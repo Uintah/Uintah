@@ -42,6 +42,7 @@ class PowerAppBase {
 	# State
 	set initialized 0
 	set loading 0
+        set saveFile ""
 
 	# Indicator variables
         set indicator1 ""
@@ -67,9 +68,14 @@ class PowerAppBase {
 	global tips
  	# Menu
 	set tips(FileMenu) [subst {\
-        Save Session...  \tSave a BioTensor session\n\
-                         \t\tto load at a later time\n\
-        Load Session...  \tLoad a BioTensor session\n\
+        Load Session...  \tLoad a [appname] session\n\
+        Save Session     \tSave a [appname] session\n\
+                         \t\tto the current file and\n\
+                         \t\tload at a later time\n\
+        Save Session As...  \tSpecify a filename to\n\
+                         \t\tsave your [appname] session\n\
+                         \t\tload at a later time\n\
+        Save Image...    \tSave the viewer image\n\
         Quit             \tQuit BioTensor} ]
 
 	set tips(HelpMenu) [subst {\
@@ -184,8 +190,11 @@ class PowerAppBase {
 	$m.main_menu.file.menu add command -label "Load Session...  Ctr+O" \
 	    -underline 1 -command "$this load_session" -state active
 	
-	$m.main_menu.file.menu add command -label "Save Session... Ctr+S" \
+	$m.main_menu.file.menu add command -label "Save Session     Ctr+S" \
 	    -underline 0 -command "$this save_session" -state active
+
+	$m.main_menu.file.menu add command -label "Save Session As..." \
+	    -underline 0 -command "$this save_session_as" -state active
 	
 	$m.main_menu.file.menu add command -label "Save Image..." \
 	    -underline 0 -command "$this save_image" -state active 
@@ -259,6 +268,29 @@ class PowerAppBase {
     }
 
 
+    ###########################
+    ### save_session_as
+    ###########################
+    # Called like Save As...
+    method save_session_as {} {
+	set types {
+	    {{App Settings} {.ses} }
+	    {{Other} { * } }
+	} 
+	set temp [ tk_getSaveFile -defaultextension {.ses} \
+			   -filetypes $types ]
+
+	if {$temp != ""} {
+	    set saveFile $temp
+
+	    # configure title
+	    wm title .standalone "[appname] - [getFileName $saveFile]" 
+	    
+	    save_session
+	}
+    }
+
+
     ##############################
     ### save_image
     ##############################
@@ -283,6 +315,7 @@ class PowerAppBase {
 	}
 	
 	puts $fileid "# Save out module variables\n"
+	puts $fileid "::netedit dontschedule"
 	
 	set searchID [array startsearch mods]
 	while {[array anymore mods $searchID]} {
@@ -295,6 +328,8 @@ class PowerAppBase {
 	    }
 	}
 	array donesearch mods $searchID
+
+	puts $fileid "::netedit scheduleok"
     }
 
     ##########################
@@ -315,22 +350,24 @@ class PowerAppBase {
     #########################
     ### save_disabled_modules
     #########################
-    # Save out the call to disable all modules that are currently disabled
+    # Save out the call to disable all modules connections
+    # that are currently disabled
     method save_disabled_modules { fileid } {
 	global mods Disabled
 	
 	puts $fileid "\n# Disabled Modules\n"
-	
-	set searchID [array startsearch mods]
-	while {[array anymore mods $searchID]} {
-	    set m [array nextelement mods $searchID]
-	    if {[info exists Disabled($mods($m))] && $Disabled($mods($m))} {
-		puts $fileid "disableModule \$mods($m) 1"
-	    }
-	}
-	array donesearch mods $searchID
+
+ 	set searchID [array startsearch mods]
+ 	while {[array anymore mods $searchID]} {
+ 	    set m [array nextelement mods $searchID]
+ 	    if {[info exists Disabled($mods($m))] && $Disabled($mods($m))} {
+ 		puts $fileid "disableModule \$mods($m) 1"
+ 	    }
+ 	}
+ 	array donesearch mods $searchID
     }
-    
+
+
 
     #########################
     ### save_class_variables
@@ -1190,6 +1227,15 @@ class PowerAppBase {
 	set window .standalone
 	$col config -background [format #%04x%04x%04x $ir $ig $ib]
     }
+
+    method getFileName { f } {
+	set end [string length $f]
+	set start [string last "/" $f]
+	set start [expr 1 + $start]
+	
+	return [string range $f $start $end]
+    }
+
 	
 
     
@@ -1299,5 +1345,10 @@ class PowerAppBase {
     variable colormap_width
     variable colormap_height
     variable colormap_res    
+
+    # Stores saved session filename. This filename
+    # should be displayed along with the title when loaded and
+    # should be used when Save Session is selected.
+    variable saveFile
     
 }
