@@ -223,7 +223,7 @@ int Network::disconnect(const clString& connId)
 void Network::initialize(NetworkEditor* _netedit)
 {
     netedit=_netedit;
-    NOT_FINISHED("Network::initialize"); // Should read a file???
+    //NOT_FINISHED("Network::initialize"); // Should read a file???
 }
 
 static clString removeSpaces(const clString& str) {
@@ -409,6 +409,10 @@ int Network::delete_module(const clString& id)
 
 //
 // $Log$
+// Revision 1.8  2000/11/29 08:24:39  moulding
+// - changed startup print statements
+// - force some tcl commands to complete to allow "see it as it happens" behavior
+//
 // Revision 1.7  2000/03/11 00:40:55  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>

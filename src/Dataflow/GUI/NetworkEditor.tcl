@@ -354,69 +354,63 @@ proc createCategoryMenu {} {
       }
     }
   }
+}
 
-#    set cats [netedit packages]
-#
-#    foreach cat $cats {
-#	# The first item in the list is the category name
-#        set package [lindex $cat 0]
-#	set name [lindex $cat 1]
-#	set mods [lindex $cat 2]
-#	set module_cats($name) $mods
-#
-#puts $package;
-#puts $name;
-#puts $mods;
-#
-#	.main_menu.modules.menu add cascade -label $name \
-#		-menu .main_menu.modules.menu.m_$name
-#	.bot.neteditFrame.canvas.modulesMenu add cascade -label $name \
-#		-menu .bot.neteditFrame.canvas.modulesMenu.m_$name
-#
-#	menu .main_menu.modules.menu.m_$name -tearoff false
-#	menu .bot.neteditFrame.canvas.modulesMenu.m_$name -tearoff false
-#
-#	foreach mod $mods {
-#	    .main_menu.modules.menu.m_$name add command -label $mod \
-#		    -command "addModule $mod"
-#
-#	    .bot.neteditFrame.canvas.modulesMenu.m_$name add command \
-#		    -label $mod \
-#		    -command "addModuleAtMouse $mod"
-#	}
-#    }
+proc createPackageMenu {index} {
 
-#    # Handle Application Specific Modules
-#
-#    set cats              [netedit catlist application]
-#    set uintahModulesMenu .main_menu.appModules.menu
-#
-#    .bot.neteditFrame.canvas.modulesMenu add separator
-#
-#    foreach cat $cats {
-#	# The first item in the list is the category name
-#	set name [lindex $cat 0]
-#	set mods [lindex $cat 1]
-#	set module_cats($name) $mods
-#
-#	$uintahModulesMenu add cascade -label $name \
-#		-menu $uintahModulesMenu.m_app_$name
-#	.bot.neteditFrame.canvas.modulesMenu add cascade -label $name \
-#		-menu .bot.neteditFrame.canvas.modulesMenu.m_app_$name
-#
-#	menu $uintahModulesMenu.m_app_$name -tearoff false
-#	menu .bot.neteditFrame.canvas.modulesMenu.m_app_$name -tearoff false
-#
-#	foreach mod $mods {
-#	    $uintahModulesMenu.m_app_$name add command -label $mod \
-#		    -command "addModule $mod"
-#
-#	    .bot.neteditFrame.canvas.modulesMenu.m_app_$name add command \
-#		    -label $mod \
-#		    -command "addModuleAtMouse $mod"
-#	}
-#    }
+#  puts "Building Module Menus..."
 
+#  foreach package [netedit packageNames] {
+    set packageNames [netedit packageNames]
+    set package [lindex $packageNames $index]
+    set packageToken [removeSpaces "menu_$package"]
+#    puts "  $package -> $packageToken"
+
+    # Add the cascade button and menu for the package to the menu bar
+
+    menubutton .main_menu.$packageToken -text "$package" -underline 0 \
+      -menu .main_menu.$packageToken.menu
+    menu .main_menu.$packageToken.menu
+    pack .main_menu.$packageToken -side left
+
+    # Add a separator to the right-button menu for this package if this
+    # isn't the first package to go in there
+
+    if { [.bot.neteditFrame.canvas.modulesMenu index end] != "none" } \
+      { .bot.neteditFrame.canvas.modulesMenu add separator }
+
+    foreach category [netedit categoryNames $package] {
+      set categoryToken [removeSpaces "menu_${package}_$category"]
+#      puts "    $category -> $categoryToken"
+
+      # Add the category to the menu bar menu
+
+      .main_menu.$packageToken.menu add cascade -label "$category" \
+        -menu .main_menu.$packageToken.menu.m_$categoryToken
+      menu .main_menu.$packageToken.menu.m_$categoryToken -tearoff false
+
+      # Add the category to the right-button menu
+
+      .bot.neteditFrame.canvas.modulesMenu add cascade -label "$category" \
+        -menu .bot.neteditFrame.canvas.modulesMenu.m_$categoryToken
+      menu .bot.neteditFrame.canvas.modulesMenu.m_$categoryToken -tearoff false
+
+      foreach module [netedit moduleNames $package $category] {
+        set moduleToken [removeSpaces $module]
+#        puts "      $module -> $moduleToken"
+
+        # Add a button for each module to the menu bar category menu and the
+        # right-button menu
+
+        .main_menu.$packageToken.menu.m_$categoryToken add command \
+          -label "$module" \
+          -command "addModule \"$package\" \"$category\" \"$module\""
+        .bot.neteditFrame.canvas.modulesMenu.m_$categoryToken add command \
+          -label "$module" \
+          -command "addModuleAtMouse \"$package\" \"$category\" \"$module\""
+      }
+    }
+#  }
 }
 
 proc moveModule {name} {

@@ -40,7 +40,7 @@ RegisterRenderer::RegisterRenderer(const clString& name,
 				   make_Renderer maker)
 : name(name), query(query), maker(maker)
 {
-    cerr << "Register: " << name << endl;
+    cerr << "Registering renderer: " << name << endl;
     RegisterRenderer* tmp;
     if(!known_renderers)
 	known_renderers=scinew AVLTree<clString, RegisterRenderer*>;
@@ -164,6 +164,10 @@ void Renderer::getData(int, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.8  2000/11/29 08:24:36  moulding
+// - changed startup print statements
+// - force some tcl commands to complete to allow "see it as it happens" behavior
+//
 // Revision 1.7  2000/06/07 20:59:26  kuzimmer
 // Modifications to make the image save menu item work on SGIs
 //
