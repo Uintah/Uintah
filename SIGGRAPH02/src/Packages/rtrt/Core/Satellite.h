@@ -34,7 +34,8 @@ class Satellite : public UVSphere
     : UVSphere(mat, center, radius, up), parent_(parent), 
     rev_speed_(1), orb_radius_(orb_radius), orb_speed_(1)
   {
-    theta_ = drand48()*6.282;
+    //theta_ = drand48()*6.282;
+    theta_ = 0;
     name_ = name;
 
     if (orb_radius_ && parent_) {

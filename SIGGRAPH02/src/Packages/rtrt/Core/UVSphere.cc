@@ -45,13 +45,11 @@ void UVSphere::preprocess(double, int&, int&)
     // Set up unit transformation
     xform.load_identity();
     xform.pre_translate(-cen.asVector());
-    xform.rotate(right, Vector(1,0,0));
-    xform.rotate(up, Vector(0,0,1));
+    xform.rotate(Vector(0,0,1),up);
     xform.pre_scale(Vector(1./radius, 1./radius, 1./radius));
     ixform.load_identity();
     ixform.pre_scale(Vector(radius, radius, radius));
-    ixform.rotate(Vector(0,0,1), up);
-    ixform.rotate(Vector(1,0,0), right);
+    ixform.rotate(up, Vector(0,0,1));
     ixform.pre_translate(cen.asVector());
 }
 
@@ -93,7 +91,7 @@ void UVSphere::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
     }
   }	
 }
-
+#if 0
 // Maybe this could be improved - steve
 void UVSphere::light_intersect(Ray& ray, HitInfo& hit, Color&,
                                DepthStats* st, PerProcessorContext*)
@@ -133,6 +131,7 @@ void UVSphere::light_intersect(Ray& ray, HitInfo& hit, Color&,
     }
   }	
 }
+#endif
 
 Vector UVSphere::normal(const Point& hitpos, const HitInfo&)
 {
