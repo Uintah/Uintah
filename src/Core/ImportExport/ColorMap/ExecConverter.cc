@@ -1,29 +1,29 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 
@@ -39,7 +39,7 @@
  *  Copyright (C) 2004 SCI Institute
  */
 
-// Use a standalone converter to do the colormap conversion into a
+// Use a standalone converter to convert a scirun object into a
 // temporary file, then read in that file.
 
 #include <Core/Malloc/Allocator.h>
@@ -168,15 +168,15 @@ Exec_reader(ProgressReporter *pr,
     }
     
     // Read the file
-    ColorMapHandle colormap;
-    Pio(*stream, colormap);
+    ColorMapHandle handle;
+    Pio(*stream, handle);
 
     pr->remark(string("ExecConverter - Successfully converted ")
 	       + cfilename + ".");
 
     unlink(tmpfilename.c_str());
     
-    return colormap;
+    return handle;
   }
 
   unlink(tmpfilename.c_str());
@@ -187,7 +187,7 @@ Exec_reader(ProgressReporter *pr,
 
 static bool
 Exec_writer(ProgressReporter *pr,
-	    ColorMapHandle colormap,
+	    ColorMapHandle handle,
 	    const char *cfilename, const string &precommand)
 {
   string command, tmpfilename;
@@ -198,18 +198,18 @@ Exec_writer(ProgressReporter *pr,
   Piostream *stream = scinew BinaryPiostream(tmpfilename, Piostream::Write);
   if (stream->error())
   {
+    delete stream;
     pr->error("ExecConverter - Could not open temporary file '" + tmpfilename +
 	      "' for writing.");
     result = false;
   }
   else
   {
-    Pio(*stream, colormap);
-    
+    Pio(*stream, handle);
+    delete stream;
     result = Exec_execute_command(pr, command, tmpfilename);
   }
   unlink(tmpfilename.c_str());
-  delete stream;
 
   return result;
 }
@@ -239,7 +239,7 @@ TextColorMap_writer(ProgressReporter *pr,
   ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
-    "ColorMapToText %f %t";
+    "ColorMapToText %t %f";
   return Exec_writer(pr, colormap, filename, command);
 }
 
