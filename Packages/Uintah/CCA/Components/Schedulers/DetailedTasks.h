@@ -108,7 +108,7 @@ namespace Uintah {
 
     void add(DetailedTask* task);
     int numTasks() const {
-      return tasks.size();
+      return (int)tasks.size();
     }
     DetailedTask* getTask(int i) {
       return tasks[i];
@@ -133,7 +133,7 @@ namespace Uintah {
 
     void computeLocalTasks(int me);
     int numLocalTasks() const {
-      return localtasks.size();
+      return (int)localtasks.size();
     }
     DetailedTask* localTask(int idx) {
       return localtasks[idx];
