@@ -59,7 +59,7 @@
 		    </BoundaryConditions>
  		</geom_object>
 		<temperature>12</temperature>
-		<velocity_field>1</velocity_field>
+		<velocity_field>0</velocity_field>
 	    </material>
 
 	    <contact>
