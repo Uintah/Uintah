@@ -1,5 +1,5 @@
-
 #include <Packages/rtrt/Core/Camera.h>
+#include <Packages/rtrt/Core/GridSpheresDpy.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Core/Geometry/Point.h>
@@ -24,13 +24,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+using namespace SCIRun;
 using namespace rtrt;
 
 #define NUM_TEXTURES 8
 #define MAX_LINE_LEN 256
 
 TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
-				    int nsides, int gdepth,
+				    int numvars, int nsides, int gdepth,
 				    const Color& color);
 
 float radius = 1.0;
@@ -122,7 +123,7 @@ Group *make_geometry_tg(char* tex_names[NUM_TEXTURES], int tex_res,
 
   int *tex_indices = 0;
   group->add(new 
-	     TextureGridSpheres(spheres, nspheres, radius, tex_indices,
+	     TextureGridSpheres(spheres, nspheres, 3, radius, tex_indices,
 				tex_data, nspheres, tex_res,
 				nsides, gdepth, color));
   return group;
@@ -137,7 +138,9 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
   char *infilename=0;
   int nsides = 6;
   int gdepth = 2;
+  int numvars = 3;
   Color color(1.0, 1.0, 1.0);
+  bool display=false;
 
   for (int i=1;i<argc;i++)
   {
@@ -151,6 +154,8 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
       radius=atof(argv[++i]);
     else if(strcmp(argv[i],"-tex_res")==0)
       tex_res=atoi(argv[++i]);
+    else if(strcmp(argv[i],"-numvars")==0)
+      numvars=atoi(argv[++i]);
     else if(strcmp(argv[i],"-nsides")==0)
       nsides=atoi(argv[++i]);
     else if(strcmp(argv[i],"-gdepth")==0)
@@ -159,8 +164,9 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
       color=Color(atof(argv[++i]),
 		  atof(argv[++i]),
 		  atof(argv[++i]));
-    } else
-    {
+    } else if(strcmp(argv[i],"-display")==0)
+      display=true;
+    else {
       cerr<<"unrecognized option \""<<argv[i]<<"\""<< endl;
       cerr<<"valid options are:"<<endl;
       cerr<<"  -bg <filename>       environment map image file (envmap.ppm)"<<endl;
@@ -168,16 +174,30 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
       cerr<<"  -tex <filename>      basename of gray-scale texture files (./sphere)"<<endl;
       cerr<<"  -tex_res <int>       resolution of the textures (-1)"<<endl;
       cerr<<"  -radius <float>      sphere radius (1.0)"<<endl;
+      cerr<<"  -numvars <int>       number of variables (3)"<<endl;
       cerr<<"  -nsides <int>        number of sides for grid cells (6)"<<endl;
       cerr<<"  -gdepth <int>        gdepth of grid cells (2)"<<endl;
       cerr<<"  -color <r> <g> <b>   surface color (1.0, 1.0, 1.0)"<<endl;
+      cerr<<"  -display             use GridSpheresDpy display (false)"<<endl;
       exit(1);
     }
   }
 
   Object *group=0;
   if (infilename) {
-    group=texGridFromFile(infilename, tex_res, radius, nsides, gdepth, color);
+    GridSpheresDpy *dpy = new GridSpheresDpy(0);
+    GridSpheres *grid = texGridFromFile(infilename, tex_res, radius, numvars,
+					nsides, gdepth, color);
+    
+    dpy->attach(grid);
+    if (display) {
+      (new Thread(dpy, "GridSpheres display thread\n"))->detach();
+    } else {
+      // This will set up the rendering parameters
+      dpy->setup_vars();
+    }
+
+    group = grid;
   } else {
     char *tex_names[NUM_TEXTURES];
     // Make the tex_names
@@ -227,6 +247,9 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
   scene->turnOffAllLights( 0.0 ); 
 
   scene->select_shadow_mode(No_Shadows);
+
+  if (display)
+    scene->addAnimateObject(group);
   
   return scene;
 }
@@ -235,7 +258,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
 // Renturns a pointer to a newly allocated TextureGridSpheres
 //   on success, NULL on any failure
 TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
-				    int nsides, int gdepth,
+				    int numvars, int nsides, int gdepth,
 				    const Color& color)
 {
   // Declare a few variables
@@ -244,11 +267,11 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   unsigned char* tex_data=0;
   float* mean_data=0;
   float* xform_data=0;
-  size_t total_nspheres=0;
-  size_t total_nindices=0;
-  size_t total_ntextures=0;
-  size_t total_nmeans=0;
-  size_t total_nxforms=0;
+  int total_nspheres=0;
+  int total_nindices=0;
+  int total_ntextures=0;
+  int total_nmeans=0;
+  int total_nxforms=0;
   float tex_min = 1;
   float tex_max = 0;
   
@@ -318,7 +341,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	return 0;
       }
       
-      total_nspheres+=(int)(statbuf.st_size/(3*sizeof(float)));
+      total_nspheres+=(int)(statbuf.st_size/(numvars*sizeof(float)));
       
       // Close the sphere data file
       close(in_fd);
@@ -574,9 +597,9 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   
   // Allocate memory for the necessary data structures
   cout<<"Allocating space for "<<total_nspheres<<" spheres"<<endl;
-  sphere_data=new float[3*total_nspheres];
+  sphere_data=new float[numvars*total_nspheres];
   if (!sphere_data) {
-    cerr<<"failed to allocate "<<3*sizeof(float)*total_nspheres<<" bytes "
+    cerr<<"failed to allocate "<<numvars*sizeof(float)*total_nspheres<<" bytes "
 	<<"for sphere data"<<endl;
     return 0;
   }
@@ -675,8 +698,8 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 
       // Slurp the sphere data
       float* data=&(sphere_data[s_index]);
-      int nspheres=(int)(statbuf.st_size/(3*sizeof(float)));
-      unsigned long data_size=nspheres*3*sizeof(float);
+      int nspheres=(int)(statbuf.st_size/(numvars*sizeof(float)));
+      unsigned long data_size=nspheres*numvars*sizeof(float);
 
       cerr<<"slurping sphere data ("<<nspheres<<" spheres = " <<data_size
 	  <<" bytes) from "<<s_fname<<endl;
@@ -910,14 +933,14 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   // Create the appropriate structure
   TextureGridSpheres* tex_grid;
   if (m_flag && xform_flag) {
-    tex_grid = new PCAGridSpheres(sphere_data, total_nspheres,
+    tex_grid = new PCAGridSpheres(sphere_data, total_nspheres, numvars,
 				  radius, index_data,
 				  tex_data, total_ntextures, tex_res,
 				  xform_data, mean_data, total_nmeans,
 				  tex_min, tex_max,
 				  nsides, gdepth, color);
   } else {
-    tex_grid = new TextureGridSpheres(sphere_data, total_nspheres,
+    tex_grid = new TextureGridSpheres(sphere_data, total_nspheres, numvars,
 				      radius, index_data, tex_data,
 				      total_ntextures, tex_res,
 				      nsides, gdepth, color);
