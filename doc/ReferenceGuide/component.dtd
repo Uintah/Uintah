@@ -85,7 +85,10 @@ Component  specification dtd.
 <!ELEMENT gui (description, parameter+, img)>
 
 <!-- Description of 1 gui parameter. -->
-<!ELEMENT parameter (label, description)>
+<!ELEMENT parameter (widget, label, description)>
+
+<!-- Name of gui item (tcl/tk) widget -->
+<!ELEMENT widget (#PCDATA)>
 
 <!-- Gui item label -->
 <!ELEMENT label (#PCDATA)>
