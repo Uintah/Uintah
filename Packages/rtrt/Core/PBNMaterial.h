@@ -6,27 +6,34 @@
 
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/PPMImage.h>
-#include <vector>
+#include <map>
+
+using std::map;
+using std::pair;
 
 namespace rtrt {
 
-class PBNMaterial
+class PBNMaterial : public Material
 {
+
+  typedef map<unsigned, Material*> mat_map;
+  typedef mat_map::iterator        mat_iter;
 
  protected:
 
-  vector<Material*> material_stack_;
-  PPMImage          pbnmap_;
+  mat_map  material_map_;
+  PPMImage pbnmap_;
 
  public:
 
   PBNMaterial(const string& s) : pbnmap_(s) {}
   virtual ~PBNMaterial() {}
 
-  unsigned push_back(Material *m)
+  void insert(Material *m, unsigned n)
   {
-    material_stack_.push_back(m);
-    return material_stack_.size();
+    mat_iter i = material_map_.find(n);
+    if (i == material_map_.end())
+      material_map_.insert(pair<unsigned,Material*>(n,m));
   }
 
   virtual void shade(Color& result, const Ray &ray, const HitInfo &hit, 
@@ -47,8 +54,10 @@ class PBNMaterial
     mapcolor = pbnmap_(u*width,v*height);
 
     unsigned index = (unsigned)(mapcolor.red()*size+.5);
-    if (index<material_stack_.size())
-      material_stack_[index]->shade(result,ray,hit,depth,atten,accumcolor,cx);
+
+    mat_iter i = material_map_.find(index);
+    if (i != material_map_.end())
+      (*i).second->shade(result,ray,hit,depth,atten,accumcolor,cx);
   }
 };
 
