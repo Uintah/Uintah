@@ -339,22 +339,6 @@ void MeshView::execute()
 	}
     }
 
-cerr << "Switch sizes: \n";
-if (switchSet)
-{
-cerr << "    measTetra = " << measTetra -> size() << endl;
-cerr << "    measAuxTetra = " << measAuxTetra -> size() << endl;
-}
-cerr << "    levTetra[0] = " << levTetra[0] -> size() << endl;
-cerr << "    auxTetra[0] = " << auxTetra[0] -> size() << endl;
-if (switchSet)
-{
-cerr << "Switch states: \n";
-cerr << "    measSwitch = " << measSwitch -> get_state() << endl;
-cerr << "    measAuxSwitch = " << measAuxSwitch -> get_state() << endl;
-cerr << "      levSwitch[0] = " << levSwitch[0] -> get_state() << endl;
-cerr << "      auxSwitch[0] =" << auxSwitch[0] -> get_state() << endl;
-}
     startingTet -> execute();
     geom_lock.write_unlock();
 
@@ -571,7 +555,7 @@ void MeshView::getMeas(const MeshHandle& mesh)
 {
     GeomGroup *gr = new GeomGroup;
     int e = elmMeas.get();
-
+    HashTable<MVEdge, int> edge_table;
     double min = mMin.get(); 
     double max = mMax.get();
     double meas;
@@ -606,16 +590,48 @@ void MeshView::getMeas(const MeshHandle& mesh)
 	    else
 	    {
 		Element* elm=mesh->elems[i];
-		Point p1(mesh->nodes[elm->n[0]]->p);
-		Point p2(mesh->nodes[elm->n[1]]->p);
-		Point p3(mesh->nodes[elm->n[2]]->p);
-		Point p4(mesh->nodes[elm->n[3]]->p);
+		MVEdge e1(elm->n[0], elm->n[1]);
+		MVEdge e2(elm->n[0], elm->n[2]);
+		MVEdge e3(elm->n[0], elm->n[3]);
+		MVEdge e4(elm->n[1], elm->n[2]);
+		MVEdge e5(elm->n[1], elm->n[3]);
+		MVEdge e6(elm->n[2], elm->n[3]);
+
+//		Point p1(mesh->nodes[elm->n[0]]->p);
+//		Point p2(mesh->nodes[elm->n[1]]->p);
+//		Point p3(mesh->nodes[elm->n[2]]->p);
+//		Point p4(mesh->nodes[elm->n[3]]->p);
 	    
-		GeomTetra *nTet = new GeomTetra(p1, p2, p3, p4);
-		measAuxTetra -> add(nTet);
+		int dummy=0;
+		if (!(edge_table.lookup(e1, dummy)))
+		    edge_table.insert(e1, 0);
+		if (!(edge_table.lookup(e2, dummy)))
+		    edge_table.insert(e2, 0);
+		if (!(edge_table.lookup(e3, dummy)))
+		    edge_table.insert(e3, 0);
+		if (!(edge_table.lookup(e4, dummy)))
+		    edge_table.insert(e4, 0);
+		if (!(edge_table.lookup(e5, dummy)))
+		    edge_table.insert(e5, 0);
+		if (!(edge_table.lookup(e6, dummy)))
+		    edge_table.insert(e6, 0);
+
+//		GeomTetra *nTet = new GeomTetra(p1, p2, p3, p4);
+//		measAuxTetra -> add(nTet);
 	    }
 
 	}
+	
+	HashTableIter<MVEdge, int> eiter(&edge_table);
+	for(eiter.first(); eiter.ok(); ++eiter)
+	{
+	    MVEdge e(eiter.get_key());
+	    Point p1(mesh->nodes[e.n[0]]->p);
+	    Point p2(mesh->nodes[e.n[1]]->p);
+	    GeomLine* gline = new GeomLine(p1, p2);
+	    measAuxTetra -> add(gline);
+	}
+
 	measMatl = new GeomMaterial(measTetra, mat3);
 	measSwitch = new GeomSwitch(measMatl, 0);
 	measAuxMatl = new GeomMaterial(measAuxTetra, mat1);
