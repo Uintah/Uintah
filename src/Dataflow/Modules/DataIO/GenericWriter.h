@@ -158,11 +158,11 @@ GenericWriter<HType>::execute()
     string ft(filetype_.get());
     if (ft == "Binary")
     {
-      stream = scinew BinaryPiostream(fn, Piostream::Write);
+      stream = auto_ostream(fn,"Binary");
     }
     else
     {
-      stream = scinew TextPiostream(fn, Piostream::Write);
+      stream = auto_ostream(fn,"Text");
     }
 
     if (stream->error())
