@@ -3,11 +3,11 @@
 
 #ifdef SCI_DIR_Modules_Visualization
 
-OBJS = BitVisualize.o  GenAxes.o  GenColormap.o  Hedgehog.o  IsoSurface.o  \
-	OctIsoSurface.o  \
+OBJS = BitVisualize.o  CuttingPlane.o  GenAxes.o  GenColormap.o  \
+	Hedgehog.o  IsoSurface.o  OctIsoSurface.o  \
 	RescaleColormap.o  Streamline.o  VectorSeg.o  WidgetTest.o
-SRCS = BitVisualize.cc GenAxes.cc GenColormap.cc Hedgehog.cc IsoSurface.cc \
-	OctIsoSurface.cc \
+SRCS = BitVisualize.cc CuttingPlane.cc GenAxes.cc GenColormap.cc \
+	Hedgehog.cc IsoSurface.cc OctIsoSurface.cc \
 	RescaleColormap.cc Streamline.cc VectorSeg.cc WidgetTest.cc
 
 LIBNAME = Visualization
