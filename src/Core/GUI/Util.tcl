@@ -315,3 +315,15 @@ itcl_class expscale {
 	$w.e.exp insert 0 $exp
     }	
 }
+
+# The method to raise a window varies depending on the windows state
+# (at least on the Mac).  This is a convenience function for taking
+# care of the raise.
+proc SciRaise { window } {
+    if { [winfo ismapped $window] == 1} {
+	raise $window
+    } else {
+	wm deiconify $window
+    }
+}
+
