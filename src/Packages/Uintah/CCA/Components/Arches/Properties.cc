@@ -19,6 +19,7 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Core/Containers/StaticArray.h>
 #include <Core/Util/NotFinished.h>
 #include <iostream>
 using namespace std;
@@ -184,7 +185,7 @@ Properties::computeProps(const ProcessorGroup*,
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
     CCVariable<double> density;
-    std::vector<CCVariable<double> > scalar(d_numMixingVars);
+    StaticArray< CCVariable<double> > scalar(d_numMixingVars);
 
 
     new_dw->get(density, d_lab->d_densitySPLabel, 
@@ -287,7 +288,6 @@ Properties::computeProps(const ProcessorGroup*,
     new_dw->put(density,d_lab->d_densityCPLabel, matlIndex, patch);
     if (d_MAlab)
       new_dw->put(denMicro,d_lab->d_densityMicroLabel, matlIndex, patch);
-
   }
 }
   
@@ -317,7 +317,7 @@ Properties::reComputeProps(const ProcessorGroup*,
     new_dw->allocate(temperature, d_lab->d_tempINLabel, matlIndex, patch);
     //    new_dw->allocate(co2, d_lab->d_co2INLabel, matlIndex, patch);
  
-    std::vector<CCVariable<double> > scalar(d_numMixingVars);
+    StaticArray< CCVariable<double> > scalar(d_numMixingVars);
     CCVariable<double> denMicro;
 
     int nofGhostCells = 0;

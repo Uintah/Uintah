@@ -233,7 +233,7 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
       IntVector d = high-low;
       totalCells+=d.x()*d.y()*d.z();
     }
-    d_petscLocalToGlobal[patch]=l2g;
+    d_petscLocalToGlobal[patch].copyPointer(l2g);
 #ifdef ARCHES_PETSC_DEBUG
     {	
       IntVector l = l2g.getWindow()->getLowIndex();

@@ -23,6 +23,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Core/Util/NotFinished.h>
+#include <Core/Containers/StaticArray.h>
 
 #include <math.h>
 
@@ -437,7 +438,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 		  matlIndex, patch, Ghost::None, nofGhostCells);
       new_dw->allocate(denMicro_new, d_lab->d_densityMicroINLabel, 
 		       matlIndex, patch);
-      denMicro_new = denMicro;
+      denMicro_new.copyPatch(denMicro);
     }
     CCVariable<int> cellType;
     if (d_MAlab)
@@ -461,7 +462,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 		Ghost::None, nofGhostCells);
 
     int nofScalars = d_props->getNumMixVars();
-    vector<CCVariable<double> > scalar(nofScalars);
+    StaticArray< CCVariable<double> > scalar(nofScalars);
     for (int ii = 0; ii < nofScalars; ii++) {
       old_dw->get(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch, 
 		  Ghost::None, nofGhostCells);
@@ -479,7 +480,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
   // Create vars for new_dw ***warning changed new_dw to old_dw...check
     CCVariable<int> cellType_new;
     new_dw->allocate(cellType_new, d_lab->d_cellTypeLabel, matlIndex, patch);
-    cellType_new = cellType;
+    cellType_new.copyPatch(cellType);
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
@@ -496,31 +497,31 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 #endif
     CCVariable<double> pressure_new;
     new_dw->allocate(pressure_new, d_lab->d_pressureINLabel, matlIndex, patch);
-    pressure_new = pressure; // copy old into new
+    pressure_new.copyPatch(pressure); // copy old into new
 
     SFCXVariable<double> uVelocity_new;
     new_dw->allocate(uVelocity_new, d_lab->d_uVelocityINLabel, matlIndex, patch);
-    uVelocity_new = uVelocity; // copy old into new
+    uVelocity_new.copyPatch(uVelocity); // copy old into new
     SFCYVariable<double> vVelocity_new;
     new_dw->allocate(vVelocity_new, d_lab->d_vVelocityINLabel, matlIndex, patch);
-    vVelocity_new = vVelocity; // copy old into new
+    vVelocity_new.copyPatch(vVelocity); // copy old into new
     SFCZVariable<double> wVelocity_new;
     new_dw->allocate(wVelocity_new, d_lab->d_wVelocityINLabel, matlIndex, patch);
-    wVelocity_new = wVelocity; // copy old into new
+    wVelocity_new.copyPatch(wVelocity); // copy old into new
 
-    vector<CCVariable<double> > scalar_new(nofScalars);
+    StaticArray< CCVariable<double> > scalar_new(nofScalars);
     for (int ii = 0; ii < nofScalars; ii++) {
       new_dw->allocate(scalar_new[ii], d_lab->d_scalarINLabel, ii, patch);
-      scalar_new[ii] = scalar[ii]; // copy old into new
+      scalar_new[ii].copyPatch(scalar[ii]); // copy old into new
     }
 
     CCVariable<double> density_new;
     new_dw->allocate(density_new, d_lab->d_densityINLabel, matlIndex, patch);
-    density_new = density; // copy old into new
+    density_new.copyPatch(density); // copy old into new
 
     CCVariable<double> viscosity_new;
     new_dw->allocate(viscosity_new, d_lab->d_viscosityINLabel, matlIndex, patch);
-    viscosity_new = viscosity; // copy old into new
+    viscosity_new.copyPatch(viscosity); // copy old into new
 
     // Copy the variables into the new datawarehouse
     new_dw->put(cellType_new, d_lab->d_cellTypeLabel, matlIndex, patch);
