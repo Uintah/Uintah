@@ -40,6 +40,7 @@ public:
   void setElement(int row, int col, double val);
   int numOfRows();
   int numOfCols();
+  
   Matrix & operator=(const Matrix &m);
 private:
   void copy(const Matrix &m);

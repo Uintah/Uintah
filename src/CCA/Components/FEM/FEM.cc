@@ -33,6 +33,7 @@
 #include <qapplication.h>
 #include <qpushbutton.h>
 #include <qmessagebox.h>
+#include "stdlib.h"
 #include "Matrix.h"
 
 
@@ -49,11 +50,13 @@ FEM::FEM()
 {
   uiPort.setParent(this);
   goPort.setParent(this);
+  matrixPort.setParent(this);
+  Ag=0;
+
 }
 
 FEM::~FEM()
 {
-  cerr << "called ~FEM()\n";
 }
 
 void FEM::setServices(const gov::cca::Services::pointer& svc)
@@ -62,10 +65,10 @@ void FEM::setServices(const gov::cca::Services::pointer& svc)
   //register provides ports here ...  
 
   gov::cca::TypeMap::pointer props = svc->createTypeMap();
-  myUIPort::pointer uip(&uiPort);
+  //myUIPort::pointer uip(&uiPort);
   myGoPort::pointer gop(&goPort);
   myPDEMatrixPort::pointer matrixp(&matrixPort);
-  svc->addProvidesPort(uip,"ui","gov.cca.UIPort", props);
+  //svc->addProvidesPort(uip,"ui","gov.cca.UIPort", props);
   svc->addProvidesPort(gop,"go","gov.cca.GoPort", props);
   svc->addProvidesPort(matrixp,"matrix","gov.cca.PDEMatrixPort", props);
   svc->registerUsesPort("mesh","gov.cca.MeshPort", props);
@@ -101,6 +104,12 @@ void FEM::localMatrices(double A[3][3], double f[3],
 {
   double b[3], c[3], area;
   diffTriangle(b,c,area,x,y);
+
+  if( fabs(area)<1e-10){
+    cerr<<"\n Bad triangle: area=0 x y="<<endl;
+    for(int i=0;i<3; i++)
+      cerr<< x[i]<<" "<<y[i]<<";";
+  }
   for(int i=0; i<3; i++){
     int i1=(i+1)%3;
     int i2=(i+2)%3;
@@ -109,21 +118,29 @@ void FEM::localMatrices(double A[3][3], double f[3],
         A[i][j]=area*(b[i]*b[j]+c[i]*c[j]);
     }
   }
+  //cerr<<"A="<<endl;
+  //for(int i=0; i<3; i++){
+  //  for(int j=0; j<3; j++){
+  //    cerr<<A[i][j]<<", ";
+  //  }
+  //}
 }
 
 
 
 //create the global matrices from the local matrices
-void FEM::globalMatrices(Matrix &Ag, std::vector<double> fg,
-			 const std::vector<double> nodes1d,
-			 const std::vector<int> &tmesh1d)
+void FEM::globalMatrices(const CIA::array1<double> &nodes1d,
+			 const CIA::array1<int> &tmesh1d)
 {
-  
- int N=fg.size();
+ int N=nodes1d.size()/2; 
+
+ Ag=new Matrix(N,N);
+ CIA::array1<double> fg;
+
  for(int i=0; i<N; i++){
-   fg[i]=0;
+   fg.push_back(0);
    for(int j=0; j<N; j++){
-     Ag.setElement(i,j,0);
+     Ag->setElement(i,j,0);
    }
  }
 
@@ -140,12 +157,12 @@ void FEM::globalMatrices(Matrix &Ag, std::vector<double> fg,
    localMatrices(A,f,x,y);
    for(int row=0; row<3; row++){
      int grow=tmesh1d[i*3+row];
-     if(isConst(grow)){
+     if(!isConst(grow)){
        fg[grow]+=f[row];
        for(int col=0; col<3; col++){
 	 int gcol=tmesh1d[i*3+col];
-	 if(isConst(gcol)){
-	   Ag.setElement(grow,gcol,Ag.getElement(grow,gcol)+A[row][col]);
+	 if(!isConst(gcol)){
+	   Ag->setElement(grow,gcol,Ag->getElement(grow,gcol)+A[row][col]);
 	 }
 	 else{
 	   //u(gcol) is the constant boundary value
@@ -159,13 +176,15 @@ void FEM::globalMatrices(Matrix &Ag, std::vector<double> fg,
  for(int grow=0; grow<N; grow++){
    if(isConst(grow)){
      for(int k=0; k<N; k++){
-       Ag.setElement(grow,k,0);
-       Ag.setElement(k,grow,0);
+       Ag->setElement(grow,k,0);
+       Ag->setElement(k,grow,0);
      }
-     Ag.setElement(grow,grow,1);
+     Ag->setElement(grow,grow,1);
      fg[grow]= boundary(grow); 
    }
  }
+
+ this->fg=fg;
 }
 
 double FEM::source(int index)
@@ -175,37 +194,80 @@ double FEM::source(int index)
 
 double FEM::boundary(int index)
 {
+  for(unsigned int i=0; i<dirichletNodes.size(); i++){
+    if(index==dirichletNodes[i]) return dirichletValues[i];
+  }
   return 0;
 }
 
 bool FEM::isConst(int index)
 {
+  for(unsigned int i=0; i<dirichletNodes.size(); i++){
+    if(index==dirichletNodes[i]) return true;
+  }  
   return false;
 }
 
 
-void myUIPort::ui() 
+int myUIPort::ui() 
 {
-  QMessageBox::warning(0, "FEM", "You have clicked the UI button!");
+  QMessageBox::warning(0, "FEM", "ui() is not in use.");
+  return 0;
 }
 
 
 int myGoPort::go() 
 {
-  QMessageBox::warning(0, "FEM", "Go ...");
-  return 0;
+  gov::cca::Port::pointer pp=com->getServices()->getPort("mesh");	
+  if(pp.isNull()){
+    QMessageBox::warning(0, "FEM", "Port mesh is not available!");
+    return 1;
+  }  
+  gov::cca::ports::MeshPort::pointer meshPort=
+    pidl_cast<gov::cca::ports::MeshPort::pointer>(pp);
+  
+
+  gov::cca::Port::pointer pp2=com->getServices()->getPort("pde");	
+  if(pp2.isNull()){
+    QMessageBox::warning(0, "FEM", "Port pde is not available!");
+    return 1;
+  }  
+  
+
+  gov::cca::ports::PDEDescriptionPort::pointer pdePort=
+    pidl_cast<gov::cca::ports::PDEDescriptionPort::pointer>(pp2);
+
+
+  CIA::array1<int> tmesh1d=meshPort->getTriangles();
+  
+  CIA::array1<double> nodes1d=pdePort->getNodes();
+
+  com->dirichletNodes=pdePort->getDirichletNodes();
+
+  com->dirichletValues=pdePort->getDirichletValues();
+
+  com->getServices()->releasePort("pde");
+  com->getServices()->releasePort("mesh");
+
+  if(nodes1d.size()==0  || tmesh1d.size()==0){
+    QMessageBox::warning(0,"FEM","Bad mesh or nodes!");
+    return 1;
+  }
+  else{
+    com->globalMatrices(nodes1d,tmesh1d);
+    return 0;
+  }
 }
  
 
 gov::cca::Matrix::pointer myPDEMatrixPort::getMatrix()
 {
-  cerr<<"getMatrix not implemented"<<endl;
-  return gov::cca::Matrix::pointer(0);
+   return gov::cca::Matrix::pointer(com->Ag );
 }
 
 CIA::array1<double> myPDEMatrixPort::getVector()
 {
-  cerr<<"getVector not implemented"<<endl;
-  CIA::array1<double > v;
-  return v;
+  return com->fg;
 }
+
+

@@ -71,12 +71,16 @@ void FileReader::setServices(const gov::cca::Services::pointer& svc)
   // Actually - the ref counting will take care of that automatically - Steve
 }
 
-void myUIPort::ui() 
+int myUIPort::ui() 
 {
   QString fn = QFileDialog::getOpenFileName(
-	    "./","PDE Description Files(*.pde *.pos *.lap)");
-  if(fn.isNull()) return;
+	    "./","PDE Description Files(*.pde)");
+  if(fn.isNull()) return 1;
   ifstream is(fn);
+  com->nodes.clear();
+  com->boundaries.clear();
+  com->dirichletNodes.clear();
+  com->dirichletValues.clear();
   while(true){
     std::string name;
     is>>name;
@@ -99,13 +103,29 @@ void myUIPort::ui()
 	com->boundaries.push_back(index);
       }
     }
+    else if(name=="dirichlet"){
+      int cnt;
+      is>>cnt;
+      for(int i=0; i<cnt; i++){
+	int index;
+	is>>index;
+	com->dirichletNodes.push_back(index);
+      }
+      for(int i=0; i<cnt; i++){
+	double value;
+	is>>value;
+	com->dirichletValues.push_back(value);
+      }
+    }
     else if(name=="end") break;  
   }
 
   cerr<<com->nodes.size()<<endl;
   cerr<<com->boundaries.size()<<endl;
+  cerr<<com->dirichletNodes.size()<<endl;
+  cerr<<com->dirichletValues.size()<<endl;
 
-  QMessageBox::warning(0, "PDE Description data is ready", fn);
+  return 0;
 }
 
 
@@ -119,7 +139,15 @@ CIA::array1<int> myPDEDescriptionPort::getBoundaries()
   return com->boundaries;
 }
  
+CIA::array1<int> myPDEDescriptionPort::getDirichletNodes()
+{
+  return com->dirichletNodes;
+}
 
+CIA::array1<double> myPDEDescriptionPort::getDirichletValues()
+{
+  return com->dirichletValues;
+}
 
 
 

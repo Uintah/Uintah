@@ -41,7 +41,7 @@ class FEM;
 class myUIPort : public virtual gov::cca::ports::UIPort {
 public:
   virtual ~myUIPort(){}
-  virtual void ui();
+  virtual int ui();
   void setParent(FEM *com){this->com=com;}
   FEM *com;
 };
@@ -72,16 +72,21 @@ class FEM : public gov::cca::Component{
     virtual ~FEM();
 
     virtual void setServices(const gov::cca::Services::pointer& svc);
+    virtual gov::cca::Services::pointer getServices(){return services;}
     void diffTriangle(double b[3], double c[3], double &area,
 			   const double x[3], const double y[3]);
     void localMatrices(double A[3][3], double f[3], 
 		       const double x[3], const double y[3]);
-    void globalMatrices(Matrix &Ag, std::vector<double> fg,
-			     const std::vector<double> node1d,
-			     const std::vector<int> &tmesh1d);
+    void globalMatrices(const CIA::array1<double> &node1d,
+			const CIA::array1<int> &tmesh1d);
     double source(int index);
     double boundary(int index);
     bool isConst(int index);
+
+    Matrix::pointer Ag;
+    CIA::array1<double> fg;
+    CIA::array1<int> dirichletNodes;
+    CIA::array1<double> dirichletValues;
   private:
 
     FEM(const FEM&);
@@ -89,7 +94,7 @@ class FEM : public gov::cca::Component{
     myUIPort uiPort;
     myGoPort goPort;
     myPDEMatrixPort matrixPort;
-    
+
 
     gov::cca::Services::pointer services;
   };

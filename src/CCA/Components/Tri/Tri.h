@@ -42,7 +42,7 @@ class Tri;
 class myUIPort : public virtual gov::cca::ports::UIPort {
 public:
    virtual ~myUIPort(){}
-   virtual void ui();
+   virtual int ui();
    void setParent(Tri *com){this->com=com;}
    Tri *com;
 };
@@ -59,6 +59,7 @@ class myMeshPort: public virtual gov::cca::ports::MeshPort{
  public:
   virtual ~myMeshPort(){}
   virtual CIA::array1<int> getTriangles();
+  virtual CIA::array1<double> getNodes();
   void setParent(Tri *com){this->com=com;}
   Tri *com;  
 };

@@ -38,7 +38,7 @@
   public:
     void setServices(const gov::cca::Services::pointer &svc);
     virtual ~ImUIPort(){}
-    virtual void ui();
+    virtual int ui();
   private:
     gov::cca::Services::pointer services;
   };

@@ -47,7 +47,7 @@ class ZList;
 
   public:
     virtual ~ImUIPort1(){}
-    virtual void ui();
+    virtual int ui();
     void setParent(ZList *com){this->com=com;}
   private:
     ZList *com;	   	
