@@ -120,7 +120,6 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
 		  TexturedTri* tri;
 		  
 		  if (v5 && v5->size()) {
-		    fprintf(stderr,"<<<<<<<<<<<<<<<<<<<Reading Normal!\n");
 		    
 		    vn0 = Vector((*v5)[loop4*9],(*v5)[loop4*9+1],(*v5)[loop4*9+2]);
 		    vn1 = Vector((*v5)[loop4*9+3],(*v5)[loop4*9+4],(*v5)[loop4*9+5]);
@@ -151,8 +150,6 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
 		  Tri *tri; 
 		  
 		  if (v5 && v5->size()) {
-		    
-		    fprintf(stderr,"<<<<<<<<<<<<<<<<<<<Reading Normal!\n");
 		    
 		    vn0 = Vector((*v5)[loop4*9],(*v5)[loop4*9+1],(*v5)[loop4*9+2]);
 		    vn1 = Vector((*v5)[loop4*9+3],(*v5)[loop4*9+4],(*v5)[loop4*9+5]);
