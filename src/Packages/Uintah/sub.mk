@@ -29,7 +29,8 @@ LIBS :=
 else
 PSELIBS := Uintah/Parallel Uintah/Components/MPM \
 	Uintah/Components/SimulationController Uintah/Components/ICE \
-	Uintah/Components/Schedulers Uintah/Components/Arches
+	Uintah/Components/Schedulers Uintah/Components/Arches \
+	SCICore/Exceptions
 LIBS :=
 endif
 
@@ -37,6 +38,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.3  2000/03/23 10:30:10  sparker
+# Now need to link sus with SCICore/Exceptions
+#
 # Revision 1.2  2000/03/20 19:38:15  sparker
 # Added VPATH support
 #
