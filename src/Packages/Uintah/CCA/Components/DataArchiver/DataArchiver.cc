@@ -127,6 +127,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    
    d_checkpointInterval = 0.0;
    d_checkpointTimestepInterval = 0;
+   d_checkpointWalltimeStart = 0;
    d_checkpointCycle = 2; /* 2 is the smallest number that is safe
 			     (always keeping an older copy for backup) */
    ProblemSpecP checkpoint = p->findBlock("checkpoint");
@@ -139,14 +140,29 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
       attrib = attributes["timestepInterval"];
       if (attrib != "")
 	d_checkpointTimestepInterval = atoi(attrib.c_str());
+      attrib = attributes["walltimeStart"];
+      if (attrib != "")
+	d_checkpointWalltimeStart = atoi(attrib.c_str());
+      attrib = attributes["walltimeInterval"];
+      if (attrib != "")
+	d_checkpointWalltimeInterval = atoi(attrib.c_str());
       attrib = attributes["cycle"];
       if (attrib != "")
 	d_checkpointCycle = atoi(attrib.c_str());
    }
+
+   // can't use both checkpointInterval and checkpointTimestepInterval
    if (d_checkpointInterval != 0.0 && d_checkpointTimestepInterval != 0)
      throw ProblemSetupException("Use <checkpoint interval=...> or <checkpoint timestepInterval=...>, not both");
- 
 
+   // can't have a walltimeStart without a walltimeInterval
+   if (d_checkpointWalltimeStart != 0 && d_checkpointWalltimeInterval == 0)
+     throw ProblemSetupException("<checkpoint walltimeStart must have a corresponding walltimeInterval");
+
+   // set walltimeStart to walltimeInterval if not specified
+   if (d_checkpointWalltimeInterval > 0 && d_checkpointWalltimeStart == 0)
+     d_checkpointWalltimeStart = d_checkpointWalltimeInterval;
+   
    d_currentTimestep = 0;
    
    int startTimestep;
@@ -157,7 +173,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    d_lastTimestepLocation = "invalid";
    d_wasOutputTimestep = false;
 
-   if (d_outputInterval == 0.0 && d_outputTimestepInterval == 0 && d_checkpointInterval == 0.0 && d_checkpointTimestepInterval == 0) 
+   if (d_outputInterval == 0.0 && d_outputTimestepInterval == 0 && d_checkpointInterval == 0.0 && d_checkpointTimestepInterval == 0 && d_checkpointWalltimeInterval == 0) 
 	return;
 
    d_nextOutputTime=0.0;
@@ -165,6 +181,11 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    d_nextCheckpointTime=d_checkpointInterval; // no need to checkpoint t=0
    d_nextCheckpointTimestep=d_checkpointTimestepInterval+1;
    
+   if (d_checkpointWalltimeInterval > 0)
+     d_nextCheckpointWalltime=d_checkpointWalltimeStart + Time::currentSeconds();
+   else 
+     d_nextCheckpointWalltime=0;
+
    if(Parallel::usingMPI()){
      // See how many shared filesystems that we have
      double start=Time::currentSeconds();
@@ -297,7 +318,8 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
       out << params->getNode()->getOwnerDocument() << endl; 
       createIndexXML(d_dir);
    
-      if (d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0) {
+      if (d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0 ||
+	  d_checkpointWalltimeInterval != 0) {
 	 d_checkpointsDir = d_dir.createSubdir("checkpoints");
 	 createIndexXML(d_checkpointsDir);
       }
@@ -358,6 +380,8 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
 	 ceil(time / d_checkpointInterval);
    else if (d_checkpointTimestepInterval > 0)
       d_nextCheckpointTimestep = d_currentTimestep + d_checkpointTimestepInterval;
+   if (d_checkpointWalltimeInterval > 0)
+     d_nextCheckpointWalltime = d_checkpointWalltimeInterval + Time::currentSeconds();
 }
 
 //////////
@@ -409,6 +433,7 @@ void DataArchiver::combinePatchSetup(Dir& fromDir)
    // don't transfer checkpoints when combining patches
    d_checkpointInterval = 0.0;
    d_checkpointTimestepInterval = 0;
+   d_checkpointWalltimeInterval = 0;
 
    // output every timestep -- each timestep is transferring data
    d_outputInterval = 0.0;
@@ -690,7 +715,8 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 			    variables to index.xml */
     }
 
-    if (d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0)
+    if (d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0 || 
+	d_checkpointWalltimeInterval != 0)
       initCheckpoints(sched);
   }
   
@@ -772,7 +798,9 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
   
   if ((d_checkpointInterval != 0.0 && d_currentTime >= d_nextCheckpointTime) ||
       (d_checkpointTimestepInterval != 0 &&
-       d_currentTimestep >= d_nextCheckpointTimestep)) {
+       d_currentTimestep >= d_nextCheckpointTimestep) ||
+      (d_checkpointWalltimeInterval != 0 &&
+       Time::currentSeconds() >= d_nextCheckpointWalltime)) {
     d_wasCheckpointTimestep=true;
     string timestepDir;
     outputTimestep(d_checkpointsDir, d_checkpointLabels, time, delt,
@@ -819,7 +847,11 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
       while (d_currentTimestep >= d_nextCheckpointTimestep)
 	d_nextCheckpointTimestep += d_checkpointTimestepInterval;
     }
-    
+    if (d_checkpointWalltimeInterval != 0) {
+      while (Time::currentSeconds() >= d_nextCheckpointWalltime)
+	d_nextCheckpointWalltime += d_checkpointWalltimeInterval;
+    }
+
     if (d_writeMeta)
       index->release();
   } else {
@@ -1661,7 +1693,8 @@ bool DataArchiver::need_recompile(double time, double dt,
       recompile=true;
   }
   if ((d_checkpointInterval != 0 && time+dt >= d_nextCheckpointTime) ||
-      (d_checkpointTimestepInterval != 0 && d_currentTimestep+1 > d_nextCheckpointTimestep)) {
+      (d_checkpointTimestepInterval != 0 && d_currentTimestep+1 > d_nextCheckpointTimestep) ||
+      (d_checkpointWalltimeInterval != 0 && Time::currentSeconds() >= d_nextCheckpointWalltime)) {
     do_output=true;
     if(!d_wasCheckpointTimestep)
       recompile=true;
