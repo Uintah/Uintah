@@ -50,12 +50,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/Environment.h>
 
-#ifdef __APPLE__
-#include <float.h>
-#define MAXDOUBLE DBL_MAX
-#else
-#include <values.h>
-#endif
+#include <sci_values.h>
 
 // CollabVis code begin
 #ifdef HAVE_COLLAB_VIS
