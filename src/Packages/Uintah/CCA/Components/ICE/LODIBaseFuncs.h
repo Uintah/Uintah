@@ -1382,7 +1382,7 @@ void fillFaceTempLODI(CCVariable<double>& temp_CC,
 void fillFacePress_LODI(CCVariable<double>& press_CC,
                         const StaticArray<CCVariable<double> >& rho_micro,
                         const StaticArray<constCCVariable<double> >& Temp_CC,
-                        const StaticArray<constCCVariable<double> >& f_theta,
+                        const StaticArray<CCVariable<double> >& f_theta,
                         const int numALLMatls,
                         SimulationStateP& sharedState, 
                         Patch::FaceType face)
