@@ -158,7 +158,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
                                         DataWarehouseP& new_dw)
 {
   Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
-  double J,U,W,se=0.;
+  double J,se=0.;
   double c_dil=0.0,Jinc;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
   double onethird = (1.0/3.0);
@@ -206,6 +206,8 @@ void ViscoScram::computeStressTensor(const Patch* patch,
  	     d_initialData.G[3] + d_initialData.G[4] + d_initialData.G[5];
   double cf = d_initialData.CrackFriction;
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
+
+  double Cp0 = matl->getSpecificHeat();
 
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
@@ -301,9 +303,11 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 	Matrix3 DevStressT = zero;
 	for(int jmaxwell=0;jmaxwell<5;jmaxwell++){
 	  DevStressS += statedata[idx].DevStress[jmaxwell];
-	  DevStressT += statedata[idx].DevStress[jmaxwell]*d_initialData.RTau[jmaxwell];
+	  DevStressT += statedata[idx].DevStress[jmaxwell]*
+				d_initialData.RTau[jmaxwell];
 	}
-	Matrix3 rk1 = (DPrime*2.*d_initialData.G[imw] - DevStressOld*d_initialData.RTau[imw] -
+	Matrix3 rk1 = (DPrime*2.*d_initialData.G[imw] -
+		       DevStressOld*d_initialData.RTau[imw] -
 		       (DevStressS*con1 +
 			(DPrime*2.*G - DevStressT - DevStressS*con1)*con3/con2)
 		          *(d_initialData.G[imw]/G))*delT;
@@ -317,9 +321,11 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 	DevStressT = zero;
 	for(int jmaxwell=0;jmaxwell<5;jmaxwell++){
 	  DevStressS += (statedata[idx].DevStress[jmaxwell] + rk1*.5);
-	  DevStressT += (statedata[idx].DevStress[jmaxwell] + rk1*.5)*d_initialData.RTau[jmaxwell];
+	  DevStressT += (statedata[idx].DevStress[jmaxwell] + rk1*.5)*
+						d_initialData.RTau[jmaxwell];
 	}
-	Matrix3 rk2 = (DPrime*2.*d_initialData.G[imw] - DevStressOld*d_initialData.RTau[imw] -
+	Matrix3 rk2 = (DPrime*2.*d_initialData.G[imw] - 
+		       DevStressOld*d_initialData.RTau[imw] -
 		       (DevStressS*con1 +
 			(DPrime*2.*G - DevStressT - DevStressS*con1)*con3/con2)
 		          *(d_initialData.G[imw]/G))*delT;
@@ -333,7 +339,8 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 	DevStressT = zero;
 	for(int jmaxwell=0;jmaxwell<5;jmaxwell++){
 	  DevStressS += (statedata[idx].DevStress[jmaxwell] + rk2*.5);
-	  DevStressT += (statedata[idx].DevStress[jmaxwell] + rk2*.5)*d_initialData.RTau[jmaxwell];
+	  DevStressT += (statedata[idx].DevStress[jmaxwell] + rk2*.5)*
+						d_initialData.RTau[jmaxwell];
 	}
 	Matrix3 rk3 = (DPrime*2.*d_initialData.G[imw] -
 			DevStressOld*d_initialData.RTau[imw] -
@@ -350,7 +357,8 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 	DevStressT = zero;
 	for(int jmaxwell=0;jmaxwell<5;jmaxwell++){
 	  DevStressS += (statedata[idx].DevStress[jmaxwell] + rk3);
-	  DevStressT += (statedata[idx].DevStress[jmaxwell] + rk3)*d_initialData.RTau[jmaxwell];
+	  DevStressT += (statedata[idx].DevStress[jmaxwell] + rk3)*
+					d_initialData.RTau[jmaxwell];
 	}
 	Matrix3 rk4 = (DPrime*2.*d_initialData.G[imw] -
 			DevStressOld*d_initialData.RTau[imw] -
@@ -369,6 +377,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 	        + statedata[idx].DevStress[3]+statedata[idx].DevStress[4]
 		+ statedata[idx].DevStress[5];
 
+      // Fix This
       double sumn = 1.;
 
       c = statedata[idx].CrackRadius;
@@ -377,6 +386,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
       double topc   = 3.*(coa3/c)*cdot;
       Matrix3 SRate = (DPrime*2.*G - One*sumn - DevStress*topc)/bot;
 
+      // This is the cracking work rate
       double scrdot =((DevStress(1,1)*DevStress(1,1) +
 		       DevStress(2,2)*DevStress(2,2) +
 		       DevStress(3,3)*DevStress(3,3) +
@@ -388,9 +398,34 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 		       DevStress(1,2)*SRate(1,2) + DevStress(1,3)*SRate(1,3))*
 		       coa3)/(2*G);
 
-      p = onethird*(pstress[idx].Trace()) + D.Trace()*bulk*delT;
+      double ekkdot = D.Trace();
+      p = onethird*(pstress[idx].Trace()) + ekkdot*bulk*delT;
 
+      // This is the total Cauchy stress
       pstress[idx] = DevStress + Identity*p;
+
+      double svedot = 0.;
+      for(int imw=0;imw<5;imw++){
+	svedot += (statedata[idx].DevStress[imw](1,1)*
+				statedata[idx].DevStress[imw](1,1) +
+                   statedata[idx].DevStress[imw](2,2)*
+				statedata[idx].DevStress[imw](2,2) +
+                   statedata[idx].DevStress[imw](3,3)*
+				statedata[idx].DevStress[imw](3,3) +
+                   statedata[idx].DevStress[imw](2,3)*
+				statedata[idx].DevStress[imw](2,3) +
+                   statedata[idx].DevStress[imw](1,2)*
+				statedata[idx].DevStress[imw](1,2) +
+                   statedata[idx].DevStress[imw](1,3)*
+				statedata[idx].DevStress[imw](1,3))
+	           /(2.*d_initialData.G[imw])*d_initialData.RTau[imw] ;
+      }
+
+      // Implement the commented out one when possible
+//      double cpnew = Cp0 + d_intialData.DCp_DTemperature*ptemperature[idx];
+      double cpnew = Cp0;
+//      double Cv = cpnew/(1+Beta*ptemperature[idx]);
+      double Cv = cpnew;
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
@@ -406,13 +441,26 @@ void ViscoScram::computeStressTensor(const Patch* patch,
       // get the volumetric part of the deformation
       J = deformationGradient[idx].Determinant();
 
-      // Compute the strain energy for all the particles
-      U = .5;
-      W = .5;
-
       pvolume[idx]=Jinc*pvolume[idx];
 
-      se += (U + W)*pvolume[idx]/J;
+      double rhocv = (pvolume[idx]/pmass[idx])*Cv;
+//      statedata[idx].VolumeChangeHeating -=
+//		 d_intitalData.Gamma*ptemperature[idx]*ekkdot*delT;
+      statedata[idx].VolumeChangeHeating = 0.;
+
+      // Increments to the particle temperature
+      statedata[idx].ViscousHeating += svedot/rhocv*delT;
+      statedata[idx].CrackHeating   += scrdot/rhocv*delT;
+
+//      ptemperature[idx] += (svedot + scrdot)/rhocv*delT;
+
+      // Compute the strain energy for all the particles
+      se += (D(1,1)*pstress[idx](1,1) +
+             D(2,2)*pstress[idx](2,2) +
+             D(3,3)*pstress[idx](3,3) +
+             D(1,2)*pstress[idx](1,2) +
+             D(1,3)*pstress[idx](1,3) +
+             D(2,3)*pstress[idx](2,3))*pvolume[idx];
 
       // Compute wave speed at each particle, store the maximum
 
@@ -507,6 +555,10 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.6  2000/08/23 22:17:32  guilkey
+// Finished implementing viscoscram.  Much debugging
+// to be done.
+//
 // Revision 1.5  2000/08/22 23:14:40  guilkey
 // More work on ViscoScram done.
 //
