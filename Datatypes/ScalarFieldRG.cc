@@ -44,6 +44,16 @@ Point ScalarFieldRG::get_point(int i, int j, int k)
     return Point(x,y,z);
 }
 
+void ScalarFieldRG::resize(int x, int y, int z) {
+    nx=x; ny=y; nz=z;
+    grid.newsize(x,y,z);
+}
+
+void ScalarFieldRG::set_minmax(const Point &min, const Point &max) {
+    bmin=min;
+    bmax=max;
+}
+    
 void ScalarFieldRG::locate(const Point& p, int& ix, int& iy, int& iz)
 {
     Vector pn=p-bmin;
