@@ -615,9 +615,9 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   // Products
   t->requires(Task::OldDW,  Ilb->temp_CCLabel,        prod_matls, gn);
   t->requires(Task::NewDW,  Ilb->vol_frac_CCLabel,    prod_matls, gn);
-  t->requires(Task::NewDW,  Ilb->TempX_FCLabel,       prod_matls, gn); 
-  t->requires(Task::NewDW,  Ilb->TempY_FCLabel,       prod_matls, gn); 
-  t->requires(Task::NewDW,  Ilb->TempZ_FCLabel,       prod_matls, gn); 
+  t->requires(Task::NewDW,  Ilb->TempX_FCLabel,       prod_matls, gac,2); 
+  t->requires(Task::NewDW,  Ilb->TempY_FCLabel,       prod_matls, gac,2); 
+  t->requires(Task::NewDW,  Ilb->TempZ_FCLabel,       prod_matls, gac,2); 
   if (prod_matls->size() > 0){
     t->requires(Task::NewDW,Ilb->press_equil_CCLabel, press_matl, gn);
     t->requires(Task::OldDW,MIlb->NC_CCweightLabel,   one_matl,   gac, 1);                                                
@@ -626,9 +626,9 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   //__________________________________
   // Reactants
   t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matls, gn);
-  t->requires(Task::NewDW, Ilb->TempX_FCLabel,    react_matls, gn);
-  t->requires(Task::NewDW, Ilb->TempY_FCLabel,    react_matls, gn);
-  t->requires(Task::NewDW, Ilb->TempZ_FCLabel,    react_matls, gn);
+  t->requires(Task::NewDW, Ilb->TempX_FCLabel,    react_matls, gac,2);
+  t->requires(Task::NewDW, Ilb->TempY_FCLabel,    react_matls, gac,2);
+  t->requires(Task::NewDW, Ilb->TempZ_FCLabel,    react_matls, gac,2);
   t->requires(Task::NewDW, MIlb->vel_CCLabel,     react_matls, gn);
   t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matls, gn);
   t->requires(Task::NewDW, MIlb->cMassLabel,      react_matls, gn);
@@ -1988,9 +1988,9 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       if (ice_matl && (ice_matl->getRxProduct() == Material::product)){
         prod_indx = ice_matl->getDWIndex();
         
-        new_dw->get(gasTempX_FC,      Ilb->TempX_FCLabel,prod_indx,patch,gn,0);   
-        new_dw->get(gasTempY_FC,      Ilb->TempY_FCLabel,prod_indx,patch,gn,0);   
-        new_dw->get(gasTempZ_FC,      Ilb->TempZ_FCLabel,prod_indx,patch,gn,0);   
+        new_dw->get(gasTempX_FC,      Ilb->TempX_FCLabel,prod_indx,patch,gac,2);   
+        new_dw->get(gasTempY_FC,      Ilb->TempY_FCLabel,prod_indx,patch,gac,2);   
+        new_dw->get(gasTempZ_FC,      Ilb->TempZ_FCLabel,prod_indx,patch,gac,2);   
         new_dw->get(gasPressure,      Ilb->press_equil_CCLabel,0,  patch,gn,0);
         old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,  0,   patch,gac,1);
         old_dw->get(gasTemperature,   Ilb->temp_CCLabel,prod_indx, patch,gn,0);
@@ -2024,9 +2024,9 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
         new_dw->get(solidTemperature,MIlb->temp_CCLabel, react_indx,patch,gn,0);
         new_dw->get(solidMass,       MIlb->cMassLabel,   react_indx,patch,gn,0);
         new_dw->get(sp_vol_CC,       Ilb->sp_vol_CCLabel,react_indx,patch,gn,0);
-        new_dw->get(solidTempX_FC,   Ilb->TempX_FCLabel, react_indx,patch,gn,0);     
-        new_dw->get(solidTempY_FC,   Ilb->TempY_FCLabel, react_indx,patch,gn,0);     
-        new_dw->get(solidTempZ_FC,   Ilb->TempZ_FCLabel, react_indx,patch,gn,0);     
+        new_dw->get(solidTempX_FC,   Ilb->TempX_FCLabel, react_indx,patch,gac,2);     
+        new_dw->get(solidTempY_FC,   Ilb->TempY_FCLabel, react_indx,patch,gac,2);     
+        new_dw->get(solidTempZ_FC,   Ilb->TempZ_FCLabel, react_indx,patch,gac,2);     
         new_dw->get(vel_CC,          MIlb->vel_CCLabel,  react_indx,patch,gn,0);
         new_dw->get(NCsolidMass,     Mlb->gMassLabel,    react_indx,patch,gac,1);
       }
