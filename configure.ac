@@ -2519,13 +2519,21 @@ if test "$sci_check_insight" = "yes"; then
   fi
 
   if test -a "$dir/ITKConfig.cmake"; then
-    INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g'`" 
-    insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g'`"
-    INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"	
-    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -litkjpeg -lITKDICOMParser -lz"
-    
+    INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g' | sed 's/
+//'`"
+    insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | sed 's/
+//'`"
+    INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
+    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -litkjpeg -lITKDICOMParser -litkzlib"
+
+    INSIGHT_VERSION_MINOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MINOR' | sed 's/SET(ITK_VERSION_MINOR \"//' | sed 's/\")//' | sed 's/
+//'`"
+    if test "$INSIGHT_VERSION_MINOR" = "6"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff"
+    fi
+
     if ! test "$HAVE_PNG" = "yes"; then
-      echo "note: using libitkpng"	
+      echo "note: using libitkpng"
       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkpng"
     fi
 
