@@ -44,8 +44,6 @@ using std::cout;
 using namespace SCIRun;
 using namespace Uintah;
 
-extern Mutex mpilock;
-
 // for calculating memory usage when sci-malloc is disabled.
 char* SimulationController::start_addr = NULL;
 
@@ -268,7 +266,6 @@ void SimulationController::run()
       unsigned long avg_highwater = highwater;
       unsigned long max_highwater = highwater;
       if (d_myworld->size() > 1) {
-mpilock.lock();
 	MPI_Reduce(&memuse, &avg_memuse, 1, MPI_UNSIGNED_LONG, MPI_SUM, 0,
 		   d_myworld->getComm());
 	if(highwater){
@@ -283,7 +280,6 @@ mpilock.lock();
 	  MPI_Reduce(&highwater, &max_highwater, 1, MPI_UNSIGNED_LONG,
 		     MPI_MAX, 0, d_myworld->getComm());
 	}
-mpilock.unlock();
       }
       
       if(log_dw_mem){
