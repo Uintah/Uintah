@@ -713,7 +713,7 @@ OpenGL::redraw_frame()
   viewer_->geomlock_.readLock();
 
   gui->lock();
-#if defined(USE_PBUFFER)
+#if defined(__linux)
   int screen = Tk_ScreenNumber(tkwin);
   if( xres != pbuffer.width() || yres != pbuffer.height() ){
     //    cerr<<"width = "<<xres<<", height == "<<yres<<"\n";
@@ -788,7 +788,7 @@ OpenGL::redraw_frame()
 	   << "\n";
     }
 
-#if defined(USE_PBUFFER)
+#if defined(__linux)
     if( pbuffer.is_current() && !viewwindow->doingMovie ){
       glXMakeCurrent(dpy, win, cx);
     }
@@ -853,13 +853,13 @@ OpenGL::redraw_frame()
 	}
 	else
 	{
-#if defined(USE_PBUFFER)
+#if defined(__linux)
 	  if(!viewwindow->doingMovie){
 	    if( pbuffer.is_current() )
 	      cerr<<"pbuffer is current while not doing Movie\n";
 #endif
 	    glDrawBuffer(GL_BACK);
-#if defined(USE_PBUFFER)
+#if defined(__linux)
 	  }
 	  else{
 	    glDrawBuffer(GL_FRONT);
@@ -1157,7 +1157,7 @@ OpenGL::redraw_frame()
       gui->execute("update idletasks");
 
       // Show the pretty picture
-#if defined(USE_PBUFFER)
+#if defined(__linux)
       if( !viewwindow->doingMovie )
 #endif
       glXSwapBuffers(dpy, win);
@@ -1277,7 +1277,7 @@ OpenGL::redraw_frame()
 	glCallList(imglist);
 #endif
     }
-#if defined(USE_PBUFFER)
+#if defined(__linux)
       if( !viewwindow->doingMovie )
 #endif
     glXSwapBuffers(dpy, win);
@@ -1607,7 +1607,7 @@ OpenGL::dump_image(const string& name, const string& /* type */)
   glReadBuffer(GL_FRONT);
   glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
   dumpfile.write((const char *)pxl,n);
-#if defined(USE_PBUFFER)
+#if defined(__linux)
   if( pbuffer.is_valid() && pbuffer.is_current()){
     glXMakeCurrent( dpy, win, cx );
     glDrawBuffer(GL_FRONT);
@@ -2427,7 +2427,7 @@ OpenGL::AddMpegFrame()
   glReadBuffer(GL_FRONT);
   glReadPixels(0,0,width,height,GL_RGB,GL_UNSIGNED_BYTE,ptr);
 
-#if defined(USE_PBUFFER)
+#if defined(__linux)
   if( pbuffer.is_valid() && pbuffer.is_current() ){
     glXMakeCurrent( dpy, win, cx ); 
     glDrawBuffer(GL_FRONT);
