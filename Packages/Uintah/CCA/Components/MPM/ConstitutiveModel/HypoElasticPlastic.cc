@@ -1082,21 +1082,24 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         //C_p = 1.0e3*(0.09278 + 7.454e-4*T + 12404.0/(T*T));
 
         // Alternative approach
-        double dep = ep - pPlasticStrain[idx];
-        double dT = flowStress*dep*taylorQuinney/(rho_cur*C_p);
+        double Tdot = flowStress*epdot*taylorQuinney/(rho_cur*C_p);
+        pIntHeatRate[idx] = Tdot;
+        double dT = Tdot*delT;
         pPlasticTempInc_new[idx] = dT;
         pPlasticTemperature_new[idx] = pPlasticTemperature[idx] + dT; 
         double temp_new = temperature + dT;
-
-        // Calculate Tdot (do not allow negative Tdot)
-        // (this is the internal heating rate)
-        double Tdot = 0.0;
-        Tdot = tensorSig.Contract(tensorD)*(taylorQuinney/(rho_cur*C_p));
-        Tdot = max(Tdot, 0.0);
-        pIntHeatRate[idx] = Tdot;
+        cout_CST << "HEP::Particle = " << idx 
+                 << " T_old = " << temperature
+                 << " Tdot = " << Tdot
+                 << " dT = " << dT 
+                 << " T_new = " << temp_new << endl;
 
         /*
+        // Calculate Tdot (do not allow negative Tdot)
+        // (this is the internal heating rate)
         // Update the plastic temperature
+        Tdot = tensorS.Contract(tensorEta)*(taylorQuinney/(rho_cur*C_p));
+        Tdot = max(Tdot, 0.0);
         pPlasticTemperature_new[idx] = pPlasticTemperature[idx] + Tdot*delT; 
         pPlasticTempInc_new[idx] = Tdot*delT; 
         double temp_new = temperature + pPlasticTempInc_new[idx];
