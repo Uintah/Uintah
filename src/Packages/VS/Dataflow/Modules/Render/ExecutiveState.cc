@@ -220,8 +220,8 @@ private:
   bool					alarm_now;
   LabelTex				*alarm_label;
   //GLfloat				*color_dat;
-  tuple					*injury_point;
-  tuple					*alarm_point;
+  //tuple					*injury_point;
+  //tuple					*alarm_point;
   tuple					*x_axis_point;
   tuple					*x_trend_h_point;
   tuple					*x_trend_m_point;
@@ -459,8 +459,8 @@ ExecutiveState::ExecutiveState(GuiContext* ctx) :
   alarm_now(0),
   alarm_label(0),
   //color_dat(0),
-  injury_point(0),
-  alarm_point(0),
+  //injury_point(0),
+  //alarm_point(0),
   x_axis_point(0),
   x_trend_h_point(0),
   x_trend_m_point(0),
@@ -502,8 +502,8 @@ ExecutiveState::ExecutiveState(GuiContext* ctx) :
     }
   }
 
-  injury_point = new tuple;
-  alarm_point = new tuple;
+  //injury_point = new tuple;
+  //alarm_point = new tuple;
   x_axis_point = new tuple;
   x_trend_h_point = new tuple;
   x_trend_m_point = new tuple;
@@ -1196,6 +1196,7 @@ ExecutiveState::draw_plots()
       lv_pwr *= 100;
       rv_pwr *= 100;
       pos *= 100;
+      float prob = 100 - pos;
 
       FreeTypeFace *font = fonts_["anatomical"];
       font->set_points(18.0 * gui_font_scale_.get());
@@ -1256,7 +1257,7 @@ ExecutiveState::draw_plots()
       }
 
       if (status_label1a && status_label1b && status_label1c && status_label1d) {
-        float prob = 100 - pos;
+        //float prob = 100 - pos;
 
         //ostringstream stata;
         //stata << "Estimated time to death: ";
@@ -1264,7 +1265,10 @@ ExecutiveState::draw_plots()
         //status_label1a->bind(font);
 
         ostringstream statb;
-        statb << " " << ttd << " mins.";
+		  if (prob >= 50) 
+          statb << " " << ttd << " mins.";
+		  else
+          statb << " NA.";
         status_label1b->set(statb.str());
         status_label1b->bind(font);
 
@@ -1285,7 +1289,7 @@ ExecutiveState::draw_plots()
 
           xoff += status_label1a->tex_width_ * status_label1a->u_;
 
-          if (ttd < 20)
+          if (ttd < 20 && prob >= 50)
             glColor4f(1.0, 0.0, 0.0, 1.0);
           else
             glColor4f(1.0, 1.0, 1.0, 1.0);
