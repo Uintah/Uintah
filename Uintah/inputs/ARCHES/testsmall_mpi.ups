@@ -104,7 +104,7 @@
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
 		      <box label="topWall">
-			<min>[2,-1,-1]</min>
+			<min>[1,-1,-1]</min>
 			<max>[3,2,2]</max>
 		      </box>
 		      <box label="posY_xzWall">
