@@ -184,15 +184,14 @@ static int unify(int not, const Array1<int>& n1, const Array1<int>& n2, const Ar
 int Element::face(int i)
 {
     if(faces[i] == -2){
-	int* idx=&(n[0]);
-	int i1=idx[(i+1)%4];
-        int i2=idx[(i+2)%4];
-	int i3=idx[(i+3)%4];
+	int i1=n[(i+1)%4];
+        int i2=n[(i+2)%4];
+	int i3=n[(i+3)%4];
 	Node* n1=mesh->nodes[i1];
 	Node* n2=mesh->nodes[i2];
 	Node* n3=mesh->nodes[i3];
 	// Compute it...
-	unify(i, n1->elems, n2->elems, n3->elems);
+	faces[i]=unify(i, n1->elems, n2->elems, n3->elems);
     }
     return faces[i];
 }
