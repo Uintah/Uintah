@@ -44,6 +44,7 @@ SRCS     += \
 	$(SRCDIR)/ApplyInterpMatrix.cc\
 	$(SRCDIR)/ApplyInterpolant.cc\
 	$(SRCDIR)/AttractNormals.cc\
+	$(SRCDIR)/BuildInterpMatrix.cc\
 	$(SRCDIR)/BuildInterpolant.cc\
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\

@@ -43,6 +43,7 @@ SRCS := \
         $(SRCDIR)/ArrowWidget.tcl \
         $(SRCDIR)/BaseWidget.tcl \
         $(SRCDIR)/BoxWidget.tcl \
+        $(SRCDIR)/BuildInterpMatrix.tcl \
         $(SRCDIR)/BuildInterpolant.tcl \
         $(SRCDIR)/BuildNoise.tcl \
         $(SRCDIR)/BuildTransform.tcl \
