@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='us-ascii' ?>
+
+<!-- description of the Nektar package -->
+
+<package name="Yarden">
+#  <guiPath>GUI</guiPath>
+#  <scirun-library category="Visualization">
+#  <soNames>
+#    <soName>libNektar_Modules_Visualization.so</soName>
+#    <soName>libNektar.so</soName>
+#  </soNames>
+#
+#  <dataflow-component name="IsosurfaceSAGE">
+#    <meta>
+#      <authors>
+#        <author>Yarden Livnat</author>
+#      </authors>
+#      <version-date>Dec 1996</version-date>
+#      <version>1.0</version>
+#      <description>No description available</description>
+#    </meta>
+#    <inputs></inputs>
+#    <outputs></outputs>
+#    <parameters></parameters>
+#    <implementation>
+#      <creationFunction>make_IsosurfaceSAGE</creationFunction>
+#    </implementation>
+#  </dataflow-component>
+#  </scirun-library>
+
+
+</package>
+
+
