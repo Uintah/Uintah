@@ -256,8 +256,6 @@ TextureRenderer::compute_view()
 void
 TextureRenderer::load_brick(Brick* brick)
 {
-  if (tex_pool_.size() == 0) return;
-
   int nc = brick->nc();
   int idx[2];
   for(int c=0; c<nc; c++) {
@@ -317,10 +315,13 @@ TextureRenderer::load_brick(Brick* brick)
               size_max = size;
             }
           }
-          // delete found object
-          if(glIsTexture(tex_pool_[free_idx].id))
-            glDeleteTextures(1, &tex_pool_[free_idx].id);
-          tex_pool_[free_idx].id = 0;
+	  if (free_idx != -1)
+	  {
+	    // delete found object
+	    if(glIsTexture(tex_pool_[free_idx].id))
+	      glDeleteTextures(1, &tex_pool_[free_idx].id);
+	    tex_pool_[free_idx].id = 0;
+	  }
           free_tex_mem_ += size_max;
         }
         // find tex table entry to reuse
