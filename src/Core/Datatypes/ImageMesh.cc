@@ -450,7 +450,7 @@ void ImageMesh::get_random_point(Point &p, const Face::index_type &ci,
 }
 
 
-const TypeDescription* get_type_description(ImageMesh::INodeIndex *)
+const TypeDescription* get_type_description(ImageMeshINodeIndex *)
 {
   static TypeDescription* td = 0;
   if(!td){
@@ -461,7 +461,7 @@ const TypeDescription* get_type_description(ImageMesh::INodeIndex *)
   return td;
 }
 
-const TypeDescription* get_type_description(ImageMesh::IFaceIndex *)
+const TypeDescription* get_type_description(ImageMeshIFaceIndex *)
 {
   static TypeDescription* td = 0;
   if(!td){
@@ -474,7 +474,7 @@ const TypeDescription* get_type_description(ImageMesh::IFaceIndex *)
 
 
 void
-Pio(Piostream& stream, ImageMesh::INodeIndex& n)
+Pio(Piostream& stream, ImageMeshINodeIndex& n)
 {
     stream.begin_cheap_delim();
     Pio(stream, n.i_);
@@ -483,7 +483,7 @@ Pio(Piostream& stream, ImageMesh::INodeIndex& n)
 }
 
 void
-Pio(Piostream& stream, ImageMesh::IFaceIndex& n)
+Pio(Piostream& stream, ImageMeshIFaceIndex& n)
 {
     stream.begin_cheap_delim();
     Pio(stream, n.i_);
@@ -493,12 +493,12 @@ Pio(Piostream& stream, ImageMesh::IFaceIndex& n)
 
 
 
-const string find_type_name(ImageMesh::INodeIndex *)
+const string find_type_name(ImageMeshINodeIndex *)
 {
   static string name = "ImageMesh::INodeIndex";
   return name;
 }
-const string find_type_name(ImageMesh::IFaceIndex *)
+const string find_type_name(ImageMeshIFaceIndex *)
 {
   static string name = "ImageMesh::IFaceIndex";
   return name;
@@ -626,13 +626,13 @@ ImageMesh::size(ImageMesh::Cell::size_type &s) const
 
 
 std::ostream& 
-operator<<(std::ostream& os, const ImageMesh::ImageIndex& n) {
+operator<<(std::ostream& os, const ImageMeshImageIndex& n) {
   os << "[" << n.i_ << "," << n.j_ << "]";
   return os;
 }
 
 std::ostream& 
-operator<<(std::ostream& os, const ImageMesh::ImageSize& s) {
+operator<<(std::ostream& os, const ImageMeshImageSize& s) {
   os << (int)s << " (" << s.i_ << " x " << s.j_ << ")";
   return os;
 }
@@ -708,5 +708,43 @@ get_type_description(ImageMesh::Cell *)
   }
   return td;
 }
+
+
+ImageMeshImageIndex::operator unsigned() const
+{ 
+  ASSERT(mesh_);
+  return i_ + j_*mesh_->ni_;
+}
+
+ImageMeshIFaceIndex::operator unsigned() const
+{ 
+  ASSERT(mesh_);
+  return i_ + j_ * (mesh_->ni_-1);
+}
+
+
+ImageMeshINodeIter &
+ImageMeshINodeIter::operator++()
+{
+  i_++;
+  if (i_ >= mesh_->min_i_ + mesh_->ni_) {
+    i_ = mesh_->min_i_;
+    j_++;
+  }
+  return *this;
+}
+
+
+ImageMeshIFaceIter &
+ImageMeshIFaceIter::operator++()
+{
+  i_++;
+  if (i_ >= mesh_->min_i_+mesh_->ni_-1) {
+    i_ = mesh_->min_i_;
+    j_++;
+  }
+  return *this;
+}
+
 
 } // namespace SCIRun
