@@ -44,7 +44,7 @@ public:
     virtual void execute();
 };
 
-Module* make_MeshRefiner(const clString& id) {
+extern "C" Module* make_MeshRefiner(const clString& id) {
   return new MeshRefiner(id);
 }
 
@@ -142,6 +142,11 @@ void MeshRefiner::execute()
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 09:26:53  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.7  1999/10/07 02:06:45  sparker
 // use standard iostreams and complex type
 //

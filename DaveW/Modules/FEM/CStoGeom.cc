@@ -52,7 +52,7 @@ public:
     virtual void execute();
 };
 
-Module* make_CStoGeom(const clString& id)
+extern "C" Module* make_CStoGeom(const clString& id)
 {
     return scinew CStoGeom(id);
 }

@@ -115,7 +115,7 @@ public:
 
 };
 
-  Module* make_Gauss(const clString& id)
+  extern "C" Module* make_Gauss(const clString& id)
     {
       return scinew Gauss(id);
     }
@@ -498,6 +498,11 @@ int Gauss::makeCurrent(void)
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 09:29:03  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.7  2000/02/10 09:22:07  moulding
 // got rid of a loser #if in fftn.cc and commented out all of Gauss.cc for all platforms but sgi
 //

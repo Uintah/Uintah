@@ -77,7 +77,7 @@ public:
     virtual void tcl_command(TCLArgs&, void*);
 };
 
-Module* make_Taubin(const clString& id)
+extern "C" Module* make_Taubin(const clString& id)
 {
    return scinew Taubin(id);
 }
@@ -373,6 +373,11 @@ void Taubin::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.9  2000/03/17 09:25:35  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.8  2000/02/02 21:53:59  dmw
 // Makefile, index - added new modules and removed no-longer-used
 // libraries

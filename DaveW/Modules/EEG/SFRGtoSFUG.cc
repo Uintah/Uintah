@@ -60,7 +60,7 @@ public:
 		       int removeAir, int scalarAsCond);
 };
 
-Module* make_SFRGtoSFUG(const clString& id)
+extern "C" Module* make_SFRGtoSFUG(const clString& id)
 {
     return new SFRGtoSFUG(id);
 }

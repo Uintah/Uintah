@@ -53,7 +53,7 @@ public:
     void parallel(int);
 };
 
-Module* make_FEMError(const clString& id) {
+extern "C" Module* make_FEMError(const clString& id) {
   return new FEMError(id);
 }
 
@@ -202,6 +202,11 @@ Vector FEMError::element_gradient(Element* e, ScalarFieldUG* sfield)
 
 //
 // $Log$
+// Revision 1.7  2000/03/17 09:26:53  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.6  1999/08/29 00:46:38  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

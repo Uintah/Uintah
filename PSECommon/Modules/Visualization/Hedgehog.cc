@@ -151,7 +151,7 @@ public:
 static clString module_name("Hedgehog");
 static clString widget_name("Hedgehog Widget");
 
-Module* make_Hedgehog(const clString& id) {
+extern "C" Module* make_Hedgehog(const clString& id) {
   return new Hedgehog(id);
 }       
 
@@ -420,6 +420,11 @@ void Hedgehog::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 09:27:32  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.7  1999/10/07 02:07:06  sparker
 // use standard iostreams and complex type
 //

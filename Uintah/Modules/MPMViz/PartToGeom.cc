@@ -333,7 +333,7 @@ void PartToGeom::geom_pick(GeomPick* pick, void* userdata, int index)
   // Now modify so that points and spheres store index.
 }
   
-Module* make_PartToGeom( const clString& id ) {
+extern "C" Module* make_PartToGeom( const clString& id ) {
   return new PartToGeom( id );
 }
 
@@ -343,6 +343,11 @@ Module* make_PartToGeom( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.12  2000/03/17 09:30:11  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.11  2000/01/27 04:52:17  kuzimmer
 // changes necessary to make MaterialParticle files work with only Grids or only Particles
 //

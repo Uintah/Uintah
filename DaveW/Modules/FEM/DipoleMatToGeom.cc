@@ -66,7 +66,7 @@ public:
     int nDips;
 };
 
-Module* make_DipoleMatToGeom(const clString& id)
+extern "C" Module* make_DipoleMatToGeom(const clString& id)
 {
     return scinew DipoleMatToGeom(id);
 }
@@ -241,6 +241,11 @@ void DipoleMatToGeom::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.4  2000/03/17 09:25:43  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.3  1999/10/07 02:06:34  sparker
 // use standard iostreams and complex type
 //

@@ -8,6 +8,9 @@
 #include <math.h>
 #include "../Util/Matrix3.h"
 
+namespace Uintah {
+namespace Components {
+
 class CompMooneyRivlin : public ConstitutiveModel {
  private:
 
@@ -52,9 +55,17 @@ class CompMooneyRivlin : public ConstitutiveModel {
 
 };
 
+}
+}
+
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.4  2000/03/17 09:29:34  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.3  2000/03/16 00:49:32  guilkey
 // Fixed the parameter lists in the .cc files
 //

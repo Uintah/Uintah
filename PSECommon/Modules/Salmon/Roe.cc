@@ -574,7 +574,7 @@ void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
 
 //>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
 static int prevPrinc;
-void Roe::bawgl_pick(int action, GLint iv[3], GLfloat fv[3])
+void Roe::bawgl_pick(int action, int iv[3], GLfloat fv[3])
 {
     BState bs;
     switch(action) {
@@ -1235,6 +1235,11 @@ void Roe::setView(View newView) {
 
 //
 // $Log$
+// Revision 1.14  2000/03/17 09:27:17  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.13  2000/03/11 00:39:52  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>

@@ -1,0 +1,1949 @@
+<?xml version='1.0' encoding='us-ascii' ?>
+
+<!-- description of the PSECommon package -->
+
+<package name="PSECommon">
+  <guiPath>GUI</guiPath>
+  <scirun-library category="FEM">
+  <soNames>
+    <soName>libPSECommon_Modules_FEM.so</soName>
+    <soName>libPSECommon.so</soName>
+  </soNames>
+
+  <dataflow-component name="BuildFEMatrix">
+    <meta>
+      <authors>
+        <author>Ruth Nicholson Klepfer</author>
+      </authors>
+      <version-date>October 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_BuildFEMatrix</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="FEMError">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>May 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_FEMError</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MeshRefiner">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>May 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MeshRefiner</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ComposeError">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>May 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ComposeError</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ApplyBC">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ApplyBC</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ErrorInterval">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>May 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ErrorInterval</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+  <scirun-library category="Readers">
+  <soNames>
+    <soName>libPSECommon_Modules_Readers.so</soName>
+    <soName>libPSECommon.so</soName>
+  </soNames>
+
+  <dataflow-component name="MatrixReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MatrixReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MeshReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MeshReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Reader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Reader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SurfaceReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SurfaceReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="VoidStarReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_VoidStarReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ColumnMatrixReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ColumnMatrixReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="VectorFieldReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_VectorFieldReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="DukeRawRead">
+    <meta>
+      <authors>
+        <author>Reads raw files used by EEL lab at Duke</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_DukeRawRead</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ColorMapReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ColorMapReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="GeomReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GeomReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ImageReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ImageReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ScalarFieldReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ScalarFieldReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="GeometryReader">
+    <meta>
+      <authors>
+        <author>Philip Sutton</author>
+      </authors>
+      <version-date>October 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GeometryReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MultiSFRGReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker - hacked for multiple scalar fields by ppsloan...</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MultiSFRGReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="PointsReader">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_PointsReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+  <scirun-library category="Salmon">
+  <soNames>
+    <soName>libPSECommon_Modules_Salmon.so</soName>
+    <soName>libPSECommon.so</soName>
+  </soNames>
+
+  <dataflow-component name="Salmon">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>April 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Salmon</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+  <scirun-library category="Example">
+  <soNames>
+    <soName>libPSECommon_Modules_Example.so</soName>
+    <soName>libPSECommon.so</soName>
+  </soNames>
+
+  <dataflow-component name="GeomPortTest">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GeomPortTest</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+  <scirun-library category="Matrix">
+  <soNames>
+    <soName>libPSECommon_Modules_Matrix.so</soName>
+    <soName>libPSECommon.so</soName>
+  </soNames>
+
+  <dataflow-component name="MatVec">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>July 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MatVec</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MatSelectVec">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>June 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MatSelectVec</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MatMat">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>July 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MatMat</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="cPhase">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_cPhase</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="VisualizeMatrix">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>November 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_VisualizeMatrix</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ExtractSubmatrix">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>November 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ExtractSubmatrix</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="BldTransform">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>March 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_BldTransform</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SolveMatrix">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SolveMatrix</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="EditMatrix">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>November 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_EditMatrix</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="cConjGrad">
+    <meta>
+      <authors>
+        <author>Leonid Zhukov</author>
+      </authors>
+      <version-date>August 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_cConjGrad</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+  <scirun-library category="Surface">
+  <soNames>
+    <soName>libPSECommon_Modules_Surface.so</soName>
+    <soName>libPSECommon.so</soName>
+  </soNames>
+
+  <dataflow-component name="SurfInterpVals">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SurfInterpVals</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SurfNewVals">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>October 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SurfNewVals</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SurfExtractBCNodes">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>April 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SurfExtractBCNodes</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="LaceContoursTemp">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>August 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_LaceContoursTemp</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TransformCS">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>April 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TransformCS</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="LaceContours">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>August 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_LaceContours</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SimpSurface">
+    <meta>
+      <authors>
+        <author>Peter-Pike Sloan</author>
+      </authors>
+      <version-date>July 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SimpSurface</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="RotateSurface">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_RotateSurface</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TranslateSurface">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TranslateSurface</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SurfGen">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SurfGen</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SurfToGeom">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SurfToGeom</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TransformSurface">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>December 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TransformSurface</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="LabelSurface">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>July 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_LabelSurface</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SimpAbs">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SimpAbs</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="GenSurface">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GenSurface</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="AugmentSurf">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>July 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_AugmentSurf</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="RescaleSurface">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_RescaleSurface</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ClipSurface">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>May 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ClipSurface</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SFUGtoSurf">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>April 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SFUGtoSurf</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+  <scirun-library category="Iterators">
+  <soNames>
+    <soName>libPSECommon_Modules_Iterators.so</soName>
+    <soName>libPSECommon.so</soName>
+  </soNames>
+
+  <dataflow-component name="Iterator">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>May 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Iterator</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MeshIterator">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>May 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MeshIterator</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+  <scirun-library category="Fields">
+  <soNames>
+    <soName>libPSECommon_Modules_Fields.so</soName>
+    <soName>libPSECommon.so</soName>
+  </soNames>
+
+  <dataflow-component name="FieldFilter">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_FieldFilter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ClipField">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ClipField</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="FieldRGAug">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_FieldRGAug</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="FieldMedianFilter">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_FieldMedianFilter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MergeTensor">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MergeTensor</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="FieldGainCorrect">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_FieldGainCorrect</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ExtractSurfs">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>April 30, 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ExtractSurfs</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="GradientMagnitude">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GradientMagnitude</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Gradient">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Gradient</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TrainSegment">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>December 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TrainSegment</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SFRGfile">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SFRGfile</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TrainSeg2">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>December 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TrainSeg2</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TracePath">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>October 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TracePath</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="FieldSeed">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_FieldSeed</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="OpenGL_Ex">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>April 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_OpenGL_Ex</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Downsample">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>June 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Downsample</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TransformField">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>December 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TransformField</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+  <scirun-library category="Writers">
+  <soNames>
+    <soName>libPSECommon_Modules_Writers.so</soName>
+    <soName>libPSECommon.so</soName>
+  </soNames>
+
+  <dataflow-component name="MatrixWriter">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MatrixWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Writer">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Writer</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MeshWriter">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MeshWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SurfaceWriter">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SurfaceWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="VoidStarWriter">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_VoidStarWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TetraWriter">
+    <meta>
+      <authors>
+        <author>Carole Gitlin</author>
+      </authors>
+      <version-date>May 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TetraWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ColumnMatrixWriter">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ColumnMatrixWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="VectorFieldWriter">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_VectorFieldWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ColorMapWriter">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ColorMapWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MultiScalarFieldWriter">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MultiScalarFieldWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ScalarFieldWriter">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ScalarFieldWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="GeometryWriter">
+    <meta>
+      <authors>
+        <author>Philip Sutton</author>
+      </authors>
+      <version-date>October 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GeometryWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+  <scirun-library category="Visualization">
+  <soNames>
+    <soName>libPSECommon_Modules_Visualization.so</soName>
+    <soName>libPSECommon.so</soName>
+  </soNames>
+
+  <dataflow-component name="Streamline">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Streamline</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ColorMapKey">
+    <meta>
+      <authors>
+        <author>Philip Sutton</author>
+      </authors>
+      <version-date>May 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ColorMapKey</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="BitVisualize">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_BitVisualize</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Hedgehog">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>June 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Hedgehog</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Span">
+    <meta>
+      <authors>
+        <author>Yarden Livnat</author>
+      </authors>
+      <version-date>Nov. 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Span</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="CuttingPlane">
+    <meta>
+      <authors>
+        <author>Colette Mullenhoff</author>
+      </authors>
+      <version-date>May 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_CuttingPlane</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Noise">
+    <meta>
+      <authors>
+        <author>Yarden Livnat</author>
+      </authors>
+      <version-date>Nov. 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Noise</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="GenTransferFunc">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GenTransferFunc</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="IsoSurfaceMRSG">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_IsoSurfaceMRSG</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="GenFieldEdges">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GenFieldEdges</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="CuttingPlaneTex">
+    <meta>
+      <authors>
+        <author>Colette Mullenhoff</author>
+      </authors>
+      <version-date>May 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_CuttingPlaneTex</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="BoxClipSField">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_BoxClipSField</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Ted">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>August 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Ted</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="AddWells2">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>Mar. 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_AddWells2</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="LevoyVis">
+    <meta>
+      <authors>
+        <author>Aleksandra Kuswik</author>
+      </authors>
+      <version-date>May 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_LevoyVis</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="BoundGrid">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_BoundGrid</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="FieldCage">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_FieldCage</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="VectorSeg">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>December 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_VectorSeg</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="AddWells">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>Mar. 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_AddWells</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="IsoSurfaceDW">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_IsoSurfaceDW</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="GenAxes">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>Mar. 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GenAxes</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="IsoSurfaceSP">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_IsoSurfaceSP</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ImageViewer">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>May 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ImageViewer</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="VolVis">
+    <meta>
+      <authors>
+        <author>Aleksandra Kuswik</author>
+      </authors>
+      <version-date>May 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_VolVis</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="VolRendTexSlices">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>October 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_VolRendTexSlices</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="GenColorMap">
+    <meta>
+      <authors>
+        <author>James T. Purciful</author>
+      </authors>
+      <version-date>Apr. 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GenColorMap</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SimpVolVis">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SimpVolVis</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="IsoSurface">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_IsoSurface</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="NoiseMCube">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_NoiseMCube</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="IsoMask">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_IsoMask</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="RescaleColorMap">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>November 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_RescaleColorMap</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="GenStandardColorMaps">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>December 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GenStandardColorMaps</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="WidgetTest">
+    <meta>
+      <authors>
+        <author>James Purciful</author>
+      </authors>
+      <version-date>Jan. 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_WidgetTest</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="HedgehogLitLines">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>June 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_HedgehogLitLines</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+</package>

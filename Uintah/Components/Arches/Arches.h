@@ -15,6 +15,10 @@ namespace Components {
 using Uintah::Parallel::UintahParallelComponent;
 using Uintah::Interface::CFDInterface;
 using Uintah::Interface::DataWarehouseP;
+using Uintah::Interface::SchedulerP;
+using Uintah::Grid::ProblemSpecP;
+using Uintah::Grid::LevelP;
+using Uintah::Grid::GridP;
 
 /**************************************
 
@@ -79,6 +83,11 @@ private:
 
 //
 // $Log$
+// Revision 1.4  2000/03/17 09:29:27  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.3  2000/03/17 02:57:00  dav
 // more namespace, cocoon, etc
 //

@@ -1,9 +1,0 @@
-SRCTOP   = @top_srcdir@
-SRCDIR   = @srcdir@
-OBJTOP   = ../..
-
-SRCS     = Exceptions.cc InternalError.cc
-
-INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
-
-include $(SRCTOP)/scripts/objs.mk

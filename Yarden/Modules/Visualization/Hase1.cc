@@ -55,8 +55,8 @@
 #include <SCICore/Math/Trig.h>
 
 #include <math.h>
-#include <iostream.h>
-#include <strstream.h>
+#include <iostream>
+#include <sstream>
 #include <values.h>
 
 #include <Yarden/Modules/Visualization/Screen.h>
@@ -464,7 +464,7 @@ public:
   void test();
 };
   
-Module* make_Hase(const clString& id)
+extern "C" Module* make_Hase(const clString& id)
 {
   return scinew Hase(id);
 }

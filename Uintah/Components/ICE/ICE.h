@@ -6,6 +6,16 @@
 class ProcessorContext;
 class Region;
 
+namespace Uintah {
+namespace Components {
+
+using Uintah::Interface::CFDInterface;
+using Uintah::Interface::DataWarehouseP;
+using Uintah::Interface::SchedulerP;
+using Uintah::Grid::ProblemSpecP;
+using Uintah::Grid::LevelP;
+using Uintah::Grid::GridP;
+
 class ICE : public CFDInterface {
 public:
     ICE();
@@ -148,5 +158,7 @@ private:
     ICE(const ICE&);
     ICE& operator=(const ICE&);
 };
+}
+}
 
 #endif

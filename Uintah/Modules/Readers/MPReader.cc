@@ -19,7 +19,7 @@ namespace Modules {
 
 using namespace SCICore::Containers;
 
-PSECore::Dataflow::Module* make_MPReader( const clString& id ) { 
+extern "C" PSECore::Dataflow::Module* make_MPReader( const clString& id ) { 
   return new MPReader( id );
 }
 
@@ -159,6 +159,11 @@ void MPReader::doAnimation()
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 09:30:15  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.2  1999/10/07 02:08:31  sparker
 // use standard iostreams and complex type
 //

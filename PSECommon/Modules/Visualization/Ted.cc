@@ -127,7 +127,7 @@ public:
 
 };
 
-Module* make_Ted(const clString& id) {
+extern "C" Module* make_Ted(const clString& id) {
   return new Ted(id);
 }
 
@@ -699,6 +699,11 @@ int Ted::makeCurrent(void)
 
 //
 // $Log$
+// Revision 1.5  2000/03/17 09:27:36  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.4  1999/08/25 03:48:11  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

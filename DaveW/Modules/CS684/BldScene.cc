@@ -117,7 +117,7 @@ public:
     virtual void widget_moved2(int last, void *userdata);    
 };
 
-Module* make_BldScene(const clString& id)
+extern "C" Module* make_BldScene(const clString& id)
 {
     return scinew BldScene(id);
 }
@@ -647,6 +647,11 @@ void BldScene::tcl_command(TCLArgs& args, void* userdata) {
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.6  2000/03/17 09:25:29  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.5  1999/10/07 02:06:25  sparker
 // use standard iostreams and complex type
 //

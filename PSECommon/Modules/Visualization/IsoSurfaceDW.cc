@@ -194,7 +194,7 @@ struct MCubeTable {
 
 #include "mcube2.h"
 
-Module* make_IsoSurfaceDW(const clString& id) {
+extern "C" Module* make_IsoSurfaceDW(const clString& id) {
   return new IsoSurfaceDW(id);
 }
 
@@ -1912,6 +1912,11 @@ void IsoSurfaceDW::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.10  2000/03/17 09:27:33  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.9  2000/03/13 09:15:11  dmw
 // fixed a problem with surfaceless MC
 //

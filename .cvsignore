@@ -4,8 +4,8 @@ Makefile
 sci_config.h
 sci_defs.h
 config.log
-uintah
-davew
 pse
 stamp-h
+y.output
 *.sr
+lib

@@ -114,7 +114,7 @@ public:
     virtual void widget_moved(int last);
 };
 
-Module* make_GenSurface(const clString& id) {
+extern "C" Module* make_GenSurface(const clString& id) {
   return new GenSurface(id);
 }
 
@@ -339,6 +339,11 @@ void GenSurface::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.9  2000/03/17 09:27:20  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.8  1999/10/07 02:06:59  sparker
 // use standard iostreams and complex type
 //

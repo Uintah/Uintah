@@ -50,7 +50,7 @@ public:
 
 };
 
-Module* make_MagneticFieldAtPoints(const clString& id)
+extern "C" Module* make_MagneticFieldAtPoints(const clString& id)
 {
     return new MagneticFieldAtPoints(id);
 }

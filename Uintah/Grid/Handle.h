@@ -16,6 +16,8 @@
 
 #include <SCICore/Util/Assert.h>
 
+namespace Uintah {
+    namespace Grid {
 template<class T>
 class Handle {
     T* rep;
@@ -122,6 +124,9 @@ void Handle<T>::detach()
     oldrep->ref_cnt--;
     oldrep->lock.unlock();
     rep->ref_cnt++;
+}
+
+}
 }
 
 #endif

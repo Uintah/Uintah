@@ -115,7 +115,7 @@ public:
 
 
 
-Module* make_TracePath( const clString& id) {
+extern "C" Module* make_TracePath( const clString& id) {
   return new TracePath(id);
 }
 
@@ -822,6 +822,11 @@ void TracePath::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.10  2000/03/17 09:27:00  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.9  1999/10/07 02:06:48  sparker
 // use standard iostreams and complex type
 //

@@ -52,7 +52,7 @@ public:
 
 //  virtual void tcl_command(TCLArgs&, void*);
 };
-Module* make_BoundGrid(const clString& id) {
+extern "C" Module* make_BoundGrid(const clString& id) {
   return new BoundGrid(id);
 }
 //static clString module_name("BoundGrid");
@@ -304,6 +304,11 @@ void BoundGrid::execute()
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 09:27:29  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.7  1999/10/07 02:07:04  sparker
 // use standard iostreams and complex type
 //

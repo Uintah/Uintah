@@ -101,7 +101,7 @@ struct MCubeTable {
 #include "mcube.h"
 #endif
 
-Module* make_BitVisualize(const clString& id) {
+extern "C" Module* make_BitVisualize(const clString& id) {
   return new BitVisualize(id);
 }
 
@@ -267,6 +267,11 @@ void BitVisualize::vol_render1_grid() {
 
 //
 // $Log$
+// Revision 1.10  2000/03/17 09:27:29  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.9  2000/03/11 00:39:54  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>

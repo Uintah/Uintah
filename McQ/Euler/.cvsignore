@@ -1,10 +1,2 @@
-config.status
-config.cache
+depend.mk
 Makefile
-sci_config.h
-sci_defs.h
-config.log
-uintah
-davew
-stamp-h
-*.sr

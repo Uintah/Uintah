@@ -46,7 +46,7 @@ public:
 
 };
 
-Module *make_GeometryReader(const clString& id) {
+extern "C" Module *make_GeometryReader(const clString& id) {
   return new GeometryReader(id);
 }
 
@@ -88,6 +88,11 @@ void GeometryReader::execute() {
 
 //
 // $Log$
+// Revision 1.6  2000/03/17 09:27:11  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.5  1999/10/07 02:06:54  sparker
 // use standard iostreams and complex type
 //

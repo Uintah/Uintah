@@ -1,0 +1,684 @@
+<?xml version='1.0' encoding='us-ascii' ?>
+
+<!-- description of the SCIRun package -->
+
+<package name="SCIRun">
+  <guiPath>GUI</guiPath>
+  <scirun-library category="Mesh">
+  <soNames>
+    <soName>libSCIRun_Modules_Mesh.so</soName>
+    <soName>libSCIRun.so</soName>
+  </soNames>
+
+  <dataflow-component name="MeshRender">
+    <meta>
+      <authors>
+        <author>Carole Gitlin</author>
+      </authors>
+      <version-date>May 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MeshRender</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="HexMeshToGeom">
+    <meta>
+      <authors>
+        <author>Peter Jensen</author>
+      </authors>
+      <version-date>April 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_HexMeshToGeom</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MeshInterpVals">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MeshInterpVals</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MakeScalarField">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MakeScalarField</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MeshView">
+    <meta>
+      <authors>
+        <author>Carole Gitlin</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MeshView</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MeshToGeom">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MeshToGeom</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TransformMesh">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>December 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TransformMesh</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="InsertDelaunay">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>October 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_InsertDelaunay</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ExtractMesh">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ExtractMesh</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Delaunay">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>October 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Delaunay</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MeshBoundary">
+    <meta>
+      <authors>
+        <author>Peter-Pike Sloan and David Weinstein</author>
+      </authors>
+      <version-date>July 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MeshBoundary</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+  <scirun-library category="Image">
+  <soNames>
+    <soName>libSCIRun_Modules_Image.so</soName>
+    <soName>libSCIRun.so</soName>
+  </soNames>
+
+  <dataflow-component name="TiffReader">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>July 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TiffReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Segment">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>July 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Segment</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Snakes">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>June 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Snakes</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="HistEq">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>June 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_HistEq</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="IFFTImage">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_IFFTImage</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="FFTImage">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_FFTImage</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Turk">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Turk</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Noise">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>Sept 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Noise</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Hist">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>October 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Hist</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Gauss">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>August 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Gauss</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Ted">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>August 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Ted</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ImageToGeom">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ImageToGeom</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="IFFT">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>July 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_IFFT</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="FFT">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>July 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_FFT</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Edge">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>August 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Edge</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ImageConvolve">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ImageConvolve</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="WhiteNoiseImage">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_WhiteNoiseImage</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Transforms">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>July 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Transforms</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Threshold">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>August 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Threshold</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Sharpen">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>Sept 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Sharpen</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="PMFilterImage">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_PMFilterImage</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="FilterImage">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_FilterImage</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ImageGen">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>July 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ImageGen</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ImageSel">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>July 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ImageSel</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Subsample">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Subsample</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ViewHist">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>October 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ViewHist</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Radon">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>July 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Radon</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Unop">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>November 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Unop</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Binop">
+    <meta>
+      <authors>
+        <author>Scott Morris</author>
+      </authors>
+      <version-date>November 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Binop</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+  <scirun-library category="Writers">
+  <soNames>
+    <soName>libSCIRun_Modules_Writers.so</soName>
+    <soName>libSCIRun.so</soName>
+  </soNames>
+
+  <dataflow-component name="TiffWriter">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>July 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TiffWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+</package>

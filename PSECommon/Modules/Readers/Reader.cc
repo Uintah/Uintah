@@ -34,7 +34,7 @@ public:
     virtual void execute();
 };
 
-Module* make_TYPEReader(const clString& id) {
+extern "C" Module* make_TYPEReader(const clString& id) {
   return new TYPEReader(id);
 }
 

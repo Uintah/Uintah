@@ -1,2 +1,3 @@
-Makefile
 bps
+depend.mk
+Makefile

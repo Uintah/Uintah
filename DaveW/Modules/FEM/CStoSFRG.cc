@@ -290,7 +290,7 @@ public:
     virtual void tcl_command(TCLArgs& args, void* userdata);
 };
 
-Module* make_CStoSFRG(const clString& id)
+extern "C" Module* make_CStoSFRG(const clString& id)
 {
     return new CStoSFRG(id);
 }

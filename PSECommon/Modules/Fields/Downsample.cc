@@ -49,7 +49,7 @@ public:
     virtual void execute();
 };
 
-Module* make_Downsample(const clString& id) {
+extern "C" Module* make_Downsample(const clString& id) {
   return new Downsample(id);
 }
 

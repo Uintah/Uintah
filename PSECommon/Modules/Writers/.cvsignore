@@ -1,6 +1,3 @@
-Makefile Makefile.bak
-.~*
-ii_files
 ColumnMatrixWriter.cc ColumnMatrixWriter.tcl
 ContourSetWriter.cc ContourSetWriter.tcl
 MatrixWriter.cc MatrixWriter.tcl
@@ -11,3 +8,5 @@ SurfaceWriter.cc SurfaceWriter.tcl
 VectorFieldWriter.cc VectorFieldWriter.tcl
 ColorMapWriter.cc ColorMapWriter.tcl
 VoidStarWriter.cc VoidStarWriter.tcl
+depend.mk
+Makefile

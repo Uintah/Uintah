@@ -50,7 +50,7 @@ public:
     virtual void execute();
 };
 
-Module* make_RescaleSegFld(const clString& id)
+extern "C" Module* Make_RescaleSegFld(const clString& id)
 {
     return new RescaleSegFld(id);
 }
@@ -116,6 +116,11 @@ void RescaleSegFld::execute()
 
 //
 // $Log$
+// Revision 1.5  2000/03/17 09:25:34  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.4  1999/10/07 02:06:28  sparker
 // use standard iostreams and complex type
 //

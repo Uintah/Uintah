@@ -83,7 +83,7 @@ GenStandardColorMaps::genMap(const clString& s)
 // ---------------------------------------------------------------------- // 
   
 
-Module* make_GenStandardColorMaps(const clString& id) { 
+extern "C" Module* make_GenStandardColorMaps(const clString& id) { 
   return new GenStandardColorMaps(id); 
 }
 

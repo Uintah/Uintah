@@ -1,4 +1,4 @@
-#include "nrrd.h"
+#include "include/nrrd.h"
 
 double DvalueC(char *v)                      {return(*v);}
 double DvalueUC(unsigned char *v)            {return(*v);}

@@ -47,7 +47,7 @@ using std::ios;
 #include "MPWriter.h"
 #include <SCICore/Datatypes/ScalarFieldRG.h>
 #include <SCICore/Datatypes/VectorFieldRG.h>
-#include <Uintah/Modules/MPMViz/TecplotReader.h>
+#include <Uintah/Datatypes/Particles/TecplotReader.h>
 
 namespace Uintah {
 namespace Modules {
@@ -55,7 +55,7 @@ namespace Modules {
 using namespace SCICore::Containers;
 using namespace SCICore::Datatypes;
  
-PSECore::Dataflow::Module*
+extern "C" PSECore::Dataflow::Module*
   make_MPWriter( const clString& id )
   { 
     return new MPWriter( id ); 

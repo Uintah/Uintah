@@ -20,6 +20,7 @@
 #include <SCICore/Thread/ThreadGroup.h>
 using SCICore::Thread::ParallelBase;
 using SCICore::Thread::ThreadPool;
+#include <stdio.h>
 
 namespace SCICore {
     namespace Thread {

@@ -51,7 +51,7 @@ public:
     virtual void execute();
 };
 
-Module* make_BldTransform(const clString& id)
+extern "C" Module* make_BldTransform(const clString& id)
 {
     return new BldTransform(id);
 }
@@ -174,6 +174,11 @@ void BldTransform::execute()
 
 //
 // $Log$
+// Revision 1.4  2000/03/17 09:27:06  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.3  2000/03/13 05:33:22  dmw
 // Transforms are done the same way for ScalarFields, Surfaces and Meshes now - build the transform with the BldTransform module, and then pipe the output matrix into a Transform{Field,Surface,Mesh} module
 //

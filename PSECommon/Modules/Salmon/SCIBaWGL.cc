@@ -195,7 +195,7 @@ void SCIBaWGLTimer::pick( void )
 {
   // Picking
   
-  int screenPos[3]; 
+    int screenPos[3]; 
 
   if( BAWGL_PINCH_LEFT_THUMB_LEFT_INDEX(pinch) )
     {

@@ -81,7 +81,7 @@ public:
    void do_canny_link(int proc);
 };
 
-Module* make_Edge(const clString& id)
+extern "C" Module* make_Edge(const clString& id)
 {
    return scinew Edge(id);
 }
@@ -462,6 +462,11 @@ void Edge::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.7  2000/03/17 09:29:02  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.6  1999/10/07 02:08:14  sparker
 // use standard iostreams and complex type
 //

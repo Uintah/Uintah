@@ -65,7 +65,7 @@ public:
     virtual void execute();
 };
 
-Module* make_RayTest(const clString& id)
+extern "C" Module* make_RayTest(const clString& id)
 {
     return new RayTest(id);
 }
@@ -218,6 +218,11 @@ void RayTest::execute()
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.7  2000/03/17 09:25:30  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.6  1999/10/07 02:06:25  sparker
 // use standard iostreams and complex type
 //

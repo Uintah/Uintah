@@ -48,7 +48,7 @@ using namespace SCICore::Containers;
 
 using namespace SCICore::Thread;
 
-Module* make_Span(const clString& id)
+extern "C" Module* make_Span(const clString& id)
  {
     return scinew Span(id);
 }

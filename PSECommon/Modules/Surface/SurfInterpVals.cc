@@ -69,7 +69,7 @@ public:
     virtual void execute();
 };
 
-Module* make_SurfInterpVals(const clString& id)
+extern "C" Module* make_SurfInterpVals(const clString& id)
 {
     return new SurfInterpVals(id);
 }
@@ -306,6 +306,11 @@ void SurfInterpVals::execute()
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 09:27:22  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.7  1999/11/09 08:32:59  dmw
 // added SurfInterpVals to index
 //

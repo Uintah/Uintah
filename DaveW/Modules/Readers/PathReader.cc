@@ -39,7 +39,7 @@ public:
     virtual void execute();
 };
 
-Module* make_PathReader(const clString& id) {
+extern "C" Module* make_PathReader(const clString& id) {
   return new PathReader(id);
 }
 
@@ -103,6 +103,11 @@ void PathReader::execute()
 
 //
 // $Log$
+// Revision 1.2  2000/03/17 09:25:57  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.1  1999/12/02 22:06:46  dmw
 // added reader/writer modules for camera path
 //

@@ -19,7 +19,7 @@
 #include <SCICore/Datatypes/ScalarFieldRGTYPE.h>
 //#include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <iostream.h>
+#include <iostream>
 
 namespace SCICore {
 namespace Datatypes {
@@ -326,6 +326,11 @@ void ScalarFieldRGTYPE::fill_gradmags() // these guys ignor the vf
 
 //
 // $Log$
+// Revision 1.2  2000/03/17 09:30:27  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.1  1999/11/22 18:09:06  yarden
 // *** empty log message ***
 //

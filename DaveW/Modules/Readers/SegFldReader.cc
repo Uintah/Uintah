@@ -39,7 +39,7 @@ public:
     virtual void execute();
 };
 
-Module* make_SegFldReader(const clString& id) {
+extern "C" Module* make_SegFldReader(const clString& id) {
   return new SegFldReader(id);
 }
 
@@ -103,6 +103,11 @@ void SegFldReader::execute()
 
 //
 // $Log$
+// Revision 1.2  2000/03/17 09:25:57  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.1  1999/09/01 07:19:52  dmw
 // new DaveW modules
 //

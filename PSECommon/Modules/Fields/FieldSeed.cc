@@ -109,7 +109,7 @@ public:
 };
 
 
-Module* make_FieldSeed(const clString& id) {
+extern "C" Module* make_FieldSeed(const clString& id) {
   return new FieldSeed(id);
 }
 
@@ -590,6 +590,11 @@ void FieldSeed::Visualize(int which, int onoff)
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 09:26:58  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.7  1999/10/07 02:06:47  sparker
 // use standard iostreams and complex type
 //

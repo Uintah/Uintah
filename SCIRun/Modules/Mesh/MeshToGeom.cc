@@ -48,7 +48,7 @@ public:
     virtual void execute();
 };
 
-Module* make_MeshToGeom(const clString& id)
+extern "C" Module* make_MeshToGeom(const clString& id)
 {
     return scinew MeshToGeom(id);
 }
@@ -202,6 +202,11 @@ void MeshToGeom::execute()
 
 //
 // $Log$
+// Revision 1.4  2000/03/17 09:29:13  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.3  1999/12/09 09:52:44  dmw
 // supports more than 7 unique regions now
 //

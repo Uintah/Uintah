@@ -38,7 +38,7 @@ public:
     virtual void execute();
 };
 
-Module* make_ContourSetWriter(const clString& id) {
+extern "C" Module* make_ContourSetWriter(const clString& id) {
   return new ContourSetWriter(id);
 }
 
@@ -91,6 +91,11 @@ void ContourSetWriter::execute()
 
 //
 // $Log$
+// Revision 1.2  2000/03/17 09:26:05  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.1  1999/09/01 07:21:00  dmw
 // new DaveW modules
 //

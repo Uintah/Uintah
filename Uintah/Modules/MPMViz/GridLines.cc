@@ -505,7 +505,7 @@ void GridLines::execute()
   ogeom->addObj(all, "Grid Lines");
 }
 
-PSECore::Dataflow::Module*
+extern "C" PSECore::Dataflow::Module*
     make_GridLines( const SCICore::Containers::clString& id ) {
   return new Uintah::Modules::GridLines( id );
 }

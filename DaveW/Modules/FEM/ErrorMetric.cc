@@ -41,7 +41,7 @@ public:
     virtual void execute();
 };
 
-Module* make_ErrorMetric(const clString& id)
+extern "C" Module* make_ErrorMetric(const clString& id)
 {
     return scinew ErrorMetric(id);
 }
@@ -144,6 +144,11 @@ void ErrorMetric::execute()
 
 //
 // $Log$
+// Revision 1.7  2000/03/17 09:25:43  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.6  2000/02/02 21:54:00  dmw
 // Makefile, index - added new modules and removed no-longer-used
 // libraries

@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <iostream.h>
+#include <iostream>
 #include <GL/gl.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Containers/Stack.h>
 #include <Yarden/Modules/Visualization/Screen.h>
-
+using std::cerr;
+using std::endl;
 
 namespace Yarden {
   namespace Modules {

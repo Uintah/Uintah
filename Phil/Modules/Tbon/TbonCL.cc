@@ -80,7 +80,7 @@ private:
 
 
 // More required stuff...
-Module* make_TbonCL(const clString& id){
+extern "C" Module* make_TbonCL(const clString& id){
   return new TbonCL(id);
 }
 
@@ -403,6 +403,11 @@ TbonCL::processQuery() {
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 09:28:11  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.2  2000/02/04 22:13:03  psutton
 // fixed ID problem
 //

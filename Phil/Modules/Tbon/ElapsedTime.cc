@@ -39,7 +39,7 @@ private:
 
 }; // class ElapsedTime
 
-Module* make_ElapsedTime(const clString& id){
+extern "C" Module* make_ElapsedTime(const clString& id){
   return new ElapsedTime(id);
 }
 
@@ -144,6 +144,11 @@ ElapsedTime::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 09:28:10  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.2  2000/02/04 22:16:48  psutton
 // fixed ID problem
 //

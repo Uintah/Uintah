@@ -439,7 +439,9 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
 {
   if (usemip == 3) return;	// this is the "don't draw" option!
   pre_draw(di, m, 0);
+#ifdef __sgi
   glEnable(GL_TEXTURE_3D_EXT);
+#endif
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,
 	    GL_MODULATE);
   glColor4f(1,1,1,1); // set to all white for modulation
@@ -488,6 +490,7 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
       
     cerr << "Loading texture...\n";
 
+#ifdef __sgi
     glBindTexture(GL_TEXTURE_3D_EXT,id);
     // assume environment is outside!
     glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -496,7 +499,6 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
     glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     
-#ifdef __sgi
     glTexImage3DEXT(GL_TEXTURE_3D_EXT,0,
 		    GL_INTENSITY8_EXT,
 		    nx,ny,nz,0,
@@ -506,7 +508,9 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
     
     map2d = 0; // clear it out...
   } else { // jost load texture object...
+#ifdef __sgi
     glBindTexture(GL_TEXTURE_3D_EXT,id);
+#endif
   }
 
   glEnable(GL_TEXTURE_GEN_S);
@@ -577,7 +581,9 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
   glMatrixMode(GL_MODELVIEW);
   
 #if 1
+#ifdef __sgi
   glDisable(GL_TEXTURE_3D_EXT);
+#endif
 
   glDisable(GL_TEXTURE_GEN_S);
   glDisable(GL_TEXTURE_GEN_T);
@@ -610,6 +616,11 @@ void GeomTexVolRender::Clear()
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 09:27:17  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.7  1999/10/07 02:06:58  sparker
 // use standard iostreams and complex type
 //

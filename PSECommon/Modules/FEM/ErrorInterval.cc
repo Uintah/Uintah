@@ -38,7 +38,7 @@ public:
     virtual void execute();
 };
 
-Module* make_ErrorInterval(const clString& id) {
+extern "C" Module* make_ErrorInterval(const clString& id) {
   return new ErrorInterval(id);
 }
 
@@ -76,6 +76,11 @@ void ErrorInterval::execute()
 
 //
 // $Log$
+// Revision 1.7  2000/03/17 09:26:52  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.6  1999/09/08 02:26:33  sparker
 // Various #include cleanups
 //

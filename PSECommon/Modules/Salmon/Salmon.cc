@@ -46,7 +46,7 @@ using SCICore::Containers::AVLTreeIter;
 using SCICore::Thread::Mailbox;
 
 //----------------------------------------------------------------------
-Module* make_Salmon(const clString& id) {
+extern "C" Module* make_Salmon(const clString& id) {
   return new Salmon(id);
 }
 
@@ -541,6 +541,11 @@ void Salmon::emit_vars(ostream& out)
 
 //
 // $Log$
+// Revision 1.11  2000/03/17 09:27:17  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.10  2000/03/11 00:39:53  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>

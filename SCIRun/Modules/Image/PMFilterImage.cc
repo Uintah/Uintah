@@ -18,6 +18,11 @@
 #include <SCICore/Math/Trig.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <math.h>
+#ifdef __linux
+#define fsqrt(x) sqrt(x)
+#define fcos(x) cos(x)
+#define fsin(x) sin(x)
+#endif
 
 namespace SCIRun {
 namespace Modules {
@@ -50,7 +55,7 @@ public:
     virtual void execute();
 };
 
-Module* make_PMFilterImage(const clString& id)
+extern "C" Module* make_PMFilterImage(const clString& id)
 {
     return scinew PMFilterImage(id);
 }
@@ -184,6 +189,11 @@ void PMFilterImage::execute()
 
 //
 // $Log$
+// Revision 1.6  2000/03/17 09:29:05  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.5  1999/09/08 02:27:01  sparker
 // Various #include cleanups
 //

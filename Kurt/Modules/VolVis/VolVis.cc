@@ -42,7 +42,7 @@ using namespace SCICore::Math;
 using std::cerr;
 
 
-Module* make_VolVis( const clString& id) {
+extern "C" Module* make_VolVis( const clString& id) {
   return new VolVis(id);
 }
 

@@ -1,9 +1,0 @@
-SRCTOP   = @top_srcdir@
-SRCDIR   = @srcdir@
-OBJTOP   = ../../..
-
-SRCS     = TiffWriter.cc
-
-INCLUDES = -I$(OBJTOP)
-
-include $(SRCTOP)/scripts/objs.mk

@@ -1,9 +1,0 @@
-SRCTOP   = @top_srcdir@
-SRCDIR   = @srcdir@
-OBJTOP   = ../../..
-
-SRCS     = arrays.c err.c histogram.c io.c methods.c nan.c subset.c types.c
-
-INCLUDES = -I$(SRCDIR)/include
-
-include $(SRCTOP)/scripts/objs.mk

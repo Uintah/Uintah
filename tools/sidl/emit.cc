@@ -1,9 +1,11 @@
 
 #include "Spec.h"
 #include "SymbolTable.h"
+#ifdef __sgi
 extern "C" {
 #include <sys/uuid.h>
 }
+#endif
 #include <algorithm>
 #include <iostream>
 #include <map>
@@ -315,6 +317,7 @@ void CI::emit(EmitState& e)
 void CI::emit_typeinfo(EmitState& e)
 {
     std::string fn=cppfullname(0);
+#ifdef __sgi
     uuid_t uuid;
     uint_t status;
     uuid_create(&uuid, &status);
@@ -328,6 +331,7 @@ void CI::emit_typeinfo(EmitState& e)
 	cerr << "Error creating uuid string!\n";
 	exit(1);
     }
+#endif
     e.out << "const ::Component::PIDL::TypeInfo* " << fn << "::_getTypeInfo()\n";
     e.out << "{\n";
     e.out << "    static ::Component::PIDL::TypeInfo* ti=0;\n";
@@ -1522,6 +1526,11 @@ bool NamedType::uniformsize() const
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 09:31:19  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.7  1999/10/07 02:08:40  sparker
 // use standard iostreams and complex type
 //

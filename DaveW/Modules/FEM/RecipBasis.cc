@@ -41,7 +41,7 @@ public:
 };
 
 
-Module* make_RecipBasis(const clString& id) {
+extern "C" Module* make_RecipBasis(const clString& id) {
     return new RecipBasis(id);
 }
 
@@ -117,6 +117,11 @@ void RecipBasis::execute() {
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 09:25:44  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.7  1999/12/09 00:05:25  dmw
 // new modules
 //

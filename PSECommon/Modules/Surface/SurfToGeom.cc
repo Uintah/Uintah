@@ -90,7 +90,7 @@ public:
     virtual void execute();
 };
 
-Module* make_SurfToGeom(const clString& id) {
+extern "C" Module* make_SurfToGeom(const clString& id) {
   return new SurfToGeom(id);
 }
 
@@ -674,6 +674,11 @@ void SurfToGeom::execute()
 
 //
 // $Log$
+// Revision 1.12  2000/03/17 09:27:22  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.11  2000/03/11 00:39:54  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>

@@ -54,7 +54,7 @@ public:
     void tcl_command( TCLArgs&, void * );
 };
 
-Module* make_BldBRDF(const clString& id)
+extern "C" Module* make_BldBRDF(const clString& id)
 {
     return scinew BldBRDF(id);
 }
@@ -94,6 +94,11 @@ void BldBRDF::tcl_command(TCLArgs& args, void* userdata) {
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.4  2000/03/17 09:25:29  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.3  1999/09/08 02:26:19  sparker
 // Various #include cleanups
 //

@@ -111,7 +111,7 @@ public:
     void unique_add(Array1<int>& a, int v);
 };
 
-Module* make_TrainSegment(const clString& id) {
+extern "C" Module* make_TrainSegment(const clString& id) {
   return new TrainSegment(id);
 }
 
@@ -778,6 +778,11 @@ int TrainSegment::makeCurrent() {
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 09:27:00  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.7  1999/11/16 00:05:37  yarden
 // replace
 //    int errcode

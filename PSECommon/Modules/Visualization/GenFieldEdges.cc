@@ -41,7 +41,7 @@ public:
     MaterialHandle matl;
 };
 
-Module* make_GenFieldEdges(const clString& id) {
+extern "C" Module* make_GenFieldEdges(const clString& id) {
   return new GenFieldEdges(id);
 }
 
@@ -95,6 +95,11 @@ void GenFieldEdges::execute()
 
 //
 // $Log$
+// Revision 1.7  2000/03/17 09:27:31  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.6  1999/09/08 02:26:36  sparker
 // Various #include cleanups
 //

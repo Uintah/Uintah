@@ -44,7 +44,7 @@ public:
     virtual void execute();
 };
 
-Module* make_ComposeError(const clString& id) {
+extern "C" Module* make_ComposeError(const clString& id) {
   return new ComposeError(id);
 }
 
@@ -134,6 +134,11 @@ void ComposeError::execute()
 
 //
 // $Log$
+// Revision 1.7  2000/03/17 09:26:52  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.6  1999/10/07 02:06:45  sparker
 // use standard iostreams and complex type
 //

@@ -1,9 +1,0 @@
-SRCTOP   = @top_srcdir@
-SRCDIR   = @srcdir@
-OBJTOP   = ../../..
-
-SRCS     = BallAux.cc
-
-INCLUDES =
-
-include $(SRCTOP)/scripts/objs.mk

@@ -64,7 +64,7 @@ public:
 
 };
 
-  Module* make_ImageSel(const clString& id)
+  extern "C" Module* make_ImageSel(const clString& id)
     {
       return scinew ImageSel(id);
     }
@@ -162,6 +162,11 @@ void ImageSel::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.7  2000/03/17 09:29:04  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.6  1999/10/07 02:08:15  sparker
 // use standard iostreams and complex type
 //

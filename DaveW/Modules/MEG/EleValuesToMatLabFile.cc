@@ -45,7 +45,7 @@ public:
 
 };
 
-Module* make_EleValuesToMatLabFile(const clString& id)
+extern "C" Module* make_EleValuesToMatLabFile(const clString& id)
 {
     return new EleValuesToMatLabFile(id);
 }

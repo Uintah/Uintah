@@ -39,6 +39,8 @@ using std::endl;
 #include <stdlib.h>
 #include <stdio.h>
 
+#undef MAX
+
 extern Tcl_Interp* the_interp;
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
@@ -86,7 +88,7 @@ public:
 
 static XYZtoRGB* current_drawer=0;
 
-Module* make_XYZtoRGB(const clString& id)
+extern "C" Module* make_XYZtoRGB(const clString& id)
 {
     return scinew XYZtoRGB(id);
 }

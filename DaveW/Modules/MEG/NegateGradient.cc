@@ -47,7 +47,7 @@ public:
 };
 
 
-Module* make_NegateGradient(const clString& id)
+extern "C" Module* make_NegateGradient(const clString& id)
 {
     return new NegateGradient(id);
 }

@@ -632,7 +632,7 @@ public:
     void tcl_command( TCLArgs&, void * );
 };
 
-Module* make_Bundles(const clString& id)
+extern "C" Module* make_Bundles(const clString& id)
 {
     return scinew Bundles(id);
 }
@@ -866,6 +866,11 @@ void Bundles::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 09:26:03  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.2  1999/10/07 02:06:41  sparker
 // use standard iostreams and complex type
 //

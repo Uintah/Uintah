@@ -1,9 +1,0 @@
-SRCTOP   = @top_srcdir@
-SRCDIR   = @srcdir@
-OBJTOP   = ../../..
-
-SRCS     = cuthill.cc matrix.cc vector.cc
-
-INCLUDES =
-
-include $(SRCTOP)/scripts/objs.mk

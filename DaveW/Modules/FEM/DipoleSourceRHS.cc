@@ -39,7 +39,7 @@ public:
     virtual void execute();
 };
 
-Module* make_DipoleSourceRHS(const clString& id)
+extern "C" Module* make_DipoleSourceRHS(const clString& id)
 {
     return scinew DipoleSourceRHS(id);
 }
@@ -143,6 +143,11 @@ void DipoleSourceRHS::execute()
 
 //
 // $Log$
+// Revision 1.5  2000/03/17 09:25:43  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.4  1999/10/07 02:06:34  sparker
 // use standard iostreams and complex type
 //

@@ -136,7 +136,7 @@ public:
 
 static RTrace* current_drawer=0;
 
-Module* make_RTrace(const clString& id)
+extern "C" Module* make_RTrace(const clString& id)
 {
     return scinew RTrace(id);
 }

@@ -81,7 +81,7 @@ public:
     virtual void execute();
 };
 
-Module* make_BuildFEMatrix(const clString& id) {
+extern "C" Module* make_BuildFEMatrix(const clString& id) {
   return new BuildFEMatrix(id);
 }
 
@@ -438,6 +438,11 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 
 //
 // $Log$
+// Revision 1.11  2000/03/17 09:26:52  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.10  2000/03/04 00:20:16  dmw
 // new bc in buildfematrix, fixed normals in surftogeom
 //

@@ -18,7 +18,7 @@ using std::ostringstream;
 #include <SCICore/Malloc/Allocator.h>
 
 #include "TecplotFileSelector.h"
-#include "TecplotReader.h"
+#include <Uintah/Datatypes/Particles/TecplotReader.h>
 
 namespace Uintah {
 namespace Modules {
@@ -149,7 +149,7 @@ void TecplotFileSelector::doAnimation()
   
 //--------------------------------------------------------------- 
   
-PSECore::Dataflow::Module* make_TecplotFileSelector( const clString& id ) { 
+extern "C" PSECore::Dataflow::Module* make_TecplotFileSelector( const clString& id ) { 
   return new TecplotFileSelector( id );
 }
 
@@ -158,6 +158,11 @@ PSECore::Dataflow::Module* make_TecplotFileSelector( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.7  2000/03/17 09:30:12  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.6  1999/10/07 02:08:28  sparker
 // use standard iostreams and complex type
 //

@@ -40,7 +40,7 @@ public:
     virtual void execute();
 };
 
-Module* make_MultiScalarFieldWriter(const clString& id) {
+extern "C" Module* make_MultiScalarFieldWriter(const clString& id) {
   return new MultiScalarFieldWriter(id);
 }
 
@@ -117,6 +117,11 @@ void MultiScalarFieldWriter::execute()
 
 //
 // $Log$
+// Revision 1.7  2000/03/17 09:27:41  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.6  1999/10/07 02:07:12  sparker
 // use standard iostreams and complex type
 //

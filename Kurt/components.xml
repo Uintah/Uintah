@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='us-ascii' ?>
+
+<!-- description of the Kurt package -->
+
+<package name="Kurt">
+  <guiPath>GUI</guiPath>
+  <scirun-library category="VolVis">
+  <soNames>
+    <soName>libKurt_Modules_VolVis.so</soName>
+    <soName>libKurt.so</soName>
+  </soNames>
+
+  <dataflow-component name="VolVis">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_VolVis</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+</package>

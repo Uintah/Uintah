@@ -43,7 +43,7 @@ public:
     virtual void execute();
 };
 
-Module* make_SegFldToSurfTree(const clString& id)
+extern "C" Module* make_SegFldToSurfTree(const clString& id)
 {
     return new SegFldToSurfTree(id);
 }
@@ -541,6 +541,11 @@ void SegFldToSurfTree::execute()
 
 //
 // $Log$
+// Revision 1.6  2000/03/17 09:25:35  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.5  2000/03/04 00:16:34  dmw
 // update some DaveW stuff
 //

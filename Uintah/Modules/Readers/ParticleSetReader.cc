@@ -41,7 +41,7 @@ public:
     virtual void execute();
 };
 
-Module* make_ParticleSetReader(const clString& id) {
+extern "C" Module* make_ParticleSetReader(const clString& id) {
   return new ParticleSetReader(id);
 }
 
@@ -105,6 +105,11 @@ void ParticleSetReader::execute()
 
 //
 // $Log$
+// Revision 1.7  2000/03/17 09:30:16  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.6  1999/09/21 16:12:27  kuzimmer
 // changes made to support binary/ASCII file IO
 //

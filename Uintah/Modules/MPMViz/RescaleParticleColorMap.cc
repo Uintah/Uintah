@@ -109,7 +109,7 @@ void RescaleParticleColorMap::execute()
     omap->send(cmap);
  }
   
-Module* make_RescaleParticleColorMap( const clString& id ) {
+extern "C" Module* make_RescaleParticleColorMap( const clString& id ) {
   return new RescaleParticleColorMap( id );
 }
 
@@ -118,6 +118,11 @@ Module* make_RescaleParticleColorMap( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.7  2000/03/17 09:30:11  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.6  1999/09/21 16:12:25  kuzimmer
 // changes made to support binary/ASCII file IO
 //
