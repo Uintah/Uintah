@@ -67,20 +67,21 @@ DirectInterpScalarAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
   typename Loc::iterator itr, itr_end;
   mesh->begin(itr);
   mesh->end(itr_end);
+
+  double val = 0;
+  Point p;
+
   while (itr != itr_end)
   {
-    Point p;
     mesh->get_center(p, *itr);
 
-    double val;
     if (interp && sfi->interpolate(val, p))
     {
       fld->set_value((typename Fld::value_type)val, *itr);
     }
     else if (closest)
     {
-      const double d = sfi->find_closest(val, p);
-      if (d < dist)
+      if (sfi->find_closest(val, p) < dist)
       {
 	fld->set_value((typename Fld::value_type)val, *itr);
       }
@@ -132,20 +133,21 @@ DirectInterpVectorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
   typename Loc::iterator itr, itr_end;
   mesh->begin(itr);
   mesh->end(itr_end);
+
+  Point p;
+  Vector val;
+
   while (itr != itr_end)
   {
-    Point p;
     mesh->get_center(p, *itr);
 
-    Vector val;
     if (interp && sfi->interpolate(val, p))
     {
       fld->set_value((typename Fld::value_type)val, *itr);
     }
     else if (closest)
     {
-      const double d = sfi->find_closest(val, p);
-      if (d < dist)
+      if (sfi->find_closest(val, p) < dist)
       {
 	fld->set_value((typename Fld::value_type)val, *itr);
       }
@@ -195,20 +197,21 @@ DirectInterpTensorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
   typename Loc::iterator itr, itr_end;
   mesh->begin(itr);
   mesh->end(itr_end);
+
+  Point p;
+  Tensor val;
+
   while (itr != itr_end)
   {
-    Point p;
     mesh->get_center(p, *itr);
 
-    Tensor val;
     if (interp && sfi->interpolate(val, p))
     {
       fld->set_value((typename Fld::value_type)val, *itr);
     }
     else if (closest)
     {
-      const double d = sfi->find_closest(val, p);
-      if (d < dist)
+      if (sfi->find_closest(val, p) < dist)
       {
 	fld->set_value((typename Fld::value_type)val, *itr);
       }
@@ -225,3 +228,8 @@ DirectInterpTensorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
 } // end namespace SCIRun
 
 #endif // DirectInterpolate_h
+
+
+
+
+
