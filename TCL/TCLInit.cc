@@ -12,12 +12,15 @@
  */
 
 #include <Dataflow/MemStats.h>
+#include <Dataflow/DebugSettings.h>
 #include <Dataflow/NetworkEditor.h>
 #include <Dataflow/ThreadStats.h>
 #include <TCL/TCL.h>
 
 void TCL::initialize()
 {
+    DebugSettings* debugs=new DebugSettings;
+    debugs->init_tcl();
     MemStats* memstats=new MemStats;
     memstats->init_tcl();
     ThreadStats* threadstats=new ThreadStats;

@@ -1,4 +1,6 @@
 proc makeColorPicker {w var command cancel} {
+    global $var
+
     frame $w.c
 
     frame $w.c.col -relief ridge -borderwidth 4 -height 1.5c -width 6c \
@@ -190,6 +192,8 @@ proc cpsethsv {w var col rs gs bs hs ss vs val} {
 }
 
 proc cpsetcol {var col color} {
+    global $var
+
     $col config -background $color
     set $var $color
 }
