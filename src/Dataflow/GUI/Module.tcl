@@ -130,11 +130,7 @@ itcl_class Module {
 	if {[winfo exists .ui[modname]]!= 0} {
 	    set w .ui[modname]
 
-	    if { [winfo ismapped $w] == 1} {
-		raise $w
-	    } else {
-		wm deiconify $w
-	    }
+	    SciRaise $w
 
 	    # Mac Hac to keep GUI windows from "growing..."  Hopefully
 	    # a TCL fix will come out for this soon and we can remove
@@ -472,11 +468,7 @@ itcl_class Module {
 	set w .mLogWnd[modname]
 	
 	if {[winfo exists $w]} {
-	    if { [winfo ismapped $w] == 1} {
-		raise $w
-	    } else {
-		wm deiconify $w
-	    }
+	    SciRaise $w
 	    return
 	}
 	
@@ -1148,8 +1140,8 @@ proc moduleHelp {modid} {
 	
     # does the window exist?
     if [winfo exists $w] {
-	raise $w
-	return;
+	SciRaise $w
+	return
     }
 	
     # create the window
