@@ -34,13 +34,13 @@ void ScalarFieldAverage::execute(void) {
   FieldHandle hTF;
   
   if(!in->get(hTF)){
-    std::cerr<<"Didn't get a handle\n";
+    error("Didn't get a handle.");
     return;
   } else if ( hTF->get_type_name(1) != "double" &&
 	      hTF->get_type_name(1) != "float" &&
 	      hTF->get_type_name(1) != "long64"){
-    std::cerr<<"Input is not a Scalar field.  type = "<<
-      hTF->get_type_name(1)<<"\n";
+    error("Input is not an accetpable field type.");
+      //      hTF->get_type_name(1)<<"\n";
     return;
   }
 
@@ -77,16 +77,13 @@ void ScalarFieldAverage::execute(void) {
     tsteps_.set( 1 );
     reset_vars();
     fillField( hTF );    
-  } else if( t != time ) {
+  } else if( t > time ) {
     time = t;
     t1_.set( t );
     tsteps_.set( tsteps_.get() + 1 );
     reset_vars();
     averageField( hTF );
     // compute new average field
-  } else {
-    sfout->send(0);
-    return;
   }
   sfout->send(aveField);
 }
