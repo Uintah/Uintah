@@ -160,8 +160,9 @@ void AMRSimulationController::run()
    // Parse time struct
    SimulationTime timeinfo(ups);
 
-   // Thsi has to change for AMR restarting, to support the readin
+   // This has to change for AMR restarting, to support the readin
    // of grid hierarchies (and with that a scheduler hierarchie)
+   // from where it left off.
    if(d_restarting){
      // create a temporary DataArchive for reading in the checkpoints
      // archive for restarting.
@@ -191,19 +192,23 @@ void AMRSimulationController::run()
 
    } else {
      sharedState->setCurrentTopLevelTimeStep( 0 );
+     t = timeinfo.initTime;
      // Initialize the CFD and/or MPM data
-     for(int i=0;i<currentGrid->numLevels();i++)
+     for(int i=0;i<currentGrid->numLevels();i++) {
        sim->scheduleInitialize(currentGrid->getLevel(i), scheduler);
+       sim->scheduleComputeStableTimestep(currentGrid->getLevel(i),scheduler);
+
+       // so we can initially regrid
+       Task* task = scinew Task("initializeErrorEstimate", this,
+                                &AMRSimulationController::initializeErrorEstimate,
+                                sharedState);
+       task->computes(sharedState->get_refineFlag_label());
+       sched->addTask(task, currentGrid->getLevel(i)->eachPatch(),
+                      sharedState->allMaterials());
+       sim->scheduleInitialErrorEstimate(currentGrid->getLevel(i), scheduler);
+     }
    }
    
-   double start_time = Time::currentSeconds();
-
-   if (!d_restarting){
-     t = timeinfo.initTime;
-     for(int i=0;i<currentGrid->numLevels();i++)
-       sim->scheduleComputeStableTimestep(currentGrid->getLevel(i),scheduler);
-   }
-
    if(output)
       output->finalizeTimestep(t, 0, currentGrid, scheduler, true);
 
@@ -216,6 +221,50 @@ void AMRSimulationController::run()
    // No scrubbing for initial step
    scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
    scheduler->execute();
+
+   // this section is for "automatically" generating all the levels we can
+   // so far, based on the existence of flagged cells, but limited to
+   // the number of levels the regridder can handle .
+   // Only do if not restarting
+
+   if (!d_restarting)
+     while (currentGrid->numLevels() < regridder->maxLevels() &&
+            regridder->flaggedCellsOnFinestLevel(currentGrid)) {
+       oldGrid = currentGrid;
+       cout << "  DOING ANOTHER INITIALIZATION REGRID!!!!\n";
+       currentGrid = regridder->regrid(oldGrid.get_rep(), scheduler, ups);
+       cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
+       cout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
+       if (currentGrid == oldGrid)
+         break;
+       scheduler->advanceDataWarehouse(currentGrid);
+       scheduler->initialize(1, 1);
+
+       // for dynamic lb's, set up patch config after changing grid
+       lb->possiblyDynamicallyReallocate(currentGrid, false); 
+
+       for(int i=0;i<currentGrid->numLevels();i++) {
+	 Task* task = scinew Task("initializeErrorEstimate", this,
+				  &AMRSimulationController::initializeErrorEstimate,
+				  sharedState);
+	 task->computes(sharedState->get_refineFlag_label());
+	 sched->addTask(task, currentGrid->getLevel(i)->eachPatch(),
+			sharedState->allMaterials());
+
+         sim->scheduleInitialize(currentGrid->getLevel(i), scheduler);
+         sim->scheduleComputeStableTimestep(currentGrid->getLevel(i),scheduler);
+         sim->scheduleInitialErrorEstimate(currentGrid->getLevel(i), scheduler);
+       }
+       scheduler->compile();
+   
+       double dt=Time::currentSeconds()-start;
+       if(d_myworld->myrank() == 0)
+         cout << "done taskgraph compile (" << dt << " seconds)\n";
+       // No scrubbing for initial step
+       scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
+       scheduler->execute();
+       
+     }
 
    int n = 0;
    double prevWallTime = Time::currentSeconds();
@@ -319,7 +368,7 @@ void AMRSimulationController::run()
        totalFine *= currentGrid->getLevel(i)->timeRefinementRatio();
      
      iterations ++;
-     double wallTime = Time::currentSeconds() - start_time;
+     double wallTime = Time::currentSeconds() - start;
  
      delt_vartype delt_var;
      DataWarehouse* oldDW = scheduler->get_dw(0);
