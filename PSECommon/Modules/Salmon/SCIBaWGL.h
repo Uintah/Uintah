@@ -12,10 +12,12 @@
 #ifndef SCI_project_module_SCIBaWGL_h
 #define SCI_project_module_SCIBaWGL_h
 
-#ifdef __sgi
-
 #include <GL/gl.h>
+
+#ifdef __sgi
 #include <ulocks.h>
+#endif
+
 #include <SCICore/Thread/Thread.h>
 #include <SCICore/Thread/Runnable.h>
 #include <PSECommon/Modules/Salmon/Roe.h>
@@ -91,7 +93,3 @@ class SCIBaWGL : public BaWGL {
 }}
 
 #endif
-
-#endif
-
-

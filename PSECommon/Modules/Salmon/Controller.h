@@ -13,6 +13,7 @@
 #define CONTROLLER_RIGHT   1
 
 #include <PSECommon/Modules/Salmon/glMath.h>
+#include <PSECommon/Modules/Salmon/SharedMemory.h>
 
 namespace PSECommon {
 namespace Modules {

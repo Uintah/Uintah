@@ -248,9 +248,14 @@ void SCIBaWGLTimer::run( void )
       while( !running ) 
         {         
           if( exit ) break; 
+#ifdef __sgi
           sginap(0);
+#endif
         }
-  
+#ifdef __sgi
+      usleep(100000);
+#endif
+
       while( running )
         {
           if( exit ) break;
@@ -310,7 +315,9 @@ void SCIBaWGLTimer::run( void )
 	  
 	  pick();
 	  
+#ifdef __sgi
 	  usleep(50000);
+#endif
         }
     }
 
@@ -345,10 +352,10 @@ int SCIBaWGL::start( Roe* r, char* config )
 {
   shutting_down = false;
 
-  init(config);
+  if( init(config) < 0 ) return(-1);
 
   timer = new SCIBaWGLTimer(r, this);
-  timerthread = new Thread(timer, "timer");
+  timerthread = new Thread(timer, "BaWGLTimer");
   timerthread->detach();
 
   timer->start();

@@ -70,11 +70,9 @@ Roe::Roe(Salmon* s, const clString& id)
   homeview(Point(.55, .5, 0), Point(.0, .0, .0), Vector(0,1,0), 25),
   bgcolor("bgcolor", id, this), shading("shading", id, this),
   do_stereo("do_stereo", id, this), 
-#ifdef __sgi
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
   do_bawgl("do_bawgl", id, this),
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-#endif
   drawimg("drawimg", id, this),
   saveprefix("saveprefix", id, this),
   id(id),doingMovie(0),curFrame(0),curName("/tmp/movie")
@@ -88,11 +86,9 @@ Roe::Roe(Salmon* s, const clString& id)
     mouse_obj=0;
     ball = new BallData();
     ball->Init();
-#ifdef __sgi
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
     bawgl = new SCIBaWGL();
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-#endif
 }
 
 clString Roe::set_id(const clString& new_id)
@@ -564,7 +560,6 @@ void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
     }
 }
 
-#ifdef __sgi
 //>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
 static int prevPrinc;
 void Roe::bawgl_pick(int action, GLint iv[3], GLfloat fv[3])
@@ -636,7 +631,6 @@ void Roe::bawgl_pick(int action, GLint iv[3], GLfloat fv[3])
     }
 }
 //<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<
-#endif
 
 void Roe::mouse_pick(int action, int x, int y, int state, int btn, int)
 {
@@ -903,7 +897,6 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	return;
       }
       current_renderer->setvisual(args[2], idx, width, height);
-#ifdef __sgi
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
    } else if(args[1] == "startbawgl") {
         if( bawgl->start(this, "bench.config")  == 0 )
@@ -912,13 +905,13 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	  }
 	else
 	  {
+	    do_bawgl.set(0);
 	    bawgl_error = 1;
 	    args.error("Bummer!\n Check if the device daemons are alive!");
 	  }
    } else if(args[1] == "stopbawgl"){
      if( !bawgl_error ) bawgl->stop();
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-#endif
     } else {
       args.error("Unknown minor command '" + args[1] + "' for Roe");
     }
@@ -1196,6 +1189,9 @@ void Roe::getData(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.11  1999/11/19 17:50:11  ikits
+// Put in __sgi to make it compile for linux. Replaced int errcode w/ GLenum errcode in OpenGL.cc.
+//
 // Revision 1.10  1999/11/19 05:44:15  dmw
 // commented out performance reporting so we dont get so many printouts from Salmon
 //
