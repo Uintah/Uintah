@@ -36,7 +36,7 @@ SRCDIR   := Core/TCLThread
 SRCS     += $(SRCDIR)/TCLThread.cc
 
 PSELIBS := Core/Thread Core/GuiInterface Core/TkExtensions \
-           Core/Exceptions Dataflow/Network Core/Util
+           Core/Containers Core/Exceptions Dataflow/Network Core/Util
 LIBS := $(TK_LIBRARY) $(TCL_LIBRARY) $(X_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
