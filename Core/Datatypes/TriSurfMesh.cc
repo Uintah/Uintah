@@ -703,7 +703,7 @@ TriSurfMesh::clip(ClipperHandle clipper)
 	nnodes[i] = nodemap[onodes[i]];
       }
 
-      clipped->add_triangle(nnodes[0], nnodes[1], nnodes[2]);
+      clipped->add_elem(nnodes);
     }
     
     ++bi;
