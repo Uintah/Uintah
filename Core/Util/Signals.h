@@ -160,6 +160,13 @@ void connect( Signal &s, T &t, void (T::*fun)(), int priority=0)
   s.add( new Slot<T>(&t, fun, priority) );
 }
 
+
+template<class T>
+void connect( Signal &s, T *t, void (T::*fun)(), int priority=0)
+{
+  s.add( new Slot<T>(t, fun, priority) );
+}
+
 inline
 void connect( Signal &s, void (*fun)(), int priority=0 )
 {
@@ -174,6 +181,12 @@ template<class T>
 bool disconnect( Signal &s, T &t, void (T::*fun)())
 {
   return s.rem(Slot<T>(&t, fun));
+}
+
+template<class T>
+bool disconnect( Signal &s, T *t, void (T::*fun)())
+{
+  return s.rem(Slot<T>(t, fun));
 }
 
 inline
@@ -253,6 +266,12 @@ void connect( Signal1<Arg> &s, T &t, void (T::*fun)(Arg), int priority=0)
   s.add( new Slot1<T,Arg>(&t, fun, priority) );
 }
 
+template<class T, class Arg>
+void connect( Signal1<Arg> &s, T *t, void (T::*fun)(Arg), int priority=0)
+{
+  s.add( new Slot1<T,Arg>(t, fun, priority) );
+}
+
 
 template<class Arg1>
 void connect( Signal &s, void (*fun)(Arg1), int priority=0 )
@@ -268,6 +287,12 @@ template<class T, class Arg>
 bool disconnect( Signal1<Arg> &s, T &t, void (T::*fun)(Arg))
 {
   return s.rem(Slot1<T,Arg>(&t, fun));
+}
+
+template<class T, class Arg>
+bool disconnect( Signal1<Arg> &s, T *t, void (T::*fun)(Arg))
+{
+  return s.rem(Slot1<T,Arg>(t, fun));
 }
 
 template<class Arg>
@@ -347,6 +372,13 @@ void connect( Signal2<Arg1,Arg2> &s, T &t, void (T::*fun)(Arg1,Arg2),
   s.add( new Slot2<T,Arg1,Arg2>(&t, fun, priority) );
 }
 
+template<class T, class Arg1, class Arg2>
+void connect( Signal2<Arg1,Arg2> &s, T *t, void (T::*fun)(Arg1,Arg2), 
+	      int priority=0)
+{
+  s.add( new Slot2<T,Arg1,Arg2>(t, fun, priority) );
+}
+
 template<class Arg1, class Arg2>
 void connect( Signal &s, void (*fun)(Arg1,Arg2), int priority=0 )
 {
@@ -361,6 +393,12 @@ template<class T, class Arg1, class Arg2>
 bool disconnect( Signal2<Arg1, Arg2> &s, T &t, void (T::*fun)(Arg1, Arg2))
 {
   return s.rem(Slot2<T,Arg1, Arg2>(&t, fun));
+}
+
+template<class T, class Arg1, class Arg2>
+bool disconnect( Signal2<Arg1, Arg2> &s, T *t, void (T::*fun)(Arg1, Arg2))
+{
+  return s.rem(Slot2<T,Arg1, Arg2>(t, fun));
 }
 
 template<class Arg1, class Arg2>
