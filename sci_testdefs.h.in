@@ -39,11 +39,14 @@
 @DEF_QT@
 @DEF_VDT@
 @DEF_MAGICK@
+@DEF_MPEG@
 @DEF_TEEM@
 @DEF_PERFEX@
 @DEF_CRYPTO@
 @DEF_EXC@
 @DEF_Z@
+
+@DEF_MDSPLUS@
 
 /* MPI++ on SGI has a bad interaction with <iostream>.  This prevents
    it from  being included.  We don't use it anyway. */
@@ -67,7 +70,6 @@
 #define SRCTOP "@abs_srcdir@"
 #define OBJTOP "@abs_conftop_dir@"
 
-@MDSPLUS_DEF_FLAG@
 
 /* Someday, we should make this a config variable - it might help the
    optimizer, at the cost of more difficult debugging */
