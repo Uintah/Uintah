@@ -1707,12 +1707,6 @@ itcl_class ViewWindow {
 	for { set i 0 } { $i < 4 } { incr i 1 } {
 	    if { $i == 0 } {
 		set $this-global-light$i 1
-		set c $w.tf.f$i.c
-		$c itemconfigure lc -fill \
-		    [format "#%04x%04x%04x" 65535 65535 65535 ]
-		set lightColor [list 1.0 1.0 1.0]
-		set $this-lightColors \
-		    [lreplace [set $this-lightColors] $i $i $lightColor]
 		$this lightSwitch $i
 	    } else {
 		if { $i < 4 } {
