@@ -250,6 +250,30 @@ void HDF5DataReader::execute() {
 
   } else {
     remark( "Already read the file " +  new_filename );
+
+    for( unsigned int ic=0; ic<MAX_PORTS; ic++ ) {
+      // Get a handle to the output double port.
+      if( nHandles_[ic].get_rep() ) {
+
+	char portNumber[4];
+	sprintf( portNumber, "%d", ic );
+
+	string portName = string("Output ") +
+	  string(portNumber) +
+	  string( " Nrrd" );
+      
+	NrrdOPort *ofield_port = 
+	  (NrrdOPort *) get_oport(portName);
+    
+	if (!ofield_port) {
+	  error("Unable to initialize "+name+"'s " + portName + " oport\n");
+	  return;
+	}
+
+	// Send the data downstream
+	ofield_port->send( nHandles_[ic] );
+      }
+    }
   }
 
 
