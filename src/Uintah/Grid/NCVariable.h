@@ -68,7 +68,57 @@ WARNING
      NCVariable<T>& operator=(const NCVariable<T>&);
      
      // Replace the values on the indicated face with value
-     void fillFace(Region::FaceType face, Vector value) {};
+     void fillFace(Region::FaceType face, Vector value)
+       { 
+	 IntVector low = getLowIndex();
+	 IntVector hi = getHighIndex();
+	 switch (face) {
+	 case Region::xplus:
+	   for (int j = low.y(); j<=hi.y(); j++) {
+	     for (int k = low.z(); k<=hi.z(); k++) {
+	       Array3<T>::operator()(hi.x(),j,k) = value;
+	     }
+	   }
+	   break;
+	 case Region::xminus:
+	   for (int j = low.y(); j<=hi.y(); j++) {
+	     for (int k = low.z(); k<=hi.z(); k++) {
+	       Array3<T>::operator()(low.x(),j,k) = value;
+	     }
+	   }
+	   break;
+	 case Region::yplus:
+	   for (int i = low.x(); i<=hi.x(); i++) {
+	     for (int k = low.z(); k<=hi.z(); k++) {
+	       Array3<T>::operator()(i,hi.y(),k) = value;
+	     }
+	   }
+	   break;
+	 case Region::yminus:
+	   for (int i = low.x(); i<=hi.x(); i++) {
+	     for (int k = low.z(); k<=hi.z(); k++) {
+	       Array3<T>::operator()(i,low.y(),k) = value;
+	     }
+	   }
+	   break;
+	 case Region::zplus:
+	   for (int i = low.x(); i<=hi.x(); i++) {
+	     for (int j = low.y(); j<=hi.y(); j++) {
+	       Array3<T>::operator()(i,j,hi.z()) = value;
+	     }
+	   }
+	   break;
+	 case Region::zminus:
+	   for (int i = low.x(); i<=hi.x(); i++) {
+	     for (int j = low.y(); j<=hi.y(); j++) {
+	       Array3<T>::operator()(i,j,low.z()) = value;
+	     }
+	   }
+	   break;
+	 }
+		    
+	 
+       };
      
      // Use to apply symmetry boundary conditions.  On the
      // indicated face, replace the component of the vector
@@ -145,6 +195,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.13  2000/05/09 23:43:07  jas
+// Filled in fillFace.  It is probably slow as mud but hopefully the gist
+// is right.
+//
 // Revision 1.12  2000/05/09 03:24:39  jas
 // Added some enums for grid boundary conditions.
 //
