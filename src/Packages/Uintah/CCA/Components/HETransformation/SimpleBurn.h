@@ -58,7 +58,8 @@ WARNING
 		       double materialMass,
 		       double materialPressure,
 		       double &burnedMass,
-		       double &releasedHeat);
+		       double &releasedHeat,
+		       double &delT);
 
 
     };
