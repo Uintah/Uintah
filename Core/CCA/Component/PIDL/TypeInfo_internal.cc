@@ -37,7 +37,7 @@ TypeInfo_internal::TypeInfo_internal(const std::string& fullclassname,
 				     const std::string& uuid,
 				     void* table,
 				     int tableSize,
-				     Object* (*create_proxy)(const refList&))
+				     Object* (*create_proxy)(const ReferenceMgr&))
     : fullclassname(fullclassname), uuid(uuid),
       table(table), tableSize(tableSize), create_proxy(create_proxy),
       parentclass(0)
