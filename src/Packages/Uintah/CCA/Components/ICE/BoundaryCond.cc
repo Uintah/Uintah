@@ -564,7 +564,11 @@ void setBC(CCVariable<Vector>& var_CC,
         IveSetBC = setNeumanDirichletBC<Vector>(patch, face, var_CC,bound, 
 						bc_kind, bc_value, cell_dx,
 						mat_id,child);
-
+        //__________________________________
+        //  hardwiring for NGC nozzle simulation   
+        #define ICEBoundaryCond_3
+        #include "../MPMICE/NGC_nozzle.i"
+        #undef ICEBoundaryCond_3  
         //__________________________________
         //  Tangent components Neumann = 0
         //  Normal components = -variable[Interior]
