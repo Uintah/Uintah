@@ -290,16 +290,26 @@ using namespace SCIRun;
                                     DataWarehouse*,
                                     DataWarehouse*);
 
-      void printData(const  Patch* patch,int include_GC,const string& message1,
-                   const string& message2, const  CCVariable<int>& q_CC);
+      void printData( int indx,
+                      const  Patch* patch,
+                      int include_GC,
+                      const string& message1,
+                      const string& message2, 
+                      const  CCVariable<int>& q_CC);
                    
-      void printData(const  Patch* patch,int include_GC,const string& message1,
-                   const string& message2, const  CCVariable<double>& q_CC); 
+      void printData( int indx,
+                      const  Patch* patch,
+                      int include_GC,
+                      const string& message1,
+                      const string& message2, 
+                      const  CCVariable<double>& q_CC); 
 
-      void printVector(const  Patch* patch,int include_GC,
-                     const string& message1,
-                     const string& message2, int component, 
-                     const CCVariable<Vector>& q_CC);
+      void printVector( int indx,
+                        const  Patch* patch,
+                        int include_GC,
+                        const string& message1,
+                        const string& message2, int component, 
+                        const CCVariable<Vector>& q_CC);
                      
       void adjust_dbg_indices( const IntVector d_dbgBeginIndx,
                                const IntVector d_dbgEndIndx,  
@@ -399,17 +409,23 @@ using namespace SCIRun;
                         const Vector dx,                      
                         SFCZVariable<Vector>& tau_Z_FC);      
                    
-       void printData_FC(const  Patch* patch,int include_GC,
+       void printData_FC(int indx,
+                      const  Patch* patch,
+                      int include_GC,
                       const string& message1,
                       const string& message2, 
                       const SFCXVariable<double>& q_FC);
                     
-       void printData_FC(const  Patch* patch,int include_GC,
+       void printData_FC(int indx,
+                      const  Patch* patch,
+                      int include_GC,
                       const string& message1,
                       const string& message2, 
                       const SFCYVariable<double>& q_FC);
                     
-       void printData_FC(const  Patch* patch,int include_GC,
+       void printData_FC(int indx, 
+                      const  Patch* patch,
+                      int include_GC,
                       const string& message1,
                       const string& message2, 
                       const SFCZVariable<double>& q_FC);
@@ -432,7 +448,9 @@ using namespace SCIRun;
       bool   d_dbgGnuPlot;
       IntVector d_dbgBeginIndx;
       IntVector d_dbgEndIndx; 
+      vector<int> d_dbgMatls; 
       int d_dbgSigFigs;
+      
       Advector* d_advector;
       
      // exchange coefficients -- off diagonal terms
