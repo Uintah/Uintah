@@ -271,21 +271,50 @@ itcl_class Roe {
 		-command "$this-c redraw"
 	checkbutton $m.eframe.cull -text "Back Cull" -variable $this-global-cull \
 		-command "$this-c redraw"
-	checkbutton $m.eframe.movie -text "Save Movie" -variable $this-global-movie
-	frame $m.eframe.mf
-	label $m.eframe.mf.lf -text "  Frame: "
-	entry $m.eframe.mf.vf -relief sunken -width 4 -textvariable $this-global-movieFrame
-	pack $m.eframe.mf.lf $m.eframe.mf.vf -side left
+# 	checkbutton $m.eframe.movie -text "Save Movie" -variable $this-global-movie
+# 	frame $m.eframe.mf
+# 	label $m.eframe.mf.lf -text "  Frame: "
+# 	entry $m.eframe.mf.vf -relief sunken -width 4 -textvariable $this-global-movieFrame
+# 	pack $m.eframe.mf.lf $m.eframe.mf.vf -side left
 	
-	frame $m.eframe.mn
-	label $m.eframe.mn.ln -text "  Name: "
-	entry $m.eframe.mn.vn -relief sunken -width 4 -textvariable $this-global-movieName
-	pack $m.eframe.mn.ln $m.eframe.mn.vn -side left
+# 	frame $m.eframe.mn
+# 	label $m.eframe.mn.ln -text "  Name: "
+# 	entry $m.eframe.mn.vn -relief sunken -width 4 -textvariable $this-global-movieName
+# 	pack $m.eframe.mn.ln $m.eframe.mn.vn -side left
+	
+# 	pack $m.eframe -anchor w -padx 2 -side left
+# 	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip \
+# 		$m.eframe.cull $m.eframe.movie $m.eframe.mf $m.eframe.mn \
+# 		-in $m.eframe -side top -anchor w
 	
 	pack $m.eframe -anchor w -padx 2 -side left
 	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip \
-		$m.eframe.cull $m.eframe.movie $m.eframe.mf $m.eframe.mn \
-		-in $m.eframe -side top -anchor w
+		$m.eframe.cull -in $m.eframe -side top -anchor w
+
+        frame $m.eframe.f -relief groove -borderwidth 2
+        pack $m.eframe.f -side top -anchor w
+        label $m.eframe.f.l -text "Record Movie as:"
+        pack $m.eframe.f.l -side top 
+        radiobutton $m.eframe.f.none -text "Stop Recording" \
+            -variable $this-global-movie -value 0 -command "$this-c redraw"
+        radiobutton $m.eframe.f.raw -text "Raw Frames" \
+            -variable $this-global-movie -value 1 -command "$this-c redraw"
+	set sgi [$this-c sgi_defined]
+	if { $sgi == 1 } {
+        radiobutton $m.eframe.f.mpeg -text "Mpeg" \
+            -variable $this-global-movie -value 2 -command "$this-c redraw"
+	} else {
+        radiobutton $m.eframe.f.mpeg -text "Mpeg" \
+            -variable $this-global-movie -value 2 \
+	    -state disabled -disabledforeground "" \
+	    --command "$this-c redraw"
+	}
+        entry $m.eframe.f.moviebase -relief sunken -width 12 \
+	    -textvariable "$this-global-movieName" 
+        pack $m.eframe.f.none $m.eframe.f.raw $m.eframe.f.mpeg \
+            -side top  -anchor w
+        pack $m.eframe.f.moviebase -side top -anchor w -padx 2 -pady 2
+
 
 	make_labeled_radio $m.shade "Shading:" $r top $this-global-type \
 		{Wire Flat Gouraud}
@@ -310,7 +339,7 @@ itcl_class Roe {
 	set "$this-global-clip" 0
 	set "$this-global-cull" 0
 	set "$this-global-movie" 0
-	set "$this-global-movieName" "/tmp/movie"
+	set "$this-global-movieName" "movie"
 	set "$this-global-movieFrame" 0
 
 	frame $m.objlist -relief groove -borderwidth 2
@@ -947,7 +976,7 @@ itcl_class Roe {
 	    -command "$this changeName $w raw"
 	pack $ex.raw -side top -anchor w
 	set sgi [$this-c sgi_defined]
-	if { $sgi == 1 } {
+	if { $sgi == 1 || $sgi == 2 } {
 	    radiobutton $ex.rgb -variable $this-saveType \
 		-text "SGI RGB File" -value "rgb" \
 	    -command "$this changeName $w rgb"
