@@ -38,6 +38,11 @@ MPMICE::~MPMICE()
   delete d_mpm;
   delete d_ice;
 }
+
+/*`==========TESTING==========  HACK: so we can get mass exchange off the ground*/
+#define HMX 1
+#define GAS 0
+ /*==========TESTING==========`*/
 //______________________________________________________________________
 //
 void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
@@ -123,6 +128,7 @@ void MPMICE::scheduleTimeAdvance(double, double,
     d_mpm->scheduleComputeStressTensor(             patch,sched,old_dw,new_dw);
      
     d_ice->scheduleComputePressFC(                  patch,sched,old_dw,new_dw);
+  //  scheduleMassExchange(                           patch,sched,old_dw,new_dw);
     d_ice->scheduleAccumulateMomentumSourceSinks(   patch,sched,old_dw,new_dw);
     d_ice->scheduleAccumulateEnergySourceSinks(     patch,sched,old_dw,new_dw);
     d_ice->scheduleComputeLagrangianValues(         patch,sched,old_dw,new_dw);
@@ -366,7 +372,6 @@ void MPMICE::scheduleInterpolateCCToNC(const Patch* patch,
 }
 /* ---------------------------------------------------------------------
  Function~  MPMICE::scheduleComputeEquilibrationPressure--
- Purpose~   Compute the equilibration pressure
  Note:  This similar to ICE::scheduleComputeEquilibrationPressure
          with the addition of MPM matls
 _____________________________________________________________________*/
@@ -404,6 +409,26 @@ void MPMICE::scheduleComputeEquilibrationPressure(const Patch* patch,
  } 
 
   task->computes(new_dw,Ilb->press_equil_CCLabel,0, patch);
+  sched->addTask(task);
+}
+/* ---------------------------------------------------------------------
+ Function~  MPMICE::scheduleMassExchange--
+_____________________________________________________________________*/
+void  MPMICE::scheduleMassExchange(const Patch* patch,
+					SchedulerP& sched,
+					DataWarehouseP& old_dw,
+					DataWarehouseP& new_dw)
+
+{
+  Task* task = scinew Task("MPMICE::massExchange",
+                        patch, old_dw, new_dw, this, &MPMICE::massExchange);
+  int numMatls=d_sharedState->getNumMatls(); 
+
+  for (int m = 0; m < numMatls; m++)  {
+    Material* matl = d_sharedState->getMaterial(m);
+    int dwindex = matl->getDWIndex();  
+    task->computes(new_dw,  Ilb->mass_sourceLabel, dwindex, patch);    
+  }
   sched->addTask(task);
 }
 //______________________________________________________________________
@@ -959,7 +984,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
         mom_L_ME[m][*iter]     = vel_CC[m][*iter] * mass[m];
     }
   }
-  /*`==========DEBUG============*/ 
+  //---- P R I N T   D A T A ------ 
   if (d_ice->switchDebugMomentumExchange_CC ) {
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -973,9 +998,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     }
   }
 
-
   // Cut and now have to do the interpolation in a separate function.
-    /*==========DEBUG============`*/
 
 #if 0
   cout << "CELL MOMENTUM AFTER CCMOMENTUM EXCHANGE" << endl;
@@ -1135,8 +1158,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
 
 
 /* --------------------------------------------------------------------- 
- Function~  MPMICE::computeEquilibrationPressure--
- Purpose~   Find the equilibration pressure  
+ Function~  MPMICE::computeEquilibrationPressure-- 
  Reference: Flow of Interpenetrating Material Phases, J. Comp, Phys
                18, 440-464, 1975, see the equilibration section
                    
@@ -1193,10 +1215,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   vector<CCVariable<double> > mass_CC(numALLMatls);
   CCVariable<double> press, press_new;
   
-/*`==========TESTING==========*/ 
-  CCVariable<double> scratch;
-  new_dw->allocate(scratch,Ilb->press_CCLabel, 0,patch); 
- /*==========TESTING==========`*/ 
+/**/  CCVariable<double> scratch;
+/**/  new_dw->allocate(scratch,Ilb->press_CCLabel, 0,patch); 
   
   old_dw->get(press,         Ilb->press_CCLabel, 0,patch,Ghost::None, 0); 
   new_dw->allocate(press_new,Ilb->press_CCLabel, 0,patch);
@@ -1227,7 +1247,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   }
 
   press_new = press;
-/*`==========DEBUG============*/
+//---- P R I N T   D A T A ------
 #if 0
   if(d_ice -> switchDebug_equilibration_press)  { 
        char description[50];
@@ -1236,7 +1256,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        d_ice->printData( patch,1,description, "cVolume", mat_vol[0]);
     }
 #endif
- /*==========DEBUG============`*/
   //__________________________________
   // Compute rho_micro, speedSound, volfrac, rho_CC
   for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
@@ -1298,7 +1317,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   }
  
 
-/*`==========DEBUG============*/
+//---- P R I N T   D A T A ------
   if(d_ice -> switchDebug_equilibration_press)  { 
       d_ice->printData( patch, 1, "TOP_equilibration", "Press_CC_top", press);
 
@@ -1318,7 +1337,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
  #endif
       }
     }
- /*==========DEBUG============`*/
+
 
 //______________________________________________________________________
 // Done with preliminary calcs, now loop over every cell
@@ -1460,7 +1479,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 #endif
        }
        speedSound_new[m][*iter] = sqrt(tmp);
- /*==========TESTING==========`*/
      }
      //__________________________________
      // - Test for convergence 
@@ -1473,13 +1491,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        converged = true;
      
     }   // end of converged
-    
-    
-/*`==========TESTING==========*/ 
-    scratch[*iter] = delPress;
- /*==========TESTING==========`*/
-    
-    
+        
+/**/    scratch[*iter] = delPress;
+     
     test_max_iter = std::max(test_max_iter, count);
     
     //__________________________________
@@ -1567,7 +1581,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   }
   new_dw->put(press_new,Ilb->press_equil_CCLabel,0,patch);
   
- /*`==========DEBUG============*/
+//---- P R I N T   D A T A ------
   if(d_ice -> switchDebug_equilibration_press)  { 
     d_ice->printData( patch, 1, "BOTTOM", "Press_CC_equil", press_new);
     d_ice->printData( patch, 1, "BOTTOM", "delPress",       scratch);
@@ -1583,7 +1597,33 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        d_ice->printData( patch,1,description, "vol_frac_CC", vol_frac[m]);
     }
    #endif
+  }  
+}
+
+/* ---------------------------------------------------------------------
+ Function~  MPMICE::massExchange--
+ ---------------------------------------------------------------------  */
+void MPMICE::massExchange(const ProcessorGroup*,  
+					const Patch* patch,
+					DataWarehouseP& old_dw, 
+					DataWarehouseP& new_dw)
+{
+#ifdef DOING
+  cout << "Doing massExchange on patch " <<
+    patch->getID() << "\t MPMICE" << endl;
+#endif
+ double misha_change_in_mass_from_particles = 0.001;  //hardwired
+ int numMatls=d_sharedState->getNumMatls();
+ vector<CCVariable<double> > mass_source(numMatls);
+
+  for(int m = 0; m < numMatls; m++) {
+    Material* matl = d_sharedState->getMaterial( m );
+    int dwindex = matl->getDWIndex();
+    new_dw->allocate(mass_source[m],Ilb->mass_sourceLabel,dwindex,patch);
   }
- /*==========DEBUG============`*/
-  
+    
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    mass_source[HMX][*iter] =  -misha_change_in_mass_from_particles;
+    mass_source[GAS][*iter] =  mass_source[HMX][*iter];
+  } 
 }
