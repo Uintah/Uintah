@@ -11,6 +11,8 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	puts "constructing GenStandardColorMaps"
         set name GenStandardColorMaps 
         set_defaults 
+	buildColorMaps
+	$this-c setColors [join $colorMap]
     } 
     
     method set_defaults {} { 
@@ -20,15 +22,14 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	global $this-minRes
 	global $this-nodeList
 	global $this-positionList
-	set $this-mapType 0
-	set $this-resolution 2
-	set $this-minRes 2
+	set $this-mapType 4
+	set $this-resolution 12
+	set $this-minRes 12
 	set exposed 0
 	set colorMap {}
 	set selected -1
 	set $this-nodeList {}
 	set $this-positionList {}
-	buildColorMaps
     }   
     
     method buildColorMaps {} {
@@ -169,12 +170,12 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 		-orient horizontal  -variable $this-resolution 
 	pack $w.f2.f3.s -side top -padx 2 -pady 2 -expand yes -fill x
 	
-	bind $w.f2.f3.s <ButtonRelease> "$this update"
+	bind $w.f2.f3.s <ButtonRelease> "$this update; $this-c needexecute"
 	bind $w.f.f1.canvas <Expose> "$this canvasExpose"
 	bind $w.f.f1.canvas <Button-1> "$this selectNode %x %y"
 	bind $w.f.f1.canvas <B1-Motion> "$this moveNode %x %y"
 	bind $w.f.f1.canvas <Button-3> "$this deleteNode %x %y"
-	bind $w.f.f1.canvas <ButtonRelease> "$this update"
+	bind $w.f.f1.canvas <ButtonRelease> "$this update; $this-c needexecute"
 	$this update
     }
     
@@ -186,13 +187,19 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	switch  [set $this-mapType] {
 	    0  -
 	    1  { set $this-minRes 2}
-	    2  { set $this-minRes 12}
-	    3  { set $this-minRes 19}
-	    4  { set $this-minRes 13}
+	    2  -
+	    3  { set $this-minRes 12}
+	    4  -
+	    5  -
+	    6  { set $this-minRes 19}
+	    7  { set $this-minRes 13}
+	    8  { set $this-minRes 10}
 	    default {set $this-minRes 19}
 	}
 	$w.f2.f3.s configure -from [set $this-minRes]
 	$this update
+	$this-c needexecute
+	
     }
 
     method selectNode { x y } {
@@ -314,7 +321,6 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	$this SetColorMap
 	$this redraw
 	$this-c setColors [join $colorMap]
-	$this-c needexecute
 	set selected -1
     }
     
@@ -372,7 +378,6 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
     method SetColorMap {} {
 	global $this-resolution
 	global $this-mapType
-	set w .ui[modname]
 	set colorMap {}
 	set map [lindex $colorMaps [set $this-mapType]]
 	set currentMap [ lindex $map 1 ]
