@@ -105,6 +105,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/VectorFieldWriter.tcl \
 	$(SRCDIR)/ViewWidget.tcl \
 	$(SRCDIR)/Viewer.tcl \
+	$(SRCDIR)/TclStream.tcl \
 
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Dataflow/GUI
 
