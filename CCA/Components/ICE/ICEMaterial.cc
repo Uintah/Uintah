@@ -82,7 +82,7 @@ ICEMaterial::~ICEMaterial()
   delete d_burn;
   delete lb;
   for (int i = 0; i< (int)d_geom_objs.size(); i++) {
-	delete d_geom_objs[i];
+       delete d_geom_objs[i];
   }
 }
 
@@ -150,14 +150,14 @@ double ICEMaterial::getSpeedOfSound() const
 _____________________________________________________________________*/
 void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
                                   CCVariable<double>& sp_vol_CC,
-				  CCVariable<double>& rho_CC,
-				  CCVariable<double>& temp,
-				  CCVariable<double>& speedSound,
-				  CCVariable<double>& vol_frac_CC,
-				  CCVariable<Vector>& vel_CC,
+                              CCVariable<double>& rho_CC,
+                              CCVariable<double>& temp,
+                              CCVariable<double>& speedSound,
+                              CCVariable<double>& vol_frac_CC,
+                              CCVariable<Vector>& vel_CC,
                                   CCVariable<double>& press_CC,
                                   int numMatls,
-				  const Patch* patch,DataWarehouse* new_dw)
+                              const Patch* patch,DataWarehouse* new_dw)
 {
   CCVariable<int> IveBeenHere;
   new_dw->allocate(IveBeenHere,lb->IveBeenHereLabel, 0,patch);
@@ -193,12 +193,12 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
      int count = 0;
      for(int ix=0;ix < ppc.x(); ix++){
        for(int iy=0;iy < ppc.y(); iy++){
-	 for(int iz=0;iz < ppc.z(); iz++){
-	   IntVector idx(ix, iy, iz);
-	   Point p = lower + dxpp*idx;
-	   if(piece->inside(p))
-	     count++;
-	 }
+        for(int iz=0;iz < ppc.z(); iz++){
+          IntVector idx(ix, iy, iz);
+          Point p = lower + dxpp*idx;
+          if(piece->inside(p))
+            count++;
+        }
        }
      }
      IveBeenHere[*iter]=-9; 
@@ -214,7 +214,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM;
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
-	  IveBeenHere[*iter]= 1;
+         IveBeenHere[*iter]= 1;
         }
 
         if (count > 0 && obj > 0) {
@@ -226,7 +226,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM;
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
-	  IveBeenHere[*iter]= 2;
+         IveBeenHere[*iter]= 2;
         } 
       }   
       if (numMatls > 1 ) {
@@ -238,7 +238,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
            rho_CC[*iter]    = rho_micro[*iter] * vol_frac_CC[*iter] +SMALL_NUM;
            temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
            speedSound[*iter] = d_speed_of_sound;
-	   IveBeenHere[*iter]= obj; 
+          IveBeenHere[*iter]= obj; 
       }    
    }  // Loop over domain
     /*`==========DEBUGGING==========*/

@@ -23,19 +23,19 @@ namespace Uintah {
 
 
     virtual void inFluxOutFluxVolume(const SFCXVariable<double>& uvel_FC,
-				     const SFCYVariable<double>& vvel_FC,
-				     const SFCZVariable<double>& wvel_FC,
-				     const double& delT, 
-				     const Patch* patch) = 0;
+                                 const SFCYVariable<double>& vvel_FC,
+                                 const SFCZVariable<double>& wvel_FC,
+                                 const double& delT, 
+                                 const Patch* patch) = 0;
 
 
     virtual void advectQ(const CCVariable<double>& q_CC,
-			 const Patch* patch,
-			 CCVariable<double>& q_advected) = 0;
+                      const Patch* patch,
+                      CCVariable<double>& q_advected) = 0;
 
     virtual void advectQ(const CCVariable<Vector>& q_CC,
-			 const Patch* patch,
-			 CCVariable<Vector>& q_advected) = 0;
+                      const Patch* patch,
+                      CCVariable<Vector>& q_advected) = 0;
 
   };
 

@@ -21,10 +21,10 @@ FirstOrderAdvector::FirstOrderAdvector()
 
 
 FirstOrderAdvector::FirstOrderAdvector(DataWarehouse* new_dw, 
-				       const Patch* patch)
+                                   const Patch* patch)
 {
   OFS_CCLabel = VarLabel::create("OFS_CC",
-				 CCVariable<fflux>::getTypeDescription());
+                             CCVariable<fflux>::getTypeDescription());
 
   new_dw->allocate(d_OFS, OFS_CCLabel,0, patch, Ghost::AroundCells,1);
 }
@@ -36,7 +36,7 @@ FirstOrderAdvector::~FirstOrderAdvector()
 }
 
 FirstOrderAdvector* FirstOrderAdvector::clone(DataWarehouse* new_dw,
-					      const Patch* patch)
+                                         const Patch* patch)
 {
   return scinew FirstOrderAdvector(new_dw,patch);
 }
@@ -64,10 +64,10 @@ See schematic diagram at bottom of ice.cc for del* definitions
 
 void FirstOrderAdvector::inFluxOutFluxVolume(
                            const SFCXVariable<double>& uvel_FC,
-			   const SFCYVariable<double>& vvel_FC,
-			   const SFCZVariable<double>& wvel_FC,
-			   const double& delT, 
-			   const Patch* patch)
+                        const SFCYVariable<double>& vvel_FC,
+                        const SFCZVariable<double>& wvel_FC,
+                        const double& delT, 
+                        const Patch* patch)
 
 {
   Vector dx = patch->dCell();
@@ -140,8 +140,8 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
  ---------------------------------------------------------------------  */
 
 void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
-				 const Patch* patch,
-				 CCVariable<double>& q_advected)
+                             const Patch* patch,
+                             CCVariable<double>& q_advected)
 {
 
   advect<double>(q_CC,patch,q_advected);
@@ -150,8 +150,8 @@ void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
 
 
 void FirstOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
-				 const Patch* patch,
-				 CCVariable<Vector>& q_advected)
+                             const Patch* patch,
+                             CCVariable<Vector>& q_advected)
 {
 
   advect<Vector>(q_CC,patch,q_advected);
@@ -160,8 +160,8 @@ void FirstOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
 
 
 template <class T> void FirstOrderAdvector::advect(const CCVariable<T>& q_CC,
-						    const Patch* patch,
-						    CCVariable<T>& q_advected)
+                                              const Patch* patch,
+                                              CCVariable<T>& q_advected)
   
 {
   T  sum_q_outflux, sum_q_influx, zero(0.);
@@ -184,17 +184,17 @@ template <class T> void FirstOrderAdvector::advect(const CCVariable<T>& q_CC,
 
     //__________________________________
     //  INFLUX: SLABS
-    adjcell = IntVector(i, j+1, k);	// TOP
+    adjcell = IntVector(i, j+1, k);       // TOP
     sum_q_influx  += q_CC[adjcell] * d_OFS[adjcell].d_fflux[BOTTOM];
-    adjcell = IntVector(i, j-1, k);	// BOTTOM
+    adjcell = IntVector(i, j-1, k);       // BOTTOM
     sum_q_influx  += q_CC[adjcell] * d_OFS[adjcell].d_fflux[TOP];
-    adjcell = IntVector(i+1, j, k);	// RIGHT
+    adjcell = IntVector(i+1, j, k);       // RIGHT
     sum_q_influx  += q_CC[adjcell] * d_OFS[adjcell].d_fflux[LEFT];
-    adjcell = IntVector(i-1, j, k);	// LEFT
+    adjcell = IntVector(i-1, j, k);       // LEFT
     sum_q_influx  += q_CC[adjcell] * d_OFS[adjcell].d_fflux[RIGHT];
-    adjcell = IntVector(i, j, k+1);	// FRONT
+    adjcell = IntVector(i, j, k+1);       // FRONT
     sum_q_influx  += q_CC[adjcell] * d_OFS[adjcell].d_fflux[BACK];
-    adjcell = IntVector(i, j, k-1);	// BACK
+    adjcell = IntVector(i, j, k-1);       // BACK
     sum_q_influx  += q_CC[adjcell] * d_OFS[adjcell].d_fflux[FRONT];
 
     //__________________________________
@@ -221,8 +221,8 @@ namespace Uintah {
     static TypeDescription* td = 0;
     if(!td){
       td = scinew TypeDescription(TypeDescription::Other,
-				  "FirstOrderAdvector::fflux", true, 
-				  &makeMPI_fflux);
+                              "FirstOrderAdvector::fflux", true, 
+                              &makeMPI_fflux);
     }
     return td;
   }

@@ -17,8 +17,8 @@ ______________________________________________________________________
 //______________________________________________________________________
 //
 void MPMICE::scheduleInterpolateVelIncFCToNC(SchedulerP& sched,
-					     const PatchSet* patches,
-					     const MaterialSet* mpm_matls)
+                                        const PatchSet* patches,
+                                        const MaterialSet* mpm_matls)
 {
   cout_doing << "MPMICE::scheduleInterpolateVelIncFCToNC" << endl;
 
@@ -47,7 +47,7 @@ void MPMICE::scheduleInterpolateVelIncFCToNC(SchedulerP& sched,
 //
 void MPMICE::interpolateVelIncFCToNC(const ProcessorGroup*,
                                      const PatchSubset* patches,
-				     const MaterialSubset* ,
+                                 const MaterialSubset* ,
                                      DataWarehouse*,
                                      DataWarehouse* new_dw)
 {
@@ -85,11 +85,11 @@ void MPMICE::interpolateVelIncFCToNC(const ProcessorGroup*,
         IntVector adjy(cur.x(),  cur.y()+1,cur.z());
         IntVector adjz(cur.x(),  cur.y(),  cur.z()+1);
         xcomp = ((uvel_FCME[cur]  - uvel_FC[cur]) +
-	         (uvel_FCME[adjx] - uvel_FC[adjx]))*0.5;
+                (uvel_FCME[adjx] - uvel_FC[adjx]))*0.5;
         ycomp = ((vvel_FCME[cur]  - vvel_FC[cur]) +
-	         (vvel_FCME[adjy] - vvel_FC[adjy]))*0.5;
+                (vvel_FCME[adjy] - vvel_FC[adjy]))*0.5;
         zcomp = ((wvel_FCME[cur]  - wvel_FC[cur]) +
-	         (wvel_FCME[adjz] - wvel_FC[adjz]))*0.5;
+                (wvel_FCME[adjz] - wvel_FC[adjz]))*0.5;
 
         velInc_CC[*iter] = Vector(xcomp,ycomp,zcomp);
       }
@@ -99,7 +99,7 @@ void MPMICE::interpolateVelIncFCToNC(const ProcessorGroup*,
         patch->findCellsFromNode(*iter,cIdx);
         velInc_NC[*iter]  = zero;
         for (int in=0;in<8;in++){
-	  velInc_NC[*iter]     +=  velInc_CC[cIdx[in]]*.125;
+         velInc_NC[*iter]     +=  velInc_CC[cIdx[in]]*.125;
         }
         gvelocity[*iter] += velInc_NC[*iter];
       }
@@ -160,7 +160,7 @@ ______________________________________________________________________
         Material* matl = d_sharedState->getMaterial( m );
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         if(ice_matl){                // I C E
-	   rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
+          rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
         }
       }
     }
@@ -176,7 +176,7 @@ ______________________________________________________________________
         Material* matl = d_sharedState->getMaterial( m );
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         if(ice_matl){                // I C E
-	   sp_vol_CC[m][*iter] = 1.0/rho_micro[m][*iter];
+          sp_vol_CC[m][*iter] = 1.0/rho_micro[m][*iter];
         }
       }
     }

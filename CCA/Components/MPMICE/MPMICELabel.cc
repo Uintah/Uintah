@@ -18,35 +18,35 @@ MPMICELabel::MPMICELabel()
 {
   // Cell centered variables
   cMassLabel    = VarLabel::create( "c.mass",
-			CCVariable<double>::getTypeDescription() );
+                     CCVariable<double>::getTypeDescription() );
   cVolumeLabel  = VarLabel::create( "c.volume",
-			CCVariable<double>::getTypeDescription() );
+                     CCVariable<double>::getTypeDescription() );
   vel_CCLabel   = VarLabel::create( "vel_CC",
-			CCVariable<Vector>::getTypeDescription() );
+                     CCVariable<Vector>::getTypeDescription() );
   velstar_CCLabel  = VarLabel::create( "velstar_CC",
-			CCVariable<Vector>::getTypeDescription() );
+                     CCVariable<Vector>::getTypeDescription() );
   dvdt_CCLabel     = VarLabel::create( "dvdt_CC",
-			CCVariable<Vector>::getTypeDescription() );
+                     CCVariable<Vector>::getTypeDescription() );
   dTdt_CCLabel     = VarLabel::create( "dTdt_CC",
-			CCVariable<double>::getTypeDescription() );
+                     CCVariable<double>::getTypeDescription() );
   temp_CCLabel     = VarLabel::create("temp_CC",
-			CCVariable<double>::getTypeDescription() );
+                     CCVariable<double>::getTypeDescription() );
   temp_CC_scratchLabel = VarLabel::create("temp_CC_scratch",
-			CCVariable<double>::getTypeDescription() );
+                     CCVariable<double>::getTypeDescription() );
   press_NCLabel      = VarLabel::create("pressureNC",
-			NCVariable<double>::getTypeDescription());
+                     NCVariable<double>::getTypeDescription());
 
   velInc_CCLabel     = VarLabel::create("velIncCC",
-			CCVariable<Vector>::getTypeDescription());
+                     CCVariable<Vector>::getTypeDescription());
   velInc_NCLabel     = VarLabel::create("velIncNC",
-			NCVariable<Vector>::getTypeDescription());
+                     NCVariable<Vector>::getTypeDescription());
 
   burnedMassCCLabel   = VarLabel::create("burnedMass",
-			CCVariable<double>::getTypeDescription());  
+                     CCVariable<double>::getTypeDescription());  
   releasedHeatCCLabel = VarLabel::create("releasedHeat",
-			CCVariable<double>::getTypeDescription());
+                     CCVariable<double>::getTypeDescription());
   NC_CCweightLabel     = VarLabel::create("NC_CCweight",
-			NCVariable<double>::getTypeDescription());
+                     NCVariable<double>::getTypeDescription());
 
 } 
 

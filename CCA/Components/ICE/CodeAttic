@@ -69,7 +69,7 @@ void ICE::setBC(CCVariable<double>& press_CC,
 
     if (new_bcs != 0) {
       if (new_bcs->getKind() == "Dirichlet") 
-	press_CC.fillFace(face,new_bcs->getValue());
+       press_CC.fillFace(face,new_bcs->getValue());
       //__________________________________
       //  This automatically takes care of the
       //  hydrostatic pressure gradient.
@@ -339,8 +339,8 @@ This section belongs at the top
  FIRST ORDER ONLY AT THIS TIME 10/21/00
 ---------------------------------------------------------------------  */ 
 void  ICE::qOutfluxFirst(const CCVariable<double>&   q_CC,const Patch* patch,
-			CCVariable<fflux>& q_out, CCVariable<eflux>& q_out_EF,
-			CCVariable<cflux>& q_out_CF)
+                     CCVariable<fflux>& q_out, CCVariable<eflux>& q_out_EF,
+                     CCVariable<cflux>& q_out_CF)
 {
   const IntVector gc(1,1,1);
   for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
@@ -385,10 +385,10 @@ Implementation Notes:
 See schematic diagram at bottom of file ice.cc
 ---------------------------------------------------------------------  */
 void ICE::qInfluxFirst(const CCVariable<fflux>& q_out, 
-		  const CCVariable<eflux>& q_out_EF, 
-		  const CCVariable<cflux>& q_out_CF, const Patch* patch,
-		  CCVariable<fflux>& q_in, CCVariable<eflux>& q_in_EF, 
-		  CCVariable<cflux>& q_in_CF)
+                const CCVariable<eflux>& q_out_EF, 
+                const CCVariable<cflux>& q_out_CF, const Patch* patch,
+                CCVariable<fflux>& q_in, CCVariable<eflux>& q_in_EF, 
+                CCVariable<cflux>& q_in_CF)
 {
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
     IntVector curcell = *iter,adjcell;

@@ -36,24 +36,24 @@ WARNING
 
       class IdealGas : public EquationOfState {
       public:
-	 
-	 IdealGas(ProblemSpecP& ps);
-	 virtual ~IdealGas();
         
-	 // Per cell
-	 virtual double computeRhoMicro(double press,double gamma,
-				        double cv, double Temp);
-	 
-	 virtual void computePressEOS(double rhoM, double gamma,
-				      double cv, double Temp,
-				      double& press, double& dp_drho,
-				      double& dp_de);
+        IdealGas(ProblemSpecP& ps);
+        virtual ~IdealGas();
+        
+        // Per cell
+        virtual double computeRhoMicro(double press,double gamma,
+                                    double cv, double Temp);
+        
+        virtual void computePressEOS(double rhoM, double gamma,
+                                  double cv, double Temp,
+                                  double& press, double& dp_drho,
+                                  double& dp_de);
                          
         virtual void computeTempCC(const Patch* patch,
                                 const string& comp_domain,
                                 const CCVariable<double>& press, 
                                 const double& gamma,
-				    const double& cv,
+                                const double& cv,
                                 const CCVariable<double>& rho_micro, 
                                 CCVariable<double>& Temp,
                                 Patch::FaceType face=Patch::xplus);
@@ -62,19 +62,19 @@ WARNING
                           const Patch* patch,
                           Vector& gravity,
                           const double& gamma,
-			     const double& cv,
+                          const double& cv,
                           const Vector& dx,
                           CCVariable<double>& Temp_CC);
 
-	 virtual double getCompressibility(double press);
-	 
-	 double getGasConstant() const;
+        virtual double getCompressibility(double press);
+        
+        double getGasConstant() const;
 
         protected:
 
-	 ICELabel* lb;
+        ICELabel* lb;
       private:
-	double d_gas_constant;
+       double d_gas_constant;
       };
 } // End namespace Uintah
       

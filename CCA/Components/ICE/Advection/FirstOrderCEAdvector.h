@@ -25,23 +25,23 @@ namespace Uintah {
     virtual ~FirstOrderCEAdvector();
 
     virtual FirstOrderCEAdvector* clone(DataWarehouse* new_dw,
-					  const Patch* patch);
+                                     const Patch* patch);
 
 
     virtual void inFluxOutFluxVolume(const SFCXVariable<double>& uvel_CC,
-				     const SFCYVariable<double>& vvel_CC,
-				     const SFCZVariable<double>& wvel_CC,
-				     const double& delT, 
-				     const Patch* patch);
+                                 const SFCYVariable<double>& vvel_CC,
+                                 const SFCZVariable<double>& wvel_CC,
+                                 const double& delT, 
+                                 const Patch* patch);
 
 
     virtual void advectQ(const CCVariable<double>& q_CC,
-			 const Patch* patch,
-			 CCVariable<double>& q_advected);
+                      const Patch* patch,
+                      CCVariable<double>& q_advected);
     
     virtual void advectQ(const CCVariable<Vector>& q_CC,
-			 const Patch* patch,
-			 CCVariable<Vector>& q_advected);
+                      const Patch* patch,
+                      CCVariable<Vector>& q_advected);
 
 
 
@@ -49,14 +49,14 @@ namespace Uintah {
     struct cflux { double d_cflux[8]; };          //corner flux
 
     enum EDGE {TOP_R = 0, TOP_FR, TOP_L, TOP_BK, BOT_R, BOT_FR, BOT_L, BOT_BK,
-	       RIGHT_BK, RIGHT_FR, LEFT_BK, LEFT_FR };
+              RIGHT_BK, RIGHT_FR, LEFT_BK, LEFT_FR };
     enum CORNER {TOP_R_BK = 0, TOP_R_FR, TOP_L_BK, TOP_L_FR, BOT_R_BK, 
-		 BOT_R_FR, BOT_L_BK, BOT_L_FR};
+               BOT_R_FR, BOT_L_BK, BOT_L_FR};
 
   private:
     template<class T> void advect(const CCVariable<T>& q_CC,
-				  const Patch* patch,
-				  CCVariable<T>& q_advected);
+                              const Patch* patch,
+                              CCVariable<T>& q_advected);
 
 
   private:
