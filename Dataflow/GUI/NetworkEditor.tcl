@@ -835,6 +835,8 @@ proc loadfile {netedit_loadfile} {
 		# Go on to stage 2, not moving on to the next line of the file
 		set stage 2
 		continue
+	    } elseif { [string match "loadfile *" $curr_line] } {
+		# do nothing
 	    } elseif { [string match "return" $curr_line] } {
 		# do nothing
 	    } elseif { [string match "puts *" $curr_line] } {
@@ -903,8 +905,7 @@ proc loadfile {netedit_loadfile} {
 		    incr c
 		}
 		
-		set value [lindex $var 1]
-				
+		set value [list [lindex $var 1]]
 		# Increment the counter each time the modname changes
 		
 		if { ! [string match $modname $curr_modname] } {
