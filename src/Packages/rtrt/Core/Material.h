@@ -111,6 +111,9 @@ public:
   //      return 0;
   //    }
 
+  // This allows a material to be animated at the frame change
+  virtual void animate(double t, bool& changed);
+
   // To implement a new material, you must override this method.
   // It should compute a resulting color (result), for the ray.
   // Parameters are:
