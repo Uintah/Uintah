@@ -37,29 +37,28 @@ set runDate " Tue  Jan 1 2002"
 global runTime
 set runTime " 14:25:13"
 
-set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 10 10]
-set m1 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 188 10]
-set m2 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 188 75]
-set m3 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 170 157]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 294 301]
-set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 294 367]
-set m6 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldDataAt" 10 74]
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 312 156]
-set m8 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 312 237]
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 51 11]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 223 11]
+set m2 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 223 76]
+set m3 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 205 158]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 15 322]
+set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 15 388]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 347 157]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 347 238]
 
 addConnection $m1 0 $m2 0
 addConnection $m2 0 $m3 1
 addConnection $m3 0 $m4 0
 addConnection $m4 0 $m5 0
-addConnection $m0 0 $m6 0
-addConnection $m6 0 $m3 0
-addConnection $m7 0 $m8 0
-addConnection $m3 0 $m8 1
-addConnection $m8 0 $m4 1
+addConnection $m6 0 $m7 0
+addConnection $m3 0 $m7 1
+addConnection $m7 0 $m4 1
+addConnection $m0 0 $m4 2
+addConnection $m0 0 $m3 0
 
 set $m0-notes {}
 set $m0-show_status {1}
-set $m0-filename $DATADIR/time-dependent/GSN257.pc.fld
+set $m0-filename $DATADIR/time-dependent/GSN257-grimson.pcv.fld
 set $m1-notes {}
 set $m1-show_status {1}
 set $m1-filename $DATADIR/time-dependent/eeg_ATD256.av.bc.mat
@@ -82,13 +81,13 @@ set $m3-notes {}
 set $m3-show_status {1}
 set $m4-notes {}
 set $m4-show_status {1}
-set $m4-nodes-on {1}
+set $m4-nodes-on {0}
 set $m4-nodes-as-disks {0}
-set $m4-edges-on {1}
-set $m4-faces-on {1}
+set $m4-edges-on {0}
+set $m4-faces-on {0}
 set $m4-use-normals {0}
 set $m4-use-transparency {0}
-set $m4-vectors-on {0}
+set $m4-vectors-on {1}
 set $m4-normalize-vectors {}
 set $m4-has_vector_data {0}
 set $m4-bidirectional {0}
@@ -115,18 +114,18 @@ set $m4-def-color-b {0.5}
 set $m4-def-color-a {0.5}
 set $m4-node_display_type {Spheres}
 set $m4-edge_display_type {Lines}
-set $m4-data_display_type {Arrows}
+set $m4-data_display_type {Disks}
 set $m4-tensor_display_type {Boxes}
-set $m4-active_tab {Nodes}
+set $m4-active_tab {Data}
 set $m4-node_scale {0.272}
 set $m4-edge_scale {0.0150}
-set $m4-vectors_scale {0.30}
+set $m4-vectors_scale {4.2}
 set $m4-tensors_scale {0.30}
 set $m4-show_progress {}
 set $m4-interactive_mode {Interactive}
 set $m4-node-resolution {6}
 set $m4-edge-resolution {6}
-set $m4-data-resolution {6}
+set $m4-data-resolution {15}
 set $m5-notes {}
 set $m5-show_status {1}
 $m5 ui
@@ -135,15 +134,15 @@ set $m5-ViewWindow_0-caxes {0}
 set $m5-ViewWindow_0-raxes {1}
 set $m5-ViewWindow_0-iaxes {}
 set $m5-ViewWindow_0-have_collab_vis {0}
-set $m5-ViewWindow_0-view-eyep-x {          89.4737}
-set $m5-ViewWindow_0-view-eyep-y {          2.40307}
-set $m5-ViewWindow_0-view-eyep-z {      -0.00886011}
-set $m5-ViewWindow_0-view-lookat-x {        0.0060183}
-set $m5-ViewWindow_0-view-lookat-y {         0.839924}
-set $m5-ViewWindow_0-view-lookat-z {        -0.664697}
-set $m5-ViewWindow_0-view-up-x {      -0.00725483}
-set $m5-ViewWindow_0-view-up-y {      -0.00431359}
-set $m5-ViewWindow_0-view-up-z {         0.999964}
+set $m5-ViewWindow_0-view-eyep-x {         -988.578}
+set $m5-ViewWindow_0-view-eyep-y {         -212.213}
+set $m5-ViewWindow_0-view-eyep-z {         -895.326}
+set $m5-ViewWindow_0-view-lookat-x {         -44.2335}
+set $m5-ViewWindow_0-view-lookat-y {          30.3745}
+set $m5-ViewWindow_0-view-lookat-z {         -925.907}
+set $m5-ViewWindow_0-view-up-x {-0.0114877}
+set $m5-ViewWindow_0-view-up-y {0.0863152}
+set $m5-ViewWindow_0-view-up-z {0.996202}
 set $m5-ViewWindow_0-view-fov {               20}
 set $m5-ViewWindow_0-view-eyep_offset-x {}
 set $m5-ViewWindow_0-view-eyep_offset-y {}
@@ -181,29 +180,24 @@ set $m5-ViewWindow_0-global-cull {0}
 set $m5-ViewWindow_0-global-dl {0}
 set $m5-ViewWindow_0-global-type {Gouraud}
 set $m5-ViewWindow_0-unused {1}
-set $m5-ViewWindow_0-unused {1}
-set $m5-ViewWindow_0-unused {1}
 set $m6-notes {}
 set $m6-show_status {1}
-set $m6-outputdataat {Nodes}
+set $m6-tcl_status {Calling GenStandardColorMaps!}
+set $m6-positionList {}
+set $m6-nodeList {}
+set $m6-width {1}
+set $m6-height {1}
+set $m6-mapType {3}
+set $m6-minRes {12}
+set $m6-resolution {255}
+set $m6-realres {255}
+set $m6-gamma {0}
 set $m7-notes {}
 set $m7-show_status {1}
-set $m7-tcl_status {Calling GenStandardColorMaps!}
-set $m7-positionList {}
-set $m7-nodeList {}
-set $m7-width {1}
-set $m7-height {1}
-set $m7-mapType {3}
-set $m7-minRes {12}
-set $m7-resolution {255}
-set $m7-realres {255}
-set $m7-gamma {0}
-set $m8-notes {}
-set $m8-show_status {1}
-set $m8-isFixed {0}
-set $m8-min {         -0.57829}
-set $m8-max {          1.06413}
-set $m8-makeSymmetric {0}
+set $m7-isFixed {0}
+set $m7-min {         -0.57829}
+set $m7-max {          1.06413}
+set $m7-makeSymmetric {0}
 $m2 initialize_ui
 
 ::netedit scheduleok
