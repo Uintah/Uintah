@@ -131,9 +131,10 @@ int main(int argc, char* argv[])
 	if(!client && !server)
 	    usage(argv[0]);
 
+	RingMaster pp;
 	if(server) {
 	    cerr << "Creating objects object\n";
-	    RingMaster_impl* pp=new RingMaster_impl;
+	    pp=new RingMaster_impl;
 	    cerr << "Waiting for objects connections...\n";
 	    cerr << pp->getURL().getString() << '\n';
 	} else {
@@ -158,6 +159,9 @@ int main(int argc, char* argv[])
 
 //
 // $Log$
+// Revision 1.3  1999/09/28 08:20:34  sparker
+// Fixed bug in test program with new ref counting scheme
+//
 // Revision 1.2  1999/09/26 06:13:00  sparker
 // Added (distributed) reference counting to PIDL objects.
 // Began campaign against memory leaks.  There seem to be no more
