@@ -191,6 +191,33 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 		     
 	 sched->addTask(t);
       }
+
+      if (d_heatConductionInvolved) {
+	 /* computeHeatExchange
+	  *   in(G.MASS, G.TEMPERATURE, G.EXTERNAL_HEAT_RATE)
+	  *   operation(peform heat exchange which will cause each of
+	  *		velocity fields to exchange heat according to 
+	  *             the temperature differences)
+	  *   out(G.EXTERNAL_HEAT_RATE)
+	  */
+
+	 Task* t = scinew Task("ThermalContact::computeHeatExchange",
+			    patch, old_dw, new_dw,
+			    d_thermalContactModel,
+			    &ThermalContact::computeHeatExchange);
+
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+	    if(mpm_matl){
+               d_thermalContactModel->addComputesAndRequires(
+		 t, mpm_matl, patch, old_dw, new_dw);
+	    }
+
+	 }
+
+	 sched->addTask(t);
+      }
       
       {
 	 /* exMomInterpolated
@@ -1363,6 +1390,10 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.77  2000/05/31 21:20:50  tan
+// ThermalContact::computeHeatExchange() linked to scheduleTimeAdvance to handle
+// thermal contact.
+//
 // Revision 1.76  2000/05/31 18:30:21  tan
 // Create linkage to ThermalContact model.
 //
