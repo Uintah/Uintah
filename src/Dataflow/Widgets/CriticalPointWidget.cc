@@ -347,6 +347,16 @@ CriticalPointWidget::redraw()
 }
 
 
+void
+CriticalPointWidget::geom_pick(GeomPick *p, ViewWindow *vw,
+			       int data, const BState &bs)
+{
+  BaseWidget::geom_pick(p, vw, data, bs);
+  pick_position_ = variables[PointVar]->point();
+}
+
+
+
 /***************************************************************************
  * The widget's geom_moved method receives geometry move requests from
  *      the widget's picks.  The widget's variables must be altered to
@@ -368,7 +378,8 @@ CriticalPointWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
   switch(pick)
   {
   case Pick:
-    MoveDelta(delta);
+    variables[PointVar]->Move(pick_position_);
+    MoveDelta(pick_offset);
     break;
   }
   execute(0);
