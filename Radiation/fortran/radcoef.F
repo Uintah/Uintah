@@ -7,14 +7,14 @@ C***********************************************************************
 	
       double precision PI,PI1,PATM,OPF,EMG,PCO2,PH2O,PCO2F,PH2OF,
      &PSUMF,PAVE,PML,PRES,PWPC,TGI,CCO2,CH2O,DELE,EMGI,EMGF,FV,ECO2,
-     &EH2O,TGF,SIG,xxx,yyy,zzz,xxxx,yyyy,zzzz
+     &EH2O,TGF,SIG,xxx,yyy,zzz,xxxx,yyyy,zzzz, small
 
       double precision AEM(3)
       double precision AEK(3) 
 
         Integer I,J,K
 
-	DATA PI/3.141593D0/,SIG/5.67D-08/
+	DATA PI/3.141593D0/,SIG/5.67D-08/, small/1d-10/
 C
 	PI1 = 1.0d0 / PI
 	PRES = 1.01325D5
@@ -59,7 +59,7 @@ C----------------------------------------------------------------------
 	          PSUMF = MAX((PCO2F + PH2OF),0.0001d0)
 	          PAVE = (PATM + PH2O) * 0.5d0
 	          PML = PSUMF / 3.281d0
-	          PWPC = PH2O / PCO2
+	          PWPC = PH2O / (PCO2+small)
 	          IF (PWPC .LE. 1.5d0) THEN
 	            AEK(1) = 0.464d0 * PML
 	            AEK(2) = 3.47d0 * PML
