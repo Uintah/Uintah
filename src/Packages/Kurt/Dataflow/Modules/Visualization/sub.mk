@@ -25,8 +25,7 @@ PSELIBS := \
 	Packages/Uintah/CCA/Ports       \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/Core/Datatypes   \
-	Packages/Uintah/CCA/Components/MPM 
+	Packages/Uintah/Core/Datatypes
 
 LIBS := $(XML_LIBRARY) -lm
 
