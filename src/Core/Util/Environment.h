@@ -46,7 +46,7 @@
 
 namespace SCIRun {
 
-  void create_sci_environment(char **environ, char *execname);
+  void create_sci_environment(char **env, char *execname);
   bool find_and_parse_scirunrc();
   bool parse_scirunrc( const std::string &filename );
 
