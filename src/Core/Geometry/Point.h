@@ -42,8 +42,7 @@ class SCICORESHARE Point {
     double _x,_y,_z;
 public:
     inline explicit Point(const Vector& v);
-    inline Point(double x, double y = 0.0, double z = 0.0): _x(x), _y(y), _z(z)
-	    {}
+    inline Point(double x, double y, double z): _x(x), _y(y), _z(z) {}
     Point(double, double, double, double);
     inline Point(const Point&);
     inline Point();
@@ -284,6 +283,11 @@ inline double Dot(const Point& p1, const Point& p2)
 
 //
 // $Log$
+// Revision 1.6.2.3  2000/09/28 20:42:14  yarden
+// remove initialization y=0.0 z=0.0 from the
+// Point constructor. it causes ambiguity in
+// the Widgets.
+//
 // Revision 1.6.2.2  2000/09/28 03:12:21  mcole
 // merge trunk into FIELD_REDESIGN branch
 //
