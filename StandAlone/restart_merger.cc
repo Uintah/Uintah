@@ -124,7 +124,8 @@ int main(int argc, char** argv)
     out_uda.copySection(restartFromDir, "globals");
     out_uda.copySection(restartFromDir, "variables");
     out_uda.restartSetup(restartFromDir, prevTimestep, -1, 0, false, move);
-    
+
+    ups->getNode()->getOwnerDocument()->release();
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << '\n';
     if(e.stackTrace())

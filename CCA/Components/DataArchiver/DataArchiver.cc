@@ -342,6 +342,7 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
        addRestartStamp(indexDoc, restartFromDir, timestep);
      ofstream copiedIndex(iname.c_str());
      copiedIndex << indexDoc << endl;
+     indexDoc->release();
    }
    
    // set time and timestep variables appropriately
@@ -406,6 +407,8 @@ void DataArchiver::combinePatchSetup(Dir& fromDir)
    // output every timestep -- each timestep is transferring data
    d_outputInterval = 0.0;
    d_outputTimestepInterval = 1;
+
+   indexDoc->release();
 }
 
 void DataArchiver::copySection(Dir& fromDir, Dir& toDir, string section)
@@ -433,6 +436,9 @@ void DataArchiver::copySection(Dir& fromDir, Dir& toDir, string section)
   
   ofstream indexOut(iname.c_str());
   indexOut << myIndexDoc << endl;
+
+  indexDoc->release();
+  myIndexDoc->release();
 }
 
 void DataArchiver::addRestartStamp(DOMDocument* indexDoc, Dir& fromDir,
@@ -531,6 +537,11 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
 
    ofstream copiedIndex(iname.c_str());
    copiedIndex << indexDoc << endl;
+   indexDoc->release();
+
+   // we don't need the old document anymore...
+   oldIndexDoc->release();
+
 }
 
 void DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
@@ -571,6 +582,7 @@ void DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
 	 variable = const_cast<DOMNode*>(findNextNode("variable", variable));
       }
    }
+   indexDoc->release();
 }
 
 void DataArchiver::createIndexXML(Dir& dir)
@@ -747,6 +759,8 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
       while (d_currentTimestep >= d_nextCheckpointTimestep)
 	d_nextCheckpointTimestep += d_checkpointTimestepInterval;
     }
+    
+    index->release();
   } else {
     d_wasCheckpointTimestep=false;
   }
@@ -854,7 +868,7 @@ void DataArchiver::outputTimestep(Dir& baseDir,
       string name = tdir.getName()+"/timestep.xml";
       ofstream out(name.c_str());
       out << doc << endl;
-      
+      doc->release();
     } catch(ErrnoException& e) {
       if(e.getErrno() != EEXIST)
 	throw;
@@ -931,6 +945,8 @@ void DataArchiver::executedTimestep()
       
       ofstream indexOut(iname.c_str());
       indexOut << indexDoc << endl;
+
+      indexDoc->release();
     }
   }
 }
@@ -974,7 +990,11 @@ DOMDocument* DataArchiver::loadDocument(string xmlName)
    if(handler.foundError)
      throw InternalError("Error reading file: " + xmlName);
    
-   return parser->getDocument();
+   // make a clone because the document is owned by the parser
+   DOMDocument* doc = dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
+   delete parser;
+
+   return doc;
 }
 
 const string
@@ -1026,6 +1046,7 @@ void DataArchiver::indexAddGlobals()
 
       ofstream indexOut(iname.c_str());
       indexOut << indexDoc << endl;
+      indexDoc->release();
    }
 }
 
@@ -1169,7 +1190,8 @@ void DataArchiver::output(const ProcessorGroup*,
       throw InternalError("Error reading file: "+xmlFilename);
     
     // Add the parser contents to the ProblemSpecP d_doc
-    doc = parser->getDocument();
+    doc = dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
+    delete parser;
   } else {
     DOMImplementation* impl = DOMImplementationRegistry::getDOMImplementation(XMLString::transcode("LS"));;
     
@@ -1268,6 +1290,7 @@ void DataArchiver::output(const ProcessorGroup*,
 
   ofstream out(xmlFilename.c_str());
   out << doc << endl;
+  doc->release();
 
   if(d_writeMeta){
     // Rewrite the index if necessary...
@@ -1312,6 +1335,7 @@ void DataArchiver::output(const ProcessorGroup*,
 
     ofstream indexOut(iname.c_str());
     indexOut << indexDoc << endl;  
+    indexDoc->release();
   }
  }
  d_outputLock.unlock(); 

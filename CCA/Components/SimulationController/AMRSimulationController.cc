@@ -401,6 +401,8 @@ void AMRSimulationController::run()
      t += delt;
      TAU_DB_DUMP();
    }
+
+   ups->getNode()->getOwnerDocument()->release();
    amrout << "ALL DONE\n";
 }
 

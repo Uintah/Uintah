@@ -53,7 +53,8 @@ ProblemSpecP ProblemSpecReader::readInputFile()
 
       // Add the parser contents to the ProblemSpecP d_doc
 
-      DOMDocument* doc = parser->getDocument();
+      DOMDocument* doc = dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
+      delete parser;
       prob_spec = scinew ProblemSpec(doc->getDocumentElement());
   } catch(const XMLException& ex) {
       throw ProblemSetupException("XML Exception: "+string(XMLString::transcode(ex.getMessage())));

@@ -135,6 +135,7 @@ private:
     map<int, MaterialHashMaps>::iterator d_lastFoundIt;
     list<XMLURL> d_xmlUrls;
     bool d_isParsed;
+    vector<DOMDocument*> docs; // kept around for memory cleanup purposes
   };
   
   // Third layer of data structure for storing hash maps of variable data

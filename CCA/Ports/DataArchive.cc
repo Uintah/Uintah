@@ -69,7 +69,9 @@ DataArchive::DataArchive(const std::string& filebase,
   if(handler.foundError)
     throw InternalError("Error reading file: "+ string(XMLString::transcode(d_base.getURLText())));
   
-  d_indexDoc = parser->getDocument();
+  d_indexDoc = dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
+
+  delete parser;
   d_swapBytes = queryEndianness() != SCIRun::endianness();
   d_nBytes = queryNBits() / 8;
 }
@@ -78,6 +80,14 @@ DataArchive::DataArchive(const std::string& filebase,
 DataArchive::~DataArchive()
 {
   delete d_varHashMaps;
+  d_indexDoc->release();
+
+
+  // need to delete the nodes
+  int size = d_tstop.size();
+  for (int i = 0; i < size; i++) {
+    d_tstop[i]->getOwnerDocument()->release();
+  }
 }
 
 string DataArchive::queryEndianness()
@@ -164,7 +174,9 @@ DataArchive::queryTimesteps( std::vector<int>& index,
 	  if(handler.foundError)
 	    throw InternalError("Cannot read timestep file");
 	  
-	  DOMNode* top = parser->getDocument()->getDocumentElement();
+	  DOMNode* top = dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true))->getDocumentElement();
+	  
+	  delete parser;
 	  d_tstop.push_back(top);
 	  d_tsurl.push_back(url);
 	  const DOMNode* time = findNode("Time", top);
@@ -795,6 +807,10 @@ void DataArchive::PatchHashMaps::purgeCache()
 {
   d_matHashMaps.clear();
   d_isParsed = false;
+
+  for (int i = 0; i < docs.size(); i++)
+    docs[i]->release();
+  docs.clear();
 }
 
 void DataArchive::PatchHashMaps::parse()
@@ -812,7 +828,12 @@ void DataArchive::PatchHashMaps::parse()
     if(handler.foundError)
       throw InternalError("Cannot read timestep file");
     
-    DOMNode* top = parser->getDocument()->getDocumentElement();
+    DOMDocument* doc = dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
+    DOMNode* top = doc->getDocumentElement();
+
+    docs.push_back(doc);
+    
+    delete parser;
     for(DOMNode* r = top->getFirstChild(); r != 0; r=r->getNextSibling()){
       if(strcmp(XMLString::transcode(r->getNodeName()),"Variable") == 0){
 	string varname;
@@ -832,6 +853,8 @@ void DataArchive::PatchHashMaps::parse()
 	cerr << "WARNING: Unknown element in Variables section: " << XMLString::transcode(r->getNodeName()) << '\n';
       }
     }
+
+    //top->getOwnerDocument()->release();
   }
   
   d_isParsed = true;
