@@ -313,16 +313,16 @@ void HVolumeVis<DataT,MetaCT>::calc_mcell(int depth, int startx, int starty,
 	  rhos[5]=data(ix+1, iy, iz+1);
 	  rhos[6]=data(ix+1, iy+1, iz);
 	  rhos[7]=data(ix+1, iy+1, iz+1);
-	  DataT min=rhos[0];
-	  DataT max=rhos[0];
+	  DataT minr=rhos[0];
+	  DataT maxr=rhos[0];
 	  for(int i=1;i<8;i++){
-	    if(rhos[i]<min)
-	      min=rhos[i];
-	    if(rhos[i]>max)
-	      max=rhos[i];
+	    if(rhos[i]<minr)
+	      minr=rhos[i];
+	    if(rhos[i]>maxr)
+	      maxr=rhos[i];
 	  }
 	  // Figure out what bits to turn on running from min to max.
-	  mcell.turn_on_bits(min, max, data_min, data_max);
+	  mcell.turn_on_bits(minr, maxr, data_min, data_max);
 	}
       }
     }
@@ -400,9 +400,6 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct, double t,
   int cz=zsize[depth];
   if(depth==0){
     bool step = true;
-#ifdef BIGLER_DEBUG
-    cerr << "x/y/z frac = ("<<x_frac<<", "<<y_frac<<", "<<z_frac<<")\n";
-#endif
     for(;;){
       int gx=startx+ix;
       int gy=starty+iy;
@@ -433,7 +430,7 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct, double t,
       Point p1(p0+sdiag);
       cerr << "p0 = "<<p0<<", p1 = "<<p1<<endl;
 #endif
-      if (t_sample < next_x && t_sample < next_y && t_sample < next_z) {
+      if (t_sample <= next_x && t_sample <= next_y && t_sample <= next_z) {
 	// If we have valid samples
 	if(gx<nx-1 && gy<ny-1 && gz<nz-1){
 #ifdef BIGLER_DEBUG
@@ -467,15 +464,18 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct, double t,
 	    step = false;
 	
 	    // get the point to interpolate
-	    Point current_p = ray.origin() + ray.direction()*t_sample - min.vector();
+	    Point current_p = ray.origin() + ray.direction()*t_sample;
 	    ////////////////////////////////////////////////////////////
 	    // interpolate the point
 	    
+	    //	    Point p0(this->min+sdiag*Vector(gx,gy,gz));
+	    //	    Vector weights((current_p-p0)*Vector(nx-1, ny-1, nz -1));
 	    Point p0(this->min+sdiag*Vector(gx,gy,gz));
-	    Vector weights((current_p-p0)*Vector(nx-1, ny-1, nz -1));
+	    Vector weights((current_p-p0)/sdiag);
 	    double x_weight_high = weights.x();
 	    double y_weight_high = weights.y();
 	    double z_weight_high = weights.z();
+	    current_p -= this->min.vector();	    
 
 	    double lz1, lz2, lz3, lz4, ly1, ly2, value;
 	    lz1 = rhos[0] * (1 - z_weight_high) + rhos[1] * z_weight_high;
