@@ -7,6 +7,7 @@
 <link rel=stylesheet type="text/css" href="http://www.sci.utah.edu/scirun_docs/doc/doc_styles.css">
 <title>Specification Procedure</title>
 <!-- Changed by: MjC, 26-Sep-2000 -->
+<!-- Changed by: TjD, 05-Oct-2000 -->
 </head>
 <body>
 
@@ -40,7 +41,7 @@ width="150"></a>
 <p class="firstpara">Prior to anything else, it would be ideal if you bounce your module idea off of some of your peers. Talk to at least two other module developers about your design. This could help in many different ways. It could save you from doing it at all, or dramatically reduce your effort, by exposing previously written code. It can solidify your design idea, or enhance it. These do not have to be long discussions, but they need to be long enough to get the design across, and allow for feedback.</p>
 
 <p class="head"><a NAME="spec"></a>Create Specification</p>
-<p class="firstpara">This specification is an xml file whose structure is defined by component.dtd. This file will contain information that the Module Maker will need to automatically generate the files for your module. It will contain all of the high level documentation about the module.</p>
+<p class="firstpara"><A HREF="http://www.sci.utah.edu/scirun_docs/doc/ReferenceGuide/component.html">This specification</A> is an xml file whose structure is defined by component.dtd. This file will contain information that the Module Maker will need to automatically generate the files for your module. It will contain all of the high level documentation about the module.</p>
 
 <p class="nextpara">Documentation for all modules will be extracted from the collection of these files. This document will live side by side in our tree with the modules .cc file. It will need to be kept current just as the .cc needs to be current. Familiarize yourself with the more detailed description of the structure of the file and its contents. If your module has a gui, you will need to get a screen capture of the dialog, and place in ./doc/&lt;<i>ModuleName</i>>.gif. Remember that when you add a binary file you need to use the -kb option like this: <b>cvs add -kb &lt;<i>ModuleName</i>>.gif </b></p>
 
@@ -53,7 +54,7 @@ useful.</a> It makes editing the xml file easier to read and help you choose the
 <p class="firstpara">You have a somewhat fleshed out specification at this point. Now you want to write the module. You will need to edit a number of files and create some more. Module Maker will automate this process for you.</p>
 
 <p class="head"><a NAME="coding"></a>Coding</p>
-<p class="firstpara">Familiarize yourself with the coding standard. Follow it. If you use emacs, there are tools to make your coding standard efforts easy. Remember that the code you write will be public. Be sure that you can put your name in the author slot with pride. As you code you will make subtle changes to your design, be sure to frequent your specification.xml file and update it. Be sure that you have removed all warnings, and have a clean compile.</p>
+<p class="firstpara">Familiarize yourself with the <a href="http://www.csafe.utah.edu/development_environment/coding_standards/index.html">coding standard</a>. Follow it. If you use emacs, there are tools to make your coding standard efforts easy. Remember that the code you write will be public. Be sure that you can put your name in the author slot with pride. As you code you will make subtle changes to your design, be sure to frequent your specification.xml file and update it. Be sure that you have removed all warnings, and have a clean compile.</p>
 
 <p class="head"><a NAME="testing"></a>Testing Your Module</p>
 <p class="firstpara">Exercise your code. Make sure you force it down all possible code paths that you create, and that your module handles all possible input data that your input ports can provide. Crashing is bad. Doing nothing is bad. Handle errors appropriately. Be sure you test each widget in your gui.</p>
