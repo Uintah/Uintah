@@ -359,7 +359,7 @@ void read_conductivity(MESH* mesh){
 
 
 /* Computes the volume associated with each vertex */
-void compute_volumes(MESH *mesh){
+void compute_volumes(MESH *mesh, const char *fname){
   int i,j,x;
   float a=1.0/sqrt(3.0);
   float detJ;
@@ -412,7 +412,7 @@ void compute_volumes(MESH *mesh){
   }
 
   /* Dump Volume Vector */
-  	fp = fopen("Volume.vec","w");
+  	fp = fopen(fname,"w");
 	if (fp ==NULL){
 		printf("\n\nProblems opening Volume.vec for writting\n");
 	}
@@ -533,7 +533,7 @@ tensor components at the element vertices. ELEMENT is a structure
 containing field VTX which is an array of length 8 arrays that define
 the vertices of the brick elements in the mesh.
 */
-void compute_matrix(MESH *mesh){
+void compute_matrix(MESH *mesh, const char *fname){
 	int i,j,k,li,lj,gi,gj,loopvar,x;
 	int counter,min,pmin,maxloopvar=0;
 	int maxbandwidth=0,minbandwidth=0;
@@ -567,7 +567,7 @@ void compute_matrix(MESH *mesh){
 	}
 
 	/* Initialize jcoef */
-	jcoef=malloc(sizeof(int)*(mesh->numvtx+1));
+	jcoef=malloc(sizeof(int *)*(mesh->numvtx+1));
 	if(jcoef == NULL){
 		printf("\n\nError allocating memory in jcoef.\n");
 		exit(-1);
@@ -587,7 +587,7 @@ void compute_matrix(MESH *mesh){
 	}
 
 	/* Initialize coef */
-	coef=malloc(sizeof(float)*(mesh->numvtx+1));
+	coef=malloc(sizeof(float *)*(mesh->numvtx+1));
 	if(coef == NULL){
 		printf("\n\nError allocating memory in coef.\n");
 		exit(-1);
@@ -710,7 +710,7 @@ void compute_matrix(MESH *mesh){
     } 
 
 	/* Dump SPR file */
-  	sp = fopen("Vulcan.spr","w");
+  	sp = fopen(fname,"w");
 	if (sp ==NULL){
 		printf("\n\nProblems opening Vulcan.spr for writting\n");
 	}

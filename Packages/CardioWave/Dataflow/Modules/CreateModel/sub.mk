@@ -14,6 +14,7 @@ SRCDIR   := Packages/CardioWave/Dataflow/Modules/CreateModel
 
 SRCS     += \
 	$(SRCDIR)/CreateSimpleMesh.cc\
+	$(SRCDIR)/RemoveInteriorTets.cc\
 	$(SRCDIR)/SetupFVMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 
