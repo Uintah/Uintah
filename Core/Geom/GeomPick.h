@@ -34,33 +34,34 @@
 #include <Core/Geom/GeomContainer.h>
 #include <Core/Geom/Pickable.h>
 #include <Core/Geom/Material.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Geometry/Vector.h>
+#include <vector>
+
+using std::vector;
 
 namespace SCIRun {
-  class BaseWidget;
-  class MessageBase;
-  class ViewWindow;
-}
 
-namespace SCIRun {
+class BaseWidget;
+class MessageBase;
+class ViewWindow;
 
 
 class SCICORESHARE GeomPick : public GeomContainer {
-  ModulePickable* module;
-  void* cbdata;
-  //int pick_index;
-  GeomObj* picked_obj;
-  Array1<Vector> directions;
-  WidgetPickable* widget;
-  int widget_data;
-  int selected;
-  int ignore;
-  MaterialHandle highlight;
+private:
+  ModulePickable*   module_;
+  void*             cbdata_;
+  GeomObj*          picked_obj_;
+  vector<Vector>    directions_;
+  WidgetPickable*   widget_;
+  int               widget_data_;
+  bool              selected_;
+  bool              ignore_;
+  MaterialHandle    highlight_;
+  bool              draw_only_on_pick_;
   
   GeomPick(const GeomPick&);
+
 public:
-  bool drawOnlyOnPick;
   GeomPick(GeomObj*, ModulePickable* module);
   GeomPick(GeomObj*, ModulePickable* module, WidgetPickable*, int widget_data);
   GeomPick(GeomObj*, ModulePickable* module, const Vector&);
@@ -71,7 +72,7 @@ public:
   virtual ~GeomPick();
   virtual GeomObj* clone();
   int nprincipal();
-  Vector principal(int i);
+  const Vector &principal(int i);
   void set_principal(const Vector&);
   void set_principal(const Vector&, const Vector&);
   void set_principal(const Vector&, const Vector&, const Vector&);

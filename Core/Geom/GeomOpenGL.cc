@@ -2079,7 +2079,7 @@ void GeomMaterial::draw(DrawInfoOpenGL* di, Material* /* old_matl */, double tim
 void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
 
-    if(drawOnlyOnPick && !di->pickmode) return;
+    if(draw_only_on_pick_ && !di->pickmode) return;
     if(di->pickmode){
 	// cerr <<"found a widget " << (GLuint)this << endl;
 	++di->npicks;
@@ -2094,11 +2094,11 @@ void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 #endif
 	di->pickchild =1;
     }
-    if(selected && highlight.get_rep()){
-	di->set_matl(highlight.get_rep());
+    if(selected_ && highlight_.get_rep()){
+	di->set_matl(highlight_.get_rep());
 	int old_ignore=di->ignore_matl;
 	di->ignore_matl=1;
-	child->draw(di, highlight.get_rep(), time);
+	child->draw(di, highlight_.get_rep(), time);
 	di->ignore_matl=old_ignore;
     } else {
 	child->draw(di, matl, time);
