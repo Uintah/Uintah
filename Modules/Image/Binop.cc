@@ -98,8 +98,8 @@ Module* Binop::clone(int deep)
 
 void Binop::do_op(int proc)    // Do the operation.. paralell
 {
-  int start = (newgrid->grid.dim2()-1)*proc/np;
-  int end   = (proc+1)*(newgrid->grid.dim2()-1)/np;
+  int start = (newgrid->grid.dim2())*proc/np;
+  int end   = (proc+1)*(newgrid->grid.dim2())/np;
 
   for(int z=0; z<newgrid->grid.dim3(); z++) 
     for(int x=start; x<end; x++) {
@@ -122,6 +122,15 @@ void Binop::do_op(int proc)    // Do the operation.. paralell
 	  break;
 	case 5:  
 	  newgrid->grid(y,x,z) = Min(a->grid(y,x,z),b->grid(y,x,z));
+	  break;
+	case 6:  
+	  newgrid->grid(y,x,z) = a->grid(y,x,z)*b->grid(y,x,z);
+	  break;
+	case 7:  
+	  newgrid->grid(y,x,z) = a->grid(y,x,z)/b->grid(y,x,z);
+	  break;
+	case 8:  
+	  newgrid->grid(y,x,z) = (int) a->grid(y,x,z) ^ (int) b->grid(y,x,z);
 	  break;
 	}
       }
@@ -170,13 +179,17 @@ void Binop::execute()
     // see which radio button is pressed..
     
     clString ft(funcname.get());
-
+    
     if (ft=="A+B") mode=0;
     if (ft=="A-B") mode=1;
     if (ft=="AorB") mode=2;
     if (ft=="AandB") mode=3;
     if (ft=="max(A,B)") mode=4;
     if (ft=="min(A,B)") mode=5;
+    if (ft=="A*B") mode=6;
+    if (ft=="A/B") mode=7;
+    if (ft=="AxorB") mode=8;
+    
 
     cout << "Mode: " << mode << "\n";
     
