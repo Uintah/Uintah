@@ -109,8 +109,6 @@ OpenGL::OpenGL(GuiInterface* gui, Viewer *viewer, ViewWindow *vw) :
   gui_(gui),
   helper_(0),
   helper_thread_(0),
-  tkwin_(0),
-  x11_dpy_(0),
   myname_("INVAID"),
   viewer_(viewer),
   view_window_(vw),
@@ -162,18 +160,7 @@ OpenGL::~OpenGL()
   delete drawinfo_;
   drawinfo_ = 0;
 
-  gui_->lock();
-  Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname_),
-				      Tk_MainWindow(the_interp));
-  if(!new_tkwin)
-  {
-    cerr << "Unable to locate window!\n";
-    gui_->unlock();
-    return;
-  }
-  glXMakeCurrent(Tk_Display(new_tkwin), None, NULL);
-  gui_->unlock();
-
+  context_ = scinew OpenGLContext(gui_, myname_);
 }
 
 
@@ -427,7 +414,7 @@ OpenGL::render_and_save_image(int x, int y,
 
   // FIXME: this next line was apparently meant to raise the Viewer to the
   //        top... but it doesn't actually seem to work
-  Tk_RestackWindow(tkwin_,Above,NULL);
+  //  Tk_RestackWindow(tkwin_,Above,NULL);
 
 
   gui_->lock();
@@ -435,7 +422,8 @@ OpenGL::render_and_save_image(int x, int y,
   if(current_drawer != this)
   {
     current_drawer=this;
-    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
+    if (!context_->make_current(false)) 
+      return;
   }
   deriveFrustum();
 
@@ -612,62 +600,32 @@ void
 OpenGL::redraw_frame()
 {
   if (dead_) return;
-  gui_->lock();
+  //  gui_->lock();
   if (dead_) { // ViewWindow was deleted from gui_
     gui_->unlock(); 
     return;
   }
-  Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname_),
-				      Tk_MainWindow(the_interp));
-  if(!new_tkwin)
-  {
-    cerr << "Unable to locate window!\n";
-    gui_->unlock();
-    return;
-  }
-  if(tkwin_ != new_tkwin)
-  {
-    tkwin_=new_tkwin;
-    x11_dpy_=Tk_Display(tkwin_);
-    x11_win_=Tk_WindowId(tkwin_);
-    // Race condition,  create context before the window is done.
-    while (x11_win_==0)
-    {
-      gui_->unlock();
-      Thread::yield();
-      gui_->lock();
-      x11_win_ = Tk_WindowId(tkwin_);
-    }
-    x11_gl_context_=OpenGLGetContext(the_interp, ccast_unsafe(myname_));
-    if(!x11_gl_context_)
-    {
-      cerr << "Unable to create OpenGL Context!\n";
-      gui_->unlock();
-      return;
-    }
-    //cerr << "The next line will crash!: " << (unsigned int)x11_dpy_ <<  ", " 
-    //	 << (unsigned int)x11_win_ << ", " << (unsigned int)x11_gl_context_ 
-    //	 << std::endl;
-    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
-    //    cerr << "See! it crashed";
-    glXWaitX();
+  //  cerr << "The next line will crash!\n";
+  if (!context_->make_current()) return;
+  //  cerr << "See! it crashed\n";
+  glXWaitX();
+
 #if defined(HAVE_GLEW)
-    sci_glew_init();
+  sci_glew_init();
 #endif
-    current_drawer=this;
-    GLint data[1];
-    glGetIntegerv(GL_MAX_LIGHTS, data);
-    max_gl_lights_=data[0];
-    // Look for multisample extension...
+  current_drawer=this;
+  GLint data[1];
+  glGetIntegerv(GL_MAX_LIGHTS, data);
+  max_gl_lights_=data[0];
+  // Look for multisample extension...
 #ifdef __sgi
-    if(strstr((char*)glGetString(GL_EXTENSIONS), "GL_SGIS_multisample"))
-    {
-      cerr << "Enabling multisampling...\n";
-      glEnable(GL_MULTISAMPLE_SGIS);
-      glSamplePatternSGIS(GL_1PASS_SGIS);
-    }
-#endif
+  if(strstr((char*)glGetString(GL_EXTENSIONS), "GL_SGIS_multisample"))
+  {
+    cerr << "Enabling multisampling...\n";
+    glEnable(GL_MULTISAMPLE_SGIS);
+    glSamplePatternSGIS(GL_1PASS_SGIS);
   }
+#endif
 
   gui_->unlock();
 
@@ -676,18 +634,19 @@ OpenGL::redraw_frame()
   timer.clear();
   timer.start();
 
-  // Get the window size
-  xres_=Tk_Width(tkwin_);
-  yres_=Tk_Height(tkwin_);
 
   // Make ourselves current
   if(current_drawer != this)
   {
     current_drawer=this;
-    gui_->lock();
-    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
+    if (!context_->make_current()) return;
     gui_->unlock();
   }
+
+  // Get the window size
+  xres_=context_->xres();
+  yres_=context_->yres();
+
   // Set up a pbuffer associated with x11_dpy_
   // Get a lock on the geometry database...
   // Do this now to prevent a hold and wait condition with TCLTask
@@ -695,11 +654,11 @@ OpenGL::redraw_frame()
 
   gui_->lock();
 #if defined(HAVE_PBUFFER)
-  int screen = Tk_ScreenNumber(tkwin_);
   if( xres_ != pbuffer.width() || yres_ != pbuffer.height() ){
     //cerr<<"creating new pbuffer: width = "<<xres<<", height == "<<yres<<"\n";
     pbuffer.destroy();
-    if( !pbuffer.create( x11_dpy_, screen, xres_, yres_, 8, 8 ) ) {
+    if( !pbuffer.create(context_->display(), context_->screen_number(), 
+			xres_, yres_, 8, 8 ) ) {
       //  printf( "Pbuffer create failed.  PBuffering will not be used.\n" );
     } else {
       have_pbuffer_ = true;
@@ -711,7 +670,10 @@ OpenGL::redraw_frame()
     pbuffer.makeCurrent();
     glDrawBuffer( GL_FRONT );
   } else if( have_pbuffer_ && pbuffer.is_current() ) {
-    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
+    if (!context_->make_current(false)) {
+      gui_->unlock();
+      return;
+    }
   }
 #endif
 
@@ -760,7 +722,10 @@ OpenGL::redraw_frame()
 #if defined(HAVE_PBUFFER)
     if( pbuffer.is_current() &&
 	(!doing_movie_p_ && !doing_image_p_) ){
-      glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
+      if (! context_->make_current(false)) {
+	gui_->unlock();
+	return;
+      }
     }
 #endif
     // Do the redraw loop for each time value
@@ -938,7 +903,7 @@ OpenGL::redraw_frame()
       if( !have_pbuffer_ ||
 	  (!doing_movie_p_ && !doing_image_p_) )
 #endif
-	glXSwapBuffers(x11_dpy_, x11_win_);
+	context_->swap();
     }
     throttle.stop();
     double fps;
@@ -957,12 +922,12 @@ OpenGL::redraw_frame()
   {
     // Just show the cleared screen
     view_window_->set_current_time(animate_time_end_);
-	
+    
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #if defined(HAVE_PBUFFER)
-      if( !have_pbuffer_ || (!doing_movie_p_ && !doing_image_p_))
+    if( !have_pbuffer_ || (!doing_movie_p_ && !doing_image_p_))
 #endif
-    glXSwapBuffers(x11_dpy_, x11_win_);
+      context_->swap();
   }
 
   viewer_->geomlock_.readUnlock();
@@ -1126,8 +1091,7 @@ OpenGL::real_get_pick(int x, int y,
   if(current_drawer != this)
   {
     current_drawer=this;
-    gui_->lock();
-    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
+    if (!context_->make_current()) return;
     cerr<<"viewer current\n";
     gui_->unlock();
   }
@@ -1305,7 +1269,7 @@ OpenGL::dump_image(const string& name, const string& /* type */)
 
 #if defined(HAVE_PBUFFER)
   if( have_pbuffer_ && pbuffer.is_valid() && pbuffer.is_current() ){
-    glXMakeCurrent( x11_dpy_, x11_win_, x11_gl_context_ ); 
+    context_->make_current(false);
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -1323,7 +1287,7 @@ OpenGL::dump_image(const string& name, const string& /* type */)
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
-    glXSwapBuffers(x11_dpy_,x11_win_);
+    context_->swap();
   }
 #endif
 
@@ -1693,7 +1657,7 @@ OpenGL::listvisuals(GuiArgs& args)
     gui_->unlock();
     return;
   }
-  x11_dpy_=Tk_Display(topwin);
+  Display *x11_dpy_=Tk_Display(topwin);
   int screen=Tk_ScreenNumber(topwin);
   vector<string> visualtags;
   vector<int> scores;
@@ -1816,14 +1780,15 @@ OpenGL::setvisual(const string& wname, unsigned int which, int wid, int height)
     which = 0;
   }
 
-  tkwin_=0;
+  //  tkwin_=0;
   current_drawer=0;
 
   gui_->execute("opengl " + wname +
 	       " -visual " + to_string((int)x11_visuals_[which]->visualid) +
 	       " -direct true" +
 	       " -geometry " + to_string(wid) + "x" + to_string(height));
-
+  if (context_) delete context_;
+  context_ = scinew OpenGLContext(gui_, wname);
   myname_ = wname;
 }
 
@@ -2001,7 +1966,7 @@ OpenGL::AddMpegFrame()
 
 #if defined(HAVE_PBUFFER)
   if( have_pbuffer_ && pbuffer.is_valid() && pbuffer.is_current() ){
-    glXMakeCurrent( x11_dpy_, x11_win_, x11_gl_context_ ); 
+    context_->make_current(false);
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -2019,7 +1984,7 @@ OpenGL::AddMpegFrame()
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
-    glXSwapBuffers(x11_dpy_,x11_win_);
+    context_->swap();
   }
 #endif
 
