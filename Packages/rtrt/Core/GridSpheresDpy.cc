@@ -37,7 +37,8 @@ namespace rtrt {
 
 GridSpheresDpy::GridSpheresDpy(int colordata, char *in_file) :
   hist(0), xres(500), yres(500), ndata(-1),
-  colordata(colordata),newcolordata(colordata), in_file(in_file)
+  colordata(colordata),newcolordata(colordata), shade_method(1), new_shade_method(1),
+  in_file(in_file)
 {
 }
 
@@ -275,6 +276,12 @@ void GridSpheresDpy::run()
       case XK_W:
 	write_data_file("gridspheredpy.cfg");
 	break;
+      case XK_s:
+      case XK_S:
+        // Right now there are only two methods, but there could be
+        // more in the future.  Change the 2 to num_shade_methods.
+        new_shade_method = (new_shade_method+1)%2;
+        break;
       }
       break;
     case KeyRelease:
@@ -763,6 +770,10 @@ void GridSpheresDpy::animate(bool& changed) {
   if (newcolordata != colordata) {
     changed=true;
     colordata = newcolordata;
+  }
+  if (new_shade_method != shade_method) {
+    changed=true;
+    shade_method = new_shade_method;
   }
 }
 
