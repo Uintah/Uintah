@@ -29,16 +29,16 @@ class SamplerGui {
 	set w $window
 
         iwidgets::entryfield $w.burning -labeltext "Burning:" \
-	    -validate numeric -command "$this change_burning" 
+	    -validate numeric -command "$this-c burning \[$w.burning get\]" 
 
         iwidgets::entryfield $w.monitor -labeltext "Monitor:" \
-	    -validate numeric -command "$this change_monitor" 
+	    -validate numeric -command "$this-c monitor \[$w.monitor get\]" 
 
         iwidgets::entryfield $w.thin -labeltext "Thin:" \
-	    -validate numeric -command "$this change_thin" 
+	    -validate numeric -command "$this-c thin  \[$w.thin get\]" 
 
         iwidgets::entryfield $w.kappa -labeltext "Kappa:" \
-	    -validate numeric -command "$this change_kappa" 
+	    -validate numeric -command "$this-c kappa \[$w.kappa get\]" 
 
 	button $w.exec -text "Execute" -command "$this-c exec"
 
@@ -46,24 +46,10 @@ class SamplerGui {
 
 	pack $w.burning $w.monitor $w.thin $w.exec -anchor w
 	pack $w.graph -expand yes -fill both
-
-	#$this-c graph-window [$w.graph childsite]
     }
 
-    
-    method change_burning {} {
-	$this-c burning [$w.burning get]
-    }
-	
-    method change_monitor {} {
-	$this-c monitor [$w.monitor get]
-    }
-
-    method change_thin {} {
-	$this-c thin [$w.thin get]
-    }
-
-    method change_kappa {} {
+    method new-child-window {} {
+	return [$w.graph childsite]
     }
 }
 
