@@ -78,10 +78,15 @@ WARNING
      virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
 					SchedulerP& sched);
 
+     // Redo a timestep if current time advance is not converging.
+     // Returned time is the new dt to use.
+     virtual double recomputeTimestep(double delt);
+     virtual bool restartableTimesteps();
+
      //////////
      // ask the component if it needs to be recompiled
      virtual bool needRecompile(double /*time*/, double /*dt*/,
-				   const GridP& /*grid*/) {return false;}
+				const GridP& /*grid*/) {return false;}
    private:
      SimulationInterface(const SimulationInterface&);
      SimulationInterface& operator=(const SimulationInterface&);
