@@ -2373,8 +2373,11 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 
           //  must have a minimum momentum                            
           Vector min_mom_L = vel_CC[*iter] * min_mass;
-          Vector mom_L_tmp = vel_CC[*iter] * mass + 
-                               vel_CC[*iter] * burnedMass[*iter];
+	// Todd:  I believe the second term here to be flawed as was
+	// int_eng_tmp.  We should create a "burnedMomentum" or something
+	// to do this right.  Someday.
+          Vector mom_L_tmp = vel_CC[*iter] * mass;
+//                         + vel_CC[*iter] * burnedMass[*iter];
                                
            // find the max between mom_L_tmp and min_mom_L
            // but keep the sign of the mom_L_tmp     
@@ -2398,8 +2401,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 
           // must have a minimum int_eng   
           double min_int_eng = min_mass * cv * temp_CC[*iter];
-          double int_eng_tmp = mass * cv * temp_CC[*iter] + 
-                               cv * temp_CC[*iter] * burnedMass[*iter];
+          double int_eng_tmp = mass * cv * temp_CC[*iter];
 
           int_eng_L[*iter] = std::max(int_eng_tmp, min_int_eng) + 
                              int_eng_source[*iter] + releasedHeat[*iter];  
