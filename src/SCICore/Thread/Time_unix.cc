@@ -15,15 +15,16 @@ static char *id="$Id$";
  */
 
 
-#include <Thread/Time.h>
-#include <Thread/Thread.h>
+#include <SCICore/Thread/Time.h>
+#include <SCICore/Thread/ThreadError.h>
 #include <stdio.h>
 #include <sys/time.h>
 
 static bool initialized=false;
 static struct timeval start_time;
 
-void Time::initialize()
+void
+Time::initialize()
 {
     initialized=true;
     if(gettimeofday(&start_time, 0) != 0){
@@ -32,12 +33,14 @@ void Time::initialize()
     }
 }
 
-double Time::secondsPerTick()
+double
+Time::secondsPerTick()
 {
     return 1.e-6;
 }
 
-double Time::currentSeconds()
+double
+Time::currentSeconds()
 {
     if(!initialized)
 	initialize();
@@ -49,7 +52,8 @@ double Time::currentSeconds()
     return (now_time.tv_sec-start_time.tv_sec)+(now_time.tv_usec-start_time.tv_usec)*1.e-6;
 }
 
-Time::SysClock Time::currentTicks()
+Time::SysClock
+Time::currentTicks()
 { 
     if(!initialized)
 	initialize();
@@ -61,17 +65,20 @@ Time::SysClock Time::currentTicks()
     return (now_time.tv_sec-start_time.tv_sec)*100000+(now_time.tv_usec-start_time.tv_usec);
 }
 
-double Time::ticksPerSecond()
+double
+Time::ticksPerSecond()
 {
     return 1000000;
 }
 
-void Time::waitUntil(double seconds)
+void
+Time::waitUntil(double seconds)
 {
     waitFor(seconds-currentSeconds());
 }
 
-void Time::waitFor(double seconds)
+void
+Time::waitFor(double seconds)
 {
     if(!initialized)
 	initialize();
@@ -83,12 +90,14 @@ void Time::waitFor(double seconds)
     while (nanosleep(&ts, &ts) == 0) /* Nothing */ ;
 }
 
-void Time::waitUntil(SysClock time)
+void
+Time::waitUntil(SysClock time)
 {
     waitFor(time-currentTicks());
 }
 
-void Time::waitFor(SysClock time)
+void
+Time::waitFor(SysClock time)
 {
     if(!initialized)
 	initialize();
@@ -102,9 +111,13 @@ void Time::waitFor(SysClock time)
 
 //
 // $Log$
+// Revision 1.2  1999/08/25 19:00:53  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.1  1999/08/25 02:38:03  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun
 //
 //
-

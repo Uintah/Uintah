@@ -2,7 +2,7 @@
 // $Id$
 
 /*
- *  Runnable.h: The base class for all threads
+ *  Runnable: The base class for all threads
  *
  *  Written by:
  *   Author: Steve Parker
@@ -22,7 +22,7 @@ CLASS
    Runnable
    
 KEYWORDS
-   Runnable
+   Thread
    
 DESCRIPTION
    
@@ -61,16 +61,16 @@ namespace SCICore {
 	    Runnable();
 
 	    //////////
+	    // The runnable destructor.  See the note above about deleting any
+	    // object derived from runnable.
+	    virtual ~Runnable();
+
+	    //////////
 	    // This method will be overridden to implement the main body
 	    // of the thread.  This method will called when the runnable
 	    // is attached to a <b>Thread</b> object, and will be executed
 	    // in a new context.
-	    virtual void run()=0;
-    
-	    //////////
-	    // The runnable destructor.  See the note above about deleting any
-	    // object derived from runnable.
-	    virtual ~Runnable();
+	    virtual void run()=0;    
 	};
     }
 }
@@ -82,6 +82,11 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 19:00:50  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.4  1999/08/25 02:37:59  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun

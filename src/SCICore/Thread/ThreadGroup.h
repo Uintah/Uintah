@@ -2,7 +2,7 @@
 // $Id$
 
 /*
- *  ThreadGroup.h: A set of threads
+ *  ThreadGroup: A set of threads
  *
  *  Written by:
  *   Author: Steve Parker
@@ -22,7 +22,7 @@ CLASS
    ThreadGroup
    
 KEYWORDS
-   ThreadGroup
+   Thread
    
 DESCRIPTION
    A group of threads that are linked together for scheduling
@@ -44,23 +44,13 @@ namespace SCICore {
 	class Thread;
 
 	class ThreadGroup {
-	    Mutex d_lock;
-	    const char* d_name;
-	    ThreadGroup* d_parent;
-	    vector<ThreadGroup*> d_groups;
-	    vector<Thread*> d_threads;
-	    void addme(ThreadGroup* t);
-	    void addme(Thread* t);
-	protected:
-	    friend class Thread;
-	    static ThreadGroup* s_defaultGroup;
 	public:
 	    
 	    //////////
 	    // Create a thread group with the specified <i>name</i>.
 	    // <i>parentGroup</i> specifies the parent <b>ThreadGroup</b>
 	    // which defaults to the default top-level group.
-	    ThreadGroup(const std::string& name, ThreadGroup* parentGroup=0);
+	    ThreadGroup(const char* name, ThreadGroup* parentGroup=0);
 	    
 	    //////////
 	    // Destroy the thread group.  All of the running threads
@@ -103,6 +93,19 @@ namespace SCICore {
 	    // by user code.  Threads added to the group after this call
 	    // may or may not be included in the schedule gang. 
 	    void gangSchedule();
+
+	protected:
+	    friend class Thread;
+	    static ThreadGroup* s_default_group;
+
+	private:
+	    Mutex d_lock;
+	    const char* d_name;
+	    ThreadGroup* d_parent;
+	    std::vector<ThreadGroup*> d_groups;
+	    std::vector<Thread*> d_threads;
+	    void addme(ThreadGroup* t);
+	    void addme(Thread* t);
 	};
     }
 }
@@ -111,6 +114,11 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 19:00:52  sparker
+// More updates to bring it up to spec
+// Factored out common pieces in Thread_irix and Thread_pthreads
+// Factored out other "default" implementations of various primitives
+//
 // Revision 1.4  1999/08/25 02:38:01  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun
