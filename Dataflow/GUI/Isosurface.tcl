@@ -66,6 +66,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	    -showvalue true \
 	    -orient horizontal  \
 	    -digits 5 \
+	    -resolution 0.001 \
 	    -command "$this change_isoval"
 
 	bind $w.f.isoval <ButtonRelease> "$this set-isoval"
