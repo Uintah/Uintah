@@ -79,6 +79,8 @@ public:
   void resize(const LatVolMesh::Cell::size_type &size)
   { Array3<Data>::resize(size.k_, size.j_, size.i_); }
 
+  unsigned int size() { return dim1() * dim2() * dim3(); }
+
   static const string type_name(int n = -1);
 };
 
