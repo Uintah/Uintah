@@ -49,10 +49,23 @@ ICE::ICE(const ProcessorGroup* myworld)
 {
   lb = new ICELabel();
 
+  IFS_CCLabel = scinew VarLabel("IFS_CC",
+                                CCVariable<fflux>::getTypeDescription());
+  OFS_CCLabel = scinew VarLabel("OFS_CC",
+                                CCVariable<fflux>::getTypeDescription());
+  IFE_CCLabel = scinew VarLabel("IFE_CC",
+                                CCVariable<eflux>::getTypeDescription());
+  OFE_CCLabel = scinew VarLabel("OFE_CC",
+                                CCVariable<eflux>::getTypeDescription());
+
 }
 
 ICE::~ICE()
 {
+  delete IFS_CCLabel;
+  delete OFS_CCLabel;
+  delete IFE_CCLabel;
+  delete OFE_CCLabel;
 }
 
 void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
@@ -276,7 +289,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	sched->addTask(t);
       }
 
-      // Step 3
+      // Step 3 compute face centered pressure
       {
 	Task* t = scinew Task("ICE::step3",patch, old_dw, new_dw,this,
 			       &ICE::actuallyStep3);
@@ -295,7 +308,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	sched->addTask(t);
       }
 
-      // Step 4a
+      // Step 4a compute sources of momentum
       {
 	Task* t = scinew Task("ICE::step4a",patch, old_dw, new_dw,this,
 			       &ICE::actuallyStep4a);
@@ -336,7 +349,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	sched->addTask(t);
       }
 
-      // Step 4b
+      // Step 4b compute sources of energy
       {
 	Task* t = scinew Task("ICE::step4b",patch, old_dw, new_dw,this,
 			       &ICE::actuallyStep4b);
@@ -364,7 +377,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	sched->addTask(t);
       }
 
-      // Step 5a
+      // Step 5a compute lagrangian quantities
       {
 	Task* t = scinew Task("ICE::step5a",patch, old_dw, new_dw,this,
 			       &ICE::actuallyStep5a);
@@ -404,7 +417,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	sched->addTask(t);
       }
 
-      // Step 5b
+      // Step 5b cell centered momentum exchange
       {
 	Task* t = scinew Task("ICE::step5b",patch, old_dw, new_dw,this,
 			       &ICE::actuallyStep5b);
@@ -436,7 +449,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	sched->addTask(t);
       }
 
-      // Step 6and7
+      // Step 6and7 advect and advance in time
       {
 	Task* t = scinew Task("ICE::step6and7",patch, old_dw, new_dw,this,
 			       &ICE::actuallyStep6and7);
@@ -1104,9 +1117,7 @@ void ICE::actuallyStep2(const ProcessorGroup*,
     if(ice_matl){
       int vfindex = matl->getVFIndex();
       // Get required variables for this patch
-      FCVariable<double> uvel_FC;
-      FCVariable<double> vvel_FC;
-      FCVariable<double> wvel_FC;
+      FCVariable<double> uvel_FC, vvel_FC, wvel_FC;
       CCVariable<double> vol_frac;
       CCVariable<double> rho_CC;
       CCVariable<double> speedSound;
@@ -1598,28 +1609,77 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 		   DataWarehouseP& new_dw)
 {
 
+#define MAX(x,y) ((x)>(y)?(x):(y))
+
   cout << "Doing actually step6 and 7" << endl;
+  delt_vartype delT;
+  old_dw->get(delT, d_sharedState->get_delt_label());
+
   double dT = 0.0001;
   new_dw->put(delt_vartype(dT), lb->delTLabel);
+  Vector dx = patch->dCell();
+  double vol = dx.x()*dx.y()*dx.z();
 
-//  CCVariable<double> rho_micro, temp, cv, rho_CC;
   CCVariable<double> temp, cv;
   CCVariable<double> uvel_CC,vvel_CC,wvel_CC, rho_CC,visc_CC;
+
+  FCVariable<double> uvel_FC, vvel_FC, wvel_FC;
+
+  CCVariable<fflux> IFS,OFS;
+  CCVariable<eflux> IFE,OFE;
+
   for (int m = 0; m < d_sharedState->getNumMatls(); m++ ) {
     Material* matl = d_sharedState->getMaterial(m);
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     if(ice_matl){
       int vfindex = ice_matl->getDWIndex();
-//      new_dw->allocate(rho_micro,lb->rho_micro_CCLabel,vfindex,patch);
+
+      new_dw->get(uvel_FC, lb->uvel_FCMELabel, vfindex, patch, Ghost::None, 0);
+      new_dw->get(vvel_FC, lb->vvel_FCMELabel, vfindex, patch, Ghost::None, 0);
+      new_dw->get(wvel_FC, lb->wvel_FCMELabel, vfindex, patch, Ghost::None, 0);
+
       new_dw->allocate(rho_CC,lb->rho_CCLabel,vfindex,patch);
       new_dw->allocate(temp,lb->temp_CCLabel,vfindex,patch);
       new_dw->allocate(cv,lb->cv_CCLabel,vfindex,patch);
-
       new_dw->allocate(uvel_CC,lb->uvel_CCLabel,vfindex,patch);
       new_dw->allocate(vvel_CC,lb->vvel_CCLabel,vfindex,patch);
       new_dw->allocate(wvel_CC,lb->wvel_CCLabel,vfindex,patch);
       new_dw->allocate(visc_CC,lb->viscosity_CCLabel,vfindex,patch);
+      new_dw->allocate(IFS,        IFS_CCLabel,      vfindex,patch);
+      new_dw->allocate(OFS,        OFS_CCLabel,      vfindex,patch);
+      new_dw->allocate(IFE,        IFE_CCLabel,      vfindex,patch);
+      new_dw->allocate(OFE,        OFE_CCLabel,      vfindex,patch);
 
+      //influx_outflux_volume
+      influxOutfluxVolume(uvel_FC,vvel_FC,wvel_FC,dx,delT,patch,
+						OFS,OFE,IFS,IFE);
+
+      // outfluxVolCentroid goes here if doing second order
+
+/*    Sketch out how the advection is going to go.
+
+	advect_and_advance  calls:
+
+	advectPreprocess(inuvel_FC,invvel_FC,inwvel_FC,
+			 outinflux_vol,outinflux_vol_CF,
+			 outoutflux_vol,outoutflux_vol_CF);
+		advect_preprocess calls:
+			influx_outflux_volume(inuvel_FC,invvel_FC,inwvel_FC,
+			 		      oinflux_vol,oinflux_vol_CF,
+					      ooutflux_vol,ooutflux_vol_CF);
+			outflux_vol_centroid(inuvel_FC,invvel_FC,inwvel_FC,
+					   or_out_x,or_out_y,or_out_z,
+					   or_out_x_CF,or_out_y_CF,or_out_z_CF);
+		advect_q ( X 4) calls:
+			//gradient_limiter(computes grad_limiter = 1 for now)
+			q_out_flux(q_CC, q_outflux, q_outflux_CF);
+				// set q_outflux=q_outflux_CF=q_CC
+			q_in_flux(q_outflux,q_outflux_CF, q_influx, q_influx_CF)
+				// figure out the influxes from the outfluxes
+		then does Q_CC = Q_CC_L + advectedQ_CC
+
+
+*/
       new_dw->put(temp,lb->temp_CCLabel,vfindex,patch);
       new_dw->put(cv,lb->cv_CCLabel,vfindex,patch);
       new_dw->put(rho_CC,lb->rho_CCLabel,vfindex,patch);
@@ -1632,8 +1692,163 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
   }
 }
 
+void ICE::influxOutfluxVolume(const FCVariable<double>& uvel_CC,
+			      const FCVariable<double>& vvel_CC,
+			      const FCVariable<double>& wvel_CC,
+			      const Vector& dx, const double& delT,
+			      const Patch* patch,
+			      CCVariable<fflux>& OFS, CCVariable<eflux>& OFE,
+			      CCVariable<fflux>& IFS, CCVariable<eflux>& IFE)
+
+{
+  double delY_top,delY_bottom,delX_right,delX_left,delZ_front,delZ_back;
+  double delX_tmp,delY_tmp,delZ_tmp,totalfluxin;
+
+      //Calculate each cells outfluxes first
+      //Here the CellIterator must visit ALL cells
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+//	delY_top    = MAX(0.0, (vvel_FC[*iter][TOP]    * delT));
+//	delY_bottom = MAX(0.0,-(vvel_FC[*iter][BOTTOM] * delT));
+//	delX_right  = MAX(0.0, (uvel_FC[*iter][RIGHT]  * delT));
+//	delX_left   = MAX(0.0,-(uvel_FC[*iter][LEFT]   * delT));
+//	delZ_front  = MAX(0.0, (wvel_FC[*iter][FRONT]  * delT));
+//	delZ_back   = MAX(0.0,-(wvel_FC[*iter][BACK]   * delT));
+
+	delX_tmp    = dx.x() - delX_right - delX_left;
+	delY_tmp    = dx.y() - delY_top   - delY_bottom;
+	delZ_tmp    = dx.z() - delZ_front - delZ_back;
+	
+	// Slabs
+	OFS[*iter].fflux[TOP]    = delY_top     * delX_tmp * dx.z();
+	OFS[*iter].fflux[BOTTOM] = delY_bottom  * delX_tmp * dx.z();
+	OFS[*iter].fflux[RIGHT]  = delX_right   * delY_tmp * dx.z();
+	OFS[*iter].fflux[LEFT]   = delX_left    * delY_tmp * dx.z();
+	OFS[*iter].fflux[FRONT]  = delZ_front   * delZ_tmp * dx.y();
+	OFS[*iter].fflux[BACK]   = delZ_back    * delZ_tmp * dx.y();
+
+	// Corners (these are actually edges in 3-d)
+	OFE[*iter].eflux[TR] = delY_top      * delX_right * dx.z();
+	OFE[*iter].eflux[TL] = delY_top      * delX_left  * dx.z();
+	OFE[*iter].eflux[BR] = delY_bottom   * delX_right * dx.z();
+	OFE[*iter].eflux[BL] = delY_bottom   * delX_left  * dx.z();
+        // These need to be filled in for 3-d
+	OFE[*iter].eflux[TF] = 0.0;
+	OFE[*iter].eflux[Tb] = 0.0;
+	OFE[*iter].eflux[BF] = 0.0;
+	OFE[*iter].eflux[Bb] = 0.0;
+	OFE[*iter].eflux[FR] = 0.0;
+	OFE[*iter].eflux[FL] = 0.0;
+	OFE[*iter].eflux[bR] = 0.0;
+	OFE[*iter].eflux[bL] = 0.0;
+      }
+      //Now calculate each cells influxes
+      //Here the CellIterator only needs to visit REAL cells
+#if 0
+	CAN'T DO THIS UNTIL EXTRA CELLS ARE IMPLEMENTED
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	IntVector curcell = *iter,adjcell;
+
+	// Slabs
+	adjcell = IntVector(curcell.x(),curcell.y()+1,curcell.z());
+	IFS[*iter].fflux[TOP]    = OFS[adjcell].fflux[BOTTOM];
+
+	adjcell = IntVector(curcell.x(),curcell.y()-1,curcell.z());
+	IFS[*iter].fflux[BOTTOM] = OFS[adjcell].fflux[TOP];
+
+	adjcell = IntVector(curcell.x()+1,curcell.y(),curcell.z());
+	IFS[*iter].fflux[RIGHT]  = OFS[adjcell].fflux[LEFT];
+
+	adjcell = IntVector(curcell.x()-1,curcell.y(),curcell.z());
+	IFS[*iter].fflux[LEFT]   = OFS[adjcell].fflux[RIGHT];
+
+	adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+1);
+	IFS[*iter].fflux[FRONT]  = OFS[adjcell].fflux[BACK];
+
+	adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()-1);
+	IFS[*iter].fflux[BACK]   = OFS[adjcell].fflux[FRONT];
+
+	// Corners (aka edges)
+	adjcell = IntVector(curcell.x()+1,curcell.y()+1,curcell.z());
+        IFE[*iter].eflux[TR]    = OFE[adjcell].eflux[BL];
+
+	adjcell = IntVector(curcell.x()+1,curcell.y()-1,curcell.z());
+        IFE[*iter].eflux[BR]    = OFE[adjcell].eflux[TL];
+
+	adjcell = IntVector(curcell.x()-1,curcell.y()+1,curcell.z());
+        IFE[*iter].eflux[TL]    = OFE[adjcell].eflux[BR];
+
+	adjcell = IntVector(curcell.x()-1,curcell.y()-1,curcell.z());
+        IFE[*iter].eflux[BL]    = OFE[adjcell].eflux[TR];
+
+	totalfluxin = IFS[*iter].fflux[TOP]   + IFS[*iter].fflux[BOTTOM] +
+		      IFS[*iter].fflux[RIGHT] + IFS[*iter].fflux[LEFT]   +
+		      IFS[*iter].fflux[FRONT] + IFS[*iter].fflux[BACK]   +
+		      IFE[*iter].eflux[TR]    + IFE[*iter].eflux[BR]     +
+		      IFE[*iter].eflux[TL]    + IFE[*iter].eflux[BL];
+
+	ASSERT(totalfluxin < vol);
+      }
+#endif
+
+}
+
+#ifdef __sgi
+#define IRIX
+#pragma set woff 1209
+#endif
+
+namespace Uintah {
+   namespace ICESpace {
+
+
+static MPI_Datatype makeMPI_fflux()
+{
+   ASSERTEQ(sizeof(ICE::fflux), sizeof(double)*6);
+   MPI_Datatype mpitype;
+   MPI_Type_vector(1, 6, 6, MPI_DOUBLE, &mpitype);
+   MPI_Type_commit(&mpitype);
+   return mpitype;
+}
+
+const TypeDescription* fun_getTypeDescription(ICE::fflux*)
+{
+   static TypeDescription* td = 0;
+   if(!td){
+      td = scinew TypeDescription(TypeDescription::Other,
+                               "ICE::fflux", true, &makeMPI_fflux);
+   }
+   return td;
+}
+
+static MPI_Datatype makeMPI_eflux()
+{
+   ASSERTEQ(sizeof(ICE::eflux), sizeof(double)*12);
+   MPI_Datatype mpitype;
+   MPI_Type_vector(1, 12, 12, MPI_DOUBLE, &mpitype);
+   MPI_Type_commit(&mpitype);
+   return mpitype;
+}
+
+const TypeDescription* fun_getTypeDescription(ICE::eflux*)
+{
+   static TypeDescription* td = 0;
+   if(!td){
+      td = scinew TypeDescription(TypeDescription::Other,
+                               "ICE::eflux", true, &makeMPI_eflux);
+   }
+   return td;
+}
+
+
+}
+}
+
+
 //
 // $Log$
+// Revision 1.45  2000/10/20 23:58:55  guilkey
+// Added part of advection code.
+//
 // Revision 1.44  2000/10/19 02:44:52  guilkey
 // Added code for step5b.
 //

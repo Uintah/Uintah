@@ -47,6 +47,10 @@ namespace Uintah {
     const VarLabel* ymom_L_ME_CCLabel;
     const VarLabel* zmom_L_ME_CCLabel;
     const VarLabel* int_eng_L_ME_CCLabel;
+    const VarLabel* IFS_CCLabel;
+    const VarLabel* OFS_CCLabel;
+    const VarLabel* IFC_CCLabel;
+    const VarLabel* OFC_CCLabel;
    
     // Face centered variables
     const VarLabel* uvel_FCLabel;
@@ -66,6 +70,9 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.10  2000/10/20 23:58:55  guilkey
+// Added part of advection code.
+//
 // Revision 1.9  2000/10/19 02:44:52  guilkey
 // Added code for step5b.
 //
