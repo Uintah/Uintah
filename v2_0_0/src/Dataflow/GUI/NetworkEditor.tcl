@@ -99,6 +99,9 @@ proc makeNetworkEditor {} {
 
     .main_menu.file.menu add command -label "Clear Network" -underline 0 \
 	-command "ClearCanvas" -state disabled
+    .main_menu.file.menu add command -label "Select All" -underline 0 \
+	-command "selectAll" -state disabled
+
     if 0 {
         .main_menu.file.menu add separator
 	.main_menu.file.menu add command -label "Save Postscript..." -underline 0 \
@@ -239,6 +242,7 @@ proc makeNetworkEditor {} {
     # Clear the canvas
     bind all <Control-l> "ClearCanvas"
     bind all <Control-z> "undo"
+    bind all <Control-a> "selectAll"
     bind all <Control-y> "redo"
 
     wm withdraw .
@@ -257,8 +261,9 @@ proc activate_file_submenus { } {
     .main_menu.file.menu entryconfig  3 -state active
     .main_menu.file.menu entryconfig  5 -state active
     .main_menu.file.menu entryconfig  6 -state active
-    .main_menu.file.menu entryconfig  8 -state active
-    .main_menu.file.menu entryconfig 10 -state active
+    .main_menu.file.menu entryconfig  7 -state active
+    .main_menu.file.menu entryconfig  9 -state active
+    .main_menu.file.menu entryconfig 11 -state active
 }
 
 proc modulesMenu { subnet x y } {
@@ -673,7 +678,8 @@ proc popupLoadMenu {} {
 proc ClearCanvas { {confirm 1} {subnet 0} } {
     # destroy all modules
     global NetworkChanged
-    set result "ok"
+    if !$NetworkChanged { set confirm 0 }
+    set result "ok"    
     if { $confirm } {
 	set result \
 	    [tk_messageBox -title "Warning" -type yesno -parent . -icon warning -message \

@@ -1062,7 +1062,7 @@ proc startPortConnection { port } {
 
 proc trackPortConnection { port x y } {
     global possiblePorts possibleConnection Color Subnet
-    if ![llength $possiblePorts] return
+    if { ![info exists possiblePorts] || ![llength $possiblePorts]} return
     set canvas $Subnet(Subnet$Subnet([pMod port])_canvas)
     set portWin $canvas.module[pMod port].port[pType port][pNum port]
     set x [expr $x+[winfo x $portWin]+[lindex [$canvas coords [pMod port]] 0]]
@@ -1606,6 +1606,15 @@ proc unselectAll {} {
 	$i removeSelected
     }
 }
+
+proc selectAll { { subnet 0 } } {
+    unselectAll
+    global Subnet
+    foreach mod $Subnet(Subnet${subnet}_Modules) {
+	$mod addSelected
+    }
+}
+
 
 # Courtesy of the Tcl'ers Wiki (http://mini.net/tcl)
 proc brightness { color } {
