@@ -159,12 +159,12 @@ void SimulationController::run()
       if(delt > timeinfo.delt_max){
 	 cerr << "WARNING: lowering delt from " << delt 
 	      << " to maxmimum: " << timeinfo.delt_max << '\n';
-//	 cerr << "AND IT DOESN'T WORK";
+	 cerr << "AND IT DOESN'T WORK";
 	 delt = timeinfo.delt_max;
       }
       
       // Needs to be fixed - steve
-      old_ds->put(delt_vartype(delt), sharedState->get_delt_label());
+//      old_ds->put(delt_vartype(delt), sharedState->get_delt_label());
       cout << "Time=" << t << ", delt=" << delt 
 	   << ", elapsed time = " << wallTime << '\n';
 
@@ -428,6 +428,10 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.25  2000/05/30 19:43:28  guilkey
+// Unfixed the maximum timestep size fix, which wasn't much of a
+// fix at all...
+//
 // Revision 1.24  2000/05/30 17:09:54  dav
 // MPI stuff
 //
