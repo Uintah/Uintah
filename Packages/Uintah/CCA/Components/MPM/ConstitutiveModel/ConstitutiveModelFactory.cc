@@ -1,10 +1,10 @@
-#include "ConstitutiveModelFactory.h"
-#include "CompMooneyRivlin.h"
-#include "CompNeoHook.h"
-#include "CompNeoHookPlas.h"
-#include "ViscoScram.h"
-#include "HypoElastic.h"
-#include "MWViscoElastic.h"
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHook.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookPlas.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
