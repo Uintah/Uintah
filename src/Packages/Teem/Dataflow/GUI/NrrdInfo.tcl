@@ -27,6 +27,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
     method set_defaults {} {
 	# the width of the first column of the data display
 	global $this-firstwidth
+	global $this-name
 	global $this-type
 	global $this-dimension
 	global $this-active_tab
@@ -41,6 +42,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 		    
 	# these won't be saved 
 	set $this-firstwidth 12
+	set $this-name "---"
 	set $this-type "---"
 	set $this-dimension 0
 	set $this-active_tab "Axis 0"
@@ -182,6 +184,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	pack $w.att -expand y -fill both
 	set att [$w.att childsite]
 	
+	labelpair $att.name "Name" $this-name
 	labelpair $att.type "C Type" $this-type
 	labelpair $att.dim "Dimension" $this-dimension
 	
@@ -196,7 +199,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	$att.tabs view [set $this-active_tab]	
 	$att.tabs configure -tabpos "n"
 	
-	pack $att.type $att.dim -side top -anchor nw
+	pack $att.name $att.type $att.dim -side top -anchor nw
 	pack $att.tabs -side top -fill x -expand yes
 	
 	makeSciButtonPanel $w $w $this
