@@ -56,57 +56,57 @@ WARNING
 	
 ****************************************/
 
-      class ConeGeometryPiece : public CylinderGeometryPiece {
-	 
-      public:
-	 //////////
-	 // Constructor that takes a ProblemSpecP argument.   
-         // It reads the xml input specification and builds 
-         // a generalized cone.
-	 ConeGeometryPiece(ProblemSpecP &);
-	 
-	 //////////
-	 // Constructor that takes top, bottom and radius
-	 //
-	 ConeGeometryPiece(const Point& top, 
-			   const Point& bottom,
-			   double topRad,
-			   double botRad);
-
-
-	 /// Make a clone
-
-	 ConeGeometryPiece* clone();
-	 //////////
-	 // Destructor
-	 virtual ~ConeGeometryPiece();
-	 
-	 //////////
-	 // Determines whether a point is inside the cone.
-	 virtual bool inside(const Point &p) const;
-	 
-	 //////////
-	 // Returns the bounding box surrounding the cone.
-	 virtual Box getBoundingBox() const;
-	 
-	 //////////
-	 // Calculate the lateral surface area of the cone
-	 virtual double surfaceArea() const;
-
-	 //////////
-	 // Calculate the volume
-	 virtual double volume() const;
-
-	 //////////
-	 // Get the top and bottom radius
-	 //
-	 inline double topRadius() const {return d_topRad;}
-	 inline double botRadius() const {return d_radius;}
-
-      private:
-	 double d_topRad;
-	 
-      };
+  class ConeGeometryPiece : public CylinderGeometryPiece {
+    
+  public:
+    //////////
+    // Constructor that takes a ProblemSpecP argument.   
+    // It reads the xml input specification and builds 
+    // a generalized cone.
+    ConeGeometryPiece(ProblemSpecP &);
+    
+    //////////
+    // Constructor that takes top, bottom and radius
+    //
+    ConeGeometryPiece(const Point& top, 
+		      const Point& bottom,
+		      double topRad,
+		      double botRad);
+    
+    
+    /// Make a clone
+    
+    ConeGeometryPiece* clone();
+    //////////
+    // Destructor
+    virtual ~ConeGeometryPiece();
+    
+    //////////
+    // Determines whether a point is inside the cone.
+    virtual bool inside(const Point &p) const;
+    
+    //////////
+    // Returns the bounding box surrounding the cone.
+    virtual Box getBoundingBox() const;
+    
+    //////////
+    // Calculate the lateral surface area of the cone
+    virtual double surfaceArea() const;
+    
+    //////////
+    // Calculate the volume
+    virtual double volume() const;
+    
+    //////////
+    // Get the top and bottom radius
+    //
+    inline double topRadius() const {return d_topRad;}
+    inline double botRadius() const {return d_radius;}
+    
+  private:
+    double d_topRad;
+    
+  };
 } // End namespace Uintah
-      
+
 #endif // __CONE_GEOMTRY_Piece_H__

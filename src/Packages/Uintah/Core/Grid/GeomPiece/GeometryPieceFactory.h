@@ -1,7 +1,6 @@
 #ifndef __GEOMETRY_OBJECT_FACTORY_H__
 #define __GEOMETRY_OBJECT_FACTORY_H__
 
-// add #include for each ConstitutiveModel here
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>

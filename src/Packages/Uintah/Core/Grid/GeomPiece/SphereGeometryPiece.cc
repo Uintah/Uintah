@@ -1,6 +1,5 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/SphereGeometryPiece.h>
 #include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
