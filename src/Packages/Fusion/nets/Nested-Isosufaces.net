@@ -2,15 +2,32 @@
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 18 21]
-set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 397 211]
-set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 18 492]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 18 250]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 397 39]
-set m5 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 18 151]
-set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 18 364]
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 210 252]
-set m8 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 210 362]
+global userName
+set userName ""
+
+global runDate
+set runDate ""
+
+global runTime
+set runTime ""
+
+global notes
+set notes ""
+
+set bbox {}
+
+set m0 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 17 17]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 396 426]
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 17 707]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 17 465]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 396 254]
+set m5 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldSubSample" 17 366]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 17 579]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 209 467]
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 209 577]
+set m9 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 17 114]
+set m10 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 208 117]
+set m11 [addModuleAtPosition "Fusion" "Fields" "NrrdFieldConverter" 17 209]
 
 addConnection $m4 0 $m1 0
 addConnection $m5 0 $m3 0
@@ -19,27 +36,69 @@ addConnection $m1 0 $m6 1
 addConnection $m5 0 $m7 0
 addConnection $m7 0 $m8 0
 addConnection $m1 0 $m8 1
-addConnection $m0 0 $m5 0
-addConnection $m0 0 $m1 1
 addConnection $m6 0 $m2 0
 addConnection $m8 0 $m2 1
+addConnection $m9 0 $m11 0
+addConnection $m10 0 $m11 1
+addConnection $m0 0 $m9 0
+addConnection $m0 1 $m9 1
+addConnection $m0 2 $m10 0
+addConnection $m11 0 $m5 0
+addConnection $m11 0 $m1 1
 
 set $m0-notes {}
-set $m0-show_status {1}
-set $m0-filename {/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10089_00.mds}
+set $m0-selectable_min {0}
+set $m0-selectable_max {100}
+set $m0-selectable_inc {1}
+set $m0-range_min {0}
+set $m0-range_max {0}
+set $m0-playmode {once}
+set $m0-current {0}
+set $m0-execmode {init}
+set $m0-delay {0}
+set $m0-inc-amount {1}
+set $m0-filename {/z/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10107.h5}
+set $m0-datasets {{/ NIMROD OUTPUTS CODE GRID PHI} {/ NIMROD OUTPUTS CODE GRID R} {/ NIMROD OUTPUTS CODE GRID Z} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE PRESSURE Values}}
+set $m0-dumpname {/tmp/NIMROD_10107.h5.dump}
+set $m0-ports {   0   1   1   2}
+set $m0-ndims {0}
+set $m0-mergeData {1}
+set $m0-assumeSVT {1}
+set $m0-animate {0}
+set $m0-0-dim {41}
+set $m0-0-start {0}
+set $m0-0-count {41}
+set $m0-0-stride {1}
+set $m0-1-dim {2}
+set $m0-1-start {0}
+set $m0-1-count {1}
+set $m0-1-stride {1}
+set $m0-2-dim {2}
+set $m0-2-start {0}
+set $m0-2-count {1}
+set $m0-2-stride {1}
+set $m0-3-dim {2}
+set $m0-3-start {0}
+set $m0-3-count {1}
+set $m0-3-stride {1}
+set $m0-4-dim {2}
+set $m0-4-start {0}
+set $m0-4-count {1}
+set $m0-4-stride {1}
+set $m0-5-dim {2}
+set $m0-5-start {0}
+set $m0-5-count {1}
+set $m0-5-stride {1}
 set $m1-notes {}
-set $m1-show_status {1}
 set $m1-isFixed {0}
-set $m1-min {      1.04083e-17}
-set $m1-max {           476463}
+set $m1-min {-0.0058362519159978693}
+set $m1-max {0.72543642484822879}
 set $m1-makeSymmetric {0}
 set $m2-notes {}
-set $m2-show_status {1}
 set $m3-notes {}
-set $m3-show_status {1}
-set $m3-isoval {418128.000}
-set $m3-isoval-min {1.04083e-17}
-set $m3-isoval-max {476463}
+set $m3-isoval {0.62553}
+set $m3-isoval-min {-0.0058362519159978693}
+set $m3-isoval-max {0.72543642484822879}
 set $m3-isoval-typed {0}
 set $m3-isoval-quantity {1}
 set $m3-quantity-range {colormap}
@@ -57,7 +116,6 @@ set $m3-color-r {0.4}
 set $m3-color-g {0.2}
 set $m3-color-b {0.9}
 set $m4-notes {}
-set $m4-show_status {1}
 set $m4-tcl_status {Calling GenStandardColorMaps!}
 set $m4-positionList {{0 15} {389 0}}
 set $m4-nodeList {256 257}
@@ -69,29 +127,29 @@ set $m4-resolution {255}
 set $m4-realres {255}
 set $m4-gamma {0}
 set $m5-notes {}
-set $m5-show_status {1}
 set $m5-wrap {1}
 set $m5-dims {3}
-set $m5-i-dim {385}
-set $m5-j-dim {192}
-set $m5-k-dim {10}
+set $m5-i-dim {41}
+set $m5-j-dim {85}
+set $m5-k-dim {145}
 set $m5-i-start {0}
 set $m5-j-start {0}
 set $m5-k-start {0}
-set $m5-i-stop {384}
-set $m5-j-stop {0}
-set $m5-k-stop {0}
-set $m5-i-stride {10}
-set $m5-j-stride {5}
+set $m5-i-stop {40}
+set $m5-j-stop {84}
+set $m5-k-stop {144}
+set $m5-i-stride {1}
+set $m5-j-stride {1}
 set $m5-k-stride {1}
 set $m5-i-wrap {0}
-set $m5-j-wrap {1}
-set $m5-k-wrap {1}
+set $m5-j-wrap {0}
+set $m5-k-wrap {0}
 set $m6-notes {}
-set $m6-show_status {1}
 set $m6-nodes-on {0}
+set $m6-nodes-transparency {0}
 set $m6-nodes-as-disks {0}
 set $m6-edges-on {0}
+set $m6-edges-transparency {0}
 set $m6-faces-on {1}
 set $m6-use-normals {0}
 set $m6-use-transparency {1}
@@ -99,9 +157,12 @@ set $m6-vectors-on {0}
 set $m6-normalize-vectors {23}
 set $m6-has_vector_data {0}
 set $m6-bidirectional {0}
-set $m6-arrow-heads-on {1}
+set $m6-vector-usedefcolor {0}
 set $m6-tensors-on {0}
 set $m6-has_tensor_data {0}
+set $m6-scalars-on {0}
+set $m6-scalars-transparency {0}
+set $m6-has_scalar_data {1}
 set $m6-text-on {0}
 set $m6-text-use-default-color {1}
 set $m6-text-color-r {1.0}
@@ -124,21 +185,24 @@ set $m6-node_display_type {Points}
 set $m6-edge_display_type {Lines}
 set $m6-data_display_type {Arrows}
 set $m6-tensor_display_type {Boxes}
+set $m6-scalar_display_type {Points}
 set $m6-active_tab {Faces}
-set $m6-node_scale {0.03}
-set $m6-edge_scale {0.015}
+set $m6-node_scale {0.0300}
+set $m6-edge_scale {0.0150}
 set $m6-vectors_scale {0.3}
 set $m6-tensors_scale {0.30}
+set $m6-scalars_scale {0.300}
 set $m6-show_progress {0}
 set $m6-interactive_mode {Interactive}
+set $m6-field-name {}
+set $m6-field-name-update {1}
 set $m6-node-resolution {6}
 set $m6-edge-resolution {6}
 set $m6-data-resolution {6}
 set $m7-notes {}
-set $m7-show_status {1}
-set $m7-isoval {96037.000}
-set $m7-isoval-min {1.04083e-17}
-set $m7-isoval-max {476463}
+set $m7-isoval {0.14201}
+set $m7-isoval-min {-0.0058362519159978693}
+set $m7-isoval-max {0.72543642484822879}
 set $m7-isoval-typed {0}
 set $m7-isoval-quantity {1}
 set $m7-quantity-range {colormap}
@@ -156,10 +220,11 @@ set $m7-color-r {0.4}
 set $m7-color-g {0.2}
 set $m7-color-b {0.9}
 set $m8-notes {}
-set $m8-show_status {1}
 set $m8-nodes-on {0}
+set $m8-nodes-transparency {0}
 set $m8-nodes-as-disks {0}
 set $m8-edges-on {0}
+set $m8-edges-transparency {0}
 set $m8-faces-on {1}
 set $m8-use-normals {0}
 set $m8-use-transparency {1}
@@ -167,9 +232,12 @@ set $m8-vectors-on {0}
 set $m8-normalize-vectors {37749086}
 set $m8-has_vector_data {0}
 set $m8-bidirectional {0}
-set $m8-arrow-heads-on {1}
+set $m8-vector-usedefcolor {0}
 set $m8-tensors-on {0}
 set $m8-has_tensor_data {0}
+set $m8-scalars-on {0}
+set $m8-scalars-transparency {0}
+set $m8-has_scalar_data {1}
 set $m8-text-on {0}
 set $m8-text-use-default-color {1}
 set $m8-text-color-r {1.0}
@@ -192,15 +260,27 @@ set $m8-node_display_type {Spheres}
 set $m8-edge_display_type {Lines}
 set $m8-data_display_type {Arrows}
 set $m8-tensor_display_type {Boxes}
+set $m8-scalar_display_type {Points}
 set $m8-active_tab {Edges}
-set $m8-node_scale {0.03}
-set $m8-edge_scale {0.015}
+set $m8-node_scale {0.0300}
+set $m8-edge_scale {0.0150}
 set $m8-vectors_scale {0.3}
 set $m8-tensors_scale {0.30}
+set $m8-scalars_scale {0.30}
 set $m8-show_progress {0}
 set $m8-interactive_mode {Interactive}
+set $m8-field-name {}
+set $m8-field-name-update {1}
 set $m8-node-resolution {6}
 set $m8-edge-resolution {6}
 set $m8-data-resolution {6}
+set $m9-notes {}
+set $m9-datasets {{-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-R:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-Z:Scalar} }
+set $m9-nmodes {0}
+set $m10-notes {}
+set $m10-datasets {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar}
+set $m10-nmodes {0}
+set $m11-notes {}
+set $m11-datasets {{-NIMROD-OUTPUTS-CODE-GRID-XYZ:Vector} {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar} }
 
 ::netedit scheduleok

@@ -179,9 +179,9 @@ public:
     get_neighbors(nodes, idx);
     return nodes.size();
   }
-  unsigned int get_valence(Edge::index_type idx) const { return 0; }
-  unsigned int get_valence(Face::index_type idx) const { return 0; }
-  unsigned int get_valence(Cell::index_type idx) const { return 0; }
+  unsigned int get_valence(Edge::index_type /*idx*/) const { return 0; }
+  unsigned int get_valence(Face::index_type /*idx*/) const { return 0; }
+  unsigned int get_valence(Cell::index_type /*idx*/) const { return 0; }
 
   //! returns false if point is out of range.
   bool locate(Node::index_type &loc, const Point &p);

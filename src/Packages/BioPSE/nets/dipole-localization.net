@@ -290,6 +290,7 @@ set $m6-interactive_mode {Interactive}
 set $m6-node-resolution {20}
 set $m6-edge-resolution {6}
 set $m6-data-resolution {6}
+set $m6-nodes-usedefcolor {1}
 set $m7-notes {}
 set $m7-show_status {1}
 set $m7-sourceNodeTCL {0}
@@ -412,7 +413,7 @@ set $m12-data_display_type {Arrows}
 set $m12-tensor_display_type {Boxes}
 set $m12-scalar_display_type {Points}
 set $m12-active_tab {Nodes}
-set $m12-node_scale [expr 0.05 * ${global-scale}]
+set $m12-node_scale [expr 0.04 * ${global-scale}]
 set $m12-edge_scale {0.03}
 set $m12-vectors_scale {0.03}
 set $m12-tensors_scale {0.30}

@@ -12,7 +12,6 @@
 SRCDIR := Packages/Fusion/Dataflow/Modules
 
 SUBDIRS := \
-	$(SRCDIR)/DataIO\
 	$(SRCDIR)/Fields\
 	$(SRCDIR)/Render\
 #[INSERT NEW CATEGORY DIR HERE]

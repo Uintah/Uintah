@@ -30,13 +30,16 @@ modules for use in &sr; networks.  By default, &sr; encapsulates a
 subset of <acronym>ITK</acronym> filters.</para>
 
 <para>&sr; encapsulates <acronym>ITK</acronym> filters using
-<acronym>XML</acronym>-based filter description files.  The xalan-j
+<acronym>XML</acronym>-based filter description files.  An
 <acronym>XSLT</acronym> processor generates code for &sr; modules from
-the <acronym>XML</acronym> descriptions.  Users may
-encapsulate additional filters by writing <acronym>XML</acronym>
-descriptions of them.  The process of encapsulating
-<acronym>ITK</acronym> filters in &sr; modules is described in
-???</para>
+the <acronym>XML</acronym> descriptions and <acronym>XSL</acronym>
+stylesheets.  Users may encapsulate additional filters by writing
+<acronym>XML</acronym> descriptions of them.  See the <ulink
+url="../../User/Guide/usersguide/srug8.html">&sr; Users Guide</ulink>
+for more information.</para>
+
+<para>&sr;'s <acronym>ITK</acronym> support depends on the
+presence of Java JDK 1.2.2 or later.</para>
 
 <note>
 <para>The &sr; <acronym>RPM</acronym> distribution does
@@ -47,38 +50,38 @@ code distribution.</para>
 
 </section>
 
-<section>
-<title>Obtaining <acronym>ITK</acronym></title>
+<section id="sec.obitk">
+<title id="sec.title.obitk">Obtaining <acronym>ITK</acronym></title>
 
 <para>The Insight toolkit must be installed before building &sr;.  The
-Insight toolkit and its installation instructions are available from
-the <ulink url="http://www.itk.org"><acronym>ITK</acronym> web
-site</ulink>.  <acronym>ITK</acronym> installation requires CMake, a
-open-source, cross-platform build tool.  CMake can be obtained from
-the <ulink url="http://www.cmake.org">CMake web site</ulink>.</para>
+Insight toolkit and its installation instructions are available on the
+<ulink url="http://www.itk.org"><acronym>ITK</acronym> web
+site</ulink>.  &sr; supports <acronym>ITK</acronym> version 1.4.
+<acronym>ITK</acronym> installation requires CMake, an open-source,
+cross-platform build tool.  CMake can be obtained from the <ulink
+url="http://www.cmake.org">CMake web site</ulink>.</para>
 
 <note>
-<title>CMake Special Instructions</title>
-
-<para>The values of CMake variables
-<varname>BUILD_SHARED_LIBS</varname> and
-<varname>ITK_USE_SYSTEM_PNG</varname> must be set to
-<userinput>ON</userinput>.  Command <command>ccmake</command> is used
-to set CMake variables.  <command>Ccmake</command>must be in
- its advanced mode to change the value of
-<varname>ITK_USE_SYSTEM_PNG</varname>.</para>
-
+<para>&sr;'s Insight package must also be downloaded to add support
+for ITK in &sr;.  See <link endterm="sec.title.sources"
+linkend="sec.sources"/>.</para>
 </note>
+
 </section>
 
 <section>
-<title>Additional Software</title>
+<title>CMake Special Instructions</title>
 
-<para>&sr; support for <acronym>ITK</acronym> requires the xalan-j
-(version 2.5.1 or later) <acronym>XSLT</acronym> processor.  Xalan-j
-and its installation instructions are available from the <ulink
-url="http://xml.apache.org/xalan-j/index.html">xalan
-website</ulink>.</para>
+<para>CMake is a program that generates Makefiles that build ITK.
+CMake's configuration variables determine how ITK is built.  Command
+<command>ccmake</command> is used to configure CMake's variables.  In
+particular, the value of CMake variable
+<varname>BUILD_SHARED_LIBS</varname> must be explicitly set.</para>
+
+<para>On SGI and Linux, <varname>BUILD_SHARED_LIBS</varname> must be
+set <userinput>ON</userinput>.  On OSX
+<varname>BUILD_SHARED_LIBS</varname> must be set
+<userinput>OFF</userinput></para>
 
 </section>
 
@@ -92,18 +95,12 @@ pubwork="section"><xref linkend="sec.build-sr"
 endterm="title.build-sr"/></citetitle>).
 <variablelist>
 <varlistentry>
-<term><option>--with-insight=<replaceable>path-to-insight</replaceable></option></term>
+<term><option>--with-insight=<replaceable>path-to-insight-libs</replaceable></option></term>
 <listitem>
-<para>Specifies the path to the <acronym>ITK</acronym>
-<quote>build</quote> directory&mdash;the directory containing
-<acronym>ITK</acronym> executables and libraries.
-</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><option>--with-xalan=<replaceable>path-to-xalan</replaceable></option></term>
-<listitem>
-<para>Specifies the path to the top-level xalan-j installation directory.
+<para>Specifies the path to the <acronym>ITK</acronym> library
+installation directory&mdash;the directory containing
+<acronym>ITK</acronym> libraries
+(e.g. <filename>/usr/local/lib/InsightToolkit</filename>)
 </para>
 </listitem>
 </varlistentry>
@@ -114,8 +111,7 @@ endterm="title.build-sr"/></citetitle>).
 ../src/configure \
   --with-thirdparty=/usr/local/&sr;/Thirdparty/1.10.0/Irix/CC-32bit \
   --enable-package="Insight BioPSE" \
-  --with-insight=/usr/local/Insight \
-  --with-xalan=/usr/local/xalan-j_2_5_1
+  --with-insight=/usr/local/lib/InsightToolkit
 </literallayout>
 </para>
 
@@ -124,9 +120,10 @@ endterm="title.build-sr"/></citetitle>).
 <section>
 <title>Next</title>
 
-<para>Proceed to <citetitle pubwork="section"><xref
-linkend="sec.source_inst" endterm="title.source_inst" /></citetitle>
-after <acronym>ITK</acronym> has been installed.</para>
+<para>After <acronym>ITK</acronym> has been installed, proceed to
+<citetitle pubwork="section"><xref linkend="sec.source_inst"
+endterm="title.source_inst" /></citetitle>
+</para>
 
 </section>
 

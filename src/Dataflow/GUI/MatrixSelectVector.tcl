@@ -77,8 +77,7 @@ itcl_class SCIRun_Math_MatrixSelectVector {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
         toplevel $w
 
@@ -176,6 +175,9 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 
         pack $w.loc $w.playmode $w.dependence $w.execmode \
 		-padx 5 -pady 5 -fill both -expand yes
+
+	makeSciButtonPanel $w $w $this "true"
+	moveToCursor $w
 
 	update
 

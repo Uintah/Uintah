@@ -35,7 +35,7 @@ protected:
   vector< GuiString* > gProperty_;
   vector< GuiString* > gType_;
   vector< GuiString* > gValue_;
-  vector< GuiString* > gReadOnly_;
+  vector< GuiInt*    > gReadOnly_;
 
   unsigned int entries_;
   string property_;
@@ -100,36 +100,44 @@ void NrrdSetProperty::execute() {
     for( unsigned int ic=0; ic<nHandle->nproperties(); ic++ ) {
       int    p_int;
       float  p_float;
+      double p_double;
       string p_string;
 
-      string name = nHandle->get_property_name( ic );
+      string pname = nHandle->get_property_name( ic );
       string type("other");
       string value("Can not display");
       int readonly = 1;
 
-      if( nHandle->get_property( name, p_int ) ) {
+      if( nHandle->get_property( pname, p_int ) ) {
 	type = string( "int" );
 	char tmpStr[128];
 	sprintf( tmpStr, "%d", p_int );
 	value = string( tmpStr );
-	readonly = 1;
+	readonly = 0;
 
-      } else if( nHandle->get_property( name, p_float ) ) {
+      } else if( nHandle->get_property( pname, p_float ) ) {
 	type = string( "float" );
 	char tmpStr[128];
 	sprintf( tmpStr, "%f", p_float );
 	value = string( tmpStr );
-	readonly = 1;
+	readonly = 0;
 
-      } else if( nHandle->get_property( name, p_string ) ) {
+      } else if( nHandle->get_property( pname, p_double ) ) {
+	type = string( "double" );
+	char tmpStr[128];
+	sprintf( tmpStr, "%f", p_double );
+	value = string( tmpStr );
+	readonly = 0;
+
+      } else if( nHandle->get_property( pname, p_string ) ) {
 	type = string( "string" );
 	value = p_string;
-	readonly = 1;
+	readonly = 0;
       }
 
       ostringstream str;
       str << id << " setEntry {";
-      str << name << "} ";
+      str << pname << "} ";
       str << type << " {";
       str << value << "} ";
       str << readonly << " ";
@@ -157,9 +165,9 @@ void NrrdSetProperty::execute() {
   value_ = sValue_.get();                    // Default Value 
   readonly_ = iReadOnly_.get();              // Default Read Only
 
-  int entries = gProperty_.size();
+  int entries = gProperty_.size();           // # GUI vars entries
 
-  // Remove the old entries that are not needed.
+  // Remove the GUI entries that are not needed.
   for( int ic=entries-1; ic>=(int)entries_; ic-- ) {
     delete( gProperty_[ic] );
     delete( gType_[ic] );
@@ -177,7 +185,7 @@ void NrrdSetProperty::execute() {
     readOnly_.pop_back();
   }
 
-  // Add new entries that are needed.
+  // Add new GUI entries that are needed.
   for( unsigned int ic=entries; ic<entries_; ic++ ) {
     char idx[24];
 
@@ -191,7 +199,7 @@ void NrrdSetProperty::execute() {
     gValue_.push_back(new GuiString(ctx->subVar(idx)) );
 
     sprintf( idx, "readonly-%d", ic );
-    gReadOnly_.push_back(new GuiString(ctx->subVar(idx)) );
+    gReadOnly_.push_back(new GuiInt(ctx->subVar(idx)) );
 
     properties_.push_back("");
     types_.push_back("");
@@ -200,6 +208,7 @@ void NrrdSetProperty::execute() {
   }
 
 
+  // Look through the properties to see if any have changed.
   for( unsigned int ic=0; ic<entries_; ic++ ) {
     gProperty_[ic]->reset();
     gType_[ic]->reset();
@@ -229,25 +238,33 @@ void NrrdSetProperty::execute() {
     // Compare with the current nrrd properties.
     int    p_int;
     float  p_float;
+    double p_double;
     string p_string;
 
     if( types_[ic] == string( "int" ) &&
-	nHandle->get_property( name, p_int ) ) {
+	nHandle->get_property( properties_[ic], p_int ) ) {
       if( p_int != atoi( values_[ic].c_str() ) )
 	update = true;
 
     } else if( types_[ic] == string( "float" ) &&
-	nHandle->get_property( name, p_float ) ) {
+	nHandle->get_property( properties_[ic], p_float ) ) {
       if( p_float != atof( values_[ic].c_str() ) )
 	update = true;
 
+    } else if( types_[ic] == string( "double" ) &&
+	nHandle->get_property( properties_[ic], p_double ) ) {
+      if( p_double != atof( values_[ic].c_str() ) )
+	update = true;
+
     } else if( types_[ic] == string( "string" ) &&
-	nHandle->get_property( name, p_string ) ) {
+	nHandle->get_property( properties_[ic], p_string ) ) {
       if( p_string != values_[ic] )
 	update = true;
     }
   }
 
+
+  // Something changed so update the properties.
   if( update == true ||
       error_ == true  ) {
 
@@ -263,6 +280,10 @@ void NrrdSetProperty::execute() {
 	float p_float = (float) atof(values_[ic].c_str());
 	nHandle->set_property(properties_[ic], p_float, false);
 
+      } else if( types_[ic] == "double" ) {
+	double p_double = (double) atof(values_[ic].c_str());
+	nHandle->set_property(properties_[ic], p_double, false);
+
       } else if( types_[ic] == "string" ) {
 	string p_string = (string) values_[ic];
 	nHandle->set_property(properties_[ic], p_string, false);
@@ -276,26 +297,30 @@ void NrrdSetProperty::execute() {
 
     // Remove the deleted properties.
     for( unsigned int ic=0; ic<nHandle->nproperties(); ic++ ) {
-      string name = nHandle->get_property_name( ic );
+      string pname = nHandle->get_property_name( ic );
 
       unsigned int jc;
 
+      // If the property is in the entries keep it.
       for( jc=0; jc<entries_; jc++ ) {
-	if( name == properties_[jc] )
+	if( pname == properties_[jc] )
 	  break;
       }
 
+      // Otherwise if not found remove it.
       if( jc == entries_ )
-	nHandle->remove_property( name );
+	nHandle->remove_property( pname );
     }
 
+    // Update the handles and generation numbers.
+    // NOTE: This is done in place, e.g. the nrrd is not copied.
     nHandle_ = nHandle;
     nHandle_->generation++;
     nGeneration_ = nHandle->generation;
   }
 
 
-  // Get a handle to the output Field port.
+  // Get a handle to the output Nrrd port.
   if( nHandle_.get_rep() )
   {
     NrrdOPort *onrrd_port =

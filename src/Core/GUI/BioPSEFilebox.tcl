@@ -670,10 +670,20 @@ proc biopseFDialog {argstring} {
     if {![string compare $data(-parent) .]} {
         set w .$w
     } else {
-	wm withdraw $data(-parent)
+# parents don't exist anymore...
+#	wm withdraw $data(-parent)
         set w $data(-parent).$w
     }
     
+    # This is a hack.  Here is the problem... biopseFDialog creates
+    # its own window instead of parenting it in the parent that is
+    # passed in.  This is non standard and is different from all the
+    # other GUIs.  Thus I'm hacking this to act correctly on the
+    # cancel and command buttons.  This works because they all do the
+    # same thing (and there are only 4 of them being used.
+    set data(-cancel) "$data(-cancel) $w"
+    set data(-command) "$data(-command) $w"
+
     # (re)create the dialog box if necessary
     if {![winfo exists $w]} {
 	biopseFDialog_Create $w
@@ -749,6 +759,10 @@ proc biopseFDialog {argstring} {
 
     catch {focus $oldFocus}
     grab release $w
+
+    # For now, return the window that this thing created so other
+    # parts of the code can deal with it... sigh.
+    return $w
 }
 
 # biopseFDialog_Config --
@@ -789,6 +803,7 @@ proc biopseFDialog_Config {w type argList} {
 	    {-splitvar "" "" ""}
 	    {-imgwidth "" "" ""}
 	    {-imgheight "" "" ""}
+	    {-confirmvar "" "" ""}
 	}
     }
 
@@ -969,6 +984,17 @@ static char updir_bits[] = {
 	} else {
 	    set data(is_split) 1
 	}
+
+        if {$data(-confirmvar) != ""} {
+            set f6 [frame $w.f6 -bd 0]
+            label $f6.lab -text "" -width 15 -anchor e
+            checkbutton $f6.button  -text "Confirm Before Overwriting File " \
+              -variable $data(-confirmvar)
+            pack $f6.lab -side left -padx 2
+            pack $f6.button -side left -padx 2
+            pack $f6 -side bottom -fill x -pady 4
+        }
+	    
 
         if {$data(-imgwidth) != ""} {
             set f5 [frame $w.f5 -bd 0]
@@ -1536,16 +1562,22 @@ proc biopseFDialog_Done {w {selectFilePath ""}} {
 	set biopsePriv(selectFile)     $data(selectFile)
 	set biopsePriv(selectPath)     $data(selectPath)
 
-	if {[file exists $selectFilePath] && 
+	set confirm 1
+	if { [info exists data(-confirmvar)] &&
+	     [string length $data(-confirmvar)] } {
+	    set confirm 0
+	}
+	
+	if {$confirm && 
+	    [file exists $selectFilePath] && 
 	    ![string compare $data(type) save]} {
-
 		set reply [tk_messageBox -icon warning -type yesno\
 			-parent $data(-parent) -message "File\
 			\"$selectFilePath\" already exists.\nDo\
 			you want to overwrite it?"]
-		if {![string compare $reply "no"]} {
-		    return
-		}
+	    if {![string compare $reply "no"]} {
+		return
+	    }
 	}
     }
     

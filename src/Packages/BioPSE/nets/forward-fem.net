@@ -141,33 +141,36 @@ set $m14-faces-on {0}
 set $m14-node_display_type {Spheres}
 set $m14-node_scale [expr 0.03 * ${global-scale}]
 set $m14-resolution {7}
+set $m14-field-name {Electrodes}
 
 set $m15-maxseeds {50}
 set $m15-numseeds {35}
 
-set $m16-nodes-on {1}
+set $m16-nodes-on {0}
 set $m16-edges-on {1}
 set $m16-faces-on {0}
-set $m16-node_display_type {Spheres}
 set $m16-edge_display_type {Cylinders}
 set $m16-node_scale [expr 0.01 * ${global-scale}]
 set $m16-edge_scale [expr 0.01 * ${global-scale}]
-set $m16-resolution {7}
+set $m16-resolution {8}
+set $m16-field-name {StreamLines}    
 
 set $m17-stepsize [expr 0.004 * ${global-scale}]
 set $m17-tolerance [expr 0.004 * ${global-scale}]
 set $m17-maxsteps {250}
+set $m17-method {5}
 
 set $m20-def-color-r {0.3}
 set $m20-def-color-g {0.3}
 set $m20-def-color-b {0.3}
+set $m20-def-color-a {0.9}
 set $m20-nodes-on {0}
 set $m20-edges-on {1}
 set $m20-faces-on {0}
-set $m20-node_display_type {Spheres}
-set $m20-edge_display_type {Cylinders}
-set $m20-node_scale [expr 0.005 * ${global-scale}]
-set $m20-edge_scale [expr 0.005 * ${global-scale}]
-set $m20-resolution {4}
+set $m20-edge_display_type {Lines}
+set $m20-edges-transparency {1}
+set $m20-edge_scale {2.0}
+set $m20-resolution {6}
+set $m20-field-name {Boundary}
 
 ::netedit scheduleok

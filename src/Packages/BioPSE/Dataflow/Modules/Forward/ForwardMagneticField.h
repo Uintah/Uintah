@@ -232,6 +232,7 @@ CalcFMField<ElecField, CondField, PointField, MagField>::calc_forward_magnetic_f
   ASSERT(ctfld != 0);
   ctfld_ = ctfld;
 
+  // this code should be able to handle Field<Tensor> as well
   if (! ctfld_->get_property("conductivity_table", tens_)) {
     mod->error("Must have a conductivity table in Conductivity Field");
     return false;
@@ -375,10 +376,12 @@ CalcFMField<ElecField, CondField, PointField, MagField>::set_up_cell_cache()
 	
       // sanity check?
     efld_->value(elemField, cur_cell);
+
+    // this code should be able to handle Tensor or int typed data
     int material = -1;
     ctfld_->value(material, cur_cell);
-
     c.cur_density_ = tens_[material].second * -1 * elemField; 
+
     c.volume_ = mesh->get_volume(cur_cell);
       
     cell_cache_[(unsigned)cur_cell] = c;

@@ -26,7 +26,6 @@
       <category>Filters</category>
       <instantiations use-defaults="yes"/>
      <includes>
-        <file>Packages/Insight/Dataflow/Ports/ITKDatatypePort.h</file>
      </includes>
   </filter-sci>
 </filter>

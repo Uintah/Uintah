@@ -80,8 +80,7 @@ itcl_class SCIRun_Math_BuildTransform {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    raise $w
-	    return;
+	    return
 	}
 
 	toplevel $w
@@ -151,7 +150,7 @@ itcl_class SCIRun_Math_BuildTransform {
 	pack $w.f.b -side top
 	pack $w.f.prepost -side top -fill x -expand 1
 
-	frame $w.f.t -relief groove -borderwidth 5
+	frame $w.f.t -relief groove -borderwidth 2
 	label $w.f.t.l -text "Translate Vector"
 	frame $w.f.t.f
 	expscale $w.f.t.f.x -orient horizontal -variable $this-translate_x \
@@ -161,7 +160,7 @@ itcl_class SCIRun_Math_BuildTransform {
 	expscale $w.f.t.f.z -orient horizontal -variable $this-translate_z \
 		-label "Z:"
 	pack $w.f.t.f.x $w.f.t.f.y $w.f.t.f.z -side top -fill x
-	pack $w.f.t.l $w.f.t.f -side top -fill both -expand 1
+	pack $w.f.t.l $w.f.t.f -side top -fill both -expand 1 -padx 2 -pady 2
 	pack $w.f.t -side top -fill x -expand 1
 	
 	global $this-rotate_x
@@ -292,7 +291,6 @@ itcl_class SCIRun_Math_BuildTransform {
 		-label "Uniform Scale"
 	frame $w.f.w.b 
 
-        set $this-ignoring_widget_changes 1
 	set $this-widget_scale 1
 	set $this-widgetShowResizeHandles 0
 
@@ -302,14 +300,16 @@ itcl_class SCIRun_Math_BuildTransform {
 	button $w.f.w.b.reset -text "Reset Widget" \
 		-command "$this-c reset_widget"
 	checkbutton $w.f.w.b.ignore -text "Ignore Changes" \
-		-variable $this-ignoring_widget_changes \
-		-command "$this change_ignore"
+		-variable $this-ignoring_widget_changes
 	pack $w.f.w.b.handles $w.f.w.b.reset $w.f.w.b.ignore -side left \
 		-fill x -expand 1 -pady 3 -padx 12
 	pack $w.f.w.d $w.f.w.b -side top -fill x -expand 1
 
 	pack $w.f -fill x -expand 1 -side top
 	$this set_transform $w [set $this-which_transform]
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }	
 
     method computelog { } {
@@ -317,12 +317,6 @@ itcl_class SCIRun_Math_BuildTransform {
 	global $this-logoutput
 	set x [set $this-loginput]
 	set $this-logoutput [ expr log10($x) ]
-    }
-
-    method change_ignore { } {
-	global $this-ignoring_widget_changes
-	set ignore [set $this-ignoring_widget_changes]
-	$this-c change_ignore $ignore
     }
 
     method change_handles { } {

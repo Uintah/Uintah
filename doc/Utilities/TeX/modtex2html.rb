@@ -64,6 +64,7 @@ def texFragToTexDoc(texFile)
 \\newcommand{\\ModuleRefDetails}{\\subsection*{Details}}
 \\newcommand{\\ModuleRefNotes}{\\subsection*{Notes}}
 \\newcommand{\\ModuleRefCredits}{\\subsection*{Credits}}
+\\newcommand{\\ModuleRefSection}[1]{\\subsection*{#1}}
 \\newcommand{\\ModuleRefSubSection}[1]{\\subsubsection*{#1}}
 \\newcommand{\\ModuleRefSubSubSection}[1]{\\paragraph*{#1}}
 %begin{latexonly}

@@ -34,10 +34,15 @@ using namespace SCIRun;
  * Constructor
  * @param 
  */
-BuildHexFEMatrix::BuildHexFEMatrix(HexVolFieldIntHandle hField, vector<pair<string, Tensor> > &tens, double unitsScale) : hField_(hField),
-																														  tens_(tens), 
-																														  unitsScale_(unitsScale){
-  hMesh_ = hField->get_typed_mesh();
+BuildHexFEMatrix::BuildHexFEMatrix(HexVolFieldIntHandle hFieldInt,
+				   HexVolFieldTensorHandle hFieldTensor,
+				   bool index_based,
+				   vector<pair<string, Tensor> > &tens, 
+				   double unitsScale) 
+  : hFieldInt_(hFieldInt), hFieldTensor_(hFieldTensor),
+    index_based_(index_based), tens_(tens), unitsScale_(unitsScale) {
+  if (index_based_) hMesh_ = hFieldInt->get_typed_mesh();
+  else hMesh_ = hFieldTensor->get_typed_mesh();
   rE_ = scinew ReferenceElement();
 }
 
@@ -95,8 +100,8 @@ MatrixHandle BuildHexFEMatrix::buildMatrix() {
   // loop over cells
   for(; ii != ie; ++ii) {
 	hMesh_->get_nodes(cell_nodes, *ii);
-	j = hField_->value(*ii); // get index of the cell (data location must be at cell !!!)
-	buildLocalMatrix(localMatrix, j, cell_nodes);
+//	j = hFieldInt_->value(*ii); // get index of the cell (data location must be at cell !!!)
+	buildLocalMatrix(localMatrix, *ii, cell_nodes);
 	addLocal2GlobalMatrix(localMatrix, cell_nodes);
   }
 
@@ -105,7 +110,7 @@ MatrixHandle BuildHexFEMatrix::buildMatrix() {
   
 }
 
-void BuildHexFEMatrix::buildLocalMatrix(double localMatrix[8][8], int ci, HexVolMesh::Node::array_type& cell_nodes) {
+void BuildHexFEMatrix::buildLocalMatrix(double localMatrix[8][8], HexVolMesh::Cell::index_type ci, HexVolMesh::Node::array_type& cell_nodes) {
 
   // compute matrix entries
   for(int i=0; i<8; i++) { // loop over nodes (basis functions)
@@ -116,7 +121,8 @@ void BuildHexFEMatrix::buildLocalMatrix(double localMatrix[8][8], int ci, HexVol
   
 }
 
-double BuildHexFEMatrix::getLocalMatrixEntry(int ci, int i, int j, HexVolMesh::Node::array_type& cell_nodes) {
+double BuildHexFEMatrix::getLocalMatrixEntry(HexVolMesh::Cell::index_type ci, int i, int j, 
+			       HexVolMesh::Node::array_type& cell_nodes) {
   double value = 0.0;
   int w;
   double xa, xb, ya, yb, za, zb;
@@ -127,8 +133,12 @@ double BuildHexFEMatrix::getLocalMatrixEntry(int ci, int i, int j, HexVolMesh::N
   hMesh_->get_point(p, cell_nodes[6]);
   xb = p.x(); yb = p.y(); zb = p.z();
 
+  typedef double onerow[3]; // This 'hack' is necessary to compile under IRIX CC
+  onerow *conductivity;
+
   // get conductivity tensor for this cell
-  double (&conductivity)[3][3] = tens_[ci].second.mat_;
+  if (index_based_) conductivity = tens_[hFieldInt_->value(ci)].second.mat_;
+  else conductivity = hFieldTensor_->value(ci).mat_;
 
   for(w = 0; w < rE_->numQuadPoints; w++) { // loop over quadrature points
 	value += 

@@ -29,11 +29,29 @@ itcl_class SCIRun_DataIO_MatrixWriter {
 	set_defaults
     }
     method set_defaults {} {
-	global $this-filetype
+	global $this-filetype $this-confirm $this-split env
 	set $this-filetype Binary
 	set $this-split 0
+      	set $this-confirm 1
+	if { [info exists env(SCI_CONFIRM_OVERWRITE)] && 
+	     ([string equal 0 $env(SCI_CONFIRM_OVERWRITE)] ||
+	      [string equal -nocase no $env(SCI_CONFIRM_OVERWRITE)]) } {
+	    set $this-confirm 0
+	}
+
     }
-    
+    method overwrite {} {
+	global $this-confirm $this-filetype
+	if {[info exists $this-confirm] && [info exists $this-filename] && \
+		[set $this-confirm] && [file exists [set $this-filename]] } {
+	    set value [tk_messageBox -type yesno -parent . \
+			   -icon warning -message \
+			   "File [set $this-filename] already exists.\n Would you like to overwrite it?"]
+	    if [string equal "no" $value] { return 0 }
+	}
+	return 1
+    }
+
     method ui {} {
 	global env
 	set w .ui[modname]
@@ -44,7 +62,7 @@ itcl_class SCIRun_DataIO_MatrixWriter {
 	    return;
 	}
 	
-	toplevel $w
+	#toplevel $w
 	set initdir ""
 
 	# place to put preferred data directory
@@ -80,16 +98,17 @@ itcl_class SCIRun_DataIO_MatrixWriter {
 	######################################################
 	
 	makeSaveFilebox \
-		-parent $w \
+		-parent . \
 		-filevar $this-filename \
-		-command "$this-c needexecute; destroy $w" \
-		-cancel "destroy $w" \
+		-command "$this-c needexecute; destroy " \
+		-cancel "destroy " \
 		-title $title \
 		-filetypes $types \
 	        -initialfile $defname \
 		-initialdir $initdir \
 		-defaultextension $defext \
 		-formatvar $this-filetype \
-		-splitvar $this-split
+		-splitvar $this-split \
+	        -confirmvar $this-confirm
     }
 }

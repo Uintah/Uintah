@@ -207,7 +207,7 @@ def genPage(packageName, list)
 <th colspan=\"#{numCols}\">
 <span class=\"title\">#{packageName} Module Descriptions</span>
 <br/>
-<span class=\"subtitle\">by category [<a class=\"alt\" href=\"#{packageName}.html\">alphabetically</a>]</span>
+<span class=\"subtitle\">by category (and <a class=\"alt\" href=\"#{packageName}.html\">alphabetically</a>)</span>
 <br/>
 <span class=\"subtitle\">for SCIRun version #{version}</span>
 </th>

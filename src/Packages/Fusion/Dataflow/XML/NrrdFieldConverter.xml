@@ -1,12 +1,80 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
-<?xml-stylesheet href="../../../../../doc/Utilities/XML/package-component.xsl" type="text/xsl"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/package-component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
 
 <component name="NrrdFieldConverter" category="Fields">
   <overview>
     <authors>
+      <author>ARSanderson</author>
     </authors>
+    <summary>
+      <p>
+The Nrrd Field Converter creates a SCIRun mesh and field from Nrrd
+data. It makes assumptions about the field and mesh type based on the
+input data. The mesh data must be properly attributed with SCIRun
+properties for the mesh to be created.
+      </p>
+    </summary>
+    <description>
+      <p>
+The Nrrd Field Converter creates a SCIRun mesh and field from the
+data. It makes assumptions about the field and mesh type based on the
+input data.
+      </p>
+      <p>
+For a mesh to be created each point component(s) must contain the
+following properties:
+      </p>
+<p>Coordinate System - {Cartesian - XYZ}</p>
+<p>Topology - {Structured or Unstructured}</p>
+<p>If the Topology is Structured a geometry property is also needed:</p>
+<p>Geometry - {Regular or Irregular}</p>
+
+<p>If the data is Unstructured a connectivity list is needed with the
+follow properties:</p>
+<p>Topology - {Unstructured}</p>
+<p>Cell Type - { Tetahedron, Pyramid, Prism, Hexahedron,
+                 Triangle,Quadrilateral, Curve, Point }</p>
+
+
+<p>For a structured mesh, the points may be given as either components
+or as an n dimensional array by 2, or 3.</p>
+
+
+<p>If no mesh is present and the user has selected the "No Mesh"
+option a regular mesh from 0 to 1 will be created.</p>
+
+
+<p>Field data is not requied, but if present, it need not have any
+properties and can not have a property "Topology" which is reserved
+only for mesh data. Further it may be sent as either scalar, vector,
+or tensor or as individual components. If sent as components there
+must be either 1, 3, or 6 inputs and each must be scalar.</p>
+
+
+<p>For all inputs the Nrrd data may be send individually or along
+a multiple tuple axis. Sending along multiple tuple axis redeuces the
+number connections needed between modules.</p>
+
+    </description>
   </overview>
   <implementation>
   </implementation>

@@ -1,0 +1,925 @@
+% -*-latex-*-
+%
+%  The contents of this file are subject to the University of Utah Public
+%  License (the "License"); you may not use this file except in compliance
+%  with the License.
+%
+%  Software distributed under the License is distributed on an "AS IS"
+%  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+%  License for the specific language governing rights and limitations under
+%  the License.
+%
+%  The Original Source Code is SCIRun, released March 12, 2001.
+%
+%  The Original Source Code was developed by the University of Utah.
+%  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+%  University of Utah. All Rights Reserved.
+%
+
+
+\chapter{Wrapping  ITK Filters in \sr{} Modules}
+\label{ch:itk_mods}
+
+The \htmladdnormallinkfoot{National Library of Medicine Insight
+  Segmentation and Registration Toolkit}{http://www.itk.org} (ITK)
+is open source software that complements \sr{} by providing
+image-processing capabilities, ranging from fundamental algorithms to
+advanced segmentation and registration tools.  The Insight Tool Kit
+provides these capabilities as \dfn{filters}.  \sci{} has developed a
+method of wrapping ITK filters in \sr{} modules.
+
+If ITK is present, and \sr{} is appropriately configured, \sr{} 
+builds a default set of ITK filter-based modules.  Users can generate 
+additional modules by writing XML descriptions. This chapter describes
+the process of wrapping ITK filters in \sr{} modules.
+
+Before reading this chapter, users should be familiar with \sr{}, the
+Insight toolkit, and the use of generic programming techniques.  Users
+must have access to the \sr{} source code tree and be familiar with
+its organization.
+
+
+\section{Aim}
+\label{sec:itk_mods:aim}
+
+ITK filters are C++ objects (also known as \dfn{process objects}) that
+receive data on input ports and forward results on output ports.
+ITK filter objects provide functions for establishing connections to
+ports and setting filter properties.
+
+\sr{} modules are C++ objects that receive data via input ports
+and forward results via output ports.  \sr{} modules provide
+GUI-based dialogs for modifying  module properties.
+
+The aim of \sr{}/ITK integration is to map ITK filter data types,
+ports, properties, and property editing functions to \sr{} module data
+types, ports, properties, and property editing GUI dialogs.
+
+
+\section{Approach}
+\label{sec:itk_mods:approach}
+
+ITK filters are mapped onto \sr{} modules via XML description files.
+Up to three XML files are required for each filter:
+
+\begin{description}
+\descitem{ITK Filter Description File} Description of a filter.  Contains
+no \sr{} specific information.  Filter descriptions may exist in the
+ITK distribution.
+\descitem{\sr{} Filter Description File} Contains \sr{} specific
+information and include a reference to an ITK filter description file
+and an optional reference to a GUI description file.
+\descitem{GUI Description File} This file is optional.  It describes a
+filter's GUI.  A default GUI will be create if this file does not exist.
+\end{description}
+
+Software in the \sr{} build system automatically translates these XML
+files to \sr{} modules.   XML files are described in
+\secref{ITK Filter Description}{sec:itk_mods:itk_filter_desc},
+\secref{\sr{} Filter Description}{sec:itk_mods:sr_filter_desc}, and
+\secref{\sr{} GUI Description}{sec:itk_mods:sr_gui_desc},
+respectively.
+
+
+\section{ITK Filter Description}
+\label{sec:itk_mods:itk_filter_desc}
+
+The ITK filter description XML file describes a filter's inputs,
+outputs, parameters, parameter modifying member functions, templated
+data types, and other filter information.  This file contains no \sr{}
+specific information.  
+
+ITK filter description files are located in
+directory \directory{SCIRun/src/Packages/Insight/ITK}. 
+ITK filter description files follow the naming convention:
+
+\begin{alltt}
+  itk\_\replaceable{filter_name}.xml
+\end{alltt}
+
+for example:
+
+\begin{alltt}
+  itk\_BinaryThresholdImageFilter.xml
+\end{alltt}
+
+
+The following XML code illustrates the overall content of an ITK
+filter description file:
+
+\begin{alltt}
+  <?xml version="1.0" encoding="iso-8859-1"?>
+  <!DOCTYPE filter SYSTEM "itk_filter.dtd">
+  <filter-itk name="\replaceable{filter_name}">
+     <description>
+     \velide
+     </description>
+     <templated>
+     \velide
+     </templated>
+     <datatypes>
+     \velide
+     </datatypes>
+     <inputs>
+     \velide
+     </inputs>
+     <outputs>
+     \velide
+     </outputs>
+     <parameters>
+     \velide
+     </parameters>
+     <includes>
+     \velide   
+     </includes>
+  </filter-itk>
+\end{alltt}
+
+Each element is discussed below.
+
+\subsection{Element \xmlstarttag{filter-itk}}
+\label{sec:itk_mods:filter-itk_element}
+
+Element \xmlstarttag{filter-itk} is the top-level element.  All other
+elements are enclosed in element \xmlstarttag{filter-itk}. The value
+of the required ``name'' attribute is the qualified C++ filter name.
+
+For example:
+
+\begin{alltt}
+  <filter-itk name="itk::ReflectImageFilter">
+    \velide
+  </filter>
+\end{alltt}
+
+\subsection{Element \xmlstarttag{description}}
+\label{sec:itk_mods:descr_element}
+
+Element \xmlstarttag{description} should provide a short (several sentences)
+filter description.  
+
+For example:
+
+\begin{alltt}
+  <description>
+    Implements a Reflection of an image along a selected 
+    direction. This class is parameterized over the type 
+    of the input image and the type of the output image. 
+  </description>
+\end{alltt}
+
+
+\subsection{Element \xmlstarttag{templated}}
+\label{sec:itk_mods:templated}
+
+ITK filters are templated (parameterized) C++ classes and generally
+support one or two template parameters.  The \xmlstarttag{templated}
+element describes a filter's template information.  Specifically, 
+\xmlstarttag{templated} contains elements that name a filter's
+template parameters and list suitable data types for filter
+instantiations.
+
+\begin{alltt}
+<templated>
+  <template>\replaceable{template\_parameter\_name1}</template>
+  <template>\replaceable{template\_parameter\_name2}</template>
+  \velide 
+  <defaults>
+    <default>\replaceable{data\_type\_for\_parameter\_name1}</default>
+    <default>\replaceable{data\_type\_for\_parameter\_name2}</default>
+    \velide
+  </defaults>
+  <defaults>
+    <default>\replaceable{data\_type\_for\_parameter\_name1}</default>
+    <default>\replaceable{data\_type\_for\_parameter\_name2}</default>
+    \velide
+  </defaults>
+  \velide
+</templated>
+\end{alltt}
+
+Each \xmlstarttag{template} element declares and names a template
+parameter.  Template parameter names may be used in subsequent
+\xmlstarttag{input} and \xmlstarttag{output} elements---see below.
+
+Each \xmlstarttag{defaults} element corresponds to one filter class
+instantiation.  Each \xmlstarttag{default} element names a type that
+corresponds (in order) with previous \xmlstarttag{template} elements.
+
+For example, the following \xmlstarttag{templated} element:
+
+\begin{alltt}
+  <templated> 
+    <template>InputImageType</template> 
+    <template>OutputImageType</template>
+    <defaults>
+       <default>itk::Image&lt;float, 2&gt;</default> 
+       <default>itk::Image&lt;float, 2&gt;</default> 
+    </defaults> 
+  </templated>
+\end{alltt}
+
+corresponds to filter class template:
+
+\begin{alltt}
+  template <class InputImageType, class OutputImageType>
+  class \replaceable{AnITKFilterClass}\(\ldots\)
+\end{alltt}
+
+and filter type instantiation:
+
+\begin{alltt}
+  \replaceable{AnITKFilterClass}<itk::Image<float,2>,itk::Image<float,2> >
+\end{alltt}
+
+Note that characters ``\la'' and ``\ra'' cannot be typed literally into an
+XML file. The character entities '\&lt;' and '\&gt;', respectively, 
+must be used.
+
+A \xmlstarttag{template} element and its corresponding
+\xmlstarttag{default} element can describe a parameterized built-in 
+value.  In this case, a \xmlstarttag{template} element's ``type''
+attribute specifies a C++ built-in type, and a corresponding
+\xmlstarttag{default} element specifies the type's value:
+
+\begin{alltt}
+  <templated>
+    <template type="unsigned int">ImageDimension</template>
+    \velide
+    <defaults>
+      <default>2</default>
+      \velide
+    </defaults>
+  </templated>
+\end{alltt}
+
+A \sr{} filter module knows all possible filter instantiations.  When
+executed at runtime, a module uses the filter instantiation with data
+input and output types matching data types passing through the
+module's input and output ports.
+
+\subsection{Element \xmlstarttag{datatypes}}
+
+Element \xmlstarttag{datatypes} declares filter parameter data types
+that are not C++ built-in  types.  Names of declared data types are
+used in \xmlstarttag{parameter} elements that describe filter
+parameters (see \secref{Element).
+  \xmlstarttag{parameters}}{sec:itk_mods:param_element}).  Element
+\xmlstarttag{datatypes} is optional, it is needed only when a
+parameter is not a C++ built-in type.
+
+The structure of the \xmlstarttag{datatypes} element follows:
+
+\begin{alltt}
+  <datatypes>
+    \xmlstarttag{\replaceable{data\_type\_element} name="\replaceable{data\_type\_name}"}
+    \velide
+    \xmlendtag{\replaceable{data\_type\_element}}
+    \velide  
+  </datatypes>
+\end{alltt}
+
+where \replaceable{data\_type\_element} is the name of a \dfn{data
+  type element}.  
+
+Each \xmlstarttag{\replaceable{data\_type\_element}}
+describes the properties of one data type.  Element
+\xmlstarttag{datatypes} enclose one or more data type elements.
+
+At this time, element \xmlstarttag{array} is the only supported data
+type element.  The array-like type described by element
+\xmlstarttag{array} is subject to the following conditions:
+
+\begin{itemize}
+\item It must support operator[]()
+\item Its array elements must be a built-in type
+\item It must support a member function that returns the array length
+\end{itemize}
+
+The structure of element \xmlstarttag{array} follows:
+
+\begin{alltt}
+  <array name="FilterType::\replaceable{data\_type\_name}">
+    <elem-type>\replaceable{built-in\_type}</elem-type>
+    <size-call>\replaceable{member\_function}</size-call>
+  </array>
+\end{alltt}
+
+Attribute \xmlattrname{name} specifies the name of an array-like
+data type.  ``FilterType'' is a pseudo qualifier.  It represents the
+full templated type of the current filter.  \datatype{FilterType} is
+used in place of the full template name, for example, 
+\datatype{itk::MeanImageFilter<InputType,OutputType>}.
+\replaceable{Data\_type\_name} is the name of a type declared or
+typedef'ed in the filter's class declaration.
+
+Element \xmlstarttag{elem-type} specifies the array's element type.
+\replaceable{Built-in\_type} is a C++ built-in type.
+
+Element \xmlstarttag{size-call} specifies the name of a member
+function that returns the number of elements in the array.
+
+An example \xmlstarttag{datatypes} element with an \xmlstarttag{array}
+sub-element follows:
+
+\begin{alltt}
+  <datatypes>
+    <array name="FilterType::InputSizeType">
+      <elem-type>int</elem-type>
+      <size-call>GetSizeDimension</size-call>
+    </array>
+  </datatypes>
+\end{alltt}
+
+\datatype{FilterType::InputSizeType} can be used in a subsequent
+\xmlstarttag{param} element.
+
+
+\subsection{Element \xmlstarttag{inputs}}
+\label{sec:itk_mods:inputs_element}
+
+The \xmlstarttag{inputs} element describes data types accepted by a
+filter's input ports, and member functions used to
+establish input port connections:
+
+\begin{alltt}
+  <inputs>
+    <input name="\replaceable{input\_name}">
+      <type>\replaceable{data\_type\_name}</type>
+      <call>\replaceable{member\_function}</call>
+    </input>
+    \velide
+  </inputs>
+\end{alltt}
+
+For example:
+
+\begin{alltt}
+  <inputs>
+    <input name="SourceImage">
+      <type>InputImageType</type>
+      <call>SetInput</call>
+    </input>
+  </inputs>
+\end{alltt}
+
+Element \xmlstarttag{input} declares one filter input.
+The \xmlattrname{name} attribute names an input.  The value of
+\xmlattrname{name} names the corresponding \sr{} module input port.
+The value of \xmlattrname{name} must be unique among all inputs.
+
+Element \xmlstarttag{type} specifies the data type accepted by a
+filter's input port.  \replaceable{Data\_type\_name} can be a name
+declared in a \xmlstarttag{template} element (as shown above), or a
+parameterized data type with  parameter names declared in a
+\xmlstarttag{template} element. For example, the following template
+element associates type \datatype{float} with name
+\datatype{ScalarType}:
+
+\begin{alltt}
+  <templates>
+    <template>ScalarType</template>
+    <defaults>
+      <default>float</default>
+    </defaults>
+  </templates>
+\end{alltt}
+
+and \datatype{ScalarType} is used as a template parameter in the
+following \xmlstarttag{inputs} element:
+
+\begin{alltt}
+  <inputs>
+    <input name="InputImage">
+      <type>itk::watershed::SegmentTree&lt;ScalarType&gt;</type>
+      <call>SetInputSegmentTree</call>
+    </input>
+  </inputs>
+\end{alltt}
+
+Element \xmlstarttag{call} specifies a member function (commonly
+\function{SetInput}) that establishes an input port connection.
+
+\subsection{Element \xmlstarttag{outputs}}
+\label{sec:itk_mods:outputs_element}
+
+The \xmlstarttag{outputs} element describes  data types transmitted
+on a filter's output ports, and the member functions used to
+establish  output port connections:
+
+\begin{alltt}
+  <outputs>
+    <output name="\replaceable{output\_name}">
+      <type>\replaceable{data\_type\_name}</type>
+      <call>\replaceable{member\_function}</call>
+    </output>
+    \velide
+  </outputs>
+\end{alltt}
+
+For example:
+
+\begin{alltt}
+  <outputs>
+    <output name="DestImage">
+      <type>OutputImageType</type>
+      <call>GetOutput</call>
+    </output>
+  </outputs>
+\end{alltt}
+
+
+The \xmlattrname{name} attribute names an output.  The value of
+\xmlattrname{name} names the corresponding \sr{} module output port.
+The value of \xmlattrname{name} must be unique among all outputs.
+
+Element \xmlstarttag{type} specifies the data type transmitted on a
+filter's output port.  \replaceable{Data\_type\_name} can be a name
+declared in a \xmlstarttag{template} element (as shown above), or a
+parameterized data type with parameter names declared in a
+\xmlstarttag{template} element.
+
+Element \xmlstarttag{call} specifies the member function (commonly
+\function{GetOutput}) that establishes an output port connection.  If
+\xmlstarttag{call} element's value is a member function returning a
+constant pointer, \xmlstarttag{call}'s \xmlattrname{const} attribute
+must be set to the value ``yes'', for example:
+
+\begin{alltt}
+  <call const="yes">GetSpeedImage</call>
+\end{alltt}
+
+\subsection{Element \xmlstarttag{parameters}}
+\label{sec:itk_mods:param_element}
+
+A filter's parameters determine its behavior.  Filter member functions
+change parameter values.  The \xmlstarttag{parameters} element
+describes a filter's parameters:
+
+\begin{alltt}
+  <parameters>
+    <param>
+      <name>\replaceable{parameter\_name}</name>
+      <type>\replaceable{data\_type}</type>
+      <call>\replaceable{member\_function}</call>
+      <default>\replaceable{initial\_value}</default>
+    </param>
+    \velide  
+  </parameters>
+\end{alltt}
+
+Each \xmlstarttag{param} element describes one parameter with
+sub-elements \xmlstarttag{name}, \xmlstarttag{type},
+\xmlstarttag{call}, and optional \xmlstarttag{default} providing the
+parameter's name, data type, corresponding member function, and
+optional initial value.
+
+For example:
+
+\begin{alltt}
+  <parameters>
+    <param>
+      <name>upper\_threshold</name>
+      <type>float</type>
+      <call>SetUpperThreshold</call>
+      <default>1000.0</default>
+    </param>
+  </parameters>
+\end{alltt}
+
+The content of element \xmlstarttag{type} is either a C++ built-in
+type or type declared in a \xmlstarttag{datatypes} element.  Element
+\xmlstarttag{default} is optional.
+
+If the ITK filter class macro \icode{itkBooleanMacro} is used to create a
+boolean parameter, two \xmlstarttag{call} elements are needed; one
+for setting a true value, and one for setting a false value:
+
+\begin{alltt}
+  <call value="on">\replaceable{member\_function\_on}</call>
+  <call value="off">\replaceable{member\_function\_off}</call>
+\end{alltt}
+
+For example:
+
+\begin{alltt}
+  <param>
+    <name>reverse\_expansion\_direction</name>
+    <type>bool</type>
+    <call value="on">ReverseExpansionDirectionOn</call>
+    <call value="off">ReverseExpansionDirectionOff</call>
+  </param>
+\end{alltt}
+
+
+To modify the parameter, each parameter requires a GUI. If a GUI
+description file is not created, a default GUI is generated that
+associates a text entry widget with each filter parameter.
+\secref{\sr{} GUI Description}{sec:itk_mods:sr_gui_desc} illustrates 
+writing a GUI description for a filter module.  When writing a GUI
+description file, note that the value of the \xmlstarttag{name}
+element above must match the value of a corresponding
+\xmlstarttag{param} element's \xmlattrname{name} attribute in the GUI
+description file.
+
+\subsection{Element \xmlstarttag{includes}}
+\label{sec:itk_mods:includes_element}
+
+Element \xmlstarttag{includes} lists ITK include files declaring filter
+classes and data types:
+
+\begin{alltt}
+<includes>
+  <file>\replaceable{include\_file}<file>
+</includes>
+\end{alltt}
+
+For example:
+
+\begin{alltt}
+<includes>
+  <file>itkBinaryThreasholdImageFilter.h<file>
+</includes>
+\end{alltt}
+
+
+\section{\sr{} Filter Description}
+\label{sec:itk_mods:sr_filter_desc}
+
+A \sr{} filter description file is associated with each ITK filter.
+The \sr{} filter description references the ITK filter description
+file, the optional GUI file, and contains \sr{} specific information.
+
+\sr{} filter description files are located in directory:
+
+\begin{alltt}
+  SCIRun/src/Packages/Insight/Dataflow/Modules/Filters/XML
+\end{alltt}
+
+\sr{} filter description files follow the naming convention:
+
+\begin{alltt}
+  sci\_\replaceable{filter_name}.xml
+\end{alltt}
+
+for example:
+
+\begin{alltt}
+  sci\_BinaryThresholdImageFilter.xml
+\end{alltt}
+
+
+The following XML code illustrates the overall structure of a
+sci-filter description file:
+
+\begin{alltt}
+  <?xml version="1.0" encoding="iso-8859-1"?>
+  <!DOCTYPE filter SYSTEM "sci_filter.dtd">
+  <filter>
+    <include href="\replaceable{file_path}"/>
+    \velide
+    <filter-sci name="\replaceable{\sr{} module name}">
+      <package>\replaceable{SCIRun\_package\_name}</package>
+      <category>\replaceable{SCIRun\_category\_name}</category>
+      <instantiations>
+      \velide
+      </instantiations>
+      <includes>
+      \velide
+      </includes>
+    </filter-sci>
+  </filter>
+\end{alltt}
+
+Each element is discussed below.
+
+
+\subsection{Element \xmlstarttag{filter}}
+
+Element \xmlstarttag{<filter>} is the top-level element.  All other
+elements are enclosed in element \xmlstarttag{<filter>}:
+
+\begin{alltt}
+  <filter>
+  \velide
+  </filter>
+\end{alltt}
+
+\subsection{Element \xmlstarttag{include}}
+
+Element \xmlstarttag{include} must be used one time to reference the
+ITK filter description file.  It can be used a second time to
+reference an optional GUI description file.
+
+The path to an ITK filter description file (or a dialog description
+file) is provided by element \xmlstarttag{include}'s ``href''
+attribute.  The file path is relative to the  \sr{} Insight
+package directory (\directory{SCIRun/src/Packages/Insight}).  Note that
+\xmlstarttag{include} is an empty element, closed with
+characters \verb|/>|:
+
+\begin{alltt}
+  <include href="\replaceable{file\_path}"/>
+\end{alltt}
+
+For example:
+
+\begin{alltt}
+  <include href="ITK/itk_WatershedImageFilter.xml"/>
+  <include href="Dataflow/Modules/Filters/XML/gui_WatershedImageFilter.xml"/>
+\end{alltt}
+
+Two \xmlstarttag{include} element's are used above.  The first
+references the ITK filter description file, the second references a
+GUI description file.
+
+
+\subsection{Element \xmlstarttag{filter-sci}}
+
+Element \xmlstarttag{filter-sci} provides module specific information.
+
+\begin{alltt}
+  <filter-sci name="\replaceable{module\_name}">
+    <package>\replaceable{package\_name}</package>
+    <category>\replaceable{category\_name}</category>
+    <instantiations>
+    \velide
+    </instantiations>
+    <includes>
+    \velide
+    </includes>
+  </filter-sci>
+\end{alltt}
+
+The value of the required \xmlattrname{name} attribute determines the name of
+the \sr{} module produced from the filter, and the name of files generated. 
+
+For example:
+
+\begin{alltt}
+  <filter-sci name="WatershedImageFilter">
+  \velide
+  </filter-sci>
+\end{alltt}
+
+generates a module named \module{WatershedImageFilter}.
+
+Elements \xmlstarttag{package} and \xmlstarttag{category} specify
+the package and category to which a module belongs:
+
+\begin{alltt}
+  <package>\replaceable{package\_name}</package>
+  <category>\replaceable{category\_name}</category>
+\end{alltt}
+
+For example:
+
+\begin{alltt}
+  <package>Insight</package>
+  <category>Filters</category>
+\end{alltt}
+
+Element \xmlstarttag{instantiations} can declare filter instantiations
+that replace those declared in an ITK filter description file (see
+\secref{Element \xmlstarttag{templated}}{sec:itk_mods:templated}):
+
+\begin{alltt}
+  <instantiations use-defaults="off">
+    <instance>
+      <type name="\replaceable{template\_parameter\_name1}">
+        <value>data\_type\_for\_parameter\_name1</value>
+      </type>
+    </instance>
+    \velide  
+  </instantiations>
+\end{alltt}
+
+Attribute \xmlattrname{use-defaults} is set to "off" to replace ITK
+filter instantiations with the instantiations specified.  It is set to
+"on" to use ITK filter instantiations.
+
+Each \xmlstarttag{instance} element declares one filter instantiation.
+Each \xmlstarttag{type} element corresponds to a
+\xmlstarttag{template} element in an ITK filter description.  The
+value of \xmlstarttag{type}'s \xmlattrname{name} attribute must match
+the content of a corresponding \xmlstarttag{template} element.
+Element \xmlstarttag{value} declares a data type associated with
+a template parameter.  
+
+For example:
+
+\begin{alltt}
+  <instance>
+    <type name="InputImageType">
+      <value>itk::Image&lt;float, 2&gt;</value>
+    </type>
+    <type name="OutputImageType">
+      <value>itk::Image&lt;float, 2&gt;</value>
+    </type>
+   </instance>
+   <instance">
+    <type name="InputImageType">
+      <value>itk::Image&lt;float, 3&gt;</value>
+    </type>
+    <type name="OutputImageType">
+      <value>itk::Image&lt;float, 3&gt;</value>
+    </type>
+  </instance>
+\end{alltt}
+
+
+Element \xmlstarttag{includes} provides a list of include files needed
+by a module's implementation.  Each \xmlstarttag{file} element
+provides the path name of one include file:
+
+\begin{alltt}
+  <includes>
+    <file>\replaceable{include\_file\_path\_name}</file>
+    \velide
+  </includes>
+\end{alltt}
+
+For example:
+
+\begin{alltt}
+  <includes>
+    <file>Packages/Insight/Dataflow/Ports/ITKDatatypePort.h</file>
+  </includes>
+\end{alltt}
+
+Include file paths are relative to the \sr{} \directory{src} directory
+(\directory{SCIRun/src}).
+
+\section{\sr{} GUI Description}
+\label{sec:itk_mods:sr_gui_desc}
+
+A module GUI allows access to ITK filter parameters.  By default, a
+GUI is created that associates a text entry widget with each filter
+parameter.  By writing a GUI description file, the user can replace
+all or part of the default GUI.  
+
+\sr{} GUI description files are located in directory:
+
+\begin{alltt}
+  SCIRun/src/Packages/Insight/Dataflow/Modules/Filters/XML
+\end{alltt}
+
+\sr{} GUI filter description files follow the naming
+convention:
+
+\begin{alltt}
+  gui\_\replaceable{filter_name}.xml
+\end{alltt}
+
+for example:
+
+\begin{alltt}
+  gui\_BinaryThresholdImageFilter.xml
+\end{alltt}
+
+The structure of the GUI description file consists of the
+top-level element \xmlstarttag{filter-gui} that encloses one or more
+\xmlstarttag{param} elements.  Each \xmlstarttag{param} element
+associates a filter parameter with a GUI widget:
+
+\begin{alltt}
+  <?xml version="1.0"  encoding="iso-8859-1"?>
+  <!DOCTYPE filter-gui SYSTEM "gui_filter.dtd">
+  <filter-gui name="\replaceable{name}">
+    <param name="\replaceable{parameter\_name}">
+      <\replaceable{widget\_element}>
+      \velide
+      </\replaceable{widget\_element}>
+      \velide
+    </param>
+    \velide  
+  </filter-gui>
+\end{alltt}
+
+The value of a \xmlstarttag{param} element's \xmlattrname{name}
+attribute must match the value of the corresponding
+\xmlstarttag{name} element in the filter description file (see
+\secref{Element \xmlstarttag{parameters}}{sec:itk_mods:param_element})
+
+One or more widgets can be specified in any order. Widgets are
+displayed top to bottom in the GUI window in the order specified in
+the ITK filter description file. Note that a text entry widget is
+generated for each parameter lacking a \xmlstarttag{param} element.
+
+\replaceable{Widget\_element} is one of text-entry, checkbutton,
+scrollbar, radiobutton, or const. Notice that each
+\replaceable{widget\_element}, except \xmlstarttag{const}, must
+contain a \xmlstarttag{default} element.
+
+A text entry widget allows the user to enter an arbitrary string of text,
+and is given an initial (default) value:
+
+\begin{alltt}
+  <text-entry>
+    <default>\replaceable{default\_string}</default>
+  </text-entry>
+\end{alltt}
+
+A check button widget allows the user to select between true and false
+values.  A check button widget is given a default value of 0 (false)
+or 1 (true):
+
+\begin{alltt}
+  <checkbutton>
+    <default>\replaceable{0\_or\_1}</default>
+  </checkbutton>
+\end{alltt}
+
+A scrollbar widget allows the user to select one value from a
+range of values.  A scrollbar widget is given a min value, a max
+value, and an initial value:
+
+\begin{alltt}
+  <scrollbar>
+    <min>\replaceable{min\_value}</min>
+    <max>\replaceable{max\_value}</max>
+    <default>\replaceable{default\_value}</default>
+  </scrollbar>
+\end{alltt}
+
+A radiobutton is a set of button widgets that allow the user to select
+one value from a set of values.  Each value in a set is represented
+by a button widget.  Each button has a label and a value.  A
+\xmlstarttag{default} element provides \xmlstarttag{radiobutton}'s
+initial value.  The initial value must be a value specified in a
+\xmlstarttag{button} element:
+
+\begin{alltt}
+  <radiobutton>
+    <button>
+      <label>\replaceable{label\_string}</label>
+      <value>\replaceable{value}</value>
+    </button>
+    \velide  
+    <default>\replaceable{initial\_value}</default>
+  </radiobutton>
+\end{alltt}
+
+A ITK filter parameter may be set to a constant value using element
+\xmlstarttag{const}.  No GUI widget will be generated for a constant
+parameter and the user cannot change the value of the parameter.
+
+\begin{alltt}
+  <const value="\replaceable{initial\_value}</const>
+\end{alltt}
+
+\section{Putting It All Together}
+\label{sec:itk_mods:put_together}
+
+To build \sr{} modules from ITK filters:
+
+\begin{enumerate}
+\item Ensure that \sr{} is Configured with support for the Insight
+  package.  See the \sr{} Installation Guide for details.
+\item Place ITK filter description files in
+  \directory{SCIRun/src/Packages/Insight/ITK}
+\item Place \sr{} filter description files in
+  \directory{SCIRun/src/Packages/Insight/Dataflow/Modules/Filters/XML}
+\item Place \sr{} GUI description files in
+  \directory{SCIRun/src/Packages/Insight/Dataflow/Modules/Filters/XML}
+\item Invoke \command{gnumake} to build \sr{} (see the \sr{}
+  Installation Guide for details)
+\end{enumerate}
+
+After building \sr{}, ITK filter modules can be created by selecting
+their names from the \menu{Filters} sub-menu of \sr{}'s \menu{Insight}
+package menu.
+
+\section{Examples}
+\label{sec:itk_mods:example}
+
+Examples of ITK, \sr{}, and GUI filter description files in increasing
+order of complexity are:
+
+\begin{itemize}
+\item DiscreteGuassianImageFilter: Typical inputs and outputs and only
+  3 parameters.  See files:
+  \begin{alltt}
+    \filename{itk\_DiscreteGuassianImageFilter.xml}
+    \filename{sci\_DiscreteGuassianImageFilter.xml}
+    \filename{gui\_DiscreteGuassianImageFilter.xml}
+  \end{alltt}
+\item ThresholdSegmentationLevelSetImageFilter: More parameters and a
+  more complex GUI.  See files:
+  \begin{alltt}
+    \filename{itk\_ThresholdSegmentationLevelSetImageFilter.xml}
+    \filename{sci\_ThresholdSegmentationLevelSetImageFilter.xml}
+    \filename{gui\_ThresholdSegmentationLevelSetImageFilter.xml}
+  \end{alltt}
+\item MeanImageFilter: GUI dependent on input image dimension.  See
+  files:
+  \begin{alltt}
+    \filename{itk\_MeanImageFilter.xml}
+    \filename{sci\_MeanImageFilter.xml}
+    \filename{gui\_MeanImageFilter.xml}
+  \end{alltt}
+\end{itemize}
+
+Example networks using the above modules are located in
+\directory{SCIRun/src/Packages/Insight/nets}.
+

@@ -132,7 +132,7 @@ void IPort::update_light()
 	break;
     }
     char str[1000];
-    sprintf(str,"%s lightIPort %d %s",module->id.c_str(),which_port,color);
+    sprintf(str,"lightPort {%s %d i} %s",module->id.c_str(),which_port,color);
     module->getGui()->execute(str);
 }
 
@@ -159,7 +159,7 @@ void OPort::update_light()
 	break;
     }
     char str[1000];
-    sprintf(str,"%s lightOPort %d %s",module->id.c_str(),which_port,color);
+    sprintf(str,"lightPort {%s %d o} %s",module->id.c_str(),which_port,color);
     module->getGui()->execute(str);
 }
 

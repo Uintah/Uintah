@@ -57,7 +57,8 @@ itcl_class SCIRun_FieldsCreate_ClipByFunction {
 	label $w.function.l -text "F(x, y, z, v)"
 	entry $w.function.e -width 20 -textvariable $this-clipfunction
 	bind $w.function.e <Return> $c
-	pack $w.function.l $w.function.e -side left
+	pack $w.function.l -side left
+	pack $w.function.e -side left -fill x -expand 1
 
 	pack $w.location $w.function -side top -fill x -expand 1 \
 	    -padx 5 -pady 5

@@ -54,104 +54,96 @@ document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTM
 }
 </script>
 
-<br />
-
-<table align="center" cellspacing="0" border="1" cellpadding="2">
+<table class="topics" align="center" cellspacing="0">
 <thead>
 <tr>
-<th colspan="3">
+<th class="mainheader" colspan="3">
 <div class="title">SCIRun Documentation</div>
-<div class="subtitle">(for SCIRun version <!--%= doc.edition %-->  <a class="alt"
-href="ReleaseNotes/version_1_10.txt">[Release Notes]</a>)</div>
+<div class="subtitle">for SCIRun v. <!--%= doc.edition %--></div>
+<div class="subtitle"><a class="alt" href="ReleaseNotes/version_1_20.txt">Release Notes</a></div>
 </th>
 </tr>
 <tr>
-<th>Installation</th>
-<th>User</th>
-<th>Developer</th>
+<th class="category">Installation</th>
+<th class="category">User</th>
+<th class="category">Developer</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>
-<ul>
-<li>
-<a href="Installation/Guide/index.html">Guide</a>  <small><a href="Installation/Guide/srig.pdf">[PDF]</a></small>
+<div class="topic_info">
+<div class="topic_heading"><a class="heading" href="Installation/Guide/index.html">Guide</a>  <small><a href="Installation/Guide/srig.pdf">[PDF]</a></small></div>
 <p>Installation instructions for SCIRun, third party
 libraries, the optional PETSc library, sample data sets, and
 documentation.</p> 
-</li>
-<li>
-<a href="Installation/FAQ/faq.html">FAQ</a>  <small><a href="Installation/FAQ/faq.pdf">[PDF]</a></small>
+
+<div class="topic_heading"><a class="heading" href="Installation/FAQ/faq.html">FAQ</a>  <small><a href="Installation/FAQ/faq.pdf">[PDF]</a></small></div>
 <p>Common installation questions and answers.</p>
-</li>
-</ul>
+</div>
 </td>
 <td>
-<ul>
-<li>
-<a href="User/Tutorial/index.html">Tutorial</a> 
+<div class="topic_info">
+
+<div class="topic_heading"><a class="heading" href="User/Tutorial/index.html">Tutorial</a></div>
 <p>An interactive introduction to SCIRun for new users.</p>
-</li>
-<li><a href="User/Guide/usersguide/index.html">Guide</a> <small><a href="User/Guide/usersguide.pdf">[PDF]</a></small>
+
+<div class="topic_heading"><a class="heading" href="User/BioTensorTutorial/index.html">BioTensor Tutorial</a></div>
+<p>
+An introduction to the BioTensor application
+</p>
+
+<hr/>
+
+<div class="topic_heading"><a class="heading" href="User/Guide/usersguide/index.html">Guide</a> <small><a href="User/Guide/usersguide.pdf">[PDF]</a></small></div>
 <p>A guide to the concepts and use of the SCIRun problem solving
 environment.
 </p>
-</li>
-<li><a href="User/Nets/index.html">Network Descriptions</a><small><a
-href="User/Nets/nets.pdf">[PDF]</a></small>
-<p>Sample networks and their descriptions</p>
-</li>
-<li><a href="Developer/Modules/index.html">Module Reference</a><small><a href="Developer/Modules/srmrg.pdf">[PDF]</a></small>
+
+<div class="topic_heading"><a class="heading" href="Developer/Modules/index.html">Module Reference</a> <small><a href="Developer/Modules/srmrg.pdf">[PDF]</a></small></div>
 <p>Descriptions of SCIRun modules organized by package (and by
 category and alphabetically)</p>
-</li>
-<li><a href="User/FAQ/faq.html">FAQ</a>  <small><a href="User/FAQ/faq.pdf">[PDF]</a></small>
+
+<div class="topic_heading"><a class="heading" href="User/FAQ/faq.html">FAQ</a>  <small><a href="User/FAQ/faq.pdf">[PDF]</a></small></div>
 <p>Common user questions and answers.</p>
-</li>
-<li>
-<a
+
+<hr/>
+
+<div class="topic_heading"><a class="heading"
 href="JavaScript:NewWindow('http://software.sci.utah.edu/scirun_citation.bib',
-'600','400','1')">SCIRun Citation</a>
+'600','400','1')">SCIRun Citation</a></div>
 <p>BibTeX and plain text versions for use in publications
 which reference SCIRun's use.</p>
-</li>
-<li>
-<a
+
+<div class="topic_heading"><a class="heading"
 href="JavaScript:NewWindow('http://software.sci.utah.edu/biopse_citation.bib',
-'600','400','1')">BioPSE Citation</a>
+'600','400','1')">BioPSE Citation</a></div>
 <p>BibTeX and plain text versions for use in publications
 which reference BioPSE's use.</p>
-</li>
-</ul>
+
+</div>
 </td>
 <td>
-<ul>
-<li><a href="Developer/Modules/index.html">Module Reference</a><small><a href="Developer/Modules/srmrg.pdf">[PDF]</a></small>
-<p>Descriptions of SCIRun modules organized by package (and by
-category and alphabetically)</p>
-</li>
-<li><a href="Developer/Guide/index.html">Guide</a>  <small><a href="Developer/Guide/srdg.pdf">[PDF]</a></small>
+<div class="topic_info">
+
+<div class="topic_heading"><a class="heading" href="Developer/Guide/index.html">Guide</a>  <small><a href="Developer/Guide/srdg.pdf">[PDF]</a></small></div>
 <p>A guide to writing SCIRun modules, data types, and other code.</p>
-</li>
-<li><a href="Developer/CodeViews/html/index.html">Source Code
-Views</a>
-<p>SCIRun source code from several points of view.</p>
-</li>
-<li><a href="Developer/FAQ/faq.html">FAQ</a>  <small><a href="Developer/FAQ/faq.pdf">[PDF]</a></small>
+
+<div class="topic_heading"><a class="heading" href="Developer/FAQ/faq.html">FAQ</a>  <small><a href="Developer/FAQ/faq.pdf">[PDF]</a></small></div>
 <p>Common developer questions and answers.</p>
-</li>
-<li><a href="Documentum/index.html">Documenting SCIRun</a>
+
+<div class="topic_heading"><a class="heading" href="Developer/CodeViews/html/index.html">Source Code
+Views</a></div>
+<p>SCIRun source code from several points of view.</p>
+
+<div class="topic_heading"><a class="heading" href="Documentum/index.html">Documenting SCIRun</a></div>
 <p>Information for those writing or building SCIRun documentation.</p>
-</li>
-</ul>
+
+</div>
 </td>
 </tr>
 </tbody>
 </table>
-
-<br/>
-<br/>
 
 <script type="text/javascript">
 if (inDocTree) {

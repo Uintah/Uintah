@@ -31,11 +31,11 @@ proc make_axis_info_sel_box {w command} {
     iwidgets::scrolledframe $w -relief groove -width 250 -height 200 \
 		-labelpos nw -labeltext "Axis Info and Selection"
 
-    pack $w -expand yes -fill both -side top
+    pack $w -expand yes -fill both -side top -padx 8
     set f [$w childsite]
 
     iwidgets::radiobox $f.rb -relief flat -command $command
-    pack $f.rb -side top -fill x -fill y -expand yes
+    pack $f.rb -side top -fill x -fill y -expand yes -padx 4 -pady 4
 }
 
 proc add_axis {w tag info} {

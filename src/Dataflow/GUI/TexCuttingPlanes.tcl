@@ -200,9 +200,7 @@ itcl_class SCIRun_Visualization_TexCuttingPlanes {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    wm deiconify $w
-	    raise $w
-	    return;
+	    return
 	}
 	toplevel $w
 	set n "$this-c needexecute "

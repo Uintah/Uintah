@@ -29,57 +29,95 @@ set Tooltip(ID) 0
 set Tooltip(Color) white
 set Font(Tooltip) $time_font
 
-proc showTooltip { id } {
-    if [winfo exists .tooltip] { destroy .tooltip }
-    global Tooltip Font
-    toplevel .tooltip -bg black
-    label .tooltip.text -text $Tooltip($id) \
-	-bg $Tooltip(Color) -fg black -justify left -font $Font(Tooltip)
-    pack .tooltip.text -padx 1 -pady 1
-    wm overrideredirect .tooltip yes
-    update idletasks
-    wm geometry .tooltip +$Tooltip(X)+[expr $Tooltip(Y)-2-[winfo height .tooltip]]
+# MS == Miliseconds
+global tooltipDelayMS
+set tooltipDelayMS 1000
+global tooltipID
+set tooltipID 0
+global tooltipsOn
+set tooltipsOn 1
+
+
+# TooltipMultiline allows the caller to put the tool tip string on
+# separate lines (as separate substrings)
+#
+# eg:
+#     TooltipMultiline window \
+#        "this is line one\n" \
+#        "this is line two\n" \
+#        "etc"
+#
+proc TooltipMultiline { w args } {
+
+    set message [lindex $args 0]
+
+    for {set arg 1} {$arg < [llength $args] } { incr arg } {
+	set message "$message[lindex $args $arg]"
+    }
+    Tooltip $w "$message"
 }
 
-proc enterTooltip { x y id } {
-    global Tooltip
-    set Tooltip(X) $x
-    set Tooltip(Y) $y
-    set Tooltip(ID) [after 500 "showTooltip $id"]
+#  TooltipMultiWidget widgets msg
+#
+#     This convenience function creates the same tooltip for multiple
+#     widgets.  "widgets" must be a list of widgets.
+#
+proc TooltipMultiWidget {widgets msg} {
+    for {set arg 0} {$arg < [llength $widgets] } { incr arg } {
+	set widget [lindex $widgets $arg]
+	Tooltip $widget $msg
+    }
 }
 
-proc motionTooltip { x y id } {
-    update idletasks
-    global Tooltip
-    set Tooltip(X) $x
-    set Tooltip(Y) $y
-    if ![winfo exists .tooltip] { return }
-    wm geometry .tooltip +$Tooltip(X)+[expr $Tooltip(Y)-2-[winfo height .tooltip]]
+proc Tooltip {w msg} {
+
+    global tooltipDelayMS tooltipID tooltipsOn
+    bind $w <Enter> "global tooltipID tooltipsOn
+                     if \[set tooltipsOn\] \{
+		        after cancel \[set tooltipID\]
+                        after 100 {catch {destroy .balloon_help}}
+                        set tooltipID \[after $tooltipDelayMS \"balloon_aux %W %X %Y [list $msg]\"\]
+                     \}"
+    bind $w <Leave> "global tooltipID tooltipsOn
+                     if \[set tooltipsOn\] \{
+                        after cancel \[set tooltipID\]
+                        after 100 {catch {destroy .balloon_help}}
+                     \}"
 }
 
-proc leaveTooltip { } {
-    if [winfo exists .tooltip] { destroy .tooltip }
-    global Tooltip
-    after cancel $Tooltip(ID)
+proc canvasTooltip {canvas w msg} {       
+    global tooltipDelayMS tooltipID tooltipsOff
+    $canvas bind $w <Enter> "global tooltipID tooltipsOn
+                             if \[set tooltipsOn\] \{
+		                after cancel \[set tooltipID\]
+                                after 100 {catch {destroy .balloon_help}}
+                                set tooltipID \[after $tooltipDelayMS \"balloon_aux %W %X %Y [list $msg]\"\]
+                             \}"
+    $canvas bind $w <Leave> "global tooltipID tooltipsOn
+                             if \[set tooltipsOn\] \{
+                                after cancel \[set tooltipID\]
+                                after 100 {catch {destroy .balloon_help}}
+                             \}"
 }
 
-proc canvasTooltip { id text } {
-    return
-    global Tooltip maincanvas
-    set Tooltip($id) $text
-    $maincanvas bind $id <Enter> "enterTooltip %X %Y $id"
-    $maincanvas bind $id <Motion> "motionTooltip %X %Y $id"
-    $maincanvas bind $id <Leave> "leaveTooltip"
-    $maincanvas bind $id <Button> "leaveTooltip"
+
+# the following code is courtesy the TCLer's Wiki (http://mini.net/tcl/)
+proc balloon_aux {w x y msg} {
+    set t .balloon_help
+    catch {destroy $t}
+    toplevel $t
+    wm overrideredirect $t 1
+    if {$::tcl_platform(platform) == "macintosh"} {
+	unsupported1 style $t floating sideTitlebar
+    }
+    pack [label $t.l -text $msg -justify left -relief groove -bd 1 -bg white] -fill both
+#    set x [expr [winfo rootx $w]+6+[winfo width $w]/2]
+#    set y [expr [winfo rooty $w]+6+[winfo height $w]/2]
+    set x [expr $x+6]
+    set y [expr $y+6]
+
+    wm geometry $t +$x\+$y
+    bind $t <Enter> {after cancel {catch {destroy .balloon_help}}}
+    bind $t <Leave> "catch {destroy .balloon_help}"
 }
 
-proc Tooltip { id text } {
-    return
-    global Tooltip
-    set Tooltip($id) $text
-    bind Tooltip$id <Enter> "enterTooltip %X %Y $id"
-    bind Tooltip$id <Motion> "motionTooltip %X %Y $id"
-    bind Tooltip$id <Leave> "leaveTooltip"
-    bind Tooltip$id <Button> "leaveTooltip"
-    bindtags $id "[bindtags $id] Tooltip$id"
-}

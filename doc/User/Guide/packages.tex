@@ -22,64 +22,84 @@
 \label{ch:packages}
 \index{packages}
 
-Packages are collections of modules organized by category. The \SR{} and 
-packages are discussed below. 
+Packages are collections of modules organized by category. \sr{}'s 
+packages and their categories are listed below. 
 
-\section{The \sr{} Package}
+\section{\sr{}}
 \label{sec:srpackage}
 \index{SCIRun@\sr{}!package}
 
+The \sr{} package provides a base set of datatypes and algorithms.  It
+is divided into the following categories:
 
-The \sr{} package contains these categories:
+\begin{itemize}
+  \item DataIO
+  \item FieldsCreate
+  \item FieldsData
+  \item FieldsGeometry
+  \item FieldsOther
+  \item Math
+  \item Render
+  \item Visualization
+\end{itemize}
 
-\begin{description}
-  \descitem{\category{DataIO}} Modules for reading and writing \sr{}
-  data types.  Use these to read \sr{} type data into a network and
-  write data to disk from a network.  These modules only know about
-  \sr{} type data.  Non-\sr{} (foreign) data may be converted to \sr{}
-  type data using \sr{}'s converter programs (see \chref{Importing
-    data into \sr{}}{ch:import_export} for more information).
-  
-  \descitem{\category{Fields}} Modules for creating, manipulating, and
-  processing field data.
-  
-  \descitem{\category{Math}} Modules providing matrix operations and
-  equation solving capabilities.
-  
-  \descitem{\category{Render}} Modules for visualizing data produced by
-  other modules.  The main visualization tool at present
-  is the Viewer, which is described in more detail in
-  \chref{Visualization with the \viewer{}}{ch:viewer}.
-\end{description}
-
-\section{The BioPSE Package}
+\section{BioPSE}
 \label{sec:biopsepackage}
 \index{SCIRun@\BIOPSE{}!package}
 
 
-These modules provide  tools tailored to solve bioelectric field
-problems.
+The BioPSE package provides modules to solve bioelectric field
+problems.  It is divided into the following categories:
 
-\begin{description}
-  \descitem{\category{DataIO}} Modules for reading and writing \sr{}
-  data types.
-  
-  \descitem{\category{Forward Problems}} Modules for solving forward
-  problems in the bioelectric field domain.
-  
-  \descitem{\category{Inverse Problems}} Modules for solving inverse
-  problems.
-  
-  \descitem{\category{LeadField Calculations}} Modules that support
-  the construction and analysis of fields derived from experimental or
-  computed data gathered or computed at electrode sensor locations.
-  
-  \descitem{\category{Modeling}} Modules that support the
-  construction of surface and volume bioelectric field models.
-  
-  \descitem{\category{Visualization}} Modules for visualizing
-  bioelectric field data.
-\end{description}
+\begin{itemize}
+\item DataIO
+\item Forward
+\item Inverse
+\item LeadField
+\item Modeling
+\item Visualization
+\end{itemize}
+
+\section{Teem}
+\label{sec:teempackage}
+
+The Teem package provides modules supporting the analysis of
+N-dimensional raster data using the
+\htmladdnormallinkfoot{Teem}{http://www.cs.utah.edu/~gk/teem/nrrd/index.html}
+library.  It is divided into the following categories:
+
+\begin{itemize}
+\item DataIO
+\item NrrdData
+\item Tend
+\item Unu
+\end{itemize}
+
+\section{Matlabinterface}
+\label{sec:matlabpackage}
+
+The Matlabinterface package provides modules that interact with the
+Matlab system.  It is divided into the following categories:
+
+\begin{itemize}
+\item DataIO
+\end{itemize}
+
+\section{Insight (ITK)}
+\label{sec:insightpackage}
+
+The Insight package provides modules that encapsulate
+\htmladdnormallinkfoot{ITK toolkit}{http://www.itk.org} filters.
+
+\begin{itemize}
+\item Converters
+\item DataIO
+\item Filters
+\end{itemize}
+
+%%\section{DataIO}
+%%\label{sec:dataiopackage}
+
 
 %%% Local Variables: 
 %%% mode: latex

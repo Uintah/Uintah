@@ -103,7 +103,9 @@ FusionSlicePlotAlgoT<FIELD>::execute(FieldHandle field_h, double scale)
     }
 
     return FieldHandle( ofield );
-  }
+  } else
+    return NULL;
+
 }
 
 } // end namespace SCIRun

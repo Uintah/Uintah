@@ -43,10 +43,13 @@ itcl_class BioPSE_Visualization_ShowDipoles {
 	global $this-scaleModeGui_
 	global $this-showLastVecGui_
 	global $this-showLinesGui_
+	global $this-num-dipoles
+
 	set $this-widgetSizeGui_ 1
 	set $this-scaleModeGui_ normalize
 	set $this-showLastVecGui_ 0
 	set $this-showLinesGui_ 1
+	set $this-num-dipoles 0
     }
     method make_entry {w text v c} {
         frame $w
@@ -68,19 +71,34 @@ itcl_class BioPSE_Visualization_ShowDipoles {
         wm minsize $w 150 30
         frame $w.f
 	global $this-widgetSizeGui_
-	make_entry $w.f.s "Widget Size:" $this-widgetSizeGui_ "$this-c needexecute"
+	make_entry $w.f.s "Widget Size:" $this-widgetSizeGui_ "$this-c widget_scale"
 	frame $w.f.r -relief sunken -bd 2
 	global $this-scaleModeGui_
-	radiobutton $w.f.r.fixed -text "Fixed Size" -value "fixed" -variable $this-scaleModeGui_
-	radiobutton $w.f.r.normalize -text "Normalize Largest" -value "normalize" -variable $this-scaleModeGui_
-	radiobutton $w.f.r.scale -text "Scale Size" -value "scale" -variable $this-scaleModeGui_
+	radiobutton $w.f.r.fixed -text "Fixed Size" -value "fixed" \
+	    -variable $this-scaleModeGui_ -command "$this-c scale_mode"
+	radiobutton $w.f.r.normalize -text "Normalize Largest" \
+	    -value "normalize" -variable $this-scaleModeGui_ \
+	    -command "$this-c scale_mode"
+	radiobutton $w.f.r.scale -text "Scale Size" -value "scale" \
+	    -variable $this-scaleModeGui_ -command "$this-c scale_mode"
+
 	pack $w.f.r.fixed $w.f.r.normalize $w.f.r.scale -side top -fill both -expand yes
 	global $this-showLastVecGui_
-	checkbutton $w.f.v -text "Show Last As Vector" -variable $this-showLastVecGui_
+	checkbutton $w.f.v -text "Show Last As Vector" -variable $this-showLastVecGui_ -command "$this-c show_last_vec"
 	global $this-showLinesGui_
-	checkbutton $w.f.l -text "Show Lines" -variable $this-showLinesGui_
+	checkbutton $w.f.l -text "Show Lines" -variable $this-showLinesGui_ -command "$this-c show_lines"
 
-	pack $w.f.s $w.f.r $w.f.v $w.f.l -side top -fill x -expand yes
+
+	frame $w.f.buttons
+	pack $w.f.s $w.f.r $w.f.v $w.f.l $w.f.buttons -side top \
+	    -fill x -expand yes
+
+
+	button $w.f.buttons.reset -text "Reset to input" \
+	    -command "$this-c reset"
+	button $w.f.buttons.exe -text "Execute" -command "$this-c needexecute"
+	pack $w.f.buttons.reset $w.f.buttons.exe -side left -fill x -expand yes
         pack $w.f -side top -fill x -expand yes
+
     }
 }

@@ -45,7 +45,7 @@ itcl_class SCIRun_DataIO_MatrixReader {
 	    return;
 	}
 
-	toplevel $w
+	#toplevel $w
 	set initdir ""
 	
 	# place to put preferred data directory
@@ -78,10 +78,10 @@ itcl_class SCIRun_DataIO_MatrixReader {
 	######################################################
 	
 	makeOpenFilebox \
-		-parent $w \
+		-parent . \
 		-filevar $this-filename \
-		-command "$this-c needexecute; destroy $w" \
-		-cancel "destroy $w" \
+		-command "$this-c needexecute; destroy" \
+		-cancel "destroy" \
 		-title $title \
 		-filetypes $types \
 		-initialdir $initdir \

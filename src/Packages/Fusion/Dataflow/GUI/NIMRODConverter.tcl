@@ -19,9 +19,6 @@
 # by Allen R. Sanderson
 # May 2003
 
-# This GUI interface is for selecting a file name via the makeOpenFilebox
-# and other reading functions.
-
 catch {rename Fusion_Fields_NIMRODConverter ""}
 
 itcl_class Fusion_Fields_NIMRODConverter {
@@ -38,9 +35,6 @@ itcl_class Fusion_Fields_NIMRODConverter {
 
 	global $this-nmodes
 	set $this-nmodes 0
-
-	global $this-mode
-	set $this-mode 0
     }
 
     method ui {} {
@@ -67,10 +61,10 @@ itcl_class Fusion_Fields_NIMRODConverter {
 
 	frame $w.modes
 
-	label $w.modes.label -text "Mode" -width 6 -anchor w -just left
+	label $w.modes.label -text "Mode Summing" -width 15 -anchor w -just left
 	pack $w.modes.label -side left	    
 
-	set_modes [set $this-nmodes]
+	set_modes [set $this-nmodes] 0
 
 	pack $w.modes -side top -pady 5
 
@@ -95,29 +89,37 @@ itcl_class Fusion_Fields_NIMRODConverter {
 	pack $w.misc -side bottom -pady 10
     }
 
-    method set_modes {nnodes} {
+    method set_modes {nmodes reset} {
+
+	global $this-nmodes
+	set $this-nmodes $nmodes
 
         set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
-	    pack forget $w.modes.label
 
-	    for {set i 0} {$i < 10} {incr i 1} {
-		if [ expr [winfo exists $w.modes.$i] ] {
-		    pack forget $w.modes.$i
-		}
-	    }
-
-	    if { $nnodes > 0 } {
-
-		global $this-nmodes
-		global $this-mode
-		set $this-nmodes $nnodes
-		set $this-mode $nnodes
-
+	    if { $nmodes > 0 } {
+		
 		pack $w.modes.label -side left
+		
+		for {set i 0} {$i <= $nmodes} {incr i 1} {
 
-		for {set i 0} {$i <= $nnodes} {incr i 1} {
+		    if { [catch { set t [set $this-mode-$i] } ] } {
+			if { $i < $nmodes } {
+			    set $this-mode-$i 0
+			} else {
+			    set $this-mode-$i 1
+			}
+		    }
+
+		    if { $reset } {
+			if { $i < $nmodes } {
+			    set $this-mode-$i 0
+			} else {
+			    set $this-mode-$i 1
+			}
+		    }
+
 		    if [ expr [winfo exists $w.modes.$i] ] {
 			$w.modes.$i.label configure -text "$i" -width 2
 		    } else {
@@ -125,18 +127,31 @@ itcl_class Fusion_Fields_NIMRODConverter {
 			
 			label $w.modes.$i.label -text "$i" \
 			    -width 2 -anchor w -just left
-			radiobutton $w.modes.$i.button \
-			    -variable $this-mode -value $i
+			checkbutton $w.modes.$i.button -variable $this-mode-$i
 			
-			pack $w.modes.$i.label $w.modes.$i.button -side left
-			pack $w.modes.$i.label -side left
-			
+			pack $w.modes.$i.button $w.modes.$i.label -side left
+
 		    }
 
 		    pack $w.modes.$i -side left
 		}
 		
-		$w.modes.$nnodes.label configure -text "Sum" -width 4
+		$w.modes.$nmodes.label configure -text "All" -width 4
+	    } else {
+		pack forget $w.modes.label
+	    }
+
+
+	    if { $nmodes > 0 } {
+		set i [expr $nmodes + 1]
+	    } else {
+		set i 0
+	    }
+
+	    # Destroy all the left over entries from prior runs.
+	    while {[winfo exists $w.modes.$i]} {
+		destroy $w.modes.$i
+		incr i
 	    }
 	}
     }

@@ -52,7 +52,7 @@ namespace SCIRun {
     bool is_blocked() const { return blocked_; }
     void block()      { blocked_ = true; }
     void unblock()    { blocked_ = false; }
-
+    void makeID();
     void wait_ready();
 
     void connect();

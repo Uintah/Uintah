@@ -31,6 +31,30 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
     method set_defaults {} {
 
+ 
+        global $this-selectable_min
+        global $this-selectable_max
+        global $this-selectable_inc
+        global $this-range_min
+        global $this-range_max
+	global $this-playmode
+	global $this-current
+	global $this-execmode
+	global $this-delay
+	global $this-inc-amount
+
+        set $this-selectable_min     0
+        set $this-selectable_max     100
+        set $this-selectable_inc     1
+        set $this-range_min          0
+        set $this-range_max          0
+	set $this-playmode           once
+	set $this-current            0
+	set $this-execmode           "init"
+	set $this-delay              0
+	set $this-inc-amount        1
+
+
 	global $this-mergeData
 	global $this-assumeSVT
 	global $this-animate
@@ -96,7 +120,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	global env
 	global $this-filename
 
-	set w [format "%s-fb" .ui[modname]]
+	set w [format "%s-filebox" .ui[modname]]
 
 	if {[winfo exists $w]} {
 	    set child [lindex [winfo children $w] 0]
@@ -106,7 +130,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    return;
 	}
 
-	toplevel $w
+	#toplevel $w
 	set initdir ""
 	
 	# place to put preferred data directory
@@ -136,10 +160,10 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	######################################################
 	
 	makeOpenFilebox \
-	    -parent $w \
+	    -parent . \
 	    -filevar $this-filename \
-	    -command "$this-c update_file; destroy $w" \
-	    -cancel "destroy $w" \
+	    -command "$this-c update_file; destroy " \
+	    -cancel "destroy " \
 	    -title $title \
 	    -filetypes $types \
 	    -initialdir $initdir \
@@ -147,6 +171,24 @@ itcl_class DataIO_Readers_HDF5DataReader {
     }
 
     method ui {} {
+	global $this-mergeData
+	global $this-assumeSVT
+	global $this-animate
+	global $this-animate-style
+	global $this-animate-frame
+	global $this-animate-frame2
+	global $this-animate-nframes
+
+	global $this-filename
+	global $this-datasets
+	global $this-dumpname
+	global $this-selectionString
+	global $this-regexp
+
+	global $this-ports
+	global $this-ndims
+	global max_dims
+
 	global env
 	set w .ui[modname]
 
@@ -239,8 +281,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	iwidgets::labeledframe $w.sel -labeltext "Search Selection"
 	set sel [$w.sel childsite]
 
-	global $this-selectionString
-	global $this-regexp
 
 	iwidgets::entryfield $sel.name -textvariable $this-selectionString
 
@@ -249,7 +289,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	button $sel.path -text "Full Path" -command "$this AddSelection 0"
 	button $sel.node -text "Terminal"  -command "$this AddSelection 1"
 
-	pack $sel.node $sel.path $sel.regexp $sel.label -side right -padx 3
+	pack $sel.node $sel.path $sel.label $sel.regexp -side right -padx 3
 	pack $sel.name -side left -fill x -expand yes
 	pack $w.sel -fill x -expand yes -side top
 
@@ -284,6 +324,15 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	frame $dm.merge
 
+	frame $dm.merge.none
+
+	radiobutton $dm.merge.none.button -variable $this-mergeData -value 0
+	label $dm.merge.none.label -text "No Merging" -width 20 \
+	    -anchor w -just left
+	
+	pack $dm.merge.none.button $dm.merge.none.label -side left
+
+
 	frame $dm.merge.like
 
 	radiobutton $dm.merge.like.button -variable $this-mergeData -value 1
@@ -302,6 +351,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	pack $dm.merge.time.button $dm.merge.time.label -side left
 
 
+	pack $dm.merge.none -side top
 	pack $dm.merge.like -side top
 	pack $dm.merge.time -side bottom
 
@@ -315,56 +365,18 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	frame $dm.animate
 
-	frame $dm.animate.buttons
+	frame $dm.animate.select
 
-
-	frame $dm.animate.buttons.select
-
-	checkbutton $dm.animate.buttons.select.button -variable $this-animate \
+	checkbutton $dm.animate.select.button -variable $this-animate \
 	    -command "$this animate"
-	label $dm.animate.buttons.select.label -text "Animate selected data" \
+	label $dm.animate.select.label -text "Animate selected data" \
 	    -width 22 -anchor w -just left
 	
-	pack $dm.animate.buttons.select.button \
-	    $dm.animate.buttons.select.label -side left
+	pack $dm.animate.select.button \
+	    $dm.animate.select.label -side left
 
-	pack $dm.animate.buttons.select -side top
+	pack $dm.animate.select -fill x -side top
 
-
-	frame $dm.animate.buttons.style
-
-	frame $dm.animate.buttons.style.loop
-
-	radiobutton $dm.animate.buttons.style.loop.button \
-	    -variable $this-animate-style -value 0
-	label $dm.animate.buttons.style.loop.label -text "Loop" -width 6 \
-	    -anchor w -just left
-	
-	pack $dm.animate.buttons.style.loop.button \
-	    $dm.animate.buttons.style.loop.label -side left
-
-	frame $dm.animate.buttons.style.single
-
-	radiobutton $dm.animate.buttons.style.single.button \
-	    -variable $this-animate-style -value 1
-	label $dm.animate.buttons.style.single.label -text "Single" -width 8 \
-	    -anchor w -just left
-	
-	pack $dm.animate.buttons.style.single.button \
-	    $dm.animate.buttons.style.single.label -side left
-
-	pack $dm.animate.buttons.style.loop   -side left
-	pack $dm.animate.buttons.style.single -side left
-
-	pack $dm.animate.buttons.style -side bottom
-
-	pack $dm.animate.buttons -side left
-
-
-	scaleEntry2 $dm.animate.frame \
-	    0 [expr [set $this-animate-nframes] - 1] 75 \
-	    $this-animate-frame $this-animate-frame2
-	
 
 	pack $dm.merge $dm.svt $dm.animate -side left
 
@@ -389,9 +401,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	pack $w.msg.text -side top
 
-
-	global $this-ndims
-	global max_dims
 
 	for {set i 0} {$i < $max_dims} {incr i 1} {
 	    if       { $i == 0 } { set index i
@@ -426,6 +435,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	    pack $w.$i.l -side left
 
+
 	    scaleEntry2 $w.$i.start \
 		0 $count_val1 200 \
 		$this-$i-start $this-$i-start2
@@ -435,7 +445,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		$this-$i-count $this-$i-count2
 
 	    scaleEntry2 $w.$i.stride \
-		1 [expr [set $this-$i-dim] - 1] 100 $this-$i-stride $this-$i-stride2
+		1 [expr [set $this-$i-dim] - 1] 100 \
+		$this-$i-stride $this-$i-stride2
 
 	    pack $w.$i.l $w.$i.start $w.$i.count \
 		    $w.$i.stride -side left
@@ -608,12 +619,12 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
     method process_group { tree parent fileId input } {
 
-	set name [process_name $input]
+	set gname [process_name $input]
 	set info(type) @blt::tv::normalOpenFolder
 	set info(Node-Type) ""
 	set info(Data-Type) ""
 	set info(Value) ""
-	set node [$tree insert $parent -tag "group" -label $name \
+	set node [$tree insert $parent -tag "group" -label $gname \
 		      -data [array get info]]
 
 	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
@@ -660,12 +671,12 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    append message $line
 	    $this-c error message
 	} else {
-	    set name [process_name $input]
+	    set aname [process_name $input]
 	    set info(type) ""
 	    set info(Node-Type) "Attribute"
 	    set info(Data-Type) ""
 	    set info(Value) $attr
-	    $tree insert $parent -tag "attribute" -label $name \
+	    $tree insert $parent -tag "attribute" -label $aname \
 		-data [array get info]
 	}
     }
@@ -701,12 +712,12 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    append message $line
 	    $this-c error message
 	} else {
-	    set name [process_name $input]
+	    set dsname [process_name $input]
 	    set info(type) ""
 	    set info(Node-Type) "DataSet"
 	    set info(Data-Type) $type
 	    set info(Value) $dims
-	    $tree insert $parent -tag "dataset" -label $name \
+	    $tree insert $parent -tag "dataset" -label $dsname \
 		-data [array get info]
 	}
     }
@@ -715,9 +726,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set start [string first "\"" $line]
 	set end   [string  last "\"" $line]
 
-	set name [string range $line [expr $start+1] [expr $end-1]]
-
-	return $name
+	return [string range $line [expr $start+1] [expr $end-1]]
     }
 
     method set_size {ndims dims} {
@@ -953,16 +962,18 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	    foreach dataset $tmp {
 
-		set name $dataset
+		set dsname $dataset
 
 		if { [string length $ports] > 0 } {
 		    set port [string range $ports [expr $cc*4] [expr $cc*4+3]]
 
-		    append name "   Port "
-		    append name $port
+		    if { [string length $port] > 0 } {
+			append dsname "   Port "
+			append dsname $port
+		    }
 		}
 
-		$listbox.list insert end $name
+		$listbox.list insert end $dsname
 
 		incr cc
 	    }
@@ -1131,43 +1142,128 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set dm [$w.dm childsite]
 
 	    if { [set $this-animate] } {
-		$dm.animate.buttons.style.loop.button configure -state normal
-		$dm.animate.buttons.style.single.button configure -state normal
-
-		$dm.animate.frame.s configure -state normal
-		$dm.animate.frame.e configure -state normal
 
 		$this-c update_selection;
+
+		make_animate_box
+
 	    } else {
-		$dm.animate.buttons.style.loop.button configure -state disable
-		$dm.animate.buttons.style.single.button configure -state disable
+		set w [format "%s-animate" .ui[modname]]
 
-		$dm.animate.frame.s configure -state disable
-		$dm.animate.frame.e configure -state disable
+		if {[winfo exists $w]} {
+		    destroy $w
+		}
 	    }
 	}
     }
 
-    method set_nframes {nframes} {
-
-	global $this-nframes
-	set $this-nframes $nframes
-
-	set w .ui[modname]
-
-	if [ expr [winfo exists $w] ] {
-
-	    set dm [$w.dm childsite]
-
-	    if { [set $this-animate-frame] >= $nframes } {
-		set $this-animate-frame  [expr $nframes-1]
-		set $this-animate-frame2 [expr $nframes-1]
-	    }
-
-	    $dm.animate.frame.s configure -from 0 -to [expr $nframes-1]
-	}
+    method run_step {} {
+	set $this-execmode "step"
+	$this-c needexecute
     }
 
- }
+    method run_play {} {
+	set $this-execmode "play"
+	$this-c needexecute
+    }
+    
+    method make_animate_box {} {
+	set w [format "%s-animate" .ui[modname]]
+
+	if {[winfo exists $w]} {
+	    set child [lindex [winfo children $w] 0]
+
+	    # $w withdrawn by $child's procedures
+	    raise $child
+	    return;
+	}
+
+        toplevel $w
+
+	
+	frame $w.loc -borderwidth 2
+	frame $w.playmode -relief groove -borderwidth 2
+	frame $w.execmode -relief groove -borderwidth 2
+
+        scale $w.loc.min -variable $this-range_min -label "Start " \
+		-showvalue true -orient horizontal -relief groove -length 200
+        scale $w.loc.max -variable $this-range_max -label "End " \
+		-showvalue true -orient horizontal -relief groove -length 200
+
+	frame $w.loc.e
+	frame $w.loc.e.l
+	frame $w.loc.e.r
+
+	label $w.loc.e.l.curlabel -text "Current Value" -just left
+	entry $w.loc.e.r.curentry -width 10 -textvariable $this-current
+
+	label $w.loc.e.l.inclabel -text "Increment" -justify left
+	entry $w.loc.e.r.incentry -width 8 -textvariable $this-inc-amount
+
+	pack $w.loc.e.l.curlabel $w.loc.e.l.inclabel \
+	      -side top -anchor w
+
+	pack $w.loc.e.r.curentry $w.loc.e.r.incentry \
+              -side top -anchor w
+
+	pack $w.loc.e.l $w.loc.e.r -side left -expand yes -fill both
+
+        pack $w.loc.min $w.loc.max $w.loc.e \
+	    -side top -expand yes -fill both -pady 2
 
 
+	label $w.playmode.label -text "Play Mode"
+	radiobutton $w.playmode.once -text "Once" \
+		-variable $this-playmode -value once
+	radiobutton $w.playmode.loop -text "Loop" \
+		-variable $this-playmode -value loop
+	radiobutton $w.playmode.bounce1 -text "Bounce1" \
+		-variable $this-playmode -value bounce1
+	radiobutton $w.playmode.bounce2 -text "Bounce2" \
+		-variable $this-playmode -value bounce2
+
+	radiobutton $w.playmode.inc_w_exec -text "Increment with Execute" \
+	    -variable $this-playmode -value inc_w_exec
+
+	frame $w.playmode.delay
+	label $w.playmode.delay.label -text "Delay (ms)" \
+		-width 10 -just left
+	entry $w.playmode.delay.entry -width 10 -textvariable $this-delay
+	pack $w.playmode.delay.label $w.playmode.delay.entry \
+		-side left -anchor n -expand yes -fill x
+
+
+	pack $w.playmode.label -side top -expand yes -fill both
+	pack $w.playmode.once $w.playmode.loop \
+	    $w.playmode.bounce1 $w.playmode.bounce2 $w.playmode.inc_w_exec\
+	    $w.playmode.delay -side top -anchor w
+
+
+        button $w.execmode.play -text "Play" -command "$this run_play"
+        button $w.execmode.stop -text "Stop" -command "$this-c stop"
+        button $w.execmode.step -text "Step" -command "$this run_step"
+        pack $w.execmode.play $w.execmode.stop $w.execmode.step \
+		-side left -fill both -expand yes
+
+        pack $w.loc $w.playmode $w.execmode \
+		-padx 5 -pady 5 -fill both -expand yes
+
+	update_animate_range [set $this-selectable_min] [set $this-selectable_max]
+    }
+
+    method update_animate_range { min max } {
+	set w [format "%s-animate" .ui[modname]]
+
+	set $this-selectable_min $min
+	set $this-selectable_max $max
+
+        if {[winfo exists $w]} {
+            $w.loc.min config -from [set $this-selectable_min]
+            $w.loc.min config -to   [set $this-selectable_max]
+            $w.loc.min config -label "Start"
+            $w.loc.max config -from [set $this-selectable_min]
+            $w.loc.max config -to   [set $this-selectable_max]
+            $w.loc.max config -label "End"
+        }
+    }
+}

@@ -1,0 +1,185 @@
+# SCI Network 1.0
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Tue  Jan 1 2002"
+
+global runTime
+set runTime " 14:25:13"
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 9 8]
+set m1 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 27 194]
+set m2 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 45 288]
+set m3 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 27 352]
+set m4 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 9 417]
+set m5 [addModuleAtPosition "SCIRun" "FieldsData" "Gradient" 640 497]
+set m6 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 411 209]
+set m7 [addModuleAtPosition "SCIRun" "Render" "Viewer" 393 822]
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 233 562]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 233 625]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 9 738]
+set m11 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 233 437]
+set m12 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 215 503]
+set m13 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 215 721]
+set m14 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 658 560]
+set m15 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 622 745]
+set m16 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 640 621]
+set m17 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 622 682]
+set m18 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldBoundary" 447 543]
+set m19 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 447 607]
+set m20 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 411 86]
+set m21 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 411 148]
+
+addConnection $m0 0 $m1 0
+addConnection $m0 0 $m2 0
+addConnection $m1 0 $m3 0
+addConnection $m2 0 $m3 1
+addConnection $m3 0 $m4 1
+addConnection $m0 0 $m4 0
+addConnection $m4 0 $m5 0
+addConnection $m6 0 $m2 1
+addConnection $m8 0 $m9 0
+addConnection $m9 0 $m10 1
+addConnection $m4 0 $m10 0
+addConnection $m11 0 $m12 1
+addConnection $m4 0 $m12 0
+addConnection $m12 0 $m13 0
+addConnection $m9 0 $m13 1
+addConnection $m5 0 $m16 0
+addConnection $m14 0 $m16 1
+addConnection $m4 0 $m14 0
+addConnection $m16 0 $m17 1
+addConnection $m4 0 $m17 0
+addConnection $m17 0 $m15 0
+addConnection $m9 0 $m15 1
+addConnection $m10 1 $m7 0
+addConnection $m13 0 $m7 1
+addConnection $m6 1 $m7 2
+addConnection $m12 0 $m9 1
+addConnection $m18 0 $m19 0
+addConnection $m19 0 $m7 3
+addConnection $m14 1 $m7 4
+addConnection $m15 0 $m7 5
+addConnection $m0 0 $m18 0
+addConnection $m0 0 $m20 0
+addConnection $m20 0 $m21 0
+addConnection $m21 0 $m6 0
+
+set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
+
+set $m3-target_error {0.000001}
+set $m3-orig_error {1}
+set $m3-current_error {9.84662e-07}
+set $m3-iteration {86}
+set $m3-maxiter {500}
+set $m3-use_previous_soln {1}
+set $m3-emit_partial {0}
+
+set $m6-widgetSizeGui_ [expr 0.05 * ${global-scale}]
+set $m6-scaleModeGui_ {normalize}
+set $m6-showLastVecGui_ {1}
+set $m6-showLinesGui_ {0}
+
+$m7 initialize_ui
+set $m7-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m7-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m7-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m7-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m7-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m7-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m7-ViewWindow_0-view-up-x ${view-up-x}
+set $m7-ViewWindow_0-view-up-y ${view-up-y}
+set $m7-ViewWindow_0-view-up-z ${view-up-z}
+set $m7-ViewWindow_0-view-fov ${view-fov}
+set $m7-ViewWindow_0-specular-scale {0.4}
+
+set $m8-mapType {3}
+set $m8-minRes {12}
+set $m8-resolution {255}
+set $m8-realres {128}
+
+set $m10-extract-from-new-field {1}
+set $m10-update_type {on release}
+
+set $m11-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
+
+set $m13-nodes-on {1}
+set $m13-edges-on {0}
+set $m13-faces-on {0}
+set $m13-node_display_type {Spheres}
+set $m13-node_scale [expr 0.03 * ${global-scale}]
+set $m13-resolution {7}
+
+set $m14-maxseeds {50}
+set $m14-numseeds {35}
+
+set $m15-nodes-on {1}
+set $m15-edges-on {1}
+set $m15-faces-on {0}
+set $m15-node_display_type {Spheres}
+set $m15-edge_display_type {Cylinders}
+set $m15-node_scale [expr 0.01 * ${global-scale}]
+set $m15-edge_scale [expr 0.01 * ${global-scale}]
+set $m15-resolution {7}
+
+set $m16-stepsize [expr 0.004 * ${global-scale}]
+set $m16-tolerance [expr 0.004 * ${global-scale}]
+set $m16-maxsteps {250}
+set $m16-method {5}
+
+set $m19-def-color-r {0.3}
+set $m19-def-color-g {0.3}
+set $m19-def-color-b {0.3}
+set $m19-nodes-on {0}
+set $m19-edges-on {1}
+set $m19-faces-on {0}
+set $m19-node_display_type {Spheres}
+set $m19-edge_display_type {Cylinders}
+set $m19-node_scale [expr 0.005 * ${global-scale}]
+set $m19-edge_scale [expr 0.005 * ${global-scale}]
+set $m19-resolution {4}
+
+set $m20-numseeds {3}
+set $m20-autoexecute {1}
+set $m20-type {}
+set $m20-dist {uniuni}
+set $m20-whichtab {Random}
+
+set $m21-function {result = Vector(1,0,0);}
+set $m21-outputdatatype {Vector}
+
+::netedit scheduleok

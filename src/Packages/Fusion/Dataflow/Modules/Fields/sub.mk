@@ -10,25 +10,20 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-INCLUDES += $(TEEM_INCLUDE)
-
 SRCDIR   := Packages/Fusion/Dataflow/Modules/Fields
 
 SRCS     += \
 	$(SRCDIR)/FusionSlicePlot.cc\
 	$(SRCDIR)/NrrdFieldConverter.cc\
 	$(SRCDIR)/NIMRODConverter.cc\
-#	$(SRCDIR)/Prism.cc\
-#	$(SRCDIR)/RadialGridDifferent.cc\
-#	$(SRCDIR)/TransCoorSys.cc\
-#	$(SRCDIR)/ReactionDiffusion.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
-        Core/TkExtensions
+        Core/TkExtensions \
+	Packages/Teem/Core/Datatypes
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

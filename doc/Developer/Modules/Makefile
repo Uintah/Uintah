@@ -182,7 +182,7 @@ packages := SCIRun
 endif
 
 ifeq (${SRGROUP},biopse)
-packages := SCIRun BioPSE Teem VDT MatlabInterface Fusion
+packages := SCIRun BioPSE Teem MatlabInterface Insight Fusion DataIO
 endif
 
 ifeq (${SRGROUP},uintah)
@@ -199,7 +199,7 @@ endif
 # ########## Primary targets
 
 .PHONY: all dvi pdf
-.PHONY: SCIRun BioPSE Teem Fusion VDT MatlabInterface clean veryclean
+.PHONY: SCIRun BioPSE Teem Fusion MatlabInterface clean veryclean
 
 .DELETE_ON_ERROR:
 
@@ -435,58 +435,58 @@ MatlabInterface_veryclean_xml_tex_files
 	${call rmfiles,${MatlabInterface_tex_html_files}}
 	${call rmdirs,${MatlabInterface_tex_html_dirs}}
 
-# ########## VDT
-VDT : VDT.html VDT_modules.tex
+# ########## Insight
+Insight : Insight.html Insight_modules.tex
 
-VDT_xml_dir:=${call xmldir,VDT}
-VDT_xml_html_files:=${call xmlhtmlfiles,${VDT_xml_dir}}
-VDT_tex_dir:=${call texdir,VDT}
-VDT_tex_html_dirs:=${call texhtmldirs,${VDT_tex_dir}}
+Insight_xml_dir:=${call xmldir,Insight}
+Insight_xml_html_files:=${call xmlhtmlfiles,${Insight_xml_dir}}
+Insight_tex_dir:=${call texdir,Insight}
+Insight_tex_html_dirs:=${call texhtmldirs,${Insight_tex_dir}}
 
-VDT.html : ${edition} ${VDT_xml_html_files} ${VDT_tex_html_dirs} \
+Insight.html : ${edition} ${Insight_xml_html_files} ${Insight_tex_html_dirs} \
 		${pkgindexgenscript} ${pkgbycatgenscript}
-	${call makepkgindex,VDT,${VDT_xml_dir},${VDT_tex_dir}}
+	${call makepkgindex,Insight,${Insight_xml_dir},${Insight_tex_dir}}
 
-${VDT_xml_html_files}: %.html: %.xml ${html_stylesheet}
+${Insight_xml_html_files}: %.html: %.xml ${html_stylesheet}
 	${call xmltohtml,${xmlpkgtreetop}}
 
-${VDT_tex_html_dirs}: %: %.tex
+${Insight_tex_html_dirs}: %: %.tex
 	${call textohtml,${dir $@}}
 
-VDT_xml_tex_files := ${call xmltexfiles,VDT}
-VDT_jpg_eps_files := ${call imageepsfiles,jpg,VDT}
-VDT_gif_eps_files := ${call imageepsfiles,gif,VDT}
-VDT_tex_files := ${call texfiles,VDT}
+Insight_xml_tex_files := ${call xmltexfiles,Insight}
+Insight_jpg_eps_files := ${call imageepsfiles,jpg,Insight}
+Insight_gif_eps_files := ${call imageepsfiles,gif,Insight}
+Insight_tex_files := ${call texfiles,Insight}
 
-VDT_modules.tex : ${VDT_jpg_eps_files} ${VDT_gif_eps_files} \
-${VDT_xml_tex_files} ${VDT_tex_files}
-	${call makemodtexfile,VDT,${VDT_xml_tex_files} ${VDT_tex_files}}
+Insight_modules.tex : ${Insight_jpg_eps_files} ${Insight_gif_eps_files} \
+${Insight_xml_tex_files} ${Insight_tex_files}
+	${call makemodtexfile,Insight,${Insight_xml_tex_files} ${Insight_tex_files}}
 
-${VDT_jpg_eps_files}: %.${eps} : %.jpg
+${Insight_jpg_eps_files}: %.${eps} : %.jpg
 	${call imagetoeps}
 
-${VDT_gif_eps_files}: %.${eps} : %.gif
+${Insight_gif_eps_files}: %.${eps} : %.gif
 	${call imagetoeps}
 
-${VDT_xml_tex_files}: %.tex : %.xml ${print_stylesheet}
+${Insight_xml_tex_files}: %.tex : %.xml ${print_stylesheet}
 	${call xmltotex}
 
-VDT_veryclean_eps_files:
-	${call rmfiles,${VDT_jpg_eps_files}}
-	${call rmfiles,${VDT_gif_eps_files}}
+Insight_veryclean_eps_files:
+	${call rmfiles,${Insight_jpg_eps_files}}
+	${call rmfiles,${Insight_gif_eps_files}}
 
-VDT_veryclean_xml_tex_files:
-	${call rmfiles,${VDT_xml_tex_files} VDT_modules.tex}
+Insight_veryclean_xml_tex_files:
+	${call rmfiles,${Insight_xml_tex_files} Insight_modules.tex}
 
-VDT_clean:
+Insight_clean:
 	@echo $@
 
-VDT_veryclean: VDT_clean VDT_veryclean_eps_files \
-VDT_veryclean_xml_tex_files
-	${call rmfiles,${VDT_xml_html_files}}
-	${call rmfiles,${VDT_tex_html_files}}
-	${call rmdirs,${VDT_tex_html_dirs}}
-
+Insight_veryclean: Insight_clean \
+Insight_veryclean_eps_files \
+Insight_veryclean_xml_tex_files
+	${call rmfiles,${Insight_xml_html_files}}
+	${call rmfiles,${Insight_tex_html_files}}
+	${call rmdirs,${Insight_tex_html_dirs}}
 
 # ########## Fusion
 Fusion : Fusion.html Fusion_modules.tex
@@ -539,6 +539,58 @@ Fusion_veryclean_xml_tex_files
 	${call rmfiles,${Fusion_xml_html_files}}
 	${call rmfiles,${Fusion_tex_html_files}}
 	${call rmdirs,${Fusion_tex_html_dirs}}
+
+# ########## DataIO
+DataIO : DataIO.html DataIO_modules.tex
+
+DataIO_xml_dir:=${call xmldir,DataIO}
+DataIO_xml_html_files:=${call xmlhtmlfiles,${DataIO_xml_dir}}
+DataIO_tex_dir:=${call texdir,DataIO}
+DataIO_tex_html_dirs:=${call texhtmldirs,${DataIO_tex_dir}}
+
+DataIO.html : ${edition} ${DataIO_xml_html_files} ${DataIO_tex_html_dirs} \
+		${pkgindexgenscript} ${pkgbycatgenscript}
+	${call makepkgindex,DataIO,${DataIO_xml_dir},${DataIO_tex_dir}}
+
+${DataIO_xml_html_files}: %.html: %.xml ${html_stylesheet}
+	${call xmltohtml,${xmlpkgtreetop}}
+
+${DataIO_tex_html_dirs}: %: %.tex
+	${call textohtml,${dir $@}}
+
+DataIO_xml_tex_files := ${call xmltexfiles,DataIO}
+DataIO_jpg_eps_files := ${call imageepsfiles,jpg,DataIO}
+DataIO_gif_eps_files := ${call imageepsfiles,gif,DataIO}
+DataIO_tex_files := ${call texfiles}
+
+DataIO_modules.tex : ${DataIO_jpg_eps_files} ${DataIO_gif_eps_files} \
+${DataIO_xml_tex_files} ${DataIO_tex_files}
+	${call makemodtexfile,DataIO,${DataIO_xml_tex_files} ${DataIO_tex_files}}
+
+${DataIO_jpg_eps_files}: %.${eps} : %.jpg
+	${call imagetoeps}
+
+${DataIO_gif_eps_files}: %.${eps} : %.gif
+	${call imagetoeps}
+
+${DataIO_xml_tex_files}: %.tex : %.xml ${print_stylesheet}
+	${call xmltotex}
+
+DataIO_veryclean_eps_files:
+	${call rmfiles,${DataIO_jpg_eps_files}}
+	${call rmfiles,${DataIO_gif_eps_files}}
+
+DataIO_veryclean_xml_tex_files:
+	${call rmfiles,${DataIO_xml_tex_files} DataIO_modules.tex}
+
+DataIO_clean:
+	@echo $@
+
+DataIO_veryclean: DataIO_clean DataIO_veryclean_eps_files \
+DataIO_veryclean_xml_tex_files
+	${call rmfiles,${DataIO_xml_html_files}}
+	${call rmfiles,${DataIO_tex_html_files}}
+	${call rmdirs,${DataIO_tex_html_dirs}}
 
 # ########## Cleanage
 clean: ${addsuffix _clean,${packages}}

@@ -45,6 +45,9 @@ using namespace SCITeem;
 #define MAX_DIMS 6
 
 class DataIOSHARE HDF5DataReader : public Module {
+protected:
+  enum { MERGE_NONE=0,   MERGE_LIKE=1,   MERGE_TIME=2 };
+
 public:
   HDF5DataReader(GuiContext *context);
 
@@ -52,14 +55,20 @@ public:
 
   virtual void execute();
 
+  void ReadandSendData( string& filename,
+			vector< string >& paths,
+			vector< string >& datasets,
+			bool last,
+			bool cache );
+
   void parseDatasets( string new_datasets,
 		      vector<string>& paths,
 		      vector<string>& datasets );
 
-  int animateDatasets( vector<string>& paths,
-		       vector<string>& datasets,
-		       vector< vector<string> >& frame_paths,
-		       vector< vector<string> >& frame_datasets );
+  unsigned int parseAnimateDatasets( vector<string>& paths,
+				     vector<string>& datasets,
+				     vector< vector<string> >& frame_paths,
+				     vector< vector<string> >& frame_datasets );
 
   vector<int> getDatasetDims( string filename, string group, string dataset );
 
@@ -69,7 +78,31 @@ public:
 
   virtual void tcl_command(GuiArgs&, void*);
 
-private:
+protected:
+  void animate_execute( string new_filename,
+			vector< vector<string> >& frame_paths,
+			vector< vector<string> >& frame_datasets );
+			
+
+  int increment(int which, int lower, int upper);
+
+protected:
+  GuiDouble      selectable_min_;
+  GuiDouble      selectable_max_;
+  GuiInt         selectable_inc_;
+  GuiInt         range_min_;
+  GuiInt         range_max_;
+  GuiString      playmode_;
+  GuiInt         current_;
+  GuiString      execmode_;
+  GuiInt         delay_;
+  GuiInt         inc_amount_;
+  int            inc_;
+  bool           stop_;
+  int            last_input_;
+  NrrdDataHandle last_output_;
+
+
 
   bool is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const;
 
@@ -84,10 +117,6 @@ private:
   GuiInt assumeSVT_;
 
   GuiInt animate_;
-  GuiInt animateStyle_;
-  GuiInt animateNframes_;
-  GuiInt animateFrame_;
-
 
   vector< GuiInt* > gDims_;
   vector< GuiInt* > gStarts_;

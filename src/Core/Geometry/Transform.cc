@@ -603,7 +603,7 @@ void Transform::compute_imat()
     imat[1][0]=imat[1][2]=imat[1][3]=0;
     imat[2][0]=imat[2][1]=imat[2][3]=0;
     imat[3][0]=imat[3][1]=imat[3][2]=0;
-    cerr << "Transform - matrix is singular!!!" << endl;
+//    cerr << "Transform - matrix is singular!!!" << endl;
     return;
   }
   imat[0][0]=(f*k*p - f*l*o - j*g*p + j*h*o + n*g*l - n*h*k)/q;

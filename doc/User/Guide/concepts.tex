@@ -38,7 +38,7 @@ the surfaces\cite{CRJ:Sch93b}. An application such as Matlab computes a
 finite element simulation of the electric current distribution from the
 defibrillation electrodes through the thoracic volume\cite{RSM:And93}.
 Another approach is to write a Fortran program using a public domain
-numerical library such as LAPACK\@ \index{LAPACK}.  To see the output
+numerical library such as LAPACK\@ \index{LAPACK}.  Viewing output
 requires a scientific visualization package (such as those described
 in\cite{RSM:All91}).  Between each of these steps, it is necessary to
 save the output of one program in a format that the next in the sequence
@@ -46,7 +46,7 @@ can read. This process usually necessitates separate file format conversion
 utilities.  To find the optimal location, shape, and size parameters for
 the defibrillating electrode, the user has to go back to the
 geometric modeling package, change the necessary parameters, manually
-re-run all of the subsequent steps to see how the new electrode
+re-run all subsequent steps to see how the new electrode
 configuration affects the current density distribution, then manually
 iterate.  The manual intervention required to drive this process is
 tedious and time consuming.
@@ -57,7 +57,7 @@ a sequence of runs to examine each of them and save the results for
 subsequent examinations.  The complete execution of the sequence might
 require hours or even days, but the user is free during that
 time to perform other tasks.  This process is similar to the ``what
-if?'' analysis that modern spreadsheet programs offer for far simpler
+if'' analysis modern spreadsheet programs offer for far simpler
 problems.  
 
 In the example of the defibrillation simulation, the user can
@@ -67,11 +67,11 @@ electrodes, choose values for other parameters of the simulation
 conditions, the error tolerance for convergence, and the evaluation
 criteria), and leave the simulations to run as long as necessary.
 Viewing the results can be as simple as watching the animation
-produced by the simulation or scanning other defibrillation quality
+produced by the simulation, or scanning other defibrillation quality
 indices such as maximum and minimum current density magnitude or
 current density histograms from the heart.  This automated execution
-process, whereby the user selects all of the parameters in advance and
-does not control the intra- or inter-package execution is called
+process, whereby the user selects all parameters in advance and
+does not control the intra- or inter-package execution, is called
 \emph{batch processing}.  A benefit of batch processing is
 that it allows the user to utilize computational resources
 without intervention.  However, most scientific computer software
@@ -108,7 +108,7 @@ stops, and a different destination.  In the example
 of the defibrillation simulation, computational steering allows users to interactively change parameters and settings as the
 simulation executes, performing his or her work in batch and interactive
 modes.  Steering interventions might include adjusting electrode
-locations to stay within anatomically reasonable bounds or refining
+locations to stay within anatomically reasonable bounds, or refining
 the geometric model resolution in order to balance accuracy and
 execution time.
 
@@ -117,7 +117,7 @@ data flows directly from one processing step to the next, without
 being diverted to a disk file or leaving the program.  Output from
 each step is available as input to dependent steps.  The underlying
 paradigm of \SR{} is data flowing between modules that each perform
-some operation.  Integration between modules guarantees that upon
+some operation.  Integration between modules guarantees, that upon
 completion of their tasks, upstream modules pass their data to
 downstream modules, thereby forcing the downstream modules to execute
 in response.  In the computational steering example,  the user may alter
@@ -182,14 +182,13 @@ environments available to the scientific community.
 \end{figure}
 
 To support extensibility in \sr{}, its infrastructure has undergone
-significant reorganization, extension, and enhancement. \SR{} remains
-the core problem solving environment and the name is used to refer to
-the entire ensemble of software.  A user may now use the core \SR{}
-software and augment its functionality with one or more packages such
-as \BIOPSE{} (as shown in Figure~\ref{fig:eab-BioPSE}).  \sci{}
-anticipates the collection of packages will grow as the \SR{}
-infrastructure becomes available to scientists and engineers in varied
-disciplines.
+significant enhancement. \SR{} remains the core problem solving
+environment and the name is used to refer to the entire ensemble of
+software.  A user may now use the core \SR{} software and augment its
+functionality with one or more packages such as \BIOPSE{} (as shown in
+Figure~\ref{fig:eab-BioPSE}).  \sci{} anticipates the collection of
+packages will grow as the \SR{} infrastructure becomes available to
+scientists and engineers in varied disciplines.
 
 In addition to major projects that have leveraged and
 advanced \SR{}, there exist a number of smaller packages that extend
@@ -214,15 +213,15 @@ contain optional control flags.
 extensibility through packages and third-party libraries will allow \SR{}
 to grow, and adapt to changing needs and opportunities. 
 
-This manual will be consistent with the usage of the
-terms \SR{} and \BIOPSE{}.  \sr{} will typically refer to some feature that
+This manual is consistent with its use of 
+terms \SR{} and \BIOPSE{}.  \sr{} typically refers to some feature that
 is common to the core functionality of the system. This is common to all
-of the problem solving environment application packages.  \BIOPSE{} will
-refer to specific elements of the bioelectric field problem solving
+problem solving environment application packages.  \BIOPSE{} 
+refers to specific elements of the bioelectric field problem solving
 environment.
 
 
-\section{\SR{} Modules and Networks}
+\section{\SR{} Modules, Networks, and Sub-Networks}
 \label{sec:con-modules} 
 
 %begin{latexonly}
@@ -257,25 +256,31 @@ Modules may contain other elements, but all have at least one input or
 one output port. Most modules have input and output ports connected to
 other modules.  Data readers are modules with only an output port.
 Their ``input'' is read from a file.  The
-\htmladdnormallink{\emph{Viewer}}{viewer.html} module provides input
+\module{Viewer} module provides input
 ports only; scene data arrives on its input ports and a screen
 visualization is its ``output''.  
 
-It is important to appreciate the concepts of modules, connections
-between modules, and the data-flow through a network (see
-\chref{Working with Networks}{ch:workwithnets} for more information
-on modules, ports, connections, and networks).
+A \dfn{subnet} is a collection of modules that behave as one.
+Sub-Networks can be created, edited, and saved just like networks.
+Sub-Networks can be reused in other networks, including other
+sub-networks.  Sub-networks simplify the construction of complex
+networks.  \sr{} ships with a  set of subnets.  See \secref{Creating a
+  Sub-Network}{sec:crsubnet} for details.
 
+It is important to understand the concepts of modules, connections,
+networks and data-flow.  See \secref{Working with
+  Networks}{ch:workwithnets} for more information on modules, subnets,
+ports, connections, and networks.
 
 \section{\sr{}'s Use of Third Party Software}
 \label{sec:con-links} 
 
-\SR{} works with software from third party sources in several
-ways. The use of third party software is largely invisible to the user of \SR{} or
-\BIOPSE{}.
+\SR{} works with software from third party sources in several ways.
+The use of third party software is largely invisible to the user of
+\SR{} or \BIOPSE{}.
 
-For example, \sr{}'s user interface is written in the Tcl language
-using the Tk library.  In general, \sr{}'s modules use Tcl for their
+For example, \sr{}'s user interface is written in Tcl language
+using the Tk library.  In general, \sr{} modules use Tcl for their
 user interface elements and C++ for their computations.  However, a
 module may also interact with code written in other languages such as
 FORTRAN or Matlab.
@@ -305,48 +310,35 @@ hostname:port) and use a client-to-client communication model.
 Synchronization between processes is manual.  For example, 
 the \SR{} \module{MatrixSend} module sends the matrix to a socket where a 
 Matlab script is listening.  The script receives the matrix, 
-performs the calculations in Matlab and sends the results to a socket 
-where \module{MatrixReceive} module is listening.  \SR   then carries out
+performs the calculations in Matlab, and sends the results to a socket 
+where \module{MatrixReceive} module is listening.  \SR then carries out
 further calculations and displays the results.
 
-%For examples of this interface, see \secref{Matlab
-%Examples}{sec:examples-matlab}.
+\subsection{Insight Tool Kit}
 
-\section{Inside Tool Kit}
+\sr{} provides modules for solving problems in a wide range of areas
+such as performance analysis, geometric modeling, numerical analysis,
+and scientific visualization.  \sr{}, however, lacks image processing
+tools. This deficiency is most prominent in the area of medical
+imaging.
 
-Inside Tool Kit (ITK) is an open source software library for
-performing segmentation and registration. 
+The \htmladdnormallinkfoot{Insight Tool Kit}{http://www.itk.org} (ITK)
+is open source software that complements \sr{} by providing
+image-processing capabilities, ranging from fundamental algorithms to
+advanced segmentation and registration tools.  The Insight Tool Kit
+provides these capabilities as \dfn{filters}.  \sci{} has developed a
+method of encapsulating ITK filters in \sr{} modules.
 
-When ITK is present and SCIRun is appropriately configured, ITK filters
-incapulate in SCIRun modules for use in SCIRun networks.
+A simple XML-based language is used to describe the properties of an
+ITK filter.  The ITK filter description is independent of the software
+system using ITK.  Additional (one or two) \sr{}-specific, XML-based
+files drive the module generation process.
 
-SCIRun incaptulates ITK filters using xml based filter description
-files. Users can incapulate additional filters by writing xml
-descriptions of the filters.
-
-The process of incapsulating ITK filters and SCIRun modules is
-described ????
-
-\subsection{GENESIS (via SQL)}
-
-\htmladdnormallink{GENESIS}{http://www.bbb.caltech.edu/GENESIS/genesis.html}
-(short for GEneral NEural SImulation System) is a general purpose
-simulation platform which was developed to support the simulation of neural
-systems ranging from complex models of single neurons to simulations of
-large networks made up of more abstract neuronal components. GENESIS has
-provided the basis for laboratory courses in neural simulation at
-Caltech and the Marine Biological Laboratory in Woods Hole, MA, as well as
-many other institutions.   
-
-\sci{} has created a bridge between \SR{} and GENESIS so it is possible
-to use the output of a GENESIS simulation as the input for a
-visualization, or a subsequent simulation within \BIOPSE{}.  The mechanism for
-this bridge is a database accessible via SQL queries.  \sci{} created
-code for GENESIS that writes the output of the simulation into the database, then the corresponding functions for \SR{} read this
-information from the same database.   Contact Chris Butson
-\htmladdnormallink{butson@sci.utah.edu}{mailto:butson@sci.utah.edu}
-for details about the implementation of the GENESIS module.
-
+If ITK is present (and \sr{} is appropriately configured) \sr{} will
+build a default set of ITK filter-based modules.  Users can generate
+additional modules by writing XML descriptions. The process of
+generating modules based on ITK filters is described in
+\chref{Wrapping ITK Filters in \sr Modules}{ch:itk_mods}.
 
 \subsection{PETSc}
 
@@ -363,34 +355,83 @@ Installation of PETSc is optional.  SolveMatrix provides built-in
 solvers if PETSc is not installed.
 
 
+\subsection{GENESIS (via SQL)}
+
+\htmladdnormallink{GENESIS}{http://www.bbb.caltech.edu/GENESIS/genesis.html}
+(short for GEneral NEural SImulation System) is a general purpose
+simulation platform that was developed to support the simulation of neural
+systems ranging from complex models of single neurons, to simulations of
+large networks made up of more abstract neuronal components. GENESIS has
+provided the basis for laboratory courses in neural simulation at
+Caltech and the Marine Biological Laboratory in Woods Hole, MA, and 
+many other institutions.   
+
+\sci{} has made it possible to use the output of a GENESIS simulation
+as the input for a visualization, or a subsequent simulation within
+\BIOPSE{}.  The mechanism for this bridge is a database accessible via
+SQL queries.  \sci{} created code for GENESIS that writes the output
+of the simulation into the database, then the corresponding functions
+for \SR{} read this information from the same database.  Contact Chris
+Butson
+\htmladdnormallink{butson@sci.utah.edu}{mailto:butson@sci.utah.edu}
+for details about the implementation of the GENESIS module.
+
+
 \section{Extensibility}
 \label{sec:con-extend} 
 
-\SR{} is an extensible \index{extensible} problem solving environment.
-There are no limits to the different ways of connecting modules and
-creating new applications.
 
-\sr{} can be extended by creating new packages and modules.  Modules
-can be coded from scratch or with the assistance of the \sr's
+\sr{} can be extended by creating new packages, modules, and subnets.
+Modules can be coded from scratch, or with the assistance of the \sr's
 \dfn{Module Maker} component.
 
-\sci{} anticipates users creating new modules. \sci{} encourages users
-to contribute modules to a repository on the \BIOPSE{} web site
-\index{BioPSE@\BIOPSE{}!web site}
-(\htmladdnormallink{www.sci.utah.edu/ncrr/software/biopse.html})
-{http://www.sci.utah.edu/ncrr/software/biopse.html} where they will be
+\sci{} encourages users to contribute modules to the \BIOPSE{} web
+site \index{BioPSE@\BIOPSE{}!web site}
+(\htmladdnormallink{www.sci.utah.edu/ncrr/software/biopse.html}
+{http://www.sci.utah.edu/ncrr/software/biopse.html}) where they will be
 reviewed, and useful modules will be included in subsequent releases
-of \sr{}.  To maximize intellectual investment in legacy code future
-releases of \sr{} will include more extensive tools for building
-modules and wrapping existing codes within \SR{} module wrappers.
+of \sr{}.
+
+To leverage investment in legacy code, future releases of \sr{} will
+include additional tools for wrapping existing code within \SR{}
+modules.
+
+\section{Power Apps}
+\label{sec:sec:con-apps}
+
+SCI is developing problem specific applications called
+\dfn{Power Apps}.  Power Apps use \sr{}'s data flow engine for
+computation and application specific data flow networks for problem
+solving.  However, Power Apps hide the complexity of the data flow
+environment behind a simplified application specific graphical user
+interface.
+
+The following Power Apps are available:
+
+\begin{description}
+  \descitem{BioTensor} An application for computing and visualizing
+  diffusion tensor data.  See the \htmladdnormallinkfoot{BioTensor
+    tutorial}{\latexhtml{http://software.sci.utah.edu/doc/User/BioTensorTutorial}{../../BioTensorTutorial}}
+  for more information.
+  
+  \descitem{BioFem} A finite element simulation application. It is
+  used, for example, to compute electric and potential fields from a
+  discretized volume conductor and a current source.
+\end{description}
+
+Commands \command{BioTensor} and \command{BioFem} invoke these
+applications.  If \sr{} is installed from source code, commands
+\command{BioTensor} and \command{BioFem} are located in \sr{}'s build
+directory (alongside the \command{scirun} command).  If \sr{} is
+installed from RPMs these commands are located in
+\directory{/usr/local/SCIRun/bin}.
 
 \section{\sr{} Objects}
 \label{sec:sr-objects}
 
-
 \sr{}'s \datatype{Field}, \datatype{Mesh}, \datatype{Matrix}, and
 \datatype{ColorMap} objects are used frequently in networks.  These
-objects are described in following sections.
+objects are described in the following sections.
 
 \subsection{Field}
 
@@ -428,7 +469,7 @@ explicitly.  The unstructured mesh types are:
 \datatype{TriSurfMesh}, \datatype{QuadSurfMesh},
 \datatype{TetVolMesh}, \datatype{HexVolMesh}.
 
-Node locations are specified explicitly and connectivities are known
+Node locations are specified explicitly, and connectivities are known
 implicitly for structured meshes.  The structured meshes are
 \datatype{StructCurveMesh}, \datatype{StructQuadSurfMesh}, and
 \datatype{StructHexVolMesh}.
@@ -463,7 +504,7 @@ Below are figures of some mesh types:
   segmented curve.}
 
 \meshdoc{100}{ImageField}{Image Mesh}{An Image mesh is a regular 2D
-  grid. Note that an Image mesh is not used for image processing because
+  grid. Note that an Image mesh is not used for image processing. 
   \sr{} does not support that function.}
 
 \meshdoc{65}{trisurf}{Tri Surface Mesh}{A Tri Surface mesh is a
@@ -492,9 +533,6 @@ storage units.
 elements are zero and no storage is allocated for zero valued
 elements.
 \end{description}
-
-\datatype{ColumnMatrix},
-\datatype{DenseMatrix}, and \datatype{SparseRowMatrix}.
 
 \subsection{Color Map}
 
