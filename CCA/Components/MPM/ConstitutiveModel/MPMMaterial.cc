@@ -66,51 +66,14 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
     d_particle_creator = scinew MembraneParticleCreator(this,lb,n8or27,
 							haveLoadCurve,
 							doErosion);
+  else if (dynamic_cast<ShellMaterial*>(d_cm) != 0)
+    d_particle_creator = scinew ShellParticleCreator(this,lb,n8or27,
+		                                     haveLoadCurve,
+						     doErosion);
   else
     d_particle_creator = scinew DefaultParticleCreator(this,lb,n8or27,
 						       haveLoadCurve,
 						       doErosion);
-}
-
-// MPMMaterial constructor specific to shell formulation
-// WARNING : This may need to be changed if the Shell stuff is to be
-// incorporated into SerialMPM or other MPMs
-MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
-			 string integrator, bool haveLoadCurve,
-			 bool doErosion, bool haveShell)
-  : Material(ps), lb(lb), d_cm(0), d_burn(0), d_eos(0), d_particle_creator(0)
-{
-  // The standard set of initializations needed
-  standardInitialization(ps, lb, n8or27, integrator, haveLoadCurve, doErosion);
-
-   // Check to see which ParticleCreator object we need
-   if (integrator == "implicit") 
-     d_particle_creator = scinew ImplicitParticleCreator(this,lb,n8or27,
-		                                         haveLoadCurve,
-							 doErosion,
-                                                         haveShell);
-
-   else if (integrator == "fracture") 
-     d_particle_creator = scinew FractureParticleCreator(this,lb,n8or27,
-		                                         haveLoadCurve,
-							 doErosion,
-                                                         haveShell);
-
-   else if (dynamic_cast<Membrane*>(d_cm) != 0)
-     d_particle_creator = scinew MembraneParticleCreator(this,lb,n8or27,
-		                                         haveLoadCurve,
-							 doErosion,
-                                                         haveShell);
-   else if (dynamic_cast<ShellMaterial*>(d_cm) != 0)
-     d_particle_creator = scinew ShellParticleCreator(this,lb,n8or27,
-		                                      haveLoadCurve,
-						      doErosion);
-   else
-     d_particle_creator = scinew DefaultParticleCreator(this,lb,n8or27,
-		                                        haveLoadCurve,
-							doErosion,
-                                                        haveShell);
-	
 }
 
 void

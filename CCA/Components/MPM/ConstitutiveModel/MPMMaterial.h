@@ -65,10 +65,6 @@ WARNING
    MPMMaterial(ProblemSpecP&, MPMLabel* lb, int n8or27,string integrat,
 	       bool haveLoadCurve, bool doErosion);
 	 
-   // Shell Formulation MPM Material Constructor
-   MPMMaterial(ProblemSpecP&, MPMLabel* lb, int n8or27,string integrat,
-	       bool haveLoadCurve, bool doErosion, bool shell);
-	 
    ~MPMMaterial();
 	 
    //////////
