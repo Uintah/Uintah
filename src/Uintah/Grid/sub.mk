@@ -39,6 +39,7 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/TempThermalBoundCond.cc \
 	$(SRCDIR)/FluxThermalBoundCond.cc \
 	$(SRCDIR)/PressureBoundCond.cc \
+	$(SRCDIR)/DensityBoundCond.cc \
 	$(SRCDIR)/BoundCondFactory.cc
 
 
@@ -51,6 +52,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.25  2000/10/26 23:27:20  jas
+# Added Density Boundary Conditions needed for ICE.
+#
 # Revision 1.24  2000/10/18 03:46:46  jas
 # Added pressure boundary conditions.
 #
