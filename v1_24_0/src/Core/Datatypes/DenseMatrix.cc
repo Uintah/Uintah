@@ -106,10 +106,9 @@ DenseMatrix::DenseMatrix(int r, int c) :
   }
 }
 
-DenseMatrix::DenseMatrix(const DenseMatrix& m)
+DenseMatrix::DenseMatrix(const DenseMatrix& m) :
+  Matrix(m.nrows_, m.ncols_)
 {
-  nrows_ = m.nrows_;
-  ncols_ = m.ncols_;
   data = scinew double*[nrows_];
   double* tmp = scinew double[nrows_ * ncols_];
   dataptr = tmp;
