@@ -27,8 +27,7 @@ SUBDIRS := \
 	$(SRCDIR)/objects	\
 	$(SRCDIR)/pingpong	\
 	$(SRCDIR)/spectest      \
-        $(SRCDIR)/pp            \
-	$(SRCDIR)/exceptiontest 
+        $(SRCDIR)/pp            
 
 ifeq ($(HAVE_MPI),yes)
 SUBDIRS += \
@@ -40,7 +39,8 @@ SUBDIRS += \
 	$(SRCDIR)/OESort        \
 	$(SRCDIR)/subsetter     \
 	$(SRCDIR)/ppArr         \
-	$(SRCDIR)/passPPtr
+	$(SRCDIR)/passPPtr      \
+        $(SRCDIR)/exceptiontest
 endif
 
 //SUBDIRS := $(SRCDIR)/pingpongArr $(SRCDIR)/pp0
