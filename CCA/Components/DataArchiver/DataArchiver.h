@@ -68,7 +68,7 @@ using std::pair;
 				bool removeOldDir);
 
       // Copy a section from another uda's index.xml.
-      void copySection(Dir& fromDir, string section);
+      void copySection(Dir& fromDir, Dir& toDir, string section);
 
       //////////
       // Insert Documentation Here:
