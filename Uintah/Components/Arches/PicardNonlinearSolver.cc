@@ -73,36 +73,35 @@ int PicardNonlinearSolver::nonlinearSolve(double time, double delta_t,
 
     //correct inlet velocities to account for change in properties
     d_boundaryCondition->sched_setInletVelocityBC(level, sched, new_dw, 
-						nonlinear_dw);
+						  new_dw);
     // linearizes and solves pressure eqn
-    d_pressSolver->solve(time, delta_t, level, sched, new_dw, nonlinear_dw);
+    d_pressSolver->solve(time, delta_t, level, sched, new_dw, new_dw);
     // if external boundary then recompute velocities using new pressure
     // and puts them in nonlinear_dw
     d_boundaryCondition->sched_computePressureBC(pc, level, new_dw,
-						 nonlinear_dw);
+						 new_dw);
     // x-velocity    
     for (int index = 1; index <= Arches::NDIM; ++index) {
-      d_momSolver->solve(time, delta_t, index, level, sched, new_dw, nonlinear_dw);
+      d_momSolver->solve(time, delta_t, index, level, sched, new_dw, new_dw);
     }
     
     // equation for scalars
     for (int index = 1;index <= d_props->getNumMixVars(); index ++) {
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve different scalars
-      d_scalarSolver->solve(index, level, sched, new_dw, nonlinear_dw);
+      d_scalarSolver->solve(index, level, sched, new_dw, new_dw);
     }
     // update properties
-    d_props->sched_computeProps(level, sched, new_dw, nonlinear_dw);
+    d_props->sched_computeProps(level, sched, new_dw, new_dw);
     // LES Turbulence model to compute turbulent viscosity
     // that accounts for sub-grid scale turbulence
-    d_turbModel->sched_computeTurbSubmodel(level, sched, new_dw, nonlinear_dw);
-    // residual represents the degrees of inaccuracies
-    nlResidual = computeResidual(level, sched, new_dw, nonlinear_dw);
+    d_turbModel->sched_computeTurbSubmodel(level, sched, new_dw, new_dw);
     // not sure...but we need to execute tasks somewhere
     ProcessorContext* pc = ProcessorContext::getRootContext();
     scheduler->execute(pc);
      ++nlIterations;
-    new_dw = nonlinear_dw;
+    // residual represents the degrees of inaccuracies
+    nlResidual = computeResidual(level, sched, new_dw, new_dw);
   }while((nlIterations < d_nonlinear_its)||(nlResidual > d_resTol));
        
   return(0);
@@ -119,18 +118,18 @@ double PicardNonlinearSolver::computeResidual(const LevelP& level,
   SoleVariable<double> omg;
   // not sure of the syntax...this operation is supposed to get 
   // L1norm of the residual over the whole level
-  new_dw->get(residual,"pressResidual",reduce);
+  new_dw->get(residual,"pressResidual");
   new_dw->get(omg,"pressomg",reduce);
   nlresidual = MACHINEPRECISSION + log(residual/omg);
   for (int index = 1; index <= Arches::NDIM; ++index) {
     new_dw->get(residual,"velocityResidual", index, reduce);
-    new_dw->get(omg,"velocityomg", index, reduce);
+    new_dw->get(omg,"velocityomg", index);
     nlresidual = max(nlresidual, MACHINEPRECISSION+log(residual/omg));
   }
   //for multiple scalars iterate
   for (int index = 1;index <= d_props->getNumMixVars(); index ++) {
     new_dw->get(residual,"scalarResidual", index, reduce);
-    new_dw->get(omg,"scalaromg", index, reduce);
+    new_dw->get(omg,"scalaromg", index);
     nlresidual = max(nlresidual, MACHINEPRECISSION+log(residual/omg));
   }
   return nlresidual;

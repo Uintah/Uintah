@@ -79,19 +79,15 @@ class PressureSolver
   // Destructor
    ~PressureSolver();
 
-   // access functions
-   CCVariable<double> getPressure() const;
-   double getResidual() const;
-   double getOrderMagnitude() const;
    // sets parameters at start time
    void problemSetup(const ProblemSpecP& params);
 
    // linearize eqn
-   void buildLinearMatrix(double time, double delta_t,
-			  const LevelP& level,
-			  SchedulerP& sched,
-			  const DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw);
+   void sched_buildLinearMatrix(double delta_t,
+				const LevelP& level,
+				SchedulerP& sched,
+				const DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw);
  
    ////////////////////////////////////////////////////////////////////////
    // solve linearized pressure equation
@@ -101,22 +97,17 @@ class PressureSolver
 	      const DataWarehouseP& old_dw,
 	      DataWarehouseP& new_dw);
    
-   void sched_modifyCoeff(const LevelP& level,
-			  SchedulerP& sched,
-			  const DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw);
    void sched_normPressure(const LevelP& level,
 			   SchedulerP& sched,
 			   const DataWarehouseP& old_dw,
 			   DataWarehouseP& new_dw);  
  private:
 
-      // Modify coefficients
-   void modifyCoeff(const Region* region,
-		    SchedulerP& sched,
-		    const DataWarehouseP& old_dw,
-		    DataWarehouseP& new_dw);
-
+   void buildLinearMatrix(const Region* region,
+			  SchedulerP& sched,
+			  const DataWarehouseP& old_dw,
+			  DataWarehouseP& new_dw,
+			  double delta_t);
    void normPressure(const Region* region,
 		     SchedulerP& sched,
 		     const DataWarehouseP& old_dw,
@@ -145,7 +136,7 @@ class PressureSolver
    // underrealaxation parameter, read from an input database
    double d_underrelax;
    //reference points for the solvers
-   Array3 d_pressRef;
+   Array1 d_pressRef;
 
 };
 

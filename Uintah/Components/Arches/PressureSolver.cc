@@ -58,15 +58,12 @@ void PressureSolver::solve(double time, double delta_t,
 			   const DataWarehouseP& old_dw,
 			   DataWarehouseP& new_dw)
 {
-  //copy pressure, velocities, scalar, density and viscosity from
-  // old_dw to new_dw
-  sched_begin(level, sched, old_dw, new_dw);
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
   // pressure solve.
   DataWarehouseP matrix_dw = sched->createDataWarehouse();
   //computes stencil coefficients and source terms
-  buildLinearMatrix(time, delta_t, level, sched, new_dw, matrix_dw);
+  sched_buildLinearMatrix(delta_t, level, sched, new_dw, matrix_dw);
   //residual at the start of linear solve
   // this can be part of linear solver
 #if 0
@@ -74,13 +71,58 @@ void PressureSolver::solve(double time, double delta_t,
   calculateOrderMagnitude(level, sched, new_dw, matrix_dw);
 #endif
   d_linearSolver->sched_pressureSolve(level, sched, new_dw, matrix_dw);
-  // if linearSolver succesful then copy pressure from new_dw
-  // to old_dw
-  sched_update(level, sched, old_dw, new_dw, matrix_dw);
+  sched_normPressure(level, sched, new_dw, new_dw);
   
 }
 
-void PressureSolver::buildLinearMatrix(double time, double delta_t,
+void PressureSolver::sched_buildLinearMatrix(double delta_t,
+					     const LevelP& level,
+					     SchedulerP& sched,
+					     const DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw)
+{
+  for(Level::const_regionIterator iter=level->regionsBegin();
+      iter != level->regionsEnd(); iter++){
+    const Region* region=*iter;
+    {
+      Task* tsk = new Task("PressureSolver::BuildCoeff",
+			   region, old_dw, new_dw, this,
+			   Discretization::buildLinearMatrix,
+			   delta_t);
+      tsk->requires(old_dw, "velocity", region, 1,
+		    FCVariable<Vector>::getTypeDescription());
+      tsk->requires(old_dw, "density", region, 1,
+		    CCVariable<double>::getTypeDescription());
+      tsk->requires(old_dw, "viscosity", region, 1,
+		    CCVariable<double>::getTypeDescription());
+      tsk->requires(old_dw, "pressure", region, 1,
+		    CCVariable<double>::getTypeDescription());
+      /// requires convection coeff because of the nodal
+      // differencing
+      // computes all the components of velocity
+      tsk->computes(new_dw, "VelocityConvectCoeff", region, 0,
+		    FCVariable<Vector>::getTypeDescription());
+      tsk->computes(new_dw, "VelocityCoeff", region, 0,
+		    FCVariable<Vector>::getTypeDescription());
+      tsk->computes(new_dw, "VelLinearSource", region, 0,
+		    FCVariable<Vector>::getTypeDescription());
+      tsk->computes(new_dw, "VelNonlinearSource", region, 0,
+		    FCVariable<Vector>::getTypeDescription());
+      tsk->computes(new_dw, "pressureCoeff", region, 0,
+		    CCVariable<Vector>::getTypeDescription());
+      tsk->computes(new_dw, "pressureLinearSource", region, 0,
+		    CCVariable<double>::getTypeDescription());
+      tsk->computes(new_dw, "pressureNonlinearSource", region, 0,
+		    CCVariable<double>::getTypeDescription());
+     
+      sched->addTask(tsk);
+    }
+
+  }
+}
+
+
+void PressureSolver::buildLinearMatrix(double delta_t,
 				       const LevelP& level,
 				       SchedulerP& sched,
 				       const DataWarehouseP& old_dw,
@@ -88,25 +130,25 @@ void PressureSolver::buildLinearMatrix(double time, double delta_t,
 {
   // compute all three componenets of velocity stencil coefficients
   for(int index = 1; index <= NDIM; ++index) {
-    d_discretize->sched_calculateVelocityCoeff(index, level, sched, 
-					       old_dw,new_dw);
-    d_source->sched_calculateVelocitySource(index, level, sched, 
-					    old_dw, new_dw);
-    d_boundaryCondition->sched_velocityBC(index, level, sched,
-					  old_dw, new_dw);
+    d_discretize->calculateVelocityCoeff(delta_t, index, level, 
+					 sched, old_dw, new_dw);
+    d_source->calculateVelocitySource(index, level, sched, 
+				      old_dw, new_dw);
+    d_boundaryCondition->velocityBC(index, level, sched,
+				    old_dw, new_dw);
     // similar to mascal
-    d_source->sched_modifyMassSource(index, level, sched,
-				     old_dw, new_dw);
-    d_discretize->sched_calculateDiagonal(index, level, sched,
-					  old_dw, new_dw);
+    d_source->modifyMassSource(index, level, sched,
+			       old_dw, new_dw);
+    d_discretize->calculateVelDiagonal(index, level, sched,
+				       old_dw, new_dw);
   }
-  d_discretize->sched_calculatePressureCoeff(level, sched,
-					     old_dw, new_dw);
-  d_source->sched_calculatePressureSource(level, sched,
-					  old_dw, new_dw);
-  d_boundaryCondition->sched_pressureBC(level, sched,
-					old_dw, new_dw);
-  sched_modifyCoeff(level, sched, old_dw, new_dw);
+  d_discretize->calculatePressureCoeff(level, sched,
+				       old_dw, new_dw);
+  d_source->calculatePressureSource(level, sched,
+				    old_dw, new_dw);
+  d_boundaryCondition->pressureBC(level, sched,
+				  old_dw, new_dw);
+  d_discretize->calculatePressDiagonal(level, sched, old_dw, new_dw);
 
 }
 
