@@ -67,9 +67,9 @@ itcl_class SCIRun_FieldsCreate_SampleField {
         }
         toplevel $w
 
-	iwidgets::tabnotebook  $w.tabs -raiseselect true \
-		               -width 350 -height 200
-	pack $w.tabs -side top
+	iwidgets::tabnotebook $w.tabs -raiseselect true \
+	    -width 350 -height 210 -tabpos n -backdrop gray
+	pack $w.tabs -side top -expand 1 -fill both
 	set wtab [$w.tabs add -label "Widget" \
 		  -command "set $this-whichtab Widget"]
 	set rtab [$w.tabs add -label "Random" \
@@ -93,7 +93,7 @@ itcl_class SCIRun_FieldsCreate_SampleField {
 	    -fill both -expand yes
 
 	frame $wtab.f1 
-	label $wtab.f1.maxseeds_l -text "Maximum number of samples" -width 25 \
+	label $wtab.f1.maxseeds_l -text "Number of samples" -width 25 \
               -anchor w
 	entry $wtab.f1.maxseeds -text $this-maxseeds -width 10
 	pack $wtab.f1.maxseeds_l $wtab.f1.maxseeds -side left
