@@ -71,11 +71,12 @@ itcl_class Teem_DataIO_NrrdReader {
 	
 	# file types to appers in filter box
 	set types {
-            {{Nrrd Files}         {.nhdr .nrrd .nd .vff .pic .pict .vol}   }
+            {{Nrrd Files}         {.nhdr .nrrd .nd .vff .pic .pict .vol .v}   }
 	    {{NrrdData File}      {.nd}           }
 	    {{VFF File}           {.vff}          }
 	    {{PICT File}          {.pic .pict}    }
 	    {{geovoxel VOL File}  {.vol}    }
+	    {{Vista File}         {.v}    }
 	    {{All Files}          {.*}            }
 	}
 	
