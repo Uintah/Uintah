@@ -391,7 +391,7 @@ void NodeHedgehog::add_arrow(Point &v_origin, Vector &vf_value,
     if (info.have_sfield) {
       // query the scalar field
       double sf_value;
-      //      double minout = info.sf_interface->find_closest(sf_value, v_origin);
+      info.sf_interface->find_closest(sf_value, v_origin);
       //      cout << "minout = "<<minout<<", sf_value = "<<sf_value<<", v_origin = "<<v_origin<<endl;
       arrow_color = info.cmap->lookup( sf_value );
     } else {
