@@ -79,33 +79,48 @@ itcl_class SCIRun_Math_MatrixSelectVector {
         toplevel $w
 
 	
-	frame $w.location -borderwidth 2
+	frame $w.loc -borderwidth 2
 	frame $w.playmode -relief groove -borderwidth 2
 	frame $w.execmode -relief groove -borderwidth 2
 
-	frame $w.location.roc
-        radiobutton $w.location.roc.row -text "Row" \
+	frame $w.loc.roc
+        radiobutton $w.loc.roc.row -text "Row" \
 		-variable $this-row_or_col \
 		-value row -command "$this run_update"
-        radiobutton $w.location.roc.col -text "Column" \
+        radiobutton $w.loc.roc.col -text "Column" \
 		-variable $this-row_or_col \
 		-value col -command "$this run_update"
-	pack $w.location.roc.row $w.location.roc.col \
+	pack $w.loc.roc.row $w.loc.roc.col \
 		-side left -expand yes -fill both
 
-        scale $w.location.min -variable $this-range_min -label "Start " \
+        scale $w.loc.min -variable $this-range_min -label "Start " \
 		-showvalue true -orient horizontal -relief groove -length 200
-        scale $w.location.max -variable $this-range_max -label "End " \
+        scale $w.loc.max -variable $this-range_max -label "End " \
 		-showvalue true -orient horizontal -relief groove -length 200
 
-	frame $w.location.cur
-	label $w.location.cur.label -text "Current Value" -width 10 -just left
-	entry $w.location.cur.entry -width 10 -textvariable $this-current
-	pack $w.location.cur.label $w.location.cur.entry \
-		-side left -anchor n -expand yes -fill x
+	frame $w.loc.e
+	frame $w.loc.e.l
+	frame $w.loc.e.r
 
-        pack $w.location.roc $w.location.min $w.location.max $w.location.cur \
-		-side top -expand yes -fill both -pady 2
+	label $w.loc.e.l.curlabel -text "Current Value" -just left
+	entry $w.loc.e.r.curentry -width 10 -textvariable $this-current
+
+	label $w.loc.e.l.inclabel -text "Increment" -justify left
+	entry $w.loc.e.r.incentry -width 8 -textvariable $this-inc-amount
+
+	label $w.loc.e.l.sendlabel -text "Amount to Send" -justify left
+	entry $w.loc.e.r.sendentry -width 8 -textvariable $this-send-amount
+
+	pack $w.loc.e.l.curlabel $w.loc.e.l.inclabel $w.loc.e.l.sendlabel \
+	      -side top -anchor w
+
+	pack $w.loc.e.r.curentry $w.loc.e.r.incentry $w.loc.e.r.sendentry \
+              -side top -anchor w
+
+	pack $w.loc.e.l $w.loc.e.r -side left -expand yes -fill both
+
+        pack $w.loc.roc $w.loc.min $w.loc.max $w.loc.e \
+	    -side top -expand yes -fill both -pady 2
 
 
 	label $w.playmode.label -text "Play Mode"
@@ -125,23 +140,11 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 	pack $w.playmode.delay.label $w.playmode.delay.entry \
 		-side left -anchor n -expand yes -fill x
 
-	frame $w.playmode.inc
-	label $w.playmode.inc.label -text "Increment" -width 16 -justify left
-	entry $w.playmode.inc.entry -width 8 -textvariable $this-inc-amount
-	pack $w.playmode.inc.label $w.playmode.inc.entry \
-		-side left -anchor n -expand yes -fill x
-
-	frame $w.playmode.send
-	label $w.playmode.send.label -text "Amount to Send" \
-	    -width 16 -justify left
-	entry $w.playmode.send.entry -width 8 -textvariable $this-send-amount
-	pack $w.playmode.send.label $w.playmode.send.entry \
-		-side left -anchor n -expand yes -fill x
 
 	pack $w.playmode.label -side top -expand yes -fill both
 	pack $w.playmode.once $w.playmode.loop \
 		$w.playmode.bounce1 $w.playmode.bounce2 $w.playmode.delay \
-	        $w.playmode.inc $w.playmode.send -side top -anchor w
+	        -side top -anchor w
 
 
         button $w.execmode.play -text "Play" -command "$this run_play"
@@ -150,7 +153,7 @@ itcl_class SCIRun_Math_MatrixSelectVector {
         pack $w.execmode.play $w.execmode.stop $w.execmode.step \
 		-side left -fill both -expand yes
 
-        pack $w.location $w.playmode $w.execmode \
+        pack $w.loc $w.playmode $w.execmode \
 		-padx 5 -pady 5 -fill both -expand yes
 
 	update
@@ -161,14 +164,14 @@ itcl_class SCIRun_Math_MatrixSelectVector {
         if {[winfo exists $w]} {
             #puts "updating!"
 
-            $w.location.min config -from [set $this-selectable_min]
-            $w.location.min config -to   [set $this-selectable_max]
-            $w.location.min config -label [concat "Start " [set $this-selectable_units]]
-            $w.location.max config -from [set $this-selectable_min]
-            $w.location.max config -to   [set $this-selectable_max]
-            $w.location.max config -label [concat "End " [set $this-selectable_units]]
+            $w.loc.min config -from [set $this-selectable_min]
+            $w.loc.min config -to   [set $this-selectable_max]
+            $w.loc.min config -label [concat "Start " [set $this-selectable_units]]
+            $w.loc.max config -from [set $this-selectable_min]
+            $w.loc.max config -to   [set $this-selectable_max]
+            $w.loc.max config -label [concat "End " [set $this-selectable_units]]
 
-	    #pack $w.location.r $w.location.c $w.location.ff $w.location.b -side top -fill x -expand yes
+	    #pack $w.loc.r $w.loc.c $w.loc.ff $w.loc.b -side top -fill x -expand yes
         }
     }
 }
