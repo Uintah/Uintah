@@ -17,10 +17,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef _WIN32
+#define for if(0);else for
+#endif
+
 using SCICore::Thread::ThreadGroup;
+using SCICore::Thread::Thread;
 
 ThreadGroup* ThreadGroup::s_default_group;
-using std::vector;
+//using std::vector;
+using namespace std;
 
 ThreadGroup::ThreadGroup(const char* name, ThreadGroup* parentGroup)
     : d_lock("ThreadGroup lock"), d_name(name), d_parent(parentGroup)
@@ -132,6 +138,21 @@ ThreadGroup::addme(Thread* t)
 
 //
 // $Log$
+// Revision 1.6  1999/10/04 16:49:19  moulding
+// changed
+// using std::vector;
+// to
+// using namespace std;
+// to help VC compiler
+//
+// added
+// #define for if(0);else for
+// for win32
+//
+// added
+// using SCICore::Thread::Thread
+// to help VC compiler
+//
 // Revision 1.5  1999/08/28 03:46:51  sparker
 // Final updates before integration with PSE
 //
