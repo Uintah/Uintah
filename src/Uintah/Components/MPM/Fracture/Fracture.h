@@ -60,18 +60,6 @@ public:
 private:
   double           d_averageMicrocrackLength;
   double           d_materialToughness;
-
-  VarLabel*        pSurfaceNormalLabel; 
-  VarLabel*        pStressLabel; 
-  VarLabel*        pExternalForceLabel; 
-  VarLabel*        pDeformationMeasureLabel;
-  VarLabel*        pXLabel; 
-  
-  VarLabel*        gSelfContactLabel;
-  
-  VarLabel*        cSelfContactLabel;
-  VarLabel*        cSurfaceNormalLabel;
-
   SimulationStateP d_sharedState;
 };
 
@@ -81,6 +69,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.9  2000/05/30 04:36:46  tan
+// Using MPMLabel instead of VarLabel.
+//
 // Revision 1.8  2000/05/15 18:58:53  tan
 // Initialized NCVariables and CCVaribles for Fracture.
 //

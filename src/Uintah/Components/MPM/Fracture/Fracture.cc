@@ -1,6 +1,6 @@
 #include "Fracture.h"
 
-#include <Uintah/Grid/VarLabel.h>
+#include <Uintah/Components/MPM/MPMLabel.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/NCVariable.h>
@@ -34,15 +34,17 @@ initializeFracture(const Region* region,
                   DataWarehouseP& new_dw)
 {
   int vfindex = d_sharedState->getMaterial(0)->getVFIndex();
+
+  const MPMLabel* lb = MPMLabel::getLabels();
   
   //For CCVariables
   //set default cSelfContact to false
   CCVariable<bool> cSelfContact;
-  new_dw->allocate(cSelfContact, cSelfContactLabel, vfindex, region);
+  new_dw->allocate(cSelfContact, lb->cSelfContactLabel, vfindex, region);
 
   //set default cSurfaceNormal to [0.,0.,0.]
   CCVariable<Vector> cSurfaceNormal;
-  new_dw->allocate(cSurfaceNormal, cSurfaceNormalLabel, vfindex, region);
+  new_dw->allocate(cSurfaceNormal, lb->cSurfaceNormalLabel, vfindex, region);
   Vector zero(0.,0.,0.);
 
   for(CellIterator iter = region->getCellIterator(region->getBox());
@@ -55,7 +57,7 @@ initializeFracture(const Region* region,
 
   //For NCVariables
   NCVariable<bool> gSelfContact;
-  new_dw->allocate(gSelfContact, gSelfContactLabel, vfindex, region);
+  new_dw->allocate(gSelfContact, lb->gSelfContactLabel, vfindex, region);
 
   for(NodeIterator iter = region->getNodeIterator();
                    !iter.done(); 
@@ -67,9 +69,9 @@ initializeFracture(const Region* region,
 
 
   //put back to DatawareHouse
-  new_dw->put(cSelfContact, cSelfContactLabel, vfindex, region);
-  new_dw->put(cSurfaceNormal, cSurfaceNormalLabel, vfindex, region);
-  new_dw->put(gSelfContact, gSelfContactLabel, vfindex, region);
+  new_dw->put(cSelfContact, lb->cSelfContactLabel, vfindex, region);
+  new_dw->put(cSurfaceNormal, lb->cSurfaceNormalLabel, vfindex, region);
+  new_dw->put(gSelfContact, lb->gSelfContactLabel, vfindex, region);
 
   materialDefectsInitialize(region, new_dw);
 }
@@ -134,35 +136,15 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
   ps->require("materialToughness",d_materialToughness);
 
   d_sharedState = d_sS;
-
-  pSurfaceNormalLabel = 
-    new VarLabel( "p.surfaceNormal",
-                   ParticleVariable<Vector>::getTypeDescription() );
-
-  pStressLabel   = new VarLabel( "p.stress",
-                   ParticleVariable<Matrix3>::getTypeDescription() );
-
-  pExternalForceLabel = new VarLabel( "p.externalForce",
-                   ParticleVariable<Vector>::getTypeDescription() );
-
-  pDeformationMeasureLabel = new VarLabel("p.deformationMeasure",
-                             ParticleVariable<Matrix3>::getTypeDescription());
-
-  pXLabel        = new VarLabel( "p.x",
-	           ParticleVariable<Point>::getTypeDescription(),
-                   VarLabel::PositionVariable);
-
-  gSelfContactLabel = new VarLabel( "g.selfContact",
-                      CCVariable<bool>::getTypeDescription() );
-
-  cSelfContactLabel = new VarLabel( "c.selfContact",
-                      CCVariable<bool>::getTypeDescription() );
 }
   
 } //namespace MPM
 } //namespace Uintah
 
 // $Log$
+// Revision 1.11  2000/05/30 04:37:00  tan
+// Using MPMLabel instead of VarLabel.
+//
 // Revision 1.10  2000/05/25 00:29:00  tan
 // Put all velocity-field independent variables on material index of 0.
 //
