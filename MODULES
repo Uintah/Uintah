@@ -122,6 +122,7 @@ VectorSeg
 VolVis
 WidgetTest
 AddWells
+FieldCage
 
 Category: Writers
 ColorMapWriter
