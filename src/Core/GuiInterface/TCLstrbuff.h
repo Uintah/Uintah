@@ -38,6 +38,7 @@
 namespace SCIRun {
 
 using namespace std;
+using std::endl;
 
 class SCICORESHARE TCLstrbuff : public GuiVar, public ostringstream{
   
