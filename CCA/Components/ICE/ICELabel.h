@@ -64,7 +64,9 @@ namespace Uintah {
     //Misc Labels
     const VarLabel* IveBeenHereLabel;
     const VarLabel* scratchLabel;
-    
+    const VarLabel* scratch_FCXLabel;
+    const VarLabel* scratch_FCYLabel;
+    const VarLabel* scratch_FCZLabel;
     // Reduction Variables
     const VarLabel*  TotalMassLabel;
     const VarLabel*  CenterOfMassVelocityLabel;
