@@ -25,6 +25,7 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Datatypes/FieldInterface.h>
 
 namespace Fusion {
 
