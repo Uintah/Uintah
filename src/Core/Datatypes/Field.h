@@ -126,7 +126,7 @@ append_fields(vector<FIELD *> fields)
     offset += (unsigned int)size;
   }
 
-  FIELD *ofield = scinew FIELD(omesh, Field::NODE);
+  FIELD *ofield = scinew FIELD(omesh, 1);
   offset = 0;
   for (i=0; i < fields.size(); i++)
   {
