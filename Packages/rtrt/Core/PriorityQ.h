@@ -57,7 +57,7 @@ void PriorityQ<T, heapsize>::heapify(int n, int i)
 template<class T, int heapsize>
 void PriorityQ<T, heapsize>::overflow()
 {
-    cerr << "PriorityQ overflow!\n";
+    std::cerr << "PriorityQ overflow!\n";
     abort();
 }
 

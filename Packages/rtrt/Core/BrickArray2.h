@@ -94,13 +94,13 @@ void BrickArray2<T>::allocate()
   L1=(int)(sqrt(128./sizeof(T))+.1);
   // 16K page size
   L2=(int)(sqrt(16384./double(sizeof(T)*L1*L1))+.1);
-  cerr << "sizeof(T)=" << sizeof(T) << '\n';
-  cerr << "L1=" << L1 << ", L2=" << L2 << '\n';
+  std::cerr << "sizeof(T)=" << sizeof(T) << '\n';
+  std::cerr << "L1=" << L1 << ", L2=" << L2 << '\n';
   int totalx=(dm1+L2*L1-1)/(L2*L1);
   int totaly=(dm2+L2*L1-1)/(L2*L1);
 
   idx1=new int[dm1];
-  cerr << "totalx=" << totalx << ", totaly=" << totaly << '\n';
+  std::cerr << "totalx=" << totalx << ", totaly=" << totaly << '\n';
   for(int x=0;x<dm1;x++){
     int m1x=x%L1;
     int xx=x/L1;
@@ -120,7 +120,7 @@ void BrickArray2<T>::allocate()
   totaldm2=totaly*L2*L1;
   int totalsize=totaldm1*totaldm2;
   ASSERT(idx1[dm1-1]+idx2[dm2-2] < totalsize);
-  cerr << "totalsize=" << totalsize*sizeof(T) << '\n';
+  std::cerr << "totalsize=" << totalsize*sizeof(T) << '\n';
   //objs=new T[totalsize];
   data=new char[totalsize*sizeof(T)+128+4096];
   unsigned long off=(unsigned long)data%128;
