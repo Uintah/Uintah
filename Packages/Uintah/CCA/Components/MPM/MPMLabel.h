@@ -64,6 +64,7 @@ using std::vector;
       const VarLabel* pMassRateLabel; //for burn models
 
       const VarLabel* pDeformationMeasureLabel_preReloc;
+      const VarLabel* pCrackRadiusLabel_preReloc;
       const VarLabel* pStressLabel_preReloc;
       const VarLabel* pVolumeLabel_preReloc;
       const VarLabel* pMassLabel_preReloc;
