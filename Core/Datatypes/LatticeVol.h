@@ -111,8 +111,8 @@ public:
   virtual const string get_type_name(int n = -1) const;
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
-  bool get_gradient(Vector &, Point &);
-
+  bool get_gradient(Vector &, const Point &);
+  bool interpolate(Data&, const Point&);
 private:
   static Persistent* maker();
 };
@@ -213,67 +213,187 @@ LatticeVol<Data>::type_name(int n)
 
 
 //! compute the gradient g, at point p
-template <> bool LatticeVol<Tensor>::get_gradient(Vector &, Point &p);
-template <> bool LatticeVol<Vector>::get_gradient(Vector &, Point &p);
+template <> bool LatticeVol<Tensor>::get_gradient(Vector &, const Point &p);
+template <> bool LatticeVol<Vector>::get_gradient(Vector &, const Point &p);
+
+// template <class Data>
+// bool LatticeVol<Data>::get_gradient(Vector &g, Point &p) {
+//   // for now we only know how to do this for fields with doubles at the nodes
+//   ASSERT(data_at() == Field::dNODE)
+//   ASSERT(type_name(1) == "double")
+//   LatticeVol<double> *lvd = dynamic_cast<LatticeVol<double> *>(this);
+
+//   Vector pn=p-get_typed_mesh()->get_min();
+//   Vector diagonal = get_typed_mesh()->diagonal();
+//   int nx=fdata().dim1();
+//   int ny=fdata().dim2();
+//   int nz=fdata().dim3();
+//   double diagx=diagonal.x();
+//   double diagy=diagonal.y();
+//   double diagz=diagonal.z();
+//   double x=pn.x()*(nx-1)/diagx;
+//   double y=pn.y()*(ny-1)/diagy;
+//   double z=pn.z()*(nz-1)/diagz;
+//   int ix0=(int)x;
+//   int iy0=(int)y;
+//   int iz0=(int)z;
+//   int ix1=ix0+1;
+//   int iy1=iy0+1;
+//   int iz1=iz0+1;
+//   if(ix0<0 || ix1>=nx)return false;
+//   if(iy0<0 || iy1>=ny)return false;
+//   if(iz0<0 || iz1>=nz)return false;
+//   double fx=x-ix0;
+//   double fy=y-iy0;
+//   double fz=z-iz0;
+//   double d000=lvd->value(LatVolMesh::node_index(ix0,iy0,iz0));
+//   double d100=lvd->value(LatVolMesh::node_index(ix1,iy0,iz0));
+//   double d010=lvd->value(LatVolMesh::node_index(ix0,iy1,iz0));
+//   double d110=lvd->value(LatVolMesh::node_index(ix1,iy1,iz0));
+//   double d001=lvd->value(LatVolMesh::node_index(ix0,iy0,iz1));
+//   double d101=lvd->value(LatVolMesh::node_index(ix1,iy0,iz1));
+//   double d011=lvd->value(LatVolMesh::node_index(ix0,iy1,iz1));
+//   double d111=lvd->value(LatVolMesh::node_index(ix1,iy1,iz1));
+//   double z00=Interpolate(d000, d001, fz);
+//   double z01=Interpolate(d010, d011, fz);
+//   double z10=Interpolate(d100, d101, fz);
+//   double z11=Interpolate(d110, d111, fz);
+//   double yy0=Interpolate(z00, z01, fy);
+//   double yy1=Interpolate(z10, z11, fy);
+//   double dx=(yy1-yy0)*(nx-1)/diagx;
+//   double x00=Interpolate(d000, d100, fx);
+//   double x01=Interpolate(d001, d101, fx);
+//   double x10=Interpolate(d010, d110, fx);
+//   double x11=Interpolate(d011, d111, fx);
+//   double y0=Interpolate(x00, x10, fy);
+//   double y1=Interpolate(x01, x11, fy);
+//   double dz=(y1-y0)*(nz-1)/diagz;
+//   double z0=Interpolate(x00, x01, fz);
+//   double z1=Interpolate(x10, x11, fz);
+//   double dy=(z1-z0)*(ny-1)/diagy;
+//   g = Vector(dx, dy, dz);
+//   return true;
+// }
 
 template <class Data>
-bool LatticeVol<Data>::get_gradient(Vector &g, Point &p) {
-  // for now we only know how to do this for fields with doubles at the nodes
-  ASSERT(data_at() == Field::NODE)
-  ASSERT(type_name(1) == "double")
-  LatticeVol<double> *lvd = dynamic_cast<LatticeVol<double> *>(this);
+bool LatticeVol<Data>::get_gradient(Vector &g, const Point &p) {
+  // for now we only know how to do this for fields with scalars at the nodes
 
-  Vector pn=p-get_typed_mesh()->get_min();
-  Vector diagonal = get_typed_mesh()->diagonal();
-  int nx=fdata().dim1();
-  int ny=fdata().dim2();
-  int nz=fdata().dim3();
-  double diagx=diagonal.x();
-  double diagy=diagonal.y();
-  double diagz=diagonal.z();
-  double x=pn.x()*(nx-1)/diagx;
-  double y=pn.y()*(ny-1)/diagy;
-  double z=pn.z()*(nz-1)/diagz;
-  int ix0=(int)x;
-  int iy0=(int)y;
-  int iz0=(int)z;
-  int ix1=ix0+1;
-  int iy1=iy0+1;
-  int iz1=iz0+1;
-  if(ix0<0 || ix1>=nx)return false;
-  if(iy0<0 || iy1>=ny)return false;
-  if(iz0<0 || iz1>=nz)return false;
-  double fx=x-ix0;
-  double fy=y-iy0;
-  double fz=z-iz0;
-  double d000=lvd->value(LatVolMesh::node_index(ix0,iy0,iz0));
-  double d100=lvd->value(LatVolMesh::node_index(ix1,iy0,iz0));
-  double d010=lvd->value(LatVolMesh::node_index(ix0,iy1,iz0));
-  double d110=lvd->value(LatVolMesh::node_index(ix1,iy1,iz0));
-  double d001=lvd->value(LatVolMesh::node_index(ix0,iy0,iz1));
-  double d101=lvd->value(LatVolMesh::node_index(ix1,iy0,iz1));
-  double d011=lvd->value(LatVolMesh::node_index(ix0,iy1,iz1));
-  double d111=lvd->value(LatVolMesh::node_index(ix1,iy1,iz1));
-  double z00=Interpolate(d000, d001, fz);
-  double z01=Interpolate(d010, d011, fz);
-  double z10=Interpolate(d100, d101, fz);
-  double z11=Interpolate(d110, d111, fz);
-  double yy0=Interpolate(z00, z01, fy);
-  double yy1=Interpolate(z10, z11, fy);
-  double dx=(yy1-yy0)*(nx-1)/diagx;
-  double x00=Interpolate(d000, d100, fx);
-  double x01=Interpolate(d001, d101, fx);
-  double x10=Interpolate(d010, d110, fx);
-  double x11=Interpolate(d011, d111, fx);
-  double y0=Interpolate(x00, x10, fy);
-  double y1=Interpolate(x01, x11, fy);
-  double dz=(y1-y0)*(nz-1)/diagz;
-  double z0=Interpolate(x00, x01, fz);
-  double z1=Interpolate(x10, x11, fz);
-  double dy=(z1-z0)*(ny-1)/diagy;
-  g = Vector(dx, dy, dz);
+  if( type_name(1) == "double" ||
+      type_name(1) == "long" ||
+      type_name(1) == "float" ||
+      type_name(1) == "int" ||
+      type_name(1) == "char") {
+
+    if( data_at() == Field::NODE){
+      mesh_handle_type mesh = get_typed_mesh();
+      Vector pn=p-mesh->get_min();
+      Vector diagonal = mesh->diagonal();
+      int nx=mesh->get_nx();
+      int ny=mesh->get_ny();
+      int nz=mesh->get_nz();
+      double diagx=diagonal.x();
+      double diagy=diagonal.y();
+      double diagz=diagonal.z();
+      double x=pn.x()*(nx-1)/diagx;
+      double y=pn.y()*(ny-1)/diagy;
+      double z=pn.z()*(nz-1)/diagz;
+      int ix0=(int)x;
+      int iy0=(int)y;
+      int iz0=(int)z;
+      int ix1=ix0+1;
+      int iy1=iy0+1;
+      int iz1=iz0+1;
+      if(ix0<0 || ix1>=nx)return false;
+      if(iy0<0 || iy1>=ny)return false;
+      if(iz0<0 || iz1>=nz)return false;
+      double fx=x-ix0;
+      double fy=y-iy0;
+      double fz=z-iz0;
+      double d000=(double)value(mesh->node(ix0,iy0,iz0));
+      double d100=(double)value(mesh->node(ix1,iy0,iz0));
+      double d010=(double)value(mesh->node(ix0,iy1,iz0));
+      double d110=(double)value(mesh->node(ix1,iy1,iz0));
+      double d001=(double)value(mesh->node(ix0,iy0,iz1));
+      double d101=(double)value(mesh->node(ix1,iy0,iz1));
+      double d011=(double)value(mesh->node(ix0,iy1,iz1));
+      double d111=(double)value(mesh->node(ix1,iy1,iz1));
+      double z00=Interpolate(d000, d001, fz);
+      double z01=Interpolate(d010, d011, fz);
+      double z10=Interpolate(d100, d101, fz);
+      double z11=Interpolate(d110, d111, fz);
+      double yy0=Interpolate(z00, z01, fy);
+      double yy1=Interpolate(z10, z11, fy);
+      double dx=(yy1-yy0)*(nx-1)/diagx;
+      double x00=Interpolate(d000, d100, fx);
+      double x01=Interpolate(d001, d101, fx);
+      double x10=Interpolate(d010, d110, fx);
+      double x11=Interpolate(d011, d111, fx);
+      double y0=Interpolate(x00, x10, fy);
+      double y1=Interpolate(x01, x11, fy);
+      double dz=(y1-y0)*(nz-1)/diagz;
+      double z0=Interpolate(x00, x01, fz);
+      double z1=Interpolate(x10, x11, fz);
+      double dy=(z1-z0)*(ny-1)/diagy;
+      g = Vector(dx, dy, dz);
+      return true;
+    }
+  }
+  return false;
+}
+
+template <class Data>
+bool LatticeVol<Data>::interpolate(Data &g, const Point &p) {
+  // for now we only know how to do this for fields with scalars at the nodes
+  mesh_handle_type mesh = get_typed_mesh();
+  if(data_at() == Field::NODE) {
+    Vector pn=p-mesh->get_min();
+    Vector diagonal = mesh->diagonal();
+    int nx=mesh->get_nx();
+    int ny=mesh->get_ny();
+    int nz=mesh->get_nz();
+    double diagx=diagonal.x();
+    double diagy=diagonal.y();
+    double diagz=diagonal.z();
+    double x=pn.x()*(nx-1)/diagx;
+    double y=pn.y()*(ny-1)/diagy;
+    double z=pn.z()*(nz-1)/diagz;
+    int ix0=(int)x;
+    int iy0=(int)y;
+    int iz0=(int)z;
+    int ix1=ix0+1;
+    int iy1=iy0+1;
+    int iz1=iz0+1;
+    if(ix0<0 || ix1>=nx)return false;
+    if(iy0<0 || iy1>=ny)return false;
+    if(iz0<0 || iz1>=nz)return false;
+    double fx=x-ix0;
+    double fy=y-iy0;
+    double fz=z-iz0;
+    Data x00=Interpolate(value(mesh->node(ix0,iy0,iz0)),
+			 value(mesh->node(ix1,iy0,iz0)), fx);
+    Data x01=Interpolate(value(mesh->node(ix0,iy0,iz1)),
+			 value(mesh->node(ix1,iy0,iz1)), fx);
+    Data x10=Interpolate(value(mesh->node(ix0,iy1,iz0)),
+			 value(mesh->node(ix1,iy1,iz1)), fx);
+    Data x11=Interpolate(value(mesh->node(ix0,iy1,iz1)),
+			 value(mesh->node(ix1,iy1,iz1)), fx);
+    Data y0=Interpolate(x00, x10, fy);
+    Data y1=Interpolate(x01, x11, fy);
+    g=Interpolate(y0, y1, fz);
+  } else if( data_at() == Field::CELL) {
+    typename mesh_type::cell_index ci;
+    if( mesh->locate(ci, p) ) {
+      g = value( ci );
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
   return true;
 }
+
 
 } // end namespace SCIRun
 
