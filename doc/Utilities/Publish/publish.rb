@@ -41,6 +41,39 @@ class Log
   end
 end
 
+module TreeDir
+  def TreeDir.docRootRelP()
+    raise "Can't find root of doc tree" if Dir.pwd == "/"
+    if (FileTest.directory?("doc") && FileTest.directory?("src"))
+      ""
+    else
+      Dir.chdir("..")
+      "../" + docRootRelP()
+    end
+  end
+
+  def TreeDir.docRootRel()
+    begin
+      pwd = Dir.pwd()
+      docRootRelP()
+    ensure
+      Dir.chdir(pwd)
+    end
+  end
+  
+  def TreeDir.docRootAbs()
+    File.expand_path(docRootRel())
+  end
+
+  def TreeDir.doc()
+    docRootAbs() + "/doc"
+  end
+
+  def TreeDir.src()
+    docRootAbs() + "/src"
+  end
+end
+
 class ConfError < RuntimeError
   def initialize(msg)
     super("Configuration  error: " + msg)

@@ -170,6 +170,7 @@ protected:
 
   Array2<Point>  points_;
   Array2<Vector> normals_; //! normalized per node
+  Mutex		 normal_lock_;
   unsigned int   synchronized_;
 
   // returns a StructQuadSurfMesh

@@ -44,84 +44,98 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 	set w .ui[modname]
 	
 	if {[winfo exists $w]} { 
-	    wm deiconify $w
-	    raise $w 
-	    return; 
+	    return
 	} 
 	
 	toplevel $w 
 	wm minsize $w 200 50 
  
-	frame $w.f1
-	
-	frame $w.f1.a -relief flat
-	pack $w.f1.a -side left -expand yes -fill x
-	radiobutton $w.f1.a.b -text "Auto Scale" -variable $this-isFixed \
+	# Base Frame
+	frame $w.bf
+	pack $w.bf -padx 4 -pady 4
+
+	# Auto Scale Frame
+	frame $w.bf.f1
+	radiobutton $w.bf.f1.as -text "Auto Scale" -variable $this-isFixed \
 	    -value 0 -command "$this autoScale"
-	pack $w.f1.a.b -side left
+	checkbutton $w.bf.f1.sas -text "Symmetric Auto Scale" -variable $this-makeSymmetric
 
-	frame $w.f1.s -relief flat
-	pack $w.f1.s -side top -expand yes -fill x
-	checkbutton $w.f1.s.b -text "Symmetric Auto Scale" \
-	    -variable $this-makeSymmetric
-	pack $w.f1.s.b -side left
-	
-	pack $w.f1 -side top -expand yes -fill x
+	TooltipMultiline $w.bf.f1.as \
+	    "Auto Scale uses the min/max values of the data (from the input field)\n" \
+	    "and maps the color map to that range."
+	TooltipMultiline $w.bf.f1.sas \
+	    "Symmetric auto scaling of the color map will make the median data value\n" \
+            "correspond to the the middle of the color map.  For example, if the maximum\n" \
+            "data value is 80 and minimum is -20, the min/max range will be set to +/- 80\n" \
+            "(and thus the median data value is set to 0)."
 
-	frame $w.f2 -relief flat
-	pack $w.f2 -side top -expand yes -fill x
-	radiobutton $w.f2.b -text "Fixed Scale"  -variable $this-isFixed \
+	pack $w.bf.f1.as  -side top -anchor w -padx 2
+	pack $w.bf.f1.sas -side top -anchor w -padx 2
+
+	# Fixed Scale Frame
+	frame $w.bf.f3 -relief groove -borderwidth 2
+
+	radiobutton $w.bf.f3.fs -text "Fixed Scale"  -variable $this-isFixed \
 	    -value 1 -command "$this fixedScale"
-	pack $w.f2.b -side left
 
-	frame $w.f3 -relief flat
-	pack $w.f3 -side top -expand yes -fill x
-	
-	label $w.f3.l1 -text "min:  "
-	entry $w.f3.e1 -textvariable $this-min
+	TooltipMultiline $w.bf.f3.fs \
+	    "Fixed Scale allows the user to select the min and max\n" \
+	    "values of the data that will correspond to the color map."
 
-	label $w.f3.l2 -text "max:  "
-	entry $w.f3.e2 -textvariable $this-max
-	pack $w.f3.l1 $w.f3.e1 $w.f3.l2 $w.f3.e2 -side left \
-	    -expand yes -fill x -padx 2 -pady 2
+	frame $w.bf.f3.min
+	label $w.bf.f3.min.l1 -text "Min:"
+	entry $w.bf.f3.min.e1 -textvariable $this-min -width 10
 
-	bind $w.f3.e1 <Return> "$this-c needexecute"
-	bind $w.f3.e2 <Return> "$this-c needexecute"
+	frame $w.bf.f3.max
+	label $w.bf.f3.max.l2 -text "Max:"
+	entry $w.bf.f3.max.e2 -textvariable $this-max -width 10
 
-	button $w.execute -text Execute -command "$this-c needexecute"
-	button $w.close -text Close -command "destroy $w"
-	pack $w.execute $w.close -side left  -padx 5 -expand 1 -fill x
+	pack $w.bf.f3.fs -anchor w -padx 2
+	pack $w.bf.f3.min.l1 $w.bf.f3.min.e1 -expand yes -fill x -anchor e -side left
+	pack $w.bf.f3.max.l2 $w.bf.f3.max.e2 -expand yes -fill x -anchor e -side left
+
+	pack $w.bf.f3.min -side top -anchor e -padx 2 -pady 2
+	pack $w.bf.f3.max -side top -anchor e -padx 2 -pady 2
+
+	# pack in the auto scale and the fixed scale frames
+	pack $w.bf.f1 $w.bf.f3 -side left -expand yes -fill x -anchor n
+
+	bind $w.bf.f3.min.e1 <Return> "$this-c needexecute"
+	bind $w.bf.f3.max.e2 <Return> "$this-c needexecute"
 
 	if { [set $this-isFixed] } {
-	    $w.f2.b select
+	    $w.bf.f3.fs select
 	    $this fixedScale
 	} else {
-	    $w.f1.a.b select
+	    $w.bf.f1.as select
 	    $this autoScale
 	}
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
     method autoScale { } {
 	global $this-isFixed
 	set w .ui[modname]
 	
-	set color "#505050"
+	set lightgray "#999999"
 
-	$w.f1.s.b configure -state normal
-	$w.f3.l1 configure -foreground $color
-	$w.f3.e1 configure -state disabled -foreground $color
-	$w.f3.l2 configure -foreground $color
-	$w.f3.e2 configure -state disabled -foreground $color
+	$w.bf.f1.sas    configure -state normal
+	$w.bf.f3.min.l1 configure -foreground $lightgray
+	$w.bf.f3.min.e1 configure -state disabled -foreground $lightgray
+	$w.bf.f3.max.l2 configure -foreground $lightgray
+	$w.bf.f3.max.e2 configure -state disabled -foreground $lightgray
     }
 
     method fixedScale { } {
 	global $this-isFixed
 	set w .ui[modname]
 
-	$w.f1.s.b configure -state disabled
-	$w.f3.l1 configure -foreground black
-	$w.f3.e1 configure -state normal -foreground black
-	$w.f3.l2 configure -foreground black
-	$w.f3.e2 configure -state normal -foreground black
+	$w.bf.f1.sas     configure -state disabled
+	$w.bf.f3.min.l1  configure -foreground black
+	$w.bf.f3.min.e1  configure -state normal -foreground black
+	$w.bf.f3.max.l2  configure -foreground black
+	$w.bf.f3.max.e2  configure -state normal -foreground black
     }
 }

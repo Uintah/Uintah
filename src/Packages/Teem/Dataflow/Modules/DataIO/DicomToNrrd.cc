@@ -50,7 +50,10 @@
 #include <Core/Algorithms/DataIO/DicomImage.h>
 #endif
 
-namespace SCITeem {
+// Standard includes
+#include <dirent.h>
+
+namespace SCITeem { 
 
 using namespace SCIRun;
 
@@ -90,15 +93,21 @@ public:
 
 private:
 
+  void split_string( string src, vector<string> &container );
+
   //! GUI variables
+  GuiInt have_insight_;
   GuiString dir_;
-  GuiInt start_index_;
-  GuiInt end_index_;
   GuiString series_uid_;
   GuiString series_files_;
   GuiString messages_;
   GuiString suid_sel_;  
-  GuiString series_del_;  
+  GuiString series_del_;
+  GuiInt num_entries_;
+  vector< GuiString* > entry_dir_;
+  vector< GuiString* > entry_suid_;
+  vector< GuiString* > entry_files_;
+
 
   //! Ports
   NrrdOPort*      onrrd_;
@@ -122,15 +131,20 @@ DECLARE_MAKER(DicomToNrrd)
 //
 DicomToNrrd::DicomToNrrd(GuiContext* ctx)
   : Module("DicomToNrrd", ctx, Source, "DataIO", "Teem"),
+    have_insight_(ctx->subVar("have-insight", false)),
     dir_(ctx->subVar("dir")),
-    start_index_(ctx->subVar("start-index")),
-    end_index_(ctx->subVar("end-index")),
     series_uid_(ctx->subVar("series-uid")),    
     series_files_(ctx->subVar("series-files")),    
     messages_(ctx->subVar("messages")),    
     suid_sel_(ctx->subVar("suid-sel")),    
-    series_del_(ctx->subVar("series-del"))    
+    series_del_(ctx->subVar("series-del")),
+    num_entries_(ctx->subVar("num-entries"))
 {
+#ifdef HAVE_INSIGHT
+  have_insight_.set(1);
+#else
+  have_insight_.set(0);
+#endif
 }
 
 /*===========================================================================*/
@@ -159,6 +173,8 @@ DicomToNrrd::~DicomToNrrd(){
 void DicomToNrrd::execute(){
 
 #ifdef HAVE_INSIGHT
+
+  gui->execute(id + " sync_filenames");
 
   // If no DICOM series' were specified via the UI, print error and return
   if( all_series_.size() == 0 ) 
@@ -217,23 +233,24 @@ void DicomToNrrd::execute(){
 // 
 // split_string
 //
-// Description : Splits a string into vector of strings based on a separator.
+// Description : Splits a string into vector of strings where each string is 
+//               space delimited in the original string.
 //
 // Arguments   :
 //
-// const T &src - String to be split.
-// C &container - Vector of strings to contain result.
-// typename T::value_type splitter - Separator string.
+// string src - String to be split.
+// vector<string> &container - Vector of strings to contain result.
 // 
-template < class T, class C >
-void split_string(const T &src, C &container, typename T::value_type splitter)
+void DicomToNrrd::split_string( string src, vector<string> &container )
 {
-  std::basic_istringstream<typename T::value_type> str_data(src);
-  T line;
-  while( std::getline(str_data, line, str_data.widen(splitter)) ) 
+  std::istringstream str_data(src);
+  //cerr << "(DicomToNrrd::split_string) src = " << src << "\n";
+  string word;
+  while( str_data >> word )
   {
-    container.push_back(line);
-  }
+    //cerr << "(DicomToNrrd::split_string) word = " << word << "\n";
+    container.push_back( word );
+  } 
 }
 
 /*===========================================================================*/
@@ -260,8 +277,20 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
 #ifdef HAVE_INSIGHT
 
     DicomSeriesReader reader;
-    dir_ = (ctx->subVar("dir"));
-    string dir = dir_.get();
+    string dir = args[2];
+
+    // Check to make sure the directory exists
+    DIR *dirp;
+    dirp = opendir( dir.c_str() );
+    if (!dirp)
+    {
+      string no_dir = string( "No such directory: " + dir );
+      messages_.set( no_dir );
+      string all_suids = "";
+      series_uid_.set( all_suids );
+      return;
+    }
+    closedir(dirp);
 
     reader.set_dir( dir );
 
@@ -293,12 +322,11 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
   {
 #ifdef HAVE_INSIGHT
     DicomSeriesReader reader;
-    dir_ = (ctx->subVar("dir"));
-    string dir = dir_.get();
+    string dir = args[2];
     reader.set_dir( dir );
 
-    suid_sel_ = (ctx->subVar("suid-sel"));
-    string suid = suid_sel_.get();
+    //suid_sel_ = (ctx->subVar("suid-sel"));
+    string suid = args[3];
 
     //cerr << "(DicomToNrrd::tcl_command) suid = " << suid << "\n";
 
@@ -318,21 +346,19 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
   else if( args[1] == "add_data" )
   {
 #ifdef HAVE_INSIGHT
-    dir_ = (ctx->subVar("dir"));
-    string dir = dir_.get();
 
-    series_files_ = (ctx->subVar("series-files"));
-    string series_files = series_files_.get();
+    string dir = args[2];
 
-    suid_sel_ = (ctx->subVar("suid-sel"));
-    string suid_sel = suid_sel_.get();
+    string series_files = args[4];
+
+    string suid_sel = args[3];
 
     // Create a new series
     struct series new_series;
 
     // Convert string of file names to vector of file names
     vector<string> files;
-    split_string( series_files, files, ' ' );
+    split_string( series_files, files );
 
     // First entry is always extra, chop it off
 
@@ -348,24 +374,36 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
         warning( "(DicomToNrrd::tcl_command) Cannot load multiple series' with different numbers of files." );
       }
     }
-
     all_series_.insert( all_series_.end(), new_series );
+
+    ostringstream str1;
+    str1 << "entry-dir" << all_series_.size()-1;
+    entry_dir_.insert(entry_dir_.end(), new GuiString(ctx->subVar(str1.str())));
+
+    ostringstream str2;
+    str2 << "entry-suid" << all_series_.size()-1;
+    entry_suid_.insert(entry_suid_.end(), new GuiString(ctx->subVar(str2.str())));
+
+    ostringstream str3;
+    str3 << "entry-files" << all_series_.size()-1;
+    entry_files_.insert(entry_files_.end(), new GuiString(ctx->subVar(str3.str())));
+
 #endif
   } 
   else if( args[1] == "delete_data" )
   {
 #ifdef HAVE_INSIGHT
     // Get the selected series to be deleted
-    series_del_ = (ctx->subVar("series-del"));
-    string series_del = series_del_.get();
+    //series_del_ = (ctx->subVar("series-del"));
+    string series_del = args[2];
 
     // Split the series_del string by spaces
     vector<string> info;
-    split_string( series_del, info, ' ' );
+    split_string( series_del, info );
 
     //cerr << "info size = " << info.size() << "\n";
 
-    if( info.size() < 17 ) {
+    if( info.size() < 11 ) {
       error("(DicomToNrrd::tcl_command) Delete series failed. Bad series info.");
       return;
     }
@@ -375,20 +413,23 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
     //cerr << "(DicomToNrrd::tcl_command) dir = " << dir << "\n";
 
     // Get the series uid
-    string suid = info[6];
+    string suid = info[4];
     //cerr << "(DicomToNrrd::tcl_command) suid = " << suid << "\n";
 
     // Get the start file
-    string start_file = info[11];
+    string start_file = info[7];
     //cerr << "(DicomToNrrd::tcl_command) start_file = " << start_file << "\n";
 
     // Get the end file
-    string end_file = info[16];
+    string end_file = info[10];
     //cerr << "(DicomToNrrd::tcl_command) end_file = " << end_file << "\n";
 
     // Find the matching entry in the all_series vector and remove it
     int num_series = all_series_.size();
     vector<struct series>::iterator iter = all_series_.begin();
+    vector<GuiString*>::iterator iter2 = entry_dir_.begin();
+    vector<GuiString*>::iterator iter3 = entry_suid_.begin();
+    vector<GuiString*>::iterator iter4 = entry_files_.begin();
      
     for( int i = 0; i < num_series; i++ )
     {
@@ -400,11 +441,25 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
       {
         // Erase this element from the vector of series'
         all_series_.erase( iter );
+
+	// remove the guivar from the filenames
+	entry_dir_.erase( iter2 );
+	entry_suid_.erase( iter3 );
+	entry_files_.erase( iter4 );
       }  
       iter++;
+      iter2++;
+      iter3++;
+      iter4++;
     }
 #endif
   }
+  else if ( args[1] == "clear_data" )
+    {
+#ifdef HAVE_INSIGHT
+      all_series_.clear();
+#endif      
+    }
   else 
   {
     Module::tcl_command(args, userdata);
@@ -481,7 +536,7 @@ int DicomToNrrd::build_nrrds( vector<Nrrd*> & array )
     int dim = image.get_dimension();
     if( dim == 3 ) 
     {
-      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeUShort, 
+      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeInt, 
                image.get_dimension(), image.get_size(0), 
                image.get_size(1), image.get_size(2)) ) 
       {
@@ -504,10 +559,15 @@ int DicomToNrrd::build_nrrds( vector<Nrrd*> & array )
       nrrd->axis[1].spacing = image.get_spacing(0);
       nrrd->axis[2].spacing = image.get_spacing(1);
       nrrd->axis[3].spacing = image.get_spacing(2);
+ 
+      nrrdAxisMinMaxSet(nrrd, 0, nrrdCenterNode);
+      nrrdAxisMinMaxSet(nrrd, 1, nrrdCenterNode);
+      nrrdAxisMinMaxSet(nrrd, 2, nrrdCenterNode);
+      nrrdAxisMinMaxSet(nrrd, 3, nrrdCenterNode);
     }
     else if( dim == 2 ) 
     {
-      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeUShort, 
+      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeInt, 
                image.get_dimension(), image.get_size(0), 
                image.get_size(1)) ) 
       {
@@ -528,6 +588,10 @@ int DicomToNrrd::build_nrrds( vector<Nrrd*> & array )
       nrrd->axis[2].label = strdup("y");
       nrrd->axis[1].spacing = image.get_spacing(0);
       nrrd->axis[2].spacing = image.get_spacing(1);
+
+      nrrdAxisMinMaxSet(nrrd, 0, nrrdCenterNode);
+      nrrdAxisMinMaxSet(nrrd, 1, nrrdCenterNode);
+      nrrdAxisMinMaxSet(nrrd, 2, nrrdCenterNode);
     }
     else
     {
@@ -603,6 +667,11 @@ NrrdData * DicomToNrrd::join_nrrds( vector<Nrrd*> arr )
   sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[1].spacing;
   sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[2].spacing;
   sciNrrd->nrrd->axis[3].spacing = arr[0]->axis[3].spacing; 
+
+  nrrdAxisMinMaxSet(sciNrrd->nrrd, 0, nrrdCenterNode);
+  nrrdAxisMinMaxSet(sciNrrd->nrrd, 1, nrrdCenterNode);
+  nrrdAxisMinMaxSet(sciNrrd->nrrd, 2, nrrdCenterNode);
+  nrrdAxisMinMaxSet(sciNrrd->nrrd, 3, nrrdCenterNode);
 
   return sciNrrd;
 }

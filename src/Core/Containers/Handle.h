@@ -93,8 +93,8 @@ public:
   //Assign a handle from a pointer.
   Handle<T>& operator=(T*);
 
-  bool Handle<T>::operator==(const Handle<T>& crep) const;
-  bool Handle<T>::operator!=(const Handle<T>& crep) const;
+  bool operator==(const Handle<T>& crep) const;
+  bool operator!=(const Handle<T>& crep) const;
 
   //////////
   //Destroy the handle

@@ -65,6 +65,8 @@ ChooseField::execute()
     return;
   }
 
+  update_state(NeedData);
+
   port_range_type range = get_iports("Field");
   if (range.first == range.second)
     return;

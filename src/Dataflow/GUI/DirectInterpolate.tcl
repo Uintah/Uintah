@@ -38,7 +38,6 @@ itcl_class SCIRun_FieldsData_DirectInterpolate {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -55,7 +54,7 @@ itcl_class SCIRun_FieldsData_DirectInterpolate {
 	radiobutton $w.basis.cframe.onetoone -text \
 		"Each source projects to just one destination" \
 		-variable $this-map_source_to_single_dest -value 1
-	pack $w.basis.cframe.label -side top -anchor w
+	pack $w.basis.cframe.label -side top -anchor w -padx 4 -pady 4
 	pack $w.basis.cframe.onetomany $w.basis.cframe.onetoone \
 		-side top -anchor w -padx 15
 	radiobutton $w.basis.lin -text "Linear (`weighted')" \
@@ -84,15 +83,11 @@ itcl_class SCIRun_FieldsData_DirectInterpolate {
 	scale $w.scale -orient horizontal -variable $this-np -from 1 -to 32 \
 		-showvalue true -label "Number of Threads"
 	
-	frame $w.buttons
-	button $w.buttons.execute -text "Execute" \
-	    -command "$this-c needexecute"
-	button $w.buttons.close -text "Close" -command "destroy $w"
-	pack $w.buttons.execute $w.buttons.close -side left -padx 40
-
 	pack $w.basis -side top -anchor w
 	pack $w.exhaustive -side top -anchor w -pady 15
-	pack $w.scale -side top -expand 1 -fill x
-	pack $w.buttons -side top -pady 5
+	pack $w.scale -side top -expand 1 -fill x -padx 4 -pady 4
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }

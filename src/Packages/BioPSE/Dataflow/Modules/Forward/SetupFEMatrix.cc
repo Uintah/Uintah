@@ -34,6 +34,8 @@
  * Modified:
  *  Sascha Moehrs
  *  January 2003
+ *
+ *  Lorena Kreda, Northeastern University, November 2003
  */
 
 #include <Core/Datatypes/ColumnMatrix.h>
@@ -41,6 +43,7 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Geometry/Point.h>
@@ -55,6 +58,7 @@
 #include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildFEMatrix.h>
 #include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildHexFEMatrix.h>
 #include <Core/Datatypes/HexVolField.h>
+#include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildTriFEMatrix.h>
 
 #include <iostream>
 
@@ -63,8 +67,15 @@ using std::endl;
 namespace BioPSE {
 
 using namespace SCIRun;
-typedef LockingHandle<TetVolField<int> >    CondMeshHandleTet;
-typedef LockingHandle<HexVolField<int> >    LHHexVolField;
+typedef LockingHandle<TetVolField<int> >    TetVolFieldIntHandle;
+typedef LockingHandle<TetVolField<Tensor> > TetVolFieldTensorHandle;
+
+typedef LockingHandle<HexVolField<int> >    HexVolFieldIntHandle;
+typedef LockingHandle<HexVolField<Tensor> > HexVolFieldTensorHandle;
+
+typedef LockingHandle<TriSurfField<int> >   TriSurfFieldIntHandle;
+typedef LockingHandle<TriSurfField<Tensor> > TriSurfFieldTensorHandle;
+
 
 class SetupFEMatrix : public Module {
   
@@ -88,11 +99,15 @@ class SetupFEMatrix : public Module {
 
   GuiString          nprocessors_;
 
-  void build_basis_matrices(FieldHandle fldH, unsigned int nconds, 
+  void build_basis_matrices(TetVolFieldIntHandle tviH, unsigned int nconds, 
 			    double unitsScale, int num_procs);
+  void build_TriBasis_matrices(TriSurfFieldIntHandle, unsigned int nconds, 
+			       double unitsScale, int num_procs);
   MatrixHandle build_composite_matrix(const vector<pair<string,Tensor> >&tens);
 
   bool tet;
+  bool hex;
+  bool tri;
 
 public:
   
@@ -126,19 +141,19 @@ SetupFEMatrix::~SetupFEMatrix()
 
 
 void
-SetupFEMatrix::build_basis_matrices(FieldHandle fldH, 
+SetupFEMatrix::build_basis_matrices(TetVolFieldIntHandle tviH,
 				    unsigned int nconds,
 				    double unitsScale,
 				    int num_procs)
 {
-  TetVolFieldIntHandle tvH;
-  tvH = dynamic_cast<TetVolField<int> *>(fldH.get_rep());
+  TetVolFieldTensorHandle tvtH;
   Tensor zero(0);
   Tensor identity(1);
 
   MatrixHandle aH;
   vector<pair<string, Tensor> > tens(nconds, pair<string, Tensor>("", zero));
-  BuildFEMatrix::build_FEMatrix(tvH, tens, aH, unitsScale, num_procs);
+  BuildFEMatrix::build_FEMatrix(tviH, tvtH, true, tens, 
+				aH, unitsScale, num_procs);
   AmatH_ = aH;
   AmatH_.detach(); //! Store our matrix shape
 
@@ -146,13 +161,44 @@ SetupFEMatrix::build_basis_matrices(FieldHandle fldH,
   for (unsigned int i=0; i<nconds; i++) {
     tens[i].first=to_string(i);
     tens[i].second=identity;
-    BuildFEMatrix::build_FEMatrix(tvH, tens, aH, unitsScale, num_procs);
+    BuildFEMatrix::build_FEMatrix(tviH, tvtH, true, tens, aH, 
+				  unitsScale, num_procs);
     SparseRowMatrix *m = dynamic_cast<SparseRowMatrix*>(aH.get_rep());
     dataBasis_[i].resize(m->nnz);
     for (int j=0; j<m->nnz; j++)
       dataBasis_[i][j] = m->a[j];
     tens[i].second=zero;
   }
+}
+
+void SetupFEMatrix::build_TriBasis_matrices(TriSurfFieldIntHandle tsiH, 
+					    unsigned int nconds,
+					    double unitsScale,
+					    int num_procs) 
+{
+  TriSurfFieldTensorHandle tstH;
+  Tensor zero(0);
+  Tensor identity(1);
+
+  MatrixHandle aH;
+  vector<pair<string, Tensor> > tens(nconds, pair<string, Tensor>("", zero));
+  BuildTriFEMatrix::build_FEMatrix(tsiH, tstH, true, tens, 
+				   aH, unitsScale, num_procs);
+  AmatH_ = aH;
+  AmatH_.detach(); //! Store our matrix shape
+  dataBasis_.resize(nconds);
+  for (unsigned int i=0; i<nconds; i++) {
+    tens[i].first=to_string(i);
+    tens[i].second=identity;
+    BuildTriFEMatrix::build_FEMatrix(tsiH, tstH, true, tens, aH, 
+				     unitsScale, num_procs);
+    SparseRowMatrix *m = dynamic_cast<SparseRowMatrix*>(aH.get_rep());
+    dataBasis_[i].resize(m->nnz);
+    for (int j=0; j<m->nnz; j++)
+      dataBasis_[i][j] = m->a[j];
+    tens[i].second=zero;
+  }
+
 }
 
 
@@ -198,31 +244,87 @@ SetupFEMatrix::execute()
     error("Can not get input field.");
     return;
   }
+  
+  tet = false;
+  hex = false;
+  tri = false;
 
-  if (hField->get_type_name(0) == "TetVolField" &&
-      (hField->get_type_name(1) == "int")) {
-    tet = true;
+  bool index_based = true;
+  if (hField->get_type_name(0) == "TetVolField") 
+  {
     remark("Input is a 'TetVolField'");
-  }
-  else {
-    if((hField->get_type_name(0) == "HexVolField") &&
-       (hField->get_type_name(1) == "int")) {
-      tet = false;
-      remark("Input is a 'HexVolField'");
+    if (hField->get_type_name(1) == "int") {
+      tet = true;
+    } else if (hField->get_type_name(1) == "Tensor") {
+      tet = true;
+      index_based = false;
+    } else {
+      error("Input TetVolField is not of type 'int' or 'Tensor'.");
+      return;
     }
-    else {
-      error("input field is not 'TetVolField' nor 'HexVolField'.");
+  } 
+  else if (hField->get_type_name(0) == "HexVolField") 
+  {
+    remark("Input is a 'HexVolField'");
+    if (hField->get_type_name(1) == "int") {
+      hex = true;
+    } else if (hField->get_type_name(1) == "Tensor") {
+      hex = true;
+      index_based = false;
+    } else {
+      error("Input HexVolField is not of type 'int' or 'Tensor'.");
       return;
     }
   }
+  else if (hField->get_type_name(0) == "TriSurfField") 
+  {
+    remark("Input is a 'TriSurfField'");
+    if (hField->get_type_name(1) == "int") {
+      tri = true;
+    }  else if (hField->get_type_name(1) == "Tensor") {
+       tri = true;
+       index_based = false;
+    } else {
+      error("Input TriSurfField is not of type 'int' of 'Tensor'.");
+      return;
+    }
+  }
+  else 
+  {
+    error("Input field is not 'TetVolField' or 'HexVolField' or 'TriSurfField'.");
+    return;
+  }
 
-  CondMeshHandleTet hCondMeshTet;
-  LHHexVolField hLHHexVolField;
+  TetVolFieldIntHandle tvfiH;
+  TetVolFieldTensorHandle tvftH;
 
-  if(tet)
-    hCondMeshTet = dynamic_cast<TetVolField<int>* >(hField.get_rep());
-  else
-    hLHHexVolField = dynamic_cast<HexVolField<int>* >(hField.get_rep());
+  HexVolFieldIntHandle hvfiH;
+  HexVolFieldTensorHandle hvftH;
+
+  TriSurfFieldIntHandle tsfiH;
+  TriSurfFieldTensorHandle tsftH;
+
+  if (tet) 
+  {
+    if (index_based)
+      tvfiH = dynamic_cast<TetVolField<int>* >(hField.get_rep());
+    else
+      tvftH = dynamic_cast<TetVolField<Tensor>* >(hField.get_rep());
+  } 
+  else if (hex)
+  {
+    if (index_based)
+      hvfiH = dynamic_cast<HexVolField<int>* >(hField.get_rep());
+    else
+      hvftH = dynamic_cast<HexVolField<Tensor>* >(hField.get_rep());
+  }
+  else if (tri)
+  {
+    if (index_based)
+      tsfiH = dynamic_cast<TriSurfField<int>* >(hField.get_rep());
+    else
+      tsftH = dynamic_cast<TriSurfField<Tensor>* >(hField.get_rep());
+  } 
 
   if (hField->generation == gen_ 
       && hGblMtrx_.get_rep() 
@@ -235,15 +337,36 @@ SetupFEMatrix::execute()
   //! Either use supplied tensors, or make an array of identity tensors
   vector<pair<string, Tensor> > tens;
  
-  if(tet) {
+  if (tet && index_based) 
+  {
     if (uiUseCond_.get()==1 &&
-	hCondMeshTet->get_property("conductivity_table", tens)){
+	tvfiH->get_property("conductivity_table", tens)) {
       remark("Using supplied conductivity tensors.");
     } else {
       remark("Using identity conductivity tensors.");
       pair<int,int> minmax;
       minmax.second=1;
-      field_minmax(*(hCondMeshTet.get_rep()), minmax);
+      field_minmax(*(tvfiH.get_rep()), minmax);
+      tens.resize(minmax.second+1);
+      vector<double> t(6);
+      t[0] = t[3] = t[5] = 1;
+      t[1] = t[2] = t[4] = 0;
+      Tensor ten(t);
+      for (unsigned int i = 0; i < tens.size(); i++) {
+	tens[i] = pair<string, Tensor>(to_string((int)i), ten);
+      }
+    }
+  } 
+  else if (hex && index_based) 
+  {
+    if((uiUseCond_.get()==1) && 
+       hvfiH->get_property("conductivity_table", tens)) {
+      remark("Using supplied conductivity tensors.");
+    } else {
+      remark("Using identity conductivity tensors.");
+      pair<int,int> minmax;
+      minmax.second=1;
+      field_minmax(*(hvfiH.get_rep()), minmax);
       tens.resize(minmax.second+1);
       vector<double> t(6);
       t[0] = t[3] = t[5] = 1;
@@ -254,22 +377,24 @@ SetupFEMatrix::execute()
       }
     }
   }
-  else {
-    if((uiUseCond_.get()==1) && (hLHHexVolField->get_property("conductivity_table", tens))) {
+  else if (tri && index_based)
+  {
+    if (uiUseCond_.get()==1 &&
+	tsfiH->get_property("conductivity_table", tens)) {
       remark("Using supplied conductivity tensors.");
-    } 
-    else {
+    } else {
       remark("Using identity conductivity tensors.");
       pair<int,int> minmax;
       minmax.second=1;
-      field_minmax(*(hLHHexVolField.get_rep()), minmax);
+      field_minmax(*(tsfiH.get_rep()), minmax);
       tens.resize(minmax.second+1);
       vector<double> t(6);
       t[0] = t[3] = t[5] = 1;
       t[1] = t[2] = t[4] = 0;
       Tensor ten(t);
-      for (unsigned int i = 0; i < tens.size(); i++) {
-	tens[i] = pair<string, Tensor>(to_string((int)i), ten);
+      for (unsigned int i = 0; i < tens.size(); i++)
+      {
+        tens[i] = pair<string, Tensor>(to_string((int)i), ten);
       }
     }
   }
@@ -279,13 +404,12 @@ SetupFEMatrix::execute()
   lastUseCond_ = uiUseCond_.get();
   lastUseBasis_ = uiUseBasis_.get();
 
-
   //! Compute the scale of this geometry based on its "units" property
   double unitsScale = 1.;
   string units;
   if (uiUseCond_.get()==1 /*&& hField->mesh()->get_property("units", units)*/) {
     if(tet) {
-      if(hCondMeshTet->mesh()->get_property("units", units)) {
+      if(hField->get_property("units", units)) {
 	msgStream_  << "units = "<< units <<"\n";
 	if (units == "mm") unitsScale = 1./1000;
 	else if (units == "cm") unitsScale = 1./100;
@@ -297,8 +421,8 @@ SetupFEMatrix::execute()
 	msgStream_ << "unitsScale = "<< unitsScale <<"\n";
       }
     }
-    else {
-      if(hLHHexVolField->mesh()->get_property("units", units)) {
+    else if (hex) {
+      if(hField->mesh()->get_property("units", units)) {
 	msgStream_  << "units = "<< units <<"\n";
 	if (units == "mm") unitsScale = 1./1000;
 	else if (units == "cm") unitsScale = 1./100;
@@ -309,6 +433,19 @@ SetupFEMatrix::execute()
 	}
 	msgStream_ << "unitsScale = "<< unitsScale <<"\n";
       }
+    }
+    else if (tri) {
+      if(hField->mesh()->get_property("units", units)) {
+          msgStream_ << "units = "<<units<<"\n";
+          if (units == "mm") unitsScale = 1./1000;
+          else if (units == "cm") unitsScale = 1./100;
+          else if (units == "dm") unitsScale = 1./10;
+          else if (units == "m") unitsScale = 1./1;
+          else {
+            warning("Did not recognize units of mesh '" + units + "'.");
+          }
+          msgStream_ << "unitsScale = "<<unitsScale<<"\n";
+       }
     }
   }
 
@@ -318,30 +455,48 @@ SetupFEMatrix::execute()
     nprocs = Thread::numProcessors() * 4;
   }
   
-  if(!tet) {
-    BuildHexFEMatrix *hexmat = scinew BuildHexFEMatrix(hLHHexVolField, tens, unitsScale);
+  if (hex) {      // HEXES
+    BuildHexFEMatrix *hexmat = 
+      scinew BuildHexFEMatrix(hvfiH, hvftH, 
+			      index_based, tens, unitsScale);
     hGblMtrx_ = hexmat->buildMatrix();
-  }
-  else {
+  } else if (tet && index_based && lastUseBasis_) { // TETS -- indexed & bases
+    //! If the user wants to use basis matrices, 
+    //!    first check to see if we need to recompute them
+    if (hField->mesh()->generation != meshGen_ || 
+	tens.size() != (unsigned int)(dataBasis_.size())) {
+      meshGen_ = hField->mesh()->generation;
+      //! Need to build basis matrices
+      build_basis_matrices(tvfiH, tens.size(), unitsScale, nprocs);
+    }
+    //! Have basis matrices, compute combined matrix
+    hGblMtrx_ = build_composite_matrix(tens);
+  } else if (tet) {          // TETS -- (non-indexed or bases)
+    BuildFEMatrix::build_FEMatrix(tvfiH, tvftH,
+				  index_based, tens, hGblMtrx_, 
+				  unitsScale, nprocs);
+  } else if (tri && index_based && lastUseBasis_) {  // TRIS -- indexed
     //! If the user wants to use basis matrices, 
     //!    first check to see if we need to recompute them
     if (lastUseBasis_) {
       if (hField->mesh()->generation != meshGen_ || 
 	  tens.size() != (unsigned int)(dataBasis_.size())) {
-	meshGen_ = hField->mesh()->generation;
-	//! Need to build basis matrices
-	build_basis_matrices(hField, tens.size(), unitsScale, nprocs);
+        meshGen_ = hField->mesh()->generation;
+        //! Need to build basis matrices
+        build_TriBasis_matrices(tsfiH, tens.size(), unitsScale, nprocs);
       }
       //! Have basis matrices, compute combined matrix
       hGblMtrx_ = build_composite_matrix(tens);
-    } else {
-      BuildFEMatrix::build_FEMatrix(hCondMeshTet, tens, hGblMtrx_,
-				    unitsScale, nprocs);
-    }
+    } else if (tri) {
+      BuildTriFEMatrix::build_FEMatrix(tsfiH, tsftH, index_based,
+				       tens, hGblMtrx_, unitsScale);
+    }  
   }
-
   oportMtrx_->send(hGblMtrx_);
 }
 
 
 } // End namespace BioPSE
+
+
+

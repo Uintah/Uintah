@@ -21,7 +21,7 @@
 
 <para>
 The &sr; source code distribution offers support for the
-<acronym>PETSc</acronym> library and the Insight toolkit
+<acronym>PETSc</acronym> library and the Insight Toolkit
 (<acronym>ITK</acronym>) when these products are installed and &sr; is
 configured to use them.  The following sections provide information on
 using these software libraries with &sr;.

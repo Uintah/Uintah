@@ -29,35 +29,48 @@ itcl_class Insight_DataIO_ImageFileWriter {
     }
 
     method ui {} {
+	global env
+
         set w .ui[modname]
 	if {[winfo exists $w]} {
-	    set child [lindex [winfo children $w] 0]
-	    
-	    # $w withdrawn by $child's procedures
-	    raise $child
-	    return;
+	    return
         }
+
+	set initdir ""
+	
+	# place to put preferred data directory
+	# it's used if $this-filename is empty
+	
+	if {[info exists env(SCIRUN_DATA)]} {
+	    set initdir $env(SCIRUN_DATA)
+	} elseif {[info exists env(SCI_DATA)]} {
+	    set initdir $env(SCI_DATA)
+	} elseif {[info exists env(PSE_DATA)]} {
+	    set initdir $env(PSE_DATA)
+	}
 
 	############
 	set types {
-	    {{Meta Image}        {.mhd} }
+	    {{Meta Image}        {.mhd .mha} }
 	    {{PNG Image}        {.png} }
+	    {{JPG Image}        {.jpg} }
 	    {{All Files}       {.*} }
 	}
 	set defname "MyImage.mhd"
 	set defext ".mhd"
 	############
-        toplevel $w
+        toplevel $w -class TkFDialog
 	makeSaveFilebox \
 	    -parent $w \
 	    -filevar $this-FileName \
-	    -command "$this-c needexecute; destroy $w" \
-	    -cancel "destroy $w" \
+	    -command "$this-c needexecute; wm withdraw $w" \
+	    -cancel "wm withdraw $w " \
 	    -title "Save Image File" \
 	    -filetypes $types \
 	    -initialfile $defname \
 	    -defaultextension $defext \
 	    -formatvar $this-filetype \
+	    -initialdir $initdir \
 	    -splitvar $this-split
     }
 }

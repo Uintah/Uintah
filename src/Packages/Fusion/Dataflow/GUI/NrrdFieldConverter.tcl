@@ -19,9 +19,6 @@
 # by Allen R. Sanderson
 # May 2003
 
-# This GUI interface is for selecting a file name via the makeOpenFilebox
-# and other reading functions.
-
 catch {rename Fusion_Fields_NrrdFieldConverter ""}
 
 itcl_class Fusion_Fields_NrrdFieldConverter {
@@ -34,8 +31,13 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
     method set_defaults {} {
 
 	global $this-datasets
-
 	set $this-datasets ""
+
+	global $this-permute
+	set $this-permute 0
+ 
+	global $this-nomesh
+	set $this-nomesh 0
     }
 
     method ui {} {
@@ -60,33 +62,54 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
 
 	toplevel $w
 
-	frame $w.grid
-	label $w.grid.l -text "Inputs: (Execute to show list)" -width 30 -just left
+	# Permute option
+	global $this-permute
 
-	pack $w.grid.l  -side left
-	pack $w.grid -side top
-
-	frame $w.datasets
+	frame $w.permute
+	label $w.permute.label -text "Permute the data" \
+	    -width 40 -anchor w -just left
+	checkbutton $w.permute.button -variable $this-permute
 	
+	pack $w.permute.button $w.permute.label -side left
+	pack $w.permute -side top -pady 5
+
+
+	# Nomesh option
+	global $this-nomesh
+
+	frame $w.mesh
+	label $w.mesh.label -text "No Mesh - regular topology and geometry" \
+	    -width 40 -anchor w -just left
+	checkbutton $w.mesh.button -variable $this-nomesh
+	
+	pack $w.mesh.button $w.mesh.label -side left
+	pack $w.mesh -side top -pady 5
+
+
+	# Input dataset label
+	frame $w.label
+	label $w.label.l -text "Inputs: (Execute to show list)" -width 30 \
+	    -just left
+
+	pack $w.label.l  -side left
+	pack $w.label -side top -pady 5
+
+
+	# Input Dataset
+	frame $w.datasets
+	pack $w.datasets -side top -pady 5
+
 	global $this-datasets
-	set_names 1 [set $this-datasets]
+	set_names [set $this-datasets]
 
-	pack $w.datasets -side top -pady 10
 
-	frame $w.misc
-	button $w.misc.execute -text "Execute" -command "$this-c needexecute"
-	button $w.misc.close -text Close -command "destroy $w"
-	pack $w.misc.execute $w.misc.close -side left -padx 25
-
-	pack $w.misc -side bottom -pady 10
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
-    method set_names {dims datasets} {
+    method set_names {datasets} {
 
-	global $this-ndims
 	global $this-datasets
-
-	set $this-ndims $dims
 	set $this-datasets $datasets
 
         set w .ui[modname]

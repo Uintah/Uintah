@@ -22,38 +22,23 @@ Stylesheet for doc/index.html
 */
 
 @import url(common.css);
+@import url(indexcommon.css);
 
-.title {
-font-weight:bold;
-font-size:large;
-text-align:center}
+table.topics { 
+margin-top: 2em;
+margin-bottom: 2em;}
 
-.subtitle {
-height: 1.75em;
-text-align:center;
-font-weight:bold;
-font-size:small}
+th.mainheader {
+background-color: #003333;
+border-bottom: 4px solid #FFCC33;
+font-size:125%}
 
-table ul li { 
-font-size: medium;
-list-style-type: none}
+th.category { 
+background-color: rgb(160,160,160);
+color: rgb(40, 60, 40);
+font-size: 110%}
 
-ul { 
-margin: 0px;
-}
-
-th { 
-font-size: large;
-background-color:#003333;
-color:#FFCC33;
-}
-
-tr {}
-
-td { 
-vertical-align: top;
+td{
 width: 33%;
-}
-
-p {
-font-size: small}
+border: 2px solid rgb(160,160,160);
+vertical-align: top}

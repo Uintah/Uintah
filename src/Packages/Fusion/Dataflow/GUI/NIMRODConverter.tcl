@@ -19,9 +19,6 @@
 # by Allen R. Sanderson
 # May 2003
 
-# This GUI interface is for selecting a file name via the makeOpenFilebox
-# and other reading functions.
-
 catch {rename Fusion_Fields_NIMRODConverter ""}
 
 itcl_class Fusion_Fields_NIMRODConverter {
@@ -39,8 +36,11 @@ itcl_class Fusion_Fields_NIMRODConverter {
 	global $this-nmodes
 	set $this-nmodes 0
 
-	global $this-mode
-	set $this-mode 0
+	global $this-allowUnrolling
+	set $this-allowUnrolling 0
+
+	global $this-unrolling
+	set $this-unrolling 0
     }
 
     method ui {} {
@@ -65,59 +65,82 @@ itcl_class Fusion_Fields_NIMRODConverter {
 
 	toplevel $w
 
+	# Modes
+	global $this-nmodes
 	frame $w.modes
-
-	label $w.modes.label -text "Mode" -width 6 -anchor w -just left
-	pack $w.modes.label -side left	    
-
-	set_modes [set $this-nmodes]
-
+	label $w.modes.label -text "Mode Summing" -width 15 \
+	    -anchor w -just left
+	pack $w.modes.label -side left
 	pack $w.modes -side top -pady 5
 
-	frame $w.grid
-	label $w.grid.l -text "Inputs: (Execute to show list)" -width 30 -just left
+	set_modes [set $this-nmodes] 0
 
-	pack $w.grid.l  -side left
-	pack $w.grid -side top
 
-	frame $w.datasets
-	
+	# Unrolling
+	global $this-allowUnrolling
+	frame $w.unrolling
+	label $w.unrolling.label -text "Mesh unrolling" -width 15 \
+	    -anchor w -just left
+	checkbutton $w.unrolling.button -variable $this-unrolling
+
+	pack $w.unrolling.button $w.unrolling.label -side left
+	pack $w.unrolling -side top -pady 5
+
+	set_unrolling [set $this-allowUnrolling]
+
+
+	# Input dataset label
+	frame $w.label
+	label $w.label.l -text "Inputs: (Execute to show list)" -width 30 \
+	    -just left
+
+	pack $w.label.l  -side left
+	pack $w.label -side top -pady 5
+
+
+	# Input Dataset
+	frame $w.datasets	
+	pack $w.datasets -side top -pady 5
+
 	global $this-datasets
 	set_names [set $this-datasets]
 
-	pack $w.datasets -side top -pady 10
 
-	frame $w.misc
-	button $w.misc.execute -text "Execute" -command "$this-c needexecute"
-	button $w.misc.close -text Close -command "destroy $w"
-	pack $w.misc.execute $w.misc.close -side left -padx 25
-
-	pack $w.misc -side bottom -pady 10
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
-    method set_modes {nnodes} {
+    method set_modes {nmodes reset} {
+
+	global $this-nmodes
+	set $this-nmodes $nmodes
 
         set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
-	    pack forget $w.modes.label
 
-	    for {set i 0} {$i < 10} {incr i 1} {
-		if [ expr [winfo exists $w.modes.$i] ] {
-		    pack forget $w.modes.$i
-		}
-	    }
-
-	    if { $nnodes > 0 } {
-
-		global $this-nmodes
-		global $this-mode
-		set $this-nmodes $nnodes
-		set $this-mode $nnodes
-
+	    if { $nmodes > 0 } {
+		
 		pack $w.modes.label -side left
+		
+		for {set i 0} {$i <= $nmodes} {incr i 1} {
 
-		for {set i 0} {$i <= $nnodes} {incr i 1} {
+		    if { [catch { set t [set $this-mode-$i] } ] } {
+			if { $i < $nmodes } {
+			    set $this-mode-$i 0
+			} else {
+			    set $this-mode-$i 1
+			}
+		    }
+
+		    if { $reset } {
+			if { $i < $nmodes } {
+			    set $this-mode-$i 0
+			} else {
+			    set $this-mode-$i 1
+			}
+		    }
+
 		    if [ expr [winfo exists $w.modes.$i] ] {
 			$w.modes.$i.label configure -text "$i" -width 2
 		    } else {
@@ -125,18 +148,48 @@ itcl_class Fusion_Fields_NIMRODConverter {
 			
 			label $w.modes.$i.label -text "$i" \
 			    -width 2 -anchor w -just left
-			radiobutton $w.modes.$i.button \
-			    -variable $this-mode -value $i
+			checkbutton $w.modes.$i.button -variable $this-mode-$i
 			
-			pack $w.modes.$i.label $w.modes.$i.button -side left
-			pack $w.modes.$i.label -side left
-			
+			pack $w.modes.$i.button $w.modes.$i.label -side left
+
 		    }
 
 		    pack $w.modes.$i -side left
 		}
 		
-		$w.modes.$nnodes.label configure -text "Sum" -width 4
+		$w.modes.$nmodes.label configure -text "All" -width 4
+	    } else {
+		pack forget $w.modes.label
+	    }
+
+
+	    if { $nmodes > 0 } {
+		set i [expr $nmodes + 1]
+	    } else {
+		set i 0
+	    }
+
+	    # Destroy all the left over entries from prior runs.
+	    while {[winfo exists $w.modes.$i]} {
+		destroy $w.modes.$i
+		incr i
+	    }
+	}
+    }
+
+    method set_unrolling { allowUnrolling } {
+
+	global $this-allowUnrolling
+	set $this-allowUnrolling $allowUnrolling
+
+        set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+
+	    if { $allowUnrolling } {		
+		pack $w.unrolling -side top
+	    } else {
+		pack forget $w.unrolling
 	    }
 	}
     }

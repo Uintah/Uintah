@@ -47,11 +47,13 @@ class GenericWriter : public Module {
 public:
   GuiString filename_;
   GuiString filetype_;
+  GuiInt    confirm_;
   GenericWriter(const string &name, GuiContext* ctx,
 		const string &category, const string &package);
   virtual ~GenericWriter();
 
   virtual void execute();
+  virtual bool overwrite();
 };
 
 
@@ -60,7 +62,8 @@ GenericWriter<HType>::GenericWriter(const string &name, GuiContext* ctx,
 				    const string &cat, const string &pack)
   : Module(name, ctx, Sink, cat, pack),
     filename_(ctx->subVar("filename")),
-    filetype_(ctx->subVar("filetype"))
+    filetype_(ctx->subVar("filetype")),
+    confirm_(ctx->subVar("confirm"))
 {
 }
 
@@ -69,6 +72,23 @@ template <class HType>
 GenericWriter<HType>::~GenericWriter()
 {
 }
+
+template <class HType>
+bool
+GenericWriter<HType>::overwrite()
+{
+  std::string result;
+  gui->lock();
+  gui->eval(id+" overwrite",result);
+  gui->unlock();
+  if (result == std::string("0")) {
+    warning("User chose to not save.");
+    return 0;
+  }
+  return 1;
+}
+  
+
 
 template <class HType>
 void
@@ -95,6 +115,8 @@ GenericWriter<HType>::execute()
     warning("No filename specified.");
     return;
   }
+
+  if (!overwrite()) return;
    
   // Open up the output stream
   Piostream* stream;

@@ -31,17 +31,17 @@ itcl_class SCIRun_Visualization_GenTransferFunc {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    raise $w
 	    doGL
-	    return;
+	    return
 	}
-
 
 	toplevel $w
 	frame $w.f
 	pack $w.f -padx 2 -pady 2
-	set n "$this-c needexecute"
 	
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
+
 	global $this-rgbhsv
 	global $this-linespline
 
@@ -49,8 +49,8 @@ itcl_class SCIRun_Visualization_GenTransferFunc {
 	set $this-linespline 0
 	
 	doGL
-
     }
+
     method doGL {} {
         
         set w .ui[modname]
@@ -59,7 +59,12 @@ itcl_class SCIRun_Visualization_GenTransferFunc {
             raise $w
         } else {
 
+	set n "$this-c needexecute"
+	make_labeled_radio $w.f.types "Color Space" $n left \
+	    $this-rgbhsv { { "RGB" 0 }  { "HSV" 1 } }
+	    
             # initialize geometry and placement of the widget
+	pack $w.f.types -side top -anchor w
             
 	    frame $w.f.gl1
 	    pack $w.f.gl1 -padx 2 -pady 2

@@ -21,6 +21,47 @@
 #      October 2000
 #      based on standard TCL tkfbox.tcl source
 
+#
+# NOTE: If you use makeOpenFilebox or makeSaveFilebox and these
+# dialogs ARE NOT the main module GUI (ie: created by the ui method
+# _as_ the UI), then you will need to explicitly deiconify the window 
+# (and move it to the location of the mouse...)
+#
+# ie: something like this:
+#
+#       set w .my_window
+#
+#       if {[winfo exists $w]} {
+#           if { [winfo ismapped $w] == 1} {
+#               raise $w
+#           } else {
+#               wm deiconify $w
+#           }
+#           return
+#        }
+#
+#       toplevel $w
+#       makeSaveFilebox \
+#               -parent $w \
+#               -filevar $this-saveFile \
+#               -command "$this doSaveImage; wm withdraw $w" \
+#               -cancel "wm withdraw $w" \
+#               -title $title \
+#               -filetypes $types \
+#               -initialfile $defname \
+#               -initialdir $initdir \
+#               -defaultextension $defext \
+#               -formatvar $this-saveType \
+#               -formats {ppm raw "by_extension"} \
+#               -imgwidth $this-resx \
+#               -imgheight $this-resy
+#       moveToCursor $w
+#       wm deiconify $w
+#
+#  However, if the save dialog is the main UI window, then the module UI
+#  function takes care of raising it for you.
+#
+
 proc makeOpenFilebox {args} {
     biopseFDialog $args
 }
@@ -28,29 +69,6 @@ proc makeOpenFilebox {args} {
 proc makeSaveFilebox {args} {
     biopseFDialog $args
 }
-
-#--------------------------------------------------------
-# procedure to conform with Dataflow readers
-#proc makeFilebox {w var command cancel} {
-#    wm withdraw $w
-#    set initfile ""
-#    set initdir ""
-#    set defext ""
-#    set title "Open Dataset"
-#    set filetypes {
-#	{{All Files}       {.*}   }
-#    }
-#    makeOpenFilebox -parent $w \
-#	    -filevar $var \
-#	    -command $command \
-#	    -cancel $cancel \
-#	    -defaultextension $defext \
-#	    -filetypes $filetypes \
-#	    -initialdir $initdir \
-#	    -initialfile $initfile  \
-#	    -title $title
-#}
-
 
 #--------------------------------------------------------
 # procedures to call from readers/writers
@@ -643,22 +661,17 @@ proc biopseIconList_Reset {w} {
 #	be called directly. Call tk_getOpenFile or tk_getSaveFile instead.
 #proc biopseFDialog {filename command cancel args} {
 proc biopseFDialog {argstring} {
-    global biopsePriv
     
-    # initial design assumed that there could 
-    # exist only one instance of the dialog box at a time, 
-    # so counter is introdused to distinguish among instances
-    global biopseFDCounter
-    if { [info exists biopseFDCounter] } {
-	incr biopseFDCounter
+    # Find parent id
+    set par_loc [lsearch $argstring "-parent"]
+    if { $par_loc < 0 } { 
+       set w .
     } else {
-	set biopseFDCounter 1
+	set w [lindex $argstring [expr $par_loc + 1]]
     }
 
-    set w ""
-    append w  __biopse_filedialog $biopseFDCounter
     upvar #0 $w data
-    
+
     if {![string compare [lindex [info level -1] 0] makeOpenFilebox]} {
 	set type open
     } else {
@@ -666,37 +679,7 @@ proc biopseFDialog {argstring} {
     }
 
     biopseFDialog_Config $w $type $argstring
-       
-    if {![string compare $data(-parent) .]} {
-        set w .$w
-    } else {
-	wm withdraw $data(-parent)
-        set w $data(-parent).$w
-    }
-    
-    # (re)create the dialog box if necessary
-    if {![winfo exists $w]} {
-	biopseFDialog_Create $w
-    } elseif {[string compare [winfo class $w] TkFDialog]} {
-	destroy $w
-	biopseFDialog_Create $w
-    } else {
-	set data(dirMenuBtn) $w.f1.menu
-	set data(dirMenu) $w.f1.menu.menu
-	set data(upBtn) $w.f1.up
-	set data(icons) $w.icons
-	set data(ent) $w.f2.ent
-	set data(typeMenuLab) $w.f3.lab
-	set data(typeMenuBtn) $w.f3.menu
-	set data(typeMenu) $data(typeMenuBtn).m
-	set data(okBtn) $w.f2.ok
-	set data(cancelBtn) $w.f3.cancel
-	set data(formatMenuBtn) $w.f4.menu
-	set data(splitBtn) $w.f4.split
-	set data(formatMenu) $data(formatMenuBtn).m
-	set data(formatMenuLab) $w.f4.lab 
-    }
-#    wm transient $w $data(-parent)
+    biopseFDialog_Create $w
 
     # 5. Initialize the file types menu
     if {$data(-filetypes) != {}} {
@@ -729,7 +712,6 @@ proc biopseFDialog {argstring} {
     set y [expr {[winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
 	    - [winfo vrooty [winfo parent $w]]}]
     wm geom $w [winfo reqwidth $w]x[winfo reqheight $w]+$x+$y
-    wm deiconify $w
     wm title $w $data(-title)
 
     # 7. Set a grab and claim the focus too.
@@ -739,6 +721,7 @@ proc biopseFDialog {argstring} {
     if {$oldGrab != ""} {
 	set grabStatus [grab status $oldGrab]
     }
+
     grab $w
     focus $data(ent)
     $data(ent) delete 0 end
@@ -749,6 +732,10 @@ proc biopseFDialog {argstring} {
 
     catch {focus $oldFocus}
     grab release $w
+
+    # For now, return the window that this thing created so other
+    # parts of the code can deal with it... sigh.
+    return $w
 }
 
 # biopseFDialog_Config --
@@ -757,6 +744,7 @@ proc biopseFDialog_Config {w type argList} {
     upvar #0 $w data
 
     set data(type) $type
+
     
     # 1: the configuration specs
     if {![string compare $type "open"]} {
@@ -789,6 +777,7 @@ proc biopseFDialog_Config {w type argList} {
 	    {-splitvar "" "" ""}
 	    {-imgwidth "" "" ""}
 	    {-imgheight "" "" ""}
+	    {-confirmvar "" "" ""}
 	}
     }
 
@@ -855,17 +844,22 @@ proc biopseFDialog_Config {w type argList} {
 }
 
 proc biopseFDialog_Create {w} {
+
     set dataName [lindex [split $w .] end]
+
     upvar #0 $dataName data
+    upvar #0 $w data
     global tk_library command
 
-    toplevel $w -class TkFDialog
+    # toplevel is now created in the modules UI function (as it should be)
+    #toplevel $w -class TkFDialog
 
     # f1: the frame with the directory option menu
     set f1 [frame $w.f1]
     label $f1.lab -text "Directory:" -under 0
     set data(dirMenuBtn) $f1.menu
-    set data(dirMenu) [tk_optionMenu $f1.menu [format %s(selectPath) $dataName] ""]
+    set data(dirMenu) [tk_optionMenu $f1.menu [format .%s(selectPath) $dataName] ""]
+
     set data(upBtn) [button $f1.up]
     if {![info exists biopsePriv(updirImage)]} {
 	set biopsePriv(updirImage) [image create bitmap -data {
@@ -970,6 +964,17 @@ static char updir_bits[] = {
 	    set data(is_split) 1
 	}
 
+        if {$data(-confirmvar) != ""} {
+            set f6 [frame $w.f6 -bd 0]
+            label $f6.lab -text "" -width 15 -anchor e
+            checkbutton $f6.button  -text "Confirm Before Overwriting File " \
+              -variable $data(-confirmvar)
+            pack $f6.lab -side left -padx 2
+            pack $f6.button -side left -padx 2
+            pack $f6 -side bottom -fill x -pady 4
+        }
+	    
+
         if {$data(-imgwidth) != ""} {
             set f5 [frame $w.f5 -bd 0]
             label $f5.resxl  -text "Width:"  -width 15 -anchor e
@@ -1056,7 +1061,7 @@ static char updir_bits[] = {
 #	time and we don't want to load the same directory for multiple times
 #	due to multiple concurrent events.
 proc biopseFDialog_UpdateWhenIdle {w} {
-    upvar #0 [winfo name $w] data
+    upvar #0 $w data
 
     if {[info exists data(updateId)]} {
 	return
@@ -1077,8 +1082,7 @@ proc biopseFDialog_Update {w} {
 	return
     }
 
-    set dataName [winfo name $w]
-    upvar #0 $dataName data
+    upvar #0 $w data
     global tk_library biopsePriv
     catch {unset data(updateId)}
 
@@ -1163,7 +1167,7 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     }
 
     $data(dirMenu) delete 0 end
-    set var [format %s(selectPath) $dataName]
+    set var [format %s(selectPath) $w]
     foreach path $list {
 	$data(dirMenu) add command -label $path -command [list set $var $path]
     }
@@ -1179,7 +1183,7 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 # biopseFDialog_SetPathSilently --
 # 	Sets data(selectPath) without invoking the trace procedure
 proc biopseFDialog_SetPathSilently {w path} {
-    upvar #0 [winfo name $w] data
+    upvar #0 $w data
     
     trace vdelete  data(selectPath) w "biopseFDialog_SetPath $w"
     set data(selectPath) $path
@@ -1190,7 +1194,7 @@ proc biopseFDialog_SetPathSilently {w path} {
 # This proc gets called whenever data(selectPath) is set
 proc biopseFDialog_SetPath {w name1 name2 op} {
     if {[winfo exists $w]} {
-	upvar #0 [winfo name $w] data
+	upvar #0 $w data
 	biopseFDialog_UpdateWhenIdle $w
     }
 }
@@ -1198,7 +1202,7 @@ proc biopseFDialog_SetPath {w name1 name2 op} {
 # This proc gets called whenever data(filter) is set
 proc biopseFDialog_SetFilter {w type} {
     
-    upvar #0 [winfo name $w] data
+    upvar #0 $w data
     upvar \#0 $data(icons) icons
   
     set data(filter) [lindex $type 1]
@@ -1211,7 +1215,7 @@ proc biopseFDialog_SetFilter {w type} {
 
 # sets output format in response to the formatMenu entries
 proc biopseFDialog_SetFormat { w format } {
-    upvar #0 [winfo name $w] data
+    upvar #0 $w data
     
     set $data(-formatvar) $format
     $data(formatMenuBtn) configure -text [set $data(-formatvar)]
@@ -1235,7 +1239,7 @@ proc biopseFDialog_SetFormat { w format } {
 #	 flag = OK	: valid input
 #	      = PATTERN	: valid directory/pattern
 #	      = PATH	: the directory does not exist
-#	      = FILE	: the directory exists by the file doesn't
+#	      = FILE	: the directory exists but the file doesn't
 #			  exist
 #	      = CHDIR	: Cannot change to the directory
 #	      = ERROR	: Invalid entry
@@ -1255,9 +1259,12 @@ proc biopseFDialogResolveFile {context text defaultext} {
 	set path $path/
     }
 
-    # DMW: added second comparison so we can specify a directory
-    if {[file ext $path] == "" && [string index $path end] != "/"} {
+    # Only consider adding default extension if the file is not a directory
+    if {![file isdirectory $path]} {
+      # DMW: added second comparison so we can specify a directory
+      if {[file ext $path] == "" && [string index $path end] != "/"} {
 	set path "$path$defaultext"
+      }
     }
 
     if {[catch {file exists $path}]} {
@@ -1320,7 +1327,7 @@ proc biopseFDialogResolveFile {context text defaultext} {
 # from the icon list . This way the user can be certain that the input in the 
 # entry box is the selection.
 proc biopseFDialog_EntFocusIn {w} {
-    upvar #0 [winfo name $w] data
+    upvar #0 $w data
 
     if {[string compare [$data(ent) get] ""]} {
 	$data(ent) selection from 0
@@ -1340,7 +1347,7 @@ proc biopseFDialog_EntFocusIn {w} {
 }
 
 proc biopseFDialog_EntFocusOut {w} {
-    upvar #0 [winfo name $w] data
+    upvar #0 $w data
 
     $data(ent) selection clear
 }
@@ -1348,7 +1355,7 @@ proc biopseFDialog_EntFocusOut {w} {
 
 # Gets called when user presses Return in the "File name" entry.
 proc biopseFDialog_ActivateEnt {w} {
-    upvar #0 [winfo name $w] data
+    upvar #0 $w data
 
     set text [string trim [$data(ent) get]]
     set list [biopseFDialogResolveFile $data(selectPath) $text \
@@ -1366,6 +1373,7 @@ proc biopseFDialog_ActivateEnt {w} {
 	    } else {
 		biopseFDialog_SetPathSilently $w $path
 		set data(selectFile) $file
+
 		biopseFDialog_Done $w
 	    }
 	}
@@ -1414,7 +1422,7 @@ proc biopseFDialog_ActivateEnt {w} {
 
 # Gets called when user presses the Alt-s or Alt-o keys.
 proc biopseFDialog_InvokeBtn {w key} {
-    upvar #0 [winfo name $w] data
+    upvar #0 $w data
 
     if {![string compare [$data(okBtn) cget -text] $key]} {
 	tkButtonInvoke $data(okBtn)
@@ -1423,7 +1431,7 @@ proc biopseFDialog_InvokeBtn {w key} {
 
 # Gets called when user presses the "parent directory" button
 proc biopseFDialog_UpDirCmd {w} {
-    upvar #0 [winfo name $w] data
+    upvar #0 $w data
 
     if {[string compare $data(selectPath) "/"]} {
 	set data(selectPath) [file dirname $data(selectPath)]
@@ -1444,9 +1452,10 @@ proc biopseFDialog_JoinFile {path file} {
 
 # Gets called when user presses the "OK" button
 proc biopseFDialog_OkCmd {w} {
-    upvar #0 [winfo name $w] data
+    upvar #0 $w data
 
     set text [biopseIconList_Get $data(icons)]
+
     if {[string compare $text ""]} {
 	set file [biopseFDialog_JoinFile $data(selectPath) $text]
 	if {[file isdirectory $file]} {
@@ -1460,7 +1469,7 @@ proc biopseFDialog_OkCmd {w} {
 
 # Gets called when user presses the "Cancel" button
 proc biopseFDialog_CancelCmd {w} {
-    upvar #0 [winfo name $w] data
+    upvar #0 $w data
     global biopsePriv
 
     # AS: setting file variable to "" and executing cancel command
@@ -1472,7 +1481,7 @@ proc biopseFDialog_CancelCmd {w} {
 # Gets called when user browses the IconList widget (dragging mouse, arrow
 # keys, etc)
 proc biopseFDialog_ListBrowse {w text} {
-    upvar #0 [winfo name $w] data
+    upvar #0 $w data
 
     if {$text == ""} {
 	return
@@ -1496,7 +1505,7 @@ proc biopseFDialog_ListBrowse {w text} {
 # Gets called when user invokes the IconList widget (double-click, 
 # Return key, etc)
 proc biopseFDialog_ListInvoke {w text} {
-    upvar #0 [winfo name $w] data
+    upvar #0 $w data
 
     if {$text == ""} {
 	return
@@ -1527,7 +1536,7 @@ proc biopseFDialog_ListInvoke {w text} {
 #	loop in biopseFDialog and return the selected filename to the
 #	script that calls biopse_getOpenFile or biopse_getSaveFile
 proc biopseFDialog_Done {w {selectFilePath ""}} {
-    upvar #0 [winfo name $w] data
+    upvar #0 $w data
     global biopsePriv
 
     if {![string compare $selectFilePath ""]} {
@@ -1536,20 +1545,27 @@ proc biopseFDialog_Done {w {selectFilePath ""}} {
 	set biopsePriv(selectFile)     $data(selectFile)
 	set biopsePriv(selectPath)     $data(selectPath)
 
-	if {[file exists $selectFilePath] && 
+	set confirm 1
+	if { [info exists data(-confirmvar)] &&
+	     [string length $data(-confirmvar)] } {
+	    set confirm 0
+	}
+	
+	if {$confirm && 
+	    [file exists $selectFilePath] && 
 	    ![string compare $data(type) save]} {
-
 		set reply [tk_messageBox -icon warning -type yesno\
 			-parent $data(-parent) -message "File\
 			\"$selectFilePath\" already exists.\nDo\
 			you want to overwrite it?"]
-		if {![string compare $reply "no"]} {
-		    return
-		}
+	    if {![string compare $reply "no"]} {
+		return
+	    }
 	}
     }
     
     # AS: final steps before returning: setting filename variable and executing command
     set $data(-filevar) $selectFilePath
+
     eval $data(-command)
 }

@@ -35,6 +35,7 @@ itcl_class SCIRun_FieldsCreate_SampleField {
 	global $this-whichtab
         global $this-clamp
         global $this-autoexecute
+        global $this-force-rake-reset
 	set $this-wtype rake
 	set $this-maxseeds 15
 	set $this-dist uniuni
@@ -44,12 +45,12 @@ itcl_class SCIRun_FieldsCreate_SampleField {
 	set $this-whichtab Widget
         set $this-clamp 0
         set $this-autoexecute 1
+        set $this-force-rake-reset 0
     }
 
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -86,7 +87,13 @@ itcl_class SCIRun_FieldsCreate_SampleField {
 	checkbutton $wtab.auto -text "Execute automatically" \
 		-variable $this-autoexecute
 
-	pack $wtab.type $wtab.f1 $wtab.auto -side top -fill x -pady 5 -anchor w
+	button $wtab.reset -text "Reset Widget" \
+	    -command "set $this-force-rake-reset 1; $this-c needexecute"
+
+	pack $wtab.type $wtab.f1 $wtab.auto \
+	    -side top -fill x -pady 5 -anchor w
+
+	pack $wtab.reset -side top -pady 5
 
 
 	frame $rtab.f2
@@ -132,10 +139,8 @@ itcl_class SCIRun_FieldsCreate_SampleField {
         checkbutton $rtab.f3.clamp -text "Clamp to nodes" -var $this-clamp
         pack $rtab.f3.clamp -anchor w -padx 8
 
-	
-
-	button $w.execute -text "Execute" -command "$this-c needexecute"
-	pack $w.execute -padx 5 -pady 5
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
 

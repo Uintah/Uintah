@@ -314,8 +314,9 @@ FindAdamsBashforth(vector<Point> &v, // storage for points
 }
 
 
-static void
-CleanupPoints(vector<Point> &v, const vector<Point> &input, double e2)
+void
+StreamLinesCleanupPoints(vector<Point> &v, const vector<Point> &input,
+			 double e2)
 {
   unsigned int i, j;
   v.push_back(input[0]);
@@ -369,9 +370,37 @@ StreamLinesAlgo::FindNodes(vector<Point> &v, // storage for points
   if (remove_colinear_p)
   {
     vector<Point> tmp;
-    CleanupPoints(tmp, v, t2);
+    StreamLinesCleanupPoints(tmp, v, t2);
     v = tmp;
   }
+}
+
+
+static inline int
+CLAMP(int a, int lower, int upper)
+{
+  if (a < lower) return lower;
+  else if (a > upper) return upper;
+  return a;
+}
+
+
+
+double
+StreamLinesAccAlgo::RayPlaneIntersection(const Point &p, const Vector &dir,
+					 const Point &p0, const Vector &pn)
+{
+  // Compute divisor.
+  const double Vd = Dot(dir, pn);
+
+  // Return no intersection if parallel to plane or no cross product.
+  if (Vd < 1.0e-12) { return 1.0e24; }
+
+  const double D = - Dot(pn, p0);
+
+  const double V0 = - (Dot(pn, p) + D);
+    
+  return V0 / Vd;
 }
 
 
@@ -429,17 +458,39 @@ StreamLines::execute()
   color_.reset();
   int color = color_.get();
 
+  if (method_.get() == 5 && vfhandle_->data_at() != Field::CELL)
+  {
+    error("The Cell Walk method only works for cell centered FlowFields.");
+    return;
+  }
+
   const TypeDescription *smtd = sf_->mesh()->get_type_description();
   const TypeDescription *sltd = sf_->data_at_type_description();
-  CompileInfoHandle ci = StreamLinesAlgo::get_compile_info(smtd, sltd); 
-  Handle<StreamLinesAlgo> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
-  vf_->mesh()->synchronize(Mesh::LOCATE_E);
+  if (method_.get() != 5)
+  {
+    CompileInfoHandle ci = StreamLinesAlgo::get_compile_info(smtd, sltd); 
+    Handle<StreamLinesAlgo> algo;
+    if (!module_dynamic_compile(ci, algo)) return;
+    vf_->mesh()->synchronize(Mesh::LOCATE_E);
 
-  oport_->send(algo->execute(sf_->mesh(), vfi,
-			     tolerance, stepsize, maxsteps, direction, color,
-			     remove_colinear_.get(),
-			     method_.get(), np_.get()));
+    oport_->send(algo->execute(sf_->mesh(), vfi,
+			       tolerance, stepsize, maxsteps, direction, color,
+			       remove_colinear_.get(),
+			       method_.get(), CLAMP(np_.get(), 1, 256)));
+  }
+  else
+  {
+    const TypeDescription *vtd = vfhandle_->get_type_description();
+    CompileInfoHandle aci =
+      StreamLinesAccAlgo::get_compile_info(smtd, sltd, vtd);
+    Handle<StreamLinesAccAlgo> accalgo;
+    if (!module_dynamic_compile(aci, accalgo)) return;
+    vf_->mesh()->synchronize(Mesh::LOCATE_E);
+
+    oport_->send(accalgo->execute(sf_->mesh(), vfhandle_, maxsteps,
+				  direction, color,
+				  remove_colinear_.get()));
+  }
 }
 
 
@@ -464,6 +515,35 @@ StreamLinesAlgo::get_compile_info(const TypeDescription *msrc,
   // Add in the include path to compile this obj
   rval->add_include(include_path);
   msrc->fill_compile_info(rval);
+  return rval;
+}
+
+
+CompileInfoHandle
+StreamLinesAccAlgo::get_compile_info(const TypeDescription *msrc,
+				     const TypeDescription *sloc,
+				     const TypeDescription *vfld)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("StreamLinesAccAlgoT");
+  static const string base_class_name("StreamLinesAccAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       msrc->get_filename() + "." +
+		       sloc->get_filename() + "." +
+		       vfld->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+		       msrc->get_name() + ", " +
+		       sloc->get_name() + ", " +
+		       vfld->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  msrc->fill_compile_info(rval);
+  vfld->fill_compile_info(rval);
   return rval;
 }
 

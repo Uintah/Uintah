@@ -235,13 +235,18 @@ add_data(const Point &p, const Vector &d, GeomArrows *arrows,
 
 
 void 
-RenderTensorFieldBase::add_item(GeomHandle glyph,
+RenderTensorFieldBase::add_item(GeomGroup *g,
+				GeomHandle glyph,
 				const Point &p, Tensor &t,
-				double scale, int resolution,
-				GeomGroup *g, bool colorize)
+				double scale,
+				bool colorize)
 {
   Vector ecolor;
   GeomTransform *gt = 0;
+
+  // don't render glyphs that are too small
+  if ((t.mat_[0][0] + t.mat_[1][1] + t.mat_[2][2]) < 0.001) return;
+
   if (t.have_eigens())
   {
     const Vector &e1 = t.get_eigenvector1();
@@ -250,10 +255,12 @@ RenderTensorFieldBase::add_item(GeomHandle glyph,
 
     double v1, v2, v3;
     t.get_eigenvalues(v1, v2, v3);
+    // don't render glyphs that are too small
+    if (v1 + v2 + v3 < 0.001) return;
 
     static const Point origin(0.0, 0.0, 0.0);
     Transform trans(origin, e1, e2, e3);
-    trans.post_scale(Vector(v1, v2, v3) * scale);
+    trans.post_scale(Vector(fabs(v1), fabs(v2), fabs(v3)) * scale);
     trans.pre_translate(p.asVector());
 
     gt = scinew GeomTransform(glyph, trans);
@@ -293,6 +300,48 @@ RenderTensorFieldBase::add_item(GeomHandle glyph,
     g->add(gt);
   }
 }
+
+
+
+void 
+RenderTensorFieldBase::add_super_quadric(GeomGroup *g,
+					 MaterialHandle mat,
+					 const Point &p, Tensor &t,
+					 double scale, int reso,
+					 bool colorize)
+{
+  double v1, v2, v3;
+  t.get_eigenvalues(v1, v2, v3);
+
+  const double cl = (v1 - v2) / (v1 + v2 + v3);
+  const double cp = 2.0 * (v2 - v3) / (v1 + v2 + v3);
+
+  double qA, qB;
+  int axis;
+  if (cl > cp)
+  {
+    axis = 0;
+    qA = pow((1.0 - cp), 3.5);  // Magic 3.5, adds emphasis to edges.
+    qB = pow((1.0 - cl), 3.5);
+  }
+  else
+  {
+    axis = 2;
+    qA = pow((1.0 - cl), 3.5);
+    qB = pow((1.0 - cp), 3.5);
+  }
+
+  GeomHandle glyph = scinew GeomSuperquadric(axis, qA, qB, reso, reso);
+
+  if (mat.get_rep())
+  {
+    glyph = scinew GeomMaterial(glyph, mat);
+  }
+
+  add_item(g, glyph, p, t, scale, colorize);
+}
+
+
 
 RenderScalarFieldBase::RenderScalarFieldBase()
 {}

@@ -28,8 +28,8 @@ Extensible, Toolkit for Scientific Computation</ulink>
 functions for the parallel solution of partial differential equations.
 </para>
 <para>
-When <acronym>PETSc</acronym> is installed (and &sr; is configured to
-use it), &sr;'s SolveMatrix module enables the use of
+When <acronym>PETSc</acronym> is installed, and &sr; is configured to
+use it, &sr;'s SolveMatrix module enables the use of
 <acronym>PETSc</acronym> solvers.
 </para>
 <para>
@@ -54,7 +54,7 @@ code distribution.
 <listitem>
 <para>
 &sr; only supports the uniprocessor build of <acronym>PETSc</acronym>.
-This is because &sr; assumes a shared memory architecture, while
+&sr; assumes a shared memory architecture, while
 multi-processor <acronym>PETSc</acronym> assumes a distributed memory
 architecture.
 </para>
@@ -132,21 +132,25 @@ and <acronym>PETSc</acronym>.
 <para>
 <envar>PETSC_DIR</envar> is the path to
 the (unpacked) <acronym>PETSc</acronym> distribution. 
+</para>
+<para>
 For csh-type shells type:
 <literallayout class="monospaced">
 setenv PETSC_DIR <replaceable>path-to-petsc</replaceable>
 </literallayout>
+</para>
+<para>
 For sh-type shells type:
 <literallayout class="monospaced">
 PETSC_DIR=<replaceable>path-to-petsc</replaceable>
 export PETSC_DIR
 </literallayout>
-</para>
-<para>
 <envar>PETSC_ARCH</envar> specifies a computer architecture.
 Its value must be set to one of <literal>linux</literal>,
 <literal>IRIX</literal> (for 32-bit Irix builds), or
 <literal>IRIX64</literal> (for 64-bit Irix builds).  For example,
+</para>
+<para>
 for csh-type shells type:
 <literallayout class="monospaced">
 setenv PETSC_ARCH IRIX
@@ -165,14 +169,12 @@ export PETSC_ARCH
 </title>
 
 <para>
-<acronym>PETSc</acronym> depends on <acronym>BLAS</acronym>
-and <acronym>LAPACK</acronym>, so they must be installed before installing
+<acronym>PETSc</acronym> depends on <acronym>BLAS</acronym> and
+<acronym>LAPACK</acronym>, so they must be installed before installing
 <acronym>PETSc</acronym>.  A vendor version of <acronym>BLAS</acronym>
-is recommended.  <acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
-may already be installed.  Check with the system administrator.
-<link linkend="sec.petsc_inst">Skip</link>
-this section if <acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
-are installed.
+is recommended.  <link linkend="sec.petsc_inst">Skip</link> this
+section if <acronym>BLAS</acronym> and <acronym>LAPACK</acronym> are
+installed.
 </para>
 
 <para>
@@ -286,7 +288,7 @@ With an editor (e.g. emacs or vi), open
 <orderedlist>
 <listitem>
 <para>
-Find the line that begins with <quote><literal>BLASLAPACK_LIB
+Find the line beginning with <quote><literal>BLASLAPACK_LIB
 =</literal></quote> (near the beginning of the file) and change it as
 follows:
                   <itemizedlist>
@@ -314,7 +316,7 @@ BLASLAPACK_LIB = -L <replaceable>path-to-fblaslapack</replaceable> -lflapack -lf
 </listitem>
 <listitem>
 <para>
-Find the line that begins with
+Find the line  beginning with
 <quote><literal>MPI_LIB =</literal></quote> and change it to:
 <literallayout class="monospaced">
 MPI_LIB = ${PETSC_DIR}/lib/lib${BOPT}/${PETSC_ARCH}/libmpiuni.a
@@ -323,7 +325,7 @@ MPI_LIB = ${PETSC_DIR}/lib/lib${BOPT}/${PETSC_ARCH}/libmpiuni.a
 </listitem>
 <listitem>
 <para>
-Find the line that begins with
+Find the line  beginning with
 <quote><literal>MPI_INCLUDE =</literal></quote> and change it to
 <literallayout class="monospaced">
 MPI_INCLUDE = -I${PETSC_DIR}/src/sys/src/mpiuni
@@ -332,7 +334,7 @@ MPI_INCLUDE = -I${PETSC_DIR}/src/sys/src/mpiuni
 </listitem>
 <listitem>
 <para>
-Find the line that begins with
+Find the line beginning with
 <quote><literal>MPIRUN =</literal></quote> and change it to
 <literallayout class="monospaced">
 MPIRUN = ${PETSC_DIR}/lib/lib${BOPT}/${PETSC_ARCH}/libmpiuni.a
@@ -406,7 +408,7 @@ Not needed if using a vendor supplied library or if the
 <title>The SolveMatrix Module</title>
 
 <para>When &sr; is built with <acronym>PETSc</acronym> support, the
-SolveMatrix module lets the user choose from one of 12
+SolveMatrix module allows the user choose to from one of 12
 <acronym>PETSc</acronym> solvers.</para>
 
 <para>SolveMatrix passes a copy of matrix data on its input ports
@@ -421,7 +423,7 @@ function. SolveMatrix charts the progress of the solution while
 
 <para>Proceed to <citetitle pubwork="section"><xref
 linkend="sec.itk_inst" endterm="title.itk_inst"/></citetitle> when
-also adding support for the Insight toolkit.  Otherwise proceed to <citetitle
+ adding support for the Insight toolkit.  Otherwise, proceed to <citetitle
 pubwork="section"><xref linkend="sec.source_inst"
 endterm="title.source_inst"/></citetitle> after <acronym>PETSc has
 been installed.</acronym></para>

@@ -43,6 +43,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-extract-from-new-field
 	global $this-algorithm
 	global $this-build_trisurf
+	global $this-build_geom
 	global $this-np
 	global $this-active_tab
 	global $this-update_type
@@ -64,6 +65,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-extract-from-new-field 1
 	set $this-algorithm 0
 	set $this-build_trisurf 1
+	set $this-build_geom 1
 	set $this-np 1
 	set $this-update_type "on release"
 	set $this-color-r 0.4
@@ -101,7 +103,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 	 set window .ui[modname]
 	 if {[winfo exists $window.color]} {
 	     raise $window.color
-	     return;
+	     wm deiconify $window.color
+	     return
 	 } else {
 	     toplevel $window.color
 	     makeColorPicker $window.color $color \
@@ -161,8 +164,7 @@ itcl_class SCIRun_Visualization_Isosurface {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    raise $w
-	    return;
+	    return
 	}
 	
 	toplevel $w
@@ -261,11 +263,16 @@ itcl_class SCIRun_Visualization_Isosurface {
 	checkbutton $opt.buildsurf -text "Build Output Field" \
 		-variable $this-build_trisurf
 
+	global $this-build_geom
+	checkbutton $opt.buildgeom -text "Build Output Geometry" \
+		-variable $this-build_geom
+
 	checkbutton $opt.aefnf -text "Auto Extract from New Field" \
 		-relief flat -variable $this-extract-from-new-field 
 
 
-	pack $opt.update $opt.aefnf $opt.buildsurf -side top -anchor w
+	pack $opt.update $opt.aefnf $opt.buildsurf $opt.buildgeom \
+	    -side top -anchor w
 
 	addColorSelection $opt $this-color
 
@@ -296,8 +303,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	pack $w.f.meth -side top -fill x -expand 1
 
-	button $w.execute -text Execute -command "$this-c needexecute"
-	pack $w.execute -fill x -expand yes -padx 10 -pady 5
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
     method set-isoval {} {

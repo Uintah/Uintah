@@ -2,6 +2,8 @@
 
   SCIRun version number
 
+  This needs to be synced with the contents of
+  SCIRun/src/main/main.cc and src/Dataflow/GUI/NetworkEditor.tcl
 -->
 
-<edition>Trunk</edition>
+<edition>1.20.2</edition>

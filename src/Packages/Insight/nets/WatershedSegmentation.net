@@ -18,32 +18,50 @@
 
 # SCI Network 1.0
 
-set DATADIR .
-if [info exists env(INSIGHT_DATA)] {
-   set DATADIR $env(INSIGHT_DATA)
-}
+#######################################################################
+# Check environment variables.  Ask user for input if not set:
+set results [sourceSettingsFile]
+set DATADIR [lindex $results 0]
+#######################################################################
+
 
 ::netedit dontschedule
 
+set bbox {10 10 301 746}
+set Name {Main}
+
+# Create the Modules
 set m0 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat2D" 10 10]
 set m1 [addModuleAtPosition "Insight" "Filters" "GradientAnisotropicDiffusionImageFilter" 10 90]
 set m2 [addModuleAtPosition "Insight" "Filters" "GradientMagnitudeImageFilter" 10 170]
 set m3 [addModuleAtPosition "Insight" "Filters" "WatershedImageFilter" 10 250]
 set m4 [addModuleAtPosition "Insight" "Filters" "UnaryFunctorImageFilter" 10 330]
-set m5 [addModuleAtPosition "Insight" "Converters" "ImageToField" 10 410]
-set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 490]
-set m7 [addModuleAtPosition "SCIRun" "Render" "Viewer" 10 570]
+set m5 [addModuleAtPosition "Insight" "Converters" "ImageToField" 10 477]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 633]
+set m7 [addModuleAtPosition "SCIRun" "Render" "Viewer" 10 702]
+set m8 [addModuleAtPosition "Insight" "Converters" "RGBPixelToVector" 10 400]
+set m9 [addModuleAtPosition "SCIRun" "FieldsData" "TransformVectorData" 10 558]
 
-addConnection $m0 0 $m1 0
-addConnection $m1 0 $m2 0
-addConnection $m2 0 $m3 0
-addConnection $m3 0 $m4 0
-addConnection $m4 0 $m5 0
-addConnection $m5 0 $m6 0
-addConnection $m6 0 $m7 0
+# Set the Module Notes Dispaly Options
 
+# Create the Connections between Modules
+set c0 [addConnection $m5 0 $m9 0]
+set c1 [addConnection $m8 0 $m5 0]
+set c2 [addConnection $m0 0 $m1 0]
+set c3 [addConnection $m1 0 $m2 0]
+set c4 [addConnection $m2 0 $m3 0]
+set c5 [addConnection $m4 0 $m8 0]
+set c6 [addConnection $m3 0 $m4 0]
+set c7 [addConnection $m9 0 $m6 0]
+set c8 [addConnection $m6 0 $m7 0]
+
+# Mark which Connections are Disabled
+
+# Set the Connection Notes and Dislpay Options
+
+# Set the GUI variables for each Module
 set $m0-notes {}
-set $m0-filename $DATADIR/BrainProtonDensitySlice.png
+set $m0-filename $DATADIR/insight/BrainProtonDensitySlice.mhd
 set $m1-notes {}
 set $m1-time_step {0.25}
 set $m1-iterations {10}
@@ -59,19 +77,25 @@ set $m6-notes {}
 set $m6-nodes-on {1}
 set $m6-nodes-transparency {0}
 set $m6-nodes-as-disks {1}
+set $m6-nodes-usedefcolor {0}
 set $m6-edges-on {1}
 set $m6-edges-transparency {0}
+set $m6-edges-usedefcolor {0}
 set $m6-faces-on {1}
 set $m6-use-normals {0}
 set $m6-use-transparency {0}
+set $m6-faces-usedefcolor {0}
 set $m6-vectors-on {0}
 set $m6-normalize-vectors {}
 set $m6-has_vector_data {1}
 set $m6-bidirectional {0}
+set $m6-vectors-usedefcolor {0}
 set $m6-tensors-on {0}
 set $m6-has_tensor_data {0}
+set $m6-tensors-usedefcolor {0}
 set $m6-scalars-on {0}
 set $m6-scalars-transparency {0}
+set $m6-scalars-usedefcolor {0}
 set $m6-has_scalar_data {0}
 set $m6-text-on {0}
 set $m6-text-use-default-color {1}
@@ -162,8 +186,49 @@ set $m7-ViewWindow_0-global-cull {0}
 set $m7-ViewWindow_0-global-dl {0}
 set $m7-ViewWindow_0-global-type {Gouraud}
 set $m7-ViewWindow_0-ortho-view {0}
+set $m7-ViewWindow_0-clip-num {}
+set $m7-ViewWindow_0-clip-visible {}
+set $m7-ViewWindow_0-clip-selected {}
+set $m7-ViewWindow_0-clip-visible-1 {}
+set $m7-ViewWindow_0-clip-normal-x-1 {}
+set $m7-ViewWindow_0-clip-normal-y-1 {}
+set $m7-ViewWindow_0-clip-normal-z-1 {}
+set $m7-ViewWindow_0-clip-normal-d-1 {}
+set $m7-ViewWindow_0-clip-visible-2 {}
+set $m7-ViewWindow_0-clip-normal-x-2 {}
+set $m7-ViewWindow_0-clip-normal-y-2 {}
+set $m7-ViewWindow_0-clip-normal-z-2 {}
+set $m7-ViewWindow_0-clip-normal-d-2 {}
+set $m7-ViewWindow_0-clip-visible-3 {}
+set $m7-ViewWindow_0-clip-normal-x-3 {}
+set $m7-ViewWindow_0-clip-normal-y-3 {}
+set $m7-ViewWindow_0-clip-normal-z-3 {}
+set $m7-ViewWindow_0-clip-normal-d-3 {}
+set $m7-ViewWindow_0-clip-visible-4 {}
+set $m7-ViewWindow_0-clip-normal-x-4 {}
+set $m7-ViewWindow_0-clip-normal-y-4 {}
+set $m7-ViewWindow_0-clip-normal-z-4 {}
+set $m7-ViewWindow_0-clip-normal-d-4 {}
+set $m7-ViewWindow_0-clip-visible-5 {}
+set $m7-ViewWindow_0-clip-normal-x-5 {}
+set $m7-ViewWindow_0-clip-normal-y-5 {}
+set $m7-ViewWindow_0-clip-normal-z-5 {}
+set $m7-ViewWindow_0-clip-normal-d-5 {}
+set $m7-ViewWindow_0-clip-visible-6 {}
+set $m7-ViewWindow_0-clip-normal-x-6 {}
+set $m7-ViewWindow_0-clip-normal-y-6 {}
+set $m7-ViewWindow_0-clip-normal-z-6 {}
+set $m7-ViewWindow_0-clip-normal-d-6 {}
 set $m7-ViewWindow_0-unused {1}
 set $m7-ViewWindow_0-unused {1}
 set $m7-ViewWindow_0-unused {1}
+set $m8-notes {}
+set $m9-notes {}
+set $m9-functionx {x/255}
+set $m9-functiony {y/255}
+set $m9-functionz {z/255}
+set $m9-pre_normalize {0}
+set $m9-post_normalize {0}
+$m3 initialize_ui
 
 ::netedit scheduleok

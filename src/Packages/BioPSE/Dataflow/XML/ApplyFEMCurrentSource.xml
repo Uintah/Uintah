@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
-<?xml-stylesheet href="../../../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
 <!--
@@ -86,6 +86,28 @@
 	</description>
 	<datatype>SCIRun::Matrix</datatype>
 	<componentname>SetupFEMatrix</componentname>
+	<componentname>MatrixReader</componentname>
+      </port>
+      <port>
+	<name>Current Pattern</name>
+	<description>
+	  <p>Takes handle to the matrix containing current pattern
+	  to apply when using the electrode set option</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>MatrixReader</componentname>
+      </port>
+      <port>
+        <name>CurrentPatternIndex</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+	<name>Electrode Parameters</name>
+	<description>
+	  <p>Takes handle to the matrix containing electrode parameters
+	  for use with the electrode set option</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
 	<componentname>MatrixReader</componentname>
       </port>
     </inputs>

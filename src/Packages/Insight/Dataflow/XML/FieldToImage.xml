@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
-<?xml-stylesheet href="../../../../../doc/Utilities/XML/package-component.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+
 <!--
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
@@ -23,6 +22,10 @@
   <overview>
     <authors>
     </authors>
+    <summary>
+    </summary>
+    <description>Converts a SCIRun Field to an ITK Image.  The data is referenced, not copied.  This module currenlty works for ImageField, ITKImageField, LatVolField, or ITKLatVolField.
+  </description>
   </overview>
   <implementation>
   </implementation>

@@ -120,7 +120,7 @@ TendBmat::execute()
   }
 
   Nrrd *nout = nrrdNew();
-  if (tenBMatrix(nout, nin)) {
+  if (tenBMatrixCalc(nout, nin)) {
     char *err = biffGetDone(TEN);
     error(string("Error making aniso volume: ") + err);
     free(err);

@@ -83,23 +83,28 @@ ComputeCurrent::execute()
     error("EField isn't a TetVolField<Vector>.");
     return;
   }
-  TetVolField<int> *sigmas = 
+  bool index_based = true;
+  TetVolField<int> *sigmasInt = 
     dynamic_cast<TetVolField<int>*>(sigmasH.get_rep());
-  if (!sigmas) {
-    error("Sigmas isn't a TetVolField<int>.");
+  TetVolField<Tensor> *sigmasTensor =
+    dynamic_cast<TetVolField<Tensor>*>(sigmasH.get_rep());
+  if (!sigmasInt && !sigmasTensor) {
+    error("Sigmas isn't a TetVolField<Tensor> or TetVolField<int>.");
     return;
   }
-  if (sigmas->data_at() != Field::CELL) {
+  if (sigmasTensor) index_based = false;
+
+  if (sigmasH->data_at() != Field::CELL) {
     error("Need sigmas at Cells");
     return;
   }
-  if (efield->data_at() != Field::CELL) {
+  if (efieldH->data_at() != Field::CELL) {
     error("Need efield at Cells");
     return;
   }
 
   vector<pair<string, Tensor> > conds;
-  if (!sigmasH->get_property("conductivity_table", conds)) {
+  if (index_based && !sigmasH->get_property("conductivity_table", conds)) {
     error("No conductivity_table found in Sigmas.");
     return;
   }
@@ -125,9 +130,14 @@ ComputeCurrent::execute()
     Vector vec;
     Vector e;
     efield->value(e, *fi);
-    int sigma_idx;
-    sigmas->value(sigma_idx, *fi);
-    Tensor s(conds[sigma_idx].second);
+    Tensor s;
+    if (index_based) {
+      int sigma_idx;
+      sigmasInt->value(sigma_idx, *fi);
+      s=conds[sigma_idx].second;
+    } else {
+      sigmasTensor->value(s, *fi);
+    }
     // - sign added to vector to account for E = - Del V
     vec = Vector(-(s.mat_[0][0]*e.x()+s.mat_[0][1]*e.y()+s.mat_[0][2]*e.z()),
 		 -(s.mat_[1][0]*e.x()+s.mat_[1][1]*e.y()+s.mat_[1][2]*e.z()),

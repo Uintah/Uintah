@@ -45,6 +45,7 @@ class ModifyConductivities : public Module
 {
 private:
   GuiInt              gui_num_entries_;
+  GuiInt              gui_use_gui_values_;
   vector<GuiString *> gui_names_;
   vector<GuiString *> gui_sizes_;
   vector<GuiString *> gui_m00_;
@@ -82,6 +83,7 @@ DECLARE_MAKER(ModifyConductivities)
 ModifyConductivities::ModifyConductivities(GuiContext *context)
   : Module("ModifyConductivities", context, Filter, "Modeling", "BioPSE"),
     gui_num_entries_(context->subVar("num-entries")),
+    gui_use_gui_values_(context->subVar("use-gui-values")),
     last_field_generation_(0),
     reset_gui_(false)
 {
@@ -243,8 +245,11 @@ ModifyConductivities::execute()
     return;
   }
   MatrixHandle imatrix;
+  vector<string> tensor_names;
+
   if (imp->get(imatrix) && imatrix.get_rep())
   {
+    imatrix->get_property("tensor-names", tensor_names);
     ScalarFieldInterfaceHandle sfi = field->query_scalar_interface(this);
     double minval, maxval;
     sfi->compute_min_max(minval, maxval);
@@ -264,8 +269,12 @@ ModifyConductivities::execute()
 	t.mat_[2][0] = imatrix->get(i, 6);
 	t.mat_[2][1] = imatrix->get(i, 7);
 	t.mat_[2][2] = imatrix->get(i, 8);
-	const string s = "matrix-row-" + to_string(i+1);
-	field_tensors.push_back(pair<string, Tensor>(s, t));
+	if ((unsigned int)i < tensor_names.size()) {
+	  field_tensors.push_back(pair<string, Tensor>(tensor_names[i], t));
+	} else {
+	  const string s = "matrix-row-" + to_string(i+1);
+	  field_tensors.push_back(pair<string, Tensor>(s, t));
+	}
       }
       created_p = true;
     }
@@ -285,8 +294,12 @@ ModifyConductivities::execute()
 	t.mat_[2][0] = imatrix->get(6, i);
 	t.mat_[2][1] = imatrix->get(7, i);
 	t.mat_[2][2] = imatrix->get(8, i);
-	const string s = "matrix-column-" + to_string(i+1);
-	field_tensors.push_back(pair<string, Tensor>(s, t));
+	if ((unsigned int)i < tensor_names.size()) {
+	  field_tensors.push_back(pair<string, Tensor>(tensor_names[i], t));
+	} else {
+	  const string s = "matrix-column-" + to_string(i+1);
+	  field_tensors.push_back(pair<string, Tensor>(s, t));
+	}
       }
       created_p = true;
     }
@@ -345,7 +358,8 @@ ModifyConductivities::execute()
   }
 
   // New input tensors, update the gui.
-  if (different_tensors(field_tensors, last_field_tensors_))
+  if ((!gui_use_gui_values_.get() || created_p) &&
+      different_tensors(field_tensors, last_field_tensors_))
   {
     update_to_gui(field_tensors);
     last_field_tensors_ = field_tensors;
@@ -406,6 +420,7 @@ ModifyConductivities::execute()
   }
 
   DenseMatrix *omatrix = scinew DenseMatrix(gui_tensors.size(), 9);
+  tensor_names.clear();
   for (unsigned int j = 0; j < gui_tensors.size(); j++)
   {
     omatrix->put(j, 0, gui_tensors[j].second.mat_[0][0]);
@@ -419,7 +434,9 @@ ModifyConductivities::execute()
     omatrix->put(j, 6, gui_tensors[j].second.mat_[2][0]);
     omatrix->put(j, 7, gui_tensors[j].second.mat_[2][1]);
     omatrix->put(j, 8, gui_tensors[j].second.mat_[2][2]);
+    tensor_names.push_back(gui_tensors[j].first);
   }
+  omatrix->set_property("tensor-names", tensor_names, false);
 
   // Forward the matrix results.
   MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");

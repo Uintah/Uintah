@@ -32,7 +32,6 @@ itcl_class SCIRun_Math_ChooseMatrix {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -40,10 +39,20 @@ itcl_class SCIRun_Math_ChooseMatrix {
 	frame $w.c
 	pack $w.c -side top -e y -f both -padx 5 -pady 5
 	
-	label $w.c.l -text "Selected port: "
+	label $w.c.l -text "Select input port: "
 	entry $w.c.e -textvariable $this-port-index
 	bind $w.c.e <Return> "$this-c needexecute"
 	pack $w.c.l $w.c.e -side left
+
+	TooltipMultiline $w.c.l \
+            "Specify the input port that should be routed to the output port.\n" \
+            "Index is 0 based (ie: the first port is index 0, the second port 1, etc.)"
+	TooltipMultiline $w.c.e \
+            "Specify the input port that should be routed to the output port.\n" \
+            "Index is 0 based (ie: the first port is index 0, the second port 1, etc.)"
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
 

@@ -72,7 +72,9 @@
 #ifdef __sgi
 #define socklen_t int
 #endif 
-
+#ifdef __APPLE__
+#define socklen_t int
+#endif
   /* values of flag: */
   /* 1 - RECEIVE (OPEN SERVER, CLOSE) */
   /* 2 - SEND    (OPEN CLIENT CLOSE) */

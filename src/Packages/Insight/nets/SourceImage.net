@@ -17,10 +17,12 @@
 
 # SCI Network 1.0
 
-set DATADIR .
-if [info exists env(INSIGHT_DATA)] {
-   set DATADIR $env(INSIGHT_DATA)
-}
+#######################################################################
+# Check environment variables.  Ask user for input if not set:
+set results [sourceSettingsFile]
+set DATADIR [lindex $results 0]
+#######################################################################
+
 
 ::netedit dontschedule
 
@@ -166,7 +168,6 @@ set $m4-ViewWindow_0-ortho-view {0}
 set $m4-ViewWindow_0-unused {1}
 set $m4-ViewWindow_0-unused {1}
 set $m5-notes {}
-puts "$DATADIR/BrainProtonDensitySlice.png"	
-set $m5-filename $DATADIR/BrainProtonDensitySlice.png
+set $m5-filename $DATADIR/insight/BrainProtonDensitySlice.mhd
 
 ::netedit scheduleok

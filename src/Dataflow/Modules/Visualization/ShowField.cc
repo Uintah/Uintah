@@ -53,6 +53,7 @@ class ShowField : public Module
   int                      mesh_generation_;
   int                      vector_generation_;
   int                      color_map_generation_;
+  string                   last_field_name_;
 
   //! output port
   GeometryOPort           *ogeom_;  
@@ -69,17 +70,20 @@ class ShowField : public Module
   GuiInt                   nodes_on_;
   GuiInt                   nodes_transparency_;
   GuiInt                   nodes_as_disks_;
+  GuiInt                   nodes_usedefcolor_;
   bool                     nodes_dirty_;
 
   //! Options for rendering edges.
   GuiInt                   edges_on_;
   GuiInt                   edges_transparency_;
+  GuiInt                   edges_usedefcolor_;
   bool                     edges_dirty_;
 
   //! Options for rendering faces.
   GuiInt                   faces_on_;
   GuiInt                   faces_normals_;
   GuiInt                   faces_transparency_;
+  GuiInt                   faces_usedefcolor_;
   bool                     faces_dirty_;
 
   //! Options for rendering non-scalar data.
@@ -87,16 +91,18 @@ class ShowField : public Module
   GuiInt                   normalize_vectors_;
   GuiInt                   has_vector_data_;
   GuiInt                   bidirectional_;
-  GuiInt                   vector_usedefcolor_;
+  GuiInt                   vectors_usedefcolor_;
   bool                     data_dirty_;
   string                   cur_field_data_type_;
   Field::data_location     cur_field_data_at_;
 
   GuiInt                   tensors_on_;
   GuiInt                   has_tensor_data_;
+  GuiInt                   tensors_usedefcolor_;
 
   GuiInt                   scalars_on_;
   GuiInt                   scalars_transparency_;
+  GuiInt                   scalars_usedefcolor_;
   GuiInt                   has_scalar_data_;
   
   //! Options for rendering text.
@@ -194,26 +200,31 @@ ShowField::ShowField(GuiContext* ctx) :
   nodes_on_(ctx->subVar("nodes-on")),
   nodes_transparency_(ctx->subVar("nodes-transparency")),
   nodes_as_disks_(ctx->subVar("nodes-as-disks")),
+  nodes_usedefcolor_(ctx->subVar("nodes-usedefcolor")),
   nodes_dirty_(true),
   edges_on_(ctx->subVar("edges-on")),
   edges_transparency_(ctx->subVar("edges-transparency")),
+  edges_usedefcolor_(ctx->subVar("edges-usedefcolor")),
   edges_dirty_(true),
   faces_on_(ctx->subVar("faces-on")),
   faces_normals_(ctx->subVar("use-normals")),
   faces_transparency_(ctx->subVar("use-transparency")),
+  faces_usedefcolor_(ctx->subVar("faces-usedefcolor")),
   faces_dirty_(true),
   vectors_on_(ctx->subVar("vectors-on")),
   normalize_vectors_(ctx->subVar("normalize-vectors")),
   has_vector_data_(ctx->subVar("has_vector_data")),
   bidirectional_(ctx->subVar("bidirectional")),
-  vector_usedefcolor_(ctx->subVar("vector-usedefcolor")),
+  vectors_usedefcolor_(ctx->subVar("vectors-usedefcolor")),
   data_dirty_(true),
   cur_field_data_type_("none"),
   cur_field_data_at_(Field::NONE),
   tensors_on_(ctx->subVar("tensors-on")),
   has_tensor_data_(ctx->subVar("has_tensor_data")),
+  tensors_usedefcolor_(ctx->subVar("tensors-usedefcolor")),
   scalars_on_(ctx->subVar("scalars-on")),
   scalars_transparency_(ctx->subVar("scalars-transparency")),
+  scalars_usedefcolor_(ctx->subVar("scalars-usedefcolor")),
   has_scalar_data_(ctx->subVar("has_scalar_data")),
   text_on_(ctx->subVar("text-on")),
   text_use_default_color_(ctx->subVar("text-use-default-color")),
@@ -560,7 +571,8 @@ ShowField::execute()
 
   bool color_map_changed = false;
   if (((bool)(color_map_.get_rep())) != was_color_map ||
-      color_map_.get_rep() && color_map_->generation != color_map_generation_)
+      color_map_.get_rep() && color_map_->generation != color_map_generation_
+      || last_field_name_ != gui_field_name_.get())
   {
     color_map_changed = true;
     color_map_generation_ = color_map_.get_rep()?color_map_->generation:-1;
@@ -578,6 +590,7 @@ ShowField::execute()
       text_dirty_ = true;
     }
   }
+  last_field_name_ = gui_field_name_.get();
 
   if (gui_node_resolution_.get() != node_resolution_) {
     nodes_dirty_ = true;
@@ -683,7 +696,9 @@ ShowField::execute()
 		      nodes_transparency_.get(),
 		      edges_transparency_.get(),
 		      faces_transparency_.get(),
-		      bidirectional_.get());
+		      nodes_usedefcolor_.get(),
+		      edges_usedefcolor_.get(),
+		      faces_usedefcolor_.get());
   }
 
   // Cleanup.
@@ -740,7 +755,7 @@ ShowField::execute()
 					     fld_handle,
 					     color_map_,
 					     def_material_,
-					     vector_usedefcolor_.get(),
+					     vectors_usedefcolor_.get(),
 					     vdt, vscale,
 					     normalize_vectors_.get(),
 					     bidirectional_.get(),
@@ -758,12 +773,14 @@ ShowField::execute()
 	     tensors_on_.get())
     {
       if (data_id_) ogeom_->delObj(data_id_);
-      GeomHandle data = data_tensor_renderer_->render_data(vfld_handle,
-							   fld_handle,
-							   color_map_,
-							   def_material_,
-							   tdt, tscale,
-							   data_resolution_);
+      GeomHandle data =
+	data_tensor_renderer_->render_data(vfld_handle,
+					   fld_handle,
+					   color_map_,
+					   def_material_,
+					   tensors_usedefcolor_.get(),
+					   tdt, tscale,
+					   data_resolution_);
       data_id_ = ogeom_->addObj(data, fname + "Tensors");
     }
     else if (vfld_handle.get_rep() &&
@@ -774,10 +791,12 @@ ShowField::execute()
       const bool transp = scalars_transparency_.get();
       if (do_data)
       {
+	const bool udc = scalars_usedefcolor_.get();
 	data_geometry_ = data_scalar_renderer_->render_data(vfld_handle,
 							    fld_handle,
 							    color_map_,
 							    def_material_,
+							    udc,
 							    sdt, sscale,
 							    data_resolution_,
 							    transp);
@@ -914,14 +933,14 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     def_material_->diffuse = 
       Color(def_color_r_.get(), def_color_g_.get(), def_color_b_.get());
     def_material_->transparency = def_color_a_.get();
-    ogeom_->flushViews();
+    if (ogeom_) ogeom_->flushViews();
   } else if (args[1] == "text_color_change") {
     text_color_r_.reset();
     text_color_g_.reset();
     text_color_b_.reset();
     text_material_->diffuse =
       Color(text_color_r_.get(), text_color_g_.get(), text_color_b_.get());
-    ogeom_->flushViews();
+    if (ogeom_) ogeom_->flushViews();
   } else if (args[1] == "node_display_type") {
     nodes_dirty_ = true;
     if (now && node_id_) {
@@ -954,7 +973,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     else if (!nodes_on_.get() && node_id_)
     {
       ogeom_->delObj(node_id_);
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
       node_id_ = 0;
     }
   } else if (args[1] == "toggle_display_edges"){
@@ -968,7 +987,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     else if (!edges_on_.get() && edge_id_)
     {
       ogeom_->delObj(edge_id_);
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
       edge_id_ = 0;
     }
   } else if (args[1] == "rerender_nodes"){
@@ -1003,7 +1022,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     else if (!faces_on_.get() && face_id_)
     {
       ogeom_->delObj(face_id_);
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
       face_id_ = 0;
     }
   } else if (args[1] == "toggle_display_vectors"){
@@ -1017,7 +1036,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     else if (!vectors_on_.get() && data_id_)
     {
       ogeom_->delObj(data_id_);
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
       data_id_ = 0;
     }
   } else if (args[1] == "toggle_display_tensors"){
@@ -1031,7 +1050,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     else if (!tensors_on_.get() && data_id_)
     {
       ogeom_->delObj(data_id_);
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
       data_id_ = 0;
     }
   } else if (args[1] == "toggle_display_scalars"){
@@ -1045,7 +1064,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     else if (!scalars_on_.get() && data_id_)
     {
       ogeom_->delObj(data_id_);
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
       data_id_ = 0;
     }
   } else if (args[1] == "toggle_display_text"){
@@ -1058,14 +1077,14 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     }
     else if (!text_on_.get() && text_id_)
     {
-      ogeom_->delObj(text_id_);
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->delObj(text_id_);
+      if (ogeom_) ogeom_->flushViews();
       text_id_ = 0;
     }
   } else if (args[1] == "rerender_text"){
     text_dirty_ = true;
     if (now && text_id_) {
-      ogeom_->delObj(text_id_);
+      if (ogeom_) ogeom_->delObj(text_id_);
       text_id_ = 0;
     }
     maybe_execute(TEXT);

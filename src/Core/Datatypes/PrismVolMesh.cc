@@ -224,6 +224,10 @@ void
 PrismVolMesh::compute_faces()
 {  
   face_lock_.lock();
+  if ((synchronized_ & FACES_E) && (synchronized_ & FACE_NEIGHBORS_E)) {
+    face_lock_.unlock();
+    return;
+  }
   faces_.clear();
   all_faces_.clear();
   unsigned int num_faces = (cells_.size()) /  PRISM_NNODES * PRISM_NFACES;
@@ -242,6 +246,10 @@ void
 PrismVolMesh::compute_edges()
 {
   edge_lock_.lock();
+  if ((synchronized_ & EDGES_E) && (synchronized_ & EDGE_NEIGHBORS_E)) {
+    edge_lock_.unlock();
+    return;
+  }
   edges_.clear();
   all_edges_.clear();
   unsigned int num_edges = (cells_.size()) /  PRISM_NNODES *  PRISM_NEDGES;
@@ -259,6 +267,10 @@ void
 PrismVolMesh::compute_node_neighbors()
 {
   node_neighbor_lock_.lock();
+  if (synchronized_ & NODE_NEIGHBORS_E) {
+    node_neighbor_lock_.unlock();
+    return;
+  }
   node_neighbors_.clear();
   node_neighbors_.resize(points_.size());
   unsigned int num_cells = cells_.size();
@@ -376,6 +388,7 @@ void
 PrismVolMesh::create_cell_edges(Cell::index_type idx)
 {
   //ASSERT(!is_frozen());
+  if (!(synchronized_&EDGES_E) && !(synchronized_&EDGE_NEIGHBORS_E)) return;
   edge_lock_.lock();
   const unsigned int base = idx * PRISM_NEDGES;
   for (unsigned int i=base; i<base+PRISM_NEDGES; ++i) {
@@ -390,6 +403,7 @@ void
 PrismVolMesh::delete_cell_edges(Cell::index_type idx)
 {
   //ASSERT(!is_frozen());
+  if (!(synchronized_&EDGES_E) && !(synchronized_&EDGE_NEIGHBORS_E)) return;
   edge_lock_.lock();
   const int base = idx * PRISM_NEDGES;
   for ( int i=base; i<base+ PRISM_NEDGES; ++i) {
@@ -431,6 +445,7 @@ void
 PrismVolMesh::create_cell_faces(Cell::index_type idx)
 {
   //ASSERT(!is_frozen());
+  if (!(synchronized_&FACES_E) && !(synchronized_&FACE_NEIGHBORS_E)) return;
   face_lock_.lock();
   const unsigned int base = idx * PRISM_NFACES;
   for (unsigned int i=base; i<base+PRISM_NFACES; i++) {
@@ -444,6 +459,7 @@ void
 PrismVolMesh::delete_cell_faces(Cell::index_type idx)
 {
   //ASSERT(!is_frozen());
+  if (!(synchronized_&FACES_E) && !(synchronized_&FACE_NEIGHBORS_E)) return;
   face_lock_.lock();
   const int base = idx * PRISM_NFACES;
   for ( int i=base; i<base+PRISM_NFACES; ++i) {
@@ -485,6 +501,7 @@ void
 PrismVolMesh::create_cell_node_neighbors(Cell::index_type idx)
 {
   //ASSERT(!is_frozen());
+  if (!(synchronized_ & NODE_NEIGHBORS_E)) return;
   node_neighbor_lock_.lock();
 
   const unsigned int base = idx * PRISM_NNODES;
@@ -499,6 +516,7 @@ void
 PrismVolMesh::delete_cell_node_neighbors(Cell::index_type idx)
 {
   //ASSERT(!is_frozen());
+  if (!(synchronized_ & NODE_NEIGHBORS_E)) return;
   node_neighbor_lock_.lock();
 
   const int base = idx * PRISM_NNODES;
@@ -683,9 +701,9 @@ PrismVolMesh::set_nodes(Node::array_type &array, Cell::index_type idx)
 {
   ASSERT(array.size() == PRISM_NNODES);
 
-  if (synchronized_ & EDGES_E) delete_cell_edges(idx);
-  if (synchronized_ & FACES_E) delete_cell_faces(idx);
-  if (synchronized_ & NODE_NEIGHBORS_E) delete_cell_node_neighbors(idx);
+  delete_cell_edges(idx);
+  delete_cell_faces(idx);
+  delete_cell_node_neighbors(idx);
 
   const unsigned int base = idx * PRISM_NNODES;
 
@@ -693,9 +711,9 @@ PrismVolMesh::set_nodes(Node::array_type &array, Cell::index_type idx)
     cells_[base + i] = array[i];
   
   synchronized_ &= ~LOCATE_E;
-  if (synchronized_ & EDGES_E) create_cell_edges(idx);
-  if (synchronized_ & FACES_E) create_cell_faces(idx);
-  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(idx);
+  create_cell_edges(idx);
+  create_cell_faces(idx);
+  create_cell_node_neighbors(idx);
 
 }
 
@@ -1272,6 +1290,10 @@ void
 PrismVolMesh::compute_grid()
 {
   grid_lock_.lock();
+  if (synchronized_ & LOCATE_E) {
+    grid_lock_.unlock();
+    return;
+  }
 //if (grid_.get_rep() != 0) {grid_lock_.unlock(); return;} // only create once.
 
   BBox bb = get_bounding_box();
@@ -1411,8 +1433,11 @@ PrismVolMesh::add_find_point(const Point &p, double err)
     return i;
   else {
     points_.push_back(p);
-    if (synchronized_ & NODE_NEIGHBORS_E)
+    if (synchronized_ & NODE_NEIGHBORS_E) {
+      node_neighbor_lock_.lock();
       node_neighbors_.push_back(vector<Cell::index_type>());
+      node_neighbor_lock_.unlock();
+    }
     return points_.size() - 1;
   }
 }
@@ -1431,9 +1456,9 @@ PrismVolMesh::add_prism(Node::index_type a, Node::index_type b,
   cells_.push_back(e);
   cells_.push_back(f);
 
-  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(idx);
-  if (synchronized_ & EDGES_E) create_cell_edges(idx);
-  if (synchronized_ & FACES_E) create_cell_faces(idx);
+  create_cell_node_neighbors(idx);
+  create_cell_edges(idx);
+  create_cell_faces(idx);
   synchronized_ &= ~LOCATE_E;
 
   return idx; 
@@ -1445,8 +1470,11 @@ PrismVolMesh::Node::index_type
 PrismVolMesh::add_point(const Point &p)
 {
   points_.push_back(p);
-  if (synchronized_ & NODE_NEIGHBORS_E)
+  if (synchronized_ & NODE_NEIGHBORS_E) {
+    node_neighbor_lock_.lock();
     node_neighbors_.push_back(vector<Cell::index_type>());
+    node_neighbor_lock_.unlock();
+  }
   return points_.size() - 1;
 }
 
@@ -1471,9 +1499,9 @@ PrismVolMesh::add_elem(Node::array_type a)
   for (unsigned int n = 0; n < PRISM_NNODES; n++)
     cells_.push_back(a[n]);
 
-  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(idx);
-  if (synchronized_ & EDGES_E) create_cell_edges(idx);
-  if (synchronized_ & FACES_E) create_cell_faces(idx);
+  create_cell_node_neighbors(idx);
+  create_cell_edges(idx);
+  create_cell_faces(idx);
   synchronized_ &= ~LOCATE_E;
 
   return idx;
@@ -1517,9 +1545,9 @@ PrismVolMesh::mod_prism(Cell::index_type idx,
 			Node::index_type e,
 			Node::index_type f)
 {
-  if (synchronized_ & NODE_NEIGHBORS_E) delete_cell_node_neighbors(idx);
-  if (synchronized_ & EDGES_E) delete_cell_edges(idx);
-  if (synchronized_ & FACES_E) delete_cell_faces(idx);
+  delete_cell_node_neighbors(idx);
+  delete_cell_edges(idx);
+  delete_cell_faces(idx);
   const unsigned int base = idx * PRISM_NNODES;
   cells_[base+0] = a;
   cells_[base+1] = b;
@@ -1527,9 +1555,9 @@ PrismVolMesh::mod_prism(Cell::index_type idx,
   cells_[base+3] = d;  
   cells_[base+4] = e;  
   cells_[base+5] = f;  
-  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(idx);
-  if (synchronized_ & EDGES_E) create_cell_edges(idx);
-  if (synchronized_ & FACES_E) create_cell_faces(idx);
+  create_cell_node_neighbors(idx);
+  create_cell_edges(idx);
+  create_cell_faces(idx);
   synchronized_ &= ~LOCATE_E;
   return idx;
 }

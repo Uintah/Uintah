@@ -41,20 +41,13 @@ end
 # Convert the given tex fragment to a real tex document by inserting
 # needed stuff at the top and bottom of the file.  The original file gets
 # renamed by appending the string ".O" to its name.
-def texFragToTexDoc(texFile)
-  origTexFile = texFile + ".O"
-  File.rename(texFile, origTexFile)
-  texUtils = treeTop() + "/doc/Utilities/TeX"
-  File.open(texFile, "w") do |f|
+def texFragToTexDoc(infile, outfile)
+  File.open(outfile, "w") do |f|
     f.write("\\documentclass[notitlepage]{article}
 \\usepackage{graphicx}
 \\usepackage{html}
-%begin{latexonly}
-\\usepackage{#{texUtils}/scirun-doc}
-%end{latexonly}
-\\begin{htmlonly}
-\\input{#{texUtils}/scirun-doc.tex}
-\\end{htmlonly}
+\\usepackage{scirun-doc}
+\\input{scirun-doc.tex}
 \\newcommand{\\ModuleRef}[3]{\\section{#1} #1 is in Category #2 of Package #3}
 \\newcommand{\\Package}[1]{#1}
 \\newcommand{\\Category}[1]{#1}
@@ -64,6 +57,7 @@ def texFragToTexDoc(texFile)
 \\newcommand{\\ModuleRefDetails}{\\subsection*{Details}}
 \\newcommand{\\ModuleRefNotes}{\\subsection*{Notes}}
 \\newcommand{\\ModuleRefCredits}{\\subsection*{Credits}}
+\\newcommand{\\ModuleRefSection}[1]{\\subsection*{#1}}
 \\newcommand{\\ModuleRefSubSection}[1]{\\subsubsection*{#1}}
 \\newcommand{\\ModuleRefSubSubSection}[1]{\\paragraph*{#1}}
 %begin{latexonly}
@@ -73,7 +67,7 @@ def texFragToTexDoc(texFile)
 \\newcommand{\\ModuleRefFigName}[1]{../#1}
 \\end{htmlonly}
 \\begin{document}\n")
-    f.write(File.open(origTexFile, "r").readlines)
+    f.write(File.open(infile, "r").readlines)
     f.write("\\end{document}\n")
   end
 end
@@ -85,7 +79,7 @@ def tex2html(moduleName)
   system("rm -rf #{htmlDir}") if FileTest.exists?(htmlDir)
   latexcmd = "latex -interaction=nonstopmode #{texFile}"
   system("#{latexcmd};#{latexcmd}")
-  system("latex2html -split 0 -no_navigation -image_type gif #{texFile}")
+  system("latex2html -split 0 -no_navigation -html_version 4.0 -image_type gif #{texFile}")
   system("rm -f *.dvi *.log *.aux #{htmlDir}/index.html #{htmlDir}/#{moduleName}.css")
 end
 
@@ -200,7 +194,13 @@ def main()
   moduleName = File.basename(texDir)
   texFile = moduleName + ".tex"
   begin
-    texFragToTexDoc(texFile)
+    origTexFile = texFile + ".O"
+    File.rename(texFile, origTexFile)
+    texUtils = treeTop() + "/doc/Utilities/TeX"
+    ["sty", "tex", "perl"].each do |ext|
+      File.symlink("#{texUtils}/scirun-doc.#{ext}", "scirun-doc.#{ext}")
+    end
+    texFragToTexDoc(origTexFile, texFile)
     tex2html(moduleName)
     filterhtml(moduleName)
   rescue => oops
@@ -208,12 +208,15 @@ def main()
     print("Reason: ", oops.message, "\n")
     print(oops.backtrace.join("\n"))
   ensure
-    origTexFile = texFile + ".O"
+    ["sty", "tex", "perl"].each do |ext|
+      symlink = "scirun-doc.#{ext}"
+      File.delete(symlink) if FileTest.exists?(symlink)
+    end
     if FileTest.exists?(origTexFile)
       File.delete(texFile)
       File.rename(origTexFile, texFile)
-      Dir.chdir(saveDir)
     end
+    Dir.chdir(saveDir)
   end
 end
 

@@ -113,6 +113,10 @@ using std::endl;
 
 #include <stdio.h>
 
+/// Uncomment this define and recompile if you're having problems with
+/// an ATI card where the polygons flicker in and out.
+//#define NEED_ATI_CARD_FIX
+
 #define MAX_MATL_STACK 100
 
 namespace SCIRun {
@@ -2427,7 +2431,16 @@ GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
   }
 
+#ifdef NEED_ATI_CARD_FIX
+  glBegin(GL_LINES);
+  for (unsigned int i = 0; i < points_.size()/3; i++)
+  {
+    glArrayElement(i);
+  }
+  glEnd();
+#else
   glDrawArrays(GL_LINES, 0, points_.size()/3);
+#endif
 
   glLineWidth(di->line_width_);
 
@@ -2547,7 +2560,17 @@ GeomCLineStrips::draw(DrawInfoOpenGL* di, Material* matl, double)
     di->polycount += n_points-1;
     glVertexPointer(3, GL_FLOAT, 0, &(points_[i].front()));
     glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_[i].front()));
+
+#ifdef NEED_ATI_CARD_FIX
+    glBegin(GL_LINE_STRIP);
+    for (int j = 0; j < n_points; j++)
+    {
+      glArrayElement(j);
+    }
+    glEnd();
+#else
     glDrawArrays(GL_LINE_STRIP, 0, n_points);
+#endif
   }
 
   glLineWidth(di->line_width_);
@@ -3021,7 +3044,16 @@ void GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
       glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     }
 
+#ifdef NEED_ATI_CARD_FIX
+    glBegin(GL_POINTS);
+    for (unsigned int i = 0; i < points_.size()/3; i++)
+    {
+      glArrayElement(i);
+    }
+    glEnd();
+#else
     glDrawArrays(GL_POINTS, 0, points_.size()/3);
+#endif
   }
 
   glDisable(GL_TEXTURE_1D);
@@ -3376,6 +3408,36 @@ void GeomSphere::draw(DrawInfoOpenGL* di, Material* matl, double)
   gluSphere(di->qobj, rad, nu, nv);
 
   glPopMatrix();
+  post_draw(di);
+}
+
+
+void GeomSuperquadric::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if (!pre_draw(di, matl, 1)) return;
+
+  di->polycount += nu_ * nv_;
+
+  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+  glEnableClientState(GL_VERTEX_ARRAY);
+
+  glNormalPointer(GL_FLOAT, 0, &(normals_.front()));
+  glEnableClientState(GL_NORMAL_ARRAY);
+
+  glDisableClientState(GL_COLOR_ARRAY);
+
+  glDrawElements(GL_TRIANGLE_FAN, nu_ + 2, GL_UNSIGNED_SHORT,
+    		 &(tindices_[0]));
+
+  glDrawElements(GL_TRIANGLE_FAN, nu_ + 2, GL_UNSIGNED_SHORT,
+		 &(tindices_[nu_+2]));
+
+  for (int pi = 0; pi < nv_-2; pi++)
+  {
+    glDrawElements(GL_QUAD_STRIP, (nu_+1)*2, GL_UNSIGNED_SHORT,
+		   &(qindices_[pi * (nu_+1) * 2]));
+  }
+
   post_draw(di);
 }
 
@@ -3936,7 +3998,16 @@ GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
   glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
   glEnableClientState(GL_VERTEX_ARRAY);
 
+#ifdef NEED_ATI_CARD_FIX
+  glBegin(GL_TRIANGLES);
+  for (unsigned int i = 0; i < points_.size()/3; i++)
+  {
+    glArrayElement(i);
+  }
+  glEnd();
+#else
   glDrawArrays(GL_TRIANGLES, 0, points_.size()/3);
+#endif
 
   glDisableClientState(GL_NORMAL_ARRAY);
   glEnable(GL_NORMALIZE);
@@ -4139,7 +4210,16 @@ GeomFastQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
     glShadeModel(GL_SMOOTH);
   }
 
+#ifdef NEED_ATI_CARD_FIX
+  glBegin(GL_QUADS);
+  for (unsigned int i = 0; i < points_.size()/3; i++)
+  {
+    glArrayElement(i);
+  }
+  glEnd();
+#else
   glDrawArrays(GL_QUADS, 0, points_.size()/3);
+#endif
 
   glDisableClientState(GL_NORMAL_ARRAY);
 
@@ -5839,10 +5919,10 @@ void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
   glPushAttrib(GL_LIST_BIT);
   
   double mat[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, mat);
+  const Vector view (mat[2], mat[6], mat[10]);
   for (unsigned int i = 0; i < text_.size(); i++)
   {
-    glGetDoublev(GL_MODELVIEW_MATRIX, mat);
-    const Vector view (mat[2], mat[6], mat[10]);
     if (Dot(view, normal_[i]) > 0)
     {
       if (coloring) { glColor3f(color_[i].r(), color_[i].g(), color_[i].b()); }

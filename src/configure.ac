@@ -50,10 +50,11 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([SCIRun],[1.10],[scirun-users@sci.utah.edu])
+AC_INIT([SCIRun],[1.20],[scirun-users@sci.utah.edu])
 
-##  require autoconf version 2.53
-AC_PREREQ(2.53)
+##  require autoconf version 2.57 (I think this is the RH9 default.)
+##  type "autoconf --version" to find out what version you have.
+AC_PREREQ(2.57)
 
 AC_COPYRIGHT(
 ##
@@ -404,6 +405,14 @@ SCI_ARG_ENABLE(scirun2,
   [enable_scirun2=${enable_scirun2='no'}])
 
 
+if test "$pkg_CollabVis" = "yes"; then
+  DEF_COLLAB_VIS="#define HAVE_COLLAB_VIS 1"
+  HAVE_COLLAB_VIS="yes"
+fi
+
+AC_SUBST(DEF_COLLAB_VIS)
+AC_SUBST(HAVE_COLLAB_VIS)
+
 ##  --------------------------------------------------------------------
 ##  Save off the arguments to configure, being careful to save 
 ##  Package strings for later parsing.
@@ -419,7 +428,7 @@ PACKAGE_DIRS=""
 # make sure the package dir exists
 for i in $package; do
    if test ! -d "$path_to_src/Packages/$i"; then
-      AC_MSG_ERROR(Package '$i' does not exist (in $path_to_src"Packages")!)
+      AC_MSG_ERROR(Package '$i' does not exist (in $path_to_src/Packages/)!)
    fi
    PACKAGE_DIRS=$PACKAGE_DIRS" Packages/$i"
    # set the package dependent checks
@@ -506,6 +515,7 @@ case $host in
     NUM_CPUS=4
     ;;
   *-darwin*)
+    SCI_CHECK_OS_VERSION(7.1,NEED_OSX_HACK=no,NEED_OSX_HACK=yes)
     NUM_CPUS=2
     IS_OSX="yes"
     ;;
@@ -866,16 +876,16 @@ case $host in
     LDRUN_PREFIX="-L"
     CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -fcoalesce-templates -Wno-long-double "
     CXXFLAGS="$CXXFLAGS $CFLAGS"
-    SCI_CHECK_VERSION($CC,--version,3.3,ver33=yes,ver33=no)
-    if test $ver33 == no; then
+
+    if test $NEED_OSX_HACK == yes; then
 	SOFLAGS="-dynamiclib -init __ZNSt8ios_base4InitC4Ev \${LIBDIR}/../osx/osx_init.o  ${SOFLAGS}"
-	NEED_OSX_HACK="yes"
+        DEF_NEED_OSX_HACK="#define NEED_OSX_HACK 1"
+        DEF_THREAD="#define SCI_PTHREAD 1"
     else
 	SOFLAGS="-dynamiclib"
-	NEED_OSX_HACK="no"
-
     fi
     AC_SUBST(NEED_OSX_HACK)
+    AC_SUBST(DEF_NEED_OSX_HACK)
     ;;
 
   *)
@@ -1168,12 +1178,12 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.10
+  sci_tp_version=1.20
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
   ac_try="$CC -v > /dev/null 2> conftest.out"
   (eval $ac_try) 2>&5
-  vers=`grep "gcc version" conftest.out | cut -d' ' -f 3`
+  vers=`grep "gcc version" conftest.out | sed -e 's/.*gcc version //' | cut -d' ' -f1`
   rm -f conftest.out
   if test -n "$vers"; then
     sci_compiler_vers=gcc-$vers
@@ -1489,7 +1499,7 @@ else
   *-darwin*)
     SCI_TRY_LINK(DL,dlopen in libdl,[
     #include <dlfcn.h>
-    ],$thirdparty/include,dl,$thirdparty/lib,,[
+    ],$sci_thirdparty_includes,dl,$sci_thirdparty_libs,,[
       dlopen("bogus", 0);
     ],not-optional)
     ;;
@@ -1542,6 +1552,27 @@ SCI_TRY_LINK(STD_HDRS,required standard headers,[
 #include <rpc/types.h> 
 #include <netinet/in.h>
 ],,,,,,not-optional)
+
+##  --  optional stat64 headers
+# stat64 is a CC lib so it has to be checked as a CC file not C.
+ext="$ac_ext"
+ac_ext="cc"
+
+SCI_TRY_LINK(STAT64,standard headers,[
+#include <sys/stat.h>
+],,,,,[
+  struct stat64 buf;
+],optional)
+
+# Restore the previous settings.
+ac_ext="$ext"
+
+if test "$HAVE_STAT64" = "yes"; then
+  DEF_STAT64="#define HAVE_STAT64 1"
+fi
+
+AC_SUBST(DEF_STAT64)
+
 
 # don't test for malloc.h or values.h on darwin
 case $host in
@@ -1683,77 +1714,6 @@ SCI_TRY_LINK(BLT,required BLT library and headers,[
 AC_SUBST(BLT_LIB_FLAG)
 AC_SUBST(BLT_LIB_DIR_FLAG)
 AC_SUBST(INC_BLT_H)
-
-if test "$pkg_CollabVis" = "yes"; then
-  DEF_COLLAB_VIS="#define HAVE_COLLAB_VIS 1"
-  HAVE_COLLAB_VIS="yes"
-fi
-
-AC_SUBST(DEF_COLLAB_VIS)
-AC_SUBST(HAVE_COLLAB_VIS)
-
-
-if test "$sci_check_plplot" = "yes"; then
-  if test "$with_plplot"; then
-    _sci_lib="$with_plplot/lib"
-    _sci_inc="$with_plplot/include"
-  else
-    _sci_lib="/usr/local/plplot/lib $sci_thirdparty_libs"
-    _sci_inc="/usr/local/plplot/include $sci_thirdparty_includes"
-  fi
-
-
-#  SCI_TRY_LINK(PLPLOTTCLTK,optional optimized plplottcltk library and headers,[
-#
-#  ],$_sci_inc,plplottcltk, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
-
-
-#  if test "$HAVE_PLPLOTTCLTK" = "no"; then
-#    SCI_TRY_LINK(PLPLOTTCLTK,optional debug plplottcltk library and headers,[
-#
-#    ],$_sci_inc,plplottcltkd, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
-#  fi
-
-  SCI_TRY_LINK(PLPLOT,optional optimized plplot library and headers,[
-  #include <plplot/plplot.h> 
-  ],$_sci_inc,plplot, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
-
-  if test "$HAVE_PLPLOT" = "no"; then
-    SCI_TRY_LINK(PLPLOT,optional debug plplot library and headers,[
-    #include <plplot/plplot.h> 
-    ],$_sci_inc,plplotd, $_sci_lib,$ITK_LIB_DIR_FLAG $ITK_LIB_FLAG $ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG,,optional)
-  fi
-
-  if test "$HAVE_PLPLOT" = "yes"; then
-    DEF_PLPLOT="#define HAVE_PLPLOT 1"
-  fi
-
-  SCI_TRY_LINK(TCLMATRIX,optional optimized tclMatrix library and headers,[
-  #include <plplot/tclMatrix.h> 
-  ],$_sci_inc,tclmatrix, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
-
-  if test "$HAVE_TCLMATRIX" = "no"; then
-    SCI_TRY_LINK(TCLMATRIX,optional debug tclMatrix library and headers,[
-    #include <plplot/tclMatrix.h> 
-    ],$_sci_inc,tclmatrixd, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
-  fi
-
-  if test "$HAVE_TCLMATRIX" = "yes"; then
-    DEF_TCLMATRIX="#define HAVE_TCLMATRIX 1"
-  fi
-fi #end sci_check_plplot
-
-#AC_SUBST(PLPLOTTCLTK_LIB_FLAG)
-#AC_SUBST(PLPLOTTCLTK_LIB_DIR_FLAG)
-AC_SUBST(PLPLOT_LIB_FLAG)
-AC_SUBST(PLPLOT_LIB_DIR_FLAG)
-AC_SUBST(INC_PLPLOT_H)
-AC_SUBST(DEF_PLPLOT)
-
-AC_SUBST(TCLMATRIX_LIB_FLAG)
-AC_SUBST(TCLMATRIX_LIB_DIR_FLAG)
-AC_SUBST(INC_TCLMATRIX_H)
-AC_SUBST(DEF_TCLMATRIX)
 
 CORRECT_TCL_VERSION=no
 CORRECT_TK_VERSION=no
@@ -2115,6 +2075,7 @@ if test "$with_lapack" && test ! "$DEF_LAPACK"; then
   echo
 fi
 
+AC_SUBST(DEF_LAPACK)
 AC_SUBST(LAPACK_LIB_FLAG)
 AC_SUBST(LAPACK_LIB_DIR_FLAG)
 
@@ -2407,9 +2368,23 @@ if test "$sci_check_insight" = "yes"; then
    fi
 
    if test -a "$dir/ITKConfig.cmake"; then
-	INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g'`" 
-        INSIGHT_LIB_DIR_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS "/;/' | sed 's/")//' | sed 's/;/ -L/g'`"
-	INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -lz"
+	INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g' | sed 's/
+//'`"
+        insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | sed 's/
+//'`"
+	INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
+	INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -litkjpeg -lITKDICOMParser -litkzlib"
+	INSIGHT_VERSION_MINOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MINOR' | sed 's/SET(ITK_VERSION_MINOR \"//' | sed 's/\")//' | sed 's/
+//'`"
+	if test "$INSIGHT_VERSION_MINOR" = "6"; then
+	   INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff"
+	fi
+
+	echo "have png is $HAVE_PNG"
+	if ! test "$HAVE_PNG" = "yes"; then
+	   echo "note: using libitkpng"
+	   INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkpng"
+	fi
 #	INSIGHT_LIB_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARIES' | sed 's/SET(ITK_LIBRARIES//' | sed 's/)//' | sed 's/ / -l/g'`" 
 
       DEF_INSIGHT="#define HAVE_INSIGHT"

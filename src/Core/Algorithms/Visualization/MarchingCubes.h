@@ -45,8 +45,8 @@ public:
   virtual void set_np( int np ) { np_ = np; }
   virtual void release() = 0;
   virtual void set_field( Field * ) = 0;
-  virtual void search( double, bool ) = 0;
-  virtual GeomObj* get_geom() = 0;
+  virtual void search( double ival, bool field, bool geom ) = 0;
+  virtual GeomHandle get_geom() = 0;
   virtual FieldHandle get_field(int n) = 0;
 
   //! support the dynamically compiled algorithm concept
@@ -65,21 +65,21 @@ class MarchingCubes : public MarchingCubesAlg
 protected:
   vector<Tesselator *> tess_;
   mesh_handle_type mesh_;
-  GeomObj *geom_;
+  GeomHandle geom_;
   vector<FieldHandle> output_field_;
 public:
   MarchingCubes() : mesh_(0) { tess_.resize( np_, 0 ); }
-  virtual ~MarchingCubes() {}
+  virtual ~MarchingCubes() { release(); }
 
   virtual void set_np( int );
   virtual void release();
   virtual void set_field( Field * );
-  virtual void search( double, bool=false );
-  virtual GeomObj* get_geom() { return geom_; } 
+  virtual void search( double ival, bool field, bool geom );
+  virtual GeomHandle get_geom() { return geom_; } 
   virtual FieldHandle get_field(int n)
   { ASSERT((unsigned int)n < output_field_.size()); return output_field_[n]; }
 
-  void parallel_search( int, double, bool );
+  void parallel_search( int, double, bool field, bool geom);
 };
     
 
@@ -92,7 +92,7 @@ MarchingCubes<Tesselator>::release()
 {
   for (int i=0; i<np_; i++)
     if ( tess_[i] ) { delete tess_[i]; tess_[i] = 0; }
-  if (geom_) geom_=0;
+  if (geom_.get_rep()) geom_=0;
 }
 
 template<class Tesselator>
@@ -101,7 +101,7 @@ MarchingCubes<Tesselator>::set_np( int np )
 {
   if ( np > np_ ) 
     tess_.resize( np, 0 );
-  if ( geom_ ) 
+  if ( geom_.get_rep() ) 
     geom_ = 0;
   
   output_field_.resize(np);
@@ -116,7 +116,7 @@ MarchingCubes<Tesselator>::set_field( Field *f )
   if ( field_type *field = dynamic_cast<field_type *>(f) ) {
     for (int i=0; i<np_; i++) {
       if ( tess_[i] ) delete tess_[i];
-      tess_[i] = new Tesselator( field );
+      tess_[i] = scinew Tesselator( field );
     }
     mesh_ = field->get_typed_mesh();
   }
@@ -124,10 +124,10 @@ MarchingCubes<Tesselator>::set_field( Field *f )
 
 template<class Tesselator>
 void
-MarchingCubes<Tesselator>::search( double iso, bool build_trisurf )
+MarchingCubes<Tesselator>::search( double iso, bool bf, bool bg )
 {
   if ( np_ == 1 ) {
-    tess_[0]->reset(0, build_trisurf);
+    tess_[0]->reset(0, bf, bg);
     typename mesh_type::Elem::iterator cell; mesh_->begin(cell); 
     typename mesh_type::Elem::iterator cell_end; mesh_->end(cell_end); 
     while ( cell != cell_end)
@@ -142,12 +142,11 @@ MarchingCubes<Tesselator>::search( double iso, bool build_trisurf )
 		      &MarchingCubes<Tesselator>::parallel_search, 
 		      np_, 
 		      true,    // block
-		      iso, 
-		      build_trisurf );
-    GeomGroup *group = new GeomGroup;
+		      iso, bf, bg );
+    GeomGroup *group = scinew GeomGroup;
     for (int i=0; i<np_; i++) {
-      GeomObj *obj = tess_[i]->get_geom();
-      if ( obj ) 
+      GeomHandle obj = tess_[i]->get_geom();
+      if ( obj.get_rep() ) 
 	group->add( obj );
     }
     if ( group->size() > 0 )
@@ -166,10 +165,10 @@ MarchingCubes<Tesselator>::search( double iso, bool build_trisurf )
 
 template<class Tesselator>
 void 
-MarchingCubes<Tesselator>::parallel_search( int proc, 
-					    double iso, bool build_trisurf)
+MarchingCubes<Tesselator>::parallel_search( int proc,
+					    double iso, bool bf, bool bg )
 {
-  tess_[proc]->reset(0, build_trisurf);
+  tess_[proc]->reset(0, bf, bg);
   typename mesh_type::Elem::size_type csize;
   mesh_->size(csize);
   unsigned int n = csize;

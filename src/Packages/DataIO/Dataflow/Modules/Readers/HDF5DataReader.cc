@@ -32,6 +32,9 @@
 #include <Packages/Teem/Core/Datatypes/NrrdData.h>
 #include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
 
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Dataflow/Ports/MatrixPort.h>
+
 #include <Packages/DataIO/Dataflow/Modules/Readers/HDF5DataReader.h>
 
 #include <sci_defs.h>
@@ -39,6 +42,7 @@
 #include <sys/stat.h>
 
 #include <fstream>
+#include <algorithm>
 
 #ifdef HAVE_HDF5
 #include "hdf5.h"
@@ -54,6 +58,21 @@ DECLARE_MAKER(HDF5DataReader)
 
 HDF5DataReader::HDF5DataReader(GuiContext *context)
   : Module("HDF5DataReader", context, Source, "Readers", "DataIO"),
+    selectable_min_(ctx->subVar("selectable_min")),
+    selectable_max_(ctx->subVar("selectable_max")),
+    selectable_inc_(ctx->subVar("selectable_inc")),
+    range_min_(ctx->subVar("range_min")),
+    range_max_(ctx->subVar("range_max")),
+    playmode_(ctx->subVar("playmode")),
+    dependence_(ctx->subVar("dependence")),
+    current_(ctx->subVar("current")),
+    delay_(ctx->subVar("delay")),
+    inc_amount_(ctx->subVar("inc-amount")),
+    inc_(1),
+    execmode_("none"),
+    last_input_(-1),
+    last_output_(0),
+
     filename_(context->subVar("filename")),
     datasets_(context->subVar("datasets")),
     dumpname_(context->subVar("dumpname")),
@@ -64,10 +83,10 @@ HDF5DataReader::HDF5DataReader(GuiContext *context)
     mergeData_(context->subVar("mergeData")),
     assumeSVT_(context->subVar("assumeSVT")),
 
-    animate_       (context->subVar("animate")),
-    animateStyle_  (context->subVar("animate-style")),
-    animateNframes_(context->subVar("animate-nframes")),
-    animateFrame_  (context->subVar("animate-frame")),
+    animate_(context->subVar("animate")),
+
+    mergedata_(-1),
+    assumesvt_(-1),
 
     error_(false)
 {
@@ -123,8 +142,8 @@ HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
 void HDF5DataReader::execute() {
 
 #ifdef HAVE_HDF5
-  bool updateAll  = false;
-  bool updateFile = false;
+  bool updateAll   = false;
+  bool updateFile  = false;
 
   filename_.reset();
   datasets_.reset();
@@ -132,16 +151,18 @@ void HDF5DataReader::execute() {
   string new_filename(filename_.get());
   string new_datasets(datasets_.get());
 
-  vector< string > paths;
-  vector< string > datasets;
-
   if( new_filename.length() == 0 || new_datasets.length() == 0 )
     return;
 
   // Read the status of this file so we can compare modification timestamps
+#ifdef HAVE_STAT64
+  struct stat64 buf;
+  if (stat64(new_filename.c_str(), &buf)) {
+#else
   struct stat buf;
   if (stat(new_filename.c_str(), &buf)) {
-    error( string("File not found ") + new_filename );
+#endif
+    error( string("Execute File not found ") + new_filename );
     return;
   }
 
@@ -205,193 +226,278 @@ void HDF5DataReader::execute() {
     }
   }
 
+  vector< string > paths;
+  vector< string > datasets;
+  
+  parseDatasets( new_datasets, paths, datasets );
+  
 
-  if( error_ ||
-      updateFile ||
-      updateAll )
+  if( animate_.get() ) {
+
+    vector< vector<string> > frame_paths;
+    vector< vector<string> > frame_datasets;
+    
+    unsigned int nframes =
+      parseAnimateDatasets( paths, datasets, frame_paths, frame_datasets);
+    
+
+    // If there is a current index matrix, use it.
+    MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Current Index");
+
+    if (!imatrix_port) {
+      error("Unable to initialize iport 'Current Index'.");
+      return;
+    }
+
+    MatrixHandle mHandle;
+    if (imatrix_port->get(mHandle) && mHandle.get_rep()) {
+      unsigned int which = (unsigned int) (mHandle->get(0, 0));
+
+      if( 0 <= which && which <= frame_paths.size() ) {
+	current_.set(which);
+	current_.reset();
+	
+	ReadandSendData( new_filename, frame_paths[which],
+			 frame_datasets[which], true, true, which );
+      } else {
+	error( "Input index is out of range" );
+	return;
+      }
+    } else {
+
+      if( nframes != selectable_max_.get() ) {
+	ostringstream str;
+	str << id << " update_animate_range 0 " << nframes-1;
+	gui->execute(str.str().c_str());
+      }
+
+      animate_execute( new_filename, frame_paths, frame_datasets );
+    }
+  } else if( error_ ||
+	     updateFile ||
+	     updateAll )
   {
     error_ = false;
 
-    vector< string > paths;
-    vector< string > datasets;
-    vector< int > ports;
+    ReadandSendData( new_filename, paths, datasets, true, true, -1 );
 
-    parseDatasets( new_datasets, paths, datasets );
+  } else {
+    remark( "Already read the file " +  new_filename );
 
-    vector< vector<NrrdDataHandle> > nHandles;
-    vector< vector<int> > ids;
+    for( unsigned int ic=0; ic<MAX_PORTS; ic++ ) {
+      // Get a handle to the output double port.
+      if( nHandles_[ic].get_rep() ) {
+
+	char portNumber[4];
+	sprintf( portNumber, "%d", ic );
+
+	string portName = string("Output ") +
+	  string(portNumber) +
+	  string( " Nrrd" );
+      
+	NrrdOPort *ofield_port = 
+	  (NrrdOPort *) get_oport(portName);
     
-    for( unsigned int ic=0; ic<paths.size(); ic++ ) {
-
-      ports.push_back( -1 );
-
-      NrrdDataHandle nHandle =
-	readDataset(new_filename, paths[ic], datasets[ic]);
-
-      if( nHandle != NULL ) {
-	bool inserted = false;
-	vector<vector<NrrdDataHandle> >::iterator iter = nHandles.begin();
-	vector<vector<int> >::iterator iditer = ids.begin();
-	
-	while (iter != nHandles.end()) {
-
-	  vector<NrrdDataHandle> &vec = *iter;
-	  vector<int> &idvec = *iditer;
-
-	  ++iter;
-	  ++iditer;
-
-	  if(is_mergeable(nHandle, vec[0])) {
-	    vec.push_back(nHandle);
-	    idvec.push_back(ic);
-	    inserted = true;
-	    break;
-	  }
+	if (!ofield_port) {
+	  error("Unable to initialize "+name+"'s " + portName + " oport\n");
+	  return;
 	}
 
-	if (! inserted) {
-	  vector<NrrdDataHandle> nrrdSet;
-	  nrrdSet.push_back( nHandle );
-	  nHandles.push_back( nrrdSet );
-
-	  vector<int> idSet;
-	  idSet.push_back( ic );
-	  ids.push_back( idSet );
-	}
-      } else
-	return;
+	// Send the data downstream
+	ofield_port->send( nHandles_[ic] );
+      }
     }
+  }
 
-    // Merge the like datatypes together.
-    if( mergedata_ ) {
 
+#else  
+  error( "No HDF5 availible." );
+  
+#endif
+}
+
+void HDF5DataReader::ReadandSendData( string& filename,
+				      vector< string >& paths,
+				      vector< string >& datasets,
+				      bool last,
+				      bool cache,
+				      int which ) {
+
+  vector< vector<NrrdDataHandle> > nHandles;
+  vector< vector<int> > ids;
+
+  vector< int > ports;
+    
+  for( unsigned int ic=0; ic<paths.size(); ic++ ) {
+    ports.push_back( -1 );
+
+    NrrdDataHandle nHandle =
+      readDataset(filename, paths[ic], datasets[ic]);
+
+    if( nHandle != NULL ) {
+      bool inserted = false;
       vector<vector<NrrdDataHandle> >::iterator iter = nHandles.begin();
+      vector<vector<int> >::iterator iditer = ids.begin();
+	
       while (iter != nHandles.end()) {
 
 	vector<NrrdDataHandle> &vec = *iter;
+	vector<int> &idvec = *iditer;
+
 	++iter;
+	++iditer;
 
-	if (mergedata_ == 2 || vec.size() > 1) {
+	if(is_mergeable(nHandle, vec[0])) {
+	  vec.push_back(nHandle);
+	  idvec.push_back(ic);
+	  inserted = true;
+	  break;
+	}
+      }
+
+      if (!inserted) {
+	vector<NrrdDataHandle> nrrdSet;
+	nrrdSet.push_back( nHandle );
+	nHandles.push_back( nrrdSet );
+
+	vector<int> idSet;
+	idSet.push_back( ic );
+	ids.push_back( idSet );
+      }
+    } else {
+      error( "No handle for - " + paths[ic] + "/" + datasets[ic] );
+      return;
+    }
+  }
+
+  // Merge the like datatypes together.
+  if( mergedata_ ) {
+
+    vector<vector<NrrdDataHandle> >::iterator iter = nHandles.begin();
+    while (iter != nHandles.end()) {
+
+      vector<NrrdDataHandle> &vec = *iter;
+      ++iter;
+
+      if (mergedata_ == MERGE_TIME || vec.size() > 1) {
 	  
-	  NrrdData* onrrd = new NrrdData(true);
-	  string new_label("");
-	  string axis_label("");
+	NrrdData* onrrd = new NrrdData(true);
+	string new_label("");
+	string axis_label("");
 
-	  // check if this is a time axis merge or a tuple axis merge.
-	  vector<Nrrd*> join_me;
-	  vector<NrrdDataHandle>::iterator niter = vec.begin();
+	// check if this is a time axis merge or a tuple axis merge.
+	vector<Nrrd*> join_me;
+	vector<NrrdDataHandle>::iterator niter = vec.begin();
 
+	NrrdDataHandle n = *niter;
+	++niter;
+	join_me.push_back(n->nrrd);
+	new_label = n->nrrd->axis[0].label;
+
+	while (niter != vec.end()) {
 	  NrrdDataHandle n = *niter;
 	  ++niter;
 	  join_me.push_back(n->nrrd);
-	  new_label = n->nrrd->axis[0].label;
+	  new_label += string(",") + n->nrrd->axis[0].label;
+	}	  
 
-	  while (niter != vec.end()) {
-	    NrrdDataHandle n = *niter;
-	    ++niter;
-	    join_me.push_back(n->nrrd);
-	    new_label += string(",") + n->nrrd->axis[0].label;
-	  }	  
+	int axis,  incr;
 
-	  int axis,  incr;
-
-	  if (mergedata_ == 1) {
-	    axis = 0; // tuple
-	    incr = 0; // tuple case.
-	  } else if (mergedata_ == 2) {
-	    axis = join_me[0]->dim; // time
-	    incr = 1;               // time
-	  }
-
-	  onrrd->nrrd = nrrdNew();
-	  if (nrrdJoin(onrrd->nrrd, &join_me[0], join_me.size(), axis, incr)) {
-	    char *err = biffGetDone(NRRD);
-	    error(string("Join Error: ") +  err);
-	    free(err);
-	    error_ = true;
-	    return;
-	  }
-
-	  if (mergedata_ == 2) {
-	    onrrd->nrrd->axis[axis].label = "Time";
-	    // remove all numbers from name
-	    string s(join_me[0]->axis[0].label);
-	    new_label.clear();
-
-	    const string nums("0123456789");
-	      
-	    //cout << "checking in_name " << s << endl;
-	    // test against valid char set.
-
-	    for(string::size_type i = 0; i < s.size(); i++) {
-	      bool in_set = false;
-	      for (unsigned int c = 0; c < nums.size(); c++) {
-		if (s[i] == nums[c]) {
-		  in_set = true;
-		  break;
-		}
-	      }
-
-	      if (in_set) { new_label.push_back('X' ); }
-	      else        { new_label.push_back(s[i]); }
-
-	    }
-	  }
-	   
-	  // Take care of tuple axis label.
-	  onrrd->nrrd->axis[0].label = strdup(new_label.c_str());
-
-	  // Copy the properties.
-	  NrrdDataHandle handle = NrrdDataHandle(onrrd);
-
-	  *((PropertyManager *) handle.get_rep()) =
-	    *((PropertyManager *) n.get_rep());
-
-	  // clear the nrrds;
-	  vec.clear();
-	  vec.push_back(handle);
+	if (mergedata_ == MERGE_LIKE) {
+	  axis = 0; // tuple
+	  incr = 0; // tuple case.
+	} else if (mergedata_ == 2) {
+	  axis = join_me[0]->dim; // time
+	  incr = 1;               // time
 	}
+
+	onrrd->nrrd = nrrdNew();
+	if (nrrdJoin(onrrd->nrrd, &join_me[0], join_me.size(), axis, incr)) {
+	  char *err = biffGetDone(NRRD);
+	  error(string("Join Error: ") +  err);
+	  free(err);
+	  error_ = true;
+	  return;
+	}
+
+	if (mergedata_ == MERGE_TIME) {
+	  onrrd->nrrd->axis[axis].label = "Time";
+	  // remove all numbers from name
+	  string s(join_me[0]->axis[0].label);
+	  new_label.clear();
+
+	  const string nums("0123456789");
+	      
+	  //cout << "checking in_name " << s << endl;
+	  // test against valid char set.
+
+	  for(string::size_type i = 0; i < s.size(); i++) {
+	    bool in_set = false;
+	    for (unsigned int c = 0; c < nums.size(); c++) {
+	      if (s[i] == nums[c]) {
+		in_set = true;
+		break;
+	      }
+	    }
+
+	    if (in_set) { new_label.push_back('X' ); }
+	    else        { new_label.push_back(s[i]); }
+
+	  }
+	}
+	   
+	// Take care of tuple axis label.
+	onrrd->nrrd->axis[0].label = strdup(new_label.c_str());
+
+	// Copy the properties.
+	NrrdDataHandle handle = NrrdDataHandle(onrrd);
+
+	*((PropertyManager *) handle.get_rep()) =
+	  *((PropertyManager *) n.get_rep());
+
+	// clear the nrrds;
+	vec.clear();
+	vec.push_back(handle);
       }
     }
-
-    unsigned int cc = 0;
-
-    for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
-
-      for( unsigned int jc=0; jc<ids[ic].size(); jc++ )
-	ports[ids[ic][jc]] = cc + (nHandles[ic].size() == 1 ? 0 : jc);
-
-      for( unsigned int jc=0; jc<nHandles[ic].size(); jc++ ) {
-	if( cc < MAX_PORTS )
-	  nHandles_[cc] = nHandles[ic][jc];
-
-	++cc;
-      }
-    }
-
-    char *portStr = scinew char[paths.size()*4 + 2 ];
-
-    portStr[0] = '\0';
-
-    for( unsigned int ic=0; ic<paths.size(); ic++ )
-      sprintf( portStr, "%s %3d", portStr, ports[ic] );
-      
-    {
-      // Update the dims in the GUI.
-      ostringstream str;
-      str << id << " updateSelection {" << portStr << "}";
-      
-      gui->execute(str.str().c_str());
-    }
-
-    if( cc > MAX_PORTS )
-      warning( "More data than availible ports." );
-
-    for( unsigned int ic=cc; ic<MAX_PORTS; ic++ )
-      nHandles_[ic] = NULL;
-  } else {
-    remark( "Already read the file " +  new_filename );
   }
+
+  unsigned int cc = 0;
+
+  for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
+
+    for( unsigned int jc=0; jc<ids[ic].size(); jc++ )
+      ports[ids[ic][jc]] = cc + (nHandles[ic].size() == 1 ? 0 : jc);
+
+    for( unsigned int jc=0; jc<nHandles[ic].size(); jc++ ) {
+      if( cc < MAX_PORTS )
+	nHandles_[cc] = nHandles[ic][jc];
+
+      ++cc;
+    }
+  }
+
+  char *portStr = scinew char[paths.size()*4 + 2 ];
+
+  portStr[0] = '\0';
+
+  for( unsigned int ic=0; ic<paths.size(); ic++ )
+    sprintf( portStr, "%s %3d", portStr, ports[ic] );
+      
+  if( cache ) {
+    // Update the ports in the GUI.
+    ostringstream str;
+    str << id << " updateSelection {" << portStr << "}";
+
+    gui->execute(str.str().c_str());
+  }
+
+  if( cc > MAX_PORTS )
+    warning( "More data than availible ports." );
+
+  for( unsigned int ic=cc; ic<MAX_PORTS; ic++ )
+    nHandles_[ic] = NULL;
+
 
   for( unsigned int ic=0; ic<MAX_PORTS; ic++ ) {
     // Get a handle to the output double port.
@@ -403,158 +509,45 @@ void HDF5DataReader::execute() {
       string portName = string("Output ") +
 	string(portNumber) +
 	string( " Nrrd" );
-
       
-      NrrdOPort *ofield_port = 
-	(NrrdOPort *) get_oport(portName);
+      NrrdOPort *ofield_port = (NrrdOPort *) get_oport(portName);
     
       if (!ofield_port) {
 	error("Unable to initialize "+name+"'s " + portName + " oport\n");
 	return;
       }
 
+      ofield_port->set_cache( cache );
+
       // Send the data downstream
-      ofield_port->send( nHandles_[ic] );
+      if( last )
+	ofield_port->send( nHandles_[ic] );
+      else
+	ofield_port->send_intermediate( nHandles_[ic] );
     }
   }
-#else  
-  error( "No HDF5 availible." );
-  
-#endif
+
+
+  MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Selected Index");
+
+  if (!omatrix_port) {
+    error("Unable to initialize oport 'Selected Index'.");
+    return;
+  }
+
+  ColumnMatrix *selected = scinew ColumnMatrix(1);
+  selected->put(0, 0, (double)which);
+
+  bool isDependent = (dependence_.get()==string("dependent"));
+
+  if ( last )
+    omatrix_port->send(MatrixHandle(selected));
+  else if ( isDependent )
+    omatrix_port->send(MatrixHandle(selected));
+  else
+    omatrix_port->send_intermediate(MatrixHandle(selected));
 }
 
-int HDF5DataReader::animateDatasets( vector<string>& paths,
-				     vector<string>& datasets,
-				     vector< vector<string> >& frame_paths,
-				     vector< vector<string> >& frame_datasets )
-{
-  unsigned int d1 = (unsigned int) 1e8, d2 = (unsigned int) 1e8;
-
-  unsigned int i, j;
-
-  for( i=0; i<paths.size(); i++ ) {
-    unsigned int len1 = paths[i].length();
-    
-    for( j=i; j<paths.size(); j++ ) {
-      unsigned int len2 = paths[j].length();
-
-      unsigned int len = len1 < len2 ? len1 : len2;
-      unsigned int c;
-
-      // Find the first character that is different.
-      for( c=0; c<len; c++ ) {
-	if( paths[i][c] != paths[j][c] )
-	  break;
-      }
-
-      // Update if a difference is found.
-      if( c<len ) {
-	if( d1 > c ) d1 = c;
-
-	// Find the last character that is different.
-	for( ; c<len; c++ ) {
-	  if( paths[i][c] == paths[j][c] )
-	    break;
-	}
-	
-	if( d2 > c ) d2 = c;
-      }
-    }
-  }
-
-  string root = paths[0].substr( 0, d1 );
-
-  vector <string> times;
-
-  // Get all of the times.
-  for( i=0; i<paths.size(); i++ ) {
-    string time = paths[i].substr( d1, d2-d1 );
-
-    for( j=0; j<times.size(); j++ ) {
-      if( time == times[j] )
-	break;
-    }
-
-    if( j==times.size() )
-      times.push_back( time );
-      
-  }
-
-  std::sort( times.begin(), times.end() );
-
-  frame_paths.clear();
-  frame_datasets.clear();
-
-  bool warn = 0;
-    
-  // Sort the datasets by time.
-  for( j=0; j<times.size(); j++ ) {
-
-    string base = root + times[j];
-
-    vector< string > path_list;
-    vector< string > dataset_list;
-
-    for( i=0; i<paths.size(); i++ ) {
-      if( paths[i].find( base ) != string::npos ) {
-
-	path_list.push_back( paths[i] );
-	dataset_list.push_back( datasets[i] );
-      }
-    }
-
-    frame_paths.push_back( path_list );
-    frame_datasets.push_back( dataset_list );
-
-    // Make sure the paths are the same.
-    if( j>0 ) {
-
-      if( frame_paths[0].size()    != frame_paths[j].size() ||
-	  frame_datasets[0].size() != frame_datasets[j].size() ) {
-	warning( "Animation path and or dataset size mismatch" );
-	warn = 1;
-      } else {
-
-	for( i=0; i<frame_paths.size(); i++ ) {
-	  if( frame_paths[0][i].substr(d2, frame_paths[0][i].length()-d2) !=
-	      frame_paths[j][i].substr(d2, frame_paths[0][i].length()-d2) ||
-	      frame_datasets[0][i] != frame_datasets[j][i] ) {
-	    warning( "Animation path and or dataset mismatch" );
-	    warning( frame_paths[0][i] );
-	    warning( frame_paths[j][i] );
-	    warning( frame_datasets[0][i] );
-	    warning( frame_datasets[j][i] );
-	    warn = 1;
-	    break;
-	  }
-	}
-      }
-    }
-  }
-
-  for( i=0; i<frame_paths.size(); i++ ) {
-    for( j=0; j<frame_paths[i].size(); j++ ) {
-
-      cerr << i << "  " << frame_paths[i][j] << " ";
-      cerr << frame_datasets[i][j] << endl;
-    }
-
-    cerr << endl;
-  }
-
-  ostringstream str;
-
-  str << times.size() << " frames found ";
-
-  if( warn ) {
-    str << " but there was a mismatch.";
-    warning( str.str() );
-  } else {
-    remark( str.str() );
-  }
-
-  return times.size();
-}
 
 void HDF5DataReader::parseDatasets( string new_datasets,
 				    vector<string>& paths,
@@ -598,32 +591,173 @@ void HDF5DataReader::parseDatasets( string new_datasets,
       cc = new_datasets.length();
     }
 
-    // Get the dataset name.
-    std::string::size_type last = path.find_last_of( " " );
-
-    string dataset( path.substr( last+1, path.length()-last) );
-
-    // Remove the dataset name from the path.
-    path.erase( last, path.length()-last);
-
     // Remove the first space.
     path.erase( 1, 1 );
 
-    // Replace the other spaces with a slash.
-    while( (last = path.find( " " )) != std::string::npos )
-      path.replace( last, 1, "/" );
-    
-    // Remove the rest of the braces.
-    while( (last = path.find( "{" )) != std::string::npos )
-      path.erase( last, 1 );
-    
-    while( (last = path.find( "}" )) != std::string::npos )
-      path.erase( last, 1 );
+    open = 0;
 
-    paths.push_back( path );
-    datasets.push_back( dataset );
+    // Replace all of spaces that are not in braces '{}'
+    // with a forward slash '/'.
+    for( unsigned int i=0; i<path.length(); i++ ) {
+
+      if( path[i] == '{' ) {
+	open++;
+      } else if( path[i] == '}' ) {
+	open--;
+      } else if( !open && path[i] == ' ' ) {
+	path[i] = '/';
+      }
+    }
+
+    // If still open there is a brace mismatch
+    if( open ) {
+      error( "Found a path with mismatched braces - " + path );
+      return;
+    } else {
+      std::string::size_type last;
+
+      // Remove the braces.
+      while( (last = path.find( "{" )) != std::string::npos )
+	path.erase( last, 1 );
+    
+      while( (last = path.find( "}" )) != std::string::npos )
+	path.erase( last, 1 );
+
+      // Get the dataset name which is after the last forward slash '/'.
+      last = path.find_last_of( "/" );
+      
+      // Get the dataset name.
+      string dataset( path.substr( last+1, path.length()-last) );
+      
+      // Remove the dataset name from the path.
+      path.erase( last, path.length()-last);
+
+      
+      paths.push_back( path );
+      datasets.push_back( dataset );
+    }
   }
 }
+
+
+unsigned int
+HDF5DataReader::parseAnimateDatasets( vector<string>& paths,
+				      vector<string>& datasets,
+				      vector< vector<string> >& frame_paths,
+				      vector< vector<string> >& frame_datasets )
+{
+  frame_paths.clear();
+  frame_datasets.clear();
+
+  unsigned int i, j;
+
+  if( paths.size() == 1 ) {
+    frame_paths.push_back( paths );
+    frame_datasets.push_back( datasets );
+    return 1;
+  }
+
+  string comp = paths[0];
+
+  for( i=1; i<paths.size(); i++ ) {
+    unsigned int len = paths[i].length();
+
+    // Reduce the size of the comparison to the smallest string.
+    if( comp.length() > len )
+      comp.replace( len, comp.length()- len, "" );    
+    
+    // Mark the characters that are different.
+    for( unsigned int c=0; c<comp.length(); c++ ) {
+      if( comp[c] != paths[i][c] )
+	comp[c] = '?';
+    }
+  }
+
+  unsigned int d1, d2;
+
+  for( d1=0; d1<comp.length(); d1++ )
+    if( comp[d1] == '?' )
+      break;
+
+  for( d2=d1; d2<comp.length(); d2++ )
+    if( comp[d2] != '?' )
+      break;
+
+  string root = paths[0].substr( 0, d1 );
+
+  vector <string> times;
+
+  // Get all of the times.
+  for( i=0; i<paths.size(); i++ ) {
+    string time = paths[i].substr( d1, d2-d1 );
+
+    for( j=0; j<times.size(); j++ ) {
+      if( time == times[j] )
+	break;
+    }
+
+    if( j==times.size() )
+      times.push_back( time );
+  }
+
+  std::sort( times.begin(), times.end() );
+
+  bool warn = 0;
+    
+  // Sort the datasets by time.
+  for( j=0; j<times.size(); j++ ) {
+
+    string base = root + times[j];
+
+    vector< string > path_list;
+    vector< string > dataset_list;
+
+    for( i=0; i<paths.size(); i++ ) {
+      if( paths[i].find( base ) != string::npos ) {
+
+	path_list.push_back( paths[i] );
+	dataset_list.push_back( datasets[i] );
+      }
+    }
+
+    frame_paths.push_back( path_list );
+    frame_datasets.push_back( dataset_list );
+
+    // Make sure the paths are the same.
+    if( j>0 ) {
+
+      if( frame_paths[0].size()    != frame_paths[j].size() ||
+	  frame_datasets[0].size() != frame_datasets[j].size() ) {
+	warning( "Animation path and or dataset size mismatch" );
+	warn = 1;
+      } else {
+
+	for( i=0; i<frame_paths[0].size(); i++ ) {
+
+	  if( frame_paths[0][i].substr(d2, frame_paths[0][i].length()-d2) !=
+	      frame_paths[j][i].substr(d2, frame_paths[0][i].length()-d2) ||
+	      frame_datasets[0][i] != frame_datasets[j][i] ) {
+	    warning( "Animation path and or dataset mismatch" );
+	    warning( frame_paths[0][i] + " " + frame_datasets[0][i] );
+	    warning( frame_paths[j][i] + " " + frame_datasets[j][i] );
+	    warn = 1;
+	    break;
+	  }
+	}
+      }
+    }
+  }
+
+  if( warn ) {
+    ostringstream str;
+    str << times.size() << " frames found ";
+    str << " but there was a mismatch.";
+    warning( str.str() );
+  }
+
+  return times.size();
+}
+
 
 vector<int> HDF5DataReader::getDatasetDims( string filename,
 					    string group,
@@ -638,19 +772,19 @@ vector<int> HDF5DataReader::getDatasetDims( string filename,
 
   if( (file_id = H5Fopen(filename.c_str(),
 			 H5F_ACC_RDONLY, H5P_DEFAULT)) < 0 ) {
-    error( "Error opening file. " );
+    error( "Error opening file - " + filename);
     return idims;
   }
 
   /* Open the group in the file. */
   if( (g_id = H5Gopen(file_id, group.c_str())) < 0 ) {
-    error( "Error opening group. " );
+    error( "Error opening group - " + group );
     return idims;
   }
 
   /* Open the dataset in the file. */
   if( (ds_id = H5Dopen(g_id, dataset.c_str())) < 0 ) {
-    error( "Error opening dataset. " );
+    error( "Error opening dataset - " + dataset );
     return idims;
   }
 
@@ -709,13 +843,13 @@ vector<int> HDF5DataReader::getDatasetDims( string filename,
 }
 
 #ifdef HAVE_HDF5
-herr_t add_attribute(hid_t group_id, const char * name, void* op_data) {
+herr_t add_attribute(hid_t group_id, const char * aname, void* op_data) {
   herr_t status;
 
-  hid_t attr_id = H5Aopen_name(group_id, name);
+  hid_t attr_id = H5Aopen_name(group_id, aname);
 
   if (attr_id < 0) {
-    cerr << "Unable to open attribute \"" << name << "\"" << endl;
+    cerr << "Unable to open attribute \"" << aname << "\"" << endl;
     status = -1;
   } else {
 
@@ -819,16 +953,16 @@ herr_t add_attribute(hid_t group_id, const char * name, void* op_data) {
 
     if( cc == 1 ) {
       if (mem_type_id == H5T_NATIVE_INT)
-	nrrd->set_property( name, ((int*) data)[0], false );
+	nrrd->set_property( aname, ((int*) data)[0], false );
       else if (mem_type_id == H5T_NATIVE_FLOAT)
-	nrrd->set_property( name, ((float*) data)[0], false );
+	nrrd->set_property( aname, ((float*) data)[0], false );
       else if (mem_type_id == H5T_NATIVE_DOUBLE)
-	nrrd->set_property( name, ((double*) data)[0], false );
+	nrrd->set_property( aname, ((double*) data)[0], false );
       else if( H5Tget_class(type_id) == H5T_STRING ) {
 	if(H5Tis_variable_str(type_id))
-	  nrrd->set_property( name, ((char*) data)[0], false );
+	  nrrd->set_property( aname, ((char*) data)[0], false );
 	else
-	  nrrd->set_property( name, string((char*) data), false );
+	  nrrd->set_property( aname, string((char*) data), false );
       }
     } else {
       ostringstream str;
@@ -851,7 +985,7 @@ herr_t add_attribute(hid_t group_id, const char * name, void* op_data) {
 	  str << ", ";
       }
 
-      nrrd->set_property( name, str.str(), false );
+      nrrd->set_property( aname, str.str(), false );
     }
 
     H5Tclose(type_id);
@@ -879,19 +1013,19 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 
   if( (file_id = H5Fopen(filename.c_str(),
 			 H5F_ACC_RDONLY, H5P_DEFAULT)) < 0 ) {
-    error( "Error opening file. " );
+    error( "Error opening file - " + filename);
     return NULL;
   }
 
   /* Open the group in the file. */
   if( (g_id = H5Gopen(file_id, group.c_str())) < 0 ) {
-    error( "Error opening group. " );
+    error( "Error opening group - " + group);
     return NULL;
   }
 
   /* Open the dataset in the file. */
   if( (ds_id = H5Dopen(g_id, dataset.c_str())) < 0 ) {
-    error( "Error opening data space. " );
+    error( "Error opening data space - " + dataset);
     return NULL;
   }
 
@@ -1085,7 +1219,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 
   string tuple_type_str(":Scalar");
   int sink_size = 1;
-  NrrdData *nout = scinew NrrdData(false);
+  NrrdData *nout = scinew NrrdData(true);
 
 
   switch(ndims) {
@@ -1306,6 +1440,8 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
     sink_label.replace( pos, 1, "_" );
   while( (pos = sink_label.find("]")) != string::npos )
     sink_label.erase( pos, 1 );
+  while( (pos = sink_label.find(" ")) != string::npos )
+    sink_label.replace( pos, 1, "_" );
 
   nout->nrrd->axis[0].label = strdup(sink_label.c_str());
 
@@ -1388,8 +1524,10 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     args.error("HDF5DataReader needs a minor command");
     return;
   }
+  if (args[1] == "play" || args[1] == "stop" || args[1] == "step") {
+    execmode_ = string(args[1]);
 
-  if (args[1] == "update_file") {
+  } else if (args[1] == "update_file") {
 #ifdef HAVE_HDF5
     filename_.reset();
     string new_filename(filename_.get());
@@ -1398,9 +1536,14 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       return;
 
     // Read the status of this file so we can compare modification timestamps
+#ifdef HAVE_STAT64
+    struct stat64 buf;
+    if (stat64(new_filename.c_str(), &buf)) {
+#else
     struct stat buf;
     if (stat(new_filename.c_str(), &buf)) {
-      error( string("File not found ") + new_filename );
+#endif
+      error( string("Updating - File not found ") + new_filename );
       return;
     }
 
@@ -1423,7 +1566,15 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       else
 	last++;
 
-      string tmp_filename( "/tmp/" );
+      char* tmpdir = getenv( "SCIRUN_TMP_DIR" );
+
+      string tmp_filename;
+
+      if( tmpdir )
+	tmp_filename = tmpdir + string( "/" );
+      else
+	tmp_filename = string( "/tmp/" );
+
       tmp_filename.append( new_filename, last, new_filename.length()-last );
       tmp_filename.append( ".dump" );
 
@@ -1442,7 +1593,11 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       sPtr.flush();
       sPtr.close();
 
-      if (stat(tmp_filename.c_str(), &buf)) {
+#ifdef HAVE_STAT64
+    if (stat64(tmp_filename.c_str(), &buf)) {
+#else
+    if (stat(tmp_filename.c_str(), &buf)) {
+#endif
 	error( string("Temporary dump file not found ") + tmp_filename );
 	return;
       } 
@@ -1453,7 +1608,6 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       
       gui->execute(str.str().c_str());
 
-      cerr << "updating set_size from update_file" << endl;
       // Update the dims in the GUI.
       gui->execute(id + " set_size 0 {}");
     }
@@ -1472,9 +1626,14 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       return;
 
     // Read the status of this file so we can compare modification timestamps
+#ifdef HAVE_STAT64
+    struct stat64 buf;
+    if (stat64(new_filename.c_str(), &buf)) {
+#else
     struct stat buf;
     if (stat(new_filename.c_str(), &buf)) {
-      error( string("File not found ") + new_filename );
+#endif
+      error( string("Selection - File not found ") + new_filename );
       return;
     }
 
@@ -1572,14 +1731,13 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       vector< vector<string> > frame_datasets;
 
       int nframes =
-	animateDatasets( paths, datasets, frame_paths, frame_datasets);
+	parseAnimateDatasets( paths, datasets, frame_paths, frame_datasets);
 
-      // Update the nframes in the GUI.
-      ostringstream str;
-      str << id << " set_nframes " << nframes;
-    
-      gui->execute(str.str().c_str());
-
+      if( nframes != selectable_max_.get() ) {
+	ostringstream str;
+	str << id << " update_animate_range 0 " << nframes-1;
+	gui->execute(str.str().c_str());
+      }
     }
 #else
     error( "No HDF5 availible." );
@@ -1589,4 +1747,133 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     Module::tcl_command(args, userdata);
   }
 }
+
+
+int
+HDF5DataReader::increment(int which, int lower, int upper)
+{
+  // Do nothing if no range.
+  if (upper == lower) {
+    if (playmode_.get() == "once")
+      execmode_ = string("stop");
+    return upper;
+  }
+
+  const int inc_amount = Max(1, Min(upper, inc_amount_.get()));
+  which += inc_ * inc_amount;
+
+  if (which > upper) {
+    if (playmode_.get() == "bounce1") {
+      inc_ *= -1;
+      return increment(upper, lower, upper);
+    } else if (playmode_.get() == "bounce2") {
+      inc_ *= -1;
+      return upper;
+    } else {
+      if (playmode_.get() == "once")
+	execmode_ = string("stop");
+      return lower;
+    }
+  }
+
+  if (which < lower) {
+    if (playmode_.get() == "bounce1") {
+      inc_ *= -1;
+      return increment(lower, lower, upper);
+    } else if (playmode_.get() == "bounce2") {
+      inc_ *= -1;
+      return lower;
+    } else {
+      if (playmode_.get() == "once")
+	execmode_ = string("stop");
+      return upper;
+    }
+  }
+  return which;
+}
+
+void
+HDF5DataReader::animate_execute( string new_filename,
+				 vector< vector<string> >& frame_paths,
+				 vector< vector<string> >& frame_datasets )
+{
+  update_state(NeedData);
+
+  reset_vars();
+
+  // Update the increment.
+  const int start = range_min_.get();
+  const int end = range_max_.get();
+  if (playmode_.get() == "once" || playmode_.get() == "loop")
+    inc_ = (start>end)?-1:1;
+
+  // If the current value is invalid, reset it to the start.
+  int lower = start;
+  int upper = end;
+  if (lower > upper) {int tmp = lower; lower = upper; upper = tmp; }
+  if (current_.get() < lower || current_.get() > upper) {
+    current_.set(start);
+    inc_ = (start>end)?-1:1;
+  }
+
+  // Cash execmode and reset it in case we bail out early.
+
+  int which = current_.get();
+
+  bool cache = (playmode_.get() != "inc_w_exec");
+
+  if (execmode_ == "step") {
+
+    which = increment(which, lower, upper);
+    current_.set(which);
+    current_.reset();
+
+    ReadandSendData( new_filename, frame_paths[which],
+		     frame_datasets[which], true, cache, which );
+
+  } else if (execmode_ == "play") {
+
+    if (playmode_.get() == "once" && which >= end)
+      which = start;
+
+    bool stop;
+    do {
+      int delay = delay_.get();
+
+      int next = increment(which, lower, upper);
+      stop = (execmode_ == "stop");
+
+      current_.set(which);
+      current_.reset();
+
+      ReadandSendData( new_filename, frame_paths[which],
+		       frame_datasets[which], stop, stop ? cache : true,
+		       which );
+
+      if (!stop && delay > 0) {
+	const unsigned int secs = delay / 1000;
+	const unsigned int msecs = delay % 1000;
+	if (secs)  { sleep(secs); }
+	if (msecs) { usleep(msecs * 1000); }
+      }
+
+      if (playmode_.get() == "once" || !stop )
+	which = next;
+
+    } while (!stop);
+  } else {
+    
+    ReadandSendData( new_filename, frame_paths[which],
+		     frame_datasets[which], true, cache, which );
+
+    if (playmode_.get() == "inc_w_exec") {
+      which = increment(which, lower, upper);
+      current_.set(which);
+      current_.reset();
+    }
+  }
+
+  execmode_ = string("none");
+}
+
 } // End namespace DataIO

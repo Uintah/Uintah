@@ -2,49 +2,111 @@
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 16 17]
-set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 300 318]
-set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 300 55]
-set m3 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 369 173]
-set m4 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 34 133]
-set m5 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 34 333]
-set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 34 553]
-set m7 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 64 228]
-set m8 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 105 467]
-set m9 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 369 416]
-set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 369 517]
-set m11 [addModuleAtPosition "SCIRun" "Render" "Viewer" 16 675]
+global userName
+set userName ""
+
+global runDate
+set runDate ""
+
+global runTime
+set runTime ""
+
+global notes
+set notes ""
+
+set bbox {}
+
+set m0 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 17 17]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 462 634]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 246 373]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 27 407]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 27 713]
+set m5 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 45 328]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 45 631]
+set m7 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 444 547]
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 444 713]
+set m9 [addModuleAtPosition "SCIRun" "Render" "Viewer" 9 835]
+set m10 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 17 123]
+set m11 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 219 119]
+set m12 [addModuleAtPosition "Fusion" "Fields" "NrrdFieldConverter" 27 230]
+set m13 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 461 119]
+set m14 [addModuleAtPosition "Fusion" "Fields" "NrrdFieldConverter" 443 229]
 
 addConnection $m2 0 $m1 0
-addConnection $m5 0 $m6 0
-addConnection $m7 0 $m5 1
-addConnection $m8 0 $m6 1
-addConnection $m5 0 $m8 1
-addConnection $m2 0 $m8 0
-addConnection $m9 0 $m10 0
-addConnection $m1 0 $m10 1
-addConnection $m5 0 $m9 1
-addConnection $m0 0 $m3 0
-addConnection $m4 0 $m5 0
-addConnection $m4 0 $m7 0
-addConnection $m0 0 $m1 1
-addConnection $m3 0 $m9 0
-addConnection $m7 1 $m11 0
-addConnection $m6 0 $m11 1
-addConnection $m10 0 $m11 2
-addConnection $m0 2 $m4 0
+addConnection $m3 0 $m4 0
+addConnection $m5 0 $m3 1
+addConnection $m6 0 $m4 1
+addConnection $m3 0 $m6 1
+addConnection $m2 0 $m6 0
+addConnection $m7 0 $m8 0
+addConnection $m1 0 $m8 1
+addConnection $m3 0 $m7 1
+addConnection $m5 1 $m9 0
+addConnection $m4 0 $m9 1
+addConnection $m8 0 $m9 2
+addConnection $m0 0 $m10 0
+addConnection $m0 1 $m10 1
+addConnection $m0 0 $m11 0
+addConnection $m0 2 $m11 1
+addConnection $m0 3 $m13 0
+addConnection $m12 0 $m3 0
+addConnection $m12 0 $m5 0
+addConnection $m10 0 $m12 0
+addConnection $m11 0 $m12 1
+addConnection $m10 0 $m14 0
+addConnection $m13 0 $m14 1
+addConnection $m14 0 $m1 1
+addConnection $m14 0 $m7 0
 
 set $m0-notes {}
-set $m0-show_status {1}
-set $m0-filename {/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10089_00.mds}
+set $m0-selectable_min {0}
+set $m0-selectable_max {100}
+set $m0-selectable_inc {1}
+set $m0-range_min {0}
+set $m0-range_max {0}
+set $m0-playmode {once}
+set $m0-current {0}
+set $m0-execmode {init}
+set $m0-delay {0}
+set $m0-inc-amount {1}
+set $m0-filename {/z/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10107.h5}
+set $m0-datasets {{/ NIMROD OUTPUTS CODE GRID PHI} {/ NIMROD OUTPUTS CODE GRID R} {/ NIMROD OUTPUTS CODE GRID Z} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD PHI} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD R} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD Z} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE PRESSURE Values}}
+set $m0-dumpname {/tmp/NIMROD_10107.h5.dump}
+set $m0-ports {}
+set $m0-ndims {0}
+set $m0-mergeData {1}
+set $m0-assumeSVT {1}
+set $m0-animate {0}
+set $m0-0-dim {41}
+set $m0-0-start {0}
+set $m0-0-count {41}
+set $m0-0-stride {1}
+set $m0-1-dim {2}
+set $m0-1-start {0}
+set $m0-1-count {1}
+set $m0-1-stride {1}
+set $m0-2-dim {2}
+set $m0-2-start {0}
+set $m0-2-count {1}
+set $m0-2-stride {1}
+set $m0-3-dim {2}
+set $m0-3-start {0}
+set $m0-3-count {1}
+set $m0-3-stride {1}
+set $m0-4-dim {2}
+set $m0-4-start {0}
+set $m0-4-count {1}
+set $m0-4-stride {1}
+set $m0-5-dim {2}
+set $m0-5-start {0}
+set $m0-5-count {1}
+set $m0-5-stride {1}
 set $m1-notes {}
-set $m1-show_status {1}
 set $m1-isFixed {1}
 set $m1-min {1.04083e-17}
 set $m1-max {733699}
 set $m1-makeSymmetric {0}
 set $m2-notes {}
-set $m2-show_status {1}
 set $m2-tcl_status {Calling GenStandardColorMaps!}
 set $m2-positionList {{0 35} {2 23} {396 18}}
 set $m2-nodeList {256 257 258}
@@ -56,236 +118,167 @@ set $m2-resolution {255}
 set $m2-realres {255}
 set $m2-gamma {-0.6}
 set $m3-notes {}
-set $m3-show_status {1}
-set $m3-wrap {1}
-set $m3-dims {3}
-set $m3-i-dim {385}
-set $m3-j-dim {192}
-set $m3-k-dim {10}
-set $m3-i-start {0}
-set $m3-j-start {0}
-set $m3-k-start {0}
-set $m3-i-stop {384}
-set $m3-j-stop {0}
-set $m3-k-stop {0}
-set $m3-i-stride {10}
-set $m3-j-stride {5}
-set $m3-k-stride {1}
-set $m3-i-wrap {0}
-set $m3-j-wrap {1}
-set $m3-k-wrap {1}
+set $m3-stepsize {0.0001}
+set $m3-tolerance {0.0001}
+set $m3-maxsteps {200}
+set $m3-direction {0}
+set $m3-color {1}
+set $m3-remove-colinear {1}
+set $m3-method {4}
+set $m3-np {1}
 set $m4-notes {}
-set $m4-show_status {1}
-set $m4-wrap {1}
-set $m4-dims {3}
-set $m4-i-dim {385}
-set $m4-j-dim {192}
-set $m4-k-dim {10}
-set $m4-i-start {0}
-set $m4-j-start {0}
-set $m4-k-start {0}
-set $m4-i-stop {384}
-set $m4-j-stop {0}
-set $m4-k-stop {0}
-set $m4-i-stride {10}
-set $m4-j-stride {5}
-set $m4-k-stride {1}
-set $m4-i-wrap {0}
-set $m4-j-wrap {1}
-set $m4-k-wrap {1}
+set $m4-nodes-on {1}
+set $m4-nodes-transparency {0}
+set $m4-nodes-as-disks {0}
+set $m4-edges-on {1}
+set $m4-edges-transparency {0}
+set $m4-faces-on {0}
+set $m4-use-normals {0}
+set $m4-use-transparency {0}
+set $m4-vectors-on {0}
+set $m4-normalize-vectors {25277570}
+set $m4-has_vector_data {0}
+set $m4-bidirectional {0}
+set $m4-vector-usedefcolor {0}
+set $m4-tensors-on {0}
+set $m4-has_tensor_data {0}
+set $m4-scalars-on {0}
+set $m4-scalars-transparency {0}
+set $m4-has_scalar_data {1}
+set $m4-text-on {0}
+set $m4-text-use-default-color {1}
+set $m4-text-color-r {1.0}
+set $m4-text-color-g {1.0}
+set $m4-text-color-b {1.0}
+set $m4-text-backface-cull {0}
+set $m4-text-fontsize {1}
+set $m4-text-precision {2}
+set $m4-text-render_locations {0}
+set $m4-text-show-data {1}
+set $m4-text-show-nodes {0}
+set $m4-text-show-edges {0}
+set $m4-text-show-faces {0}
+set $m4-text-show-cells {0}
+set $m4-def-color-r {0.5}
+set $m4-def-color-g {0.5}
+set $m4-def-color-b {0.5}
+set $m4-def-color-a {0.5}
+set $m4-node_display_type {Spheres}
+set $m4-edge_display_type {Cylinders}
+set $m4-data_display_type {Arrows}
+set $m4-tensor_display_type {Boxes}
+set $m4-scalar_display_type {Points}
+set $m4-active_tab {Edges}
+set $m4-node_scale {0.0500}
+set $m4-edge_scale {0.0300}
+set $m4-vectors_scale {0.3}
+set $m4-tensors_scale {0.30}
+set $m4-scalars_scale {0.30}
+set $m4-show_progress {39848618}
+set $m4-interactive_mode {Interactive}
+set $m4-field-name {}
+set $m4-field-name-update {1}
+set $m4-node-resolution {6}
+set $m4-edge-resolution {6}
+set $m4-data-resolution {6}
 set $m5-notes {}
-set $m5-show_status {1}
-set $m5-stepsize {0.0001}
-set $m5-tolerance {0.0001}
-set $m5-maxsteps {200}
-set $m5-direction {0}
-set $m5-color {1}
-set $m5-remove-colinear {1}
-set $m5-method {4}
-set $m5-np {1}
+set $m5-endpoints {1}
+set $m5-endpoint0x {1.97785}
+set $m5-endpoint0y {0.0023881}
+set $m5-endpoint0z {0.00733424}
+set $m5-endpoint1x {1.98503}
+set $m5-endpoint1y {0.00189332}
+set $m5-endpoint1z {0.0201022}
+set $m5-widgetscale {0.103313}
+set $m5-maxseeds {2}
+set $m5-numseeds {10}
+set $m5-rngseed {1}
+set $m5-rnginc {1}
+set $m5-clamp {0}
+set $m5-autoexecute {1}
+set $m5-type {}
+set $m5-dist {impuni}
+set $m5-whichtab {Widget}
 set $m6-notes {}
-set $m6-show_status {1}
-set $m6-nodes-on {1}
-set $m6-nodes-as-disks {0}
-set $m6-edges-on {1}
-set $m6-faces-on {0}
-set $m6-use-normals {0}
-set $m6-use-transparency {0}
-set $m6-vectors-on {0}
-set $m6-normalize-vectors {25277570}
-set $m6-has_vector_data {0}
-set $m6-bidirectional {0}
-set $m6-arrow-heads-on {1}
-set $m6-tensors-on {0}
-set $m6-has_tensor_data {0}
-set $m6-text-on {0}
-set $m6-text-use-default-color {1}
-set $m6-text-color-r {1.0}
-set $m6-text-color-g {1.0}
-set $m6-text-color-b {1.0}
-set $m6-text-backface-cull {0}
-set $m6-text-fontsize {1}
-set $m6-text-precision {2}
-set $m6-text-render_locations {0}
-set $m6-text-show-data {1}
-set $m6-text-show-nodes {0}
-set $m6-text-show-edges {0}
-set $m6-text-show-faces {0}
-set $m6-text-show-cells {0}
-set $m6-def-color-r {0.5}
-set $m6-def-color-g {0.5}
-set $m6-def-color-b {0.5}
-set $m6-def-color-a {0.5}
-set $m6-node_display_type {Spheres}
-set $m6-edge_display_type {Cylinders}
-set $m6-data_display_type {Arrows}
-set $m6-tensor_display_type {Boxes}
-set $m6-active_tab {Edges}
-set $m6-node_scale {0.0500}
-set $m6-edge_scale {0.0300}
-set $m6-vectors_scale {0.3}
-set $m6-tensors_scale {0.30}
-set $m6-show_progress {39848618}
-set $m6-interactive_mode {Interactive}
-set $m6-node-resolution {6}
-set $m6-edge-resolution {6}
-set $m6-data-resolution {6}
+set $m6-isFixed {0}
+set $m6-min {0}
+set $m6-max {191}
+set $m6-makeSymmetric {0}
 set $m7-notes {}
-set $m7-show_status {1}
-set $m7-endpoints {1}
-set $m7-endpoint0x {1.97785}
-set $m7-endpoint0y {0.0023881}
-set $m7-endpoint0z {0.00733424}
-set $m7-endpoint1x {1.98503}
-set $m7-endpoint1y {0.00189332}
-set $m7-endpoint1z {0.0201022}
-set $m7-widgetscale {0.103313}
-set $m7-maxseeds {2}
-set $m7-numseeds {10}
-set $m7-rngseed {1}
-set $m7-rnginc {1}
-set $m7-clamp {0}
-set $m7-autoexecute {1}
-set $m7-type {}
-set $m7-dist {impuni}
-set $m7-whichtab {Widget}
+set $m7-interpolation_basis {linear}
+set $m7-map_source_to_single_dest {0}
+set $m7-exhaustive_search {1}
+set $m7-exhaustive_search_max_dist {-1}
+set $m7-np {1}
 set $m8-notes {}
-set $m8-show_status {1}
-set $m8-isFixed {0}
-set $m8-min {                0}
-set $m8-max {               76}
-set $m8-makeSymmetric {0}
+set $m8-nodes-on {0}
+set $m8-nodes-transparency {0}
+set $m8-nodes-as-disks {0}
+set $m8-edges-on {1}
+set $m8-edges-transparency {0}
+set $m8-faces-on {0}
+set $m8-use-normals {0}
+set $m8-use-transparency {0}
+set $m8-vectors-on {0}
+set $m8-normalize-vectors {39847676}
+set $m8-has_vector_data {0}
+set $m8-bidirectional {0}
+set $m8-vector-usedefcolor {0}
+set $m8-tensors-on {0}
+set $m8-has_tensor_data {0}
+set $m8-scalars-on {0}
+set $m8-scalars-transparency {0}
+set $m8-has_scalar_data {1}
+set $m8-text-on {0}
+set $m8-text-use-default-color {1}
+set $m8-text-color-r {1.0}
+set $m8-text-color-g {1.0}
+set $m8-text-color-b {1.0}
+set $m8-text-backface-cull {0}
+set $m8-text-fontsize {1}
+set $m8-text-precision {2}
+set $m8-text-render_locations {0}
+set $m8-text-show-data {1}
+set $m8-text-show-nodes {0}
+set $m8-text-show-edges {0}
+set $m8-text-show-faces {0}
+set $m8-text-show-cells {0}
+set $m8-def-color-r {0.5}
+set $m8-def-color-g {0.5}
+set $m8-def-color-b {0.5}
+set $m8-def-color-a {0.5}
+set $m8-node_display_type {Spheres}
+set $m8-edge_display_type {Cylinders}
+set $m8-data_display_type {Arrows}
+set $m8-tensor_display_type {Boxes}
+set $m8-scalar_display_type {Points}
+set $m8-active_tab {Edges}
+set $m8-node_scale {0.03}
+set $m8-edge_scale {0.03}
+set $m8-vectors_scale {0.3}
+set $m8-tensors_scale {0.30}
+set $m8-scalars_scale {0.30}
+set $m8-show_progress {19551847}
+set $m8-interactive_mode {Interactive}
+set $m8-field-name {}
+set $m8-field-name-update {1}
+set $m8-node-resolution {6}
+set $m8-edge-resolution {6}
+set $m8-data-resolution {6}
 set $m9-notes {}
-set $m9-show_status {1}
-set $m9-interpolation_basis {linear}
-set $m9-map_source_to_single_dest {0}
-set $m9-exhaustive_search {1}
-set $m9-exhaustive_search_max_dist {-1}
-set $m9-np {1}
 set $m10-notes {}
-set $m10-show_status {1}
-set $m10-nodes-on {0}
-set $m10-nodes-as-disks {0}
-set $m10-edges-on {1}
-set $m10-faces-on {0}
-set $m10-use-normals {0}
-set $m10-use-transparency {0}
-set $m10-vectors-on {0}
-set $m10-normalize-vectors {39847676}
-set $m10-has_vector_data {0}
-set $m10-bidirectional {0}
-set $m10-arrow-heads-on {1}
-set $m10-tensors-on {0}
-set $m10-has_tensor_data {0}
-set $m10-text-on {0}
-set $m10-text-use-default-color {1}
-set $m10-text-color-r {1.0}
-set $m10-text-color-g {1.0}
-set $m10-text-color-b {1.0}
-set $m10-text-backface-cull {0}
-set $m10-text-fontsize {1}
-set $m10-text-precision {2}
-set $m10-text-render_locations {0}
-set $m10-text-show-data {1}
-set $m10-text-show-nodes {0}
-set $m10-text-show-edges {0}
-set $m10-text-show-faces {0}
-set $m10-text-show-cells {0}
-set $m10-def-color-r {0.5}
-set $m10-def-color-g {0.5}
-set $m10-def-color-b {0.5}
-set $m10-def-color-a {0.5}
-set $m10-node_display_type {Spheres}
-set $m10-edge_display_type {Cylinders}
-set $m10-data_display_type {Arrows}
-set $m10-tensor_display_type {Boxes}
-set $m10-active_tab {Edges}
-set $m10-node_scale {0.03}
-set $m10-edge_scale {0.03}
-set $m10-vectors_scale {0.3}
-set $m10-tensors_scale {0.30}
-set $m10-show_progress {19551847}
-set $m10-interactive_mode {Interactive}
-set $m10-node-resolution {6}
-set $m10-edge-resolution {6}
-set $m10-data-resolution {6}
+set $m10-datasets {{-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-R:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-Z:Scalar} }
+set $m10-nmodes {0}
 set $m11-notes {}
-set $m11-show_status {1}
-$m11 ui
-set $m11-ViewWindow_0-pos {}
-set $m11-ViewWindow_0-caxes {0}
-set $m11-ViewWindow_0-raxes {1}
-set $m11-ViewWindow_0-iaxes {}
-set $m11-ViewWindow_0-have_collab_vis {0}
-set $m11-ViewWindow_0-view-eyep-x {          3.05378}
-set $m11-ViewWindow_0-view-eyep-y {         -15.4529}
-set $m11-ViewWindow_0-view-eyep-z {          3.68747}
-set $m11-ViewWindow_0-view-lookat-x {        0.0381261}
-set $m11-ViewWindow_0-view-lookat-y {         0.013994}
-set $m11-ViewWindow_0-view-lookat-z {       -0.0123404}
-set $m11-ViewWindow_0-view-up-x {         0.067677}
-set $m11-ViewWindow_0-view-up-y {         0.244573}
-set $m11-ViewWindow_0-view-up-z {         0.967266}
-set $m11-ViewWindow_0-view-fov {               20}
-set $m11-ViewWindow_0-view-eyep_offset-x {}
-set $m11-ViewWindow_0-view-eyep_offset-y {}
-set $m11-ViewWindow_0-view-eyep_offset-z {}
-set $m11-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
-set $m11-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
-set $m11-ViewWindow_0-bgcolor-r {                0}
-set $m11-ViewWindow_0-bgcolor-g {                0}
-set $m11-ViewWindow_0-bgcolor-b {                0}
-set $m11-ViewWindow_0-shading {}
-set $m11-ViewWindow_0-do_stereo {0}
-set $m11-ViewWindow_0-ambient-scale {1.0}
-set $m11-ViewWindow_0-diffuse-scale {1.0}
-set $m11-ViewWindow_0-specular-scale {0.4}
-set $m11-ViewWindow_0-emission-scale {1.0}
-set $m11-ViewWindow_0-shininess-scale {1.0}
-set $m11-ViewWindow_0-polygon-offset-factor {1.0}
-set $m11-ViewWindow_0-polygon-offset-units {0.0}
-set $m11-ViewWindow_0-point-size {1.0}
-set $m11-ViewWindow_0-line-width {1.0}
-set $m11-ViewWindow_0-sbase {0.40}
-set $m11-ViewWindow_0-sr {1}
-set $m11-ViewWindow_0-do_bawgl {0}
-set $m11-ViewWindow_0-drawimg {}
-set $m11-ViewWindow_0-saveprefix {}
-set $m11-ViewWindow_0-resx {}
-set $m11-ViewWindow_0-resy {}
-set $m11-ViewWindow_0-aspect {}
-set $m11-ViewWindow_0-aspect_ratio {}
-set $m11-ViewWindow_0-global-light {1}
-set $m11-ViewWindow_0-global-fog {0}
-set $m11-ViewWindow_0-global-debug {0}
-set $m11-ViewWindow_0-global-clip {0}
-set $m11-ViewWindow_0-global-cull {0}
-set $m11-ViewWindow_0-global-dl {0}
-set $m11-ViewWindow_0-global-type {Gouraud}
-set $m11-ViewWindow_0-unused {1}
-set $m11-ViewWindow_0-unused {1}
-set $m11-ViewWindow_0-unused {1}
-set $m11-ViewWindow_0-unused {1}
-$m5 initialize_ui
+set $m11-datasets {{-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-R:Scalar} {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-Z:Scalar} }
+set $m11-nmodes {0}
+set $m12-notes {}
+set $m12-datasets {{-NIMROD-OUTPUTS-CODE-GRID-XYZ:Vector} {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-XYZ:Vector} }
+set $m13-notes {}
+set $m13-datasets {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar}
+set $m13-nmodes {0}
+set $m14-notes {}
+set $m14-datasets {{-NIMROD-OUTPUTS-CODE-GRID-XYZ:Vector} {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar} }
+$m0 initialize_ui
 
 ::netedit scheduleok

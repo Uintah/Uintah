@@ -42,7 +42,10 @@ namespace SCIRun {
 PersistentTypeID StructQuadSurfMesh::type_id("StructQuadSurfMesh", "Mesh", maker);
 
 StructQuadSurfMesh::StructQuadSurfMesh()
-  : synchronized_(ALL_ELEMENTS_E)
+  : normal_lock_("StructQuadSurfMesh Normals Lock"),
+    synchronized_(ALL_ELEMENTS_E)
+    
+    
 {
 }
   
@@ -50,12 +53,14 @@ StructQuadSurfMesh::StructQuadSurfMesh(unsigned int x, unsigned int y)
   : ImageMesh(x, y, Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0)),
     points_(x, y),
     normals_(x,y),
+    normal_lock_("StructQuadSurfMesh Normals Lock"),
     synchronized_(ALL_ELEMENTS_E)
 {
 }
 
 StructQuadSurfMesh::StructQuadSurfMesh(const StructQuadSurfMesh &copy)
   : ImageMesh(copy),
+    normal_lock_("StructQuadSurfMesh Normals Lock"),
     synchronized_(copy.synchronized_)
 {
   points_.copy( copy.points_ );
@@ -383,6 +388,11 @@ StructQuadSurfMesh::synchronize(unsigned int tosync)
 void
 StructQuadSurfMesh::compute_normals()
 {
+  normal_lock_.lock();
+  if (synchronized_ & NORMALS_E) {
+    normal_lock_.unlock();
+    return;
+  }
   normals_.resize(points_.dim1(), points_.dim2()); // 1 per node
 
   // build table of faces that touch each node
@@ -439,6 +449,7 @@ StructQuadSurfMesh::compute_normals()
     ++nif_iter;
   }
   synchronized_ |= NORMALS_E;
+  normal_lock_.unlock();
 }
 
 #define STRUCT_QUAD_SURF_MESH_VERSION 1

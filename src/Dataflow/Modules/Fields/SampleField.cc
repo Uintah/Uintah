@@ -78,6 +78,7 @@ class SampleField : public Module
   GuiString widgetType_;
   GuiString randDist_;
   GuiString whichTab_;
+  GuiInt force_rake_reset_;
 
   int vf_generation_;
 
@@ -120,6 +121,7 @@ SampleField::SampleField(GuiContext* ctx)
     widgetType_(ctx->subVar("type")),
     randDist_(ctx->subVar("dist")),
     whichTab_(ctx->subVar("whichtab")),
+    force_rake_reset_(ctx->subVar("force-rake-reset", false)),
     vf_generation_(0),
     widget_lock_("StreamLines widget lock"),
     rake_(0)
@@ -163,17 +165,17 @@ SampleField::widget_moved(bool last)
 void
 SampleField::execute_rake()
 {
-  const BBox bbox = vfhandle_->mesh()->get_bounding_box();
-  Point min = bbox.min();
-  Point max = bbox.max();
-  double quarterl2norm;
-
-  if (firsttime_)
+  force_rake_reset_.reset();
+  if (firsttime_ || force_rake_reset_.get())
   {
     firsttime_ = false;
 
-    if(!endpoints_.get())
+    if(!endpoints_.get() || force_rake_reset_.get())
     {
+      const BBox bbox = vfhandle_->mesh()->get_bounding_box();
+      const Point min = bbox.min();
+      const Point max = bbox.max();
+
       Point center(min.x()+(max.x()-min.x())/2.,
 		   min.y()+(max.y()-min.y())/2.,
 		   min.z()+(max.z()-min.z())/2.);
@@ -185,7 +187,7 @@ SampleField::execute_rake()
       double z  = max.z()-min.z();
       double z2 = z*z;
   
-      quarterl2norm = sqrt(x2+y2+z2)/4.;
+      const double quarterl2norm = sqrt(x2+y2+z2)/4.;
       widgetscale_.set( quarterl2norm*.06 );// this size seems empirically good
 
       endpoint0x_.set( center.x()-quarterl2norm   );
@@ -198,8 +200,21 @@ SampleField::execute_rake()
       endpoints_.set( 1 );
     }
 
-    endpoint0_ = Point( endpoint0x_.get(),endpoint0y_.get(),endpoint0z_.get() ); 
-    endpoint1_ = Point( endpoint1x_.get(),endpoint1y_.get(),endpoint1z_.get() ); 
+    endpoint0_ = Point(endpoint0x_.get(),endpoint0y_.get(),endpoint0z_.get()); 
+    endpoint1_ = Point(endpoint1x_.get(),endpoint1y_.get(),endpoint1z_.get()); 
+
+    
+    if (force_rake_reset_.get())
+    {
+      if (widgetid_)
+      {
+	ogport_->delObj(widgetid_);
+	ogport_->flushViews();
+      }
+      widgetid_ = 0;
+      rake_ = 0; // leak rake
+      force_rake_reset_.set(0);
+    }
   }
 
   if (!rake_)
@@ -213,6 +228,7 @@ SampleField::execute_rake()
     ogport_->flushViews();
   }
 
+  Point min, max;
   rake_->GetEndpoints(min, max);
   
   Vector dir(max-min);
@@ -246,7 +262,10 @@ SampleField::execute_rake()
   }
   seeds->freeze();
   ofport_->send(seeds);
+
+  update_state(Completed);
 }
+
 
 
 
@@ -274,6 +293,8 @@ SampleField::execute_random()
   rake_ = 0;
 
   ofport_->send(seedhandle);
+
+  update_state(Completed);
 }
 
 

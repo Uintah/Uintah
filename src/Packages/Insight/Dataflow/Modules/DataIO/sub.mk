@@ -35,13 +35,16 @@ SRCS     += \
 	$(SRCDIR)/ImageFileWriter.cc\
 	$(SRCDIR)/ImageReaderUChar2D.cc \
 	$(SRCDIR)/ImageReaderUChar3D.cc \
-	$(SRCDIR)/Switch.cc\
 	$(SRCDIR)/ImageReaderFloat2D.cc\
 	$(SRCDIR)/ImageReaderFloat3D.cc\
 	$(SRCDIR)/ImageReaderUShort2D.cc\
 	$(SRCDIR)/ImageReaderUShort3D.cc\
 	$(SRCDIR)/ColorImageReaderUChar2D.cc\
 	$(SRCDIR)/ColorImageReaderFloat2D.cc\
+	$(SRCDIR)/ColorImageReaderUChar3D.cc\
+	$(SRCDIR)/ColorImageReaderFloat3D.cc\
+	$(SRCDIR)/ChooseImage.cc\
+#	$(SRCDIR)/ImageInfo.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Insight/Core/Datatypes Dataflow/Network \

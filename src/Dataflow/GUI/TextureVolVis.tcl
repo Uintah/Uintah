@@ -43,9 +43,7 @@ itcl_class SCIRun_Visualization_TextureVolVis {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    wm deiconify $w
-	    raise $w
-	    return;
+	    return
 	}
 	toplevel $w
 	wm minsize $w 250 300
@@ -67,8 +65,7 @@ itcl_class SCIRun_Visualization_TextureVolVis {
 		-variable $this-render_style -value 2 \
 		-anchor w -command $n
 
-	pack $w.f.l $w.f.modeo $w.f.modem $w.f.modea \
-		-side top -fill x
+	pack $w.f.l $w.f.modeo $w.f.modem $w.f.modea -side top -fill x -padx 4 -pady 4
 
 	frame $w.f2 -relief groove -borderwidth 2
 	pack $w.f2 -padx 2 -pady 2 -fill x
@@ -86,9 +83,7 @@ itcl_class SCIRun_Visualization_TextureVolVis {
 		-variable $this-draw_mode -value 2 \
 		-anchor w -command $n
 
-	pack $w.f2.l $w.f2.full $w.f2.los $w.f2.roi \
-		-side top -fill x
-
+	pack $w.f2.l $w.f2.full $w.f2.los $w.f2.roi -side top -fill x -padx 4
 
 	frame $w.f3 -relief groove -borderwidth 2
 	pack $w.f3 -padx 2 -pady 2 -fill x
@@ -102,15 +97,13 @@ itcl_class SCIRun_Visualization_TextureVolVis {
 		-variable $this-interp_mode -value 0 \
 		-anchor w -command $n
 
-	pack $w.f3.l $w.f3.interp $w.f3.near \
-		-side top -fill x
-
+	pack $w.f3.l $w.f3.interp $w.f3.near -side top -fill x -padx 4
+ 
 	global $this-num_slices
 	scale $w.nslice -variable $this-num_slices \
 		-from 64 -to 1024 -label "Number of Slices" \
 		-showvalue true \
 		-orient horizontal \
-
 
 	global $this-alpha_scale
 	
@@ -119,14 +112,12 @@ itcl_class SCIRun_Visualization_TextureVolVis {
 		-showvalue true -resolution 0.001 \
 		-orient horizontal 
 
-	pack $w.stransp $w.nslice  -side top -fill x
+	pack $w.stransp $w.nslice  -side top -fill x -padx 4 -pady 2
 
-	button $w.exec -text "Execute" -command $n
-	pack $w.exec -side top -fill x
 	bind $w.nslice <ButtonRelease> $n
 	bind $w.stransp <ButtonRelease> $n
 	
-	button $w.close -text "Close" -command "wm withdraw $w"
-	pack $w.close -side top -fill x
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }

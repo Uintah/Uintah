@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
-<?xml-stylesheet href="../../../../../doc/Utilities/XML/package-component.xsl" type="text/xsl"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/package-component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
 <!--
@@ -24,6 +24,10 @@
   <overview>
     <authors>
     </authors>
+    <summary>
+    </summary>
+    <description>Converts an ITK Image to a Field.  If the radiobutton "Reference ITK Image Data" is selected, then the data is not copied and an ITKImageField or ITKLatVolField will result.  If the "Copy Data" option is selected, the data is copied and an ImageField or LatVolField will be created. This module will convert Scalar Data Vector Data, and RGBPixel data.  
+  </description>
   </overview>
   <implementation>
   </implementation>

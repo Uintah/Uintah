@@ -65,6 +65,8 @@ void ModuleHelper::run()
       switch(msg->type){
       case MessageTypes::GoAway:
 	return;
+      case MessageTypes::GoAwayWarn:
+	break;
       case MessageTypes::ExecuteModule:
 	module->do_execute();
 	break;

@@ -1,5 +1,0 @@
-void collect_drag_cc(
-	CCVariable<double> su_dragx_cc, CCVariable<double> sp_dragx_cc, 
-        const Array3<double> su_dragx_fc, const Array3<double> sp_dragx_fc, 
-        int ioff, int joff, int koff,
-        IntVector valid_lo, IntVector valid_hi);

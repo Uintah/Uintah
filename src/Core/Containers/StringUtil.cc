@@ -93,7 +93,8 @@ ccast_unsafe(const string &str)
 }
 
 
-vector<string> split_string(const std::string& str, char sep)
+vector<string>
+split_string(const std::string& str, char sep)
 {
   vector<string> result;
   string s(str);
@@ -109,6 +110,50 @@ vector<string> split_string(const std::string& str, char sep)
   }
   return result;
 }
+
+
+/////////
+// C++ify a string, turn newlines into \n, use \t, \r, \\ \", etc.
+string
+string_Cify(const string &str)
+{
+  string result("");
+  for (string::size_type i = 0; i < str.size(); i++)
+  {
+    switch(str[i])
+    {
+    case '\n':
+      result.push_back('\\');
+      result.push_back('n');
+      break;
+
+    case '\r':
+      result.push_back('\\');
+      result.push_back('r');
+      break;
+
+    case '\t':
+      result.push_back('\\');
+      result.push_back('t');
+      break;
+
+    case '"':
+      result.push_back('\\');
+      result.push_back('"');
+      break;
+
+    case '\\':
+      result.push_back('\\');
+      result.push_back('\\');
+      break;
+
+    default:
+      result.push_back(str[i]);
+    }
+  }
+  return result;
+}
+
 
 } // End namespace SCIRun
 

@@ -31,6 +31,39 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
     method set_defaults {} {
 
+	global have_groups
+	global have_attributes
+	global have_datasets
+
+	set have_groups     0
+	set have_attributes 0
+	set have_datasets   0
+ 
+        global $this-selectable_min
+        global $this-selectable_max
+        global $this-selectable_inc
+        global $this-range_min
+        global $this-range_max
+	global $this-playmode
+	global $this-dependence
+	global $this-current
+	global $this-execmode
+	global $this-delay
+	global $this-inc-amount
+
+        set $this-selectable_min     0
+        set $this-selectable_max     100
+        set $this-selectable_inc     1
+        set $this-range_min          0
+        set $this-range_max          0
+	set $this-playmode           once
+	set $this-dependence         independent
+	set $this-current            0
+	set $this-execmode           "init"
+	set $this-delay              0
+	set $this-inc-amount         1
+
+
 	global $this-mergeData
 	global $this-assumeSVT
 	global $this-animate
@@ -96,17 +129,15 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	global env
 	global $this-filename
 
-	set w [format "%s-fb" .ui[modname]]
+	set w [format "%s-filebox" .ui[modname]]
 
 	if {[winfo exists $w]} {
-	    set child [lindex [winfo children $w] 0]
-
-	    # $w withdrawn by $child's procedures
-	    raise $child
+	    moveToCursor $w
+	    wm deiconify $w
 	    return;
 	}
 
-	toplevel $w
+	toplevel $w -class TkFDialog
 	set initdir ""
 	
 	# place to put preferred data directory
@@ -138,31 +169,43 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	makeOpenFilebox \
 	    -parent $w \
 	    -filevar $this-filename \
-	    -command "$this-c update_file; destroy $w" \
-	    -cancel "destroy $w" \
+	    -command "$this-c update_file; wm withdraw $w" \
+	    -cancel "wm withdraw $w" \
 	    -title $title \
 	    -filetypes $types \
 	    -initialdir $initdir \
 	    -defaultextension $defext
+
+       moveToCursor $w
+       wm deiconify $w
     }
 
     method ui {} {
+	global $this-mergeData
+	global $this-assumeSVT
+	global $this-animate
+	global $this-animate-style
+	global $this-animate-frame
+	global $this-animate-frame2
+	global $this-animate-nframes
+
+	global $this-filename
+	global $this-datasets
+	global $this-dumpname
+	global $this-selectionString
+	global $this-regexp
+
+	global $this-ports
+	global $this-ndims
+	global max_dims
+
 	global env
 	set w .ui[modname]
 
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
-
-#	if {[winfo exists $w]} {
-#	    set child [lindex [winfo children $w] 0]
-#
-#	    # $w withdrawn by $child's procedures
-#	    raise $child
-#	    return;
-#	}
 
 	# Before building the tree save the current selections since
 	# they erased when the tree is built.
@@ -186,14 +229,13 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 
 	option add *TreeView.font { Courier 12 }
-	#option add *TreeView.Button.background grey95
-	#option add *TreeView.Button.activeBackground grey90
-	#option add *TreeView.Column.background grey90
+#	option add *TreeView.Button.background grey95
+#	option add *TreeView.Button.activeBackground grey90
+#	option add *TreeView.Column.background grey90
 	option add *TreeView.Column.titleShadow { grey70 1 }
-	#option add *TreeView.Column.titleFont { Helvetica 12 bold }
+#	option add *TreeView.Column.titleFont { Helvetica 12 bold }
 	option add *TreeView.Column.font { Courier 12 }
 
-#	iwidgets::scrolledframe $w.treeview
 	iwidgets::labeledframe $w.treeview -labeltext "File Treeview"
 
 	set treeframe [$w.treeview childsite]
@@ -202,7 +244,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set tree [blt::tree create]    
 
 	set treeview [Scrolled_Treeview $treeframe.tree \
-			  -width 0 \
+			  -width 600 -height 225 \
 			  -selectmode multiple \
 			  -selectcommand [list $this SelectNotify] \
 			  -tree $tree]
@@ -214,7 +256,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	$treeview column configure "Node-Type" "Data-Type" "Value" \
 	    -justify left -edit no
 	$treeview column configure treeView -hide no -edit no
-	$treeview text configure -selectborderwidth 0
+#	$treeview text configure -selectborderwidth 0
 
 	focus $treeview
 
@@ -233,32 +275,38 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		-command [list $this SortColumn $column]
 	}
 
-	pack $treeview -fill x -expand yes -side top
+	iwidgets::labeledframe $w.search -labeltext "Search Selection"
+	set search [$w.search childsite]
 
 
-	iwidgets::labeledframe $w.sel -labeltext "Search Selection"
-	set sel [$w.sel childsite]
+	iwidgets::entryfield $search.name -textvariable $this-selectionString
 
-	global $this-selectionString
-	global $this-regexp
+	frame $search.options
 
-	iwidgets::entryfield $sel.name -textvariable $this-selectionString
+	checkbutton $search.options.regexp -variable $this-regexp
+	label $search.options.label -text "Reg-Exp" -width 7 \
+	    -anchor w -just left
+	button $search.options.path -text "Full Path" \
+	    -command "$this AddSelection 0"
+	button $search.options.node -text "Terminal"  \
+	    -command "$this AddSelection 1"
 
-	label $sel.label -text "Reg-Exp" -width 7 -anchor w -just left
-	checkbutton $sel.regexp -variable $this-regexp
-	button $sel.path -text "Full Path" -command "$this AddSelection 0"
-	button $sel.node -text "Terminal"  -command "$this AddSelection 1"
+	pack $search.options.regexp -side left -padx 5
+	pack $search.options.label -side left
+	pack $search.options.path $search.options.node -padx 5 -side left
+	pack $search.options -side right
 
-	pack $sel.node $sel.path $sel.regexp $sel.label -side right -padx 3
-	pack $sel.name -side left -fill x -expand yes
-	pack $w.sel -fill x -expand yes -side top
+	pack $search.name -side left -fill x -expand yes
+	pack $w.search -fill x -expand yes -side top
 
 
 
 	iwidgets::labeledframe $w.sd -labeltext "Selected Data"
 	set sd [$w.sd childsite]
 
-	set listbox [Scrolled_Listbox $sd.listbox -width 100 -height 10 -selectmode extended]
+	set listbox [Scrolled_Listbox $sd.listbox \
+			 -width 100 -height 8 \
+			 -selectmode extended]
 
 	if { [string first "\{" $datasets] == 0 } {
 	    set tmp $datasets
@@ -284,6 +332,15 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	frame $dm.merge
 
+	frame $dm.merge.none
+
+	radiobutton $dm.merge.none.button -variable $this-mergeData -value 0
+	label $dm.merge.none.label -text "No Merging" -width 20 \
+	    -anchor w -just left
+	
+	pack $dm.merge.none.button $dm.merge.none.label -side left
+
+
 	frame $dm.merge.like
 
 	radiobutton $dm.merge.like.button -variable $this-mergeData -value 1
@@ -302,6 +359,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	pack $dm.merge.time.button $dm.merge.time.label -side left
 
 
+	pack $dm.merge.none -side top
 	pack $dm.merge.like -side top
 	pack $dm.merge.time -side bottom
 
@@ -315,56 +373,18 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	frame $dm.animate
 
-	frame $dm.animate.buttons
+	frame $dm.animate.select
 
-
-	frame $dm.animate.buttons.select
-
-	checkbutton $dm.animate.buttons.select.button -variable $this-animate \
+	checkbutton $dm.animate.select.button -variable $this-animate \
 	    -command "$this animate"
-	label $dm.animate.buttons.select.label -text "Animate selected data" \
+	label $dm.animate.select.label -text "Animate selected data" \
 	    -width 22 -anchor w -just left
 	
-	pack $dm.animate.buttons.select.button \
-	    $dm.animate.buttons.select.label -side left
+	pack $dm.animate.select.button \
+	    $dm.animate.select.label -side left
 
-	pack $dm.animate.buttons.select -side top
+	pack $dm.animate.select -fill x -side top
 
-
-	frame $dm.animate.buttons.style
-
-	frame $dm.animate.buttons.style.loop
-
-	radiobutton $dm.animate.buttons.style.loop.button \
-	    -variable $this-animate-style -value 0
-	label $dm.animate.buttons.style.loop.label -text "Loop" -width 6 \
-	    -anchor w -just left
-	
-	pack $dm.animate.buttons.style.loop.button \
-	    $dm.animate.buttons.style.loop.label -side left
-
-	frame $dm.animate.buttons.style.single
-
-	radiobutton $dm.animate.buttons.style.single.button \
-	    -variable $this-animate-style -value 1
-	label $dm.animate.buttons.style.single.label -text "Single" -width 8 \
-	    -anchor w -just left
-	
-	pack $dm.animate.buttons.style.single.button \
-	    $dm.animate.buttons.style.single.label -side left
-
-	pack $dm.animate.buttons.style.loop   -side left
-	pack $dm.animate.buttons.style.single -side left
-
-	pack $dm.animate.buttons.style -side bottom
-
-	pack $dm.animate.buttons -side left
-
-
-	scaleEntry2 $dm.animate.frame \
-	    0 [expr [set $this-animate-nframes] - 1] 75 \
-	    $this-animate-frame $this-animate-frame2
-	
 
 	pack $dm.merge $dm.svt $dm.animate -side left
 
@@ -389,9 +409,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	pack $w.msg.text -side top
 
-
-	global $this-ndims
-	global max_dims
 
 	for {set i 0} {$i < $max_dims} {incr i 1} {
 	    if       { $i == 0 } { set index i
@@ -426,6 +443,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	    pack $w.$i.l -side left
 
+
 	    scaleEntry2 $w.$i.start \
 		0 $count_val1 200 \
 		$this-$i-start $this-$i-start2
@@ -435,18 +453,14 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		$this-$i-count $this-$i-count2
 
 	    scaleEntry2 $w.$i.stride \
-		1 [expr [set $this-$i-dim] - 1] 100 $this-$i-stride $this-$i-stride2
+		1 [expr [set $this-$i-dim] - 1] 100 \
+		$this-$i-stride $this-$i-stride2
 
 	    pack $w.$i.l $w.$i.start $w.$i.count \
 		    $w.$i.stride -side left
 #	    grid $w.$i.l $w.$i.start $w.$i.count 
 #		    $w.$i.stride
 	}
-
-	frame $w.misc
-	button $w.misc.execute -text "Execute" -command "$this-c needexecute"
-	button $w.misc.close -text Close -command "destroy $w"
-	pack $w.misc.execute $w.misc.close -side left -padx 25
 
 	pack $w.l -side top -padx 10 -pady 5
 
@@ -457,8 +471,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		pack $w.$i
 	    }
 	}
-
-	pack $w.misc -side top -padx 10 -pady 5	    
 
 
 	# When building the UI prevent the selection from taking place
@@ -482,18 +494,21 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 		# Reselect the datasets
 		foreach dataset $tmp {
-		    set id [eval $treeview find -exact -full "{$dataset}"]
-
-		    if {"$id" != ""} {
-			if { [eval $treeview entry isopen $id] == 0 } {
-			    $treeview open $id
+		    set ids [eval $treeview find -exact -full "{$dataset}"]
+		    
+		    foreach id $ids {
+			if {"$id" != ""} {
+			    if { [eval $treeview entry isopen $id] == 0 } {
+				$treeview open $id
+			    }
+			    
+			    $treeview selection set $id
+			} else {
+			    set message "Could not find dataset: "
+			    append message $dataset
+			    $this-c error $message
+			    return
 			}
-
-			$treeview selection set $id
-		    } else {
-			set message "Could not find dataset: "
-			append message $dataset
-			$this-c error $message
 		    }
 		}
 	    }
@@ -501,10 +516,12 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	# Makesure the datasets are saved once everything is built.
 	set $this-datasets $datasets
-
  	set allow_selection true
 
 	animate
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
     method scaleEntry2 { win start count length var1 var2 } {
@@ -579,6 +596,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		process_file $tree root $fileId $line
 	    } else {
 		$this-c error "Not an HDF5 file."
+		return
 	    }
 
 	    close $fileId
@@ -596,25 +614,37 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
     method process_file { tree parent fileId input } {
 
+	global have_groups
+	global have_attributes
+	global have_datasets
+
+	set have_groups     0
+	set have_attributes 0
+	set have_datasets   0
+ 
 	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
 
 	    if { [string first "GROUP" $line] != -1 } {
 		process_group $tree $parent $fileId $line
 	    } else {
 		$this-c error "File hierarchy mal formed."
+		return
 	    }
 	}
     }
 
     method process_group { tree parent fileId input } {
 
-	set name [process_name $input]
+	set gname [process_name $input]
 	set info(type) @blt::tv::normalOpenFolder
 	set info(Node-Type) ""
 	set info(Data-Type) ""
 	set info(Value) ""
-	set node [$tree insert $parent -tag "group" -label $name \
+	set node [$tree insert $parent -tag "group" -label $gname \
 		      -data [array get info]]
+
+	global have_groups
+	set have_groups 1
 
 	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
 
@@ -627,7 +657,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    } else {
 		set message "Unknown token: "
 		append message $line
-		$this-c error message
+		$this-c error $message
+		return
 	    }
 	}
     }
@@ -638,7 +669,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    [string first "DATA" $line] == -1} {
 	    set message "Bad attribute data formation: "
 	    append message $line
-	    $this-c error message
+	    $this-c error $message
+	    return
 	}
 
 	set attr ""
@@ -658,15 +690,19 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	if {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
 	    set message "Bad attribute formation: "
 	    append message $line
-	    $this-c error message
+	    $this-c error $message
+	    return
 	} else {
-	    set name [process_name $input]
+	    set aname [process_name $input]
 	    set info(type) ""
 	    set info(Node-Type) "Attribute"
 	    set info(Data-Type) ""
 	    set info(Value) $attr
-	    $tree insert $parent -tag "attribute" -label $name \
+	    $tree insert $parent -tag "attribute" -label $aname \
 		-data [array get info]
+
+	    global have_attributes
+	    set have_attributes 1
 	}
     }
 
@@ -676,7 +712,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    [string first "DATATYPE" $line] == -1} {
 	    set message "Bad dataset formation: "
 	    append message $line
-	    $this-c error message
+	    $this-c error $message
 	    return
 	}
 
@@ -688,7 +724,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    [string first "DATASPACE" $line] == -1} {
 	    set message "Bad dataset formation: "
 	    append message $line
-	    $this-c error message
+	    $this-c error $message
 	    return
 	}
 
@@ -696,18 +732,27 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set end   [string  last ")" $line]
 	set dims  [string range $line $start $end]
 
-	if {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
-	    set message "Bad dataset formation: "
-	    append message $line
-	    $this-c error message
-	} else {
-	    set name [process_name $input]
-	    set info(type) ""
-	    set info(Node-Type) "DataSet"
-	    set info(Data-Type) $type
-	    set info(Value) $dims
-	    $tree insert $parent -tag "dataset" -label $name \
-		-data [array get info]
+	set dsname [process_name $input]
+	set info(type) ""
+	set info(Node-Type) "DataSet"
+	set info(Data-Type) $type
+	set info(Value) $dims
+	set node [$tree insert $parent -tag "dataset" -label $dsname \
+		      -data [array get info]]
+  
+	global have_datasets
+	set have_datasets 1
+
+	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
+
+	    if { [string first "ATTRIBUTE" $line] != -1 } {
+		process_attribute $tree $node $fileId $line
+	    } else {
+		set message "Unknown token: "
+		append message $line
+		$this-c error $message
+		return
+	    }
 	}
     }
 
@@ -715,9 +760,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set start [string first "\"" $line]
 	set end   [string  last "\"" $line]
 
-	set name [string range $line [expr $start+1] [expr $end-1]]
-
-	return $name
+	return [string range $line [expr $start+1] [expr $end-1]]
     }
 
     method set_size {ndims dims} {
@@ -838,14 +881,27 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		set treeframe [$w.treeview childsite]
 		set treeview $treeframe.tree.tree
 
-		set groups     [$treeview tag nodes "group"]
-		set attributes [$treeview tag nodes "attribute"]
-
 		focus $treeview
 
 		set ids [$treeview curselection]
 
 		if { $ids != "" } {
+
+		    global have_groups
+		    global have_attributes
+
+		    if { $have_groups == 1 } {
+			set groups [$treeview tag nodes "group"]
+		    } else {
+			set groups ""
+		    }
+
+		    if { $have_attributes == 1 } {
+			set attributes [$treeview tag nodes "attribute"]
+		    } else {
+			set attributes ""
+		    }
+
 		    foreach id $ids {
 
 			# Check to see if the selection is an attribute
@@ -883,8 +939,20 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set treeframe [$w.treeview childsite]
 	    set treeview $treeframe.tree.tree
 
-	    set datasets [$treeview tag nodes "dataset"]
-	    set groups   [$treeview tag nodes "group"]
+	    global have_groups
+	    global have_datasets
+
+	    if { $have_groups == 1 } {
+		set groups [$treeview tag nodes "group"]
+	    } else {
+		set groups ""
+	    }
+
+	    if { $have_datasets == 1 } {
+		set datasets [$treeview tag nodes "dataset"]
+	    } else {
+		set datasets ""
+	    }
 
 	    set children [eval $treeview entry children $parent]
 	    
@@ -953,16 +1021,18 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	    foreach dataset $tmp {
 
-		set name $dataset
+		set dsname $dataset
 
 		if { [string length $ports] > 0 } {
 		    set port [string range $ports [expr $cc*4] [expr $cc*4+3]]
 
-		    append name "   Port "
-		    append name $port
+		    if { [string length $port] > 0 } {
+			append dsname "   Port "
+			append dsname $port
+		    }
 		}
 
-		$listbox.list insert end $name
+		$listbox.list insert end $dsname
 
 		incr cc
 	    }
@@ -1042,15 +1112,18 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 		foreach idx $indices {
 		    if { $index == $idx } { 
-			set id [eval $treeview find -exact -full "{$dataset}"]
+			set ids [eval $treeview find -exact -full "{$dataset}"]
 			
-			if {"$id" != ""} {
-			    $treeview selection clear $id
-			    $treeview open $id
-			} else {			    
-			    set message "Could not find dataset: "
-			    append message $dataset
-			    $this-c error $message
+			foreach id $ids {
+			    if {"$id" != ""} {
+				$treeview selection clear $id
+				$treeview open $id
+			    } else {			    
+				set message "Could not find dataset: "
+				append message $dataset
+				$this-c error $message
+				return
+			    }
 			}
 		    }
 		}
@@ -1112,15 +1185,14 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		  -xscrollcommand [list $f.xscroll set] \
 		  -yscrollcommand [list $f.yscroll set]}
 	eval {$f.tree configure} $args
-
 	scrollbar $f.xscroll -orient horizontal \
 	    -command [list $f.tree xview]
 	scrollbar $f.yscroll -orient vertical \
 	    -command [list $f.tree yview]
-#	grid $f.tree $f.yscroll -sticky news
-#	grid $f.xscroll -sticky news
-#	grid rowconfigure $f 0 -weight 1
-#	grid columnconfigure $f 0 -weight 1
+	grid $f.tree $f.yscroll -sticky news
+	grid $f.xscroll -sticky news
+	grid rowconfigure $f 0 -weight 1
+	grid columnconfigure $f 0 -weight 1
 	return $f.tree
     }
 
@@ -1131,43 +1203,139 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set dm [$w.dm childsite]
 
 	    if { [set $this-animate] } {
-		$dm.animate.buttons.style.loop.button configure -state normal
-		$dm.animate.buttons.style.single.button configure -state normal
-
-		$dm.animate.frame.s configure -state normal
-		$dm.animate.frame.e configure -state normal
 
 		$this-c update_selection;
+
+		make_animate_box
+
 	    } else {
-		$dm.animate.buttons.style.loop.button configure -state disable
-		$dm.animate.buttons.style.single.button configure -state disable
+		set w [format "%s-animate" .ui[modname]]
 
-		$dm.animate.frame.s configure -state disable
-		$dm.animate.frame.e configure -state disable
+		if {[winfo exists $w]} {
+		    destroy $w
+		}
 	    }
 	}
     }
 
-    method set_nframes {nframes} {
+    method execmode { mode } {
+	$this-c $mode
 
-	global $this-nframes
-	set $this-nframes $nframes
-
-	set w .ui[modname]
-
-	if [ expr [winfo exists $w] ] {
-
-	    set dm [$w.dm childsite]
-
-	    if { [set $this-animate-frame] >= $nframes } {
-		set $this-animate-frame  [expr $nframes-1]
-		set $this-animate-frame2 [expr $nframes-1]
-	    }
-
-	    $dm.animate.frame.s configure -from 0 -to [expr $nframes-1]
+	if { "$mode" != "stop" } {
+	    $this-c needexecute
 	}
     }
 
- }
+    method make_animate_box {} {
+	set w [format "%s-animate" .ui[modname]]
+
+	if {[winfo exists $w]} {
+	    set child [lindex [winfo children $w] 0]
+
+	    # $w withdrawn by $child's procedures
+	    raise $child
+	    return
+	}
+
+        toplevel $w
+
+	
+	frame $w.loc                       -borderwidth 2
+	frame $w.playmode   -relief groove -borderwidth 2
+	frame $w.dependence -relief groove -borderwidth 2
+	frame $w.execmode   -relief groove -borderwidth 2
+
+        scale $w.loc.min -variable $this-range_min -label "Start " \
+		-showvalue true -orient horizontal -relief groove -length 200
+        scale $w.loc.max -variable $this-range_max -label "End " \
+		-showvalue true -orient horizontal -relief groove -length 200
+
+	frame $w.loc.e
+	frame $w.loc.e.l
+	frame $w.loc.e.r
+
+	label $w.loc.e.l.curlabel -text "Current Value" -just left
+	entry $w.loc.e.r.curentry -width 10 -textvariable $this-current
+
+	label $w.loc.e.l.inclabel -text "Increment" -justify left
+	entry $w.loc.e.r.incentry -width 8 -textvariable $this-inc-amount
+
+	pack $w.loc.e.l.curlabel $w.loc.e.l.inclabel \
+	      -side top -anchor w
+
+	pack $w.loc.e.r.curentry $w.loc.e.r.incentry \
+              -side top -anchor w
+
+	pack $w.loc.e.l $w.loc.e.r -side left -expand yes -fill both
+
+        pack $w.loc.min $w.loc.max $w.loc.e \
+	    -side top -expand yes -fill both -pady 2
 
 
+	label $w.playmode.label -text "Play Mode"
+	radiobutton $w.playmode.once -text "Once" \
+		-variable $this-playmode -value once
+	radiobutton $w.playmode.loop -text "Loop" \
+		-variable $this-playmode -value loop
+	radiobutton $w.playmode.bounce1 -text "Bounce1" \
+		-variable $this-playmode -value bounce1
+	radiobutton $w.playmode.bounce2 -text "Bounce2" \
+		-variable $this-playmode -value bounce2
+
+
+	radiobutton $w.playmode.inc_w_exec -text "Increment with Execute" \
+	    -variable $this-playmode -value inc_w_exec
+
+	label $w.dependence.label -text "Downstream Dependencies"
+	radiobutton $w.dependence.independent -text \
+	        "Column and Index are Independent" \
+	        -variable $this-dependence -value independent
+	radiobutton $w.dependence.dependent -text \
+	        "Column and Index are Dependent" \
+		-variable $this-dependence -value dependent
+	pack $w.dependence.label -side top -expand yes -fill both
+	pack $w.dependence.independent $w.dependence.dependent \
+	        -side top -anchor w
+
+	frame $w.playmode.delay
+	label $w.playmode.delay.label -text "Delay (ms)" \
+		-width 10 -just left
+	entry $w.playmode.delay.entry -width 10 -textvariable $this-delay
+	pack $w.playmode.delay.label $w.playmode.delay.entry \
+		-side left -anchor n -expand yes -fill x
+
+
+	pack $w.playmode.label -side top -expand yes -fill both
+	pack $w.playmode.once $w.playmode.loop \
+	    $w.playmode.bounce1 $w.playmode.bounce2 $w.playmode.inc_w_exec\
+	    $w.playmode.delay -side top -anchor w
+
+
+        button $w.execmode.play -text "Play" -command "$this execmode play"
+        button $w.execmode.stop -text "Stop" -command "$this execmode stop"
+        button $w.execmode.step -text "Step" -command "$this execmode step"
+        pack $w.execmode.play $w.execmode.stop $w.execmode.step \
+		-side left -fill both -expand yes
+
+        pack $w.loc $w.playmode $w.dependence $w.execmode \
+		-padx 5 -pady 5 -fill both -expand yes
+
+	update_animate_range [set $this-selectable_min] [set $this-selectable_max]
+    }
+
+    method update_animate_range { min max } {
+	set w [format "%s-animate" .ui[modname]]
+
+	set $this-selectable_min $min
+	set $this-selectable_max $max
+
+        if {[winfo exists $w]} {
+            $w.loc.min config -from [set $this-selectable_min]
+            $w.loc.min config -to   [set $this-selectable_max]
+            $w.loc.min config -label "Start"
+            $w.loc.max config -from [set $this-selectable_min]
+            $w.loc.max config -to   [set $this-selectable_max]
+            $w.loc.max config -label "End"
+        }
+    }
+}

@@ -28,14 +28,9 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Unu
 
 
 SRCS     += \
-	$(SRCDIR)/UnuAxmerge.cc\
-	$(SRCDIR)/UnuAxsplit.cc\
 	$(SRCDIR)/UnuCmedian.cc\
 	$(SRCDIR)/UnuConvert.cc\
 	$(SRCDIR)/UnuCrop.cc\
-	$(SRCDIR)/UnuDhisto.cc\
-	$(SRCDIR)/UnuFlip.cc\
-	$(SRCDIR)/UnuHisto.cc\
 	$(SRCDIR)/UnuJoin.cc\
 	$(SRCDIR)/UnuPad.cc\
 	$(SRCDIR)/UnuPermute.cc\
@@ -44,6 +39,14 @@ SRCS     += \
 	$(SRCDIR)/UnuResample.cc\
 	$(SRCDIR)/UnuSlice.cc\
 #[INSERT NEW CODE FILE HERE]
+
+# the following are stubs that need implementa
+#	$(SRCDIR)/UnuAxmerge.cc\
+#	$(SRCDIR)/UnuAxsplit.cc\
+#	$(SRCDIR)/UnuDhisto.cc\
+#	$(SRCDIR)/UnuFlip.cc\
+#	$(SRCDIR)/UnuHisto.cc\
+
 
 PSELIBS := Packages/Teem/Core/Datatypes Core/Datatypes \
 	Dataflow/Network Dataflow/Ports \

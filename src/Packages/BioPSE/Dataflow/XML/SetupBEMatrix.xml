@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -35,13 +35,6 @@
   <io>
     <inputs lastportdynamic="yes">
       <!-- one of (device port file) -->
-      <port>
-	<name>Conductivity Tensors</name>
-	<description>
-	  <p>Conductivity tensors for the input surfaces.</p>
-	</description>
-	<datatype>SCIRun::Matrix</datatype>
-      </port>
       <port>
 	<name>Surface</name>
 	<description>

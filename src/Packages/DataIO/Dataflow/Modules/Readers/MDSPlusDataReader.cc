@@ -323,7 +323,7 @@ void MDSPlusDataReader::execute(){
 
 	if (vec.size() > 1) {
 	  
-	  NrrdData* onrrd = new NrrdData(true);
+	  NrrdData* onrrd = scinew NrrdData(true);
 	  string new_label("");
 	  string axis_label("");
 
@@ -464,7 +464,7 @@ void MDSPlusDataReader::execute(){
     }
   }
 #else  
-  error( "No HDF5 availible." );
+  error( "No MDSPlus availible." );
   
 #endif
 }
@@ -529,7 +529,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
     remark( str.str() );
   }
 
-  if( !mds.valid( signal ) ) {
+  if( 0 && !mds.valid( signal ) ) {
     ostringstream str;
     str << "Invalid signal " << signal;
     error( str.str() );
@@ -578,11 +578,18 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
     dtype = DTYPE_DOUBLE;
     nrrd_type = get_nrrd_type<double>();
     break;
+  case DTYPE_CSTRING:
+    {
+      ostringstream str;
+      str << "String data is not supported for signal " << signal;
+      error( str.str() );
+      error_ = true;
+    }
   default:
     {
       ostringstream str;
-      str << "Unknown type for signal " << signal;
-      remark( str.str() );
+      str << "Unknown type (" << mds_data_type << ") for signal " << signal;
+      error( str.str() );
       error_ = true;
     }
     
@@ -605,7 +612,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
     // Stuff the data into the NRRD.
     string tuple_type_str(":Scalar");
     int sink_size = 1;
-    NrrdData *nout = scinew NrrdData(false);
+    NrrdData *nout = scinew NrrdData(true);
 
     switch(ndims) {
     case 1:
@@ -817,7 +824,13 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
     sink_label.clear();
 
     // Remove the MDS characters that are illegal in Nrrds.
-    const string nums("\\:.");
+    /*
+    std::string::size_type pos;
+    while( (pos = sink_label.find("/")) != string::npos )
+    sink_label.replace( pos, 1, "-" );
+    */
+
+    const string nums("\"\\:.()");
 	      
     // test against valid char set.
     for(string::size_type i = 0; i < signal.size(); i++) {
@@ -873,12 +886,12 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 void MDSPlusDataReader::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2){
-    args.error("HDF5DataReader needs a minor command");
+    args.error("MDSPlusDataReader needs a minor command");
     return;
   }
 
   if (args[1] == "search") {
-#ifdef HAVE_HDF5
+#ifdef HAVE_MDSPLUS
 
     searchServer_.reset();
     searchTree_.reset();
