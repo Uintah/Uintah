@@ -119,8 +119,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,GridP&,
     if (flags->d_integrator_type == "explicit") {
       d_integrator = Explicit;
     }
-    if (flags->d_integrator_type == "fracture")
+    if (flags->d_integrator_type == "fracture") {
+      d_integrator = Fracture;
       flags->d_fracture = true;
+    }
   }
 
   //  cout << "d_fracture = " << flags->d_fracture << endl;
