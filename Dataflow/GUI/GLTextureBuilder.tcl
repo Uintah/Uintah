@@ -26,10 +26,12 @@ itcl_class SCIRun_Visualization_GLTextureBuilder {
     }
     method set_defaults {} {
 	global $this-max_brick_dim
+	global $this-sel_brick_dim
 	global $this-min
 	global $this-max
 	global $this-is_fixed
 	set $this-max_brick_dim 0 
+	set $this-sel_brick_dim 0
 	set $this-min 0
 	set $this-max 1
 	set $this-is_fixed 0
@@ -109,7 +111,7 @@ itcl_class SCIRun_Visualization_GLTextureBuilder {
         $w.f3.e2 configure -state disabled -foreground $color
 
 
-        $this-c needexecute
+#        $this-c needexecute
     }
 
     method fixedScale { } {
@@ -128,7 +130,10 @@ itcl_class SCIRun_Visualization_GLTextureBuilder {
 
     method SetDims { val } {
 	global $this-max_brick_dim
+	global $this-sel_brick_dim
 	set $this-max_brick_dim $val
+	if {[set $this-sel_brick_dim] == 0} {set $this-sel_brick_dim $val}
+
 	set w .ui[modname]
 
 	set vals  [format "%i %i %i %i" [expr $val/8] [expr $val/4] [expr $val/2] $val] 
@@ -143,12 +148,15 @@ itcl_class SCIRun_Visualization_GLTextureBuilder {
 	frame $w.f.dimframe.f -relief flat
 	pack $w.f.dimframe.f -side top -fill x
 	set f $w.f.dimframe.f
+	set still_exists 0
 	for {set i 0} {$i < 4} { incr i} {
 	    set v [lindex $vals $i]
+	    if {$v == [set $this-sel_brick_dim]} {set still_exists 1}
 	    radiobutton $f.brickdim$v -text $v -relief flat \
-		-variable $this-max_brick_dim -value $v \
+		-variable $this-sel_brick_dim -value $v \
 		-command "$this-c needexecute"
 	    pack $f.brickdim$v -side left -padx 2 -fill x
 	}
+	if {$still_exists == 0} {set $this-sel_brick_dim $val}
     }
 }

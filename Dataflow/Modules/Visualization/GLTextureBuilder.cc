@@ -53,6 +53,7 @@ GLTextureBuilder::GLTextureBuilder(const string& id)
     tex_(0),
     is_fixed_("is_fixed", id, this),
     max_brick_dim_("max_brick_dim", id, this),
+    sel_brick_dim_("sel_brick_dim", id, this),
     min_("min", id, this),
     max_("max", id, this),
     old_brick_size_(0), old_min_(-1), old_max_(-1)
@@ -156,7 +157,7 @@ void GLTextureBuilder::real_execute(FieldHandle sfield)
       max_.set(maxV);
     }
     TCL::execute(id + " SetDims " + to_string( tex_->get_brick_size()));
-    max_brick_dim_.set(tex_->get_brick_size());
+    if (sel_brick_dim_.get()) tex_->set_brick_size(sel_brick_dim_.get());
     old_brick_size_ = tex_->get_brick_size();
   }
   else if (sfield.get_rep() != sfrg_.get_rep())
@@ -174,12 +175,13 @@ void GLTextureBuilder::real_execute(FieldHandle sfield)
       min_.set(minV);
       max_.set(maxV);
     }
-    tex_->set_brick_size(max_brick_dim_.get());
+    tex_->set_brick_size(sel_brick_dim_.get());
+    old_brick_size_ = sel_brick_dim_.get();
   }
-  else if (old_brick_size_ != max_brick_dim_.get())
+  else if (old_brick_size_ != sel_brick_dim_.get())
   {
-    tex_->set_brick_size(max_brick_dim_.get());
-    old_brick_size_ = max_brick_dim_.get();
+    tex_->set_brick_size(sel_brick_dim_.get());
+    old_brick_size_ = sel_brick_dim_.get();
   }
   else if ((old_min_ != min) || (old_max_ != max))
   {
