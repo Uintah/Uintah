@@ -45,13 +45,7 @@
 
 #include <Core/Persistent/Persistent.h>
 #include <stdio.h>
-#ifdef _WIN32
-struct XDR;
-#else
-// sgi is picky about forward declaring struct XDR
-#include <rpc/types.h>
-#include <rpc/xdr.h>
-#endif
+
 #include <zlib.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -63,14 +57,13 @@ namespace SCIRun {
 class BinaryPiostream : public Piostream {
   FILE* fp;
   void* addr;
-  XDR* xdr;
   bool mmapped;
   virtual void emit_pointer(int&, int&);
   int have_peekname;
   string peekname;
 public:
-  BinaryPiostream(const string& filename, Direction dir);
-  BinaryPiostream(int fd, Direction dir);
+  BinaryPiostream(const string& filename, Direction dir, const int&v = -1);
+  BinaryPiostream(int fd, Direction dir, const int& v = -1);
 
   virtual ~BinaryPiostream();
   virtual string peek_class();
@@ -95,6 +88,43 @@ public:
   virtual void io(double&);
   virtual void io(float&);
   virtual void io(string& str);
+};
+
+class BinarySwapPiostream : public Piostream {
+  FILE* fp;
+  void* addr;
+  bool mmapped;
+  virtual void emit_pointer(int&, int&);
+  int have_peekname;
+  string peekname;
+public:
+  BinarySwapPiostream(const string& filename, Direction dir, const int& v = -1);
+  BinarySwapPiostream(int fd, Direction dir, const int& v = -1);
+
+  virtual ~BinarySwapPiostream();
+  virtual string peek_class();
+  virtual int begin_class(const string& name, int);
+  virtual void end_class();
+
+  virtual void begin_cheap_delim();
+  virtual void end_cheap_delim();
+
+  virtual void io(bool&);
+  virtual void io(char&);
+  virtual void io(signed char&);
+  virtual void io(unsigned char&);
+  virtual void io(short&);
+  virtual void io(unsigned short&);
+  virtual void io(int&);
+  virtual void io(unsigned int&);
+  virtual void io(long&);
+  virtual void io(unsigned long&);
+  virtual void io(long long&);
+  virtual void io(unsigned long long&);
+  virtual void io(double&);
+  virtual void io(float&);
+  virtual void io(string& str);
+
 };
 
 class TextPiostream : public Piostream {
