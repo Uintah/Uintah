@@ -2678,15 +2678,6 @@ void ICE::computeVel_FC(const ProcessorGroup*,
       CellIterator XFC_iterator = patch->getSFCXIterator(offset);
       CellIterator YFC_iterator = patch->getSFCYIterator(offset);
       CellIterator ZFC_iterator = patch->getSFCZIterator(offset);
-      
-      if (level->getIndex() > 0) {  // Finer levels need to hit the ghost cells
-        IntVector l, h;
-        l = patch->getExtraCellIterator().begin();
-        h = patch->getExtraCellIterator().end();
-        XFC_iterator = CellIterator(l + IntVector(1,0,0),h);
-        YFC_iterator = CellIterator(l + IntVector(0,1,0),h);
-        ZFC_iterator = CellIterator(l + IntVector(0,0,1),h);
-      }
 
       //__________________________________
       //  Compute vel_FC for each face
@@ -2898,15 +2889,6 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     CellIterator XFC_iterator = patch->getSFCXIterator(offset);
     CellIterator YFC_iterator = patch->getSFCYIterator(offset);
     CellIterator ZFC_iterator = patch->getSFCZIterator(offset);
-
-    if (level->getIndex() > 0) {  // Finer levels need to hit the ghost cells
-      IntVector l, h;
-      l = patch->getExtraCellIterator().begin();
-      h = patch->getExtraCellIterator().end();
-      XFC_iterator = CellIterator(l + IntVector(1,0,0),h);
-      YFC_iterator = CellIterator(l + IntVector(0,1,0),h);
-      ZFC_iterator = CellIterator(l + IntVector(0,0,1),h);
-    }
                                 
     //__________________________________
     //  tack on exchange contribution
