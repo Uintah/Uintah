@@ -56,3 +56,9 @@ Vector Vector::normal() const
    return v;
 }
 
+ostream& operator<<( ostream& os, Vector& v )
+{
+   os << v.string();
+   return os;
+}
+
