@@ -237,7 +237,7 @@ void PartToGeom::execute()
       count++;
       if (count == show_nth.get() ){ 
 	GeomSphere *sp = new GeomSphere(pos[i].asPoint(),radius.get(),
-					 nu, nv);
+					 nu, nv, i);
       // Default ColorMap ie. unscaled n autoscale values.
       //      if( cmap->isScaled() ) {
 	
@@ -320,7 +320,11 @@ void PartToGeom::geom_pick(GeomPick* pick, void* userdata, int index)
   cerr << "this = "<< this <<", pick = "<<pick<<endl;
   cerr << "User data = "<<userdata<<endl;
   cerr << "sphere index = "<<index<<endl<<endl;
-  
+  int id = 0;
+  if ( ((GeomObj *)pick)->getId( id ) )
+    cerr<<"Id = "<< id <<endl;
+  else
+    cerr<<"Not getting the correct data\n";
   if( cbClass != 0 )
     ((VizControl *)cbClass)->callback( index );
   // Now modify so that points and spheres store index.
@@ -336,6 +340,9 @@ Module* make_PartToGeom( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.10  1999/12/28 21:11:44  kuzimmer
+// modified so that picking works again
+//
 // Revision 1.9  1999/12/09 21:29:54  kuzimmer
 // Change necessary to fix picking
 //

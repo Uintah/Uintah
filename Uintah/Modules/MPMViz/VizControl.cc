@@ -562,8 +562,8 @@ void VizControl::graph(clString idx, clString var)
     cerr<< "ntimesteps = "<< tpr->GetNTimesteps()<<endl;
     Array1<double> values;
     if( tpr->GetNTimesteps() ){
-	int varId = tpr->GetParticleSet(pName.get())->find_scalar( var ); // psVar.get() );
-      tpr->GetParticleData(atoi(idx()), pName.get(), values);
+      int varId = tpr->GetParticleSet(pName.get())->find_scalar( var );
+      tpr->GetParticleData(atoi(idx()), pName.get(), var,  values);
     
       Array1<double> vs;
       for(i = 0; i < values.size(); i++)
@@ -634,8 +634,6 @@ void VizControl::execute()
        psout->send(psh);
      }
    }
-   cout << "Done!"<<endl; 
-   NOT_FINISHED("VizControl::execute()");
 } 
 //--------------------------------------------------------------- 
 } // end namespace CFD

@@ -71,6 +71,7 @@ public:
 			      bool isVector,
 			      Array1<float>& values);
   virtual void GetParticleData(int particleId,
+			       clString pSetName,
                                clString varname,
                                Array1<double>& values);
   //////////
@@ -155,6 +156,9 @@ private:
 
 //
 // $Log$
+// Revision 1.6  1999/12/28 21:11:45  kuzimmer
+// modified so that picking works again
+//
 // Revision 1.5  1999/10/07 02:08:29  sparker
 // use standard iostreams and complex type
 //
