@@ -8,6 +8,7 @@ static char *id="@(#) $Id$";
 
 
 using std::cerr;
+using std::endl;
 
 namespace Uintah {
 namespace Interface {
@@ -236,6 +237,9 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.5  2000/03/31 00:55:07  jas
+// Let the include stuff know we are using endl.
+//
 // Revision 1.4  2000/03/29 23:48:00  jas
 // Filled in methods for extracting data from the xml tree (requires and get)
 // and storing the result in a variable.
