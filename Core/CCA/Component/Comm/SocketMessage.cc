@@ -27,6 +27,7 @@
 #include <Core/CCA/Component/Comm/SocketMessage.h>
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
+#include <Core/CCA/Component/PIDL/URL.h>
 
 using namespace std;
 using namespace SCIRun;
@@ -95,7 +96,11 @@ SocketMessage::marshalLong(const long *buf, int size){
 
 void 
 SocketMessage::marshalSpChannel(SpChannel* channel){
-  throw CommError("SocketMessage::marshalSpChannel not inmplemented!",-1);
+  SocketSpChannel * chan = dynamic_cast<SocketSpChannel*>(channel);
+  marshalBuf(&(chan->sockfd), sizeof(int));
+  int urlSize=chan->ep_url.size(); 
+  marshalBuf(&urlSize, sizeof(int));
+  marshalBuf(chan->ep_url.c_str(), urlSize);
 }
 
 void 
@@ -195,12 +200,21 @@ SocketMessage::unmarshalLong(long *buf, int size){
 
 void 
 SocketMessage::unmarshalSpChannel(SpChannel* channel){
-  throw CommError("SocketMessage::unmarshalSpChannel not inmplemented!",-1);
+  SocketSpChannel * chan = dynamic_cast<SocketSpChannel*>(channel);
+  unmarshalBuf(&(chan->sockfd), sizeof(int));
+  int urlSize;
+  unmarshalBuf(&urlSize, sizeof(int));
+  char *buf=new char[urlSize+1];
+  unmarshalBuf(buf, urlSize);
+  buf[urlSize]='\0';
+  chan->ep_url=buf;
+  delete []buf;
+  chan->openConnection(URL(chan->ep_url));
 }
 
 void* 
 SocketMessage::getLocalObj(){
-  if(ep==NULL) throw CommError("SocketMessagegetLocalObj", -1);
+  if(ep==NULL) return NULL; //throw CommError("SocketMessagegetLocalObj", -1);
   return ep->object; 
 }
 
