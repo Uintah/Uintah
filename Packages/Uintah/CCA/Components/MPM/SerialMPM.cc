@@ -1734,7 +1734,8 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       new_dw->allocateAndPut(acceleration, lb->gAccelerationLabel, dwi, patch);
       acceleration.initialize(Vector(0.,0.,0.));
 
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+      for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
+                       !iter.done();iter++){
         IntVector c = *iter;
         acceleration[c] =
           (internalforce[c] + externalforce[c])/mass[c] +
@@ -1844,7 +1845,8 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
       new_dw->allocateAndPut(velocity_star, lb->gVelocityStarLabel, dwi, patch);
       velocity_star.initialize(Vector(0.0));
 
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+      for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
+                       !iter.done();iter++){
         IntVector c = *iter;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
       }
