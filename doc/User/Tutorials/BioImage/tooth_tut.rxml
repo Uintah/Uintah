@@ -48,6 +48,20 @@ DEALINGS IN THE SOFTWARE.
     loading the data into BioImage.  Although the data might be
     displayed in the view windows, the loading process is not complete
     until the "Update" button is clicked.</para>
+    <figure id="fig.load">
+      <title>Load Data Pane</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>Loading the Tooth dataset.</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/toothload.eps" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/toothload.jpg" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
 
     <para>After loading the data into BioImage, the 4 view windows
     will contain visualizations of the data.  The upper-left window
@@ -71,6 +85,20 @@ DEALINGS IN THE SOFTWARE.
       <member>L: Left</member>
       <member>R: Right</member>
     </simplelist>
+    <figure id="fig.cube">
+      <title>The Viewing Cube</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>The Viewing Cube.</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/viewcube.eps" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/viewcube.jpg" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
     <para>To reset the views to the default parameters, simply press
     the "Reset" button in the lower right corner of the Load Data
     window.</para>
