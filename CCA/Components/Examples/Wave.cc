@@ -21,37 +21,37 @@ using namespace Uintah;
 Wave::Wave(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
-  phi_label = VarLabel::create("phi", CCVariable<double>::getTypeDescription());
+  phi_label = VarLabel::create("phi", CCVariable<double>::getTypeDescription(), IntVector(1,1,1));
   pi_label = VarLabel::create("pi", CCVariable<double>::getTypeDescription());
 
   rk4steps[0].cur_dw = Task::OldDW;
-  rk4steps[0].curphi_label = VarLabel::create("phi", CCVariable<double>::getTypeDescription());
+  rk4steps[0].curphi_label = VarLabel::create("phi", CCVariable<double>::getTypeDescription(), IntVector(1,1,1));
   rk4steps[0].curpi_label = VarLabel::create("pi", CCVariable<double>::getTypeDescription());
-  rk4steps[0].newphi_label = VarLabel::create("phi1", CCVariable<double>::getTypeDescription());
+  rk4steps[0].newphi_label = VarLabel::create("phi1", CCVariable<double>::getTypeDescription(), IntVector(1,1,1));
   rk4steps[0].newpi_label = VarLabel::create("pi1", CCVariable<double>::getTypeDescription());
   rk4steps[0].stepweight = 0.5;
   rk4steps[0].totalweight = 1/6.0;
 
   rk4steps[1].cur_dw = Task::NewDW;
-  rk4steps[1].curphi_label = VarLabel::create("phi1", CCVariable<double>::getTypeDescription());
+  rk4steps[1].curphi_label = VarLabel::create("phi1", CCVariable<double>::getTypeDescription(), IntVector(1,1,1));
   rk4steps[1].curpi_label = VarLabel::create("pi1", CCVariable<double>::getTypeDescription());
-  rk4steps[1].newphi_label = VarLabel::create("phi2", CCVariable<double>::getTypeDescription());
+  rk4steps[1].newphi_label = VarLabel::create("phi2", CCVariable<double>::getTypeDescription(), IntVector(1,1,1));
   rk4steps[1].newpi_label = VarLabel::create("pi2", CCVariable<double>::getTypeDescription());
   rk4steps[1].stepweight = 0.5;
   rk4steps[1].totalweight = 1/3.0;
 
   rk4steps[2].cur_dw = Task::NewDW;
-  rk4steps[2].curphi_label = VarLabel::create("phi2", CCVariable<double>::getTypeDescription());
+  rk4steps[2].curphi_label = VarLabel::create("phi2", CCVariable<double>::getTypeDescription(), IntVector(1,1,1));
   rk4steps[2].curpi_label = VarLabel::create("pi2", CCVariable<double>::getTypeDescription());
-  rk4steps[2].newphi_label = VarLabel::create("phi3", CCVariable<double>::getTypeDescription());
+  rk4steps[2].newphi_label = VarLabel::create("phi3", CCVariable<double>::getTypeDescription(), IntVector(1,1,1));
   rk4steps[2].newpi_label = VarLabel::create("pi3", CCVariable<double>::getTypeDescription());
   rk4steps[2].stepweight = 1.0;
   rk4steps[2].totalweight = 1/3.0;
 
   rk4steps[3].cur_dw = Task::NewDW;
-  rk4steps[3].curphi_label = VarLabel::create("phi3", CCVariable<double>::getTypeDescription());
+  rk4steps[3].curphi_label = VarLabel::create("phi3", CCVariable<double>::getTypeDescription(), IntVector(1,1,1));
   rk4steps[3].curpi_label = VarLabel::create("pi3", CCVariable<double>::getTypeDescription());
-  rk4steps[3].newphi_label = VarLabel::create("phi4", CCVariable<double>::getTypeDescription());
+  rk4steps[3].newphi_label = VarLabel::create("phi4", CCVariable<double>::getTypeDescription(), IntVector(1,1,1));
   rk4steps[3].newpi_label = VarLabel::create("pi4", CCVariable<double>::getTypeDescription());
   rk4steps[3].stepweight = 0.0;
   rk4steps[3].totalweight = 1/6.0;
@@ -114,8 +114,8 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
   if(integration == "Euler"){
     Task* task = scinew Task("timeAdvance",
                              this, &Wave::timeAdvanceEuler);
-    task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-    task->requires(Task::OldDW, pi_label, Ghost::AroundNodes, 1);
+    task->requires(Task::OldDW, phi_label, Ghost::AroundCells, 1);
+    task->requires(Task::OldDW, pi_label, Ghost::None, 0);
     //task->requires(Task::OldDW, sharedState_->get_delt_label());
     task->computes(phi_label);
     task->computes(pi_label);
@@ -123,8 +123,8 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
   } else if(integration == "RK4"){
     Task* task = scinew Task("setupRK4",
                              this, &Wave::setupRK4);
-    task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-    task->requires(Task::OldDW, pi_label, Ghost::AroundNodes, 1);
+    task->requires(Task::OldDW, phi_label, Ghost::AroundCells, 1);
+    task->requires(Task::OldDW, pi_label, Ghost::None, 0);
     task->computes(phi_label);
     task->computes(pi_label);
     sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -137,7 +137,7 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
       task->requires(Task::OldDW, phi_label, Ghost::None);
       task->requires(Task::OldDW, pi_label, Ghost::None);
       task->requires(step->cur_dw, step->curphi_label, Ghost::AroundCells, 1);
-      task->requires(step->cur_dw, step->curpi_label, Ghost::AroundCells, 1);
+      task->requires(step->cur_dw, step->curpi_label, Ghost::None, 0);
       task->computes(step->newphi_label);
       task->computes(step->newpi_label);
       task->modifies(phi_label);
@@ -205,6 +205,7 @@ void Wave::timeAdvanceEuler(const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
+      // cout << " Doing Wave::timeAdvanceEuler on patch " << patch->getID() << ", matl " << matl << endl;
       const Level* level = getLevel(patches);
       delt_vartype dt;
       old_dw->get(dt, sharedState_->get_delt_label(), level);
@@ -212,7 +213,7 @@ void Wave::timeAdvanceEuler(const ProcessorGroup*,
       constCCVariable<double> oldPhi;
       old_dw->get(oldPhi, phi_label, matl, patch, Ghost::AroundCells, 1);
       constCCVariable<double> oldPi;
-      old_dw->get(oldPi, pi_label, matl, patch, Ghost::AroundCells, 1);
+      old_dw->get(oldPi, pi_label, matl, patch, Ghost::None, 0);
 
       CCVariable<double> newPhi;
       new_dw->allocateAndPut(newPhi, phi_label, matl, patch);
@@ -244,13 +245,13 @@ void Wave::timeAdvanceEuler(const ProcessorGroup*,
         newPhi[c] = oldPhi[c] + oldPi[c] * delt;
         newPi[c] = oldPi[c] + curlPhi * delt;
 
-        cerr << c << ", phi=" << newPhi[c] << ", pi=" << newPi[c] << '\n';
+        //        cerr << c << ", phi=" << newPhi[c] << ", pi=" << newPi[c] << '\n';
         sumPhi += newPhi[c];
         if(newPhi[c] > maxphi)
           maxphi = newPhi[c];
       }
-      cerr << "sumPhi=" << sumPhi << '\n';
-      cerr << "maxPhi=" << maxphi << '\n';
+      //      cerr << "sumPhi=" << sumPhi << '\n';
+      //      cerr << "maxPhi=" << maxphi << '\n';
     }
   }
 }
@@ -269,7 +270,7 @@ void Wave::setupRK4(const ProcessorGroup*,
       constCCVariable<double> oldPhi;
       old_dw->get(oldPhi, phi_label, matl, patch, Ghost::AroundCells, 1);
       constCCVariable<double> oldPi;
-      old_dw->get(oldPi, pi_label, matl, patch, Ghost::AroundCells, 1);
+      old_dw->get(oldPi, pi_label, matl, patch, Ghost::None, 0);
 
       CCVariable<double> newPhi;
       new_dw->allocateAndPut(newPhi, phi_label, matl, patch);
@@ -296,6 +297,7 @@ void Wave::timeAdvanceRK4(const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
+      //cout << " Doing Wave::timeAdvanceRK4 on patch " << patch->getID() << ", matl " << matl << endl;
       const Level* level = getLevel(patches);
       delt_vartype dt;
       old_dw->get(dt, sharedState_->get_delt_label(), level);
@@ -304,7 +306,7 @@ void Wave::timeAdvanceRK4(const ProcessorGroup*,
       constCCVariable<double> curPhi;
       cur_dw->get(curPhi, step->curphi_label, matl, patch, Ghost::AroundCells, 1);
       constCCVariable<double> curPi;
-      cur_dw->get(curPi, step->curpi_label, matl, patch, Ghost::AroundCells, 1);
+      cur_dw->get(curPi, step->curpi_label, matl, patch, Ghost::None, 0);
 
       CCVariable<double> newPhi;
       new_dw->allocateAndPut(newPhi, step->newphi_label, matl, patch);
@@ -314,7 +316,7 @@ void Wave::timeAdvanceRK4(const ProcessorGroup*,
       constCCVariable<double> oldPhi;
       old_dw->get(oldPhi, phi_label, matl, patch, Ghost::AroundCells, 1);
       constCCVariable<double> oldPi;
-      old_dw->get(oldPi, pi_label, matl, patch, Ghost::AroundCells, 1);
+      old_dw->get(oldPi, pi_label, matl, patch, Ghost::None, 0);
 
       CCVariable<double> totalPhi;
       new_dw->getModifiable(totalPhi, phi_label, matl, patch);
