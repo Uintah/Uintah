@@ -303,8 +303,8 @@ void PackageDB::loadPackage(const string& packPath)
 	  registerModule((*mi).second);
 	}
 
-	TCL::execute("if [winfo exists .loading.fb] "
-		     "{.loading.fb step; update idletasks}");
+	TCL::execute(string("if [winfo exists .loading.fb] ") + 
+		     string("{.loading.fb step; update idletasks}"));
       }
     }
     
@@ -318,7 +318,7 @@ void PackageDB::loadPackage(const string& packPath)
   }
 
   postMessage("\nFinished loading packages.\n",false);
-  TCL::execute("if [winfo exists .loading] {destroy .loading}");
+  TCL::execute(string("if [winfo exists .loading] {destroy .loading}"));
   TCL::eval("update idletasks",result);
 }
   
