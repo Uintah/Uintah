@@ -34,16 +34,17 @@
 namespace SCIRun {
 
 
-Runnable::Runnable()
+Runnable::Runnable(bool delete_on_exit)
+  : delete_on_exit(delete_on_exit)
 {
-    my_thread_=0;
+  my_thread_=0;
 }
 
 Runnable::~Runnable()
 {
-    if(my_thread_){
-	throw ThreadError("Runnable is being destroyed while thread is still running\n");
-    }
+  if(my_thread_){
+    throw ThreadError("Runnable is being destroyed while thread is still running\n");
+  }
 }
 
 
