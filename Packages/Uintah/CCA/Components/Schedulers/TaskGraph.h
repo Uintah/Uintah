@@ -71,7 +71,16 @@ WARNING
 ****************************************/
   class CompTable;
   class SchedulerCommon;
-  
+
+  // this is so we can keep task independent of taskgraph
+  struct GraphSortInfo {
+    GraphSortInfo() { visited = false; sorted = false; }
+    bool visited;
+    bool sorted;
+  };
+
+  typedef map<Task*, GraphSortInfo> GraphSortInfoMap;
+
    class TaskGraph {
    public:
      TaskGraph(SchedulerCommon* sc, const ProcessorGroup* pg);
@@ -156,13 +165,15 @@ WARNING
      /// Will call processTask (recursively, as this is a helper for 
      /// processTask) for each dependent task.
      void processDependencies(Task* task, Task::Dependency* req,
-			      vector<Task*>& sortedTasks) const;
+			      vector<Task*>& sortedTasks,
+                              GraphSortInfoMap& sortinfo) const;
      
      /// Helper function for setupTaskConnections, adding dependency edges
      /// for the given task for each of the require (or modify) depencies in
      /// the list whose head is req.  If modifies is true then each found
      /// compute will be replaced by its modifying dependency on the CompMap.
-     void addDependencyEdges(Task* task, Task::Dependency* req, CompMap& comps,
+     void addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo, 
+                             Task::Dependency* req, CompMap& comps,
 			     bool modifies);
 
      /// Used by (the public) createDetailedDependencies to store comps
@@ -197,14 +208,15 @@ WARNING
 
      /// Adds edges in the TaskGraph between requires/modifies and their
      /// associated computes.  Uses addDependencyEdges as a helper
-     void setupTaskConnections();
+     void setupTaskConnections(GraphSortInfoMap& sortinfo);
 
      /// Called for each task, this "sorts" the taskgraph.  
      /// This sorts in topological order by calling processDependency
      /// (which checks for cycles in the graph), which then recursively
      /// calls processTask for each dependentTask.  After this process is
      /// finished, then the task is added at the end of sortedTasks.
-     void processTask(Task* task, vector<Task*>& sortedTasks) const;
+     void processTask(Task* task, vector<Task*>& sortedTasks,
+                      GraphSortInfoMap& sortinfo) const;
       
      vector<Task*>        d_tasks;
      vector<Task::Edge*> edges;
