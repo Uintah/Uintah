@@ -4,17 +4,13 @@
 
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/Core/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Variables/VarTypes.h>
 
 #include <map>
 #include <vector>
 
 namespace Uintah {
-
+  
 /**************************************
 
 CLASS
@@ -43,7 +39,7 @@ DESCRIPTION
 WARNING
   
 ****************************************/
-
+  class ICELabel;
   class GeometryPiece;
   class flameSheet_rxn : public ModelInterface {
   public:
@@ -77,26 +73,42 @@ WARNING
                                     const int);
                                     
    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                      SchedulerP& sched);           
+                                      SchedulerP& sched);
+                                      
+   virtual void scheduleTestConservation(SchedulerP&,
+                                         const PatchSet* patches,
+                                         const ModelInfo* mi);           
 
   private:
+    ICELabel* lb;
+    
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,
-		      const MaterialSubset* matls, DataWarehouse*, 
+		      const MaterialSubset* matls, 
+                    DataWarehouse*, 
 		      DataWarehouse* new_dw);
                      
+    void testConservation(const ProcessorGroup*, 
+                          const PatchSubset* patches,
+                          const MaterialSubset*,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const ModelInfo* mi);   
+   
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
-	                      const MaterialSubset* matls, DataWarehouse*, 
-	                      DataWarehouse* new_dw, const ModelInfo*);
+	                      const MaterialSubset* matls, 
+                             DataWarehouse*, 
+	                      DataWarehouse* new_dw, 
+                             const ModelInfo*);
 
     flameSheet_rxn(const flameSheet_rxn&);
     flameSheet_rxn& operator=(const flameSheet_rxn&);
 
     ProblemSpecP params;
 
-    const Material* matl;
-    MaterialSet* mymatls;
+    const Material* d_matl;
+    MaterialSet* d_matl_set;
 
     class Region {
     public:
@@ -112,11 +124,11 @@ WARNING
       string name;
       VarLabel* scalar_CCLabel;
       VarLabel* scalar_source_CCLabel;
+      VarLabel* sum_scalar_fLabel;
       vector<Region*> regions;
     };
 
-    vector<Scalar*> scalars;
-    map<string, Scalar*> names;
+    Scalar* d_scalar;
     double d_del_h_comb;
     double d_f_stoic;
     double d_cp;
@@ -124,7 +136,8 @@ WARNING
     double d_T_fuel_init;
     double d_diffusivity;
     int  d_smear_initialDistribution_knob;
-    SimulationStateP sharedState;
+    bool d_test_conservation;
+    SimulationStateP d_sharedState;
   };
 }
 
