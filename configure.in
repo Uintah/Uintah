@@ -519,6 +519,10 @@ AC_DEFUN(SCI_CHECK_HEADERS,
     # then skip the individual tests below.
     if test "$SUCCESS" = "yes"; then
        _HEADER_LIST_=""
+    else
+       if test $num_headers -gt 1; then
+          echo "no.  (One or more missing, will check individually)"
+       fi
     fi
 
     ## Begin: HEADER for loop
@@ -564,7 +568,19 @@ EOF
 
           if test -f conftest.o; then
              if test "$_CHECK_PATH_" != ""; then
-                eval $_SCI_INCLUDE_NAME_=-I$_CHECK_PATH_
+                if test -e "$_CHECK_PATH_/$_HEADER_"; then
+                   AC_MSG_RESULT($_CHECK_PATH_)
+                   eval $_SCI_INCLUDE_NAME_=-I$_CHECK_PATH_
+                else
+                   # Even though the compilation was successful,
+                   # it was because the header was in the generic
+                   # compiler path, not because it was in the path we just
+                   # tested.  Thus, we really did not succeed.
+                   if test "$debugging" = "yes"; then
+                      echo "False alarm, will keep trying"
+                   fi
+                   continue
+                fi
              fi
              eval $_SCI_HEADER_HAVE_=yes
              if test "$_CHECK_PATH_" = ""; then
@@ -1904,6 +1920,8 @@ SCI_CHECK_HEADERS(,stdio.h stdlib.h stddef.h stdarg.h string.h limits.h \
    sys/types.h sys/time.h sys/stat.h sys/socket.h sys/timeb.h \
    sys/mman.h sys/param.h sys/ioctl.h sys/resource.h sys/wait.h \
    sys/utsname.h rpc/types.h netinet/in.h,,,not-optional)
+
+SCI_CHECK_HEADERS(,inttypes.h stdint.h,,,optional)
 
 ##  --  required SGI headers
 if test "$host" = "irix"; then
