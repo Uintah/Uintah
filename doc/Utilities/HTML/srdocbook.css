@@ -25,17 +25,49 @@ This stylesheet is used by html documents generated from docbook sources.
 
 .title {
 color:#003300;
-text-align: left}
-
-h2.title {
-border-bottom: 1px dotted;
-border-left: 1px dotted;
-padding-left: 4px;
-text-align: left}
+text-align: left;
+font-size: 100%}
 
 .subtitle {
 color:#003300;
 text-align: left}
+
+/* Table titles */
+div.table p.title { 
+color:#003300;
+text-align: left;
+font-size: 100%}
+
+/* Top-level section titles */
+h2.title {
+border-bottom: 1px solid;
+border-left: 1px solid;
+padding-left: 4px;
+font-size: 150%;
+text-align: left}
+
+/* section section titles */
+h3.title { 
+border-bottom: 1px dotted;
+border-left: 1px dotted;
+font-size: 125%;
+text-align: left}
+
+/* section section section titles */
+h4.title { 
+font-size: 110%;
+text-align: left}
+
+/* section section section section titles */
+h5.title { 
+font-size: 100%;
+text-align: left}
+
+/* Note titles */
+div.note h3.title { 
+border: 0px none;
+font-size: 100%;
+}
 
 .screen {
 color:#006633}
