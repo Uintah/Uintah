@@ -30,10 +30,10 @@ Patch::Patch(const Level* level,
 	     const IntVector& lowIndex, const IntVector& highIndex,
 	     const IntVector& inLowIndex, const IntVector& inHighIndex,
 	     int id)
-    : d_level(level), d_level_index(-1),
+    : d_realPatch(0), d_level(level), d_level_index(-1),
       d_lowIndex(lowIndex), d_highIndex(highIndex),
       d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
-      d_realPatch(0), d_id( id )
+      d_id( id )
 {
   have_layout=false;
   if(d_id == -1){
