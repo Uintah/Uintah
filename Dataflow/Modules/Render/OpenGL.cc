@@ -50,6 +50,11 @@ int query_OpenGL()
   int have_opengl=glXQueryExtension
     (Tk_Display(Tk_MainWindow(the_interp)), NULL, NULL);
   TCLTask::unlock();
+  if (!have_opengl)
+    cerr << "glXQueryExtension() returned NULL.\n"
+            "** XFree86 NOTE **  Do you have the line 'Load \"glx\"'"
+            " in the Modules section of your XF86Config file?"
+         << endl;
   return have_opengl;
 }
 
