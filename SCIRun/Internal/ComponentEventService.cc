@@ -42,18 +42,18 @@
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/CCA/CCAException.h>
 #include <iostream>
-using namespace std;
-using namespace SCIRun;
+
+namespace SCIRun {
 
 ComponentEventService::ComponentEventService(SCIRunFramework* framework,
-			       const std::string& name)
+                                             const std::string& name)
   : InternalComponentInstance(framework, name, "internal:ComponentEventService")
 {
 }
 
 ComponentEventService::~ComponentEventService()
 {
-  cerr << "EventService destroyed...\n";
+  std::cerr << "EventService destroyed..." << std::endl;
 }
 
 InternalComponentInstance* ComponentEventService::create(SCIRunFramework* framework,
@@ -75,21 +75,24 @@ ComponentEventService::addComponentEventListener(sci::cca::ports::ComponentEvent
 						 bool playInitialEvents)
 {
   listeners.push_back(new Listener(type, l));
-  if(playInitialEvents){
-    cerr << "addComponentEventListener not done!\n";
-  }
+  if(playInitialEvents)
+    {
+    std::cerr << "addComponentEventListener not done!" << std::endl;
+    }
 }
 
 void
-ComponentEventService::removeComponentEventListener(sci::cca::ports::ComponentEventType /*type*/,
-						    const sci::cca::ports::ComponentEventListener::pointer& /*l*/)
+ComponentEventService::removeComponentEventListener(
+                                  sci::cca::ports::ComponentEventType /*type*/,
+			    const sci::cca::ports::ComponentEventListener::pointer& /*l*/)
 {
-  cerr << "removeComponentEventListener not done!\n";
+  std::cerr << "removeComponentEventListener not done!" << std::endl;
 }
 
 void ComponentEventService::moveComponent(const sci::cca::ComponentID::pointer& /*id*/,
-					  int /*x*/, int /*y*/)
+                                          int /*x*/, int /*y*/)
 {
-  cerr << "moveComponent not done!\n";
+  std::cerr << "moveComponent not done!" << std::endl;
 }
 
+} // end namespace SCIRun

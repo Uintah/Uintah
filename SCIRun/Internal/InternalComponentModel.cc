@@ -46,33 +46,38 @@
 #include <SCIRun/Dataflow/DataflowScheduler.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <iostream>
-using namespace std;
-using namespace SCIRun;
+
+namespace SCIRun {
 
 InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
   : ComponentModel("internal"), framework(framework)
 {
   addService(new InternalComponentDescription(this, "cca.BuilderService",
-					      &BuilderService::create, true));
+                                              &BuilderService::create, true));
   addService(new InternalComponentDescription(this, "cca.ComponentRepository",
-					      &ComponentRegistry::create, true));
+                                              &ComponentRegistry::create, true));
   addService(new InternalComponentDescription(this, "cca.ComponentEventService",
-					      &ComponentEventService::create, true));
+                                              &ComponentEventService::create, true));
   addService(new InternalComponentDescription(this, "cca.DataflowScheduler",
                                               &DataflowScheduler::create, true));
 }
 
 InternalComponentModel::~InternalComponentModel()
 {
-  for(map<string, InternalComponentDescription*>::iterator iter=services.begin();
-      iter != services.end(); iter++)
+  for(std::map<std::string, InternalComponentDescription*>::iterator
+        iter=services.begin(); iter != services.end(); iter++)
+    {
     delete iter->second;
+    }
 }
 
 void InternalComponentModel::addService(InternalComponentDescription* svc)
 {
   if(services.find(svc->serviceType) != services.end())
-    cerr << "WARNING: duplicate internal service: " << svc->serviceType << '\n';
+    {
+    std::cerr << "WARNING: duplicate internal service: " << svc->serviceType
+              << std::endl;
+    }
   services[svc->serviceType]=svc;
 }
 
@@ -80,59 +85,73 @@ sci::cca::Port::pointer
 InternalComponentModel::getFrameworkService(const std::string& type,
 					    const std::string& componentName)
 {
-  //cerr<<"getFrameworkService #"<<1<<endl;
-  map<string, InternalComponentDescription*>::iterator iter=services.find(type);
+  //std::cerr<<"getFrameworkService #"<<1<<std::endl;
+  std::map<std::string, InternalComponentDescription*>::iterator
+    iter=services.find(type);
   if(iter == services.end())
+    {
     return sci::cca::Port::pointer(0);
-  //cerr<<"getFrameworkService #"<<2<<endl;
+    }
+  //std::cerr<<"getFrameworkService #"<<2<<std::endl;
   InternalComponentDescription* cd = iter->second;
   InternalComponentInstance* ci;
-  if(cd->isSingleton){
-    //cerr<<"getFrameworkService #"<<3<<endl;
-    string cname = "internal: "+type;
-    if(!cd->singleton_instance){
+  if(cd->isSingleton)
+    {
+    //std::cerr<<"getFrameworkService #"<<3<<std::endl;
+    std::string cname = "internal: "+type;
+    if(!cd->singleton_instance)
+      {
       cd->singleton_instance = (*cd->create)(framework, cname);
       framework->registerComponent(cd->singleton_instance, cname);
-    }
-    //cerr<<"getFrameworkService #"<<4<<endl;
+      }
+    //std::cerr<<"getFrameworkService #"<<4<<std::endl;
     ci = cd->singleton_instance;
-  } else {
-    //cerr<<"getFrameworkService #"<<5<<endl;
-    string cname = "internal: "+type+" for "+componentName;
+    }
+  else
+    {
+    //std::cerr<<"getFrameworkService #"<<5<<std::endl;
+    std::string cname = "internal: "+type+" for "+componentName;
     ci = (*cd->create)(framework, cname);
-    //cerr<<"getFrameworkService #"<<6<<endl;
+    //std::cerr<<"getFrameworkService #"<<6<<std::endl;
     framework->registerComponent(ci, cname);
-    //cerr<<"getFrameworkService #"<<7<<endl;
-  }
+    //std::cerr<<"getFrameworkService #"<<7<<std::endl;
+    }
   ci->incrementUseCount();
-  //cerr<<"getFrameworkService #"<<8<<endl;
+  //std::cerr<<"getFrameworkService #"<<8<<std::endl;
   sci::cca::Port::pointer ptr = ci->getService(type);
-  //cerr<<"getFrameworkService #"<<9<<endl;
+  //std::cerr<<"getFrameworkService #"<<9<<std::endl;
   ptr->addReference();
-  //cerr<<"getFrameworkService #"<<10<<endl;
+  //std::cerr<<"getFrameworkService #"<<10<<std::endl;
   return ptr;
 }
 
 bool
 InternalComponentModel::releaseFrameworkService(const std::string& type,
-						const std::string& componentName)
+                                                const std::string& componentName)
 {
-  map<string, InternalComponentDescription*>::iterator iter=services.find(type);
+  std::map<std::string, InternalComponentDescription*>::iterator
+    iter=services.find(type);
   if(iter == services.end())
-    return false;
-
+    {    return false; }
+  
   InternalComponentDescription* cd = iter->second;
   InternalComponentInstance* ci;
-  if(cd->isSingleton){
+  if(cd->isSingleton)
+    {
     ci=cd->singleton_instance;
-  } else {
-    string cname = "internal: "+type+" for "+componentName;
+    }
+  else
+    {
+    std::string cname = "internal: "+type+" for "+componentName;
     ci = dynamic_cast<InternalComponentInstance*>(framework->lookupComponent(cname));
     if(!ci)
-      throw InternalError("Cannot find Service component of type: "+type+" for component "+componentName);
-  }
+      throw InternalError("Cannot find Service component of type: " +
+                          type + " for component " + componentName);
+    }
   if(!ci->decrementUseCount())
+    {
     throw InternalError("Service released without correspond get");
+    }
   return true;
 }
 
@@ -142,30 +161,33 @@ bool InternalComponentModel::haveComponent(const std::string& /*name*/)
 }
 
 ComponentInstance* InternalComponentModel::createInstance(const std::string&,
-							  const std::string&)
+                                                          const std::string&)
 {
   return 0;
 }
 
 bool InternalComponentModel::destroyInstance(ComponentInstance *ic)
 {
-  cerr<<"Warning: I don't know how to destroy a internal component instance!"<<endl;
+  std::cerr << "Warning: I don't know how to destroy a internal component instance!"
+            << std::endl;
   return true;
 }
 
-
-string InternalComponentModel::getName() const
+std::string InternalComponentModel::getName() const
 {
   return "Internal";
 }
 
 void
-InternalComponentModel::listAllComponentTypes(vector<ComponentDescription*>& list,
-					      bool listInternal)
+InternalComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
+                                              bool listInternal)
 {
-  if(listInternal){
-    for(map<string, InternalComponentDescription*>::iterator iter = services.begin();
-	iter != services.end(); iter++)
+  if(listInternal)
+    {
+    for(std::map<std::string, InternalComponentDescription*>::iterator
+          iter = services.begin(); iter != services.end(); iter++)
       list.push_back(iter->second);
-  }
+    }
 }
+
+} // end namespace SCIRun

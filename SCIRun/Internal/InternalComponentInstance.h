@@ -43,27 +43,35 @@
 
 #include <SCIRun/ComponentInstance.h>
 
-namespace SCIRun {
-  class InternalComponentInstance : public ComponentInstance {
-  public:
-    InternalComponentInstance(SCIRunFramework* framework,
-			      const std::string& intanceName,
-			      const std::string& className);
+namespace SCIRun
+{
 
-    virtual PortInstance* getPortInstance(const std::string& name);
-    virtual ~InternalComponentInstance();
+/** \class InternalComponentInstance
+ *
+ *
+ */
+class InternalComponentInstance : public ComponentInstance
+{
+public:
+  InternalComponentInstance(SCIRunFramework* framework,
+                            const std::string& intanceName,
+                            const std::string& className);
+  
+  virtual PortInstance* getPortInstance(const std::string& name);
+  virtual ~InternalComponentInstance();
+  
+  virtual sci::cca::Port::pointer getService(const std::string& name) = 0;
+  virtual PortInstanceIterator* getPorts();
+  
+  void incrementUseCount();
+  bool decrementUseCount();
+private:
+  int useCount;
+  
+  InternalComponentInstance(const InternalComponentInstance&);
+  InternalComponentInstance& operator=(const InternalComponentInstance&);
+};
 
-    virtual sci::cca::Port::pointer getService(const std::string& name) = 0;
-    virtual PortInstanceIterator* getPorts();
-
-    void incrementUseCount();
-    bool decrementUseCount();
-  private:
-    int useCount;
-
-    InternalComponentInstance(const InternalComponentInstance&);
-    InternalComponentInstance& operator=(const InternalComponentInstance&);
-  };
-}
+} // end namespace SCIRun
 
 #endif

@@ -45,28 +45,40 @@
 #include <string>
 
 namespace SCIRun {
-  class InternalComponentInstance;
-  class InternalComponentModel;
-  class InternalComponentDescription : public ComponentDescription {
-  public:
-    InternalComponentDescription(InternalComponentModel* model,
-				 const std::string& serviceType,
-				 InternalComponentInstance* (*create)(SCIRunFramework*, const std::string&),
-				 bool isSingleton);
-    virtual ~InternalComponentDescription();
-    virtual std::string getType() const;
-    virtual const ComponentModel* getModel() const;
 
-  private:
-    friend class InternalComponentModel;
-    InternalComponentModel* model;
-    std::string serviceType;
-    InternalComponentInstance* (*create)(SCIRunFramework*, const std::string&);
-    InternalComponentInstance* singleton_instance;
-    bool isSingleton;
-    InternalComponentDescription(const InternalComponentDescription&);
-    InternalComponentDescription& operator=(const InternalComponentDescription&);
-  };
-}
+class InternalComponentInstance;
+class InternalComponentModel;
+
+/** \class InternalComponentDescription
+ *
+ *
+ */
+class InternalComponentDescription : public ComponentDescription
+{
+public:
+  InternalComponentDescription(InternalComponentModel* model,
+                               const std::string& serviceType,
+                               InternalComponentInstance* (*create)(SCIRunFramework*,
+                                                                    const std::string&),
+                               bool isSingleton);
+  virtual ~InternalComponentDescription();
+
+  /** */
+  virtual std::string getType() const;
+  /** */
+  virtual const ComponentModel* getModel() const;
+  
+private:
+  friend class InternalComponentModel;
+  InternalComponentModel* model;
+  std::string serviceType;
+  InternalComponentInstance* (*create)(SCIRunFramework*, const std::string&);
+  InternalComponentInstance* singleton_instance;
+  bool isSingleton;
+  InternalComponentDescription(const InternalComponentDescription&);
+  InternalComponentDescription& operator=(const InternalComponentDescription&);
+};
+
+} // end namespace SCIRun
 
 #endif
