@@ -421,15 +421,6 @@ int ExplicitSolver::noSolve(const LevelP& level,
 
   d_props->sched_computePropsFirst_mm(sched, patches, matls);
 
-  d_props->sched_computeDrhodt(sched, patches, matls,
-				 nosolve_timelabels);
-
-  d_boundaryCondition->sched_setInletFlowRates(sched, patches, matls);
-
-  sched_dummySolve(sched, patches, matls);
-
-  sched_interpolateFromFCToCC(sched, patches, matls, nosolve_timelabels);
-
   // check if filter is defined...
 #ifdef PetscFilter
   if (d_turbModel->getFilter()) {
@@ -438,6 +429,15 @@ int ExplicitSolver::noSolve(const LevelP& level,
       d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
   }
 #endif
+
+  d_props->sched_computeDrhodt(sched, patches, matls,
+				 nosolve_timelabels);
+
+  d_boundaryCondition->sched_setInletFlowRates(sched, patches, matls);
+
+  sched_dummySolve(sched, patches, matls);
+
+  sched_interpolateFromFCToCC(sched, patches, matls, nosolve_timelabels);
 
   d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
 					   nosolve_timelabels);
