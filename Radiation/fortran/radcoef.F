@@ -7,7 +7,8 @@ C***********************************************************************
 	
       double precision PI,PI1,PATM,OPF,EMG,PCO2,PH2O,PCO2F,PH2OF,
      &PSUMF,PAVE,PML,PRES,PWPC,TGI,CCO2,CH2O,DELE,EMGI,EMGF,FV,ECO2,
-     &EH2O,TGF,SIG,xxx,yyy,zzz,xxxx,yyyy,zzzz,small,QSRC
+     &EH2O,TGF,SIG,xxx,yyy,zzz,xxxx,yyyy,zzzz,small,QSRC,M,scatcoef, 
+     &phfunc
 
       double precision AEM(3)
       double precision AEK(3)
@@ -17,6 +18,7 @@ C***********************************************************************
 	DATA SIG/5.67D-08/, small/1.0d-40/
 C
 	fraction(lambda)=1.0d0
+	fractiontwo(lambda)=1.0d0
 
         pi = dacos(-1.0D0)
 
@@ -35,14 +37,41 @@ c       Domain details for Problem Two
           DO 85 J=idxlo(2),idxhi(2)
             DO 80 I=idxlo(1),idxhi(1)
 	     IF (PCELL(I,J,K).EQ.FFIELD) THEN
-               CO2(I,J,K) = 0.0d0
-               H2O(I,J,K) = 1.0d0
-	       SFV(I,J,K) = 0.0d0
-               TG(I,J,K) = 1000.0
+
+       CO2(I,J,K) = 0.4d0*xx(I)*(1.0d0-xx(I))+0.06d0
+       H2O(I,J,K) = 2.0d0*CO2(I,J,K)
+       SFV(I,J,K) = (40.0d0*xx(I)*(1.0d0-xx(I))+6.0d0)*1.0d-07
+       TG(I,J,K) = 4000.0d0*xx(I)*(1.0d0-xx(I))+800.0d0
+
+c                 if (xx(I).le.0.375d0)
+c     &TG(I,J,K) = 400.0d0+((1800.0d0-400.0d0)/0.375d0)*xx(I)
+c                 if (xx(I).gt.0.375d0)
+c     &TG(I,J,K) = 1800.0d0+((800.0d0-1800.0d0)/3.625d0)*(xx(I)-0.375)
+
 	     END IF
 80          CONTINUE
 85        CONTINUE
 90      CONTINUE
+
+c        DO 105 K=idxlo(3),idxhi(3)
+c          DO 100 J=idxlo(2),idxhi(2)
+c            DO 95 I=idxlo(1),idxhi(1)
+
+c	     IF (PCELL(I,J,K).EQ.FFIELD) THEN
+		
+c		M = MAX(ABS(yy(J)-1.0d0), ABS(zz(K)-1.0d0))
+
+c		IF (M.NE.0.0d0)
+c     &TG(I,J,K)= (TG(I,40,40)-800.0d0)*
+c     &(1.0d0-3.0d0*(M**2)+2*(M**3))+800.0d0
+
+c		IF (M.GT.1.0d0)TG(I,J,K)= 800.0d0
+
+c	     END IF
+
+c95	    CONTINUE
+c100	  CONTINUE
+c105	CONTINUE
 
         END IF
 
@@ -205,8 +234,20 @@ C-----------------------------------------------------------------------
 
                     FV = SFV(I,J,K)
 	    ABSKG(I,J,K) = ABSKG(I,J,K) + MIN( 25.0d0,((4.0d0/OPL) 
-     1                 * DLOG(1.0d0 + 350.0d0*FV*TG(I,J,K)*OPL)) ) 
+     1                 * DLOG(1.0d0 + 350.0d0*FV*TG(I,J,K)*OPL)) )
 
+c     Anisotropic scattering properties for the interior nodes
+c     (for spherical harmonics only)
+
+            scatcoef = 0.0d0
+            phfunc   = 0.0d0
+            shgamma(i,j,k) = 3.0d0*(abskg(i,j,k) + scatcoef) - 
+     &      phfunc*scatcoef
+
+        if(shgamma(i,j,k).eq.0.0d0)shgamma(i,j,k) = 1.0d-10
+
+            shgamma(i,j,k) = 1.0d0/shgamma(i,j,k)
+	    
 C	Calculate blackbody emissive intensity (emissive power / pi)
 C
         ESRCG(I,J,K) = abs(fraction(lambda)) * SIG * PI1 * 
@@ -230,6 +271,8 @@ c     User specified properties for validation
             DO 330 J=idxlo(2),idxhi(2)
               DO 320 I=idxlo(1),idxhi(1)
 
+	        IF (PCELL(I,J,K).EQ.FFIELD) THEN
+
                  xxx=0.5-xx(I)
                  yyy=0.5-yy(J)
                  zzz=0.5-zz(K)
@@ -246,6 +289,18 @@ c     User specified properties for validation
                  ABSKG(I,J,K)=(0.9*(1-xxxx)*(1-yyyy)*(1-zzzz))+0.1
                  ESRCG(I,J,K) = abs(fraction(lambda))*PI1 * 
      &		 ABSKG(I,J,K)
+
+c     Anisotropic scattering properties for the interior nodes
+c     (for spherical harmonics only)
+
+            scatcoef = 0.0d0
+            phfunc   = 0.0d0
+            shgamma(i,j,k) = 3.0d0*(abskg(i,j,k) + scatcoef) - 
+     &      phfunc*scatcoef
+        if(shgamma(i,j,k).eq.0.0d0)shgamma(i,j,k) = 1.0d-10
+            shgamma(i,j,k) = 1.0d0/shgamma(i,j,k)
+
+	        END IF
 
 320           CONTINUE
 330         CONTINUE
