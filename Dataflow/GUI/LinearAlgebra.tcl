@@ -54,7 +54,8 @@ itcl_class SCIRun_Math_LinearAlgebra {
 	frame $w.row2
 	button $w.row2.execute -text "Execute" -command "$this-c needexecute"
 	pack $w.row2.execute -side left -e y -f both -padx 5 -pady 5
-	pack $w.row1 $w.row2 -side top -e y -f both -padx 5 -pady 5
+	pack $w.row1 -side top -e y -f both -padx 5 -pady 5
+	pack $w.row2 -side top -e n -f x -padx 5 -pady 5
     }
 }
 
