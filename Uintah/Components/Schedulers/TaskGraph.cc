@@ -239,7 +239,7 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
 	 }
 	 
 	 for (actype::const_iterator aciter = range.first;
-	      aciter < range.second; aciter++) {
+	      aciter != range.second; aciter++) {
 	    Task* vtask = aciter->second->d_task;
 	    if(!vtask->sorted){
 	       if(vtask->visited){
@@ -321,8 +321,7 @@ TaskGraph::addTask(Task* task)
    for(Task::compType::const_iterator dep = comps.begin();
        dep != comps.end(); dep++){
       TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
-      if (!dep->d_var->typeDescription()->isReduction() ||
-	  !dep->d_var->allowsMultipleComputes()) {
+      if (!dep->d_var->allowsMultipleComputes()) {
 	 actype::iterator aciter = d_allcomps.find(p);
 	 if(aciter != d_allcomps.end()){
 	    cerr << "First task:\n";
@@ -469,6 +468,9 @@ DependData::operator()( const DependData & d1, const DependData & d2 ) const {
 
 //
 // $Log$
+// Revision 1.16  2001/01/05 21:52:08  witzel
+// One more try -- I should really compile before I commit something
+//
 // Revision 1.15  2001/01/05 21:26:56  witzel
 // Made d_allcomps a multimap so that some reduction variables may allow
 // themselves to be computed multiple times (i.e. desirable for delT).
