@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd"?>
 <?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
+<!cocoon-process type="xslt">
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -29,7 +29,7 @@
     <summary>The FieldBoundary module extracts a boundary surface from a volume field.</summary>
     <description>
       <p>
-        The FieldBoundary module pulls out the bounding surface of
+        The FieldBoundary module extracts the bounding surface of
         the incoming field, making it into a new field that it outputs
         through the BoundaryField port.  This module does not have a GUI.
 	It has one input port, Field, and two output ports, BoundaryField,
@@ -42,9 +42,9 @@
 
         The Field output port will contain the new boundary mesh with
         no data interpolated onto it.  If the data from the input
-        field is desired on the output field, it is recommended that
-        the Interpolant output be used instead and the results run
-        through ApplyInterpolant to pull in the values from the input
+        field is desired on the output field, we recommended that
+        using the Interpolant output, running the results
+        through ApplyInterpolant in order to draw values from the input
         field.
        </p>
 
