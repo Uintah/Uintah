@@ -14,12 +14,19 @@ using SCICore::Geometry::Point;
 
 class Cell;
 
-class Lattice {
+class Lattice : public Array3<Cell> {
 public:
-         Lattice(const Patch* patch,const ParticleVariable<Point>& pX);
-                
+        Lattice(const Patch* patch,const ParticleVariable<Point>& pX);
+
+  void  fingNeighborWithout(particleIndex pIndex);
+  void  fingNeighborWith(particleIndex pIndex);
+         
+  const Patch*                    getPatch();
+  const ParticleVariable<Point>&  getParticlesPosition();
+
 private:
-  Array3<Cell>  d_lattice;
+  const Patch* d_patch;
+  const ParticleVariable<Point>& d_pX;
 };
 
 } //namespace MPM
@@ -28,6 +35,9 @@ private:
 #endif //__LATTICE_H__
 
 // $Log$
+// Revision 1.3  2000/06/05 22:32:29  tan
+// Added function to find neighbor for a given particle index.
+//
 // Revision 1.2  2000/06/05 19:48:48  tan
 // Added d_lattice which is a Array3 data of cells in a given patch.
 //
