@@ -145,7 +145,7 @@ WARNING
     // Replace the values on the indicated face with value
    
     virtual void emitNormal(ostream& out, const IntVector& l,
-			    const IntVector& h, DOM_Element* /*varnode*/)
+			    const IntVector& h, DOMElement* /*varnode*/)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat())
@@ -155,7 +155,7 @@ WARNING
     }
       
     virtual bool emitRLE(ostream& out, const IntVector& l,
-			 const IntVector& h, DOM_Element* /*varnode*/)
+			 const IntVector& h, DOMElement* /*varnode*/)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat()){

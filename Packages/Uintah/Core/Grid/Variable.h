@@ -67,11 +67,11 @@ public:
 	    const string& compressionMode);
 
   virtual void emitNormal(ostream& out, const IntVector& l,
-			  const IntVector& h, DOM_Element* varnode) = 0;
+			  const IntVector& h, DOMElement* varnode) = 0;
   virtual void readNormal(istream& in, bool swapbytes) = 0;
 
   virtual bool emitRLE(ostream& /*out*/, const IntVector& l,
-		       const IntVector& h, DOM_Element* /*varnode*/);
+		       const IntVector& h, DOMElement* /*varnode*/);
   virtual void readRLE(istream& /*in*/, bool swapbytes, int nByteMode);
   
   virtual void allocate(const Patch* patch) = 0;
