@@ -18,10 +18,9 @@ using namespace SCIRun;
 static DebugStream dbg("SimpleScheduler", false);
 
 SimpleScheduler::SimpleScheduler(const ProcessorGroup* myworld,
-				 Output* oport)
-   : SchedulerCommon(myworld, oport)
+				 Output* oport) :
+  SchedulerCommon( myworld, oport )
 {
-  d_generation = 0;
 }
 
 SimpleScheduler::~SimpleScheduler()

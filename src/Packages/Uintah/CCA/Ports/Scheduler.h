@@ -52,6 +52,10 @@ WARNING
     Scheduler();
     virtual ~Scheduler();
     
+    // Only called by the SimulationController, and only once, and only
+    // if the simulation has been "restarted."
+    virtual void setGeneration( int id ) = 0;
+
     virtual void problemSetup(const ProblemSpecP& prob_spec) = 0;
     
     //////////
