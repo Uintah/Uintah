@@ -78,6 +78,19 @@ public:
   virtual void scheduleTimeAdvance(const LevelP& level, 
 				   SchedulerP&, int step, int nsteps );
 
+  void scheduleRefine(const LevelP& fineLevel, SchedulerP& scheduler);
+
+  void scheduleRefineInterface(const LevelP& fineLevel, SchedulerP& scheduler,
+                               int step, int nsteps);
+
+  void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
+
+  /// Schedule to mark flags for AMR regridding
+  void scheduleErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
+  
+  /// Schedule to mark initial flags for AMR regridding
+  void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
+
   void setSharedState(SimulationStateP& ssp);
 
   void setMPMLabel(MPMLabel* Mlb)
@@ -321,6 +334,17 @@ protected:
 				       DataWarehouse* old_dw,
 				       DataWarehouse* new_dw);
 
+  void errorEstimate(const ProcessorGroup*,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse*,
+                     DataWarehouse* new_dw);
+
+  void initialErrorEstimate(const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse*,
+                            DataWarehouse* new_dw);
 
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
