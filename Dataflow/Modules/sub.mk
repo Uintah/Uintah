@@ -12,7 +12,6 @@ SRCDIR := Dataflow/Modules
 SUBDIRS := \
 	$(SRCDIR)/DataIO\
 	$(SRCDIR)/Fields\
-	$(SRCDIR)/ManipFields\
 	$(SRCDIR)/Math\
 	$(SRCDIR)/Render\
         $(SRCDIR)/Visualization\
