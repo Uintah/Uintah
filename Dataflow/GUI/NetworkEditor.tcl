@@ -60,27 +60,6 @@ set netedit_savefile ""
 global NetworkChanged
 set NetworkChanged 0
 
-# TCL has some trace on the env array that makes it impossible
-# to set it in neteditGetenv wihtout causing an error
-# Here, we just back it up, unset it, then restore it
-# to undo the TCL trace
-global env
-array set temporary [array get env]
-unset env
-array set env [array get temporary]
-unset temporary
-
-# Whenever the env array is accessed, get the environment variable
-# from the C side of SCIRun
-proc neteditGetenv { name1 name2 op } {
-    upvar $name1 var
-    array set var "$name2 \"[netedit getenv $name2]\""
-}
-
-# Setup the trace that sets the appropriate value when the env array is read
-trace variable env r neteditGetenv
-
-
 # Turns 'true/false', 'on/off', 'yes/no', '1/0' into '1/0' respectively
 # This function is case insensitive.
 # Warns user if not a valid boolean string.
