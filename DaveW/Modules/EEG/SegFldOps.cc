@@ -110,6 +110,7 @@ void SegFldOps::execute()
 	    segFldHandle=scinew SegFld(sf);
 	gen=sf->generation;
 	itype.set("oldseg");
+	tcl_exec=1;
     } else if (itype.get()=="newseg") {
 	SegFldHandle iSFHandle;
 	if (!iseg->get(iSFHandle))
@@ -121,6 +122,7 @@ void SegFldOps::execute()
 	segFldHandle=iSFHandle;
 	lastType=itype.get();
 	itype.set("oldseg");
+	tcl_exec=1;
     } else if (itype.get()=="oldseg") {
 	if (!segFldHandle.get_rep()) {
 	    cerr << "Error: empty SegFldHandle!\n";
@@ -137,6 +139,7 @@ void SegFldOps::execute()
 		segFldHandle->killSmallComponents(ann);
 	    }
 	}
+	tcl_exec=0;
     }
 
     oseg->send(segFldHandle);
@@ -174,6 +177,9 @@ void SegFldOps::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.5  2000/03/04 00:16:34  dmw
+// update some DaveW stuff
+//
 // Revision 1.4  1999/10/07 02:06:28  sparker
 // use standard iostreams and complex type
 //
