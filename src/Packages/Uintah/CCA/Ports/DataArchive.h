@@ -347,7 +347,7 @@ private:
 			  int matlIndex, long64 particleID,
 			  double startTime, double endTime)
   {
-    double call_start = Time::currentSeconds();
+    double call_start = SCIRun::Time::currentSeconds();
     
     if (!have_timesteps) {
       vector<int> index;
@@ -398,7 +398,7 @@ private:
       
     }
     dbg << "DataArchive::query(values) completed in "
-	<< (Time::currentSeconds() - call_start) << " seconds\n";
+	<< (SCIRun::Time::currentSeconds() - call_start) << " seconds\n";
   }  
   
   template<class T>
@@ -406,7 +406,7 @@ private:
 			  int matlIndex, IntVector loc,
 			  double startTime, double endTime)
   {
-    double call_start = Time::currentSeconds();
+    double call_start = SCIRun::Time::currentSeconds();
     
     if (!have_timesteps) {
       vector<int> index;
@@ -490,7 +490,7 @@ private:
     }
     
     dbg << "DataArchive::query(values) completed in "
-        << (Time::currentSeconds() - call_start) << " seconds\n";
+        << (SCIRun::Time::currentSeconds() - call_start) << " seconds\n";
   }
   
 } // end namespace Uintah
