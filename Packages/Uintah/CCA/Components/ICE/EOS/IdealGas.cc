@@ -8,25 +8,11 @@ using namespace Uintah;
 IdealGas::IdealGas(ProblemSpecP& ps)
 {
    // Constructor
-  ps->get("gas_constant",d_gas_constant);
-  lb = scinew ICELabel();
-
 }
 
 IdealGas::~IdealGas()
 {
-  delete lb;
 }
-
-
-double IdealGas::getGasConstant() const
-{
-  return d_gas_constant;
-}
-
-//__________________________________
-//
-
 
 double IdealGas::computeRhoMicro(double press, double gamma,
                               double cv, double Temp)

@@ -84,14 +84,6 @@ WARNING
                                           CCVariable<double>& Temp_CC);
 
         virtual double getCompressibility(double press);
-        
-        double getGasConstant() const;
-
-        protected:
-
-        ICELabel* lb;
-      private:
-       double d_gas_constant;
       };
 } // End namespace Uintah
       
