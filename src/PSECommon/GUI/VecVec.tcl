@@ -40,7 +40,8 @@ itcl_class PSECommon_Matrix_VecVec {
 	make_labeled_radio $w.f "Operation: " " " \
 		top $this-opTCL \
 		{{"a + b" plus} \
-		{"a - b" minus}}
+		{"a - b" minus} \
+		{"cat (a  b)" cat}}
 	
 	pack $w.f -expand 1 -fill both
     }

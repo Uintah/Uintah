@@ -87,21 +87,34 @@ void VecVec::execute() {
     cerr << "VecVec: error - no data.\n";
     return;
   }
-  if (icol1H->nrows() != icol2H->nrows()) {
-    cerr << "VecVec: error, column matrices must have same number of rows ("<<icol1H->nrows()<<"!="<<icol2H->nrows()<<")\n";
-    return;
-  }
 
   clString opS=opTCL.get();
   update_state(JustStarted);
-  ColumnMatrix *res = scinew ColumnMatrix(icol1H->nrows());
+  ColumnMatrix *res;
   if (opS == "plus") {
+    if (icol1H->nrows() != icol2H->nrows()) {
+      cerr << "VecVec: error, column matrices must have same number of rows ("<<icol1H->nrows()<<"!="<<icol2H->nrows()<<")\n";
+      return;
+    }
+    res = scinew ColumnMatrix(icol1H->nrows());
     for (i=0; i<icol1H->nrows(); i++)
       (*res)[i]=(*(icol1H.get_rep()))[i]+(*(icol2H.get_rep()))[i];
     ocol->send(ColumnMatrixHandle(res));
   } else if (opS == "minus") {
+    if (icol1H->nrows() != icol2H->nrows()) {
+      cerr << "VecVec: error, column matrices must have same number of rows ("<<icol1H->nrows()<<"!="<<icol2H->nrows()<<")\n";
+      return;
+    }
+    res = scinew ColumnMatrix(icol1H->nrows());
     for (i=0; i<icol1H->nrows(); i++)
       (*res)[i]=(*(icol1H.get_rep()))[i]-(*(icol2H.get_rep()))[i];
+    ocol->send(ColumnMatrixHandle(res));
+  } else if (opS == "cat") {
+    res = scinew ColumnMatrix(icol1H->nrows()+icol2H->nrows());
+    for (i=0; i<icol1H->nrows(); i++)
+      (*res)[i]=(*(icol1H.get_rep()))[i];
+    for (i=0; i<icol2H->nrows(); i++) 
+      (*res)[i+icol1H->nrows()]=(*(icol2H.get_rep()))[i];
     ocol->send(ColumnMatrixHandle(res));
   } else {
     cerr << "VecVec: unknown operation "<<opS<<"\n";
@@ -112,6 +125,9 @@ void VecVec::execute() {
 
 //
 // $Log$
+// Revision 1.2  2000/12/13 21:03:18  dmw
+// Added concatination of vectors
+//
 // Revision 1.1  2000/11/02 21:43:32  dmw
 // added VecVec module
 //
