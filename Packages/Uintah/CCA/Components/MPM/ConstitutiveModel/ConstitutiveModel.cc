@@ -69,6 +69,37 @@ ConstitutiveModel::initSharedDataForExplicit(const Patch* patch,
   }
 }
 
+///////////////////////////////////////////////////////////////////////
+/*! Initialize the common quantities that all the implicit constituive
+ *  models compute */
+///////////////////////////////////////////////////////////////////////
+void 
+ConstitutiveModel::initSharedDataForImplicit(const Patch* patch,
+                                             const MPMMaterial* matl,
+                                             DataWarehouse* new_dw)
+{
+  Matrix3 I; I.Identity();
+  Matrix3 zero(0.);
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+
+  ParticleVariable<double>  pIntHeatRate;
+  ParticleVariable<Matrix3> pDefGrad, pStress;
+
+  new_dw->allocateAndPut(pIntHeatRate,lb->pInternalHeatRateLabel,   pset);
+  new_dw->allocateAndPut(pDefGrad,    lb->pDeformationMeasureLabel, pset);
+  new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
+
+  // To fix : For a material that is initially stressed we need to
+  // modify the stress tensors to comply with the initial stress state
+  ParticleSubset::iterator iter = pset->begin();
+  for(; iter != pset->end(); iter++){
+    particleIndex idx = *iter;
+    pIntHeatRate[idx] = 0.0;
+    pDefGrad[idx] = I;
+    pStress[idx] = zero;
+  }
+}
+
 void 
 ConstitutiveModel::addComputesAndRequires(Task*, 
                                           const MPMMaterial*,
@@ -117,6 +148,53 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   }
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
+  task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
+  task->computes(lb->pVolumeDeformedLabel,              matlset);
+  task->computes(lb->pInternalHeatRateLabel_preReloc,   matlset);
+}
+
+void 
+ConstitutiveModel::addSharedCRForImplicit(Task* task,
+                                          const MaterialSubset* matlset,
+                                          const PatchSet* ) const
+{
+  Ghost::GhostType  gnone = Ghost::None;
+  Ghost::GhostType  gac   = Ghost::AroundCells;
+
+  task->requires(Task::OldDW, lb->pXLabel,           matlset, gnone);
+  task->requires(Task::OldDW, lb->pMassLabel,        matlset, gnone);
+  task->requires(Task::OldDW, lb->pVolumeLabel,      matlset, gnone);
+  task->requires(Task::OldDW, lb->pTemperatureLabel, matlset, gnone);
+  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
+                                                     matlset, gnone);
+  task->requires(Task::OldDW, lb->pStressLabel,      matlset, gnone);
+  task->requires(Task::OldDW, lb->dispNewLabel,      matlset, gac, 1);
+
+  task->computes(lb->pStressLabel_preReloc,             matlset);  
+  task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
+  task->computes(lb->pVolumeDeformedLabel,              matlset);
+  task->computes(lb->pInternalHeatRateLabel_preReloc,   matlset);
+}
+
+void 
+ConstitutiveModel::addSharedCRForImplicit(Task* task,
+                                          const MaterialSubset* matlset,
+                                          const PatchSet* ,
+                                          const bool ) const
+{
+  Ghost::GhostType  gnone = Ghost::None;
+  Ghost::GhostType  gac   = Ghost::AroundCells;
+
+  task->requires(Task::ParentOldDW, lb->pXLabel,           matlset, gnone);
+  task->requires(Task::ParentOldDW, lb->pMassLabel,        matlset, gnone);
+  task->requires(Task::ParentOldDW, lb->pVolumeLabel,      matlset, gnone);
+  task->requires(Task::ParentOldDW, lb->pTemperatureLabel, matlset, gnone);
+  task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
+                                                           matlset, gnone);
+  task->requires(Task::ParentOldDW, lb->pStressLabel,      matlset, gnone);
+  task->requires(Task::OldDW,       lb->dispNewLabel,      matlset, gac, 1);
+
+  task->computes(lb->pStressLabel_preReloc,             matlset);  
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
   task->computes(lb->pInternalHeatRateLabel_preReloc,   matlset);
@@ -305,6 +383,36 @@ ConstitutiveModel::computePressEOS(double rhoM, double gamma,
 }
 //______________________________________________________________________
 
+// Compute velocity gradient (default case)
+Matrix3 
+ConstitutiveModel::computeVelGrad(const Patch* patch,
+                                  const double* oodx, 
+                                  const Point& pX, 
+                                  const Vector& pSize, 
+                                  constNCVariable<Vector>& gVelocity,
+                                  double erosion)
+{
+  if (flag->d_8or27 == 27)
+    return computeVelocityGradient(patch, oodx, pX, pSize, gVelocity, erosion);
+  return computeVelocityGradient(patch, oodx, pX, gVelocity, erosion);
+}
+
+// Compute velocity gradient for fracture
+Matrix3 
+ConstitutiveModel::computeVelGrad(const Patch* patch,
+                                  const double* oodx,
+                                  const Point& pX,
+                                  const Vector& pSize,
+                                  const short pgFld[], 
+                                  constNCVariable<Vector>& gVelocity,
+                                  constNCVariable<Vector>& GVelocity)
+{
+  if (flag->d_8or27 == 27)
+    return computeVelocityGradient(patch, oodx, pX, pSize, pgFld, gVelocity, 
+                                   GVelocity);
+  return computeVelocityGradient(patch, oodx, pX, pgFld, gVelocity, GVelocity);
+}
+
 Matrix3
 ConstitutiveModel::computeVelocityGradient(const Patch* patch,
                                            const double* oodx, 
@@ -487,10 +595,109 @@ ConstitutiveModel::computeVelocityGradient(const Patch* patch,
   return velGrad;
 }
 
+/*! Calculate displacement gradient for 8 noded interpolation */
+void 
+ConstitutiveModel::computeGrad(const Patch* patch,
+                               const double* oodx, 
+                               const Point& px, 
+                               constNCVariable<Vector>& gVec,
+                               Matrix3& grad)
+{
+
+  // Get the node indices that surround the cell
+  IntVector ni[8];
+  Vector d_S[8];
+  patch->findCellAndShapeDerivatives(px, ni, d_S);
+
+  // Compute gradient matrix
+  grad.set(0.0);
+  for(int k = 0; k < 8; k++) {
+    const Vector& vec = gVec[ni[k]];
+    for (int j = 0; j<3; j++){
+      double fac = d_S[k][j]*oodx[j];
+      for (int i = 0; i<3; i++) {
+        grad(i,j) += vec[i]*fac;
+      }
+    }
+  }
+}
+
+/*! Calculate displacement gradient for 8 noded interpolation, B matrix
+    for Kmat and B matrix for Kgeo */
+void 
+ConstitutiveModel::computeGradAndBmats(const Patch* patch,
+                                       const double* oodx, 
+                                       const Point& px, 
+                                       constNCVariable<Vector>& gVec,
+                                       const Array3<int>& l2g,
+                                       Matrix3& grad,
+                                       double B[6][24],
+                                       double Bnl[3][24],
+                                       int* dof)
+{
+  // Get the node indices that surround the cell
+  IntVector ni[8];
+  Vector d_S[8];
+  patch->findCellAndShapeDerivatives(px, ni, d_S);
+
+  grad.set(0.0);
+  int l2g_node_num = -1;
+  for(int k = 0; k < 8; k++) {
+    const Vector& disp = gVec[ni[k]];
+    for (int j = 0; j<3; j++){
+      double fac = d_S[k][j]*oodx[j];
+      for (int i = 0; i<3; i++) {
+        grad(i,j) += disp[i]*fac;
+      }
+    }
+
+    B[0][3*k] = d_S[k][0]*oodx[0];
+    B[3][3*k] = d_S[k][1]*oodx[1];
+    B[5][3*k] = d_S[k][2]*oodx[2];
+    B[1][3*k] = 0.;
+    B[2][3*k] = 0.;
+    B[4][3*k] = 0.;
+
+    B[1][3*k+1] = d_S[k][1]*oodx[1];
+    B[3][3*k+1] = d_S[k][0]*oodx[0];
+    B[4][3*k+1] = d_S[k][2]*oodx[2];
+    B[0][3*k+1] = 0.;
+    B[2][3*k+1] = 0.;
+    B[5][3*k+1] = 0.;
+
+    B[2][3*k+2] = d_S[k][2]*oodx[2];
+    B[4][3*k+2] = d_S[k][1]*oodx[1];
+    B[5][3*k+2] = d_S[k][0]*oodx[0];
+    B[0][3*k+2] = 0.;
+    B[1][3*k+2] = 0.;
+    B[3][3*k+2] = 0.;
+
+    Bnl[0][3*k] = d_S[k][0]*oodx[0];
+    Bnl[1][3*k] = 0.;
+    Bnl[2][3*k] = 0.;
+    Bnl[0][3*k+1] = 0.;
+    Bnl[1][3*k+1] = d_S[k][1]*oodx[1];
+    Bnl[2][3*k+1] = 0.;
+    Bnl[0][3*k+2] = 0.;
+    Bnl[1][3*k+2] = 0.;
+    Bnl[2][3*k+2] = d_S[k][2]*oodx[2];
+
+    // Need to loop over the neighboring patches l2g to get the right
+    // dof number.
+    l2g_node_num = l2g[ni[k]];
+    dof[3*k]  =l2g_node_num;
+    dof[3*k+1]=l2g_node_num+1;
+    dof[3*k+2]=l2g_node_num+2;
+  }
+}
+
 // Convert J-integral into stress intensity (for FRACTURE)
 void 
 ConstitutiveModel::ConvertJToK(const MPMMaterial*,
-                               const Vector&,const double&,const Vector&,Vector& SIF)
+                               const Vector&,
+                               const double&,
+                               const Vector&,
+                               Vector& SIF)
 {
   SIF=Vector(-9999.,-9999.,-9999.);
 }
@@ -522,8 +729,8 @@ ConstitutiveModel::artificialBulkViscosity(double Dkk,
 }
 
 void
-ConstitutiveModel::BtDB(double B[6][24], 
-                        double D[6][6],
+ConstitutiveModel::BtDB(const double B[6][24], 
+                        const double D[6][6],
                         double Kmat[24][24]) const
 {
   double t100, t105, t1060, t1065, t1070, t1075, t1081, t1086, t110, t115,t1156;
@@ -1940,3 +2147,4 @@ ConstitutiveModel::BnltDBnl(double Bnl[3][24],
   t90 = Bnl[2][23]*Bnl[2][23];
   BnTsigBn[23][23] = t90*sig[2][2];
 }
+
