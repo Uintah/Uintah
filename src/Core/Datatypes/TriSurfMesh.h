@@ -35,6 +35,7 @@
 #include <Core/Datatypes/MeshBase.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Containers/Array1.h>
+#include <Core/Math/MusilRNG.h>
 
 #include <vector>
 
@@ -137,6 +138,26 @@ public:
     get_nodes(ra,fi);
     return (Cross(ra[1]-ra[0],ra[2]-ra[0])).length2()*0.5;
   }
+
+  void get_random_point(Point &p, const elem_index &ei) const {
+    static MusilRNG rng(1249);
+    node_array ra;
+    get_nodes(ra,ei);
+    Point p0,p1,p2;
+    get_point(p0,ra[0]);
+    get_point(p1,ra[1]);
+    get_point(p2,ra[2]);
+    Vector v0 = ra[1]-ra[0];
+    Vector v1 = ra[2]-ra[0];
+    double t = rng()*v0.length2();
+    double u = rng()*v1.length2();
+    if ( (t+u)>1 ) {
+      t = 1.-t;
+      u = 1.-u;
+    }
+    p = p0+(v0*t)+(v1*u);
+  }
+  
   double get_element_size(Face::index_type &fi) { return get_area(fi); }
 
   virtual void finish_mesh(); // to get normals calculated.
