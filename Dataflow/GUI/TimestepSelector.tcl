@@ -67,14 +67,10 @@ itcl_class Uintah_Selectors_TimestepSelector {
     }
 
     method buildTopLevel {} {
-        set w .ui[modname] 
+        set w .ui[modname]
+	puts "$w: buildTopLevel"
 
-        if {[winfo exists $w]} { 
-            return;
-        } 
-	
         toplevel $w 
-	wm withdraw $w
 	
 	set n "$this-c needexecute"
 	frame $w.f -relief flat
@@ -88,10 +84,11 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	label $f.lframe.val -text "    Time      "
 	global $this-max_time
 
+	set tickinterval [expr ([set $this-max_time] -1)/2.0]
 	scale $f.tframe.time -orient horizontal -from 0 \
 	    -to [set $this-max_time]  \
 	    -resolution 1 -bd 2 -variable $this-time \
-	    -tickinterval 50
+	    -tickinterval $tickinterval
 	entry $f.tframe.tval -state disabled \
 	     -textvariable $this-timeval -justify left
 	pack $f -side top -fill x -padx 2 -pady 2
@@ -153,22 +150,13 @@ itcl_class Uintah_Selectors_TimestepSelector {
     }
 
 
-    method isVisible {} {
-	if {[winfo exists .ui[modname]]} {
-	    return 1
-	} else {
-	    return 0
-	}
-    }
-    
-
     method SetTimeRange { timesteps } {
 	set w .ui[modname].tframe.tframe
+	set $this-max_time [expr $timesteps -1 ]
 	if { [winfo exists $w.time] } {
-	    set interval [expr ($timesteps -1)/2.0]
-	    set $this-max_time [expr $timesteps -1 ]
+	    set interval [expr ([set $this-max_time] -1)/2.0]
 	    $w.time configure -from 0
-	    $w.time configure -to [expr $timesteps -1 ]
+	    $w.time configure -to [set $this-max_time]
 	    $w.time configure -tickinterval $interval
 	}
     }
