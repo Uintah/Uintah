@@ -1,4 +1,3 @@
-
 DONE Rework Geometry
 Fix Salmon
    DONE Fix interaction
@@ -50,9 +49,14 @@ Bugs:
    Salmon deadlocks on ONYX - make unbounded mailboxes (2)
    Finish fixing MeshView
    Annoying flashing on startup.
+   Lock I/O
 Optimizations:
-   Optimize redraw loop
+   Better locks for Irix
+   DONE Use gluSphere/cylinder/etc
+   Better view interface to TCL
+   Don't always disable all light sources
    Optimizations for Unstructured Grids
+   Make SurfToGeom use TriStrip's
 Progress:
    Remote modules
    Save/Load Networks

@@ -31,3 +31,11 @@ typedef MeshIPort hack9;
 
 #include <Datatypes/Matrix.h>
 typedef MatrixHandle hack10;
+
+typedef Array1<int> hack11;
+
+#include <Datatypes/Surface.h>
+typedef SurfaceHandle hack12;
+
+#include <Datatypes/SurfacePort.h>
+typedef SurfaceIPort hack13;
