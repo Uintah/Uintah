@@ -1581,7 +1581,6 @@ class BioImageApp {
 	global mods
 
 	frame $history.$which
-	puts "add load ui $history.$which"
 	grid config $history.$which -column 0 -row $row -sticky "nw" -pady 0
 
 	### Load Data UI
@@ -3015,7 +3014,7 @@ class BioImageApp {
 	set grid_rows [expr $grid_rows + 1]
 
         change_indicator_labels "Press Update to Resample Volume..."
-        $this disable_update
+        $this enable_update [expr $which+1]
     }
 
 
@@ -3208,7 +3207,7 @@ class BioImageApp {
 
         change_indicator_labels "Press Update to Perform Median Filtering..."
 
-	$this disable_update
+        $this enable_update [expr $which+1]
 
     }
 
@@ -3334,7 +3333,7 @@ class BioImageApp {
 
         change_indicator_labels "Press Update to Perform Histogram Equalization..."
 
-	$this disable_update
+	$this enable_update [expr $which+1]
     }
 
 
@@ -3889,7 +3888,7 @@ class BioImageApp {
 	pack $w.expand -side top -anchor nw
 
 	global expandimg close_img
-	button $w.expand.b -image $expand_img \
+	button $w.expand.b -image $expandimg \
 	    -anchor nw \
 	    -command "$this change_visibility $which" \
 	    -relief flat
@@ -4267,6 +4266,7 @@ class BioImageApp {
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis] 
 	setGlobal $ChooseNrrd-port-index [lindex $filters($eye) $choose_port]
 	if { $execute } {
+	    disable_update
 	    $ChooseNrrd-c needexecute
 	}
     }
