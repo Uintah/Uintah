@@ -8,9 +8,6 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 
 using namespace Uintah;
 using std::vector;
@@ -63,7 +60,7 @@ void ImplicitParticleCreator::createParticles(MPMMaterial* matl,
       count = 0;
       continue;
     }
-    
+
     IntVector ppc = obj->getNumParticlesPerCell();
     Vector dxpp = patch->dCell()/obj->getNumParticlesPerCell();
     Vector dcorner = dxpp*0.5;
@@ -115,31 +112,7 @@ void ImplicitParticleCreator::createParticles(MPMMaterial* matl,
     
   }
 
-
-  particleIndex particlesNum = start;
-  for(particleIndex pIdx=0;pIdx<particlesNum;++pIdx) {
-     pexternalforce[pIdx] = Vector(0.0,0.0,0.0);
-
-     const Point& p( position[pIdx] );
-     
-     for (int i = 0; i<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++){
-       string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[i]->getType();
-        
-       if (bcs_type == "Force") {
-         ForceBC* bc = dynamic_cast<ForceBC*>
-			(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
-
-         const Point& lower( bc->getLowerRange() );
-         const Point& upper( bc->getUpperRange() );
-          
-         if(lower.x()<= p.x() && p.x() <= upper.x() &&
-            lower.y()<= p.y() && p.y() <= upper.y() &&
-            lower.z()<= p.z() && p.z() <= upper.z() ){
-               pexternalforce[pIdx] = bc->getForceDensity() * pmass[pIdx];
-         }
-       }
-     }
-  }
+  ParticleCreator::applyForceBC(start,pexternalforce,pmass,position);
  
 }
 
@@ -153,7 +126,6 @@ particleIndex ImplicitParticleCreator::countParticles(const Patch* patch,
 particleIndex ImplicitParticleCreator::countParticles(GeometryObject* obj,
 						      const Patch* patch) const
 {
-
   return ParticleCreator::countParticles(obj,patch);
 }
 

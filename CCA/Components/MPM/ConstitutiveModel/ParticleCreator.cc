@@ -5,6 +5,9 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 
 using namespace Uintah;
 using std::vector;
@@ -33,9 +36,12 @@ ParticleCreator::countParticles(const Patch* patch,
 				vector<GeometryObject*>& d_geom_objs) const
 {
   particleIndex sum = 0;
-  for(int i=0; i<(int)d_geom_objs.size(); i++)
-    sum += countParticles(d_geom_objs[i], patch);
+  vector<GeometryObject*>::const_iterator geom;
+  for (geom=d_geom_objs.begin(); geom != d_geom_objs.end(); ++geom) 
+    sum += countParticles(*geom,patch);
+
   return sum;
+
 }
 
 
@@ -73,6 +79,39 @@ particleIndex ParticleCreator::countParticles(GeometryObject* obj,
    }
    
    return count;
+
+
+}
+
+void ParticleCreator::applyForceBC(particleIndex particlesNum, 
+				   ParticleVariable<Vector>& pextforce,
+				   ParticleVariable<double>& pmass,
+				   ParticleVariable<Point>& position)
+{
+
+  for(particleIndex pIdx=0;pIdx<particlesNum;++pIdx) {
+     pextforce[pIdx] = Vector(0.0,0.0,0.0);
+
+     const Point& p( position[pIdx] );
+     
+     for (int i = 0; i<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++){
+       string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[i]->getType();
+        
+       if (bcs_type == "Force") {
+         ForceBC* bc = dynamic_cast<ForceBC*>
+			(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
+
+         const Point& lower( bc->getLowerRange() );
+         const Point& upper( bc->getUpperRange() );
+          
+         if(lower.x()<= p.x() && p.x() <= upper.x() &&
+            lower.y()<= p.y() && p.y() <= upper.y() &&
+            lower.z()<= p.z() && p.z() <= upper.z() ){
+               pextforce[pIdx] = bc->getForceDensity() * pmass[pIdx];
+         }
+       }
+     }
+  }
 
 
 }

@@ -2,6 +2,7 @@
 #define __PARTICLE_CREATOR_H__
 
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <vector>
 
 namespace Uintah {
@@ -29,6 +30,11 @@ namespace Uintah {
 				 std::vector<GeometryObject*>&) const;
     particleIndex countParticles(GeometryObject* obj,
 				 const Patch*) const;
+
+    void applyForceBC(particleIndex start, 
+		      ParticleVariable<Vector>& pextforce,
+		      ParticleVariable<double>& pmass, 
+		      ParticleVariable<Point>& position);
     
   };
 
