@@ -25,15 +25,20 @@ namespace SCIRun {
 template <class T> 
 class TetVol : public GenericField<TetVolMesh, vector<T> > {
 public:
-  GenericField() {};
-  GenericField(data_location data_at) {};
-  virtual ~GenericField() {};
+  TetVol() : 
+    GenericField<TetVolMesh, vector<T> >() {};
+  TetVol(Field::data_location data_at) : 
+    GenericField<TetVolMesh, vector<T> >(data_at) {};
+  virtual ~TetVol() {};
+
+  static const string type_name(int a);
  
 };
 
 // FIX_ME support the int arg return vals...
 template <class T> 
-TetVol::type_name(int a)
+const string 
+TetVol<T>::type_name(int a)
 {
   const static string name =  "TetVol<" + find_type_name((T *)0) + ">";
   return name;
