@@ -46,7 +46,7 @@ echo "	rm -f fast_templates.o" >> $m
 echo "	ld -r -o fast_templates.o *.o" >> $m
 echo "" >> $m
 
-(cd $1 && makedepend -s "# DO NOT DELETE" -- -I../lib -I../project/project -I../project/modules -I../wrapper -I../wrapper/Mt -I../wrapper/libMInT   -nostdinc -I/usr/include -DXML -DSYSV -DSVR4  -DFUNCPROTO=7 -DNARROWPROTO -DSCI_ASSERTIONS -I/usr/include/CC -- $tmpls )
+(cd $1 && makedepend -s "# DO NOT DELETE" -- -I.. -nostdinc -I/usr/include -DXML -DSYSV -DSVR4  -DFUNCPROTO=7 -DNARROWPROTO -DSCI_ASSERTIONS -I/usr/include/CC -- $tmpls )
 
 
 built:
