@@ -6,6 +6,7 @@
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Handle.h>
 #include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/IntVector.h>
 #include <string>
 #include <vector>
 
@@ -47,24 +48,29 @@ WARNING
 
 class Level : public RefCounted {
 public:
-    Level();
-    virtual ~Level();
+  Level();
+  virtual ~Level();
 
-    typedef std::vector<Region*>::iterator regionIterator;
-    typedef std::vector<Region*>::const_iterator const_regionIterator;
-    const_regionIterator regionsBegin() const;
-    const_regionIterator regionsEnd() const;
-    regionIterator regionsBegin();
-    regionIterator regionsEnd();
+  typedef std::vector<Region*>::iterator regionIterator;
+  typedef std::vector<Region*>::const_iterator const_regionIterator;
+  const_regionIterator regionsBegin() const;
+  const_regionIterator regionsEnd() const;
+  regionIterator regionsBegin();
+  regionIterator regionsEnd();
 
-    Region* addRegion(const SCICore::Geometry::Point& min,
-		      const SCICore::Geometry::Point& max,
-		      int nx, int ny, int nz);
+  Region* addRegion(const SCICore::Geometry::Point& lower,
+		    const SCICore::Geometry::Point& upper,
+		    const SCICore::Geometry::IntVector& res);
+
+  int numRegions() const;
+  long totalCells() const;
+
+  void performConsistencyCheck() const;
 private:
-    Level(const Level&);
-    Level& operator=(const Level&);
+  Level(const Level&);
+  Level& operator=(const Level&);
 
-    std::vector<Region*> d_regions;
+  std::vector<Region*> d_regions;
 };
 
 } // end namespace Grid
@@ -72,6 +78,10 @@ private:
 
 //
 // $Log$
+// Revision 1.7  2000/04/12 23:00:47  sparker
+// Starting problem setup code
+// Other compilation fixes
+//
 // Revision 1.6  2000/03/22 00:32:12  sparker
 // Added Face-centered variable class
 // Added Per-region data class

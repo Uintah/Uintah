@@ -122,7 +122,9 @@ NCVariable<T>::allocate(const Region* region)
 {
     if(getWindow())
 	throw InternalError("Allocating an NCvariable that is apparently already allocated!");
+#if 0
     resize(region->getNx()+1, region->getNy()+1, region->getNz()+1);
+#endif
 }
 
 } // end namespace Grid
@@ -130,6 +132,10 @@ NCVariable<T>::allocate(const Region* region)
 
 //
 // $Log$
+// Revision 1.6  2000/04/12 23:00:48  sparker
+// Starting problem setup code
+// Other compilation fixes
+//
 // Revision 1.5  2000/04/11 07:10:50  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications

@@ -43,6 +43,7 @@ public:
 
     //////////
     // Insert Documentation Here:
+#if 0
     inline NodeIterator operator++(int) {
 	NodeIterator old(*this);
 	if(++d_iz > d_region->d_nz){
@@ -56,6 +57,7 @@ public:
 	}
 	return old;
     }
+#endif
 
     //////////
     // Insert Documentation Here:
@@ -93,6 +95,10 @@ private:
 
 //
 // $Log$
+// Revision 1.4  2000/04/12 23:00:48  sparker
+// Starting problem setup code
+// Other compilation fixes
+//
 // Revision 1.3  2000/03/21 01:29:42  dav
 // working to make MPM stuff compile successfully
 //
