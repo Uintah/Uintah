@@ -186,12 +186,10 @@ DirectMappingAlgoT<FSRC, LSRC,
   FOUT *out_field = scinew FOUT(dst_mesh, basis_order);  
   d.out_fieldH = out_field;
 
-  if (np==1)
-    parallel_execute(0, &d);
-  else
-    Thread::parallel(this, 
-	     &DirectMappingAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute,
-	     np, true, &d);
+  Thread::parallel(this, 
+                   &DirectMappingAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute,
+                   np, &d);
+
   return out_field;
 }
 

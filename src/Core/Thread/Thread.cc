@@ -88,15 +88,14 @@ void exit_all_threads(int rc) {
 namespace SCIRun {
 
 class ParallelHelper : public Runnable {
-  const ParallelBase* helper;
-  int proc;
+  ParallelBase &helper_;
+  int proc_;
 public:
-  ParallelHelper(const ParallelBase& helper, int proc)
-    : helper(&helper), proc(proc) {}
+  ParallelHelper(ParallelBase& helper, int proc)
+    : helper_(helper), proc_(proc) {}
   virtual ~ParallelHelper() {}
   virtual void run() {
-    ParallelBase* cheat=(ParallelBase*)helper;
-    cheat->run(proc);
+    helper_.run(proc_);
   }
 };
 
@@ -227,9 +226,15 @@ Thread::getThreadName() const
 }
 
 ThreadGroup*
-Thread::parallel(const ParallelBase& helper, int nthreads,
+Thread::parallel(ParallelBase& helper, int nthreads,
 		 bool block, ThreadGroup* threadGroup)
 {
+  if (block && nthreads <= 1)
+  {
+    helper.run(0);
+    return 0;
+  }
+
   ThreadGroup* newgroup=new ThreadGroup("Parallel group", threadGroup);
   if(!block){
     // Extra synchronization to make sure that helper doesn't

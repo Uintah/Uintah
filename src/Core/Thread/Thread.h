@@ -182,7 +182,7 @@ DESCRIPTION
 	    // If <i>block</i> is true, then the caller will block until all
 	    // of the threads return.  Otherwise, the call will return
 	    // immediately.
-	    static ThreadGroup* parallel(const ParallelBase& helper,
+	    static ThreadGroup* parallel(ParallelBase& helper,
 					 int nthreads, bool block,
 					 ThreadGroup* threadGroup=0);
 
@@ -193,39 +193,56 @@ DESCRIPTION
 	    // immediately.
 	    template<class T>
 	    static void parallel(T* ptr, void (T::*pmf)(int),
-				 int numThreads, bool block) {
-        Parallel<T> p(ptr, pmf);
-        parallel(p, numThreads, block);
+				 int numThreads)
+            {
+              if (numThreads <= 1) { (ptr->*pmf)(0); }
+              else
+              {
+                Parallel<T> p(ptr, pmf);
+                parallel(p, numThreads, true);
+              }
 	    }
 
 	    //////////
 	    // Another overloaded version of parallel that passes 1 argument
 	    template<class T, class Arg1>
 	    static void parallel(T* ptr, void (T::*pmf)(int, Arg1),
-				 int numThreads, bool block,
-				 Arg1 a1) {
-        Parallel1<T, Arg1> p(ptr, pmf, a1);
-        parallel(p, numThreads, block);
+				 int numThreads, Arg1 a1)
+            {
+              if (numThreads <= 1) { (ptr->*pmf)(0, a1); }
+              else
+              {
+                Parallel1<T, Arg1> p(ptr, pmf, a1);
+                parallel(p, numThreads, true);
+              }
 	    }
 
 	    //////////
 	    // Another overloaded version of parallel that passes 2 arguments
 	    template<class T, class Arg1, class Arg2>
 	    static void parallel(T* ptr, void (T::* pmf)(int, Arg1, Arg2),
-				 int numThreads, bool block,
-				 Arg1 a1, Arg2 a2) {
-        Parallel2<T, Arg1, Arg2> p(ptr, pmf, a1, a2);
-        parallel(p, numThreads, block);
+				 int numThreads, Arg1 a1, Arg2 a2)
+            {
+              if (numThreads <= 1) { (ptr->*pmf)(0, a1, a2); }
+              else
+              {
+                Parallel2<T, Arg1, Arg2> p(ptr, pmf, a1, a2);
+                parallel(p, numThreads, true);
+              }
 	    }
 
 	    //////////
 	    // Another overloaded version of parallel that passes 3 arguments
 	    template<class T, class Arg1, class Arg2, class Arg3>
 	    static void parallel(T* ptr, void (T::* pmf)(int, Arg1, Arg2, Arg3),
-				 int numThreads, bool block,
-				 Arg1 a1, Arg2 a2, Arg3 a3) {
-        Parallel3<T, Arg1, Arg2, Arg3> p(ptr, pmf, a1, a2, a3);
-        parallel(p, numThreads, block);
+				 int numThreads, Arg1 a1, Arg2 a2, Arg3 a3)
+            {
+              if (numThreads <= 1) { (ptr->*pmf)(0, a1, a2, a3); }
+              else
+              {
+                Parallel3<T, Arg1, Arg2, Arg3> p(ptr, pmf, a1, a2, a3);
+                parallel(p, numThreads, true);
+              }
 	    }
 
 	    //////////

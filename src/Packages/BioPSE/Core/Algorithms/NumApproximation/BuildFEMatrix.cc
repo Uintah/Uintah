@@ -101,9 +101,8 @@ bool BuildFEMatrix::build_FEMatrix(TetVolFieldIntHandle hFieldInt,
   BuildFEMatrixHandle hMaker =
     new BuildFEMatrix(hFieldInt, hFieldTensor, index_based, tens, 
 		      hA, np, unitsScale);
-//  cerr << "SetupFEMatrix: number of threads being used = " << np << endl;
-  Parallel<BuildFEMatrix> p(hMaker.get_rep(), &BuildFEMatrix::parallel);
-  Thread::parallel(p, np, true);
+
+  Thread::parallel(hMaker.get_rep(), &BuildFEMatrix::parallel, np);
   
   // -- refer to the object one more time not to make it die before
   hMaker = 0;

@@ -733,11 +733,12 @@ void SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
   data.mat=matrix;
   data.timer=new WallClockTimer;
   data.stats=new PStats[data.np];
-  Parallel<SolveMatrix> p(this, &SolveMatrix::parallel_conjugate_gradient);
-  Thread::parallel(p, data.np, true);
+
+  Thread::parallel(this, &SolveMatrix::parallel_conjugate_gradient, data.np);
+
   delete data.timer;
   delete data.stats;
-//  delete data;
+
   timer.stop();
 }
 
@@ -982,7 +983,6 @@ SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
   int np = tcl_np.get();
   Matrix *trans = matrix->transpose();
 
-//  data=new CGData;
   data.module=this;
   data.np=np;
   data.rhs=&rhs;
@@ -992,12 +992,12 @@ SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
   data.stats=new PStats[data.np];
   data.trans = trans;
   
-//   int i,p;
-  Parallel<SolveMatrix> p(this, &SolveMatrix::parallel_bi_conjugate_gradient);
-  Thread::parallel(p, data.np, true);
+  Thread::parallel(this, &SolveMatrix::parallel_bi_conjugate_gradient,
+                   data.np);
+
   delete data.timer;
   delete data.stats;
-//  delete data;
+
   timer.stop();
   remark("bi_cg done in " + to_string(timer.time()) + " seconds");
 }
