@@ -91,6 +91,7 @@ void usage(const std::string& badarg, const std::string& progname)
     //    cerr << "  -binary (prints out the data in binary)\n";
     cerr << "  -tlow,--timesteplow [int] (only outputs timestep from int) [defaults to 0]\n";
     cerr << "  -thigh,--timestephigh [int] (only outputs timesteps up to int) [defaults to last timestep]\n";
+    cerr << "  -tstep,--timestep [int] (only outputs timestep int)\n";
     cerr << "  -vv,--verbose (prints status of output)\n";
     cerr << "  -q,--quiet (very little output)\n";
     exit(1);
@@ -189,7 +190,7 @@ void build_field(QueryInfo &qinfo,
       hi = (*r)->getCellHighIndex();
     } else {
       low = (*r)->getNodeLowIndex();
-      switch (qinfo.type->getSubType()->getType()) {
+      switch (qinfo.type->getType()) {
       case Uintah::TypeDescription::SFCXVariable:
 	hi = (*r)->getSFCXHighIndex();
 	break;
@@ -423,26 +424,27 @@ void getVariable(QueryInfo &qinfo, IntVector &low,
     getData<NCVariable<T>, T>(qinfo, low, mesh_handle_, Field::NODE,
 			      filename);
     break;
-#if 0
   case Uintah::TypeDescription::SFCXVariable:
     mesh_handle_ = scinew LatVolMesh(range.x(), range.y()-1,
 				     range.z()-1, box.min(),
 				     box.max());
-    getData<SFCXVariable<T>, T>(qinfo, low, mesh_handle_, Field::NODE);
+    getData<SFCXVariable<T>, T>(qinfo, low, mesh_handle_, Field::NODE,
+				filename);
     break;
   case Uintah::TypeDescription::SFCYVariable:
     mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y(),
 				     range.z()-1, box.min(),
 				     box.max());
-    getData<SFCYVariable<T>, T>(qinfo, low, mesh_handle_, Field::NODE);
+    getData<SFCYVariable<T>, T>(qinfo, low, mesh_handle_, Field::NODE,
+				filename);
     break;
   case Uintah::TypeDescription::SFCZVariable:
     mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y()-1,
 				     range.z(), box.min(),
 				     box.max());
-    getData<SFCZVariable<T>, T>(qinfo, low, mesh_handle_, Field::NODE);
+    getData<SFCZVariable<T>, T>(qinfo, low, mesh_handle_, Field::NODE,
+				filename);
     break;
-#endif
   default:
     cerr << "Type is unknown.\n";
     return;
@@ -490,6 +492,9 @@ int main(int argc, char** argv)
       time_step_lower = strtoul(argv[++i],(char**)NULL,10);
     } else if (s == "-thigh" || s == "--timestephigh") {
       time_step_upper = strtoul(argv[++i],(char**)NULL,10);
+    } else if (s == "-tstep" || s == "--timestep") {
+      time_step_lower = strtoul(argv[++i],(char**)NULL,10);
+      time_step_upper = time_step_lower;
     } else if (s == "-i" || s == "--index") {
       int x = atoi(argv[++i]);
       int y = atoi(argv[++i]);
