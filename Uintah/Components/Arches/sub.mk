@@ -8,9 +8,9 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Uintah/Components/Arches
 
 SRCS     += $(SRCDIR)/Arches.cc \
-	$(SRCDIR)/NonlinearSolver.cc \
-	$(SRCDIR)/PressureSolver.cc
+	$(SRCDIR)/NonlinearSolver.cc
 #$(SRCDIR)/Discretization.cc $(SRCDIR)/PicardNonlinearSolver.cc \
+#	$(SRCDIR)/PressureSolver.cc
 PSELIBS := Uintah/Parallel Uintah/Interface
 LIBS :=
 
@@ -18,6 +18,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/03/22 23:42:52  sparker
+# Do not compile it all quite yet
+#
 # Revision 1.4  2000/03/22 23:41:20  sparker
 # Working towards getting arches to compile/run
 #
