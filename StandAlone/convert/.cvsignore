@@ -14,3 +14,6 @@ CVRTItoTriSurfPot
 TriSurfToCVRTI
 CVRTItoPointCloud
 PointCloudToCVRTI
+CVRTItoTetVolDirichlet
+RawToColumnMatrix
+RawToDenseMatrix
