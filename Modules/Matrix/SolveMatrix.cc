@@ -254,7 +254,7 @@ void SolveMatrix::jacobi(Matrix* matrix,
 	    double progress=(log_orig-log(err))/(log_orig-log_targ);
 	    update_progress(progress);
 
-	    if(niter%30 == 0)
+	    if(niter%50 == 0)
 		solport->send_intermediate(rhs.clone());
 	}
     }
@@ -415,7 +415,8 @@ void SolveMatrix::conjugate_gradient(Matrix* matrix,
 		update_progress(progress);
 	    }
 
-	    solport->send_intermediate(lhs.clone());
+	    if(niter == 5 || niter%30 == 0)
+		solport->send_intermediate(lhs.clone());
 	}
     }
     iteration.set(niter);

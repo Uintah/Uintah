@@ -112,7 +112,7 @@ itcl_class SolveMatrix {
 	set err [set $this-target_error]
 
 	blt_graph $w.graph -title "Convergence" -height 250 \
-		-plotbackground gray70
+		-plotbackground gray99
 	$w.graph yaxis configure -logscale true -title "error (RMS)"
 	$w.graph xaxis configure -title "Iteration" \
 		-loose true
@@ -122,7 +122,7 @@ itcl_class SolveMatrix {
 	bind $w.graph <ButtonRelease-1> "$this deselect_error %x %y"
 
 	set iter 1
-	$w.graph element create "Current Target" -linewidth 1
+	$w.graph element create "Current Target" -linewidth 2
 	$w.graph element configure "Current Target" -data "0 $err" \
 		-symbol diamond
 
@@ -167,8 +167,8 @@ itcl_class SolveMatrix {
 	}
 	catch "$w.graph element delete {Target Error}"
 	catch "$w.graph element delete {Current Error}"
-	$w.graph element create "Target Error" -linewidth 0 -foreground blue
-	$w.graph element create "Current Error" -linewidth 0 -foreground red 
+	$w.graph element create "Target Error" -linewidth 2 -foreground blue
+	$w.graph element create "Current Error" -linewidth 2 -foreground red 
 	global $this-target_error
 	set err [set $this-target_error]
 	set iter 1
