@@ -526,10 +526,9 @@ void ImpMPM::iterate(const ProcessorGroup*,
   bool dispIncQ = false;
 
   if ((dispIncNorm/(dispIncNormMax + 1e-100) <= d_conv_crit_disp) &&
-      (dispIncNorm/(dispIncNormMax + 1e-100) != 0.0))
+       dispIncNormMax != 0.0)
     dispInc = true;
-  if ((dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy) &&
-      (dispIncQNorm/(dispIncQNorm0 + 1e-100) != 0.0))
+  if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy)
     dispIncQ = true;
 
   // Get all of the required particle data that is in the old_dw and put it 
@@ -617,10 +616,9 @@ void ImpMPM::iterate(const ProcessorGroup*,
     cerr << "dispIncQNorm/dispIncQNorm0 = "
          << dispIncQNorm/(dispIncQNorm0 + 1.e-100) << "\n";
     if ((dispIncNorm/(dispIncNormMax + 1e-100) <= d_conv_crit_disp) &&
-        (dispIncNorm/(dispIncNormMax + 1e-100) != 0.0))
+        dispIncNormMax != 0.0)
       dispInc = true;
-    if ((dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy) &&
-        (dispIncQNorm/(dispIncQNorm0 + 1e-100) != 0.0))
+    if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy)
       dispIncQ = true;
     subsched->advanceDataWarehouse(grid);
   }
@@ -1296,16 +1294,6 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
 				      DataWarehouse* new_dw,
 				      const bool recursion)
 {
-  int nn = 0;
-  IntVector nodes(0,0,0);
-  for(int pp=0;pp<patches->size();pp++){
-    const Patch* patch = patches->get(pp);
-    IntVector num_nodes = patch->getNNodes();
-    nn += (num_nodes.x())*(num_nodes.y())*(num_nodes.z())*3;
-    nodes = IntVector(Max(num_nodes.x(),nodes.x()),
-		      Max(num_nodes.y(),nodes.y()),
-		      Max(num_nodes.z(),nodes.z()));
-  }
   if (!dynamic)
     return;
   for(int p=0;p<patches->size();p++){
@@ -1464,68 +1452,71 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
 
-    int dwi = 0;
-    int m   = 0;
-    d_solver[m]->copyL2G(l2g,patch);
+    int numMatls = d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      d_solver[m]->copyL2G(l2g,patch);
 
-    delt_vartype dt;
-    Ghost::GhostType  gnone = Ghost::None;
+      delt_vartype dt;
+      Ghost::GhostType  gnone = Ghost::None;
 
-    constNCVariable<Vector> extForce, intForce;
-    constNCVariable<Vector> dispNew,velocity,accel;
-    constNCVariable<double> mass;
-    if (recursion) {
-      DataWarehouse* parent_new_dw = 
-	new_dw->getOtherDataWarehouse(Task::ParentNewDW);
-      DataWarehouse* parent_old_dw = 
-	new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+      constNCVariable<Vector> extForce, intForce;
+      constNCVariable<Vector> dispNew,velocity,accel;
+      constNCVariable<double> mass;
+      if (recursion) {
+        DataWarehouse* parent_new_dw = 
+          new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+        DataWarehouse* parent_old_dw = 
+          new_dw->getOtherDataWarehouse(Task::ParentOldDW);
 
-      parent_old_dw->get(dt,d_sharedState->get_delt_label());
-      new_dw->get(       intForce,   lb->gInternalForceLabel,dwi,patch,gnone,0);
-      old_dw->get(       dispNew,    lb->dispNewLabel,       dwi,patch,gnone,0);
-      parent_new_dw->get(extForce,   lb->gExternalForceLabel,dwi,patch,gnone,0);
-      parent_new_dw->get(velocity,   lb->gVelocityOldLabel,  dwi,patch,gnone,0);
-      parent_new_dw->get(accel,      lb->gAccelerationLabel, dwi,patch,gnone,0);
-      parent_new_dw->get(mass,       lb->gMassLabel,         dwi,patch,gnone,0);
-    } else {
-      new_dw->get(intForce,          lb->gInternalForceLabel,dwi,patch,gnone,0);
-      new_dw->get(extForce,          lb->gExternalForceLabel,dwi,patch,gnone,0);
-      new_dw->get(dispNew,           lb->dispNewLabel,       dwi,patch,gnone,0);
-      new_dw->get(velocity,          lb->gVelocityLabel,     dwi,patch,gnone,0);
-      new_dw->get(accel,             lb->gAccelerationLabel, dwi,patch,gnone,0);
-      new_dw->get(mass,              lb->gMassLabel,         dwi,patch,gnone,0);
-      old_dw->get(dt, d_sharedState->get_delt_label());
-    }
-    double fodts = 4./(dt*dt);
-    double fodt = 4./dt;
-
-    for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
-      IntVector n = *iter;
-      int dof[3];
-      int l2g_node_num = l2g[n];
-      dof[0] = l2g_node_num;
-      dof[1] = l2g_node_num+1;
-      dof[2] = l2g_node_num+2;
-
-      double v[3];
-      v[0] = extForce[n].x() + intForce[n].x();
-      v[1] = extForce[n].y() + intForce[n].y();
-      v[2] = extForce[n].z() + intForce[n].z();
-      
-      // temp2 = M*a^(k-1)(t+dt)
-      if (dynamic) {
-	v[0] -= (dispNew[n].x()*fodts - velocity[n].x()*fodt -
-		 accel[n].x())*mass[n];
-	v[1] -= (dispNew[n].y()*fodts - velocity[n].y()*fodt -
-		 accel[n].y())*mass[n];
-	v[2] -= (dispNew[n].z()*fodts - velocity[n].z()*fodt -
-		 accel[n].z())*mass[n];
+        parent_old_dw->get(dt,d_sharedState->get_delt_label());
+        new_dw->get(       intForce, lb->gInternalForceLabel,dwi,patch,gnone,0);
+        old_dw->get(       dispNew,  lb->dispNewLabel,       dwi,patch,gnone,0);
+        parent_new_dw->get(extForce, lb->gExternalForceLabel,dwi,patch,gnone,0);
+        parent_new_dw->get(velocity, lb->gVelocityOldLabel,  dwi,patch,gnone,0);
+        parent_new_dw->get(accel,    lb->gAccelerationLabel, dwi,patch,gnone,0);
+        parent_new_dw->get(mass,     lb->gMassLabel,         dwi,patch,gnone,0);
+      } else {
+        new_dw->get(intForce,        lb->gInternalForceLabel,dwi,patch,gnone,0);
+        new_dw->get(extForce,        lb->gExternalForceLabel,dwi,patch,gnone,0);
+        new_dw->get(dispNew,         lb->dispNewLabel,       dwi,patch,gnone,0);
+        new_dw->get(velocity,        lb->gVelocityLabel,     dwi,patch,gnone,0);
+        new_dw->get(accel,           lb->gAccelerationLabel, dwi,patch,gnone,0);
+        new_dw->get(mass,            lb->gMassLabel,         dwi,patch,gnone,0);
+        old_dw->get(dt, d_sharedState->get_delt_label());
       }
-      d_solver[m]->fillVector(dof[0],double(v[0]));
-      d_solver[m]->fillVector(dof[1],double(v[1]));
-      d_solver[m]->fillVector(dof[2],double(v[2]));
+      double fodts = 4./(dt*dt);
+      double fodt = 4./dt;
+
+      for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+        IntVector n = *iter;
+        int dof[3];
+        int l2g_node_num = l2g[n];
+        dof[0] = l2g_node_num;
+        dof[1] = l2g_node_num+1;
+        dof[2] = l2g_node_num+2;
+
+        double v[3];
+        v[0] = extForce[n].x() + intForce[n].x();
+        v[1] = extForce[n].y() + intForce[n].y();
+        v[2] = extForce[n].z() + intForce[n].z();
+
+        // temp2 = M*a^(k-1)(t+dt)
+        if (dynamic) {
+          v[0] -= (dispNew[n].x()*fodts - velocity[n].x()*fodt -
+                   accel[n].x())*mass[n];
+          v[1] -= (dispNew[n].y()*fodts - velocity[n].y()*fodt -
+                   accel[n].y())*mass[n];
+          v[2] -= (dispNew[n].z()*fodts - velocity[n].z()*fodt -
+                   accel[n].z())*mass[n];
+        }
+        d_solver[m]->fillVector(dof[0],double(v[0]));
+        d_solver[m]->fillVector(dof[1],double(v[1]));
+        d_solver[m]->fillVector(dof[2],double(v[2]));
+      }
+      d_solver[m]->assembleVector();
     }
-    d_solver[m]->assembleVector();
   }
 }
 
@@ -1734,7 +1725,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
       if (recursion) {
         dispNew.copyData(dispNew_old);
       }
-      if(m==0){  // don't do the rigid_body matl. for now
+      if(m==0 || d_rigid_body==false){ // don't do the rigid_body matl. for now
         for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
           IntVector n = *iter;
           dispNew[n] += dispInc[n];
