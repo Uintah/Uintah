@@ -40,10 +40,9 @@ Object_proxy::Object_proxy(const Reference& ref)
 }
 
 Object_proxy::Object_proxy(const URL& url)
-  : ProxyBase(new Reference())
 {
-  rm.d_ref[0].chan->openConnection(url);
-  rm.d_ref[0].d_vtable_base=TypeInfo::vtable_methods_start;
+  rm.d_ref[0]->chan->openConnection(url);
+  rm.d_ref[0]->d_vtable_base=TypeInfo::vtable_methods_start;
   rm.localSize = 1;
   rm.localRank = 0;
   rm.intracomm = NULL;

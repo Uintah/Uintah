@@ -47,7 +47,8 @@ DESCRIPTION
    be used outside of PIDL or sidl generated code.  It contains a 
    spchannel and the vtable base offset.
 ****************************************/
-  struct Reference {
+  class Reference {
+  public:
     //////////
     // Empty constructor.  Initalizes the channel to nil
     Reference();
@@ -59,6 +60,12 @@ DESCRIPTION
     //////////
     // Copy the reference. 
     Reference(const Reference&);
+
+    void cloneTo(Reference &Clone);
+
+    //////////
+    // Clone the reference, duplicate everything
+    Reference *  clone();
 
     //////////
     // Copy the reference.  
@@ -79,6 +86,15 @@ DESCRIPTION
     //////////
     // The vtable base offset
     int d_vtable_base;
+  private:
+    // primary==false means chan comes from SPFactory(false)
+    // thus should not be deleted in the destructor.
+    bool primary; 
+
+    //////////
+    // Copy the reference.  
+    Reference& _copy(const Reference&);
+
   };
 } // End namespace SCIRun
 

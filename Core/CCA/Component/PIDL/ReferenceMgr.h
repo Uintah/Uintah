@@ -59,7 +59,7 @@ DESCRIPTION
   class Object_proxy;
   class TypeInfo;
 
-  typedef std::vector<Reference> refList;
+  typedef std::vector<Reference*> refList;
 
   typedef enum {
     REDIS = 1,
@@ -70,8 +70,8 @@ DESCRIPTION
     
 
   class ReferenceMgr {
+    friend class ProxyBase;
   public:
-    
     /////////
     // Default constructor
     ReferenceMgr();
@@ -84,9 +84,6 @@ DESCRIPTION
     // Copy the referenc manager.
     ReferenceMgr(const ReferenceMgr&);
 
-    //////////
-    // Copy the reference.manager
-    ReferenceMgr& operator=(const ReferenceMgr&);
 
     //////////
     // Destructor which clears all current storage entries
@@ -110,7 +107,7 @@ DESCRIPTION
 
     //////////
     // Adds another reference (parallel component situation)
-    void insertReference(const Reference& ref);
+    void insertReference(Reference *ref);
 
     ///////////
     // Returns the number of references in the list
@@ -162,8 +159,12 @@ DESCRIPTION
     int s_refSize;
 
     //////////
-    // A vector of reference to the remote objects.
+    // A vector of reference pointers to the remote objects.
     refList d_ref;
+
+    //////////
+    // Copy the reference.manager
+    ReferenceMgr& operator=(const ReferenceMgr&);
   };
 } // End namespace SCIRun
 
