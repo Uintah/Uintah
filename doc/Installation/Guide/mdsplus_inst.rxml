@@ -40,7 +40,7 @@
   
   <!--%= doc.ifP(Doc::Irix) {%Q{-->
   <para>Building <acronym>MDSplus</acronym> to work properly with &sr;
-  is somewaht involved.  Contact Allen Anderson
+  is somewaht involved.  Contact Allen Sanderson
   (<email>allen@sci.utah.edu</email>) at the SCI institute for more
   information.</para>
   <!--}} %-->
