@@ -90,8 +90,8 @@ namespace SCIRun {
 					const string &modName);
 
       // Doesnt belong here, this is the path to the TCL GUI splash screen
-      void		setSplashPath(string p);
-      void		setLoadingApp(bool b, const string ses = "");
+      void		setSplashPath(const string &p);
+      void		setLoadingApp(bool b, const string &ses = "");
     private:
       LIBRARY_HANDLE	findLib(string);
       bool		findMaker(ModuleInfo* info);

@@ -721,11 +721,11 @@ PackageDB::GetModuleInfo(const string& name,
   return 0;
 }
 
-void PackageDB::setSplashPath(string p) {
+void PackageDB::setSplashPath(const string &p) {
   splash_path_ = p;
 }
 
-void PackageDB::setLoadingApp(bool b, const string ses) {
+void PackageDB::setLoadingApp(bool b, const string & ses) {
   loading_app_ = b;
 
   if (ses != "") {
