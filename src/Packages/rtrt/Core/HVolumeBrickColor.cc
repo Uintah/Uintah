@@ -5,6 +5,7 @@
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/visinfo/visinfo.h>
 #include <Packages/rtrt/Core/FontString.h>
+#include <Packages/rtrt/Core/DpyBase.h>
 
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
@@ -37,7 +38,6 @@ using namespace SCIRun;
 
 namespace rtrt {
   extern Mutex io_lock_;
-  extern Mutex xlock;
 
   class HVolumeBrickColorDpy : public Runnable {
     HVolumeBrickColor* vol;
@@ -325,7 +325,7 @@ HVolumeBrickColorDpy::~HVolumeBrickColorDpy()
 
 void HVolumeBrickColorDpy::run()
 {
-    xlock.lock();
+    DpyBase::xlock();
     // Open an OpenGL window
     Display* dpy=XOpenDisplay(NULL);
     if(!dpy){
@@ -404,7 +404,7 @@ void HVolumeBrickColorDpy::run()
     
 
     bool redraw=true;
-    xlock.unlock();
+    DpyBase::xunlock();
     for(;;){
 	if(redraw){
 	    drawit(fontbase, fontInfo);
