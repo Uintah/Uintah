@@ -117,12 +117,12 @@ itcl_class expscale {
 	set resolution [getResolution ]
 	set built 1
 	scale $w.scale -label $label -orient $orient \
-		-from -1000000 -to 10000000 -resolution $resolution \
+		-from -1.0e-17 -to 1.0e17 -resolution $resolution \
 		-variable $variable -command $command
 	pack $w.scale -fill x -side left -expand yes
 
 	frame $w.e
-	pack $w.e -fill y -anchor se
+	pack $w.e -fill y -padx 2 -anchor se
 
 	label $w.e.e -text "E"
 	pack $w.e.e -side left
@@ -170,7 +170,6 @@ itcl_class expscale {
 	    for { set i 1} { $i < $decimalplaces } {incr i } {
 		set val "0$val"
 	    }
-	    
 	    return "0.$val"
 	}
     }
@@ -184,13 +183,14 @@ itcl_class expscale {
 	    set decimalplaces 0
 	} else {
 	    incr decimalplaces -1
+	    if {$decimalplaces < 0} { set decimalplaces 0 }
 	}
 	global $variable
 	updatevalue [set $variable]
     }
 
     method downexp {} {
-	if {$exp < -5} {
+	if {$exp < -6} {
 	    return;
 	}
 	incr exp -1
@@ -221,18 +221,19 @@ itcl_class expscale {
 	if {$value < 0} {
 	    set from [expr int($value/$mag-1)*$mag]
 	} else {
-	    set from [expr int($value/$mag)*$mag]
+	    set i [expr int($value/$mag)]
+	    set from [expr $i * $mag]
 	}
 
 	set to [expr $from+$mag]
-	set ti [expr $mag/5]
+	set ti [expr $mag/3]
 	
 	set resolution [getResolution ]
 	$w.scale configure -from $from -to $to \
-	    -tickinterval $mag -resolution $resolution
+	    -tickinterval $ti -resolution $resolution
 
 	global $variable
-	set $variable $value
+	set $variable [format "%e" $value]
 	$w.e.exp delete 0 end
 	$w.e.exp insert 0 $exp
     }
@@ -241,22 +242,21 @@ itcl_class expscale {
 
     method newvalue {value} {
 	global $variable
-	
 	# crop of trailing zeros
 	set value [expr $value * 1]
-	set decimalplaces 2
-	set spl [split $value .]
-	if {[llength $spl] != 1} {
-	    set decimalplaces [string length [lindex $spl end]]
-	}
-	if {$decimalplaces > 8} {
-	    set decimalplaces 8
-	}
+
+	set enum [format "%e" $value]
+	set spl [split $enum e] 
+	set left [lindex $spl 0]
+	set right [format "%d" [lindex $spl end]]
+	
+	#set tright [expr $right * 1]
+	set decimalplaces [expr abs($right) + 2]
 
 	set exp 2
 	if {$value != 0} {
 	    while {([expr pow(10, [expr $exp-1])] > [expr abs($value)]) && \
-		    ($exp >= -5)} {
+		       ($exp >= -6)} {
 		
 		incr exp -1
 	    }
@@ -271,15 +271,16 @@ itcl_class expscale {
 	} else {
 	    set from [expr int($value/$mag)*$mag]
 	}
-
+	
 	set to [expr $from+$mag]
-	set ti [expr $mag/5]
+	set ti [expr $mag/3]
 	
 	set resolution [getResolution ]
-
+	
 	$w.scale configure -from $from -to $to \
-	    -tickinterval $mag -resolution $resolution
-	set $variable $value
+	    -tickinterval $ti -resolution $resolution
+
+	set $variable [format "%e" $value]
 
 	$w.e.exp delete 0 end
 	$w.e.exp insert 0 $exp
