@@ -139,4 +139,12 @@ ImplicitParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
 	 lb->pErosionLabel_preReloc);
   particle_state_preReloc.erase(r6);
 
+  vector<const VarLabel*>::iterator r7,r8;
+  r7 = find(particle_state.begin(), particle_state.end(),lb->pSizeLabel);
+  particle_state.erase(r5);
+
+  r8 = find(particle_state_preReloc.begin(), particle_state_preReloc.end(),
+	 lb->pSizeLabel_preReloc);
+  particle_state_preReloc.erase(r6);
+
 }
