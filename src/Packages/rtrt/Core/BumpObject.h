@@ -16,9 +16,6 @@ public:
   ~BumpObject(); 
     virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext*);
-    virtual void light_intersect(Light* light, const Ray& ray,
-				 HitInfo& hit, double dist, Color& atten,
-				 DepthStats* st, PerProcessorContext*);
     virtual void multi_light_intersect(Light* light, const Point& orig,
 				       const Array1<Vector>& dirs,
 				       const Array1<Color>& attens,

@@ -1,5 +1,7 @@
 
 
+
+#include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Scene.h>
@@ -12,7 +14,6 @@
 #include <Core/Thread/Thread.h>
 #include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/Rect.h>
-#include <Packages/rtrt/Core/MetalMaterial.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/CoupledMaterial.h>
@@ -23,6 +24,8 @@
 #include <Packages/rtrt/Core/UVMapping.h>
 #include <Packages/rtrt/Core/UVSphere.h>
 #include <Packages/rtrt/Core/UVPlane.h>
+#include <Packages/rtrt/Core/MetalMaterial.h>
+
 
 #include <iostream>
 #include <math.h>
@@ -67,15 +70,11 @@ static void create_dirs(Vector* objset)
 
 static void create_objs(Group* group, const Point& center,
 		 double radius, const Vector& dir, int depth,
-                 Vector* objset, Material* mat)
+                 Vector* objset, Material* matl)
 {
-  Material *matl;
-  //matl = new BumpMaterial(mat,"t.r",4);
-  matl = new NormalMapMaterial(mat,"testmap.ppm",4);
   Object * o1= new Sphere(matl, center, radius);
-  UVMapping *uv = new UVPlane( center,Vector(radius,0,0), Vector(0,radius,0));
-  //UVMapping *uv = new UVSphere(center,radius);
-  o1->set_uvmapping(uv);
+
+
     group->add(o1);
     // Check if children should be generated
     if(depth > 0){
@@ -102,8 +101,10 @@ static void make_box(Group* group, Material* mat,
 	      const Point& corner, const Vector& x, const Vector& y, const Vector& z)
 {
   //Group *boxgroup = new Group();
-  //Material *matl = new BumpMaterial(mat,"t.r",4);
-  Material *matl = new NormalMapMaterial(mat,"testmap.ppm",4);
+
+  Material *matl = new NormalMapMaterial(mat, "/usr/sci/data/Geometry/textures/testmap.ppm",4);
+//use the normal map to add some lines through the boxes
+
   group->add(new Rect(matl, corner+x+z, x, z));
   group->add(new Rect(matl, corner+x+y*2+z, z, x));
   group->add(new Rect(matl, corner+y+z, y, z));
@@ -127,7 +128,6 @@ static Object* make_obj(int size)
     Vector objset[9];
     create_dirs(objset);
     Material* matl0=new LambertianMaterial (Color(.4,.4,.4));
-    //Material* matl0=new Phong(Color(0.32,0.32,0.32), Color(0.32,0.32,0.32), Color(0.32,0.32,0.32), 40, 0);
     create_objs(world, Point(0,0,.5), BV_RADIUS/2.0, Vector(0,0,1),
 		size, objset, matl0);
 
@@ -143,23 +143,33 @@ static Object* make_obj(int size)
     make_box(world, matl1, corner, diag1, diag2, z);
 
     Material* matl3=new MetalMaterial( Color(.7,.7,.7));
-    //Material* nmatl = new BumpMaterial(matl3,"t.r",4);
-    Material * nmatl = new NormalMapMaterial(matl3,"testmap.ppm",4);
+    Material* nmatl = new BumpMaterial(matl3,"/usr/sci/data/Geometry/textures/tile-bump.ppm",8);
+    //Material * nmatl = new NormalMapMaterial(matl3,"/usr/sci/data/Geometry/textures/testmap.ppm",4);
+    //Material *nmatl = matl3;
     world->add(new Sphere(nmatl, corner+diag1*1.25+diag2*.6+z*2+Vector(0,0,.6), .6));
-#if 1
     Material* matl2=new Checker(new LambertianMaterial(Color(.95,.95,.95)),
                                 new LambertianMaterial(Color(.7,.3,.3)),
 				Vector(1,1.1,0), Vector(-1.1,1,0));
-/*
-    Material* matl2=new Checker(new Phong(Color(.05,.05,.05), Color(.95,.95,.95), Color(.6,.6,.6), 10),
-				new Phong(Color(.05,.0,0), Color(.7,.3,.3), Color(.6,.6,.6), 10),
-				Vector(1,1.1,0), Vector(-1.1,1,0));
-*/
-#else
-    Material* matl2=new Phong(Color(.05,.05,.05), Color(.95,.95,.95), Color(.6,.6,.6), 10);
-#endif
-    double planesize=15;
-    Object* obj1=new Rect(matl2, Point(0,0,0), Vector(planesize,planesize*1.1,0), Vector(-planesize*1.1,planesize,0));
+double planesize=15;
+
+Material *image = new 
+ImageMaterial("/usr/sci/data/Geometry/textures/granite-tile.ppm",
+ImageMaterial::Tile,
+ImageMaterial::Tile,
+Color(0,0,0),1,Color(1,1,1),4000);
+
+
+// matl2 = new Checker(image,image, Vector(1,1,1,0), Vector(-1,1,1,0));
+ matl2 = image;
+
+
+//Material *bumpmatl = new BumpMaterial(matl2,"/usr/sci/data/Geometry/textures/tile-bump",1);
+//Material *bumpmatl = new NormalMapMaterial(matl2, 	"/usr/sci/data/Geometry/textures/testmap.ppm", 75);
+	
+ Material *bumpmatl = new 
+BumpMaterial(matl2,"/usr/sci/data/Geometry/textures/tile-bump.ppm", 8);
+    Object* obj1=new Rect(bumpmatl, Point(0,0,0), 
+Vector(planesize,planesize*1.1,0), Vector(-planesize*1.1,planesize,0));
     world->add(obj1);
     return world;
 }

@@ -77,11 +77,11 @@ void NormalMapMaterial::shade(Color& result, const Ray& ray,
     BumpObject n = BumpObject(normal);
     BumpObject *n2 = &n;
     Object *o2 = (Object *)n2;
-   //BumpObject o(normal);
+    //Object *o2 = new BumpObject(normal);
     HitInfo h2 = hit;
     h2.hit_obj = o2;
     material->shade(result,ray,h2,depth,a,c,cx);
-    
+    //delete o2;
 }
 
 

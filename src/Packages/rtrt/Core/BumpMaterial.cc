@@ -87,11 +87,12 @@ void BumpMaterial::shade(Color& result, const Ray& ray,
     perturbnormal(normal,ray, hit);
     BumpObject n(normal);
     BumpObject *n2 = &n;
+    //Object *o2 = new BumpObject(normal); // (Object *)n2; 
     Object *o2 = (Object *)n2;
-    //BumpObject o(normal);
     HitInfo h2 = hit;
     h2.hit_obj = o2;
     material->shade(result,ray,h2,depth,a,c,cx);
+    //delete o2;
     
 }
 
