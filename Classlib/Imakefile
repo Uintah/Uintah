@@ -2,10 +2,10 @@
 #include <config/sci.cf>
 
 OBJS = BitArray1.o  Debug.o  \
-	Exceptions.o  Persistent.o  Pstreams.o  \
+	Exceptions.o  Persistent.o  Pstreams.o  PQueue.o\
 	Sort.o String.o  Timer.o  TrivialAllocator.o tests.o
 SRCS = BitArray1.cc Debug.cc \
-	Exceptions.cc Persistent.cc Pstreams.cc \
+	Exceptions.cc Persistent.cc Pstreams.cc PQueue.cc\
 	Sort.cc String.cc Timer.cc TrivialAllocator.cc tests.cc
 
 LIBNAME = Classlib

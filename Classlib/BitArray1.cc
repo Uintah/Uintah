@@ -16,7 +16,7 @@
 #include <Malloc/Allocator.h>
 
 BitArray1::BitArray1(int size, int initial)
-: size(size), nbits(size/8), bits(scinew unsigned char[nbits])
+: size(size), nbits(size/8 + ((size&7)?1:0)), bits(scinew unsigned char[nbits])
 {
     if(initial)
 	set_all();
