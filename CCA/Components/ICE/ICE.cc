@@ -1232,7 +1232,7 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
 
       double term1, term2, term3, press_coeff, rho_micro_FC, rho_FC;
 
-     for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+      for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector curcell = *iter;
         //__________________________________
         //   B O T T O M   F A C E S 
@@ -1302,18 +1302,15 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
 	  // interpolation to the face
 	  term1 = (rho_CC[adjcell] * vel_CC[adjcell].z() +
 		   rho_CC[curcell] * vel_CC[curcell].z())/(rho_FC);
-
 	  //__________________________________
 	  // pressure term
 	  press_coeff = 2.0/(rho_micro_FC);
 
 	  term2 =   delT * press_coeff *
 	    (press_CC[curcell] - press_CC[adjcell])/dx.z();
-
 	  //__________________________________
 	  // gravity term
 	  term3 =  delT * gravity.z();
-
 	  wvel_FC[curcell] = term1- term2 + term3;
         }
       }
@@ -2187,7 +2184,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
 
 #ifdef ANNULUSICE
       if(n_iter <= 250){
-        if(m==1){
+        if(m==2){
           for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
             int_eng_source[*iter] += 0.1 * 716.0 * rho_CC[*iter] * vol;
           }
