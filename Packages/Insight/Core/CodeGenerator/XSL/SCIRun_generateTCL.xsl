@@ -26,6 +26,11 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
 #  University of Utah. All Rights Reserved.
 #
+
+#############################################################
+#  This is an auto generated file for the 
+#  </xsl:text><xsl:value-of select="/filter/filter-itk/@name"/><xsl:text>
+
 </xsl:text>
 <xsl:text> itcl_class Insight_Filters_</xsl:text>
 <!-- Constructor -->

@@ -131,6 +131,13 @@
   Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
   University of Utah. All Rights Reserved.
 --&gt;
+
+
+&lt;!-- This is an auto generated file for the
+  </xsl:text><xsl:value-of select="$itk-name"/><xsl:text disable-output-escaping="yes">
+--&gt;
+
+
 </xsl:text>
 </xsl:template>
 
