@@ -48,26 +48,30 @@ void    MPMICE::printData(int matl,
     
     d_ice->adjust_dbg_indices( include_EC, patch, d_ice->d_dbgBeginIndx, 
                                 d_ice->d_dbgEndIndx, low, high);
-    cerr << "______________________________________________\n";
-    cerr << "$" << message1 << "\n";
-    cerr << "$" << message2 << "\n"; 
-    cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(d_ice->d_dbgSigFigs);
-        
-    for(int k = low.z(); k < high.z(); k++)  {
-      for(int j = low.y(); j < high.y(); j++) {
-        for(int i = low.x(); i < high.x(); i++) {
-         IntVector idx(i, j, k);
-          cerr << "[" << i << "," << j << "," << k << "]~ " 
-               << q_NC[idx] << "  ";
-         /*  cerr << "\n"); */
+    //__________________________________
+    // spew to stderr
+    if ( high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {      
+      cerr << "____________________________________________L-"<<levelIndx<<"\n";
+      cerr << "$" << message1 << "\n";
+      cerr << "$" << message2 << "\n"; 
+      cerr.setf(ios::scientific,ios::floatfield);
+      cerr.precision(d_ice->d_dbgSigFigs);
+
+      for(int k = low.z(); k < high.z(); k++)  {
+        for(int j = low.y(); j < high.y(); j++) {
+          for(int i = low.x(); i < high.x(); i++) {
+           IntVector idx(i, j, k);
+            cerr << "[" << i << "," << j << "," << k << "]~ " 
+                 << q_NC[idx] << "  ";
+           /*  cerr << "\n"); */
+          }
+          cerr << "\n";
         }
         cerr << "\n";
       }
-      cerr << "\n";
+      cerr <<" ______________________________________________\n";
+      cerr.setf(ios::scientific, ios::floatfield);
     }
-    cerr <<" ______________________________________________\n";
-    cerr.setf(ios::scientific, ios::floatfield);
   }
   //__________________________________
   //  bullet proof
