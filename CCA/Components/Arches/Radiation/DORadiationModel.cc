@@ -75,7 +75,8 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("DORadiationModel");
   if (db) {
     db->getWithDefault("ordinates",d_sn,2);
-    db->getWithDefault("opl",d_xumax,3.0);
+//    db->getWithDefault("opl",d_xumax,3.0); too sensitive to have default
+    db->require("opl",d_xumax);
   }
   else {
     d_sn=2;
