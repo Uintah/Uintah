@@ -62,22 +62,22 @@ void TetMC<Field>::extract( cell_index cell, double v )
 {
   static int num[16] = { 0, 1, 1, 2, 1, 2, 2, 1, 1, 2, 2, 1, 2, 1, 1, 0 };
   static int order[16][4] = {
-    {0, 0, 0, 0},   /* nothing */
-    {0, 1, 2, 3},   /* 0 */
-    {1, 2, 0, 3},   /* 1 */
-    {0, 2, 3, 1},   /* 0, 1 */
-    {2, 0, 1, 3},   /* 2 */
-    {0, 3, 1, 2},   /* 0, 2 */
-    {1, 0, 3, 2},   /* 1, 2 */
-    {3, 2, 0, 1},   /* 0, 1, 2 */
+    {0, 0, 0, 0},   /* none - ignore */
     {3, 0, 2, 1},   /* 3 */
-    {1, 3, 0, 2},   /* 0, 3 - reverse of 1, 2 */
-    {0, 1, 3, 2},   /* 1, 3 - reverse of 0, 2 */
-    {0, 3, 2, 1},   /* 2, 3 - reverse of 0, 1 */
-    {2, 1, 0, 3},   /* 0, 1, 3 - reverse of 2 */
-    {1, 0, 2, 3},   /* 0, 2, 3 - reverse of 1 */
-    {0, 2, 1, 3},   /* 1, 2, 3 - reverse of 0 */
-    {0, 0, 0, 0}    /* nothing */
+    {2, 0, 1, 3},   /* 2 */
+    {2, 0, 1, 3},   /* 2, 3 */
+    {1, 0, 3, 2},   /* 1 */
+    {1, 2, 0, 3},   /* 1, 3 */
+    {1, 0, 3, 2},   /* 1, 2 */
+    {0, 3, 2, 1},   /* 1, 2, 3 */
+    {0, 1, 2, 3},   /* 0 */
+    {2, 3, 0, 1},   /* 0, 3 - reverse of 1, 2 */
+    {3, 0, 2, 1},   /* 0, 2 - reverse of 1, 3 */
+    {1, 3, 0, 2},   /* 0, 2, 3 - reverse of 1 */
+    {3, 1, 0, 2},   /* 0, 1 - reverse of 2, 3 */
+    {2, 3, 0, 1},   /* 0, 1, 3 - reverse of 2 */
+    {3, 1, 2, 0},   /* 0, 1, 2 - reverse of 3 */
+    {0, 0, 0, 0}    /* all - ignore */
   };
     
     
@@ -130,7 +130,9 @@ void TetMC<Field>::extract( cell_index cell, double v )
     }
     break;
   default:
-    // do nothing
+    // do nothing. 
+    // MarchingCubes calls extract on each and every cell. i.e., this is
+    // not an error
     break;
   }
 }
