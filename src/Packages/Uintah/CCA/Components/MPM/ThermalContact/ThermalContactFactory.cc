@@ -11,11 +11,12 @@ ThermalContact* ThermalContactFactory::create(const ProblemSpecP& ps,
 {
    ProblemSpecP mpm_ps = ps->findBlock("MaterialProperties")->findBlock("MPM");
 
-   for( ProblemSpecP child = mpm_ps->findBlock("thermal_contact"); child != 0;
-        child = child->findNextBlock("thermal_contact"))
-   {
+//   for( ProblemSpecP child = mpm_ps->findBlock("thermal_contact"); child != 0;
+//        child = child->findNextBlock("thermal_contact"))
+//   {
+     ProblemSpecP child; 
      return( scinew ThermalContact(child,d_sS) );
-   }
-   return 0;
+//   }
+//   return 0;
 }
 

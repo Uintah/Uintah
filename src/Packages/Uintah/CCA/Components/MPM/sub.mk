@@ -6,8 +6,7 @@ SRCDIR   := Packages/Uintah/CCA/Components/MPM
 
 SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/BoundCond.cc \
-	$(SRCDIR)/MPMLabel.cc \
-	$(SRCDIR)/MPMPhysicalModules.cc
+	$(SRCDIR)/MPMLabel.cc 
 
 SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
 	$(SRCDIR)/Fracture \

@@ -2,7 +2,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMPhysicalModules.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
@@ -33,7 +32,7 @@ void ThermalContact::computeHeatExchange(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-  int numMatls = d_sharedState->getNumMatls();
+  int numMatls = d_sharedState->getNumMPMMatls();
 
   std::vector<NCVariable<double> > gmass(numMatls);
   std::vector<NCVariable<double> > gTemperature(numMatls);

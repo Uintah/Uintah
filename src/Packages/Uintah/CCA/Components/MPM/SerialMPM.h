@@ -53,6 +53,9 @@ class SerialMPM : public UintahParallelComponent, public MPMInterface {
 public:
   SerialMPM(const ProcessorGroup* myworld);
   virtual ~SerialMPM();
+
+  Contact*         contactModel;
+  ThermalContact*  thermalContactModel;
 	 
   //////////
   // Insert Documentation Here:

@@ -2,10 +2,11 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMPhysicalModules.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
+#include <Packages/Uintah/CCA/Components/MPM/Contact/ContactFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/Fracture/Fracture.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
+#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/Fracture/Connectivity.h>
@@ -61,7 +62,6 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
 SerialMPM::~SerialMPM()
 {
   delete lb;
-  MPMPhysicalModules::kill();
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
@@ -72,8 +72,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
    d_sharedState = sharedState;
 
-   MPMPhysicalModules::build(prob_spec,d_sharedState);
    MPMPhysicalBCFactory::create(prob_spec);
+
+   contactModel = ContactFactory::create(prob_spec,sharedState);
+   thermalContactModel = ThermalContactFactory::create(prob_spec, sharedState);
 
    ProblemSpecP p = prob_spec->findBlock("DataArchiver");
    if(!p->get("outputInterval", d_outputInterval))
@@ -195,9 +197,7 @@ void SerialMPM::scheduleTimeAdvance(double , double ,
   }
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
       
-  if (MPMPhysicalModules::thermalContactModel) {
-    scheduleComputeHeatExchange(          sched, patches, matls);
-  }
+  scheduleComputeHeatExchange(            sched, patches, matls);
   scheduleExMomInterpolated(              sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
   scheduleComputeInternalForce(           sched, patches, matls);
@@ -341,11 +341,10 @@ void SerialMPM::scheduleComputeHeatExchange(SchedulerP& sched,
 
 
   Task* t = scinew Task("ThermalContact::computeHeatExchange",
-		        MPMPhysicalModules::thermalContactModel,
+		        thermalContactModel,
 		        &ThermalContact::computeHeatExchange);
 
-  MPMPhysicalModules::thermalContactModel->addComputesAndRequires(t, patches,
-								  matls);
+  thermalContactModel->addComputesAndRequires(t, patches, matls);
   sched->addTask(t, patches, matls);
 }
 
@@ -354,11 +353,10 @@ void SerialMPM::scheduleExMomInterpolated(SchedulerP& sched,
 					  const MaterialSet* matls)
 {
   Task* t = scinew Task("Contact::exMomInterpolated",
-		    MPMPhysicalModules::contactModel,
+		    contactModel,
 		    &Contact::exMomInterpolated);
 
-  MPMPhysicalModules::contactModel->
-    addComputesAndRequiresInterpolated(t, patches, matls);
+  contactModel->addComputesAndRequiresInterpolated(t, patches, matls);
   sched->addTask(t, patches, matls);
 }
 
@@ -488,10 +486,8 @@ void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gInternalHeatRateLabel, Ghost::None);
   t->requires(Task::NewDW, lb->gExternalHeatRateLabel, Ghost::None);
 
-  if(MPMPhysicalModules::thermalContactModel) {
     t->requires(Task::NewDW, lb->gThermalContactHeatExchangeRateLabel,
-		Ghost::None);
-  }
+						       Ghost::None);
 		
   t->computes(lb->gTemperatureRateLabel);
 
@@ -554,11 +550,9 @@ void SerialMPM::scheduleExMomIntegrated(SchedulerP& sched,
    *   out(G.VELOCITY_STAR, G.ACCELERATION) */
 
   Task* t = scinew Task("Contact::exMomIntegrated",
-		   MPMPhysicalModules::contactModel,
+		   contactModel,
 		   &Contact::exMomIntegrated);
-  MPMPhysicalModules::contactModel->addComputesAndRequiresIntegrated(t,
-								     patches,
-								     matls);
+  contactModel->addComputesAndRequiresIntegrated(t, patches, matls);
   sched->addTask(t, patches, matls);
 }
 
@@ -738,8 +732,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
        int dwindex = mpm_matl->getDWIndex();
 
-       MPMPhysicalModules::contactModel->
-			initializeContact(patch,dwindex,new_dw);
+       contactModel->initializeContact(patch,dwindex,new_dw);
     }
     new_dw->put(NAPID, lb->ppNAPIDLabel, 0, patch);
   }
@@ -1423,11 +1416,9 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
       new_dw->get(externalHeatRate, lb->gExternalHeatRateLabel,
 					        dwindex, patch, Ghost::None, 0);
 
-      if(MPMPhysicalModules::thermalContactModel) {
         new_dw->get(thermalContactHeatExchangeRate,
-                  lb->gThermalContactHeatExchangeRateLabel, 
+                  lb->gThermalContactHeatExchangeRateLabel,
                   dwindex, patch, Ghost::None, 0);
-      }
 
       Vector dx = patch->dCell();
       for(Patch::FaceType face = Patch::startFace;
@@ -1493,9 +1484,7 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
 	  temperatureRate[*iter] = (internalHeatRate[*iter]
 		                 +  externalHeatRate[*iter]) /
 				  (mass[*iter] * specificHeat);
-          if(MPMPhysicalModules::thermalContactModel) {
             temperatureRate[*iter]+=thermalContactHeatExchangeRate[*iter];
-          }
       }
 
       // Put the result in the datawarehouse
