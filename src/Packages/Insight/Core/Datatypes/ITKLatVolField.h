@@ -556,27 +556,8 @@ template <class Data>
 void
 ITKLatVolField<Data>::io(Piostream &stream)
 {
-  ASSERTFAIL("ITKLatVolField::io not implemented yet");
-  if(image_set_) {
-    /*  
-	int version = stream.begin_class(type_name(-1), ITK_LAT_VOL_FIELD_VERSION);
-	GenericField<LatVolMesh, ITKFData3d<Data> >::io(stream); 
-	stream.end_class();                                                         
-	if (version < 2) { 
-	ITKFData3d <Data> temp;
-	temp.copy(fdata()); 
-	resize_fdata(); 
-	int i, j, k; 
-	for (i=0; i<fdata().dim1(); i++) 
-	for (j=0; j<fdata().dim2(); j++) 
-	for (k=0; k<fdata().dim3(); k++) 
-	fdata()(i,j,k)=temp(k,j,i); 
-	}
-    */  
-  }
-  else {
-    ASSERTFAIL("ITKLatVolField Image not set");
-  }
+  ASSERTFAIL("ITKLatVolField::io not implemented.  Please use an Insight->ImageWriter");
+
 }
 
 
@@ -668,7 +649,7 @@ bool ITKLatVolField<Data>::get_gradient(Vector &g, const Point &p)
 template<class T> 
 void Pio(Piostream& stream, ITKFData3d<T>& array)
 {
-  ASSERTFAIL("Pio not written for ITKLatVolField");
+  ASSERTFAIL("Pio not written for ITKLatVolField. Please use Insight->ImageWriter.");
 }
 
 } // end namespace Insight

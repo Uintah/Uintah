@@ -431,25 +431,7 @@ template <class Data>
 void
 ITKImageField<Data>::io(Piostream &stream)
 {
-  ASSERTFAIL("ITKImageField::io not implemented yet");
-  if(image_set_) {  
-    /*
-      int version = stream.begin_class(type_name(-1), IMAGE_FIELD_VERSION);
-      GenericField<ImageMesh, ITKFData2d<Data> >::io(stream); 
-      stream.end_class();                                                         
-      if (version < 2) { 
-      ITKFData2d<Data> temp; 
-      temp.copy(fdata()); 
-      resize_fdata(); 
-      int i, j; 
-      for (i=0; i<fdata().dim1(); i++) 
-      for (j=0; j<fdata().dim2(); j++) 
-      fdata()(i,j)=temp(j,i); 
-      }   
-    */
-  }
-  else
-    ASSERTFAIL("ITKImageField image not set");
+  ASSERTFAIL("ITKImageField::io not implemented. Please use Insight->ImageWriter.");
 }
 
 template <class Data>
@@ -504,7 +486,7 @@ ITKImageField<T>::get_type_description(int n) const
 template<class T> 
 void Pio(Piostream& stream, ITKFData2d<T>& array)
 {
-  ASSERTFAIL("Pio not written for ITKImageField"); 
+  ASSERTFAIL("Pio not written for ITKImageField. Please use Insight->ImageWriter."); 
 }
 
 } // end namespace Insight
