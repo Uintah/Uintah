@@ -777,6 +777,15 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	    task->getAssignedResourceIndex() &&
 	    task->getAssignedResourceIndex() == me) {
 	  // the tasks are on the same processor, so add an internal dependency
+	  if (comp->matls) {
+	    for (int m = 0; m < comp->matls->size(); m++) {
+	      dt->scrubCountDependency(reductionTask, comp, 0,
+				       comp->matls->get(m), comp->dw);
+	    }
+	  }
+	  else {
+	    dt->scrubCountDependency(reductionTask, comp, 0, -1, comp->dw);
+	  }
 	  reductionTask->addInternalDependency(task, comp->var);
 	}
       }
@@ -978,8 +987,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	if(task->getAssignedResourceIndex() ==
 	   creator->getAssignedResourceIndex() &&
 	   task->getAssignedResourceIndex() == me) {
-	    dt->scrubCountDependency(task, req, 0, matl, req->dw);
-	    task->addInternalDependency(creator, req->var);
+	  dt->scrubCountDependency(task, req, 0, matl, req->dw);
+	  task->addInternalDependency(creator, req->var);
 	}
       }
     }
