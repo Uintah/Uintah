@@ -36,8 +36,7 @@ void* memalign(size_t, size_t);
 void* valloc(size_t);
 }
 
-namespace SCICore {
-namespace Malloc {
+using namespace SCICore::Malloc;
 
 void* malloc(size_t size)
 {
@@ -76,11 +75,11 @@ void* valloc(size_t)
     return 0;
 }
 
-} // End namespace Malloc
-} // End namespace SCICore
-
 //
 // $Log$
+// Revision 1.4  1999/09/01 05:34:30  sparker
+// malloc/free shouldn't be in the SCICore::Malloc namespace
+//
 // Revision 1.3  1999/08/23 06:30:37  sparker
 // Linux port
 // Added X11 configuration options
