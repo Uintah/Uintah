@@ -15,7 +15,7 @@ if [ $retval != "0" ]; then
 
     if [ "$ERRORS_TO" != "" -a $retval -gt "0" ]; then
 	cat > $TMPDIR/error.msg <<EOF
-Subject: *** Automated Correctness Regression Alert ***
+Subject: Regression Alert for $TEST on $OS
 To: $ERRORS_TO
 
 Correctness test failed for $TEST.

@@ -34,7 +34,7 @@ if [ $error != "0" ]; then
     echo "Memory leak test failed for $TEST."
     if [ "$ERRORS_TO" != "" ]; then
 	cat > $TMPDIR/error.msg <<EOF
-Subject: *** Automated Memory Leak Alert ***
+Subject: Memory Leak Alert for $TEST on $OS
 To: $ERRORS_TO
 
 Memory leak test failed for $TEST.  
