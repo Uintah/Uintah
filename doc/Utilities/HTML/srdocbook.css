@@ -96,3 +96,24 @@ color: white}
 table.simplelist{
 border: 0;
 frame: void}
+
+.faq_q_leadin {
+color: #003300;
+font-style: oblique;
+font-weight: bold;
+}
+
+.faq_a_leadin {
+color: #003300;
+font-weight: bold;
+}
+
+p.faqrev {
+color: #003300;
+font-size: small;
+font-style: italic;
+}
+
+.question {
+font-weight: bold;
+}
