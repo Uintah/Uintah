@@ -1727,10 +1727,10 @@ PaintCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux,
     
     GLdouble modelview[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
-    double panx = (modelview[12]+1.0)/2.0;
+    //    double panx = (modelview[12]+1.0)/2.0;
     double pany = (modelview[13]+1.0)/2.0;
-    double scalex = (modelview[0])/2.0;
-    double scaley = (modelview[5])/2.0;
+    //double scalex = (modelview[0])/2.0;
+    //double scaley = (modelview[5])/2.0;
 
     GLint vp[4];
     glGetIntegerv(GL_VIEWPORT, vp);
@@ -1956,6 +1956,12 @@ void
 PaintCM2Widget::add_coordinate(const Coordinate &coordinate)
 {
   if (strokes_.empty()) return;
+
+  // filter duplicate points
+  if (!strokes_.back().empty() && 
+      coordinate.first == strokes_.back().back().first &&
+      coordinate.second == strokes_.back().back().second) return;
+      
   strokes_.back().push_back(coordinate);
   dirty_ = true;
 }
