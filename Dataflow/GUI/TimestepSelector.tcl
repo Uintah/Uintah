@@ -36,7 +36,9 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	global $this-animate
 	global $this-time;
 	global $this-timeval 
+	global $this-max_time
 	set $this-time 0
+	set $this-max_time 100
 	set $this-timeval 0
 	set $this-animate 0
 	set $this-anisleep 0
@@ -75,7 +77,10 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	frame $f.lframe
 	label $f.lframe.step -text "Time Step"
 	label $f.lframe.val -text "    Time      "
-	scale $f.tframe.time -orient horizontal -from 0 -to 100 \
+	global $this-max_time
+
+	scale $f.tframe.time -orient horizontal -from 0 \
+	    -to [set $this-max_time]  \
 	    -resolution 1 -bd 2 -variable $this-time \
 	    -tickinterval 50
 	entry $f.tframe.tval -state disabled \
@@ -121,6 +126,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	set w .ui[modname].tframe.tframe
 	if { [winfo exists $w.time] } {
 	    set interval [expr ($timesteps -1)/2.0]
+	    set $this-max_time [expr $timesteps -1 ]
 	    $w.time configure -from 0
 	    $w.time configure -to [expr $timesteps -1 ]
 	    $w.time configure -tickinterval $interval
