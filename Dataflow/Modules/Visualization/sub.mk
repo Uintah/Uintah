@@ -13,6 +13,7 @@ SRCS     += \
 	$(SRCDIR)/Isosurface.cc \
 	$(SRCDIR)/CuttingPlane.cc\
 	$(SRCDIR)/Hedgehog.cc\
+	$(SRCDIR)/AnimatedStreams.cc\
 [INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/NodeHedgehog.cc \
 
