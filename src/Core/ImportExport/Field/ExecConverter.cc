@@ -349,7 +349,7 @@ TextPointCloudField_writer(ProgressReporter *pr,
 }
 
 static FieldIEPlugin
-TextPointCloudField_plugin("TextHexVolField",
+TextPointCloudField_plugin("TextPointCloudField",
 			   "", "",
 			   TextPointCloudField_reader,
 			   TextPointCloudField_writer);
@@ -376,7 +376,7 @@ TextStructCurveField_writer(ProgressReporter *pr,
 }
 
 static FieldIEPlugin
-TextStructCurveField_plugin("TextHexVolField",
+TextStructCurveField_plugin("TextStructCurveField",
 			    "", "",
 			    TextStructCurveField_reader,
 			    TextStructCurveField_writer);
@@ -403,7 +403,7 @@ TextStructHexVolField_writer(ProgressReporter *pr,
 }
 
 static FieldIEPlugin
-TextStructHexVolField_plugin("TextHexVolField",
+TextStructHexVolField_plugin("TextStructHexVolField",
 			     "", "",
 			     TextStructHexVolField_reader,
 			     TextStructHexVolField_writer);
@@ -429,7 +429,7 @@ TextStructQuadSurfField_writer(ProgressReporter *pr,
 }
 
 static FieldIEPlugin
-TextStructQuadSurfField_plugin("TextQuadSurfField",
+TextStructQuadSurfField_plugin("TextStructQuadSurfField",
 			       "", "",
 			       TextStructQuadSurfField_reader,
 			       TextStructQuadSurfField_writer);
