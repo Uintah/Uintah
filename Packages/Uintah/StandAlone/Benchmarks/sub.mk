@@ -41,3 +41,5 @@ endif
 LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
+
+SimpleMath: prereqs Packages/Uintah/StandAlone/Benchmarks/SimpleMath
