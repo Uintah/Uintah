@@ -16,7 +16,6 @@
 
 extern "C" {
 #include <Packages/CardioWave/Core/Algorithms/Vulcan.h>
-#include <Packages/CardioWave/Core/Algorithms/CuthillMcKee.h>
 }
 
 #include <Packages/CardioWave/share/share.h>
@@ -32,11 +31,9 @@ class CardioWaveSHARE SetupFVMatrix : public Module {
   GuiDouble	sigx2_;
   GuiDouble	sigy2_;
   GuiDouble	sigz2_;
-  GuiString	sprbwfile_;
   GuiString	sprfile_;
   GuiString	volumefile_;
   GuiString	visfile_;
-  GuiInt	BW_;
   
 public:
   SetupFVMatrix(GuiContext *context);
@@ -56,11 +53,9 @@ SetupFVMatrix::SetupFVMatrix(GuiContext *context)
     sigx2_(context->subVar("sigx2")),
     sigy2_(context->subVar("sigy2")),
     sigz2_(context->subVar("sigz2")),
-    sprbwfile_(context->subVar("sprbwfile")),
     sprfile_(context->subVar("sprfile")),
     volumefile_(context->subVar("volumefile")),
-    visfile_(context->subVar("visfile")),
-    BW_(context->subVar("BW"))
+    visfile_(context->subVar("visfile"))
   
 {
 }
@@ -76,10 +71,8 @@ void SetupFVMatrix::execute(){
   double sigy2 = sigy2_.get();
   double sigz2 = sigz2_.get();
   string sprfile = sprfile_.get();
-  string sprbwfile = sprbwfile_.get();
   string volumefile = volumefile_.get();
   string visfile = visfile_.get();
-  int BW = BW_.get();
   
   // must find ports and have valid data on inputs
   FieldIPort *ifib1 = (FieldIPort*)get_iport("PrimaryFiberOrientation");
@@ -246,34 +239,6 @@ void SetupFVMatrix::execute(){
   compute_matrix(mesh, sprfile.c_str());
   dump_vis(mesh, visfile.c_str());
 
-  // bandwidth minimization -- get back the permutation vector
-  //   from the permutation vector, reorder the nodes and fix the cells
-
-  if (BW) {
-    HexVolMesh *hvm = scinew HexVolMesh;
-    int *map = scinew int[nnodes];
-    cuthill_mckee_bandwidth_minimization(sprfile.c_str(), sprbwfile.c_str(), map, nnodes);
-    int i;
-    for (i=0; i<nnodes; i++)
-      hvm->add_point(m->point(map[i]));
-    for (i=0; i<ncells; i++) {
-      m->get_nodes(nodes, (HexVolMesh::Cell::index_type) i);
-      hvm->add_hex((HexVolMesh::Node::index_type) map[nodes[0]],
-		   (HexVolMesh::Node::index_type) map[nodes[1]],
-		   (HexVolMesh::Node::index_type) map[nodes[2]],
-		   (HexVolMesh::Node::index_type) map[nodes[3]],
-		   (HexVolMesh::Node::index_type) map[nodes[4]],
-		   (HexVolMesh::Node::index_type) map[nodes[5]],
-		   (HexVolMesh::Node::index_type) map[nodes[6]],
-		   (HexVolMesh::Node::index_type) map[nodes[7]]);
-    }
-    HexVolField<int> *hv = scinew HexVolField<int>(hvm, Field::NODE);
-    for (i=0; i<nnodes; i++) {
-      hv->fdata()[i] = ct->fdata()[map[i]];
-    }
-    ct=hv;
-  }
-  
   omesh->send(ct);
 }
 

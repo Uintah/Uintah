@@ -29,7 +29,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/CardioWave/Core/Algorithms
 
 SRCS     += \
-	$(SRCDIR)/CuthillMcKee.c\
 	$(SRCDIR)/Vulcan.c\
 #[INSERT NEW CODE FILE HERE]
 

@@ -47,7 +47,8 @@ using namespace SCIRun;
 class HexToTet : public Module {
 private:
   unsigned int last_generation_;
-  
+  FieldHandle tvfieldH;
+
 public:
 
   //! Constructor/Destructor
@@ -100,9 +101,17 @@ HexToTet::execute()
     return;
   }
 
+  FieldOPort *ofp = (FieldOPort *)get_oport("TetVol");
+  if (!ofp)
+  {
+    error("Unable to initialize " + name + "'s Output port.");
+    return;
+  }
+
   // Cache generation.
   if (hvfield->generation == last_generation_)
   {
+    ofp->send(tvfieldH);
     return;
   }
   last_generation_ = hvfield->generation;
@@ -120,6 +129,8 @@ HexToTet::execute()
     tvmesh->add_point(p);
     ++nbi;
   }
+
+  tvmesh->compute_nodes();
 
   vector<HexVolMesh::Elem::index_type> elemmap;
 
@@ -243,13 +254,8 @@ HexToTet::execute()
   }
 
   // Forward the results.
-  FieldOPort *ofp = (FieldOPort *)get_oport("TetVol");
-  if (!ofp)
-  {
-    error("Unable to initialize " + name + "'s Output port.");
-    return;
-  }
-  ofp->send(tvfield);
+  tvfieldH = tvfield;
+  ofp->send(tvfieldH);
 }
 
 
