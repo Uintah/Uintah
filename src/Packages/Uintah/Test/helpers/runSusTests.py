@@ -56,11 +56,11 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 # otherwise, save it in the build
   try:
 
-# if webpage exists, use that, otherwise, use BUILDROOT/mode
+# if webpath exists, use that, otherwise, use BUILDROOT/mode
     outputpath = "%s-%s" % (environ['HTMLLOG'], mode)
     weboutputpath = "%s-%s" % (environ['WEBLOG'], mode)
     try:
-      # make outputpath/bdg or opt dirs
+      # make outputpath/dbg or opt dirs
       mkdir(outputpath)
     except Exception:
       pass
@@ -133,6 +133,8 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   for test in TESTS:
     if solotest != "" and nameoftest(test) != solotest:
       continue
+
+    # if test can be run on this OS
     if testOS(test) != environ['OS'] and testOS(test) != "ALL":
       continue
     solotest_found = 1 # if there is a solotest, that is
@@ -186,6 +188,9 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   system("chgrp -R csafe %s" % resultsdir)
   system("chmod -R g+rwX %s" % resultsdir)
 
+  # if results saved on the web server, copy back to build root
+  if outputpath != startpath:
+    system("cp -r %s %s/%s-results" % (resultsdir, startpath, ALGO))
 
   if solotest != 0 and solotest_found == 0:
     print "unknown test: %s" % solotest
