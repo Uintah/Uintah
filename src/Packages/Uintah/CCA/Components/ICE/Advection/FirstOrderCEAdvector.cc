@@ -70,7 +70,8 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
                         const SFCYVariable<double>& vvel_FC,
                         const SFCZVariable<double>& wvel_FC,
                         const double& delT, 
-                        const Patch* patch)
+                        const Patch* patch,
+                        const int&   indx)
 
 {
   Vector dx = patch->dCell();
@@ -80,10 +81,9 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
 
   // Compute outfluxes 
   const IntVector gc(1,1,1);
-  bool err=false;
-  IntVector err_cell(0,0,0);
-  double err_total_fluxout = 0;
-  double err_vol = 0;
+  double error_test = 0.0;
+  int    num_cells = 0;
+  
   for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
     IntVector curcell = *iter;
     delY_top    = std::max(0.0, (vvel_FC[curcell+IntVector(0,1,0)] * delT));
@@ -148,16 +148,30 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
     for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ )  {
       total_fluxout  += d_OFC[curcell].d_cflux[corner];
     }
-    
-    if (total_fluxout > vol) {
-      err_cell = *iter;
-      err_total_fluxout = total_fluxout;
-      err_vol = vol;
-      err=true;
-   }
-  }
-  if(err)
-    throw OutFluxVolume(err_cell,err_total_fluxout,err_vol);
+    num_cells++;
+    error_test +=(vol - total_fluxout)/fabs(vol- total_fluxout);
+  }  // cell iterator
+  //__________________________________
+  // if total_fluxout > vol then 
+  // find the cell and throw an exception.  
+  if (fabs(error_test - num_cells) > 1.0e-2) {
+    for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
+      IntVector curcell = *iter; 
+      double total_fluxout = 0.0;
+      for(int face = FOA::TOP; face <= FOA::BACK; face++ )  {
+        total_fluxout  += d_advector.d_OFS[curcell].d_fflux[face];
+      }
+      for(int edge = TOP_R; edge <= LEFT_FR; edge++ )  {
+        total_fluxout  += d_OFE[curcell].d_eflux[edge];
+      }
+      for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ )  {
+        total_fluxout  += d_OFC[curcell].d_cflux[corner];
+      }
+      if (vol - total_fluxout < 0.0) {
+        throw OutFluxVolume(*iter,total_fluxout, vol, indx);
+      }
+    }  // cell iter
+  }  // if total_fluxout > vol
  
 }
 
