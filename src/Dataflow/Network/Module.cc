@@ -115,7 +115,7 @@ Module::Module(const string& name, GuiContext* ctx,
     ctx(ctx), name(name), moduleName(name), packageName(pack),
     categoryName(cat), sched(0), pid_(0), have_own_dispatch(0),
     helper_done("Module helper finished flag"), id(ctx->getfullname()), 
-    abort_flag(0), msgStream_(ctx->subVar("msgStream")), need_execute(0),
+    abort_flag(0), msgStream_(std::cerr), need_execute(0),
     sched_class(sched_class), state(NeedData), msg_state(Reset), 
     progress(0),
     show_stat(false), helper(0), network(0), 
@@ -636,21 +636,21 @@ void Module::setPid(int pid)
 void Module::error(const string& str)
 {
   //gui->postMessage("ERROR: " + moduleName + ": " + str, true);
-  msgStream_ << "ERROR: " << str << endl;
+  msgStream_ << "ERROR: " << str << std::endl;
   update_msg_state(Error); 
 }
 
 void Module::warning(const string& str)
 {
   // gui->postMessage("WARNING: " + moduleName + ": " + str, false);
-  msgStream_ << "WARNING: " << str << endl;
+  msgStream_ << "WARNING: " << str << std::endl;
   update_msg_state(Warning); 
 }
 
 void Module::remark(const string& str)
 {
   //gui->postMessage("REMARK: " + moduleName + ": " + str, false);
-  msgStream_ << "REMARK: " << str << endl;
+  msgStream_ << "REMARK: " << str << std::endl;
   update_msg_state(Remark); 
 }
 
