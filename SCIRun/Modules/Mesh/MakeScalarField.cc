@@ -61,15 +61,31 @@ void MakeScalarField::execute()
     if(!inmesh->get(mesh))
 	return;
     ColumnMatrixHandle rhshandle;
+    ScalarFieldUG* sf;
     if(!inrhs->get(rhshandle))
 	return;
-    ScalarFieldUG* sf=scinew ScalarFieldUG(ScalarFieldUG::NodalValues);
-    sf->mesh=mesh;
     ColumnMatrix& rhs=*rhshandle.get_rep();
+    if (rhs.nrows() == mesh->nodes.size()) {
+	cerr << "Using nodal values";
+	sf=scinew ScalarFieldUG(ScalarFieldUG::NodalValues);
+    }
+    else
+	if (rhs.nrows() == mesh->elems.size()) {
+	    cerr << "Using element values";
+	    sf=scinew ScalarFieldUG(ScalarFieldUG::ElementValues);
+	}
+	else {
+	    cerr << "The ColumnMatrix size, " << rhs.nrows() << ", does not match the number of nodes, " << mesh->nodes.size() << ", nor does it match the number of elements, " << mesh->elems.size();
+	    return;
+	}
+    sf->mesh=mesh;
     sf->data.resize(rhs.nrows());
     for(int i=0;i<rhs.nrows();i++){
-	if(mesh->nodes[i]->bc)
-	    sf->data[i]=mesh->nodes[i]->bc->value;
+	if (rhs.nrows() == mesh->nodes.size())
+	    if(mesh->nodes[i]->bc)
+		sf->data[i]=mesh->nodes[i]->bc->value;
+	    else	
+		sf->data[i]=rhs[i];
 	else
 	    sf->data[i]=rhs[i];
     }
@@ -82,6 +98,9 @@ void MakeScalarField::execute()
 
 //
 // $Log$
+// Revision 1.4  2000/09/07 00:12:19  zyp
+// MakeScalarField.cc
+//
 // Revision 1.3  2000/03/17 09:29:12  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
