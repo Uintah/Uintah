@@ -16,7 +16,7 @@
 */
 
 /*
- *  StructHexVolMesh.cc: Templated Mesh defined on a 3D Regular Grid
+ *  StructHexVolMesh.cc: Templated Mesh defined on a 3D Structured Grid
  *
  *  Written by:
  *   Michael Callahan
@@ -27,6 +27,10 @@
  *  Copyright (C) 2002 SCI Group
  *
  */
+
+/*
+  See StructHexVolMesh.h for field/mesh comments.
+*/
 
 #include <Core/Datatypes/StructHexVolMesh.h>
 #include <Core/Datatypes/FieldAlgo.h>

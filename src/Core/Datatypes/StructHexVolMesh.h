@@ -28,6 +28,21 @@
  *
  */
 
+/*
+  A sturctured grid is a dataset with regular topology but with irregular geometry.
+  The grid may have any shape but can not be overlapping or self-intersecting.
+  
+  The topology of a structured grid is represented using a 2D, or 3D vector with
+  the points being stored in an index based array. The faces (quadrilaterals) and
+  cells (Hexahedron) are implicitly define based based upon their indexing.
+
+  Structured grids are typically used in finite difference analysis.
+
+  For more information on datatypes see Schroeder, Martin, and Lorensen,
+  "The Visualization Toolkit", Prentice Hall, 1998.
+ */
+
+
 #ifndef SCI_project_StructHexVolMesh_h
 #define SCI_project_StructHexVolMesh_h 1
 

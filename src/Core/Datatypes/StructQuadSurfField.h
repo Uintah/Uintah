@@ -16,7 +16,7 @@
 */
 
 /*
- *  StructQuadSurfField.cc: Templated Mesh defined on a 3D Structured Grid
+ *  StructQuadSurfField.cc: Templated Field defined on a 2D Structured Grid
  *
  *  Written by:
  *   Allen Sanderson
@@ -27,6 +27,10 @@
  *  Copyright (C) 2002 SCI Group
  *
  */
+
+/*
+  See StructQuadSurfMesh.h for field/mesh comments.
+*/
 
 #ifndef Datatypes_StructQuadSurfField_h
 #define Datatypes_StructQuadSurfField_h
