@@ -107,8 +107,8 @@ AC_DEFUN([SCI_TRY_LINK], [
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
@@ -181,10 +181,12 @@ for inc in $4; do
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank). 
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
         echo
         AC_MSG_WARN(Only -I options are allowed in arg 4 ($4) of $1 check.  Skipping $inc.)
@@ -193,7 +195,7 @@ for inc in $4; do
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
