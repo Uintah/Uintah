@@ -15,6 +15,9 @@
   University of Utah. All Rights Reserved.
 -->
 
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
 <section id="sec.help">
 <title id="title.help">Getting Help</title>
 
@@ -39,9 +42,9 @@ version of &sr; used.
 </para>
 
 <para>
-See also the <ulink
-url="../../Installation/FAQ/faq.html">Installation</ulink> and <ulink
-url="../../User/FAQ/faq.html">User</ulink> FAQs.
+See also the <ulink url=<!--%= doc.treeUrl("doc/Installation/FAQ/faq.html") %--> >Installation</ulink> 
+and
+<ulink url=<!--%= doc.treeUrl("doc/User/FAQ/faq.html") %--> >User</ulink> FAQs.
 </para>
 
 </section>

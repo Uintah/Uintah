@@ -15,6 +15,9 @@
   University of Utah. All Rights Reserved.
 -->
 
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
 <section id="sec.starting">
 <title>Starting &sr;</title>
 
@@ -40,13 +43,14 @@ endterm="title.help" linkend="sec.help"/>.
 </para>
 
 <para>
-See &sr;'s <ulink url="../../User/Tutorial/index.html"><citetitle>
+See &sr;'s <ulink 
+url=<!--%= doc.treeUrl("doc/User/Tutorial/index.html") %--> ><citetitle>
 tutorial</citetitle></ulink> for an introduction to the use of &sr;.
 The tutorial uses the previously downloaded sample data sets.
 </para>
 
 <para>See the <ulink
-url="../../User/Guide/usersguide/index.html"><citetitle>&sr; Users
+url=<!--%= doc.treeUrl("doc/User/Guide/usersguide/index.html") %-->><citetitle>&sr; Users
 Guide</citetitle></ulink> for particulars on the use of &sr;.</para>
 </section>
 
