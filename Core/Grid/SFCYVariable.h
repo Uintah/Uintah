@@ -99,8 +99,13 @@ WARNING
     virtual void allocate(const IntVector& lowIndex,
 			  const IntVector& highIndex);
      
-    virtual void allocate(const Patch* patch)
-    { allocate(patch->getSFCYLowIndex(), patch->getSFCYHighIndex()); }
+    virtual void allocate(const Patch* patch, const IntVector& boundary)
+    {      
+      IntVector l,h;
+      patch->computeVariableExtents(Patch::YFaceBased, boundary, 
+                                    Ghost::None, 0, l, h);
+      allocate(l, h);
+    }
     virtual void allocate(const SFCYVariable<T>& src)
     { allocate(src.getLowIndex(), src.getHighIndex()); }
     virtual void allocate(const SFCYVariableBase* src)

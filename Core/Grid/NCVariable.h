@@ -104,8 +104,13 @@ WARNING
     virtual void allocate(const IntVector& lowIndex,
 			  const IntVector& highIndex);
      
-    virtual void allocate(const Patch* patch)
-    { allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex()); }
+    virtual void allocate(const Patch* patch, const IntVector& boundary)
+    {      
+      IntVector l,h;
+      patch->computeVariableExtents(Patch::NodeBased, boundary, 
+                                    Ghost::None, 0, l, h);
+      allocate(l, h);
+    }
     virtual void allocate(const NCVariable<T>& src)
     { allocate(src.getLowIndex(), src.getHighIndex()); }
     virtual void allocate(const NCVariableBase* src)

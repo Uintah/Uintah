@@ -99,9 +99,14 @@ WARNING
     virtual void allocate(const IntVector& lowIndex,
 			  const IntVector& highIndex);
 
-    virtual void allocate(const Patch* patch)
-    { allocate(patch->getSFCXLowIndex(), patch->getSFCXHighIndex()); }
-     virtual void allocate(const SFCXVariable<T>& src)
+    virtual void allocate(const Patch* patch, const IntVector& boundary)
+    {      
+      IntVector l,h;
+      patch->computeVariableExtents(Patch::XFaceBased, boundary, 
+                                    Ghost::None, 0, l, h);
+      allocate(l, h);
+    }
+    virtual void allocate(const SFCXVariable<T>& src)
     { allocate(src.getLowIndex(), src.getHighIndex()); }
     virtual void allocate(const SFCXVariableBase* src)
     { allocate(castFromBase(src)); }
