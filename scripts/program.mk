@@ -7,6 +7,7 @@
 OBJS := $(patsubst %.c,%.o,$(filter %.c,$(SRCS))) \
 	   $(patsubst %.cc,%.o,$(filter %.cc,$(SRCS))) \
 	   $(patsubst %.s,%.o,$(filter %.s,$(SRCS))) \
+	   $(patsubst %.F,%.o,$(filter %.F,$(SRCS))) \
 	   $(patsubst %.l,%.o,$(filter %.l,$(SRCS))) \
 	   $(patsubst %.y,%.o,$(filter %.y,$(SRCS)))
 
@@ -22,6 +23,7 @@ PSELIBS := $(PSELIBS) $(MALLOCLIB)
 PSELIBS := $(subst /,_,$(PSELIBS))
 
 ALLTARGETS := $(ALLTARGETS) $(PROGRAM)
+ALLSRCS := $(ALLSRCS) $(SRCS)
 
 #
 # Tuck the value of $(LIBS) away in a mangled variable
@@ -62,6 +64,9 @@ endif
 
 #
 # $Log$
+# Revision 1.10  2000/05/04 22:34:16  sparker
+# Added an ALLSRCS variable
+#
 # Revision 1.9  2000/03/23 11:18:18  sparker
 # Makefile tweaks for sidl files
 # Added GENHDRS to program.mk
