@@ -38,22 +38,23 @@
     <Grid>
 		<BoundaryConditions>
 		 <Face side = "x-">
-                        <BCType label = "Kinematic" var = "velocity">
-                           <velocity> [0.0,0.0,0.0] </velocity>
+                        <BCType label = "Pressure" var = "pressure">
+                           <pressure> 10. </pressure>
                         </BCType>
                 </Face>
                 <Face side = "x+">
-                        <BCType label = "Kinematic" var = "velocity">
-			     <velocity> [0.0,0.0,0.0] </velocity>
+                        <BCType label = "Pressure" var = "pressure">
+			     <pressure> 10.  </pressure>
                         </BCType>
                 </Face>
                 <Face side = "y-">
-                        <BCType label = "Kinematic" var = "velocity">
-                           <velocity> [0.0,0.0,0.0] </velocity>
+                        <BCType label = "Pressure" var = "pressure">
+                           <pressure> 10.  </pressure>
                         </BCType>
                 </Face>                  
 		<Face side = "y+">
-                        <BCType label = "Kinematic" var = "velocity">            			    <velocity> [0.0,0.0,0.0] </velocity>
+                        <BCType label = "Pressure" var = "pressure">   
+			    <pressure> 10.  </pressure>
                         </BCType>
                 </Face>
                 <Face side = "z-">
@@ -67,8 +68,8 @@
 	    <Box label="1">
 	    	<lower>       [0,0,0]     </lower>
 	    	<upper>       [20,20,2]   </upper>
-	       <resolution>  [22,22,3]   </resolution>
-                <extraCells>[1,1,1]</extraCells>
+	       	<resolution>  [22,22,3]   </resolution>
+                <extraCells>  [1,1,1]	  </extraCells>
 		<patches>     [1,1,1]     </patches>
 	    </Box>
 	</Level>
