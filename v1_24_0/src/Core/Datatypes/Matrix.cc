@@ -372,23 +372,6 @@ Matrix::bicg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
   return 0;
 }
 
-bool
-Matrix::is_dense()
-{
-  return dynamic_cast<DenseMatrix *>(this) != NULL;
-}
-
-bool
-Matrix::is_sparse()
-{
-  return dynamic_cast<SparseRowMatrix *>(this) != NULL;
-}
-
-bool
-Matrix::is_column()
-{
-  return dynamic_cast<ColumnMatrix *>(this) != NULL;
-}
 
 DenseMatrix *
 Matrix::as_dense()
@@ -407,7 +390,6 @@ Matrix::as_column()
 {
   return dynamic_cast<ColumnMatrix *>(this);
 }
-
 
 
 } // End namespace SCIRun
