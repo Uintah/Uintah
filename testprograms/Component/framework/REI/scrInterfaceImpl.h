@@ -4,11 +4,11 @@
 
 #include <testprograms/Component/framework/cca_sidl.h>
 #include <testprograms/Component/framework/ComponentImpl.h>
-#include <Core/CCA/Component/SIDL/array.h>
+#include <Core/CCA/Component/SSIDL/array.h>
 
 namespace sci_cca {
 
-using SIDL::array1;
+using SSIDL::array1;
 
 class scrInterfaceImpl : virtual public scrInterface {
 
@@ -29,7 +29,7 @@ public:
 		     double O2,
 		     double sum_of_all_others,
 		     double heat_loss,
-		     ::SIDL::array1< double>& kmol_s,
+		     ::SSIDL::array1< double>& kmol_s,
 		     double& noreduction,
 		     double& new_temp,
 		     double& kmol_s_tot);
