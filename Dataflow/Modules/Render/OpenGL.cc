@@ -1061,7 +1061,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
     GLuint hit_pick=0;
     GLuint hit_pick_index = 0x12345678;  // need for object indexing
 #endif
-    cerr << "hits=" << hits << endl;
+    //cerr << "hits=" << hits << endl;
     if(hits >= 1){
       int idx=0;
       min_z=0;
@@ -1093,9 +1093,9 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
 	  hit_obj=pick_buffer[idx++];
 	  hit_pick_index=pick_buffer[idx++];
 #endif
-	  cerr << "new min... (obj=" << hit_obj
-	       << ", pick="          << hit_pick
-	       << ", index = "       << hit_pick_index << ")\n";
+	  //cerr << "new min... (obj=" << hit_obj
+	  //     << ", pick="          << hit_pick
+	  //     << ", index = "       << hit_pick_index << ")\n";
 	} else {
 	  idx+=nnames+1;
 	}
@@ -1104,7 +1104,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
       pick_obj=(GeomObj*)hit_obj;
       pick_pick=(GeomPick*)hit_pick;
       pick_obj->getId(pick_index); //(int)hit_pick_index;
-      cerr << "pick_pick=" << pick_pick << ", pick_index="<<pick_index<<endl;
+      //cerr << "pick_pick=" << pick_pick << ", pick_index="<<pick_index<<endl;
     }
   }
   viewer->geomlock.readUnlock();
