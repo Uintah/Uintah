@@ -17,7 +17,7 @@ public:
 private:
     bool flip_;
     bool valid_;
-    Color ambient;
+
     double Kd;
     Color specular;
     double specpow;
@@ -31,16 +31,13 @@ private:
     void read_hdr_image(char* texfile);
 public:
     ImageMaterial(int /* oldstyle */, char* filename, Mode umode, Mode vmode,
-		  const Color& ambient,
 		  double Kd, const Color& specular,
 		  double specpow, double refl=0);
     ImageMaterial(char* filename, Mode umode, Mode vmode,
-		  const Color& ambient,
 		  double Kd, const Color& specular,
 		  double specpow, double refl, 
 		  double transp=0);
     ImageMaterial(char* filename, Mode umode, Mode vmode,
-		  const Color& ambient,
 		  double Kd, const Color& specular,
 		  double specpow, double refl=0);
     virtual ~ImageMaterial();
