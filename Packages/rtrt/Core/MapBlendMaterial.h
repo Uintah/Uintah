@@ -31,16 +31,20 @@ class MapBlendMaterial : public Material
     UV uv;
     Point hitpos(ray.origin()+ray.direction()*hit.min_t);
     map->uv(uv, hitpos, hit);
-    Color mapcolor,final,original=result;
+    Color final,original=result;
     double u=uv.u();
     double v=uv.v();
+    double percent;
     unsigned width = map_.get_width();
     unsigned height = map_.get_height();
 
-    mapcolor = map_((unsigned)(u*width+.5),
-                    (unsigned)(v*height+.5));
+    if (!(map_.valid() && mat1_ && mat2_)) return;
 
-    double percent = mapcolor.red();
+    double tu = u-(unsigned)u;
+    double tv = v-(unsigned)v;
+
+    percent = (map_((unsigned)(tu*width),
+                    (unsigned)(tv*height))).red();
 
     mat1_->shade(result,ray,hit,depth,atten,accumcolor,cx);
     final = result*percent;
@@ -55,3 +59,4 @@ class MapBlendMaterial : public Material
 } // end namespace
 
 #endif
+
