@@ -38,7 +38,7 @@
 #if !defined(SCI_VALUES_H)
 #define SCI_VALUES_H
 
-#ifdef __APPLE__
+#if defined( __APPLE__) || defined(_WIN32)
 
 #include <float.h>
 #define MAXDOUBLE DBL_MAX
