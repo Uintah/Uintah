@@ -16,7 +16,9 @@
 #ifndef INDEX_H
 #define INDEX_H 1
 
-#include <iostream.h>
+#include <iostream>
+
+using namespace std;
 
 class Index
 {

@@ -1,7 +1,9 @@
 #include <math.h>
-#include <iostream.h>
+#include <iostream>
 #define NRANSI
 #include "nrutil.h"
+
+using namespace std;
 
 void dsvdcmp(double **a, int m, int n, double w[], double **v, int conv)
 {

@@ -32,7 +32,9 @@
 
 
 #include <stdlib.h>
-#include <iostream.h>       // for formatted printing of matrices
+#include <iostream>       // for formatted printing of matrices
+
+using namespace std;
 
 
 #ifdef MV_VECTOR_BOUNDS_CHECK

@@ -32,8 +32,10 @@
 /*              Coordinate sparse matrix (0-based)                       */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-#include <iostream.h>
+#include <iostream>
 #include <stdlib.h>
+
+using namespace std;
 
 #define _NON_TEMPLATE_COMPLEX
 

@@ -31,7 +31,7 @@ LOG
 #include "MPRead.h"
 
 #include <sstream>
-using std::istringstream;
+using namespace std;
 
 namespace Uintah {
 namespace Datatypes {  

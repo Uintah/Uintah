@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include "main.h"
 #include <stdlib.h>
-#include <iostream.h>
+#include <iostream>
 #include "vector.h"
+
+using namespace std;
 
 double norm(double **a, int nx, int ny) {
     double total=0;
