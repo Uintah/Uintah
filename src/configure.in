@@ -1921,6 +1921,7 @@ SCI_CHECK_LIB(,m,main,,,not-optional)
 SCI_CHECK_HEADERS(,math.h,,,not-optional)
 
 AC_SUBST(M_LIB_FLAG)
+AC_SUBST(M_LIB_DIR_FLAG)
 
 ##  --  search for X  ----------------------------------------------------
 
