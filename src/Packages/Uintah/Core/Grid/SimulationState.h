@@ -4,10 +4,6 @@
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Material.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 
@@ -21,6 +17,9 @@ using std::cerr;
 using std::endl;
 
 class VarLabel;
+class Material; 
+class ICEMaterial;
+class MPMMaterial;
    
     /**************************************
       
@@ -61,6 +60,8 @@ class VarLabel;
 
       void registerMPMMaterial(MPMMaterial*);
       void registerICEMaterial(ICEMaterial*);
+      int getNumVelFields() const;
+
       int getNumMatls() const {
 	 return (int)matls.size();
       }
@@ -69,14 +70,6 @@ class VarLabel;
       }
       int getNumICEMatls() const {
 	 return (int)ice_matls.size();
-      }
-
-      int getNumVelFields() const {
-	int num_vf=0;
-	for (int i = 0; i < (int)matls.size(); i++) {
-	  num_vf = Max(num_vf,matls[i]->getVFIndex());
-	}
-	return num_vf+1;
       }
 
       Material* getMaterial(int idx) const {
@@ -91,6 +84,10 @@ class VarLabel;
 
       Vector getGravity() const {
 	return d_gravity;
+      }
+
+      double getRefPress() const {
+	return d_ref_press;
       }
 
       double getElapsedTime() const {
@@ -113,6 +110,7 @@ class VarLabel;
       std::vector<MPMMaterial*> mpm_matls;
       std::vector<ICEMaterial*> ice_matls;
       Vector d_gravity;
+      double d_ref_press;
       double d_elapsed_time;
    };
 
