@@ -901,25 +901,8 @@ EditTransferFunc2::execute()
 bool
 EditTransferFunc2::make_current()
 {
-  //----------------------------------------------------------------
-  // obtain rendering ctx 
-  if(!ctx_) {
-    const string myname(".ui" + id + ".f.gl.gl");
-    try {
-      ctx_ = scinew TkOpenGLContext(myname, 0, 512, 256);
-      width_ = 512;
-      height_ = 256;
-#ifdef HAVE_GLEW
-      ctx_->make_current();
-      sci_glew_init();
-#endif
-    } catch (...) {
-    }
-  } 
-
   // check if it was created
   if(!ctx_) {
-    gui->unlock();
     return false;
   }
 
@@ -1249,7 +1232,7 @@ EditTransferFunc2::redraw()
 {
   gui->lock();
 
-  if (! make_current()) return;
+  if (! make_current()) { gui->unlock(); return; }
   init_pbuffer();
   rasterize_widgets();
   update_histo();
