@@ -301,16 +301,14 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
 
 void 
 Arches::computeStableTimeStep(const ProcessorGroup* ,
-			      const PatchSubset* patches,
-			      const MaterialSubset* matls,
+			      const PatchSubset*,
+			      const MaterialSubset*,
 			      DataWarehouse* ,
 			      DataWarehouse* new_dw)
 {
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    new_dw->put(delt_vartype(d_deltaT),  d_sharedState->get_delt_label()); 
-  }
+  new_dw->put(delt_vartype(d_deltaT),  d_sharedState->get_delt_label()); 
 }
+
 // ****************************************************************************
 // Schedule time advance
 // ****************************************************************************
@@ -350,7 +348,7 @@ Arches::scheduleTimeAdvance(double time, double dt,
 void
 Arches::paramInit(const ProcessorGroup* ,
 		  const PatchSubset* patches,
-		  const MaterialSubset* matls,
+		  const MaterialSubset*,
 		  DataWarehouse* ,
 		  DataWarehouse* new_dw)
 {
