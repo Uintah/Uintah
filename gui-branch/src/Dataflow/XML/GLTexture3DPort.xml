@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ 
+<port name="GLTexture3D">
+   <datatype>GLTexture3D</datatype>
+   <color>BlueViolet</color>
+</port>
