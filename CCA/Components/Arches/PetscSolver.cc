@@ -507,13 +507,6 @@ PetscSolver::pressLinearSolve()
   if(ierr)
     throw PetscError(ierr, "VecAXPY");
   ierr  = VecNorm(u_tmp,NORM_2,&init_norm);
-
-  int me2 = d_myworld->myrank();
-  if (me2 == 0) {
-    cerr.precision(12);
-    cerr << "Initial Norm of Pressure Solve = " << init_norm << endl;
-  }
-
   if(ierr)
     throw PetscError(ierr, "VecNorm");
   ierr = VecDestroy(u_tmp);
