@@ -40,7 +40,7 @@ Object_proxy::Object_proxy(const Reference& ref)
 }
 
 Object_proxy::Object_proxy(const URL& url)
-  : ProxyBase(*(new Reference()))
+  : ProxyBase(new Reference())
 {
   rm.d_ref[0].chan->openConnection(url);
   rm.d_ref[0].d_vtable_base=TypeInfo::vtable_methods_start;
@@ -55,6 +55,7 @@ Object_proxy::Object_proxy(const int urlc, const URL urlv[], int mysize, int myr
     ref->chan->openConnection(urlv[i]);
     ref->d_vtable_base=TypeInfo::vtable_methods_start;
     rm.insertReference(*ref);
+    delete ref;	 //k.z.
   }
   rm.localSize = mysize;
   rm.localRank = myrank;
@@ -70,6 +71,7 @@ Object_proxy::Object_proxy(const std::vector<URL>& urlv, int mysize, int myrank)
     ref->chan->openConnection(*iter);
     ref->d_vtable_base=TypeInfo::vtable_methods_start;
     rm.insertReference(*ref);
+	delete ref; //k.z.
   }
   rm.localSize = mysize;
   rm.localRank = myrank;

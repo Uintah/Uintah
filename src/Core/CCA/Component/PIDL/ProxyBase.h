@@ -69,6 +69,11 @@ DESCRIPTION
 	  ProxyBase(const Reference&);
 
 	  ////////////
+	  // Create the proxy from the given reference pointer.
+	  // the pointer is deleted inside the constructor
+	  ProxyBase(Reference*);
+	  
+	  ////////////
 	  // Create the proxy from the given reference list.
 	  ProxyBase(const ReferenceMgr&);	  
 

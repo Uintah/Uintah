@@ -101,6 +101,10 @@ DESCRIPTION
     // (only in parallel components)
     static IntraComm* getIntraComm();
 
+    //////////
+    // Check if the communication library is nexus
+    static bool isNexus();
+
   protected:
   private:
     //////////
@@ -122,6 +126,8 @@ DESCRIPTION
     PIDL();
   };
 } // End namespace SCIRun
+
+
 
 #endif
 

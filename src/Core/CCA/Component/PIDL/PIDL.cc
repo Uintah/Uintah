@@ -31,9 +31,6 @@
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/PIDL/Object_proxy.h>
 #include <Core/CCA/Component/PIDL/Warehouse.h>
-#include <Core/CCA/Component/Comm/NexusSpChannel.h>
-#include <Core/CCA/Component/Comm/NexusEpChannel.h>
-#include <Core/CCA/Component/Comm/CommNexus.h>
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
 #include <Core/CCA/Component/Comm/SocketMessage.h>
@@ -41,6 +38,12 @@
 #include <Core/Exceptions/InternalError.h> 
 #include <iostream>
 #include <sstream>
+
+#ifdef HAVE_GLOBUS
+#include <Core/CCA/Component/Comm/NexusSpChannel.h>
+#include <Core/CCA/Component/Comm/NexusEpChannel.h>
+#include <Core/CCA/Component/Comm/CommNexus.h>
+#endif
 
 //Inter-Component Comm libraries supported
 #define COMM_SOCKET 1
@@ -66,9 +69,12 @@ PIDL::initialize(int, char*[])
   case COMM_SOCKET:
     SocketMessage::setSiteTag();
     break;
+#ifdef HAVE_GLOBUS
   case COMM_NEXUS:
     CommNexus::initialize();
     break;
+#endif
+
   }
 
   setIntraCommunication(INTRA_COMM_MPI);
@@ -84,9 +90,11 @@ PIDL::finalize()
   switch (comm_type) {
   case COMM_SOCKET:
     break;
+#ifdef HAVE_GLOBUS
   case COMM_NEXUS:
     CommNexus::finalize();
     break;
+#endif
   }
 }
 
@@ -95,8 +103,10 @@ PIDL::getSpChannel() {
   switch (comm_type) {
   case COMM_SOCKET:
     return (new SocketSpChannel());
+#ifdef HAVE_GLOBUS
   case COMM_NEXUS:
     return (new NexusSpChannel());
+#endif
   default:
     return NULL;
   }
@@ -107,8 +117,11 @@ PIDL::getEpChannel() {
   switch (comm_type) {
   case COMM_SOCKET:
     return (new SocketEpChannel());
+
+#ifdef HAVE_GLOBUS
   case COMM_NEXUS:
     return (new NexusEpChannel());
+#endif
   default:
     return (new SocketEpChannel());
   }
@@ -181,6 +194,10 @@ PIDL::setIntraCommunication(int c)
   }
 }
 
+bool
+PIDL::isNexus(){
+  return comm_type==COMM_NEXUS;
+}
 
 
 
