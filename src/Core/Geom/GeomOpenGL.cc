@@ -4311,7 +4311,7 @@ void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
   if(!pre_draw(di,matl,0)) return;
 
   if ( di->fontinit ) {
-    cerr << "GeomText::draw: Initializing fonts." << endl;
+    //cerr << "GeomText::draw: Initializing fonts." << endl;
     di->dpy = XOpenDisplay( NULL );
     XFontStruct* fontInfo = XLoadQueryFont(di->dpy,
     	 "-adobe-helvetica-bold-r-normal-*-14-120-*-*-p-60-iso8859-1");
