@@ -33,6 +33,12 @@ itcl_class Teem_DataIO_DicomToNrrd {
         global $this-suid-sel
         global $this-series-del
         global $this-dir-tmp
+	global $this-num-entries
+	global $this-max-entries
+	global $this-entry-dir
+	global $this-entry-suid
+	global $this-entry-files
+
 	set $this-dir [pwd]
 	#set $this-start-index 0
 	#set $this-end-index 0
@@ -43,6 +49,11 @@ itcl_class Teem_DataIO_DicomToNrrd {
         set $this-suid-sel ""
         set $this-series-del ""
         set $this-dir-tmp ""
+	set $this-num-entries 0
+	set $this-max-entries 0
+	set $this-entry-dir ""
+	set $this-entry-suid ""
+	set $this-entry-files ""
     }
 
     method ui {} {
@@ -69,7 +80,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
         $w.row3 $w.sd $w.row4 $w.row9 -side top -e y -f both -padx 5 -pady 5
 
 	button $w.row10.browse_button -text " Browse " \
-	    -command "$this ChooseDir;  $this UpdateSeriesUIDs"
+	    -command "$this ChooseDir; $this UpdateSeriesUIDs"
        
 
 	#entry $w.row10.browse -textvariable $this-browse
@@ -88,7 +99,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
         pack $listing.seriesuid $listing.files -side left -fill x -expand yes
 
         # Populate seriesuid listbox
-        UpdateSeriesUIDs
+	UpdateSeriesUIDs
 
         # Selecting in Series UID listbox causes text to appear in Files 
         # listbox
@@ -109,13 +120,20 @@ itcl_class Teem_DataIO_DicomToNrrd {
 	pack $sd.selected $sd.delete -side top -fill x -expand yes
         pack $sd.selected -side top -fill x -expand yes
 
-	button $w.row4.execute -text "Execute" -command "$this-c needexecute"
-	pack $w.row4.execute -side top -e n -f both
+	# button $w.row4.execute -text "Execute" -command "$this-c needexecute"
+	# pack $w.row4.execute -side top -e n -f both
 
+
+	makeSciButtonPanel $w $w $this
+	# Commented this out because the ui
+	# would no longer popup in BioTensor
+	# moveToCursor $w
+
+	$this sync_filenames
     }
 
 
-    method ChooseDir { } {
+    method ChooseDir { } {	
         set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
@@ -131,51 +149,54 @@ itcl_class Teem_DataIO_DicomToNrrd {
     }
 
     method UpdateSeriesUIDs { } {
-        set w .ui[modname]
-
+	global $this-dir
+	set w .ui[modname]
+	
 	if [ expr [winfo exists $w] ] {
-            set listing [$w.listing childsite]
-            set seriesuid $listing.seriesuid
-            set files $listing.files
-
-            # Delete all entries in the series uid list
-            $seriesuid.list delete 0 end
-            $files.list delete 0 end
-
-            # Call C++ function to set my $this-series-uid variable as a list 
-            # of series uids for the series' in the current directory. If there
-            # are no series' in this dir, it sets the message variable instead
-            $this-c get_series_uid
-
-            set len [string length $this-series-uid]
-            #puts "len = $len"            
-            #puts "this-series-uid = {[set $this-series-uid]}"
-
-            if { [string length [set $this-series-uid]] != 0 } { 
-                # Break series_uid into a list 
-                set suids [set  $this-series-uid] 
-                #puts "suids = {$suids}"
-                set list_suid [split $suids " "]
- 
-                # Delete the first entry in the list -- this is always empty
-                set len [llength $list_suid]
-                set list_suid [lrange $list_suid 1 $len]
-
-                foreach entry $list_suid {
-                  $seriesuid.list insert end $entry
-                }
-                
-                # Select first line
-                $seriesuid.list selection set 0 0 
-                UpdateSeriesFiles $seriesuid.list $files.list
-
+	    set listing [$w.listing childsite]
+	    set seriesuid $listing.seriesuid
+	    set files $listing.files
+	    
+	    # Delete all entries in the series uid list
+	    $seriesuid.list delete 0 end
+	    $files.list delete 0 end
+	    
+	    # Call C++ function to set my $this-series-uid variable as a list 
+	    # of series uids for the series' in the current directory. If there
+	    # are no series' in this dir, it sets the message variable instead
+	    $this-c get_series_uid [set $this-dir]
+	    
+	    set len [string length $this-series-uid]
+	    #puts "len = $len"            
+	    #puts "this-series-uid = {[set $this-series-uid]}"
+	    
+	    if { [string length [set $this-series-uid]] != 0 } { 
+		# Break series_uid into a list 
+		set suids [set  $this-series-uid] 
+		#puts "suids = {$suids}"
+		set list_suid [split $suids " "]
+		
+		# Delete the first entry in the list -- this is always empty
+		set len [llength $list_suid]
+		set list_suid [lrange $list_suid 1 $len]
+		    
+		foreach entry $list_suid {
+		    $seriesuid.list insert end $entry
+		}
+		
+		# Select first line
+		$seriesuid.list selection set 0 0 
+		UpdateSeriesFiles $seriesuid.list $files.list
+		    
 	    } else {
-                $seriesuid.list insert end [set $this-messages]
-            }     
-        }
+		$seriesuid.list insert end [set $this-messages]
+	    }     
+	}
     }
 
     method UpdateSeriesFiles { src dst } {
+	global $this-dir
+	global $this-suid-sel
 
         # Delete all entries in the files list
         $dst delete 0 end
@@ -189,7 +210,7 @@ itcl_class Teem_DataIO_DicomToNrrd {
 
         # Call C++ function to set my $this-files variable as a list of
         # files for the seriesuid that was selected.
-        $this-c get_series_files 
+        $this-c get_series_files [set $this-dir] [set $this-suid-sel]
 
         # Break series files into a list 
         set fls [set  $this-series-files] 
@@ -212,6 +233,9 @@ itcl_class Teem_DataIO_DicomToNrrd {
     }
 
     method AddData { } {
+	global $this-dir
+	global $this-suid-sel
+
       # Need to pass the c++ side the current directory, the selected series 
       # uid, and the selected files in the series.  If no files are selected,
       # all files are considered to be selected.
@@ -271,9 +295,41 @@ itcl_class Teem_DataIO_DicomToNrrd {
                     }  
                 }
 
+		# initialize a filename variable and set it to the
+		# current file
+		global $this-num-entries
+		global $this-max-entries
+		global $this-series-files
+
+
+		# Only make a new variable if the max number of files
+		# that have been created is == the num-entries
+		if {[set $this-num-entries] == [set $this-max-entries]} {
+
+		    set i [set $this-num-entries]
+
+		    global $this-entry-dir$i
+		    global $this-entry-suid$i
+		    global $this-entry-files$i
+
+		    set $this-entry-dir$i [set $this-dir]
+		    set $this-entry-suid$i [set $this-suid-sel]
+		    set $this-entry-files$i ""
+
+		    for {set j 0} {$j < [llength $list_files]} {incr j} {
+			set $this-entry-files$i [ concat [set $this-entry-files$i] [lindex $list_files $j] ]
+		    }
+
+		    set $this-max-entries [expr [set $this-max-entries] + 1]
+
+		}
+
+		# increment num-entries
+		set $this-num-entries [expr [set $this-num-entries] + 1]
+
                 # Call the c++ function that adds this data to its data 
                 # structure.
-                $this-c add_data
+                $this-c add_data [set $this-dir] [set $this-suid-sel] [set $this-series-files]
            
                 # Now add entry to selected data
                 $selected.list insert end $entry
@@ -282,8 +338,46 @@ itcl_class Teem_DataIO_DicomToNrrd {
         }
     } 
 
+    method AddSavedData { which } {
+	global $this-entry-dir$which
+	global $this-entry-suid$which
+	global $this-entry-files$which
+
+	# Need to pass the c++ side the current directory, the selected series 
+	# uid, and the selected files in the series.  If no files are selected,
+	# all files are considered to be selected.
+	
+	set w .ui[modname]
+	
+	if [ expr [winfo exists $w] ] {
+            set sd [$w.sd childsite]
+            set selected $sd.selected
+
+	    set list_files [split [set $this-entry-files$which] " "]
+
+	    set start_file [lindex $list_files 0]
+	    set end_file [lindex $list_files end]
+	    # Check to make sure this is a unique entry
+	    set entry "DIR: [set $this-entry-dir$which]   SERIES UID: [set $this-entry-suid$which]   START FILE: $start_file   END FILE: $end_file"
+	    
+	    
+
+	    # increment num-entries
+	    set $this-num-entries [expr [set $this-num-entries] + 1]
+
+	    # Call the c++ function that adds this data to its data 
+	    # structure.
+	    $this-c add_data [set $this-entry-dir$which] [set $this-entry-suid$which] [set $this-entry-files$which]
+	    
+	    # Now add entry to selected data
+	    $selected.list insert end $entry
+	    
+	}  
+    }
+
  
     method DeleteData { } {
+	global $this-num-entries
 	set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
@@ -295,9 +389,27 @@ itcl_class Teem_DataIO_DicomToNrrd {
                 set $this-series-del [$selected.list get $i] 
                 $selected.list delete $i $i
 
+		# re-order and remove selected file
+		for {set x $i} {$x < [expr [set $this-num-entries]-1]} {incr x} {
+		    global $this-entry-dir$x
+		    global $this-entry-suid$x
+		    global $this-entry-files$x
+		    set next [expr $x +1]
+		    global $this-entry-dir$next
+		    global $this-entry-suid$next
+		    global $this-entry-files$next
+		    set $this-entry-dir$x [set $this-entry-dir$next]
+		    set $this-entry-suid$x [set $this-entry-suid$next]
+		    set $this-entry-files$x [set $this-entry-files$next]
+		}
+
+		# decrement num-entries
+		set $this-num-entries [expr [set $this-num-entries] - 1]
+		puts "Info deleted...num-entries now [set $this-num-entries]"
+
                 # Call the c++ function that deletes this data from its data 
                 # structure.
-                $this-c delete_data
+                $this-c delete_data [set $this-series-del]
             }
 
 	}
@@ -338,4 +450,59 @@ itcl_class Teem_DataIO_DicomToNrrd {
         }
 
     }
+    method darby {} {
+	set w .ui[modname]
+	puts [$w.listing.childsite.seriesuid.list curselection]
+    }
+
+    method sync_filenames {} {
+ 	set w .ui[modname]
+
+ 	global $this-num-entries
+
+ 	if {![winfo exists $w]} {
+ 	    $this ui
+ 	    wm withdraw $w
+ 	}
+
+
+	# Select proper series
+	#set i [$w.listing.childsite.seriesuid.list index [set $this-suid-sel]]
+
+	#$w.listing.childsite.seriesuid.list selection clear 0 end
+	#$w.listing.childsite.seriesuid.list selection set $i $i
+	#$w.listing.childsite.seriesuid.list selection set [set $this-suid-sel] [set $this-suid-sel]
+	#$this UpdateSeriesFiles $w.listing.childsite.seriesuid.list $w.listing.childsite.files.list
+
+	set sd [$w.sd childsite]
+	set selected $sd.selected
+	
+	# make sure num-entries corresponds to
+	# the number of files in the selection box
+ 	if {[set $this-num-entries] != [$selected.list size]} {
+ 	    global $this-series-files
+
+ 	    # Make sure all filenames are in the
+ 	    # selected listbox
+	    
+ 	    # delete all of them
+	    $w.listing.childsite.seriesuid.list delete 0 end
+ 	    #$this-c clear_data
+	    
+ 	    set num [set $this-num-entries]
+ 	    set $this-num-entries 0
+	    
+	    global $this-dir
+	    global $this-suid-sel
+
+ 	    # add back in
+ 	    for {set i 0} {$i < $num} {incr i} {
+ 		$this AddSavedData $i
+ 	    }
+
+	    # update directory
+	    $this UpdateSeriesUIDs
+ 	} 
+    }
 }
+

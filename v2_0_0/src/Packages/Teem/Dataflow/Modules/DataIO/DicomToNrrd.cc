@@ -98,7 +98,12 @@ private:
   GuiString series_files_;
   GuiString messages_;
   GuiString suid_sel_;  
-  GuiString series_del_;  
+  GuiString series_del_;
+  GuiInt num_entries_;
+  vector< GuiString* > entry_dir_;
+  vector< GuiString* > entry_suid_;
+  vector< GuiString* > entry_files_;
+
 
   //! Ports
   NrrdOPort*      onrrd_;
@@ -127,7 +132,8 @@ DicomToNrrd::DicomToNrrd(GuiContext* ctx)
     series_files_(ctx->subVar("series-files")),    
     messages_(ctx->subVar("messages")),    
     suid_sel_(ctx->subVar("suid-sel")),    
-    series_del_(ctx->subVar("series-del"))    
+    series_del_(ctx->subVar("series-del")),
+    num_entries_(ctx->subVar("num-entries"))
 {
 }
 
@@ -157,6 +163,8 @@ DicomToNrrd::~DicomToNrrd(){
 void DicomToNrrd::execute(){
 
 #ifdef HAVE_INSIGHT
+
+  gui->execute(id + " sync_filenames");
 
   // If no DICOM series' were specified via the UI, print error and return
   if( all_series_.size() == 0 ) 
@@ -259,8 +267,7 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
 #ifdef HAVE_INSIGHT
 
     DicomSeriesReader reader;
-    dir_ = (ctx->subVar("dir"));
-    string dir = dir_.get();
+    string dir = args[2];
 
     reader.set_dir( dir );
 
@@ -292,12 +299,11 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
   {
 #ifdef HAVE_INSIGHT
     DicomSeriesReader reader;
-    dir_ = (ctx->subVar("dir"));
-    string dir = dir_.get();
+    string dir = args[2];
     reader.set_dir( dir );
 
-    suid_sel_ = (ctx->subVar("suid-sel"));
-    string suid = suid_sel_.get();
+    //suid_sel_ = (ctx->subVar("suid-sel"));
+    string suid = args[3];
 
     //cerr << "(DicomToNrrd::tcl_command) suid = " << suid << "\n";
 
@@ -317,14 +323,12 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
   else if( args[1] == "add_data" )
   {
 #ifdef HAVE_INSIGHT
-    dir_ = (ctx->subVar("dir"));
-    string dir = dir_.get();
 
-    series_files_ = (ctx->subVar("series-files"));
-    string series_files = series_files_.get();
+    string dir = args[2];
 
-    suid_sel_ = (ctx->subVar("suid-sel"));
-    string suid_sel = suid_sel_.get();
+    string series_files = args[4];
+
+    string suid_sel = args[3];
 
     // Create a new series
     struct series new_series;
@@ -347,16 +351,28 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
         warning( "(DicomToNrrd::tcl_command) Cannot load multiple series' with different numbers of files." );
       }
     }
-
     all_series_.insert( all_series_.end(), new_series );
+
+    ostringstream str1;
+    str1 << "entry-dir" << all_series_.size()-1;
+    entry_dir_.insert(entry_dir_.end(), new GuiString(ctx->subVar(str1.str())));
+
+    ostringstream str2;
+    str2 << "entry-suid" << all_series_.size()-1;
+    entry_suid_.insert(entry_suid_.end(), new GuiString(ctx->subVar(str2.str())));
+
+    ostringstream str3;
+    str3 << "entry-files" << all_series_.size()-1;
+    entry_files_.insert(entry_files_.end(), new GuiString(ctx->subVar(str3.str())));
+
 #endif
   } 
   else if( args[1] == "delete_data" )
   {
 #ifdef HAVE_INSIGHT
     // Get the selected series to be deleted
-    series_del_ = (ctx->subVar("series-del"));
-    string series_del = series_del_.get();
+    //series_del_ = (ctx->subVar("series-del"));
+    string series_del = args[2];
 
     // Split the series_del string by spaces
     vector<string> info;
@@ -388,6 +404,9 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
     // Find the matching entry in the all_series vector and remove it
     int num_series = all_series_.size();
     vector<struct series>::iterator iter = all_series_.begin();
+    vector<GuiString*>::iterator iter2 = entry_dir_.begin();
+    vector<GuiString*>::iterator iter3 = entry_suid_.begin();
+    vector<GuiString*>::iterator iter4 = entry_files_.begin();
      
     for( int i = 0; i < num_series; i++ )
     {
@@ -399,11 +418,25 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
       {
         // Erase this element from the vector of series'
         all_series_.erase( iter );
+
+	// remove the guivar from the filenames
+	entry_dir_.erase( iter2 );
+	entry_suid_.erase( iter3 );
+	entry_files_.erase( iter4 );
       }  
       iter++;
+      iter2++;
+      iter3++;
+      iter4++;
     }
 #endif
   }
+  else if ( args[1] == "clear_data" )
+    {
+#ifdef HAVE_INSIGHT
+      all_series_.clear();
+#endif      
+    }
   else 
   {
     Module::tcl_command(args, userdata);
