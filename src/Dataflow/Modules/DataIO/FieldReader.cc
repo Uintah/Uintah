@@ -14,6 +14,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <sys/stat.h>
 
 namespace SCIRun {
 
@@ -22,6 +23,7 @@ class FieldReader : public Module {
   GuiString filename_;
   FieldHandle handle_;
   clString old_filename_;
+  long old_filemodification_;
 public:
   FieldReader(const clString& id);
   virtual ~FieldReader();
@@ -33,7 +35,8 @@ extern "C" Module* make_FieldReader(const clString& id) {
 }
 
 FieldReader::FieldReader(const clString& id)
-  : Module("FieldReader", id, Source), filename_("filename", id, this)
+  : Module("FieldReader", id, Source), filename_("filename", id, this),
+    old_filemodification_(0)
 {
   // Create the output port
   outport_=scinew FieldOPort(this, "Output Data", FieldIPort::Atomic);
@@ -47,9 +50,21 @@ FieldReader::~FieldReader()
 void FieldReader::execute()
 {
   clString fn(filename_.get());
-  
-  // If we haven't read yet, or if it's a new filename, then read
-  if(!handle_.get_rep() || fn != old_filename_){
+
+  // Read the status of this file so we can compare modification timestamps
+  struct stat buf;
+  if (stat(fn(), &buf)) {
+    error(clString("Warning: couldn't get stats on file ")+fn);
+    return;
+  }
+
+  // If we haven't read yet, or if it's a new filename, 
+  //  or if the datestamp has changed -- then read...
+  if(!handle_.get_rep() || 
+     fn != old_filename_ || 
+     buf.st_mtim.tv_nsec != old_filemodification_)
+  {
+    old_filemodification_=buf.st_mtim.tv_nsec;
     old_filename_=fn;
     Piostream* stream=auto_istream(fn);
     if(!stream){
