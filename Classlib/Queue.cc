@@ -66,3 +66,25 @@ template<class T> Queue<T>::length()
 {
     return _length;
 }
+
+
+
+
+
+#include <Tester/RigorousTest.h>
+
+void template<class T>Queue<T>::test_rigorous(RigorousTest* __test)
+{
+    TEST(1==1);
+}
+
+
+
+
+
+
+
+
+
+
+

@@ -41,6 +41,15 @@ public:
     T pop();
     int is_empty();
     int length();
+    static void test_rigorous(RigorousTest* __test);
+
 };
 
 #endif
+
+
+
+
+
+
+
