@@ -551,7 +551,8 @@ itcl_class Roe {
 	#tkwait visibility $m.objlist.canvas.frame.obj$objid
 	update idletasks
 	set width [winfo width $m.objlist.canvas.frame]
-	set height [winfo height $m.objlist.canvas.frame]
+	#set height [winfo height $m.objlist.canvas.frame]
+	set height [lindex [$m.objlist.canvas cget -scrollregion] end]
 
 	incr height $newframeheight
 
