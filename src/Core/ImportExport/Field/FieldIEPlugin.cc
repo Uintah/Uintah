@@ -115,7 +115,7 @@ FieldIEPlugin::FieldIEPlugin(const string& pname,
     filewriter(fwriter)
 {
   fieldIEPluginMutex.lock();
-  printf("in fieldiedplugin %s\n", pname.c_str());
+
   if (!field_plugin_table)
   {
     field_plugin_table = scinew map<string, FieldIEPlugin *>();
