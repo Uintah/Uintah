@@ -14,6 +14,7 @@
 #include <Classlib/Assert.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/TrivialAllocator.h>
+#include <Classlib/Queue.h>
 #include <Datatypes/TriSurface.h>
 #include <Geometry/BBox.h>
 #include <Geometry/Grid.h>
@@ -76,7 +77,7 @@ int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
     if (grid==0) {
 	ASSERT(!"Can't run TriSurface::get_closest_vertex_id() w/o a grid\n");
     }
-    int i[3], j[3], k[3];
+    int i[3], j[3], k[3];	// grid element indices containing these points
     int maxi, maxj, maxk, mini, minj, mink;
     grid->get_element(p1, &(i[0]), &(j[0]), &(k[0]));
     grid->get_element(p2, &(i[1]), &(j[1]), &(k[1]));
@@ -89,8 +90,12 @@ int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
     int rad=Max(maxi-mini,maxj-minj,maxk-mink)/2;
     int ci=(maxi+mini)/2; int cj=(maxj+minj)/2; int ck=(maxk+mink)/2;
 
-    BBox bb;
-    bb.extend(p1); bb.extend(p2); bb.extend(p3);
+//    BBox bb;
+//    bb.extend(p1); bb.extend(p2); bb.extend(p3);
+
+    // We make a temporary surface which just contains this one triangle,
+    // so we can use the existing Surface->distance code to find the closest
+    // vertex to this triangle.
 
     TriSurface* surf=scinew TriSurface;
     surf->construct_grid(grid->dim1(), grid->dim2(), grid->dim3(), 
@@ -174,6 +179,89 @@ int TriSurface::add_triangle(int i1, int i2, int i3, int cw) {
     if (grid) grid->add_triangle(temp, points[i1], points[i2], points[i3]);
 
     return temp;
+}
+
+void TriSurface::separate(int idx, TriSurface* conn, TriSurface* d_conn) {
+    if (idx<0 || idx>points.size()) {
+	cerr << "Trisurface:separate() failed -- index out of range";
+	return;
+    }
+
+    // brute force -- every node has its neighbor nodes in this list... twice!
+    Array1<Array1<int> > nbr(points.size());
+    Array1<int> newLocation(points.size());
+    Array1<int> d_newLocation(points.size());
+    Array1<int> invLocation(points.size());
+    Array1<int> visited(points.size());
+    Array1<int> d_visited(points.size());
+    for (int i=0; i<points.size(); i++) {
+	invLocation[i]=newLocation[i]=d_newLocation[i]=-1;
+	visited[i]=d_visited[i]=0;
+    }
+    for (i=0; i<points.size(); i++) {
+	nbr[i].resize(0);
+    }
+    for (i=0; i<elements.size(); i++) {
+	nbr[elements[i]->i1].add(elements[i]->i2);	
+	nbr[elements[i]->i1].add(elements[i]->i3);	
+	nbr[elements[i]->i2].add(elements[i]->i1);	
+	nbr[elements[i]->i2].add(elements[i]->i3);	
+	nbr[elements[i]->i3].add(elements[i]->i1);	
+	nbr[elements[i]->i3].add(elements[i]->i2);	
+    }
+    Queue<int> q;
+    q.append(idx);
+    visited[idx]=1;
+    int currLocation=0;
+    while(!q.is_empty()) {
+	// enqueue non-visited neighbors
+	int c=q.pop();
+	newLocation[c] = currLocation;
+	invLocation[currLocation] = c;
+	currLocation++;
+	for (int j=0; j<nbr[c].size(); j++) {
+	    if (!visited[nbr[c][j]]) {
+		q.append(nbr[c][j]);
+		visited[nbr[c][j]] = 1;
+	    }
+	}
+    }
+
+    conn->points.resize(currLocation);
+    for (i=0; i<currLocation; i++)
+	conn->points[i]=points[invLocation[i]];
+    d_conn->points.resize(points.size()-currLocation);
+    int d_currLocation=0;
+    for (i=0; i<points.size(); i++)
+	if (!visited[i]) {
+	    d_newLocation[i]=d_currLocation;
+	    d_conn->points[d_currLocation]=points[i];
+	    d_currLocation++;
+	}
+
+// GOOD CODE FOR STEVE'S TEST FUNCTIONS!
+//    for (i=0; i<points.size(); i++) {
+//	if (!visited[i]) {
+//	    if (newLocation[i] != -1) {
+//		cerr << "Error: " << i << " was not visited, but its mapped to "<<newLocation[i]<<"\n";
+//	    }
+//	} else {
+//	    if (d_newLocation[i] != -1) {
+//		cerr << "Error: " << i << " was visited, but its d_mapped to "<<d_newLocation[i]<<"\n";
+//	    }
+//	}
+//   }
+
+    for (i=0; i<elements.size(); i++) {
+	if (visited[elements[i]->i1])
+	    conn->elements.add(new TSElement(newLocation[elements[i]->i1],
+					     newLocation[elements[i]->i2],
+					     newLocation[elements[i]->i3]));
+	else
+	    d_conn->elements.add(new TSElement(d_newLocation[elements[i]->i1],
+					       d_newLocation[elements[i]->i2],
+					       d_newLocation[elements[i]->i3]));
+    }
 }
 
 void TriSurface::remove_empty_index() {

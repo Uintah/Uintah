@@ -25,6 +25,7 @@ struct TSElement {
     int i2; 
     int i3;
     inline TSElement(int i1, int i2, int i3):i1(i1), i2(i2), i3(i3){}
+    inline TSElement(const TSElement& e):i1(e.i1), i2(e.i2), i3(e.i3){}
     void* operator new(size_t);
     void operator delete(void*, size_t);
 };
@@ -47,6 +48,10 @@ public:
     TriSurface(const TriSurface& copy);
     virtual ~TriSurface();
     virtual Surface* clone();
+
+    // pass in allocated surfaces for conn and d_conn. NOTE: contents will be
+    // overwritten
+    void separate(int idx, TriSurface* conn, TriSurface* d_conn);
 
     // NOTE: if elements have been added or removed from the surface
     // remove_empty_index() MUST be called before passing a TriSurface
