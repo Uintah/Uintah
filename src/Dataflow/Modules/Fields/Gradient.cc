@@ -141,8 +141,8 @@ GradientAlgo::get_compile_info(const TypeDescription *ftd,
 		       ttd->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-                       ftd->get_name() + "<" + ttd->get_name() + " >" + ", " +
-                       ftd->get_name() + "<" + otd->get_name() + ">" );
+                       ftd->get_name() + "<" + ttd->get_name() + "> " + ", " +
+                       ftd->get_name() + "<" + otd->get_name() + "> " );
   
   // Add in the include path to compile this obj
   rval->add_include(include_path);
