@@ -510,7 +510,7 @@ void MDSPlusFieldReader::execute(){
 	
 	    buf = sNode + sFieldStr[n];
 
-	    int i=0; ncomps=0;
+	    int i=0, ncomps=0;
 	    
 	    if( space == REALSPACE ) {
 	      i = 0;
@@ -563,7 +563,7 @@ void MDSPlusFieldReader::execute(){
 
 	  if( bVector_[n] ) {
 
-	    int i=0; ncomps=0;
+	    int i=0, ncomps=0;
 	    
 	    if( space == REALSPACE ) {
 	      i = 0;
