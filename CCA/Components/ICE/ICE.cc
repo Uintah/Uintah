@@ -86,7 +86,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_Turb              = false;
   d_delT_knob         = 1.0;
   d_delT_scheme       = "aggressive";
-
+  d_surroundingMatl_indx = -9;
   d_dbgVar1   = 0;     //inputs for debugging                               
   d_dbgVar2   = 0;                                                          
   d_SMALL_NUM = 1.0e-100;                                                   
@@ -1442,19 +1442,30 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocateAndPut(Temp_CC[m],    lb->temp_CCLabel,      indx,patch); 
       new_dw->allocateAndPut(speedSound[m], lb->speedSound_CCLabel,indx,patch); 
       new_dw->allocateAndPut(vol_frac_CC[m],lb->vol_frac_CCLabel,  indx,patch); 
-      new_dw->allocateAndPut(vel_CC[m],     lb->vel_CCLabel,       indx,patch); 
+      new_dw->allocateAndPut(vel_CC[m],     lb->vel_CCLabel,       indx,patch);
+      if(ice_matl->isSurroundingMatl()) {
+        d_surroundingMatl_indx = indx;  // find which matl. is the surrounding matl
+      } 
     }
+    // --------bulletproofing
+    if (grav.length() >0.0 && d_surroundingMatl_indx == -9)  {
+      throw ProblemSetupException("ERROR ICE::actuallyInitialize \n"
+            "You must have \n" 
+            "       <isSurroundingMatl> true </isSurroundingMatl> \n "
+            "specified inside the ICE material that is the background matl\n \n");
+    }
+    
     for (int m = 0; m < numMatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
       ice_matl->initializeCells(rho_micro[m],  rho_CC[m],
-                                Temp_CC[m],   speedSound[m], 
+                                Temp_CC[m],    speedSound[m], 
                                 vol_frac_CC[m], vel_CC[m], 
-                                press_CC,  numALLMatls,    patch, new_dw);
+                                press_CC, numALLMatls, patch, new_dw);
 
       cv[m] = ice_matl->getSpecificHeat();
       
-      setBC(press_CC, rho_micro, placeHolder,
+      setBC(press_CC, rho_micro, placeHolder, d_surroundingMatl_indx,
             "rho_micro","Pressure", patch, d_sharedState, 0, new_dw);
       setBC(rho_CC[m],        "Density",      patch, d_sharedState, indx);
       setBC(rho_micro[m],     "Density",      patch, d_sharedState, indx);
@@ -1471,12 +1482,12 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       //__________________________________
       //  Adjust pressure and Temp field if g != 0
       //  so fields are thermodynamically consistent.
-      if ((grav.x() !=0 || grav.y() != 0.0 || grav.z() != 0.0))  {
-        hydrostaticPressureAdjustment(patch,
-                                      rho_micro[SURROUND_MAT], press_CC);
+      if (grav.length() >0.0)  {
+        hydrostaticPressureAdjustment(patch, rho_micro[d_surroundingMatl_indx],
+                                      press_CC);
 
-        setBC(press_CC,  rho_micro, placeHolder,
-            "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
+        setBC(press_CC,  rho_micro, placeHolder, d_surroundingMatl_indx,
+              "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
 
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
         double gamma = ice_matl->getGamma();
@@ -1812,7 +1823,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     Lodi_vars_pressBC* lv = new Lodi_vars_pressBC(0);
     lv->setLodiBcs = false;
  
-    setBC(press_new,   rho_micro, placeHolder,
+    setBC(press_new,   rho_micro, placeHolder, d_surroundingMatl_indx,
           "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, lv);
     delete lv;
     
@@ -2510,7 +2521,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       lodi_getVars_pressBC(  patch, lv, lb, d_sharedState, old_dw, new_dw);
     } 
     
-    setBC(press_CC, placeHolder, sp_vol_CC, 
+    setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw, lv);
           
     delete lv;                      
