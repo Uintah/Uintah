@@ -445,8 +445,13 @@ Dpy::checkGuiFlags()
   if(animate && scene->animate) {
     // Do all the regular animated objects.
     Array1<Object*> & objects = scene->animateObjects_;
+    double current_seconds = SCIRun::Time::currentSeconds();
     for( int num = 0; num < objects.size(); num++ ) {
-      objects[num]->animate(SCIRun::Time::currentSeconds(), changed);
+      objects[num]->animate(current_seconds, changed);
+    }
+    Array1<Material*>& materials = scene->animateMaterials_;
+    for( int num = 0; num < materials.size(); num++ ) {
+      materials[num]->animate(current_seconds, changed);
     }
     // Do the special objects that require bounding box mojo.
     Array1<Object*> & dobjects = scene->dynamicBBoxObjects_;
@@ -454,7 +459,7 @@ Dpy::checkGuiFlags()
     for( int num = 0; num < dobjects.size(); num++ ) {
       bbox1.reset();
       dobjects[num]->compute_bounds(bbox1,1E-5);
-      dobjects[num]->animate(SCIRun::Time::currentSeconds(), changed);
+      dobjects[num]->animate(current_seconds, changed);
       Grid2 *anim_grid = dobjects[num]->get_anim_grid();
       if (anim_grid) {
         bbox2.reset();
