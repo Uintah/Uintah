@@ -75,7 +75,7 @@ ColorMap::ColorMap(int nlevels, double min, double max)
     units(),
     min_(min),
     max_(max),
-    colors_(nlevels),
+    colors_(),
     scaled_p_(false),
     blend_p_(false)
 {
@@ -106,7 +106,7 @@ ColorMap::ColorMap(const ColorMap& copy)
     rawRGBA_(0),
     min_(copy.min_),
     max_(copy.max_),
-    colors_(copy.colors_),
+    colors_(),
     scaled_p_(copy.scaled_p_),
     blend_p_(copy.blend_p_)
 {
@@ -125,7 +125,7 @@ ColorMap::ColorMap(const vector<Color>& rgb,
    rawRGBA_(0),
    min_(-1),
    max_(1),
-   colors_(rgb.size()),
+   colors_(),
    scaled_p_(false),
    blend_p_(false)
 {
@@ -208,7 +208,7 @@ ColorMap::Build1d(const int size)
       C0 = rawRampColor_[cIdx];
       C1 = rawRampColor_[cIdx+1];
     }
-    
+
     if (aIdx < aSize && t >= AT1) { 
       aIdx++;
       AT0 = rawRampAlphaT_[aIdx];
@@ -237,6 +237,10 @@ ColorMap::SetRaw(const vector<Color>& rgb,
 
 ColorMap::~ColorMap()
 {
+  if (rawRGBA_)
+    delete[] rawRGBA_;
+  
+  colors_.clear();
 }
 
 
