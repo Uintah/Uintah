@@ -1,6 +1,14 @@
 #include <Packages/rtrt/Core/Bezier.h>
 
 using namespace rtrt;
+using namespace SCIRun;
+
+Persistent* bezier_maker() {
+  return new Bezier();
+}
+
+// initialize the static member type_id
+PersistentTypeID Bezier::type_id("Bezier", "Object", bezier_maker);
 
 Bezier::Bezier(Material *mat, Mesh *m, 
 	       double u0, double u1,
@@ -40,3 +48,38 @@ void Bezier::preprocess(double, int&, int& scratchsize)
   scratchsize=Max(scratchsize, control->get_scratchsize());
 }
 
+const int BEZIER_VERSION = 1;
+
+void 
+Bezier::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Bezier", BEZIER_VERSION);
+  Object::io(str);
+  SCIRun::Pio(str, control);
+  SCIRun::Pio(str, local);
+  SCIRun::Pio(str, ne);
+  SCIRun::Pio(str, nw);
+  SCIRun::Pio(str, se);
+  SCIRun::Pio(str, sw);
+  SCIRun::Pio(str, bbox);
+  SCIRun::Pio(str, isleaf);
+  SCIRun::Pio(str, ustart);
+  SCIRun::Pio(str, ufinish);
+  SCIRun::Pio(str, vstart);
+  SCIRun::Pio(str, vfinish);
+  SCIRun::Pio(str, uguess);
+  SCIRun::Pio(str, vguess);
+ str.end_class();
+}
+
+namespace SCIRun {
+void Pio(SCIRun::Piostream& stream, rtrt::Bezier*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Bezier::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Bezier*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

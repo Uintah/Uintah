@@ -6,11 +6,18 @@
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Array2.h>
 #include <Packages/rtrt/Core/UVMapping.h>
-
+#include <sci_config.h>
 #include <stdlib.h>
 
+namespace rtrt {
+template<class A, class B> class Heightfield;
+template<class T> struct HMCell;
+}
+
 namespace SCIRun {
-  class WorkQueue;
+//template<class A, class B> void Pio(Piostream&, rtrt::Heightfield<A,B>*&);
+class WorkQueue;
+template<class T> Pio(Piostream&, rtrt::HMCell<T>&);
 }
 
 namespace rtrt {
@@ -50,6 +57,7 @@ public:
   double* iysize;
   B* macrocells;
   WorkQueue* work;
+  int np_;
   void brickit(int);
   void parallel_calc_mcell(int);
   char* filebase;
@@ -75,9 +83,10 @@ public:
   Heightfield(Material* matl,
 	      char* filebase, int depth, int np);
   Heightfield(Material* matl, Heightfield<A,B>* share);
+  Heightfield() : Object(0) {};
   virtual ~Heightfield();
 
-  virtual void io(SCIRun::Piostream &stream);
+
 
   virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
@@ -85,6 +94,12 @@ public:
   virtual void compute_bounds(BBox&, double offset);
   virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
   virtual void uv(UV& uv, const Point&, const HitInfo& hit);
+
+  static  SCIRun::PersistentTypeID type_id;
+  static SCIRun::Persistent* maker();
+  virtual void io(SCIRun::Piostream &stream);
+  //friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Heightfield<A,B>*&);
+  static const string type_name();
 };
 }
 

@@ -19,7 +19,7 @@ SCIRun::Persistent* uvca_maker() {
 }
 
 // initialize the static member type_id
-SCIRun::PersistentTypeID UVCylinderArc::type_id("UVCylinderArc", "UVMapping", 
+SCIRun::PersistentTypeID UVCylinderArc::type_id("UVCylinderArc", "Object", 
 						uvca_maker);
 
 UVCylinderArc::UVCylinderArc(Material* matl, const Point& bottom, 

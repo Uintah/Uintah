@@ -190,8 +190,9 @@ void Pio(Piostream& stream, rtrt::Array1<T>& array)
     array.grow(size);
   }
   T* obj_arr = array.get_objs();
-  for(int i=0;i<size;i++)
+  for(int i = 0; i < size; i++) {
     Pio(stream, obj_arr[i]);
+  }
   stream.end_class();
 }
 

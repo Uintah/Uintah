@@ -21,6 +21,7 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <iostream>
 #include <stdlib.h>
@@ -39,8 +40,29 @@ PersistentTypeID Scene::type_id("Scene", "Persistent", scene_maker);
 
 Scene::Scene() : 
   work("frame tiles"),
+  maxdepth(0),
+  base_threshold(0),
+  full_threshold(0),
+  xoffset(0),
+  yoffset(0),
+  xtilesize(0),
+  ytilesize(0),
+  no_aa(false),
+  shadowobj(0),
+  stereo(0),
+  animate(0),
   ref_cnt(0),
-  lock("rtrt::Scene lock")
+  lock("rtrt::Scene lock"),
+  obj(0),
+  mainGroup_(0),
+  mainGroupWithLights_(0),
+  lightsGroup_(0),
+  camera0(0),
+  camera1(0),
+  image0(0),
+  image1(0),
+  background(0),
+  ambient_environment_map(0)
 {}
 
 Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
@@ -51,6 +73,17 @@ Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
 	     double ambientscale,
 	     AmbientType ambient_mode) : 
   work("frame tiles"),
+  maxdepth(0),
+  base_threshold(0),
+  full_threshold(0),
+  xoffset(0),
+  yoffset(0),
+  xtilesize(0),
+  ytilesize(0),
+  no_aa(false),
+  shadowobj(0),
+  stereo(0),
+  animate(0),
   ambient_mode(ambient_mode),
   ambientScale_(ambientscale),
   ref_cnt(0),
@@ -138,13 +171,24 @@ Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
 	     double ambientscale,
 	     AmbientType ambient_mode) :     
   work("frame tiles"),
+  maxdepth(0),
+  base_threshold(0),
+  full_threshold(0),
+  xoffset(0),
+  yoffset(0),
+  xtilesize(0),
+  ytilesize(0),
+  no_aa(false),
+  shadowobj(0),
+  stereo(0),
+  animate(0),
   ambient_mode(ambient_mode),
   ambientScale_(ambientscale),
   ref_cnt(0),
   lock("rtrt::Scene lock"),
   soundVolume_(50),
   obj(ob), 
-  mainGroup_(ob ),
+  mainGroup_(ob),
   camera0(camera0), 
   image0(0), 
   image1(0),

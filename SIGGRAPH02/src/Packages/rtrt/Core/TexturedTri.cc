@@ -24,7 +24,7 @@ SCIRun::Persistent* maker() {
 }
 
 // initialize the static member type_id
-SCIRun::PersistentTypeID TexturedTri::type_id("TexturedTri", "UVMapping", 
+SCIRun::PersistentTypeID TexturedTri::type_id("TexturedTri", "Object", 
 					      maker);
 namespace rtrt {
 TexturedTri::TexturedTri(Material* matl, const Point& p1, const Point& p2,

@@ -127,11 +127,13 @@ Object::io(SCIRun::Piostream &str)
 namespace SCIRun {
 void Pio(SCIRun::Piostream& stream, rtrt::Object*& obj)
 {
-  SCIRun::Persistent* pobj=obj;
-  stream.io(pobj, rtrt::Object::type_id);
-  if(stream.reading()) {
-    obj=dynamic_cast<rtrt::Object*>(pobj);
-    //ASSERT(obj != 0)
+  SCIRun::Persistent* p;
+  if (stream.reading()) {
+    stream.io(p, rtrt::Object::type_id);
+    obj=dynamic_cast<rtrt::Object*>(p);
+  } else {
+    p = obj;
+    stream.io(p, rtrt::Object::type_id);
   }
 }
 } // end namespace SCIRun

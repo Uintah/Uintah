@@ -209,19 +209,16 @@ ImageMaterial::io(SCIRun::Piostream &str)
 {
   str.begin_class("ImageMaterial", IMAGEMATERIAL_VERSION);
   Material::io(str);
-  Mode &tmp = umode;
-  SCIRun::Pio(str, (unsigned int&)tmp);
-  Mode &tmp2 = vmode;
-  SCIRun::Pio(str, (unsigned int&)tmp2);
+  SCIRun::Pio(str, (unsigned int&)umode);
+  SCIRun::Pio(str, (unsigned int&)vmode);
   SCIRun::Pio(str, Kd);
   SCIRun::Pio(str, specular);
   SCIRun::Pio(str, specpow);
   SCIRun::Pio(str, refl);
   SCIRun::Pio(str, transp);
-// MARTY: FIX ME
-//  SCIRun::Pio(str, image);
+  rtrt::Pio(str, image);
   SCIRun::Pio(str, outcolor);
-  SCIRun::Pio(str, valid_);
+  SCIRun::Pio(str, valid_);    
   SCIRun::Pio(str, filename_);
   str.end_class();
 }

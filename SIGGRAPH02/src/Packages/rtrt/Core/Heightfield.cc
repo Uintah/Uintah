@@ -30,10 +30,31 @@ using SCIRun::Thread;
 
 extern Mutex io_lock_;
 
+
+template<class A, class B>
+SCIRun::Persistent*
+Heightfield<A,B>::maker() {
+  return new Heightfield<A,B>;
+}
+
+template<class A, class B>
+SCIRun::PersistentTypeID
+Heightfield<A,B>::type_id(Heightfield<A,B>::type_name(), "Object", maker);
+
+
+template<class A, class B>
+const string
+Heightfield<A,B>::type_name() 
+{
+  static const string name("Heightfield<A,B>");
+  // hack type_name needs to be supported for more than one templated type!
+  return name;
+}
+
 template<class A, class B>
 Heightfield<A,B>::Heightfield(Material* matl, char* filebase,
 			      int depth, int np)
-    : Object(matl,this), depth(depth), filebase(filebase)
+  : Object(matl,this), depth(depth), filebase(filebase), np_(np)
 {
     this->filebase=strdup(filebase);
     if(depth<1)
@@ -930,7 +951,74 @@ void Heightfield<A,B>::uv(UV& uv, const Point&p, const HitInfo&)
     uv.set(v,u);
 
 }
+
+const int HEIGHTFIELD_VERSION = 1;
+
 template<class A, class B>
-void Heightfield<A,B>::io(SCIRun::Piostream &stream) {
-  ASSERTFAIL("not implemented");
+void Heightfield<A,B>::io(SCIRun::Piostream &str) 
+{
+  str.begin_class("Heightfield<A,B>", HEIGHTFIELD_VERSION);
+  Object::io(str);
+  UVMapping::io(str);
+  SCIRun::Pio(str, min);
+  SCIRun::Pio(str, datadiag);
+  SCIRun::Pio(str, hierdiag);
+  SCIRun::Pio(str, ihierdiag);
+  SCIRun::Pio(str, sdiag);
+  SCIRun::Pio(str, nx);
+  SCIRun::Pio(str, ny);
+  SCIRun::Pio(str, x1);
+  SCIRun::Pio(str, y1);
+  SCIRun::Pio(str, x2);
+  SCIRun::Pio(str, y2);
+  SCIRun::Pio(str, maxx);
+  SCIRun::Pio(str, minx);
+  SCIRun::Pio(str, maxy);
+  rtrt::Pio(str, indata);
+  rtrt::Pio(str, blockdata);
+  SCIRun::Pio(str, datamin);
+  SCIRun::Pio(str, datamax);
+  SCIRun::Pio(str, depth);
+
+  if (str.reading()) {
+    xsize = new int[depth];
+    ysize = new int[depth];
+    ixsize = new double[depth];
+    iysize = new double[depth];
+    if(depth==1){
+      macrocells=0;
+    } else {
+      macrocells=new B[depth+1];
+    }
+  }
+  for (int i = 0; i < depth; i++) {
+    SCIRun::Pio(str, xsize[i]);
+    SCIRun::Pio(str, ysize[i]);
+    SCIRun::Pio(str, ixsize[i]);
+    SCIRun::Pio(str, iysize[i]);
+  }
+  for (int i = 0; i < depth + 1; i++) {
+    rtrt::Pio(str, macrocells[i]);
+  }
+  SCIRun::Pio(str, np_);
+
+  if(str.reading()) {
+    int bnp=np_>8?8:np_;
+    work=new WorkQueue("Bricking"); // , nx, bnp, false, 5);
+    work->refill(nx, bnp, 5);
+    Parallel<Heightfield<A,B> > phelper(this, &Heightfield<A,B>::brickit);
+    Thread::parallel(phelper, bnp, true);
+    delete work;
+  }
+  str.end_class();
+}
+
+namespace SCIRun {
+template<class T> Pio(Piostream&str, rtrt::HMCell<T>&o)
+{
+  str.begin_cheap_delim();
+  SCIRun::Pio(str, o.min);
+  SCIRun::Pio(str, o.max);
+  str.end_cheap_delim();
+}
 }
