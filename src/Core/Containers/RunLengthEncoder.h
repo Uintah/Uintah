@@ -120,7 +120,7 @@ private:
   struct Group
   {
     Group() // default empty group
-      : length_(0), data_(1) {}
+      : data_(1), length_(0) {}
     
     // make a Run
     Group(const RunSpec<T, SequenceRule>& run)
