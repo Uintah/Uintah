@@ -58,6 +58,7 @@ itcl_class ConfigBase {
 	} else {
 	    set rebuild_all_symlinks 0
 	}
+	exec mv config.values config.values.bak
 	set cv [open config.values w]
 	set ch [open config.h.tmp w]
 	set cm [open config_imake.h.tmp w]

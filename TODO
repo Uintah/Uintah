@@ -1,16 +1,9 @@
 
-0) itcl classes for Modules
-DONE   - Fix graphs on modules
-   - Fix Streamline
-   - more testing
-   - Bugs in LinkVar with itcl
-1) Make Streamline Module use new widgets
-2) Rewrite Streamline/Streamsurf modules
+Fix convert directories
+Streamline...
 3) Add generation numbers to Geom
 4) Figure out what to do about multiple parented Geoms
 5) Use opengl display lists to optimize geoms
-
-
 
 Convert directory
 Checkin procedures to update work_lib
