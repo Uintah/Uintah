@@ -71,7 +71,7 @@ public:
    //////////
    // Insert Documentation Here:
    virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			     const SimulationStateP&);
+			     SimulationStateP&);
 
    virtual void scheduleInitialize(const LevelP& level,
 				   SchedulerP&,
@@ -167,6 +167,9 @@ private:
 
 //
 // $Log$
+// Revision 1.14  2000/04/24 21:04:24  sparker
+// Working on MPM problem setup and object creation
+//
 // Revision 1.13  2000/04/20 23:20:26  dav
 // updates
 //

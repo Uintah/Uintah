@@ -1,127 +1,76 @@
 #include "SphereGeometryPiece.h"
 #include <SCICore/Geometry/Vector.h>
+#include "GeometryPieceFactory.h"
+#include <Uintah/Grid/Box.h>
+#include <Uintah/Interface/ProblemSpec.h>
+
+using namespace Uintah::Components;
+using SCICore::Geometry::Vector;
 
 
-SphereGeometryPiece::SphereGeometryPiece()
+SphereGeometryPiece::SphereGeometryPiece(ProblemSpecP& ps)
 {
-}
 
-SphereGeometryPiece::SphereGeometryPiece(const double r, const  Point o):
-  d_origin(o),d_radius(r)
-{
+  Point orig;
+  double rad;
+
+  ps->require("origin",orig);
+  ps->require("radius",rad);
+
+  d_origin = orig;
+  d_radius = rad;
 }
 
 SphereGeometryPiece::~SphereGeometryPiece()
 {
 }
 
-int SphereGeometryPiece::checkShapesPositive(Point check_point, 
-					     int &np, int piece_num,
-					     Vector part_spacing,
-					     int ppold)
+bool SphereGeometryPiece::inside(const Point& p) const
 {
- 
-  int pp = 0;
-  Point point_diff(check_point - d_origin);
-  Vector diff(point_diff.x(),point_diff.y(),point_diff.z());
-  double len = diff.length();
-  double len_sq = len*len;
-  double radius_sq = d_radius*d_radius;
+  Vector diff = p - d_origin;
 
-   // Positive space piece
+  if (diff.length() > d_radius)
+    return false;
+  else 
+    return true;
   
-
-  if (len_sq <= radius_sq) {
-    pp = 3;
-    d_in_piece=piece_num;
-  }
-  
-  
-  return pp;
 }
 
-int SphereGeometryPiece::checkShapesNegative(Point check_point, 
-					     int &np, int piece_num,
-					     Vector part_spacing,
-					     int ppold)
+Box SphereGeometryPiece::getBoundingBox() const
 {
+    Point lo(d_origin.x()-d_radius,d_origin.y()-d_radius,
+	   d_origin.z()-d_radius);
 
-  int pp = 0;
-  Point point_diff(check_point - d_origin);
-  Vector diff(point_diff.x(),point_diff.y(),point_diff.z());
-  double len = diff.length();
-  double len_sq = len*len;
-  double radius_sq = d_radius*d_radius;
+    Point hi(d_origin.x()+d_radius,d_origin.y()+d_radius,
+	   d_origin.z()+d_radius);
 
- 
-  // Negative space piece
-
-  if (len_sq < radius_sq) {
-    pp = -30;
-    np = piece_num;
-  }
-  
-  
-  return pp;
-}
-
-void SphereGeometryPiece::computeNorm(Vector &norm, Point part_pos, 
-					      int sf[7], int inPiece, int &np)
-{
-
-  Vector dir(0.0,0.0,0.0);
-  norm = Vector(0.0,0.0,0.0);
-  int small = 1;
-
-  for(int i=1;i<=6;i++) {
-    if(sf[i] < small) { 
-      small = sf[i]; 
-    }
-  }
-  
-  // Not a surface point
-  if(small == 1){ 
-    return; 
-  }		
-   
-  for(int i=1;i<=6;i++){
-    if(sf[i]==(0)){	
-      // sphere's surface
-      Point tmp = Point((part_pos - d_origin)*2.);
-      dir = Vector(tmp.x(),tmp.y(),tmp.z());
-      dir.normalize();
-      norm+=dir;
-    }
-  }
-  
-  // The point is on the surface of a "negative" object.
-  // Get the geometry information for the negative object so we can determine
-  // a surface normal.
-
-  if(small < -10) {	
-    for(int i=1;i<=6;i++){
-      if(sf[i]==(-30)){		
-	// sphere's surface
-	Point tmp = Point((part_pos - d_origin)*(-2.));
-	dir = Vector(tmp.x(),tmp.y(),tmp.z());
-	dir.normalize();
-	norm+=dir;
-      }
-    }
-  }
-  
-  norm.normalize();
+    return Box(lo,hi);
 
 }
-
 
 // $Log$
-// Revision 1.2  2000/04/14 03:29:14  jas
-// Fixed routines to use SCICore's point and vector stuff.
+// Revision 1.3  2000/04/24 21:04:32  sparker
+// Working on MPM problem setup and object creation
 //
-// Revision 1.1  2000/04/14 02:05:46  jas
-// Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
-// Tri.  This made the GeometryObject class simpler since many of the
-// methods are now relegated to the GeometryPiece subclasses.
+// Revision 1.5  2000/04/20 22:58:14  sparker
+// Resolved undefined symbols
+// Trying to make stuff work
+//
+// Revision 1.4  2000/04/20 22:37:14  jas
+// Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
+// to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).
+//
+// Revision 1.3  2000/04/20 18:56:23  sparker
+// Updates to MPM
+//
+// Revision 1.2  2000/04/20 15:09:26  jas
+// Added factory methods for GeometryObjects.
+//
+// Revision 1.1  2000/04/19 21:31:08  jas
+// Revamping of the way objects are defined.  The different geometry object
+// subtypes only do a few simple things such as testing whether a point
+// falls inside the object and also gets the bounding box for the object.
+// The constructive solid geometry objects:union,difference, and intersection
+// have the same simple operations.
 //
 

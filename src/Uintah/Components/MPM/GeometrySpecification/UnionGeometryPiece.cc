@@ -1,37 +1,43 @@
-#include "IntersectionGeometryObject.h"
+#include "UnionGeometryPiece.h"
 #include <SCICore/Geometry/Point.h>
-#include "GeometryObjectFactory.h"
+#include "GeometryPieceFactory.h"
 
 using SCICore::Geometry::Point;
-using SCICore::Geometry::Max;
 using SCICore::Geometry::Min;
+using SCICore::Geometry::Max;
 
 using namespace Uintah::Components;
+using namespace std;
 
-
-IntersectionGeometryObject::IntersectionGeometryObject(ProblemSpecP &ps) 
+UnionGeometryPiece::UnionGeometryPiece(ProblemSpecP &ps) 
 {
-  GeometryObjectFactory::create(ps,child);
-
+  // Need to loop through all the geometry pieces
+  GeometryPieceFactory::create(ps,child);
+  
 }
 
-IntersectionGeometryObject::~IntersectionGeometryObject()
+UnionGeometryPiece::UnionGeometryPiece(const vector<GeometryPiece*>& child)
+   : child(child)
+{
+}
+
+UnionGeometryPiece::~UnionGeometryPiece()
 {
   for (int i = 0; i < child.size(); i++) {
     delete child[i];
   }
 }
 
-bool IntersectionGeometryObject::inside(const Point &p) const 
+bool UnionGeometryPiece::inside(const Point &p) const 
 {
   for (int i = 0; i < child.size(); i++) {
-    if (!child[i]->inside(p))
-      return false;
+    if (child[i]->inside(p))
+      return true;
   }
-  return true;
+  return false;
 }
 
-Box IntersectionGeometryObject::getBoundingBox() const
+Box UnionGeometryPiece::getBoundingBox() const
 {
 
   Point lo,hi;
@@ -49,4 +55,3 @@ Box IntersectionGeometryObject::getBoundingBox() const
 
   return Box(lo,hi);
 }
-

@@ -5,22 +5,24 @@
 
 SRCDIR   := Uintah/Components/MPM/GeometrySpecification
 
-SRCS     += $(SRCDIR)/GeometryGrid.cc $(SRCDIR)/GeometryObject.cc \
+SRCS     += $(SRCDIR)/GeometryObject.cc \
 	$(SRCDIR)/GeometryPiece.cc \
-	$(SRCDIR)/Problem.cc $(SRCDIR)/BoxGeometryPiece.cc \
-	$(SRCDIR)/CylinderGeometryPiece.cc $(SRCDIR)/TriGeometryPiece.cc \
-	$(SRCDIR)/SphereGeometryPiece.cc  $(SRCDIR)/BoxGeometryObject.cc \
-	$(SRCDIR)/SphereGeometryObject.cc \
-	$(SRCDIR)/CylinderGeometryObject.cc \
-	$(SRCDIR)/TriGeometryObject.cc \
-	$(SRCDIR)/UnionGeometryObject.cc \
-	$(SRCDIR)/DifferenceGeometryObject.cc \
-	$(SRCDIR)/IntersectionGeometryObject.cc \
-	$(SRCDIR)/GeometryObjectFactory.cc
+	$(SRCDIR)/Problem.cc \
+	$(SRCDIR)/SphereGeometryPiece.cc  $(SRCDIR)/BoxGeometryPiece.cc \
+	$(SRCDIR)/SphereGeometryPiece.cc \
+	$(SRCDIR)/CylinderGeometryPiece.cc \
+	$(SRCDIR)/TriGeometryPiece.cc \
+	$(SRCDIR)/UnionGeometryPiece.cc \
+	$(SRCDIR)/DifferenceGeometryPiece.cc \
+	$(SRCDIR)/IntersectionGeometryPiece.cc \
+	$(SRCDIR)/GeometryPieceFactory.cc
 
 
 #
 # $Log$
+# Revision 1.6  2000/04/24 21:04:34  sparker
+# Working on MPM problem setup and object creation
+#
 # Revision 1.5  2000/04/20 18:56:23  sparker
 # Updates to MPM
 #

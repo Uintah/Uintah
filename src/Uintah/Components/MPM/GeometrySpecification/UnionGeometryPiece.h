@@ -2,7 +2,7 @@
 #define __UNION_GEOMETRY_OBJECT_H__      
 
 
-#include "GeometryObject.h"
+#include "GeometryPiece.h"
 #include <vector>
 #include <Uintah/Grid/Box.h>
 #include <SCICore/Geometry/Point.h>
@@ -16,14 +16,14 @@ namespace Components {
 /**************************************
 	
 CLASS
-   UnionGeometryObject
+   UnionGeometryPiece
 	
-   Creates a collection of geometry objects from the xml input 
+   Creates a collection of geometry pieces from the xml input 
    file description. 
 	
 GENERAL INFORMATION
 	
-   UnionGeometryObject.h
+   UnionGeometryPiece.h
 	
    John A. Schmidt
    Department of Mechanical Engineering
@@ -34,14 +34,14 @@ GENERAL INFORMATION
  
 	
 KEYWORDS
-   UnionGeometryObject BoundingBox inside
+   UnionGeometryPiece BoundingBox inside
 	
 DESCRIPTION
-   Creates a union of different geometry objects from the xml input 
+   Creates a union of different geometry pieces from the xml input 
    file description.
-   Requires multiple inputs: specify multiple geometry objects.  
+   Requires multiple inputs: specify multiple geometry pieces.  
    There are methods for checking if a point is inside the union of 
-   objects and also for determining the bounding box for the collection.
+   pieces and also for determining the bounding box for the collection.
    The input form looks like this:
        <union>
          <box>
@@ -59,37 +59,45 @@ WARNING
 	
 ****************************************/
 
-class UnionGeometryObject : public GeometryObject {
+class UnionGeometryPiece : public GeometryPiece {
 
  public:
   //////////
   // Constructor that takes a ProblemSpecP argument.   It reads the xml 
-  // input specification and builds the intersection of geometry objects.
-  UnionGeometryObject(ProblemSpecP &);
+  // input specification and builds the intersection of geometry pieces.
+  UnionGeometryPiece(ProblemSpecP &);
+
+  //////////
+  // Constructor that takes an array of children. It copies the array,
+  // and assume ownership of the children.
+  UnionGeometryPiece(const std::vector<GeometryPiece*>& children);
 
   //////////
   // Destructor
-  virtual ~UnionGeometryObject();
+  virtual ~UnionGeometryPiece();
 
   //////////
-  // Determines whether a point is inside the intersection object.
+  // Determines whether a point is inside the intersection piece.
   virtual bool inside(const Point &p) const;
 
   //////////
-  // Returns the bounding box surrounding the union object.
+  // Returns the bounding box surrounding the union piece.
   virtual Box getBoundingBox() const;
 
  private:
-  std::vector<GeometryObject* > child;
+  std::vector<GeometryPiece* > child;
 
 };
 
 } //end namespace Components
 } //end namespace Uintah
 
-#endif // __UNION_GEOMETRY_OBJECT_H__
+#endif // __UNION_GEOMETRY_PIECE_H__
 
 // $Log$
+// Revision 1.1  2000/04/24 21:04:34  sparker
+// Working on MPM problem setup and object creation
+//
 // Revision 1.7  2000/04/22 18:19:11  jas
 // Filled in comments.
 //

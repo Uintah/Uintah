@@ -36,7 +36,7 @@ Arches::~Arches()
 }
 
 void Arches::problemSetup(const ProblemSpecP& params, GridP&,
-			  const SimulationStateP&)
+			  SimulationStateP&)
 {
   ProblemSpecP db = params->findBlock("CFD")->findBlock("Arches");
 
@@ -183,6 +183,9 @@ void Arches::paramInit(const ProcessorContext*,
 
 //
 // $Log$
+// Revision 1.22  2000/04/24 21:04:19  sparker
+// Working on MPM problem setup and object creation
+//
 // Revision 1.21  2000/04/20 18:56:10  sparker
 // Updates to MPM
 //

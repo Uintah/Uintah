@@ -1,5 +1,4 @@
 #include "Problem.h"
-#include "GeometryGrid.h"
 #include <Uintah/Components/MPM/BoundCond.h>
 #include <iostream>
 #include <Uintah/Interface/ProblemSpec.h>
@@ -7,8 +6,9 @@
 #include <SCICore/Geometry/Point.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Uintah/Components/MPM/GeometrySpecification/GeometryObjectFactory.h>
+#include <Uintah/Components/MPM/GeometrySpecification/GeometryPieceFactory.h>
 #include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/SimulationState.h>
 
 using Uintah::Interface::DataWarehouseP;
 using Uintah::Grid::GridP;
@@ -39,18 +39,8 @@ Problem::~Problem()
 }
 
 void Problem::preProcessor(const ProblemSpecP& prob_spec, GridP& grid,
-			   const SimulationStateP& sharedState)
+			   SimulationStateP& sharedState)
 {
-  int n;
-  int obj, piece, surf;
-  double   force[4];
-  BoundCond BCTemp;
- 
-  Point lo,hi;
-  Vector dx;
-
-  std::vector<GeometryObject *> geom_objs; // This is temporary for now.
-  
   cerr << "In the preprocessor . . ." << endl;
     
   // Search for the MaterialProperties block and then get the MPM section
@@ -59,37 +49,12 @@ void Problem::preProcessor(const ProblemSpecP& prob_spec, GridP& grid,
  
   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");  
 
-  
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
     // Extract out the type of constitutive model and the 
     // associated parameters
-
-    std::string material_type;
-    ps->require("material_type", material_type);
-    cerr << "material_type is " <<  material_type << endl;
-
-    // Loop through all of the pieces in this geometry object
-
-    int piece_num = 0;
-    for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
-	 geom_obj_ps != 0; 
-	 geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-
-      GeometryObjectFactory::create(geom_obj_ps,geom_objs);
-
-      piece_num++;
-      cerr << "piece: " << piece_num << '\n';
-      IntVector res;
-      geom_obj_ps->require("res",res);
-      cerr << piece_num << ": res: " << res << '\n';
-    }
-
-    cerr << "MPM Material creation not done\n";
-#if 0
-    MPMMaterial *mat = new MPMMaterial;
-#endif
-    
+     MPMMaterial *mat = new MPMMaterial(ps);
+     sharedState->registerMaterial(mat);
   }                                                                
       
 
@@ -133,6 +98,9 @@ void Problem::createParticles(const Region* region, DataWarehouseP& dw)
 #endif
 
 // $Log$
+// Revision 1.12  2000/04/24 21:04:32  sparker
+// Working on MPM problem setup and object creation
+//
 // Revision 1.11  2000/04/20 23:57:01  jas
 // Fixed the findBlock() and findNextBlock() to iterate through all the
 // nodes.  Now we can go thru the MPM setup without an error.  There is

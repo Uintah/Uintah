@@ -3,12 +3,15 @@
 
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/Material.h>
+#include <Uintah/Interface/ProblemSpecP.h>
+#include <vector>
 
 namespace Uintah {
   namespace Components {
-    
+    class GeometryObject;
 class ConstitutiveModel;
 using Uintah::Grid::Material;
+using Uintah::Interface::ProblemSpecP;
 
 /**************************************
 
@@ -41,23 +44,29 @@ WARNING
 
 class MPMMaterial : public Material {
 public:
-  MPMMaterial(int dwi, int vfi, ConstitutiveModel *cm);
+   MPMMaterial(ProblemSpecP&);
 
-  ~MPMMaterial();
+   ~MPMMaterial();
 
-  //////////
-  // Return correct constitutive model pointer for this material
-  ConstitutiveModel * getConstitutiveModel();
+   //////////
+   // Return correct constitutive model pointer for this material
+   ConstitutiveModel * getConstitutiveModel();
 
 private:
 
-  // Specific constitutive model associated with this material
-  ConstitutiveModel *d_cm;
+   // Specific constitutive model associated with this material
+   ConstitutiveModel *d_cm;
 
-  // Prevent copying of this class
-  // copy constructor
-  MPMMaterial(const MPMMaterial &mpmm);
-  MPMMaterial& operator=(const MPMMaterial &mpmm);
+   double d_density;
+   double d_toughness;
+   double d_thermal_cond;
+   double d_spec_heat;
+   std::vector<GeometryObject*> d_geom_objs;
+
+   // Prevent copying of this class
+   // copy constructor
+   MPMMaterial(const MPMMaterial &mpmm);
+   MPMMaterial& operator=(const MPMMaterial &mpmm);
 
 };
 
@@ -67,6 +76,9 @@ private:
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.5  2000/04/24 21:04:26  sparker
+// Working on MPM problem setup and object creation
+//
 // Revision 1.4  2000/04/20 18:56:18  sparker
 // Updates to MPM
 //

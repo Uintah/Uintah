@@ -110,11 +110,13 @@ SerialMPM::~SerialMPM()
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
-			     const SimulationStateP& sharedState)
+			     SimulationStateP& sharedState)
 {
    d_sharedState = sharedState;
    Problem prob_description;
    prob_description.preProcessor(prob_spec, grid, sharedState);
+
+   d_contactModel = new SingleVelContact();
    cerr << "SerialMPM::problemSetup not done\n";
 }
 
@@ -342,8 +344,21 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
 				   const DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw)
 {
+#if 0
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+       GeometryObject* obj = mpm_matl->getObject();
 
-  d_contactModel = new SingleVelContact();
+       int numParticles = obj->countParticles(region);
+       ParticleVariable<Point> particles;
+       new_dw->allocate(numParticles, particles, position_label, region);
+
+       obj->createParticles(particles, region);
+    }
+  }
+#endif
 }
 
 void SerialMPM::actuallyComputeStableTimestep(const ProcessorContext*,
@@ -716,6 +731,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.26  2000/04/24 21:04:24  sparker
+// Working on MPM problem setup and object creation
+//
 // Revision 1.25  2000/04/24 15:16:58  sparker
 // Fixed unresolved symbols
 //

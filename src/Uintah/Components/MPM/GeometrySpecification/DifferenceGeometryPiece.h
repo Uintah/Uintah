@@ -2,7 +2,7 @@
 #define __DIFFERENCE_GEOMETRY_OBJECT_H__      
 
 
-#include "GeometryObject.h"
+#include "GeometryPiece.h"
 #include <Uintah/Grid/Box.h>
 #include <SCICore/Geometry/Point.h>
 
@@ -16,15 +16,15 @@ namespace Components {
 /**************************************
 	
 CLASS
-   DifferenceGeometryObject
+   DifferenceGeometryPiece
 	
-   Creates the difference between two geometry objects from the xml input 
+   Creates the difference between two geometry Pieces from the xml input 
    file description. 
 
 
 GENERAL INFORMATION
 	
-   DifferenceGeometryObject.h
+   DifferenceGeometryPiece.h
 	
    John A. Schmidt
    Department of Mechanical Engineering
@@ -35,14 +35,14 @@ GENERAL INFORMATION
  
 	
 KEYWORDS
-   DifferenceGeometryObject BoundingBox inside
+   DifferenceGeometryPiece BoundingBox inside
 	
 DESCRIPTION
-   Creates the difference between two  geometry objects from the xml input 
+   Creates the difference between two  geometry Pieces from the xml input 
    file description.
-   Requires tow inputs: specify two geometry objects. The order is important.
+   Requires tow inputs: specify two geometry Pieces. The order is important.
    There are methods for checking if a point is inside the difference of 
-   objects and also for determining the bounding box for the collection.
+   Pieces and also for determining the bounding box for the collection.
    The input form looks like this:
        <difference>
          <box>
@@ -60,29 +60,29 @@ WARNING
 	
 ****************************************/
 
-class DifferenceGeometryObject : public GeometryObject {
+class DifferenceGeometryPiece : public GeometryPiece {
 
  public:
   //////////
   //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
-  // input specification and builds the union of geometry objects.
-  DifferenceGeometryObject(ProblemSpecP &);
+  // input specification and builds the union of geometry Pieces.
+  DifferenceGeometryPiece(ProblemSpecP &);
 
   //////////
   // Destructor
-  virtual ~DifferenceGeometryObject();
+  virtual ~DifferenceGeometryPiece();
 
   //////////
-  // Determines whether a point is inside the union object.
+  // Determines whether a point is inside the union Piece.
   virtual bool inside(const Point &p) const;
 
   //////////
-  // Returns the bounding box surrounding the union object.
+  // Returns the bounding box surrounding the union Piece.
   virtual Box getBoundingBox() const;
 
  private:
-  GeometryObject* left;
-  GeometryObject* right;
+  GeometryPiece* left;
+  GeometryPiece* right;
 
 
 };
@@ -90,9 +90,12 @@ class DifferenceGeometryObject : public GeometryObject {
 } // end namespace Components
 } // end namespace Uintah
 
-#endif // __DIFFERENCE_GEOMETRY_OBJECT_H__
+#endif // __DIFFERENCE_GEOMETRY_Piece_H__
 
 // $Log$
+// Revision 1.1  2000/04/24 21:04:29  sparker
+// Working on MPM problem setup and object creation
+//
 // Revision 1.5  2000/04/22 18:19:11  jas
 // Filled in comments.
 //

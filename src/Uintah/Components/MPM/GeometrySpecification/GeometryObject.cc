@@ -1,32 +1,13 @@
 
-#include <math.h>
 #include "GeometryObject.h"
-#include "BoxGeometryPiece.h"
-#include "SphereGeometryPiece.h"
-#include "CylinderGeometryPiece.h"
-#include "TriGeometryPiece.h"   
-#include <Uintah/Grid/ParticleSet.h>
-#include <Uintah/Grid/ParticleVariable.h>
-#include <Uintah/Interface/DataWarehouse.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
-using Uintah::Interface::DataWarehouseP;
-using Uintah::Grid::ParticleVariable;
-#include <fstream>
-#include <string>
-#include <iostream>
-using std::cerr;
-using std::ifstream;
-using std::string;
-using std::vector;
 
 using namespace Uintah::Components;
 
-GeometryObject::GeometryObject()
+GeometryObject::GeometryObject(GeometryPiece* piece, const IntVector& num_par)
+   : d_piece(piece), d_num_par_per_cell(num_par)
 {
 }
+
 GeometryObject::~GeometryObject()
 {
 }
@@ -394,9 +375,11 @@ void GeometryObject::fillWithParticles(vector<Material *> &materials,
 }
 
 #endif
-
   
 // $Log$
+// Revision 1.8  2000/04/24 21:04:30  sparker
+// Working on MPM problem setup and object creation
+//
 // Revision 1.7  2000/04/20 18:56:21  sparker
 // Updates to MPM
 //
