@@ -99,7 +99,7 @@ sci_getenv( const string & key )
   return value;
 }
 
-#if defined(__sgi)
+#if defined(__sgi) || defined(__alpha)
 // SGI doesn't have setenv so we make our own...
 int
 setenv(const char * name, const char * value, int overwrite )
