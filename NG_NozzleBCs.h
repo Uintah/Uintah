@@ -2,17 +2,31 @@
 #define Packages_Uintah_CCA_Components_ICE_Rieman_h
 
 #include <Packages/Uintah/Core/Labels/ICELabel.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/CircleBCData.h>
 #include <Packages/Uintah/Core/Grid/BCDataArray.h>
 #include <Packages/Uintah/Core/Grid/BoundCond.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Math/MiscMath.h>
+#include <Packages/Uintah/CCA/Ports/Output.h>
+
 
 using namespace Uintah;
 namespace Uintah {
+
+
+struct NG_BC_vars{
+  CCVariable<double> press_CC;
+  CCVariable<Vector> vel_CC;
+  CCVariable<double> rho_CC;
+  Output* dataArchiver;
+  IntVector c;
+  bool dumpNow;
+  bool setNGBcs;
+};
 
 void computeStagnationProperties(double &stag_press,
                                  double &stag_temp,
@@ -58,6 +72,7 @@ void computeStagnationProperties(double &stag_press,
           const double u1, const double p1, const double rho1,
           const double diaphragm_locaton ,
           const int probeCell,
+          NG_BC_vars* ng,
           double &press,    // at probe location
           double &Temp,
           double &rho,
@@ -71,8 +86,24 @@ void computeStagnationProperties(double &stag_press,
                        const string& bc_kind,
 			  const int mat_id,
 			  const int child,
-                       SimulationStateP& sharedState);
-                                     
+                       SimulationStateP& sharedState,
+                       NG_BC_vars* CCVars);
+
+    void addRequires_NGNozzle(Task* t, 
+                               const string& where,
+                               ICELabel* lb,
+                               const MaterialSubset* ice_matls);
+                               
+    void getVars_for_NGNozzle( DataWarehouse* old_dw,
+                               DataWarehouse* new_dw,
+                               ICELabel* lb,
+                               const Patch* patch,
+                               const int indx,
+                               const string& where,
+                               NG_BC_vars* ng);
+                               
+    bool using_NG_hack(const ProblemSpecP& prob_spec);
+                                                                
 //______________________________________________________________________
 //   Function~  setNGC_Nozzle_BC
 template<class T,class V >
@@ -85,7 +116,8 @@ void setNGC_Nozzle_BC(const Patch* patch,
                       const string& bc_kind,        //Dirichlet, Neumann, custom
 			 const int mat_id,
 			 const int child,
-                      SimulationStateP& sharedState)
+                      SimulationStateP& sharedState,
+                      NG_BC_vars* ng)
    {
   BCGeomBase* bc_geom_type = patch->getBCDataArray(face)->getChild(mat_id,child);
   cmp_type<CircleBCData> nozzle;
@@ -99,8 +131,10 @@ void setNGC_Nozzle_BC(const Patch* patch,
   //__________________________________
   // if on the x- face and inside the nozzle
   if(bc_kind == "Custom" && 
-     face == Patch::xminus && nozzle(bc_geom_type) ) {
-     
+     face == Patch::xminus && 
+     nozzle(bc_geom_type)  &&
+     ng->setNGBcs) {
+ 
     //__________________________________
     // problem specific hard coded variables
     // see fig 2 at top of NG_nozzleBCs.cc
@@ -120,16 +154,16 @@ void setNGC_Nozzle_BC(const Patch* patch,
     if(var_loc == "FC"){   // FC overlaps the diaphram location 
       probeCell = (int)ceil(diaphragm_location/dx_sg);
     }
-    
-    cout << " inside setNGC_NozzlePressure " << bc_kind 
-         << " variable " << var_desc << " variable Loc:" << var_loc<<endl;
-    cout << " probeCell " << probeCell<< endl;
+   
+    //cout << " inside setNGC_NozzlePressure " << bc_kind 
+    //     << " variable " << var_desc << " variable Loc:" << var_loc<<endl;
+    //cout << " probeCell " << probeCell<< endl;
 
     
     //__________________________________
     // compute the stagnation properties at location 4.
-    double p4, rho4, u4, t_final, notUsed;
-    computeStagnationProperties(p4,notUsed, rho4,t_final, sharedState);
+    double p4, rho4, u4, T4, t_final;
+    computeStagnationProperties(p4,T4, rho4,t_final, sharedState);
     u4 = 0.0;
    
     vector<IntVector>::const_iterator iter;
@@ -137,23 +171,28 @@ void setNGC_Nozzle_BC(const Patch* patch,
       IntVector c = *iter + offset;
       IntVector adj = *iter + IntVector(1,0,0);
       
-       // Properties at location 1 this is a complete hack right now
-      double p1 = p4/10.0;
-      double rho1 = rho4/10.0;
-      double u1 = 0.0;
-      
+       // Properties at location 1 
+      double p1   = ng->press_CC[adj];
+      double rho1 = ng->rho_CC[adj];
+      double u1   = ng->vel_CC[adj].x();
+       ng->c = c;     // cell index
+ 
+ #if 0
+      p1   = p4/10;
+      rho1 = rho4/10;
+      u1   = 0.0;
+ #endif          
+     
       
       double p, Temp, rho, vel;   // probed cell variables
-      p    = getNan();
-      Temp = getNan();
-      rho  = getNan();
-      vel  = getNan();
+
       solveRiemannProblemInterface( t_final,Length,ncells,
                               u4, p4, rho4,                                   
                               u1, p1, rho1,
                               diaphragm_location,
-                              probeCell,
+                              probeCell, ng,
                               p, Temp, rho, vel);
+                              
       if(var_desc == "Pressure"){
         q_CC[c] = V(p);
       }
@@ -167,7 +206,8 @@ void setNGC_Nozzle_BC(const Patch* patch,
         q_CC[c] = V(vel);
       }
       
-      cout << c << " " << var_desc << " " << q_CC[c] << endl;
+      cout << c << " adj " << adj << var_desc << " " << q_CC[c] 
+             << "\t\t  p1 " << p1 << "\t rho1 " << rho1 << "\t u1 " << u1 <<endl;
     }
   }
 }
