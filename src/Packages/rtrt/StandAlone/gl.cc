@@ -402,7 +402,7 @@ void MyGui::key_pressed(unsigned long key) {
     break;
 #endif
   case XK_r:
-    post_redraw();
+    redraw = true;
     break;
 //   case XK_c:
 //     child->stop();
