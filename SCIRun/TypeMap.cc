@@ -57,8 +57,9 @@ TypeMap::cloneEmpty(){
 // int .sci.cca.TypeMap.getInt(in string key, in int dflt)throws .sci.cca.TypeMismatchException
 int
 TypeMap::getInt(const ::std::string& key, int dflt){
-  cerr<<"method not implemented\n";  
-  return  dflt;
+  IntMap::iterator found=intMap.find(key);
+  if(found!=intMap.end()) return found->second;
+  return dflt;
 }
 
     
@@ -187,7 +188,7 @@ TypeMap::getBoolArray(const ::std::string& key, const ::SSIDL::array1< bool>& df
 // void .sci.cca.TypeMap.putInt(in string key, in int value)
 void
 TypeMap::putInt(const ::std::string& key, int value){
-  cerr<<"method not implemented\n";  
+  intMap.insert(IntMap::value_type(key, value));
   return;
 }
 
