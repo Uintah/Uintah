@@ -59,7 +59,7 @@ extern "C" NetSolveSHARE Module* make_SparseSolve(const string& id) {
 }
 
 SparseSolve::SparseSolve(const string& id)
-  : Module("SparseSolve", id, Source), 
+  : Module("SparseSolve", id, Source, "Matrix", "NetSolve"), 
   target_error("target_error", id, this), 
   final_error("final_error", id, this),
   final_iterations("final_iterations", id, this), 
