@@ -2141,8 +2141,7 @@ class BioImageApp {
                 -command "$this change_window_width"
             Tooltip $winlevel.ww.s "Control the window width of\nthe 2D viewers"
             bind $winlevel.ww.s <ButtonRelease> "$this execute_vol_ren_when_linked"
-            entry $winlevel.ww.e -textvariable $mods(ViewSlices)-axial-viewport0-clut_ww \
-                -relief flat
+            entry $winlevel.ww.e -textvariable $mods(ViewSlices)-axial-viewport0-clut_ww 
             bind $winlevel.ww.e <Return> "$this change_window_width 1; $this execute_vol_ren_when_linked"
             pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left -anchor n -pady 1
 
@@ -2153,8 +2152,7 @@ class BioImageApp {
                 -command "$this change_window_level"
             Tooltip $winlevel.wl.s "Control the window level of\nthe 2D viewers"
             bind $winlevel.wl.s <ButtonRelease> "$this execute_vol_ren_when_linked"
-            entry $winlevel.wl.e -textvariable $mods(ViewSlices)-axial-viewport0-clut_wl \
-                -relief flat
+            entry $winlevel.wl.e -textvariable $mods(ViewSlices)-axial-viewport0-clut_wl 
             bind $winlevel.wl.e <Return> "$this change_window_level 1; $this execute_vol_ren_when_linked"
             pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left -anchor n -pady 1
 
@@ -2454,8 +2452,7 @@ class BioImageApp {
             -command "$this change_volume_window_width_and_level"
         Tooltip $winlevel.ww.s "Control the window width of\nthe volume rendering"
         bind $winlevel.ww.s <ButtonRelease> "$this execute_vol_ren"
-        entry $winlevel.ww.e -textvariable vol_width \
-            -relief flat
+        entry $winlevel.ww.e -textvariable vol_width            
         bind $winlevel.ww.e <Return> "$this change_volume_window_width_and_level 1; $this update_planes_threshold"
         pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left -anchor n -pady 1
 
@@ -2466,8 +2463,7 @@ class BioImageApp {
             -command "$this change_volume_window_width_and_level"
         Tooltip $winlevel.wl.s "Control the window width of\nthe volume rendering"
        bind $winlevel.wl.s <ButtonRelease> "$this execute_vol_ren"
-        entry $winlevel.wl.e -textvariable vol_level \
-            -relief flat
+        entry $winlevel.wl.e -textvariable vol_level           
        bind $winlevel.wl.e <Return> "$this change_volume_window_width_and_level 1; $this update_planes_threshold"
         pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left -anchor n -pady 1
 
