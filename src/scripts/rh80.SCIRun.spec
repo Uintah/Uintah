@@ -5,6 +5,7 @@
 %define plat	rh8.0
 %define distro  Red Hat 8.0
 %define debug   opt
+%undefine	__check_files
 
 
 Name:		%{defname}
@@ -42,7 +43,8 @@ source0:	Thirdparty_install.%{version}.tar.gz
 source1:	%{name}.%{version}.tar.gz
 source2:	cmake-1.8.1-x86-linux-files.tar
 source3:	InsightToolkit-1.4.0.tar.gz
-source4:	BioTensor-otf-files.tar.gz
+source4:	SCIRun-otf-files.tar.gz
+source5:	BioTensor-otf-files.tar.gz
 #source2:	BioPSE.PKG.%{version}.tar.gz
 #source3:	MatlabInterface.PKG.%{version}.tar.gz
 #source4:	Teem.PKG.%{version}.tar.gz
@@ -71,9 +73,6 @@ rm -rf /usr/local/InsightToolkit*
 cd /usr/local
 tar -xvzf %{SOURCE3}
 	
-cd /usr/local/SCIRun/on-the-fly-libs
-tar -xvzf %{SOURCE4}
-
 #cd /usr/local/%{defname}/src/Packages
 #tar -xvzf %{SOURCE2}
 #tar -xvzf %{SOURCE3}
@@ -99,13 +98,11 @@ cd /usr/local/SCIRun/bin
 export JAVA_HOME=/usr/java/jdk1.3.1_08
 export PATH=${JAVA_HOME}/bin:${PATH}
 /usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" -with-insight="/usr/local/lib/InsightToolkit"
+cd /usr/local/SCIRun/bin/on-the-fly-libs
+tar -xvzf %{SOURCE4}
+tar -xvzf %{SOURCE5}
+cd /usr/local/SCIRun/bin/
 gmake
-
-cd /usr/local/SCIRun/bin
-export SCIRUN_DATASET=sphere
-export SCIRUN_DATA=/usr/sci/data/SCIRunData/1.20.0
-find /usr/local/SCIRun/src -name "*.net" -exec /usr/local/SCIRun/bin/scirun --nosplash -r {} \;
-rm -rf /usr/local/SCIRun/bin/snapshot*
 
 %install
 chown -R root.root /usr/local/SCIRun
