@@ -11,6 +11,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/HexVol.h>
 
 extern "C" {
 #include <Packages/CardioWave/Core/Algorithms/Vulcan.h>
@@ -23,16 +25,16 @@ namespace CardioWave {
 using namespace SCIRun;
 
 class CardioWaveSHARE SetupFVMatrix : public Module {
-	GuiDouble	sigx1_;
-	GuiDouble	sigy1_;
-	GuiDouble	sigz1_;
-	GuiDouble	sigx2_;
-	GuiDouble	sigy2_;
-	GuiDouble	sigz2_;
-	GuiString	sprfile_;
-	GuiString	volumefile_;
-	GuiInt		BW_;
-
+  GuiDouble	sigx1_;
+  GuiDouble	sigy1_;
+  GuiDouble	sigz1_;
+  GuiDouble	sigx2_;
+  GuiDouble	sigy2_;
+  GuiDouble	sigz2_;
+  GuiString	sprfile_;
+  GuiString	volumefile_;
+  GuiInt		BW_;
+  
 public:
   SetupFVMatrix(const string& id);
   virtual ~SetupFVMatrix();
@@ -54,7 +56,7 @@ SetupFVMatrix::SetupFVMatrix(const string& id)
     sprfile_("sprfile", id, this),
     volumefile_("volumefile", id, this),
     BW_("BW", id, this)
-
+  
 {
 }
 
@@ -62,122 +64,183 @@ SetupFVMatrix::~SetupFVMatrix(){
 }
 
 void SetupFVMatrix::execute(){
-	double sigx1 = sigx1_.get();
-	double sigy1 = sigy1_.get();
-	double sigz1 = sigz1_.get();
-	double sigx2 = sigx2_.get();
-	double sigy2 = sigy2_.get();
-	double sigz2 = sigz2_.get();
-	string sprfile = sprfile_.get();
-	string volumefile = volumefile_.get();
-	int BW = BW_.get();
+  double sigx1 = sigx1_.get();
+  double sigy1 = sigy1_.get();
+  double sigz1 = sigz1_.get();
+  double sigx2 = sigx2_.get();
+  double sigy2 = sigy2_.get();
+  double sigz2 = sigz2_.get();
+  string sprfile = sprfile_.get();
+  string volumefile = volumefile_.get();
+  int BW = BW_.get();
+  
+  // must find ports and have valid data on inputs
+  FieldIPort *ifib1 = (FieldIPort*)get_iport("PrimaryFiberOrientation");
+  if (!ifib1) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  
+  FieldIPort *ifib2 = (FieldIPort*)get_iport("SecondaryFiberOrientation");
+  if (!ifib2) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  
+  FieldIPort *icell = (FieldIPort*)get_iport("CellType");
+  if (!icell) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  
+  FieldOPort *omesh = (FieldOPort*)get_oport("ReorderedMesh");
+  if (!omesh) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
 
-//	FILE HANDEL IN
+  FieldHandle cellTypeH;
+  if (!icell->get(cellTypeH) || 
+      !cellTypeH.get_rep())
+    return;
+  
+  FieldHandle primFiberOrientH;
+  if (!ifib1->get(primFiberOrientH) || 
+      !primFiberOrientH.get_rep())
+    return;
+  
+  FieldHandle secFiberOrientH;
+  if (!ifib2->get(secFiberOrientH) || 
+      !secFiberOrientH.get_rep())
+    return;
+  
+#if 0
+  if (primFiberOrientH->mesh()->generation != cellTypeH->mesh()->generation ||
+      secFiberOrientH->mesh()->generation != cellTypeH->mesh()->generation) {
+    cerr << "SetupFVMatrix Error -- input fields have to have the same mesh.\n";
+    return;
+  }
+#endif
 
-	MESH * mesh;
+  HexVol<Vector> *fo1 = dynamic_cast<HexVol<Vector> *>(primFiberOrientH.get_rep());
+  HexVol<Vector> *fo2 = dynamic_cast<HexVol<Vector> *>(secFiberOrientH.get_rep());
+  HexVol<int> *ct = dynamic_cast<HexVol<int> *>(cellTypeH.get_rep());
 
-	// fill in mesh from SCIRun field
+  if (!fo1) {
+    cerr << "SetupFVMatrix Error -- PrimFiberOrientation field wasn't a HexVol<Vector>\n";
+    return;
+  }
+  if (!fo2) {
+    cerr << "SetupFVMatrix Error -- SecFiberOrientation field wasn't a HexVol<Vector>\n";
+    return;
+  }
+  if (!ct) {
+    cerr << "SetupFVMatrix Error -- CellType field wasn't a HexVol<int>\n";
+    return;
+  }
 
-/*		for(k=0; k<=zdim-1; k++){
-		for(j=0; j<=ydim-1; j++){
-		for(i=0; i<=xdim-1; i++){
-			nodenumber = i+j*xdim+k*xdim*ydim;
-			(*mesh)->vtx[nodenumber].x = i*dx;
-			(*mesh)->vtx[nodenumber].y = j*dy;
-			(*mesh)->vtx[nodenumber].z = k*dz;			
-		}
-		}
-		}
+  
+  HexVolMeshHandle m = fo1->get_typed_mesh();
+  HexVolMesh::Node::size_type nnodes;
+  HexVolMesh::Cell::size_type ncells;
+  m->size(nnodes);
+  m->size(ncells);
 
-		for(k=0; k<=zdim-2; k++){
-		for(j=0; j<=ydim-2; j++){
-		for(i=0; i<=xdim-2; i++){
-			(*mesh)->elements[numelem].vtx[0] = i+j*xdim+k*xdim*ydim;
-			(*mesh)->elements[numelem].vtx[1] = (i+1)+j*xdim+k*xdim*ydim;
-			(*mesh)->elements[numelem].vtx[2] = (i+1)+(j+1)*xdim+k*xdim*ydim;
-			(*mesh)->elements[numelem].vtx[3] = i+(j+1)*xdim+k*xdim*ydim;
-			(*mesh)->elements[numelem].vtx[4] = i+j*xdim+(k+1)*xdim*ydim;
-			(*mesh)->elements[numelem].vtx[5] = (i+1)+j*xdim+(k+1)*xdim*ydim;
-			(*mesh)->elements[numelem].vtx[6] = (i+1)+(j+1)*xdim+(k+1)*xdim*ydim;
-			(*mesh)->elements[numelem].vtx[7] = i+(j+1)*xdim+(k+1)*xdim*ydim;
-			numelem++;
-		}
-		}
-		}
+  MESH *mesh = new MESH;
+  mesh->vtx = new VERTEX[nnodes];
+  mesh->numvtx = nnodes;
+  mesh->elements = new VOLUME_ELEMENT[ncells];
+  mesh->numelement = ncells;
+  
+  // fill in mesh from SCIRun field
 
-		for(i=0; i<3; i++){
-			for(j=0; j<3; j++){
-				U[i][j] = 0.0;
-				UT[i][j] = 0.0;
-				sigma[i][j] = 0.0;
-				D[i][j] = 0.0;
-				temp[i][j] = 0.0;	
-			}
-		}
+  HexVolMesh::Node::iterator nb, ne; m->begin(nb); m->end(ne);
+  int cnt=0;
+  Point p;
 
+  while(nb != ne) {
+    m->get_center(p, *nb);
+    mesh->vtx[cnt].x = p.x();
+    mesh->vtx[cnt].y = p.y();
+    mesh->vtx[cnt].z = p.z();
 
-		printf("Enter the relative conductivity scale [longitudinal transverse sheet] in mS/cm: ");
-		scanf("%f %f %f", &sigma[0][0], &sigma[1][1], &sigma[2][2]);
-		printf("Enter the longitudinal unit vector [x y z]: ");
-		scanf("%f %f %f", &U[0][0], &U[0][1], &U[0][2]);
-		printf("Enter the transverse unit vector [x y z]: ");
-		scanf("%f %f %f", &U[1][0], &U[1][1], &U[1][2]);
+    int ctIdx = ct->fdata()[cnt];
+    Vector f1 = fo1->fdata()[*nb];
+    Vector f2 = fo2->fdata()[*nb];
+    Vector f3 = Cross(f1, f2);
+    
 
+    if (ctIdx == 0) {
+      mesh->vtx[cnt].sxx = f1.x()*sigx1*f1.x() + 
+                              f1.y()*sigy1*f1.y() + 
+                              f1.z()*sigz1*f1.z();
+      mesh->vtx[cnt].sxy = f1.x()*sigx1*f2.x() + 
+                              f1.y()*sigy1*f2.y() + 
+                              f1.z()*sigz1*f2.z();
+      mesh->vtx[cnt].sxz = f1.x()*sigx1*f3.x() + 
+                              f1.y()*sigy1*f3.y() + 
+                              f1.z()*sigz1*f3.z();
+      mesh->vtx[cnt].syy = f2.x()*sigx1*f2.x() + 
+                              f2.y()*sigy1*f2.y() + 
+                              f2.z()*sigz1*f2.z();
+      mesh->vtx[cnt].syz = f2.x()*sigx1*f3.x() + 
+                              f2.y()*sigy1*f3.y() + 
+                              f2.z()*sigz1*f3.z();
+      mesh->vtx[cnt].szz = f3.x()*sigx1*f3.x() + 
+                              f3.y()*sigy1*f3.y() + 
+                              f3.z()*sigz1*f3.z();
+      mesh->vtx[cnt].volume=0;
+    } else { // assuming type = 1
+      mesh->vtx[cnt].sxx = f1.x()*sigx2*f1.x() + 
+                              f1.y()*sigy2*f1.y() + 
+                              f1.z()*sigz2*f1.z();
+      mesh->vtx[cnt].sxy = f1.x()*sigx2*f2.x() + 
+                              f1.y()*sigy2*f2.y() + 
+                              f1.z()*sigz2*f2.z();
+      mesh->vtx[cnt].sxz = f1.x()*sigx2*f3.x() + 
+                              f1.y()*sigy2*f3.y() + 
+                              f1.z()*sigz2*f3.z();
+      mesh->vtx[cnt].syy = f2.x()*sigx2*f2.x() + 
+                              f2.y()*sigy2*f2.y() + 
+                              f2.z()*sigz2*f2.z();
+      mesh->vtx[cnt].syz = f2.x()*sigx2*f3.x() + 
+                              f2.y()*sigy2*f3.y() + 
+                              f2.z()*sigz2*f3.z();
+      mesh->vtx[cnt].szz = f3.x()*sigx2*f3.x() + 
+                              f3.y()*sigy2*f3.y() + 
+                              f3.z()*sigz2*f3.z();
+      mesh->vtx[cnt].volume=0;
+    }
+    cnt++;
+    ++nb;
+  }
+  
+  HexVolMesh::Cell::iterator cb, ce; m->begin(cb); m->end(ce);
+  HexVolMesh::Node::array_type nodes;
+  cnt=0;
 
-		dot_result = U[0][0]*U[1][0]+U[0][1]*U[1][1]+U[0][2]*U[1][2];
-		if(dot_result>0.0001){
-			printf("\n\nUnit Vectors not orthogonal!\n");
-			exit(-1);
-		}
-//		 Cross Product 
-		U[2][0]=U[0][1]*U[1][2]-U[0][2]*U[1][1]; 
-		U[2][1]=U[0][2]*U[1][0]-U[0][0]*U[1][2];
-		U[2][2]=U[0][0]*U[1][1]-U[0][1]*U[1][0];
-		printf("The sheet unit vector is [%2.2f %2.2f %2.2f].\n",U[2][0],U[2][1],U[2][2]);
+  while(cb != ce) {
+    m->get_nodes(nodes, *cb);
+    mesh->elements[cnt].vtx[0] = nodes[0];
+    mesh->elements[cnt].vtx[1] = nodes[1];
+    mesh->elements[cnt].vtx[2] = nodes[2];
+    mesh->elements[cnt].vtx[3] = nodes[3];
+    mesh->elements[cnt].vtx[4] = nodes[4];
+    mesh->elements[cnt].vtx[5] = nodes[5];
+    mesh->elements[cnt].vtx[6] = nodes[6];
+    mesh->elements[cnt].vtx[7] = nodes[7];
+    cnt++;
+    ++cb;
+  }
+    
+  compute_volumes(mesh, volumefile.c_str());
+  compute_matrix(mesh, sprfile.c_str());
+  
+  // add bandwidth minimization -- get back the permutation vector
+  //   from the permutation vector, reorder the nodes and fix the cells
+  
+  omesh->send(ct);
 
-//		 U Transpose 
-		UT[0][0] = U[0][0];
-		UT[0][1] = U[1][0];
-		UT[0][2] = U[2][0];
-		UT[1][0] = U[0][1];
-		UT[1][1] = U[1][1];
-		UT[1][2] = U[2][1];
-		UT[2][0] = U[0][2];
-		UT[2][1] = U[1][2];
-		UT[2][2] = U[2][2];
-
-		for(i=0; i<3; i++){
-			for(j=0; j<3; j++){
-				for(k=0; k<3; k++){
-					temp[i][j]=temp[i][j]+U[i][k]*sigma[k][j]; 
-				}
-			}
-		}
-
-		for(i=0; i<3; i++){
-			for(j=0; j<3; j++){
-				for(k=0; k<3; k++){
-					D[i][j]=D[i][j]+temp[i][k]*UT[k][j]; 
-				}
-			}
-		}
-
-		for(i=0;i<mesh->numvtx;i++)
-		{
-			mesh->vtx[i].sxx=D[0][0];
-			mesh->vtx[i].sxy=D[0][1];
-			mesh->vtx[i].sxz=D[0][2];			
-			mesh->vtx[i].syy=D[1][1];
-			mesh->vtx[i].syz=D[1][2];
-			mesh->vtx[i].szz=D[2][2];
-		}
-		
-*/
-	
-	compute_volumes(mesh);
-	compute_matrix(mesh);
 }
 
 } // End namespace CardioWave
-
-

@@ -14,6 +14,7 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/CreateSimpleMesh.tcl \
+	$(SRCDIR)/RemoveInteriorTets.tcl \
 	$(SRCDIR)/SetupFVMatrix.tcl \
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/CardioWave/Dataflow/GUI
 

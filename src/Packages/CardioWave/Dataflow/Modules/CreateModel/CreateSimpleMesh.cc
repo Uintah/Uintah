@@ -84,7 +84,7 @@ void CreateSimpleMesh::execute(){
 
   LatVolMesh *mesh = scinew LatVolMesh(xdim, ydim, zdim, Point(0,0,0),
 				       Point((xdim-1)*dx, (ydim-1)*dy,
-					     (ydim-1)*dy));
+					     (zdim-1)*dz));
   LatticeVol<int> *fld = scinew LatticeVol<int>(mesh, Field::NODE);
   Vector v1(fib1x, fib1y, fib1z);
   if (!v1.length()) {
