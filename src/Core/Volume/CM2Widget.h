@@ -279,7 +279,6 @@ protected:
   void			line(Array3<float> &, int, int, int, int, bool first);
   void			splat(Array3<float> &, int, int);
   Strokes		strokes_;
-  Array3<float>		pixels_;
 };
 
 } // End namespace SCIRun
