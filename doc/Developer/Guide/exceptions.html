@@ -1,0 +1,247 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+
+        <title>SCIRun Exceptions</title>
+	<!-- Changed by: Ted Dustman, 26-Feb-2002 -->
+	 <link rel=stylesheet type="text/css" href="../doc_styles.css">
+</head>
+<body>
+<!-- ******************** DOCUMENTATION HEADER ********************* -->
+<div class="banner-margins">
+<table border="0" cellspacing="0" cellpadding="0" width="100%" height="91">
+<tr>
+	<td align="center" width="%100" background="../images/banner_top_fill.jpg"><img src="../images/banner_top.jpg" width="744" height="91" border="0" usemap="#banner" /></td>
+<map name="banner">
+	<area href="http://www.sci.utah.edu" alt="Home" coords="92,62,186,83" />
+	<area href="http://software.sci.utah.edu" alt="Software" coords="193,61,289,83" />
+	<area href=".." alt="Documentation" coords="296,62,437,83" />
+	<area href="../UserGuide/usersguide" alt="User Guide" coords="449,62,544,83" />
+	<area href="../TechnicalGuide/TOC.html" alt="Technical Guide" coords="550,62,692,83" />
+</map>
+</tr>
+</table>
+</div>
+<!-- ****************** END DOCUMENTATION HEADER ******************* -->
+
+<p class="title">SCIRun Exceptions</p>
+
+<h1>Introduction</h1>
+
+<p>C++ has a facility for handling errors called <i>exceptions</i>. For more information 
+  about exceptions, see your favorite modern C++ textbook.</p>
+
+<p>If you see keywords like <b>try</b>, <b>catch</b>, and <b>throw</b>--you are 
+  seeing exceptions.</p>
+
+<p><b>Warning:</b> Exceptions are great, but are also dangerous and can be misused. 
+  To continue running your program after catching an exception, you will need 
+  to carefully ensure that resources are appropriately cleaned up. In current 
+  versions of SCIRun, we primarily use SCIRun to indicate catastrophic or near-catastrophic 
+  failure. In this mode, many of the more serious difficulties do not arise.</p>
+
+
+<h1>Exception Classes</h1>
+
+<p>All exceptions thrown in SCIRun should be derived from a common
+base class, SCIRun::Exceptions::Exception.  While this is not required
+by C++, it allows SCIRun to more intellingently report what happened
+when an exception is thrown and not caught.  This is an abstract base
+class, requiring subsequently derived exception classes to implement
+two methods: <b>message</b> which returns a user-readable explanation
+string, and <b>type</b> which returns the string name of the class.
+To avoid strong dependencies on std::string, these are implemented
+using char* instead of using std::string.</p>
+
+<p>There are several derived classes that are useful for reporting
+errors in your code:
+<ul>
+  <li><b>InternalError</b>: Report a generic error.  This should be
+      used when something has gone very wrong.
+</ul>
+
+Other exception classes will be added in the future.<p></p>
+
+<p>A few others are used by other SCIRun facilities (described in the next two 
+  sections): 
+<ul>
+  <li><b>ArrayIndexOutOfBounds</b>: Used by Array1, Array2 and Array3 to report 
+    that an array has been accessed outside of its valid range. The index, lower 
+    bound and upper bound are reported. 
+  <li><b>AssertionFailed</b>: Used by the ASSERT, ASSERTEQ and
+      ASSERTRANGE macros to indicate a failed assertion.
+</ul>
+
+<p>To use one of these, you would do something like this in your code:
+<pre>
+    throw InternalError("this is why I failed");
+</pre>
+Alternatively, you can use SCI_THROW or ASSERT (described below) for
+more functionality.<p></p>
+
+<p>You can create your own exception class by deriving from
+SCIRun::Exceptions::Exception and implementing the message and type
+methods.  InternalError is simple exception class that would make a
+good prototype if you wanted to do this.  Exceptions that are broadly
+applicable should go in SCICore/Exceptions, but others should go
+nearer where they are used.</p>
+
+<h1>SCI_THROW</h1>
+
+<p>C++ exceptions have a drawback: they unwind the call stack, which
+destroys any information which might have been useful for debugging
+the problem.  To address this issue, I created a macro called
+<b>SCI_THROW</b> (found in SCICore/Exceptions/Exception.h).  You would
+use it in a similar form to the exceptions above:
+<pre>
+    SCI_THROW(InternalError("this is why I failed"));
+</pre>
+
+This should only be used for exceptions that are not going to be
+caught by higher-level code.  Fist, SCI_THROW will display the
+exception type and the exception message strings.  On an SGI, it will
+additionally display a stack backtrace.  Next, SCI_THROW examines an
+environment variable called <b>SCI_EXCEPTIONMODE</b> which describes
+what should be done.  Here are the various options:
+<ul>
+  <li><b>dbx</b> (the default, used if SCI_EXCEPTIONMODE is not set).
+      This brings up a dbx debugger in a window and attaches it to the
+      thread that threw the exception. 
+  <li><b>cvd</b> Similar to dbx, but fires up cvd instead (prepare to
+      wait).  This is not likely to work on anything but an SGI.
+  <li><b>abort</b> Calls abort.  The abort signal will be caught in
+      the thread library, resulting in the familiar message:<br>
+resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)?
+
+  <li><b>throw</b> Does NOT print the information above, but just
+      throws the exception through the usual C++ exception mechanism.
+  <li><b>ask</b> Displays the information, and then reads a response
+      from stdin.  Press d, c, a or t for the dbx, cvd, abort and
+      throw options (respectively).
+</ul>
+
+<p>Here is a typical output from triggering SCI_THROW, with
+SCI_EXCEPTIONMODE set to "ask".
+<pre>
+An exception was thrown.
+Backtrace:
+0x3fff990fb8: processDataflowComponent
+0x3fff992144: processLibrary
+0x3fff992bf4: processPackage
+0x3fff994b68: PSECore::Dataflow::PackageDB::loadPackage(const SCICore::Containers::clString&)
+0x100159b0: main
+
+Exception type: SCICore::Exceptions::InternalError
+Exception message: asdf
+
+throw(t)/dbx(d)/cvd(c)/abort(a)? 
+</pre>
+
+<p>Inline functions will probably not show up in the stack backtrace.</p>
+
+<h1>ASSERT and Friends</h1>
+
+There is a macro in SCIRun called ASSERT (in SCICore/Util/Assert.h>,
+similar to the assert macro found in /usr/include/assert.h.  However,
+there are several additional features:
+
+<ul>
+  <li>It uses <b>SCI_THROW</b> (described above) to facilitate a more
+      flexible handling of errors.
+  <li>There are several "levels" of assertions, <b>ASSERTL1</b>, <b>ASSERTL2</b>, 
+    and <b>ASSERTL3</b>. Higher numbered assertions are more expensive to check 
+    and will be turned off in production. Optimized versions are lower numbers 
+    that are not expensive to check. There is a configuration variable that defines 
+    an assertion level: 
+    <ul>
+        <li>Level 0 - all assertions are turned off.
+	<li>Level 1 - Only the macro <b>ASSERTL1</b> will be checked,
+            all others are turned off.
+	<li>Level 2 - Only the macros <b>ASSERTL1</b> and
+            <b>ASSERTL2</b> will be checked, all others are turned
+            off. 
+	<li>Level 3 - All of the macros <b>ASSERTL1</b>,
+            <b>ASSERTL2</b> and <b>ASSERTL3</b> will be
+            checked. (lowest performance, most checking)
+       </ul>
+       To change the assertion level, use the configure flag
+       <b>--enable-assertion-level=N</b>, where N is the desired
+          assertion level (0-3).
+       <p>The macro <b>ASSERT</b> is provided as a more convenient
+          equivalent to <b>ASSERTL2</b>
+  <li>There is an <b>ASSERTEQ</b> to assert that two quantities are
+      equal.  ASSERTEQ(a, b) is functionaly equivalent to
+      ASSERT(a==b), but ASSERTEQ will report the values of <b>a</b>
+      and <b>b</b> in the failure message.  This is useful for
+      debugging.  It can be used on any type which can be printed with
+      an ostream.
+  <li>There is an <b>ASSERTNE</b> which is equivalent to ASSERT(a !=
+      b), similar to the above.
+  <li>There is an <b>ASSERTRANGE</b> macro for checking that a
+      quanitity is within a valid range.  ASSERTRANGE(q, l, h) is
+      functionally equivalent to ASSERT(c >= l && c < h).  Similar to
+      ASSERTEQ, it will print out the values of q, l and h in the
+      failure message for debugging purposes.  This macro will work on
+      any type which defines operator <, operator >= and an ostream <<
+      operator. 
+  <li>There is a <b>CHECKARRAYBOUNDS</b> macro which performs the same
+      check as ASSERTRANGE, but throws an ArrayIndexOutOfBounds
+      exception instead.
+  <li>There is an <b>ASSERTFAIL</b> statement to always fail. It would be
+      better to "throw InternalError" descibed above.  However, this
+      was provided for backwards compatibility with some old SCIRun
+      code.
+</ul>
+
+<p>Most of the <b>ASSERT*</b> statements are found in
+SCICore/Util/Assert.h, except for <b>ASSERTEQ</b>, <b>ASSERTNE</b>,
+<b>ASSERTRANGE</b> are found in SCICore/Util/FancyAssert.h. To avoid
+include file pollution, please do *not* include FancyAssert.h in any
+.h file.</p>
+
+<p>Here are several typical ASSERT statements:</p>
+<pre>
+ ASSERT(d_refCount &gt;= 0);
+ ASSERTEQ(d_refCount, 0);
+ ASSERT(mindex&lt;NumMaterials);
+</pre>
+<p>Look around the source tree for other examples.</p>
+
+<!-- ******************** DOCUMENTATION FOOTER ********************* -->
+<div class="banner-margins">
+<table border="0" cellspacing="0" cellpadding="0" height="32" width="100%">
+<tr>
+	<td align="left" background="../images/banner_bottom_fill.jpg" width="%100"><img src="../images/banner_bottom.jpg" width="444" height="32" border="0"></td>
+</tr>
+</table>
+<center><font size="-2" face="arial, helvetica, sans-serif">Scientific
+Computing and Imaging Institute &#149; 50 S. Central Campus Dr. Rm
+3490 &#149; Salt Lake City, UT 84112<br />
+
+(801) 585-1867 &#149; fax: (801) 585-6513 &#149; <a href="http://www.utah.edu/disclaimer/disclaimer_home.html">Disclaimer</a></font></center>
+</div>
+<!-- ****************** END DOCUMENTATION FOOTER ******************* -->
+
+</body>
+
+
+</html>
