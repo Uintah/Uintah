@@ -37,7 +37,7 @@ using namespace Uintah;
 
 static DebugStream cout_doing("CGSOLVER_DOING_COUT", false);
 
-#define OPT 1
+#define OPT 0               //  OPTIMIZATION GIVES THE WRONG ANSWERS
 
 void Mult(Array3<double>& B, const Array3<Stencil7>& A,
 	  const Array3<double>& X, CellIterator iter,
@@ -1227,10 +1227,6 @@ private:
 SolverParameters* CGSolver::readParameters(ProblemSpecP& params, const string& varname)
 {
 
-/*`==========TESTING==========*/
-throw InternalError("CGSolver: There's a bug in this solver when running with OPT = 1 "
-                     "Until it's fixed use hypre."); 
-/*===========TESTING==========`*/
   CGSolverParams* p = new CGSolverParams();
   if(params){
     for(ProblemSpecP param = params->findBlock("Parameters"); param != 0;
