@@ -829,7 +829,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,  gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureLabel,      gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,  gac,NGN);
-  t->requires(Task::NewDW, lb->gSp_volLabel,           gac,NGN);
   t->requires(Task::NewDW, lb->frictionalWorkLabel,    gac,NGN);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
@@ -853,7 +852,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   if(d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
-    t->requires(Task::NewDW, lb->gSp_vol_srcLabel,     gac,NGN);
     t->requires(Task::NewDW, lb->massBurnFractionLabel,gac,NGN);
   }
 
@@ -2573,7 +2571,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constNCVariable<Vector> gvelocity_star, gacceleration;
       constNCVariable<double> gTemperatureRate, gTemperature, gTemperatureNoBC;
       constNCVariable<double> dTdt, massBurnFrac, frictionTempRate;
-      constNCVariable<double> gSp_vol_src;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -2614,19 +2611,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(frictionTempRate,lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
       if(d_with_ice){
         new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
-        new_dw->get(gSp_vol_src,   lb->gSp_vol_srcLabel,     dwi,patch,gac,NGP);
         new_dw->get(massBurnFrac,  lb->massBurnFractionLabel,dwi,patch,gac,NGP);
       }
       else{
-        NCVariable<double> dTdt_create,massBurnFrac_create,gSp_vol_src_create;
+        NCVariable<double> dTdt_create,massBurnFrac_create;
         new_dw->allocateTemporary(dTdt_create,                   patch,gac,NGP);
-        new_dw->allocateTemporary(gSp_vol_src_create,            patch,gac,NGP);
         new_dw->allocateTemporary(massBurnFrac_create,           patch,gac,NGP);
         dTdt_create.initialize(0.);
-        gSp_vol_src_create.initialize(0.);
         massBurnFrac_create.initialize(0.);
         dTdt = dTdt_create;                         // reference created data
-        gSp_vol_src = gSp_vol_src_create;           // reference created data
         massBurnFrac = massBurnFrac_create;         // reference created data
       }
 
@@ -2671,7 +2664,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         Vector acc(0.0,0.0,0.0);
         double tempRate = 0.0;
         double burnFraction = 0.0;
-        double sp_vol_dt = 0.0;
 
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < flags->d_8or27; k++) {
@@ -2681,7 +2673,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]] +
                        frictionTempRate[ni[k]])   * S[k];
           burnFraction += massBurnFrac[ni[k]]     * S[k];
-          sp_vol_dt += gSp_vol_src[ni[k]]         * S[k];
         }
 
         // Update the particle's position and velocity
@@ -2690,14 +2681,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pvelocitynew[idx]    = pvelocity[idx]    + (acc - alpha*vel)*delT;
         // pxx is only useful if we're not in normal grid resetting mode.
         pxx[idx]             = px[idx]    + pdispnew[idx];
-//        if(pvelocitynew[idx].length() > 5000.0){
-//          pvelocitynew[idx] = .5*pvelocitynew[idx];
-//        }
         // If there is no adiabatic heating, add the plastic temperature
         // to the particle temperature
         pTempNew[idx]        = pTemperature[idx] + tempRate  * delT 
           + flags->d_adiabaticHeating*pPlasticTempInc[idx];
-        pSp_volNew[idx]      = pSp_vol[idx]      + sp_vol_dt * delT;
+        pSp_volNew[idx]      = pSp_vol[idx];
 
 
         double rho;
