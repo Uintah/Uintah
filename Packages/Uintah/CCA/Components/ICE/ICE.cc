@@ -50,7 +50,6 @@ static DebugStream cout_doing("ICE_DOING_COUT", false);
 
 //#define ANNULUSICE 
 #undef ANNULUSICE
-
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
 {
@@ -84,7 +83,6 @@ ICE::~ICE()
   delete lb;
   delete MIlb;
   delete d_advector;
-
 }
 
 /* ---------------------------------------------------------------------
@@ -358,12 +356,12 @@ void ICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
 
   scheduleComputePressure(                sched, patches, press_matl,
                                                           all_matls);
-  if(d_RateForm) {                                                         
-    scheduleComputeFCPressDiffRF(         sched, patches, ice_matls_sub,
-                                                          mpm_matls_sub,
-                                                          press_matl,
-                                                          all_matls);
-  }
+
+  if (d_RateForm) {                                                                 
+    schedulecomputeDivThetaVel_CC(        sched, patches, ice_matls_sub,        
+                                                          mpm_matls_sub,        
+                                                          all_matls);           
+  }  
                                                             
   scheduleComputeFaceCenteredVelocities(  sched, patches, ice_matls_sub,
                                                           mpm_matls_sub,
@@ -386,7 +384,9 @@ void ICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
                                                           ice_matls_sub,
                                                           all_matls);
 
-  scheduleAccumulateEnergySourceSinks(    sched, patches, press_matl,
+  scheduleAccumulateEnergySourceSinks(    sched, patches, ice_matls_sub,
+                                                          mpm_matls_sub,
+                                                          press_matl,
                                                           all_matls);
 
   scheduleComputeLagrangianValues(        sched, patches, all_matls);
@@ -646,23 +646,48 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
                                          const PatchSet* patches,
+                                         const MaterialSubset* ice_matls,
+                                         const MaterialSubset* mpm_matls,
                                          const MaterialSubset* press_matl,
                                          const MaterialSet* matls)
 
 {
-  Task* t;
+  Task* t;              // EQ
     cout_doing << "ICE::scheduleAccumulateEnergySourceSinks" << endl;
     t = scinew Task("ICE::accumulateEnergySourceSinks",
                      this, &ICE::accumulateEnergySourceSinks);
-  
-  t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,Ghost::None);
-  t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,Ghost::None);
-  t->requires(Task::NewDW, lb->sp_vol_CCLabel,               Ghost::None);
-  t->requires(Task::NewDW, lb->speedSound_CCLabel,           Ghost::None);
-  t->requires(Task::NewDW, lb->vol_frac_CCLabel,             Ghost::None);
+                     
   if (d_RateForm) {     //RATE FORM
-    t->requires(Task::NewDW, lb->matl_press_CCLabel,         Ghost::None);
+    cout_doing << "ICE::scheduleAccumulateEnergySourceSinks_RF" << endl;
+    t = scinew Task("ICE::accumulateEnergySourceSinks_RF",
+                       this, &ICE::accumulateEnergySourceSinks_RF);
+  }
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gn  = Ghost::None;  
+  t->requires(Task::OldDW, lb->delTLabel);
+  t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,gn);
+
+  t->requires(Task::NewDW, lb->sp_vol_CCLabel,               gn);
+  t->requires(Task::NewDW, lb->speedSound_CCLabel,           gn);
+  t->requires(Task::NewDW, lb->vol_frac_CCLabel,             gn);
+  if (d_EqForm) {       //EQ FORM
+    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,gn);
+  }
+  if (d_RateForm) {     //RATE FORM
+    t->requires(Task::NewDW, lb->matl_press_CCLabel,         gn,0);
+    t->requires(Task::NewDW, lb->f_theta_CCLabel,            gn,0);
+    t->requires(Task::NewDW, lb->rho_CCLabel,                gn,0);
+    t->requires(Task::OldDW, lb->vel_CCLabel,     ice_matls, gn,0);    
+    t->requires(Task::NewDW, lb->vel_CCLabel,     mpm_matls, gn,0);    
+    t->requires(Task::NewDW, lb->pressX_FCLabel,  press_matl,gac,1);             
+    t->requires(Task::NewDW, lb->pressY_FCLabel,  press_matl,gac,1);             
+    t->requires(Task::NewDW, lb->pressZ_FCLabel,  press_matl,gac,1);             
+    t->requires(Task::NewDW, lb->uvel_FCMELabel,             gac,1);
+    t->requires(Task::NewDW, lb->vvel_FCMELabel,             gac,1);
+    t->requires(Task::NewDW, lb->wvel_FCMELabel,             gac,1);
+    t->requires(Task::NewDW, lb->press_diffX_FCLabel,        gac,1);     
+    t->requires(Task::NewDW, lb->press_diffY_FCLabel,        gac,1);     
+    t->requires(Task::NewDW, lb->press_diffZ_FCLabel,        gac,1);     
   }
 
 #ifdef ANNULUSICE
@@ -722,28 +747,29 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
     t = scinew Task("ICE::computeLagrangianSpecificVolume",
                         this,&ICE::computeLagrangianSpecificVolume);
   }
-
-/*`==========TESTING==========*/
-//  WE MAY WANT TO GET RID OF THIS TASK SINCE IT DOES NOTHING
-  if (d_EqForm) {     // EQ FORM
-    t->requires(Task::NewDW, lb->mass_L_CCLabel,      Ghost::None);     
-    t->requires(Task::NewDW, lb->sp_vol_CCLabel,      Ghost::None);
-    t->requires(Task::NewDW, lb->rho_CCLabel,         Ghost::None);
-    t->requires(Task::NewDW, lb->created_vol_CCLabel, Ghost::None); 
+  Ghost::GhostType  gn  = Ghost::None;         
+  Ghost::GhostType  gac = Ghost::AroundCells;  
+  if (d_EqForm) {            // EQ FORM
+    t->requires(Task::NewDW, lb->mass_L_CCLabel,      gn);     
+    t->requires(Task::NewDW, lb->sp_vol_CCLabel,      gn);
+    t->requires(Task::NewDW, lb->rho_CCLabel,         gn);
+    t->requires(Task::NewDW, lb->created_vol_CCLabel, gn); 
     t->computes(lb->spec_vol_L_CCLabel);
   } 
-/*==========TESTING==========`*/
   else if (d_RateForm) {     // RATE FORM
     t->requires(Task::OldDW, lb->delTLabel);
-    t->requires(Task::NewDW, lb->rho_CCLabel,         Ghost::None);
-    t->requires(Task::NewDW, lb->sp_vol_CCLabel,      Ghost::None);
-    t->requires(Task::NewDW, lb->speedSound_CCLabel,  Ghost::None);
-    t->requires(Task::NewDW, lb->vol_frac_CCLabel,    Ghost::None);
-    t->requires(Task::OldDW, lb->temp_CCLabel,        Ghost::None);
-    t->requires(Task::NewDW, lb->Tdot_CCLabel,        Ghost::None);
-    t->requires(Task::NewDW, lb->f_theta_CCLabel,     Ghost::None);
-    t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,Ghost::None);
-    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,Ghost::None);
+    t->requires(Task::NewDW, lb->rho_CCLabel,         gn);
+    t->requires(Task::NewDW, lb->sp_vol_CCLabel,      gn);
+    t->requires(Task::NewDW, lb->speedSound_CCLabel,  gn);
+    t->requires(Task::NewDW, lb->vol_frac_CCLabel,    gn);
+    t->requires(Task::OldDW, lb->temp_CCLabel,        gn);
+    t->requires(Task::NewDW, lb->Tdot_CCLabel,        gn);
+    t->requires(Task::NewDW, lb->f_theta_CCLabel,     gn);
+    t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,gn);
+    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,gn);
+    t->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,2); 
+    t->requires(Task::NewDW, lb->vvel_FCMELabel,      gac,2); 
+    t->requires(Task::NewDW, lb->wvel_FCMELabel,      gac,2); 
     t->computes(lb->spec_vol_L_CCLabel);
     t->computes(lb->spec_vol_source_CCLabel);
   }
@@ -770,26 +796,29 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
     t=scinew Task("ICE::addExchangeToMomentumAndEnergy",
                   this, &ICE::addExchangeToMomentumAndEnergy);
   }
-
+  Ghost::GhostType  gn  = Ghost::None; 
   t->requires(Task::OldDW, d_sharedState->get_delt_label());
                                 // I C E
-  t->requires(Task::OldDW,  lb->temp_CCLabel,  ice_matls, Ghost::None);
+  t->requires(Task::OldDW,  lb->temp_CCLabel,  ice_matls, gn);
                                 // M P M 
-  t->requires(Task::NewDW,  lb->temp_CCLabel,  mpm_matls, Ghost::None);
+  t->requires(Task::NewDW,  lb->temp_CCLabel,  mpm_matls, gn);      
                                 // A L L  M A T L S
-  t->requires(Task::NewDW,  lb->mass_L_CCLabel,           Ghost::None); 
-  t->requires(Task::NewDW,  lb->mom_L_CCLabel,            Ghost::None);
-  t->requires(Task::NewDW,  lb->int_eng_L_CCLabel,        Ghost::None);
-  t->requires(Task::NewDW,  lb->sp_vol_CCLabel,           Ghost::None); 
-  t->requires(Task::NewDW,  lb->vol_frac_CCLabel,         Ghost::None);
-  if (d_RateForm) {     // RATE FORM
-    t->requires(Task::NewDW, lb->f_theta_CCLabel,         Ghost::None);  
-    t->requires(Task::NewDW, lb->sp_vol_CCLabel,          Ghost::None); 
-    t->requires(Task::NewDW, lb->rho_CCLabel,             Ghost::None); 
-    t->requires(Task::NewDW, lb->speedSound_CCLabel,      Ghost::None);         
-    t->requires(Task::NewDW, lb->int_eng_source_CCLabel,  Ghost::None);        
-    t->requires(Task::NewDW, lb->press_CCLabel,     press_matl, Ghost::None);  
-    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl, Ghost::None);  
+  t->requires(Task::NewDW,  lb->mass_L_CCLabel,           gn);      
+  t->requires(Task::NewDW,  lb->mom_L_CCLabel,            gn);      
+  t->requires(Task::NewDW,  lb->int_eng_L_CCLabel,        gn);      
+  t->requires(Task::NewDW,  lb->sp_vol_CCLabel,           gn);      
+  t->requires(Task::NewDW,  lb->vol_frac_CCLabel,         gn);      
+  if (d_RateForm) {         // RATE FORM
+    t->requires(Task::NewDW, lb->f_theta_CCLabel,         gn);      
+    t->requires(Task::NewDW, lb->sp_vol_CCLabel,          gn);      
+    t->requires(Task::NewDW, lb->rho_CCLabel,             gn);      
+    t->requires(Task::NewDW, lb->speedSound_CCLabel,      gn);         
+    t->requires(Task::NewDW, lb->int_eng_source_CCLabel,  gn);        
+    t->requires(Task::NewDW, lb->press_CCLabel,     press_matl, gn);  
+    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl, gn);
+    t->requires(Task::OldDW, lb->vel_CCLabel,       ice_matls,  gn);   
+    t->requires(Task::NewDW, lb->vel_CCLabel,       mpm_matls,  gn);   
+
   }
   t->computes(lb->Tdot_CCLabel);
   t->computes(lb->mom_L_ME_CCLabel);      
@@ -1847,22 +1876,27 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 
         term3[c] += (vol_frac[c] + created_vol[c]/vol)*sp_vol_CC[m][c]/
                                              (speedSound[c]*speedSound[c]);
-
-//        cout << c << " " << m << " " << term3[c] << " " << created_vol[c] << " " << sp_vol_CC[m][c] << endl;
       }  //iter loop 
     }  //matl loop
     delete advector;
     press_CC.initialize(0.);
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
-      delP_MassX[c]    = term1[c]/term3[c];
+      delP_MassX[c]    =  term1[c]/term3[c];
       delP_Dilatate[c] = -term2[c]/term3[c];
       press_CC[c]      = pressure[c] + delP_MassX[c] + delP_Dilatate[c];
-      press_CC[c] = max(1e-12, press_CC[c]);
+      press_CC[c]      = max(1e-12, press_CC[c]);
+/*`==========TESTING==========*/
+      //__________________________________
+      // FOR THE BAK'S SHOCK TUBE PROBLEMS
+      if(d_RateForm) {
+        press_CC[c]    = pressure[c];
+      }  
+/*==========TESTING==========`*/ 
     }
     setBC(press_CC, sp_vol_CC[SURROUND_MAT],
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw);
-
+          
    //---- P R I N T   D A T A ------  
     if (switchDebug_explicit_press) {
       ostringstream desc;
@@ -2135,11 +2169,11 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     old_dw->get(doMechOld, lb->doMechLabel);
  
     dx      = patch->dCell();
-    double delX = dx.x();
-    double delY = dx.y();
-    double delZ = dx.z();
     gravity = d_sharedState->getGravity();
-    vol     = delX * delY * delZ;
+    vol     = dx.x() * dx.y() * dx.z();
+    double areaX = dx.y() * dx.z();
+    double areaY = dx.x() * dx.z();
+    double areaZ = dx.x() * dx.y();
     constCCVariable<double>   rho_CC;
     constCCVariable<Vector>   vel_CC;
     constCCVariable<double>   vol_frac;
@@ -2190,7 +2224,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       tau_Z_FC.initialize(Vector(0.,0.,0.));
       viscosity = 0.0;
       if(ice_matl){
-        old_dw->get(vel_CC, lb->vel_CCLabel,  indx,patch,Ghost::AroundCells,2);
+        old_dw->get(vel_CC, lb->vel_CCLabel,  indx,patch,gac,2);
         viscosity = ice_matl->getViscosity();
         if(viscosity != 0.0){  
           computeTauX_Components( patch, vel_CC, viscosity, dx, tau_X_FC);
@@ -2203,6 +2237,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       if(mpm_matl){
         include_term = 0.0;
       }
+      
       //__________________________________
       //  accumulate sources
       for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
@@ -2220,13 +2255,13 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         //    X - M O M E N T U M 
         pressure_source = (pressX_FC[right]-pressX_FC[left]) * vol_frac[c];
         
-        press_force[c](0) = -pressure_source * delY * delZ; 
+        press_force[c](0) = -pressure_source * areaX; 
                
-        viscous_source=(tau_X_FC[right].x() - tau_X_FC[left].x())  *delY*delZ+
-                       (tau_Y_FC[top].x()   - tau_Y_FC[bottom].x())*delX*delZ+
-                       (tau_Z_FC[front].x() - tau_Z_FC[back].x())  *delX*delY;
+        viscous_source=(tau_X_FC[right].x() - tau_X_FC[left].x())  * areaX +
+                       (tau_Y_FC[top].x()   - tau_Y_FC[bottom].x())* areaY +
+                       (tau_Z_FC[front].x() - tau_Z_FC[back].x())  * areaZ;
 
-        mom_source[c].x( (-pressure_source * delY * delZ +
+        mom_source[c].x( (-pressure_source * areaX +
                            vol_frac[c] * viscous_source +
                            mass * gravity.x() * include_term) * delT );
 
@@ -2234,26 +2269,26 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         //    Y - M O M E N T U M
         pressure_source = (pressY_FC[top]-pressY_FC[bottom])* vol_frac[c];
          
-        press_force[c](1) = -pressure_source * delX * delZ;
+        press_force[c](1) = -pressure_source * areaY;
         
-        viscous_source=(tau_X_FC[right].y() - tau_X_FC[left].y())  *delY*delZ+
-                       (tau_Y_FC[top].y()   - tau_Y_FC[bottom].y())*delX*delZ+
-                       (tau_Z_FC[front].y() - tau_Z_FC[back].y())  *delX*delY;
+        viscous_source=(tau_X_FC[right].y() - tau_X_FC[left].y())  * areaX +
+                       (tau_Y_FC[top].y()   - tau_Y_FC[bottom].y())* areaY +
+                       (tau_Z_FC[front].y() - tau_Z_FC[back].y())  * areaZ;
 
-        mom_source[c].y( (-pressure_source * delX * delZ +
+        mom_source[c].y( (-pressure_source * areaY +
                            vol_frac[c] * viscous_source +
                            mass * gravity.y() * include_term) * delT );       
       //__________________________________
       //    Z - M O M E N T U M
         pressure_source = (pressZ_FC[front]-pressZ_FC[back]) * vol_frac[c];
         
-        press_force[c](2) = -pressure_source * delX * delY;
+        press_force[c](2) = -pressure_source * areaZ;
         
-        viscous_source=(tau_X_FC[right].z() - tau_X_FC[left].z())  *delY*delZ+
-                       (tau_Y_FC[top].z()   - tau_Y_FC[bottom].z())*delX*delZ+
-                       (tau_Z_FC[front].z() - tau_Z_FC[back].z())  *delX*delY;
+        viscous_source=(tau_X_FC[right].z() - tau_X_FC[left].z())  * areaX +
+                       (tau_Y_FC[top].z()   - tau_Y_FC[bottom].z())* areaY +
+                       (tau_Z_FC[front].z() - tau_Z_FC[back].z())  * areaZ;
 
-        mom_source[c].z( (-pressure_source * delX * delY +
+        mom_source[c].z( (-pressure_source * areaZ +
                          vol_frac[c] * viscous_source + 
                          mass * gravity.z() * include_term) * delT );
 
@@ -2274,18 +2309,18 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           //__________________________________
           //    X - M O M E N T U M 
           press_diff_source = (press_diffX_FC[right] - press_diffX_FC[left]);
-          mom_source[c].x(mom_source[c].x() +
-                        press_diff_source * delY * delZ * include_term * delT);
+          mom_source[c].x(mom_source[c].x() -
+                        press_diff_source * areaX * include_term * delT);
           //__________________________________
           //    Y - M O M E N T U M 
           press_diff_source = (press_diffY_FC[top] - press_diffY_FC[bottom]);
-          mom_source[c].y(mom_source[c].y() +
-                        press_diff_source * delX * delZ * include_term * delT);
+          mom_source[c].y(mom_source[c].y() -
+                        press_diff_source * areaY * include_term * delT);
           //__________________________________
           //    Z - M O M E N T U M 
           press_diff_source = (press_diffZ_FC[front] - press_diffZ_FC[back]);
-          mom_source[c].z(mom_source[c].z() +
-                        press_diff_source * delX * delY * include_term * delT);
+          mom_source[c].z(mom_source[c].z() -
+                        press_diff_source * areaZ * include_term * delT); 
         }
       }
       } // if doMechOld
@@ -2846,7 +2881,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         printVector(patch,1, desc.str(), "mom_L_ME", 0,mom_L_ME[m]);
         printData(  patch,1, desc.str(),"int_eng_L_ME",int_eng_L_ME[m]);
       }
-    }  
+    }
   } //patches
 }
 
@@ -2874,7 +2909,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     old_dw->get(delT, d_sharedState->get_delt_label());
 
     Vector dx = patch->dCell();
-    double vol = dx.x()*dx.y()*dx.z(),mass;
+    double vol = dx.x()*dx.y()*dx.z();
     double invvol = 1.0/vol;
     double cv;
     IntVector neg_cell;
@@ -2883,10 +2918,11 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     // These arrays get re-used for each material, and for each
     // advected quantity
     const IntVector gc(1,1,1);
-    CCVariable<double> q_CC, q_advected;
+    CCVariable<double> q_CC, q_advected, mass_new;
     CCVariable<Vector> qV_CC, qV_advected;
     Advector* advector = d_advector->clone(new_dw,patch);
     Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->allocateTemporary(mass_new,     patch);
     new_dw->allocateTemporary(q_advected,   patch);
     new_dw->allocateTemporary(qV_advected,  patch);
     new_dw->allocateTemporary(qV_CC,        patch,gac,1);
@@ -2951,8 +2987,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
         rho_CC[c]  = (mass_L[c] + q_advected[c]) * invvol;
+        mass_new[c] = rho_CC[c] * vol;
       }   
-     
+  
       setBC(rho_CC, "Density", patch, d_sharedState, indx);
       
       //__________________________________
@@ -2966,10 +3003,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
         IntVector c = *iter;
-        mass = rho_CC[c] * vol;
-        vel_CC[c] = (mom_L_ME[c] + qV_advected[c])/mass ;
+        vel_CC[c] = (mom_L_ME[c] + qV_advected[c])/mass_new[c] ;
       }
-
+      
       setBC(vel_CC, "Velocity", patch,indx);
 
       //__________________________________
@@ -2980,18 +3016,26 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       }
 
       advector->advectQ(q_CC,patch,q_advected);
-
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        mass = rho_CC[c] * vol;
-        temp[c] = (int_eng_L_ME[c] + q_advected[c])/(mass*cv);
-      }
       
+      if (d_EqForm){         // EQ FORM
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+          IntVector c = *iter;
+          temp[c] = (int_eng_L_ME[c] + q_advected[c])/(mass_new[c]*cv);
+        }
+      }
+
+      if (d_RateForm){      // RATE FORM
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+          IntVector c = *iter;
+          double KE = 0.5 * mass_new[c] * vel_CC[c].length() * vel_CC[c].length();
+          temp[c] = (int_eng_L_ME[c] + q_advected[c] - KE)/(mass_new[c] * cv);
+        }
+      } 
       setBC(temp, "Temperature", patch, d_sharedState, indx);
      
       //__________________________________
       // Advection of specific volume
-      // Note sp_vol_L[m] is actually sp_vol[m] * cell_vol
+      // Note sp_vol_L[m] is actually sp_vol[m] * mass
       for(CellIterator iter=patch->getCellIterator(gc); !iter.done();iter++){
         IntVector c = *iter;
         q_CC[c] = spec_vol_L[c]*invvol;
@@ -3001,7 +3045,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 
       for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
         IntVector c = *iter;
-        sp_vol_CC[c] = (spec_vol_L[c] + q_advected[c])/(rho_CC[c] * vol); 
+        sp_vol_CC[c] = (spec_vol_L[c] + q_advected[c])/mass_new[c];    
       }
 
       //  Set Neumann = 0 if symmetric Boundary conditions
@@ -3425,6 +3469,39 @@ void ICE::getExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
    } else 
      throw InvalidValue("Number of exchange components don't match.");
   
+}
+/*---------------------------------------------------------------------
+ Function~  ICE::upwindCell--
+ purpose:   find the upwind cell in each direction
+ ---------------------------------------------------------------------  */
+IntVector ICE::upwindCell_X(const IntVector& c, 
+                            const double & var,              
+                            double is_logical_R_face )     
+{
+  double  plus_minus_half = 0.5 * (var + d_SMALL_NUM)/fabs(var + d_SMALL_NUM);
+  int one_or_zero = -0.5 - plus_minus_half + is_logical_R_face; 
+  IntVector tmp = c + IntVector(one_or_zero,0,0);
+  return tmp;
+}
+
+IntVector ICE::upwindCell_Y(const IntVector& c, 
+                            const double& var,              
+                            double is_logical_R_face )     
+{
+  double  plus_minus_half = (var + d_SMALL_NUM)/2.0*fabs(var + d_SMALL_NUM);
+  int one_or_zero = -0.5 - plus_minus_half + is_logical_R_face; 
+  IntVector tmp = c + IntVector(0,one_or_zero,0);
+  return tmp;
+}
+
+IntVector ICE::upwindCell_Z(const IntVector& c, 
+                            const double& var,              
+                            double is_logical_R_face )     
+{
+  double  plus_minus_half = (var + d_SMALL_NUM)/2.0*fabs(var + d_SMALL_NUM);
+  int one_or_zero = -0.5 - plus_minus_half + is_logical_R_face; 
+  IntVector tmp = c + IntVector(0,0,one_or_zero);
+  return tmp;
 }
 /*---------------------------------------------------------------------
  Function~  ICE::areAllValuesPositive--
