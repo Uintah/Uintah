@@ -373,7 +373,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         // For the elastic region : the updated stress is the trial stress
         double pressure = d_eos->computePressure(matl, bulk, shear, tensorF_new, tensorEta, 
                                                  tensorS, pTemperature[idx], rho_cur, delT);
-        Matrix3 tensorSig = trialS - one*pressure;
+        Matrix3 tensorSig = trialS + one*pressure;
 
         // Compute the strain energy for the particles
         double pStrainEnergy = (tensorD(1,1)*tensorSig(1,1) +
@@ -459,7 +459,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         // Update the total stress tensor
         double pressure = d_eos->computePressure(matl, bulk, shear, tensorF_new, tensorEta, 
                                                  tensorS, pTemperature[idx], rho_cur, delT);
-        Matrix3 tensorSig = tensorS - one*pressure;
+        Matrix3 tensorSig = tensorS + one*pressure;
 
         // Compute the strain energy for the particles
         double pStrainEnergy = (tensorD(1,1)*tensorSig(1,1) +
