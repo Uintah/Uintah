@@ -2,8 +2,8 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../..
 
-SRCS     = 
+SRCS     = JAStoSurf.cc SFRGfile.cc SurfToJAS.cc
 
-INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(SRCTOP)/DaveW/ThirdParty/Nrrd/include/ -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk
