@@ -169,6 +169,12 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
 	  gvelocity_star[0][c]   = new_velocity;
       }
     }
+    
+    //__________________________________
+    //  hardwiring for Northrup Grumman nozzle
+    #define rigidBody_2
+    #include "../../MPMICE/NGC_nozzle.i"
+    #undef rigidBody_2
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
@@ -217,7 +223,6 @@ void RigidBodyContact::addComputesAndRequiresIntegrated( Task* t,
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);    
   t->requires(Task::NewDW, lb->gMassLabel,              Ghost::None);
-
   t->modifies(             lb->gVelocityStarLabel, mss);
   t->modifies(             lb->gAccelerationLabel, mss);
 #ifdef FRACTURE
@@ -225,4 +230,13 @@ void RigidBodyContact::addComputesAndRequiresIntegrated( Task* t,
 #else    
   t->computes(             lb->frictionalWorkLabel);
 #endif
+
+ //__________________________________
+ //  add requirements for Northrup Grumman nozzle
+ #define rigidBody_1
+ #include "../../MPMICE/NGC_nozzle.i"
+ #undef rigidBody_1
+
 }
+
+
