@@ -2,7 +2,7 @@ body {background-color:#DDDDDD; text-color:#000000; font-family:"arial", "helvet
 
 p {margin-left:100px; margin-right:80px; font-family:"arial", "helvetica", "sans-serif"}
 
-.toc {list-style-type:"upper-roman"; font-family:"arial", "helvetica", "sans-serif"; margin-left:180px}
+.toc {list-style-type:"upper-roman"; font-family:"arial", "helvetica", "sans-serif"; margin-left:120px; margin-right:120px}
 
 .subtoc {list-style-type:disc; font-family:"arial", "helvetica", "sans-serif"}
 
