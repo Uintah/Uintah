@@ -87,7 +87,6 @@ void DebugStream::checkenv(string iname)
   // values in onstreams and offstreams
   if( env ){
     string var = (string) env;
-    cerr << "var = " << var << endl;
     string name, file; 
     int commapos, colonpos, oldcomma;
     commapos = colonpos = oldcomma = 0;
