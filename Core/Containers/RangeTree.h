@@ -446,7 +446,16 @@ private:
       : node_(traverser.node_), D_(traverse.D_) {}
 
     template <class BoundTester>
-    inline bool goNext(const BoundTester& boundTester);
+    inline bool goNext(const BoundTester& boundTester) {
+      const int OTHER_SIDE = (SIDE + 1) % 2;
+      ASSERT(!node_->isLeaf());
+      
+      node_ = getChild<SIDE>(node_);
+      while (!node_->isLeaf() &&
+	     !boundTester.isInBound((*node_->point_)[D_]))
+      node_ = getChild<OTHER_SIDE>(node_);
+      return !node_->isLeaf();
+    }
 
     RangeTreeNode* getNode()
     { return node_; }
@@ -485,7 +494,36 @@ private:
     // indices).
     template <class BoundTester>
     inline bool goNext(const BoundTester& boundTester,
-		       bool quitOnBadIndex = true);
+		       bool quitOnBadIndex = true) {
+      const int OTHER_SIDE = (SIDE + 1) % 2;
+      ASSERT(!node_->isLeaf());
+      BaseLevelSet* parentSub = node_->lowerLevel_.bls;
+      BaseLevelSet* sub;
+  
+      node_ = getChild<SIDE>(node_);
+      sub = node_->lowerLevel_.bls;
+      subIndex_ =
+	getCascadedSubIndex<SIDE, BOUND_FROM_SIDE>(parentSub, subIndex_, sub);
+      if (((BOUND_FROM_SIDE == RANGE_RIGHT) || quitOnBadIndex) &&
+      !isValidIndex(subIndex_, sub)) {
+	return false; // no more points in range at the base level
+      }
+  
+      while (!node_->isLeaf() &&
+	     !boundTester.isInBound((*node_->point_)[D_])){
+	parentSub = sub;    
+	node_ = getChild<OTHER_SIDE>(node_);
+	sub = node_->lowerLevel_.bls;
+	subIndex_ = getCascadedSubIndex<OTHER_SIDE, BOUND_FROM_SIDE>
+	  (parentSub, subIndex_, sub);
+	if (((BOUND_FROM_SIDE == RANGE_RIGHT) || quitOnBadIndex) &&
+	    !isValidIndex(subIndex_, sub)) {
+	  return false;// no more points in range at the base level
+	}
+      }
+
+      return !node_->isLeaf();
+    }
 
     int getCurrentCascadedIndex()
     { return subIndex_; }
@@ -1146,62 +1184,7 @@ dump()
 
 
 /* Traverser class methods -- for traversing down a tree */
-
-template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
-template<int SIDE>
-template<class BoundTester>
-inline bool
-RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::Traverser<SIDE>::
-goNext(const BoundTester& boundTester)
-{
-  const int OTHER_SIDE = (SIDE + 1) % 2;
-  ASSERT(!node_->isLeaf());
-
-  node_ = getChild<SIDE>(node_);
-  while (!node_->isLeaf() &&
-	 !boundTester.isInBound((*node_->point_)[D_]))
-      node_ = getChild<OTHER_SIDE>(node_);
-  return !node_->isLeaf();
-}
-
-template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
-template<int SIDE, int BOUND_FROM_SIDE>
-template<class BoundTester>
-inline bool
-RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
-CascadeTraverser<SIDE, BOUND_FROM_SIDE>::goNext(const BoundTester& boundTester,
-					       bool quitOnBadIndex /*=true*/)
-{
-  const int OTHER_SIDE = (SIDE + 1) % 2;
-  ASSERT(!node_->isLeaf());
-  BaseLevelSet* parentSub = node_->lowerLevel_.bls;
-  BaseLevelSet* sub;
-  
-  node_ = getChild<SIDE>(node_);
-  sub = node_->lowerLevel_.bls;
-  subIndex_ =
-    getCascadedSubIndex<SIDE, BOUND_FROM_SIDE>(parentSub, subIndex_, sub);
-  if (((BOUND_FROM_SIDE == RANGE_RIGHT) || quitOnBadIndex) &&
-      !isValidIndex(subIndex_, sub)) {
-    return false; // no more points in range at the base level
-  }
-  
-  while (!node_->isLeaf() &&
-	 !boundTester.isInBound((*node_->point_)[D_])){
-    parentSub = sub;    
-    node_ = getChild<OTHER_SIDE>(node_);
-    sub = node_->lowerLevel_.bls;
-    subIndex_ = getCascadedSubIndex<OTHER_SIDE, BOUND_FROM_SIDE>
-      (parentSub, subIndex_, sub);
-    if (((BOUND_FROM_SIDE == RANGE_RIGHT) || quitOnBadIndex) &&
-	!isValidIndex(subIndex_, sub)) {
-      return false;// no more points in range at the base level
-    }
-  }
-
-  return !node_->isLeaf();
-}
-
+/* Moved to class file - Steve */
 
 /* Actual query implementations below */
 
