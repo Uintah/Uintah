@@ -1244,8 +1244,10 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
   Vector dx      = patch->dCell();
   Vector gravity = d_sharedState->getGravity();
 
+#if 0
   CCVariable<double> rho_CC, rho_micro_CC;
   CCVariable<Vector> vel_CC;
+#endif
   CCVariable<double> press_CC;
   new_dw->get(press_CC,lb->press_equil_CCLabel, 0, patch, 
 	      Ghost::AroundCells, 1);
@@ -1255,24 +1257,22 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
   for(int m = 0; m < numMatls; m++) {
     Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
-
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    CCVariable<double> rho_CC, rho_micro_CC;
+    CCVariable<Vector> vel_CC;
     if(ice_matl){
       new_dw->get(rho_CC, lb->rho_CCLabel, dwindex, patch, 
 		  Ghost::AroundCells, 1);
       old_dw->get(vel_CC, lb->vel_CCLabel, dwindex, patch, 
-		  Ghost::AroundCells, 1);
-      new_dw->get(rho_micro_CC, lb->rho_micro_CCLabel,dwindex,patch,
 		  Ghost::AroundCells, 1);
     } else {
       new_dw->get(rho_CC, lb->rho_CCLabel, dwindex, patch, 
 		  Ghost::AroundCells, 1);
       new_dw->get(vel_CC, lb->vel_CCLabel, dwindex, patch, 
 		  Ghost::AroundCells, 1);
-      new_dw->get(rho_micro_CC, lb->rho_micro_CCLabel,dwindex,patch,
-		  Ghost::AroundCells, 1);
     }
-
+    new_dw->get(rho_micro_CC, lb->rho_micro_CCLabel,dwindex,patch,
+		Ghost::AroundCells, 1);
  
 /*`==========TESTING==========*/ 
     if (switchDebug_vel_FC ) {
@@ -2470,7 +2470,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
 
   int numALLmatls = d_sharedState->getNumMatls();
   int numICEmatls = d_sharedState->getNumICEMatls();
-  
+
+#if 0  
   CCVariable<double > int_eng_L_ME, mass_L,speedSound;
   CCVariable<double > mass_CC;
   CCVariable<double > sp_vol_equil;
@@ -2479,6 +2480,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
   SFCXVariable<double > uvel_FC;
   SFCYVariable<double > vvel_FC;
   SFCZVariable<double > wvel_FC;
+#endif
   
   // These arrays get re-used for each material, and for each
   // advected quantity
@@ -2500,6 +2502,14 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
   for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) {
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
     int dwindex = ice_matl->getDWIndex();
+    CCVariable<double > int_eng_L_ME, mass_L,speedSound;
+    CCVariable<double > sp_vol_equil;
+    CCVariable<Vector > mom_L_ME;
+    
+    SFCXVariable<double > uvel_FC;
+    SFCYVariable<double > vvel_FC;
+    SFCZVariable<double > wvel_FC;
+
     new_dw->get(uvel_FC,lb->uvel_FCMELabel,dwindex,patch,Ghost::AroundCells,2);
     new_dw->get(vvel_FC,lb->vvel_FCMELabel,dwindex,patch,Ghost::AroundCells,2);
     new_dw->get(wvel_FC,lb->wvel_FCMELabel,dwindex,patch,Ghost::AroundCells,2);
