@@ -1,5 +1,7 @@
 % -*-latex-*-
-%<= "JSBET04nVCBFRElUIE1FLgolIEknbSBnZW5lcmF0ZWQgZnJvbSBzcnVnbWFj\ncm9zLnJ0ZXguICBFZGl0IGl0IGluc3RlYWQK\n".unpack("m") %>
+%< require("../../Utilities/Publish/srdoc.rb") %>
+%< doc = Doc.create(Doc::TeX) %>
+
 %
 %  The contents of this file are subject to the University of Utah Public
 %  License (the "License"); you may not use this file except in compliance
@@ -50,12 +52,7 @@
 \setlength{\parskip}{\smallskipamount} 
 
 % Users Guide specific markup
-%<
-version = File.open("../../edition.xml") do |f|
-  /<edition>(.*)<\/edition>/.match(f.read())[1]
-end
-%>
-\newcommand{\version}{%<= version %>}
+\newcommand{\version}{%<= doc.edition %>}
 \newcommand{\viewer}{\emph{Viewer}}
 \newcommand{\installguideurl}{\htmlurl{\scisoftware{}/doc/Installation/Guide/index.html}}
 \newcommand{\modulemakerguideurl}{}
