@@ -17,7 +17,11 @@ ICELabel::ICELabel()
 	 = scinew VarLabel("delT",      delt_vartype::getTypeDescription() );
 
     press_CCLabel     =
-     scinew VarLabel("press_CC",  CCVariable<double>::getTypeDescription() );
+     scinew VarLabel("press_CC",    CCVariable<double>::getTypeDescription() );
+    pressdP_CCLabel   =
+     scinew VarLabel("pressdP_CC",  CCVariable<double>::getTypeDescription() );
+    delPress_CCLabel  =
+     scinew VarLabel("delPress_CC", CCVariable<double>::getTypeDescription() );
 
     rho_CCLabel       = 
      scinew VarLabel("rho_CC",    CCVariable<double>::getTypeDescription() );
@@ -66,6 +70,8 @@ ICELabel::~ICELabel()
 {
     // Cell centered variables
     delete  press_CCLabel;
+    delete  pressdP_CCLabel;
+    delete  delPress_CCLabel;
     delete  rho_CCLabel;
     delete temp_CCLabel;
     delete uvel_CCLabel;
@@ -87,6 +93,9 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.7  2000/10/16 19:10:35  guilkey
+// Combined step1e with step2 and eliminated step1e.
+//
 // Revision 1.6  2000/10/16 18:32:40  guilkey
 // Implemented "step1e" of the ICE algorithm.
 //
