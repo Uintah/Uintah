@@ -9,6 +9,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/PDFMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/FlameletMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/StaticMixingTable.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/StandardTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/SteadyFlameletsTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MeanMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
@@ -102,6 +103,8 @@ Properties::problemSetup(const ProblemSpecP& params)
   }
   else if (mixModel == "StaticMixingTable")
     d_mixingModel = scinew StaticMixingTable();
+  else if (mixModel == "StandardTable")
+    d_mixingModel = scinew StandardTable();
   else if (mixModel == "SteadyFlameletsTable"){
     if(!d_thermalNOx)
     	d_mixingModel = scinew SteadyFlameletsTable();
@@ -137,6 +140,9 @@ Properties::computeInletProperties(const InletStream& inStream,
     d_mixingModel->computeProps(inStream, outStream);
   }
   else if (dynamic_cast<const StaticMixingTable*>(d_mixingModel)) {
+    d_mixingModel->computeProps(inStream, outStream);
+  }
+  else if (dynamic_cast<const StandardTable*>(d_mixingModel)) {
     d_mixingModel->computeProps(inStream, outStream);
   }
   else if (dynamic_cast<const SteadyFlameletsTable*>(d_mixingModel)) {
