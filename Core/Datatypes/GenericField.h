@@ -220,7 +220,7 @@ GenericField<Mesh, FData>::GenericField(data_location data_at) :
   Field(data_at),
   mesh_(mesh_handle_type(scinew mesh_type()))
 {
-  if (data_at() != NONE && mesh_.get_rep())
+  if (data_at != NONE && mesh_.get_rep())
   {
     resize_fdata();
   }
@@ -232,7 +232,7 @@ GenericField<Mesh, FData>::GenericField(mesh_handle_type mesh,
   Field(data_at),
   mesh_(mesh)
 {
-  if (data_at() != NONE && mesh_.get_rep())
+  if (data_at != NONE && mesh_.get_rep())
   {
     resize_fdata();
   }
