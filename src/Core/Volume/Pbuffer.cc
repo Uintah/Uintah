@@ -601,21 +601,25 @@ Pbuffer::set_use_texture_matrix(bool b)
   mUseTextureMatrix = b;
 }
 
-Pbuffer::Pbuffer (int width, int height, bool isRenderTex)
-  : mWidth(width), mHeight(height), mRenderTex(isRenderTex), mSeparate(false),
-    mTex(0), mTexTarget(GL_TEXTURE_2D), mImpl(new PbufferImpl)
-{}
-
 Pbuffer::Pbuffer (int width, int height, int format, int numColorBits,
 		  /* int numChannels, */ bool isRenderTex, int isDoubleBuffer,
 		  int numAuxBuffers, int numDepthBits, int numStencilBits,
 		  int numAccumBits)
-  : mWidth(width), mHeight(height), mFormat(format), mNumColorBits(numColorBits),
-    /* mNumChannels(numChannels), */ mRenderTex(isRenderTex),
-    mDoubleBuffer(isDoubleBuffer), mNumAuxBuffers(numAuxBuffers),
-    mNumDepthBits(numDepthBits), mNumStencilBits(numStencilBits),
-    mNumAccumBits(numAccumBits), mSeparate(true), mTex(0),
-    mTexTarget(GL_TEXTURE_2D), mUseDefaultShader(true), mImpl(new PbufferImpl)
+  : mWidth(width),
+    mHeight(height),
+    mFormat(format),
+    mNumColorBits(numColorBits),
+    /* mNumChannels(numChannels), */
+    mRenderTex(isRenderTex),
+    mDoubleBuffer(isDoubleBuffer),
+    mNumAuxBuffers(numAuxBuffers),
+    mNumDepthBits(numDepthBits),
+    mNumStencilBits(numStencilBits),
+    mNumAccumBits(numAccumBits),
+    mSeparate(true), mTex(0),
+    mTexTarget(GL_TEXTURE_2D),
+    mUseDefaultShader(true),
+    mImpl(new PbufferImpl)
 {}
 
 Pbuffer::~Pbuffer ()
