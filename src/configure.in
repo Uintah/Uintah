@@ -534,14 +534,16 @@ fi
   
 AC_SUBST(ITCLSH)
 AC_SUBST(ITCL_INCLUDE_DIR)
-#AC_SUBST(ITCL_LIB_DIR)
+AC_SUBST(ITCL_LIB_DIR)
 AC_SUBST(ITCL_BIN_DIR)
 #AC_SUBST(ITCL_LIB_FLAG)
 AC_SUBST(ITCL_WIDGETS)
 AC_SUBST(ITCL_INIT_DIR)
 AC_SUBST(ITCL_SRC_DIR)
-AC_SUBST(ITK_SRC_DIR)
 AC_SUBST(ITCL_LIB_SPEC)
+
+AC_SUBST(ITK_SRC_DIR)
+AC_SUBST(ITK_LIB_DIR)
 AC_SUBST(ITK_LIB_SPEC)
 
 ##-- Find BLT ---------------------------------------------------------------
@@ -857,6 +859,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.76  2000/11/15 05:43:30  yarden
+# add -rpath for the tk,itcl and itk libraries
+#
 # Revision 1.75  2000/11/13 07:44:23  moulding
 # added TK_LIB_SPEC needed indirectly by main/sub.mk and others
 #
