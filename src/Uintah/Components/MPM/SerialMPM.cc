@@ -1351,7 +1351,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   double tempRate; /* tan: tempRate stands for "temperature variation
                            time rate", used for heat conduction.  */
 //  double thermal_energy = 0.0;
-  double ke=0;
   Vector CMX(0.0,0.0,0.0);
   Vector CMV(0.0,0.0,0.0);
   int numPTotal = 0;
@@ -1365,6 +1364,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    double ke=0;
 
     if(mpm_matl){
       int matlindex = matl->getDWIndex();
@@ -1511,14 +1511,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         tempRate = 0;
 
         // Accumulate the contribution from each surrounding vertex
-        for (int k = 0; k < 8; k++)
-        {
+        for (int k = 0; k < 8; k++) {
 	   vel += gvelocity_star[ni[k]]  * S[k];
 	   acc += gacceleration[ni[k]]   * S[k];
 	   
            tempRate += gTemperatureRate[ni[k]] * S[k];
-           for (int j = 0; j<3; j++)
-           {
+           for (int j = 0; j<3; j++) {
              pTemperatureGradient[idx](j) += 
                 gTemperatureStar[ni[k]] * d_S[k](j) * oodx[j];
            }
@@ -1615,6 +1613,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.117  2000/08/19 01:04:56  guilkey
+// Fixed the calculation of kinetic energy for multiple materials.
+//
 // Revision 1.116  2000/08/18 20:28:59  tan
 // Fixed some bugs in SerialMPM, mainly in applyPhysicalBC.
 //
