@@ -9,6 +9,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/PDFMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/FlameletMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/StaticMixingTable.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/SteadyFlameletsTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MeanMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
@@ -48,6 +49,7 @@ Properties::Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
   d_enthalpySolve(enthalpySolver)
 {
   d_flamelet = false;
+  d_steadyflamelet = false;
   d_DORadiationCalc = false;
   d_bc = 0;
 #ifdef PetscFilter
@@ -96,6 +98,10 @@ Properties::problemSetup(const ProblemSpecP& params)
   }
   else if (mixModel == "StaticMixingTable")
     d_mixingModel = scinew StaticMixingTable();
+  else if (mixModel == "SteadyFlameletsTable"){
+    d_mixingModel = scinew SteadyFlameletsTable();
+    d_steadyflamelet = true;
+  }
   else
     throw InvalidValue("Mixing Model not supported" + mixModel);
   d_mixingModel->problemSetup(db);
@@ -124,6 +130,9 @@ Properties::computeInletProperties(const InletStream& inStream,
     d_mixingModel->computeProps(inStream, outStream);
   }
   else if (dynamic_cast<const StaticMixingTable*>(d_mixingModel)) {
+    d_mixingModel->computeProps(inStream, outStream);
+  }
+  else if (dynamic_cast<const SteadyFlameletsTable*>(d_mixingModel)) {
     d_mixingModel->computeProps(inStream, outStream);
   }
   else {
@@ -155,7 +164,11 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
   if (d_mixingModel->getNumRxnVars())
     tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, Ghost::None,
 		  Arches::ZEROGHOSTCELLS);
-
+  // For steady flamelet mixing tables
+  if (d_steadyflamelet){
+    tsk->requires(Task::NewDW, d_lab->d_scalarDissSPLabel, Ghost::None,
+    Arches::ZEROGHOSTCELLS);
+  }
   if (d_MAlab) {
 #ifdef ExactMPMArchesInitialize
     tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel, Ghost::None,
@@ -186,6 +199,8 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
     tsk->computes(d_lab->d_cpINLabel);
     if (d_mixingModel->getNumRxnVars())
       tsk->computes(d_lab->d_reactscalarSRCINLabel);
+    if (d_steadyflamelet)
+      tsk->computes(d_lab->d_c2h2INLabel);
   }
 
   if (d_flamelet) {
@@ -258,6 +273,7 @@ Properties::computeProps(const ProcessorGroup* pc,
     CCVariable<double> cp;
     CCVariable<double> co2;
     CCVariable<double> h2o;
+    CCVariable<double> c2h2;
     CCVariable<double> enthalpyRXN;
     CCVariable<double> reactscalarSRC;
     if (d_reactingFlow) {
@@ -270,6 +286,10 @@ Properties::computeProps(const ProcessorGroup* pc,
 	new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
 			 matlIndex, patch);
 	reactscalarSRC.initialize(0.0);
+      }
+      if (d_steadyflamelet) {
+        new_dw->allocateAndPut(c2h2, d_lab->d_c2h2INLabel,matlIndex, patch);
+        c2h2.initialize(0.0);
       }
     }
     CCVariable<double> absorption;
@@ -317,7 +337,10 @@ Properties::computeProps(const ProcessorGroup* pc,
 	new_dw->get(reactScalar[ii], d_lab->d_reactscalarSPLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
-
+    // Scalar dissipation
+    constCCVariable<double>  scalarDisp;
+    if(d_steadyflamelet)
+        new_dw->get(scalarDisp, d_lab->d_scalarDissSPLabel,matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     // get multimaterial vars
 
@@ -373,6 +396,11 @@ Properties::computeProps(const ProcessorGroup* pc,
 	    for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++ ) 
 	      inStream.d_rxnVars[ii] = (reactScalar[ii])[currCell];
 	  }
+	  // Scalar dissipation for steady flamelet mixing tables
+	  if (d_steadyflamelet) {
+	      inStream.d_scalarDisp = scalarDisp[currCell];
+	  }
+
 	  if (d_flamelet) {
 	    if (colX >= 0)
 	      inStream.d_axialLoc = colX;
@@ -396,6 +424,8 @@ Properties::computeProps(const ProcessorGroup* pc,
 	    enthalpyRXN[currCell] = outStream.getEnthalpy();
 	    if (d_mixingModel->getNumRxnVars())
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
+	    if (d_steadyflamelet)
+              c2h2[currCell] = outStream.getC2H2();
 	  }
 	  if (d_flamelet) {
 	    temperature[currCell] = outStream.getTemperature();
@@ -845,6 +875,11 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
   if (d_mixingModel->getNumRxnVars())
     tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  // Scalar dissipation for steady flamelet tables
+  if (d_steadyflamelet) {
+    tsk->requires(Task::NewDW, d_lab->d_scalarDissSPLabel,
+    Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
 
   if (!(d_mixingModel->isAdiabatic()))
     tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,
@@ -866,6 +901,8 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->computes(d_lab->d_enthalpyRXNLabel);
       if (d_mixingModel->getNumRxnVars())
         tsk->computes(d_lab->d_reactscalarSRCINLabel);
+      if (d_steadyflamelet)
+        tsk->computes(d_lab->d_c2h2INLabel);
     }
     if (d_flamelet) {
       tsk->computes(d_lab->d_tempINLabel);
@@ -894,6 +931,8 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->modifies(d_lab->d_enthalpyRXNLabel);
       if (d_mixingModel->getNumRxnVars())
         tsk->modifies(d_lab->d_reactscalarSRCINLabel);
+      if (d_steadyflamelet)
+        tsk->modifies(d_lab->d_c2h2INLabel);
     }
     if (d_flamelet) {
       tsk->modifies(d_lab->d_tempINLabel);
@@ -952,6 +991,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     StaticArray<constCCVariable<double> > scalar(d_numMixingVars);
     StaticArray<constCCVariable<double> > scalarVar(d_numMixStatVars);
     StaticArray<constCCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
+    constCCVariable<double> scalarDisp;
     constCCVariable<double> enthalpy;
     constCCVariable<double> voidFraction;
     CCVariable<double> new_density;
@@ -959,6 +999,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> cp;
     CCVariable<double> co2;
     CCVariable<double> h2o;
+    CCVariable<double> c2h2;
     CCVariable<double> enthalpyRXN;
     CCVariable<double> reactscalarSRC;
     CCVariable<double> drhodf;
@@ -993,6 +1034,11 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	new_dw->get(reactScalar[ii], d_lab->d_reactscalarSPLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
+    // Scalar dissipation for steady flamelet tables
+    if (d_steadyflamelet) {
+        new_dw->get(scalarDisp, d_lab->d_scalarDissSPLabel,
+        matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
 
     if (!(d_mixingModel->isAdiabatic()))
       new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, 
@@ -1016,6 +1062,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         if (d_mixingModel->getNumRxnVars())
 	  new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
 			         matlIndex, patch);
+	if (d_steadyflamelet)
+	  new_dw->allocateAndPut(c2h2, d_lab->d_c2h2INLabel, matlIndex, patch);
       }
 
       if (d_flamelet) {
@@ -1053,6 +1101,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         if (d_mixingModel->getNumRxnVars())
 	  new_dw->getModifiable(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
 			         matlIndex, patch);
+	if (d_steadyflamelet)
+          new_dw->getModifiable(c2h2, d_lab->d_c2h2INLabel, matlIndex, patch);
       }
 
       if (d_flamelet) {
@@ -1086,6 +1136,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       enthalpyRXN.initialize(0.0);
         if (d_mixingModel->getNumRxnVars())
 	  reactscalarSRC.initialize(0.0);
+	if (d_steadyflamelet)
+          c2h2.initialize(0.0);
     }    
     if (d_flamelet) {
       temperature.initialize(0.0);
@@ -1138,6 +1190,10 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	      inStream.d_mixVarVariance[ii] = (scalarVar[ii])[currCell];
 	    }
 	  }
+	  // Scalar dissipation for steady flamelet tables
+	  if (d_steadyflamelet) {
+	      inStream.d_scalarDisp = scalarDisp[currCell];
+	  }
 
 	  if (d_mixingModel->getNumRxnVars() > 0) {
 	    for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++ ) 
@@ -1188,6 +1244,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    enthalpyRXN[currCell] = outStream.getEnthalpy();
 	    if (d_mixingModel->getNumRxnVars())
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
+	    if (d_steadyflamelet)
+	      c2h2[currCell] = outStream.getC2H2();
 	  }
 	  
 
