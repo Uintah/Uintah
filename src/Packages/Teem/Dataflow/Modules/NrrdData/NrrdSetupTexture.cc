@@ -77,7 +77,8 @@ NrrdSetupTexture::NrrdSetupTexture(SCIRun::GuiContext *ctx) :
 {
 }
 
-NrrdSetupTexture::~NrrdSetupTexture() {
+NrrdSetupTexture::~NrrdSetupTexture()
+{
 }
 
 
@@ -139,8 +140,7 @@ compute_data(T *nindata, unsigned char *nvoutdata, float *gmoutdata,
         const double z1 = nindata[i * njk + j * nk + k1];
 
         const Vector g((x1 - x0)*xscale, (y1 - y0)*yscale, (z1 - z0)*zscale);
-        //const Vector gradient = transform.project_normal(g);
-        Vector gradient = g;
+        Vector gradient = transform.project_normal(g);
         const float gm = gradient.safe_normalize();
 
         nvoutdata[(i * njk + j * nk + k) * 4 + 0] = NtoUC(gradient.x());
@@ -152,6 +152,7 @@ compute_data(T *nindata, unsigned char *nvoutdata, float *gmoutdata,
     }
   }
 }
+
 
 void 
 NrrdSetupTexture::execute()
@@ -238,51 +239,66 @@ NrrdSetupTexture::execute()
   nvout->axis[0].min=AIR_NAN;
   nvout->axis[0].max=AIR_NAN;
 
-  double spacing_inv[NRRD_DIM_MAX];
-  double min, max, spacing;
-  int center;
-
   // Copy the other axes' info
-  int nsamples=1;
   for (dim=0; dim<nin->dim; dim++)
   {
     nvout->axis[dim+1].kind = nin->axis[dim].kind;
-    nvout->axis[dim+1].center = center =nin->axis[dim].center;
-    nvout->axis[dim+1].spacing = spacing = nin->axis[dim].spacing;
-    nvout->axis[dim+1].min = min = nin->axis[dim].min;
-    nvout->axis[dim+1].max = max = nin->axis[dim].max;
+    nvout->axis[dim+1].center = nin->axis[dim].center;
+    nvout->axis[dim+1].spacing = nin->axis[dim].spacing;
+    nvout->axis[dim+1].min = nin->axis[dim].min;
+    nvout->axis[dim+1].max = nin->axis[dim].max;
 
     gmout->axis[dim].kind = nin->axis[dim].kind;
     gmout->axis[dim].center = nin->axis[dim].center;
     gmout->axis[dim].spacing = nin->axis[dim].spacing;
     gmout->axis[dim].min = nin->axis[dim].min;
     gmout->axis[dim].max = nin->axis[dim].max;
-
-    nsamples *= nin->axis[dim].size;
-
-    // Note spacing so we can correctly scale derivatives
-    if (min != AIR_NAN && max != AIR_NAN)
-    {
-      if (center == nrrdCenterNode) 
-	spacing_inv[dim]=(nvsize[dim+1]-1.)/(max-min);
-      else
-	spacing_inv[dim]=(nvsize[dim+1]*1.)/(max-min);
-    }
-    else
-    {
-      if (spacing != AIR_NAN)
-	spacing_inv[dim]=spacing;
-      else
-	spacing_inv[dim]=AIR_NAN;
-    }
   }
 
   // Build the transform here.
   Transform transform;
+  string trans_str;
+  // See if it's stored in the nrrd first.
+  if (nin_handle->get_property("Transform", trans_str) &&
+      trans_str != "Unknown")
+  {
+    double t[16];
+    int old_index=0, new_index=0;
+    for(int i=0; i<16; i++)
+    {
+      new_index = trans_str.find(" ", old_index);
+      string temp = trans_str.substr(old_index, new_index-old_index);
+      old_index = new_index+1;
+      string_to_double(temp, t[i]);
+    }
+    transform.set(t);
+  } 
+  else
+  {
+    // Reconstruct the axis aligned transform.
+    const Point nmin(nin->axis[0].min, nin->axis[1].min, nin->axis[2].min);
+    const Point nmax(nin->axis[0].max, nin->axis[1].max, nin->axis[2].max);
+    transform.pre_scale(nmax - nmin);
+    transform.pre_translate(nmin.asVector());
+  }
 
-  if (nin->type == nrrdTypeUChar)
+  if (nin->type == nrrdTypeChar)
+  {
+    compute_data((char *)nin->data,
+                 (unsigned char *)nvout->data, (float *)gmout->data,
+                 nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
+                 transform, minf, maxf);
+  }
+  else if (nin->type == nrrdTypeUChar)
   {
     compute_data((unsigned char *)nin->data,
+                 (unsigned char *)nvout->data, (float *)gmout->data,
+                 nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
+                 transform, minf, maxf);
+  }
+  else if (nin->type == nrrdTypeShort)
+  {
+    compute_data((short *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmout->data,
                  nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
                  transform, minf, maxf);
@@ -290,6 +306,20 @@ NrrdSetupTexture::execute()
   else if (nin->type == nrrdTypeUShort)
   {
     compute_data((unsigned short *)nin->data,
+                 (unsigned char *)nvout->data, (float *)gmout->data,
+                 nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
+                 transform, minf, maxf);
+  }
+  else if (nin->type == nrrdTypeInt)
+  {
+    compute_data((int *)nin->data,
+                 (unsigned char *)nvout->data, (float *)gmout->data,
+                 nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
+                 transform, minf, maxf);
+  }
+  else if (nin->type == nrrdTypeUInt)
+  {
+    compute_data((unsigned int *)nin->data,
                  (unsigned char *)nvout->data, (float *)gmout->data,
                  nin->axis[2].size, nin->axis[1].size, nin->axis[0].size,
                  transform, minf, maxf);
