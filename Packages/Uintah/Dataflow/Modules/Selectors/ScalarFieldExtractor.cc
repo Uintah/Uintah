@@ -100,11 +100,9 @@ void ScalarFieldExtractor::get_vars(vector< string >& names,
       // supported scalars double, int, long, long long, short, bool
       if( subtype->getType() == TypeDescription::double_type ||
 	  subtype->getType() == TypeDescription::int_type ||
-	  subtype->getType() == TypeDescription::long_type ){//||
-//  	  subtype->getType() == TypeDescription::long64_type ||
+  	  subtype->getType() == TypeDescription::long64_type) {
 //  	  subtype->getType() == TypeDescription::short_int_type ||
 //  	  subtype->getType() == TypeDescription::bool_type
-	  
 	if( sNames.size() != 0 )
 	  sNames += " ";
 	sNames += names[i];
@@ -187,12 +185,12 @@ void ScalarFieldExtractor::execute()
 	  sfout->send(sfd);
 	  return;
 	}
-     case TypeDescription::long_type:
+     case TypeDescription::long64_type:
 	{
-	  NCVariable<long> gridVar;
+	  NCVariable<long64> gridVar;
 	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	  LevelField<long> *sfd =
-	    scinew LevelField<long>( mesh, Field::NODE );
+	  LevelField<long64> *sfd =
+	    scinew LevelField<long64>( mesh, Field::NODE );
 	  sfd->store( "variable", string(var), true );
 	  sfd->store( "time", double( time ), true);
 	  build_field( archive, level, var, mat, time, gridVar, sfd);
@@ -230,12 +228,13 @@ void ScalarFieldExtractor::execute()
 	  sfout->send(sfd);
 	  return;
 	}
+      case TypeDescription::long64_type:
       case TypeDescription::long_type:
 	{
-	  CCVariable<long> gridVar;
+	  CCVariable<long64> gridVar;
 	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	  LevelField<long> *sfd =
-	    scinew LevelField<long>( mesh, Field::CELL );
+	  LevelField<long64> *sfd =
+	    scinew LevelField<long64>( mesh, Field::CELL );
 	  sfd->store( "variable", string(var), true );
 	  sfd->store( "time", double( time ), true);
 	  build_field( archive, level, var, mat, time, gridVar, sfd);

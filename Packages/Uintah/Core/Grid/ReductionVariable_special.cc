@@ -1,4 +1,4 @@
-
+#include<Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Packages/Uintah/Core/Grid/ReductionVariable.h>
 #include <Core/Geometry/Vector.h>
 
@@ -31,7 +31,7 @@ ReductionVariable<double, Reductions::Sum<double> >
 
 template<>
 void
-ReductionVariable<long, Reductions::Sum<long> >
+ReductionVariable<long64, Reductions::Sum<long64> >
    ::getMPIBuffer(void*& buf, int& count,
 		  MPI_Datatype& datatype, MPI_Op& op)
 {
