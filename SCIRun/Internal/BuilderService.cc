@@ -124,19 +124,19 @@ SSIDL::array1<sci::cca::ComponentID::pointer> BuilderService::getComponentIDs()
 
 sci::cca::TypeMap::pointer BuilderService::getComponentProperties(const sci::cca::ComponentID::pointer& /*cid*/)
 {
-  cerr << "BuilderService::getComponentProperties not finished\n";
+  std::cerr << "BuilderService::getComponentProperties not finished\n";
   return sci::cca::TypeMap::pointer(0);
 }
 
 void BuilderService::setComponentProperties(const sci::cca::ComponentID::pointer& /*cid*/,
 					    const sci::cca::TypeMap::pointer& /*map*/)
 {
-  cerr << "BuilderService::setComponentProperties not finished\n";
+  std::cerr << "BuilderService::setComponentProperties not finished\n";
 }
 
 sci::cca::ComponentID::pointer BuilderService::getDeserialization(const std::string& /*s*/)
 {
-  cerr << "BuilderService::getDeserialization not finished\n";
+  std::cerr << "BuilderService::getDeserialization not finished\n";
   return sci::cca::ComponentID::pointer(0);
 }
 
@@ -158,7 +158,7 @@ SSIDL::array1<std::string> BuilderService::getProvidedPortNames(const sci::cca::
 {
   SSIDL::array1<std::string> result;
   ComponentInstance *ci=framework->lookupComponent(cid->getInstanceName());
-  cerr<<"Component: "<<cid->getInstanceName()<<endl;
+  std::cerr<<"Component: "<<cid->getInstanceName()<<std::endl;
   for(PortInstanceIterator* iter = ci->getPorts(); !iter->done(); iter->next()){
     PortInstance* port = iter->get();
     if(port->portType() == PortInstance::To)
@@ -197,7 +197,7 @@ void BuilderService::setPortProperties(const sci::cca::ComponentID::pointer& /*c
 				       const std::string& /*portname*/,
 				       const sci::cca::TypeMap::pointer& /*map*/)
 {
-  cerr << "BuilderService::setPortProperties not finished\n";
+  std::cerr << "BuilderService::setPortProperties not finished\n";
 }
 
 SSIDL::array1<sci::cca::ConnectionID::pointer> BuilderService::getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer>& componentList)
@@ -219,14 +219,14 @@ SSIDL::array1<sci::cca::ConnectionID::pointer> BuilderService::getConnectionIDs(
 sci::cca::TypeMap::pointer
 BuilderService::getConnectionProperties(const sci::cca::ConnectionID::pointer& /*connID*/)
 {
-  cerr << "BuilderService::getConnectionProperties not finished\n";
+  std::cerr << "BuilderService::getConnectionProperties not finished\n";
   return sci::cca::TypeMap::pointer(0);
 }
 
 void BuilderService::setConnectionProperties(const sci::cca::ConnectionID::pointer& /*connID*/,
 					     const sci::cca::TypeMap::pointer& /*map*/)
 {
-  cerr << "BuilderService::setConnectionProperties not finished\n";
+  std::cerr << "BuilderService::setConnectionProperties not finished\n";
 }
 
 void BuilderService::disconnect(const sci::cca::ConnectionID::pointer& connID,
@@ -247,14 +247,14 @@ void BuilderService::disconnect(const sci::cca::ConnectionID::pointer& connID,
       break;
     }
   }
-  //cerr << "BuilderService::disconnect: timeout or safty check needed "<<endl;
+  //std::cerr << "BuilderService::disconnect: timeout or safty check needed "<<std::endl;
 }
 
 void BuilderService::disconnectAll(const sci::cca::ComponentID::pointer& /*id1*/,
 				   const sci::cca::ComponentID::pointer& /*id2*/,
 				   float /*timeout*/)
 {
-  cerr << "BuilderService::disconnectAll not finished\n";
+  std::cerr << "BuilderService::disconnectAll not finished\n";
 }
 
 
@@ -273,7 +273,7 @@ SSIDL::array1<std::string>  BuilderService::getCompatiblePortList(
   ComponentInstance* comp1=framework->lookupComponent(cid1->name);
   ComponentInstance* comp2=framework->lookupComponent(cid2->name);
 
-  cerr<<"Component: "<<cid2->getInstanceName()<<endl;
+  std::cerr<<"Component: "<<cid2->getInstanceName()<<std::endl;
   PortInstance* pr1=comp1->getPortInstance(port1);
   if(!pr1)
     throw CCAException("Unknown port");
@@ -305,7 +305,7 @@ SSIDL::array1<std::string> BuilderService::getBridgablePortList(
   ComponentInstance* comp1=framework->lookupComponent(cid1->name);
   ComponentInstance* comp2=framework->lookupComponent(cid2->name);
 
-  cerr<<"Component: "<<cid2->getInstanceName()<<endl;
+  std::cerr<<"Component: "<<cid2->getInstanceName()<<std::endl;
   PortInstance* pr1=comp1->getPortInstance(port1);
   if(!pr1)
     throw CCAException("Unknown port");
@@ -355,32 +355,32 @@ BuilderService::generateBridge(const sci::cca::ComponentID::pointer& c1,
 
 int BuilderService::addLoader(const std::string &loaderName, const std::string &user, const std::string &domain, const std::string &loaderPath )
 {
-  cerr<<"BuiderService::addLoader() not implemented\n";
+  std::cerr<<"BuiderService::addLoader() not implemented\n";
   std::string cmd="xterm -e ssh ";
   //  cmd+=user+"@"+domain+" "+loaderPath+" "+loaderName+" "+getFrameworkURL() +"&";
 
   cmd="xterm -e "+loaderPath+" "+loaderName+" "+getFrameworkURL() +"&";
-  cout<<cmd<<endl;
+  cout<<cmd<<std::endl;
   system(cmd.c_str());
   return 0;
 }
 
 int BuilderService::removeLoader(const std::string &loaderName)
 {
-  cerr<<"BuiderService::removeLoader() not implemented\n";
+  std::cerr<<"BuiderService::removeLoader() not implemented\n";
   return 0;
 }
 
 
 int BuilderService::addComponentClasses(const std::string &loaderName)
 {
-  cerr<<"BuiderService::addComponentClasses not implemented\n";
+  std::cerr<<"BuiderService::addComponentClasses not implemented\n";
   return 0;
 }
 
 int BuilderService::removeComponentClasses(const std::string &loaderName)
 {
-  cerr<<"BuiderService::removeComponentClasses not implemented\n";
+  std::cerr<<"BuiderService::removeComponentClasses not implemented\n";
   return 0;
 }
 
@@ -394,12 +394,12 @@ void BuilderService::registerFramework(const std::string &frameworkURL)
   sci::cca::Services::pointer bs = remoteFramework->getServices("external builder", 
 								"builder main", 
 								sci::cca::TypeMap::pointer(0));
-  cerr << "got bs\n";
+  std::cerr << "got bs\n";
   sci::cca::ports::ComponentRepository::pointer reg =
     pidl_cast<sci::cca::ports::ComponentRepository::pointer>
     (bs->getPort("cca.ComponentRepository"));
   if(reg.isNull()){
-    cerr << "Cannot get component registry, not building component menus\n";
+    std::cerr << "Cannot get component registry, not building component menus\n";
     return;
   }
   
@@ -411,22 +411,22 @@ void BuilderService::registerFramework(const std::string &frameworkURL)
       (servicesList[i]->getPort("cca.BuilderService"));
 
     if(builder.isNull()){
-      cerr << "Fatal Error: Cannot find builder service\n";
+      std::cerr << "Fatal Error: Cannot find builder service\n";
       return;
     } 
     
     sci::cca::ComponentID::pointer cid=servicesList[i]->getComponentID();
-    cerr<<"try to connect..."<<endl;
+    std::cerr<<"try to connect..."<<std::endl;
     sci::cca::ConnectionID::pointer connID=builder->connect(cid, "builderPort",
 							    cid, "builder");
-    cerr<<"connection done"<<endl;
+    std::cerr<<"connection done"<<std::endl;
   
 
     sci::cca::Port::pointer p = servicesList[i]->getPort("builder");
     sci::cca::ports::BuilderPort::pointer bp = 
       pidl_cast<sci::cca::ports::BuilderPort::pointer>(p);
     if(bp.isNull()){
-      cerr << "BuilderPort is not connected!\n";
+      std::cerr << "BuilderPort is not connected!\n";
     } 
     else{
       bp->buildRemotePackageMenus(reg, frameworkURL);
