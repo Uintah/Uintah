@@ -12,6 +12,8 @@ itcl_class MeshView {
 	set $this-allLevels 1
 	global $this-elmMeas
 	global $this-elmSwitch
+	set $this-elmSwitch 0
+	set $this-elmMeas 1
     }
     method ui {} {
 	set w .ui$this
@@ -93,16 +95,18 @@ itcl_class MeshView {
 		-variable $this-elmMeas -value 3 -anchor w \
 		-command $n
 	radiobutton $w.f.elms.err -text "Error" \
-		-variable $this-elmMeas -value 4 -anchor w  \
+		-variable $this-elmMeas -value 4 -anchor w \
 		-command $n
 	pack $w.f.elms.volume $w.f.elms.aspect \
 		$w.f.elms.size $w.f.elms.err -side top -expand 1 -fill x
+
 
 	frame $w.f.elms.dummy
 	pack $w.f.elms.dummy -side top -pady 2 -fill y
 
 	range $w.f.elms.range -from -1 -to 1 -showvalue true \
-		-orient horizontal -command $n -label Measure
+		-orient horizontal -command $n -label Measure \
+		-var_min $this-mMin -var_max $this-mMax
 	pack $w.f.elms.range -side left -fill x -expand 1
 
     }
@@ -130,20 +134,24 @@ itcl_class MeshView {
 	$w.f.clips.clipZ configure -from $zmin -to $zmax
     }
 
-#    method do_measure {} {
-#	set w .ui$this
-#	if {1 == 1} {
-#	    $w.f.elms.range configure -label "Volume"
-#	} elseif {1 == 2} {
-#	    $w.f.elms.range configure -label "Aspect Ratio"
-#	} elseif {1 == 3} {
-#	    $w.f.elms.range configure -label "Size v neighbor"
-#	} else {
-#	    $w.f.elms.range configure -label "Error"
-#	}
-#	$this-c needexecute
-#    }
+    method do_measure {min max} {
+	global $this-mMin
+	global $this-mMax
+	set w .ui$this
+	if {1 == 1} {
+	    $w.f.elms.range configure -label "Volume"
+	} elseif {1 == 2} {
+	    $w.f.elms.range configure -label "Aspect Ratio"
+	} elseif {1 == 3} {
+	    $w.f.elms.range configure -label "Size v neighbor"
+	} else {
+	    $w.f.elms.range configure -label "Error"
+	}
+	$w.f.elms.range configure -from $min -to $max
+	set $this-mMin $min
+	set $this-mMax $max
 
+    }
 
 }
 

@@ -27,6 +27,7 @@
 #include <Geom/Line.h>
 #include <Geom/Switch.h>
 #include <TCL/TCLvar.h>
+#include <Widgets/CrosshairWidget.h>
 #include <iostream.h>
 #include <strstream.h>
 #include <Math/Mat.h>
@@ -46,7 +47,7 @@ struct MVEdge {
 class MeshView : public Module {
     MeshIPort* inport;
     GeometryOPort* ogeom;
-
+    CrowdMonitor widget_lock;
     int haveVol, haveAsp, haveSize;
     
     TCLint numLevels,               //  The number of levels being shown
@@ -62,25 +63,35 @@ class MeshView : public Module {
         oldNumTet;                  //  The previous number of elements
     TCLint allLevels, elmMeas;	    //  Flag of whether to show all levels
                                     //    or only the current one
-
     TCLint elmSwitch;
+    TCLdouble mMin, mMax;
+    CrosshairWidget *startingTet;
+
+    int oldMeas, switchSet, oldElm;
+    Array1<BBox> tb;
 
     Array1<int> levels;
     Array1< Array1<int> > levStor;
     Array1<GeomSwitch*> levSwitch;
     Array1<GeomSwitch*> auxSwitch;
+    GeomSwitch* measSwitch;
+    GeomSwitch* measAuxSwitch;
     Array1<GeomGroup*> levTetra;
     Array1<GeomGroup*> auxTetra;
+    GeomGroup* measTetra;
+    GeomGroup* measAuxTetra;
     Array1<GeomGroup*> levEdges;
     Array1<GeomMaterial*> levMatl;
     Array1<GeomMaterial*> auxMatl;
+    GeomMaterial* measMatl;
+    GeomMaterial* measAuxMatl;
 
     Array1<double> volMeas, aspMeas, sizeMeas;
     CrowdMonitor geom_lock;
     GeomGroup* eGroup;
 
     MaterialHandle mat1;
-    MaterialHandle mat2;
+    MaterialHandle mat2, mat3;
 public:
     MeshView(const clString& id);
     MeshView(const MeshView&, int deep);
@@ -94,6 +105,7 @@ public:
 		double cNY, double cZ, double cNZ, const MeshHandle& mesh); 
     void makeEdges(const MeshHandle& mesh);
     void calcMeasures(const MeshHandle& mesh, double *min, double *max);
+    void getMeas(const MeshHandle& mesh);
     double volume(Point p1, Point p2, Point p3, Point p4);
     double aspect_ratio(Point p1, Point p2, Point p3, Point p4);
     double calcSize(const MeshHandle& mesh, int ind);
@@ -116,7 +128,8 @@ MeshView::MeshView(const clString& id)
   clipY("clipY", id, this), clipZ("clipZ", id, this),
   clipNX("clipNX", id, this), clipNY("clipNY", id, this), 
   clipNZ("clipNZ", id, this), allLevels("allLevels", id, this),
-  elmMeas("elmMeas", id, this), elmSwitch("elmSwitch", id, this)
+  elmMeas("elmMeas", id, this), elmSwitch("elmSwitch", id, this),
+  mMin("mMin", id, this), mMax("mMax", id, this)
 {
 
     // Create an input port, of type Mesh
@@ -131,15 +144,24 @@ MeshView::MeshView(const clString& id)
     oldSeed = -1; 
     oldClipY = 10000; oldClipX = 10000; oldClipZ = 10000;
     oldClipNY = 10000; oldClipNX = 10000; oldClipNZ = 10000;
+    oldMeas = 10;
 
     // Set up Material Properties
     mat1=new Material(Color(.5, .5, .5), Color(.5, .5, .5),
 		      Color(.1, .1, .1), 10);
     mat2=new Material(Color(1, 0, 0), Color(1, 0, 0),
 		      Color(.1, .1, .1), 10);
+    mat3=new Material(Color(0, 1, 1), Color(0, 1, 1),
+		      Color(.1, .1, .1), 10);
     oldMin = Point(0.0, 0.0, 0.0);
     oldMax = Point(0.0, 0.0, 0.0);
-    oldNumTet = 0;
+    oldNumTet = 0; oldElm = -1;
+    haveVol = haveAsp = haveSize = 0;
+    switchSet = 0;
+
+    startingTet = new CrosshairWidget(this, &widget_lock, 0.01);
+    measTetra = new GeomGroup;
+    measAuxTetra = new GeomGroup;
 }	
 
 MeshView::MeshView(const MeshView& copy, int deep)
@@ -148,7 +170,8 @@ MeshView::MeshView(const MeshView& copy, int deep)
   clipY("clipY", id, this), clipZ("clipZ", id, this),
   clipNX("clipNX", id, this), clipNY("clipNY", id, this), 
   clipNZ("clipNZ", id, this), allLevels("allLevels", id, this),
-  elmMeas("elmMeas", id, this), elmSwitch("elmSwitch", id, this)
+  elmMeas("elmMeas", id, this), elmSwitch("elmSwitch", id, this),
+  mMin("mMin", id, this), mMax("mMax", id, this)
 {
     NOT_FINISHED("MeshView::MeshView");
 }
@@ -171,8 +194,6 @@ void MeshView::execute()
     Point bmin, bmax;
     mesh->get_bounds(bmin, bmax);
 
-    haveVol = haveAsp = haveSize = 0;
-
     // If the new bounding box values aren't equal to the old ones, reset
     //  the values on the slider
     if ((bmin != oldMin) || (bmax != oldMax))
@@ -187,8 +208,8 @@ void MeshView::execute()
         clipY.set(bmin.y()); clipNY.set(bmax.y());
         clipZ.set(bmin.z()); clipNZ.set(bmax.z());
     }
-    
 
+    int numTetra=mesh->elems.size();
     if (oldSeed != seedTet.get()) 
     {
         makeLevels(mesh);
@@ -196,17 +217,19 @@ void MeshView::execute()
         str3 << id << " set_minmax_nl " << " " << 0 << " " << deep-1 << '\0';
         TCL::execute(str3.str());
         oldSeed = seedTet.get();
-
+	if (tb.size())
+	    tb.remove_all();
+	tb.grow(deep);
+	for (int k = 0; k < deep; k++)
+	{
+	    levMatl[k] -> get_bounds(tb[k]);
+	}
     }
 
     oldLev = numLevels.get();
     oldClipX = clipX.get();
     oldClipY = clipY.get();
     oldClipZ = clipZ.get();
-    int numTetra=mesh->elems.size();
-    volMeas.grow(numTetra);
-    aspMeas.grow(numTetra);
-    sizeMeas.grow(numTetra);
 
     if (oldNumTet != numTetra)
     {
@@ -225,9 +248,8 @@ void MeshView::execute()
     cZ = clipZ.get(); cNZ = clipNZ.get();
 
 
-    BBox tb;
 
-//    geom_lock.write_lock();
+    geom_lock.write_lock();
     GeomGroup *group = new GeomGroup;
     int needAux = 0;
     int start, finish;
@@ -243,23 +265,39 @@ void MeshView::execute()
 	finish = nL;
     }
 
-/*    if (elmSwitch.get())
+    double measMin, measMax;
+    calcMeasures(mesh, &measMin, &measMax);
+    if (oldMeas != elmMeas.get())
     {
-	double measMin, measMax;
+	ostrstream str4(buf, 1000);
+	str4 << id << " do_measure " << " " << measMin << " " << measMax << '\0';
+	TCL::execute(str4.str());
+	oldMeas = elmMeas.get();
+    }
+
+    if (elmSwitch.get())
+    {
 	for (int j = 0; j < deep; j++)
 	{
 	    levSwitch[j] -> set_state(0);
 	    auxSwitch[j] -> set_state(0);
-	    calcMeasures(mesh, &measMin, &measMax);
 	}
-//        ostrstream str4(buf, 1000);
-//        str4 << id << " do_measure " << " " << measMin << " " << measMax << '\0';
-//        TCL::execute(str4.str());
-	
+
+	getMeas(mesh);
+	measSwitch -> set_state(1);
+
+	if (elmSwitch.get() == 2)
+	    measAuxSwitch -> set_state(1);
+	else
+	    measAuxSwitch -> set_state(0);
     }
     else	
     {
-*/
+	if (switchSet)
+	{
+	    measSwitch -> set_state(0);
+	    measAuxSwitch -> set_state(0);
+	}
 	for( int i = 0; i < deep; i++)
 	{
 	    if (((aL == OUTER) && (i != nL)) || (i > nL))
@@ -269,12 +307,11 @@ void MeshView::execute()
 	    }	
 	    else
 	    {
-		levMatl[i] -> get_bounds(tb);
 
 		needAux = 0;
-		if ((tb.min().x() < cX) || (tb.max().x() > cNX) ||
-		    (tb.min().y() < cY) || (tb.max().y() > cNY) ||
-		    (tb.min().z() < cZ) || (tb.max().z() > cNZ))
+		if ((tb[i].min().x() < cX) || (tb[i].max().x() > cNX) ||
+		    (tb[i].min().y() < cY) || (tb[i].max().y() > cNY) ||
+		    (tb[i].min().z() < cZ) || (tb[i].max().z() > cNZ))
 		{
 		    doClip(i, cX, cNX, cY, cNY, cZ, cNZ, mesh);
 		    needAux = 1;
@@ -300,8 +337,28 @@ void MeshView::execute()
 		levMatl[i]->setMaterial(mat1);
 	    }
 	}
-//    }
+    }
+
+cerr << "Switch sizes: \n";
+if (switchSet)
+{
+cerr << "    measTetra = " << measTetra -> size() << endl;
+cerr << "    measAuxTetra = " << measAuxTetra -> size() << endl;
+}
+cerr << "    levTetra[0] = " << levTetra[0] -> size() << endl;
+cerr << "    auxTetra[0] = " << auxTetra[0] -> size() << endl;
+if (switchSet)
+{
+cerr << "Switch states: \n";
+cerr << "    measSwitch = " << measSwitch -> get_state() << endl;
+cerr << "    measAuxSwitch = " << measAuxSwitch -> get_state() << endl;
+cerr << "      levSwitch[0] = " << levSwitch[0] -> get_state() << endl;
+cerr << "      auxSwitch[0] =" << auxSwitch[0] -> get_state() << endl;
+}
+    startingTet -> execute();
     geom_lock.write_unlock();
+
+
     ogeom->flushViews();
 }
 
@@ -444,10 +501,12 @@ void MeshView::calcMeasures(const MeshHandle& mesh, double *min, double *max)
     int i, e = elmMeas.get();
     int numTetra=mesh->elems.size();
 
+
     *min = DBL_MAX;
     *max = DBL_MIN;
     if ((e == 1) && !haveVol)
     {
+	volMeas.grow(numTetra);
 	for (i = 0; i < numTetra; i++)
 	{
 	    Element* e=mesh->elems[i];
@@ -464,6 +523,7 @@ void MeshView::calcMeasures(const MeshHandle& mesh, double *min, double *max)
     }
     else if ((e == 2) && !haveAsp)
     {
+	aspMeas.grow(numTetra);
 	for (i = 0; i < numTetra; i++)
 	{
 	    Element* e=mesh->elems[i];
@@ -480,6 +540,8 @@ void MeshView::calcMeasures(const MeshHandle& mesh, double *min, double *max)
     }
     else if ((e == 3) && !haveSize)
     {
+
+	sizeMeas.grow(numTetra);
 	if (!haveVol)
 	{
 	    for (i = 0; i < numTetra; i++)
@@ -505,6 +567,68 @@ void MeshView::calcMeasures(const MeshHandle& mesh, double *min, double *max)
 
 }
 
+void MeshView::getMeas(const MeshHandle& mesh)
+{
+    GeomGroup *gr = new GeomGroup;
+    int e = elmMeas.get();
+
+    double min = mMin.get(); 
+    double max = mMax.get();
+    double meas;
+    int numTetra=mesh->elems.size();
+
+    if (e != oldElm)
+    {
+	if (measTetra -> size())
+	    measTetra -> remove_all();
+	if (measAuxTetra -> size())
+	    measAuxTetra -> remove_all();
+	for (int i = 0; i < numTetra; i++)
+	{
+	    if (e == 1)
+		meas = volMeas[i];
+	    else if (e == 2)
+		meas = aspMeas[i];
+	    else if (e == 3)
+		meas = sizeMeas[i];
+		
+	    if ((meas > min) && (meas < max))
+	    {
+		Element* elm=mesh->elems[i];
+		Point p1(mesh->nodes[elm->n[0]]->p);
+		Point p2(mesh->nodes[elm->n[1]]->p);
+		Point p3(mesh->nodes[elm->n[2]]->p);
+		Point p4(mesh->nodes[elm->n[3]]->p);
+	    
+		GeomTetra *nTet = new GeomTetra(p1, p2, p3, p4);
+		measTetra -> add(nTet);
+	    }
+	    else
+	    {
+		Element* elm=mesh->elems[i];
+		Point p1(mesh->nodes[elm->n[0]]->p);
+		Point p2(mesh->nodes[elm->n[1]]->p);
+		Point p3(mesh->nodes[elm->n[2]]->p);
+		Point p4(mesh->nodes[elm->n[3]]->p);
+	    
+		GeomTetra *nTet = new GeomTetra(p1, p2, p3, p4);
+		measAuxTetra -> add(nTet);
+	    }
+
+	}
+	measMatl = new GeomMaterial(measTetra, mat3);
+	measSwitch = new GeomSwitch(measMatl, 0);
+	measAuxMatl = new GeomMaterial(measAuxTetra, mat1);
+	measAuxSwitch = new GeomSwitch(measAuxMatl, 0);
+	gr -> add(measAuxSwitch);
+	gr -> add(measSwitch);
+
+	switchSet = 1;
+//    ogeom -> delAll();
+	ogeom -> addObj(gr, mesh_name, &geom_lock);
+	oldElm = e;
+    }
+}
 double MeshView::volume(Point p1, Point p2, Point p3, Point p4)
 {
     double x1=p1.x();
@@ -525,7 +649,7 @@ double MeshView::volume(Point p1, Point p2, Point p3, Point p4)
     double a3 = x4*(y1*z2 - y2*z1) + x1*(y2*z4 - y4*z2) + x2*(y4*z1 - y1*z4);
     double a4 =-x1*(y2*z3 - y3*z2) - x2*(y3*z1 - y1*z3) - x3*(y1*z2 - y2*z1);
 
-    return(a1 + a2 + a3 + a4) / 6.;
+    return fabs((a1 + a2 + a3 + a4) / 6.);
 }
 
 double MeshView::aspect_ratio(Point p0, Point p1, Point p2, Point p3)
