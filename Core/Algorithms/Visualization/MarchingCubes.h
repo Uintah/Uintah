@@ -31,8 +31,8 @@
 #ifndef MarchingCubes_h
 #define MarchingCubes_h
 
-#include <stdio.h>
 #include <iostream>
+#include <string>
 
 #include <Core/Geom/GeomObj.h>
 
@@ -40,12 +40,13 @@ namespace SCIRun {
 
 class MarchingCubesAlg {
 public:
+
   MarchingCubesAlg() {}
   virtual ~MarchingCubesAlg() {}
 
   virtual void release() = 0;
   virtual void set_field( Field * ) = 0;
-  virtual void search( double, int ) = 0;
+  virtual void search( double, bool ) = 0;
   virtual GeomObj* get_geom() = 0;
   virtual TriSurfMeshHandle get_trisurf() = 0;
 };
@@ -69,7 +70,7 @@ public:
 
   virtual void release();
   virtual void set_field( Field * );
-  virtual void search( double, int=0 );
+  virtual void search( double, bool=false );
   virtual GeomObj* get_geom() { 
     if (tess_) return tess_->get_geom(); else return 0; }
   virtual TriSurfMeshHandle get_trisurf() { 
@@ -100,7 +101,7 @@ MarchingCubes<AI,Tesselator>::set_field( Field *f )
 
 template<class AI, class Tesselator>
 void
-MarchingCubes<AI,Tesselator>::search( double iso, int build_trisurf )
+MarchingCubes<AI,Tesselator>::search( double iso, bool build_trisurf )
 {
   ASSERT(tess_ != 0);
 
@@ -112,7 +113,6 @@ MarchingCubes<AI,Tesselator>::search( double iso, int build_trisurf )
     ++cell;
   }
 }
-
 
 } // End namespace SCIRun
 
