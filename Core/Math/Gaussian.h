@@ -33,8 +33,6 @@
 
 #include <Core/share/share.h>
 #include <Core/Math/MusilRNG.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
 #include <math.h>
 #include <iostream>
 
@@ -43,6 +41,7 @@ namespace SCIRun {
 using std::cout;
 using std::endl;
 
+//   http://mathworld.wolfram.com/GaussianDistribution.html
 class SCICORESHARE Gaussian {
 public:
   double mean_;
@@ -51,25 +50,14 @@ public:
   Gaussian(double mean=0, double sigma=1, int seed=0);
   ~Gaussian();
 
-  inline double rand() {double a=2.0 * (*mr_)() - 1.0; double a2=a*a; return a*sigma_*sqrt((-2.0 * log(a2)) / (a2));};
+  //   pick a random value from this Gaussian distribution
+  //      - implemented using the Box-Muller transformation
+  inline double rand() {return sqrt(-2*log((*mr_)()))*cos(2*M_PI*(*mr_)())*sigma_+mean_;}
+
+  //   probablility that x was picked from this Gaussian distribution
   double prob(double x) {return exp(-(x-mean_)*(x-mean_)/(2*sigma_*sigma_))/(sigma_*sqrt(2*M_PI));}
 };
 
 } // End namespace SCIRun
 
 #endif //SCI_GAUSSIAN_H__
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
