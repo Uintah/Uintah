@@ -105,4 +105,24 @@ public:
     static PersistentTypeID type_id;
 };
 
+class PointsSurface : public Surface {
+    Array1<Point> pos;
+    Array1<double> val;
+public:
+    PointsSurface();
+    PointsSurface(const Array1<Point>& pos, const Array1<double>& val);
+    PointsSurface(const PointsSurface&);
+    virtual ~PointsSurface();
+    virtual Surface* clone();
+    virtual int inside(const Point& p);
+    virtual void get_surfnodes(Array1<NodeHandle>&);
+    virtual void construct_grid(int, int, int, const Point &, double);
+    virtual void construct_grid();
+
+    virtual GeomObj* get_obj(const ColormapHandle&);
+    // Persistent representation...
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
+};
+
 #endif /* SCI_Datatypes_BasicSurfaces_h */

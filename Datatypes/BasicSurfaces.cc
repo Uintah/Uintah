@@ -567,6 +567,80 @@ GeomObj* PointSurface::get_obj(const ColormapHandle&)
     return 0;
 }
 
+static Persistent* make_PointsSurface()
+{
+    return scinew PointsSurface();
+}
+
+PersistentTypeID PointsSurface::type_id("PointsSurface", "Surface",
+				       make_PointsSurface);
+
+PointsSurface::PointsSurface(const Array1<Point>& pos, const Array1<double>& val)
+: Surface(Other, 0), pos(pos), val(val)
+
+{
+}
+
+PointsSurface::PointsSurface()
+: Surface(Other, 0)
+{
+}
+
+PointsSurface::~PointsSurface()
+{
+}
+
+PointsSurface::PointsSurface(const PointsSurface& copy)
+: Surface(copy), pos(copy.pos)
+{
+}
+
+Surface* PointsSurface::clone()
+{
+    return scinew PointsSurface(*this);
+}
+
+int PointsSurface::inside(const Point&)
+{
+    return 0;
+}
+
+#define POINTSSURFACE_VERSION 1
+
+void PointsSurface::io(Piostream& stream)
+{
+    /*int version=*/stream.begin_class("PointsSurface", POINTSSURFACE_VERSION);
+    Surface::io(stream);
+    Pio(stream, pos);
+    Pio(stream, val);		    
+    stream.end_class();
+}
+
+void PointsSurface::construct_grid(int, int, int, const Point &, double)
+{
+    NOT_FINISHED("PointsSurface::construct_grid");
+}
+
+void PointsSurface::construct_grid()
+{
+    NOT_FINISHED("PointsSurface::construct_grid");
+}
+
+GeomObj* PointsSurface::get_obj(const ColormapHandle&)
+{
+    NOT_FINISHED("PointsSurface::get_obj");
+    return 0;
+}
+
+void PointsSurface::get_surfnodes(Array1<NodeHandle>& nodes)
+{
+    for (int i=0; i<val.size(); i++) {
+	Node* node=new Node(pos[i]);
+	node->bc=scinew DirichletBC(this, val[i]);
+	nodes.add(node);
+    }
+}
+
 #ifdef __GNUG__
 
 #include <Classlib/Array1.cc>
