@@ -1,6 +1,6 @@
 
 0) itcl classes for Modules
-   - Fix graphs on modules
+DONE   - Fix graphs on modules
    - Fix Streamline
    - more testing
    - Bugs in LinkVar with itcl
