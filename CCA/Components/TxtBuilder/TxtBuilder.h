@@ -61,6 +61,7 @@ namespace SCIRun {
     void run();
     bool exec_command(char cmdline[]);
     int parse(string cmdline, string args[]);
+    void use_cluster(string args[]);
     void list_all(string args[]);
     void list_components(string args[]);
     void list_ports(string args[]);
