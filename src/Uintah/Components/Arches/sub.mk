@@ -36,13 +36,18 @@ endif
 #CFLAGS += -g -DARCHES_VEL_DEBUG
 #CFLAGS += -g -DARCHES_DEBUG -DARCHES_GEOM_DEBUG -DARCHES_BC_DEBUG -DARCHES_COEF_DEBUG 
 CFLAGS += -DARCHES_SRC_DEBUG -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG
-# -DHAVE_PETSC
+ifneq ($(PETSC_DIR),)
+CFLAGS +=	-DHAVE_PETSC
+endif
 #LIBS += -lblas
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.35  2000/09/25 17:32:12  sparker
+# Automatically determine if we should use -DHAVE_PETSC
+#
 # Revision 1.34  2000/09/25 16:31:40  rawat
 # removed petsc lib from sub.mk
 #
