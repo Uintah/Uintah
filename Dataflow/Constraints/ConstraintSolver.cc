@@ -25,7 +25,7 @@ using SCICore::Util::DebugSwitch;
 static DebugSwitch cs_debug("ConstraintSolver", "Print");
 static DebugSwitch cs2_debug("ConstraintSolver", "Stack");
 
-ostream& operator<<( ostream& os, StackItem& i ) {
+ostream& operator<<( ostream& os, const StackItem& i ) {
    os << i.var->GetName() << ":  ";
    switch (i.rtype) {
    case UnInit:
@@ -128,7 +128,7 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
    stack.push(StackItem(var));
 
    while (!stack.empty() && !abort) {
-      StackItem& item = stack.top();
+       StackItem& item = stack.top();
       BaseVariable (*v)(item.var);      // without the () around *v, visualC++ gets confused
 
       if (cs2_debug) {
@@ -260,6 +260,10 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 21:45:25  sparker
+// Array1 const correctness, and subsequent fixes
+// Array1 bug fix courtesy Tom Thompson
+//
 // Revision 1.2  1999/08/17 06:38:16  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -124,7 +124,7 @@ void TecplotReader::GetParticleData(int particleId,
   clString file = basename(  filename );
   clString path = pathname( filename  );
   const char *p = file();
-  char n[5];
+   char n[5];
   char root[ 80 ];
   int i, ii;
   int j = 0;
@@ -804,6 +804,10 @@ VectorFieldHandle TecplotReader::makeVectorField(int ii, int jj,
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 21:45:27  sparker
+// Array1 const correctness, and subsequent fixes
+// Array1 bug fix courtesy Tom Thompson
+//
 // Revision 1.2  1999/08/17 06:40:12  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
