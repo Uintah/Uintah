@@ -21,34 +21,39 @@
 -->
 
 
-<component name="TransformData" category="Fields">
+<component name="TransformData2" category="Fields">
   <overview>
     <authors>
       <author>Michael Callahan</author>
     </authors>
-    <summary>Perform a specified functional transform on all of the
-  data in a field.</summary>
+    <summary>Perform a specified functional transform to each pair of
+  data elements in the two input fields.</summary>
     <description>
-    	<p>Compute the specified function on each data element in the
-	 input field.</p>
 
+	<p>Compute the specified function for each pair of
+        corresponding data elements in the input fields.  In order to
+        correspond the data points, this module requires that the two
+        input fields share the same mesh and have their data at the
+        same location.</p>
+  
         <p>The data transform is specified in the GUI as the body of a
 	C++ function.  The input values to the function are the x, y,
 	and z positions of the data point, v0 for the first field's
 	data element and v1 for the second field's data element.  No
 	value is returned, rather set the 'result' variable to the
-	return type.  For example, "result = x + v;" would return a
-	new field containing the x position of each element added with
-	the value that was already there.  "result = v.x();" could be
-	used to extract the x component of a vector field into a
-	scalar field.</p>
+	return type.  For example, "result = v0 + v1;" would add each
+	of the corresponding elements of the two fields.</p>
 
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Input Field</name>
+        <name>Input Field 0</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Input Field 1</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>

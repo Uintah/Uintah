@@ -71,6 +71,8 @@ SRCS     += \
 	$(SRCDIR)/TetVol2QuadraticTetVol.cc\
 	$(SRCDIR)/TransformField.cc\
 	$(SRCDIR)/TransformData.cc\
+	$(SRCDIR)/TransformData2.cc\
+	$(SRCDIR)/TransformData3.cc\
 	$(SRCDIR)/TransformScalarData.cc\
 	$(SRCDIR)/TransformVectorData.cc\
 	$(SRCDIR)/Unstructure.cc\
