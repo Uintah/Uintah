@@ -157,6 +157,7 @@ usage( const std::string & message,
       cerr << "-emit_taskgraphs     : Output taskgraph information\n";
       cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
       cerr << "-combine_patches     : Give a uda directory as the input file\n";      
+      cerr << "-uda_suffix <number> : Make a new uda dir with <number> as the default suffix\n";      
       cerr << "-t <timestep>        : Restart timestep (last checkpoint is default,\n\t\t\tyou can use -t 0 for the first checkpoint)\n";
       cerr << "-copy                : Copy from old uda when restarting\n";
       cerr << "-move                : Move from old uda when restarting\n";
@@ -213,6 +214,7 @@ main( int argc, char** argv )
     bool   restart=false;
     bool   combine_patches=false;
     int    restartTimestep = -1;
+    int    udaSuffix;
     string udaDir; // for restart or combine_patches
     bool   restartFromScratch = true;
     bool   restartRemoveOldDir = false;
@@ -325,6 +327,12 @@ main( int argc, char** argv )
 	   restart=true;
 	} else if(s == "-combine_patches") {
 	   combine_patches=true;	   
+	} else if(s == "-uda_suffix") {
+           if (i < argc-1)
+	      udaSuffix = atoi(argv[++i]);
+           else
+	    usage("You must provide a suffix number for -uda_suffix",
+		  s, argv[0]);
 	} else if(s == "-nocopy") { // default anyway, but that's fine
  	   restartFromScratch = true;
 	} else if(s == "-copy") {
@@ -596,7 +604,7 @@ main( int argc, char** argv )
 	}
 
 	// Output
-        DataArchiver* dataarchiver = scinew DataArchiver(world);
+        DataArchiver* dataarchiver = scinew DataArchiver(world, udaSuffix);
 	Output* output = dataarchiver;
 	ctl->attachPort("output", output);
         dataarchiver->attachPort("load balancer", bal);
