@@ -44,7 +44,8 @@ DESCRIPTION
 WARNING
   
 ****************************************/
-
+   class CompTable;
+  
    class TaskGraph {
    public:
       TaskGraph();
@@ -105,9 +106,33 @@ WARNING
       typedef map< string, list<int> > VarLabelMaterialMap;
       VarLabelMaterialMap* makeVarLabelMaterialMap();
    private:
+     typedef multimap<const VarLabel*, Task::Dependency*, VarLabel::Compare>
+     CompMap;
+
+     // Helper function for proccessTasks, processing the dependencies
+     // for the given task in the dependency list whose head is req.
+     void processDependencies(Task* task, Task::Dependency* req,
+			      vector<Task*>& sortedTasks) const;
+     
+     // Helper function for setupTaskConnections, adding dependency edges
+     // for the given task for each of the require (or modify) depencies in
+     // the list whose head is req.  If modifies is true then each found
+     // compute will be replaced by its modifying dependency on the CompMap.
+     void addDependencyEdges(Task* task, Task::Dependency* req, CompMap& comps,
+			     bool modifies);
+
+     // This is the "detailed" version of addDependencyEdges.  It does for
+     // the public createDetailedDependencies member function essentially
+     // what addDependencyEdges does for setupTaskConnections.
+     void createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
+				     const ProcessorGroup* pg,
+				     DetailedTask* task, Task::Dependency* req,
+				     CompTable& ct, bool modifies);
+     
      void createDetailedTask(DetailedTasks* tasks, Task* task,
 			     const PatchSubset* patches,
 			     const MaterialSubset* matls);
+     
      int findVariableLocation(LoadBalancer* lb, const ProcessorGroup* pg,
 			      Task::Dependency* req,
 			      const Patch* patch, int matl);
