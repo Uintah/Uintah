@@ -900,6 +900,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     StaticArray<CCVariable<Vector>   > vel_CC(numMatls);
     CCVariable<double>    press_CC;  
     StaticArray<double>   cv(numMatls);
+    StaticArray<double>   gamma(numALLMatls);
     new_dw->allocate(press_CC,lb->press_CCLabel, 0,patch);
     press_CC.initialize(0.0);
 
@@ -928,7 +929,9 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                 vol_frac_CC[m], vel_CC[m], 
                                 press_CC,  numALLMatls,    patch, new_dw);
 
-      cv[m] = ice_matl->getSpecificHeat();
+      cv[m]    = ice_matl->getSpecificHeat();
+      gamma[m] = ice_matl->getGamma();
+
       setBC(rho_top_cycle[m], "Density",      patch, indx);
       setBC(Temp_CC[m],       "Temperature",  patch, indx);
       setBC(vel_CC[m],        "Velocity",     patch, indx); 
@@ -943,9 +946,8 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
         setBC(press_CC, rho_micro[SURROUND_MAT], "Pressure",patch,0);
 
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-        double gamma = ice_matl->getGamma();
         ice_matl->getEOS()->computeTempCC(patch, "WholeDomain",
-                                     press_CC,   gamma,   cv[m],
+                                     press_CC,   gamma[m],   cv[m],
 					  rho_micro[m],    Temp_CC[m]);
       }
     }  
@@ -1043,6 +1045,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     constCCVariable<double> press;
     CCVariable<double> press_new;
     StaticArray<double> cv(numMatls);
+    StaticArray<double> gamma(numMatls);
 
     old_dw->get(press,         lb->press_CCLabel, 0,patch,Ghost::None, 0); 
     new_dw->allocate(press_new,lb->press_equil_CCLabel, 0,patch);
@@ -1061,7 +1064,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       new_dw->allocate(rho_micro[m],     lb->rho_micro_CCLabel, indx, patch);
       new_dw->allocate(vol_frac[m],      lb->vol_frac_CCLabel,  indx, patch);
       new_dw->allocate(rho_CC_new[m],    lb->rho_CCLabel,       indx, patch);
-      cv[m] = matl->getSpecificHeat();
+      cv[m]    = matl->getSpecificHeat();
+      gamma[m] = matl->getGamma();
     }
 
     press_new.copyData(press);
@@ -1070,12 +1074,11 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
       for (int m = 0; m < numMatls; m++) {
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-        double gamma = ice_matl->getGamma();
         rho_micro[m][*iter] = 
-	  ice_matl->getEOS()->computeRhoMicro(press_new[*iter],gamma,cv[m],
+	  ice_matl->getEOS()->computeRhoMicro(press_new[*iter],gamma[m],cv[m],
 					      Temp[m][*iter]); 
 
-          ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
+          ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma[m],
                                           cv[m], Temp[m][*iter],
                                           press_eos[m], dp_drho[m], dp_de[m]);
 
@@ -1134,9 +1137,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        // evaluate press_eos at cell i,j,k
        for (int m = 0; m < numMatls; m++)  {
          ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-         double gamma = ice_matl->getGamma();
-
-         ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
+         ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma[m],
                                            cv[m], Temp[m][*iter],
                                            press_eos[m], dp_drho[m], dp_de[m]);
        }
@@ -1161,10 +1162,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        // backout rho_micro_CC at this new pressure
        for (int m = 0; m < numMatls; m++) {
          ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-         double gamma = ice_matl->getGamma();
-
          rho_micro[m][*iter] = 
-           ice_matl->getEOS()->computeRhoMicro(press_new[*iter],gamma,
+           ice_matl->getEOS()->computeRhoMicro(press_new[*iter],gamma[m],
                                                cv[m],Temp[m][*iter]);
        }
        //__________________________________
@@ -1179,8 +1178,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        // del pressure function
        for (int m = 0; m < numMatls; m++)  {
           ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-          double gamma = ice_matl->getGamma();
-          ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
+          ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma[m],
                                             cv[m],Temp[m][*iter],
                                             press_eos[m],dp_drho[m], dp_de[m]);
 
@@ -1311,6 +1309,7 @@ void ICE::computeNonEquilibrationPressure(const ProcessorGroup*,
     StaticArray<double> mat_volume(numMatls);
     StaticArray<double> mat_mass(numMatls);
     StaticArray<double> cv(numMatls);
+    StaticArray<double> gamma(numMatls);
     StaticArray<double> compressibility(numMatls);
     StaticArray<CCVariable<double> > vol_frac(numMatls);
     StaticArray<CCVariable<double> > rho_micro(numMatls);
@@ -1345,7 +1344,9 @@ void ICE::computeNonEquilibrationPressure(const ProcessorGroup*,
       new_dw->allocate(rho_micro[m], lb->rho_micro_CCLabel, indx, patch);
       new_dw->allocate(speedSound_new[m],lb->speedSound_CCLabel,indx,patch);
       speedSound_new[m].initialize(0.0);
-      cv[m] = matl->getSpecificHeat();
+      cv[m]    = matl->getSpecificHeat();
+      gamma[m] = matl->getGamma();
+
     }
     
     press_new.initialize(0.0);
@@ -1359,8 +1360,7 @@ void ICE::computeNonEquilibrationPressure(const ProcessorGroup*,
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
 
 	 rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
-	 double gamma   = ice_matl->getGamma(); 
-	 ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
+	 ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma[m],
 					     cv[m],Temp[m][*iter],
 					     matl_press[m][*iter],dp_drho[m],dp_de[m]);
 
