@@ -11,7 +11,7 @@
  */
 
 #include "RescaleColorMapForParticles.h"
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/ParticleSubset.h>
 #include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
