@@ -260,7 +260,7 @@ case $host in
      TEMPLATE_BOX="<>"
      LOCK_IMPL=""
      SOFLAGS="-shared ${SOFLAGS}"
-     LDRUN_PREFIX="-L"
+     LDRUN_PREFIX="-Wl,-rpath "
      TIME_IMPL=Time_unix.cc
      PLATFORM_LDFLAGS="-ldl"
            ;;
