@@ -19,15 +19,16 @@ class MUI_slider_real;
 class SoundIPort;
 class SoundOPort;
 
+struct SoundMixer_PortInfo {
+    double gain;
+    MUI_slider_real* interface;
+    SoundIPort* isound;
+};
+
 class SoundMixer : public UserModule {
-    struct PortInfo {
-	double gain;
-	MUI_slider_real* interface;
-	SoundIPort* isound;
-    };
-    Array1<PortInfo*> portinfo;
     double overall_gain;
     SoundOPort* osound;
+    Array1<SoundMixer_PortInfo*> portinfo;
 public:
     SoundMixer();
     SoundMixer(const SoundMixer&, int deep);

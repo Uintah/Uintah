@@ -13,10 +13,18 @@
 
 #include <SoundMixer/SoundMixer.h>
 #include <Math/MinMax.h>
+#include <ModuleList.h>
 #include <MUI.h>
 #include <NotFinished.h>
 #include <SoundPort.h>
 #include <iostream.h>
+
+static Module* make_SoundMixer()
+{
+    return new SoundMixer;
+}
+
+static RegisterModule db1("Sound", "SoundMixer", make_SoundMixer);
 
 SoundMixer::SoundMixer()
 : UserModule("SoundMixer", Filter)
@@ -33,7 +41,7 @@ SoundMixer::SoundMixer()
     add_oport(osound);
 
     // Create the input port
-    PortInfo* pi=new PortInfo;
+    SoundMixer_PortInfo* pi=new SoundMixer_PortInfo;
     pi->interface=0;
     pi->isound=new SoundIPort(this, "Sound(0)",
 			      SoundIPort::Stream|SoundIPort::Atomic);
@@ -49,11 +57,6 @@ SoundMixer::SoundMixer(const SoundMixer& copy, int deep)
 
 SoundMixer::~SoundMixer()
 {
-}
-
-Module* make_SoundMixer()
-{
-    return new SoundMixer;
 }
 
 Module* SoundMixer::clone(int deep)
@@ -160,7 +163,7 @@ void SoundMixer::connection(ConnectionMode mode, int which_port,
 	reconfigure_ui();
     } else {
 	// Add a new data handle
-	PortInfo* pi=new PortInfo;
+	SoundMixer_PortInfo* pi=new SoundMixer_PortInfo;
 	portinfo.add(pi);
 	
 	// Add a new port...
