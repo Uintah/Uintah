@@ -159,21 +159,55 @@ LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox)
 
 
 //! return iterators over that fall within or on the BBox
+
+// This function does a pretty good job of giving you the set of iterators
+// that would loop over the mesh that falls within the BBox.  When the
+// BBox falls outside the mesh boundaries, the iterators should equal each
+// other so that a for loop using them [for(;iter != end; iter++)] will
+// not enter.  There are some cases where you can get a range for cells on
+// the edge when the BBox is to the side, but not inside, the mesh.
+// This could be remedied, by more insightful inspection of the bounding
+// box and the mesh.  Checking all cases would be tedious and probably
+// fraught with error.
 void
 LatVolMesh::get_cell_range(Cell::range_iter &iter, Cell::iterator &end,
 			   const BBox &box) {
   // get the min and max points of the bbox and make sure that they lie
   // inside the mesh boundaries.
   BBox mesh_boundary = get_bounding_box();
-  Point max = Min(box.max(), mesh_boundary.max());
+  // crop by min boundary
   Point min = Max(box.min(), mesh_boundary.min());
+  Point max = Max(box.max(), mesh_boundary.min());
+  // crop by max boundary
+  min = Min(min, mesh_boundary.max());
+  max = Min(max, mesh_boundary.max());
+  
   Cell::index_type min_index, max_index;
-  locate(min_index, min);
-  locate(max_index, max);
-  end = Cell::iterator(this, min_index.i_, min_index.j_, max_index.k_);
-  iter = Cell::range_iter(this,
-			  min_index.i_, min_index.j_, min_index.k_,
-			  max_index.i_, max_index.j_, max_index.k_);
+
+  // If one of the locates return true, then we have a valid iteration
+  bool min_located = locate(min_index, min);
+  bool max_located = locate(max_index, max);
+  if (min_located || max_located) {
+    // This tests is designed for a slice in the xy plane.  If z (or k)
+    // is equal then you have this condition.  When this happens you
+    // need to increment k so that you will iterate over the xy values.
+    if (min_index.k_ != max_index.k_)
+      end = Cell::iterator(this, min_index.i_, min_index.j_, max_index.k_);
+    else
+      end = Cell::iterator(this, min_index.i_, min_index.j_, max_index.k_ + 1);
+
+    // Initialize the range iterator
+    iter = Cell::range_iter(this,
+			    min_index.i_, min_index.j_, min_index.k_,
+			    max_index.i_, max_index.j_, max_index.k_);
+  } else {
+    // If both of these are false then we are outside the boundary.
+    // Set both iterators to be the same thing and exit.  When they are the
+    // same any for loop using these iterators [for(;iter != end; iter++)]
+    // will never enter.
+    iter = Cell::range_iter(this, 0, 0, 0, 0, 0, 0);
+    end = Cell::iterator(this, 0, 0, 0);
+  }
 }
 
 
