@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Variables/Array3Window.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Variables/Stencil7.h>
 
 #include <Core/Util/Endian.h>
 #include <Core/Geometry/IntVector.h>
