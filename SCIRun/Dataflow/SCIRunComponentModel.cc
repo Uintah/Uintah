@@ -126,15 +126,17 @@ void SCIRunComponentModel::initGuiInterface() {
   gui = new TCLInterface();
   
   // Set up the TCL environment to find core components
-  gui->execute("global PSECoreTCL CoreTCL");
-  gui->execute("set DataflowTCL "PSECORETCL);
-  gui->execute("set CoreTCL "SCICORETCL);
-  gui->execute("lappend auto_path "SCICORETCL);
-  gui->execute("lappend auto_path "PSECORETCL);
-  gui->execute("lappend auto_path "ITCL_WIDGETS);
-  gui->execute("global scirun2");
+  const string DataflowTCLpath = SCIRUN_SRCDIR+string("/Dataflow/GUI");
+  const string CoreTCLpath = SCIRUN_SRCDIR+string("/Core/GUI");
+  gui->execute("global CoreTCL SCIRUN_SRCDIR SCIRUN_OBJDIR scirun2");
+  gui->execute("set CoreTCL "+CoreTCLpath);
+  gui->execute("set SCIRUN_SRCDIR "SCIRUN_SRCDIR);
+  gui->execute("set SCIRUN_OBJDIR "SCIRUN_OBJDIR);
   gui->execute("set scirun2 1");
-  gui->source_once("$DataflowTCL/NetworkEditor.tcl");
+  gui->execute("lappend auto_path "+CoreTCLpath);
+  gui->execute("lappend auto_path "+DataflowTCLpath);
+  gui->execute("lappend auto_path "ITCL_WIDGETS);
+  gui->source_once(DataflowTCLpath+string("/NetworkEditor.tcl"));
   gui->execute("wm withdraw .");
   
   tcl_task->release_mainloop();
