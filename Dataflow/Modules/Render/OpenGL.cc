@@ -1943,7 +1943,7 @@ void OpenGL::StartMpeg(const string& fname)
 #ifdef HAVE_MPEG
   output=fopen(fname.c_str(), "w");
   if (!output){
-    cerr<<"Failed to open file "<< fname.c_str()<<" for writing\n";
+    cerr << "Failed to open file " << fname << " for writing\n";
     return;
   }
   // get the default options
