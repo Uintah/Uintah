@@ -189,6 +189,21 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   hdr << "#include <Core/CCA/SmartPointer.h>\n";
   hdr << "#include <complex>\n";
   hdr << "\n";
+
+  //Include imported file headers *HACK*
+  vector<Specification*>::const_iterator iter;
+  for(iter = specs.begin(); iter != specs.end(); iter++){
+    if ((*iter)->isImport) {
+      Definition* def = (*iter)->packages->list.front();
+      string fname = def->curfile;
+      int start_pos = fname.find("src");
+      start_pos += 4;
+      int end_pos = fname.find(".sidl");
+      hdr << "#include <" << fname.substr(start_pos,end_pos-start_pos) << "_sidl.h>\n";
+    }
+  }  
+  
+  hdr << "\n";
   hdr << e.fwd.str();
   hdr << e.decl.str();
   hdr << "\n#endif\n\n";
@@ -240,6 +255,9 @@ void Symbol::emit(EmitState& e)
   case InterfaceType:
   case ClassType:
   case EnumType:
+    if(definition->isImport) {
+      return;
+    }      
     definition->emit(e);
     break;
   case MethodType:
@@ -255,6 +273,9 @@ void Symbol::emit(EmitState& e)
 
 void Symbol::emit_forward(EmitState& e)
 {
+  if(definition->isImport) {
+    return;
+  }
   if(emitted_forward)
     return;
   switch(type){
@@ -2680,7 +2701,7 @@ void Enum::emit(EmitState& e)
   }
   e.fwd << "\n";
   e.fwd << leader2 << "};\n";
-  emitted_declaration=true;
+  emitted_declaration=true; 
 }
 
 void Enumerator::emit(EmitState& e, bool first)

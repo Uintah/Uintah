@@ -38,6 +38,7 @@ Definition::Definition(const string& curfile, int lineno, const string& name)
   symbols=0;
   emitted_declaration=false;
   do_emit=::foremit;
+  isImport=false;
 }
 
 void Definition::setName(const std::string& n)
@@ -288,6 +289,17 @@ DefinitionList::~DefinitionList()
 void DefinitionList::add(Definition* def)
 {
   list.push_back(def);
+}
+
+void DefinitionList::processImports()
+{
+  for(vector<Definition*>::iterator iter=list.begin();iter != list.end();iter++){
+    (*iter)->isImport = true;
+    Package* pkg;
+    if((pkg = dynamic_cast<Package*>(*iter))) {
+      pkg->definition->processImports();
+    }
+  }
 }
 
 Interface::Interface(const string& curfile, int lineno, const string& id,
@@ -594,6 +606,7 @@ Specification::Specification(VersionList* versions, ScopedNameList* imports,
 			     DefinitionList* packages)
   : versions(versions), imports(imports), packages(packages)
 {
+  isImport=false;
   toplevel=false;
 }
 
@@ -901,8 +914,17 @@ void SpecificationList::add(Specification* spec)
 
 void SpecificationList::processImports()
 {
-  cerr << "processImports not finished!\n";
+  for(vector<Specification*>::iterator iter = specs.begin();
+      iter != specs.end(); iter++){
+    if ((*iter)->isImport) {
+      (*iter)->packages->processImports();
+    }
+  }
+	        
+  // "processImports not finished!\n" -- Might want to remove unnecessary packages here;
 }
+
+
 
 DistributionArray::DistributionArray(const std::string& curfile, int lineno, const std::string& name,
 				     ArrayType* arr_t)
