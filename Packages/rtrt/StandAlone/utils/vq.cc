@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <values.h>
+#include <sci_values.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
