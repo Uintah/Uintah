@@ -42,6 +42,5 @@ typedef SurfaceIPort hack13;
 
 typedef Array1<double> hack14;
 
-
-typedef Array1<double> hack14;
-
+#include <Datatypes/Colormap.h>
+typedef ColormapHandle hack15;
