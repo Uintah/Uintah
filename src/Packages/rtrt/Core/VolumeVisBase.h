@@ -20,6 +20,8 @@ class VolumeVisBase : public Object, public Material {
 protected:
   VolumeVisDpy* dpy;
 
+  Object* child;
+
   inline int clamp(const int min, const int val, const int max) {
     return (val>min?(val<max?val:max):min);
   }
@@ -33,6 +35,7 @@ public:
   friend void SCIRun::Pio(SCIRun::Piostream&, VolumeVisBase*&);
 
   virtual void animate(double t, bool& changed);
+  virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
   virtual void compute_hist(int nhist, int* hist,
 			    float datamin, float datamax)=0;
   virtual void get_minmax(float& min, float& max)=0;
@@ -40,6 +43,8 @@ public:
 		     const HitInfo& hit, int depth,
 		     double atten, const Color& accumcolor,
 		     Context* cx) = 0;
+
+  void set_child(Object* kiddo) { child = kiddo; }
 };
 
 } // end namespace rtrt
