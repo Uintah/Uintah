@@ -95,26 +95,13 @@ struct VarDestType {
 static const TypeDescription* specialType;
 
 MixedScheduler::MixedScheduler(const ProcessorGroup* myworld, Output* oport)
-   : UintahParallelComponent(myworld), Scheduler(oport)
+   : UintahParallelComponent(myworld), Scheduler(oport), log(myworld, oport)
 {
-  int MAX_NUM_THREADS = 1;
-
   d_generation = 0;
 
-  if(getenv("MAX_NUM_THREADS")){
-    MAX_NUM_THREADS = atoi( getenv("MAX_NUM_THREADS") );
-    cerr << "MAX_NUM_THREADS = " << MAX_NUM_THREADS << "\n";
-    if( MAX_NUM_THREADS <= 0 || MAX_NUM_THREADS > 16 ){
-      // Empirical evidence points to 16 being the most threads
-      // that we should use... (this isn't conclusive evidence)
-      cerr << "MAX_NUM_THREADS is out of range 1..16\n";
-      throw InternalError( "MAX_NUM_THREADS is out of range 1..16\n" );
-    }
-  }
-    
-  d_threadPool = scinew ThreadPool( MAX_NUM_THREADS );
+  d_threadPool = scinew ThreadPool( Parallel::getMaxThreads() );
 
-  if(!specialType){
+  if( !specialType ){
     specialType = scinew
       TypeDescription(TypeDescription::ScatterGatherVariable,
 		      "DataWarehouse::specialInternalScatterGatherType",
@@ -127,6 +114,12 @@ MixedScheduler::MixedScheduler(const ProcessorGroup* myworld, Output* oport)
 
 MixedScheduler::~MixedScheduler()
 {
+}
+
+void
+MixedScheduler::problemSetup( const ProblemSpecP& prob_spec )
+{
+  log.problemSetup( prob_spec );
 }
 
 void
@@ -391,7 +384,7 @@ MixedScheduler::createDepencyList( vector<Task*> & tasks,
       vector< DependData > dependencies = (*iter).second;
 
       cerr << "\n";
-      taskData.task->fullDisplay( cerr );
+      taskData.task->displayAll( cerr );
 
       cerr << "\n  Depends on these " << dependencies.size() << " deps:\n";
       for( int t = 0; t < dependencies.size(); t++ ){
@@ -470,13 +463,16 @@ MixedScheduler::makeAllRecvRequests( vector<Task*>       & tasks,
 	  cerr << "Request to (eventually) recv MPI data for: " << *need << "\n";
 	  cerrSem->up();
 #endif
+	  int size;
 	  dw->recvMPI(old_dw, need->d_var, need->d_matlIndex,
 		      need->d_patch, d_myworld,
 		      MPI_ANY_SOURCE,
-		      need->d_serialNumber, &requestid);
-
-	  reqToDep[ requestid ] = *needIter;
-	  recv_ids.push_back( requestid );
+		      need->d_serialNumber, &size, &requestid);
+	  if(size != -1){
+	    log.logRecv(need, size);
+	    recv_ids.push_back(requestid);
+	    reqToDep[ requestid ] = *needIter;
+	  }
 	} // end if !dep->d_dw->exists()
       } // end if cmp computer not me
     } // end for( needIter )
@@ -955,12 +951,16 @@ MixedScheduler::sendInitialData( vector<Task*> & tasks,
                  << " serial " << dep->d_serialNumber << ", to " 
                  << dep->d_task->getAssignedResourceIndex() << '\n';
 #endif
+	    int size;
             dw->sendMPI(dep->d_var, dep->d_matlIndex,
                         dep->d_patch, d_myworld,
                         dep->d_task->getAssignedResourceIndex(),
-                        dep->d_serialNumber, &requestid);
-            send_ids.push_back(requestid);
-            varsent.insert(ddest);
+                        dep->d_serialNumber, &size, &requestid);
+	    if(size != -1){
+	      log.logSend(dep, size);
+	      send_ids.push_back(requestid);
+	      varsent.insert(ddest);
+	    }
           }
         }
       }
@@ -1020,14 +1020,18 @@ MixedScheduler::recvInitialData( vector<Task*>  & tasks,
                cerr << "MPI: Request to receive initial " << *dep << ": serial #: " 
 		    << dep->d_serialNumber << '\n';
 #endif
+	       int size;
                dw->recvMPI(old_dw, dep->d_var, dep->d_matlIndex,
                            dep->d_patch, d_myworld,
                            MPI_ANY_SOURCE,
-                           dep->d_serialNumber, &requestid);
+                           dep->d_serialNumber, &size, &requestid);
+	       if(size != -1){
+		 log.logRecv(dep, size);
+		 recv_ids.push_back(requestid);
+	       }
 #if DAV_DEBUG
 	       cerr << "Made receive request\n";
 #endif
-               recv_ids.push_back(requestid);
             }
          }
       } // End for requires
@@ -1397,9 +1401,9 @@ MixedScheduler::gatherParticles(const ProcessorGroup* pc,
 
 void
 MixedScheduler::displayTaskGraph( vector<Task*> & taskGraph )
-
 {
-  if( Parallel::usingMPI && Parallel::getRootProcessorGroup()->myrank() == 0 ){
+  if( Parallel::usingMPI() && 
+      Parallel::getRootProcessorGroup()->myrank() == 0 ){
     cerr << "\n---------------------------\n";
     cerr << "Begin: Tasks in Task List:\n";
     for(vector<Task*>::iterator iter = taskGraph.begin();
@@ -1450,7 +1454,7 @@ findRequirement( const Task::Dependency * comp, Task * task )
     }
   }
   cerr << "Couldn't find a matching req for comp: " << *comp << "\n";
-  task->fullDisplay( cerr );
+  task->displayAll( cerr );
   throw InternalError( "Should have found a matching requirement! ");
 }
 
@@ -1537,11 +1541,17 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 	  cerr << "MPI Sending " << *req << "\n";
 	  cerrSem->up();
 #endif
+	  int size;
 	  dw->sendMPI(req->d_var, req->d_matlIndex,
 		      req->d_patch, d_myworld,
 		      req->d_task->getAssignedResourceIndex(),
-		      req->d_serialNumber, &requestid);
-	  send_ids.push_back( requestid );
+		      req->d_serialNumber, &size, &requestid);
+
+	  if(size != -1){
+	    log.logSend(req, size);
+	    send_ids.push_back( requestid );
+	  }
+
 #if DAV_DEBUG
 	  cerrSem->down();
 	  cerr << "sent to " << req->d_task->getAssignedResourceIndex() << "\n";
@@ -1595,8 +1605,25 @@ MixedScheduler::dependenciesSatisfied( const vector<Task::Dependency*> & comps,
   }
 }
 
+LoadBalancer*
+MixedScheduler::getLoadBalancer()
+{
+   UintahParallelPort* lbp = getPort("load balancer");
+   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+   return lb;
+}
+
+void
+MixedScheduler::releaseLoadBalancer()
+{
+   releasePort("load balancer");
+}
+
 //
 // $Log$
+// Revision 1.2  2000/09/27 02:08:31  dav
+// bug fixes that should have been made before the initial commit
+//
 // Revision 1.1  2000/09/26 18:50:26  dav
 // Initial commit.  These files are derived from Steve's MPIScheduler,
 // and thus have a lot in common.  Perhaps in the future, the common
