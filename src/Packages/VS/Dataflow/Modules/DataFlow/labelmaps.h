@@ -179,6 +179,7 @@ class VH_injury
   // flags to test our tree traversal context
   int context;
   bool isPrimaryInjury, isSecondaryInjury, isGeometry;
+  bool isAblate, isStun;
   // flags to test whether this node is complete
   bool timeSet, nameSet, point0set, point1set, rad0set, rad1set;
   bool inside_rad0set, inside_rad1set;
@@ -186,14 +187,21 @@ class VH_injury
   float axisX0, axisY0, axisZ0; // center axis endpoint 0
   float axisX1, axisY1, axisZ1; // center axis endpoint 1
   float inside_rad0, inside_rad1, rad0, rad1;
+  float probability;
 
   VH_injury() { context = UNSET; rad0set = rad1set = false;
                 inside_rad0set = inside_rad1set = false;
-                nameSet = timeSet = point0set = point1set = false; };
+                nameSet = timeSet = point0set = point1set = false;
+		isPrimaryInjury = isSecondaryInjury = isGeometry = false;
+		isAblate = isStun = false; probability = 0.0;
+                rad0 = rad1 = 0.0; };
   VH_injury(char *newName) { anatomyname = string(newName);
              context = UNSET; rad0set = rad1set = false;
              inside_rad0set = inside_rad1set = false;
-             nameSet = true; timeSet = point0set = point1set = false; };
+             nameSet = true; timeSet = point0set = point1set = false;
+             isPrimaryInjury = isSecondaryInjury = isGeometry = false;
+             isAblate = isStun = false; probability = 0.0;
+             rad0 = rad1 = 0.0; };
   bool iscomplete();
   void print();
 };
