@@ -795,7 +795,7 @@ itcl_class Module {
 		    append script "${tab}set $varname "
 		    append script "\"[subDATADIRandDATASET $val]\"\n"
 		} else {
-		    if { [llength $val] == 1 && ![string is integer $val] } {
+		    if { ![string is integer $val] } {
 			set failed [catch "set num [format %.[string length $val]e $val]"]
 			if { !$failed } {
 			    set failed [catch "set num [expr $num]"]
