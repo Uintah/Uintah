@@ -15,7 +15,9 @@ SRCS     += \
 	$(SRCDIR)/ParticleVis.cc \
 	$(SRCDIR)/RescaleColorMap.cc \
 	$(SRCDIR)/GLTextureBuilder.cc \
-	$(SRCDIR)/Isosurface.cc #\
+	$(SRCDIR)/Isosurface.cc \
+	$(SRCDIR)/CuttingPlane.cc\
+[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/NodeHedgehog.cc \
 #	$(SRCDIR)/EigenEvaluator.cc \
 #	$(SRCDIR)/ParticleEigenEvaluator.cc \

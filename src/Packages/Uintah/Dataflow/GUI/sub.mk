@@ -18,6 +18,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/RescaleColorMap.tcl\
 	$(SRCDIR)/Isosurface.tcl\
 	$(SRCDIR)/GLTextureBuilder.tcl\
+	$(SRCDIR)/CuttingPlane.tcl\
 #[INSERT NEW TCL FILE HERE]
 #	$(SRCDIR)/EigenEvaluator.tcl\
 #	$(SRCDIR)/ParticleEigenEvaluator.tcl\
