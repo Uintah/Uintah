@@ -92,7 +92,7 @@ public:
     
   //////////
   //Class Destructor
-  ~Array2();
+  virtual ~Array2();
 
   //////////
   //Used for accessing elements in the Array
