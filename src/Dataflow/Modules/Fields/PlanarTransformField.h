@@ -80,31 +80,90 @@ PlanarTransformFieldAlgoT<FIELD>::execute(FieldHandle& ifield_h,
   FIELD *ofield(ifield->clone());
   ofield->mesh_detach();
 
-  typename FIELD::mesh_type::Node::iterator inodeItr;
-  ofield->get_typed_mesh()->begin(inodeItr);
-
   Transform trans;
 
-  // Translate the mesh to the center of the view.
-  const BBox bbox = ofield->mesh()->get_bounding_box();
+  if( ifield->get_type_description(0)->get_name() == "CurveField" ) {
+    const BBox bbox = ofield->mesh()->get_bounding_box();
 
-  if (bbox.valid()) {
-    Point center = -bbox.center();
-    trans.post_translate( Vector( center ) );
+    if (bbox.valid()) {
+      // Translate the mesh to the center of the view.
+      //      Point min_pt = -bbox.min();
+      //      trans.post_translate( Vector( min_pt ) );
+    }
+
+    // Rotate the mesh in to the correct plane.
+    typename FIELD::mesh_type::Node::iterator inodeItr;
+    typename FIELD::mesh_type::Node::iterator inodeEnd;
+    ofield->get_typed_mesh()->begin(inodeItr);
+    ofield->get_typed_mesh()->end(inodeEnd);
+
+    Point p0;
+    Point p1;
+
+    // Get the first point along the line.
+    if (inodeItr != inodeEnd) {
+      ofield->get_typed_mesh()->get_point(p0, *inodeItr);
+      ++inodeItr;
+    } else {
+      cerr << "Can not get first point - No mesh" << endl;
+    }
+
+    // Get the last point along the line.
+    if (inodeItr != inodeEnd) {
+      while (inodeItr != inodeEnd) {
+	ofield->get_typed_mesh()->get_point(p1, *inodeItr);
+	++inodeItr;
+      }
+
+      // Get the angle of the line.
+      double dy = p1.y() - p0.y();
+      double dz = p1.z() - p0.z();
+
+      if( axis == 0 ) {       // X
+	trans.pre_rotate( atan2(dy, dz), Vector(1,0,0));
+	trans.pre_rotate( -M_PI/2.0, Vector(1,0,0));
+      } else if( axis == 1 ) {  // Y
+	trans.pre_rotate( atan2(dy, dz), Vector(0,1,0));
+      } else if( axis == 2 ){   // Z
+	trans.pre_rotate( atan2(dy, dz), Vector(0,0,1));
+      }
+    } else {
+      cerr << "Can not get second point - No mesh" << endl;
+    }
+
+    ofield->mesh()->transform(trans);
+ 
+  } else {
+    // Translate the mesh to the center of the view.
+    const BBox bbox = ofield->mesh()->get_bounding_box();
+
+    if (bbox.valid()) {
+      Point center = -bbox.center();
+      trans.post_translate( Vector( center ) );
+    }
+
+    // Rotate the mesh in to the correct plane.
+    typename FIELD::mesh_type::Node::iterator inodeItr;
+    typename FIELD::mesh_type::Node::iterator inodeEnd;
+    ofield->get_typed_mesh()->begin(inodeItr);
+    ofield->get_typed_mesh()->end(inodeEnd);
+
+    if (inodeItr != inodeEnd) {
+      Point p0;
+      ofield->get_typed_mesh()->get_point(p0, *inodeItr);
+
+      if( axis == 0 )       // X
+	trans.pre_rotate( atan2(p0.x(), p0.y()), Vector(1,0,0));
+      else if( axis == 1 )  // Y
+	trans.pre_rotate( atan2(p0.x(), p0.y()), Vector(0,1,0));
+      else if( axis == 2 )  // Z
+	trans.pre_rotate( atan2(p0.x(), p0.y()), Vector(0,0,1));
+    } else {
+      cerr << "Can not get point for transform - No mesh" << endl;
+    }
+
+    ofield->mesh()->transform(trans);
   }
-
-  // Rotate the mesh in to the correct plane.
-  Point p0;
-  ofield->get_typed_mesh()->get_point(p0, *inodeItr);
-
-  if( axis == 0 )       // X
-    trans.pre_rotate( atan2(p0.x(), p0.y()), Vector(1,0,0));
-  else if( axis == 1 )  // Y
-    trans.pre_rotate( atan2(p0.x(), p0.y()), Vector(0,1,0));
-  else if( axis == 2 )  // Z
-    trans.pre_rotate( atan2(p0.x(), p0.y()), Vector(0,0,1));
-
-  ofield->mesh()->transform(trans);
 
   // Optionally translate the mesh away from the center of the view.
   if (tx || ty) {
