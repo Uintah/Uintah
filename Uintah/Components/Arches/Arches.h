@@ -103,6 +103,15 @@ public:
 	 
       ///////////////////////////////////////////////////////////////////////
       //
+      // Schedule parameter initialization
+      //
+      virtual void sched_paramInit(const LevelP& level,
+				   SchedulerP&,
+				   DataWarehouseP& old_dw,
+				   DataWarehouseP& new_dw);
+      
+      ///////////////////////////////////////////////////////////////////////
+      //
       // Schedule Compute if Stable time step
       //
       virtual void scheduleComputeStableTimestep(const LevelP& level,
@@ -192,6 +201,11 @@ private:
 
 //
 // $Log$
+// Revision 1.30  2000/06/29 06:22:47  bbanerje
+// Updated FCVariable to SFCX, SFCY, SFCZVariables and made corresponding
+// changes to profv.  Code is broken until the changes are reflected
+// thru all the files.
+//
 // Revision 1.29  2000/06/18 01:20:14  bbanerje
 // Changed names of varlabels in source to reflect the sequence of tasks.
 // Result : Seg Violation in addTask in MomentumSolver

@@ -14,7 +14,9 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/Arches/CellInformation.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Grid/Task.h>
-#include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Grid/SFCXVariable.h>
+#include <Uintah/Grid/SFCYVariable.h>
+#include <Uintah/Grid/SFCZVariable.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/PerPatch.h>
 #include <Uintah/Grid/CellIterator.h>
@@ -64,11 +66,11 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
   d_viscosityINLabel = scinew VarLabel("viscosityIN", 
 				   CCVariable<double>::getTypeDescription() );
   d_uVelocityINLabel = scinew VarLabel("uVelocityIN", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocityINLabel = scinew VarLabel("vVelocityIN", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocityINLabel = scinew VarLabel("wVelocityIN", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_scalarINLabel = scinew VarLabel("scalarIN",
 				    CCVariable<double>::getTypeDescription() );
 
@@ -77,11 +79,11 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
   d_densitySPLabel = scinew VarLabel("densitySP", 
 				   CCVariable<double>::getTypeDescription() );
   d_uVelocitySPLabel = scinew VarLabel("uVelocitySP", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocitySPLabel = scinew VarLabel("vVelocitySP", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocitySPLabel = scinew VarLabel("wVelocitySP", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_scalarSPLabel = scinew VarLabel("scalarSP", 
 				    CCVariable<double>::getTypeDescription() );
   
@@ -90,49 +92,49 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
   d_densitySIVBCLabel = scinew VarLabel("densitySIVBC", 
 				    CCVariable<double>::getTypeDescription() );
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
 
   // 3) The labels used/computed by velocityBC (VBC)
   d_uVelCoefPBLMLabel = scinew VarLabel("uVelCoefPBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelCoefPBLMLabel = scinew VarLabel("vVelCoefPBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelCoefPBLMLabel = scinew VarLabel("wVelCoefPBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_uVelLinSrcPBLMLabel = scinew VarLabel("uVelLinSrcPBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelLinSrcPBLMLabel = scinew VarLabel("vVelLinSrcPBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelLinSrcPBLMLabel = scinew VarLabel("wVelLinSrcPBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcPBLMLabel = scinew VarLabel("uVelNonLinSrcPBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcPBLMLabel = scinew VarLabel("vVelNonLinSrcPBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcPBLMLabel = scinew VarLabel("wVelNonLinSrcPBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_uVelCoefMBLMLabel = scinew VarLabel("uVelCoefMBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelCoefMBLMLabel = scinew VarLabel("vVelCoefMBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelCoefMBLMLabel = scinew VarLabel("wVelCoefMBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_uVelLinSrcMBLMLabel = scinew VarLabel("uVelLinSrcMBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelLinSrcMBLMLabel = scinew VarLabel("vVelLinSrcMBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelLinSrcMBLMLabel = scinew VarLabel("wVelLinSrcMBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcMBLMLabel = scinew VarLabel("uVelNonLinSrcMBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcMBLMLabel = scinew VarLabel("vVelNonLinSrcMBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcMBLMLabel = scinew VarLabel("wVelNonLinSrcMBLM", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
 
   // 4) The labels used/computed by pressureBC 
   d_presCoefPBLMLabel = scinew VarLabel("presCoefPBLM", 
@@ -142,11 +144,11 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
   d_pressurePSLabel = scinew VarLabel("pressurePS", 
 				    CCVariable<double>::getTypeDescription() );
   d_uVelocityCPBCLabel = scinew VarLabel("uVelocityCPBC", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocityCPBCLabel = scinew VarLabel("vVelocityCPBC", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC", 
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
 
   // 6) The labels used/computed by scalarBC
   d_scalCoefSBLMLabel = scinew VarLabel("scalCoefSBLM", 
@@ -222,6 +224,29 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 }
 
 //****************************************************************************
+// schedule the initialization of cell types
+//****************************************************************************
+void 
+BoundaryCondition::sched_cellTypeInit(const LevelP& level,
+				      SchedulerP& sched,
+				      DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw)
+{
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
+
+    // cell type initialization
+    Task* tsk = new Task("BoundaryCondition::cellTypeInit",
+			 patch, old_dw, new_dw, this,
+			 &BoundaryCondition::cellTypeInit);
+    int matlIndex = 0;
+    tsk->computes(new_dw, d_cellTypeLabel, matlIndex, patch);
+    sched->addTask(tsk);
+  }
+}
+
+//****************************************************************************
 // Actual initialization of celltype
 //****************************************************************************
 void 
@@ -235,23 +260,23 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 
   old_dw->allocate(cellType, d_cellTypeLabel, matlIndex, patch);
 
-  IntVector domainLow = cellType.getLowIndex();
-  IntVector domainHigh = cellType.getHighIndex()-IntVector(1,1,1);
-  IntVector indexLow = domainLow;
-  IntVector indexHigh = domainHigh;
+  IntVector domLo = cellType.getFortLowIndex();
+  IntVector domHi = cellType.getFortHighIndex();
+  IntVector idxLo = domLo;
+  IntVector idxHi = domHi;
  
   cerr << "Just before geom init" << endl;
   // initialize CCVariable to -1 which corresponds to flowfield
   int celltypeval = -1;
-  FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(), 
-		    indexLow.get_pointer(), indexHigh.get_pointer(),
+  FORT_CELLTYPEINIT(domLo.get_pointer(), domHi.get_pointer(), 
+		    idxLo.get_pointer(), idxHi.get_pointer(),
 		    cellType.getPointer(), &celltypeval);
 
   // Testing if correct values have been put
   cout << " In C++ (BoundaryCondition.cc) after cell type init " << endl;
-  for (int kk = indexLow.z(); kk <= indexHigh.z(); kk++) {
-    for (int jj = indexLow.y(); jj <= indexHigh.y(); jj++) {
-      for (int ii = indexLow.x(); ii <= indexHigh.x(); ii++) {
+  for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
 	cout << "(" << ii << "," << jj << "," << kk << ") : "
 	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
       }
@@ -276,20 +301,20 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
       // iterates thru box b, converts from geometry space to index space
       // make sure this works
       CellIterator iter = patch->getCellIterator(b);
-      IntVector indexLow = iter.begin();
-      IntVector indexHigh = iter.end() - IntVector(1,1,1);
+      IntVector idxLo = iter.begin();
+      IntVector idxHi = iter.end() - IntVector(1,1,1);
       celltypeval = d_flowInlets[ii].d_cellTypeID;
       cout << "Flow inlet " << ii << " cell type val = " << celltypeval << endl;
-      FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(),
-			indexLow.get_pointer(), indexHigh.get_pointer(),
+      FORT_CELLTYPEINIT(domLo.get_pointer(), domHi.get_pointer(),
+			idxLo.get_pointer(), idxHi.get_pointer(),
 			cellType.getPointer(), &celltypeval);
     }
   }
   // Testing if correct values have been put
   cout << " In C++ (BoundaryCondition.cc) after flow inlet init " << endl;
-  for (int kk = indexLow.z(); kk <= indexHigh.z(); kk++) {
-    for (int jj = indexLow.y(); jj <= indexHigh.y(); jj++) {
-      for (int ii = indexLow.x(); ii <= indexHigh.x(); ii++) {
+  for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
 	cout << "(" << ii << "," << jj << "," << kk << ") : "
 	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
       }
@@ -309,21 +334,21 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
       // check for another geometry
       if (!(b.degenerate())) {
 	CellIterator iter = patch->getCellIterator(b);
-	IntVector indexLow = iter.begin();
-	IntVector indexHigh = iter.end() - IntVector(1,1,1);
+	IntVector idxLo = iter.begin();
+	IntVector idxHi = iter.end() - IntVector(1,1,1);
 	celltypeval = d_wallBdry->d_cellTypeID;
 	cout << "Wall cell type val = " << celltypeval << endl;
-	FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(), 
-			  indexLow.get_pointer(), indexHigh.get_pointer(),
+	FORT_CELLTYPEINIT(domLo.get_pointer(), domHi.get_pointer(), 
+			  idxLo.get_pointer(), idxHi.get_pointer(),
 			  cellType.getPointer(), &celltypeval);
       }
     }
   }
   // Testing if correct values have been put
   cout << " In C++ (BoundaryCondition.cc) after wall geom init " << endl;
-  for (int kk = indexLow.z(); kk <= indexHigh.z(); kk++) {
-    for (int jj = indexLow.y(); jj <= indexHigh.y(); jj++) {
-      for (int ii = indexLow.x(); ii <= indexHigh.x(); ii++) {
+  for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
 	cout << "(" << ii << "," << jj << "," << kk << ") : "
 	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
       }
@@ -343,12 +368,12 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 	// check for another geometry
 	if (!(b.degenerate())) {
 	  CellIterator iter = patch->getCellIterator(b);
-	  IntVector indexLow = iter.begin();
-	  IntVector indexHigh = iter.end() - IntVector(1,1,1);
+	  IntVector idxLo = iter.begin();
+	  IntVector idxHi = iter.end() - IntVector(1,1,1);
 	  celltypeval = d_pressureBdry->d_cellTypeID;
 	  cout << "Pressure Bdry  cell type val = " << celltypeval << endl;
-	  FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(),
-			    indexLow.get_pointer(), indexHigh.get_pointer(),
+	  FORT_CELLTYPEINIT(domLo.get_pointer(), domHi.get_pointer(),
+			    idxLo.get_pointer(), idxHi.get_pointer(),
 			    cellType.getPointer(), &celltypeval);
 	}
       }
@@ -356,9 +381,9 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
   }
   // Testing if correct values have been put
   cout << " In C++ (BoundaryCondition.cc) after press inlet init " << endl;
-  for (int kk = indexLow.z(); kk <= indexHigh.z(); kk++) {
-    for (int jj = indexLow.y(); jj <= indexHigh.y(); jj++) {
-      for (int ii = indexLow.x(); ii <= indexHigh.x(); ii++) {
+  for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
 	cout << "(" << ii << "," << jj << "," << kk << ") : "
 	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
       }
@@ -378,12 +403,12 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 	// check for another geometry
 	if (!(b.degenerate())) {
 	  CellIterator iter = patch->getCellIterator(b);
-	  IntVector indexLow = iter.begin();
-	  IntVector indexHigh = iter.end() - IntVector(1,1,1);
+	  IntVector idxLo = iter.begin();
+	  IntVector idxHi = iter.end() - IntVector(1,1,1);
 	  celltypeval = d_outletBC->d_cellTypeID;
 	  cout << "Flow Outlet cell type val = " << celltypeval << endl;
-	  FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(),
-			    indexLow.get_pointer(), indexHigh.get_pointer(),
+	  FORT_CELLTYPEINIT(domLo.get_pointer(), domHi.get_pointer(),
+			    idxLo.get_pointer(), idxHi.get_pointer(),
 			    cellType.getPointer(), &celltypeval);
 	}
       }
@@ -392,9 +417,9 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 
   // Testing if correct values have been put
   cout << " In C++ (BoundaryCondition.cc) after cell type BC init " << endl;
-  for (int kk = indexLow.z(); kk <= indexHigh.z(); kk++) {
-    for (int jj = indexLow.y(); jj <= indexHigh.y(); jj++) {
-      for (int ii = indexLow.x(); ii <= indexHigh.x(); ii++) {
+  for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
 	cout << "(" << ii << "," << jj << "," << kk << ") : "
 	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
       }
@@ -409,40 +434,51 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 //****************************************************************************
 void 
 BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
-				 const Patch* patch,
-				 DataWarehouseP& old_dw,
-				 DataWarehouseP&)
+					const Patch* patch,
+					DataWarehouseP& old_dw,
+					DataWarehouseP&)
 {
+  // Create the cellType variable
   CCVariable<int> cellType;
+
+  // **WARNING** numGhostcells, Ghost::NONE may change in the future
   int matlIndex = 0;
   int numGhostCells = 0;
+
+  // Get the cell type data from the old_dw
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch,
 	      Ghost::None, numGhostCells);
-  // initialize CCVariable to -1 which corresponds to flowfield
-  // ** WARNING **  this needs to be changed soon (6/9/2000)
-  IntVector domainLow = patch->getCellLowIndex();
-  IntVector domainHigh = patch->getCellHighIndex();
-  IntVector indexLow = patch->getCellLowIndex();
-  IntVector indexHigh = patch->getCellHighIndex();
-  domainLow = patch->getCellLowIndex();
-  domainHigh = patch->getCellHighIndex() - IntVector(1,1,1);
+
+  // Get the low and high index for the variable and the patch
+  IntVector domLo = cellType.getFortLowIndex();
+  IntVector domHi = cellType.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  // Get the geometry of the patch
   Box patchBox = patch->getBox();
+
+  // Go thru the number of inlets
   for (int ii = 0; ii < d_numInlets; ii++) {
+
+    // Loop thru the number of geometry pieces in each inlet
     int nofGeomPieces = d_flowInlets[ii].d_geomPiece.size();
     for (int jj = 0; jj < nofGeomPieces; jj++) {
+
+      // Intersect the geometry piece with the patch box
       GeometryPiece*  piece = d_flowInlets[ii].d_geomPiece[jj];
       Box geomBox = piece->getBoundingBox();
       Box b = geomBox.intersect(patchBox);
       // check for another geometry
       if (b.degenerate())
 	continue; // continue the loop for other inlets
+
       // iterates thru box b, converts from geometry space to index space
       // make sure this works
       CellIterator iter = patch->getCellIterator(b);
-      domainLow = iter.begin();
-      domainHigh = iter.end() - IntVector(1,1,1);
-      indexLow = domainLow;
-      indexHigh = domainHigh;
+      idxLo = iter.begin();
+      idxHi = iter.end() - IntVector(1,1,1);
+
 #ifdef WONT_COMPILE_YET
       // using chain of responsibility pattern for getting cell information
       DataWarehouseP top_dw = new_dw->getTop();
@@ -455,15 +491,20 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
       } 
       CellInformation* cellinfo = cellinfop;
 #endif
-      // ** WARNING ** this is just for compilation purposes
+
+      // ** WARNING ** the next line is just for compilation purposes
       CellInformation* cellinfo = scinew CellInformation(patch);
+
+      // Calculate the inlet area
       double inlet_area;
       int cellid = d_flowInlets[ii].d_cellTypeID;
-      FORT_AREAIN(domainLow.get_pointer(), domainHigh.get_pointer(),
-		  indexLow.get_pointer(), indexHigh.get_pointer(),
+      FORT_AREAIN(domLo.get_pointer(), domHi.get_pointer(),
+		  idxLo.get_pointer(), idxHi.get_pointer(),
 		  cellinfo->sew.get_objs(),
 		  cellinfo->sns.get_objs(), cellinfo->stb.get_objs(),
 		  &inlet_area, cellType.getPointer(), &cellid);
+
+      // Write the inlet area to the old_dw
       old_dw->put(sum_vartype(inlet_area),d_flowInlets[ii].d_area_label);
     }
   }
@@ -472,6 +513,7 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 //****************************************************************************
 // Schedule the calculation of the velocity BCs
 //****************************************************************************
+/*
 void 
 BoundaryCondition::sched_velocityBC(const LevelP& level,
 				    SchedulerP& sched,
@@ -560,10 +602,12 @@ BoundaryCondition::sched_velocityBC(const LevelP& level,
   }
 #endif
 }
+*/
 
 //****************************************************************************
 // Schedule the computation of the presures bcs
 //****************************************************************************
+/*
 void 
 BoundaryCondition::sched_pressureBC(const LevelP& level,
 				    SchedulerP& sched,
@@ -598,10 +642,12 @@ BoundaryCondition::sched_pressureBC(const LevelP& level,
   }
 #endif
 }
+*/
 
 //****************************************************************************
 // Schedule the computation of scalar BCS
 //****************************************************************************
+/*
 void 
 BoundaryCondition::sched_scalarBC(const LevelP& level,
 				  SchedulerP& sched,
@@ -610,6 +656,7 @@ BoundaryCondition::sched_scalarBC(const LevelP& level,
 				  int index)
 {
 }
+*/
 
 //****************************************************************************
 // Schedule the setting of inlet velocity BC
@@ -724,12 +771,6 @@ BoundaryCondition::sched_calculateArea(const LevelP& level,
   }
 }
 
- 
-
-
-
-
-
 //****************************************************************************
 // Schedule set profile
 // assigns flat velocity profiles for primary and secondary inlets
@@ -770,7 +811,8 @@ BoundaryCondition::sched_setProfile(const LevelP& level,
 	tsk->requires(old_dw, d_scalarINLabel, ii, patch, Ghost::None,
 		    numGhostCells);
 
-      // This task computes new density, uVelocity, vVelocity and wVelocity, scalars
+      // This task computes new density, uVelocity, vVelocity and wVelocity, 
+      // scalars
       tsk->computes(new_dw, d_densitySPLabel, matlIndex, patch);
       tsk->computes(new_dw, d_uVelocitySPLabel, matlIndex, patch);
       tsk->computes(new_dw, d_vVelocitySPLabel, matlIndex, patch);
@@ -794,9 +836,9 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
 {
   CCVariable<int> cellType;
   CCVariable<double> density;
-  FCVariable<double> uVelocity;
-  FCVariable<double> vVelocity;
-  FCVariable<double> wVelocity;
+  SFCXVariable<double> uVelocity;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
 
   int matlIndex = 0;
   int nofGhostCells = 0;
@@ -842,10 +884,6 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
   // ** WARNING ** this is just for compilation purposes
   CellInformation* cellinfo = scinew CellInformation(patch);
 
-  // Get the low and high index for the patch
-  IntVector indexLow = patch->getCellLowIndex();
-  IntVector indexHigh = patch->getCellHighIndex();
-
 #ifdef WONT_COMPILE_YET
   //get Molecular Viscosity of the fluid
   SoleVariable<double> VISCOS_CONST;
@@ -858,19 +896,16 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
   // Call the fortran routines
   switch(index) {
   case 1:
-    uVelocityBC(new_dw, patch, indexLow, indexHigh, &cellType, &uVelocity, 
-		&vVelocity, &wVelocity, &density, &VISCOS,
-		cellinfo, eqnType);
+    uVelocityBC(new_dw, patch, &cellType, &uVelocity, &vVelocity, &wVelocity, 
+		&density, &VISCOS, cellinfo, eqnType);
     break;
   case 2:
-    vVelocityBC(new_dw, patch, indexLow, indexHigh, &cellType, &uVelocity, 
-		&vVelocity, &wVelocity, &density, &VISCOS,
-		cellinfo, eqnType);
+    vVelocityBC(new_dw, patch, &cellType, &uVelocity, &vVelocity, &wVelocity, 
+		&density, &VISCOS, cellinfo, eqnType);
     break;
   case 3:
-    wVelocityBC(new_dw, patch, indexLow, indexHigh, &cellType, &uVelocity, 
-		&vVelocity, &wVelocity, &density, &VISCOS,
-		cellinfo, eqnType);
+    wVelocityBC(new_dw, patch, &cellType, &uVelocity, &vVelocity, &wVelocity, 
+		&density, &VISCOS, cellinfo, eqnType);
     break;
   default:
     cerr << "Invalid Index value" << endl;
@@ -896,12 +931,10 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
 void 
 BoundaryCondition::uVelocityBC(DataWarehouseP& new_dw,
 			       const Patch* patch,
-			       const IntVector& indexLow, 
-			       const IntVector& indexHigh,
 			       CCVariable<int>* cellType,
-			       FCVariable<double>* uVelocity, 
-			       FCVariable<double>* vVelocity, 
-			       FCVariable<double>* wVelocity, 
+			       SFCXVariable<double>* uVelocity, 
+			       SFCYVariable<double>* vVelocity, 
+			       SFCZVariable<double>* wVelocity, 
 			       CCVariable<double>* density,
 			       const double* VISCOS,
 			       CellInformation*,
@@ -911,28 +944,34 @@ BoundaryCondition::uVelocityBC(DataWarehouseP& new_dw,
   int numGhostCells = 0;
   int nofStencils = 7;
 
-  StencilMatrix<FCVariable<double> > velocityCoeff;
-  FCVariable<double> linearSrc; // SP term in Arches 
-  FCVariable<double> nonlinearSrc; // SU term in Arches 
+  StencilMatrix<SFCXVariable<double> > velocityCoeff;
+  SFCXVariable<double> linearSrc; // SP term in Arches 
+  SFCXVariable<double> nonlinearSrc; // SU term in Arches 
+
+  // Get the low and high index for the patch and the variables
+  IntVector idxLo = patch->getSFCXFORTLowIndex();
+  IntVector idxHi = patch->getSFCXFORTHighIndex();
+  IntVector domLo = linearSrc.getFortLowIndex();
+  IntVector domHi = linearSrc.getFortHighIndex();
 
   switch(eqnType) {
   case Discretization::PRESSURE:
     for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(velocityCoeff[ii], d_uVelCoefPBLMLabel, ii, patch, Ghost::None,
-		  numGhostCells);
+      new_dw->get(velocityCoeff[ii], d_uVelCoefPBLMLabel, ii, patch, 
+		  Ghost::None, numGhostCells);
     }
-    new_dw->get(linearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
+    new_dw->get(linearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
     new_dw->get(nonlinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch, 
 		Ghost::None, numGhostCells);
     break;
   case Discretization::MOMENTUM:
     for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(velocityCoeff[ii], d_uVelCoefMBLMLabel, ii, patch, Ghost::None,
-		  numGhostCells);
+      new_dw->get(velocityCoeff[ii], d_uVelCoefMBLMLabel, ii, patch, 
+		  Ghost::None, numGhostCells);
     }
-    new_dw->get(linearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
+    new_dw->get(linearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
     new_dw->get(nonlinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch, 
 		Ghost::None, numGhostCells);
     break;
@@ -940,16 +979,17 @@ BoundaryCondition::uVelocityBC(DataWarehouseP& new_dw,
     break;
   }
 
+#ifdef WONT_COMPILE_YET
   int ioff = 1;
   int joff = 0;
   int koff = 0;
-
-#ifdef WONT_COMPILE_YET
   // 3-d array for volume - fortran uses it for temporary storage
   Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
   // computes remianing diffusion term and also computes source due to gravity
-  FORT_BCUVEL(velocityCoeff, linearSrc, nonlinearSrc, velocity,  
-	      density, VISCOS, ioff, joff, koff, lowIndex, highIndex,
+  FORT_BCUVEL(domLo.get_pointer(), domHi.get_pointer(), 
+	      idxLo.get_pointer(), idxHi.get_pointer(),
+	      velocityCoeff, linearSrc, nonlinearSrc, velocity,  
+	      density, VISCOS, ioff, joff, koff, 
 	      cellType,
 	      cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
 	      cellinfo->cnn, cellinfo->csn, cellinfo->css,
@@ -988,12 +1028,10 @@ BoundaryCondition::uVelocityBC(DataWarehouseP& new_dw,
 void 
 BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
 			       const Patch* patch,
-			       const IntVector& indexLow, 
-			       const IntVector& indexHigh,
 			       CCVariable<int>* cellType,
-			       FCVariable<double>* uVelocity, 
-			       FCVariable<double>* vVelocity, 
-			       FCVariable<double>* wVelocity, 
+			       SFCXVariable<double>* uVelocity, 
+			       SFCYVariable<double>* vVelocity, 
+			       SFCZVariable<double>* wVelocity, 
 			       CCVariable<double>* density,
 			       const double* VISCOS,
 			       CellInformation*,
@@ -1003,28 +1041,34 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
   int numGhostCells = 0;
   int nofStencils = 7;
 
-  StencilMatrix<FCVariable<double> > velocityCoeff;
-  FCVariable<double> linearSrc; // SP term in Arches 
-  FCVariable<double> nonlinearSrc; // SU term in Arches 
+  StencilMatrix<SFCYVariable<double> > velocityCoeff;
+  SFCYVariable<double> linearSrc; // SP term in Arches 
+  SFCYVariable<double> nonlinearSrc; // SU term in Arches 
+
+  // Get the low and high index for the patch and the variables
+  IntVector idxLo = patch->getSFCYFORTLowIndex();
+  IntVector idxHi = patch->getSFCYFORTHighIndex();
+  IntVector domLo = linearSrc.getFortLowIndex();
+  IntVector domHi = linearSrc.getFortHighIndex();
 
   switch(eqnType) {
   case Discretization::PRESSURE:
     for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(velocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch, Ghost::None,
-		  numGhostCells);
+      new_dw->get(velocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch, 
+		  Ghost::None, numGhostCells);
     }
-    new_dw->get(linearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
+    new_dw->get(linearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
     new_dw->get(nonlinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch, 
 		Ghost::None, numGhostCells);
     break;
   case Discretization::MOMENTUM:
     for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(velocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch, Ghost::None,
-		  numGhostCells);
+      new_dw->get(velocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch, 
+		  Ghost::None, numGhostCells);
     }
-    new_dw->get(linearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
+    new_dw->get(linearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
     new_dw->get(nonlinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch, 
 		Ghost::None, numGhostCells);
     break;
@@ -1032,26 +1076,27 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
     break;
   }
 
+#ifdef WONT_COMPILE_YET
   int ioff = 1;
   int joff = 0;
   int koff = 0;
-
-#ifdef WONT_COMPILE_YET
-    // 3-d array for volume - fortran uses it for temporary storage
-    Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
-    // computes remianing diffusion term and also computes source due to gravity
-    FORT_BCVVEL(velocityCoeff, linearSrc, nonlinearSrc, velocity,  
-		density, VISCOS, ioff, joff, koff, lowIndex, highIndex,
-		cellType,
-		cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
-		cellinfo->cnn, cellinfo->csn, cellinfo->css,
-		cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-		cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-		cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
-		cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
-		cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
-		cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
-		cellinfo->tfac, cellinfo->bfac, volume);
+  // 3-d array for volume - fortran uses it for temporary storage
+  Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
+  // computes remianing diffusion term and also computes source due to gravity
+  FORT_BCVVEL(domLo.get_pointer(), domHi.get_pointer(), 
+	      idxLo.get_pointer(), idxHi.get_pointer(),
+	      velocityCoeff, linearSrc, nonlinearSrc, velocity,  
+	      density, VISCOS, ioff, joff, koff, 
+	      cellType,
+	      cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
+	      cellinfo->cnn, cellinfo->csn, cellinfo->css,
+	      cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
+	      cellinfo->sewu, cellinfo->sns, cellinfo->stb,
+	      cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
+	      cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
+	      cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
+	      cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
+	      cellinfo->tfac, cellinfo->bfac, volume);
 #endif
 
   switch(eqnType) {
@@ -1080,12 +1125,10 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
 void 
 BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
 			       const Patch* patch,
-			       const IntVector& indexLow, 
-			       const IntVector& indexHigh,
 			       CCVariable<int>* cellType,
-			       FCVariable<double>* uVelocity, 
-			       FCVariable<double>* vVelocity, 
-			       FCVariable<double>* wVelocity, 
+			       SFCXVariable<double>* uVelocity, 
+			       SFCYVariable<double>* vVelocity, 
+			       SFCZVariable<double>* wVelocity, 
 			       CCVariable<double>* density,
 			       const double* VISCOS,
 			       CellInformation*,
@@ -1095,28 +1138,34 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
   int numGhostCells = 0;
   int nofStencils = 7;
 
-  StencilMatrix<FCVariable<double> > velocityCoeff;
-  FCVariable<double> linearSrc; // SP term in Arches 
-  FCVariable<double> nonlinearSrc; // SU term in Arches 
+  StencilMatrix<SFCZVariable<double> > velocityCoeff;
+  SFCZVariable<double> linearSrc; // SP term in Arches 
+  SFCZVariable<double> nonlinearSrc; // SU term in Arches 
+
+  // Get the low and high index for the patch and the variables
+  IntVector idxLo = patch->getSFCZFORTLowIndex();
+  IntVector idxHi = patch->getSFCZFORTHighIndex();
+  IntVector domLo = linearSrc.getFortLowIndex();
+  IntVector domHi = linearSrc.getFortHighIndex();
 
   switch(eqnType) {
   case Discretization::PRESSURE:
     for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(velocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch, Ghost::None,
-		  numGhostCells);
+      new_dw->get(velocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch, 
+		  Ghost::None, numGhostCells);
     }
-    new_dw->get(linearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
+    new_dw->get(linearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
     new_dw->get(nonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch, 
 		Ghost::None, numGhostCells);
     break;
   case Discretization::MOMENTUM:
     for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(velocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch, Ghost::None,
-		  numGhostCells);
+      new_dw->get(velocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch, 
+		  Ghost::None, numGhostCells);
     }
-    new_dw->get(linearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
+    new_dw->get(linearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch, 
+		Ghost::None, numGhostCells);
     new_dw->get(nonlinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, patch, 
 		Ghost::None, numGhostCells);
     break;
@@ -1124,26 +1173,27 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
     break;
   }
 
+#ifdef WONT_COMPILE_YET
   int ioff = 1;
   int joff = 0;
   int koff = 0;
-
-#ifdef WONT_COMPILE_YET
-    // 3-d array for volume - fortran uses it for temporary storage
-    Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
-    // computes remianing diffusion term and also computes source due to gravity
-    FORT_BCWVEL(velocityCoeff, linearSrc, nonlinearSrc, velocity,  
-		density, VISCOS, ioff, joff, koff, lowIndex, highIndex,
-		cellType,
-		cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
-		cellinfo->cnn, cellinfo->csn, cellinfo->css,
-		cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-		cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-		cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
-		cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
-		cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
-		cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
-		cellinfo->tfac, cellinfo->bfac, volume);
+  // 3-d array for volume - fortran uses it for temporary storage
+  Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
+  // computes remianing diffusion term and also computes source due to gravity
+  FORT_BCWVEL(domLo.get_pointer(), domHi.get_pointer(), 
+	      idxLo.get_pointer(), idxHi.get_pointer(),
+	      velocityCoeff, linearSrc, nonlinearSrc, velocity,  
+	      density, VISCOS, ioff, joff, koff, 
+	      cellType,
+	      cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
+	      cellinfo->cnn, cellinfo->csn, cellinfo->css,
+	      cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
+	      cellinfo->sewu, cellinfo->sns, cellinfo->stb,
+	      cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
+	      cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
+	      cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
+	      cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
+	      cellinfo->tfac, cellinfo->bfac, volume);
 #endif
 
   switch(eqnType) {
@@ -1194,8 +1244,10 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
   }
 
   // Get the low and high index for the patch
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
+  IntVector domLo = pressure.getFortLowIndex();
+  IntVector domHi = pressure.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
 
 #ifdef WONT_COMPILE_YET
   // using chain of responsibility pattern for getting cell information
@@ -1210,8 +1262,10 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
   CellInformation* cellinfo = cellinfop;
 
   //fortran call
-  FORT_PRESSBC(pressCoeff, pressure, 
-	       lowIndex, highIndex, cellType);
+  FORT_PRESSBC(domLo.get_pointer(), domHi.get_pointer(),
+	       idxLo.get_pointer(), idxHi.get_pointer(),
+	       pressCoeff, pressure, 
+	       cellType);
 #endif
 
   // Put the calculated data into the new DW
@@ -1252,8 +1306,10 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
   }
 
   // Get the low and high index for the patch
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
+  IntVector domLo = scalar.getFortLowIndex();
+  IntVector domHi = scalar.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
 
 #ifdef WONT_COMPILE_YET
   // using chain of responsibility pattern for getting cell information
@@ -1268,8 +1324,10 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
   CellInformation* cellinfo = cellinfop;
 
   //fortran call
-  FORT_SCALARBC(scalarCoeff, scalar, 
-	       lowIndex, highIndex, cellType);
+  FORT_SCALARBC(domLo.get_pointer(), domHi.get_pointer(),
+		idxLo.get_pointer(), idxHi.get_pointer(),
+		scalarCoeff, scalar, 
+		cellType);
 #endif
 
   // Put the calculated data into the new DW
@@ -1286,16 +1344,16 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
 // Actually set the inlet velocity BC
 //****************************************************************************
 void 
-BoundaryCondition::setInletVelocityBC(const ProcessorGroup* pc,
+BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
 				      const Patch* patch,
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw) 
 {
   CCVariable<int> cellType;
   CCVariable<double> density;
-  FCVariable<double> uVelocity;
-  FCVariable<double> vVelocity;
-  FCVariable<double> wVelocity;
+  SFCXVariable<double> uVelocity;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
 
   int matlIndex = 0;
   int nofGhostCells = 0;
@@ -1310,9 +1368,23 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* pc,
   old_dw->get(wVelocity, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
-  // Get the low and high index for the patch
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
+  // Get the low and high index for the patch and the variables
+  IntVector domLo = density.getFortLowIndex();
+  IntVector domHi = density.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector domLoU = uVelocity.getFortLowIndex();
+  IntVector domHiU = uVelocity.getFortHighIndex();
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  IntVector domLoV = vVelocity.getFortLowIndex();
+  IntVector domHiV = vVelocity.getFortHighIndex();
+  IntVector idxLoV = patch->getSFCYFORTLowIndex();
+  IntVector idxHiV = patch->getSFCYFORTHighIndex();
+  IntVector domLoW = wVelocity.getFortLowIndex();
+  IntVector domHiW = wVelocity.getFortHighIndex();
+  IntVector idxLoW = patch->getSFCZFORTLowIndex();
+  IntVector idxHiW = patch->getSFCZFORTHighIndex();
 
   // stores cell type info for the patch with the ghost cell type
   for (int indx = 0; indx < d_numInlets; indx++) {
@@ -1323,9 +1395,18 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* pc,
 #ifdef WONT_COMPILE_YET
     // assign flowType the value that corresponds to flow
     CellTypeInfo flowType = FLOW;
-    FORT_INLBCS(domainLow, domianHigh, indexLow, indexHigh,
-		uVelocity, vVelocity, wVelocity,
-		density, 
+    FORT_INLBCS(domLoU.get_pointer(), domHiU.get_pointer(), 
+		idxLoU.get_pointer(), idxHiU.get_pointer(), 
+		uVelocity.getPointer(),
+		domLoV.get_pointer(), domHiV.get_pointer(), 
+		idxLoV.get_pointer(), idxHiV.get_pointer(), 
+		vVelocity.getPointer(),
+		domLoW.get_pointer(), domHiW.get_pointer(), 
+		idxLoW.get_pointer(), idxHiW.get_pointer(), 
+		wVelocity.getPointer(),
+		domLo.get_pointer(), domHi.get_pointer(), 
+		idxLo.get_pointer(), idxHi.get_pointer(), 
+		density.getPointer(),
 		&fi.cellTypeID, &fi.flowRate, &fi.area, &fi.density, 
 		&fi.inletType,
 		flowType);
@@ -1343,7 +1424,7 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* pc,
 // Actually calculate the pressure BCs
 //****************************************************************************
 void 
-BoundaryCondition::calculatePressBC(const ProcessorGroup* pc,
+BoundaryCondition::calculatePressBC(const ProcessorGroup* ,
 				    const Patch* patch,
 				    DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw) 
@@ -1351,9 +1432,9 @@ BoundaryCondition::calculatePressBC(const ProcessorGroup* pc,
   CCVariable<int> cellType;
   CCVariable<double> density;
   CCVariable<double> pressure;
-  FCVariable<double> uVelocity;
-  FCVariable<double> vVelocity;
-  FCVariable<double> wVelocity;
+  SFCXVariable<double> uVelocity;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
 
   int matlIndex = 0;
   int nofGhostCells = 0;
@@ -1372,14 +1453,38 @@ BoundaryCondition::calculatePressBC(const ProcessorGroup* pc,
   old_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
-  // Get the low and high index for the patch
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
+  // Get the low and high index for the patch and the variables
+  IntVector domLo = density.getFortLowIndex();
+  IntVector domHi = density.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector domLoU = uVelocity.getFortLowIndex();
+  IntVector domHiU = uVelocity.getFortHighIndex();
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  IntVector domLoV = vVelocity.getFortLowIndex();
+  IntVector domHiV = vVelocity.getFortHighIndex();
+  IntVector idxLoV = patch->getSFCYFORTLowIndex();
+  IntVector idxHiV = patch->getSFCYFORTHighIndex();
+  IntVector domLoW = wVelocity.getFortLowIndex();
+  IntVector domHiW = wVelocity.getFortHighIndex();
+  IntVector idxLoW = patch->getSFCZFORTLowIndex();
+  IntVector idxHiW = patch->getSFCZFORTHighIndex();
 
 #ifdef WONT_COMPILE_YET
-  FORT_CALPBC(domainLow, domainHigh, indexLow, indexHigh,
-	      uVelocity, vVelocity, wVelocity, 
-	      pressure, density, 
+  FORT_CALPBC(domLoU.get_pointer(), domHiU.get_pointer(), 
+	      idxLoU.get_pointer(), idxHiU.get_pointer(), 
+	      uVelocity.getPointer(),
+	      domLoV.get_pointer(), domHiV.get_pointer(), 
+	      idxLoV.get_pointer(), idxHiV.get_pointer(), 
+	      vVelocity.getPointer(),
+	      domLoW.get_pointer(), domHiW.get_pointer(), 
+	      idxLoW.get_pointer(), idxHiW.get_pointer(), 
+	      wVelocity.getPointer(),
+	      domLo.get_pointer(), domHi.get_pointer(), 
+	      idxLo.get_pointer(), idxHi.get_pointer(), 
+	      pressure.getPointer(),
+	      density.getPointer(), 
 	      &(d_pressureBdry->d_cellTypeID),
 	      &(d_pressureBdry->refPressure), 
 	      &(d_pressureBdry->area),
@@ -1404,9 +1509,9 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
 {
   CCVariable<int> cellType;
   CCVariable<double> density;
-  FCVariable<double> uVelocity;
-  FCVariable<double> vVelocity;
-  FCVariable<double> wVelocity;
+  SFCXVariable<double> uVelocity;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
   vector<CCVariable<double> > scalar(d_nofScalars);
   int matlIndex = 0;
   int nofGhostCells = 0;
@@ -1427,11 +1532,23 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
 	      nofGhostCells);
   }
 
-  // Get the low and high index for the patch
-  IntVector domainLow = patch->getCellLowIndex();
-  IntVector domainHigh = patch->getCellHighIndex() - IntVector(1,1,1);
-  IntVector lowIndex = domainLow;
-  IntVector highIndex = domainHigh;
+  // Get the low and high index for the patch and the variables
+  IntVector domLo = density.getFortLowIndex();
+  IntVector domHi = density.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector domLoU = uVelocity.getFortLowIndex();
+  IntVector domHiU = uVelocity.getFortHighIndex();
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  IntVector domLoV = vVelocity.getFortLowIndex();
+  IntVector domHiV = vVelocity.getFortHighIndex();
+  IntVector idxLoV = patch->getSFCYFORTLowIndex();
+  IntVector idxHiV = patch->getSFCYFORTHighIndex();
+  IntVector domLoW = wVelocity.getFortLowIndex();
+  IntVector domHiW = wVelocity.getFortHighIndex();
+  IntVector idxLoW = patch->getSFCZFORTLowIndex();
+  IntVector idxHiW = patch->getSFCZFORTHighIndex();
 
   // loop thru the flow inlets to set all the components of velocity and density
   for (int indx = 0; indx < d_numInlets; indx++) {
@@ -1442,36 +1559,44 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
     // check if given patch intersects with the inlet boundary of type index
     FlowInlet fi = d_flowInlets[indx];
 
-
-    FORT_PROFV(domainLow.get_pointer(), domainHigh.get_pointer(),
-	       lowIndex.get_pointer(), highIndex.get_pointer(),
-	       uVelocity.getPointer(), vVelocity.getPointer(),
+    FORT_PROFV(domLoU.get_pointer(), domHiU.get_pointer(),
+	       idxHiU.get_pointer(), idxHiU.get_pointer(),
+	       uVelocity.getPointer(), 
+	       domLoV.get_pointer(), domHiV.get_pointer(),
+	       idxHiV.get_pointer(), idxHiV.get_pointer(),
+	       vVelocity.getPointer(),
+	       domLoW.get_pointer(), domHiW.get_pointer(),
+	       idxHiW.get_pointer(), idxHiW.get_pointer(),
 	       wVelocity.getPointer(),
-	       cellType.getPointer(), &area, &fi.d_cellTypeID, &fi.flowRate, 
+	       domLo.get_pointer(), domHi.get_pointer(),
+	       idxHi.get_pointer(), idxHi.get_pointer(),
+	       cellType.getPointer(), 
+	       &area, &fi.d_cellTypeID, &fi.flowRate, 
 	       &fi.density);
-    FORT_PROFSCALAR(domainLow.get_pointer(), domainHigh.get_pointer(),
-		    lowIndex.get_pointer(), highIndex.get_pointer(),
-		    density.getPointer(), cellType.getPointer(),
+    FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(),
+		    idxLo.get_pointer(), idxHi.get_pointer(),
+		    density.getPointer(), 
+		    cellType.getPointer(),
 		    &fi.density, &fi.d_cellTypeID);
   }   
   if (d_pressureBdry) {
-    FORT_PROFSCALAR(domainLow.get_pointer(), domainHigh.get_pointer(), 
-		    lowIndex.get_pointer(), highIndex.get_pointer(),
+    FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(), 
+		    idxLo.get_pointer(), idxHi.get_pointer(),
 		    density.getPointer(), cellType.getPointer(),
 		    &d_pressureBdry->density, &d_pressureBdry->d_cellTypeID);
   }    
   for (int indx = 0; indx < d_nofScalars; indx++) {
     for (int ii = 0; ii < d_numInlets; ii++) {
       double scalarValue = d_flowInlets[ii].streamMixturefraction[indx];
-      FORT_PROFSCALAR(domainLow.get_pointer(), domainHigh.get_pointer(), 
-		      lowIndex.get_pointer(), highIndex.get_pointer(),
+      FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(), 
+		      idxLo.get_pointer(), idxHi.get_pointer(),
 		      scalar[indx].getPointer(), cellType.getPointer(),
 		      &scalarValue, &d_flowInlets[ii].d_cellTypeID);
     }
     if (d_pressBoundary) {
       double scalarValue = d_pressureBdry->streamMixturefraction[indx];
-      FORT_PROFSCALAR(domainLow.get_pointer(), domainHigh.get_pointer(),
-		      lowIndex.get_pointer(), highIndex.get_pointer(),
+      FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(),
+		      idxLo.get_pointer(), idxHi.get_pointer(),
 		      scalar[indx].getPointer(), cellType.getPointer(),
 		      &scalarValue, &d_pressureBdry->d_cellTypeID);
     }
@@ -1664,6 +1789,11 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.30  2000/06/29 06:22:47  bbanerje
+// Updated FCVariable to SFCX, SFCY, SFCZVariables and made corresponding
+// changes to profv.  Code is broken until the changes are reflected
+// thru all the files.
+//
 // Revision 1.29  2000/06/28 08:14:52  bbanerje
 // Changed the init routines a bit.
 //

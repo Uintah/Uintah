@@ -43,7 +43,9 @@ none
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Grid/SFCXVariable.h>
+#include <Uintah/Grid/SFCYVariable.h>
+#include <Uintah/Grid/SFCZVariable.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
@@ -103,16 +105,13 @@ public:
       //
       void problemSetup(const ProblemSpecP& params);
 
-      // GROUP: Access function
+      // GROUP: Access functions
       ////////////////////////////////////////////////////////////////////////
       //
-      // Details here
+      // Get the number if inlets (primary + secondary)
       //
-      int getNumInlets() {
-	return d_numInlets;
-      }
+      int getNumInlets() { return d_numInlets; }
 
-      // GROUP: Access function
       ////////////////////////////////////////////////////////////////////////
       //
       // Details here
@@ -120,6 +119,16 @@ public:
       int getFlowCellID(int index) {
 	return d_flowInlets[index].d_cellTypeID;
       }
+
+      // GROUP:  Schedule tasks :
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Initialize cell types
+      //
+      void sched_cellTypeInit(const LevelP& level,
+			      SchedulerP& sched,
+			      DataWarehouseP& old_dw,
+			      DataWarehouseP& new_dw);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -133,53 +142,32 @@ public:
 
       ////////////////////////////////////////////////////////////////////////
       //
-      // Initialize celltyping
-      // Details here
-      //
-
-      void cellTypeInit(const ProcessorGroup*,
-			const Patch* patch,
-			DataWarehouseP& old_dw,  
-			DataWarehouseP&);
-      ////////////////////////////////////////////////////////////////////////
-      //
-      // computing inlet areas
-      // Details here
-      //
-      void computeInletFlowArea(const ProcessorGroup*,
-			const Patch* patch,
-			DataWarehouseP& old_dw,  
-			DataWarehouseP&);
-
-      // GROUP:  Schedule tasks :
-      ////////////////////////////////////////////////////////////////////////
-      //
       // Schedule Computation of Velocity boundary conditions terms. 
       //
-      void sched_velocityBC(const LevelP& level,
-			    SchedulerP& sched,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw,
-			    int index);
+      //void sched_velocityBC(const LevelP& level,
+      //    SchedulerP& sched,
+      //    DataWarehouseP& old_dw,
+      //    DataWarehouseP& new_dw,
+      //    int index);
 
       ////////////////////////////////////////////////////////////////////////
       //
       // Schedule Computation of Pressure boundary conditions terms. 
       //
-      void sched_pressureBC(const LevelP& level,
-			    SchedulerP& sched,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw);
+      //void sched_pressureBC(const LevelP& level,
+      //    SchedulerP& sched,
+      //    DataWarehouseP& old_dw,
+      //    DataWarehouseP& new_dw);
 
       ////////////////////////////////////////////////////////////////////////
       //
       // Schedule Computation of Scalar boundary conditions terms. 
       //
-      void sched_scalarBC(const LevelP& level,
-			  SchedulerP& sched,
-			  DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw,
-			  int index);
+      //void sched_scalarBC(const LevelP& level,
+      //    SchedulerP& sched,
+      //    DataWarehouseP& old_dw,
+      //    DataWarehouseP& new_dw,
+      //    int index);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -215,6 +203,25 @@ public:
 			    DataWarehouseP& new_dw);
 
       // GROUP:  Actual Computations :
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Initialize celltyping
+      // Details here
+      //
+      void cellTypeInit(const ProcessorGroup*,
+			const Patch* patch,
+			DataWarehouseP& old_dw,  
+			DataWarehouseP&);
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // computing inlet areas
+      // Details here
+      //
+      void computeInletFlowArea(const ProcessorGroup*,
+			const Patch* patch,
+			DataWarehouseP& old_dw,  
+			DataWarehouseP&);
+
       ////////////////////////////////////////////////////////////////////////
       //
       // Actually compute velocity BC terms
@@ -254,12 +261,10 @@ private:
       //
       void uVelocityBC(DataWarehouseP& new_dw,
 		       const Patch* patch,
-		       const IntVector& indexLow, 
-		       const IntVector& indexHigh,
 		       CCVariable<int>* cellType,
-		       FCVariable<double>* uVelocity, 
-		       FCVariable<double>* vVelocity, 
-		       FCVariable<double>* wVelocity, 
+		       SFCXVariable<double>* uVelocity, 
+		       SFCYVariable<double>* vVelocity, 
+		       SFCZVariable<double>* wVelocity, 
 		       CCVariable<double>* density,
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
@@ -271,12 +276,10 @@ private:
       //
       void vVelocityBC(DataWarehouseP& new_dw,
 		       const Patch* patch,
-		       const IntVector& indexLow, 
-		       const IntVector& indexHigh,
 		       CCVariable<int>* cellType,
-		       FCVariable<double>* uVelocity, 
-		       FCVariable<double>* vVelocity, 
-		       FCVariable<double>* wVelocity, 
+		       SFCXVariable<double>* uVelocity, 
+		       SFCYVariable<double>* vVelocity, 
+		       SFCZVariable<double>* wVelocity, 
 		       CCVariable<double>* density,
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
@@ -288,12 +291,10 @@ private:
       //
       void wVelocityBC(DataWarehouseP& new_dw,
 		       const Patch* patch,
-		       const IntVector& indexLow, 
-		       const IntVector& indexHigh,
 		       CCVariable<int>* cellType,
-		       FCVariable<double>* uVelocity, 
-		       FCVariable<double>* vVelocity, 
-		       FCVariable<double>* wVelocity, 
+		       SFCXVariable<double>* uVelocity, 
+		       SFCYVariable<double>* vVelocity, 
+		       SFCZVariable<double>* wVelocity, 
 		       CCVariable<double>* density,
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
@@ -476,6 +477,11 @@ private:
   
 //
 // $Log$
+// Revision 1.29  2000/06/29 06:22:48  bbanerje
+// Updated FCVariable to SFCX, SFCY, SFCZVariables and made corresponding
+// changes to profv.  Code is broken until the changes are reflected
+// thru all the files.
+//
 // Revision 1.28  2000/06/28 08:14:53  bbanerje
 // Changed the init routines a bit.
 //

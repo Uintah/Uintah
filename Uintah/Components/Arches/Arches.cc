@@ -14,7 +14,9 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Grid/SFCXVariable.h>
+#include <Uintah/Grid/SFCYVariable.h>
+#include <Uintah/Grid/SFCZVariable.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/ReductionVariable.h>
@@ -48,11 +50,11 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_pressureINLabel = scinew VarLabel("pressureIN", 
 				   CCVariable<double>::getTypeDescription() );
   d_uVelocityINLabel = scinew VarLabel("uVelocityIN", 
-				   FCVariable<double>::getTypeDescription() );
+				   SFCXVariable<double>::getTypeDescription() );
   d_vVelocityINLabel = scinew VarLabel("vVelocityIN", 
-				   FCVariable<double>::getTypeDescription() );
+				   SFCYVariable<double>::getTypeDescription() );
   d_wVelocityINLabel = scinew VarLabel("wVelocityIN", 
-				   FCVariable<double>::getTypeDescription() );
+				   SFCZVariable<double>::getTypeDescription() );
   d_scalarINLabel = scinew VarLabel("scalarIN", 
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityINLabel = scinew VarLabel("viscosityIN", 
@@ -128,40 +130,20 @@ Arches::scheduleInitialize(const LevelP& level,
 			   SchedulerP& sched,
 			   DataWarehouseP& dw)
 {
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
+  // schedule the initialization of parameters
+  // require : None
+  // compute : [u,v,w]VelocityIN, pressureIN, scalarIN, densityIN,
+  //           viscosityIN
+  sched_paramInit(level, sched, dw, dw);
 
-    // primitive variable initialization
-    {
-      Task* tsk = new Task("Arches::paramInit",
-			   patch, dw, dw, this,
-			   &Arches::paramInit);
-      int matlIndex = 0;
-      tsk->computes(dw, d_uVelocityINLabel, matlIndex, patch);
-      tsk->computes(dw, d_vVelocityINLabel, matlIndex, patch);
-      tsk->computes(dw, d_wVelocityINLabel, matlIndex, patch);
-      tsk->computes(dw, d_pressureINLabel, matlIndex, patch);
-      for (int ii = 0; ii < d_nofScalars; ii++) 
-	tsk->computes(dw, d_scalarINLabel, ii, patch);
-      tsk->computes(dw, d_densityINLabel, matlIndex, patch);
-      tsk->computes(dw, d_viscosityINLabel, matlIndex, patch);
-      sched->addTask(tsk);
-    }
+  // schedule init of cell type
+  // require : NONE
+  // compute : cellType
+  d_boundaryCondition->sched_cellTypeInit(level, sched, dw, dw);
 
-    // cell type initialization
-    {
-      Task* tsk = new Task("BoundaryCondition::cellTypeInit",
-			   patch, dw, dw, d_boundaryCondition,
-			   &BoundaryCondition::cellTypeInit);
-      int matlIndex = 0;
-      tsk->computes(dw, d_cellTypeLabel, matlIndex, patch);
-      sched->addTask(tsk);
-    }
-
-  }
   // computing flow inlet areas
   d_boundaryCondition->sched_calculateArea(level, sched, dw, dw);
+
   // Set the profile (output Varlabel have SP appended to them)
   // require : densityIN,[u,v,w]VelocityIN
   // compute : densitySP, [u,v,w]VelocitySP
@@ -180,6 +162,36 @@ Arches::scheduleInitialize(const LevelP& level,
   // NOTE : Sched pressure BC requires pressureCoeff. That has not been 
   // computed yet in this flow.
   //d_boundaryCondition->sched_pressureBC(level, sched, dw, dw);
+}
+
+//****************************************************************************
+// schedule the initialization of parameters
+//****************************************************************************
+void 
+Arches::sched_paramInit(const LevelP& level,
+			SchedulerP& sched,
+			DataWarehouseP& old_dw,
+			DataWarehouseP& new_dw)
+{
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
+
+    // primitive variable initialization
+    Task* tsk = new Task("Arches::paramInit",
+			 patch, old_dw, new_dw, this,
+			 &Arches::paramInit);
+    int matlIndex = 0;
+    tsk->computes(new_dw, d_uVelocityINLabel, matlIndex, patch);
+    tsk->computes(new_dw, d_vVelocityINLabel, matlIndex, patch);
+    tsk->computes(new_dw, d_wVelocityINLabel, matlIndex, patch);
+    tsk->computes(new_dw, d_pressureINLabel, matlIndex, patch);
+    for (int ii = 0; ii < d_nofScalars; ii++) 
+      tsk->computes(new_dw, d_scalarINLabel, ii, patch);
+    tsk->computes(new_dw, d_densityINLabel, matlIndex, patch);
+    tsk->computes(new_dw, d_viscosityINLabel, matlIndex, patch);
+    sched->addTask(tsk);
+  }
 }
 
 //****************************************************************************
@@ -232,9 +244,9 @@ Arches::paramInit(const ProcessorGroup* ,
 		  DataWarehouseP& )
 {
   // ....but will only compute for computational domain
-  FCVariable<double> uVelocity;
-  FCVariable<double> vVelocity;
-  FCVariable<double> wVelocity;
+  SFCXVariable<double> uVelocity;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
   CCVariable<double> pressure;
   vector<CCVariable<double> > scalar(d_nofScalars);
   CCVariable<double> density;
@@ -252,20 +264,20 @@ Arches::paramInit(const ProcessorGroup* ,
   old_dw->allocate(viscosity, d_viscosityINLabel, matlIndex, patch);
 
   // ** WARNING **  this needs to be changed soon (6/9/2000)
-  IntVector domLoU = uVelocity.getLowIndex();
-  IntVector domHiU = uVelocity.getHighIndex()-IntVector(1,1,1);
+  IntVector domLoU = uVelocity.getFortLowIndex();
+  IntVector domHiU = uVelocity.getFortHighIndex();
   IntVector idxLoU = domLoU;
   IntVector idxHiU = domHiU;
-  IntVector domLoV = vVelocity.getLowIndex();
-  IntVector domHiV = vVelocity.getHighIndex()-IntVector(1,1,1);
+  IntVector domLoV = vVelocity.getFortLowIndex();
+  IntVector domHiV = vVelocity.getFortHighIndex();
   IntVector idxLoV = domLoV;
   IntVector idxHiV = domHiV;
-  IntVector domLoW = wVelocity.getLowIndex();
-  IntVector domHiW = wVelocity.getHighIndex()-IntVector(1,1,1);
+  IntVector domLoW = wVelocity.getFortLowIndex();
+  IntVector domHiW = wVelocity.getFortHighIndex();
   IntVector idxLoW = domLoW;
   IntVector idxHiW = domHiW;
-  IntVector domLo = pressure.getLowIndex();
-  IntVector domHi = pressure.getHighIndex()-IntVector(1,1,1);
+  IntVector domLo = pressure.getFortLowIndex();
+  IntVector domHi = pressure.getFortHighIndex();
   IntVector idxLo = domLo;
   IntVector idxHi = domHi;
 
@@ -322,6 +334,11 @@ Arches::paramInit(const ProcessorGroup* ,
   
 //
 // $Log$
+// Revision 1.47  2000/06/29 06:22:47  bbanerje
+// Updated FCVariable to SFCX, SFCY, SFCZVariables and made corresponding
+// changes to profv.  Code is broken until the changes are reflected
+// thru all the files.
+//
 // Revision 1.46  2000/06/28 08:14:52  bbanerje
 // Changed the init routines a bit.
 //

@@ -53,18 +53,18 @@ c*********************************************************************
 c*********************************************************************
 c     Start :
 c*********************************************************************
-      iBegGhost = indexLow(1)
-      jBegGhost = indexLow(2)
-      kBegGhost = indexLow(3)
-      iEndGhost = indexHigh(1)
-      jEndGhost = indexHigh(2)
-      kEndGhost = indexHigh(3)
-      IST = iBegGhost+1
-      JST = iBegGhost+1
-      KST = iBegGhost+1
-      IEND = iEndGhost-1
-      JEND = iEndGhost-1
-      KEND = iEndGhost-1
+      iBegGhost = domainLow(1)
+      jBegGhost = domainLow(2)
+      kBegGhost = domainLow(3)
+      iEndGhost = domainHigh(1)
+      jEndGhost = domainHigh(2)
+      kEndGhost = domainHigh(3)
+      IST = indexLow(1)
+      JST = indexLow(2)
+      KST = indexLow(3)
+      IEND = indexHigh(1)
+      JEND = indexHigh(2)
+      KEND = indexHigh(3)
 
 C-------------------------------------------------------------------- 
 C     CALCULATION OF THE AREA OF TOTAL PRIMARY STREAMS
@@ -117,6 +117,11 @@ c     &              ' NO PRIMARY INLET AREA IN INPUT GEOMETRY '
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/06/29 06:22:50  bbanerje
+c Updated FCVariable to SFCX, SFCY, SFCZVariables and made corresponding
+c changes to profv.  Code is broken until the changes are reflected
+c thru all the files.
+c
 c Revision 1.3  2000/06/15 23:47:59  rawat
 c modified Archesfort to fix function call
 c
