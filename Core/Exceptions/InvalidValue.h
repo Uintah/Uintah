@@ -9,6 +9,7 @@
 class InvalidValue {
     std::string msg;
 public:
+    InvalidValue(const std::string&);
     InvalidValue(const std::string&, const Uintah::Grid::ProblemSpecP& context);
     virtual std::string message() const;
 };
