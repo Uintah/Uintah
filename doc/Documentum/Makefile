@@ -96,8 +96,9 @@ mod-spec-ref : mod-spec-ref-html mod-spec-ref-print
 
 mod-spec-ref-html : mod-spec-ref.html
 
-mod-spec-ref.html : mod-spec-ref.rxml ${edition}
-	${call rxml_to_hxml,$<}
+mod-spec-ref.html : mod-spec-ref.rxml mod-spec-ref-partII.rxml ${edition}
+	${call rxml_to_hxml,mod-spec-ref.rxml}
+	${call rxml_to_hxml,mod-spec-ref-partII.rxml}
 	java com.icl.saxon.StyleSheet -w2 mod-spec-ref.hxml \
          ${stylesheet_chunk} ${parms_chunk}
 	java com.icl.saxon.StyleSheet -w2 mod-spec-ref.hxml \
@@ -106,7 +107,8 @@ mod-spec-ref.html : mod-spec-ref.rxml ${edition}
 mod-spec-ref-print : mod-spec-ref.pdf
 
 mod-spec-ref.pdf : mod-spec-ref.rxml ${edition}
-	${call rxml_to_pxml,$<}
+	${call rxml_to_pxml,mod-spec-ref.rxml}
+	${call rxml_to_pxml,mod-spec-ref-partII.rxml}
 	openjade -t tex -V tex-backend -c ${CATALOG} -o mod-spec-ref.tex \
 -d ${stylesheet_print}  ${params_print} ${XML_DCL} mod-spec-ref.pxml 
 	for i in 1 2 ; do jadetex mod-spec-ref.tex ; done
