@@ -78,6 +78,47 @@ itcl_class SCIRun_Render_Viewer {
 	ViewWindow $rid -viewer $this 
 	lappend openViewersList $rid
     }
+
+    method duplicateViewer {old_vw} {
+	# Button "New Viewer" was pressed.
+	# Create a new viewer with the same eyep, lookat, up and fov.
+	set rid $this-ViewWindow_$nextrid
+
+	$this addViewer
+
+	# Use position of previous viewer if not the first one
+	set new_id [lindex [split $rid _] end]
+	set old_id [lindex [split $old_vw _] end]
+
+	set new_win $this-ViewWindow_$new_id
+	set old_win $this-ViewWindow_$old_id
+
+	setGlobal $new_win-view-eyep-x \
+	    [set $old_win-view-eyep-x]
+	setGlobal $new_win-view-eyep-y \
+	    [set $old_win-view-eyep-y]
+	setGlobal $new_win-view-eyep-z \
+	    [set $old_win-view-eyep-z]
+
+	setGlobal $new_win-view-lookat-x \
+	    [set $old_win-view-lookat-x]
+	setGlobal $new_win-view-lookat-y \
+	    [set $old_win-view-lookat-y]
+	setGlobal $new_win-view-lookat-z \
+	    [set $old_win-view-lookat-z]
+
+	setGlobal $new_win-view-up-x \
+	    [set $old_win-view-up-x]
+	setGlobal $new_win-view-up-y \
+	    [set $old_win-view-up-y]
+	setGlobal $new_win-view-up-z \
+	    [set $old_win-view-up-z]
+
+	setGlobal $new_win-view-fov \
+	    [set $old_win-view-fov]
+
+	$new_win-c redraw
+    }
     
     method ui {{rid -1}} {
 	# Update the viewer window list by culling all the windows
@@ -368,7 +409,7 @@ itcl_class ViewWindow {
 	}
 
 	button $w.menu.newviewer -text "NewViewer" \
-	    -command "$viewer addViewer" -borderwidth 0
+	    -command "$viewer duplicateViewer [modname]" -borderwidth 0
 	
 	pack $w.menu.file -side left
 	pack $w.menu.edit -side left
@@ -580,7 +621,7 @@ itcl_class ViewWindow {
 	    if { [string equal $myviewer $viewer] } {
 		if { ![string equal $mywindow $window] } {
 		    set num [lindex [split $window _] end]
-		    $m add command -label "Get View form Viewer $num" \
+		    $m add command -label "Get View from Viewer $num" \
 			-command "set $this-pos ViewWindow$actual; $this-c Views"
 		}
 		incr actual
@@ -1914,8 +1955,7 @@ itcl_class ViewWindow {
 	set w .ui[modname]-saveMovie
 
 	# check license env var
-	set license [netedit getenv SCIRUN_MPEG_LICENSE_ACCEPT]
-	if {![string equal $license "true"]} {
+	if {![envBool SCIRUN_MPEG_LICENSE_ACCEPT]} {
 	    tk_messageBox -message "License information describing the mpeg_encode software can be found in SCIRun's Thirdparty directory, in the mpeg_encode/README file.\n\nThe MPEG software is freely distributed and may be used for any non-commercial purpose.  However, patents are held by several companies on various aspects of the MPEG video standard. Companies or individuals who want to develop commercial products that include this code must acquire licenses from these companies. For information on licensing, see Appendix F in the standard. For more information, please see the mpeg_encode README file.\n\nIf you are allowed to use the MPEG functionality based on the above license, you may enable MPEG movie recording in SCIRun (accessible via the SCIRun Viewer's \"File->Record Movie\" menu) by setting the value of SCIRUN_MPEG_LICENSE_ACCEPT to \"true\". This can be done by uncommenting the reference to the SCIRUN_MPEG_LICENSE_ACCEPT variable in your scirunrc and changing the value from false to true." -type ok -icon info -parent .ui[modname] -title "MPEG License"
 	    return
 	}
