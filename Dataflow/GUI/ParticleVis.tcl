@@ -5,8 +5,9 @@ itcl_class Uintah_Visualization_ParticleVis {
 
     inherit Module
     protected r ""
-    protected l_s ""
     protected changed 0
+    protected old_show_nth 1
+    protected md ""
 
     constructor {config} {
 	set name ParticleVis
@@ -18,10 +19,8 @@ itcl_class Uintah_Visualization_ParticleVis {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
 	    ::delete object $r
-	    ::delete object $l_s
        }
 	set r ""
-	set l_s ""
 	puts "done"
     }
 
@@ -82,6 +81,7 @@ itcl_class Uintah_Visualization_ParticleVis {
 	global $this-shaft_rad
 
 	set n "$this-c needexecute"
+	set nth "$this showNth"
 
 	toplevel $w
 	wm minsize $w 300 20
@@ -106,9 +106,11 @@ itcl_class Uintah_Visualization_ParticleVis {
 
 	pack $w.f1.res -side top -expand yes -fill x
 
+	set old_show_nth $this-show_nth
 	scale $w.f1.nth -label "Show Nth Particle:" -orient horizontal \
-	    -variable $this-show_nth -command $n \
-	    -from 1 -to 100 -tickinterval 99 -resolution 1
+	    -variable $this-show_nth \
+	    -command "$n; $this showNth"  -from 1 -to 100 \
+	    -tickinterval 99 -resolution 1
 	
 	pack $w.f1.nth -side top -expand yes -fill x
 
@@ -187,12 +189,20 @@ itcl_class Uintah_Visualization_ParticleVis {
 	pack $w.close -side top -expand yes -fill x
 	
 	$this scalable 0
+
+	iwidgets::messagedialog .md \
+	    -master $w \
+	    -bitmap warning \
+	    -title "ParticleVis Warning" \
+	    -text "WARNING: Particle ordering is not maintained across patch boundaries.\nVisual artifacts may appear if every particle is not shown."  
+	.md hide Cancel
+	.md buttonconfigure OK -text OK -command { .md deactivate}
+	set md .md
     }
 
     method scalable { truefalse } {
 	set w .ui[modname]
 	if {[winfo exists $w]} { 
-	    puts "scalable is $truefalse in tcl"
 	    if { $truefalse == 1} {
 		$w.f3.sf.cb configure -state normal -foreground black
 		$w.f3.l configure -foreground black
@@ -230,13 +240,27 @@ itcl_class Uintah_Visualization_ParticleVis {
 	}
 	
     }
+
+    method showNth { val  } {
+	set w .ui[modname]
+	if { $old_show_nth == 1 && $val != 1 } { 
+	    $md activate
+	}
+
+	if { $old_show_nth != $val } {
+	    set old_show_nth $val
+	}
+    }
+
     method close {} {
 	puts "closing ParticleVis Ui"
 	set w .ui[modname]
 	
 	::delete object $t
 	::delete object $r
-	::delete object $l_s
+	if {[winfo exists $md]} {
+	    destroy md
+	}
 	destroy $w
     }
 
