@@ -41,7 +41,7 @@ ArchesTable::~ArchesTable()
 int ArchesTable::addDependentVariable(const string& name)
 {
   ASSERT(!file_read);
-  for(int i=0;i<deps.size();i++){
+  for(unsigned int i=0;i<deps.size();i++){
     Dep* dep = deps[i];
     if(dep->name == name)
       return i;
@@ -209,12 +209,12 @@ void ArchesTable::setup()
 
   // Verify that independent/dependent variables are available
   vector<int> input_indices(inds.size());
-  for(int i=0;i<inds.size();i++)
+  for(unsigned int i=0;i<inds.size();i++)
     input_indices[i] = -1;
-  for(int i=0;i<inds.size();i++){
+  for(unsigned int i=0;i<inds.size();i++){
     Ind* ind = inds[i];
     bool found = false;
-    for(int j=0;j<in_inds.size();j++){
+    for(unsigned int j=0;j<in_inds.size();j++){
       if(in_inds[j]->name == ind->name){
 	found=true;
 	input_indices[i] = j;
@@ -227,7 +227,7 @@ void ArchesTable::setup()
 
   // Convert the input indeps
   long newstride=1;
-  for(int i=0;i<inds.size();i++){
+  for(unsigned int i=0;i<inds.size();i++){
     Ind* ind = inds[i];
     Ind* input_ind = in_inds[input_indices[i]];
     ind->name = input_ind->name;
@@ -236,7 +236,7 @@ void ArchesTable::setup()
     ind->dx = input_ind->dx;
     cerr << i << ", input " << input_indices[i] << ", name=" << ind-> name << ", dx=" << ind->dx << '\n';
     ind->offset.resize(ind->weights.size());
-    for(int i=0;i<ind->weights.size();i++)
+    for(unsigned int i=0;i<ind->weights.size();i++)
       ind->offset[i] = i*newstride;
     newstride *= ind->weights.size();
   }
@@ -254,9 +254,9 @@ void ArchesTable::setup()
 
   // Find the axes to be eliminated
   long s = 1;
-  for(int i=0;i<in_inds.size();i++){
+  for(unsigned int i=0;i<in_inds.size();i++){
     bool found=false;
-    for(int j=0;j<inds.size();j++){
+    for(unsigned int j=0;j<inds.size();j++){
       if(in_inds[i]->name == inds[j]->name){
 	found=true;
 	break;
@@ -266,7 +266,7 @@ void ArchesTable::setup()
       // Find the default value...
       bool found = false;
       double value;
-      for(int j=0;j<defaults.size();j++){
+      for(unsigned int j=0;j<defaults.size();j++){
 	if(in_inds[i]->name == defaults[j]->name){
 	  found=true;
 	  value=defaults[j]->value;
@@ -301,10 +301,10 @@ void ArchesTable::setup()
       }
     }
   }
-  for(int i=0;i<deps.size();i++){
+  for(unsigned int i=0;i<deps.size();i++){
     Dep* dep = deps[i];
     Dep* inputdep = 0;
-    for(int j=0;j<in_deps.size();j++){
+    for(unsigned int j=0;j<in_deps.size();j++){
       if(in_deps[j]->name == dep->name){
 	inputdep = in_deps[j];
 	break;
@@ -315,13 +315,13 @@ void ArchesTable::setup()
     cerr << "Downslicing: " << dep->name << '\n';
     dep->data = new double[newsize];
 
-    for(int i=0;i<inds.size();i++)
+    for(unsigned int i=0;i<inds.size();i++)
       n[i]=0;
 
     for(int i=0;i<newsize;i++){
       double sum = 0;
       long iidx = 0;
-      for(int j=0;j<inds.size();j++){
+      for(unsigned int j=0;j<inds.size();j++){
 	Ind* ind = in_inds[input_indices[j]];
 	iidx += ind->offset[n[j]];
       }
@@ -332,7 +332,7 @@ void ArchesTable::setup()
       }
 
       long oidx = 0;
-      for(int j=0;j<inds.size();j++){
+      for(unsigned int j=0;j<inds.size();j++){
 	oidx += inds[j]->offset[n[j]];
       }
       dep->data[oidx] = sum;
