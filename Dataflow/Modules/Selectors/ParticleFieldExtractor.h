@@ -160,11 +160,13 @@ private:
   string vector_to_string(vector< int > data);
   string vector_to_string(vector< string > data);
   string vector_to_string(vector< double > data);
+  string vector_to_string(vector< float > data);
   string vector_to_string(vector< Vector > data, string type);
   string vector_to_string(vector< Matrix3 > data, string type);
 
   bool is_cached(string name, string& data);
   void cache_value(string where, vector<double>& values, string &data);
+  void cache_value(string where, vector<float>& values, string &data);
   void cache_value(string where, vector<int>& values, string &data);
   void cache_value(string where, vector<Vector>& values);
   void cache_value(string where, vector<Matrix3>& values);

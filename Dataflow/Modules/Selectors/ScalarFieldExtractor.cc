@@ -97,8 +97,9 @@ void ScalarFieldExtractor::get_vars(vector< string >& names,
 	td->getType() ==  TypeDescription::SFCYVariable ||
 	td->getType() ==  TypeDescription::SFCZVariable )
     {
-      // supported scalars double, int, long64, long long, short, bool
+      // supported scalars double, float, int, long64, long long, short, bool
       if( subtype->getType() == TypeDescription::double_type ||
+  	  subtype->getType() == TypeDescription::float_type ||
 	  subtype->getType() == TypeDescription::int_type ||
   	  subtype->getType() == TypeDescription::long64_type ||
   	  subtype->getType() == TypeDescription::bool_type) {
@@ -197,6 +198,18 @@ void ScalarFieldExtractor::execute()
 	  sfout->send(sfd);
 	  return;
 	}
+      case TypeDescription::float_type:
+	{
+	  NCVariable<float> gridVar;
+	  LatVolField<float> *sfd =
+	    scinew LatVolField<float>( mesh_handle_, Field::NODE );
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",int(TypeDescription::NCVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	  sfout->send(sfd);
+	  return;
+	}
       case TypeDescription::int_type:
 	{
 	  NCVariable<int> gridVar;
@@ -259,6 +272,19 @@ void ScalarFieldExtractor::execute()
 	  CCVariable<double> gridVar;
 	  LatVolField<double> *sfd =
 	    scinew LatVolField<double>( mesh_handle_, Field::CELL );
+	  
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",int(TypeDescription::CCVariable),true);
+ 	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
+ 	  sfout->send(sfd);
+	  return;
+	}
+      case TypeDescription::float_type:
+	{
+	  CCVariable<float> gridVar;
+	  LatVolField<float> *sfd =
+	    scinew LatVolField<float>( mesh_handle_, Field::CELL );
 	  
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
@@ -335,6 +361,20 @@ void ScalarFieldExtractor::execute()
 	  sfout->send(sfd);
 	  return;
 	}
+      case TypeDescription::float_type:
+	{
+	  SFCXVariable<float> gridVar;
+	  LatVolField<float> *sfd =
+	    scinew LatVolField<float>( mesh_handle_, Field::NODE );
+	  
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",
+			     int(TypeDescription::SFCXVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	  sfout->send(sfd);
+	  return;
+	}
       case TypeDescription::int_type:
 	{
 	  SFCXVariable<int> gridVar;
@@ -393,6 +433,20 @@ void ScalarFieldExtractor::execute()
 	  sfout->send(sfd);
 	  return;
 	}
+      case TypeDescription::float_type:
+	{
+	  SFCYVariable<float> gridVar;
+	  LatVolField<float> *sfd =
+	    scinew LatVolField<float>( mesh_handle_, Field::NODE );
+	  
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",
+			     int(TypeDescription::SFCYVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	  sfout->send(sfd);
+	  return;
+	}
       case TypeDescription::int_type:
 	{
 	  SFCYVariable<int> gridVar;
@@ -441,6 +495,20 @@ void ScalarFieldExtractor::execute()
 	  SFCZVariable<double> gridVar;
 	  LatVolField<double> *sfd =
 	    scinew LatVolField<double>( mesh_handle_, Field::NODE );
+	  
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",
+			     int(TypeDescription::SFCZVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	  sfout->send(sfd);
+	  return;
+	}
+      case TypeDescription::float_type:
+	{
+	  SFCZVariable<float> gridVar;
+	  LatVolField<float> *sfd =
+	    scinew LatVolField<float>( mesh_handle_, Field::NODE );
 	  
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);

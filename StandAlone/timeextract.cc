@@ -244,6 +244,10 @@ int main(int argc, char** argv)
     printData<double>(archive, variable_name, material, var_id,
 		      time_step_lower, time_step_upper, *output_stream);
     break;
+  case Uintah::TypeDescription::float_type:
+    printData<float>(archive, variable_name, material, var_id,
+		      time_step_lower, time_step_upper, *output_stream);
+    break;
   case Uintah::TypeDescription::int_type:
     printData<int>(archive, variable_name, material, var_id,
 		   time_step_lower, time_step_upper, *output_stream);

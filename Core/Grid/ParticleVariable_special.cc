@@ -93,5 +93,46 @@ using namespace std;
     ASSERT(dstiter+extra == pset->end());    
   }
 
+
+  template<>
+  void
+  ParticleVariable<double>::emitNormal(ostream& out, const IntVector&,
+				  const IntVector&, ProblemSpecP varnode, bool outputDoubleAsFloat )
+  {
+    const TypeDescription* td = fun_getTypeDescription((double*)0);
+
+    if (varnode->findBlock("numParticles") == 0) {
+      varnode->appendElement("numParticles", d_pset->numParticles());
+    }
+    if(!td->isFlat()){
+      SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
+    }
+    else {
+      if (outputDoubleAsFloat) {
+	// This could be optimized...
+	ParticleSubset::iterator iter = d_pset->begin();
+	for ( ; iter != d_pset->end(); iter++) {
+	  float tempFloat = (float)(*this)[*iter];
+	  out.write((char*)&tempFloat, sizeof(float));
+	}
+      } else {
+	// This could be optimized...
+	ParticleSubset::iterator iter = d_pset->begin();
+	while(iter != d_pset->end()){
+	  particleIndex start = *iter;
+	  iter++;
+	  particleIndex end = start+1;
+	  while(iter != d_pset->end() && *iter == end) {
+	    end++;
+	    iter++;
+	  }
+	  ssize_t size = (ssize_t)(sizeof(double)*(end-start));
+	  out.write((char*)&(*this)[start], size);
+	}
+      }
+    }
+  }
+
+
 #endif // this file does need to be included to satisfy template instantiations
        // for some compilers

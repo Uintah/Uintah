@@ -52,6 +52,7 @@ public:
   void cache_value(const string &key, vector< int > &values, string &data);
   void cache_value(const string &key, vector< string > &values, string &data);
   void cache_value(const string &key, vector< double > &values, string &data);
+  void cache_value(const string &key, vector< float > &values, string &data);
 
   // Scalar values based on Vector are cached.
   // 
@@ -82,6 +83,7 @@ public:
   static string vector_to_string(vector< int > &data);
   static string vector_to_string(vector< string > &data);
   static string vector_to_string(vector< double > &data);
+  static string vector_to_string(vector< float > &data);
   // These take an extra argument witch tells what kind of scalar to extract
   // type can be: "length", "length2", "x", "y", or "z"
   static string vector_to_string(vector< Vector > &data, const string &type);

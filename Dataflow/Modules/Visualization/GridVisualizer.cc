@@ -647,11 +647,13 @@ private:
 		    string index);
   bool is_cached(string name, string& data);
   void cache_value(string where, vector<double>& values, string &data);
+  void cache_value(string where, vector<float>& values, string &data);
   void cache_value(string where, vector<Vector>& values);
   void cache_value(string where, vector<Matrix3>& values);
   string vector_to_string(vector< int > data);
   string vector_to_string(vector< string > data);
   string vector_to_string(vector< double > data);
+  string vector_to_string(vector< float > data);
   string vector_to_string(vector< Vector > data, string type);
   string vector_to_string(vector< Matrix3 > data, string type);
   string currentNode_str();
@@ -801,6 +803,9 @@ void GridVisualizer::add_type(string &type_list,const TypeDescription *subtype)
   case TypeDescription::double_type:
     type_list += " scaler";
     break;
+  case TypeDescription::float_type:
+    type_list += " scaler";
+    break;
   case TypeDescription::Vector:
     type_list += " vector";
     break;
@@ -873,6 +878,12 @@ void GridVisualizer::cache_value(string where, vector<double>& values,
   material_data_list[where] = data;
 }
 
+void GridVisualizer::cache_value(string where, vector<float>& values,
+				 string &data) {
+  data = vector_to_string(values);
+  material_data_list[where] = data;
+}
+
 void GridVisualizer::cache_value(string where, vector<Vector>& values) {
   string data = vector_to_string(values,"length");
   material_data_list[where+" length"] = data;
@@ -919,6 +930,13 @@ string GridVisualizer::vector_to_string(vector< double > data) {
   return ostr.str();
 }
 
+string GridVisualizer::vector_to_string(vector< float > data) {
+  ostringstream ostr;
+  for(int i = 0; i < (int)data.size(); i++) {
+      ostr << data[i]  << " ";
+    }
+  return ostr.str();
+}
 string GridVisualizer::vector_to_string(vector< Vector > data, string type) {
   ostringstream ostr;
   if (type == "length") {
@@ -1006,6 +1024,30 @@ void GridVisualizer::extract_data(string display_mode, string varname,
       if (!is_cached(currentNode_str()+" "+varname+" "+mat_list[i],data)) {
 	// query the value and then cache it
 	vector< double > values;
+	int matl = atoi(mat_list[i].c_str());
+	try {
+	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	} catch (const VariableNotFoundInGrid& exception) {
+	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+	  return;
+	} 
+	cerr << "Received data.  Size of data = " << values.size() << endl;
+	cache_value(currentNode_str()+" "+varname+" "+mat_list[i],values,data);
+      } else {
+	cerr << "Cache hit\n";
+      }
+      TCL::execute(id+" set_var_val "+data.c_str());
+      name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
+    }
+    break;
+  case TypeDescription::float_type:
+    cerr << "Graphing a variable of type float\n";
+    // loop over all the materials in the mat_list
+    for(int i = 0; i < (int)mat_list.size(); i++) {
+      string data;
+      if (!is_cached(currentNode_str()+" "+varname+" "+mat_list[i],data)) {
+	// query the value and then cache it
+	vector< float > values;
 	int matl = atoi(mat_list[i].c_str());
 	try {
 	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);

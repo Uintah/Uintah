@@ -26,6 +26,7 @@
 #include <Core/Util/Endian.h>
 #include <Core/Thread/Time.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iomanip>
 #include <errno.h>
 #include <fstream>
@@ -40,6 +41,7 @@
 #include <strings.h>
 #include <unistd.h>
 #include <math.h>
+#include <sgi_stl_warnings_on.h>
 
 #define PADSIZE 1024L
 
@@ -565,7 +567,7 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
 	 if (hrefNode == "")
 	    throw InternalError("timestep href attribute not found");
 
-	 unsigned int href_pos = hrefNode.find_first_of("/");
+	 unsigned int href_pos = (unsigned int)hrefNode.find_first_of("/");
 
 	 string href = hrefNode;
 	 if (href_pos != string::npos)
@@ -1279,7 +1281,7 @@ void DataArchiver::indexAddGlobals()
 } // end indexAddGlobals()
 
 void DataArchiver::outputReduction(const ProcessorGroup*,
-				   const PatchSubset* pss,
+				   const PatchSubset* /*pss*/,
 				   const MaterialSubset* /*matls*/,
 				   DataWarehouse* /*old_dw*/,
 				   DataWarehouse* new_dw)
@@ -1904,10 +1906,11 @@ void DataArchiver::SaveItem::setMaterials(const ConsecutiveRangeSet& matls,
   }
 }
 
-bool DataArchiver::needRecompile(double time, double dt,
-				  const GridP& grid)
+bool DataArchiver::needRecompile(double /*time*/, double /*dt*/,
+				 const GridP& /*grid*/)
 {
   return false;
+/*
   LevelP level = grid->getLevel(0);
   d_currentTime=time+dt;
   dbg << "DataArchiver::needRecompile called\n";
@@ -1948,6 +1951,7 @@ bool DataArchiver::needRecompile(double time, double dt,
     dbg << "We do not request recompile\n";
 
   return recompile;
+*/
 }
 
 
@@ -1959,6 +1963,7 @@ string DataArchiver::TranslateVariableType( string type, bool isThisCheckpoint )
     else if (type=="SFCXVariable<double>") return "SFCXVariable<float>";
     else if (type=="SFCYVariable<double>") return "SFCYVariable<float>";
     else if (type=="SFCZVariable<double>") return "SFCZVariable<float>";
+    else if (type=="ParticleVariable<double>") return "ParticleVariable<float>";
   }
   return type;
 }
