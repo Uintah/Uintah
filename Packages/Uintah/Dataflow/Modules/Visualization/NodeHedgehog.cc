@@ -736,6 +736,7 @@ void NodeHedgehog::widget_moved(bool last)
   }
 #endif
   cerr << "NodeHedgehog::widget_moved: last = "<<last<<endl;
+  want_to_execute(); 
 }
 
 
