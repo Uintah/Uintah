@@ -16,7 +16,6 @@ static char *id="$Id$";
 
 #include <Thread/TestThreads.h>
 #include <Thread/Guard.h>
-#include <iostream.h>
 
 TestThreads::TestThreads(RigorousTest* __test)
     : __test(__test),
@@ -415,6 +414,9 @@ void TestThreads::test1(int proc)
 }
 //
 // $Log$
+// Revision 1.2  1999/09/08 02:26:56  sparker
+// Various #include cleanups
+//
 // Revision 1.1  1999/08/25 02:38:09  sparker
 // Added namespaces
 // General cleanups to prepare for integration with SCIRun

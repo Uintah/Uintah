@@ -15,8 +15,9 @@
 #define SCI_Containers_Array1_h 1
 
 #include <sci_config.h>
-
 #include <SCICore/Util/Assert.h>
+#include <SCICore/Persistent/Persistent.h>
+
 
 namespace DaveW {
   namespace Datatypes {
@@ -181,21 +182,6 @@ public:
 
     friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array1<T>&);
 };
-
-} // End namespace Containers
-} // End namespace SCICore
-
-////////////////////////////////////////////////////////////
-//
-// Start of included Array1.cc
-//
-
-#include <SCICore/Containers/String.h>
-#include <SCICore/Persistent/Persistent.h>
-#include <SCICore/Malloc/Allocator.h>
-
-namespace SCICore {
-namespace Containers {
 
 template<class T>
 Array1<T>::Array1(const Array1<T>& a)
@@ -387,6 +373,9 @@ void Pio(Piostream& stream, Containers::Array1<T>*& array) {
 
 //
 // $Log$
+// Revision 1.12  1999/09/08 02:26:44  sparker
+// Various #include cleanups
+//
 // Revision 1.11  1999/09/04 06:01:41  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

@@ -14,6 +14,7 @@
 
 #include <PSECore/Constraints/ConstraintSolver.h>
 #include <SCICore/Util/Debug.h>
+#include <iostream.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -255,11 +256,19 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
       stack.remove_all();
 }
 
+void StackItem::print( ostream& os )
+{
+    os<<"StackItem:  "<<var->GetName()<<","<<rtype<<","<<iter<<endl;
+}
+
 } // End namespace Constraints
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:38  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/18 21:45:25  sparker
 // Array1 const correctness, and subsequent fixes
 // Array1 bug fix courtesy Tom Thompson

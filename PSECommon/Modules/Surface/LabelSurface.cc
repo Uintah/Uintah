@@ -21,7 +21,6 @@
 #include <SCICore/Datatypes/SurfTree.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <iostream.h>
-#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Geometry/BBox.h>
 
 namespace PSECommon {
@@ -107,6 +106,9 @@ void LabelSurface::execute()
 
 //
 // $Log$
+// Revision 1.7  1999/09/08 02:26:35  sparker
+// Various #include cleanups
+//
 // Revision 1.6  1999/08/25 03:48:00  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -14,9 +14,6 @@
 
 #include <SCICore/TclInterface/ThreadStats.h>
 
-#include <iostream.h>
-#include <stdio.h>
-
 namespace SCICore {
 namespace TclInterface {
 
@@ -104,6 +101,9 @@ void ThreadStats::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.5  1999/09/08 02:26:55  sparker
+// Various #include cleanups
+//
 // Revision 1.4  1999/08/28 17:54:52  sparker
 // Integrated new Thread library
 //

@@ -839,18 +839,18 @@ double TriSurface::distance(const Point &p, int el, int *type, Point *pp) {
 }
 
 static void orderNormal(int i[], const Vector& v) {
-    if (fabs(v.x())>fabs(v.y())) {
-        if (fabs(v.y())>fabs(v.z())) {  // x y z
+    if (Abs(v.x())>Abs(v.y())) {
+        if (Abs(v.y())>Abs(v.z())) {  // x y z
             i[0]=0; i[1]=1; i[2]=2;
-        } else if (fabs(v.z())>fabs(v.x())) {   // z x y
+        } else if (Abs(v.z())>Abs(v.x())) {   // z x y
             i[0]=2; i[1]=0; i[2]=1;
         } else {                        // x z y
             i[0]=0; i[1]=2; i[2]=1;
         }
     } else {
-        if (fabs(v.x())>fabs(v.z())) {  // y x z
+        if (Abs(v.x())>Abs(v.z())) {  // y x z
             i[0]=1; i[1]=0; i[2]=2;
-        } else if (fabs(v.z())>fabs(v.y())) {   // z y x
+        } else if (Abs(v.z())>Abs(v.y())) {   // z y x
             i[0]=2; i[1]=1; i[2]=0;
         } else {                        // y z x
             i[0]=1; i[1]=2; i[2]=0;
@@ -1147,6 +1147,9 @@ void Pio(Piostream& stream, TSEdge*& data)
 
 //
 // $Log$
+// Revision 1.9  1999/09/08 02:26:48  sparker
+// Various #include cleanups
+//
 // Revision 1.8  1999/09/02 04:55:05  dmw
 // fixed the = operator I just added (forgot the return at the end before)
 //

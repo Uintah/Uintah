@@ -10,7 +10,6 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Datatypes/BasicSurfaces.h>
 #include <SCICore/Datatypes/ColorMap.h>
 #include <PSECore/Datatypes/ColorMapPort.h>
@@ -220,6 +219,9 @@ void SurfToVectGeom::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/09/08 02:26:29  sparker
+// Various #include cleanups
+//
 // Revision 1.1  1999/09/02 04:27:09  dmw
 // Rob V's modules
 //

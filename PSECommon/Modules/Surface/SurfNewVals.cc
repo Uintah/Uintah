@@ -21,7 +21,6 @@
 #include <PSECore/Datatypes/SurfacePort.h>
 #include <SCICore/Datatypes/TriSurface.h>
 #include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/Expon.h>
 
 #include <SCICore/TclInterface/TCLvar.h>
@@ -126,6 +125,9 @@ void SurfNewVals::execute() {
 
 //
 // $Log$
+// Revision 1.7  1999/09/08 02:26:36  sparker
+// Various #include cleanups
+//
 // Revision 1.6  1999/09/05 05:32:26  dmw
 // updated and added Modules from old tree to new
 //

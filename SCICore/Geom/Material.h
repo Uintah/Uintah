@@ -14,7 +14,6 @@
 #ifndef SCI_Geom_Material_h
 #define SCI_Geom_Material_h 1
 
-//#include <SCICore/Persistent/Persistent.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Thread/Mutex.h>
 #include <SCICore/Geom/Color.h>

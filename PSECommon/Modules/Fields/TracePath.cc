@@ -26,6 +26,7 @@
 #include <SCICore/Geom/Pt.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MinMax.h>
+#include <SCICore/Math/MiscMath.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Thread/CrowdMonitor.h>
 #include <PSECore/Widgets/PointWidget.h>
@@ -375,7 +376,7 @@ void TracePath::genPaths(ScalarFieldRG* dfield, Array3<char> &parray,
 
 		// penalty for straying from seedpoint intensity
 		uchar nbrVal = rgchar->grid(nbr.i, nbr.j, nbr.k);
-		valDist = fabs(seedval - nbrVal);
+		valDist = Abs(seedval - nbrVal);
 #if 0
 		valDist = seedval - nbrVal + 50;
 		double valDistPos = fabs(valDist);
@@ -392,7 +393,7 @@ void TracePath::genPaths(ScalarFieldRG* dfield, Array3<char> &parray,
 		    (nbr_dd[idx]*nbr_dd[idx]*nbr_dd[idx]);
 
 		if (gradDist < 0) gradDist/=3;
-		gradDist = fabs(gradDist);
+		gradDist = Abs(gradDist);
 //		gradDist-=30;
 		if (gradDist < 0) gradDist = 0;
 
@@ -819,6 +820,9 @@ void TracePath::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.8  1999/09/08 02:26:34  sparker
+// Various #include cleanups
+//
 // Revision 1.7  1999/08/29 00:46:40  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

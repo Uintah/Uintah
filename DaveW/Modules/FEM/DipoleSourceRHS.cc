@@ -15,7 +15,6 @@
 #include <PSECore/Datatypes/SurfacePort.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/Trig.h>
-#include <SCICore/Util/NotFinished.h>
 
 namespace DaveW {
 namespace Modules {
@@ -140,6 +139,9 @@ void DipoleSourceRHS::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/09/08 02:26:27  sparker
+// Various #include cleanups
+//
 // Revision 1.1  1999/09/02 04:49:24  dmw
 // more of Dave's modules
 //

@@ -13,6 +13,7 @@
  */
 
 #include <SCICore/Datatypes/cSMatrix.h>
+#include <iostream.h>
 
 namespace SCICore {
 namespace Datatypes {
@@ -143,6 +144,9 @@ Complex& cSMatrix::get(int i, int j) {
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:49  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/25 03:48:48  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

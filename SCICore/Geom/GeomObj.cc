@@ -14,7 +14,6 @@
 
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Geometry/Vector.h>
-#include <iostream.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -56,6 +55,9 @@ void Pio( Piostream & stream, GeomObj *& obj )
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:50  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/17 23:50:22  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

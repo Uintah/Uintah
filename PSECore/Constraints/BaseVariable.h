@@ -70,7 +70,7 @@ public:
    inline Real real() const;
    inline operator Real() const;
 
-   void print( ostream& os=cout );
+   void print( ostream& os );
 
    inline const clString& GetName() const { return name; }
    inline int GetNumConstraints() const { return numconstraints; }
@@ -149,6 +149,9 @@ operator<<( ostream& os, BaseVariable& v )
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:37  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/26 23:57:01  moulding
 // changed SCICORESHARE to PSECORESHARE
 //

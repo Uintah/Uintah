@@ -13,9 +13,6 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <iostream.h>
-#include <stdio.h>
-
 #include <SCICore/Datatypes/ScalarFieldRG.h>
 #include <SCICore/Datatypes/VectorFieldRG.h>
 #include <SCICore/Geom/GeomObj.h>
@@ -287,6 +284,9 @@ PSECore::Dataflow::Module*
 
 //
 // $Log$
+// Revision 1.7  1999/09/08 02:27:09  sparker
+// Various #include cleanups
+//
 // Revision 1.6  1999/09/04 06:01:57  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

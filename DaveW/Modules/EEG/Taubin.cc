@@ -14,7 +14,6 @@
 
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Datatypes/ColumnMatrix.h>
 #include <SCICore/Datatypes/SparseRowMatrix.h>
 #include <SCICore/Datatypes/SurfTree.h>
@@ -297,6 +296,9 @@ void Taubin::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:25  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/25 03:47:39  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -23,8 +23,8 @@ char *strcpy( char *, const char *);
 
 #include <SCICore/Containers/String.h>
 
-#include <iostream.h>
 #include <stdio.h>
+#include <iostream.h>
 #include <string.h>
 #include <iomanip.h>
 #include <ctype.h>
@@ -475,6 +475,9 @@ void clString::test_performance(PerfTest* __pt) {
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:46  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/09/04 06:01:42  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

@@ -147,7 +147,7 @@ public:
    BaseWidget& operator=( const BaseWidget& );
    int operator==( const BaseWidget& );
 
-   void print( ostream& os=cout ) const;
+   void print( ostream& os ) const;
 
    void init_tcl();
    void tcl_command( TCLArgs&, void* );
@@ -230,6 +230,9 @@ ostream& operator<<( ostream& os, BaseWidget& w );
 
 //
 // $Log$
+// Revision 1.5  1999/09/08 02:26:43  sparker
+// Various #include cleanups
+//
 // Revision 1.4  1999/08/28 17:54:33  sparker
 // Integrated new Thread library
 //

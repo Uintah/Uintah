@@ -17,6 +17,7 @@
 #include <SCICore/Geometry/Plane.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Util/Debug.h>
+#include <iostream.h>
 
 namespace PSECore {
 namespace Constraints {
@@ -79,7 +80,7 @@ PlaneConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 
    if (pc_debug) {
       ChooseChange(index, scheme);
-      print();
+      print(cout);
    }
    
    switch (ChooseChange(index, scheme)) {
@@ -143,6 +144,9 @@ PlaneConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:39  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/17 06:38:18  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

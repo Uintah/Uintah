@@ -12,9 +12,7 @@
 
 #include <DaveW/Datatypes/General/VectorFieldMI.h>
 #include <SCICore/Geometry/Vector.h>
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <iostream.h>
 
 namespace DaveW {
 namespace Datatypes {
@@ -228,6 +226,9 @@ MeshHandle VectorFieldMI::getMesh()  {
 
 //
 // $Log$
+// Revision 1.2  1999/09/08 02:26:18  sparker
+// Various #include cleanups
+//
 // Revision 1.1  1999/09/02 04:45:51  dmw
 // magnetic field
 //

@@ -16,6 +16,11 @@
 #include <PSECore/Dataflow/Port.h>
 #include <SCICore/Thread/Mailbox.h>
 #include <SCICore/Util/Timer.h>
+#include <SCICore/Persistent/Pstreams.h>
+#include <SCICore/Util/Assert.h>
+#include <PSECore/Dataflow/Connection.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCICore/TclInterface/Remote.h>
 
 namespace PSECore {
 
@@ -88,33 +93,6 @@ public:
 
 } // End namespace Datatypes
 } // End namespace PSECore
-
-////////////////////////////////////////////////////////////
-//
-// Start of included SimplePort.cc
-//
-
-#include <SCICore/Persistent/Pstreams.h>
-
-#include <SCICore/Util/Assert.h>
-#include <PSECore/Dataflow/Connection.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/Remote.h>
-
-#include <stdio.h>
-#include <iostream.h>
-#include <fstream.h>
-#include <sys/types.h>
-#ifndef _WIN32
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <netdb.h>
-#endif
-#include <fcntl.h>
-
-//#define DEBUG 1
 
 extern char** global_argv;
 
@@ -195,7 +173,7 @@ void SimpleOPort<T>::finish()
 #if 0
 	    if(connections[i]->demand){
 #endif
-	        SimplePortComm<T>* msg=scinew SimplePortComm<T>();
+	        SimplePortComm<T>* msg=new SimplePortComm<T>();
 		((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
 #if 0
 		connections[i]->demand--;
@@ -255,7 +233,7 @@ void SimpleOPort<T>::send(const T& data)
    	    delete outstream;
 
 	} else {
-            SimplePortComm<T>* msg = scinew SimplePortComm<T>(data);
+            SimplePortComm<T>* msg = new SimplePortComm<T>(data);
             ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
 	}
     }
@@ -277,7 +255,7 @@ void SimpleOPort<T>::send_intermediate(const T& data)
     turn_on();
     module->multisend(this);
     for(int i=0;i<nconnections();i++){
-	SimplePortComm<T>* msg=scinew SimplePortComm<T>(data);
+	SimplePortComm<T>* msg=new SimplePortComm<T>(data);
 	((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
     }
     turn_off();
@@ -427,7 +405,7 @@ void SimpleOPort<T>::resend(Connection* conn)
     turn_on();
     for(int i=0;i<nconnections();i++){
 	if(connections[i] == conn){
-	    SimplePortComm<T>* msg=scinew SimplePortComm<T>(handle);
+	    SimplePortComm<T>* msg=new SimplePortComm<T>(handle);
 	    ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
 	}
     }
@@ -451,6 +429,9 @@ SimplePortComm<T>::SimplePortComm(const T& data)
 
 //
 // $Log$
+// Revision 1.7  1999/09/08 02:26:42  sparker
+// Various #include cleanups
+//
 // Revision 1.6  1999/08/29 00:58:48  sparker
 // Moved timer1 into ifdef DEBUG to avoid extraneous messages
 // about time stopped while already stopped

@@ -59,13 +59,11 @@
 #include <SCICore/Datatypes/Mesh.h>
 #include <SCICore/Datatypes/SparseRowMatrix.h>
 #include <SCICore/Datatypes/SurfTree.h>
-#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Persistent/Pstreams.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Thread/Mutex.h>
 #include <SCICore/Thread/Parallel.h>
 #include <SCICore/Thread/Thread.h>
-#include <SCICore/Util/NotFinished.h>
 
 #include <iostream.h>
 #include <stdio.h>
@@ -958,6 +956,9 @@ void InvEEGSolve::execute() {
 
 //
 // $Log$
+// Revision 1.6  1999/09/08 02:26:23  sparker
+// Various #include cleanups
+//
 // Revision 1.5  1999/09/03 06:07:19  dmw
 // added a Makefile.in for Leonid's files
 //

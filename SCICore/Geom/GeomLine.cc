@@ -14,10 +14,9 @@
 
 #include <SCICore/Geom/GeomLine.h>
 #include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
 #include <SCICore/Containers/TrivialAllocator.h>
+#include <SCICore/Containers/String.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Malloc/Allocator.h>
 
 #include <stdlib.h>
 
@@ -392,6 +391,9 @@ void TexGeomLines::SortVecs()
 
 //
 // $Log$
+// Revision 1.6  1999/09/08 02:26:50  sparker
+// Various #include cleanups
+//
 // Revision 1.5  1999/08/29 00:46:55  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

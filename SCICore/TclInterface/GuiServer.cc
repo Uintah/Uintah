@@ -23,6 +23,7 @@
 
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/TclInterface/TCLTask.h>
+#include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
 #include <tcl.h>
@@ -199,6 +200,9 @@ cerr << "GuiServer::getValue(): string = " << msg->un.tstring << endl;
 
 //
 // $Log$
+// Revision 1.6  1999/09/08 02:26:55  sparker
+// Various #include cleanups
+//
 // Revision 1.5  1999/08/28 17:54:51  sparker
 // Integrated new Thread library
 //

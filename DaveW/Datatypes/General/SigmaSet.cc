@@ -15,9 +15,6 @@
 #include <DaveW/Datatypes/General/SigmaSet.h>
 #include <SCICore/Malloc/Allocator.h>
 
-#include <iostream.h>
-#include <fstream.h>
-
 namespace DaveW {
 namespace Datatypes {
 
@@ -68,6 +65,9 @@ void SigmaSet::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.2  1999/09/08 02:26:18  sparker
+// Various #include cleanups
+//
 // Revision 1.1  1999/08/23 02:53:01  dmw
 // Dave's Datatypes
 //

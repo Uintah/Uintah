@@ -57,7 +57,7 @@ public:
 		    const Index i6 = 0,
 		    const Index i7 = 0 );
 
-   void print( ostream& os=cout );
+   void print( ostream& os );
    void printc( ostream& os, const Scheme scheme );
 
 protected:
@@ -100,6 +100,9 @@ operator<<( ostream& os, BaseConstraint& c )
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:37  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/26 23:57:01  moulding
 // changed SCICORESHARE to PSECORESHARE
 //

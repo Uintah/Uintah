@@ -37,7 +37,6 @@
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/Tester/RigorousTest.h>
-#include <SCICore/Util/NotFinished.h>
 
 #include <iostream.h>
 #include <string.h>
@@ -647,6 +646,9 @@ void BldScene::tcl_command(TCLArgs& args, void* userdata) {
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:19  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/29 00:46:36  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

@@ -16,7 +16,6 @@
 #include <PSECore/Datatypes/ColorMapPort.h>
 #include <PSECore/Datatypes/IntervalPort.h>
 #include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
 namespace PSECommon {
@@ -77,6 +76,9 @@ void ErrorInterval::execute()
 
 //
 // $Log$
+// Revision 1.6  1999/09/08 02:26:33  sparker
+// Various #include cleanups
+//
 // Revision 1.5  1999/08/25 03:47:45  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

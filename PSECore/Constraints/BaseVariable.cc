@@ -13,10 +13,10 @@
  */
 
 
-#include <stdio.h>
-#include <string.h>
 #include <PSECore/Constraints/BaseVariable.h>
 #include <PSECore/Constraints/ConstraintSolver.h>
+#include <iostream.h>
+#include <stdio.h>
 
 namespace PSECore {
 namespace Constraints {
@@ -222,6 +222,9 @@ SchemeString( const Scheme s )
 
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:37  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/17 06:38:16  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -16,10 +16,7 @@
 #define SCI_Containers_FastHashTable_h 1
 
 #include <SCICore/Util/Assert.h>
-
-#ifdef __GNUG__
-#pragma interface
-#endif
+#include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
 namespace Tester {
@@ -199,20 +196,6 @@ inline int FastHashTable<Key>::remove(const Key* k)
     return count;
 }
 
-} // End namespace Containers
-} // End namespace SCICore
-
-////////////////////////////////////////////////////////////
-//
-// Start of included FastHashTable.cc
-//
-
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Malloc/Allocator.h>
-
-namespace SCICore {
-namespace Containers {
-
 // Create a FastHashTable
 template<class Key>
 FastHashTable<Key>::FastHashTable()
@@ -368,6 +351,9 @@ Key* FastHashTableIter<Key>::get_key()
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:45  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/19 23:52:58  sparker
 // Removed extraneous includes of iostream.h  Fixed a few NotFinished.h
 // problems.  May have broken KCC support.

@@ -21,7 +21,6 @@
 #include <SCICore/Datatypes/SurfTree.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Tester/RigorousTest.h>
-#include <SCICore/Util/NotFinished.h>
 
 namespace DaveW {
 namespace Modules {
@@ -743,6 +742,9 @@ void SegFldToSurfTree::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:24  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/25 03:47:39  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

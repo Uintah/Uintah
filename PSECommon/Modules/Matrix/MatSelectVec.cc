@@ -13,7 +13,6 @@
 
 #include <PSECore/Datatypes/ColumnMatrixPort.h>
 #include <PSECore/Datatypes/MatrixPort.h>
-#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
 namespace PSECommon {
@@ -157,6 +156,9 @@ void MatSelectVec::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.2  1999/09/08 02:26:34  sparker
+// Various #include cleanups
+//
 // Revision 1.1  1999/09/07 04:02:23  dmw
 // more modules that were left behind...
 //

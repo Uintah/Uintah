@@ -6,7 +6,6 @@
 #ifdef ASSERT
 #undef ASSERT
 #endif
-#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Containers/AVLTree.h>
 #include <SCICore/Containers/String.h>
 #include <PSECore/Dataflow/PackageDB.h>
@@ -265,6 +264,9 @@ Array1<clString> PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.10  1999/09/08 02:26:41  sparker
+// Various #include cleanups
+//
 // Revision 1.9  1999/09/04 06:01:41  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

@@ -23,7 +23,6 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <iostream.h>
 
 namespace PSECommon {
 namespace Modules {
@@ -174,6 +173,9 @@ void FieldCage::execute()
 
 //
 // $Log$
+// Revision 1.7  1999/09/08 02:26:36  sparker
+// Various #include cleanups
+//
 // Revision 1.6  1999/09/04 06:01:40  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

@@ -7,9 +7,6 @@
 #include <SCICore/Datatypes/VectorField.h>
 #include <SCICore/Malloc/Allocator.h>
 
-#include <iostream.h> 
-#include <stdio.h>
-
 namespace DaveW {
 namespace Modules {
 
@@ -247,6 +244,9 @@ void TensorAnisotropy::do_it(TensorField<DATA> *tensor_base)
 
 //
 // $Log$
+// Revision 1.2  1999/09/08 02:26:32  sparker
+// Various #include cleanups
+//
 // Revision 1.1  1999/09/02 04:50:36  dmw
 // Eric's modules
 //

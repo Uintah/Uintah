@@ -22,8 +22,6 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Util/NotFinished.h>
 
-#include <iostream.h>
-
 namespace DaveW {
 namespace Datatypes {
 
@@ -86,6 +84,9 @@ GeomObj* ScalarTriSurface::get_obj(const ColorMapHandle&)
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:17  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/09/05 05:32:22  dmw
 // updated and added Modules from old tree to new
 //

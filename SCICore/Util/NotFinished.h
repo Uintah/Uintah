@@ -12,7 +12,7 @@
  */
 
 #ifndef SCI_project_NotFinished_h
-#define SCI_project_NotFinsihed_h
+#define SCI_project_NotFinished_h
 
 #include <iostream.h>
 

@@ -16,8 +16,6 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Tester/RigorousTest.h>
 
-#include <iostream.h>
-
 namespace SCICore {
 namespace Containers {
 
@@ -130,6 +128,9 @@ void BitArray1::test_rigorous(RigorousTest* __test)
 
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:45  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/17 06:38:35  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -34,7 +34,6 @@
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/TclInterface/TCL.h>
-#include <SCICore/Util/NotFinished.h>
 
 #include <iostream.h>
 #include <string.h>

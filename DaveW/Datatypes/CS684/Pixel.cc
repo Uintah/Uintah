@@ -12,8 +12,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <iostream.h>
-
 #include <DaveW/Datatypes/CS684/Pixel.h>
 
 namespace DaveW {
@@ -65,6 +63,9 @@ void Pio(Piostream& stream, Pixel& p)
 
 //
 // $Log$
+// Revision 1.2  1999/09/08 02:26:17  sparker
+// Various #include cleanups
+//
 // Revision 1.1  1999/08/23 02:52:56  dmw
 // Dave's Datatypes
 //

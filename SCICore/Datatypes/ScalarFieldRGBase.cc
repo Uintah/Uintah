@@ -14,7 +14,6 @@
 
 #include <SCICore/Datatypes/ScalarFieldRGBase.h>
 #include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 
 #ifdef _WIN32
@@ -375,6 +374,9 @@ void ScalarFieldRGBase::distribute_samples()
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:48  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/25 03:48:37  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -41,7 +41,6 @@
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/Thread/Parallel.h>
 #include <SCICore/Thread/Thread.h>
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Util/Timer.h>
 #include <PSECore/Widgets/ViewWidget.h>
 

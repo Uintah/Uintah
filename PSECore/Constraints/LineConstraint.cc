@@ -15,6 +15,7 @@
 #include <PSECore/Constraints/LineConstraint.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Util/Debug.h>
+#include <iostream.h>
 
 namespace PSECore {
 namespace Constraints {
@@ -74,7 +75,7 @@ LineConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsi
 
    if (lc_debug) {
       ChooseChange(index, scheme);
-      print();
+      print(cout);
    }
    
    switch (ChooseChange(index, scheme)) {
@@ -123,6 +124,9 @@ LineConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsi
 
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:38  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/17 06:38:17  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

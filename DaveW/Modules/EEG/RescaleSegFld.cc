@@ -21,7 +21,6 @@
 #include <SCICore/Math/Expon.h>
 #include <SCICore/Math/MusilRNG.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Util/NotFinished.h>
 
 #include <stdio.h>
 
@@ -115,6 +114,9 @@ void RescaleSegFld::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:23  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/25 03:47:38  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -12,7 +12,6 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#if 1
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Util/Assert.h>
@@ -131,6 +130,9 @@ void Vector::rotz90(const int c)
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:53  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/09/04 06:01:53  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)
@@ -150,4 +152,3 @@ void Vector::rotz90(const int c)
 //
 //
 
-#endif
