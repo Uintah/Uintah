@@ -610,11 +610,26 @@ OnDemandDataWarehouse::pleaseSave(const VarLabel* var, int number)
 }
 
 void
+OnDemandDataWarehouse::pleaseSaveIntegrated(const VarLabel* var)
+{
+   ASSERT(!d_finalized);
+
+   d_saveset_integrated.push_back(var);
+}
+
+void
 OnDemandDataWarehouse::getSaveSet(std::vector<const VarLabel*>& vars,
 				  std::vector<int>& numbers) const
 {
    vars=d_saveset;
    numbers=d_savenumbers;
+}
+
+void
+OnDemandDataWarehouse::getIntegratedSaveSet
+				(std::vector<const VarLabel*>& vars) const
+{
+   vars=d_saveset_integrated;
 }
 
 bool
@@ -633,6 +648,7 @@ OnDemandDataWarehouse::exists(const VarLabel* label, const Patch* patch) const
    return false;
 }
 
+
 void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
 				 int matlIndex, const Patch* patch) const
 {
@@ -649,6 +665,27 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
    throw UnknownVariable(label->getName());
 }
 
+void OnDemandDataWarehouse::emit(ofstream& intout,
+				 vector <const VarLabel*> ivars) const
+{
+
+  static ts = 0;
+  if(ts == 0){
+     intout << "Step_number" << " ";
+     for(int i = 0;i<ivars.size();i++){
+	intout <<  ivars[i]->getName() << " ";
+     }
+     intout << endl;
+  }
+
+  for(int i = 0;i<ivars.size();i++){
+//	ivars[i]->emit(intout);
+  }
+  intout << endl;
+
+  ts++;
+}
+
 OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* var)
    : var(var)
 {
@@ -658,6 +695,10 @@ OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* v
 
 //
 // $Log$
+// Revision 1.28  2000/06/01 23:14:04  guilkey
+// Added pleaseSaveIntegrated functionality to save ReductionVariables
+// to an archive.
+//
 // Revision 1.27  2000/05/31 04:01:46  rawat
 // partially completed CCVariable implementation
 //
