@@ -30,6 +30,8 @@ namespace rtrt {
       int doSpin() { if (dorotate) return 1; else return 0; };
       void incMagnification();	
       void decMagnification();	
+      void upPole();
+      void downPole();
     };
 }
 #endif

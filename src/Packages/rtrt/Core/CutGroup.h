@@ -65,7 +65,7 @@ public:
       }
     };
 
-    bool interior_value(double& ret_val, const Ray &ref, const double t);
+    virtual bool interior_value(double& ret_val, const Ray &ref, const double t);
 
 
     virtual void shade(Color& result, const Ray& ray,

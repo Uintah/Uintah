@@ -1068,6 +1068,13 @@ Gui::createObjectWindow( GLUI * window )
 						 2,
 						 SIChangeCB );
 
+  SIUpButton_ = window->add_button_to_panel( moreControls, "N/A",
+					     3,
+					     SIChangeCB );
+  SIDownButton_ = window->add_button_to_panel( moreControls, "N/A",
+					       4,
+					       SIChangeCB );
+
   window->add_column_to_panel( moreControls, true);
 
   window->add_statictext_to_panel( moreControls, "Cutting" );
@@ -1087,6 +1094,8 @@ void Gui::resetObjSelection() {
   activeGui->SIAutoButton_->set_name( "N/A" );
   activeGui->SIIncMagButton_->set_name( "N/A" );
   activeGui->SIDecMagButton_->set_name( "N/A" );
+  activeGui->SIUpButton_->set_name( "N/A" );
+  activeGui->SIDownButton_->set_name( "N/A" );
   activeGui->CutToggleButton_->set_name( "N/A" );
   activeGui->SIAutoButton_->set_int_val(0);
   activeGui->SGAutoButton_->set_int_val(0);
@@ -1120,6 +1129,12 @@ void Gui::SIChangeCB( int id ) {
       break;
     case 2:
       activeGui->attachedSI_->decMagnification();      
+      break;
+    case 3:
+      activeGui->attachedSI_->upPole();      
+      break;
+    case 4:
+      activeGui->attachedSI_->downPole();      
       break;
     }
     activeGui->SIAutoButton_->set_int_val(activeGui->attachedSI_->doSpin());
@@ -1176,6 +1191,8 @@ Gui::attachKeypadCB( int /*id*/ )
       activeGui->SIAutoButton_->set_name( "Auto Spin" );
       activeGui->SIIncMagButton_->set_name( "Inc Magnify" );
       activeGui->SIDecMagButton_->set_name( "Dec Magnify" );
+      activeGui->SIUpButton_->set_name( "Slide Up" );
+      activeGui->SIDownButton_->set_name( "Slide Down" );
       activeGui->SIAutoButton_->set_int_val(si->doSpin()); 
       activeGui->attachedSI_ = si;
     }
@@ -1644,8 +1661,11 @@ Gui::toggleGui()
     lightsWindowVisible = false;
     routeWindowVisible = false;
     objectsWindowVisible = false;
+
+    activeGui->dpy_->scene->hide_auxiliary_displays();
   } else {
     mainWindow->show();
+    activeGui->dpy_->scene->show_auxiliary_displays();
   }
   mainWindowVisible = !mainWindowVisible;
 }
