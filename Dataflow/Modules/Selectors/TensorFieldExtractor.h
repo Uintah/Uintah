@@ -48,7 +48,7 @@ public:
 
   // GROUP: Constructors
   //////////
-  TensorFieldExtractor(const string& id); 
+  TensorFieldExtractor(GuiContext* ctx);
 
   // GROUP: Destructors
   //////////

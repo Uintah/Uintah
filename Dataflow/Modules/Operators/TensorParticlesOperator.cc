@@ -11,20 +11,17 @@
 namespace Uintah {
 
 
-extern "C" Module* make_TensorParticlesOperator( const string& id ) { 
-  return scinew TensorParticlesOperator( id );
-}
+  DECLARE_MAKER(TensorParticlesOperator);
 
-
-TensorParticlesOperator::TensorParticlesOperator(const string& id)
-  : Module("TensorParticlesOperator",id,Source, "Operators", "Uintah"),
-    guiOperation("operation", id, this),
-    guiRow("row", id, this),
-    guiColumn("column", id, this),
-    guiPlaneSelect("planeSelect", id, this),
-    guiDelta("delta", id, this),
-    guiEigen2DCalcType("eigen2D-calc-type", id, this)
-    //    tcl_status("tcl_status", id, this),
+TensorParticlesOperator::TensorParticlesOperator(GuiContext* ctx)
+  : Module("TensorParticlesOperator",ctx,Source, "Operators", "Uintah"),
+    guiOperation(ctx->subVar("operation")),
+    guiRow(ctx->subVar("row")),
+    guiColumn(ctx->subVar("column")),
+    guiPlaneSelect(ctx->subVar("planeSelect")),
+    guiDelta(ctx->subVar("delta")),
+    guiEigen2DCalcType(ctx->subVar("eigen2D-calc-type"))
+    //    tcl_status(ctx->subVar("tcl_status")),
 {
 }
   

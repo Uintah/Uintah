@@ -32,24 +32,15 @@
 #include <Core/Geom/Material.h>
 #include <iostream>
 
+namespace Uintah {
 using std::cerr;
 using std::endl;
-
-namespace Uintah {
-
-using SCIRun::Module;
-using SCIRun::ColorMapIPort;
-using SCIRun::FieldIPort;
-using SCIRun::FieldHandle;
-using SCIRun::GeometryOPort;
-using SCIRun::GuiInt;
-using SCIRun::GuiDouble;
-using SCIRun::MaterialHandle;
+using namespace SCIRun;
 
 class SubFieldHistogram : public Module {
 
 public:
-  SubFieldHistogram( const string& id);
+  SubFieldHistogram(GuiContext* ctx);
 
   virtual ~SubFieldHistogram();
 
@@ -81,8 +72,8 @@ private:
   int min_i, max_i;
 
   double setval( double val );
-
 };
+
 
 double 
 SubFieldHistogram::setval(double val)
@@ -149,7 +140,6 @@ bool SubFieldHistogram::fill_histogram(F1* f1, F2* f2)
   }
   return false;
 }   
-
 } // End namespace Uintah
 
 #endif

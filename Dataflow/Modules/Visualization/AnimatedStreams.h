@@ -23,20 +23,18 @@
 #include <string>
 
 namespace Uintah {
-
-
 using namespace SCIRun;
 
 
 class AnimatedStreams : public Module {
 
 public:
-  AnimatedStreams( const string& id);
+  AnimatedStreams(GuiContext* ctx);
 
   virtual ~AnimatedStreams();
   virtual void widget_moved(int last);    
   virtual void execute();
-  void tcl_command( TCLArgs&, void* );
+  void tcl_command( GuiArgs&, void* );
 
 private:
   

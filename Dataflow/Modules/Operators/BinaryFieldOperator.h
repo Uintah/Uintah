@@ -42,9 +42,8 @@ WARNING
 
 #include <iostream>
 
-using namespace std;
-
 namespace Uintah {
+using namespace std;
 using namespace SCIRun;
 
   class BinaryFieldOperator {

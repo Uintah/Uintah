@@ -57,15 +57,13 @@ using std::ostringstream;
 
 using namespace SCIRun;
 
-extern "C" Module* make_VectorFieldExtractor( const string& id ) {
-  return scinew VectorFieldExtractor( id ); 
-}
+  DECLARE_MAKER(VectorFieldExtractor);
 
 //--------------------------------------------------------------- 
-VectorFieldExtractor::VectorFieldExtractor(const string& id) 
-  : FieldExtractor("VectorFieldExtractor", id, "Selectors", "Uintah"),
-    tcl_status("tcl_status", id, this), sVar("sVar", id, this),
-    sMatNum("sMatNum", id, this), type(0)
+VectorFieldExtractor::VectorFieldExtractor(GuiContext* ctx) 
+  : FieldExtractor("VectorFieldExtractor", ctx, "Selectors", "Uintah"),
+    tcl_status(ctx->subVar("tcl_status")), sVar(ctx->subVar("sVar")),
+    sMatNum(ctx->subVar("sMatNum")), type(0)
 { 
 } 
 

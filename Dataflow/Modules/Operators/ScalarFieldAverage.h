@@ -3,23 +3,22 @@
 
 #include "OperatorThread.h"
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/TCL.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <string>
 #include <iostream>
+
+namespace Uintah {
 using std::string;
 using std::cerr;
 using std::endl;
-
 using namespace SCIRun;
 
-namespace Uintah {
   
 class ScalarFieldAverage: public Module {
 public:
-  ScalarFieldAverage(const string& id);
+  ScalarFieldAverage(GuiContext* ctx);
   virtual ~ScalarFieldAverage() {}
     
   virtual void execute(void);

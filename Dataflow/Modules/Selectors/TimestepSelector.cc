@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Containers/StringUtil.h>
 #include "TimestepSelector.h"
 #include <iostream> 
 #include <sstream>
@@ -19,19 +20,17 @@ namespace Uintah {
   
 using namespace SCIRun;
 
-extern "C" Module* make_TimestepSelector( const string& id ) {
-  return scinew TimestepSelector( id ); 
-}
+  DECLARE_MAKER(TimestepSelector)
 
 //--------------------------------------------------------------- 
-TimestepSelector::TimestepSelector(const string& id) 
-  : Module("TimestepSelector", id, Filter, "Selectors", "Uintah"),
-    tcl_status("tcl_status", id, this), 
-    time("time", id, this),
-    max_time("max_time", id, this),
-    timeval("timeval", id, this),
-    animate("animate",id, this),
-    anisleep("anisleep", id, this),
+TimestepSelector::TimestepSelector(GuiContext* ctx) 
+  : Module("TimestepSelector", ctx, Filter, "Selectors", "Uintah"),
+    tcl_status(ctx->subVar("tcl_status")), 
+    time(ctx->subVar("time")),
+    max_time(ctx->subVar("max_time")),
+    timeval(ctx->subVar("timeval")),
+    animate(ctx->subVar("animate")),
+    anisleep(ctx->subVar("anisleep")),
     archiveH(0)
 { 
 } 
@@ -52,9 +51,9 @@ void TimestepSelector::execute()
 
    if (archiveH.get_rep()  == 0 ){
      string visible;
-     TCL::eval(id + " isVisible", visible);
+     gui->eval(id + " isVisible", visible);
      if( visible == "0" ){
-       TCL::execute(id + " buildTopLevel");
+       gui->execute(id + " buildTopLevel");
      }
    }
 
@@ -65,7 +64,7 @@ void TimestepSelector::execute()
      archive.queryTimesteps( indices, times );
      if( archiveH.get_rep() == 0 ||
 	 archiveH.get_rep() != handle.get_rep()){
-       TCL::execute(id + " SetTimeRange " + to_string((int)times.size()));
+       gui->execute(id + " SetTimeRange " + to_string((int)times.size()));
        archiveH = handle;
      }
    }

@@ -45,7 +45,7 @@ public:
 
   // GROUP: Constructors
   //////////
-  TimestepSelector(const string& id); 
+  TimestepSelector(GuiContext* ctx);
 
   // GROUP: Destructors
   //////////

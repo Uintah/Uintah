@@ -11,15 +11,13 @@ namespace Uintah {
 
 using namespace SCIRun;
 
-extern "C" Module* make_ArchiveReader( const string& id ) { 
-  return scinew ArchiveReader( id );
-}
+  DECLARE_MAKER(ArchiveReader)
 
 //--------------------------------------------------------------- 
-ArchiveReader::ArchiveReader(const string& id) 
-  : Module("ArchiveReader", id, Filter, "DataIO", "Uintah"),
-    filebase("filebase", id, this), 
-    tcl_status("tcl_status",id,this), archiveH(0)
+  ArchiveReader::ArchiveReader(GuiContext* ctx)
+  : Module("ArchiveReader", ctx, Filter, "DataIO", "Uintah"),
+    filebase(ctx->subVar("filebase")), 
+    tcl_status(ctx->subVar("tcl_status")), archiveH(0)
 { 
   if( filebase.get() != "" )
     need_execute = 1;

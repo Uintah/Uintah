@@ -48,7 +48,7 @@ public:
 
   // GROUP: Constructors
   //////////
-  ScalarFieldExtractor(const string& id); 
+  ScalarFieldExtractor(GuiContext* ctx);
 
   // GROUP: Destructors
   //////////

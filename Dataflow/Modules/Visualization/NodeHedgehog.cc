@@ -164,7 +164,7 @@ public:
   // Constructs an instance of class NodeHedgehog
   // Constructor taking
   //    [in] id as an identifier
-  NodeHedgehog(const string& id);
+  NodeHedgehog(GuiContext* ctx);
   
   // GROUP:  Destructor:
   ///////////////////////////
@@ -181,7 +181,7 @@ public:
   //                                  findxy,
   //                                  findyz,
   //                                  findxz
-  virtual void tcl_command(TCLArgs&, void*);
+  virtual void tcl_command(GuiArgs&, void*);
 
   // used to get the values.
   //  bool interpolate(FieldHandle f, const Point& p, Vector& val);
@@ -312,29 +312,26 @@ private:
   
 static string module_name("NodeHedgehog");
 static string widget_name("NodeHedgehog Widget");
+  DECLARE_MAKER(NodeHedgehog);
 
-extern "C" Module* make_NodeHedgehog(const string& id) {
-  return scinew NodeHedgehog(id);
-}       
-
-NodeHedgehog::NodeHedgehog(const string& id)
-: Module("NodeHedgehog", id, Filter, "Visualization", "Uintah"),
+  NodeHedgehog::NodeHedgehog(GuiContext* ctx)
+: Module("NodeHedgehog", ctx, Filter, "Visualization", "Uintah"),
   widget_lock("NodeHedgehog widget lock"),
-  length_scale("length_scale", id, this),
-  min_crop_length("min_crop_length",id,this),
-  max_crop_length("max_crop_length",id,this),
-  width_scale("width_scale", id, this),
-  head_length("head_length", id, this),
-  type("type", id, this),
-  drawcylinders("drawcylinders", id, this),
-  norm_head("norm_head", id, this),
-  skip_node("skip_node", id, this),
-  shaft_rad("shaft_rad", id, this),
+  length_scale(ctx->subVar("length_scale")),
+  min_crop_length(ctx->subVar("min_crop_length")),
+  max_crop_length(ctx->subVar("max_crop_length")),
+  width_scale(ctx->subVar("width_scale")),
+  head_length(ctx->subVar("head_length")),
+  type(ctx->subVar("type")),
+  drawcylinders(ctx->subVar("drawcylinders")),
+  norm_head(ctx->subVar("norm_head")),
+  skip_node(ctx->subVar("skip_node")),
+  shaft_rad(ctx->subVar("shaft_rad")),
   max_vector(0,0,0), max_length(0),
-  max_vector_x("max_vector_x", id, this),
-  max_vector_y("max_vector_y", id, this),
-  max_vector_z("max_vector_z", id, this),
-  max_vector_length("max_vector_length", id, this),
+  max_vector_x(ctx->subVar("max_vector_x")),
+  max_vector_y(ctx->subVar("max_vector_y")),
+  max_vector_z(ctx->subVar("max_vector_z")),
+  max_vector_length(ctx->subVar("max_vector_length")),
   add_arrows("NodeHedgehog add_arrows mutex")
 {
   init = 1;
@@ -726,7 +723,7 @@ void NodeHedgehog::widget_moved(int last)
 }
 
 
-void NodeHedgehog::tcl_command(TCLArgs& args, void* userdata)
+void NodeHedgehog::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2) {
     args.error("Streamline needs a minor command");

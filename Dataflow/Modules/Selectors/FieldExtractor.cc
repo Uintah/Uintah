@@ -66,11 +66,11 @@ using namespace SCIRun;
 
 
 //--------------------------------------------------------------- 
-FieldExtractor::FieldExtractor(const string& name,
-			       const string& id,
-			       const string& cat,
-			       const string& pack)
-  : Module(name, id, Filter, cat, pack),
+  FieldExtractor::FieldExtractor(const string& name,
+				 GuiContext* ctx,
+				 const string& cat,
+				 const string& pack)
+  : Module(name, ctx, Filter, cat, pack),
     generation(-1),  timestep(-1), material(-1), grid(0), archiveH(0)
 { 
 
@@ -84,9 +84,9 @@ void FieldExtractor::build_GUI_frame()
 {
   // create the variable extractor interface.
   string visible;
-  TCL::eval(id + " isVisible", visible);
+  gui->eval(id + " isVisible", visible);
   if( visible == "0" ){
-    TCL::execute(id + " buildTopLevel");
+    gui->execute(id + " buildTopLevel");
   }
 }
 
@@ -136,17 +136,17 @@ void FieldExtractor::update_GUI(const string& var,
     archive.queryMaterials(var, r, times[timestep]);
 
   string visible;
-  TCL::eval(id + " isVisible", visible);
+  gui->eval(id + " isVisible", visible);
   if( visible == "1"){
-    TCL::execute(id + " destroyFrames");
-    TCL::execute(id + " build");
+    gui->execute(id + " destroyFrames");
+    gui->execute(id + " build");
       
-    TCL::execute(id + " buildMaterials " + matls.expandedString().c_str());
+    gui->execute(id + " buildMaterials " + matls.expandedString().c_str());
       
-    TCL::execute(id + " setVars " + varnames.c_str());
-    TCL::execute(id + " buildVarList");
+    gui->execute(id + " setVars " + varnames.c_str());
+    gui->execute(id + " buildVarList");
       
-    TCL::execute("update idletasks");
+    gui->execute("update idletasks");
     reset_vars();
   }
 }

@@ -17,13 +17,11 @@ using namespace SCIRun;
 
 namespace Uintah {
  
-extern "C" Module* make_ScalarFieldBinaryOperator( const string& id ) { 
-  return scinew ScalarFieldBinaryOperator( id );}
+DECLARE_MAKER(ScalarFieldBinaryOperator)
 
-
-ScalarFieldBinaryOperator::ScalarFieldBinaryOperator(const string& id)
-  : Module("ScalarFieldBinaryOperator",id,Source, "Operators", "Uintah"),
-    guiOperation("operation", id, this)
+ScalarFieldBinaryOperator::ScalarFieldBinaryOperator(GuiContext* ctx)
+  : Module("ScalarFieldBinaryOperator",ctx,Source, "Operators", "Uintah"),
+    guiOperation(ctx->subVar("operation"))
 {
 }
   

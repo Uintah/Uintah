@@ -32,7 +32,6 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Geom/GeomTriangles.h>
-#include <Core/GuiInterface/TCL.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -62,14 +61,12 @@ using std::ostrstream;
 
 namespace Uintah {
 
-using SCIRun::postMessage;
 using SCIRun::Field;
 using SCIRun::LatVolField;
 using SCIRun::HistogramTex;
 using SCIRun::GeomGroup;
 using SCIRun::GeomText;
 using SCIRun::GeomSticky;
-using SCIRun::TCL;
 using SCIRun::Point;
 using SCIRun::Color;
 using SCIRun::GeomMaterial;
@@ -84,16 +81,12 @@ using SCIRun::default_allocator;
 
 static string control_name("Control Widget");
 			 
-extern "C" Module* make_SubFieldHistogram( const string& id)
-{
-  return scinew SubFieldHistogram(id);
-}
+  DECLARE_MAKER(SubFieldHistogram);
 
-
-SubFieldHistogram::SubFieldHistogram(const string& id)
-  : Module("SubFieldHistogram", id, Filter, "Visualization", "Uintah"),
-    is_fixed_("is_fixed_", id, this),
-    min_("min_", id, this), max_("max_", id, this)
+  SubFieldHistogram::SubFieldHistogram(GuiContext* ctx)
+  : Module("SubFieldHistogram", ctx, Filter, "Visualization", "Uintah"),
+    is_fixed_(ctx->subVar("is_fixed_")),
+    min_(ctx->subVar("min_")), max_(ctx->subVar("max_"))
 {
   white = scinew Material(Color(0,0,0), Color(0.6,0.6,0.6), Color(0.6,0.6,0.6), 20);
     
@@ -225,6 +218,4 @@ void SubFieldHistogram::execute(void)
 }
 
 } // End namespace Uintah
-
-
 

@@ -64,14 +64,14 @@ namespace Uintah {
 
 class GridVisualizer : public VariablePlotter {
 public:
-  GridVisualizer(const string& id);
+  GridVisualizer(GuiContext* ctx);
 
   virtual ~GridVisualizer() {}
 
   virtual void execute();
   
   virtual void widget_moved(int last);
-  void tcl_command(TCLArgs& args, void* userdata);
+  void tcl_command(GuiArgs& args, void* userdata);
   virtual void geom_pick(GeomPick* pick, void* userdata, GeomObj* picked);
   virtual void geom_pick(GeomPick* pick, void* userdata);
   virtual void geom_pick(GeomPick* pick, ViewWindow* window,
@@ -121,31 +121,30 @@ protected:
 };
 
 static string widget_name("GridVisualizer Widget");
- 
-extern "C" Module* make_GridVisualizer(const string& id) {
-  return scinew GridVisualizer(id);
-}
 
+  DECLARE_MAKER(GridVisualizer) 
 } // end namespace Uintah
 
-GridVisualizer::GridVisualizer(const string& id):
-  VariablePlotter("GridVisualizer", id),
-  level1_grid_color("level1_grid_color",id, this),
-  level2_grid_color("level2_grid_color",id, this),
-  level3_grid_color("level3_grid_color",id, this),
-  level4_grid_color("level4_grid_color",id, this),
-  level5_grid_color("level5_grid_color",id, this),
-  level6_grid_color("level6_grid_color",id, this),
-  level1_node_color("level1_node_color",id, this),
-  level2_node_color("level2_node_color",id, this),
-  level3_node_color("level3_node_color",id, this),
-  level4_node_color("level4_node_color",id, this),
-  level5_node_color("level5_node_color",id, this),
-  level6_node_color("level6_node_color",id, this),
-  plane_on("plane_on",id,this),
-  node_select_on("node_select_on",id,this),
-  radius("radius",id,this),
-  polygons("polygons",id,this),
+using namespace Uintah;
+
+GridVisualizer::GridVisualizer(GuiContext* ctx):
+  VariablePlotter("GridVisualizer", ctx),
+  level1_grid_color(ctx->subVar("level1_grid_color")),
+  level2_grid_color(ctx->subVar("level2_grid_color")),
+  level3_grid_color(ctx->subVar("level3_grid_color")),
+  level4_grid_color(ctx->subVar("level4_grid_color")),
+  level5_grid_color(ctx->subVar("level5_grid_color")),
+  level6_grid_color(ctx->subVar("level6_grid_color")),
+  level1_node_color(ctx->subVar("level1_node_color")),
+  level2_node_color(ctx->subVar("level2_node_color")),
+  level3_node_color(ctx->subVar("level3_node_color")),
+  level4_node_color(ctx->subVar("level4_node_color")),
+  level5_node_color(ctx->subVar("level5_node_color")),
+  level6_node_color(ctx->subVar("level6_node_color")),
+  plane_on(ctx->subVar("plane_on")),
+  node_select_on(ctx->subVar("node_select_on")),
+  radius(ctx->subVar("radius")),
+  polygons(ctx->subVar("polygons")),
   widget_lock("GridVusualizer widget lock"),
   init(1)
 {
@@ -371,7 +370,7 @@ void GridVisualizer::widget_moved(int last)
   }
 }
 
-void GridVisualizer::tcl_command(TCLArgs& args, void* userdata)
+void GridVisualizer::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2) {
     args.error("GridVisualizer needs a minor command");
@@ -1029,7 +1028,5 @@ void GridVisualizer::pick() {
   currentNode.level = index_l.get();
   cerr << "Extracting values for " << currentNode.id << ", level " << currentNode.level << endl;
 }
-
-} // End namespace Uintah
 
 #endif

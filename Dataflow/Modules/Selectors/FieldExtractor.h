@@ -56,7 +56,7 @@ public:
   // GROUP: Constructors
   //////////
   FieldExtractor(const string& name,
-		 const string& id,
+		 GuiContext* ctx,
 		 const string& cat="unknown",
 		 const string& pack="unknown");
   // GROUP: Destructors

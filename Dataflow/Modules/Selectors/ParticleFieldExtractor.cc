@@ -41,6 +41,7 @@ LOG
 #include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
 #include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
 #include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Thread/Thread.h>
@@ -68,18 +69,16 @@ using namespace SCIRun;
 
 Mutex ParticleFieldExtractor::module_lock("PFEMutex");
 
-extern "C" Module* make_ParticleFieldExtractor( const string& id ) {
-  return scinew ParticleFieldExtractor( id ); 
-}
+  DECLARE_MAKER(ParticleFieldExtractor);
 
 //--------------------------------------------------------------- 
-ParticleFieldExtractor::ParticleFieldExtractor(const string& id) 
-  : Module("ParticleFieldExtractor", id, Filter, "Selectors", "Uintah"),
-    tcl_status("tcl_status", id, this),
-    psVar("psVar", id, this),
-    pvVar("pvVar", id, this),
-    ptVar("ptVar", id, this),
-    pNMaterials("pNMaterials", id, this),
+  ParticleFieldExtractor::ParticleFieldExtractor(GuiContext* ctx)
+  : Module("ParticleFieldExtractor", ctx, Filter, "Selectors", "Uintah"),
+    tcl_status(ctx->subVar("tcl_status")),
+    psVar(ctx->subVar("psVar")),
+    pvVar(ctx->subVar("pvVar")),
+    ptVar(ctx->subVar("ptVar")),
+    pNMaterials(ctx->subVar("pNMaterials")),
     positionName(""), particleIDs(""), archiveH(0),
     num_materials(0)
 { 
@@ -178,12 +177,12 @@ void ParticleFieldExtractor::setVars(ArchiveHandle ar)
   cerr << "Number of Materials " << num_materials << endl;
 
   string visible;
-  TCL::eval(id + " isVisible", visible);
+  gui->eval(id + " isVisible", visible);
   if( visible == "1"){
-     TCL::execute(id + " destroyFrames");
-     TCL::execute(id + " build");
-     TCL::execute(id + " buildPMaterials " + to_string(num_materials));
-     TCL::execute(id + " buildVarList");    
+     gui->execute(id + " destroyFrames");
+     gui->execute(id + " build");
+     gui->execute(id + " buildPMaterials " + to_string(num_materials));
+     gui->execute(id + " buildVarList");    
   }
 }
 
@@ -193,7 +192,7 @@ void ParticleFieldExtractor::showVarsForMatls()
   ConsecutiveRangeSet onMaterials;
   for (int matl = 0; matl < num_materials; matl++) {
      string result;
-     eval(id + " isOn p" + to_string(matl), result);
+     gui->eval(id + " isOn p" + to_string(matl), result);
      if ( result == "0")
 	continue;
      onMaterials.addInOrder(matl);
@@ -206,15 +205,15 @@ void ParticleFieldExtractor::showVarsForMatls()
 
   if (needToUpdate) {
     string visible;
-    TCL::eval(id + " isVisible", visible);
+    gui->eval(id + " isVisible", visible);
     if( visible == "1"){
-      TCL::execute(id + " clearVariables");
-      TCL::execute(id + " setParticleScalars " + spNames.c_str());
-      TCL::execute(id + " setParticleVectors " + vpNames.c_str());
-      TCL::execute(id + " setParticleTensors " + tpNames.c_str());
-      TCL::execute(id + " buildVarList");    
-      TCL::execute("update idletasks");
-      reset_vars(); // ?? what is this for?
+      gui->execute(id + " clearVariables");
+      gui->execute(id + " setParticleScalars " + spNames.c_str());
+      gui->execute(id + " setParticleVectors " + vpNames.c_str());
+      gui->execute(id + " setParticleTensors " + tpNames.c_str());
+      gui->execute(id + " buildVarList");    
+      gui->execute("update idletasks");
+      reset_vars(); // ?? what is this for?  // It flushes the cache on varibles - Steve
     }
   }
 
@@ -269,7 +268,7 @@ void ParticleFieldExtractor::addGraphingVars(long64 particleID,
 	" { " << get_matl_from_particleID(particleID) << " } " << type <<
        //	" {" << (*iter).matls.expandedString() << "} " << type <<
 	" " << i;
-     TCL::execute(call.str().c_str());
+     gui->execute(call.str().c_str());
   }
 }
 
@@ -280,7 +279,7 @@ void ParticleFieldExtractor::callback(long64 particleID)
 
   ostringstream call;
   call << id << " create_part_graph_window " << particleID;
-  TCL::execute(call.str().c_str());
+  gui->execute(call.str().c_str());
   addGraphingVars(particleID, scalarVars, "scalar");
   addGraphingVars(particleID, vectorVars, "vector");
   addGraphingVars(particleID, tensorVars, "matrix3");
@@ -342,7 +341,7 @@ void ParticleFieldExtractor::graph(string idx, string var)
 	{
 	  ostr << i << " " << values[j++] << " ";
 	}
-      TCL::execute( ostr.str().c_str() );
+      gui->execute( ostr.str().c_str() );
     }
   }
 }
@@ -371,9 +370,9 @@ void ParticleFieldExtractor::execute()
      
      if (archiveH.get_rep()  == 0 ){
        string visible;
-       TCL::eval(id + " isVisible", visible);
+       gui->eval(id + " isVisible", visible);
        if( visible == "0" ){
-	 TCL::execute(id + " buildTopLevel");
+	 gui->execute(id + " buildTopLevel");
        }
      }
      cerr << "Calling setVars\n";
@@ -447,7 +446,7 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
       new Thread( scinew PFEThread( this, archive, *patch,  sp, vp, tp, pset,
 			     scalar_type, have_sp, have_vp,
 			     have_tp, have_ids, sema,
-			     &smutex, &vmutex, &tmutex, &imutex),
+			     &smutex, &vmutex, &tmutex, &imutex, gui),
 		  "Particle Field Extractor Thread");
     thrd->detach();
 //     PFEThread *thrd = scinew PFEThread( this, archive, *patch,  sp, vp, tp, pset,
@@ -486,7 +485,7 @@ void PFEThread::run(){
     ParticleSubset* source_subset;
     bool have_subset = false;
 
-    pfe->eval(pfe->id + " isOn p" + to_string(matl), result);
+    gui->eval(pfe->id + " isOn p" + to_string(matl), result);
     if ( result == "0")
       continue;
     if (pfe->pvVar.get() != ""){
@@ -677,7 +676,7 @@ void PFEThread::run(){
 }
 
 
-void ParticleFieldExtractor::tcl_command(TCLArgs& args, void* userdata) {
+void ParticleFieldExtractor::tcl_command(GuiArgs& args, void* userdata) {
   if(args.count() < 2) {
     args.error("Streamline needs a minor command");
     return;
@@ -716,7 +715,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 			double startTime, double endTime);
   */
   // clear the current contents of the ticles's material data list
-  TCL::execute(id + " reset_var_val");
+  gui->execute(id + " reset_var_val");
 
   // determine type
   const TypeDescription *td;
@@ -728,7 +727,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
   vector< int > indices;
   times.clear();
   archive.queryTimesteps( indices, times );
-  TCL::execute(id + " setTime_list " + vector_to_string(indices).c_str());
+  gui->execute(id + " setTime_list " + vector_to_string(indices).c_str());
 
   string name_list("");
   long64 partID = atoll(particleID.c_str());
@@ -756,7 +755,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
       } else {
 	cerr << "Cache hit\n";
       }
-      TCL::execute(id+" set_var_val "+data.c_str());
+      gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
@@ -776,7 +775,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
       } else {
 	cerr << "Cache hit\n";
       }
-      TCL::execute(id+" set_var_val "+data.c_str());
+      gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
@@ -797,7 +796,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
       } else {
 	cerr << "Cache hit\n";
       }
-      TCL::execute(id+" set_var_val "+data.c_str());
+      gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";      
     }
     break;
@@ -818,7 +817,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
       } else {
 	cerr << "Cache hit\n";
       }
-      TCL::execute(id+" set_var_val "+data.c_str());
+      gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";      
     }
     break;
@@ -826,7 +825,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
     cerr<<"Unknown var type\n";
   }// else { Tensor,Other}
   cerr << "callig graph_data with \"particleID="<<particleID<<" varname="<<varname<<" name_list="<<name_list<<endl;
-  TCL::execute(id+" graph_data "+particleID.c_str()+" "+varname.c_str()+" "+
+  gui->execute(id+" graph_data "+particleID.c_str()+" "+varname.c_str()+" "+
 	       name_list.c_str());
 
 }

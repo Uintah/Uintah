@@ -116,7 +116,7 @@ public:
         // Constructor taking
         //    [in] id as an identifier
         //
-   CuttingPlane(const string& id);
+  CuttingPlane(GuiContext* ctx);
 
         // GROUP:  Destructor:
         ///////////////////////////
@@ -143,7 +143,7 @@ public:
         //                                  findxy, findyz, findxz, 
         //                                  plusx, minusx, plusy, minusy, plusz, minusz,
         //                                  connectivity
-   virtual void tcl_command(TCLArgs&, void*);
+   virtual void tcl_command(GuiArgs&, void*);
 private:
   Point iPoint_;
   double result_;
@@ -153,25 +153,22 @@ private:
   pair<double, double> minmax_;
 };
 
-extern "C" Module* make_CuttingPlane(const string& id) {
-  return new CuttingPlane(id);
-}
+DECLARE_MAKER(CuttingPlane)
 
-//static string module_name("CuttingPlane");
 static string widget_name("CuttingPlane Widget");
 
-CuttingPlane::CuttingPlane(const string& id) :
-  Module("CuttingPlane", id, Filter, "Visualization", "Uintah"),
+CuttingPlane::CuttingPlane(GuiContext* ctx) :
+  Module("CuttingPlane", ctx, Filter, "Visualization", "Uintah"),
   widget_lock("Cutting plane widget lock"),
-  cutting_plane_type("cutting_plane_type",id, this),
-  num_contours("num_contours", id, this), 
-  offset("offset", id, this), scale("scale", id, this), 
-  where("where", id, this),
-   need_find("need_find",id,this),
-  localMinMaxGUI("localMinMaxGUI", id, this), 
-  fullRezGUI("fullRezGUI", id, this),
-  exhaustiveGUI("exhaustiveGUI", id, this),
-  xt("xt", id, this), yt("yt", id, this), zt("zt", id, this)
+  cutting_plane_type(ctx->subVar("cutting_plane_type")),
+  num_contours(ctx->subVar("num_contours")), 
+  offset(ctx->subVar("offset")), scale(ctx->subVar("scale")), 
+  where(ctx->subVar("where")),
+  need_find(ctx->subVar("need_find")),
+  localMinMaxGUI(ctx->subVar("localMinMaxGUI")), 
+  fullRezGUI(ctx->subVar("fullRezGUI")),
+  exhaustiveGUI(ctx->subVar("exhaustiveGUI")),
+  xt(ctx->subVar("xt")), yt(ctx->subVar("yt")), zt(ctx->subVar("zt"))
 {
     float INIT(.1);
 
@@ -665,7 +662,7 @@ void CuttingPlane::widget_moved(int last)
 }
 
 
-void CuttingPlane::tcl_command(TCLArgs& args, void* userdata)
+void CuttingPlane::tcl_command(GuiArgs& args, void* userdata)
 {
     if(args.count() < 2)
     {

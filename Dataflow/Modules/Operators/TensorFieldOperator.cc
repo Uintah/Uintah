@@ -14,21 +14,18 @@ using namespace SCIRun;
 
 namespace Uintah {
  
-extern "C" Module* make_TensorFieldOperator( const string& id ) { 
-  return scinew TensorFieldOperator( id );
-}
+  DECLARE_MAKER(TensorFieldOperator);
 
 
-
-TensorFieldOperator::TensorFieldOperator(const string& id)
-  : Module("TensorFieldOperator",id,Source, "Operators", "Uintah"),
-    guiOperation("operation", id, this),
-    guiRow("row", id, this),
-    guiColumn("column", id, this),
-    guiPlaneSelect("planeSelect", id, this),
-    guiDelta("delta", id, this),
-    guiEigen2DCalcType("eigen2D-calc-type", id, this)
-    //    tcl_status("tcl_status", id, this),
+TensorFieldOperator::TensorFieldOperator(GuiContext* ctx)
+  : Module("TensorFieldOperator",ctx,Source, "Operators", "Uintah"),
+    guiOperation(ctx->subVar("operation")),
+    guiRow(ctx->subVar("row")),
+    guiColumn(ctx->subVar("column")),
+    guiPlaneSelect(ctx->subVar("planeSelect")),
+    guiDelta(ctx->subVar("delta")),
+    guiEigen2DCalcType(ctx->subVar("eigen2D-calc-type"))
+    //    tcl_status(ctx->subVar("tcl_status")),
 {
 }
   

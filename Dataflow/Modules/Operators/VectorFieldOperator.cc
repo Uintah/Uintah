@@ -12,13 +12,11 @@ using namespace SCIRun;
 
 namespace Uintah {
  
-extern "C" Module* make_VectorFieldOperator( const string& id ) { 
-  return scinew VectorFieldOperator( id );}
+  DECLARE_MAKER(VectorFieldOperator)
 
-
-VectorFieldOperator::VectorFieldOperator(const string& id)
-  : Module("VectorFieldOperator",id,Source, "Operators", "Uintah"),
-    guiOperation("operation", id, this)
+VectorFieldOperator::VectorFieldOperator(GuiContext* ctx)
+  : Module("VectorFieldOperator",ctx,Source, "Operators", "Uintah"),
+    guiOperation(ctx->subVar("operation"))
 {
 }
   

@@ -63,15 +63,13 @@ using namespace SCIRun;
 
   //using DumbScalarField;
 
-extern "C" Module* make_ScalarFieldExtractor( const string& id ) {
-  return scinew ScalarFieldExtractor( id ); 
-}
+  DECLARE_MAKER(ScalarFieldExtractor)
 
 //--------------------------------------------------------------- 
-ScalarFieldExtractor::ScalarFieldExtractor(const string& id) 
-  : FieldExtractor("ScalarFieldExtractor", id, "Selectors", "Uintah"),
-    tcl_status("tcl_status", id, this), sVar("sVar", id, this),
-    sMatNum("sMatNum", id, this), type(0)
+ScalarFieldExtractor::ScalarFieldExtractor(GuiContext* ctx) 
+  : FieldExtractor("ScalarFieldExtractor", ctx, "Selectors", "Uintah"),
+    tcl_status(ctx->subVar("tcl_status")), sVar(ctx->subVar("sVar")),
+    sMatNum(ctx->subVar("sMatNum")), type(0)
 { 
 } 
 
