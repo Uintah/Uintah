@@ -62,6 +62,9 @@ SerialMPM::~SerialMPM()
 void SerialMPM::problemSetup(const ProblemSpecP&, GridP& grid,
 			     DataWarehouseP& dw)
 {
+
+  Problem prob_description;
+  prob_description.preProcessor(prob_spec,grid);  
 #if 0
     for(Level::const_regionIterator iter=level->regionsBegin();
 	iter != level->regionsEnd(); iter++){
@@ -83,7 +86,7 @@ void SerialMPM::problemSetup(const ProblemSpecP&, GridP& grid,
 	ParticleVariable<Vector> pexternalforce(psubset);
 	dw->put(pexternalforce, "p.externalforce", region, 0);
 	cerr << "Creating particles for region\n";
-	Enigma.createParticles(region, dw);
+	prob_description.createParticles(region, dw);
     }
 #endif
     cerr << "SerialMPM::problemSetup not done\n";
@@ -678,6 +681,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.15  2000/04/14 02:13:57  jas
+// problemSetup runs the preProcessor.
+//
 // Revision 1.14  2000/04/13 06:50:55  sparker
 // More implementation to get this to work
 //
