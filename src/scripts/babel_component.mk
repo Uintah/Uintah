@@ -1,13 +1,11 @@
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-#define BABELDIR BABEL BABEL_REPOSITORY CCASIDL here
+#define BABELDIR BABEL BABEL_REPOSITORY CCASIDL MERGESRC here
 include $(SCIRUN_SCRIPTS)/babel_defs.mk
 
 COMPONENT:=$(notdir $(SRCDIR))
 
-CCASIDL := ${SRCTOP}/Core/Babel/cca.sidl
 OUTDIR := ${SRCTOP_ABS}/${SRCDIR}
-BABEL_REPOSITORY := Core/Babel/repository
 
 ${OUTDIR}/${COMPONENT}.make: ${OUTDIR}/${COMPONENT}.sidl Core/Babel/timestamp
 	$(BABEL) -sC++ -o$(dir $@) -R${BABEL_REPOSITORY} $<	
