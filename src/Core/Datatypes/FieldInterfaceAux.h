@@ -113,25 +113,14 @@ template <class F, class L>
 bool
 SFInterface<F, L>::finterpolate(double &result, const Point &p) const
 {
-  const typename F::mesh_handle_type &mesh = field_->get_typed_mesh();
-
-  typename L::array_type locs;
-  double weights[MESH_WEIGHT_MAXSIZE];
-  const int n = mesh->get_weights(p, locs, weights);
-
-  // Weights is empty if point not found.
-  if (n == 0) return false;
-
-  result = 0.0;
-  for (unsigned int i = 0; i < locs.size(); i++)
-  {
-    typename F::value_type tmp;
-    if (field_->value(tmp, locs[i]))
-    {
-      result += tmp * weights[i];
-    }
-  }
-
+  typedef typename F::mesh_type Msh;
+  typename F::mesh_handle_type mh = field_->get_typed_mesh();
+  
+  typename Msh::Elem::index_type ei;
+  mh->locate(ei, p);
+  vector<double> coords(3, .0L);
+  mh->get_coords(coords, p, ei);
+  field_->interpolate(result, coords, ei);
   return true;
 }
 
@@ -319,25 +308,14 @@ template <class F, class L>
 bool
 VFInterface<F, L>::finterpolate(Vector &result, const Point &p) const
 {
-  const typename F::mesh_handle_type &mesh = field_->get_typed_mesh();
-
-  typename L::array_type locs;
-  double weights[MESH_WEIGHT_MAXSIZE];
-  const int n = mesh->get_weights(p, locs, weights);
-
-  // Weights is empty if point not found.
-  if (n == 0) return false;
-
-  result = Vector(0.0, 0.0, 0.0);
-  for (unsigned int i = 0; i < locs.size(); i++)
-  {
-    typename F::value_type tmp;
-    if (field_->value(tmp, locs[i]))
-    {
-      result += tmp * weights[i];
-    }
-  }
-
+  typedef typename F::mesh_type Msh;
+  typename F::mesh_handle_type mh = field_->get_typed_mesh();
+  
+  typename Msh::Elem::index_type ei;
+  mh->locate(ei, p);
+  vector<double> coords(3, .0L);
+  mh->get_coords(coords, p, ei);
+  field_->interpolate(result, coords, ei);
   return true;
 }
 
@@ -527,25 +505,14 @@ template <class F, class L>
 bool
 TFInterface<F, L>::finterpolate(Tensor &result, const Point &p) const
 {
-  const typename F::mesh_handle_type &mesh = field_->get_typed_mesh();
-
-  typename L::array_type locs;
-  double weights[MESH_WEIGHT_MAXSIZE];
-  const int n = mesh->get_weights(p, locs, weights);
-
-  // Weights is empty if point not found.
-  if (n == 0) return false;
-
-  result = Tensor(0);
-  for (unsigned int i = 0; i < locs.size(); i++)
-  {
-    typename F::value_type tmp;
-    if (field_->value(tmp, locs[i]))
-    {
-      result += tmp * weights[i];
-    }
-  }
-
+  typedef typename F::mesh_type Msh;
+  typename F::mesh_handle_type mh = field_->get_typed_mesh();
+  
+  typename Msh::Elem::index_type ei;
+  mh->locate(ei, p);
+  vector<double> coords(3, .0L);
+  mh->get_coords(coords, p, ei);
+  field_->interpolate(result, coords, ei);
   return true;
 }
 

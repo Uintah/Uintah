@@ -98,9 +98,6 @@ public:
   virtual const TypeDescription *get_type_description() const = 0;
 };
 
-
-
-
 } // end namespace SCIRun
 
 #endif // Datatypes_Mesh_h

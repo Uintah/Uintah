@@ -44,6 +44,9 @@
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <Dataflow/Modules/Fields/FieldSubSample.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/CrvLinearLgn.h>
 
 namespace SCIRun {
 
@@ -200,9 +203,12 @@ void FieldSubSample::execute(){
   int dims = 0;
 
   // Get the dimensions of the mesh.
-  if( fHandle->get_type_description(0)->get_name() == "LatVolField" ||
-      fHandle->get_type_description(0)->get_name() == "StructHexVolField" ) {
-    LatVolMesh *lvmInput = (LatVolMesh*) fHandle->mesh().get_rep();
+  string mesh_type = fHandle->get_type_description(1)->get_name();
+  if( mesh_type.find("LatVolMesh") != string::npos ||
+      mesh_type.find("StructHexVolMesh") != string::npos ) 
+  {
+    typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+    LVMesh *lvmInput = (LVMesh*) fHandle->mesh().get_rep();
 
     idim_ = lvmInput->get_ni();
     jdim_ = lvmInput->get_nj();
@@ -210,9 +216,11 @@ void FieldSubSample::execute(){
 
     dims = 3;
 
-  } else if( fHandle->get_type_description(0)->get_name() == "ImageField" ||
-	     fHandle->get_type_description(0)->get_name() == "StructQuadSurfField" ) {
-    ImageMesh *imInput = (ImageMesh*) fHandle->mesh().get_rep();
+  } else if( mesh_type.find("ImageMesh") != string::npos ||
+	     mesh_type.find("StructQuadSurfMesh") != string::npos ) 
+  {
+    typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
+    IMesh *imInput = (IMesh*) fHandle->mesh().get_rep();
 
     idim_ = imInput->get_ni();
     jdim_ = imInput->get_nj();
@@ -220,9 +228,10 @@ void FieldSubSample::execute(){
 
     dims = 2;
 
-  } else if( fHandle->get_type_description(0)->get_name() == "ScanlineField" ||
-	     fHandle->get_type_description(0)->get_name() == "StructCurveField" ) {
-    ScanlineMesh *slmInput = (ScanlineMesh*) fHandle->mesh().get_rep();
+  } else if( mesh_type.find("ScanlineMesh") != string::npos ||
+	     mesh_type.find("StructCurveMesh") != string::npos ) {
+    typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
+    SLMesh *slmInput = (SLMesh*) fHandle->mesh().get_rep();
 
     idim_ = slmInput->get_ni();
     jdim_ = 1;
@@ -245,9 +254,9 @@ void FieldSubSample::execute(){
 
   int wrap;
 
-  if( fHandle->get_type_description(0)->get_name() == "StructHexVolField" ||
-      fHandle->get_type_description(0)->get_name() == "StructQuadSurfField" ||
-      fHandle->get_type_description(0)->get_name() == "StructCurveField" )
+  if( mesh_type.find("StructHexVolMesh") != string::npos ||
+      mesh_type.find("StructQuadSurfMesh") != string::npos ||
+      mesh_type.find("StructCurveMesh") != string::npos )
     wrap = 1;
   else
     wrap = 0;
@@ -354,9 +363,9 @@ FieldSubSampleAlgo::get_compile_info(const TypeDescription *ftd)
   // Structured meshs have a set_point method which is needed. However, it is not
   // defined for gridded meshes. As such, the include file defined below contains a
   // compiler flag so that when needed in FieldSlicer.h it is compiled.
-  if( ftd->get_name().find("StructHexVolField"  ) == 0 ||
-      ftd->get_name().find("StructQuadSurfField") == 0 ||
-      ftd->get_name().find("StructCurveField"   ) == 0 ) {
+  if( ftd->get_name().find("StructHexVolMesh") == 0 ||
+      ftd->get_name().find("StructQuadSurfMesh") == 0 ||
+      ftd->get_name().find("StructCurveMesh") == 0 ) {
 
     string header_path(include_path);  // Get the right path 
 

@@ -37,14 +37,23 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/ScanlineField.h>
-#include <Core/Datatypes/HexVolField.h>
-#include <Core/Datatypes/QuadSurfField.h>
-#include <Core/Datatypes/CurveField.h>
+#include <Core/Containers/FData.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/ScanlineMesh.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/CurveMesh.h>
 
 namespace SCIRun {
+
+
+typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+typedef ImageMesh<QuadBilinearLgn<Point> >  IMesh;
+typedef ScanlineMesh<CrvLinearLgn<Point> >  SLMesh;
 
 class UnstructureAlgo : public DynamicAlgoBase
 {
@@ -68,77 +77,77 @@ public:
 
 struct SpecialUnstructuredHash
 {
-  size_t operator()(const LatVolMesh::Node::index_type &n) const
+  size_t operator()(const LVMesh::Node::index_type &n) const
   { return n.i_ * ((1 << 20) - 1) + n.j_ * ((1 << 10) - 1) + n.k_; }
 
-  size_t operator()(const ImageMesh::Node::index_type &n) const
+  size_t operator()(const IMesh::Node::index_type &n) const
   { return n.i_ * ((1 << 10) - 1) + n.j_; }
 
-  size_t operator()(const ScanlineMesh::Node::index_type &n) const
+  size_t operator()(const SLMesh::Node::index_type &n) const
   { return n; }
 
-  size_t operator()(const LatVolMesh::Elem::index_type &n) const
+  size_t operator()(const LVMesh::Elem::index_type &n) const
   { return n.i_ * ((1 << 20) - 1) + n.j_ * ((1 << 10) - 1) + n.k_; }
 
-  size_t operator()(const ImageMesh::Elem::index_type &n) const
+  size_t operator()(const IMesh::Elem::index_type &n) const
   { return n.i_ * ((1 << 10) - 1) + n.j_; }
 
-  size_t operator()(const ScanlineMesh::Elem::index_type &n) const
+  size_t operator()(const SLMesh::Elem::index_type &n) const
   { return n; }
 };
 
 #ifdef HAVE_HASH_MAP
 struct SpecialUnstructuredEqual
 {
-  bool operator()(const LatVolMesh::Node::index_type &a,
-		  const LatVolMesh::Node::index_type &b) const
+  bool operator()(const LVMesh::Node::index_type &a,
+		  const LVMesh::Node::index_type &b) const
   { return a.i_ == b.i_ && a.j_ == b.j_ && a.k_ == b.k_; }
 
-  bool operator()(const ImageMesh::Node::index_type &a,
-		  const ImageMesh::Node::index_type &b) const
+  bool operator()(const IMesh::Node::index_type &a,
+		  const IMesh::Node::index_type &b) const
   { return a.i_ == b.i_ && a.j_ == b.j_; }
 
-  bool operator()(const ScanlineMesh::Node::index_type &a,
-		  const ScanlineMesh::Node::index_type &b) const
+  bool operator()(const SLMesh::Node::index_type &a,
+		  const SLMesh::Node::index_type &b) const
   { return a == b; }
 
-  bool operator()(const LatVolMesh::Elem::index_type &a,
-		  const LatVolMesh::Elem::index_type &b) const
+  bool operator()(const LVMesh::Elem::index_type &a,
+		  const LVMesh::Elem::index_type &b) const
   { return a.i_ == b.i_ && a.j_ == b.j_ && a.k_ == b.k_; }
 
-  bool operator()(const ImageMesh::Elem::index_type &a,
-		  const ImageMesh::Elem::index_type &b) const
+  bool operator()(const IMesh::Elem::index_type &a,
+		  const IMesh::Elem::index_type &b) const
   { return a.i_ == b.i_ && a.j_ == b.j_; }
 
-  bool operator()(const ScanlineMesh::Elem::index_type &a,
-		  const ScanlineMesh::Elem::index_type &b) const
+  bool operator()(const SLMesh::Elem::index_type &a,
+		  const SLMesh::Elem::index_type &b) const
   { return a == b; }
 };
 #else
 struct SpecialUnstructuredLess
 {
-  bool operator()(const LatVolMesh::Node::index_type &a,
-		  const LatVolMesh::Node::index_type &b) const
+  bool operator()(const LVMesh::Node::index_type &a,
+		  const LVMesh::Node::index_type &b) const
   { return a.i_ < b.i_ || a.i_ == b.i_ && ( a.j_ < b.j_ || a.j_ == b.j_ && a.k_ < b.k_); }
 
-  bool operator()(const ImageMesh::Node::index_type &a,
-		  const ImageMesh::Node::index_type &b) const
+  bool operator()(const IMesh::Node::index_type &a,
+		  const IMesh::Node::index_type &b) const
   { return a.i_ < b.i_ || a.i_ == b.i_ && a.j_ < b.j_; }
 
-  bool operator()(const ScanlineMesh::Node::index_type &a,
-		  const ScanlineMesh::Node::index_type &b) const
+  bool operator()(const SLMesh::Node::index_type &a,
+		  const SLMesh::Node::index_type &b) const
   { return a < b; }
 
-  bool operator()(const LatVolMesh::Elem::index_type &a,
-		  const LatVolMesh::Elem::index_type &b) const
+  bool operator()(const LVMesh::Elem::index_type &a,
+		  const LVMesh::Elem::index_type &b) const
   { return a.i_ < b.i_ || a.i_ == b.i_ && ( a.j_ < b.j_ || a.j_ == b.j_ && a.k_ < b.k_); }
 
-  bool operator()(const ImageMesh::Elem::index_type &a,
-		  const ImageMesh::Elem::index_type &b) const
+  bool operator()(const IMesh::Elem::index_type &a,
+		  const IMesh::Elem::index_type &b) const
   { return a.i_ < b.i_ || a.i_ == b.i_ && a.j_ < b.j_; }
 
-  bool operator()(const ScanlineMesh::Elem::index_type &a,
-		  const ScanlineMesh::Elem::index_type &b) const
+  bool operator()(const SLMesh::Elem::index_type &a,
+		  const SLMesh::Elem::index_type &b) const
   { return a < b; }
 };
 #endif

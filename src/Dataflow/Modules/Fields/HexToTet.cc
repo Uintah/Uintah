@@ -39,8 +39,8 @@
  */
 
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/HexVolField.h>
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/TetVolMesh.h>
 #include <Dataflow/Modules/Fields/HexToTet.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>

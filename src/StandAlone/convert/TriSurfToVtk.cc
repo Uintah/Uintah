@@ -38,8 +38,9 @@
  *
  *  Copyright (C) 2001 SCI Group
  */
-
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <fstream>
@@ -73,9 +74,10 @@ main(int argc, char **argv) {
     cerr << "Error -- input field wasn't a TriSurfField (type_name="<<handle->get_type_name(0)<<"\n";
     exit(0);
   }
+  typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
 
   MeshHandle mb = handle->mesh();
-  TriSurfMesh *tsm = dynamic_cast<TriSurfMesh *>(mb.get_rep());
+  TSMesh *tsm = dynamic_cast<TSMesh *>(mb.get_rep());
   FILE *fout = fopen(argv[2], "wt");
   if (!fout) {
     cerr << "Error - can't open input file "<<argv[2]<<"\n";
@@ -83,9 +85,9 @@ main(int argc, char **argv) {
   }
 
   fprintf(fout, "# vtk DataFile Version 3.0\nvtk output\nASCII\nDATASET POLYDATA\n");
-  TriSurfMesh::Node::iterator niter; tsm->begin(niter);
-  TriSurfMesh::Node::iterator niter_end; tsm->end(niter_end);
-  TriSurfMesh::Node::size_type nsize; tsm->size(nsize);
+  TSMesh::Node::iterator niter; tsm->begin(niter);
+  TSMesh::Node::iterator niter_end; tsm->end(niter_end);
+  TSMesh::Node::size_type nsize; tsm->size(nsize);
   cerr << "Writing "<<((unsigned int)nsize)<< " points to "<<argv[2]<<"...\n";
   fprintf(fout, "POINTS %d float\n", (int)nsize);
   while(niter != niter_end)
@@ -96,10 +98,10 @@ main(int argc, char **argv) {
     ++niter;
   }
 
-  TriSurfMesh::Face::size_type fsize; tsm->size(fsize);
-  TriSurfMesh::Face::iterator fiter; tsm->begin(fiter);
-  TriSurfMesh::Face::iterator fiter_end; tsm->end(fiter_end);
-  TriSurfMesh::Node::array_type fac_nodes(3);
+  TSMesh::Face::size_type fsize; tsm->size(fsize);
+  TSMesh::Face::iterator fiter; tsm->begin(fiter);
+  TSMesh::Face::iterator fiter_end; tsm->end(fiter_end);
+  TSMesh::Node::array_type fac_nodes(3);
   cerr << "     and "<< ((unsigned int)fsize)<<" faces.\n";
   fprintf(fout, "POLYGONS %d %d\n", (int)fsize, (int)fsize*4);
   while(fiter != fiter_end)

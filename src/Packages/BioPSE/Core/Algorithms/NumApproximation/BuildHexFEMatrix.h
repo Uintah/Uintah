@@ -48,7 +48,9 @@
 #ifndef BUILD_HEX_FE_MATRIX_H
 #define BUILD_HEX_FE_MATRIX_H
 
-#include <Core/Datatypes/HexVolField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Geometry/Tensor.h>
 #include <Packages/BioPSE/Core/Algorithms/NumApproximation/ReferenceElement.h>
@@ -60,9 +62,14 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class BuildHexFEMatrix;
+typedef HexTrilinearLgn<int>                      DatBasisi;
+typedef HexTrilinearLgn<Tensor>                   DatBasist;
+typedef HexVolMesh<HexTrilinearLgn<Point> >       HVMesh;
+typedef GenericField<HVMesh, DatBasisi,    vector<int> > HVFieldi;  
+typedef GenericField<HVMesh, DatBasist, vector<Tensor> > HVFieldt;  
 
-typedef LockingHandle<HexVolField<int> > HexVolFieldIntHandle;
-typedef LockingHandle<HexVolField<Tensor> > HexVolFieldTensorHandle;
+typedef LockingHandle<HVFieldi> HexVolFieldIntHandle;
+typedef LockingHandle<HVFieldt> HexVolFieldTensorHandle;
 typedef LockingHandle<BuildHexFEMatrix> BuildHexFEMatrixHandle;
 
 class BuildHexFEMatrix {
@@ -71,7 +78,7 @@ class BuildHexFEMatrix {
   HexVolFieldIntHandle hFieldInt_;
   HexVolFieldTensorHandle hFieldTensor_;
   bool index_based_;
-  HexVolMeshHandle hMesh_;
+  HVMesh::handle_type hMesh_;
   vector<pair<string, Tensor> >& tens_;
   MatrixHandle hA_;
   double unitsScale_;
@@ -80,10 +87,13 @@ class BuildHexFEMatrix {
   ReferenceElement *rE_;
   SparseRowMatrix *dA_;
 
-  void buildLocalMatrix(double localMatrix[8][8], HexVolMesh::Cell::index_type ci, HexVolMesh::Node::array_type& cell_nodes);
-  void addLocal2GlobalMatrix(double localMatrix[8][8], HexVolMesh::Node::array_type& cell_nodes);
-  double getLocalMatrixEntry(HexVolMesh::Cell::index_type ci, int i, int j, HexVolMesh::Node::array_type& cell_nodes);
-  int getAllNeighbors(HexVolMesh::Node::index_type nii, int *index);
+  void buildLocalMatrix(double localMatrix[8][8], HVMesh::Cell::index_type ci, 
+			HVMesh::Node::array_type& cell_nodes);
+  void addLocal2GlobalMatrix(double localMatrix[8][8], 
+			     HVMesh::Node::array_type& cell_nodes);
+  double getLocalMatrixEntry(HVMesh::Cell::index_type ci, int i, int j, 
+			     HVMesh::Node::array_type& cell_nodes);
+  int getAllNeighbors(HVMesh::Node::index_type nii, int *index);
   void sortNodes(int *index, int length);
 
  public:

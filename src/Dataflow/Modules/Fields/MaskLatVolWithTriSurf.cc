@@ -44,8 +44,12 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Containers/FData.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <iostream>
 
 using std::cerr;
@@ -54,8 +58,9 @@ namespace SCIRun {
 
 class MaskLatVolWithTriSurf : public Module
 {
-private:
 public:
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+  typedef TriSurfMesh<TriLinearLgn<Point> >   TSMesh;
   MaskLatVolWithTriSurf(GuiContext* ctx);
   virtual ~MaskLatVolWithTriSurf();
   virtual void execute();
@@ -80,8 +85,8 @@ MaskLatVolWithTriSurf::execute()
   FieldIPort *trisurf = (FieldIPort *) get_iport("TriSurfField");
 
   FieldHandle latvolH, trisurfH;
-  LatVolMeshHandle latvolM;
-  TriSurfMeshHandle trisurfM;
+  LVMesh::handle_type latvolM;
+  TSMesh::handle_type trisurfM;
   
   if (!latvol) {
     error("Unable to initialize iport 'LatVolField'.");
@@ -96,7 +101,7 @@ MaskLatVolWithTriSurf::execute()
     warning("No input on LatVol port.");
     return;
   }
-  latvolM = dynamic_cast<LatVolMesh*>(latvolH->mesh().get_rep());
+  latvolM = dynamic_cast<LVMesh*>(latvolH->mesh().get_rep());
   if (!latvolH.get_rep()) {
     error("Input field was not a LatVol.");
     return;
@@ -106,7 +111,7 @@ MaskLatVolWithTriSurf::execute()
     warning("No input on TriSurf port.");
     return;
   }
-  trisurfM = dynamic_cast<TriSurfMesh*>(trisurfH->mesh().get_rep());
+  trisurfM = dynamic_cast<TSMesh*>(trisurfH->mesh().get_rep());
   if (!trisurfM.get_rep()) {
     error("Input field was not a TriSurf.");
     return;
@@ -117,12 +122,15 @@ MaskLatVolWithTriSurf::execute()
     error("Unable to initialize oport 'Mask'.");
     return;
   }
-  LatVolField<char> *mask=scinew LatVolField<char>(latvolM, 1);
 
-  TriSurfMesh::Face::iterator fiter; 
-  TriSurfMesh::Face::iterator fiter_end; 
-  TriSurfMesh::Face::size_type nfaces;
-  TriSurfMesh::Node::array_type fac_nodes(3);
+  typedef HexTrilinearLgn<char>                                  DatBasis;
+  typedef GenericField<LVMesh, DatBasis, FData3d<char, LVMesh> > LVField;
+  LVField *mask = scinew LVField(latvolM);
+
+  TSMesh::Face::iterator fiter; 
+  TSMesh::Face::iterator fiter_end; 
+  TSMesh::Face::size_type nfaces;
+  TSMesh::Node::array_type fac_nodes(3);
   trisurfM->begin(fiter);
   trisurfM->end(fiter_end);
   trisurfM->size(nfaces);
@@ -141,8 +149,8 @@ MaskLatVolWithTriSurf::execute()
     ++fidx;
     ++fiter;
   }
-  LatVolMesh::Node::iterator niter;
-  LatVolMesh::Node::iterator niter_end;
+  LVMesh::Node::iterator niter;
+  LVMesh::Node::iterator niter_end;
   latvolM->begin(niter);
   latvolM->end(niter_end);
   while (niter != niter_end) {

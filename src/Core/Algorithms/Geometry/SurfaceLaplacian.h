@@ -42,12 +42,15 @@
 #define SurfaceLaplacian_h
 
 #include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Basis/TriLinearLgn.h>
+
 //#include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 
 namespace SCIRun {
 
-DenseMatrix *surfaceLaplacian(TriSurfMesh *mesh);
+typedef TriSurfMesh<TriLinearLgn<Point> > surfLaplMesh;
+DenseMatrix *surfaceLaplacian(surfLaplMesh *mesh);
 
 } // End namespace SCIRun
 #endif // SurfaceLaplacian_h

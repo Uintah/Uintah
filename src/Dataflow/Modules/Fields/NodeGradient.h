@@ -45,8 +45,10 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 
-#include <Core/Datatypes/LatVolField.h>
-
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
 
 namespace SCIRun {
 
@@ -74,17 +76,19 @@ FieldHandle
 NodeGradientAlgoT<IFIELD>::execute(FieldHandle& field_h)
 {
   IFIELD *ifield = (IFIELD *) field_h.get_rep();
-
-  LatVolMeshHandle imesh = ifield->get_typed_mesh();
+  typedef LatVolMesh<HexTrilinearLgn<Point> >  LVMesh;
+  typedef HexTrilinearLgn<Vector>              DatBasis;
+  typedef GenericField<LVMesh, DatBasis,  FData3d<Vector, LVMesh> > LVField;
+  LVMesh::handle_type imesh = ifield->get_typed_mesh();
     
-  LatVolField<Vector> *ofield = scinew LatVolField<Vector>(imesh, 1);
+  LVField *ofield = scinew LVField(imesh);
 
-  LatVolMesh::Node::iterator itr, end;
+  LVMesh::Node::iterator itr, end;
 
   imesh->begin( itr );
   imesh->end( end );
 
-  LatVolMesh::Node::size_type size;
+  LVMesh::Node::size_type size;
   imesh->size(size);
 
   const unsigned int ni = size.i_-1;
@@ -96,9 +100,9 @@ NodeGradientAlgoT<IFIELD>::execute(FieldHandle& field_h)
   while (itr != end)
     {
       // Get all of the adjacent indices.  Clone boundary.
-      LatVolMesh::Node::index_type ix0(*itr), ix1(*itr);
-      LatVolMesh::Node::index_type iy0(*itr), iy1(*itr);
-      LatVolMesh::Node::index_type iz0(*itr), iz1(*itr);
+      LVMesh::Node::index_type ix0(*itr), ix1(*itr);
+      LVMesh::Node::index_type iy0(*itr), iy1(*itr);
+      LVMesh::Node::index_type iz0(*itr), iz1(*itr);
 
       double xscale, yscale, zscale;
       xscale=yscale=zscale=0.5;

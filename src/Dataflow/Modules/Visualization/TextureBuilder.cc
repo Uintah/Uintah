@@ -31,7 +31,10 @@
 
 #include <sci_defs/ogl_defs.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -46,7 +49,7 @@
 #include <Core/Algorithms/Visualization/TextureBuilderAlgo.h>
 #include <Core/Util/DebugStream.h>
 
-#include <Core/Datatypes/MRLatVolField.h>
+//#include <Core/Datatypes/MRLatVolField.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <limits>
@@ -178,6 +181,8 @@ TextureBuilder::execute()
     }
   }
 
+  //FIX_ME MC
+#if HAVE_MRLVF
   if( MRLatVolField<double>* vmrfield =
       dynamic_cast< MRLatVolField< double >* > (vfield.get_rep()) ) {
 
@@ -189,7 +194,7 @@ TextureBuilder::execute()
       }
     }
   }
-  
+#endif
   if (build_texture(vfield, gfield))
   {
     otexture->send(texture_);
@@ -242,25 +247,15 @@ TextureBuilder::new_vfield(FieldHandle vfield)
   return true;
 }
 
-
-bool
-TextureBuilder::new_gfield(FieldHandle gfield)
+template <class F>
+void
+get_gminmax(F *gfld, double &gminval, double &gmaxval) 
 {
-  // set gmin/gmax
-  LatVolField<Vector>* gfld =
-    dynamic_cast<LatVolField<Vector>*>(gfield.get_rep());
-
-  if (!gfld)
-  {
-    error("Input gradient field does not contain vector data.");
-    return false;
-  }
-
-  FData3d<Vector>::const_iterator bi, ei;
+  typename F::fdata_type::const_iterator bi, ei;
   bi = gfld->fdata().begin();
   ei = gfld->fdata().end();
-  double gminval = std::numeric_limits<double>::max();
-  double gmaxval = -gminval;
+  gminval = std::numeric_limits<double>::max();
+  gmaxval = -gminval;
   while (bi != ei)
   {
     Vector v = *bi;
@@ -269,6 +264,32 @@ TextureBuilder::new_gfield(FieldHandle gfield)
     if (g > gmaxval) gmaxval = g;
     ++bi;
   }
+}
+
+bool
+TextureBuilder::new_gfield(FieldHandle gfield)
+{
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+  typedef HexTrilinearLgn<Vector>             VecLinBasis;
+  typedef ConstantBasis<Vector>               VecConBasis;
+
+  typedef GenericField<LVMesh, VecLinBasis,  FData3d<Vector,LVMesh> > LVField;
+  typedef GenericField<LVMesh, VecConBasis,  FData3d<Vector,LVMesh> > LVFieldC;
+
+  // set gmin/gmax
+  LVField* gfld = dynamic_cast<LVField*>(gfield.get_rep());
+  LVFieldC* gfldc = dynamic_cast<LVFieldC*>(gfield.get_rep());
+
+  if (!gfld && !gfldc)
+  {
+    error("Input gradient field does not contain vector data.");
+    return false;
+  }
+
+  double gminval, gmaxval;
+  if (gfld)  get_gminmax(gfld, gminval, gmaxval);
+  else if (gfldc) get_gminmax(gfld, gminval, gmaxval);
+
   if (!gui_fixed_.get())
   {
     gui_gminval_.set(gminval);

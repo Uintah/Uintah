@@ -47,7 +47,11 @@
 // The SCIRun output file is written in ASCII, unless you specify 
 // -binOutput.
 
-#include <Core/Datatypes/StructHexVolField.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Datatypes/StructHexVolMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -145,21 +149,25 @@ main(int argc, char **argv) {
   }
   if (header) ptsstream >> ni >> nj >> nk;
   cerr << "number of points = ("<<ni<<" "<<nj<<" "<<nk<<")\n";
-  StructHexVolMesh *hvm = new StructHexVolMesh(ni, nj, nk);
+
+  typedef StructHexVolMesh<HexTrilinearLgn<Point> > SHVMesh;
+  SHVMesh *hvm = new SHVMesh(ni, nj, nk);
   int i, j, k;
   for (i=0; i<ni; i++)
     for (j=0; j<nj; j++)
       for (k=0; k<nk; k++) {
 	double x, y, z;
 	ptsstream >> x >> y >> z;
-	StructHexVolMesh::Node::index_type idx(hvm, i, j, k);
+	SHVMesh::Node::index_type idx(hvm, i, j, k);
 	hvm->set_point(Point(x, y, z), idx);
 	if (debugOn) 
 	  cerr << "Added point (idx=["<<i<<" "<<j<<" "<<k<<"]) at ("<<x<<", "<<y<<", "<<z<<")\n";
       }
   cerr << "done adding points.\n";
+  typedef NoDataBasis<double>                DatBasis;
+  typedef GenericField<SHVMesh, DatBasis, FData3d<double, SHVMesh> > SHVField;
 
-  StructHexVolField<double> *hvf = scinew StructHexVolField<double>(hvm, -1);
+  SHVField *hvf = scinew SHVField(hvm);
   FieldHandle hvH(hvf);
   
   if (binOutput) {

@@ -36,7 +36,12 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Volume/Texture.h>
-#include <Core/Datatypes/MRLatVolField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+//FIX_ME MC
+//#include <Core/Datatypes/MRLatVolField.h>
 #include <Core/Volume/TextureBrick.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -76,6 +81,8 @@ protected:
   virtual void fill_brick(TextureBrickHandle &brick,
                           FieldHandle vfield, double vmin, double vmax,
                           FieldHandle gfield, double gmin, double gmax) = 0;
+
+  typedef LatVolMesh<HexTrilinearLgn<Point> >                        LVMesh;
 };
 
 template <class FieldType>
@@ -111,6 +118,36 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
 				     double gmin, double gmax,
                                      int card_mem)
 {
+  //FIX_ME MC
+#define MRLATVOL_NEEDS_BASIS_STILL 1
+#if MRLATVOL_NEEDS_BASIS_STILL
+  LVMesh::handle_type mesh = (LVMesh*)(vfield->mesh().get_rep());
+  int nx = mesh->get_ni();
+  int ny = mesh->get_nj();
+  int nz = mesh->get_nk();
+  if(vfield->basis_order() == 0) {
+    --nx; --ny; --nz;
+  }
+  int nc = gfield.get_rep() ? 2 : 1;
+  int nb[2];
+  nb[0] = gfield.get_rep() ? 4 : 1;
+  nb[1] = gfield.get_rep() ? 1 : 0;
+  Transform tform;
+  mesh->get_canonical_transform(tform);
+
+  texture->lock_bricks();
+  vector<TextureBrick*>& bricks = texture->bricks();
+  // bbox for the canonical_transform.
+  const BBox bbox(Point(0, 0, 0), Point(1, 1, 1));
+  if (nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
+      || nc != texture->nc() || card_mem != texture->card_mem() ||
+      bbox.min() != texture->bbox().min() ||
+      bbox.max() != texture->bbox().max())
+  {
+    build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
+    texture->set_size(nx, ny, nz, nc, nb);
+    texture->set_card_mem(card_mem);
+#else
   if(   MRLatVolField<value_type>* vmrfield =
       dynamic_cast< MRLatVolField< value_type >* > (vfield.get_rep()) ) {
 
@@ -261,6 +298,7 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
       bricks[i]->set_dirty(true);
     }
     texture->unlock_bricks();
+#endif
   }
 }
 
@@ -429,16 +467,20 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
                                           FieldHandle gfield,
 					  double gmin, double gmax)
 {
-  LatVolField<value_type>* vfld = 
-    dynamic_cast<LatVolField<value_type>*>(vfield.get_rep());
-
+  typedef GenericField<LVMesh, HexTrilinearLgn<value_type>, 
+    FData3d<value_type, LVMesh> >  LVField;  
+  
+  typedef GenericField<LVMesh, HexTrilinearLgn<Vector>, 
+    FData3d<Vector, LVMesh> >  LVFieldV; 
+  
+  LVField* vfld = dynamic_cast<LVField*>(vfield.get_rep());
+  
   if (! vfld) { 
     cerr << "dynamic cast failed! : value field" << endl;
     return;
   }
 
-  LatVolField<Vector>* gfld = 
-    dynamic_cast<LatVolField<Vector>*>(gfield.get_rep());
+  LVFieldV* gfld = dynamic_cast<LVFieldV*>(gfield.get_rep());
 
   if (gfield.get_rep() && !gfld) { 
     cerr << "dynamic cast failed! : gradient field" << endl;

@@ -57,8 +57,13 @@ using std::ostringstream;
 #include <Dataflow/Network/Module.h>
 
 // Temporaries
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/CurveField.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/GenericField.h>
 
 namespace SCIRun {
 
@@ -494,30 +499,43 @@ Isosurface::execute()
 
       // Multiple fields.
       else {
-	const TypeDescription *mtd = fields[0]->get_type_description(0);
-      
-	if( mtd->get_name() == "TriSurfField" ) {
-	  vector<TriSurfField<double> *> tfields(fields.size());
+	string mesh_type = fields[0]->get_type_description(1)->get_name();
+	if( mesh_type.find("TriSurfMesh") != string::npos ) 
+	{
+
+	  typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
+	  typedef TriLinearLgn<double>              DatBasis;
+	  typedef GenericField<TSMesh, DatBasis, vector<double> > TSField; 
+
+	  vector<TSField *> tfields(fields.size());
 	  for (unsigned int i=0; i < fields.size(); i++) {
-	    tfields[i] = (TriSurfField<double> *)(fields[i].get_rep());
+	    tfields[i] = (TSField *)(fields[i].get_rep());
 	  }
 
 	  fHandle_ = append_fields(tfields);
 
-	} else if( mtd->get_name() == "CurveField" ) {
+	} else if( mesh_type.find("CurveMesh") != string::npos ) {
 
-	  vector<CurveField<double> *> cfields(fields.size());
+	  typedef CurveMesh<CrvLinearLgn<Point> > CMesh;
+	  typedef CrvLinearLgn<double>            DatBasis;
+	  typedef GenericField<CMesh, DatBasis, vector<double> > CField;
+
+	  vector<CField *> cfields(fields.size());
 	  for (unsigned int i=0; i < fields.size(); i++) {
-	    cfields[i] = (CurveField<double> *)(fields[i].get_rep());
+	    cfields[i] = (CField *)(fields[i].get_rep());
 	  }
 
 	  fHandle_ = append_fields(cfields);
-
-	} else if( mtd->get_name() == "QuadSurfField" ) {
-
-	  vector<QuadSurfField<double> *> qfields(fields.size());
+	  
+	} else if( mesh_type.find("QuadSurfMesh") != string::npos ) {
+	  
+	  typedef QuadSurfMesh<QuadBilinearLgn<Point> > QSMesh;
+	  typedef QuadBilinearLgn<double>             DatBasis;
+	  typedef GenericField<QSMesh, DatBasis, vector<double> > QSField;
+  
+	  vector<QSField *> qfields(fields.size());
 	  for (unsigned int i=0; i < fields.size(); i++) {
-	    qfields[i] = (QuadSurfField<double> *)(fields[i].get_rep());
+	    qfields[i] = (QSField *)(fields[i].get_rep());
 	  }
 
 	  fHandle_ = append_fields(qfields);

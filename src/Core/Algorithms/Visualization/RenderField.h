@@ -90,7 +90,8 @@ public:
 		      bool face_transparency,
 		      bool node_force_def_color,
 		      bool edge_force_def_color,
-		      bool face_force_def_color) = 0;
+		      bool face_force_def_color,
+		      unsigned approx_div) = 0;
 
   virtual GeomHandle render_text(FieldHandle fld,
 				 bool use_color_map,
@@ -142,7 +143,8 @@ public:
 		      bool face_transparency,
 		      bool node_force_def_color,
 		      bool edge_force_def_color,
-		      bool face_force_def_color);
+		      bool face_force_def_color,
+		      unsigned approx_div);
 
   virtual GeomHandle render_text(FieldHandle fld,
 				 bool use_color_map,
@@ -173,13 +175,13 @@ private:
 			  bool force_def_color,
 			  double edge_scale,
 			  int cylinder_resolution,
-			  bool transparent_p);
+			  bool transparent_p, unsigned div);
   GeomHandle render_faces(Fld *fld, 
 			  ColorMapHandle color_handle,
 			  MaterialHandle def_mat,
 			  bool force_def_color,
 			  bool use_normals,
-			  bool use_transparency);
+			  bool use_transparency, unsigned div);
 
   GeomHandle render_text_data(FieldHandle fld,
 			      bool use_color_map,
@@ -287,7 +289,7 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
 			      int sphere_res, int cyl_res,
 			      bool use_normals,
 			      bool n_transp, bool e_transp, bool f_transp,
-			      bool nfdc, bool efdc, bool ffdc)
+			      bool nfdc, bool efdc, bool ffdc, unsigned div)
 {
   Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
   ASSERT(fld != 0);
@@ -301,13 +303,13 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
   if (edges)
   {
     edge_switch_ = render_edges(fld, edt, color_handle, def_mat, efdc,
-				es, cyl_res, e_transp);
+				es, cyl_res, e_transp, div);
   }
 
   if (faces)
   {
     face_switch_ = render_faces(fld, color_handle, def_mat, ffdc,
-				use_normals, f_transp);
+				use_normals, f_transp, div);
   }
 }
 
@@ -414,7 +416,7 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
     double val;
 
     if ((sfld->basis_order() > 0) || (sfld->basis_order() == 0 && 
-				     mesh->dimensionality() == 1)) {
+				      mesh->dimensionality() == 1)) {
       typename Fld::value_type tmp;
       sfld->value(tmp, *niter);
 	
@@ -528,7 +530,87 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
   return display_list;
 }
 
+template <class fc_t>
+struct eqfc
+{
+  bool operator()(const fc_t &s1, const fc_t &s2) const
+  {
+    for(unsigned i = 0; i < s1.size(); ++i) {
+      if (s1[i] != s2[i]) return false;
+    }
+    return true;
+  }
+};
 
+template <class fc_t>
+struct hash_nds
+{
+  size_t operator()(const fc_t &f) const {
+    const unsigned spc = sizeof(size_t);
+    const unsigned div = f.size();
+    const unsigned spc_div = spc / div;
+    size_t val = 0;
+//     for (unsigned i = 0; i < div; ++i) {
+//       val = val | (f[i] << ((div - i - 1) * spc_div));
+//       cerr << "hash[" << i << "]: "<< val;
+//     }
+
+    val = (f[0] << 24) | (f[1] << 16) | (f[2] << 8) | f[3];
+    //    cerr << "hard hash: " << val;
+    //    cerr << endl;
+    return val;
+  }
+};
+
+template <class Val_t>
+void add_edge_geom(GeomLines *lines, GeomCylinders *cylinders,
+		   const Point &p0, const Point &p1, 
+		   const Val_t &val0, const Val_t &val1,
+		   bool def_color, bool vec_color, bool cyl,
+		   MaterialHandle vcol0, MaterialHandle vcol1)
+{
+  if (def_color)
+  {
+    if (cyl)
+    {
+      cylinders->add(p0, p1);
+    }
+    else
+    {
+      lines->add(p0, p1);
+    }
+  }
+  else if (vec_color)
+  {
+    Vector v0(0, 0, 0), v1(0, 0, 0);
+    to_vector(val0, v0);
+    to_vector(val1, v1);
+    sciVectorToColor(vcol0->diffuse, v0);
+    sciVectorToColor(vcol1->diffuse, v1);
+    if (cyl)
+    {
+      cylinders->add(p0, vcol0, p1, vcol1);
+    }
+    else
+    {
+      lines->add(p0, vcol0, p1, vcol1);
+    }
+  }
+  else
+  {
+    double dval0, dval1;
+    to_double(val0, dval0);
+    to_double(val1, dval1);
+    if (cyl)
+    {
+      cylinders->add(p0, dval0, p1, dval1);
+    }
+    else
+    {
+      lines->add(p0, dval0, p1, dval1);
+    }
+  }
+}
 
 template <class Fld, class Loc>
 GeomHandle
@@ -539,7 +621,7 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
 				    bool force_def_color,
 				    double edge_scale,
 				    int cylinder_resolution,
-				    bool transparent_p) 
+				    bool transparent_p, unsigned div) 
 {
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
 
@@ -584,124 +666,179 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
   }
 
   // Second pass: over the edges
-  mesh->synchronize(Mesh::EDGES_E);
-  typename Fld::mesh_type::Edge::iterator eiter; mesh->begin(eiter);  
-  typename Fld::mesh_type::Edge::iterator eiter_end; mesh->end(eiter_end);  
+  mesh->synchronize(Mesh::EDGES_E | Mesh::FACES_E | Mesh::CELLS_E);
+  typename Fld::mesh_type::Elem::iterator eiter; mesh->begin(eiter);  
+  typename Fld::mesh_type::Elem::iterator eiter_end; mesh->end(eiter_end);  
   while (eiter != eiter_end) {  
-    typename Fld::mesh_type::Node::array_type nodes;
-    mesh->get_nodes(nodes, *eiter);
-      
-    Point p1, p2;
-    mesh->get_point(p1, nodes[0]);
-    mesh->get_point(p2, nodes[1]);
-    if (sfld->basis_order() > 0 || (sfld->basis_order() == 0 && 
-				    mesh->dimensionality() == 1)) {
-      typename Fld::value_type val0, val1;
-      sfld->value(val0, nodes[0]);
-      sfld->value(val1, nodes[1]);
-      if (def_color)
-      {
-	if (cyl)
-	{
-	  cylinders->add(p1, p2);
+    typename Fld::mesh_type::Edge::array_type edges;
+    mesh->get_edges(edges, *eiter);
+    // render all the edges FIX_ME has the edges, render each only once.
+    typename Fld::mesh_type::Edge::array_type::iterator edge_iter;
+    edge_iter = edges.begin();
+    while (edge_iter != edges.end()) {
+    
+      vector<vector<double> > coords;
+      mesh->pwl_approx_edge(coords, *eiter, *edge_iter++, div);
+      vector<vector<double> >::iterator coord_iter = coords.begin();
+      do {
+	vector<double> &c0 = *coord_iter++;
+	if (coord_iter == coords.end()) break;
+	vector<double> &c1 = *coord_iter;
+	Point p0, p1;      
+	typename Fld::value_type val0, val1;
+	
+	// get the geometry at the approx.
+	mesh->interpolate(p0, c0, *eiter);
+	mesh->interpolate(p1, c1, *eiter);
+
+	// get the field variables values at the approx (if they exist)
+	if (sfld->basis_order() >= 0) {
+	  sfld->interpolate(val0, c0, *eiter);
+	  sfld->interpolate(val1, c1, *eiter);
 	}
-	else
-	{
-	  lines->add(p1, p2);
-	}
-      }
-      else if (vec_color)
-      {
-	Vector v0(0, 0, 0), v1(0, 0, 0);
-	to_vector(val0, v0);
-	to_vector(val1, v1);
-	sciVectorToColor(vcol0->diffuse, v0);
-	sciVectorToColor(vcol1->diffuse, v1);
-	if (cyl)
-	{
-	  cylinders->add(p1, vcol0, p2, vcol1);
-	}
-	else
-	{
-	  lines->add(p1, vcol0, p2, vcol1);
-	}
-      }
-      else
-      {
-	double dval0, dval1;
-	to_double(val0, dval0);
-	to_double(val1, dval1);
-	if (cyl)
-	{
-	  cylinders->add(p1, dval0, p2, dval1);
-	}
-	else
-	{
-	  lines->add(p1, dval0, p2, dval1);
-	}
-      }
-    }
-    else if (mesh->dimensionality() == 1)
-    {
-      typename Fld::value_type val;
-      sfld->value(val, *eiter);
-      if (def_color)
-      {
-	if (cyl)
-	{
-	  cylinders->add(p1, p2);
-	}
-	else
-	{
-	  lines->add(p1, p2);
-	}
-      }
-      else if (vec_color)
-      {
-	Vector v(0, 0, 0);
-	to_vector(val, v);
-	sciVectorToColor(vcol0->diffuse, v);
-	if (cyl)
-	{
-	  cylinders->add(p1, vcol0, p2, vcol0);
-	}
-	else
-	{
-	  lines->add(p1, vcol0, p2, vcol0);
-	}
-      }
-      else
-      {
-	double dval;
-	to_double(val, dval);
-	if (cyl)
-	{
-	  cylinders->add(p1, dval, p2, dval);
-	}
-	else
-	{
-	  lines->add(p1, dval, p2, dval);
-	}
-      }
-    }
-    else 
-    {
-      if (cyl)
-      {
-	cylinders->add(p1, p2);
-      }
-      else
-      {
-	lines->add(p1, p2);
-      }
+	// add the geom_obj for this part....
+	  
+	add_edge_geom(lines, cylinders, p0, p1, val0, val1,
+		      def_color, vec_color, cyl, vcol0, vcol1);
+	
+      } while (coords.size() > 1 && coord_iter != coords.end()); 
     }
     
     ++eiter;
   }
-
+  
   return display_list;
 }
 
+
+template <class Val_t>
+void add_face_geom(GeomFastTriangles *faces, GeomFastQuads *qfaces,
+		   const vector<Point> &points,
+		   const vector<Vector> &normals,
+		   const vector<Val_t>  &vals,
+		   bool def_color,
+		   bool vec_color,
+		   bool with_normals,
+		   vector<MaterialHandle> &vcol,
+		   vector<Vector> &vvals,
+		   vector<double> &dvals)
+{
+  if (def_color) {
+    if (points.size() == 4)
+    {
+      if (with_normals)
+      {
+	qfaces->add(points[0], normals[0],
+		    points[1], normals[1],
+		    points[2], normals[2],
+		    points[3], normals[3]);
+      }
+      else
+      {
+	qfaces->add(points[0], points[1], points[2], points[3]);
+      }
+    }
+    else
+    {
+      for (unsigned i = 2; i < points.size(); i++)
+      {
+	if (with_normals)
+	{
+	  faces->add(points[0], normals[0],
+		     points[i-1], normals[i-1],
+		     points[i], normals[i]);
+	}
+	else
+	{
+	  faces->add(points[0], points[i-1], points[i]);
+	}
+      }
+    }    
+  } else  if (vec_color) {
+    for (unsigned i = 0; i < points.size(); i++)
+    {
+      to_vector(vals[i], vvals[i]);
+      sciVectorToColor(vcol[i]->diffuse, vvals[i]);
+    }
+    if (points.size() == 4)
+    {
+      if (with_normals)
+      {
+	qfaces->add(points[0], normals[0], vcol[0],
+		    points[1], normals[1], vcol[1],
+		    points[2], normals[2], vcol[2],
+		    points[3], normals[3], vcol[3]);
+      }
+      else
+      {
+	qfaces->add(points[0], vcol[0],
+		    points[1], vcol[1],
+		    points[2], vcol[2],
+		    points[3], vcol[3]);
+      }
+    }
+    else
+    {
+      for (unsigned i = 2; i < points.size(); i++)
+      {
+	if (with_normals)
+	{
+	  faces->add(points[0], normals[0], vcol[0],
+		     points[i-1], normals[i-1], vcol[i-1],
+		     points[i], normals[i], vcol[i]);
+	}
+	else
+	{
+	  faces->add(points[0], vcol[0],
+		     points[i-1], vcol[i-1],
+		     points[i], vcol[i]);
+	}
+      }
+    }
+  }
+  else
+  {
+    for (unsigned i = 0; i < points.size(); i++)
+    {
+      to_double(vals[i], dvals[i]);
+    }
+    if (points.size() == 4)
+    {
+      if (with_normals)
+      {
+	qfaces->add(points[0], normals[0], dvals[0],
+		    points[1], normals[1], dvals[1],
+		    points[2], normals[2], dvals[2],
+		    points[3], normals[3], dvals[3]);
+      }
+      else
+      {
+	qfaces->add(points[0], dvals[0],
+		    points[1], dvals[1],
+		    points[2], dvals[2],
+		    points[3], dvals[3]);
+      }
+    }
+    else
+    {
+      for (unsigned i = 2; i < points.size(); i++)
+      {
+	if (with_normals)
+	{
+	  faces->add(points[0], normals[0], dvals[0],
+		     points[i-1], normals[i-1], dvals[i-1],
+		     points[i], normals[i], dvals[i]);
+	}
+	else
+	{
+	  faces->add(points[0], dvals[0],
+		     points[i-1], dvals[i-1],
+		     points[i], dvals[i]);
+	}
+      }
+    }
+  }
+}
 
 
 template <class Fld, class Loc>
@@ -711,7 +848,7 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 				    MaterialHandle def_mat,
 				    bool force_def_color,
 				    bool use_normals,
-				    bool use_transparency)
+				    bool use_transparency, unsigned div)
 {
   unsigned int i;
 
@@ -759,244 +896,100 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
       vcol[i]->transparency = 1.0;
     }
   }
-  // Third pass: over the faces
-  if (with_normals) mesh->synchronize(Mesh::NORMALS_E);
-  mesh->synchronize(Mesh::FACES_E);
-  typename Fld::mesh_type::Face::iterator fiter; mesh->begin(fiter);  
-  typename Fld::mesh_type::Face::iterator fiter_end; mesh->end(fiter_end);  
-  typename Fld::mesh_type::Node::array_type nodes;
 
-  while (fiter != fiter_end) {
-    mesh->get_nodes(nodes, *fiter); 
- 
-    vector<Point> points(nodes.size());
-    vector<Vector> normals(nodes.size());
-    for (i = 0; i < nodes.size(); i++)
-    {
-      mesh->get_point(points[i], nodes[i]);
-    }
 
-    if (with_normals) {
-      for (i = 0; i < nodes.size(); i++) {
-	mesh->get_normal(normals[i], nodes[i]);
-      }
-    }
+  typedef typename Fld::mesh_type::Node::array_type fc_t;
+  typedef hash_set<fc_t, hash_nds<fc_t>, eqfc<fc_t> > face_ht_t;
+  face_ht_t rendered_faces; 
+  
+  mesh->synchronize(Mesh::FACES_E | Mesh::CELLS_E);
+  typename Fld::mesh_type::Elem::iterator eiter; mesh->begin(eiter);  
+  typename Fld::mesh_type::Elem::iterator eiter_end; mesh->end(eiter_end);  
+  int count = 0;
+  while (eiter != eiter_end) {  
+    typename Fld::mesh_type::Face::array_type face_indecies;
+    mesh->get_faces(face_indecies, *eiter);
+    // render all the edges FIX_ME has the edges, render each only once.
+    typename Fld::mesh_type::Face::array_type::iterator face_iter;
+    face_iter = face_indecies.begin();
+    while (face_iter != face_indecies.end()) {
+      typename Fld::mesh_type::Node::array_type nodes;
+      typename Fld::mesh_type::Face::index_type fidx = *face_iter++;
 
-    if (sfld->basis_order() == 1 && !def_color)
-    {
-      for (i = 0; i < nodes.size(); i++)
-      {
-	sfld->value(vals[i], nodes[i]);
-      }
-      if (vec_color)
-      {
-	for (i = 0; i < nodes.size(); i++)
-	{
-	  to_vector(vals[i], vvals[i]);
-	  sciVectorToColor(vcol[i]->diffuse, vvals[i]);
-	}
-	if (nodes.size() == 4)
-	{
-	  if (with_normals)
-	  {
-	    qfaces->add(points[0], normals[0], vcol[0],
-			points[1], normals[1], vcol[1],
-			points[2], normals[2], vcol[2],
-			points[3], normals[3], vcol[3]);
-	  }
-	  else
-	  {
-	    qfaces->add(points[0], vcol[0],
-			points[1], vcol[1],
-			points[2], vcol[2],
-			points[3], vcol[3]);
-	  }
-	}
-	else
-	{
-	  for (i=2; i<nodes.size(); i++)
-	  {
-	    if (with_normals)
-	    {
-	      faces->add(points[0], normals[0], vcol[0],
-			 points[i-1], normals[i-1], vcol[i-1],
-			 points[i], normals[i], vcol[i]);
-	    }
-	    else
-	    {
-	      faces->add(points[0], vcol[0],
-			 points[i-1], vcol[i-1],
-			 points[i], vcol[i]);
-	    }
-	  }
-	}
-      }
-      else
-      {
-	for (i = 0; i < nodes.size(); i++)
-	{
-	  to_double(vals[i], dvals[i]);
-	}
-	if (nodes.size() == 4)
-	{
-	  if (with_normals)
-	  {
-	    qfaces->add(points[0], normals[0], dvals[0],
-			points[1], normals[1], dvals[1],
-			points[2], normals[2], dvals[2],
-			points[3], normals[3], dvals[3]);
-	  }
-	  else
-	  {
-	    qfaces->add(points[0], dvals[0],
-			points[1], dvals[1],
-			points[2], dvals[2],
-			points[3], dvals[3]);
-	  }
-	}
-	else
-	{
-	  for (i=2; i<nodes.size(); i++)
-	  {
-	    if (with_normals)
-	    {
-	      faces->add(points[0], normals[0], dvals[0],
-			 points[i-1], normals[i-1], dvals[i-1],
-			 points[i], normals[i], dvals[i]);
-	    }
-	    else
-	    {
-	      faces->add(points[0], dvals[0],
-			 points[i-1], dvals[i-1],
-			 points[i], dvals[i]);
-	    }
-	  }
-	}
-      }
-    }
-    else if (sfld->basis_order() == 0 && mesh->dimensionality() == 2 && !def_color)
-    {
-      typename Fld::value_type val;
-      sfld->value(val, *fiter);
-      if (vec_color)
-      {
-	Vector vval;
-	to_vector(val, vval);
-	sciVectorToColor(vcol[0]->diffuse, vval);
-	if (nodes.size() == 4)
-	{
-	  if (with_normals)
-	  {
-	    qfaces->add(points[0], normals[0], vcol[0],
-			points[1], normals[1], vcol[0],
-			points[2], normals[2], vcol[0],
-			points[3], normals[3], vcol[0]);
-	  }
-	  else
-	  {
-	    qfaces->add(points[0], vcol[0],
-			points[1], vcol[0],
-			points[2], vcol[0],
-			points[3], vcol[0]);
-	  }
-	}
-	else
-	{
-	  for (i=2; i<nodes.size(); i++)
-	  {
-	    if (with_normals)
-	    {
-	      faces->add(points[0], normals[0], vcol[0],
-			 points[i-1], normals[i-1], vcol[0],
-			 points[i], normals[i], vcol[0]);
-	    }
-	    else
-	    {
-	      faces->add(points[0], vcol[0],
-			 points[i-1], vcol[0],
-			 points[i], vcol[0]);
-	    }
-	  }
-	}
-      }
-      else
-      {
-	double dval;
-	to_double(val, dval);
+      mesh->get_nodes(nodes, fidx);
+      sort(nodes.begin(), nodes.end());
+      
+//       typename Fld::mesh_type::Node::array_type::iterator nni = nodes.begin();
+//       while (nni != nodes.end()) {
+// 	cerr << *nni++ << " ";
+//       }
+      typename face_ht_t::const_iterator it = rendered_faces.find(nodes);
 
-	if (nodes.size() == 4)
-	{
-	  if (with_normals)
-	  {
-	    qfaces->add(points[0], normals[0], dval,
-			points[1], normals[1], dval,
-			points[2], normals[2], dval,
-			points[3], normals[3], dval);
+      if (it != rendered_faces.end()) {
+// 	const typename Fld::mesh_type::Node::array_type &arr = *it;
+// 	typename Fld::mesh_type::Node::array_type::iterator ita = (typename Fld::mesh_type::Node::array_type::iterator)arr.begin();
+// 	while (ita != arr.end()) {
+// 	  cerr << *ita++ << " ";
+// 	}
+// 	cerr << " skipped..";
+	continue;
+      } else {
+	rendered_faces.insert(nodes);
+      }
+      count++;
+      //      cerr << " - render - ";
+
+
+      //coords organized as scanlines of quad/tri strips.
+      vector<vector<vector<double> > > coords;
+      mesh->pwl_approx_face(coords, *eiter, fidx, div);
+      vector<vector<vector<double> > >::iterator coord_iter = coords.begin();
+
+      while (coord_iter != coords.end()) {
+	vector<vector<double> > &sl = *coord_iter++;
+	vector<vector<double> >::iterator sliter = sl.begin();
+	while(sliter != sl.end()) {
+	  // FIX_ME must also work with tris...
+	  vector<double> &c0 = *sliter++;
+	  if (sliter == sl.end()) break;
+	  vector<double> &c1 = *sliter++;
+	  if (sliter == sl.end()) break;
+	  vector<double> &c2 = *sliter;
+	  vector<double> &c3 = *(sliter + 1);
+
+	  const int face_sz = mesh->get_basis().get_approx_face_elements();
+	  vector<Point> pnts(face_sz);
+	  vector<Vector> norms(face_sz);
+	  vector<typename Fld::value_type> vals(face_sz);
+	  
+	  // get the geometry at the approx.
+	  mesh->interpolate(pnts[0], c2, *eiter);
+	  mesh->interpolate(pnts[1], c3, *eiter);
+	  mesh->interpolate(pnts[2], c1, *eiter);
+	  mesh->interpolate(pnts[3], c0, *eiter);
+
+	  //FIX_ME need to interp normals in meshes that have normals
+
+	  // get the field variables values at the approx (if they exist)
+	  if (sfld->basis_order() >= 0) {
+	    sfld->interpolate(vals[0], c2, *eiter);
+	    sfld->interpolate(vals[1], c3, *eiter);
+	    sfld->interpolate(vals[2], c1, *eiter);
+	    sfld->interpolate(vals[3], c0, *eiter);
+	  } else {
+	    def_color = true;
 	  }
-	  else
-	  {
-	    qfaces->add(points[0], dval,
-			points[1], dval,
-			points[2], dval,
-			points[3], dval);
-	  }
-	}
-	else
-	{
-	  for (i=2; i<nodes.size(); i++)
-	  {
-	    if (with_normals)
-	    {
-	      faces->add(points[0], normals[0], dval,
-			 points[i-1], normals[i-1], dval,
-			 points[i], normals[i], dval);
-	    }
-	    else
-	    {
-	      faces->add(points[0], dval,
-			 points[i-1], dval,
-			 points[i], dval);
-	    }
-	  }
+	  // add the geom_obj for this part....
+	  
+	  add_face_geom(faces, qfaces, pnts, norms, vals,
+			def_color, vec_color, with_normals, 
+			vcol, vvals, dvals);
 	}
       }
     }
-    else
-    {
-      if (nodes.size() == 4)
-      {
-	if (with_normals)
-	{
-	  qfaces->add(points[0], normals[0],
-		      points[1], normals[1],
-		      points[2], normals[2],
-		      points[3], normals[3]);
-	}
-	else
-	{
-	  qfaces->add(points[0], points[1], points[2], points[3]);
-	}
-      }
-      else
-      {
-	for (i=2; i<nodes.size(); i++)
-	{
-	  if (with_normals)
-	  {
-	    faces->add(points[0], normals[0],
-		       points[i-1], normals[i-1],
-		       points[i], normals[i]);
-	  }
-	  else
-	  {
-	    faces->add(points[0], points[i-1], points[i]);
-	  }
-	}
-      }
-    }
-    ++fiter;     
+    ++eiter;
   }
-
+  cerr << "rendered " << count << " faces." << endl;
   return face_switch;
 }
 

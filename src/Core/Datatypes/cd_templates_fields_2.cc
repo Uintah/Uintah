@@ -30,76 +30,62 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/ScanlineField.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/ScanlineMesh.h>
+#include <Core/Datatypes/PointCloudMesh.h>
 
 using namespace SCIRun;
 
-template class GenericField<ScanlineMesh, vector<Tensor> >;
-template class GenericField<ScanlineMesh, vector<Vector> >;
-template class GenericField<ScanlineMesh, vector<double> >;
-template class GenericField<ScanlineMesh, vector<float> >;
-template class GenericField<ScanlineMesh, vector<int> >;
-template class GenericField<ScanlineMesh, vector<short> >;
-template class GenericField<ScanlineMesh, vector<char> >;
-template class GenericField<ScanlineMesh, vector<unsigned int> >;
-template class GenericField<ScanlineMesh, vector<unsigned short> >;
-template class GenericField<ScanlineMesh, vector<unsigned char> >;
 
-template class ScanlineField<Tensor>;
-template class ScanlineField<Vector>;
-template class ScanlineField<double>;
-template class ScanlineField<float>;
-template class ScanlineField<int>;
-template class ScanlineField<short>;
-template class ScanlineField<char>;
-template class ScanlineField<unsigned int>;
-template class ScanlineField<unsigned short>;
-template class ScanlineField<unsigned char>;
+typedef CrvLinearLgn<Tensor>                FDTensorBasis;
+typedef CrvLinearLgn<Vector>                FDVectorBasis;
+typedef CrvLinearLgn<double>                FDdoubleBasis;
+typedef CrvLinearLgn<float>                 FDfloatBasis;
+typedef CrvLinearLgn<int>                   FDintBasis;
+typedef CrvLinearLgn<short>                 FDshortBasis;
+typedef CrvLinearLgn<char>                  FDcharBasis;
+typedef CrvLinearLgn<unsigned int>          FDuintBasis;
+typedef CrvLinearLgn<unsigned short>        FDushortBasis;
+typedef CrvLinearLgn<unsigned char>         FDucharBasis;
+typedef CrvLinearLgn<unsigned long>         FDulongBasis;
 
-const TypeDescription* get_type_description(ScanlineField<Tensor> *);
-const TypeDescription* get_type_description(ScanlineField<Vector> *);
-const TypeDescription* get_type_description(ScanlineField<double> *);
-const TypeDescription* get_type_description(ScanlineField<float> *);
-const TypeDescription* get_type_description(ScanlineField<int> *);
-const TypeDescription* get_type_description(ScanlineField<short> *);
-const TypeDescription* get_type_description(ScanlineField<char> *);
-const TypeDescription* get_type_description(ScanlineField<unsigned int> *);
-const TypeDescription* get_type_description(ScanlineField<unsigned short> *);
-const TypeDescription* get_type_description(ScanlineField<unsigned char> *);
+typedef ScanlineMesh<CrvLinearLgn<Point> > SLMesh;
+template class GenericField<SLMesh, FDTensorBasis, vector<Tensor> >;       
+template class GenericField<SLMesh, FDVectorBasis, vector<Vector> >;       
+template class GenericField<SLMesh, FDdoubleBasis, vector<double> >;       
+template class GenericField<SLMesh, FDfloatBasis,  vector<float> >;        
+template class GenericField<SLMesh, FDintBasis,    vector<int> >;          
+template class GenericField<SLMesh, FDshortBasis,  vector<short> >;        
+template class GenericField<SLMesh, FDcharBasis,   vector<char> >;         
+template class GenericField<SLMesh, FDuintBasis,   vector<unsigned int> >; 
+template class GenericField<SLMesh, FDushortBasis, vector<unsigned short> >;
+template class GenericField<SLMesh, FDucharBasis,  vector<unsigned char> >;
+template class GenericField<SLMesh, FDulongBasis,  vector<unsigned long> >;
 
-template class GenericField<PointCloudMesh, vector<string> >;
-template class GenericField<PointCloudMesh, vector<Tensor> >;
-template class GenericField<PointCloudMesh, vector<Vector> >;
-template class GenericField<PointCloudMesh, vector<double> >;
-template class GenericField<PointCloudMesh, vector<float> >;
-template class GenericField<PointCloudMesh, vector<int> >;
-template class GenericField<PointCloudMesh, vector<short> >;
-template class GenericField<PointCloudMesh, vector<char> >;
-template class GenericField<PointCloudMesh, vector<unsigned int> >;
-template class GenericField<PointCloudMesh, vector<unsigned short> >;
-template class GenericField<PointCloudMesh, vector<unsigned char> >;
 
-template class PointCloudField<string>;
-template class PointCloudField<Tensor>;
-template class PointCloudField<Vector>;
-template class PointCloudField<double>;
-template class PointCloudField<float>;
-template class PointCloudField<int>;
-template class PointCloudField<short>;
-template class PointCloudField<char>;
-template class PointCloudField<unsigned int>;
-template class PointCloudField<unsigned short>;
-template class PointCloudField<unsigned char>;
+typedef ConstantBasis<Tensor>                FDCTensorBasis;
+typedef ConstantBasis<Vector>                FDCVectorBasis;
+typedef ConstantBasis<double>                FDCdoubleBasis;
+typedef ConstantBasis<float>                 FDCfloatBasis;
+typedef ConstantBasis<int>                   FDCintBasis;
+typedef ConstantBasis<short>                 FDCshortBasis;
+typedef ConstantBasis<char>                  FDCcharBasis;
+typedef ConstantBasis<unsigned int>          FDCuintBasis;
+typedef ConstantBasis<unsigned short>        FDCushortBasis;
+typedef ConstantBasis<unsigned char>         FDCucharBasis;
+typedef ConstantBasis<unsigned long>         FDCulongBasis;
 
-const TypeDescription* get_type_description(PointCloudField<string> *);
-const TypeDescription* get_type_description(PointCloudField<Tensor> *);
-const TypeDescription* get_type_description(PointCloudField<Vector> *);
-const TypeDescription* get_type_description(PointCloudField<double> *);
-const TypeDescription* get_type_description(PointCloudField<float> *);
-const TypeDescription* get_type_description(PointCloudField<int> *);
-const TypeDescription* get_type_description(PointCloudField<short> *);
-const TypeDescription* get_type_description(PointCloudField<char> *);
-const TypeDescription* get_type_description(PointCloudField<unsigned int> *);
-const TypeDescription* get_type_description(PointCloudField<unsigned short> *);
-const TypeDescription* get_type_description(PointCloudField<unsigned char> *);
+typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+template class GenericField<PCMesh, FDCTensorBasis, vector<Tensor> >;       
+template class GenericField<PCMesh, FDCVectorBasis, vector<Vector> >;       
+template class GenericField<PCMesh, FDCdoubleBasis, vector<double> >;       
+template class GenericField<PCMesh, FDCfloatBasis,  vector<float> >;        
+template class GenericField<PCMesh, FDCintBasis,    vector<int> >;          
+template class GenericField<PCMesh, FDCshortBasis,  vector<short> >;        
+template class GenericField<PCMesh, FDCcharBasis,   vector<char> >;         
+template class GenericField<PCMesh, FDCuintBasis,   vector<unsigned int> >; 
+template class GenericField<PCMesh, FDCushortBasis, vector<unsigned short> >;
+template class GenericField<PCMesh, FDCucharBasis,  vector<unsigned char> >;
+template class GenericField<PCMesh, FDCulongBasis,  vector<unsigned long> >;
+

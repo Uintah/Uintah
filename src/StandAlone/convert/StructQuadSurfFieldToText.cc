@@ -46,7 +46,9 @@
 // also have a one line header, specifying ni and nj, unless the user 
 // specifies the -noHeader command-line argument.
 
-#include <Core/Datatypes/StructQuadSurfField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Datatypes/StructQuadSurfMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -124,15 +126,19 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<fieldName<<".  Exiting...\n";
     return 2;
   }
-  if (handle->get_type_description(0)->get_name() != "StructQuadSurfField") {
-    cerr << "Error -- input field wasn't a StructQuadSurfField (type_name="<<handle->get_type_description(0)->get_name()<<"\n";
+  if (handle->get_type_description(1)->get_name().find("StructQuadSurfField")!=
+      string::npos)
+  {
+    cerr << "Error -- input field wasn't a StructQuadSurfField (type_name="
+	 << handle->get_type_description(1)->get_name() << std::endl;
     return 2;
   }
+  typedef StructQuadSurfMesh<QuadBilinearLgn<Point> > SQSMesh;
 
   MeshHandle mH = handle->mesh();
-  StructQuadSurfMesh *sqsm = dynamic_cast<StructQuadSurfMesh *>(mH.get_rep());
-  StructQuadSurfMesh::Node::iterator niter; 
-  StructQuadSurfMesh::Node::iterator niter_end; 
+  SQSMesh *sqsm = dynamic_cast<SQSMesh *>(mH.get_rep());
+  SQSMesh::Node::iterator niter; 
+  SQSMesh::Node::iterator niter_end; 
   sqsm->begin(niter);
   sqsm->end(niter_end);
   vector<unsigned int> dims;

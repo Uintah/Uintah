@@ -44,7 +44,9 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/AttractNormals.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Util/DynamicCompilation.h>
 
@@ -52,6 +54,10 @@
 #include <stdio.h>
 
 namespace SCIRun {
+
+typedef PointCloudMesh<ConstantBasis<Point> >                 PCMesh;
+typedef ConstantBasis<Vector>                                 DatBasis;
+typedef GenericField<PCMesh, DatBasis, vector<Vector> >       PCField;  
 
 
 class PointAttractor : public Attractor
@@ -67,6 +73,8 @@ class LineAttractor : public Attractor
   Point point_;
   Vector direction_;
 
+  
+  
 public:
   LineAttractor(const Point &p, const Vector &d) : point_(p), direction_(d)
   { direction_.normalize(); }
@@ -124,28 +132,27 @@ AttractNormals::execute()
     return;
   }
   
-  PointCloudMesh *ipcm =
-    dynamic_cast<PointCloudMesh *>(ipointhandle->mesh().get_rep());
+  PCMesh *ipcm =
+    dynamic_cast<PCMesh *>(ipointhandle->mesh().get_rep());
   if (!ipcm)
   {
-    error("Input point not in a PointCloudField format.");
+    error("Input point not in a PCField format.");
     return;
   }
   
-  PointCloudMesh::Node::iterator itr, eitr;
+  PCMesh::Node::iterator itr, eitr;
   ipcm->begin(itr);
   ipcm->end(eitr);
   if (itr == eitr)
   {
-    error("Empty PointCloudField in Input Point Port.");
+    error("Empty PCField in Input Point Port.");
     return;
   }
   Point attract_point;
   ipcm->get_center(attract_point, *itr);
 
   AttractorHandle attractor = 0;
-  PointCloudField<Vector> *vpc =
-    dynamic_cast<PointCloudField<Vector> *>(ipointhandle.get_rep());
+  PCField *vpc = dynamic_cast<PCField*>(ipointhandle.get_rep());
   if (vpc)
   {
     Vector dir;

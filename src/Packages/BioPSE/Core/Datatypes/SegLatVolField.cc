@@ -57,7 +57,7 @@ SegLatVolField::maker()
 
 PersistentTypeID 
 SegLatVolField::type_id(type_name(-1), 
-			LatVolField<int>::type_name(-1),
+			SegLVField::type_name(-1),
 			maker);
 
 
@@ -66,7 +66,7 @@ SegLatVolField::io(Piostream& stream)
 {
   /*int version=*/stream.begin_class(type_name(-1), 
 				     SEG_LAT_VOL_FIELD_VERSION);
-  LatVolField<int>::io(stream);
+  SegLVField::io(stream);
   Pio(stream, comps_);
   Pio(stream, compMembers_);
   Pio(stream, maxMatl_);
@@ -78,12 +78,12 @@ SegLatVolField *SegLatVolField::clone() const {
 }
 
 SegLatVolField::SegLatVolField(const SegLatVolField &copy) :
-  LatVolField<int>(copy), maxMatl_(copy.maxMatl_)
+  SegLVField(copy), maxMatl_(copy.maxMatl_)
 {
   comps_ = copy.comps_;
   compMembers_.resize(copy.compMembers_.size());
   for (int i=0; i<copy.compMembers_.size(); i++)
-    compMembers_[i] = new Array1<LatVolMesh::Cell::index_type>(*(copy.compMembers_[i]));
+    compMembers_[i] = new Array1<SegLVMesh::Cell::index_type>(*(copy.compMembers_[i]));
 }
   
 const string 
@@ -152,7 +152,7 @@ void SegLatVolField::compress() {
   for (i=0; i<comps_.size(); i++)
     comps_[i]=newcomps[i];
 
-  Array1<Array1<LatVolMesh::Cell::index_type> *> newcompMembers;
+  Array1<Array1<SegLVMesh::Cell::index_type> *> newcompMembers;
   newcompMembers.resize(newcomps.size());
   for (i=0; i<newcompMembers.size(); i++)
     newcompMembers[i]=compMembers_[invmap[i]];
@@ -189,7 +189,7 @@ void SegLatVolField::audit() {
 
 void SegLatVolField::absorbComponent(int old_comp, int new_comp) {
   int i;
-  LatVolMesh::Cell::index_type idx;
+  SegLVMesh::Cell::index_type idx;
   for (i=0; i<compMembers_[old_comp]->size(); i++) {
     idx=(*compMembers_[old_comp])[i];
     fdata()(idx.i_, idx.j_, idx.k_)=new_comp;
@@ -363,12 +363,12 @@ void SegLatVolField::initialize() {
     
   for (i=0; i<compMembers_.size(); i++) delete compMembers_[i];
   compMembers_.resize(counter);
-  for (i=0; i<compMembers_.size(); i++) compMembers_[i]=new Array1<LatVolMesh::Cell::index_type>;
+  for (i=0; i<compMembers_.size(); i++) compMembers_[i]=new Array1<SegLVMesh::Cell::index_type>;
   for (i=0; i<fdata().dim1(); i++)
     for (j=0; j<fdata().dim2(); j++)
       for (k=0; k<fdata().dim3(); k++) {
 	id(i,j,k)=fdata()(i,j,k)=finalLabels[id(i,j,k)];
-	compMembers_[id(i,j,k)]->add(LatVolMesh::Cell::index_type(get_typed_mesh().get_rep(),i,j,k));
+	compMembers_[id(i,j,k)]->add(SegLVMesh::Cell::index_type(get_typed_mesh().get_rep(),i,j,k));
       }
 
   comps_.resize(0);
@@ -384,11 +384,11 @@ void SegLatVolField::initialize() {
 void SegLatVolField::absorbSmallComponents(int min) {
   int i;
   int ii,jj,kk;
-  LatVolMesh::Cell::index_type idx;
+  SegLVMesh::Cell::index_type idx;
   int min_sz=0;
   Array3<char> visited(fdata().dim1(),fdata().dim2(),fdata().dim3());
   int min_comp=-1;
-  queue<LatVolMesh::Cell::index_type> visit_q;
+  queue<SegLVMesh::Cell::index_type> visit_q;
   Array1<int> bdry_comps(comps_.size());
 
   while (min_sz<min) {
@@ -418,7 +418,7 @@ void SegLatVolField::absorbSmallComponents(int min) {
     bdry_comps.initialize(0);
     while(!visit_q.empty()) {
       // enqueue non-visited neighbors
-      LatVolMesh::Cell::index_type next=visit_q.front();
+      SegLVMesh::Cell::index_type next=visit_q.front();
       visit_q.pop();
       int iii=next.i_;
       int jjj=next.j_;
@@ -430,7 +430,7 @@ void SegLatVolField::absorbSmallComponents(int min) {
 	    if (!visited(ii,jj,kk)) {
 	      visited(ii,jj,kk)=1;
 	      if(fdata()(ii,jj,kk)==min_comp) {
-		visit_q.push(LatVolMesh::Cell::index_type(get_typed_mesh().get_rep(),ii,jj,kk));
+		visit_q.push(SegLVMesh::Cell::index_type(get_typed_mesh().get_rep(),ii,jj,kk));
 	      } else {
 //		cerr << "neighbor component:"<<fdata()(ii,jj,kk)<<"\n";
 		bdry_comps[fdata()(ii,jj,kk)]=1;

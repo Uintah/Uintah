@@ -43,7 +43,9 @@
 // matrices from the points, performs PCA on the matrix, and prints out
 // the eigenvalues / eigenvectors.
 
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Persistent/Pstreams.h>
@@ -85,16 +87,20 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<fieldName<<".  Exiting...\n";
     exit(0);
   }
-  if (handle->get_type_description(0)->get_name() != "PointCloudField") {
-    cerr << "Error -- input field wasn't a PointCloudField (type_name="<<handle->get_type_description(0)->get_name()<<"\n";
+  if (handle->get_type_description(1)->get_name().find("PointCloudMesh") !=
+      string::npos) 
+  {
+    cerr << "Error -- input field wasn't a PointCloudField (type_name="
+	 << handle->get_type_description(1)->get_name() << std::endl;
     exit(0);
   }
 
+  typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
   MeshHandle mH = handle->mesh();
-  PointCloudMesh *pcm = dynamic_cast<PointCloudMesh *>(mH.get_rep());
-  PointCloudMesh::Node::iterator niter; 
-  PointCloudMesh::Node::iterator niter_end; 
-  PointCloudMesh::Node::size_type nsize; 
+  PCMesh *pcm = dynamic_cast<PCMesh *>(mH.get_rep());
+  PCMesh::Node::iterator niter; 
+  PCMesh::Node::iterator niter_end; 
+  PCMesh::Node::size_type nsize; 
   pcm->size(nsize);
   cerr << "\n\nNumber of points = "<< nsize <<"\n";
   pcm->begin(niter);

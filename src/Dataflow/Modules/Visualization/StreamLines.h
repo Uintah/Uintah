@@ -37,16 +37,20 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/CurveField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Containers/Array1.h>
 #include <algorithm>
 
 namespace SCIRun {
-
+typedef CurveMesh<CrvLinearLgn<Point> > CMesh;
+typedef CrvLinearLgn<double>            DatBasis;
+typedef GenericField<CMesh, DatBasis, vector<double> > CField;
+ 
 typedef struct _SLData {
-  CurveField<double> *cf;
+  CField *cf;
   Mutex lock;
   MeshHandle seed_mesh_h;
   VectorFieldInterfaceHandle vfi;
@@ -121,16 +125,13 @@ StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d)
 
   const double tolerance2 = d->tolerance * d->tolerance;
 
-  //CurveMeshHandle cmesh = scinew CurveMesh();
-  //CurveField<double> *cf = scinew CurveField<double>(cmesh, 1);
-
   Point seed;
   Vector test;
   vector<Point> nodes;
   nodes.reserve(d->maxsteps);
 
   vector<Point>::iterator node_iter;
-  CurveMesh::Node::index_type n1, n2;
+  CMesh::Node::index_type n1, n2;
 
   // Try to find the streamline for each seed point.
   typename SLOC::iterator seed_iter, seed_iter_end;
@@ -274,8 +275,8 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
   d.met=met;
   d.np=np;
 
-  CurveMeshHandle cmesh = scinew CurveMesh();
-  CurveField<double> *cf = scinew CurveField<double>(cmesh, 1);
+  CMesh::handle_type cmesh = scinew CMesh();
+  CField *cf = scinew CField(cmesh);
   
   d.cf = cf;
 
@@ -295,7 +296,7 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
   return cf;
 
 #if 0
-  CurveMesh::Node::size_type count;
+  CMesh::Node::size_type count;
   cf->get_typed_mesh()->size(count);
   if (((unsigned int)count) == 0)
   {
@@ -437,8 +438,8 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::execute(MeshHandle seed_mesh_h,
 
   vfield->mesh()->synchronize(Mesh::FACE_NEIGHBORS_E);
 
-  CurveMeshHandle cmesh = scinew CurveMesh();
-  CurveField<double> *cf = scinew CurveField<double>(cmesh, 1);
+  CMesh::handle_type cmesh = scinew CMesh();
+  CField *cf = scinew CField(cmesh);
 
   Point seed;
   typename VFLD::mesh_type::Elem::index_type elem;
@@ -446,7 +447,7 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::execute(MeshHandle seed_mesh_h,
   nodes.reserve(maxsteps);
 
   vector<Point>::iterator node_iter;
-  CurveMesh::Node::index_type n1, n2;
+  CMesh::Node::index_type n1, n2;
 
   // Try to find the streamline for each seed point.
   typename SLOC::iterator seed_iter, seed_iter_end;

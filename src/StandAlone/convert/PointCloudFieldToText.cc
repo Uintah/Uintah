@@ -46,7 +46,9 @@
 // also have a one line header, specifying number of points, unless the
 // user specifies the -noPtsCount command-line argument.
 
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -113,6 +115,7 @@ main(int argc, char **argv) {
     return 2;
   }
 
+
   FieldHandle handle;
   Piostream* stream=auto_istream(fieldName);
   if (!stream) {
@@ -124,16 +127,19 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<fieldName<<".  Exiting...\n";
     return 2;
   }
-  if (handle->get_type_description(0)->get_name() != "PointCloudField") {
-    cerr << "Error -- input field wasn't a PointCloudField (type_name="<<handle->get_type_description(0)->get_name()<<"\n";
+  if (handle->get_type_description(1)->get_name().find("PointCloudField") != 
+      string::npos) 
+  {
+    cerr << "Error -- input field wasn't a PointCloudField (type_name="
+	 << handle->get_type_description(1)->get_name() << std::endl;
     return 2;
   }
-
+  typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;  
   MeshHandle mH = handle->mesh();
-  PointCloudMesh *pcm = dynamic_cast<PointCloudMesh *>(mH.get_rep());
-  PointCloudMesh::Node::iterator niter; 
-  PointCloudMesh::Node::iterator niter_end; 
-  PointCloudMesh::Node::size_type nsize; 
+  PCMesh *pcm = dynamic_cast<PCMesh *>(mH.get_rep());
+  PCMesh::Node::iterator niter; 
+  PCMesh::Node::iterator niter_end; 
+  PCMesh::Node::size_type nsize; 
   pcm->begin(niter);
   pcm->end(niter_end);
   pcm->size(nsize);

@@ -53,23 +53,9 @@ using namespace SCIRun;
 #include <Core/Geometry/Tensor.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/QuadraticTetVolField.h>
-#include <Core/Datatypes/HexVolField.h>
-#include <Core/Datatypes/MaskedTetVolField.h>
-#include <Core/Datatypes/MaskedHexVolField.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/MaskedLatVolField.h>
-#include <Core/Datatypes/MaskedTriSurfField.h>
-#include <Core/Datatypes/PrismVolField.h>
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/CurveField.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/ScanlineField.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Datatypes/PropertyManager.h>
+#include <Core/Datatypes/GenericField.h>
 
 #if !defined(__sgi)
 // Needed for optimized linux build only
@@ -120,7 +106,7 @@ template class Property<pair<char,char> >;
 template class Property<vector<pair<string,Tensor> > >;
 template class Property<vector<pair<int,double> > >;
 
-
+#if 0
 //! Compute the gradient g in cell ci.
 template <>
 Vector PrismVolField<Vector>::cell_gradient(PrismVolMesh::Cell::index_type /*ci*/)
@@ -207,7 +193,7 @@ Vector LatVolField<Tensor>::cell_gradient(const LatVolMesh::Cell::index_type &/*
   ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
   return Vector(0, 0, 0);
 }
-
+#endif
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468

@@ -128,6 +128,15 @@ public:
 
 };
 
+inline 
+Point operator*(double d, const Point &p) {
+  return p*d;
+}
+inline 
+Point operator+(const Vector &v, const Point &p) {
+  return p+v;
+}
+
 SCICORESHARE std::ostream& operator<<(std::ostream& os, const Point& p);
 SCICORESHARE std::istream& operator>>(std::istream& os, Point& p);
 

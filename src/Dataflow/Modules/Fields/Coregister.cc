@@ -46,7 +46,9 @@
 #include <Core/Algorithms/Geometry/CoregPts.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 
@@ -95,10 +97,14 @@ Coregister::execute()
   FieldIPort *mobile = (FieldIPort *) get_iport("Mobile PointCloudField");
   FieldIPort *dfield = (FieldIPort *) get_iport("DistanceField From Fixed");
 
+  typedef ConstantBasis<double>                FDCdoubleBasis;
+  typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+  typedef GenericField<PCMesh, FDCdoubleBasis, vector<double> >PCField;
+
   FieldHandle fixedH, mobileH;
-  PointCloudField<double> *fixedPC, *mobilePC;
-  PointCloudMeshHandle fixedM, mobileM;
-  PointCloudMesh::Node::size_type nnodes;
+  PCField *fixedPC, *mobilePC;
+  PCMesh::handle_type fixedM, mobileM;
+  PCMesh::Node::size_type nnodes;
   
   if (!fixed) {
     error("Unable to initialize iport 'Fixed PointCloudField'.");
@@ -114,13 +120,13 @@ Coregister::execute()
   }
 
   if (!fixed->get(fixedH)) return;
-  fixedPC = dynamic_cast<PointCloudField<double> *>(fixedH.get_rep());
+  fixedPC = dynamic_cast<PCField *>(fixedH.get_rep());
   if (!fixedPC) return;
 
   fixedM = fixedPC->get_typed_mesh();
 
   if (!mobile->get(mobileH)) return;
-  mobilePC = dynamic_cast<PointCloudField<double> *>(mobileH.get_rep());
+  mobilePC = dynamic_cast<PCField *>(mobileH.get_rep());
   if (!mobilePC) return;
 
   mobileM = mobilePC->get_typed_mesh();
@@ -146,7 +152,7 @@ Coregister::execute()
   Array1<Point> fixedPts, mobilePts;
   Transform trans;
 
-  PointCloudMesh::Node::iterator fni, fne, mni, mne;
+  PCMesh::Node::iterator fni, fne, mni, mne;
   fixedM->begin(fni); fixedM->end(fne);
   mobileM->begin(mni); mobileM->end(mne);
   Point p;

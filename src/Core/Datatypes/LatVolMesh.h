@@ -46,15 +46,20 @@
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/Transform.h>
+#include <Core/Math/MusilRNG.h>
 #include <Core/Containers/StackVector.h>
+#include <Core/Geometry/BBox.h>
 
 namespace SCIRun {
 
 using std::string;
 
+template <class Basis>
 class SCICORESHARE LatVolMesh : public Mesh
 {
 public:
+  typedef LockingHandle<LatVolMesh<Basis> > handle_type;
+  typedef Basis                             basis_type;
 
   struct LatIndex;
   friend struct LatIndex;
@@ -63,14 +68,12 @@ public:
   {
   public:
     LatIndex() : i_(0), j_(0), k_(0), mesh_(0) {}
-    //LatIndex(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k), mesh_(0) {}
-
     LatIndex(const LatVolMesh *m, unsigned i, unsigned j, 
 	     unsigned k) : i_(i), j_(j), k_(k), mesh_(m) {}
     
     operator unsigned() const { 
       ASSERT(mesh_);
-      return i_ + ni()*j_ + ni()*nj()*k_;;
+      return i_ + ni()*j_ + ni()*nj()*k_;
     }
     
     // Make sure mesh_ is valid before calling these convience accessors
@@ -92,12 +95,12 @@ public:
 
     operator unsigned() const { 
       ASSERT(mesh_);
-      return i_ + (ni()-1)*j_ + (ni()-1)*(nj()-1)*k_;;
+      return i_ + (ni()-1)*j_ + (ni()-1)*(nj()-1)*k_;
     }
 
-    friend void Pio(Piostream&, CellIndex&);
-    friend const TypeDescription* get_type_description(CellIndex *);
-    friend const string find_type_name(CellIndex *);
+    friend void Pio<Basis>(Piostream&, CellIndex&);
+    //friend const TypeDescription* get_type_description<Basis>(CellIndex *);
+    friend const string find_type_name<Basis>(CellIndex *);
   };
 
   struct NodeIndex : public LatIndex
@@ -105,10 +108,13 @@ public:
     NodeIndex() : LatIndex() {}
     NodeIndex(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
       : LatIndex(m, i,j,k) {}
-    static string type_name(int i=-1) { ASSERT(i<1); return "LatVolMesh::NodeIndex"; }
-    friend void Pio(Piostream&, NodeIndex&);
-    friend const TypeDescription* get_type_description(NodeIndex *);
-    friend const string find_type_name(NodeIndex *);
+    static string type_name(int i=-1) { 
+      ASSERT(i < 1); 
+      return LatVolMesh<Basis>::type_name(-1) + "::NodeIndex"; 
+    }
+    friend void Pio<Basis>(Piostream&, NodeIndex&);
+    //friend const TypeDescription* get_type_description<Basis>(NodeIndex *);
+    friend const string find_type_name<Basis>(NodeIndex *);
   };
 
 
@@ -411,22 +417,156 @@ public:
   friend class RangeCellIter;
   friend class RangeNodeIter;
   
-  LatVolMesh()
-    : min_i_(0), min_j_(0), min_k_(0),
-      ni_(1), nj_(1), nk_(1) {}
+  friend class ElemData;
+  
+  class ElemData 
+  {
+  public:
+    ElemData(const LatVolMesh<Basis>& msh, 
+		const typename Cell::index_type ind) :
+      mesh_(msh),
+      index_(ind)
+    {}
+    
+    // the following designed to coordinate with ::get_nodes
+    inline 
+    unsigned node0_index() const {
+      return (index_.i_ + mesh_.get_ni()*index_.j_ + 
+	      mesh_.get_ni()*mesh_.get_nj()*index_.k_);
+    }
+    inline 
+    unsigned node1_index() const {
+      return (index_.i_+ 1 + mesh_.get_ni()*index_.j_ + 
+	      mesh_.get_ni()*mesh_.get_nj()*index_.k_);
+    }
+    inline 
+    unsigned node2_index() const {
+      return (index_.i_ + 1 + mesh_.get_ni()*(index_.j_ + 1) + 
+	      mesh_.get_ni()*mesh_.get_nj()*index_.k_);
+      
+    }
+    inline 
+    unsigned node3_index() const {
+      return (index_.i_ + mesh_.get_ni()*(index_.j_ + 1) + 
+	      mesh_.get_ni()*mesh_.get_nj()*index_.k_);
+    }
+    inline 
+    unsigned node4_index() const {
+      return (index_.i_ + mesh_.get_ni()*index_.j_ + 
+	      mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
+    }
+    inline 
+    unsigned node5_index() const {
+      return (index_.i_ + 1 + mesh_.get_ni()*index_.j_ + 
+	      mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
+    }
+
+    inline 
+    unsigned node6_index() const {
+      return (index_.i_ + 1 + mesh_.get_ni()*(index_.j_ + 1) + 
+	      mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
+    }
+    inline 
+    unsigned node7_index() const {
+      return (index_.i_ + mesh_.get_ni()*(index_.j_ + 1) + 
+	      mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
+    }
+
+//     inline 
+//     unsigned edge0_index() const {
+//       return idx.i_ + idx.j_*(ni_-1)     + idx.k_*(ni_-1)*(nj_);
+//     }
+
+    inline 
+    const Point node0() const {
+      Point p(index_.i_, index_.j_, index_.k_);
+      return mesh_.transform_.project(p);
+    }
+    inline 
+    const Point node1() const {
+      Point p(index_.i_ + 1, index_.j_, index_.k_);
+      return mesh_.transform_.project(p);
+    }
+    inline 
+    const Point node2() const {
+      Point p(index_.i_ + 1, index_.j_ + 1, index_.k_);
+      return mesh_.transform_.project(p);
+    }
+    inline 
+    const Point node3() const {
+      Point p(index_.i_, index_.j_ + 1, index_.k_);
+      return mesh_.transform_.project(p);
+    }
+    inline 
+    const Point node4() const {
+      Point p(index_.i_, index_.j_, index_.k_+ 1);
+      return mesh_.transform_.project(p);
+    }
+    inline 
+    const Point node5() const {
+      Point p(index_.i_ + 1, index_.j_, index_.k_+ 1);
+      return mesh_.transform_.project(p);
+    }
+    inline 
+    const Point node6() const {
+      Point p(index_.i_ + 1, index_.j_ + 1, index_.k_+ 1);
+      return mesh_.transform_.project(p);
+    }
+    inline 
+    const Point node7() const {
+      Point p(index_.i_, index_.j_ + 1, index_.k_+ 1);
+      return mesh_.transform_.project(p);
+    }
+
+  private:
+    const LatVolMesh<Basis>          &mesh_;
+    const typename Cell::index_type  index_;
+  };
+
+
+  LatVolMesh() : 
+    min_i_(0), 
+    min_j_(0), 
+    min_k_(0),
+    ni_(1), 
+    nj_(1), 
+    nk_(1) 
+  {}
   LatVolMesh(unsigned x, unsigned y, unsigned z,
 	     const Point &min, const Point &max);
   LatVolMesh(LatVolMesh* /* mh */,  // FIXME: Is this constructor broken?
 	     unsigned mx, unsigned my, unsigned mz,
-	     unsigned x, unsigned y, unsigned z)
-    : min_i_(mx), min_j_(my), min_k_(mz),
-      ni_(x), nj_(y), nk_(z) {}
-  LatVolMesh(const LatVolMesh &copy)
-    : min_i_(copy.min_i_), min_j_(copy.min_j_), min_k_(copy.min_k_),
-      ni_(copy.get_ni()), nj_(copy.get_nj()), nk_(copy.get_nk()),
-      transform_(copy.transform_) {}
+	     unsigned x, unsigned y, unsigned z) : 
+    min_i_(mx), 
+    min_j_(my), 
+    min_k_(mz),
+    ni_(x), 
+    nj_(y), 
+    nk_(z) 
+  {}
+  LatVolMesh(const LatVolMesh &copy) : 
+    min_i_(copy.min_i_), 
+    min_j_(copy.min_j_), 
+    min_k_(copy.min_k_),
+    ni_(copy.get_ni()), 
+    nj_(copy.get_nj()), 
+    nk_(copy.get_nk()),
+    transform_(copy.transform_),
+    basis_(copy.basis_)
+  {}
   virtual LatVolMesh *clone() { return new LatVolMesh(*this); }
   virtual ~LatVolMesh() {}
+
+  Basis &get_basis() { return basis_; }
+
+  //! Generate the list of points that make up a sufficiently accurate
+  //! piecewise linear approximation of an edge.
+  void pwl_approx_edge(vector<Point> &approx, typename Edge::index_type, 
+		       double epsilon) const;
+  void get_coords(vector<double> &coords, 
+		  const Point &p,
+		  typename Cell::index_type idx) const;
+  
 
   //! get the mesh statistics
   unsigned get_min_i() const { return min_i_; }
@@ -453,103 +593,121 @@ public:
   void set_nk(unsigned k) { nk_ = k; }
   void set_dim(vector<unsigned int> dims);
 
-  void begin(Node::iterator &) const;
-  void begin(Edge::iterator &) const;
-  void begin(Face::iterator &) const;
-  void begin(Cell::iterator &) const;
+  void begin(typename Node::iterator &) const;
+  void begin(typename Edge::iterator &) const;
+  void begin(typename Face::iterator &) const;
+  void begin(typename Cell::iterator &) const;
 
-  void end(Node::iterator &) const;
-  void end(Edge::iterator &) const;
-  void end(Face::iterator &) const;
-  void end(Cell::iterator &) const;
+  void end(typename Node::iterator &) const;
+  void end(typename Edge::iterator &) const;
+  void end(typename Face::iterator &) const;
+  void end(typename Cell::iterator &) const;
 
-  void size(Node::size_type &) const;
-  void size(Edge::size_type &) const;
-  void size(Face::size_type &) const;
-  void size(Cell::size_type &) const;
+  void size(typename Node::size_type &) const;
+  void size(typename Edge::size_type &) const;
+  void size(typename Face::size_type &) const;
+  void size(typename Cell::size_type &) const;
 
-  void to_index(Node::index_type &index, unsigned int i);
-  void to_index(Edge::index_type &index, unsigned int i) { index = i; }
-  void to_index(Face::index_type &index, unsigned int i) { index = i; }
-  void to_index(Cell::index_type &index, unsigned int i);
+  void to_index(typename Node::index_type &index, unsigned int i);
+  void to_index(typename Edge::index_type &index, unsigned int i) 
+  { index = i; }
+  void to_index(typename Face::index_type &index, unsigned int i) 
+  { index = i; }
+  void to_index(typename Cell::index_type &index, unsigned int i);
 
   //! get the child elements of the given index
-  void get_nodes(Node::array_type &, Edge::index_type) const;
-  void get_nodes(Node::array_type &, Face::index_type) const;
-  void get_nodes(Node::array_type &, const Cell::index_type &) const;
-  void get_edges(Edge::array_type &, Face::index_type) const; 
-  void get_edges(Edge::array_type &, const Cell::index_type &) const;
-  void get_faces(Face::array_type &, const Cell::index_type &) const;
+  void get_nodes(typename Node::array_type &, typename Edge::index_type) const;
+  void get_nodes(typename Node::array_type &, typename Face::index_type) const;
+  void get_nodes(typename Node::array_type &, 
+		 const typename Cell::index_type &) const;
+  void get_edges(typename Edge::array_type &, 
+		 typename Face::index_type) const; 
+  void get_edges(typename Edge::array_type &, 
+		 const typename Cell::index_type &) const;
+  void get_faces(typename Face::array_type &, 
+		 const typename Cell::index_type &) const;
 
   //! get the parent element(s) of the given index
-  unsigned get_edges(Edge::array_type &, Node::index_type) const
+  unsigned get_edges(typename Edge::array_type &, 
+		     typename Node::index_type) const
   { ASSERTFAIL("LatVolMesh::get_edges not implemented."); }
-  unsigned get_faces(Face::array_type &, Node::index_type) const
+  unsigned get_faces(typename Face::array_type &, 
+		     typename Node::index_type) const
   { ASSERTFAIL("LatVolMesh::get_faces not implemented."); }
-  unsigned get_faces(Face::array_type &, Edge::index_type) const
+  unsigned get_faces(typename Face::array_type &, 
+		     typename Edge::index_type) const
   { ASSERTFAIL("LatVolMesh::get_faces not implemented."); }
-  unsigned get_cells(Cell::array_type &, Node::index_type) const;
-  unsigned get_cells(Cell::array_type &, Edge::index_type)
+  unsigned get_cells(typename Cell::array_type &, 
+		     typename Node::index_type) const;
+  unsigned get_cells(typename Cell::array_type &, typename Edge::index_type)
   { ASSERTFAIL("LatVolMesh::get_cells not implemented."); }
-  unsigned get_cells(Cell::array_type &, Face::index_type)
+  unsigned get_cells(typename Cell::array_type &, typename Face::index_type)
   { ASSERTFAIL("LatVolMesh::get_cells not implemented."); }
 
   //! return all cell_indecies that overlap the BBox in arr.
-  void get_cells(Cell::array_type &arr, const BBox &box);
+  void get_cells(typename Cell::array_type &arr, const BBox &box);
   //! returns the min and max indices that fall within or on the BBox
-  void get_cells(Cell::index_type &begin, Cell::index_type &end,
+  void get_cells(typename Cell::index_type &begin, 
+		 typename Cell::index_type &end,
 		 const BBox &bbox);
-  void get_nodes(Node::index_type &begin, Node::index_type &end,
+  void get_nodes(typename Node::index_type &begin, 
+		 typename Node::index_type &end,
 		 const BBox &bbox);
   
-  bool get_neighbor(Cell::index_type &neighbor,
-		    const Cell::index_type &from,
-		    Face::index_type face) const;
+  bool get_neighbor(typename Cell::index_type &neighbor,
+		    const typename Cell::index_type &from,
+		    typename Face::index_type face) const;
 
   //! get the center point (in object space) of an element
-  void get_center(Point &, const Node::index_type &) const;
-  void get_center(Point &, Edge::index_type) const;
-  void get_center(Point &, Face::index_type) const;
-  void get_center(Point &, const Cell::index_type &) const;
+  void get_center(Point &, const typename Node::index_type &) const;
+  void get_center(Point &, typename Edge::index_type) const;
+  void get_center(Point &, typename Face::index_type) const;
+  void get_center(Point &, const typename Cell::index_type &) const;
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(const Node::index_type &idx) const;
-  double get_size(Edge::index_type idx) const;
-  double get_size(Face::index_type idx) const;
-  double get_size(const Cell::index_type &idx) const;
-  double get_length(Edge::index_type idx) const { return get_size(idx); };
-  double get_area(Face::index_type idx) const { return get_size(idx); };
-  double get_volume(const Cell::index_type &i) const { return get_size(i); };
+  double get_size(const typename Node::index_type &idx) const;
+  double get_size(typename Edge::index_type idx) const;
+  double get_size(typename Face::index_type idx) const;
+  double get_size(const typename Cell::index_type &idx) const;
+  double get_length(typename Edge::index_type idx) const 
+  { return get_size(idx); };
+  double get_area(typename Face::index_type idx) const 
+  { return get_size(idx); };
+  double get_volume(const typename Cell::index_type &i) const 
+  { return get_size(i); };
 
-  int get_valence(const Node::index_type &idx) const;
-  int get_valence(Edge::index_type idx) const;
-  int get_valence(Face::index_type idx) const;
-  int get_valence(const Cell::index_type &idx) const;
+  int get_valence(const typename Node::index_type &idx) const;
+  int get_valence(typename Edge::index_type idx) const;
+  int get_valence(typename Face::index_type idx) const;
+  int get_valence(const typename Cell::index_type &idx) const;
   
-  bool locate(Node::index_type &, const Point &);
-  bool locate(Edge::index_type &, const Point &) const { return false; }
-  bool locate(Face::index_type &, const Point &) const { return false; }
-  bool locate(Cell::index_type &, const Point &);
+  bool locate(typename Node::index_type &, const Point &);
+  bool locate(typename Edge::index_type &, const Point &) const 
+  { return false; }
+  bool locate(typename Face::index_type &, const Point &) const 
+  { return false; }
+  bool locate(typename Cell::index_type &, const Point &);
 
-  int get_weights(const Point &p, Node::array_type &l, double *w);
-  int get_weights(const Point & , Edge::array_type & , double * )
-  {ASSERTFAIL("LatVolMesh::get_weights for edges isn't supported"); }
-  int get_weights(const Point & , Face::array_type & , double * )
-  {ASSERTFAIL("LatVolMesh::get_weights for faces isn't supported"); }
-  int get_weights(const Point &p, Cell::array_type &l, double *w);
-
-  void get_point(Point &p, const Node::index_type &i) const
+  void get_point(Point &p, const typename Node::index_type &i) const
   { get_center(p, i); }
 
-  void get_normal(Vector &/*normal*/, const Node::index_type &/*index*/) const
+  void get_normal(Vector &/*normal*/, 
+		  const typename Node::index_type &/*index*/) const
   { ASSERTFAIL("not implemented") }
 
-  void get_random_point(Point &, const Elem::index_type &, int seed=0) const;
+  void get_random_point(Point &, 
+			const typename Elem::index_type &, int seed=0) const;
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static  const string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
+  static const TypeDescription* cell_type_description();
+  static const TypeDescription* face_type_description();
+  static const TypeDescription* edge_type_description();
+  static const TypeDescription* node_type_description();
+  static const TypeDescription* cell_index_type_description();
+  static const TypeDescription* node_index_type_description();
 
   // Unsafe due to non-constness of unproject.
   Transform &get_transform() { return transform_; }
@@ -567,24 +725,1184 @@ protected:
   unsigned ni_, nj_, nk_;
 
   Transform transform_;
-
+  Basis     basis_;
   // returns a LatVolMesh
   static Persistent *maker() { return new LatVolMesh(); }
 };
 
-typedef LockingHandle<LatVolMesh> LatVolMeshHandle;
-
-const TypeDescription* get_type_description(LatVolMesh *);
-const TypeDescription* get_type_description(LatVolMesh::Node *);
-const TypeDescription* get_type_description(LatVolMesh::Edge *);
-const TypeDescription* get_type_description(LatVolMesh::Face *);
-const TypeDescription* get_type_description(LatVolMesh::Cell *);
-
-const TypeDescription* get_type_description(LatVolMesh::CellIndex *);
+template <class Basis>
+const TypeDescription*
+LatVolMesh<Basis>::get_type_description() const
+{
+  return SCIRun::get_type_description((LatVolMesh<Basis> *)0);
+}
 
 
-std::ostream& operator<<(std::ostream& os, const LatVolMesh::LatIndex& n);
-std::ostream& operator<<(std::ostream& os, const LatVolMesh::LatSize& s);
+template <class Basis>
+const TypeDescription* get_type_description(LatVolMesh<Basis> *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription(LatVolMesh<Basis>::type_name(-1), 
+				string(__FILE__), "SCIRun");
+  }
+  return td;
+}
+
+template <class Basis>
+const TypeDescription* 
+LatVolMesh<Basis>::node_type_description()
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription(LatVolMesh<Basis>::type_name(-1) + "::Node",
+				string(__FILE__), "SCIRun");
+  }
+  return td;
+}
+
+template <class Basis>
+const TypeDescription* 
+LatVolMesh<Basis>::edge_type_description()
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription(LatVolMesh<Basis>::type_name(-1) + "::Edge",
+				string(__FILE__)," SCIRun");
+  }
+  return td;
+}
+
+template <class Basis>
+const TypeDescription*
+LatVolMesh<Basis>::face_type_description()
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription(LatVolMesh<Basis>::type_name(-1) + "::Face",
+				string(__FILE__), "SCIRun");
+  }
+  return td;
+}
+
+template <class Basis>
+const TypeDescription*
+LatVolMesh<Basis>::cell_type_description()
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription(LatVolMesh<Basis>::type_name(-1) + "::Cell",
+				string(__FILE__), "SCIRun");
+  }
+  return td;
+}
+
+template <class Basis>
+const TypeDescription* 
+LatVolMesh<Basis>::node_index_type_description()
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription(LatVolMesh<Basis>::type_name(-1) + 
+				"::NodeIndex",
+				string(__FILE__), "SCIRun");
+  }
+  return td;
+}
+
+template <class Basis>
+const TypeDescription*
+LatVolMesh<Basis>::cell_index_type_description()
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription(LatVolMesh<Basis>::type_name(-1) + 
+				"::CellIndex",
+				string(__FILE__), "SCIRun");
+  }
+  return td;
+}
+
+template <class Basis>
+PersistentTypeID 
+LatVolMesh<Basis>::type_id(type_name(-1), "Mesh", LatVolMesh<Basis>::maker);
+
+template <class Basis>
+std::ostream& operator<<(std::ostream& os, 
+			 const typename LatVolMesh<Basis>::LatIndex& n)
+{
+  os << "[" << n.i_ << "," << n.j_ << "," << n.k_ << "]";
+  return os;
+}
+
+template <class Basis>
+std::ostream& operator<<(std::ostream& os, 
+			 const typename LatVolMesh<Basis>::LatSize& s)
+{
+  os << (int)n << " (" << n.i_ << " x " << n.j_ << " x " << n.k_ << ")";
+  return os;
+}
+
+template <class Basis>
+
+LatVolMesh<Basis>::LatVolMesh(unsigned x, unsigned y, unsigned z,
+			      const Point &min, const Point &max)
+  : min_i_(0), min_j_(0), min_k_(0),
+    ni_(x), nj_(y), nk_(z)
+{
+  transform_.pre_scale(Vector(1.0 / (x-1.0), 1.0 / (y-1.0), 1.0 / (z-1.0)));
+  transform_.pre_scale(max - min);
+
+  transform_.pre_translate(min.asVector());
+  transform_.compute_imat();
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_coords(vector<double> &coords, 
+			      const Point &p,
+			      typename Cell::index_type idx) const
+{
+  ElemData cmcd(*this, idx);
+  basis_.get_coords(coords, p, cmcd);
+}
+
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_random_point(Point &p, 
+				    const typename Elem::index_type &ei,
+				    int seed) const
+{
+  static MusilRNG rng;
+
+  // build the three principal edge vectors
+  typename Node::array_type ra;
+  get_nodes(ra,ei);
+  Point p0,p1,p2,p3;
+  get_point(p0,ra[0]);
+  get_point(p1,ra[1]);
+  get_point(p2,ra[3]);
+  get_point(p3,ra[4]);
+  Vector v0(p1-p0);
+  Vector v1(p2-p0);
+  Vector v2(p3-p0);
+
+  // choose a random point in the cell
+  double t, u, v;
+  if (seed) {
+    MusilRNG rng1(seed);
+    t = rng1();
+    u = rng1();
+    v = rng1();
+  } else {
+    t = rng();
+    u = rng();
+    v = rng();
+  }
+  p = p0+(v0*t)+(v1*u)+(v2*v);
+}
+
+template <class Basis>
+BBox
+LatVolMesh<Basis>::get_bounding_box() const
+{
+  Point p0(min_i_,         min_j_,         min_k_);
+  Point p1(min_i_ + ni_-1, min_j_,         min_k_);
+  Point p2(min_i_ + ni_-1, min_j_ + nj_-1, min_k_);
+  Point p3(min_i_,         min_j_ + nj_-1, min_k_);
+  Point p4(min_i_,         min_j_,         min_k_ + nk_-1);
+  Point p5(min_i_ + ni_-1, min_j_,         min_k_ + nk_-1);
+  Point p6(min_i_ + ni_-1, min_j_ + nj_-1, min_k_ + nk_-1);
+  Point p7(min_i_,         min_j_ + nj_-1, min_k_ + nk_-1);
+  
+  BBox result;
+  result.extend(transform_.project(p0));
+  result.extend(transform_.project(p1));
+  result.extend(transform_.project(p2));
+  result.extend(transform_.project(p3));
+  result.extend(transform_.project(p4));
+  result.extend(transform_.project(p5));
+  result.extend(transform_.project(p6));
+  result.extend(transform_.project(p7));
+  return result;
+}
+
+template <class Basis>
+Vector 
+LatVolMesh<Basis>::diagonal() const
+{
+  return get_bounding_box().diagonal();
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::transform(const Transform &t)
+{
+  transform_.pre_trans(t);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_canonical_transform(Transform &t) 
+{
+  t = transform_;
+  t.post_scale(Vector(ni_ - 1.0, nj_ - 1.0, nk_ - 1.0));
+}
+
+template <class Basis>
+bool
+LatVolMesh<Basis>::get_min(vector<unsigned int> &array) const
+{
+  array.resize(3);
+  array.clear();
+  
+  array.push_back(min_i_);
+  array.push_back(min_j_);
+  array.push_back(min_k_);
+
+  return true;
+}
+
+template <class Basis>
+bool
+LatVolMesh<Basis>::get_dim(vector<unsigned int> &array) const
+{
+  array.resize(3);
+  array.clear();
+  
+  array.push_back(ni_);
+  array.push_back(nj_);
+  array.push_back(nk_);
+
+  return true;
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::set_min(vector<unsigned int> min)
+{
+  min_i_ = min[0];
+  min_j_ = min[1];
+  min_k_ = min[2];
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::set_dim(vector<unsigned int> dim)
+{
+  ni_ = dim[0];
+  nj_ = dim[1];
+  nk_ = dim[2];
+}
+
+
+// Note: This code does not respect boundaries of the mesh
+template <class Basis>
+void
+LatVolMesh<Basis>::get_nodes(typename Node::array_type &array, 
+			     typename Edge::index_type idx) const
+{
+  array.resize(2);
+  const unsigned int xidx = idx;
+  if (xidx < (ni_ - 1) * nj_ * nk_)
+  {
+    const int i = xidx % (ni_ - 1);
+    const int jk = xidx / (ni_ - 1);
+    const int j = jk % nj_;
+    const int k = jk / nj_;
+
+    array[0] = typename Node::index_type(this, i+0, j, k);
+    array[1] = typename Node::index_type(this, i+1, j, k);
+  }
+  else
+  {
+    const unsigned int yidx = idx - (ni_ - 1) * nj_ * nk_;
+    if (yidx < (ni_ * (nj_ - 1) * nk_))
+    {
+      const int j = yidx % (nj_ - 1);
+      const int ik = yidx / (nj_ - 1);
+      const int i = ik / nk_;
+      const int k = ik % nk_;
+
+      array[0] = typename Node::index_type(this, i, j+0, k);
+      array[1] = typename Node::index_type(this, i, j+1, k);
+    }
+    else
+    {
+      const unsigned int zidx = yidx - (ni_ * (nj_ - 1) * nk_);
+      const int k = zidx % (nk_ - 1);
+      const int ij = zidx / (nk_ - 1);
+      const int i = ij % ni_;
+      const int j = ij / ni_;
+
+      array[0] = typename Node::index_type(this, i, j, k+0);
+      array[1] = typename Node::index_type(this, i, j, k+1);
+    }      
+  }
+}
+
+
+
+// Note: This code does not respect boundaries of the mesh
+template <class Basis>
+void
+LatVolMesh<Basis>::get_nodes(typename Node::array_type &array, 
+			     typename Face::index_type idx) const
+{
+  array.resize(4);
+  const unsigned int xidx = idx;
+  if (xidx < (ni_ - 1) * (nj_ - 1) * nk_)
+  {
+    const int i = xidx % (ni_ - 1);
+    const int jk = xidx / (ni_ - 1);
+    const int j = jk % (nj_ - 1);
+    const int k = jk / (nj_ - 1);
+    array[0] = typename Node::index_type(this, i+0, j+0, k);
+    array[1] = typename Node::index_type(this, i+1, j+0, k);
+    array[2] = typename Node::index_type(this, i+1, j+1, k);
+    array[3] = typename Node::index_type(this, i+0, j+1, k);
+  }
+  else
+  {
+    const unsigned int yidx = idx - (ni_ - 1) * (nj_ - 1) * nk_;
+    if (yidx < ni_ * (nj_ - 1) * (nk_ - 1))
+    {
+      const int j = yidx % (nj_ - 1);
+      const int ik = yidx / (nj_ - 1);
+      const int k = ik % (nk_ - 1);
+      const int i = ik / (nk_ - 1);
+      array[0] = typename Node::index_type(this, i, j+0, k+0);
+      array[1] = typename Node::index_type(this, i, j+1, k+0);
+      array[2] = typename Node::index_type(this, i, j+1, k+1);
+      array[3] = typename Node::index_type(this, i, j+0, k+1);
+    }
+    else
+    {
+      const unsigned int zidx = yidx - ni_ * (nj_ - 1) * (nk_ - 1);
+      const int k = zidx % (nk_ - 1);
+      const int ij = zidx / (nk_ - 1);
+      const int i = ij % (ni_ - 1);
+      const int j = ij / (ni_ - 1);
+      array[0] = typename Node::index_type(this, i+0, j, k+0);
+      array[1] = typename Node::index_type(this, i+0, j, k+1);
+      array[2] = typename Node::index_type(this, i+1, j, k+1);
+      array[3] = typename Node::index_type(this, i+1, j, k+0);
+    }
+  }
+}
+
+// Note: This code does not respect boundaries of the mesh
+template <class Basis>
+void
+LatVolMesh<Basis>::get_nodes(typename Node::array_type &array,
+			     const typename Cell::index_type &idx) const
+{
+  array.resize(8);
+  array[0].i_ = idx.i_;   array[0].j_ = idx.j_;   array[0].k_ = idx.k_;
+  array[1].i_ = idx.i_+1; array[1].j_ = idx.j_;   array[1].k_ = idx.k_;
+  array[2].i_ = idx.i_+1; array[2].j_ = idx.j_+1; array[2].k_ = idx.k_;
+  array[3].i_ = idx.i_;   array[3].j_ = idx.j_+1; array[3].k_ = idx.k_;
+  array[4].i_ = idx.i_;   array[4].j_ = idx.j_;   array[4].k_ = idx.k_+1;
+  array[5].i_ = idx.i_+1; array[5].j_ = idx.j_;   array[5].k_ = idx.k_+1;
+  array[6].i_ = idx.i_+1; array[6].j_ = idx.j_+1; array[6].k_ = idx.k_+1;
+  array[7].i_ = idx.i_;   array[7].j_ = idx.j_+1; array[7].k_ = idx.k_+1;
+
+  array[0].mesh_ = this;
+  array[1].mesh_ = this;
+  array[2].mesh_ = this;
+  array[3].mesh_ = this;
+  array[4].mesh_ = this;
+  array[5].mesh_ = this;
+  array[6].mesh_ = this;
+  array[7].mesh_ = this;
+}
+
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_edges(typename Edge::array_type &array, 
+			     typename Face::index_type idx) const
+{
+  array.resize(4);
+  const unsigned int num_i_faces = (ni_-1)*(nj_-1)*nk_;  // lie in ij plane ijk
+  const unsigned int num_j_faces = ni_*(nj_-1)*(nk_-1);  // lie in jk plane jki
+  const unsigned int num_k_faces = (ni_-1)*nj_*(nk_-1);  // lie in ki plane kij
+
+  const unsigned int num_i_edges = (ni_-1)*nj_*nk_; // ijk
+  const unsigned int num_j_edges = ni_*(nj_-1)*nk_; // jki
+  //  const unsigned int num_k_edges = ni_*nj_*(nk_-1); // kij
+
+  unsigned int facei, facej, facek;
+  unsigned int face = idx;
+  
+  if (face < num_i_faces)
+  {
+    facei = face % (ni_-1);
+    facej = (face / (ni_-1)) % (nj_-1);
+    facek = face / ((ni_-1)*(nj_-1));
+    array[0] = facei+facej*(ni_-1)+facek*(ni_-1)*(nj_);
+    array[1] = facei+(facej+1)*(ni_-1)+facek*(ni_-1)*(nj_);
+    array[2] = num_i_edges + facei*(nj_-1)*(nk_)+facej+facek*(nj_-1);
+    array[3] = num_i_edges + (facei+1)*(nj_-1)*(nk_)+facej+facek*(nj_-1);    
+  }
+  else if (face - num_i_faces < num_j_faces)
+  {
+    face -= num_i_faces;
+    facei = face / ((nj_-1) *(nk_-1));
+    facej = face % (nj_-1);
+    facek = (face / (nj_-1)) % (nk_-1);
+    array[0] = num_i_edges + facei*(nj_-1)*(nk_)+facej+facek*(nj_-1);
+    array[1] = num_i_edges + facei*(nj_-1)*(nk_)+facej+(facek+1)*(nj_-1);    
+    array[2] = (num_i_edges + num_j_edges + 
+		facei*(nk_-1)+facej*(ni_)*(nk_-1)+facek);
+    array[3] = (num_i_edges + num_j_edges + 
+		facei*(nk_-1)+(facej+1)*(ni_)*(nk_-1)+facek);
+
+  }
+  else if (face - num_i_faces - num_j_faces < num_k_faces)
+  {
+    face -= (num_i_faces + num_j_faces);
+    facei = (face / (nk_-1)) % (ni_-1);
+    facej = face / ((ni_-1) * (nk_-1));
+    facek = face % (nk_-1);
+    array[0] = facei+facej*(ni_-1)+facek*(ni_-1)*(nj_);
+    array[1] = facei+facej*(ni_-1)+(facek+1)*(ni_-1)*(nj_);
+    array[2] = (num_i_edges + num_j_edges + 
+		facei*(nk_-1)+facej*(ni_)*(nk_-1)+facek);
+    array[3] = (num_i_edges + num_j_edges + 
+		(facei+1)*(nk_-1)+facej*(ni_)*(nk_-1)+facek);
+  }
+  else {
+    ASSERTFAIL(
+	  "LatVolMesh<Basis>::get_edges(Edge, Face) Face idx out of bounds"); 
+  }
+}
+  
+  
+    
+template <class Basis>
+void
+LatVolMesh<Basis>::get_edges(typename Edge::array_type &array,
+			     const typename Cell::index_type &idx) const
+{
+  array.resize(12);
+  const unsigned int j_start= (ni_-1)*nj_*nk_; 
+  const unsigned int k_start = ni_*(nj_-1)*nk_ + j_start; 
+
+  array[0] = idx.i_ + idx.j_*(ni_-1)     + idx.k_*(ni_-1)*(nj_);
+  array[1] = idx.i_ + (idx.j_+1)*(ni_-1) + idx.k_*(ni_-1)*(nj_);
+  array[2] = idx.i_ + idx.j_*(ni_-1)     + (idx.k_+1)*(ni_-1)*(nj_);
+  array[3] = idx.i_ + (idx.j_+1)*(ni_-1) + (idx.k_+1)*(ni_-1)*(nj_);
+
+  array[4] = j_start + idx.i_*(nj_-1)*(nk_)     + idx.j_ + idx.k_*(nj_-1);
+  array[5] = j_start + (idx.i_+1)*(nj_-1)*(nk_) + idx.j_ + idx.k_*(nj_-1);
+  array[6] = j_start + idx.i_*(nj_-1)*(nk_)     + idx.j_ + (idx.k_+1)*(nj_-1);
+  array[7] = j_start + (idx.i_+1)*(nj_-1)*(nk_) + idx.j_ + (idx.k_+1)*(nj_-1);
+
+  array[8] =  k_start + idx.i_*(nk_-1)     + idx.j_*(ni_)*(nk_-1)     + idx.k_;
+  array[9] =  k_start + (idx.i_+1)*(nk_-1) + idx.j_*(ni_)*(nk_-1)     + idx.k_;
+  array[10] = k_start + idx.i_*(nk_-1)     + (idx.j_+1)*(ni_)*(nk_-1) + idx.k_;
+  array[11] = k_start + (idx.i_+1)*(nk_-1) + (idx.j_+1)*(ni_)*(nk_-1) + idx.k_;
+  
+}
+
+
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_faces(typename Face::array_type &array,
+			     const typename Cell::index_type &idx) const
+{
+  array.resize(6);
+  
+  const unsigned int i = idx.i_;
+  const unsigned int j = idx.j_;
+  const unsigned int k = idx.k_;
+
+  const unsigned int offset1 = (ni_ - 1) * (nj_ - 1) * nk_;
+  const unsigned int offset2 = offset1 + ni_ * (nj_ - 1) * (nk_ - 1);
+
+  array[0] = i + (j + k * (nj_-1)) * (ni_-1);
+  array[1] = i + (j + (k+1) * (nj_-1)) * (ni_-1);
+
+  array[2] = offset1 + j + (k + i * (nk_-1)) * (nj_-1);
+  array[3] = offset1 + j + (k + (i+1) * (nk_-1)) * (nj_-1);
+
+  array[4] = offset2 + k + (i + j * (ni_-1)) * (nk_-1);
+  array[5] = offset2 + k + (i + (j+1) * (ni_-1)) * (nk_-1);
+}
+
+
+
+template <class Basis>
+unsigned
+LatVolMesh<Basis>::get_cells(typename Cell::array_type &array, 
+			     typename Node::index_type idx) const
+{
+  array.clear();
+  const unsigned int i0 = idx.i_ ? idx.i_ - 1 : 0;
+  const unsigned int j0 = idx.j_ ? idx.j_ - 1 : 0;
+  const unsigned int k0 = idx.k_ ? idx.k_ - 1 : 0;
+
+  const unsigned int i1 = idx.i_ < ni_-1 ? idx.i_+1 : ni_-1;
+  const unsigned int j1 = idx.j_ < nj_-1 ? idx.j_+1 : nj_-1;
+  const unsigned int k1 = idx.k_ < nk_-1 ? idx.k_+1 : nk_-1;
+
+  unsigned int i, j, k;
+  for (k = k0; k < k1; k++)
+    for (j = j0; j < j1; j++)
+      for (i = i0; i < i1; i++)
+	array.push_back(Cell::index_type(this, i, j, k));
+
+  return array.size();
+}
+
+//! return all cell_indecies that overlap the BBox in arr.
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_cells(typename Cell::array_type &arr, const BBox &bbox)
+{
+  // Get our min and max
+  typename Cell::index_type min, max;
+  get_cells(min, max, bbox);
+
+  // Clear the input array.  Limited to range of ints.
+  arr.clear();
+
+  // Loop over over min to max and fill the array
+  unsigned int i, j, k;
+  for (i = min.i_; i <= max.i_; i++) {
+    for (j = min.j_; j <= max.j_; j++) {
+      for (k = min.k_; k <= max.k_; k++) {
+	arr.push_back(typename Cell::index_type(this, i,j,k));
+      }
+    }
+  }
+}
+
+//! Returns the min and max indices that fall within or on the BBox.
+
+// If the max index lies "in front of" (meaning that any of the
+// indexes are negative) then the max will be set to [0,0,0] and the
+// min to [1,1,1] in the hopes that they will be used something like
+// this: for(unsigned int i = min.i_; i <= max.i_; i++)....  Otherwise
+// you can expect the min and max to be set clamped to the boundaries.
+template <class Basis> 
+void
+LatVolMesh<Basis>::get_cells(typename Cell::index_type &begin, typename Cell::index_type &end,
+			     const BBox &bbox) {
+  
+  const Point minp = transform_.unproject(bbox.min());
+  int mini = (int)floor(minp.x());
+  int minj = (int)floor(minp.y());
+  int mink = (int)floor(minp.z());
+  if (mini < 0) { mini = 0; }
+  if (minj < 0) { minj = 0; }
+  if (mink < 0) { mink = 0; }
+  
+  const Point maxp = transform_.unproject(bbox.max());
+  int maxi = (int)floor(maxp.x());
+  int maxj = (int)floor(maxp.y());
+  int maxk = (int)floor(maxp.z());
+  if (maxi >= (int)(ni_ - 1)) { maxi = ni_ - 2; }
+  if (maxj >= (int)(nj_ - 1)) { maxj = nj_ - 2; }
+  if (maxk >= (int)(nk_ - 1)) { maxk = nk_ - 2; }
+  // We also need to protect against when any of these guys are
+  // negative.  In this case we should not have any iteration.  We
+  // can't however express negative numbers with unsigned ints (in the
+  // case of index_type).
+  if (maxi < 0 || maxj < 0 || maxk < 0) {
+    // We should create a range which will not be iterated over
+    mini = minj = mink = 1;
+    maxi = maxj = maxk = 0;
+  }
+
+  begin = typename Cell::index_type(this, mini, minj, mink);
+  end   = typename Cell::index_type(this, maxi, maxj, maxk);
+}
+
+
+template <class Basis>
+bool
+LatVolMesh<Basis>::get_neighbor(typename Cell::index_type &neighbor,
+				const typename Cell::index_type &from,
+				typename Face::index_type face) const
+{
+  const unsigned int xidx = face;
+  if (xidx < (ni_ - 1) * (nj_ - 1) * nk_)
+  {
+    //const unsigned int i = xidx % (ni_ - 1);
+    const unsigned int jk = xidx / (ni_ - 1);
+    //const unsigned int j = jk % (nj_ - 1);
+    const unsigned int k = jk / (nj_ - 1);
+
+    if (k == from.k_ && k > 0)
+    {
+      neighbor.i_ = from.i_;
+      neighbor.j_ = from.j_;
+      neighbor.k_ = k-1;
+      neighbor.mesh_ = this;
+      return true;
+    }
+    else if (k == (from.k_+1) && k < (nk_-1))
+    {
+      neighbor.i_ = from.i_;
+      neighbor.j_ = from.j_;
+      neighbor.k_ = k;
+      neighbor.mesh_ = this;
+      return true;
+    }
+  }
+  else
+  {
+    const unsigned int yidx = xidx - (ni_ - 1) * (nj_ - 1) * nk_;
+    if (yidx < ni_ * (nj_ - 1) * (nk_ - 1))
+    {
+      //const unsigned int j = yidx % (nj_ - 1);
+      const unsigned int ik = yidx / (nj_ - 1);
+      //const unsigned int k = ik % (nk_ - 1);
+      const unsigned int i = ik / (nk_ - 1);
+
+      if (i == from.i_ && i > 0)
+      {
+	neighbor.i_ = i-1;
+	neighbor.j_ = from.j_;
+	neighbor.k_ = from.k_;
+	neighbor.mesh_ = this;
+	return true;
+      }
+      else if (i == (from.i_+1) && i < (ni_-1))
+      {
+	neighbor.i_ = i;
+	neighbor.j_ = from.j_;
+	neighbor.k_ = from.k_;
+	neighbor.mesh_ = this;
+	return true;
+      }
+    }
+    else
+    {
+      const unsigned int zidx = yidx - ni_ * (nj_ - 1) * (nk_ - 1);
+      //const unsigned int k = zidx % (nk_ - 1);
+      const unsigned int ij = zidx / (nk_ - 1);
+      //const unsigned int i = ij % (ni_ - 1);
+      const unsigned int j = ij / (ni_ - 1);
+
+      if (j == from.j_ && j > 0)
+      {
+	neighbor.i_ = from.i_;
+	neighbor.j_ = j-1;
+	neighbor.k_ = from.k_;
+	neighbor.mesh_ = this;
+	return true;
+      }
+      else if (j == (from.j_+1) && j < (nj_-1))
+      {
+	neighbor.i_ = from.i_;
+	neighbor.j_ = j;
+	neighbor.k_ = from.k_;
+	neighbor.mesh_ = this;
+	return true;
+      }
+    }
+  }
+  return false;
+}
+
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_nodes(typename Node::index_type &begin, typename Node::index_type &end,
+			     const BBox &bbox) {
+  // get the min and max points of the bbox and make sure that they lie
+  // inside the mesh boundaries.
+  BBox mesh_boundary = get_bounding_box();
+  // crop by min boundary
+  Point min = Max(bbox.min(), mesh_boundary.min());
+  Point max = Max(bbox.max(), mesh_boundary.min());
+  // crop by max boundary
+  min = Min(min, mesh_boundary.max());
+  max = Min(max, mesh_boundary.max());
+  typename Node::index_type min_index, max_index;
+
+  // If one of the locates return true, then we have a valid iteration
+  bool min_located = locate(min_index, min);
+  bool max_located = locate(max_index, max);
+  if (!min_located && !max_located) {
+    // first check to see if there is a bbox overlap
+    BBox box;
+    box.extend(min);
+    box.extend(max);
+    if ( box.Overlaps(mesh_boundary) ){
+      Point r = transform_.unproject(min);
+      double rx = floor(r.x());
+      double ry = floor(r.y());
+      double rz = floor(r.z());
+      min_index.i_ = (unsigned int)Max(rx, 0.0);
+      min_index.j_ = (unsigned int)Max(ry, 0.0);
+      min_index.k_ = (unsigned int)Max(rz, 0.0);
+      r = transform_.unproject(max);
+      rx = floor(r.x());
+      ry = floor(r.y());
+      rz = floor(r.z());
+      max_index.i_ = (unsigned int)Min(rx, (double)ni_ );
+      max_index.j_ = (unsigned int)Min(ry, (double)nj_ );
+      max_index.k_ = (unsigned int)Min(rz, (double)nk_ );
+    } else {
+      // Set the min and max extents of the range iterator to be the
+      // same thing.  When they are the same end_iter will be set to
+      // the starting state of the range iterator, thereby causing any
+      // for loop using these iterators [for(;iter != end_iter;
+      // iter++)] to never enter.
+      min_index = typename Node::index_type(this, 0,0,0);
+      max_index = typename Node::index_type(this, 0,0,0);
+    }
+  } else if ( !min_located ) {    
+    const Point r = transform_.unproject(min);
+    const double rx = floor(r.x());
+    const double ry = floor(r.y());
+    const double rz = floor(r.z());
+    min_index.i_ = (unsigned int)Max(rx, 0.0);
+    min_index.j_ = (unsigned int)Max(ry, 0.0);
+    min_index.k_ = (unsigned int)Max(rz, 0.0);
+  } else { //  !max_located 		       
+    const Point r = transform_.unproject(max);
+    const double rx = floor(r.x());
+    const double ry = floor(r.y());
+    const double rz = floor(r.z());
+    max_index.i_ = (unsigned int)Min(rx, (double) ni_ );
+    max_index.j_ = (unsigned int)Min(ry, (double) nj_ );
+    max_index.k_ = (unsigned int)Min(rz, (double) nk_ );
+  }
+  
+  begin = min_index;
+  end   = max_index;
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_center(Point &result, typename Edge::index_type idx) const
+{
+  typename Node::array_type arr;
+  get_nodes(arr, idx);
+  Point p1;
+  get_center(result, arr[0]);
+  get_center(p1, arr[1]);
+  
+  result.asVector() += p1.asVector();
+  result.asVector() *= 0.5;
+}
+
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_center(Point &result, typename Face::index_type idx) const
+{
+  typename Node::array_type nodes;
+  get_nodes(nodes, idx);
+  ASSERT(nodes.size() == 4);
+  typename Node::array_type::iterator nai = nodes.begin();
+  get_point(result, *nai);
+  ++nai;
+  Point pp;
+  while (nai != nodes.end())
+  {
+    get_point(pp, *nai);
+    result.asVector() += pp.asVector();
+    ++nai;
+  }
+  result.asVector() *= (1.0 / 4.0);
+}
+
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_center(Point &result, const typename Cell::index_type &idx) const
+{
+  Point p(idx.i_ + 0.5, idx.j_ + 0.5, idx.k_ + 0.5);
+  result = transform_.project(p);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_center(Point &result, const typename Node::index_type &idx) const
+{
+  Point p(idx.i_, idx.j_, idx.k_);
+  result = transform_.project(p);
+}
+
+
+
+template <class Basis>
+double
+LatVolMesh<Basis>::get_size(const typename Node::index_type &idx) const
+{
+  return 0.0;
+}
+
+
+template <class Basis>
+double
+LatVolMesh<Basis>::get_size(typename Edge::index_type idx) const
+{
+  typename Node::array_type arr;
+  get_nodes(arr, idx);
+  Point p0, p1;
+  get_center(p0, arr[0]);
+  get_center(p1, arr[1]);
+
+  return (p1.asVector() - p0.asVector()).length();
+}
+  
+
+template <class Basis>
+double
+LatVolMesh<Basis>::get_size(typename Face::index_type idx) const
+{
+  typename Node::array_type nodes;
+  get_nodes(nodes, idx);
+  Point p0, p1, p2;
+  get_point(p0, nodes[0]);
+  get_point(p1, nodes[1]);
+  get_point(p2, nodes[2]);
+  Vector v0 = p1 - p0;
+  Vector v1 = p2 - p0;
+  return (v0.length() * v1.length());
+}
+
+
+template <class Basis>
+double
+LatVolMesh<Basis>::get_size(const typename Cell::index_type &idx) const
+{
+  typename Node::array_type nodes;
+  get_nodes(nodes, idx);
+  Point p0, p1, p2, p3;
+  get_point(p0, nodes[0]);
+  get_point(p1, nodes[1]);
+  get_point(p2, nodes[3]);
+  get_point(p3, nodes[4]);
+  Vector v0 = p1 - p0;
+  Vector v1 = p2 - p0;
+  Vector v2 = p3 - p0;
+  return (v0.length() * v1.length() * v2.length());
+}
+
+
+
+
+template <class Basis>
+bool
+LatVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
+{
+  const Point r = transform_.unproject(p);
+  
+  const double rx = floor(r.x());
+  const double ry = floor(r.y());
+  const double rz = floor(r.z());
+
+  // Clamp in double space to avoid overflow errors.
+  if (rx < 0.0      || ry < 0.0      || rz < 0.0    ||
+      rx >= (ni_-1) || ry >= (nj_-1) || rz >= (nk_-1))
+  {
+    cell.i_ = (unsigned int)Max(Min(rx,(double)(ni_-1)), 0.0);
+    cell.j_ = (unsigned int)Max(Min(ry,(double)(nj_-1)), 0.0);
+    cell.k_ = (unsigned int)Max(Min(rz,(double)(nk_-1)), 0.0);
+    cell.mesh_ = this;
+    return false;
+  }
+
+  cell.i_ = (unsigned int)rx;
+  cell.j_ = (unsigned int)ry;
+  cell.k_ = (unsigned int)rz;
+  cell.mesh_ = this;
+
+  return true;
+}
+
+
+
+template <class Basis>
+bool
+LatVolMesh<Basis>::locate(typename Node::index_type &node, const Point &p)
+{
+  const Point r = transform_.unproject(p);
+  
+  const double rx = floor(r.x() + 0.5);
+  const double ry = floor(r.y() + 0.5);
+  const double rz = floor(r.z() + 0.5);
+
+  // Clamp in double space to avoid overflow errors.
+  if (rx < 0.0  || ry < 0.0  || rz < 0.0 ||
+      rx >= ni_ || ry >= nj_ || rz >= nk_)
+  {
+    node.i_ = (unsigned int)Max(Min(rx,(double)(ni_-1)), 0.0);
+    node.j_ = (unsigned int)Max(Min(ry,(double)(nj_-1)), 0.0);
+    node.k_ = (unsigned int)Max(Min(rz,(double)(nk_-1)), 0.0);
+    node.mesh_ = this;
+    return false;
+  }
+
+  // Nodes over 2 billion might suffer roundoff error.
+  node.i_ = (unsigned int)rx;
+  node.j_ = (unsigned int)ry;
+  node.k_ = (unsigned int)rz;
+  node.mesh_ = this;
+
+  return true;
+}
+
+
+template <class Basis>
+void
+Pio(Piostream& stream, typename LatVolMesh<Basis>::NodeIndex& n)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, n.i_);
+    Pio(stream, n.j_);
+    Pio(stream, n.k_);
+    stream.end_cheap_delim();
+}
+
+template <class Basis>
+void
+Pio(Piostream& stream, typename LatVolMesh<Basis>::CellIndex& n)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, n.i_);
+    Pio(stream, n.j_);
+    Pio(stream, n.k_);
+    stream.end_cheap_delim();
+}
+
+template <class Basis>
+const string 
+find_type_name(typename LatVolMesh<Basis>::NodeIndex *)
+{
+  static string name = LatVolMesh<Basis>::type_name(-1) + "::NodeIndex";
+  return name;
+}
+
+template <class Basis>
+const string 
+find_type_name(typename LatVolMesh<Basis>::CellIndex *)
+{
+  static string name = LatVolMesh<Basis>::type_name(-1) + "::CellIndex";
+  return name;
+}
+
+#define LATVOLMESH_VERSION 3
+
+template <class Basis>
+void
+LatVolMesh<Basis>::io(Piostream& stream)
+{
+  int version = stream.begin_class(type_name(-1), LATVOLMESH_VERSION);
+  
+  Mesh::io(stream);
+
+  // IO data members, in order
+  Pio(stream, ni_);
+  Pio(stream, nj_);
+  Pio(stream, nk_);
+
+  if (version < 2 && stream.reading())
+  {
+    Point min, max;
+    Pio(stream, min);
+    Pio(stream, max);
+    transform_.pre_scale(Vector(1.0 / (ni_ - 1.0),
+				1.0 / (nj_ - 1.0),
+				1.0 / (nk_ - 1.0)));
+    transform_.pre_scale(max - min);
+    transform_.pre_translate(Vector(min));
+    transform_.compute_imat();
+  } else if (version < 3 && stream.reading() ) {
+    Pio_old(stream, transform_);
+  }
+  else
+  {
+    Pio(stream, transform_);
+  }
+
+  stream.end_class();
+}
+
+template <class Basis>
+const string
+LatVolMesh<Basis>::type_name(int n)
+{
+  ASSERT((n >= -1) && n <= 1);
+  if (n == -1)
+  {
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    return name;
+  }
+  else if (n == 0)
+  {
+    static const string nm("LatVolMesh");
+    return nm;
+  }
+  else 
+  {
+    return find_type_name((Basis *)0);
+  }
+}
+
+
+template <class Basis>
+void
+LatVolMesh<Basis>::begin(typename LatVolMesh<Basis>::Node::iterator &itr) const
+{
+  itr = typename Node::iterator(this, min_i_, min_j_, min_k_);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::end(typename LatVolMesh<Basis>::Node::iterator &itr) const
+{
+  itr = typename Node::iterator(this, min_i_, min_j_, min_k_ + nk_);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::size(typename LatVolMesh<Basis>::Node::size_type &s) const
+{
+  s = typename Node::size_type(ni_,nj_,nk_);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::to_index(typename LatVolMesh<Basis>::Node::index_type &idx, 
+			    unsigned int a)
+{
+  const unsigned int i = a % ni_;
+  const unsigned int jk = a / ni_;
+  const unsigned int j = jk % nj_;
+  const unsigned int k = jk / nj_;
+  idx = typename Node::index_type(this, i, j, k);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::begin(typename LatVolMesh<Basis>::Edge::iterator &itr) const
+{
+  itr = typename Edge::iterator(0);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::end(typename LatVolMesh<Basis>::Edge::iterator &itr) const
+{
+  itr = ((ni_-1) * nj_ * nk_) + (ni_ * (nj_-1) * nk_) + (ni_ * nj_ * (nk_-1));
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::size(typename LatVolMesh<Basis>::Edge::size_type &s) const
+{
+  s = ((ni_-1) * nj_ * nk_) + (ni_ * (nj_-1) * nk_) + (ni_ * nj_ * (nk_-1));
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::begin(typename LatVolMesh<Basis>::Face::iterator &itr) const
+{
+  itr = typename Face::iterator(0);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::end(typename LatVolMesh<Basis>::Face::iterator &itr) const
+{
+  itr = (ni_-1) * (nj_-1) * nk_ +
+    ni_ * (nj_ - 1 ) * (nk_ - 1) +
+    (ni_ - 1) * nj_ * (nk_ - 1);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::size(typename LatVolMesh<Basis>::Face::size_type &s) const
+{
+  s =  (ni_-1) * (nj_-1) * nk_ +
+    ni_ * (nj_ - 1 ) * (nk_ - 1) +
+    (ni_ - 1) * nj_ * (nk_ - 1);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::begin(typename LatVolMesh<Basis>::Cell::iterator &itr) const
+{
+  itr = typename Cell::iterator(this,  min_i_, min_j_, min_k_);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::end(typename LatVolMesh<Basis>::Cell::iterator &itr) const
+{
+  itr = typename Cell::iterator(this, min_i_, min_j_, min_k_ + nk_-1);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::size(typename LatVolMesh<Basis>::Cell::size_type &s) const
+{
+  s = typename Cell::size_type(ni_-1, nj_-1,nk_-1);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::to_index(typename LatVolMesh<Basis>::Cell::index_type &idx, 
+			    unsigned int a)
+{
+  const unsigned int i = a % (ni_-1);
+  const unsigned int jk = a / (ni_-1);
+  const unsigned int j = jk % (nj_-1);
+  const unsigned int k = jk / (nj_-1);
+  idx = Cell::index_type(this, i, j, k);
+}
+
+
+template <class Basis>
+int
+LatVolMesh<Basis>::get_valence(const typename Node::index_type &i) const
+{
+  return (((i.i_ == 0 || i.i_ == ni_) ? 1 : 2) +
+	  ((i.j_ == 0 || i.j_ == nj_) ? 1 : 2) +
+	  ((i.k_ == 0 || i.k_ == nk_) ? 1 : 2));
+}
+
+template <class Basis>
+int
+LatVolMesh<Basis>::get_valence(
+			 typename LatVolMesh<Basis>::Edge::index_type i) const
+{
+  return 1;
+}
+
+template <class Basis>
+int
+LatVolMesh<Basis>::get_valence(
+			 typename LatVolMesh<Basis>::Face::index_type i) const
+{
+  return 1;
+}
+
+template <class Basis>
+int
+LatVolMesh<Basis>::get_valence(const typename Cell::index_type &i) const
+{
+  return 1;
+}
+
 
 } // namespace SCIRun
 

@@ -43,8 +43,10 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/FieldBoundary.h>
 #include <Core/Containers/Handle.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/ImageField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Datatypes/ImageMesh.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/Geom/GeomLine.h>
@@ -59,6 +61,10 @@ public:
   FieldCage(GuiContext* ctx);
   virtual ~FieldCage();
   virtual void execute();
+
+
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+  typedef ImageMesh<QuadBilinearLgn<Point> >  IMesh;
 
 private:
   //! input port
@@ -168,11 +174,13 @@ FieldCage::execute()
 
     // for Image and LatVols have the field cage coordinates 
     // correspond to the exact corner cooords
-    string field_type = fld_handle->get_type_description(0)->get_name();
-    if( field_type.find("LatVolField") != string::npos) {
+    string field_type = fld_handle->get_type_description(1)->get_name();
+    if( field_type.find("LatVolMesh") != string::npos) {
       // use min coords of latvol
-      LatVolMesh *m = (LatVolMesh*) fld_handle->mesh().get_rep();
-      LatVolMesh::Node::index_type index;
+      // this should be dynamically compiled....
+      
+      LVMesh *m = (LVMesh*) fld_handle->mesh().get_rep();
+      LVMesh::Node::index_type index;
 
       m->get_min(min);
       m->get_dim(max);
@@ -234,10 +242,10 @@ FieldCage::execute()
       add_lines(p3, p7, p4, blue, lines, z_incr, zn-1);
       add_lines(p2, p6, p1, blue, lines, z_incr, zn-1);
       add_lines(p1, p5, p4, blue, lines, z_incr, zn-1);
-    } else if( field_type.find("ImageField") != string::npos) {
+    } else if( field_type.find("ImageMesh") != string::npos) {
       // use min coords of image
-      ImageMesh *m = (ImageMesh*) fld_handle->mesh().get_rep();
-      ImageMesh::Node::index_type index;
+      IMesh *m = (IMesh*) fld_handle->mesh().get_rep();
+      IMesh::Node::index_type index;
 
       m->get_min(min);
       min.push_back(0);

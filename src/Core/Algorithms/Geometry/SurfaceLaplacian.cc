@@ -116,14 +116,14 @@ int matrix_union(Array1<int> &mat_init, Array1<int> &mat_res) {
 
 // --------------------------------------------------------------------------
 // function to compute laplacian matrix from neighbours
-DenseMatrix *surfaceLaplacian(TriSurfMesh *tsm) {
+DenseMatrix *surfaceLaplacian(surfLaplMesh *tsm) {
   //Array1<Point> &pts, Array2<int> &tris) {
 
-  TriSurfMesh::Node::iterator niter; 
+  surfLaplMesh::Node::iterator niter; 
   tsm->begin(niter);
-  TriSurfMesh::Node::iterator niter_end; 
+  surfLaplMesh::Node::iterator niter_end; 
   tsm->end(niter_end);
-  TriSurfMesh::Node::size_type nsize; 
+  surfLaplMesh::Node::size_type nsize; 
   tsm->size(nsize);
 
   Array1<Point> pts;
@@ -134,15 +134,15 @@ DenseMatrix *surfaceLaplacian(TriSurfMesh *tsm) {
     ++niter;
   }
 
-  TriSurfMesh::Face::size_type nfaces;
+  surfLaplMesh::Face::size_type nfaces;
   tsm->size(nfaces);
   Array2<int> tris(nfaces, 3);
-  TriSurfMesh::Face::iterator fiter;
+  surfLaplMesh::Face::iterator fiter;
   tsm->begin(fiter);
-  TriSurfMesh::Face::iterator fend;
+  surfLaplMesh::Face::iterator fend;
   tsm->end(fend);
   
-  TriSurfMesh::Node::array_type fac_nodes(3);
+  surfLaplMesh::Node::array_type fac_nodes(3);
   int ctr = 0;
   while(fiter != fend) {
     tsm->get_nodes(fac_nodes, *fiter);

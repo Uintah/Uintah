@@ -49,7 +49,9 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Datatypes/PointCloudMesh.h>
 #include <Packages/BioPSE/Core/Algorithms/Forward/SphericalVolumeConductor.h>
 #include <Packages/BioPSE/share/share.h>
 
@@ -58,7 +60,11 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class BioPSESHARE AnisoSphereModel : public Module {
-
+  typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+  typedef ConstantBasis<int>                DatBasisi;
+  typedef ConstantBasis<double>                DatBasisd;
+  typedef GenericField<PCMesh, DatBasisi, vector<int> > PCFieldi;  
+  typedef GenericField<PCMesh, DatBasisd, vector<double> > PCFieldd;  
   // ports
   FieldIPort  *hInElectrodes;
   MatrixIPort *hInConductivities;
@@ -97,21 +103,21 @@ public:
 
 DECLARE_MAKER(AnisoSphereModel)
 
-AnisoSphereModel::AnisoSphereModel(GuiContext *context) : 
-  Module("AnisoSphereModel", context, Filter, "Forward", "BioPSE"),
-  r_scalp(context->subVar("r_scalp")),
-  r_skull(context->subVar("r_skull")),
-  r_cbsf(context->subVar("r_cbsf")),
-  r_brain(context->subVar("r_brain")),
-  units(context->subVar("units")),
-  rc_scalp(context->subVar("rc_scalp")),
-  rc_skull(context->subVar("rc_skull")),
-  rc_cbsf(context->subVar("rc_cbsf")),
-  rc_brain(context->subVar("rc_brain")),
-  tc_scalp(context->subVar("tc_scalp")),
-  tc_skull(context->subVar("tc_skull")),
-  tc_cbsf(context->subVar("tc_cbsf")),
-  tc_brain(context->subVar("tc_brain")) {}
+  AnisoSphereModel::AnisoSphereModel(GuiContext *context) : 
+    Module("AnisoSphereModel", context, Filter, "Forward", "BioPSE"),
+    r_scalp(context->subVar("r_scalp")),
+    r_skull(context->subVar("r_skull")),
+    r_cbsf(context->subVar("r_cbsf")),
+    r_brain(context->subVar("r_brain")),
+    units(context->subVar("units")),
+    rc_scalp(context->subVar("rc_scalp")),
+    rc_skull(context->subVar("rc_skull")),
+    rc_cbsf(context->subVar("rc_cbsf")),
+    rc_brain(context->subVar("rc_brain")),
+    tc_scalp(context->subVar("tc_scalp")),
+    tc_skull(context->subVar("tc_skull")),
+    tc_cbsf(context->subVar("tc_cbsf")),
+    tc_brain(context->subVar("tc_brain")) {}
 
 AnisoSphereModel::~AnisoSphereModel() {}
 
@@ -122,16 +128,16 @@ void AnisoSphereModel::execute() {
   // get input ports
   hInElectrodes = (FieldIPort*)get_iport("ElectrodePositions");
   if(!hInElectrodes) {
-	error("DipoleInAnisoSpheres::execute() -> impossible to initialize input port 'ElectrodePositions'");
-	return;
+    error("DipoleInAnisoSpheres::execute() -> impossible to initialize input port 'ElectrodePositions'");
+    return;
   }
   hInConductivities = (MatrixIPort *)get_iport("AnisoConductivities");
 
   // get output ports
   hOutElectrodes = (FieldOPort*)get_oport("ElectrodePositions");
   if(!hOutElectrodes) {
-	error("impossible to initialize output port 'ElectrodePositions'");
-	return;
+    error("impossible to initialize output port 'ElectrodePositions'");
+    return;
   }
 
   hOutRadii = (MatrixOPort*)get_oport("SphereRadii");
@@ -141,35 +147,36 @@ void AnisoSphereModel::execute() {
   FieldHandle hElectrodes;
   hInElectrodes->get(hElectrodes);
   if(!hElectrodes.get_rep() ||
-	 !(hElectrodes->get_type_name(0) == "PointCloudField") ||
-	 !(hElectrodes->get_type_name(1) == "double")) {
-	error("input electrode field is not of type 'PointCloudField<double>'");
-	return;
+     !(hElectrodes->get_type_name(1).find("PointCloudMesh") != string::npos) ||
+     !(hElectrodes->get_type_name(3).find("double") != string::npos))
+  {
+    error("input electrode field is not of type 'PointCloudField<double>'");
+    return;
   }
   
   // if possible, get matrix handle for conductivities
   MatrixHandle hConductivities;
   if(!hInConductivities->get(hConductivities) || !hConductivities.get_rep())
-	condMatrix = false;
+    condMatrix = false;
   else
-	condMatrix = true;
+    condMatrix = true;
 
 
   // get electrode positions from input port
-  PointCloudField<double> *pElectrodes = dynamic_cast<PointCloudField<double>* >(hElectrodes.get_rep());
+  PCFieldd *pElectrodes = dynamic_cast<PCFieldd* >(hElectrodes.get_rep());
   if(!pElectrodes) {
-	error("input field ElectrodePositions is not of type 'PointCloudField<double>'");
-	return;
+    error("input field ElectrodePositions is not of type 'PointCloudField<double>'");
+    return;
   }
-  PointCloudMeshHandle mesh_ = pElectrodes->get_typed_mesh();
-  PointCloudMesh::Node::iterator nii, nie;
+  PCMesh::handle_type mesh_ = pElectrodes->get_typed_mesh();
+  PCMesh::Node::iterator nii, nie;
   mesh_->begin(nii);
   mesh_->end(nie);
   vector<Point> electrodePositions;
   Point p;
   for(; nii != nie; ++nii) {
-	mesh_->get_point(p, *nii);
-	electrodePositions.push_back(p);
+    mesh_->get_point(p, *nii);
+    electrodePositions.push_back(p);
   }
   int numElectrodes = (int)electrodePositions.size();
 
@@ -184,25 +191,25 @@ void AnisoSphereModel::execute() {
   // otherwise take the values from the gui
   cond = scinew DenseMatrix(4,2);
   if(condMatrix) {
-	for(int i=0; i<4; i++) {
-	  cond->put(i, RAD, hConductivities->get(i, RAD)); // radial
-	  cond->put(i, TAN, hConductivities->get(i, TAN)); // tangential
-	}
-	// update gui
-	rc_scalp.set(cond->get(SCALP, RAD)); tc_scalp.set(cond->get(SCALP, TAN));
-	rc_skull.set(cond->get(SKULL, RAD)); tc_skull.set(cond->get(SKULL, TAN));
-	rc_cbsf.set(cond->get(CBSF, RAD)); tc_cbsf.set(cond->get(CBSF, TAN));
-	rc_brain.set(cond->get(BRAIN, RAD)); tc_brain.set(cond->get(BRAIN, TAN));
+    for(int i=0; i<4; i++) {
+      cond->put(i, RAD, hConductivities->get(i, RAD)); // radial
+      cond->put(i, TAN, hConductivities->get(i, TAN)); // tangential
+    }
+    // update gui
+    rc_scalp.set(cond->get(SCALP, RAD)); tc_scalp.set(cond->get(SCALP, TAN));
+    rc_skull.set(cond->get(SKULL, RAD)); tc_skull.set(cond->get(SKULL, TAN));
+    rc_cbsf.set(cond->get(CBSF, RAD)); tc_cbsf.set(cond->get(CBSF, TAN));
+    rc_brain.set(cond->get(BRAIN, RAD)); tc_brain.set(cond->get(BRAIN, TAN));
   }
   else {
-	cond->put(SCALP, RAD, rc_scalp.get());
-	cond->put(SKULL, RAD, rc_skull.get()); 
-	cond->put(CBSF,  RAD, rc_cbsf.get());  
-	cond->put(BRAIN, RAD, rc_brain.get()); 
-	cond->put(SCALP, TAN, tc_scalp.get());
-	cond->put(SKULL, TAN, tc_skull.get()); 
-	cond->put(CBSF,  TAN, tc_cbsf.get()); 
-	cond->put(BRAIN, TAN, tc_brain.get());
+    cond->put(SCALP, RAD, rc_scalp.get());
+    cond->put(SKULL, RAD, rc_skull.get()); 
+    cond->put(CBSF,  RAD, rc_cbsf.get());  
+    cond->put(BRAIN, RAD, rc_brain.get()); 
+    cond->put(SCALP, TAN, tc_scalp.get());
+    cond->put(SKULL, TAN, tc_skull.get()); 
+    cond->put(CBSF,  TAN, tc_cbsf.get()); 
+    cond->put(BRAIN, TAN, tc_brain.get());
   }
 
   // get unit of sphere radii
@@ -210,22 +217,22 @@ void AnisoSphereModel::execute() {
 
   // project electrodes on outer sphere (scalp) and create new PointCloudField
   double rad;
-  PointCloudMesh *electrodeMesh = scinew PointCloudMesh();
+  PCMesh *electrodeMesh = scinew PCMesh();
   for(int i=0; i<numElectrodes; i++) {
-	p = electrodePositions[i];
-	rad = sqrt(p.x()*p.x() + p.y()*p.y() + p.z()*p.z());
-	p *= radii->get(SCALP) / rad;
-	electrodeMesh->add_point(p);
+    p = electrodePositions[i];
+    rad = sqrt(p.x()*p.x() + p.y()*p.y() + p.z()*p.z());
+    p *= radii->get(SCALP) / rad;
+    electrodeMesh->add_point(p);
   }
-  PointCloudMeshHandle hElectrodeMesh(electrodeMesh);
-  PointCloudField<int> *newElectrodePositions = scinew PointCloudField<int>(hElectrodeMesh, 1);
+  PCMesh::handle_type hElectrodeMesh(electrodeMesh);
+  PCFieldi *newElectrodePositions = scinew PCFieldi(hElectrodeMesh);
   // enumerate the nodes
   electrodeMesh->begin(nii);
   electrodeMesh->end(nie);
   int i=0;
   for(; nii != nie; ++nii) {
-	newElectrodePositions->set_value(i, *nii);
-	i++;
+    newElectrodePositions->set_value(i, *nii);
+    i++;
   }
 
   // set units

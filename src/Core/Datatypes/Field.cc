@@ -38,8 +38,7 @@ namespace SCIRun{
 PersistentTypeID Field::type_id("Field", "PropertyManager", 0);
 
 
-Field::Field(int order) :
-  order_(order)
+Field::Field()
 {
 }
 
@@ -52,33 +51,11 @@ const int FIELD_VERSION = 2;
 void 
 Field::io(Piostream& stream){
   int version = stream.begin_class("Field", FIELD_VERSION);
-  if (version < FIELD_VERSION) {
-
-    // The following was FIELD_VERSION 1 data_at ordering
-    //     enum data_location{
-    //       NODE,
-    //       EDGE,
-    //       FACE,
-    //       CELL,
-    //       NONE
-    //     };
-
-    unsigned int tmp;
+  if (version < 2) {
+    // used to be data_location, then order at this point.
+    unsigned tmp = 0;
     Pio(stream, tmp);
-    if (tmp == 0) {
-      // data_at_ was NODE
-      order_ = 1;
-    } else if (tmp == 4) {
-      // data_at_ was NONE
-      order_ = -1;
-    } else {
-      // data_at_ was somewhere else
-      order_ = 0;
-    }
-  } else {
-    Pio(stream, order_);
   }
-  
   PropertyManager::io(stream);
   stream.end_class();
 }
@@ -93,7 +70,8 @@ Field::get_type_name(int n) const
 ScalarFieldInterfaceHandle
 Field::query_scalar_interface(ProgressReporter *reporter)
 {
-  if (order_ == -1) { return 0; }
+  if (basis_order() == -1) { return 0; }
+
   const TypeDescription *ftd = get_type_description();
   const TypeDescription *ltd = order_type_description();
   CompileInfoHandle ci = ScalarFieldInterfaceMaker::get_compile_info(ftd, ltd);
@@ -111,7 +89,7 @@ Field::query_scalar_interface(ProgressReporter *reporter)
 VectorFieldInterfaceHandle
 Field::query_vector_interface(ProgressReporter *reporter)
 {
-  if (order_ == -1) { return 0; }
+  if (basis_order() == -1) { return 0; }
   const TypeDescription *ftd = get_type_description();
   const TypeDescription *ltd = order_type_description();
   CompileInfoHandle ci = VectorFieldInterfaceMaker::get_compile_info(ftd, ltd);
@@ -129,7 +107,8 @@ Field::query_vector_interface(ProgressReporter *reporter)
 TensorFieldInterfaceHandle
 Field::query_tensor_interface(ProgressReporter *reporter)
 {
-  if (order_ == -1) { return 0; }
+  if (basis_order() == -1) { return 0; }
+
   const TypeDescription *ftd = get_type_description();
   const TypeDescription *ltd = order_type_description();
   CompileInfoHandle ci = TensorFieldInterfaceMaker::get_compile_info(ftd, ltd);

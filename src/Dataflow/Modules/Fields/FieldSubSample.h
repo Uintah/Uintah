@@ -40,12 +40,12 @@
 #include <Core/Containers/Handle.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/ScanlineField.h>
-#include <Core/Datatypes/StructHexVolField.h>
-#include <Core/Datatypes/StructQuadSurfField.h>
-#include <Core/Datatypes/StructCurveField.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/ScanlineMesh.h>
+#include <Core/Datatypes/StructHexVolMesh.h>
+#include <Core/Datatypes/StructQuadSurfMesh.h>
+#include <Core/Datatypes/StructCurveMesh.h>
 
 
 namespace SCIRun {

@@ -50,7 +50,9 @@
 // -noElementsCount flag is used).  The edge indicies will be zero-based, 
 // unless the user specifies -oneBasedIndexing.
 
-#include <Core/Datatypes/CurveField.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -143,16 +145,19 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<fieldName<<".  Exiting...\n";
     return 2;
   }
-  if (handle->get_type_description(0)->get_name() != "CurveField") {
-    cerr << "Error -- input field wasn't a CurveField (type_name="<<handle->get_type_description(0)->get_name()<<"\n";
+  if (handle->get_type_description(1)->get_name().find("CurveMesh") != 
+      string::npos) 
+  {
+    cerr << "Error -- input field wasn't a CurveField (type_name="
+	 << handle->get_type_description(1)->get_name() << std::endl;
     return 2;
   }
-
+  typedef CurveMesh<CrvLinearLgn<Point> > CMesh;
   MeshHandle mH = handle->mesh();
-  CurveMesh *cm = dynamic_cast<CurveMesh *>(mH.get_rep());
-  CurveMesh::Node::iterator niter; 
-  CurveMesh::Node::iterator niter_end; 
-  CurveMesh::Node::size_type nsize; 
+  CMesh *cm = dynamic_cast<CMesh *>(mH.get_rep());
+  CMesh::Node::iterator niter; 
+  CMesh::Node::iterator niter_end; 
+  CMesh::Node::size_type nsize; 
   cm->begin(niter);
   cm->end(niter_end);
   cm->size(nsize);
@@ -171,10 +176,10 @@ main(int argc, char **argv) {
   }
   fclose(fPts);
 
-  CurveMesh::Edge::size_type esize; 
-  CurveMesh::Edge::iterator eiter; 
-  CurveMesh::Edge::iterator eiter_end; 
-  CurveMesh::Node::array_type edge_nodes(2);
+  CMesh::Edge::size_type esize; 
+  CMesh::Edge::iterator eiter; 
+  CMesh::Edge::iterator eiter_end; 
+  CMesh::Node::array_type edge_nodes(2);
   cm->size(esize);
   cm->begin(eiter);
   cm->end(eiter_end);

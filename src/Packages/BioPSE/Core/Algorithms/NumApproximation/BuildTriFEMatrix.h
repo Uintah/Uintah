@@ -46,7 +46,9 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Barrier.h>
 #include <Core/Thread/Parallel.h>
@@ -58,8 +60,15 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class BuildTriFEMatrix;
-typedef LockingHandle<TriSurfField<int> >   TriSurfFieldIntHandle;
-typedef LockingHandle<TriSurfField<Tensor> >   TriSurfFieldTensorHandle;
+
+typedef TriLinearLgn<int>                  btfeDatBasisi;
+typedef TriLinearLgn<Tensor>               btfeDatBasist;
+typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
+typedef GenericField<TSMesh, btfeDatBasisi,    vector<int> > TSFieldi;  
+typedef GenericField<TSMesh, btfeDatBasist, vector<Tensor> > TSFieldt;   
+
+typedef LockingHandle<TSFieldi>   TriSurfFieldIntHandle;
+typedef LockingHandle<TSFieldt>   TriSurfFieldTensorHandle;
 typedef LockingHandle<BuildTriFEMatrix>   BuildTriFEMatrixHandle;
 
 class BuildTriFEMatrix: public Datatype {
@@ -68,7 +77,7 @@ class BuildTriFEMatrix: public Datatype {
   TriSurfFieldIntHandle           hFieldInt_;
   TriSurfFieldTensorHandle        hFieldTensor_;
   bool                            index_based_;
-  TriSurfMeshHandle               hMesh_;
+  TSMesh::handle_type             hMesh_;
   MatrixHandle&                   hA_;
   SparseRowMatrix*                pA_;
   int                             np_;
@@ -82,9 +91,10 @@ class BuildTriFEMatrix: public Datatype {
   //! Private methods
   void parallel(int);
   
-  void build_local_matrix(double lcl[3][3], TriSurfMesh::Face::index_type);
+  void build_local_matrix(double lcl[3][3], TSMesh::Face::index_type);
   
-  void add_lcl_gbl(double lcl[3][3], TriSurfMesh::Face::index_type, int, int, TriSurfMesh::Node::array_type&);
+  void add_lcl_gbl(double lcl[3][3], TSMesh::Face::index_type, int, int, 
+		   TSMesh::Node::array_type&);
   
  
 public:

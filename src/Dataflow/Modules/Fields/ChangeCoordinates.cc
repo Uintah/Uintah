@@ -39,7 +39,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/Datatypes/PointCloudField.h>
 #include <Dataflow/Modules/Fields/ChangeCoordinates.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>

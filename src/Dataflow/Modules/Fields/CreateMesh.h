@@ -42,13 +42,13 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Containers/StringUtil.h>
 
-#include <Core/Datatypes/CurveField.h>
-#include <Core/Datatypes/HexVolField.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/PrismVolField.h>
-#include <Core/Datatypes/QuadSurfField.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/PrismVolMesh.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 
 namespace SCIRun {
 

@@ -49,7 +49,10 @@
 // specify -oneBasedIndexing.  And the SCIRun output file is written in 
 // ASCII, unless you specify -binOutput.
 
-#include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -132,8 +135,8 @@ main(int argc, char **argv) {
 	          // static constructors) Core/Datatypes;
 #endif
   setDefaults();
-
-  QuadSurfMesh *qsm = new QuadSurfMesh();
+  typedef QuadSurfMesh<QuadBilinearLgn<Point> > QSMesh;
+  QSMesh *qsm = new QSMesh();
   char *ptsName = argv[1];
   char *quadsName = argv[2];
   char *fieldName = argv[3];
@@ -199,7 +202,10 @@ main(int argc, char **argv) {
   }
   cerr << "done adding elements.\n";
 
-  QuadSurfField<double> *qs = scinew QuadSurfField<double>(qsm, -1);
+  typedef NoDataBasis<double>             DatBasis;
+  typedef GenericField<QSMesh, DatBasis, vector<double> > QSField; 
+  
+  QSField *qs = scinew QSField(qsm);
   FieldHandle qsH(qs);
   
   if (binOutput) {

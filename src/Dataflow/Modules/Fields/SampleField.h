@@ -37,7 +37,9 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Math/MusilRNG.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Util/ProgressReporter.h>
 #include <algorithm>
@@ -47,7 +49,7 @@ namespace SCIRun {
 class SampleFieldRandomAlgo : public DynamicAlgoBase
 {
 public:
-
+  typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
   virtual FieldHandle execute(ProgressReporter *mod,
 			      FieldHandle field, unsigned int num_seeds,
 			      int rng_seed, const string &dist, int clamp) = 0;
@@ -230,7 +232,7 @@ SampleFieldRandomAlgoT<Mesh>::execute(ProgressReporter *mod,
 
   long double max = table[table.size()-1].first;
 
-  PointCloudMesh *pcmesh = scinew PointCloudMesh;
+  PCMesh *pcmesh = scinew PCMesh;
 
   unsigned int i;
   for (i=0; i < num_seeds; i++)
@@ -259,9 +261,9 @@ SampleFieldRandomAlgoT<Mesh>::execute(ProgressReporter *mod,
     }
     pcmesh->add_node(p);
   }
-
-  PointCloudField<double> *seeds =
-    scinew PointCloudField<double>(pcmesh,1);
+  typedef ConstantBasis<double>                DatBasis;
+  typedef GenericField<PCMesh, DatBasis, vector<double> >  PCField;   
+  PCField *seeds = scinew PCField(pcmesh);
 
   return seeds;
 }

@@ -39,7 +39,11 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/TetVolField.h>
+
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/TetVolMesh.h> 
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Persistent/Pstreams.h>
@@ -53,6 +57,7 @@ using std::ifstream;
 using std::endl;
 
 using namespace SCIRun;
+typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
 
 int readLine(FILE **f, char *buf) {
     char c = 0;
@@ -77,7 +82,7 @@ main(int argc, char **argv) {
     exit(0);
   }
 
-  TetVolMeshHandle tvm = new TetVolMesh();
+  TVMesh::handle_type tvm = new TVMesh();
   char buf[10000];
   int i, dum1, dum2, nattr, tattr, npts, ntets;
   double x, y, z;
@@ -137,7 +142,11 @@ main(int argc, char **argv) {
   }
   fclose(f);
 
-  TetVolField<int> *tvi = scinew TetVolField<int>(tvm, 0);
+  typedef ConstantBasis<int>  DatBasis;
+  typedef GenericField<TVMesh, DatBasis, vector<int> >  TVField;
+
+  TVField *tvi = scinew TVField(tvm);
+
   vector<pair<string, Tensor> > tens;
   tens.resize(1);
   tens[0] = pair<string, Tensor>("inside", Tensor(1.0));

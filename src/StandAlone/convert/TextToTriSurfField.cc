@@ -49,7 +49,10 @@
 // specify -oneBasedIndexing.  And the SCIRun output file is written in 
 // ASCII, unless you specify -binOutput.
 
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -137,8 +140,8 @@ main(int argc, char **argv) {
 #endif
 
   setDefaults();
-
-  TriSurfMesh *tsm = new TriSurfMesh();
+  typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
+  TSMesh *tsm = new TSMesh();
 
   char *ptsName = argv[1];
   char *trisName = argv[2];
@@ -200,7 +203,10 @@ main(int argc, char **argv) {
   }
   cerr << "done adding elements.\n";
 
-  TriSurfField<double> *ts = scinew TriSurfField<double>(tsm, -1);
+  typedef NoDataBasis<double>  DatBasis;
+  typedef GenericField<TSMesh, DatBasis, vector<double> > TSField;
+
+  TSField *ts = scinew TSField(tsm);
   FieldHandle tsH(ts);
   
   if (binOutput) {

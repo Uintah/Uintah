@@ -46,7 +46,10 @@
 // The SCIRun output file will be written in ASCII, unless you specify 
 // -binOutput.
 
-#include <Core/Datatypes/StructCurveField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Datatypes/StructCurveMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -134,19 +137,23 @@ main(int argc, char **argv) {
   }
   if (header) ptsstream >> ni;
   cerr << "number of points = ("<<ni<<")\n";
-  StructCurveMesh *cm = new StructCurveMesh(ni);
+  typedef StructCurveMesh<CrvLinearLgn<Point> > SCMesh;
+  SCMesh *cm = new SCMesh(ni);
   int i;
   for (i=0; i<ni; i++) {
     double x, y, z;
     ptsstream >> x >> y >> z;
-    StructCurveMesh::Node::index_type idx(i);
+    SCMesh::Node::index_type idx(i);
     cm->set_point(Point(x, y, z), idx);
     if (debugOn) 
       cerr << "Added point (idx=["<<i<<"]) at ("<<x<<", "<<y<<", "<<z<<")\n";
   }
   cerr << "done adding points.\n";
 
-  StructCurveField<double> *cf = scinew StructCurveField<double>(cm, -1);
+  typedef NoDataBasis<double>                DatBasis;
+  typedef GenericField<SCMesh, DatBasis, vector<double> > SCField; 
+
+  SCField *cf = scinew SCField(cm);
   FieldHandle cH(cf);
   
   if (binOutput) {

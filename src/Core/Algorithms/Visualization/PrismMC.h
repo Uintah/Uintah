@@ -44,7 +44,9 @@
 
 #include <Core/Algorithms/Visualization/mcube2.h>
 #include <Core/Geom/GeomTriangles.h>
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <sci_hash_map.h>
 
@@ -67,13 +69,17 @@ public:
   typedef typename Field::mesh_type              mesh_type;
   typedef typename Field::mesh_handle_type       mesh_handle_type;
 
+  typedef TriSurfMesh<TriLinearLgn<Point> >                 TSMesh;
+  typedef TriLinearLgn<double>                              TDatBasis;
+  typedef GenericField<TSMesh, TDatBasis, vector<double> >  TSField;  
+
 private:
   LockingHandle<Field> field_;
   mesh_handle_type mesh_;
   GeomFastTriangles *triangles_;
   bool build_field_;
   bool build_geom_;
-  TriSurfMeshHandle trisurf_;
+  TSMesh::handle_type trisurf_;
   int nnodes_;
 
   struct edgepair_t
@@ -102,7 +108,7 @@ private:
   };
 
   typedef hash_map<edgepair_t,
-		   TriSurfMesh::Node::index_type,
+		   TSMesh::Node::index_type,
 		   edgepairhash,
 		   edgepairequal> edge_hash_type;
 #else
@@ -115,17 +121,17 @@ private:
   };
 
   typedef map<edgepair_t,
-	      TriSurfMesh::Node::index_type,
+	      TSMesh::Node::index_type,
 	      edgepairless> edge_hash_type;
 #endif
 
   edge_hash_type   edge_map_;  // Unique edge cuts when surfacing node data
   vector<long int> node_map_;  // Unique nodes when surfacing cell data.
 
-  TriSurfMesh::Node::index_type find_or_add_edgepoint(int n0, int n1,
+  TSMesh::Node::index_type find_or_add_edgepoint(int n0, int n1,
 						      double d0,
 						      const Point &p);
-  TriSurfMesh::Node::index_type find_or_add_nodepoint(node_index_type &);
+  TSMesh::Node::index_type find_or_add_nodepoint(node_index_type &);
 
   int n_;
 
@@ -177,13 +183,13 @@ void PrismMC<Field>::reset( int n, bool build_field, bool build_geom )
   trisurf_ = 0;
   if (build_field_)
   {
-    trisurf_ = scinew TriSurfMesh; 
+    trisurf_ = scinew TSMesh; 
   }
 }
 
 
 template<class Field>
-TriSurfMesh::Node::index_type
+PrismMC<Field>::TSMesh::Node::index_type
 PrismMC<Field>::find_or_add_edgepoint(int u0, int u1, double d0,
 				      const Point &p) 
 {
@@ -193,7 +199,7 @@ PrismMC<Field>::find_or_add_edgepoint(int u0, int u1, double d0,
   const typename edge_hash_type::iterator loc = edge_map_.find(np);
   if (loc == edge_map_.end())
   {
-    const TriSurfMesh::Node::index_type nodeindex = trisurf_->add_point(p);
+    const TSMesh::Node::index_type nodeindex = trisurf_->add_point(p);
     edge_map_[np] = nodeindex;
     return nodeindex;
   }
@@ -205,11 +211,11 @@ PrismMC<Field>::find_or_add_edgepoint(int u0, int u1, double d0,
 
 
 template<class Field>
-TriSurfMesh::Node::index_type
+PrismMC<Field>::TSMesh::Node::index_type
 PrismMC<Field>::find_or_add_nodepoint(node_index_type &tet_node_idx) {
-  TriSurfMesh::Node::index_type surf_node_idx;
+  TSMesh::Node::index_type surf_node_idx;
   long int i = node_map_[(long int)(tet_node_idx)];
-  if (i != -1) surf_node_idx = (TriSurfMesh::Node::index_type) i;
+  if (i != -1) surf_node_idx = (TSMesh::Node::index_type) i;
   else {
     Point p;
     mesh_->get_point(p, tet_node_idx);
@@ -239,7 +245,7 @@ void PrismMC<Field>::extract_c( cell_index_type cell, double iso )
   cell_index_type nbr;
   Point p[4];
   typename mesh_type::Node::array_type nodes;
-  TriSurfMesh::Node::index_type vertices[3];
+  TSMesh::Node::index_type vertices[3];
   unsigned int i, j;
   for (i = 0; i < faces.size(); i++)
   {
@@ -312,7 +318,7 @@ void PrismMC<Field>::extract_n( cell_index_type cell, double iso )
   int *vertex = tcase->edges;
   
   Point q[12];
-  TriSurfMesh::Node::index_type surf_node[12];
+  TSMesh::Node::index_type surf_node[12];
 
   // interpolate and project vertices
   int v = 0;
@@ -357,10 +363,10 @@ template<class Field>
 FieldHandle
 PrismMC<Field>::get_field(double value)
 {
-  TriSurfField<double> *fld = 0;
+  TSField *fld = 0;
   if (trisurf_.get_rep())
   {
-    fld = scinew TriSurfField<double>(trisurf_, 1);
+    fld = scinew TSField(trisurf_, 1);
     vector<double>::iterator iter = fld->fdata().begin();
     while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
   }

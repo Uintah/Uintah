@@ -42,7 +42,14 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/StructHexVolField.h>
+#include <Core/Geometry/Tensor.h>
+#include <Core/Containers/FData.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/StructHexVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Containers/FData.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -54,6 +61,8 @@ namespace SCIRun {
 class SampleStructHex : public Module
 {
 public:
+  typedef StructHexVolMesh<HexTrilinearLgn<Point> > SHVMesh;
+
   SampleStructHex(GuiContext* ctx);
   virtual ~SampleStructHex();
 
@@ -233,7 +242,7 @@ SampleStructHex::execute()
   unsigned int sizex = Max(2, size_x_.get());
   unsigned int sizey = Max(2, size_y_.get());
   unsigned int sizez = Max(2, size_z_.get());
-  StructHexVolMeshHandle mesh = scinew StructHexVolMesh(sizex, sizey, sizez);
+  SHVMesh::handle_type mesh = scinew SHVMesh(sizex, sizey, sizez);
 
   Transform trans;
   trans.pre_scale(Vector(1.0 / (sizex-1.0),
@@ -242,7 +251,7 @@ SampleStructHex::execute()
   trans.pre_scale(maxb - minb);
   trans.pre_translate(minb.asVector());
 
-  StructHexVolMesh::Node::iterator mitr, mitr_end;
+  SHVMesh::Node::iterator mitr, mitr_end;
   mesh->begin(mitr);
   mesh->end(mitr_end);
   while (mitr != mitr_end)
@@ -266,51 +275,99 @@ SampleStructHex::execute()
   FieldHandle ofh;
   if (datatype == SCALAR)
   {
-    StructHexVolField<double> *lvf = 
-      scinew StructHexVolField<double>(mesh, basis_order);
-    if (basis_order != -1)
-    {
-      StructHexVolField<double>::fdata_type::iterator itr = 
-	lvf->fdata().begin();
+    typedef NoDataBasis<double>                 NBasis;
+    typedef ConstantBasis<double>               CBasis;
+    typedef HexTrilinearLgn<double>             LBasis;
+    
+    if (basis_order == -1) {
+      typedef GenericField<SHVMesh, NBasis, FData3d<double,SHVMesh> > SHVField;
+      SHVField *lvf = scinew SHVField(mesh);
+      ofh = lvf;
+    } else if (basis_order == 0) {
+      typedef GenericField<SHVMesh, CBasis, FData3d<double,SHVMesh> > SHVField;
+      SHVField *lvf = scinew SHVField(mesh);
+      SHVField::fdata_type::iterator itr = lvf->fdata().begin();
       while (itr != lvf->fdata().end())
       {
 	*itr = 0.0;
 	++itr;
       }
+      ofh = lvf;
+    } else {
+      typedef GenericField<SHVMesh, LBasis, FData3d<double,SHVMesh> > SHVField;
+      SHVField *lvf = scinew SHVField(mesh);
+      SHVField::fdata_type::iterator itr = lvf->fdata().begin();
+      while (itr != lvf->fdata().end())
+      {
+	*itr = 0.0;
+	++itr;
+      }
+      ofh = lvf;
     }
-    ofh = lvf;
   } 
   else if (datatype == VECTOR)
   {
-    StructHexVolField<Vector> *lvf = 
-      scinew StructHexVolField<Vector>(mesh, basis_order);
-    if (basis_order != -1)
-    {
-      StructHexVolField<Vector>::fdata_type::iterator itr = 
-	lvf->fdata().begin();
+    typedef NoDataBasis<Vector>                 NBasis;
+    typedef ConstantBasis<Vector>               CBasis;
+    typedef HexTrilinearLgn<Vector>             LBasis;
+    
+    if (basis_order == -1) {
+      typedef GenericField<SHVMesh, NBasis, FData3d<Vector,SHVMesh> > SHVField;
+      SHVField *lvf = scinew SHVField(mesh);
+      ofh = lvf;
+    } else if (basis_order == 0) {
+      typedef GenericField<SHVMesh, CBasis, FData3d<Vector,SHVMesh> > SHVField;
+      SHVField *lvf = scinew SHVField(mesh);
+      SHVField::fdata_type::iterator itr = lvf->fdata().begin();
       while (itr != lvf->fdata().end())
       {
 	*itr = Vector(0.0, 0.0, 0.0);
 	++itr;
       }
+      ofh = lvf;
+    } else {
+      typedef GenericField<SHVMesh, LBasis, FData3d<Vector,SHVMesh> > SHVField;
+      SHVField *lvf = scinew SHVField(mesh);
+      SHVField::fdata_type::iterator itr = lvf->fdata().begin();
+      while (itr != lvf->fdata().end())
+      {
+	*itr = Vector(0.0, 0.0, 0.0);
+	++itr;
+      }
+      ofh = lvf;
     }
-    ofh = lvf;
   }				    
   else // if (datatype == TENSOR)	    
-  {				    
-    StructHexVolField<Tensor> *lvf = 
-      scinew StructHexVolField<Tensor>(mesh, basis_order);
-    if (basis_order != -1)
-    {
-      StructHexVolField<Tensor>::fdata_type::iterator itr = 
-	lvf->fdata().begin();
+  {	
+    typedef NoDataBasis<Tensor>                 NBasis;
+    typedef ConstantBasis<Tensor>               CBasis;
+    typedef HexTrilinearLgn<Tensor>             LBasis;
+    
+    if (basis_order == -1) {
+      typedef GenericField<SHVMesh, NBasis, FData3d<Tensor,SHVMesh> > SHVField;
+      SHVField *lvf = scinew SHVField(mesh);
+      ofh = lvf;
+    } else if (basis_order == 0) {
+      typedef GenericField<SHVMesh, CBasis, FData3d<Tensor,SHVMesh> > SHVField;
+      SHVField *lvf = scinew SHVField(mesh);
+      SHVField::fdata_type::iterator itr = lvf->fdata().begin();
       while (itr != lvf->fdata().end())
       {
 	*itr = Tensor(0.0);
 	++itr;
       }
+      ofh = lvf;
+    } else {
+      typedef GenericField<SHVMesh, LBasis, FData3d<Tensor,SHVMesh> > SHVField;
+      SHVField *lvf = scinew SHVField(mesh);
+      SHVField::fdata_type::iterator itr = lvf->fdata().begin();
+      while (itr != lvf->fdata().end())
+      {
+	*itr = Tensor(0.0);
+	++itr;
+      }
+      ofh = lvf;
     }
-    ofh = lvf;
   }				    
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Sample Field");

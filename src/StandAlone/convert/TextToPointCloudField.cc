@@ -46,7 +46,10 @@
 // And the SCIRun output file is written in ASCII, unless you specify 
 // -binOutput.
 
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -115,8 +118,8 @@ main(int argc, char **argv) {
 	          // static constructors) Core/Datatypes;
 #endif
   setDefaults();
-
-  PointCloudMesh *pcm = new PointCloudMesh();
+  typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+  PCMesh *pcm = new PCMesh();
   char *ptsName = argv[1];
   char *fieldName = argv[2];
   if (!parseArgs(argc, argv)) {
@@ -143,7 +146,11 @@ main(int argc, char **argv) {
   }
   cerr << "done adding points.\n";
 
-  PointCloudField<double> *pc = scinew PointCloudField<double>(pcm, -1);
+  typedef NoDataBasis<double>                DatBasis;
+  typedef GenericField<PCMesh, DatBasis, vector<double> > PCField;   
+
+
+  PCField *pc = scinew PCField(pcm);
   FieldHandle pcH(pc);
   
   if (binOutput) {

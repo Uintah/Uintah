@@ -43,8 +43,11 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/PointCloudMesh.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
@@ -60,6 +63,16 @@ using namespace SCIRun;
 
 class ApplyFEMVoltageSource : public Module {
 public:
+  typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
+  typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
+
+  typedef TetLinearLgn<int>                  tetDatBasis;
+  typedef GenericField<TVMesh, tetDatBasis,    vector<int> > TVField;
+
+  typedef ConstantBasis<int>                 pcDatBasis;
+  typedef GenericField<PCMesh, pcDatBasis,    vector<int> > PCField;  
+
+
   GuiString bcFlag_; // "none", "GroundZero", or "DirSub"
 
   //! Constructor/Destructor
@@ -120,15 +133,15 @@ void ApplyFEMVoltageSource::execute()
     return;
   }
 
-  TetVolMeshHandle mesh;
-  TetVolField<int> *field;
+  TVMesh::handle_type mesh;
+  TVField *field;
 
   if (hField->get_type_name(0)!="TetVolField" && hField->get_type_name(1)!="int"){
-    error("Supplied field is not of type TetVolField<int>.");
+    error("Supplied field is not of type TVField.");
     return;
   }
   else {
-    field = dynamic_cast<TetVolField<int>*> (hField.get_rep());
+    field = dynamic_cast<TVField*> (hField.get_rep());
     mesh = field->get_typed_mesh();
   }
   
@@ -150,7 +163,7 @@ void ApplyFEMVoltageSource::execute()
   MatrixHandle  hRhsIn;
   ColumnMatrix* rhsIn;
   
-  TetVolMesh::Node::size_type nsize; mesh->size(nsize);
+  TVMesh::Node::size_type nsize; mesh->size(nsize);
   ColumnMatrix* rhs = scinew ColumnMatrix(nsize);
  
   // -- if the user passed in a vector the right size, copy it into ours 
@@ -198,7 +211,7 @@ void ApplyFEMVoltageSource::execute()
   Array1<int> idcNz;
   Array1<double> valNz;
 
-  TetVolMesh::Node::array_type nind;
+  TVMesh::Node::array_type nind;
   vector<double> dbc;
   unsigned int idx;
   for(idx = 0; idx<dirBC.size(); ++idx){

@@ -42,7 +42,10 @@
 #define Datatypes_SegLatVolField_h
 
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Containers/FData.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/PersistentSTL.h>
@@ -53,23 +56,26 @@ namespace BioPSE {
 
 using namespace SCIRun;
 
-class SegLatVolField : public LatVolField<int> {
+typedef LatVolMesh<HexTrilinearLgn<Point> >  SegLVMesh;
+typedef ConstantBasis<int>                 SegDatBasis;
+typedef GenericField<SegLVMesh,SegDatBasis,FData3d<int,SegLVMesh> > SegLVField;
+
+class SegLatVolField : public SegLVField {
 private:
   int maxMatl_;
   Array1<pair<int, long> > comps_;
-  Array1<Array1<LatVolMesh::Cell::index_type> *> compMembers_;
+  Array1<Array1<SegLVMesh::Cell::index_type> *> compMembers_;
   int lowestValue(int i, Array1<int>& workingLabels);
   void setAll(int i, int newValue, Array1<int>& workingLabels);
   void setEquiv(int larger, int smaller, Array1<int>& workingLabels);
   void initialize();
 
 public:
-  SegLatVolField() : LatVolField<int>() {}
+  SegLatVolField() : SegLVField() {}
   SegLatVolField(const SegLatVolField &copy);
-  SegLatVolField(LatVolMeshHandle mesh)
-    : LatVolField<int>(mesh, 0)
-  {
-  }
+  SegLatVolField(SegLVMesh::handle_type mesh) : 
+    SegLVField(mesh)
+  {}
   
   inline int ncomps() { return comps_.size(); }
   inline int compMatl(int comp) { return comps_[comp].first; }

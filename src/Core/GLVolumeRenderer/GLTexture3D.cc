@@ -37,7 +37,10 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Persistent.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/ThreadGroup.h>
@@ -55,6 +58,8 @@ using std::deque;
 
 
 namespace SCIRun {
+
+typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
 
 int GLTexture3D::max_workers = 0;
 
@@ -120,7 +125,7 @@ bool
 GLTexture3D::init(double& min, double &max, bool use_minmax)
 {
   if (texfld_->mesh()->get_type_description()->get_name() !=
-      get_type_description((LatVolMesh *)0)->get_name())
+      get_type_description((LVMesh *)0)->get_name())
   {
     cerr << "GLTexture3D init error - can only make a GLTexture3D from a LatVolField.\n";
     return false;
@@ -132,9 +137,9 @@ GLTexture3D::init(double& min, double &max, bool use_minmax)
     cerr << "GLTexture3D constructor error - nonscalar LatVolField type.\n";
     return false;
   }
-  LatVolMeshHandle mesh = (LatVolMesh *)(texfld_->mesh().get_rep());
-//   cerr<<"Field Bounds in init()  are "<<mesh->get_bounding_box().min()<<
-//     ", "<<mesh->get_bounding_box().max()<<"\n";
+  LVMesh::handle_type mesh = (LVMesh *)(texfld_->mesh().get_rep());
+  //   cerr<<"Field Bounds in init()  are "<<mesh->get_bounding_box().min()<<
+  //     ", "<<mesh->get_bounding_box().max()<<"\n";
   transform_ = mesh->get_transform();
 
   if (xmax_ == 0 && ymax_ ==0 && zmax_== 0)
@@ -282,46 +287,70 @@ GLTexture3D::build_texture( Reporter *reporter)
   const int minpx = (int)minP_.x();
   const int minpy = (int)minP_.y();
   const int minpz = (int)minP_.z();
+
+  typedef GenericField<LVMesh, HexTrilinearLgn<double>, 
+    FData3d<double, LVMesh> >  LVFieldd;  
+
+  typedef GenericField<LVMesh, HexTrilinearLgn<float>, 
+    FData3d<float, LVMesh> >  LVFieldf;  
+
+  typedef GenericField<LVMesh, HexTrilinearLgn<int>, 
+    FData3d<int, LVMesh> >  LVFieldi;  
+
+  typedef GenericField<LVMesh, HexTrilinearLgn<unsigned int>, 
+    FData3d<unsigned int, LVMesh> >  LVFieldui;  
+
+  typedef GenericField<LVMesh, HexTrilinearLgn<short>, 
+    FData3d<short, LVMesh> >  LVFields;  
+
+  typedef GenericField<LVMesh, HexTrilinearLgn<unsigned short>, 
+    FData3d<unsigned short, LVMesh> >  LVFieldus;  
+
+  typedef GenericField<LVMesh, HexTrilinearLgn<char>, 
+    FData3d<char, LVMesh> >  LVFieldc;  
+
+  typedef GenericField<LVMesh, HexTrilinearLgn<unsigned char>, 
+    FData3d<unsigned char, LVMesh> >  LVFielduc;  
   
   if (type == "double") {
     bontree_ = build_bon_tree(minP_, maxP_, minpx, minpy, minpz,
 			      X_, Y_, Z_, 0, 
-	       dynamic_cast<LatVolField<double>*>(texfld_.get_rep()), 0, 
-			   thread_sema, tg);
+			      dynamic_cast<LVFieldd*>(texfld_.get_rep()), 0, 
+			      thread_sema, tg);
   } else if (type == "float") {
     bontree_ = build_bon_tree(minP_, maxP_, minpx, minpy, minpz,
 			      X_, Y_, Z_, 0, 
-	       dynamic_cast<LatVolField<float>*>(texfld_.get_rep()), 0, 
-			   thread_sema, tg);
+			      dynamic_cast<LVFieldf*>(texfld_.get_rep()), 0, 
+			      thread_sema, tg);
   } else if (type == "int") {
     bontree_ = build_bon_tree(minP_, maxP_, minpx, minpy, minpz,
 			      X_, Y_, Z_, 0, 
-	       dynamic_cast<LatVolField<int>*>(texfld_.get_rep()), 0, 
+			      dynamic_cast<LVFieldi*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
   } else if (type == "unsigned_int") {
     bontree_ = build_bon_tree(minP_, maxP_, minpx, minpy, minpz,
 			      X_, Y_, Z_, 0, 
-	       dynamic_cast<LatVolField<unsigned int>*>(texfld_.get_rep()), 0, 
-			   thread_sema, tg);
+			      dynamic_cast<LVFieldui*>(texfld_.get_rep()), 0, 
+			      thread_sema, tg);
   } else if (type == "short") {
     bontree_ = build_bon_tree(minP_, maxP_, minpx, minpy, minpz,
 			      X_, Y_, Z_, 0, 
-	       dynamic_cast<LatVolField<short>*>(texfld_.get_rep()), 0, 
-			   thread_sema, tg);
+			      dynamic_cast<LVFields*>(texfld_.get_rep()), 0, 
+			      thread_sema, tg);
   } else if (type == "unsigned_short") {
     bontree_ = build_bon_tree(minP_, maxP_, minpx, minpy, minpz,
 			      X_, Y_, Z_, 0, 
-	       dynamic_cast<LatVolField<unsigned short>*>(texfld_.get_rep()), 0, 
-			   thread_sema, tg);
+			      dynamic_cast<LVFieldus*>(texfld_.get_rep()), 0, 
+			      thread_sema, tg);
   } else if (type == "char") {
     bontree_ = build_bon_tree(minP_, maxP_, minpx, minpy, minpz,
 			      X_, Y_, Z_, 0, 
-	       dynamic_cast<LatVolField<char>*>(texfld_.get_rep()), 0, 
-			   thread_sema, tg);
+			      dynamic_cast<LVFieldc*>(texfld_.get_rep()), 0, 
+			      thread_sema, tg);
   } else if (type == "unsigned_char") {
     bontree_ = build_bon_tree(minP_, maxP_, minpx, minpy, minpz,
 			      X_, Y_, Z_, 0, 
-	       dynamic_cast<LatVolField<unsigned char>*>(texfld_.get_rep()), 0, 
+			      dynamic_cast<LVFielduc*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
   } else {
     cerr<<"Error: cast didn't work!\n";
@@ -373,27 +402,39 @@ void GLTexture3D::replace_texture( Reporter *reporter)
 				 texfld_.get_rep(),
 				 bontree_,  thread_sema, tg);
 #else
+  typedef GenericField<LVMesh, HexTrilinearLgn<double>, 
+    FData3d<double, LVMesh> >  LVFieldd;  
+
+  typedef GenericField<LVMesh, HexTrilinearLgn<int>, 
+    FData3d<int, LVMesh> >  LVFieldi;  
+
+  typedef GenericField<LVMesh, HexTrilinearLgn<short>, 
+    FData3d<short, LVMesh> >  LVFields;  
+
+  typedef GenericField<LVMesh, HexTrilinearLgn<unsigned char>, 
+    FData3d<unsigned char, LVMesh> >  LVFielduc;  
+
 
   if (type == "double") {
     replace_bon_tree_data(minP_, maxP_, minpx, minpy, minpz,
 			  X_, Y_, Z_, 0, 
-		  dynamic_cast<LatVolField<double>*>(texfld_.get_rep()),
-		  bontree_,  thread_sema, tg);
+			  dynamic_cast<LVFieldd*>(texfld_.get_rep()),
+			  bontree_,  thread_sema, tg);
   } else if (type == "int") {
     replace_bon_tree_data(minP_, maxP_, minpx, minpy, minpz,
 			  X_, Y_, Z_, 0, 
-	       dynamic_cast<LatVolField<int>*>(texfld_.get_rep()),
-	       bontree_, thread_sema, tg);
+			  dynamic_cast<LVFieldi*>(texfld_.get_rep()),
+			  bontree_, thread_sema, tg);
   } else if (type == "short") {
     replace_bon_tree_data(minP_, maxP_, minpx, minpy, minpz,
 			  X_, Y_, Z_, 0, 
-	       dynamic_cast<LatVolField<short>*>(texfld_.get_rep()),
-	       bontree_, thread_sema, tg);
+			  dynamic_cast<LVFields*>(texfld_.get_rep()),
+			  bontree_, thread_sema, tg);
   } else if (type == "unsigned_char") {
     replace_bon_tree_data(minP_, maxP_, minpx, minpy, minpz,
 			  X_, Y_, Z_, 0, 
-	       dynamic_cast<LatVolField<unsigned char>*>(texfld_.get_rep()),
-	       bontree_,  thread_sema, tg);
+			  dynamic_cast<LVFielduc*>(texfld_.get_rep()),
+			  bontree_,  thread_sema, tg);
   } else {
     cerr<<"Error: cast didn't work!\n";
   }
@@ -409,8 +450,8 @@ void GLTexture3D::replace_texture( Reporter *reporter)
 bool
 GLTexture3D::get_dimensions(int& nx, int& ny, int& nz)
 {
-  LatVolMesh *meshpointer = 
-    dynamic_cast<LatVolMesh *>(texfld_->mesh().get_rep());
+  LVMesh *meshpointer = 
+    dynamic_cast<LVMesh *>(texfld_->mesh().get_rep());
   if (meshpointer)
   {
     nx = meshpointer->get_ni();
@@ -458,7 +499,7 @@ void
 GLTexture3D::set_field( FieldHandle texfld )
 {
   if (texfld_->mesh()->get_type_description()->get_name() !=
-      get_type_description((LatVolMesh *)0)->get_name())
+      get_type_description((LVMesh *)0)->get_name())
   {
     cerr << "GLTexture3D constructor error - can only make a GLTexture3D from a LatVolField\n";
     return;

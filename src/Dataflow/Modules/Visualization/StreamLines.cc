@@ -40,7 +40,7 @@
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/CurveField.h>
+#include <Core/Datatypes/CurveMesh.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Modules/Visualization/StreamLines.h>
 #include <Core/Containers/Handle.h>

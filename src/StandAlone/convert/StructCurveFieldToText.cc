@@ -46,7 +46,9 @@
 // also have a one line header, specifying ni, unless the user 
 // specifies the -noHeader command-line argument.
 
-#include <Core/Datatypes/StructCurveField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Datatypes/StructCurveMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -123,15 +125,19 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<fieldName<<".  Exiting...\n";
     return 2;
   }
-  if (handle->get_type_description(0)->get_name() != "StructCurveField") {
-    cerr << "Error -- input field wasn't a StructCurveField (type_name="<<handle->get_type_description(0)->get_name()<<"\n";
+  if (handle->get_type_description(1)->get_name().find("StructCurveField") !=
+      string::npos)
+  {
+    cerr << "Error -- input field wasn't a StructCurveField (type_name="
+	 << handle->get_type_description(1)->get_name() << std::endl;
     return 2;
   }
 
+  typedef StructCurveMesh<CrvLinearLgn<Point> > SCMesh;
   MeshHandle mH = handle->mesh();
-  StructCurveMesh *scm = dynamic_cast<StructCurveMesh *>(mH.get_rep());
-  StructCurveMesh::Node::iterator niter; 
-  StructCurveMesh::Node::iterator niter_end; 
+  SCMesh *scm = dynamic_cast<SCMesh *>(mH.get_rep());
+  SCMesh::Node::iterator niter; 
+  SCMesh::Node::iterator niter_end; 
   vector<unsigned int> dims;
   scm->get_dim(dims);
   scm->begin(niter);

@@ -36,7 +36,9 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/GenericField.h>
 
 namespace SCIRun {
 
@@ -65,8 +67,10 @@ CentroidsAlgoT<FIELD>::execute(FieldHandle field_h)
 {
   FIELD *ifield = dynamic_cast<FIELD *>(field_h.get_rep());
   typename FIELD::mesh_handle_type mesh = ifield->get_typed_mesh();
-
-  PointCloudMeshHandle pcm(scinew PointCloudMesh);
+  typedef PointCloudMesh<ConstantBasis<Point> >                 PCMesh;
+  typedef ConstantBasis<double>                                 FDCdoubleBasis;
+  typedef GenericField<PCMesh, FDCdoubleBasis, vector<double> > PCField;
+  PCMesh::handle_type pcm(scinew PCMesh);
 
   typename FIELD::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi);
@@ -80,7 +84,7 @@ CentroidsAlgoT<FIELD>::execute(FieldHandle field_h)
     ++bi;
   }
 
-  return scinew PointCloudField<double>(pcm, 1);
+  return scinew PCField(pcm);
 }
 
 
