@@ -30,12 +30,19 @@
     <description>
       <p>
         This module clips out a subset of a field.  The new field
-        contains just the selected portion of the input field.  The
-        module runs in two modes.  If the "clip field" is connected,
-        it will clip the input field such that only those elements
-        inside of the clip field are preserved.  If no clip field is
-        connected, the GUI widget is used to select which portion of
-        the input field to preserve.
+        contains just the selected portion of the input field.
+      </p>
+      <p>
+
+        The module runs in one of three different modes.  If a field
+	is connected to the "Clip Field" port, the module will clip
+	the input field such that only those elements inside of the
+	clip field are preserved.  If Functional Clipping is turned
+	on, then the function specified in the GUI is used to
+	determine which elements are inside of the field.  Finally, if
+	no Clip Field is connected and functional clipping is turned
+	off then the GUI widget is used to select which portion of the
+	input field to preserve.
       </p>
       <p>
         The type of the field is preserved in the clip, as well as the
@@ -44,6 +51,14 @@
         and Scanline field types.  There is an Unstructure module that
         can be used to convert these fields to appropriately
         unstructured versions before clipping.
+      </p>
+      <p>
+
+        The function specified by the functional clipping mode is
+	evaluated as a TCL expression.  $x is the variable used for
+	the value in the field.  For example, "$x == 0 || $x == 1"
+	will select all of the elements where the data value is equal
+	to 0 or 1.
       </p>
     </description>
   </overview>
