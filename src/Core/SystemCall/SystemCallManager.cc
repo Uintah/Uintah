@@ -84,7 +84,7 @@ void SystemCallProcess::kill(int secs, bool processexit)
     
         if (killprocess) 
         {
-            ::killpg(pid_,SIGKILL);
+            killpg(pid_,SIGKILL);
         }
     }
     pid_ = 0;
