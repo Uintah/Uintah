@@ -1914,6 +1914,7 @@ ExplicitSolver::syncRhoF(const ProcessorGroup*,
         for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
 
+	  if (density[currCell] > 0.0) {
 	  scalar[currCell] = scalar[currCell] * densityGuess[currCell] /
 		  	     density[currCell];
           if (scalar[currCell] > 1.0)
@@ -1932,6 +1933,7 @@ ExplicitSolver::syncRhoF(const ProcessorGroup*,
           if (d_enthalpySolve)
 	    enthalpy[currCell] = enthalpy[currCell] * densityGuess[currCell] /
 		  	     density[currCell];
+	  }
         }
       }
     }
