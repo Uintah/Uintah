@@ -56,6 +56,8 @@ private:
 
   GuiInt       height_;
   GuiInt       log_;
+  GuiDouble    max_;
+  GuiInt       usemax_;
 };
 
 DECLARE_MAKER(UnuDhisto)
@@ -63,7 +65,9 @@ DECLARE_MAKER(UnuDhisto)
 UnuDhisto::UnuDhisto(SCIRun::GuiContext *ctx) : 
   Module("UnuDhisto", ctx, Filter, "UnuAtoM", "Teem"), 
   height_(ctx->subVar("height")),
-  log_(ctx->subVar("log"))
+  log_(ctx->subVar("log")),
+  max_(ctx->subVar("max")),
+  usemax_(ctx->subVar("usemax"))
 {
 }
 
@@ -99,10 +103,18 @@ UnuDhisto::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-  if (nrrdHistoDraw(nout, nin, height_.get(), log_.get(), AIR_NAN)) {
-    char *err = biffGetDone(NRRD);
-    error(string("Error creating DHistogram nrrd: ") + err);
-    free(err);
+  if (usemax_.get()) {
+    if (nrrdHistoDraw(nout, nin, height_.get(), log_.get(), max_.get())) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error creating DHistogram nrrd: ") + err);
+      free(err);
+    }
+  } else {
+    if (nrrdHistoDraw(nout, nin, height_.get(), log_.get(), AIR_NAN)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error creating DHistogram nrrd: ") + err);
+      free(err);
+    }
   }
 
   NrrdData *nrrd = scinew NrrdData;

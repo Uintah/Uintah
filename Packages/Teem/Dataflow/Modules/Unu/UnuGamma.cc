@@ -51,7 +51,9 @@ private:
 
   GuiDouble    gamma_;
   GuiDouble    min_;
+  GuiInt       useinputmin_;
   GuiDouble    max_;
+  GuiInt       useinputmax_;
 };
 
 DECLARE_MAKER(UnuGamma)
@@ -60,7 +62,9 @@ UnuGamma::UnuGamma(SCIRun::GuiContext *ctx) :
   Module("UnuGamma", ctx, Filter, "UnuAtoM", "Teem"), 
   gamma_(ctx->subVar("gamma")),
   min_(ctx->subVar("min")),
-  max_(ctx->subVar("max"))
+  useinputmin_(ctx->subVar("useinputmin")),
+  max_(ctx->subVar("max")),
+  useinputmax_(ctx->subVar("useinputmax"))
 {
 }
 
@@ -100,7 +104,15 @@ UnuGamma::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-  NrrdRange *range = nrrdRangeNew(min_.get(), max_.get());
+  NrrdRange *range = NULL;
+
+  double min = AIR_NAN, max = AIR_NAN;
+  if (!useinputmin_.get())
+    min = min_.get();
+  if (!useinputmax_.get())
+    max = max_.get();
+
+  nrrdRangeNew(min, max);
   nrrdRangeSafeSet(range, nin, nrrdBlind8BitRangeState);
 
   if (nrrdArithGamma(nout, nin, range, gamma_.get())) {

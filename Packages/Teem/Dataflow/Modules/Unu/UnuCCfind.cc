@@ -61,6 +61,10 @@ private:
   NrrdOPort*      onrrd_;
   
   GuiInt          connectivity_;
+  GuiString    type_;
+  GuiInt       usetype_;
+
+  unsigned int get_type(const string &type);
 };
 
 
@@ -68,7 +72,9 @@ DECLARE_MAKER(UnuCCfind)
 UnuCCfind::UnuCCfind(GuiContext* ctx)
   : Module("UnuCCfind", ctx, Source, "UnuAtoM", "Teem"),
     inrrd_(0), onrrd_(0),
-    connectivity_(ctx->subVar("connectivity"))
+    connectivity_(ctx->subVar("connectivity")),
+    type_(ctx->subVar("type")),
+    usetype_(ctx->subVar("usetype"))
 {
 }
 
@@ -105,10 +111,18 @@ void
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-  if (nrrdCCFind(nout, NULL, nin, nrrdTypeInt, connectivity_.get())) {
-    char *err = biffGetDone(NRRD);
-    error(string("Error performing CC find nrrd: ") + err);
-    free(err);
+  if (!usetype_.get()) {
+    if (nrrdCCFind(nout, NULL, nin, get_type(type_.get()), connectivity_.get())) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error performing CC find nrrd: ") + err);
+      free(err);
+    }
+  } else {
+    if (nrrdCCFind(nout, NULL, nin, nrrdTypeDefault, connectivity_.get())) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error performing CC find nrrd: ") + err);
+      free(err);
+    }
   }
 
   NrrdData *nrrd = scinew NrrdData;
@@ -132,6 +146,20 @@ void
  UnuCCfind::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
+}
+
+unsigned int
+UnuCCfind::get_type(const string &type) {
+  if (type == "nrrdTypeUChar") 
+    return nrrdTypeUChar;
+  else if (type == "nrrdTypeUShort")
+    return nrrdTypeUShort;
+  else if (type == "nrrdTypeInt")
+    return nrrdTypeInt;
+  else {
+    error("Unknown nrrd type. Defaulting to nrrdTypeInt");
+    return nrrdTypeInt;
+  }
 }
 
 } // End namespace Teem
