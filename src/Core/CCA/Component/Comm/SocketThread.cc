@@ -26,46 +26,36 @@
  *
  */
 
-#include <CCA/Components/Builder/QtUtils.h>
-#include <Core/Thread/Runnable.h>
+#include <iostream>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
-#include <iostream>
+#include <Core/CCA/Component/Comm/SocketSpChannel.h>
+#include <Core/CCA/Component/Comm/SocketThread.h>
+
 using namespace SCIRun;
 using namespace std;
 
 static Semaphore* startup;
-
-class SocketAcceptThread : public Runnable {
-public:
-  SocketAcceptThread(SocketEpChannel *sep) {
-    this->sep=sep;
-  }
-  ~SocketAcceptThread() {}
-  void run();
- private:
-  SocketEpChannel *sep;
   
-};
-
-void 
-SocketAcceptThread::run()
-{
-  sep->runAccept();
+SocketThread::SocketThread(SocketEpChannel *ep, int id){
+  this->ep=ep;
+  this->id=id;
+  isEp=true;
 }
 
-class SocketHandlerThread : public Runnable {
-public:
-  SocketHandlerThread(SocketEpChannel *sep) {this->sep=sep;}
-  ~SocketHandlerThread() {}
-  void run();
- private:
-  SocketEpChannel *sep;
-};
+SocketThread::SocketThread(SocketSpChannel *sp, int id){
+  this->sp=sp;
+  this->id=id;
+  isEp=false;
+}
 
 void 
-SocketHandlerThread::run()
+SocketThread::run()
 {
-  cerr<<"SocketAcceptThread is running\n";
+  if(isEp){
+    if(id==-1) ep->runAccept();
+    else if(id==1) ; // deleteReference();
+
+  }
 }
