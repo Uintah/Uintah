@@ -1,5 +1,6 @@
 #include "Octree.h"
-
+#include <iostream>
+using std::cerr;
 
 namespace Kurt{
   namespace Datatypes{
@@ -11,7 +12,7 @@ Octree<T>::Octree(const T stored, nodeType t, const Octree<T> *parent):
   if( t == LEAF ){
     children = 0;
   } else {
-    children = new Octree<T>*[8];
+    children = scinew Octree<T>*[8];
     for( int i = 0; i < 8; i++)
       children[i] = 0;
   }
@@ -20,9 +21,9 @@ Octree<T>::Octree(const T stored, nodeType t, const Octree<T> *parent):
 template<class T>  
 Octree<T>::~Octree()
 {
-  if (children){
-    delete [] children;
-  }
+   if (children){
+     delete [] children;
+   }
   delete stored;
 }
 

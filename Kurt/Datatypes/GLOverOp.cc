@@ -4,7 +4,6 @@
 namespace SCICore {
 namespace GeomSpace  {
 
-GLTexRenState* GLOverOp::_instance = 0;
 
 GLOverOp::GLOverOp(const GLVolumeRenderer* glvr) :
   GLTexRenState( glvr )
@@ -23,16 +22,6 @@ void GLOverOp::postDraw()
   glDisable(GL_BLEND);
 }
 
-GLTexRenState* GLOverOp::Instance(const GLVolumeRenderer* glvr)
-{
-  // Not a true Singleton class, but this does make sure that 
-  // there is only one instance per volume renderer.
-  if( _instance == 0 ){
-    _instance = new GLOverOp( glvr );
-  }
-  
-  return _instance;
-}
 
 } // end namespace Datatypes
 } // end namespace Kurt

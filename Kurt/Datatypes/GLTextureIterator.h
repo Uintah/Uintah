@@ -55,7 +55,7 @@ public:
   // GROUP: Destructors
   //////////
   // Destructor
-  virtual ~GLTextureIterator(){}
+  virtual ~GLTextureIterator();
  
   // GROUP: Access
   //////////

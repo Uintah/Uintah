@@ -1,6 +1,7 @@
 #ifndef GLVOLUMERENDERER_H
 #define GLVOLUMERENDERER_H
 
+#include <SCICore/Thread/Mutex.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Ray.h>
 #include <SCICore/Geometry/Vector.h>
@@ -34,6 +35,7 @@ namespace GeomSpace  {
 using namespace SCICore::Geometry;
 using namespace SCICore::Datatypes;
 using namespace Kurt::Datatypes;
+using SCICore::Thread::Mutex;
 
 class GLVolumeRenderer : public GeomObj
 {
@@ -47,6 +49,23 @@ class GLVolumeRenderer : public GeomObj
   friend class ROI;
   friend class LOS;
   friend class TexPlanes;
+private:
+  GLVolRenState* _state;
+  // GLVolRenStates in lieu of static variables in the state object
+  // this allows multiple volume renders to work..
+  TexPlanes* _tp;
+  ROI* _roi;
+  FullRes* _fr;
+  LOS* _los;
+  
+  GLTexRenState* _gl_state;
+ 
+  // GLTexRenStates done for the same reasons as above.
+  GLOverOp* _oo;
+  GLMIP* _mip;
+  GLAttenuate* _atten;
+  GLPlanes* _planes;
+
 public:
 
   GLVolumeRenderer(int id);
@@ -57,26 +76,37 @@ public:
   void SetNSlices(int s) { slices = s; }
   void SetSliceAlpha( double as){ slice_alpha = as;}
 
-  void SetVol( GLTexture3DHandle tex ){ this->tex = tex.get_rep(); }
-  void SetColorMap( ColorMapHandle map){this->cmap = map->raw1d;
-                                   cmapHasChanged = true;}
+  void SetVol( GLTexture3DHandle tex ){ 
+    mutex.lock(); this->tex = tex; mutex.unlock();}
+  void SetColorMap( ColorMapHandle map){
+    mutex.lock(); this->cmap = map; cmapHasChanged = true;
+    mutex.unlock(); }
   void SetControlPoint( const Point& point){ controlPoint = point; }
 
   void Reload() { _state->Reload(); }
 
-  void DrawFullRes(){ _state = FullRes::Instance(this);}
-  void DrawLOS(){ _state = LOS::Instance(this);}
-  void DrawROI(){ _state = ROI::Instance(this);}
-  void DrawPlanes(){ _state = TexPlanes::Instance(this); }
+/*   void DrawFullRes(){ _state = FullRes::Instance(this);} */
+/*   void DrawLOS(){ _state = LOS::Instance(this);} */
+/*   void DrawROI(){ _state = ROI::Instance(this);} */
+/*   void DrawPlanes(){ _state = TexPlanes::Instance(this); } */
+  void DrawFullRes(){ _state = state(_fr);}
+  void DrawLOS(){ _state = state(_los);}
+  void DrawROI(){ _state = state(_roi);}
+  void DrawPlanes(){ _state = state(_tp);}
+
   void SetX(bool b){ if(b){drawView = false;} drawX = b; }
   void SetY(bool b){ if(b){drawView = false;} drawY = b; }
   void SetZ(bool b){ if(b){drawView = false;} drawZ = b; }
   void SetView(bool b){ if(b){drawX=false; drawY=false; drawZ=false;}
                         drawView = b; }
-  void GLOverOp(){ _gl_state = GLOverOp::Instance( this ); }
-  void GLMIP(){ _gl_state = GLMIP::Instance( this ); }
-  void GLAttenuate(){ _gl_state = GLAttenuate::Instance( this ); }
-  void GLPlanes(){ _gl_state = GLPlanes::Instance(this);}
+/*   void GLOverOp(){ _gl_state = GLOverOp::Instance( this ); } */
+/*   void GLMIP(){ _gl_state = GLMIP::Instance( this ); } */
+/*   void GLAttenuate(){ _gl_state = GLAttenuate::Instance( this ); } */
+/*   void GLPlanes(){ _gl_state = GLPlanes::Instance(this);} */
+  void GLOverOp(){ _gl_state = state(_oo);}
+  void GLMIP(){ _gl_state = state(_mip); }
+  void GLAttenuate(){ _gl_state = state(_atten ); }
+  void GLPlanes(){ _gl_state = state(_planes);}
 
   void SetInterp( bool i) { _interp = i; }
 
@@ -104,11 +134,12 @@ public:
 
 protected:
   int slices;
-  const GLTexture3D *tex;
+  GLTexture3DHandle tex;
 
 private:
 
-  unsigned char* cmap;
+  Mutex mutex;
+  ColorMapHandle cmap;
   Point controlPoint;
   
   double slice_alpha;
@@ -116,14 +147,22 @@ private:
   bool cmapHasChanged;
   bool drawX, drawY, drawZ, drawView;
   
-  GLVolRenState* _state;
-  GLTexRenState* _gl_state;
+   
+ 
+
+  // Sets the state function without having to write a bunch of code
+  template <class T>
+    T* state( T* st){ if(st == 0) st = new T(this); return st;}
+
 
   bool _interp;
   
   static double swapMatrix[16];
   
 };
+
+
+ 
 }  // namespace GeomSpace
 } // namespace SCICore
 

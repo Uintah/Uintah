@@ -14,6 +14,7 @@
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <PSECore/Datatypes/ScalarFieldPort.h>
 #include <SCICore/Datatypes/ScalarFieldRGuchar.h>
+#include <SCICore/Datatypes/ScalarFieldRGBase.h>
 
 #include <SCICore/Geom/GeomTriangles.h>
 
@@ -23,10 +24,14 @@
 
 #include <PSECore/Widgets/PointWidget.h>
 #include <iostream>
+#include <ios>
 #include <algorithm>
 #include <Kurt/Datatypes/VolumeUtils.h>
 
-
+using std::cerr;
+using std::endl;
+using std::hex;
+using std::dec;
 
 namespace Kurt {
 namespace Modules {
@@ -39,8 +44,6 @@ using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Geometry;
 using namespace SCICore::Math;
-using std::cerr;
-
 
 static clString control_name("Control Widget");
 			 
@@ -114,6 +117,7 @@ void TextureVolVis::SwapXZ( ScalarFieldHandle sfh )
   
 void TextureVolVis::execute(void)
 {
+
   if (!intexture->get(tex)) {
     return;
   }
@@ -125,7 +129,6 @@ void TextureVolVis::execute(void)
   if( !incolormap->get(cmap)){
     return;
   }
-
 
   if(!control_widget){
     control_widget=scinew PointWidget(this, &control_lock, 0.2);
@@ -139,7 +142,7 @@ void TextureVolVis::execute(void)
     control_widget->SetScale(max/80.0);
   }
 
-
+  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
   if( !volren ){
     volren = new GLVolumeRenderer(0x12345676,
 				  tex,
@@ -154,9 +157,10 @@ void TextureVolVis::execute(void)
     volren->SetVol( tex );
     volren->SetColorMap( cmap );
   }
-
+ 
+  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
   volren->SetInterp( bool(interp_mode.get()));
-    
+  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
 
   switch( render_style.get() ) {
   case 0:
@@ -192,10 +196,12 @@ void TextureVolVis::execute(void)
    }
   }
 
+  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
   volren->SetNSlices( num_slices.get() );
   volren->SetSliceAlpha( alpha_scale.get() );
-
+  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
   ogeom->flushViews();				  
+  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
 }
 
 } // End namespace Modules

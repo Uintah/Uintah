@@ -1,5 +1,6 @@
 #include "FullRes.h"
 #include <SCICore/Geometry/Ray.h>
+#include <SCICore/Malloc/Allocator.h>
 #include "FullResIterator.h"
 #include "Brick.h"
 #include "Polygon.h"
@@ -13,8 +14,6 @@ namespace GeomSpace {
 using SCICore::Geometry::Ray;
 using Kurt::Datatypes::SliceTable;
 
-GLVolRenState* FullRes::_instance = 0;
-
 FullRes::FullRes(const GLVolumeRenderer* glvr ) :
   GLVolRenState( glvr )
 {
@@ -24,11 +23,12 @@ FullRes::FullRes(const GLVolumeRenderer* glvr ) :
 void
 FullRes::draw()
 {
+  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
   Ray viewRay;
   Brick* brick;
   computeView(viewRay);
   
-  FullResIterator it( volren->tex, viewRay,  volren->controlPoint);
+  FullResIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
 
   SliceTable st(volren->tex->min(),
 		volren->tex->max(), 
@@ -54,11 +54,14 @@ FullRes::draw()
     loadTexture( b );
     makeTextureMatrix( b );
     enableTexCoords();
+    enableBlend();
     setAlpha( b );
     drawPolys( polys );
+    disableBlend();
     disableTexCoords();
 
   }
+  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
 }
 
 void
@@ -74,26 +77,13 @@ FullRes::drawWireFrame()
   Ray viewRay;
   computeView( viewRay );
   
-  FullResIterator it( volren->tex, viewRay,  volren->controlPoint);
+  FullResIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
 
   const Brick* brick;
   for( brick = it.Start(); !it.isDone(); brick = it.Next()){
     GLVolRenState::drawWireFrame( *brick );
   }
 }
-GLVolRenState* 
-FullRes::Instance(const GLVolumeRenderer* glvr)
-{
-  // Not a true Singleton class, but this does make sure that 
-  // there is only one instance per volume renderer.
-  if( _instance == 0 ){
-    _instance = new FullRes( glvr );
-  }
-  
-  return _instance;
-}
-
-
 
 } // end namespace Datatypes
 } // end namespace Kurt

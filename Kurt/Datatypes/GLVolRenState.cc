@@ -6,12 +6,15 @@
 #include <GL/gl.h>
 #include <vector>
 #include <stdlib.h>
+#include <iostream>
 namespace SCICore {
 namespace GeomSpace  {
 
 using SCICore::Geometry::Polygon;
 using namespace Kurt::Datatypes;
 using std::vector;
+using std::cerr;
+using std::endl;
 
 
 GLVolRenState::GLVolRenState(const GLVolumeRenderer* glvr)

@@ -12,8 +12,6 @@ namespace GeomSpace  {
 
 using SCICore::Geometry::Ray;
 
-GLVolRenState* ROI::_instance = 0;
-
 ROI::ROI(const GLVolumeRenderer* glvr ) :
   GLVolRenState( glvr )
 {
@@ -38,7 +36,7 @@ ROI::draw()
   computeView(viewRay);
 
   
-  ROIIterator it( volren->tex, viewRay,  volren->controlPoint);
+  ROIIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
 
   SliceTable st(volren->tex->min(),
 		volren->tex->max(), 
@@ -76,24 +74,12 @@ ROI::drawWireFrame()
   Ray viewRay;
   computeView(viewRay);
   
-  ROIIterator it( volren->tex, viewRay,  volren->controlPoint);
+  ROIIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
 
   Brick* brick;
   for( brick = it.Start(); !it.isDone(); brick = it.Next()){
     GLVolRenState::drawWireFrame( *brick );
   }
-}
-
-GLVolRenState* 
-ROI::Instance(const GLVolumeRenderer* glvr)
-{
-  // Not a true Singleton class, but this does make sure that 
-  // there is only one instance per volume renderer.
-  if( _instance == 0 ){
-    _instance = new ROI( glvr );
-  }
-  
-  return _instance;
 }
 
 }  // namespace GeomSpace

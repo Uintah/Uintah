@@ -38,12 +38,16 @@ int GLTextureIterator::traversalTable[27][8] = { {7,3,5,6,1,2,4,0},
 
 
 
-  GLTextureIterator::GLTextureIterator(const GLTexture3D* tex,
+GLTextureIterator::GLTextureIterator(const GLTexture3D* tex,
 				       Ray view,
 				       Point c ):
     tex(tex), view(view), control( c ), done( false )
 {
 
+}
+
+GLTextureIterator::~GLTextureIterator()
+{
 }
 
 deque<int>* 
@@ -74,7 +78,7 @@ GLTextureIterator::traversal(const Octree<Brick*>* n)
 
   traversal = traversalTable[ traversalIndex ];
 
-  deque< int > *q = new deque< int >;
+  deque< int > *q = scinew deque< int >;
   
   //  std::cerr<<"Child order ";
   for( int i = 0; i < 8; i++){

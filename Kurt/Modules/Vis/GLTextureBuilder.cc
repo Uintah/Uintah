@@ -59,7 +59,7 @@ static clString widget_name("GLTextureBuilderLocatorWidget");
 static clString res_name("Resolution Widget");
 			 
 extern "C" Module* make_GLTextureBuilder( const clString& id) {
-  return new GLTextureBuilder(id);
+  return scinew GLTextureBuilder(id);
 }
 
 
@@ -154,18 +154,18 @@ void GLTextureBuilder::execute(void)
       this->max.set( max );
     }
 
-  if( ScalarFieldRGBase *rgchar =
+  if( ScalarFieldRGBase *rg =
       dynamic_cast<ScalarFieldRGBase *> (sfield.get_rep()) ){
     
     if( sfield.get_rep() != sfrg.get_rep()  && !tex.get_rep() ){
       sfrg = sfield;
-      tex = scinew GLTexture3D( rgchar);
+      tex = scinew GLTexture3D( rg);
       TCL::execute(id + " SetDims " + to_string( tex->getBrickSize()));
       max_brick_dim.set( tex->getBrickSize() );
       oldBrickSize = tex->getBrickSize();
     } else if( sfield.get_rep() != sfrg.get_rep()){
       sfrg = sfield;
-      tex = scinew GLTexture3D( rgchar);
+      tex = scinew GLTexture3D( rg);
       tex->SetBrickSize( max_brick_dim.get() );
     } else if (oldBrickSize != max_brick_dim.get()){
       tex->SetBrickSize( max_brick_dim.get() );

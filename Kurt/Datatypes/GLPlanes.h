@@ -56,13 +56,7 @@ public:
   virtual void postDraw();
   //////////
   // 
-  static GLTexRenState* Instance(const GLVolumeRenderer* glvr);
-  //////////
-  // 
-  //////////
-  // 
 private:
-  static GLTexRenState* _instance;
 
 };
 
