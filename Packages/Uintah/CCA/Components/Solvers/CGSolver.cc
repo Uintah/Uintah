@@ -397,8 +397,8 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
 #endif
   dotresult=dot;
   IntVector diff = iter.end()-iter.begin();
-  flops += 13*diff.x()*diff.y()*diff.z();
-  memrefs += 15L*diff.x()*diff.y()*diff.z()*8L;
+  flops += 15*diff.x()*diff.y()*diff.z();
+  memrefs += 16L*diff.x()*diff.y()*diff.z()*8L;
 }
 
 static void Sub(Array3<double>& r, const Array3<double>& a,
@@ -762,21 +762,21 @@ public:
 	memrefs += 7L*diff.x()*diff.y()*diff.z()*8L;
 #else
 	// X = a*D+X
-	::ScMult_Add(Xnew, a, D, X, iter, flops);
+	::ScMult_Add(Xnew, a, D, X, iter, flops, memrefs);
 	// R = -a*Q+R
-	::ScMult_Add(Rnew, -a, Q, R, iter, flops);
+	::ScMult_Add(Rnew, -a, Q, R, iter, flops, memrefs);
 
 	// Simple Preconditioning...
-	::Mult(Q, Rnew, diagonal, iter, flops);
+	::Mult(Q, Rnew, diagonal, iter, flops, memrefs);
 
 	// Calculate coefficient bk and direction vectors p and pp
-	double dnew = ::Dot(Q, Rnew, iter, flops);
+	double dnew = ::Dot(Q, Rnew, iter, flops, memrefs);
 
 	// Calculate error term
 	switch(params->norm){
 	case CGSolverParams::L1:
 	  {
-	    double err = ::L1(Q, iter, flops);
+	    double err = ::L1(Q, iter, flops, memrefs);
 	    new_dw->put(sum_vartype(err), err_label);
 	  }
 	  break;
@@ -785,7 +785,7 @@ public:
 	  break;
 	case CGSolverParams::LInfinity:
 	  {
-	    double err = ::LInf(Q, iter, flops);
+	    double err = ::LInf(Q, iter, flops, memrefs);
 	    new_dw->put(max_vartype(err), err_label);
 	  }
 	  break;
