@@ -74,11 +74,6 @@ void
 ChooseMatrix::execute()
 {
   MatrixOPort *ofld = (MatrixOPort *)get_oport("Matrix");
-  if (!ofld) {
-    error("Unable to initialize oport 'Matrix'.");
-    return;
-  }
-
   port_range_type range = get_iports("Matrix");
   if (range.first == range.second)
     return;
@@ -119,10 +114,6 @@ ChooseMatrix::execute()
     }
 
     imatrix = (MatrixIPort *)get_iport(port_number);
-    if (!imatrix) {
-      error("Unable to initialize iport '" + to_string(port_number) + "'.");
-      return;
-    }
     imatrix->get(matrix);
   }
   

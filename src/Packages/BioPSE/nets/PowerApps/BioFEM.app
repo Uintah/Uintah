@@ -136,10 +136,9 @@ set $m7-ViewWindow_0-view-up-z ${view-up-z}
 set $m7-ViewWindow_0-view-fov ${view-fov}
 set $m7-ViewWindow_0-specular-scale {0.4}
 
-set $m8-mapType {3}
-set $m8-minRes {12}
-set $m8-resolution {255}
-set $m8-realres {128}
+set $m8-mapName {Rainbow}
+set $m8-resolution {256}
+set $m8-realres {256}
 
 set $m10-extract-from-new-field {1}
 set $m10-update_type {on release}
@@ -150,6 +149,8 @@ if {[file exists $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld]} {
 } else {
     set $m11-filename ""
 }
+
+set $m12-exhaustive_search {1}
 
 set $m13-nodes-on {1}
 set $m13-edges-on {0}
@@ -185,6 +186,8 @@ set $m16-stepsize [expr 0.004 * ${global-scale}]
 set $m16-tolerance [expr 0.004 * ${global-scale}]
 set $m16-maxsteps {250}
 set $m16-method {5}
+
+set $m17-exhaustive_search {0}
 
 set $m19-def-color-r {0.5}
 set $m19-def-color-g {0.5}
@@ -598,6 +601,8 @@ class BioFEMApp {
 	    
 	    ### Renderer Options Tab
 	    create_viewer_tab $vis
+
+            $vis.tnb view "Vis Options"
 	    
 	    
 	    # Execute Button
@@ -874,9 +879,7 @@ class BioFEMApp {
 	global $mods(ShowDipole)-force-field-reset
 	set $mods(ShowDipole)-force-field-reset 1
 
-	$mods(FieldReader-conductivities)-c needexecute
-	$mods(FieldReader-electrodes)-c needexecute
-	$mods(FieldReader-probe)-c needexecute
+	netedit scheduleall
     }
     
 
@@ -1068,15 +1071,15 @@ class BioFEMApp {
 	    pack $isocolor.select -side top -anchor nw -padx 3 -pady 3
 	    
 	    set maps $f
-	    global $mods(GenStandardColorMaps)-mapType
+	    global $mods(GenStandardColorMaps)-mapName
 	    
 	    # Gray
 	    frame $maps.gray
 	    pack $maps.gray -side top -anchor nw -padx 3 -pady 1 \
 		-fill x -expand 1
 	    radiobutton $maps.gray.b -text "Gray" \
-		-variable $mods(GenStandardColorMaps)-mapType \
-		-value 0 \
+		-variable $mods(GenStandardColorMaps)-mapName \
+		-value Gray \
 		-command "$mods(GenStandardColorMaps)-c needexecute"
 	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -1088,31 +1091,13 @@ class BioFEMApp {
 	    
 	    draw_colormap Gray $maps.gray.f.canvas
 	    
-	    # Reverse Rainbow
-	    frame $maps.rainbow1
-	    pack $maps.rainbow1 -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.rainbow1.b -text "Inverse Rainbow" \
-		-variable $mods(GenStandardColorMaps)-mapType \
-		-value 3 \
-		-command "$mods(GenStandardColorMaps)-c needexecute"
-	    pack $maps.rainbow1.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.rainbow1.f -relief sunken -borderwidth 2
-	    pack $maps.rainbow1.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.rainbow1.f.canvas -bg "#ffffff" \
-		-height $colormap_height -width $colormap_width
-	    pack $maps.rainbow1.f.canvas -anchor e
-	    
-	    draw_colormap "Inverse Rainbow" $maps.rainbow1.f.canvas
-
 	    # Rainbow
 	    frame $maps.rainbow2
 	    pack $maps.rainbow2 -side top -anchor nw -padx 3 -pady 1 \
 		-fill x -expand 1
 	    radiobutton $maps.rainbow2.b -text "Rainbow" \
-		-variable $mods(GenStandardColorMaps)-mapType \
-		-value 2 \
+		-variable $mods(GenStandardColorMaps)-mapName \
+		-value Rainbow \
 		-command "$mods(GenStandardColorMaps)-c needexecute"
 	    pack $maps.rainbow2.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -1129,8 +1114,8 @@ class BioFEMApp {
 	    pack $maps.darkhue -side top -anchor nw -padx 3 -pady 1 \
 		-fill x -expand 1
 	    radiobutton $maps.darkhue.b -text "Darkhue" \
-		-variable $mods(GenStandardColorMaps)-mapType \
-		-value 5 \
+		-variable $mods(GenStandardColorMaps)-mapName \
+		-value Darkhue \
 		-command "$mods(GenStandardColorMaps)-c needexecute"
 	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -1147,8 +1132,8 @@ class BioFEMApp {
 	    pack $maps.blackbody -side top -anchor nw -padx 3 -pady 1 \
 		-fill x -expand 1
 	    radiobutton $maps.blackbody.b -text "Blackbody" \
-		-variable $mods(GenStandardColorMaps)-mapType \
-		-value 7 \
+		-variable $mods(GenStandardColorMaps)-mapName \
+		-value Blackbody \
 		-command "$mods(GenStandardColorMaps)-c needexecute"
 	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -1159,13 +1144,30 @@ class BioFEMApp {
 	    
 	    draw_colormap Blackbody $maps.blackbody.f.canvas
 	    
+	    # Don
+	    frame $maps.don
+	    pack $maps.don -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.don.b -text "Don" \
+		-variable $mods(GenStandardColorMaps)-mapName \
+		-value Don \
+		-command "$mods(GenStandardColorMaps)-c needexecute"
+	    pack $maps.don.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.don.f -relief sunken -borderwidth 2 
+	    pack $maps.don.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.don.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
+	    pack $maps.don.f.canvas -anchor e
+	    
+	    draw_colormap Don $maps.don.f.canvas
+	    
 	    # Blue-to-Red
 	    frame $maps.bpseismic
 	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
 		-fill x -expand 1
 	    radiobutton $maps.bpseismic.b -text "Blue-to-Red" \
-		-variable $mods(GenStandardColorMaps)-mapType \
-		-value 17 \
+		-variable $mods(GenStandardColorMaps)-mapName \
+		-value "BP Seismic" \
 		-command "$mods(GenStandardColorMaps)-c needexecute"
 	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
 	    

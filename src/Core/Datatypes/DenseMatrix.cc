@@ -51,6 +51,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/Assert.h>
+#include <Core/Exceptions/FileNotFound.h>
 #include <iostream>
 #include <vector>
 
@@ -87,96 +88,120 @@ DenseMatrix* DenseMatrix::clone(){
 
 //! constructors
 DenseMatrix::DenseMatrix() :
-  nc(0), 
-  nr(0), 
   data(0),
   dataptr(0)
 {
 }
 
-DenseMatrix::DenseMatrix(int r, int c)
+DenseMatrix::DenseMatrix(int r, int c) :
+  Matrix(r, c)
 {
-  ASSERT(r>0);
-  ASSERT(c>0);
-  nr=r;
-  nc=c;
-  data=scinew double*[nr];
-  double* tmp=scinew double[nr*nc];
-  dataptr=tmp;
-  for(int i=0;i<nr;i++){
-    data[i]=tmp;
-    tmp+=nc;
+  data = scinew double*[nrows_];
+  double* tmp = scinew double[nrows_ * ncols_];
+  dataptr = tmp;
+  for(int i=0; i<nrows_; i++)
+  {
+    data[i] = tmp;
+    tmp += ncols_;
   }
 }
 
-DenseMatrix::DenseMatrix(const DenseMatrix& m)
+DenseMatrix::DenseMatrix(const DenseMatrix& m) :
+  Matrix(m.nrows_, m.ncols_)
 {
-  nc=m.ncols();
-  nr=m.nrows();
-  data=scinew double*[nr];
-  double* tmp=scinew double[nr*nc];
-  dataptr=tmp;
-  for(int i=0;i<nr;i++){
-    data[i]=tmp;
-    double* p=m.data[i];
-    for(int j=0;j<nc;j++){
-      *tmp++=*p++;
+  data = scinew double*[nrows_];
+  double* tmp = scinew double[nrows_ * ncols_];
+  dataptr = tmp;
+  for (int i=0; i<nrows_; i++)
+  {
+    data[i] = tmp;
+    double* p = m.data[i];
+    for (int j=0; j<ncols_; j++)
+    {
+      *tmp++ = *p++;
     }
   }
 }
 
-DenseMatrix::DenseMatrix(const Transform& t)
+DenseMatrix::DenseMatrix(const Transform& t) :
+  Matrix(4, 4)
 {
-  nc=nr=4;
   double dummy[16];
   t.get(dummy);
-  data=scinew double*[nr];
-  double* tmp=scinew double[nr*nc];
-  dataptr=tmp;
+  data = scinew double*[nrows_];
+  double* tmp = scinew double[nrows_ * ncols_];
+  dataptr = tmp;
   double* p=&(dummy[0]);
-  for(int i=0;i<nr;i++){
-    data[i]=tmp;
-    for(int j=0;j<nc;j++){
-      *tmp++=*p++;
+  for(int i=0; i<nrows_; i++){
+    data[i] = tmp;
+    for(int j=0; j<ncols_; j++){
+      *tmp++ = *p++;
     }
   }
 }
 
-DenseMatrix *DenseMatrix::dense() {
+
+DenseMatrix *
+DenseMatrix::dense()
+{
   return this;
 }
 
-ColumnMatrix *DenseMatrix::column() {
-  ColumnMatrix *cm = scinew ColumnMatrix(nr);
-  for(int i=0;i<nr;i++)
-    (*cm)[i]=data[i][0];
+
+ColumnMatrix *
+DenseMatrix::column()
+{
+  ColumnMatrix *cm = scinew ColumnMatrix(nrows_);
+  for(int i=0; i<nrows_; i++)
+    (*cm)[i] = data[i][0];
   return cm;
 }
 
-SparseRowMatrix *DenseMatrix::sparse() {
+
+SparseRowMatrix *
+DenseMatrix::sparse()
+{
   int nnz = 0;
   int r, c;
-  int *rows = scinew int[nr+1];
-  for (r=0; r<nr; r++)
-    for (c=0; c<nc; c++)
+  int *rows = scinew int[nrows_ + 1];
+  for (r=0; r<nrows_; r++)
+    for (c=0; c<ncols_; c++)
       if (data[r][c] != 0) nnz++;
 
   int *columns = scinew int[nnz];
   double *a = scinew double[nnz];
 
-  int count=0;
-  for (r=0; r<nr; r++) {
-    rows[r]=count;
-    for (c=0; c<nc; c++)
-      if (data[r][c] != 0) {
+  int count = 0;
+  for (r=0; r<nrows_; r++)
+  {
+    rows[r] = count;
+    for (c=0; c<ncols_; c++)
+      if (data[r][c] != 0)
+      {
 	columns[count]=c;
 	a[count]=data[r][c];
 	count++;
       }
   }
-  rows[nr]=count;
-  return scinew SparseRowMatrix(nr, nc, rows, columns, nnz, a);
+  rows[nrows_] = count;
+
+  return scinew SparseRowMatrix(nrows_, ncols_, rows, columns, nnz, a);
 }
+
+
+double *
+DenseMatrix::get_data_pointer()
+{
+  return dataptr;
+}
+
+
+size_t
+DenseMatrix::get_data_size()
+{
+  return nrows() * ncols();
+}
+
 
 //! destructor
 DenseMatrix::~DenseMatrix()
@@ -186,64 +211,66 @@ DenseMatrix::~DenseMatrix()
 }
 
 //! assignment operator
-DenseMatrix& DenseMatrix::operator=(const DenseMatrix& m)
+DenseMatrix&
+DenseMatrix::operator=(const DenseMatrix& m)
 {
   delete[] dataptr;
   delete[] data;
-  nc=m.nc;
-  nr=m.nr;
-  data=scinew double*[nr];
-  double* tmp=scinew double[nr*nc];
-  dataptr=tmp;
-  for(int i=0;i<nr;i++){
+  nrows_ = m.nrows_;
+  ncols_ = m.ncols_;
+  data = scinew double*[nrows_];
+  double* tmp = scinew double[nrows_ * ncols_];
+  dataptr = tmp;
+  for(int i=0; i<nrows_; i++)
+  {
     data[i]=tmp;
     double* p=m.data[i];
-    for(int j=0;j<nc;j++){
+    for(int j=0; j<ncols_; j++)
+    {
       *tmp++=*p++;
     }
   }
   return *this;
 }
 
-double& DenseMatrix::get(int r, int c) const
+double DenseMatrix::get(int r, int c) const
 {
-  ASSERTRANGE(r, 0, nr);
-  ASSERTRANGE(c, 0, nc);
+  ASSERTRANGE(r, 0, nrows_);
+  ASSERTRANGE(c, 0, ncols_);
   return data[r][c];
 }
 
 void DenseMatrix::put(int r, int c, double d)
 {
-  ASSERTRANGE(r, 0, nr);
-  ASSERTRANGE(c, 0, nc);
+  ASSERTRANGE(r, 0, nrows_);
+  ASSERTRANGE(c, 0, ncols_);
   data[r][c]=d;
 }
 
-DenseMatrix *DenseMatrix::transpose() {
-  DenseMatrix *m=scinew DenseMatrix(nc,nr);
+void DenseMatrix::add(int r, int c, double d)
+{
+  ASSERTRANGE(r, 0, nrows_);
+  ASSERTRANGE(c, 0, ncols_);
+  data[r][c] += d;
+}
+
+DenseMatrix *
+DenseMatrix::transpose()
+{
+  DenseMatrix *m=scinew DenseMatrix(ncols_, nrows_);
   double *mptr = &((*m)[0][0]);
-  for (int c=0; c<nc; c++)
-    for (int r=0; r<nr; r++)
+  for (int c=0; c<ncols_; c++)
+    for (int r=0; r<nrows_; r++)
       *mptr++ = data[r][c];
   return m;
 }
 
-int DenseMatrix::nrows() const
-{
-  return nr;
-}
-
-int DenseMatrix::ncols() const
-{
-  return nc;
-}
-
 void DenseMatrix::getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val)
 {
-  idx.resize(nc);
-  val.resize(nc);
+  idx.resize(ncols_);
+  val.resize(ncols_);
   int i=0;
-  for (int c=0; c<nc; c++) {
+  for (int c=0; c<ncols_; c++) {
     if (data[r][c]!=0.0) {
       idx[i]=c;
       val[i]=data[r][c];
@@ -254,9 +281,9 @@ void DenseMatrix::getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val)
     
 void DenseMatrix::zero()
 {
-  for(int r=0;r<nr;r++){
+  for(int r=0; r<nrows_; r++){
     double* row=data[r];
-    for(int c=0;c<nc;c++){
+    for(int c=0; c<ncols_; c++){
       row[c]=0.0;
     }
   }
@@ -271,8 +298,8 @@ int DenseMatrix::solve(ColumnMatrix& sol, int overwrite)
 int DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs, 
 		       int overwrite)
 {
-  ASSERT(nr==nc);
-  ASSERT(rhs.nrows()==nc);
+  ASSERT(nrows_ == ncols_);
+  ASSERT(rhs.nrows() == ncols_);
   lhs=rhs;
 
   double **A;
@@ -282,24 +309,28 @@ int DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
 
   // Gauss-Jordan with partial pivoting
   int i;
-  for(i=0;i<nr;i++){
-    //	cout << "Solve: " << i << " of " << nr << endl;
+  for(i=0; i<nrows_; i++)
+  {
     double max=Abs(A[i][i]);
     int row=i;
     int j;
-    for(j=i+1;j<nr;j++){
-      if(Abs(A[j][i]) > max){
+    for(j=i+1; j<nrows_; j++)
+    {
+      if(Abs(A[j][i]) > max)
+      {
 	max=Abs(A[j][i]);
 	row=j;
       }
     }
     //	ASSERT(Abs(max) > 1.e-12);
-    if (Abs(max) < 1.e-12) {
+    if (Abs(max) < 1.e-12)
+    {
       lhs=rhs;
       if (!overwrite) delete cpy;
       return 0;
     }
-    if(row != i){
+    if(row != i)
+    {
       // Switch rows (actually their pointers)
       double* tmp=A[i];
       A[i]=A[row];
@@ -311,17 +342,18 @@ int DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
     double denom=1./A[i][i];
     double* r1=A[i];
     double s1=lhs[i];
-    for(j=i+1;j<nr;j++){
+    for(j=i+1; j<nrows_; j++)
+    {
       double factor=A[j][i]*denom;
       double* r2=A[j];
-      for(int k=i;k<nr;k++)
+      for(int k=i; k<nrows_; k++)
 	r2[k]-=factor*r1[k];
       lhs[j]-=factor*s1;
     }
   }
 
   // Back-substitution
-  for(i=1;i<nr;i++){
+  for(i=1; i<nrows_; i++){
     //	cout << "Solve: " << i << " of " << nr << endl;
     //	ASSERT(Abs(A[i][i]) > 1.e-12);
     if (Abs(A[i][i]) < 1.e-12) {
@@ -335,14 +367,14 @@ int DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
     for(int j=0;j<i;j++){
       double factor=A[j][i]*denom;
       double* r2=A[j];
-      for(int k=i;k<nr;k++)
-	r2[k]-=factor*r1[k];
-      lhs[j]-=factor*s1;
+      for(int k=i; k<nrows_; k++)
+	r2[k] -= factor*r1[k];
+      lhs[j] -= factor*s1;
     }
   }
 
   // Normalize
-  for(i=0;i<nr;i++){
+  for(i=0; i<nrows_; i++){
     //	cout << "Solve: " << i << " of " << nr << endl;
     //	ASSERT(Abs(A[i][i]) > 1.e-12);
     if (Abs(A[i][i]) < 1.e-12) {
@@ -351,9 +383,9 @@ int DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
       return 0;
     }
     double factor=1./A[i][i];
-    for(int j=0;j<nr;j++)
-      A[i][j]*=factor;
-    lhs[i]*=factor;
+    for(int j=0; j<nrows_; j++)
+      A[i][j] *= factor;
+    lhs[i] *= factor;
   }
   if (!overwrite) delete cpy;
   return 1;
@@ -368,8 +400,8 @@ int DenseMatrix::solve(vector<double>& sol, int overwrite)
 int DenseMatrix::solve(const vector<double>& rhs, vector<double>& lhs, 
 		       int overwrite)
 {
-  ASSERT(nr==nc);
-  ASSERT(rhs.size()==(unsigned)nc);
+  ASSERT(nrows_ == ncols_);
+  ASSERT(rhs.size()==(unsigned)ncols_);
   lhs=rhs;
 
   double **A;
@@ -379,12 +411,12 @@ int DenseMatrix::solve(const vector<double>& rhs, vector<double>& lhs,
 
   // Gauss-Jordan with partial pivoting
   int i;
-  for(i=0;i<nr;i++){
+  for(i=0; i<nrows_; i++){
     //	cout << "Solve: " << i << " of " << nr << endl;
     double max=Abs(A[i][i]);
     int row=i;
     int j;
-    for(j=i+1;j<nr;j++){
+    for(j=i+1; j<nrows_; j++){
       if(Abs(A[j][i]) > max){
 	max=Abs(A[j][i]);
 	row=j;
@@ -408,20 +440,23 @@ int DenseMatrix::solve(const vector<double>& rhs, vector<double>& lhs,
     double denom=1./A[i][i];
     double* r1=A[i];
     double s1=lhs[i];
-    for(j=i+1;j<nr;j++){
+    for(j=i+1; j<nrows_; j++)
+    {
       double factor=A[j][i]*denom;
       double* r2=A[j];
-      for(int k=i;k<nr;k++)
+      for(int k=i; k<nrows_; k++)
 	r2[k]-=factor*r1[k];
       lhs[j]-=factor*s1;
     }
   }
 
   // Back-substitution
-  for(i=1;i<nr;i++){
+  for(i=1; i<nrows_; i++)
+  {
     //	cout << "Lhsve: " << i << " of " << nr << endl;
     //	ASSERT(Abs(A[i][i]) > 1.e-12);
-    if (Abs(A[i][i]) < 1.e-12) {
+    if (Abs(A[i][i]) < 1.e-12)
+    {
       lhs=rhs;
       if (!overwrite) delete cpy;
       return 0;
@@ -429,17 +464,18 @@ int DenseMatrix::solve(const vector<double>& rhs, vector<double>& lhs,
     double denom=1./A[i][i];
     double* r1=A[i];
     double s1=lhs[i];
-    for(int j=0;j<i;j++){
+    for(int j=0;j<i;j++)
+    {
       double factor=A[j][i]*denom;
       double* r2=A[j];
-      for(int k=i;k<nr;k++)
+      for(int k=i;k<nrows_;k++)
 	r2[k]-=factor*r1[k];
       lhs[j]-=factor*s1;
     }
   }
 
   // Normalize
-  for(i=0;i<nr;i++){
+  for(i=0; i<nrows_; i++){
     //	cout << "Solve: " << i << " of " << nr << endl;
     //	ASSERT(Abs(A[i][i]) > 1.e-12);
     if (Abs(A[i][i]) < 1.e-12) {
@@ -448,7 +484,7 @@ int DenseMatrix::solve(const vector<double>& rhs, vector<double>& lhs,
       return 0;
     }
     double factor=1./A[i][i];
-    for(int j=0;j<nr;j++)
+    for(int j=0; j<nrows_; j++)
       A[i][j]*=factor;
     lhs[i]*=factor;
   }
@@ -461,29 +497,29 @@ void DenseMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
 		       int spVec) const
 {
   // Compute A*x=b
-  ASSERTEQ(x.nrows(), nc);
-  ASSERTEQ(b.nrows(), nr);
-  if(beg==-1)beg=0;
-  if(end==-1)end=nr;
+  ASSERTEQ(x.nrows(), ncols_);
+  ASSERTEQ(b.nrows(), nrows_);
+  if (beg == -1) beg = 0;
+  if (end == -1) end = nrows_;
   int i, j;
   if(!spVec) {
     for(i=beg; i<end; i++){
       double sum=0;
       double* row=data[i];
-      for(j=0;j<nc;j++){
+      for(j=0; j<ncols_; j++){
 	sum+=row[j]*x[j];
       }
       b[i]=sum;
     }
   } else {
     for (i=beg; i<end; i++) b[i]=0;
-    for (j=0; j<nc; j++) 
+    for (j=0; j<ncols_; j++) 
       if (x[j]) 
 	for (i=beg; i<end; i++) 
 	  b[i]+=data[i][j]*x[j];
   }
-  flops+=(end-beg)*nc*2;
-  memrefs+=(end-beg)*nc*2*sizeof(double)+(end-beg)*sizeof(double);
+  flops += (end-beg) * ncols_ * 2;
+  memrefs += (end-beg) * ncols_ * 2 *sizeof(double)+(end-beg)*sizeof(double);
 }
     
 void DenseMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
@@ -491,42 +527,42 @@ void DenseMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 				 int spVec) const
 {
   // Compute At*x=b
-  ASSERT(x.nrows() == nr);
-  ASSERT(b.nrows() == nc);
-  if(beg==-1)beg=0;
-  if(end==-1)end=nc;
+  ASSERT(x.nrows() == nrows_);
+  ASSERT(b.nrows() == ncols_);
+  if (beg == -1) beg = 0;
+  if (end == -1) end = ncols_;
   int i, j;
   if (!spVec) {
     for(i=beg; i<end; i++){
       double sum=0;
-      for(j=0;j<nr;j++){
+      for(j=0; j<nrows_; j++){
 	sum+=data[j][i]*x[j];
       }
       b[i]=sum;
     }
   } else {
     for (i=beg; i<end; i++) b[i]=0;
-    for (j=0; j<nr; j++)
+    for (j=0; j<nrows_; j++)
       if (x[j]) {
 	double *row=data[j];
 	for (i=beg; i<end; i++)
 	  b[i]+=row[i]*x[j];
       }
   }
-  flops+=(end-beg)*nr*2;
-  memrefs+=(end-beg)*nr*2*sizeof(double)+(end-beg)*sizeof(double);
+  flops+=(end-beg)*nrows_*2;
+  memrefs+=(end-beg)*nrows_*2*sizeof(double)+(end-beg)*sizeof(double);
 }
 
 void DenseMatrix::print() const
 {
-  std::cout << "Dense Matrix: " << nr << " by " << nc << std::endl;
+  std::cout << "Dense Matrix: " << nrows_ << " by " << ncols_ << std::endl;
   print(std::cout);
 }
 
 void DenseMatrix::print(ostream& ostr) const
 {
-  for(int i=0;i<nr;i++){
-    for(int j=0;j<nc;j++){
+  for(int i=0; i<nrows_; i++){
+    for(int j=0; j<ncols_; j++){
       ostr << data[i][j] << "\t";
     }
     ostr << endl;
@@ -535,9 +571,9 @@ void DenseMatrix::print(ostream& ostr) const
 
 void DenseMatrix::scalar_multiply(double s)
 {
-  for (int i=0;i<nr;i++)
+  for (int i=0; i<nrows_; i++)
   {
-    for (int j=0;j<nc;j++)
+    for (int j=0; j<ncols_; j++)
     {
       data[i][j] *= s;
     }
@@ -549,9 +585,9 @@ MatrixHandle
 DenseMatrix::submatrix(int r1, int c1, int r2, int c2)
 {
   ASSERTRANGE(r1, 0, r2+1);
-  ASSERTRANGE(r2, r1, nr);
+  ASSERTRANGE(r2, r1, nrows_);
   ASSERTRANGE(c1, 0, c2+1);
-  ASSERTRANGE(c2, c1, nc);
+  ASSERTRANGE(c2, c1, ncols_);
   DenseMatrix *mat = scinew DenseMatrix(r2 - r1 + 1, c2 - c1 + 1);
   for (int i=r1; i <= r2; i++)
   {
@@ -563,22 +599,24 @@ DenseMatrix::submatrix(int r1, int c1, int r2, int c2)
 
 #define DENSEMATRIX_VERSION 3
 
-void DenseMatrix::io(Piostream& stream)
+void
+DenseMatrix::io(Piostream& stream)
 {
 
   int version=stream.begin_class("DenseMatrix", DENSEMATRIX_VERSION);
   // Do the base class first...
   Matrix::io(stream);
 
-  stream.io(nr);
-  stream.io(nc);
+  stream.io(nrows_);
+  stream.io(ncols_);
   if(stream.reading()){
-    data=scinew double*[nr];
-    double* tmp=scinew double[nr*nc];
+    data=scinew double*[nrows_];
+    double* tmp=scinew double[nrows_ * ncols_];
     dataptr=tmp;
-    for(int i=0;i<nr;i++){
-      data[i]=tmp;
-      tmp+=nc;
+    for(int i=0; i<nrows_; i++)
+    {
+      data[i] = tmp;
+      tmp += ncols_;
     }
   }
   stream.begin_cheap_delim();
@@ -590,8 +628,18 @@ void DenseMatrix::io(Piostream& stream)
       if (separate_raw_) {
 	Pio(stream, raw_filename_);
 	FILE *f=fopen(raw_filename_.c_str(), "r");
-	fread(data[0], sizeof(double), nr*nc, f);
-	fclose(f);
+	if (f)
+	{
+	  fread(data[0], sizeof(double), nrows_ * ncols_, f);
+	  fclose(f);
+	}
+	else
+	{
+	  const string errmsg = "Error reading separated file '" +
+	    raw_filename_ + "'";
+	  cerr << errmsg << "\n";
+	  throw FileNotFound(errmsg);
+	}
       }
     } else {
       separate_raw_ = false;
@@ -615,15 +663,15 @@ void DenseMatrix::io(Piostream& stream)
     if (split) {
       Pio(stream, filename);
       FILE *f = fopen(filename.c_str(), "w");
-      fwrite(data[0], sizeof(double), nr*nc, f);
+      fwrite(data[0], sizeof(double), nrows_ * ncols_, f);
       fclose(f);
     }
   }
 
   if (!split) {
     int idx=0;
-    for(int i=0;i<nr;i++)
-      for (int j=0; j<nc; j++, idx++)
+    for(int i=0; i<nrows_; i++)
+      for (int j=0; j<ncols_; j++, idx++)
 	stream.io(dataptr[idx]);
   }
   stream.end_cheap_delim();
@@ -633,32 +681,35 @@ void DenseMatrix::io(Piostream& stream)
 bool
 DenseMatrix::invert()
 {
-  if (nr != nc) return false;
+  if (nrows_ != ncols_) return false;
 #if defined(HAVE_LAPACK)
-     lapackinvert(dataptr, nr);
+     lapackinvert(dataptr, nrows_);
   return true;
 #else
-  double** newdata=scinew double*[nr];
-  double* tmp=scinew double[nr*nc];
+  double** newdata=scinew double*[nrows_];
+  double* tmp=scinew double[nrows_ * ncols_];
   double* newdataptr=tmp;
 
   int i;
-  for(i=0;i<nr;i++){
+  for(i=0; i<nrows_; i++){
     newdata[i]=tmp;
-    for(int j=0;j<nr;j++){
+    for(int j=0; j<nrows_; j++){
       tmp[j]=0;
     }
-    tmp[i]=1;
-    tmp+=nc;
+    tmp[i] = 1;
+    tmp += ncols_;
   }
 
   // Gauss-Jordan with partial pivoting
-  for(i=0;i<nr;i++){
+  for(i=0;i<nrows_;i++)
+  {
     double max=Abs(data[i][i]);
     int row=i;
     int j;
-    for(j=i+1;j<nr;j++){
-      if(Abs(data[j][i]) > max){
+    for(j=i+1; j<nrows_; j++)
+    {
+      if(Abs(data[j][i]) > max)
+      {
 	max=Abs(data[j][i]);
 	row=j;
       }
@@ -680,11 +731,13 @@ DenseMatrix::invert()
     double denom=1./data[i][i];
     double* r1=data[i];
     double* n1=newdata[i];
-    for(j=i+1;j<nr;j++){
+    for(j=i+1; j<nrows_; j++)
+    {
       double factor=data[j][i]*denom;
       double* r2=data[j];
       double* n2=newdata[j];
-      for(int k=0;k<nr;k++){
+      for(int k=0;k<nrows_;k++)
+      {
 	r2[k]-=factor*r1[k];
 	n2[k]-=factor*n1[k];
       }
@@ -692,8 +745,9 @@ DenseMatrix::invert()
   }
 
   // Back-substitution
-  for(i=1;i<nr;i++){
-    if (Abs(data[i][i]) <= 1.e-12) {
+  for(i=1; i<nrows_; i++){
+    if (Abs(data[i][i]) <= 1.e-12)
+    {
       delete[] newdataptr;
       delete[] newdata; 
       return false; 
@@ -705,7 +759,8 @@ DenseMatrix::invert()
       double factor=data[j][i]*denom;
       double* r2=data[j];
       double* n2=newdata[j];
-      for(int k=0;k<nr;k++){
+      for(int k=0; k<nrows_; k++)
+      {
 	r2[k]-=factor*r1[k];
 	n2[k]-=factor*n1[k];
       }
@@ -713,14 +768,17 @@ DenseMatrix::invert()
   }
 
   // Normalize
-  for(i=0;i<nr;i++){
-    if (Abs(data[i][i]) <= 1.e-12) { 
+  for(i=0;i<nrows_;i++)
+  {
+    if (Abs(data[i][i]) <= 1.e-12)
+    {
       delete[] newdataptr;
       delete[] newdata;
       return false; 
     }
     double factor=1./data[i][i];
-    for(int j=0;j<nr;j++){
+    for(int j=0;j<nrows_; j++)
+    {
       data[i][j]*=factor;
       newdata[i][j]*=factor;
     }
@@ -746,8 +804,8 @@ void Mult(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)
 	      m2.ncols(), m1.ncols(), ALPHA, m1.dataptr, m1.ncols(), 
 	      m2.dataptr, m2.ncols(), BETA, out.dataptr, out.ncols());
 #else
-  int nr=out.nrows();
-  int nc=out.ncols();
+  int nr = out.nrows();
+  int nc = out.ncols();
   int ndot=m1.ncols();
   for(int i=0;i<nr;i++){
     double* row=m1.data[i];
@@ -858,31 +916,34 @@ void Mult_X_trans(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2
 
 void DenseMatrix::mult(double s)
 {
-  for(int i=0;i<nr;i++){
-    double* p=data[i];
-    for(int j=0;j<nc;j++){
-      p[j]*=s;
+  for(int i=0; i<nrows_; i++)
+  {
+    double* p = data[i];
+    for(int j=0; j<ncols_; j++)
+    {
+      p[j] *= s;
     }
   }
 }
 
-double DenseMatrix::sumOfCol(int n){
-  ASSERT(n<nc);
+double DenseMatrix::sumOfCol(int n)
+{
+  ASSERT(n<ncols_);
   ASSERT(n>=0);
 
   double sum = 0;
-  for (int i=0; i<nr; i++)
+  for (int i=0; i<nrows_; i++)
     sum+=data[i][n];
   return sum;
 }
 
 double DenseMatrix::sumOfRow(int n){
-  ASSERT(n<nr);
-  ASSERT(n>=0);
+  ASSERT(n < nrows_);
+  ASSERT(n >= 0);
   double* rp = data[n];
   double sum = 0;
   int i=0;
-  while(i<nc)
+  while (i<ncols_)
     sum+=rp[i++];
   return sum;
 }
@@ -892,7 +953,8 @@ double
 DenseMatrix::determinant() 
 {
   double a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p;
-  ASSERTMSG(((nr==4)&&(nc==4)), "Number of Rows and Colums for Determinant must equal 4! (Code not completed)");
+  ASSERTMSG(((nrows_ == 4) && (ncols_ == 4)),
+            "Number of Rows and Colums for Determinant must equal 4! (Code not completed)");
   a=data[0][0]; b=data[0][1]; c=data[0][2]; d=data[0][3];
   e=data[1][0]; f=data[1][1]; g=data[1][2]; h=data[1][3];
   i=data[2][0]; j=data[2][1]; k=data[2][2]; l=data[2][3];
@@ -908,48 +970,58 @@ DenseMatrix::determinant()
 
 #if defined(HAVE_LAPACK)
 
-void DenseMatrix::svd(DenseMatrix& U, SparseRowMatrix& S, DenseMatrix& VT){
+void
+DenseMatrix::svd(DenseMatrix& U, SparseRowMatrix& S, DenseMatrix& VT)
+{
 
   ASSERTEQ(U.ncols(), U.nrows());
   ASSERTEQ(VT.ncols(), VT.nrows());
-  ASSERTEQ(U.nrows(), nr);
-  ASSERTEQ(VT.ncols(), nc);
-  ASSERTEQ(S.nrows(), nr);
-  ASSERTEQ(S.ncols(), nc);
+  ASSERTEQ(U.nrows(), nrows_);
+  ASSERTEQ(VT.ncols(), ncols_);
+  ASSERTEQ(S.nrows(), nrows_);
+  ASSERTEQ(S.ncols(), ncols_);
 
-  lapacksvd(data, nr, nc, S.a, U.data, VT.data); 
+  lapacksvd(data, nrows_, ncols_, S.a, U.data, VT.data); 
 
 }  
 
-void DenseMatrix::eigenvalues(ColumnMatrix& R, ColumnMatrix& I){
+
+void
+DenseMatrix::eigenvalues(ColumnMatrix& R, ColumnMatrix& I)
+{
   
-  ASSERTEQ(nc, nr);
+  ASSERTEQ(ncols_, nrows_);
   ASSERTEQ(R.nrows(), I.nrows());
-  ASSERTEQ(nc, R.nrows());
+  ASSERTEQ(ncols_, R.nrows());
 
-  double *Er = scinew double[nr];
-  double *Ei = scinew double[nr];
+  double *Er = scinew double[nrows_];
+  double *Ei = scinew double[nrows_];
   
-  lapackeigen(data, nr, Er, Ei);
+  lapackeigen(data, nrows_, Er, Ei);
 
-  for(int i = 0; i<nr; i++){
+  for(int i = 0; i<nrows_; i++)
+  {
     R[i] = Er[i];
     I[i] = Ei[i];
   }
 }
 
-void DenseMatrix::eigenvectors(ColumnMatrix& R, ColumnMatrix& I, DenseMatrix& Vecs){
+
+void
+DenseMatrix::eigenvectors(ColumnMatrix& R, ColumnMatrix& I, DenseMatrix& Vecs)
+{
   
-  ASSERTEQ(nc, nr);
+  ASSERTEQ(ncols_, nrows_);
   ASSERTEQ(R.nrows(), I.nrows());
-  ASSERTEQ(nc, R.nrows());
+  ASSERTEQ(ncols_, R.nrows());
 
-  double *Er = scinew double[nr];
-  double *Ei = scinew double[nr];
+  double *Er = scinew double[nrows_];
+  double *Ei = scinew double[nrows_];
   
-  lapackeigen(data, nr, Er, Ei, Vecs.data);
+  lapackeigen(data, nrows_, Er, Ei, Vecs.data);
 
-  for(int i = 0; i<nr; i++){
+  for(int i = 0; i<nrows_; i++)
+  {
     R[i] = Er[i];
     I[i] = Ei[i];
   }

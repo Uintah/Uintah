@@ -63,6 +63,7 @@
 #include <Core/GuiInterface/GuiCallback.h>
 #include <Core/GuiInterface/GuiInterface.h>
 #include <Core/GuiInterface/SciTCLstrbuff.h>
+#include <Core/GuiInterface/TCLTask.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/sci_system.h>
@@ -99,7 +100,8 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	return;
     }
     if(args[1] == "quit"){
-	Thread::exitAll(0);
+      TCLTask::unlock();
+      Thread::exitAll(0);
     } else if(args[1] == "addmodule"){
 	if(args.count() < 5){
 	    args.error("netedit addmodule needs a package name,"

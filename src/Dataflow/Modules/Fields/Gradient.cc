@@ -57,8 +57,6 @@ public:
   virtual void execute();
 
 protected:
-  FieldHandle fieldout_;
-
   int fGeneration_;
 };
 
@@ -81,13 +79,6 @@ Gradient::execute()
   FieldIPort* ifp = (FieldIPort *)get_iport("Input Field");
 
   FieldHandle fieldin;
-
-  if (!ifp)
-  {
-    error( "Unable to initialize iport 'Input Field'.");
-    return;
-  }
-
   if (!(ifp->get(fieldin) && fieldin.get_rep()))
   {
     error( "No handle or representation in input field." );
@@ -97,19 +88,23 @@ Gradient::execute()
   TypeDescription *otd = 0;
 
   if (fieldin->query_scalar_interface(this).get_rep() )
+  {
     otd = (TypeDescription *) SCIRun::get_type_description( (Vector*) 0 );
-
+  }
   else if (fieldin->query_vector_interface(this).get_rep())
+  {
     otd = (TypeDescription *) SCIRun::get_type_description( (Tensor*) 0 );
-
-  else {
+  }
+  else
+  {
     error( "This module only works on fields of scalar or vector data.");
     return;
   }
 
   // If no data or a changed recalcute.
-  if( !fieldout_.get_rep() ||
-      fGeneration_ != fieldin->generation ) {
+  FieldHandle fieldout(0);
+  if( fGeneration_ != fieldin->generation )
+  {
     fGeneration_ = fieldin->generation;
 
     const TypeDescription *ftd = fieldin->get_type_description(0);
@@ -120,20 +115,14 @@ Gradient::execute()
     Handle<GradientAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
-    fieldout_ = algo->execute(fieldin);
+    fieldout = algo->execute(fieldin);
   }
 
-  // Get a handle to the output field port.
-  if ( fieldout_.get_rep() ) {
+  // Send the data downstream
+  if ( fieldout.get_rep() )
+  {
     FieldOPort* ofp = (FieldOPort *) get_oport("Output Gradient");
-
-    if (!ofp) {
-      error("Unable to initialize oport 'Output Gradient'.");
-      return;
-    }
-
-    // Send the data downstream
-    ofp->send(fieldout_);
+    ofp->send(fieldout);
   }
 }
 

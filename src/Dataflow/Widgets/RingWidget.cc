@@ -545,6 +545,7 @@ RingWidget::SetPosition( const Point& center, const Vector& normal, const double
   variables[CenterVar]->Move(center);
   variables[PointRVar]->Move(center+v1*radius);
   variables[PointDVar]->Set(center+v2*radius);
+  SetRadius(radius);
 
   execute(0);
 }
@@ -705,6 +706,7 @@ RingWidget::SetStateString(const string &str)
   is >> centerx >> centery >> centerz;
   is >> normalx >> normaly >> normalz;
   is >> radius;
+
   if (!is.fail())
   {
     SetPosition(Point(centerx, centery, centerz),

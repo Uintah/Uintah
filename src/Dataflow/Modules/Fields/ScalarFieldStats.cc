@@ -76,12 +76,18 @@ ScalarFieldStats::~ScalarFieldStats()
 }
 
 void
+ScalarFieldStats::clear_histogram()
+{
+  gui->execute(id + " clear_data");
+}
+
+void
 ScalarFieldStats::fill_histogram( vector<int>& hits)
 {
   ostringstream ostr;
   int nmin, nmax;
   vector<int>::iterator it = hits.begin();
-  nmin = nmax = *it;
+  nmin = 0;  nmax = *it;
   ostr << *it;  ++it;
   for(; it != hits.end(); ++it){
     ostr <<" "<<*it;
@@ -103,10 +109,6 @@ ScalarFieldStats::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
     return;

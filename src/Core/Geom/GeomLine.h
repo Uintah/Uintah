@@ -97,7 +97,7 @@ public:
 	   const Point &p1, const MaterialHandle &c1, double cindex1);
   void setLineWidth(float val) { line_width_ = val; }
 
-  unsigned int size() { return points_.size() / 6; }
+  unsigned int size() { return (int)points_.size() / 6; }
 
   virtual ~GeomLines();
   virtual GeomObj* clone();

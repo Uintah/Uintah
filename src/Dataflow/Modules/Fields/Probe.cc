@@ -176,10 +176,7 @@ Probe::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!ifp) {
-    error("Unable to initialize " +name + "'s iport.");
-    return;
-  }
+
   bool input_field_p = true;
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
@@ -244,11 +241,6 @@ Probe::execute()
     widget_group->add(widget_->GetWidget());
 
     GeometryOPort *ogport = (GeometryOPort*)get_oport("Probe Widget");
-    if (!ogport)
-    {
-      error("Unable to initialize " + name + "'s oport.");
-      return;
-    }
     widgetid_ = ogport->addObj(widget_group, "Probe Selection Widget",
 			       &widget_lock_);
     ogport->flushViews();
@@ -340,11 +332,6 @@ Probe::execute()
   if (moved_p)
   {
     GeometryOPort *ogport = (GeometryOPort*)get_oport("Probe Widget");
-    if (!ogport)
-    {
-      error("Unable to initialize " + name + "'s oport.");
-      return;
-    }
     ogport->flushViews();
     gui_moveto_.set("");
   }
@@ -384,7 +371,7 @@ Probe::execute()
   {
     valstr << 0;
     PointCloudField<double> *field =
-      scinew PointCloudField<double>(mesh, 1);
+      scinew PointCloudField<double>(mesh, 0);
     field->set_value(0.0, pcindex);
     ofield = field;
   }
@@ -397,7 +384,7 @@ Probe::execute()
     }
     valstr << result;
 
-    PointCloudField<double> *field = scinew PointCloudField<double>(mesh, 1);
+    PointCloudField<double> *field = scinew PointCloudField<double>(mesh, 0);
     field->set_value(result, pcindex);
     ofield = field;
   }
@@ -410,7 +397,7 @@ Probe::execute()
     }
     valstr << result;
 
-    PointCloudField<Vector> *field = scinew PointCloudField<Vector>(mesh, 1);
+    PointCloudField<Vector> *field = scinew PointCloudField<Vector>(mesh, 0);
     field->set_value(result, pcindex);
     ofield = field;
   }
@@ -423,7 +410,7 @@ Probe::execute()
     }
     valstr << result;
 
-    PointCloudField<Tensor> *field = scinew PointCloudField<Tensor>(mesh, 1);
+    PointCloudField<Tensor> *field = scinew PointCloudField<Tensor>(mesh, 0);
     field->set_value(result, pcindex);
     ofield = field;
   }
@@ -433,20 +420,11 @@ Probe::execute()
   if (gui_show_value_.get()) { gui_value_.set(valstr.str()); }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Probe Point");
-  if (!ofp) {
-    error("Unable to initialize oport 'Probe Point'.");
-    return;
-  }
   ofp->send(ofield);
 
   if (input_field_p)
   {
     MatrixOPort *mp = (MatrixOPort *)get_oport("Element Index");
-    if (!mp)
-    {
-      error("Unable to initialize oport 'Element Index'.");
-      return;
-    }
     unsigned int index = 0;
     switch (ifieldhandle->basis_order())
     {
@@ -468,7 +446,7 @@ Probe::execute()
       break;
     }
     MatrixHandle cm = scinew ColumnMatrix(1);
-    cm->get(0, 0) = (double)index;
+    cm->put(0, 0, index);
     mp->send(cm);
   }
 }

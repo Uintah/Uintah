@@ -262,19 +262,6 @@ void SolveMatrix::execute()
   rhsport = (MatrixIPort *)get_iport("RHS");
   solport = (MatrixOPort *)get_oport("Solution");
   
-  if (!matrixport) {
-    error("Unable to initialize iport 'Matrix'.");
-    return;
-  }
-  if (!rhsport) {
-    error("Unable to initialize iport 'RHS'.");
-    return;
-  }
-  if (!solport) {
-    error("Unable to initialize oport 'Solution'.");
-    return;
-  }
-  
   MatrixHandle matrix;
   MatrixHandle rhs;
   
@@ -746,8 +733,8 @@ void SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
   data.mat=matrix;
   data.timer=new WallClockTimer;
   data.stats=new PStats[data.np];
-  Thread::parallel(Parallel<SolveMatrix>(this, &SolveMatrix::parallel_conjugate_gradient),
-		   data.np, true);
+  Parallel<SolveMatrix> p(this, &SolveMatrix::parallel_conjugate_gradient);
+  Thread::parallel(p, data.np, true);
   delete data.timer;
   delete data.stats;
 //  delete data;
@@ -1006,8 +993,8 @@ SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
   data.trans = trans;
   
 //   int i,p;
-  Thread::parallel(Parallel<SolveMatrix>(this, &SolveMatrix::parallel_bi_conjugate_gradient),
-		   data.np, true);
+  Parallel<SolveMatrix> p(this, &SolveMatrix::parallel_bi_conjugate_gradient);
+  Thread::parallel(p, data.np, true);
   delete data.timer;
   delete data.stats;
 //  delete data;

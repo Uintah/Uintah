@@ -93,13 +93,11 @@ BuildInterpolant::~BuildInterpolant()
 void
 BuildInterpolant::execute()
 {
+  warning("This module is deprecated, use BuildMappingMatrix instead.");
+
   dst_port = (FieldIPort *)get_iport("Destination");
   FieldHandle fdst_h;
 
-  if (!dst_port) {
-    error("Unable to initialize iport 'Destination'.");
-    return;
-  }
   if (!(dst_port->get(fdst_h) && fdst_h.get_rep()))
   {
     return;
@@ -112,10 +110,6 @@ BuildInterpolant::execute()
 
   src_port = (FieldIPort *)get_iport("Source");
   FieldHandle fsrc_h;
-  if(!src_port) {
-    error("Unable to initialize iport 'Source'.");
-    return;
-  }
   if (!(src_port->get(fsrc_h) && fsrc_h.get_rep()))
   {
     return;
@@ -135,10 +129,6 @@ BuildInterpolant::execute()
   if (!DynamicCompilation::compile(ci, algo, this)) return;
 
   ofp = (FieldOPort *)get_oport("Interpolant");
-  if(!ofp) {
-    error("Unable to initialize oport 'Interpolant'.");
-    return;
-  }
   fsrc_h->mesh()->synchronize(Mesh::LOCATE_E);
   ofp->send(algo->execute(fsrc_h->mesh(), fdst_h->mesh(), fdst_h->basis_order(),
 			  interpolation_basis_.get(),

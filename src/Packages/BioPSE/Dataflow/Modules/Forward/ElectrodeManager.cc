@@ -105,16 +105,6 @@ void
   electrodeParams_ = (MatrixOPort *)get_oport("Electrode Parameters");
   currPattIndicies_ = (MatrixOPort *)get_oport("Current Pattern Index Vector");
 
-  if (!electrodeParams_) {
-    error("Unable to initialize oport 'Electrode Parameters'.");
-    return;
-  }
-
-  if (!currPattIndicies_) {
-    error("Unable to initialize oport 'Current Pattern Index Vector'.");
-    return;
-  }
-
   unsigned int model = modelTCL_.get();
   unsigned int numEl = Max(numElTCL_.get(), 0);
   double lengthEl = Max(lengthElTCL_.get(), 0.0);

@@ -127,6 +127,8 @@ private:
   OPort& operator=(const OPort&);
 
   virtual void update_light();
+protected:
+  static void issue_no_port_caching_warning();
 };
 
 }

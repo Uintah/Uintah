@@ -224,6 +224,9 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
   }
   else
   {
+    TriSurfField<double> *ts = scinew TriSurfField<double>(tmesh, -1);
+    boundary_fh = ts;
+
     interp = 0;
   }
 }
@@ -389,6 +392,10 @@ FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
   }
   else
   {
+    QuadSurfField<double> *ts =
+      scinew QuadSurfField<double>(tmesh, -1);
+    boundary_fh = ts;
+
     interp = 0;
   }
 }
@@ -543,6 +550,9 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
   }
   else
   {
+    CurveField<double> *ts = scinew CurveField<double>(tmesh, -1);
+    boundary_fh = ts;
+
     interp = 0;
   }
 }

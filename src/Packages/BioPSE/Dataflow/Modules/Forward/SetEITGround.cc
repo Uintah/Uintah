@@ -89,28 +89,7 @@ void SetEITGround::execute()
     oportGndPot_ = (MatrixOPort *)get_oport("OutputPotentialVector");
     oportElectrodePot_ = (MatrixOPort *)get_oport("Electrode Potentials");
   
-    if (!iportInPot_)
-    {
-        postMessage("Unable to initialize "+name+"'s iport\n");
-        return;
-    }
-    if (!iportMeshToElectrodeMap_)
-    {
-        postMessage("Unable to initialize "+name+"'s iport\n");
-        return;
-    }
-    if (!oportGndPot_)
-    {
-        postMessage("Unable to initialize "+name+"'s oport\n");
-        return;
-    }
-    if (!oportElectrodePot_)
-    {
-        postMessage("Unable to initialize "+name+"'s oport\n");
-        return;
-    }
-
-    // validate inputs
+    // Validate inputs.
     MatrixHandle hInPot;
     if (!iportInPot_->get(hInPot) || !hInPot.get_rep())
     {

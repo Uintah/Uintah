@@ -31,10 +31,9 @@
 #ifndef Datatypes_LatVolField_h
 #define Datatypes_LatVolField_h
 
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/Tensor.h>
-#include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
@@ -56,9 +55,9 @@ public:
   typedef const Data * const_iterator;
 
   iterator begin() { return &(*this)(0,0,0); } 
-  iterator end() { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
+  iterator end() { return &((*this)(this->dim1()-1,this->dim2()-1,this->dim3()-1))+1; }
   const_iterator begin() const { return &(*this)(0,0,0); } 
-  const_iterator end() const { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
+  const_iterator end() const { return &((*this)(this->dim1()-1,this->dim2()-1,this->dim3()-1))+1; }
 
     
   FData3d() : Array3<Data>() {}
@@ -67,22 +66,22 @@ public:
   virtual ~FData3d();
   
   const value_type &operator[](typename LatVolMesh::Cell::index_type idx) const
-  { return operator()(idx.k_,idx.j_,idx.i_); } 
+  { return this->operator()(idx.k_,idx.j_,idx.i_); } 
   const value_type &operator[](typename LatVolMesh::Face::index_type idx) const
-  { return operator()(0, 0, idx); }
+  { return this->operator()(0, 0, idx); }
   const value_type &operator[](typename LatVolMesh::Edge::index_type idx) const
-  { return operator()(0, 0, idx); }    
+  { return this->operator()(0, 0, idx); }    
   const value_type &operator[](typename LatVolMesh::Node::index_type idx) const
-  { return operator()(idx.k_,idx.j_,idx.i_); }    
+  { return this->operator()(idx.k_,idx.j_,idx.i_); }    
 
   value_type &operator[](typename LatVolMesh::Cell::index_type idx)
-  { return operator()(idx.k_,idx.j_,idx.i_); } 
+  { return this->operator()(idx.k_,idx.j_,idx.i_); } 
   value_type &operator[](typename LatVolMesh::Face::index_type idx)
-  { return operator()(0, 0, idx); }
+  { return this->operator()(0, 0, idx); }
   value_type &operator[](typename LatVolMesh::Edge::index_type idx)
-  { return operator()(0, 0, idx); }    
+  { return this->operator()(0, 0, idx); }    
   value_type &operator[](typename LatVolMesh::Node::index_type idx)
-  { return operator()(idx.k_,idx.j_,idx.i_); }    
+  { return this->operator()(idx.k_,idx.j_,idx.i_); }    
 
   void resize(const LatVolMesh::Node::size_type &size)
   { Array3<Data>::resize(size.k_, size.j_, size.i_); }
@@ -93,7 +92,7 @@ public:
   void resize(const LatVolMesh::Cell::size_type &size)
   { Array3<Data>::resize(size.k_, size.j_, size.i_); }
 
-  unsigned int size() const { return dim1() * dim2() * dim3(); }
+  unsigned int size() const { return this->dim1() * this->dim2() * this->dim3(); }
 
   static const string type_name(int n = -1);
 };
@@ -277,13 +276,13 @@ LatVolField<Data>::io(Piostream &stream)
   stream.end_class();                                                         
   if (version < 2) {
     FData3d<Data> temp;
-    temp.copy(fdata());
-    resize_fdata();
+    temp.copy(this->fdata());
+    this->resize_fdata();
     int i, j, k;
-    for (i=0; i<fdata().dim1(); i++)
-      for (j=0; j<fdata().dim2(); j++)
-	for (k=0; k<fdata().dim3(); k++)
-	  fdata()(i,j,k)=temp(k,j,i);
+    for (i=0; i<this->fdata().dim1(); i++)
+      for (j=0; j<this->fdata().dim2(); j++)
+	for (k=0; k<this->fdata().dim3(); k++)
+	  this->fdata()(i,j,k)=temp(k,j,i);
   }
 }
 
@@ -297,11 +296,11 @@ template <class Data>
 bool LatVolField<Data>::get_gradient(Vector &g, const Point &p)
 {
   // for now we only know how to do this for fields with scalars at the nodes
-  if (query_scalar_interface().get_rep())
+  if (this->query_scalar_interface().get_rep())
   {
-    if( basis_order() == 1)
+    if( this->basis_order() == 1)
     {
-      const Point r = mesh_->get_transform().unproject(p);
+      const Point r = this->mesh_->get_transform().unproject(p);
       double x = r.x();
       double y = r.y();
       double z = r.z();
@@ -320,9 +319,9 @@ bool LatVolField<Data>::get_gradient(Vector &g, const Point &p)
       double z=pn.z()*(nk-1)/diagz;
 #endif
 
-      int ni=mesh_->get_ni();
-      int nj=mesh_->get_nj();
-      int nk=mesh_->get_nk();
+      int ni = this->mesh_->get_ni();
+      int nj = this->mesh_->get_nj();
+      int nk = this->mesh_->get_nk();
       int ix0 = (int)x;
       int iy0 = (int)y;
       int iz0 = (int)z;
@@ -335,15 +334,15 @@ bool LatVolField<Data>::get_gradient(Vector &g, const Point &p)
       double fx = x-ix0;
       double fy = y-iy0;
       double fz = z-iz0;
-      LatVolMesh *mp = mesh_.get_rep();
-      double d000 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz0));
-      double d100 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz0));
-      double d010 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz0));
-      double d110 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz0));
-      double d001 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz1));
-      double d101 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz1));
-      double d011 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz1));
-      double d111 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz1));
+      LatVolMesh *mp = this->mesh_.get_rep();
+      double d000 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz0));
+      double d100 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz0));
+      double d010 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz0));
+      double d110 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz0));
+      double d001 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz1));
+      double d101 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz1));
+      double d011 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz1));
+      double d111 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz1));
       double z00 = Interpolate(d000, d001, fz);
       double z01 = Interpolate(d010, d011, fz);
       double z10 = Interpolate(d100, d101, fz);
@@ -361,7 +360,7 @@ bool LatVolField<Data>::get_gradient(Vector &g, const Point &p)
       double z0 = Interpolate(x00, x01, fz);
       double z1 = Interpolate(x10, x11, fz);
       double dy = (z1-z0);
-      g = mesh_->get_transform().unproject(Vector(dx, dy, dz));
+      g = this->mesh_->get_transform().unproject(Vector(dx, dy, dz));
       return true;
     }
   }
@@ -382,7 +381,7 @@ template <class T>
 Vector
 LatVolField<T>::cell_gradient(const LatVolMesh::Cell::index_type &ci) const
 {
-  ASSERT(basis_order() == 1);
+  ASSERT(this->basis_order() == 1);
 
   const unsigned int ix0 = ci.i_;
   const unsigned int iy0 = ci.j_;
@@ -391,15 +390,15 @@ LatVolField<T>::cell_gradient(const LatVolMesh::Cell::index_type &ci) const
   const unsigned int iy1 = iy0+1;
   const unsigned int iz1 = iz0+1;
 
-  LatVolMesh *mp = mesh_.get_rep();
-  double d000 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz0));
-  double d100 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz0));
-  double d010 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz0));
-  double d110 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz0));
-  double d001 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz1));
-  double d101 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz1));
-  double d011 = (double)value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz1));
-  double d111 = (double)value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz1));
+  LatVolMesh *mp = this->mesh_.get_rep();
+  double d000 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz0));
+  double d100 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz0));
+  double d010 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz0));
+  double d110 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz0));
+  double d001 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy0,iz1));
+  double d101 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy0,iz1));
+  double d011 = (double)this->value(LatVolMesh::Node::index_type(mp,ix0,iy1,iz1));
+  double d111 = (double)this->value(LatVolMesh::Node::index_type(mp,ix1,iy1,iz1));
   const double z00 = Interpolate(d000, d001, 0.5);
   const double z01 = Interpolate(d010, d011, 0.5);
   const double z10 = Interpolate(d100, d101, 0.5);
@@ -417,7 +416,7 @@ LatVolField<T>::cell_gradient(const LatVolMesh::Cell::index_type &ci) const
   const double z0 = Interpolate(x00, x01, 0.5);
   const double z1 = Interpolate(x10, x11, 0.5);
   const double dy = (z1-z0);
-  return mesh_->get_transform().unproject(Vector(dx, dy, dz));
+  return this->mesh_->get_transform().unproject(Vector(dx, dy, dz));
 }
 
 } // end namespace SCIRun

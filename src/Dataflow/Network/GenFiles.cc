@@ -41,14 +41,21 @@
 
 #define PERM S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH
 
-namespace SCIRun {
-  using std::string;
-  /*! these functions all assume that the files and/or directories
-      about to be generated, do not already exist */ 
+#define DEBUG 0
 
-int GenPackage(char* package, char* psepath)
+namespace SCIRun {
+
+using std::string;
+
+/*! these functions all assume that the files and/or directories
+    about to be generated, do not already exist */ 
+
+int
+GenPackage(char* package, char* psepath)
 {
+#if DEBUG
   printf ("GenPack\n");
+#endif
   int check=0,checkall=0;
   char* strbuf = 0;
   FILE* file = 0;
@@ -171,7 +178,9 @@ int GenPackage(char* package, char* psepath)
 
 int GenCategory(char* catname, char* package, char* psepath)
 {
+#if DEBUG
   printf ("GenCat\n");
+#endif
   int check;
   char* strbuf = 0;
   FILE* file = 0;
@@ -214,7 +223,8 @@ int GenCategory(char* catname, char* package, char* psepath)
   return 1;
 }
 
-int GenComponent(component_node* n, char* package, char* psepath)
+int
+GenComponent(component_node* n, char* package, char* psepath)
 {
   printf ("GenComp\n");
   

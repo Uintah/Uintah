@@ -114,12 +114,8 @@ void
 ClipByFunction::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
+  FieldIPort *ifp = (FieldIPort *)get_iport("Input");
   FieldHandle fHandle;
-  if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
   if (!(ifp->get(fHandle) && fHandle.get_rep())) {
     error( "No source field handle or representation" );
     return;
@@ -196,27 +192,25 @@ ClipByFunction::execute()
     algo->u4 = gui_uservar4_.get();
     algo->u5 = gui_uservar5_.get();
 
+    if (!(fHandle->basis_order() == 0 && gMode == 0 ||
+          fHandle->basis_order() == 1 && gMode != 0))
+    {
+      warning("Basis doesn't match clip location, value will always be zero.");
+    }
+
     fHandle_ = algo->execute(this, fHandle, gMode, mHandle_);
   }
 
 
-  if( fHandle_.get_rep() ) {
-    FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-    if (!ofield_port) {
-      error("Unable to initialize oport 'Output Field'.");
-      return;
-    }
-
+  if( fHandle_.get_rep() )
+  {
+    FieldOPort *ofield_port = (FieldOPort *)get_oport("Clipped");
     ofield_port->send(fHandle_);
   }
 
-  if( mHandle_.get_rep() ) {
-    MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Interpolant");
-    if (!omatrix_port) {
-      error("Unable to initialize oport 'Interpolant'.");
-      return;
-    }
-
+  if( mHandle_.get_rep() )
+  {
+    MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Mapping");
     omatrix_port->send(mHandle_);
   }
 }

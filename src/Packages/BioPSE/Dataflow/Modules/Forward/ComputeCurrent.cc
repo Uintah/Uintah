@@ -39,6 +39,7 @@
  *  Copyright (C) 2002 SCI Group
  */
 
+#include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -76,19 +77,6 @@ ComputeCurrent::execute()
   FieldIPort* efield_port = (FieldIPort *) get_iport("TetMesh EField");
   FieldIPort* sigmas_port = (FieldIPort *) get_iport("TetMesh Sigmas");
   FieldOPort* ofield_port = (FieldOPort *) get_oport("Currents");
-
-  if (!efield_port) {
-    error("Unable to initialize iport 'TetMesh EField'.");
-    return;
-  }
-  if (!sigmas_port) {
-    error("Unable to initialize iport 'TetMesh Sigmas'.");
-    return;
-  }
-  if (!ofield_port) {
-    error("Unable to initialize oport 'Currents'.");
-    return;
-  }
 
   FieldHandle efieldH, sigmasH;
 

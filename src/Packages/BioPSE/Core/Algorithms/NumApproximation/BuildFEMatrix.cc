@@ -102,10 +102,8 @@ bool BuildFEMatrix::build_FEMatrix(TetVolFieldIntHandle hFieldInt,
     new BuildFEMatrix(hFieldInt, hFieldTensor, index_based, tens, 
 		      hA, np, unitsScale);
 //  cerr << "SetupFEMatrix: number of threads being used = " << np << endl;
-
-  Thread::parallel(Parallel<BuildFEMatrix>(hMaker.get_rep(), 
-					   &BuildFEMatrix::parallel),
- 		   np, true);
+  Parallel<BuildFEMatrix> p(hMaker.get_rep(), &BuildFEMatrix::parallel);
+  Thread::parallel(p, np, true);
   
   // -- refer to the object one more time not to make it die before
   hMaker = 0;
@@ -298,7 +296,7 @@ void BuildFEMatrix::add_lcl_gbl(double lcl_a[4][4], TetVolMesh::Cell::index_type
     if (ii>=s && ii<e)          //! the row to update belongs to the process, proceed...
       for (int j=0; j<4; j++) {      
 	int jj = cell_nodes[j];
-	pA_->get(ii, jj) += lcl_a[i][j];
+	pA_->add(ii, jj, lcl_a[i][j]);
       }
   }
 }

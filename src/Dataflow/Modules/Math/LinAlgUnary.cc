@@ -40,6 +40,7 @@
 
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Modules/Math/LinAlgUnary.h>
@@ -131,15 +132,6 @@ void LinAlgUnary::execute() {
   MatrixIPort* imat_ = (MatrixIPort *)get_iport("Input");
   MatrixOPort* omat_ = (MatrixOPort *)get_oport("Output");
 
-  if (!imat_) {
-    error("Unable to initialize iport 'Input'.");
-    return;
-  }
-  if (!omat_) {
-    error("Unable to initialize oport 'Output'.");
-    return;
-  }
-  
   update_state(NeedData);
   MatrixHandle mh;
   if (!imat_->get(mh) || !mh.get_rep()) {
@@ -162,36 +154,30 @@ void LinAlgUnary::execute() {
     }
     m = dm;
   } else if (op == "Sort") {
-    m = mh->clone();
-    double *x = &((*(m.get_rep()))[0][0]);
-    int n = m->nrows()*m->ncols();
-    insertion_sort(x, n);
+    // Not real efficient for sparse row matrices, but works now.
+    m = (mh->is_sparse())?mh->dense():mh->clone();
+    insertion_sort(m->get_data_pointer(), m->get_data_size());
+    if (mh->is_sparse()) { m = m->sparse(); }
   } else if (op == "Subtract_Mean") {
-    m = mh->clone();
-    double *x = &((*(m.get_rep()))[0][0]);
-    int n = m->nrows()*m->ncols();
-    subtract_mean(x, n);
+    m = (mh->is_sparse())?mh->dense():mh->clone();
+    subtract_mean(m->get_data_pointer(), m->get_data_size());
   } else if (op == "Normalize") {
     m = mh->clone();
-    double *x = &((*(m.get_rep()))[0][0]);
-    int n = m->nrows()*m->ncols();
-    normalize(x, n);
+    normalize(m->get_data_pointer(), m->get_data_size());
   } else if (op == "Round") {
     m = mh->clone();
-    double *x = &((*(m.get_rep()))[0][0]);
-    int n = m->nrows()*m->ncols();
-    round(x, n);
+    round(m->get_data_pointer(), m->get_data_size());
   } else if (op == "Floor") {
     m = mh->clone();
-    double *x = &((*(m.get_rep()))[0][0]);
-    int n = m->nrows()*m->ncols();
-    Floor(x, n);
+    Floor(m->get_data_pointer(), m->get_data_size());
   } else if (op == "Ceil") {
     m = mh->clone();
-    double *x = &((*(m.get_rep()))[0][0]);
-    int n = m->nrows()*m->ncols();
-    Ceil(x, n);
+    Ceil(m->get_data_pointer(), m->get_data_size());
   } else if (op == "Function") {
+    if (mh->is_sparse())
+    {
+      remark("Only calling function for non-zero sparse matrix elements.");
+    }
 
     // Remove trailing white-space from the function string.
     string func = function_.get();
@@ -203,7 +189,7 @@ void LinAlgUnary::execute() {
     // Compile the function.
     int hoffset = 0;
     Handle<LinAlgUnaryAlgo> algo;
-    while (1)
+    for( ;; )
     {
       CompileInfoHandle ci =
 	LinAlgUnaryAlgo::get_compile_info(func, hoffset);
@@ -223,9 +209,9 @@ void LinAlgUnary::execute() {
 
     // Get the data from the matrix, iterate over it calling the function.
     m = mh->clone();
-    double *x = &((*(m.get_rep()))[0][0]);
-    const int n = m->nrows()*m->ncols();
-    for (int i = 0; i < n; i++)
+    double *x = m->get_data_pointer();
+    const unsigned int n = m->get_data_size();
+    for (unsigned int i = 0; i < n; i++)
     {
       x[i] = algo->user_function(x[i]);
     }

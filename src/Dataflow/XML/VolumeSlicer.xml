@@ -35,11 +35,16 @@
   <overview>
     <authors>
       <author>Kurt Zimmerman</author>
+      <author>Milan Ikits</author>
+      <author>Michael Callahan</author>
     </authors>
     <summary>This module is used to view slices of data using hardware
     3D textures.
     </summary>
     <description>
+      <p> The VolumeSlicer module is used to view slices of data using hardware
+      3D textures and volume rendering techniques.</p>
+
       <p> Under Standard tab, select the X, Y, Z and or View plane and use
       the "+" and "-" buttons to move the cutting planes. The X, Y,
       and Z planes can also be moved with a selection widget displayed

@@ -41,7 +41,7 @@ ifeq ($(HAVE_INSIGHT),yes)
           $(SRCDIR)/AnalyzeReader.cc     \
           $(SRCDIR)/AnalyzeImage.cc      \
 
-  LIBS := $(INSIGHT_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
+  LIBS := $(INSIGHT_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
 endif
 
 PSELIBS := Core/Datatypes Core/Containers Core/Thread \

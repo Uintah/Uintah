@@ -27,7 +27,7 @@
 #
 
 %define defname SCIRun
-%define defver	1.22
+%define defver	1.24
 %define dotver  0
 %define gccver  3.2.2
 %define plat	rh9.0
@@ -35,14 +35,14 @@
 %define debug   opt
 %undefine	__check_files
 %define thirdpartydotver 0
-%define thirdpartyversion 1.22
+%define thirdpartyversion %{defver}.%{thirdpartydotver}
 %define hdf5    hdf5-1.6.2
 %define ftgl    ftgl-2.0.9
 
 
-Name:		%{defname}WithFusion
+Name:		%{defname}Fusion
 Version:	%{defver}.%{dotver}
-Serial:		6
+Serial:		7
 Release:	%{plat}
 Summary:	Problem Solving Environment Software
 Copyright:	University of Utah Limited
@@ -56,12 +56,12 @@ Provides: libBLT24.so libBLTlite24.so libCore_2d.so libCore_Algorithms_DataIO.so
 Requires(rpmlib): rpmlib(CompressedFileNames) <= 3.0.4-1 rpmlib(PartialHardlinkSets) <= 4.0.4-1 rpmlib(PayloadFilesHavePrefix) <= 4.0-1 rpmlib(VersionedDependencies) <= 3.0.3-1
 Requires: mdsplus  gcc-c++ >= %{gccver} /bin/bash /bin/csh /bin/sh /usr/bin/env /usr/bin/perl libBLT24.so libBLTlite24.so libCore_Algorithms_DataIO.so libCore_Algorithms_GLVolumeRenderer.so libCore_Algorithms_Geometry.so libCore_Algorithms_Visualization.so libCore_Containers.so libCore_Datatypes.so libCore_Exceptions.so libCore_GLVolumeRenderer.so libCore_Geom.so libCore_GeomInterface.so libCore_Geometry.so libCore_GuiInterface.so libCore_Malloc.so libCore_Math.so libCore_Persistent.so libCore_Thread.so libCore_TkExtensions.so libCore_Util.so libDataflow_Comm.so libDataflow_Constraints.so libDataflow_Modules_Render.so libDataflow_Network.so libDataflow_Ports.so libDataflow_Widgets.so libDataflow_XMLUtil.so libGL.so.1 libGLU.so.1 libPackages_DataIO_Core_ThirdParty.so libPackages_Teem_Core_Datatypes.so libPackages_Teem_Dataflow_Ports.so libX11.so.6 libXaw.so.7 libXext.so.6 libXi.so.6 libXmu.so.6 libXt.so.6 libbz2.so.1 libc.so.6 libc.so.6(GLIBC_2.0) libc.so.6(GLIBC_2.1) libc.so.6(GLIBC_2.1.1) libc.so.6(GLIBC_2.1.3) libc.so.6(GLIBC_2.2) libc.so.6(GLIBC_2.3) libdl.so.2 libdl.so.2(GLIBC_2.0) libdl.so.2(GLIBC_2.1) libfreetype.so.6 libgcc_s.so.1 libgcc_s.so.1(GCC_3.0) libgcc_s.so.1(GLIBC_2.0) libhdf5.so.0 libitcl3.1.so libitk3.1.so libjpeg.so.62 libm.so.6 libm.so.6(GLIBC_2.0) libnsl.so.1 libpng12.so.0 libpthread.so.0 libpthread.so.0(GLIBC_2.0) libpthread.so.0(GLIBC_2.1) libpthread.so.0(GLIBC_2.2) libpthread.so.0(GLIBC_2.3.2) libstdc++.so.5 libstdc++.so.5(CXXABI_1.2) libstdc++.so.5(GLIBCPP_3.2) libstdc++.so.5(GLIBCPP_3.2.2) libtcl8.3.so libteem.so libtiff.so.3 libtk8.3.so libxerces-c.so.21 libz.so.1 perl >= 0:5.002 perl(AutoLoader) perl(Carp) perl(DynaLoader) perl(Exporter) perl(strict) perl(vars)
 
-conflicts: SCIRun
+conflicts: SCIRun SCIRunWithFusion SCIRunBioPSE
 AutoReqProv:	NO
 
 ExclusiveOS:	linux
 
-source0:	Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}.tar.gz
+source0:	Thirdparty_install.%{thirdpartyversion}.tar.gz
 source1:	%{defname}.%{version}.tar.gz
 source2:	Teem.PKG.%{version}.tar.gz
 source3:	Fusion.PKG.%{version}.tar.gz
@@ -99,11 +99,11 @@ tar -xvzf %{SOURCE6}
 
 
 %build
-cd $RPM_BUILD_DIR/%{ftgl}/FTGL/unix
-./configure --prefix=/usr/local/%{ftgl}
-make
-make install 
-cp $RPM_BUILD_DIR/%{ftgl}/FTGL/COPYING.txt /usr/local/%{ftgl}
+#cd $RPM_BUILD_DIR/%{ftgl}/FTGL/unix
+#./configure --prefix=/usr/local/%{ftgl}
+#make
+#make install 
+#cp $RPM_BUILD_DIR/%{ftgl}/FTGL/COPYING.txt /usr/local/%{ftgl}
 
 
 cd $RPM_BUILD_DIR/%{hdf5} 
@@ -112,14 +112,14 @@ make
 make install
 cp $RPM_BUILD_DIR/%{hdf5}/COPYING /usr/local/%{hdf5}
 
-cd $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}
-python $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}/install /usr/local/SCIRun/Thirdparty 32 1
+cd $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}
+python $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}/install /usr/local/SCIRun/Thirdparty 32 1
 
 
 rm -rf /usr/local/SCIRun/bin
 mkdir -p /usr/local/SCIRun/bin
 cd /usr/local/SCIRun/bin
-/usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" --with-ftgl="/usr/local/%{ftgl}/FTGL" --with-hdf5="/usr/local/%{hdf5}" --with-mdsplus="/usr/local/mdsplus" --enable-package="Fusion DataIO Teem"
+/usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" --with-ftgl="/usr/local/%{ftgl}" --with-hdf5="/usr/local/%{hdf5}" --with-mdsplus="/usr/local/mdsplus" --enable-package="Fusion DataIO Teem"
 cd /usr/local/SCIRun/bin/on-the-fly-libs
 tar -xvzf %{SOURCE7}
 cd /usr/local/SCIRun/bin/
@@ -130,7 +130,7 @@ chown -R root.root /usr/local/SCIRun /usr/local/%{hdf5} /usr/local/%{ftgl}
 chmod -R a+r /usr/local/SCIRun /usr/local/%{hdf5} /usr/local/%{ftgl}
 
 %clean
-rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}
+rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}
 rm -rf $RPM_BUILD_DIR/%{hdf5}
 rm -rf $RPM_BUILD_DIR/%{ftgl} 
 

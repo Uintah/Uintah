@@ -393,6 +393,7 @@ void Module::update_msg_state(MsgState st)
   }
 }
 
+
 void Module::update_progress(double p)
 {
   if (state == JustStarted)
@@ -408,41 +409,10 @@ void Module::update_progress(double p)
   }
 }
 
-void Module::update_progress(double p, Timer &t)
-{
-  if (state == JustStarted)
-    update_state(Executing);
-  if (p < 0.0) p = 0.0;
-  if (p > 1.0) p = 1.0;
-  int opp=(int)(progress*100);
-  int npp=(int)(p*100);
-  if(opp != npp){
-    double time=t.time();
-    gui->execute(id+" set_progress "+to_string(p)+" "+to_string(time));
-    progress=p;
-  }
-}
 
-void Module::update_progress(int n, int max)
+void Module::update_progress(unsigned int n, unsigned int max)
 {
-  current_ = n;
-  max_ = max;
   update_progress(double(n)/double(max));
-}
-
-void Module::update_progress(int n, int max, Timer &t)
-{
-  current_ = n;
-  max_ = max;
-  update_progress(double(n)/double(max), t);
-}
-
-void Module::accumulate_progress(int n)
-{
-  progress_lock_.lock();
-  current_ += n;
-  progress_lock_.unlock();
-  update_progress(double(current_)/double(max_));
 }
 
 
@@ -499,12 +469,16 @@ OPort* Module::get_oport(int item)
 
 IPort* Module::get_iport(const string& name)
 {
-  return getIPort(name);
+  IPort *p = getIPort(name);
+  if (p == 0) throw "Unable to initialize iport '" + name + "'.";
+  return p;
 }
 
 OPort* Module::get_oport(const string& name)
 {
-  return getOPort(name);
+  OPort *p = getOPort(name);
+  if (p == 0) throw "Unable to initialize oport '" + name + "'.";
+  return p;
 }
 
 IPort* Module::getIPort(const string &name)
@@ -866,6 +840,14 @@ void Module::do_execute()
 	error("Thread Stacktrace:");
 	error(e.stackTrace());
       }
+  }
+  catch (const string a)
+  {
+    error(a);
+  }
+  catch (const char *a)
+  {
+    error(string(a));
   }
   catch (...)
   {

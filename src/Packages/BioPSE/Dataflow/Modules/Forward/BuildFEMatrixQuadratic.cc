@@ -97,7 +97,7 @@ private:
 
   void parallel(int);
   void build_local_matrix(double lcl[10][10], TetVolMesh::Cell::index_type);
-  void add_lcl_gbl(Matrix&, double lcl[10][10],
+  void add_lcl_gbl(SparseRowMatrix *, double lcl[10][10],
 		   ColumnMatrix&, TetVolMesh::Cell::index_type, int s, int e);
 };
 
@@ -223,10 +223,11 @@ BuildFEMatrixQuadratic::execute()
     remark("Averaging of all nodes to zero.");
   }
 
-    QuadraticTetVolMesh::Cell::array_type array;
+  QuadraticTetVolMesh::Cell::array_type array;
   qtvm_->get_cells(array,(QuadraticTetVolMesh::Node::index_type)0);
 
-  Thread::parallel(Parallel<BuildFEMatrixQuadratic>(this, &BuildFEMatrixQuadratic::parallel), np, true);
+  Parallel<BuildFEMatrixQuadratic> p(this, &BuildFEMatrixQuadratic::parallel);
+  Thread::parallel(p, np, true);
 
 
   current_time = time(NULL);
@@ -345,7 +346,7 @@ void BuildFEMatrixQuadratic::parallel(int proc)
   for (; ii != iie; ++ii){
     if (qtvm_->test_nodes_range(*ii, start_node, end_node)){ 
       build_local_matrix(lcl_matrix,*ii);   
-      add_lcl_gbl(*gbl_matrix,lcl_matrix,*rhs,*ii,start_node, end_node);
+      add_lcl_gbl(gbl_matrix,lcl_matrix,*rhs,*ii,start_node, end_node);
     }
   }
       /*  for (i=0; i<nelems; i++){
@@ -549,7 +550,8 @@ void BuildFEMatrixQuadratic::build_local_matrix(double lcl_a[10][10],
 
 
 void
-BuildFEMatrixQuadratic::add_lcl_gbl(Matrix& gbl_a, double lcl_a[10][10],
+BuildFEMatrixQuadratic::add_lcl_gbl(SparseRowMatrix *gbl_a,
+                                    double lcl_a[10][10],
 				    ColumnMatrix& rhs,
 				    TetVolMesh::Cell::index_type c_ind,
 				    int s, int e)
@@ -576,7 +578,7 @@ BuildFEMatrixQuadratic::add_lcl_gbl(Matrix& gbl_a, double lcl_a[10][10],
 	  } else if (jj==refnode && PinZero){
 	    rhs[ii] -= PINVAL*lcl_a[i][j];
 	  } else {
-	    gbl_a[ii][jj] += lcl_a[i][j];
+	    gbl_a->add(ii, jj, lcl_a[i][j]);
 	  }
 	}
       }

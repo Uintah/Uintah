@@ -425,7 +425,9 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
 
     GeomGroup *ticks = scinew GeomGroup();
     GeomGroup *values = scinew GeomGroup();
+#ifdef HAVE_FTGL
     const int precision = get_GuiInt("precision");
+#endif
     Vector squash(1.,1.,1.);
     squash[axisleft] = 
       get_GuiDouble(base+"valuesquash")*get_GuiDouble("squash");

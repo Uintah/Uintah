@@ -199,20 +199,8 @@ get_raw_data_ptr<FData3d<double> >(FData3d<double> &data, int)  {
 template <>
 void* 
 get_raw_data_ptr<FData3d<Vector> >(FData3d<Vector> &data, int)  {
-  int nx = data.dim3();
-  int ny = data.dim2();
-  int nz = data.dim1();
-  double *new_data = new double[nx * ny * nz * 3];
-  double *p = new_data;
-  for (int k = 0; k < nz; k++) {
-    for (int j = 0; j < ny; j++) {
-      for (int i = 0; i < nx; i++) {
-	fill_data(data(k,j,i), p);
-	p += 3;
-      }
-    }
-  }
-  return new_data;
+  ASSERT(sizeof(Vector) == sizeof(double) * 3);
+  return &(data(0,0,0));
 }
 
 template <>
@@ -244,17 +232,8 @@ get_raw_data_ptr<FData3d<Tensor> >(FData3d<Tensor> &data, int)  {
 template <>
 void* 
 get_raw_data_ptr<FData2d<Vector> >(FData2d<Vector> &data, int)  {
-  int nx = data.dim2();
-  int ny = data.dim1();
-  double *new_data = new double[nx * ny * 3];
-  double *p = new_data;
-  for (int j = 0; j < ny; j++) {
-    for (int i = 0; i < nx; i++) {
-      fill_data(data(j,i), p);
-      p += 3;
-    }
-  }
-  return new_data;
+  ASSERT(sizeof(Vector) == sizeof(double) * 3);
+  return &(data(0,0));
 }
 
 template <>
@@ -283,14 +262,8 @@ get_raw_data_ptr<FData2d<Tensor> >(FData2d<Tensor> &data, int)  {
 template <>
 void*
 get_raw_data_ptr<vector<Vector> >(vector<Vector> &data, int)  {
-  int sz = data.size();
-  double *new_data = new double[sz * 3];
-  double *p = new_data;
-  for (int i = 0; i < sz; i++) {
-    fill_data(data[i], p);
-    p += 3;
-  }
-  return new_data;
+  ASSERT(sizeof(Vector) == sizeof(double) * 3);
+  return &(data[0]);
 }
 
 template <>

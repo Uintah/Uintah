@@ -30,7 +30,8 @@
 //    Date   : Sun Jun 27 17:49:45 2004
 
 #include <Core/Volume/Pbuffer.h>
-#include <Core/Volume/ShaderProgramARB.h>
+#include <Core/Geom/ShaderProgramARB.h>
+#include <Core/Util/Environment.h>
 #include <iostream>
 
 #include <string>
@@ -41,8 +42,6 @@
 using std::cerr;
 using std::endl;
 using std::string;
-
-#ifndef HAVE_GLEW
 
 #ifndef GLX_ATI_pixel_format_float
 
@@ -168,8 +167,6 @@ static void *NSGLGetProcAddress (const GLubyte *name)
 static PFNGLXBINDTEXIMAGEATIPROC glXBindTexImageATI = 0;
 static PFNGLXRELEASETEXIMAGEATIPROC glXReleaseTexImageATI = 0;
 
-#endif /* HAVE_GLEW */
-
 static bool mInit = false;
 static bool mSupported = false;
 
@@ -203,27 +200,18 @@ struct PbufferImpl
 bool
 Pbuffer::create ()
 {
+  if (sci_getenv_p("SCIRUN_DISABLE_PBUFFERS"))
+  {
+    mSupported = false;
+    return true;
+  }
+
 #ifdef __ECC
   // For now no Pbuffer support on the Altix system
   mSupported = false;
-  return false;
+  return true;
 #else
   if(!mInit) {
-#ifdef HAVE_GLEW
-    // extension check
-    mATI_render_texture = GLXEW_ATI_render_texture;
-    mATI_pixel_format_float = GLXEW_ATI_pixel_format_float;
-    mNV_float_buffer = GLXEW_NV_float_buffer && GLEW_NV_float_buffer && GLEW_ARB_fragment_program;
-    mNV_texture_rectangle = GLEW_NV_texture_rectangle;
-    if (!GLXEW_VERSION_1_3
-        || (mFormat == GL_FLOAT // float buffer extensions
-            && !(mATI_pixel_format_float || mNV_float_buffer))) {
-      mSupported = false;
-    } else {
-      mSupported = true;
-    }
-    //        || (mRenderTex && !mATI_render_texture) // render texture extensions
-#else
     /* query GLX version */
     int major, minor;
     const char* version = glXGetClientString(glXGetCurrentDisplay(), GLX_VERSION);
@@ -272,8 +260,6 @@ Pbuffer::create ()
       }
     }
 
-    
-#endif
     mInit = true;
   }
   

@@ -216,19 +216,6 @@ TendFiber::execute()
   iseeds_ = (FieldIPort *)get_iport("SeedPoints");
   ofibers_ = (FieldOPort *)get_oport("Fibers");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'nin'.");
-    return;
-  }
-  if (!iseeds_) {
-    error("Unable to initialize oport 'SeedPoints'.");
-    return;
-  }
-  if (!ofibers_) {
-    error("Unable to initialize oport 'Fibers'.");
-    return;
-  }
-
   if (!inrrd_->get(nrrd_handle))
     return;
   if (!nrrd_handle.get_rep()) {

@@ -52,364 +52,294 @@ namespace SCIRun {
 
 using std::string;
 
+class LatVolMesh;
+
+struct LatVolMeshLatIndex
+{
+public:
+  LatVolMeshLatIndex() : i_(0), j_(0), k_(0), mesh_(0) {}
+
+  LatVolMeshLatIndex(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
+    : i_(i), j_(j), k_(k), mesh_(m) {}
+    
+  operator unsigned() const;
+    
+  // Make sure mesh_ is valid before calling these convience accessors
+  unsigned ni() const;
+  unsigned nj() const;
+  unsigned nk() const;
+
+  unsigned i_, j_, k_;
+
+  // Needs to be here so we can compute a sensible index.
+  const LatVolMesh *mesh_;
+};
+
+
+struct LatVolMeshCellIndex : public LatVolMeshLatIndex
+{
+  LatVolMeshCellIndex() : LatVolMeshLatIndex() {}
+  LatVolMeshCellIndex(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
+    : LatVolMeshLatIndex(m,i,j,k) {}
+
+  operator unsigned() const;
+
+  friend void Pio(Piostream&, LatVolMeshCellIndex&);
+  friend const TypeDescription* get_type_description(LatVolMeshCellIndex *);
+  friend const string find_type_name(LatVolMeshCellIndex *);
+};
+
+
+struct LatVolMeshNodeIndex : public LatVolMeshLatIndex
+{
+  LatVolMeshNodeIndex() : LatVolMeshLatIndex() {}
+  LatVolMeshNodeIndex(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
+    : LatVolMeshLatIndex(m, i,j,k) {}
+  static string type_name(int i=-1) { ASSERT(i<1); return "LatVolMesh::NodeIndex"; }
+  friend void Pio(Piostream&, LatVolMeshNodeIndex&);
+  friend const TypeDescription* get_type_description(LatVolMeshNodeIndex *);
+  friend const string find_type_name(LatVolMeshNodeIndex *);
+};
+
+
+struct LatVolMeshLatSize
+{ 
+public:
+  LatVolMeshLatSize() : i_(0), j_(0), k_(0) {}
+  LatVolMeshLatSize(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k) {}
+  operator unsigned() const { return i_*j_*k_; }
+
+  unsigned i_, j_, k_;
+};
+
+
+struct LatVolMeshCellSize : public LatVolMeshLatSize
+{
+  LatVolMeshCellSize() : LatVolMeshLatSize() {}
+  LatVolMeshCellSize(unsigned i, unsigned j, unsigned k) : LatVolMeshLatSize(i,j,k) {}
+};
+
+
+struct LatVolMeshNodeSize : public LatVolMeshLatSize
+{
+  LatVolMeshNodeSize() : LatVolMeshLatSize() {}
+  LatVolMeshNodeSize(unsigned i, unsigned j, unsigned k) : LatVolMeshLatSize(i,j,k) {}
+};
+
+
+struct LatVolMeshLatIter : public LatVolMeshLatIndex
+{
+  LatVolMeshLatIter() : LatVolMeshLatIndex() {}
+  LatVolMeshLatIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
+    : LatVolMeshLatIndex(m, i, j, k) {}
+    
+  const LatVolMeshLatIndex &operator *() { return *this; }
+
+  bool operator ==(const LatVolMeshLatIter &a) const
+  {
+    return i_ == a.i_ && j_ == a.j_ && k_ == a.k_ && mesh_ == a.mesh_;
+  }
+
+  bool operator !=(const LatVolMeshLatIter &a) const
+  {
+    return !(*this == a);
+  }
+};
+
+
+struct LatVolMeshNodeIter : public LatVolMeshLatIter
+{
+  LatVolMeshNodeIter() : LatVolMeshLatIter() {}
+  LatVolMeshNodeIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
+    : LatVolMeshLatIter(m, i, j, k) {}
+
+  const LatVolMeshNodeIndex &operator *() const { return (const LatVolMeshNodeIndex&)(*this); }
+
+  LatVolMeshNodeIter &operator++();
+
+private:
+
+  LatVolMeshNodeIter operator++(int)
+  {
+    LatVolMeshNodeIter result(*this);
+    operator++();
+    return result;
+  }
+};
+
+
+struct LatVolMeshCellIter : public LatVolMeshLatIter
+{
+  LatVolMeshCellIter() : LatVolMeshLatIter() {}
+  LatVolMeshCellIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
+    : LatVolMeshLatIter(m, i, j, k) {}
+
+  const LatVolMeshCellIndex &operator *() const { return (const LatVolMeshCellIndex&)(*this); }
+
+  operator unsigned() const;
+
+  LatVolMeshCellIter &operator++();
+
+private:
+
+  LatVolMeshCellIter operator++(int)
+  {
+    LatVolMeshCellIter result(*this);
+    operator++();
+    return result;
+  }
+};
+
+//////////////////////////////////////////////////////////////////
+// Range Iterators
+// 
+// These iterators are designed to loop over a sub-set of the mesh
+//
+
+struct LatVolMeshRangeNodeIter : public LatVolMeshNodeIter
+{
+  LatVolMeshRangeNodeIter() : LatVolMeshNodeIter() {}
+  // Pre: min, and max are both valid iterators over this mesh
+  //      min.A <= max.A where A is (i_, j_, k_)
+  LatVolMeshRangeNodeIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k,
+                unsigned max_i, unsigned max_j, unsigned max_k)
+    : LatVolMeshNodeIter(m, i, j, k), min_i_(i), min_j_(j), min_k_(k),
+      max_i_(max_i), max_j_(max_j), max_k_(max_k)
+  {}
+
+  const LatVolMeshNodeIndex &operator *() const { return (const LatVolMeshNodeIndex&)(*this); }
+
+  LatVolMeshRangeNodeIter &operator++();
+
+  void end(LatVolMeshNodeIter &end_iter) {
+    // This tests is designed for a slice in the xy plane.  If z (or k)
+    // is equal then you have this condition.  When this happens you
+    // need to increment k so that you will iterate over the xy values.
+    if (min_k_ != max_k_)
+      end_iter = LatVolMeshNodeIter(mesh_, min_i_, min_j_, max_k_);
+    else {
+      // We need to check to see if the min and max extents are the same.
+      // If they are then set the end iterator such that it will be equal
+      // to the beginning.  When they are the same anj for() loop using
+      // these iterators [for(;iter != end_iter; iter++)] will never enter.
+      if (min_i_ != max_i_ || min_j_ != max_j_)
+        end_iter = LatVolMeshNodeIter(mesh_, min_i_, min_j_, max_k_ + 1);
+      else
+        end_iter = LatVolMeshNodeIter(mesh_, min_i_, min_j_, max_k_);
+    }
+  }
+    
+private:
+  // The minimum extents
+  unsigned min_i_, min_j_, min_k_;
+  // The maximum extents
+  unsigned max_i_, max_j_, max_k_;
+
+  LatVolMeshRangeNodeIter operator++(int)
+  {
+    LatVolMeshRangeNodeIter result(*this);
+    operator++();
+    return result;
+  }
+};
+
+struct LatVolMeshRangeCellIter : public LatVolMeshCellIter
+{
+  LatVolMeshRangeCellIter() : LatVolMeshCellIter() {}
+  // Pre: min, and max are both valid iterators over this mesh
+  //      min.A <= max.A where A is (i_, j_, k_)
+  LatVolMeshRangeCellIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k,
+                unsigned max_i, unsigned max_j, unsigned max_k)
+    : LatVolMeshCellIter(m, i, j, k), min_i_(i), min_j_(j), min_k_(k),
+      max_i_(max_i), max_j_(max_j), max_k_(max_k)
+  {}
+
+  const LatVolMeshCellIndex &operator *() const { return (const LatVolMeshCellIndex&)(*this); }
+
+  LatVolMeshRangeCellIter &operator++();
+  void end(LatVolMeshCellIter &end_iter) {
+    // This tests is designed for a slice in the xy plane.  If z (or k)
+    // is equal then you have this condition.  When this happens you
+    // need to increment k so that you will iterate over the xy values.
+    if (min_k_ != max_k_)
+      end_iter = LatVolMeshCellIter(mesh_, min_i_, min_j_, max_k_);
+    else {
+      // We need to check to see if the min and max extents are the same.
+      // If they are then set the end iterator such that it will be equal
+      // to the beginning.  When they are the same anj for() loop using
+      // these iterators [for(;iter != end_iter; iter++)] will never enter.
+      if (min_i_ != max_i_ || min_j_ != max_j_)
+        end_iter = LatVolMeshCellIter(mesh_, min_i_, min_j_, max_k_ + 1);
+      else
+        end_iter = LatVolMeshCellIter(mesh_, min_i_, min_j_, max_k_);
+    }
+  }
+
+private:
+  // The minimum extents
+  unsigned int min_i_, min_j_, min_k_;
+  // The maximum extents
+  unsigned int max_i_, max_j_, max_k_;
+
+  LatVolMeshRangeCellIter operator++(int)
+  {
+    LatVolMeshRangeCellIter result(*this);
+    operator++();
+    return result;
+  }
+};
+
+//! Index and Iterator types required for Mesh Concept.
+struct LatVolMeshNode {
+  typedef LatVolMeshNodeIndex                  index_type;
+  typedef LatVolMeshNodeIter                   iterator;
+  typedef LatVolMeshNodeSize                   size_type;
+  typedef StackVector<index_type, 8>           array_type;
+  typedef LatVolMeshRangeNodeIter              range_iter;
+};			
+  			
+struct LatVolMeshEdge {		
+  typedef EdgeIndex<unsigned int>          index_type;
+  typedef EdgeIterator<unsigned int>       iterator;
+  typedef EdgeIndex<unsigned int>          size_type;
+  typedef vector<index_type>               array_type;
+};			
+			
+struct LatVolMeshFace {		
+  typedef FaceIndex<unsigned int>          index_type;
+  typedef FaceIterator<unsigned int>       iterator;
+  typedef FaceIndex<unsigned int>          size_type;
+  typedef vector<index_type>               array_type;
+};			
+			
+struct LatVolMeshCell {		
+  typedef LatVolMeshCellIndex          index_type;
+  typedef LatVolMeshCellIter           iterator;
+  typedef LatVolMeshCellSize           size_type;
+  typedef vector<index_type>           array_type;
+  typedef LatVolMeshRangeCellIter          range_iter;
+};
+
+
 class SCICORESHARE LatVolMesh : public Mesh
 {
 public:
 
-  struct LatIndex;
-  friend struct LatIndex;
+  friend struct LatVolMeshLatIndex;
+  friend struct LatVolMeshNodeIter;
+  friend struct LatVolMeshCellIter;
+  friend struct LatVolMeshRangeNodeIter;
+  friend struct LatVolMeshRangeCellIter;
 
-  struct LatIndex
-  {
-  public:
-    LatIndex() : i_(0), j_(0), k_(0), mesh_(0) {}
-    //LatIndex(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k), mesh_(0) {}
+  // Backwards compatability with interp fields
+  typedef LatVolMeshNodeIndex NodeIndex;
+  typedef LatVolMeshCellIndex CellIndex;
 
-    LatIndex(const LatVolMesh *m, unsigned i, unsigned j, 
-	     unsigned k) : i_(i), j_(j), k_(k), mesh_(m) {}
-    
-    operator unsigned() const { 
-      ASSERT(mesh_);
-      return i_ + ni()*j_ + ni()*nj()*k_;;
-    }
-    
-    // Make sure mesh_ is valid before calling these convience accessors
-    unsigned ni() const { ASSERT(mesh_); return mesh_->get_ni(); }
-    unsigned nj() const { ASSERT(mesh_); return mesh_->get_nj(); }
-    unsigned nk() const { ASSERT(mesh_); return mesh_->get_nk(); }
-
-    unsigned i_, j_, k_;
-
-    // Needs to be here so we can compute a sensible index.
-    const LatVolMesh *mesh_;
-  };
-
-  struct CellIndex : public LatIndex
-  {
-    CellIndex() : LatIndex() {}
-    CellIndex(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
-      : LatIndex(m, i,j,k) {}
-
-    operator unsigned() const { 
-      ASSERT(mesh_);
-      return i_ + (ni()-1)*j_ + (ni()-1)*(nj()-1)*k_;;
-    }
-
-    friend void Pio(Piostream&, CellIndex&);
-    friend const TypeDescription* get_type_description(CellIndex *);
-    friend const string find_type_name(CellIndex *);
-  };
-
-  struct NodeIndex : public LatIndex
-  {
-    NodeIndex() : LatIndex() {}
-    NodeIndex(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
-      : LatIndex(m, i,j,k) {}
-    static string type_name(int i=-1) { ASSERT(i<1); return "LatVolMesh::NodeIndex"; }
-    friend void Pio(Piostream&, NodeIndex&);
-    friend const TypeDescription* get_type_description(NodeIndex *);
-    friend const string find_type_name(NodeIndex *);
-  };
-
-
-  struct LatSize
-  { 
-  public:
-    LatSize() : i_(0), j_(0), k_(0) {}
-    LatSize(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k) {}
-
-    operator unsigned() const { return i_*j_*k_; }
-
-    unsigned i_, j_, k_;
-  };
-
-  struct CellSize : public LatSize
-  {
-    CellSize() : LatSize() {}
-    CellSize(unsigned i, unsigned j, unsigned k) : LatSize(i,j,k) {}
-  };
-
-  struct NodeSize : public LatSize
-  {
-    NodeSize() : LatSize() {}
-    NodeSize(unsigned i, unsigned j, unsigned k) : LatSize(i,j,k) {}
-  };
-
-
-  struct LatIter : public LatIndex
-  {
-    LatIter() : LatIndex() {}
-    LatIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
-      : LatIndex(m, i, j, k) {}
-    
-    const LatIndex &operator *() { return *this; }
-
-    bool operator ==(const LatIter &a) const
-    {
-      return i_ == a.i_ && j_ == a.j_ && k_ == a.k_ && mesh_ == a.mesh_;
-    }
-
-    bool operator !=(const LatIter &a) const
-    {
-      return !(*this == a);
-    }
-  };
-
-
-  struct NodeIter : public LatIter
-  {
-    NodeIter() : LatIter() {}
-    NodeIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
-      : LatIter(m, i, j, k) {}
-
-    const NodeIndex &operator *() const { return (const NodeIndex&)(*this); }
-
-    NodeIter &operator++()
-    {
-      i_++;
-      if (i_ >= mesh_->min_i_+mesh_->get_ni())	{
-	i_ = mesh_->min_i_;
-	j_++;
-	if (j_ >=  mesh_->min_j_+mesh_->get_nj()) {
-	  j_ = mesh_->min_j_;
-	  k_++;
-	}
-      }
-      return *this;
-    }
-
-  private:
-
-    NodeIter operator++(int)
-    {
-      NodeIter result(*this);
-      operator++();
-      return result;
-    }
-  };
-
-
-  struct CellIter : public LatIter
-  {
-    CellIter() : LatIter() {}
-    CellIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
-      : LatIter(m, i, j, k) {}
-
-    const CellIndex &operator *() const { return (const CellIndex&)(*this); }
-
-    operator unsigned() const { 
-      ASSERT(mesh_);
-      return i_ + (ni()-1)*j_ + (ni()-1)*(nj()-1)*k_;;
-    }
-
-    CellIter &operator++()
-    {
-      i_++;
-      if (i_ >= mesh_->min_i_+ni()-1) {
-	i_ = mesh_->min_i_;
-	j_++;
-	if (j_ >= mesh_->min_j_+nj()-1) {
-	  j_ = mesh_->min_j_;
-	  k_++;
-	}
-      }
-      return *this;
-    }
-
-  private:
-
-    CellIter operator++(int)
-    {
-      CellIter result(*this);
-      operator++();
-      return result;
-    }
-  };
-
-  //////////////////////////////////////////////////////////////////
-  // Range Iterators
-  // 
-  // These iterators are designed to loop over a sub-set of the mesh
-  //
-
-  struct RangeNodeIter : public NodeIter
-  {
-    RangeNodeIter() : NodeIter() {}
-    // Pre: min, and max are both valid iterators over this mesh
-    //      min.A <= max.A where A is (i_, j_, k_)
-    RangeNodeIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k,
-		  unsigned max_i, unsigned max_j, unsigned max_k)
-      : NodeIter(m, i, j, k), min_i_(i), min_j_(j), min_k_(k),
-	max_i_(max_i), max_j_(max_j), max_k_(max_k)
-    {}
-
-    const NodeIndex &operator *() const { return (const NodeIndex&)(*this); }
-
-    RangeNodeIter &operator++()
-    {
-      i_++;
-      // Did i_ loop over the line
-      // mesh_->min_x is the starting point of the x range for the mesh
-      // min_i_ is the starting point of the range on x
-      // max_i_ is the ending point of the range on x
-      if (i_ >= mesh_->min_i_ + max_i_) {
-	// set i_ to the beginning of the range
-	i_ = min_i_;
-	j_++;
-	// Did j_ loop over the face
-	// mesh_->min_j_ is the starting point of the y range for the mesh
-	// min_j is the starting point of the range on y
-	// max_j is the ending point of the range on y
-	if (j_ >= mesh_->min_j_ + max_j_) {
-	  j_ = min_j_;
-	  k_++;
-	}
-      }
-      return *this;
-    }
-
-    void end(NodeIter &end_iter) {
-      // This tests is designed for a slice in the xy plane.  If z (or k)
-      // is equal then you have this condition.  When this happens you
-      // need to increment k so that you will iterate over the xy values.
-      if (min_k_ != max_k_)
-	end_iter = NodeIter(mesh_, min_i_, min_j_, max_k_);
-      else {
-	// We need to check to see if the min and max extents are the same.
-	// If they are then set the end iterator such that it will be equal
-	// to the beginning.  When they are the same anj for() loop using
-	// these iterators [for(;iter != end_iter; iter++)] will never enter.
-	if (min_i_ != max_i_ || min_j_ != max_j_)
-	  end_iter = NodeIter(mesh_, min_i_, min_j_, max_k_ + 1);
-	else
-	  end_iter = NodeIter(mesh_, min_i_, min_j_, max_k_);
-      }
-    }
-    
-  private:
-    // The minimum extents
-    unsigned min_i_, min_j_, min_k_;
-    // The maximum extents
-    unsigned max_i_, max_j_, max_k_;
-
-    RangeNodeIter operator++(int)
-    {
-      RangeNodeIter result(*this);
-      operator++();
-      return result;
-    }
-  };
-
-  struct RangeCellIter : public CellIter
-  {
-    RangeCellIter() : CellIter() {}
-    // Pre: min, and max are both valid iterators over this mesh
-    //      min.A <= max.A where A is (i_, j_, k_)
-    RangeCellIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k,
-		  unsigned max_i, unsigned max_j, unsigned max_k)
-      : CellIter(m, i, j, k), min_i_(i), min_j_(j), min_k_(k),
-	max_i_(max_i), max_j_(max_j), max_k_(max_k)
-    {}
-
-    const CellIndex &operator *() const { return (const CellIndex&)(*this); }
-
-    RangeCellIter &operator++()
-    {
-      i_++;
-      // Did i_ loop over the line
-      // mesh_->min_x is the starting point of the x range for the mesh
-      // min_i_ is the starting point of the range on x
-      // max_i_ is the ending point of the range on x
-      if (i_ >= mesh_->min_i_ + max_i_) {
-	// set i_ to the beginning of the range
-	i_ = min_i_;
-	j_++;
-	// Did j_ loop over the face
-	// mesh_->min_j_ is the starting point of the y range for the mesh
-	// min_j is the starting point of the range on y
-	// max_j is the ending point of the range on y
-	if (j_ >= mesh_->min_j_ + max_j_) {
-	  j_ = min_j_;
-	  k_++;
-	}
-      }
-      return *this;
-    }
-
-    void end(CellIter &end_iter) {
-      // This tests is designed for a slice in the xy plane.  If z (or k)
-      // is equal then you have this condition.  When this happens you
-      // need to increment k so that you will iterate over the xy values.
-      if (min_k_ != max_k_)
-	end_iter = CellIter(mesh_, min_i_, min_j_, max_k_);
-      else {
-	// We need to check to see if the min and max extents are the same.
-	// If they are then set the end iterator such that it will be equal
-	// to the beginning.  When they are the same anj for() loop using
-	// these iterators [for(;iter != end_iter; iter++)] will never enter.
-	if (min_i_ != max_i_ || min_j_ != max_j_)
-	  end_iter = CellIter(mesh_, min_i_, min_j_, max_k_ + 1);
-	else
-	  end_iter = CellIter(mesh_, min_i_, min_j_, max_k_);
-      }
-    }
-
-  private:
-    // The minimum extents
-    unsigned int min_i_, min_j_, min_k_;
-    // The maximum extents
-    unsigned int max_i_, max_j_, max_k_;
-
-    RangeCellIter operator++(int)
-    {
-      RangeCellIter result(*this);
-      operator++();
-      return result;
-    }
-  };
-
-  //typedef LatIndex        under_type;
-
-  //! Index and Iterator types required for Mesh Concept.
-  struct Node {
-    typedef NodeIndex                  index_type;
-    typedef NodeIter                   iterator;
-    typedef NodeSize                   size_type;
-    typedef StackVector<index_type, 8> array_type;
-    typedef RangeNodeIter              range_iter;
-  };			
-  			
-  struct Edge {		
-    typedef EdgeIndex<unsigned int>          index_type;
-    typedef EdgeIterator<unsigned int>       iterator;
-    typedef EdgeIndex<unsigned int>          size_type;
-    typedef vector<index_type>               array_type;
-  };			
-			
-  struct Face {		
-    typedef FaceIndex<unsigned int>          index_type;
-    typedef FaceIterator<unsigned int>       iterator;
-    typedef FaceIndex<unsigned int>          size_type;
-    typedef vector<index_type>               array_type;
-  };			
-			
-  struct Cell {		
-    typedef CellIndex          index_type;
-    typedef CellIter           iterator;
-    typedef CellSize           size_type;
-    typedef vector<index_type> array_type;
-    typedef RangeCellIter      range_iter;
-  };
-
+  typedef LatVolMeshNode Node;
+  typedef LatVolMeshEdge Edge;
+  typedef LatVolMeshFace Face;
+  typedef LatVolMeshCell Cell;
   typedef Cell Elem;
-
-  friend class NodeIter;
-  friend class CellIter;
-  friend class EdgeIter;
-  friend class FaceIter;
-
-  friend class RangeCellIter;
-  friend class RangeNodeIter;
   
   LatVolMesh()
     : min_i_(0), min_j_(0), min_k_(0),
@@ -542,7 +472,7 @@ public:
   { get_center(p, i); }
 
   void get_normal(Vector &/*normal*/, const Node::index_type &/*index*/) const
-  { ASSERTFAIL("not implemented") }
+  { ASSERTFAIL("LatVolMesh::get_normal not implemented") }
 
   void get_random_point(Point &, const Elem::index_type &, int seed=0) const;
 
@@ -580,11 +510,11 @@ const TypeDescription* get_type_description(LatVolMesh::Edge *);
 const TypeDescription* get_type_description(LatVolMesh::Face *);
 const TypeDescription* get_type_description(LatVolMesh::Cell *);
 
-const TypeDescription* get_type_description(LatVolMesh::CellIndex *);
+const TypeDescription* get_type_description(LatVolMeshCellIndex *);
 
 
-std::ostream& operator<<(std::ostream& os, const LatVolMesh::LatIndex& n);
-std::ostream& operator<<(std::ostream& os, const LatVolMesh::LatSize& s);
+std::ostream& operator<<(std::ostream& os, const LatVolMeshLatIndex& n);
+std::ostream& operator<<(std::ostream& os, const LatVolMeshLatSize& s);
 
 } // namespace SCIRun
 

@@ -80,7 +80,7 @@ CentroidsAlgoT<FIELD>::execute(FieldHandle field_h)
     ++bi;
   }
 
-  return scinew PointCloudField<double>(pcm, 1);
+  return scinew PointCloudField<double>(pcm, 0);
 }
 
 

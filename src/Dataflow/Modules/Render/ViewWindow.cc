@@ -72,6 +72,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCLTask.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/FutureValue.h>
 #include <iostream>
@@ -1331,6 +1332,27 @@ ViewWindow::redraw_if_needed()
   }
 }
 
+
+// Used by "redraw" tcl_command.  We check to see if there is aleady a
+// redraw message on the mailbox queue before we bother to add a new
+// one.
+static bool
+check_for_redraw_msg(MessageBase *const& a, MessageBase *const& b)
+{
+  if (a->type == MessageTypes::ViewWindowRedraw &&
+      b->type == MessageTypes::ViewWindowRedraw)
+  {
+    ViewerMessage *av = (ViewerMessage *)a;
+    ViewerMessage *bv = (ViewerMessage *)b;
+    if (av->rid == bv->rid)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+
 void
 ViewWindow::tcl_command(GuiArgs& args, void*)
 {
@@ -1371,8 +1393,16 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     // We need to dispatch this one to the  remote thread We use an ID string
     // instead of a pointer in case this viewwindow gets killed by the time the
     // redraw message gets dispatched.
-    if(!viewer_->mailbox.trySend(scinew ViewerMessage(id_)))
-      cerr << "Redraw event dropped, mailbox full!\n";
+#ifdef __APPLE__
+    if (args.count() > 2) renderer_->apple_wait_a_second_=true;
+#endif
+    
+    ViewerMessage *tmp = scinew ViewerMessage(id_);
+    if (!viewer_->mailbox.sendIfNotSentLast(tmp, check_for_redraw_msg))
+    {
+      // Message wasn't needed, delete it.
+      delete tmp;
+    }
   } else if(args[1] == "anim_redraw"){
     // We need to dispatch this one to the remote thread We use an ID string
     // instead of a pointer in case this viewwindow gets killed by the time the
@@ -1513,7 +1543,7 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
       (MessageTypes::ViewWindowDumpObjects,id_,args[2],args[3],args[4],args[5]);
     viewer_->mailbox.send(msg);
   } else if(args[1] == "listvisuals") {
-    renderer_->listvisuals(args);
+    args.result(TkOpenGLContext::listvisuals());
   } else if(args[1] == "switchvisual") {
     if(args.count() != 6){
       args.error(args[0]+" needs a window id, visual index, width,and height");
@@ -1534,10 +1564,34 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
       args.error("Bad height");
       return;
     }
-    renderer_->setvisual(args[2], idx, width, height);
+    //    renderer_->setvisual(args[2], idx, width, height);
   } else if(args[1] == "setgl") {
-    //    if (renderer_->context_) delete renderer_->context_;
-    //renderer_->context_ = scinew OpenGLContext(gui_, args[2]);
+    int visualid = 0;
+    if (args.count() > 3)
+      string_to_int(args[3], visualid);
+
+    int width = 640;
+    if (args.count() > 4) 
+      string_to_int(args[4], width);
+
+    int height = 480;
+    if (args.count() > 5) 
+      string_to_int(args[5], height);
+
+    if (renderer_->tk_gl_context_) 
+      delete renderer_->tk_gl_context_;
+
+    renderer_->tk_gl_context_ = 
+      scinew TkOpenGLContext(args[2], visualid, width, height);
+    renderer_->old_tk_gl_context_ = 0;
+    renderer_->myname_ = args[2];
+    renderer_->start_helper();
+  } else if(args[1] == "destroygl") {
+    ASSERT(args[2] == renderer_->myname_);
+    ASSERT(renderer_->tk_gl_context_);
+    delete renderer_->tk_gl_context_;
+    renderer_->tk_gl_context_ = 0;
+    renderer_->myname_ = "";
   } else if(args[1] == "centerGenAxes") { 
     // have to do this here, as well as in redraw() so the axes can be
     // turned on/off even while spinning with inertia
@@ -1624,7 +1678,16 @@ ViewWindow::autoview(const BBox& bbox)
     double myfov=20.0;
 
     Vector diag(bbox.diagonal());
-    const double w = diag.length();
+    
+    double w = diag.length();
+    if( w < 0.000001 ){
+      BBox bb;
+      bb.reset();
+      Vector epsilon(0.001, 0.001, 0.001 );
+      bb.extend( bbox.min() - epsilon );
+      bb.extend( bbox.max() + epsilon );
+      w = bb.diagonal().length();
+    }
     Vector lookdir(cv.lookat() - cv.eyep()); 
     lookdir.safe_normalize();
     const double scale = 1.0 / (2*Tan(DtoR(myfov/2.0)));

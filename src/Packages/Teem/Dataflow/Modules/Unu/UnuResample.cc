@@ -139,14 +139,7 @@ UnuResample::execute()
   update_state(NeedData);
   inrrd_ = (NrrdIPort *)get_iport("Nrrd");
   onrrd_ = (NrrdOPort *)get_oport("Nrrd");
-  if (!inrrd_) {
-    error("Unable to initialize iport 'Nrrd'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
-    return;
-  }
+
   if (!inrrd_->get(nrrdH))
     return;
   if (!nrrdH.get_rep()) {
@@ -237,10 +230,6 @@ UnuResample::execute()
     kern = nrrdKernelBox;
   } else if (last_filtertype_ == "tent") {
     kern = nrrdKernelTent;
-  } else if (last_filtertype_ == "gaussian") { 
-    kern = nrrdKernelGaussian; 
-    p[1] = sigma_.get(); 
-    p[2] = extent_.get(); 
   } else if (last_filtertype_ == "cubicCR") { 
     kern = nrrdKernelBCCubic; 
     p[1] = 0; 
@@ -249,9 +238,13 @@ UnuResample::execute()
     kern = nrrdKernelBCCubic; 
     p[1] = 1; 
     p[2] = 0; 
+  } else if (last_filtertype_ == "gaussian") { 
+    kern = nrrdKernelGaussian; 
+    p[0] = sigma_.get(); 
+    p[1] = extent_.get(); 
   } else  { // default is quartic
     kern = nrrdKernelAQuartic; 
-    p[1] = 0.0834; 
+    p[1] = 0.0834; // most accurate as per Teem documenation
   }
 
   for (int a = 0; a < dim_.get(); a++) {

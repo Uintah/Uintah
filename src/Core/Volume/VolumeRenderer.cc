@@ -34,7 +34,7 @@
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Volume/VolumeRenderer.h>
 #include <Core/Volume/VolShader.h>
-#include <Core/Volume/ShaderProgramARB.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Volume/Pbuffer.h>
 #include <Core/Volume/TextureBrick.h>
 #include <Core/Util/DebugStream.h>
@@ -189,11 +189,19 @@ VolumeRenderer::draw_volume()
 
   //--------------------------------------------------------------------------
 
-  int nc = bricks[0]->nc();
-  int nb0 = bricks[0]->nb(0);
-  bool use_cmap2 = cmap2_.get_rep() && nc == 2;
-  bool use_shading = shading_ && nb0 == 4;
-  GLboolean use_fog = glIsEnabled(GL_FOG);
+  const int nc = bricks[0]->nc();
+  const int nb0 = bricks[0]->nb(0);
+  const bool use_cmap1 = cmap1_.get_rep();
+  const bool use_cmap2 =
+    cmap2_.get_rep() && nc == 2 && ShaderProgramARB::shaders_supported();
+  if(!use_cmap1 && !use_cmap2)
+  {
+    tex_->unlock_bricks();
+    return;
+  }
+
+  const bool use_shading = shading_ && nb0 == 4;
+  const GLboolean use_fog = glIsEnabled(GL_FOG);
   // glGetBooleanv(GL_FOG, &use_fog);
   GLfloat light_pos[4];
   glGetLightfv(GL_LIGHT0+light_, GL_POSITION, light_pos);
@@ -232,11 +240,15 @@ VolumeRenderer::draw_volume()
     glEnable(GL_BLEND);
     switch(mode_) {
     case MODE_OVER:
+#ifdef GL_FUNC_ADD // Workaround for old bad nvidia headers.
       glBlendEquation(GL_FUNC_ADD);
+#endif
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       break;
     case MODE_MIP:
+#ifdef GL_MAX // Workaround for old bad nvidia headers.
       glBlendEquation(GL_MAX);
+#endif
       glBlendFunc(GL_ONE, GL_ONE);
       break;
     default:
@@ -357,7 +369,7 @@ VolumeRenderer::draw_volume()
   
   for(unsigned int i=0; i<bricks.size(); i++) {
     TextureBrickHandle b = bricks[i];
-    load_brick(b);
+    load_brick(b, use_cmap2);
     vertex.clear();
     texcoord.clear();
     size.clear();
@@ -497,11 +509,19 @@ VolumeRenderer::multi_level_draw()
   size.reserve(num_slices*6);
   //--------------------------------------------------------------------------
 
-  int nc = bricks[0]->nc();
-  int nb0 = bricks[0]->nb(0);
-  bool use_cmap2 = cmap2_.get_rep() && nc == 2;
-  bool use_shading = shading_ && nb0 == 4;
-  GLboolean use_fog = glIsEnabled(GL_FOG);
+  const int nc = bricks[0]->nc();
+  const int nb0 = bricks[0]->nb(0);
+  const bool use_cmap1 = cmap1_.get_rep();
+  const bool use_cmap2 =
+    cmap2_.get_rep() && nc == 2 && ShaderProgramARB::shaders_supported();
+  if(!use_cmap1 && !use_cmap2)
+  {
+    tex_->unlock_bricks();
+    return;
+  }
+
+  const bool use_shading = shading_ && nb0 == 4;
+  const GLboolean use_fog = glIsEnabled(GL_FOG);
   // glGetBooleanv(GL_FOG, &use_fog);
   GLfloat light_pos[4];
   glGetLightfv(GL_LIGHT0+light_, GL_POSITION, light_pos);
@@ -540,11 +560,15 @@ VolumeRenderer::multi_level_draw()
     glEnable(GL_BLEND);
     switch(mode_) {
     case MODE_OVER:
+#ifdef GL_FUNC_ADD // Workaround for old bad nvidia headers.
       glBlendEquation(GL_FUNC_ADD);
+#endif
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       break;
     case MODE_MIP:
+#ifdef GL_MAX // Workaround for old bad nvidia headers.
       glBlendEquation(GL_MAX);
+#endif
       glBlendFunc(GL_ONE, GL_ONE);
       break;
     default:
@@ -731,7 +755,7 @@ VolumeRenderer::multi_level_draw()
 	if( vertex.size() == 0 ) {
 	  continue;
 	}
-	load_brick(b);
+	load_brick(b, use_cmap2);
 	draw_polygons(vertex, texcoord, size, false, use_fog,
 		      blend_num_bits_ > 8 ? blend_buffer_ : 0);
       }

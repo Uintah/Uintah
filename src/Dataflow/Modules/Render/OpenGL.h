@@ -73,6 +73,7 @@
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomTri.h>
 #include <Core/Geom/GeomText.h>
+#include <Core/Geom/TkOpenGLContext.h>
 #include <Core/Math/Trig.h>
 #include <Core/Util/Timer.h>
 
@@ -135,10 +136,9 @@ public:
   OpenGL(GuiInterface* gui, Viewer *, ViewWindow *);
   ~OpenGL();
   void			kill_helper();
+  void			start_helper();
   static bool		query(GuiInterface* gui);
   void			redraw_loop();
-  void			listvisuals(GuiArgs&);
-  void			setvisual(const string&, unsigned int, int x, int y);
   void			get_pick(int, int, GeomHandle&, GeomPickHandle&, int&);
   void			redraw(double tbeg, double tend,
 			       int ntimesteps, double frametime);
@@ -164,6 +164,13 @@ public:
   bool			make_MPEG_p_;
   int			current_movie_frame_;
   string		movie_name_;
+
+  TkOpenGLContext *	tk_gl_context_;
+  TkOpenGLContext *	old_tk_gl_context_;
+  string		myname_;
+#ifdef __APPLE__
+  bool                  apple_wait_a_second_;
+#endif
 
 private:
   void			redraw_frame();
@@ -191,18 +198,14 @@ private:
   GuiInterface*		gui_;
   Runnable *		helper_;
   Thread *		helper_thread_;
-  Tk_Window		tkwin_;
-  Window		x11_win_;
-  Display*		x11_dpy_;
-  GLXContext		x11_gl_context_;
-  string		myname_;
+
+
   Viewer*		viewer_;
   ViewWindow*		view_window_;
   DrawInfoOpenGL*	drawinfo_;
   WallClockTimer	fps_timer_;
   Frustum		frustum_;
   HiRes			hi_res_;
-  vector<XVisualInfo*>	x11_visuals_;
   bool			have_pbuffer_;
   bool			dead_;
   bool			do_hi_res_;

@@ -106,10 +106,6 @@ ImageExporter::execute()
   // Read data from the input port
   NrrdDataHandle handle;
   NrrdIPort* inport = (NrrdIPort *)get_iport("Input Data");
-  if (!inport) {
-    error("Unable to initialize iport 'Input Data'.");
-    return;
-  }
 
   if(!inport->get(handle))
   {

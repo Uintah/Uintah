@@ -47,7 +47,7 @@ itcl_class SCIRun_FieldsCreate_GatherFields {
         toplevel $w
 
 	checkbutton $w.fpc -text "Force PointCloudField as output" \
-	    -variable $this-force-pointcloud -command "$this-c needexecute"
+	    -variable $this-force-pointcloud
 
 	pack $w.fpc
 

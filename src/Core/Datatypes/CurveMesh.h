@@ -59,41 +59,45 @@ using std::string;
 using std::vector;
 using std::pair;
 
+typedef unsigned int under_type;
+
+//! Index and Iterator types required for Mesh Concept.
+struct CurveMeshNode {
+  typedef NodeIndex<under_type>       index_type;
+  typedef NodeIterator<under_type>    iterator;
+  typedef NodeIndex<under_type>       size_type;
+  typedef StackVector<index_type, 2>  array_type;
+};					
+  					
+struct CurveMeshEdge {				
+  typedef EdgeIndex<under_type>       index_type;
+  typedef EdgeIterator<under_type>    iterator;
+  typedef EdgeIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+};					
+					
+struct CurveMeshFace {				
+  typedef FaceIndex<under_type>       index_type;
+  typedef FaceIterator<under_type>    iterator;
+  typedef FaceIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+};					
+					
+struct CurveMeshCell {				
+  typedef CellIndex<under_type>       index_type;
+  typedef CellIterator<under_type>    iterator;
+  typedef CellIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+};
+
 
 class SCICORESHARE CurveMesh : public Mesh
 {
 public:
-  typedef unsigned int under_type;
-
-  //! Index and Iterator types required for Mesh Concept.
-  struct Node {
-    typedef NodeIndex<under_type>       index_type;
-    typedef NodeIterator<under_type>    iterator;
-    typedef NodeIndex<under_type>       size_type;
-    typedef StackVector<index_type, 2>  array_type;
-  };					
-  					
-  struct Edge {				
-    typedef EdgeIndex<under_type>       index_type;
-    typedef EdgeIterator<under_type>    iterator;
-    typedef EdgeIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
-  };					
-					
-  struct Face {				
-    typedef FaceIndex<under_type>       index_type;
-    typedef FaceIterator<under_type>    iterator;
-    typedef FaceIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
-  };					
-					
-  struct Cell {				
-    typedef CellIndex<under_type>       index_type;
-    typedef CellIterator<under_type>    iterator;
-    typedef CellIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
-  };
-
+  typedef CurveMeshNode Node;
+  typedef CurveMeshEdge Edge;
+  typedef CurveMeshFace Face;
+  typedef CurveMeshCell Cell;
   typedef Edge Elem;
 
   typedef pair<Node::index_type, Node::index_type> index_pair_type;
@@ -153,7 +157,14 @@ public:
   void get_center(Point &, Face::index_type) const {}
   void get_center(Point &, Cell::index_type) const {}
 
-  //! Get the size of an elemnt (length, area, volume)
+  bool get_neighbor(Edge::index_type &neighbor, Edge::index_type edge,
+		    Node::index_type node) const
+  {ASSERTFAIL("CurveMesh::get_neighbor for edges needs to be implemented"); }
+  void get_neighbors(vector<Node::index_type> &array,
+                     Node::index_type idx) const
+  {ASSERTFAIL("CurveMesh::get_neighbor for nodes needs to be implemented"); }
+
+  //! Get the size of an element (length, area, volume)
   double get_size(Node::index_type /*idx*/) const { return 0.0; }
   double get_size(Edge::index_type idx) const 
   {

@@ -1,9 +1,0 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- AerMet 100 Steel -->
-<Uintah_Include>
-  <equation_of_state type="mie_gruneisen">
-    <C_0>4529</C_0>
-    <Gamma_0>1.84</Gamma_0>
-    <S_alpha>1.50</S_alpha>
-  </equation_of_state>
-</Uintah_Include>

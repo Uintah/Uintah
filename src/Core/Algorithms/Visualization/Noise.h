@@ -173,15 +173,15 @@ void NoiseFace<Tesselator>::set_field( Field *f )
 {
   if ( field_type *field = dynamic_cast<field_type *>(f) )
   {
-    if ( tess_ ) delete tess_;
-    tess_ = new Tesselator( field );
-    if ( !field->get_property( "spanspace", space_ ) )
+    if ( this->tess_ ) delete this->tess_;
+    this->tess_ = new Tesselator( field );
+    if ( !field->get_property( "spanspace", this->space_ ) )
     {
       SpanSpaceFace<value_type, cell_index_type> *space =
 	scinew SpanSpaceFace<value_type, cell_index_type>;
       space->init_face( field );
-      space_ = space;
-      field->set_property( "spanspace", space_, true );
+      this->space_ = space;
+      field->set_property( "spanspace", this->space_, true );
     }
   }
 }
@@ -191,15 +191,15 @@ void NoiseCell<Tesselator>::set_field( Field *f )
 {
   if ( field_type *field = dynamic_cast<field_type *>(f) )
   {
-    if ( tess_ ) delete tess_;
-    tess_ = new Tesselator( field );
-    if ( !field->get_property( "spanspace", space_ ) )
+    if ( this->tess_ ) delete this->tess_;
+    this->tess_ = new Tesselator( field );
+    if ( !field->get_property( "spanspace", this->space_ ) )
     {
       SpanSpaceCell<value_type, cell_index_type> *space =
 	scinew SpanSpaceCell<value_type, cell_index_type>;
       space->init_cell( field );
-      space_ = space;
-      field->set_property( "spanspace", space_, true );
+      this->space_ = space;
+      field->set_property( "spanspace", this->space_, true );
     }
   }
 }

@@ -41,7 +41,6 @@
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <limits>
 #include <sgi_stl_warnings_on.h>
 
 using std::cerr;
@@ -239,16 +238,15 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
     nb[1] = gfield.get_rep() ? 1 : 0;
     Transform tform;
     mesh->get_canonical_transform(tform);
-    //
+
     texture->lock_bricks();
     texture->clear();
     vector<TextureBrickHandle>& bricks = texture->bricks();
     const BBox bbox(Point(0,0,0), Point(1,1,1)); 
     if(nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
        || nc != texture->nc() || card_mem != texture->card_mem() ||
-       bbox.min() != texture->bbox().min()) {
-
-//        build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
+       bbox.min() != texture->bbox().min())
+    {
       build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
       texture->set_size(nx, ny, nz, nc, nb);
       texture->set_card_mem(card_mem);
@@ -473,8 +471,8 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
     if (!gfld) { // fill only values
       unsigned char* tex = br->data(0);
       if(vfield->basis_order() == 0) {
-        typename FieldType::mesh_type::RangeCellIter iter(mesh, x0, y0, z0,
-                                                          x1, y1, z1);
+        typename FieldType::mesh_type::Cell::range_iter iter(mesh, x0, y0, z0,
+                                                             x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
@@ -484,25 +482,25 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
               ++iter;
             }
             if(nx != brick->mx()) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[k*ny*nx+j*nx+(brick->mx()-1)];
             }
           }
           if(ny != brick->my()) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[k*ny*nx+(brick->my()-1)*nx+i];
             }
           }
         }
         if(nz != brick->mz()) {
           for(j=0; j<Min(ny, brick->my()+1); j++) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[(brick->mz()-1)*ny*nx+j*nx+i];
             }
           }
         }
       } else {
-        typename FieldType::mesh_type::RangeNodeIter iter(mesh, x0, y0, z0,
-                                                          x1, y1, z1);
+        typename FieldType::mesh_type::Node::range_iter iter(mesh, x0, y0, z0,
+                                                             x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
@@ -512,19 +510,19 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
               ++iter;
             }
             if(nx != brick->mx()) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[k*ny*nx+j*nx+(brick->mx()-1)];
             }
           }
           if(ny != brick->my()) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[k*ny*nx+(brick->my()-1)*nx+i];
             }
           }
         }
         if(nz != brick->mz()) {
           for(j=0; j<Min(ny, brick->my()+1); j++) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[(brick->mz()-1)*ny*nx+j*nx+i];
             }
           }
         }
@@ -534,8 +532,8 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
       unsigned char* tex1 = br->data(1);
       
       if(vfield->basis_order() == 0) {
-        typename FieldType::mesh_type::RangeCellIter iter(mesh, x0, y0, z0,
-                                                          x1, y1, z1);
+        typename FieldType::mesh_type::Cell::range_iter iter(mesh, x0, y0, z0,
+                                                             x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
@@ -544,100 +542,98 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
               tex0[idx*4+3] =
                 (unsigned char)(Clamp((v - vmin)/(vmax-vmin), 0.0, 1.0)*255.0);
               Vector g = gfld->fdata()[*iter];
-              double gn = g.length();
-              if(gn > std::numeric_limits<float>::epsilon())
-                g.normalize();
-              else
-                g = Vector(0.0, 0.0, 0.0);
+              const double gn = g.safe_normalize();
               tex0[idx*4+0] = (unsigned char)((g.x()*0.5 + 0.5)*255);
               tex0[idx*4+1] = (unsigned char)((g.y()*0.5 + 0.5)*255);
               tex0[idx*4+2] = (unsigned char)((g.z()*0.5 + 0.5)*255);
-              tex1[idx] = (unsigned char)((gn-gmin)/(gmax-gmin))*255;
+              tex1[idx] = (unsigned char)(((gn-gmin)/(gmax-gmin))*255);
               ++iter;
             }
             if(nx != brick->mx()) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = k*ny*nx+j*nx+(brick->mx()-1);
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
           if(ny != brick->my()) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = k*ny*nx+(brick->my()-1)*nx+i;
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
         }
         if(nz != brick->mz()) {
           for(j=0; j<Min(ny, brick->my()+1); j++) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = (brick->mz()-1)*ny*nx+j*nx+i;
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
         }
       } else {
-        typename FieldType::mesh_type::RangeNodeIter iter(mesh, x0, y0, z0,
-                                                          x1, y1, z1);
+        typename FieldType::mesh_type::Node::range_iter iter(mesh, x0, y0, z0,
+                                                             x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
               double v = vfld->fdata()[*iter];
-              int idx = k*ny*nx+j*nx+i;
+              const int idx = k*ny*nx+j*nx+i;
               tex0[idx*4+3] =
                 (unsigned char)(Clamp((v - vmin)/(vmax-vmin), 0.0, 1.0)*255.0);
               Vector g = gfld->fdata()[*iter];
-              double gn = g.length();
-              if(gn > std::numeric_limits<float>::epsilon())
-                g.normalize();
-              else
-                g = Vector(0.0, 0.0, 0.0);
+              const double gn = g.safe_normalize();
               tex0[idx*4+0] = (unsigned char)((g.x()*0.5 + 0.5)*255);
               tex0[idx*4+1] = (unsigned char)((g.y()*0.5 + 0.5)*255);
               tex0[idx*4+2] = (unsigned char)((g.z()*0.5 + 0.5)*255);
-              tex1[idx] = (unsigned char)((gn-gmin)/(gmax-gmin))*255;
+              tex1[idx] = (unsigned char)(((gn-gmin)/(gmax-gmin))*255);
               ++iter;
             }
             if(nx != brick->mx()) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = k*ny*nx+j*nx+(brick->mx()-1);
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
           if(ny != brick->my()) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = k*ny*nx+(brick->my()-1)*nx+i;
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
         }
         if(nz != brick->mz()) {
           for(j=0; j<Min(ny, brick->my()+1); j++) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = (brick->mz()-1)*ny*nx+j*nx+i;
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
         }

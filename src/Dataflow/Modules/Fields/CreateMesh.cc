@@ -91,11 +91,6 @@ CreateMesh::execute()
 {
   MatrixIPort *elements_port = (MatrixIPort *)get_iport("Mesh Elements");
   MatrixHandle elementshandle;
-  if (!elements_port)
-  {
-    error("Unable to initialize iport 'Mesh Elements'.");
-    return;
-  }
   if (!(elements_port->get(elementshandle) && elementshandle.get_rep()))
   {
     error("No input elements connected, unable to build mesh.");
@@ -104,11 +99,6 @@ CreateMesh::execute()
 
   MatrixIPort *positions_port = (MatrixIPort *)get_iport("Mesh Positions");
   MatrixHandle positionshandle;
-  if (!positions_port)
-  {
-    error("Unable to initialize iport 'Mesh Positions'.");
-    return;
-  }
   if (!(positions_port->get(positionshandle) && positionshandle.get_rep()))
   {
     remark("No positions matrix connected, using zeros'.");
@@ -116,11 +106,6 @@ CreateMesh::execute()
 
   MatrixIPort *normals_port = (MatrixIPort *)get_iport("Mesh Normals");
   MatrixHandle normalshandle;
-  if (!normals_port)
-  {
-    error("Unable to initialize iport 'Mesh Normals'.");
-    return;
-  }
   if (!(normals_port->get(normalshandle) && normalshandle.get_rep()))
   {
     remark("No input normals connected, not used.");
@@ -146,11 +131,6 @@ CreateMesh::execute()
   }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
-  if (!ofp) {
-    error("Unable to initialize oport 'Output Field'.");
-    return;
-  }
-
   ofp->send(result_field);
 }
 

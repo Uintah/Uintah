@@ -1666,6 +1666,7 @@ void TetVolMesh::get_basis(Cell::index_type ci, int gaussPt, double& g0, double&
     gam = 1.0/6.0;
     break;
   default: 
+    xi = nu = gam = -1; // Removes compiler warning...
     cerr << "Error in get_basis: Incorrect index for gaussPt. "
 	 << "index = " << gaussPt << endl;
   }

@@ -110,32 +110,12 @@ void DipoleInAnisoSpheres::execute() {
 
   // get input ports
   hInSource = (FieldIPort*)get_iport("Dipole Sources");
-  if(!hInSource) { // verify that the port was found
-	error("impossible to initialize input port 'Dipole Sources'");
-	return;
-  }
   hInElectrodes = (FieldIPort*)get_iport("Electrodes");
-  if(!hInElectrodes) {
-	error("impossible to initialize input port 'Electrodes'");
-	return;
-  }
   hInConductivities = (MatrixIPort*)get_iport("AnisoConductivities");
-  if(!hInConductivities) {
-	error("impossible to initialize input port 'AnisoConductivities'");
-	return;
-  }
   hInRadii = (MatrixIPort*)get_iport("Radii");
-  if(!hInRadii) {
-	error("impossible to initialize input port 'Radii'");
-	return;
-  }
 
   // get output ports
   hOutPotentials = (FieldOPort*)get_oport("ElectrodePotentials");
-  if(!hOutPotentials) {
-	error("impossible to initialize output port 'ElectrodePotentials'");
-	return;
-  }
 
   update_state(NeedData);
 
@@ -191,7 +171,7 @@ void DipoleInAnisoSpheres::execute() {
 	hMeshD->get_point(p, *iter);     // ... position
 	dipolePositions.push_back(p);
   }
-  numDipoles = dipolePositions.size();
+  numDipoles = (int)dipolePositions.size();
   DenseMatrix dipoleMatrix(numDipoles, 6);
   int i;
   for(i=0; i<numDipoles; i++) {
@@ -215,7 +195,7 @@ void DipoleInAnisoSpheres::execute() {
 	hMeshE->get_point(p, *iter);     // ... position
 	electrodePositions.push_back(p);
   }
-  numElectrodes = electrodePositions.size();
+  numElectrodes = (int)electrodePositions.size();
   DenseMatrix electrodeMatrix(numElectrodes, 3);
   for(i=0; i < numElectrodes; i++) {
 	p = electrodePositions[i];
@@ -258,7 +238,7 @@ void DipoleInAnisoSpheres::execute() {
   // create new output field containing the potential values
   newElectrodeMesh = scinew PointCloudMesh(*hMeshE->clone());
   PointCloudMeshHandle hNewMesh(newElectrodeMesh);
-  nElectrodes = scinew PointCloudField<double>(hNewMesh, 1);
+  nElectrodes = scinew PointCloudField<double>(hNewMesh, 0);
   
   // set new electrode values
   vector<double>& newElectrodeValues = nElectrodes->fdata();

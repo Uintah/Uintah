@@ -78,20 +78,12 @@ SegFieldToLatVol::~SegFieldToLatVol()
 void
 SegFieldToLatVol::execute()
 {
-  // make sure the ports exist
+  // Make sure the ports exist.
   FieldIPort *ifp = (FieldIPort *)get_iport("SegField");
-  FieldHandle ifieldH;
-  if (!ifp) {
-    error("Unable to initialize iport 'SegField'.");
-    return;
-  }
   FieldOPort *ofp = (FieldOPort *)get_oport("LatVolField");
-  if (!ofp) {
-    error("Unable to initialize oport 'LatVolField'.");
-    return;
-  }
 
-  // make sure the input data exists
+  // Make sure the input data exists.
+  FieldHandle ifieldH;
   if (!ifp->get(ifieldH) || !ifieldH.get_rep()) {
     error("No input data");
     return;

@@ -99,11 +99,7 @@ void
 ChangeFieldDataType::execute()
 {
   FieldIPort *iport = (FieldIPort*)get_iport("Input Field"); 
-  if (!iport) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
-  
+
   // The input port (with data) is required.
   FieldHandle fh;
   if (!iport->get(fh) || !fh.get_rep())
@@ -115,10 +111,6 @@ ChangeFieldDataType::execute()
 
   // The output port is required.
   FieldOPort *oport = (FieldOPort*)get_oport("Output Field");
-  if (!oport) {
-    error("Unable to initialize oport 'Output Field'.");
-    return;
-  }
 
   const string old_data_type = fh->get_type_description(1)->get_name();
   const string new_data_type = outputdatatype_.get();

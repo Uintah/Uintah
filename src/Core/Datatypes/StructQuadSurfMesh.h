@@ -59,7 +59,6 @@
 
 #include <Core/Datatypes/ImageMesh.h>
 #include <Core/Containers/Array2.h>
-#include <Core/Geometry/Point.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
@@ -134,6 +133,7 @@ public:
   double get_area(const Face::index_type &idx) const { return get_size(idx); };
   double get_volume(Cell::index_type idx) const { return get_size(idx); };
 
+  virtual bool has_normals() const { return true; }
   void get_normal(Vector &, const Node::index_type &) const;
 
   //! get the center point (in object space) of an element

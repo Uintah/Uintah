@@ -78,7 +78,7 @@ class FileTransferClient : public ServiceClient
     bool get_file(std::string localfilename,std::string remotefilename);
     bool put_file(std::string remotefilename,std::string localfilename);
     
-    // The next set of functions are only local and are meant to simply 
+    // The next set of functions are only local and are meant to simplify 
     // the task of keeping track what the remote and local directory are called
     // set_local_dir sets the local temp directories path. This should preferably
     // be an absolute path. The set_remote_dir does the same for the remote directory

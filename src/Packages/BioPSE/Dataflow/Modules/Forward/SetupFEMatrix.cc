@@ -237,18 +237,8 @@ SetupFEMatrix::build_composite_matrix(const vector<pair<string, Tensor> > &tens)
 void
 SetupFEMatrix::execute()
 {
-  
   iportField_ = (FieldIPort *)get_iport("Mesh");
   oportMtrx_ = (MatrixOPort *)get_oport("Stiffness Matrix");
-
-  if (!iportField_) {
-    error("Unable to initialize iport 'Mesh'.");
-    return;
-  }
-  if (!oportMtrx_) {
-    error("Unable to initialize oport 'Stiffness Matrix'.");
-    return;
-  }
 
   //! Validate input
   FieldHandle hField;
@@ -510,7 +500,7 @@ SetupFEMatrix::execute()
 	  tens.size() != (unsigned int)(dataBasis_.size())) {
         meshGen_ = hField->mesh()->generation;
         //! Need to build basis matrices
-        build_TriBasis_matrices(tsfiH, tens.size(), unitsScale, nprocs);
+        build_TriBasis_matrices(tsfiH, (int)tens.size(), unitsScale, nprocs);
       }
       //! Have basis matrices, compute combined matrix
       hGblMtrx_ = build_composite_matrix(tens);

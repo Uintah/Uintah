@@ -99,24 +99,6 @@ void DipoleInSphere::execute() {
   FieldOPort *oportMag_ = (FieldOPort *)get_oport("SphereWithMagneticField");
   FieldHandle field_handle;
 
-  if (!iportGeom_) {
-    error("Unable to initialize iport 'Sphere'.");
-    return;
-  }
-  if (!iportDip_) {
-    error("Unable to initialize iport 'Dipole Sources'.");
-    return;
-  }
-  if (!oportPot_) {
-    error("Unable to initialize oport 'SphereWithPots'.");
-    return;
-  }
-  if (!oportMag_) {
-    error("Unable to initialize oport 'SphereWithMagneticField'.");
-    return;
-  }
-  
-  
   if (!iportGeom_->get(field_handle)){
     error("Can't get input mesh data.");
     return;
@@ -161,7 +143,7 @@ void DipoleInSphere::execute() {
 	}
       }
       
-      DenseMatrix dip_mtrx(pos.size(), 6);
+      DenseMatrix dip_mtrx((int)pos.size(), 6);
       unsigned int i;
       msgStream_ << "Dipoles: " << endl;
       for (i=0; i<pos.size(); ++i){

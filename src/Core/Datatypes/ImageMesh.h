@@ -53,191 +53,178 @@ namespace SCIRun {
 
 using std::string;
 
+class ImageMesh;
+
+struct ImageMeshImageIndex
+{
+public:
+  ImageMeshImageIndex() : i_(0), j_(0), mesh_(0) {}
+
+  ImageMeshImageIndex(const ImageMesh *m, unsigned i, unsigned j) 
+    : i_(i), j_(j), mesh_(m) {}
+
+  operator unsigned() const;
+
+  unsigned i_, j_;
+  const ImageMesh *mesh_;
+};
+
+struct ImageMeshIFaceIndex : public ImageMeshImageIndex
+{
+  ImageMeshIFaceIndex() : ImageMeshImageIndex() {}
+  ImageMeshIFaceIndex(const ImageMesh *m, unsigned i, unsigned j) 
+    : ImageMeshImageIndex(m, i, j) {}
+
+  operator unsigned() const;
+
+  friend void Pio(Piostream&, ImageMeshIFaceIndex&);
+  friend const TypeDescription* get_type_description(ImageMeshIFaceIndex *);
+  friend const string find_type_name(ImageMeshIFaceIndex *);
+};
+
+struct ImageMeshINodeIndex : public ImageMeshImageIndex
+{
+  ImageMeshINodeIndex() : ImageMeshImageIndex() {}
+  ImageMeshINodeIndex(const ImageMesh *m, unsigned i, unsigned j) 
+    : ImageMeshImageIndex(m, i, j) {}
+  friend void Pio(Piostream&, ImageMeshINodeIndex&);
+  friend const TypeDescription* get_type_description(ImageMeshINodeIndex *);
+  friend const string find_type_name(ImageMeshINodeIndex *);
+};
+
+struct ImageIter : public ImageMeshImageIndex
+{
+  ImageIter() : ImageMeshImageIndex() {}
+  ImageIter(const ImageMesh *m, unsigned i, unsigned j)
+    : ImageMeshImageIndex(m, i, j) {}
+
+  const ImageMeshImageIndex &operator *() { return *this; }
+
+  bool operator ==(const ImageIter &a) const
+  {
+    return i_ == a.i_ && j_ == a.j_ && mesh_ == a.mesh_;
+  }
+
+  bool operator !=(const ImageIter &a) const
+  {
+    return !(*this == a);
+  }
+};
+
+struct ImageMeshINodeIter : public ImageIter
+{
+  ImageMeshINodeIter() : ImageIter() {}
+  ImageMeshINodeIter(const ImageMesh *m, unsigned i, unsigned j)
+    : ImageIter(m, i, j) {}
+
+  const ImageMeshINodeIndex &operator *() const { return (const ImageMeshINodeIndex&)(*this); }
+
+  ImageMeshINodeIter &operator++();
+
+private:
+
+  ImageMeshINodeIter operator++(int)
+  {
+    ImageMeshINodeIter result(*this);
+    operator++();
+    return result;
+  }
+};
+
+
+struct ImageMeshIFaceIter : public ImageIter
+{
+  ImageMeshIFaceIter() : ImageIter() {}
+  ImageMeshIFaceIter(const ImageMesh *m, unsigned i, unsigned j)
+    : ImageIter(m, i, j) {}
+
+  const ImageMeshIFaceIndex &operator *() const { return (const ImageMeshIFaceIndex&)(*this); }
+
+  ImageMeshIFaceIter &operator++();
+
+private:
+
+  ImageMeshIFaceIter operator++(int)
+  {
+    ImageMeshIFaceIter result(*this);
+    operator++();
+    return result;
+  }
+};
+
+struct ImageMeshImageSize
+{ 
+public:
+  ImageMeshImageSize() : i_(0), j_(0) {}
+  ImageMeshImageSize(unsigned i, unsigned j) : i_(i), j_(j) {}
+
+  operator unsigned() const { return i_*j_; }
+
+  unsigned i_, j_;
+};
+
+struct ImageMeshINodeSize : public ImageMeshImageSize
+{
+  ImageMeshINodeSize() : ImageMeshImageSize() {}
+  ImageMeshINodeSize(unsigned i, unsigned j) : ImageMeshImageSize(i,j) {}
+};
+
+
+struct ImageMeshIFaceSize : public ImageMeshImageSize
+{
+  ImageMeshIFaceSize() : ImageMeshImageSize() {}
+  ImageMeshIFaceSize(unsigned i, unsigned j) : ImageMeshImageSize(i,j) {}
+};
+
+
+//! Index and Iterator types required for Mesh Concept.
+struct ImageMeshNode {
+  typedef ImageMeshINodeIndex                       index_type;
+  typedef ImageMeshINodeIter                        iterator;
+  typedef ImageMeshINodeSize                        size_type;
+  typedef StackVector<index_type, 4>       array_type;
+};			
+			
+struct ImageMeshEdge {		
+  typedef EdgeIndex<unsigned int>          index_type;
+  typedef EdgeIterator<unsigned int>       iterator;
+  typedef EdgeIndex<unsigned int>          size_type;
+  typedef vector<index_type>               array_type;
+};			
+			
+struct ImageMeshFace {		
+  typedef ImageMeshIFaceIndex                       index_type;
+  typedef ImageMeshIFaceIter                        iterator;
+  typedef ImageMeshIFaceSize                        size_type;
+  typedef vector<index_type>               array_type;
+};			
+			
+struct ImageMeshCell {		
+  typedef CellIndex<unsigned int>          index_type;
+  typedef CellIterator<unsigned int>       iterator;
+  typedef CellIndex<unsigned int>          size_type;
+  typedef vector<index_type>               array_type;
+};
+
+
 class SCICORESHARE ImageMesh : public Mesh
 {
 public:
-  struct ImageIndex;
-  friend struct ImageIndex;
 
-  struct ImageIndex
-  {
-  public:
-    ImageIndex() : i_(0), j_(0), mesh_(0) {}
+  friend struct ImageMeshImageIndex;
+  friend struct ImageMeshINodeIter;
+  friend struct ImageMeshIFaceIter;
+  friend struct ImageMeshIFaceIndex;
 
-    ImageIndex(const ImageMesh *m, unsigned i, unsigned j) 
-      : i_(i), j_(j), mesh_(m) {}
-
-    operator unsigned() const { 
-      ASSERT(mesh_);
-      return i_ + j_*mesh_->ni_;
-    }
-
-    unsigned i_, j_;
-
-    const ImageMesh *mesh_;
-  };
-
-  struct IFaceIndex : public ImageIndex
-  {
-    IFaceIndex() : ImageIndex() {}
-    IFaceIndex(const ImageMesh *m, unsigned i, unsigned j) 
-      : ImageIndex(m, i, j) {}
-
-    operator unsigned() const { 
-      ASSERT(mesh_);
-      return i_ + j_ * (mesh_->ni_-1);
-    }
-
-    friend void Pio(Piostream&, IFaceIndex&);
-    friend const TypeDescription* get_type_description(IFaceIndex *);
-    friend const string find_type_name(IFaceIndex *);
-  };
-
-  struct INodeIndex : public ImageIndex
-  {
-    INodeIndex() : ImageIndex() {}
-    INodeIndex(const ImageMesh *m, unsigned i, unsigned j) 
-      : ImageIndex(m, i, j) {}
-    friend void Pio(Piostream&, INodeIndex&);
-    friend const TypeDescription* get_type_description(INodeIndex *);
-    friend const string find_type_name(INodeIndex *);
-  };
-
-  struct ImageIter : public ImageIndex
-  {
-    ImageIter() : ImageIndex() {}
-    ImageIter(const ImageMesh *m, unsigned i, unsigned j)
-      : ImageIndex(m, i, j) {}
-
-    const ImageIndex &operator *() { return *this; }
-
-    bool operator ==(const ImageIter &a) const
-    {
-      return i_ == a.i_ && j_ == a.j_ && mesh_ == a.mesh_;
-    }
-
-    bool operator !=(const ImageIter &a) const
-    {
-      return !(*this == a);
-    }
-  };
-
-  struct INodeIter : public ImageIter
-  {
-    INodeIter() : ImageIter() {}
-    INodeIter(const ImageMesh *m, unsigned i, unsigned j)
-      : ImageIter(m, i, j) {}
-
-    const INodeIndex &operator *() const { return (const INodeIndex&)(*this); }
-
-    INodeIter &operator++()
-    {
-      i_++;
-      if (i_ >= mesh_->min_i_ + mesh_->ni_) {
-	i_ = mesh_->min_i_;
-	j_++;
-      }
-      return *this;
-    }
-
-  private:
-
-    INodeIter operator++(int)
-    {
-      INodeIter result(*this);
-      operator++();
-      return result;
-    }
-  };
-
-
-  struct IFaceIter : public ImageIter
-  {
-    IFaceIter() : ImageIter() {}
-    IFaceIter(const ImageMesh *m, unsigned i, unsigned j)
-      : ImageIter(m, i, j) {}
-
-    const IFaceIndex &operator *() const { return (const IFaceIndex&)(*this); }
-
-    IFaceIter &operator++()
-    {
-      i_++;
-      if (i_ >= mesh_->min_i_+mesh_->ni_-1) {
-	i_ = mesh_->min_i_;
-	j_++;
-      }
-      return *this;
-    }
-
-  private:
-
-    IFaceIter operator++(int)
-    {
-      IFaceIter result(*this);
-      operator++();
-      return result;
-    }
-  };
-
-  struct ImageSize
-  { 
-  public:
-    ImageSize() : i_(0), j_(0) {}
-    ImageSize(unsigned i, unsigned j) : i_(i), j_(j) {}
-
-    operator unsigned() const { return i_*j_; }
-
-    unsigned i_, j_;
-  };
-
-  struct INodeSize : public ImageSize
-  {
-    INodeSize() : ImageSize() {}
-    INodeSize(unsigned i, unsigned j) : ImageSize(i,j) {}
-  };
-
-
-  struct IFaceSize : public ImageSize
-  {
-    IFaceSize() : ImageSize() {}
-    IFaceSize(unsigned i, unsigned j) : ImageSize(i,j) {}
-  };
-
-
-  //! Index and Iterator types required for Mesh Concept.
-  struct Node {
-    typedef INodeIndex                       index_type;
-    typedef INodeIter                        iterator;
-    typedef INodeSize                        size_type;
-    typedef StackVector<index_type, 4>       array_type;
-  };			
-			
-  struct Edge {		
-    typedef EdgeIndex<unsigned int>          index_type;
-    typedef EdgeIterator<unsigned int>       iterator;
-    typedef EdgeIndex<unsigned int>          size_type;
-    typedef vector<index_type>               array_type;
-  };			
-			
-  struct Face {		
-    typedef IFaceIndex                       index_type;
-    typedef IFaceIter                        iterator;
-    typedef IFaceSize                        size_type;
-    typedef vector<index_type>               array_type;
-  };			
-			
-  struct Cell {		
-    typedef CellIndex<unsigned int>          index_type;
-    typedef CellIterator<unsigned int>       iterator;
-    typedef CellIndex<unsigned int>          size_type;
-    typedef vector<index_type>               array_type;
-  };
-
+  typedef ImageMeshNode Node;
+  typedef ImageMeshEdge Edge;
+  typedef ImageMeshFace Face;
+  typedef ImageMeshCell Cell;
   typedef Face Elem;
 
-  friend class INodeIter;
-  friend class IFaceIter;
-  friend class IFaceIndex;
+  // Backwards compatability with interp fields
+  typedef ImageMeshINodeIndex INodeIndex;
+  typedef ImageMeshIFaceIndex IFaceIndex;
 
   ImageMesh()
     : min_i_(0), min_j_(0),
@@ -263,6 +250,7 @@ public:
   virtual BBox get_bounding_box() const;
   virtual void transform(const Transform &t);
   virtual void get_canonical_transform(Transform &t);
+  virtual bool synchronize(unsigned int);
 
   //! set the mesh statistics
   void set_min_i(unsigned i) {min_i_ = i; }
@@ -353,8 +341,9 @@ public:
   
   void get_neighbors(Face::array_type &array, Face::index_type idx) const;
     
-  void get_normal(Vector &, const Node::index_type &) const
-  { ASSERTFAIL("not implemented") }
+  virtual bool has_normals() const { return true; }
+  void get_normal(Vector &n, const Node::index_type &) const
+  { n = normal_; }
 
   //! get the center point (in object space) of an element
   void get_center(Point &, const Node::index_type &) const;
@@ -402,6 +391,8 @@ protected:
   //! the object space extents of a ImageMesh
   Transform transform_;
 
+  Vector normal_;
+
   // returns a ImageMesh
   static Persistent *maker() { return new ImageMesh(); }
 };
@@ -413,8 +404,8 @@ const TypeDescription* get_type_description(ImageMesh::Node *);
 const TypeDescription* get_type_description(ImageMesh::Edge *);
 const TypeDescription* get_type_description(ImageMesh::Face *);
 const TypeDescription* get_type_description(ImageMesh::Cell *);
-std::ostream& operator<<(std::ostream& os, const ImageMesh::ImageIndex& n);
-std::ostream& operator<<(std::ostream& os, const ImageMesh::ImageSize& s);
+std::ostream& operator<<(std::ostream& os, const ImageMeshImageIndex& n);
+std::ostream& operator<<(std::ostream& os, const ImageMeshImageSize& s);
 
 } // namespace SCIRun
 

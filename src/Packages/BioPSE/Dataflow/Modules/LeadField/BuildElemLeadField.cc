@@ -108,27 +108,6 @@ void BuildElemLeadField::execute() {
   MatrixOPort* leadfield_oport = 
     (MatrixOPort *)get_oport("Leadfield (nelecs x nelemsx3)");
 
-  if (!mesh_iport) {
-    error("Unable to initialize iport 'Domain Mesh'.");
-    return;
-  }
-  if (!interp_iport) {
-    error("Unable to initialize iport 'Electrode Interpolant'.");
-    return;
-  }
-  if (!sol_iport) {
-    error("Unable to initialize iport 'Solution Vectors'.");
-    return;
-  }
-  if (!rhs_oport) {
-    error("Unable to initialize oport 'RHS Vector'.");
-    return;
-  }
-  if (!leadfield_oport) {
-    error("Unable to initialize oport 'Leadfield (nelecs x nelemsx3)'.");
-    return;
-  }
-  
   int nnodes;
   int nelems;
   FieldHandle mesh_in;
@@ -194,7 +173,7 @@ void BuildElemLeadField::execute() {
     }
     for (i=0; i<nelems; i++)
       for (int j=0; j<3; j++) {
-	(*leadfield_mat)[counter+1][i*3+j]=-(*sol_in.get_rep())[i][j];
+	(*leadfield_mat)[counter+1][i*3+j] =- sol_in->get(i, j);
       }
     counter++;
   }

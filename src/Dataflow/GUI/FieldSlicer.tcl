@@ -66,7 +66,11 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	    set $this-$index-dim 1
 	    set $this-$index-index 1
 	    set $this-$index-index2 "0"
+
+	    trace variable $this-$index-dim w "$this update_setsize_callback"
 	}
+
+	trace variable $this-dims w "$this update_setsize_callback"
     }
 
     method ui {} {
@@ -166,6 +170,18 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	    set $var2 $stop }
 	
 	set $var1 [set $var2]
+    }
+
+    method update_setsize_callback { name1 name2 op } {
+	global $this-dims
+	global $this-i-dim
+	global $this-j-dim
+	global $this-k-dim
+
+	set_size [set $this-dims] \
+	    [set $this-i-dim] \
+	    [set $this-j-dim] \
+	    [set $this-k-dim]
     }
 
     method set_size { dims idim jdim kdim } {
