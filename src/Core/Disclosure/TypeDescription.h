@@ -20,14 +20,13 @@
 #if ! defined(Disclosure_TypeDescription_h)
 #define Disclosure_TypeDescription_h
 
-#include <Core/Malloc/Allocator.h>
 #include <vector>
 #include <string>
-
 
 namespace SCIRun {
 
 using std::string;
+using std::vector;
 
 class CompileInfo;
 
