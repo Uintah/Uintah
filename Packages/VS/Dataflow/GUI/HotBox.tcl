@@ -17,6 +17,7 @@ itcl_class VS_DataFlow_HotBox {
   }
 
   method set_defaults {} {
+    global $this-gui_name
     global $this-gui_label(1)
     global $this-gui_label(2)
     global $this-gui_label(3)
@@ -35,14 +36,17 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_is_injured(7)
     global $this-gui_is_injured(8)
     global $this-gui_is_injured(9)
+    global $this-gui_parent(0)
     global $this-gui_parent(1)
-    global $this-gui_parent(2)
     global $this-gui_parent_list
+    global $this-gui_parlist_name
+    global $this-gui_sibling(0)
     global $this-gui_sibling(1)
     global $this-gui_sibling(2)
     global $this-gui_sibling(3)
-    global $this-gui_sibling(4)
     global $this-gui_sibling_list
+    global $this-gui_siblist_name
+    global $this-gui_child(0)
     global $this-gui_child(1)
     global $this-gui_child(2)
     global $this-gui_child(3)
@@ -50,8 +54,8 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_child(5)
     global $this-gui_child(6)
     global $this-gui_child(7)
-    global $this-gui_child(8)
     global $this-gui_child_list
+    global $this-gui_childlist_name
     global $this-FME_on
     global $this-Files_on
     global $this-enableDraw
@@ -74,6 +78,7 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_probeLocz
     global $this-gui_probe_scale
 
+    set $this-gui_name $this
     set $this-gui_label(1) "label1"
     set $this-gui_label(2) "label2"
     set $this-gui_label(3) "label3"
@@ -92,18 +97,23 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_is_injured(7) "0"
     set $this-gui_is_injured(8) "0"
     set $this-gui_is_injured(9) "0"
+    set $this-gui_parent(0) ""
     set $this-gui_parent(1) ""
-    set $this-gui_parent(2) ""
-    set $this-gui_parent_list [list [set $this-gui_parent(1)] \
-                                    [set $this-gui_parent(2)]]
+    set $this-gui_parent_list [list [set $this-gui_parent(0)] \
+                                    [set $this-gui_parent(1)]]
+    # this holds the name of this instance of the list
+    set $this-gui_parlist_name $this-gui_parent_list
+    set $this-gui_sibling(0) ""
     set $this-gui_sibling(1) ""
     set $this-gui_sibling(2) ""
     set $this-gui_sibling(3) ""
-    set $this-gui_sibling(4) ""
-    set $this-gui_sibling_list [list [set $this-gui_sibling(1)] \
+    set $this-gui_sibling_list [list [set $this-gui_sibling(0)] \
+                                     [set $this-gui_sibling(1)] \
                                      [set $this-gui_sibling(2)] \
-                                     [set $this-gui_sibling(3)] \
-                                     [set $this-gui_sibling(4)]]
+                                     [set $this-gui_sibling(3)]]
+    # this holds the name of this instance of the list
+    set $this-gui_siblist_name $this-gui_sibling_list
+    set $this-gui_child(0) ""
     set $this-gui_child(1) ""
     set $this-gui_child(2) ""
     set $this-gui_child(3) ""
@@ -111,15 +121,16 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_child(5) ""
     set $this-gui_child(6) ""
     set $this-gui_child(7) ""
-    set $this-gui_child(8) ""
-    set $this-gui_child_list [list [set $this-gui_child(1)] \
+    set $this-gui_child_list [list [set $this-gui_child(0)] \
+                                   [set $this-gui_child(1)] \
                                    [set $this-gui_child(2)] \
                                    [set $this-gui_child(3)] \
                                    [set $this-gui_child(4)] \
                                    [set $this-gui_child(5)] \
                                    [set $this-gui_child(6)] \
-                                   [set $this-gui_child(7)] \
-                                   [set $this-gui_child(8)]]
+                                   [set $this-gui_child(7)]]
+    # this holds the name of this instance of the list
+    set $this-gui_childlist_name $this-gui_child_list
     set $this-FME_on "no"
     set $this-Files_on "no"
     set $this-enableDraw "no"
@@ -210,7 +221,6 @@ itcl_class VS_DataFlow_HotBox {
        }
     } elseif {$whichdatasource == "geometry"} {
     set title "Set Geometry path"
-    set defext ".xml"
     set $this-geometrypath [ tk_chooseDirectory \
         -title $title \
         -initialdir $initdir ]
@@ -271,6 +281,33 @@ itcl_class VS_DataFlow_HotBox {
     $this-c needexecute
   }
   # end method set_selection
+
+  method set_hier_selection { selection_id } {
+    set w .ui[modname]
+    if { [winfo exists $w.hier.multi.l$selection_id] } {
+        set selindex [$w.hier.multi.l$selection_id curselection]
+    } else { puts "VS_DataFlow_HotBox::set_hier_selection: not found" }
+    if { $selection_id == 1 } {
+        if { [info exists $this-gui_parent($selindex)] } {
+            set $this-currentselection [set $this-gui_parent($selindex)]
+        } else { puts "VS_DataFlow_HotBox::set_hier_selection: not found" }
+    } elseif { $selection_id == 2 } {
+        if { [info exists $this-gui_sibling($selindex)] } {
+            set $this-currentselection [set $this-gui_sibling($selindex)]
+        } else { puts "VS_DataFlow_HotBox::set_hier_selection: not found" }
+    } elseif { $selection_id == 3 } {
+        if { [info exists $this-gui_child($selindex)] } {
+            set $this-currentselection [set $this-gui_child($selindex)]
+        } else { puts "VS_DataFlow_HotBox::set_hier_selection: not found" }
+    }
+    # tell the HotBox module that the
+    # current selection was changed
+    # from the HotBox UI -- not the Probe
+    set $this-selectionsource "fromHotBoxUI"
+    # trigger the HotBox execution to reflect selection change
+    $this-c needexecute
+  }
+  # end method set_hier_selection
 
   method set_data_source { datasource } {
     set $this-datasource $datasource
@@ -420,7 +457,7 @@ itcl_class VS_DataFlow_HotBox {
     bind $w.probeUI.loc.locz <KeyPress-Return> "$this-c needexecute"
     pack $w.probeUI.loc.locLabel $w.probeUI.loc.locx $w.probeUI.loc.locy $w.probeUI.loc.locz \
                 -side left -anchor n -expand yes -fill x
-    scale $w.probeUI.slide -orient horizontal -label "Cursor Size" -from 0 -to 100 -showvalue true \
+    scale $w.probeUI.slide -orient horizontal -label "Cursor Size" -from 0 -to 40 -showvalue true \
              -variable $this-gui_probe_scale -resolution 0.25 -tickinterval 25
     set $w.probeUI.slide $this-gui_probe_scale
     bind $w.probeUI.slide <ButtonRelease> "$this-c needexecute"
@@ -436,12 +473,15 @@ itcl_class VS_DataFlow_HotBox {
     canvas $w.hier.titles.l1 -width 150 -height 20
     $w.hier.titles.l1 create text 20 10 -text "Parent"
     listbox $w.hier.multi.l1 -listvariable $this-gui_parent_list
+    bind $w.hier.multi.l1 <<ListboxSelect>> "$this set_hier_selection 1"
     canvas $w.hier.titles.l2 -width 150 -height 20
     $w.hier.titles.l2 create text 20 10 -text "Sibling"
     listbox $w.hier.multi.l2 -listvariable $this-gui_sibling_list
+    bind $w.hier.multi.l2 <<ListboxSelect>> "$this set_hier_selection 2"
     canvas $w.hier.titles.l3 -width 100 -height 20
     $w.hier.titles.l3 create text 20 10 -text "Child"
     listbox $w.hier.multi.l3 -listvariable $this-gui_child_list
+    bind $w.hier.multi.l3 <<ListboxSelect>> "$this set_hier_selection 3"
     scrollbar $w.hier.vs
     grid $w.hier.titles -column 0 -row 0 -sticky nsew
     grid $w.hier.multi -column 0 -row 1 -sticky nsew
@@ -460,20 +500,23 @@ itcl_class VS_DataFlow_HotBox {
     grid columnconfigure $w.hier.multi 2 -weight 1
     # pack $w.hier -fill both -expand 1
 
-    set $this-gui_parent_list [list [set $this-gui_parent(1)] \
-                                    [set $this-gui_parent(2)]]
-    set $this-gui_sibling_list [list [set $this-gui_sibling(1)] \
+    ### *** magic occurs here *** ###
+    ### C++ HotBox Module takes control asynchronously
+    ### and performs the following on selection change
+    set $this-gui_parent_list [list [set $this-gui_parent(0)] \
+                                    [set $this-gui_parent(1)]]
+    set $this-gui_sibling_list [list [set $this-gui_sibling(0)] \
+                                     [set $this-gui_sibling(1)] \
                                      [set $this-gui_sibling(2)] \
-                                     [set $this-gui_sibling(3)] \
-                                     [set $this-gui_sibling(4)]]
-    set $this-gui_child_list [list [set $this-gui_child(1)] \
+                                     [set $this-gui_sibling(3)]]
+    set $this-gui_child_list [list [set $this-gui_child(0)] \
+                                   [set $this-gui_child(1)] \
                                    [set $this-gui_child(2)] \
                                    [set $this-gui_child(3)] \
                                    [set $this-gui_child(4)] \
                                    [set $this-gui_child(5)] \
                                    [set $this-gui_child(6)] \
-                                   [set $this-gui_child(7)] \
-                                   [set $this-gui_child(8)]]
+                                   [set $this-gui_child(7)]]
     ######################################
     # Query UI
     ######################################
