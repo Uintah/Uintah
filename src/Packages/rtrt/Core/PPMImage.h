@@ -19,6 +19,7 @@ using std::ifstream;
 using std::ofstream;
 using std::cout;
 using std::cerr;
+using std::endl;
 using std::vector;
 using std::string;
 
@@ -141,6 +142,11 @@ class PPMImage
       cerr << "PPMImage: WARNING: format error: file not a PPM: "
            << filename << "\n";
     }
+
+    cerr << "PPMImage: reading image: " << filename;
+    if (flipped_)
+      cerr << " (flipped!)";
+    cerr << endl;
 
     eat_comments_and_whitespace(indata);
     indata >> u_ >> v_;
