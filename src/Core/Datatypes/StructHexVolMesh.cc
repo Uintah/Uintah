@@ -34,6 +34,7 @@
 
 #include <Core/Datatypes/StructHexVolMesh.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Plane.h>
 #include <Core/Math/MusilRNG.h>
 #include <iostream>
 
@@ -314,148 +315,124 @@ StructHexVolMesh::get_weights(const Point &p,
   }
 }
 
-// The volume x 6, used by get_weights to compute barycentric coordinates.
-static double
-tet_vol6(const Point &p1, const Point &p2, const Point &p3, const Point &p4)
+
+
+//===================================================================
+
+// area3D_Polygon(): computes the area of a 3D planar polygon
+//    Input:  int n = the number of vertices in the polygon
+//            Point* V = an array of n+2 vertices in a plane
+//                       with V[n]=V[0] and V[n+1]=V[1]
+//            Point N = unit normal vector of the polygon's plane
+//    Return: the (float) area of the polygon
+double
+StructHexVolMesh::polygon_area(const Node::array_type &ni, const Vector N) const
 {
-  const double x1=p1.x();
-  const double y1=p1.y();
-  const double z1=p1.z();
-  const double x2=p2.x();
-  const double y2=p2.y();
-  const double z2=p2.z();
-  const double x3=p3.x();
-  const double y3=p3.y();
-  const double z3=p3.z();
-  const double x4=p4.x();
-  const double y4=p4.y();
-  const double z4=p4.z();
-  const double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
-  const double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
-  const double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
-  const double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
-  return fabs(a1+a2+a3+a4);
+    double area = 0;
+    double an, ax, ay, az;  // abs value of normal and its coords
+    int   coord;           // coord to ignore: 1=x, 2=y, 3=z
+    int   i, j, k;         // loop indices
+    const unsigned int n = ni.size();
+
+    // select largest abs coordinate to ignore for projection
+    ax = (N.x()>0 ? N.x() : -N.x());     // abs x-coord
+    ay = (N.y()>0 ? N.y() : -N.y());     // abs y-coord
+    az = (N.z()>0 ? N.z() : -N.z());     // abs z-coord
+
+    coord = 3;                     // ignore z-coord
+    if (ax > ay) {
+        if (ax > az) coord = 1;    // ignore x-coord
+    }
+    else if (ay > az) coord = 2;   // ignore y-coord
+
+    // compute area of the 2D projection
+    for (i=1, j=2, k=0; i<=n; i++, j++, k++)
+        switch (coord) {
+        case 1:
+            area += (get_point(ni[i%n]).y() *
+		     (get_point(ni[j%n]).z() - get_point(ni[k%n]).z()));
+            continue;
+        case 2:
+            area += (get_point(ni[i%n]).x() * 
+		     (get_point(ni[j%n]).z() - get_point(ni[k%n]).z()));
+            continue;
+        case 3:
+            area += (get_point(ni[i%n]).x() * 
+		     (get_point(ni[j%n]).y() - get_point(ni[k%n]).y()));
+            continue;
+        }
+
+    // scale to get area before projection
+    an = sqrt( ax*ax + ay*ay + az*az);  // length of normal vector
+    switch (coord) {
+    case 1:
+        area *= (an / (2*ax));
+        break;
+    case 2:
+        area *= (an / (2*ay));
+        break;
+    case 3:
+        area *= (an / (2*az));
+    }
+    return area;
 }
 
-
-// Tet inside test, cut and pasted from TetVolMesh.cc
-static bool
-tet_inside_p(const Point &p, const Point &p0, const Point &p1,
-	     const Point &p2, const Point &p3)
+double
+StructHexVolMesh::pyramid_volume(const Node::array_type &face, const Point &p) const
 {
-  const double x0 = p0.x();
-  const double y0 = p0.y();
-  const double z0 = p0.z();
-  const double x1 = p1.x();
-  const double y1 = p1.y();
-  const double z1 = p1.z();
-  const double x2 = p2.x();
-  const double y2 = p2.y();
-  const double z2 = p2.z();
-  const double x3 = p3.x();
-  const double y3 = p3.y();
-  const double z3 = p3.z();
-
-  const double a0 = + x1*(y2*z3-y3*z2) + x2*(y3*z1-y1*z3) + x3*(y1*z2-y2*z1);
-  const double a1 = - x2*(y3*z0-y0*z3) - x3*(y0*z2-y2*z0) - x0*(y2*z3-y3*z2);
-  const double a2 = + x3*(y0*z1-y1*z0) + x0*(y1*z3-y3*z1) + x1*(y3*z0-y0*z3);
-  const double a3 = - x0*(y1*z2-y2*z1) - x1*(y2*z0-y0*z2) - x2*(y0*z1-y1*z0);
-  const double iV6 = 1.0 / (a0+a1+a2+a3);
-
-  const double b0 = - (y2*z3-y3*z2) - (y3*z1-y1*z3) - (y1*z2-y2*z1);
-  const double c0 = + (x2*z3-x3*z2) + (x3*z1-x1*z3) + (x1*z2-x2*z1);
-  const double d0 = - (x2*y3-x3*y2) - (x3*y1-x1*y3) - (x1*y2-x2*y1);
-  const double s0 = iV6 * (a0 + b0*p.x() + c0*p.y() + d0*p.z());
-  if (s0 < -1.e-12)
-    return false;
-
-  const double b1 = + (y3*z0-y0*z3) + (y0*z2-y2*z0) + (y2*z3-y3*z2);
-  const double c1 = - (x3*z0-x0*z3) - (x0*z2-x2*z0) - (x2*z3-x3*z2);
-  const double d1 = + (x3*y0-x0*y3) + (x0*y2-x2*y0) + (x2*y3-x3*y2);
-  const double s1 = iV6 * (a1 + b1*p.x() + c1*p.y() + d1*p.z());
-  if (s1 < -1.e-12)
-    return false;
-
-  const double b2 = - (y0*z1-y1*z0) - (y1*z3-y3*z1) - (y3*z0-y0*z3);
-  const double c2 = + (x0*z1-x1*z0) + (x1*z3-x3*z1) + (x3*z0-x0*z3);
-  const double d2 = - (x0*y1-x1*y0) - (x1*y3-x3*y1) - (x3*y0-x0*y3);
-  const double s2 = iV6 * (a2 + b2*p.x() + c2*p.y() + d2*p.z());
-  if (s2 < -1.e-12)
-    return false;
-
-  const double b3 = +(y1*z2-y2*z1) + (y2*z0-y0*z2) + (y0*z1-y1*z0);
-  const double c3 = -(x1*z2-x2*z1) - (x2*z0-x0*z2) - (x0*z1-x1*z0);
-  const double d3 = +(x1*y2-x2*y1) + (x2*y0-x0*y2) + (x0*y1-x1*y0);
-  const double s3 = iV6 * (a3 + b3*p.x() + c3*p.y() + d3*p.z());
-  if (s3 < -1.e-12)
-    return false;
-
-  return true;
+  int min_index = 3;
+  for (int i = 0; i < 2; i++)
+    if (face[i] < face[min_index]) min_index = i;
+  Plane plane(get_point(face[min_index]), 
+	      get_point(face[(min_index+1)%4]), 
+	      get_point(face[(min_index+2)%4]));
+  double dist = plane.eval_point(p);
+  return fabs(plane.eval_point(p)*polygon_area(face,plane.normal())*0.25);
 }
-
-static void
-tetinterp(const Point &p, Point nodes[8],
-	  vector<double> &w, int a, int b, int c, int d)
-{
-  int i;
-  w.resize(8);
-  for (i=0; i < 8; i++)
-  {
-    w[i] = 0.0;
-  }
   
-  const double wa = tet_vol6(p, nodes[b], nodes[c], nodes[d]); 
-  const double wb = tet_vol6(p, nodes[a], nodes[c], nodes[d]); 
-  const double wc = tet_vol6(p, nodes[a], nodes[b], nodes[d]); 
-  const double wd = tet_vol6(p, nodes[a], nodes[b], nodes[c]); 
-
-  const double sum = 1.0 / (wa + wb + wc + wd);
   
-  w[a] = wa * sum;
-  w[b] = wb * sum;
-  w[c] = wc * sum;
-  w[d] = wd * sum;
-}
-
 
 void
 StructHexVolMesh::get_weights(const Point &p,
-			      Node::array_type &nodes, vector<double> &w)
+			Node::array_type &nodes, vector<double> &w)
 {
+  synchronize (Mesh::FACES_E);
   Cell::index_type cell;
   if (locate(cell, p))
   {
-    get_nodes(nodes, cell);
-    Point v[8];
-    int i;
-    for (i = 0; i < 8; i++)
+    get_nodes(nodes,cell);
+    unsigned int nnodes = nodes.size();
+    ASSERT(nnodes == 8);
+    w.resize(nnodes);
+      
+    Face::array_type faces;
+    get_faces(faces, cell);
+    unsigned int nfaces = faces.size();
+    vector<double> face_point_volume(nfaces);
+    double total_volume = 0.0;
+    map<Node::index_type, map<Face::index_type,bool> > attached;
+    int f, n;
+      
+    for (f = 0; f < nfaces; f++)
     {
-      get_point(v[i], nodes[i]);
+      Node::array_type face_nodes;
+      get_nodes(face_nodes, faces[f]);
+      face_point_volume[f] = pyramid_volume(face_nodes, p);
+      total_volume += face_point_volume[f];
+      unsigned int n_face_nodes = face_nodes.size();
+      for (n = 0; n < n_face_nodes; n++)
+	attached[face_nodes[n]][faces[f]] = true;
     }
-    
-    if (tet_inside_p(p, v[0], v[4], v[3], v[1]))
+    for (n = 0; n < nnodes; n++)
     {
-      tetinterp(p, v, w, 0, 4, 3, 1);
-    }
-    else if (tet_inside_p(p, v[2], v[6], v[1], v[3]))
-    {
-      tetinterp(p, v, w, 2, 6, 1, 3);
-    }
-    else if (tet_inside_p(p, v[5], v[1], v[6], v[4]))
-    {
-      tetinterp(p, v, w, 5, 1, 6, 4);
-    }
-    else if (tet_inside_p(p, v[7], v[3], v[4], v[6]))
-    {
-      tetinterp(p, v, w, 7, 3, 4, 6);
-    }
-    else
-    {
-      tetinterp(p, v, w, 1, 3, 4, 6);
+      double unattached_volume = 0.0;
+      for (f = 0; f < nfaces; f++)
+	if (!attached[nodes[n]][faces[f]])
+	  unattached_volume += face_point_volume[f];
+      w[n] = unattached_volume / total_volume;
     }
   }
 }
-
 
 
 void
