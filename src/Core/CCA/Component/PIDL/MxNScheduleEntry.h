@@ -186,6 +186,14 @@ namespace SCIRun {
     // Used to determine whether we should let the array pointer to be set
     bool allowArraySet;
 
+    ///////
+    // setArray() is called for both IN and OUT args and can't tell the
+    // difference between each situation. For an OUT argument situation
+    // setArray() should raise the arr_wait semaphore. This variable uses 
+    // knowledge from the way the calls are made to determine whether it 
+    // is an IN or OUT argument.
+    bool raiseArrSema;
+
   };
 } // End namespace SCIRun
 

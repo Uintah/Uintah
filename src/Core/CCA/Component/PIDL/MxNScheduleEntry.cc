@@ -33,10 +33,11 @@ using namespace SCIRun;
 
 MxNScheduleEntry::MxNScheduleEntry(std::string n, sched_t st)
   : name(n), scht(st), recv_sema("getCompleteArray Wait", 0), 
-  arr_wait_sema("getArrayWait Semaphore", 0), meta_sema("allMetadataReceived Wait", 0), 
-  arr_mutex("Distribution Array Pointer lock"), recv_mutex("Receieved Flag lock")
+    arr_wait_sema("getArrayWait Semaphore", 0), meta_sema("allMetadataReceived Wait", 0), 
+    arr_mutex("Distribution Array Pointer lock"), recv_mutex("Receieved Flag lock"),
+    allowArraySet(true), raiseArrSema(true)
+
 {
-  allowArraySet = true;
 }
 
 MxNScheduleEntry::~MxNScheduleEntry()
@@ -94,6 +95,12 @@ MxNArrayRep* MxNScheduleEntry::getCalleeRep(unsigned int index)
 
 void* MxNScheduleEntry::getArray()
 {
+  //If get array gets called, this is the IN
+  //argument part so don't raise the arr sema
+  raiseArrSema = false;
+
+  //If it is okay to set this array, we return NULL
+  //to indicate that we want the array to be set
   if (allowArraySet) 
     return NULL;
   else
@@ -117,11 +124,13 @@ void MxNScheduleEntry::setArray(void** a_ptr)
     arr_ptr = (*a_ptr);
     allowArraySet = false;
     //Raise getArrayWait's semaphore if 
-    //there is somebody waiting on it
-    ::std::cout << "setArray -- Raised sema +" << caller_rep.size()+1 << "\n";
-    arr_wait_sema.up((int) caller_rep.size());
+    //it is appropriate
+    if(raiseArrSema) {
+      arr_wait_sema.up((int) caller_rep.size());
+      ::std::cout << "setArray -- Raised sema +" << caller_rep.size() << "\n";
+    }
   }
-  else {
+  else { 
     (*a_ptr) = arr_ptr;
   }
   arr_mutex.unlock();
@@ -133,6 +142,7 @@ void* MxNScheduleEntry::waitCompleteArray()
   if (scht == callee) {
     //Wait for all meta data communications to finish
     meta_sema.down();
+
     //Determine which redistribution requests we are waiting for
     for(unsigned int i=0; i < caller_rep.size(); i++) {
       if (callee_rep[0]->isIntersect(caller_rep[i]))
@@ -170,11 +180,14 @@ void* MxNScheduleEntry::waitCompleteArray()
       (*iter)->received = false;
       recv_mutex.unlock();
     }
-    //Refresh semaphores
-    while (arr_wait_sema.tryDown());
-
   }  
+
+  //Reset all variables to original values 
+  while (arr_wait_sema.tryDown());
+  raiseArrSema = true;
   allowArraySet = true;
+  meta_sema.up((int) caller_rep.size()+1);
+
   return arr_ptr;
 }
 
@@ -183,7 +196,9 @@ void MxNScheduleEntry::reportMetaRecvDone(int size)
   if (scht == callee) {
     //::std::cout << "Meta " << caller_rep.size() << " of " << size << "\n"; 
     if (size == static_cast<int>(caller_rep.size())) { 
-      while (meta_sema.tryDown());
+      //One the metadata is here, we don't want anyone
+      //to wait for the meta_sema so we raise it 
+      //(also perpertually raise it in each redistribution)
       meta_sema.up((int) 4*caller_rep.size());
       ::std::cout << "UP Meta semaphore\n";
     }
@@ -193,6 +208,7 @@ void MxNScheduleEntry::reportMetaRecvDone(int size)
 void MxNScheduleEntry::doReceive(int rank)
 {
   if (scht == callee) {
+    //Find the proper arr. representation and mark it is received
     for(unsigned int i=0; i < caller_rep.size(); i++) {
       if (caller_rep[i]->getRank() == rank) {
 	recv_mutex.lock();
