@@ -26,8 +26,11 @@
 #include <SCICore/Geom/GeomTri.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/Mat.h>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
+#include <fstream>
+using std::ofstream;
 
 namespace SCICore {
 namespace Datatypes {
@@ -1858,6 +1861,9 @@ void Pio(Piostream& stream, SCICore::Datatypes::ElementVersion1& elem)
 
 //
 // $Log$
+// Revision 1.8  1999/10/07 02:07:32  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.7  1999/09/23 01:04:31  moulding
 // changed the reference constructors in Mesh::overlaps() to reference assignments:
 // VC++ can't initialize references from function calls.

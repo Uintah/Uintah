@@ -278,8 +278,10 @@ if test "$threads" = "unknown"; then
 fi
 case $threads in
   pthreads*) THREAD_LIBS="-lpthread"
+
   ;;
   irix)     THREAD_LIBS="-lfetchop"
+	    CFLAGS="$CFLAGS -DSTL_SGI_THREADS"
   ;;  
   *)
     echo "Unknown thread implementation: $threads"

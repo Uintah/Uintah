@@ -42,7 +42,7 @@ public:
 
     View get();
     void set(const View&);
-    virtual void emit(ostream& out);
+    virtual void emit(std::ostream& out);
 };
 
 class SCICORESHARE TCLExtendedView : public TCLvar {
@@ -63,7 +63,7 @@ public:
 
     ExtendedView get();
     void set(const ExtendedView&);
-    virtual void emit(ostream& out);
+    virtual void emit(std::ostream& out);
   };
 
 } // End namespace GeomSpace
@@ -71,6 +71,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:07:50  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:39:24  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

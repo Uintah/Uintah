@@ -17,7 +17,9 @@
 #include <SCICore/Datatypes/DenseMatrix.h>
 #include <SCICore/Datatypes/ScalarFieldUG.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <stdio.h>
 #include <math.h>
 
@@ -134,6 +136,9 @@ void FieldFromBasis::execute() {
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:06:35  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/09/22 18:43:25  dmw
 // added new GUI
 //

@@ -24,7 +24,8 @@
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Malloc/Allocator.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 
 #ifdef _WIN32
 #include <stdlib.h>
@@ -1147,6 +1148,9 @@ void Pio(Piostream& stream, TSEdge*& data)
 
 //
 // $Log$
+// Revision 1.10  1999/10/07 02:07:35  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.9  1999/09/08 02:26:48  sparker
 // Various #include cleanups
 //

@@ -38,13 +38,10 @@
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <PSECore/Widgets/ArrowWidget.h>
-#include <iostream.h>
-#include <strstream.h>
-
-// just so I can see the proccess id...
-
-#include <sys/types.h>
-#include <unistd.h>
+#include <iostream>
+using std::cerr;
+#include <sstream>
+using std::ostringstream;
 
 namespace PSECommon {
 namespace Modules {
@@ -175,10 +172,9 @@ void IsoSurfaceMRSG::execute()
     double min, max;
     field->get_minmax(min, max);
     if(min != old_min || max != old_max){
-	char buf[1000];
-	ostrstream str(buf, 1000);
-	str << id << " set_minmax " << min << " " << max << '\0';
-	TCL::execute(str.str());
+	ostringstream str;
+	str << id << " set_minmax " << min << " " << max;
+	TCL::execute(str.str().c_str());
 	old_min=min;
 	old_max=max;
     }
@@ -654,6 +650,9 @@ void IsoSurfaceMRSG::iso_reg_grid(ScalarFieldRG* field, double isoval,
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:07  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/25 03:48:09  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

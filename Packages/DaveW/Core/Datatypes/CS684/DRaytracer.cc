@@ -17,6 +17,8 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Thread/Thread.h>
+#include <iostream>
+using std::cerr;
 
 namespace DaveW {
 namespace Datatypes {
@@ -336,7 +338,7 @@ void DRaytracer::io(Piostream& stream) {
     using SCICore::PersistentSpace::Pio;
     using DaveW::Datatypes::Pio;
 
-    int version=stream.begin_class("DRaytracer", DRaytracer_VERSION);
+    /*int version=*/stream.begin_class("DRaytracer", DRaytracer_VERSION);
     VoidStar::io(stream);
     Pio(stream, scene);
     Pio(stream, camera);
@@ -363,6 +365,9 @@ void DRaytracer::io(Piostream& stream) {
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:06:18  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/08/30 20:19:20  sparker
 // Updates to compile with -LANG:std on SGI
 // Other linux/irix porting oscillations

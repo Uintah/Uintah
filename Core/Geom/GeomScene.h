@@ -21,11 +21,7 @@
 #include <SCICore/Geom/Color.h>
 #include <SCICore/Geom/View.h>
 
-#ifdef KCC
-  #include <iosfwd.h>  // Forward declarations for KCC C++ I/O routines
-#else
-  class ostream;
-#endif
+#include <iosfwd>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -53,6 +49,9 @@ struct SCICORESHARE GeomScene : public Persistent {
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:07:45  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:39:12  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

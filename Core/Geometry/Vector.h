@@ -19,12 +19,7 @@
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Math/Expon.h>
 
-#ifdef KCC
-#include <iosfwd.h>  // Forward declarations for KCC C++ I/O routines
-#else
-class ostream;
-class istream;
-#endif
+#include <iosfwd>
 
 namespace SCICore {
     namespace Containers {
@@ -128,8 +123,8 @@ public:
     }
 };
 
-SCICORESHARE ostream& operator<<(ostream& os, const Vector& p);
-SCICORESHARE istream& operator>>(istream& os, Vector& p);
+SCICORESHARE std::ostream& operator<<(std::ostream& os, const Vector& p);
+SCICORESHARE std::istream& operator>>(std::istream& os, Vector& p);
 
 } // End namespace Geometry
 } // End namespace SCICore
@@ -347,6 +342,9 @@ inline Point Vector::asPoint() const {
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:07:57  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/04 06:01:53  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

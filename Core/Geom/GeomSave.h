@@ -17,11 +17,7 @@
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
 
-#ifdef KCC
-#include <iosfwd.h>  // Forward declarations for KCC C++ I/O routines
-#else
-class ostream;
-#endif
+#include <iosfwd>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -33,28 +29,28 @@ struct GeomSave {
     int nindent;
     void indent();
     void unindent();
-    void indent(ostream&);
+    void indent(std::ostream&);
 
     // For VRML.
-    void start_sep(ostream&);
-    void end_sep(ostream&);
-    void start_tsep(ostream&);
-    void end_tsep(ostream&);
-    void orient(ostream&, const Point& center, const Vector& up,
+    void start_sep(std::ostream&);
+    void end_sep(std::ostream&);
+    void start_tsep(std::ostream&);
+    void end_tsep(std::ostream&);
+    void orient(std::ostream&, const Point& center, const Vector& up,
 		const Vector& new_up=Vector(0,1,0));
 
     // For RIB.
-    void start_attr(ostream&);
-    void end_attr(ostream&);
-    void start_trn(ostream&);
-    void end_trn(ostream&);
-    void rib_orient(ostream&, const Point& center, const Vector& up,
+    void start_attr(std::ostream&);
+    void end_attr(std::ostream&);
+    void start_trn(std::ostream&);
+    void end_trn(std::ostream&);
+    void rib_orient(std::ostream&, const Point& center, const Vector& up,
 		const Vector& new_up=Vector(0,1,0));
 
-    void translate(ostream&, const Point& p);
-    void rotateup(ostream&, const Vector& up, const Vector& new_up);
-    void start_node(ostream&, char*);
-    void end_node(ostream&);
+    void translate(std::ostream&, const Point& p);
+    void rotateup(std::ostream&, const Vector& up, const Vector& new_up);
+    void start_node(std::ostream&, char*);
+    void end_node(std::ostream&);
 };
 
 } // End namespace GeomSpace
@@ -62,6 +58,9 @@ struct GeomSave {
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:07:44  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:39:12  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

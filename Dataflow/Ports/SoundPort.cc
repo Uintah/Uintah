@@ -20,7 +20,8 @@
 #include <PSECore/Dataflow/Port.h>
 #include <SCICore/Malloc/Allocator.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 
 namespace PSECore {
 namespace Datatypes {
@@ -247,6 +248,9 @@ void SoundOPort::resend(Connection*)
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:21  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/28 17:54:32  sparker
 // Integrated new Thread library
 //

@@ -16,7 +16,8 @@
 #include <SCICore/Containers/Array2.h>
 #include <SCICore/Math/Expon.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 
 namespace DaveW {
 namespace Datatypes {
@@ -213,6 +214,9 @@ void Sample2D::genSamplesQuasiMonteCarlo(Array1<double>&x, Array1<double>&y,
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:06:19  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/08/23 02:52:57  dmw
 // Dave's Datatypes
 //

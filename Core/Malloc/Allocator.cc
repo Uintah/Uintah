@@ -40,6 +40,12 @@
 #include <pthread.h>
 #endif
 
+extern "C" void audit() {
+    using namespace SCICore::Malloc;
+    AuditAllocator(DefaultAllocator());
+    fprintf(stderr, "Memory audit OK\n");
+}
+
 namespace SCICore {
 namespace Malloc {
 
@@ -1184,6 +1190,9 @@ void DumpAllocator(Allocator* a)
 
 //
 // $Log$
+// Revision 1.8  1999/10/07 02:07:58  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.7  1999/09/30 00:33:46  sparker
 // Added support for memalign (got orphaned in move from SCIRun)
 //

@@ -22,6 +22,8 @@
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <iostream>
+using std::cerr;
 
 namespace PSECommon {
 namespace Modules {
@@ -123,6 +125,9 @@ void ImageViewer::execute()
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:07:06  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/08/29 00:46:46  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

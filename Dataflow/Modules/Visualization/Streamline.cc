@@ -65,9 +65,13 @@ hook up user interface buttons
 #include <PSECore/Widgets/RingWidget.h>
 #include <PSECore/Widgets/ScaledFrameWidget.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <values.h>
-#include <strstream.h>
+#include <sstream>
+using std::istringstream;
+using std::ostringstream;
 
 namespace PSECommon {
 namespace Modules {
@@ -229,6 +233,11 @@ struct VertBatch {
   Array1<double> ts; // times for animation
   Array1<Color>  cs; // colors - might be zero-length
 };
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+// Turn off warnings about partially overridden virtual functions
+#pragma set woff 1682
+#endif
 
 class Streamline : public Module {
     VectorFieldIPort* infield;
@@ -1364,15 +1373,14 @@ void SLPointSource::get_n(int& ns, int& nt)
 
 void SLPointSource::update_position(const clString& base, const clString& varname)
 {
-  char buf[1000];
-  ostrstream out(buf, 1000);
+  ostringstream out;
   out << pw->GetPosition();
-  sl->set_tclvar(base, varname, buf);
+  sl->set_tclvar(base, varname, out.str().c_str());
 }
 
 void SLPointSource::reposition(const clString& pos)
 {
-  istrstream buf(pos());
+  istringstream buf(pos());
   Point p;
   buf >> p;
   if(buf){
@@ -1428,7 +1436,7 @@ Point SLLineSource::trace_start(double s, double)
 
 void SLLineSource::reposition(const clString& pos)
 {
-  istrstream buf(pos());
+  istringstream buf(pos());
   Point p1, p2;
   double ratio;
   buf >> p1 >> p2 >> ratio;
@@ -1442,13 +1450,12 @@ void SLLineSource::reposition(const clString& pos)
 
 void SLLineSource::update_position(const clString& base, const clString& varname)
 {
-  char buf[1000];
-  ostrstream out(buf, 1000);
+  ostringstream out;
   Point p1, p2;
   gw->GetEndpoints(p1, p2);
   double ratio=gw->GetRatio();
-  out << p1 << " " << p2 << " " << ratio << '\0';
-  sl->set_tclvar(base, varname, buf);
+  out << p1 << " " << p2 << " " << ratio;
+  sl->set_tclvar(base, varname, out.str().c_str());
 }
 
 
@@ -1507,7 +1514,7 @@ Point SLRingSource::trace_start(double s, double)
 
 void SLRingSource::reposition(const clString& pos)
 {
-  istrstream buf(pos());
+  istringstream buf(pos());
   Point cen;
   Vector normal;
   double rad;
@@ -1524,15 +1531,14 @@ void SLRingSource::reposition(const clString& pos)
 
 void SLRingSource::update_position(const clString& base, const clString& varname)
 {
-  char buf[1000];
-  ostrstream out(buf, 1000);
+  ostringstream out;
   Point cen;
   Vector normal;
   double rad;
   rw->GetPosition(cen, normal, rad);
   double ratio=rw->GetRatio();
-  out << cen << " " << normal << " " << rad << " " << ratio << '\0';
-  sl->set_tclvar(base, varname, buf);
+  out << cen << " " << normal << " " << rad << " " << ratio;
+  sl->set_tclvar(base, varname, out.str().c_str());
 }
 
 
@@ -1599,7 +1605,7 @@ Point SLSquareSource::trace_start(double s, double t)
 
 void SLSquareSource::reposition(const clString& pos)
 {
-  istrstream buf(pos());
+  istringstream buf(pos());
   Point center, R, D;
   double ratioR, ratioD;
   buf >> center >> R >> D >> ratioR >> ratioD;
@@ -1614,14 +1620,13 @@ void SLSquareSource::reposition(const clString& pos)
 
 void SLSquareSource::update_position(const clString& base, const clString& varname)
 {
-  char buf[1000];
-  ostrstream out(buf, 1000);
+  ostringstream out;
   Point center, R, D;
   fw->GetPosition(center, R, D);
   double ratioR=fw->GetRatioR();
   double ratioD=fw->GetRatioD();
-  out << center << " " << R << " " << D << " " << ratioR << " " << ratioD << '\0';
-  sl->set_tclvar(base, varname, buf);
+  out << center << " " << R << " " << D << " " << ratioR << " " << ratioD;
+  sl->set_tclvar(base, varname, out.str().c_str());
 }
 
 void SLSquareSource::get_n(int& ns, int& nt)
@@ -2040,6 +2045,9 @@ void SLSourceInfo::pick_source(const clString& sname,
 
 //
 // $Log$
+// Revision 1.8  1999/10/07 02:07:08  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.7  1999/09/04 06:01:40  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

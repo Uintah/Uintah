@@ -16,7 +16,9 @@
 #include <PSECore/Datatypes/ColumnMatrixPort.h>
 #include <SCICore/Math/Expon.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 namespace DaveW {
 namespace Modules {
@@ -219,6 +221,9 @@ void OptDip::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:06:37  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/22 18:43:26  dmw
 // added new GUI
 //

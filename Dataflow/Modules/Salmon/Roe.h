@@ -115,8 +115,6 @@ protected:
 
     void update_mode_string(const clString&);
     void update_mode_string(GeomObj*);
-    char* modebuf;
-    char* modecommand;
 
     int maxtag;
 
@@ -265,6 +263,9 @@ public:
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:06:57  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/09/08 22:04:33  sparker
 // Fixed picking
 // Added messages for pick mode

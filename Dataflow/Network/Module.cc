@@ -31,6 +31,8 @@
 
 using SCICore::Thread::Thread;
 
+#include <iostream>
+using std::cerr;
 #include <stdlib.h>
 
 namespace PSECore {
@@ -452,6 +454,9 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:07:19  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/08/30 18:47:52  kuzimmer
 // Modified so that dataflow scripts can be read and written properly
 //

@@ -15,7 +15,10 @@
 #include <PSECore/Constraints/LineConstraint.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Util/Debug.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::cout;
+using std::endl;
 
 namespace PSECore {
 namespace Constraints {
@@ -124,6 +127,9 @@ LineConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsi
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:07:16  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/08 02:26:38  sparker
 // Various #include cleanups
 //

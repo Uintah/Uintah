@@ -75,13 +75,15 @@ void ImageToGeom::execute()
     //cerr << "generation=" << image->generation << endl;
     int form=format.get();
     GeomObj* obj=0;
+#if 0
     double hs(heightscale.get());
+#endif
     switch(form){
     case 0:
 	{
+#if 0
 	    int xres=image->xres();
 	    int yres=image->yres();
-#if 0
 	    GeomGrid* grid=new GeomGrid(image->xres(), image->yres(),
 					Point(0,0,0),
 					Vector(xres-1,0,0),
@@ -118,6 +120,9 @@ void ImageToGeom::execute()
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:08:15  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/09/08 02:27:00  sparker
 // Various #include cleanups
 //

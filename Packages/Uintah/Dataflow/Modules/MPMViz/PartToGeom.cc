@@ -37,6 +37,9 @@
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <PSECore/Datatypes/ColorMapPort.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 namespace Uintah {
 namespace Modules {
@@ -47,6 +50,11 @@ using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
 using namespace SCICore::GeomSpace;
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+// Turn off warnings about partially overridden virtual functions
+#pragma set woff 1682
+#endif
 
 class PartToGeom : public Module {
     ParticleSetIPort* iPort;
@@ -327,6 +335,9 @@ Module* make_PartToGeom( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.8  1999/10/07 02:08:27  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.7  1999/09/21 21:22:05  kuzimmer
 // added particle density control
 //

@@ -31,10 +31,13 @@
 #include <SCICore/Math/Mat.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/TclInterface/Histogram.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <limits.h>
 #include <math.h>
-#include <strstream.h>
+#include <sstream>
+using std::ostringstream;
 
 namespace SCIRun {
 namespace Modules {
@@ -56,6 +59,11 @@ using namespace SCICore::TclInterface;
 
 #define ADD 1
 #define DELETE 2
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+// Turn off warnings about partially overridden virtual functions
+#pragma set woff 1682
+#endif
 
 class MeshView : public Module {
     MeshIPort* inport;
@@ -337,7 +345,6 @@ void MeshView::execute()
 void MeshView::doChecks(const MeshHandle& mesh, const ColorMapHandle& cmap)
 {
     int numTetra=mesh->elems.size();
-    char buf[1000];
     changed = 0; // This is used to indicate whether something has been
                  // changed.
 
@@ -411,10 +418,10 @@ void MeshView::doChecks(const MeshHandle& mesh, const ColorMapHandle& cmap)
 
     if ((bmin != oldMin) || (bmax != oldMax))
     {
-        ostrstream str(buf, 1000);
-	str << id << " set_bounds " << bmin.x() << " " << bmax.x() << " " << bmin.y() << " " << bmax.y() << " " << bmin.z() << " " << bmax.z() << '\0';
+        ostringstream str;
+	str << id << " set_bounds " << bmin.x() << " " << bmax.x() << " " << bmin.y() << " " << bmax.y() << " " << bmin.z() << " " << bmax.z();
 
-        TCL::execute(str.str());
+        TCL::execute(str.str().c_str());
         oldMin = bmin;
         oldMax = bmax;
         clipX.set(bmin.x()); clipNX.set(bmax.x());
@@ -444,9 +451,9 @@ void MeshView::doChecks(const MeshHandle& mesh, const ColorMapHandle& cmap)
     {
 	makeLevels(mesh);
 	// Reset the slider with the new number of levels
-        ostrstream str3(buf, 1000);
-        str3 << id << " set_minmax_nl " << " " << 0 << " " << deep-1 << '\0';
-        TCL::execute(str3.str());
+        ostringstream str3;
+        str3 << id << " set_minmax_nl " << " " << 0 << " " << deep-1;
+        TCL::execute(str3.str().c_str());
 
 	updateInfo(mesh);
     }
@@ -1398,7 +1405,7 @@ int MeshView::findElement(Point p, const MeshHandle& mesh,
 int MeshView::doEdit(const MeshHandle& mesh)
 {
     Element* elem = mesh->elems[toEdit];
-cerr << "Deleting: " << toEdit << endl; 
+    cerr << "Deleting: " << toEdit << endl; 
 
     // Add a point
     if (editMode.get() == 1)
@@ -1581,7 +1588,6 @@ int MeshView::findNode(const MeshHandle& mesh)
  */
 void MeshView::updateInfo(const MeshHandle& mesh)
 {	
-    char buf[1000];
     double m1, m2;
     if (!haveVol)
 	calcMeasures(mesh, &m1, &m2);
@@ -1604,11 +1610,11 @@ void MeshView::updateInfo(const MeshHandle& mesh)
     else
 	t2 = aspMeas[Seed];
     
-    ostrstream str4(buf, 1000);
+    ostringstream str4;
     str4 << id << " set_info " << " " << mesh->nodes.size() << " " <<
 	mesh->elems.size() << " " << Seed << " " << t1 << " " << t2 << 
-	    " " << toEdit << " " << t3 << " " << t4 << '\0';
-    TCL::execute(str4.str());
+	    " " << toEdit << " " << t3 << " " << t4;
+    TCL::execute(str4.str().c_str());
     oldSeed = Seed;
     changed = 1;
 }
@@ -1638,6 +1644,9 @@ void MeshView::geom_moved(GeomPick*, int, double, const Vector&, void*)
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:08:20  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/09/08 02:27:06  sparker
 // Various #include cleanups
 //

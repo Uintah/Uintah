@@ -15,7 +15,9 @@
 #include <PSECore/Datatypes/MeshPort.h>
 #include <SCICore/Datatypes/DenseMatrix.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <stdio.h>
 #include <math.h>
 
@@ -113,6 +115,9 @@ void RecipBasis::execute() {
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:06:35  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/22 18:43:25  dmw
 // added new GUI
 //

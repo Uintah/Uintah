@@ -25,8 +25,13 @@ LOG
 
 
 
-#include <fstream.h>
-#include <strstream.h>
+#include <fstream>
+#include <iostream>
+using std::cerr;
+using std::endl;
+using std::ostream;
+#include <sstream>
+using std::istringstream;
 #include "MPWrite.h"
 
 namespace Uintah {
@@ -158,11 +163,11 @@ MPWrite::BeginGrid( clString name,
       
     }
     
-    istrstream sv( scalarVars() );
-    istrstream vv( vectorVars() );
-    char inbuf[100];
-    while( sv >> inbuf ) sVars.add( clString(inbuf) );
-    while( vv >> inbuf ) vVars.add( clString(inbuf) );
+    istringstream sv( scalarVars() );
+    istringstream vv( vectorVars() );
+    clString inbuf;
+    while( sv >> inbuf ) sVars.add( inbuf );
+    while( vv >> inbuf ) vVars.add( inbuf );
 
 
 //    cerr<<"In BeginGrid with type = " <<type<<endl;
@@ -199,11 +204,11 @@ MPWrite::BeginGrid( clString name,
     os << minX << " " << minY << " " << minZ << " ";
     os << dx << " " << dy << " " << dz << endl;
 
-    istrstream sv( scalarVars() );
-    istrstream vv( vectorVars() );
-    char inbuf[100];
-    while( sv >> inbuf ) sVars.add( clString(inbuf) );
-    while( vv >> inbuf ) vVars.add( clString(inbuf) );
+    istringstream sv( scalarVars() );
+    istringstream vv( vectorVars() );
+    clString inbuf;
+    while( sv >> inbuf ) sVars.add( inbuf );
+    while( vv >> inbuf ) vVars.add( inbuf );
 
 //    cerr<<"In BeginGrid with type = " <<type<<endl;
     if( type == "NC") currentGrid = NC;
@@ -427,11 +432,11 @@ MPWrite::BeginParticles( clString name,
     os <<scalarVars<<endl;
     os <<vectorVars<<endl;
 
-    istrstream sv( scalarVars() );
-    istrstream vv( vectorVars() );
-    char inbuf[100];
-    while( sv >> inbuf ) psVars.add( clString(inbuf) );
-    while( vv >> inbuf ) pvVars.add( clString(inbuf) );
+    istringstream sv( scalarVars() );
+    istringstream vv( vectorVars() );
+    clString inbuf;
+    while( sv >> inbuf ) psVars.add( inbuf );
+    while( vv >> inbuf ) pvVars.add( inbuf );
 
     state = Particles;
     pCount = 0;

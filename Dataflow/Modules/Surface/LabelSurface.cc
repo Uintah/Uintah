@@ -20,7 +20,8 @@
 #include <PSECore/Datatypes/SurfacePort.h>
 #include <SCICore/Datatypes/SurfTree.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <SCICore/Geometry/BBox.h>
 
 namespace PSECommon {
@@ -106,6 +107,9 @@ void LabelSurface::execute()
 
 //
 // $Log$
+// Revision 1.8  1999/10/07 02:07:00  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.7  1999/09/08 02:26:35  sparker
 // Various #include cleanups
 //

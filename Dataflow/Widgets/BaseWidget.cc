@@ -26,6 +26,11 @@
 #include <SCICore/Thread/CrowdMonitor.h>
 #include <SCICore/Thread/Mutex.h>
 #include <SCICore/Util/NotFinished.h>
+#include <iostream>
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::ostream;
 
 namespace PSECore {
 namespace Widgets {
@@ -722,6 +727,9 @@ BaseWidget& BaseWidget::operator=( const BaseWidget& )
 
 //
 // $Log$
+// Revision 1.8  1999/10/07 02:07:24  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.7  1999/09/08 02:26:43  sparker
 // Various #include cleanups
 //

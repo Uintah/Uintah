@@ -17,6 +17,8 @@
 #include <SCICore/Datatypes/SymSparseRowMatrix.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <iostream>
+using std::cerr;
 
 namespace PSECommon {
 namespace Modules {
@@ -111,6 +113,9 @@ void MatVec::execute() {
 
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:06:52  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/09/07 04:02:23  dmw
 // more modules that were left behind...
 //

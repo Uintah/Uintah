@@ -26,7 +26,8 @@
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Math/MiscMath.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <math.h>
 #include <stdio.h>
 
@@ -80,7 +81,7 @@ double RadObj::computeVis(RadObj* so, DRaytracer* rt, int nsamp) {
 	Point pr(rndPt());
 	Vector v(pr-ps);
 	RTObject* rcv=mesh->obj.get_rep();
-	RTObject* src=so->mesh->obj.get_rep();
+	//RTObject* src=so->mesh->obj.get_rep();
 	
 	// send a ray from src and point ps in direction v... 
 	// ...if it hits rcv then pr is visible
@@ -549,6 +550,9 @@ PersistentTypeID RadMesh::type_id("RadMesh", "Datatype", make_RadMesh);
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:06:18  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/08/29 00:46:35  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

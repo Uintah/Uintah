@@ -38,7 +38,8 @@
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/Tester/RigorousTest.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -646,6 +647,9 @@ void BldScene::tcl_command(TCLArgs& args, void* userdata) {
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:06:25  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/08 02:26:19  sparker
 // Various #include cleanups
 //

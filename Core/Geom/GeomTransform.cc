@@ -18,7 +18,9 @@
 #include <SCICore/Geom/GeomSave.h>
 #include <SCICore/Malloc/Allocator.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::ostream;
 
 namespace SCICore {
 namespace GeomSpace {
@@ -136,6 +138,9 @@ bool GeomTransform::saveobj(ostream&, const clString&,
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:07:46  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/08/17 23:50:27  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

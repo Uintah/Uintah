@@ -30,7 +30,8 @@
 #include <SCICore/Thread/Mutex.h>
 #include <SCICore/Thread/Parallel.h>
 #include <SCICore/Thread/Thread.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 
 namespace DaveW {
 namespace Modules {
@@ -163,6 +164,9 @@ void MagneticScalarField::execute() {
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:06:38  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/09/08 02:26:29  sparker
 // Various #include cleanups
 //

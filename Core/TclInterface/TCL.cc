@@ -19,7 +19,10 @@
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
+using std::ostream;
 #include <tcl.h>
 #include <tk.h>
 #include <stdlib.h>
@@ -457,6 +460,9 @@ void TCL::set_tclvar(const clString& base, const clString& name,
 
 //
 // $Log$
+// Revision 1.11  1999/10/07 02:08:03  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.10  1999/09/23 06:33:26  sparker
 // Moved else inside win32 ifdef
 //

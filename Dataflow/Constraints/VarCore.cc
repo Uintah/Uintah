@@ -13,7 +13,8 @@
  */
 
 #include <PSECore/Constraints/VarCore.h>
-#include <iostream.h>
+#include <iostream>
+using std::ostream;
 #include <stdio.h>
 
 namespace PSECore {
@@ -79,6 +80,9 @@ ostream& operator<<( ostream& os, VarCore& c ) {
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:07:17  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/08 02:26:40  sparker
 // Various #include cleanups
 //

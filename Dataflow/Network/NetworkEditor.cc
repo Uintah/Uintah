@@ -45,8 +45,12 @@
 #else
 #include <io.h>
 #endif
-  
-#include <fstream.h>
+
+#include <fstream>
+using std::ofstream;
+#include <iostream>
+using std::cerr;
+using std::endl;
   
 using SCICore::Thread::Thread;
 
@@ -672,6 +676,9 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.9  1999/10/07 02:07:19  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.8  1999/09/08 02:26:41  sparker
 // Various #include cleanups
 //
