@@ -10,13 +10,13 @@ itcl_class TclStream {
 	set maxBuffSize 10000
 	set freeBuffSize $maxBuffSize
 	set txtWidget ""
-	set varName ""
-	set isNewOutput 0
+	set varNames [list]
+	set varTags [list]
     }
     
     destructor {
 	unregisterOutput
-	unset varName
+	unset varNames
 	destroy $this
     }
 
@@ -24,25 +24,27 @@ itcl_class TclStream {
     public txtWidget               
 
     # variable serving as interface with C-part of the stream
-    public varName 
- 
+    public varNames
+    public varTags
+
     # holder for buffer contents               
-    public strBuff                 
+    public strBuff                
 
-    public maxBuffSize  
+    public maxBuffSize
 
-    # set to 1 if output widget is new one, and need the buffer to purge in           
-    public isNewOutput                  
-
-    method registerVar {vname} {
-	set varName $vname
-	trace variable $varName w "$this flush"
-	flush "" "" ""
+    method registerVar {vname tag} {
+	set index [lsearch -exact $varNames $vname]
+	if {$index==-1} {
+	    lappend varNames $vname
+	    lappend varTags $tag
+	    lsearch $varNames $vname
+	    trace variable $vname w "$this flush"
+	    flush $vname "" ""
+	}
     }
     
     method registerOutput {tname} {
 	set txtWidget $tname
-	set isNewOutput 1
 	flush "" "" ""
     }
 
@@ -52,15 +54,25 @@ itcl_class TclStream {
 	}
     }
     
-    method flush {v ind op} {
-	if {$varName!=""} {
-	    
-	    # no trace during execution
-	    trace vdelete $varName w "$this flush"
-	    set tmpBuff [set $varName]
-
-	    if {$isNewOutput==0} {
+    method flush {vname ind op} {
+	if {$vname==""} {
+	    # flushing the whole buffer
+	    if {[winfo exists $txtWidget]} {
+		$txtWidget delete 1.0 end
+		$txtWidget insert end $strBuff
+	    }
+	} else {
+	    set scName ::
+	    append scName $vname
+	    set index [lsearch -exact $varNames $scName]
+	   
+	    if {$index!=-1} {
+		# no trace during execution	    
+		trace vdelete $scName w "$this flush"
+		set vname $scName
+		set tmpBuff [set $vname]
 		append strBuff $tmpBuff
+		
 		set currLength [string length $strBuff]
 		
 		# handling buffers of excessive size
@@ -72,25 +84,20 @@ itcl_class TclStream {
 		} else {
 		    set redraw 0
 		}
-	    }
-
-	    if {[winfo exists $txtWidget]} {
-		if {$isNewOutput} {
-		    set redraw 1
-		    set isNewOutput 0
-		}
 		
-		if {$redraw} {
-		    $txtWidget delete 1.0 end
-		    $txtWidget insert end $strBuff
-		} else {
-		    $txtWidget insert end $tmpBuff
+		if {[winfo exists $txtWidget]} {
+		    if {$redraw} {
+			$txtWidget delete 1.0 end
+			$txtWidget insert end $strBuff [lindex varTags $index]
+		    } else {
+			$txtWidget insert end $tmpBuff [lindex varTags $index]
+		    }
+		    set redraw 0
 		}
+		# restoring trace
+		trace variable $scName w "$this flush"
 	    }
-	    
-	    # restoring trace
-	    trace variable $varName w "$this flush"
-	} 
-    }
 
+	}   
+    }    
 }
