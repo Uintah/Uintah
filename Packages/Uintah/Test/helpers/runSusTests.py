@@ -74,6 +74,8 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   compare_root = "%s/%s" % (gold_standard, ALGO)
 
   environ['PATH'] = "%s%s%s" % (helperspath, pathsep, environ['PATH'])
+  if environ['HOST'] == "rapture.sci.utah.edu":  
+    environ['PATH'] = "%s%s%s" % ("/usr/gnu/bin/", pathsep, environ['PATH'])
   environ['SCI_SIGNALMODE'] = 'exit'
   environ['SCI_EXCEPTIONMODE'] = 'abort'
 
@@ -217,7 +219,7 @@ def runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelis
     if do_restart == "yes":
       chdir("..")
       system("rm *.uda")
-      system("/usr/gnu/bin/cp -d --symbolic-link restart/*.uda .")
+      system("cp -d --symbolic-link restart/*.uda .")
       chdir("restart")
     print "\tComparing udas on %s" % (date())
     replace_msg = "\tTo replace the gold standard uda and memory usage with these results,\n\trun: %s/replace_gold_standard" % (getcwd())
