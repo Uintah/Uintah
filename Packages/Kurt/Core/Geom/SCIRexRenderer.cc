@@ -114,6 +114,7 @@ SCIRexRenderer::SCIRexRenderer(int id, vector<char *>& displays,
   render_data_->mvmat_ = new double[16];
   render_data_->pmat_ = new double[16];
   render_data_->comp_count_ = 0;
+  render_data_->use_depth_ = false;
 
   // Here is where we need to split up the volume between the windows
   make_render_windows(tex_, min_, max, is_fixed_, brick_size_, displays);
@@ -199,6 +200,23 @@ void SCIRexRenderer::get_bounds(BBox& bb)
   bb.extend(b);
 }
 
+void 
+SCIRexRenderer::DumpFrames(bool dump) 
+{
+  if( dump != render_data_->dump_){
+    render_data_->dump_ = dump;
+    render_data_->curFrame_ = 0;
+  }
+}
+
+void
+SCIRexRenderer::UseDepth(bool use_depth)
+{
+  if( use_depth != render_data_->use_depth_){
+    render_data_->use_depth_ = use_depth;
+  }
+}
+
 #ifdef SCI_OPENGL
 void 
 SCIRexRenderer::draw(DrawInfoOpenGL* di, Material* mat, double time)
@@ -220,7 +238,6 @@ SCIRexRenderer::draw(DrawInfoOpenGL* di, Material* mat, double time)
     postDraw();
     cleanup();
   }
-  //  render_data_->di_ = 0;
   mutex_.unlock();
 
 }
@@ -443,6 +460,7 @@ SCIRexRenderer::setup()
  
   // read the depth buffer.
 //  cerr<<"Reading the depth buffer.\n";
+  if( rd->use_depth_ ){
   glPixelStorei(GL_PACK_ALIGNMENT,1);
   glReadBuffer(GL_BACK);
   glReadPixels(0,0,
@@ -450,7 +468,7 @@ SCIRexRenderer::setup()
 	       rd->viewport_y_,
 	       GL_DEPTH_COMPONENT,
 	       GL_UNSIGNED_BYTE, rd->depth_buffer_);
-
+  }
   // set the view matrix
 //   cerr<<"Setting the view matrix.\n";
   glGetDoublev(GL_MODELVIEW_MATRIX, rd->mvmat_);
@@ -496,6 +514,8 @@ SCIRexRenderer::postDraw()
     cerr<<"Shouldn't be here! in SCIRexRenderer::postDraw\n";
     ASSERT(0);
   }
+  (render_data_->curFrame_)++;
+  cerr<<"current Frame in SCIRexRenderer is "<<render_data_->curFrame_<<endl;
 }
 
 void
@@ -626,7 +646,9 @@ SCIRexRenderer::Build()
     while ( long_dim_size < bsize/2.0 ){
       bsize = largestPowerOf2( bsize -1 );
     }
-    for(i = 0, j = 0; i < ntextures; i++, j+= (split_size-2)){
+    int shift;
+    if(tex_->data_at() == Field::CELL) shift = 3; else shift = 2;
+    for(i = 0, j = 0; i < ntextures; i++, j+= (split_size-shift)){
       Transform trans;
       if( i == (ntextures - 1) ){
 	if(long_dim == 1){
@@ -765,8 +787,9 @@ SCIRexRenderer::make_render_windows(FieldHandle tex_,
     cerr<<"Using brick size "<< bsize <<endl;
     // make an array for ordering the composition
     render_data_->comp_order_ = new int[ nwindows ];
-
-    for(i = 0, j = 0; i < nwindows; i++, j+= (split_size-2)){
+    int shift;
+    if(tex_->data_at() == Field::CELL) shift = 3; else shift = 2;
+    for(i = 0, j = 0; i < nwindows; i++, j+= (split_size-shift)){
       
       //build the rendering windows
       render_data_->comp_order_[i] = i; // just use default order for setup

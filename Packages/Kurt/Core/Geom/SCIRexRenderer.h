@@ -131,7 +131,8 @@ public:
   }
   
   void Reload() { NOT_FINISHED("SCIRexRenderer::Reload");}
-  
+  void DumpFrames(bool dump);
+  void UseDepth(bool use_depth);
   SCIRexRenderer(const SCIRexRenderer&);
   ~SCIRexRenderer();
   
@@ -185,6 +186,7 @@ private:
   bool windows_init_; 
   bool compositers_init_;
   bool cmapHasChanged_;
+
   unsigned char transfer_functions_[8][1024];
   
   vector<SCIRexWindow *> windows;

@@ -43,10 +43,14 @@ itcl_class Kurt_Visualization_SCIRex {
 	global $this-min_
 	global $this-max_
 	global $this-is_fixed_
+	global $this-dump_frames
+	global $this-use_depth
 	set $this-max_brick_dim_ 0
 	set $this-min_ 0
 	set $this-max_ 1
 	set $this-is_fixed_ 0
+	set $this-dump_frames 0
+	set $this-use_depth 0
 
 	global $this-displays
 	set $this-displays ""
@@ -171,11 +175,22 @@ itcl_class Kurt_Visualization_SCIRex {
 
 	pack $w.stransp $w.nslice  -side top -fill x
 	
+	frame $w.cframe -borderwidth 2 -relief flat
+	pack $w.cframe -expand yes -fill x -side top
+	checkbutton $w.cframe.dump -text "Dump Frames"  \
+	    -variable $this-dump_frames  -command $n
+	pack $w.cframe.dump -anchor w -side top -fill x
+
+	checkbutton $w.cframe.depth -text "Use Depth Buffer (slow)"  \
+	    -variable $this-use_depth  -command $n
+	pack $w.cframe.depth -anchor w -side top -fill x
+
+
 	global $this-autofire
-	checkbutton $w.autofire -text "Auto Execute" -indicatoron true \
+	checkbutton $w.cframe.autofire -text "Auto Execute" -indicatoron true \
 	    -variable $this-autofire
-	pack $w.autofire -side top -fill x
-	button $w.exec -text "Execute" -command $n
+	pack $w.cframe.autofire -anchor w -side top -fill x
+	button $w.exec -text "Execute" -command "$this-c needexecute"
 	pack $w.exec -side top -fill x
 	bind $w.nslice <ButtonRelease> $n
 	bind $w.stransp <ButtonRelease> $n
@@ -214,7 +229,7 @@ itcl_class Kurt_Visualization_SCIRex {
         $w.f3.e1 configure -state disabled -foreground $color
         $w.f3.l2 configure -foreground $color
         $w.f3.e2 configure -state disabled -foreground $color
-	$this-c needexecute	
+	$this needexecute	
 
     }
 
@@ -260,7 +275,7 @@ itcl_class Kurt_Visualization_SCIRex {
 	    set v [lindex $vals $i]
 	    radiobutton $f.brickdim$v -text $v -relief flat \
 		-variable $this-max_brick_dim_ -value $v \
-		-command "$this-c needexecute"
+		-command "$this needexecute"
 	    pack $f.brickdim$v -side left -padx 2 -fill x
 	}
     }

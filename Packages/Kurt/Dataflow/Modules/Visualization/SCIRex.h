@@ -79,6 +79,8 @@ private:
   GuiInt render_style_;
   GuiDouble alpha_scale_;
   GuiInt interp_mode_;
+  GuiInt dump_frames_;
+  GuiInt use_depth_;
   GuiString displays_;
   GuiInt compositers_;
 };
