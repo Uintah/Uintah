@@ -271,26 +271,26 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
                                                                   mpm_matls_sub,
                                                                   press_matl,
                                                                   all_matls);
-  if (d_ice->d_RateForm) {                                                                 
+  if (d_ice->d_RateForm) {
     d_ice->schedulecomputeDivThetaVel_CC(         sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   all_matls);
   }
   
-  d_ice->scheduleComputeTempFC(                   sched, patches, ice_matls_sub,  
-                                                                  mpm_matls_sub,  
+  d_ice->scheduleComputeTempFC(                   sched, patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
                                                                   all_matls);
   
   scheduleHEChemistry(                            sched, patches, react_sub,
                                                                   prod_sub,
                                                                   press_matl,
                                                                   all_matls);
-  if(d_ice->d_impICE) {        //  I M P L I C I T                                           
-    d_ice->scheduleImplicitPressureSolve(         sched, level,   patches,       
-                                                                  one_matl,      
-                                                                  press_matl,    
-                                                                  ice_matls_sub,  
-                                                                  mpm_matls_sub, 
+  if(d_ice->d_impICE) {        //  I M P L I C I T 
+    d_ice->scheduleImplicitPressureSolve(         sched, level,   patches,
+                                                                  one_matl, 
+                                                                  press_matl,
+                                                                  ice_matls_sub,
+                                                                  mpm_matls_sub,
                                                                   all_matls);
                                                            
     d_ice->scheduleComputeDel_P(                  sched,  level,  patches,  
@@ -307,7 +307,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   d_ice->scheduleAddExchangeContributionToFCVel(sched, patches,   all_matls,
                                                                   false);
                                                                   
-  if(!(d_ice->d_impICE)){       //  E X P L I C I T                                                         
+  if(!(d_ice->d_impICE)){       //  E X P L I C I T 
     d_ice->scheduleComputeDelPressAndUpdatePressCC(sched,patches, press_matl,
                                                                   ice_matls_sub,
                                                                   mpm_matls_sub,
@@ -500,11 +500,11 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
    t->requires(Task::NewDW, MIlb->temp_CCLabel,           Ghost::None);
    t->requires(Task::NewDW, MIlb->vel_CCLabel,            Ghost::None); 
 
-   t->modifies(Ilb -> rho_CCLabel); 
-   t->computes(Ilb -> mass_L_CCLabel);
-   t->computes(Ilb -> mom_L_CCLabel);
-   t->computes(Ilb -> int_eng_L_CCLabel);
-   t->computes(MIlb-> NC_CCweightLabel, one_matl);
+   t->modifies( Ilb->rho_CCLabel); 
+   t->computes( Ilb->mass_L_CCLabel);
+   t->computes( Ilb->mom_L_CCLabel);
+   t->computes( Ilb->int_eng_L_CCLabel);
+   t->computes(MIlb->NC_CCweightLabel, one_matl);
 
    sched->addTask(t, patches, mpm_matls);
 }
@@ -573,8 +573,8 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
  
   if (d_ice->d_EqForm) {      // E Q   F O R M
     t->requires(Task::OldDW,Ilb->press_CCLabel,      press_matl, Ghost::None);
-    t->requires(Task::OldDW,Ilb->vel_CCLabel,        ice_matls, Ghost::None);
-    t->requires(Task::NewDW,MIlb->vel_CCLabel,       mpm_matls, Ghost::None);
+    t->requires(Task::OldDW,Ilb->vel_CCLabel,        ice_matls,  Ghost::None);
+    t->requires(Task::NewDW,MIlb->vel_CCLabel,       mpm_matls,  Ghost::None);
   }
 
                               //  A L L _ M A T L S
@@ -615,12 +615,12 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   // Products
   t->requires(Task::OldDW,  Ilb->temp_CCLabel,        prod_matls, gn);
   t->requires(Task::NewDW,  Ilb->vol_frac_CCLabel,    prod_matls, gn);
-  t->requires(Task::NewDW,  Ilb->TempX_FCLabel,       prod_matls, gac,2); 
-  t->requires(Task::NewDW,  Ilb->TempY_FCLabel,       prod_matls, gac,2); 
-  t->requires(Task::NewDW,  Ilb->TempZ_FCLabel,       prod_matls, gac,2); 
+  t->requires(Task::NewDW,  Ilb->TempX_FCLabel,       prod_matls, gac,2);
+  t->requires(Task::NewDW,  Ilb->TempY_FCLabel,       prod_matls, gac,2);
+  t->requires(Task::NewDW,  Ilb->TempZ_FCLabel,       prod_matls, gac,2);
   if (prod_matls->size() > 0){
     t->requires(Task::NewDW,Ilb->press_equil_CCLabel, press_matl, gn);
-    t->requires(Task::OldDW,MIlb->NC_CCweightLabel,   one_matl,   gac, 1);                                                
+    t->requires(Task::OldDW,MIlb->NC_CCweightLabel,   one_matl,   gac, 1);
   }
   
   //__________________________________
@@ -712,12 +712,12 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       int indx= mpm_matl->getDWIndex();
       new_dw->allocateTemporary(rho_micro, patch);
-      new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel,    indx,patch);      
+      new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel,    indx,patch);
       new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,       indx,patch);
-      new_dw->allocateAndPut(speedSound,Ilb->speedSound_CCLabel,indx,patch);      
-      new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,      indx,patch);      
+      new_dw->allocateAndPut(speedSound,Ilb->speedSound_CCLabel,indx,patch);
+      new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,      indx,patch);
       new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,       indx,patch);
-             
+
       mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
                                       Temp_CC,     vel_CC,  
                                       numALL_matls,patch);  
@@ -1072,10 +1072,10 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       new_dw->get(Temp_CC_sur, MIlb->temp_CCLabel,        indx,patch,gn,0);    
       new_dw->get(vel_CC_sur,  MIlb->vel_CCLabel,         indx,patch,gn,0);
                                                            
-      new_dw->getModifiable(rho_CC,     Ilb->rho_CCLabel,      indx,patch);   
-      new_dw->allocateAndPut(mass_L,    Ilb->mass_L_CCLabel,   indx,patch);      
-      new_dw->allocateAndPut(cmomentum, Ilb->mom_L_CCLabel,    indx,patch);   
-      new_dw->allocateAndPut(int_eng_L, Ilb->int_eng_L_CCLabel,indx,patch);   
+      new_dw->getModifiable(rho_CC,     Ilb->rho_CCLabel,      indx,patch);
+      new_dw->allocateAndPut(mass_L,    Ilb->mass_L_CCLabel,   indx,patch); 
+      new_dw->allocateAndPut(cmomentum, Ilb->mom_L_CCLabel,    indx,patch);
+      new_dw->allocateAndPut(int_eng_L, Ilb->int_eng_L_CCLabel,indx,patch);
 
       cmomentum.initialize(Vector(0.0, 0.0, 0.0));
       int_eng_L.initialize(0.);
@@ -1092,7 +1092,8 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
          d_ice->printData(indx, patch,1,desc.str(), "cmass",    cmass);
          printData(     indx, patch,  1,desc.str(), "gmass",    gmass);
          printData(     indx, patch,  1,desc.str(), "gtemStar", gtempstar);
-         printNCVector( indx, patch,  1,desc.str(), "gvelocityStar", 0, gvelocity);
+         printNCVector( indx, patch,  1,desc.str(), "gvelocityStar", 0,
+                                                                gvelocity);
       }
 
       for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
@@ -1184,9 +1185,9 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
         ostringstream desc;
         desc<<"BOT_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
             <<  patch->getID();
-        d_ice->printData(   indx, patch, 1,desc.str(), "rho_CC",    rho_CC);
-        d_ice->printData(   indx, patch, 1,desc.str(), "int_eng_L", int_eng_L);
-        d_ice->printVector( indx, patch, 1,desc.str(), "mom_L_CC", 0,  cmomentum);
+        d_ice->printData(  indx,patch, 1,desc.str(), "rho_CC",        rho_CC);
+        d_ice->printData(  indx,patch, 1,desc.str(), "int_eng_L",    int_eng_L);
+        d_ice->printVector(indx,patch, 1,desc.str(), "mom_L_CC", 0,  cmomentum);
       }
     }  //numMatls
     //__________________________________
@@ -1302,9 +1303,9 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
         ostringstream desc;
         desc<< "BOT_MPMICE::interpolateCCToNC_mat_"<< indx<<"_patch_"
             <<patch->getID();                   
-        printData(     indx, patch, 1,desc.str(), "dTdt_NC",     dTdt_NC);
-        printNCVector( indx, patch, 1,desc.str(),"gvelocity",    0,gvelocity);
-        printNCVector( indx, patch, 1,desc.str(),"gacceleration",0,gacceleration);
+        printData(    indx,patch, 1,desc.str(), "dTdt_NC",     dTdt_NC);
+        printNCVector(indx,patch, 1,desc.str(),"gvelocity",    0,gvelocity);
+        printNCVector(indx,patch, 1,desc.str(),"gacceleration",0,gacceleration);
       }
     }  
   }  //patches
@@ -1369,7 +1370,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<CCVariable<double> > vol_frac(numALLMatls);
     StaticArray<CCVariable<double> > rho_micro(numALLMatls);
     StaticArray<CCVariable<double> > rho_CC_new(numALLMatls);
-    StaticArray<CCVariable<double> > speedSound_new(numALLMatls);
     StaticArray<CCVariable<double> > speedSound(numALLMatls);
     StaticArray<CCVariable<double> > sp_vol_new(numALLMatls);
     StaticArray<CCVariable<double> > f_theta(numALLMatls);
@@ -1410,17 +1410,12 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         cv[m] = mpm_matl->getSpecificHeat();
       }
       new_dw->allocateTemporary(rho_micro[m],  patch);
-      new_dw->allocateAndPut(rho_CC_new[m],    Ilb->rho_CCLabel,       
-                                                                indx, patch);
-      new_dw->allocateAndPut(vol_frac[m],      Ilb->vol_frac_CCLabel,  
-                                                                indx, patch);
-      new_dw->allocateAndPut(f_theta[m],       Ilb->f_theta_CCLabel,
-                                                                indx, patch);
-      new_dw->allocateAndPut(speedSound_new[m],Ilb->speedSound_CCLabel,
-                                                                indx,patch);
-      new_dw->allocateAndPut(sp_vol_new[m],    Ilb->sp_vol_CCLabel,    
-                                                                indx, patch);
-      speedSound_new[m].initialize(0.0);
+      new_dw->allocateAndPut(rho_CC_new[m], Ilb->rho_CCLabel,indx, patch);
+      new_dw->allocateAndPut(vol_frac[m],   Ilb->vol_frac_CCLabel,  indx,patch);
+      new_dw->allocateAndPut(f_theta[m],    Ilb->f_theta_CCLabel,   indx,patch);
+      new_dw->allocateAndPut(speedSound[m], Ilb->speedSound_CCLabel,indx,patch);
+      new_dw->allocateAndPut(sp_vol_new[m], Ilb->sp_vol_CCLabel,    indx,patch);
+      speedSound[m].initialize(0.0);
     }
     
     press_new.copyData(press);
@@ -1486,8 +1481,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   #endif   
         }
 
-    //  speedSound_new[m][c] = sqrt(tmp)/gamma[m];  // Isothermal speed of sound
-        speedSound_new[m][c] = sqrt(tmp);           // Isentropic speed of sound       
+    //  speedSound[m][c] = sqrt(tmp)/gamma[m];  // Isothermal speed of sound
+        speedSound[m][c] = sqrt(tmp);           // Isentropic speed of sound       
         total_mat_vol += mat_volume[m];
       }  // numAllMatls loop
 
@@ -1507,11 +1502,10 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           int indx = matl->getDWIndex();
           ostringstream desc;
           desc<<"TOP_equilibration_Mat_"<< indx<<"_patch_"<<patch->getID();
-          d_ice->printData( indx, patch,1,desc.str(),"rho_CC_new",rho_CC_new[m]);    
-          d_ice->printData( indx, patch,1,desc.str(),"rho_micro", rho_micro[m]);     
-        //  d_ice->printData( indx, patch,0,desc.str(),"speedSound",speedSound_new[m]); 
-          d_ice->printData( indx, patch,1,desc.str(),"Temp_CC",   Temp[m]);     
-          d_ice->printData( indx, patch,1,desc.str(),"vol_frac_CC",vol_frac[m]);
+          d_ice->printData( indx,patch,1,desc.str(),"rho_CC_new",rho_CC_new[m]);
+          d_ice->printData( indx,patch,1,desc.str(),"rho_micro", rho_micro[m]);
+          d_ice->printData( indx,patch,1,desc.str(),"Temp_CC",   Temp[m]);     
+          d_ice->printData( indx,patch,1,desc.str(),"vol_frac_CC",vol_frac[m]);
         }
       }
   //______________________________________________________________________
@@ -1649,8 +1643,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   #endif
          }
 
-     //  speedSound_new[m][c] = sqrt(tmp)/gamma[m];// Isothermal speed of sound
-         speedSound_new[m][c] = sqrt(tmp);         // Isentropic speed of sound
+     //  speedSound[m][c] = sqrt(tmp)/gamma[m];// Isothermal speed of sound
+         speedSound[m][c] = sqrt(tmp);         // Isentropic speed of sound
        }
        //__________________________________
        // - Test for convergence 
@@ -1666,7 +1660,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       delPress_tmp[c] = delPress;
 
 /*`==========TESTING==========*/
-#if 0
+#if 1
      if(count >= d_ice->d_max_iter_equilibration) {
        // Start over for this cell using a binary search
        count = 0;
@@ -1724,7 +1718,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                     computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
                                       dp_drho[m],tmp,mpm_matl);
             }
-            speedSound_new[m][c] = sqrt(tmp);     // Isentropic speed of sound
+            speedSound[m][c] = sqrt(tmp);     // Isentropic speed of sound
          }
        }
        if(count == 1){
@@ -1872,7 +1866,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       IntVector c = *iter;
       double sumVolFrac_kappa = 0.0;
       for (int m = 0; m < numALLMatls; m++) {
-        kappa[m] = sp_vol_new[m][c]/(speedSound_new[m][c]*speedSound_new[m][c]);
+        kappa[m] = sp_vol_new[m][c]/(speedSound[m][c]*speedSound[m][c]);
         sumVolFrac_kappa += vol_frac[m][c]*kappa[m];
       }
       for (int m = 0; m < numALLMatls; m++) {
@@ -1884,16 +1878,16 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     if(d_ice -> switchDebug_EQ_RF_press)  { 
       ostringstream desc1;
       desc1<< "BOT_equilibration_patch_"<<patch->getID();
-      d_ice->printData( 0, patch, 1, desc1.str(), "Press_CC_equil", press_new);
-      d_ice->printData( 0, patch, 1, desc1.str(), "delPress",       delPress_tmp);               
+      d_ice->printData( 0, patch, 1, desc1.str(),"Press_CC_equil",press_new);
+      d_ice->printData( 0, patch, 1, desc1.str(),"delPress",      delPress_tmp);
       for (int m = 0; m < numALLMatls; m++)  {
          Material* matl = d_sharedState->getMaterial( m );
          int indx = matl->getDWIndex();
          ostringstream desc; 
          desc<< "BOT_equilibration_Mat_"<<indx<<"_patch_"<< patch->getID();
-         d_ice->printData( indx, patch,1,desc.str(), "rho_CC",      rho_CC_new[m]);
-         d_ice->printData( indx, patch,1,desc.str(), "rho_micro_CC",rho_micro[m]);
-         d_ice->printData( indx, patch,1,desc.str(), "vol_frac_CC", vol_frac[m]);
+         d_ice->printData(indx,patch,1,desc.str(),"rho_CC",      rho_CC_new[m]);
+         d_ice->printData(indx,patch,1,desc.str(),"rho_micro_CC",rho_micro[m]);
+         d_ice->printData(indx,patch,1,desc.str(),"vol_frac_CC", vol_frac[m]);
       }
     }
   }  //patches
@@ -1977,14 +1971,14 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       if (ice_matl && (ice_matl->getRxProduct() == Material::product)){
         prod_indx = ice_matl->getDWIndex();
         
-        new_dw->get(gasTempX_FC,      Ilb->TempX_FCLabel,prod_indx,patch,gac,2);   
-        new_dw->get(gasTempY_FC,      Ilb->TempY_FCLabel,prod_indx,patch,gac,2);   
-        new_dw->get(gasTempZ_FC,      Ilb->TempZ_FCLabel,prod_indx,patch,gac,2);   
-        new_dw->get(gasPressure,      Ilb->press_equil_CCLabel,0,  patch,gn,0);
+        new_dw->get(gasTempX_FC,      Ilb->TempX_FCLabel,prod_indx,patch,gac,2);
+        new_dw->get(gasTempY_FC,      Ilb->TempY_FCLabel,prod_indx,patch,gac,2);
+        new_dw->get(gasTempZ_FC,      Ilb->TempZ_FCLabel,prod_indx,patch,gac,2);
+        new_dw->get(gasPressure,      Ilb->press_equil_CCLabel,0,  patch,gn, 0);
         old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,  0,   patch,gac,1);
-        old_dw->get(gasTemperature,   Ilb->temp_CCLabel,prod_indx, patch,gn,0);
+        old_dw->get(gasTemperature,   Ilb->temp_CCLabel,prod_indx, patch,gn, 0);
         new_dw->get(gasVolumeFraction,Ilb->vol_frac_CCLabel,
-                                                        prod_indx,patch,gn,0);
+                                                        prod_indx, patch,gn, 0);
 
         new_dw->allocateAndPut(sumBurnedMass, MIlb->burnedMassCCLabel,  
                                                                prod_indx,patch);
@@ -2030,7 +2024,6 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl); 
 
       if(mpm_matl && (mpm_matl->getRxProduct() == Material::reactant))  {
-        double delt = delT;
         double cv_solid = mpm_matl->getSpecificHeat();
       
         for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
@@ -2062,12 +2055,13 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
           //  Determine the temperature
           //  to use in burn model
           double Temp = 0;
+          double delt = delT;
            if (gasVolumeFraction[c] < 0.2){             //--------------KNOB 2
             Temp =std::max(Temp, solidTempX_FC[c] );    //L
             Temp =std::max(Temp, solidTempY_FC[c] );    //Bot
             Temp =std::max(Temp, solidTempZ_FC[c] );    //BK
             Temp =std::max(Temp, solidTempX_FC[c + IntVector(1,0,0)] );
-            Temp =std::max(Temp, solidTempY_FC[c + IntVector(0,1,0)] );          
+            Temp =std::max(Temp, solidTempY_FC[c + IntVector(0,1,0)] );
             Temp =std::max(Temp, solidTempZ_FC[c + IntVector(0,0,1)] );
            }
             else {
@@ -2079,7 +2073,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
             Temp =std::max(Temp, gasTempZ_FC[c + IntVector(0,0,1)] );
            }
            surfaceTemp[c] = Temp;
-         
+#if 1
             double gradRhoX = 0.25 *
                               ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
                                 NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
@@ -2125,8 +2119,10 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
              double TmpX = fabs(normalX*delX);
              double TmpY = fabs(normalY*delY);
              double TmpZ = fabs(normalZ*delZ);
+#endif
 
              double surfArea = delX*delY*delZ / (TmpX+TmpY+TmpZ); 
+//             double surfArea = delX*delY; 
              onSurface[c] = surfArea; // debugging var
              
              
