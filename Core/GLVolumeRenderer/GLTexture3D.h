@@ -216,7 +216,7 @@ private:
   
   // friend needed by gcc-2.95.3 compiler
   template <class T>
-#if defined(__GNUC__) && (__GNUC__ == 3) && \
+#if defined(__GNUC__) && (__GNUC__ == 2) && \
     defined(__GNUC_MINOR__) && (__GNUC_MINOR__ < 96)
   friend 
 #endif
