@@ -44,7 +44,6 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomTriangles.h>
-#include <Core/Geom/Pt.h>
 #include <Core/Geom/View.h>
 #include <Core/Geom/GeomGrid.h>
 #include <Core/Geom/GeomGroup.h>
