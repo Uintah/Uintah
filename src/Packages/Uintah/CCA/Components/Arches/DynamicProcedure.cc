@@ -2043,13 +2043,13 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-    int wallID = d_boundaryCondition->wallCellType();
+    int wall_celltypeval = d_boundaryCondition->wallCellType();
     if (xminus) {
       int colX = indexLow.x();
       for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
 	for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
 	  IntVector currCell(colX-1, colY, colZ);
-	  if (cellType[currCell] != wallID)
+	  if (cellType[currCell] != wall_celltypeval)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
 	}
       }
@@ -2059,7 +2059,7 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
 	for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
 	  IntVector currCell(colX+1, colY, colZ);
-	  if (cellType[currCell] != wallID)
+	  if (cellType[currCell] != wall_celltypeval)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
 	}
       }
@@ -2069,7 +2069,7 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
 	for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY-1, colZ);
-	  if (cellType[currCell] != wallID)
+	  if (cellType[currCell] != wall_celltypeval)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
 	}
       }
@@ -2079,7 +2079,7 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {
 	for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY+1, colZ);
-	  if (cellType[currCell] != wallID)
+	  if (cellType[currCell] != wall_celltypeval)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
 	}
       }
@@ -2089,7 +2089,7 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ-1);
-	  if (cellType[currCell] != wallID)
+	  if (cellType[currCell] != wall_celltypeval)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
 	}
       }
@@ -2099,7 +2099,7 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       for (int colY = indexLow.y(); colY <=  indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <=  indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ+1);
-	  if (cellType[currCell] != wallID)
+	  if (cellType[currCell] != wall_celltypeval)
 	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
 	}
       }
