@@ -608,8 +608,7 @@ QuadraticTetVolMesh::get_gradient_basis(Cell::index_type ci, int gaussPt,
 void
 QuadraticTetVolMesh::compute_nodes() 
 {
-  if (nodes_computed_p_) return;
-  TetVolMesh::compute_nodes();
+  TetVolMesh::compute_node_neighbors();
   compute_edges();
   phantom_nodes_computed_p_ = true;
   edge_2_node_.clear();
