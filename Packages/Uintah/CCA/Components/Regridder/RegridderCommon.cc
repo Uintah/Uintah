@@ -1,5 +1,6 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Regridder/RegridderCommon.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -7,7 +8,11 @@
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 
+#include <iostream>
+
+using namespace std;
 using namespace Uintah;
+
 
 RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), UintahParallelComponent(pg)
 {
@@ -34,17 +39,60 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   d_sharedState = state;
 
   ProblemSpecP regrid_spec = params->findBlock("Regridder");
-  // check for not-null
+  if (!regrid_spec)
+    throw ProblemSetupException("Must specify a Regridder section for"
+                                " AMR problems\n");
 
   // get max num levels
   regrid_spec->require("max_levels", d_maxLevels);
 
-  // get cell refinement ratio, expand it to max levels
-    // get simple ratio - allow user to just say '2'
+  // get cell refinement ratio
+  // get simple ratio - allow user to just say '2'
+  int simpleRatio = -1;
+  int size;
+  regrid_spec->get("simple_refinement_ratio", simpleRatio);
+  regrid_spec->get("cell_refinement_ratio", d_cellRefinementRatio);
+  size = (int) d_cellRefinementRatio.size();
 
+  if (simpleRatio != -1 && size > 0)
+    throw ProblemSetupException("Cannot specify both simple_refinement_ratio"
+                                " and cell_refinement_ratio\n");
+  if (simpleRatio == -1 && size == 0)
+    throw ProblemSetupException("Must specify either simple_refinement_ratio"
+                                " or cell_refinement_ratio\n");
+
+  // as it is not required to have cellRefinementRatio specified to all levels,
+  // expand it to all levels here for convenience in looking up later.
+  if (simpleRatio != -1) {
+    d_cellRefinementRatio.push_back(IntVector(simpleRatio, simpleRatio, simpleRatio));
+    size = 1;
+  }
+
+  IntVector lastRatio = d_cellRefinementRatio[size - 1];
+  if (size < d_maxLevels) {
+    d_cellRefinementRatio.resize(d_maxLevels);
+    for (int i = size; i < d_maxLevels; i++)
+      d_cellRefinementRatio[i] = lastRatio;
+  }
+  
   // get lattice refinement ratio, expand it to max levels
+  regrid_spec->require("lattice_refinement_ratio", d_latticeRefinementRatio);
+  size = (int) d_latticeRefinementRatio.size();
+  lastRatio = d_latticeRefinementRatio[size - 1];
+  if (size < d_maxLevels) {
+    d_latticeRefinementRatio.resize(d_maxLevels);
+    for (int i = size; i < d_maxLevels; i++)
+      d_latticeRefinementRatio[i] = lastRatio;
+  }
 
   // get other init parameters
+  d_cellCreationDilation = 1;
+  d_cellDeletionDilation = 1;
+  d_minBoundaryCells = 1;
+
+  regrid_spec->get("cell_creation_dilation", d_cellCreationDilation);
+  regrid_spec->get("cell_deletion_dilation", d_cellDeletionDilation);
+  regrid_spec->get("min_boundary_cells", d_minBoundaryCells);
 
   const LevelP level0 = origGrid->getLevel(0);
   cell_num.resize(d_maxLevels);
@@ -79,9 +127,10 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   cell_error_delete.resize(d_maxLevels);
   cell_error_boundary.resize(d_maxLevels);
 
-  for (int levelIdx = 0; levelIdx < d_maxLevels-1; levelIdx++) {
+  for (int levelIdx = 0; levelIdx < origGrid->numLevels(); levelIdx++) {
     LevelP level = origGrid->getLevel(levelIdx);
-    for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
+    for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter != level->patchesEnd(); patchIter++ ) {
+        
       const Patch* patch = *patchIter;
       IntVector l(patch->getCellLowIndex());
       IntVector h(patch->getCellHighIndex());
@@ -89,11 +138,12 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
       constCCVariable<int> refineFlag;
       //dw->get(refineFlag, d_sharedState->get_refineFlag_label(), 0, patch, Ghost::None, 0);
 
-      for(CellIterator iter(l, h); !iter.done(); iter++){
-	IntVector idx(*iter);
-	if (refineFlag[idx])
-	  cell_error[levelIdx].push_back(idx);
-      }
+//       for(CellIterator iter(l, h); !iter.done(); iter++){
+// 	IntVector idx(*iter);
+// 	if (refineFlag[idx])
+// 	  cell_error[levelIdx].push_back(idx);
+//       }
+
     }
   }
 }
