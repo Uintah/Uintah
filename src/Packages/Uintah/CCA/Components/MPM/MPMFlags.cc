@@ -29,7 +29,7 @@ MPMFlags::MPMFlags()
   d_doErosion = false;
   d_erosionAlgorithm = "none";
 
-  d_adiabaticHeating = 0.0;
+  d_adiabaticHeating = 1.0;
   d_artificialDampCoeff = 0.0;
   d_forceIncrementFactor = 1.0;
 }
@@ -49,10 +49,10 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   ps->get("artificial_viscosity_coeff2", d_artificialViscCoeff2);
   ps->get("accumulate_strain_energy", d_accStrainEnergy);
   ps->get("use_load_curves", d_useLoadCurves);
-  bool adiabaticHeatingOn = true;
+  bool adiabaticHeatingOn = false;
   ps->get("turn_on_adiabatic_heating", adiabaticHeatingOn);
+  if (adiabaticHeatingOn) d_adiabaticHeating = 0.0;
   ps->get("finest_level_only", d_finestLevelOnly);
-  if (!adiabaticHeatingOn) d_adiabaticHeating = 1.0;
   ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);
   ps->get("create_new_particles", d_createNewParticles);
   ps->get("manual_new_material", d_addNewMaterial);
