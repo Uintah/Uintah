@@ -71,7 +71,6 @@ static void usage(char* progname)
     cerr << " -udp             - update rate - how often to synchronuze cameras\n";
     cerr << "                    as a fraction of pixels per/proc\n";
     cerr << " -jitter          - jittered masks - fixed table for now\n";
-    cerr << " -logframes       - save all frames and a time log\n";
     cerr << " -worker_gltest   - calls run_gl_test from worker threads\n";
     cerr << " -display_gltest  - calls run_gl_test from display thread\n";
     cerr << " -displayless     - do not display and write a frame to displayless\n";
@@ -115,7 +114,7 @@ int main(int argc, char* argv[])
   int c1;
   int ncounters=0;
   bool bench=false;
-  char* shadow_mode=0;
+  ShadowType shadow_mode = No_Shadows;
   bool no_aa=false;
   double bvscale=.3;
   char* criteria1="db, stereo, max rgb, max accumrgb";
@@ -123,7 +122,6 @@ int main(int argc, char* argv[])
   double light_radius=-1;
   
   bool do_frameless=false;
-  bool logframes=false;
   bool display_frames=true;
   
   Camera usercamera(Point(1,0,0), Point(0,0,0), Vector(0,0,1), 60);
@@ -188,10 +186,10 @@ int main(int argc, char* argv[])
     } else if(strcmp(argv[i], "-bench")==0){
       bench=true;
     } else if(strcmp(argv[i], "-no_shadows")==0){
-      shadow_mode="none";
+      shadow_mode = No_Shadows;
     } else if(strcmp(argv[i], "-shadows")==0){
       i++;
-      shadow_mode=argv[i];
+      shadow_mode = (ShadowType)atoi(argv[i]);
     } else if(strcmp(argv[i], "-no_aa")==0){
       no_aa=true;
     } else if(strcmp(argv[i], "-bvscale")==0){
@@ -236,8 +234,6 @@ int main(int argc, char* argv[])
       }
     } else if(strcmp(argv[i],"-jitter")==0) {
       rtrt_engine->do_jitter=1;
-    } else if(strcmp(argv[i], "-logframes") == 0){
-      logframes=true;
     } else if(strcmp(argv[i], "-eye") == 0){
       Point p;
       i++;
@@ -312,12 +308,11 @@ int main(int argc, char* argv[])
     // set the scenes rtrt_engine pointer
     scene->set_rtrt_engine(rtrt_engine);
   
-    if(shadow_mode){
-      if(!scene->select_shadow_mode(shadow_mode)){
-	cerr << "Unknown shadow mode: " << shadow_mode << '\n';
-	exit(1);
-      }
+    if(shadow_mode > Uncached_Shadows ){
+      cerr << "Unknown shadow mode: " << shadow_mode << '\n';
+      exit(1);
     }
+
     scene->no_aa=no_aa;
   
     if(use_bv){
@@ -373,8 +368,6 @@ int main(int argc, char* argv[])
       rtrt_engine->Gjitter_valsb[ii] *= 0.25;
     }
   
-    scene->logframes=logframes;
-
     //  ThreadGroup *group = new ThreadGroup("rtrt group");
 
     // Start up display thread...
