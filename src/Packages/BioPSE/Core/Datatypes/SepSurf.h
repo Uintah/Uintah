@@ -74,7 +74,7 @@ public:
   SepSurf() : QuadSurfField<int>() {}
   SepSurf(const SepSurf& copy);
   SepSurf(QuadSurfMeshHandle mesh)
-    : QuadSurfField<int>(mesh, Field::NODE) {}
+    : QuadSurfField<int>(mesh, Field::FACE) {}
 
 
   virtual ~SepSurf();
