@@ -444,6 +444,40 @@ void getBoundaryEdges(const Patch* patch,
   }
 }
 /*_________________________________________________________________
+ Function~ patchEdgeIterator--
+ Purpose~ Returns an edge iterator minus the corner cells for 
+          that patch.  For multipatch problems be careful where
+          the two patches join.
+___________________________________________________________________*/  
+CellIterator PatchEdgeIterator(const Patch* patch,
+                               const Patch::FaceType face,
+                               const Patch::FaceType face0,
+                               IntVector offset)
+{
+  // get an iterator for the entire edge include the corner cells
+  CellIterator iterLimits_tmp =  
+                patch->getEdgeCellIterator(face, face0, "plusCornerCells");
+
+  // Find the corner cells for that patch and add/subtract them
+  // from the edge iterator
+  vector<IntVector> crn;
+  computeCornerCellIndices(patch, face, crn);
+  IntVector lo = iterLimits_tmp.begin();
+  IntVector hi = iterLimits_tmp.end();
+
+  vector<IntVector>::iterator itr;  
+  for(itr = crn.begin(); itr != crn.end(); ++ itr ) {
+    IntVector corner = *itr;
+    if (corner == lo) {
+      lo += offset;
+    }
+    if (corner == (hi - IntVector(1,1,1)) ) {
+      hi -= offset;
+    }
+  } 
+  return  CellIterator(lo, hi);
+}
+/*_________________________________________________________________
  Function~ computeCornerCellIndices--
  Purpose~ return a list of indicies of the corner cells that are on the
            boundaries of the domain
@@ -608,15 +642,13 @@ void FaceDensity_LODI(const Patch* patch,
     IntVector axes = patch->faceAxes(face0);
     int Edir1 = axes[0];
     int Edir2 = otherDirection(P_dir, Edir1);
-     
-    CellIterator iterLimits =  
-                  patch->getEdgeCellIterator(face, face0, "minusCornerCells");
-                  
+  
+    CellIterator iterLimits =  PatchEdgeIterator( patch,face,face0,offset);
+                      
     for(CellIterator iter = iterLimits;!iter.done();iter++){ 
       IntVector c = *iter;  
       IntVector r = c + offset;  
       IntVector l = c - offset;
-
       qConFrt  = rho_tmp[r] * vel[r][Edir2];
       qConLast = rho_tmp[l] * vel[l][Edir2];
       double conv = computeConvection(nu[r][Edir2], nu[c][Edir2], nu[l][Edir2],
@@ -745,9 +777,8 @@ void FaceVel_LODI(const Patch* patch,
     int Edir1 = axes[0];
     int Edir2 = otherDirection(P_dir, Edir1);
      
-    CellIterator iterLimits =  
-                  patch->getEdgeCellIterator(face, face0, "minusCornerCells");
-                  
+    CellIterator iterLimits =  PatchEdgeIterator( patch,face,face0,offset);
+                      
     for(CellIterator iter = iterLimits;!iter.done();iter++){ 
     IntVector c = *iter;
     
@@ -914,8 +945,7 @@ void FaceTemp_LODI(const Patch* patch,
     int Edir1 = axes[0];
     int Edir2 = otherDirection(P_dir, Edir1);
      
-    CellIterator iterLimits =  
-                  patch->getEdgeCellIterator(face, face0, "minusCornerCells");
+    CellIterator iterLimits =  PatchEdgeIterator( patch,face,face0,offset);
                   
     for(CellIterator iter = iterLimits;!iter.done();iter++){ 
       IntVector c = *iter;  
