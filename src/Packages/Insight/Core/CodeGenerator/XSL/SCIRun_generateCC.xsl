@@ -21,9 +21,6 @@
 <xsl:variable name="category">
   <xsl:value-of select="/filter/filter-sci/category"/>
 </xsl:variable>
-<xsl:variable name="base">
-  <xsl:value-of select="/filter/filter-itk/templated/base"/>
-</xsl:variable>
 
 
 
@@ -152,10 +149,8 @@ public:
 <xsl:variable name="import"><xsl:value-of select="@import"/></xsl:variable>
 <xsl:choose>
   <xsl:when test="$import = 'yes'">
-  <xsl:variable name="import_name"><xsl:value-of select="value"/></xsl:variable>
-  <xsl:value-of select="/filter/filter-itk/filter[@name=$import_name]/filter-itk/templated/base"/>*</xsl:when>
-  <xsl:otherwise>
-<xsl:value-of select="$base"/>* </xsl:otherwise>
+  <xsl:variable name="import_name"><xsl:value-of select="value"/></xsl:variable>itk::Object*</xsl:when>
+  <xsl:otherwise>itk::Object* </xsl:otherwise>
 </xsl:choose>
 <xsl:if test="position() &lt; last()">
 <xsl:text>, </xsl:text>
@@ -265,10 +260,8 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 <xsl:variable name="import"><xsl:value-of select="@import"/></xsl:variable>
 <xsl:choose>
   <xsl:when test="$import = 'yes'">
-  <xsl:variable name="import_name"><xsl:value-of select="value"/></xsl:variable>
-  <xsl:value-of select="/filter/filter-itk/filter[@name=$import_name]/filter-itk/templated/base"/>* </xsl:when>
-  <xsl:otherwise>
-<xsl:value-of select="$base"/><xsl:text> *</xsl:text>
+  <xsl:variable name="import_name"><xsl:value-of select="value"/></xsl:variable>itk::Object* </xsl:when>
+  <xsl:otherwise>itk::Object<xsl:text> *</xsl:text>
   </xsl:otherwise>
 </xsl:choose>
 <xsl:value-of select="$var"/>
@@ -501,12 +494,12 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 <xsl:variable name="optional"><xsl:value-of select="@optional"/></xsl:variable>
 <xsl:choose>
   <xsl:when test="$optional = 'yes'">
-  <xsl:value-of select="$base"/><xsl:text>* data</xsl:text><xsl:value-of select="@num"/> = 0;
+  itk::Object<xsl:text>* data</xsl:text><xsl:value-of select="@num"/> = 0;
   if( inport<xsl:value-of select="@num"/>_has_data_ ) {
     data<xsl:value-of select="@num"/> = <xsl:value-of select="$ihandle"/>.get_rep()->data_.GetPointer();
   }
   </xsl:when>
-  <xsl:otherwise><xsl:value-of select="$base"/><xsl:text>* data</xsl:text><xsl:value-of select="@num"/><xsl:text> = </xsl:text><xsl:value-of select="$ihandle"/><xsl:text>.get_rep()->data_.GetPointer();
+  <xsl:otherwise>itk::Object<xsl:text>* data</xsl:text><xsl:value-of select="@num"/><xsl:text> = </xsl:text><xsl:value-of select="$ihandle"/><xsl:text>.get_rep()->data_.GetPointer();
   </xsl:text>
   </xsl:otherwise>
 </xsl:choose>
