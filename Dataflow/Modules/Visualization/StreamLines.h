@@ -25,20 +25,20 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/CurveField.h>
+#include <algorithm>
 
 namespace SCIRun {
 
 class StreamLinesAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(MeshHandle smesh,
-		       VectorFieldInterface *vfi,
-		       double tolerance,
-		       double stepsize,
-		       int maxsteps,
-		       CurveMeshHandle cmesh,
-		       bool remove_colinear_p) = 0;
+  virtual FieldHandle execute(MeshHandle seed_mesh_h,
+			      VectorFieldInterface *vfi,
+			      double tolerance,
+			      double stepsize,
+			      int maxsteps,
+			      bool remove_colinear_p) = 0;
 
 
   //! support the dynamically compiled algorithm concept
@@ -58,35 +58,36 @@ protected:
 };
 
 
-template <class SMESH, class SLOC>
+template <class SFLD, class SLOC>
 class StreamLinesAlgoT : public StreamLinesAlgo
 {
 public:
   //! virtual interface. 
-  virtual void execute(MeshHandle smesh,
-		       VectorFieldInterface *vfi,
-		       double tolerance,
-		       double stepsize,
-		       int maxsteps,
-		       CurveMeshHandle cmesh,
-		       bool remove_colinear_p);
+  virtual FieldHandle execute(MeshHandle seed_mesh_h,
+			      VectorFieldInterface *vfi,
+			      double tolerance,
+			      double stepsize,
+			      int maxsteps,
+			      bool remove_colinear_p);
 };
 
 
 
 template <class SMESH, class SLOC>
-void 
-StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle smesh_h,
+FieldHandle
+StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
 				       VectorFieldInterface *vfi,
 				       double tolerance,
 				       double stepsize,
 				       int maxsteps,
-				       CurveMeshHandle cmesh,
 				       bool rcp)
 {
-  SMESH *smesh = dynamic_cast<SMESH *>(smesh_h.get_rep());
+  SMESH *smesh = dynamic_cast<SMESH *>(seed_mesh_h.get_rep());
 
   const double tolerance2 = tolerance * tolerance;
+
+  CurveMeshHandle cmesh = scinew CurveMesh();
+  CurveField<double> *cf = scinew CurveField<double>(cmesh, Field::NODE);
 
   Point seed;
   Vector test;
@@ -110,36 +111,28 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle smesh_h,
       continue;
     }
 
-    // Find the positive streamlines.
     nodes.clear();
-    FindStreamLineNodes(nodes, seed, tolerance2, stepsize, maxsteps, vfi, rcp);
-
-    node_iter = nodes.begin();
-    if (node_iter != nodes.end())
-    {
-      n1 = cmesh->add_node(*node_iter);
-      ++node_iter;
-      while (node_iter != nodes.end())
-      {
-	n2 = cmesh->add_node(*node_iter);
-	cmesh->add_edge(n1, n2);
-	n1 = n2;
-	++node_iter;
-      }
-    }
-
+    nodes.push_back(seed);
     // Find the negative streamlines.
-    nodes.clear();
-    FindStreamLineNodes(nodes, seed, tolerance2, -stepsize, maxsteps, vfi, rcp);
+    FindStreamLineNodes(nodes, seed, tolerance2, -stepsize,
+			maxsteps, vfi, rcp);
+    std::reverse(nodes.begin(), nodes.end());
+    // Append the positive streamlines.
+    FindStreamLineNodes(nodes, seed, tolerance2, stepsize,
+			maxsteps, vfi, rcp);
 
     node_iter = nodes.begin();
     if (node_iter != nodes.end())
     {
       n1 = cmesh->add_node(*node_iter);
+      cf->resize_fdata();
+      cf->set_value((double)n1, n1);
       ++node_iter;
       while (node_iter != nodes.end())
       {
 	n2 = cmesh->add_node(*node_iter);
+	cf->resize_fdata();
+	cf->set_value((double)n2, n2);
 	cmesh->add_edge(n1, n2);
 	n1 = n2;
 	++node_iter;
@@ -148,6 +141,9 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle smesh_h,
 
     ++seed_iter;
   }
+
+  cf->freeze();
+  return cf;
 }
 
 

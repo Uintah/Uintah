@@ -174,9 +174,6 @@ StreamLinesAlgo::FindStreamLineNodes(vector<Point> &v, // storage for points
 {
   vector <Vector> terms(6, Vector(0.0, 0.0, 0.0));
 
-  // Add the initial point to the list of points found.
-  v.push_back(x);
-
   for (int i=0; i<n; i++)
   {
 
@@ -286,10 +283,6 @@ void StreamLines::execute()
   if (!sfport_->get(sfhandle_) || !(sf_ = sfhandle_.get_rep()))
     return;
 
-  // might have to get Field::NODE
-  CurveField<double> *cf = scinew CurveField<double>(Field::NODE);
-  CurveMeshHandle cmesh = cf->get_typed_mesh();
-
   double tolerance;
   double stepsize;
   int maxsteps;
@@ -313,17 +306,15 @@ void StreamLines::execute()
     cout << "Could not get algorithm." << std::endl;
     return;
   }
-  algo->execute(sf_->mesh(), vfi,
-		tolerance, stepsize, maxsteps, cmesh, remove_colinear_.get());
 
-  cf->resize_fdata();
-  cf->freeze();
-  oport_->send(cf);
+  oport_->send(algo->execute(sf_->mesh(), vfi,
+			     tolerance, stepsize, maxsteps,
+			     remove_colinear_.get()));
 }
 
 
 CompileInfo *
-StreamLinesAlgo::get_compile_info(const TypeDescription *smesh,
+StreamLinesAlgo::get_compile_info(const TypeDescription *msrc,
 				  const TypeDescription *sloc)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
@@ -333,16 +324,16 @@ StreamLinesAlgo::get_compile_info(const TypeDescription *smesh,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       smesh->get_filename() + "." +
+		       msrc->get_filename() + "." +
 		       sloc->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-		       smesh->get_name() + ", " +
+		       msrc->get_name() + ", " +
 		       sloc->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  smesh->fill_compile_info(rval);
+  msrc->fill_compile_info(rval);
   return rval;
 }
 
