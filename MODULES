@@ -73,9 +73,11 @@ OctIsoSurface
 RescaleColormap
 Streamline
 VectorSeg
+VolVis
 WidgetTest
 
 Category: Writers
+ColormapWriter
 ColumnMatrixWriter
 ContourSetWriter
 MatrixWriter
