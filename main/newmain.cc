@@ -33,7 +33,7 @@
 #include <iostream>
 using namespace std;
 using namespace SCIRun;
-using namespace gov::cca;
+using namespace sci::cca;
 #define VERSION "2.0.0" // this needs to be synced with the contents of
                         // SCIRun/doc/edition.xml
 #include <sys/stat.h>
@@ -114,8 +114,8 @@ main(int argc, char *argv[] )
       cerr << "Not finished: pass url to existing framework\n";
     }
 
-    gov::cca::Services::pointer main_services = sr->getServices("SCIRun main", "main", gov::cca::TypeMap::pointer(0));
-    gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(main_services->getPort("cca.BuilderService"));
+    sci::cca::Services::pointer main_services = sr->getServices("SCIRun main", "main", sci::cca::TypeMap::pointer(0));
+    sci::cca::ports::BuilderService::pointer builder = pidl_cast<sci::cca::ports::BuilderService::pointer>(main_services->getPort("cca.BuilderService"));
     if(builder.isNull()){
       cerr << "Fatal Error: Cannot find builder service\n";
       Thread::exitAll(1);
@@ -125,14 +125,14 @@ main(int argc, char *argv[] )
     if(!HAVE_QT) defaultBuilder="txt";
 
     if(defaultBuilder=="qt"){
-      ComponentID::pointer gui_id=builder->createInstance("QtBuilder", "cca:SCIRun.Builder", gov::cca::TypeMap::pointer(0));
+      ComponentID::pointer gui_id=builder->createInstance("QtBuilder", "cca:SCIRun.Builder", sci::cca::TypeMap::pointer(0));
       if(gui_id.isNull()){
 	cerr << "Cannot create component: cca:SCIRun.Builder\n";
 	Thread::exitAll(1);
       }
     }
     else{
-      ComponentID::pointer gui_id=builder->createInstance("TxtBuilder", "cca:SCIRun.TxtBuilder", gov::cca::TypeMap::pointer(0));
+      ComponentID::pointer gui_id=builder->createInstance("TxtBuilder", "cca:SCIRun.TxtBuilder", sci::cca::TypeMap::pointer(0));
       if(gui_id.isNull()){
 	cerr << "Cannot create component: cca:SCIRun.TxtBuilder\n";
 	Thread::exitAll(1);
