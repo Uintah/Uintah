@@ -53,6 +53,8 @@ itcl_class SCIRun_DataIO_ColorMapWriter {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
+	    # Refresh UI
+	    biopseFDialog_RefreshCmd $w
 	    return
 	}
 	

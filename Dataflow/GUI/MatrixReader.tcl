@@ -37,6 +37,8 @@ itcl_class SCIRun_DataIO_MatrixReader {
 	set w .ui[modname]
 
 	if {[winfo exists $w]} {
+	    # Refresh UI
+	    biopseFDialog_RefreshCmd $w
 	    return
 	}
 

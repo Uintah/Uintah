@@ -36,6 +36,8 @@ itcl_class SCIRun_DataIO_FieldReader {
 	set w .ui[modname]
 
 	if {[winfo exists $w]} {
+	    # Refresh UI
+	    biopseFDialog_RefreshCmd $w
 	    return
 	}
 

@@ -795,9 +795,9 @@ proc biopseFDialog_Config {w type argList} {
 
     if {![string compare $data(-title) ""]} {
 	if {![string compare $type "open"]} {
-	    set data(-title) "Open"
+	    # set data(-title) "Open"
 	} else {
-	    set data(-title) "Save As"
+	    # set data(-title) "Save As"
 	}
     }
     
@@ -926,19 +926,36 @@ static char updir_bits[] = {
     $data(typeMenuBtn) config -takefocus 1 -highlightthickness 2 \
 	-relief raised -bd 2 -anchor w
 
-    # the okBtn is created after the typeMenu so that the keyboard traversal
+   # the okBtn is created after the typeMenu so that the keyboard traversal
     # is in the right order
-    set data(okBtn)     [button $f2.ok     -text OK     -under 0 -width 6 \
+    # Ok, Execute, Cancel, Refresh, and Find at bottom
+    set f7 [frame $w.f7]
+    set data(okBtn)     [button $f7.ok     -text Set     -under 0 -width 6 \
 	-default active -pady 3]
     if { [string length $data(-execute)] } {
-       set data(executeBtn) [button $f3.execute -text Execute -under 0 -width 6\
+       set data(executeBtn) [button $f7.execute -text Execute -under 0 -width 6\
 	  -default normal -pady 3]
-       set data(cancelBtn) [button $f4.cancel -text Cancel -under 0 -width 6\
+       set data(cancelBtn) [button $f7.cancel -text Cancel -under 0 -width 6\
 				 -default normal -pady 3]
     } else {
-       set data(cancelBtn) [button $f3.cancel -text Cancel -under 0 -width 6\
+       set data(cancelBtn) [button $f7.cancel -text Cancel -under 0 -width 6\
 				 -default normal -pady 3]
     }	
+    set data(refreshBtn) [button $f7.refresh   -text Refresh   -under 0  -width 6 \
+			      -default normal -pady 3]		  
+    set data(findBtn) [button $f7.find   -text Find   -under 0  -width 6 \
+			      -default normal -pady 3]		  
+
+    # pack the widgets in f7
+    pack $data(okBtn) -side left -padx 4 -anchor e -fill x -expand 1
+    if { [string length $data(-execute)] } {
+	pack $data(executeBtn) -side left -padx 4 -anchor e -fill x -expand 1 
+    }
+    pack $data(cancelBtn) -side left -padx 4 -anchor e -fill x -expand 1
+    pack $data(refreshBtn) -side left -padx 4 -anchor e -fill x -expand 1
+    pack $data(findBtn) -side left -padx 4 -anchor e -fill x -expand 1
+
+    pack $f7 -side bottom -fill x 
 
     # creating additional widgets for Save-dialog box
     if {![string compare $data(type) save]} {
@@ -1000,7 +1017,7 @@ static char updir_bits[] = {
 	-relief raised -bd 2 -anchor w
 	set data(splitBtn) [checkbutton $f4.split -text Split -disabledforeground "" \
 		-onvalue 1 -offvalue 0 -width 5 -pady 2]
-
+	pack $data(splitBtn) -side right -padx 4 -anchor w
 
 	if { [set data(is_split)] } {	    
 	    $data(splitBtn) configure -state normal
@@ -1015,32 +1032,15 @@ static char updir_bits[] = {
 	}
 
 	pack $f4.lab -side left -padx 4
-	pack $data(formatMenuBtn) -expand yes -fill x -side left
+	pack $data(formatMenuBtn) -expand yes -fill x -side right
     }
 
     # pack the widgets in f2 and f3
-    pack $data(okBtn) -side right -padx 4 -anchor e
     pack $f2.lab -side left -padx 4
     pack $f2.ent -expand yes -fill x -padx 2 -pady 0
     
-
-    if { [string length $data(-execute)] } {
-	pack $data(executeBtn) -side right -padx 4 -anchor w
-    }
-
     pack $data(typeMenuLab) -side left -padx 4
-    pack $data(typeMenuBtn) -expand yes -fill x -side left
-
-
-
-    if {![string compare $data(type) save]} {
-	pack $data(splitBtn) -side left -padx 4 -anchor w
-    }
-    pack $data(cancelBtn) -side right -padx 4 -anchor e
-   
-
-
-
+    pack $data(typeMenuBtn) -expand yes -fill x -side right
 
     
     # Pack all the frames together. We are done with widget construction.
@@ -1054,11 +1054,13 @@ static char updir_bits[] = {
     bind $data(ent) <Return>  "biopseFDialog_ActivateEnt $w"
     
     $data(upBtn)     config -command "biopseFDialog_UpDirCmd $w"
-    $data(okBtn)     config -command "biopseFDialog_OkCmd $w"
+    $data(okBtn)     config -command "biopseFDialog_OkCmd $w ok"
     if { [string length $data(-execute)] } {
-	$data(executeBtn) config -command "set executeScript 1; biopseFDialog_OkCmd $w"
+	$data(executeBtn) config -command "biopseFDialog_OkCmd $w execute"
     }
     $data(cancelBtn) config -command "biopseFDialog_CancelCmd $w"
+    $data(refreshBtn) config -command "biopseFDialog_RefreshCmd $w"
+    $data(findBtn) config -command "biopseFDialog_FindCmd $w"
 
     trace variable data(selectPath) w "biopseFDialog_SetPath $w"
 
@@ -1398,9 +1400,9 @@ proc biopseFDialog_EntFocusIn {w} {
     biopseIconList_Unselect $data(icons)
 
     if {![string compare $data(type) open]} {
-	$data(okBtn) config -text "Open"
+	# $data(okBtn) config -text "Open"
     } else {
-	$data(okBtn) config -text "Save"
+	# $data(okBtn) config -text "Save"
     }
 }
 
@@ -1412,7 +1414,7 @@ proc biopseFDialog_EntFocusOut {w} {
 
 
 # Gets called when user presses Return in the "File name" entry.
-proc biopseFDialog_ActivateEnt {w} {
+proc biopseFDialog_ActivateEnt {w {whichBtn execute}} {
     upvar #0 $w data
 
     set text [string trim [$data(ent) get]]
@@ -1432,7 +1434,7 @@ proc biopseFDialog_ActivateEnt {w} {
 		biopseFDialog_SetPathSilently $w $path
 		set data(selectFile) $file
 
-		biopseFDialog_Done $w
+		biopseFDialog_Done $w "" $whichBtn
 	    }
 	}
 	PATTERN {
@@ -1509,7 +1511,7 @@ proc biopseFDialog_JoinFile {path file} {
 
 
 # Gets called when user presses the "OK" button
-proc biopseFDialog_OkCmd {w} {
+proc biopseFDialog_OkCmd {w {whichBtn execute}} {
     upvar #0 $w data
 
     set text [biopseIconList_Get $data(icons)]
@@ -1522,7 +1524,7 @@ proc biopseFDialog_OkCmd {w} {
 	}
     }
 
-    biopseFDialog_ActivateEnt $w
+    biopseFDialog_ActivateEnt $w $whichBtn
 }
 
 # Gets called when user presses the "Cancel" button
@@ -1534,6 +1536,24 @@ proc biopseFDialog_CancelCmd {w} {
     set data(-filevar) ""
     eval $data(-cancel)
     #set biopsePriv(selectFilePath) ""
+}
+
+# biopseFDialog_Refresh --
+#       Refresh the files and directories in the IconList.  If a 
+#       current filename is present, leave focus on that.
+proc biopseFDialog_RefreshCmd {w} {
+#     upvar #0 $w data
+#     biopseFDialog_Update $w
+#     focus $data(ent) 
+    
+}
+
+
+# Gets called when user presses the "Find" button
+proc biopseFDialog_FindCmd {w} {
+    # Fade in Icon
+    # Indicate which module by removing the .ui from $w
+    fadeinIcon [string range $w 3 end] 1 1
 }
 
 # Gets called when user browses the IconList widget (dragging mouse, arrow
@@ -1551,12 +1571,12 @@ proc biopseFDialog_ListBrowse {w text} {
 	$data(ent) insert 0 $text
 
 	if {![string compare $data(type) open]} {
-	    $data(okBtn) config -text "Open"
+	    # $data(okBtn) config -text "Open"
 	} else {
-	    $data(okBtn) config -text "Save"
+	    # $data(okBtn) config -text "Save"
 	}
     } else {
-	$data(okBtn) config -text "Open"
+	# $data(okBtn) config -text "Open"
     }
 }
 
@@ -1593,7 +1613,7 @@ proc biopseFDialog_ListInvoke {w text} {
 #	biopsePriv(selectFilePath) variable, which will break the "tkwait"
 #	loop in biopseFDialog and return the selected filename to the
 #	script that calls biopse_getOpenFile or biopse_getSaveFile
-proc biopseFDialog_Done {w {selectFilePath ""}} {
+proc biopseFDialog_Done {w {selectFilePath ""} {whichBtn execute}} {
     upvar #0 $w data
     global biopsePriv
 
@@ -1624,12 +1644,9 @@ proc biopseFDialog_Done {w {selectFilePath ""}} {
     
     # AS: final steps before returning: setting filename variable and executing command
     set $data(-filevar) $selectFilePath
-    upvar \#0 executeScript execute
-    if { [info exists execute] } {
-	eval $data(-execute) 
-	unset execute
+    if {$whichBtn == "ok"} {
+	eval $data(-command)
     } else {
-	eval $data(-command) 
+	eval $data(-execute)
     }
-	
 }

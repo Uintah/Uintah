@@ -36,6 +36,8 @@ itcl_class Teem_DataIO_NrrdWriter {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
+	    # Refresh UI
+	    biopseFDialog_RefreshCmd $w
 	    return
 	}
 	
