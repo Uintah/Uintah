@@ -19,6 +19,7 @@
 #include <SCICore/Datatypes/ScalarFieldRGchar.h>
 //#include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/MiscMath.h>
 #include <iostream.h>
 
 namespace SCICore {
@@ -326,6 +327,10 @@ void ScalarFieldRGchar::fill_gradmags() // these guys ignor the vf
 
 //
 // $Log$
+// Revision 1.4  1999/09/04 06:01:44  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.3  1999/08/25 03:48:38  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

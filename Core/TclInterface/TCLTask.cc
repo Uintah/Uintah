@@ -20,6 +20,7 @@
 #include <SCICore/Thread/Thread.h>
 
 #include <iostream.h>
+#include <stdlib.h>
 #include <tcl.h>
 #include <tk.h>
 
@@ -210,6 +211,10 @@ Thread* TCLTask::get_owner()
 
 //
 // $Log$
+// Revision 1.4  1999/09/04 06:01:55  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.3  1999/08/28 17:54:52  sparker
 // Integrated new Thread library
 //

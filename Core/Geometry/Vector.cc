@@ -43,7 +43,6 @@ Vector::string() const
 void
 Vector::find_orthogonal(Vector& v1, Vector& v2) const
 {
-    ASSERTL4(!uninit);
     Vector v0(Cross(*this, Vector(1,0,0)));
     if(v0.length2() == 0){
 	v0=Cross(*this, Vector(0,1,0));
@@ -95,11 +94,47 @@ Pio(Piostream& stream, Vector& p)
     stream.end_cheap_delim();
 }
 
+void Vector::rotz90(const int c)
+{
+    // Rotate by c*90 degrees counter clockwise
+    switch(c%4){
+    case 0:
+	// 0 degrees, do nothing
+	break;
+    case 1:
+	// 90 degrees
+	{
+	    double newx=-_y;
+	    _y=_x;
+	    _x=newx;
+	}
+	break;
+    case 2:
+	// 180 degrees
+	_x=-_x;
+	_y=-_y;
+	break;
+    case 3:
+	// 270 degrees
+	{
+	    double newy=-_x;
+	    _x=_y;
+	    _y=newy;
+	}
+	break;
+    }
+}
+
+
 } // End namespace Geometry
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/09/04 06:01:53  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.2  1999/08/17 06:39:29  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
