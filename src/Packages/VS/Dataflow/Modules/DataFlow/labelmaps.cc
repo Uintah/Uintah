@@ -35,6 +35,30 @@ char *space_to_underbar(char *dst, char *src)
   return(dst);
 } /* end space_to_underbar() */
 
+char *capitalize(char *dst, char *src)
+{
+  char *srcPtr, *dstPtr;
+  srcPtr = src; dstPtr = dst;
+  /* skip white space */
+  while(*srcPtr != '\0' && (*srcPtr == ' ' || *srcPtr == '\t'))
+  { *dstPtr++ = *srcPtr++; }
+  if(*srcPtr == '\0')
+  {
+    *dstPtr = '\0';
+    return(dst);
+  }
+  if( 'a' <= *srcPtr )
+      *dstPtr++ = *srcPtr - 32; 
+  srcPtr++;
+  /* copy the rest of the string */
+  while(*srcPtr != '\0')
+  {
+    *dstPtr++ = *srcPtr++;
+  }
+  *dstPtr = '\0';
+   return(dst);
+} /* end capitalize() */
+
 int
 countCommas(char *inString)
 {
