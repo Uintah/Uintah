@@ -31,7 +31,9 @@ New Projects in Version 1.20
     results with electric field streamlines and isopotential surfaces.
 
 - Upgraded the Network Editor to be much more user friendly.  See
-  "Network Editor" below.
+  "Network Editor" below (and Chapter 5 of the Users Guide).
+
+- Full support of OSX (See installation guide).
 
 Data Sets
 ---------
