@@ -73,6 +73,15 @@ AC_DEFUN([BASE_LIB_PATH], [
 ##
 ## BASE_LIB_PATH:
 ##
+## This macro takes the base path of a library and determines
+## if there is a lib32, lib64, or just plain lib that is 
+## associated with it.  It sets the full path to the value of
+## the first argument.
+##
+## eg:  if arg 2 is /usr/sci/local, and the machine has a 
+## /usr/sci/local/lib64, and configure is in 64 bit mode, then
+## /sur/sci/local/lib64 is set as the value of arg 1.
+##
 ## arguments mean:
 ## arg 1 : This argument will be written with the result
 ## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
@@ -461,7 +470,7 @@ if test "$9" = "specific"; then
       __sci_pass=false
     fi
   done
-  if test $__sci_pass != "true"; then
+  if test -n "$4" && test $__sci_pass != "true"; then
        AC_MSG_ERROR(For specific SCI-TRY-LINK test for $1 only one include path may be specified for arg 4 (you had: $4).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
   fi
 fi
