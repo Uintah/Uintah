@@ -23,6 +23,7 @@ SRCDIR   := Core/2d
 
 SRCS     += \
 	$(SRCDIR)/Axes.cc \
+	$(SRCDIR)/AxesObj.cc \
 	$(SRCDIR)/BBox2d.cc \
 	$(SRCDIR)/BoxObj.cc \
 	$(SRCDIR)/Diagram.cc \
@@ -42,7 +43,6 @@ SRCS     += \
 	$(SRCDIR)/glprintf.cc \
 	$(SRCDIR)/asciitable.cc \
 	$(SRCDIR)/texture.cc \
-
 
 PSELIBS := Core/Persistent Core/Exceptions \
 	Core/Math Core/Containers Core/Thread \

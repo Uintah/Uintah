@@ -69,6 +69,8 @@ class Diagram {
 
 	$menu add command .widgets.hairline -label Hairline -underline 0 \
 	    -command "$this widget hairline"
+	$menu add command .widgets.axes -label Axes -underline 0 \
+	    -command "$this widget axes"
 	$menu add command .widgets.zoom -label Zoom -underline 0 \
 	    -command "$this widget zoom"
 
@@ -83,7 +85,7 @@ class Diagram {
 	$tb add button zoom-in \
 	    -helpstr "Zoom mode" \
 	    -image [image create photo \
-		-file "../pixmaps/viewmag.ppm"] \
+		-file "/home/moulding/mag_glass_3d.ppm"] \
 	    -command "$this set-mode zoom"
 	
 	$tb add button sub \

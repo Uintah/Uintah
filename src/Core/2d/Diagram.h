@@ -86,7 +86,9 @@ public:
 			    const string &ui, const string &ogl);
 
   void get_active( Array1<Polyline *> &);
-  double get_at( double );
+  //! the following two convert from [0-1] to world space coordinates
+  double x_get_at( double );
+  double y_get_at( double );
  private:  
   void button_press( int x, int y, int button );
   void button_motion( int x, int y, int button );
@@ -97,6 +99,7 @@ public:
   void pan_end( int x, int y, int button );
 
   void add_hairline();
+  void add_axes();
   void add_zoom();
 
   void zoom_in( int x, int y, int );

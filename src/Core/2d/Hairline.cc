@@ -88,7 +88,7 @@ void
 Hairline::update()
 {
   parent_->get_active( poly_ );
-  double pos = parent_->get_at( at() );
+  double pos = parent_->x_get_at( at() );
 
   // get and sort the values
 

@@ -17,10 +17,10 @@
 
 
 /*
- *  HairObj.h: Displayable 2D object
+ *  AxesObj.h: Displayable 2D object
  *
  *  Written by:
- *   Yarden Livnat
+ *   Chris
  *   Department of Computer Science
  *   University of Utah
  *   Aug 2001
@@ -28,28 +28,28 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#ifndef SCI_HairObj_h
-#define SCI_HairObj_h 
+#ifndef SCI_AxesObj_h
+#define SCI_AxesObj_h 
 
-#include <Core/2d/Widget.h>
+#include <Core/2d/HairObj.h>
 
 namespace SCIRun {
   
-class SCICORESHARE HairObj :  public Widget {
-protected:
-  double from_, to_;
-  double pos_;
+class SCICORESHARE AxesObj :  public HairObj {
 
-  double proj[16], model[16];
-  int viewport[4];
+protected:
+  double xpos_, ypos_;
+  int num_h_tics_,num_v_tics_;
+
 public:
   
-  HairObj( const string &name="hairline" );
-  virtual ~HairObj();
+  AxesObj( const string &name="axes" );
+  virtual ~AxesObj();
 
   virtual void get_bounds( BBox2d & ) {} 
-  double at() { return pos_; }
-  virtual void recompute();
+  double x_at() { return xpos_; }
+  double y_at() { return ypos_; }
+  void recompute();
   virtual void select( double x, double y, int b );
   virtual void move( double x, double y, int b );
   virtual void release( double x, double y, int b );
@@ -64,7 +64,7 @@ public:
   
 };
 
-void Pio(Piostream&, HairObj*&);
+void Pio(Piostream&, AxesObj*&);
 
 } // namespace SCIRun
 
