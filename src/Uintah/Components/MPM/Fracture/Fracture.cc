@@ -67,6 +67,7 @@ crackGrow(const Patch* patch,
    ParticleVariable<double> pMicrocrackSize;
    ParticleVariable<double> pDilationalWaveSpeed;
    ParticleVariable<double> pVolume;
+   ParticleVariable<Vector> pRotationRate;
 
    new_dw->get(pStress, lb->pStressLabel_preReloc, pset);
    old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
@@ -74,6 +75,7 @@ crackGrow(const Patch* patch,
    old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
    old_dw->get(pVolume, lb->pVolumeLabel, pset);
    new_dw->get(pDilationalWaveSpeed, lb->pDilationalWaveSpeedLabel, pset);
+   new_dw->get(pRotationRate, lb->pRotationRateLabel, pset);
 
    delt_vartype delT;
    old_dw->get(delT, lb->delTLabel);
@@ -128,6 +130,11 @@ crackGrow(const Patch* patch,
 	}
       }
       else {
+        //crack surface rotation
+	pCrackSurfaceNormal[idx] += Cross( pRotationRate[idx] * delT, 
+	                                   pCrackSurfaceNormal[idx] );
+	pCrackSurfaceNormal[idx].normalize();
+	
         //crack propagation
         double sizeLimit = pow(pVolume[idx],0.333) /2;
 	
@@ -219,6 +226,9 @@ Fracture::~Fracture()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.40  2000/09/10 23:09:59  tan
+// Added calculations on the rotation of crack surafce during fracture.
+//
 // Revision 1.39  2000/09/10 22:51:13  tan
 // Added particle rotationRate computation in computeStressTensor functions
 // in each constitutive model classes.  The particle rotationRate will be used
