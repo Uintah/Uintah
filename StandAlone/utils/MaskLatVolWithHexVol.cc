@@ -39,9 +39,10 @@
  *  Copyright (C) 2001 SCI Group
  */
 
+#include <Core/Datatypes/MaskedLatVolMesh.h>
+#include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/HexVolField.h>
-#include <Core/Datatypes/MaskedLatVolMesh.h>
 #include <Core/Datatypes/MaskedLatVolField.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Persistent/Pstreams.h>

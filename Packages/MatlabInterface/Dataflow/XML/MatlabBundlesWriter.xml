@@ -20,23 +20,21 @@
   University of Utah. All Rights Reserved.
 -->
 
-<component name="MatlabFieldsWriter" category="DataIO">
+<component name="MatlabBundlesWriter" category="DataIO">
   <overview>
     <authors>
 	<author>Jeroen Stinstra</author>
     </authors>
 	<summary> 
-	The MatlabFieldsWriter Module saves a SCIRun Field object into a MATLAB .mat file.
+	The MatlabBundlesWriter Module saves a SCIRun NRRD object into a MATLAB .mat file.
 	</summary>
     <description>
 	<section>
 	<title>Module Description</title>
 	<p>
-	The MatlabFieldsWriter module exports SCIRun Field objects into a MATLAB compatible .mat file. Currently this
+	The MatlabBundlesWriter module exports SCIRun Bundle objects into a MATLAB compatible .mat file. Currently this
 	module supports the fileformat of MATLAB version 5 and higher. The module has multiple input ports that can
-	be used to store multiple MATLAB arrays in one file. All fields except for Scanline, Images, and LatVols will be
-	stored as structured matrices. Only Scanlines, Images and LatVols have the possiblity to be stored as dense matrices.
-	The format in which the fields are exported is described in the documentation of the MatlabFieldsReader module.
+	be used to store multiple MATLAB arrays in one file.
 	</p>
 	
 	<p> Setting up the GUI: </p>
@@ -69,6 +67,7 @@
 	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
 	<modref package="MatlabInterface" name="MatlabNrrdsWriter" />,
 	<modref package="MatlabInterface" name="MatlabNrrdsReader" />	
+	
 	</p>
 	</section>	
 	
@@ -82,45 +81,45 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Field1</name>
-		<datatype>SCIRun::Field</datatype>
+        <name>Bundle1</name>
+		<datatype>SCIRun::Bundle</datatype>
 		<description>
-		Field input port 1
+		Bundle input port 1
 		</description>	
       </port>
 	  <port>
-        <name>Field2</name>
-		<datatype>SCIRun::Field</datatype>
+        <name>Bundle2</name>
+		<datatype>SCIRun::Bundle</datatype>
 		<description>
-		Field input port 2
+		Bundle input port 2
 		</description>	
       </port>
 	  <port>
-        <name>Field3</name>
-		<datatype>SCIRun::Field</datatype>
+        <name>Bundle3</name>
+		<datatype>SCIRun::Bundle</datatype>
 		<description>
-		Field input port 3
+		Bundle input port 3
 		</description>	
       </port>
 	  <port>
-        <name>Field4</name>
-		<datatype>SCIRun::Field</datatype>
+        <name>Bundle4</name>
+		<datatype>SCIRun::Bundle</datatype>
 		<description>
-		Field input port 4
+		Bundle input port 4
 		</description>			
       </port>
 	  <port>
-        <name>Field5</name>
-		<datatype>SCIRun::Field</datatype>
+        <name>Bundle5</name>
+		<datatype>SCIRun::Bundle</datatype>
 		<description>
-		Field input port 5
+		Bundle input port 5
 		</description>	
       </port>
 	  <port>
-        <name>Field6</name>
-		<datatype>SCIRun::Field</datatype>
+        <name>Bundle6</name>
+		<datatype>SCIRun::Bundle</datatype>
 		<description>
-		Field input port 6
+		Bundle input port 6
 		</description>	
       </port>
 <!--
@@ -129,7 +128,7 @@
         <datatype>SCIRun::Nrrd</datatype>
         <description>filename store as a char array in a nrrd</description>
       </port>
--->              
+-->        
 	</inputs>
     <outputs>
     </outputs>
@@ -157,18 +156,6 @@
 	</description>
 	</parameter>
 	
-	<parameter>
-    <widget> Popup Menu </widget>
-	<label> Array Type </label>
-	<description>
-	Use this button to select the output format. In case "numeric array" is selected, the Field object will
-	be exported as a plain dense matrix without any additional information However this option is currently
-	only available for ScanlineFields, ImageFields, and LatVolFields. In case "struct array" is chosen, a structured
-	MATLAB array will be created. The layout of the array structure represents the geometry and the field data.
-	For a description of the structure of this array, see the documentation of the MatlabFieldsReader module.
-	</description>
-	</parameter>
-
   </gui>
 
   <testing>

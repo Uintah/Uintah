@@ -30,39 +30,27 @@
 
 
 
-itcl_class MatlabInterface_DataIO_Matlab {
+itcl_class MatlabInterface_DataIO_MatlabBundle {
     inherit Module
 
     constructor {config} {
-        set name Matlab
+        set name MatlabBundle
         set_defaults
     }
 
     method set_defaults {} {
 
-		global $this-numport-matrix
-		global $this-numport-field
-		global $this-numport-nrrd
+		global $this-numport-bundle
 
 		# input matrix names
 
-		global $this-input-matrix-name
-		global $this-input-matrix-type
-		global $this-input-matrix-array
-		
-		global $this-input-field-name
-		global $this-input-field-type
-		global $this-input-field-array
-
-		global $this-input-nrrd-name
-		global $this-input-nrrd-type
-		global $this-input-nrrd-array
+		global $this-input-bundle-name
+		global $this-input-bundle-array
+		global $this-output-bundle-pnrrds
+		global $this-output-bundle-pbundles
 
 		# output matrix names
-
-		global $this-output-matrix-name
-		global $this-output-field-name
-		global $this-output-nrrd-name
+		global $this-output-bundle-name
 
 		# internet connection parameters
 
@@ -80,9 +68,7 @@ itcl_class MatlabInterface_DataIO_Matlab {
 
 		# menu pointers
 		
-		global $this-matrix-menu
-		global $this-field-menu
-		global $this-nrrd-menu
+		global $this-bundle-menu
 
 		global $this-matlab-code-menu 
 		global $this-matlab-output-menu 
@@ -92,47 +78,24 @@ itcl_class MatlabInterface_DataIO_Matlab {
 
 		# Set up the number of ports for each SCIRun type
 		
-		set $this-numport-matrix 5
-		set $this-numport-field 3
-		set $this-numport-nrrd 3
+		set $this-numport-bundle 5
 
 		# Setup the default translation options
 		
+		set $this-input-bundle-name ""
+		set $this-input-bundle-array ""
+    set $this-output-bundle-pnrrds ""
+    set $this-output-bundle-pbundles ""
+		set $this-output-bundle-name ""
 		
-		set $this-input-matrix-name ""
-		set $this-input-matrix-type ""
-		set $this-input-matrix-array ""
-		set $this-output-matrix-name ""
-
-		set $this-input-field-name ""
-		set $this-input-field-array ""
-		set $this-output-field-name ""
-
-		set $this-input-nrrd-name ""
-		set $this-input-nrrd-type ""
-		set $this-input-nrrd-array ""
-		set $this-output-nrrd-name ""
-		
-		for {set x 0} {$x < [set $this-numport-matrix]} {incr x} {
-			lappend $this-input-matrix-name [format "i%d" [expr $x+1]]
-			lappend $this-input-matrix-type {same as data}
-			lappend $this-input-matrix-array {numeric array}
-			lappend $this-output-matrix-name [format "o%d" [expr $x+1]]
+		for {set x 0} {$x < [set $this-numport-bundle]} {incr x} {
+			lappend $this-input-bundle-name [format "bundle%d" [expr $x+1]]
+			lappend $this-input-bundle-array {numeric array}
+			lappend $this-output-bundle-pnrrds {prefer matrices}
+			lappend $this-output-bundle-pbundles {prefer sciobjects}
+			lappend $this-output-bundle-name [format "bundle%d" [expr $x+1]]
 		}
 
-		for {set x 0} {$x < [set $this-numport-field]} {incr x} {
-			lappend $this-input-field-name [format "field%d" [expr $x+1]]
-			lappend $this-input-field-type {same as data}
-			lappend $this-input-field-array {struct array}
-			lappend $this-output-field-name [format "field%d" [expr $x+1]]
-		}
-
-		for {set x 0} {$x < [set $this-numport-nrrd]} {incr x} {
-			lappend $this-input-nrrd-name [format "nrrd%d" [expr $x+1]]
-			lappend $this-input-nrrd-type {same as data}
-			lappend $this-input-nrrd-array {numeric array}
-			lappend $this-output-nrrd-name [format "nrrd%d" [expr $x+1]]
-		}
 
 		# internet default settings
 		
@@ -149,66 +112,34 @@ itcl_class MatlabInterface_DataIO_Matlab {
 		set $this-matlab-update-status "$this UpdateStatus"
 		set $this-matlab-status "matlab engine not running"
 
-       		global $this-cmdTCL
-        	global $this-hpTCL
-		trace variable $this-cmdTCL w "$this backcompat_cmdTCL"
-		trace variable $this-hpTCL w "$this backcompat_hpTCL"
 	}
 
-    method backcompat_cmdTCL {a b c} {
-	global $this-cmdTCL
-	global $this-matlab-code
-	set $this-matlab-code [set $this-cmdTCL]
-    }
-
-    method backcompat_hpTCL {a b c} {
-	global $this-hpTCL
-	global $this-inet-address
-	global $this-inet-port
-	set sp [lindex [split [set $this-hpTCL]] 0]
-	set spl [split $sp ":"]
-	set $this-inet-address [lindex $spl 0]
-	set $this-inet-port [lindex $spl 1]
-    }
-
     method ui {} {
-		set w .ui[modname]
-		if {[winfo exists $w]} {
-			raise $w
-			return;
-		}
 
-		global $this-numport-matrix
-		global $this-numport-field
-		global $this-numport-nrrd
+      set w .ui[modname]
+      if {[winfo exists $w]} {
+        raise $w
+        return;
+      }
+
+		global $this-numport-bundle
 
 		# input matrix names
 
-		global $this-input-matrix-name
-		global $this-input-matrix-type
-		global $this-input-matrix-array
-		
-		global $this-input-field-name
-		global $this-input-field-array
-
-		global $this-input-nrrd-name
-		global $this-input-nrrd-type
-		global $this-input-nrrd-array
+		global $this-input-bundle-name
+		global $this-input-bundle-array
+		global $this-output-bundle-pnrrds
+		global $this-output-bundle-pbundles
 
 		# output matrix names
 
-		global $this-output-matrix-name
-		global $this-output-field-name
-		global $this-output-nrrd-name
+		global $this-output-bundle-name
 
-		global $this-matrix-menu
-		global $this-field-menu
-		global $this-nrrd-menu
+		global $this-bundle-menu
 		
 		global $this-matlab-code-menu 
 		global $this-matlab-output-menu 
 		global $this-matlab-status-menu 
-	
 
 		# internet connection parameters
 
@@ -236,162 +167,71 @@ itcl_class MatlabInterface_DataIO_Matlab {
 		pack $w.ioframe -fill x
 
 		iwidgets::tabnotebook $childframe.pw -height 200 -tabpos n
-		$childframe.pw add -label "Matrices"
-		$childframe.pw add -label "Fields" 
-		$childframe.pw add -label "Nrrds" 
+		$childframe.pw add -label "Bundles" 
 		$childframe.pw select 0
 
 		pack $childframe.pw -fill x -expand yes
 
-		set matrix [$childframe.pw childsite 0]
-		set field [$childframe.pw childsite 1]
-		set nrrd [$childframe.pw childsite 2]
+		set bundle [$childframe.pw childsite 0]
 
-		set $this-matrix-menu $matrix
-		set $this-field-menu $field
-		set $this-nrrd-menu $nrrd
-		
+		set $this-bundle-menu $bundle
 
-		frame $matrix.in
-		frame $matrix.out
-		pack $matrix.in $matrix.out -side left -padx 5p -anchor n
+		frame $bundle.in
+		frame $bundle.out
+		pack $bundle.in $bundle.out -side left -padx 5p -anchor n 
 
-		label $matrix.in.t -text "INPUT MATRICES"
-		pack $matrix.in.t -side top -anchor n	
+		label $bundle.in.t -text "INPUT BUNDLES"
+		pack $bundle.in.t -side top -anchor n	
 	
-		label $matrix.out.t -text "OUTPUT MATRICES"
-		pack $matrix.out.t -side top -anchor n	
+		label $bundle.out.t -text "OUTPUT BUNDLES"
+		pack $bundle.out.t -side top -anchor n	
 	
-		for {set x 0} {$x < [set $this-numport-matrix]} {incr x} {
+		for {set x 0} {$x < [set $this-numport-bundle]} {incr x} {
 	
-			frame $matrix.in.m-$x
-			pack $matrix.in.m-$x -side top -fill x -expand yes
+			frame $bundle.in.m-$x
+			pack $bundle.in.m-$x -side top -fill x -expand yes
 
-			label $matrix.in.m-$x.label -text [format "matrix %d" [expr $x+1]]
-			entry $matrix.in.m-$x.name 
+			label $bundle.in.m-$x.label -text [format "bundle %d" [expr $x+1]]
+			entry $bundle.in.m-$x.name 
 			
-			$matrix.in.m-$x.name insert 0 [lindex [set $this-input-matrix-name] $x] 
-			
-			iwidgets::optionmenu $matrix.in.m-$x.type
-			foreach dformat {{same as data} {double} {single} {int8} {uint8} {int16} {uint16} {int32} {uint32}} {
-				$matrix.in.m-$x.type insert end $dformat
-			}
-			
-			set dataformatindex [lsearch {{same as data} {double} {single} {int8} {uint8} {int16} {uint16} {int32} {uint32}} [lindex [set $this-input-matrix-type] $x]]
-			if [expr $dataformatindex > 0] { $matrix.in.m-$x.type select $dataformatindex }
-			
-			iwidgets::optionmenu $matrix.in.m-$x.array
+			$bundle.in.m-$x.name insert 0 [lindex [set $this-input-bundle-name] $x] 
+
+			iwidgets::optionmenu $bundle.in.m-$x.array
 			foreach dformat {{numeric array} {struct array}} {
-				$matrix.in.m-$x.array insert end $dformat
+				$bundle.in.m-$x.array insert end $dformat
 			}
 
-			set matrixformatindex [lsearch {{numeric array} {struct array}} [lindex [set $this-input-matrix-array] $x]]
-			if [expr $matrixformatindex > 0] { $matrix.in.m-$x.array select $matrixformatindex }
+			set bundleformatindex [lsearch {{numeric array} {struct array}} [lindex [set $this-input-bundle-array] $x]]
+			if [expr $bundleformatindex > 0] { $bundle.in.m-$x.array select $bundleformatindex }
 			
-			pack $matrix.in.m-$x.label $matrix.in.m-$x.name $matrix.in.m-$x.type $matrix.in.m-$x.array -side left
+			pack $bundle.in.m-$x.label $bundle.in.m-$x.name $bundle.in.m-$x.array -side left
 
-			frame $matrix.out.m-$x
-			pack $matrix.out.m-$x -side top -fill x -expand yes -pady 4p
+			frame $bundle.out.m-$x
+			pack $bundle.out.m-$x  -side top -fill x -expand yes
 			
-			label $matrix.out.m-$x.label -text [format "matrix %d" [expr $x+1]]
-			entry $matrix.out.m-$x.name 
+			label $bundle.out.m-$x.label -text [format "bundle %d" [expr $x+1]]
+			entry $bundle.out.m-$x.name 
 
-			$matrix.out.m-$x.name insert 0 [lindex [set $this-output-matrix-name] $x] 
+			$bundle.out.m-$x.name insert 0 [lindex [set $this-output-bundle-name] $x] 
 
-			pack $matrix.out.m-$x.label $matrix.out.m-$x.name -side left
+			iwidgets::optionmenu $bundle.out.m-$x.pnrrds
+			foreach dformat {{prefer matrices} {prefer nrrds}} {
+				$bundle.out.m-$x.pnrrds insert end $dformat
+			}
+			
+			set dataformatindex [lsearch {{prefer matrices} {prefer nrrds}} [lindex [set $this-output-bundle-pnrrds] $x]]
+			if [expr $dataformatindex > 0] { $bundle.out.m-$x.pnrrds select $dataformatindex }
+
+			iwidgets::optionmenu $bundle.out.m-$x.pbundles
+			foreach dformat {{prefer sciobjects} {prefer bundles}} {
+				$bundle.out.m-$x.pbundles insert end $dformat
+			}
+			
+			set dataformatindex [lsearch {{prefer sciobjects} {prefer bundles}} [lindex [set $this-output-bundle-pbundles] $x]]
+			if [expr $dataformatindex > 0] { $bundle.out.m-$x.pbundles select $dataformatindex }
+
+			pack $bundle.out.m-$x.label $bundle.out.m-$x.name $bundle.out.m-$x.pnrrds $bundle.out.m-$x.pbundles -side left
 		}
-
-		frame $field.in
-		frame $field.out
-		pack $field.in $field.out -side left -padx 5p -anchor n 
-
-		label $field.in.t -text "INPUT FIELD MATRICES"
-		pack $field.in.t -side top -anchor n	
-	
-		label $field.out.t -text "OUTPUT FIELD MATRICES"
-		pack $field.out.t -side top -anchor n	
-	
-		for {set x 0} {$x < [set $this-numport-field]} {incr x} {
-	
-			frame $field.in.m-$x
-			pack $field.in.m-$x -side top -fill x -expand yes
-
-			label $field.in.m-$x.label -text [format "field %d" [expr $x+1]]
-			entry $field.in.m-$x.name 
-			
-			$field.in.m-$x.name insert 0 [lindex [set $this-input-field-name] $x] 
-						
-			iwidgets::optionmenu $field.in.m-$x.array
-			foreach dformat {{numeric array} {struct array}} {
-				$field.in.m-$x.array insert end $dformat
-			}
-
-			set fieldformatindex [lsearch {{numeric array} {struct array}} [lindex [set $this-input-field-array] $x]]
-			if [expr $fieldformatindex > 0] { $field.in.m-$x.array select $fieldformatindex }
-			
-			pack $field.in.m-$x.label $field.in.m-$x.name $field.in.m-$x.array -side left
-
-			frame $field.out.m-$x
-			pack $field.out.m-$x -side top -fill x -expand yes -pady 4p
-			
-			label $field.out.m-$x.label -text [format "field %d" [expr $x+1]]
-			entry $field.out.m-$x.name 
-
-			$field.out.m-$x.name insert 0 [lindex [set $this-output-field-name] $x] 
-
-			pack $field.out.m-$x.label $field.out.m-$x.name -side left
-		}
-
-
-		frame $nrrd.in
-		frame $nrrd.out
-		pack $nrrd.in $nrrd.out -side left -padx 5p -anchor n 
-
-		label $nrrd.in.t -text "INPUT NRRD MATRICES"
-		pack $nrrd.in.t -side top -anchor n	
-	
-		label $nrrd.out.t -text "OUTPUT NRRD MATRICES"
-		pack $nrrd.out.t -side top -anchor n	
-	
-		for {set x 0} {$x < [set $this-numport-nrrd]} {incr x} {
-	
-			frame $nrrd.in.m-$x
-			pack $nrrd.in.m-$x -side top -fill x -expand yes
-
-			label $nrrd.in.m-$x.label -text [format "nrrd %d" [expr $x+1]]
-			entry $nrrd.in.m-$x.name 
-			
-			$nrrd.in.m-$x.name insert 0 [lindex [set $this-input-nrrd-name] $x] 
-			
-			iwidgets::optionmenu $nrrd.in.m-$x.type
-			foreach dformat {{same as data} {double} {single} {int8} {uint8} {int16} {uint16} {int32} {uint32}} {
-				$nrrd.in.m-$x.type insert end $dformat
-			}
-			
-			set dataformatindex [lsearch {{same as data} {double} {single} {int8} {uint8} {int16} {uint16} {int32} {uint32}} [lindex [set $this-input-nrrd-type] $x]]
-			if [expr $dataformatindex > 0] { $nrrd.in.m-$x.type select $dataformatindex }
-			
-			iwidgets::optionmenu $nrrd.in.m-$x.array
-			foreach dformat {{numeric array} {struct array}} {
-				$nrrd.in.m-$x.array insert end $dformat
-			}
-
-			set nrrdformatindex [lsearch {{numeric array} {struct array}} [lindex [set $this-input-nrrd-array] $x]]
-			if [expr $nrrdformatindex > 0] { $nrrd.in.m-$x.array select $nrrdformatindex }
-			
-			pack $nrrd.in.m-$x.label $nrrd.in.m-$x.name $nrrd.in.m-$x.type $nrrd.in.m-$x.array -side left
-
-			frame $nrrd.out.m-$x
-			pack $nrrd.out.m-$x -side top -fill x -expand yes -pady 4p
-			
-			label $nrrd.out.m-$x.label -text [format "nrrd %d" [expr $x+1]]
-			entry $nrrd.out.m-$x.name 
-
-			$nrrd.out.m-$x.name insert 0 [lindex [set $this-output-nrrd-name] $x] 
-
-			pack $nrrd.out.m-$x.label $nrrd.out.m-$x.name -side left
-		}
-
 
 	iwidgets::labeledframe $w.inetframe -labeltext "MATLAB ENGINE ADDRESS"
 		set childframe [$w.inetframe childsite]
@@ -415,8 +255,8 @@ itcl_class MatlabInterface_DataIO_Matlab {
 		label $childframe.f4.sessionlabel -text "Session:" 
 		entry $childframe.f4.session -textvariable $this-inet-session
 
-        label $childframe.f5.info -text "Note: leave the addressbar empty for a matlab engine on local machine"
-        pack $childframe.f5.info -anchor w -side left
+    label $childframe.f5.info -text "Note: leave the addressbar empty for a matlab engine on local machine"
+    pack $childframe.f5.info -anchor w -side left
 
 		pack $childframe.f1.addresslabel -side left -padx 3p -pady 2p -padx 4p
 		pack $childframe.f1.address -side left -fill x -expand yes -padx 3p -pady 2p
@@ -426,8 +266,6 @@ itcl_class MatlabInterface_DataIO_Matlab {
 		pack $childframe.f3.passwd -side left -padx 3p -pady 2p -anchor e
 		pack $childframe.f4.sessionlabel -side left -padx 3p -pady 2p -anchor e
 		pack $childframe.f4.session -side left -padx 3p -pady 2p -anchor e
-
-
 
 		iwidgets::labeledframe $w.matlabframe -labeltext "MATLAB"
 		set childframe [$w.matlabframe childsite]
@@ -452,7 +290,7 @@ itcl_class MatlabInterface_DataIO_Matlab {
 		frame $output.f1
 		frame $status.f1
 		frame $code.f2
-        frame $code.f3
+    frame $code.f3
 		frame $output.f2
 		frame $status.f2
 		pack $code.f1 $output.f1 $status.f1 -side top -fill both -expand yes
@@ -469,14 +307,15 @@ itcl_class MatlabInterface_DataIO_Matlab {
 
 		pack $code.f2.load $code.f2.save $code.f2.clear -anchor e -side left
 
-  		label $code.f3.info -text "Please do not use the 'keyboard' instruction in the matlab code"
+    label $code.f3.info -text "Please do not use the 'keyboard' instruction in the matlab code"
+    label $code.f3.info2 -text "This module assumes that all input and output matrices are matlab structs; Each individual field of the output matrices will be translated into a separate SCIRun object"
         	pack $code.f3.info -anchor w -side left
 
 		iwidgets::scrolledtext $output.f1.display -vscrollmode dynamic \
 			-labeltext "Matlab Output" -height 150 
        
-        	set textwidget [$output.f1.display component text]
-	        bind $textwidget <KeyPress> "$this KeyStroke %A %K"
+    set textwidget [$output.f1.display component text]
+    bind $textwidget <KeyPress> "$this KeyStroke %A %K"
 		$output.f1.display clear	
 		$output.f1.display insert end [set $this-matlab-output]
 		set $this-matlab-var $this-matlab-output
@@ -683,7 +522,7 @@ itcl_class MatlabInterface_DataIO_Matlab {
     
     method SaveFile {} {
         
-        global $this-matlab-code-menu
+    global $this-matlab-code-menu
 		global $this-matlab-code
 		global $this-matlab-code-file
         
@@ -716,72 +555,34 @@ itcl_class MatlabInterface_DataIO_Matlab {
 	}
 
 	method Synchronise {} {
-	
-		global $this-input-matrix-name
-		global $this-input-matrix-type
-		global $this-input-matrix-array
-		global $this-output-matrix-name
 
-		global $this-input-field-name
-		global $this-input-field-array
-		global $this-output-field-name
+		global $this-input-bundle-name
+		global $this-input-bundle-array
+		global $this-output-bundle-pnrrds
+		global $this-output-bundle-pbundles
+		global $this-output-bundle-name
 
-		global $this-input-nrrd-name
-		global $this-input-nrrd-type
-		global $this-input-nrrd-array
-		global $this-output-nrrd-name
-		
-		global $this-numport-matrix
-		global $this-numport-nrrd
-		global $this-numport-field
-
-		global $this-matrix-menu
-		global $this-nrrd-menu
-		global $this-field-menu
+		global $this-bundle-menu
 		
 		set w .ui[modname]
 
 		if {[winfo exists $w]} {
 
-			set $this-input-matrix-name ""
-			set $this-input-matrix-type ""
-			set $this-input-matrix-array ""
-			set $this-output-matrix-name ""
-			
-			set matrix [set $this-matrix-menu]
-			set field [set $this-field-menu]
-			set nrrd [set $this-nrrd-menu]
+			set $this-input-bundle-name ""
+			set $this-input-bundle-array ""
+			set $this-output-bundle-name ""
+			set $this-output-bundle-pnrrds ""
+			set $this-output-bundle-pbundles ""
 		
-			for {set x 0} {$x < [set $this-numport-matrix]} {incr x} {
-				lappend $this-input-matrix-name [$matrix.in.m-$x.name get] 
-				lappend $this-input-matrix-type [$matrix.in.m-$x.type get] 
-				lappend $this-input-matrix-array [$matrix.in.m-$x.array get] 
-				lappend $this-output-matrix-name [$matrix.out.m-$x.name get] 
-			}
-
-			set $this-input-field-name ""
-			set $this-input-field-array ""
-			set $this-output-field-name ""
-		
-			for {set x 0} {$x < [set $this-numport-field]} {incr x} {
-				lappend $this-input-field-name [$field.in.m-$x.name get] 
-				lappend $this-input-field-array [$field.in.m-$x.array get] 
-				lappend $this-output-field-name [$field.out.m-$x.name get] 
-			}
-
-			set $this-input-nrrd-name ""
-			set $this-input-nrrd-type ""
-			set $this-input-nrrd-array ""
-			set $this-output-nrrd-name ""
-		
-			for {set x 0} {$x < [set $this-numport-nrrd]} {incr x} {
-				lappend $this-input-nrrd-name [$nrrd.in.m-$x.name get] 
-				lappend $this-input-nrrd-type [$nrrd.in.m-$x.type get] 
-				lappend $this-input-nrrd-array [$nrrd.in.m-$x.array get] 
-				lappend $this-output-nrrd-name [$nrrd.out.m-$x.name get] 
-			}
-
-			
+      set bundle [set $this-bundle-menu]
+    
+			for {set x 0} {$x < [set $this-numport-bundle]} {incr x} {
+				lappend $this-input-bundle-name [$bundle.in.m-$x.name get] 
+				lappend $this-input-bundle-array [$bundle.in.m-$x.array get] 
+				lappend $this-output-bundle-name [$bundle.out.m-$x.name get] 
+        lappend $this-output-bundle-pnrrds [$bundle.out.m-$x.pnrrds get] 
+        lappend $this-output-bundle-pbundles [$bundle.out.m-$x.pbundles get]
+      }
 		}
 	}
 
