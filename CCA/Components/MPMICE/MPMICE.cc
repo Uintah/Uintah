@@ -259,6 +259,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
  
  //__________________________________
  // Scheduling
+  d_ice->scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
+   
   d_mpm->scheduleInterpolateParticlesToGrid(      sched, patches, mpm_matls);
 
   d_mpm->scheduleComputeHeatExchange(             sched, patches, mpm_matls);
