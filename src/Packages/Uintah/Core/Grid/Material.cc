@@ -35,6 +35,10 @@ Material::Material(ProblemSpecP& ps)
   if (Material::d_rx_prod == Material::none)
     std::cerr << "Material is not specified product/reactant" << std::endl;
 
+  if(ps->getAttribute("name", name))
+    haveName = true;
+  else
+    haveName = false;
 }
 
 Material::~Material()
