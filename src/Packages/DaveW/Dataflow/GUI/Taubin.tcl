@@ -10,12 +10,15 @@ itcl_class DaveW_EEG_Taubin {
 	global $this-N
 	global $this-pb
 	global $this-gamma
+	global $this-constraintTCL
 	global $this-constrainedTCL
+	global $this-jitterTCL
 	set $this-pb .4
 	set $this-gamma .8
 	set $this-N 10
 	set $this-constrainedTCL 0
 	set $this-constraintTCL 1
+	set $this-jitterTCL 1
     }
     method ui {} {
 	set w .ui[modname]
@@ -33,6 +36,7 @@ itcl_class DaveW_EEG_Taubin {
 	global $this-gamma
 	global $this-constrainedTCL
 	global $this-constraintTCL
+	global $this-jitterTCL
 	scale $w.f.n -orient horizontal -label "Iterations: " \
 		-variable $this-N -showvalue true -from 1 -to 100
 	scale $w.f.pb -orient horizontal -label "Pass Band (k) : " \
@@ -49,7 +53,8 @@ itcl_class DaveW_EEG_Taubin {
 	button $w.f.b.e -text "Execute" -command "$this-c tcl_exec"
 	button $w.f.b.p -text "Print" -command "$this-c print"
 	checkbutton $w.f.b.c -text "Constrained" -variable $this-constrainedTCL
-	pack $w.f.b.r $w.f.b.e $w.f.b.p $w.f.b.c -side left -padx 4 -expand 1
+	checkbutton $w.f.b.j -text "Jitter" -variable $this-jitterTCL
+	pack $w.f.b.r $w.f.b.e $w.f.b.p $w.f.b.c $w.f.b.j -side left -padx 4 -expand 1
 	pack $w.f.n $w.f.pb $w.f.gamma $w.f.constr $w.f.b -side top -fill x -expand 1
 	$this set_defaults
     }
