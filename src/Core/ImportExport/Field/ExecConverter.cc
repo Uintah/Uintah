@@ -536,7 +536,7 @@ VgridTetGmv_reader(ProgressReporter *pr, const char *filename)
 {
   ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-   string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/gmvTopts -t %f %t1 && " +
+   string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/gmvToPts -t %f %t1 && " +
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToTetVolField %t1.pts %t1.tet %t -binOutput";
   return Exec_reader(pr, filename, command);
@@ -554,7 +554,7 @@ VgridHexGmv_reader(ProgressReporter *pr, const char *filename)
 {
   ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-   string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/gmvTopts -h %f %t1 && " +
+   string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/gmvToPts -h %f %t1 && " +
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     "TextToHexVolField %t1.pts %t1.hex %t -binOutput";
   return Exec_reader(pr, filename, command);
@@ -572,7 +572,7 @@ NeuroFEMTetGeo_reader(ProgressReporter *pr, const char *filename)
 {
   ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-   string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/geoTopts -t %f %t1 && " +
+   string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/geoToPts -t %f %t1 && " +
    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
    "TextToTetVolField %t1.pts %t1.tet %t -binOutput";
   return Exec_reader(pr, filename, command);
@@ -590,7 +590,7 @@ NeuroFEMHexGeo_reader(ProgressReporter *pr, const char *filename)
 {
   ASSERT(sci_getenv("SCIRUN_OBJDIR"));
   const string command =
-   string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/geoTopts -h %f %t1 && " +
+   string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/geoToPts -h %f %t1 && " +
    string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
    "TextToHexVolField %t1.pts %t1.hex %t -binOutput";
   return Exec_reader(pr, filename, command);
