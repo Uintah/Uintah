@@ -4,6 +4,16 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/MPMICE
 
+#---------------------
+# remove rate form files
+#
+RF= $(RateForm)
+ifeq ($(RF),true)
+SRCS     += \
+	$(SRCDIR)/MPMICERF.cc
+else
+	$(SRCDIR)/MPMICE.cc
+endif
 SRCS     += \
 	$(SRCDIR)/MPMICE.cc \
 	$(SRCDIR)/MPMICELabel.cc \
