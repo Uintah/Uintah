@@ -831,7 +831,7 @@ void Roe::goHomeCB(CallbackData*, void*)
 
 void Roe::get_bounds(BBox& bbox)
 {
-    bb.reset();
+    bbox.reset();
     HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
     for (iter.first(); iter.ok(); ++iter) {
 	HashTable<int, GeomObj*>* serHash=iter.get_data();
