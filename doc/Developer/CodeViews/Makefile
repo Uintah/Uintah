@@ -7,15 +7,16 @@ SRC = ../../../src
 products:
 	if test -d ${SRC} -a \( "$$WITH_CV" = true -o $$MAKELEVEL -eq 1 \);  \
 	then \
-		-rm -rf html; \
+		test -d codeviews && rm -rf codeviews; \
 		doxygen Doxyconfig; \
+		mv html codeviews; \
 	fi
 
 tarball: products
-	tar cf - html | gzip >codeviews.tgz
+	tar cf - codeviews | gzip >codeviews.tgz
 
 clean:
 	-rm *~
 
 veryclean:
-	-rm -rf html ${TIMESTAMP}
+	-rm -rf codeviews
