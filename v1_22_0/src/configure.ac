@@ -2095,12 +2095,14 @@ AC_SUBST(DEF_MPEG)
 _sci_optional=optional
 if test "$with_scisock"; then
   _sci_lib="$with_scisock/lib"
+  _sci_inc="$with_scisock/include"
   _sci_optional=specific
 else
   _sci_lib="$sci_thirdparty_libs"
+  _sci_inc="$sci_thirdparty_includes"
 fi
 
-SCI_TRY_LINK(SCISOCK,SCISock library,,,scisock unp,$_sci_lib,,,$_sci_optional)
+SCI_TRY_LINK(SCISOCK,SCISock library,NetConnectionC.h NetInterfaceC.h unp.h,$_sci_inc,scisock unp,$_sci_lib,,,$_sci_optional)
 
 if test "$HAVE_SCISOCK" = "yes"; then
   DEF_MPEG="#define HAVE_SCISOCK 1"
