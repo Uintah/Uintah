@@ -149,6 +149,32 @@ setenv SCIRUN_ON_THE_FLY_LIBS /home/dmw/on-the-fly-libs/
 </answer>
 </qandaentry>
 
+<!---------------------------------------------------------------
+<qandaentry>
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>4/20/04</date>
+</revision>
+</revhistory>
+<question>
+<para>
+I am seeing this Xlib error when running SCIRun: Xlib: sequence
+lost...  What does it mean and how do I fix it?
+</para>
+</question>
+<answer>
+<para>
+The most likely reason for seeing this is that you have found a bug in
+SCIRun with the locking of the X display.  You should report this
+problem to scirun-develop@sci.utah.edu.  The last time this error
+occurred it was in Dataflow/Modules/Render/OpenGL.cc and required that
+a glGetIntegerv() call be placed within a gui->lock()/unlock() section.
+</para>
+</answer>
+</qandaentry>
+---------------------------------------------------------------->
+
 <qandaentry id="auto_exec_qa">
 <revhistory>
 <revision>
