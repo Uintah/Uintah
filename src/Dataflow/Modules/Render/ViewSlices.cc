@@ -193,7 +193,6 @@ class ViewSlices : public Module
     UIint		slice_num_;
     UIint		axis_;
     UIdouble		zoom_;
-    double		pixel_ratio_;
     UIint		slab_min_;
     UIint		slab_max_;
       
@@ -629,7 +628,6 @@ ViewSlices::SliceWindow::SliceWindow(GuiContext *ctx) :
   slice_num_(ctx->subVar("slice"), 0),
   axis_(ctx->subVar("axis"), 2),
   zoom_(ctx->subVar("zoom"), 100.0),
-  pixel_ratio_(1.0),
   slab_min_(ctx->subVar("slab_min"), 0),
   slab_max_(ctx->subVar("slab_max"), 0),
   x_(ctx->subVar("posx"),0.0),
@@ -2344,7 +2342,6 @@ void
 ViewSlices::zoom_in(SliceWindow &window)
 {
   window.zoom_ *= 1.1;
-  window.pixel_ratio_ *= 1.1;
   window.cursor_moved_ = true;
   window.redraw_ = true;
 }
@@ -2353,7 +2350,6 @@ void
 ViewSlices::zoom_out(SliceWindow &window)
 {
   window.zoom_ /= 1.1;
-  window.pixel_ratio_ /= 1.1;
   window.cursor_moved_ = true;
   window.redraw_ = true;
 }
@@ -2387,7 +2383,6 @@ ViewSlices::world_to_screen(SliceWindow &window, Point &world)
 void
 ViewSlices::execute()
 {
-  //  cerr << "execute\n";
   update_state(Module::JustStarted);
 
   unsigned int a, n = 1;
@@ -2422,7 +2417,8 @@ ViewSlices::execute()
 
   if (painting_() == 2) {
     ASSERT(cm2_.get_rep());
-    cm2_=scinew ColorMap2(cm2_->widgets(), false, cm2_->faux());
+    cm2_=scinew ColorMap2(cm2_->widgets(), false, 
+			  cm2_->selected(), cm2_->value_range());
     painting_ = 1;
   } 
   cmap2_oport_->send_intermediate(cm2_);
@@ -3026,8 +3022,7 @@ ViewSlices::rasterize_widgets_to_cm2(int min, int max, Array3<float> &buffer)
 {
   buffer.initialize(0.0);
   for (int i = min; i <= max; ++i)
-    if (cm2_->widgets()[i]->get_onState() && !cm2_->widgets()[i]->is_empty())
-      cm2_->widgets()[i]->rasterize(buffer, cm2_->faux());
+    cm2_->widgets()[i]->rasterize(buffer);
 }
 
 
