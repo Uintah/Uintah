@@ -29,10 +29,15 @@ set m10 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 28 467]
 set m11 [addModuleAtPosition "SCIRun" "Fields" "SeedField" 92 551]
 set m12 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 427 665]
 set m13 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 707 724]
-set m14 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 49 850]
+set m14 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 51 810]
 set m15 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 246 765]
-set m16 [addModuleAtPosition "SCIRun" "Render" "Viewer" 505 995]
+set m16 [addModuleAtPosition "SCIRun" "Render" "Viewer" 514 1048]
+set m17 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 51 929]
+set m18 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 240 905]
 
+addConnection $m17 1 $m16 0
+addConnection $m18 1 $m16 1
+addConnection $m14 0 $m17 0
 
 set ::SCIRun_DataIO_FieldReader_0-notes {}
 set ::SCIRun_DataIO_FieldReader_0-show_status 1
@@ -107,5 +112,17 @@ set ::SCIRun_Math_ErrorMetric_1-methodTCL {CCinv}
 set ::SCIRun_Math_ErrorMetric_1-pTCL {1}
 set ::SCIRun_Render_Viewer_0-notes {}
 set ::SCIRun_Render_Viewer_0-show_status 1
+set ::BioPSE_Visualization_ShowDipoles_0-notes {}
+set ::BioPSE_Visualization_ShowDipoles_0-show_status 1
+set ::BioPSE_Visualization_ShowDipoles_0-widgetSizeGui_ {}
+set ::BioPSE_Visualization_ShowDipoles_0-scaleModeGui_ {}
+set ::BioPSE_Visualization_ShowDipoles_0-showLastVecGui_ -2147483647
+set ::BioPSE_Visualization_ShowDipoles_0-showLinesGui_ -2147483647
+set ::BioPSE_Visualization_ShowDipoles_1-notes {}
+set ::BioPSE_Visualization_ShowDipoles_1-show_status 1
+set ::BioPSE_Visualization_ShowDipoles_1-widgetSizeGui_ {}
+set ::BioPSE_Visualization_ShowDipoles_1-scaleModeGui_ {}
+set ::BioPSE_Visualization_ShowDipoles_1-showLastVecGui_ -2147483647
+set ::BioPSE_Visualization_ShowDipoles_1-showLinesGui_ -2147483647
 
 ::netedit scheduleok

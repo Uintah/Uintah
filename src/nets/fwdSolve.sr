@@ -28,6 +28,7 @@ addConnection $m3 1 $m5 0
 addConnection $m2 0 $m6 1
 addConnection $m1 0 $m6 0
 addConnection $m0 0 $m1 0
+addConnection $m0 0 $m2 0
 
 set ::SCIRun_DataIO_FieldReader_0-notes {}
 set ::SCIRun_DataIO_FieldReader_0-show_status 1
