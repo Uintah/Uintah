@@ -59,6 +59,14 @@ public:
     virtual void tcl_command(TCLArgs&, void*)=0;
 
     void reset_vars();
+
+    // To get at tcl variables
+    clString get_tcl_stringvar(const clString& base, const clString& name);
+    int get_tcl_boolvar(const clString& base, const clString& name);
+
+    void set_tclvar(const clString& base, const clString& name,
+		    const clString& value);
+
 };
 
 #endif

@@ -215,3 +215,45 @@ void TCL::unregister_var(TCLvar* v)
 	}
     }
 }
+
+clString TCL::get_tcl_stringvar(const clString& base, const clString& name)
+{
+    clString n(base+"-"+name);
+    TCLTask::lock();
+    char* l=Tcl_GetVar(the_interp, n(), TCL_GLOBAL_ONLY);
+    if(!l){
+	l="";
+    }
+    clString value(l);
+    TCLTask::unlock();
+    return value;
+}
+
+int TCL::get_tcl_boolvar(const clString& base, const clString& name)
+{
+    clString n(base+"-"+name);
+    TCLTask::lock();
+    char* l=Tcl_GetVar(the_interp, n(), TCL_GLOBAL_ONLY);
+    if(!l){
+	l="";
+    }
+    int value=0;
+    if(!strcmp(l, "yes")){
+	value=1;
+    } else if(!strcmp(l, "true")){
+	value=1;
+    } else if(!strcmp(l, "1")){
+	value=1;
+    }
+    TCLTask::unlock();
+    return value;
+}
+
+void TCL::set_tclvar(const clString& base, const clString& name,
+		     const clString& value)
+{
+    clString n(base+"-"+name);
+    TCLTask::lock();
+    Tcl_SetVar(the_interp, n(), value(), TCL_GLOBAL_ONLY);
+    TCLTask::unlock();
+}
