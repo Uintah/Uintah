@@ -5,11 +5,13 @@
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/CellGroup.h>
 #include <Packages/rtrt/Core/Phong.h>
-#include <Packages/rtrt/Core/Trigger.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
-#include <Packages/rtrt/Sound/Sound.h>
+#if !defined(linux)
+#  include <Packages/rtrt/Sound/Sound.h>
+#  include <Packages/rtrt/Core/Trigger.h>
+#endif
 
 #include <dlfcn.h>
 #include <math.h>
@@ -69,8 +71,10 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   CellGroup *g = new CellGroup;
 
+#if !defined(linux)
   vector<Trigger*>          * allTriggers;
   vector<Sound*>            * allSounds;
+#endif
   rtrt::Array1<Object*>     * allObsOfInterest;
   rtrt::Array1<Object*>     * allAnimateObjects;
   rtrt::Array1<Object*>     * allDynamicBBoxObjects;
@@ -111,8 +115,10 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
     if( s == 0 ) 
       {
+#if !defined(linux)
 	allTriggers = &(scene[0]->getTriggers());
 	allSounds = &(scene[0]->getSounds());
+#endif
 	allObsOfInterest = &(scene[0]->getObjectsOfInterest());
 	allAnimateObjects = &(scene[0]->getAnimateObjects());
 	allDynamicBBoxObjects = &(scene[0]->getDynBBoxObjs());
@@ -127,6 +133,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       }
     else
       {
+#if !defined(linux)
 	vector<Trigger*> & triggers = scene[s]->getTriggers();
 	for( int cnt = 0; cnt < triggers.size(); cnt++ ) {
 	  allTriggers->push_back( triggers[cnt] );
@@ -135,6 +142,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	for( int cnt = 0; cnt < sounds.size(); cnt++ ) {
 	  allSounds->push_back( sounds[cnt] );
 	}
+#endif
 	rtrt::Array1<Object*> & obsOfInterest=scene[s]->getObjectsOfInterest();
 	for( int cnt = 0; cnt < obsOfInterest.size(); cnt++ ) {
 	  allObsOfInterest->add( obsOfInterest[cnt] );
