@@ -129,7 +129,7 @@ itcl_class Teem_UnuNtoZ_UnuResample {
 	global $this-sigma
 	make_entry $w.f.s "   Guassian sigma:" $this-sigma 
 	global $this-extent
-	make_entry $w.f.e "   Guassian extent:" $this-extent 
+	make_entry $w.f.e "   Guassian extent (in sigmas):" $this-extent 
 	frame $w.f.f
 	label $w.f.f.l -text "Number of samples (e.g. `128')\nor, if preceded by an x,\nthe resampling ratio\n(e.g. `x0.5' -> half as many samples)"
 

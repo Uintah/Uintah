@@ -67,9 +67,9 @@ set m8 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 461 91]
 set m9 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 656 101]
 set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 656 170]
 set m11 [addModuleAtPosition "SCIRun" "Render" "Viewer" 638 252]
-set m12 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 425 378]
+set m12 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpMatrix" 425 378]
 set m13 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 551 299]
-set m14 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 407 437]
+set m14 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpMatrix" 407 437]
 set m15 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 407 299]
 set m16 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 407 496]
 set m17 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 235 299]
@@ -88,7 +88,8 @@ addConnection $m8 1 $m11 0
 addConnection $m10 0 $m11 1
 addConnection $m1 0 $m6 0
 addConnection $m13 0 $m12 1
-addConnection $m12 0 $m14 1
+addConnection $m13 0 $m14 1
+addConnection $m12 0 $m14 2
 addConnection $m3 0 $m15 0
 addConnection $m5 0 $m15 1
 addConnection $m15 0 $m14 0
@@ -147,6 +148,7 @@ set $m11-ViewWindow_0-view-up-z ${view-up-z}
 set $m11-ViewWindow_0-view-fov ${view-fov}
 set $m11-ViewWindow_0-specular-scale {0.4}
 set $m12-use_interp {0}
+set $m12-exhaustive_search {1}
 set $m13-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
 set $m17-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
 $m6 initialize_ui

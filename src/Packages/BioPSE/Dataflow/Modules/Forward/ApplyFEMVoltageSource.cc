@@ -162,7 +162,7 @@ void ApplyFEMVoltageSource::execute()
     if (rhsIn->get_property("units", units))
       rhs->set_property("units", units, false);
 
-    for (int i=0; i < nsize; i++) 
+    for (unsigned int i=0; i < nsize; i++) 
       (*rhs)[i]=(*rhsIn)[i];
   }
   else{

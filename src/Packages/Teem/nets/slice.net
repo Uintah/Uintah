@@ -31,10 +31,10 @@
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "Teem" "Unu" "UnuSlice" 304 263]
-set m1 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 304 2]
+set m0 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSlice" 304 263]
+set m1 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleLattice" 304 2]
 set m2 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 304 195]
-set m3 [addModuleAtPosition "SCIRun" "Fields" "TransformData" 304 80]
+set m3 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 304 80]
 set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 127 493]
 set m5 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 28 339]
 set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 20 20]
