@@ -26,21 +26,21 @@ c*********************************************************************
       IEND = idxHi(1)
       JEND = idxHi(2)
       KEND = idxHi(3)
-      factor = 1.0
-      if (time .lt. 0.499) then
-         factor = (time+0.01)/0.5
-         if (time.lt.0.02) then
-            factor = 0.000001*factor
-         elseif (time.lt.0.1) then
-            factor = 0.001*factor
-         elseif (time.lt.0.2) then
-            factor = 0.01*factor
-         elseif (time.lt.0.3) then
-            factor = 0.1*factor
-         elseif (time.lt.0.4) then
-            factor = 0.5*factor
-         elseif (time.lt.0.45) then
-            factor = 0.8*factor
+      factor = 1.0D0
+      if (time .lt. 0.499D0) then
+         factor = (time+0.01D0)/0.5D0
+         if (time.lt.0.02D0) then
+            factor = 0.000001D0*factor
+         elseif (time.lt.0.1D0) then
+            factor = 0.001D0*factor
+         elseif (time.lt.0.2D0) then
+            factor = 0.01D0*factor
+         elseif (time.lt.0.3D0) then
+            factor = 0.1D0*factor
+         elseif (time.lt.0.4D0) then
+            factor = 0.5D0*factor
+         elseif (time.lt.0.45D0) then
+            factor = 0.8D0*factor
          endif
       endif
 
