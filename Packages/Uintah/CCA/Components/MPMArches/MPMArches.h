@@ -143,8 +143,8 @@ public:
   ///////////////////////////////////////////////////////////////////////
     // Function to return boolean for recompiling taskgraph
 
-    virtual bool need_recompile(double time, double dt,
-				const GridP& grid);
+    virtual bool needRecompile(double time, double dt,
+			       const GridP& grid);
 
  protected:
 

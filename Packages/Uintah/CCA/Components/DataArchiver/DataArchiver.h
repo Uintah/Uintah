@@ -95,7 +95,7 @@ using std::pair;
       // Insert Documentation Here:
       virtual const string getOutputLocation() const;
 
-      virtual bool need_recompile(double time, double dt,
+      virtual bool needRecompile(double time, double dt,
 				  const GridP& grid);
 
       //////////
