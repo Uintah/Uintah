@@ -3823,13 +3823,13 @@ class BioTensorApp {
 	    change_indicate_val 2
 	} elseif {$which == $mods(SampleField-GlyphSeeds) && $state == "Completed" && ![set $mods(ShowField-Glyphs)-tensors-on]} {
 	    after 100 \
-		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	} elseif {$which == $mods(Probe-GlyphSeeds) && $state == "Completed" && ![set $mods(ShowField-Glyphs)-tensors-on]} {
 	    after 100 \
 		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	} elseif {$which == $mods(SampleField-FiberSeeds) && $state == "Completed" && ![set $mods(ShowField-Fibers)-edges-on]} {
 	    after 100 \
-		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	} elseif {$which == $mods(Probe-FiberSeeds) && $state == "Completed" && ![set $mods(ShowField-Fibers)-edges-on]} {
 	    after 100 \
 		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
@@ -4903,9 +4903,9 @@ class BioTensorApp {
 	$mods(ChooseField-GlyphSeeds)-c needexecute
 	
 	uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
-	uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
+	uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 0
 	uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
-	uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
+	uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 0
 	
 	$mods(Viewer)-ViewWindow_0-c redraw
 	
@@ -7144,7 +7144,7 @@ class BioTensorApp {
         if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 0} {
 	    # Point
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 1
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 0
 	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state normal
 	    $glyphs_tab2.seed.childsite.a.pointf.w configure -state normal
 
@@ -7153,7 +7153,7 @@ class BioTensorApp {
         } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
 	    # Rake
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 1
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 1
 	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
 	    $glyphs_tab2.seed.childsite.a.pointf.w configure -state disabled
 
@@ -7162,7 +7162,7 @@ class BioTensorApp {
         } else {
 	    # Grid or Planes
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 0
 	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
 	    $glyphs_tab2.seed.childsite.a.pointf.w configure -state disabled
 
@@ -7197,9 +7197,9 @@ class BioTensorApp {
 	global mods
 	
 	if {$glyph_rake} {
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 1
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 1
 	} else {
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 0
 	}
 
 	$mods(Viewer)-ViewWindow_0-c redraw
@@ -7211,7 +7211,7 @@ class BioTensorApp {
 	
         if {[set $mods(ShowField-Glyphs)-tensors-on] == 0} {
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 0
         } else {
             global $mods(ChooseField-GlyphSeeds)-port-index
             if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 0} {
@@ -7219,7 +7219,7 @@ class BioTensorApp {
 		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 1
             } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
 		# enable rake
-		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 1
+		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 1
             } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 3} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
@@ -8000,7 +8000,7 @@ class BioTensorApp {
         if {[set $mods(ChooseField-FiberSeeds)-port-index] == 0} {
 	    # Point
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 1
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 0
 	    $fibers_tab1.seed.childsite.a.pointf.w configure -state normal
 	    $fibers_tab2.seed.childsite.a.pointf.w configure -state normal
 
@@ -8009,7 +8009,7 @@ class BioTensorApp {
         } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
 	    # Rake
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 1
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 1
 	    $fibers_tab1.seed.childsite.a.pointf.w configure -state disabled
 	    $fibers_tab2.seed.childsite.a.pointf.w configure -state disabled
 
@@ -8018,7 +8018,7 @@ class BioTensorApp {
         } else {
 	    # Grid or Planes
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 0
 	    $fibers_tab1.seed.childsite.a.pointf.w configure -state disabled
 	    $fibers_tab2.seed.childsite.a.pointf.w configure -state disabled
 
@@ -8054,9 +8054,9 @@ class BioTensorApp {
 	global mods
 	
 	if {$fiber_rake} {
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 1
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 1
 	} else {
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 0
 	}
 
 	$mods(Viewer)-ViewWindow_0-c redraw
@@ -8071,7 +8071,7 @@ class BioTensorApp {
         if {[set $mods(ShowField-Fibers)-edges-on] == 0} {
 	    # sync nodes
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 0
 
 	    # disable rest of fibers tab except for checkbutton
         } else {
@@ -8082,7 +8082,7 @@ class BioTensorApp {
 		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 1
             } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
 		# enable rake
-		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 1
+		uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 1
             } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
