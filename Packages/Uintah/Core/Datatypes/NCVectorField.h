@@ -31,7 +31,7 @@ public:
 			  int& ix, int exhaustive=0);
 
   void SetGrid( GridP g ){ grid = g; }
-  void SetLevel( LevelP l){ level = l; }
+  void SetLevel( LevelP l){ _level = l; }
   void SetName( string vname ) { _varname = vname; }
   void SetMaterial( int index) { _matIndex = index; }
   void AddVar( const NCVariable<Vector>& var);
@@ -42,7 +42,7 @@ public:
 private:
   vector< NCVariable<Vector> > _vars;
   GridP grid;
-  LevelP level;
+  LevelP _level;
   string _varname;
   int _matIndex;
 };
