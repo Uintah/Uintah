@@ -181,8 +181,9 @@ void Image::draw_depth( float max_depth ) {
     int ylow = j>0?j-1:0;
     int yhigh = j<yres-1?j+1:yres-1;
     for(int i = 0; i < xres; i++) {
-      float val = depth[j][i];
+      float val;
 #if 0
+      val = depth[j][i];
       if (val > 0) {
         if (val < max_depth)
           val = sqrtf(val*inv_md) * 255;
@@ -193,25 +194,76 @@ void Image::draw_depth( float max_depth ) {
       }
       image[j][i] = Pixel(val, val, val, 255);
 #else
-      // Compute the laplacian
-      val *= 8;
       int xlow = i>0?i-1:0;
       int xhigh = i<xres-1?i+1:xres-1;
 
-      val -=
-        depth[j][xlow] +
-        depth[j][xhigh] +
-        depth[ylow][xlow] +
-        depth[ylow][i] +
-        depth[ylow][xhigh] +
-        depth[yhigh][xlow] +
-        depth[yhigh][i] +
-        depth[yhigh][xhigh];
+      // Compute the first derivative
+      float dx = 0
+        - depth[j][xlow] - depth[j][xlow]
+        + depth[j][xhigh] + depth[j][xhigh]
+        - depth[ylow][xlow]
+        + depth[ylow][xhigh]
+        - depth[yhigh][xlow]
+        + depth[yhigh][xhigh];
+      float dy = 0
+        - depth[yhigh][xlow]
+        - depth[yhigh][i] - depth[yhigh][i]
+        - depth[yhigh][xhigh]
+        - depth[ylow][xlow]
+        - depth[ylow][i] - depth[ylow][i]
+        - depth[ylow][xhigh];
 
-      if (val > max_val) max_val = val;
-      if (val < min_val) min_val = val;
-      val = (val*.5)+128;
-      image[j][i] = Pixel(val, val, val, 255);
+      // Threshold the second derivative
+      float first_der = dx*dx + dy*dy;
+
+      if (first_der > max_val) max_val = first_der;
+      if (first_der < min_val) min_val = first_der;
+
+      first_der = first_der/500*255;
+      if (first_der > 255)
+        val = 255;
+      else
+        val = 0;
+
+      if (val > 0) {
+        // Compute the laplacian
+        float inside_val = depth[j][i];
+        inside_val *= 8;
+
+        float outside_val =
+          depth[j][xlow] +
+          depth[j][xhigh] +
+          depth[ylow][xlow] +
+          depth[ylow][i] +
+          depth[ylow][xhigh] +
+          depth[yhigh][xlow] +
+          depth[yhigh][i] +
+          depth[yhigh][xhigh];
+
+#if 0
+        if (inside_val < 0 && inside_val > outside_val)
+          image[j][i] = Pixel(val, 0, 0, 255);
+        else if (inside_val < 0 && inside_val < outside_val)
+          image[j][i] = Pixel(val, val, 0, 255);
+        else if (inside_val > 0 && inside_val > outside_val)
+          image[j][i] = Pixel(0, val, val, 255);
+        else if (inside_val > 0 && inside_val < outside_val)
+          image[j][i] = Pixel(0, 50, 0, 255);
+        else
+          image[j][i] = Pixel(0, 0, val, 255);
+#else
+        if (inside_val > 0 && inside_val > outside_val)
+          image[j][i] = Pixel(255, 255, 255, 255);
+        else
+          image[j][i] = Pixel(0, 0, 0, 255);
+#endif
+        //        if (val > max_val) max_val = val;
+        //        if (val < min_val) min_val = val;
+        //      val = (val*.5)+128;
+        //      val = fabsf(val)*10;
+      } else {
+        image[j][i] = Pixel(0, 0, 0, 255);
+      }      
 #endif
     }
   }
@@ -237,8 +289,8 @@ void Image::set_depth(int x, int y, double d) {
   if (d <= MAXFLOAT/10)
     depth[y][x] = d;
   else
-    //    depth[y][x] = MAXFLOAT/10;
-    depth[y][x] = 0;
+    depth[y][x] = MAXFLOAT/10;
+  //depth[y][x] = 0;
 }
 
 void Image::save(char* filename)
