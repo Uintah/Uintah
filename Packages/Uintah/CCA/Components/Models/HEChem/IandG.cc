@@ -101,7 +101,7 @@ void IandG::problemSetup(GridP&, SimulationStateP& sharedState,
 //______________________________________________________________________
 //     
 void IandG::scheduleInitialize(SchedulerP&,
-                               const LevelP& level,
+                               const LevelP&,
                                const ModelInfo*)
 {
   // None necessary...
@@ -163,7 +163,7 @@ void IandG::scheduleMassExchange(SchedulerP& sched,
 //
 void IandG::massExchange(const ProcessorGroup*, 
                          const PatchSubset* patches,
-                         const MaterialSubset* matls,
+                         const MaterialSubset*,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw,
                          const ModelInfo* mi)
@@ -293,4 +293,10 @@ void IandG::scheduleMomentumAndEnergyExchange(SchedulerP&,
 				       const ModelInfo*)
 {
   // None
+}
+void IandG::scheduleModifyThermoTransportProperties(SchedulerP&,
+                                                    const LevelP&,         
+                                                    const MaterialSet*)    
+{
+  // do nothing      
 }

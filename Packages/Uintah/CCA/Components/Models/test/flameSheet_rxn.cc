@@ -224,8 +224,11 @@ void flameSheet_rxn::initialize(const ProcessorGroup*,
            
         //__________________________________
         //  Smooth out initial distribution with some diffusion
-        double FakeDiffusivity = 1.0;
+        CCVariable<double> FakeDiffusivity;
+        new_dw->allocateTemporary(FakeDiffusivity, patch);
+        FakeDiffusivity.initialize(1.0);    //  HARDWIRED
         double fakedelT = 1.0;
+        
         for( int i =1 ; i < d_smear_initialDistribution_knob; i++ ){
           bool use_vol_frac = false; // don't include vol_frac in diffusion calc.
           constCCVariable<double> placeHolder;
@@ -395,11 +398,23 @@ void flameSheet_rxn::react(const ProcessorGroup*,
       if(d_diffusivity != 0.0){ 
         bool use_vol_frac = false; // don't include vol_frac in diffusion calc.
         constCCVariable<double> placeHolder;
-        
+        /*`==========TESTING==========*/    
+        // this needs to be changed
+        CCVariable<double> diff_coeff;
+        new_dw->allocateTemporary(diff_coeff, patch);
+        diff_coeff.initialize(d_diffusivity);    
+        /*==========TESTING==========`*/
         scalarDiffusionOperator(new_dw, patch, use_vol_frac,
                                 placeHolder, placeHolder,  f_old,
-                                f_src, d_diffusivity, delT);
+                                f_src, diff_coeff, delT);
       }  // diffusivity > 0 
     }  // matl loop
   }
+}
+//______________________________________________________________________
+void flameSheet_rxn::scheduleModifyThermoTransportProperties(SchedulerP&,
+                                                        const LevelP&,
+                                                        const MaterialSet*)
+{
+  // do nothing      
 }

@@ -432,4 +432,11 @@ void Mixing2::react(const ProcessorGroup*,
     }
   }
 }
+//______________________________________________________________________
+void Mixing2::scheduleModifyThermoTransportProperties(SchedulerP&,
+                                                      const LevelP&,
+                                                      const MaterialSet*)
+{
+  // do nothing      
+}
 
