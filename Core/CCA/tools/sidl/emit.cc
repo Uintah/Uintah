@@ -1637,10 +1637,10 @@ e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _se
     if (isCollective) {
       e.out.pop_leader(call_ldr);
       e.out << leader2 << "}\n";
+      e.out << "exitmethod:\n";
     }
 
     /**********************************************/
-    e.out << "exitmethod:\n";
     if(reply_required()) {  
       if(return_type){
 	if(!return_type->isvoid()){
