@@ -57,23 +57,11 @@ namespace Uintah {
                                   const MPMMaterial* matl,
                                   DataWarehouse* new_dw);
 
-    /*! compute stable timestep for this patch */
-    virtual void computeStableTimestep(const Patch* patch,
-                                       const MPMMaterial* matl,
-                                       DataWarehouse* new_dw);
-
     /*! Computes and requires for compute stress tensor added to
       the taskgraph */
     virtual void addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,
                                         const PatchSet* patches) const;
-
-    virtual void addComputesAndRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches,
-                                        const bool recursion) const
-      {
-      }
 
     /*! compute stress at each particle in the patch */
     virtual void computeStressTensor(const PatchSubset* patches,
@@ -81,6 +69,13 @@ namespace Uintah {
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
 
+    /* Add computes and requires for the implicit code */
+    virtual void addComputesAndRequires(Task* task,
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches,
+                                        const bool recursion) const;
+
+    /* Computes stress tensor for the implicit code */
     virtual void computeStressTensor(const PatchSubset* ,
                                      const MPMMaterial* ,
                                      DataWarehouse* ,
@@ -90,9 +85,7 @@ namespace Uintah {
 #else
                                      SimpleSolver* ,
 #endif
-                                     const bool )
-      {
-      }
+                                     const bool );
 
     /*! carry forward CM data for RigidMPM */
     virtual void carryForward(const PatchSubset* patches,
@@ -135,6 +128,15 @@ namespace Uintah {
 
     /*! Function that interacts with ice */
     virtual double getCompressibility();
+
+  protected:
+
+    /*! compute stress at each particle in the patch (replacement for
+        standard compute stress tensor without the recursion flag) */
+    void computeStressTensorImplicit(const PatchSubset* patches,
+                                     const MPMMaterial* matl,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
 
   };
 
