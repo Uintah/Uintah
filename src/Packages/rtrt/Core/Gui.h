@@ -143,9 +143,15 @@ private:
   GLUI_Listbox * lightList;
 
   GLUI_Panel   * lightsColorPanel_;
+  GLUI_Panel   * lightsPositionPanel_;
+
   GLUI_Spinner * r_color_spin;
   GLUI_Spinner * g_color_spin;
   GLUI_Spinner * b_color_spin;
+
+  GLUI_Spinner * lightPosX_;
+  GLUI_Spinner * lightPosY_;
+  GLUI_Spinner * lightPosZ_;
 
   GLUI_Spinner * lightIntensity_;
   GLUI_Spinner * ambientIntensity_;
@@ -155,6 +161,11 @@ private:
 
   float lightBrightness_;
   float ambientBrightness_;
+
+  // Currently selected lights position (x,y,z)
+  float lightX_;
+  float lightY_;
+  float lightZ_;
 
   ////////////////////////////////////////////////////////////////
   //
@@ -188,12 +199,6 @@ private:
   void handleMousePress( int button, int mouse_x, int mouse_y );
   void handleMouseRelease( int button, int mouse_x, int mouse_y );
 
-  void createLightWindow( GLUI * window );
-  static void toggleLightsWindowCB( int id );
-  static void updateLightPanelCB( int id );
-  static void toggleLightSwitchesCB( int id ); // turn all lights on/off
-  static void toggleShowLightsCB( int id );    // display light positions
-
   // Get String Window Callbacks
   void createGetStringWindow( GLUI * window );
   GLUI_Panel  * getStringPanel;
@@ -214,6 +219,18 @@ private:
   static void goToNextMarkerCB( int id );
   static void goToPrevMarkerCB( int id );
   static void goToRouteBeginningCB( int id );
+
+  // Light Window Callbacks
+  void createLightWindow( GLUI * window );
+  static void toggleLightsWindowCB( int id );
+  static void toggleLightSwitchesCB( int id ); // turn all lights on/off
+  static void toggleShowLightsCB( int id );    // display light positions
+  //// Update the intensity of the currently selected light.
+  static void updateIntensityCB( int id );
+  //// Update the intensity of the ambient light.
+  static void updateAmbientCB( int id );
+  static void updateLightPanelCB( int id );
+  static void updateLightPositionCB( int id );
 
   // Object Window Callbacks
   void createObjectWindow( GLUI * window );
@@ -237,13 +254,6 @@ private:
   static void updateFovCB( int id );
 
   static void updateDepthCB( int id );
-
-  ////////////////////////////////////////////////////////////////
-
-  // Update the intensity of the currently selected light.
-  static void updateIntensityCB( int id );
-  // Update the intensity of the ambient light.
-  static void updateAmbientCB( int id );
 
   ////////////////////////////////////////////////////////////////
   // Helper Functions:

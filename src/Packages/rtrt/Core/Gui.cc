@@ -13,7 +13,7 @@
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/CycleMaterial.h>
 #include <Packages/rtrt/Core/FontString.h>
-#include <Packages/rtrt/Core/Instance.h>
+#include <Packages/rtrt/Core/DynamicInstance.h>
 
 #include <Core/Math/Trig.h>
 #include <Core/Thread/Time.h>
@@ -45,6 +45,9 @@ static Transform prev_trans;
 #define LIGHTS_BUTTON_ID         101
 #define TOGGLE_LIGHT_SWITCHES_ID 102
 #define TOGGLE_SHOW_LIGHTS_ID    103
+#define LIGHT_X_POS_ID           104
+#define LIGHT_Y_POS_ID           105
+#define LIGHT_Z_POS_ID           106
 
 #define ROUTE_LIST_ID            110
 #define ROUTE_BUTTON_ID          111
@@ -691,6 +694,7 @@ Gui::updateLightPanelCB( int /*id*/ )
 
   Light * light = activeGui->lights_[ activeGui->selectedLightId_ ];
   const Color & color = light->getOrigColor();
+  const Point & pos   = light->get_pos();
 
   activeGui->r_color_spin->set_float_val( color.red() );
   activeGui->g_color_spin->set_float_val( color.green() );
@@ -698,11 +702,20 @@ Gui::updateLightPanelCB( int /*id*/ )
 
   activeGui->lightIntensity_->set_float_val( light->get_intensity() );
 
-  if( light->isOn() )
-    activeGui->lightsColorPanel_->enable();
-  else
-    activeGui->lightsColorPanel_->disable();
+  activeGui->lightPosX_->set_float_val( pos.x() );
+  activeGui->lightPosY_->set_float_val( pos.y() );
+  activeGui->lightPosZ_->set_float_val( pos.z() );
 
+  if( light->isOn() )
+    {
+      activeGui->lightsColorPanel_->enable();
+      activeGui->lightsPositionPanel_->enable();
+    }
+  else
+    {
+      activeGui->lightsColorPanel_->disable();
+      activeGui->lightsPositionPanel_->disable();
+    }
 }
 
 void
@@ -739,11 +752,13 @@ Gui::toggleLightSwitchesCB( int /*id*/ )
     activeGui->dpy_->turnOffAllLights_ = true;
     activeGui->lightsOn_ = false;
     activeGui->lightsColorPanel_->disable();
+    activeGui->lightsPositionPanel_->disable();
   } else {
     activeGui->toggleLightsOnOffBtn_->set_name( "Turn Off Lights" );
     activeGui->dpy_->turnOnAllLights_ = true;
     activeGui->lightsOn_ = true;
     activeGui->lightsColorPanel_->enable();
+    activeGui->lightsPositionPanel_->enable();
   }
 }
 
@@ -843,6 +858,10 @@ Gui::createObjectWindow( GLUI * window )
   window->add_statictext_to_panel( panel, "Type:" );
   window->add_statictext_to_panel( panel, "Material:" );
 
+  GLUI_Rotation * objectRotator = 
+    window->add_rotation_to_panel( panel, "Rotator", 
+				   (float*)(dpy_->objectRotationMatrix_) );
+
   attachKeypadBtn_ = window->add_button_to_panel( panel, "Attach Keypad",
 						  ATTACH_KEYPAD_BTN_ID,
 						  attachKeypadCB );
@@ -853,7 +872,7 @@ Gui::attachKeypadCB( int /*id*/ )
 {
   Object * obj = 
     activeGui->dpy_->scene->objectsOfInterest_[ activeGui->selectedObjectId_ ];
-  Instance * instance = dynamic_cast<Instance*>( obj );
+  DynamicInstance * instance = dynamic_cast<DynamicInstance*>( obj );
 
   if( instance ) 
     {
@@ -861,13 +880,18 @@ Gui::attachKeypadCB( int /*id*/ )
 	{
 	  activeGui->keypadAttached_ = true;
 	  activeGui->attachKeypadBtn_->set_name( "Detach Keypad" );
+	  activeGui->dpy_->attachedObject_ = instance;
+	  activeGui->stealth_->stopAllMovement();
+	  activeGui->stealth_ = activeGui->dpy_->objectStealth_;
 	}
       else
 	{
+	  activeGui->stealth_ = activeGui->dpy_->stealth_;
 	  activeGui->keypadAttached_ = false;
 	  activeGui->attachKeypadBtn_->set_name( "Attach Keypad" );
+	  activeGui->dpy_->attachedObject_ = NULL;
 	}
-  }
+    }
 }
 
 void
@@ -918,6 +942,20 @@ Gui::createLightWindow( GLUI * window )
 				  &lightBrightness_, -1, updateIntensityCB );
   lightIntensity_->set_float_limits( 0.0, 1.0 );
   lightIntensity_->set_speed( 0.01 );
+
+  lightsPositionPanel_ = window->add_panel_to_panel( panel, "Position" );
+  lightPosX_ = 
+    window->add_spinner_to_panel(lightsPositionPanel_,"X:",GLUI_SPINNER_FLOAT,
+			  &(activeGui->lightX_),
+			  LIGHT_X_POS_ID, updateLightPositionCB );
+  lightPosY_ =
+    window->add_spinner_to_panel(lightsPositionPanel_,"Y:",GLUI_SPINNER_FLOAT,
+			  &(activeGui->lightY_),
+			  LIGHT_Y_POS_ID, updateLightPositionCB );
+  lightPosZ_ =
+    window->add_spinner_to_panel(lightsPositionPanel_,"Z:",GLUI_SPINNER_FLOAT,
+			  &(activeGui->lightZ_),
+			  LIGHT_Z_POS_ID, updateLightPositionCB );
 
   window->add_separator_to_panel( panel );
 
@@ -1281,11 +1319,13 @@ Gui::updateIntensityCB( int /*id*/ )
 
   if( activeGui->lightBrightness_ == 0.0 )
     {
+      activeGui->lightsPositionPanel_->disable();
       activeGui->lightsColorPanel_->disable();
       activeGui->dpy_->turnOffLight_ = light;
     }
   else if( !light->isOn() )
     {
+      activeGui->lightsPositionPanel_->enable();
       activeGui->lightsColorPanel_->enable();
       activeGui->dpy_->turnOnLight_ = light;
     }
@@ -1466,6 +1506,36 @@ Gui::toggleJitterCB( int /*id*/ )
     activeGui->jitterButton_->set_name("Turn Jitter ON");
   else
     activeGui->jitterButton_->set_name("Turn Jitter OFF");
+}
+
+void
+Gui::updateLightPositionCB( int id )
+{
+  Light * light = activeGui->lights_[ activeGui->selectedLightId_ ];
+  Point pos = light->get_pos();
+
+  cout << "updating light position: " << id << "\n";
+  cout << "pos was " << pos << "\n";
+
+  cout << activeGui->lightX_ << ", "
+       << activeGui->lightY_ << ", "
+       << activeGui->lightZ_ << "\n";
+
+  switch( id ) {
+  case LIGHT_X_POS_ID:
+    pos.x( activeGui->lightX_ );
+    light->updatePosition( pos );
+    break;
+  case LIGHT_Y_POS_ID:
+    pos.y( activeGui->lightY_ );
+    light->updatePosition( pos );
+    break;
+  case LIGHT_Z_POS_ID:
+    pos.z( activeGui->lightZ_ );
+    light->updatePosition( pos );
+    break;
+  }
+  cout << "pos is " << pos << "\n";
 }
 
 void
