@@ -36,7 +36,7 @@
 %undefine	__check_files
 %define thirdpartydotver 1
 %define thirdpartyversion %{defver}.%{thirdpartydotver}
-%define insightver  1.8.1
+%define insightver  2.0.0
 
 
 Name:		%{defname}BioPSE
