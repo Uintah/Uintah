@@ -850,7 +850,7 @@ GzipPiostream::GzipPiostream(const clString& filename, Direction dir)
     } else {
 	gzfile=gzopen(filename(), "w");
 	char str[100];
-	sprintf(str, "SCI\nBIN\n1\n");
+	sprintf(str, "SCI\nGZP\n1\n");
 	gzwrite(gzfile, str, strlen(str));
 	version=1;
     }
@@ -863,7 +863,7 @@ GzipPiostream::GzipPiostream(char* name, int version)
     char str[10];
     gzread(gzfile, str, 10);
     char hdr[13];
-    sprintf(hdr, "SCI\nBIN\n%d\n", 1);
+    sprintf(hdr, "SCI\nGZP\n%d\n", 1);
     if (strncmp(str, hdr, 10)) {
 	gzclose(gzfile);
 	gzfile=0;
@@ -1121,6 +1121,272 @@ void GzipPiostream::emit_pointer(int& have_data, int& pointer_id)
 }
 
 double GzipPiostream::get_percent_done()
+{
+    return 0;
+}
+
+GunzipPiostream::GunzipPiostream(ifstream* istr, int version)
+: Piostream(Read, version), have_peekname(0)
+{
+    unzipfile=istr->rdbuf()->fd();
+    struct stat buf;
+    if(fstat(unzipfile, &buf) != 0){
+	perror("fstat");
+	exit(-1);
+    }
+    len=buf.st_size;
+}
+
+GunzipPiostream::~GunzipPiostream()
+{
+    cancel_timers();
+    close(unzipfile);
+}
+
+clString GunzipPiostream::peek_class()
+{
+    have_peekname=1;
+    io(peekname);
+    return peekname;
+}
+
+int GunzipPiostream::begin_class(const clString& classname,
+			       int current_version)
+{
+    if(err)return -1;
+    int version=current_version;
+    clString gname;
+    if(dir==Write){
+	gname=classname;
+	io(gname);
+    } else if(dir==Read && have_peekname){
+	gname=peekname;
+    } else {
+	io(gname);
+    }
+    have_peekname=0;
+
+    if(dir==Read){
+	if(classname != gname){
+	    err=1;
+	    cerr << "Expecting class: " << classname << ", got class: " << gname << endl;
+	    return 0;
+	}
+    }
+    io(version);
+    return version;
+}
+
+void GunzipPiostream::end_class()
+{
+    // No-op
+}
+
+void GunzipPiostream::begin_cheap_delim()
+{
+    // No-op
+}
+
+void GunzipPiostream::end_cheap_delim()
+{
+    // No-op
+}
+
+void GunzipPiostream::io(char& data)
+{
+    int sz=sizeof(char);
+    if(err)return;
+    if(dir == Read) {
+	if (read(unzipfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "unzipread failed\n";
+	}
+    } else {
+	if (!write(unzipfile, &data, sz)) {
+	    err=1;
+	    cerr << "unzipwrite failed\n";
+	}
+    }
+}
+
+void GunzipPiostream::io(unsigned char& data)
+{
+    int sz=sizeof(unsigned char);
+    if(err)return;
+    if(dir == Read) {
+	if (read(unzipfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "unzipread failed\n";
+	}
+    } else {
+	if (!write(unzipfile, &data, sz)) {
+	    err=1;
+	    cerr << "unzipwrite failed\n";
+	}
+    }
+}
+
+void GunzipPiostream::io(short& data)
+{
+    int sz=sizeof(short);
+    if(err)return;
+    if(dir == Read) {
+	if (read(unzipfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "unzipread failed\n";
+	}
+    } else {
+	if (!write(unzipfile, &data, sz)) {
+	    err=1;
+	    cerr << "unzipwrite failed\n";
+	}
+    }
+}
+
+void GunzipPiostream::io(unsigned short& data)
+{
+    int sz=sizeof(unsigned short);
+    if(err)return;
+    if(dir == Read) {
+	if (read(unzipfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "unzipread failed\n";
+	}
+    } else {
+	if (!write(unzipfile, &data, sz)) {
+	    err=1;
+	    cerr << "unzipwrite failed\n";
+	}
+    }
+}
+
+void GunzipPiostream::io(int& data)
+{
+    int sz=sizeof(int);
+    if(err)return;
+    if(dir == Read) {
+	if (read(unzipfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "unzipread failed\n";
+	}
+    } else {
+	if (!write(unzipfile, &data, sz)) {
+	    err=1;
+	    cerr << "unzipwrite failed\n";
+	}
+    }
+}
+
+void GunzipPiostream::io(unsigned int& data)
+{
+    int sz=sizeof(unsigned int);
+    if(err)return;
+    if(dir == Read) {
+	if (read(unzipfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "unzipread failed\n";
+	}
+    } else {
+	if (!write(unzipfile, &data, sz)) {
+	    err=1;
+	    cerr << "unzipwrite failed\n";
+	}
+    }
+}
+
+void GunzipPiostream::io(long& data)
+{
+    int sz=sizeof(long);
+    if(err)return;
+    if(dir == Read) {
+	if (read(unzipfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "unzipread failed\n";
+	}
+    } else {
+	if (!write(unzipfile, &data, sz)) {
+	    err=1;
+	    cerr << "unzipwrite failed\n";
+	}
+    }
+}
+
+void GunzipPiostream::io(unsigned long& data)
+{
+    int sz=sizeof(unsigned long);
+    if(err)return;
+    if(dir == Read) {
+	if (read(unzipfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "unzipread failed\n";
+	}
+    } else {
+	if (!write(unzipfile, &data, sz)) {
+	    err=1;
+	    cerr << "unzipwrite failed\n";
+	}
+    }
+}
+
+void GunzipPiostream::io(double& data)
+{
+    int sz=sizeof(double);
+    if(err)return;
+    if(dir == Read) {
+	if (read(unzipfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "unzipread failed\n";
+	}
+    } else {
+	if (!write(unzipfile, &data, sz)) {
+	    err=1;
+	    cerr << "unzipwrite failed\n";
+	}
+    }
+}
+
+void GunzipPiostream::io(float& data)
+{
+    int sz=sizeof(float);
+    if(err)return;
+    if(dir == Read) {
+	if (read(unzipfile, &data, sz) == -1) {
+	    err=1;
+	    cerr << "unzipread failed\n";
+	}
+    } else {
+	if (!write(unzipfile, &data, sz)) {
+	    err=1;
+	    cerr << "unzipwrite failed\n";
+	}
+    }
+}
+
+void GunzipPiostream::io(clString& data)
+{
+    if(err)return;
+    if(dir == Read) {
+	char c='1';
+	while (c != '\0' && !err) {
+	    io(c);
+	    data+=c;
+	}
+    } else {
+	int sz=strlen(data());
+	if (!write(unzipfile, data(), sz+1)) {
+	    err=1;
+	    cerr << "unzipwrite failed\n";
+	}
+    }
+}
+
+void GunzipPiostream::emit_pointer(int& have_data, int& pointer_id)
+{
+    io(have_data);
+    io(pointer_id);
+}
+
+double GunzipPiostream::get_percent_done()
 {
     return 0;
 }

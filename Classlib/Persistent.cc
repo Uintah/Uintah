@@ -246,6 +246,8 @@ Piostream* auto_istream(ifstream* inp, char *name)
 	return scinew BinaryPiostream(inp, version);
     } else if(m1 == 'A' && m2 == 'S' && m3 == 'C'){
 	return scinew TextPiostream(inp, version);
+    } else if(m1 == 'G' && m2 == 'Z' && m3 == 'P'){
+	return scinew GunzipPiostream(inp, version);
     } else {
         cerr << name << " is an unknown type!\n";
         return 0;

@@ -129,4 +129,37 @@ public:
     inline int fileOpen() { return (gzfile!=0); }
 };
 
+class GunzipPiostream : public Piostream {
+    int unzipfile;	// file descriptor
+    int len;
+    int have_peekname;
+    clString peekname;
+    void expect(char);
+    virtual void emit_pointer(int&, int&);
+    virtual double get_percent_done();
+public:
+    GunzipPiostream(ifstream* istream, int version);
+    virtual ~GunzipPiostream();
+    virtual clString peek_class();
+    virtual int begin_class(const clString& name, int);
+    virtual void end_class();
+
+    virtual void begin_cheap_delim();
+    virtual void end_cheap_delim();
+
+    virtual void io(char&);
+    virtual void io(unsigned char&);
+    virtual void io(short&);
+    virtual void io(unsigned short&);
+    virtual void io(int&);
+    virtual void io(unsigned int&);
+    virtual void io(long&);
+    virtual void io(unsigned long&);
+    virtual void io(double&);
+    virtual void io(float&);
+    virtual void io(clString& string);
+    void io(int, clString& string);
+    inline int fileOpen() { return (unzipfile!=0); }
+};
+
 #endif
