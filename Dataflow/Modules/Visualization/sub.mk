@@ -6,6 +6,7 @@ SRCDIR   := Packages/Uintah/Dataflow/Modules/Visualization
 
 SRCS     += \
 	$(SRCDIR)/GridVisualizer.cc \
+	$(SRCDIR)/PatchVisualizer.cc \
 	$(SRCDIR)/RescaleColorMapForParticles.cc \
 	$(SRCDIR)/ParticleVis.cc \
 	$(SRCDIR)/RescaleColorMap.cc \
