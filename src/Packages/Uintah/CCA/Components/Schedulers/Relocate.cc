@@ -330,7 +330,7 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 
     for(int m = 0; m < matls->size(); m++){
       int matl = matls->get(m);
-      int numVars = (int)reloc_old_labels[matl].size();
+      int numVars = (int)reloc_old_labels[m].size();
       vector<const Patch*> fromPatches;
       vector<ParticleSubset*> subsets;
       ParticleSubset* keepset = keepsets(p, m);
@@ -359,8 +359,8 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 	ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
 	new_dw->put(*posvar, reloc_new_posLabel);
 	for(int v=0;v<numVars;v++){
-	  ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[matl][v], orig_pset);
-	  new_dw->put(*var, reloc_new_labels[matl][v]);
+	  ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], orig_pset);
+	  new_dw->put(*var, reloc_new_labels[m][v]);
 	}
       } else {
 	int numOldVariables = (int)subsets.size();
@@ -402,15 +402,15 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 
 	vector<ParticleVariableBase*> vars(numVars);
 	for(int v=0;v<numVars;v++){
-	  const VarLabel* label = reloc_old_labels[matl][v];
+	  const VarLabel* label = reloc_old_labels[m][v];
 	  ParticleVariableBase* var = new_dw->getParticleVariable(label, orig_pset);
 	  for(int i=0;i<numOldVariables;i++)
 	    invars[i]=new_dw->getParticleVariable(label, matl, fromPatches[i]);
 	  if(newParts){
 	    map<const VarLabel*, ParticleVariableBase*>::iterator piter;
-	    piter = newParts->find(reloc_new_labels[matl][v]);
+	    piter = newParts->find(reloc_new_labels[m][v]);
 	    if(piter == newParts->end()) {
-	      cout << "reloc_new_labels = " << reloc_new_labels[matl][v]->getName()
+	      cout << "reloc_new_labels = " << reloc_new_labels[m][v]->getName()
 		   << endl;
 	      throw InternalError("didnt create new variable of this type");
 	    }
@@ -425,7 +425,7 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 	new_dw->put(*newpos, reloc_new_posLabel);
 	delete newpos;
 	for(int v=0;v<numVars;v++){
-	  new_dw->put(*vars[v], reloc_new_labels[matl][v]);
+	  new_dw->put(*vars[v], reloc_new_labels[m][v]);
 	  delete vars[v];
 	}
       }
@@ -463,7 +463,12 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   ASSERTEQ(reloc_old_labels.size(), reloc_new_labels.size());
   int numMatls = (int)reloc_old_labels.size();
   ASSERTEQ(matls->size(), 1);
-  ASSERTEQ(numMatls, matls->getSubset(0)->size());
+
+  // be careful with matls - we need to access reloc_labels linearly, but
+  // they may not be in consecutive order - so get the matl from the matl
+  // subset whenever you schedule a task or use the dw.
+  const MaterialSubset* matlsub = matls->getSubset(0);
+  ASSERTEQ(numMatls, matlsub->size());
   for (int m = 0; m< numMatls; m++)
     ASSERTEQ(reloc_old_labels[m].size(), reloc_new_labels[m].size());
   Task* t = scinew Task("Relocate::relocateParticles",
@@ -473,7 +478,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   t->requires( Task::NewDW, old_posLabel, Ghost::None);
   for(int m=0;m < numMatls;m++){
     MaterialSubset* thismatl = scinew MaterialSubset();
-    thismatl->add(m);
+    thismatl->add(matlsub->get(m));
     for(int i=0;i<(int)old_labels[m].size();i++)
       t->requires( Task::NewDW, old_labels[m][i], thismatl, Ghost::None);
 
@@ -768,8 +773,9 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     for(patchestype::iterator it = pr->patches.begin();
 	it != pr->patches.end(); it++){
       const Patch* toPatch = *it;
-      for(int matl=0;matl<numMatls;matl++){
-	int numVars = (int)reloc_old_labels[matl].size();
+      for(int m=0;m<numMatls;m++){
+        int matl = matls->get(m);
+	int numVars = (int)reloc_old_labels[m].size();
 	int numParticles=0;
 	pair<maptype::iterator, maptype::iterator> pr;
 	pr = scatter_records.records.equal_range(make_pair(toPatch, matl));
@@ -787,7 +793,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	  ParticleSubset* sendset=record->sendset;
 	  posvar->packsizeMPI(&sendsize, pg, sendset);
 	  for(v=0;v<numVars;v++){
-	    ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[matl][v], pset);
+	    ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], pset);
 	    var->packsizeMPI(&sendsize, pg, sendset);
 	  }
 	  int datasize=sendsize-orig_sendsize;
@@ -805,8 +811,9 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     for(patchestype::iterator it = pr->patches.begin();
 	it != pr->patches.end(); it++){
       const Patch* toPatch = *it;
-      for(int matl=0;matl<numMatls;matl++){
-	int numVars = (int)reloc_old_labels[matl].size();
+      for(int m=0;m<numMatls;m++){
+        int matl = matls->get(m);
+	int numVars = (int)reloc_old_labels[m].size();
 
 	pair<maptype::iterator, maptype::iterator> pr;
 	pr = scatter_records.records.equal_range(make_pair(toPatch, matl));
@@ -814,7 +821,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	  int patchid = toPatch->getID();
 	  MPI_Pack(&patchid, 1, MPI_INT, buf, sendsize, &position,
 		   pg->getComm());
-	  MPI_Pack(&matl, 1, MPI_INT, buf, sendsize, &position,
+	  MPI_Pack(&m, 1, MPI_INT, buf, sendsize, &position,
 		   pg->getComm());
 	  ScatterRecord* record = pr.first->second;
 	  int totalParticles=record->sendset->numParticles();
@@ -832,7 +839,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	  ParticleSubset* sendset=record->sendset;
 	  posvar->packMPI(buf, sendsize, &position, pg, sendset, record->toPatch);
 	  for(v=0;v<numVars;v++){
-	    ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[matl][v], pset);
+	    ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], pset);
 	    var->packMPI(buf, sendsize, &position, pg, sendset);
 	  }
 	  int size=position-start;
@@ -932,7 +939,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 
     for(int m = 0; m < matls->size(); m++){
       int matl = matls->get(m);
-      int numVars = (int)reloc_old_labels[matl].size();
+      int numVars = (int)reloc_old_labels[m].size();
       vector<const Patch*> fromPatches;
       vector<ParticleSubset*> subsets;
       ParticleSubset* keepset = keepsets(p, m);
@@ -964,8 +971,8 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
 	new_dw->put(*posvar, reloc_new_posLabel);
 	for(v=0;v<numVars;v++){
-	  ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[matl][v], orig_pset);
-	  new_dw->put(*var, reloc_new_labels[matl][v]);
+	  ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], orig_pset);
+	  new_dw->put(*var, reloc_new_labels[m][v]);
 	}
       } else {
         int numOldVariables = (int)subsets.size();
@@ -1011,16 +1018,15 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 
 	vector<ParticleVariableBase*> vars(numVars);
 	for(v=0;v<numVars;v++){
-	  const VarLabel* label = reloc_old_labels[matl][v];
+	  const VarLabel* label = reloc_old_labels[m][v];
 	  ParticleVariableBase* var = new_dw->getParticleVariable(label, orig_pset);
 	  for(int i=0;i<numOldVariables;i++)
 	    invars[i]=new_dw->getParticleVariable(label, matl, fromPatches[i]);
           if(newParts){
             map<const VarLabel*, ParticleVariableBase*>::iterator piter;
-            piter = newParts->find(reloc_new_labels[matl][v]);
+            piter = newParts->find(reloc_new_labels[m][v]);
             if(piter == newParts->end()) {
-              cout << "reloc_new_labels = " << reloc_new_labels[matl][v]->getNa\
-me()
+              cout << "reloc_new_labels = " << reloc_new_labels[m][v]->getName()
                    << endl;
               throw InternalError("didnt create new variable of this type");
             }
@@ -1052,7 +1058,7 @@ me()
 
 #if 0
 	for(v=0;v<numVars;v++){
-	  const VarLabel* label = reloc_new_labels[matl][v];
+	  const VarLabel* label = reloc_new_labels[m][v];
 	  if (label == particleIDLabel_)
 	    break;
 	}
@@ -1066,7 +1072,7 @@ me()
 	new_dw->put(*newpos, reloc_new_posLabel);
 	delete newpos;
 	for(v=0;v<numVars;v++){
-	  new_dw->put(*vars[v], reloc_new_labels[matl][v]);
+	  new_dw->put(*vars[v], reloc_new_labels[m][v]);
 	  delete vars[v];
 	}
       }
