@@ -212,7 +212,7 @@ void FastMatrix::copy(const FastMatrix& a)
 {
   ASSERTEQ(rows, a.rows);
   ASSERTEQ(cols, a.cols);
-  int size=rows*cols;
+  //int size=rows*cols;
   for(int i=0;i<rows;i++){
     for(int j=0;j<cols;j++)
       mat[i][j] = a.mat[i][j];
