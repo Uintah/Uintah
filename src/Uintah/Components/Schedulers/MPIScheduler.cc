@@ -588,32 +588,36 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 	 if(sr[i]){
 	    int sendsize = 0;
 	    for(int j=0;j<sr[i]->matls.size();j++){
-	       MPIScatterMaterialRecord* mr = sr[i]->matls[j];
-	       int size;
-	       MPI_Pack_size(1, MPI_INT, pc->getComm(), &size);
-	       sendsize+=size;
-	       int numP = mr->relocset->numParticles();
-	       for(int v=0;v<mr->vars.size();v++){
+	      if (sr[i]->matls[j]) {
+		MPIScatterMaterialRecord* mr = sr[i]->matls[j];
+		int size;
+		MPI_Pack_size(1, MPI_INT, pc->getComm(), &size);
+		sendsize+=size;
+		int numP = mr->relocset->numParticles();
+		for(int v=0;v<mr->vars.size();v++){
 		  ParticleVariableBase* var = mr->vars[v];
 		  ParticleVariableBase* var2 = var->cloneSubset(mr->relocset);
 		  var2->packsizeMPI(&sendsize, pc, 0, numP);
 		  //delete var2;
-	       }
+		}
+	      }
 	    }
 	    MPI_Send(&sendsize, 1, MPI_INT, sgargs.dest[i],
 		     sgargs.tags[i]|RECV_BUFFER_SIZE_TAG, pc->getComm());
 	    char* buf = scinew char[sendsize];
 	    int position = 0;
 	    for(int j=0;j<sr[i]->matls.size();j++){
-	       MPIScatterMaterialRecord* mr = sr[i]->matls[j];
-	       int numP = mr->relocset->numParticles();
-	       MPI_Pack(&numP, 1, MPI_INT, buf, sendsize, &position, pc->getComm());
-	       for(int v=0;v<mr->vars.size();v++){
+	      if (sr[i]->matls[j]) {
+		MPIScatterMaterialRecord* mr = sr[i]->matls[j];
+		int numP = mr->relocset->numParticles();
+		MPI_Pack(&numP, 1, MPI_INT, buf, sendsize, &position, pc->getComm());
+		for(int v=0;v<mr->vars.size();v++){
 		  ParticleVariableBase* var = mr->vars[v];
 		  ParticleVariableBase* var2 = var->cloneSubset(mr->relocset);
 		  var2->packMPI(buf, sendsize, &position, pc, 0, numP);
 		  delete var2;
-	       }
+		}
+	      }
 	    }
 	    ASSERTEQ(position, sendsize);
 	    MPI_Send(buf, sendsize, MPI_PACKED, sgargs.dest[i], sgargs.tags[i],
@@ -710,7 +714,7 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
       vector<int> counts(neighbors.size());
       for(int i=0;i<neighbors.size();i++){
 	 if(sgargs.dest[i] != me){
-	    if(recvsize[i]){
+	    if(recvsize[i] && totalParticles){
 	       int n=-1234;
 	       MPI_Unpack(recvbuf[i], recvsize[i], &recvpos[i],
 			  &n, 1, MPI_INT, pc->getComm());
@@ -763,13 +767,14 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 	 new_dw->put(*newvar, reloc_new_labels[m][v]);
 	 delete newvar;
       }
-      for(int i=0;i<sr.size();i++){
-	if(sr[i]->matls[m])
-	  delete sr[i]->matls[m];
-	delete sr[i];
-      }
       for(int i=0;i<subsets.size();i++)
 	 delete subsets[i];
+   }
+   for(int i=0;i<sr.size();i++){
+     for(int m=0;m<reloc_numMatls;m++)
+       if(sr[i]->matls[m])
+	 delete sr[i]->matls[m];
+     delete sr[i];
    }
    for(int i=0;i<neighbors.size();i++){
       ASSERTEQ(recvsize[i], recvpos[i]);
@@ -781,6 +786,9 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.15  2000/08/31 20:39:00  jas
+// Fixed problem with particles crossing patch boundaries for multi-materials.
+//
 // Revision 1.14  2000/08/23 21:40:04  sparker
 // Fixed slight memory leak when particles cross patch boundaries
 //
