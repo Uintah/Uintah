@@ -463,6 +463,7 @@ class BioImageApp {
 		    set slab_max [expr $size*3/4]	;# 75%
 		}
 		incr axis_num
+		$mods(ViewSlices)-c rebind $slice_frame($axis).bd.$axis
 	    }
 	    $mods(ViewSlices)-c redrawall
 	} elseif {[string first "Teem_NrrdData_NrrdInfo_0" $which] != -1 && $state == "JustStarted"} {
