@@ -35,31 +35,30 @@ tarball : tar
 tar: products
 	@echo "Making a tar archive"
 	-rm -f SCIRunDocs.tar
-	cd ..; tar cvf doc/SCIRunDocs.tar \
-		doc/index.html \
-		doc/.htaccess \
-		doc/Installation/index.html \
-                doc/Installation/Guide/*.html \
-		doc/User/index.html \
-		doc/User/Guide/usersguide \
-		doc/User/Guide/Figures \
-		doc/User/Tutorial \
-		doc/User/Guide/usersguide.ps.gz \
-		doc/User/Guide/usersguide2.ps.gz \
-		doc/Developer/index.html \
-                doc/Developer/Guide/*.html \
-		doc/Developer/Modules/*.html \
-		src/Dataflow/XML/*.html \
-		src/Packages/BioPSE/Dataflow/XML/*.html \
-		src/Packages/Teem/Dataflow/XML/*.html \
-		src/Packages/VDT/Dataflow/XML/*.html \
-		src/Packages/MatlabInterface/Dataflow/XML/*.html \
-		src/Packages/Fusion/Dataflow/XML/*.html \
-		doc/Developer/CodeViews/html \
-		doc/FAQBook/*.html \
-                doc/Utilities/HTML/doc_styles.css \
-                doc/Utilities/HTML/*.js \
-		doc/Utilities/Figures
+	cd ..; root=`pwd`; root=`basename $${root}`;\
+	cd ..; tar cvf $${root}/doc/SCIRunDocs.tar \
+		$${root}/doc/index.html \
+		$${root}/doc/.htaccess \
+		$${root}/doc/Installation/index.html \
+                $${root}/doc/Installation/Guide/*.html \
+		$${root}/doc/User/index.html \
+		$${root}/doc/User/Guide/usersguide \
+		$${root}/doc/User/Guide/Figures \
+		$${root}/doc/User/Tutorial \
+		$${root}/doc/User/Guide/usersguide.ps.gz \
+		$${root}/doc/User/Guide/usersguide2.ps.gz \
+		$${root}/doc/Developer/index.html \
+                $${root}/doc/Developer/Guide/*.html \
+		$${root}/doc/Developer/Modules/*.html \
+		$${root}/doc/Developer/CodeViews/html \
+		$${root}/doc/FAQBook/*.html \
+                $${root}/doc/Utilities/HTML/doc_styles.css \
+                $${root}/doc/Utilities/HTML/*.js \
+		$${root}/doc/Utilities/Figures \
+		$${root}/src/Dataflow/XML/*.html \
+		$${root}/src/Dataflow/Modules/*/doc \
+		$${root}/src/Packages/*/Dataflow/XML/*.html
+#		$${root}/src/Packages/*/Dataflow/Modules/*/doc
 
 # Build all docs.
 products:
