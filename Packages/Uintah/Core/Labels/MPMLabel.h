@@ -79,6 +79,7 @@ using std::vector;
       const VarLabel* gAccelerationLabel;
       const VarLabel* gMomExedAccelerationLabel;
       const VarLabel* gVelocityLabel;
+      const VarLabel* gVelocityInterpLabel;
       const VarLabel* gMomExedVelocityLabel;
       const VarLabel* gVelocityStarLabel;
       const VarLabel* gMomExedVelocityStarLabel;
