@@ -43,8 +43,9 @@ WARNING
 	 virtual ~MPMEquationOfState();
 	 
 	 //////////
-	 // Calculate the pressure using a equation of state
-	 virtual double computePressure(const MPMMaterial* matl,
+	 // Calculate the hydrostatic component of stress (pressure)
+         // using a equation of state
+	 virtual Matrix3 computePressure(const MPMMaterial* matl,
 				        const double& bulk,
 				        const double& shear,
                                         const Matrix3& deformGrad,

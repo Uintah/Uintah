@@ -6,9 +6,6 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-static constParticleVariable<double> pAlpha;
-static ParticleVariable<double> pAlpha_new;
-
 IsoHardeningPlastic::IsoHardeningPlastic(ProblemSpecP& ps)
 {
   ps->require("K",d_const.K);
@@ -58,10 +55,9 @@ void
 IsoHardeningPlastic::initializeInternalVars(ParticleSubset* pset,
 					    DataWarehouse* new_dw)
 {
-  ParticleVariable<double> pAlpha_init;
-  new_dw->allocateAndPut(pAlpha_init, pAlphaLabel, pset);
+  new_dw->allocateAndPut(pAlpha_new, pAlphaLabel, pset);
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
-    pAlpha_init[*iter] = 0.0;
+    pAlpha_new[*iter] = 0.0;
   }
 }
 

@@ -57,6 +57,10 @@ WARNING
             double K;
             double sigma_Y;
 	 };	 
+
+         constParticleVariable<double> pAlpha;
+         ParticleVariable<double> pAlpha_new;
+
          const VarLabel* pAlphaLabel;  // For Isotropic Hardening Plasticity
          const VarLabel* pAlphaLabel_preReloc;  // For Isotropic Hardening Plasticity
 

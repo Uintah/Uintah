@@ -384,11 +384,11 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // satisfy small strain elasticity
       tensorF_new = pDeformGrad_new[idx];
       double rho_cur = rho_0/J;
-      double pressure = d_eos->computePressure(matl, bulk, shear, tensorF_new, tensorEta, 
+      Matrix3 tensorHy = d_eos->computePressure(matl, bulk, shear, tensorF_new, tensorEta, 
                                                tensorS, pTemperature[idx], rho_cur, delT);
 
       // compute the total Cauchy stress = (Kirchhoff stress/J) (volumetric + deviatoric)
-      pStress_new[idx] = one*pressure + tensorS/J;
+      pStress_new[idx] = tensorHy + tensorS/J;
 
       // Update the volume
       pVolume_new[idx]=pMass[idx]/rho_cur;
@@ -492,6 +492,68 @@ HyperElasticPlastic::getCompressibility()
 {
   return 1.0/d_initialData.Bulk;
 }
+
+/*
+Matrix3
+HyperElasticPlastic::computeVelocityGradient(const Patch* patch,
+					   const double* oodx, 
+					   const Point& px, 
+					   const Vector& psize, 
+					   constNCVariable<Vector>& gVelocity) 
+{
+  // Initialize
+  Matrix3 velGrad(0.0);
+
+  // Get the node indices that surround the cell
+  IntVector ni[MAX_BASIS];
+  Vector d_S[MAX_BASIS];
+
+  patch->findCellAndShapeDerivatives27(px, ni, d_S, psize);
+
+  //cout << "ni = " << ni << endl;
+  for(int k = 0; k < d_8or27; k++) {
+    //if(patch->containsNode(ni[k])) {
+    const Vector& gvel = gVelocity[ni[k]];
+    //cout << "GridVel = " << gvel << endl;
+    for (int j = 0; j<3; j++){
+      for (int i = 0; i<3; i++) {
+	velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+      }
+    }
+    //}
+  }
+  //cout << "VelGrad = " << velGrad << endl;
+  return velGrad;
+}
+
+Matrix3
+HyperElasticPlastic::computeVelocityGradient(const Patch* patch,
+					   const double* oodx, 
+					   const Point& px, 
+					   constNCVariable<Vector>& gVelocity) 
+{
+  // Initialize
+  Matrix3 velGrad(0.0);
+
+  // Get the node indices that surround the cell
+  IntVector ni[MAX_BASIS];
+  Vector d_S[MAX_BASIS];
+
+  patch->findCellAndShapeDerivatives(px, ni, d_S);
+
+  for(int k = 0; k < d_8or27; k++) {
+    const Vector& gvel = gVelocity[ni[k]];
+    //cout << "GridVel = " << gvel << endl;
+    for (int j = 0; j<3; j++){
+      for (int i = 0; i<3; i++) {
+	velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+      }
+    }
+  }
+  //cout << "VelGrad = " << velGrad << endl;
+  return velGrad;
+}
+*/
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1209
