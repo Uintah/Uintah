@@ -87,6 +87,11 @@ WARNING
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const = 0;
 
+         double computeRhoMicro(double pressure);
+
+         void computePressEOS(double rho_m, double& press_eos,
+                              double& dp_drho, double& ss_new);
+
         protected:
 
 	 MPMLabel* lb;
