@@ -46,13 +46,13 @@ void usage(char *me, const char *unknown = 0) {
   // Print out the usage
   printf("usage:  %s [options]\n", me);
   printf("options:\n");
-  printf("  -i <filename>     input nrrd, channels as fastest axis (null)\n");
-  printf("  -o <filename>     basename of output nrrds (\"pca\")\n");
-  printf("  -numbases <int>   number of basis textures to use (0)\n");
-  printf("  -saveall          write mean and transform to files (false)\n");
-  printf("  -simple           use the LAPACK simple driver (false)\n");
-  printf("  -nrrd             use .nrrd extension (false)\n");
-  printf("  -v <int>          set verbosity level (0)\n");
+  printf("  -i <filename>   input nrrd, channels as fastest axis (null)\n");
+  printf("  -o <filename>   basename of output nrrds (\"pca\")\n");
+  printf("  -nbases <int>   number of basis textures to use (0)\n");
+  printf("  -saveall        write mean values and PCA coefficients to files (false)\n");
+  printf("  -simple         use the LAPACK simple driver (false)\n");
+  printf("  -nrrd           use .nrrd extension (false)\n");
+  printf("  -v <int>        set verbosity level (0)\n");
 
   if (unknown)
     exit(1);
@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
       infilename = argv[++i];
     } else if (arg == "-output" || arg == "-o") {
       outfilename_base = argv[++i];
-    } else if (arg == "-numbases") {
+    } else if (arg == "-nbases") {
       num_bases = atoi(argv[++i]);
     } else if (arg == "-saveall") {
       saveall = true;
