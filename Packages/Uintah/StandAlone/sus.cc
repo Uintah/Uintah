@@ -95,11 +95,11 @@ usage( const std::string & message,
        const std::string& badarg,
        const std::string& progname)
 {
+#ifndef HAVE_MPICH
   int argc = 0;
   char **argv;
   argv = 0;
 
-#ifndef HAVE_MPICH
   // Initialize MPI so that "usage" is only printed by proc 0.
   // (If we are using MPICH, then MPI_Init() has already been called.)
   Uintah::Parallel::initializeManager( argc, argv, "" );
