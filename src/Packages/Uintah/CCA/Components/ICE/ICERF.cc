@@ -9,6 +9,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h> 
 
 using namespace SCIRun;
 using namespace Uintah;
@@ -578,11 +579,12 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      if(ice_matl){
+    if(ice_matl){
        int indx = matl->getDWIndex();
        new_dw->get(Tdot[m],     lb->Tdot_CCLabel,    indx,patch,Ghost::None, 0);
        new_dw->get(vol_frac[m], lb->vol_frac_CCLabel,indx,patch,Ghost::None, 0);
        old_dw->get(Temp_CC[m],  lb->temp_CCLabel,    indx,patch,Ghost::None, 0);
+
        for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
          IntVector c = *iter;
          // the following assumes an ideal gas and is getting alpha from the
@@ -594,7 +596,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
     }
 
     //__________________________________ 
-    //  Compute the Lagrangian specific volume
+    //  Compute the Mass[m] * specific volume[m]
     for(int m = 0; m < numALLMatls; m++) {
      Material* matl = d_sharedState->getMaterial( m );
      int indx = matl->getDWIndex();
@@ -604,16 +606,29 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
      new_dw->allocate(spec_vol_source,lb->spec_vol_source_CCLabel,indx,patch);
      spec_vol_L.initialize(0.);
      spec_vol_source.initialize(0.);
-     if(ice_matl){
+    if(ice_matl)    
+    {
        new_dw->get(rho_CC,    lb->rho_CCLabel,       indx,patch,Ghost::None, 0);
        new_dw->get(speedSound,lb->speedSound_CCLabel,indx,patch,Ghost::None, 0);
        new_dw->get(f_theta,   lb->f_theta_CCLabel,   indx,patch,Ghost::None, 0);
        new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,    indx,patch,Ghost::None, 0);
-
+        //---- P R I N T   D A T A ------ 
+        if (switchDebugLagrangianSpecificVol ) {
+          ostringstream desc;
+          desc <<"TOP_Lagrangian_VolRF_Mat_"<<indx<< "_patch_"<<patch->getID();
+          printData(  patch,1, desc.str(), "vol_frac[m]",   vol_frac[m]);
+          printData(  patch,1, desc.str(), "rho_CC",        rho_CC);
+          printData(  patch,1, desc.str(), "speedSound",    speedSound);
+          printData(  patch,1, desc.str(), "sp_vol_CC",     sp_vol_CC);
+          printData(  patch,1, desc.str(), "Tdot",          Tdot[m]);
+          printData(  patch,1, desc.str(), "f_theta",       f_theta);
+          printData(  patch,1, desc.str(), "delP_Dilatate", delP_Dilatate); 
+        }
+       //__________________________________
+       //  Note that spec_vol_L[m] = Mass[m] * sp_vol[m]
+       //  this is consistent with 4.8c
        for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
-        // Note that at this point, spec_vol_L is actually just a
-        // volume of material, this is consistent with 4.8c
 
         double kappa = sp_vol_CC[c]/(speedSound[c] * speedSound[c]); 
         // the following assumes an ideal gas and is getting alpha from the
@@ -625,27 +640,26 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
                                         f_theta[c]*sum_therm_exp[c]);
 
         spec_vol_source[c] = term1 + term2;
-        spec_vol_L[c] = (rho_CC[c]*vol*sp_vol_CC[c]) + spec_vol_source[c];
-
-#if 0
-        if(spec_vol_L[c] < 0.){
-          cout << "Cell = " << c << endl;
-          cout << "vol  = " << vol << endl;
-          cout << "sp_vol_CC[c] = " << sp_vol_CC[c] << endl;
-          cout << "(rho_CC[c]*vol*sp_vol_CC[c]) = " << (rho_CC[c]*vol*sp_vol_CC[c]) << endl;
-          cout << "spec_vol_L[c] = " << spec_vol_L[c] << endl;
-          cout << "spec_vol_source[c] = " << spec_vol_source[c] << endl;
-          cout << "vol_frac[m][c] = " << vol_frac[m][c] << endl;
-          cout << "kappa = " << kappa << endl;
-          cout << "delP_Dilatate[c] = " << delP_Dilatate[c] << endl;
-          cout << "rho_CC[c] = " << rho_CC[c] << endl;
-          cout << "Tdot = " << Tdot[m][c] << endl;
-          cout << "f_theta[c] = " << f_theta[c] << endl;
-
-        }
-#endif
+        spec_vol_L[c] = (rho_CC[c]*vol*sp_vol_CC[c]) + spec_vol_source[c]; 
        }
-     }
+        //---- P R I N T   D A T A ------ 
+        if (switchDebugLagrangianSpecificVol ) {
+          ostringstream desc;
+          desc <<"BOT_Lagrangian_VolRF_Mat_"<<indx<< "_patch_"<<patch->getID();
+          printData(  patch,1, desc.str(), "spec_vol_source",spec_vol_source);
+          printData(  patch,1, desc.str(), "spec_vol_L",     spec_vol_L);
+        }
+
+        //__________________________________
+        // BULLET PROOFING
+        IntVector neg_cell;
+        if (!areAllValuesPositive(spec_vol_L, neg_cell)) {
+          ostringstream warn;
+          warn<<"ERROR ICE::computeLagrangianSpecificVolumeRF, mat "<<indx
+              << " cell " <<neg_cell << " spec_vol_L is negative\n";
+          throw InvalidValue(warn.str());
+       }
+     } // if(ice_matl)
      new_dw->put(spec_vol_L,     lb->spec_vol_L_CCLabel,     indx,patch);
      new_dw->put(spec_vol_source,lb->spec_vol_source_CCLabel,indx,patch);
     }  // end numALLMatl loop
