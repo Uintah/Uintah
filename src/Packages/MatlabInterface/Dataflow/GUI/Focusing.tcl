@@ -31,8 +31,10 @@ itcl_class MatlabInterface_Math_Focusing {
         set_defaults
     }
     method set_defaults {} {
-	global $this-hpTCL
-	set $this-hpTCL ""
+	global $this-noiseGUI
+	global $this-fcsdgGUI
+	set $this-noiseGUI "0.01"
+	set $this-fcsdgGUI "5"
     }
     method ui {} {
         set w .ui[modname]
@@ -45,12 +47,19 @@ itcl_class MatlabInterface_Math_Focusing {
         wm minsize $w 100 30
         frame $w.f
         set n "$this-c needexecute "
-	global $this-hpTCL
-	frame $w.f.hp
-	label $w.f.hp.l -text "pars: "
-	entry $w.f.hp.e -relief sunken -width 21 -textvariable $this-hpTCL
-	pack $w.f.hp.l $w.f.hp.e -side left
-	pack $w.f.hp -side top
+	global $this-noiseGUI
+	global $this-fcsdgGUI
+	frame $w.f.noise
+	label $w.f.noise.l -text "Noise: "
+	entry $w.f.noise.e -relief sunken -width 20 \
+		-textvariable $this-noiseGUI
+	pack $w.f.noise.l $w.f.noise.e -side left
+	frame $w.f.fcsdg
+	label $w.f.fcsdg.l -text "FCSDG: "
+	entry $w.f.fcsdg.e -relief sunken -width 20 \
+		-textvariable $this-fcsdgGUI
+	pack $w.f.fcsdg.l $w.f.fcsdg.e -side left
+	pack $w.f.noise $w.f.fcsdg -side top
         pack $w.f -side top -expand yes
     }
 }
