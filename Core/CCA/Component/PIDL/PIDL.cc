@@ -43,7 +43,7 @@ namespace PIDL {
 static unsigned short port;
 static char* host;
 
-Warehouse* PIDL::PIDL::warehouse;
+Warehouse* ::PIDL::PIDL::warehouse;
 
 static int approval_fn(void*, char* urlstring, globus_nexus_startpoint_t* sp)
 {
