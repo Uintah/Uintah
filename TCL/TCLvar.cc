@@ -76,7 +76,7 @@ void TCLdouble::set(double val)
     if(val != value){
 	TCLTask::lock();
 	value=val;
-	char buf[20];
+	char buf[50];
 	sprintf(buf, "%f", val);
 	Tcl_SetVar(the_interp, varname(), buf, TCL_GLOBAL_ONLY);
 	TCLTask::unlock();
