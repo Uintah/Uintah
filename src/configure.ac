@@ -2725,7 +2725,7 @@ if test "$sci_required_babel" = "yes"; then
   fi
   echo $_sci_lib
   echo $_sci_inc
-  SCI_TRY_LINK(SIDL,sidl library and headers,SIDL.h,$_sci_inc,sidl,$_sci_lib,,,optional)
+  SCI_TRY_LINK(SIDL,sidl library and headers,sidl.h,$_sci_inc,sidl,$_sci_lib,,,optional)
   
   BABEL_BIN=""
   AC_CHECKING(for babel in $LIB_DIR_SIDL/../bin)
