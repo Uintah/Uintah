@@ -60,10 +60,10 @@ proc change_radio_var {root newvar} {
 #
 itcl_class expscale {
 
-    method modname { c } {
-	set n [string range $c [expr [string last "::" $c] + 2] end]
-	return $n
-    }
+#    method modname { c } {
+#	set n [string range $c [expr [string last "::" $c] + 2] end]
+#	return $n
+#    }
 
     constructor {config} {
 

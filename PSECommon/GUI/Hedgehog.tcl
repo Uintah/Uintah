@@ -23,16 +23,6 @@ itcl_class PSECommon_Visualization_Hedgehog {
 	}
     }
 
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
-
-
-
     method set_defaults {} {
 	global $this-length_scale
 	set $this-length_scale 0.1
