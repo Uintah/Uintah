@@ -133,6 +133,8 @@ void SimpleSolver::createMatrix(const ProcessorGroup* d_myworld)
 void SimpleSolver::destroyMatrix(bool recursion)
 {
   KK.clear();
+  if (recursion == false)
+    d_DOF.clear();
 }
 
 void SimpleSolver::fillMatrix(int i,int j,double value)
