@@ -831,14 +831,14 @@ long RunLengthEncoder<T, Sequencer>::readPriv(istream& in, bool swapBytes,
     vector<T>& data = (*groupIter).data_;
     if ((*groupIter).isRun()) {
       in.read((char*)&data[0], sizeof(T));
-      if (needConversion && swapBytes) swapbytes(data[0]);
+      if (needConversion && swapBytes) SCIRun::swapbytes(data[0]);
       if (Sequencer::needRule()) {
 	if (usesDefaultRule[i])
 	  (*groupIter).sequenceRule_ = Sequencer::defaultSequenceRule;
 	else {
 	  in.read((char*)&(*groupIter).sequenceRule_, ruleStorageSize(false));
 	  if (needConversion && swapBytes)
-	    swapbytes((*groupIter).sequenceRule_);
+	    SCIRun::swapbytes((*groupIter).sequenceRule_);
 	}
       }
     }
@@ -848,7 +848,7 @@ long RunLengthEncoder<T, Sequencer>::readPriv(istream& in, bool swapBytes,
       in.read((char*)&data[0], (long)(sizeof(T) * data.size()));
       if (needConversion && swapBytes) {
 	for (unsigned long index = 0; index < data.size(); index++) {
-	  swapbytes(data[index]);
+	  SCIRun::swapbytes(data[index]);
 	}
       }
     }
