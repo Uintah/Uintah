@@ -108,7 +108,8 @@ int Renderer::compute_depth(ViewWindow* viewwindow, const View& view,
 	Point max(bb.max());
 	Point eyep(view.eyep());
 	Vector dir(view.lookat()-eyep);
-	if(dir.length2() < 1.e-6)
+	const double dirlen2 = dir.length2();
+	if (dirlen2 < 1.0e-6 || dirlen2 > 1.0e6 || dirlen2 != dirlen2)
 	  return 0;
 	dir.normalize();
 	double d=-Dot(eyep, dir);
