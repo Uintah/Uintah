@@ -4,6 +4,11 @@
 #include <Packages/Ptolemy/Core/PtolemyInterface/JNIUtils.h>
 
 #include <main/sci_version.h>
+
+#include <Dataflow/Comm/MessageTypes.h>		//for mail box stuff
+#include <Dataflow/Comm/MessageBase.h>
+
+#include <Dataflow/Modules/Render/Viewer.h>
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/Module.h>
@@ -150,15 +155,19 @@ void StartSCIRun::run()
     // Activate "File" menu sub-menus once packages are all loaded.
     gui->eval("activate_file_submenus");
 	
-	
-	
+		
 	Module* mod;
+	
+	///////////////////////
+	//***********Maybe a bad place for this
+	JNIUtils::modName = readerName;
+	
 	//string command = "loadnet {/scratch/SCIRun/test.net}";
-	if (runNet != 0 && netName != "") {
+	if (netName != "") {
 		gui->eval("loadnet {" + netName + "}");
 		if(dataPath != "" && readerName != ""){
 			
-			mod=net->get_module_by_id(readerName); //example: SCIRun_DataIO_FieldReader_0
+			mod = net->get_module_by_id(readerName); //example: SCIRun_DataIO_FieldReader_0
 			
 			GuiInterface* modGui = mod->getGui();
 			
@@ -168,9 +177,15 @@ void StartSCIRun::run()
 			//std::cerr << "result: " << result << std::endl;
 			
 			// example" modGui->set("::SCIRun_DataIO_FieldReader_0-filename", "/scratch/DATA1.22.0/utahtorso/utahtorso-voltage.tvd.fld");
+			std::string state;
+			modGui->get("::" + readerName + "-filename", state);
+			
+			std::cerr << "file name was: " << state << std::endl;
+			
 			modGui->set("::" + readerName + "-filename", dataPath);
 		}
 		else if(readerName != ""){
+		
 			//for running a module that doesnt neccesarily have a file to load
 			mod=net->get_module_by_id(readerName); //example: SCIRun_DataIO_FieldReader_0
 		}
@@ -208,6 +223,93 @@ void AddModule::run()
     std::cerr << "AddModule::run: " << command << std::endl;
 	
     JNIUtils::sem().up();
+}
+
+void ChangeFile::run()
+{
+	std::string state = "";
+	std::string readerName = "SCIRun_DataIO_FieldReader_0";
+	std::string viewName = "SCIRun_Render_Viewer_0";
+	std::string cmapName = "SCIRun_DataIO_ColorMapWriter_0";
+	std::string genName = "SCIRun_Visualization_GenStandardColorMaps_0";
+	std::string count;
+	
+	JNIUtils::sem().down();
+    
+	Module* modptr = JNIUtils::cachedNet->get_module_by_id(readerName);
+	ASSERT(modptr);
+	GuiInterface* readerGui = modptr->getGui();
+	ASSERT(readerGui);
+	
+	//colormap writer
+	Module* cmap = JNIUtils::cachedNet->get_module_by_id(cmapName);
+	GuiInterface* cmapGUI = cmap->getGui();
+	
+	//color maps generator
+	Module* gen = JNIUtils::cachedNet->get_module_by_id(genName);
+	GuiInterface* genGUI = gen->getGui();
+	
+	for(int i = 0; i < 3; i++){
+		//set new file for SCIRun to process
+		readerGui->set("::" + readerName + "-filename", file);	
+
+		
+		//setcolor maps
+		if(i == 1){
+			count = "1";
+			genGUI->set("::" + genName + "-mapName", "Rainbow");
+		}
+		else if(i == 2){
+			count = "2";
+			genGUI->set("::" + genName + "-mapName", "Orange Tint");
+		}
+		else{
+			count = "3";
+			genGUI->set("::" + genName + "-mapName", "Green Tint");
+		}
+		
+		//setfilename for the last module		
+		cmapGUI->set("::" + cmapName + "-filename", "/scratch/result" + count + ".cmap");
+
+		//tell the first module that it wants to execute
+		modptr->want_to_execute();
+
+		while(cmap->getState() != 3){
+			//spin and wait
+			//TODO there has got to be a better way to wait on the network
+			//this will definitely need to be fixed
+		}
+
+		std::cout << "State of cmap: " << cmap->getState() << std::endl;
+		
+		//reset the states of the ones we care about
+		cmap->resetState();
+		gen->resetState();
+		modptr->resetState();
+		std::cout << "State of cmap: " << cmap->getState() << std::endl;
+		
+	}
+		
+	//return only when the viewer is done
+//	Module* viewer = JNIUtils::cachedNet->get_module_by_id(viewName);
+	
+	/*  doesnt work because you need pointer to view window not viewer.  
+		dont know how to get that.
+		
+	GuiInterface* viewGui = viewer->getGui();
+	while(state == ""){
+		viewGui->get("::" + viewName + "-ViewWindow_0-resx",state);
+	}
+	std::cerr << "state is: " << state << std::endl;
+	
+	*/
+	
+	//when the viewer is done save the image
+//    ViewerMessage *msg = scinew ViewerMessage
+//      (MessageTypes::ViewWindowDumpImage,"::SCIRun_Render_Viewer_0-ViewWindow_0","/scratch/output.ppm", "ppm","640","478");
+//	viewer->mailbox.send(msg); 
+	
+	JNIUtils::sem().up();
 }
 
 void SignalExecuteReady::run()

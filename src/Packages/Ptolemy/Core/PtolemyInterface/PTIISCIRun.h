@@ -43,6 +43,16 @@ private:
     std::string command;
 };
 
+class ChangeFile : public Runnable {
+public:
+    ChangeFile(std::string file) : file(file) {}
+    virtual ~ChangeFile() {}
+    void run();
+
+private:
+    std::string file;
+};
+
 class SignalExecuteReady : public Runnable {
 public:
     SignalExecuteReady() {}
