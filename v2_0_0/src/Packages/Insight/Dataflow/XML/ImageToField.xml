@@ -26,7 +26,7 @@
     </authors>
     <summary>
     </summary>
-    <description>Converts an ITK Image to a Field.  If the radiobutton "Reference ITK Image Data" is selected, then the data is not copied and an ITKImageField or ITKLatVolField will result.  If the "Copy Data" option is selected, the data is copied and an ImageField or LatVolField will be created. This module will convert Scalar Data and Vector Data.  It will not convert RGBPixel data.  To convert RGBPixel Data, first use the RGBPixelToVector module followed by the ImageToField module.
+    <description>Converts an ITK Image to a Field.  If the radiobutton "Reference ITK Image Data" is selected, then the data is not copied and an ITKImageField or ITKLatVolField will result.  If the "Copy Data" option is selected, the data is copied and an ImageField or LatVolField will be created. This module will convert Scalar Data Vector Data, and RGBPixel data.  
   </description>
   </overview>
   <implementation>
