@@ -1864,8 +1864,7 @@ proc drawPort { port { color red } { connected 0 } } {
 
 proc lightPort { { port "" } { color "black" } } {
     global Subnet LitPorts
-    if {![info exists Subnet([pMod port])]} return
-    
+
     if ![string length $port] {
 	if [info exists LitPorts] {
 	    foreach port [lsort -unique $LitPorts] {
@@ -1874,6 +1873,8 @@ proc lightPort { { port "" } { color "black" } } {
 	}
 	return
     }
+
+    if {![info exists Subnet([pMod port])]} return
 		
     lappend LitPorts $port
     set canvas $Subnet(Subnet$Subnet([pMod port])_canvas)
