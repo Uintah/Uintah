@@ -145,15 +145,14 @@ ICELabel::ICELabel()
     VarLabel::create("mach",     CCVariable<double>::getTypeDescription() ); 
   scratchLabel     =
     VarLabel::create("scratch",  CCVariable<double>::getTypeDescription() );
+  scratchVecLabel     =
+    VarLabel::create("scratchVec", CCVariable<Vector>::getTypeDescription() );
   scratch_FCXLabel   =
     VarLabel::create("scratch_FCX",SFCXVariable<double>::getTypeDescription());
   scratch_FCYLabel   =
     VarLabel::create("scratch_FCY",SFCYVariable<double>::getTypeDescription());
   scratch_FCZLabel   =
     VarLabel::create("scratch_FCZ",SFCZVariable<double>::getTypeDescription());
-  scratch_FCVectorLabel   =
-    VarLabel::create("scratch_FCVector",
-                                   SFCXVariable<Vector>::getTypeDescription());
   IveBeenHereLabel     =
     VarLabel::create("IveBeenHere",CCVariable<int>::getTypeDescription() );
      
@@ -262,7 +261,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(IveBeenHereLabel);
     VarLabel::destroy(machLabel);
     VarLabel::destroy(scratchLabel);
-    VarLabel::destroy(scratch_FCVectorLabel);
+    VarLabel::destroy(scratchVecLabel);
     VarLabel::destroy(scratch_FCXLabel);
     VarLabel::destroy(scratch_FCYLabel);
     VarLabel::destroy(scratch_FCZLabel);
