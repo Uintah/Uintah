@@ -149,8 +149,10 @@ template <class Msh>
 void 
 FieldBoundary::boundary(const Msh *mesh)
 {
+  map<Msh::node_index, TriSurfMesh::node_index> vertex_map_;
+  map<Msh::node_index, TriSurfMesh::node_index>::iterator node_iter;
+  TriSurfMesh::node_index node_idx[3];
 
-  
   TriSurfMeshHandle tmesh = scinew TriSurfMesh;
   if (geom_tris_) delete geom_tris_;
   geom_tris_ = scinew GeomTriangles;  
@@ -175,29 +177,38 @@ FieldBoundary::boundary(const Msh *mesh)
 	typename Msh::node_array nodes;
 	mesh->get_nodes(nodes, fi);
 	// Creating triangles, so fan if more than 3 nodes.
-	Point p1, p2, p3;
+	Point p;
 	typename Msh::node_array::iterator niter = nodes.begin();
-	mesh->get_point(p1, *niter);
-	++niter;
-	mesh->get_point(p2, *niter);
-	++niter;
-	mesh->get_point(p3, *niter);
-	++niter;
 
-	geom_tris_->add(p1, p2, p3);
-	add_ordered_tri(p1, p2, p3, center, tmesh);
-	while (niter != nodes.end()) {
-	  p2 = p3;
-	  mesh->get_point(p3, *niter);
+	for (int i=0; i<3; i++) {
+	  node_iter = vertex_map_.find(*niter);
+	  if (node_iter == vertex_map_.end()) {
+	    mesh->get_point(p, *niter);
+	    node_idx[i] = tmesh->add_point(p);
+	    vertex_map_[*niter] = node_idx[i];
+	  } else {
+	    node_idx[i] = (*node_iter).second;
+	  }
 	  ++niter;
-	  
-	  geom_tris_->add(p1, p2, p3);
-	  add_ordered_tri(p1, p2, p3, center, tmesh);
 	}
+	tmesh->add_triangle(node_idx[0], node_idx[1], node_idx[2]);
+
+	while (niter != nodes.end()) {
+	  node_idx[1] = node_idx[2];
+	  node_iter = vertex_map_.find(*niter);
+	  if (node_iter == vertex_map_.end()) {
+	    mesh->get_point(p, *niter);
+	    node_idx[2] = tmesh->add_point(p);
+	    vertex_map_[*niter] = node_idx[2];
+	  } else {
+	    node_idx[2] = (*node_iter).second;
+	  }
+	  ++niter;
+	  tmesh->add_triangle(node_idx[0], node_idx[1], node_idx[2]);
+	} 
       }
     }
   }
-  tmesh->connect();
 
   TriSurf<double> *ts = scinew TriSurf<double>(tmesh, Field::NODE);
 
