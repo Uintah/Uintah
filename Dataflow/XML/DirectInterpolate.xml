@@ -28,6 +28,14 @@
     </authors>
     <summary>Interpolate Source field onto the Destination field.</summary>
     <description>
+      <p>
+        DirectInterpolate generates a new field that contains the
+        geometry of the destination field, but with all of the
+        data values linearly interpolated from the source field.
+        It should work correctly with all of the current field
+        and data types.  The data will be stored at the elements
+        specified in the destination field.
+      </p>
     </description>
   </overview>
   <io>
