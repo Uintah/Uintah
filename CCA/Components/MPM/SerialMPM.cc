@@ -73,8 +73,6 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   d_max_vel = 3.e105;
   NGP     = 1;
   NGN     = 1;
-  d_artificialViscCoeff1 = 0.2;
-  d_artificialViscCoeff2 = 2.0;
   d_doGridReset = true;
 }
 
@@ -95,30 +93,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP&,
   ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
 
   if(mpm_soln_ps) {
-    mpm_soln_ps->get("nodes8or27", flags->d_8or27);
-    mpm_soln_ps->get("withColor",  flags->d_with_color);
+    flags->readMPMFlags(mpm_soln_ps);
     mpm_soln_ps->get("do_grid_reset", d_doGridReset);
     mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
     mpm_soln_ps->get("maximum_particle_velocity",d_max_vel);
-    mpm_soln_ps->get("artificial_damping_coeff", flags->d_artificialDampCoeff);
-    mpm_soln_ps->get("artificial_viscosity",     flags->d_artificial_viscosity);
-    mpm_soln_ps->get("artificial_viscosity_coeff1", d_artificialViscCoeff1);
-    mpm_soln_ps->get("artificial_viscosity_coeff2", d_artificialViscCoeff2);
-    mpm_soln_ps->get("accumulate_strain_energy", flags->d_accStrainEnergy);
-    mpm_soln_ps->get("use_load_curves", flags->d_useLoadCurves);
-    bool adiabaticHeatingOn = true;
-    mpm_soln_ps->get("turn_on_adiabatic_heating", adiabaticHeatingOn);
-    if (!adiabaticHeatingOn) flags->d_adiabaticHeating = 1.0;
-    mpm_soln_ps->get("ForceBC_force_increment_factor", 
-                     flags->d_forceIncrementFactor);
-    mpm_soln_ps->get("create_new_particles", flags->d_createNewParticles);
-    ProblemSpecP erosion_ps = mpm_soln_ps->findBlock("erosion");
-    if (erosion_ps) {
-      if (erosion_ps->getAttribute("algorithm", flags->d_erosionAlgorithm)) {
-        if (flags->d_erosionAlgorithm == "none") flags->d_doErosion = false;
-        else flags->d_doErosion = true;
-      }
-    }
   }
 
   if(flags->d_8or27==8){
@@ -553,6 +531,7 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   if(d_with_ice){
     t->requires(Task::NewDW, lb->pPressureLabel,          gan,NGP);
   }
+
   if(flags->d_artificial_viscosity){
     t->requires(Task::NewDW, lb->p_qLabel,                gan,NGP);
   }
@@ -1350,6 +1329,8 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
                                            DataWarehouse* old_dw,
                                            DataWarehouse* new_dw)
 {
+  double C0 = flags->d_artificialViscCoeff1;
+  double C1 = flags->d_artificialViscCoeff2;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -1423,8 +1404,8 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
              p_q[idx] = 0.0;
              if(DTrace<0.){
                c_dil = sqrt(K*pvol_def[idx]/pmass[idx]);
-               p_q[idx] = (d_artificialViscCoeff1*fabs(c_dil*DTrace*dx_ave) +
-                      d_artificialViscCoeff2*(DTrace*DTrace*dx_ave*dx_ave))*
+               p_q[idx] = (C0*fabs(c_dil*DTrace*dx_ave) +
+                           C1*(DTrace*DTrace*dx_ave*dx_ave))*
                            (pmass[idx]/pvol_def[idx]);
              }
 
@@ -1548,6 +1529,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         }
 
         stressmass  = pstress[idx]*pmass[idx];
+        //stresspress = pstress[idx] + Id*p_pressure[idx];
         stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
 
         for (int k = 0; k < n8or27; k++){
