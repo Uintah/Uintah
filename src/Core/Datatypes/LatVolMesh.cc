@@ -540,14 +540,14 @@ LatVolMesh::get_center(Point &result, Face::index_type idx) const
 
 
 void
-LatVolMesh::get_center(Point &result, Cell::index_type idx) const
+LatVolMesh::get_center(Point &result, const Cell::index_type &idx) const
 {
   Point p(idx.i_ + 0.5, idx.j_ + 0.5, idx.k_ + 0.5);
   result = transform_.project(p);
 }
 
 void
-LatVolMesh::get_center(Point &result, Node::index_type idx) const
+LatVolMesh::get_center(Point &result, const Node::index_type &idx) const
 {
   Point p(idx.i_, idx.j_, idx.k_);
   result = transform_.project(p);
@@ -565,6 +565,7 @@ LatVolMesh::locate(Cell::index_type &cell, const Point &p)
   cell.i_ = (unsigned int)floor(r.x());
   cell.j_ = (unsigned int)floor(r.y());
   cell.k_ = (unsigned int)floor(r.z());
+  cell.mesh_ = this;
 
   if (cell.i_ >= (ni_-1) ||
       cell.j_ >= (nj_-1) ||
@@ -589,6 +590,7 @@ LatVolMesh::locate(Node::index_type &node, const Point &p)
   node.i_ = (unsigned int)floor(r.x() + 0.5);
   node.j_ = (unsigned int)floor(r.y() + 0.5);
   node.k_ = (unsigned int)floor(r.z() + 0.5);
+  node.mesh_ = this;
 
   if (node.i_ >= ni_ ||
       node.j_ >= nj_ ||

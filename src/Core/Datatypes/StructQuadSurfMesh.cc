@@ -142,7 +142,8 @@ StructQuadSurfMesh::get_edges(Edge::array_type &array, Face::index_type idx) con
 }
 
 void
-StructQuadSurfMesh::get_center(Point &result, Node::index_type idx) const
+StructQuadSurfMesh::get_center(Point &result,
+			       const Node::index_type &idx) const
 {
   result = points_(idx.i_, idx.j_);
 }
@@ -168,7 +169,8 @@ StructQuadSurfMesh::get_center(Point &result, Edge::index_type idx) const
 
 
 void
-StructQuadSurfMesh::get_center(Point &result, Face::index_type idx) const
+StructQuadSurfMesh::get_center(Point &result,
+			       const Face::index_type &idx) const
 {
   Node::array_type nodes;
   get_nodes(nodes, idx);
@@ -187,6 +189,7 @@ StructQuadSurfMesh::get_center(Point &result, Face::index_type idx) const
 bool
 StructQuadSurfMesh::locate(Node::index_type &node, const Point &p) const
 {
+  node.mesh_ = this;
   Face::index_type fi;
   if (locate(fi, p)) { // first try the fast way.
     Node::array_type nodes;

@@ -183,6 +183,7 @@ StructHexVolMesh::locate(Cell::index_type &cell, const Point &p)
   {
     compute_grid();
   }
+  cell.mesh_ = this;
   LatVolMeshHandle mesh = grid_->get_typed_mesh();
   LatVolMesh::Cell::index_type ci;
   if (!mesh->locate(ci, p)) { return false; }
@@ -222,6 +223,7 @@ distance2(const Point &p0, const Point &p1)
 bool
 StructHexVolMesh::locate(Node::index_type &node, const Point &p)
 {
+  node.mesh_ = this;
   Cell::index_type ci;
   if (locate(ci, p)) { // first try the fast way.
     Node::array_type nodes;
