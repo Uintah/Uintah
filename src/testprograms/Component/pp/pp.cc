@@ -73,7 +73,6 @@ int main(int argc, char* argv[])
       bool stop=false;
       bool test=false;
       string url;
-      int reps=1;
       
       for(int i=1;i<argc;i++){
 	string arg(argv[i]);
@@ -160,9 +159,8 @@ int main(int argc, char* argv[])
       }
 
       PIDL::serveObjects();
-      cerr << "exits\n";
       PIDL::finalize();
-
+      cerr << "exits\n";
     } catch(const MalformedURL& e) {
 	cerr << "pp.cc: Caught MalformedURL exception:\n";
 	cerr << e.message() << '\n';
