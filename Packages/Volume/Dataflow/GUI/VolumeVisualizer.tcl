@@ -130,7 +130,7 @@ itcl_class Volume_Visualization_VolumeVisualizer {
 
 	global $this-num_slices
 	scale $w.nslice -variable $this-num_slices \
-		-from 64 -to 1024 -label "Number of Slices" \
+		-from 1 -to 1024 -label "Number of Slices" \
 		-showvalue true \
 		-orient horizontal \
 

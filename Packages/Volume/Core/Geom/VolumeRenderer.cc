@@ -3,9 +3,13 @@
 #include <Core/Geom/GeomOpenGL.h>
 
 #include <Packages/Volume/Core/Geom/VolumeRenderer.h>
+#include <Packages/Volume/Core/Geom/VertexProgramARB.h>
 #include <Packages/Volume/Core/Geom/FragmentProgramARB.h>
 #include <Packages/Volume/Core/Datatypes/Brick.h>
 #include <Packages/Volume/Core/Util/SliceTable.h>
+#include <Core/Util/DebugStream.h>
+
+//static SCIRun::DebugStream dbg("VolumeRenderer", false);
 
 //ATTRIB fc = fragment.color;
 //MUL_SAT result.color, c, fc;
@@ -16,7 +20,6 @@ ATTRIB tf = fragment.texcoord[0]; \n\
 TEX c0, tf, texture[0], 3D; \n\
 TEX result.color, c0, texture[1], 1D; \n\
 END";
-
 
 static const char* ShaderString4 =
 "!!ARBfp1.0 \n\
@@ -49,36 +52,42 @@ END";
 //fogCoord.x = z
 //f = (end - fogCoord)/(end-start)
 static const char* FogShaderString1 =
-"!!ARBfp1.0 \n\
-TEMP c0, c, fogFactor, finalColor; \n\
-PARAM fogColor = state.fog.color; \n\
-PARAM fogParam = state.fog.params; \n\
-ATTRIB fogCoord = fragment.fogcoord; \n\
-ATTRIB tf = fragment.texcoord[0]; \n\
-SUB c, fogParam.z, fogCoord.x; \n\
-MUL_SAT fogFactor.x, c, fogParam.w; \n\
-TEX c0, tf, texture[0], 3D; \n\
-TEX finalColor, c0, texture[1], 1D; \n\
-LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n\
-MOV result.color, finalColor; \n\
-END";
+"!!ARBfp1.0 \n"
+"TEMP c0, c, fogFactor, finalColor; \n"
+"PARAM fogColor = state.fog.color; \n"
+"PARAM fogParam = state.fog.params; \n"
+#ifdef __APPLE__
+"ATTRIB fogCoord = fragment.texcoord[1];\n"
+#else
+"ATTRIB fogCoord = fragment.fogcoord; \n"
+#endif
+"ATTRIB tf = fragment.texcoord[0]; \n"
+"SUB c, fogParam.z, fogCoord.x; \n"
+"MUL_SAT fogFactor.x, c, fogParam.w; \n"
+"TEX c0, tf, texture[0], 3D; \n"
+"TEX finalColor, c0, texture[1], 1D; \n"
+"LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
+"MOV result.color, finalColor; \n"
+"END";
 
 static const char* FogShaderString4 =
-"!!ARBfp1.0 \n\
-TEMP c0, c, fogFactor, finalColor; \n\
-PARAM fogColor = state.fog.color; \n\
-PARAM fogParam = state.fog.params; \n\
-ATTRIB fogCoord = fragment.fogcoord; \n\
-ATTRIB tf = fragment.texcoord[0]; \n\
-SUB c, fogParam.z, fogCoord.x; \n\
-MUL_SAT fogFactor.x, c, fogParam.w; \n\
-TEX c0, tf, texture[0], 3D; \n\
-TEX finalColor, c0.w, texture[1], 1D; \n\
-LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n\
-MOV result.color, finalColor; \n\
-END";
-
-
+"!!ARBfp1.0 \n"
+"TEMP c0, c, fogFactor, finalColor; \n"
+"PARAM fogColor = state.fog.color; \n"
+"PARAM fogParam = state.fog.params; \n"
+#ifdef __APPLE__
+"ATTRIB fogCoord = fragment.texcoord[1];\n"
+#else
+"ATTRIB fogCoord = fragment.fogcoord; \n"
+#endif
+"ATTRIB tf = fragment.texcoord[0]; \n"
+"SUB c, fogParam.z, fogCoord.x; \n"
+"MUL_SAT fogFactor.x, c, fogParam.w; \n"
+"TEX c0, tf, texture[0], 3D; \n"
+"TEX finalColor, c0.w, texture[1], 1D; \n"
+"LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
+"MOV result.color, finalColor; \n"
+"END";
 
 static const char* LitVolShaderString =
 "!!ARBfp1.0 \n"
@@ -108,7 +117,11 @@ static const char* LitFogVolShaderString =
 "PARAM k = program.local[1]; # {ka, kd, ks, ns} \n"
 "PARAM fc = state.fog.color; \n"
 "PARAM fp = state.fog.params; \n"
+#ifdef __APPLE__
+"ATTRIB f = fragment.texcoord[1];\n"
+#else
 "ATTRIB f = fragment.fogcoord; \n"
+#endif
 "TEMP v, n, c, d, s; \n"
 "TEX v, t, texture[0], 3D; \n"
 "MAD n, v, 2.0, -1.0; \n"
@@ -128,6 +141,22 @@ static const char* LitFogVolShaderString =
 "MOV result.color, c; \n"
 "END";
 
+static const char* FogVertexShaderString =
+"!!ARBvp1.0 \n"
+"ATTRIB iPos = vertex.position; \n"
+"ATTRIB iTex0 = vertex.texcoord[0]; \n"
+"OUTPUT oPos = result.position; \n"
+"OUTPUT oTex0 = result.texcoord[0]; \n"
+"OUTPUT oTex1 = result.texcoord[1]; \n"
+"PARAM mvp[4] = { state.matrix.mvp }; \n"
+"PARAM mv[4] = { state.matrix.modelview }; \n"
+"MOV oTex0, iTex0; \n"
+"DP4 oTex1.x, -mv[2], iPos; \n"
+"DP4 oPos.x, mvp[0], iPos; \n"
+"DP4 oPos.y, mvp[1], iPos; \n"
+"DP4 oPos.z, mvp[2], iPos; \n"
+"DP4 oPos.w, mvp[3], iPos; \n"
+"END";
 
 using namespace Volume;
 using SCIRun::DrawInfoOpenGL;
@@ -145,6 +174,7 @@ VolumeRenderer::VolumeRenderer() :
   LitFogVolShader = new FragmentProgramARB(LitFogVolShaderString, false);
   MipShader1 = new FragmentProgramARB(MipShaderString1, false);
   MipShader4 = new FragmentProgramARB(MipShaderString4, false);
+  FogVertexShader = new VertexProgramARB(FogVertexShaderString, false);
 }
 
 VolumeRenderer::VolumeRenderer(TextureHandle tex, ColorMapHandle cmap):
@@ -161,6 +191,7 @@ VolumeRenderer::VolumeRenderer(TextureHandle tex, ColorMapHandle cmap):
   LitFogVolShader = new FragmentProgramARB(LitFogVolShaderString, false);
   MipShader1 = new FragmentProgramARB(MipShaderString1, false);
   MipShader4 = new FragmentProgramARB(MipShaderString4, false);
+  FogVertexShader = new VertexProgramARB(FogVertexShaderString, false);
 }
 
 VolumeRenderer::VolumeRenderer( const VolumeRenderer& copy):
@@ -177,6 +208,7 @@ VolumeRenderer::VolumeRenderer( const VolumeRenderer& copy):
   LitFogVolShader = copy.LitFogVolShader;
   MipShader1 = copy.MipShader1;
   MipShader4 = copy.MipShader4;
+  FogVertexShader = copy.FogVertexShader;
 }
 
 GeomObj*
@@ -220,13 +252,13 @@ VolumeRenderer::setup()
   load_colormap();
 
   // First set up the Textures.
-  glActiveTextureARB(GL_TEXTURE0_ARB);
+  glActiveTexture(GL_TEXTURE0_ARB);
   glEnable(GL_TEXTURE_3D);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-  glActiveTextureARB(GL_TEXTURE1_ARB);
+  glActiveTexture(GL_TEXTURE1_ARB);
   glEnable(GL_TEXTURE_1D);
-  glActiveTextureARB(GL_TEXTURE0_ARB);
+  glActiveTexture(GL_TEXTURE0_ARB);
 
   glColor4f(1.0, 1.0, 1.0, 1.0);
   glDepthMask(GL_FALSE);
@@ -256,9 +288,9 @@ VolumeRenderer::cleanup()
   glDisable(GL_BLEND);
   glDepthMask(GL_TRUE);
   if(cmap_.get_rep()) {
-    glActiveTextureARB(GL_TEXTURE1_ARB);
+    glActiveTexture(GL_TEXTURE1_ARB);
     glDisable(GL_TEXTURE_1D);
-    glActiveTextureARB(GL_TEXTURE0_ARB);
+    glActiveTexture(GL_TEXTURE0_ARB);
   }
   glDisable(GL_TEXTURE_3D);
   // glEnable(GL_DEPTH_TEST);  
@@ -292,12 +324,36 @@ VolumeRenderer::draw()
   //--------------------------------------------------------------------------
 
   if(mode_ == OVEROP) {
+    //glFogi(GL_FOG_COORDINATE_SOURCE, GL_FRAGMENT_DEPTH);
     GLboolean fog;
     glGetBooleanv(GL_FOG, &fog);
+
+//     GLfloat fog_start, fog_end;
+//     GLfloat fog_color[4];
+//     GLint fog_source;
+//     glGetIntegerv(GL_FOG_COORDINATE_SOURCE, &fog_source);
+//     glGetFloatv(GL_FOG_START, &fog_start);
+//     glGetFloatv(GL_FOG_END, &fog_end);
+//     glGetFloatv(GL_FOG_COLOR, (GLfloat*)&fog_color);
+
+//     dbg << "FOG: " << (int)fog << endl;
+//     dbg << "PARAM: " << fog_start << " " << fog_end << endl;
+//     dbg << "COLOR: " << fog_color[0] << " " << fog_color[1] << " " << fog_color[2] << " " << fog_color[3] << endl;
+//     dbg << "SOURCE: " << fog_source << " " << GL_FRAGMENT_DEPTH << " " << GL_FOG_COORDINATE << endl;
+
     GLboolean lighting;
     glGetBooleanv(GL_LIGHTING, &lighting);
     int nb = (*bricks.begin())->data()->nb(0);
   
+#ifdef __APPLE__
+    if (fog) {
+        if (!FogVertexShader->valid()) {
+          FogVertexShader->create();
+        }
+        FogVertexShader->bind();
+    }
+#endif
+
     if (shading_ && nb == 4) {
       if(fog) {
         if (!LitFogVolShader->valid()) {
@@ -327,6 +383,10 @@ VolumeRenderer::draw()
       if(fog) {
         LitFogVolShader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
         LitFogVolShader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
+// #ifdef __APPLE__
+//         LitFogVolShader->setLocalParam(2, fog_color[0], fog_color[1], fog_color[2], fog_color[3]);
+//         LitFogVolShader->setLocalParam(3, 0.0, fog_start, fog_end, 1.0/(fog_end-fog_start));
+// #endif
       } else {
         LitVolShader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
         LitVolShader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
@@ -402,6 +462,13 @@ VolumeRenderer::draw()
     GLboolean lighting;
     glGetBooleanv(GL_LIGHTING, &lighting);
     int nb = (*bricks.begin())->data()->nb(0);
+
+#ifdef __APPLE__
+    if (fog) {
+        FogVertexShader->release();
+    }
+#endif
+
     if(shading_ && nb == 4) {
       if(fog) {
         LitFogVolShader->release();
@@ -508,7 +575,7 @@ VolumeRenderer::load_colormap()
 {
   const unsigned char *arr = transfer_function_;
 
-  glActiveTextureARB(GL_TEXTURE1_ARB);
+  glActiveTexture(GL_TEXTURE1_ARB);
   {
     glEnable(GL_TEXTURE_1D);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
