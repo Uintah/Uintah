@@ -88,6 +88,10 @@ static Transform prev_trans;
 // GLUI Component IDs
 #define TURN_ON_JITTER_BTN        50
 
+#define WHITE_BG_BUTTON           52
+#define BLACK_BG_BUTTON           53
+#define ORIG_BG_BUTTON            54
+
 #define SENSITIVITY_SPINNER_ID    60
 #define FOV_SPINNER_ID            61
 #define DEPTH_SPINNER_ID          62
@@ -1909,60 +1913,11 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   // Main Panel
   //
   GLUI_Panel * main_panel   = activeGui->mainWindow->add_panel( "" );
-  GLUI_Panel * button_panel = activeGui->mainWindow->add_panel( "" );
-
-  /////////////////////////////////////////////////////////
-  // Eye Position Panel
-  //
-  GLUI_Panel *eye_panel = 
-    activeGui->mainWindow->add_panel_to_panel( main_panel, "Eye Position" );
-  GLUI_Panel *pos_panel = 
-    activeGui->mainWindow->add_panel_to_panel( eye_panel, "Position" );
-
-  activeGui->x_pos = activeGui->mainWindow->
-    add_edittext_to_panel( pos_panel, "X:", GLUI_EDITTEXT_FLOAT );
-  activeGui->y_pos = activeGui->mainWindow->
-    add_edittext_to_panel( pos_panel, "Y:", GLUI_EDITTEXT_FLOAT );
-  activeGui->z_pos = activeGui->mainWindow->
-    add_edittext_to_panel( pos_panel, "Z:", GLUI_EDITTEXT_FLOAT );
-
-  activeGui->mainWindow->add_separator_to_panel( pos_panel );
-  activeGui->direct = 
-    activeGui->mainWindow->add_edittext_to_panel( pos_panel, "Facing" );
-
-  GLUI_Panel *speed_panel = 
-    activeGui->mainWindow->add_panel_to_panel( eye_panel, "Speed" );
-
-  activeGui->forward_speed = activeGui->mainWindow->
-    add_edittext_to_panel( speed_panel, "Forward:", GLUI_EDITTEXT_FLOAT );
-  activeGui->upward_speed = activeGui->mainWindow->
-    add_edittext_to_panel( speed_panel, "Up:", GLUI_EDITTEXT_FLOAT );
-  activeGui->leftward_speed = activeGui->mainWindow->
-    add_edittext_to_panel( speed_panel, "Right:", GLUI_EDITTEXT_FLOAT );
-
-  GLUI_Rollout *control_panel = activeGui->mainWindow->
-    add_rollout_to_panel( eye_panel, "Control Sensitivity", false );
-  activeGui->rotateSensitivity_ = 1.0;
-  GLUI_Spinner * rot = activeGui->mainWindow->
-    add_spinner_to_panel( control_panel, "Rotation:", GLUI_SPINNER_FLOAT,
-			  &(activeGui->rotateSensitivity_),
-			  SENSITIVITY_SPINNER_ID, updateRotateSensitivityCB );
-  rot->set_float_limits( MIN_SENSITIVITY, MAX_SENSITIVITY );
-  rot->set_speed( 0.1 );
-
-  activeGui->translateSensitivity_ = 1.0;
-  GLUI_Spinner * trans = activeGui->mainWindow->
-    add_spinner_to_panel(control_panel, "Translation:", GLUI_SPINNER_FLOAT,
-			 &(activeGui->translateSensitivity_),
-			 SENSITIVITY_SPINNER_ID, updateTranslateSensitivityCB);
-  trans->set_float_limits( MIN_SENSITIVITY, MAX_SENSITIVITY );
-  trans->set_speed( 0.01 );
+  //  GLUI_Panel * button_panel = activeGui->mainWindow->add_panel( "" );
 
   /////////////////////////////////////////////////////////
   // Display Parameters Panel
   //
-  activeGui->mainWindow->add_column_to_panel( main_panel, false );
-
   GLUI_Panel *display_panel = activeGui->mainWindow->
     add_panel_to_panel( main_panel, "Display Parameters" );
 
@@ -2000,6 +1955,18 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   activeGui->ambientModeLB_->add_item( Sphere_Ambient, "Sphere" );
   activeGui->ambientModeLB_->set_int_val( activeGui->dpy_->ambientMode_ );
 
+  // Background Color controls
+  GLUI_Panel * bgcolor = 
+    activeGui->mainWindow->add_panel_to_panel( display_panel, "Background Color" );
+  activeGui->WhiteBGButton_ = activeGui->mainWindow->
+    add_button_to_panel( bgcolor, "White Background",
+			 WHITE_BG_BUTTON, bgColorCB);
+  activeGui->BlackBGButton_ = activeGui->mainWindow->
+    add_button_to_panel( bgcolor, "Black Background",
+			 BLACK_BG_BUTTON, bgColorCB);
+  activeGui->OrigBGButton_ = activeGui->mainWindow->
+    add_button_to_panel( bgcolor, "Original Background",
+			 ORIG_BG_BUTTON, bgColorCB);
   // Jitter
   GLUI_Panel * jitter = 
     activeGui->mainWindow->add_panel_to_panel( display_panel, "Jitter" );
@@ -2092,30 +2059,83 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   depthSpinner->set_speed( 0.1 );
 
   /////////////////////////////////////////////////////////
+  // Eye Position Panel
+  //
+  activeGui->mainWindow->add_column_to_panel( main_panel, false );
+
+  GLUI_Panel *eye_panel = 
+    activeGui->mainWindow->add_panel_to_panel( main_panel, "Eye Position" );
+  GLUI_Panel *pos_panel = 
+    activeGui->mainWindow->add_panel_to_panel( eye_panel, "Position" );
+
+  activeGui->x_pos = activeGui->mainWindow->
+    add_edittext_to_panel( pos_panel, "X:", GLUI_EDITTEXT_FLOAT );
+  activeGui->y_pos = activeGui->mainWindow->
+    add_edittext_to_panel( pos_panel, "Y:", GLUI_EDITTEXT_FLOAT );
+  activeGui->z_pos = activeGui->mainWindow->
+    add_edittext_to_panel( pos_panel, "Z:", GLUI_EDITTEXT_FLOAT );
+
+  activeGui->mainWindow->add_separator_to_panel( pos_panel );
+  activeGui->direct = 
+    activeGui->mainWindow->add_edittext_to_panel( pos_panel, "Facing" );
+
+  GLUI_Panel *speed_panel = 
+    activeGui->mainWindow->add_panel_to_panel( eye_panel, "Speed" );
+
+  activeGui->forward_speed = activeGui->mainWindow->
+    add_edittext_to_panel( speed_panel, "Forward:", GLUI_EDITTEXT_FLOAT );
+  activeGui->upward_speed = activeGui->mainWindow->
+    add_edittext_to_panel( speed_panel, "Up:", GLUI_EDITTEXT_FLOAT );
+  activeGui->leftward_speed = activeGui->mainWindow->
+    add_edittext_to_panel( speed_panel, "Right:", GLUI_EDITTEXT_FLOAT );
+
+  GLUI_Rollout *control_panel = activeGui->mainWindow->
+    add_rollout_to_panel( eye_panel, "Control Sensitivity", false );
+  activeGui->rotateSensitivity_ = 1.0;
+  GLUI_Spinner * rot = activeGui->mainWindow->
+    add_spinner_to_panel( control_panel, "Rotation:", GLUI_SPINNER_FLOAT,
+			  &(activeGui->rotateSensitivity_),
+			  SENSITIVITY_SPINNER_ID, updateRotateSensitivityCB );
+  rot->set_float_limits( MIN_SENSITIVITY, MAX_SENSITIVITY );
+  rot->set_speed( 0.1 );
+
+  activeGui->translateSensitivity_ = 1.0;
+  GLUI_Spinner * trans = activeGui->mainWindow->
+    add_spinner_to_panel(control_panel, "Translation:", GLUI_SPINNER_FLOAT,
+			 &(activeGui->translateSensitivity_),
+			 SENSITIVITY_SPINNER_ID, updateTranslateSensitivityCB);
+  trans->set_float_limits( MIN_SENSITIVITY, MAX_SENSITIVITY );
+  trans->set_speed( 0.01 );
+
+  /////////////////////////////////////////////////////////
   // Route/Light/Objects/Sounds Window Buttons
   //
+  GLUI_Panel * button_panel =
+    activeGui->mainWindow->add_panel_to_panel( main_panel, "" );
 
   activeGui->mainWindow->
     add_button_to_panel( button_panel, "Routes",
 			 ROUTE_BUTTON_ID, toggleRoutesWindowCB );
-  activeGui->mainWindow->add_column_to_panel( button_panel );
+  //  activeGui->mainWindow->add_column_to_panel( button_panel );
 
   activeGui->mainWindow->
     add_button_to_panel( button_panel, "Lights",
 			 LIGHTS_BUTTON_ID, toggleLightsWindowCB );
-  activeGui->mainWindow->add_column_to_panel( button_panel );
+  //  activeGui->mainWindow->add_column_to_panel( button_panel );
 
   activeGui->mainWindow->
     add_button_to_panel( button_panel, "Objects",
 			 OBJECTS_BUTTON_ID, toggleObjectsWindowCB );
-  activeGui->mainWindow->add_column_to_panel( button_panel );
+  //  activeGui->mainWindow->add_column_to_panel( button_panel );
 
   activeGui->openSoundPanelBtn_ = activeGui->mainWindow->
     add_button_to_panel( button_panel, "Sounds",
 			 OBJECTS_BUTTON_ID, toggleSoundWindowCB );
   activeGui->openSoundPanelBtn_->disable();
-  activeGui->mainWindow->add_column_to_panel( button_panel );
+  //  activeGui->mainWindow->add_column_to_panel( button_panel );
 
+  //  activeGui->mainWindow->add_separator_to_panel( button_panel);
+  
   activeGui->mainWindow->
     add_button_to_panel( button_panel, "Triggers",
 			 OBJECTS_BUTTON_ID, toggleTriggersWindowCB );
@@ -2606,6 +2626,22 @@ Gui::goToRouteBeginningCB( int /*id*/ )
   activeGui->camera_->set_eye( pos );
   activeGui->camera_->set_lookat( look_at );
   activeGui->camera_->setup();
+}
+
+void
+Gui::bgColorCB( int id )
+{
+  switch ( id ) {
+  case WHITE_BG_BUTTON:
+    activeGui->dpy_->scene->set_bgcolor(Color(1,1,1));
+    break;
+  case BLACK_BG_BUTTON:
+    activeGui->dpy_->scene->set_bgcolor(Color(0,0,0));
+    break;
+  case ORIG_BG_BUTTON:
+    activeGui->dpy_->scene->set_original_bg();
+    break;
+  }
 }
 
 void
