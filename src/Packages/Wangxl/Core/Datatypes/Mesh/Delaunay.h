@@ -1816,6 +1816,7 @@ DVertex* Delaunay::insert(const Point& p, DCell* start, DVertex* v)
   DCell* c;
   switch (dimension()) {
   case 3://dim 3
+    {
     c = locate( p, lt, li, lj, start);
     if ( lt == VERTEX ) return c->vertex(li);
     set_number_of_vertices(number_of_vertices()+1);
@@ -1823,24 +1824,29 @@ DVertex* Delaunay::insert(const Point& p, DCell* start, DVertex* v)
     v = (DVertex*)d_mesh.insert_conflict(v, c, tester); 
     v->set_point(p);
     return v;
+    }
   case 2://dim2
+    {
     c = locate( p, lt, li, lj, start);
     switch (lt) {
     case OUTSIDE_CONVEX_HULL:
     case CELL:
     case FACET:
     case EDGE:
+      {
       set_number_of_vertices(number_of_vertices()+1);
       Conflict_tester_2 tester(p, this);
       v = (DVertex*) d_mesh.insert_conflict(v, c, tester); 
       v->set_point(p);
       return v;
+      }
     case VERTEX:
       return c->vertex(li);
     case OUTSIDE_AFFINE_HULL:
       // if the 2d triangulation is Delaunay, the 3d
       // triangulation will be Delaunay
       return insert_outside_affine_hull(p,v); 
+    }
     }
   default :
     // dimension <= 1

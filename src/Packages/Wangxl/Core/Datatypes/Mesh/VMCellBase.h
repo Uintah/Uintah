@@ -152,7 +152,7 @@ public:
 
 
   //COMPUTE TETRA
-  set_tetra() {
+  void set_tetra() {
     int i;
     if ( d_ratio != 0.0 ) return;
     double a0,a1,a2,b0,b1,b2,c0,c1,c2;
@@ -184,7 +184,7 @@ public:
     d_ratio = r/len;    
   }
 
-  set_tetra0() {
+  void set_tetra0() {
     int i,j;
     //    if ( d_ratio != 0.0 ) return;
     double a0,a1,a2,b0,b1,b2,c0,c1,c2;
