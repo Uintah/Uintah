@@ -31,9 +31,9 @@
 #ifndef PingPong_PingPong_impl_h
 #define PingPong_PingPong_impl_h
 
-#include "PingPong_sidl.h"
+#include <testprograms/Component/pingpong/PingPong_sidl.h>
 
-namespace PingPong {
+namespace PingPong_ns {
 
     class PingPong_impl : public PingPong_interface {
     public:

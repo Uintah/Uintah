@@ -30,7 +30,7 @@
 
 #include <iostream>
 #include <Core/CCA/Component/PIDL/PIDL.h>
-#include "memstress_sidl.h"
+#include <testprograms/Component/memstress/memstress_sidl.h>
 #include <Core/Thread/Time.h>
 #include <vector>
 using std::cerr;
