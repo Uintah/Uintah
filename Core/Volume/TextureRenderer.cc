@@ -259,7 +259,7 @@ void
 TextureRenderer::load_brick(TextureBrickHandle brick)
 {
   int nc = brick->nc();
-#ifndef GL_ARB_fragment_program 
+#if !defined(GL_ARB_fragment_program) || !defined(GL_ATI_fragment_shader)
   nc = 1;
 #endif
   int idx[2];
@@ -380,7 +380,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
 			nx, ny, nz, 0, GL_RED,
 			brick->tex_type(), brick->tex_data(c));
       }
-#elif defined (GL_ARB_fragment_program)
+#elif defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
       if (ShaderProgramARB::shaders_supported())
       {
 	unsigned int format = (nb == 1 ? GL_LUMINANCE : GL_RGBA);
@@ -839,7 +839,7 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
                GL_RGBA,
                GL_FLOAT,
                &(cmap1_array_(0, 0)));
-#elif defined (GL_ARB_fragment_program)
+#elif defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
     glActiveTexture(GL_TEXTURE2_ARB);
@@ -905,7 +905,7 @@ TextureRenderer::release_colormap1()
 {
 #if defined(GL_TEXTURE_COLOR_TABLE_SGI) && defined(__sgi)
   glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
-#elif defined (GL_ARB_fragment_program)
+#elif defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
     // bind texture to unit 2
