@@ -1199,8 +1199,21 @@ static void dump_bin(Allocator*, AllocBin* bin, FILE* fp)
 void DumpAllocator(Allocator* a, const char* filename)
 {
     FILE* fp=fopen(filename, "w");
+
+    if( a == NULL )
+      {
+	printf( "WARNING: In DumpAllocator: Allocator is NULL.\n");
+	printf( "         Therefore no information to dump.");
+	return;
+      }
+    if( fp == NULL )
+      {
+	perror("DumpAllocator fopen");	
+	exit( 1 );
+      }
     fprintf(fp, "\n");
     a->lock();
+
     int i;
     for(i=0;i<NSMALL_BINS;i++)
 	dump_bin(a, &a->small_bins[i], fp);
