@@ -10,93 +10,84 @@
 
 namespace Uintah {
 
-/**************************************
+  /////////////////////////////////////////////////////////////////////////////
+  /*!
+    \class ShellGeometryPiece
 	
-CLASS
-
-   ShellGeometryPiece
+    \brief Abstract class for shell geometries
 	
-   Creates a shell from the xml input file description.
+    \author Biswajit Banerjee \n
+    C-SAFE and Department of Mechanical Engineering \n
+    University of Utah \n
 	
-GENERAL INFORMATION
-	
-   ShellGeometryPiece.h
-	
-   Biswajit Banerjee
-   Department of Mechanical Engineering
-   University of Utah
-	
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-	
-KEYWORDS
-
-   ShellGeometryPiece  BoundingBox inside
-	
-DESCRIPTION
-
-   Creates a shell from the xml input file description.
-   The input form looks like this:
+    Creates a shell from the xml input file description.
+    The input form looks like this:
    
-   a) Sphere
-   <shell>
-     <sphere>
-       <origin>[0.,0.,0.]</origin>
-       <radius>2.0</radius>
-       <thickness>0.1</thickness>
-       <num_lat>20</num_lat>
-       <num_long>40</num_long>
-     </sphere>
-   </shell>
+    \verbatim
+    a) Sphere
+    <shell>
+      <sphere>
+        <origin>[0.,0.,0.]</origin>
+        <radius>2.0</radius>
+        <thickness>0.1</thickness>
+        <num_lat>20</num_lat>
+        <num_long>40</num_long>
+      </sphere>
+    </shell>
 
-   b) Cylinder
-   <shell>
-     <cylinder>
-     </cylinder>
-   </shell>
+    b) Cylinder
+    <shell>
+      <cylinder>
+      </cylinder>
+    </shell>
 	
-   c) Plane
-   <shell>
-     <plane>
-     </plane>
-   </shell>
+    c) Plane
+    <shell>
+      <plane>
+      </plane>
+    </shell>
 
-   d) Union/Intersection operations
-   <shell>
-     <union>
-     </union>
-   </shell>
+    d) Union/Intersection operations
+    <shell>
+      <union>
+      </union>
+    </shell>
 
-   <shell>
-     <intersect>
-     </intersect>
-   </shell>
+    <shell>
+      <intersect>
+      </intersect>
+    </shell>
+    \endverbatim
 	
-WARNING
-	
-****************************************/
-
+  */
+  /////////////////////////////////////////////////////////////////////////////
 
   class ShellGeometryPiece : public GeometryPiece {
 	 
   public:
-    //////////
-    // Destructor
+    //////////////////////////////////////////////////////////////////////
+    /*! \brief Destructor */
+    //////////////////////////////////////////////////////////////////////
     virtual ~ShellGeometryPiece();
 	 
-    //////////
-    // Returns the bounding box surrounding the box.
+    //////////////////////////////////////////////////////////////////////
+    /*! \brief Returns the bounding box surrounding the box. */
+    //////////////////////////////////////////////////////////////////////
     virtual Box getBoundingBox() const = 0;
 
-    //////////
-    // Determines whether a point is inside the shell
+    //////////////////////////////////////////////////////////////////////
+    /*! \brief Determines whether a point is inside the shell */
+    //////////////////////////////////////////////////////////////////////
     virtual bool inside(const Point &p) const = 0;
 	 
-    //////////
-    // Returns the number of particles associated with the shell
+    //////////////////////////////////////////////////////////////////////
+    /*! \brief Returns the number of particles associated with the shell */
+    //////////////////////////////////////////////////////////////////////
     virtual int returnParticleCount(const Patch* patch) = 0;
 
-    //////////
-    // Create the particles in the shell
+    //////////////////////////////////////////////////////////////////////
+    /*! \brief Create the particles in the shell */
+    //////////////////////////////////////////////////////////////////////
     virtual int createParticles(const Patch* patch,
 				ParticleVariable<Point>&  pos,
 				ParticleVariable<double>& vol,

@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/SphereGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/SphereMembraneGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/CylinderGeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/SmoothCylGeomPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/ConeGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/TriGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/UnionGeometryPiece.h>
@@ -45,6 +46,9 @@ void GeometryPieceFactory::create(const ProblemSpecP& ps,
 
       else if (go_type ==  "cylinder")
 	 objs.push_back(new CylinderGeometryPiece(child));
+
+      else if (go_type ==  "smoothcyl")
+	 objs.push_back(new SmoothCylGeomPiece(child));
 
       else if (go_type ==  "cone")
 	 objs.push_back(new ConeGeometryPiece(child));

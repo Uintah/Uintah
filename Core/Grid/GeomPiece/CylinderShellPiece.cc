@@ -67,11 +67,12 @@ CylinderShellPiece::getBoundingBox() const
   return Box(lo,hi);
 }
 
-///////////
-// Count particles on cylinder
-// The particles are created at the bottom plane and then
-// copies are rotated and translated to get the final count
-// Particles are counted only if they are inside the patch
+/////////////////////////////////////////////////////////////////////////////
+/*! Count particles on cylinder
+   The particles are created at the bottom plane and then
+   copies are rotated and translated to get the final count
+   Particles are counted only if they are inside the patch */
+/////////////////////////////////////////////////////////////////////////////
 int 
 CylinderShellPiece::returnParticleCount(const Patch* patch)
 {
@@ -123,11 +124,13 @@ CylinderShellPiece::returnParticleCount(const Patch* patch)
 }
 
 ///////////
-// Create particles on cylinder
-// Same algorithm as particle count
-// The particles are created at the bottom plane and then
-// copies are rotated and translated to get the final count
-// Particles are counted only if they are inside the patch
+/////////////////////////////////////////////////////////////////////////////
+/*! Create particles on cylinder
+   Same algorithm as particle count
+   The particles are created at the bottom plane and then
+   copies are rotated and translated to get the final count
+   Particles are counted only if they are inside the patch */
+/////////////////////////////////////////////////////////////////////////////
 int 
 CylinderShellPiece::createParticles(const Patch* patch,
 				  ParticleVariable<Point>&  pos,

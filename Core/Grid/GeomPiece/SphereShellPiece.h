@@ -13,30 +13,16 @@
 
 namespace Uintah {
 
-/**************************************
+/////////////////////////////////////////////////////////////////////////////
+/*!
+   \class SphereShellPiece
 	
-CLASS
-
-   SphereShellPiece
+   \brief Creates a spherical shell from the xml input file description.
 	
-   Creates a spherical shell from the xml input file description.
+   \author Jim Guilkey \n
+   C-SAFE and Department of Mechanical Engineering \n
+   University of Utah \n
 	
-GENERAL INFORMATION
-	
-   SphereShellPiece.h
-	
-   Jim Guilkey
-   Department of Mechanical Engineering
-   University of Utah
-	
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-	
-KEYWORDS
-
-   SphereShellPiece  BoundingBox 
-	
-DESCRIPTION
-
    Creates a sphere from the xml input file description.
    Requires five inputs: origin, radius and thickness as well as
    num_lat and num_long.  These last two indicate how many lines of
@@ -44,17 +30,18 @@ DESCRIPTION
    There are methods for checking if a point is inside the sphere
    and also for determining the bounding box for the sphere.
    The input form looks like this:
-       <sphere>
-         <origin>[0.,0.,0.]</origin>
-	 <radius>2.0</radius>
-	 <thickness>0.1</thickness>
-	 <num_lat>20</num_lat>
-	 <num_long>40</num_long>
-       </sphere>
+   \verbatim
+     <sphere>
+       <origin>[0.,0.,0.]</origin>
+       <radius>2.0</radius>
+       <thickness>0.1</thickness>
+       <num_lat>20</num_lat>
+       <num_long>40</num_long>
+     </sphere>
+   \endverbatim
 	
-WARNING
-	
-****************************************/
+*/
+/////////////////////////////////////////////////////////////////////////////
 
   class SphereShellPiece : public ShellGeometryPiece {
 	 
