@@ -87,13 +87,13 @@ public:
 
   //! Required interface to support Field Concept.
   bool value(value_type &val, typename mesh_type::node_index i) const
-  { val = fdata_[i]; return true; }
-  bool value(value_type &val, typename mesh_type::edge_index i) const 
-  { val = fdata_[i]; return true; }
-  bool value(value_type &val, typename mesh_type::face_index i) const 
-  { val = fdata_[i]; return true; }
-  bool value(value_type &val, typename mesh_type::cell_index i) const 
-  { val = fdata_[i]; return true; }
+  { if (data_at() != NODE) return false; val = fdata_[i]; return true; }
+  bool value(value_type &val, typename mesh_type::edge_index i) const
+  { if (data_at() != EDGE) return false; val = fdata_[i]; return true; }
+  bool value(value_type &val, typename mesh_type::face_index i) const
+  { if (data_at() != FACE) return false; val = fdata_[i]; return true; }
+  bool value(value_type &val, typename mesh_type::cell_index i) const
+  { if (data_at() != CELL) return false; val = fdata_[i]; return true; } 
 
   //! Required interface to support Field Concept.
   void set_value(const value_type &val, typename mesh_type::node_index i)

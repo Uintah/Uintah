@@ -32,6 +32,7 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geom/GeomTriangles.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 
 namespace SCIRun {
 
@@ -41,7 +42,7 @@ template<class Field>
 class TetMC
 {
 public:
-  typedef Field                         field_type;
+  typedef Field                                  field_type;
   typedef typename Field::mesh_type::cell_index  cell_index;
   typedef typename Field::value_type             value_type;
   typedef typename Field::mesh_type              mesh_type;
@@ -50,14 +51,19 @@ private:
   Field *field_;
   mesh_handle_type mesh_;
   GeomTrianglesP *triangles_;
-
+  int build_trisurf_;
+  TriSurfMeshHandle trisurf_;
+  map<long int, TriSurfMesh::node_index> vertex_map_;
+  int nnodes_;
+  TriSurfMesh::node_index find_or_add_edgepoint(int, int, Point);
 public:
   TetMC( Field *field ) : field_(field), mesh_(field->get_typed_mesh()) {}
   virtual ~TetMC();
 	
-  void extract( cell_index, double);
-  void reset( int );
+  void extract( cell_index, double );
+  void reset( int, int build_trisurf=0);
   GeomObj *get_geom() { return triangles_->size() ? triangles_ : 0; };
+  TriSurfMeshHandle get_trisurf() { return trisurf_; };
 };
   
 
@@ -68,10 +74,33 @@ TetMC<Field>::~TetMC()
     
 
 template<class Field>
-void TetMC<Field>::reset( int n )
+void TetMC<Field>::reset( int n, int build_trisurf )
 {
+  build_trisurf_ = build_trisurf;
   triangles_ = new GeomTrianglesP;
   triangles_->reserve_clear( 1.3*n );
+  vertex_map_.clear();
+  nnodes_ = mesh_->nodes_size();
+  if (build_trisurf_)
+    trisurf_ = new TriSurfMesh; 
+  else 
+    trisurf_=0;
+}
+
+template<class Field>
+TriSurfMesh::node_index
+TetMC<Field>::find_or_add_edgepoint(int n0, int n1, Point p) {
+  map<long int, TriSurfMesh::node_index>::iterator node_iter;
+  TriSurfMesh::node_index node_idx;
+  long int key = (n0 < n1) ? n0*nnodes_+n1 : n1*nnodes_+n0;
+  node_iter = vertex_map_.find(key);
+  if (node_iter == vertex_map_.end()) { // first time to see this node
+    node_idx = trisurf_->add_point(p);
+    vertex_map_[key] = node_idx;
+  } else {
+    node_idx = (*node_iter).first;
+  }
+  return node_idx;
 }
 
 template<class Field>
@@ -107,7 +136,7 @@ void TetMC<Field>::extract( cell_index cell, double v )
 
   for (int i=0; i<4; i++) {
     mesh_->get_point( p[i], node[i] );
-    value[i] = field_->value( node[i] );
+    if (!field_->value( value[i], node[i] )) return;
     code = code*2+(value[i] > v );
   }
 
@@ -125,6 +154,14 @@ void TetMC<Field>::extract( cell_index cell, double v )
       Point p3(Interpolate( p[o],p[k],(v-value[o])/double(value[k]-value[o])));
       
       triangles_->add( p1, p2, p3 );
+
+      if (build_trisurf_) {
+	TriSurfMesh::node_index i1, i2, i3;
+	i1 = find_or_add_edgepoint(o, i, p1);
+	i2 = find_or_add_edgepoint(o, j, p2);
+	i3 = find_or_add_edgepoint(o, k, p3);
+	trisurf_->add_triangle(i1, i2, i3);
+      }
     }
     break;
   case 2: 
@@ -144,6 +181,16 @@ void TetMC<Field>::extract( cell_index cell, double v )
       Point p4(Interpolate( p[k],p[i],(v-value[k])/double(value[i]-value[k])));
 
       triangles_->add( p1, p3, p4 );
+
+      if (build_trisurf_) {
+	TriSurfMesh::node_index i1, i2, i3, i4;
+	i1 = find_or_add_edgepoint(o, i, p1);
+	i2 = find_or_add_edgepoint(o, j, p2);
+	i3 = find_or_add_edgepoint(k, j, p3);
+	i4 = find_or_add_edgepoint(k, i, p4);
+	trisurf_->add_triangle(i1, i2, i3);
+	trisurf_->add_triangle(i1, i3, i4);
+      }
     }
     break;
   default:

@@ -141,7 +141,7 @@ template class Property<pair<char,char> >;
 
 //! Compute the gradient g in cell ci.
 template <>
-Vector TetVol<Vector>::cell_gradient(TetVolMesh::cell_index ci)
+Vector TetVol<Vector>::cell_gradient(TetVolMesh::cell_index /*ci*/)
 {
   ASSERT(type_name(1) != "Vector");  // redundant, useful error message
   return Vector(0, 0, 0);
@@ -149,19 +149,19 @@ Vector TetVol<Vector>::cell_gradient(TetVolMesh::cell_index ci)
 
 
 template <>
-Vector TetVol<Tensor>::cell_gradient(TetVolMesh::cell_index ci)
+Vector TetVol<Tensor>::cell_gradient(TetVolMesh::cell_index /*ci*/)
 {
   ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
   return Vector(0, 0, 0);
 }
 
-template <> bool LatticeVol<Tensor>::get_gradient(Vector &, Point &p)
+template <> bool LatticeVol<Tensor>::get_gradient(Vector &, Point &/*p*/)
 {
   ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
   return false;
 }
 
-template <> bool LatticeVol<Vector>::get_gradient(Vector &, Point &p)
+template <> bool LatticeVol<Vector>::get_gradient(Vector &, Point &/*p*/)
 {
   ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
   return false;

@@ -61,7 +61,7 @@ class Loader
 {
 public:
   Loader() {}
-  Loader(const Loader &copy) {}
+  Loader(const Loader &) {}
   virtual ~Loader() {}
 
   

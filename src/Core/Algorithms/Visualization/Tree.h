@@ -193,6 +193,6 @@ void Tree<Cell>::show()
 
 } // namespace SCIRun
 
-#endif Tree_h		
+#endif // Tree_h		
   
   

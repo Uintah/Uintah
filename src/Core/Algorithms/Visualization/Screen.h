@@ -77,4 +77,4 @@ private:
 
 } // namespace SCIRun
 
-#endif Screen_h
+#endif // Screen_h
