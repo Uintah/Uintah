@@ -62,7 +62,10 @@ using namespace SCIRun;
 SocketMessage::SocketMessage(DTMessage *dtmsg)
 {
   this->msg=dtmsg->buf;
-  dtmsg->buf=NULL;
+  if(dtmsg->autofree) dtmsg->buf=NULL;
+  else{
+    cerr<<"TODO: shoudl copy memory here"<<endl;
+  }
   this->dtmsg=dtmsg;
   msg_size=sizeof(int); //skip handler_id
   spchan=NULL;
@@ -78,9 +81,7 @@ SocketMessage::SocketMessage(SocketSpChannel *spchan)
 
 SocketMessage::~SocketMessage() {
   if(dtmsg!=NULL)  delete dtmsg;
-  else{
-    if(msg!=NULL) free(msg);
-  }
+  if(msg!=NULL) free(msg);
 }
 
 void 
@@ -155,6 +156,7 @@ void
 SocketMessage::waitReply(){
   DTMessage *wmsg=spchan->sp->getMessage();
   wmsg->autofree=false;
+  if(msg!=NULL) free(msg);
   msg=wmsg->buf;
   delete wmsg;
   msg_size=sizeof(int);//skip handler_id
@@ -215,9 +217,7 @@ SocketMessage::getLocalObj(){
 
 void SocketMessage::destroyMessage() {
   if(dtmsg!=NULL)  delete dtmsg;
-  else{
-    if(msg!=NULL) free(msg);
-  }
+  if(msg!=NULL) free(msg);
   dtmsg=NULL;
   msg=NULL;
   delete this;

@@ -269,14 +269,7 @@ DataTransmitter::runRecvingThread(){
 	  msg->to_addr=addr;
 	  msg->autofree=true;
 	  msg->fr_addr=iter->first;
-	  int id=*((int *)msg->buf);
-	  recvQ_mutex->lock();
-	  recv_msgQ.push_back(msg);
-	  recvQ_mutex->unlock();
-	  /*
-	    recvQ_cond->conditionSignal();
-	   */
-
+	  //int id=*((int *)msg->buf);
 	  DTPoint *pt=msg->recver;
 	  SemaphoreMap::iterator found=semamap.find(pt);
 	  if(found!=semamap.end()){
@@ -284,6 +277,13 @@ DataTransmitter::runRecvingThread(){
 	      pt->service(msg);
 	    }
 	    else{
+	      recvQ_mutex->lock();
+	      recv_msgQ.push_back(msg);
+	      recvQ_mutex->unlock();
+	      /*
+		recvQ_cond->conditionSignal();
+	      */
+	      
 	      found->second->up();
 	    }
 	  }
