@@ -99,8 +99,22 @@ main(int argc, char **argv) {
     } else {
       fread(data, sizeof(unsigned char), ni*nj*nk, fin);
     }
+  } else if (datatype == "f") {
+    LatticeVol<float> *lv = 
+      new LatticeVol<float>(lvm, Field::NODE);
+    fH=lv;
+    float *data=&(lv->fdata()(0,0,0));
+    if (ascii_or_binary == "a") {
+      float f;
+      for (int i=0; i<ni*nj*nk; i++) {
+	fscanf(fin, "%f", &f);
+	*data++ = f;
+      }
+    } else {
+      fread(data, sizeof(float), ni*nj*nk, fin);
+    }
   }
-  TextPiostream out_stream(argv[2], Piostream::Write);
+  BinaryPiostream out_stream(argv[2], Piostream::Write);
   Pio(out_stream, fH);
   return 0;  
 }    
