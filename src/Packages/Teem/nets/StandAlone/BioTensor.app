@@ -1813,7 +1813,7 @@ class BioTensorApp {
 	set win .standalone
 
 	set viewer_width 435
-	set viewer_height 560
+	set viewer_height 565
 	
 	set notebook_width 280
 	set notebook_height [expr $viewer_height - 50]
@@ -5080,15 +5080,15 @@ class BioTensorApp {
         global mods
 	global $mods(ChooseField-ColorPlanes)-port-index
 	global $mods(ChooseColorMap-Planes)-port-index
-	global $mods(ShowField-X)-tensor-usedefcolor
-	global $mods(ShowField-Y)-tensor-usedefcolor
-	global $mods(ShowField-Z)-tensor-usedefcolor
+	global $mods(ShowField-X)-faces-usedefcolor
+	global $mods(ShowField-Y)-faces-usedefcolor
+	global $mods(ShowField-Z)-faces-usedefcolor
 	
         set which [$w.color get]
 
-	set $mods(ShowField-X)-tensor-usedefcolor 0
-	set $mods(ShowField-Y)-tensor-usedefcolor 0
-	set $mods(ShowField-Z)-tensor-usedefcolor 0
+	set $mods(ShowField-X)-faces-usedefcolor 0
+	set $mods(ShowField-Y)-faces-usedefcolor 0
+	set $mods(ShowField-Z)-faces-usedefcolor 0
 	
         if {$which == "Principle Eigenvector"} {
 	    set plane_type "Principle Eigenvector"
@@ -5127,9 +5127,9 @@ class BioTensorApp {
 	    set $mods(ChooseColorMap-Planes)-port-index 1
 	    set $mods(ChooseField-ColorPlanes)-port-index 0
 
-	    set $mods(ShowField-X)-tensor-usedefcolor 1
-	    set $mods(ShowField-Y)-tensor-usedefcolor 1
-	    set $mods(ShowField-Z)-tensor-usedefcolor 1
+	    set $mods(ShowField-X)-faces-usedefcolor 1
+	    set $mods(ShowField-Y)-faces-usedefcolor 1
+	    set $mods(ShowField-Z)-faces-usedefcolor 1
         }
 
 	$planes_tab1.color.childsite.select.color select $which
@@ -5137,6 +5137,9 @@ class BioTensorApp {
 	
         # execute 
         $mods(ChooseField-ColorPlanes)-c needexecute
+	$mods(ShowField-X)-c rerender_faces
+	$mods(ShowField-Y)-c rerender_faces
+	$mods(ShowField-Z)-c rerender_faces
     }
   
     method initialize_clip_info {} {
@@ -6007,6 +6010,9 @@ class BioTensorApp {
 	set which [$w.color get]
 
 	#disableModule $mods(ChooseField-Isosurface) 0
+	global $mods(ShowField-Isosurface)-faces-usedefcolor
+
+	set $mods(ShowField-Isosurface)-faces-usedefcolor 0
 	
         if {$which == "Principle Eigenvector"} {
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
@@ -6039,6 +6045,7 @@ class BioTensorApp {
 	    #disableModule $mods(RescaleColorMap-Isosurface) 1
 	    set $mods(ChooseColorMap-Isosurface)-port-index 1
 	    set $mods(ChooseField-Isosurface)-port-index 0
+	    set $mods(ShowField-Isosurface)-faces-usedefcolor 1
         }
 
 	$isosurface_tab1.isocolor.childsite.select.color select $which
@@ -6046,6 +6053,7 @@ class BioTensorApp {
 	
         # execute 
         $mods(ChooseField-Isosurface)-c needexecute
+	$mods(ShowField-Isosurface)-c rerender_faces
     }
     
 
@@ -6542,6 +6550,10 @@ class BioTensorApp {
 	    set type [$w.type get]
         }
 	
+	global $mods(ShowField-Glyphs)-tensors-usedefcolor
+
+	set $mods(ShowField-Glyphs)-tensors-usedefcolor 0
+
         # configure display type
         if {$glyph_display_type == "ellipsoids"} {
 	    set $mods(ShowField-Glyphs)-tensor_display_type Ellipsoids
@@ -6585,6 +6597,7 @@ class BioTensorApp {
 	    set $mods(ChooseColorMap-Glyphs)-port-index 1
 	    set $mods(ShowField-Glyphs)-tensor-usedefcolor 1
 	    set $mods(ChooseColorMap-Glyphs)-port-index 0
+	    set $mods(ShowField-Glyphs)-tensors-usedefcolor 1
 	}
 	
 	# sync attached/detached optionmenus
@@ -7223,12 +7236,13 @@ class BioTensorApp {
 	global mods
 	global $mods(ChooseField-Fibers)-port-index
 	global $mods(ChooseColorMap-Fibers)-port-index
-	global $mods(ShowField-Fibers)-tensor-usedefcolor
+	global $mods(ShowField-Fibers)-edges-usedefcolor
 
 	# get selection and change appropriate port
 	set type [$f.type get]
 
-	set $mods(ShowField-Fibers)-tensor-usedefcolor 0
+	set $mods(ShowField-Fibers)-edges-usedefcolor 0
+
 	# configure color
 	if {$type == "Principle Eigenvector"} {
 	    set fiber_type "Principle Eigenvector"
@@ -7254,7 +7268,7 @@ class BioTensorApp {
 	    set fiber_type "Constant"
 	    #disableModule $mods(RescaleColorMap-Fibers) 1
 	    set $mods(ChooseColorMap-Fibers)-port-index 1
-	    set $mods(ShowField-Fibers)-tensor-usedefcolor 1
+	    set $mods(ShowField-Fibers)-edges-usedefcolor 1
 	    set $mods(ChooseField-Fibers)-port-index 0
 	}
 	
@@ -7264,8 +7278,8 @@ class BioTensorApp {
 
 	configure_fibers_tabs
 
-	$mods(ShowField-Fibers)-c data_display_type
 	$mods(ChooseField-Fibers)-c needexecute
+	$mods(ShowField-Fibers)-c rerender_edges
     }
  
 
