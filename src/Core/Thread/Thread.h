@@ -214,6 +214,7 @@ DESCRIPTION
 		BLOCK_SEMAPHORE,
 		BLOCK_CONDITIONVARIABLE
 	    };
+
 	private:
 	    static const char* getStateString(ThreadState);
 	    static int push_bstack(Thread_private*, ThreadState s,
@@ -233,6 +234,10 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.18  1999/11/10 19:44:52  moulding
+// moved some data members and member functions from private: to public:
+// so that the many global functions that require it, have access.
+//
 // Revision 1.17  1999/11/10 19:41:16  moulding
 // modified the comment for yield
 //
