@@ -127,6 +127,9 @@ void LookupSurface::execute()
 
 //
 // $Log$
+// Revision 1.1.2.1  2000/10/31 02:24:34  dmw
+// Merging PSECommon changes from HEAD to FIELD_REDESIGN branch
+//
 // Revision 1.1  2000/10/29 04:34:56  dmw
 // BuildFEMatrix -- ground an arbitrary node
 // SolveMatrix -- when preconditioning, be careful with 0's on diagonal
