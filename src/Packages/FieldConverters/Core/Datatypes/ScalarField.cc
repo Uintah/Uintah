@@ -22,7 +22,7 @@ namespace FieldConverters {
 PersistentTypeID ScalarField::type_id("ScalarField", "Datatype", 0);
 
 ScalarField::ScalarField(Representation rep)
-  : have_bounds(0), have_minmax(0), rep(rep), separate_raw(0), raw_filename("")
+  : have_bounds(0), have_minmax(0), separate_raw(0), raw_filename(""), rep(rep)
 {
 }
 

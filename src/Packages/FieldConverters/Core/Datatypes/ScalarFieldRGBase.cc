@@ -29,17 +29,17 @@ PersistentTypeID ScalarFieldRGBase::type_id("ScalarFieldRGBase", "ScalarField", 
 
 ScalarFieldRGBase::ScalarFieldRGBase(Representation r, int x, int y, int z)
   : ScalarField(RegularGridBase),
-    rep(r),
     nx(x), ny(y), nz(z),
     is_augmented(0),
-    next(0)
+    next(0),
+    rep(r)
 {
 }
 
 ScalarFieldRGBase::ScalarFieldRGBase(const ScalarFieldRGBase& copy)
 : ScalarField(copy), nx(copy.nx), ny(copy.ny), nz(copy.nz), 
-  rep(copy.rep),
-  is_augmented(0), next(0)
+  is_augmented(0), next(0),
+  rep(copy.rep)
 {
 }
 

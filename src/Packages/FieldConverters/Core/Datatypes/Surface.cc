@@ -18,7 +18,8 @@ namespace FieldConverters {
 PersistentTypeID Surface::type_id("Surface", "Datatype", 0);
 
 Surface::Surface(Representation rep, int closed)
-: monitor("Surface crowd monitor"), rep(rep), grid(0), closed(closed), pntHash(0), boundary_type(BdryNone)
+  : monitor("Surface crowd monitor"),
+    rep(rep), closed(closed), grid(0), pntHash(0), boundary_type(BdryNone)
 {
 }
 
@@ -29,7 +30,8 @@ Surface::~Surface()
 }
 
 Surface::Surface(const Surface& copy)
-  : monitor("Surface crowd monitor"), closed(copy.closed), rep(copy.rep), name(copy.name), grid(0), pntHash(0)
+  : monitor("Surface crowd monitor"), name(copy.name), rep(copy.rep),
+    closed(copy.closed), grid(0), pntHash(0)
 {
 //    NOT_FINISHED("Surface::Surface");
 }
