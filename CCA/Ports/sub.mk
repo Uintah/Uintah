@@ -11,6 +11,7 @@ SRCS += $(SRCDIR)/SimulationInterface.cc \
 	$(SRCDIR)/ModelMaker.cc \
 	$(SRCDIR)/Output.cc \
 	$(SRCDIR)/ProblemSpecInterface.cc \
+	$(SRCDIR)/Regridder.cc \
 	$(SRCDIR)/Scheduler.cc \
 	$(SRCDIR)/SolverInterface.cc
 
