@@ -969,9 +969,15 @@ package cca {
    	   array<string> getCompatiblePortList(in sci.cca.ComponentID c1,
 				       in string port1,
 				       in sci.cca.ComponentID c2);
-	    		
-	   int addLoader(in string loaderName, in string login, in string domain, in string path);
+	    	
+           //Bridge methods:	
+           array<string> getBridgablePortList(in sci.cca.ComponentID c1,
+                                       in string port1,
+                                       in sci.cca.ComponentID c2);
+           string generateBridge(in string c1, in string c2);
 
+
+	   int addLoader(in string loaderName, in string login, in string domain, in string path);
 	   int removeLoader(in string name);
 
 	   //void registerFramework(in string frameworkURL); 	
