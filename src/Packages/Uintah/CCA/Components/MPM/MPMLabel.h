@@ -119,9 +119,10 @@ using std::vector;
       const VarLabel* dispNewLabel;
       const VarLabel* dispIncLabel;
       const VarLabel* pAccelerationLabel;
-      const VarLabel* converged;
       const VarLabel* dispIncQNorm0;
       const VarLabel* dispIncNormMax;
+      const VarLabel* dispIncQNorm;
+      const VarLabel* dispIncNorm;
 
       const VarLabel* bElBarLabel;
       const VarLabel* bElBarLabel_preReloc;

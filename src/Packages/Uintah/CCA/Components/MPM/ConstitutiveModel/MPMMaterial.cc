@@ -244,7 +244,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    new_dw->put(pvelocity,            lb->pVelocityLabel);
 #ifdef IMPLICIT
    new_dw->put(pacceleration,        lb->pAccelerationLabel);
-   new_dw->put(bElBar,               lb->bElBarLabel);
+   //   new_dw->put(bElBar,               lb->bElBarLabel);
 #endif
    new_dw->put(pexternalforce,       lb->pExternalForceLabel);
    new_dw->put(pmass,                lb->pMassLabel);
