@@ -231,9 +231,9 @@ public:
     CellIter(const MaskedLatVolMesh *m, unsigned i, unsigned j, unsigned k)
       : MaskedLatIndex(m, i, j, k) {}
 
-    const NodeIndex &operator *() const 
+    const CellIndex &operator *() const 
     { 
-      return (const NodeIndex&)(*this); 
+      return (const CellIndex&)(*this); 
     }
 
     operator unsigned() const 
@@ -452,7 +452,7 @@ private:
   bool		check_valid(Face::iterator idx) const;
   bool		check_valid(Cell::iterator idx) const;
   inline bool	check_valid(unsigned i, unsigned j, unsigned k) const
-  { return masked_cells_.find(unsigned(i)) == masked_cells_.end(); }
+  { return masked_cells_.find(unsigned(Cell::index_type(this,i,j,k))) == masked_cells_.end(); }
 
   
   // returns a MaskedLatVolMesh

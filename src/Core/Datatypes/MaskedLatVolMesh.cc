@@ -575,12 +575,12 @@ get_neighbors_stencil(vector<pair<bool,Cell::index_type> > &nbrs,
 
     
 
-#define STRUCT_HEX_VOL_MESH_VERSION 1
+#define MASKED_LAT_VOL_MESH_VERSION 1
 
 void
 MaskedLatVolMesh::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1), STRUCT_HEX_VOL_MESH_VERSION);
+  stream.begin_class(type_name(-1), MASKED_LAT_VOL_MESH_VERSION);
 
   LatVolMesh::io(stream);
 
