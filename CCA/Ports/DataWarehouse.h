@@ -262,7 +262,8 @@ WARNING
 
       // For sanity checking.
       // Must be called by the thread that will run the test.
-      virtual void setCurrentTask(const Task* task) = 0;
+      virtual void pushRunningTask(const Task* task) = 0;
+      virtual void popRunningTask() = 0;     
       virtual void checkTasksAccesses(const PatchSubset* patches,
 				      const MaterialSubset* matls) = 0;
      
