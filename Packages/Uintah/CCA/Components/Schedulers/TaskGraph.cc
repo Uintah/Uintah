@@ -584,6 +584,7 @@ TaskGraph::createDetailedTasks( const ProcessorGroup* pg,
       }
     }
   }
+  ASSERT(level != 0);
   lb->createNeighborhood(level, pg);
 
   DetailedTasks* dt = scinew DetailedTasks( pg, this, useInternalDeps );
