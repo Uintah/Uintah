@@ -36,11 +36,13 @@ namespace Uintah {
 
     virtual void advectQ(const CCVariable<double>& q_CC,
                       const Patch* patch,
-                      CCVariable<double>& q_advected);
+                      CCVariable<double>& q_advected,
+			 DataWarehouse* new_dw);
     
     virtual void advectQ(const CCVariable<Vector>& q_CC,
                       const Patch* patch,
-                      CCVariable<Vector>& q_advected);
+                      CCVariable<Vector>& q_advected,
+			 DataWarehouse* new_dw);
     
     enum FACE {TOP, BOTTOM, RIGHT, LEFT, FRONT, BACK};
     struct fflux { double d_fflux[6]; };    // face flux

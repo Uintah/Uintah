@@ -194,7 +194,8 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
 
 void FirstOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
                              const Patch* patch,
-                             CCVariable<double>& q_advected)
+                             CCVariable<double>& q_advected,
+				 DataWarehouse* /*new_dw*/)
 {
 
   advect<double>(q_CC,patch,q_advected);
@@ -204,7 +205,8 @@ void FirstOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
 
 void FirstOrderCEAdvector::advectQ(const CCVariable<Vector>& q_CC,
                              const Patch* patch,
-                             CCVariable<Vector>& q_advected)
+                             CCVariable<Vector>& q_advected,
+				 DataWarehouse* /*new_dw*/)
 {
 
   advect<Vector>(q_CC,patch,q_advected);
