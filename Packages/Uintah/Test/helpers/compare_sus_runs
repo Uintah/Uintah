@@ -32,6 +32,9 @@ if [ -d "$TEST_UDADIR" ]; then
   if [ ! -d "$COMPARE_UDADIR" ]; then
     echo "Storing uda directory: $COMPARE_UDADIR"
 
+    # try to remove it in case it exists as a non-directory
+    rm $COMPARE_UDADIR 
+
     # if cp has a --dereference option, then us it
     cp -r --dereference $TEST_UDADIR $COMPARE_UDADIR
     if [ $? != "0" ]; then
