@@ -324,6 +324,7 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleCalculateFractureParameters(    sched, patches, matls);
   scheduleDoCrackPropagation(             sched, patches, matls);
   scheduleMoveCracks(                     sched, patches, matls);
+  scheduleUpdateCrackFront(               sched, patches, matls);
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
 				    lb->d_particleState_preReloc,
@@ -945,11 +946,10 @@ void FractureMPM::scheduleCalculateFractureParameters(SchedulerP& sched,
   crackMethod->addComputesAndRequiresGetNodalSolutions(t,patches, matls);
   sched->addTask(t, patches, matls);
 
-  // Create crack-front segment subset
-  t = scinew Task("Crack::CrackFrontSegSubset", crackMethod,
-                        &Crack::CrackFrontSegSubset);
-  crackMethod->addComputesAndRequiresCrackFrontSegSubset(t,
-                                           patches, matls);
+  // cfnset & cfsset
+  t = scinew Task("Crack::CrackFrontNodeSubset", crackMethod,
+                        &Crack::CrackFrontNodeSubset);
+  crackMethod->addComputesAndRequiresCrackFrontNodeSubset(t,patches, matls);
   sched->addTask(t, patches, matls);
 
   // Compute fracture parameters (J, K,...)
@@ -965,19 +965,14 @@ void FractureMPM::scheduleDoCrackPropagation(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls)
 {
-  // Recollect crack-front nodes, discarding the dead crack-front segments
-  Task* t = scinew Task("Crack::RecollectCrackFrontNodes", crackMethod,
-                        &Crack::RecollectCrackFrontNodes);
-  crackMethod->addComputesAndRequiresPropagateCrackFrontNodes(t, patches, matls);
+  // Propagate crack-front points
+  Task* t = scinew Task("Crack::PropagateCrackFrontPoints", crackMethod,
+                  &Crack::PropagateCrackFrontPoints);
+  crackMethod->addComputesAndRequiresPropagateCrackFrontPoints(t, patches, matls);
   sched->addTask(t, patches, matls);
 
-  // Propagate crack front and form the new crack nodes
-  t = scinew Task("Crack::PropagateCrackFrontNodes", crackMethod,
-                  &Crack::PropagateCrackFrontNodes);
-  crackMethod->addComputesAndRequiresPropagateCrackFrontNodes(t, patches, matls);
-  sched->addTask(t, patches, matls);
-
-  // Construct the new crack front elements 
+  // Construct the new crack-front elems and new crack-front segments. 
+  // The new crack-front is tempoarry, and will be updated after moving cracks  
   t = scinew Task("Crack::ConstructNewCrackFrontElems", crackMethod,
                   &Crack::ConstructNewCrackFrontElems);
   crackMethod->addComputesAndRequiresConstructNewCrackFrontElems(t, patches, matls);
@@ -999,7 +994,24 @@ void FractureMPM::scheduleMoveCracks(SchedulerP& sched,
                         &Crack::MoveCracks);
   crackMethod->addComputesAndRequiresMoveCracks(t, patches, matls);
   sched->addTask(t, patches, matls);
+}
 
+void FractureMPM::scheduleUpdateCrackFront(SchedulerP& sched,
+                                    const PatchSet* patches,
+                                    const MaterialSet* matls)
+{
+  // Set up cfnset & cfsset -- subset for the temporary crack-front
+  // and crack-front segment subset for each patch
+  Task* t = scinew Task("Crack::CrackFrontNodeSubset", crackMethod,
+                        &Crack::CrackFrontNodeSubset);
+  crackMethod->addComputesAndRequiresCrackFrontNodeSubset(t, patches, matls);
+  sched->addTask(t, patches, matls);
+
+  // Recollect crack-front segments, discarding the dead segments,
+  // calculating normals, indexes and so on
+  t = scinew Task("Crack::RecollectCrackFrontSegments", crackMethod,
+                        &Crack::RecollectCrackFrontSegments);
+  crackMethod->addComputesAndRequiresRecollectCrackFrontSegments(t, patches, matls);
   sched->addTask(t, patches, matls);
 }
 

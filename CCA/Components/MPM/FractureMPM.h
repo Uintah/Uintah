@@ -353,6 +353,10 @@ private:
   void scheduleMoveCracks(SchedulerP& sched,             
                                      const PatchSet* patches,
                                      const MaterialSet* matls);
+  void scheduleUpdateCrackFront(SchedulerP& sched,
+                                     const PatchSet* patches,
+                                     const MaterialSet* matls);
+
   // -----------------------------------------------
 
   FractureMPM(const FractureMPM&);
