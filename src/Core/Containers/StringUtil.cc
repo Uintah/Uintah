@@ -28,6 +28,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
+#include <Core/Util/Assert.h>
 #include <Core/Containers/StringUtil.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,6 +73,15 @@ string
 pathname(const string &path)
 {
   return path.substr(0, path.rfind('/')+1);
+}
+
+
+char *
+ccast_unsafe(string str)
+{
+  char *result = const_cast<char *>(str.c_str());
+  ASSERT(result);
+  return result;
 }
 
 

@@ -814,8 +814,7 @@ int GenTransferFunc::makeCurrent(void)
 
   if (!ctxs[0]) {
     string myname(".ui" + id + ".f.gl1.gl");
-    tkwin = Tk_NameToWindow(the_interp,
-			    const_cast<char *>(myname.c_str()),
+    tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
 			    Tk_MainWindow(the_interp));
 
     if (!tkwin) {
@@ -831,7 +830,7 @@ int GenTransferFunc::makeCurrent(void)
     dpy[0] = Tk_Display(tkwin);
     win0 = Tk_WindowId(tkwin);
 
-    ctxs[0] = OpenGLGetContext(the_interp,const_cast<char *>(myname.c_str()));
+    ctxs[0] = OpenGLGetContext(the_interp, ccast_unsafe(myname));
 
     // check if it was created
     if(!ctxs[0])
@@ -844,8 +843,7 @@ int GenTransferFunc::makeCurrent(void)
 
   if (!ctxs[1]) {
     string myname(".ui" + id + ".f.gl2.gl");
-    tkwin = Tk_NameToWindow(the_interp,
-			    const_cast<char *>(myname.c_str()),
+    tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
 			    Tk_MainWindow(the_interp));
 
     if (!tkwin) {
@@ -862,7 +860,7 @@ int GenTransferFunc::makeCurrent(void)
     dpy[1] = Tk_Display(tkwin);
     win1 = Tk_WindowId(tkwin);
 
-    ctxs[1] = OpenGLGetContext(the_interp,const_cast<char *>(myname.c_str()));
+    ctxs[1] = OpenGLGetContext(the_interp, ccast_unsafe(myname));
 
     // check if it was created
     if(!ctxs[1])
@@ -875,8 +873,7 @@ int GenTransferFunc::makeCurrent(void)
 
   if (!ctxs[2]) {
     string myname(".ui" + id + ".f.gl3.gl");
-    tkwin = Tk_NameToWindow(the_interp,
-			    const_cast<char *>(myname.c_str()),
+    tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
 			    Tk_MainWindow(the_interp));
 
     if (!tkwin) {
@@ -892,7 +889,7 @@ int GenTransferFunc::makeCurrent(void)
     dpy[2] = Tk_Display(tkwin);
     win2 = Tk_WindowId(tkwin);
 
-    ctxs[2] = OpenGLGetContext(the_interp,const_cast<char *>(myname.c_str()));
+    ctxs[2] = OpenGLGetContext(the_interp, ccast_unsafe(myname));
 
     // check if it was created
     if(!ctxs[2])

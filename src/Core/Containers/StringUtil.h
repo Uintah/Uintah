@@ -51,6 +51,10 @@ string basename(const string &path);
 // Return directory name
 string pathname(const string &path);
 
+//////////
+// Unsafe cast from string to char *, used to export strings to C functions.
+char * ccast_unsafe(string str);
+
 } // End namespace SCIRun
 
 #endif

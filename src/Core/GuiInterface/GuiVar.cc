@@ -201,8 +201,7 @@ double GuiDouble::get()
         } else {
 #endif
 	    TCLTask::lock();
-	    char* l=Tcl_GetVar(the_interp,
-			       const_cast<char *>(varname.c_str()),
+	    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname),
 			       TCL_GLOBAL_ONLY);
 	    if(l){
 	        Tcl_GetDouble(the_interp, l, &value);
@@ -225,8 +224,7 @@ void GuiDouble::set(double val)
 	char buf[50];
 	sprintf(buf, "%g", val);
 	
-	Tcl_SetVar(the_interp,
-		   const_cast<char *>(varname.c_str()),
+	Tcl_SetVar(the_interp, ccast_unsafe(varname),
 		   buf, TCL_GLOBAL_ONLY);
 	TCLTask::unlock();
     }
@@ -280,7 +278,8 @@ int GuiInt::get()
 #endif
 
 	    TCLTask::lock();
-	    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname.c_str()), TCL_GLOBAL_ONLY);
+	    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname),
+			       TCL_GLOBAL_ONLY);
 	    if(l){
 	        Tcl_GetInt(the_interp, l, &value);
 	        is_reset=0;
@@ -301,7 +300,7 @@ void GuiInt::set(int val)
 	value=val;
 	char buf[20];
 	sprintf(buf, "%d", val);
-	Tcl_SetVar(the_interp, const_cast<char *>(varname.c_str()), buf, TCL_GLOBAL_ONLY);
+	Tcl_SetVar(the_interp, ccast_unsafe(varname), buf, TCL_GLOBAL_ONLY);
 	TCLTask::unlock();
     }
 }
@@ -354,7 +353,8 @@ string GuiString::get()
         } else {
 #endif
 	    TCLTask::lock();
-	    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname.c_str()), TCL_GLOBAL_ONLY);
+	    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname),
+			       TCL_GLOBAL_ONLY);
 	    if(!l){
 	        l="";
 	    }
@@ -374,7 +374,8 @@ void GuiString::set(const string& val)
     if(val != value){
 	TCLTask::lock();
 	value=val;
-	Tcl_SetVar(the_interp, const_cast<char *>(varname.c_str()), const_cast<char *>(value.c_str()), TCL_GLOBAL_ONLY);
+	Tcl_SetVar(the_interp, ccast_unsafe(varname),
+		   ccast_unsafe(value), TCL_GLOBAL_ONLY);
 	TCLTask::unlock();
     }
 }
@@ -388,14 +389,15 @@ GuiVardouble::GuiVardouble(const string& name, const string& id, TCL* tcl)
 : GuiVar(name, id, tcl)
 {
     TCLTask::lock();
-    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname.c_str()), TCL_GLOBAL_ONLY);
+    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname), TCL_GLOBAL_ONLY);
     if(l){
 	if(Tcl_GetDouble(the_interp, l, &value) != TCL_OK)
 	    value=0;
     } else {
 	value=0;
     }
-    if(Tcl_LinkVar(the_interp, const_cast<char *>(varname.c_str()), (char*)&value, TCL_LINK_DOUBLE) != TCL_OK){
+    if(Tcl_LinkVar(the_interp, ccast_unsafe(varname), (char*)&value,
+		   TCL_LINK_DOUBLE) != TCL_OK){
 	cerr << "Error linking variable: " << varname << endl;
     }
     TCLTask::unlock();
@@ -403,7 +405,7 @@ GuiVardouble::GuiVardouble(const string& name, const string& id, TCL* tcl)
 
 GuiVardouble::~GuiVardouble()
 {
-    Tcl_UnlinkVar(the_interp, const_cast<char *>(varname.c_str()));
+    Tcl_UnlinkVar(the_interp, ccast_unsafe(varname));
 }
 
 double GuiVardouble::get()
@@ -428,14 +430,15 @@ GuiVarint::GuiVarint(const string& name, const string& id, TCL* tcl)
 : GuiVar(name, id, tcl)
 {
     TCLTask::lock();
-    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname.c_str()), TCL_GLOBAL_ONLY);
+    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname), TCL_GLOBAL_ONLY);
     if(l){
 	if(Tcl_GetInt(the_interp, l, &value) != TCL_OK)
 	    value=0;
     } else {
 	value=0;
     }
-    if(Tcl_LinkVar(the_interp, const_cast<char *>(varname.c_str()), (char*)&value, TCL_LINK_INT) != TCL_OK){
+    if(Tcl_LinkVar(the_interp, ccast_unsafe(varname),
+		   (char*)&value, TCL_LINK_INT) != TCL_OK){
 	cerr << "Error linking variable: " << varname << endl;
     }
     TCLTask::unlock();
@@ -443,7 +446,7 @@ GuiVarint::GuiVarint(const string& name, const string& id, TCL* tcl)
 
 GuiVarint::~GuiVarint()
 {
-    Tcl_UnlinkVar(the_interp, const_cast<char *>(varname.c_str()));
+    Tcl_UnlinkVar(the_interp, ccast_unsafe(varname));
 }
 
 int GuiVarint::get()
@@ -479,10 +482,11 @@ GuiVarintp::GuiVarintp(int* value,
 : GuiVar(name, id, tcl), value(value)
 {
     TCLTask::lock();
-    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname.c_str()), TCL_GLOBAL_ONLY);
+    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname), TCL_GLOBAL_ONLY);
     if(l)
 	Tcl_GetInt(the_interp, l, value);
-    if(Tcl_LinkVar(the_interp, const_cast<char *>(varname.c_str()), (char*)value, TCL_LINK_INT) != TCL_OK){
+    if(Tcl_LinkVar(the_interp, ccast_unsafe(varname),
+		   (char*)value, TCL_LINK_INT) != TCL_OK){
 	cerr << "Error linking variable: " << varname << endl;
     }
     TCLTask::unlock();
@@ -490,7 +494,7 @@ GuiVarintp::GuiVarintp(int* value,
 
 GuiVarintp::~GuiVarintp()
 {
-    Tcl_UnlinkVar(the_interp, const_cast<char *>(varname.c_str()));
+    Tcl_UnlinkVar(the_interp, ccast_unsafe(varname));
 }
 
 // mm - must use Pio to get ptr

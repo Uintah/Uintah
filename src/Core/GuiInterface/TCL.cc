@@ -122,7 +122,7 @@ TCL::execute(const string& str)
 #endif
   {
     TCLTask::lock();
-    int code = Tcl_Eval(the_interp, const_cast<char *>(str.c_str()));
+    int code = Tcl_Eval(the_interp, ccast_unsafe(str));
     if(code != TCL_OK)
       Tk_BackgroundError(the_interp);
     TCLTask::unlock();
@@ -133,7 +133,7 @@ TCL::execute(const string& str)
 int TCL::eval(const string& str, string& result)
 {
     TCLTask::lock();
-    int code = Tcl_Eval(the_interp, const_cast<char *>(str.c_str()));
+    int code = Tcl_Eval(the_interp, ccast_unsafe(str));
     if(code != TCL_OK){
 	Tk_BackgroundError(the_interp);
 	result="";
@@ -149,8 +149,7 @@ void TCL::source_once(const string& filename)
 {
   string result;
   if(!eval("source " + filename, result)) {
-    char* msg=const_cast<char *>
-      (("Couldn't source file '" + filename + "'").c_str());
+    char* msg = ccast_unsafe("Couldn't source file '" + filename + "'");
     Tcl_AddErrorInfo(the_interp,msg);
     Tk_BackgroundError(the_interp);
   }
@@ -162,7 +161,7 @@ void TCL::source_once(const string& filename)
 
     string pse_filename(filename);
 
-    char* fn=const_cast<char *>(pse_filename.c_str());
+    char* fn = ccast_unsafe(pse_filename);
     code = Tcl_EvalFile(the_interp, fn);
 
     if(code != TCL_OK) {
@@ -196,7 +195,7 @@ void TCL::add_command(const string& command, TCL* callback, void* userdata)
     TCLCommandData* command_data=scinew TCLCommandData;
     command_data->object=callback;
     command_data->userdata=userdata;
-    Tcl_CreateCommand(the_interp, const_cast<char *>(command.c_str()),
+    Tcl_CreateCommand(the_interp, ccast_unsafe(command),
 		      do_command, command_data, 0);
     TCLTask::unlock();
 }
@@ -205,7 +204,7 @@ void
 TCL::delete_command( const string& command )
 {
     TCLTask::lock();
-    Tcl_DeleteCommand(the_interp, const_cast<char *>(command.c_str()) );
+    Tcl_DeleteCommand(the_interp, ccast_unsafe(command));
     TCLTask::unlock();
 }
 
@@ -286,8 +285,8 @@ void TCLArgs::append_element(const string& e)
 string TCLArgs::make_list(const string& item1, const string& item2)
 {
     char* argv[2];
-    argv[0]=const_cast<char *>(item1.c_str());
-    argv[1]=const_cast<char *>(item2.c_str());
+    argv[0]= ccast_unsafe(item1);
+    argv[1]= ccast_unsafe(item2);
     char* ilist=Tcl_Merge(2, argv);
     string res(ilist);
     free(ilist);
@@ -298,9 +297,9 @@ string TCLArgs::make_list(const string& item1, const string& item2,
 			const string& item3)
 {
     char* argv[3];
-    argv[0]=const_cast<char *>(item1.c_str());
-    argv[1]=const_cast<char *>(item2.c_str());
-    argv[2]=const_cast<char *>(item3.c_str());
+    argv[0]=ccast_unsafe(item1);
+    argv[1]=ccast_unsafe(item2);
+    argv[2]=ccast_unsafe(item3);
     char* ilist=Tcl_Merge(3, argv);
     string res(ilist);
     free(ilist);
@@ -311,7 +310,9 @@ string TCLArgs::make_list(const Array1<string>& items)
 {
     char** argv=scinew char*[items.size()];
     for(int i=0;i<items.size();i++)
-	argv[i]=const_cast<char *>(items[i].c_str());
+    {
+      argv[i]= ccast_unsafe(items[i]);
+    }
     char* ilist=Tcl_Merge(items.size(), argv);
     string res(ilist);
     free(ilist);
@@ -345,8 +346,7 @@ int TCL::get_gui_stringvar(const string& base, const string& name,
 {
     string n(base + "-" + name);
     TCLTask::lock();
-    char* l=Tcl_GetVar(the_interp, const_cast<char *>(n.c_str()),
-		       TCL_GLOBAL_ONLY);
+    char* l=Tcl_GetVar(the_interp, ccast_unsafe(n), TCL_GLOBAL_ONLY);
     if(!l){
 	TCLTask::unlock();
 	return 0;
@@ -361,7 +361,7 @@ int TCL::get_gui_boolvar(const string& base, const string& name,
 {
     string n(base+"-"+name);
     TCLTask::lock();
-    char* l=Tcl_GetVar(the_interp, const_cast<char *>(n.c_str()), TCL_GLOBAL_ONLY);
+    char* l=Tcl_GetVar(the_interp, ccast_unsafe(n), TCL_GLOBAL_ONLY);
     if(!l){
 	TCLTask::unlock();
 	return 0;
@@ -383,7 +383,7 @@ int TCL::get_gui_doublevar(const string& base, const string& name,
 {
     string n(base+"-"+name);
     TCLTask::lock();
-    char* l=Tcl_GetVar(the_interp, const_cast<char *>(n.c_str()), TCL_GLOBAL_ONLY);
+    char* l=Tcl_GetVar(the_interp, ccast_unsafe(n), TCL_GLOBAL_ONLY);
     if(!l){
 	TCLTask::unlock();
 	return 0;
@@ -405,7 +405,7 @@ int TCL::get_gui_intvar(const string& base, const string& name,
 {
     string n(base+"-"+name);
     TCLTask::lock();
-    char* l=Tcl_GetVar(the_interp, const_cast<char *>(n.c_str()), TCL_GLOBAL_ONLY);
+    char* l=Tcl_GetVar(the_interp, ccast_unsafe(n), TCL_GLOBAL_ONLY);
     if(!l){
 	Tk_BackgroundError(the_interp);
 	TCLTask::unlock();
@@ -426,9 +426,10 @@ int TCL::get_gui_intvar(const string& base, const string& name,
 void TCL::set_guivar(const string& base, const string& name,
 		     const string& value)
 {
-    string n(base+"-"+name);
+    string n(base + "-" + name);
     TCLTask::lock();
-    Tcl_SetVar(the_interp, const_cast<char *>(n.c_str()), const_cast<char *>(value.c_str()), TCL_GLOBAL_ONLY);
+    Tcl_SetVar(the_interp, ccast_unsafe(n), ccast_unsafe(value),
+	       TCL_GLOBAL_ONLY);
     TCLTask::unlock();
 }
 
