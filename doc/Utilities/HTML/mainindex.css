@@ -35,8 +35,7 @@ font-weight:bold;
 font-size:small}
 
 table { 
-border: 1px solid #003333; 
-border-collapse: collapse}
+}
 
 table ul li { 
 font-size: medium;
@@ -51,7 +50,7 @@ tr {
 vertical-align: top}
 
 td { 
-border: 1px solid #003333}
+}
 
 p {
 font-size: small}
