@@ -15,7 +15,7 @@ SRCS += $(SRCDIR)/NektarScalarField.cc \
 PSELIBS := SCICore/Persistent SCICore/Exceptions SCICore/Containers \
 	SCICore/Thread SCICore/Geometry SCICore/Geom SCICore/TclInterface \
 	SCICore/Math
-LIBS := -lm
+LIBS := $(NEKTAR_LIBRARY) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
