@@ -183,11 +183,11 @@ public:
     NodeIter &operator++()
     {
       i_++;
-      if (i_ >= mesh_->nx_)	{
-	i_ = 0;
+      if (i_ >= mesh_->min_x_+mesh_->nx_)	{
+	i_ = mesh_->min_x_;
 	j_++;
-	if (j_ >= mesh_->ny_) {
-	  j_ = 0;
+	if (j_ >=  mesh_->min_y_+mesh_->ny_) {
+	  j_ = mesh_->min_y_;
 	  k_++;
 	}
       }
@@ -215,11 +215,11 @@ public:
     CellIter &operator++()
     {
       i_++;
-      if (i_ >= mesh_->nx_-1) {
-	i_ = 0;
+      if (i_ >= mesh_->min_x_+mesh_->nx_-1) {
+	i_ = mesh_->min_x_;
 	j_++;
-	if (j_ >= mesh_->ny_-1) {
-	  j_ = 0;
+	if (j_ >= mesh_->min_y_+mesh_->ny_-1) {
+	  j_ = mesh_->min_y_;
 	  k_++;
 	}
       }
@@ -268,18 +268,30 @@ public:
   friend class FaceIter;
 
   LatVolMesh()
-    : nx_(1),ny_(1),nz_(1),min_(Point(0,0,0)),max_(Point(1,1,1)) {}
+    : min_x_(0), min_y_(0), min_z_(0),
+      nx_(1),ny_(1),nz_(1),min_(Point(0,0,0)),max_(Point(1,1,1)) {}
   LatVolMesh(unsigned x, unsigned y, unsigned z, 
 	     const Point &min, const Point &max) 
-    : nx_(x),ny_(y),nz_(z),min_(min),max_(max) {}
+    : min_x_(0), min_y_(0), min_z_(0),
+      nx_(x), ny_(y), nz_(z), min_(min),max_(max) {}
+  LatVolMesh( LatVolMesh* mh,
+	      unsigned mx, unsigned my, unsigned mz,
+	      unsigned x, unsigned y, unsigned z)
+    : min_x_(mx), min_y_(my), min_z_(mz),
+      nx_(x), ny_(y), nz_(z), min_(mh->min_),max_(mh->max_) {}
   LatVolMesh(const LatVolMesh &copy)
-    : nx_(copy.get_nx()),ny_(copy.get_ny()),nz_(copy.get_nz()),
+    : min_x_(copy.min_x_), min_y_(copy.min_y_), min_z_(copy.min_z_),
+      nx_(copy.get_nx()),ny_(copy.get_ny()),nz_(copy.get_nz()),
       min_(copy.get_min()),max_(copy.get_max()) {}
   virtual LatVolMesh *clone() { return new LatVolMesh(*this); }
   virtual ~LatVolMesh() {}
 
-  node_iterator  node_begin() const { return node_iterator(this, 0, 0, 0); }
-  node_iterator  node_end() const { return node_iterator(this, 0, 0, nz_); }
+  node_index  node(unsigned i, unsigned j, unsigned k) const
+    { return node_index(i, j, k); }
+  node_iterator  node_begin() const 
+  { return node_iterator(this, min_x_, min_y_, min_z_); }
+  node_iterator  node_end() const 
+  { return node_iterator(this, min_x_, min_y_, min_z_ + nz_); }
   node_size_type nodes_size() const { return node_size_type(nx_,ny_,nz_); }
 
   edge_iterator  edge_begin() const { return edge_iterator(this,0); }
@@ -290,10 +302,14 @@ public:
   face_iterator  face_end() const { return face_iterator(this,0); }
   face_size_type faces_size() const { return face_size_type(0); }
 
-  cell_iterator  cell_begin() const { return cell_iterator(this, 0, 0, 0); }
-  cell_iterator  cell_end() const { return cell_iterator(this, 0, 0, nz_-1); }
-  cell_size_type cells_size() const { return cell_size_type(nx_-1,
-							    ny_-1,nz_-1); }
+  cell_index  cell(unsigned i, unsigned j, unsigned k) const
+    { return cell_index(i, j, k); }
+  cell_iterator  cell_begin() const 
+  { return cell_iterator(this,  min_x_, min_y_, min_z_); }
+  cell_iterator  cell_end() const 
+  { return cell_iterator(this, min_x_, min_y_, min_z_ + nz_-1); }
+  cell_size_type cells_size() const 
+  { return cell_size_type(nx_-1, ny_-1,nz_-1); }
 
   //! get the mesh statistics
   unsigned get_nx() const { return nx_; }
@@ -305,6 +321,9 @@ public:
   virtual BBox get_bounding_box() const;
 
   //! set the mesh statistics
+  void set_min_x(unsigned x) {min_x_ = x; }
+  void set_min_y(unsigned y) {min_y_ = y; }
+  void set_min_z(unsigned z) {min_z_ = z; }
   void set_nx(unsigned x) { nx_ = x; }
   void set_ny(unsigned y) { ny_ = y; }
   void set_nz(unsigned z) { nz_ = z; }
@@ -361,7 +380,10 @@ public:
 
 private:
 
-  //! the node_index space extents of a LatVolMesh (min=0, max=n-1)
+  //! the min_node_index ( incase this is a subLattice )
+  unsigned min_x_, min_y_, min_z_;
+  //! the node_index space extents of a LatVolMesh 
+  //! (min=min_node_index, max=min+extents-1)
   unsigned nx_, ny_, nz_;
 
   //! the object space extents of a LatVolMesh
