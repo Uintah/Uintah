@@ -183,6 +183,11 @@ void PlaneDpy::run()
 		printString(fontbase, v-w/wid/yres, 1./yres, buf, Color(1,1,1));
 	    }
 	    redraw=false;
+	    glFinish();
+	    int errcode;
+	    while((errcode=glGetError()) != GL_NO_ERROR){
+	      cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+	    }
 	}
 	XEvent e;
 	XNextEvent(dpy, &e);	
