@@ -117,6 +117,10 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 					d_physicalConsts);
     d_momSolver->problemSetup(db); // d_mmInterface
   }
+  if ((calPress)&&(calMom)) {
+  d_pressure_correction = d_momSolver->getPressureCorrectionFlag();
+  d_pressSolver->setPressureCorrectionFlag(d_pressure_correction);
+  }
   bool calScalar;
   db->require("cal_mixturescalar", calScalar);
   if (calScalar) {
@@ -124,8 +128,6 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 					 d_turbModel, d_boundaryCondition,
 					 d_physicalConsts);
     d_scalarSolver->problemSetup(db);
-    d_conv_scheme = d_scalarSolver->getConvectionSchemeType();
-    d_momSolver->setConvectionSchemeType(d_conv_scheme);
   }
   if (d_reactingScalarSolve) {
     d_reactingScalarSolver = scinew ReactiveScalarSolver(d_lab, d_MAlab,
@@ -303,12 +305,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_momSolver->solve(sched, patches, matls,
 			 d_timeIntegratorLabels[curr_level], index);
     }
+    if (d_pressure_correction)
+    sched_updatePressure(sched, patches, matls,
+				 d_timeIntegratorLabels[curr_level]);
 
+    //if (curr_level == numTimeIntegratorLevels - 1) {
     d_boundaryCondition->sched_getFlowINOUT(sched, patches, matls,
 					    d_timeIntegratorLabels[curr_level]);
     d_boundaryCondition->sched_correctVelocityOutletBC(sched, patches, matls,
 					    d_timeIntegratorLabels[curr_level]);
-  
+    //}
+
     // Schedule an interpolation of the face centered velocity data 
     sched_interpolateFromFCToCC(sched, patches, matls,
 				d_timeIntegratorLabels[curr_level]);
@@ -1347,4 +1354,64 @@ ExplicitSolver::printTotalKE(const ProcessorGroup* ,
   if (me == 0)
      cerr << "Total kinetic energy " <<  total_kin_energy << endl;
 
+}
+void 
+ExplicitSolver::sched_updatePressure(SchedulerP& sched, const PatchSet* patches,
+				   const MaterialSet* matls,
+				   const TimeIntegratorLabel* timelabels)
+{
+  string taskname =  "ExplicitSolver::updatePressure" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname,
+			  this, &ExplicitSolver::updatePressure,
+			  timelabels);
+  
+  if (timelabels->integrator_last_step)
+    tsk->requires(Task::NewDW, timelabels->pressure_guess, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  else
+    tsk->requires(Task::OldDW, timelabels->pressure_guess, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  tsk->modifies(timelabels->pressure_out);
+
+  sched->addTask(tsk, patches, matls);
+  
+}
+void 
+ExplicitSolver::updatePressure(const ProcessorGroup* ,
+			     const PatchSubset* patches,
+			     const MaterialSubset*,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw,
+			     const TimeIntegratorLabel* timelabels)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch *patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+  
+    constCCVariable<double> pressure_guess;
+    CCVariable<double> pressure;
+    new_dw->getModifiable(pressure, timelabels->pressure_out,
+			  matlIndex, patch);
+    if (timelabels->integrator_last_step)
+      new_dw->get(pressure_guess, timelabels->pressure_guess, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    else
+      old_dw->get(pressure_guess, timelabels->pressure_guess, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+    for (int ColX = idxLo.x(); ColX <= idxHi.x(); ColX++) {
+      for (int ColY = idxLo.y(); ColY <= idxHi.y(); ColY++) {
+        for (int ColZ = idxLo.z(); ColZ <= idxHi.z(); ColZ++) {
+	    IntVector currCell(ColX,ColY,ColZ);
+	    pressure[currCell] += pressure_guess[currCell];
+        }
+      }
+    }
+  }
 }

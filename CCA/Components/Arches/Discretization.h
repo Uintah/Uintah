@@ -152,22 +152,22 @@ public:
 				   const Patch* patch,
 				   int Index,
 				   CellInformation* cellinfo,
-				   double maxAbsU, double maxAbsV,
-				   double maxAbsW,
+				   const double maxAbsU, const double maxAbsV,
+				   const double maxAbsW,
 				   ArchesVariables* vars,
 				   ArchesConstVariables* constvars,
-				   int wall_celltypeval);
+				   const int wall_celltypeval);
 
 
       void calculateScalarWENOscheme(const ProcessorGroup*,
 				   const Patch* patch,
 				   int Index,
 				   CellInformation* cellinfo,
-				   double maxAbsU, double maxAbsV,
-				   double maxAbsW,
+				   const double maxAbsU, const double maxAbsV,
+				   const double maxAbsW,
 				   ArchesVariables* vars,
 				   ArchesConstVariables* constvars,
-				   int wall_celltypeval);
+				   const int wall_celltypeval);
 
 
       void computeDivergence(const ProcessorGroup*,

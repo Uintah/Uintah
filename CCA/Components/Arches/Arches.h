@@ -70,7 +70,7 @@ WARNING
 
 // Filtering of drhodt
 #ifdef PetscFilter
-// #define FILTER_DRHODT
+ //#define FILTER_DRHODT
 #endif
 
 namespace Uintah {
@@ -239,7 +239,6 @@ private:
 #endif
 
     string d_timeIntegratorType;
-    int d_conv_scheme;
 
     bool d_recompile;
 

@@ -364,9 +364,9 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
   }
 
-  double maxAbsU;
-  double maxAbsV;
-  double maxAbsW;
+  double maxAbsU = 0.0;
+  double maxAbsV = 0.0;
+  double maxAbsW = 0.0;
   if (d_conv_scheme > 0) {
     max_vartype mxAbsU;
     max_vartype mxAbsV;
@@ -750,6 +750,18 @@ EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, timelabels->wvelocity_in,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+    tsk->requires(Task::OldDW, timelabels->maxabsu_in);
+    tsk->requires(Task::OldDW, timelabels->maxabsv_in);
+    tsk->requires(Task::OldDW, timelabels->maxabsw_in);
+  }
+  else {
+    tsk->requires(Task::NewDW, timelabels->maxabsu_in);
+    tsk->requires(Task::NewDW, timelabels->maxabsv_in);
+    tsk->requires(Task::NewDW, timelabels->maxabsw_in);
+  }
+
   if (d_MAlab) {
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -775,6 +787,25 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
+  double maxAbsU;
+  double maxAbsV;
+  double maxAbsW;
+  max_vartype mxAbsU;
+  max_vartype mxAbsV;
+  max_vartype mxAbsW;
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+    old_dw->get(mxAbsU, timelabels->maxabsu_in);
+    old_dw->get(mxAbsV, timelabels->maxabsv_in);
+    old_dw->get(mxAbsW, timelabels->maxabsw_in);
+  }
+  else {
+    new_dw->get(mxAbsU, timelabels->maxabsu_in);
+    new_dw->get(mxAbsV, timelabels->maxabsv_in);
+    new_dw->get(mxAbsW, timelabels->maxabsw_in);
+  }
+  maxAbsU = mxAbsU;
+  maxAbsV = mxAbsW;
+  maxAbsW = mxAbsW;
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -842,7 +873,7 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 // Outlet bc is done here not to change old enthalpy
     d_boundaryCondition->enthalpyOutletBC(pc, patch,  cellinfo, 
 					  &enthalpyVars, &constEnthalpyVars,
-					  delta_t);
+					  delta_t, maxAbsU, maxAbsV, maxAbsW);
 
     d_boundaryCondition->enthalpyPressureBC(pc, patch,  cellinfo, 
 				  	    &enthalpyVars,&constEnthalpyVars);
