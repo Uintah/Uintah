@@ -16,6 +16,7 @@
 unalias ls
 unalias cd 
 unalias rm
+unalias mv
 
 set test = `uname -s`
 if ( $test != "Linux") then
