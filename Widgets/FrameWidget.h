@@ -33,7 +33,34 @@ public:
 
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
+
+   inline const Vector& GetAxis1() const;
+   inline const Vector& GetAxis2() const;
 };
+
+
+inline const Vector&
+FrameWidget::GetAxis1() const
+{
+   static Vector oldaxis;
+   Vector axis(variables[FrameW_PointUR]->Get() - variables[FrameW_PointUL]->Get());
+   if (axis.length2() <= 1e-6)
+      return oldaxis;
+   else
+      return (oldaxis = axis.normal());
+}
+
+
+inline const Vector&
+FrameWidget::GetAxis2() const
+{
+   static Vector oldaxis;
+   Vector axis(variables[FrameW_PointDL]->Get() - variables[FrameW_PointUL]->Get());
+   if (axis.length2() <= 1e-6)
+      return oldaxis;
+   else
+      return (oldaxis = axis.normal());
+}
 
 
 #endif

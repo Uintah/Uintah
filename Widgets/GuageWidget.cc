@@ -27,7 +27,7 @@ const Index NumSchemes = 2;
 const Index NumPcks = 4;
 
 enum { GuageW_ConstLine, GuageW_ConstDist, GuageW_ConstSDist, GuageW_ConstRatio };
-enum { GuageW_SphereL, GuageW_SphereR, GuageW_Cylinder, GuageW_SliderCyl };
+enum { GuageW_GeomPointL, GuageW_GeomPointR, GuageW_GeomShaft, GuageW_GeomSlider };
 enum { GuageW_PickSphL, GuageW_PickSphR, GuageW_PickCyl, GuageW_PickSlider };
 
 GuageWidget::GuageWidget( Module* module, CrowdMonitor* lock, double widget_scale )
@@ -79,23 +79,23 @@ GuageWidget::GuageWidget( Module* module, CrowdMonitor* lock, double widget_scal
    materials[GuageW_SliderMatl] = SliderWidgetMaterial;
    materials[GuageW_HighMatl] = HighlightWidgetMaterial;
 
-   geometries[GuageW_SphereL] = new GeomSphere;
-   picks[GuageW_PickSphL] = new GeomPick(geometries[GuageW_SphereL], module);
+   geometries[GuageW_GeomPointL] = new GeomSphere;
+   picks[GuageW_PickSphL] = new GeomPick(geometries[GuageW_GeomPointL], module);
    picks[GuageW_PickSphL]->set_highlight(materials[GuageW_HighMatl]);
    picks[GuageW_PickSphL]->set_cbdata((void*)GuageW_PickSphL);
    GeomMaterial* sphlm = new GeomMaterial(picks[GuageW_PickSphL], materials[GuageW_PointMatl]);
-   geometries[GuageW_SphereR] = new GeomSphere;
-   picks[GuageW_PickSphR] = new GeomPick(geometries[GuageW_SphereR], module);
+   geometries[GuageW_GeomPointR] = new GeomSphere;
+   picks[GuageW_PickSphR] = new GeomPick(geometries[GuageW_GeomPointR], module);
    picks[GuageW_PickSphR]->set_highlight(materials[GuageW_HighMatl]);
    picks[GuageW_PickSphR]->set_cbdata((void*)GuageW_PickSphR);
    GeomMaterial* sphrm = new GeomMaterial(picks[GuageW_PickSphR], materials[GuageW_PointMatl]);
-   geometries[GuageW_Cylinder] = new GeomCylinder;
-   picks[GuageW_PickCyl] = new GeomPick(geometries[GuageW_Cylinder], module);
+   geometries[GuageW_GeomShaft] = new GeomCylinder;
+   picks[GuageW_PickCyl] = new GeomPick(geometries[GuageW_GeomShaft], module);
    picks[GuageW_PickCyl]->set_highlight(materials[GuageW_HighMatl]);
    picks[GuageW_PickCyl]->set_cbdata((void*)GuageW_PickCyl);
    GeomMaterial* cylm = new GeomMaterial(picks[GuageW_PickCyl], materials[GuageW_EdgeMatl]);
-   geometries[GuageW_SliderCyl] = new GeomCappedCylinder;
-   picks[GuageW_PickSlider] = new GeomPick(geometries[GuageW_SliderCyl], module);
+   geometries[GuageW_GeomSlider] = new GeomCappedCylinder;
+   picks[GuageW_PickSlider] = new GeomPick(geometries[GuageW_GeomSlider], module);
    picks[GuageW_PickSlider]->set_highlight(materials[GuageW_HighMatl]);
    picks[GuageW_PickSlider]->set_cbdata((void*)GuageW_PickSlider);
    GeomMaterial* sliderm = new GeomMaterial(picks[GuageW_PickSlider], materials[GuageW_SliderMatl]);
@@ -120,14 +120,14 @@ GuageWidget::~GuageWidget()
 void
 GuageWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[GuageW_SphereL])->move(variables[GuageW_PointL]->Get(),
+   ((GeomSphere*)geometries[GuageW_GeomPointL])->move(variables[GuageW_PointL]->Get(),
 						   1*widget_scale);
-   ((GeomSphere*)geometries[GuageW_SphereR])->move(variables[GuageW_PointR]->Get(),
+   ((GeomSphere*)geometries[GuageW_GeomPointR])->move(variables[GuageW_PointR]->Get(),
 						   1*widget_scale);
-   ((GeomCylinder*)geometries[GuageW_Cylinder])->move(variables[GuageW_PointL]->Get(),
+   ((GeomCylinder*)geometries[GuageW_GeomShaft])->move(variables[GuageW_PointL]->Get(),
 						      variables[GuageW_PointR]->Get(),
 						      0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[GuageW_SliderCyl])->move(variables[GuageW_Slider]->Get()
+   ((GeomCappedCylinder*)geometries[GuageW_GeomSlider])->move(variables[GuageW_Slider]->Get()
 							     - (GetAxis() * 0.3 * widget_scale),
 							     variables[GuageW_Slider]->Get()
 							     + (GetAxis() * 0.3 * widget_scale),
@@ -148,6 +148,10 @@ GuageWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
 {
    ((DistanceConstraint*)constraints[GuageW_ConstSDist])->SetDefault(GetAxis());
+   ((DistanceConstraint*)constraints[GuageW_ConstDist])->SetDefault(GetAxis());
+
+   for (Index v=0; v<NumVars; v++)
+      variables[v]->Reset();
    
    switch((int)cbdata){
    case GuageW_PickSphL:

@@ -50,7 +50,6 @@ SquareWidget::SquareWidget( Module* module, CrowdMonitor* lock,
 							 variables[SquareW_PointUR],
 							 variables[SquareW_PointDR],
 							 variables[SquareW_PointDL]);
-   
    constraints[SquareW_ConstPlane]->VarChoices(Scheme1, 2, 3, 0, 1);
    constraints[SquareW_ConstPlane]->VarChoices(Scheme2, 2, 3, 0, 1);
    constraints[SquareW_ConstPlane]->Priorities(P_Highest, P_Highest,
@@ -194,6 +193,9 @@ void
 SquareWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
 {
+   for (Index v=0; v<NumVars; v++)
+      variables[v]->Reset();
+   
    switch((int)cbdata){
    case SquareW_PickSphUL:
       variables[SquareW_PointUL]->SetDelta(delta);

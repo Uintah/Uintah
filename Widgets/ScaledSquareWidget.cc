@@ -122,7 +122,6 @@ ScaledSquareWidget::ScaledSquareWidget( Module* module, CrowdMonitor* lock,
 							  variables[SSquareW_PointUR],
 							  variables[SSquareW_PointDR],
 							  variables[SSquareW_PointDL]);
-   
    constraints[SSquareW_ConstPlane]->VarChoices(Scheme1, 2, 3, 0, 1);
    constraints[SSquareW_ConstPlane]->VarChoices(Scheme2, 2, 3, 0, 1);
    constraints[SSquareW_ConstPlane]->VarChoices(Scheme3, 2, 3, 0, 1);
@@ -315,6 +314,9 @@ ScaledSquareWidget::geom_moved( int /* axis */, double /* dist */, const Vector&
    ((DistanceConstraint*)constraints[SSquareW_ConstSDist1])->SetDefault(GetAxis1());
    ((DistanceConstraint*)constraints[SSquareW_ConstSDist2])->SetDefault(GetAxis2());
 
+   for (Index v=0; v<NumVars; v++)
+      variables[v]->Reset();
+   
    switch((int)cbdata){
    case SSquareW_PickSphUL:
       variables[SSquareW_PointUL]->SetDelta(delta);

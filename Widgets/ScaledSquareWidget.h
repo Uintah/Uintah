@@ -60,22 +60,24 @@ ScaledSquareWidget::GetRatio2() const
 inline const Vector&
 ScaledSquareWidget::GetAxis1() const
 {
+   static Vector oldaxis;
    Vector axis(variables[SSquareW_PointUR]->Get() - variables[SSquareW_PointUL]->Get());
-   if (axis.length() == 0.0)
-      return Vector(0,0,0);
+   if (axis.length2() <= 1e-6)
+      return oldaxis;
    else
-      return axis.normal();
+      return (oldaxis = axis.normal());
 }
 
 
 inline const Vector&
 ScaledSquareWidget::GetAxis2() const
 {
+   static Vector oldaxis;
    Vector axis(variables[SSquareW_PointDL]->Get() - variables[SSquareW_PointUL]->Get());
-   if (axis.length() == 0.0)
-      return Vector(0,0,0);
+   if (axis.length2() <= 1e-6)
+      return oldaxis;
    else
-      return axis.normal();
+      return (oldaxis = axis.normal());
 }
 
 

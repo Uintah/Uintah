@@ -91,11 +91,13 @@ protected:
    inline void SetPointWidgetMaterial( const MaterialHandle m );
    inline void SetEdgeWidgetMaterial( const MaterialHandle m );
    inline void SetSliderWidgetMaterial( const MaterialHandle m );
+   inline void SetSpecialWidgetMaterial( const MaterialHandle m );
    inline void SetHighlightWidgetMaterial( const MaterialHandle m );
    
    static MaterialHandle PointWidgetMaterial;
    static MaterialHandle EdgeWidgetMaterial;
    static MaterialHandle SliderWidgetMaterial;
+   static MaterialHandle SpecialWidgetMaterial;
    static MaterialHandle HighlightWidgetMaterial;
 };
 
@@ -198,6 +200,13 @@ inline void
 BaseWidget::SetSliderWidgetMaterial( const MaterialHandle m )
 {
    SliderWidgetMaterial = m;
+}
+
+
+inline void
+BaseWidget::SetSpecialWidgetMaterial( const MaterialHandle m )
+{
+   SpecialWidgetMaterial = m;
 }
 
 

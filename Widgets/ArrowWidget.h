@@ -44,9 +44,7 @@ private:
 inline void
 ArrowWidget::SetDirect( const Vector& v )
 {
-   ASSERT(v.length()>0.0);
-   
-   direction = v.normal();
+   direction = v;
    execute();
 }
 

@@ -15,11 +15,12 @@
 #include <Widgets/CubeWidget.h>
 #include <Constraints/DistanceConstraint.h>
 #include <Constraints/HypotenuseConstraint.h>
+#include <Constraints/PlaneConstraint.h>
 #include <Constraints/PythagorasConstraint.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Sphere.h>
 
-const Index NumCons = 18;
+const Index NumCons = 24;
 const Index NumVars = 11;
 const Index NumGeoms = 20;
 const Index NumMatls = 3;
@@ -30,7 +31,9 @@ enum { CubeW_ConstIULODR, CubeW_ConstOULIDR, CubeW_ConstIDLOUR, CubeW_ConstODLIU
        CubeW_ConstHypo, CubeW_ConstDiag,
        CubeW_ConstIULUR, CubeW_ConstIULDL, CubeW_ConstIDRUR, CubeW_ConstIDRDL,
        CubeW_ConstMULUL, CubeW_ConstMURUR, CubeW_ConstMDRDR, CubeW_ConstMDLDL,
-       CubeW_ConstOULUR, CubeW_ConstOULDL, CubeW_ConstODRUR, CubeW_ConstODRDL };
+       CubeW_ConstOULUR, CubeW_ConstOULDL, CubeW_ConstODRUR, CubeW_ConstODRDL,
+       CubeW_ConstPlaneL, CubeW_ConstPlaneR, CubeW_ConstPlaneI, CubeW_ConstPlaneO,
+       CubeW_ConstPlaneU, CubeW_ConstPlaneD };
 enum { CubeW_SphereIUL, CubeW_SphereIUR, CubeW_SphereIDR, CubeW_SphereIDL,
        CubeW_SphereOUL, CubeW_SphereOUR, CubeW_SphereODR, CubeW_SphereODL,
        CubeW_CylIU, CubeW_CylIR, CubeW_CylID, CubeW_CylIL,
@@ -46,10 +49,10 @@ CubeWidget::CubeWidget( Module* module, CrowdMonitor* lock, double widget_scale 
    Real INIT = 1.0*widget_scale;
    variables[CubeW_PointIUL] = new Variable("PntIUL", Scheme1, Point(0, 0, 0));
    variables[CubeW_PointIUR] = new Variable("PntIUR", Scheme2, Point(INIT, 0, 0));
-   variables[CubeW_PointIDR] = new Variable("PntIDR", Scheme1, Point(INIT, INIT, 0));
-   variables[CubeW_PointIDL] = new Variable("PntIDL", Scheme2, Point(0, INIT, 0));
-   variables[CubeW_PointOUL] = new Variable("PntOUL", Scheme1, Point(0, 0, INIT));
-   variables[CubeW_PointOUR] = new Variable("PntOUR", Scheme2, Point(INIT, 0, INIT));
+   variables[CubeW_PointIDR] = new Variable("PntIDR", Scheme3, Point(INIT, INIT, 0));
+   variables[CubeW_PointIDL] = new Variable("PntIDL", Scheme4, Point(0, INIT, 0));
+   variables[CubeW_PointOUL] = new Variable("PntOUL", Scheme3, Point(0, 0, INIT));
+   variables[CubeW_PointOUR] = new Variable("PntOUR", Scheme4, Point(INIT, 0, INIT));
    variables[CubeW_PointODR] = new Variable("PntODR", Scheme1, Point(INIT, INIT, INIT));
    variables[CubeW_PointODL] = new Variable("PntODL", Scheme2, Point(0, INIT, INIT));
    variables[CubeW_Dist] = new Variable("DIST", Scheme1, Point(INIT, 0, 0));
@@ -58,6 +61,72 @@ CubeWidget::CubeWidget( Module* module, CrowdMonitor* lock, double widget_scale 
 
    NOT_FINISHED("Constraints not right!");
    
+   constraints[CubeW_ConstPlaneL] = new PlaneConstraint("ConstPlaneL",
+							NumSchemes,
+							variables[CubeW_PointOUL],
+							variables[CubeW_PointIUL],
+							variables[CubeW_PointIDL],
+							variables[CubeW_PointODL]);
+   constraints[CubeW_ConstPlaneL]->VarChoices(Scheme1, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneL]->VarChoices(Scheme2, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneL]->VarChoices(Scheme3, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneL]->VarChoices(Scheme4, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneL]->Priorities(P_Highest, P_Highest, P_Highest, P_Highest);
+   constraints[CubeW_ConstPlaneR] = new PlaneConstraint("ConstPlaneR",
+							NumSchemes,
+							variables[CubeW_PointIUR],
+							variables[CubeW_PointOUR],
+							variables[CubeW_PointODR],
+							variables[CubeW_PointIDR]);
+   constraints[CubeW_ConstPlaneR]->VarChoices(Scheme1, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneR]->VarChoices(Scheme2, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneR]->VarChoices(Scheme3, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneR]->VarChoices(Scheme4, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneR]->Priorities(P_Highest, P_Highest, P_Highest, P_Highest);
+   constraints[CubeW_ConstPlaneI] = new PlaneConstraint("ConstPlaneI",
+							NumSchemes,
+							variables[CubeW_PointIUL],
+							variables[CubeW_PointIUR],
+							variables[CubeW_PointIDR],
+							variables[CubeW_PointIDL]);
+   constraints[CubeW_ConstPlaneI]->VarChoices(Scheme1, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneI]->VarChoices(Scheme2, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneI]->VarChoices(Scheme3, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneI]->VarChoices(Scheme4, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneI]->Priorities(P_Highest, P_Highest, P_Highest, P_Highest);
+   constraints[CubeW_ConstPlaneO] = new PlaneConstraint("ConstPlaneO",
+							NumSchemes,
+							variables[CubeW_PointOUR],
+							variables[CubeW_PointOUL],
+							variables[CubeW_PointODL],
+							variables[CubeW_PointODR]);
+   constraints[CubeW_ConstPlaneO]->VarChoices(Scheme1, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneO]->VarChoices(Scheme2, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneO]->VarChoices(Scheme3, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneO]->VarChoices(Scheme4, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneO]->Priorities(P_Highest, P_Highest, P_Highest, P_Highest);
+   constraints[CubeW_ConstPlaneU] = new PlaneConstraint("ConstPlaneU",
+							NumSchemes,
+							variables[CubeW_PointOUL],
+							variables[CubeW_PointOUR],
+							variables[CubeW_PointIUR],
+							variables[CubeW_PointIUL]);
+   constraints[CubeW_ConstPlaneU]->VarChoices(Scheme1, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneU]->VarChoices(Scheme2, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneU]->VarChoices(Scheme3, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneU]->VarChoices(Scheme4, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneU]->Priorities(P_Highest, P_Highest, P_Highest, P_Highest);
+   constraints[CubeW_ConstPlaneD] = new PlaneConstraint("ConstPlaneD",
+							NumSchemes,
+							variables[CubeW_PointIDL],
+							variables[CubeW_PointIDR],
+							variables[CubeW_PointODR],
+							variables[CubeW_PointODL]);
+   constraints[CubeW_ConstPlaneD]->VarChoices(Scheme1, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneD]->VarChoices(Scheme2, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneD]->VarChoices(Scheme3, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneD]->VarChoices(Scheme4, 2, 3, 0, 1);
+   constraints[CubeW_ConstPlaneD]->Priorities(P_Highest, P_Highest, P_Highest, P_Highest);
    constraints[CubeW_ConstIULODR] = new DistanceConstraint("ConstIULODR",
 							   NumSchemes,
 							   variables[CubeW_PointIUL],
@@ -65,29 +134,29 @@ CubeWidget::CubeWidget( Module* module, CrowdMonitor* lock, double widget_scale 
 							   variables[CubeW_Diag]);
    constraints[CubeW_ConstIULODR]->VarChoices(Scheme1, 2, 2, 1);
    constraints[CubeW_ConstIULODR]->VarChoices(Scheme2, 1, 0, 1);
-   constraints[CubeW_ConstIULODR]->VarChoices(Scheme3, 2, 2, 1);
+   constraints[CubeW_ConstIULODR]->VarChoices(Scheme3, 1, 0, 1);
    constraints[CubeW_ConstIULODR]->VarChoices(Scheme4, 1, 0, 1);
-   constraints[CubeW_ConstIULODR]->Priorities(P_Highest, P_Highest, P_Default);
+   constraints[CubeW_ConstIULODR]->Priorities(P_HighMedium, P_HighMedium, P_Default);
    constraints[CubeW_ConstOULIDR] = new DistanceConstraint("ConstOULIDR",
 							   NumSchemes,
 							   variables[CubeW_PointOUL],
 							   variables[CubeW_PointIDR],
 							   variables[CubeW_Diag]);
    constraints[CubeW_ConstOULIDR]->VarChoices(Scheme1, 1, 0, 1);
-   constraints[CubeW_ConstOULIDR]->VarChoices(Scheme2, 2, 2, 1);
-   constraints[CubeW_ConstOULIDR]->VarChoices(Scheme3, 1, 0, 1);
-   constraints[CubeW_ConstOULIDR]->VarChoices(Scheme4, 2, 2, 1);
-   constraints[CubeW_ConstOULIDR]->Priorities(P_Highest, P_Highest, P_Default);
+   constraints[CubeW_ConstOULIDR]->VarChoices(Scheme2, 1, 0, 1);
+   constraints[CubeW_ConstOULIDR]->VarChoices(Scheme3, 2, 2, 1);
+   constraints[CubeW_ConstOULIDR]->VarChoices(Scheme4, 1, 0, 1);
+   constraints[CubeW_ConstOULIDR]->Priorities(P_HighMedium, P_HighMedium, P_Default);
    constraints[CubeW_ConstIDLOUR] = new DistanceConstraint("ConstIDLOUR",
 							  NumSchemes,
 							  variables[CubeW_PointIDL],
 							  variables[CubeW_PointOUR],
 							  variables[CubeW_Diag]);
-   constraints[CubeW_ConstIDLOUR]->VarChoices(Scheme1, 2, 2, 1);
+   constraints[CubeW_ConstIDLOUR]->VarChoices(Scheme1, 1, 0, 1);
    constraints[CubeW_ConstIDLOUR]->VarChoices(Scheme2, 1, 0, 1);
-   constraints[CubeW_ConstIDLOUR]->VarChoices(Scheme3, 2, 2, 1);
-   constraints[CubeW_ConstIDLOUR]->VarChoices(Scheme4, 1, 0, 1);
-   constraints[CubeW_ConstIDLOUR]->Priorities(P_Highest, P_Highest, P_Default);
+   constraints[CubeW_ConstIDLOUR]->VarChoices(Scheme3, 1, 0, 1);
+   constraints[CubeW_ConstIDLOUR]->VarChoices(Scheme4, 2, 2, 1);
+   constraints[CubeW_ConstIDLOUR]->Priorities(P_HighMedium, P_HighMedium, P_Default);
    constraints[CubeW_ConstODLIUR] = new DistanceConstraint("ConstODLIUR",
 							  NumSchemes,
 							  variables[CubeW_PointODL],
@@ -96,8 +165,8 @@ CubeWidget::CubeWidget( Module* module, CrowdMonitor* lock, double widget_scale 
    constraints[CubeW_ConstODLIUR]->VarChoices(Scheme1, 1, 0, 1);
    constraints[CubeW_ConstODLIUR]->VarChoices(Scheme2, 2, 2, 1);
    constraints[CubeW_ConstODLIUR]->VarChoices(Scheme3, 1, 0, 1);
-   constraints[CubeW_ConstODLIUR]->VarChoices(Scheme4, 2, 2, 1);
-   constraints[CubeW_ConstODLIUR]->Priorities(P_Highest, P_Highest, P_Default);
+   constraints[CubeW_ConstODLIUR]->VarChoices(Scheme4, 1, 0, 1);
+   constraints[CubeW_ConstODLIUR]->Priorities(P_HighMedium, P_HighMedium, P_Default);
    constraints[CubeW_ConstHypo] = new HypotenuseConstraint("ConstHypo",
 							   NumSchemes,
 							   variables[CubeW_Dist],
@@ -106,7 +175,7 @@ CubeWidget::CubeWidget( Module* module, CrowdMonitor* lock, double widget_scale 
    constraints[CubeW_ConstHypo]->VarChoices(Scheme2, 1, 0);
    constraints[CubeW_ConstHypo]->VarChoices(Scheme3, 1, 0);
    constraints[CubeW_ConstHypo]->VarChoices(Scheme4, 1, 0);
-   constraints[CubeW_ConstHypo]->Priorities(P_Highest, P_Default);
+   constraints[CubeW_ConstHypo]->Priorities(P_HighMedium, P_Default);
    constraints[CubeW_ConstDiag] = new PythagorasConstraint("ConstDiag",
 							   NumSchemes,
 							   variables[CubeW_Dist],
@@ -116,7 +185,7 @@ CubeWidget::CubeWidget( Module* module, CrowdMonitor* lock, double widget_scale 
    constraints[CubeW_ConstDiag]->VarChoices(Scheme2, 2, 2, 1);
    constraints[CubeW_ConstDiag]->VarChoices(Scheme3, 2, 2, 1);
    constraints[CubeW_ConstDiag]->VarChoices(Scheme4, 2, 2, 1);
-   constraints[CubeW_ConstDiag]->Priorities(P_Highest, P_Highest, P_Default);
+   constraints[CubeW_ConstDiag]->Priorities(P_Lowest, P_HighMedium, P_Default);
    constraints[CubeW_ConstIULUR] = new DistanceConstraint("ConstIULUR",
 							  NumSchemes,
 							  variables[CubeW_PointIUL],
@@ -133,8 +202,8 @@ CubeWidget::CubeWidget( Module* module, CrowdMonitor* lock, double widget_scale 
 							  variables[CubeW_PointIDL],
 							  variables[CubeW_Dist]);
    constraints[CubeW_ConstIULDL]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[CubeW_ConstIULDL]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[CubeW_ConstIULDL]->VarChoices(Scheme3, 1, 1, 1);
+   constraints[CubeW_ConstIULDL]->VarChoices(Scheme2, 1, 0, 1);
+   constraints[CubeW_ConstIULDL]->VarChoices(Scheme3, 1, 0, 1);
    constraints[CubeW_ConstIULDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[CubeW_ConstIULDL]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[CubeW_ConstIDRUR] = new DistanceConstraint("ConstIDRUR",
@@ -142,18 +211,18 @@ CubeWidget::CubeWidget( Module* module, CrowdMonitor* lock, double widget_scale 
 							  variables[CubeW_PointIDR],
 							  variables[CubeW_PointIUR],
 							  variables[CubeW_Dist]);
-   constraints[CubeW_ConstIDRUR]->VarChoices(Scheme1, 1, 1, 1);
+   constraints[CubeW_ConstIDRUR]->VarChoices(Scheme1, 1, 0, 1);
    constraints[CubeW_ConstIDRUR]->VarChoices(Scheme2, 0, 0, 0);
    constraints[CubeW_ConstIDRUR]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[CubeW_ConstIDRUR]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[CubeW_ConstIDRUR]->VarChoices(Scheme4, 1, 0, 1);
    constraints[CubeW_ConstIDRUR]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[CubeW_ConstIDRDL] = new DistanceConstraint("ConstIDRUR",
 							  NumSchemes,
 							  variables[CubeW_PointIDR],
 							  variables[CubeW_PointIDL],
 							  variables[CubeW_Dist]);
-   constraints[CubeW_ConstIDRDL]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[CubeW_ConstIDRDL]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[CubeW_ConstIDRDL]->VarChoices(Scheme1, 1, 0, 1);
+   constraints[CubeW_ConstIDRDL]->VarChoices(Scheme2, 1, 0, 1);
    constraints[CubeW_ConstIDRDL]->VarChoices(Scheme3, 1, 1, 1);
    constraints[CubeW_ConstIDRDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[CubeW_ConstIDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
@@ -163,18 +232,18 @@ CubeWidget::CubeWidget( Module* module, CrowdMonitor* lock, double widget_scale 
 							  variables[CubeW_PointOUL],
 							  variables[CubeW_Dist]);
    constraints[CubeW_ConstMULUL]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[CubeW_ConstMULUL]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[CubeW_ConstMULUL]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[CubeW_ConstMULUL]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[CubeW_ConstMULUL]->VarChoices(Scheme2, 1, 0, 1);
+   constraints[CubeW_ConstMULUL]->VarChoices(Scheme3, 0, 0, 0);
+   constraints[CubeW_ConstMULUL]->VarChoices(Scheme4, 1, 0, 1);
    constraints[CubeW_ConstMULUL]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[CubeW_ConstMURUR] = new DistanceConstraint("ConstMURUR",
 							  NumSchemes,
 							  variables[CubeW_PointIUR],
 							  variables[CubeW_PointOUR],
 							  variables[CubeW_Dist]);
-   constraints[CubeW_ConstMURUR]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[CubeW_ConstMURUR]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[CubeW_ConstMURUR]->VarChoices(Scheme3, 1, 1, 1);
+   constraints[CubeW_ConstMURUR]->VarChoices(Scheme1, 1, 0, 1);
+   constraints[CubeW_ConstMURUR]->VarChoices(Scheme2, 1, 1, 1);
+   constraints[CubeW_ConstMURUR]->VarChoices(Scheme3, 1, 0, 1);
    constraints[CubeW_ConstMURUR]->VarChoices(Scheme4, 0, 0, 0);
    constraints[CubeW_ConstMURUR]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[CubeW_ConstMDRDR] = new DistanceConstraint("ConstMDRDR",
@@ -182,28 +251,28 @@ CubeWidget::CubeWidget( Module* module, CrowdMonitor* lock, double widget_scale 
 							  variables[CubeW_PointIDR],
 							  variables[CubeW_PointODR],
 							  variables[CubeW_Dist]);
-   constraints[CubeW_ConstMDRDR]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[CubeW_ConstMDRDR]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[CubeW_ConstMDRDR]->VarChoices(Scheme1, 0, 0, 0);
+   constraints[CubeW_ConstMDRDR]->VarChoices(Scheme2, 1, 0, 1);
    constraints[CubeW_ConstMDRDR]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[CubeW_ConstMDRDR]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[CubeW_ConstMDRDR]->VarChoices(Scheme4, 1, 0, 1);
    constraints[CubeW_ConstMDRDR]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[CubeW_ConstMDLDL] = new DistanceConstraint("ConstMDLDL",
 							  NumSchemes,
 							  variables[CubeW_PointIDL],
 							  variables[CubeW_PointODL],
 							  variables[CubeW_Dist]);
-   constraints[CubeW_ConstMDLDL]->VarChoices(Scheme1, 1, 1, 1);
+   constraints[CubeW_ConstMDLDL]->VarChoices(Scheme1, 1, 0, 1);
    constraints[CubeW_ConstMDLDL]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[CubeW_ConstMDLDL]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[CubeW_ConstMDLDL]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[CubeW_ConstMDLDL]->VarChoices(Scheme3, 1, 0, 1);
+   constraints[CubeW_ConstMDLDL]->VarChoices(Scheme4, 1, 1, 1);
    constraints[CubeW_ConstMDLDL]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[CubeW_ConstOULUR] = new DistanceConstraint("ConstOULUR",
 							  NumSchemes,
 							  variables[CubeW_PointOUL],
 							  variables[CubeW_PointOUR],
 							  variables[CubeW_Dist]);
-   constraints[CubeW_ConstOULUR]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[CubeW_ConstOULUR]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[CubeW_ConstOULUR]->VarChoices(Scheme1, 1, 0, 1);
+   constraints[CubeW_ConstOULUR]->VarChoices(Scheme2, 1, 0, 1);
    constraints[CubeW_ConstOULUR]->VarChoices(Scheme3, 1, 1, 1);
    constraints[CubeW_ConstOULUR]->VarChoices(Scheme4, 0, 0, 0);
    constraints[CubeW_ConstOULUR]->Priorities(P_Default, P_Default, P_LowMedium);
@@ -212,10 +281,10 @@ CubeWidget::CubeWidget( Module* module, CrowdMonitor* lock, double widget_scale 
 							  variables[CubeW_PointOUL],
 							  variables[CubeW_PointODL],
 							  variables[CubeW_Dist]);
-   constraints[CubeW_ConstOULDL]->VarChoices(Scheme1, 1, 1, 1);
+   constraints[CubeW_ConstOULDL]->VarChoices(Scheme1, 1, 0, 1);
    constraints[CubeW_ConstOULDL]->VarChoices(Scheme2, 0, 0, 0);
    constraints[CubeW_ConstOULDL]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[CubeW_ConstOULDL]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[CubeW_ConstOULDL]->VarChoices(Scheme4, 1, 0, 1);
    constraints[CubeW_ConstOULDL]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[CubeW_ConstODRUR] = new DistanceConstraint("ConstODRUR",
 							  NumSchemes,
@@ -223,8 +292,8 @@ CubeWidget::CubeWidget( Module* module, CrowdMonitor* lock, double widget_scale 
 							  variables[CubeW_PointOUR],
 							  variables[CubeW_Dist]);
    constraints[CubeW_ConstODRUR]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[CubeW_ConstODRUR]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[CubeW_ConstODRUR]->VarChoices(Scheme3, 1, 1, 1);
+   constraints[CubeW_ConstODRUR]->VarChoices(Scheme2, 1, 0, 1);
+   constraints[CubeW_ConstODRUR]->VarChoices(Scheme3, 1, 0, 1);
    constraints[CubeW_ConstODRUR]->VarChoices(Scheme4, 0, 0, 0);
    constraints[CubeW_ConstODRUR]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[CubeW_ConstODRDL] = new DistanceConstraint("ConstODRDL",
@@ -234,8 +303,8 @@ CubeWidget::CubeWidget( Module* module, CrowdMonitor* lock, double widget_scale 
 							  variables[CubeW_Dist]);
    constraints[CubeW_ConstODRDL]->VarChoices(Scheme1, 1, 1, 1);
    constraints[CubeW_ConstODRDL]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[CubeW_ConstODRDL]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[CubeW_ConstODRDL]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[CubeW_ConstODRDL]->VarChoices(Scheme3, 1, 0, 1);
+   constraints[CubeW_ConstODRDL]->VarChoices(Scheme4, 1, 0, 1);
    constraints[CubeW_ConstODRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
    materials[CubeW_PointMatl] = PointWidgetMaterial;
@@ -373,6 +442,9 @@ void
 CubeWidget::geom_moved( int /* axis*/, double /*dist*/, const Vector& delta,
 			void* cbdata )
 {
+   for (Index v=0; v<NumVars; v++)
+      variables[v]->Reset();
+   
    switch((int)cbdata){
    case CubeW_PickSphIUL:
       variables[CubeW_PointIUL]->SetDelta(delta);

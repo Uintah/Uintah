@@ -375,6 +375,9 @@ void
 ScaledBoxWidget::geom_moved( int /* axis*/, double /*dist*/, const Vector& delta,
 			void* cbdata )
 {
+   for (Index v=0; v<NumVars; v++)
+      variables[v]->Reset();
+   
    switch((int)cbdata){
    case SBoxW_PickSphIUL:
       variables[SBoxW_PointIUL]->SetDelta(delta);

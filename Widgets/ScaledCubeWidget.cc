@@ -375,6 +375,9 @@ void
 ScaledCubeWidget::geom_moved( int /* axis*/, double /*dist*/, const Vector& delta,
 			void* cbdata )
 {
+   for (Index v=0; v<NumVars; v++)
+      variables[v]->Reset();
+   
    switch((int)cbdata){
    case SCubeW_PickSphIUL:
       variables[SCubeW_PointIUL]->SetDelta(delta);

@@ -24,7 +24,7 @@ const Index NumMatls = 3;
 const Index NumPcks = 1;
 // const Index NumSchemes = 1;
 
-enum { ArrowW_Sphere, ArrowW_Cylinder, ArrowW_Cone };
+enum { ArrowW_GeomPoint, ArrowW_GeomShaft, ArrowW_GeomHead };
 enum { ArrowW_Pick };
 
 ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock,
@@ -40,14 +40,14 @@ ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock,
    materials[ArrowW_HighMatl] = HighlightWidgetMaterial;
 
    GeomGroup* arr = new GeomGroup;
-   geometries[ArrowW_Sphere] = new GeomSphere;
-   GeomMaterial* sphm = new GeomMaterial(geometries[ArrowW_Sphere], materials[ArrowW_PointMatl]);
+   geometries[ArrowW_GeomPoint] = new GeomSphere;
+   GeomMaterial* sphm = new GeomMaterial(geometries[ArrowW_GeomPoint], materials[ArrowW_PointMatl]);
    arr->add(sphm);
-   geometries[ArrowW_Cylinder] = new GeomCylinder;
-   GeomMaterial* cylm = new GeomMaterial(geometries[ArrowW_Cylinder], materials[ArrowW_EdgeMatl]);
+   geometries[ArrowW_GeomShaft] = new GeomCylinder;
+   GeomMaterial* cylm = new GeomMaterial(geometries[ArrowW_GeomShaft], materials[ArrowW_EdgeMatl]);
    arr->add(cylm);
-   geometries[ArrowW_Cone] = new GeomCappedCone;
-   GeomMaterial* conem = new GeomMaterial(geometries[ArrowW_Cone], materials[ArrowW_EdgeMatl]);
+   geometries[ArrowW_GeomHead] = new GeomCappedCone;
+   GeomMaterial* conem = new GeomMaterial(geometries[ArrowW_GeomHead], materials[ArrowW_EdgeMatl]);
    arr->add(conem);
    picks[ArrowW_Pick] = new GeomPick(arr, module);
    picks[ArrowW_Pick]->set_highlight(materials[ArrowW_HighMatl]);
@@ -65,13 +65,13 @@ ArrowWidget::~ArrowWidget()
 void
 ArrowWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[ArrowW_Sphere])->move(variables[ArrowW_Point]->Get(),
+   ((GeomSphere*)geometries[ArrowW_GeomPoint])->move(variables[ArrowW_Point]->Get(),
 						  1*widget_scale);
-   ((GeomCylinder*)geometries[ArrowW_Cylinder])->move(variables[ArrowW_Point]->Get(),
+   ((GeomCylinder*)geometries[ArrowW_GeomShaft])->move(variables[ArrowW_Point]->Get(),
 						      variables[ArrowW_Point]->Get()
 						      + direction * widget_scale * 3.0,
 						      0.5*widget_scale);
-   ((GeomCappedCone*)geometries[ArrowW_Cone])->move(variables[ArrowW_Point]->Get()
+   ((GeomCappedCone*)geometries[ArrowW_GeomHead])->move(variables[ArrowW_Point]->Get()
 						    + direction * widget_scale * 3.0,
 						    variables[ArrowW_Point]->Get()
 						    + direction * widget_scale * 5.0,

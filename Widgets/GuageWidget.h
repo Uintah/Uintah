@@ -48,11 +48,12 @@ GuageWidget::GetRatio() const
 inline const Vector&
 GuageWidget::GetAxis() const
 {
+   static Vector oldaxis;
    Vector axis(variables[GuageW_PointR]->Get() - variables[GuageW_PointL]->Get());
-   if (axis.length() == 0.0)
-      return Vector(0,0,0);
-   else
-      return axis.normal();
+   if (axis.length2() <= 1e-6)
+      return oldaxis;
+   else 
+      return (oldaxis = axis.normal());
 }
 
 

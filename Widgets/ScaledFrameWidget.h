@@ -60,22 +60,24 @@ ScaledFrameWidget::GetRatio2() const
 inline const Vector&
 ScaledFrameWidget::GetAxis1() const
 {
+   static Vector oldaxis;
    Vector axis(variables[SFrameW_PointUR]->Get() - variables[SFrameW_PointUL]->Get());
-   if (axis.length() == 0.0)
-      return Vector(0,0,0);
+   if (axis.length2() <= 1e-6)
+      return oldaxis;
    else
-      return axis.normal();
+      return (oldaxis = axis.normal());
 }
 
 
 inline const Vector&
 ScaledFrameWidget::GetAxis2() const
 {
+   static Vector oldaxis;
    Vector axis(variables[SFrameW_PointDL]->Get() - variables[SFrameW_PointUL]->Get());
-   if (axis.length() == 0.0)
-      return Vector(0,0,0);
+   if (axis.length2() <= 1e-6)
+      return oldaxis;
    else
-      return axis.normal();
+      return (oldaxis = axis.normal());
 }
 
 

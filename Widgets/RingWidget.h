@@ -23,7 +23,7 @@ enum { RingW_PointUL, RingW_PointUR, RingW_PointDR, RingW_PointDL,
        RingW_Dist, RingW_Hypo, RingW_Center,
        RingW_Slider, RingW_SDist, RingW_Angle };
 // Material indexs
-enum { RingW_PointMatl, RingW_EdgeMatl, RingW_SliderMatl, RingW_HighMatl };
+enum { RingW_PointMatl, RingW_EdgeMatl, RingW_SliderMatl, RingW_SpecialMatl, RingW_HighMatl };
 
 
 class RingWidget : public BaseWidget {
@@ -43,18 +43,19 @@ public:
 inline Real
 RingWidget::GetRatio() const
 {
-   return (variables[RingW_Angle]->Get().x());
+   return (variables[RingW_Angle]->Get().x() + 3.14159) / (2.0 * 3.14159);
 }
 
 
 inline const Vector&
 RingWidget::GetAxis() const
 {
+   static Vector oldaxis;
    Vector axis(variables[RingW_PointDR]->Get() - variables[RingW_PointUL]->Get());
-   if (axis.length() == 0.0)
-      return Vector(0,0,0);
+   if (axis.length2() <= 1e-6)
+      return oldaxis;
    else
-      return axis.normal();
+      return (oldaxis = axis.normal());
 }
 
 
