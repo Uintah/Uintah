@@ -27,7 +27,6 @@ AUTHOR
 LOG
     Created January 5, 1999
 ****************************************/
-#include "FieldExtractor.h"
 
 #include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
@@ -48,6 +47,7 @@ LOG
 #include <Core/Geometry/Transform.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
 //#include <Packages/Uintah/Core/Grid/NodeIterator.h>
+#include "FieldExtractor.h"
  
 #include <iostream> 
 #include <sstream>
