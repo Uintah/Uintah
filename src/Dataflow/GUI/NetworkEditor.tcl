@@ -1050,7 +1050,7 @@ proc SCIRunNew_source { args } {
 	if { ![info exists recentlyWarnedAboutDefaultSettings] } {
 	    set recentlyWarnedAboutDefaultSettings 1
 	    after 10000 uplevel \#0 unset recentlyWarnedAboutDefaultSettings
-	    displayErrorWarningOrInfo "*** The settings file '$args'  was not found.  Loading the default file:\n     $file" warning
+	    displayErrorWarningOrInfo "*** SCIRUN_DATA and SCIRUN_DATASET are not valid.\n*** Loading the default dataset .settings file: $file\n" info
 	}
 	return [uplevel 1 SCIRunBackup_source \{$file\}]
     }
