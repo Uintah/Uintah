@@ -78,11 +78,7 @@ public:
 
   virtual void scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP&);
-#if 0         
-  //////////
-  // Insert Documentation Here:
-  virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&);
-#endif  
+  
   // scheduleTimeAdvance version called by the AMR simulation controller.
   virtual void scheduleTimeAdvance( const LevelP& level, 
 				    SchedulerP&, int step, int nsteps );
@@ -213,7 +209,8 @@ public:
                             constCCVariable<double> & press,
                             CCVariable<double> & press_new, 
                             double press_ref,
-                            StaticArray<double> & cv,
+                            StaticArray<constCCVariable<double> > & cv,
+                            StaticArray<constCCVariable<double> > & gamma,
                             double convergence_crit,
                             int numALLMatls,
                             int & count,
