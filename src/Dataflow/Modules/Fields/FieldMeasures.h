@@ -43,7 +43,8 @@
 
 #if !defined(FieldMeasures_h)
 #define FieldMeasures_h
-  
+
+#include <Core/Util/ProgressReporter.h>  
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/DenseMatrix.h>
@@ -53,12 +54,12 @@
 
 namespace SCIRun {
 
-
 class FieldMeasuresAlgo : public DynamicAlgoBase
 {
 public:
-  virtual Matrix *execute(MeshHandle meshH, bool x, bool y, bool z,
-		         bool idx, bool size, bool nnbrs, bool nbr_enum)=0;
+  virtual Matrix *execute(ProgressReporter *reporter,
+                          MeshHandle meshH, bool x, bool y, bool z,
+                          bool idx, bool size, bool nnbrs)=0;
 
   //! Support the dynamically compiled algorithm concept.
   static CompileInfoHandle get_compile_info(const TypeDescription *mesh_td,
@@ -71,21 +72,20 @@ class FieldMeasuresAlgoT : public FieldMeasuresAlgo
 {
 public:
   //! virtual interface. 
-  virtual Matrix *execute(MeshHandle meshH, bool x, bool y, bool z, bool idx,
-			  bool nnbrs, bool size, bool nbr_enum);
+  virtual Matrix *execute(ProgressReporter *reporter,
+                          MeshHandle meshH, bool x, bool y, bool z, bool idx,
+			  bool nnbrs, bool size);
 };
 
 //! MESH -- e.g. TetVolMeshHandle
 //! SIMPLEX -- e.g. TetVolMesh::Node
 
-// We have to pass in nbr_enum, in order to call synchronize neighbor info...
-//   maybe there's a better way?
-
 template <class MESH, class SIMPLEX>
 Matrix *
-FieldMeasuresAlgoT<MESH,SIMPLEX>::execute(MeshHandle meshH, bool x, bool y, 
+FieldMeasuresAlgoT<MESH,SIMPLEX>::execute(ProgressReporter *reporter,
+                                          MeshHandle meshH, bool x, bool y, 
 					  bool z, bool idx, bool size,
-					  bool nnbrs, bool nbr_enum)
+					  bool nnbrs)
 {
   MESH *mesh = dynamic_cast<MESH *>(meshH.get_rep());
   int ncols=0;
@@ -98,7 +98,7 @@ FieldMeasuresAlgoT<MESH,SIMPLEX>::execute(MeshHandle meshH, bool x, bool y,
   if (size)  ncols++;
 
   if (ncols==0) {
-    cerr << "Error -- no measures selected.\n";
+    reporter->error("No measures selected.");
     return 0;
   }
 
@@ -108,7 +108,6 @@ FieldMeasuresAlgoT<MESH,SIMPLEX>::execute(MeshHandle meshH, bool x, bool y,
   if (ncols==1) m = scinew ColumnMatrix(nsimplices);
   else m = scinew DenseMatrix(nsimplices, ncols);
 
-  if (nnbrs) mesh->synchronize(nbr_enum);
   typename SIMPLEX::array_type nbrs;
 
   typename SIMPLEX::iterator si, sie;
@@ -138,21 +137,20 @@ class FieldMeasuresAlgoTNN : public FieldMeasuresAlgo
 {
 public:
   //! virtual interface. 
-  virtual Matrix *execute(MeshHandle meshH, bool x, bool y, bool z, bool idx,
-			  bool nnbrs, bool size, bool nbr_enum);
+  virtual Matrix *execute(ProgressReporter *reporter,
+                          MeshHandle meshH, bool x, bool y, bool z, bool idx,
+			  bool nnbrs, bool size);
 };
 
 //! MESH -- e.g. TetVolMeshHandle
 //! SIMPLEX -- e.g. TetVolMesh::Node
 
-// We have to pass in nbr_enum, in order to call synchronize neighbor info...
-//   maybe there's a better way?
-
 template <class MESH, class SIMPLEX>
 Matrix *
-FieldMeasuresAlgoTNN<MESH,SIMPLEX>::execute(MeshHandle meshH, bool x, bool y, 
+FieldMeasuresAlgoTNN<MESH,SIMPLEX>::execute(ProgressReporter *reporter,
+                                            MeshHandle meshH, bool x, bool y, 
 					    bool z, bool idx, bool size,
-					    bool nnbrs, bool nbr_enum)
+					    bool nnbrs)
 {
   MESH *mesh = dynamic_cast<MESH *>(meshH.get_rep());
   int ncols=0;
@@ -166,7 +164,7 @@ FieldMeasuresAlgoTNN<MESH,SIMPLEX>::execute(MeshHandle meshH, bool x, bool y,
   ncols+=3;
 
   if (ncols==0) {
-    cerr << "Error -- no measures selected.\n";
+    reporter->error("No measures selected.");
     return 0;
   }
 
@@ -176,7 +174,6 @@ FieldMeasuresAlgoTNN<MESH,SIMPLEX>::execute(MeshHandle meshH, bool x, bool y,
   if (ncols==1) m = scinew ColumnMatrix(nsimplices);
   else m = scinew DenseMatrix(nsimplices, ncols);
 
-  if (nnbrs) mesh->synchronize(nbr_enum);
   typename SIMPLEX::array_type nbrs;
 
   typename SIMPLEX::iterator si, sie;
@@ -212,21 +209,20 @@ class FieldMeasuresAlgoTFN : public FieldMeasuresAlgo
 {
 public:
   //! virtual interface. 
-  virtual Matrix *execute(MeshHandle meshH, bool x, bool y, bool z, bool idx,
-			  bool nnbrs, bool size, bool nbr_enum);
+  virtual Matrix *execute(ProgressReporter *reporter,
+                          MeshHandle meshH, bool x, bool y, bool z, bool idx,
+			  bool nnbrs, bool size);
 };
 
 //! MESH -- e.g. TetVolMeshHandle
 //! SIMPLEX -- e.g. TetVolMesh::Node
 
-// We have to pass in nbr_enum, in order to call synchronize neighbor info...
-//   maybe there's a better way?
-
 template <class MESH, class SIMPLEX>
 Matrix *
-FieldMeasuresAlgoTFN<MESH,SIMPLEX>::execute(MeshHandle meshH, bool x, bool y, 
+FieldMeasuresAlgoTFN<MESH,SIMPLEX>::execute(ProgressReporter *reporter,
+                                            MeshHandle meshH, bool x, bool y, 
 					    bool z, bool idx, bool size,
-					    bool nnbrs, bool nbr_enum)
+					    bool nnbrs)
 {
   MESH *mesh = dynamic_cast<MESH *>(meshH.get_rep());
   int ncols=0;
@@ -240,7 +236,7 @@ FieldMeasuresAlgoTFN<MESH,SIMPLEX>::execute(MeshHandle meshH, bool x, bool y,
   ncols+=3;
 
   if (ncols==0) {
-    cerr << "Error -- no measures selected.\n";
+    reporter->error("No measures selected.");
     return 0;
   }
 
@@ -250,7 +246,6 @@ FieldMeasuresAlgoTFN<MESH,SIMPLEX>::execute(MeshHandle meshH, bool x, bool y,
   if (ncols==1) m = scinew ColumnMatrix(nsimplices);
   else m = scinew DenseMatrix(nsimplices, ncols);
 
-  if (nnbrs) mesh->synchronize(nbr_enum);
   typename SIMPLEX::array_type nbrs;
   typename SIMPLEX::iterator si, sie;
   mesh->begin(si);

@@ -55,8 +55,6 @@ namespace SCIRun {
 class FieldMeasures : public Module
 {
 private:
-  FieldIPort *ifp;
-  MatrixOPort *omp;
   GuiString simplexString_;
   GuiInt xFlag_;
   GuiInt yFlag_;
@@ -65,7 +63,6 @@ private:
   GuiInt sizeFlag_;
   GuiInt nNbrsFlag_;
   GuiInt normalsFlag_;
-  MeshHandle m_;
 public:
   FieldMeasures(GuiContext* ctx);
   virtual ~FieldMeasures();
@@ -100,16 +97,14 @@ FieldMeasures::~FieldMeasures()
 void
 FieldMeasures::execute()
 {
-  ifp = (FieldIPort *)get_iport("Input Field");
+  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle fieldhandle;
   if (!(ifp->get(fieldhandle) && fieldhandle.get_rep()))
   {
     return;
   }
 
-  omp = (MatrixOPort *)get_oport("Output Measures Matrix");
-
-  m_ = fieldhandle->mesh();
+  MeshHandle mesh = fieldhandle->mesh();
 
   //! This is a hack for now, it is definitely not an optimal way
   int syncflag = 0;
@@ -128,23 +123,28 @@ FieldMeasures::execute()
 		Mesh::EDGE_NEIGHBORS_E | 
 		Mesh::FACE_NEIGHBORS_E);
 
-  m_->synchronize(syncflag);
+  mesh->synchronize(syncflag);
 
-  const bool nnormals =
+  bool nnormals =
     normalsFlag_.get() && simplexString_.get() == "Node";
   const bool fnormals =
     normalsFlag_.get() && simplexString_.get() == "Face";
+
+  if (nnormals && !mesh->has_normals())
+  {
+    warning("This mesh type does not contain normals, skipping.");
+    nnormals = false;
+  }
+  else if (normalsFlag_.get() && !(nnormals || fnormals))
+  {
+    warning("Cannot compute normals at that simplex location, skipping.");
+  }
   if (nnormals)
   {
-    m_->synchronize(Mesh::NORMALS_E);
-    remark("Node normals are only implemented for surface meshes.");
-  }
-  if (normalsFlag_.get() && !(nnormals || fnormals))
-  {
-    warning("Cannot compute normals at that simplex location.");
+    mesh->synchronize(Mesh::NORMALS_E);
   }
 
-  const TypeDescription *meshtd = m_->get_type_description();
+  const TypeDescription *meshtd = mesh->get_type_description();
   const TypeDescription *simptd = 
     scinew TypeDescription(meshtd->get_name()+"::"+simplexString_.get(), 
 			   meshtd->get_h_file_path(),
@@ -163,14 +163,14 @@ FieldMeasures::execute()
   }
 
   // Execute and Send (ha, no extraneous local variables here!)
-  omp->send(MatrixHandle(algo->execute(m_,
+  MatrixOPort *omp = (MatrixOPort *)get_oport("Output Measures Matrix");
+  omp->send(MatrixHandle(algo->execute(this, mesh,
 				       xFlag_.get(),
 				       yFlag_.get(),
 				       zFlag_.get(), 
 				       idxFlag_.get(), 
 				       sizeFlag_.get(), 
-				       nNbrsFlag_.get(),
-				       syncflag)));
+				       nNbrsFlag_.get())));
 }
 
 
