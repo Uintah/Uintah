@@ -18,9 +18,6 @@ namespace Uintah {
       void registerPermanentParticleState(int i,const VarLabel* l,
 					  const VarLabel* lp);
 
-      const VarLabel* delTAfterConstitutiveModelLabel;
-      const VarLabel* delTAfterFractureLabel;
-      const VarLabel* delTAfterCrackSurfaceContactLabel;
       const VarLabel* delTLabel;
       
       //non PermanentParticleState
@@ -127,6 +124,13 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.39  2001/01/05 23:04:09  guilkey
+// Using the code that Wayne just commited which allows the delT variable to
+// be "computed" multiple times per timestep, I removed the multiple derivatives
+// of delT (delTAfterFracture, delTAfterConstitutiveModel, etc.).  This also
+// now allows MPM and ICE to run together with a common timestep.  The
+// dream of the sharedState is realized!
+//
 // Revision 1.38  2000/12/28 20:27:12  guilkey
 // Moved some labels from MPMLabel to MPMICELabel.
 //

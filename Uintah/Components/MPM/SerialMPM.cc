@@ -385,7 +385,7 @@ void SerialMPM::scheduleComputeStressTensor(const Patch* patch,
     cm->addComputesAndRequires(t, mpm_matl, patch, old_dw, new_dw);
   }
 	 
-  t->computes(new_dw, lb->delTAfterConstitutiveModelLabel);
+  t->computes(new_dw, d_sharedState->get_delt_label());
   t->computes(new_dw, lb->StrainEnergyLabel);
 
   sched->addTask(t);
@@ -753,9 +753,6 @@ void SerialMPM::scheduleStressRelease(const Patch* patch,
 			    patch, old_dw, new_dw,
 			    this,&SerialMPM::stressRelease);
 
-  t->requires(new_dw, lb->delTAfterConstitutiveModelLabel);
-  t->requires(old_dw, d_sharedState->get_delt_label() );
-
   for(int m = 0; m < numMatls; m++) {
 	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     int idx = mpm_matl->getDWIndex();
@@ -791,7 +788,7 @@ void SerialMPM::scheduleStressRelease(const Patch* patch,
       t->computes( new_dw, lb->pCrackSurfaceNormalLabel_preReloc, idx, patch);
     }
   }
-  t->computes(new_dw, lb->delTAfterFractureLabel);
+  t->computes(new_dw, d_sharedState->get_delt_label() );
   sched->addTask(t);
 }
 
@@ -818,7 +815,7 @@ void SerialMPM::scheduleComputeCrackSurfaceContactForce(const Patch* patch,
 					(t,mpm_matl, patch,old_dw,new_dw);
     }
   }
-  t->computes(new_dw, lb->delTAfterCrackSurfaceContactLabel);
+  t->computes(new_dw, d_sharedState->get_delt_label() );
   sched->addTask(t);
 }
 
@@ -839,12 +836,6 @@ void SerialMPM::scheduleCarryForwardVariables(const Patch* patch,
 		         patch, old_dw, new_dw,
 		         this,&SerialMPM::carryForwardVariables);
 
-  if(d_fracture) {
-    t->requires( new_dw, lb->delTAfterCrackSurfaceContactLabel);
-  }
-  else {
-    t->requires( new_dw, lb->delTAfterConstitutiveModelLabel);
-  }
   for(int m = 0; m < numMatls; m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     int idx = mpm_matl->getDWIndex();
@@ -865,7 +856,6 @@ void SerialMPM::scheduleCarryForwardVariables(const Patch* patch,
     t->computes(new_dw, lb->pStressLabel_preReloc,   idx, patch);
     t->computes(new_dw, lb->pVelocityLabel_preReloc, idx, patch);
   }
-  t->computes(new_dw, lb->delTLabel );
   sched->addTask(t);
 }
 
@@ -1212,18 +1202,8 @@ void SerialMPM::carryForwardVariables( const ProcessorGroup*,
       new_dw->get(pVelocity, lb->pVelocityAfterUpdateLabel, pset);
     }
 
-    //timestep
-    delt_vartype delT;
-    if(d_fracture) {
-      new_dw->get(delT, lb->delTAfterCrackSurfaceContactLabel);
-    }
-    else {
-      new_dw->get(delT, lb->delTAfterConstitutiveModelLabel);
-    }
-
     new_dw->put(pStress, lb->pStressLabel_preReloc);
     new_dw->put(pVelocity, lb->pVelocityLabel_preReloc);
-    new_dw->put(delT, lb->delTLabel);
   }
 }
 	    
@@ -2075,6 +2055,13 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.179  2001/01/05 23:04:09  guilkey
+// Using the code that Wayne just commited which allows the delT variable to
+// be "computed" multiple times per timestep, I removed the multiple derivatives
+// of delT (delTAfterFracture, delTAfterConstitutiveModel, etc.).  This also
+// now allows MPM and ICE to run together with a common timestep.  The
+// dream of the sharedState is realized!
+//
 // Revision 1.178  2000/12/30 05:08:04  tan
 // Fixed a problem concerning patch and ghost in fracture computations.
 //

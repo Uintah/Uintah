@@ -252,18 +252,6 @@ MPMLabel::MPMLabel()
 			CCVariable<double>::getTypeDescription() );
 
   // Reduction variables
-
-  delTAfterConstitutiveModelLabel = scinew VarLabel( 
-    "delTAfterConstitutiveModel", 
-    delt_vartype::getTypeDescription() );
-
-  delTAfterFractureLabel = scinew VarLabel( "delTAfterFracture", 
-    delt_vartype::getTypeDescription() );
-
-  delTAfterCrackSurfaceContactLabel = scinew VarLabel( 
-    "delTAfterCrackSurafceContact", 
-    delt_vartype::getTypeDescription() );
-
   delTLabel = scinew VarLabel( "delT", delt_vartype::getTypeDescription() );
 
   StrainEnergyLabel = scinew VarLabel( "StrainEnergy",
@@ -369,9 +357,6 @@ MPMLabel::~MPMLabel()
   delete gThermalContactHeatExchangeRateLabel;
   delete cBurnedMassLabel;
 
-  delete delTAfterConstitutiveModelLabel;
-  delete delTAfterFractureLabel;
-  delete delTAfterCrackSurfaceContactLabel;
   delete delTLabel;
 
   delete StrainEnergyLabel;
@@ -401,6 +386,13 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.45  2001/01/05 23:04:09  guilkey
+// Using the code that Wayne just commited which allows the delT variable to
+// be "computed" multiple times per timestep, I removed the multiple derivatives
+// of delT (delTAfterFracture, delTAfterConstitutiveModel, etc.).  This also
+// now allows MPM and ICE to run together with a common timestep.  The
+// dream of the sharedState is realized!
+//
 // Revision 1.44  2000/12/28 20:27:11  guilkey
 // Moved some labels from MPMLabel to MPMICELabel.
 //

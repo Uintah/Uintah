@@ -151,7 +151,6 @@ void ViscoScram::computeStableTimestep(const Patch* patch,
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-//    new_dw->put(delt_vartype(delT_new), lb->delTAfterConstitutiveModelLabel);
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
@@ -510,7 +509,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(delT_new),lb->delTAfterConstitutiveModelLabel);
+  new_dw->put(delt_vartype(delT_new),lb->delTLabel);
   new_dw->put(pstress, lb->pStressAfterStrainRateLabel);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
 
@@ -607,6 +606,13 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.19  2001/01/05 23:04:16  guilkey
+// Using the code that Wayne just commited which allows the delT variable to
+// be "computed" multiple times per timestep, I removed the multiple derivatives
+// of delT (delTAfterFracture, delTAfterConstitutiveModel, etc.).  This also
+// now allows MPM and ICE to run together with a common timestep.  The
+// dream of the sharedState is realized!
+//
 // Revision 1.18  2000/12/02 21:19:16  bard
 // Fixed indexing errors in material constants
 //
