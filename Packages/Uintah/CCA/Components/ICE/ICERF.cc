@@ -314,13 +314,8 @@ template<class T> void ICE::vel_PressDiff_FC
     double pDiff_L   = matl_press_CC[L] - press_CC[L];
     double stressBar = rho_brack * 
                      (sp_vol_CC[L]*pDiff_L + sp_vol_CC[R]*pDiff_R); 
-/*`==========TESTING==========*/
-//    double stressBar_R = stressBar/(vol_frac[R] + d_SMALL_NUM);
-//     double stressBar_L = stressBar/(vol_frac[L] + d_SMALL_NUM);
-
     double stressBar_R = stressBar/(vol_frac[R]);
     double stressBar_L = stressBar/(vol_frac[L]); 
-/*==========TESTING==========`*/
         
     term3 = dtdx * sp_vol_brack * 
             ( (stressBar_L - pDiff_L) + (pDiff_R - stressBar_R) );
@@ -403,13 +398,12 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
       
       new_dw->allocateAndPut(pressDiffX_FC,lb->press_diffX_FCLabel,indx,patch);  
       new_dw->allocateAndPut(pressDiffY_FC,lb->press_diffY_FCLabel,indx,patch);  
-      new_dw->allocateAndPut(pressDiffZ_FC,lb->press_diffZ_FCLabel,indx,patch);  
-      
-      IntVector lowIndex(patch->getSFCXLowIndex());
-      uvel_FC.initialize(0.0, lowIndex,patch->getSFCXHighIndex());     
-      vvel_FC.initialize(0.0, lowIndex,patch->getSFCYHighIndex());     
-      wvel_FC.initialize(0.0, lowIndex,patch->getSFCZHighIndex());     
+      new_dw->allocateAndPut(pressDiffZ_FC,lb->press_diffZ_FCLabel,indx,patch);     
 
+      uvel_FC.initialize(0.0);     
+      vvel_FC.initialize(0.0);     
+      wvel_FC.initialize(0.0); 
+      
       pressDiffX_FC.initialize(0.0);
       pressDiffY_FC.initialize(0.0);
       pressDiffZ_FC.initialize(0.0);
@@ -448,7 +442,7 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
       //__________________________________
       // (*)vel_FC BC are updated in 
       // ICE::addExchangeContributionToFCVel()
-
+      
       //---- P R I N T   D A T A ------
       if (switchDebug_vel_FC ) {
         ostringstream desc;
