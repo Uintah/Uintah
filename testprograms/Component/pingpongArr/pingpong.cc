@@ -41,7 +41,7 @@
 #include <testprograms/Component/pingpongArr/PingPong_impl.h>
 #include <testprograms/Component/pingpongArr/PingPong_sidl.h>
 #include <Core/Thread/Time.h>
-#include <signal.h>
+#include <assert.h>
 
 using namespace std;
 using namespace SCIRun;
@@ -120,8 +120,8 @@ int main(int argc, char* argv[])
 	  PingPong_impl* pp=new PingPong_impl;
 
           //Set up server's requirement of the distribution array 
-	  Index** dr = new Index* [1]; 
-	  dr[0] = new Index(myrank,99,mysize);
+	  Index* dr[1];  
+	  dr[0] = CYCLIC(myrank,mysize,100);
 	  MxNArrayRep* arrr = new MxNArrayRep(1,dr);
 	  pp->setCalleeDistribution("D",arrr);
           std::cerr << "setCalleeDistribution completed\n";
@@ -161,8 +161,10 @@ int main(int argc, char* argv[])
 
 	  //Inform everyone else of my distribution
           //(this sends a message to all the callee objects)
-          Index** dr = new Index* [1];
-          dr[0] = new Index(sta,fin,1);
+          Index* dr[1];
+          dr[0] = BLOCK(myrank,mysize,100);
+	  cout << "sta=" << sta << ", dr[0]->myfirst)=" << dr[0]->myfirst << "\n";
+	  cout << "fin=" << fin << ", dr[0]->myfirst)=" << dr[0]->mylast << "\n";
           MxNArrayRep* arrr = new MxNArrayRep(1,dr);
 	  pp->setCallerDistribution("D",arrr); 
 	  std::cerr << "setCallerDistribution completed\n";
