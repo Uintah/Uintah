@@ -39,6 +39,7 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/Mesh.cc		    	\
 	$(SRCDIR)/PointCloudMesh.cc         	\
 	$(SRCDIR)/PropertyManager.cc	    	\
+	$(SRCDIR)/PrismVolMesh.cc	    	\
 	$(SRCDIR)/QuadSurfMesh.cc               \
 	$(SRCDIR)/QuadraticTetVolMesh.cc        \
 	$(SRCDIR)/QuadraticLatVolMesh.cc        \
