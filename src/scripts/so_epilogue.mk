@@ -92,7 +92,7 @@ $(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)%,$(CORE_PSELIBS)) $(patsubst %
 CLEANLIBS := $(CLEANLIBS) $(LIBNAME)
 CLEANOBJS := $(CLEANOBJS) $(OBJS)
 ifneq ($(REPOSITORY_FLAGS),)
-  ALL_LIB_ASSOCIATIONS := $(ALL_LIB_ASSOCIATIONS) $(patsubst %,$(SRCDIR)/ptrepository:%,$(OBJS))
+  ALL_LIB_ASSOCIATIONS := $(ALL_LIB_ASSOCIATIONS) $(patsubst %,$(SRCDIR)/ptrepository:%,$(patsubst ./%,%,$(OBJS)))
 endif
 
 # Try to prevent user error
