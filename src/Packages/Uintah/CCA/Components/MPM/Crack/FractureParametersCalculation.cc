@@ -232,7 +232,6 @@ void Crack::CrackFrontSegSubset(const ProcessorGroup*,
                       DataWarehouse* /*old_dw*/,
                       DataWarehouse* /*new_dw*/)
 { 
-  // Create cfsset -- store crack-front seg numbers
   for(int p=0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
 
@@ -787,14 +786,14 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
 // Output fracture parameters and crack-front position
 void Crack::OutputCrackFrontResults(const int& m)
 {
-  //static double timeforoutputcrack=0.0;
+  static double timeforoutputcrack=0.0;
 
   double time=d_sharedState->getElapsedTime();
   ofstream outCrkFrt("CrackFrontResults.dat", ios::app);
 
-//  if(time>=timeforoutputcrack) {
+  if(time>=timeforoutputcrack) {
     for(int i=0;i<(int)cfSegNodes[m].size();i++) {
-      int    node=cfSegNodes[m][i];
+      int node=cfSegNodes[m][i];
       int segs[2];
       FindSegsFromNode(m,node,segs);
       Point  cp=cx[m][node];
@@ -818,7 +817,7 @@ void Crack::OutputCrackFrontResults(const int& m)
         outCrkFrt << endl;
       }
     }
-//    timeforoutputcrack+=d_outputInterval;
-//  }
+    timeforoutputcrack+=d_outputCFInterval;
+  }
 }
 
