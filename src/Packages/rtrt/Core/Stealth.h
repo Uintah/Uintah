@@ -3,6 +3,8 @@
 #ifndef STEALTH_H
 #define STEALTH_H 1
 
+#include <Packages/rtrt/Core/Camera.h>
+
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
@@ -81,43 +83,6 @@ public:
   void pitchUp();
   void pitchDown();
 
-  void updateRotateSensitivity( double scalar );
-  void updateTranslateSensitivity( double scalar );
-
-  // Display the Stealth's speeds, etc.
-  void print();
-
-  // Returns next location in the path and the new view vector.
-  void getNextLocation( Point & point, Point & look_at );
-
-  // Moves the stealth to the next Marker in the path, point/lookat
-  // are set to the correct locations.  Index of that pnt is returned.
-  // Returns -1 if no route!
-
-  //void using_catmull_rom(vector<Point> &points, vector<Point> &f_points);
-  Point using_catmull_rom(vector<Point> &points, int i, float t);
-
-  int  getNextMarker( Point & point, Point & look_at );
-  int  getPrevMarker( Point & point, Point & look_at );
-  int  goToBeginning( Point & point, Point & look_at );
-  void getRouteStatus( int & pos, int & numPts );
-
-  // Clear out path stealth is to follow.
-  void clearPath();
-  // Adds point to the end of the route
-  void addToPath( const Point & eye, const Point & look_at );
-  // Adds point in front of the current marker.
-  void addToMiddleOfPath( const Point & eye, const Point & look_at );
-  void deleteCurrentMarker();
-
-  // Returns the name of the route (for GUI to display)
-  string loadPath( const string & filename );
-  void   newPath(  const string & routeName );
-  void   savePath( const string & filename );
-
-  // Choose the current path to follow.
-  void   selectPath( int index );
-
   // If gravity is on, the stealth/camera will "fall" towards the ground.
   void toggleGravity();
 
@@ -128,6 +93,48 @@ public:
   double getGravityForce() { return gravity_force_; }
 
   bool   moving(); // Returns true if moving in any direction
+
+  void updateRotateSensitivity( double scalar );
+  void updateTranslateSensitivity( double scalar );
+
+  // Display the Stealth's speeds, etc.
+  void print();
+
+  // Returns next location in the path and the new view vector.
+  void getNextLocation( Camera* new_camera );
+
+  // Moves the stealth to the next Marker in the path, point/lookat
+  // are set to the correct locations.  Index of that pnt is returned.
+  // Returns -1 if no route!
+
+  //void using_catmull_rom(vector<Point> &points, vector<Point> &f_points);
+  Camera using_catmull_rom(vector<Camera> &cameras, int i, float t);
+  Point using_catmull_rom(vector<Point> &points, int i, float t);
+
+  int  getNextMarker( Camera* new_camera);
+  int  getPrevMarker( Camera* new_camera);
+  int  goToBeginning( Camera* new_camera);
+  void getRouteStatus( int & pos, int & numPts );
+
+  // Clear out path stealth is to follow.
+  void clearPath();
+  // Adds point to the end of the route
+  void addToPath( const Camera* new_camera);
+  // Adds point in front of the current marker.
+  void addToMiddleOfPath( const Camera* new_camera);
+  void deleteCurrentMarker();
+
+  // Returns the name of the route (for GUI to display)
+  string loadPath( const string & filename );
+  void   newPath(  const string & routeName );
+  void   savePath( const string & filename );
+
+  int    loadOldPath( const string & filename );
+  void   saveOldPath( const string & filename );
+
+  
+  // Choose the current path to follow.
+  void   selectPath( int index );
 
 private:
 
@@ -162,17 +169,15 @@ private:
   int pitch_accel_cnt_;      // + up, - down
   int rotate_accel_cnt_;     // + right, - left
 
-  // Path information  (rough draft)
+  // Path information (second draft that uses actuall Cameras instead
+  // of just eye and lookat points)
 
-  vector< vector<Point> >   paths_;    // Array of routes.
-  vector< vector<Point> >   lookAts_;
+  vector< vector<Camera> >  paths_;
   vector< string >          routeNames_;
 
-  vector<Point>    * currentPath_;
+  vector<Camera>    * currentPath_;
+  string            * currentRouteName_;
 
-  vector<Point>    * currentLookAts_;
-
-  string           * currentRouteName_;
   double        segment_percentage_;
 
   bool          gravity_on_;
