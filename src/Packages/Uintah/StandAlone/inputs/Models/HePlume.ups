@@ -214,7 +214,6 @@
      <dbg_EndIndex>        [47,0,2]    </dbg_EndIndex>
      <dbg_Matls>           [0,1]       </dbg_Matls>
      <dbg_SigFigs>         10          </dbg_SigFigs>
-     <debug label = "switchDebugConvergence"/>
      <!--<debug label = "switchTestConservation"/>
          <debug label = "switchDebug_EQ_RF_press"/>-->
    </Debug>
