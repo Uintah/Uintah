@@ -6,6 +6,7 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/PerPatch.h>
+#include <Uintah/Grid/GeometryPiece.h>
 #include <vector>
 #include <Uintah/Components/MPM/MPMLabel.h>
 
@@ -21,7 +22,6 @@ namespace Uintah {
    class VarLabel;
    namespace MPM {
       class GeometryObject;
-      class GeometryPiece;
       class ConstitutiveModel;
       class HEBurn;
       class Fracture;
@@ -140,6 +140,9 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.31  2000/11/22 01:40:59  guilkey
+// Moved forward declaration of GeometryPiece
+//
 // Revision 1.30  2000/09/22 07:10:57  tan
 // MPM code works with fracture in three point bending.
 //
