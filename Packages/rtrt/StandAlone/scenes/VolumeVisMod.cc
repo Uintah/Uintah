@@ -174,7 +174,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Array1<Material*> matls;
   Array1<float> alphas;
   get_material(matls,alphas,do_phong);
-  BrickArray3<Voxel> data;
+  BrickArray3<float> data;
   float data_min, data_max;
   Point minP, maxP;
   if (scene_type == 5) {
@@ -237,7 +237,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     for (int z = 0; z < nz; z++)
       for (int y = 0; y < ny; y++)
 	for (int x = 0; x < nx; x++)
-	  data(x,y,z).val = *p++;
+	  data(x,y,z) = *p++;
     // compute the min and max of the data
     double dmin,dmax;
     nrrdMinMaxFind(&dmin,&dmax,n);
@@ -258,19 +258,19 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	for (int z = 0; z < nz; z++) {
 	  switch (scene_type) {
 	  case 0:
-	    data(x,y,z).val = z;
+	    data(x,y,z) = z;
 	    break;
 	  case 1:
-	    data(x,y,z).val = y*z;
+	    data(x,y,z) = y*z;
 	    break;
 	  case 2:
-	    data(x,y,z).val = x*y*z;
+	    data(x,y,z) = x*y*z;
 	    break;
 	  case 3:
-	    data(x,y,z).val = y+z;
+	    data(x,y,z) = y+z;
 	    break;
 	  case 4:
-	    data(x,y,z).val = x+y+z;
+	    data(x,y,z) = x+y+z;
 	    break;
 	  }
 	}
@@ -302,21 +302,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     cout << "total = " << nz * ny * nz << endl;
   }
   
-#if 0
-  float data[2][3][4] = { { {0,1,2,3}, {0,1,2,3}, {0,1,2,3} },
-			  { {0,1,2,3}, {0,1,2,3}, {0,1,2,3} } };
-
-  //    { { 0, 1}, {0, 1}, {0, 1} },
-  //			  { { 0, 1}, {0, 1}, {0, 1} },
-  //			  { { 0, 1}, {0, 1}, {0, 1} },
-  //			  { { 0, 1}, {0, 1}, {0, 1} } };
-#endif
-#if 0
-  float data[24] = { 0,1, 0,1, 0,1,
-		     0,1, 0,1, 0,1,
-		     0,1, 0,1, 0,1,
-		     0,1, 0,1, 0,1 };
-#endif
   Object* obj = (Object*) new VolumeVis(data, data_min, data_max,
 					nx, ny, nz,
 					minP, maxP,
