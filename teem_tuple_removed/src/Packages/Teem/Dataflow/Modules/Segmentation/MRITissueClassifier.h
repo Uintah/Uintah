@@ -133,49 +133,49 @@ protected:
   inline int get_nrrd_int(const NrrdDataHandle &data, int x, int y, int z) {
     Nrrd &nrrd = *data.get_rep()->nrrd;
     int *idata = (int*)nrrd.data;
-    return idata[x + nrrd.axis[1].size*(y + nrrd.axis[2].size*z)];
+    return idata[x + nrrd.axis[0].size*(y + nrrd.axis[1].size*z)];
   }
 
   inline float get_nrrd_float(const NrrdDataHandle &data, int x, int y, int z) {
     Nrrd &nrrd = *data.get_rep()->nrrd;
     float *idata = (float*)nrrd.data;
-    return idata[x + nrrd.axis[1].size*(y + nrrd.axis[2].size*z)];
+    return idata[x + nrrd.axis[0].size*(y + nrrd.axis[1].size*z)];
   }
 
   inline void set_nrrd_int(const NrrdDataHandle &data, int val, int x, int y, int z) {
     Nrrd &nrrd = *data.get_rep()->nrrd;
     int *idata = (int*)nrrd.data;
-    idata[x + nrrd.axis[1].size*(y + nrrd.axis[2].size*z)] = val;
+    idata[x + nrrd.axis[0].size*(y + nrrd.axis[1].size*z)] = val;
   }
 
   inline void set_nrrd_float(const NrrdDataHandle &data, float val, int x, int y, int z){
     Nrrd &nrrd = *data.get_rep()->nrrd;
     float *idata = (float*)nrrd.data;
-    idata[x + nrrd.axis[1].size*(y + nrrd.axis[2].size*z)] = val;
+    idata[x + nrrd.axis[0].size*(y + nrrd.axis[1].size*z)] = val;
   }
 
   inline int get_nrrd_int2(const NrrdDataHandle &data, int x, int y) {
     Nrrd &nrrd = *data.get_rep()->nrrd;
     int *idata = (int*)nrrd.data;
-    return idata[x + nrrd.axis[1].size*y];
+    return idata[x + nrrd.axis[0].size*y];
   }
 
   inline float get_nrrd_float2(const NrrdDataHandle &data, int x, int y) {
     Nrrd &nrrd = *data.get_rep()->nrrd;
     float *idata = (float*)nrrd.data;
-    return idata[x + nrrd.axis[1].size*y];
+    return idata[x + nrrd.axis[0].size*y];
   }
 
   inline void set_nrrd_int2(const NrrdDataHandle &data, int val, int x, int y) {
     Nrrd &nrrd = *data.get_rep()->nrrd;
     int *idata = (int*)nrrd.data;
-    idata[x + nrrd.axis[1].size*y] = val;
+    idata[x + nrrd.axis[0].size*y] = val;
   }
 
   inline void set_nrrd_float2(const NrrdDataHandle &data, float val, int x, int y){
     Nrrd &nrrd = *data.get_rep()->nrrd;
     float *idata = (float*)nrrd.data;
-    idata[x + nrrd.axis[1].size*y] = val;
+    idata[x + nrrd.axis[0].size*y] = val;
   }
 
   
