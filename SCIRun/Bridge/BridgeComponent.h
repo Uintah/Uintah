@@ -35,11 +35,13 @@ namespace SCIRun {
   
   class BridgeComponent {
   public:
-    BridgeComponent::BridgeComponent() { }
+    BridgeComponent::BridgeComponent() { bridgeID++;}
     virtual BridgeComponent::~BridgeComponent() { }
     virtual void setServices(const BridgeServices* svc) { }
+    //A dummy method for dataflow bridges
+    virtual void execute() {} 
+    static int bridgeID;
   };    
-
 }
 
 #endif

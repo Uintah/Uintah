@@ -225,7 +225,8 @@ public:
   //Used by Bridge stuff for SR2
   int addIPortByName(std::string name, std::string d_type);
   int addOPortByName(std::string name, std::string d_type);
- 
+  void want_to_execute();
+
 protected:
 
   virtual void tcl_command(GuiArgs&, void*);
@@ -251,7 +252,6 @@ protected:
   friend class IPort;
   string id;
   bool abort_flag;
-  void want_to_execute();
   virtual void update_progress(double);
   virtual void update_progress(double, Timer &);
   virtual void update_progress(int, int);

@@ -59,11 +59,12 @@
 using namespace std;
 using namespace SCIRun;
 
+int BridgeComponent::bridgeID(0);
+
 BridgeComponentModel::BridgeComponentModel(SCIRunFramework* framework)
   : ComponentModel("cca"), framework(framework)
 {
   if(!SCIRunComponentModel::gui) SCIRunComponentModel::initGuiInterface();
-  //SCIRunComponentModel::net->add_module2("Bridge", "", "BridgeModule"); 
   buildComponentList();
 }
 

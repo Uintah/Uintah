@@ -50,6 +50,13 @@ Scheduler::~Scheduler()
 {
 }
 
+bool
+Scheduler::toggleOnOffScheduling()
+{
+  schedule = !schedule;
+  return schedule;  
+}
+
 void
 Scheduler::run()
 {
