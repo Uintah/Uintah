@@ -41,35 +41,6 @@ Salmon::Salmon()
     // Create the input port
     iports.add(new GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
     add_iport(iports[0]);
-
-    // Create the User Interface...
-    dialog=new DialogShellC;
-    dialog->Create("sci", "sci", evl->get_display());
-
-#if 0
-    form=new FormC;
-    form->Create(*dialog, "viewer_form");
-#endif
-
-    gr_frame=new FrameC;
-    gr_frame->SetShadowType(XmSHADOW_IN);
-#if 0
-    gr_frame->SetLeftAttachment(XmATTACH_FORM);
-    gr_frame->SetRightAttachment(XmATTACH_POSITION);
-    gr_frame->SetRightPosition(100);
-    gr_frame->SetTopAttachment(XmATTACH_FORM);
-#endif
-    gr_frame->Create(*dialog, "frame");
-
-    graphics=new GLwMDrawC;
-    graphics->SetWidth(600);
-    graphics->SetHeight(500);
-#if 0
-    graphics->SetNavigationType(XmSTICKY_TAB_GROUP);
-    graphics->SetTraversalOn(True);
-#endif
-    graphics->Create(*gr_frame, "opengl_viewer");
-
 }
 
 Salmon::Salmon(const Salmon& copy, int deep)
@@ -97,8 +68,10 @@ void Salmon::do_execute()
     NOT_FINISHED("Salmon::do_execute");
 }
 
-void Salmon::create_widget()
+void Salmon::create_interface()
 {
+    // Create the module icon
+    evl->lock(); // Lock just once - for efficiency
     bgcolor=new XQColor(netedit->color_manager, "salmon");
     drawing_a=new DrawingAreaC;
     drawing_a->SetUnitType(XmPIXELS);
@@ -117,6 +90,36 @@ void Salmon::create_widget()
 				   &Salmon::redraw_widget, 0, 0);
 
     drawing_a->Create(*netedit->drawing_a, "usermodule");
+
+
+    // Create the viewer window...
+    dialog=new DialogShellC;
+    dialog->Create("sci", "sci", evl->get_display());
+
+#if 0
+    form=new FormC;
+    form->Create(*dialog, "viewer_form");
+#endif
+
+    gr_frame=new FrameC;
+    gr_frame->SetShadowType(XmSHADOW_IN);
+#if 0
+    gr_frame->SetLeftAttachment(XmATTACH_FORM);
+    gr_frame->SetRightAttachment(XmATTACH_POSITION);
+    gr_frame->SetRightPosition(100);
+    gr_frame->SetTopAttachment(XmATTACH_FORM);
+#endif
+    gr_frame->Create(*dialog, "frame");
+
+    graphics=new GLwMDrawC;
+    graphics->SetWidth(600);
+    graphics->SetHeight(500);
+#if 0
+    graphics->SetNavigationType(XmSTICKY_TAB_GROUP);
+    graphics->SetTraversalOn(True);
+#endif
+    graphics->Create(*gr_frame, "opengl_viewer");
+    evl->unlock();
 }
 
 void Salmon::redraw_widget(CallbackData*, void*)

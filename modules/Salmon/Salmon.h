@@ -29,7 +29,7 @@ class XQColor;
 class Salmon : public Module {
     Array1<GeometryIPort*> iports;
     virtual void do_execute();
-    virtual void create_widget();
+    virtual void create_interface();
     virtual int should_execute();
     DrawingAreaC* drawing_a;
     void redraw_widget(CallbackData*, void*);
