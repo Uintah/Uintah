@@ -67,29 +67,9 @@ itcl_class Uintah_Readers_ArchiveReader {
 		set $this-filebase $env(PWD)
  	    }
 	    $this makeFilebox $w.f1
-# 	    iwidgets::fileselectionbox $w.f1.fb \
-# 		-directory $dir
-# 	    #-dblfilescommand  "$this selectfile"
-# 	    $w.f1.fb.filter delete 0 end
-# 	    $w.f1.fb.filter insert 0 "$dir\/*"
-# 	    $w.f1.fb filter
-#	    pack $w.f1.fb -padx 2 -pady 2 -side top
 	} else {
-# 	    iwidgets::fileselectionbox $w.f1.fb \
-# 	    -directory [filedir [set $this-filebase ] ] 
-# 	    #-dblfilescommand  "$this selectfile"
-
 	    $this makeFilebox $w.f1
-# 	    $w.f1.fb.filter delete 0 end
-# 	    $w.f1.fb.filter insert 0 [filedir [set $this-filebase]]/*
-# 	    $w.f1.fb filter
-# 	    $w.f1.fb.selection delete 0 end
-# 	    $w.f1.fb.selection insert 0 [set $this-filebase]
-#	    pack $w.f1.fb -padx 2 -pady 2 -side top
 	}
-	
-#	frame $w.f1.f -relief flat
-#	pack $w.f1.f -side top -padx 2 -pady 2 -expand yes -fill x
 	
 	button $w.f1.select -text Select -command "$this selectfile"
 	pack $w.f1.select -side left -padx 2 -pady 2
@@ -100,7 +80,6 @@ itcl_class Uintah_Readers_ArchiveReader {
 
     method selectfile {} {
 	set w .ui[modname]
-#	set $this-filebase [$w.f1.f.sel get]
 	$this-c needexecute
     }
 
@@ -117,7 +96,7 @@ itcl_class Uintah_Readers_ArchiveReader {
 	    -yscrollcommand "$w.f.bro.dir.dirss1 set" \
 	    -xscrollcommand "$w.f.bro.dir.dirss2 set"
 	set dirs $w.f.bro.dir.dirs
-	#    tk_listboxSingleSelect $dirs
+
 	bind $w.f.bro.dir.dirs <Double-Button-1> "$this fbdirs %y $w $dirs"
 	scrollbar $w.f.bro.dir.dirss1 -relief sunken \
 	    -command "$w.f.bro.dir.dirs yview"
@@ -152,6 +131,7 @@ itcl_class Uintah_Readers_ArchiveReader {
 	$this fbupdate $w $dirs	
 	
     }
+
     method fbsel {w dirs } {
     if [file isdirectory [set $this-filebase]] {
 	fbcd $w [set $this-filebase] $dirs 
