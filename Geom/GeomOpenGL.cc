@@ -13,6 +13,7 @@
 
 #include <Geom/GeomOpenGL.h>
 #include <Classlib/NotFinished.h>
+#include <Geom/Arrows.h>
 #include <Geom/Cone.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Disc.h>
@@ -57,10 +58,16 @@ void GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
     di->set_matl(matl);
 }
 
+static void quad_error(GLenum code)
+{
+    cerr << "WARNING: Quadric Error (" << (char*)gluErrorString(code) << ")" << endl;
+}
+
 DrawInfoOpenGL::DrawInfoOpenGL()
 : current_matl(0)
 {
     qobj=gluNewQuadric();
+    gluQuadricCallback(qobj, GLU_ERROR, (void (*)())quad_error);
 }
 
 void DrawInfoOpenGL::reset()
@@ -117,9 +124,240 @@ void DrawInfoOpenGL::set_matl(Material* matl)
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
 }
 
+void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+    int n=positions.size();
+    di->polycount+=6*n;
+    // Draw shafts - they are the same for all draw types....
+    double shaft_scale=headlength;
+    if(di->get_drawtype() == DrawInfoOpenGL::WireFrame)
+	shaft_scale=1.0;
+    if(shaft_matls.size() == 1){
+	pre_draw(di, shaft_matls[0].get_rep(), 0);
+	glBegin(GL_LINES);
+	for(int i=0;i<n;i++){
+	    Point from(positions[i]);
+	    Point to(from+directions[i]*shaft_scale);
+	    glVertex3d(from.x(), from.y(), from.z());
+	    glVertex3d(to.x(), to.y(), to.z());
+	}
+	glEnd();
+    } else {
+	pre_draw(di, matl, 0);
+	glBegin(GL_LINES);
+	for(int i=0;i<n;i++){
+	    di->set_matl(shaft_matls[i].get_rep());
+	    Point from(positions[i]);
+	    Point to(from+directions[i]*shaft_scale);
+	    glVertex3d(from.x(), from.y(), from.z());
+	    glVertex3d(to.x(), to.y(), to.z());
+	}
+	glEnd();
+    }
+
+    // Draw back and head
+    switch(di->get_drawtype()){
+    case DrawInfoOpenGL::WireFrame:
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	break;
+    case DrawInfoOpenGL::Flat:
+    case DrawInfoOpenGL::Gouraud:
+    case DrawInfoOpenGL::Phong:
+	break;
+    }
+
+    int do_normals=1;
+    if(di->get_drawtype() == DrawInfoOpenGL::Flat ||
+       di->get_drawtype() == DrawInfoOpenGL::WireFrame)
+	do_normals=0;
+    if(back_matls.size() == 1){
+	pre_draw(di, back_matls[0].get_rep(), 1);
+	glBegin(GL_QUADS);
+	if(do_normals){
+	    for(int i=0;i<n;i++){
+		Point from(positions[i]+directions[i]*headlength);
+		glNormal3d(directions[i].x(), directions[i].y(), directions[i].z());
+		Point to(from+directions[i]);
+		Point p1(from+v1[i]);
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		Point p2(from+v2[i]);
+		glVertex3d(p2.x(), p2.y(), p2.z());
+		Point p3(from-v1[i]);
+		glVertex3d(p3.x(), p3.y(), p3.z());
+		Point p4(from-v2[i]);
+		glVertex3d(p4.x(), p4.y(), p4.z());
+	    }
+	} else {
+	    for(int i=0;i<n;i++){
+		Point from(positions[i]+directions[i]*headlength);
+		Point to(from+directions[i]);
+		Vector n1(v1[i]+v2[i]);
+		Point p1(from+v1[i]);
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		Point p2(from+v2[i]);
+		glVertex3d(p2.x(), p2.y(), p2.z());
+		Point p3(from-v1[i]);
+		glVertex3d(p3.x(), p3.y(), p3.z());
+		Point p4(from-v2[i]);
+		glVertex3d(p4.x(), p4.y(), p4.z());
+	    }
+	}
+	glEnd();
+    } else {
+	pre_draw(di, matl, 1);
+	glBegin(GL_QUADS);
+	if(do_normals){
+	    for(int i=0;i<n;i++){
+		di->set_matl(back_matls[i].get_rep());
+		glNormal3d(directions[i].x(), directions[i].y(), directions[i].z());
+		Point from(positions[i]+directions[i]*headlength);
+		Point to(from+directions[i]);
+		Point p1(from+v1[i]);
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		Point p2(from+v2[i]);
+		glVertex3d(p2.x(), p2.y(), p2.z());
+		Point p3(from-v1[i]);
+		glVertex3d(p3.x(), p3.y(), p3.z());
+		Point p4(from-v2[i]);
+		glVertex3d(p4.x(), p4.y(), p4.z());
+	    }
+	} else {
+	    for(int i=0;i<n;i++){
+		di->set_matl(back_matls[i].get_rep());
+		Point from(positions[i]+directions[i]*headlength);
+		Point to(from+directions[i]);
+		Point p1(from+v1[i]);
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		Point p2(from+v2[i]);
+		glVertex3d(p2.x(), p2.y(), p2.z());
+		Point p3(from-v1[i]);
+		glVertex3d(p3.x(), p3.y(), p3.z());
+		Point p4(from-v2[i]);
+		glVertex3d(p4.x(), p4.y(), p4.z());
+	    }
+	}
+	glEnd();
+    }
+    if(head_matls.size() == 1){
+	pre_draw(di, head_matls[0].get_rep(), 1);
+	if(do_normals){
+	    double w=headwidth;
+	    double h=1.0-headlength;
+	    double w2h2=w*w/h;
+	    for(int i=0;i<n;i++){
+		glBegin(GL_TRIANGLES);
+		Vector dn(directions[i]*w2h2);
+		Vector n(dn+v1[i]+v2[i]);
+		glNormal3d(n.x(), n.y(), n.z());
+
+		Point top(positions[i]+directions[i]);
+		Point from=top-directions[i]*h;
+		Point to(from+directions[i]);
+		Point p1(from+v1[i]);
+		Point p2(from+v2[i]);
+		glVertex3d(top.x(), top.y(), top.z());
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		glVertex3d(p2.x(), p2.y(), p2.z()); // 1st tri
+		n=dn-v1[i]+v2[i];
+		glNormal3d(n.x(), n.y(), n.z());
+		Point p3(from-v1[i]);
+		glVertex3d(top.x(), top.y(), top.z());
+		glVertex3d(p2.x(), p2.y(), p2.z());
+		glVertex3d(p3.x(), p3.y(), p3.z()); // 2nd tri
+		n=dn-v1[i]-v2[i];
+		glNormal3d(n.x(), n.y(), n.z());
+		Point p4(from-v2[i]);
+		glVertex3d(top.x(), top.y(), top.z());
+		glVertex3d(p3.x(), p3.y(), p3.z());
+		glVertex3d(p4.x(), p4.y(), p4.z()); // 3rd tri
+		n=dn+v1[i]-v2[i];
+		glNormal3d(n.x(), n.y(), n.z());
+		glVertex3d(top.x(), top.y(), top.z());
+		glVertex3d(p4.x(), p4.y(), p4.z());
+		glVertex3d(p1.x(), p1.y(), p1.z()); // 4th tri
+		glEnd();
+	    }
+	} else {
+	    for(int i=0;i<n;i++){
+		glBegin(GL_TRIANGLE_FAN);
+		Point from(positions[i]+directions[i]);
+		glVertex3d(from.x(), from.y(), from.z());
+		from-=directions[i]*(1.0-headlength);
+		Point to(from+directions[i]);
+		Point p1(from+v1[i]);
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		Point p2(from+v2[i]);
+		glVertex3d(p2.x(), p2.y(), p2.z());
+		Point p3(from-v1[i]);
+		glVertex3d(p3.x(), p3.y(), p3.z());
+		Point p4(from-v2[i]);
+		glVertex3d(p4.x(), p4.y(), p4.z());
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		glEnd();
+	    }
+	}
+    } else {
+	pre_draw(di, matl, 1);
+	if(do_normals){
+	    double w=headwidth;
+	    double h=1.0-headlength;
+	    double w2h2=w*w+h*h;
+	    for(int i=0;i<n;i++){
+		glBegin(GL_TRIANGLE_FAN);
+		Vector n(directions[i]*w2h2+v1[i]+v2[i]);
+		glNormal3d(n.x(), n.y(), n.z());
+		di->set_matl(back_matls[i].get_rep());
+		Point from(positions[i]+directions[i]);
+		glVertex3d(from.x(), from.y(), from.z());
+		from-=directions[i]*h;
+		Point to(from+directions[i]);
+		Point p1(from+v1[i]);
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		Point p2(from+v2[i]);
+		glVertex3d(p2.x(), p2.y(), p2.z());
+		Point p3(from-v1[i]);
+		glVertex3d(p3.x(), p3.y(), p3.z());
+		Point p4(from-v2[i]);
+		glVertex3d(p4.x(), p4.y(), p4.z());
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		glEnd();
+	    }
+	} else {
+	    for(int i=0;i<n;i++){
+		glBegin(GL_TRIANGLE_FAN);
+		di->set_matl(back_matls[i].get_rep());
+		Point from(positions[i]+directions[i]);
+		glVertex3d(from.x(), from.y(), from.z());
+		from-=directions[i]*(1.0-headlength);
+		Point to(from+directions[i]);
+		Point p1(from+v1[i]);
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		Point p2(from+v2[i]);
+		glVertex3d(p2.x(), p2.y(), p2.z());
+		Point p3(from-v1[i]);
+		glVertex3d(p3.x(), p3.y(), p3.z());
+		Point p4(from-v2[i]);
+		glVertex3d(p4.x(), p4.y(), p4.z());
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		glEnd();
+	    }
+	}
+    }
+
+    switch(di->get_drawtype()){
+    case DrawInfoOpenGL::WireFrame:
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	break;
+    case DrawInfoOpenGL::Flat:
+    case DrawInfoOpenGL::Gouraud:
+    case DrawInfoOpenGL::Phong:
+	break;
+    }
+}
+
 void GeomCappedCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    if(height < 1.e-6)return;
+    if(height < 1.e-6 || rad < 1.e-6)return;
     pre_draw(di, matl, 1);
     glPushMatrix();
     glTranslated(bottom.x(), bottom.y(), bottom.z());
@@ -138,7 +376,7 @@ void GeomCappedCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void GeomCone::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    if(height < 1.e-6)return;
+    if(height < 1.e-6 || (bot_rad < 1.e-6 && top_rad < 1.e-6))return;
     pre_draw(di, matl, 1);
     glPushMatrix();
     glTranslated(bottom.x(), bottom.y(), bottom.z());
@@ -150,20 +388,24 @@ void GeomCone::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void GeomCappedCone::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    if(height < 1.e-6)return;
+    if(height < 1.e-6 || (bot_rad < 1.e-6 && top_rad < 1.e-6))return;
     pre_draw(di, matl, 1);
     glPushMatrix();
     glTranslated(bottom.x(), bottom.y(), bottom.z());
     glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
     di->polycount+=2*(nu-1)*(nv-1);
     gluCylinder(di->qobj, bot_rad, top_rad, height, nu, nv);
-    // Bottom endcap
-    di->polycount+=2*(nu-1)*(nvdisc1-1);
-    gluDisk(di->qobj, 0, bot_rad, nu, nvdisc1);
-    // Top endcap
-    glTranslated(0, 0, height);
-    di->polycount+=2*(nu-1)*(nvdisc2-1);
-    gluDisk(di->qobj, 0, top_rad, nu, nvdisc2);
+    if(bot_rad > 1.e-6){
+        // Bottom endcap
+        di->polycount+=2*(nu-1)*(nvdisc1-1);
+        gluDisk(di->qobj, 0, bot_rad, nu, nvdisc1);
+    }
+    if(top_rad > 1.e-6){
+        // Top endcap
+        glTranslated(0, 0, height);
+        di->polycount+=2*(nu-1)*(nvdisc2-1);
+        gluDisk(di->qobj, 0, top_rad, nu, nvdisc2);
+    }
     glPopMatrix();
 }
 
@@ -174,7 +416,7 @@ void GeomContainer::draw(DrawInfoOpenGL* di, Material* matl, double time)
 
 void GeomCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    if(height < 1.e-6)return;
+    if(height < 1.e-6 || rad < 1.e-6)return;
     pre_draw(di, matl, 1);
     glPushMatrix();
     glTranslated(bottom.x(), bottom.y(), bottom.z());
@@ -186,6 +428,7 @@ void GeomCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void GeomDisc::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
+    if(rad < 1.e-6)return;
     pre_draw(di, matl, 1);
     glPushMatrix();
     glTranslated(cen.x(), cen.y(), cen.z());
@@ -436,6 +679,7 @@ void GeomRenderMode::draw(DrawInfoOpenGL* di, Material* matl, double time)
 
 void GeomSphere::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
+    if(rad < 1.e-6)return;
     pre_draw(di, matl, 1);
     glPushMatrix();
     glTranslated(cen.x(), cen.y(), cen.z());

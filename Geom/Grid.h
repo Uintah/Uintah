@@ -14,7 +14,10 @@
 #ifndef SCI_Geom_Grid_h
 #define SCI_Geom_Grid_h 1
 
-#include <Geom/VertexPrim.h>
+#include <Geom/Geom.h>
+#include <Geom/Material.h>
+#include <Geometry/Point.h>
+#include <Geometry/Vector.h>
 #include <Classlib/Array2.h>
 
 class GeomGrid : public GeomObj {
