@@ -772,7 +772,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
   } // End of loop patches
 }
 
-void Crack::addComputesAndRequiresCrackAdjustInterpolated(Task* t,
+void Crack::addComputesAndRequiresAdjustCrackContactInterpolated(Task* t,
                                 const PatchSet* /*patches*/,
                                 const MaterialSet* matls) const
 {
@@ -798,7 +798,7 @@ void Crack::addComputesAndRequiresCrackAdjustInterpolated(Task* t,
 
 }
 
-void Crack::CrackContactAdjustInterpolated(const ProcessorGroup*,
+void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
@@ -994,7 +994,7 @@ void Crack::CrackContactAdjustInterpolated(const ProcessorGroup*,
 
           else { // wrong contact type
             cout << "Unknown crack contact type in subroutine " 
-                 << "Crack::CrackContactAdjustInterpolated: " 
+                 << "Crack::AdjustCrackContactInterpolated: " 
                  << crackType[m] << endl;
             exit(1);
           }
@@ -1005,7 +1005,7 @@ void Crack::CrackContactAdjustInterpolated(const ProcessorGroup*,
   }  //End of loop over patches
 }
 
-void Crack::addComputesAndRequiresCrackAdjustIntegrated(Task* t,
+void Crack::addComputesAndRequiresAdjustCrackContactIntegrated(Task* t,
                                 const PatchSet* /*patches*/,
                                 const MaterialSet* matls) const
 {
@@ -1030,7 +1030,7 @@ void Crack::addComputesAndRequiresCrackAdjustIntegrated(Task* t,
 
 }
 
-void Crack::CrackContactAdjustIntegrated(const ProcessorGroup*,
+void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
@@ -1247,7 +1247,7 @@ void Crack::CrackContactAdjustIntegrated(const ProcessorGroup*,
 
           else {
             cout<< "Unknown crack contact type in "
-                << "Crack::CrackContactAdjustIntegrated: " 
+                << "Crack::AdjustCrackContactIntegrated: " 
                 << crackType[m] << endl;
             exit(1);
           }
@@ -1257,14 +1257,14 @@ void Crack::CrackContactAdjustIntegrated(const ProcessorGroup*,
   }  //End of loop over patches
 }
 
-void Crack::addComputesAndRequiresPrepareMovingCrack(Task* /*t*/,
+void Crack::addComputesAndRequiresInitializeMovingCracks(Task* /*t*/,
                                 const PatchSet* /*patches*/,
                                 const MaterialSet* /*matls*/) const
 {
 // currently do nothing 
 }
 
-void Crack::PrepareMovingCrack(const ProcessorGroup*,
+void Crack::InitializeMovingCracks(const ProcessorGroup*,
                       const PatchSubset* /*patches*/,
                       const MaterialSubset* /*matls*/,
                       DataWarehouse* /*old_dw*/,
@@ -1279,7 +1279,7 @@ void Crack::PrepareMovingCrack(const ProcessorGroup*,
   }
 }
 
-void Crack::addComputesAndRequiresMoveCrack(Task* t,
+void Crack::addComputesAndRequiresMoveCracks(Task* t,
                                 const PatchSet* /*patches*/,
                                 const MaterialSet* /*matls*/) const
 {
@@ -1297,7 +1297,7 @@ void Crack::addComputesAndRequiresMoveCrack(Task* t,
    t->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
 }
 
-void Crack::MoveCrack(const ProcessorGroup*,
+void Crack::MoveCracks(const ProcessorGroup*,
                       const PatchSubset* patches,
                       const MaterialSubset* /*matls*/,
                       DataWarehouse* old_dw,
