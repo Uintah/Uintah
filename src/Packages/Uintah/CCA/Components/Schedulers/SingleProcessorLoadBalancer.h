@@ -1,7 +1,7 @@
 #ifndef UINTAH_HOMEBREW_SingleProcessorLoadBalancer_H
 #define UINTAH_HOMEBREW_SingleProcessorLoadBalancer_H
 
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/LoadBalancerCommon.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 
 namespace Uintah {
@@ -34,23 +34,20 @@ namespace Uintah {
       
      ****************************************/
     
-   class SingleProcessorLoadBalancer : public LoadBalancer, public UintahParallelComponent {
-   public:
-     SingleProcessorLoadBalancer(const ProcessorGroup* myworld);
-     ~SingleProcessorLoadBalancer();
-     virtual void assignResources(DetailedTasks& tg, const ProcessorGroup*);
-     virtual int getPatchwiseProcessorAssignment(const Patch* patch,
-						  const ProcessorGroup* resources);
-     virtual void createNeighborhood(const GridP& grid, const ProcessorGroup*,
-				    const Scheduler*);
-     virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*);
-     virtual bool inNeighborhood(const Patch*);
-
-     virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level,
-							const ProcessorGroup* resources);
-   private:
-      SingleProcessorLoadBalancer(const SingleProcessorLoadBalancer&);
-      SingleProcessorLoadBalancer& operator=(const SingleProcessorLoadBalancer&);
+  class SingleProcessorLoadBalancer : public LoadBalancerCommon {
+  public:
+    SingleProcessorLoadBalancer(const ProcessorGroup* myworld);
+    ~SingleProcessorLoadBalancer();
+    virtual void assignResources(DetailedTasks& tg);
+    virtual int getPatchwiseProcessorAssignment(const Patch* patch);
+    virtual void createNeighborhood(const GridP& grid);
+    virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*);
+    virtual bool inNeighborhood(const Patch*);
+    
+    virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level);
+  private:
+    SingleProcessorLoadBalancer(const SingleProcessorLoadBalancer&);
+    SingleProcessorLoadBalancer& operator=(const SingleProcessorLoadBalancer&);
       
    };
 } // End namespace Uintah

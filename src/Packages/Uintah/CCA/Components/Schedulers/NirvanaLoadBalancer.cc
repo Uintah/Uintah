@@ -18,7 +18,7 @@ using namespace std;
 
 NirvanaLoadBalancer::NirvanaLoadBalancer(const ProcessorGroup* myworld,
 					 const IntVector& layout)
-   : UintahParallelComponent(myworld), layout(layout)
+   : LoadBalancerCommon(myworld), layout(layout)
 {
   npatches=0;
 }
@@ -40,8 +40,7 @@ static int getproc(const IntVector& l, const IntVector& d,
   return proc;
 }
 
-void NirvanaLoadBalancer::assignResources(DetailedTasks& graph,
-					  const ProcessorGroup* group)
+void NirvanaLoadBalancer::assignResources(DetailedTasks& graph)
 {
   int nTasks = graph.numTasks();
   const Level* level = 0;
@@ -57,7 +56,7 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks& graph,
   ASSERT(npatches != 0);
   ASSERT(level != 0);
   numhosts = layout.x()*layout.y()*layout.z();
-  numProcs = group->size();
+  numProcs = d_myworld->size();
   processors_per_host = numProcs/numhosts;
   if(processors_per_host * numhosts != numProcs)
     SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven numbers of processors per host"));
@@ -112,13 +111,12 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks& graph,
   }
 }
 
-int NirvanaLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
-							 const ProcessorGroup* group)
+int NirvanaLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch)
 {
   if(npatches == 0){
     npatches = patch->getLevel()->numPatches();
     numhosts = layout.x()*layout.y()*layout.z();
-    numProcs = group->size();
+    numProcs = d_myworld->size();
     processors_per_host = numProcs/numhosts;
     if(processors_per_host * numhosts != numProcs)
       SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven numbers of processors per host"));
@@ -143,76 +141,7 @@ int NirvanaLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
   if(!patch->getLayoutHint(l))
     SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints"));
   int pidx = getproc(l, d, layout, patches_per_processor, processors_per_host);
-  ASSERTRANGE(pidx, 0, group->size());
+  ASSERTRANGE(pidx, 0, d_myworld->size());
   return pidx;
 }
 
-const PatchSet*
-NirvanaLoadBalancer::createPerProcessorPatchSet(const LevelP& level,
-						const ProcessorGroup* world)
-{
-  PatchSet* patches = scinew PatchSet();
-  patches->createEmptySubsets(world->size());
-  for(Level::const_patchIterator iter = level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch = *iter;
-    int proc = getPatchwiseProcessorAssignment(patch, world);
-    ASSERTRANGE(proc, 0, world->size());
-    PatchSubset* subset = patches->getSubset(proc);
-    subset->add(patch);
-  }
-  patches->sortSubsets();  
-  return patches;
-}
-
-
-void
-NirvanaLoadBalancer::createNeighborhood(const GridP& grid,
-					const ProcessorGroup* group,
-					const Scheduler* /*sch*/)
-{
-  int me = group->myrank();
-  // WARNING - this should be determined from the taskgraph? - Steve
-  int maxGhost = 2;
-  d_neighbors.clear();
-  for(int l=0;l<grid->numLevels();l++){
-    const LevelP& level = grid->getLevel(l);
-    for(Level::const_patchIterator iter = level->patchesBegin();
-	iter != level->patchesEnd(); iter++){
-      const Patch* patch = *iter;
-      if(getPatchwiseProcessorAssignment(patch, group) == me){
-	Patch::selectType n;
-	IntVector lowIndex, highIndex;
-	patch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0),
-				      Ghost::AroundCells, maxGhost, n,
-				      lowIndex, highIndex);
-	for(int i=0;i<(int)n.size();i++){
-	  const Patch* neighbor = n[i];
-	  if(d_neighbors.find(neighbor) == d_neighbors.end())
-	    d_neighbors.insert(neighbor);
-	}
-      }
-    }
-  }
-}
-
-bool
-NirvanaLoadBalancer::inNeighborhood(const PatchSubset* ps,
-				    const MaterialSubset*)
-{
-  for(int i=0;i<ps->size();i++){
-    const Patch* patch = ps->get(i);
-    if(d_neighbors.find(patch) != d_neighbors.end())
-      return true;
-  }
-  return false;
-}
-
-bool
-NirvanaLoadBalancer::inNeighborhood(const Patch* patch)
-{
-  if(d_neighbors.find(patch) != d_neighbors.end())
-    return true;
-  else
-    return false;
-}

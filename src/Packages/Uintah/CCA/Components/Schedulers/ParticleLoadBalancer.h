@@ -1,10 +1,11 @@
 #ifndef UINTAH_HOMEBREW_ParticleLoadBalancer_H
 #define UINTAH_HOMEBREW_ParticleLoadBalancer_H
 
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/LoadBalancerCommon.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <set>
+#include <string>
 
 namespace Uintah {
    /**************************************
@@ -36,55 +37,54 @@ namespace Uintah {
       
      ****************************************/
     
-   class ParticleLoadBalancer : public LoadBalancer, public UintahParallelComponent {
-   public:
-     ParticleLoadBalancer(const ProcessorGroup* myworld);
-     ~ParticleLoadBalancer();
-     virtual void assignResources(DetailedTasks& tg, const ProcessorGroup*);
-     virtual int getPatchwiseProcessorAssignment(const Patch* patch,
-						  const ProcessorGroup* resources);
+  class ParticleLoadBalancer : public LoadBalancerCommon {
+  public:
+    ParticleLoadBalancer(const ProcessorGroup* myworld);
+    ~ParticleLoadBalancer();
+    virtual int getPatchwiseProcessorAssignment(const Patch* patch);
     virtual int getOldProcessorAssignment(const VarLabel* var,
-					  const Patch* patch, int matl, 
-					  const ProcessorGroup* pg); 
+					  const Patch* patch, const int matl);
     virtual bool needRecompile(double time, double delt, const GridP& grid); 
-    virtual void problemSetup(ProblemSpecP& pspec);
-     virtual void createNeighborhood(const GridP& grid, const ProcessorGroup*,
-				    const Scheduler*);
-     virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*);
-     virtual bool inNeighborhood(const Patch*);
 
-     virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level,
-							const ProcessorGroup* resources);
-   private:
-     ParticleLoadBalancer(const ParticleLoadBalancer&);
-     ParticleLoadBalancer& operator=(const ParticleLoadBalancer&);
+    // maintain lb state and call one of the assignPatches functions
+    virtual void dynamicReallocation(const GridP& grid, const SchedulerP& sch);
+    
+  private:
+    enum { static_lb, cyclic_lb, random_lb, particle_lb };
 
-     void assignPatches(const LevelP& level, const ProcessorGroup*,
-			const Scheduler* sch);
-     void assignPatches2(const LevelP& level, const ProcessorGroup*,
-			const Scheduler* sch);
+    ParticleLoadBalancer(const ParticleLoadBalancer&);
+    ParticleLoadBalancer& operator=(const ParticleLoadBalancer&);
 
-     std::set<const Patch*> d_neighbors;
-     std::vector<int> d_processorAssignment;
-     std::vector<int> d_oldAssignment;
+    // these functions take care of setting d_processorAssignment on all procs
+    // and dynamicReallocation takes care of maintaining the state
+    void assignPatchesParticle(const GridP& level, const SchedulerP& sch);
+    void assignPatchesRandom(const GridP& level, const SchedulerP& sch);
+    void assignPatchesCyclic(const GridP& level, const SchedulerP& sch);
 
-     double d_lbInterval;
-     double d_currentTime;
-     double d_lastLbTime;
+    virtual void setDynamicAlgorithm(std::string algo, double interval, 
+                                     int timestepInterval, float cellFactor);
+    
+    std::vector<int> d_processorAssignment;
+    std::vector<int> d_oldAssignment;
 
-     int d_lbTimestepInterval;
-     int d_currentTimestep;
-     int d_lastLbTimestep;
-
-     bool d_do_AMR;
-     ProblemSpecP d_pspec;
-
-     enum {
-       idle = 0, postLoadBalance = 1, needLoadBalance = 2
-     };
-
-     int d_state; //< either idle, needLoadBalance, postLoadBalance
-   };
+    double d_lbInterval;
+    double d_lastLbTime;
+    
+    int d_lbTimestepInterval;
+    int d_lastLbTimestep;
+    
+    bool d_do_AMR;
+    ProblemSpecP d_pspec;
+    
+    enum {
+      idle = 0, postLoadBalance = 1, needLoadBalance = 2
+    };
+    
+    float d_cellFactor;
+    int d_dynamicAlgorithm;
+    int d_particleAlgo;
+    int d_state; //< either idle, needLoadBalance, postLoadBalance
+  };
 } // End namespace Uintah
 
 
