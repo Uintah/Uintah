@@ -107,6 +107,9 @@ template<class T>
 Octree<T>::~Octree()
 {
    if (children){
+     for(int i = 0; i < 8; i++){
+       delete children[i];
+     }
      delete [] children;
    }
   delete stored;
