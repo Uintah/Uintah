@@ -13,19 +13,22 @@
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
+#include <Datatypes/ColumnMatrixPort.h>
 #include <Datatypes/MatrixPort.h>
 #include <Datatypes/Matrix.h>
 #include <Datatypes/DenseMatrix.h>
+#include <Datatypes/SymSparseRowMatrix.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/Mesh.h>
 #include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
 
 class BuildFEMatrix : public Module {
-     MeshIPort* inmesh;
-     MatrixOPort * outmatrix;
-     void build_local_matrix(Element*,Matrix&,MeshHandle);
-     void add_lcl_gbl(Matrix&, Matrix&, int, MeshHandle);
+    MeshIPort* inmesh;
+    MatrixOPort * outmatrix;
+    ColumnMatrixOPort* rhsoport;
+    void build_local_matrix(Element*,Matrix&, const MeshHandle&);
+    void add_lcl_gbl(Matrix&, Matrix&, ColumnMatrix&, int, const MeshHandle&);
 public:
     BuildFEMatrix(const clString& id);
     BuildFEMatrix(const BuildFEMatrix&, int deep);
@@ -45,12 +48,14 @@ BuildFEMatrix::BuildFEMatrix(const clString& id)
 : Module("BuildFEMatrix", id, Filter)
 {
     // Create the input port
-    inmesh = new MeshIPort(this, "Geometry", MeshIPort::Atomic);
+    inmesh = new MeshIPort(this, "Mesh", MeshIPort::Atomic);
     add_iport(inmesh);
 
-    // Create the output port
-    outmatrix=new MatrixOPort(this, "Geometry", MatrixIPort::Atomic);
+    // Create the output ports
+    outmatrix=new MatrixOPort(this, "FEM Matrix", MatrixIPort::Atomic);
     add_oport(outmatrix);
+    rhsoport=new ColumnMatrixOPort(this, "RHS", ColumnMatrixIPort::Atomic);
+    add_oport(rhsoport);
 
     // Ask Dave about why this was different originally
     // i.e. it was add_iport(new MeshIPort(this,"Geometry",...));
@@ -73,28 +78,66 @@ Module* BuildFEMatrix::clone(int deep)
 
 void BuildFEMatrix::execute()
 {
-
      MeshHandle mesh;
      if(!inmesh->get(mesh))
 	  return;
-     Matrix* gbl_matrix=new DenseMatrix(mesh->nodes.size(),mesh->nodes.size());
-     DenseMatrix lcl_matrix(3,3);
+     int nnodes=mesh->nodes.size();
 
-     for (int i=1; i<=mesh->elems.size(); i++){
+     // SC94 ONLY
+     mesh->nodes[nnodes-1]->ndof=0;
+     mesh->nodes[nnodes-2]->ndof=0;
+     mesh->nodes[nnodes-3]->ndof=0;
+     mesh->nodes[nnodes-4]->ndof=0;
+     mesh->nodes[nnodes-1]->value=1;
+     mesh->nodes[nnodes-2]->value=-1;
+     mesh->nodes[nnodes-3]->value=1;
+     mesh->nodes[nnodes-4]->value=-1;
+     mesh->nodes[nnodes-1]->nodetype=Node::VSource;
+     mesh->nodes[nnodes-2]->nodetype=Node::VSource;
+     mesh->nodes[nnodes-3]->nodetype=Node::VSource;
+     mesh->nodes[nnodes-4]->nodetype=Node::VSource;
 
-	  build_local_matrix(mesh->elems[i],lcl_matrix,mesh);
-	  add_lcl_gbl(*gbl_matrix,lcl_matrix,i,mesh);
-
+     int ndof=nnodes;
+     Array1<int> rows(ndof+1);
+     Array1<int> cols;
+     int r=0;
+     int nd=0;
+     for(int i=0;i<nnodes;i++){
+	 rows[r++]=cols.size();
+	 if(mesh->nodes[i]->ndof > 0){
+	     mesh->add_node_neighbors(i, cols);
+	 } else {
+	     cols.add(i); // Just a diagonal term
+	 }
      }
-     outmatrix->send(gbl_matrix);
+     rows[r]=cols.size();
+     Matrix* gbl_matrix=new SymSparseRowMatrix(ndof, ndof, rows, cols);
+     gbl_matrix->zero();
+     ColumnMatrix* rhs=new ColumnMatrix(ndof);
+     rhs->zero();
+     DenseMatrix lcl_matrix(4, 4);
 
+     int nelems=mesh->elems.size();
+     for (i=0; i<nelems; i++){
+	 update_progress(i, nelems);
+	 build_local_matrix(mesh->elems[i],lcl_matrix,mesh);
+	 add_lcl_gbl(*gbl_matrix,lcl_matrix,*rhs,i,mesh);
+     }
+     for(i=0;i<nnodes;i++){
+	 if(mesh->nodes[i]->ndof == 0){
+	     // This is just a dummy entry...
+	     (*gbl_matrix)[i][i]=1;
+	 }
+     }
+
+     outmatrix->send(gbl_matrix);
+     rhsoport->send(rhs);
 }
 
 void BuildFEMatrix::build_local_matrix(Element *elem, 
 				       Matrix& lcl_a,
-				       MeshHandle mesh)
+				       const MeshHandle& mesh)
 {
-
      Point pt;
      Vector grad1,grad2,grad3,grad4;
      double vol = mesh->get_grad(elem,pt,grad1,grad2,grad3,grad4);
@@ -163,7 +206,8 @@ void BuildFEMatrix::build_local_matrix(Element *elem,
 
 
 void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, Matrix& lcl_a,
-				int el, MeshHandle mesh)
+				ColumnMatrix& rhs,
+				int el, const MeshHandle& mesh)
 {
 
      for (int i=0; i<4; i++) // this four should eventually be a
@@ -172,32 +216,18 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, Matrix& lcl_a,
 	  // higher order elements
      {	  
 	  int ii = mesh->elems[el]->n[i];
-	  for (int j=0; j<4; j++)
-	  {
-	       int jj = mesh->elems[el]->n[j];
-	       gbl_a[ii][jj] += lcl_a[i][j];
+	  Node* n1=mesh->nodes[ii];
+	  if(n1->ndof > 0){
+	      for (int j=0; j<4; j++) {
+		  int jj = mesh->elems[el]->n[j];
+		  Node* n2=mesh->nodes[jj];
+		  if(n2->ndof > 0){
+		      gbl_a[ii][jj] += lcl_a[i][j];
+		  } else {
+		      // Eventually look at nodetype...
+		      rhs[ii]-=n2->value*lcl_a[i][j];
+		  }
+	      }
 	  }
      }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
