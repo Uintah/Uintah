@@ -1,8 +1,8 @@
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Regridder/RegridderCommon.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-
+#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -83,10 +83,12 @@ bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid, SchedulerP& s
     for (Level::const_patchIterator iter=level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       // here we assume that the per-patch has been set
       PerPatch<PatchFlagP> flaggedPatchCells;
-      newDW->get(flaggedPatchCells, d_sharedState->get_refinePatchFlag_label(), 0, *iter);
-      if (flaggedPatchCells.get().get_rep()->flag) {
-        thisproc = true;
-        break;
+      if (sched->getLoadBalancer()->getPatchwiseProcessorAssignment(*iter) == d_myworld->myrank()) {
+        newDW->get(flaggedPatchCells, d_sharedState->get_refinePatchFlag_label(), 0, *iter);
+        if (flaggedPatchCells.get().get_rep()->flag) {
+          thisproc = true;
+          break;
+        }
       }
     }
     MPI_Allreduce(&thisproc, &allprocs, 1, MPI_INT, MPI_MAX, d_myworld->getComm());
@@ -250,6 +252,13 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
     }
   }
 
+  // set up filters
+  dilate_dbg << "Initializing cell creation filter\n";
+  initFilter(d_creationFilter, d_filterType, d_cellCreationDilation);
+  dilate_dbg << "Initializing cell deletion filter\n";
+  initFilter(d_deletionFilter, d_filterType, d_cellDeletionDilation);
+  dilate_dbg << "Initializing patch extension filter\n";
+  initFilter(d_patchFilter, FILTER_BOX, d_minBoundaryCells);
   rdbg << "RegridderCommon::problemSetup() END" << endl;
 }
 
@@ -369,20 +378,16 @@ void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, Data
   rdbg << "RegridderCommon::GetFlaggedCells() END" << endl;
 }
 
-void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& dilatedFlaggedCells, int filterType, IntVector depth )
+void RegridderCommon::initFilter(CCVariable<int>& filter, FilterType ft, IntVector& depth)
 {
-  rdbg << "RegridderCommon::Dilate() BGN" << endl;
-
   if ((depth.x() < 0) || (depth.y() < 0) || (depth.z() < 0))  throw InternalError("Regridder given a bad dilation depth!");
 
-  // we'll find a better way to do this
-  CCVariable<int> filter;
   filter.rewindow(IntVector(0,0,0), IntVector(2,2,2)*depth+IntVector(2,2,2));
   filter.initialize(0);
 
   dilate_dbg << "Size of Filter = " << filter.size() << endl;
 
-  switch (filterType) {
+  switch (ft) {
 
     case FILTER_STAR: {
       for (int x = 0; x < 2*depth.x()+1; x++) {
@@ -407,18 +412,26 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
     default: throw InternalError("Regridder given a bad dilation filter type!");
   }
 
-  dilate_dbg << "----------------------------------------------------------------" << endl;
-  dilate_dbg << "FILTER" << endl;
+  if (dilate_dbg.active()) {
+    dilate_dbg << "----------------------------------------------------------------" << endl;
+    dilate_dbg << "FILTER" << endl;
 
-  for (int z = 0; z < 2*depth.z()+1; z++) {
-    for (int y = 0; y < 2*depth.y()+1; y++) {
-      for (int x = 0; x < 2*depth.x()+1; x++) {
-	dilate_dbg << filter[IntVector(x,y,z)] << " ";
+    for (int z = 0; z < 2*depth.z()+1; z++) {
+      for (int y = 0; y < 2*depth.y()+1; y++) {
+        for (int x = 0; x < 2*depth.x()+1; x++) {
+	  dilate_dbg << filter[IntVector(x,y,z)] << " ";
+        }
+        dilate_dbg << endl;
       }
       dilate_dbg << endl;
     }
-    dilate_dbg << endl;
   }
+}
+
+
+void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& dilatedFlaggedCells, CCVariable<int>& filter, IntVector depth )
+{
+  rdbg << "RegridderCommon::Dilate() BGN" << endl;
 
   IntVector arraySize = flaggedCells.size();
   IntVector dilatedArraySize = dilatedFlaggedCells.size();
@@ -443,7 +456,6 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
       temp += flaggedCells[local_idx]*filter[local_idx-idx+depth];
     }
     dilatedFlaggedCells[idx] = static_cast<int>(temp > 0);
-    //    dilate_dbg << idx << " = " << static_cast<int>(temp > 0) << endl;
   }
 
   if (dilate_dbg.active()) {
@@ -484,8 +496,94 @@ void RegridderCommon::Dilate2(const ProcessorGroup*,
 			      const PatchSubset* patches,
 			      const MaterialSubset* ,
 			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw, DilationType dilate_which, FilterType filter_type,
-                              IntVector depth)
+			      DataWarehouse* new_dw, DilationType type, DataWarehouse* get_dw)
 {
-  rdbg << "D2\n";
+  rdbg << "RegridderCommon::Dilate2() BGN" << endl;
+
+  // change values based on which dilation it is
+  const VarLabel* to_get = d_sharedState->get_refineFlag_label();
+  const VarLabel* to_put;
+  CCVariable<int>* filter;
+  IntVector depth;
+
+  switch (type) {
+  case DILATE_CREATION:
+    to_put = d_dilatedCellsCreationLabel;
+    filter = &d_creationFilter;
+    depth = d_cellCreationDilation;
+    break;
+  case DILATE_DELETION:
+    to_put = d_dilatedCellsDeletionLabel;
+    filter = &d_deletionFilter;
+    depth = d_cellDeletionDilation;
+    break;
+  default:
+    throw InternalError("Dilate not implemented for this Dilation Type");
+  }
+
+  int ngc;
+  ngc = Max(depth.x(), depth.y());
+  ngc = Max(ngc, depth.z());
+
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    constCCVariable<int> flaggedCells;
+    CCVariable<int> dilatedFlaggedCells;
+
+    get_dw->get(flaggedCells, to_get, 0, patch, Ghost::AroundCells, ngc);
+    new_dw->allocateAndPut(dilatedFlaggedCells, to_put, 0, patch);
+
+    IntVector flagLow = patch->getLowIndex();
+    IntVector flagHigh = patch->getHighIndex();
+
+    IntVector low, high;
+    for(CellIterator iter(flagLow, flagHigh); !iter.done(); iter++) {
+      IntVector idx(*iter);
+
+      low = Max(idx - depth, flaggedCells.getLowIndex());
+      high = Min(idx + depth, flaggedCells.getHighIndex() - IntVector(1,1,1));
+      int temp = 0;
+      for(CellIterator local_iter(low, high + IntVector(1,1,1)); !local_iter.done(); local_iter++) {
+        IntVector local_idx(*local_iter);
+        temp += flaggedCells[local_idx]*(*filter)[local_idx-idx+depth];
+      }
+      dilatedFlaggedCells[idx] = static_cast<int>(temp > 0);
+      //    dilate_dbg << idx << " = " << static_cast<int>(temp > 0) << endl;
+    }
+
+  rdbg << "G\n";
+    if (dilate_dbg.active()) {
+      dilate_dbg << "----------------------------------------------------------------" << endl;
+      dilate_dbg << "FLAGGED CELLS" << endl;
+
+      IntVector low  = flaggedCells.getLowIndex();
+      IntVector high = flaggedCells.getHighIndex();
+      
+      for (int z = low.z(); z < high.z(); z++) {
+        for (int y = low.y(); y < high.y(); y++) {
+          for (int x = low.x(); x < high.x(); x++) {
+            dilate_dbg << flaggedCells[IntVector(x,y,z)] << " ";
+          }
+          dilate_dbg << endl;
+        }
+        dilate_dbg << endl;
+      }
+      
+      dilate_dbg << "----------------------------------------------------------------" << endl;
+      dilate_dbg << "DILATED FLAGGED CELLS" << endl;
+
+      for (int z = low.z(); z < high.z(); z++) {
+        for (int y = low.y(); y < high.y(); y++) {
+          for (int x = low.x(); x < high.x(); x++) {
+            dilate_dbg << dilatedFlaggedCells[IntVector(x,y,z)] << " ";
+          }
+          dilate_dbg << endl;
+        }
+        dilate_dbg << endl;
+      }
+    }
+  }
+  rdbg << "RegridderCommon::Dilate2() END" << endl;
 }

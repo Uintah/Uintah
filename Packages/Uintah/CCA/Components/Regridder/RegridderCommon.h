@@ -15,6 +15,7 @@ namespace Uintah {
 
 class DataWarehouse;
 class Patch;
+class VarLabel;
 
 typedef vector<SCIRun::IntVector> SizeList;
 
@@ -88,13 +89,12 @@ WARNING
       DILATE_DELETION,
       DILATE_PATCH
     };
-
+  
     void Dilate2(const ProcessorGroup*,
-		const PatchSubset* patches,
-		const MaterialSubset* ,
-		DataWarehouse* old_dw,
-		DataWarehouse* new_dw,
-                DilationType dilate_which, FilterType filter_type, IntVector depth);
+                 const PatchSubset* patches,
+                 const MaterialSubset* ,
+                 DataWarehouse* old_dw,
+                 DataWarehouse* new_dw, DilationType type, DataWarehouse* get_dw);
 
   protected:
      SimulationStateP d_sharedState; ///< to keep track of timesteps
@@ -111,6 +111,10 @@ WARNING
     vector< CCVariable<int>* > d_dilatedCellsCreated;
     vector< CCVariable<int>* > d_dilatedCellsDeleted;
 
+    CCVariable<int> d_creationFilter;
+    CCVariable<int> d_deletionFilter;
+    CCVariable<int> d_patchFilter;
+
     //! ratio to divide each patch (inner vector is for x,y,z ratio, 
     //! outer vector is a subsequent value per level)
     vector<SCIRun::IntVector> d_latticeRefinementRatio;
@@ -121,10 +125,13 @@ WARNING
     SizeList d_patchNum;
     SizeList d_patchSize;
 
-
     vector< CCVariable<int>* > d_patchActive;
     vector< CCVariable<int>* > d_patchCreated;
     vector< CCVariable<int>* > d_patchDeleted;
+
+    // var labels for interior task graph
+    const VarLabel* d_dilatedCellsCreationLabel;
+    const VarLabel* d_dilatedCellsDeletionLabel;
 
     vector<int> d_numCreated;
     vector<int> d_numDeleted;
@@ -142,8 +149,9 @@ WARNING
     IntVector Mod     (const IntVector& a, const IntVector& b);
     IntVector Ceil    (const Vector& a);
 
-    void Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& dilatedFlaggedCells, int filterType, IntVector depth );
+    void Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& dilatedFlaggedCells, CCVariable<int>& filter, IntVector depth );
     void GetFlaggedCells ( const GridP& origGrid, int levelIdx, DataWarehouse* dw );
+    void initFilter(CCVariable<int>& filter, FilterType ft, IntVector& depth);
   };
 
 } // End namespace Uintah
