@@ -94,8 +94,7 @@ public:
 
   virtual string get_info();  
 
-  virtual T* begin() { return (T*)data.begin(); }
-  virtual T* end() { return (T*)data.end(); }
+  virtual int iterate(AttribFunctor<T> &func);
 
   //////////
   // Persistent representation...
@@ -285,7 +284,7 @@ FlatAttrib<T>::fset3(int ix, int iy, int iz, const T& val)
   if (dim != 3) {
     throw DimensionMismatch(3, dim);
   }
-  if(ix >= nx) {
+  if (ix >= nx) {
     throw ArrayIndexOutOfBounds(ix, 0, nx);
   }
   if (iy >= ny) {
@@ -370,18 +369,32 @@ FlatAttrib<T>::size() const
 }
 
 
+template <class T> int
+FlatAttrib<T>::iterate(AttribFunctor<T> &func)
+{
+  vector<T>::iterator itr = data.begin();
+  while (itr != data.end())
+    {
+      func(*itr++);
+    }
+  return size();
+}
+
+
 template <class T> string FlatAttrib<T>::get_info(){
   ostringstream retval;
   retval <<
-    "Name = " << name << '\n' <<
-    "Type = FlatAttrib" << '\n' <<
-    "Dim = " << dim << ": " << nx << ' ' << ny << ' ' << nz << '\n' <<
-    "Size = " << size() << '\n' <<
+    "Name = " << name << endl <<
+    "Type = FlatAttrib" << endl <<
+    "Dim = " << dim << ": " << nx << ' ' << ny << ' ' << nz << endl <<
+    "Size = " << size() << endl <<
     "Data = ";
   vector<T>::iterator itr = data.begin();
-  for(;itr!=data.end(); itr++){
+  int i = 0;
+  for(;itr!=data.end() && i < 1000; itr++, i++)  {
     retval << *itr << " ";
   }
+  if (itr != data.end()) { retval << "..."; }
   retval << endl;
   return retval.str();
 }

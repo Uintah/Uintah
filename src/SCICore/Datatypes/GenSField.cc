@@ -172,29 +172,51 @@ bool GenSField<T,G,A>::set_bbox(const Point& p1, const Point& p2)
     }
 }
 
+
+template <class T> struct MinMaxFunctor : public AttribFunctor<T>
+{
+public:
+  virtual void operator () (T &val)
+  {
+    if (val < min) { min = val; }
+    if (val > max) { max = val; }
+  }
+
+  T min;
+  T max;
+};
+
+
 // TODO: Implement this so it's always valid.
 template <class T, class G, class A >
-bool GenSField<T,G,A>::get_minmax(double& imin, double& imax)
+bool GenSField<T,G,A>::get_minmax(double &imin, double &imax)
 {
   A* tattrib = attrib.get_rep();
   if (!tattrib) { return false; }
 
-  A::iterator itr = tattrib->begin();
-  if (itr == tattrib->end()) { return false; }
-
-  T lmin = *itr;
-  T lmax = *itr;
-  itr++;
-  while (itr != tattrib->end())
+  MinMaxFunctor<T> f;
+  switch (tattrib->dimension())
     {
-      lmin = Min(lmin, *itr);
-      lmax = Max(lmax, *itr);
-      itr++;
+    case 3:
+      f.min = f.max = tattrib->get3(0, 0, 0);
+      break;
+    case 2:
+      f.min = f.max = tattrib->get2(0, 0);
+      break;
+    case 1:
+      f.min = f.max = tattrib->get1(0);
+      break;
+    default:
+      return false;
     }
-  imin = (double)lmin;
-  imax = (double)lmax;
+
+  tattrib->iterate(f);
+  
+  imin = (double)f.min;
+  imax = (double)f.max;
   return true;
 }
+
 
 template <class T, class G, class A >
 bool GenSField<T,G,A>::longest_dimension(double &odouble)

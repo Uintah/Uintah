@@ -16,6 +16,7 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 #include <SCICore/Datatypes/FlatAttrib.h>
 #include <SCICore/Datatypes/AccelAttrib.h>
 #include <SCICore/Datatypes/BrickAttrib.h>
+#include <SCICore/Datatypes/WrapAttrib.h>
 
 #include <SCICore/Datatypes/ScalarField.h>
 using namespace SCICore::Datatypes;
@@ -42,9 +43,13 @@ template class DiscreteAttrib<double>;
 template class FlatAttrib<double>;
 template class AccelAttrib<double>;
 template class BrickAttrib<double>;
+template class WrapAttrib<double>;
 template class GenSField<double, LatticeGeom>;
 template class GenSField<double, LatticeGeom, FlatAttrib<double> >;
 template class GenSField<double, LatticeGeom, AccelAttrib<double> >;
+
+template class AttribFunctor<double>;
+//template class MinMaxFunctor<double>;
 
 #ifdef __sgi
 #pragma reset woff 1468
