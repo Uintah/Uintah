@@ -228,6 +228,8 @@ void AMRSimulationController::run()
    if(output)
       output->finalizeTimestep(t, 0, currentGrid, scheduler, true);
 
+   setStartSimTime(t);
+
    amrout << "Compiling initial schedule\n";
    scheduler->compile();
    
@@ -391,7 +393,8 @@ void AMRSimulationController::run()
 
      scheduler->advanceDataWarehouse(currentGrid);
 
-     // Compute number of dataWarehouses
+     // Compute number of dataWarehouses - multiplies by the time refinement
+     // ratio for each level you increase
      int totalFine=1;
      for(int i=1;i<currentGrid->numLevels();i++)
        totalFine *= currentGrid->getLevel(i)->timeRefinementRatio();
