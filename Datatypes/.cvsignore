@@ -1,6 +1,6 @@
 Makefile Makefile.bak
 .~*
-so_locations ii_files
+ii_files
 ScalarFieldRGdouble.h ScalarFieldRGdouble.cc
 ScalarFieldRGchar.h ScalarFieldRGchar.cc
 ScalarFieldRGint.h ScalarFieldRGint.cc
