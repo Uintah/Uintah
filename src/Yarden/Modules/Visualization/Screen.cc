@@ -21,7 +21,7 @@ namespace Yarden {
   int show = 0;
   
   int Byte2Bit[] =
-  {{0},
+  {0,
    7,
    6, 0,
    5, 0,0,0,	
@@ -46,38 +46,39 @@ namespace Yarden {
     Word *LeftMask = (Word *) LM;
 
   
-  long RM[18]= { 0xffffffff ,0xffffffff,
-		 0x80808080 ,0x80808080,
-		 0xc0c0c0c0 ,0xc0c0c0c0,
-		 0xe0e0e0e0 ,0xe0e0e0e0,
-		 0xf0f0f0f0 ,0xf0f0f0f0,
-		 0xf8f8f8f8 ,0xf8f8f8f8,
-		 0xfcfcfcfc ,0xfcfcfcfc,
-		 0xfefefefe ,0xfefefefe,
-		 0xffffffff ,0xffffffff};
-    
-  Word *RightMask =(Word *)  RM;
+    Block RM[9] = {{0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff},
+                  {0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80},
+		  {0xc0,0xc0,0xc0,0xc0,0xc0,0xc0,0xc0,0xc0},
+		  {0xe0,0xe0,0xe0,0xe0,0xe0,0xe0,0xe0,0xe0},
+		  {0xf0,0xf0,0xf0,0xf0,0xf0,0xf0,0xf0,0xf0},
+		  {0xf8,0xf8,0xf8,0xf8,0xf8,0xf8,0xf8,0xf8},
+		  {0xfc,0xfc,0xfc,0xfc,0xfc,0xfc,0xfc,0xfc},
+		  {0xfe,0xfe,0xfe,0xfe,0xfe,0xfe,0xfe,0xfe},
+		  {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}};
+    Word *RightMask =(Word *)  RM;
 
-  long BM[18]={ 0xffffffff ,0xffffffff,
-		0xffffffff ,0xffffffff,
-		0x00ffffff ,0xffffffff,
-		0x0000ffff ,0xffffffff,
-		0x000000ff ,0xffffffff,
-		0x00000000 ,0xffffffff,
-		0x00000000 ,0x00ffffff,
-		0x00000000 ,0x0000ffff,
-		0x00000000 ,0x000000ff};
+    Block BM[9] = {{0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff},
+                   {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff},
+		   {0x00,0xff,0xff,0xff,0xff,0xff,0xff,0xff},
+		   {0x00,0x00,0xff,0xff,0xff,0xff,0xff,0xff},
+		   {0x00,0x00,0x00,0xff,0xff,0xff,0xff,0xff},
+		   {0x00,0x00,0x00,0x00,0xff,0xff,0xff,0xff},
+		   {0x00,0x00,0x00,0x00,0x00,0xff,0xff,0xff},
+		   {0x00,0x00,0x00,0x00,0x00,0x00,0xff,0xff},
+   	           {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xff}};
   
   Word *BottomMask = (Word *) BM;
-  long TM[18]  = { 0xffffffff ,0xffffffff,
-		   0xff000000 ,0x00000000,
-		   0xffff0000 ,0x00000000,
-		   0xffffff00 ,0x00000000,
-		   0xffffffff ,0x00000000,
-		   0xffffffff ,0xff000000,
-		   0xffffffff ,0xffff0000,
-		   0xffffffff ,0xffffff00,
-		   0xffffffff ,0xffffffff};
+
+    Block TM[18] = {{0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff},
+                    {0xff,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
+                    {0xff,0xff,0x00,0x00,0x00,0x00,0x00,0x00},
+                    {0xff,0xff,0xff,0x00,0x00,0x00,0x00,0x00},
+                    {0xff,0xff,0xff,0xff,0x00,0x00,0x00,0x00},
+                    {0xff,0xff,0xff,0xff,0xff,0x00,0x00,0x00},
+                    {0xff,0xff,0xff,0xff,0xff,0xff,0x00,0x00},
+                    {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x00},
+                    {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}};
+
   Word *TopMask = (Word *)TM;
 
   struct MapEntry {
@@ -99,7 +100,24 @@ namespace Yarden {
   
   Stack<MapEntry> map_stack;
   Stack<ScreenEntry> screen_stack;
-  
+
+Screen::Screen()
+{
+//   int i;
+//   printf("LM = \n");
+//   for (i=0;i<9; i++)
+//     printf("\t0x%llx\n",LeftMask[i]);
+//   printf("RM = \n");
+//   for (i=0;i<9; i++)
+//     printf("\t0x%llx\n",RightMask[i]);
+//   printf("BM = \n");
+//   for (i=0;i<9; i++)
+//     printf("\t0x%llx\n",BottomMask[i]);
+//   printf("TM = \n");
+//   for (i=0;i<9; i++)
+//     printf("\t0x%llx\n",TopMask[i]);
+}  
+
 int
 Screen::scan( Pt *_pt, int ne, int edge_list[], int double_edges[] )
 {
@@ -462,7 +480,7 @@ Screen::visible_map( int row, int col,
   int tb = row == (top>>6);
 
   // add 1 since the *Mask tables starts at 1.
-  // entry 0 is an ignored case.
+  // the case for entry 0 is an ignored.
   int ml = (((left>>3)&0x7)+1)  *lb;
   int mr = (((right>>3)&0x7)+1) *rb;
   int mt = (((top>>3)&0x7)+1)   *tb;
@@ -509,7 +527,9 @@ Screen::visible1( int left, int bottom, int right , int top )
 {
   int r;
   if ( visible_counter++ > 0 ) {
-    if ( show) fprintf( stderr, ">>Screen: visible %d\n",visible_counter);
+    if ( show) 
+      fprintf( stderr, ">>Screen: visible %d at (%d %d %d %d)\n",
+	       visible_counter, left,right,bottom,top);
     glLogicOp(GL_XOR);
     show_box( left, right, top, bottom );
     r = visible( left, bottom, right, top );
@@ -524,6 +544,7 @@ Screen::visible1( int left, int bottom, int right , int top )
   }
   else
     r = visible( left, bottom, right, top );
+
 //   fprintf( stderr, "<<\n");
   return r;
 }
@@ -533,7 +554,7 @@ Screen::visible( int left, int bottom, int right, int top )
 {
   if ( left > 511 || right < 0 || top < 0 || bottom > 511 )
     return 0;
-
+  
   // check at top level
   
 //   top += 1;
@@ -561,10 +582,10 @@ Screen::visible( int left, int bottom, int right, int top )
   if ( left < 0 ) tl = 0;
   else tl = min((left>>6)+1, 8 );
 
-  if ( right > 511 ) tr = 0;
+  if ( right > 511 ) tr = 8;
   else tr = min((right>>6)+1,8);
 
-  if ( top > 511 ) tt = 0;
+  if ( top > 511 ) tt = 8;
   else tt = min((top>>6)+1,8);
 
   if ( bottom < 0 ) tb = 0;
@@ -576,12 +597,11 @@ Screen::visible( int left, int bottom, int right, int top )
   if( bottom < 0 ) bottom = 0;
 
   Word root_mask = B2W(root);
-  
   Word cover = (LeftMask[tl] & RightMask[tr] &
 		TopMask[tt] & BottomMask[tb]);
-  
+
   if ( !(~root_mask & cover) ) {
-//     if ( show ) { printf("not visible - root\n"); scanf("%*c"); }
+    //    if ( show ) { printf("not visible - root\n"); scanf("%*c"); }
     return 0; // not visible
   }
   
@@ -589,7 +609,7 @@ Screen::visible( int left, int bottom, int right, int top )
 		TopMask[tt-toff] & BottomMask[tb+boff]);
 
   if ( ~root_mask & inner ) {
-//     { if (show)printf("visible - root\n");}
+    //    { if (show)printf("visible - root\n");}
     return 1; // visible
   }
 
@@ -612,7 +632,7 @@ Screen::visible( int left, int bottom, int right, int top )
     while ( !map_stack.empty() ) {
       MapEntry entry = map_stack.pop();
       if (visible_map( entry.r, entry.c, left, right, top, bottom)) {
-// 	{ if (show) printf(" visible - map\n");}
+	// 	{ if (show) printf(" visible - map\n");}
 	return 1;
       }
     }
@@ -628,7 +648,7 @@ Screen::visible( int left, int bottom, int right, int top )
 	  Byte bit = b & (~b+1);
 	  int x = Byte2Bit[bit];
 	  if ( visible_screen( r+y, c+x, left, right, top, bottom )) {
-// 	    if ( show ) printf(" visible - screen\n");
+	    // 	    if ( show ) printf(" visible - screen\n");
 	    return 1;
 	  }
 	  b ^= bit;
@@ -636,7 +656,7 @@ Screen::visible( int left, int bottom, int right, int top )
       }
     }
   }
-//   if ( show ) printf("not visible - root end\n");
+  //   if ( show ) printf("not visible - root end\n");
   return 0;
 }
 
