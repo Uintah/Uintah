@@ -71,7 +71,7 @@ ETAGS_FILES := $(wildcard $(HEADER_FILES) $(C_FILES) $(CPP_FILES) )
 TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
 ETAGS := @ETAGS@
 
-all:: $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(ALLTARGETS)
+all:: $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(ALLTARGETS) packmaker
 
 $(MAKEFILEDIRS):
 	@echo creating directory $@
@@ -84,6 +84,13 @@ $(CREATETCLINDEX): $(SRCTOP)/scripts/createTclIndex.in $(OBJTOP)/Makefile
 	      -e 's,TCL_INIT_DIR,$(TCL_INIT_DIR),g' \
               $(SRCTOP)/scripts/createTclIndex.in > $(CREATETCLINDEX)
 	-@chmod a+x $(CREATETCLINDEX)
+
+packmaker: $(SRCTOP)/scripts/packmaker.in $(OBJTOP)/Makefile
+	@echo creating packmaker
+	-@sed -e 's,REPLACE_SCIRUN_OBJTOP,$(OBJTOP_ABS),g' \
+              -e 's,REPLACE_SCIRUN_SRCTOP,$(SRCTOP_ABS),g' \
+              $(SRCTOP)/scripts/packmaker.in > packmaker
+	-@chmod a+x packmaker
 
 $(LIBDIR):
 	mkdir -p $(LIBDIR)
