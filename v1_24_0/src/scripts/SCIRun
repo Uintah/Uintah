@@ -1,2 +1,11 @@
 #!/bin/bash
-/usr/bin/open-x11 ${0}.launch
+export DISPLAY=:0.0
+export SCIRUN_OBJDIR=`cd ${0/"%\/SCIRun"/""}; pwd`
+export SCIRUN_SRCDIR=`cd ${SCIRUN_OBJDIR}/../src; pwd`
+export SCIRUN_THIRDPARTY_DIR=`cd ${SCIRUN_OBJDIR}/../Thirdparty; pwd`
+export SCIRUN_ITCL_WIDGETS=${SCIRUN_THIRDPARTY_DIR}/lib/iwidgets/scripts
+export DYLD_LIBRARY_PATH=${SCIRUN_THIRDPARTY_DIR}/lib:${SCIRUN_OBJDIR}/lib/:/usr/local/mdsplus/lib
+export TCL_LIBRARY=${SCIRUN_THIRDPARTY_DIR}/lib/tcl
+#env >& /tmp/SCIRun.env
+exec ${SCIRUN_OBJDIR}/scirun-bin 
+#>& /tmp/SCIRun.log
