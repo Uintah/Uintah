@@ -17,27 +17,32 @@ class Scene;
 class PerProcessorContext;
 
 class Camera {
-    friend class Dpy;
-    char pad1[128];
-    Point eye;
-    Point lookat;
-    Vector up;
-    double fov;
-    Vector u,v;
-    Vector direction;
-    double eyesep;
 
-    char pad2[128];
+protected:
+
+  friend class Dpy;
+  char pad1[128];
+  Point eye;
+  Point lookat;
+  Vector up;
+  double fov;
+  Vector u, v;
+  Vector uhat, vhat, what;
+  Vector direction;
+  double eyesep;
+  
+  char pad2[128];
+  
 public:
     Camera(const Point& eye, const Point& lookat,
 	   const Vector& up, double fov);
     Camera();
-    ~Camera();
-    void makeRay(Ray& ray, double x, double y, double xres, double yres);
-    void makeRayL(Ray& ray, double x, double y, double xres, double yres);
-    void makeRayR(Ray& ray, double x, double y, double xres, double yres);
+    virtual ~Camera();
+    virtual void makeRay(Ray& ray, double x, double y, double xres, double yres);
+    virtual void makeRayL(Ray& ray, double x, double y, double xres, double yres);
+    virtual void makeRayR(Ray& ray, double x, double y, double xres, double yres);
     void get_viewplane(Vector& u, Vector& v);
-    void setup();
+    virtual void setup();
     void print();
     inline const Point& get_eye() const {
 	return eye;
