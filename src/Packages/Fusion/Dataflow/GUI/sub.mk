@@ -17,7 +17,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/FusionFieldReader.tcl\
 	$(SRCDIR)/FusionFieldSetReader.tcl\
 	$(SRCDIR)/PPPLNrrdConverter.tcl\
-	$(SRCDIR)/HDF5ProtoType.tcl\
 	$(SRCDIR)/MDSPlusFieldReader.tcl\
 	$(SRCDIR)/MDSPlusDataReader.tcl\
 	$(SRCDIR)/Plot2DViewer.tcl\
