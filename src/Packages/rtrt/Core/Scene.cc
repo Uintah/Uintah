@@ -142,7 +142,7 @@ void Scene::preprocess(double bvscale, int& pp_offset, int& scratchsize)
     shadowobj=obj;
   for(int i=0;i<shadows.size();i++)
     shadows[i]->preprocess(this, pp_offset, scratchsize);
-  cerr << "Preprocess took " << Time::currentSeconds()-time << " seconds\n";
+  cerr << "Preprocess took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
 }
 
 void Scene::copy_camera(int which)
