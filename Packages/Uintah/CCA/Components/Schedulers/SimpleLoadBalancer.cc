@@ -30,15 +30,7 @@ SimpleLoadBalancer::~SimpleLoadBalancer()
 void SimpleLoadBalancer::assignResources(DetailedTasks& graph,
 					 const ProcessorGroup* group)
 {
-  int maxThreads = Parallel::getMaxThreads();
   int nTasks = graph.numTasks();
-  int numProcs = group->size();
-
-  // If there are less patches than threads, "divBy" will distribute
-  // the work to both processors.
-  int divBy = min( maxThreads, numProcs - 1 );
-  // If there is only one processor, we need divBy to be 1.
-  divBy = max( divBy, 1 );
 
   if( mixedDebug.active() ) {
     cerrLock.lock();
@@ -52,13 +44,27 @@ void SimpleLoadBalancer::assignResources(DetailedTasks& graph,
     const PatchSubset* patches = task->getPatches();
     if(patches && patches->size() > 0){
       const Patch* patch = patches->get(0);
-      int idx = (patch->getID() / divBy) % numProcs;
+
+      int idx = getPatchwiseProcessorAssignment(patch, group);
+
       task->assignResource(idx);
+
+      if( mixedDebug.active() ) {
+	cerrLock.lock();
+	mixedDebug << "1) Task " << *(task->getTask()) << " put on resource "
+		   << idx << "\n";
+	cerrLock.unlock();
+      }
+
       for(int i=1;i<patches->size();i++){
 	const Patch* p = patches->get(i);
-	int pidx = (p->getID()/divBy)%numProcs;
+	int pidx = getPatchwiseProcessorAssignment(p, group);
 	if(pidx != idx){
-	  cerr << "WARNING: inconsistent task assignment in SimpleLoadBalancer\n";
+	  cerrLock.lock();
+	  cerr << "WARNING: inconsistent task (" << task->getTask()->getName() 
+	       << ") assignment (" << pidx << ", " << idx 
+	       << ") in SimpleLoadBalancer\n";
+	  cerrLock.unlock();
 	}
       }
     } else {
@@ -91,10 +97,20 @@ void SimpleLoadBalancer::assignResources(DetailedTasks& graph,
   }
 }
 
-int SimpleLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
-							const ProcessorGroup* group)
+int
+SimpleLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
+						    const ProcessorGroup* group)
 {
-   return patch->getID()%group->size();
+  int maxThreads = Parallel::getMaxThreads();
+  int numProcs = group->size();
+
+  // If there are less patches than threads, "divBy" will distribute
+  // the work to both processors.
+  int divBy = min( maxThreads, numProcs - 1 );
+  // If there is only one processor, we need divBy to be 1.
+  divBy = max( divBy, 1 );
+
+  return ( (patch->getID() / divBy) % numProcs );
 }
 
 const PatchSet*
