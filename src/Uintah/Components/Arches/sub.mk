@@ -15,6 +15,7 @@ SRCS     += $(SRCDIR)/Arches.cc $(SRCDIR)/BoundaryCondition.cc \
 	$(SRCDIR)/LinearSolver.cc \
 	$(SRCDIR)/PressureSolver.cc $(SRCDIR)/MomentumSolver.cc \
 	$(SRCDIR)/ScalarSolver.cc $(SRCDIR)/RBGSSolver.cc \
+	$(SRCDIR)/PetscSolver.cc \
 	$(SRCDIR)/Source.cc $(SRCDIR)/CellInformation.cc \
 	$(SRCDIR)/ArchesLabel.cc $(SRCDIR)/ArchesVariables.cc
 
@@ -26,6 +27,9 @@ include $(SRCTOP)/scripts/recurse.mk
 PSELIBS := Uintah/Parallel Uintah/Interface Uintah/Grid Uintah/Exceptions \
 	   SCICore/Exceptions
 LIBS := $(XML_LIBRARY) -lftn -lm
+ifneq ($(PETSC_DIR),)
+LIBS := $(LIBS) $(PETSC_LIBS) -lpetscsles -lpetscdm -lpetscmat -lpetscvec -lpetsc -lblas
+endif
 #CFLAGS += -g -DARCHES_VEL_DEBUG
 #CFLAGS += -g -DARCHES_DEBUG -DARCHES_GEOM_DEBUG -DARCHES_BC_DEBUG -DARCHES_COEF_DEBUG 
 #CFLAGS += -DARCHES_SRC_DEBUG -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG
@@ -35,6 +39,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.27  2000/09/12 15:47:38  sparker
+# Use petsc configuration
+#
 # Revision 1.26  2000/09/07 23:07:17  rawat
 # fixed some bugs in bc and added pressure solver using petsc
 #
