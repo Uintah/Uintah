@@ -121,9 +121,8 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 	pvelocity[pidx]=(*obj)->getInitialVelocity();
 	ptemperature[pidx]=(*obj)->getInitialTemperature();
 	psp_vol[pidx]=1.0/matl->getInitialDensity();
-#ifdef FRACTURE
         pdisp[pidx] = Vector(0.,0.,0.);
-#endif
+
         // Calculate particle mass
 	double partMass = matl->getInitialDensity()*pvolume[pidx];
 	pmass[pidx] = partMass;
@@ -183,9 +182,7 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 	      if(piece->inside(p)){
                 particleIndex pidx = start+count; 
 		position[pidx]=p;
-#ifdef FRACTURE
                 pdisp[pidx] = Vector(0.,0.,0.);
-#endif
 		pvolume[pidx]=dxpp.x()*dxpp.y()*dxpp.z();
 		pvelocity[pidx]=(*obj)->getInitialVelocity();
 		ptemperature[pidx]=(*obj)->getInitialTemperature();
