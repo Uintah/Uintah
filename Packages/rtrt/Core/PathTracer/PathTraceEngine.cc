@@ -24,14 +24,14 @@ using namespace rtrt;
 using namespace SCIRun;
 using namespace std;
 
-PathTraceContext::PathTraceContext(const Color &color,
+PathTraceContext::PathTraceContext(float luminance,
 				   const PathTraceLight &light,
 				   Object* geometry,
 				   Background *background,
                                    int num_samples, int max_depth, bool dilate,
 				   int support, int use_weighted_ave,
 				   float threshold, Semaphore *sem) :
-  light(light), color(color), geometry(geometry), background(background),
+  light(light), luminance(luminance), geometry(geometry), background(background),
   num_samples(num_samples), max_depth(max_depth), dilate(dilate), support(support),
   use_weighted_ave(use_weighted_ave), threshold(threshold), sem(sem)
 {
@@ -43,55 +43,11 @@ PathTraceContext::PathTraceContext(const Color &color,
     this->num_samples = new_num_samples;
   }
 
-  useColormap=false;
-  
   // Determine the scratch size needed
   float bvscale=0.3;
   pp_size=0;
   pp_scratchsize=0;
   geometry->preprocess(bvscale, pp_size, pp_scratchsize);
-}
-
-void PathTraceContext::addColormap(Array1<unsigned char>& value, Array1<Color>& map) {
-  if (value.size()<=0) {
-    cerr<<"PathTraceContext::addColormap - Invalid value array"<<endl;
-    return;
-  }
-
-  if (map.size()!=256) {
-    cerr<<"PathTraceContext::addColormap - Color map is not of size 256"<<endl;
-    return;
-  }
-
-  this->value=value;
-  this->map=map;
-
-  useColormap=true;
-}
-
-Color PathTraceContext::lookupColor(HitInfo& hit) {
-  if (!useColormap)
-    return color;
-
-  // Assumes that number of values in TextureGridSpheres is 3
-  int cell=*(int*)hit.scratchpad;
-  int sphere_index = cell/3;
-  if (sphere_index<value.size()) {
-    return map[value[sphere_index]];
-  } else {
-    return Color(1,0,1);
-  }
-}
-
-Color PathTraceContext::lookupColor(int sphere_index) {
-  if (!useColormap)
-    return color;
-
-  if (sphere_index<value.size()) {
-    return map[value[sphere_index]];
-  } else {
-    return Color(1,0,1);
-  }
 }
 
 PathTraceWorker::PathTraceWorker(Group *group, PathTraceContext *ptc,
@@ -187,9 +143,8 @@ void PathTraceWorker::run() {
 	    normal=Vector(x,y,z).normal();
 	  }
 
-	  Color result(0,0,0);
+	  float result=0;
 	  PathTraceLight* light=&(ptc->light);
-	  Color surface_color=ptc->lookupColor(offset+sindex);
 	  for (int depth=0;depth<=ptc->max_depth;depth++) {
 	    // Compute direct illumination (assumes one light source)
             Vector random_dir=light->random_vector(rng(),rng(),rng());
@@ -223,12 +178,10 @@ void PathTraceWorker::run() {
 					     depth_stats, ppc);
 	      if (!s_hit.was_hit)
 		result +=
-		  surface_color *
-		  //		  reflected_surface_dot *
-		  light->color *
-		  (light_norm_dot_sr *
-		   light->area *
-		   (normal_dot_sr/(distance*distance*M_PI)));
+		  ptc->luminance * light->luminance *
+		  light_norm_dot_sr *
+		  light->area *
+		  (normal_dot_sr/(distance*distance*M_PI));
 	    }
 			      
 	    if (depth==ptc->max_depth)
@@ -282,14 +235,15 @@ void PathTraceWorker::run() {
 		sphere->inside(u,v) += 1;
 		break;
 	      }
-
-	      surface_color=ptc->lookupColor(global_hit);
 	    }
 	    else {
 	      // Accumulate bg color?
 	      Color bgcolor;
 	      ptc->background->color_in_direction(ray.direction(), bgcolor);
-	      result += bgcolor*surface_color;
+
+	      // Expecting a gray-scale bg image, so just take the first channel
+	      result += bgcolor.red()*ptc->luminance;
+	      
 	      break;
 	    }
 	  } // end depth
@@ -345,15 +299,15 @@ void PathTraceWorker::run() {
 
     fprintf(out, "NRRD0001\n");
     fprintf(out, "type: float\n");
-    fprintf(out, "dimension: 4\n");
-    fprintf(out, "sizes: 3 %d %d %d\n", width, height, local_spheres->objs.size());
-    fprintf(out, "spacings: NaN 1 1 NaN\n");
+    fprintf(out, "dimension: 3\n");
+    fprintf(out, "sizes: %d %d %d\n", width, height, local_spheres->objs.size());
+    fprintf(out, "spacings: 1 1 NaN\n");
 #ifdef __sgi
     fprintf(out, "endian: big\n");
 #else
     fprintf(out, "endian: little\n");
 #endif
-    fprintf(out, "labels: \"rgb\" \"x\" \"y\" \"sphere\"\n");
+    fprintf(out, "labels: \"x\" \"y\" \"sphere\"\n");
     fprintf(out, "encoding: raw\n");
     fprintf(out, "\n");
     
@@ -367,7 +321,6 @@ void PathTraceWorker::run() {
       }
       
       sphere->writeData(out, sindex, ptc);
-      
     }
     
     fclose(out);
@@ -394,7 +347,7 @@ void PathTraceWorker::run() {
 TextureSphere::TextureSphere(const Point &cen, double radius, int tex_res):
   Sphere(0, cen, radius), texture(tex_res, tex_res), inside(tex_res, tex_res)
 {
-  texture.initialize(Color(0,0,0));
+  texture.initialize(0);
   inside.initialize(0);
 }
 
@@ -424,7 +377,7 @@ void TextureSphere::dilateTexture(size_t index, PathTraceContext* ptc) {
       inside(x,y)=(inside(x,y)-min)*inv_maxmin;
 
   // Initialize the dilated texture
-  Array2<Color> dilated;
+  Array2<float> dilated;
   dilated.resize(width, height);
   for (int y=0;y<height;y++)
     for (int x=0;x<width;x++)
@@ -444,7 +397,7 @@ void TextureSphere::dilateTexture(size_t index, PathTraceContext* ptc) {
 	  // Pixel is not occluded, so go to the next one
 	  continue;
 	
-	float ave[3] = {0,0,0};
+	float ave = 0;
 	float contribution_total = 0;
 	// Loop over each neighbor
 	for(int j = y-support; j <= y+support; j++)
@@ -467,19 +420,14 @@ void TextureSphere::dilateTexture(size_t index, PathTraceContext* ptc) {
 	      float contributer=inside(newi, newj);
 	      if (contributer < threshold) {
 		contributer*=use_weighted_ave;
-		Color tex=texture(newi, newj);
-		ave[0]=ave[0]+tex[0]*(1-contributer);
-		ave[1]=ave[1]+tex[1]*(1-contributer);
-		ave[2]=ave[2]+tex[2]*(1-contributer);
+		ave+=texture(newi, newj)*(1-contributer);
 		contribution_total+=(1-contributer);
 	      }
 	    }
 	
 	// Dilate the pixel
 	if (contribution_total > 0) {
-	  dilated(x,y)[0]=ave[0]/contribution_total;
-	  dilated(x,y)[1]=ave[1]/contribution_total;
-	  dilated(x,y)[2]=ave[2]/contribution_total;
+	  dilated(x,y)=ave/contribution_total;
 	}
       }
   
@@ -506,15 +454,15 @@ void TextureSphere::writeTexture(char* basename, size_t index,
   int height = texture.dim2();
   fprintf(out, "NRRD0001\n");
   fprintf(out, "type: float\n");
-  fprintf(out, "dimension: 3\n");
-  fprintf(out, "sizes: 3 %d %d\n", width, height);
-  fprintf(out, "spacings: NaN 1 1\n");
+  fprintf(out, "dimension: 2\n");
+  fprintf(out, "sizes: %d %d\n", width, height);
+  fprintf(out, "spacings: 1 1\n");
 #ifdef __sgi
   fprintf(out, "endian: big\n");
 #else
   fprintf(out, "endian: little\n");
 #endif
-  fprintf(out, "labels: \"rgb\" \"x\" \"y\"\n");
+  fprintf(out, "labels: \"x\" \"y\"\n");
   fprintf(out, "encoding: raw\n");
   fprintf(out, "\n");
   
@@ -531,22 +479,20 @@ void TextureSphere::writeData(FILE *outfile, size_t index, PathTraceContext* ptc
   // Iterate over each texel
   int width = texture.dim1();
   int height = texture.dim2();
-  for(int v = 0; v < height; v++)
+  for(int v = 0; v < height; v++) {
     for(int u = 0; u < width; u++) {
-      float data[3];
-      data[0] = texture(u,v).red();
-      data[1] = texture(u,v).green();
-      data[2] = texture(u,v).blue();
-      if (fwrite(data, sizeof(float), 3, outfile) != 3) {
+      float data = texture(u,v);
+      if (fwrite(&data, sizeof(float), 1, outfile) != 1) {
 	cerr << "Trouble writing texel for sphere at ["<<u<<", "<<v<<"]\n";
 	return;
       }
     }
+  }
 }
 
 PathTraceLight::PathTraceLight(const Point &cen, double radius,
-			       const Color &c):
-  center(cen), radius(radius), color(c)
+			       float lum):
+  center(cen), radius(radius), luminance(lum)
 {
   area = 2.*M_PI*radius;
 }
