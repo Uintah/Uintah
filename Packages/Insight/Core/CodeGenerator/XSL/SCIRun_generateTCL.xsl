@@ -2,15 +2,37 @@
 <xsl:stylesheet 
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
-<xsl:output method="text" indent="no"/>
+  <xsl:output method="text" indent="no"/>
 
+
+<!-- ========================================== -->
 <!-- ============ GLOBAL VARIABLES ============ -->
-<xsl:variable name="gui_specified"><xsl:value-of select="/filter/filter-gui"/></xsl:variable>
-<xsl:variable name="no_params"><xsl:value-of select="/filter/filter-itk/parameters/param"/></xsl:variable>	      
+<!-- ========================================== -->
+<!-- Variable gui_specifed indicates whether a gui xml
+     file was specified in the sci xml file.  If no gui
+     was specified, all parameters will be represented by
+     a text-entry and the UI button will still appear on 
+     the module. 
+-->
+<xsl:variable name="gui_specified">
+	<xsl:value-of select="/filter/filter-gui"/>
+</xsl:variable>
 
-<!-- ============== /FILTER =====================-->
+<!-- Variable no_params indicates when a filter has no
+     parameters.  In this case, no UI button should be
+     generated. 
+-->
+<xsl:variable name="no_params">
+	<xsl:value-of select="/filter/filter-itk/parameters/param"/>
+</xsl:variable>	      
+
+
+
+<!-- =========================================== -->
+<!-- ========== FILTER ROOT TAG ================ -->
+<!-- =========================================== -->
 <xsl:template match="/filter">
-<!-- Insert copyright -->
+<!-- Insert SCIRun copyright and auto-generated message-->
 <xsl:text>#
 #  The contents of this file are subject to the University of Utah Public
 #  License (the "License"); you may not use this file except in compliance
@@ -29,27 +51,24 @@
 #
 
 #############################################################
-#  This is an auto generated file for the 
-#  </xsl:text><xsl:value-of select="/filter/filter-itk/@name"/><xsl:text>
+#  This is an automatically generated file for the 
+#  </xsl:text><xsl:value-of select="/filter/filter-itk/@name"/>
+#############################################################
 
-</xsl:text>
-<xsl:text> itcl_class Insight_Filters_</xsl:text>
-<!-- Constructor -->
-<xsl:value-of select="/filter/filter-sci/@name"/>
-<xsl:text> {
+<!-- define the itcl class -->
+ itcl_class Insight_Filters_<xsl:value-of select="/filter/filter-sci/@name"/> {
     inherit Module
     constructor {config} {
-         set name </xsl:text>
-<xsl:value-of select="/filter/filter-sci/@name"/>
+         set name <xsl:value-of select="/filter/filter-sci/@name"/>
 <xsl:text>
 </xsl:text>
-<!-- Create globals corresponding to parameters -->
+<!-- Create globals corresponding to parameters which will be used
+     on the C++ side
+ -->
 <xsl:choose>
 <xsl:when test="$gui_specified = ''">
 <xsl:for-each select="/filter/filter-itk/parameters/param">
-<xsl:text>
-         global $this-</xsl:text> 
-<xsl:value-of select="name"/>  
+         global $this-<xsl:value-of select="name"/>  
 </xsl:for-each>
 </xsl:when>
 <xsl:otherwise>
@@ -59,41 +78,36 @@
 <xsl:value-of select="@name"/>  
 </xsl:for-each>
 </xsl:otherwise>
-</xsl:choose><xsl:text>
+</xsl:choose>
 
          set_defaults
     }
-</xsl:text>
-<!-- Create set_defaults function -->
-<xsl:text>
+<!-- Create set_defaults method. If the gui isn't
+     specified, run for loop over itk xml parameters
+     and initialize everything to 0
+-->
     method set_defaults {} {
-</xsl:text>
 <xsl:choose>
 <xsl:when test="$gui_specified = ''">
 <xsl:for-each select="/filter/filter-itk/parameters/param">
-<xsl:text>
-         set $this-</xsl:text> 
-<xsl:value-of select="name"/><xsl:text> 0</xsl:text> 
+         set $this-<xsl:value-of select="name"/> 0 
 </xsl:for-each>
 </xsl:when>
+
 <xsl:otherwise>
 <xsl:for-each select="/filter/filter-gui/parameters/param">
-<xsl:text>
-         set $this-</xsl:text> 
-<xsl:value-of select="@name"/><xsl:text> </xsl:text>  
-<xsl:value-of select="default"/>
-</xsl:for-each>
+         set $this-<xsl:value-of select="@name"/><xsl:text> </xsl:text><xsl:value-of select="default"/></xsl:for-each>
 </xsl:otherwise>
+
 </xsl:choose>
-<xsl:text>    
     }
-</xsl:text>
-<!-- Create ui function -->
+<!-- Create ui method only if there are parameters for
+     a gui.
+ -->
 <xsl:choose>
-<xsl:when test="$no_params = ''"> <!-- no ui method -->
-</xsl:when>
+<xsl:when test="$no_params = ''"> <!-- no ui method --></xsl:when>
+
 <xsl:otherwise>
-<xsl:text>
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -103,17 +117,25 @@
 	    raise $child
 	    return;
         }
+
         toplevel $w
-</xsl:text>
-<!-- Parameters -->
+<!-- Create parameter widgets.  If no gui was specified 
+     have everything default to a text entry
+-->  
 <xsl:choose>
+<!-- text-entry -->
 <xsl:when test="$gui_specified = ''">
 <xsl:for-each select="/filter/filter-itk/parameters/param">
 <xsl:variable name="gui"><xsl:value-of select="gui"/></xsl:variable>
-  <xsl:call-template name="create_text_entry">
+<xsl:call-template name="create_text_entry">
   </xsl:call-template>
 </xsl:for-each>
 </xsl:when>
+
+<!-- A specific gui has been defined in the gui xml file.
+     Each widget call needs certain parameters to create
+     its gui and each gui will be created in its own frame.
+ -->
 <xsl:otherwise>
 <xsl:for-each select="/filter/filter-gui/parameters/param">
 <xsl:variable name="gui"><xsl:value-of select="gui"/></xsl:variable>
@@ -141,25 +163,31 @@
   <xsl:call-template name="create_text_entry">
   </xsl:call-template>
 </xsl:otherwise>
+
 </xsl:choose>
 
 </xsl:for-each>
 </xsl:otherwise>
 </xsl:choose>
+
+<!-- Every gui must have an execute and close button -->
 <xsl:call-template name="execute_and_close_buttons"/>
 <xsl:text>
     }
 </xsl:text>
 </xsl:otherwise>
 </xsl:choose>
-<xsl:text>
 }
-
-</xsl:text>
-
 </xsl:template>
 
-<!--  ================= WIDGET FUNCTIONS ================= -->
+
+
+
+<!-- ==================================================== -->
+<!-- ================= WIDGET FUNCTIONS ================= -->
+<!-- ==================================================== -->
+
+<!-- Execute and Close Buttons -->
 <xsl:template name="execute_and_close_buttons">
 <xsl:text disable-output-escaping="yes">        
         frame $w.buttons
@@ -170,7 +198,8 @@
 </xsl:text>
 </xsl:template>
 
-<!-- CREATE_TEXT_ENTRY -->
+
+<!-- Text entry gui -->
 <xsl:template name="create_text_entry">
 <xsl:variable name="widget">entry</xsl:variable>
 <xsl:choose>
@@ -192,28 +221,26 @@
 <xsl:text>
 </xsl:text>
 </xsl:when>
+<!--   -->
 <xsl:otherwise>
 <xsl:variable name="path"><xsl:text>$w.</xsl:text><xsl:value-of select="@name"/>
 </xsl:variable>
-<xsl:text>
-        frame </xsl:text><xsl:value-of select="$path"/><xsl:text>
-        label </xsl:text><xsl:value-of select="$path"/><xsl:text disable-output-escaping="yes">.label -text &quot;</xsl:text><xsl:value-of select="@name"/><xsl:text disable-output-escaping="yes">&quot;
+        frame <xsl:value-of select="$path"/>
+        label <xsl:value-of select="$path"/><xsl:text disable-output-escaping="yes">.label -text &quot;</xsl:text><xsl:value-of select="@name"/><xsl:text disable-output-escaping="yes">&quot;
         </xsl:text>
-<xsl:value-of select="$widget"/>
-<xsl:text> </xsl:text>
+<xsl:value-of select="$widget"/><xsl:text> </xsl:text>
 <xsl:value-of select="$path"/><xsl:text>.</xsl:text><xsl:value-of select="$widget"/>
 <xsl:text> -textvariable $this-</xsl:text><xsl:value-of select="@name"/><xsl:text>
         pack </xsl:text><xsl:value-of select="$path"/><xsl:text>.label </xsl:text>
 <xsl:value-of select="$path"/><xsl:text>.</xsl:text><xsl:value-of select="$widget"/><xsl:text> -side left
-</xsl:text>
-<xsl:text>        pack </xsl:text><xsl:value-of select="$path"/>
+        pack </xsl:text><xsl:value-of select="$path"/>
 <xsl:text>
 </xsl:text>
 </xsl:otherwise>
 </xsl:choose>
 </xsl:template>
 
-<!-- CREATE_SCROLLBAR -->
+<!-- Scrollbar gui. A scrollbar must have a min and max. -->
 <xsl:template name="create_scrollbar">
   <xsl:param name="from"/>
   <xsl:param name="to"/>
@@ -221,8 +248,7 @@
 <xsl:variable name="widget">scale</xsl:variable>
 <xsl:variable name="path"><xsl:text>$w.</xsl:text><xsl:value-of select="@name"/>
 </xsl:variable>
-<xsl:text>
-        frame </xsl:text><xsl:value-of select="$path"/><xsl:text>
+        frame <xsl:value-of select="$path"/><xsl:text>
         </xsl:text>
 <xsl:value-of select="$widget"/>
 <xsl:text> </xsl:text>
@@ -232,14 +258,13 @@
            -from <xsl:value-of select="$from"/> -to <xsl:value-of select="$to"/> -orient horizontal<xsl:text>
         pack </xsl:text>
 <xsl:value-of select="$path"/><xsl:text>.</xsl:text><xsl:value-of select="$widget"/><xsl:text> -side left
-</xsl:text>
-<xsl:text>        pack </xsl:text><xsl:value-of select="$path"/>
+        pack </xsl:text><xsl:value-of select="$path"/>
 <xsl:text>
 </xsl:text>	     
 </xsl:template>
 
 
-<!-- CREATE_CHECKBUTTON -->
+<!-- Checkbutton gui -->
 <xsl:template name="create_checkbutton">
 <xsl:variable name="widget">checkbutton</xsl:variable>
 <xsl:variable name="path"><xsl:text>$w.</xsl:text><xsl:value-of select="@name"/>
@@ -254,15 +279,13 @@
            -text &quot;<xsl:value-of select="@name"/>&quot; \
 <xsl:text>           -variable $this-</xsl:text><xsl:value-of select="@name"/>
         pack <xsl:value-of select="$path"/><xsl:text>.</xsl:text><xsl:value-of select="$widget"/><xsl:text> -side left
-</xsl:text>
-<xsl:text>        pack </xsl:text><xsl:value-of select="$path"/>
+        pack </xsl:text><xsl:value-of select="$path"/>
 <xsl:text>
-
 </xsl:text>
 </xsl:template>
 
 
-<!-- CREATE_RADIOBUTTON -->
+<!-- Radiobutton gui -->
 <xsl:template name="create_radiobutton">
   <xsl:param name="values"/>
 <xsl:variable name="name"><xsl:value-of select="@name"/></xsl:variable>
@@ -284,7 +307,7 @@
         pack <xsl:value-of select="$path"/><xsl:text>.</xsl:text><xsl:value-of select="position()"/><xsl:text> -side left
 </xsl:text>
 </xsl:for-each>
-<xsl:text>        pack </xsl:text> <xsl:value-of select="$path"/>
+        pack <xsl:value-of select="$path"/>
 <xsl:text>
 </xsl:text>	     
 </xsl:template>
