@@ -7,18 +7,15 @@ OBJS = AsyncReply.o Parallel.o Thread.o AtomicCounter.o \
 	Reducer.o ThreadTopology.o Runnable.o WorkQueue.o Mutex.o \
 	Semaphore.o Thread_irix.o
 
-#CCFLAGS = -O2 -m486
-#CCC = g++
-#CCFLAGS = -g -n32 -mips4
-CCFLAGS = -g -64 -mips4 -fullwarn
-CCC = CC -LANG:ansi-for-init-scope=ON -MDupdate Makedepend
+TOP = ..
 
-.SUFFIXES: .cc
-.cc.o:
-	$(CCC) -c $(CCFLAGS) $<
+include ../make.config
 
 libThread.a: $(OBJS)
 	rm -f $@
-	ar qcv $@ $(OBJS)
+	$(AR) $@ $(OBJS)
+
+Makedepend:
+	touch Makedepend
 
 include Makedepend

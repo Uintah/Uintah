@@ -47,6 +47,7 @@ class Thread {
     friend class Semaphore;
     friend class Barrier;
     friend class PoolMutex;
+    friend class WorkQueue;
     
     //////////
     //<i>No documentation provided</i>
