@@ -171,9 +171,11 @@ public:
 
 
       void computeDivergence(const ProcessorGroup*,
-				  const Patch* patch,
-				  ArchesVariables* vars,
-				  ArchesConstVariables* constvars);
+			     const Patch* patch,
+			     ArchesVariables* vars,
+			     ArchesConstVariables* constvars,
+			     const bool filter_divergence,
+			     const bool periodic);
 
 #ifdef PetscFilter
       inline void setFilter(Filter* filter) {

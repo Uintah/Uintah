@@ -111,6 +111,7 @@ private:
    const ArchesLabel* d_lab;
    BoundaryCondition* d_boundaryCondition;
 
+   bool d_3d_periodic;
    bool d_matrixInitialize;
 #ifdef HAVE_PETSC
    map<const Patch*, int> d_petscGlobalStart;
