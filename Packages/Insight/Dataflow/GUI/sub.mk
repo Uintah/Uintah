@@ -30,7 +30,7 @@ SRCDIR := Packages/Insight/Dataflow/GUI
 
 PATH_TO_SCIRUN := $(shell cd $(SRCTOP) ; pwd)
 
-CODEGEN := Packages/Insight/Core/CodeGenerator/generate
+CODEGEN := GenerateSCIRunCode
 
 XMLS :=  \
 	sci_DiscreteGaussianImageFilter.xml \
@@ -50,7 +50,7 @@ INSIGHT_TCL_GEN := $(patsubst sci_%.xml, $(SRCDIR)/%.tcl, $(XMLS))
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 Packages/Insight/Dataflow/GUI/%.tcl:  Packages/Insight/Dataflow/Modules/Filters/XML/sci_%.xml
-	java $(CODEGEN) $(PATH_TO_SCIRUN)/Packages/Insight $(CATEGORY) $* -gui 
+	java $(CODEGEN) $(PATH_TO_PACKAGE) $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/XML/sci_$*.xml $(PATH_TO_PACKAGE)/Core/CodeGenerator/XSL/SCIRun_generateTCL.xsl $(PATH_TO_PACKAGE)/Dataflow/GUI/$*.tcl
 
 $(SRCDIR)/tclIndex: $(INSIGHT_TCL_GEN) \
 	$(SRCDIR)/ImageFileWriter.tcl \
