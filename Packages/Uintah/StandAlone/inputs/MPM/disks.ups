@@ -46,11 +46,11 @@
                   <type>null</type>
                 </burn>
 		<density>1000.0</density>
-		<comp_mooney_rivlin> 
+		<constitutive_model type="comp_mooney_rivlin"> 
 		   <he_constant_1>100000.0</he_constant_1>
 		   <he_constant_2>20000.0</he_constant_2>
 		   <he_PR>.49</he_PR>
-	        </comp_mooney_rivlin>
+	        </constitutive_model>
 		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
