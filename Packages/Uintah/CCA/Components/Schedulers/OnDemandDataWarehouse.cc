@@ -1700,7 +1700,7 @@ void
 OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
 				     const Task::Dependency* dep,
 				     AccessType accessType,
-				     const PatchSubset* comainPatches,
+				     const PatchSubset* domainPatches,
 				     const MaterialSubset* domainMatls)
 {
   if (currentTask->isReductionTask())
@@ -1775,7 +1775,7 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
     if(patches && patches->getReferenceCount() == 0)
       delete patches;
     if(matls && matls->getReferenceCount() == 0)
-      delete matls;     
+      delete matls;
   }
 
   default_patches.removeReference();
