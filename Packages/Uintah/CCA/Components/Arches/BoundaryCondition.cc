@@ -1980,7 +1980,7 @@ BoundaryCondition::newrecomputePressureBC(const ProcessorGroup* /*pc*/,
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-    fort_calbc(vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, idxLo, idxHi,
+    fort_calpbc(vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, idxLo, idxHi,
 		    vars->pressure, vars->density, vars->cellType,
 		    d_pressureBdry->d_cellTypeID,
 		    d_pressureBdry->refPressure,
