@@ -19,6 +19,7 @@
 #include <stdio.h>
 #ifdef _WIN32
 #include <io.h>
+#include <iostream.h> // for cerr 
 #endif
 
 #include <PSECore/Dataflow/Connection.h>
@@ -101,6 +102,10 @@ Demand_Message::~Demand_Message()
 
 //
 // $Log$
+// Revision 1.6  1999/10/26 22:01:03  moulding
+// put #include <iostream.h> back into the win32 #ifdef because cerr isn't in
+// the visual c++ std namespace yet
+//
 // Revision 1.5  1999/10/07 02:07:19  sparker
 // use standard iostreams and complex type
 //
