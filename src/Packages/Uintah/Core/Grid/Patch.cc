@@ -1,4 +1,3 @@
-
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
@@ -117,6 +116,11 @@ Patch::~Patch()
 //     patches.erase( patches.find(getID()));
     patches.erase( getID() );
   }
+ for(Patch::FaceType face = Patch::startFace;
+     face <= Patch::endFace; face=Patch::nextFace(face))
+    delete array_bcs[face];
+
+  array_bcs.clear();
 }
 
 const Patch* Patch::getByID(int id)
@@ -981,71 +985,20 @@ Patch::setBCValues(Patch::FaceType face, BoundCondData& bc)
 	      getBCType(zplus) == Neighbor?0:1);
 }
 
+
 void 
-Patch::setArrayBCValues(Patch::FaceType face, BCDataArray& bc)
+Patch::setArrayBCValues(Patch::FaceType face, BCDataArray* bc)
 {
   // At this point need to set up the iterators for each BCData type:
   // Side, Rectangle, Circle, Difference, and Union.
-  IntVector l,h,li,hi,ln,hn,l_pts,h_pts;
-  getFaceCells(face,0,l,h);
-  getFaceCells(face,-1,li,hi);
-  getFaceNodes(face,0,ln,hn);
-
-  l_pts = li;
-  h_pts = hi;
-  // Loop over the various material ids.
+#if 1
+  bc->determineIteratorLimits(face,this);
+#else
+  bc->oldDetermineIteratorLimits(face,this);
+#endif
+  array_bcs[face] = bc->clone();
+}  
  
-  BCDataArray::bcDataArrayType::const_iterator mat_id_itr;
-  for (mat_id_itr = bc.d_BCDataArray.begin(); 
-       mat_id_itr != bc.d_BCDataArray.end(); ++mat_id_itr) {
-    int mat_id = mat_id_itr->first;
-    for (int c = 0; c < bc.getNumberChildren(mat_id); c++) {
-      CellIterator interior(li,hi), candidatePoints(l_pts,h_pts);
-      vector<IntVector> bound,inter,nbound;
-      for (CellIterator boundary(l,h);!boundary.done();boundary++,interior++,
-	     candidatePoints++) {
-	IntVector nodes[8];
-	findNodesFromCell(*candidatePoints,nodes);
-	Point pts[8];
-	Vector p;
-	for (int i = 0; i < 8; i++)
-	  pts[i] = this->getLevel()->getNodePosition(nodes[i]);
-	if (face == Patch::xminus)
-	  p = (pts[0].asVector()+pts[1].asVector()+pts[2].asVector()
-	       +pts[3].asVector())/4.;
-	if (face == Patch::xplus)
-      	  p = (pts[4].asVector()+pts[5].asVector()+pts[6].asVector()
-	       +pts[7].asVector())/4.;
-	if (face == Patch::yminus)
-      	  p = (pts[0].asVector()+pts[1].asVector()+pts[4].asVector()
-	       +pts[5].asVector())/4.;
-	if (face == Patch::yplus)
-      	  p = (pts[2].asVector()+pts[3].asVector()+pts[6].asVector()
-	       +pts[7].asVector())/4.;
-	if (face == Patch::zminus)
-      	  p = (pts[0].asVector()+pts[2].asVector()+pts[4].asVector()
-	       +pts[6].asVector())/4.;
-	if (face == Patch::zplus)
-      	  p = (pts[1].asVector()+pts[3].asVector()+pts[5].asVector()
-	       +pts[7].asVector())/4.;
-	
-	if ((bc.getChild(mat_id,c))->inside(Point(p.x(),p.y(),p.z()))) 
-	  bound.push_back(*boundary);
-	
-      }
-      for (NodeIterator boundary(ln,hn);!boundary.done();boundary++) {
-	Point p = this->getLevel()->getNodePosition(*boundary);
-	if ((bc.getChild(mat_id,c))->inside(p)) 
-	  nbound.push_back(*boundary);
-      }
-      bc.setBoundaryIterator(mat_id,bound,c);
-      bc.setNBoundaryIterator(mat_id,nbound,c);
-    }
-  }
-  array_bcs[face] = bc;
-}
-
-
 
 const BoundCondBase*
 Patch::getBCValues(int mat_id,string type,Patch::FaceType face) const
@@ -1053,13 +1006,13 @@ Patch::getBCValues(int mat_id,string type,Patch::FaceType face) const
   return d_bcs[face].getBCValues(mat_id,type);
 }
 
-BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
+const BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
 {
-  map<Patch::FaceType,BCDataArray>* m = 
-    const_cast<map<Patch::FaceType, BCDataArray>* >(&array_bcs);
-  BCDataArray* ubc = &((*m)[face]);
-  return ubc;
-  
+  map<Patch::FaceType,BCDataArray*>::const_iterator itr = array_bcs.find(face);
+  if (itr != array_bcs.end())
+    return itr->second;
+  else
+    return 0;
 }
 
 const BoundCondBase*
@@ -1071,51 +1024,52 @@ Patch::getArrayBCValues(Patch::FaceType face,int mat_id,string type,
 			vector<IntVector>& sfz,
 			int child) const
 {
-  map<Patch::FaceType,BCDataArray >* m = 
-    const_cast<map<Patch::FaceType,BCDataArray>* >(&array_bcs);
-  BCDataArray* ubc = &((*m)[face]);
-  const BoundCondBase* bc = ubc->getBoundCondData(mat_id,type,child);
-  ubc->getBoundaryIterator(mat_id,bound,child);
-  ubc->getNBoundaryIterator(mat_id,nbound,child);
-  ubc->getSFCZIterator(mat_id,sfx,child);
-  ubc->getSFCYIterator(mat_id,sfy,child);
-  ubc->getSFCZIterator(mat_id,sfz,child);
-
-  return bc;
+  map<Patch::FaceType,BCDataArray* >::const_iterator itr=array_bcs.find(face); 
+  if (itr != array_bcs.end()) {
+    const BoundCondBase* bc = itr->second->getBoundCondData(mat_id,type,child);
+    itr->second->getBoundaryIterator(mat_id,bound,child);
+    itr->second->getNBoundaryIterator(mat_id,nbound,child);
+    itr->second->getSFCZIterator(mat_id,sfx,child);
+    itr->second->getSFCYIterator(mat_id,sfy,child);
+    itr->second->getSFCZIterator(mat_id,sfz,child);
+    return bc;
+  } else
+    return 0;
 }
 
 bool 
 Patch::haveBC(FaceType face,int mat_id,string bc_type,string bc_variable) const
 {
-  map<Patch::FaceType,BCDataArray >* m = 
-    const_cast<map<Patch::FaceType,BCDataArray>* >(&array_bcs);
-  BCDataArray* ubc = &((*m)[face]);
-#if 0
-  cout << "Inside haveBC" << endl;
-  ubc->print();
-#endif
-  BCDataArray::bcDataArrayType::const_iterator v_itr;
-  vector<BCGeomBase*>::const_iterator it;
+  map<Patch::FaceType,BCDataArray* >::const_iterator itr=array_bcs.find(face); 
 
-  v_itr = ubc->d_BCDataArray.find(mat_id);
-  if (v_itr != ubc->d_BCDataArray.end()) { 
-    for (it = v_itr->second.begin(); it != v_itr->second.end(); ++it) {
+  if (itr != array_bcs.end()) {
+#if 0
+    cout << "Inside haveBC" << endl;
+    ubc->print();
+#endif
+    BCDataArray::bcDataArrayType::const_iterator v_itr;
+    vector<BCGeomBase*>::const_iterator it;
+    
+    v_itr = itr->second->d_BCDataArray.find(mat_id);
+    if (v_itr != itr->second->d_BCDataArray.end()) { 
+      for (it = v_itr->second.begin(); it != v_itr->second.end(); ++it) {
       BCData bc;
       (*it)->getBCData(bc);
       bool found_variable = bc.find(bc_type,bc_variable);
       if (found_variable)
 	return true;
-    }
-  } 
-  // Check the mat_it = "all" case
-  v_itr = ubc->d_BCDataArray.find(-1);
-  if (v_itr != ubc->d_BCDataArray.end()) {
-    for (it = v_itr->second.begin(); it != v_itr->second.end(); ++it) {
-      BCData bc;
-      (*it)->getBCData(bc);
-      bool found_variable = bc.find(bc_type,bc_variable);
-      if (found_variable)
-	return true;
+      }
+    } 
+    // Check the mat_it = "all" case
+    v_itr = itr->second->d_BCDataArray.find(-1);
+    if (v_itr != itr->second->d_BCDataArray.end()) {
+      for (it = v_itr->second.begin(); it != v_itr->second.end(); ++it) {
+	BCData bc;
+	(*it)->getBCData(bc);
+	bool found_variable = bc.find(bc_type,bc_variable);
+	if (found_variable)
+	  return true;
+      }
     }
   }
   return false;

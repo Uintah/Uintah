@@ -4,7 +4,6 @@
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 //#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/BCDataArray.h>
 #include <Packages/Uintah/Core/Grid/BoundCondData.h>
 #include <Packages/Uintah/Core/Grid/fixedvector.h>
 
@@ -19,12 +18,14 @@
 #include <string>
 #include <map>
 #include <iosfwd>
+#include <vector>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 
   using std::string;
   using std::map;
+  using std::vector;
 
   using SCIRun::Vector;
   using SCIRun::Point;
@@ -35,6 +36,7 @@ namespace Uintah {
   class BCData;
   class Level;
   class Box;
+  class BCDataArray;
    
 /**************************************
       
@@ -341,11 +343,11 @@ WARNING
      BCType getBCType(FaceType face) const;
      void setBCType(FaceType face, BCType newbc);
      void setBCValues(FaceType face, BoundCondData& bc);
-     void setArrayBCValues(FaceType face, BCDataArray& bc);
+     void setArrayBCValues(FaceType face, BCDataArray* bc);
      const BoundCondBase* getBCValues(int mat_id,string type,
 				      FaceType face) const;
 
-     BCDataArray* getBCDataArray(Patch::FaceType face) const;
+     const BCDataArray* getBCDataArray(Patch::FaceType face) const;
 
      const BoundCondBase* getArrayBCValues(FaceType face,int mat_id,
 					   string type,
@@ -354,7 +356,7 @@ WARNING
 					   vector<IntVector>& sfx,
 					   vector<IntVector>& sfy,
 					   vector<IntVector>& sfz,
-					   int child) const;
+					   int child) const ;
      
      bool haveBC(FaceType face,int mat_id,string bc_type,
 		 string bc_variable) const;
@@ -604,7 +606,7 @@ WARNING
      // Added an extra vector<> for each material
      BCType d_bctypes[numFaces];  // specifies bc type for each face
      vector<BoundCondData> d_bcs;
-     map<Patch::FaceType,BCDataArray > array_bcs;
+     map<Patch::FaceType,BCDataArray* > array_bcs;
      bool in_database;
      bool have_layout;
      IntVector layouthint;
@@ -618,6 +620,7 @@ WARNING
      vector<IntVector> d_CornerCells[Patch::numFaces];
      
    };
+
 
 } // End namespace Uintah
 
