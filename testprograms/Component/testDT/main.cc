@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
 
       PIDL::initialize(argc, argv);
       if(server) {
-	DTPoint *ep=new DTPoint;
+	DTPoint *ep=new DTPoint(PIDL::getDT());
 	ofstream f("pp.url");
 	std::string s;
 	f<<PIDL::getDT()->getUrl()<<endl;
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
       }
       else if(client){
 	ifstream f("pp.url");
-	DTPoint *sp=new DTPoint;
+	DTPoint *sp=new DTPoint(PIDL::getDT());
 	long ep;
 	string ppurl;
 	f>>ppurl;
@@ -142,12 +142,12 @@ int main(int argc, char* argv[])
 	long ip=url.getIP();
 
 	for(int i=0; i<5; i++){
-	  sleep(2);
 	  DTMessage *msg=new DTMessage;
-	  msg->buf=new char[40];
-	  sprintf(msg->buf, "$This is message #%d$",i);
-	  msg->length=strlen(msg->buf);
-	  msg->autofree=false;
+	  const int SIZE=80000;
+	  msg->buf=new char[SIZE];
+	  msg->length=SIZE;
+	  sprintf(msg->buf, "$This is LONG message #%d$...\0",i);
+	  msg->autofree=true;
 	  msg->to_addr.port=port;
 	  msg->to_addr.ip  =ip;
 	  msg->recver= (DTPoint *)ep;
