@@ -3522,13 +3522,19 @@ AC_MSG_CHECKING(for $_sci_optional freetype)
 
 found_freetype_config="no"
 
-if test -e $_sci_lib/../bin/freetype-config; then
+if test -z "$_sci_lib"; then
+   freetype_bin=/usr/bin
+else
+   freetype_bin=$_sci_lib/../bin
+fi
+
+if test -e $freetype_bin/freetype-config; then
     found_freetype_config="yes"
     echo
-    AC_MSG_RESULT(Using $_sci_lib/../bin/freetype-config to set freetype variables.)
+    AC_MSG_RESULT(Using $freetype_bin/freetype-config to set freetype variables.)
 
-    includes=`$_sci_lib/../bin/freetype-config --cflags`
-    FREETYPE_LIB_FLAG=`$_sci_lib/../bin/freetype-config --libs`
+    includes=`$freetype_bin/freetype-config --cflags`
+    FREETYPE_LIB_FLAG=`$freetype_bin/freetype-config --libs`
 
     SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
                  $_sci_inc,$FREETYPE_LIB_FLAG,$_sci_lib,$includes,,$_sci_optional)
