@@ -680,7 +680,6 @@ void ImpMPM::iterate(const ProcessorGroup*,
   int count = 0;
   bool dispInc = false;
   bool dispIncQ = false;
-  bool haveanan = false;
   sum_vartype dispIncQNorm,dispIncNorm,dispIncQNorm0,dispIncNormMax;
 
   // Get all of the required particle data that is in the old_dw and put it 
@@ -745,18 +744,12 @@ void ImpMPM::iterate(const ProcessorGroup*,
            << dispIncQNorm/(dispIncQNorm0 + 1.e-100) << "\n";
     }
     if ((dispIncNorm/(dispIncNormMax + 1e-100) <= d_conv_crit_disp) &&
-                                                          dispIncNormMax != 0.0)
+	dispIncNormMax != 0.0)
       dispInc = true;
     if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy)
       dispIncQ = true;
     // Check to see if the residual is likely a nan, if so, we'll restart.
-    if(!((dispIncQNorm/(dispIncQNorm0 + 1e-100) > d_SMALL_NUM_MPM) &&
-         (dispIncQNorm/(dispIncQNorm0 + 1e-100) < 1./d_SMALL_NUM_MPM)) ||
-       !((dispIncNorm/(dispIncNormMax + 1e-100) > d_SMALL_NUM_MPM) &&
-         (dispIncNorm/(dispIncNormMax + 1e-100) < 1./d_SMALL_NUM_MPM))){
-      haveanan=true;
-    }
-    if(haveanan){
+    if (isnan(dispIncQNorm/dispIncQNorm0)||isnan(dispIncNorm/dispIncNormMax)){
       new_dw->abortTimestep();
       new_dw->restartTimestep();
       return;
