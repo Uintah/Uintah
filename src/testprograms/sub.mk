@@ -20,7 +20,7 @@
 SRCDIR := testprograms
 
 SUBDIRS := $(SRCDIR)/Malloc $(SRCDIR)/Thread
-ifeq ($(BUILD_PARALLEL),yes)
+ifeq ($(BUILD_SCIRUN2),yes)
 SUBDIRS := $(SUBDIRS) $(SRCDIR)/Component
 endif
 
