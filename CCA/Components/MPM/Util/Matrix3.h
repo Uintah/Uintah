@@ -77,6 +77,9 @@ class Matrix3 {
   // subtract two Matrix3s
   inline Matrix3 operator - (const Matrix3 &m3) const;
 
+  // compare two Matrix3s
+  inline bool operator==(const Matrix3 &m3) const;
+
   // multiply by constant
   inline void operator *= (const double value);
 
@@ -432,6 +435,14 @@ inline Matrix3 Matrix3::operator - (const Matrix3 &m3) const
   return Matrix3(mat3[0][0] - m3(1,1),mat3[0][1] - m3(1,2),mat3[0][2] - m3(1,3),
 		 mat3[1][0] - m3(2,1),mat3[1][1] - m3(2,2),mat3[1][2] - m3(2,3),
 		 mat3[2][0] - m3(3,1),mat3[2][1] - m3(3,2),mat3[2][2] - m3(3,3));
+}
+
+inline bool Matrix3::operator==(const Matrix3 &m3) const
+{
+  return
+    mat3[0][0] == m3(1,1) && mat3[0][1] == m3(1,2) && mat3[0][2] == m3(1,3) &&
+    mat3[1][0] == m3(2,1) && mat3[1][1] == m3(2,2) && mat3[1][2] == m3(2,3) &&
+    mat3[2][0] == m3(3,1) && mat3[2][1] == m3(3,2) && mat3[2][2] == m3(3,3);
 }
 
 inline Matrix3 Matrix3::operator / (const double value) const
