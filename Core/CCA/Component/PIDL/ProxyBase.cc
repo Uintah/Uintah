@@ -85,9 +85,9 @@ void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
   }
 }
 
-ReferenceMgr* ProxyBase::_proxyGetReferenceMgr()  
+ReferenceMgr* ProxyBase::_proxyGetReferenceMgr() const
 {
-  return (&rm);
+  return (ReferenceMgr*)(&rm);
 }
 
 ::std::string ProxyBase::getProxyUUID()

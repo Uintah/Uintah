@@ -100,17 +100,17 @@ URL Object::getURL() const
 }
 
 void
-Object::_getReference(Reference& ref, bool copy) const
+Object::_getReferenceCopy(ReferenceMgr** refM) const
 {
   if(!d_serverContext)
     throw InternalError("Object::getReference called for a non-server object");
-  if(!copy){
-    throw InternalError("Object::getReference called with copy=false");
-  }
   if(!d_serverContext->d_endpoint_active)
     activateObject();
-  ref.d_vtable_base=TypeInfo::vtable_methods_start;
-  d_serverContext->bind(ref);
+  (*refM) = new ReferenceMgr();
+  Reference* ref = new Reference();
+  ref->d_vtable_base=TypeInfo::vtable_methods_start;
+  d_serverContext->bind(*ref);
+  (*refM)->insertReference(ref);
 }
 
 void

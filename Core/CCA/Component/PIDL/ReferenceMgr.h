@@ -161,10 +161,6 @@ DESCRIPTION
     //////////
     // A vector of reference pointers to the remote objects.
     refList d_ref;
-
-    //////////
-    // Copy the reference.manager
-    ReferenceMgr& operator=(const ReferenceMgr&);
   };
 } // End namespace SCIRun
 

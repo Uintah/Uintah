@@ -66,20 +66,13 @@ void MxNScheduleEntry::addCallerRep(MxNArrayRep* arr_rep)
     int myrank = arr_rep->getRank();
     descriptorList::iterator iter = caller_rep.begin();
     for(unsigned int i=0; i < caller_rep.size(); i++, iter++) 
-      if(myrank == (*iter)->getRank()) delete (*iter);
+    if(myrank == (*iter)->getRank()) delete (*iter);
   }
   caller_rep.push_back(arr_rep);
 }
 
 void MxNScheduleEntry::addCalleeRep(MxNArrayRep* arr_rep)
 {
-  if(scht == caller) {
-    //Check if a representation with the same rank exists
-    int myrank = arr_rep->getRank();
-    descriptorList::iterator iter = callee_rep.begin();
-    for(unsigned int i=0; i < callee_rep.size(); i++, iter++)
-      if(myrank == (*iter)->getRank()) delete (*iter);
-  }
   callee_rep.push_back(arr_rep);
 }
 

@@ -1075,7 +1075,7 @@ void CI::emit_proxyclass(EmitState& e)
   e.proxy << leader2 << "protected:\n";
   e.proxy << leader2 << "  virtual ~" << pname << "();\n";
   e.proxy << leader2 << "private:\n";
-  e.proxy << leader2 << "  virtual void _getReference(::SCIRun::Reference&, bool copy) const;\n";
+  e.proxy << leader2 << "  virtual void _getReferenceCopy(::SCIRun::ReferenceMgr**) const;\n";
   e.proxy << leader2 << "  friend const ::SCIRun::TypeInfo* " << name << "::_static_getTypeInfo();\n";
   e.proxy << leader2 << "  static ::SCIRun::Object* create_proxy(const ::SCIRun::ReferenceMgr&);\n";
   e.proxy << leader2 << "  " << pname << "(const " << pname << "&);\n";
@@ -1267,9 +1267,9 @@ void CI::emit_proxy(EmitState& e)
     e.out << "  delete d_sched;\n";
   }
   e.out << "}\n\n";
-  e.out << "void " << fn << "::_getReference(::SCIRun::Reference& ref, bool copy) const\n";
+  e.out << "void " << fn << "::_getReferenceCopy(::SCIRun::ReferenceMgr** refM) const\n";
   e.out << "{\n";
-  e.out << "  _proxyGetReference(ref,copy);\n";
+  e.out << "  (*refM) = new ::SCIRun::ReferenceMgr(*(_proxyGetReferenceMgr()));\n";
   e.out << "}\n\n";
   e.out << "::SCIRun::Object* " << fn << "::create_proxy(const ::SCIRun::ReferenceMgr& ref)\n";
   e.out << "{\n";
@@ -2201,22 +2201,31 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
     }    
     e.out << leader2 << "int " << arg << "_vtable_base;\n";
     e.out << leader2 << "message->unmarshalInt(&" << arg << "_vtable_base);\n";
+    e.out << leader2 << "int " << arg << "_refno;\n";
+    e.out << leader2 << "message->unmarshalInt(&" << arg << "_refno);\n";
     if(declare)
       e.out << leader2 << name->cppfullname(0) << "::pointer " << arg << ";\n";
     e.out << leader2 << "if(" << arg << "_vtable_base == -1){\n";
     e.out << leader2 << "  " << arg << "=0;\n";
     e.out << leader2 << "} else {\n";
-    e.out << leader2 << "  ::SCIRun::Reference _ref;\n";
-    e.out << leader2 << "  _ref.d_vtable_base=" << arg << "_vtable_base;\n";
-    e.out << leader2 << "  message->unmarshalSpChannel(_ref.chan);\n";
-    e.out << leader2 << "  ::SCIRun::Message* spmsg = (_ref.chan)->getMessage();\n";
+    //NEW
+    e.out << leader2 << "  ::SCIRun::ReferenceMgr _refM;\n";
+    e.out << leader2 << "  for(int i=0; i<" << arg << "_refno; i++) {\n";
+    e.out << leader2 << "    //This may leak SPs\n";
+    e.out << leader2 << "    ::SCIRun::Reference* _ref = new ::SCIRun::Reference();\n";
+    e.out << leader2 << "    _ref->d_vtable_base=" << arg << "_vtable_base;\n";
+    e.out << leader2 << "    message->unmarshalSpChannel(_ref->chan);\n";
+    e.out << leader2 << "    _refM.insertReference(_ref);\n";
+    e.out << leader2 << "  }\n";
+    e.out << leader2 << "  ::SCIRun::Message* spmsg = _refM.getIndependentReference()->chan->getMessage();\n";
+
     e.out << leader2 << "  void* _ptr;\n";
     e.out << leader2 << "  if ((_ptr=spmsg->getLocalObj()) != NULL) {\n";
     e.out << leader2 << "    ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(_ptr);\n";
     e.out << leader2 << "    " << arg << "=dynamic_cast<" << name->cppfullname(0) << "*>(_sc->d_objptr);\n";
     e.out << leader2 << "    " << arg << "->_deleteReference();\n";
     e.out << leader2 << "  } else {\n";
-    e.out << leader2 << "    " << arg << "=new " << name->cppfullname(0) << "_proxy(_ref);\n";
+    e.out << leader2 << "    " << arg << "=new " << name->cppfullname(0) << "_proxy(_refM);\n";
     e.out << leader2 << "  }\n";
     e.out << leader2 << "}\n";
   } else if(symtype == Symbol::DistArrayType) {
@@ -2507,15 +2516,23 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
       }
     }
     e.out << leader2 << "if(!" << arg << ".isNull()){\n";
+
     e.out << leader2 << "  " << arg << "->addReference();\n";
     e.out << leader2 << "  const ::SCIRun::TypeInfo* _dt=" << arg << "->_virtual_getTypeInfo();\n";
     e.out << leader2 << "  const ::SCIRun::TypeInfo* _bt=" << name->cppfullname(0) << "::_static_getTypeInfo();\n";
     e.out << leader2 << "  int _vtable_offset=_dt->computeVtableOffset(_bt);\n";
-    e.out << leader2 << "  ::SCIRun::Reference " << arg << "_ref;\n";
-    e.out << leader2 << "  " << arg << "->_getReference(" << arg << "_ref, true);\n";
-    e.out << leader2 << "  int _vtable_base=" << arg << "_ref.getVtableBase()+_vtable_offset;\n";
+    //NEW
+    e.out << leader2 << "  ::SCIRun::ReferenceMgr* " << arg << "_rm;\n";
+    e.out << leader2 << "  " << arg << "->_getReferenceCopy(&" << arg << "_rm);\n";
+    e.out << leader2 << "  ::SCIRun::refList* _refL = " << arg << "_rm->getAllReferences();\n";
+    e.out << leader2 << "  int _vtable_base=(*_refL)[0]->getVtableBase()+_vtable_offset;\n";
     e.out << leader2 << "  message->marshalInt(&_vtable_base);\n";
-    e.out << leader2 << "  message->marshalSpChannel(" << arg << "_ref.chan);\n";
+    e.out << leader2 << "  int " << arg << "_refno=_refL->size();\n";
+    e.out << leader2 << "  message->marshalInt(&" << arg << "_refno);\n";
+    e.out << leader2 << "  for(::SCIRun::refList::iterator iter = _refL->begin(); iter != _refL->end(); iter++) {\n";
+    e.out << leader2 << "    message->marshalSpChannel((*iter)->chan);\n";
+    e.out << leader2 << "  }\n";
+
     e.out << leader2 << "} else {\n";
     e.out << leader2 << "  int _vtable_base=-1; // Null ptr\n";
     e.out << leader2 << "  message->marshalInt(&_vtable_base);\n";
