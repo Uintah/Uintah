@@ -193,7 +193,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
    Task* t = scinew Task("DataArchiver::outputReduction", new_dw, new_dw,
 			 this, &DataArchiver::outputReduction, time);
 
-   for(int i=0;i<ivars.size();i++){
+   for(int i=0;i<(int)ivars.size();i++){
       t->requires(new_dw, ivars[i]) ;
    }
 
@@ -318,7 +318,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
    for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
 
       const Patch* patch=*iter;
-      for(int i=0;i<vars.size();i++){
+      for(int i=0;i<(int)vars.size();i++){
 	 for(int j=0;j<number[i];j++){
 	    Task* t = scinew Task("DataArchiver::output", patch, new_dw, new_dw,
 				  this, &DataArchiver::output, timestep,
@@ -347,7 +347,7 @@ void DataArchiver::outputReduction(const ProcessorGroup*,
 
    vector<const VarLabel*> ivars;
    new_dw->getIntegratedSaveSet(ivars);
-   for(int i=0;i<ivars.size();i++){
+   for(int i=0;i<(int)ivars.size();i++){
       const VarLabel* var = ivars[i];
       string filename = d_dir.getName()+"/"+var->getName()+".dat";
 #ifdef __GNUG__
@@ -644,6 +644,9 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 //
 // $Log$
+// Revision 1.21  2000/09/29 05:41:57  sparker
+// Quiet g++ warnings
+//
 // Revision 1.20  2000/09/28 17:54:29  bigler
 // Added #include <time.h> for aix
 //
