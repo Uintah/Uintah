@@ -25,8 +25,8 @@ if [ $yesno == "y" -o $yesno == "yes" ]; then
     echo "failed"
     exit 1
   fi
-  echo "cp -r $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/."
-  cp -r $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/.
+  echo "cp -r --dereference $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/."
+  cp -r --dereference $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/.
   if [ $? != "0" ]; then
     echo "failed"
     exit 1

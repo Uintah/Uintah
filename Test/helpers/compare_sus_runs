@@ -30,8 +30,8 @@ if [ -d "$TEST_UDADIR" ]; then
 #    cvs add $TEST
   fi
   if [ ! -d "$COMPARE_UDADIR" ]; then
-    echo "Storing uda directory"
-    cp -r $TEST_UDADIR $COMPARE_UDADIR
+    echo "Storing uda directory: $COMPARE_UDADIR"
+    cp -r --dereference $TEST_UDADIR $COMPARE_UDADIR
     cd $COMPARE_ROOT/$TEST
     exit -2
 #    find $UDADIR -type d | xargs cvs add
