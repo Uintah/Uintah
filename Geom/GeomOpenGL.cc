@@ -221,10 +221,10 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 		    }
 		    glVertex3d(pp1.x(), pp1.y(), pp1.z());
 
-		    p1+=uu;
+		    p1+=vv;
 		}
 		glEnd();
-		rstart+=vv;
+		rstart+=uu;
 	    }
 	    rstart=corner;
 	    for(int j=0;j<nv;j++){
@@ -240,10 +240,10 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 		    }
 		    glVertex3d(pp1.x(), pp1.y(), pp1.z());
 
-		    p1+=vv;
+		    p1+=uu;
 		}
 		glEnd();
-		rstart+=uu;
+		rstart+=vv;
 	    }
 	}
 	break;
@@ -251,10 +251,12 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
     case DrawInfoOpenGL::Gouraud:
     case DrawInfoOpenGL::Phong:
 	{
+	    if(!have_normals)
+		glNormal3d(w.x(), w.y(), w.z());
 	    Point rstart(corner);
 	    for(int i=0;i<nu-1;i++){
 		Point p1(rstart);
-		Point p2(rstart+vv);
+		Point p2(rstart+uu);
 		rstart=p2;
 		glBegin(GL_TRIANGLE_STRIP);
 		for(int j=0;j<nv;j++){
@@ -275,8 +277,8 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 			glNormal3d(normal.x(), normal.y(), normal.z());
 		    }
 		    glVertex3d(pp2.x(), pp2.y(), pp2.z());
-		    p1+=uu;
-		    p2+=uu;
+		    p1+=vv;
+		    p2+=vv;
 		}
 		glEnd();
 	    }
