@@ -113,12 +113,14 @@ void DenseMatrixSQLReader::execute() {
         dbd->next_row();
     }
 
+/*
     for(int row = 0 ; row < dm->nrows() ; ++row) {
         for(int col = 0 ; col < dm->ncols() ; ++col) {
             cerr << dm->get(row, col) << "\t";
         }
         cerr << endl;
     }
+*/
 
     MatrixHandle omat = dm;
     omatrix->send(omat);
