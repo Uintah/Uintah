@@ -17,7 +17,7 @@
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/CycleMaterial.h>
-#include <Packages/rtrt/Core/SketchMaterial.h>
+#include <Packages/rtrt/Core/SketchMaterialBase.h>
 #include <Packages/rtrt/Core/FontString.h>
 #include <Packages/rtrt/Core/DynamicInstance.h>
 #include <Packages/rtrt/Core/Stats.h>
