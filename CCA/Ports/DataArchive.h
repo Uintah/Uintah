@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 
+#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
@@ -375,7 +376,8 @@ private:
       findPatchAndIndex(grid, patch, idx, particleID, matlIndex, t);
       //    cerr <<" Patch = 0x"<<hex<<patch<<dec<<", index = "<<idx;
       if (patch == NULL)
-	throw InternalError("Couldn't find patch containing location");
+	throw VariableNotFoundInGrid(name,particleID,matlIndex,
+				     "DataArchive::query");
       
       ParticleVariable<T> var;
       query(var, name, matlIndex, patch, t);
@@ -453,9 +455,10 @@ private:
 	  break;
 	}
       }
-      if (patch == NULL)
-	throw InternalError("Couldn't find patch containing location");
-      
+      if (patch == NULL) {
+	throw VariableNotFoundInGrid(name,loc,matlIndex,"DataArchive::query");
+      }
+     
       switch (type->getType()) {
       case TypeDescription::CCVariable: {
 	CCVariable<T> var;
@@ -472,6 +475,7 @@ private:
 	// Dd: Is this correct?  Error here?
 	break;
       }
+      //cerr << "DataArchive::query:data extracted" << endl;
     }
     
     dbg << "DataArchive::query(values) completed in "
