@@ -32,7 +32,6 @@ BuilderImpl::setServices( const Services &svc )
       return;
     }
 
-#if 0
     RegistryServices reg_port = pidl_cast<RegistryServices>(
                                            svc->getPort("RegistryServices"));
     if ( !reg_port ) {
@@ -44,12 +43,11 @@ BuilderImpl::setServices( const Services &svc )
 
       cerr << components.size() << " components returned:\n";
 
-      for( int cnt = 0; cnt < components.size(); cnt++ )
+      for( unsigned int cnt = 0; cnt < components.size(); cnt++ )
 	{
 	  cerr << cnt << ": " << components[ cnt ] << "\n";
 	}
     }
-#endif
 
     Sender sender = new SenderImpl;
     Component s = sender;

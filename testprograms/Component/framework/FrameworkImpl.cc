@@ -27,7 +27,6 @@ FrameworkImpl::FrameworkImpl()
   id->init( hostname_, "framework" );
   id_ = id;
 
-
   registry_ = new Registry;
 
   //
@@ -43,10 +42,10 @@ FrameworkImpl::FrameworkImpl()
 
   // Registry
   RegistryServicesImpl *rsi = new RegistryServicesImpl;
-  rsi->init( Framework( this ) );
-  RegistryServices rs = rsi;
 
-  ports_["RegistryServices"] = cs;
+  rsi->init( Framework( this ) );
+  RegistryServices rs( rsi );
+  ports_["RegistryServices"] = rs;
 
   // directoty
   // creation
