@@ -78,8 +78,10 @@ MPRead::ReadHeader( clString& title,
       if(filetype == "BIN") this->fileType = BIN;
       else this->fileType = ASCII;
       while( is >> in ){
-	if( in == "TITLE:")
-	  is >> title;
+	if( in == "TITLE:"){
+	  is.getline(buf, buflen);
+	  title = clString(buf);
+	}
 	else if( in == "##"){
 	  is.getline(buf, buflen);
 	  comments += buf;
@@ -173,6 +175,8 @@ MPRead::GetGridInfo( clString& name,
 
   sV.remove_all();
   vV.remove_all();
+  sVars.remove_all();
+  vVars.remove_all();
   
   const int buflen = 1024;
   char buf[buflen];
@@ -451,13 +455,17 @@ MPRead::GetParticleInfo( clString& name,
 			 Array1<clString>& s,
 			 Array1<clString>& v)
 {
-  s.remove_all();
-  v.remove_all();
+  
   
   if( state != Particles ){
     cerr<<"Error: Not reading particles.\n";
     return 0;
   } else {
+
+  s.remove_all();
+  v.remove_all();
+  psVars.remove_all();
+  pvvars.remove_all();
 
     const int buflen = 1024;
     char buf[buflen];
