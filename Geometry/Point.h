@@ -54,6 +54,7 @@ public:
     friend class Vector;
     friend inline double Dot(const Point&, const Point&);
     friend inline double Dot(const Vector&, const Point&);
+    friend inline double Dot(const Point&, const Vector&);
 //    friend inline double Dot(const Point&, const Vector&);
     friend inline Point Min(const Point&, const Point&);
     friend inline Point Max(const Point&, const Point&);

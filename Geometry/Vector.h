@@ -30,7 +30,7 @@ public:
     double length() const;
     double length2() const;
     friend inline double Dot(const Vector&, const Vector&);
-//    friend inline double Dot(const Point&, const Vector&);
+    friend inline double Dot(const Point&, const Vector&);
     friend inline double Dot(const Vector&, const Point&);
     Vector& operator=(const Vector&);
 

@@ -146,18 +146,6 @@ inline Vector Point::vector() const
     return Vector(_x,_y,_z);
 }
 
-inline double Dot(const Point& p, const Vector& v)
-{
-    ASSERTL4(!p.uninit && !v.uninit);
-    return p.x()*v.x()+p.y()*v.y()+p.z()*v.z();
-}
-
-inline double Dot(const Point& p1, const Point& p2)
-{
-    ASSERTL4(!p1.uninit && !p2.uninit);
-    return p1._x*p2._x+p1._y*p2._y+p1._z*p2._z;
-}
-
 inline Point Min(const Point& p1, const Point& p2)
 {
     ASSERTL4(!p1.uninit && !p2.uninit);
@@ -176,3 +164,14 @@ inline Point Max(const Point& p1, const Point& p2)
     return Point(x,y,z);
 }
 
+inline double Dot(const Point& p, const Vector& v)
+{
+    ASSERTL4(!p.uninit && !v.uninit);
+    return p._x*v._x+p._y*v._y+p._z*v._z;
+}
+
+inline double Dot(const Point& p1, const Point& p2)
+{
+    ASSERTL4(!p1.uninit && !p2.uninit);
+    return p1._x*p2._x+p1._y*p2._y+p1._z*p2._z;
+}

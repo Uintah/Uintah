@@ -82,7 +82,7 @@ void Transform::print(void)
 {
     for(int i=0;i<4;i++) {
 	for(int j=0;j<4;j++)
-	    printf("%lf ",mat[i][j]); 
+	    printf("%f ",mat[i][j]); 
 	printf("\n");
     }
     printf("\n");
@@ -93,7 +93,7 @@ void Transform::printi(void)
 {
     for(int i=0;i<4;i++) {
 	for(int j=0;j<4;j++)
-	    printf("%lf ",imat[i][j]); 
+	    printf("%f ",imat[i][j]); 
 	printf("\n");
     }
     printf("\n");

@@ -82,18 +82,6 @@ inline Vector Vector::operator-() const
     return Vector(-_x,-_y,-_z);
 }
 
-inline double Dot(const Vector& v1, const Vector& v2)
-{
-    ASSERTL4(!v1.uninit && !v2.uninit);
-    return v1._x*v2._x+v1._y*v2._y+v1._z*v2._z;
-}
-
-inline double Dot(const Vector& v, const Point& p)
-{
-    ASSERTL4(!v.uninit && !p.uninit);
-    return v.x()*p.x()+v.y()*p.y()+v.z()*p.z();
-}
-
 inline double Vector::length() const
 {
     ASSERTL4(!uninit);
@@ -218,3 +206,14 @@ inline Point Vector::point() const
     return Point(_x,_y,_z);
 }
 
+inline double Dot(const Vector& v1, const Vector& v2)
+{
+    ASSERTL4(!v1.uninit && !v2.uninit);
+    return v1._x*v2._x+v1._y*v2._y+v1._z*v2._z;
+}
+
+inline double Dot(const Vector& v, const Point& p)
+{
+    ASSERTL4(!v.uninit && !p.uninit);
+    return v._x*p._x+v._y*p._y+v._z*p._z;
+}
