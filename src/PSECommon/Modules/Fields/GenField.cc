@@ -417,9 +417,21 @@ GenField::send_tensor_field()
 void
 GenField::execute()
 {
-  //send_tensor_field();
-  //send_vector_field();
-  send_scalar_field();
+  clString tclRes;
+  TCL::eval(".ui"+id+".f.r.functions view", tclRes);
+
+  if (tclRes == "2")
+    {
+      send_tensor_field();
+    }
+  else if (tclRes == "1")
+    {
+      send_vector_field();
+    }
+  else
+    {
+      send_scalar_field();
+    }
 }
 
 
