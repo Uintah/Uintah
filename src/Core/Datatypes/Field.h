@@ -20,6 +20,7 @@
 #define Datatypes_Field_h
 
 #include <Core/Datatypes/PropertyManager.h>
+#include <Core/Datatypes/TypeDescription.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Datatypes/MeshBase.h>
 #include <Core/Containers/LockingHandle.h>
@@ -47,6 +48,8 @@ public:
   //! Required virtual functions
   virtual MeshBaseHandle mesh() const = 0;
   virtual void mesh_detach() = 0;
+  virtual const TypeDescription* get_type_description() const = 0; 
+  
 
   //! Required interfaces
   virtual ScalarFieldInterface* query_scalar_interface() const { return 0; }

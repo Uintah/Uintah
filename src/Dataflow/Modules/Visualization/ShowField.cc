@@ -27,7 +27,6 @@
  *  Copyright (C) 2000 SCI Group
  */
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/LatticeVol.h>
@@ -39,11 +38,6 @@
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Datatypes/Dispatch1.h>
 #include <Core/Datatypes/DispatchMesh1.h>
-
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/FieldPort.h>
-
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/Switch.h>
@@ -52,15 +46,17 @@
 #include <Core/Geom/GeomCylinder.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Geom/Pt.h>
-
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/Util/DebugStream.h>
+
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Modules/Visualization/RenderField.h>
 
 #include <typeinfo>
 #include <map.h>
 #include <iostream>
-#include <sstream>
-using std::ostringstream;
 
 namespace SCIRun {
 
@@ -68,7 +64,6 @@ class ShowField : public Module
 {
   
   //! Private Data
-  DebugStream              dbg_;  
 
   //! input ports
   FieldIPort*              fld_;
@@ -86,16 +81,13 @@ class ShowField : public Module
 
   //! top level nodes for switching on and off..
   //! nodes.
-  GeomSwitch*              node_switch_;
-  GuiInt                  nodes_on_;
+  GuiInt                   nodes_on_;
   bool                     nodes_dirty_;
   //! edges.
-  GeomSwitch*              edge_switch_;
-  GuiInt                  edges_on_;
+  GuiInt                   edges_on_;
   bool                     edges_dirty_;
   //! faces.
-  GeomSwitch*              face_switch_;
-  GuiInt                  faces_on_;
+  GuiInt                   faces_on_;
   bool                     faces_dirty_;
 
   //! default color and material
@@ -115,36 +107,14 @@ class ShowField : public Module
   //! Refinement resolution for cylinders and spheres
   GuiInt                   resolution_;
   int                      res_;
+  RenderFieldBase         *renderer_;
 
-  //! Private Methods
-  template <class T> bool to_double(const T&, double &) const;
-  template <class Fld> void render_nodes(const Fld *sfld);
-  template <class Fld> void render_edges(const Fld *sfld);
-  template <class Fld> void render_faces(const Fld *sfld);
-  template <class F1>  void render(const F1 *fld);
-
-  inline  MaterialHandle choose_mat(bool def, double val);
 public:
   ShowField(const string& id);
   virtual ~ShowField();
   virtual void execute();
 
-  inline void add_sphere(const Point &p, double scale, GeomGroup *g, 
-			 MaterialHandle m0);
-  inline void add_axis(const Point &p, double scale, GeomGroup *g, 
-		       MaterialHandle m0);
-  inline void add_point(const Point &p, GeomPts *g, 
-			MaterialHandle m0);
-  inline void add_edge(const Point &p1, const Point &p2, double scale, 
-		       GeomGroup *g, MaterialHandle mh_avg,
-		       bool cyl = true);
-  inline void add_face(const Point &p1, const Point &p2, const Point &p3, 
-		       MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
-		       GeomTriangles *g);
-  inline void add_face(const Point &p1, const Point &p2, const Point &p3, 
-		       const Vector &v1, const Vector &v2, const Vector &v3, 
-		       MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
-		       GeomTriangles *g);
+
 
   virtual void tcl_command(TCLArgs& args, void* userdata);
 
@@ -152,23 +122,19 @@ public:
 
 ShowField::ShowField(const string& id) : 
   Module("ShowField", id, Filter, "Visualization", "SCIRun"), 
-  dbg_("ShowField", true),
   fld_(0),
   color_(0),
   color_handle_(0),
-  fld_gen_(-1),
+  fld_gen_(-69),
   colm_gen_(-1),
   ogeom_(0),
   node_id_(0),
   edge_id_(0),
   face_id_(0),
-  node_switch_(0),
   nodes_on_("nodes-on", id, this),
   nodes_dirty_(true),
-  edge_switch_(0),
   edges_on_("edges-on", id, this),
   edges_dirty_(true),
-  face_switch_(0),
   faces_on_("faces-on", id, this),
   faces_dirty_(true),
   use_def_color_(true),
@@ -182,7 +148,8 @@ ShowField::ShowField(const string& id) :
   edge_scale_("edge_scale", id, this),
   showProgress_("show_progress", id, this),
   resolution_("resolution", id, this),
-  res_(0)
+  res_(0),
+  renderer_(0)
  {
   // Create the input ports
   fld_ = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
@@ -203,11 +170,47 @@ ShowField::execute()
   // tell module downstream to delete everything we have sent it before.
   // This is typically viewer, it owns the scene graph memory we create here.
   FieldHandle fld_handle;
+
   fld_->get(fld_handle);
   if(!fld_handle.get_rep()){
     warning("No Data in port 1 field.");
     return;
   } else if (fld_gen_ != fld_handle->generation) {
+    const TypeDescription *td = fld_handle->get_type_description();
+
+    error(td->get_h_file_path().c_str());
+
+    DynamicLoader loader;
+    // Do I have the algorithm already?
+    DynamicAlgoBase *alg = 0;
+    CompileInfo *ci = RenderFieldBase::get_compile_info(td);
+    if (! loader.get(ci->filename_, alg)) {
+      if (loader.compile_and_store(*ci)) {
+	// fetch the algorithm.
+	loader.get(ci->filename_, alg);
+      }
+      else {
+	fld_gen_ = -1;
+	error("Could not compile algorithm for ShowField -");
+	error(td->get_name().c_str());
+	return;
+      }
+    }
+    renderer_ = dynamic_cast<RenderFieldBase*>(alg);
+    
+    node_display_type_.reset();
+    string ndt = node_display_type_.get();
+    node_scale_.reset();
+    double ns = node_scale_.get();
+    edge_display_type_.reset();
+    string edt = edge_display_type_.get();
+    edge_scale_.reset();
+    double es = edge_scale_.get();
+
+    renderer_->render(fld_handle, nodes_dirty_, edges_dirty_, faces_dirty_, 
+		      def_mat_handle_, use_def_color_, color_handle_,
+		      ndt, edt, ns, es, res_);
+
     fld_gen_ = fld_handle->generation;  
     nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
     MeshBaseHandle mh = fld_handle->mesh();
@@ -237,346 +240,35 @@ ShowField::execute()
 
   use_def_color_ = ! fld_handle->is_scalar();
 
-  dispatch1(fld_handle, render);
-  if (disp_error) return; // dispatch already printed an error message. 
+  //dispatch1(fld_handle, render);
+  //  if (disp_error) return; // dispatch already printed an error message. 
 
   // cleanup...
   if (nodes_dirty_) {
     if (node_id_) ogeom_->delObj(node_id_);
     node_id_ = 0;
     nodes_dirty_ = false;
-    if (nodes_on_.get()) node_id_ = ogeom_->addObj(node_switch_, "Nodes");
+    if (renderer_ && nodes_on_.get()) 
+      node_id_ = ogeom_->addObj(renderer_->node_switch_, "Nodes");
   }
   if (edges_dirty_) {
     if (edge_id_) ogeom_->delObj(edge_id_); 
     edge_id_ = 0;
     edges_dirty_ = false;
-    if (edges_on_.get()) edge_id_ = ogeom_->addObj(edge_switch_, "Edges");
+    if (renderer_ && edges_on_.get()) edge_id_ = 
+					ogeom_->addObj(renderer_->edge_switch_, "Edges");
 
   }
   if (faces_dirty_) {
     if (face_id_) ogeom_->delObj(face_id_); 
     face_id_ = 0;
     faces_dirty_ = false;
-    if (faces_on_.get()) face_id_ = ogeom_->addObj(face_switch_, "Faces");
+    if (renderer_ && faces_on_.get()) 
+      face_id_ = ogeom_->addObj(renderer_->face_switch_, "Faces");
   }  
   ogeom_->flushViews();
 }
 
-template <class T>
-bool
-ShowField::to_double(const T& tmp, double &val) const
-{
-  val = tmp;
-  return true;
-}
-
-template <>
-bool
-ShowField::to_double(const Vector&, double &) const
-{
-  return false;
-}
-
-template <>
-bool
-ShowField::to_double(const Tensor&, double &) const
-{
-  return false;
-}
-
-inline
-MaterialHandle 
-ShowField::choose_mat(bool def, double val) {
-  if (def) return def_mat_handle_;
-  return color_handle_->lookup(val);
-}
-
-template <class Fld>
-void 
-ShowField::render_nodes(const Fld *sfld) 
-{
-  if (nodes_dirty_) {
-    typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
-    GeomGroup* nodes = scinew GeomGroup;
-    node_switch_ = scinew GeomSwitch(nodes);
-    GeomPts *pts = 0;
-    node_display_type_.reset();
-    if (node_display_type_.get() == "Points") {
-      pts = scinew GeomPts(mesh->nodes_size());
-    }
-    // First pass: over the nodes
-    typename Fld::mesh_type::Node::iterator niter = mesh->node_begin();  
-    while (niter != mesh->node_end()) {
-      // Use a default color?
-      bool def_color = (use_def_color_ || (color_handle_.get_rep() == 0));
-    
-      Point p;
-      mesh->get_point(p, *niter);
-
-      // val is double because the color index field must be scalar.
-      double val = 0.L;
- 
-      switch (sfld->data_at()) {
-      case Field::NODE:
-	{
-	  typename Fld::value_type tmp = 0;
-	  if (! (sfld->value(tmp, *niter) && (to_double(tmp, val)))) { 
-	    def_color = true; 
-	  }
-	}
-	break;
-      case Field::EDGE:
-      case Field::FACE:
-      case Field::CELL:
-      case Field::NONE:
-	def_color = true;
-	break;
-      }
-
-      node_scale_.reset();
-      if (node_display_type_.get() == "Spheres") {
-	add_sphere(p, node_scale_.get(), nodes, 
-		   choose_mat(def_color, val));
-      } else if (node_display_type_.get() == "Axes") {
-	add_axis(p, node_scale_.get(), nodes, choose_mat(def_color, val));
-      } else {
-	add_point(p, pts, choose_mat(def_color, val));
-      }
-      ++niter;
-    }
-    if (node_display_type_.get() == "Points") {
-      nodes->add(pts);
-    }
-  }
-}
-
-
-template <class Fld>
-void 
-ShowField::render_edges(const Fld *sfld) 
-{
-  if (edges_dirty_) { 
-    typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
-    GeomGroup* edges = scinew GeomGroup;
-    edge_switch_ = scinew GeomSwitch(edges);
-    // Second pass: over the edges
-    typename Fld::mesh_type::Edge::iterator eiter = mesh->edge_begin();  
-    while (eiter != mesh->edge_end()) {  
-      // Use a default color?
-      bool def_color = (use_def_color_ || (color_handle_.get_rep() == 0));
-
-      typename Fld::mesh_type::Node::array_type nodes;
-      mesh->get_nodes(nodes, *eiter); ++eiter;
-    
-      
-      Point p1, p2;
-      mesh->get_point(p1, nodes[0]);
-      mesh->get_point(p2, nodes[1]);
-      double val1 = 0.L;
-      double val2 = 0.L;
-      double val_avg = 0.L;
-      switch (sfld->data_at()) {
-      case Field::NODE:
-	{
-	  typename Fld::value_type tmp1 = 0;
-	  typename Fld::value_type tmp2 = 0;
-	  if (! (sfld->value(tmp1, nodes[0]) && to_double(tmp1, val1) &&
-		 sfld->value(tmp2, nodes[1]) && to_double(tmp2, val2))) { 
-	    def_color = true; 
-	  } else {
-	    val_avg = (val1+val2)/2.;
-	  }
-	}
-	break;
-      case Field::EDGE:
-	{
-	  typename Fld::value_type tmp = 0;
-	  if (! (sfld->value(tmp, *eiter) && to_double(tmp, val_avg))) { 
-	    def_color = true; 
-	  }
-	}
-	break;
-      case Field::FACE:
-      case Field::CELL:
-      case Field::NONE:
-	def_color = true;
-	break;
-      }
-      bool cyl = false;
-      if (edge_display_type_.get() == "Cylinders") { cyl = true; }
-      add_edge(p1, p2, edge_scale_.get(), edges, 
-	       choose_mat(def_color, val_avg), cyl);
-    }
-  }
-}
-
-
-template <class Fld>
-void 
-ShowField::render_faces(const Fld *sfld) 
-{
-  if (faces_dirty_) {
-    typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
-    const bool with_normals = mesh->has_normals();
-
-    GeomTriangles* faces = scinew GeomTriangles;
-    face_switch_ = scinew GeomSwitch(faces);
-    // Third pass: over the faces
-    typename Fld::mesh_type::Face::iterator fiter = mesh->face_begin();  
-    typename Fld::mesh_type::Node::array_type nodes;
-
-    while (fiter != mesh->face_end()) {  
-      // Use a default color?
-      bool def_color = (use_def_color_ || (color_handle_.get_rep() == 0));
-
-      mesh->get_nodes(nodes, *fiter); 
-      ++fiter;     
- 
-      Point p1, p2, p3;
-      mesh->get_point(p1, nodes[0]);
-      mesh->get_point(p2, nodes[1]);
-      mesh->get_point(p3, nodes[2]);
-      Vector n1, n2, n3;
-
-      if (with_normals) {
-	mesh->get_normal(n1, nodes[0]);
-	mesh->get_normal(n2, nodes[1]);
-	mesh->get_normal(n3, nodes[2]);
-      }
-
-      double val1 = 0.L;
-      double val2 = 0.L;
-      double val3 = 0.L;
-
-      switch (sfld->data_at()) {
-      case Field::NODE:
-	{
-	  typename Fld::value_type tmp1 = 0;
-	  typename Fld::value_type tmp2 = 0;
-	  typename Fld::value_type tmp3 = 0;
-	  if (! (sfld->value(tmp1, nodes[0]) && to_double(tmp1, val1) &&
-		 sfld->value(tmp2, nodes[1]) && to_double(tmp2, val2) &&
-		 sfld->value(tmp3, nodes[2]) && to_double(tmp3, val3))) { 
-	    def_color = true; 
-	  }
-	}
-	break;
-      case Field::FACE: 
-	{
-	  typename Fld::value_type tmp = 0;
-	  if (! (sfld->value(tmp, *fiter) && to_double(tmp, val1) && 
-		 to_double(tmp, val2) && to_double(tmp, val3))) {
-	    def_color = true; 
-	  }
-	}
-	break;
-
-      case Field::EDGE:
-      case Field::CELL:
-      case Field::NONE:
-	def_color = true;
-	break;
-      }
-      if (with_normals) {
-	add_face(p1, p2, p3, n1, n2, n3, 
-		 choose_mat(def_color, val1), 
-		 choose_mat(def_color, val2), 
-		 choose_mat(def_color, val3), 
-		 faces);
-      } else {
-	add_face(p1, p2, p3, 
-		 choose_mat(def_color, val1), 
-		 choose_mat(def_color, val2), 
-		 choose_mat(def_color, val3), 
-		 faces);
-      }
-    }
-  }
-}
-
-template <class F1>
-void
-ShowField::render(const F1 *fld)
-{
-  render_nodes(fld);
-  render_edges(fld);
-  render_faces(fld);
-}
-
-void 
-ShowField::add_face(const Point &p0, const Point &p1, const Point &p2, 
-		    const Vector &n0, const Vector &n1, const Vector &n2,
-		    MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
-		    GeomTriangles *g) 
-{
-  g->add(p0, n0, m0, 
-	 p1, n1, m1, 
-	 p2, n2, m2);
-}
-
-void 
-ShowField::add_face(const Point &p0, const Point &p1, const Point &p2, 
-		    MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
-		    GeomTriangles *g) 
-{
-  g->add(p0, m0, 
-	 p1, m1, 
-	 p2, m2);
-}
-
-
-void 
-ShowField::add_edge(const Point &p0, const Point &p1,  
-		    double scale, GeomGroup *g, MaterialHandle mh_avg,
-		    bool cyl) 
-{
-  if (cyl) {
-    GeomCylinder *c = new GeomCylinder(p0, p1, scale, 2*res_);
-    g->add(scinew GeomMaterial(c, mh_avg));
-  } else {
-    GeomLine *l = new GeomLine(p0, p1);
-    l->setLineWidth(scale);
-    g->add(scinew GeomMaterial(l, mh_avg));
-  }
-}
-
-void 
-ShowField::add_sphere(const Point &p0, double scale, 
-		      GeomGroup *g, MaterialHandle mh) {
-  GeomSphere *s = scinew GeomSphere(p0, scale, res_, res_);
-  g->add(scinew GeomMaterial(s, mh));
-}
-
-void 
-ShowField::add_axis(const Point &p0, double scale, 
-		    GeomGroup *g, MaterialHandle mh) 
-{
-  static const Vector x(1., 0., 0.);
-  static const Vector y(0., 1., 0.);
-  static const Vector z(0., 0., 1.);
-
-  Point p1 = p0 + x * scale;
-  Point p2 = p0 - x * scale;
-  GeomLine *l = new GeomLine(p1, p2);
-  l->setLineWidth(3.0);
-  g->add(scinew GeomMaterial(l, mh));
-  p1 = p0 + y * scale;
-  p2 = p0 - y * scale;
-  l = new GeomLine(p1, p2);
-  l->setLineWidth(3.0);
-  g->add(scinew GeomMaterial(l, mh));
-  p1 = p0 + z * scale;
-  p2 = p0 - z * scale;
-  l = new GeomLine(p1, p2);
-  l->setLineWidth(3.0);
-  g->add(scinew GeomMaterial(l, mh));
-}
-
-void 
-ShowField::add_point(const Point &p, GeomPts *pts, MaterialHandle mh) {
-  pts->add(p, mh->diffuse);
-}
 
 void 
 ShowField::tcl_command(TCLArgs& args, void* userdata) {
@@ -607,7 +299,8 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
   } else if (args[1] == "toggle_display_nodes"){
     // Toggle the GeomSwitches.
     nodes_on_.reset();
-    if (node_switch_) node_switch_->set_state(nodes_on_.get());
+    if (renderer_ && renderer_->node_switch_) 
+      renderer_->node_switch_->set_state(nodes_on_.get());
 
     if ((nodes_on_.get()) && (node_id_ == 0)) {
       nodes_dirty_ = true;
@@ -618,7 +311,8 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
   } else if (args[1] == "toggle_display_edges"){
     // Toggle the GeomSwitch.
     edges_on_.reset();
-    if (edge_switch_) edge_switch_->set_state(edges_on_.get());
+    if (renderer_ && renderer_->edge_switch_) 
+      renderer_->edge_switch_->set_state(edges_on_.get());
     
     if ((edges_on_.get()) && (edge_id_ == 0)) {
       edges_dirty_ = true;
@@ -629,7 +323,8 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
   } else if (args[1] == "toggle_display_faces"){
     // Toggle the GeomSwitch.
     faces_on_.reset();
-    if (face_switch_) face_switch_->set_state(faces_on_.get());
+    if (renderer_ && renderer_->face_switch_) 
+      renderer_->face_switch_->set_state(faces_on_.get());
 
     if ((faces_on_.get()) && (face_id_ == 0)) {
       faces_dirty_ = true;

@@ -1220,14 +1220,22 @@ AC_SUBST(LEX)
 AC_SUBST(LEXLIB)
 
 ##-- Generate Output Files ---------------------------------------------------
+
 if ! test -d "Dataflow/Modules/Fields/Manip"; then
   mkdir -p "Dataflow/Modules/Fields/Manip";
 fi
 if ! test -d "Dataflow/Modules/Math/Manip"; then
   mkdir -p "Dataflow/Modules/Math/Manip";
 fi
+
+if ! test -d "on-the-fly-libs"; then
+  mkdir -p "on-the-fly-libs";
+fi
+
+##-- Generate Output Files ---------------------------------------------------
 AC_OUTPUT(	configVars.mk \
 		Makefile \
+		on-the-fly-libs/Makefile\
 		disjointPackageMakefile \
                 Dataflow/Modules/Fields/Manip/Makefile\
 		Dataflow/Modules/Math/Manip/Makefile\

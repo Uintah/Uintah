@@ -32,9 +32,11 @@
 #define Loader_h 
 
 #include <map>
+#include <string>
 
 namespace SCIRun {
 
+using namespace std;
 
 /*
  * Loadable

@@ -79,6 +79,15 @@ template class GenericField<TetVolMesh, vector<int> >;
 template class GenericField<TetVolMesh, vector<short> >;
 template class GenericField<TetVolMesh, vector<unsigned char> >;
 
+const TypeDescription* get_type_description(TetVol<Tensor>*);
+const TypeDescription* get_type_description(TetVol<Vector>*);
+const TypeDescription* get_type_description(TetVol<double>*);
+const TypeDescription* get_type_description(TetVol<int>*);
+const TypeDescription* get_type_description(TetVol<short>*);
+const TypeDescription* get_type_description(TetVol<unsigned char>*);
+
+
+
 template class MaskedLatticeVol<Tensor>;
 template class MaskedLatticeVol<Vector>;
 template class MaskedLatticeVol<double>;
@@ -245,7 +254,6 @@ template <> bool LatticeVol<Vector>::get_gradient(Vector &, const Point &/*p*/)
   ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
   return false;
 }
-
 
 #ifdef __sgi
 #pragma reset woff 1468

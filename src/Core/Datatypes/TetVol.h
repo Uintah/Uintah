@@ -65,11 +65,10 @@ public:
   static  PersistentTypeID type_id;
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const;
-
+  virtual const TypeDescription* get_type_description() const;
 private:
   static Persistent *maker();
 };
-
 
 template <class T>
 TetVol<T>::TetVol()
@@ -189,6 +188,26 @@ TetVol<T>::get_type_name(int n) const
   return type_name(n);
 }
 
+template <class T>
+const TypeDescription* 
+get_type_description(TetVol<T>*)
+{
+  static TypeDescription* td = 0;
+  static string tv("TetVol");
+  static string path(__FILE__);
+  if(!td){
+    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    td = scinew TypeDescription(tv, sub, path);
+  }
+  return td;
+}
+
+template <class T>
+const TypeDescription* 
+TetVol<T>::get_type_description() const 
+{
+  return SCIRun::get_type_description((TetVol<T>*)0);
+}
 
 //! compute the gradient g, at point p
 template <class T>

@@ -34,6 +34,7 @@ SRCS     += \
 	$(SRCDIR)/GenTransferFunc.cc\
 	$(SRCDIR)/Isosurface.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
+        $(SRCDIR)/RenderField.cc\
 	$(SRCDIR)/ShowField.cc\
 	$(SRCDIR)/StreamLines.cc\
 	$(SRCDIR)/TexCuttingPlanes.cc\
