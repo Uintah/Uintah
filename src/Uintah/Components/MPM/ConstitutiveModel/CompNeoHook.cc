@@ -338,13 +338,11 @@ void CompNeoHook::addComputesAndRequires(Task* task,
                   Ghost::None);
    task->requires(old_dw, lb->delTLabel);
 
-   task->computes(new_dw, lb->delTLabel);
    task->computes(new_dw, lb->pStressLabel_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
    task->computes(new_dw, bElBarLabel_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, p_cmdata_label_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
-   task->computes(new_dw, lb->StrainEnergyLabel);
 }
 
 #ifdef __sgi
@@ -367,6 +365,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.24  2000/06/19 21:22:33  bard
+// Moved computes for reduction variables outside of loops over materials.
+//
 // Revision 1.23  2000/06/16 23:23:39  guilkey
 // Got rid of pVolumeDeformedLabel_preReloc to fix some confusion
 // the scheduler was having.

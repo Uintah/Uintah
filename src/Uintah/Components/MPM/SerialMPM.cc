@@ -183,7 +183,6 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    t->computes(new_dw, lb->gMassLabel, idx, patch );
 	    t->computes(new_dw, lb->gVelocityLabel, idx, patch );
 	    t->computes(new_dw, lb->gExternalForceLabel, idx, patch );
-	    t->computes(new_dw, lb->TotalMassLabel);
 
             if (d_heatConductionInvolved) {
               t->requires(old_dw, lb->pTemperatureLabel, idx, patch,
@@ -192,6 +191,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
             }
 	 }
 		     
+	 t->computes(new_dw, lb->TotalMassLabel);
 	 sched->addTask(t);
       }
 
@@ -272,6 +272,9 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	       cm->addComputesAndRequires(t, mpm_matl, patch, old_dw, new_dw);
 	    }
 	 }
+         t->computes(new_dw, lb->delTLabel);
+         t->computes(new_dw, lb->StrainEnergyLabel);
+
 	 sched->addTask(t);
       }
 
@@ -522,7 +525,6 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    t->computes(new_dw, lb->pXLabel_preReloc, idx, patch );
 	    //	    t->computes(new_dw, lb->pMassLabel_preReloc, idx, patch);
 	    t->computes(new_dw, lb->pExternalForceLabel_preReloc, idx, patch);
-	    t->computes(new_dw, lb->KineticEnergyLabel);
 
 	    t->requires(old_dw, lb->pParticleIDLabel, idx, patch, Ghost::None);
 	    t->computes(new_dw, lb->pParticleIDLabel_preReloc, idx, patch);
@@ -536,6 +538,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    }
 	 }
 
+	 t->computes(new_dw, lb->KineticEnergyLabel);
 	 sched->addTask(t);
       }
 
@@ -1518,6 +1521,9 @@ void SerialMPM::crackGrow(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.87  2000/06/19 21:22:28  bard
+// Moved computes for reduction variables outside of loops over materials.
+//
 // Revision 1.86  2000/06/17 07:06:33  sparker
 // Changed ProcessorContext to ProcessorGroup
 //
