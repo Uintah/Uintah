@@ -28,7 +28,8 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include "MxNScheduleEntry.h"
+#include <Core/CCA/Component/PIDL/MxNScheduleEntry.h>
+#include <Core/Thread/Thread.h>
 using namespace SCIRun;   
 
 MxNScheduleEntry::MxNScheduleEntry(std::string n, sched_t st)
@@ -162,6 +163,11 @@ void* MxNScheduleEntry::waitCompleteArray()
       int** temp_ptr = new int*;
       (*temp_ptr) = NULL;
       arr_ptr = (void*) temp_ptr; 
+      //Reset variables  
+      while (arr_wait_sema.tryDown());
+      allowArraySet = true;
+      meta_sema.up((int) (2*caller_rep.size()));
+      //**************
       return arr_ptr;
     }
 
@@ -191,10 +197,10 @@ void* MxNScheduleEntry::waitCompleteArray()
     }
   }  
 
-  //Reset all variables to original values 
+  //Reset variables  
   while (arr_wait_sema.tryDown());
   allowArraySet = true;
-  meta_sema.up((int) caller_rep.size()+1);
+  meta_sema.up((int) (2*caller_rep.size()));
 
   return arr_ptr;
 }
@@ -219,8 +225,11 @@ void MxNScheduleEntry::doReceive(int rank)
     //Find the proper arr. representation and mark it is received
     for(unsigned int i=0; i < caller_rep.size(); i++) {
       if (caller_rep[i]->getRank() == rank) {
-	recv_mutex.lock();
 	::std::cout << "received dist rank=" << i << "\n";
+	//If we have already received this, something is happening
+	//out of order, so we yield until things sort out.
+	while(caller_rep[i]->received) Thread::yield();
+	recv_mutex.lock();
 	caller_rep[i]->received = true;
 	recv_mutex.unlock();
 	recv_sema.up();

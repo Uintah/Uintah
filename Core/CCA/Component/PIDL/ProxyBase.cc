@@ -41,14 +41,14 @@ ProxyBase::ProxyBase()
 ProxyBase::ProxyBase(const Reference& ref)
 : proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
-	rm.insertReference(ref);
+  rm.insertReference(ref);
 }
 
 ProxyBase::ProxyBase(Reference *ref )
 : proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
-	rm.insertReference(*ref);
-	delete ref;
+  rm.insertReference(*ref);
+  delete ref;
 }
 
 ProxyBase::ProxyBase(const ReferenceMgr& refM)
@@ -123,7 +123,6 @@ ReferenceMgr* ProxyBase::_proxyGetReferenceMgr()
 
 void ProxyBase::_proxycreateSubset(int localsize, int remotesize)
 {
-  ::std::cerr << "ProxyBase::_proxycreateSubset()\n";
   if(proxy_uuid == "NONENONENONENONENONENONENONENONENONE") {
     getProxyUUID();
   }
