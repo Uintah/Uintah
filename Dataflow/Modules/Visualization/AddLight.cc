@@ -165,7 +165,7 @@ AddLight::execute()
   
   if( light_widget_->GetLightType() !=  (LightType)light_type_.get() ){
     light_widget_->SetLightType((LightType)light_type_.get());
-    return;
+    need_new_light = true;
   }
 
   Point location( light_widget_->GetSource() );
@@ -182,11 +182,12 @@ AddLight::execute()
     if (need_new_light){
       l = new class DirectionalLight( "my directional light", (-direction),
 				      Color(1,1,1) );
-      
+      l->on = (bool)light_on_.get();
     } else {
       class DirectionalLight* dl;
       dl = dynamic_cast<class DirectionalLight *>(l.get_rep());
       dl->move( (-direction) );
+      dl->on = (bool)light_on_.get();
       ogeom_->flushViews();
     }
     break;
@@ -194,10 +195,12 @@ AddLight::execute()
 //     cerr<<"PointLight with location = "<<location<<"\n";
     if (need_new_light){
       l = new class PointLight( "my point light", location, Color(1,1,1));
+      l->on = (bool)light_on_.get();
     } else {
       class PointLight* pl;
       pl = dynamic_cast<class PointLight *>(l.get_rep());
       pl->move( location );
+      pl->on = (bool)light_on_.get();
       ogeom_->flushViews();
     }
     break;
@@ -207,12 +210,14 @@ AddLight::execute()
     if (need_new_light){
       l = new class SpotLight( "my spot light", location, direction, cutoff,
 			       Color(1,1,1));
+      l->on = (bool)light_on_.get();
     } else {
       class SpotLight * sl;
       sl = dynamic_cast<class SpotLight *>(l.get_rep());
       sl->move( location );
       sl->setDirection( direction );
       sl->setCutoff( cutoff );
+      sl->on = (bool)light_on_.get();
       ogeom_->flushViews();
     }
     break;
@@ -220,17 +225,13 @@ AddLight::execute()
     warning("Unknown Light type");
   }
   
-  if( light_on_.get() == 1)
-    l->on = true;
-  else
-    l->on = false;
-
   if ( need_new_light ){
     if( light_id_ != -1 ){
       ogeom_->delLight( light_id_, 0);
     }
     light_id_ = ogeom_->addLight( l, "my light", &control_lock_);
     lt = light_widget_->GetLightType();
+    ogeom_->flushViews();
   } 
   
 }
