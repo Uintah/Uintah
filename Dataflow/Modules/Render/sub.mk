@@ -45,6 +45,11 @@ SRCS     += \
 	$(SRCDIR)/glMath.cc\
 #[INSERT NEW CODE FILE HERE]
 
+ifeq ($(HAVE_COLLAB_VIS),yes)
+#  SRCS += $(SRCDIR)/ViewServer.cc
+#  SUBDIRS += $(SRCDIR)/CollabVis
+endif
+
 PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Dataflow/Comm Core/Persistent Core/Exceptions Core/Geometry \
 	Core/Geom Core/Thread Core/Containers \
