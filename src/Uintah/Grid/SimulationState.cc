@@ -9,7 +9,7 @@ using namespace Uintah;
 
 SimulationState::SimulationState(ProblemSpecP &ps)
 {
-   delt_label = new VarLabel("delt", ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
+   delt_label = new VarLabel("delT", ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
 
   // Get the physical constants that are shared between codes.
   // For now it is just gravity.
@@ -27,6 +27,9 @@ void SimulationState::registerMaterial(Material* matl)
 
 //
 // $Log$
+// Revision 1.8  2000/05/30 18:15:10  dav
+// Changed delt to delT.  Should the MPM code use this delT, or the delT it creates in MPMLabel?
+//
 // Revision 1.7  2000/05/18 18:48:30  jas
 // Added gravity.  It is read in from the input file.
 //
