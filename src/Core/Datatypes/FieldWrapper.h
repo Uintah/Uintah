@@ -46,16 +46,16 @@ class SCICORESHARE FieldWrapper:public Datatype{
 public:
   /////////
   // Constructors
-  FieldWrapper(const GeomHandle&, status_t);
-  FieldWrapper(const AttribHandle&, status_t);
-  FieldWrapper(const FieldHandle&, status_t);
+  FieldWrapper(const GeomHandle&);
+  FieldWrapper(const AttribHandle&);
+  FieldWrapper(const FieldHandle&);
 
   inline GeomHandle get_geom(){return d_geom;};
   inline AttribHandle get_attrib(){return d_attrib;};
   inline FieldHandle get_field(){return d_field;};
   
   inline field_t get_field_type(){return fieldtype;};
-  inline status_t get_status_type(){return statustype;};
+  //inline status_t get_status_type(){return statustype;};
   //inline void set_field_type(field_t inval){fieldtype=inval;};
   //inline void set_status_type(status_t inval){statustype=inval;};
   
@@ -69,7 +69,7 @@ private:
   AttribHandle d_attrib;
   FieldHandle d_field;
   field_t fieldtype;
-  status_t statustype;
+  //status_t statustype;
 };
   
 

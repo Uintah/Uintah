@@ -15,18 +15,18 @@ namespace SCIRun {
 PersistentTypeID FieldWrapper::type_id("FieldWrapper", "Datatype", 0);
 
 
-  FieldWrapper::FieldWrapper(const GeomHandle &handle, status_t intype):
-  statustype(intype), fieldtype(GEOM){
+FieldWrapper::FieldWrapper(const GeomHandle &handle):
+  fieldtype(GEOM){
   d_geom = handle;
 }
 
-FieldWrapper::FieldWrapper(const AttribHandle &handle, status_t intype):
-  statustype(intype), fieldtype(ATTRIB){
+FieldWrapper::FieldWrapper(const AttribHandle &handle):
+  fieldtype(ATTRIB){
   d_attrib = handle;
 }
 
-FieldWrapper::FieldWrapper(const FieldHandle &handle, status_t intype):
-  statustype(intype), fieldtype(FIELD) {
+FieldWrapper::FieldWrapper(const FieldHandle &handle):
+  fieldtype(FIELD) {
   d_field = handle;
 }
 
