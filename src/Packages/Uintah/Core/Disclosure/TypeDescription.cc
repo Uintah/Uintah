@@ -15,20 +15,11 @@ using namespace SCIRun;
 
 static Mutex tdLock("TypeDescription::getMPIType lock");
 
-struct KillMap {
-  KillMap();
-  ~KillMap();
-};
-
-KillMap::KillMap()
-{
-}
-
 static map<string, const TypeDescription*>* types = 0;
 static vector<const TypeDescription*>* typelist=0;
 static bool killed=false;
 
-KillMap::~KillMap()
+void TypeDescription::deleteAll()
 {
   if(!types){
     ASSERT(!killed);
@@ -37,15 +28,15 @@ KillMap::~KillMap()
   }
   killed=true;
   vector<const TypeDescription*>::iterator iter = typelist->begin();
-  for(;iter != typelist->end();iter++)
+  for(;iter != typelist->end();iter++) {
+    cerr << "Killing " << (*iter)->getName() << endl;
     delete *iter;
+  }
   delete types;
   types = 0;
   delete typelist;
   typelist = 0;
 }
-
-KillMap killit;
 
 void TypeDescription::register_type()
 {

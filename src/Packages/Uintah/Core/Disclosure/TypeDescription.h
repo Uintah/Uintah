@@ -98,6 +98,8 @@ class Variable;
 
       ~TypeDescription();
 
+     static void deleteAll();
+     
    private:
       Type d_type;
       const TypeDescription* d_subtype;
