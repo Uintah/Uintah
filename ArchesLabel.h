@@ -316,6 +316,7 @@ namespace Uintah {
       // runge-kutta 3d order pressure and momentum labels
       const VarLabel* d_pressureIntermLabel;
       const VarLabel* d_velocityDivergenceLabel;
+      const VarLabel* d_velDivResidualLabel;
       const VarLabel* d_velocityDivergenceBCLabel;
       const VarLabel* d_continuityResidualLabel;
 

@@ -549,9 +549,15 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     tsk->requires(Task::NewDW, timelabels->maxuxplus_in);
   }
   // required for computing div constraint
-#ifdef divergenceconstraint
-  tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+//#ifdef divergenceconstraint
+  if (timelabels->multiple_steps)
+    tsk->requires(Task::NewDW, d_lab->d_scalarTempLabel, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  else
+    tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::OldDW, d_lab->d_divConstraintLabel, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_drhodfCPLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalDiffCoefLabel, 
@@ -559,7 +565,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalDiffCoefSrcLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-#endif
+//#endif
 #ifdef filter_convection_terms
   tsk->requires(Task::NewDW, d_lab->d_filteredRhoUjULabel,
 		d_lab->d_scalarFluxMatl, Task::OutOfDomain,
@@ -605,12 +611,12 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->modifies(d_lab->d_vVelRhoHatLabel);
   tsk->modifies(d_lab->d_wVelRhoHatLabel);
     
-#ifdef divergenceconstraint
+//#ifdef divergenceconstraint
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
     tsk->computes(d_lab->d_divConstraintLabel);
   else
     tsk->modifies(d_lab->d_divConstraintLabel);
-#endif
+//#endif
 
   sched->addTask(tsk, patches, matls);
 }
@@ -725,9 +731,16 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       new_dw->get(constVelocityVars.pressure, timelabels->pressure_guess, 
 		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-#ifdef divergenceconstraint
-    old_dw->get(constVelocityVars.scalar, d_lab->d_scalarSPLabel,
+//#ifdef divergenceconstraint
+    if (timelabels->multiple_steps)
+      new_dw->get(constVelocityVars.scalar, d_lab->d_scalarTempLabel,
 		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    else
+      old_dw->get(constVelocityVars.scalar, d_lab->d_scalarSPLabel,
+		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    constCCVariable<double> old_divergence;
+    old_dw->get(old_divergence, d_lab->d_divConstraintLabel,
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(constVelocityVars.drhodf, d_lab->d_drhodfCPLabel,
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
@@ -744,7 +757,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       new_dw->getModifiable(velocityVars.divergence,
 			    d_lab->d_divConstraintLabel, matlIndex, patch);
     velocityVars.divergence.initialize(0.0);
-#endif
+//#endif
 
   TAU_PROFILE_STOP(input);
   TAU_PROFILE_START(inputcell);
@@ -1409,10 +1422,29 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
   }
   }*/
 
-#ifdef divergenceconstraint    
+//#ifdef divergenceconstraint    
     // compute divergence constraint to use in pressure equation
     d_discretize->computeDivergence(pc, patch,&velocityVars,&constVelocityVars);
-#endif
+
+    double factor_old, factor_new, factor_divide;
+    factor_old = timelabels->factor_old;
+    factor_new = timelabels->factor_new;
+    factor_divide = timelabels->factor_divide;
+    IntVector ixLow = patch->getCellFORTLowIndex();
+    IntVector ixHigh = patch->getCellFORTHighIndex();
+    
+    for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
+      for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
+        for (int colX = ixLow.x(); colX <= ixHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+
+	      velocityVars.divergence[currCell] = (factor_old*old_divergence[currCell]+
+			                           factor_new*velocityVars.divergence[currCell])/factor_divide;
+        }
+      }
+    }
+//#endif
 
 #ifdef ARCHES_PRES_DEBUG
     std::cerr << "Done building matrix for vel coeff for pressure" << endl;

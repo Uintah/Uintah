@@ -211,9 +211,9 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
     tsk->computes(d_lab->d_scalDiffCoefLabel, d_lab->d_stencilMatl,
 		  Task::OutOfDomain);
     tsk->computes(d_lab->d_scalNonLinSrcSBLMLabel);
-#ifdef divergenceconstraint
+//#ifdef divergenceconstraint
     tsk->computes(d_lab->d_scalDiffCoefSrcLabel);
-#endif
+//#endif
   }
   else {
     tsk->modifies(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl,
@@ -221,9 +221,9 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
     tsk->modifies(d_lab->d_scalDiffCoefLabel, d_lab->d_stencilMatl,
 		  Task::OutOfDomain);
     tsk->modifies(d_lab->d_scalNonLinSrcSBLMLabel);
-#ifdef divergenceconstraint
+//#ifdef divergenceconstraint
     tsk->modifies(d_lab->d_scalDiffCoefSrcLabel);
-#endif
+//#endif
   }
 
   sched->addTask(tsk, patches, matls);
@@ -332,11 +332,11 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->allocateAndPut(scalarVars.scalarNonlinearSrc,
 			   d_lab->d_scalNonLinSrcSBLMLabel, matlIndex, patch);
     scalarVars.scalarNonlinearSrc.initialize(0.0);
-#ifdef divergenceconstraint
+//#ifdef divergenceconstraint
     new_dw->allocateAndPut(scalarVars.scalarDiffNonlinearSrc,
 			   d_lab->d_scalDiffCoefSrcLabel, matlIndex, patch);
     scalarVars.scalarDiffNonlinearSrc.initialize(0.0);
-#endif
+//#endif
   }
   else {
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
@@ -350,11 +350,11 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->getModifiable(scalarVars.scalarNonlinearSrc,
 			  d_lab->d_scalNonLinSrcSBLMLabel, matlIndex, patch);
     scalarVars.scalarNonlinearSrc.initialize(0.0);
-#ifdef divergenceconstraint
+//#ifdef divergenceconstraint
     new_dw->getModifiable(scalarVars.scalarDiffNonlinearSrc,
 			  d_lab->d_scalDiffCoefSrcLabel, matlIndex, patch);
     scalarVars.scalarDiffNonlinearSrc.initialize(0.0);
-#endif
+//#endif
   }
 
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {

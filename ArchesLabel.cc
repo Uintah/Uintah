@@ -411,6 +411,8 @@ ArchesLabel::ArchesLabel()
 				    CCVariable<double>::getTypeDescription() );
   d_velocityDivergenceLabel = VarLabel::create("velocityDivergence", 
 				   CCVariable<double>::getTypeDescription() );
+  d_velDivResidualLabel = VarLabel::create("velDivResidual", 
+				   CCVariable<double>::getTypeDescription() );
   d_velocityDivergenceBCLabel = VarLabel::create("velocityDivergenceBC", 
 				   CCVariable<double>::getTypeDescription() );
   d_continuityResidualLabel = VarLabel::create("continuityResidual", 
@@ -627,6 +629,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_strainTensorCompLabel);
   VarLabel::destroy(d_scalarFluxCompLabel);
   VarLabel::destroy(d_velocityDivergenceLabel);
+  VarLabel::destroy(d_velDivResidualLabel);
   VarLabel::destroy(d_velocityDivergenceBCLabel);
   VarLabel::destroy(d_continuityResidualLabel);
 
