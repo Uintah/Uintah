@@ -1083,12 +1083,13 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       if(flags->d_with_color) {
         ParticleVariable<double> pcolor;
         setParticleDefault(pcolor, lb->pColorLabel, pset, new_dw, 0.0);
+        //__________________________________
+        //  hardwiring for Northrup Grumman nozzle   
+        #define SerialMPM_1
+        #include "../MPMICE/NGC_nozzle.i"
+        #undef SerialMPM_1
       }
-      //__________________________________
-      //  hardwiring for Northrup Grumman nozzle   
-      #define SerialMPM_1
-      #include "../MPMICE/NGC_nozzle.i"
-      #undef SerialMPM_1
+
     }
   }
 
