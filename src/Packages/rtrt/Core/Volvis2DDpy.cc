@@ -981,8 +981,8 @@ Volvis2DDpy::key_pressed(unsigned long key) {
 	 << "\ta vertical or horizontal alignment.\n"
 	 << "T/t: toggle accelerated texturing for widget manipulation.\n"
 	 << "\tNote: does not work on all machines; turn off if buggy.\n"
-	 << "0-9: save widget configuration into one of ten states\n"
-	 << "Ctrl+(0-9): load widget configuration from one of ten states\n"
+	 << "Ctrl+(0-9): save widget configuration into one of ten states\n"
+	 << "(0-9): load widget configuration from one of ten states\n"
 	 << "Delete: deletes widget in focus (the one with the blue frame)\n"
 	 << "Page Up/Down: increases/decreases ray sample interval\n"
 	 << "\tby a factor of 2\n\n"
@@ -1097,9 +1097,9 @@ Volvis2DDpy::key_pressed(unsigned long key) {
   case XK_9:
   case XK_0:
     if( control_pressed )
-      loadUIState( key );
-    else
       saveUIState( key );
+    else
+      loadUIState( key );
     break;
 
   } // switch()
@@ -1781,8 +1781,8 @@ Volvis2DDpy::saveUIState( unsigned long key ) {
 // template<class T>
 void
 Volvis2DDpy::loadUIState( unsigned long key ) {
-  char *file;
-  int stateNum;
+  char *file="uninitialized";
+  int stateNum = -1;
   switch( key ) {
   case XK_1:
     file = "savedUIState1.txt";      
@@ -1983,7 +1983,7 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
 void
 Volvis2DDpy::colorWidgetFrames( void )
 {
-  for( int i = 0; i < widgets.size()-1; i++ )
+  for( unsigned int i = 0; i < widgets.size()-1; i++ )
     widgets[i]->changeColor( 0.85, 0.6, 0.6 );
   widgets[widgets.size()-1]->changeColor( 0.0, 0.6, 0.85 );
 }
@@ -2192,7 +2192,7 @@ Volvis2DDpy::Volvis2DDpy( float t_inc, bool cut ):DpyBase("Volvis2DDpy"),
   cp_probe = new EllipWidget( 0, 0, 0, 0, color );
   display_probe = false;
 
-  set_resolution( worldWidth, worldHeight );
+  set_resolution( (int)worldWidth, (int)worldHeight );
   lastSaveState = "none";
   lastLoadState = "none";
   UIgrid1 = 0;
