@@ -47,7 +47,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
       return(scinew CompMooneyRivlin(child,lb,n8or27));
    
    else if (mat_type ==  "comp_neo_hook") {
-     if (integrator == "explicit")
+     if (integrator == "explicit" || integrator == "fracture")
       return(scinew CompNeoHook(child,lb,n8or27));
      else if (integrator == "implicit") 
        return(scinew CompNeoHookImplicit(child,lb,n8or27));
@@ -66,7 +66,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
       return(scinew ViscoScramForBinder(child,lb,n8or27));
    
    else if (mat_type ==  "hypo_elastic") {
-     if (integrator == "explicit")
+     if (integrator == "explicit" || integrator == "fracture")
       return(scinew HypoElastic(child,lb,n8or27));
      else if (integrator == "implicit")
        return(scinew HypoElasticImplicit(child,lb,n8or27));
