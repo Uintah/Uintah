@@ -75,10 +75,10 @@ cd /usr/local
 tar -xvzf %{SOURCE3}
 	
 cd /usr/local/%{defname}/src/Packages
-tar -xvzf %{SOURCE2}
-tar -xvzf %{SOURCE3}
-tar -xvzf %{SOURCE4}
-tar -xvzf %{SOURCE5}
+tar -xvzf %{SOURCE6}
+tar -xvzf %{SOURCE7}
+tar -xvzf %{SOURCE8}
+tar -xvzf %{SOURCE9}
 
 
 
