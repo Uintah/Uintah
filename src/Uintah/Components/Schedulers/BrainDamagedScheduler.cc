@@ -375,13 +375,13 @@ BrainDamagedScheduler::dumpDependencies()
 		const Task* task1 = taskrec->task;
 		const Task* task2 = deptask->second->task;
 
-		depfile << task1->getName();
+		depfile << "\"" << task1->getName();
 		if(task1->getPatch())
 		   depfile << "\\nPatch" << task1->getPatch()->getID();
-		depfile << " "  << task2->getName() << "\\nPatch";
+		depfile << "\" \""  << task2->getName();
 		if(task2->getPatch())
-		   depfile << task2->getPatch()->getID();
-		depfile << endl;
+		   depfile << "\\nPatch" << task2->getPatch()->getID();
+		depfile << "\"" << endl;
 	    }
 	}
     }
@@ -404,6 +404,9 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.18  2000/06/08 17:11:39  jehall
+// - Added quotes around task names so names with spaces are parsable
+//
 // Revision 1.17  2000/06/03 05:27:23  sparker
 // Fixed dependency analysis for reduction variables
 // Removed warnings
