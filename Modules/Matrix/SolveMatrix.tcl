@@ -6,23 +6,52 @@ itcl_class SolveMatrix {
 	set_defaults
     }
     method set_defaults {} {
-	global $this-target_error $this-method $this-orig_error
+	global $this-target_error $this-method_sci $this-method $this-precond $this-orig_error
 	global $this-current_error $this-flops $this-floprate $this-iteration
 	global $this-memrefs $this-memrate $this-maxiter
-	global $this-use_previous_soln
-	set $this-target_error 1.e-4
+	global $this-use_previous_so
+
+        set $this-target_error 1.e-4
 	set $this-method conjugate_gradient
-	set $this-orig_error 9.99999e99
-	set $this-current_error 9.99999e99
+        set $this-precond Diag_P
+	set $this-orig_error 0
+	set $this-current_error 0
 	set $this-flops 0
 	set $this-floprate 0
 	set $this-memrefs 0
 	set $this-memrate 0
 	set $this-iteration 0
-	set $this-maxiter 0
+	set $this-maxiter 200
 	set $this-use_previous_soln 1
 	set $this-emit_partial 1
     }
+ 
+
+ method switchmethod {} {
+        global $this-method
+        set w .ui$this
+        set meth [set $this-method]
+     if {($meth == "conjugate_gradient_sci") || ($meth == "jacoby_sci")} {
+           pack forget $w.stat                  
+           pack $w.converg $w.graph -side top -padx 2 -pady 2 -fill x
+	 foreach t [winfo children $w.precond] {
+	     if {[winfo class $t] == "Radiobutton"} {
+		 $t configure -state disabled
+	     }
+	 }
+        } else {
+             pack forget $w.graph $w.converg
+             pack $w.stat  -side top -padx 2 -pady 2 -fill x
+	 foreach t [winfo children $w.precond] {
+	     if {[winfo class $t] == "Radiobutton"} {
+		 $t configure -state normal
+	     }
+	 }
+
+        }
+    }
+ 
+
     method ui {} {
 	set w .ui$this
 	if {[winfo exists $w]} {
@@ -36,30 +65,78 @@ itcl_class SolveMatrix {
 
 	button $w.execute -text "Execute" -command $n
 	pack $w.execute -side top -fill x -pady 2 -padx 2
+        
+ 
+	make_labeled_radio $w.method "Solution Method" "$this switchmethod
+" \
+		top $this-method\
+	        
+                {{"Conjugate Gradient" conjugate_gradient }\
+                 {"Conjugate Gradient Squared Iteration" conj_grad_squared}\
+	         {"BiConjugate Gradient Iteration" bi_conjugate_gradient}\
+                 {"BiConjugate Gradient Iteration Stabilized" bi_conjugate_gradient_stab}\
+                 {"Quasi Minimal Residual Iteration" quasi_minimal_res}\
+                 {"Generalized Minimum Residual Iteration" gen_min_res_iter}\
+        	 {"Richardson Iterations" richardson_iter}              
+                 {"Conjugate Gradient & Precond. (SCIRun)" conjugate_gradient_sci}\
+	         {"Jacoby & Precond. (SCIRun)" jacoby_sci}}
 
-	make_labeled_radio $w.method "Solution Method" "" \
-		top $this-method \
-		{{"Jacobi" jacobi} \
-		{"Conjugate Gradient" conjugate_gradient}}
 
-	pack $w.method -side top -fill x -pady 2
+                 
+             
+
+        
+         make_labeled_radio $w.precond "Preconditioner" ""\
+                top $this-precond\
+		{{"DiagPreconditioner" Diag_P}\
+		{"IC Preconditioner" IC_P}\
+	{"ILU Preconditioner" ILU_P}}
+    
+
+        pack $w.method -side top -fill x -pady 2
+
+	pack $w.precond -side top -fill x -pady 2
 
 	expscale $w.target_error -orient horizontal -label "Target error:" \
 		-variable $this-target_error -command ""
 	pack $w.target_error -side top -fill x -pady 2
 
 	scale $w.maxiter -orient horizontal -label "Maximum Iterations:" \
-		-variable $this-maxiter -from 0 -to 200
+		-variable $this-maxiter -from 0 -to 400
 	pack $w.maxiter -side top -fill x -pady 2
 
 	checkbutton $w.use_prev -variable $this-use_previous_soln \
 		-text "Use previous solution as initial guess"
 	pack $w.use_prev -side top -fill x -pady 2
 
+        frame $w.stat -borderwidth 2 -relief ridge
+        pack $w.stat  -side top -padx 2 -pady 2 -fill x
 
 	frame $w.converg -borderwidth 2 -relief ridge
-	pack $w.converg -side top -padx 2 -pady 2 -fill x
+#	pack $w.converg -side top -padx 2 -pady 2 -fill x
 
+        frame $w.stat.status
+	pack $w.stat.status -side top -fill x
+	label $w.stat.status.lab -text "Job Status: "
+	pack $w.stat.status.lab -side left
+	label $w.stat.status.val -textvariable $this-status
+	pack $w.stat.status.val -side right
+      
+        frame $w.stat.iter
+	pack $w.stat.iter -side top -fill x
+	label $w.stat.iter.lab -text "Total Iterations: "
+	pack $w.stat.iter.lab -side left
+	label $w.stat.iter.val -textvariable $this-iteration
+	pack $w.stat.iter.val -side right
+
+        frame $w.stat.current
+	pack $w.stat.current -side top -fill x
+	label $w.stat.current.lab -text "Tolerance Achieved: "
+	pack $w.stat.current.lab -side left
+	label $w.stat.current.val -textvariable $this-current_error
+	pack $w.stat.current.val -side right
+	
+	
 	frame $w.converg.iter
 	pack $w.converg.iter -side top -fill x
 	label $w.converg.iter.lab -text "Iteration: "
@@ -127,7 +204,7 @@ itcl_class SolveMatrix {
 	$w.graph element configure "Current Target" -data "0 $err" \
 		-symbol diamond
 
-	pack $w.graph -fill x
+#	pack $w.graph -fill x
     }
     protected error_selected false
     protected tmp_error
@@ -203,3 +280,15 @@ itcl_class SolveMatrix {
 	$w.graph element configure "Current Error" -foreground green
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+

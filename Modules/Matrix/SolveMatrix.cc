@@ -10,6 +10,35 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+
+#include <config.h>
+
+#ifdef SCI_SPARSELIB
+#include "comprow_double.h"        //compressed row matrix storage
+#include "iotext_double.h"        //matrix, vector input- output
+
+
+#include "mvm.h"           //matrix definitions
+#include "mvv.h"           //vector definitions
+#include "mvblasd.h"       //vector multiplication BLASD
+
+
+#include "icpre_double.h"         //preconditionars
+#include "diagpre_double.h"
+#include "ilupre_double.h"
+
+
+#include "cg.h"                  //iterative IML  methods
+#include "bicg.h"
+#include "qmr.h"
+#include "cgs.h"
+#include "bicgstab.h"
+#include "ir.h"
+#include "gmres.h"
+#endif
+
+
+
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
 #include <Datatypes/ColumnMatrixPort.h>
@@ -27,9 +56,22 @@ class SolveMatrix : public Module {
     ColumnMatrixIPort* rhsport;
     ColumnMatrixOPort* solport;
     ColumnMatrixHandle solution;
-    void conjugate_gradient(Matrix*, ColumnMatrix&, ColumnMatrix&);
-    void jacobi(Matrix*, ColumnMatrix&, ColumnMatrix&);
+  
+#ifdef SCI_SPARSELIB
+    void conjugate_gradient(Matrix*, ColumnMatrix&, ColumnMatrix&,int flag);
+    void quasi_minimal_res(Matrix*, ColumnMatrix&, ColumnMatrix&,int flag);
+    void bi_conjugate_gradient(Matrix*, ColumnMatrix&, ColumnMatrix&,int flag);
+    void bi_conjugate_gradient_stab(Matrix*, ColumnMatrix&, ColumnMatrix&,int flag);
+    void conj_grad_squared(Matrix*, ColumnMatrix&, ColumnMatrix&,int flag);
+    void gen_min_res_iter(Matrix*, ColumnMatrix&, ColumnMatrix&,int flag);
+    void richardson_iter(Matrix*, ColumnMatrix&, ColumnMatrix&,int flag);
+#endif
 
+    void jacobi_sci(Matrix*,ColumnMatrix& , ColumnMatrix&);
+    void conjugate_gradient_sci(Matrix*,ColumnMatrix&, ColumnMatrix&);
+
+
+  
     void append_values(int niter, const Array1<double>& errlist,
 		       int& last_update, const Array1<int>& targetidx,
 		       const Array1<double>& targetlist,
@@ -49,10 +91,12 @@ public:
     TCLdouble orig_error;
     TCLdouble current_error;
     TCLstring method;
+    TCLstring precond;
     TCLint iteration;
     TCLint maxiter;
     TCLint use_previous_soln;
     TCLvarint emit_partial;
+    TCLstring status;
 };
 
 extern "C" {
@@ -62,15 +106,16 @@ Module* make_SolveMatrix(const clString& id)
 }
 };
 
+
 SolveMatrix::SolveMatrix(const clString& id)
 : Module("SolveMatrix", id, Filter), target_error("target_error", id, this),
   flops("flops", id, this), floprate("floprate", id, this),
   memrefs("memrefs", id, this), memrate("memrate", id, this),
   orig_error("orig_error", id, this), current_error("current_error", id, this),
-  method("method", id, this), iteration("iteration", id, this),
+  method("method", id, this),precond("precond",id,this), iteration("iteration", id, this),
   maxiter("maxiter", id, this),
   use_previous_soln("use_previous_soln", id, this),
-  emit_partial("emit_partial", id, this)
+  emit_partial("emit_partial", id, this),status("status",id,this)
 {
     matrixport=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
     add_iport(matrixport);
@@ -86,10 +131,10 @@ SolveMatrix::SolveMatrix(const SolveMatrix& copy, int deep)
   flops("flops", id, this), floprate("floprate", id, this),
   memrefs("memrefs", id, this), memrate("memrate", id, this),
   orig_error("orig_error", id, this), current_error("current_error", id, this),
-  method("method", id, this), iteration("iteration", id, this),
+  method("method", id, this),precond("precond",id,this), iteration("iteration", id, this),
   maxiter("maxiter", id, this),
   use_previous_soln("use_previous_soln", id, this),
-  emit_partial("emit_partial", id, this)
+  emit_partial("emit_partial", id, this),status("status",id,this)
 {
     NOT_FINISHED("SolveMatrix::SolveMatrix");
 }
@@ -103,8 +148,11 @@ Module* SolveMatrix::clone(int deep)
     return scinew SolveMatrix(*this, deep);
 }
 
+
 void SolveMatrix::execute()
 {
+ int flag = 1;
+  
     MatrixHandle matrix;
     if(!matrixport->get(matrix))
 	return;	
@@ -129,22 +177,537 @@ void SolveMatrix::execute()
 	return;
     }
 
+
+  
+  clString pre=precond.get();
+      if(pre == "Diag_P") flag = 1;
+      else if(pre == "IC_P") flag = 2;
+      else if(pre == "ILU_P") flag = 3;
+
     clString meth=method.get();
-    if(meth == "conjugate_gradient"){
+    if(0){
+#ifdef SCI_SPARSELIB
+    } else if(meth == "conjugate_gradient"){
 	rhs.detach();
 	conjugate_gradient(matrix.get_rep(),
-			   *solution.get_rep(), *rhs.get_rep());
+			   *solution.get_rep(), *rhs.get_rep(),flag);
 	solport->send(solution);
-    } else if(meth == "jacobi"){
-	jacobi(matrix.get_rep(),
+    } else if(meth == "quasi_minimal_res"){
+	quasi_minimal_res(matrix.get_rep(),
+	       *solution.get_rep(), *rhs.get_rep(),flag);
+	solport->send(solution);
+    } else if(meth == "bi_conjugate_gradient"){
+	bi_conjugate_gradient(matrix.get_rep(),
+	       *solution.get_rep(), *rhs.get_rep(),flag);
+	solport->send(solution);
+    } else if(meth == "bi_conjugate_gradient_stab"){
+	bi_conjugate_gradient_stab(matrix.get_rep(),
+	       *solution.get_rep(), *rhs.get_rep(),flag);
+	solport->send(solution);
+
+   } else if(meth == "conj_grad_squared"){
+	conj_grad_squared(matrix.get_rep(),
+	       *solution.get_rep(), *rhs.get_rep(),flag);
+        solport->send(solution);
+  } else if(meth == "gen_min_res_iter"){
+	gen_min_res_iter(matrix.get_rep(),
+	       *solution.get_rep(), *rhs.get_rep(),flag);
+	solport->send(solution);
+
+   } else if(meth == "richardson_iter"){
+	richardson_iter(matrix.get_rep(),
+	       *solution.get_rep(), *rhs.get_rep(),flag);
+        solport->send(solution);
+	
+#endif
+   } else if(meth == "conjugate_gradient_sci"){
+	conjugate_gradient_sci(matrix.get_rep(),
 	       *solution.get_rep(), *rhs.get_rep());
-	solport->send(solution);
-    } else {
+        solport->send(solution);
+
+
+   } else if(meth == "jacoby_sci"){
+	jacobi_sci(matrix.get_rep(),
+	       *solution.get_rep(), *rhs.get_rep());
+        solport->send(solution);
+
+
+	
+    }else {
 	error(clString("Unknown solution method: ")+meth);
     }
+
 }
 
-void SolveMatrix::jacobi(Matrix* matrix,
+
+
+
+void SolveMatrix::append_values(int niter, const Array1<double>& errlist,
+				int& last_update,
+				const Array1<int>& targetidx,
+				const Array1<double>& targetlist,
+				int& last_errupdate)
+{
+    char buf[10000];
+    ostrstream str(buf, 1000);
+    str << id << " append_graph " << niter << " \"";
+    int i;
+    for(i=last_update;i<errlist.size();i++){
+	str << i << " " << errlist[i] << " ";
+    }
+    str << "\" \"";
+    for(i=last_errupdate;i<targetidx.size();i++){
+	str << targetidx[i] << " " << targetlist[i] << " ";
+    }
+    str << "\" ; update idletasks" << '\0';
+    TCL::execute(str.str());
+    last_update=errlist.size();
+    last_errupdate=targetidx.size();
+}
+
+
+#ifdef SCI_SPARSELIB
+
+//********************** IML++  **************************************************
+
+void SolveMatrix::conjugate_gradient(Matrix* matrix,
+				    ColumnMatrix& lhs, ColumnMatrix& rhs,int flag)
+{
+int result;  
+int size = matrix->nrows();
+int non_zero =  matrix->get_row()[size];
+
+
+int maxit = maxiter.get();
+double tol = target_error.get();
+double x_init = 0.0;
+
+
+status.set("Running"); 
+  TCL::execute("update idletasks");
+iteration.set(0); 
+current_error.set(0);
+  TCL::execute("update idletasks");
+
+
+VECTOR_double b(rhs.get_rhs(),size);
+
+
+VECTOR_double  x(size,x_init);
+
+for(int i=0;i<size;i++)
+   x[i] = lhs[i];
+
+
+
+CompRow_Mat_double A(size,size,non_zero,matrix->get_val(),matrix->get_row(),matrix->get_col()); 
+ 
+
+if (flag == 1){
+     DiagPreconditioner_double D(A);
+     result = CG(A,x,b,D,maxit,tol);  //IML++ solver 
+}
+
+else if(flag == 2){
+     ICPreconditioner_double D(A);
+     result = CG(A,x,b,D,maxit,tol);  //IML++ solver  
+}
+
+else if(flag ==3){
+   CompRow_ILUPreconditioner_double D(A);
+    result = CG(A,x,b,D,maxit,tol);  //IML++ solver
+}
+
+
+for(i=0;i<size;i++)
+  lhs[i] = x[i];
+
+//lhs.put_lhs(&x[0]);
+
+
+
+if(result == 0)
+  status.set("Done");
+else
+  status.set("Failed to Converge");
+
+iteration.set(maxit);
+current_error.set(tol);	      
+ TCL::execute("update idletasks");
+
+}
+
+
+void SolveMatrix::bi_conjugate_gradient(Matrix* matrix,
+				    ColumnMatrix& lhs, ColumnMatrix& rhs,int flag)
+{
+int result; 
+int size = matrix->nrows();
+
+int non_zero =  matrix->get_row()[size];
+
+int maxit = maxiter.get();
+double tol = target_error.get();
+double x_init = 0.0;
+
+status.set("Running");
+  TCL::execute("update idletasks");
+iteration.set(0);
+current_error.set(0);
+ TCL::execute("update idletasks");
+
+
+VECTOR_double b(rhs.get_rhs(),size);
+
+VECTOR_double  x(size,x_init);
+
+for(int i=0;i<size;i++)
+   x[i] = lhs[i];
+
+
+CompRow_Mat_double A(size,size,non_zero,matrix->get_val(),matrix->get_row(),matrix->get_col()); 
+
+
+if (flag == 1){
+     DiagPreconditioner_double D(A);
+     result = BiCG(A,x,b,D,maxit,tol);  //IML++ solver 
+}
+
+else if(flag == 2){
+     ICPreconditioner_double D(A);
+     result = BiCG(A,x,b,D,maxit,tol);  //IML++ solver  
+}
+
+else if(flag ==3){
+   CompRow_ILUPreconditioner_double D(A);
+    result = BiCG(A,x,b,D,maxit,tol);  //IML++ solver
+}
+
+//lhs.put_lhs(&x[0]);
+
+for(i=0;i<size;i++)
+   lhs[i] = x[i];
+
+if(result == 0)
+  status.set("Done");
+else
+  status.set("Failed to Converge");
+
+iteration.set(maxit);
+current_error.set(tol);	   
+ TCL::execute("update idletasks");
+
+}
+
+
+void SolveMatrix::quasi_minimal_res(Matrix* matrix,
+				    ColumnMatrix& lhs, ColumnMatrix& rhs,int flag)
+{
+int result; 
+int size = matrix->nrows();
+
+int non_zero =  matrix->get_row()[size];
+
+int maxit = maxiter.get();
+double tol = target_error.get();
+double x_init = 0.0;
+
+
+status.set("Running");
+  TCL::execute("update idletasks");
+iteration.set(0);
+current_error.set(0);
+ TCL::execute("update idletasks");
+
+VECTOR_double b(rhs.get_rhs(),size);
+
+VECTOR_double  x(size,x_init);
+
+for(int i=0;i<size;i++)
+   x[i] = lhs[i];
+
+CompRow_Mat_double A(size,size,non_zero,matrix->get_val(),matrix->get_row(),matrix->get_col()); 
+
+
+if (flag == 1){
+     DiagPreconditioner_double D(A);
+     result = QMR(A,x,b,D,D,maxit,tol);  //IML++ solver 
+}
+
+else if(flag == 2){
+     ICPreconditioner_double D(A);
+     result = QMR(A,x,b,D,D,maxit,tol);  //IML++ solver  
+}
+
+else if(flag ==3){
+   CompRow_ILUPreconditioner_double D(A);
+    result = QMR(A,x,b,D,D,maxit,tol);  //IML++ solver
+}
+
+//lhs.put_lhs(&x[0]);
+
+for(i=0;i<size;i++)
+   lhs[i] = x[i];
+
+
+if(result == 0)
+  status.set("Done");
+else
+  status.set("Failed to Converge");
+
+iteration.set(maxit);
+current_error.set(tol);	   
+
+ TCL::execute("update idletasks");
+
+}
+
+
+
+void SolveMatrix::bi_conjugate_gradient_stab(Matrix* matrix,
+				    ColumnMatrix& lhs, ColumnMatrix& rhs,int flag)
+{
+int result; 
+int size = matrix->nrows();
+
+int non_zero =  matrix->get_row()[size];
+int maxit = maxiter.get();
+double tol = target_error.get();
+double x_init = 0.0;
+
+status.set("Running");
+ TCL::execute("update idletasks");
+iteration.set(0);
+current_error.set(0);
+ TCL::execute("update idletasks");
+
+VECTOR_double b(rhs.get_rhs(),size);
+
+VECTOR_double  x(size,x_init);
+
+for(int i=0;i<size;i++)
+   x[i] = lhs[i];
+
+CompRow_Mat_double A(size,size,non_zero,matrix->get_val(),matrix->get_row(),matrix->get_col()); 
+
+
+
+if (flag == 1){
+     DiagPreconditioner_double D(A);
+     result = BiCGSTAB(A,x,b,D,maxit,tol);  //IML++ solver 
+}
+
+else if(flag == 2){
+     ICPreconditioner_double D(A);
+     result = BiCGSTAB(A,x,b,D,maxit,tol);  //IML++ solver  
+}
+
+else if(flag ==3){
+   CompRow_ILUPreconditioner_double D(A);
+    result = BiCGSTAB(A,x,b,D,maxit,tol);  //IML++ solver
+}
+
+//lhs.put_lhs(&x[0]);
+
+for(i=0;i<size;i++)
+   lhs[i] = x[i];
+
+
+if(result == 0)
+  status.set("Done");
+else
+  status.set("Failed to Converge");
+
+iteration.set(maxit);
+current_error.set(tol);	   
+
+ TCL::execute("update idletasks");
+
+}
+
+
+void SolveMatrix::conj_grad_squared(Matrix* matrix,
+				    ColumnMatrix& lhs, ColumnMatrix& rhs,int flag)
+{
+int result; 
+int size = matrix->nrows();
+
+int non_zero =  matrix->get_row()[size];
+int maxit = maxiter.get();
+double tol = target_error.get();
+double x_init = 0.0;
+
+status.set("Running");
+TCL::execute("update idletasks");
+iteration.set(0);
+current_error.set(0);
+ TCL::execute("update idletasks");
+
+VECTOR_double b(rhs.get_rhs(),size);
+VECTOR_double  x(size,x_init);
+
+for(int i=0;i<size;i++)
+   x[i] = lhs[i];
+
+CompRow_Mat_double A(size,size,non_zero,matrix->get_val(),matrix->get_row(),matrix->get_col()); 
+
+
+if (flag == 1){
+     DiagPreconditioner_double D(A);
+     result = CGS(A,x,b,D,maxit,tol);  //IML++ solver 
+}
+
+else if(flag == 2){
+     ICPreconditioner_double D(A);
+     result = CGS(A,x,b,D,maxit,tol);  //IML++ solver  
+}
+
+else if(flag ==3){
+   CompRow_ILUPreconditioner_double D(A);
+    result = CGS(A,x,b,D,maxit,tol);  //IML++ solver
+}
+
+//lhs.put_lhs(&x[0]);
+
+for(i=0;i<size;i++)
+   lhs[i] = x[i];
+
+if(result == 0)
+  status.set("Done");
+else
+  status.set("Failed to Converge");
+
+iteration.set(maxit);
+current_error.set(tol);	   
+ TCL::execute("update idletasks");
+}
+
+ 
+void SolveMatrix::gen_min_res_iter(Matrix* matrix,
+				    ColumnMatrix& lhs, ColumnMatrix& rhs,int flag)
+{
+int result; 
+int restart = 32;
+int size = matrix->nrows();
+
+int non_zero =  matrix->get_row()[size];
+int maxit = maxiter.get();
+double tol = target_error.get();
+double x_init = 0.0;
+
+status.set("Running");
+TCL::execute("update idletasks");
+iteration.set(0);
+current_error.set(0);
+ TCL::execute("update idletasks");
+
+VECTOR_double b(rhs.get_rhs(),size);
+VECTOR_double  x(size,x_init);
+
+MATRIX_double H(restart+1,restart,0.0);
+
+for(int i=0;i<size;i++)
+   x[i] = lhs[i];
+
+CompRow_Mat_double A(size,size,non_zero,matrix->get_val(),matrix->get_row(),matrix->get_col()); 
+
+
+if (flag == 1){
+     DiagPreconditioner_double D(A);
+     result = GMRES(A,x,b,D,H,restart,maxit,tol);  //IML++ solver 
+}
+
+else if(flag == 2){
+     ICPreconditioner_double D(A);
+     result = GMRES(A,x,b,D,H,restart,maxit,tol);  //IML++ solver  
+}
+
+else if(flag ==3){
+   CompRow_ILUPreconditioner_double D(A);
+    result = GMRES(A,x,b,D,H,restart,maxit,tol);  //IML++ solver
+}
+
+//lhs.put_lhs(&x[0]);
+
+for(i=0;i<size;i++)
+   lhs[i] = x[i];
+
+if(result == 0)
+  status.set("Done");
+else
+  status.set("Failed to Converge");
+
+iteration.set(maxit);
+current_error.set(tol);	   
+ TCL::execute("update idletasks");
+
+}
+
+
+void SolveMatrix::richardson_iter(Matrix* matrix,
+				    ColumnMatrix& lhs, ColumnMatrix& rhs,int flag)
+{
+int result; 
+int size = matrix->nrows();
+
+int non_zero =  matrix->get_row()[size];
+int maxit = maxiter.get();
+double tol = target_error.get();
+double x_init = 0.0;
+
+status.set("Running");
+TCL::execute("update idletasks");
+iteration.set(0);
+current_error.set(0);
+ TCL::execute("update idletasks");
+
+VECTOR_double b(rhs.get_rhs(),size);
+VECTOR_double  x(size,x_init);
+
+for(int i=0;i<size;i++)
+   x[i] = lhs[i];
+
+CompRow_Mat_double A(size,size,non_zero,matrix->get_val(),matrix->get_row(),matrix->get_col()); 
+
+
+if (flag == 1){
+     DiagPreconditioner_double D(A);
+     result = IR(A,x,b,D,maxit,tol);  //IML++ solver 
+}
+
+else if(flag == 2){
+     ICPreconditioner_double D(A);
+     result = IR(A,x,b,D,maxit,tol);  //IML++ solver  
+}
+
+else if(flag ==3){
+   CompRow_ILUPreconditioner_double D(A);
+    result = IR(A,x,b,D,maxit,tol);  //IML++ solver
+}
+
+//lhs.put_lhs(&x[0]);
+
+for(i=0;i<size;i++)
+   lhs[i] = x[i];
+
+if(result == 0)
+  status.set("Done");
+else
+  status.set("Failed to Converge");
+
+iteration.set(maxit);
+current_error.set(tol);	   
+ TCL::execute("update idletasks");
+
+}
+//**********************End IML++ *********************************************
+
+
+#endif 
+
+
+
+void SolveMatrix::jacobi_sci(Matrix* matrix,
 			 ColumnMatrix& lhs, ColumnMatrix& rhs)
 {
     int size=matrix->nrows();
@@ -277,7 +840,7 @@ void SolveMatrix::jacobi(Matrix* matrix,
     append_values(niter, errlist, last_update, targetidx, targetlist, last_errupdate);
 }
 
-void SolveMatrix::conjugate_gradient(Matrix* matrix,
+void SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
 				    ColumnMatrix& lhs, ColumnMatrix& rhs)
 {
     int size=matrix->nrows();
@@ -292,6 +855,8 @@ void SolveMatrix::conjugate_gradient(Matrix* matrix,
     memrate.set(0);
 
     iteration.set(0);
+
+
     
     ColumnMatrix diag(size);
     // We should try to do a better job at preconditioning...
@@ -438,25 +1003,3 @@ void SolveMatrix::conjugate_gradient(Matrix* matrix,
     append_values(niter, errlist, last_update, targetidx, targetlist, last_errupdate);
 }
 
-void SolveMatrix::append_values(int niter, const Array1<double>& errlist,
-				int& last_update,
-				const Array1<int>& targetidx,
-				const Array1<double>& targetlist,
-				int& last_errupdate)
-{
-    char buf[10000];
-    ostrstream str(buf, 1000);
-    str << id << " append_graph " << niter << " \"";
-    int i;
-    for(i=last_update;i<errlist.size();i++){
-	str << i << " " << errlist[i] << " ";
-    }
-    str << "\" \"";
-    for(i=last_errupdate;i<targetidx.size();i++){
-	str << targetidx[i] << " " << targetlist[i] << " ";
-    }
-    str << "\" ; update idletasks" << '\0';
-    TCL::execute(str.str());
-    last_update=errlist.size();
-    last_errupdate=targetidx.size();
-}
