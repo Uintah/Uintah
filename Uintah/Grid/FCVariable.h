@@ -244,7 +244,16 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 	 return getTypeDescription();
       }
 
+   template<class T>
+      void
+      FCVariable<T>::getSizes(IntVector& low, IntVector& high, IntVector& siz) const
+      {
+	 low=getLowIndex();
+	 high=getHighIndex();
+	 siz=size();
+      }
 
+   
    template<class T>
       Variable*
       FCVariable<T>::maker()
@@ -347,6 +356,13 @@ class FCVariable : public Array3<T>, public FCVariableBase {
       }
 
    template<class T>
+      void*
+      FCVariable<T>::getBasePointer()
+      {
+	 return getPointer();
+      }
+
+   template<class T>
       void
       FCVariable<T>::read(InputContext& oc)
       {
@@ -373,6 +389,9 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 
 //
 // $Log$
+// Revision 1.11  2000/10/06 02:40:38  jas
+// Implemented more functions.
+//
 // Revision 1.10  2000/10/05 23:11:06  jas
 // Fixed a typo in FCVariable so that maker returns a FCVariable instead of
 // a NCVariable.  Subclassed FCVariableBase from Variable like the other
