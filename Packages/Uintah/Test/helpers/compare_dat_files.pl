@@ -30,7 +30,7 @@ $first_significant_rel_error_value2 = 0;
 $first_significant_abs_error_value1 = 0;
 $first_significant_abs_error_value2 = 0;
 $failed = 0;
-
+$lineno = 0;
 foreach $datfile (@ARGV[4 .. @ARGV-1]) {
     $datfilename1 = $uda_dir1 . "/" . $datfile;
     $datfilename2 = $uda_dir2 . "/" . $datfile;
@@ -47,9 +47,14 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
     $greatest_abs_error = 0;
     
     while (($line1 = <IN1>) && ($line2 = <IN2>)) {
+        $lineno = $lineno + 1;
 	($time1, @values1) = getTimeAndValue($line1);
 	($time2, @values2) = getTimeAndValue($line2);
 	if (@values1 != @values2) {
+
+            print "Values1 " . @values1 . " Values2 " . @values2;
+            print " on line number " . $lineno . "\n";
+            
 	    print "Error: the dat files do not have the same number of values per line\n";
 	    exit(1);
 	}
@@ -165,7 +170,7 @@ else {
 sub getTimeAndValue {
     my($line) = @_;
     my(@vals) = ();
-    $number_reg_exp = "(-?\\d+(?:.\\d+)?(?:e-?\\d+(?:.\\d+)?)?)";
+    $number_reg_exp = "(-?\\d+(?:\\.\\d+)?(?:e-?\\d+(?:\\.\\d+)?)?)";
     if ( $line =~ "$number_reg_exp" ) {
 	$time = $1;
 	$line = $';
