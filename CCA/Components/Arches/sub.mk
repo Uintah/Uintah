@@ -22,6 +22,7 @@ SRCS     += $(SRCDIR)/Arches.cc \
 	$(SRCDIR)/PressureSolver.cc \
 	$(SRCDIR)/Properties.cc \
 	$(SRCDIR)/ReactiveScalarSolver.cc \
+	$(SRCDIR)/ThermalNOxSolver.cc \
 	$(SRCDIR)/RBGSSolver.cc \
 	$(SRCDIR)/ScalarSolver.cc \
 	$(SRCDIR)/SmagorinskyModel.cc \

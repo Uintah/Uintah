@@ -537,6 +537,38 @@ Source::addReactiveScalarSource(const ProcessorGroup*,
   }
 }
 
+//****************************************************************************
+// Thermal NOx source calculation
+// Added by Padmabhushana Desam
+//****************************************************************************
+void Source::thermalNOxSource(const ProcessorGroup*,
+                                const Patch* patch,
+                                double,
+                                int,
+                                CellInformation* cellinfo,
+                                ArchesVariables* vars,
+                                ArchesConstVariables* constvars)
+{
+  double tot_noxsource=0.0; // This varible is for monitoring the total NOx production
+  // Get the patch and variable indices
+  IntVector indexLow = patch->getCellFORTLowIndex();
+  IntVector indexHigh = patch->getCellFORTHighIndex();
+  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+       // There is a multiplication with volume on the left side. So the right hand side als has to be multiplied       // with volume
+        vars->scalarNonlinearSrc[currCell] += vol*
+                                        constvars->thermalnoxSRC[currCell];
+        //tot_noxsource+=vol*constvars->thermalnoxSRC[currCell];
+      }
+    }
+  }
+  //cout<<"Total NOx production is:"<<tot_noxsource<<endl;
+}
+
+
 
 
 //****************************************************************************
