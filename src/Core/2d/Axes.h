@@ -37,9 +37,9 @@
 
 namespace SCIRun {
 
-class Diagram;  
+class Diagram;
 
-class SCICORESHARE Axes :  public TclObj, public AxesObj {
+class SCICORESHARE XAxis :  public TclObj, public XAxisObj {
 protected:
   Array1< Polyline *> poly_;
   Diagram *parent_;
@@ -48,9 +48,38 @@ protected:
 
 public:
   
-  Axes() : TclObj( "axes"), AxesObj("Axes") {}
-  Axes( Diagram *, const string &name="Axes" );
-  virtual ~Axes();
+  XAxis() : TclObj( "xaxis"), XAxisObj("XAxis") {}
+  XAxis( Diagram *, const string &name="XAxis" );
+  virtual ~XAxis();
+
+  void update();
+
+  virtual void select( double x, double y, int b );
+  virtual void move( double x, double y, int b );
+  virtual void release( double x, double y, int b );
+
+  // For OpenGL
+#ifdef SCI_OPENGL
+  virtual void draw( bool = false );
+#endif
+  static PersistentTypeID type_id;
+  
+  virtual void io(Piostream&);    
+  
+};  
+
+class SCICORESHARE YAxis :  public TclObj, public YAxisObj {
+protected:
+  Array1< Polyline *> poly_;
+  Diagram *parent_;
+  int activepoly_;
+  bool initialized_;
+
+public:
+  
+  YAxis() : TclObj( "yaxis"), YAxisObj("YAxis") {}
+  YAxis( Diagram *, const string &name="YAxis" );
+  virtual ~YAxis();
 
   void update();
 
@@ -68,7 +97,8 @@ public:
   
 };
 
-void Pio(Piostream&, Axes*&);
+void Pio(Piostream&, XAxis*&);
+void Pio(Piostream&, YAxis*&);
 
 } // namespace SCIRun
 
