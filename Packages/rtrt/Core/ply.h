@@ -128,8 +128,8 @@ typedef struct PlyFile {        /* description of PLY file */
 } PlyFile;
 
 /* memory allocation */
-extern char *my_alloc(size_t, int, char*);
-#define myalloc(mem_size) my_alloc((mem_size), __LINE__, __FILE__)
+extern char *ply_alloc(size_t, int, char*);
+#define myalloc(mem_size) ply_alloc((mem_size), __LINE__, __FILE__)
 
 
 /*** delcaration of routines ***/
