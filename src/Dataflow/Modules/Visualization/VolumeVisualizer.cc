@@ -63,7 +63,6 @@ public:
   VolumeVisualizer(GuiContext*);
   virtual ~VolumeVisualizer();
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
 
 private:
   TextureHandle tex;
@@ -96,7 +95,8 @@ private:
   GuiDouble gui_shine_;
   GuiInt gui_light_;
   GuiInt gui_blend_res_;
-  
+  GuiInt gui_num_slices_;  // unused except for backwards compatability
+
   VolumeRenderer* volren_;
 };
 
@@ -126,6 +126,7 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     gui_shine_(ctx->subVar("shine")),
     gui_light_(ctx->subVar("light")),
     gui_blend_res_(ctx->subVar("blend_res")),
+    gui_num_slices_(ctx->subVar("num_slices", false)), // don't save
     volren_(0)
 {}
 
@@ -247,6 +248,13 @@ VolumeVisualizer::execute()
     gui_render_style_.set(0);
     break;
   }
+
+  if (gui_num_slices_.get() > 0)
+  {
+    const double rate = volren_->num_slices_to_rate(gui_num_slices_.get());
+    gui_sampling_rate_hi_.set(rate);
+    gui_num_slices_.set(-1);
+  }
   
   //AuditAllocator(default_allocator);
   volren_->set_sampling_rate(gui_sampling_rate_hi_.get());
@@ -285,12 +293,6 @@ VolumeVisualizer::execute()
       ocmap->send(outcmap);
     }
   }    
-}
-
-void
-VolumeVisualizer::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace SCIRun
