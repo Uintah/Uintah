@@ -129,11 +129,6 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
     delt_CFL = std::min(delt_CFL, d_initialDt);
     d_initialDt = 10000.0;
 
-    delt_vartype doMech;
-    new_dw->get(doMech, lb->doMechLabel);
-    if(doMech >= 0.){
-      delt_CFL = .0625;
-    }
     //__________________________________
     //  Bullet proofing
     if(delt_CFL < 1e-20) {  
@@ -462,8 +457,6 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
-    delt_vartype doMechOld;
-    old_dw->get(doMechOld, lb->doMechLabel);
     Vector dx      = patch->dCell();
     Vector gravity = d_sharedState->getGravity();
 
@@ -527,7 +520,6 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
       adj_offset[2] = IntVector(0,  0, -1);   // Z faces  
       int offset=0; // 0=Compute all faces in computational domain
                     // 1=Skip the faces at the border between interior and gc      
-      if(doMechOld < -1.5){
       //__________________________________
       //  Compute vel_FC for each face
       vel_PressDiff_FC<SFCXVariable<double> >(
@@ -550,7 +542,6 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
                                        sp_vol_CC, vel_CC, vol_frac, rho_CC, D,
                                        speedSound, matl_press_CC, press_CC,
                                        wvel_FC, pressDiffZ_FC);
-      }  // if doMech
 
       //__________________________________
       // (*)vel_FC BC are updated in 
