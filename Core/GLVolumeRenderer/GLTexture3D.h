@@ -103,17 +103,17 @@ public:
 
   // GROUP: Access
   //////////
-  // get min point
+  // get min point -- IN FIELD INDEX SPACE
   const Point& min() const { return minP_;}
   //////////
-  // get max point
+  // get max point -- IN FIELD INDEX SPACE
   const Point& max() const { return maxP_;}
   /////////
   // the depth of the bontree
   int depth() const { return levels_; }
   /////////
-  // the depth of the bontree
-  void get_bounds(BBox& b) const { b.extend(minP_); b.extend(maxP_);}
+  // the bounding box -- IN WORLD SPACE
+  void get_bounds(BBox& b) const { b.extend(texfld_->mesh()->get_bounding_box().min()); b.extend(texfld_->mesh()->get_bounding_box().max()); } //b.extend(minP_); b.extend(maxP_);}
   /////////
   // Get the brick
   int get_brick_size(){ return xmax_; }
