@@ -24,8 +24,10 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ArrowWidget.tcl \
 	$(SRCDIR)/BaseWidget.tcl \
-	$(SRCDIR)/BoxWidget.tcl \
+	$(SRCDIR)/BuildNoise.tcl \
 	$(SRCDIR)/BuildTransform.tcl \
+	$(SRCDIR)/BoxWidget.tcl \
+	$(SRCDIR)/CastTVtoMLV.tcl \
 	$(SRCDIR)/CastField.tcl \
 	$(SRCDIR)/CastMatrix.tcl \
 	$(SRCDIR)/ChangeCellType.tcl \
