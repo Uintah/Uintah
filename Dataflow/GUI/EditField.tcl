@@ -43,14 +43,17 @@ itcl_class SCIRun_Fields_EditField {
 	global $this-typename2
 	global $this-datamin2
 	global $this-datamax2
-	global $this-numelems2
 	global $this-dataat2
-	global $this-minx2
-	global $this-miny2
-	global $this-minz2
-	global $this-maxx2
-	global $this-maxy2
-	global $this-maxz2
+	global $this-rotx
+	global $this-roty
+	global $this-rotz
+	global $this-rotdeg
+	global $this-transx
+	global $this-transy
+	global $this-transz
+	global $this-scalex
+	global $this-scaley
+	global $this-scalez
 	global $this-cfldname
 	global $this-ctypename
 	global $this-cdataminmax
@@ -59,17 +62,19 @@ itcl_class SCIRun_Fields_EditField {
 	global $this-cnumelems
 	global $this-cdataat
 	set $this-fldname2 ""
-	set $this-typename2 ""
+	set $this-typename2 "--- No typename ---"
 	set $this-datamin2 ""
 	set $this-datamax2 ""
-	set $this-numelems2 ""
-	set $this-dataat2 ""
-	set $this-minx2 ""
-	set $this-miny2 ""
-	set $this-minz2 ""
-	set $this-maxx2 ""
-	set $this-maxy2 ""
-	set $this-maxz2 ""
+	set $this-dataat2 "Field::CELL"
+	set $this-rotx ""
+	set $this-roty ""
+	set $this-rotz ""
+	set $this-transx ""
+	set $this-transy ""
+	set $this-transz ""
+	set $this-scalex ""
+	set $this-scaley ""
+	set $this-scalez ""
 	set $this-cfldname 0
 	set $this-ctypename 0
 	set $this-cdataminmax 0
@@ -124,24 +129,21 @@ itcl_class SCIRun_Fields_EditField {
 	labelcombo $edit.l2 "Typename" \
 		   "[possible_typenames [set $this-typename2]]" \
                    $this-typename2 $this-ctypename
-	labelentry3 $edit.l3 "BBox min" $this-minx2 $this-miny2 $this-minz2 \
-		    $this-cbboxmin
-	labelentry3 $edit.l4 "BBox max" $this-maxx2 $this-maxy2 $this-maxz2 \
-                    $this-cbboxmax
 	labelentry2 $edit.l5 "Data min,max" $this-datamin2 $this-datamax2 \
 		    $this-cdataminmax
-	labeloption $edit.l8 "# Elements" "[set $this-numelems2]" "0" \
-		    $this-numelems2 $this-cnumelems 
-	labelcombo $edit.l9 "Data at" {Field::CELL Field::FACE Field::EDGE \
+	labelcombo $edit.l9 "Data at" {Field::CELL 
 		                       Field::NODE Field::NONE} \
 		   $this-dataat2 $this-cdataat
-	pack $edit.l1 $edit.l2 $edit.l3 $edit.l4 $edit.l5 \
-	     $edit.l8 $edit.l9 -side top 
+	pack $edit.l1 $edit.l2 $edit.l5 \
+	     $edit.l9 -side top 
 
     }
 
     method update_multifields {} {
         set w .ui[modname]
+	if {![winfo exists $w]} {
+	    return
+	}
 	set att [$w.att childsite]
 	$att.l3.l2 configure -text "[set $this-minx], [set $this-miny], \
 		                  [set $this-minz]"
@@ -228,12 +230,22 @@ itcl_class SCIRun_Fields_EditField {
 	label $win.colon  -text ":" -width 2 -anchor w -just left
 	iwidgets::optionmenu $win.c -foreground darkred \
 		-command " $this comboget $win.c $var "
+
 	set i 0
+	set found 0
 	set length [llength $arglist]
 	for {set elem [lindex $arglist $i]} {$i<$length} \
 	    {incr i 1; set elem [lindex $arglist $i]} {
+	    if {"$elem"=="[set $var]"} {
+		set found 1
+	    }
 	    $win.c insert end $elem
 	}
+
+	if {!$found} {
+	    $win.c insert end [set $var]
+	}
+
 	label $win.l2 -text "" -width 40 -anchor w -just left
 
 	# hack to associate optionmenus with a textvariable
@@ -244,6 +256,9 @@ itcl_class SCIRun_Fields_EditField {
     }
 
     method comboget { win var } {
+	if {![winfo exists $win]} {
+	    return
+	}
 	if { "$var"!="[$win get]" } {
 	    set $var [$win get]
 	}
@@ -265,6 +280,9 @@ itcl_class SCIRun_Fields_EditField {
 
     method copy_attributes {} {
 	set w .ui[modname]
+	if {![winfo exists $w]} {
+	    return
+	}
 	set att [$w.att childsite]
 	set edit [$w.edit childsite]
 	if {"[set $this-fldname]"!="--- Name Not Assigned ---"} {
@@ -272,9 +290,7 @@ itcl_class SCIRun_Fields_EditField {
 	} else {
 	    set $this-fldname2 ""
 	}
-	config_labeloption $edit.l8 "[set $this-numelems]" "0"
-	set $this-numelems2 [set $this-numelems]
-	config_labelcombo $edit.l9 {Field::CELL Field::FACE Field::EDGE \
+	config_labelcombo $edit.l9 {Field::CELL  \
 		                    Field::NODE Field::NONE} [set $this-dataat]
 	set $this-datamin2 [set $this-datamin]
 	set $this-datamax2 [set $this-datamax]
@@ -309,24 +325,27 @@ itcl_class SCIRun_Fields_EditField {
 
 	if {"$name1"=="LatticeVol"} {
 	    if {"$name2"!="Vector" && "$name2"!="Tensor"} {
-		return { LatticeVol<char> "LatticeVol<unsigned char>" \
-                         LatticeVol<short> "LatticeVol<unsigned short>" \
-			 LatticeVol<int> "LatticeVol<unsigned int>" \
-			 LatticeVol<float> LatticeVol<double> }
+		return { "LatticeVol<unsigned char>" \
+                         LatticeVol<short> \
+			 LatticeVol<int> \
+			 LatticeVol<float> LatticeVol<double> \
+                         }
 	    }
 	} elseif {"$name1"=="TetVol"} {
 	    if {"$name2"!="Vector" && "$name2"!="Tensor"} {
-		return { TetVol<char> "TetVol<unsigned char>" \
-                         TetVol<short> "TetVol<unsigned short>" \
-			 TetVol<int> "TetVol<unsigned int>" \
-			 TetVol<float> TetVol<double> }
+		return { "TetVol<unsigned char>" \
+                         TetVol<short>  \
+			 TetVol<int>  \
+			 TetVol<float> TetVol<double> \
+                         }
 	    }
 	} elseif {"$name1"=="TriSurf"} {
 	    if {"$name2"!="Vector" && "$name2"!="Tensor"} {
-		return { TriSurf<char> "TriSurf<unsigned char>" \
-                         TriSurf<short> "TriSurf<unsigned short>" \
-			 TriSurf<int> "TriSurf<unsigned int>" \
-			 TriSurf<float> TriSurf<double> }
+		return { "TriSurf<unsigned char>" \
+                         TriSurf<short> \
+			 TriSurf<int> \
+			 TriSurf<float> TriSurf<double> 
+                         }
 	    }
 	} else {
 	    return ""
@@ -338,6 +357,9 @@ itcl_class SCIRun_Fields_EditField {
     }
 
     method config_labeloption {win text2 text3} {
+	if {![winfo exists $win]} {
+	    return
+	}
 	$win.l2 configure -text $text2 -val $text2
 	$win.l3 configure -text $text3 -val $text3
     }
@@ -346,6 +368,9 @@ itcl_class SCIRun_Fields_EditField {
     }
 
     method config_labelcombo { win arglist sel} {
+	if {![winfo exists $win]} {
+	    return
+	}
 	$win.c delete 0 end
 	if {[llength $arglist]==0} {
 	    $win.c insert end ""

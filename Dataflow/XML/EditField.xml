@@ -54,6 +54,16 @@
           </p>
         </description>
       </port>
+      <port>
+        <name>Transformation Widget</name>
+        <datatype>SCIRun::Geometry</datatype>
+        <description>
+          <p>
+            A box widget used to transform the postion and/or size of the
+            field.
+          </p>
+        </description>
+      </port>
     </outputs>
   </io>
   <gui>
