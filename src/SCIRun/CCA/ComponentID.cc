@@ -42,7 +42,12 @@ ComponentID::~ComponentID()
 {
 }
 
-string ComponentID::toString()
+string ComponentID::getInstanceName()
+{
+  return name;
+}
+
+string ComponentID::getSerialization()
 {
   string s = framework->getURL().getString()+"/"+name;
   return s;

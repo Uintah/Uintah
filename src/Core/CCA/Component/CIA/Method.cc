@@ -32,23 +32,23 @@
 #include <Core/Util/NotFinished.h>
 
 using CIA::Class;
-using CIA::Method_interface;
+using CIA::Method;
 
-Class Method_interface::getDeclaringClass()
+Class::pointer Method::getDeclaringClass()
 {
-    NOT_FINISHED("Method_interface::getDeclaringClass");
-    return 0;
+    NOT_FINISHED("Method::getDeclaringClass");
+    return Class::pointer(0);
 }
 
-::CIA::string Method_interface::getName()
+::CIA::string Method::getName()
 {
     NOT_FINISHED("final string .CIA.Metho.getName()");
     return "";
 }
 
-Class Method_interface::getReturnType()
+Class::pointer Method::getReturnType()
 {
-    NOT_FINISHED("Method_interface::getReturnType");
-    return 0;
+    NOT_FINISHED("Method::getReturnType");
+    return Class::pointer(0);
 }
 

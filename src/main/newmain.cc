@@ -95,24 +95,24 @@ main(int argc, char *argv[] )
 
   // Create a new framework
   try {
-    Framework sr;
+    AbstractFramework::pointer sr;
     if(framework){
-      sr = new SCIRunFramework();
+      sr = AbstractFramework::pointer(new SCIRunFramework());
       cerr << "URL to framework:\n" << sr->getURL().getString() << '\n';
     } else {
       cerr << "Not finished: pass url to existing framework\n";
     }
 
-    gov::cca::Services main_services = sr->createServices("SCIRun main");
-    gov::cca::BuilderService builder = pidl_cast<gov::cca::BuilderService>(main_services->getPort("cca.builderService"));
-    if(!builder){
+    gov::cca::Services::pointer main_services = sr->getServices("SCIRun main", "main", gov::cca::TypeMap::pointer(0));
+    gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(main_services->getPort("cca.builderService"));
+    if(builder.isNull()){
       cerr << "Fatal Error: Cannot find builder service\n";
       Thread::exitAll(1);
     }
 
     if(gui){
-      ComponentID gui_id=builder->createComponentInstance("gui", "cca:SCIRun.Builder");
-      if(!gui_id){
+      ComponentID::pointer gui_id=builder->createInstance("gui", "cca:SCIRun.Builder", gov::cca::TypeMap::pointer(0));
+      if(gui_id.isNull()){
 	cerr << "Cannot create GUI component\n";
 	Thread::exitAll(1);
       }

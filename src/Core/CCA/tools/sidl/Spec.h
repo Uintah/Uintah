@@ -47,6 +47,7 @@ public:
   std::string fullname() const;
   virtual void emit(EmitState& out)=0;
   void setName(const std::string& name);
+  bool isEmitted() { return emitted_declaration; }
 protected:
   Definition(const std::string& curfile, int lineno,
 	     const std::string& name);

@@ -52,12 +52,15 @@ SCIRunFramework::~SCIRunFramework()
     delete *iter;
 }
 
-gov::cca::Services SCIRunFramework::createServices(const std::string& name)
+gov::cca::Services::pointer
+SCIRunFramework::getServices(const std::string& selfInstanceName,
+			     const std::string& selfClassName,
+			     const gov::cca::TypeMap::pointer& selfProperties)
 {
-  return cca->createServices(name);
+  return cca->createServices(selfInstanceName, selfClassName, selfProperties);
 }
 
-gov::cca::ComponentID
+gov::cca::ComponentID::pointer
 SCIRunFramework::createComponentInstance(const std::string& name,
 					 const std::string& t)
 {
@@ -97,13 +100,17 @@ SCIRunFramework::createComponentInstance(const std::string& name,
       throw InternalError("Need CCA Exception here");
     }
   }
-  if(!mod)
-    return 0;
+  if(!mod){
+    cerr << "!mod\n";
+    return ComponentID::pointer(0);
+  }
   ComponentInstance* ci = mod->createInstance(name, type);
-  if(!ci)
-    return 0;
+  if(!ci){
+    cerr << "!ci\n";
+    return ComponentID::pointer(0);
+  }
   registerComponent(ci, name);
-  return new ComponentID(this, name);
+  return ComponentID::pointer(new ComponentID(this, name));
 }
 
 void SCIRunFramework::registerComponent(ComponentInstance* ci,
@@ -117,8 +124,8 @@ void SCIRunFramework::registerComponent(ComponentInstance* ci,
     goodname=newname.str();
   }
   ci->framework=this;
-  ci->name = goodname;
-  activeInstances[ci->name] = ci;
+  ci->instanceName = goodname;
+  activeInstances[ci->instanceName] = ci;
   // Get the component event service and send a creation event
   cerr << "Should register a creation event for component " << name << '\n';
 }
@@ -133,7 +140,7 @@ SCIRunFramework::getComponent(const std::string& name)
     return iter->second;
 }
 
-gov::cca::Port
+gov::cca::Port::pointer
 SCIRunFramework::getFrameworkService(const std::string& type)
 {
   return internalServices->getFrameworkService(type);
@@ -147,3 +154,27 @@ SCIRunFramework::listAllComponentTypes(vector<ComponentDescription*>& list,
       iter != models.end(); iter++)
     (*iter)->listAllComponentTypes(list, listInternal);
 }
+
+gov::cca::TypeMap::pointer SCIRunFramework::createTypeMap()
+{
+  cerr << "SCIRunFramework::createTypeMap not finished\n";
+  return gov::cca::TypeMap::pointer(0);
+}
+
+void SCIRunFramework::releaseServices(const gov::cca::Services::pointer& svc)
+{
+  cerr << "SCIRunFramework::releaseServices not finished\n";
+}
+
+void SCIRunFramework::shutdownFramework()
+{
+  cerr << "SCIRunFramework::shutdownFramework not finished\n";
+}
+
+gov::cca::AbstractFramework::pointer SCIRunFramework::createEmptyFramework()
+{
+  cerr << "SCIRunFramework::createEmptyFramework not finished\n";
+  return gov::cca::AbstractFramework::pointer(0);
+}
+
+

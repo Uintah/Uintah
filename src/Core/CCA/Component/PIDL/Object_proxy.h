@@ -45,30 +45,30 @@ KEYWORDS
    
 DESCRIPTION
    Internal PIDL class for a proxy to a base object.  This impements
-   the Object_interface interface and provides a proxy mechanism for
+   the Object interface and provides a proxy mechanism for
    remote objects.  Since there are no interesting methods at this level,
    the only interesting thing that we can do is up-cast.
 ****************************************/
-	class Object_proxy : public ProxyBase, public Object_interface {
-	public:
-	protected:
-	    //////////
-	    // PIDL will create these.
-	    friend class PIDL;
+  class Object_proxy : public ProxyBase, public Object {
+  public:
+  protected:
+    //////////
+    // PIDL will create these.
+    friend class PIDL;
 
-	    //////////
-	    // Private constructor from a reference
-	    Object_proxy(const Reference&);
+    //////////
+    // Private constructor from a reference
+    Object_proxy(const Reference&);
 
-	    //////////
-	    // Private constructor from a URL
-	    Object_proxy(const URL&);
+    //////////
+    // Private constructor from a URL
+    Object_proxy(const URL&);
 
-	    //////////
-	    // Destructor
-	    virtual ~Object_proxy();
-	private:
-	};
+    //////////
+    // Destructor
+    virtual ~Object_proxy();
+  private:
+  };
 } // End namespace PIDL
 
 #endif

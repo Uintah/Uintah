@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
   }
   if(!client && !server)
     usage(argv[0]);
-  Framework fw;
+  Framework::pointer fw;
   try {
     PIDL::PIDL::initialize(argc, argv);
     sleep( 1 ); // Give threads enough time to come up.
@@ -115,10 +115,10 @@ int main(int argc, char* argv[])
       cerr << "Waiting for spectest connections...\n";
       cerr << fw->getURL().getString() << '\n';
     } else {
-      PIDL::Object obj = PIDL::PIDL::objectFrom(client_url);
+      PIDL::Object::pointer obj = PIDL::PIDL::objectFrom(client_url);
       cerr << "in the middle\n";
-      Framework fw = pidl_cast<Framework>(obj);
-      CCA::Services s = fw->get_services();
+      Framework::pointer fw = pidl_cast<Framework::pointer>(obj);
+      CCA::Services::pointer s = fw->get_services();
 
       if (consumer) {
 	ConsumerInt cint;

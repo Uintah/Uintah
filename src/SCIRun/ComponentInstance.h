@@ -38,11 +38,14 @@ namespace SCIRun {
 
   class ComponentInstance {
   public:
-    ComponentInstance(SCIRunFramework* framework, const std::string& name);
+    ComponentInstance(SCIRunFramework* framework,
+		      const std::string& instanceName,
+		      const std::string& className);
     virtual ~ComponentInstance();
 
     SCIRunFramework* framework;
-    std::string name;
+    std::string instanceName;
+    std::string className;
 
     virtual PortInstance* getPortInstance(const std::string& name) = 0;
   private:

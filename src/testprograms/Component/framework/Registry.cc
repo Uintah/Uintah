@@ -13,7 +13,7 @@ namespace sci_cca {
 using namespace SCIRun;
 using namespace std;
 
-ComponentRecord::ComponentRecord( const ComponentID &id )
+ComponentRecord::ComponentRecord( const ComponentID::pointer &id )
 {
   id_ = id;
 }
@@ -22,20 +22,20 @@ ComponentRecord::~ComponentRecord()
 {
 }
 
-Port
+Port::pointer
 ComponentRecord::getPort( const string &name )
 {
   use_iterator ui = uses_.find(name);
   if ( ui == uses_.end() ) {
     // throw an error ? the port was not registered as a use port.
-    return 0;
+    return Port::pointer(0);
   }
 
   UsePortRecord *use = ui->second;
   
   if ( !use->connection_ ) {
     // a non blocking implementation
-    return 0;
+    return Port::pointer(0);
   }
   
   ProvidePortRecord *provide = use->connection_->provide_;
@@ -46,7 +46,7 @@ ComponentRecord::getPort( const string &name )
 }
     
 void 
-ComponentRecord::registerUsesPort( const PortInfo &info) 
+ComponentRecord::registerUsesPort( const PortInfo::pointer &info) 
 {
   UsePortRecord *record = new UsePortRecord;
   record->info_ = info;
@@ -75,7 +75,7 @@ ComponentRecord::unregisterUsesPort( const string &name )
 }
 
 void 
-ComponentRecord::addProvidesPort( const Port &port, const PortInfo& info) 
+ComponentRecord::addProvidesPort( const Port::pointer &port, const PortInfo::pointer& info) 
 {
   ProvidePortRecord *record = new ProvidePortRecord;
   record->info_ = info;
@@ -165,7 +165,7 @@ Registry::Registry() : connections_("Registry Connection Lock")
 }
 
 ProvidePortRecord *
-Registry::getProvideRecord( const ComponentID &id, const string &name )
+Registry::getProvideRecord( const ComponentID::pointer &id, const string &name )
 {
   component_iterator from = components_.find(id->toString());
   if ( from == components_.end() ) {
@@ -178,7 +178,7 @@ Registry::getProvideRecord( const ComponentID &id, const string &name )
 }
 
 UsePortRecord *
-Registry::getUseRecord( const ComponentID &id, const string &name )
+Registry::getUseRecord( const ComponentID::pointer &id, const string &name )
 {
   component_iterator from = components_.find(id->toString());
   if ( from == components_.end() ) {

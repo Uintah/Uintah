@@ -37,13 +37,13 @@ using namespace CCAPORTS;
 
 namespace spectest {
 
-class Port_impl : public CCA::Port_interface {
+class Port_impl : public CCA::Port {
 public:
   Port_impl();
   virtual ~Port_impl();
 };
 
-class PortInfo_impl : public CCA::PortInfo_interface {
+class PortInfo_impl : public CCA::PortInfo {
 public:
   PortInfo_impl();
   virtual ~PortInfo_impl();
@@ -64,88 +64,88 @@ private:
   ::CIA::array1< ::CIA::string> properties_;
 };
 
-class Services_impl : public CCA::Services_interface {
+class Services_impl : public CCA::Services {
 public:
   struct PortData {
     PortData() {}
-    PortData(const Port &p, const PortInfo &pi) :
+    PortData(const Port::pointer &p, const PortInfo::pointer &pi) :
       port_info_(pi),
       port_(p)
     {}
-    PortInfo port_info_;
-    Port     port_;
+    PortInfo::pointer port_info_;
+    Port::pointer     port_;
   };
 
   typedef map<string, PortData> port_map_t;
 
   Services_impl();
   virtual ~Services_impl();
-  virtual Port getPort(const ::CIA::string& name);
-  virtual Port getPortNonblocking(const ::CIA::string& name);
-  virtual PortInfo createPortInfo(const ::CIA::string& name, 
+  virtual Port::pointer getPort(const ::CIA::string& name);
+  virtual Port::pointer getPortNonblocking(const ::CIA::string& name);
+  virtual PortInfo::pointer createPortInfo(const ::CIA::string& name, 
 				  const ::CIA::string& type, 
 				  const ::CIA::array1< ::CIA::string> &properties );
-  virtual void registerUsesPort(const PortInfo &name_and_type);
+  virtual void registerUsesPort(const PortInfo::pointer &name_and_type);
   virtual void unregisterUsesPort(const ::CIA::string&name);
-  virtual void addProvidesPort(const Port &inPort, const PortInfo &name);
+  virtual void addProvidesPort(const Port::pointer &inPort, const PortInfo::pointer &name);
   virtual void removeProvidesPort(const ::CIA::string&name);
   virtual void releasePort(const ::CIA::string&name);
-  virtual ComponentID  getComponentID();
+  virtual ComponentID::pointer  getComponentID();
 private:
   port_map_t provides_;
   port_map_t uses_;
 };
 
-class Component_impl : public CCA::Component_interface {
+class Component_impl : public CCA::Component {
 public:
   Component_impl();
   virtual ~Component_impl();
-  virtual void setServices(const Services &svc);
+  virtual void setServices(const Services::pointer &svc);
 protected:
-  Services services_;
+  Services::pointer services_;
 };
 
-class ComponentID_impl : public CCA::ComponentID_interface {
+class ComponentID_impl : public CCA::ComponentID {
 public:
   ComponentID_impl();
   virtual ~ComponentID_impl();
   virtual ::CIA::string toString();
 };
 
-class GoPort_impl : public CCAPORTS::GoPort_interface {
+class GoPort_impl : public CCAPORTS::GoPort {
 public:
   GoPort_impl();
   virtual ~GoPort_impl();
 };
 
 class ConnectionEventService_impl : 
-    public CCAPORTS::ConnectionEventService_interface {
+    public CCAPORTS::ConnectionEventService {
 public:
   ConnectionEventService_impl();
   virtual ~ConnectionEventService_impl();
 
   virtual void addConnectionEventListener(int connectionEventType, 
-					  const ConnectionEventListener &l);
+					  const ConnectionEventListener::pointer &l);
   virtual void removeConnectionEventListener(int connectionEventType, 
-					     const ConnectionEventListener &l);
+					     const ConnectionEventListener::pointer &l);
   };
 
 class ConnectionEventListener_impl : 
-    public CCAPORTS::ConnectionEventListener_interface {
+    public CCAPORTS::ConnectionEventListener {
 public:
   ConnectionEventListener_impl();
   virtual ~ConnectionEventListener_impl();
 
-  virtual void connectionActivity(const ConnectionEvent &evt);
+  virtual void connectionActivity(const ConnectionEvent::pointer &evt);
 };
 
-class ConnectionEvent_impl : public CCAPORTS::ConnectionEvent_interface {
+class ConnectionEvent_impl : public CCAPORTS::ConnectionEvent {
 public:
   ConnectionEvent_impl();
   virtual ~ConnectionEvent_impl();
 
   virtual int getEventType();
-  virtual CCA::PortInfo getPortInfo();
+  virtual CCA::PortInfo::pointer getPortInfo();
              
   // The following enum belongs in the interface, but the sidl compiler
   // cannot currently handle it.
@@ -166,7 +166,7 @@ public:
  * Below is all of the non specification test code.
  * --------------------------------------------------------------------*/
 
-class IntegerStream_impl : public IntegerStream_interface {
+class IntegerStream_impl : public IntegerStream {
   queue<int> stream_;
 public:
   IntegerStream_impl();
@@ -183,9 +183,9 @@ public:
   RandomInt();
   ~RandomInt();
   void go(); //keep the stream full
-  virtual void setServices(const CCA::Services &svc);
+  virtual void setServices(const CCA::Services::pointer &svc);
 private:
-  IntegerStream istr_;
+  IntegerStream::pointer istr_;
   // IntegerStream_impl istr_;
 };
 
@@ -195,19 +195,19 @@ public:
   ConsumerInt();
   ~ConsumerInt();
   void go(); //kpull from the stream
-  virtual void setServices(const CCA::Services &svc);
+  virtual void setServices(const CCA::Services::pointer &svc);
 private:
-  IntegerStream istr_;
+  IntegerStream::pointer istr_;
   // IntegerStream_impl istr_;
 };
 
-class Framework_impl : public Framework_interface {
-  CCA::Services services_;
+class Framework_impl : public Framework {
+  CCA::Services::pointer services_;
 public:
   Framework_impl();
   virtual ~Framework_impl();
   
-  virtual CCA::Services get_services();
+  virtual CCA::Services::pointer get_services();
 };
 
 } // end spectest namespace

@@ -45,7 +45,9 @@ namespace SCIRun {
     CCAComponentModel(SCIRunFramework* framework);
     virtual ~CCAComponentModel();
 
-    gov::cca::Services createServices(const std::string& name);
+    gov::cca::Services::pointer createServices(const std::string& instanceName,
+					       const std::string& className,
+					       const gov::cca::TypeMap::pointer& properties);
     virtual bool haveComponent(const std::string& type);
     virtual ComponentInstance* createInstance(const std::string& name,
 					      const std::string& type);

@@ -15,17 +15,16 @@
   University of Utah. All Rights Reserved.
 */
 
+version mitest 0.0.1;
+
 
 package mitest {
-    interface B;
-    interface C;
-    interface D;
     interface A {
 	int a();
-	bool isa_mitest(in A);
-	bool isa_mitest(in B);
-	bool isa_mitest(in C);
-	bool isa_mitest(in D);
+	bool isa_mitestA(in A a);
+	bool isa_mitestB(in B b);
+	bool isa_mitestC(in C c);
+	bool isa_mitestD(in D d);
     };
     interface B extends A {
 	int a();

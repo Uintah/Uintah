@@ -382,9 +382,8 @@ string Method::fullsignature() const
     break;
   }
   s+=return_type->fullname()+" "+fullname()+"("+args->fullsignature()+")";
-  if(throws_clause){
+  if(throws_clause)
     s+="throws "+throws_clause->fullsignature();
-  }
   return s;
 }
 
@@ -394,9 +393,8 @@ MethodList::MethodList()
 
 MethodList::~MethodList()
 {
-  for(vector<Method*>::iterator iter=list.begin(); iter != list.end(); iter++){
+  for(vector<Method*>::iterator iter=list.begin(); iter != list.end(); iter++)
     delete *iter;
-  }
 }
 
 void MethodList::add(Method* method)
@@ -406,47 +404,44 @@ void MethodList::add(Method* method)
 
 void MethodList::setClass(Class* c)
 {
-    for(vector<Method*>::iterator iter=list.begin();iter != list.end();iter++){
-	(*iter)->setClass(c);
-    }
+  for(vector<Method*>::iterator iter=list.begin();iter != list.end();iter++)
+    (*iter)->setClass(c);
 }
 
 void MethodList::setInterface(Interface* c)
 {
-    for(vector<Method*>::iterator iter=list.begin();iter != list.end();iter++){
-	(*iter)->setInterface(c);
-    }
+  for(vector<Method*>::iterator iter=list.begin();iter != list.end();iter++)
+    (*iter)->setInterface(c);
 }
 
 vector<Method*>& MethodList::getList()
 {
-    return list;
+  return list;
 }
 
 void MethodList::gatherMethods(vector<Method*>& allmethods) const
 {
-    for(vector<Method*>::const_iterator iter=list.begin();iter != list.end();iter++){
-	allmethods.push_back(*iter);
-    }
+  for(vector<Method*>::const_iterator iter=list.begin();iter != list.end();iter++)
+    allmethods.push_back(*iter);
 }
 
 void MethodList::gatherVtable(vector<Method*>& uniquemethods) const
 {
-    // Yuck - O(N^2)
-    for(vector<Method*>::const_iterator iter1=list.begin();iter1 != list.end();iter1++){
-	vector<Method*>::iterator iter2=uniquemethods.begin();;
-	for(;iter2 != uniquemethods.end(); iter2++){
-	    if((*iter1)->matches(*iter2, Method::TypesOnly))
-		break;
-	}
-	if(iter2 == uniquemethods.end())
-	    uniquemethods.push_back(*iter1);
+  // Yuck - O(N^2)
+  for(vector<Method*>::const_iterator iter1=list.begin();iter1 != list.end();iter1++){
+    vector<Method*>::iterator iter2=uniquemethods.begin();;
+    for(;iter2 != uniquemethods.end(); iter2++){
+      if((*iter1)->matches(*iter2, Method::TypesOnly))
+	break;
     }
+    if(iter2 == uniquemethods.end())
+      uniquemethods.push_back(*iter1);
+  }
 }
 
 Package::Package(const string& fileno, int lineno, const std::string& name,
 		 DefinitionList* definition)
-    : Definition(fileno, lineno, name), definition(definition)
+  : Definition(fileno, lineno, name), definition(definition)
 {
 }
 
@@ -456,24 +451,24 @@ Package::~Package()
 }
 
 ScopedName::ScopedName()
-    : leading_dot(false)
+  : leading_dot(false)
 {
-    sym=0;
+  sym=0;
 }
 
 ScopedName::ScopedName(const string& s1, const string& s2)
 {
-    leading_dot=true;
-    add(s1);
-    add(s2);
-    sym=0;
+  leading_dot=true;
+  add(s1);
+  add(s2);
+  sym=0;
 }
 
 ScopedName::ScopedName(const string& s1)
 {
-    leading_dot=false;
-    add(s1);
-    sym=0;
+  leading_dot=false;
+  add(s1);
+  sym=0;
 }
 
 ScopedName::~ScopedName()
@@ -482,70 +477,70 @@ ScopedName::~ScopedName()
 
 void ScopedName::prepend(const string& name)
 {
-    names.insert(names.begin(), name);
+  names.insert(names.begin(), name);
 }
 
 void ScopedName::add(const string& name)
 {
-    names.push_back(name);
+  names.push_back(name);
 }
 
 void ScopedName::set_leading_dot(bool dot)
 {
-    leading_dot=dot;
+  leading_dot=dot;
 }
 
 string ScopedName::getName() const
 {
-    string n;
-    if(leading_dot)
-	n+=".";
-    bool first=true;
-    for(vector<string>::const_iterator iter=names.begin();iter != names.end();iter++){
-	if(!first)
-	    n+=".";
-	n+=*iter;
-	first=false;
-    }
-    return n;
+  string n;
+  if(leading_dot)
+    n+=".";
+  bool first=true;
+  for(vector<string>::const_iterator iter=names.begin();iter != names.end();iter++){
+    if(!first)
+      n+=".";
+    n+=*iter;
+    first=false;
+  }
+  return n;
 }
 
 Symbol* ScopedName::getSymbol() const
 {
-    return sym;
+  return sym;
 }
 
 bool ScopedName::getLeadingDot() const
 {
-    return leading_dot;
+  return leading_dot;
 }
 
 const string& ScopedName::name(int idx) const
 {
-    return names[idx];
+  return names[idx];
 }
 
 int ScopedName::nnames() const
 {
-    return names.size();
+  return names.size();
 }
 
 string ScopedName::fullname() const
 {
-    if(!sym){
-	cerr << "ERROR: Symbol not bound: " << getName() << " - " << this << "\n";
-	exit(1);
-    }
-    return sym->fullname();
+  if(!sym){
+    cerr << "ERROR: Symbol not bound: " << getName() << " - " << this << "\n";
+    exit(1);
+  }
+  return sym->fullname();
 }
 
 string ScopedName::cppfullname(SymbolTable* forstab) const
 {
-    if(!sym){
-	cerr << "ERROR: Symbol not bound: " << getName() << " - " << this << "\n";
-	exit(1);
-    }
-    return sym->cppfullname(forstab);
+  if(!sym){
+    cerr << "ERROR: Symbol not bound: " << getName() << " - " << this << "\n";
+    exit(1);
+  }
+  return sym->cppfullname(forstab);
 }
 
 ScopedNameList::ScopedNameList()
@@ -554,36 +549,35 @@ ScopedNameList::ScopedNameList()
 
 ScopedNameList::~ScopedNameList()
 {
-    for(vector<ScopedName*>::iterator iter=list.begin(); iter != list.end(); iter++){
-	delete *iter;
-    }
+  for(vector<ScopedName*>::iterator iter=list.begin(); iter != list.end(); iter++)
+    delete *iter;
 }
 
 void ScopedNameList::prepend(ScopedName* name)
 {
-    list.insert(list.begin(), name);
+  list.insert(list.begin(), name);
 }
 
 void ScopedNameList::add(ScopedName* name)
 {
-    list.push_back(name);
+  list.push_back(name);
 }
 
 vector<ScopedName*> const& ScopedNameList::getList() const
 {
-    return list;
+  return list;
 }
 
 std::string ScopedNameList::fullsignature() const
 {
-    string s="";
-    int c=0;
-    for(vector<ScopedName*>::const_iterator iter=list.begin(); iter != list.end(); iter++){
-	if(c++ > 0)
-	    s+=", ";
-	s+=(*iter)->fullname();
-    }
-    return s;
+  string s="";
+  int c=0;
+  for(vector<ScopedName*>::const_iterator iter=list.begin(); iter != list.end(); iter++){
+    if(c++ > 0)
+      s+=", ";
+    s+=(*iter)->fullname();
+  }
+  return s;
 }
 
 Specification::Specification(VersionList* versions, ScopedNameList* imports,
@@ -610,104 +604,104 @@ void Specification::setTopLevel()
 
 Type* Type::voidtype()
 {
-    static Type* t;
-    if(!t)
-	t=new BuiltinType("void", "error");
-    return t;
+  static Type* t;
+  if(!t)
+    t=new BuiltinType("void", "error");
+  return t;
 }
 
 Type* Type::booltype()
 {
-    static Type* t;
-    if(!t)
-	t=new BuiltinType("bool", "byte");
-    return t;
+  static Type* t;
+  if(!t)
+    t=new BuiltinType("bool", "byte");
+  return t;
 }
 
 Type* Type::chartype()
 {
-    static Type* t;
-    if(!t)
-	t=new BuiltinType("char", "char");
-    return t;
+  static Type* t;
+  if(!t)
+    t=new BuiltinType("char", "char");
+  return t;
 }
 
 Type* Type::dcomplextype()
 {
-    static Type* t;
-    if(!t)
-	t=new BuiltinType("::std::complex<double> ", "special");
-    return t;
+  static Type* t;
+  if(!t)
+    t=new BuiltinType("::std::complex<double> ", "special");
+  return t;
 }
 
 Type* Type::doubletype()
 {
-    static Type* t;
-    if(!t)
-	t=new BuiltinType("double", "double");
-    return t;
+  static Type* t;
+  if(!t)
+    t=new BuiltinType("double", "double");
+  return t;
 }
 
 Type* Type::fcomplextype()
 {
-    static Type* t;
-    if(!t)
-	t=new BuiltinType("::std::complex<float> ", "special");
-    return t;
+  static Type* t;
+  if(!t)
+    t=new BuiltinType("::std::complex<float> ", "special");
+  return t;
 }
 
 Type* Type::floattype()
 {
-    static Type* t;
-    if(!t)
-	t=new BuiltinType("float", "float");
-    return t;
+  static Type* t;
+  if(!t)
+    t=new BuiltinType("float", "float");
+  return t;
 }
 
 Type* Type::inttype()
 {
-    static Type* t;
-    if(!t)
-	t=new BuiltinType("int", "int");
-    return t;
+  static Type* t;
+  if(!t)
+    t=new BuiltinType("int", "int");
+  return t;
 }
 
 Type* Type::longtype()
 {
-    static Type* t;
-    if(!t)
-	t=new BuiltinType("long", "long");
-    return t;
+  static Type* t;
+  if(!t)
+    t=new BuiltinType("long", "long");
+  return t;
 }
 
 Type* Type::opaquetype()
 {
-    static Type* t;
-    if(!t)
-	t=new BuiltinType("void*", "error");
-    return t;
+  static Type* t;
+  if(!t)
+    t=new BuiltinType("void*", "error");
+  return t;
 }
 
 Type* Type::stringtype()
 {
-    static Type* t;
-    if(!t)
-	t=new BuiltinType("string", "special");
-    return t;
+  static Type* t;
+  if(!t)
+    t=new BuiltinType("string", "special");
+  return t;
 }
 
 static map<pair<Type*, int>, Type*> arrays;
 
 Type* Type::arraytype(Type* t, int dim)
 {
-    if(dim == 0)
-	dim=1;
-    map<pair<Type*, int>, Type*>::iterator iter=arrays.find(pair<Type*, int>(t, dim));
-    if(iter == arrays.end()){
-	return (arrays[pair<Type*, int>(t, dim)]=new ArrayType(t, dim));
-    } else {
-	return iter->second;
-    }
+  if(dim == 0)
+    dim=1;
+  map<pair<Type*, int>, Type*>::iterator iter=arrays.find(pair<Type*, int>(t, dim));
+  if(iter == arrays.end()){
+    return (arrays[pair<Type*, int>(t, dim)]=new ArrayType(t, dim));
+  } else {
+    return iter->second;
+  }
 }
 
 Type::Type()
@@ -719,7 +713,7 @@ Type::~Type()
 }
 
 BuiltinType::BuiltinType(const string& cname, const string& nexusname)
-    : cname(cname), nexusname(nexusname)
+  : cname(cname), nexusname(nexusname)
 {
 }
 
@@ -729,28 +723,28 @@ BuiltinType::~BuiltinType()
 
 std::string BuiltinType::fullname() const
 {
-    return cname;
+  return cname;
 }
 
 std::string BuiltinType::cppfullname(SymbolTable*) const
 {
-    if(cname == "string"){
-	return "::std::string";
-    } else {
-	return cname;
-    }
+  if(cname == "string"){
+    return "::std::string";
+  } else {
+    return cname;
+  }
 }
 
 bool BuiltinType::isvoid() const
 {
-    if(cname == "void")
-	return true;
-    else
-	return false;
+  if(cname == "void")
+    return true;
+  else
+    return false;
 }
 
 NamedType::NamedType(const string& curfile, int lineno, ScopedName* name)
-    : curfile(curfile), lineno(lineno), name(name)
+  : curfile(curfile), lineno(lineno), name(name)
 {
 }
 
@@ -760,21 +754,27 @@ NamedType::~NamedType()
 
 std::string NamedType::fullname() const
 {
-    return name->fullname();
+  return name->fullname();
 }
 
 bool NamedType::isvoid() const
 {
-    return false;
+  return false;
 }
 
 std::string NamedType::cppfullname(SymbolTable* localScope) const
 {
+  Symbol::Type symtype = name->getSymbol()->getType();
+  if(symtype == Symbol::EnumType)
     return name->cppfullname(localScope);
+  else if(name->getSymbol()->getDefinition()->isEmitted())
+    return name->cppfullname(localScope)+"::pointer";
+  else
+    return "CCALib::SmartPointer<"+name->cppfullname(localScope)+" >";
 }
 
 ArrayType::ArrayType(Type* t, int dim)
-    : subtype(t), dim(dim)
+  : subtype(t), dim(dim)
 {
 }
 
@@ -784,24 +784,24 @@ ArrayType::~ArrayType()
 
 std::string ArrayType::fullname() const
 {
-    std::ostringstream o;
-    o << "array" << dim << "< " << subtype->fullname() << ", " << dim << ">";
-    return o.str();
+  std::ostringstream o;
+  o << "array" << dim << "< " << subtype->fullname() << ", " << dim << ">";
+  return o.str();
 }
 
 std::string ArrayType::cppfullname(SymbolTable* localScope) const
 {
-    std::ostringstream o;
-    o << "::CIA::array" << dim << "< " << subtype->cppfullname(localScope);
-    if(dynamic_cast<ArrayType*>(subtype))
-	o << " "; // Keep > > from being >>
-    o << ">";
-    return o.str();
+  std::ostringstream o;
+  o << "::CIA::array" << dim << "< " << subtype->cppfullname(localScope);
+  if(dynamic_cast<ArrayType*>(subtype) || dynamic_cast<NamedType*>(subtype))
+    o << " "; // Keep > > from being >>
+  o << ">";
+  return o.str();
 }
 
 bool ArrayType::isvoid() const
 {
-    return false;
+  return false;
 }
 
 Enum::Enum(const std::string& curfile, int lineno,

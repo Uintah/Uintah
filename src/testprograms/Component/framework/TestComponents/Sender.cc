@@ -20,13 +20,13 @@ Sender::~Sender()
 }
 
 void 
-Sender::setServices( const Services &svc )
+Sender::setServices( const Services::pointer &svc )
 {
   ComponentImpl::setServices( svc );
 
-  if( svc )
+  if( !svc.isNull() )
     {
-      PortInfo info = new PortInfoImpl("Uses", "", 0);
+      PortInfo::pointer info (new PortInfoImpl("Uses", "", 0));
       svc->registerUsesPort( info );
     }
 }
@@ -34,8 +34,8 @@ Sender::setServices( const Services &svc )
 void
 Sender::go()
 {
-  TestPort port = pidl_cast<TestPort>(services_->getPort("Uses"));
-  if ( !port ) {
+  TestPort::pointer port (pidl_cast<TestPort::pointer>(services_->getPort("Uses")));
+  if ( port.isNull() ) {
     cerr << "go: could not find test port\n";
     return;
   }

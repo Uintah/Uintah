@@ -35,10 +35,12 @@ using namespace std;
 using namespace SCIRun;
 
 CCAComponentInstance::CCAComponentInstance(SCIRunFramework* framework,
-					   const std::string& name,
-					   const gov::cca::Component& component
+					   const std::string& instanceName,
+					   const std::string& typeName,
+					   const gov::cca::TypeMap::pointer& properties,
+					   const gov::cca::Component::pointer& component
 )
-  : ComponentInstance(framework, name), component(component)
+  : ComponentInstance(framework, instanceName, typeName), component(component)
 {
 }
 
@@ -57,15 +59,15 @@ CCAComponentInstance::getPortInstance(const std::string& portname)
     return iter->second;
 }
 
-gov::cca::Port CCAComponentInstance::getPort(const std::string& name)
+gov::cca::Port::pointer CCAComponentInstance::getPort(const std::string& name)
 {
-  gov::cca::Port svc = framework->getFrameworkService(name);
-  if(svc)
+  gov::cca::Port::pointer svc = framework->getFrameworkService(name);
+  if(!svc.isNull())
     return svc;
 
   map<string, CCAPortInstance*>::iterator iter = ports.find(name);
   if(iter == ports.end())
-    return 0;
+    return gov::cca::Port::pointer(0);
 
   CCAPortInstance* pr = iter->second;
   if(pr->porttype != CCAPortInstance::Uses)
@@ -76,10 +78,10 @@ gov::cca::Port CCAComponentInstance::getPort(const std::string& name)
   return pr->connections[0]->port;
 }
 
-gov::cca::Port CCAComponentInstance::getPortNonblocking(const std::string& name)
+gov::cca::Port::pointer CCAComponentInstance::getPortNonblocking(const std::string& name)
 {
   cerr << "getPortNonblocking not done, name=" << name << '\n';
-  return 0;
+  return gov::cca::Port::pointer(0);
 }
 
 void CCAComponentInstance::releasePort(const std::string& name)
@@ -87,15 +89,15 @@ void CCAComponentInstance::releasePort(const std::string& name)
   cerr << "releasePort not done, name=" << name << '\n';
 }
 
-gov::cca::TypeMap CCAComponentInstance::createTypeMap()
+gov::cca::TypeMap::pointer CCAComponentInstance::createTypeMap()
 {
   cerr << "createTypeMap not done\n";
-  return 0;
+  return gov::cca::TypeMap::pointer(0);
 }
 
 void CCAComponentInstance::registerUsesPort(const std::string& portName,
-				const std::string& portType,
-				const gov::cca::TypeMap& properties)
+					    const std::string& portType,
+					    const gov::cca::TypeMap::pointer& properties)
 {
   map<string, CCAPortInstance*>::iterator iter = ports.find(portName);
   if(iter != ports.end()){
@@ -111,10 +113,10 @@ void CCAComponentInstance::unregisterUsesPort(const std::string& name)
 {
   cerr << "unregisterUsesPort not done, name=" << name << '\n';
 }
-void CCAComponentInstance::addProvidesPort(const gov::cca::Port& port,
-			       const std::string& portName,
-			       const std::string& portType,
-			       const gov::cca::TypeMap& properties)
+void CCAComponentInstance::addProvidesPort(const gov::cca::Port::pointer& port,
+					   const std::string& portName,
+					   const std::string& portType,
+					   const gov::cca::TypeMap::pointer& properties)
 {
   map<string, CCAPortInstance*>::iterator iter = ports.find(portName);
   if(iter != ports.end()){
@@ -131,14 +133,14 @@ void CCAComponentInstance::removeProvidesPort(const std::string& name)
   cerr << "removeProvidesPort not done, name=" << name << '\n';
 }
 
-gov::cca::TypeMap CCAComponentInstance::getPortProperties(const std::string& portName)
+gov::cca::TypeMap::pointer CCAComponentInstance::getPortProperties(const std::string& portName)
 {
   cerr << "getPortProperties not done, name=" << portName << '\n';
-  return 0;
+  return gov::cca::TypeMap::pointer(0);
 }
 
-gov::cca::ComponentID CCAComponentInstance::getComponentID()
+gov::cca::ComponentID::pointer CCAComponentInstance::getComponentID()
 {
-  return new ComponentID(framework, name);
+  return gov::cca::ComponentID::pointer(new ComponentID(framework, instanceName));
 }
 

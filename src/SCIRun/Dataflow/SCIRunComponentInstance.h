@@ -36,7 +36,9 @@ namespace SCIRun {
   class Module;
   class SCIRunComponentInstance : public ComponentInstance {
   public:
-    SCIRunComponentInstance(SCIRunFramework* fwk, const std::string& name,
+    SCIRunComponentInstance(SCIRunFramework* fwk,
+			    const std::string& instanceName,
+			    const std::string& className,
 			    Module* module);
     virtual ~SCIRunComponentInstance();
 

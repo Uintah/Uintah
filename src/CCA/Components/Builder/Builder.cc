@@ -36,9 +36,9 @@ using namespace SCIRun;
 #include <qapplication.h>
 #include <qpushbutton.h>
 
-extern "C" gov::cca::Component make_SCIRun_Builder()
+extern "C" gov::cca::Component::pointer make_SCIRun_Builder()
 {
-  return new Builder();
+  return gov::cca::Component::pointer(new Builder());
 }
 
 Builder::Builder()
@@ -50,7 +50,7 @@ Builder::~Builder()
   cerr << "called ~Builder()\n";
 }
 
-void Builder::setServices(const gov::cca::Services& svc)
+void Builder::setServices(const gov::cca::Services::pointer& svc)
 {
   services=svc;
 
@@ -59,7 +59,7 @@ void Builder::setServices(const gov::cca::Services& svc)
   app->lock();
 #endif
   builder = new BuilderWindow(services);
-  builder->_addReference();
+  builder->addReference();
   builder->show();
 #ifdef QT_THREAD_SUPPORT
   app->unlock();

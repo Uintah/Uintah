@@ -61,25 +61,26 @@ DESCRIPTION
    (in TypeInfo::pidl_cast) if required.
 ****************************************/
 
-template<class T>
+template<class T, class F>
 T
-pidl_cast(const PIDL::Object& obj)
+pidl_cast(const F& ptr)
 {
+  typedef typename T::element_type ptr_type;
   // Try the direct cast before we go remote
-  typename T::interfacetype * iface =
-    dynamic_cast< typename T::interfacetype* >(obj.getPointer());
+  ptr_type* iface =
+    dynamic_cast<ptr_type* >(ptr.getPointer());
   if(iface)
-    return iface;
+    return T(iface);
 
-  const PIDL::TypeInfo* typeinfo = T::_getTypeInfo();
-  PIDL::Object_interface* result=typeinfo->pidl_cast(obj.getPointer());
+  const PIDL::TypeInfo* typeinfo = ptr_type::_static_getTypeInfo();
+  PIDL::Object* result=typeinfo->pidl_cast(ptr.getPointer());
   if(result){
-    T p=dynamic_cast<typename T::interfacetype*>(result);
-    if(!p)
+    ptr_type* p=dynamic_cast<ptr_type*>(result);
+    if(p)
       throw SCIRun::InternalError("TypeInfo::pidl_cast returned wrong object!");
-    return p;
+    return T(p);
   } else {
-    return 0;
+    return T(0);
   }
 }
 

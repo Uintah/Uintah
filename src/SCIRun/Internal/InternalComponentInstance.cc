@@ -32,8 +32,9 @@ using namespace std;
 using namespace SCIRun;
 
 InternalComponentInstance::InternalComponentInstance(SCIRunFramework* framework,
-						     const std::string& name)
-  : ComponentInstance(framework, name)
+						     const std::string& instanceName,
+						     const std::string& className)
+  : ComponentInstance(framework, instanceName, className)
 {
 }
 

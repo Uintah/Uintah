@@ -96,9 +96,9 @@ int main(int argc, char* argv[])
 	    cerr << "Waiting for pingpong connections...\n";
 	    cerr << pp->getURL().getString() << '\n';
 	} else {
-	    PIDL::Object obj=PIDL::PIDL::objectFrom(client_url);
-	    PingPong pp=pidl_cast<PingPong>(obj);
-	    if(!pp){
+	    PIDL::Object::pointer obj=PIDL::PIDL::objectFrom(client_url);
+	    PingPong::pointer pp=pidl_cast<PingPong::pointer>(obj);
+	    if(pp.isNull()){
 		abort();
 	    }
 	    double stime=Time::currentSeconds();

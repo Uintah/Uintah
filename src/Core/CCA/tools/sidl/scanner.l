@@ -60,7 +60,7 @@ integer [0-9]+
 "version"       return VERSION;
 "void"		return VOID;
 
-{integer} { yylval.number = strtol(yytext, 0, 0);
+-?{integer} { yylval.number = strtol(yytext, 0, 0);
 	 return INTEGER;
        }
 

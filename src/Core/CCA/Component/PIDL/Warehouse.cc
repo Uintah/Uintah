@@ -39,7 +39,7 @@
 #include <string>
 using namespace std;
 
-using PIDL::Object_interface;
+using PIDL::Object;
 using PIDL::Warehouse;
 using std::map;
 
@@ -62,7 +62,7 @@ void Warehouse::run()
   mutex.unlock();
 }
 
-int Warehouse::registerObject(Object_interface* object)
+int Warehouse::registerObject(Object* object)
 {
   mutex.lock();
   int id=nextID++;
@@ -71,10 +71,10 @@ int Warehouse::registerObject(Object_interface* object)
   return id;
 }
 
-Object_interface* Warehouse::unregisterObject(int id)
+Object* Warehouse::unregisterObject(int id)
 {
   mutex.lock();
-  map<int, Object_interface*>::iterator iter=objects.find(id);
+  map<int, Object*>::iterator iter=objects.find(id);
   if(iter == objects.end())
     throw SCIRun::InternalError("Object not in wharehouse");
   objects.erase(id);
@@ -84,10 +84,10 @@ Object_interface* Warehouse::unregisterObject(int id)
   return iter->second;
 }
 
-Object_interface* Warehouse::lookupObject(int id)
+Object* Warehouse::lookupObject(int id)
 {
   mutex.lock();
-  map<int, Object_interface*>::iterator iter=objects.find(id);
+  map<int, Object*>::iterator iter=objects.find(id);
   if(iter == objects.end()){
     mutex.unlock();
     return 0;
@@ -97,7 +97,7 @@ Object_interface* Warehouse::lookupObject(int id)
   }
 }
 
-Object_interface* Warehouse::lookupObject(const std::string& str)
+Object* Warehouse::lookupObject(const std::string& str)
 {
   string temp = str;
   std::istringstream i(temp);
@@ -115,7 +115,7 @@ Object_interface* Warehouse::lookupObject(const std::string& str)
 int Warehouse::approval(char* urlstring, globus_nexus_startpoint_t* sp)
 {
   URL url(urlstring);
-  Object_interface* obj=lookupObject(url.getSpec());
+  Object* obj=lookupObject(url.getSpec());
   if(!obj){
     std::cerr << "Unable to find object: " << urlstring
 	      << ", rejecting client (code=1002)\n";
@@ -133,7 +133,7 @@ int Warehouse::approval(char* urlstring, globus_nexus_startpoint_t* sp)
     return 1004;
   }
   /* Increment the reference count for this object. */
-  obj->_addReference();
+  obj->addReference();
   //std::cerr << "Approved connection to " << urlstring << '\n';
   return GLOBUS_SUCCESS;
 }

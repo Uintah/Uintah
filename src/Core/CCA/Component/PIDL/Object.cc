@@ -44,7 +44,7 @@
 using namespace PIDL;
 using namespace SCIRun;
 
-Object_interface::Object_interface()
+Object::Object()
     : d_serverContext(0)
 {
   ref_cnt=0;
@@ -52,7 +52,7 @@ Object_interface::Object_interface()
 }
 
 void
-Object_interface::initializeServer(const TypeInfo* typeinfo, void* ptr)
+Object::initializeServer(const TypeInfo* typeinfo, void* ptr)
 {
   if(!d_serverContext){
     d_serverContext=new ServerContext;
@@ -71,7 +71,7 @@ Object_interface::initializeServer(const TypeInfo* typeinfo, void* ptr)
   d_serverContext->d_ptr=ptr;
 }
 
-Object_interface::~Object_interface()
+Object::~Object()
 {
   if(ref_cnt != 0)
     throw InternalError("Object delete while reference count != 0");
@@ -88,7 +88,7 @@ Object_interface::~Object_interface()
 }
 
 URL
-Object_interface::getURL() const
+Object::getURL() const
 {
   std::ostringstream o;
   if(d_serverContext){
@@ -103,12 +103,12 @@ Object_interface::getURL() const
 }
 
 void
-Object_interface::_getReference(Reference& ref, bool copy) const
+Object::_getReference(Reference& ref, bool copy) const
 {
   if(!d_serverContext)
-    throw InternalError("Object_interface::getReference called for a non-server object");
+    throw InternalError("Object::getReference called for a non-server object");
   if(!copy){
-    throw InternalError("Object_interface::getReference called with copy=false");
+    throw InternalError("Object::getReference called with copy=false");
   }
   if(!d_serverContext->d_endpoint_active)
     activateObject();
@@ -118,7 +118,7 @@ Object_interface::_getReference(Reference& ref, bool copy) const
 }
 
 void
-Object_interface::_addReference()
+Object::addReference()
 {
   Mutex* m=getMutexPool()->getMutex(mutex_index);
   m->lock();
@@ -127,7 +127,7 @@ Object_interface::_addReference()
 }
 
 void
-Object_interface::_deleteReference()
+Object::deleteReference()
 {
   Mutex* m=getMutexPool()->getMutex(mutex_index);
   m->lock();
@@ -148,22 +148,22 @@ Object_interface::_deleteReference()
 }
 
 void
-Object_interface::activateObject() const
+Object::activateObject() const
 {
   Warehouse* warehouse=PIDL::getWarehouse();
-  d_serverContext->d_objid=warehouse->registerObject(const_cast<Object_interface*>(this));
+  d_serverContext->d_objid=warehouse->registerObject(const_cast<Object*>(this));
   d_serverContext->activateEndpoint();
 }
 
 MutexPool*
-Object_interface::getMutexPool()
+Object::getMutexPool()
 {
   static MutexPool* pool=0;
   if(!pool){
     // TODO - make this threadsafe.  This can leak if two threads
     // happen to request the first pool at the same time.  I doubt
     // it will ever happen - sparker.
-    pool=new MutexPool("Core/CCA/Component::PIDL::Object_interface mutex pool", 63);
+    pool=new MutexPool("Core/CCA/Component::PIDL::Object mutex pool", 63);
   }
   return pool;
 }

@@ -35,12 +35,13 @@ namespace SCIRun {
   class InternalComponentInstance : public ComponentInstance {
   public:
     InternalComponentInstance(SCIRunFramework* framework,
-			      const std::string& name);
+			      const std::string& intanceName,
+			      const std::string& className);
 
     virtual PortInstance* getPortInstance(const std::string& name);
     virtual ~InternalComponentInstance();
 
-    virtual gov::cca::Port getService(const std::string& name) = 0;
+    virtual gov::cca::Port::pointer getService(const std::string& name) = 0;
 
   private:
     InternalComponentInstance(const InternalComponentInstance&);

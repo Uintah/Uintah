@@ -22,7 +22,7 @@ BuilderServicesImpl::~BuilderServicesImpl()
 
 
 void 
-BuilderServicesImpl::init( const Framework &f ) 
+BuilderServicesImpl::init( const Framework::pointer &f ) 
 { 
   framework_ = f; 
   
@@ -30,9 +30,9 @@ BuilderServicesImpl::init( const Framework &f )
 }
 
 bool
-BuilderServicesImpl::connect( const ComponentID &uses, 
+BuilderServicesImpl::connect( const ComponentID::pointer &uses, 
 				 const string &use_port, 
-				 const ComponentID &provider, 
+				 const ComponentID::pointer &provider, 
 				 const string &provide_port)
 {
   // lock registry
@@ -88,21 +88,21 @@ BuilderServicesImpl::connect( const ComponentID &uses,
   
 
 bool 
-BuilderServicesImpl::disconnect( const ComponentID &, const string &, 
-				    const ComponentID &, const string &)
+BuilderServicesImpl::disconnect( const ComponentID::pointer &, const string &, 
+				    const ComponentID::pointer &, const string &)
 {
   return false;
 }
 
 bool 
-BuilderServicesImpl::exportAs( const ComponentID &, const string &, 
+BuilderServicesImpl::exportAs( const ComponentID::pointer &, const string &, 
 				  const string &)
 {
   return false;
 }
 
 bool
-BuilderServicesImpl::provideTo( const ComponentID &, const string&, 
+BuilderServicesImpl::provideTo( const ComponentID::pointer &, const string&, 
 				   const string &)
 {
   return false;

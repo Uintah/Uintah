@@ -33,12 +33,13 @@
 
 namespace SCIRun {
   class SCIRunFramework;
-  class ComponentID : public gov::cca::ComponentID_interface {
+  class ComponentID : public gov::cca::ComponentID {
   public:
     ComponentID(SCIRunFramework* framework, const std::string& name);
     virtual ~ComponentID();
 
-    virtual std::string toString();
+    virtual std::string getInstanceName();
+    virtual std::string getSerialization();
 
     SCIRunFramework* framework;
     const std::string name;

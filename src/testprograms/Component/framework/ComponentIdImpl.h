@@ -15,7 +15,7 @@ namespace sci_cca {
 using SCIRun::InternalError;
 using std::string;
 
-class ComponentIdImpl : public ComponentID_interface {
+class ComponentIdImpl : public ComponentID {
 public:
   ComponentIdImpl();
   ~ComponentIdImpl();

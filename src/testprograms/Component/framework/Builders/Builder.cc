@@ -22,7 +22,7 @@ Builder::Builder()
   // Hard code creation of a scrUser so that I can use it to call
   // the "go" function.  Go should actually be an interface...
   scruser = new scrUser();
-  Component comp = scruser;
+  Component::pointer comp(scruser);
   CCA::init( comp, "scrUser" );
 }
 
@@ -51,11 +51,11 @@ Builder::read_input_script()
 void
 Builder::connect_components()
 {
-  array1<ComponentID> componentIds;
+  array1<ComponentID::pointer> componentIds;
 
-  RegistryServices reg_port = pidl_cast<RegistryServices>(
+  RegistryServices::pointer reg_port = pidl_cast<RegistryServices::pointer>(
                                        services_->getPort("RegistryServices"));
-  if ( !reg_port ) {
+  if ( reg_port.isNull() ) {
     cerr << "Could not get registry port\n";
     return;
   } else {
@@ -90,10 +90,10 @@ Builder::connect_components()
       return;
     }
 
-  BuilderServices build_port = 
-     pidl_cast<BuilderServices>( services_->getPort("BuilderServices") );
+  BuilderServices::pointer build_port = 
+     pidl_cast<BuilderServices::pointer>( services_->getPort("BuilderServices") );
 
-  if ( !build_port ) {
+  if ( build_port.isNull() ) {
     cerr << "Could not get builder port\n";
     return;
   }
@@ -111,7 +111,7 @@ Builder::create_component()
 {
   char      command;
   bool      done;
-  Component comp;
+  Component::pointer comp;
   string    name;
 
   do
@@ -126,20 +126,20 @@ Builder::create_component()
       switch( command )
 	{
 	case '1':
-	  comp = new Provider();
+	  comp = Component::pointer(new Provider());
 	  name = "Provider";
 	  break;
 	case '2':
-	  comp = new Sender();
+	  comp = Component::pointer(new Sender());
 	  name = "Sender";
 	  break;
 	case '3':
 	  name = "scr";
-	  comp = new scr();
+	  comp = Component::pointer(new scr());
 	  break;
 	case '4':
 	  name = "scrUser";
-	  comp = new scrUser();
+	  comp = Component::pointer(new scrUser());
 	  break;
 	default:
 	  done = false;
@@ -153,13 +153,13 @@ void
 Builder::list_active_components()
 {
   // Query the Registry for all active components...
-  RegistryServices reg_port = pidl_cast<RegistryServices>(
+  RegistryServices::pointer reg_port = pidl_cast<RegistryServices::pointer>(
                                        services_->getPort("RegistryServices"));
-  if ( !reg_port ) {
+  if ( reg_port.isNull() ) {
     cerr << "Could not get registry port\n";
     return;
   } else {
-    array1<ComponentID> componentIds;
+    array1<ComponentID::pointer> componentIds;
     reg_port->getActiveComponentList( componentIds );
 
     cerr << "Number of Components Returned: " << componentIds.size() << "\n";
@@ -169,7 +169,7 @@ Builder::list_active_components()
 	cerr << cnt << ": " << componentIds[ cnt ]->toString() << "\n";
       }
     services_->releasePort( "RegistryServices" );
-    reg_port = 0;
+    reg_port = RegistryServices::pointer(0);
   }
 }
 
@@ -177,9 +177,9 @@ void
 Builder::shutdown_framework()
 {
   // Query the Registry for all active components...
-  RegistryServices reg_port = pidl_cast<RegistryServices>(
+  RegistryServices::pointer reg_port = pidl_cast<RegistryServices::pointer>(
                                        services_->getPort("RegistryServices"));
-  if ( !reg_port ) {
+  if ( reg_port.isNull() ) {
     cerr << "Shutdown_Framework(): Could not get registry port\n";
     return;
   } else {
@@ -188,7 +188,7 @@ Builder::shutdown_framework()
 
     // This is probably not connected after shutdown...
     //services_->releasePort( "RegistryServices" );
-    reg_port = 0;
+    reg_port = RegistryServices::pointer(0);
   }
 }
 

@@ -36,7 +36,7 @@
 namespace PIDL {
 
 class TypeInfo_internal;
-class Object_interface;
+class Object;
 
 /**************************************
 
@@ -78,7 +78,7 @@ public:
   // cast the object obj to an object of this type.  It will
   // return 0 for failure, or will return an object that is
   // castable to a subclass of this class using dynamic_cast.
-  Object_interface* pidl_cast(Object_interface* obj) const;
+  Object* pidl_cast(Object* obj) const;
 
   //////////
   // Return the new vtable offset for casting to the named class.

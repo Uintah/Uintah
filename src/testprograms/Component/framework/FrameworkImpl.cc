@@ -36,16 +36,16 @@ FrameworkImpl::FrameworkImpl()
 
   // connection
   BuilderServicesImpl *csi = new BuilderServicesImpl;
-  csi->init( Framework(this) );
-  BuilderServices cs = csi; 
+  csi->init( Framework::pointer(this) );
+  BuilderServices::pointer cs (csi);
 
   ports_["BuilderServices"] = cs;
 
   // Registry
   RegistryServicesImpl *rsi = new RegistryServicesImpl;
 
-  rsi->init( Framework( this ) );
-  RegistryServices rs( rsi );
+  rsi->init( Framework::pointer( this ) );
+  RegistryServices::pointer rs( rsi );
   ports_["RegistryServices"] = rs;
 
   // directoty
@@ -57,15 +57,15 @@ FrameworkImpl::~FrameworkImpl()
   cerr <<"FrameworkImpl destructor\n";
 }
 
-Port
-FrameworkImpl::getPort( const ComponentID &id, const string &name )
+Port::pointer
+FrameworkImpl::getPort( const ComponentID::pointer &id, const string &name )
 {
   ports_lock_.readLock();
 
   // framework port ?
   port_iterator pi = ports_.find(name);
   if ( pi != ports_.end() ) {
-    Port port = pi->second;
+    Port::pointer port = pi->second;
     ports_lock_.readUnlock();
     return port;
   }
@@ -76,7 +76,7 @@ FrameworkImpl::getPort( const ComponentID &id, const string &name )
   //  registry_->connections_.readLock();
 
   ComponentRecord *c = registry_->components_[id->toString()];
-  Port port =  c->getPort( name );
+  Port::pointer port =  c->getPort( name );
   
   //registry_->connections_.readUnlock();
 
@@ -84,7 +84,7 @@ FrameworkImpl::getPort( const ComponentID &id, const string &name )
 }
     
 void 
-FrameworkImpl::registerUsesPort( const ComponentID &id, const PortInfo &info) 
+FrameworkImpl::registerUsesPort( const ComponentID::pointer &id, const PortInfo::pointer &info) 
 {
   registry_->connections_.writeLock();
 
@@ -97,7 +97,7 @@ FrameworkImpl::registerUsesPort( const ComponentID &id, const PortInfo &info)
 
 
 void 
-FrameworkImpl::unregisterUsesPort( const ComponentID &id, const string &name )
+FrameworkImpl::unregisterUsesPort( const ComponentID::pointer &id, const string &name )
 {
   registry_->connections_.writeLock();
   
@@ -108,8 +108,8 @@ FrameworkImpl::unregisterUsesPort( const ComponentID &id, const string &name )
 }
 
 void 
-FrameworkImpl::addProvidesPort( const ComponentID &id, const Port &port,
-				const PortInfo& info) 
+FrameworkImpl::addProvidesPort( const ComponentID::pointer &id, const Port::pointer &port,
+				const PortInfo::pointer& info) 
 {
   registry_->connections_.writeLock();
   
@@ -120,7 +120,7 @@ FrameworkImpl::addProvidesPort( const ComponentID &id, const Port &port,
 }
 
 void 
-FrameworkImpl::removeProvidesPort( const ComponentID &id, const string &name)
+FrameworkImpl::removeProvidesPort( const ComponentID::pointer &id, const string &name)
 {
   registry_->connections_.writeLock();
   
@@ -131,7 +131,7 @@ FrameworkImpl::removeProvidesPort( const ComponentID &id, const string &name)
 }
 
 void 
-FrameworkImpl::releasePort( const ComponentID &id, const string &name)
+FrameworkImpl::releasePort( const ComponentID::pointer &id, const string &name)
 {
   ports_lock_.readLock();
   bool found = ports_.find(name) != ports_.end();
@@ -150,19 +150,20 @@ FrameworkImpl::releasePort( const ComponentID &id, const string &name)
 bool
 FrameworkImpl::registerComponent( const string &hostname, 
 				  const string &program,
-				  Component &c )
+				  Component::pointer &c )
 {
   // create new ID and Services objects
   ComponentIdImpl *id = new ComponentIdImpl;
   id->init(hostname, program );
+  ComponentID::pointer cid(id);
 
   cerr << "framework register " << id->toString() << "\n";
 
-  SciServices svc = new SciServicesImpl;
-  svc->init(Framework(this), id); 
+  SciServices::pointer svc(new SciServicesImpl);
+  svc->init(Framework::pointer(this), cid); 
 
   // save info about the Component 
-  ComponentRecord *cr = new ComponentRecord( id );
+  ComponentRecord *cr = new ComponentRecord( cid );
   cr->component_ = c;
   cr->services_ = svc;
 
@@ -188,7 +189,7 @@ FrameworkImpl::registerComponent( const string &hostname,
 }
 
 void
-FrameworkImpl::unregisterComponent( const ComponentID &id )
+FrameworkImpl::unregisterComponent( const ComponentID::pointer &id )
 {
   registry_->connections_.writeLock();
 
@@ -217,7 +218,7 @@ FrameworkImpl::shutdown()
   for( ; iter != registry_->components_.end(); iter++ ) {
     ComponentRecord * cr = (*iter).second;
     
-    cr->component_->setServices( 0 );
+    cr->component_->setServices( Services::pointer(0) );
     cr->component_ = 0;
     cr->services_ = 0;
     cr->id_ = 0;

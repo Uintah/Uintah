@@ -25,17 +25,17 @@ class CCA {
 
 public:
   static bool init( int &argc, char *argv[] );
-  static bool init ( Component & component, 
-		     const string & component_name = "" );
+  static bool init ( Component::pointer& component, 
+		     const string& component_name = "" );
   static void done();
 
 private:
   static bool       initialized_;
-  static Framework  framework_;
+  static Framework::pointer  framework_;
   static string     framework_url_;
   static Thread   * framework_thread_;
   static bool       is_server_;
-  static Component  local_framework_;
+  static Component::pointer  local_framework_;
   static string     hostname_;
   static string     program_;
   static Semaphore  semaphore_;

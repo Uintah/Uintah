@@ -23,7 +23,7 @@ main( int argc, char *argv[] )
   cerr << "main cont.\n";  
 
   Builder * b = new Builder();
-  Component bc = b;
+  Component::pointer bc(b);
   CCA::init( bc, "Builder" );
 
   b->ui(); // infinite ui loop (until ui quits)

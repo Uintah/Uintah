@@ -35,16 +35,45 @@
 
 namespace SCIRun {
   class SCIRunFramework;
-  class BuilderService : public gov::cca::BuilderService_interface, public InternalComponentInstance {
+  class BuilderService : public gov::cca::ports::BuilderService, public InternalComponentInstance {
   public:
     virtual ~BuilderService();
-    gov::cca::ComponentID createComponentInstance(const std::string& name,
-						  const std::string& type);
-    void connect(const gov::cca::ComponentID& c1, const std::string& port1,
-		 const gov::cca::ComponentID& c2, const std::string& port2);
+
+    virtual gov::cca::ComponentID::pointer createInstance(const std::string& instanceName,
+						 const std::string& className,
+						 const gov::cca::TypeMap::pointer& properties);
+    virtual CIA::array1<gov::cca::ComponentID::pointer> getComponentIDs();
+    virtual gov::cca::TypeMap::pointer getComponentProperties(const gov::cca::ComponentID::pointer& cid);
+    virtual void setComponentProperties(const gov::cca::ComponentID::pointer& cid,
+					const gov::cca::TypeMap::pointer& map);
+    virtual gov::cca::ComponentID::pointer getDeserialization(const std::string& s);
+    virtual gov::cca::ComponentID::pointer getComponentID(const std::string& componentInstanceName);
+    virtual void destroyInstance(const gov::cca::ComponentID::pointer& toDie,
+				 float timeout);
+    virtual CIA::array1<std::string> getProvidedPortNames(const gov::cca::ComponentID::pointer& cid);
+    virtual CIA::array1<std::string> getUsedPortNames(const gov::cca::ComponentID::pointer& cid);
+    virtual gov::cca::TypeMap::pointer getPortProperties(const gov::cca::ComponentID::pointer& cid,
+						const std::string& portname);
+    virtual void setPortProperties(const gov::cca::ComponentID::pointer& cid,
+				   const std::string& portname,
+				   const gov::cca::TypeMap::pointer& map);
+    virtual gov::cca::ConnectionID::pointer connect(const gov::cca::ComponentID::pointer& user,
+					   const std::string& usingPortName,
+					   const gov::cca::ComponentID::pointer& provider,
+					   const ::std::string& providingPortName);
+    virtual CIA::array1<gov::cca::ConnectionID::pointer> getConnectionIDs(const CIA::array1<gov::cca::ComponentID::pointer>& componentList);
+    virtual gov::cca::TypeMap::pointer getConnectionProperties(const gov::cca::ConnectionID::pointer& connID);
+    virtual void setConnectionProperties(const gov::cca::ConnectionID::pointer& connID,
+					 const gov::cca::TypeMap::pointer& map);
+    virtual void disconnect(const gov::cca::ConnectionID::pointer& connID,
+			    float timeout);
+    virtual void disconnectAll(const gov::cca::ComponentID::pointer& id1,
+			       const gov::cca::ComponentID::pointer& id2,
+			       float timeout);
+
     static InternalComponentInstance* create(SCIRunFramework* fwk,
 					     const std::string& name);
-    gov::cca::Port getService(const std::string&);
+    gov::cca::Port::pointer getService(const std::string&);
   private:
     BuilderService(SCIRunFramework* fwk, const std::string& name);
   };

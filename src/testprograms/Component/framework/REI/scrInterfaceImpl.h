@@ -10,7 +10,7 @@ namespace sci_cca {
 
 using CIA::array1;
 
-class scrInterfaceImpl : virtual public scrInterface_interface {
+class scrInterfaceImpl : virtual public scrInterface {
 
 public:
   scrInterfaceImpl();

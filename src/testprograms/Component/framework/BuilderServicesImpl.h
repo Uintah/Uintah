@@ -19,7 +19,7 @@ using CIA::array1;
 
 class Registry;
 
-class BuilderServicesImpl : public BuilderServices_interface {
+class BuilderServicesImpl : public BuilderServices {
 
 public:
   BuilderServicesImpl();
@@ -27,21 +27,21 @@ public:
   ~BuilderServicesImpl();
 
   // Framework internals
-  void init( const Framework & );
+  void init( const Framework::pointer & );
 
   // export services
-  virtual bool connect( const ComponentID & user,
+  virtual bool connect( const ComponentID::pointer & user,
 			const string      & use_port, 
-			const ComponentID & provider, 
+			const ComponentID::pointer & provider, 
 			const string      & provide_port);
 
-  virtual bool disconnect( const ComponentID &, const string &, 
-			   const ComponentID &, const string &);
-  virtual bool exportAs( const ComponentID &, const string &, const string &);
-  virtual bool provideTo( const ComponentID &, const string&, const string &);
+  virtual bool disconnect( const ComponentID::pointer &, const string &, 
+			   const ComponentID::pointer &, const string &);
+  virtual bool exportAs( const ComponentID::pointer &, const string &, const string &);
+  virtual bool provideTo( const ComponentID::pointer &, const string&, const string &);
   
 protected:
-  Framework framework_;
+  Framework::pointer framework_;
   Registry *registry_;
 };
 

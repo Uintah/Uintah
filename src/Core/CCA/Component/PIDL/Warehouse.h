@@ -51,76 +51,76 @@ DESCRIPTION
    Internal PIDL class. This is a singleton that holds all activated
    server objects.
 ****************************************/
-	class Warehouse {
-	public:
-	    //////////
-	    // The nexus approval function.  Returns the startpoint
-	    // to an object based on the object number.
-	    int approval(char* url, globus_nexus_startpoint_t* sp);
+  class Warehouse {
+  public:
+    //////////
+    // The nexus approval function.  Returns the startpoint
+    // to an object based on the object number.
+    int approval(char* url, globus_nexus_startpoint_t* sp);
 
-	protected:
-	    //////////
-	    // PIDL needs access to most of these methods.
-	    friend class PIDL;
+  protected:
+    //////////
+    // PIDL needs access to most of these methods.
+    friend class PIDL;
 
-	    //////////
-	    // The constructor - only called once.
-	    Warehouse();
+    //////////
+    // The constructor - only called once.
+    Warehouse();
 
-	    //////////
-	    // Destructor
-	    ~Warehouse();
+    //////////
+    // Destructor
+    ~Warehouse();
 
-	    //////////
-	    // The Object base class will register server objects with
-	    // the warehouse.
-	    friend class Object_interface;
+    //////////
+    // The Object base class will register server objects with
+    // the warehouse.
+    friend class Object;
 
-	    //////////
-	    // Register obj with the warehouse, returning the objects
-	    // unique identifier.
-	    int registerObject(Object_interface* obj);
+    //////////
+    // Register obj with the warehouse, returning the objects
+    // unique identifier.
+    int registerObject(Object* obj);
 
-	    //////////
-	    // Unregister the object associated with the object ID.
-	    // Returns a pointer to the object.
-	    Object_interface* unregisterObject(int id);
+    //////////
+    // Unregister the object associated with the object ID.
+    // Returns a pointer to the object.
+    Object* unregisterObject(int id);
 
-	    //////////
-	    // Lookup an object by name.  name should be parsable
-	    // as an integer, specifiying the object id.  Returns
-	    // null of the object is not found.  May throw
-	    // InvalidReference if name is not parsable.
-	    Object_interface* lookupObject(const std::string&);
+    //////////
+    // Lookup an object by name.  name should be parsable
+    // as an integer, specifiying the object id.  Returns
+    // null of the object is not found.  May throw
+    // InvalidReference if name is not parsable.
+    Object* lookupObject(const std::string&);
 
-	    //////////
-	    // Lookup an object by the object ID.  Returns null if
-	    // the object is not found.
-	    Object_interface* lookupObject(int id);
+    //////////
+    // Lookup an object by the object ID.  Returns null if
+    // the object is not found.
+    Object* lookupObject(int id);
 
-	    //////////
-	    // "Run" the warehouse.  This simply blocks until objects
-	    // have been removed from the warehouse.
-	    void run();
+    //////////
+    // "Run" the warehouse.  This simply blocks until objects
+    // have been removed from the warehouse.
+    void run();
 
-	private:
-	    //////////
-	    // The lock for the object database and nextID
-	    SCIRun::Mutex mutex;
+  private:
+    //////////
+    // The lock for the object database and nextID
+    SCIRun::Mutex mutex;
 
-	    //////////
-	    // The wait condition for run().  It is signaled when all
-	    // objects have been removed from the warehouse.
-	    SCIRun::ConditionVariable condition;
+    //////////
+    // The wait condition for run().  It is signaled when all
+    // objects have been removed from the warehouse.
+    SCIRun::ConditionVariable condition;
 
-	    //////////
-	    // The object database
-	    std::map<int, Object_interface*> objects;
+    //////////
+    // The object database
+    std::map<int, Object*> objects;
 
-	    //////////
-	    // The ID of the next object to be created.
-	    int nextID;
-	};
+    //////////
+    // The ID of the next object to be created.
+    int nextID;
+  };
 } // End namespace PIDL
 
 #endif

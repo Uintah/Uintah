@@ -42,9 +42,9 @@ namespace SCIRun {
   public:
     MenuTree(BuilderWindow* builder);
     virtual ~MenuTree();
-    gov::cca::ComponentDescription cd;
+    gov::cca::ComponentClassDescription::pointer cd;
     void add(const std::vector<std::string>& name, int nameindex,
-	     const gov::cca::ComponentDescription& desc,
+	     const gov::cca::ComponentClassDescription::pointer& desc,
 	     const std::string& fullname);
     void coalesce();
     void populateMenu(QPopupMenu*);
@@ -55,7 +55,7 @@ namespace SCIRun {
     void instantiateComponent();
     
   };
-  class BuilderWindow : public QMainWindow, public gov::cca::ComponentEventListener_interface {
+  class BuilderWindow : public QMainWindow, public gov::cca::ports::ComponentEventListener {
     Q_OBJECT
   protected:
     void closeEvent( QCloseEvent* );
@@ -71,15 +71,15 @@ namespace SCIRun {
 
     void about();
   public:
-    BuilderWindow(const gov::cca::Services& services);
+    BuilderWindow(const gov::cca::Services::pointer& services);
     virtual ~BuilderWindow();
 
-    void instantiateComponent(const gov::cca::ComponentDescription&);
+    void instantiateComponent(const gov::cca::ComponentClassDescription::pointer&);
 
     // From gov::cca::ComponentEventListener
-    void componentActivity(const gov::cca::ComponentEvent& e);
+    void componentActivity(const gov::cca::ports::ComponentEvent::pointer& e);
   private:
-    gov::cca::Services services;
+    gov::cca::Services::pointer services;
     void buildPackageMenus();
     BuilderWindow(const BuilderWindow&);
     BuilderWindow& operator=(const BuilderWindow&);

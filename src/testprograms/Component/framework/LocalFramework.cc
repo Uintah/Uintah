@@ -19,7 +19,7 @@ LocalFramework::~LocalFramework()
 }
 
 void 
-LocalFramework::setServices( const Services &services )
+LocalFramework::setServices( const Services::pointer &services )
 {
   services_ = services;
 

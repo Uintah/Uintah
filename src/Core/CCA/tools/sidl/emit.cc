@@ -44,6 +44,7 @@ extern "C" { // Linux uuid.h doesn't have this, so we need extern C here
 using namespace std;
 extern bool doing_cia;
 
+#ifdef OLD_STUFF
 static string handle_class = "\
 class @ {\n\
   @_interface* ptr;\n\
@@ -99,6 +100,7 @@ public:\n\
     return ptr;\n\
   }\n\
 ";
+#endif
 
 struct Leader {
 };
@@ -180,6 +182,7 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   hdr << "#include <Core/CCA/Component/CIA/CIA_sidl.h>\n";
   hdr << "#include <Core/CCA/Component/CIA/array.h>\n";
   hdr << "#include <Core/CCA/Component/CIA/string.h>\n";
+  hdr << "#include <CCALib/SmartPointer.h>\n";
   hdr << "#include <complex>\n";
   hdr << "\n";
   hdr << e.fwd.str();
@@ -276,8 +279,8 @@ void Symbol::emit_forward(EmitState& e)
 
 void Package::emit(EmitState&)
 {
-    cerr << "Package::emit should not be called...\n";
-    exit(1);
+  cerr << "Package::emit should not be called...\n";
+  exit(1);
 }
 
 void SState::begin_namespace(SymbolTable* stab)
@@ -341,11 +344,11 @@ void CI::emit(EmitState& e)
   }
   
   emit_proxyclass(e);
-  if(!do_emit){
-    emitted_declaration=true;
+  emitted_declaration=true;
+  if(!do_emit)
     return;
-  }
   
+  emitted_declaration=true;
   emit_header(e);
 
   e.instanceNum++;
@@ -356,12 +359,9 @@ void CI::emit(EmitState& e)
   // Emit handler table
   emit_handler_table(e);
 
-  emit_typeinfo(e);
-
   emit_interface(e);
-
+  emit_typeinfo(e);
   emit_proxy(e);
-  emitted_declaration=true;
 }
 
 void CI::emit_typeinfo(EmitState& e)
@@ -389,7 +389,7 @@ void CI::emit_typeinfo(EmitState& e)
   uuid_generate( uuid );
   uuid_unparse(uuid, uuid_str);
 #endif
-  e.out << "const ::PIDL::TypeInfo* " << fn << "::_getTypeInfo()\n";
+  e.out << "const ::PIDL::TypeInfo* " << fn << "::_static_getTypeInfo()\n";
   e.out << "{\n";
   e.out << "  static ::PIDL::TypeInfo* ti=0;\n";
   e.out << "  if(!ti){\n";
@@ -404,14 +404,18 @@ void CI::emit_typeinfo(EmitState& e)
   e.out << "                                      &::" << fn << "_proxy::create_proxy);\n\n";
   SymbolTable* localScope=symbols->getParent();
   if(parentclass)
-    e.out << "    tii->add_parentclass(" << parentclass->cppfullname(localScope) << "::_getTypeInfo(), " << parentclass->vtable_base << ");\n";
+    e.out << "    tii->add_parentclass(" << parentclass->cppfullname(localScope) << "::_static_getTypeInfo(), " << parentclass->vtable_base << ");\n";
   for(vector<Interface*>::iterator iter=parent_ifaces.begin();
       iter != parent_ifaces.end(); iter++){
-    e.out << "    tii->add_parentiface(" << (*iter)->cppfullname(localScope) << "::_getTypeInfo(), " << (*iter)->vtable_base << ");\n";
+    e.out << "    tii->add_parentiface(" << (*iter)->cppfullname(localScope) << "::_static_getTypeInfo(), " << (*iter)->vtable_base << ");\n";
   }
   e.out << "    ti=new ::PIDL::TypeInfo(tii);\n";
   e.out << "  }\n";
   e.out << "  return ti;\n";
+  e.out << "}\n\n";
+  e.out << "const ::PIDL::TypeInfo* " << fn << "::_virtual_getTypeInfo() const\n";
+  e.out << "{\n";
+  e.out << "  return _static_getTypeInfo();\n";
   e.out << "}\n\n";
 
   free(uuid_str);
@@ -443,7 +447,7 @@ void CI::emit_handlers(EmitState& e)
   e.out << "    throw ::PIDL::GlobusError(\"get_startpoint\", _gerr);\n";
   e.out << "  if(int _gerr=globus_nexus_buffer_destroy(_recvbuff))\n";
   e.out << "    throw ::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
-  e.out << "  const ::PIDL::TypeInfo* ti=" << cppfullname(0) << "::_getTypeInfo();\n";
+  e.out << "  const ::PIDL::TypeInfo* ti=" << cppfullname(0) << "::_static_getTypeInfo();\n";
   e.out << "  int result=ti->isa(classname, uuid);\n";
   e.out << "  delete[] classname;\n";
   e.out << "  delete[] uuid;\n";
@@ -455,7 +459,7 @@ void CI::emit_handlers(EmitState& e)
   e.out << "    if(_addRef){\n";
   e.out << "      void* _v=globus_nexus_endpoint_get_user_pointer(_ep);\n";
   e.out << "      ::PIDL::ServerContext* _sc=static_cast< ::PIDL::ServerContext*>(_v);\n";
-  e.out << "      _sc->d_objptr->_addReference();\n";
+  e.out << "      _sc->d_objptr->addReference();\n";
   e.out << "    }\n";
   e.out << "  }\n";
   e.out << "  globus_nexus_buffer_t sendbuff;\n";
@@ -481,7 +485,7 @@ void CI::emit_handlers(EmitState& e)
   e.out << "    throw ::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
   e.out << "  void* _v=globus_nexus_endpoint_get_user_pointer(_ep);\n";
   e.out << "  ::PIDL::ServerContext* _sc=static_cast< ::PIDL::ServerContext*>(_v);\n";
-  e.out << "  _sc->d_objptr->_deleteReference();\n";
+  e.out << "  _sc->d_objptr->deleteReference();\n";
   e.out << "}\n\n";
 
   // Emit method handlers...
@@ -608,7 +612,7 @@ string Method::get_classname() const
     cerr << "ERROR: Method does not have an associated class or interface\n";
     exit(1);
   }
-  return n+"_interface";
+  return n;
 }
 
 void Method::emit_comment(EmitState& e, const std::string& leader,
@@ -679,7 +683,6 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
       arg->emit_unmarshal(e, argname.str(), "1", "_recvbuff", true);
     }
   }
-  e.out.pop_leader(oldleader);
 
   // If we are sending a reply, unmarshal the startpoint
   e.out << "\n";
@@ -692,7 +695,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   e.out << "  if(int _gerr=globus_nexus_buffer_destroy(_recvbuff))\n";
   e.out << "    throw ::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
   e.out << "  void* _v=globus_nexus_endpoint_get_user_pointer(_ep);\n";
-  string myclass=emit_class->cppfullname(0)+"_interface";
+  string myclass=emit_class->cppfullname(0);
   e.out << "  ::PIDL::ServerContext* _sc=static_cast< ::PIDL::ServerContext*>(_v);\n";
   e.out << "  " << myclass << "* _obj=static_cast< " << myclass << "*>(_sc->d_ptr);\n";
   e.out << "\n";
@@ -708,7 +711,8 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
       arg->emit_declaration(e, argname.str());
     }
   }
-    
+  e.out.pop_leader(oldleader);
+
   e.out << "  // Call the method\n";
   // Call the method...
   e.out << "  ";
@@ -808,9 +812,8 @@ void CI::emit_proxyclass(EmitState& e)
 
   // Proxy
   std::string pname=name+"_proxy";
-  std::string iname=name+"_interface";
 
-  e.proxy << leader2 << "class " << pname << " : public ::PIDL::ProxyBase, public " << iname << " {\n";
+  e.proxy << leader2 << "class " << pname << " : public ::PIDL::ProxyBase, public " << name << " {\n";
   e.proxy << leader2 << "public:\n";
   e.proxy << leader2 << "  " << pname << "(const ::PIDL::Reference&);\n";
   std::string oldleader=e.proxy.push_leader();
@@ -828,8 +831,8 @@ void CI::emit_proxyclass(EmitState& e)
   e.proxy << leader2 << "  virtual ~" << pname << "();\n";
   e.proxy << leader2 << "private:\n";
   e.proxy << leader2 << "  virtual void _getReference(::PIDL::Reference&, bool copy) const;\n";
-  e.proxy << leader2 << "  friend const ::PIDL::TypeInfo* " << name << "::_getTypeInfo();\n";
-  e.proxy << leader2 << "  static ::PIDL::Object_interface* create_proxy(const ::PIDL::Reference&);\n";
+  e.proxy << leader2 << "  friend const ::PIDL::TypeInfo* " << name << "::_static_getTypeInfo();\n";
+  e.proxy << leader2 << "  static ::PIDL::Object* create_proxy(const ::PIDL::Reference&);\n";
   e.proxy << leader2 << "  " << pname << "(const " << pname << "&);\n";
   e.proxy << leader2 << "  " << pname << "& operator=(const " << pname << "&);\n";
   e.proxy << leader2 << "};\n\n";
@@ -843,13 +846,12 @@ void CI::emit_header(EmitState& e)
   std::vector<Method*>& mymethods=myMethods();
 
   // interface
-  std::string iname=name+"_interface";
-  e.decl << leader2 << "class " << iname << " : ";
+  e.decl << leader2 << "class " << name << " : ";
 
   // Parents
   bool haveone=false;
   if(parentclass){
-    e.decl << "public " << parentclass->cppfullname(e.decl.currentPackage) << "_interface";
+    e.decl << "public " << parentclass->cppfullname(e.decl.currentPackage);
     haveone=true;
   }
   for(vector<Interface*>::iterator iter=parent_ifaces.begin();
@@ -859,15 +861,18 @@ void CI::emit_header(EmitState& e)
     } else {
       e.decl << ", ";
     }
-    e.decl << "virtual public " << (*iter)->cppfullname(e.decl.currentPackage) << "_interface";
+    e.decl << "virtual public " << (*iter)->cppfullname(e.decl.currentPackage);
   }
   if(!haveone)
-    e.decl << "virtual public ::PIDL::Object_interface";
+    e.decl << "virtual public ::PIDL::Object";
   e.decl << " {\n";
-  
-  // The interace class body
   e.decl << leader2 << "public:\n";
-  e.decl << leader2 << "  virtual ~" << iname << "();\n";
+  
+  // The smart pointer class
+  e.decl << leader2 << "  typedef CCALib::SmartPointer<" << name << "> pointer;\n";
+
+  // The interace class body
+  e.decl << leader2 << "  virtual ~" << name << "();\n";
   std::string oldleader=e.decl.push_leader();
   for(vector<Method*>::const_iterator iter=mymethods.begin();
       iter != mymethods.end();iter++){
@@ -877,16 +882,16 @@ void CI::emit_header(EmitState& e)
   }
   e.decl.pop_leader(oldleader);
   // The type signature method...
-  e.decl << leader2 << "  virtual const ::PIDL::TypeInfo* _getTypeInfo() const;\n";
+  e.decl << leader2 << "  virtual const ::PIDL::TypeInfo* _virtual_getTypeInfo() const;\n";
+  e.decl << leader2 << "  static const ::PIDL::TypeInfo* _static_getTypeInfo();\n";
   e.decl << leader2 << "protected:\n";
-  e.decl << leader2 << "  " << iname << "(bool initServer=true);\n";
+  e.decl << leader2 << "  " << name << "(bool initServer=true);\n";
   e.decl << leader2 << "private:\n";
-  e.decl << leader2 << "  " << iname << "(const " << iname << "&);\n";
-  e.decl << leader2 << "  " << iname << "& operator=(const " << iname << "&);\n";
+  e.decl << leader2 << "  " << name << "(const " << name << "&);\n";
+  e.decl << leader2 << "  " << name << "& operator=(const " << name << "&);\n";
   e.decl << leader2 << "};\n\n";
 
-  // The Handle
-  e.decl << leader2;
+#ifdef OLDSTUFF
   for_each(handle_class.begin(), handle_class.end(), output_sub(e.decl, name));
   e.decl << "  // Conversion operations\n";
   // Emit an operator() for each parent class and interface...
@@ -903,18 +908,19 @@ void CI::emit_header(EmitState& e)
     }
   }
   e.decl << leader2 << "};\n\n";
+#endif
 }
 
 void CI::emit_interface(EmitState& e)
 {
-  std::string fn=cppfullname(0)+"_interface";
-  std::string cn=cppclassname()+"_interface";
+  std::string fn=cppfullname(0);
+  std::string cn=cppclassname();
   e.out << fn << "::" << cn << "(bool initServer)\n";
   if(parent_ifaces.size() != 0 || parentclass)
     e.out << " : ";
   SymbolTable* localScope=symbols->getParent();
   if(parentclass)
-    e.out << parentclass->cppfullname(localScope) << "_interface(false)";
+    e.out << parentclass->cppfullname(localScope) << "(false)";
   if(parent_ifaces.size() > 0){
     vector<Interface*> parents;
     gatherParentInterfaces(parents);
@@ -923,22 +929,17 @@ void CI::emit_interface(EmitState& e)
       if(*iter != this){
 	if(parentclass || iter != parents.begin())
 	  e.out << ",\n   ";
-	e.out << (*iter)->cppfullname(localScope) << "_interface(false)";
+	e.out << (*iter)->cppfullname(localScope) << "(false)";
       }
     }
   }
   e.out << "\n{\n";
   e.out << "  if(initServer)\n";
-  e.out << "    initializeServer(" << cppfullname(0) << "::_getTypeInfo(), this);\n";
+  e.out << "    initializeServer(" << cppfullname(0) << "::_static_getTypeInfo(), this);\n";
   e.out << "}\n\n";
 
   e.out << fn << "::~" << cn << "()\n";
   e.out << "{\n";
-  e.out << "}\n\n";
-
-  e.out << "const ::PIDL::TypeInfo* " << fn << "::_getTypeInfo() const\n";
-  e.out << "{\n";
-  e.out << "  return " << cppfullname(0) << "::_getTypeInfo();\n";
   e.out << "}\n\n";
 }
 
@@ -948,17 +949,17 @@ void CI::emit_proxy(EmitState& e)
   if(fn[0] == ':' && fn[1] == ':')
     fn=fn.substr(2);
   std::string cn=cppclassname()+"_proxy";
-  e.out << fn << "::" << cn << "(const ::PIDL::Reference& ref) :\n";
+  e.out << fn << "::" << cn << "(const ::PIDL::Reference& _ref) :\n";
   SymbolTable* localScope=symbols->getParent();
   
-  e.out << "::PIDL::ProxyBase(ref),";
+  e.out << "::PIDL::ProxyBase(_ref),";
 
-  e.out << cppfullname(localScope) << "_interface(false)";
+  e.out << cppfullname(localScope) << "(false)";
   vector<Interface*> parents;
   gatherParentInterfaces(parents);
   for(vector<Interface*>::iterator iter=parents.begin();
       iter != parents.end(); iter++){
-    e.out  << ",\n   "<< (*iter)->cppfullname(localScope) << "_interface(false)";
+    e.out  << ",\n   "<< (*iter)->cppfullname(localScope) << "(false)";
   }
   e.out << "\n";
   e.out << "{\n";
@@ -970,7 +971,7 @@ void CI::emit_proxy(EmitState& e)
   e.out << "{\n";
   e.out << "  _proxyGetReference(ref, copy);\n";
   e.out << "}\n\n";
-  e.out << "::PIDL::Object_interface* " << fn << "::create_proxy(const ::PIDL::Reference& ref)\n";
+  e.out << "::PIDL::Object* " << fn << "::create_proxy(const ::PIDL::Reference& ref)\n";
   e.out << "{\n";
   e.out << "  return new " << cn << "(ref);\n";
   e.out << "}\n\n";
@@ -988,95 +989,95 @@ void CI::emit_proxy(EmitState& e)
 void Method::emit_proxy(EmitState& e, const string& fn,
 			SymbolTable* localScope) const
 {
-    emit_prototype_defin(e, fn+"::", localScope);
-    e.out << "\n{\n";
-    if(reply_required())
-	e.out << "  ::PIDL::ReplyEP* _reply=::PIDL::ReplyEP::acquire();\n";
-    e.out << "  globus_nexus_startpoint_t _sp;\n";
-    e.out << "  _reply->get_startpoint_copy(&_sp);\n\n";
-    std::vector<Argument*>& list=args->getList();
-    e.out << "  // Size the buffer\n";
-    e.out << "  int _size=";
-    if(reply_required())
-	e.out << "globus_nexus_sizeof_startpoint(&_sp, 1);\n";
-    else
-	e.out << "0;\n";
-    string oldleader=e.out.push_leader();
-    int argNum=0;
-    for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
-	argNum++;
-	Argument* arg=*iter;
-	if(arg->getMode() != Argument::Out) {
-	    std::ostringstream argname;
-	    argname << "_arg" << argNum;
-	    arg->emit_marshalsize(e, argname.str(), "_size", "1");
-	}
+  emit_prototype_defin(e, fn+"::", localScope);
+  e.out << "\n{\n";
+  if(reply_required())
+    e.out << "  ::PIDL::ReplyEP* _reply=::PIDL::ReplyEP::acquire();\n";
+  e.out << "  globus_nexus_startpoint_t _sp;\n";
+  e.out << "  _reply->get_startpoint_copy(&_sp);\n\n";
+  std::vector<Argument*>& list=args->getList();
+  e.out << "  // Size the buffer\n";
+  e.out << "  int _size=";
+  if(reply_required())
+    e.out << "globus_nexus_sizeof_startpoint(&_sp, 1);\n";
+  else
+    e.out << "0;\n";
+  string oldleader=e.out.push_leader();
+  int argNum=0;
+  for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
+    argNum++;
+    Argument* arg=*iter;
+    if(arg->getMode() != Argument::Out) {
+      std::ostringstream argname;
+      argname << "_arg" << argNum;
+      arg->emit_marshalsize(e, argname.str(), "_size", "1");
     }
-    e.out << "  globus_nexus_buffer_t _buffer;\n";
-    e.out << "  if(int _gerr=globus_nexus_buffer_init(&_buffer, _size, 0))\n";
-    e.out << "    throw ::PIDL::GlobusError(\"buffer_init\", _gerr);\n";
+  }
+  e.out << "  globus_nexus_buffer_t _buffer;\n";
+  e.out << "  if(int _gerr=globus_nexus_buffer_init(&_buffer, _size, 0))\n";
+  e.out << "    throw ::PIDL::GlobusError(\"buffer_init\", _gerr);\n";
+  if(list.size() != 0)
+    e.out << "  // Marshal the arguments\n";
+  argNum=0;
+  for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
+    argNum++;
+    Argument* arg=*iter;
+    if(arg->getMode() != Argument::Out) {
+      std::ostringstream argname;
+      argname << "_arg" << argNum;
+      arg->emit_marshal(e, argname.str(), "1", "&_buffer", true);
+    }
+  }
+  e.out.pop_leader(oldleader);
+
+  if(reply_required()){
+    e.out << "  // Marshal the reply startpoint\n";
+    e.out << "  globus_nexus_put_startpoint_transfer(&_buffer, &_sp, 1);\n";
+  }
+  e.out << "  // Send the message\n";
+  e.out << "  ::PIDL::Reference _ref;\n";
+  e.out << "  _proxyGetReference(_ref, false);\n";
+  e.out << "  int _handler=_ref.getVtableBase()+" << handlerOff << ";\n";
+  e.out << "  if(int _gerr=globus_nexus_send_rsr(&_buffer, &_ref.d_sp,\n";
+  e.out << "                                     _handler, GLOBUS_TRUE, GLOBUS_FALSE))\n";
+  e.out << "    throw ::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
+  if(reply_required()){
+    e.out << "  globus_nexus_buffer_t _recvbuff=_reply->wait();\n";
+    //... emit unmarshal...;
+    e.out << "  int _flag;\n";
+    e.out << "  globus_nexus_get_int(&_recvbuff, &_flag, 1);\n";
+    e.out << "  if(_flag != 0)\n";
+    e.out << "    NOT_FINISHED(\"Exceptions not implemented\");\n";
+    string oldleader=e.out.push_leader();
+    if(return_type){
+      if(!return_type->isvoid()){
+	e.out << "  // Unmarshal the return value\n";
+	return_type->emit_unmarshal(e, "_ret", "1", "&_recvbuff", true);
+      }
+    }
     if(list.size() != 0)
-	e.out << "  // Marshal the arguments\n";
+      e.out << "  // Unmarshal the return arguments\n";
     argNum=0;
     for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
-	argNum++;
-	Argument* arg=*iter;
-	if(arg->getMode() != Argument::Out) {
-	    std::ostringstream argname;
-	    argname << "_arg" << argNum;
-	    arg->emit_marshal(e, argname.str(), "1", "&_buffer", true);
-	}
+      argNum++;
+      Argument* arg=*iter;
+      if(arg->getMode() != Argument::In) {
+	std::ostringstream argname;
+	argname << "_arg" << argNum;
+	arg->emit_unmarshal(e, argname.str(), "1", "&_recvbuff", false);
+      }
     }
     e.out.pop_leader(oldleader);
-
-    if(reply_required()){
-	e.out << "  // Marshal the reply startpoint\n";
-	e.out << "  globus_nexus_put_startpoint_transfer(&_buffer, &_sp, 1);\n";
+    e.out << "  ::PIDL::ReplyEP::release(_reply);\n";
+    e.out << "  if(int _gerr=globus_nexus_buffer_destroy(&_recvbuff))\n";
+    e.out << "    throw ::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
+    if(return_type){
+      if(!return_type->isvoid()){
+	e.out << "  return _ret;\n";
+      }
     }
-    e.out << "  // Send the message\n";
-    e.out << "  ::PIDL::Reference _ref;\n";
-    e.out << "  _proxyGetReference(_ref, false);\n";
-    e.out << "  int _handler=_ref.getVtableBase()+" << handlerOff << ";\n";
-    e.out << "  if(int _gerr=globus_nexus_send_rsr(&_buffer, &_ref.d_sp,\n";
-    e.out << "                                     _handler, GLOBUS_TRUE, GLOBUS_FALSE))\n";
-    e.out << "    throw ::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
-    if(reply_required()){
-	e.out << "  globus_nexus_buffer_t _recvbuff=_reply->wait();\n";
-	//... emit unmarshal...;
-	e.out << "  int _flag;\n";
-	e.out << "  globus_nexus_get_int(&_recvbuff, &_flag, 1);\n";
-	e.out << "  if(_flag != 0)\n";
-	e.out << "    NOT_FINISHED(\"Exceptions not implemented\");\n";
-	string oldleader=e.out.push_leader();
-	if(return_type){
-	    if(!return_type->isvoid()){
-		e.out << "  // Unmarshal the return value\n";
-		return_type->emit_unmarshal(e, "_ret", "1", "&_recvbuff", true);
-	    }
-	}
-	if(list.size() != 0)
-	    e.out << "  // Unmarshal the return arguments\n";
-	argNum=0;
-	for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
-	    argNum++;
-	    Argument* arg=*iter;
-	    if(arg->getMode() != Argument::In) {
-		std::ostringstream argname;
-		argname << "_arg" << argNum;
-		arg->emit_unmarshal(e, argname.str(), "1", "&_recvbuff", false);
-	    }
-	}
-	e.out.pop_leader(oldleader);
-	e.out << "  ::PIDL::ReplyEP::release(_reply);\n";
-	e.out << "  if(int _gerr=globus_nexus_buffer_destroy(&_recvbuff))\n";
-	e.out << "    throw ::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
-	if(return_type){
-	    if(!return_type->isvoid()){
-		e.out << "  return _ret;\n";
-	    }
-	}
-    }
-    e.out << "}\n";
+  }
+  e.out << "}\n";
 }
 
 void Argument::emit_unmarshal(EmitState& e, const string& arg,
@@ -1084,65 +1085,65 @@ void Argument::emit_unmarshal(EmitState& e, const string& arg,
 			      const string& bufname,
 			      bool declare) const
 {
-    e.out << "  // " << arg << ": " << fullsignature() << "\n";
-    type->emit_unmarshal(e, arg, qty, bufname, declare);
+  e.out << "  // " << arg << ": " << fullsignature() << "\n";
+  type->emit_unmarshal(e, arg, qty, bufname, declare);
 }
 
 void Argument::emit_marshalsize(EmitState& e, const string& arg,
 				const string& sizevar,
 				const string& qty) const
 {
-    type->emit_marshalsize(e, arg, sizevar, qty);
+  type->emit_marshalsize(e, arg, sizevar, qty);
 }
 
 void Argument::emit_declaration(EmitState& e, const string& arg) const
 {
-    type->emit_declaration(e, arg);
+  type->emit_declaration(e, arg);
 }
 
 void Argument::emit_marshal(EmitState& e, const string& arg,
 			    const string& qty,
 			    const string& bufname, bool top) const
 {
-    type->emit_marshal(e, arg, qty, bufname, top);
+  type->emit_marshal(e, arg, qty, bufname, top);
 }
 
 void Argument::emit_prototype(SState& out, SymbolTable* localScope) const
 {
-    Type::ArgContext ctx;
-    switch(mode){
-    case In:
-	ctx=Type::ArgIn;
-	break;
-    case Out:
-	ctx=Type::ArgOut;
-	break;
-    case InOut:
-	ctx=Type::ArgInOut;
-	break;
-    }
-    type->emit_prototype(out, ctx, localScope);
-    if(id != "" && id != "this")
-	out << " " << id;
+  Type::ArgContext ctx;
+  switch(mode){
+  case In:
+    ctx=Type::ArgIn;
+    break;
+  case Out:
+    ctx=Type::ArgOut;
+    break;
+  case InOut:
+    ctx=Type::ArgInOut;
+    break;
+  }
+  type->emit_prototype(out, ctx, localScope);
+  if(id != "" && id != "this")
+    out << " " << id;
 }
 
 void Argument::emit_prototype_defin(SState& out, const std::string& arg,
 				    SymbolTable* localScope) const
 {
-    Type::ArgContext ctx;
-    switch(mode){
-    case In:
-	ctx=Type::ArgIn;
-	break;
-    case Out:
-	ctx=Type::ArgOut;
-	break;
-    case InOut:
-	ctx=Type::ArgInOut;
-	break;
-    }
-    type->emit_prototype(out, ctx, localScope);
-    out << " " << arg;
+  Type::ArgContext ctx;
+  switch(mode){
+  case In:
+    ctx=Type::ArgIn;
+    break;
+  case Out:
+    ctx=Type::ArgOut;
+    break;
+  case InOut:
+    ctx=Type::ArgInOut;
+    break;
+  }
+  type->emit_prototype(out, ctx, localScope);
+  out << " " << arg;
 }
 
 void ArrayType::emit_unmarshal(EmitState& e, const string& arg,
@@ -1150,153 +1151,153 @@ void ArrayType::emit_unmarshal(EmitState& e, const string& arg,
 			       const string& bufname,
 			       bool declare) const
 {
-    if(qty != "1"){
-	cerr << "ArrayType::emit_unmarshall, qty != 1: " << qty << '\n';
-	exit(1);
-    }
-    e.out << leader2 << "int " << arg << "_dim[" << dim << "];\n";
-    e.out << leader2 << "globus_nexus_get_int(" << bufname << ", &" << arg << "_dim[0], " << dim << ");\n";
-    if(declare){
-	e.out << leader2 << cppfullname(0) << " " << arg << "(";
-    } else {
-	e.out << leader2 << arg << ".resize(";
-    }
+  if(qty != "1"){
+    cerr << "ArrayType::emit_unmarshall, qty != 1: " << qty << '\n';
+    exit(1);
+  }
+  e.out << leader2 << "int " << arg << "_dim[" << dim << "];\n";
+  e.out << leader2 << "globus_nexus_get_int(" << bufname << ", &" << arg << "_dim[0], " << dim << ");\n";
+  if(declare){
+    e.out << leader2 << cppfullname(0) << " " << arg << "(";
+  } else {
+    e.out << leader2 << arg << ".resize(";
+  }
+  for(int i=0;i<dim;i++){
+    if(i != 0)
+      e.out << ", ";
+    e.out << arg << "_dim[" << i << "]";
+  }
+  e.out << ");\n";
+  if(subtype->array_use_pointer()){
+    string pname=arg+"_uptr";
+    string sizename=arg+"_totalsize";
+    e.out << leader2 << "int " << sizename << "=";
     for(int i=0;i<dim;i++){
-	if(i != 0)
-	    e.out << ", ";
-	e.out << arg << "_dim[" << i << "]";
+      if(i != 0)
+	e.out << "*";
+      e.out << arg << "_dim[" << i << "]";
     }
-    e.out << ");\n";
-    if(subtype->array_use_pointer()){
-	string pname=arg+"_uptr";
-	string sizename=arg+"_totalsize";
-	e.out << leader2 << "int " << sizename << "=";
-	for(int i=0;i<dim;i++){
-	    if(i != 0)
-		e.out << "*";
-	    e.out << arg << "_dim[" << i << "]";
-	}
-	e.out << ";\n";
-	e.out << leader2 << cppfullname(0) << "::pointer " << pname << "=const_cast< " << cppfullname(0) << "::pointer>(&" << arg << "[0]);\n";
-	subtype->emit_unmarshal(e, pname, sizename, bufname, false);
-    } else {
-	string pname=arg+"_iter";
-	e.out << leader2 << "for(" << cppfullname(0) << "::iterator " << pname << "=" << arg << ".begin();";
-	e.out << pname << " != " << arg << ".end(); " << pname << "++){\n";
-	string oldleader=e.out.push_leader();
-	e.out << leader2 << cppfullname(0) << "::reference " << arg << "_el = *" << pname << ";\n";
-	subtype->emit_unmarshal(e, arg+"_el", "1", bufname, false);
-	e.out.pop_leader(oldleader);
-	e.out << leader2 << "}\n";
-    }
+    e.out << ";\n";
+    e.out << leader2 << cppfullname(0) << "::pointer " << pname << "=const_cast< " << cppfullname(0) << "::pointer>(&" << arg << "[0]);\n";
+    subtype->emit_unmarshal(e, pname, sizename, bufname, false);
+  } else {
+    string pname=arg+"_iter";
+    e.out << leader2 << "for(" << cppfullname(0) << "::iterator " << pname << "=" << arg << ".begin();";
+    e.out << pname << " != " << arg << ".end(); " << pname << "++){\n";
+    string oldleader=e.out.push_leader();
+    e.out << leader2 << cppfullname(0) << "::reference " << arg << "_el = *" << pname << ";\n";
+    subtype->emit_unmarshal(e, arg+"_el", "1", bufname, false);
+    e.out.pop_leader(oldleader);
+    e.out << leader2 << "}\n";
+  }
 }
 
 void ArrayType::emit_marshalsize(EmitState& e, const string& arg,
 				 const string& sizevar,
 				 const string& /* qty */) const
 {
-    e.out << leader2 << sizevar << " += globus_nexus_sizeof_int(" << dim << "); // array dims\n";
-    if(subtype->uniformsize()){
-	string sizename=arg+"_mtotalsize";
-	if(dim == 1){
-	    e.out << leader2 << "int " << sizename << "=" << arg << ".size();\n";
-	} else {
-	    string dimname=arg+"_mdim";
-	    e.out << leader2 << "int " << dimname << "[" << dim << "];\n";
-	    for(int i=0;i<dim;i++)
-		e.out << leader2 << dimname << "[" << i << "]=" << arg << ".size" << i+1 << "();\n";
-	    e.out << leader2 << "int " << sizename << "=" << dimname << "[0]";
-	    for(int i=1;i<dim;i++)
-		e.out << "*" << dimname << "[" << i << "]";
-	    e.out << ";\n";
-	}
-	subtype->emit_marshalsize(e, "", sizevar, arg+"_mtotalsize");
+  e.out << leader2 << sizevar << " += globus_nexus_sizeof_int(" << dim << "); // array dims\n";
+  if(subtype->uniformsize()){
+    string sizename=arg+"_mtotalsize";
+    if(dim == 1){
+      e.out << leader2 << "int " << sizename << "=" << arg << ".size();\n";
     } else {
-	string pname=arg+"_iter";
-	e.out << leader2 << "for(" << cppfullname(0) << "::const_iterator " << pname << "=" << arg << ".begin();";
-	e.out << pname << " != " << arg << ".end(); " << pname << "++){\n";
-	string oldleader=e.out.push_leader();
-	e.out << leader2 << cppfullname(0) << "::const_reference " << arg << "_el = *" << pname << ";\n";
-	subtype->emit_marshalsize(e, arg+"_el", sizevar, "1");
-	e.out.pop_leader(oldleader);
-	e.out << leader2 << "}\n";
+      string dimname=arg+"_mdim";
+      e.out << leader2 << "int " << dimname << "[" << dim << "];\n";
+      for(int i=0;i<dim;i++)
+	e.out << leader2 << dimname << "[" << i << "]=" << arg << ".size" << i+1 << "();\n";
+      e.out << leader2 << "int " << sizename << "=" << dimname << "[0]";
+      for(int i=1;i<dim;i++)
+	e.out << "*" << dimname << "[" << i << "]";
+      e.out << ";\n";
     }
+    subtype->emit_marshalsize(e, "", sizevar, arg+"_mtotalsize");
+  } else {
+    string pname=arg+"_iter";
+    e.out << leader2 << "for(" << cppfullname(0) << "::const_iterator " << pname << "=" << arg << ".begin();";
+    e.out << pname << " != " << arg << ".end(); " << pname << "++){\n";
+    string oldleader=e.out.push_leader();
+    e.out << leader2 << cppfullname(0) << "::const_reference " << arg << "_el = *" << pname << ";\n";
+    subtype->emit_marshalsize(e, arg+"_el", sizevar, "1");
+    e.out.pop_leader(oldleader);
+    e.out << leader2 << "}\n";
+  }
 }
 
 void ArrayType::emit_declaration(EmitState& e, const string& arg) const
 {
-    e.out << leader2 << cppfullname(0) << " " << arg << ";\n";
+  e.out << leader2 << cppfullname(0) << " " << arg << ";\n";
 }
 
 bool ArrayType::array_use_pointer() const
 {
-    return false; // Always use iterator for array of array
+  return false; // Always use iterator for array of array
 }
 
 bool ArrayType::uniformsize() const
 {
-    return false;
+  return false;
 }
 
 void ArrayType::emit_marshal(EmitState& e, const string& arg,
 			     const string& qty,
 			     const std::string& bufname, bool top) const
 {
-    string pname;
-    if(subtype->array_use_pointer()){
-	pname=arg+"_mptr";
-	e.out << leader2 << cppfullname(0) << "::pointer " << pname << "=const_cast< " << cppfullname(0) << "::pointer>(&" << arg << "[0]);\n";
-    } else {
-	pname=arg+"_iter";
-    }
-    string sizename=arg+"_mtotalsize";
-    string dimname=arg+"_mdim";
-    if(!top || !subtype->uniformsize()){
-	if(dim == 1){
-	    e.out << leader2 << "int " << sizename << "=" << arg << ".size();\n";
-	} else {
-	    e.out << leader2 << "int " << dimname << "[" << dim << "];\n";
-	    for(int i=0;i<dim;i++)
-		e.out << leader2 << dimname << "[" << i << "]=" << arg << ".size" << i+1 << "();\n";
-	    e.out << leader2 << "int " << sizename << "=" << dimname << "[0]";
-	    for(int i=1;i<dim;i++)
-		e.out << "*" << dimname << "[" << i << "]";
-	    e.out << ";\n";
-	}
-    }
+  string pname;
+  if(subtype->array_use_pointer()){
+    pname=arg+"_mptr";
+    e.out << leader2 << cppfullname(0) << "::pointer " << pname << "=const_cast< " << cppfullname(0) << "::pointer>(&" << arg << "[0]);\n";
+  } else {
+    pname=arg+"_iter";
+  }
+  string sizename=arg+"_mtotalsize";
+  string dimname=arg+"_mdim";
+  if(!top || !subtype->uniformsize()){
     if(dim == 1){
-	e.out << leader2 << "globus_nexus_put_int(" << bufname << ", &" << sizename << ", 1);\n";
+      e.out << leader2 << "int " << sizename << "=" << arg << ".size();\n";
     } else {
-	e.out << leader2 << "globus_nexus_put_int(" << bufname << ", &" << dimname << "[0], " << dim << ");\n";
+      e.out << leader2 << "int " << dimname << "[" << dim << "];\n";
+      for(int i=0;i<dim;i++)
+	e.out << leader2 << dimname << "[" << i << "]=" << arg << ".size" << i+1 << "();\n";
+      e.out << leader2 << "int " << sizename << "=" << dimname << "[0]";
+      for(int i=1;i<dim;i++)
+	e.out << "*" << dimname << "[" << i << "]";
+      e.out << ";\n";
     }
+  }
+  if(dim == 1){
+    e.out << leader2 << "globus_nexus_put_int(" << bufname << ", &" << sizename << ", 1);\n";
+  } else {
+    e.out << leader2 << "globus_nexus_put_int(" << bufname << ", &" << dimname << "[0], " << dim << ");\n";
+  }
 
-    if(subtype->array_use_pointer()){
-	subtype->emit_marshal(e, pname, sizename, bufname, false);
-    } else {
-	e.out << leader2 << "for(" << cppfullname(0) << "::const_iterator " << pname << "=" << arg << ".begin();";
-	e.out << pname << " != " << arg << ".end(); " << pname << "++){\n";
-	e.out << leader2 << cppfullname(0) << "::const_reference " << arg << "_el = *" << pname << ";\n";
-	string oldleader=e.out.push_leader();
-	subtype->emit_marshal(e, arg+"_el", "1", bufname, false);
-	e.out.pop_leader(oldleader);
-	e.out << leader2 << "}\n";
-    }
+  if(subtype->array_use_pointer()){
+    subtype->emit_marshal(e, pname, sizename, bufname, false);
+  } else {
+    e.out << leader2 << "for(" << cppfullname(0) << "::const_iterator " << pname << "=" << arg << ".begin();";
+    e.out << pname << " != " << arg << ".end(); " << pname << "++){\n";
+    e.out << leader2 << cppfullname(0) << "::const_reference " << arg << "_el = *" << pname << ";\n";
+    string oldleader=e.out.push_leader();
+    subtype->emit_marshal(e, arg+"_el", "1", bufname, false);
+    e.out.pop_leader(oldleader);
+    e.out << leader2 << "}\n";
+  }
 }
 
 void ArrayType::emit_rettype(EmitState& e, const string& arg) const
 {
-    e.out << cppfullname(0) << " _ret";
+  e.out << cppfullname(0) << " _ret";
 }
 
 void ArrayType::emit_prototype(SState& out, ArgContext ctx,
 			       SymbolTable* localScope) const
 {
-    if(ctx == ArgIn){
-	out << "const ";
-    }
-    out << cppfullname(0);
-    if(ctx == ArgOut || ctx == ArgInOut || ctx == ArgIn)
-	out << "&";
+  if(ctx == ArgIn){
+    out << "const ";
+  }
+  out << cppfullname(0);
+  if(ctx == ArgOut || ctx == ArgInOut || ctx == ArgIn)
+    out << "&";
 }
 
 void BuiltinType::emit_unmarshal(EmitState& e, const string& arg,
@@ -1478,70 +1479,70 @@ void BuiltinType::emit_marshal(EmitState& e, const string& arg,
 
 void BuiltinType::emit_rettype(EmitState& e, const string& arg) const
 {
-    if(cname == "void"){
-	// Nothing
-	return;
-    } else if(cname == "string"){
-	e.out << "::std::string " << arg;
-    } else {
-	e.out << cname << " " << arg;
-    }
+  if(cname == "void"){
+    // Nothing
+    return;
+  } else if(cname == "string"){
+    e.out << "::std::string " << arg;
+  } else {
+    e.out << cname << " " << arg;
+  }
 }
 
 void BuiltinType::emit_prototype(SState& out, ArgContext ctx,
 				 SymbolTable*) const
 {
-    if(cname == "void"){
-	// Nothing
-	if(ctx == ReturnType)
-	    out << "void";
-	else {
-	    cerr << "Illegal void type in argument list\n";
-	    exit(1);
-	}
-    } else if(cname == "string"){
-	switch(ctx){
-	case ReturnType:
-	case ArrayTemplate:
-	    out << "::std::string";
-	    break;
-	case ArgIn:
-	    out << "const ::std::string&";
-	    break;
-	case ArgOut:
-	case ArgInOut:
-	    out << "::std::string&";
-	    break;
-	}
-    } else {
-	switch(ctx){
-	case ReturnType:
-	case ArgIn:
-	case ArrayTemplate:
-	    out << cname;
-	    break;
-	case ArgOut:
-	case ArgInOut:
-	    out << cname << "&";
-	    break;
-	}
+  if(cname == "void"){
+    // Nothing
+    if(ctx == ReturnType)
+      out << "void";
+    else {
+      cerr << "Illegal void type in argument list\n";
+      exit(1);
     }
+  } else if(cname == "string"){
+    switch(ctx){
+    case ReturnType:
+    case ArrayTemplate:
+      out << "::std::string";
+      break;
+    case ArgIn:
+      out << "const ::std::string&";
+      break;
+    case ArgOut:
+    case ArgInOut:
+      out << "::std::string&";
+      break;
+    }
+  } else {
+    switch(ctx){
+    case ReturnType:
+    case ArgIn:
+    case ArrayTemplate:
+      out << cname;
+      break;
+    case ArgOut:
+    case ArgInOut:
+      out << cname << "&";
+      break;
+    }
+  }
 }
 
 bool BuiltinType::array_use_pointer() const
 {
-    if(cname == "string" || cname == "bool")
-	return false;
-    else
-	return true;
+  if(cname == "string" || cname == "bool")
+    return false;
+  else
+    return true;
 }
 
 bool BuiltinType::uniformsize() const
 {
-    if(cname == "string")
-	return false;
-    else
-	return true;
+  if(cname == "string")
+    return false;
+  else
+    return true;
 }
 
 void NamedType::emit_unmarshal(EmitState& e, const string& arg,
@@ -1569,7 +1570,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
     e.out << leader2 << "int " << arg << "_vtable_base;\n";
     e.out << leader2 << "globus_nexus_get_int(" << bufname << ", &" << arg << "_vtable_base, 1);\n";
     if(declare)
-      e.out << leader2 << name->cppfullname(0) << " " << arg << ";\n";
+      e.out << leader2 << name->cppfullname(0) << "::pointer " << arg << ";\n";
     e.out << leader2 << "if(" << arg << "_vtable_base == -1){\n";
     e.out << leader2 << "  " << arg << "=0;\n";
     e.out << leader2 << "} else {\n";
@@ -1582,7 +1583,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
     e.out << leader2 << "      throw ::PIDL::GlobusError(\"get_endpoint\", _gerr);\n";
     e.out << leader2 << "    void* _ptr=globus_nexus_endpoint_get_user_pointer(_ep);\n";
     e.out << leader2 << "    ::PIDL::ServerContext* _sc=static_cast< ::PIDL::ServerContext*>(_ptr);\n";
-    e.out << leader2 << "    " << arg << "=dynamic_cast< " << name->cppfullname(0) << "_interface*>(_sc->d_objptr);\n";
+    e.out << leader2 << "    " << arg << "=dynamic_cast< " << name->cppfullname(0) << "*>(_sc->d_objptr);\n";
     e.out << leader2 << "    if(int _gerr=globus_nexus_startpoint_destroy(&_ref.d_sp))\n";
     e.out << leader2 << "      throw ::PIDL::GlobusError(\"startpoint_destroy\", _gerr);\n";
     e.out << leader2 << "  } else {\n";
@@ -1605,12 +1606,12 @@ void NamedType::emit_marshalsize(EmitState& e, const string& arg,
       exit(1);
     }
     e.out << leader2 << "::PIDL::Reference " << arg << "_ref;\n";
-    e.out << leader2 << "if(" << arg << "){\n";
-    e.out << leader2 << "  " << arg << "->_addReference();\n";
+    e.out << leader2 << "if(!" << arg << ".isNull()){\n";
+    e.out << leader2 << "  " << arg << "->addReference();\n";
     e.out << leader2 << "  " << arg << "->_getReference(" << arg << "_ref, true);\n";
     e.out << leader2 << "}\n";
     e.out << leader2 << sizevar << "+=globus_nexus_sizeof_int(1)+(";
-    e.out << arg << "?globus_nexus_sizeof_startpoint(&" << arg << "_ref.d_sp, 1):0);\n";
+    e.out << arg << ".isNull()?0:globus_nexus_sizeof_startpoint(&" << arg << "_ref.d_sp, 1));\n";
   } else {
     cerr << "Emit marshalsize shouldn't be called for packages/methods\n";
     exit(1);
@@ -1619,7 +1620,7 @@ void NamedType::emit_marshalsize(EmitState& e, const string& arg,
 
 void NamedType::emit_declaration(EmitState& e, const string& arg) const
 {
-  e.out << leader2 << name->cppfullname(0) << " " << arg << ";\n";
+  e.out << leader2 << cppfullname(0) << " " << arg << ";\n";
 }
 
 void NamedType::emit_marshal(EmitState& e, const string& arg,
@@ -1639,9 +1640,9 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
       cerr << "NamedType::emit_marshal called with qty != 1: " << qty << '\n';
       exit(1);
     }
-    e.out << leader2 << "if(" << arg << "){\n";
-    e.out << leader2 << "  const ::PIDL::TypeInfo* _dt=" << arg << "->_getTypeInfo();\n";
-    e.out << leader2 << "  const ::PIDL::TypeInfo* _bt=" << name->cppfullname(0) << "::_getTypeInfo();\n";
+    e.out << leader2 << "if(!" << arg << ".isNull()){\n";
+    e.out << leader2 << "  const ::PIDL::TypeInfo* _dt=" << arg << "->_virtual_getTypeInfo();\n";
+    e.out << leader2 << "  const ::PIDL::TypeInfo* _bt=" << name->cppfullname(0) << "::_static_getTypeInfo();\n";
     e.out << leader2 << "  int _vtable_offset=_dt->computeVtableOffset(_bt);\n";
     e.out << leader2 << "  ::PIDL::Reference " << arg << "_ref;\n";
     e.out << leader2 << "  " << arg << "->_getReference(" << arg << "_ref, true);\n";
@@ -1660,7 +1661,11 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 
 void NamedType::emit_rettype(EmitState& e, const string& arg) const
 {
-  e.out << name->cppfullname(0) << " " << arg;
+  Symbol::Type symtype = name->getSymbol()->getType();
+  if(symtype == Symbol::EnumType)
+    e.out << name->cppfullname(0) << " " << arg;
+  else
+    e.out << name->cppfullname(0) << "::pointer " << arg;
 }
 
 void NamedType::emit_prototype(SState& out, ArgContext ctx,
@@ -1671,29 +1676,29 @@ void NamedType::emit_prototype(SState& out, ArgContext ctx,
   switch(ctx){
   case ReturnType:
   case ArrayTemplate:
-    out << name->cppfullname(localScope);
+    out << cppfullname(localScope);
     break;
   case ArgIn:
     if(name->getSymbol()->getType() == Symbol::EnumType)
-      out << name->cppfullname(localScope);
+      out << cppfullname(localScope);
     else
-      out << "const " << name->cppfullname(localScope) << "&";
+      out << "const " << cppfullname(localScope) << "&";
     break;
   case ArgOut:
   case ArgInOut:
-    out << name->cppfullname(localScope) << "&";
+    out << cppfullname(localScope) << "&";
     break;
   }
 }
 
 bool NamedType::array_use_pointer() const
 {
-    return false; // Always use iterator for array of references
+  return false; // Always use iterator for array of references
 }
 
 bool NamedType::uniformsize() const
 {
-    return false; // Startpoints can vary in size
+  return false; // Startpoints can vary in size
 }
 
 void Enum::emit(EmitState& e)

@@ -18,7 +18,7 @@ public:
   scr() {}
   ~scr() {}
 
-  virtual void setServices( const Services & srv );
+  virtual void setServices( const Services::pointer & srv );
 
 };
 

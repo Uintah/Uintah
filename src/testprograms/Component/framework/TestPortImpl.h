@@ -10,7 +10,7 @@ namespace sci_cca {
 using std::string;
 using CIA::array1;
 
-class TestPortImpl : public TestPort_interface {
+class TestPortImpl : public TestPort {
 public:
   TestPortImpl();
   ~TestPortImpl();
