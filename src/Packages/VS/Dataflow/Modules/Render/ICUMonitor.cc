@@ -126,6 +126,7 @@ private:
       max_ref_label_(0),
       label_(0),
       index_(-1),
+      snd_(0),
       min_(0.0),
       max_(1.0),
       r_(1.0),
@@ -139,6 +140,7 @@ private:
     LabelTex *max_ref_label_;
     LabelTex *label_;
     int       index_;
+    int       snd_;
     float     min_;
     float     max_;
     float     r_;
@@ -162,6 +164,7 @@ private:
   vector<GuiDouble*>                   gui_min_;
   vector<GuiDouble*>                   gui_max_;
   vector<GuiInt*>                      gui_idx_;
+  vector<GuiInt*>                      gui_snd_;
   vector<GuiDouble*>                   gui_red_;
   vector<GuiDouble*>                   gui_green_;
   vector<GuiDouble*>                   gui_blue_;
@@ -180,6 +183,7 @@ private:
   bool                                  dig_init_;
   vector<Plot>                          plots_;
   NrrdDataHandle                        data_;
+  NrrdDataHandle                        data2_; // asade
   int                                   cur_idx_;
   bool                                  plots_dirty_;
 
@@ -320,6 +324,7 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   dig_init_(false),
   plots_(0),
   data_(0),
+  data2_(0),
   cur_idx_(0),
   plots_dirty_(true)
 {
@@ -500,6 +505,7 @@ ICUMonitor::synch_plot_vars(int s)
   clear_vector(gui_min_, s);
   clear_vector(gui_max_, s);
   clear_vector(gui_idx_, s);
+  clear_vector(gui_snd_, s);
   clear_vector(gui_red_, s);
   clear_vector(gui_green_, s);
   clear_vector(gui_blue_, s);
@@ -516,7 +522,6 @@ ICUMonitor::init_plots()
   reset_vars();
   synch_plot_vars(gui_plot_count_.get());
   if (! gui_plot_count_.get()) return;
-  
 
   FreeTypeFace *font = fonts_["anatomical"];
   if (! font) return;
@@ -587,6 +592,10 @@ ICUMonitor::init_plots()
       gui_idx_[i] = scinew GuiInt(ctx->subVar("idx-" + num));
     }
     g.index_ = gui_idx_[i]->get();
+    if (! gui_snd_[i]) {
+      gui_snd_[i] = scinew GuiInt(ctx->subVar("snd-" + num));
+    }
+    g.snd_ = gui_snd_[i]->get();
 
     if (! gui_red_[i]) {
       gui_red_[i] = scinew GuiDouble(ctx->subVar("plot_color-" + num + "-r"));
@@ -684,6 +693,7 @@ ICUMonitor::draw_plots()
       float start_y = cur_y - gr_ht;
       //glColor4f(0.0, 0.9, 0.1, 1.0);
       glDisable(GL_TEXTURE_2D);
+
       glBegin(GL_LINE_STRIP);
       for (int i = 0; i < (int)samples; i++) {
 	int idx = i + cur_idx_;
@@ -693,12 +703,12 @@ ICUMonitor::draw_plots()
 	float *dat = (float*)data_->nrrd->data;
 	int dat_index = idx * data_->nrrd->axis[0].size + g.index_;
 	float val = (dat[dat_index] - g.min_) * norm;
-	glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
-		   (start_y + val) * sy);
+	glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, (start_y + val) * sy);
 
 	if (idx % (int)samp_rate == 0){
 	  float tick = gr_ht * .15;// * norm;
-	  glColor4f(0.0, 0.1, 0.9, 1.0);
+	  //glColor4f(0.0, 0.1, 0.9, 1.0); //asade
+	  glColor4f(1.0, 1.0, 1.0, 1.0); //asade
 	  glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
 		     (start_y + val + tick) * sy);
 	  glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
@@ -707,12 +717,42 @@ ICUMonitor::draw_plots()
 		     (start_y + val) * sy);
 	  glColor4f(g.r_, g.g_, g.b_, 1.0);
 	}
-
       }
       glEnd();
+
+	// only plot 4 of 6 strips with jsim data
+	//if (g.index_ == 0 || g.index_ == 3 || g.index_ == 4) {
+	if (g.snd_ == 1) {
+	// jsim data
+      glBegin(GL_LINE_STRIP);
+      for (int i = 0; i < (int)samples; i++) {
+	int idx = i + cur_idx_;
+	if (idx > data2_->nrrd->axis[1].size) {
+	  idx -= data2_->nrrd->axis[1].size;
+	}
+	float *dat = (float*)data2_->nrrd->data;
+	int dat_index = idx * data2_->nrrd->axis[0].size + g.index_;
+	float val = (dat[dat_index] - g.min_) * norm;
+	glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, (start_y + val) * sy);
+
+	//if (idx % (int)samp_rate == 0){
+	 // float tick = gr_ht * .15;// * norm;
+	  //glColor4f(0.0, 0.1, 0.9, 1.0); //asade
+	  //glColor4f(1.0, 1.0, 1.0, 0.3); //asade
+	  //glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
+	//	     (start_y + val + tick) * sy);
+	  //glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
+	//	     (start_y + val - tick) * sy);
+	  //glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
+	//	     (start_y + val) * sy);
+	  glColor4f(0.5, 0.5, 0.5, 0.7);
+	//}
+      }
+      glEnd();
+	}
+
       glEnable(GL_TEXTURE_2D);     
     }
-
 
     cur_y -= gr_ht + 20;
   }
@@ -800,6 +840,37 @@ ICUMonitor::execute()
     error ("Unable to get input data.");
     return;
   } 
+  
+  // start asade
+  NrrdIPort *nrrd2_port = (NrrdIPort*)get_iport("Nrrd2");
+
+  if (!nrrd2_port) 
+  {
+    error("Unable to initialize iport Nrrd2.");
+    return;
+  }
+
+  nrrd2_port->get(data2_);
+
+  if (!data2_.get_rep())
+  {
+    error ("Unable to get input data for JSIM Nrrd.");
+    return;
+  } 
+
+  //float *datum = (float*)data2_->nrrd->data;
+//	cerr << datum[0] << endl;
+//	cerr << datum[1] << endl;
+//	cerr << datum[2] << endl;
+//	cerr << datum[3] << endl;
+//	cerr << "----" << endl;
+//	cerr << datum[4] << endl;
+//	cerr << datum[5] << endl;
+//	cerr << datum[6] << endl;
+//	cerr << datum[7] << endl;
+ //int shit = data2_->nrrd->axis[1].size;
+//	cerr << shit << endl;
+  // asade
   
   if (!runner_) {
     runner_ = scinew RTDraw(this);

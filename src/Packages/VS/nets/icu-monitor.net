@@ -2,9 +2,9 @@
 
 
 set name {Main}
-set bbox {10 10 175 145}
-set creationDate {Mon Nov 22 2004}
-set creationTime {18:32:20}
+set bbox {10 10 394 243}
+set creationDate {Wed Dec 01 2004}
+set creationTime {22:40:56}
 set runDate {}
 set runTime {}
 set notes {}
@@ -13,16 +13,20 @@ set notes {}
 set m1 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 10 10]
 
 # Create a VS->Render->ICUMonitor Module
-set m2 [addModuleAtPosition "VS" "Render" "ICUMonitor" 10 88]
+set m2 [addModuleAtPosition "VS" "Render" "ICUMonitor" 70 186]
+
+# Create a Teem->DataIO->NrrdReader Module
+set m3 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 229 49]
 
 # Create the Connections between Modules
 set c1 [addConnection $m1 0 $m2 0]
+set c2 [addConnection $m3 0 $m2 1]
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
-set $m1-filename "/home/mjc/work/virtual_soldier/data/ISRData/ExampleData/CH105/CH105_040412_1016_w_100.nrrd"
+set $m1-filename "/home/asade/UTAH/TEST/CH105_040412_1016_w_100.nrrd"
 
 # Set GUI variables for the VS->Render->ICUMonitor Module
-set $m2-time {0.00823333333333}
+set $m2-time {0.008}
 set $m2-plot_count {6}
 set $m2-nw_label-0 {I}
 set $m2-sw_label-0 {F}
