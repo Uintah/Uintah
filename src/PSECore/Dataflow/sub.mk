@@ -12,7 +12,8 @@ SRCS     += $(SRCDIR)/Connection.cc $(SRCDIR)/ModuleHelper.cc \
 	$(SRCDIR)/NetworkEditor.cc $(SRCDIR)/PackageDB.cc \
 	$(SRCDIR)/FileUtils.cc $(SRCDIR)/GenFiles.cc\
 	$(SRCDIR)/ComponentNode.cc $(SRCDIR)/SkeletonFiles.cc\
-        $(SRCDIR)/CreatePacCatMod.cc
+        $(SRCDIR)/CreatePacCatMod.cc $(SRCDIR)/PackageDBHandler.cc\
+	$(SRCDIR)/StrX.cc
 
 PSELIBS := PSECore/Comm SCICore/Exceptions SCICore/Thread \
 	SCICore/Containers SCICore/TclInterface SCICore/Util \
@@ -23,6 +24,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/10/21 18:35:10  moulding
+# more work for new module maker.
+#
 # Revision 1.5  2000/10/15 04:17:20  moulding
 # Phase 1 for the new module maker: Prepare the repository for the new
 # module maker.

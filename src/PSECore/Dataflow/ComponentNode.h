@@ -169,6 +169,17 @@ void PrintComponentNode(component_node* node);
 
 //////////////////////////
 //
+// ReadComponentNodeFromFile()
+//
+// Parses "filename", which is in XML format, and then 
+// copies the resulting DOM tree into "node"
+//
+
+void ReadComponentNodeFromFile(component_node* node, const char* filename);
+
+
+//////////////////////////
+//
 // WriteComponentNodeToFile()
 //
 // Saves "node" to a file named "filename" in
@@ -176,7 +187,7 @@ void PrintComponentNode(component_node* node);
 // are not written.
 //
 
-void WriteComponentNodeToFile(component_node*,const char* filename);
+void WriteComponentNodeToFile(component_node* node,const char* filename);
 
 } // Dataflow
 } // PSECore
