@@ -1169,12 +1169,15 @@ proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
     $netedit_canvas bind $connid <ButtonRelease-1> \
 	    "resetPipe $temp"
 	
+    $netedit_canvas bind $connid <Control-Button-1> \
+	    "raisePipe $connid"
+
     eval $netedit_mini_canvas create line $minipath -width 1 \
 	-fill \"$portcolor\" -tags $connid
 
     $netedit_mini_canvas lower $connid
 }
-proc IPortTrace { imodid which temp} {
+proc IPortTrace { imodid which temp } {
     set connInfo [netedit getconnected $imodid] 
     foreach t $connInfo {
 	set fromName [lindex $t 1]
@@ -1192,12 +1195,12 @@ proc IPortTrace { imodid which temp} {
     }
 }
 
-proc IPortReset { temp} {
+proc IPortReset { temp } {
     global netedit_canvas
     $netedit_canvas delete $temp
 }
 
-proc OPortTrace { omodid which temp} {
+proc OPortTrace { omodid which temp } {
     set connInfo [netedit getconnected $omodid]
     set fromName ""
     set fromPort ""
@@ -1217,22 +1220,27 @@ proc OPortTrace { omodid which temp} {
     }
 }
 
-proc OPortReset { temp} {
+proc OPortReset { temp } {
     global netedit_canvas
     $netedit_canvas delete $temp
 }
     
 
-proc lightPipe {temp omodid owhich imodid iwhich} {
+proc lightPipe { temp omodid owhich imodid iwhich } {
     global netedit_canvas
     set path [routeConnection $omodid $owhich $imodid $iwhich]
     eval $netedit_canvas create bline $path -width 7 \
 	-borderwidth 2 -fill red  -tags $temp
 }
 
-proc resetPipe {temp} {
+proc resetPipe { temp } {
     global netedit_canvas
     $netedit_canvas delete $temp
+}
+
+proc raisePipe { connid } {
+    global netedit_canvas
+    $netedit_canvas raise $connid
 }
 
 proc destroyConnection {connid omodid imodid} { 
