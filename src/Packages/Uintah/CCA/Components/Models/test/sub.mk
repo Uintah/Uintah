@@ -15,15 +15,12 @@ SRCS	+= \
        $(SRCDIR)/AdiabaticTable.cc \
        $(SRCDIR)/ArchesTable.cc \
        $(SRCDIR)/MaterialProperties.cc \
-       $(SRCDIR)/PinTo300Test.cc \
        $(SRCDIR)/PassiveScalar.cc \
        $(SRCDIR)/TableInterface.cc \
        $(SRCDIR)/TableFactory.cc \
-       $(SRCDIR)/TableTest.cc \
        $(SRCDIR)/TestModel.cc \
        $(SRCDIR)/VorticityConfinement.cc \
-       $(SRCDIR)/flameSheet_rxn.cc \
-       $(SRCDIR)/VorticityConfinement.cc
+       $(SRCDIR)/flameSheet_rxn.cc 
 #       $(SRCDIR)/Mixing2.cc
 #       $(SRCDIR)/Mixing2.cc \
 #       $(SRCDIR)/Mixing3.cc
