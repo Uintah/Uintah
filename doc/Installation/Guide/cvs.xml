@@ -1,25 +1,42 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+  University of Utah. All Rights Reserved.
+-->
+
 <appendix id="ap.lsrcvs">
-<title>Local SCIRun Source Code Control using CVS</title>
+<title>Local &sr; Source Code Control using CVS</title>
 
 
 <section>
 <title>Introduction</title>
 
 <para>This is a brief explanation of how we're using CVS at Northeastern
-University to manage our local SCIRun software development. </para>
+University to manage our local &sr; software development. </para>
 
 <para>We are treating SCI Institute as a software vendor and using
 CVS's built-in capability to track third-party sources in parallel
 with the modifications we make to that source. As we download releases
 from SCI Institute, we use the <command>import</command> command to
-check the SCIRun/BioPSE source code and documentation onto a vendor
+check the &sr;/BioPSE source code and documentation onto a vendor
 branch in our local repository. CVS automatically establishes a main
 trunk, along which development versions of files get
 stored. Initially, files are <quote>copied</quote> from the vendor
 branch to the main trunk. As we check out files, make modifications,
 and/or add new files, and commit these changes, our modifications
 appear as new versions of these files on the main trunk. When a new
-release of SCIRun/BioPSE becomes available, we use import again to
+release of &sr;/BioPSE becomes available, we use import again to
 store the new code on the vender branch. If a file has been both
 locally modified and changed in the new release, CVS gives a warning
 that the file from the new release must be merged into the main
@@ -57,7 +74,7 @@ endterm="title.create-work-dir"/> to create a working directory.</para>
 <listitem>
 <para>Set environment variable: 
 <literallayout class="monospaced">
-setenv CVSROOT /proj/cdsp/biomed2/cvsSCIRun
+setenv CVSROOT /proj/cdsp/biomed2/cvs&sr;
 </literallayout>
 </para>
 </listitem>
@@ -65,7 +82,7 @@ setenv CVSROOT /proj/cdsp/biomed2/cvsSCIRun
 <listitem>
 <para>Create directory to store tar files. I suggest we move away from
    roland and start storing these files on the ECE file system, eg.,
-   <filename>/proj/cdsp/biomed2/SCIRunDownloads/v1.6.0_tars</filename>.
+   <filename>/proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars</filename>.
    </para>
 </listitem>
 
@@ -85,39 +102,39 @@ Use gunzip to inflate all zip files.
 <para>Extract source code files for import into the CVS repository. For example:
 <orderedlist>
 <listitem>
-<para>Create a directory on an appropriate file system: <filename>SCIRun.1.6.0</filename>
+<para>Create a directory on an appropriate file system: <filename>&sr;.1.6.0</filename>
 and <command>cd </command>into it</para>
 </listitem>
 
 <listitem>
 <literallayout class="monospaced">
-tar xvf /proj/cdsp/biomed2/SCIRunDownloads/v1.6.0_tars/SCIRun.1.6.0
+tar xvf /proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars/&sr;.1.6.0
 </literallayout>
 </listitem>
 
 <listitem>
 <literallayout class="monospaced">
-tar xvf /proj/cdsp/biomed2/SCIRunDownloads/v1.6.0_tars/docs.1.6.0.tar
+tar xvf /proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars/docs.1.6.0.tar
 </literallayout>
 </listitem>
 
 <listitem>
 <literallayout class="monospaced">
-cd ./SCIRun/src/Packages
-</literallayout>
-</listitem>
-
-<listitem>
-<literallayout class="monospaced">
-tar xvf \
-/proj/cdsp/biomed2/SCIRunDownloads/v1.6.0_tars/BioPSE.PKG.1.6.0.tar
+cd ./&sr;/src/Packages
 </literallayout>
 </listitem>
 
 <listitem>
 <literallayout class="monospaced">
 tar xvf \
-/proj/cdsp/biomed2/SCIRunDownloads/v1.6.0_tars/MatlabInterface.PKG.1.6.0.tar
+/proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars/BioPSE.PKG.1.6.0.tar
+</literallayout>
+</listitem>
+
+<listitem>
+<literallayout class="monospaced">
+tar xvf \
+/proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars/MatlabInterface.PKG.1.6.0.tar
 </literallayout> 
 
 </listitem>
@@ -127,9 +144,9 @@ tar xvf \
 
 <listitem>
 <para>Import source files into CVS repository. Run the following command in
-   the <filename>./SCIRun</filename> directory.
+   the <filename>./&sr;</filename> directory.
 <literallayout class="monospaced">
-cvs import -m"Import of release 1.6.0" /proj/cdsp/biomed2/cvsSCIRun
+cvs import -m"Import of release 1.6.0" /proj/cdsp/biomed2/cvs&sr;
 SCI_DIST V1_6_0 > cvsimport.out
 </literallayout>
 Redirect output to a file in order to reliably identify any conflicts.
@@ -179,11 +196,11 @@ cvs checkout -jSCI_DIST:yesterday -jSCI_DIST filename
 <section id="sec.create-work-dir">
 <title id="title.create-work-dir">Creating A Working Scirun Directory Tree</title>
 
-<para>This procedure assumes the latest SCIRun/BioPSE tar files have
+<para>This procedure assumes the latest &sr;/BioPSE tar files have
 already been downloaded and the source code has been imported, and
 merged if necessary, into our repository. The following steps build a
 working directory by extracting the Thirdparty software, DataSets, and
-documentation from tar files and obtaining the SCIRun/BioPSE source
+documentation from tar files and obtaining the &sr;/BioPSE source
 code from the CVS repository. This procedure also assumes, for the
 present, that the BioPSE and MatlabInterface packages are always
 desired in the working directory and that no other packages have been
@@ -197,22 +214,22 @@ repository.
 <orderedlist>
 <listitem>
 <literallayout class="monospaced">
-setenv CVSROOT /proj/cdsp/biomed2/cvsSCIRun
+setenv CVSROOT /proj/cdsp/biomed2/cvs&sr;
 </literallayout>
 <para>
 or to retrieve source code via ssh:
 </para>
 <literallayout class="monospaced">
-setenv CVSROOT gateway.ece.neu.edu:/proj/cdsp/biomed2/cvsSCIRun
+setenv CVSROOT gateway.ece.neu.edu:/proj/cdsp/biomed2/cvs&sr;
 setenv CVS_RSH ssh
 </literallayout>
 </listitem>
 
 <listitem>
-<para>Create your top-level SCIRun directory. This can be anything
+<para>Create your top-level &sr; directory. This can be anything
 since it is your personal working directory, eg.,
-<filename>/usr/people/scirun/SCIRun.1.6.0.lk</filename> or
-<filename>/export/scratch/SCIRun.1.6.0.test</filename>.
+<filename>/usr/people/scirun/&sr;.1.6.0.lk</filename> or
+<filename>/export/scratch/&sr;.1.6.0.test</filename>.
 </para>
 </listitem>
 
@@ -222,23 +239,23 @@ since it is your personal working directory, eg.,
 
 <listitem>
 <para>Assuming unzipped tar files reside in
-<filename>/proj/cdsp/biomed2/SCIRunDownloads/vx.x.x_tars</filename>,
+<filename>/proj/cdsp/biomed2/&sr;Downloads/vx.x.x_tars</filename>,
 issue the following commands (version numbers given as an example):
 <orderedlist>
 <listitem>
 <literallayout class="monospaced">
 tar xvf \
-/proj/cdsp/biomed2/SCIRunDownloads /v1.6.0_tars/Thirdparty_install.1.6.0
+/proj/cdsp/biomed2/&sr;Downloads /v1.6.0_tars/Thirdparty_install.1.6.0
 </literallayout>
 </listitem>
 <listitem>
 <literallayout class="monospaced">
-tar xvf /proj/cdsp/biomed2/SCIRunDownloads /v1.6.0_tars/DataSets.1.6.0.tar
+tar xvf /proj/cdsp/biomed2/&sr;Downloads /v1.6.0_tars/DataSets.1.6.0.tar
 </literallayout>
 </listitem>
 <listitem>
 <literallayout class="monospaced">
-tar xvf /proj/cdsp/biomed2/SCIRunDownloads /v1.6.0_tars/docs.1.6.0.tar
+tar xvf /proj/cdsp/biomed2/&sr;Downloads /v1.6.0_tars/docs.1.6.0.tar
 </literallayout></listitem>
 </orderedlist>
 </para>
@@ -250,7 +267,7 @@ tar xvf /proj/cdsp/biomed2/SCIRunDownloads /v1.6.0_tars/docs.1.6.0.tar
 previous step, eg.,
 </para>
 <literallayout class="monospaced">
-cd /export/scratch/SCIRun.1.6.0.test/Thirdparty_install.1.4.3. 
+cd /export/scratch/&sr;.1.6.0.test/Thirdparty_install.1.4.3. 
 </literallayout>
 <note>
 <para>The Thirdparty software distributed with v1.6.0 is unchanged from
@@ -265,7 +282,7 @@ python install <replaceable>INSTALLDIR</replaceable> [irix, Linux] [sgi, gcc] [3
 
 <para>where <replaceable>INSTALLDIR</replaceable> is your top-level
 working directory, eg.,
-<filename>/export/scratch/SCIRun.1.6.0.test</filename>, and brackets
+<filename>/export/scratch/&sr;.1.6.0.test</filename>, and brackets
 indicate lists of options for each argument.
 </para>
 
@@ -275,10 +292,10 @@ software has not changed with v1.6.0) under
 thirdparty software libraries.
 </para>
 
-<para>The previous 5 steps take care of the SCIRun installation that
-is independent of CVS. The remaining steps retrieve the SCIRun/BioPSE
+<para>The previous 5 steps take care of the &sr; installation that
+is independent of CVS. The remaining steps retrieve the &sr;/BioPSE
 source code that has been imported to the repository and build the
-SCIRun program itself.
+&sr; program itself.
 </para>
 </listitem>
 
@@ -289,30 +306,30 @@ SCIRun program itself.
 </listitem>
 
 <listitem>
-<para>Create a SCIRun directory below
+<para>Create a &sr; directory below
 <replaceable>INSTALLDIR</replaceable></para>
 </listitem>
 
 <listitem>
-<para><command>cd</command> into <filename>SCIRun</filename></para>
+<para><command>cd</command> into <filename>&sr;</filename></para>
 </listitem>
 
 <listitem>
 <para>Enter the following command to checkout the HEAD revision of the
-SCIRun/BioPSE source code files. Note that the period at the end of the
+&sr;/BioPSE source code files. Note that the period at the end of the
 line below is an essential part of the command.</para>
 <literallayout class="monospaced">
 cvs checkout . 
 </literallayout>
 
 <para>This command will create and populate the src and doc directories below
-<filename>./SCIRun</filename>. 
+<filename>./&sr;</filename>. 
 </para>
 </listitem>
 
 <listitem>
 <para>Create an sgi32 or linux (or appropriate other) directory below
-the <filename>./SCIRun</filename> directory, and <command>cd</command>
+the <filename>./&sr;</filename> directory, and <command>cd</command>
 into this directory.</para>
 </listitem>
 
@@ -320,7 +337,7 @@ into this directory.</para>
 <para>Run configure as follows (eg.):</para>
 <literallayout class="monospaced">
 ../src/configure
---with-thirdparty=/export/scratch/SCIRun.1.6.0.test/1.4.2/Linux/gcc-32bit  
+--with-thirdparty=/export/scratch/&sr;.1.6.0.test/1.4.2/Linux/gcc-32bit  
 --enable-package='BioPSE MatlabInterface'--enable-debug
 </literallayout>
 
@@ -337,7 +354,7 @@ setenv F77 f77
 </listitem>
 
 <listitem>
-<para>Compile SCIRun/BioPSE:</para>
+<para>Compile &sr;/BioPSE:</para>
 <literallayout class="monospaced">
 gmake -j <replaceable>JOBNUMBER</replaceable>
 </literallayout>
@@ -345,11 +362,11 @@ gmake -j <replaceable>JOBNUMBER</replaceable>
 <para>where 5 is a typical value for
 <replaceable>JOBNUMBER</replaceable></para>
 
-<para>SCIRun may appear to compile successfully, but run-time errors
+<para>&sr; may appear to compile successfully, but run-time errors
 may occur if environment variables starting with
 <envar>LD_LIBRARY</envar> were set prior to compilation. Therefore, we
 recommend unsetting these environment variables when compiling and
-running SCIRun, e.g.,</para>
+running &sr;, e.g.,</para>
 
 <literallayout class="monospaced">
 unsetenv LD_LIBRARY_PATH
@@ -453,12 +470,12 @@ repository if they're missing from the working directory.</para>
 <para>Do the update for real. Options same as above.  The output of
 this command is:</para>
 <screen>
-RCS file: /proj/cdsp/biomed2/cvsSCIRun/src/Core/Datatypes/TriSurfMesh.cc,v
+RCS file: /proj/cdsp/biomed2/cvs&sr;/src/Core/Datatypes/TriSurfMesh.cc,v
 retrieving revision 1.2
 retrieving revision 1.3
 Merging differences between 1.2 and 1.3 into TriSurfMesh.cc
 C Core/Datatypes/TriSurfMesh.cc
-RCS file: /proj/cdsp/biomed2/cvsSCIRun/src/Core/Datatypes/TriSurfMesh.h,v
+RCS file: /proj/cdsp/biomed2/cvs&sr;/src/Core/Datatypes/TriSurfMesh.h,v
 retrieving revision 1.2
 retrieving revision 1.4
 Merging differences between 1.2 and 1.4 into TriSurfMesh.h

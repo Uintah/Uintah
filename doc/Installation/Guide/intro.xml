@@ -15,10 +15,15 @@
   University of Utah. All Rights Reserved.
 -->
 
-<section>
-<title>Introduction</title>
-<para>This guide provides instructions for installing
-&sr;.</para>
+<section id="sec.intro">
+<title>Introduction</title> <para>This guide provides instructions for
+installing &sr;, its third party libraries, and the (optional)
+<acronym>PETSc</acronym> library.</para>
+
+<para>
+The optional <acronym>PETSc</acronym> library adds equation solvers to
+&sr;'s SolveMatrix module.
+</para>
 
 <para>
 &sr; is compatible with two platforms: SGI and Linux.
@@ -39,16 +44,26 @@ On Linux systems (Mandrake 9 and Red Hat 8), &sr; binaries may be
 <link linkend="sec.rpminst">installed via
 <acronym>RPM</acronym></link> (Red Hat Package Manager).
 Alternatively, &sr; binaries may be built and <link
-linkend="sec.tarball_inst">installed from source code tarballs</link>.
+linkend="sec.source_inst">installed from source code tarballs</link>.
+<para>
+The &sr; <acronym>RPM</acronym> distribution does
+<emphasis>not</emphasis> provide support for <acronym>PETSc</acronym>.
+<acronym>PETSc</acronym> support is available only through the &sr; source
+code distribution.  The <acronym>PETSc</acronym> library adds
+additional solvers to &sr;'s SolveMatrix module.  See
+<citetitle pubwork="section"><xref linkend="sec.petsc"
+endterm="title.petsc"/></citetitle> for details.
+</para>
 </para>
 
 <para>
 On SGI systems &sr; binaries must be built and <link
-linkend="sec.tarball_inst">installed from source code tarballs</link>.
+linkend="sec.source_inst">installed from the source code
+distribution</link>.
 </para>
 
 <para>
-Be sure to read Section&nbsp;<citetitle pubwork="section"><xref
+Be sure to read  <citetitle pubwork="section"><xref
 endterm="title.prepare" linkend="sec.prepare"/></citetitle> after
 installing but before starting &sr;.
 </para>

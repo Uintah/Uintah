@@ -35,7 +35,7 @@
 <!ENTITY sr  "SCIRun">
 ]>
 
-<article id="main">
+<article id="article.main">
 <!--%
 version = File.open("../../edition.xml") do |f|
   /<edition>(.*)<\/edition>/.match(f.read())[1]

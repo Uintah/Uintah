@@ -16,26 +16,14 @@
 -->
 
 <section id="sec.rpminst">
-<title>Installation from RPMs (Linux)</title>
+<title>RPMs (Linux)</title>
 
 <section>
 <title>Introduction</title>
 
-<note>
-<para>
-The &sr; <acronym>RPM</acronym> distribution does
-<emphasis>not</emphasis> include support for <acronym>PETSc</acronym>.
-<acronym>PETSc</acronym> support is available only to the &sr; source
-code distribution.  The <acronym>PETSc</acronym> library adds
-additional solvers to &sr;'s SolveMatrix module.  See
-<citetitle pubwork="section"><xref linkend="petsc"
-endterm="petsc.title"/></citetitle> for details.
-</para>
-</note>
-
 <para>
 Root privileges are required to install &sr;.  The system
-administrator can install &sr; if you don't have root privileges.
+administrator can install &sr; if necessary.
 </para>
 
 <para>
@@ -83,7 +71,6 @@ for Redhat 8 systems.
 <listitem>
 <para>
 <filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-too.
 </para>
 </listitem>
 <listitem>
@@ -108,8 +95,7 @@ install the RPM.
 </para>
 
 <para>
-Now <command>cd</command> to the directory where &sr; was downloaded
-and type:
+Type:
 <literallayout class="monospaced">
 rpm -ivh &sr;-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm
 </literallayout>
@@ -132,7 +118,7 @@ Type <command>exit</command> to leave the root account.
 rpm -e &sr;
 </literallayout>
 <para>
-Be sure to read section&nbsp;<citetitle pubwork="section"><xref
+Be sure to read  <citetitle pubwork="section"><xref
 endterm="title.prepare" linkend="sec.prepare"/></citetitle> before
 <link linkend="sec.starting">starting</link> &sr;.
 </para>
@@ -156,16 +142,18 @@ endterm="title.prepare" linkend="sec.prepare"/></citetitle> before
 </section>
 
 <section>
-<title>Installing &sr;'s Sample Data Sets</title>
+<title>&sr;'s Sample Data Sets</title>
 <para>
-The following procedure installs
-the sample data sets in the directory
-<filename>/usr/local</filename>.  It  assumes you have root privileges.
+Install
+the sample data sets into
+<filename>/usr/local</filename>.  You must have root privileges.
 </para>
 <para>
-Use the <command>su</command> command to become the root user.  Then
-<command>Cd</command> to the directory containing the compressed data
-sets tarball and type:
+Become root:
+<literallayout class="monospaced">
+su -
+</literallayout>
+and type:
 <literallayout class="monospaced">
 gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
 </literallayout>
@@ -176,7 +164,7 @@ root account.
 </section>
 
 <section>
-<title>Installing &sr;'s Documentation</title>
+<title>&sr;'s Documentation</title>
 <para>
 The following procedure installs the documentation
 in the directory <filename>/usr/local</filename>
