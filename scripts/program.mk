@@ -7,6 +7,7 @@ include $(SRCTOP)/scripts/objs.mk
 all:: $(PROGRAM)
 
 $(PROGRAM):: $(OBJS)
+	rm -f $(PROGRAM)
 	$(CXX) $(LDFLAGS) -o $(PROGRAM) $(OBJS) $(LIBRARIES)
 
 _cleanHere::
