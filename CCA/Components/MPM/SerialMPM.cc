@@ -248,7 +248,7 @@ void SerialMPM::scheduleComputeBoundaryContact(SchedulerP& sched,
 
   t->requires(Task::NewDW, lb->pXXLabel, Ghost::None);
 
-  t->computes(lb->pContactNormalLabel);
+  t->computes(lb->pTouchNormalLabel);
 
   sched->addTask(t, patches, matls);
 }
@@ -275,9 +275,11 @@ void SerialMPM::scheduleComputeConnectivity(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pCrackNormal1Label, Ghost::AroundCells, 1);
   t->requires(Task::OldDW, lb->pCrackNormal2Label, Ghost::AroundCells, 1);
   t->requires(Task::OldDW, lb->pCrackNormal3Label, Ghost::AroundCells, 1);
-  t->requires(Task::NewDW, lb->pContactNormalLabel, Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, lb->pTouchNormalLabel, Ghost::AroundCells, 1);
 
   t->computes(lb->pConnectivityLabel);
+  t->computes(lb->pContactNormalLabel);
+
   sched->addTask(t, patches, matls);
 }
 
