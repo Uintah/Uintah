@@ -1433,13 +1433,14 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
       // Apply grid boundary conditions to the velocity before storing the data
 
+      int n8or27=flags->d_8or27;
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity",gvelocity);
-      bc.setBoundaryCondition(patch,dwi,"Velocity",Gvelocity);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",Gvelocity);
-      bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature);
-      bc.setBoundaryCondition(patch,dwi,"Temperature",GTemperature);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",gvelocity,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",Gvelocity,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",Gvelocity,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Temperature",GTemperature,n8or27);
 
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
 
@@ -1758,9 +1759,10 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
       //__________________________________
       // Set internal force = 0 on symmetric boundaries
 
+      int n8or27=flags->d_8or27;
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",Ginternalforce);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",Ginternalforce,n8or27);
 
 #ifdef KUMAR
       internalforce.initialize(Vector(0,0,0));
@@ -2067,11 +2069,12 @@ void FractureMPM::solveHeatEquations(const ProcessorGroup*,
 	htrate_gasNC = htrate_gasNC_create; // reference created data
       }
 
+      int n8or27=flags->d_8or27;
       MPMBoundCond bc;
       bc.setBoundaryCondition(patch,dwi,"Temperature",internalHeatRate,
-			      gvolume);
+			      gvolume,n8or27);
       bc.setBoundaryCondition(patch,dwi,"Temperature",GinternalHeatRate,
-			      gvolume);
+			      gvolume,n8or27);
 
 
       // Create variables for the results
@@ -2203,9 +2206,10 @@ void FractureMPM::integrateTemperatureRate(const ProcessorGroup*,
 
       // Apply grid boundary conditions to the temperature 
 
+      int n8or27=flags->d_8or27;
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Temperature",tempStar);
-      bc.setBoundaryCondition(patch,dwi,"Temperature",GtempStar);
+      bc.setBoundaryCondition(patch,dwi,"Temperature",tempStar,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Temperature",GtempStar,n8or27);
 
 
       // Now recompute temp_rate as the difference between the temperature
@@ -2252,15 +2256,16 @@ void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
 
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
+      int n8or27=flags->d_8or27;
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity",gvelocity_star);
-      bc.setBoundaryCondition(patch,dwi,"Velocity",Gvelocity_star);
-      bc.setBoundaryCondition(patch,dwi,"Acceleration",gacceleration);
-      bc.setBoundaryCondition(patch,dwi,"Acceleration",Gacceleration);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",Gvelocity_star);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",gacceleration);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",Gacceleration);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",gvelocity_star,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",Gvelocity_star,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Acceleration",gacceleration,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Acceleration",Gacceleration,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",Gvelocity_star,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",gacceleration,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",Gacceleration,n8or27);
 
     } // matl loop
   }  // patch loop
