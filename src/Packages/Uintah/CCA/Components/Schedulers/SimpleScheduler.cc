@@ -69,11 +69,13 @@ SimpleScheduler::execute(const ProcessorGroup * pc)
 	for(int m=0;m<matlset->size();m++){
 	  const MaterialSubset* matl_subset = matlset->getSubset(m);
 	  task->doit( pc, patch_subset, matl_subset, 
-		      dws_[Task::OldDW], dws_[Task::NewDW] );
+		      dws_[Task::OldDW].get_rep(),
+		      dws_[Task::NewDW].get_rep() );
 	}
       }
     } else {
-      task->doit(pc, 0, 0, dws_[Task::OldDW], dws_[Task::NewDW]);
+      task->doit(pc, 0, 0, dws_[Task::OldDW].get_rep(),
+		 dws_[Task::NewDW].get_rep());
     }
     double dt = Time::currentSeconds()-start;
     dbg << "Completed task: " << tasks[i]->getName()

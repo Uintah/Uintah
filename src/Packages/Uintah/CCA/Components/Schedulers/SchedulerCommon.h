@@ -7,6 +7,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/GhostOffsetVarMap.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/LocallyComputedPatchVarMap.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <iosfwd>
 
 class DOM_Document;
@@ -17,7 +18,6 @@ namespace Uintah {
   class Output;
   class DetailedTask;
   class DetailedTasks;
-  class OnDemandDataWarehouse;
 
 /**************************************
 
@@ -75,6 +75,9 @@ WARNING
     virtual DataWarehouse* get_old_dw();
     virtual DataWarehouse* get_new_dw();
 
+    virtual void set_old_dw(DataWarehouse*);
+    virtual void set_new_dw(DataWarehouse*);
+
     virtual void logMemoryUse();
       
     //////////
@@ -119,7 +122,7 @@ WARNING
     TaskGraph graph;
     int       d_generation;
 
-    OnDemandDataWarehouse * dws_[2];
+    OnDemandDataWarehouseP dws_[2];
     DetailedTasks         * dts_;
 
     Output* m_outPort;

@@ -5,6 +5,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/MessageLog.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/Relocate.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/PackBufferInfo.h>
 #include <Packages/Uintah/Core/Grid/TaskProduct.h>
@@ -88,14 +89,14 @@ WARNING
     static void recvMPIData( const ProcessorGroup  * pg,
 			     DetailedTask          * task, 
 			     mpi_timing_info_s     & mpi_info,
-			     OnDemandDataWarehouse * dws[2] );
+			     OnDemandDataWarehouseP dws[2] );
 
     static void sendMPIData( const ProcessorGroup  * pg,
 			     DetailedTask          * task,
 			     mpi_timing_info_s     & mpi_info,
 			     SendRecord            & sends,
 			     SendState             & ss,
-			     OnDemandDataWarehouse * dws[2],
+			     OnDemandDataWarehouseP dws[2],
 			     const VarLabel        * reloc_label );
 
   protected:
@@ -107,7 +108,7 @@ WARNING
 			       mpi_timing_info_s     & mpi_info,
 			       SendRecord            & sends,
 			       SendState             & ss,
-			       OnDemandDataWarehouse * dws[2],
+			       OnDemandDataWarehouseP dws[2],
 			       const VarLabel        * reloc_label );
 
     // Waits until all tasks have finished.  In the MPI Scheduler,
