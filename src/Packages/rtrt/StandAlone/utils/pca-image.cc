@@ -395,7 +395,7 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
   
-  nrrdAxisInfoSet(transform, nrrdAxisInfoLabel, "channels", "bases");
+  nrrdAxisInfoSet(transform, nrrdAxisInfoLabel, "channel", "basis");
   
   float *tdata = (float*)(transform->data);
   float *edata = evec_data;
@@ -452,7 +452,7 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
   
-  nrrdAxisInfoSet(bases, nrrdAxisInfoLabel, "bases", "width", "height");
+  nrrdAxisInfoSet(bases, nrrdAxisInfoLabel, "basis", "width", "height");
   
   {
     float *btdata = (float*)(bases->data);
