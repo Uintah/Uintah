@@ -757,7 +757,8 @@ RectangleCM2Widget::tcl_unpickle(const string &p)
   s >> width_;
   s >> height_;
   s >> offset_;
-  un_normalize();
+  value_range_.first = 0.0;
+  value_range_.second = -1.0;
 }
 
 
@@ -1244,6 +1245,7 @@ TriangleCM2Widget::release (int /*x*/, int /*y*/,
 string
 TriangleCM2Widget::tcl_pickle()
 {
+  normalize();
   ostringstream s;
   s << "t ";
   s << base_ << " ";
@@ -1251,6 +1253,7 @@ TriangleCM2Widget::tcl_pickle()
   s << top_y_ << " ";
   s << width_ << " ";
   s << bottom_;
+  un_normalize();
   return s.str();
 }
 
@@ -1265,6 +1268,8 @@ TriangleCM2Widget::tcl_unpickle(const string &p)
   s >> top_y_;
   s >> width_;
   s >> bottom_;
+  value_range_.first = 0.0;
+  value_range_.second = -1.0;
 }
 
 
