@@ -1,10 +1,12 @@
-
 #ifndef __CONTACT_H__
 #define __CONTACT_H__
 
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 
 #include <math.h>
+
+#define FRACTURE
+#undef FRACTURE
 
 namespace Uintah {
 using namespace SCIRun;
