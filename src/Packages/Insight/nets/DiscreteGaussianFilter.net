@@ -2,25 +2,22 @@
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
-set m0 [addModuleAtPosition "Insight" "DataIO" "ImageFileReader" 10 10]
-set m1 [addModuleAtPosition "Insight" "Filters" "DiscreteGaussianImageFilter" 10 90]
-set m2 [addModuleAtPosition "Insight" "DataIO" "ImageFileWriter" 10 170]
+set m0 [addModuleAtPosition "Insight" "Filters" "DiscreteGaussianImageFilter" 10 90]
+set m1 [addModuleAtPosition "Insight" "DataIO" "ImageFileWriter" 10 170]
+set m2 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat2D" 10 10]
 
 addConnection $m0 0 $m1 0
-addConnection $m1 0 $m2 0
+addConnection $m2 0 $m0 0
 
 set $m0-notes {}
 set $m0-show_status {1}
-set $m0-FileName {}
+set $m0-variance {10}
+set $m0-maximum_error {0.001}
 set $m1-notes {}
 set $m1-show_status {1}
-set $m1-Variance {10}
-set $m1-MaximumError {0.001}
+set $m1-FileName {/scratch/darbyb/data/cake_easy_out.mhd}
 set $m2-notes {}
 set $m2-show_status {1}
-set $m2-FileName {}
+set $m2-filename {/scratch/darbyb/data/cake_easy.mhd}
 
 ::netedit scheduleok
