@@ -16,6 +16,9 @@
 #
 
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/defaults.tcl
+source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Module.tcl
+source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Connection.tcl
+source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Port.tcl
 
 set modname_font "-Adobe-Helvetica-Bold-R-Normal-*-12-120-75-*"
 set ui_font "-Adobe-Helvetica-Medium-R-Normal-*-12-120-75-*"
@@ -1106,7 +1109,7 @@ proc sourceSettingsFile {} {
 	    1 "set data [showChooseDatasetPrompt $initialdir]"
 	    2 { 
 		displayErrorWarningOrInfo "*** SCIRUN_DATA not set.  Reader modules will need to be manually set to valid filenames." warning
-		return
+		break
 	    }
 	    3 {
 		::netedit quit
@@ -1124,9 +1127,7 @@ proc sourceSettingsFile {} {
     displayErrorWarningOrInfo "*** Using SCIRUN_DATASET=$DATASET" info
 
     set settings "$DATADIR/$DATASET/$DATASET.settings"
-    if { [file isfile $settings] } {
-	uplevel \#0 source $settings
-    }
+    uplevel \#0 source $settings
 
     return "$DATADIR $DATASET"
 }
