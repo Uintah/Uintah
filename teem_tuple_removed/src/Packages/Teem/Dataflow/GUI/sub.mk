@@ -54,11 +54,14 @@ SRCS := \
 	$(SRCDIR)/TendSatin.tcl\
 	$(SRCDIR)/TendShrink.tcl\
 	$(SRCDIR)/Unu1op.tcl\
+	$(SRCDIR)/Unu2op.tcl\
 	$(SRCDIR)/UnuAxdelete.tcl\
 	$(SRCDIR)/UnuAxinfo.tcl\
 	$(SRCDIR)/UnuAxinsert.tcl\
 	$(SRCDIR)/UnuAxmerge.tcl\
 	$(SRCDIR)/UnuAxsplit.tcl\
+	$(SRCDIR)/UnuCCadj.tcl\
+	$(SRCDIR)/UnuCCfind.tcl\
 	$(SRCDIR)/UnuCmedian.tcl\
 	$(SRCDIR)/UnuConvert.tcl\
 	$(SRCDIR)/UnuCrop.tcl\
@@ -68,8 +71,10 @@ SRCS := \
 	$(SRCDIR)/UnuHeq.tcl\
 	$(SRCDIR)/UnuHistax.tcl\
 	$(SRCDIR)/UnuHisto.tcl\
+	$(SRCDIR)/UnuImap.tcl\
 	$(SRCDIR)/UnuInset.tcl\
 	$(SRCDIR)/UnuJoin.tcl\
+	$(SRCDIR)/UnuLut.tcl\
 	$(SRCDIR)/UnuMake.tcl\
 	$(SRCDIR)/UnuMinmax.tcl\
 	$(SRCDIR)/UnuPad.tcl\
@@ -78,6 +83,8 @@ SRCS := \
 	$(SRCDIR)/UnuQuantize.tcl\
 	$(SRCDIR)/UnuResample.tcl\
 	$(SRCDIR)/UnuReshape.tcl\
+	$(SRCDIR)/UnuRmap.tcl\
+	$(SRCDIR)/UnuSave.tcl\
 	$(SRCDIR)/UnuSlice.tcl\
 	$(SRCDIR)/UnuSplice.tcl\
 	$(SRCDIR)/UnuShuffle.tcl\

@@ -29,11 +29,15 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Unu
 
 SRCS     += \
 	$(SRCDIR)/Unu1op.cc\
+	$(SRCDIR)/Unu2op.cc\
 	$(SRCDIR)/UnuAxdelete.cc\
 	$(SRCDIR)/UnuAxinfo.cc\
 	$(SRCDIR)/UnuAxinsert.cc\
 	$(SRCDIR)/UnuAxmerge.cc\
 	$(SRCDIR)/UnuAxsplit.cc\
+	$(SRCDIR)/UnuCCadj.cc\
+	$(SRCDIR)/UnuCCfind.cc\
+	$(SRCDIR)/UnuCCsettle.cc\
 	$(SRCDIR)/UnuCmedian.cc\
 	$(SRCDIR)/UnuConvert.cc\
 	$(SRCDIR)/UnuCrop.cc\
@@ -43,8 +47,10 @@ SRCS     += \
 	$(SRCDIR)/UnuHeq.cc\
 	$(SRCDIR)/UnuHistax.cc\
 	$(SRCDIR)/UnuHisto.cc\
+	$(SRCDIR)/UnuImap.cc\
 	$(SRCDIR)/UnuInset.cc\
 	$(SRCDIR)/UnuJoin.cc\
+	$(SRCDIR)/UnuLut.cc\
 	$(SRCDIR)/UnuMake.cc\
 	$(SRCDIR)/UnuMinmax.cc\
 	$(SRCDIR)/UnuPad.cc\
@@ -53,6 +59,8 @@ SRCS     += \
 	$(SRCDIR)/UnuQuantize.cc\
 	$(SRCDIR)/UnuResample.cc\
 	$(SRCDIR)/UnuReshape.cc\
+	$(SRCDIR)/UnuRmap.cc\
+	$(SRCDIR)/UnuSave.cc\
 	$(SRCDIR)/UnuSlice.cc\
 	$(SRCDIR)/UnuSplice.cc\
 	$(SRCDIR)/UnuShuffle.cc\

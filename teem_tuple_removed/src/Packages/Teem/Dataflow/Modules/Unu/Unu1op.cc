@@ -146,7 +146,7 @@ Unu1op::get_op(const string &op) {
   else if (op == "exists")
     return nrrdUnaryOpExists;
   else {
-    warning("Unknown unary op. Performing random operation.");
+    error("Unknown unary op. Performing random operation.");
     return nrrdUnaryOpRand;
   }
 }
