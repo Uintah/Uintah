@@ -71,13 +71,13 @@ WARNING
 	 // compute stress at each particle in the region
 	 virtual void computeStressTensor(const Region* region,
 					  const MPMMaterial* matl,
-					  const DataWarehouseP& old_dw,
+					  DataWarehouseP& old_dw,
 					  DataWarehouseP& new_dw);
 	 
 	 // compute total strain energy for all particles in the region
 	 virtual double computeStrainEnergy(const Region* region,
 					    const MPMMaterial* matl,
-					    const DataWarehouseP& new_dw);
+					    DataWarehouseP& new_dw);
 	 
 	 // initialize  each particle's constitutive model data
 	 virtual void initializeCMData(const Region* region,
@@ -87,7 +87,7 @@ WARNING
 	 virtual void addComputesAndRequires(Task* task,
 					     const MPMMaterial* matl,
 					     const Region* region,
-					     const DataWarehouseP& old_dw,
+					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const;
 
 	 // class function to read correct number of parameters
@@ -116,6 +116,9 @@ WARNING
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.18  2000/05/11 20:10:13  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.17  2000/05/07 06:02:03  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

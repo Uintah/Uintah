@@ -124,7 +124,7 @@ std::vector<double> CompNeoHook::getMechProps() const
 
 void CompNeoHook::computeStressTensor(const Region* /*region*/,
 				      const MPMMaterial* /*matl*/,
-				      const DataWarehouseP& /*old_dw*/,
+				      DataWarehouseP& /*old_dw*/,
 				      DataWarehouseP& /*new_dw*/)
 {
 #ifdef WONT_COMPILE_YET
@@ -174,7 +174,7 @@ void CompNeoHook::computeStressTensor(const Region* /*region*/,
 
 double CompNeoHook::computeStrainEnergy(const Region* /*region*/,
 					const MPMMaterial* /*matl*/,
-					const DataWarehouseP& /*new_dw*/)
+					DataWarehouseP& /*new_dw*/)
 {
 #ifdef WONT_COMPILE_YET
   double se,J,U,W;
@@ -199,7 +199,7 @@ void CompNeoHook::initializeCMData(const Region* /*region*/,
 void CompNeoHook::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
 					 const Region* region,
-					 const DataWarehouseP& old_dw,
+					 DataWarehouseP& old_dw,
 					 DataWarehouseP& new_dw) const
 {
    cerr << "CompNeoHook::addComputesAndRequires needs to be filled in\n";
@@ -319,6 +319,9 @@ int CompNeoHook::getSize() const
 
 
 // $Log$
+// Revision 1.8  2000/05/11 20:10:13  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.7  2000/05/07 06:02:03  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

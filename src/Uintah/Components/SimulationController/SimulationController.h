@@ -3,6 +3,7 @@
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Interface/DWMpiHandler.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Interface/SchedulerP.h>
@@ -11,6 +12,8 @@
 namespace Uintah {
    class CFDInterface;
    class MPMInterface;
+   class DWMpiHandler;
+
 /**************************************
       
   CLASS
@@ -56,19 +59,28 @@ namespace Uintah {
 					 DataWarehouseP&,
 					 CFDInterface*, MPMInterface*);
       void scheduleTimeAdvance(double t, double delt, LevelP&, SchedulerP&,
-			       const DataWarehouseP&, DataWarehouseP&,
+			       DataWarehouseP& old_ds,
+			       DataWarehouseP& new_ds,
 			       CFDInterface*, MPMInterface*);
       
       SimulationController(const SimulationController&);
       SimulationController& operator=(const SimulationController&);
       
-      bool restarting;
+      bool           d_restarting;
+      int            d_generation;    // The Nth iteration (time step.)
+                                      //    Starts at 0.
+      Thread       * d_MpiThread;
+      DWMpiHandler * d_dwMpiHandler;  // DWs register with the DWMpiHandler
+                                      //    and it handles the Mpi requests
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.10  2000/05/11 20:10:20  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.9  2000/04/26 06:48:36  sparker
 // Streamlined namespaces
 //

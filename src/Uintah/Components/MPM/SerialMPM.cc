@@ -11,6 +11,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Array3Index.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
+#include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/ParticleVariable.h>
@@ -144,10 +145,11 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 				   SchedulerP& sched,
 				   DataWarehouseP& dw)
 {
-   for(Level::const_regionIterator iter=level->regionsBegin();
-       iter != level->regionsEnd(); iter++){
+   Level::const_regionIterator iter;
+
+   for(iter=level->regionsBegin(); iter != level->regionsEnd(); iter++){
+
       const Region* region=*iter;
-      
       {
 	 Task* t = new Task("SerialMPM::initialize", region, dw, dw,
 			    this, &SerialMPM::actuallyInitialize);
@@ -168,7 +170,7 @@ void SerialMPM::scheduleComputeStableTimestep(const LevelP&,
 void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 				    const LevelP&         level,
 				          SchedulerP&     sched,
-				    const DataWarehouseP& old_dw, 
+				          DataWarehouseP& old_dw, 
 				          DataWarehouseP& new_dw)
 {
    int numMatls = d_sharedState->getNumMatls();
@@ -545,7 +547,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
 void SerialMPM::actuallyInitialize(const ProcessorContext*,
 				   const Region* region,
-				   const DataWarehouseP& /* old_dw */,
+				   DataWarehouseP& /* old_dw */,
 				   DataWarehouseP& new_dw)
 {
   int numMatls = d_sharedState->getNumMatls();
@@ -569,14 +571,14 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
 
 void SerialMPM::actuallyComputeStableTimestep(const ProcessorContext*,
 					      const Region*,
-					      const DataWarehouseP&,
+					      DataWarehouseP&,
 					      DataWarehouseP&)
 {
 }
 
 void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 					   const Region* region,
-					   const DataWarehouseP& old_dw,
+					   DataWarehouseP& old_dw,
 					   DataWarehouseP& new_dw)
 {
   // This needs the datawarehouse to allow indexing by material
@@ -709,7 +711,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 
 void SerialMPM::computeStressTensor(const ProcessorContext*,
 				    const Region* region,
-				    const DataWarehouseP& old_dw,
+				    DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
 {
    // This needs the datawarehouse to allow indexing by material
@@ -724,9 +726,17 @@ void SerialMPM::computeStressTensor(const ProcessorContext*,
    }
 }
 
+void SerialMPM::updateSurfaceNormalOfBoundaryParticle(const ProcessorContext*,
+				    const Region* /*region*/,
+				    DataWarehouseP& /*old_dw*/,
+				    DataWarehouseP& /*new_dw*/)
+{
+  //Tan: not finished yet. 
+}
+
 void SerialMPM::computeInternalForce(const ProcessorContext*,
 				     const Region* region,
-				     const DataWarehouseP& old_dw,
+				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw)
 {
 
@@ -800,7 +810,7 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
 
 void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 				     const Region* region,
-				     const DataWarehouseP& /*old_dw*/,
+				     DataWarehouseP& /*old_dw*/,
 				     DataWarehouseP& new_dw)
 {
   Vector zero(0.,0.,0.);
@@ -830,11 +840,11 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
       }
 #endif
 
-      new_dw->get(mass,          gMassLabel, vfindex, region, Ghost::None);
+      new_dw->get(mass,          gMassLabel, vfindex, region, Ghost::None, 0);
       new_dw->get(internalforce, gInternalForceLabel, vfindex, region,
-		  Ghost::None);
+		  Ghost::None, 0);
       new_dw->get(externalforce, gExternalForceLabel, vfindex, region,
-		  Ghost::None);
+		  Ghost::None, 0);
 
       // Create variables for the results
       NCVariable<Vector> acceleration;
@@ -861,7 +871,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 
 void SerialMPM::integrateAcceleration(const ProcessorContext*,
 				      const Region* region,
-				      const DataWarehouseP& old_dw,
+				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw)
 {
   // This needs the datawarehouse to allow indexing by material
@@ -879,11 +889,11 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       delt_vartype delt;
 
       new_dw->get(acceleration, gAccelerationLabel, vfindex, region,
-		  Ghost::None);
+		  Ghost::None, 0);
       new_dw->get(velocity, gMomExedVelocityLabel, vfindex, region,
-		  Ghost::None);
+		  Ghost::None, 0);
 
-      old_dw->get(delt, deltLabel);
+      old_dw->get((ReductionVariableBase&)delt, deltLabel);
 
       // Create variables for the results
       NCVariable<Vector> velocity_star;
@@ -904,7 +914,7 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
 
 void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 						const Region* region,
-						const DataWarehouseP& old_dw,
+						DataWarehouseP& old_dw,
 						DataWarehouseP& new_dw)
 {
   // Performs the interpolation from the cell vertices of the grid
@@ -929,9 +939,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       ParticleVariable<Vector> pvelocity;
       ParticleVariable<double> pmass;
 
-      old_dw->get(px,        pXLabel, matlindex, region, Ghost::None);
-      old_dw->get(pvelocity, pVelocityLabel, matlindex, region, Ghost::None);
-      old_dw->get(pmass,     pMassLabel, matlindex, region, Ghost::None);
+      old_dw->get(px,        pXLabel, matlindex, region, Ghost::None, 0);
+      old_dw->get(pvelocity, pVelocityLabel, matlindex, region, Ghost::None,0);
+      old_dw->get(pmass,     pMassLabel, matlindex, region, Ghost::None, 0);
 
       // Get the arrays of grid data on which the new particle values depend
       NCVariable<Vector> gvelocity_star;
@@ -1016,10 +1026,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 
       new_dw->put(pmass,          pMassLabel, matlindex, region);
       old_dw->get(pvolume,        pVolumeLabel, matlindex, region,
-		  Ghost::None);
+		  Ghost::None, 0);
       new_dw->put(pvolume,        pVolumeLabel, matlindex, region);
       old_dw->get(pexternalforce, pExternalForceLabel, matlindex, region,
-		  Ghost::None);
+		  Ghost::None, 0);
       new_dw->put(pexternalforce, pExternalForceLabel, matlindex, region);
     }
   }
@@ -1030,7 +1040,17 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
   ts++;
 }
 
+void SerialMPM::crackGrow(const ProcessorContext*,
+                          const Region* /*region*/,
+                          DataWarehouseP& /*old_dw*/,
+                          DataWarehouseP& /*new_dw*/)
+{
+}
+
 // $Log$
+// Revision 1.52  2000/05/11 20:10:12  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.51  2000/05/10 20:02:42  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

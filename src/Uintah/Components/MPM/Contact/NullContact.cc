@@ -35,7 +35,7 @@ void NullContact::initializeContact(const Region* /*region*/,
 
 void NullContact::exMomInterpolated(const ProcessorContext*,
 				    const Region*,
-				    const DataWarehouseP& /*old_dw*/,
+				    DataWarehouseP& /*old_dw*/,
 				    DataWarehouseP& /*new_dw*/)
 {
   
@@ -44,7 +44,7 @@ void NullContact::exMomInterpolated(const ProcessorContext*,
 
 void NullContact::exMomIntegrated(const ProcessorContext*,
 				  const Region*,
-                                  const DataWarehouseP& /*old_dw*/,
+                                  DataWarehouseP& /*old_dw*/,
                                   DataWarehouseP& /*new_dw*/)
 {
 
@@ -52,6 +52,9 @@ void NullContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.9  2000/05/11 20:10:17  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.8  2000/05/10 20:02:48  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

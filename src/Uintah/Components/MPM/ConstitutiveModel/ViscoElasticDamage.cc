@@ -208,8 +208,8 @@ std::vector<double> ViscoElasticDamage::getMechProps() const
 
 void ViscoElasticDamage::computeStressTensor(const Region* region,
 					     const MPMMaterial* matl,
-					     const DataWarehouseP& new_dw,
-					     DataWarehouseP& old_dw)
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw)
 {
 #ifdef WONT_COMPILE_YET
   Matrix3 bElBarTrial,shearTrial,fbar,F_bar,C_bar,C_nn;
@@ -310,7 +310,7 @@ void ViscoElasticDamage::computeStressTensor(const Region* region,
 
 double ViscoElasticDamage::computeStrainEnergy(const Region* region,
 					       const MPMMaterial* matl,
-					       const DataWarehouseP& new_dw)
+					       DataWarehouseP& new_dw)
 {
 #ifdef WONT_COMPILE_YET
 
@@ -443,7 +443,7 @@ void ViscoElasticDamage::printParameterNames(ofstream& out) const
 void ViscoElasticDamage::addComputesAndRequires(Task* task,
 						const MPMMaterial* matl,
 						const Region* region,
-						const DataWarehouseP& old_dw,
+						DataWarehouseP& old_dw,
 						DataWarehouseP& new_dw) const
 {
    cerr << "ViscoElasticDamage::addComputesAndRequires needs to be filled in\n";

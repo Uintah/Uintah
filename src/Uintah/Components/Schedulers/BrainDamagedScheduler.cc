@@ -3,15 +3,18 @@ static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Schedulers/BrainDamagedScheduler.h>
 #include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <Uintah/Parallel/ProcessorContext.h>
+#include <Uintah/Exceptions/TypeMismatchException.h>
 #include <Uintah/Grid/Region.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/TypeDescription.h>
+#include <Uintah/Parallel/ProcessorContext.h>
+
 #include <SCICore/Exceptions/InternalError.h>
 #include <SCICore/Thread/SimpleReducer.h>
 #include <SCICore/Thread/Thread.h>
 #include <SCICore/Thread/Time.h>
 #include <SCICore/Thread/ThreadPool.h>
+
 #include <iostream>
 #include <algorithm>
 
@@ -240,9 +243,9 @@ BrainDamagedScheduler::allDependenciesCompleted(TaskRecord*) const
 }
 
 DataWarehouseP
-BrainDamagedScheduler::createDataWarehouse()
+BrainDamagedScheduler::createDataWarehouse( int generation )
 {
-    return new OnDemandDataWarehouse( d_MpiRank, d_MpiProcesses );
+    return new OnDemandDataWarehouse( d_MpiRank, d_MpiProcesses, generation );
 }
 
 void
@@ -271,6 +274,9 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.12  2000/05/11 20:10:19  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.11  2000/05/07 06:02:07  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

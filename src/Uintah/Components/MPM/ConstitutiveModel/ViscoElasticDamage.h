@@ -127,14 +127,14 @@ namespace Uintah {
 	 // Basic constitutive model calculations
 	 virtual void computeStressTensor(const Region* region,
 					  const MPMMaterial* matl,
-					  const DataWarehouseP& new_dw,
-					  DataWarehouseP& old_dw);
+					  DataWarehouseP& old_dw,
+					  DataWarehouseP& new_dw);
 	 
 	 //////////
 	 // Computation of strain energy.  Useful for tracking energy balance.
 	 virtual double computeStrainEnergy(const Region* region,
 					    const MPMMaterial* matl,
-					    const DataWarehouseP& new_dw);
+					    DataWarehouseP& new_dw);
 	 
 	 // initialize  each particle's constitutive model data
 	 virtual void initializeCMData(const Region* region,
@@ -144,7 +144,7 @@ namespace Uintah {
 	 virtual void addComputesAndRequires(Task* task,
 					     const MPMMaterial* matl,
 					     const Region* region,
-					     const DataWarehouseP& old_dw,
+					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const;
 
 	 // Return the Lame constants

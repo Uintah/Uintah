@@ -51,14 +51,14 @@ WARNING
 	 // Basic constitutive model calculations
 	 virtual void computeStressTensor(const Region* region,
 					  const MPMMaterial* matl,
-					  const DataWarehouseP& new_dw,
-					  DataWarehouseP& old_dw) = 0;
+					  DataWarehouseP& old_dw,
+					  DataWarehouseP& new_dw) = 0;
 	 
 	 //////////
 	 // Computation of strain energy.  Useful for tracking energy balance.
 	 virtual double computeStrainEnergy(const Region* region,
 					    const MPMMaterial* matl,
-					    const DataWarehouseP& new_dw) = 0;
+					    DataWarehouseP& new_dw) = 0;
 	 
 	 //////////
 	 // Create space in data warehouse for CM data
@@ -69,7 +69,7 @@ WARNING
 	 virtual void addComputesAndRequires(Task* task,
 					     const MPMMaterial* matl,
 					     const Region* region,
-					     const DataWarehouseP& old_dw,
+					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const = 0;
 
          const VarLabel* deltLabel;
@@ -88,6 +88,9 @@ WARNING
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.14  2000/05/11 20:10:14  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.13  2000/05/07 06:02:04  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

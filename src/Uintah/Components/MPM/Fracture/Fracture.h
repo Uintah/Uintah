@@ -23,31 +23,31 @@ public:
   void   updateSurfaceNormalOfBoundaryParticle(
            const ProcessorContext*,
            const Region* region,
-           const DataWarehouseP& old_dw,
+           DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
   
   void   labelSelfContactCells (
            const ProcessorContext*,
            const Region* region,
-           const DataWarehouseP& old_dw,
+           DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
   void   updateParticleInformationInContactCells (
            const ProcessorContext*,
            const Region* region,
-           const DataWarehouseP& old_dw,
+           DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
   void   updateNodeInformationInContactCells (
            const ProcessorContext*,
            const Region* region,
-           const DataWarehouseP& old_dw,
+           DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
   void   crackGrow(
            const ProcessorContext*,
            const Region* region,
-           const DataWarehouseP& old_dw,
+           DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
          Fracture();
@@ -74,6 +74,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.6  2000/05/11 20:10:18  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.5  2000/05/10 18:32:22  tan
 // Added member funtion to label self-contact cells.
 //

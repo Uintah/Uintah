@@ -83,12 +83,12 @@ WARNING
 	 // Basic contact methods
 	 virtual void exMomInterpolated(const ProcessorContext*,
 					const Region* region,
-					const DataWarehouseP& old_dw,
+					DataWarehouseP& old_dw,
 					DataWarehouseP& new_dw);
 	 
 	 virtual void exMomIntegrated(const ProcessorContext*,
 				      const Region* region,
-				      const DataWarehouseP& old_dw,
+				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw);
 	 
       };
@@ -99,6 +99,9 @@ WARNING
 #endif /* __FRICTION_H__ */
 
 // $Log$
+// Revision 1.6  2000/05/11 20:10:16  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.5  2000/05/08 18:42:46  guilkey
 // Added an initializeContact function to all contact classes.  This is
 // a null function for all but the FrictionContact.

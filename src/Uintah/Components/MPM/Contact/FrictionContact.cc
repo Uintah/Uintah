@@ -87,7 +87,7 @@ void FrictionContact::initializeContact(const Region* region,
 
 void FrictionContact::exMomInterpolated(const ProcessorContext*,
 					const Region* region,
-					const DataWarehouseP& old_dw,
+					DataWarehouseP& old_dw,
 					DataWarehouseP& new_dw)
 {
   Vector zero(0.0,0.0,0.0);
@@ -112,13 +112,13 @@ void FrictionContact::exMomInterpolated(const ProcessorContext*,
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
       new_dw->get(gmass[vfindex], gMassLabel,vfindex , region,
-		  Ghost::None);
+		  Ghost::None, 0);
       new_dw->get(gvelocity[vfindex], gVelocityLabel, vfindex, region,
-		  Ghost::None);
+		  Ghost::None, 0);
       old_dw->get(normtraction[vfindex],gNormTractionLabel,vfindex , region,
-		  Ghost::None);
+		  Ghost::None, 0);
       old_dw->get(surfnorm[vfindex], gSurfNormLabel,vfindex , region,
-		  Ghost::None);
+		  Ghost::None, 0);
     }
   }
 
@@ -184,7 +184,7 @@ void FrictionContact::exMomInterpolated(const ProcessorContext*,
 
 void FrictionContact::exMomIntegrated(const ProcessorContext*,
 				  const Region* region,
-				  const DataWarehouseP& old_dw,
+				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw)
 {
   Vector zero(0.0,0.0,0.0);
@@ -222,8 +222,7 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfi = matl->getVFIndex();
-      new_dw->get(gmass[vfi], gMassLabel,vfi , region,
-		  Ghost::None);
+      new_dw->get(gmass[vfi], gMassLabel, vfi, region, Ghost::None, 0);
       new_dw->allocate(gsurfnorm[vfi], gSurfNormLabel, vfi, region);
 
       gsurfnorm[vfi].initialize(Vector(0.0,0.0,0.0));
@@ -331,8 +330,7 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
     }
   }
 
-  new_dw->get(gsurfnorm[0], gSurfNormLabel, 0, region,
-	      Ghost::None);
+  new_dw->get(gsurfnorm[0], gSurfNormLabel, 0, region, Ghost::None, 0);
   IntVector lowi(gsurfnorm[0].getLowIndex());
   IntVector highi(gsurfnorm[0].getHighIndex());
   ofstream tfile("tecplotfile");
@@ -420,12 +418,12 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
       // Create arrays for the particle stress and grid stress
       ParticleVariable<Matrix3> pstress;
       NCVariable<Matrix3>       gstress;
-      new_dw->get(pstress, pStressLabel, matlindex, region, Ghost::None);
+      new_dw->get(pstress, pStressLabel, matlindex, region, Ghost::None, 0);
       new_dw->allocate(gstress, gStressLabel, vfindex, region);
       gstress.initialize(Matrix3(0.0));
 
       ParticleVariable<Point> px;
-      old_dw->get(px, pXLabel, matlindex, region, Ghost::None);
+      old_dw->get(px, pXLabel, matlindex, region, Ghost::None, 0);
 
 
       ParticleSubset* pset = pstress.getParticleSubset();
@@ -458,8 +456,8 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
       NCVariable<Matrix3>      gstress;
       NCVariable<double>       gnormtraction;
       NCVariable<Vector>       surfnorm;
-      new_dw->get(gstress, gStressLabel, vfindex, region, Ghost::None);
-      new_dw->get(surfnorm, gSurfNormLabel, vfindex, region, Ghost::None);
+      new_dw->get(gstress, gStressLabel, vfindex, region, Ghost::None, 0);
+      new_dw->get(surfnorm, gSurfNormLabel, vfindex, region, Ghost::None, 0);
       new_dw->allocate(gnormtraction, gNormTractionLabel, vfindex, region);
 
       for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
@@ -481,15 +479,15 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
-      new_dw->get(gmass[vfindex], gMassLabel,vfindex , region, Ghost::None);
+      new_dw->get(gmass[vfindex], gMassLabel,vfindex , region, Ghost::None, 0);
       new_dw->get(gvelocity_star[vfindex], gVelocityStarLabel,
-		  vfindex, region, Ghost::None);
+		  vfindex, region, Ghost::None, 0);
       new_dw->get(gacceleration[vfindex],gAccelerationLabel,vfindex,region,
-		  Ghost::None);
+		  Ghost::None, 0);
       new_dw->get(normtraction[vfindex],gNormTractionLabel,vfindex , region,
-		  Ghost::None);
+		  Ghost::None, 0);
       new_dw->get(gsurfnorm[vfindex], gSurfNormLabel,vfindex , region,
-		  Ghost::None);
+		  Ghost::None, 0);
     }
   }
   delt_vartype delt;
@@ -560,6 +558,9 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.17  2000/05/11 20:10:16  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.16  2000/05/10 20:02:48  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

@@ -264,7 +264,7 @@ void ElasticConstitutiveModel::computeStressIncrement()
 
 void ElasticConstitutiveModel::computeStressTensor(const Region* region,
 						   const MPMMaterial* matl,
-						   const DataWarehouseP& new_dw,
+						   DataWarehouseP& new_dw,
 						   DataWarehouseP& old_dw)
 {
   cerr << "computeStressTensor not finished\n";
@@ -272,7 +272,7 @@ void ElasticConstitutiveModel::computeStressTensor(const Region* region,
 
 double ElasticConstitutiveModel::computeStrainEnergy(const Region* region,
 						     const MPMMaterial* matl,
-						     const DataWarehouseP& new_dw)
+						     DataWarehouseP& new_dw)
 {
   cerr << "computeStrainEnergy not finished\n";
 }
@@ -349,7 +349,7 @@ void ElasticConstitutiveModel::computeStressTensor
 void ElasticConstitutiveModel::addComputesAndRequires(Task* task,
 						      const MPMMaterial* matl,
 						      const Region* region,
-						      const DataWarehouseP& old_dw,
+						      DataWarehouseP& old_dw,
 						      DataWarehouseP& new_dw) const
 {
    cerr << "ElasticConsitutive::addComputesAndRequires needs to be filled in\n";
@@ -479,6 +479,9 @@ int ElasticConstitutiveModel::getSize() const
 
 
 // $Log$
+// Revision 1.11  2000/05/11 20:10:14  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.10  2000/05/07 06:02:04  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

@@ -68,7 +68,7 @@ WARNING
 	 // Insert Documentation Here:
 	 virtual void scheduleTimeAdvance(double t, double dt,
 				  const LevelP& level, SchedulerP&,
-				  const DataWarehouseP&, DataWarehouseP&);
+				  DataWarehouseP&, DataWarehouseP&);
 
   enum bctype { NONE=0,
                 FIXED,
@@ -79,51 +79,70 @@ WARNING
 	 // Insert Documentation Here:
 	 void actuallyInitialize(const ProcessorContext*,
 				 const Region* region,
-				 const DataWarehouseP&,
-				 DataWarehouseP&);
+				 DataWarehouseP& old_dw,
+				 DataWarehouseP& new_dw);
 	 //////////
 	 // Insert Documentation Here:
 	 void actuallyComputeStableTimestep(const ProcessorContext*,
 					    const Region* region,
-					    const DataWarehouseP&,
-					    DataWarehouseP&);
+					    DataWarehouseP& old_dw,
+					    DataWarehouseP& new_dw);
 	 //////////
 	 // Insert Documentation Here:
 	 void interpolateParticlesToGrid(const ProcessorContext*,
 					 const Region* region,
-					 const DataWarehouseP&,
-					 DataWarehouseP&);
+					 DataWarehouseP& old_dw,
+					 DataWarehouseP& new_dw);
 	 //////////
 	 // Insert Documentation Here:
 	 void computeStressTensor(const ProcessorContext*,
 				  const Region* region,
-				  const DataWarehouseP&,
-				  DataWarehouseP&);
+				  DataWarehouseP& old_dw,
+				  DataWarehouseP& new_dw);
+
+	 //////////
+	 // update the Surface Normal Of Boundary Particles according to their
+	 // velocity gradient during the deformation
+	 //
+	 void updateSurfaceNormalOfBoundaryParticle(
+	                            const ProcessorContext*,
+				    const Region* region,
+				    DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw);
 
 	 //////////
 	 // Insert Documentation Here:
 	 void computeInternalForce(const ProcessorContext*,
 				   const Region* region,
-				   const DataWarehouseP&,
-				   DataWarehouseP&);
+				   DataWarehouseP& old_dw,
+				   DataWarehouseP& new_dw);
 	 //////////
 	 // Insert Documentation Here:
 	 void solveEquationsMotion(const ProcessorContext*,
 				   const Region* region,
-				   const DataWarehouseP&,
-				   DataWarehouseP&);
+				   DataWarehouseP& old_dw,
+				   DataWarehouseP& new_dw);
 	 //////////
 	 // Insert Documentation Here:
 	 void integrateAcceleration(const ProcessorContext*,
 				    const Region* region,
-				    const DataWarehouseP&,
-				    DataWarehouseP&);
+				    DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw);
 	 //////////
 	 // Insert Documentation Here:
 	 void interpolateToParticlesAndUpdate(const ProcessorContext*,
 					      const Region* region,
-					      const DataWarehouseP&,
-					      DataWarehouseP&);
+					      DataWarehouseP& old_dw,
+					      DataWarehouseP& new_dw);
+
+	 //////////
+	 // check the stress on each boundary particle to see
+	 // if the microcrack will grow.  If fracture occur,
+	 // more interior particles become boundary particles
+         void crackGrow(const ProcessorContext*,
+                        const Region* region,
+                        DataWarehouseP& old_dw,
+                        DataWarehouseP& new_dw);
 
 	 SerialMPM(const SerialMPM&);
 	 SerialMPM& operator=(const SerialMPM&);
@@ -162,6 +181,9 @@ WARNING
    
 //
 // $Log$
+// Revision 1.25  2000/05/11 20:10:12  dav
+// adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
+//
 // Revision 1.24  2000/05/10 18:34:00  tan
 // Added computations on self-contact cells for cracked surfaces.
 //
