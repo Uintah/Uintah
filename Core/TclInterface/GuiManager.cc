@@ -32,6 +32,7 @@ namespace SCICore {
 namespace TclInterface {
 
 GuiManager::GuiManager (char* hostname, char* portname) 
+    : access("GUI manager access lock")
 {
     base_port = atoi (portname);
     strcpy (host, hostname);
@@ -107,6 +108,9 @@ GuiManager::putConnection (int sock)
 
 //
 // $Log$
+// Revision 1.3  1999/08/28 17:54:51  sparker
+// Integrated new Thread library
+//
 // Revision 1.2  1999/08/17 06:39:42  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

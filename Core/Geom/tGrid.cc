@@ -133,7 +133,6 @@ GeomObj* TexGeomGrid::clone()
 void TexGeomGrid::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
 
     stream.begin_class("TexGeomGrid", TexGeomGrid_VERSION);
     GeomObj::io(stream);
@@ -155,6 +154,9 @@ bool TexGeomGrid::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:45  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/19 23:18:07  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

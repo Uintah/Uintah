@@ -13,21 +13,29 @@
  */
 
 #include <SCICore/Datatypes/Datatype.h>
+#include <SCICore/Thread/AtomicCounter.h>
 
 namespace SCICore {
 namespace Datatypes {
 
-Mutex generation_lock;
-int current_generation;
+static SCICore::Thread::AtomicCounter current_generation("Datatypes generation counter", 1);
 
-Datatype::Datatype() {
+Datatype::Datatype()
+: lock("Datatype ref_cnt lock")
+{
     ref_cnt=0;
-    generation_lock.lock();
-    generation=++current_generation;
-    generation_lock.unlock();
+    generation=current_generation++;
 }
 
-Datatype::~Datatype() {
+Datatype::Datatype(const Datatype&)
+    : lock("Datatype ref_cnt lock")
+{
+    ref_cnt=0;
+    generation=current_generation++;
+}
+
+Datatype::~Datatype()
+{
 }
 
 } // End namespace Datatypes
@@ -35,6 +43,9 @@ Datatype::~Datatype() {
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:36  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/25 03:48:32  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -16,16 +16,13 @@
 
 #include <PSECore/share/share.h>
 #include <PSECore/Comm/MessageBase.h>
-#include <SCICore/Multitask/Task.h>
-#include <SCICore/Multitask/ITC.h>
-#include <SCICore/Multitask/Mailbox.h>
 #include <SCICore/TclInterface/TCL.h>
+#include <SCICore/Thread/Mailbox.h>
+#include <SCICore/Thread/Runnable.h>
 
 namespace PSECore {
 namespace Dataflow {
 
-using SCICore::Multitask::Task;
-using SCICore::Multitask::Mailbox;
 using SCICore::TclInterface::TCL;
 using SCICore::TclInterface::TCLArgs;
 using SCICore::Containers::clString;
@@ -39,7 +36,7 @@ class Module;
 class Network;
 class OPort;
 
-class PSECORESHARE NetworkEditor : public Task, public TCL {
+class PSECORESHARE NetworkEditor : public SCICore::Thread::Runnable, public TCL {
     Network* net;
     void multisend(OPort*);
     void do_scheduling(Module*);
@@ -47,14 +44,14 @@ class PSECORESHARE NetworkEditor : public Task, public TCL {
     int schedule;
     void save_network(const clString&);
 public:
-    Mailbox<MessageBase*> mailbox;
+    SCICore::Thread::Mailbox<MessageBase*> mailbox;
 
     NetworkEditor(Network*);
     ~NetworkEditor();
 
     void add_text(const clString&);
 private:
-    virtual int body(int);
+    virtual void run();
     void main_loop();
 
     virtual void tcl_command(TCLArgs&, void*);
@@ -82,6 +79,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:30  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/26 23:59:07  moulding
 // changed SCICORESHARE to PSECORESHARE
 //

@@ -14,7 +14,6 @@
 #include <SCICore/Containers/String.h>
 //#include <PSECore/Dataflow/Module.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Multitask/Task.h>
 #include <SCICore/TclInterface/GuiManager.h>
 #include <SCICore/TclInterface/Remote.h>
 #include <SCICore/TclInterface/TCL.h>
@@ -456,6 +455,9 @@ void TCL::set_tclvar(const clString& base, const clString& name,
 
 //
 // $Log$
+// Revision 1.6  1999/08/28 17:54:52  sparker
+// Integrated new Thread library
+//
 // Revision 1.5  1999/08/23 20:11:51  sparker
 // GenAxes had no UI
 // Removed extraneous print statements

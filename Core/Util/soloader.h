@@ -20,7 +20,7 @@ typedef void* LIBRARY_HANDLE;
 // from within the shared library called "libname"
 //
 
-void* GetLibrarySymbolAddress(char* libname, char* symbolname);
+void* GetLibrarySymbolAddress(const char* libname, const char* symbolname);
 
 
 /////////////////////////////////////////////////////////////////
@@ -31,7 +31,7 @@ void* GetLibrarySymbolAddress(char* libname, char* symbolname);
 // called "libname"
 //
 
-LIBRARY_HANDLE GetLibraryHandle(char* libname);
+LIBRARY_HANDLE GetLibraryHandle(const char* libname);
 
 
 /////////////////////////////////////////////////////////////////

@@ -152,7 +152,6 @@ Mesh* Mesh::clone()
 void Mesh::io(Piostream& stream)
 {
     using SCICore::Containers::Pio;
-    using SCICore::PersistentSpace::Pio;
 
     int version=stream.begin_class("Mesh", MESH_VERSION);
     if(version == 1){
@@ -198,9 +197,6 @@ void Mesh::io(Piostream& stream)
 void Node::io(Piostream& stream)
 {
     using SCICore::Containers::Pio;
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Geometry::Pio;
 
     int version=stream.begin_class("Node", NODE_VERSION);
     Pio(stream, p);
@@ -1601,6 +1597,9 @@ void Pio(Piostream& stream, SCICore::Datatypes::ElementVersion1& elem)
 
 //
 // $Log$
+// Revision 1.4  1999/08/28 17:54:36  sparker
+// Integrated new Thread library
+//
 // Revision 1.3  1999/08/25 03:48:35  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

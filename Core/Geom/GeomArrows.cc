@@ -109,7 +109,6 @@ GeomObj* GeomArrows::clone()
 void GeomArrows::io(Piostream& stream)
 {
     using SCICore::Containers::Pio;
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomArrows", GEOMARROWS_VERSION);
     GeomObj::io(stream);

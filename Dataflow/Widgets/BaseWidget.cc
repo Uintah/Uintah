@@ -23,6 +23,8 @@
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Thread/CrowdMonitor.h>
+#include <SCICore/Thread/Mutex.h>
 #include <SCICore/Util/NotFinished.h>
 
 namespace PSECore {
@@ -32,7 +34,7 @@ using SCICore::Geometry::BBox;
 using SCICore::GeomSpace::GeomGroup;
 using SCICore::GeomSpace::Material;
 using SCICore::GeomSpace::Color;
-using SCICore::Multitask::Mutex;
+using SCICore::Thread::Mutex;
 using SCICore::Containers::to_string;
 
 static const Index NumDefaultMaterials = 6;
@@ -65,7 +67,7 @@ MaterialHandle BaseWidget::DefaultHighlightMaterial(scinew Material(Color(0,0,0)
 static clString make_id(const clString& name)
 {
    static int next_widget_number=0;
-   static Mutex idlock;
+   static Mutex idlock("Widget ID lock");
    idlock.lock();
    clString id ( name+"_"+to_string(next_widget_number++) );
    idlock.unlock();
@@ -523,9 +525,9 @@ BaseWidget::execute(int always_callback)
       solve->ResetChanged();
    }
 
-   lock->write_lock();
+   lock->writeLock();
    redraw();
-   lock->write_unlock();
+   lock->writeUnlock();
 
    flushViews();
 }
@@ -720,6 +722,9 @@ BaseWidget& BaseWidget::operator=( const BaseWidget& )
 
 //
 // $Log$
+// Revision 1.6  1999/08/28 17:54:33  sparker
+// Integrated new Thread library
+//
 // Revision 1.5  1999/08/27 00:05:06  moulding
 // disabled a 'this' warning on win32
 //

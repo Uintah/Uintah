@@ -843,7 +843,8 @@ static void orderNormal(int i[], const Vector& v) {
     }
 }       
     
-int TriSurface::intersect(const Point& origin, const Vector& dir, double &d, int &v, int face) {
+int TriSurface::intersect(const Point& origin, const Vector& dir, double &d, int &v, int face)
+{
     double P[3], t, alpha, beta;
     double u0,u1,u2,v0,v1,v2;
     int i[3];
@@ -1131,6 +1132,9 @@ void Pio(Piostream& stream, TSEdge*& data)
 
 //
 // $Log$
+// Revision 1.6  1999/08/28 17:54:37  sparker
+// Integrated new Thread library
+//
 // Revision 1.5  1999/08/25 03:48:44  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

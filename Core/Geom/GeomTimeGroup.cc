@@ -121,7 +121,6 @@ void GeomTimeGroup::reset_bbox()
 void GeomTimeGroup::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_class("GeomTimeGroup", GEOMTimeGroup_VERSION);
     // Do the base class first...
@@ -154,6 +153,9 @@ bool GeomTimeGroup::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 17:54:42  sparker
+// Integrated new Thread library
+//
 // Revision 1.4  1999/08/19 23:18:06  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.
