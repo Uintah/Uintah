@@ -34,16 +34,16 @@ ViscoScram::ViscoScram(ProblemSpecP& ps)
   ps->require("CrackFriction",d_initialData.CrackFriction);
   ps->require("InitialCrackRadius",d_initialData.InitialCrackRadius);
   ps->require("CrackGrowthRate",d_initialData.CrackGrowthRate);
-  ps->require("G1",d_initialData.G[1]);
-  ps->require("G2",d_initialData.G[2]);
-  ps->require("G3",d_initialData.G[3]);
-  ps->require("G4",d_initialData.G[4]);
-  ps->require("G5",d_initialData.G[5]);
-  ps->require("RTau1",d_initialData.RTau[1]);
-  ps->require("RTau2",d_initialData.RTau[2]);
-  ps->require("RTau3",d_initialData.RTau[3]);
-  ps->require("RTau4",d_initialData.RTau[4]);
-  ps->require("RTau5",d_initialData.RTau[5]);
+  ps->require("G1",d_initialData.G[0]);
+  ps->require("G2",d_initialData.G[1]);
+  ps->require("G3",d_initialData.G[2]);
+  ps->require("G4",d_initialData.G[3]);
+  ps->require("G5",d_initialData.G[4]);
+  ps->require("RTau1",d_initialData.RTau[0]);
+  ps->require("RTau2",d_initialData.RTau[1]);
+  ps->require("RTau3",d_initialData.RTau[2]);
+  ps->require("RTau4",d_initialData.RTau[3]);
+  ps->require("RTau5",d_initialData.RTau[4]);
   ps->require("Beta",d_initialData.Beta);
   ps->require("Gamma",d_initialData.Gamma);
   ps->require("DCp_DTemperature",d_initialData.DCp_DTemperature);
@@ -136,8 +136,8 @@ void ViscoScram::computeStableTimestep(const Patch* patch,
   double c_dil = 0.0;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
-  double G = d_initialData.G[1] + d_initialData.G[2] +
- 	     d_initialData.G[3] + d_initialData.G[4] + d_initialData.G[5];
+  double G = d_initialData.G[0] + d_initialData.G[1] +
+ 	     d_initialData.G[2] + d_initialData.G[3] + d_initialData.G[4];
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
@@ -211,8 +211,8 @@ void ViscoScram::computeStressTensor(const Patch* patch,
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
 
-  double G = d_initialData.G[1] + d_initialData.G[2] +
- 	     d_initialData.G[3] + d_initialData.G[4] + d_initialData.G[5];
+  double G = d_initialData.G[0] + d_initialData.G[1] +
+ 	     d_initialData.G[2] + d_initialData.G[3] + d_initialData.G[4];
   double cf = d_initialData.CrackFriction;
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
 
@@ -607,6 +607,9 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.18  2000/12/02 21:19:16  bard
+// Fixed indexing errors in material constants
+//
 // Revision 1.17  2000/12/01 00:05:34  bard
 // Fixed indexing error in maxwell (deviatoric) stresses.
 //
