@@ -21,10 +21,12 @@
 #include <NotFinished.h>
 #include <iostream.h>
 #include <fstream.h>
-
+#include <Classlib/HashTable.h>
+#include <Classlib/Queue.h>
 struct MCubeTable {
     int which_case;
     int permute[8];
+    int nbrs;
 };
 
 #include "mcube.h"
@@ -125,7 +127,7 @@ void IsoSurface::execute()
     }
 }
 
-void IsoSurface::iso_cube(int i, int j, int k, double isoval,
+int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 			  ObjGroup* group, const Field3DHandle& field)
 {
     double oval[9];
@@ -353,6 +355,7 @@ void IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	error("Bad case in marching cubes!\n");
 	break;
     }
+    return(tab->nbrs);
 }
 
 void IsoSurface::iso_reg_grid(const Field3DHandle& field, double isoval,
@@ -371,10 +374,87 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, double isoval,
     }
 }
 
-void IsoSurface::iso_reg_grid(const Field3DHandle&, const Point&,
+void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 			      ObjGroup* group)
 {
-    NOT_FINISHED("IsoSurace::iso_reg_grid");
+    int nx=field->get_nx();
+    int ny=field->get_ny();
+    int nz=field->get_nz();
+    Point p0(field->get_point(0,0,0));
+    Point p1(field->get_point(nx-1, ny-1, nz-1));
+    double tx=(p.x()-p0.x())/(p1.x()-p0.x());
+    double ty=(p.x()-p0.x())/(p1.x()-p0.x());
+    double tz=(p.x()-p0.x())/(p1.x()-p0.x());
+    if (tx<0 || tx>1 || ty<0 || ty>1 || tz<0 || tz>1) {
+	error("Isosurface Seed Point not in field\n");
+	return;
+    }
+    int px=nx*tx;
+    int py=ny*ty;
+    int pz=nz*tz;
+    double isoval=field->get(px,py,pz);
+    HashTable<int, int> visitedPts;
+    Queue<int> surfQ;
+    int pLoc=(((pz*ny)+py)*nx)+px;
+    int dummy;
+    visitedPts.insert(pLoc, 0);
+    surfQ.append(pLoc);
+    while(!surfQ.is_empty()) {
+	pLoc=surfQ.pop();
+	pz=pLoc/(nx*ny);
+	dummy=pLoc%(nx*ny);
+	py=dummy/nx;
+	px=dummy%py;
+	int nbrs=iso_cube(px, py, pz, isoval, group, field);
+	if ((nbrs | 1) && (px!=0)) {
+	    pLoc-=1;
+	    if (!visitedPts.lookup(pLoc, dummy)) {
+		visitedPts.insert(pLoc, 0);
+		surfQ.append(pLoc);
+	    }
+	    pLoc+=1;
+	}
+	if ((nbrs | 2) && (px!=nx)) {
+	    pLoc+=1;
+	    if (!visitedPts.lookup(pLoc, dummy)) {
+		visitedPts.insert(pLoc, 0);
+		surfQ.append(pLoc);
+	    }
+	    pLoc-=1;
+	}
+	if ((nbrs | 4) && (py!=0)) {
+	    pLoc-=nx;
+	    if (!visitedPts.lookup(pLoc, dummy)) {
+		visitedPts.insert(pLoc, 0);
+		surfQ.append(pLoc);
+	    }
+	    pLoc+=nx;
+	}
+	if ((nbrs | 8) && (py!=ny)) {
+	    pLoc+=nx;
+	    if (!visitedPts.lookup(pLoc, dummy)) {
+		visitedPts.insert(pLoc, 0);
+		surfQ.append(pLoc);
+	    }
+	    pLoc-=nx;
+	}
+	if ((nbrs | 16) && (pz!=0)) {
+	    pLoc-=nx*ny;
+	    if (!visitedPts.lookup(pLoc, dummy)) {
+		visitedPts.insert(pLoc, 0);
+		surfQ.append(pLoc);
+	    }
+	    pLoc+=nx*ny;
+	}
+	if ((nbrs | 32) && (pz!=nz)) {
+	    pLoc+=nx*ny;
+	    if (!visitedPts.lookup(pLoc, dummy)) {
+		visitedPts.insert(pLoc, 0);
+		surfQ.append(pLoc);
+	    }
+	    pLoc-=nx*ny;
+	}
+    }	    
 }
 
 

@@ -38,7 +38,7 @@ class IsoSurface : public UserModule {
 
     int widget_id;
 
-    void iso_cube(int, int, int, double, ObjGroup*, const Field3DHandle&);
+    int iso_cube(int, int, int, double, ObjGroup*, const Field3DHandle&);
     void iso_tetra(int, double, ObjGroup*, const Field3DHandle&);
 
     void iso_reg_grid(const Field3DHandle&, const Point&, ObjGroup*);
