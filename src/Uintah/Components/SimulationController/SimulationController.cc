@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 #include <Uintah/Components/SimulationController/SimulationController.h>
 #include <SCICore/Geometry/IntVector.h>
@@ -477,6 +478,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.46  2000/09/25 20:44:08  sparker
+// Quiet g++ warnings
+//
 // Revision 1.45  2000/09/20 16:05:24  sparker
 // Call problemSetup on scheduler
 //
