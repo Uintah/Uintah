@@ -27,7 +27,7 @@ itcl_class SCIRun_FieldsData_TransformData3 {
     }
 
     method set_defaults {} {
-	set $this-function "result = v * 10;"
+	set $this-function "result = v0 + v1 + v2;"
 	set $this-outputdatatype "input 0"
     }
 
@@ -58,11 +58,10 @@ itcl_class SCIRun_FieldsData_TransformData3 {
 	bind $w.row1 <Leave> "$this update_text"
 	$w.row1 insert end [set $this-function]
 
-	frame $w.row2
-	button $w.row2.execute -text "Execute" -command "$this-c needexecute"
-	pack $w.row2.execute -side left -e y -f both -padx 5 -pady 5
 	pack $w.row1 -side top -e y -f both -padx 5 -pady 5
-	pack $w.row2 -side top -e n -f x -padx 5 -pady 5
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
 
