@@ -10,12 +10,14 @@
 #define MAXINDEPENDENTS 100
 
 // TODO:  Interpolation could be a lot faster
+// TODO: parentheses in expressions, other ops in expressions
 using namespace std;
 
 using namespace Uintah;
 
 ArchesTable::ArchesTable(ProblemSpecP& params)
 {
+  file_read = false;
   params->require("filename", filename);
   for (ProblemSpecP child = params->findBlock("defaultValue"); child != 0;
        child = child->findNextBlock("defaultValue")) {
@@ -25,7 +27,36 @@ ArchesTable::ArchesTable(ProblemSpecP& params)
     child->get(df->value);
     defaults.push_back(df);
   }
-  file_read = false;
+  for (ProblemSpecP child = params->findBlock("constantValue"); child != 0;
+       child = child->findNextBlock("constantValue")) {
+    Dep* dep = new Dep(Dep::ConstantValue);
+    if(!child->getAttribute("name", dep->name))
+      throw ProblemSetupException("No name for constantValue");
+    child->get(dep->constantValue);
+    deps.push_back(dep);
+  }
+  for (ProblemSpecP child = params->findBlock("derivedValue"); child != 0;
+       child = child->findNextBlock("derivedValue")) {
+    Dep* dep = new Dep(Dep::DerivedValue);
+    if(!child->getAttribute("name", dep->name))
+      throw ProblemSetupException("No expression for derivedValue");
+    string expr;
+    child->get(expr);
+    string::iterator beg = expr.begin();
+    string::iterator end = expr.end();
+    dep->expression = parse_addsub(beg, end);
+    if(beg != end || !dep->expression){
+      cerr << "expression = " << dep->expression << '\n';
+      if(beg != end)
+        cerr << "next=" << *beg << '\n';
+      cerr << "Error parsing expression:\n" << expr << '\n';
+      for(string::iterator skip = expr.begin(); skip != beg; skip++)
+        cerr << ' ';
+      cerr << "^\n";
+      throw ProblemSetupException("Error parsing expression");
+    }
+    deps.push_back(dep);
+  }
 }
 
 ArchesTable::~ArchesTable()
@@ -33,8 +64,126 @@ ArchesTable::~ArchesTable()
   for(int i=0;i<(int)inds.size();i++)
     delete inds[i];
   for(int i=0;i<(int)deps.size();i++){
-    delete[] deps[i]->data;
+    if(deps[i]->data)
+      delete[] deps[i]->data;
+    if(deps[i]->expression)
+      delete[] deps[i]->expression;
     delete deps[i];
+  }
+}
+
+ArchesTable::Expr* ArchesTable::parse_addsub(string::iterator&  begin,
+                                             string::iterator& end)
+{
+  Expr* child1 = parse_muldiv(begin, end);
+  if(!child1)
+    return 0;
+  while(begin != end){
+    char next = *begin;
+    if(next == '+' || next == '-'){
+      begin++;
+      Expr* child2 = parse_muldiv(begin, end);
+      if(!child2)
+        return 0;
+      child1 = new Expr(next, child1, child2);
+    } else if(next == ' ' || next == '\t' || next == '\n'){
+      begin++;
+    } else {
+      break;
+    }
+  }
+  return child1;
+}
+
+ArchesTable::Expr* ArchesTable::parse_muldiv(string::iterator&  begin,
+                                             string::iterator& end)
+{
+  Expr* child1 = parse_sign(begin, end);
+  if(!child1)
+    return 0;
+  while(begin != end){
+    char next = *begin;
+    if(next == '*' || next == '/'){
+      begin++;
+      Expr* child2 = parse_sign(begin, end);
+      if(!child2)
+        return 0;
+      child1 = new Expr(next, child1, child2);
+    } else if(next == ' ' || next == '\t' || next == '\n'){
+      begin++;
+    } else {
+      break;
+    }
+  }
+  return child1;
+}
+
+ArchesTable::Expr* ArchesTable::parse_sign(string::iterator& begin,
+                                           string::iterator& end)
+{
+  while(begin != end){
+    char next = *begin;
+    if(next == '-'){
+      begin++;
+      Expr* child = parse_idorconstant(begin, end);
+      if(!child)
+        return 0;
+      return new Expr(next, child, 0);
+    } else if(next == '+'){
+      begin++;
+      Expr* child = parse_idorconstant(begin, end);
+      return child;
+    } else if(next == ' ' || next == '\t' || next == '\n'){
+      begin++;
+    } else {
+      Expr* child = parse_idorconstant(begin, end);
+      return child;
+    }
+  }
+}
+
+ArchesTable::Expr* ArchesTable::parse_idorconstant(string::iterator& begin,
+                                                   string::iterator& end)
+{
+  while(begin != end && (*begin == ' ' || *begin == '\t' || *begin == '\n'))
+    begin++;
+  if(begin == end)
+    return 0;
+  char next = *begin;
+  if(next == '['){
+    // ID...
+    begin++;
+    string id;
+    while(begin != end && *begin != ']')
+      id.push_back(*begin++);
+    if(begin == end)
+      return 0;
+    begin++; // skip ]
+    int id_index = addDependentVariable(id);
+    Dep* dep = deps[id_index];
+    if(dep->type == Dep::ConstantValue)
+      return new Expr(dep->constantValue);
+    else
+      return new Expr(id_index);
+  } else if(isdigit(next)){
+    string constant;
+    while((*begin >= '0' && *begin <= '9') || *begin == '.')
+      constant.push_back(*begin++);
+    if(*begin == 'e' || *begin == 'E'){
+      constant.push_back(*begin++);
+      if(*begin == '-' || *begin == '+')
+        constant.push_back(*begin++);
+      while((*begin >= '0' && *begin <= '9'))
+        constant.push_back(*begin++);
+    }
+    istringstream in(constant);
+    double c;
+    in >> c;
+    if(!in)
+      return 0;
+    return new Expr(c);
+  } else {
+    return 0;
   }
 }
 
@@ -46,9 +195,8 @@ int ArchesTable::addDependentVariable(const string& name)
     if(dep->name == name)
       return i;
   }
-  Dep* dep = new Dep;
+  Dep* dep = new Dep(Dep::TableValue);
   dep->name = name;
-  dep->data = 0;
   deps.push_back(dep);
   return (int)deps.size()-1;
 }
@@ -102,7 +250,7 @@ void ArchesTable::setup()
   int ndeps = getInt(in);
   vector<Dep*> in_deps(ndeps);
   for(int i=0;i<ndeps;i++){
-    Dep* dep = new Dep;
+    Dep* dep = new Dep(Dep::TableValue);
     
     dep->name = getString(in);
     dep->data = new double[size];
@@ -303,6 +451,8 @@ void ArchesTable::setup()
   }
   for(unsigned int i=0;i<deps.size();i++){
     Dep* dep = deps[i];
+    if(dep->type != Dep::TableValue)
+      continue;
     Dep* inputdep = 0;
     for(unsigned int j=0;j<in_deps.size();j++){
       if(in_deps[j]->name == dep->name){
@@ -344,9 +494,87 @@ void ArchesTable::setup()
       
     }
   }
+  for(unsigned int i=0;i<deps.size();i++){
+    Dep* dep = deps[i];
+    if(dep->type != Dep::DerivedValue)
+      continue;
+
+    cerr << "Evaluating: " << dep->name << '\n';
+    dep->data = new double[newsize];
+    evaluate(dep->expression, dep->data, newsize);
+  }
   file_read = true;
   double dt = Time::currentSeconds()-start;
   cerr << "Read and interpolated table in " << dt << " seconds\n";
+}
+
+void ArchesTable::evaluate(Expr* expr, double* data, int size)
+{
+  switch(expr->op){
+  case '+':
+    {
+      double* data1 = new double[size];
+      double* data2 = new double[size];
+      evaluate(expr->child1, data1, size);
+      evaluate(expr->child2, data2, size);
+      for(int i=0;i<size;i++)
+        data[i] = data1[i] + data2[i];
+      delete[] data1;
+      delete[] data2;
+    }
+    break;
+  case '-':
+    {
+      double* data1 = new double[size];
+      double* data2 = new double[size];
+      evaluate(expr->child1, data1, size);
+      evaluate(expr->child2, data2, size);
+      for(int i=0;i<size;i++)
+        data[i] = data1[i] - data2[i];
+      delete[] data1;
+      delete[] data2;
+    }
+    break;
+  case '*':
+    {
+      double* data1 = new double[size];
+      double* data2 = new double[size];
+      evaluate(expr->child1, data1, size);
+      evaluate(expr->child2, data2, size);
+      for(int i=0;i<size;i++)
+        data[i] = data1[i] * data2[i];
+      delete[] data1;
+      delete[] data2;
+    }
+    break;
+  case '/':
+    {
+      double* data1 = new double[size];
+      double* data2 = new double[size];
+      evaluate(expr->child1, data1, size);
+      evaluate(expr->child2, data2, size);
+      for(int i=0;i<size;i++)
+        data[i] = data1[i] / data2[i];
+      delete[] data1;
+      delete[] data2;
+    }
+    break;
+  case 'c':
+    {
+      for(int i=0;i<size;i++)
+        data[i] = expr->constant;
+    }
+    break;
+  case 'i':
+    {
+      double* from = deps[expr->dep]->data;
+      for(int i=0;i<size;i++)
+        data[i] = from[i];
+    }
+    break;
+  default:
+    throw InternalError("Bad op in expression");
+  }
 }
     
 void ArchesTable::interpolate(int index, CCVariable<double>& result,
@@ -354,73 +582,86 @@ void ArchesTable::interpolate(int index, CCVariable<double>& result,
 			      vector<constCCVariable<double> >& independents)
 {
   Dep* dep = deps[index];
-  int ni = inds.size();
-  ASSERT(ni < MAXINDEPENDENTS);
-  double w[MAXINDEPENDENTS];
-  long idx0[MAXINDEPENDENTS];
-  long idx1[MAXINDEPENDENTS];
-  long ninterp = 1<<ni;
+  switch(dep->type){
+  case Dep::ConstantValue:
+    {
+      double value = dep->constantValue;
+      for(CellIterator iter = in_iter; !iter.done(); iter++)
+        result[*iter] = value;
+    }
+    break;
+  case Dep::TableValue:
+  case Dep::DerivedValue:
+    {
+      int ni = inds.size();
+      ASSERT(ni < MAXINDEPENDENTS);
+      double w[MAXINDEPENDENTS];
+      long idx0[MAXINDEPENDENTS];
+      long idx1[MAXINDEPENDENTS];
+      long ninterp = 1<<ni;
 
-  for(CellIterator iter = in_iter; !iter.done(); iter++){
-    for(int i=0;i<ni;i++){
-      Ind* ind = inds[i];
-      double value = independents[i][*iter];
-      if(ind->uniform){
-	double index = (value-ind->weights[0])/ind->dx;
-	int idx = (int)index;
-	if(index < 0 || index >= ind->weights.size()){
-          if(value == ind->weights[ind->weights.size()-1]){
-            idx--;
-          } else if(index < 0 || index > -1.e-10){
-            index=0;
-            idx=0;
+      for(CellIterator iter = in_iter; !iter.done(); iter++){
+        for(int i=0;i<ni;i++){
+          Ind* ind = inds[i];
+          double value = independents[i][*iter];
+          if(ind->uniform){
+            double index = (value-ind->weights[0])/ind->dx;
+            int idx = (int)index;
+            if(index < 0 || index >= ind->weights.size()){
+              if(value == ind->weights[ind->weights.size()-1]){
+                idx--;
+              } else if(index < 0 || index > -1.e-10){
+                index=0;
+                idx=0;
+              } else {
+                cerr.precision(17);
+                cerr << "value=" << value << ", start=" << ind->weights[0] << ", dx=" << ind->dx << '\n';
+                cerr << "index=" << index << ", fraction=" << index-idx << '\n';
+                cerr << "last value=" << ind->weights[ind->weights.size()-1] << '\n';
+                throw InternalError("Interpolate outside range of table");
+              }
+            }
+            w[i] = index-idx;
+            idx0[i] = ind->offset[idx];
+            idx1[i] = ind->offset[idx+1];
           } else {
-            cerr.precision(17);
-            cerr << "value=" << value << ", start=" << ind->weights[0] << ", dx=" << ind->dx << '\n';
-            cerr << "index=" << index << ", fraction=" << index-idx << '\n';
-            cerr << "last value=" << ind->weights[ind->weights.size()-1] << '\n';
-            throw InternalError("Interpolate outside range of table");
+            int l=0;
+            int h=ind->weights.size()-1;
+            if(value < ind->weights[l] || value > ind->weights[h])
+              throw InternalError("Interpolate outside range of table");
+            while(h > l+1){
+              int m = (h+l)/2;
+              if(value < ind->weights[m])
+                h=m;
+              else
+                l=m;
+            }
+            idx0[i] = ind->offset[l];
+            idx1[i] = ind->offset[h];
+            w[i] = (value-ind->weights[l])/(ind->weights[h]-ind->weights[l]);
           }
-	}
-	w[i] = index-idx;
-	idx0[i] = ind->offset[idx];
-	idx1[i] = ind->offset[idx+1];
-      } else {
-	int l=0;
-	int h=ind->weights.size()-1;
-	if(value < ind->weights[l] || value > ind->weights[h])
-	  throw InternalError("Interpolate outside range of table");
-	while(h > l+1){
-	  int m = (h+l)/2;
-	  if(value < ind->weights[m])
-	    h=m;
-	  else
-	    l=m;
-	}
-	idx0[i] = ind->offset[l];
-	idx1[i] = ind->offset[h];
-	w[i] = (value-ind->weights[l])/(ind->weights[h]-ind->weights[l]);
+        }
+        // Do the interpolation
+        double sum = 0;
+        for(long i=0;i<ninterp;i++){
+          double weight = 1;
+          long index = 0;
+          for(int j=0;j<ni;j++){
+            long mask = 1<<j;
+            if(i & mask){
+              index += idx1[j];
+              weight *= w[j];
+            } else {
+              index += idx0[j];
+              weight *= 1-w[j];
+            }
+          }
+          double value = dep->data[index] * weight;
+          sum += value;
+        }
+        result[*iter] = sum;
       }
     }
-    // Do the interpolation
-    double sum = 0;
-    for(long i=0;i<ninterp;i++){
-      double weight = 1;
-      long index = 0;
-      for(int j=0;j<ni;j++){
-	long mask = 1<<j;
-	if(i & mask){
-	  index += idx1[j];
-	  weight *= w[j];
-	} else {
-	  index += idx0[j];
-	  weight *= 1-w[j];
-	}
-      }
-      double value = dep->data[index] * weight;
-      sum += value;
-    }
-    result[*iter] = sum;
   }
 }
 

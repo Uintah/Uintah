@@ -61,11 +61,51 @@ WARNING
     };
     vector<Ind*> inds;
 
+    struct Expr {
+      char op;
+      Expr(char op, Expr* child1, Expr* child2)
+        : op(op), child1(child1), child2(child2)
+      {
+      }
+      Expr(int dep)
+        : op('i'), child1(0), child2(0), dep(dep)
+      {
+      }
+      Expr(double constant)
+        : op('c'), child1(0), child2(0), constant(constant)
+      {
+      }
+      Expr* child1;
+      Expr* child2;
+      int dep;
+      double constant;
+      ~Expr() {
+        if(child1)
+          delete child1;
+        if(child2)
+          delete child2;
+      }
+    };
+
     struct Dep {
       string name;
+      enum Type {
+        ConstantValue,
+        DerivedValue,
+        TableValue
+      } type;
+      double constantValue;
       double* data;
+      Expr* expression;
+      Dep(Type type) : type(type) { data = 0; expression = 0; }
     };
     vector<Dep*> deps;
+
+    Expr* parse_addsub(string::iterator&  begin, string::iterator& end);
+    Expr* parse_muldiv(string::iterator&  begin, string::iterator& end);
+    Expr* parse_sign(string::iterator&  begin, string::iterator& end);
+    Expr* parse_idorconstant(string::iterator&  begin, string::iterator& end);
+    void evaluate(Expr* expr, double* data, int size);
 
     string filename;
     bool file_read;
