@@ -43,7 +43,6 @@ Persistent* scene_maker() {
 PersistentTypeID Scene::type_id("Scene", "Persistent", scene_maker);
 
 Scene::Scene() :
-  rtrt_engine(0),
   work("frame tiles"),
   maxdepth(-1),
   base_threshold(0),
@@ -69,8 +68,9 @@ Scene::Scene() :
   camera1(0),
   image0(0),
   image1(0),
-  background(0), orig_background(0),
-  ambient_environment_map(0)
+  orig_background(0), background(0),
+  ambient_environment_map(0),
+  rtrt_engine(0)
 { mainGroup_ = new Group(); }
 
 Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
@@ -108,8 +108,7 @@ Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
   origCDown_(cdown),
   cup(cup), 
   cdown(cdown), 
-  groundplane(groundplane), 
-  transmissionMode_(false)
+  groundplane(groundplane)
 {
   mainGroup_ = new Group();
   mainGroup_->add( ob );
@@ -148,7 +147,6 @@ void Scene::init(const Camera& cam, const Color& bgcolor)
   shadowobj=0;
   orig_background = background = new ConstantBackground( bgcolor );
   animate=true;
-  hotSpotMode_ = 0;
   frameno=0;
   frametime_fp=0;
   lasttime=0;
@@ -455,7 +453,6 @@ Scene::io(SCIRun::Piostream &stream) {
   //  SCIRun::Pio(stream, displays);
   SCIRun::Pio(stream, ambientColor_);
   SCIRun::Pio(stream, origAmbientColor_);
-  SCIRun::Pio(stream, hotSpotMode_);
   SCIRun::Pio(stream, materials);
   stream.end_class();
 }
