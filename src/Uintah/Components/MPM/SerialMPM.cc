@@ -172,14 +172,35 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 {
    Level::const_patchIterator iter;
 
+   int numMatls = d_sharedState->getNumMPMMatls();
+
    for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
 
-      const Patch* patch=*iter; {
+     const Patch* patch=*iter;
+     {
 	 Task* t = scinew Task("SerialMPM::actuallyInitialize", patch, dw, dw,
 			       this, &SerialMPM::actuallyInitialize);
+	 for(int m = 0; m < numMatls; m++){
+           MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+           int idx = mpm_matl->getDWIndex();
+	   t->computes(dw, lb->pXLabel,             idx, patch);
+	   t->computes(dw, lb->pMassLabel,          idx, patch);
+	   t->computes(dw, lb->pVolumeLabel,        idx, patch);
+	   t->computes(dw, lb->pTemperatureLabel,   idx, patch);
+	   t->computes(dw, lb->pVelocityLabel,      idx, patch);
+	   t->computes(dw, lb->pExternalForceLabel, idx, patch);
+	   t->computes(dw, lb->pParticleIDLabel,    idx, patch);
+	   if(d_fracture){
+	      t->computes(dw, lb->pIsBrokenLabel,                 idx, patch);
+	      t->computes(dw, lb->pCrackNormalLabel,              idx, patch);
+	      t->computes(dw, lb->pCrackSurfaceContactForceLabel, idx, patch);
+	      t->computes(dw, lb->pTensileStrengthLabel,          idx, patch);
+	      t->computes(dw, lb->pImageVelocityLabel,            idx, patch);
+	   }
+	 }
 	 t->computes(dw, d_sharedState->get_delt_label());
 	 sched->addTask(t);
-      }
+     }
    }
 }
 
@@ -1654,6 +1675,7 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw)
 {
+
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwindex = mpm_matl->getDWIndex();
@@ -2160,6 +2182,9 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.184  2001/01/16 23:58:58  guilkey
+// Added "computes" to scheduleInitialze.
+//
 // Revision 1.183  2001/01/15 22:44:38  tan
 // Fixed parallel version of fracture code.
 //
