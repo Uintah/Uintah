@@ -41,18 +41,15 @@ void ConstitutiveModel::computeStressTensor(const PatchSubset*,
 
 void ConstitutiveModel::addComputesAndRequires(Task*, 
 					       const MPMMaterial*,
-					       const PatchSet*)
+					       const PatchSet*) const
 {
-
 }
-
 
 void ConstitutiveModel::addComputesAndRequires(Task*, 
 					       const MPMMaterial*,
 					       const PatchSet*,
-					       const bool)
+					       const bool) const
 {
-
 }
 
 
