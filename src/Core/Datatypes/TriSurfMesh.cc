@@ -363,6 +363,8 @@ TriSurfMesh::locate(Edge::index_type &loc, const Point &p) const
 	    "Must call synchronize EDGES_E on TriSurfMesh first");
 
   Edge::iterator bi, ei;
+  begin(bi);
+  end(ei);
   
   bool found = false;
   double mindist = 0.0;
