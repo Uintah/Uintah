@@ -771,14 +771,11 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   //__________________________________
   // define Matl sets and subsets
   const MaterialSet* all_matls = d_sharedState->allMaterials();
-  MaterialSubset* one_matl    = scinew MaterialSubset();
+  MaterialSubset* one_matl    = d_press_matl;
   MaterialSet* press_matlSet  = scinew MaterialSet();
-  one_matl->add(0);
   press_matlSet->add(0);
-  one_matl->addReference();
   press_matlSet->addReference(); 
-  MaterialSubset* press_matl = one_matl;
-
+  
   //__________________________________
   //  turn off parentDW scrubbing
   DataWarehouse::ScrubMode ParentOldDW_scrubmode =
@@ -814,7 +811,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   ParentNewDW->get(max_RHS_old, lb->max_RHSLabel);
   subNewDW->put(   max_RHS_old, lb->max_RHSLabel);
   
-  subNewDW->transferFrom(ParentNewDW,lb->press_CCLabel,     patch_sub, press_matl); 
+  subNewDW->transferFrom(ParentNewDW,lb->press_CCLabel,     patch_sub, d_press_matl); 
   subNewDW->transferFrom(ParentNewDW,lb->rhsLabel,          patch_sub, one_matl);
   //subNewDW->transferFrom(ParentOldDW,lb->initialGuessLabel, patch_sub, one_matl);  
   //__________________________________
@@ -849,12 +846,12 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
 
     scheduleUpdatePressure( subsched,  level, patch_set,  ice_matls,
                                                           mpm_matls, 
-                                                          press_matl,  
+                                                          d_press_matl,  
                                                           all_matls);
                                                           
     scheduleImplicitVel_FC( subsched,         patch_set,  ice_matls,
                                                           mpm_matls, 
-                                                          press_matl, 
+                                                          d_press_matl, 
                                                           all_matls,
                                                           recursion);
 
@@ -943,7 +940,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   bool replace = true;
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
   ParentNewDW->transferFrom(subNewDW,         // press
-                    lb->press_CCLabel,  patch_sub, press_matl, replace); 
+                    lb->press_CCLabel,  patch_sub, d_press_matl, replace); 
   ParentNewDW->transferFrom(subNewDW,         // term2
                     lb->term2Label,     patch_sub, one_matl,   replace);   
   ParentNewDW->transferFrom(subNewDW,         // beta
@@ -958,15 +955,5 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   //__________________________________
   //  Turn scrubbing back on
   ParentOldDW->setScrubbing(ParentOldDW_scrubmode);
-  ParentNewDW->setScrubbing(ParentNewDW_scrubmode);
-  
-  //__________________________________
-  // clean up memory
-  if(press_matlSet->removeReference()){
-    delete press_matlSet;
-  }
-  if(one_matl->removeReference()){
-    delete one_matl;
-  }
-  
+  ParentNewDW->setScrubbing(ParentNewDW_scrubmode);  
 }
