@@ -123,6 +123,7 @@ public:
   void get(double*) const;
   void get_trans(double*) const;
   void set(double*);
+  void set_trans(double*);
   void load_identity();
   void perspective(const Point& eyep, const Point& lookat,
 		   const Vector& up, double fov,
