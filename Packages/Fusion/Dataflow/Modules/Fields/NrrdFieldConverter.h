@@ -107,16 +107,26 @@ execute(MeshHandle mHandle,
   
     PNTYPE *ptr = (PNTYPE *)(nHandles[mesh[0]]->nrrd->data);
     
+    int rank = 0;
+    string label(nHandles[mesh[0]]->nrrd->axis[0].label);
+
+    if( label.find( ":Scalar" ) != string::npos )
+      rank = nHandles[mesh[0]]->nrrd->axis[ nHandles[mesh[0]]->nrrd->dim-1].size;
+    else if( label.find( ":Vector" ) != string::npos )
+      rank = 3;
+
     for( k=0; k<kdim; k++ ) {
       for( j=0; j<jdim; j++ ) {
 	for( i=0; i<idim; i++ ) {
 	  
 	  int index = (i * jdim + j) * kdim + k;
 
+	  float xVal = 0, yVal = 0, zVal = 0;
+
 	  // Mesh
-	  float xVal = ptr[index*3 + 0];
-	  float yVal = ptr[index*3 + 1];
-	  float zVal = ptr[index*3 + 2];
+	  if( rank >= 1 ) xVal = ptr[index*rank + 0];
+	  if( rank >= 2 ) yVal = ptr[index*rank + 1];
+	  if( rank >= 3 ) zVal = ptr[index*rank + 2];
 	
 	  imesh->set_point(Point(xVal, yVal, zVal), *inodeItr);
 
@@ -162,11 +172,22 @@ execute(MeshHandle mHandle,
 
   int npts = pHandle->nrrd->axis[1].size;
 
-  for( int i=0; i<npts; i++ ) {
-    double xVal = pPtr[i*3  ];
-    double yVal = pPtr[i*3+1];
-    double zVal = pPtr[i*3+2];
+  int rank = 0;
+  string label(pHandle->nrrd->axis[0].label);
+  
+  if( label.find( ":Scalar" ) != string::npos )
+    rank = pHandle->nrrd->axis[ pHandle->nrrd->dim-1].size;
+  else if( label.find( ":Vector" ) != string::npos )
+    rank = 3;
 
+  for( int index=0; index<npts; index++ ) {
+    float xVal = 0, yVal = 0, zVal = 0;
+
+    // Mesh
+    if( rank >= 1 ) xVal = pPtr[index*rank + 0];
+    if( rank >= 2 ) yVal = pPtr[index*rank + 1];
+    if( rank >= 3 ) zVal = pPtr[index*rank + 2];
+    
     imesh->add_point( Point(xVal, yVal, zVal) );
   }
 
