@@ -246,7 +246,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   scene->add_per_matl_light( sunlight );
 
   scene->select_shadow_mode( Hard_Shadows );
-  scene->maxdepth = 4;
+  scene->maxdepth = 8;
 
   if( argc < 2 || strcmp(argv[1],"-fast") ) {
     cout << "Creating TRIGGERS:\n";

@@ -537,7 +537,8 @@ main(int argc, char* argv[])
     scene->shadow_mode = shadow_mode;
 
   scene->no_aa=no_aa;
-  
+  scene->maxdepth = 8;
+
   if(use_bv){
     if(scene->nprims() > 1){
       cerr << "*********************************************************\n";
