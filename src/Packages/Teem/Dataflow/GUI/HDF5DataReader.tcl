@@ -393,7 +393,6 @@ itcl_class Teem_DataIO_HDF5DataReader {
 		    set id [eval $treeview find -exact -full "{$dataset}"]
 
 		    if {"$id" != ""} {
-
 			if { [eval $treeview entry isopen $id] == 1 } {
 			    $treeview selection set $id
 			} else {
@@ -776,26 +775,28 @@ itcl_class Teem_DataIO_HDF5DataReader {
 
 		set ids [$treeview curselection]
 
-		foreach id $ids {
+		if { $ids != "" } {
+		    foreach id $ids {
 
-#		    Check to see if the selection is an attribute
-		    foreach attribute $attributes {
-			if { $attribute == $id } { 
-			    $treeview selection clear $id
-			    break
+			# Check to see if the selection is an attribute
+			foreach attribute $attributes {
+			    if { $attribute == $id } { 
+				$treeview selection clear $id
+				break
+			    }
 			}
-		    }
 
-#		    Check to see if the selection is a group
-		    foreach group $groups {
-			if { $group == $id } { 
-			    $treeview selection clear $id
-			    SelectChildrenDataSet $id
-			    break
+			# Check to see if the selection is a group
+			foreach group $groups {
+			    if { $group == $id } { 
+				$treeview selection clear $id
+				SelectChildrenDataSet $id
+				break
+			    }
 			}
-		    }
+		    }		    
 		}
-		
+
 		updateSelection
 	    }
 
@@ -953,8 +954,7 @@ itcl_class Teem_DataIO_HDF5DataReader {
 			if {"$id" != ""} {
 			    $treeview selection clear $id
 			    $treeview open $id
-			} else {
-			    
+			} else {			    
 			    set message "Could not find dataset: "
 			    append message $dataset
 			    $this-c error $message
