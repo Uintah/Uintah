@@ -29,6 +29,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ApplyFEMCurrentSource.tcl\
 	$(SRCDIR)/ApplyFEMVoltageSource.tcl\
 	$(SRCDIR)/BuildFEMatrixQuadratic.tcl\
+	$(SRCDIR)/BuildMisfitField.tcl\
 	$(SRCDIR)/ComputeCurrent.tcl\
 	$(SRCDIR)/ConductivitySearch.tcl\
 	$(SRCDIR)/ConfigureElectrode.tcl\
