@@ -590,7 +590,7 @@ void MPMArches::schedulePutAllForcesOnNC(SchedulerP& sched,
 void MPMArches::interpolateNCToCC(const ProcessorGroup*,
 				  const PatchSubset* patches,
 				  const MaterialSubset* matls,
-				  DataWarehouse* old_dw,
+				  DataWarehouse* /*old_dw*/,
 				  DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
@@ -652,7 +652,7 @@ void MPMArches::interpolateNCToCC(const ProcessorGroup*,
 void MPMArches::interpolateCCToFC(const ProcessorGroup*,
 				  const PatchSubset* patches,
 				  const MaterialSubset* matls,
-				  DataWarehouse* old_dw,
+				  DataWarehouse* /*old_dw*/,
 				  DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
@@ -818,7 +818,7 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
 void MPMArches::computeVoidFrac(const ProcessorGroup*,
 				const PatchSubset* patches,
 				const MaterialSubset*,
-				DataWarehouse* old_dw,
+				DataWarehouse* /*old_dw*/,
 				DataWarehouse* new_dw) 
 
 {
@@ -1181,11 +1181,11 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     double viscos = d_arches->getTurbulenceModel()->getMolecularViscosity();
     double csmag = d_arches->getTurbulenceModel()->getSmagorinskyConst();
 
-    IntVector dim_lo = cellType.getFortLowIndex();
-    IntVector dim_hi = cellType.getFortHighIndex();
+//    IntVector dim_lo = cellType.getFortLowIndex();
+//    IntVector dim_hi = cellType.getFortHighIndex();
     
-    IntVector dim_lo_eps = gas_fraction_cc.getFortLowIndex();
-    IntVector dim_hi_eps = gas_fraction_cc.getFortHighIndex();
+//    IntVector dim_lo_eps = gas_fraction_cc.getFortLowIndex();
+//    IntVector dim_hi_eps = gas_fraction_cc.getFortHighIndex();
     
     IntVector dim_lo_ugc;
     IntVector dim_hi_ugc;
@@ -1198,11 +1198,11 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     
     for (int m = 0; m < numMPMMatls; m++) {
       
-      IntVector dim_lo_upc = xvelCC_solid[m].getFortLowIndex();
-      IntVector dim_hi_upc = xvelCC_solid[m].getFortHighIndex();
+//      IntVector dim_lo_upc = xvelCC_solid[m].getFortLowIndex();
+//      IntVector dim_hi_upc = xvelCC_solid[m].getFortHighIndex();
       
-      IntVector dim_lo_epss = solid_fraction_cc[m].getFortLowIndex();
-      IntVector dim_hi_epss = solid_fraction_cc[m].getFortHighIndex();
+//      IntVector dim_lo_epss = solid_fraction_cc[m].getFortLowIndex();
+//      IntVector dim_hi_epss = solid_fraction_cc[m].getFortHighIndex();
       
       // code for x-direction momentum exchange
       
@@ -1217,23 +1217,23 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       
       // gas variables
       
-      IntVector xdim_lo_su_fcy = uVelNonlinearSrc_fcy.getFortLowIndex();
-      IntVector xdim_hi_su_fcy = uVelNonlinearSrc_fcy.getFortHighIndex();
+//      IntVector xdim_lo_su_fcy = uVelNonlinearSrc_fcy.getFortLowIndex();
+//      IntVector xdim_hi_su_fcy = uVelNonlinearSrc_fcy.getFortHighIndex();
       
-      IntVector xdim_lo_sp_fcy = uVelLinearSrc_fcy.getFortLowIndex();
-      IntVector xdim_hi_sp_fcy = uVelLinearSrc_fcy.getFortHighIndex();
+//      IntVector xdim_lo_sp_fcy = uVelLinearSrc_fcy.getFortLowIndex();
+//      IntVector xdim_hi_sp_fcy = uVelLinearSrc_fcy.getFortHighIndex();
       
-      IntVector xdim_lo_su_fcz = uVelNonlinearSrc_fcz.getFortLowIndex();
-      IntVector xdim_hi_su_fcz = uVelNonlinearSrc_fcz.getFortHighIndex();
+//      IntVector xdim_lo_su_fcz = uVelNonlinearSrc_fcz.getFortLowIndex();
+//      IntVector xdim_hi_su_fcz = uVelNonlinearSrc_fcz.getFortHighIndex();
       
-      IntVector xdim_lo_sp_fcz = uVelLinearSrc_fcz.getFortLowIndex();
-      IntVector xdim_hi_sp_fcz = uVelLinearSrc_fcz.getFortHighIndex();
+//      IntVector xdim_lo_sp_fcz = uVelLinearSrc_fcz.getFortLowIndex();
+//      IntVector xdim_hi_sp_fcz = uVelLinearSrc_fcz.getFortHighIndex();
       
-      IntVector xdim_lo_su_cc = uVelNonlinearSrc_cc.getFortLowIndex();
-      IntVector xdim_hi_su_cc = uVelNonlinearSrc_cc.getFortHighIndex();
+//      IntVector xdim_lo_su_cc = uVelNonlinearSrc_cc.getFortLowIndex();
+//      IntVector xdim_hi_su_cc = uVelNonlinearSrc_cc.getFortHighIndex();
       
-      IntVector xdim_lo_sp_cc = uVelLinearSrc_cc.getFortLowIndex();
-      IntVector xdim_hi_sp_cc = uVelLinearSrc_cc.getFortHighIndex();
+//      IntVector xdim_lo_sp_cc = uVelLinearSrc_cc.getFortLowIndex();
+//      IntVector xdim_hi_sp_cc = uVelLinearSrc_cc.getFortHighIndex();
       
       int ioff = 1;
       int joff = 0;
@@ -1245,17 +1245,17 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       
       // solid material variables
       
-      IntVector xdim_lo_dx_fcy = dragForceX_fcy[m].getFortLowIndex();
-      IntVector xdim_hi_dx_fcy = dragForceX_fcy[m].getFortHighIndex();
+//      IntVector xdim_lo_dx_fcy = dragForceX_fcy[m].getFortLowIndex();
+//      IntVector xdim_hi_dx_fcy = dragForceX_fcy[m].getFortHighIndex();
       
-      IntVector xdim_lo_dx_fcz = dragForceX_fcz[m].getFortLowIndex();
-      IntVector xdim_hi_dx_fcz = dragForceX_fcz[m].getFortHighIndex();
+//      IntVector xdim_lo_dx_fcz = dragForceX_fcz[m].getFortLowIndex();
+//      IntVector xdim_hi_dx_fcz = dragForceX_fcz[m].getFortHighIndex();
       
-      IntVector xdim_lo_upy = xvelFCY_solid[m].getFortLowIndex();
-      IntVector xdim_hi_upy = xvelFCY_solid[m].getFortHighIndex();
+//      IntVector xdim_lo_upy = xvelFCY_solid[m].getFortLowIndex();
+//      IntVector xdim_hi_upy = xvelFCY_solid[m].getFortHighIndex();
       
-      IntVector xdim_lo_upz = xvelFCZ_solid[m].getFortLowIndex();
-      IntVector xdim_hi_upz = xvelFCZ_solid[m].getFortHighIndex();
+//      IntVector xdim_lo_upz = xvelFCZ_solid[m].getFortLowIndex();
+//      IntVector xdim_hi_upz = xvelFCZ_solid[m].getFortHighIndex();
       
       fort_momentum_exchange_term_continuous_cc(uVelNonlinearSrc_fcy,
 						uVelLinearSrc_fcy,
@@ -1295,23 +1295,23 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       
       // gas variables
       
-      IntVector ydim_lo_su_fcy = vVelNonlinearSrc_fcz.getFortLowIndex();
-      IntVector ydim_hi_su_fcy = vVelNonlinearSrc_fcz.getFortHighIndex();
+//      IntVector ydim_lo_su_fcy = vVelNonlinearSrc_fcz.getFortLowIndex();
+//      IntVector ydim_hi_su_fcy = vVelNonlinearSrc_fcz.getFortHighIndex();
       
-      IntVector ydim_lo_sp_fcy = vVelLinearSrc_fcz.getFortLowIndex();
-      IntVector ydim_hi_sp_fcy = vVelLinearSrc_fcz.getFortHighIndex();
+//      IntVector ydim_lo_sp_fcy = vVelLinearSrc_fcz.getFortLowIndex();
+//      IntVector ydim_hi_sp_fcy = vVelLinearSrc_fcz.getFortHighIndex();
       
-      IntVector ydim_lo_su_fcz = vVelNonlinearSrc_fcx.getFortLowIndex();
-      IntVector ydim_hi_su_fcz = vVelNonlinearSrc_fcx.getFortHighIndex();
+//      IntVector ydim_lo_su_fcz = vVelNonlinearSrc_fcx.getFortLowIndex();
+//      IntVector ydim_hi_su_fcz = vVelNonlinearSrc_fcx.getFortHighIndex();
       
-      IntVector ydim_lo_sp_fcz = vVelLinearSrc_fcx.getFortLowIndex();
-      IntVector ydim_hi_sp_fcz = vVelLinearSrc_fcx.getFortHighIndex();
+//      IntVector ydim_lo_sp_fcz = vVelLinearSrc_fcx.getFortLowIndex();
+//      IntVector ydim_hi_sp_fcz = vVelLinearSrc_fcx.getFortHighIndex();
       
-      IntVector ydim_lo_su_cc = vVelNonlinearSrc_cc.getFortLowIndex();
-      IntVector ydim_hi_su_cc = vVelNonlinearSrc_cc.getFortHighIndex();
+//      IntVector ydim_lo_su_cc = vVelNonlinearSrc_cc.getFortLowIndex();
+//      IntVector ydim_hi_su_cc = vVelNonlinearSrc_cc.getFortHighIndex();
       
-      IntVector ydim_lo_sp_cc = vVelLinearSrc_cc.getFortLowIndex();
-      IntVector ydim_hi_sp_cc = vVelLinearSrc_cc.getFortHighIndex();
+//      IntVector ydim_lo_sp_cc = vVelLinearSrc_cc.getFortLowIndex();
+//      IntVector ydim_hi_sp_cc = vVelLinearSrc_cc.getFortHighIndex();
       
       ioff = 0;
       joff = 1;
@@ -1323,17 +1323,17 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       
       // solid material variables
       
-      IntVector ydim_lo_dx_fcy = dragForceY_fcz[m].getFortLowIndex();
-      IntVector ydim_hi_dx_fcy = dragForceY_fcz[m].getFortHighIndex();
+//      IntVector ydim_lo_dx_fcy = dragForceY_fcz[m].getFortLowIndex();
+//      IntVector ydim_hi_dx_fcy = dragForceY_fcz[m].getFortHighIndex();
       
-      IntVector ydim_lo_dx_fcz = dragForceY_fcx[m].getFortLowIndex();
-      IntVector ydim_hi_dx_fcz = dragForceY_fcx[m].getFortHighIndex();
+//      IntVector ydim_lo_dx_fcz = dragForceY_fcx[m].getFortLowIndex();
+//      IntVector ydim_hi_dx_fcz = dragForceY_fcx[m].getFortHighIndex();
       
-      IntVector ydim_lo_upy = yvelFCZ_solid[m].getFortLowIndex();
-      IntVector ydim_hi_upy = yvelFCZ_solid[m].getFortHighIndex();
+//      IntVector ydim_lo_upy = yvelFCZ_solid[m].getFortLowIndex();
+//      IntVector ydim_hi_upy = yvelFCZ_solid[m].getFortHighIndex();
       
-      IntVector ydim_lo_upz = yvelFCX_solid[m].getFortLowIndex();
-      IntVector ydim_hi_upz = yvelFCX_solid[m].getFortHighIndex();
+//      IntVector ydim_lo_upz = yvelFCX_solid[m].getFortLowIndex();
+//      IntVector ydim_hi_upz = yvelFCX_solid[m].getFortHighIndex();
 
       fort_momentum_exchange_term_continuous_cc(vVelNonlinearSrc_fcz,
 						vVelLinearSrc_fcz,
@@ -1373,23 +1373,23 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       
       // gas variables
       
-      IntVector zdim_lo_su_fcy = wVelNonlinearSrc_fcx.getFortLowIndex();
-      IntVector zdim_hi_su_fcy = wVelNonlinearSrc_fcx.getFortHighIndex();
+//      IntVector zdim_lo_su_fcy = wVelNonlinearSrc_fcx.getFortLowIndex();
+//      IntVector zdim_hi_su_fcy = wVelNonlinearSrc_fcx.getFortHighIndex();
       
-      IntVector zdim_lo_sp_fcy = wVelLinearSrc_fcx.getFortLowIndex();
-      IntVector zdim_hi_sp_fcy = wVelLinearSrc_fcx.getFortHighIndex();
+//      IntVector zdim_lo_sp_fcy = wVelLinearSrc_fcx.getFortLowIndex();
+//      IntVector zdim_hi_sp_fcy = wVelLinearSrc_fcx.getFortHighIndex();
       
-      IntVector zdim_lo_su_fcz = wVelNonlinearSrc_fcy.getFortLowIndex();
-      IntVector zdim_hi_su_fcz = wVelNonlinearSrc_fcy.getFortHighIndex();
+//      IntVector zdim_lo_su_fcz = wVelNonlinearSrc_fcy.getFortLowIndex();
+//      IntVector zdim_hi_su_fcz = wVelNonlinearSrc_fcy.getFortHighIndex();
       
-      IntVector zdim_lo_sp_fcz = wVelLinearSrc_fcy.getFortLowIndex();
-      IntVector zdim_hi_sp_fcz = wVelLinearSrc_fcy.getFortHighIndex();
+//      IntVector zdim_lo_sp_fcz = wVelLinearSrc_fcy.getFortLowIndex();
+//      IntVector zdim_hi_sp_fcz = wVelLinearSrc_fcy.getFortHighIndex();
       
-      IntVector zdim_lo_su_cc = wVelNonlinearSrc_cc.getFortLowIndex();
-      IntVector zdim_hi_su_cc = wVelNonlinearSrc_cc.getFortHighIndex();
+//      IntVector zdim_lo_su_cc = wVelNonlinearSrc_cc.getFortLowIndex();
+//      IntVector zdim_hi_su_cc = wVelNonlinearSrc_cc.getFortHighIndex();
       
-      IntVector zdim_lo_sp_cc = wVelLinearSrc_cc.getFortLowIndex();
-      IntVector zdim_hi_sp_cc = wVelLinearSrc_cc.getFortHighIndex();
+//      IntVector zdim_lo_sp_cc = wVelLinearSrc_cc.getFortLowIndex();
+//      IntVector zdim_hi_sp_cc = wVelLinearSrc_cc.getFortHighIndex();
       
       ioff = 0;
       joff = 0;
@@ -1401,17 +1401,17 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       
       // solid material variables
       
-      IntVector zdim_lo_dx_fcy = dragForceZ_fcx[m].getFortLowIndex();
-      IntVector zdim_hi_dx_fcy = dragForceZ_fcx[m].getFortHighIndex();
+//      IntVector zdim_lo_dx_fcy = dragForceZ_fcx[m].getFortLowIndex();
+//      IntVector zdim_hi_dx_fcy = dragForceZ_fcx[m].getFortHighIndex();
       
-      IntVector zdim_lo_dx_fcz = dragForceZ_fcy[m].getFortLowIndex();
-      IntVector zdim_hi_dx_fcz = dragForceZ_fcy[m].getFortHighIndex();
+//      IntVector zdim_lo_dx_fcz = dragForceZ_fcy[m].getFortLowIndex();
+//      IntVector zdim_hi_dx_fcz = dragForceZ_fcy[m].getFortHighIndex();
       
-      IntVector zdim_lo_upy = zvelFCX_solid[m].getFortLowIndex();
-      IntVector zdim_hi_upy = zvelFCX_solid[m].getFortHighIndex();
+//      IntVector zdim_lo_upy = zvelFCX_solid[m].getFortLowIndex();
+//      IntVector zdim_hi_upy = zvelFCX_solid[m].getFortHighIndex();
       
-      IntVector zdim_lo_upz = zvelFCY_solid[m].getFortLowIndex();
-      IntVector zdim_hi_upz = zvelFCY_solid[m].getFortHighIndex();
+//      IntVector zdim_lo_upz = zvelFCY_solid[m].getFortLowIndex();
+//      IntVector zdim_hi_upz = zvelFCY_solid[m].getFortHighIndex();
 
       fort_momentum_exchange_term_continuous_cc(wVelNonlinearSrc_fcx,
 						wVelLinearSrc_fcx,
@@ -1440,17 +1440,17 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
       
       // code for pressure forces (direction-independent)
       
-      IntVector dim_lo_fcx = pressForceX[m].getFortLowIndex();
-      IntVector dim_hi_fcx = pressForceX[m].getFortHighIndex();
+//      IntVector dim_lo_fcx = pressForceX[m].getFortLowIndex();
+//      IntVector dim_hi_fcx = pressForceX[m].getFortHighIndex();
       
-      IntVector dim_lo_fcy = pressForceY[m].getFortLowIndex();
-      IntVector dim_hi_fcy = pressForceY[m].getFortHighIndex();
+//      IntVector dim_lo_fcy = pressForceY[m].getFortLowIndex();
+//      IntVector dim_hi_fcy = pressForceY[m].getFortHighIndex();
       
-      IntVector dim_lo_fcz = pressForceZ[m].getFortLowIndex();
-      IntVector dim_hi_fcz = pressForceZ[m].getFortHighIndex();
+//      IntVector dim_lo_fcz = pressForceZ[m].getFortLowIndex();
+//      IntVector dim_hi_fcz = pressForceZ[m].getFortHighIndex();
       
-      IntVector dim_lo_pres = pressure.getFortLowIndex();
-      IntVector dim_hi_pres = pressure.getFortHighIndex();
+//      IntVector dim_lo_pres = pressure.getFortLowIndex();
+//      IntVector dim_hi_pres = pressure.getFortHighIndex();
       
       valid_lo = patch->getCellFORTLowIndex();
       valid_hi = patch->getCellFORTHighIndex();
@@ -1554,7 +1554,7 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
 					  const PatchSubset* patches,
 					  const MaterialSubset*,
-					  DataWarehouse* old_dw,
+					  DataWarehouse* /*old_dw*/,
 					  DataWarehouse* new_dw)
 
 {
@@ -1812,7 +1812,7 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
 void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
 						const PatchSubset* patches,
 						const MaterialSubset* ,
-						DataWarehouse* old_dw,
+						DataWarehouse* /*old_dw*/,
 						DataWarehouse* new_dw)
 
   // This function interpolates the source terms that are calculated 
@@ -2152,7 +2152,7 @@ void MPMArches::redistributeDragForceFromCCtoFC(const ProcessorGroup*,
 void MPMArches::putAllForcesOnCC(const ProcessorGroup*,
 				const PatchSubset* patches,
 				const MaterialSubset* matls,
-				DataWarehouse* old_dw,
+				DataWarehouse* /*old_dw*/,
 				DataWarehouse* new_dw)
 
 {
@@ -2219,7 +2219,7 @@ void MPMArches::putAllForcesOnCC(const ProcessorGroup*,
 void MPMArches::putAllForcesOnNC(const ProcessorGroup*,
 				const PatchSubset* patches,
 				const MaterialSubset* matls,
-				DataWarehouse* old_dw,
+				DataWarehouse* /*old_dw*/,
 				DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
