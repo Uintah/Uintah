@@ -28,8 +28,8 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#ifndef SCI_Gui_h
-#define SCI_Gui_h 
+#ifndef SCI_SamplerGui_h
+#define SCI_SamplerGui_h 
 
 #include <Core/PartsGui/PartGui.h>
 #include <Core/Util/Signals.h>
@@ -55,5 +55,5 @@ public:
 
 } // namespace MIT
 
-#endif // SCI_Gui_h
+#endif // SCI_SamplerGui_h
 

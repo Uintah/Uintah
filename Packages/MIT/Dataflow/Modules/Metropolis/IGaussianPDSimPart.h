@@ -18,6 +18,9 @@ using namespace SCIRun;
 
 class Sampler;
 class IGaussianPDSimPart : public PDSimPart {
+private:
+  vector<double> mean_;
+
 public:
   IGaussianPDSimPart( Sampler *, PartInterface *parent, 
 			      const string &name="IGaussianPDSim");

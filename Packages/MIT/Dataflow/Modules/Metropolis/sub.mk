@@ -15,6 +15,8 @@ SRCDIR   := Packages/MIT/Dataflow/Modules/Metropolis
 SRCS     += \
 	$(SRCDIR)/PDSimPart.cc\
 	$(SRCDIR)/IUniformPDSimPart.cc\
+	$(SRCDIR)/IGaussianPDSimPart.cc\
+	$(SRCDIR)/ItPDSimPart.cc\
 	$(SRCDIR)/MultivariateNormalDSimPart.cc\
 	$(SRCDIR)/PriorPart.cc\
 	$(SRCDIR)/LikelihoodPart.cc\
@@ -22,6 +24,9 @@ SRCS     += \
         $(SRCDIR)/Sampler.cc\
         $(SRCDIR)/SamplerGui.cc\
         $(SRCDIR)/Bayer.cc\
+        $(SRCDIR)/AS245.F\
+        $(SRCDIR)/mvtpdf.F\
+        $(SRCDIR)/mnormpdf.F\
 #[INSERT NEW CODE FILE HERE]
 
 
@@ -36,7 +41,9 @@ PSELIBS := Packages/MIT/Core/Datatypes \
         Core/Geom Core/Geometry Core/Thread Core/GuiInterface
 
 LIBS := -L/usr/local/lib -L$(TCL_LIB_DIR) \
-	$(LAPACK_LIBRARY)  $(BLAS_LIBRARY) -lcvode -lunuran $(FLIBS) -lm
+	$(LAPACK_LIBRARY)  $(BLAS_LIBRARY) \
+	 -lcvode -lunuran -lranlib -llinpack \
+	$(FLIBS) -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
