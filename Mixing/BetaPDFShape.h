@@ -40,6 +40,10 @@ POSSIBLE REVISIONS
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/PDFShape.h>
 #include <vector>
 
+#if !defined(_AIX)
+#  define dgammaln dgammaln_
+#endif
+
 namespace Uintah {
 
 class BetaPDFShape: public PDFShape {
