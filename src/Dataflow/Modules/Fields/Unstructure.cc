@@ -96,6 +96,7 @@ Unstructure::execute()
   }
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
+    error( "No handle or representation" );                                     
     return;
   }
 
