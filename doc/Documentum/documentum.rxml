@@ -1349,15 +1349,15 @@ in the <filename>src</filename> side of the tree should be based on
 
 <para>
 Documentation for current &sr; release is published at <ulink
-url="http://software.sci.utah.edu/doc/present/doc">http://software.sci.utah.edu/doc/present/doc</ulink>.
+url="http://software.sci.utah.edu/doc">http://software.sci.utah.edu/doc</ulink>.
 </para>
 <para>
 Documentation under development is published at <ulink
-url="http://software.sci.utah.edu/doc/future/doc">http://software.sci.utah.edu/doc/future/doc</ulink>.
+url="http://software.sci.utah.edu/future/doc">http://software.sci.utah.edu/future/doc</ulink>.
 </para>
 <para>
 Documentation being tested for release is published at <ulink
-url="http://software.sci.utah.edu/doc/pre-release">http://software.sci.utah.edu/doc/pre-release/doc</ulink>.
+url="http://software.sci.utah.edu/pre-release/doc">http://software.sci.utah.edu/pre-release/doc</ulink>.
 </para>
 
 <para>The following sections describe (approximately) how to publish
