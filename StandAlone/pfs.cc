@@ -115,20 +115,23 @@ main(int argc, char *argv[])
           for(ProblemSpecP child = geom_obj_ps->findBlock(); child != 0;
                            child = child->findNextBlock()){
             std::string go_type = child->getNodeName();
+            bool done = false;
 
             // Read in points from a file
             if (go_type == "file"){
               string f_name,of_name;
-              string var_name1="0",var_name2="0";
+              string var_name1="0",var_name2="0",var_name3="0";
               child->require("name",f_name);
               child->get("var1",var_name1);
               child->get("var2",var_name2);
+              child->get("var3",var_name3);
               ifstream source(f_name.c_str());
               vector<vector<Point> > points(level->numPatches());
               double x,y,z;
               Point min(1e30,1e30,1e30),max(-1e30,-1e30,-1e30);
               // Points only
-              if(var_name1=="0" && var_name2 == "0"){
+              if(var_name1=="0" && var_name2 == "0" && var_name3 == "0"){
+                done = true;
                 while (source >> x >> y >> z) {
                   Point pp(x,y,z);
                   if(level->containsPoint(pp)){
@@ -161,8 +164,9 @@ main(int argc, char *argv[])
                 }
               }  // if vn1==0 && vn2==0
 
-              if(var_name1=="p.volume" && var_name2 == "0"){
+              if(var_name1=="p.volume" && var_name2 == "0" && var_name3 == "0"){
                 vector<vector<Vector> > normals(level->numPatches());
+                done = true;
                 double vol;
                 vector<vector<double> > volumes(level->numPatches());
                 while (source >> x >> y >> z >> vol) {
@@ -196,10 +200,12 @@ main(int argc, char *argv[])
                    }
                    dest.close();
                 }
-              }  // if vn1==pv && vn2==0
+              }  // if vn1==pv && vn2==0 
 
-              if(var_name1=="0" && var_name2 == "p.externalforce"){
+              if(var_name1=="0" && var_name2=="p.externalforce"
+                                &&  var_name3=="0"){
                 vector<vector<Vector> > normals(level->numPatches());
+                done = true;
                 double nx,ny,nz;
                 while (source >> x >> y >> z >> nx >> ny >> nz) {
                   Point pp(x,y,z);
@@ -238,8 +244,60 @@ main(int argc, char *argv[])
                 }
               }  // if vn1==0 && vn2==pef
 
-              if(var_name1=="p.volume" && var_name2 == "p.externalforce"){
-                 cout << "This option not yet supported" << endl;
+              if(var_name1=="0" && var_name2=="p.externalforce"
+                                && var_name3=="p.fiberdir"){
+                vector<vector<Vector> > normals(level->numPatches());
+                vector<vector<Vector> > fiberdirs(level->numPatches());
+                done = true;
+                double nx,ny,nz,fibx,fiby,fibz;
+                while (source >> x >> y >> z >> nx >> ny >> nz >> fibx >> fiby >> fibz){
+                  Point pp(x,y,z);
+                  if(level->containsPoint(pp)){
+                    Vector norm(nx,ny,nz);
+                    Vector fibdir(fibx,fiby,fibz);
+                    const Patch* currentpatch =
+                       level->selectPatchForCellIndex(level->getCellIndex(pp));
+                    int pid = currentpatch->getID();
+                    min = Min(pp,min);
+                    max = Max(pp,max);
+                    points[pid].push_back(pp);
+                    normals[pid].push_back(norm);
+                    fiberdirs[pid].push_back(fibdir);
+                  }
+                }
+                source.close();
+                for(Level::const_patchIterator iter = level->patchesBegin();
+                                    iter != level->patchesEnd(); iter++){
+                   const Patch* patch = *iter;
+                   int pid = patch->getID();
+                                                                                
+                   char fnum[5];
+                   sprintf(fnum,".%d",pid);
+                   of_name = f_name+fnum;
+                   ofstream dest(of_name.c_str());
+                   dest << min.x() << " " << min.y() << " " << min.z() << " "
+                        << max.x() << " " << max.y() << " " << max.z() << endl;
+                   for (int I = 0; I < (int) points[pid].size(); I++) {
+                     dest << points[pid][I].x() << " " <<
+                             points[pid][I].y() << " " <<
+                             points[pid][I].z() << " ";
+                     dest << normals[pid][I].x() << " " <<
+                             normals[pid][I].y() << " " <<
+                             normals[pid][I].z() << " ";
+                     dest << fiberdirs[pid][I].x() << " " <<
+                             fiberdirs[pid][I].y() << " " <<
+                             fiberdirs[pid][I].z() << endl;
+                   }
+                   dest.close();
+                }
+              }  // if vn1==0 && vn2==pef  && vn3==pfibdir
+
+              if(!done){
+                 cout << "This option not yet supported:" << endl;
+                 cout << " var_name1 = " << var_name1
+                      << " var_name2 = " << var_name2
+                      << " var_name3 = " << var_name3 << endl;
+                 cout << "Feel free to add it!" << endl;
                  exit(1);
               }  // if vn1==pv && vn2==pef
             }
