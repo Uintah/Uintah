@@ -304,8 +304,8 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   }
 
   // Calculate Pressure Coeffs
-  //  inputs : pressureSPBC, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
-  //  outputs: presCoefPBLM 
+  //  inputs : densityCP, [u,v,w]VelCoefPBLM[Arches::AP]
+  //  outputs: presCoefPBLM[Arches::AE..AB] 
   d_discretize->calculatePressureCoeff(pc, patch, old_dw, new_dw, delta_t);
 
   // Calculate Pressure Source
@@ -350,6 +350,9 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.33  2000/07/12 22:15:02  bbanerje
+// Added pressure Coef .. will do until Kumar's code is up and running
+//
 // Revision 1.32  2000/07/12 07:35:46  bbanerje
 // Added stuff for mascal : Rawat: Labels and dataWarehouse in velsrc need to be corrected.
 //

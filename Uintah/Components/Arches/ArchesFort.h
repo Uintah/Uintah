@@ -56,6 +56,7 @@ WARNING
 #define FORT_BCWVEL bcwvel_
 #define FORT_MASCAL mascal_
 #define FORT_APCAL apcal_
+#define FORT_PRESSCOEFF prescoef_
 #define FORT_PRESSBC pressbc_
 #define FORT_VELCOEF velcoef_
 #define FORT_SCALARCOEF scalcof_
@@ -490,12 +491,40 @@ extern "C"
 	       const double* velCoefAB,
 	       const double* velLinSrc); 
 
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the pressure stencil coefficients
+    //
+    void
+    FORT_PRESSCOEFF(const int* domLo, const int* domHi,
+		    const int* idxLo, const int* idxHi,
+		    const double* density,
+		    double* pressCoefAE,
+		    double* pressCoefAW,
+		    double* pressCoefAN,
+		    double* pressCoefAS,
+		    double* pressCoefAT,
+		    double* pressCoefAB,
+		    const int* domLoU, const int* domHiU,
+		    const double* uVelCoefAP,
+		    const int* domLoV, const int* domHiV,
+		    const double* vVelCoefAP,
+		    const int* domLoW, const int* domHiW,
+		    const double* wVelCoefAP,
+		    const double* sew, const double* sns, const double* stb,
+		    const double* sewu, const double* dxep, const double* dxpw,
+		    const double* snsv, const double* dynp, const double* dyps,
+		    const double* stbw, const double* dztp, const double* dzpb); 
+
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.17  2000/07/12 22:15:01  bbanerje
+// Added pressure Coef .. will do until Kumar's code is up and running
+//
 // Revision 1.16  2000/07/12 19:55:43  bbanerje
 // Added apcal stuff in calcVelDiagonal
 //
