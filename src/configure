@@ -2330,12 +2330,12 @@ if test -z "$ITCL_MAJOR_VERSION" ; then
   cfsh="/usr/local/lib/itclConfig.sh"
   if test -f $cfsh ; then
     . $cfsh
-    ITCL_PREFIX="/usr"
+    ITCL_PREFIX="/usr/local"
   else
     cfsh="/usr/lib/itclConfig.sh"
     if test -f $cfsh ; then
       . $cfsh
-      ITCL_PREFIX="/usr/local"
+      ITCL_PREFIX="/usr"
     fi
   fi
   cfsh="/usr/local/lib/itkConfig.sh"
