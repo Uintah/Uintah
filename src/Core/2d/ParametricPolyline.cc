@@ -32,6 +32,7 @@
 #include <Core/2d/ParametricPolyline.h>
 #include <Core/2d/BBox2d.h>
 #include <iostream>
+#include <Core/Persistent/PersistentSTL.h>
 using std::cerr;
 using std::ostream;
 #include <sstream>
