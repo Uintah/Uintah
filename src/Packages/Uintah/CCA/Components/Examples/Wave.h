@@ -22,7 +22,7 @@ GENERAL INFORMATION
 
    Wave.h
 
-   Nathan Lovell and Steven Parker
+   Steven Parker
    Department of Computer Science
    University of Utah
 
@@ -34,8 +34,6 @@ KEYWORDS
    Wave
 
 DESCRIPTION
-   2D implementation of Wave's Algorithm using Euler's method.
-   Independent study for CS3200
   
 WARNING
   
@@ -55,7 +53,7 @@ WARNING
 					       SchedulerP&);
     virtual void scheduleTimeAdvance( const LevelP& level, 
 				      SchedulerP&, int step, int nsteps );
-  private:
+  protected:
     struct Step {
       Task::WhichDW cur_dw;
       const VarLabel* curphi_label;

@@ -1,6 +1,5 @@
 
 #include <Packages/Uintah/CCA/Components/Examples/Wave.h>
-#include <Packages/Uintah/CCA/Components/Examples/ExamplesLabel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
@@ -221,9 +220,6 @@ void Wave::timeAdvanceEuler(const ProcessorGroup*,
 
       newPhi.initialize(0);
       newPi.initialize(0);
-
-      CCVariable<double> curlPhi;
-      new_dw->allocateTemporary(curlPhi, patch);
 
       // No boundary conditions - only works with periodic grids...
 
