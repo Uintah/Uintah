@@ -33,72 +33,50 @@
 
 namespace SCIRun {
 
-Pickable::~Pickable()
+WidgetPickable::~WidgetPickable()
 {
 }
 
-#if 0
-// These are now all pure virtual functions, so these are not needed...
 void
-Pickable::geom_pick( GeomPick *, void *, int )
+WidgetPickable::geom_pick(GeomPick*, ViewWindow*, int, const BState& bs)
 {
-  NOT_FINISHED( "This is a virtual function... should've been overloaded" );
+}
+ 
+void
+WidgetPickable::geom_release(GeomPick*, int, const BState& bs)
+{
 }
 
 void
-Pickable::geom_pick( GeomPick *, void * )
+WidgetPickable::geom_moved(GeomPick*, int, double, const Vector&,
+			   int, const BState&)
 {
-  NOT_FINISHED( "This is a virtual function... should've been overloaded" );
+}
+
+
+
+ModulePickable::~ModulePickable()
+{
 }
 
 void
-Pickable::geom_pick( GeomPick *, ViewWindow *, int, const BState & )
+ModulePickable::geom_pick(GeomPick*, void*, GeomObj*)
 {
-  NOT_FINISHED( "This is a virtual function... should've been overloaded" );
 }
 
 void
-Pickable::geom_release( GeomPick *, void *, int )
+ModulePickable::geom_release(GeomPick*, void*, GeomObj*)
 {
-  NOT_FINISHED( "This is a virtual function... should've been overloaded" );
 }
 
 void
-Pickable::geom_release( GeomPick *, void * )
+ModulePickable::geom_moved(GeomPick*, int, double, const Vector&,
+			  void*, GeomObj*)
 {
-  NOT_FINISHED( "This is a virtual function... should've been overloaded" );
 }
 
-void
-Pickable::geom_release( GeomPick *, int, const BState & )
-{
-  NOT_FINISHED( "This is a virtual function... should've been overloaded" );
-}
 
-void
-Pickable::geom_moved( GeomPick *, int, double, const Vector &,  void * )
-{
-  NOT_FINISHED( "This is a virtual function... should've been overloaded" );
-}
 
-void
-Pickable::geom_moved(GeomPick*, int, double, const Vector&, void*, int)
-{
-  NOT_FINISHED( "This is a virtual function... should've been overloaded" );
-}
-
-void
-Pickable::geom_moved(GeomPick*,int,double,const Vector&,int, const BState&)
-{
-  NOT_FINISHED( "This is a virtual function... should've been overloaded" );
-}
-
-void
-Pickable::geom_moved(GeomPick*,int,double,const Vector&,const BState&, int)
-{
-  NOT_FINISHED( "This is a virtual function... should've been overloaded" );
-}
-#endif
 
 } // End namespace SCIRun
 

@@ -481,6 +481,7 @@ void Module::want_to_execute()
     netedit->mailbox.send(scinew Module_Scheduler_Message);
 }
 
+#if 0
 void
 Module::geom_pick(GeomPick*, ViewWindow*, int, const BState&)
 {
@@ -543,10 +544,10 @@ void Module::geom_moved(GeomPick*, int, double, const Vector&, void*)
 {
     cerr << "Caught stray moved event!\n";
 }
+#endif
 
 void Module::widget_moved(int)
 {
-    cerr << "Caught stray widget_moved event!\n";
 }
 
 void Module::get_position(int& x, int& y)

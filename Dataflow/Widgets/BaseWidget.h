@@ -65,7 +65,7 @@ namespace SCIRun {
 
 
 
-class BaseWidget : public TCL, public Pickable {
+class BaseWidget : public TCL, public WidgetPickable {
 public:
    BaseWidget( Module* module, CrowdMonitor* lock,
 	       const string& name,
@@ -116,19 +116,8 @@ public:
    inline Real GetRealVar( const Index vindex ) const;
    
    virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
-  //   virtual void geom_pick(GeomPick*, void*, int);
-   virtual void geom_pick(GeomPick*, void*, GeomObj*);
-   virtual void geom_pick(GeomPick*, void*);
    virtual void geom_release(GeomPick*, int, const BState& bs);
-  //   virtual void geom_release(GeomPick*, void*, int);
-   virtual void geom_release(GeomPick*, void*, GeomObj*);
-   virtual void geom_release(GeomPick*, void*);
-
-   virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
-  //virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, int);
-   virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, GeomObj*);
    virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState& bs);
-   virtual void geom_moved(GeomPick*, int, double, const Vector&, const BState&, int);
 
    BaseWidget& operator=( const BaseWidget& );
    int operator==( const BaseWidget& );

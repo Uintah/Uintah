@@ -48,26 +48,26 @@ struct BState {
    unsigned int btn:2;
 };
 
-class SCICORESHARE Pickable {
+class SCICORESHARE WidgetPickable {
 
 public:
-  virtual ~Pickable();
+  virtual ~WidgetPickable();
 
-  virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs) = 0;
-  //virtual void geom_pick(GeomPick*, void*, int) = 0;
-  virtual void geom_pick(GeomPick*, void*, GeomObj*) = 0;
-  virtual void geom_pick(GeomPick*, void*) = 0;
-  
-  virtual void geom_release(GeomPick*, int, const BState& bs) = 0;
-  //  virtual void geom_release(GeomPick*, void*, int) = 0;
-  virtual void geom_release(GeomPick*, void*, GeomObj*) = 0;
-  virtual void geom_release(GeomPick*, void*) = 0;
+  virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs); 
+  virtual void geom_release(GeomPick*, int, const BState& bs);
+  virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
+};
 
-  virtual void geom_moved(GeomPick*, int, double, const Vector&, void*) = 0;
-  //virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, int) = 0;
-  virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, GeomObj*) = 0;
-  virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&) = 0;
-  virtual void geom_moved(GeomPick*, int, double, const Vector&, const BState&, int) = 0;
+
+class SCICORESHARE ModulePickable {
+
+public:
+  virtual ~ModulePickable();
+
+  virtual void geom_pick(GeomPick*, void*, GeomObj*);
+  virtual void geom_release(GeomPick*, void*, GeomObj*);
+  virtual void geom_moved(GeomPick*, int, double, const Vector&,
+			  void*, GeomObj*);
 };
 
 } // End namespace SCIRun

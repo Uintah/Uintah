@@ -559,18 +559,6 @@ BaseWidget::execute(int always_callback)
 }
 
 void
-//BaseWidget::geom_pick(GeomPick*, void*, int)
-BaseWidget::geom_pick(GeomPick*, void*, GeomObj*)
-{
-  NOT_FINISHED("Module::geom_pick: This version of geom_pick is only here to stop the compiler from complaining, it should never be used.");
-}
-void
-BaseWidget::geom_pick(GeomPick*, void*)
-{
-  NOT_FINISHED("Module::geom_pick: This version of geom_pick is only here to stop the compiler from complaining, it should never be used.");
-}
-
-void
 BaseWidget::geom_pick( GeomPick* pick, ViewWindow* /*roe*/, int /* cbdata */, const BState& state )
 {
    cerr << "btn=" << state.btn << endl;
@@ -592,51 +580,18 @@ BaseWidget::geom_pick( GeomPick* pick, ViewWindow* /*roe*/, int /* cbdata */, co
 
 
 void
-//BaseWidget::geom_release(GeomPick*, void*, int)
-BaseWidget::geom_release(GeomPick*, void*, GeomObj*)
-{
-  NOT_FINISHED("Module::geom_release: This version of geom_release is only here to stop the compiler from complaining, it should never be used.");
-}
-
-void
-BaseWidget::geom_release(GeomPick*, void*)
-{
-  NOT_FINISHED("Module::geom_release: This version of geom_release is only here to stop the compiler from complaining, it should never be used.");
-}
-
-void
 BaseWidget::geom_release( GeomPick*, int /* cbdata */, const BState& )
 {
     module->widget_moved(1);
 }
 
-void
-BaseWidget::geom_moved(GeomPick*, int, double, const Vector&,
-		       void*)
-{
-  NOT_FINISHED("Module::geom_release: This version of geom_release is only here to stop the compiler from complaining, it should never be used.");
-}
 
 void
 BaseWidget::geom_moved(GeomPick*, int, double, const Vector&,
 		       int, const BState& )
 {
-  NOT_FINISHED("Module::geom_release: This version of geom_release is only here to stop the compiler from complaining, it should never be used.");
 }
 
-void
-BaseWidget::geom_moved(GeomPick*, int, double, const Vector&,
-		       //void*, int)
-		       void*, GeomObj*)
-{
-  NOT_FINISHED("Module::geom_release: This version of geom_release is only here to stop the compiler from complaining, it should never be used.");
-}
-void
-BaseWidget::geom_moved(GeomPick*, int, double, const Vector&, 
-		       const BState&, int)
-{
-  NOT_FINISHED("Module::geom_release: This version of geom_release is only here to stop the compiler from complaining, it should never be used.");
-}
 
 void
 BaseWidget::CreateModeSwitch( const Index snum, GeomObj* o )

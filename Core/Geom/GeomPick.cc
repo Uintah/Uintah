@@ -41,7 +41,7 @@ Persistent* make_GeomPick()
 
 PersistentTypeID GeomPick::type_id("GeomPick", "GeomObj", make_GeomPick);
 
-GeomPick::GeomPick(GeomObj* obj, Pickable* module)
+GeomPick::GeomPick(GeomObj* obj, ModulePickable* module)
 : GeomContainer(obj),
   module(module),
   cbdata(0),
@@ -60,8 +60,8 @@ GeomPick::GeomPick(GeomObj* obj, Pickable* module)
     directions[5]=Vector(0,0,-1);
 }
 
-GeomPick::GeomPick(GeomObj* obj, Pickable* module,
-		   Pickable* widget, int widget_data)
+GeomPick::GeomPick(GeomObj* obj, ModulePickable* module,
+		   WidgetPickable* widget, int widget_data)
 : GeomContainer(obj),
   module(module),
   cbdata(0),
@@ -81,7 +81,7 @@ GeomPick::GeomPick(GeomObj* obj, Pickable* module,
     directions[5]=Vector(0,0,-1);
 }
 
-GeomPick::GeomPick(GeomObj* obj, Pickable* module, const Vector& v1)
+GeomPick::GeomPick(GeomObj* obj, ModulePickable* module, const Vector& v1)
 : GeomContainer(obj),
   module(module),
   cbdata(0),
@@ -96,7 +96,7 @@ GeomPick::GeomPick(GeomObj* obj, Pickable* module, const Vector& v1)
     directions[1]=-v1;
 }
 
-GeomPick::GeomPick(GeomObj* obj, Pickable* module, const Vector& v1, const Vector& v2)
+GeomPick::GeomPick(GeomObj* obj, ModulePickable* module, const Vector& v1, const Vector& v2)
 : GeomContainer(obj),
   module(module),
   cbdata(0),
@@ -113,7 +113,7 @@ GeomPick::GeomPick(GeomObj* obj, Pickable* module, const Vector& v1, const Vecto
     directions[3]=-v2;
 }
 
-GeomPick::GeomPick(GeomObj* obj, Pickable* module, const Vector& v1, const Vector& v2,
+GeomPick::GeomPick(GeomObj* obj, ModulePickable* module, const Vector& v1, const Vector& v2,
 		   const Vector& v3)
 : GeomContainer(obj),
   module(module),
