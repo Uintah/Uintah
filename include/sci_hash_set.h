@@ -26,17 +26,17 @@
 #ifdef HAVE_STD_HASHMAP
 #include <hash_set>
 using std::hash_set;
-using std::hash_multimap;
+using std::hash_multiset;
 #else
 #ifdef HAVE_EXT_HASHMAP
 #include <ext/hash_set>
 using std::hash_set;
-using std::hash_multimap;
+using std::hash_multiset;
 #else
 #ifdef HAVE_GNU_HASHMAP
 #include <ext/hash_set>
 using __gnu_cxx::hash_set;
-using __gnu_cxx::hash_multimap;
+using __gnu_cxx::hash_multiset;
 #else
 #error Do not know location of hash_set
 #endif
