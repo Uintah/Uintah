@@ -28,11 +28,40 @@ itcl_class SCIRun_Fields_SamplePlane {
 	global $this-axis
 	global $this-padpercent
 	global $this-data-at
+	global $this-update_type
+	global $this-pos
+
 	set $this-sizex 20
 	set $this-sizey 20
 	set $this-axis 0
 	set $this-padpercent 0
 	set $this-data-at Nodes
+	set $this-update_type "on release"
+	set $this-pos 0
+
+    }
+
+    method update-type { w } {
+	global $this-update_type
+	set $this-update_type [$w get]
+    }
+
+    method position_release { } {
+	global $this-update_type
+
+	set type [set $this-update_type]
+	if { $type == "on release" } {
+	    eval "$this-c needexecute"
+	}
+    }
+
+    method set_position {v} {
+	global $this-update_type
+
+	set type [set $this-update_type]
+	if { $type == "Auto" } {
+	    eval "$this-c needexecute"
+	}
     }
 
     method ui {} {
@@ -47,10 +76,11 @@ itcl_class SCIRun_Fields_SamplePlane {
 	frame $w.row2
 	frame $w.row21
 	frame $w.row3
-	frame $w.which -relief groove -borderwidth 2
 	frame $w.row4
+	frame $w.which -relief groove -borderwidth 2
+	frame $w.row5
 
-	pack $w.row1 $w.row2 $w.row21 $w.row3 $w.which $w.row4 \
+	pack $w.row1 $w.row2 $w.row21 $w.row3 $w.row4 $w.which $w.row5 \
 	    -side top -e y -f both -padx 5 -pady 5
 	
 	label $w.row1.xsize_label -text "Width    "
@@ -71,6 +101,18 @@ itcl_class SCIRun_Fields_SamplePlane {
 	radiobutton $w.row3.z -text "Z" -variable $this-axis -value 2
 	pack $w.row3.label $w.row3.x $w.row3.y $w.row3.z -side left
 
+	label $w.row4.label -text "Position: "
+	scale $w.row4.scale -from -1.0 -to 1.0 -resolution .01 -width 10 -orient horizontal -command "$this set_position" -variable $this-pos
+
+	iwidgets::optionmenu $w.row4.update -labeltext "Update:" \
+	    -labelpos w -command "$this update-type $w.row4.update"
+	$w.row4.update insert end "on release" Manual Auto
+	$w.row4.update select [set $this-update_type]
+
+	bind $w.row4.scale <ButtonRelease> "$this position_release"
+
+	
+	pack $w.row4.label $w.row4.scale $w.row4.update -side left
 
 	label $w.which.l -text "Data At Location"
 	radiobutton $w.which.node -text "Nodes" \
@@ -85,8 +127,8 @@ itcl_class SCIRun_Fields_SamplePlane {
 	pack $w.which.node $w.which.edge $w.which.face \
 	    $w.which.none -anchor nw
 
-	button $w.row4.execute -text "Execute" -command "$this-c needexecute"
-	pack $w.row4.execute -side top -e n -f both
+	button $w.row5.execute -text "Execute" -command "$this-c needexecute"
+	pack $w.row5.execute -side top -e n -f both
     }
 }
 

@@ -52,22 +52,25 @@ private:
   GuiInt size_y_;
   GuiInt axis_;
   GuiDouble padpercent_;
+  GuiDouble position_;
   GuiString data_at_;
+  GuiString update_type_;
 
   enum DataTypeEnum { SCALAR, VECTOR, TENSOR };
 };
 
 
 DECLARE_MAKER(SamplePlane)
-
-SamplePlane::SamplePlane(GuiContext* ctx)
-  : Module("SamplePlane", ctx, Filter, "Fields", "SCIRun"),
-    size_x_(ctx->subVar("sizex")),
-    size_y_(ctx->subVar("sizey")),
-    axis_(ctx->subVar("axis")),
-    padpercent_(ctx->subVar("padpercent")),
-    data_at_(ctx->subVar("data-at"))
   
+SamplePlane::SamplePlane(GuiContext* ctx) : 
+  Module("SamplePlane", ctx, Filter, "Fields", "SCIRun"),
+  size_x_(ctx->subVar("sizex")),
+  size_y_(ctx->subVar("sizey")),
+  axis_(ctx->subVar("axis")),
+  padpercent_(ctx->subVar("padpercent")),
+  position_(ctx->subVar("pos")),
+  data_at_(ctx->subVar("data-at")),
+  update_type_(ctx->subVar("update_type"))
 {
 }
 
@@ -136,18 +139,20 @@ SamplePlane::execute()
 
     Point loc(box.min());
     Vector diag(box.diagonal());
+    position_.reset();
+    double dist = position_.get()/2.0 + 0.5;
     switch (axis)
     {
     case 0:
-      loc.x(loc.x() + diag.x() * 0.5);
+      loc.x(loc.x() + diag.x() * dist);
       break;
 
     case 1:
-      loc.y(loc.y() + diag.y() * 0.5);
+      loc.y(loc.y() + diag.y() * dist);
       break;
 
     case 2:
-      loc.z(loc.z() + diag.z() * 0.5);
+      loc.z(loc.z() + diag.z() * dist);
       break;
       
     default:
