@@ -113,7 +113,7 @@ set $m2-UseCondTCL 1
 set $m2-BCFlag {GroundZero}
 set $m3-sourceNodeTCL 4
 set $m3-sinkNodeTCL 14
-set $m3-modeTCL {electrode pair}
+set $m3-modeTCL {sources and sinks}
 set $m4-target_error 1e-07
 set $m4-orig_error 0.00141421
 set $m4-current_error {7.84145e-06}
