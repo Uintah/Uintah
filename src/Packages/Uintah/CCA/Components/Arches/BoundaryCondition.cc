@@ -4994,10 +4994,15 @@ BoundaryCondition::sched_getScalarFlowRate(SchedulerP& sched,
   if (d_carbon_balance)
     tsk->requires(Task::NewDW, d_lab->d_co2INLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (d_enthalpySolve)
+    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->computes(d_lab->d_scalarFlowRateLabel);
   if (d_carbon_balance)
     tsk->computes(d_lab->d_CO2FlowRateLabel);
+  if (d_enthalpySolve)
+    tsk->computes(d_lab->d_enthalpyFlowRateLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -5021,6 +5026,7 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
 
     constCCVariable<double> scalar;
     constCCVariable<double> co2;
+    constCCVariable<double> enthalpy;
 
     new_dw->get(constVars.cellType, d_lab->d_cellTypeLabel,
 		matlIndex, patch, Ghost::AroundCells,Arches::ONEGHOSTCELL);
@@ -5061,6 +5067,15 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
 			&co2IN, &co2OUT); 
       new_dw->put(sum_vartype(co2OUT-co2IN), d_lab->d_CO2FlowRateLabel);
     }
+    double enthalpyIN = 0.0;
+    double enthalpyOUT = 0.0;
+    if (d_enthalpySolve) {
+      new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex,
+		  patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    getVariableFlowRate(pc,patch, cellinfo, &constVars, enthalpy,
+			&enthalpyIN, &enthalpyOUT); 
+      new_dw->put(sum_vartype(enthalpyOUT-enthalpyIN), d_lab->d_enthalpyFlowRateLabel);
+    }
   }
 }
 
@@ -5087,6 +5102,10 @@ void BoundaryCondition::sched_getScalarEfficiency(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_CO2FlowRateLabel);
     tsk->computes(d_lab->d_carbonEfficiencyLabel);
   }
+  if (d_enthalpySolve) {
+    tsk->requires(Task::NewDW, d_lab->d_enthalpyFlowRateLabel);
+    tsk->computes(d_lab->d_enthalpyEfficiencyLabel);
+  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -5101,20 +5120,27 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
 			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw)
 {
-    sum_vartype sum_scalarFlowRate, sum_CO2FlowRate;
+    sum_vartype sum_scalarFlowRate, sum_CO2FlowRate, sum_enthalpyFlowRate;
     delt_vartype flowRate;
     double scalarFlowRate = 0.0;
     double CO2FlowRate = 0.0;
+    double enthalpyFlowRate = 0.0;
     double totalFlowRate = 0.0;
     double totalCarbonFlowRate = 0.0;
+    double totalEnthalpyFlowRate = 0.0;
     double scalarEfficiency = 0.0;
     double carbonEfficiency = 0.0;
+    double enthalpyEfficiency = 0.0;
 
     new_dw->get(sum_scalarFlowRate, d_lab->d_scalarFlowRateLabel);
     scalarFlowRate = sum_scalarFlowRate;
     if (d_carbon_balance) {
       new_dw->get(sum_CO2FlowRate, d_lab->d_CO2FlowRateLabel);
       CO2FlowRate = sum_CO2FlowRate;
+    }
+    if (d_enthalpySolve) {
+      new_dw->get(sum_enthalpyFlowRate, d_lab->d_enthalpyFlowRateLabel);
+      enthalpyFlowRate = sum_enthalpyFlowRate;
     }
     for (int indx = 0; indx < d_numInlets; indx++) {
       FlowInlet fi = d_flowInlets[indx];
@@ -5127,6 +5153,8 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
 	  totalFlowRate += fi.flowRate;
       if ((d_carbon_balance)&&(scalarValue > 0.0))
 	    totalCarbonFlowRate += fi.flowRate * fi.fcr;
+      if ((d_enthalpySolve)&&(scalarValue > 0.0))
+	    totalEnthalpyFlowRate += fi.flowRate * fi.calcStream.getEnthalpy();
     }
     if (totalFlowRate > 0.0)
       scalarEfficiency = scalarFlowRate / totalFlowRate;
@@ -5140,6 +5168,13 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
       else 
 	throw InvalidValue("No carbon in the domain");
       new_dw->put(delt_vartype(carbonEfficiency), d_lab->d_carbonEfficiencyLabel);
+    }
+    if (d_enthalpySolve) {
+      if (totalEnthalpyFlowRate < 0.0)
+	enthalpyEfficiency = enthalpyFlowRate/totalEnthalpyFlowRate;
+      else 
+	throw InvalidValue("No enthalpy in the domain");
+      new_dw->put(delt_vartype(enthalpyEfficiency), d_lab->d_enthalpyEfficiencyLabel);
     }
  
 }
