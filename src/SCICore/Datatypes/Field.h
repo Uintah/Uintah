@@ -54,7 +54,7 @@ public:
 
   //////////
   // Virtual destructor 
-  virtual ~Field() { };
+  virtual ~Field();
 
   //////////
   // Return geometry
@@ -65,6 +65,7 @@ public:
   virtual Attrib* get_attrib() = 0;
 
 
+  inline Field * get_base() { return this; }
 
   //////////
   // Test to see if this field includes (is derived from)

@@ -34,7 +34,7 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
 	$(SRCDIR)/SurfTree.cc $(SRCDIR)/ScalarFieldRGCC.cc \
 	$(SRCDIR)/VectorFieldRGCC.cc $(SRCDIR)/templates.cc \
 	$(SRCDIR)/Geom.cc $(SRCDIR)/Attrib.cc \
-	$(SRCDIR)/Field.cc $(SRCDIR)/SField.cc \
+	$(SRCDIR)/Field.cc \
 	$(SRCDIR)/FieldWrapper.cc $(SRCDIR)/Domain.cc \
 	$(SRCDIR)/SField.cc $(SRCDIR)/VField.cc \
 	$(SRCDIR)/TField.cc $(SRCDIR)/Lattice3Geom.cc \
@@ -109,6 +109,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.3.2.12  2000/10/10 23:02:17  michaelc
+# move from {SVT}Field ports to Field ports
+#
 # Revision 1.3.2.11  2000/09/29 22:45:25  samsonov
 # added GenFunction.cc into build
 #

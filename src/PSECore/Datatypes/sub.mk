@@ -19,7 +19,7 @@ SRCS     += $(SRCDIR)/BooleanPort.cc $(SRCDIR)/ColorMapPort.cc \
 	$(SRCDIR)/SpanPort.cc \
 	$(SRCDIR)/SpanSpace.cc $(SRCDIR)/templates.cc \
 	$(SRCDIR)/DomainPort.cc $(SRCDIR)/FieldWrapperPort.cc \
-	$(SRCDIR)/SFieldPort.cc $(SRCDIR)/AttribPort.cc \
+	$(SRCDIR)/FieldPort.cc $(SRCDIR)/AttribPort.cc \
 	$(SRCDIR)/GeomPort.cc \
 	$(SRCDIR)/PathPort.cc $(SRCDIR)/CameraViewPort.cc 
 
@@ -32,6 +32,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3.2.4  2000/10/10 23:02:15  michaelc
+# move from {SVT}Field ports to Field ports
+#
 # Revision 1.3.2.3  2000/10/02 23:12:47  michaelc
 # add SpanSpace.cc, unresolved symbols
 #

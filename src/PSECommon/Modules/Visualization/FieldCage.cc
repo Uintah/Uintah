@@ -14,8 +14,9 @@
 
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/SFieldPort.h>
+#include <PSECore/Datatypes/FieldPort.h>
 //#include <PSECore/Datatypes/VFieldPort.h>
+#include <SCICore/Datatypes/SField.h>
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Geom/GeomLine.h>
 #include <SCICore/Geom/GeomGroup.h>
@@ -37,7 +38,7 @@ using namespace SCICore::Math;
 using namespace SCICore::Util;
 
 class FieldCage : public Module {
-  SFieldIPort* insfield;
+  FieldIPort* insfield;
   //VectorFieldIPort* invfield;
   GeometryOPort* ogeom;
   MaterialHandle dk_red;
@@ -69,7 +70,7 @@ FieldCage::FieldCage(const clString& id)
   numy("numy", id, this), numz("numz", id, this)
 {
     // Create the input ports
-    insfield=new SFieldIPort(this, "SField", SFieldIPort::Atomic);
+    insfield=new FieldIPort(this, "Field", FieldIPort::Atomic);
     add_iport(insfield);
     //invfield=new VectorFieldIPort(this, "Vector Field", VectorFieldIPort::Atomic);
     //add_iport(invfield);
@@ -102,12 +103,11 @@ void FieldCage::execute()
 {
   ogeom->delAll();
   
-  SFieldHandle sfh;
+  FieldHandle sfh;
   BBox sbbox;
-  bool haveit=false;
   if(insfield->get(sfh)){
-    SField* sfield = sfh.get_rep();
-    if(!sfield->get_geom()->get_bbox(sbbox)){
+    Field* field = sfh.get_rep();
+    if(!field->get_geom()->get_bbox(sbbox)){
       error("FieldCage: Could not compute bounding box of input field.");
       return;
     }
@@ -178,6 +178,9 @@ void FieldCage::execute()
 
 //
 // $Log$
+// Revision 1.8.2.3  2000/10/10 23:02:13  michaelc
+// move from {SVT}Field ports to Field ports
+//
 // Revision 1.8.2.2  2000/09/11 16:18:20  kuehne
 // updates to field redesign
 //

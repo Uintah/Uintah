@@ -15,14 +15,19 @@ namespace Datatypes{
 
 PersistentTypeID SField::type_id("SField", "Datatype", 0);
   
-SField::SField():
-  Field(){
+SField::SField() :
+  Field()
+{
 }
 
-SField::~SField(){
+SField::~SField()
+{
 }
 
-void SField::io(Piostream&){
+
+void
+SField::io(Piostream&)
+{
 }
 
 } // end Datatypes

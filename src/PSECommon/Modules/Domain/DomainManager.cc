@@ -104,9 +104,9 @@ void DomainManager::grab(const FieldWrapperHandle& ifwh){
       break;
     case ATTRIB:
       break;
-    case SFIELD:
+    case FIELD:
       {
-	SFieldHandle sfh(ifwh->get_sfield());
+	FieldHandle sfh(ifwh->get_field());
 	AttribHandle ah(sfh->get_attrib());
 	domain->attribs[ah->get_name()] = ah;
 	GeomHandle gh(sfh->get_geom());

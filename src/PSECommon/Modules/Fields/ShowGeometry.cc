@@ -16,7 +16,7 @@
 #include <SCICore/Datatypes/Mesh.h>
 #include <SCICore/Datatypes/Lattice3Geom.h>
 #include <SCICore/Datatypes/SField.h>
-#include <PSECore/Datatypes/SFieldPort.h>
+#include <PSECore/Datatypes/FieldPort.h>
 #include <SCICore/Geom/GeomGroup.h>
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Geom/Switch.h>
@@ -51,8 +51,8 @@ class ShowGeometry : public Module
   
 
   DebugStream              d_dbg;  
-  SFieldIPort*             d_infield;
-  SFieldHandle             d_sfield;
+  FieldIPort*              d_infield;
+  FieldHandle              d_sfield;
   GeometryOPort           *d_ogeom;  
 
   // scene graph ID's
@@ -146,7 +146,7 @@ public:
     d_nodeSwitch(NULL)
   {
     // Create the input ports
-    d_infield = scinew SFieldIPort(this, "Field", SFieldIPort::Atomic);
+    d_infield = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
     add_iport(d_infield);
     
     // Create the output port

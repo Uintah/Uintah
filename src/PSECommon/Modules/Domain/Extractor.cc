@@ -20,7 +20,7 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/DomainPort.h>
-#include <PSECore/Datatypes/SFieldPort.h>
+#include <PSECore/Datatypes/FieldPort.h>
 #include <PSECore/Datatypes/AttribPort.h>
 #include <PSECore/Datatypes/GeomPort.h>
 
@@ -38,7 +38,7 @@ private:
   DomainIPort* iport;
   AttribOPort* aoport;
   GeomOPort* goport;
-  SFieldOPort* foport;
+  FieldOPort* foport;
 public:
   Extractor(const clString& id);
   virtual ~Extractor();
@@ -56,7 +56,7 @@ Extractor::Extractor(const clString& id)
     iport = new DomainIPort(this, "Domain", DomainIPort::Atomic);
     add_iport(iport);
     // Create the output port
-    foport = new SFieldOPort(this, "Field", SFieldIPort::Atomic);
+    foport = new FieldOPort(this, "Field", FieldIPort::Atomic);
     add_oport(foport);
     goport = new GeomOPort(this, "Geom", GeomIPort::Atomic);
     add_oport(goport);
