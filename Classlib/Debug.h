@@ -117,10 +117,11 @@ private:
 inline int
 DebugSwitch::operator!()
 {
+	cerr << "flagvar=" << flagvar << endl;
     return !flagvar;
 }
 
 #define PRINTVAR(sw, varname) \
-    cerr << sw << ": "#varname"=" << varname << endl
+    if(!!sw)cerr << sw << ": "#varname"=" << varname << endl
 
 #endif
