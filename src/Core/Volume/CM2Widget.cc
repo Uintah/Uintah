@@ -173,7 +173,7 @@ static Persistent* RectangleCM2Widget_maker()
 PersistentTypeID RectangleCM2Widget::type_id("RectangleCM2Widget", "CM2Widget",
 					     RectangleCM2Widget_maker);
 
-#define RECTANGLECM2WIDGET_VERSION 2
+#define RECTANGLECM2WIDGET_VERSION 3
 
 void
 RectangleCM2Widget::io(Piostream &stream)
@@ -181,7 +181,6 @@ RectangleCM2Widget::io(Piostream &stream)
   const int version = 
     stream.begin_class("RectangleCM2Widget", RECTANGLECM2WIDGET_VERSION);
 
-  normalize();
   // Originally used "Pio(stream, (int)type_);", but this did not
   // compile on the SGI, so needed to do it this way.
   int tmp = (int)type_;
@@ -200,6 +199,7 @@ RectangleCM2Widget::io(Piostream &stream)
   Pio(stream, onState_);
   Pio(stream, color_);
   Pio(stream, alpha_);
+
   if (version == 2) {
     Pio(stream, name_);
     double temp;
@@ -209,8 +209,13 @@ RectangleCM2Widget::io(Piostream &stream)
     value_range_.second = -1.0;
   }
 
+  if (version == 3) {
+    Pio(stream, name_);
+    Pio(stream, value_range_.first);
+    Pio(stream, value_range_.second);
+  }
+
   stream.end_class();
-  un_normalize();
 }
 
 RectangleCM2Widget::RectangleCM2Widget() : 
@@ -780,7 +785,7 @@ static Persistent* TriangleCM2Widget_maker()
 PersistentTypeID TriangleCM2Widget::type_id("TriangleCM2Widget", "CM2Widget",
 					    TriangleCM2Widget_maker);
 
-#define TRIANGLECM2WIDGET_VERSION 2
+#define TRIANGLECM2WIDGET_VERSION 3
 
 void
 TriangleCM2Widget::io(Piostream &stream)
@@ -788,7 +793,6 @@ TriangleCM2Widget::io(Piostream &stream)
   const int version = 
     stream.begin_class("TriangleCM2Widget", TRIANGLECM2WIDGET_VERSION);
 
-  normalize();
   Pio(stream, base_);
   Pio(stream, top_x_);
   Pio(stream, top_y_);
@@ -798,6 +802,7 @@ TriangleCM2Widget::io(Piostream &stream)
   Pio(stream, onState_);
   Pio(stream, color_);
   Pio(stream, alpha_);
+
   if (version == 2) {
     Pio(stream, name_);
     double temp;
@@ -806,9 +811,14 @@ TriangleCM2Widget::io(Piostream &stream)
     value_range_.first = 0.0;
     value_range_.second = -1.0;
   }
+
+  if (version == 3) {
+    Pio(stream, name_);
+    Pio(stream, value_range_.first);
+    Pio(stream, value_range_.second);
+  }
     
   stream.end_class();
-  un_normalize();
 }
 
 TriangleCM2Widget::TriangleCM2Widget() : 
