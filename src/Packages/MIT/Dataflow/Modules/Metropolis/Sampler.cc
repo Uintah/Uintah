@@ -61,7 +61,7 @@ Sampler::Sampler(const string& id)
   // init random number generator
   srand48(seed);
 
-  user_ready = false;
+  user_ready_ = false;
   
   // install Interface
   interface_ = new SamplerInterface( this, 0 );
@@ -79,6 +79,9 @@ Sampler::Sampler(const string& id)
 
   graph_ = 0;
 
+  user_ready_ = false;
+  paused_ = false;
+  stop_ = false;
 }
 
 Sampler::~Sampler() 
@@ -86,52 +89,74 @@ Sampler::~Sampler()
 }
 
 void
-Sampler::go()
+Sampler::go( int s )
 {
   Module *module = dynamic_cast<Module*>(this);
   if ( ! graph_ ) {
     graph_ = new GraphPart( interface_, "Progress");
     graph_->set_num_lines(nparms);
   }
-  module->want_to_execute();
+  switch ( s ) {
+  case 0: // stop
+    stop_ = true;
+    paused_ = false;
+    break;
+  case 1: // run
+    stop_ = false;
+    user_ready_ = true;
+    module->want_to_execute();
+    break;
+  case 2: // pause
+    stop_ = true;
+    paused_ = true;
+    break;
+  }
 }
 
 void 
 Sampler::execute() 
 {
-  update_state(NeedData);
+  if ( !paused_ ) {
+    update_state(NeedData);
+    
+    // Distribution
+    d_port_ = (DistributionIPort *) get_iport("Distribution");
+    if ( !d_port_) {
+      cerr << "Sampler: can not get input port \"Distribution\".";
+      return;
+    }
+    d_port_->get(distribution_);
+    
+    // Measurements
+    m_port_ = (MeasurementsIPort *) get_iport("Measurements");
+    if ( !m_port_) {
+      cerr << "Metropolis: can not get input port \"Measurements\".";
+      return;
+    }
 
-  // Distribution
-  d_port_ = (DistributionIPort *) get_iport("Distribution");
-  if ( !d_port_) {
-    cerr << "Sampler: can not get input port \"Distribution\".";
-    return;
+    m_port_->get(measurements_);
+    
+    if ( !measurements_.get_rep() || ! distribution_.get_rep() ) {
+      cerr << "missing input\n";
+      return;
+    }
+
+    update_state(JustStarted);
+    reset();
   }
-  d_port_->get(distribution_);
-
-  // Measurements
-  m_port_ = (MeasurementsIPort *) get_iport("Measurements");
-  if ( !m_port_) {
-    cerr << "Metropolis: can not get input port \"Measurements\".";
-    return;
-  }
-  m_port_->get(measurements_);
-
-  if ( !measurements_.get_rep() || ! distribution_.get_rep() ) {
-    cerr << "missing input\n";
-    return;
+  else {
+    update_state(JustStarted);
   }
 
   r_port_ = (ResultsOPort *) get_oport("Posterior");
   
-  update_state(JustStarted);
-
-  reset();
-
-//   if ( user_ready ) {
+  if ( user_ready_ ) {
     metropolis();
-//     user_ready = false;
-//   }
+    if ( !paused_ )
+      interface_->done();
+    user_ready_ = false;
+  }
+  
 }
 
 
@@ -140,22 +165,41 @@ Sampler::reset()
 {
   int m = distribution_->sigma.dim1();
   if ( m != nparms ) {
-
     theta[old].resize(m);
     theta[star].resize(m);
     
     has_lkappa_ = false;
-
+    
     results = scinew Results;
-
+    
     srand48(0);
     nparms = m;
-
   }
 
   if ( graph_ )
     graph_->set_num_lines(nparms);
   likelihood_->measurements( measurements_ );
+
+
+  // input probable distribution
+  for (int i=0; i<nparms; i++) 
+    theta[old][i] = distribution_->theta[i]; // we should let the user change 
+                                             // it too
+  
+  int len = interface_->iterations();
+
+  results->k_.reserve( len );
+  results->data_.resize( nparms );
+
+  for (int i=0; i<nparms; i++) {
+    results->data_[i].reserve( len );
+    results->data_[i].remove_all();
+  }
+
+  post_ = logpost( theta[old] );
+  lpr_ = pdsim_->lpr(theta[old]);
+
+  current_iter_ = 0;
 }
 
 Array2<double> &
@@ -199,52 +243,31 @@ Sampler::get_lkappa()
 
 void Sampler::metropolis()
 {
-  // input probable distribution
-  for (int i=0; i<nparms; i++) 
-    theta[old][i] = distribution_->theta[i]; // we should let the user change 
-                                             // it too
-  
-  int len = (interface_->monitor() - interface_->burning()) 
-            / interface_->thin();
-
-  results->k_.reserve( len );
-  results->data_.resize( nparms );
-
-  for (int i=0; i<nparms; i++) {
-    results->data_[i].reserve( len );
-    results->data_[i].remove_all();
-  }
-
-  double post = logpost( theta[old] );
-  double lpr = pdsim_->lpr(theta[old]);
-
-  for (int k=1; k<interface_->monitor(); k++) {
-
+  paused_ = false;
+  for (int k=current_iter_; k<interface_->iterations() && !stop_; k++) {
+    current_iter_ = k;
     pdsim_->compute( theta[old], theta[star]);
     double new_lpr = pdsim_->lpr( theta[star] );
     double new_post = logpost( theta[star] );
-    double sum = new_post - post + lpr - new_lpr;
+    double sum = new_post - post_ + lpr_ - new_lpr;
     double u = drand48();
 
     if ( sum <= 500 && exp(sum) >= u ) {
       swap( old, star );   // yes
-      post = new_post;
-      lpr = new_lpr;
+      post_ = new_post;
+      lpr_ = new_lpr;
     }
     
-    if ( k > interface_->burning()  
-	 && fmod((double) k-interface_->burning(), interface_->thin() ) == 0 ) 
-    {
-      results->k_.add(k) ;
-
-      vector<double> v(nparms);
-      for (int i=0; i<nparms; i++) {
-	results->data_[i].add(theta[old][i]);
-	v[i]=theta[old][i];
-      }
-      if ( graph_ ) 
-	graph_->add_values(v);
+    results->k_.add(k) ;
+    
+    vector<double> v(nparms);
+    for (int i=0; i<nparms; i++) {
+      results->data_[i].add(theta[old][i]);
+      v[i]=theta[old][i];
     }
+    if ( graph_ ) 
+      graph_->add_values(v);
+    interface_->current_iter( k );
   }
 
   if ( !r_port_ ) 
@@ -274,11 +297,11 @@ Sampler::tcl_command( TCLArgs &args, void *data)
     SamplerGui *gui = new SamplerGui( id+"-gui" );
     gui->set_window( args[2] );
 
-    connect( gui->burning, interface_, &SamplerInterface::burning );
-    connect( gui->monitor, interface_, &SamplerInterface::monitor );
-    connect( gui->thin, interface_, &SamplerInterface::thin );
+    connect( gui->num_iter, interface_, &SamplerInterface::num_iterations );
     connect( gui->go, interface_, &SamplerInterface::go);
+    connect( interface_->current_iter_changed, gui, &SamplerGui::set_iter );
     connect( interface_->has_child, (PartGui* )gui, &PartGui::add_child );
+    connect( interface_->done, gui, &SamplerGui::done );
 
     interface_->report_children( (PartGui* )gui, &PartGui::add_child );
   }

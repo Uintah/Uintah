@@ -40,15 +40,18 @@ using namespace SCIRun;
 
 class SamplerGui : public PartGui {
 public:
-  Signal1<int> burning;
-  Signal1<int> monitor;
-  Signal1<int> thin;
-  Signal       go;
+  // Signals
+  Signal1<int> num_iter;
+  Signal1<int> go;
+
+  // Slots
+  void set_iter( int );
+  void done();
 
 public:
   SamplerGui( const string &name, const string &script = "SamplerGui"); 
   virtual ~SamplerGui();
-
+  
   void attach( PartInterface *) {}
   virtual void tcl_command( TCLArgs &, void *);
 };

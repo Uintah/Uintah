@@ -43,24 +43,24 @@ class SamplerInterface : public PartInterface {
 protected:
   Sampler *sampler_;
 
-  int burning_;
-  int monitor_;
-  int thin_;
+  int num_iterations_;
+  int current_iter_;
 
 public:
   SamplerInterface( Sampler *, PartInterface *parent );
   virtual ~SamplerInterface();
 
   // get values
-  int burning() { return burning_; }
-  int monitor() { return monitor_; }
-  int thin() { return thin_; }
+  int iterations() { return num_iterations_; }
 
   // set values
-  void burning( int b ) { burning_ = b; }
-  void monitor( int m ) { monitor_ = m; }
-  void thin( int t) { thin_ = t; }
-  void go();
+  void num_iterations( int i ) { num_iterations_ = i; } 
+  void current_iter( int i ) { current_iter_ = i; current_iter_changed(i); }
+  void go( int );
+
+  // Signals
+  Signal1<int> current_iter_changed;
+  Signal done;
 };
 
 } // namespace MIT

@@ -46,26 +46,36 @@ SamplerGui::~SamplerGui()
 {
 }
 
+void
+SamplerGui::set_iter( int i ) 
+{
+  tcl_ << "set-iter " << i;
+  tcl_exec();
+}
+
+void 
+SamplerGui::done()
+{
+  tcl_ << "done";
+  tcl_exec();
+}
+
 void 
 SamplerGui::tcl_command( TCLArgs &args, void *data)
 {
   int i;
-  if ( args[1] == "burning") {
+  if ( args[1] == "iterations") {
     string_to_int(args[2],i);
-    cerr << "burning " << i << endl;
-    burning(i);
+    num_iter(i);
   }
-  else if ( args[1] == "monitor" ) {
-    string_to_int(args[2],i);
-    monitor(i);
+  else if ( args[1] == "run" ) {
+    go( 1 );
   }
-  else if ( args[1] == "thin" ) {
-    string_to_int(args[2],i);
-    thin(i);
+  else if ( args[1] == "pause" ) {
+    go( 2 );
   }
-  else if ( args[1] == "exec" ) {
-    cerr << "SamplerGui exec" << endl;
-    go();
+  else if ( args[1] == "stop" ) {
+    go( 0 );
   }
   else
     PartGui::tcl_command( args, data);
