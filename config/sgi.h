@@ -51,7 +51,12 @@
 #define SCI_DeltaCppCompiler CC -Dbool=int -Dtrue=1 -Dfalse=0
 #define SCI_DeltaOptimizeCppFlags SCI_DeltaOptimizeCFlags
 #define SCI_DeltaDebugCppFlags SCI_DeltaDebugCFlags
-#define SCI_DeltaOtherCppFlags SCI_BinFlags
+#ifdef SCI_IRIX_BIN_32_mips2
+#define SCI_BoolFlags -Dbool=int -Dtrue=1 -Dfalse=0
+#else
+#define SCI_BoolFlags
+#endif
+#define SCI_DeltaOtherCppFlags SCI_BinFlags SCI_BoolFlags
 #define SCI_DeltaCppIncludeLocation /usr/include/CC
 #define SCI_DeltaLinker time CC
 #define SCI_DeltaLinkerFlags SCI_BinFlags
@@ -76,6 +81,14 @@
 #define SCI_LXDR -lsun
 #define SCI_LAUDIO -laudio -laudiofile
 #define SCI_LGL -lGL -lGLU
+
+#ifdef SCI_PTHREADS
+#define SCI_SHLinkTail -lGL -lpthread $(SCI_CLIBS)
+#define SCI_ThreadLib -lpthread
+#else
+#define SCI_SHLinkTail $(SCI_CLIBS)
+#define SCI_ThreadLib
+#endif
 
 #ifndef SCI_OBJROOT
 #define SCI_OBJROOT /home/sci/data1/development/obj/sgi

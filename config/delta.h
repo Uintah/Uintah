@@ -20,7 +20,8 @@
 #define SCI_Linker SCI_DeltaLinker
 #define SCI_LinkerFlags SCI_DeltaLinkerFlags
 #define SCI_LinkerLib SCI_DeltaLinkerLib
-#define SCI_ShLib CC SCI_BinFlags -shared -Wl,-no_unresolved
+
+#define SCI_ShLib CC SCI_BinFlags -shared -Wl,-no_unresolved -update_registry $(TOP)/so_locations
 #define SCI_CCLibs -lC -lc
 
 #define CppNeedsIncludes

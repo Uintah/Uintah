@@ -56,7 +56,7 @@ AllTarget(program)						@@\
 program: objs libs SCI_LinkerLib				@@\
 	RemoveTargetProgram($@)					@@\
 	SCI_TemplateCommand(objs, libs)\
-$(LOADER) -o $@ $(LDOPTIONS) SCI_TemplateLib objs libs SCI_LinkerLib ldflags @@\
+$(LOADER) -o $@ $(LDOPTIONS) SCI_TemplateLib objs libs SCI_LinkerLib ldflags SCI_ThreadLib @@\
 								@@\
 InstallProgram(program, $(BINDIR))				@@\
 								@@\
@@ -129,6 +129,10 @@ AllTarget(lib)							@@\
 
 lib:	objs
 
+#ifndef SCI_SHLinkTail
+#define SCI_SHLinkTail
+#endif
+
 #ifdef SCI_PrelinkCommand
 #define PreLink(objs)SCI_PrelinkCommand objs
 #else
@@ -141,7 +145,7 @@ AllTarget($(TOP)/lib/Concat(lib,libname.so))                            @@\
 $(TOP)/lib/Concat(lib,libname.so): objlist othersos                     @@\
 	$(RM) $@                                                        @@\
 	PreLink(objlist)						@@\
-	$(LDSHARED) -o Concat(lib,libname.so) objlist othersos libsos && \
+	$(LDSHARED) -o Concat(lib,libname.so) objlist othersos libsos SCI_SHLinkTail && \
 	$(MV) Concat(lib,libname.so) $@					@@\
 									@@\
 soclean::								@@\
