@@ -79,6 +79,9 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     int i = 0;
     vector<Point>::const_iterator itr;
     geompoints::key_type key(patch,*obj);
+    vector<double>::const_iterator voliter;
+    geomvols::key_type volkey(patch,*obj);
+    if (volumes) voliter = d_object_vols[volkey].begin();
     for (itr=d_object_points[key].begin();itr!=d_object_points[key].end(); 
 	 ++itr) {
       
@@ -92,8 +95,9 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 			 cellNAPID);
       
       if (volumes) {
-	pvolume[pidx] = (*volumes)[i];
+	pvolume[pidx] = *voliter;
         pmass[pidx] = matl->getInitialDensity()*pvolume[pidx];
+        ++voliter;
       }
       
       // If the particle is on the surface and if there is
@@ -407,6 +411,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
 					 GeometryObject* obj)
 {
   geompoints::key_type key(patch,obj);
+  geomvols::key_type volkey(patch,obj);
   GeometryPiece* piece = obj->getPiece();
   Box b1 = piece->getBoundingBox();
   Box b2 = patch->getBox();
@@ -420,14 +425,21 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   if (sgp) {
     int numPts = sgp->returnPointCount();
     vector<Point>* points = sgp->getPoints();
+    vector<double>* vols = sgp->getVolume();
     Point p;
     IntVector cell_idx;
     for (int ii = 0; ii < numPts; ++ii) {
       p = points->at(ii);
       if (patch->findCell(p,cell_idx)) {
         d_object_points[key].push_back(p);
+        if (vols) {
+          double vol = vols->at(ii); 
+          d_object_vols[volkey].push_back(vol);
+        }
       }
     }
+    //sgp->deletePoints();
+    //sgp->deleteVolume();
   } else {
     createPoints(patch,obj);
   }
