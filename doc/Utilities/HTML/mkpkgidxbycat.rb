@@ -166,7 +166,7 @@ end
 def genPage(packageName, list)
   versionFile = TREE_TOP + "src/main/sci_version.h"
   version = File.open(versionFile) do |f|
-    match = /SCIRUN_VERSION +"(\d+\.\d+\.\d+)"/.match(f.read())
+    match = /SCIRUN_VERSION +"(\d+\.\d+\.\d+p?)"/.match(f.read())
     raise "Couldn't match edition from #{versionFile}" if match == nil
     match[1]
   end
