@@ -284,9 +284,7 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
         }
         printData(  patch, 1, desc.str(), "rho_CC",     rho_CC[m]);
         printData(  patch, 1, desc.str(), "matl_press", matl_press[m]);
-        printVector(patch, 1, desc.str(), "uvel_CC", 0, vel_CC[m]); 
-        printVector(patch, 1, desc.str(), "vvel_CC", 1, vel_CC[m]); 
-        printVector(patch, 1, desc.str(), "wvel_CC", 2, vel_CC[m]); 
+        printVector(patch, 1, desc.str(), "vel_CC",  0, vel_CC[m]); 
       }
     }
     //______________________________________________________________________
@@ -295,9 +293,8 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
       //  For each face compute the press_Diff
       for (int dir= 0; dir < 3; dir++) {
         for(CellIterator iter=patch->getSFCIterator(dir);!iter.done(); iter++){
-          IntVector R = *iter;
-          IntVector L = R + adj_offset[dir]; 
-
+          IntVector R    = *iter;
+          IntVector L    = R + adj_offset[dir]; 
 //__________________________________
 //WARNING: We're currently using the 
 // isentropic compressibility instead of 
@@ -313,12 +310,18 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
           double term1 = 
                 (matl_press[m][R] - press_CC[R]) * sp_vol_CC[m][R] +
                 (matl_press[m][L] - press_CC[L]) * sp_vol_CC[m][L];
-                
+/*`==========TESTING==========*/
+// Bucky has this term turned off in his 1D code.
+// This term causes problems in ice::advect2mat.ups
+// by slowly generating delP over 40+ timesteps.
+          double term2 = 0.0;
+#if 0         
           double term2 = -2.0 * delT *
                          ((sp_vol_CC[m][R] + sp_vol_CC[m][L])/
                          (kappa_R          + kappa_L) ) *
                          ((vel_CC[m][R](dir) - vel_CC[m][L](dir))/dx(dir)); 
- 
+#endif 
+/*==========TESTING==========`*/
           scratch[dir][R] = rho_brack * (term1 + term2);
         }
       } 
@@ -326,15 +329,15 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
       //  Extract the different components
       for(CellIterator iter=patch->getSFCXIterator();!iter.done(); iter++){
         IntVector cur = *iter;
-        press_diffX_FC[m][cur] = scratch[0][cur];   
+        press_diffX_FC[m][cur] = scratch[0][cur];  
       }
       for(CellIterator iter=patch->getSFCYIterator();!iter.done(); iter++){
         IntVector cur = *iter;
-        press_diffY_FC[m][cur] = scratch[1][cur];   
+        press_diffY_FC[m][cur] = scratch[1][cur];    
       }
       for(CellIterator iter=patch->getSFCZIterator();!iter.done(); iter++){
         IntVector cur = *iter;
-        press_diffZ_FC[m][cur] = scratch[2][cur];   
+        press_diffZ_FC[m][cur] = scratch[2][cur];          
       }     
     }  // for(numMatls)
     
@@ -404,8 +407,6 @@ template<class T> void ICE::computeVelFaceRF(int dir, CellIterator it,
             (sig_bar_FC[R] - sig_L)/vol_frac[L] +
             (sig_R - sig_bar_FC[R])/vol_frac[R]);
 
-    // Todd, I think that term4 should be a negative, since Bucky
-    // has a positive, but since sigma = -p*I.  What do you think?
     vel_FC[R] = term1 - term2 + term3 - term4;
   } 
 }
@@ -463,12 +464,10 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
    //---- P R I N T   D A T A ------ 
       if (switchDebug_vel_FC ) {
         ostringstream desc;
-        desc << "TOP_vel_FC_Mat_" << indx << "_patch_" << patch->getID(); 
+        desc << "TOP_vel_FC_RF_Mat_" << indx << "_patch_" << patch->getID(); 
         printData(    patch,1, desc.str(), "rho_CC",     rho_CC);
         printData(    patch,1, desc.str(), "sp_vol_CC",  sp_vol_CC);
-        printVector(  patch,1, desc.str(), "uvel_CC", 0, vel_CC);
-        printVector(  patch,1, desc.str(), "vvel_CC", 1, vel_CC);
-        printVector(  patch,1, desc.str(), "wvel_CC", 2, vel_CC);
+        printVector(  patch,1, desc.str(), "vel_CC",  0, vel_CC);
         printData_FC( patch,1, desc.str(), "p_dXFC",     p_dXFC);
         printData_FC( patch,1, desc.str(), "p_dYFC",     p_dYFC);
         printData_FC( patch,1, desc.str(), "p_dZFC",     p_dZFC);
@@ -554,14 +553,11 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
 | b31( data_CC[1] - data_CC[3] ) + b32 ( data_CC[2] -data_CC[3])    | 
 
  Steps for each cell;
-    1) Comute the beta coefficients
+    1) Compute the beta coefficients
     2) Form and A matrix and B vector
     3) Solve for X[*]
     4) Add X[*] to the appropriate Lagrangian data
  - apply Boundary conditions to vel_CC and Temp_CC
-
- References: see "A Cell-Centered ICE method for multiphase flow simulations"
- by Kashiwa, above equation 4.13.
  ---------------------------------------------------------------------  */
 void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
                              const PatchSubset* patches,
@@ -610,7 +606,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     vector<Vector> del_vel_CC(numALLMatls, Vector(0,0,0));
     vector<double> if_mpm_matl_ignore(numALLMatls);
     
-    double tmp, sumBeta, alpha, term2, term3, kappa, sp_vol_source, delta_KE;
+    double tmp, sumBeta, alpha, term2, kappa, sp_vol_source, delta_KE;
 /*`==========TESTING==========*/
 // I've included this term but it's turned off -Todd
     double Joule_coeff   = 0.0;         // measure of "thermal imperfection" 
@@ -731,9 +727,8 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       //  compute phi and alpha
       sumBeta = 0.0;
       for(int m = 0; m < numALLMatls; m++) {
-        tmp = sp_vol_CC[m][c] / cv[m];
         for(int n = 0; n < numALLMatls; n++)  {
-          beta[m][n]  = delT * vol_frac_CC[n][c] * H[n][m]*tmp;
+          beta[m][n]  = delT * sp_vol_CC[m][c] * vol_frac_CC[n][c] * H[n][m];
           sumBeta    += beta[m][n];
           alpha       = if_mpm_matl_ignore[n] * 1.0/Temp_CC[n][c];
           phi[m][n]   = (f_theta[m][c] * vol_frac_CC[n][c]* alpha)/rho_CC[m][c]; 
@@ -742,22 +737,27 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       //  off diagonal terms, matrix A    
       for(int m = 0; m < numALLMatls; m++) {
         for(int n = 0; n < numALLMatls; n++)  {
-          a[m][n] = -( (1.0 - press_CC[c]) * phi[m][n] + beta[m][n]);
+          a[m][n] = -( (e_prime_v[m] + press_CC[c]) * phi[m][n] + beta[m][n]);
         }
       }
       //  diagonal terms, matrix A
       for(int m = 0; m < numALLMatls; m++) {
-        term2   = ((1.0 + press_CC[c]) * phi[m][m] )/ f_theta[m][c];
-        term3   =  (1.0 - press_CC[c]) * phi[m][m];
-        a[m][m] = cv[m] + term2 - term3 + sumBeta - beta[m][m];
+        term2   = ((1.0/f_theta[m][c]) - 1.0) 
+                * (e_prime_v[m] + press_CC[c]) 
+                * phi[m][m];
+        a[m][m] = cv[m] + term2 + sumBeta - beta[m][m];
       }
 
       // -  F O R M   R H S   (b)         
       for(int m = 0; m < numALLMatls; m++)  {
         kappa         = sp_vol_CC[m][c]/(speedSound[m][c] * speedSound[m][c]);   
+        
         sp_vol_source = -cell_vol * vol_frac_CC[m][c] * kappa*delP_Dilatate[c];
-        delta_KE      = 0.5 * del_vel_CC[m].length() * del_vel_CC[m].length();     
-        b[m]          = int_eng_source[m][c] - (e_prime_v[m] * sp_vol_source) 
+        
+        delta_KE      = 0.5 * del_vel_CC[m].length() * del_vel_CC[m].length(); 
+            
+        b[m]          = int_eng_source[m][c] 
+                      - (e_prime_v[m] * sp_vol_source) 
                       - delta_KE;
 
         for(int n = 0; n < numALLMatls; n++) {
