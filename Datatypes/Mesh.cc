@@ -476,6 +476,7 @@ void dump_mesh(Mesh* mesh)
     }
 }
 
+#if 0
 int Mesh::locate(const Point& p, int& ix)
 {
     int i=0;
@@ -570,9 +571,8 @@ int Mesh::locate(const Point& p, int& ix)
     }
 //    return 0;
 }
+#endif
 
-
-#if 0
 int Mesh::locate(const Point& p, int& ix)
 {
     for (int i=0; i<elems.size(); i++) {
@@ -622,7 +622,7 @@ int Mesh::locate(const Point& p, int& ix)
 	double s4=iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
 
 	if(s1>-1.e-6 && s2>-1.e-6 && s3>-1.e-6 && s4>-1.e-6) {
-//	    cerr << "Point " << p << " was in " << p1 << p2 << p3 << p4 << "\n";
+	    cerr << "Point " << p << " was in " << p1 << p2 << p3 << p4 << "\n";
 	    ix=i;
 	    return 1;
 	}
@@ -630,7 +630,7 @@ int Mesh::locate(const Point& p, int& ix)
     }
     return 0;
 }
-#endif
+
 void* Element::operator new(size_t)
 {
     return Element_alloc.alloc();
