@@ -17,31 +17,52 @@
 
 
 /*
- *  TCLInit.cc: Initialize TCL stuff..
+ *  TCLArgs.h: Interface to TCL
  *
  *  Written by:
  *   Steven G. Parker
  *   Department of Computer Science
  *   University of Utah
- *   Jul 1994
+ *   September 1994
  *
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/GuiInterface/MemStats.h>
-#include <Core/GuiInterface/ThreadStats.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/TCL.h>
+#ifndef TCLArgs_h
+#define TCLArgs_h 
+
+#include <string>
+#include <vector>
+
+using std::string;
+using std::vector;
 
 namespace SCIRun {
 
-void TCL::initialize()
-{
-    MemStats* memstats=scinew MemStats;
-    memstats->init_tcl();
-    ThreadStats* threadstats=scinew ThreadStats;
-    threadstats->init_tcl();
-}
+class TCLArgs {
+    vector<string> args_;
+public:
+    bool have_error_;
+    bool have_result_;
+    string string_;
+
+    TCLArgs(int argc, char* argv[]);
+    ~TCLArgs();
+    int count();
+    string operator[](int i);
+
+    void error(const string&);
+    void result(const string&);
+    void append_result(const string&);
+    void append_element(const string&);
+
+    static string make_list(const string&, const string&);
+    static string make_list(const string&, const string&, const string&);
+    static string make_list(const vector<string>&);
+};
+
 
 } // End namespace SCIRun
 
+
+#endif
