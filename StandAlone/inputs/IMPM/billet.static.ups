@@ -27,6 +27,7 @@
         <save label="g.acceleration"/>
         <save label="dispNew"/>
         <save label="g.stressFS"/>
+        <checkpoint cycle = "2" interval = ".05"/>
    </DataArchiver>
 
     <MPM>
