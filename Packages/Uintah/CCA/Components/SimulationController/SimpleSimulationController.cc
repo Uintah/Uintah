@@ -154,14 +154,12 @@ SimpleSimulationController::run()
    sched->problemSetup(ups);
    SchedulerP scheduler(sched);
 
-   if(d_myworld->myrank() == 0){
-     cout << "Compiling taskgraph...";
-     cout.flush();
-   }
+   if(d_myworld->myrank() == 0)
+     cout << "Compiling taskgraph...\n";
+
    double start = Time::currentSeconds();
-   scheduler->advanceDataWarehouse(grid);
-   
    scheduler->initialize();
+   scheduler->advanceDataWarehouse(grid);
 
    double t;
 
@@ -189,11 +187,11 @@ SimpleSimulationController::run()
 
       double delt = 0;
       archive.restartInitialize(d_restartTimestep, grid,
-				scheduler->get_new_dw(), &t, &delt);
+				scheduler->get_dw(1), &t, &delt);
       
       output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
 			   d_restartFromScratch, d_restartRemoveOldDir);
-      scheduler->get_new_dw()->finalize();
+      scheduler->get_dw(1)->finalize();
       sim->restartInitialize();
    } else {
       // Initialize the CFD and/or MPM data
@@ -218,13 +216,14 @@ SimpleSimulationController::run()
    }
    
    if(output)
-      output->finalizeTimestep(t, 0, level, scheduler);
+      output->finalizeTimestep(t, 0, grid, scheduler);
 
-   scheduler->compile(d_myworld, false);
+   scheduler->compile(d_myworld);
    
    double dt=Time::currentSeconds()-start;
    if(d_myworld->myrank() == 0)
      cout << "done taskgraph compile (" << dt << " seconds)\n";
+   scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
    scheduler->execute(d_myworld);
 
    if(output)
@@ -240,13 +239,13 @@ SimpleSimulationController::run()
    int  iterations = 0;
    while( ( t < timeinfo.maxTime ) && 
 	  ( iterations < timeinfo.num_time_steps ) ) {
-
       iterations ++;
 
       double wallTime = Time::currentSeconds() - start_time;
 
       delt_vartype delt_var;
-      scheduler->get_new_dw()->get(delt_var, sharedState->get_delt_label());
+      DataWarehouse* newDW = scheduler->get_dw(1);
+      newDW->get(delt_var, sharedState->get_delt_label());
 
       double delt = delt_var;
       delt *= timeinfo.delt_factor;
@@ -263,8 +262,7 @@ SimpleSimulationController::run()
 		 << " to maxmimum: " << timeinfo.delt_max << '\n';
 	 delt = timeinfo.delt_max;
       }
-      scheduler->get_new_dw()->override(delt_vartype(delt),
-					sharedState->get_delt_label());
+      newDW->override(delt_vartype(delt), sharedState->get_delt_label());
 
 #ifndef DISABLE_SCI_MALLOC
       size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
@@ -317,7 +315,7 @@ SimpleSimulationController::run()
       if(d_myworld->myrank() == 0){
 	cout << "Time=" << t << ", delT=" << delt 
 	     << ", elap T = " << wallTime 
-	     << ", DW: " << scheduler->get_new_dw()->getID() << ", Mem Use = ";
+	     << ", DW: " << newDW->getID() << ", Mem Use = ";
 	if (avg_memuse == max_memuse && avg_highwater == max_highwater){
 	  cout << avg_memuse;
 	  if(avg_highwater)
@@ -351,27 +349,29 @@ SimpleSimulationController::run()
       // put the current time into the shared state so other components
       // can access it
       sharedState->setElapsedTime(t);
-      if(need_recompile(t, delt, level, sim, output) || first){
+      if(need_recompile(t, delt, grid, sim, output) || first){
 	first=false;
 	if(d_myworld->myrank() == 0)
-	  cout << "Compiling taskgraph...";
+	  cout << "Compiling taskgraph...\n";
 	double start = Time::currentSeconds();
 	scheduler->initialize();
 
 	sim->scheduleTimeAdvance(level, scheduler);
 
 	if(output)
-	  output->finalizeTimestep(t, delt, level, scheduler);
+	  output->finalizeTimestep(t, delt, grid, scheduler);
       
 	// Begin next time step...
 	sim->scheduleComputeStableTimestep(level, scheduler);
-	scheduler->compile(d_myworld, true);
+	scheduler->compile(d_myworld);
 
 	double dt=Time::currentSeconds()-start;
 	if(d_myworld->myrank() == 0)
 	  cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
       }
       // Execute the current timestep
+      scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
+      scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
       scheduler->execute(d_myworld);
       if(output)
 	output->executedTimestep();
@@ -379,8 +379,6 @@ SimpleSimulationController::run()
       t += delt;
       TAU_DB_DUMP();
    }
-
-   scheduler->get_new_dw()->scrubExtraneous();
 }
 
 void 
@@ -527,13 +525,13 @@ SimpleSimulationController::problemSetup(const ProblemSpecP& params,
 
 bool
 SimpleSimulationController::need_recompile(double time, double delt,
-					   const LevelP& level,
+					   const GridP& grid,
 					   SimulationInterface* /*sim*/,
 					   Output* output)
 {
   // Currently, nothing but output can request a recompile.  This
   // should be fixed - steve
-  if(output && output->need_recompile(time, delt, level))
+  if(output && output->need_recompile(time, delt, grid))
     return true;
   return false;
 }
