@@ -32,24 +32,16 @@ ICELabel::ICELabel()
     VarLabel::create("temp_CC",      CCVariable<double>::getTypeDescription());
   vel_CCLabel       = 
     VarLabel::create("vel_CC",       CCVariable<Vector>::getTypeDescription());
-  cv_CCLabel        = 
-    VarLabel::create("cv_CC",        CCVariable<double>::getTypeDescription());
   rho_micro_CCLabel = 
     VarLabel::create("rho_micro_CC", CCVariable<double>::getTypeDescription());
   sp_vol_CCLabel =
     VarLabel::create("sp_vol_CC",    CCVariable<double>::getTypeDescription());
   DLabel =
     VarLabel::create("D",            CCVariable<Vector>::getTypeDescription()); 
-  mass_CCLabel =
-    VarLabel::create("mass_CC",      CCVariable<double>::getTypeDescription());
   speedSound_CCLabel =
     VarLabel::create("speedSound_CC",CCVariable<double>::getTypeDescription());
-  Kappa_CCLabel =
-    VarLabel::create("Kappa",        CCVariable<double>::getTypeDescription());
   vol_frac_CCLabel =
     VarLabel::create("vol_frac_CC",  CCVariable<double>::getTypeDescription());
-  viscosity_CCLabel =
-    VarLabel::create("viscosity_CC", CCVariable<double>::getTypeDescription());
   press_force_CCLabel =
     VarLabel::create("press_force",  CCVariable<Vector>::getTypeDescription());
   mom_source_CCLabel = 
@@ -70,14 +62,6 @@ ICELabel::ICELabel()
     VarLabel::create("mom_L_ME_CC",  CCVariable<Vector>::getTypeDescription());
   eng_L_ME_CCLabel = 
    VarLabel::create("eng_L_ME_CC",   CCVariable<double>::getTypeDescription());
-  q_CCLabel = 
-    VarLabel::create("q_CC",         CCVariable<double>::getTypeDescription());
-  q_advectedLabel = 
-    VarLabel::create("q_advected",   CCVariable<double>::getTypeDescription());
-  qV_CCLabel = 
-    VarLabel::create("qV_CC",        CCVariable<Vector>::getTypeDescription());
-  qV_advectedLabel = 
-    VarLabel::create("qV_advected",  CCVariable<Vector>::getTypeDescription());
   burnedMass_CCLabel =
     VarLabel::create("burnedMass",   CCVariable<double>::getTypeDescription());
   int_eng_comb_CCLabel =
@@ -97,19 +81,14 @@ ICELabel::ICELabel()
     VarLabel::create("imp_delP",    CCVariable<double>::getTypeDescription());       
 
 /*==========TESTING==========`*/
-  term1Label = 
-    VarLabel::create("term1",        CCVariable<double>::getTypeDescription());
   term2Label = 
     VarLabel::create("term2",        CCVariable<double>::getTypeDescription());
   term3Label = 
     VarLabel::create("term3",        CCVariable<double>::getTypeDescription());
-
   f_theta_CCLabel =
     VarLabel::create("f_theta",      CCVariable<double>::getTypeDescription());
   Tdot_CCLabel =
     VarLabel::create("Tdot",         CCVariable<double>::getTypeDescription());
-  SumThermExpLabel =
-    VarLabel::create("SumThermExp",  CCVariable<double>::getTypeDescription());
   
   // Face centered variables
   uvel_FCLabel       = 
@@ -130,12 +109,6 @@ ICELabel::ICELabel()
     VarLabel::create("pressY_FC", SFCYVariable<double>::getTypeDescription() );
   pressZ_FCLabel     =
     VarLabel::create("pressZ_FC", SFCZVariable<double>::getTypeDescription() );
-  tau_X_FCLabel       =
-    VarLabel::create("tau_X_FC",  SFCXVariable<Vector>::getTypeDescription() );
-  tau_Y_FCLabel       =
-    VarLabel::create("tau_Y_FC",  SFCYVariable<Vector>::getTypeDescription() );
-  tau_Z_FCLabel       =
-    VarLabel::create("tau_Z_FC",  SFCZVariable<Vector>::getTypeDescription() );
   press_diffX_FCLabel = VarLabel::create("press_diffX_FC",
                                   SFCXVariable<double>::getTypeDescription() );
   press_diffY_FCLabel = VarLabel::create("press_diffY_FC",
@@ -184,19 +157,15 @@ ICELabel::~ICELabel()
 /*===========TESTING==========`*/
     VarLabel::destroy(temp_CCLabel);
     VarLabel::destroy(vel_CCLabel);
-    VarLabel::destroy(cv_CCLabel);
     VarLabel::destroy(rho_micro_CCLabel);
     VarLabel::destroy(sp_vol_CCLabel);
     VarLabel::destroy(DLabel);
-    VarLabel::destroy(mass_CCLabel);
     VarLabel::destroy(burnedMass_CCLabel);
     VarLabel::destroy(int_eng_comb_CCLabel);
     VarLabel::destroy(created_vol_CCLabel);
     VarLabel::destroy(mom_comb_CCLabel);
     VarLabel::destroy(speedSound_CCLabel);
-    VarLabel::destroy(Kappa_CCLabel);
     VarLabel::destroy(vol_frac_CCLabel);
-    VarLabel::destroy(viscosity_CCLabel);
     VarLabel::destroy(press_force_CCLabel); 
     VarLabel::destroy(mom_source_CCLabel);
     VarLabel::destroy(int_eng_source_CCLabel);
@@ -207,16 +176,10 @@ ICELabel::~ICELabel()
     VarLabel::destroy(mass_L_CCLabel);
     VarLabel::destroy(mom_L_ME_CCLabel);
     VarLabel::destroy(eng_L_ME_CCLabel);
-    VarLabel::destroy(q_CCLabel);
-    VarLabel::destroy(q_advectedLabel);
-    VarLabel::destroy(qV_CCLabel);
-    VarLabel::destroy(qV_advectedLabel);
-    VarLabel::destroy(term1Label);
     VarLabel::destroy(term2Label);
     VarLabel::destroy(term3Label);
     VarLabel::destroy(f_theta_CCLabel);
     VarLabel::destroy(Tdot_CCLabel);
-    VarLabel::destroy(SumThermExpLabel);
     //
 /*`==========TESTING==========*/
     VarLabel::destroy(matrixLabel);
@@ -235,9 +198,6 @@ ICELabel::~ICELabel()
     VarLabel::destroy(pressX_FCLabel);
     VarLabel::destroy(pressY_FCLabel);
     VarLabel::destroy(pressZ_FCLabel);
-    VarLabel::destroy(tau_X_FCLabel);
-    VarLabel::destroy(tau_Y_FCLabel);
-    VarLabel::destroy(tau_Z_FCLabel);
     VarLabel::destroy(press_diffX_FCLabel);
     VarLabel::destroy(press_diffY_FCLabel);
     VarLabel::destroy(press_diffZ_FCLabel);
