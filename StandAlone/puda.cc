@@ -1015,8 +1015,8 @@ int main(int argc, char** argv)
 		    {
 		      NCVariable<double> value;
 		      da->query(value, var, matl, patch, time);
-                    IntVector lo = value.getLowIndex();
-                    IntVector hi = value.getHighIndex() - IntVector(1,1,1);
+		      IntVector lo = value.getLowIndex();
+		      IntVector hi = value.getHighIndex() - IntVector(1,1,1);
 		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
@@ -1104,23 +1104,29 @@ int main(int argc, char** argv)
 		    {
 		      CCVariable<double> value;
 		      da->query(value, var, matl, patch, time);
-                    IntVector lo = value.getLowIndex();
-                    IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      IntVector lo = value.getLowIndex();
+		      IntVector hi= value.getHighIndex() - IntVector(1,1,1);
 		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
-                     IntVector c_min, c_max;
+			IntVector c_min, c_max;
 			CellIterator iter = patch->getCellIterator();
 			min=max=value[*iter];
+			c_min = c_max = *iter;
+			// No need to do a comparison on the initial cell
+			iter++;
 			for(;!iter.done(); iter++){
-			  min=Min(min, value[*iter]);
-                       if (min == value[*iter] ) 
-                         c_min = *iter;
-			  max=Max(max, value[*iter]);
-                       if (max == value[*iter] ) 
-                         c_max = *iter;
-			}                     
+			  double val = value[*iter];
+			  if (val < min) {
+			    min = val;
+			    c_min = *iter;
+			  }
+			  if (val > max ) {
+			    max = val;
+			    c_max = *iter;
+			  }
+			}
 			cout << "\t\t\t\tmin value: " << min << "\t\t"<< c_min <<endl;
 			cout << "\t\t\t\tmax value: " << max << "\t\t"<< c_max <<endl;
 		      }
@@ -1149,22 +1155,28 @@ int main(int argc, char** argv)
 		    {
 		      CCVariable<Vector> value;
 		      da->query(value, var, matl, patch, time);
-                    IntVector lo = value.getLowIndex();
-                    IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      IntVector lo = value.getLowIndex();
+		      IntVector hi= value.getHighIndex() - IntVector(1,1,1);
 		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
-                     IntVector c_min, c_max;
+			IntVector c_min, c_max;
 			CellIterator iter = patch->getCellIterator();
 			min=max=value[*iter].length2();
+			c_min = c_max = *iter;
+			// No need to do a comparison on the initial cell
+			iter++;
 			for(;!iter.done(); iter++){
-			  min=Min(min, value[*iter].length2());
-                       if (min == value[*iter].length2() ) 
-                         c_min = *iter;
-			  max=Max(max, value[*iter].length2());
-                       if (max == value[*iter].length2() ) 
-                         c_max = *iter;
+			  double val = value[*iter].length2();
+			  if (val < min) {
+			    min = val;
+			    c_min = *iter;
+			  }
+			  if (val > max ) {
+			    max = val;
+			    c_max = *iter;
+			  }
 			}
 			cout << "\t\t\t\tmin magnitude: " << sqrt(min) << "\t\t"<< c_min <<endl;
 			cout << "\t\t\t\tmax magnitude: " << sqrt(max) << "\t\t"<< c_max <<endl;
@@ -1203,25 +1215,31 @@ int main(int argc, char** argv)
 		    {
 		      SFCXVariable<double> value;
 		      da->query(value, var, matl, patch, time);
-                    IntVector lo = value.getLowIndex();
-                    IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      IntVector lo = value.getLowIndex();
+		      IntVector hi= value.getHighIndex() - IntVector(1,1,1);
 		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
                     
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
-                     IntVector c_min, c_max;
-                     
-                     CellIterator iter=patch->getSFCXIterator();
+			IntVector c_min, c_max;
+			
+			CellIterator iter=patch->getSFCXIterator();
 			min=max=value[*iter];
+			c_min = c_max = *iter;
+			// No need to do a comparison on the initial cell
+			iter++;
 			for(;!iter.done(); iter++){
-			  min=Min(min, value[*iter]);
-                       if (min == value[*iter] ) 
-                         c_min = *iter;
-			  max=Max(max, value[*iter]);
-                       if (max == value[*iter] ) 
-                         c_max = *iter;
-			}                     
+			  double val = value[*iter];
+			  if (val < min) {
+			    min = val;
+			    c_min = *iter;
+			  }
+			  if (val > max ) {
+			    max = val;
+			    c_max = *iter;
+			  }
+			}
 			cout << "\t\t\t\tmin value: " << min << "\t\t"<< c_min <<endl;
 			cout << "\t\t\t\tmax value: " << max << "\t\t"<< c_max <<endl;
 		      }
@@ -1240,25 +1258,31 @@ int main(int argc, char** argv)
 		    {
 		      SFCYVariable<double> value;
 		      da->query(value, var, matl, patch, time);
-                    IntVector lo = value.getLowIndex();
-                    IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      IntVector lo = value.getLowIndex();
+		      IntVector hi= value.getHighIndex() - IntVector(1,1,1);
 		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
                     
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
-                     IntVector c_min, c_max;
-                     
-                     CellIterator iter=patch->getSFCYIterator();
+			IntVector c_min, c_max;
+			
+			CellIterator iter=patch->getSFCYIterator();
 			min=max=value[*iter];
+			c_min = c_max = *iter;
+			// No need to do a comparison on the initial cell
+			iter++;
 			for(;!iter.done(); iter++){
-			  min=Min(min, value[*iter]);
-                       if (min == value[*iter] ) 
-                         c_min = *iter;
-			  max=Max(max, value[*iter]);
-                       if (max == value[*iter] ) 
-                         c_max = *iter;
-			}                     
+			  double val = value[*iter];
+			  if (val < min) {
+			    min = val;
+			    c_min = *iter;
+			  }
+			  if (val > max ) {
+			    max = val;
+			    c_max = *iter;
+			  }
+			}
 			cout << "\t\t\t\tmin value: " << min << "\t\t"<< c_min <<endl;
 			cout << "\t\t\t\tmax value: " << max << "\t\t"<< c_max <<endl;
 		      }
@@ -1277,25 +1301,31 @@ int main(int argc, char** argv)
 		    {
 		      SFCZVariable<double> value;
 		      da->query(value, var, matl, patch, time);
-                    IntVector lo = value.getLowIndex();
-                    IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      IntVector lo = value.getLowIndex();
+		      IntVector hi= value.getHighIndex() - IntVector(1,1,1);
 		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
                     
 		      if(dx.x() && dx.y() && dx.z()){
 			double min, max;
-                     IntVector c_min, c_max;
-                     
-                     CellIterator iter=patch->getSFCZIterator();
+			IntVector c_min, c_max;
+			
+			CellIterator iter=patch->getSFCZIterator();
 			min=max=value[*iter];
+			c_min = c_max = *iter;
+			// No need to do a comparison on the initial cell
+			iter++;
 			for(;!iter.done(); iter++){
-			  min=Min(min, value[*iter]);
-                       if (min == value[*iter] ) 
-                         c_min = *iter;
-			  max=Max(max, value[*iter]);
-                       if (max == value[*iter] ) 
-                         c_max = *iter;
-			}                     
+			  double val = value[*iter];
+			  if (val < min) {
+			    min = val;
+			    c_min = *iter;
+			  }
+			  if (val > max ) {
+			    max = val;
+			    c_max = *iter;
+			  }
+			}
 			cout << "\t\t\t\tmin value: " << min << "\t\t"<< c_min <<endl;
 			cout << "\t\t\t\tmax value: " << max << "\t\t"<< c_max <<endl;
 		      }
