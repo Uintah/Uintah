@@ -149,7 +149,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       # Prepare for restart test
       mkdir("restart")
       chdir("restart")
-    
+      system("cp ../replace_gold_standard .")
       # call the callback function before running each test
       callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism);
 
