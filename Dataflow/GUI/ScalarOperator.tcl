@@ -45,10 +45,10 @@ itcl_class Uintah_Operators_ScalarOperator {
 	radiobutton $w.calc.e -text "Exponential" \
 		-variable $this-operation -value 1 \
 		-command "$this-c needexecute"
-	radiobutton $w.calc.e -text "No Op" \
+	radiobutton $w.calc.no -text "No Op" \
 		-variable $this-operation -value 20 \
 		-command "$this-c needexecute"
-	pack $w.calc.l $w.calc.log $w.calc.e -anchor w 
+	pack $w.calc.l $w.calc.log $w.calc.e $w.calc.no -anchor w 
 	pack $w.calc -side left -padx 2 -pady 2 -fill y
 
     }
