@@ -299,7 +299,7 @@ public:
   int get_valence(Face::index_type idx) const { return 0; }
   int get_valence(Cell::index_type idx) const { return 0; }
 
-  void get_normal(Vector &/* result */, Node::index_type /* index */) const
+  void get_normal(Vector &, const Node::index_type &) const
   { ASSERTFAIL("not implemented") }
 
   //! get the center point (in object space) of an element
