@@ -12,6 +12,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+#ifdef _WIN32
+#pragma warning(disable:4291) // quiet the visual C++ compiler
+#endif
+
 #include <SCICore/Geom/GeomVertexPrim.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geometry/BBox.h>
@@ -360,6 +364,10 @@ void Pio(Piostream& stream, GeomVertex*& obj)
 
 //
 // $Log$
+// Revision 1.9  1999/11/02 06:06:14  moulding
+// added a #ifdef for win32 to quiet the C++ compiler.  This change
+// relates to bug # 61 in csafe's bugzilla.
+//
 // Revision 1.8  1999/09/16 17:43:58  kuzimmer
 // corrected new and delete functions for GeomMVertex
 //

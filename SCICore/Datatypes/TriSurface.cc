@@ -12,6 +12,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+#ifdef _WIN32
+#pragma warning(disable:4291) // quiet the visual C++ compiler
+#endif
+
 #include <SCICore/Datatypes/TriSurface.h>
 
 #include <SCICore/Util/Assert.h>
@@ -1148,6 +1152,10 @@ void Pio(Piostream& stream, TSEdge*& data)
 
 //
 // $Log$
+// Revision 1.11  1999/11/02 06:06:13  moulding
+// added a #ifdef for win32 to quiet the C++ compiler.  This change
+// relates to bug # 61 in csafe's bugzilla.
+//
 // Revision 1.10  1999/10/07 02:07:35  sparker
 // use standard iostreams and complex type
 //

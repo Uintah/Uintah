@@ -11,6 +11,9 @@
   *
  *  Copyright (C) 1997 SCI Group
  */
+#ifdef _WIN32
+#pragma warning(disable:4291) // quiet the visual C++ compiler
+#endif
 
 #include <iostream>
 using std::cerr;
@@ -584,6 +587,10 @@ void Pio(Piostream& stream, NodeInfo& node)
 
 //
 // $Log$
+// Revision 1.8  1999/11/02 06:06:13  moulding
+// added a #ifdef for win32 to quiet the C++ compiler.  This change
+// relates to bug # 61 in csafe's bugzilla.
+//
 // Revision 1.7  1999/10/07 02:07:34  sparker
 // use standard iostreams and complex type
 //
