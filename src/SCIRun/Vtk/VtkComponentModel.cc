@@ -138,7 +138,7 @@ void VtkComponentModel::buildComponentList()
        it != paths.end(); ++it)
     {
     Dir d(*it);
-    std::cerr << "Looking at directory: " << *it << std::endl;
+    std::cerr << "VTK Component Model: Looking at directory: " << *it << std::endl;
     std::vector<std::string> files;
     d.getFilenamesBySuffix(".xml", files);
 
@@ -146,6 +146,7 @@ void VtkComponentModel::buildComponentList()
         iter != files.end(); iter++)
       {
       std::string& file = *iter;
+      std::cerr << "VTK Component Model: Looking at file" << file << std::endl;
       readComponentDescription(*it+"/"+file);
       }
     }

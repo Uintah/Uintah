@@ -28,7 +28,7 @@
 
 
 /*
- *  CCAComponentModel.cc:
+ *  BabelComponentModel.cc:
  *
  *  Written by:
  *   Keming Zhang
@@ -152,7 +152,7 @@ void BabelComponentModel::buildComponentList()
       }
     Dir d(dir);
 
-    std::cerr << "Looking at directory: " << dir << std::endl;
+    std::cerr << "BabelComponentModel: Looking at directory: " << dir << std::endl;
 
     std::vector<std::string> files;
     d.getFilenamesBySuffix(".cca", files);
@@ -160,6 +160,7 @@ void BabelComponentModel::buildComponentList()
         iter != files.end(); iter++)
       {
       std::string& file = *iter;
+      std::cerr << "BabelComponentModel: Parsing file " << file << std::endl;
       readComponentDescription(dir+"/"+file);
       }
     }
