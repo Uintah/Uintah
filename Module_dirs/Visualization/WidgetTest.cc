@@ -19,6 +19,7 @@
 
 #include <Widgets/PointWidget.h>
 #include <Widgets/ArrowWidget.h>
+#include <Widgets/CrosshairWidget.h>
 #include <Widgets/GuageWidget.h>
 #include <Widgets/RingWidget.h>
 #include <Widgets/FixedFrameWidget.h>
@@ -33,33 +34,35 @@
 
 #include <iostream.h>
 
-const Index NumWidgetTypes = 13;
-enum WidgetTypes {Point, Arrow, Guage, Ring, FFrame, Frame, SFrame, Square, SSquare, Box, SBox, Cube, SCube};
+const Index NumWidgetTypes = 14;
+enum WidgetTypes { WT_Point, WT_Arrow, WT_Cross, WT_Guage, WT_Ring,
+		   WT_FFrame, WT_Frame, WT_SFrame, WT_Square, WT_SSquare,
+		   WT_Box, WT_SBox, WT_Cube, WT_SCube };
 
 class WidgetTest : public Module {
-    GeometryOPort* ogeom;
-    CrowdMonitor widget_lock;
+   GeometryOPort* ogeom;
+   CrowdMonitor widget_lock;
 
 private:
-    int init;
-    int widget_id;
-    TCLdouble widget_scale;
-    TCLint widget_type;
+   int init;
+   int widget_id;
+   TCLdouble widget_scale;
+   TCLint widget_type;
 
-    BaseWidget* widgets[NumWidgetTypes];
+   BaseWidget* widgets[NumWidgetTypes];
 
-    virtual void geom_moved(int, double, const Vector&, void*);
+   virtual void geom_moved(int, double, const Vector&, void*);
 public:
-    WidgetTest(const clString& id);
-    WidgetTest(const WidgetTest&, int deep);
-    virtual ~WidgetTest();
-    virtual Module* clone(int deep);
-    virtual void execute();
+   WidgetTest(const clString& id);
+   WidgetTest(const WidgetTest&, int deep);
+   virtual ~WidgetTest();
+   virtual Module* clone(int deep);
+   virtual void execute();
 };
 
 static Module* make_WidgetTest(const clString& id)
 {
-    return new WidgetTest(id);
+   return new WidgetTest(id);
 }
 
 static RegisterModule db1("Fields", "WidgetTest", make_WidgetTest);
@@ -71,28 +74,29 @@ WidgetTest::WidgetTest(const clString& id)
 : Module("WidgetTest", id, Source), widget_scale("widget_scale", id, this),
   widget_type("widget_type", id, this)
 {
-    // Create the output port
-    ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
-    add_oport(ogeom);
+   // Create the output port
+   ogeom = new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+   add_oport(ogeom);
 
-    widgets[Point]=new PointWidget(this, &widget_lock, .1);
-    widgets[Arrow]=new ArrowWidget(this, &widget_lock, .1);
-    widgets[Guage]=new GuageWidget(this, &widget_lock, .1);
-    widgets[Ring]=new RingWidget(this, &widget_lock, .1);
-    widgets[FFrame]=new FixedFrameWidget(this, &widget_lock, .1);
-    widgets[Frame]=new FrameWidget(this, &widget_lock, .1);
-    widgets[SFrame]=new ScaledFrameWidget(this, &widget_lock, .1);
-    widgets[Square]=new SquareWidget(this, &widget_lock, .1);
-    widgets[SSquare]=new ScaledSquareWidget(this, &widget_lock, .1);
-    widgets[Box]=new BoxWidget(this, &widget_lock, .1);
-    widgets[SBox]=new ScaledBoxWidget(this, &widget_lock, .1);
-    widgets[Cube]=new CubeWidget(this, &widget_lock, .1);
-    widgets[SCube]=new ScaledCubeWidget(this, &widget_lock, .1);
+   widgets[WT_Point] = new PointWidget(this, &widget_lock, .1);
+   widgets[WT_Arrow] = new ArrowWidget(this, &widget_lock, .1);
+   widgets[WT_Cross] = new CrosshairWidget(this, &widget_lock, .1);
+   widgets[WT_Guage] = new GuageWidget(this, &widget_lock, .1);
+   widgets[WT_Ring] = new RingWidget(this, &widget_lock, .1);
+   widgets[WT_FFrame] = new FixedFrameWidget(this, &widget_lock, .1);
+   widgets[WT_Frame] = new FrameWidget(this, &widget_lock, .1);
+   widgets[WT_SFrame] = new ScaledFrameWidget(this, &widget_lock, .1);
+   widgets[WT_Square] = new SquareWidget(this, &widget_lock, .1);
+   widgets[WT_SSquare] = new ScaledSquareWidget(this, &widget_lock, .1);
+   widgets[WT_Box] = new BoxWidget(this, &widget_lock, .1);
+   widgets[WT_SBox] = new ScaledBoxWidget(this, &widget_lock, .1);
+   widgets[WT_Cube] = new CubeWidget(this, &widget_lock, .1);
+   widgets[WT_SCube] = new ScaledCubeWidget(this, &widget_lock, .1);
 
-    widget_scale.set(.1);
-    init = 1;
+   widget_scale.set(.1);
+   init = 1;
 
-    widget_type.set(Frame);
+   widget_type.set(WT_Frame);
 }
 
 WidgetTest::WidgetTest(const WidgetTest& copy, int deep)
@@ -100,7 +104,7 @@ WidgetTest::WidgetTest(const WidgetTest& copy, int deep)
   widget_scale("widget_scale", id, this),
   widget_type("widget_type", id, this)
 {
-    NOT_FINISHED("WidgetTest::WidgetTest");
+   NOT_FINISHED("WidgetTest::WidgetTest");
 }
 
 WidgetTest::~WidgetTest()
@@ -109,40 +113,40 @@ WidgetTest::~WidgetTest()
 
 Module* WidgetTest::clone(int deep)
 {
-    return new WidgetTest(*this, deep);
+   return new WidgetTest(*this, deep);
 }
 
 void WidgetTest::execute()
 {
-    if (init == 1) {
-        init = 0;
-	GeomGroup* w = new GeomGroup;
-	for(int i=0;i<NumWidgetTypes;i++)
-	   w->add(widgets[i]->GetWidget());
-	widget_id = ogeom->addObj(w, module_name, &widget_lock);
-    }
+   if (init == 1) {
+      init = 0;
+      GeomGroup* w = new GeomGroup;
+      for(int i = 0; i < NumWidgetTypes; i++)
+	 w->add(widgets[i]->GetWidget());
+      widget_id = ogeom->addObj(w, module_name, &widget_lock);
+   }
 
-    widget_lock.write_lock();
-    for(int i=0;i<NumWidgetTypes;i++)
-       widgets[i]->SetState(0);
-    
-    widgets[widget_type.get()]->SetState(1);
-    widgets[widget_type.get()]->SetScale(widget_scale.get());
-    widget_lock.write_unlock();
-    widgets[widget_type.get()]->execute();
-    ogeom->flushViews();
+   widget_lock.write_lock();
+   for(int i = 0; i < NumWidgetTypes; i++)
+      widgets[i]->SetState(0);
+   
+   widgets[widget_type.get()]->SetState(1);
+   widgets[widget_type.get()]->SetScale(widget_scale.get());
+   widget_lock.write_unlock();
+   widgets[widget_type.get()]->execute();
+   ogeom->flushViews();
 }
 
 void WidgetTest::geom_moved(int axis, double dist, const Vector& delta,
-			   void* cbdata)
+			    void* cbdata)
 {
-    widgets[widget_type.get()]->geom_moved(axis, dist, delta, cbdata);
-    cout << "Gauge ratio " << ((GuageWidget*)widgets[Guage])->GetRatio() << endl;
-    cout << "Ring angle " << ((RingWidget*)widgets[Ring])->GetRatio() << endl;
-    
-    if(!abort_flag){
-	abort_flag=1;
-	want_to_execute();
-    }
+   widgets[widget_type.get()]->geom_moved(axis, dist, delta, cbdata);
+   cout << "Gauge ratio " << ((GuageWidget*)widgets[WT_Guage])->GetRatio() << endl;
+   cout << "Ring angle " << ((RingWidget*)widgets[WT_Ring])->GetRatio() << endl;
+   
+   if(!abort_flag) {
+      abort_flag = 1;
+      want_to_execute();
+   }
 }
 

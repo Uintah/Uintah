@@ -20,18 +20,19 @@ proc uiWidgetTest {modid} {
     frame $w.f.wids
     radiobutton $w.f.wids.point -text PointWidget -variable widget_type,$modid -value 0 -command $n
     radiobutton $w.f.wids.arrow -text ArrowWidget -variable widget_type,$modid -value 1 -command $n
-    radiobutton $w.f.wids.guage -text GuageWidget -variable widget_type,$modid -value 2 -command $n
-    radiobutton $w.f.wids.ring -text RingWidget -variable widget_type,$modid -value 3 -command $n
-    radiobutton $w.f.wids.fframe -text FixedFrameWidget -variable widget_type,$modid -value 4 -command $n
-    radiobutton $w.f.wids.frame -text FrameWidget -variable widget_type,$modid -value 5 -command $n
-    radiobutton $w.f.wids.sframe -text ScaledFrameWidget -variable widget_type,$modid -value 6 -command $n
-    radiobutton $w.f.wids.square -text SquareWidget -variable widget_type,$modid -value 7 -command $n
-    radiobutton $w.f.wids.ssquare -text ScaledSquareWidget -variable widget_type,$modid -value 8 -command $n
-    radiobutton $w.f.wids.box -text BoxWidget -variable widget_type,$modid -value 9 -command $n
-    radiobutton $w.f.wids.sbox -text ScaledBoxWidget -variable widget_type,$modid -value 10 -command $n
-    radiobutton $w.f.wids.cube -text CubeWidget -variable widget_type,$modid -value 11 -command $n
-    radiobutton $w.f.wids.scube -text ScaledCubeWidget -variable widget_type,$modid -value 12 -command $n
+    radiobutton $w.f.wids.cross -text CrosshairWidget -variable widget_type,$modid -value 2 -command $n
+    radiobutton $w.f.wids.guage -text GuageWidget -variable widget_type,$modid -value 3 -command $n
+    radiobutton $w.f.wids.ring -text RingWidget -variable widget_type,$modid -value 4 -command $n
+    radiobutton $w.f.wids.fframe -text FixedFrameWidget -variable widget_type,$modid -value 5 -command $n
+    radiobutton $w.f.wids.frame -text FrameWidget -variable widget_type,$modid -value 6 -command $n
+    radiobutton $w.f.wids.sframe -text ScaledFrameWidget -variable widget_type,$modid -value 7 -command $n
+    radiobutton $w.f.wids.square -text SquareWidget -variable widget_type,$modid -value 8 -command $n
+    radiobutton $w.f.wids.ssquare -text ScaledSquareWidget -variable widget_type,$modid -value 9 -command $n
+    radiobutton $w.f.wids.box -text BoxWidget -variable widget_type,$modid -value 10 -command $n
+    radiobutton $w.f.wids.sbox -text ScaledBoxWidget -variable widget_type,$modid -value 11 -command $n
+    radiobutton $w.f.wids.cube -text CubeWidget -variable widget_type,$modid -value 12 -command $n
+    radiobutton $w.f.wids.scube -text ScaledCubeWidget -variable widget_type,$modid -value 13 -command $n
 
-    pack $w.f.wids.point $w.f.wids.arrow $w.f.wids.guage $w.f.wids.ring $w.f.wids.fframe $w.f.wids.frame $w.f.wids.sframe $w.f.wids.square $w.f.wids.ssquare $w.f.wids.box $w.f.wids.sbox $w.f.wids.cube $w.f.wids.scube -in $w.f.wids -side top -padx 2 -pady 2 -anchor w
+    pack $w.f.wids.point $w.f.wids.arrow $w.f.wids.cross $w.f.wids.guage $w.f.wids.ring $w.f.wids.fframe $w.f.wids.frame $w.f.wids.sframe $w.f.wids.square $w.f.wids.ssquare $w.f.wids.box $w.f.wids.sbox $w.f.wids.cube $w.f.wids.scube -in $w.f.wids -side top -padx 2 -pady 2 -anchor w
     pack $w.f.wids -in $w.f
 }
