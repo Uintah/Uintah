@@ -38,6 +38,7 @@ static void do_lock()
     tlock->lock();
     lock_count=1;
     owner=Task::self();
+//    cerr << "Locked: owner=" << owner << ", count=" << lock_count << endl;
 }
 
 static void do_unlock()
@@ -45,6 +46,7 @@ static void do_unlock()
     ASSERT(lock_count>0);
     if(--lock_count == 0){
 	owner=0;
+//	cerr << "Unlocked" << endl;
 	tlock->unlock();
     }
 }
@@ -95,3 +97,19 @@ void TCLTask::unlock()
     do_unlock();
 }
 
+int TCLTask::try_lock()
+{
+    if(owner == Task::self()){
+	lock_count++;
+	return 1;
+    }
+    if(tlock->try_lock()){
+	lock_count=1;
+	owner=Task::self();
+//	cerr << "Locked (try): owner=" << owner << ", count=" << lock_count << endl;
+	return 1;
+    } else {
+//	cerr << "Try Lock failed" << endl;
+	return 0;
+    }
+}

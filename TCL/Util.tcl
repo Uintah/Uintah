@@ -78,6 +78,7 @@ itcl_class expscale {
 	    set $variable 1
 	}
 
+	set built 1
 	scale $this.scale -label $label -orient $orient \
 		-from 1 -to 10 -resolution 0.000001 \
 		-variable $variable
@@ -107,7 +108,14 @@ itcl_class expscale {
     }
     public label "" 
     public orient
-    public variable
+    protected built 0
+    public variable "" {
+	if {$built} {
+	    $this.scale config -variable ""
+	    setscales
+	    $this.scale config -variable $variable
+	}
+    }
     protected exp 0
 
     method upexp {} {
