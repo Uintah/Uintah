@@ -83,6 +83,7 @@ public:
 
   TriSurfMesh();
   TriSurfMesh(const TriSurfMesh &copy);
+  virtual MeshBase *clone() { return new TriSurfMesh(*this); }
   virtual ~TriSurfMesh();
 
   virtual BBox get_bounding_box() const;
@@ -118,7 +119,6 @@ public:
   void unlocate(Point &result, const Point &p);
 
   void get_point(Point &result, node_index index) const;
-
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
