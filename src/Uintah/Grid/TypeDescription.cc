@@ -11,7 +11,7 @@ using namespace Uintah;
 using namespace std;
 using namespace SCICore::Exceptions;
 
-static map<string, const TypeDescription*>* types;
+static map<string, const TypeDescription*>* types = 0;
 
 TypeDescription::TypeDescription(Type type, const std::string& name,
 				 bool isFlat, MPI_Datatype (*mpitypemaker)())
@@ -46,7 +46,10 @@ string TypeDescription::getName() const
 
 const TypeDescription* TypeDescription::lookupType(const std::string& t)
 {
-   map<string, const TypeDescription*>::iterator iter = types->find(t);
+  if(!types)
+    types=scinew map<string, const TypeDescription*>;   
+  
+  map<string, const TypeDescription*>::iterator iter = types->find(t);
    if(iter == types->end())
       return 0;
    return iter->second;
@@ -54,10 +57,10 @@ const TypeDescription* TypeDescription::lookupType(const std::string& t)
 
 TypeDescription::Register::Register(const TypeDescription* td)
 {
-   //cerr << "Register: td=" << td << ", name=" << td->getName() << '\n';
-   if(!types)
-     types=scinew map<string, const TypeDescription*>;
-   (*types)[td->getName()]=td;
+  //  cerr << "Register: td=" << td << ", name=" << td->getName() << '\n';
+  if(!types)
+    types=scinew map<string, const TypeDescription*>;
+  (*types)[td->getName()]=td;
 }
 
 TypeDescription::Register::~Register()
@@ -87,6 +90,10 @@ Variable* TypeDescription::createInstance() const
 
 //
 // $Log$
+// Revision 1.9  2001/01/08 22:12:12  jas
+// Added switch for invalidFace for fillFlux, and friends.
+// Added check for types in lookupType().
+//
 // Revision 1.8  2000/09/25 20:37:43  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
