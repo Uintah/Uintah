@@ -20,136 +20,161 @@ public:
    ICE();
    virtual ~ICE();
    
-   virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			     SimulationStateP&);
-   virtual void scheduleInitialize(const LevelP& level,
-				   SchedulerP&,
-				   DataWarehouseP&);
+   virtual void problemSetup(
+                        const ProblemSpecP& params, 
+                        GridP& grid,
+			   SimulationStateP&);
+   virtual void scheduleInitialize(
+                        const LevelP& level,
+			   SchedulerP&,
+			   DataWarehouseP&);
 
-   void actuallyInitialize(const ProcessorGroup*,
+   void actuallyInitialize(
+                        const ProcessorGroup*,
 			   const Patch* patch,
 			   DataWarehouseP& /* old_dw */,
 			   DataWarehouseP& new_dw);
    
-   virtual void scheduleComputeStableTimestep(const LevelP&,
-					      SchedulerP&,
-					      DataWarehouseP&);
-   void actuallyComputeStableTimestep(const ProcessorGroup*,
-				      const Patch* patch,
-				      DataWarehouseP&,
-				      DataWarehouseP&);
+   virtual void scheduleComputeStableTimestep(
+                        const LevelP&,
+			   SchedulerP&,
+			   DataWarehouseP&);
+   void actuallyComputeStableTimestep(
+                        const ProcessorGroup*,
+			   const Patch* patch,
+			   DataWarehouseP&,
+			   DataWarehouseP&);
 
-   virtual void scheduleTimeAdvance(double t, double dt, 
-				    const LevelP&, 
-				    SchedulerP&,
-				    DataWarehouseP&, 
-				    DataWarehouseP&);
-
-
-   void actuallyTimeStep(const ProcessorGroup*,
-			 const Patch* patch,
-			 DataWarehouseP&,
-			 DataWarehouseP&);
-
-   void actuallyStep0(const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
-
-   void actuallyStep1(const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
-
-   void actuallyStep2(const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
-
-   void actuallyStep3(const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
-
-   void actuallyStep4(const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
-
-   void actuallyStep5(const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP&,
-		      DataWarehouseP&);
-
- void actuallyStep6(const ProcessorGroup*,
-		    const Patch* patch,
-		    DataWarehouseP&,
-		    DataWarehouseP&);
-
- void actuallyStep7(const ProcessorGroup*,
-		    const Patch* patch,
-		    DataWarehouseP&,
-		    DataWarehouseP&);
+   virtual void scheduleTimeAdvance(
+                        double t, 
+                        double dt, 
+			   const LevelP&, 
+			   SchedulerP&,
+			   DataWarehouseP&, 
+			   DataWarehouseP&);
 
 
- void convertNR_4dToUCF(const Patch*, CCVariable<Vector>& vel_ucf, 
-			  double ****uvel_CC,
-			  double ****vvel_CC,
-			  double **** wvel_CC,
-			  int xLoLimit,
-			  int xHiLimit,
-			  int yLoLimit,
-			  int yHiLimit,
-			  int zLoLimit,
-			  int zHiLimit,
-			  int nMaterials);
- void convertNR_4dToUCF(const Patch*, CCVariable<double>& vel_ucf, 
-			  double ****uvel_CC,
-			  int xLoLimit,
-			  int xHiLimit,
-			  int yLoLimit,
-			  int yHiLimit,
-			  int zLoLimit,
-			  int zHiLimit,
-			  int nMaterials);
+   void actually_Bottom_of_main_loop(
+                        const ProcessorGroup*,
+			   const Patch* patch,
+			   DataWarehouseP&,
+			   DataWarehouseP&);
 
- void convertUCFToNR_4d(const Patch*, CCVariable<Vector>& vel_ucf, 
-			  double ****uvel_CC,
-			  double ****vvel_CC,
-			  double **** wvel_CC,
-			  int xLoLimit,
-			  int xHiLimit,
-			  int yLoLimit,
-			  int yHiLimit,
-			  int zLoLimit,
-			  int zHiLimit,
-			  int nMaterials);
- void convertUCFToNR_4d(const Patch*, CCVariable<double>& vel_ucf, 
-			  double ****uvel_CC,
-			  int xLoLimit,
-			  int xHiLimit,
-			  int yLoLimit,
-			  int yHiLimit,
-			  int zLoLimit,
-			  int zHiLimit,
-			  int nMaterials);
+   void actually_Top_of_main_loop(
+                        const ProcessorGroup*,
+		          const Patch* patch,
+		          DataWarehouseP&,
+		          DataWarehouseP&);
+
+   void actuallyStep1(
+                       const ProcessorGroup*,
+		         const Patch* patch,
+		         DataWarehouseP&,
+		         DataWarehouseP&);
+
+   void actuallyStep2(
+                        const ProcessorGroup*,
+		          const Patch* patch,
+		          DataWarehouseP&,
+		          DataWarehouseP&);
+
+   void actuallyStep3(
+                        const ProcessorGroup*,
+		          const Patch* patch,
+		          DataWarehouseP&,
+		          DataWarehouseP&);
+
+   void actuallyStep4(
+                        const ProcessorGroup*,
+		          const Patch* patch,
+		          DataWarehouseP&,
+		          DataWarehouseP&);
+
+   void actuallyStep5(
+                        const ProcessorGroup*,
+		          const Patch* patch,
+		          DataWarehouseP&,
+		          DataWarehouseP&);
+
+   void actuallyStep6and7(
+                        const ProcessorGroup*,
+		          const Patch* patch,
+		          DataWarehouseP&,
+		          DataWarehouseP&);
+
+
+ void convertNR_4dToUCF(
+                        const Patch*, 
+                        CCVariable<Vector>& vel_ucf, 
+			   double ****uvel_CC,
+			   double ****vvel_CC,
+			   double ****wvel_CC,
+                        int include_ghostcells,
+			   int xLoLimit,
+			   int xHiLimit,
+			   int yLoLimit,
+			   int yHiLimit,
+			   int zLoLimit,
+			   int zHiLimit,
+			   int nMaterials);
+ void convertNR_4dToUCF(
+                        const Patch*, 
+                        CCVariable<double>& scalar_ucf, 
+			   double ****scalar_CC,
+                        int include_ghostcells,
+			   int xLoLimit,
+			   int xHiLimit,
+			   int yLoLimit,
+			   int yHiLimit,
+			   int zLoLimit,
+			   int zHiLimit,
+			   int nMaterials);
+
+ void convertUCFToNR_4d(
+                        const Patch*, 
+                        CCVariable<Vector>& vel_ucf, 
+			   double ****uvel_CC,
+			   double ****vvel_CC,
+			   double ****wvel_CC,
+                        int include_ghostcells,
+			   int xLoLimit,
+			   int xHiLimit,
+			   int yLoLimit,
+			   int yHiLimit,
+			   int zLoLimit,
+			   int zHiLimit,
+			   int nMaterials);
+                        
+ void convertUCFToNR_4d(
+                        const Patch*, 
+                        CCVariable<double>& scalar_ucf, 
+			   double ****scalar_CC,
+                        int include_ghostcells,
+			   int xLoLimit,
+			   int xHiLimit,
+			   int yLoLimit,
+			   int yHiLimit,
+			   int zLoLimit,
+			   int zHiLimit,
+			   int nMaterials);
 
 
 			  
    
 private:
-    // These two will go away SOON - a really bad habit, won't work in parallel, blah blah blah
+ // These two will go away SOON - a really bad habit, won't work in parallel, blah blah blah
  
  // Cell centered variables
 
     const VarLabel* delTLabel;
     const VarLabel* vel_CCLabel;
     const VarLabel* press_CCLabel;
+    const VarLabel* press_CCLabel_1;
     const VarLabel* rho_CCLabel;
     const VarLabel* temp_CCLabel;
     const VarLabel* cv_CCLabel;
 
-    // Face centered variables
+// Face centered variables
     const VarLabel* vel_FCLabel;
     const VarLabel* press_FCLabel;
     const VarLabel* tau_FCLabel;
