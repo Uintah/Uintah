@@ -11,17 +11,28 @@
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 INCLUDES += $(INSIGHT_INCLUDE)
+
 SRCDIR   := Packages/Insight/Dataflow/Modules/Filters
 
-SRCS     += \
-	$(SRCDIR)/DiscreteGaussianImageFilter.cc\
-	$(SRCDIR)/GradientAnisotropicDiffusionImageFilter.cc\
-	$(SRCDIR)/GradientMagnitudeImageFilter.cc\
-	$(SRCDIR)/CannySegmentationLevelSetImageFilter.cc\
-	$(SRCDIR)/WatershedSegmenter.cc\
-	$(SRCDIR)/WatershedSegmentTreeGenerator.cc\
-	$(SRCDIR)/WatershedRelabeler.cc\
+#XMLS :=  $(wildcard $(SRCDIR)/XML/sci_*.xml)
+XMLS :=  sci_CannySegmentationLevelSetImageFilter.xml \
+	sci_DiscreteGaussianImageFilter.xml \
+	sci_GradientAnisotropicDiffusionImageFilter.xml \
+	sci_GradientMagnitudeImageFilter.xml \
+	sci_WatershedRelabeler.xml \
+	sci_WatershedSegmentTreeGenerator.xml \
+	sci_WatershedSegmenter.xml \
 #[INSERT NEW CODE FILE HERE]
+
+SRC_GEN := $(patsubst sci_%.xml, $(SRCDIR)/%.cc, $(XMLS))
+
+CATEGORY := Filters
+CODEGEN := Packages/Insight/generate
+
+SRCS += ${SRC_GEN} 
+
+$(SRCDIR)/%.cc : $(SRCDIR)/XML/sci_%.xml
+	$(CODEGEN) $(SRCDIR)/Packages/Insight $(CATEGORY) $*
 
 PSELIBS := Packages/Insight/Core/Datatypes \
 	Core/Datatypes Dataflow/Network Dataflow/Ports \

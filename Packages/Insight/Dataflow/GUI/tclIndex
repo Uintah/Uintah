@@ -6,6 +6,18 @@
 # element name is the name of a command and the value is
 # a script that loads the command.
 
-set auto_index(Insight_DataIO_ImageFileWriter) [list source [file join $dir ImageFileWriter.tcl]]
+set auto_index(Insight_Filters_CannySegmentationLevelSetImageFilter) [list source [file join $dir CannySegmentationLevelSetImageFilter.tcl]]
 set auto_index(Insight_Filters_DiscreteGaussianImageFilter) [list source [file join $dir DiscreteGaussianImageFilter.tcl]]
+set auto_index(Insight_Filters_GradientAnisotropicDiffusionImageFilter) [list source [file join $dir GradientAnisotropicDiffusionImageFilter.tcl]]
+set auto_index(Insight_Filters_GradientMagnitudeImageFilter) [list source [file join $dir GradientMagnitudeImageFilter.tcl]]
 set auto_index(Insight_DataIO_ImageFileReader) [list source [file join $dir ImageFileReader.tcl]]
+set auto_index(Insight_DataIO_ImageFileWriter) [list source [file join $dir ImageFileWriter.tcl]]
+set auto_index(Insight_DataIO_ImageReaderFloat2D) [list source [file join $dir ImageReaderFloat2D.tcl]]
+set auto_index(Insight_DataIO_ImageReaderFloat3D) [list source [file join $dir ImageReaderFloat3D.tcl]]
+set auto_index(Insight_DataIO_ImageReaderUChar2D) [list source [file join $dir ImageReaderUChar2D.tcl]]
+set auto_index(Insight_DataIO_ImageReaderUShort2D) [list source [file join $dir ImageReaderUShort2D.tcl]]
+set auto_index(Insight_DataIO_Switch) [list source [file join $dir Switch.tcl]]
+set auto_index(Insight_Filters_WatershedImageFilter) [list source [file join $dir WatershedImageFilter.tcl]]
+set auto_index(Insight_Filters_WatershedRelabeler) [list source [file join $dir WatershedRelabeler.tcl]]
+set auto_index(Insight_Filters_WatershedSegmenter) [list source [file join $dir WatershedSegmenter.tcl]]
+set auto_index(Insight_Filters_SegmentTreeGenerator) [list source [file join $dir WatershedSegmentTreeGenerator.tcl]]
