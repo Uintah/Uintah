@@ -71,8 +71,9 @@ PetscSolver::matrixCreate(const PatchSet*,
 // ****************************************************************************
 void 
 PetscSolver::computePressUnderrelax(const ProcessorGroup*,
-				  const Patch*,
-				  ArchesVariables*)
+				    const Patch*,
+				    ArchesVariables*,
+				    ArchesConstVariables*)
 {
   throw InternalError("PetscSolver not configured");
 }
@@ -84,6 +85,7 @@ void
 PetscSolver::setPressMatrix(const ProcessorGroup* ,
 			    const Patch*,
 			    ArchesVariables*,
+			    ArchesConstVariables*,
 			    const ArchesLabel*)
 {
   throw InternalError("PetscSolver not configured");
@@ -167,7 +169,8 @@ void
 PetscSolver::computeVelUnderrelax(const ProcessorGroup* ,
 				  const Patch*,
 				  int,
-				  ArchesVariables*)
+				  ArchesVariables*,
+				  ArchesConstVariables*)
 {
   throw InternalError("PetscSolver not configured");
 }
@@ -222,7 +225,8 @@ void
 PetscSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 				    const Patch*,
 				    int,
-				    ArchesVariables*)
+				    ArchesVariables*,
+				    ArchesConstVariables*)
 {
   throw InternalError("PetscSolver not configured");
 }
@@ -235,6 +239,7 @@ PetscSolver::scalarLisolve(const ProcessorGroup*,
 			  const Patch*,
 			  int, double,
 			  ArchesVariables*,
+			  ArchesConstVariables*,
 			  CellInformation*,
 			  const ArchesLabel*)
 {
@@ -243,8 +248,9 @@ PetscSolver::scalarLisolve(const ProcessorGroup*,
 
 void 
 PetscSolver::computeEnthalpyUnderrelax(const ProcessorGroup* ,
-				       const Patch* patch,
-				       ArchesVariables* vars)
+				       const Patch*,
+				       ArchesVariables*,
+				       ArchesConstVariables*)
 {
   throw InternalError("PetscSolver not configured");
 }
@@ -258,6 +264,7 @@ PetscSolver::enthalpyLisolve(const ProcessorGroup* pc,
 			  const Patch* patch,
 			  double delta_t,
 			  ArchesVariables* vars,
+			  ArchesConstVariables* vars,
 			  CellInformation* cellinfo,
 			  const ArchesLabel* lab)
 {
