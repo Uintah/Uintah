@@ -122,17 +122,17 @@ void do_tensor(Tensor &t, void *&ptr)
   T *&p = (T*&)ptr;
   float scl = (p[0] > 0.5);
   ++p; // skip first value (confidence)
-  t.mat_[0][0] = (*p)*scl;
+  t.mat_[0][0] = (*p);//*scl;
   ++p;
-  t.mat_[0][1] = (*p)*scl;
+  t.mat_[0][1] = (*p);//*scl;
   ++p;
-  t.mat_[0][2] = (*p)*scl;
+  t.mat_[0][2] = (*p);//*scl;
   ++p;
-  t.mat_[1][1] = (*p)*scl;
+  t.mat_[1][1] = (*p);//*scl;
   ++p;
-  t.mat_[1][2] = (*p)*scl;
+  t.mat_[1][2] = (*p);//*scl;
   ++p;
-  t.mat_[2][2] = (*p)*scl;
+  t.mat_[2][2] = (*p);//*scl;
   ++p;
 }
 
@@ -159,17 +159,17 @@ void get_val_and_eigens_and_inc_nrrdptr(Tensor &t, void *&ptr)
 //  cerr << "e1="<<e1<<"  e2="<<e2<<"  e3="<<e3<<"  l1="<<eval_scl[0]<<" l2="<<eval_scl[1]<<" l3="<<eval_scl[2]<<"\n";
   t.set_outside_eigens(e1, e2, e3, eval_scl[0], eval_scl[1], eval_scl[2]);
   ++p; // skip first value (confidence)
-  t.mat_[0][0] = (*p)*scl;
+  t.mat_[0][0] = (*p);//*scl;
   ++p;
-  t.mat_[0][1] = (*p)*scl;
+  t.mat_[0][1] = (*p);//*scl;
   ++p;
-  t.mat_[0][2] = (*p)*scl;
+  t.mat_[0][2] = (*p);//*scl;
   ++p;
-  t.mat_[1][1] = (*p)*scl;
+  t.mat_[1][1] = (*p);//*scl;
   ++p;
-  t.mat_[1][2] = (*p)*scl;
+  t.mat_[1][2] = (*p);//*scl;
   ++p;
-  t.mat_[2][2] = (*p)*scl;
+  t.mat_[2][2] = (*p);//*scl;
   ++p;
 //  cerr << "tensor="<<t<<"\n";
 }
