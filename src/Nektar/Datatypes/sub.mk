@@ -9,6 +9,8 @@ SRCDIR   := Nektar/Datatypes
 
 SRCS += $(SRCDIR)/NektarScalarField.cc \
 	$(SRCDIR)/NektarVectorField.cc  
+	$(SRCDIR)/NektarScalarFieldPort.cc \
+	$(SRCDIR)/NektarVectorFieldPort.cc  
 
 PSELIBS := SCICore/Persistent SCICore/Exceptions SCICore/Containers \
 	SCICore/Thread SCICore/Geometry SCICore/Geom SCICore/TclInterface \
