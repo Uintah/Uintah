@@ -61,6 +61,7 @@ private:
 
   //! Input should be a volume field.
   FieldIPort*              infield_;
+  int                      infield_gen_;
   //! Scene graph output.
   GeometryOPort*           viewer_;
   //! TriSurf field output.
@@ -68,6 +69,7 @@ private:
   
   //! Handle on the generated surface.
   FieldHandle              tri_fh_;
+  GeomTriangles           *geom_tris_;
 };
 
 extern "C" Module* make_FieldBoundary(const clString& id)
@@ -77,7 +79,9 @@ extern "C" Module* make_FieldBoundary(const clString& id)
 
 FieldBoundary::FieldBoundary(const clString& id) : 
   Module("FieldBoundary", id, Filter, "Fields", "SCIRun"),
-  tri_fh_(scinew TriSurf<double>)
+  infield_gen_(-1),
+  tri_fh_(scinew TriSurf<double>),
+  geom_tris_(0)
 {
   // Create the input port
   infield_ = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
@@ -116,7 +120,8 @@ template <class Msh>
 void 
 FieldBoundary::boundary(const Msh *mesh)
 {
-  GeomTriangles *tris= scinew GeomTriangles;  
+  if (geom_tris_) delete geom_tris_;
+  geom_tris_ = scinew GeomTriangles;  
   // Walk all the cells in the mesh.
   typename Msh::cell_iterator citer = mesh->cell_begin();
   while (citer != mesh->cell_end()) {
@@ -145,7 +150,7 @@ FieldBoundary::boundary(const Msh *mesh)
 	mesh->get_point(p3, *niter);
 	++niter;
 
-	tris->add(p1, p2, p3);
+	geom_tris_->add(p1, p2, p3);
 	// FIX_ME add to TriSurf
 	//osurf->add_tri(p1,p2,p3);
 	while (niter != nodes.end()) {
@@ -153,7 +158,7 @@ FieldBoundary::boundary(const Msh *mesh)
 	  mesh->get_point(p3, *niter);
 	  ++niter;
 	  
-	  tris->add(p1, p2, p3);
+	  geom_tris_->add(p1, p2, p3);
 	  // FIX_ME add to TriSurf
 	  //osurf->add_tri(p1,p2,p3);
 	}
@@ -162,8 +167,7 @@ FieldBoundary::boundary(const Msh *mesh)
   }
   // FIX_ME remove duplicates and build neighbors
   // osurf->resolve_surf();
-  viewer_->addObj(tris, "Boundary Surface");
-  viewer_->flushViews();
+
 }
 
 
@@ -176,10 +180,15 @@ FieldBoundary::execute()
   if (!input.get_rep()) {
     error("FieldBoundary Error: No input data.");
     return;
+  } else if (infield_gen_ != input->generation) {
+    infield_gen_ = input->generation;
+    MeshBaseHandle mesh = input->mesh();
+    mesh->finish_mesh();
+    dispatch_mesh1(input->mesh(), boundary);
   }
-  MeshBaseHandle mesh = input->mesh();
-  mesh->finish_mesh();
-  dispatch_mesh1(input->mesh(), boundary);
+
+  viewer_->addObj(geom_tris_, "Boundary Surface");
+  viewer_->flushViews();
 }
 
 
