@@ -60,6 +60,11 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   d_numIterations=0;
 }
 
+bool ImpMPM::restartableTimesteps()
+{
+  return true;
+}
+
 ImpMPM::~ImpMPM()
 {
   delete lb;
@@ -746,6 +751,10 @@ void ImpMPM::iterate(const ProcessorGroup*,
     subsched->advanceDataWarehouse(grid);
   }
   d_numIterations = count;
+  if(d_numIterations > 7){
+    new_dw->abortTimestep();
+    new_dw->restartTimestep();
+  }
 
   // Move the particle data from subscheduler to scheduler.
   for (int p = 0; p < patches->size();p++) {
@@ -2030,4 +2039,9 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
       old_dw->get(old_delT, d_sharedState->get_delt_label());
       new_dw->put(old_delT, lb->delTLabel);
     }
+}
+
+double ImpMPM::recomputeTimestep(double current_dt)
+{
+  return current_dt/2;
 }

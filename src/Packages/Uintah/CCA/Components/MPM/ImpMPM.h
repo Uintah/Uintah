@@ -80,6 +80,9 @@ public:
   virtual void scheduleTimeAdvance(          const LevelP& level, SchedulerP&,
 				    int step, int nsteps );
 
+  virtual bool restartableTimesteps();
+  virtual double recomputeTimestep(double new_dt);
+
   void setSharedState(SimulationStateP& ssp);
 
   void setMPMLabel(MPMLabel* Mlb)
