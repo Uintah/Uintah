@@ -317,7 +317,7 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	toplevel $w
 	wm minsize $w 300 190
 	set n "$this-c needexecute "
-	set pick "$this-c pick "
+	set pick "$this-c update_sn "
 
 	#selection stuff
 	frame $w.o
@@ -335,13 +335,13 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	pack $w.o.select.cell -side top -anchor w -pady 2 -ipadx 3
 	
 	# node ID
-	make_entry $w.o.nodel "level index:" $this-index_l "$this do_nothing"
+	make_entry $w.o.nodel "level index:" $this-index_l $pick
 	pack $w.o.nodel -side top -fill x -padx 2 -pady 2
-	make_entry $w.o.nodex "x index:" $this-index_x "$this do_nothing"
+	make_entry $w.o.nodex "x index:" $this-index_x $pick
 	pack $w.o.nodex -side top -fill x -padx 2 -pady 2
-	make_entry $w.o.nodey "y index:" $this-index_y "$this do_nothing"
+	make_entry $w.o.nodey "y index:" $this-index_y $pick
 	pack $w.o.nodey -side top -fill x -padx 2 -pady 2
-	make_entry $w.o.nodez "z index:" $this-index_z "$this do_nothing"
+	make_entry $w.o.nodez "z index:" $this-index_z $pick
 	pack $w.o.nodez -side top -fill x -padx 2 -pady 2
 
 	makeFrames $w
