@@ -145,7 +145,7 @@ LinearAlgebra::execute()
       LinearAlgebraAlgo::get_compile_info(mcount, function_.get(), hoffset);
     if (!DynamicCompilation::compile(ci, algo, false, this))
     {
-      //DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+      DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
       error("Your function would not compile.");
       return;
     }
