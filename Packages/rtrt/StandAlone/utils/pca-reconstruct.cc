@@ -18,7 +18,7 @@ void usage(char *me, const char *unknown = 0) {
   printf("  -i <filename>   basename of input nrrds (null)\n");
   printf("  -o <filename>   filename of output nrrd (null)\n");
   printf("  -b <filename>   load basis textures from file (null)\n");
-  printf("  -t <filename>   load transform matrix from file (null)\n");
+  printf("  -c <filename>   load PCA coefficients from file (null)\n");
   printf("  -m <filename>   load mean vector from file (null)\n");
   printf("  -nrrd           use .nrrd extension (false)\n");
   
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
   char *infilename_base=0;
   char *outfilename=0;
   char *bases_filename=0;
-  char *trans_filename=0;
+  char *coeff_filename=0;
   char *mean_filename=0;
   char *nrrd_ext = ".nhdr";
   
@@ -42,10 +42,10 @@ int main(int argc, char *argv[]) {
       infilename_base = argv[++i];
     } else if (arg == "-output" || arg == "-o") {
       outfilename = argv[++i];
-    } else if (arg == "-bases" || arg == "-b") {
+    } else if (arg == "-basis" || arg == "-b") {
       bases_filename = argv[++i];
-    } else if (arg == "-trans" || arg == "-t") {
-      trans_filename = argv[++i];
+    } else if (arg == "-coeff" || arg == "-c") {
+      coeff_filename = argv[++i];
     } else if (arg == "-mean" || arg == "-m") {
       mean_filename = argv[++i];            
     } else if (arg == "-nrrd") {
@@ -61,8 +61,8 @@ int main(int argc, char *argv[]) {
       cerr << "filename of basis textures not specified"<<endl;
       error=true;
     }
-    if (!trans_filename) {
-      cerr << "filename of transformation matrix not specified"<<endl;
+    if (!coeff_filename) {
+      cerr << "filename of PCA coefficients not specified"<<endl;
       error=true;
     }
     if (!mean_filename) {
@@ -78,11 +78,11 @@ int main(int argc, char *argv[]) {
     size_t len=strlen(infilename_base);
     if (!bases_filename) {
       bases_filename=new char[len+15];
-      sprintf(bases_filename, "%s-bases%s", infilename_base, nrrd_ext);
+      sprintf(bases_filename, "%s-basis%s", infilename_base, nrrd_ext);
     }
-    if (!trans_filename) {
-      trans_filename=new char[len+20];
-      sprintf(trans_filename, "%s-transform%s", infilename_base, nrrd_ext);
+    if (!coeff_filename) {
+      coeff_filename=new char[len+20];
+      sprintf(coeff_filename, "%s-coeff%s", infilename_base, nrrd_ext);
     }
     if (!mean_filename) {
       mean_filename=new char[len+15];
@@ -98,13 +98,13 @@ int main(int argc, char *argv[]) {
 
   // Load the input nrrds
   Nrrd *bases = nrrdNew();
-  Nrrd *transform = nrrdNew();
+  Nrrd *coeff = nrrdNew();
   Nrrd *mean = nrrdNew();
   int E = 0;
   cerr<<"attempting to load "<<bases_filename<<endl;
   if (!E) E |= nrrdLoad(bases, bases_filename, 0);
-  cerr<<"attempting to load "<<trans_filename<<endl;
-  if (!E) E |= nrrdLoad(transform, trans_filename, 0);
+  cerr<<"attempting to load "<<coeff_filename<<endl;
+  if (!E) E |= nrrdLoad(coeff, coeff_filename, 0);
   cerr<<"attempting to load "<<mean_filename<<endl;
   if (!E) E |= nrrdLoad(mean, mean_filename, 0);
   if (E) {
@@ -115,8 +115,8 @@ int main(int argc, char *argv[]) {
     exit(2);
   }
     
-  int num_bases = transform->axis[0].size;
-  int num_channels = transform->axis[1].size;
+  int num_bases = coeff->axis[0].size;
+  int num_channels = coeff->axis[1].size;
   int width = bases->axis[1].size;
   int height = bases->axis[2].size;
 
@@ -142,12 +142,11 @@ int main(int argc, char *argv[]) {
 
   float *outdata = (float*)(nout->data);
   float *btdata = (float*)(bases->data);
-  float *tdata = (float*)(transform->data);
+  float *tdata = (float*)(coeff->data);
   float *mdata = (float*)(mean->data);
-  // Produce one channel at a time
   // Loop over each pixel
   for (int pixel = 0; pixel < (width*height); pixel++) {
-    // Now do transform_transpose * btdata
+    // Now do coeff_transpose * btdata
     for(int r = 0; r < num_channels; r++)
       for(int c = 0; c < num_bases; c++)
 	outdata[r] += tdata[r*num_bases+c] * btdata[c];
