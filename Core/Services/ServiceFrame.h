@@ -42,7 +42,6 @@
 #include <Core/Services/ServiceDB.h>
 #include <Core/Services/ServiceManager.h>
 #include <Core/Services/ServiceLog.h>
-#include <Dataflow/share/share.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
 

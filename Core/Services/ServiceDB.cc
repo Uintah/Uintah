@@ -35,6 +35,7 @@
 #include <Dataflow/Network/FileUtils.h>
 
 #include <Core/Services/ServiceNode.h>
+#include <Core/OS/Dir.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
@@ -235,7 +236,7 @@ ServiceDB::loadpackages()
             }
       
           struct stat buf;
-          lstat((pathelt+"/"+packageelt).c_str(),&buf);
+          LSTAT((pathelt+"/"+packageelt).c_str(),&buf);
           if (S_ISDIR(buf.st_mode)) 
             {
               tmppath = "found";
@@ -380,7 +381,7 @@ ServiceDB::parse_and_find_service_rcfile(ServiceInfo *new_service,string xmldir)
     {
       string dirname = HOME+string("/SCIRun/services");
       struct stat buf;
-      if(lstat(dirname.c_str(),&buf) < 0)
+      if(LSTAT(dirname.c_str(),&buf) < 0)
         {
           // The target directory does not exist
 			
@@ -388,11 +389,11 @@ ServiceDB::parse_and_find_service_rcfile(ServiceInfo *new_service,string xmldir)
           // if not create it
 
           dirname = HOME+string("/SCIRun");
-          if (lstat(dirname.c_str(),&buf) < 0)
+          if (LSTAT(dirname.c_str(),&buf) < 0)
             {
               string cmd = string("mkdir ") + string(HOME) + string("/SCIRun");
               sci_system(cmd.c_str());
-              if(lstat(dirname.c_str(),&buf) < 0) return;  // Try to get information once more
+              if(LSTAT(dirname.c_str(),&buf) < 0) return;  // Try to get information once more
             }
           if (!S_ISDIR(buf.st_mode))
             {
@@ -403,11 +404,11 @@ ServiceDB::parse_and_find_service_rcfile(ServiceInfo *new_service,string xmldir)
           // SCIRun directory must exist now
 		
           dirname = HOME+string("/SCIRun/services");
-          if (lstat(dirname.c_str(),&buf) < 0)
+          if (LSTAT(dirname.c_str(),&buf) < 0)
             {
               string cmd = string("mkdir ") + string(HOME) + string("/SCIRun/services");
               sci_system(cmd.c_str());
-              if(lstat(dirname.c_str(),&buf) < 0) return;  // Try to get information once more
+              if(LSTAT(dirname.c_str(),&buf) < 0) return;  // Try to get information once more
             }
           if (!S_ISDIR(buf.st_mode))
             { 

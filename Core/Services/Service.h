@@ -44,8 +44,6 @@
 #include <Core/Services/ServiceLog.h>
 #include <Core/Containers/LockingHandle.h>
 
-#include <Core/share/share.h>
-
 #define DECLARE_SERVICE_MAKER(name) \
 extern "C" Service* make_service_##name(ServiceContext &ctx) \
 { \
