@@ -69,7 +69,7 @@ private:
   double lpr_;
 
   vector< vector<double> > theta;
-  int old, star;
+  int current, star;
 
   Array2<double> lkappa;
 

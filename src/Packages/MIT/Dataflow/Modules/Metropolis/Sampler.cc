@@ -57,7 +57,7 @@ Sampler::Sampler(const string& id)
 
   nparms = 0;
   theta.resize(2);
-  old = 0;
+  current = 0;
   star = 1;
 
   // init random number generator
@@ -169,7 +169,7 @@ Sampler::reset()
 {
   int m = distribution_->sigma.dim1();
   if ( m != nparms ) {
-    theta[old].resize(m);
+    theta[current].resize(m);
     theta[star].resize(m);
     
     has_lkappa_ = false;
@@ -188,7 +188,7 @@ Sampler::reset()
 
   // input probable distribution
   for (int i=0; i<nparms; i++) 
-    theta[old][i] = distribution_->theta[i]; // we should let the user change 
+    theta[current][i] = distribution_->theta[i]; // we should let the user change 
                                              // it too
   interface_->kappa( distribution_->kappa );
 
@@ -202,8 +202,8 @@ Sampler::reset()
     results->data_[i].remove_all();
   }
 
-  post_ = logpost( theta[old] );
-  lpr_ = pdsim_->lpr(theta[old]);
+  post_ = logpost( theta[current] );
+  lpr_ = pdsim_->lpr(theta[current]);
 
   current_iter_ = 0;
 }
@@ -252,14 +252,14 @@ void Sampler::metropolis()
   paused_ = false;
   for (int k=current_iter_; k<interface_->iterations() && !stop_; k++) {
     current_iter_ = k;
-    pdsim_->compute( theta[old], theta[star]);
+    pdsim_->compute( theta[current], theta[star]);
     double new_lpr = pdsim_->lpr( theta[star] );
     double new_post = logpost( theta[star] );
     double sum = new_post - post_ + lpr_ - new_lpr;
     double u = drand48();
 
     if ( sum <= 500 && exp(sum) >= u ) {
-      swap( old, star );   // yes
+      swap( current, star );   // yes
       post_ = new_post;
       lpr_ = new_lpr;
     }
@@ -269,8 +269,8 @@ void Sampler::metropolis()
       
       vector<double> v(nparms);
       for (int i=0; i<nparms; i++) {
-	results->data_[i].add(theta[old][i]);
-	v[i]=theta[old][i];
+	results->data_[i].add(theta[current][i]);
+	v[i]=theta[current][i];
       }
       if ( graph_ ) 
 	graph_->add_values(v);
