@@ -91,15 +91,13 @@ itcl_class Module {
     protected Macroed
     protected menumod
     protected MenuList
-
+    protected made_icon 0
     public state "NeedData" {$this update_state}
     public progress 0 {$this update_progress}
     public time "00.00" {$this update_time}
-
     public group -1
     public selected 0
     public show_status 1
-    
     method name {} {
 	return name
     }
@@ -329,7 +327,6 @@ itcl_class Module {
 
 	set $this-show_status 1
 
-
 # Destroy selected items with a Ctrl-D press
 	bind all <Control-d> "moduleDestroySelected \
 		$canvas $minicanvas lightgray"
@@ -388,7 +385,7 @@ itcl_class Module {
 	    bind $p.inset <ButtonRelease-1> "moduleEndDrag $modframe $canvas"
 	    bind $p.inset <3> "popup_menu %X %Y $canvas $minicanvas [modname]"
 	}
-	
+	set made_icon 1
     }
     method set_moduleDragged {  ModuleDragged } {
 	set mdragged $ModuleDragged
@@ -737,6 +734,7 @@ itcl_class Module {
 	# create the window
 	toplevel $w
 	append t "Log for " [modname]
+	set t "$t -- pid=[set $this-pid]"
 	wm title $w $t
 	
 	frame $w.log
