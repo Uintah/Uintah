@@ -18,7 +18,7 @@
       </port>
       <port>
         <name>DipoleSource</name>
-        <datatype>SCIRun::Matrix</datatype>
+        <datatype>SCIRun::Field</datatype>
       </port>
       <port>
         <name>Input RHS</name>
