@@ -1,4 +1,21 @@
 
+#include "MPMICE.h"
+#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Core/Util/DebugStream.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
+
+using namespace SCIRun;
+using namespace Uintah;
+
+static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
+static DebugStream cout_doing("ICE_DOING_COUT", false); 
 /* --------------------------------------------------------------------- 
  Function~  MPMICE::computeRateFormPressure-- 
  Reference: A Multifield Model and Method for Fluid Structure
@@ -101,11 +118,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
          mat_volume[m] = mat_mass[m] * sp_vol_CC[m][c];
 
          tmp = dp_drho[m] + dp_de[m] * 
-           (press_eos[m]*(sp_vol_CC[m][c] * sp_vol_CC[m][c])); 
-/*`==========TESTING==========*/
-      //speedSound_new[m][c] = sqrt(tmp)/gamma[m];  // Isothermal speed of sound
-        speedSound_new[m][c] = sqrt(tmp);           // Isentropic speed of sound 
-/*==========TESTING==========`*/           
+           (press_eos[m]*(sp_vol_CC[m][c] * sp_vol_CC[m][c]));         
         } 
         if(mpm_matl){                //  M P M
           rho_micro[m][c]  = mass_CC[m][c]/mat_vol[m][c];
@@ -117,18 +130,12 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
                               dp_drho[m], tmp,mpm_matl);
 
           mat_volume[m] = mat_vol[m][c];
-/*`==========TESTING==========*/
-      //speedSound_new[m][c] = tmp/gamma[m];    // Isothermal speed of sound
-        speedSound_new[m][c] = tmp;             // Isentropic speed of sound 
-/*==========TESTING==========`*/   
         }              
         matl_press[m][c] = press_eos[m];
         total_mat_vol += mat_volume[m];
 /*`==========TESTING==========*/
-// THESE OBNOXIOUS STATEMENTS WILL DISAPPEAR WHEN WE FIGURE OUT WHAT TO DO WITH 
-//  MPM'S SPEED OF SOUND.
     //  speedSound_new[m][c] = sqrt(tmp)/gamma[m];  // Isothermal speed of sound
-    //  speedSound_new[m][c] = sqrt(tmp);           // Isentropic speed of sound
+        speedSound_new[m][c] = sqrt(tmp);           // Isentropic speed of sound
         kappa[m] = sp_vol_new[m][c]/ 
                             (speedSound_new[m][c] * speedSound_new[m][c]); 
 /*==========TESTING==========`*/
