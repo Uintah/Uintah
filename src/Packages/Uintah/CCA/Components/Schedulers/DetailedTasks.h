@@ -17,6 +17,7 @@ namespace Uintah {
   class DataWarehouse;
   class DetailedTask;
   class DetailedTasks;
+  class TaskGraph;
 
   class DetailedDep {
   public:

@@ -13,6 +13,11 @@
 
 namespace SCIRun {
   void swapbytes( Uintah::Matrix3& m);
+
+  // I assume a bool is one byte and swapping the bytes is really a no-op.
+  // This is needed for the instantiation (xlC) of :
+  // class Uintah::ReductionVariable<bool,Uintah::Reductions::And<bool> >".
+  void swapbytes( bool ) {}
 } //end namespace SCIRun
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
