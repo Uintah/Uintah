@@ -1,1 +1,2 @@
-0 0 * * * /usr/sci/projects/Uintah/tester/bin/tcsh_run "/usr/sci/projects/Uintah/tester/bin/startTester -j 8 -sendmail"
+0 0 * * * /local/csafe/raid1/tester/bin/tcsh_run "/local/csafe/raid1/tester/bin/startTester -j 8 -sendmail"
+0 19 * * 5 /local/csafe/raid1/tester/bin/tcsh_run "/local/csafe/raid1/tester/bin/startTester -j 8 -sendmail -weekly"
