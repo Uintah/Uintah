@@ -2,6 +2,9 @@
 
 #include <sci_defs/hypre_defs.h>
 
+#include <fstream> // work around compiler bug with RHEL 3
+
+
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/RadiationSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/RadLinearSolver.h>
