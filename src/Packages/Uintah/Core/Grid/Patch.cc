@@ -61,13 +61,12 @@ Patch::Patch(const Level* level,
     if(d_id >= *ids)
       ids->set(d_id+1);
    }
-
-  setBCType(xplus, None);
-  setBCType(yplus, None);
-  setBCType(zplus, None);
   setBCType(xminus, None);
+  setBCType(xplus, None);
   setBCType(yminus, None);
+  setBCType(yplus, None);
   setBCType(zminus, None);
+  setBCType(zplus, None);
 
   d_nodeHighIndex = d_highIndex+
     IntVector(getBCType(xplus) == Neighbor?0:1,
