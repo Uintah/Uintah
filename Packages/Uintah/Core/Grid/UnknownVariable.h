@@ -42,5 +42,3 @@ class Patch;
 } // End namespace Uintah
 
 #endif
-
-

@@ -6,9 +6,8 @@
 #include <iosfwd>
 #include <mpi.h>
 
-using namespace std;
-
 namespace Uintah {
+
 /**************************************
 
 CLASS
@@ -46,8 +45,10 @@ WARNING
       virtual void copyPointer(const ReductionVariableBase&) = 0;
       virtual ReductionVariableBase* clone() const = 0;
       virtual void reduce(const ReductionVariableBase&) = 0;
+      virtual void emit(OutputContext&) = 0;
       virtual void emit(ostream&) = 0;
-      virtual void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype, MPI_Op& op) = 0;
+      virtual void getMPIBuffer(void*& buf, int& count,
+				MPI_Datatype& datatype, MPI_Op& op) = 0;
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
    protected:
       ReductionVariableBase(const ReductionVariableBase&);

@@ -10,6 +10,7 @@
 #include <vector>
 
 namespace Uintah {
+
    class OutputContext;
    class ParticleSubset;
    class ParticleSet;
@@ -57,6 +58,7 @@ WARNING
       virtual ParticleVariableBase* clone() const = 0;
       virtual ParticleVariableBase* cloneSubset(ParticleSubset*) const = 0;
 
+      virtual void allocate(const Patch*) = 0; // will throw an InternalError
       virtual void allocate(ParticleSubset*) = 0;
       virtual void gather(ParticleSubset* dest,
 			  std::vector<ParticleSubset*> subsets,
@@ -95,6 +97,7 @@ WARNING
 
    private:
    };
+
 } // End namespace Uintah
    
 #endif

@@ -58,8 +58,7 @@ class VarLabel;
       const VarLabel* get_delt_label() const {
 	 return delt_label;
       }
-      
-      void registerMaterial(Material*);
+
       void registerMPMMaterial(MPMMaterial*);
       void registerICEMaterial(ICEMaterial*);
       int getNumMatls() const {
@@ -96,6 +95,9 @@ class VarLabel;
       }
 
    private:
+
+      void registerMaterial(Material*);
+
       SimulationState(const SimulationState&);
       SimulationState& operator=(const SimulationState&);
       
@@ -106,6 +108,7 @@ class VarLabel;
       Vector d_gravity;
 
    };
+
 } // End namespace Uintah
 
 #endif

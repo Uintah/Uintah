@@ -43,6 +43,10 @@ public:
     return d_foreign;
   }
 
+  virtual void emit(OutputContext&) = 0;
+  virtual void read(InputContext&) = 0;
+  virtual void allocate(const Patch* patch) = 0;
+
 protected:
   Variable();
   virtual ~Variable();
@@ -57,4 +61,3 @@ private:
 } // End namespace Uintah
 
 #endif
-

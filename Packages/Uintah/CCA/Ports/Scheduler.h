@@ -83,6 +83,8 @@ WARNING
        // Insert Documentation Here:
        virtual void addTask(Task* t) = 0;
 
+       virtual const vector<const Task::Dependency*>& getInitialRequires() = 0;
+
        virtual LoadBalancer* getLoadBalancer() = 0;
        virtual void releaseLoadBalancer() = 0;
        
@@ -105,8 +107,7 @@ WARNING
        // Makes and returns a map that maps strings to VarLabels of
        // that name and a list of material indices for which that
        // variable is valid (at least according to d_allcomps).
-       typedef map< string, pair< const VarLabel*, list<int> > >
-               VarLabelMaterialMap;
+       typedef map< string, list<int> > VarLabelMaterialMap;
        virtual VarLabelMaterialMap* makeVarLabelMaterialMap() = 0;
     protected:
        void makeTaskGraphDoc(const vector<Task*>& tasks,
@@ -123,6 +124,7 @@ WARNING
        DOM_Element* m_nodes;
        //unsigned int m_executeCount;
     };
+
 } // End namespace Uintah
 
 #endif

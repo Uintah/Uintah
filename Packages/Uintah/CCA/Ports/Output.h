@@ -55,6 +55,11 @@ WARNING
       virtual void problemSetup(const ProblemSpecP& params) = 0;
 
       //////////
+      // Call this when restarting from a checkpoint after calling
+      // problemSetup.
+      virtual void restartSetup(Dir& restartFromDir, int timestep,
+				double time, bool removeOldDir) = 0;
+      //////////
       // Insert Documentation Here:
       virtual void finalizeTimestep(double t, double delt, const LevelP&,
 				    SchedulerP&,
@@ -80,6 +85,7 @@ WARNING
       Output(const Output&);
       Output& operator=(const Output&);
    };
+
 } // End namespace Uintah
 
 #endif

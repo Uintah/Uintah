@@ -97,11 +97,12 @@ class Patch;
       // times in a TaskGraph without complaining.
       bool                   d_allowMultipleComputes;
      
-      static map<std::string, VarLabel*> allLabels;     
+      static map<string, VarLabel*> allLabels;     
       
       VarLabel(const VarLabel&);
       VarLabel& operator=(const VarLabel&);
    };
+
 } // End namespace Uintah
 
 ostream & operator<<( ostream & out, const Uintah::VarLabel & vl );
