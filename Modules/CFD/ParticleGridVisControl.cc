@@ -1,3 +1,33 @@
+/****************************************
+CLASS
+    ParticleGridVisControl
+
+    Visualization control for simulation data that contains
+    information on both a regular grid in particle sets.
+
+OVERVIEW TEXT
+    This module receives a ParticleGridReader object.  The user
+    interface is dynamically created based information provided by the
+    ParticleGridReader.  The user can then select which variables he/she
+    wishes to view in a visualization.
+
+
+
+KEYWORDS
+    ParticleGridReader, Material/Particle Method
+
+AUTHOR
+    Kurt Zimmerman
+    Department of Computer Science
+    University of Utah
+    January 1999
+
+    Copyright (C) 1999 SCI Group
+
+LOG
+    Created January 5, 1999
+****************************************/
+
 #include <Modules/CFD/ParticleGridVisControl.h>
 #include <Datatypes/TecplotReader.h>
 #include <Datatypes/MEFluid.h>
@@ -10,6 +40,8 @@
 #include <stdio.h>
 #include <string.h>
 
+namespace SCI {
+namespace CFD {
 
 extern "C" { 
   
@@ -45,10 +77,10 @@ ParticleGridVisControl::ParticleGridVisControl(const clString& id)
   add_oport(psout);
   add_oport(pseout);
 
-  sVar.set( "None" );
-  vVar.set( "None" );
-  psVar.set("None" );
-  pvVar.set( "None" );
+  sVar.set( "" );
+  vVar.set( "" );
+  psVar.set("" );
+  pvVar.set( "" );
 
   sFluid.set(0);
   vFluid.set(0);
@@ -348,13 +380,13 @@ void ParticleGridVisControl::execute()
      
    }       
    
-   if ( sVar.get() != "None"  && sFluid.get() != 0 ) {
+   if ( sVar.get() != ""  && sFluid.get() != 0 ) {
      fl = pgrh->getFluid( sFluid.get() - 1 );
      ScalarFieldHandle sfh = fl->getScalarField( clString(sVar.get()) );
      if ( sfh.get_rep() )
        sfout->send(sfh);
    }
-   if ( vVar.get() != "None"  && vFluid.get() != 0 ) {
+   if ( vVar.get() != ""  && vFluid.get() != 0 ) {
      fl = pgrh->getFluid( vFluid.get() - 1);
      VectorFieldHandle vfh = fl->getVectorField( clString(vVar.get()) );
      if( vfh.get_rep() )
@@ -377,4 +409,6 @@ void ParticleGridVisControl::execute()
    NOT_FINISHED("ParticleGridVisControl::execute()");
 } 
 //--------------------------------------------------------------- 
+} // end namespace CFD
+} // end namespace SCI
   

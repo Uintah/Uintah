@@ -37,6 +37,10 @@
 #include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
 
+using namespace SCI;
+using CFD::ParticleGridVisControl;
+
+
 class PartToGeom : public Module {
     ParticleSetIPort* iPort;
     ParticleSetExtensionIPort* iePort;
@@ -80,6 +84,8 @@ extern "C" {
     return scinew PartToGeom(id);
   }
 }
+
+
 
 PartToGeom::PartToGeom(const clString& id)
   : Module("PartToGeom", id, Filter), current_time("current_time", id, this),
@@ -176,7 +182,7 @@ void PartToGeom::execute()
   if( iePort->get(pseh)) {
     pse = pseh.get_rep();
     posid = part->position_vector();
-    if( pse->getVectorId() != "None") {
+    if( pse->getVectorId() != "") {
       vid = part->find_vector( pse->getVectorId());
       part->get(timestep, vid, vectors);
     }

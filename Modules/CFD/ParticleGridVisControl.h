@@ -1,23 +1,20 @@
-#ifndef PARTICLEGRIDVISCONTROL_H
-#define PARTICLEGRIDVISCONTROL_H
-
-
-/*----------------------------------------------------------------------
+/****************************************
 CLASS
     ParticleGridVisControl
 
-    Select Tecplot files for use in visualization and animation.
+    Visualization control for simulation data that contains
+    information on both a regular grid in particle sets.
 
 OVERVIEW TEXT
-    It simply allows to user to select a Tecplot file for use in
-    visualization.  This class then creates a TecplotReader
-    datatype (a subclass of ParticleGridReader) and sends it out
-    the output port.
+    This module receives a ParticleGridReader object.  The user
+    interface is dynamically created based information provided by the
+    ParticleGridReader.  The user can then select which variables he/she
+    wishes to view in a visualization.
 
 
 
 KEYWORDS
-    ParticleGridSelector
+    ParticleGridReader, Material/Particle Method
 
 AUTHOR
     Kurt Zimmerman
@@ -29,19 +26,23 @@ AUTHOR
 
 LOG
     Created January 5, 1999
-----------------------------------------------------------------------*/
-    
-#include <Classlib/NotFinished.h> 
+****************************************/
+#ifndef PARTICLEGRIDVISCONTROL_H
+#define PARTICLEGRIDVISCONTROL_H 1
+
+
+#include <Datatypes/ParticleGridReader.h>
 #include <Datatypes/ParticleGridReaderPort.h>
 #include <Datatypes/ParticleSetPort.h>
 #include <Datatypes/ParticleSetExtensionPort.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/VectorFieldPort.h>
-#include <Datatypes/ParticleGridReader.h>
 #include <Dataflow/Module.h> 
 #include <TCL/TCLvar.h> 
-#include <iostream.h> 
+
   
+namespace SCI {
+namespace CFD {
 
 
 class ParticleGridVisControl : public Module { 
@@ -49,14 +50,27 @@ class ParticleGridVisControl : public Module {
 public: 
   
 
-
-  ////////// Constructors
+  // GROUP: Constructors
+  //////////
   ParticleGridVisControl(const clString& id); 
   ParticleGridVisControl(const ParticleGridVisControl&, int deep); 
+
+  // GROUP: Destructors
+  //////////
   virtual ~ParticleGridVisControl(); 
+
+  // GROUP: cloning and execution 
+  ////////// 
   virtual Module* clone(int deep); 
-  void tcl_command( TCLArgs&, void* );
   virtual void execute(); 
+
+  //////////
+  // overides tcl_command in base class Module
+  void tcl_command( TCLArgs&, void* );
+
+  //////////
+  // callback taking
+  // [in] index--an index into the particle set.
   void callback( int index);
 
 
@@ -85,5 +99,8 @@ private:
   void checkVars(ParticleGridReader *reader );
   void graph(clString, clString);
 }; //class 
+
+} // end namespace CFD
+} // end namespace SCI
 
 #endif

@@ -1,3 +1,33 @@
+########################################
+#CLASS
+#    ParticleGridVisControl
+#
+#    Visualization control for simulation data that contains
+#    information on both a regular grid in particle sets.
+#
+#OVERVIEW TEXT
+#    This module receives a ParticleGridReader object.  The user
+#    interface is dynamically created based information provided by the
+#    ParticleGridReader.  The user can then select which variables he/she
+#    wishes to view in a visualization.
+#
+#
+#
+#KEYWORDS
+#    ParticleGridReader, Material/Particle Method
+#
+#AUTHOR
+#    Kurt Zimmerman
+#    Department of Computer Science
+#    University of Utah
+#    January 1999
+#
+#    Copyright (C) 1999 SCI Group
+#
+#LOG
+#    Created January 5, 1999
+########################################
+
 itcl_class ParticleGridVisControl { 
     inherit Module 
 
@@ -99,22 +129,6 @@ itcl_class ParticleGridVisControl {
 	}
 	button $w.b -text "Close" -command "destroy $w"
 	pack $w.b -side top -fill x -padx 2 -pady 2
-
-	radiobutton $sf.1.1."None" -text "None" -variable $this-sVar \
-	    -value "None"
-	pack $sf.1.1."None" -side bottom -anchor w
-
-	radiobutton $pf.1.1.1."None" -text "None" \
-	    -variable $this-psVar -value "None"
-	pack $pf.1.1.1."None" -side bottom -anchor w
-	
-	radiobutton $vf.1.1."None" -text "None" -variable $this-vVar \
-	    -value "None"
-	pack $vf.1.1."None" -side bottom -anchor w
-	
-	radiobutton $pf.1.1.2."None" -text "None" \
-	    -variable $this-pvVar -value "None"
-	pack $pf.1.1.2."None" -side bottom -anchor w
 
 
   	$this addScalarVars
@@ -248,7 +262,6 @@ itcl_class ParticleGridVisControl {
 	pack $w.$args1 -side top -expand yes -fill x
 	label $w.$args1.l -text $text
 	pack $w.$args1.l -anchor w -side left   -expand yes -fill x
-	puts "do we add a button? --> $addbutton"
 	if { $addbutton } {
 	    button $w.$args1.b -text "Graph $var over time" \
 		-command "$this-c graph $id $var"
