@@ -63,7 +63,7 @@ and functional overview of the various classes associated with fields.</font></f
 attributes and geometries.&nbsp; It provides methods to access and manage
 the attributes and geometries.&nbsp; The modules that allow the user to
 extract and register geometries and attributes associated with a domain
-are described below (see section 3).</font></font><font face="Arial,Helvetica"><font size=+0></font></font>
+are described below (see section 3).</font></font>
 <p><font face="Arial,Helvetica"><font size=+0>Fields may be extracted from
 a domain by combining an attribute and a geometry.&nbsp;&nbsp; When a field
 is formed by this combination, the attribute and geometry are checked to
@@ -71,36 +71,31 @@ make sure that they are compatible.&nbsp; Changes may then be made to the
 field without affecting the attribute and geometry in the domain.&nbsp;
 If the user wishes the changes to be reflected in the domain then he may
 re-register the field with the domain, at which point the field is split
-in to its attribute and geometry which replace the old versions.</font></font><font face="Arial,Helvetica"><font size=+0></font></font>
+in to its attribute and geometry which replace the old versions.</font></font>
 <p><font face="Arial,Helvetica"><font size=+0>A simple example:&nbsp; Say
 we have an empty domain.&nbsp; We may read in a geometry (representing
-the brain)&nbsp;and a few attributes (representing measurements on the
-brain)&nbsp;that live on the geometry. If we are interested in modifying
-or doing calculations with a particular set of measurements (say conductivity
-levels), we can extract a field by specifying the brain geometry and the
-conductivity attribute.&nbsp;&nbsp; We can then do calculation and make
-changes to the field without affecting the domain.&nbsp; If we want any
-changes we made to the attribute or geometry to be reflected in the domain,
-then we register the field with the domain.</font></font>
+the brain) and a few attributes (representing measurements on the brain)
+that live on the geometry. If we are interested in modifying or doing calculations
+with a particular set of measurements (say conductivity levels), we can
+extract a field by specifying the brain geometry and the conductivity attribute.&nbsp;&nbsp;
+We can then do calculation and make changes to the field without affecting
+the domain.&nbsp; If we want any changes we made to the attribute or geometry
+to be reflected in the domain, then we register the field with the domain.</font></font>
 <p><b><font face="Arial,Helvetica">2.2 Class Attrib</font></b>
 <p><font face="Arial,Helvetica"><font size=+0>The Attrib class holds sets
-of data, as well as various properties of that data.&nbsp;&nbsp; The Attrib
-base class provides virtual methods to access data, while each child class
-of Attrib provides its own faster methods of access.&nbsp; The programmer
-can then decide whether to use virtual function calls or to cast to a particular
-type and use the faster access methods.&nbsp; The ComposedAttrib class
-is essentially a pointer to another Attrib of type A, and a function that
-maps from type D to type R.&nbsp; This class allows one attribute to be
-compsed from another.&nbsp; The IndexedAttrib class is used in situations
-where there is a relatively small group of values spread over the data
+of data, as well as various properties of that data.&nbsp;&nbsp; Fast inline
+accessor methods are provided by each attribute class.&nbsp; The ComposedAttrib
+class is essentially a pointer to another Attrib of type A, and a function
+that maps from type D to type R.&nbsp; This class allows one attribute
+to be compsed from another.&nbsp; The IndexedAttrib class is used for data
+sets which have is a relatively small group of values spread over the data
 set.&nbsp; To create an IndexedAttrib, two lists of values must first be
 constructed.&nbsp; One is an array of data values, and the other is an
 attriute that holds indexes in to the array.&nbsp; SparseAttrib provides
 methods optimized for sparsly populated data sets, and BrickAttib provides
 a bricked storage stategy that allows for quick traversal of sub-regions
 in the data set.&nbsp; The AnalytAttrib class uses a user specified function
-that takes a point&nbsp;P&nbsp;and returns a data value f(P)&nbsp;of type
-T.</font></font>
+that takes a point P and returns a data value f(P) of type T.</font></font>
 <br>&nbsp;
 <br>&nbsp;
 <p><img SRC="Attrib.gif" height=238 width=779>
@@ -109,24 +104,24 @@ T.</font></font>
 abstract base class for one, two, and three dimensional geometries, both
 unstructured and structured.&nbsp;&nbsp; The unstructured</font></font>
 <br><font face="Arial,Helvetica"><font size=+0>geometries are represented
-by the derived classes NodeGeom, ContourGeom, SurfaceGeom, and MeshGeom.&nbsp;
-Each of these is composed of groups of points, line segments, triangles,
-and tetrahedrals, respectively.&nbsp; The Lattice*Geom classes represent
-regular geometries based on orthaganol axes with regularly spaced grid
-lines. The Xform*Geom classes allow for a transformation frunction to applied
-to a grid, allowing it to be arbitrarily warped.&nbsp; The AnalytGeom classes
-provide analytical geometries such as spheres and cubes.</font></font>
+by the derived classes PointCloudGeom, ContourGeom, TriSurfaceGeom, and
+TetMeshGeom.&nbsp; Each of these is composed of groups of points, line
+segments, triangles, and tetrahedrals, respectively.&nbsp; The Lattice*Geom
+classes represent regular geometries based on orthaganol axes with regularly
+spaced grid lines. The Xform*Geom classes allow for a transformation frunction
+to applied to a grid, allowing it to be arbitrarily warped.</font></font>
 <br>&nbsp;
 <br>&nbsp;
-<p><img SRC="Geom.gif" height=525 width=549>
+<p><img SRC="Geom.gif" height=357 width=779>
 <br>&nbsp;
-<p><b><font face="Arial,Helvetica"><font size=+0>2.4 Class Field</font></font></b>
-<p><font face="Arial,Helvetica"><font size=+0>Fields describe entities
-living in one, two, or three dimensions, including the space they live
-on as well as the values that exist over that space.&nbsp; General fields
-contain one geometry and one attribute, and provide methods that need information
-about both geometry and attribute values, such as interpolate.</font></font>
-<p><img SRC="Field.gif" height=173 width=552>
+<p><b><font face="Arial,Helvetica"><font size=+0>2.4 Class Field</font></font></b><b><font face="Arial,Helvetica"><font size=+0></font></font></b>
+<p><font face="Arial,Helvetica"><font size=+0>Fields provide methods that
+require information from both the geometry and the attribute that make
+it up.&nbsp; Fields are templatized on the type of data in the field, the
+type of attribute that is used to hold the data, and the type of geometry
+that the field uses.&nbsp; The GeneralField classes hold one Attribute
+and one Geometry.</font></font>
+<br><img SRC="Field.gif" height=173 width=552>
 <br>&nbsp;
 <p><b><font face="Arial,Helvetica"><font size=+0>2.6 Interfaces</font></font></b>
 <p><font face="Arial,Helvetica"><font size=+0>The above classes use inherited
@@ -183,31 +178,6 @@ modules take in a field and registers its geometry and attribute components
 with the domain.&nbsp;&nbsp; The user specifies whether the&nbsp; geometry
 is a new geometry, a geometry that shares nodes with others in the domain,
 or a geometry that allready exists in the domain.</font></font></li>
-</ul>
-<font face="Arial,Helvetica"><font size=+0><b>Data Manipulation Modules:
-</b>These
-modules provide various operations to manipulate fields, attributes, and
-geometries.&nbsp; Each module includes in-ports for fields, geometries,
-and/or attributes as appropriate.&nbsp; If a module performs operations
-only on the geometry of a set (such as clipping) the user has the option
-to either pass in a set, or to pass in a geometry indpendent of any attribute.&nbsp;
-The majority of these modules exist in SCIRun and are simply modified to
-accomodate domains.</font></font>
-<ul>
-<li>
-<font face="Arial,Helvetica"><font size=+0><b>Geometric manipulation: </b>These
-modules include operations such as clipping, merging geometries, performing
-local and global transformations, and padding.</font></font></li>
-
-<li>
-<font face="Arial,Helvetica"><font size=+0><b>Field creation/disection:
-</b>Operations
-such as slicing fields and stacking slices to create a field.</font></font></li>
-
-<li>
-<font face="Arial,Helvetica"><font size=+0><b>Attribute manipulation: </b>These
-modules include operations such as interpolation, filtering, mirroring
-and interleaving.</font></font></li>
 </ul>
 
 <h2>
