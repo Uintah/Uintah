@@ -884,7 +884,7 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     break;
   case 'w':
     cerr << "Saving ppm image file\n";
-    activeGui->dpy_->scene->get_image(showing_scene)->save_ppm("images/image.ppm");
+    activeGui->dpy_->scene->get_image(showing_scene)->save_ppm("images/image");
     break;
   default:
     printf("unknown regular key %d\n", key);
