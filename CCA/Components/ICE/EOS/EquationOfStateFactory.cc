@@ -1,5 +1,6 @@
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/IdealGas.h>
+#include <Packages/Uintah/CCA/Components/ICE/EOS/JWL.h>
 #if 0
 #include <Packages/Uintah/CCA/Components/ICE/EOS/Harlow.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/StiffGas.h>
@@ -28,6 +29,8 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
     
     if (mat_type == "ideal_gas") 
       return(scinew IdealGas(child));
+    else if (mat_type == "JWL") 
+      return(scinew JWL(child));
 #if 0   // Turn off harlow and stiff gas until everything with ideal
         // gas is working. Todd
     else if (mat_type == "harlow") 

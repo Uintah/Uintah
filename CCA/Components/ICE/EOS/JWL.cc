@@ -2,6 +2,7 @@
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <iostream>
 
 using namespace Uintah;
 
@@ -14,7 +15,8 @@ JWL::JWL(ProblemSpecP& ps)
   R2 = 1.21;
   om = 0.28;
   rho0 = 1630.;  // kg/m^3
-  c_v = 716.;        // J/(kg K)
+  c_v = 996.;        // J/(kg K)
+  // rho_micro at P=101325. and T = 300. is 1.21109437751004
 }
 
 JWL::~JWL()
@@ -22,35 +24,72 @@ JWL::~JWL()
 }
 
 double JWL::computeRhoMicro(double press, double gamma,
-                              double cv, double Temp)
+                            double cv, double Temp)
 {
   // Pointwise computation of microscopic density
-  return  press/((gamma - 1.0)*cv*Temp);
+  // P=P(rho,T) is not invertable to get rho=rho(P,T)
+  // so I'm using Newton's method to find the rhoM
+  // such that 
+  //press - (A*(1.-om*rhoM/(R1*rho0))*exp(-R1*rho0/rhoM) +
+  //         B*(1.-om*rhoM/(R2*rho0))*exp(-R2*rho0/rhoM) + om*rhoM*c_v*Temp) = 0
+  // First guess comes from inverting the last term of this equation
+
+  double rhoM = press/(om*c_v*Temp);
+  double epsilon = 1.e-15;
+  double delta = 1.;
+  double f,df_drho;
+  int count = 0;
+
+  while(fabs(delta/rhoM)>epsilon){
+    f = (A*(1.-om*rhoM/(R1*rho0))*exp(-R1*rho0/rhoM) +
+         B*(1.-om*rhoM/(R2*rho0))*exp(-R2*rho0/rhoM) +
+         om*rhoM*c_v*Temp) - press;
+
+    df_drho = A*((-om/(R1*rho0))*exp(-R1*rho0/rhoM) +
+                (1.-om*rhoM/(R1*rho0))*(R1*rho0/(rhoM*rhoM))*exp(-R1*rho0/rhoM))
+            + B*((-om/(R2*rho0))*exp(-R2*rho0/rhoM) +
+                (1.-om*rhoM/(R2*rho0))*(R2*rho0/(rhoM*rhoM))*exp(-R2*rho0/rhoM))
+            + om*c_v*Temp;
+
+    delta = -(f/df_drho);
+    rhoM+=delta;
+    if(count>100){
+      cout << "JWL::computeRhoMicro not converging." << endl;
+      cout << "delta = " << delta << " rhoM = " << rhoM << endl;
+    }
+  }
+  return rhoM;
+  
 }
 
 //__________________________________
 //
 void JWL::computeTempCC(const Patch* patch,
-                          const string& comp_domain,
-                          const CCVariable<double>& press, 
-                          const double& gamma,
-                          const double& cv,
-                          const CCVariable<double>& rho_micro, 
-                          CCVariable<double>& Temp,
-                          Patch::FaceType face)
+                        const string& comp_domain,
+                        const CCVariable<double>& press, 
+                        const double& gamma,
+                        const double& cv,
+                        const CCVariable<double>& rhoM, 
+                        CCVariable<double>& Temp,
+                        Patch::FaceType face)
 {
   if(comp_domain == "WholeDomain") {
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
-      Temp[*iter]= press[*iter]/ ( (gamma - 1.0) * cv * rho_micro[*iter] );
+      IntVector c = *iter;
+      Temp[c]= (press[c] - A*(1.-om*rhoM[c]/(R1*rho0))*exp(-R1*rho0/rhoM[c])
+                         - B*(1.-om*rhoM[c]/(R2*rho0))*exp(-R2*rho0/rhoM[c]))
+                         / (om*rhoM[c]*c_v);
     }
   } 
   // Although this isn't currently being used
   // keep it around it could be useful
   if(comp_domain == "FaceCells") {     
-    for (CellIterator iter = patch->getFaceCellIterator(face);
-         !iter.done();iter++) {                     
-      Temp[*iter]= press[*iter]/ ( (gamma - 1.0) * cv * rho_micro[*iter] );
-    }
+   for (CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+      IntVector c = *iter;
+      Temp[c]= (press[c] - A*(1.-om*rhoM[c]/(R1*rho0))*exp(-R1*rho0/rhoM[c])
+                         - B*(1.-om*rhoM[c]/(R2*rho0))*exp(-R2*rho0/rhoM[c]))
+                         / (om*rhoM[c]*c_v);
+   }
   }
 }
 
