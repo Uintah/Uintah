@@ -57,6 +57,7 @@ class Isosurface : public Module {
   GuiInt     gui_extract_from_new_field_;
   GuiInt     gui_use_algorithm_;
   GuiInt     gui_build_field_;
+  GuiInt     gui_build_geom_;
   GuiInt     gui_np_;          
   GuiString  gui_active_isoval_selection_tab_;
   GuiString  gui_active_tab_; //! for saving nets state

@@ -67,6 +67,7 @@ Isosurface::Isosurface(GuiContext* ctx) :
   gui_extract_from_new_field_(ctx->subVar("extract-from-new-field")),
   gui_use_algorithm_(ctx->subVar("algorithm")),
   gui_build_field_(ctx->subVar("build_trisurf")),
+  gui_build_geom_(ctx->subVar("build_geom")),
   gui_np_(ctx->subVar("np")),
   gui_active_isoval_selection_tab_(ctx->subVar("active-isoval-selection-tab")),
   gui_active_tab_(ctx->subVar("active_tab")),
@@ -84,18 +85,6 @@ Isosurface::Isosurface(GuiContext* ctx) :
 
 Isosurface::~Isosurface()
 {
-  if (geom_id_)
-  {
-    GeometryOPort *ogport = (GeometryOPort*)get_oport("Geometry");
-    if (!ogport)
-    {
-      error("Unable to initialize " + name + "'s oport.");
-      return;
-    }
-    ogport->delObj(geom_id_);
-    ogport->flushViews();
-    geom_id_ = 0;
-  }
 }
 
 
@@ -307,8 +296,9 @@ Isosurface::execute()
     }
   }
 
-  bool build_field = gui_build_field_.get();
-  vector<GeomObj *> geometries;
+  const bool bf = gui_build_field_.get();
+  const bool bg = gui_build_geom_.get();
+  vector<GeomHandle > geometries;
   vector<FieldHandle> fields;
   const TypeDescription *td = field->get_type_description();
   switch (gui_use_algorithm_.get()) {
@@ -328,13 +318,14 @@ Isosurface::execute()
       mc_alg->set_field( field.get_rep() );
       for (unsigned int iv=0; iv<isovals.size(); iv++)
       {
-	mc_alg->search( isovals[iv], build_field);
+	mc_alg->search( isovals[iv], bf, bg );
 	geometries.push_back( mc_alg->get_geom() );
 	for (int i = 0 ; i < np; i++)
 	{
 	  fields.push_back( mc_alg->get_field(i) );
 	}
       }
+      mc_alg->release();
     }
     break;
   case 1:  // Noise
@@ -355,9 +346,10 @@ Isosurface::execute()
       }
       for (unsigned int iv=0; iv<isovals.size(); iv++)
       {
-	geometries.push_back(noise_alg->search(isovals[iv], build_field));
+	geometries.push_back(noise_alg->search(isovals[iv], bf, bg));
 	fields.push_back(noise_alg->get_field());
       }
+      noise_alg->release();
     }
     break;
 
@@ -375,11 +367,12 @@ Isosurface::execute()
       } 
       for (unsigned int iv=0; iv<isovals.size(); iv++)
       {
-	GeomGroup *group = new GeomGroup;
-	GeomPoints *points = new GeomPoints();
+	GeomGroup *group = scinew GeomGroup;
+	GeomPoints *points = scinew GeomPoints();
 	sage_alg->search(isovals[0], group, points);
 	geometries.push_back( group );
       }
+      sage_alg->release();
     }
     break;
   default: // Error
@@ -387,29 +380,7 @@ Isosurface::execute()
     return;
   }
 
-  // Merged send_results.
-  GeomGroup *geom = new GeomGroup;;
-
-  for (unsigned int iv=0; iv<isovals.size(); iv++)
-  {
-    MaterialHandle matl;
-
-    if (have_ColorMap)
-    {
-      matl= cmap->lookup(isovals[iv]);
-    }
-    else
-    {
-      matl = scinew Material(Color(gui_color_r_.get(),
-				   gui_color_g_.get(),
-				   gui_color_b_.get()));
-    }
-    if (geometries[iv]) 
-    {
-      geom->add(scinew GeomMaterial( geometries[iv] , matl ));
-    }
-  }
-
+  // Output geometry.
   GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
   if (!ogeom)
   {
@@ -418,22 +389,55 @@ Isosurface::execute()
   }
   
   // Stop showing the previous surface.
+  bool geomflush = false;
   if ( geom_id_ )
   {
     ogeom->delObj( geom_id_ );
+    geom_id_ = 0;
+    geomflush = true;
   }
-
-  if (!geom->size())
+  if (bg)
   {
-    geom_id_=0;
-    return;
-  }
+    // Merged send_results.
+    GeomGroup *geom = scinew GeomGroup;;
 
-  // Send to viewer.
-  geom_id_ = ogeom->addObj( geom, surface_name);
+    for (unsigned int iv=0; iv<isovals.size(); iv++)
+    {
+      MaterialHandle matl;
+
+      if (have_ColorMap)
+      {
+	matl= cmap->lookup(isovals[iv]);
+      }
+      else
+      {
+	matl = scinew Material(Color(gui_color_r_.get(),
+				     gui_color_g_.get(),
+				     gui_color_b_.get()));
+      }
+      if (geometries[iv].get_rep()) 
+      {
+	geom->add(scinew GeomMaterial( geometries[iv] , matl ));
+      }
+    }
+
+    if (!geom->size())
+    {
+      delete geom;
+    }
+    else
+    {
+      geom_id_ = ogeom->addObj( geom, surface_name );
+      geomflush = true;
+    }
+  }
+  if (geomflush)
+  {
+    ogeom->flushViews();
+  }
 
   // Output surface.
-  if (build_field && fields.size() && fields[0].get_rep())
+  if (bf && fields.size() && fields[0].get_rep())
   {
     FieldOPort *osurf = (FieldOPort *)get_oport("Surface");
     if (!osurf)
@@ -448,8 +452,8 @@ Isosurface::execute()
     }
     else
     {
-      vector<TriSurfField<double> *> tfields(fields.size());
       unsigned int i;
+      vector<TriSurfField<double> *> tfields(fields.size());
       for (i=0; i < fields.size(); i++)
       {
 	tfields[i] = dynamic_cast<TriSurfField<double> *>(fields[i].get_rep());
@@ -461,6 +465,13 @@ Isosurface::execute()
 	cfields[i] = dynamic_cast<CurveField<double> *>(fields[i].get_rep());
       }
 
+      vector<QuadSurfField<double> *> qfields(fields.size());
+      for (i=0; i < fields.size(); i++)
+      {
+	qfields[i] =
+	  dynamic_cast<QuadSurfField<double> *>(fields[i].get_rep());
+      }
+
       if (tfields[0])
       {
 	osurf->send(append_fields(tfields));
@@ -468,6 +479,10 @@ Isosurface::execute()
       else if (cfields[0])
       {
 	osurf->send(append_fields(cfields));
+      }
+      else if (qfields[0])
+      {
+	osurf->send(append_fields(qfields));
       }
       else
       {
@@ -481,8 +496,6 @@ Isosurface::execute()
 bool
 Isosurface::new_field( FieldHandle field )
 {
-  const string type = field->get_type_description()->get_name();
-
   ScalarFieldInterfaceHandle sfi = field->query_scalar_interface(this);
   if (!sfi.get_rep())
   {

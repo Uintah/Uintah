@@ -43,6 +43,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-extract-from-new-field
 	global $this-algorithm
 	global $this-build_trisurf
+	global $this-build_geom
 	global $this-np
 	global $this-active_tab
 	global $this-update_type
@@ -64,6 +65,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-extract-from-new-field 1
 	set $this-algorithm 0
 	set $this-build_trisurf 1
+	set $this-build_geom 1
 	set $this-np 1
 	set $this-update_type "on release"
 	set $this-color-r 0.4
@@ -261,11 +263,16 @@ itcl_class SCIRun_Visualization_Isosurface {
 	checkbutton $opt.buildsurf -text "Build Output Field" \
 		-variable $this-build_trisurf
 
+	global $this-build_geom
+	checkbutton $opt.buildgeom -text "Build Output Geometry" \
+		-variable $this-build_geom
+
 	checkbutton $opt.aefnf -text "Auto Extract from New Field" \
 		-relief flat -variable $this-extract-from-new-field 
 
 
-	pack $opt.update $opt.aefnf $opt.buildsurf -side top -anchor w
+	pack $opt.update $opt.aefnf $opt.buildsurf $opt.buildgeom \
+	    -side top -anchor w
 
 	addColorSelection $opt $this-color
 
