@@ -75,21 +75,28 @@ int main(int argc, char **argv)
 	    cerr << "  Region "<<i<<" gets conductivity "<<newConds[i]<<"\n";
     }
 
-    FILE *f=fopen(clString(clString(argv[1])+".t3d")(), "rt");
+    clString base1(argv[1]);
+    FILE *f=fopen((base1+".t3d")(), "rt");
     if (!f) {
 	cerr << "Error - failed to open "<<argv[1]<<".t3d\n";
 	exit(0);
     }
     SurfaceHandle surfH;
-    Piostream* surfstr=auto_istream(clString(clString(argv[1])+".st"));
+    Piostream* surfstr=auto_istream(base1+".st");
     if (!surfstr)
-	surfstr = auto_istream(clString(clString(argv[1])+".stree"));
+	surfstr = auto_istream(base1+".stree");
     if (surfstr) Pio(*surfstr, surfH);
     SurfTree *st;
     if (surfH.get_rep() && (st=dynamic_cast<SurfTree*>(surfH.get_rep()))) {
 	cerr << "Getting material indices for each component from surftree\n";
 	newConds.resize(st->surfI.size());
-	for (i=0; i<newConds.size(); i++) newConds[i]=st->surfI[i].matl;
+	remap = 1;
+	for (i=0; i<newConds.size(); i++) {
+	    newConds[i]=st->surfI[i].matl;
+	    cerr << "New conds["<<i<<"] = "<<newConds[i]<<"\n";
+	}
+    } else {
+	cerr << "Not getting material indices from surftree!\n";
     }
 
     // ! VDT (C) 1998 Petr Krysl
@@ -166,7 +173,7 @@ int main(int argc, char **argv)
     mesh->cond_tensors[5].initialize(0);
     mesh->cond_tensors[5][0]=mesh->cond_tensors[5][3]=mesh->cond_tensors[5][5]=WHITE_CONDUCTIVITY;
     
-    BinaryPiostream stream(clString(argv[1])+".mesh", Piostream::Write);
+    BinaryPiostream stream(base1+".mesh", Piostream::Write);
     Pio(stream, mesh);
     return 0;
 }

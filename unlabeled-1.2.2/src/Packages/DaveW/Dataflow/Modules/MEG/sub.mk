@@ -27,7 +27,6 @@ SRCS     += \
 	$(SRCDIR)/SurfToVectGeom.cc\
 #[INSERT NEW CODE FILE HERE]
 
-
 PSELIBS := DaveW/Datatypes/General PSECore/Dataflow PSECore/Datatypes \
 	SCICore/Persistent SCICore/Exceptions SCICore/Thread \
 	SCICore/Datatypes SCICore/TclInterface SCICore/Containers \
@@ -38,8 +37,8 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
-# Revision 1.2.2.3  2000/10/26 14:02:13  moulding
-# merge HEAD into FIELD_REDESIGN
+# Revision 1.2.2.4  2000/10/31 02:14:50  dmw
+# merging DaveW HEAD changes into FIELD_BRANCH
 #
 # Revision 1.5  2000/10/24 05:57:15  moulding
 # new module maker Phase 2: new module maker goes online

@@ -40,9 +40,9 @@ int main(int argc, char **argv)
 	double x,y,z;          // coordinates for 3D points
 	int v1,v2,v3,v4;       // vertices of the tetras
 
-
-	clString ptsfilename(clString(argv[1])+".pts");
-	clString tetrafilename(clString(argv[1])+".tetra");
+	clString basename(argv[1]);
+	clString ptsfilename(basename+".pts");
+	clString tetrafilename(basename+".tetra");
 
 	ifstream tetrafile(tetrafilename());
 	ifstream ptsfile(ptsfilename());
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 	}
 	cerr << "# elems = "<<nelems<<"\n";
 	
-	clString meshfilename(clString(argv[1])+".mesh");
+	clString meshfilename(basename+".mesh");
 	TextPiostream stream(meshfilename, Piostream::Write);
 
 	MeshHandle m = mesh;
@@ -103,3 +103,5 @@ int main(int argc, char **argv)
 
     return 0;
 }
+
+

@@ -105,6 +105,9 @@ void SeedDipoles2::execute()
 
 //
 // $Log$
+// Revision 1.1.2.1  2000/10/31 02:14:47  dmw
+// merging DaveW HEAD changes into FIELD_BRANCH
+//
 // Revision 1.1  2000/10/29 03:51:45  dmw
 // SeedDipoles will place dipoles randomly within a mesh
 //

@@ -14,14 +14,16 @@ SRCS     += $(SRCDIR)/amoeba.cc $(SRCDIR)/amotry.cc $(SRCDIR)/banbks.cc \
 	$(SRCDIR)/linbcg.cc $(SRCDIR)/nrutil.cc $(SRCDIR)/plgndr.cc
 
 PSELIBS := DaveW/ThirdParty/OldLinAlg
-LIBS := 
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
-# Revision 1.2.2.3  2000/10/26 14:02:25  moulding
-# merge HEAD into FIELD_REDESIGN
+# Revision 1.2.2.4  2000/10/31 02:14:58  dmw
+# merging DaveW HEAD changes into FIELD_BRANCH
+#
+# Revision 1.4  2000/10/29 04:05:05  dmw
+# updates to make downhill simplex more interactive
 #
 # Revision 1.3  2000/09/20 21:27:27  zyp
 # Added protozoa

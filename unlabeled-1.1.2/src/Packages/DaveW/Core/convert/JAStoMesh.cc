@@ -40,7 +40,8 @@ int main(int argc, char **argv)
     }
     MeshHandle mesh=new Mesh;
 
-    ifstream ptsfile(clString(clString(argv[1])+".pts")());
+    clString basename(argv[1]);
+    ifstream ptsfile((basename+".pts")());
     int n;
     ptsfile >> n;
     cerr << "nnodes in pts file=" << n << endl;
@@ -53,7 +54,7 @@ int main(int argc, char **argv)
     }
     cerr << "nnodes in mesh=" << mesh->nodes.size() << endl;
 
-    ifstream tetrafile(clString(clString(argv[1])+".tetras")());
+    ifstream tetrafile((basename+".tetras")());
     int t;
     tetrafile >> t;
     cerr << "nelems in tetras files=" << t << endl;
@@ -63,46 +64,40 @@ int main(int argc, char **argv)
 	tetrafile >> i1 >> i2 >> i3 >> i4 >> cond;
 	if(tetrafile && cond!=2){
 	    Element *e = new Element(mesh.get_rep(), i1-1, i2-1, i3-1, i4-1);
-	    //	    e->cond=cond;
-	    e->cond=0;
+	    e->cond=cond-1;
+	    // e->cond=0;
 	    mesh->elems.add(e);
 	}
     }
     cerr << "nelems in mesh=" << mesh->elems.size() << endl;
 
-#if 0
-    ifstream condfile(clString(clString(argv[1])+".conds")());
+    ifstream condfile((basename+".cond")());
     condfile >> t;
     cerr << "number of conductivities="<<t<< endl;
     mesh->cond_tensors.resize(t);
-    for (int i=0; i<t; i++) {
+    int i;
+    for (i=0; i<t; i++) {
 	for (int j=0; j<6; j++) {
 	    int dummy;
 	    condfile >> dummy;
-	    mesh->cond_tensors[i].add(dummy);
+	    mesh->cond_tensors[i].add(dummy*10000);
 	}
     }
 
-    Array1<int> numT;
-    int xyz, oldSz, j;
+    Array1<int> numT(mesh->cond_tensors.size());
+    numT.initialize(0);
+
     cerr << "Analyzing mesh...\n";
     for (i=0; i<mesh->elems.size(); i++) {
-	xyz=mesh->elems[i]->cond;
-	if (xyz >= numT.size()) {
-	    oldSz=numT.size();
-	    numT.resize(xyz+1);
-	    for (j=oldSz; j<numT.size(); j++) numT[j]=0;
-	}
-	numT[xyz]=numT[xyz]+1;
+      numT[mesh->elems[i]->cond]++;
     }
     for (i=0; i<numT.size(); i++) {
 	if (numT[i]) {
 	    cerr << "Mesh has "<<numT[i]<<" elements of type "<<i<<"\n";
 	}
     }
-#endif
 
-    TextPiostream stream(clString(argv[1])+".mesh", Piostream::Write);
+    BinaryPiostream stream(basename+".mesh", Piostream::Write);
     Pio(stream, mesh);
     return 0;
 }
