@@ -33,10 +33,15 @@ typedef struct sigcontext_struct sigcontext_t;
 #include <signal.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#ifdef __sgi
+#include <sys/sysmp.h>
+#endif
 
+#ifdef __linux
 extern "C" {
     size_t getpagesize();
 };
+#endif
 
 #define DEFAULT_STACK_LENGTH 64*1024
 #define INITIAL_STACK_LENGTH 16*1024
@@ -56,15 +61,16 @@ static long tick;
 static int pagesize;
 static int devzero_fd;
 static char* progname;
+static pthread_key_t selfkey;
 
 struct TaskPrivate {
+    pthread_t threadid;
     caddr_t sp;
     caddr_t stackbot;
     size_t stacklen;
     size_t redlen;
 };
 
-#if 0
 struct TaskArgs {
     int arg;
     Task* t;
@@ -73,11 +79,7 @@ struct TaskArgs {
 #define MAXTASKS 1000
 static int ntasks=0;
 static Task* tasks[MAXTASKS];
-
-// Global locks...
-static usema_t* main_sema;
-static usema_t* sched_lock;
-static int nsched;
+Mutex* sched_lock;
 
 static void makestack(TaskPrivate* priv)
 {
@@ -115,34 +117,19 @@ void* runbody(void* vargs)
 
 int Task::startup(int task_arg)
 {
-    task_local->current_task=this;
+    if(pthread_setspecific(selfkey, (void*)this) != 0){
+	perror("pthread_setspecific");
+	exit(1);
+    }
     int retval=body(task_arg);
     Task::taskexit(this, retval);
     return 0; // Never reached.
 }
 
 // We are done..
-void Task::taskexit(Task* xit, int retval)
+void Task::taskexit(Task*, int retval)
 {
-    xit->priv->retval=retval;
-    usvsema(xit->priv->running);
-
-    // See if everyone is done..
-    if(uspsema(sched_lock) == -1){
-	perror("uspsema");
-	Task::exit_all(-1);
-    }
-    if(--nsched == 0){
-	if(usvsema(main_sema) == -1){
-	    perror("usvsema");
-	    Task::exit_all(-1);
-	}
-    }
-    if(usvsema(sched_lock) == -1){
-	perror("usvsema");
-	Task::exit_all(-1);
-    }
-    _exit(0);
+    pthread_exit((void*)retval);
 } 
 
 // Fork a thread
@@ -157,37 +144,31 @@ void Task::activate(int task_arg)
     TaskArgs* args=scinew TaskArgs;
     args->arg=task_arg;
     args->t=this;
-    priv->running=usnewsema(arena, 0);
-    if(!priv->running){
-	perror("usnewsema");
-	Task::exit_all(-1);
-    }
+
     makestack(priv);
 
-    if(uspsema(sched_lock) == -1){
-	perror("uspsema");
-	Task::exit_all(-1);
+    sched_lock->lock();
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setstacksize(&attr, priv->stacklen);
+    pthread_attr_setstackaddr(&attr, priv->sp);
+    if(pthread_create(&priv->threadid, NULL, runbody, (void*)args) != 0) {
+	perror("pthread_create");
+	exit(1);
     }
-    nsched++;
-    priv->tid=sprocsp((void (*)(void*, size_t))runbody,
-		      PR_SADDR|PR_SDIR|PR_SUMASK|PR_SULIMIT|PR_SID,
-		      (void*)args, priv->sp, priv->stacklen);
-    if(priv->tid==	-1){
-	perror("sprocsp");
-	Task::exit_all(-1);
-    }
+
     tasks[ntasks++]=this;
-    if(usvsema(sched_lock) == -1){
-	perror("usvsema");
-	Task::exit_all(-1);
-    }
+    sched_lock->unlock();
 }
-#endif
 
 Task* Task::self()
 {
-    fprintf(stderr, "Task::self not done!\n");
-    exit(1);
+    Task* t=(Task*)pthread_getspecific(selfkey);
+    if(!t){
+	perror("pthread_getspecific");
+	exit(1);
+    }
+    return t;
 }
 
 static char* signal_name(int sig, int code, caddr_t addr)
@@ -401,11 +382,18 @@ void Task::initialize(char* pn)
 {
     progname=strdup(pn);
     pagesize=getpagesize();
+    fprintf(stderr, "Open...\n");
     devzero_fd=open("/dev/zero", O_RDWR);
     if(devzero_fd == -1){
 	perror("open");
 	exit(-1);
     }
+    fprintf(stderr, "Done...\n");
+    if(pthread_key_create(&selfkey, NULL) != 0){
+	perror("pthread_key_create\n");
+	exit(1);
+    }
+    sched_lock=new Mutex;
 
 #ifdef __sgi
     // Set up the signal stack so that we will be able to 
@@ -482,13 +470,14 @@ int Task::nprocessors()
 #endif
 }
 
-#if 0
 void Task::main_exit()
 {
-    uspsema(main_sema);
-    exit(0);
+    fprintf(stderr, "Task::main_exit not done!\n");
+    exit(1);
 }
 
+
+#if 0
 void Task::yield()
 {
     sginap(0);
@@ -706,14 +695,14 @@ void Task::coredump(Task* task)
 }
 #endif
 
-void Task::debug(Task* task)
+void Task::debug(Task*)
 {
     char buf[1000];
     char* dbx=getenv("SCI_DEBUGGER");
 #ifdef __sgi
     if(!dbx)
 	dbx="winterm -c dbx -p %d &";
-    sprintf(buf, dbx, task->priv->tid, progname);
+    sprintf(buf, dbx, getpid(), progname);
 #endif
 #ifdef __linux
     if(!dbx)
@@ -817,4 +806,5 @@ int Task::start_itimer(const TaskTime& start, const TaskTime& interval,
 {
     fprintf(stderr, "Task::start_itimer not done!\n");
     exit(1);
+    return 0;
 }
