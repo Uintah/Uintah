@@ -1090,6 +1090,23 @@
     </implementation>
   </dataflow-component>
 
+  <dataflow-component name="ShowGeometry">
+    <meta>
+      <authors>
+        <author>Martin Cole</author>
+      </authors>
+      <version-date>Mon Aug 21 13:05:16 MDT 2000</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ShowGeometry</creationFunction>
+    </implementation>
+  </dataflow-component>
+
 
   <dataflow-component name="FieldRGAug">
     <meta>

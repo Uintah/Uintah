@@ -36,7 +36,8 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/AddWells.tcl $(SRCDIR)/AddWells2.tcl \
 	$(SRCDIR)/OpenGL_Ex.tcl $(SRCDIR)/PointsReader.tcl \
 	$(SRCDIR)/Reader.tcl $(SRCDIR)/RescaleColorMap.tcl \
 	$(SRCDIR)/Salmon.tcl $(SRCDIR)/ScalarFieldReader.tcl \
-	$(SRCDIR)/ScalarFieldWriter.tcl $(SRCDIR)/SimpSurface.tcl \
+	$(SRCDIR)/ScalarFieldWriter.tcl $(SRCDIR)/ShowGeometry.tcl \
+	$(SRCDIR)/SimpSurface.tcl \
 	$(SRCDIR)/SimpVolVis.tcl $(SRCDIR)/SolveMatrix.tcl \
 	$(SRCDIR)/Streamline.tcl $(SRCDIR)/SurfGen.tcl \
 	$(SRCDIR)/SurfInterpVals.tcl $(SRCDIR)/SurfToGeom.tcl \
@@ -56,6 +57,9 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.2.2.2  2000/09/21 04:34:26  mcole
+# initial checkin of showGeometry module
+#
 # Revision 1.2.2.1  2000/06/07 17:30:32  kuehne
 # revised sub.mk to include Domain modules
 #
