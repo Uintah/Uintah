@@ -474,11 +474,43 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   if (press_matl->removeReference())
     delete press_matl; // shouln't happen, but...
   }
-//__________________________________
+/* ---------------------------------------------------------------------
+ Function~  ICE::restartInitialize--
+ Purpose:   Set variables that are normally set during the initialization
+            phase, but get wiped clean when you restart
+_____________________________________________________________________*/
 void ICE::restartInitialize()
 {
+    cout_doing << "Doing restartInitialize "<< "\t\t\t ICE" << endl;
   // disregard initial dt when restarting
   d_initialDt = 10000.0;
+  
+  //__________________________________
+  // Models Initialization
+  if(d_models.size() != 0){
+    for(vector<ModelInterface*>::iterator iter = d_models.begin();
+       iter != d_models.end(); iter++){
+      ModelInterface* model = *iter;
+      model->d_dataArchiver = dataArchiver;
+    }
+  }  
+  // which matl index is the surrounding matl.
+  int numMatls    = d_sharedState->getNumICEMatls();
+  for (int m = 0; m < numMatls; m++ ) {
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    int indx= ice_matl->getDWIndex();
+    if(ice_matl->isSurroundingMatl()) {
+      d_surroundingMatl_indx = indx;
+    } 
+  }
+  // --------bulletproofing
+  Vector grav     = d_sharedState->getGravity();
+  if (grav.length() >0.0 && d_surroundingMatl_indx == -9)  {
+    throw ProblemSetupException("ERROR ICE::restartInitialize \n"
+          "You must have \n" 
+          "       <isSurroundingMatl> true </isSurroundingMatl> \n "
+          "specified inside the ICE material that is the background matl\n");
+  }
 }
 
 /* ---------------------------------------------------------------------
@@ -1824,7 +1856,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
 #endif
     }
-
   //______________________________________________________________________
   // Done with preliminary calcs, now loop over every cell
     int count, test_max_iter = 0;
