@@ -1,4 +1,3 @@
-
 #include <Packages/Uintah/CCA/Components/SimulationController/SimpleSimulationController.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
@@ -23,6 +22,8 @@
 #include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
@@ -141,9 +142,9 @@ SimpleSimulationController::run()
    
    // Setup the initial grid
    GridP grid=scinew Grid();
-
    problemSetup(ups, grid);
    
+
    if(grid->numLevels() == 0){
       cerr << "No problem specified.  Exiting SimpleSimulationController.\n";
       return;
@@ -172,6 +173,12 @@ SimpleSimulationController::run()
    sched->problemSetup(ups);
    SchedulerP scheduler(sched);
    
+   LoadBalancer* lb = dynamic_cast<LoadBalancer*>
+     (dynamic_cast<SchedulerCommon*>(sched)->getPort("load balancer"));
+   lb->problemSetup(ups);
+
+   // done after the sim->problemSetup to get defaults into the
+   // input.xml, which it writes along with index.xml
    output->initializeOutput(ups);
 
    if(d_myworld->myrank() == 0)
@@ -183,7 +190,7 @@ SimpleSimulationController::run()
 
    double t;
 
-   // Parse time struct
+   // Parse time struct: get info like max time, init time, num timesteps, etc.
    SimulationTime timeinfo(ups);
 
    if (d_combinePatches) {
@@ -243,7 +250,7 @@ SimpleSimulationController::run()
    LevelP level = grid->getLevel(0);
    
    // Parse time struct
-   /* SimulationTime timeinfo(ups); */
+   /* SimulationTime timeinfo(ups); - done earlier */
    
    double start_time = Time::currentSeconds();
    if (!d_restarting){
@@ -288,6 +295,7 @@ SimpleSimulationController::run()
       double delt = delt_var;
       delt *= timeinfo.delt_factor;
       
+      // Bind delt to the min and max read from the ups file
       if(delt < timeinfo.delt_min){
 	 if(d_myworld->myrank() == 0)
 	    cerr << "WARNING: raising delt from " << delt
@@ -328,6 +336,7 @@ SimpleSimulationController::run()
       }
      prev_delt=delt;
 
+     // get memory stats for output
 #ifndef DISABLE_SCI_MALLOC
       size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
 	nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
@@ -376,6 +385,7 @@ SimpleSimulationController::run()
 	DumpAllocator(DefaultAllocator(), filename.c_str());
       }
 
+      // output timestep statistics
       if(d_myworld->myrank() == 0){
 	cout << "Time=" << t << ", delT=" << delt 
 	     << ", elap T = " << wallTime 
@@ -395,6 +405,7 @@ SimpleSimulationController::run()
 	}
 	cout << endl;
 
+	// calculate mean/std dev
 	if (n > 2) // ignore times 0,1,2
 	{
 	  //wallTimes.push_back(wallTime - prevWallTime);
@@ -423,7 +434,7 @@ SimpleSimulationController::run()
       sharedState->setElapsedTime(t);
       sharedState->incrementCurrentTopLevelTimeStep();
 
-      if(need_recompile(t, delt, grid, sim, output) || first){
+      if(needRecompile(t, delt, grid, sim, output, lb) || first){
 	first=false;
 	if(d_myworld->myrank() == 0)
 	  cout << "COMPILING TASKGRAPH...\n";
@@ -444,8 +455,10 @@ SimpleSimulationController::run()
 	  cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
       }
       // Execute the current timestep
-      scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
-      scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+      //scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
+      //scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+      scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
+      scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
       scheduler->execute(d_myworld);
       if(output)
 	output->executedTimestep();
@@ -466,7 +479,7 @@ SimpleSimulationController::problemSetup(const ProblemSpecP& params,
    
    for(ProblemSpecP level_ps = grid_ps->findBlock("Level");
        level_ps != 0; level_ps = level_ps->findNextBlock("Level")){
-      // Make two passes through the patches.  The first time, we
+      // Make two passes through the boxes.  The first time, we
       // want to find the spacing and the lower left corner of the
       // problem domain.  Spacing can be specified with a dx,dy,dz
       // on the level, or with a resolution on the patch.  If a
@@ -475,10 +488,13 @@ SimpleSimulationController::problemSetup(const ProblemSpecP& params,
       Point anchor(MAXDOUBLE, MAXDOUBLE, MAXDOUBLE);
       Vector spacing;
       bool have_levelspacing=false;
+
       if(level_ps->get("spacing", spacing))
 	 have_levelspacing=true;
       bool have_patchspacing=false;
 	 
+
+      // first pass - find upper/lower corner, find resolution/spacing
       for(ProblemSpecP box_ps = level_ps->findBlock("Box");
 	  box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
 	 Point lower;
@@ -492,6 +508,8 @@ SimpleSimulationController::problemSetup(const ProblemSpecP& params,
 	    if(have_levelspacing){
 	       throw ProblemSetupException("Cannot specify level spacing and patch resolution");
 	    } else {
+
+     	       // all boxes on same level must have same spacing
 	       Vector newspacing = (upper-lower)/resolution;
 	       if(have_patchspacing){
 		  Vector diff = spacing-newspacing;
@@ -510,6 +528,8 @@ SimpleSimulationController::problemSetup(const ProblemSpecP& params,
 
       LevelP level = grid->addLevel(anchor, spacing);
       
+
+      // second pass - set up patches and cells
       for(ProblemSpecP box_ps = level_ps->findBlock("Box");
 	  box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
 	Point lower;
@@ -572,6 +592,7 @@ SimpleSimulationController::problemSetup(const ProblemSpecP& params,
 	    }
 	  }
 	} else {
+	  // actually create the patch
 	  level->addPatch(lowCell, highCell, lowCell+extraCells, highCell-extraCells);
 	}
       }
@@ -587,18 +608,23 @@ SimpleSimulationController::problemSetup(const ProblemSpecP& params,
       }
       level->assignBCS(grid_ps);
    }
-}
+} // end problemSetup()
 
 bool
-SimpleSimulationController::need_recompile(double time, double delt,
-					   const GridP& grid,
-					   SimulationInterface* sim,
-					   Output* output)
+SimpleSimulationController::needRecompile(double time, double delt,
+					  const GridP& grid,
+					  SimulationInterface* sim,
+					  Output* output,
+					  LoadBalancer* lb)
 {
-  // Currently, output and sim can request a recompile. --bryan
-  if(output && output->need_recompile(time, delt, grid))
-    return true;
-  if (sim && sim->need_recompile(time, delt, grid))
-    return true;
-  return false;
+  // Currently, output, sim, and load balancer can request a recompile. --bryan
+  
+  // It is done in this fashion to give everybody a shot at modifying their 
+  // state.  Some get left out if you say 
+  // 'return lb->needRecompile() || output->needRecompile()'
+
+  bool recompile = (lb && lb->needRecompile(time, delt, grid));
+  recompile = (output && output->needRecompile(time, delt, grid)) || recompile;
+  recompile =  (sim && sim->needRecompile(time, delt, grid)) || recompile;
+  return recompile;
 }

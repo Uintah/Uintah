@@ -11,8 +11,8 @@
 namespace Uintah {
 
 class SimulationInterface;
-  class Output;
-
+class Output;
+class LoadBalancer;
 /**************************************
       
   CLASS
@@ -61,8 +61,9 @@ class SimulationInterface;
    private:
    /*
       void problemSetup(const ProblemSpecP&, GridP&) = 0;
-      bool need_recompile(double t, double delt, const LevelP& level,
-			  SimulationInterface* cfd, Output* output) = 0;
+      bool needRecompile(double t, double delt, const LevelP& level,
+			  SimulationInterface* cfd, Output* output,
+			  LoadBalancer* lb) = 0;
       SimulationController(const SimulationController&) = 0;
       SimulationController& operator=(const SimulationController&) = 0;
       */
