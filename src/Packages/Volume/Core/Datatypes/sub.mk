@@ -13,8 +13,8 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Exceptions Core/Geometry \
-	   Core/Persistent Core/Datatypes \
-	   Core/Containers  Core/Geom Core/Thread \
+	   Core/Persistent Core/Datatypes Core/Util \
+	   Core/Containers Core/Geom Core/Thread \
 	   Dataflow/Network Dataflow/XMLUtil \
 	   Packages/Volume/Core/Util 
 
