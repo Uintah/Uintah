@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/ShareAssignParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 
 #include <Core/Containers/LockingHandle.h>
