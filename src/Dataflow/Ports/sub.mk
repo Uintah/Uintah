@@ -18,7 +18,7 @@ SRCS     += $(SRCDIR)/BooleanPort.cc $(SRCDIR)/ColorMapPort.cc \
 	$(SRCDIR)/cVectorPort.cc \
 	$(SRCDIR)/SpanSpace.cc $(SRCDIR)/SpanPort.cc \
 	$(SRCDIR)/templates.cc \
-	$(SRCDIR)/PathPort.cc
+	$(SRCDIR)/PathPort.cc $(SRCDIR)/CameraViewPort.cc 
 
 
 PSELIBS := PSECore/Dataflow PSECore/Comm SCICore/Containers \
@@ -30,6 +30,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/08/20 04:23:22  samsonov
+# *** empty log message ***
+#
 # Revision 1.6  2000/07/27 17:13:22  yarden
 # add SpanPort
 #
