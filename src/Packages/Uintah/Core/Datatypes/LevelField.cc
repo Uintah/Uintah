@@ -2,14 +2,16 @@
 
 namespace Uintah {
 
+using SCIRun::Vector;
 
 template<>
-void LevelField<Matrix3>::make_minmax_thread::run()
+void make_minmax_thread<Matrix3>::run()
 {
   sema_->up();
 }
+
 template<>
-void LevelField<Vector>::make_minmax_thread::run()
+void make_minmax_thread<Vector>::run()
 {
   sema_->up();
 }

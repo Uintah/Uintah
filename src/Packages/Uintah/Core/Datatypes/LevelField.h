@@ -268,43 +268,46 @@ public:
   virtual const SCIRun::TypeDescription* get_type_description() const;
 private:
   static Persistent* maker();
-  class make_minmax_thread : public Runnable
-    {
-    public:
-      make_minmax_thread( typename Array3<Data>::iterator it,
-			  typename Array3<Data>::iterator it_end,
-			  double& min, double& max, Semaphore* sema,
-			  Mutex& m):
-	it_(it), it_end_(it_end), min_(min), max_(max), sema_(sema), m_(m){}
-
-      void run()
-	{
-	  double min, max;
-	  min = max = *it_;
-	  ++it_;
-	  for(; it_ != it_end_; ++it_){
-	    min = Min(min, double(*it_));
-	    max = Max(max, double(*it_));
-	  }
-	  m_.lock();
-	  min_ = Min(min_, min);
-	  max_ = Max(max_, max);
-	  m_.unlock();
-	  sema_->up();
-	}
-    private:
-      typename Array3<Data>::iterator it_;
-      typename Array3<Data>::iterator it_end_;
-      double &min_, &max_;
-      Semaphore *sema_;
-      Mutex& m_;
-    };
 };
 
+template <class Data>
+class make_minmax_thread : public Runnable
+{
+public:
+  make_minmax_thread( typename Array3<Data>::iterator it,
+		      typename Array3<Data>::iterator it_end,
+		      double& min, double& max, Semaphore* sema,
+		      Mutex& m):
+it_(it), it_end_(it_end), min_(min), max_(max), sema_(sema), m_(m){}
+
+  void run()
+{
+  double min, max;
+  min = max = *it_;
+  ++it_;
+  for(; it_ != it_end_; ++it_){
+    min = Min(min, double(*it_));
+    max = Max(max, double(*it_));
+  }
+  m_.lock();
+  min_ = Min(min_, min);
+  max_ = Max(max_, max);
+  m_.unlock();
+  sema_->up();
+}
+private:
+  typename Array3<Data>::iterator it_;
+  typename Array3<Data>::iterator it_end_;
+  double &min_, &max_;
+  Semaphore *sema_;
+  Mutex& m_;
+};
+
+
 template<>
-void LevelField<Matrix3>::make_minmax_thread::run();
+void make_minmax_thread<Matrix3>::run(); 
 template<>
-void LevelField<Vector>::make_minmax_thread::run();
+void make_minmax_thread<Vector>::run();
 
 #define LEVELFIELD_VERSION 1
 
@@ -570,8 +573,8 @@ bool LevelField<Data>::minmax( pair<double, double> & mm) const
       
       thread_sema->down();
       Thread *thrd = 
-	scinew Thread(scinew LevelField<Data>::make_minmax_thread( it, it_end,
-						   mn, mx, thread_sema, lock),
+	scinew Thread(scinew make_minmax_thread<Data>( it, it_end,
+					mn, mx, thread_sema, lock),
 		      "minmax worker" );
       thrd->detach();
     }
