@@ -22,7 +22,7 @@
 <!ELEMENT include EMPTY>
   <!ATTLIST include href CDATA #REQUIRED>
 
-<!ELEMENT filter-sci (package, category, instantiations, includes?)>
+<!ELEMENT filter-sci (package, category, instantiations, outputs?, includes?)>
   <!ATTLIST filter-sci name CDATA #REQUIRED>
 
 <!ELEMENT package (#PCDATA)>
@@ -38,6 +38,12 @@
   <!ATTLIST type name CDATA #REQUIRED>
 
 <!ELEMENT value (#PCDATA)>
+
+<!ELEMENT outputs (output*)>
+
+<!ELEMENT output EMPTY>
+  <!ATTLIST output name CDATA #REQUIRED>
+  <!ATTLIST output send_intermediate (yes|no) "no">
 
 <!ELEMENT includes (file*)>
 
