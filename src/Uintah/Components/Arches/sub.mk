@@ -26,12 +26,13 @@ PSELIBS := Uintah/Parallel Uintah/Interface Uintah/Grid Uintah/Exceptions \
 	   SCICore/Exceptions
 LIBS := $(XML_LIBRARY) -lftn -lm -lblas
 
-CFLAGS := -g -fullwarn -xansi -LANG:std  -n32 -mips4  -DSTL_SGI_THREADS
-
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.14  2000/06/13 20:47:31  bbanerje
+# Correct version of sub.mk (sub.mk removed from .cvsignore)
+#
 # Revision 1.13  2000/06/12 21:30:01  bbanerje
 # Added first Fortran routines, added Stencil Matrix where needed,
 # removed unnecessary CCVariables (e.g., sources etc.)
