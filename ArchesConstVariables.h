@@ -23,7 +23,7 @@ GENERAL INFORMATION
    Author: Rajesh Rawat (rawat@crsim.utah.edu)
    
    Creation Date:   July 20, 2000
-   
+
    C-SAFE 
    
    Copyright U of U 2000
@@ -95,6 +95,10 @@ namespace Uintah {
       constSFCYVariable<double> mmvVelSp;
       constSFCZVariable<double> mmwVelSu;
       constSFCZVariable<double> mmwVelSp;
+     // Thermal NOx constant variables
+
+      constCCVariable<double> thermalnox;
+      constCCVariable<double> thermalnoxSRC;
 
     }; // End class ArchesConstVariables
 } // End namespace Uintah
