@@ -147,9 +147,6 @@ public:
   //int seed=0) const;
 
   double get_element_size(const Elem::index_type &fi) { return get_area(fi); }
-
-  virtual void flush_changes(); // to get normals calculated.
-  void compute_normals();
   virtual bool has_normals() const { return true; }
 
   virtual void io(Piostream&);
@@ -166,13 +163,9 @@ public:
 		const Point &p2, const Point &p3);
   Elem::index_type add_elem(Node::array_type a);
   virtual bool is_editable() const { return true; }
-
-  // Must call connect after adding quads this way.
   Node::index_type add_point(const Point &p);
-  void add_quad_unconnected(const Point &p0, const Point &p1,
-			    const Point &p2, const Point &p3);
 
-  void connect(double err = 1.0e-8);
+
 
 
   //bool intersect(const Point &p, const Vector &dir, double &min, double &max,
@@ -180,8 +173,12 @@ public:
 
 
   const Point &point(Node::index_type i) { return points_[i]; }
+  virtual bool		synchronize(const synchronized_t &which);
 
 private:
+
+  void			compute_normals();
+  void			compute_edge_neighbors(double err = 1.0e-8);
 
   int next(int i) { return ((i%4)==3) ? (i-3) : (i+1); }
   int prev(int i) { return ((i%4)==0) ? (i+3) : (i-1); }
@@ -191,11 +188,11 @@ private:
   //bool inside4_p(int, const Point &p);
 
 
-  vector<Point>  points_;
-  vector<Node::index_type>    faces_;
-  vector<int>    neighbors_;
-  //! normalized per node normal.
-  vector<Vector> normals_;
+  vector<Point>			points_;
+  vector<Node::index_type>	faces_;
+  vector<int>			edge_neighbors_;
+  vector<Vector>		normals_; //! normalized per node
+  synchronized_t		synchronized_;
 };
 
 typedef LockingHandle<QuadSurfMesh> QuadSurfMeshHandle;
