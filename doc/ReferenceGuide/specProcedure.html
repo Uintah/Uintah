@@ -2,122 +2,97 @@
 <html>
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="GENERATOR" content="Mozilla/4.61 [en] (X11; U; IRIX64 6.5 IP28) [Netscape]">
+   <meta name="GENERATOR" content="Mozilla/4.7 [en] (X11; I; Linux 2.2.14-mc-smp i686) [Netscape]">
    <meta name="Author" content="Martin Cole">
+   <link rel=stylesheet type="text/css" href="http://www.sci.utah.edu/scirun_docs/doc/doc_styles.css">
    <title>Specification Procedure</title>
-   <!-- Changed by: TjD, 18-Jul-2000 -->
+<!-- Changed by: TjD, 18-Jul-2000 -->
 </head>
-<BODY BGCOLOR="#FFFFCC" TEXT="#000000" LINK=#CC0000 VLINK=#6666CC ALINK=#FF0000>
+<body>
 
-<center>
-<h2>
-Specification procedure</h2></center>
+<!- THE SCI LOGO ->
+<a href="http://www.sci.utah.edu"><img style="margin-left:-2em"
+   src="/images/SCI_logo.gif" border="0" hspace="10" height="66" 
+   width="150"></a>
 
-<p><br>Our goal is to have complete specifications for each module we release.
-To achieve this goal you will need to create and completely populate a
-.xml file that lives next to the .cc file associated with a module. 
+<!- TITLE OF PAGE ->
+<p class="title">Module Design/Implementation Procedure</p>
+<p class="subtitle">(Updated: Wed Sep 20 22:03:01 MDT 2000)</p>
 
-<br>&nbsp;</br>
-<dt>
-<b>spec.xml</b></dt>
+<p class="firstpara">Every module will have an associated specifications file associated
+with it.&nbsp; This file will be &lt;<i>ModuleName</i>>.xml. This document
+describes the module writing procedure that we are encouraging every module
+writer to follow.&nbsp; The complete set of documentation for a module
+live in the code itself and in the specification file. Typically a module
+has a .cc file and a .xml file.</p>
 
-<dd>
-Combined with the documentation extracted via Cocoon, spec.xml defines
-a complete specification for a module. It contains information the compile
-needs, as well as various levels of documentation targeted at different
-user levels. Documentation will be extracted from the module's .xml file, and the
-.xml file is intended to be maintained just as the C++ code is.</dd>
-
-<h3>
-User levels</h3>
-
-<dt>
-<b>user</b></dt>
-
-<dd>
-User who works with a predefined network map of modules. This level of user is
-not relevant for module level specifications, and nothing in the spec.xml is 
-targeted toward this kind of user. These users will have a unique User
-Guide for the specific PSE network(s) they use.</dd>
-<br>&nbsp;</br>
-
-<dt>
-<b>builder</b></dt>
-
-<dd>
-User will do the above as well as building and editing their own maps,
-but will write no code. Some of the information in the spec.xml is
-germane to this type of user. </dd>
-<br>&nbsp;</br>
-
-<dt>
-<b>developer</b></dt>
-
-<dd>
-User will write modules they need as well as all of the above. Much of
-the information in the spec.xml is important to this type of user.</dd>
-<br>&nbsp;</br>
-
-<center>
-<h3>
-Steps:</h3></center>
-
-<ol>
+<p class="head">Table of contents</p>
+<ol class="toc">
 <li>
-Start with .cc file.&nbsp; Make sure it conforms to the <a href="http://www.csafe.utah.edu/development_environment/coding_standards/index.html">coding
-standard</a>.</li>
-<br>&nbsp;</br>
-<li>
-If there isn't one there already, create a ./doc subdirectory in the directory where the module lives.
-All the files you generate besides <i>module_name</i>.xml belong in the doc directory so that
-the source tree doesn't get too cluttered.</li>
-<br>&nbsp;</br>
-<li>
-Update/enhance <a href="http://www.csafe.utah.edu/development_environment/cocoon/index.html">cocoon
-style comments</a>.</li>
-<br>&nbsp;</br>
-<li>
-Take a screen shot of the gui (if it has one) and convert to gif format.
-This should be placed in ./doc and needs a particular name:
-Name the image <i>module_name</i>Gui.gif. 
-<br>&nbsp;</br>
-use xv for generating grabbing the image,
-it will grab the whole GUI popup dialog, and just the dialog.&nbsp; If you need more
-than one window in the grab, and you are on an SGI use snapshot, then xv
-to convert to gif format.</li>
-<br>&nbsp;</br>
+<a href="#chalk talk">chalk talk</a></li>
 
 <li>
-Write <i>module_name</i>.xml.&nbsp; It should live in the same dir as the .cc file. See
-the <a href="annotatedSpec.html">annotated spec.xml </a>to understand what each
-tag is for. 
-<br>&nbsp;</br>
-We recommend that you use emacs to edit the .xml file. If you are using 
-emacs, there is an xml mode you can use which knows about xml and enforces the 
-syntax so you can't mess up as easily. <a href="psgmlInEmacs.html">obtain the xml editing 
-mode for emacs</a>, and <a href="spec.dtd">obtain the spec.dtd file</a> that 
-makes this editing mode useful.</li>
-<br>&nbsp;</br>
-<a name="bugzilla">Bugzilla! One part of the spec is listing the bugs associated with this module.
-  To find the known bugs for this module, go to the <A HREF="http://www.csafe.utah.edu/bugzilla/query.cgi">Bugzilla page</A>, choose PSE
-and PSECommon as the project and package, type in the module name as the search text. All
-unresolved bugs are game. To double check the status of a bug (since bugzilla tends to be somewhat
-out of date), send the bug owner an email (and tell them to please update bugzilla while you're
-at it).    </a></li>
-<br>&nbsp;</br>
+<a href="#spec">design spec</a></li>
+
 <li>
-The current plan is to gmake docs: generate Specification in the various
-formats (xml, html, latex) This is not currently implemented, so <a href="xml2html.html">convert your file to html.</a>convert your file to html.
-</li>
-<br>&nbsp;</br>
+<a href="#module maker">module maker</a></li>
+
 <li>
-Update the repository. Commit the changes you made to the .h, .cc, and .tcl files for this
-module. Add the files you created to the cvs repository
- (<i>module_name</i>.xml  and all the other <i>module_name</i>*.*
-files in the ./doc directory). If you had to create the ./doc directory, you will also have to 
-create it in the cvs source tree before checking in the files underneath it. 
-<a href="cvs_info.html">checking things into cvs</a></li>
+<a href="#coding">coding</a></li>
+
+<li>
+<a href="#testing">testing</a></li>
+
+<li>
+<a href="#final pass">final pass over the specification</a></li>
+
+<li>
+<a href="#code submission">code submission</a></li>
 </ol>
+
+
+<p>Following the above steps will ensure a consistent well documented set
+of modules for researchers to work with. A module is not just the execute
+method.
+<p class="head"><a NAME="chalk talk"></a>Chalk Talk</p>
+<p class="firstpara">Prior to anything else, it would be ideal if you bounce your module
+idea off of some of your peers. Talk to at least two other module
+developers about your design. This could help in many different ways. It
+could save you from doing it at all, or dramatically reduce your effort,
+by exposing previously written code.&nbsp; It can solidify your design
+idea, or enhance it. These do not have to be long discussions, but they
+need to be long enough to get the design across, and allow for feedback.</p>
+
+<p class="head"><a NAME="spec"></a>Create Specification</p>
+<p class="firstpara">This specification is an xml file whose structure is defined by component.dtd. This file will contain information that the module maker will need to create the files for your module. It will contain all of the high level documentation about the module.</p>
+
+<p class="nextpara">Documentation for all modules will be extracted from the collection of these files. This document will live side by side in our tree with the modules .cc file. It will need to be kept current just as the .cc needs to be current. Familiarize yourself with the more detailed description of the structure of the file and its contents. If your module has a gui, you will need to get a screen capture of the dialog, and place in ./doc/&lt;<i>ModuleName</i>>.gif.</p>
+
+<p><a href="psgmlInEmacs.html">There is an xml-mode for emacs that is
+useful.</a></p>
+
+<p class="nextpara">The entire file need not be filled out at this point. In the design stages this document will help you to specify the target you are coding to. Start at the top and fill in as much as you know now. You should be now know which ports you will need for the module, so be sure to fill that part out fully. Module Maker will make use of this information.</p>
+
+<p class="head"><a NAME="module maker"></a>Module Maker</p>
+<p class="firstpara">You have a somewhat fleshed out specification at this point. Now you want to write the module. You will need to edit a number of files and create some more. Module Maker will automate this process for you.</p>
+
+<p class="head"><a NAME="coding"></a>Coding</p>
+<p class="firstpara">Familiarize yourself with the coding standard. Follow it. If you use emacs, there are tools to make your coding standard efforts easy. Remember that the code you write will be public. Be sure that you can put your name in the author slot with pride. As you code you will make subtle changes to your design, be sure to frequent your specification.xml file and update it. Be sure that you have removed all warnings, and have a clean compile.</p>
+
+<p class="head"><a NAME="testing"></a>Testing Your Module</p>
+<p class="firstpara">Exercise your code. Make sure you force it down all possible code paths that you create, and that your module handles all possible input data that your input ports can provide. Crashing is bad. Doing nothing is bad. Handle errors appropriately. Be sure you test each widget in your gui.</p>
+
+<p class="head"><a NAME="final pass"></a>Final Check of xml data</p>
+<p class="firstpara">Your code works. You have made all the subtle changes to the code that the testing phase exposed, and it works as intended. Before you commit this code, take one last pass through the &lt;<i>ModuleName</i>>.xml file. Make sure all of your changes are reflected in it.</p>
+
+<p class="head"><a NAME="code submission"></a>Code Submission</p>
+<p class="firstpara">Update the repository. Commit the changes you made to the .h, .cc, .mk, tcl, and .xml files for this module. Add the files you created to the cvs repository. If you had to create the ./doc directory, you will also have to create it in the cvs source tree before checking in the files underneath it. <a href="cvs_info.html">checking things into cvs</a></p>
+
+<br>&nbsp;
+<br>&nbsp;
+<ol>&nbsp;</ol>
+An example module that has followed this procedure is ShowGeometry.
+<br>&nbsp;
 
 </body>
 </html>
