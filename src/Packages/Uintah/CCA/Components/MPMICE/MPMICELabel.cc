@@ -46,7 +46,7 @@ MPMICELabel::MPMICELabel()
   scratch3Label        = VarLabel::create("scratch3",
                      CCVariable<double>::getTypeDescription()); 
   scratchVecLabel      = VarLabel::create("scratchVec",
-                     CCVariable<Vector>::getTypeDescription()) 
+                     CCVariable<Vector>::getTypeDescription());
   NC_CCweightLabel     = VarLabel::create("NC_CCweight",
                      NCVariable<double>::getTypeDescription());
   rho_CCScratchLabel   = VarLabel::create("rho_CCScratch",
