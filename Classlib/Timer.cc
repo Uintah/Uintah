@@ -66,6 +66,10 @@ void Timer::stop()
     }
 }
 
+void Timer::add(double t) {
+    start_time -= t;
+}
+
 void Timer::clear()
 {
     if(state == Stopped){

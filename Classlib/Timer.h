@@ -30,6 +30,7 @@ public:
     void stop();
     void clear();
     double time();
+    void add(double t);
 };
 
 class CPUTimer : public Timer {
