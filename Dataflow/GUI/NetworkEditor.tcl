@@ -15,6 +15,10 @@
 #  University of Utah. All Rights Reserved.
 #
 
+# Make sure version stays in sync with main/main.cc
+global SCIRun_version
+set SCIRun_version v1.22
+
 
 global SCIRUN_SRCDIR
 source $SCIRUN_SRCDIR/Dataflow/GUI/defaults.tcl
@@ -61,9 +65,6 @@ set netedit_savefile ""
 global NetworkChanged
 set NetworkChanged 0
 
-# Make sure version stays in sync with main/main.cc
-global SCIRun_version
-set SCIRun_version v1.22
 
 # TCL has some trace on the env array that makes it impossible
 # to set it in neteditGetenv wihtout causing an error
@@ -1022,8 +1023,8 @@ proc sourceSettingsFile {} {
    global env
 
    # Attempt to get environment variables:
-   set DATADIR [lindex [array get env SCIRUN_DATA] 1]
-   set DATASET [lindex [array get env SCIRUN_DATASET] 1]
+    set DATADIR [netedit getenv SCIRUN_DATA]
+    set DATASET [netedit getenv SCIRUN_DATASET]
 
    if { "$DATASET" == "" } {
        # if env var SCIRUN_DATASET not set... default to sphere:
@@ -1035,8 +1036,7 @@ proc sourceSettingsFile {} {
 	  # Push out to the environment so user doesn't get asked
 	  # again if we need to check for this var again.
 	  # (Do it twice do to tcl bug...)
-	  array set env "SCIRUN_DATA    $DATADIR"
-	  array set env "SCIRUN_DATA    $DATADIR"
+	  netedit setenv SCIRUN_DATA $DATADIR
        }
    }
 
@@ -1068,8 +1068,8 @@ proc sourceSettingsFile {} {
 	 # again if we need to check for these vars again.
 	 # NOTE: For some reason you have to do this twice... perhaps
 	 # a newer version of TCL will fix this...
-	 array set env [list SCIRUN_DATA $DATADIR SCIRUN_DATASET $DATASET]
-	 array set env [list SCIRUN_DATA $DATADIR SCIRUN_DATASET $DATASET]
+	 netedit setenv SCIRUN_DATA $DATADIR
+	 netedit setenv SCIRUN_DATASET $DATASET
       }
    }
    source $DATADIR/$DATASET/$DATASET.settings
@@ -1462,13 +1462,14 @@ proc emitTCLStyleCopyright { out } {
 }
 
 proc writeNetwork { filename { subnet 0 } } {
-    global env userName runDate runTime notes
-
+    global SCIRun_version
     set out [open $filename {WRONLY CREAT TRUNC}]
-    puts $out "\# SCI Network 1.22\n"
-    if [info exists env(SCI_INSERT_NET_COPYRIGHT)] {
+    puts $out "\# SCI Network ${SCIRun_version}\n"
+    if [boolToInt [netedit getenv SCI_INSERT_NET_COPYRIGHT]] {
 	emitTCLStyleCopyright $out
     }
+
+    global userName runDate runTime notes
     if [info exists userName] {
 	puts $out "global userName"
 	puts $out "set userName \"${userName}\"\n"
