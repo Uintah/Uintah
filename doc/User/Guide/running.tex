@@ -77,80 +77,97 @@ team.  \latexonly{See \secref{Reporting Bugs}{sec:bugs} for information on
 \subsection{Anatomy of the Main Window}
 \label{sec:windowanatomy}
 
-The \sr{} main window consists of 4 main components (see
-Figure~\ref{fig:srwindow}): 
+The \sr{} main window consists of the Menu Bar, the Global View Frame,
+the Error Frame, and the NetEdit frame (see
+Figure~\ref{fig:srwindow}):
 
 \begin{description}
-\item[Menu Bar] The menu bar is used to load networks, save networks, quit
-  \sr{}, create network modules, and perform other tasks.  The menu bar
-  consists of the following menu items:
+  \descitem{Menu Bar} The menu bar is used to load networks, save
+  networks, quit \sr{}, create network modules, and perform other
+  tasks.  The menu bar consists of the following menu items:
 
   \begin{description}
-  \item[\menu{File}] The \menu{File} menu contains the following items:
+    \menudesc{File} The \menu{File} menu contains the following items:
+
     \begin{description}
-    \item[Save] Saves the network to a file (See \hyperref{this
+      \menuitemdesc{Save} Saves the network to a file (See \hyperref{this
         section}{Section~}{}{sec:savenet}). 
-    \item[Save As...] Saves a network to a new file (See
-      \hyperref{this section}{Section~}{}{sec:savenet}). 
-    \item[Load] Loads a network from a file (See \hyperref{this
-        section}{Section~}{}{sec:opennet}). 
-    \item[Insert] Adds a network to the NetEdit frame without overlap
-      (See \hyperref{this section}{Section~}{}{sec:insertnetwork}). 
-    \item[Clear] Removes all modules and connections from the NetEdit
-      frame (See \hyperref{this section}{Section~}{}{sec:clearnet}).
-    \item[New] This sub-menu contains items of interest to developers only.
-    \item[Add Info] Use this item to add network specific notes to
-      the current network.  Notes should be used to document the purpose of
-      the network (See \hyperref{this section}{Section~}{}{sec:docnetwork}).
-    \item[Quit] Quits \sr{}.
+
+      \menuitemdesc{Save As...} Saves a network to a new file (See
+      \hyperref{this section}{Section~}{}{sec:savenet}).
+      
+      \menuitemdesc{Load} Loads a network from a file (See
+      \hyperref{this section}{Section~}{}{sec:opennet}).
+      
+      \menuitemdesc{Insert} Adds a network to the NetEdit frame
+      without overlap (See \hyperref{this
+        section}{Section~}{}{sec:insertnetwork}).
+      
+      \menuitemdesc{Clear} Removes all modules and connections from
+      the NetEdit frame (See \hyperref{this
+        section}{Section~}{}{sec:clearnet}).
+      
+      \menuitemdesc{New} This sub-menu contains items of interest to
+      developers only.
+      
+      \menuitemdesc{Add Info} Use this item to add network specific
+      notes to the current network.  Notes should be used to document
+      the purpose of the network (See \hyperref{this
+        section}{Section~}{}{sec:docnetwork}).
+    
+      \menuitemdesc{Quit} Quits \sr{}.
     \end{description}
   \end{description}
   
   \begin{description}
-  \item[\menu{SCIRun}] The \menu{SCIRun} menu is used to create modules
-    (from the \sr{} package) for use in the net edit frame.  This menu is
+    \menudesc{SCIRun} The \menu{SCIRun} menu is used to create modules
+    (from the \sr{} package) for use in the net edit frame.
+
+    This menu is
     composed of sub-menus. Each sub-menu corresponds to a \dfn{category}
     \index{category} within the \sr{} package.  A category is a group of
     related modules.  Each menu item in a category sub-menu creates a
-    specific module and places it in the netedit frame.  The netedit frame
+    specific module and places it in the NetEdit frame.  
+
+    The NetEdit frame
     pop-up menu (activated by pressing the right mouse button when the
-    mouse pointer is in the netedit frame) also provides access to the
+    mouse pointer is in the NetEdit frame) also provides access to the
     \menu{\sr{}} and \menu{\biopse{}} (and possibly other) package menus.  An
     overview of the contents of the \sr{} package is given in \secref{The
       \biopse{} Package}{sec:biopsepackage}.
   \end{description}
 
   \begin{description}
-  \item[\menu{BioPSE}] The \menu{BioPSE} menu is used to create modules
-    (from the \biopse package) for use in the netedit frame.  It consists
-    of category sub-menus and module menu items.   An overview of the
-    contents of the \biopse{} package is given in \secref{The SCIRun
-      Package}{sec:srpackage}.
+    \menudesc{BioPSE} The \menu{BioPSE} menu is used to create modules
+    (from the \biopse package) for use in the NetEdit frame.  It
+    consists of category sub-menus and module menu items.  An overview
+    of the contents of the \biopse{} package is given in \secref{The
+      SCIRun Package}{sec:srpackage}.
   \end{description}
 
   \begin{description}
-  \item [\textit{Other Package Menus}] There may be other package
-    menus if other packages have been installed.  They too will consist
-    of category sub-menus and module menu items.
+    \descitem{...}  There may be other package menus if other packages
+    have been installed.  They too will consist of category sub-menus
+    and module menu items.
   \end{description}
   
-\item[Global View Frame] The Global View Frame is located in the upper left
-  corner of the main window (see Figure~\ref{fig:srwindow}). It is used to
-  navigate complex networks.  The use of the Globla View Frame is
-  described in \secref{Navigating a Network}{sec:navnetwork}.
+  \descitem{Global View Frame} The Global View Frame is located in the
+  upper left corner of the main window (see
+  Figure~\ref{fig:srwindow}). It is used to navigate complex networks.
+  The use of the Globla View Frame is described in \secref{Navigating
+    a Network}{sec:navnetwork}.
   
-\item[Error Frame] Errors during program startup are displayed in the Error
-  Frame.  It is located in the upper right corner of the main window(see
-  Figure~\ref{fig:srwindow}).  Errors on startup may mean that \sr{} has
-  been installed incorrectly or has been installed from a buggy
-  distribution.  Please report \hyperref{report}{(see
-  Section~}{)}{sec:bugs} these 
-  errors.
+  \descitem{Error Frame} Errors during program startup are displayed
+  in the Error Frame.  It is located in the upper right corner of the
+  main window(see Figure~\ref{fig:srwindow}).  Errors on startup may
+  mean that \sr{} has been installed incorrectly or has been installed
+  from a buggy distribution.  Please report \hyperref{report}{(see
+    Section~}{)}{sec:bugs} these errors.
   
-\item[NetEdit Frame] The NetEdit Frame occupies the bottom of the main
-  window(see Figure~\ref{fig:srwindow}).  It is used to build and execute
-  networks.  \secref{Building Networks}{sec:workwithnets} discusses the use
-  of this frame.
+  \descitem{NetEdit Frame} The NetEdit Frame occupies the bottom of
+  the main window(see Figure~\ref{fig:srwindow}).  It is used to build
+  and execute networks.  \secref{Building Networks}{sec:workwithnets}
+  discusses the use of this frame.
 
 \end{description}
 
@@ -169,7 +186,7 @@ is described in \hyperref{a later section}{Section~}{}{sec:termapp}.
 \label{sec:environ} 
 \index{Environment Variables}
 
-\newcommand{\envitem}[1]{\item[\envvar{#1}]\mbox{}}
+\newcommand{\envitem}[1]{\item[\envvar{#1}]\latex{\mbox{}\\}}
 
 The following environment variables either affect \sr{}'s behavior or
 improve its performance via remote connections.  With the exception of
@@ -177,17 +194,15 @@ improve its performance via remote connections.  With the exception of
 optional.
 
 \begin{description}
-\envitem{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR}
-  
+  \envitem{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR}
   \envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR} specifies the location of
   dynamically generated code.  See \secref{Dynamic
     Compilation}{sec:dyncomp} for details on the meaning and use of
   this variable.
-
-\item[\envvar{SCIRUN\_DATA} \& \envvar{SCIRUN\_DATASET}]\mbox{}
-
-  These two variables specify the complete path to a \sr{} \dfn{data
-  set}.  A data set is a collection of \sr{} type data like fields,
+  
+  \descitem{\envvar{SCIRUN\_DATA} \& \envvar{SCIRUN\_DATASET}}  These
+  two variables specify the complete path to a \sr{} \dfn{data set}.
+  A data set is a collection of \sr{} type data like fields,
   matricies, \etc{} that are stored in a directory and are used in
   \sr{} networks.
 
@@ -203,12 +218,10 @@ optional.
   sample data were installed).  \envvar{SCIRUN\_DATASET} could then be
   set to \filename{utahtorso} to specify the Utah Torso data set.
   
-\envitem{DISPLAY}
-  
-  If \sr{} is executed remotely then the value of the
-  \envvar{DISPLAY} variable (as set on the remote machine) must
-  be set correctly and the remote machine must be allowed to
-  talk to the local X11 server.
+  \envitem{DISPLAY} If \sr{} is executed remotely then the value of
+  the \envvar{DISPLAY} variable (as set on the remote machine) must be
+  set correctly and the remote machine must be allowed to talk to the
+  local X11 server.
   
   For telnet-like (unencrypted) connections to a remote machine
   you may set \envvar{DISPLAY} as follows:
@@ -243,10 +256,9 @@ optional.
 \begin{verbatim}
   xhost +remote-machine-name
 \end{verbatim}
-
-\envitem{LOAD\_PACKAGE}
   
-  A comma seperated list of package names that \sr{} will load.
+  \envitem{LOAD\_PACKAGE} A comma seperated list of package names that
+  \sr{} will load.
   
   This overrides the packages specified at configure time.  Note
   that this will not cause packages not specifed at configure time
@@ -256,23 +268,20 @@ optional.
   Its value defaults to the list of packages given to the
   \option{\-\-enable-package} option at configure time.
   
-\envitem{PACKAGE\_SRC\_PATH}
-  
-  A colon separated list of paths to root(s) of package source trees.
-  The path \directory{\ptext{build\_dir}/Packages} is implicitly part
-  of this list.  Note that \ptext{build\_dir} is the directory in
-  which the \command{configure} and \command{make} commands were run.
+  \envitem{PACKAGE\_SRC\_PATH} A colon separated list of paths to
+  root(s) of package source trees.  The path
+  \directory{\ptext{build\_dir}/Packages} is implicitly part of this
+  list.  Note that \ptext{build\_dir} is the directory in which the
+  \command{configure} and \command{make} commands were run.
   
   \sr{} searches this path list to find XML description files and
   user interface code corresponding to the list of packages
   specified in \envvar{LOAD\_PACKAGE}.
   
   It's value defaults to \directory{\ptext{build\_dir}/Packages}.
-
-\envitem{PACKAGE\_LIB\_PATH}
   
-  \envvar{PACKAGE\_LIB\_PATH} is a colon separated list of paths to
-  package libraries.
+  \envitem{PACKAGE\_LIB\_PATH} \envvar{PACKAGE\_LIB\_PATH} is a colon
+  separated list of paths to package libraries.
   
   \sr{} searches this path list to find package libraries
   which correspond to the list of packages specified in
