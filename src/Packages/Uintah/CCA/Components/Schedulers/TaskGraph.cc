@@ -234,7 +234,6 @@ TaskGraph::setupTaskConnections()
   }
 
   // Gather the comps for the tasks into a map
-  typedef multimap<const VarLabel*, Task::Dependency*, VarLabel::Compare> CompMap;
   CompMap comps;
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
     Task* task = *iter;
@@ -280,87 +279,19 @@ TaskGraph::setupTaskConnections()
   }
 #endif
   
+  // Connect the tasks for modified variables, updating the comp
+  // map with each modify and doing this in task order.
+  // Also do a type check
+  for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
+    Task* task = *iter;
+    addDependencyEdges(task, task->getModifies(), comps, true);
+  }
+ 
   // Connect the tasks together using the computes/requires info
   // Also do a type check
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
     Task* task = *iter;
-    for(Task::Dependency* req = task->getRequires();
-	req != 0; req=req->next){
-      if(req->dw != Task::OldDW){
-	// If DW is finalized, we assume that we already have it,
-	// or that we will get it sent to us.  Otherwise, we set
-	// up an edge to connect this req to a comp
-	pair<CompMap::iterator,CompMap::iterator> iters 
-	  = comps.equal_range(req->var);
-	int count=0;
-	for(CompMap::iterator compiter = iters.first;
-	    compiter != iters.second; ++compiter){
-	  if(req->var->typeDescription() != compiter->first->typeDescription())
-	    throw TypeMismatchException("Type mismatch for variable: "+req->var->getName());
-	  // Make sure that we get the comp from the reduction task
-	  bool add=false;
-	  if(task->isReductionTask()){
-	    // Only those that overlap
-	    if(overlaps(compiter->second, req))
-	      add=true;
-	  } else if(req->var->typeDescription()->isReductionVariable()){
-	    if(compiter->second->task->isReductionTask())
-	      add=true;
-	  } else {
-	    if(overlaps(compiter->second, req))
-	      add=true;
-	  }
-	  if(add){
-	    Task::Edge* edge = scinew Task::Edge(compiter->second, req);
-	    edges.push_back(edge);
-	    req->addComp(edge);
-	    compiter->second->addReq(edge);
-	    count++;
-	    if(dbg.active()){
-	      dbg << "Creating edge from task: " << *compiter->second->task << " to task: " << *task << '\n';
-	      dbg << "Req=" << *req << '\n';
-	      dbg << "Comp=" << *compiter->second << '\n';
-	    }
-	  }
-	}
-	if(count == 0 && (!req->matls || req->matls->size() > 0) 
-	   && (!req->patches || req->patches->size() > 0)){
-	  if(req->patches){
-	    cerr << req->patches->size() << "Patches: ";
-	    for(int i=0;i<req->patches->size();i++)
-	      cerr << req->patches->get(i)->getID() << " ";
-	    cerr << '\n';
-	  } else {
-	    cerr << "Patches from task: ";
-	    const PatchSet* patches = task->getPatchSet();
-	    for(int i=0;i<patches->size();i++){
-	      const PatchSubset* pat=patches->getSubset(i);
-	      for(int i=0;i<pat->size();i++)
-		cerr << pat->get(i)->getID() << " ";
-	      cerr << " ";
-	    }
-	    cerr << '\n';
-	  }
-	  if(req->matls){
-	    cerr << req->matls->size() << "Matls: ";
-	    for(int i=0;i<req->matls->size();i++)
-	      cerr << req->matls->get(i) << " ";
-	    cerr << '\n';
-	  } else {
-	    cerr << "Matls from task: ";
-	    const MaterialSet* matls = task->getMaterialSet();
-	    for(int i=0;i<matls->size();i++){
-	      const MaterialSubset* mat = matls->getSubset(i);
-	      for(int i=0;i<mat->size();i++)
-		cerr << mat->get(i) << " ";
-	      cerr << " ";
-	    }
-	    cerr << '\n';
-	  }
-	  throw InternalError("Scheduler could not find specific production for variable: "+req->var->getName()+", required for task: "+task->getName());
-	}
-      }
-    }
+    addDependencyEdges(task, task->getRequires(), comps, false);
   }
 
   // Initialize variables on the tasks
@@ -370,6 +301,93 @@ TaskGraph::setupTaskConnections()
     task->sorted=false;
   }
 } // end setupTaskConnections()
+
+void TaskGraph::addDependencyEdges(Task* task, Task::Dependency* req,
+				  CompMap& comps, bool modifies)
+{
+  for(; req != 0; req=req->next){
+    if(req->dw != Task::OldDW){
+      // If DW is finalized, we assume that we already have it,
+      // or that we will get it sent to us.  Otherwise, we set
+      // up an edge to connect this req to a comp
+      pair<CompMap::iterator,CompMap::iterator> iters 
+	= comps.equal_range(req->var);
+      int count=0;
+      for(CompMap::iterator compiter = iters.first;
+	  compiter != iters.second; ++compiter){
+	if(req->var->typeDescription() != compiter->first->typeDescription())
+	  throw TypeMismatchException("Type mismatch for variable: "+req->var->getName());
+	// Make sure that we get the comp from the reduction task
+	bool add=false;
+	if(task->isReductionTask()){
+	  // Only those that overlap
+	  if(overlaps(compiter->second, req))
+	    add=true;
+	} else if(req->var->typeDescription()->isReductionVariable()){
+	  if(compiter->second->task->isReductionTask())
+	    add=true;
+	} else {
+	  if(overlaps(compiter->second, req))
+	    add=true;
+	}
+	if(add){
+	  Task::Edge* edge = scinew Task::Edge(compiter->second, req);
+	  edges.push_back(edge);
+	  req->addComp(edge);
+	  compiter->second->addReq(edge);
+	  
+	  if (modifies)
+	    // not just requires, but modifies, so the comps map must be
+	    // updated so future modifies or requires will link to this one.
+	    compiter->second = req; // ??? will this work?  let's see
+	  
+	  count++;
+	  if(dbg.active()){
+	    dbg << "Creating edge from task: " << *compiter->second->task << " to task: " << *task << '\n';
+	    dbg << "Req=" << *req << '\n';
+	    dbg << "Comp=" << *compiter->second << '\n';
+	  }
+	}
+      }
+      if(count == 0 && (!req->matls || req->matls->size() > 0) 
+	 && (!req->patches || req->patches->size() > 0)){
+	if(req->patches){
+	  cerr << req->patches->size() << "Patches: ";
+	  for(int i=0;i<req->patches->size();i++)
+	    cerr << req->patches->get(i)->getID() << " ";
+	  cerr << '\n';
+	} else {
+	  cerr << "Patches from task: ";
+	  const PatchSet* patches = task->getPatchSet();
+	  for(int i=0;i<patches->size();i++){
+	    const PatchSubset* pat=patches->getSubset(i);
+	    for(int i=0;i<pat->size();i++)
+	      cerr << pat->get(i)->getID() << " ";
+	    cerr << " ";
+	  }
+	  cerr << '\n';
+	}
+	if(req->matls){
+	  cerr << req->matls->size() << "Matls: ";
+	  for(int i=0;i<req->matls->size();i++)
+	    cerr << req->matls->get(i) << " ";
+	  cerr << '\n';
+	} else {
+	  cerr << "Matls from task: ";
+	  const MaterialSet* matls = task->getMaterialSet();
+	  for(int i=0;i<matls->size();i++){
+	    const MaterialSubset* mat = matls->getSubset(i);
+	    for(int i=0;i<mat->size();i++)
+	      cerr << mat->get(i) << " ";
+	    cerr << " ";
+	  }
+	  cerr << '\n';
+	}
+	throw InternalError("Scheduler could not find specific production for variable: "+req->var->getName()+", required for task: "+task->getName());
+      }
+    }
+  }
+}
 
 void
 TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
@@ -387,8 +405,22 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
 
   task->visited=true;
    
-  for(const Task::Dependency* req = task->getRequires();
-      req != 0; req=req->next){
+  processDependencies(task, task->getRequires(), sortedTasks);
+  processDependencies(task, task->getModifies(), sortedTasks);
+
+  // All prerequisites are done - add this task to the list
+  sortedTasks.push_back(task);
+  task->sorted=true;
+  if(dbg.active())
+    dbg << "Added task: " << task->getName() << '\n';
+} // end processTask()
+
+
+void TaskGraph::processDependencies(Task* task, Task::Dependency* req,
+				    vector<Task*>& sortedTasks) const
+
+{
+  for(; req != 0; req=req->next){
     if(!req->dw == Task::OldDW){
       Task::Edge* edge = req->comp_head;
 #if 0
@@ -401,7 +433,7 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
 	  throw InternalError(string("Only reduction tasks may require a variable that has multiple computes.\n'") + task->getName() + "' is therefore invalid.\n");
       }
 #endif
-	 
+      
       for (;edge != 0; edge = edge->compNext){
 	Task* vtask = edge->comp->task;
 	if(!vtask->sorted){
@@ -421,12 +453,7 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
       }
     }
   }
-  // All prerequisites are done - add this task to the list
-  sortedTasks.push_back(task);
-  task->sorted=true;
-  if(dbg.active())
-    dbg << "Added task: " << task->getName() << '\n';
-} // end processTask()
+}
 
 void
 TaskGraph::nullSort( vector<Task*>& tasks )
@@ -540,6 +567,8 @@ namespace std {
 }
 #endif
 
+namespace Uintah {
+  
 class CompTable {
   struct Data {
     Data* next;
@@ -581,7 +610,14 @@ class CompTable {
 		    const PatchSubset* patches, const MaterialSubset* matls);
   bool findcomp(Task::Dependency* req, const Patch* patch, int matlIndex,
 		DetailedTask*& dt, Task::Dependency*& comp);
+  bool findReplaceComp(Task::Dependency* req, const Patch* patch,
+		       int matlIndex,
+		       DetailedTask* newTask, Task::Dependency* newComp,
+		       DetailedTask*& foundTask, Task::Dependency*& foundComp);
+  
 };
+
+}
 
 CompTable::CompTable()
 {
@@ -621,6 +657,26 @@ bool CompTable::findcomp(Task::Dependency* req, const Patch* patch,
     return false;
   }
 }
+
+bool
+CompTable::findReplaceComp(Task::Dependency* req, const Patch* patch,
+			   int matlIndex, DetailedTask* newTask,
+			   Task::Dependency* newComp, DetailedTask*& foundTask,
+			   Task::Dependency*& foundComp)
+{
+  Data key(0, req, patch, matlIndex);
+  Data* result;
+  if(data.lookup(&key, result)){
+    foundTask=result->task;
+    foundComp=result->comp;
+    data.remove(&key);
+    data.insert(new Data(newTask, newComp, patch, matlIndex));
+    return true;
+  } else {
+    return false;
+  }
+}
+
 
 // Will need to do something about const-ness here.
 template<class T>
@@ -724,7 +780,22 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
       }
     }
   }
-  
+
+  // Go through the modifies and find and replace the matching comp
+  for(int i=0;i<dt->numTasks();i++){
+    DetailedTask* task = dt->getTask(i);
+
+    // Explicit dependencies are currently not generated for reductions
+    if(task->task->getType() == Task::Reduction)
+      continue;
+
+    if(dbg.active())
+      dbg << "Looking at modifies of detailed task: " << *task << '\n';
+
+    createDetailedDependencies(dt, lb, pg, task, task->task->getModifies(),
+			       ct, true);
+  }
+    
   // Go through the reqs and find the matching comp
   for(int i=0;i<dt->numTasks();i++){
     DetailedTask* task = dt->getTask(i);
@@ -734,88 +805,108 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
       continue;
 
     if(dbg.active())
-      dbg << "Looking at detailed task: " << *task << '\n';
-    for(Task::Dependency* req = task->task->getRequires();
-	req != 0; req = req->next){
-      if(dbg.active())
-	dbg << "req: " << *req << '\n';
+      dbg << "Looking at requires of detailed task: " << *task << '\n';
 
-      const PatchSubset* patches;
-      switch(req->patches_dom){
-      case Task::NormalDomain:
-	patches = intersection(req->patches, task->patches);
-        break;
-      case Task::OutOfDomain:
-	patches = req->patches;
-	break;
-      default:
-	throw InternalError("Unknown patches_dom type");
-      }
-      const MaterialSubset* matls;
-      switch(req->matls_dom){
-      case Task::NormalDomain:
-	matls = intersection(req->matls, task->matls);
-	break;
-      case Task::OutOfDomain:
-	matls = req->matls;
-	break;
-      default:
-	throw InternalError("Unknown matls_dom type");
-      }
-      if(patches)
-	patches->addReference();
-      if(matls)
-	matls->addReference();
-      if(patches && !patches->empty() && matls && !matls->empty()){
-	for(int i=0;i<patches->size();i++){
-	  const Patch* patch = patches->get(i);
-	  Level::selectType neighbors;
-	  IntVector low, high;
-	  patch->computeVariableExtents(req->var->typeDescription()->getType(),
-					req->gtype, req->numGhostCells,
-					neighbors, low, high);
-	  if(dbg.active()){
-	    dbg << "Creating dependency on " << neighbors.size() << " neighbors\n";
-	    dbg << "Low=" << low << ", high=" << high << ", var=" << req->var->getName() << '\n';
-	  }
-	  for(int i=0;i<neighbors.size();i++){
-	    const Patch* neighbor=neighbors[i];
-	    for(int m=0;m<matls->size();m++){
-	      int matl = matls->get(m);
-	      DetailedTask* creator;
-	      Task::Dependency* comp = 0;
-	      if(req->dw == Task::OldDW){
-		int proc = findVariableLocation(lb, pg, req, neighbor, matl);
-		creator = dt->getOldDWSendTask(proc);
-		comp=0;
-	      } else {
-		if(!ct.findcomp(req, neighbor, matl, creator, comp)) {
-		  throw InternalError("Failed to find comp for dep!");
-		}
-		/*
+    createDetailedDependencies(dt, lb, pg, task, task->task->getRequires(),
+			       ct, false);
+  }
+  
+  if(dbg.active())
+    dbg << "Done creating detailed tasks\n";
+
+}
+
+
+void
+TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
+				      const ProcessorGroup* pg,
+				      DetailedTask* task,
+				      Task::Dependency* req, CompTable& ct,
+				      bool modifies)
+
+{
+  for( ; req != 0; req = req->next){
+    if(dbg.active())
+      dbg << "req: " << *req << '\n';
+    
+    const PatchSubset* patches;
+    switch(req->patches_dom){
+    case Task::NormalDomain:
+      patches = intersection(req->patches, task->patches);
+      break;
+    case Task::OutOfDomain:
+      patches = req->patches;
+      break;
+    default:
+      throw InternalError("Unknown patches_dom type");
+    }
+    const MaterialSubset* matls;
+    switch(req->matls_dom){
+    case Task::NormalDomain:
+      matls = intersection(req->matls, task->matls);
+      break;
+    case Task::OutOfDomain:
+      matls = req->matls;
+      break;
+    default:
+      throw InternalError("Unknown matls_dom type");
+    }
+    if(patches)
+      patches->addReference();
+    if(matls)
+      matls->addReference();
+    if(patches && !patches->empty() && matls && !matls->empty()){
+      for(int i=0;i<patches->size();i++){
+	const Patch* patch = patches->get(i);
+	Level::selectType neighbors;
+	IntVector low, high;
+	patch->computeVariableExtents(req->var->typeDescription()->getType(),
+				      req->gtype, req->numGhostCells,
+				      neighbors, low, high);
+	if(dbg.active()){
+	  dbg << "Creating dependency on " << neighbors.size() << " neighbors\n";
+	  dbg << "Low=" << low << ", high=" << high << ", var=" << req->var->getName() << '\n';
+	}
+	for(int i=0;i<neighbors.size();i++){
+	  const Patch* neighbor=neighbors[i];
+	  for(int m=0;m<matls->size();m++){
+	    int matl = matls->get(m);
+	    DetailedTask* creator;
+	    Task::Dependency* comp = 0;
+	    if(req->dw == Task::OldDW){
+	      int proc = findVariableLocation(lb, pg, req, neighbor, matl);
+	      creator = dt->getOldDWSendTask(proc);
+	      comp=0;
+	    } else {
+	      bool didFind;
+	      if (modifies)
+		didFind = ct.findReplaceComp(req, neighbor, matl, task, req,
+					     creator, comp);
+	      else
+		didFind = ct.findcomp(req, neighbor, matl, creator, comp);
+	      if(!didFind)
+		throw InternalError("Failed to find comp for dep!");
+	      /*
 		if (comp && comp->var)
-		  cerr << comp->var->getName() << " on matl " << matl << endl;
+		cerr << comp->var->getName() << " on matl " << matl << endl;
 		else
-		  cerr << "unknown on matl " << matl << endl;
-		*/
-	      }
-	      IntVector l = Max(neighbor->getNodeLowIndex(), low);
-	      IntVector h = Min(neighbor->getNodeHighIndex(), high);
-	      dt->possiblyCreateDependency(creator, comp, neighbor,
-					   task, req, patch,
-					   matl, l, h);
+		cerr << "unknown on matl " << matl << endl;
+	      */
 	    }
+	    IntVector l = Max(neighbor->getNodeLowIndex(), low);
+	    IntVector h = Min(neighbor->getNodeHighIndex(), high);
+	    dt->possiblyCreateDependency(creator, comp, neighbor,
+					 task, req, patch,
+					 matl, l, h);
 	  }
 	}
       }
-      if(patches && patches->removeReference())
-	delete patches;
-      if(matls && matls->removeReference())
-	delete matls;
     }
+    if(patches && patches->removeReference())
+      delete patches;
+    if(matls && matls->removeReference())
+      delete matls;
   }
-  if(dbg.active())
-    dbg << "Done creating detailed tasks\n";
 }
 
 int TaskGraph::findVariableLocation(LoadBalancer* lb,
