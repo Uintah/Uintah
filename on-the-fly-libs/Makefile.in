@@ -41,6 +41,15 @@ include @scirun_obj_dir@/configVars.mk
 
 SCIRUN_SRCTOP   := @scirun_src_dir@
 SCIRUN_OBJTOP   := @scirun_obj_dir@
+
+ifneq ($(SCIRUN_OBJDIR),)
+  SCIRUN_OBJTOP := $(SCIRUN_OBJDIR)
+endif
+
+ifneq ($(SCIRUN_SRCDIR),)
+  SCIRUN_SRCTOP := $(SCIRUN_SRCDIR)
+endif
+
 LIBDIR	        := $(SCIRUN_OBJTOP)/lib
 # get libraries in ./lib
 LIBS_FULLNAMES  := $(wildcard $(LIBDIR)/*.$(SO_OR_A_FILE))
