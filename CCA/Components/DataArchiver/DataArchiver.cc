@@ -65,6 +65,11 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    if(!p->get("outputInterval", d_outputInterval))
       d_outputInterval = 1.0;
 
+   string defaultCompressionMode = "";
+   if (p->get("compression", defaultCompressionMode)) {
+     VarLabel::setDefaultCompressionMode(defaultCompressionMode);
+   }
+   
    map<string, string> attributes;
    SaveNameItem saveItem;
    ProblemSpecP save = p->findBlock("save");
@@ -886,8 +891,6 @@ void DataArchiver::output(const ProcessorGroup*,
    appendElement(pdElem, "variable", var->getName());
    appendElement(pdElem, "index", matlIndex);
    appendElement(pdElem, "patch", patchID);
-   if (var->getCompressionMode() != "")
-     appendElement(pdElem, "compression", var->getCompressionMode());
    pdElem.setAttribute("type", var->typeDescription()->getName().c_str());
 
    // Open the data file
