@@ -255,6 +255,7 @@ public:
   bool get_gradient(Vector &, const Point &);
   bool interpolate(Data&, const Point&) const;
   bool minmax(pair<double, double>& mm) const ;
+  virtual const SCIRun::TypeDescription* get_type_description() const;
 private:
   static Persistent* maker();
   class make_minmax_thread : public Runnable
@@ -360,6 +361,32 @@ LevelField<Data>::type_name(int n)
     return find_type_name((Data *)0);
   }
 } 
+
+
+template <class T>
+const SCIRun::TypeDescription* 
+get_type_description(LevelField<T>*)
+{
+  static SCIRun::TypeDescription* td = 0;
+  static string name("LevelField");
+  static string namesp("Uintah");
+  static string path(__FILE__);
+  if(!td){
+    const SCIRun::TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    SCIRun::TypeDescription::td_vec *subs =
+      scinew SCIRun::TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew SCIRun::TypeDescription(name, subs, path, namesp);
+  }
+  return td;
+}
+
+template <class T>
+const SCIRun::TypeDescription* 
+LevelField<T>::get_type_description() const 
+{
+  return Uintah::get_type_description((LevelField<T>*)0);
+}
 
 
 
