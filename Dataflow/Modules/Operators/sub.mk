@@ -17,6 +17,7 @@ SRCS     += \
 
 PSELIBS := \
 	Packages/Uintah/Core/Datatypes     \
+	Packages/Uintah/Core/Disclosure     \
 	Packages/Uintah/CCA/Ports          \
 	Packages/Uintah/Core/Grid          \
 	Packages/Uintah/Core/Math          \
@@ -31,7 +32,8 @@ PSELIBS := \
 	Core/Thread       \
 	Core/Datatypes    \
 	Core/Geom         \
-	Core/Geometry
+	Core/Geometry     \
+	Core/Malloc
 LIBS := $(XML_LIBRARY) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

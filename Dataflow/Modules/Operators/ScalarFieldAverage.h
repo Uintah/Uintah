@@ -7,7 +7,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/LatticeVol.h>
-#include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
 #include <string>
 #include <iostream>
 using std::string;
@@ -93,44 +92,22 @@ void ScalarFieldAverage::computeScalars(ScalarField1* scalarField1,
   typename ScalarField2::mesh_handle_type s2mh =
     scalarField2->get_typed_mesh();
  
-  if( scalarField1->get_type_name(0) != "LevelField"){
-    if( scalarField1->data_at() == Field::CELL){
-      typename ScalarField1::mesh_type::Cell::iterator v_it; s1mh->begin(v_it);
-      typename ScalarField1::mesh_type::Cell::iterator v_end; s1mh->end(v_end);
-      typename ScalarField2::mesh_type::Cell::iterator s_it; s2mh->begin(s_it);
-      for( ; v_it != v_end; ++v_it, ++s_it){
-	scalarField2->fdata()[*s_it] = op(scalarField1->fdata()[*v_it]);
-      }
-    } else {
-      typename ScalarField1::mesh_type::Node::iterator v_it; s1mh->begin(v_it);
-      typename ScalarField1::mesh_type::Node::iterator v_end; s1mh->end(v_end);
-      typename ScalarField2::mesh_type::Node::iterator s_it; s2mh->begin(s_it);
-      
-      for( ; v_it != v_end; ++v_it, ++s_it){
-	scalarField2->fdata()[*s_it] = op(scalarField1->fdata()[*v_it]);
-      }
-    }  
-  } else {
-    int max_workers = Max(Thread::numProcessors()/3, 4);
-    Semaphore* thread_sema = scinew Semaphore( "scalar Average semaphore",
-					       max_workers); 
-    typedef typename ScalarField1::value_type Data;
-    vector<ShareAssignArray3<Data> >& sdata = scalarField1->fdata();
-    vector<ShareAssignArray3<Data> >::iterator vit = sdata.begin();
-    vector<ShareAssignArray3<Data> >::iterator vit_end = sdata.end();
-    IntVector offset( (*vit).getLowIndex() );
-    for(;vit != vit_end; ++vit) {
-      thread_sema->down();
-      Thread *thrd = 
-	scinew Thread(
-		      scinew OperatorThread< Data, ScalarField2, ScalarOp >
-		      ( *vit, scalarField2, offset, op, thread_sema ),
-		      "scalar operator worker");
-      thrd->detach();
+  if( scalarField1->data_at() == Field::CELL){
+    typename ScalarField1::mesh_type::Cell::iterator v_it; s1mh->begin(v_it);
+    typename ScalarField1::mesh_type::Cell::iterator v_end; s1mh->end(v_end);
+    typename ScalarField2::mesh_type::Cell::iterator s_it; s2mh->begin(s_it);
+    for( ; v_it != v_end; ++v_it, ++s_it){
+      scalarField2->fdata()[*s_it] = op(scalarField1->fdata()[*v_it]);
     }
-    thread_sema->down(max_workers);
-    if(thread_sema) delete thread_sema;
-  }
+  } else {
+    typename ScalarField1::mesh_type::Node::iterator v_it; s1mh->begin(v_it);
+    typename ScalarField1::mesh_type::Node::iterator v_end; s1mh->end(v_end);
+    typename ScalarField2::mesh_type::Node::iterator s_it; s2mh->begin(s_it);
+    
+    for( ; v_it != v_end; ++v_it, ++s_it){
+      scalarField2->fdata()[*s_it] = op(scalarField1->fdata()[*v_it]);
+    }
+  }  
 }
  
 template<class ScalarField1, class ScalarField2>       
@@ -148,52 +125,28 @@ void ScalarFieldAverage::computeAverages(ScalarField1* scalarField1,
     scalarField2->get_typed_mesh();
   double ave = 0;
   int counter = 0;
-  if( scalarField1->get_type_name(0) != "LevelField"){
-    if( scalarField1->data_at() == Field::CELL){
-      typename ScalarField1::mesh_type::Cell::iterator v_it; s1mh->begin(v_it);
-      typename ScalarField1::mesh_type::Cell::iterator v_end; s1mh->end(v_end);
-      typename ScalarField2::mesh_type::Cell::iterator s_it; s2mh->begin(s_it);
-      for( ; v_it != v_end; ++v_it, ++s_it){
-	scalarField2->fdata()[*s_it] =
-	  (scalarField2->fdata()[*s_it] * scalarField1->fdata()[*v_it])/2.0;
-	ave = scalarField2->fdata()[*s_it];
-	++counter;
-      }
-    } else {
-      typename ScalarField1::mesh_type::Node::iterator v_it; s1mh->begin(v_it);
-      typename ScalarField1::mesh_type::Node::iterator v_end; s1mh->end(v_end);
-      typename ScalarField2::mesh_type::Node::iterator s_it; s2mh->begin(s_it);
-      
-      for( ; v_it != v_end; ++v_it, ++s_it){
-	scalarField2->fdata()[*s_it] =
-	  (scalarField2->fdata()[*s_it] * scalarField1->fdata()[*v_it])/2.0;
-	ave = scalarField2->fdata()[*s_it];
-	++counter;
-      }
-    } 
-  } else {
-    int max_workers = Max(Thread::numProcessors()/3, 4);
-    Semaphore* thread_sema = scinew Semaphore( "scalar Average semaphore",
-					       max_workers); 
-    Mutex mutex("average thread mutex");
-    typedef typename ScalarField1::value_type Data;
-    vector<ShareAssignArray3<Data> >& sdata = scalarField1->fdata();
-    vector<ShareAssignArray3<Data> >::iterator vit = sdata.begin();
-    vector<ShareAssignArray3<Data> >::iterator vit_end = sdata.end();
-    IntVector offset( (*vit).getLowIndex() );
-    for(;vit != vit_end; ++vit) {
+  if( scalarField1->data_at() == Field::CELL){
+    typename ScalarField1::mesh_type::Cell::iterator v_it; s1mh->begin(v_it);
+    typename ScalarField1::mesh_type::Cell::iterator v_end; s1mh->end(v_end);
+    typename ScalarField2::mesh_type::Cell::iterator s_it; s2mh->begin(s_it);
+    for( ; v_it != v_end; ++v_it, ++s_it){
+      scalarField2->fdata()[*s_it] =
+	(scalarField2->fdata()[*s_it] * scalarField1->fdata()[*v_it])/2.0;
+      ave = scalarField2->fdata()[*s_it];
       ++counter;
-      thread_sema->down();
-      Thread *thrd = 
-	scinew Thread(
-		      scinew AverageThread< Data, ScalarField2>
-		      ( *vit, scalarField2, offset, ave, thread_sema, &mutex ),
-		      "scalar Average worker");
-      thrd->detach();
     }
-    thread_sema->down(max_workers);
-    if(thread_sema) delete thread_sema;
-  }
+  } else {
+    typename ScalarField1::mesh_type::Node::iterator v_it; s1mh->begin(v_it);
+    typename ScalarField1::mesh_type::Node::iterator v_end; s1mh->end(v_end);
+    typename ScalarField2::mesh_type::Node::iterator s_it; s2mh->begin(s_it);
+      
+    for( ; v_it != v_end; ++v_it, ++s_it){
+      scalarField2->fdata()[*s_it] =
+	(scalarField2->fdata()[*s_it] * scalarField1->fdata()[*v_it])/2.0;
+      ave = scalarField2->fdata()[*s_it];
+      ++counter;
+    }
+  } 
 }
   
 }

@@ -10,7 +10,7 @@ SRCS     += \
 	$(SRCDIR)/ScalarFieldExtractor.cc   \
 	$(SRCDIR)/VectorFieldExtractor.cc   \
 	$(SRCDIR)/TensorFieldExtractor.cc   \
-	$(SRCDIR)/ParticleFieldExtractor.cc \
+	$(SRCDIR)/ParticleFieldExtractor.cc 
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \

@@ -138,11 +138,17 @@ void TensorFieldExtractor::execute()
 
    archiveH = handle;
    DataArchive& archive = *((*(archiveH.get_rep()))());
-
+   string endianness( archive.queryEndianness() );
+   bool need_byte_swap( endianness != SCIRun::endianness() );
   // get time, set timestep, set generation, update grid and update gui
   double time = update(); // yeah it does all that
 
   LevelP level = grid->getLevel( 0 );
+  IntVector hi, low, range;
+  level->findIndexRange(low, hi);
+  range = hi - low;
+  BBox box;
+  level->getSpatialRange(box);
   const TypeDescription* subtype = type->getSubType();
   string var(sVar.get());
   int mat = sMatNum.get();
@@ -153,10 +159,15 @@ void TensorFieldExtractor::execute()
       case TypeDescription::Matrix3:
 	{	
 	  NCVariable<Matrix3> gridVar;
-	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	  LevelField<Matrix3> *tfd =
-	    scinew LevelField<Matrix3>( mesh, Field::NODE );
-	  build_field( archive, level, var, mat, time, gridVar, tfd);
+	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
+					     range.z(), box.min(),
+					     box.max());
+	  LatticeVol<Matrix3> *tfd =
+	    scinew LatticeVol<Matrix3>( lvm, Field::NODE );
+	  // set the generation and timestep in the field
+	  build_field2( archive, level, low, var, mat, time, gridVar,
+			tfd, need_byte_swap);
+	  // send the field out to the port
 	  tfout->send(tfd);
 	  // 	DumpAllocator(default_allocator, "TensorDump.allocator");
 	  return;
@@ -172,10 +183,15 @@ void TensorFieldExtractor::execute()
       case TypeDescription::Matrix3:
 	{
 	  CCVariable<Matrix3> gridVar;
-	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	  LevelField<Matrix3> *tfd =
-	    scinew LevelField<Matrix3>( mesh, Field::CELL );
-	  build_field( archive, level, var, mat, time, gridVar, tfd);
+	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
+					     range.z(), box.min(),
+					     box.max());
+	  LatticeVol<Matrix3> *tfd =
+	    scinew LatticeVol<Matrix3>( lvm, Field::CELL );
+	  // set the generation and timestep in the field
+	  build_field2( archive, level, low, var, mat, time, gridVar,
+			tfd, need_byte_swap);
+	  // send the field out to the port
 	  tfout->send(tfd);
 	  // 	DumpAllocator(default_allocator, "TensorDump.allocator");
 	  return;

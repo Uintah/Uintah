@@ -39,17 +39,13 @@ itcl_class Uintah_Operators_ScalarOperator {
 
 	label $w.calc.l \
 	    -text "Select Operation \n All output fields are LatticeVols"
-	radiobutton $w.calc.noop \
-	    -text "No op, converts field to LatticeVol" \
-	    -variable $this-operation -value 0 \
-	    -command "$this-c needexecute"
 	radiobutton $w.calc.log -text "Natural Log" \
-		-variable $this-operation -value 1 \
+		-variable $this-operation -value 0 \
 		-command "$this-c needexecute"
 	radiobutton $w.calc.e -text "Exponential" \
-		-variable $this-operation -value 2 \
+		-variable $this-operation -value 1 \
 		-command "$this-c needexecute"
-	pack $w.calc.l $w.calc.noop $w.calc.log $w.calc.e -anchor w 
+	pack $w.calc.l $w.calc.log $w.calc.e -anchor w 
 	pack $w.calc -side left -padx 2 -pady 2 -fill y
 
     }
