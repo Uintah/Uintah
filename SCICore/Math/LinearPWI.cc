@@ -14,41 +14,36 @@
 #include <SCICore/share/share.h>
 #include <SCICore/Containers/Sort.h>
 #include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array2.h>
-
-// #include <as_default.h>
 
 namespace SCICore{
 namespace Math{
 
 using namespace SCICore::Containers;
 
-	LinearPWI::LinearPWI()
-	{
-	}
+LinearPWI::LinearPWI()
+{
+}
 
-	LinearPWI::LinearPWI(Array1<float>& pts, Array1<double>& vals) {
-		set_data(pts, vals);
-		clean_data(false);
-	}
-	
-	// takes unsorted array of points
-	bool LinearPWI::set_data(Array1<float>& pts, Array1<double>& vals){
-		if (fill_data(pts, vals) && points.size()>1){
-		       //  MSG ("LinearPWI::set_data - inside, filling was OK");
-			a.newsize(points.size(), 2);
-			for (int i=0; i<points.size()-1; i++){
-				a(i, 0)=(values[i]*points[i+1]-values[i+1]*points[i])/(points[i+1]-points[i]);
-				a(i, 1)=(values[i+1]-values[i])/(points[i+1]-points[i]);
-			}
-			return data_valid=true;
-		}
-		else
-		{
-		 //  MSG ("LinearPWI::set_data - filling data was not OK, data not valid");
-		  return data_valid=false;
-		}
-	}
+LinearPWI::LinearPWI(const Array1<double>& pts, const Array1<double>& vals) {
+  set_data(pts, vals);
+}
+
+// takes sorted array of points
+bool LinearPWI::set_data(const Array1<double>& pts, const Array1<double>& vals){
+  reset();
+  if (fill_data(pts) && points.size()>1){
+    p.resize(points.size());
+    for (int i=0; i<points.size()-1; i++){
+      p[i].a=(vals[i]*points[i+1]-vals[i+1]*points[i])/(points[i+1]-points[i]);
+      p[i].b=(vals[i+1]-vals[i])/(points[i+1]-points[i]);
+    }
+    return data_valid=true;
+  }
+  else
+    {
+      return data_valid=false;
+    }
+}
 
 } //Math
 } //SCICore
