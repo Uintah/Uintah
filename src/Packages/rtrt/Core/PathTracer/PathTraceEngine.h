@@ -97,13 +97,14 @@ namespace rtrt {
   protected:
     // Pointer to its texture
     Array2<Color> texture;
+    Array2<float> inside;
     friend class PathTraceWorker;
   public:
     TextureSphere(const Point &cen, double radius, int tex_res=16);
     ~TextureSphere() {}
     
     void writeTexture(char* basename, size_t index);
-    void writeData(FILE *outfile);
+    void writeData(FILE *outfile, FILE *outfile2);
   };
 
 } // end namespace rtrt
