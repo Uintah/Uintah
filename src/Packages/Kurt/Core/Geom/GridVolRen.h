@@ -18,15 +18,22 @@ class GridVolRen
 public:
 
   GridVolRen();
-  ~GridVolRen(){}
+  virtual ~GridVolRen(){}
   void SetColorMap( unsigned char *cmap ){
     cmap_ = cmap; }
   void SetInterp( bool interp) {interp_ = interp; }
-  void draw(const BrickGrid& bg,int slices);
-  void drawWireFrame(const BrickGrid& bg);
+  void SetControlPoint( const Point& p){ controlPoint = p; }
+  void SetX(bool b){ if(b){drawView = false;} drawX = b; }
+  void SetY(bool b){ if(b){drawView = false;} drawY = b; }
+  void SetZ(bool b){ if(b){drawView = false;} drawZ = b; }
+  void SetView(bool b){ if(b){drawX=false; drawY=false; drawZ=false;}
+                        drawView = b; }
+  virtual void draw(const BrickGrid& bg, int slices);
+  virtual void drawWireFrame(const BrickGrid& bg);
   void Reload(){reload_ = (unsigned char *)1;}
+  //  void SetDrawInfo( ){}
 
-private:
+protected:
 
   void setAlpha(const Brick& brick);
   void computeView(Ray&);
@@ -44,7 +51,11 @@ private:
   unsigned char *reload_;
   unsigned char *cmap_;
   bool interp_;
+  Point controlPoint;
+  bool drawX, drawY, drawZ, drawView;
+
+
 };
 
-#endif
 } // end namespace Kurt
+#endif

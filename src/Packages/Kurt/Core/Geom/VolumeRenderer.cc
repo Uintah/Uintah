@@ -37,6 +37,7 @@ using SCIRun::FieldHandle;
 
 VolumeRenderer::VolumeRenderer(int id) 
   : GeomObj( id ),
+    gvr_(0),
     rs_(VolumeRenderer::OVEROP),
     slices_(0),
     tex_(0),
@@ -52,17 +53,24 @@ VolumeRenderer::VolumeRenderer(int id)
 }
 
 
-VolumeRenderer::VolumeRenderer(int id, 
+VolumeRenderer::VolumeRenderer(int id, GridVolRen* gvr,
 			       FieldHandle tex,
-			       ColorMapHandle map)
+			       ColorMapHandle map,
+			       bool fixed,
+			       double min, double max)
   : GeomObj( id ),
+    gvr_(gvr),
     rs_(VolumeRenderer::OVEROP),
     slices_(0),
     tex_(tex),
     bg_(0),
     mutex("VolumeRenderer Mutex"),
     cmap(map),
+    brick_size_(128),
     slice_alpha(1.0),
+    is_fixed_(fixed),
+    min_val_(min),
+    max_val_(max),
     cmapHasChanged(true),
     di_(0),
     lighting_(0)
@@ -74,13 +82,18 @@ VolumeRenderer::VolumeRenderer(int id,
 
 VolumeRenderer::VolumeRenderer(const VolumeRenderer& copy)
   : GeomObj( copy.id ),
+    gvr_(copy.gvr_),
     rs_(copy.rs_),
     slices_(copy.slices_),
     tex_(copy.tex_),
     bg_(copy.bg_),
     mutex("VolumeRenderer Mutex"),
     cmap(copy.cmap),
+    brick_size_(copy.brick_size_),
     slice_alpha(copy.slice_alpha),
+    is_fixed_(copy.is_fixed_),
+    min_val_(copy.min_val_),
+    max_val_(copy.max_val_),
     cmapHasChanged(copy.cmapHasChanged),
     di_(copy.di_),
     lighting_(copy.lighting_)
@@ -103,11 +116,23 @@ VolumeRenderer::clone()
 void
 VolumeRenderer::buildBrickGrid()
 {
-  bg_ = new BrickGrid( tex_, 64 );
+
+  bg_ = scinew BrickGrid( tex_, brick_size_,  is_fixed_, min_val_, max_val_);
   bg_->init();
+
 }
 
-
+void
+VolumeRenderer::GetRange(double& min, double& max)
+{
+  if( bg_.get_rep() != 0){
+    pair<double, double> range;
+    bg_->get_range( range );
+    min = range.first; max = range.second;
+  } else {
+    min = min_val_; max = max_val_;
+  }
+}
 #ifdef SCI_OPENGL
 void 
 VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
@@ -150,7 +175,7 @@ VolumeRenderer::setup()
     
     if( cmapHasChanged ) {
       BuildTransferFunction();
-      gvr_.SetColorMap(TransferFunction);
+      gvr_->SetColorMap(TransferFunction);
       cmapHasChanged = false;
     }
 #endif

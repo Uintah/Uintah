@@ -30,8 +30,20 @@ class GridVolRen;
 class BrickGrid : public Datatype {
   friend class GridVolRen;
 public:
-  BrickGrid(FieldHandle tex, int bricksize);
-  virtual ~BrickGrid() { }//if(bricks_) delete bricks_; }
+  BrickGrid(FieldHandle tex, int bricksize, bool fixed,
+	    double min, double max);
+  virtual ~BrickGrid() { 
+    int i,j,k;
+    if( bricks_ ){
+      for( i = 0; i < bricks_->dim1(); i++)
+	for( j = 0; j < bricks_->dim2(); j++)
+	  for( k = 0; k < bricks_->dim3(); k++)
+	    delete (*bricks_)(i,j,k);
+    
+      delete bricks_;
+    }
+  }
+
   virtual void io(Piostream &);
 
   GridBrick*& operator()(int i, int j, int k) const
@@ -39,7 +51,7 @@ public:
   Point& get_min_point(){ return min_; }
   Point& get_max_point(){ return max_; }
   void get_bounds( BBox& bb ) { bb.extend(min_); bb.extend(max_); }
-
+  void get_range( pair<double,double>& range){ range = minmax_; }
   void init();
   
   int nx() const { return bricks_->dim1(); }
@@ -79,14 +91,63 @@ public:
 	      ix_ == it2.ix_ && iy_ == it2.iy_ && iz_ == it2.iz_ &&
 	      bg_ == it2.bg_ && view_.origin() == it2.view_.origin() &&
 	      view_.direction() == it2.view_.direction()); }
+
     bool operator!=(const iterator& it2) const
     { return (x_ != it2.x_ || y_ != it2.y_ || z_ != it2.z_ ||
 	      ix_ != it2.ix_ || iy_ != it2.iy_ || iz_ != it2.iz_ ||
 	      bg_ != it2.bg_ || view_.origin() != it2.view_.origin() ||
 	      view_.direction() != it2.view_.direction()); }
+
     GridBrick*& operator*() { return (*bg_)(ix_, iy_, iz_); }
-    iterator operator++();
-    iterator operator++(int);
+
+    iterator operator++()
+      {
+	static bool rz = false, ry = false, rx = false;
+	if( iz_ < z_) iz_++;
+	if( iz_ > z_) { iz_--; return *this;}
+	if( iz_ == z_ ) {
+	  if( !rz ) {
+	    iz_ = bg_->nz() - 1;
+	    rz = true;
+	  } else {
+	    rz = false;
+	    iz_ = ((z_ == 0) ?  bg_->nz() -1 : 0);
+	    if( iy_ < y_) iy_++;
+	    if( iy_ > y_) { iy_--; return *this; }
+	    if( iy_ == y_ ) {
+	      if( !ry ) {
+		iy_ = bg_->ny() - 1;
+		ry = true;
+	      } else {
+		iy_ = ((y_ == 0) ? bg_->ny() - 1 : 0);
+		ry = false;
+		if( ix_ < x_) ix_++;
+		if( ix_ > x_) { ix_--; return *this; }
+		if( ix_ == x_ ) {
+		  if( !rx ) {
+		    ix_ = bg_->nx() - 1;
+		    rx = true;
+		  } else {
+		    rx = false;
+		    ix_ = -1;
+		    iy_ = -1;
+		    iz_ = -1;
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+	return *this;
+      }
+    
+    iterator operator++(int)
+      {
+	BrickGrid::iterator old(*this);
+	++(*this);
+	return old;
+      }
+
     IntVector getIndex() const { return IntVector(ix_,iy_,iz_); }
   private:
     int x_, y_, z_;
@@ -100,16 +161,13 @@ public:
     
 private:
   template <class Data>
-  void fill_brick_from_lat_vol_data(LatticeVol<Data>& tex,
-				    IntVector min, IntVector max,
-				    Array3<unsigned char> *brick_data);
-  template <class Data>
     void lat_vol_init( LatticeVol<Data>& tex );
 
   template <class Data>
     void level_field_init( LevelField<Data>& tex );
 
   unsigned char SETVAL(double val);
+  bool is_fixed_;
   Point min_, max_;
   pair<double,double> minmax_;
   Array3<GridBrick*> *bricks_;
