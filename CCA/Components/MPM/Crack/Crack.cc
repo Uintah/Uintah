@@ -239,8 +239,9 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
     cfSegNodes.resize(numMPMMatls);
     cfSegNodesT.resize(numMPMMatls);
     cfSegPtsT.resize(numMPMMatls);
-    cfSegV3.resize(numMPMMatls);
+    cfSegV1.resize(numMPMMatls);
     cfSegV2.resize(numMPMMatls);
+    cfSegV3.resize(numMPMMatls);
     cfSegJ.resize(numMPMMatls);
     cfSegK.resize(numMPMMatls);
     cfSegNodesInMat.resize(numMPMMatls);
@@ -257,7 +258,6 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
       cx[m].clear();
       ce[m].clear();
       cfSegNodes[m].clear();
-      cfSegV2[m].clear();
       cmin[m]=Point(9e16,9e16,9e16);
       cmax[m]=Point(-9e16,-9e16,-9e16); 
 
@@ -265,6 +265,7 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
         // Discretize crack plane
         int nstart0=0;  // Starting node number for each crack geometry
 
+        // Discretize crack plane to build up cx and ce
         DiscretizeRectangularCracks(m,nstart0);
         DiscretizeTriangularCracks(m,nstart0);
         DiscretizeArcCracks(m,nstart0);
@@ -277,10 +278,6 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
           cmax[m]=Max(cmax[m],cx[m][i]);
         }
 
-        // Smooth crack-front and get tangential vector 
-        if(d_calFractParameters!="false" || d_doCrackPropagation!="false")
-        SmoothCrackFrontAndGetTangentialVector(m);
-
         // Get the average length of crack front segments 
         cs0[m]=0.;
         int ncfSegs=(int)cfSegNodes[m].size()/2;
@@ -290,6 +287,11 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
           cs0[m]+=(cx[m][n1]-cx[m][n2]).length();
         } 
         cs0[m]/=ncfSegs;
+
+        // Get normals, tangential normals and bi-normals
+        // at crack-front nodes
+        if(d_calFractParameters!="false"||d_doCrackPropagation!="false")   
+          CalculateCrackFrontNormals(m);
 
         #if 1  
           OutputCrackPlaneMesh(m);
@@ -1524,7 +1526,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
             Vector* cfK=new Vector[num];
 
             if(pid==i) { // Calculte J & K by proc i
-              for(int l=0; l<num; l++) { // Calculate J & K over crack-front nodes
+              for(int l=0; l<num; l++) {     
                 int idx=cfnset[m][i][l];     // crack-front node index
                 int node=cfSegNodes[m][idx]; // node
 
@@ -1568,19 +1570,11 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   }
                   x0=origin.x();  y0=origin.y();  z0=origin.z();
 
-                  // Direction-cosines of the node
-                  Vector v1,v2,v3;
-                  Vector v2T=Vector(0.,0.,0.);
+                  // Direction-cosines of local coordinates at the node 
+                  Vector v1=cfSegV1[m][idx];
+                  Vector v2=cfSegV2[m][idx];
+                  Vector v3=cfSegV3[m][idx];
                   double l1,m1,n1,l2,m2,n2,l3,m3,n3;
-                  for(int j=R; j<=L; j++) {
-                    if(segs[j]>=0) v2T+=cfSegV2[m][segs[j]];
-                  }
-                  v2=v2T/v2T.length();
-                  v3=-cfSegV3[m][idx];
-                  Vector v23=Cross(v2,v3);
-                  v1=v23/v23.length();
-                  Vector v31=Cross(v3,v1);
-                  v2=v31/v31.length();
                   l1=v1.x(); m1=v1.y(); n1=v1.z();
                   l2=v2.x(); m2=v2.y(); n2=v2.z();
                   l3=v3.x(); m3=v3.y(); n3=v3.z();
@@ -2002,8 +1996,8 @@ void Crack::PropagateCrackFrontNodes(const ProcessorGroup*,
         IntVector ni[MAX_BASIS];
         double S[MAX_BASIS];
 
-        // Step 1: Update crack front segments, discard dead segements 
-
+        /* Task 1: Update crack front segments, discard dead segments 
+        */
         // Step 1a: Detect if crack-front nodes inside materials
         cfSegNodesInMat[m].resize(cfSegNodes[m].size());
         for(int i=0; i<(int)cfSegNodes[m].size();i++) {
@@ -2096,28 +2090,36 @@ void Crack::PropagateCrackFrontNodes(const ProcessorGroup*,
 
         MPI_Barrier(mpi_crack_comm);
 
-        // Step 1c: Store crack-front nodes and J&K in temporary arraies
+        // Step 1c: Store crack-front nodes, normals and J & K
+        //          in temporary arraies
         int old_size=(int)cfSegNodes[m].size();
-        int*    cfSegNdT = new int[old_size];
-        Vector* cfSegJT  = new Vector[old_size];
-        Vector* cfSegKT  = new Vector[old_size];
-        Vector* cfSegNmT = new Vector[old_size/2];
+        int*  cfSegNodeT = new int[old_size];
+        Vector*  cfSegJT = new Vector[old_size];
+        Vector*  cfSegKT = new Vector[old_size];
+        Vector* cfSegV1T = new Vector[old_size];
+        Vector* cfSegV2T = new Vector[old_size];
+        Vector* cfSegV3T = new Vector[old_size];
+
         for(int i=0; i<old_size; i++) {
-          cfSegNdT[i]=cfSegNodes[m][i];
+          cfSegNodeT[i]=cfSegNodes[m][i];
           cfSegJT[i]=cfSegJ[m][i];
           cfSegKT[i]=cfSegK[m][i];
-          if(i<old_size/2) cfSegNmT[i]=cfSegV2[m][i];
+          cfSegV1T[i]=cfSegV1[m][i];
+          cfSegV2T[i]=cfSegV2[m][i];
+          cfSegV3T[i]=cfSegV3[m][i];
         }
         cfSegNodes[m].clear();
-        cfSegV2[m].clear();
-        cfSegK[m].clear();
         cfSegJ[m].clear();
+        cfSegK[m].clear();
+        cfSegV1[m].clear();
+        cfSegV2[m].clear();
+        cfSegV3[m].clear();
 
         // Step 1d: Collect the active crack-front segs & parameters
         for(int i=0; i<old_size/2; i++) { // Loop over crack-front segs 
           short thisSegActive=NO;
-          int nd1=cfSegNdT[2*i];
-          int nd2=cfSegNdT[2*i+1];
+          int nd1=cfSegNodeT[2*i];
+          int nd2=cfSegNodeT[2*i+1];
           if(old_size/2==1) { // for single seg problems 
             // Remain active if any of two ends and center inside
             if(cfSegNodesInMat[m][2*i] || cfSegNodesInMat[m][2*i+1] ||
@@ -2128,14 +2130,19 @@ void Crack::PropagateCrackFrontNodes(const ProcessorGroup*,
             if(cfSegNodesInMat[m][2*i] || cfSegNodesInMat[m][2*i+1])
               thisSegActive=YES;
           }
-          if(thisSegActive) { 
+          if(thisSegActive) { // Collect parameters of the node
             cfSegNodes[m].push_back(nd1);
             cfSegNodes[m].push_back(nd2); 
             cfSegJ[m].push_back(cfSegJT[2*i]);
             cfSegJ[m].push_back(cfSegJT[2*i+1]);
             cfSegK[m].push_back(cfSegKT[2*i]);
             cfSegK[m].push_back(cfSegKT[2*i+1]);
-            cfSegV2[m].push_back(cfSegNmT[i]);
+            cfSegV1[m].push_back(cfSegV1T[2*i]);
+            cfSegV1[m].push_back(cfSegV1T[2*i+1]);
+            cfSegV2[m].push_back(cfSegV2T[2*i]);
+            cfSegV2[m].push_back(cfSegV2T[2*i+1]);
+            cfSegV3[m].push_back(cfSegV3T[2*i]);
+            cfSegV3[m].push_back(cfSegV3T[2*i+1]);
           }
           else { // The segment is dead
             if(pid==0) {
@@ -2145,10 +2152,12 @@ void Crack::PropagateCrackFrontNodes(const ProcessorGroup*,
             }
           }
         } // End of loop over crack-front segs     
-        delete [] cfSegNdT;
-        delete [] cfSegNmT;
+        delete [] cfSegNodeT;
         delete [] cfSegJT;
         delete [] cfSegKT;
+        delete [] cfSegV1T;
+        delete [] cfSegV2T;
+        delete [] cfSegV3T;
 
         // If all crack-front segs dead, the material is broken.
         if(cfSegNodes[m].size()/2<=0 && pid==0) {
@@ -2157,8 +2166,8 @@ void Crack::PropagateCrackFrontNodes(const ProcessorGroup*,
          exit(1);
         }
 
-        // Step 2: Detect if crack front nodes propagate (cp) 
-        //         and propagate them virtually (da) 
+        // Task 2: Detect if crack front nodes propagate (cp) 
+        // and propagate them virtually (da) for the active nodes
         short*  cp=new  short[(int)cfSegNodes[m].size()];
         Vector* da=new Vector[(int)cfSegNodes[m].size()];
 
@@ -2177,21 +2186,13 @@ void Crack::PropagateCrackFrontNodes(const ProcessorGroup*,
               break;
             }
           }
-          //if(i>0 && node==cfSegNodes[m][i-1]) pre_idx=i-1;
 
           if(pre_idx<0) { // for the nodes not operated
-            // Direction-cosines of the node
-            Vector v1,v2,v3;
-            Vector v2T=Vector(0.,0.,0.);
-            for(int j=R; j<=L; j++) {
-              if(segs[j]>=0) v2T+=cfSegV2[m][segs[j]];    
-            }
-            v2=v2T/v2T.length();
-            v3=-cfSegV3[m][i];
-            Vector v23=Cross(v2,v3);
-            v1=v23/v23.length(); 
-            Vector v31=Cross(v3,v1);
-            v2=v31/v31.length();            
+            // Direction-cosines at the node
+            Vector v1=cfSegV1[m][i];
+            Vector v2=cfSegV2[m][i];
+            Vector v3=cfSegV3[m][i];
+
             // Coordinates transformation matrix from local to global
             Matrix3 T=Matrix3(v1.x(), v2.x(), v3.x(),
                               v1.y(), v2.y(), v3.y(),
@@ -2396,17 +2397,11 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
         // Step 1: Combine crack front nodes if they propagates 
         // a little (<10%) or in self-similar way (angle<10 degree)
         for(int i=0; i<(int)cfSegNodes[m].size(); i++) {
+           // Crack-front node and normal
            int node=cfSegNodes[m][i];
-           // crack plane normal at this node
-           int segs[2];
-           FindSegsFromNode(m,node,segs);
-           Vector v2,v2T=Vector(0.,0.,0.);
-           for(int j=0; j<=1; j++) {
-             if(segs[j]>=0) v2T+=cfSegV2[m][segs[j]];
-           }
-           v2=v2T/v2T.length();
+           Vector v2=cfSegV2[m][i];
 
-           // crack propagation increment(dis) and direction(vp) 
+           // Crack propagation increment(dis) and direction(vp) 
            double dis=(cfSegPtsT[m][i]-cx[m][node]).length();
            Vector vp=TwoPtsDirCos(cx[m][node],cfSegPtsT[m][i]);
            // Crack propa angle(in degree) measured from crack plane
@@ -2684,8 +2679,9 @@ void Crack::MoveCracks(const ProcessorGroup*,
       if((int)ce[m].size()==0) // for materials with no cracks
         continue; 
 
-      /* Get the necessary information
+      /* Task 1: Move crack nodes (cx)
       */
+      //Get the necessary information
       MPMMaterial* mpm_matl=d_sharedState->getMPMMaterial(m);
       int dwi=mpm_matl->getDWIndex();
       ParticleSubset* pset=old_dw->getParticleSubset(dwi,patch);
@@ -2760,7 +2756,7 @@ void Crack::MoveCracks(const ProcessorGroup*,
           // Broadcast the updated position to all ranks 
           MPI_Bcast(cptmp,numNodes,MPI_POINT,i,mpi_crack_comm);
        
-          // Save the updated potion back  
+          // Update cx  
           for(int j=0; j<numNodes; j++) {
             int idx=cnset[m][i][j];
             cx[m][idx]=cptmp[j];
@@ -2780,6 +2776,24 @@ void Crack::MoveCracks(const ProcessorGroup*,
           exit(1);
         }
       }  
+
+      MPI_Barrier(mpi_crack_comm);
+
+      /* Task 2: Update crack extent
+      */
+      cmin[m]=Point(9.e16,9.e16,9.e16);
+      cmax[m]=Point(-9.e16,-9.e16,-9.e16);
+      for(int i=0; i<(int)cx[m].size(); i++) {
+        cmin[m]=Min(cmin[m],cx[m][i]);
+        cmax[m]=Max(cmax[m],cx[m][i]);
+      } // End of loop over crack points
+
+      /* Task 3: Calculate normals, tangential normals and binormals
+                 at crack-front nodes of crack plane
+      */
+      if(d_calFractParameters!="false"||d_doCrackPropagation!="false") 
+        CalculateCrackFrontNormals(m);
+
     } // End of loop over matls
   }
 }
@@ -2831,70 +2845,6 @@ void Crack::FindIntersectionLineAndGridBoundary(const Point& p1, Point& p2)
     y2=y1+(z2-z1)/n*m;
   }
   p2=Point(x2,y2,z2);
-}
-
-void Crack::addComputesAndRequiresUpdateCrackExtentAndNormals(Task* /*t*/,
-                                const PatchSet* /*patches*/,
-                                const MaterialSet* /*matls*/) const
-{
-// Currently do nothing
-}
-
-void Crack::UpdateCrackExtentAndNormals(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* /*matls*/,
-                      DataWarehouse* /*old_dw*/,
-                      DataWarehouse* /*new_dw*/)
-{
-  for(int p=0; p<patches->size(); p++){
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
-    for(int m=0; m<numMPMMatls; m++) {
-      // Update crack extent for this material  
-      cmin[m]=Point(9.e16,9.e16,9.e16);
-      cmax[m]=Point(-9.e16,-9.e16,-9.e16);
-      for(int i=0; i<(int)cx[m].size(); i++) {
-        cmin[m]=Min(cmin[m],cx[m][i]);
-        cmax[m]=Max(cmax[m],cx[m][i]);
-      } // End of loop over crack points 
-
-      // Update the outward normals for crack front segments
-      int ncfSegs=(int)cfSegNodes[m].size()/2;
-      cfSegV2[m].resize(ncfSegs);
-      for(int i=0; i<ncfSegs; i++) {
-        int elemID=-1;
-        int n1=cfSegNodes[m][2*i];
-        int n2=cfSegNodes[m][2*i+1];
-        // Find the crack element ID of the front segment
-        Vector ceNorm;
-        for(int j=(int)ce[m].size()-1; j>=0; j--) { // from the last elem
-          int numDupNodes=0;
-          int n3=ce[m][j].x();
-          int n4=ce[m][j].y();
-          int n5=ce[m][j].z();
-          if(n1==n3 || n1==n4 || n1==n5) numDupNodes++;
-          if(n2==n3 || n2==n4 || n2==n5) numDupNodes++;
-          if(numDupNodes==2) {
-            elemID=j;
-            ceNorm=TriangleNormal(cx[m][n3],cx[m][n4],cx[m][n5]);
-            break;
-          }
-        } // End of loop over j
-        if(elemID>=0) {
-          cfSegV2[m][i]=ceNorm;
-        } 
-        else {
-          cout << " Failure to find cfSegNorm of (mat " << m 
-               << ", seg " << i << "). Program terminated." << endl;
-          exit(1);
-        }
-      } // End of loop over ncfSegs 
-
-      // Smooth crack-front and get tangential vectors
-      if(d_calFractParameters!="false" || d_doCrackPropagation!="false")
-      SmoothCrackFrontAndGetTangentialVector(m);
-
-    } // End of loop over matls
-  } // End of loop patches
 }
 
 // *** PRIVATE METHODS BELOW ***
@@ -3663,7 +3613,7 @@ void Crack::DiscretizeRectangularCracks(const int& m,int& nstart0)
   int k,i,j,ni,nj,n1,n2,n3;
   int nstart1,nstart2,nstart3;
   Point p1,p2,p3,p4,pt;
-  Vector norm;
+  //TRYVector norm;
 
   for(k=0; k<(int)rectangles[m].size(); k++) {  // Loop over quadrilaterals
     // Resolutions for the quadrilateral
@@ -3759,8 +3709,6 @@ void Crack::DiscretizeRectangularCracks(const int& m,int& nstart0)
             if(TwoLinesDuplicate(pt1,pt2,cx[m][sn],cx[m][en])) {
               cfSegNodes[m].push_back(sn);
               cfSegNodes[m].push_back(en);
-              norm=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
-              cfSegV2[m].push_back(norm);
             }
           }
         } // End of loop over i
@@ -3775,7 +3723,7 @@ void Crack::DiscretizeTriangularCracks(const int&m, int& nstart0)
   int k,i,j;
   int nstart1,nstart2,n1,n2,n3;
   Point p1,p2,p3,pt;
-  Vector norm;
+  //TRYVector norm;
 
   for(k=0; k<(int)triangles[m].size(); k++) {  // Loop over all triangles
     // Three vertices of the triangle
@@ -3858,8 +3806,6 @@ void Crack::DiscretizeTriangularCracks(const int&m, int& nstart0)
             if(TwoLinesDuplicate(pt1,pt2,cx[m][sn],cx[m][en])) {
               cfSegNodes[m].push_back(sn);
               cfSegNodes[m].push_back(en);
-              norm=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
-              cfSegV2[m].push_back(norm);
             }
           }
         } // End of loop over i
@@ -3949,8 +3895,6 @@ void Crack::DiscretizeArcCracks(const int& m, int& nstart0)
       if(arcCrkFrtSegID[m][k]==9999 || arcCrkFrtSegID[m][k]==j) {
         cfSegNodes[m].push_back(n2);
         cfSegNodes[m].push_back(n3);
-        Vector thisSegNorm=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
-        cfSegV2[m].push_back(thisSegNorm);
       }
     }
     nstart0+=arcNCells[m][k]+2;
@@ -4004,8 +3948,6 @@ void Crack::DiscretizeEllipticCracks(const int& m, int& nstart0)
       if(ellipseCrkFrtSegID[m][k]==9999 || ellipseCrkFrtSegID[m][k]==j) {
         cfSegNodes[m].push_back(n2);
         cfSegNodes[m].push_back(n3);
-        Vector thisSegNorm=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
-        cfSegV2[m].push_back(thisSegNorm);
       }
     }
     nstart0+=ellipseNCells[m][k]+1;
@@ -4062,8 +4004,6 @@ void Crack::DiscretizePartialEllipticCracks(const int& m, int& nstart0)
       if(pellipseCrkFrtSegID[m][k]==9999 || pellipseCrkFrtSegID[m][k]==j) {
         cfSegNodes[m].push_back(n2);
         cfSegNodes[m].push_back(n3);
-        Vector thisSegNorm=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
-        cfSegV2[m].push_back(thisSegNorm);
       }
     }
     nstart0+=pellipseNCells[m][k]+2;
@@ -4098,9 +4038,10 @@ void Crack::OutputCrackPlaneMesh(const int& m)
     cout << "  Crack front elems (" << (int)cfSegNodes[m].size()/2
          << " elems in total)" << endl;
     for(int i=0; i<(int)cfSegNodes[m].size();i++) {
-      cout << "     Seg " << i/2 << ": "
+      cout << "     Seg " << i/2 << ": node "
            << cfSegNodes[m][i] << cx[m][cfSegNodes[m][i]] 
-           << ", V2: " << cfSegV2[m][i/2] 
+           << ", V1: " << cfSegV1[m][i]
+           << ", V2: " << cfSegV2[m][i] 
            << ", V3: " << cfSegV3[m][i] << endl;
     }
 
@@ -4112,15 +4053,17 @@ void Crack::OutputCrackPlaneMesh(const int& m)
   }
 }
  
-short Crack::SmoothCrackFrontAndGetTangentialVector(const int& mm)
+short Crack::CalculateCrackFrontNormals(const int& mm)
 { 
-  short flag=1;       // Smooth successfully
-  double ep=1.e-10;   // Tolerance
-  enum {R=0,L};       // Right and left
-
   int i=-1,l=-1,k=-1;
-
   int cfNodeSize=(int)cfSegNodes[mm].size();
+
+  /* Task 1: Calculate tangential normals at crack-front nodes
+  */
+  short  flag=1;       // Smooth successfully
+  double ep=1.e-6;     // Tolerance
+  enum   {R=0,L};      // Right and left
+
   cfSegV3[mm].clear();
   cfSegV3[mm].resize(cfNodeSize);
 
@@ -4132,7 +4075,7 @@ short Crack::SmoothCrackFrontAndGetTangentialVector(const int& mm)
   vector<int>    idx;  
 
   for(k=0; k<cfNodeSize;k++) {
-    // Step 1: Collect crack points for current sub-crack
+    // Step a: Collect crack points for current sub-crack
     int node=cfSegNodes[mm][k];
     int segs[2];
     FindSegsFromNode(mm,node,segs);
@@ -4175,7 +4118,7 @@ short Crack::SmoothCrackFrontAndGetTangentialVector(const int& mm)
       if(k<max_idx) continue; // Collect next point 
     } 
 
-    // Step 2: Define how to smooth the sub-crack
+    // Step b: Define how to smooth the sub-crack
     int n=numSegs+1;          // number of points (>=2)
     int m=(int)(numSegs/2)+2; // number of intervals (>=2)     
     int n1=7*m-3;
@@ -4216,7 +4159,7 @@ short Crack::SmoothCrackFrontAndGetTangentialVector(const int& mm)
       }
     }
 
-    // Step 3: Smooth the sub-crack points
+    // Step c: Smooth the sub-crack points
     if(CubicSpline(n,m,n1,S,X,s,j,ex,ep) &&
        CubicSpline(n,m,n1,S,Y,s,j,ey,ep) &&
        CubicSpline(n,m,n1,S,Z,s,j,ez,ep)) {// Smooth successfully
@@ -4269,19 +4212,82 @@ short Crack::SmoothCrackFrontAndGetTangentialVector(const int& mm)
     delete [] Y;
     delete [] Z;
 
-    // Step 4: Store tangential vectors and modify cx
+    // Step d: Store tangential vectors and modify cx
     for(i=min_idx;i<=max_idx;i++) { // Loop over 
       int ki=idx[i]; 
       int nd=cfSegNodes[mm][i]; 
       cx[mm][nd]=pts[ki];
-      cfSegV3[mm][i]=V3[ki]/V3[ki].length();
+      cfSegV3[mm][i]=-V3[ki]/V3[ki].length();
     }
     pts.clear();
     idx.clear();
     dis.clear();
     V3.clear();
-
   } // End of loop over k
+
+  /* Task 2: Calculate normals of crack plane at crack-front nodes
+  */
+  cfSegV2[mm].clear();
+  cfSegV2[mm].resize(cfNodeSize);
+  for(k=0; k<cfNodeSize; k++) {
+    int node=cfSegNodes[mm][k];
+    int pre_idx=-1;
+    for(int ij=0; ij<k; ij++) {
+      if(node==cfSegNodes[mm][ij]) {
+        pre_idx=ij;
+        break;
+      }
+    }
+
+    if(pre_idx<0) {// Not operated
+      Vector v2T=Vector(0.,0.,0.);
+      double totalArea=0.;
+      for(i=0; i<(int)ce[mm].size(); i++) { //Loop over crack elems 
+        // Three nodes of the elems
+        int n1=ce[mm][i].x();
+        int n2=ce[mm][i].y();
+        int n3=ce[mm][i].z();
+        if(node==n1 || node==n2 || node==n3) {
+          // Three points of the triangle
+          Point p1=cx[mm][n1];
+          Point p2=cx[mm][n2];
+          Point p3=cx[mm][n3];
+          // Lengths of sides of the triangle 
+          double a=(p1-p2).length();
+          double b=(p1-p3).length();
+          double c=(p2-p3).length();
+          // Half of perimeter of the triangle 
+          double s=(a+b+c)/2.;
+          // Area of the triangle
+          double thisArea=sqrt(s*(s-a)*(s-b)*(s-c));
+          // Normal of the triangle
+          Vector thisNorm=TriangleNormal(p1,p2,p3);
+          // Area-weighted normal vector
+          v2T+=thisNorm*thisArea;
+          // Total area of crack plane related to the node
+          totalArea+=thisArea;
+        }
+      } // End of loop over crack elems
+      v2T/=totalArea;
+      cfSegV2[mm][k]=v2T/v2T.length();
+    }
+    else { // Calculated
+      cfSegV2[mm][k]=cfSegV2[mm][pre_idx];
+    }
+  } // End of loop over crack-front nodes
+
+  /* Task 3: Calculate bi-normals of crack plane at crack-front nodes
+             and adjust crack-plane normals to make sure the three axes 
+             are perpendicular to each other.
+  */
+  cfSegV1[mm].clear();
+  cfSegV1[mm].resize(cfNodeSize);
+  for(k=0; k<cfNodeSize; k++) {
+    Vector V1=Cross(cfSegV2[mm][k],cfSegV3[mm][k]);
+    cfSegV1[mm][k]=V1/V1.length();
+    Vector V2=Cross(cfSegV3[mm][k],cfSegV1[mm][k]);
+    cfSegV2[mm][k]=V2/V2.length();
+  }
 
   return flag;
 }
