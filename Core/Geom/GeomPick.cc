@@ -28,6 +28,7 @@
  */
 
 #include <Core/Geom/GeomPick.h>
+#include <Core/GeomInterface/Pickable.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::ostream;

@@ -32,7 +32,6 @@
 #define SCI_Geom_Pick_h 1
 
 #include <Core/Geom/GeomContainer.h>
-#include <Core/GeomInterface/Pickable.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geometry/Vector.h>
 #include <vector>
@@ -44,7 +43,9 @@ using std::vector;
 class BaseWidget;
 class MessageBase;
 class ViewWindow;
-
+class ModulePickable;
+class WidgetPickable;
+class BState;
 
 class SCICORESHARE GeomPick : public GeomContainer {
 private:
