@@ -33,7 +33,7 @@
 #include <Core/Util/NotFinished.h>
 
 #include <iostream>
-
+#define SMALL_NUM 1.0e-100
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
@@ -711,4 +711,80 @@ double MPMMaterial::getExplosivePressure() const
 double MPMMaterial::getInitialPressure() const
 {
   return d_initialPressure;
+}
+/* --------------------------------------------------------------------- 
+ Function~  MPMMaterial::initializeCells--
+ Notes:  This function initializeCCVariables.  Reasonable values for 
+ CC Variables need to be present in all the cells and evolve, even though
+ there is no mass.  This is essentially the same routine that is in
+ ICEMaterial.cc
+_____________________________________________________________________*/
+void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
+                                  CCVariable<double>& rho_CC,
+                                  CCVariable<double>& temp,
+                                  CCVariable<Vector>& vel_CC,
+                                  int numMatls,
+                                  const Patch* patch)
+{ 
+  // Zero the arrays so they don't get wacky values
+  vel_CC.initialize(Vector(0.,0.,0.));
+  rho_micro.initialize(0.);
+  rho_CC.initialize(0.);
+  temp.initialize(0.);
+  
+  for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
+   GeometryPiece* piece = d_geom_objs[obj]->getPiece();
+   Box b1 = piece->getBoundingBox();
+   Box b2 = patch->getBox();
+   Box b = b1.intersect(b2);
+   
+   if(b.degenerate())
+      cerr << "b.degenerate" << endl;
+
+   IntVector ppc = d_geom_objs[obj]->getNumParticlesPerCell();
+   Vector dxpp    = patch->dCell()/ppc;
+   Vector dcorner = dxpp*0.5;
+   double totalppc = ppc.x()*ppc.y()*ppc.z();
+
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+     Point lower = patch->nodePosition(*iter) + dcorner;
+     int count = 0;
+     for(int ix=0;ix < ppc.x(); ix++){
+       for(int iy=0;iy < ppc.y(); iy++){
+        for(int iz=0;iz < ppc.z(); iz++){
+          IntVector idx(ix, iy, iz);
+          Point p = lower + dxpp*idx;
+          if(piece->inside(p))
+            count++;
+        }
+       }
+     }
+  //__________________________________
+  // For single materials with more than one object 
+      if(numMatls == 1)  {
+        if ( count > 0  && obj == 0) {
+         // vol_frac_CC[*iter]= 1.0;
+          vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
+          rho_micro[*iter]  = getInitialDensity();
+          rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM;
+          temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+        }
+
+        if (count > 0 && obj > 0) {
+         // vol_frac_CC[*iter]= 1.0;
+          vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
+          rho_micro[*iter]  = getInitialDensity();
+          rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM;
+          temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+        } 
+      }   
+      if (numMatls > 1 ) {
+        double vol_frac_CC= count/totalppc;       
+        vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
+        rho_micro[*iter]  = getInitialDensity();
+        rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC +SMALL_NUM;
+        temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+      }    
+    }  // Loop over domain
+  }  // Loop over geom_objects
 }
