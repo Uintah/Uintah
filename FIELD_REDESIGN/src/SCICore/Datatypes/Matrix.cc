@@ -104,11 +104,8 @@ void Mult(ColumnMatrix& result, const Matrix& mat, const ColumnMatrix& v)
 
 //
 // $Log$
-// Revision 1.4.2.2  2000/10/26 10:04:19  moulding
+// Revision 1.4.2.3  2000/10/26 17:30:45  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.4.2.1  2000/09/28 03:13:31  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.5  2000/07/12 15:45:08  dmw
 // Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
