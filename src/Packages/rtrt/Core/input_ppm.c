@@ -57,7 +57,7 @@ void FatalError( char *msg )
 {
   char buf[512];  
   sprintf( buf, "Fatal Error: %s\n", msg );
-  fprintf( stderr, buf );
+  fprintf( stderr, "%s\n", buf );
   exit(-1);
 }
 
@@ -83,7 +83,7 @@ void Warning( char *msg )
 texture *ReadPPMTexture( char *infilename )
 {
   FILE *infile;
-  char string[256], buf[80];
+  char string[256], buf[1000];
   int i, j, count=0;
   int img_max;
   long img_size;
@@ -97,7 +97,7 @@ texture *ReadPPMTexture( char *infilename )
     
   /* open file containing texture */
   if ((infile = fopen(infilename, "rb")) == NULL) {
-    sprintf("LIBGFX: Can't open file '%s'!", infilename);
+    sprintf(buf, "LIBGFX: Can't open file '%s'!", infilename);
     FatalError( buf );
   }
   
@@ -106,7 +106,7 @@ texture *ReadPPMTexture( char *infilename )
   mode = string[1]-'0';
   if ((!IsValidMode(mode)) || (string[0] != 'P' && string[0] != 'p'))
     {
-      sprintf("LIBGFX: Invalid PPM format specification in '%s'!", 
+      sprintf(buf, "LIBGFX: Invalid PPM format specification in '%s'!", 
 	      infilename);
       FatalError(buf);
     }
