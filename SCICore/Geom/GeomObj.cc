@@ -15,6 +15,10 @@
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Geometry/Vector.h>
 
+#include <iostream>
+using std::cerr;
+using std::endl;
+
 namespace SCICore {
 namespace GeomSpace {
 
@@ -30,6 +34,11 @@ GeomObj::GeomObj(const GeomObj&)
 
 GeomObj::~GeomObj()
 {
+}
+
+void GeomObj::get_triangles( Array1<float> &)
+{
+  cerr << "GeomObj::get_triangles - no triangles" << endl;
 }
 
 void GeomObj::reset_bbox()
@@ -55,6 +64,13 @@ void Pio( Piostream & stream, GeomObj *& obj )
 
 //
 // $Log$
+// Revision 1.6  2000/06/06 16:01:45  dahart
+// - Added get_triangles() to several classes for serializing triangles to
+// send them over a network connection.  This is a short term (hack)
+// solution meant for now to allow network transport of the geometry that
+// Yarden's modules produce.  Yarden has promised to work on a more
+// general solution to network serialization of SCIRun geometry objects. ;)
+//
 // Revision 1.5  2000/01/03 20:12:36  kuzimmer
 //  Forgot to check in these files for picking spheres
 //

@@ -15,6 +15,10 @@
 #include <SCICore/Geom/GeomContainer.h>
 #include <SCICore/Containers/String.h>
 
+#include <iostream>
+using std::cerr;
+using std::endl;
+
 namespace SCICore {
 namespace GeomSpace {
 
@@ -34,6 +38,12 @@ GeomContainer::~GeomContainer()
 {
     if(child)
 	delete child;
+}
+
+void GeomContainer::get_triangles( Array1<float> &v)
+{
+  if (child)
+    child->get_triangles(v);
 }
 
 void GeomContainer::get_bounds(BBox& bbox)
@@ -56,6 +66,13 @@ void GeomContainer::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.5  2000/06/06 16:01:43  dahart
+// - Added get_triangles() to several classes for serializing triangles to
+// send them over a network connection.  This is a short term (hack)
+// solution meant for now to allow network transport of the geometry that
+// Yarden's modules produce.  Yarden has promised to work on a more
+// general solution to network serialization of SCIRun geometry objects. ;)
+//
 // Revision 1.4  1999/08/23 07:06:33  sparker
 // Fix IRIX build
 //
