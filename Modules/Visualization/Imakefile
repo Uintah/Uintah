@@ -14,14 +14,14 @@ OPENGLOBJS =
 OPENGLSRCS = 
 #endif
 
-OBJS = BitVisualize.o  BoxClipSField.o  CuttingPlane.o  GenAxes.o  \
-	GenColormap.o  GenFieldEdges.o  \
+OBJS = BitVisualize.o  BoxClipSField.o  CuttingPlane.o FastRender.o    \
+	GenAxes.o GenColormap.o  GenFieldEdges.o  \
 	Hedgehog.o  IsoMask.o  IsoSurface.o IsoSurfaceSP.o  LevoyVis.o  \
 	OctIsoSurface.o     \
 	RescaleColormap.o  Streamline.o  VectorSeg.o  VolVis.o   \
 	WidgetTest.o
-SRCS = BitVisualize.cc BoxClipSField.cc CuttingPlane.cc GenAxes.cc \
-	GenColormap.cc GenFieldEdges.cc \
+SRCS = BitVisualize.cc BoxClipSField.cc CuttingPlane.cc FastRender.cc    \
+	GenAxes.cc GenColormap.cc GenFieldEdges.cc \
 	Hedgehog.cc IsoMask.o  IsoSurface.cc IsoSurfaceSP.cc LevoyVis.cc \
 	 OctIsoSurface.cc    \
 	RescaleColormap.cc Streamline.cc VectorSeg.cc  VolVis.cc \
