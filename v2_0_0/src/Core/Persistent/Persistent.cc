@@ -64,16 +64,18 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
 				   Persistent* (*maker)())
   :  type(typeName), parent(parentName), maker(maker)
 {
+  Piostream::MapStringPersistentTypeID *localTable = 
+    scinew Piostream::MapStringPersistentTypeID;
 #if DEBUG
   cerr << "PersistentTypeID constructor: " << typeName << " " << parentName << ", maker: " << maker << "\n";
 #endif
   persistentTypeIDMutex.lock();
   if (!table) {
-    table = scinew Piostream::MapStringPersistentTypeID;
+    table = localTable;
 #if DEBUG
     cerr << "table " << &table << ", pointer is " << table << "\n";
 #endif
-  }
+  } else delete localTable;
   
   Piostream::MapStringPersistentTypeID::iterator dummy;
  
