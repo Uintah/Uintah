@@ -1,0 +1,5 @@
+Changes since 6/23/00
+
+
+
+- removed path dependencies on PGPLOT_DIR from all main2.c and overides.c 
