@@ -78,13 +78,17 @@ c      if (zminus) kst = kst + 1
                   avdenlow = 0.5D0*(den(i-1,j,k)+den(i-2,j,k))
 c                  avden = 1.0
 c                  avdenlow = 1.0
-                  UU(I,J,K) = (-delta_t*uvwout*(avden*old_uu(i,j,k)-
+                  UU(I,J,K) = (-delta_t*old_uu(i-1,j,k)*
+c                  UU(I,J,K) = (-delta_t*uvwout*
+     $                        (avden*old_uu(i,j,k)-
      $                         avdenlow*old_uu(i-1,j,k))/(dxpwu(i)) + 
      $                         avden*old_uu(i,j,k))/avden
                   flowout = flowout+ avden*
      $                 uu(i,j,k)*sns(j)*stb(k)
                   UU(I+1,J,K) = uu(i,j,k)
-                 ff(i,j,k)=(-delta_t*uvwout*(den(i,j,k)*old_ff(i,j,k)-
+                 ff(i,j,k)=(-delta_t*old_uu(i-1,j,k)*
+c                 ff(i,j,k)=(-delta_t*uvwout*
+     $                       (den(i,j,k)*old_ff(i,j,k)-
      $                        den(i-1,j,k)*old_ff(i-1,j,k))/(dxpw(i))+ 
      $                         den(i,j,k)*old_ff(i,j,k))/den(i,j,k)
                   if (ff(i,j,k) .lt. 0.0D0) then 
@@ -102,9 +106,15 @@ c                  avdenlow = 1.0
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
                   avden = 0.5D0*(den(i,j,k)+den(i,j-1,k))
                   avdenlow = 0.5D0*(den(i-1,j,k)+den(i-1,j-1,k))
-                  VV(I,J,K) = (-delta_t*uvwout*(avden*old_vv(i,j,k)-
+#if 0
+                  VV(I,J,K) = (-delta_t*old_uu(i-1,j,k)*
+c                  VV(I,J,K) = (-delta_t*uvwout*
+     $                        (avden*old_vv(i,j,k)-
      $                         avdenlow*old_vv(i-1,j,k))/(dxpw(i)) + 
      $                         avden*old_vv(i,j,k))/avden
+#else
+                  vv(i,j,k) = vv(i-1,j,k)
+#endif
                endif
             end do
          end do
@@ -115,9 +125,15 @@ c                  avdenlow = 1.0
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
                   avden = 0.5D0*(den(i,j,k)+den(i,j,k-1))
                   avdenlow = 0.5D0*(den(i-1,j,k)+den(i-1,j,k-1))
-                  WW(I,J,K) = (-delta_t*uvwout*(avden*old_ww(i,j,k)-
+#if 0
+                  WW(I,J,K) = (-delta_t*old_uu(i-1,j,k)*
+c                  WW(I,J,K) = (-delta_t*uvwout*
+     $                        (avden*old_ww(i,j,k)-
      $                         avdenlow*old_ww(i-1,j,k))/(dxpw(i)) + 
      $                         avden*old_ww(i,j,k))/avden
+#else
+                  ww(i,j,k) = ww(i-1,j,k)
+#endif
                endif
             end do
          end do

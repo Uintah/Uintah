@@ -49,7 +49,7 @@ Integrator::problemSetup(const ProblemSpecP& params)
   // BetaPDFShape can be assumed to be a univariate PDF, higher
   // dim beta pdf can be called multivariateBetaPDF
   int dimPDF = pdfMixModel->getNumMixStatVars();
-  if (pdfMixModel->getPDFShape() == "BetaPDFShape") 
+  if (pdfMixModel->getPDFShape() == "Beta") 
     d_mixingPDF = new BetaPDFShape(dimPDF);
   else
     throw InvalidValue("PDF shape not implemented "
@@ -192,10 +192,12 @@ Integrator::integrate(int* tableKeyIndex)
   resultStateVars.convertVecToStream(resultStateSpaceVars, d_lfavre, 
                pdfMixModel->getNumMixVars(), pdfMixModel->getNumRxnVars(),
 	       meanSpaceVars.d_lsoot);
+#if 0
   cout << "Integrator::h = "<<d_meanValues[0]<<endl;
   cout << "Integrator::f = "<<d_meanValues[1]<<endl;
   cout << "Integrator::gf = "<<d_meanValues[2]<<endl;
   resultStateVars.print(cout);
+#endif
   return resultStateVars;
 
 }

@@ -8,7 +8,7 @@ CLASS
    NonlinearSolver
    
    Class ExplicitSolver is a subclass of NonlinearSolver
-   which implements the Fixed Point Picard iteration.[Ref Kumar's thesis]
+   which implements the Forward Euler/RK2/ RK3 methods
 
 GENERAL INFORMATION
    ExplicitSolver.h - declaration of the class

@@ -67,6 +67,7 @@ C$DIR SCALAR
                IF ((PCELL(IEND+1,J,K).NE.WALL .AND.
      &              PCELL(IEND,J,K).NE.WALL).AND.xplus) then
                   AP(IEND,J,K) = AP(IEND,J,K)+AE(IEND,J,K)
+c                  AP(IEND,J,K) = AP(IEND,J,K)-AE(IEND,J,K)
                   AE(IEND,J,K) = ZERO
 #ifdef ARCHES_BC_DEBUG
                   i = iend
@@ -103,6 +104,7 @@ C$DIR SCALAR
      &              PCELL(I,JEND,K).NE.WALL).AND.
      $              yplus) THEN
                   AP(I,JEND,K) = AP(I,JEND,K)+AN(I,JEND,K)
+c                  AP(I,JEND,K) = AP(I,JEND,K)-AN(I,JEND,K)
                   AN(I,JEND,K) = ZERO
 #ifdef ARCHES_BC_DEBUG
                   j = jend
@@ -116,6 +118,7 @@ C$DIR SCALAR
      &              PCELL(I,JST,K).NE.WALL).AND.
      $              yminus) THEN
                   AP(I,JST,K) = AP(I,JST,K)+AS(I,JST,K)
+c                  AP(I,JST,K) = AP(I,JST,K)-AS(I,JST,K)
                   AS(I,JST,K) = ZERO
 #ifdef ARCHES_BC_DEBUG
                   j = jst
@@ -140,6 +143,7 @@ C$DIR SCALAR
      &              PCELL(I,J,KEND).NE.WALL).AND.
      $              zplus)THEN
                   AP(I,J,KEND) = AP(I,J,KEND)+AT(I,J,KEND)
+c                  AP(I,J,KEND) = AP(I,J,KEND)-AT(I,J,KEND)
                   AT(I,J,KEND) = ZERO
 #ifdef ARCHES_BC_DEBUG
                   k = kend
@@ -153,6 +157,7 @@ C$DIR SCALAR
      &              PCELL(I,J,KST).NE.WALL).AND.
      $              zminus) THEN
                   AP(I,J,KST) = AP(I,J,KST)+AB(I,J,KST)
+c                  AP(I,J,KST) = AP(I,J,KST)-AB(I,J,KST)
                   AB(I,J,KST) = ZERO
 #ifdef ARCHES_BC_DEBUG
                   k = kst
