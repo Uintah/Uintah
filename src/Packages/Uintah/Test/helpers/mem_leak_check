@@ -5,15 +5,14 @@ MALLOC_STATS=$2
 COMPARISON_MALLOC_STATS=$3
 TMPDIR=$4
 
-if [ ! -f $MALLOC_STATS* ]; then
-    echo "No malloc_stats output found.  Can't do memory leak test."
-    exit 5
-fi
-
 if [ ! -f $MALLOC_STATS ]; then
-    # the malloc_stats are in seperate files for each process id
+    # the malloc_stats are in separate files for each process id
     # merge them
     cat $MALLOC_STATS.* > $MALLOC_STATS
+    if [ `cat $MALLOC_STATS` = "" ]; then
+        echo "No malloc_stats output found.  Can't do memory leak test."
+        exit 5
+    fi
 fi
 
 error=0
