@@ -8,6 +8,7 @@ static char *id="@(#) $Id$";
 
 using std::cerr;
 using std::endl;
+using std::string;
 
 namespace Uintah {
 namespace Interface {
@@ -233,6 +234,49 @@ ProblemSpecP ProblemSpec::get(const std::string& name, std::string &value)
 
 }
 
+ProblemSpecP ProblemSpec::get(const std::string& name, 
+			      SCICore::Geometry::Vector &value)
+{
+
+  std::string string_value;
+  ProblemSpecP ps = this;
+  DOM_Node found_node = findNode(name, this->d_node);
+  if (found_node.isNull()) {
+    cerr << "Didn't find the tag . ." << endl;
+    cerr << "Setting to Null . . " << endl;
+    ps = 0;
+    return ps;
+  }
+  else {
+    for (DOM_Node child = found_node.getFirstChild(); child != 0;
+	 child = child.getNextSibling()) {
+      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
+	DOMString val = child.getNodeValue();
+	char *s = val.transcode();
+	string_value = std::string(s);
+	delete[] s;
+	// Parse out the [num,num,num]
+	// Now pull apart the string_value
+	std::string::size_type i1 = string_value.find("[");
+	std::string::size_type i2 = string_value.find_first_of(",");
+	std::string::size_type i3 = string_value.find_last_of(",");
+	std::string::size_type i4 = string_value.find("]");
+	
+	std::string x_val(string_value,i1+1,i2-i1-1);
+	std::string y_val(string_value,i1+1,i3-i2-1);
+	std::string z_val(string_value,i1+1,i4-i3-1);
+
+	value.x(atof(x_val.c_str()));
+	value.y(atof(y_val.c_str()));
+	value.z(atof(z_val.c_str()));	
+      }
+    }
+  }
+          
+  return ps;
+
+}
+
 void ProblemSpec::require(const std::string& name, double& value)
 {
 
@@ -272,6 +316,19 @@ void ProblemSpec::require(const std::string& name, std::string& value)
  
 }
 
+void ProblemSpec::require(const std::string& name, 
+			      SCICore::Geometry::Vector  &value)
+{
+
+  // Check if the prob_spec is NULL
+
+ if (! this->get(name,value))
+    cerr << "Throw an exception . . " << endl;
+
+
+}
+
+
 
 const TypeDescription* ProblemSpec::getTypeDescription()
 {
@@ -284,6 +341,9 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.9  2000/04/12 15:33:49  jas
+// Can now read a Vector type [num,num,num] from the ProblemSpec.
+//
 // Revision 1.8  2000/04/07 18:40:51  jas
 // Fixed bug in getNextBlock.
 //
