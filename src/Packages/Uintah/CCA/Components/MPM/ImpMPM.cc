@@ -172,31 +172,31 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
 
   scheduleCreateMatrix(sched, d_perproc_patches, matls,false);
 
-  scheduleComputeStressTensorI(sched, d_perproc_patches, matls,false);
+  scheduleComputeStressTensor(sched, d_perproc_patches, matls,false);
 
-  scheduleFormStiffnessMatrixI(sched,d_perproc_patches,matls,false);
+  scheduleFormStiffnessMatrix(sched,d_perproc_patches,matls,false);
 
-  scheduleComputeInternalForceI(sched, d_perproc_patches, matls,false);
+  scheduleComputeInternalForce(sched, d_perproc_patches, matls,false);
 
-  scheduleFormQI(sched, d_perproc_patches, matls,false);
+  scheduleFormQ(sched, d_perproc_patches, matls,false);
 
 #if 0
   scheduleApplyRigidBodyConditionI(sched, d_perproc_patches,matls);
 #endif
 
-  scheduleRemoveFixedDOFI(sched, d_perproc_patches, matls,false);
+  scheduleRemoveFixedDOF(sched, d_perproc_patches, matls,false);
 
-  scheduleSolveForDuCGI(sched, d_perproc_patches, matls,false);
+  scheduleSolveForDuCG(sched, d_perproc_patches, matls);
 
-  scheduleUpdateGridKinematicsI(sched, d_perproc_patches, matls,false);
+  scheduleUpdateGridKinematics(sched, d_perproc_patches, matls,false);
 
-  scheduleCheckConvergenceI(sched,level, d_perproc_patches, matls, false);
+  scheduleCheckConvergence(sched,level, d_perproc_patches, matls,false);
 
   scheduleIterate(sched,level,d_perproc_patches,matls);
 
   scheduleComputeStressTensorOnly(sched,d_perproc_patches,matls,false);
 
-  scheduleComputeInternalForceII(sched,d_perproc_patches,matls,false);
+  scheduleComputeInternalForce(sched,d_perproc_patches,matls,false);
 
   scheduleComputeAcceleration(sched,d_perproc_patches,matls);
 
@@ -289,31 +289,13 @@ void ImpMPM::scheduleDestroyMatrix(SchedulerP& sched,
 }
 
 
-void ImpMPM::scheduleComputeStressTensorI(SchedulerP& sched,
+void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
 					 const PatchSet* patches,
 					 const MaterialSet* matls,
 					 const bool recursion)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
-  Task* t = scinew Task("ImpMPM::computeStressTensorI",
-		    this, &ImpMPM::computeStressTensor,recursion);
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->addComputesAndRequiresImplicit(t, mpm_matl, patches,recursion);
-  }
-
-  sched->addTask(t, patches, matls);
-}
-
-
-void ImpMPM::scheduleComputeStressTensorR(SchedulerP& sched,
-					 const PatchSet* patches,
-					 const MaterialSet* matls,
-					 const bool recursion)
-{
-  int numMatls = d_sharedState->getNumMPMMatls();
-  Task* t = scinew Task("ImpMPM::computeStressTensorR",
+  Task* t = scinew Task("ImpMPM::computeStressTensor",
 		    this, &ImpMPM::computeStressTensor,recursion);
 
   for(int m = 0; m < numMatls; m++){
@@ -341,88 +323,45 @@ void ImpMPM::scheduleComputeStressTensorOnly(SchedulerP& sched,
 }
 
 
-void ImpMPM::scheduleFormStiffnessMatrixI(SchedulerP& sched,
-					  const PatchSet* patches,
-					  const MaterialSet* matls,
-					  const bool recursion)
+void ImpMPM::scheduleFormStiffnessMatrix(SchedulerP& sched,
+					 const PatchSet* patches,
+					 const MaterialSet* matls,
+					 const bool recursion)
 {
 
-  Task* t = scinew Task("ImpMPM::formStiffnessMatrixI",
+  Task* t = scinew Task("ImpMPM::formStiffnessMatrix",
 		    this, &ImpMPM::formStiffnessMatrix,recursion);
 
-  t->requires(Task::NewDW,lb->gMassLabel, Ghost::None);
-  t->requires(Task::OldDW,d_sharedState->get_delt_label());
+  if (recursion) {
+    t->requires(Task::ParentNewDW,lb->gMassLabel, Ghost::None);
+    t->requires(Task::ParentOldDW,d_sharedState->get_delt_label());
+  } else {
+    t->requires(Task::NewDW,lb->gMassLabel, Ghost::None);
+    t->requires(Task::OldDW,d_sharedState->get_delt_label());
+  }
 
   sched->addTask(t, patches, matls);
 }
 
-
-void ImpMPM::scheduleFormStiffnessMatrixR(SchedulerP& sched,
+void ImpMPM::scheduleComputeInternalForce(SchedulerP& sched,
 					  const PatchSet* patches,
 					  const MaterialSet* matls,
 					  const bool recursion)
 {
-  Task* t = scinew Task("ImpMPM::formStiffnessMatrixR",
-		    this, &ImpMPM::formStiffnessMatrix,recursion);
-
-  t->requires(Task::ParentNewDW,lb->gMassLabel, Ghost::None);
-  t->requires(Task::ParentOldDW,d_sharedState->get_delt_label());
-
-  sched->addTask(t, patches, matls);
-}
-
-void ImpMPM::scheduleComputeInternalForceI(SchedulerP& sched,
-					  const PatchSet* patches,
-					  const MaterialSet* matls,
-					  const bool recursion)
-{
-  Task* t = scinew Task("ImpMPM::computeInternalForceI",
-			this, &ImpMPM::computeInternalForce,recursion);
-  
-  t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
-  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,lb->pXLabel,Ghost::AroundNodes,1);
-  t->modifies(lb->gInternalForceLabel);  
-  
-  sched->addTask(t, patches, matls);
-  
-}
-
-void ImpMPM::scheduleComputeInternalForceII(SchedulerP& sched,
-					  const PatchSet* patches,
-					  const MaterialSet* matls,
-					  const bool recursion)
-{
-  Task* t = scinew Task("ImpMPM::computeInternalForceII",
-			this, &ImpMPM::computeInternalForce,recursion);
-  
-  t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
-  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,lb->pXLabel,Ghost::AroundNodes,1);
-  t->modifies(lb->gInternalForceLabel);  
-  
-  sched->addTask(t, patches, matls);
-  
-}
-
-void ImpMPM::scheduleComputeInternalForceR(SchedulerP& sched,
-					  const PatchSet* patches,
-					  const MaterialSet* matls,
-					  const bool recursion)
-{
-  Task* t = scinew Task("ImpMPM::computeInternalForceR",
+  Task* t = scinew Task("ImpMPM::computeInternalForce",
 			this, &ImpMPM::computeInternalForce,recursion);
 
   if (recursion) {
     t->requires(Task::ParentOldDW,lb->pXLabel,Ghost::AroundNodes,1);
     t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
-  }
-  else {
-    t->requires(Task::NewDW,lb->pStressLabel,Ghost::AroundNodes,1);
+    t->requires(Task::NewDW,lb->pVolumeDeformedLabel,Ghost::AroundNodes,1);
+    t->computes(lb->gInternalForceLabel);  
+  } else {
+    t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
+    t->requires(Task::NewDW,lb->pVolumeDeformedLabel,Ghost::AroundNodes,1);
     t->requires(Task::OldDW,lb->pXLabel,Ghost::AroundNodes,1);
+    t->modifies(lb->gInternalForceLabel);  
   }
-  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,Ghost::AroundNodes,1);
-  t->computes(lb->gInternalForceLabel);  
   
   sched->addTask(t, patches, matls);
   
@@ -503,30 +442,31 @@ void ImpMPM::iterate(const ProcessorGroup*,
   scheduleCreateMatrix(subsched, level->eachPatch(), 
 		       d_sharedState->allMPMMaterials(),true);
   
-  scheduleComputeStressTensorR(subsched,level->eachPatch(),
+  scheduleComputeStressTensor(subsched,level->eachPatch(),
 			      d_sharedState->allMPMMaterials(),
 			      true);
 
-  scheduleFormStiffnessMatrixR(subsched,level->eachPatch(),
-			       d_sharedState->allMPMMaterials(),true);
+  scheduleFormStiffnessMatrix(subsched,level->eachPatch(),
+			      d_sharedState->allMPMMaterials(),true);
 
-  scheduleComputeInternalForceR(subsched,level->eachPatch(),
-				d_sharedState->allMPMMaterials(), true);
+  scheduleComputeInternalForce(subsched,level->eachPatch(),
+			       d_sharedState->allMPMMaterials(), true);
 
   
-  scheduleFormQR(subsched,level->eachPatch(),d_sharedState->allMPMMaterials(),
-		 true);
+  scheduleFormQ(subsched,level->eachPatch(),
+		d_sharedState->allMPMMaterials(),true);
 
-  scheduleRemoveFixedDOFR(subsched,level->eachPatch(),
-			  d_sharedState->allMPMMaterials(),true);
+  scheduleRemoveFixedDOF(subsched,level->eachPatch(),
+			 d_sharedState->allMPMMaterials(),true);
 
-  scheduleSolveForDuCGR(subsched,level->eachPatch(),
-		       d_sharedState->allMPMMaterials(), true);
-  scheduleUpdateGridKinematicsR(subsched,level->eachPatch(),
+  scheduleSolveForDuCG(subsched,level->eachPatch(),
+		       d_sharedState->allMPMMaterials());
+
+  scheduleUpdateGridKinematics(subsched,level->eachPatch(),
 			       d_sharedState->allMPMMaterials(),true);
 
-  scheduleCheckConvergenceR(subsched,level,level->eachPatch(),
-			       d_sharedState->allMPMMaterials(), true);
+  scheduleCheckConvergence(subsched,level,level->eachPatch(),
+			   d_sharedState->allMPMMaterials(),true);
  
   subsched->compile(d_myworld);
 
@@ -559,9 +499,9 @@ void ImpMPM::iterate(const ProcessorGroup*,
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
-      ParticleSubset* pset = subsched->get_dw(0)->getParticleSubset(matlindex, 
-								    patch);
-      cerr << "number of particles = " << pset->numParticles() << "\n";
+      ParticleSubset* pset = 
+	subsched->get_dw(0)->getParticleSubset(matlindex, patch);
+
       // Need to pull out the pX, pVolume, and pVolumeOld from old_dw
       // and put it in the subschedulers new_dw.  Once it is advanced,
       // the subscheduler will be pulling data from the old_dw per the
@@ -664,41 +604,30 @@ void ImpMPM::iterate(const ProcessorGroup*,
   new_dw->setScrubbing(new_dw_scrubmode);
 }
 
-void ImpMPM::scheduleFormQI(SchedulerP& sched,const PatchSet* patches,
-			   const MaterialSet* matls, const bool recursion)
-{
-  Task* t = scinew Task("ImpMPM::formQI", this, 
-			&ImpMPM::formQ, recursion);
 
-  t->requires(Task::OldDW,d_sharedState->get_delt_label());
-  t->requires(Task::NewDW,lb->gInternalForceLabel,Ghost::None,0);
-  t->requires(Task::NewDW,lb->gExternalForceLabel,Ghost::None,0);
-  t->requires(Task::NewDW,lb->dispNewLabel,Ghost::None,0);
-  t->requires(Task::NewDW,lb->gVelocityLabel,Ghost::None,0);
-  t->requires(Task::NewDW,lb->gAccelerationLabel,Ghost::None,0);
-  t->requires(Task::NewDW,lb->gMassLabel,Ghost::None,0);
-  
-  sched->addTask(t, patches, matls);
-  
-}
-
-
-void ImpMPM::scheduleFormQR(SchedulerP& sched,const PatchSet* patches,
+void ImpMPM::scheduleFormQ(SchedulerP& sched,const PatchSet* patches,
 			   const MaterialSet* matls,const bool recursion)
 {
-  Task* t = scinew Task("ImpMPM::formQR", this, 
+  Task* t = scinew Task("ImpMPM::formQ", this, 
 			&ImpMPM::formQ,recursion);
 
-  t->requires(Task::ParentOldDW,d_sharedState->get_delt_label());
-  t->requires(Task::NewDW,lb->gInternalForceLabel,Ghost::None,0);
-  t->requires(Task::OldDW,lb->dispNewLabel,Ghost::None,0);
-
-  // Old version used OldDW (had to copy), new version uses ParentNewDW
-  // now no copying is required.
-  t->requires(Task::ParentNewDW,lb->gExternalForceLabel,Ghost::None,0);
-  t->requires(Task::ParentNewDW,lb->gVelocityOldLabel,Ghost::None,0);
-  t->requires(Task::ParentNewDW,lb->gAccelerationLabel,Ghost::None,0);
-  t->requires(Task::ParentNewDW,lb->gMassLabel,Ghost::None,0);
+  if (recursion) {
+    t->requires(Task::ParentOldDW,d_sharedState->get_delt_label());
+    t->requires(Task::NewDW,lb->gInternalForceLabel,Ghost::None,0);
+    t->requires(Task::OldDW,lb->dispNewLabel,Ghost::None,0);
+    t->requires(Task::ParentNewDW,lb->gExternalForceLabel,Ghost::None,0);
+    t->requires(Task::ParentNewDW,lb->gVelocityOldLabel,Ghost::None,0);
+    t->requires(Task::ParentNewDW,lb->gAccelerationLabel,Ghost::None,0);
+    t->requires(Task::ParentNewDW,lb->gMassLabel,Ghost::None,0);
+  } else {
+    t->requires(Task::OldDW,d_sharedState->get_delt_label());
+    t->requires(Task::NewDW,lb->gInternalForceLabel,Ghost::None,0);
+    t->requires(Task::NewDW,lb->gExternalForceLabel,Ghost::None,0);
+    t->requires(Task::NewDW,lb->dispNewLabel,Ghost::None,0);
+    t->requires(Task::NewDW,lb->gVelocityLabel,Ghost::None,0);
+    t->requires(Task::NewDW,lb->gAccelerationLabel,Ghost::None,0);
+    t->requires(Task::NewDW,lb->gMassLabel,Ghost::None,0);
+  }
   
   sched->addTask(t, patches, matls);
   
@@ -735,62 +664,30 @@ void ImpMPM::scheduleApplyRigidBodyConditionR(SchedulerP& sched,
   
 }
 
-
-void ImpMPM::scheduleRemoveFixedDOFI(SchedulerP& sched,
+void ImpMPM::scheduleRemoveFixedDOF(SchedulerP& sched,
 				     const PatchSet* patches,
 				     const MaterialSet* matls,
 				     const bool recursion)
 {
-
-  Task* t = scinew Task("ImpMPM::removeFixedDOFI", this, 
+  Task* t = scinew Task("ImpMPM::removeFixedDOF", this, 
 			&ImpMPM::removeFixedDOF,recursion);
 
-  t->requires(Task::NewDW,lb->gMassLabel,Ghost::None,0);
+  if (recursion) {
+    t->requires(Task::ParentNewDW,lb->gMassLabel,Ghost::None,0);
+  } else {
+    t->requires(Task::NewDW,lb->gMassLabel,Ghost::None,0);
+  }
 
   sched->addTask(t, patches, matls);
   
 }
 
-void ImpMPM::scheduleRemoveFixedDOFR(SchedulerP& sched,
-				     const PatchSet* patches,
-				     const MaterialSet* matls,
-				     const bool recursion)
-{
-  Task* t = scinew Task("ImpMPM::removeFixedDOFR", this, 
-			&ImpMPM::removeFixedDOF,recursion);
-
-  t->requires(Task::ParentNewDW,lb->gMassLabel,Ghost::None,0);
-
-  sched->addTask(t, patches, matls);
-  
-}
-
-
-void ImpMPM::scheduleSolveForDuCGI(SchedulerP& sched,
+void ImpMPM::scheduleSolveForDuCG(SchedulerP& sched,
 				   const PatchSet* patches,
-				   const MaterialSet* matls,
-				   const bool recursion)
+				   const MaterialSet* matls)
 {
-  Task* t = scinew Task("ImpMPM::solveForDuCGI", this, 
-			&ImpMPM::solveForDuCG,recursion);
-
-  if (recursion)
-    t->modifies(lb->dispIncLabel);
-  else
-    t->computes(lb->dispIncLabel);
-  
-  sched->addTask(t, patches, matls);
-  
-}
-
-
-void ImpMPM::scheduleSolveForDuCGR(SchedulerP& sched,
-				   const PatchSet* patches,
-				   const MaterialSet* matls,
-				   const bool recursion)
-{
-  Task* t = scinew Task("ImpMPM::solveForDuCGR", this, 
-			&ImpMPM::solveForDuCG,recursion);
+  Task* t = scinew Task("ImpMPM::solveForDuCG", this, 
+			&ImpMPM::solveForDuCG);
 
   t->computes(lb->dispIncLabel);
     
@@ -799,79 +696,45 @@ void ImpMPM::scheduleSolveForDuCGR(SchedulerP& sched,
 }
 
 
-void ImpMPM::scheduleUpdateGridKinematicsI(SchedulerP& sched,
-					   const PatchSet* patches,
-					   const MaterialSet* matls,
-					   const bool recursion)
+void ImpMPM::scheduleUpdateGridKinematics(SchedulerP& sched,
+					  const PatchSet* patches,
+					  const MaterialSet* matls,
+					  const bool recursion)
 {
-  Task* t = scinew Task("ImpMPM::updateGridKinematicsI", this, 
-			&ImpMPM::updateGridKinematics,recursion);
-  
-  t->modifies(lb->dispNewLabel);
-  t->modifies(lb->gVelocityLabel);
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
-  t->requires(Task::NewDW,lb->dispIncLabel,Ghost::None,0);
-  t->requires(Task::NewDW,lb->gVelocityOldLabel,Ghost::None,0);
-  
-  sched->addTask(t, patches, matls);
-  
-}
-
-void ImpMPM::scheduleUpdateGridKinematicsR(SchedulerP& sched,
-					   const PatchSet* patches,
-					   const MaterialSet* matls,
-					   const bool recursion)
-{
-  Task* t = scinew Task("ImpMPM::updateGridKinematicsR", this, 
+  Task* t = scinew Task("ImpMPM::updateGridKinematics", this, 
 			&ImpMPM::updateGridKinematics,recursion);
 
-  t->requires(Task::OldDW,lb->dispNewLabel,Ghost::None,0);
-  t->computes(lb->dispNewLabel);
-  t->computes(lb->gVelocityLabel);
-  t->requires(Task::ParentOldDW, d_sharedState->get_delt_label() );
-  t->requires(Task::NewDW,lb->dispIncLabel,Ghost::None,0);
-  t->requires(Task::ParentNewDW,lb->gVelocityOldLabel,Ghost::None,0);
+  if (recursion) {
+    t->requires(Task::OldDW,lb->dispNewLabel,Ghost::None,0);
+    t->computes(lb->dispNewLabel);
+    t->computes(lb->gVelocityLabel);
+    t->requires(Task::ParentOldDW, d_sharedState->get_delt_label() );
+    t->requires(Task::NewDW,lb->dispIncLabel,Ghost::None,0);
+    t->requires(Task::ParentNewDW,lb->gVelocityOldLabel,Ghost::None,0);
+  } else {
+    t->modifies(lb->dispNewLabel);
+    t->modifies(lb->gVelocityLabel);
+    t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+    t->requires(Task::NewDW,lb->dispIncLabel,Ghost::None,0);
+    t->requires(Task::NewDW,lb->gVelocityOldLabel,Ghost::None,0);
+  }
   
   sched->addTask(t, patches, matls);
   
 }
 
 
+void ImpMPM::scheduleCheckConvergence(SchedulerP& sched, 
+				      const LevelP& level,
+				      const PatchSet* patches,
+				      const MaterialSet* matls,
+				      const bool recursion)
 
-void ImpMPM::scheduleCheckConvergenceI(SchedulerP& sched, const LevelP& level,
-				       const PatchSet* patches,
-				       const MaterialSet* matls,
-				       const bool recursion)
 {
   // NOT DONE
 
-  Task* t = scinew Task("ImpMPM::checkConvergenceI", this,
-			&ImpMPM::checkConvergence, recursion);
-
-  t->requires(Task::NewDW,lb->dispIncLabel,Ghost::None,0);
-  t->requires(Task::OldDW,lb->dispIncQNorm0);
-  t->requires(Task::OldDW,lb->dispIncNormMax);
-
-  t->computes(lb->dispIncNormMax);
-  t->computes(lb->dispIncQNorm0);
-  t->computes(lb->dispIncNorm);
-  t->computes(lb->dispIncQNorm);
-  
-  sched->addTask(t,patches,matls);
-
-  
-
-}
-
-void ImpMPM::scheduleCheckConvergenceR(SchedulerP& sched, const LevelP& level,
-				       const PatchSet* patches,
-				       const MaterialSet* matls,
-				       const bool recursion)
-{
-  // NOT DONE
-
-  Task* t = scinew Task("ImpMPM::checkConvergenceR", this,
-			&ImpMPM::checkConvergence, recursion);
+  Task* t = scinew Task("ImpMPM::checkConvergence", this,
+			&ImpMPM::checkConvergence,recursion);
 
   t->requires(Task::NewDW,lb->dispIncLabel,Ghost::None,0);
   t->requires(Task::OldDW,lb->dispIncQNorm0);
@@ -1654,8 +1517,7 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* pg,
 			       const PatchSubset* patches,
 			       const MaterialSubset* ,
 			       DataWarehouse*,
-			       DataWarehouse* new_dw,
-			       const bool /*recursion*/)
+			       DataWarehouse* new_dw)
 
 {
   // DONE
