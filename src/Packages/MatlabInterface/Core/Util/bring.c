@@ -152,6 +152,7 @@ char *bring(int wordy,int flag,char *hostport,int lbuf,char *buf)
     if(status_flag==0) fatalerr("bring: Socket is not open\n");
     if(status_flag==1) close(ms);
     sockclose(wordy-2,as);
+    status_flag=0;
 
    break; default:
 
@@ -229,7 +230,6 @@ int client(int wordy,char *hostport)
    server.sin_family = AF_INET;
    server.sin_port = htons( atoi(cport+1) );
    hp=gethostbyname(hname);
-   if(wordy>1) printf("client: gethostbyname %s port: %i\n",hname, atoi(cport+1) );
    bcopy( hp->h_addr, &server.sin_addr, hp->h_length);
 
    for(;;) /* wait for server */
@@ -242,7 +242,7 @@ int client(int wordy,char *hostport)
      if(tmp==0) 
      {
        err=read(as,locbuf,sizeof(locbuf));
-       if(wordy>1) printf("client: READY %i %s\n",err,locbuf);
+       if(wordy>1) printf("read READY %i %s\n",err,locbuf);
        if( (err==sizeof(locbuf))&&(strncmp(locbuf,"READY",5)==0) ) break;
      }
      close(as);
