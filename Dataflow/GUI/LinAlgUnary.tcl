@@ -23,7 +23,18 @@ itcl_class SCIRun_Math_LinAlgUnary {
     }
     method set_defaults {} {
         global $this-op
-	set $this-op "Transpose"
+	set $this-op "Function"
+        global $this-function
+	set $this-function "x+10"
+    }
+    method make_entry {w text v c} {
+        frame $w
+        label $w.l -text "$text"
+        pack $w.l -side left
+        global $v
+        entry $w.e -textvariable $v
+        bind $w.e <Return> $c
+        pack $w.e -side right
     }
     method ui {} {
         set w .ui[modname]
@@ -40,9 +51,11 @@ itcl_class SCIRun_Math_LinAlgUnary {
         make_labeled_radio $w.f.r "Unary Operations:" "" \
                 top $this-op \
 		{{"Transpose" Transpose}\
-		{"Sort" Sort}}
-
-	pack $w.f.r -side top -expand 1 -fill x
+		{"Sort" Sort}\
+		{"Function" Function}}
+	global $this-function
+	make_entry $w.f.f "    specify function:" $this-function "$this-c needexecute"	
+	pack $w.f.r $w.f.f -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
     }
 }

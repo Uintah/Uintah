@@ -80,7 +80,7 @@ ClipField::ClipField(const string& id)
     widget_lock_("ClipField widget lock"),
     clip_location_("clip-location", id, this),
     clip_mode_("clipmode", id, this),
-    autoexec_("autoexec", id, this),
+    autoexec_("autoexecute", id, this),
     autoinvert_("autoinvert", id, this),
     exec_mode_("execmode", id, this),
     last_input_generation_(0),
@@ -343,10 +343,14 @@ ClipField::execute()
 void
 ClipField::widget_moved(int i)
 {
-  if (i == 1 && autoexec_.get())
+  if (i == 1)
   {
-    exec_mode_.set("execute");
-    want_to_execute();
+    autoexec_.reset();
+    if (autoexec_.get())
+    {
+      exec_mode_.set("execute");
+      want_to_execute();
+    }
   }
 }
 

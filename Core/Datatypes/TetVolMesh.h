@@ -110,8 +110,9 @@ public:
   void get_edges(Edge::array_type &array, Face::index_type idx) const;
   void get_edges(Edge::array_type &array, Cell::index_type idx) const;
   void get_faces(Face::array_type &array, Cell::index_type idx) const;
+  void get_cells(Cell::array_type &array, Node::index_type idx);
   bool get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
-		   Face::index_type idx) const;
+		    Face::index_type idx) const;
   void get_neighbors(Cell::array_type &array, Cell::index_type idx) const;
   //! must call compute_node_neighbors before calling get_neighbors.
   void get_neighbors(Node::array_type &array, Node::index_type idx) const;
@@ -220,7 +221,7 @@ public:
   const Point &point(Node::index_type i) { return points_[i]; }
 
 protected:
-
+  virtual void calc_node_cells_map(); 
   bool inside4_p(int, const Point &p) const;
 
   //! all the nodes.
@@ -360,7 +361,11 @@ protected:
   edge_ht                  edge_table_;
   Mutex                    edge_table_lock_;
 
-
+  //! bookkeeping to get from node_index to Cells
+  typedef hash_map<int, Cell::array_type> node_cells_ht;
+  node_cells_ht            node_cells_table_;
+  Mutex                    node_cells_table_lock_;
+  bool                     have_node_cells_table_;
 
   inline
   void hash_edge(Node::index_type n1, Node::index_type n2,
@@ -396,6 +401,10 @@ protected:
   grid_handle                 grid_;
   Mutex                       grid_lock_; // Bad traffic!
   
+
+  void orient(Cell::index_type ci);
+  double volume(TetVolMesh::Cell::index_type ci);
+
 public:
   inline grid_handle get_grid() {return grid_;}
 

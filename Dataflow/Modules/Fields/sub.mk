@@ -37,6 +37,7 @@ SRCS     += \
 	$(SRCDIR)/Centroids.cc\
 	$(SRCDIR)/ClipField.cc\
 	$(SRCDIR)/ClipLattice.cc\
+	$(SRCDIR)/ConvertTet.cc\
 	$(SRCDIR)/Coregister.cc\
 	$(SRCDIR)/DirectInterpolate.cc\
 	$(SRCDIR)/EditField.cc\
@@ -55,6 +56,7 @@ SRCS     += \
 	$(SRCDIR)/SetProperty.cc\
 	$(SRCDIR)/TransformField.cc\
 	$(SRCDIR)/TetVolFieldCellToNode.cc\
+	$(SRCDIR)/TetVol2QuadraticTetVol.cc\
 	$(SRCDIR)/Unstructure.cc\
 #[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/CastField.cc\

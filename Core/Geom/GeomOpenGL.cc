@@ -197,7 +197,9 @@ DrawInfoOpenGL::DrawInfoOpenGL()
     pickchild(0),
     fog(0),
     cull(0),
-    current_matl(0)
+    current_matl(0),
+    fontinit(true),
+    fontbase(0)
 {
     qobj=gluNewQuadric();
 #ifdef _WIN32
@@ -2236,13 +2238,16 @@ void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
   if ( have_normal ) {
     float* n=&normals[0];
     if(colors.size() > 0){
-      float* c=&colors[0];
+      float rgb[3];  
       for (int i=0; i<pts.size(); i+=3) {
-	glColor3fv(c);
+	MaterialHandle c = colors[i/3];
+	rgb[0] = c->diffuse.r();
+	rgb[1] = c->diffuse.g();
+	rgb[2] = c->diffuse.b();
+	glColor3fv(rgb);
 	glNormal3fv(n);
 	glVertex3fv(p);
 	p+=3;
-	c+=3;
 	n+=3;
       }
     } else {
@@ -2256,12 +2261,15 @@ void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
   else { // no normals
     if(colors.size() > 0){
-      float* c=&colors[0];
+      float rgb[3];  
       for (int i=0; i<pts.size(); i+=3) {
-	glColor3fv(c);
+	MaterialHandle c = colors[i/3];
+	rgb[0] = c->diffuse.r();
+	rgb[1] = c->diffuse.g();
+	rgb[2] = c->diffuse.b();
+	glColor3fv(rgb);
 	glVertex3fv(p);
 	p+=3;
-	c+=3;
       }
     } else {
       for (int i=0; i<pts.size(); i+=3) {
@@ -4302,8 +4310,8 @@ void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
 #ifndef _WIN32
   if(!pre_draw(di,matl,0)) return;
 
-  if ( init ) {
-    cerr << "Init" << endl;
+  if ( di->fontinit ) {
+    //cerr << "GeomText::draw: Initializing fonts." << endl;
     di->dpy = XOpenDisplay( NULL );
     XFontStruct* fontInfo = XLoadQueryFont(di->dpy,
     	 "-adobe-helvetica-bold-r-normal-*-14-120-*-*-p-60-iso8859-1");
@@ -4313,23 +4321,23 @@ void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
     }
     if (fontInfo == NULL)
     {
-      cerr << "GeomText: no font found\n";
+      cerr << "GeomText::draw: no font found.\n";
       return;
     }
     Font id = fontInfo->fid;
     unsigned int first = fontInfo->min_char_or_byte2;
     unsigned int last = fontInfo->max_char_or_byte2;
 
-    fontbase = glGenLists((GLuint) last+1);
+    di->fontbase = glGenLists((GLuint) last+1);
 
-    if (fontbase == 0) {
-      printf ("out of display lists\n");
+    if (di->fontbase == 0) {
+      printf ("GeomText::draw: Out of display lists\n");
       return;
     }
 
-    glXUseXFont(id, first, last-first+1, fontbase+first);
+    glXUseXFont(id, first, last-first+1, di->fontbase+first);
 
-    init = 0;
+    di->fontinit = false;
   }
 
   glColor3f(c.r(), c.g(), c.b());
@@ -4337,7 +4345,7 @@ void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
   glRasterPos3d( at.x(), at.y(), at.z() );
   /*glBitmap(0, 0, x, y, 1, 1, 0);*/
   glPushAttrib (GL_LIST_BIT);
-  glListBase(fontbase);
+  glListBase(di->fontbase);
   glCallLists(text.size(), GL_UNSIGNED_BYTE, (GLubyte *)text.c_str());
   glPopAttrib ();
   post_draw(di);

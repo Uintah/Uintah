@@ -175,6 +175,10 @@ ManageFieldData::execute()
     result_field = algo_mesh->execute(ifieldhandle->mesh(), imatrixhandle);
   }
 
+  string units;
+  if (imatrixhandle.get_rep() && imatrixhandle->get_property("units", units))
+    result_field->set_property("units", units, false);
+
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
   if (!ofp) {
     postMessage("Unable to initialize "+name+"'s oport\n");

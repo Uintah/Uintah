@@ -56,7 +56,7 @@ DirectInterpScalarAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
 					  ScalarFieldInterface *sfi)
 {
   Fld *fld2 = dynamic_cast<Fld *>(fldhandle.get_rep());
-  if (!fld2->is_scalar()) { return 0; }
+  if (!fld2->query_scalar_interface()) { return 0; }
   Fld *fld = fld2->clone();
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
 
@@ -110,7 +110,7 @@ DirectInterpVectorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
 					  VectorFieldInterface *vfi)
 {
   Fld *fld2 = dynamic_cast<Fld *>(fldhandle.get_rep());
-  if (!fld2->is_scalar()) { return 0; }
+  if (!fld2->query_vector_interface()) { return 0; }
   Fld *fld = fld2->clone();
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
 
@@ -163,7 +163,7 @@ DirectInterpTensorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
 					  TensorFieldInterface *tfi)
 {
   Fld *fld2 = dynamic_cast<Fld *>(fldhandle.get_rep());
-  if (!fld2->is_scalar()) { return 0; }
+  if (!fld2->query_tensor_interface()) { return 0; }
   Fld *fld = fld2->clone();
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
 

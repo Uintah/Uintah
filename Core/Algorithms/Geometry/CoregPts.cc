@@ -29,6 +29,12 @@ namespace SCIRun {
 CoregPts::~CoregPts() {
 }
 
+CoregPts::CoregPts(int allowScale, int allowRotate, int allowTranslate) :
+  allowScale_(allowScale), allowRotate_(allowRotate), 
+  allowTranslate_(allowTranslate) 
+{
+}
+
 void CoregPts::setOrigPtsA(Array1<Point> a) { 
   origPtsA_ = a; 
   invalidate(); 
@@ -85,12 +91,19 @@ int CoregPts::getMisfit(double &misfit) {
 CoregPtsAnalytic::~CoregPtsAnalytic() {
 }
 
+CoregPtsAnalytic::CoregPtsAnalytic(int allowScale, int allowRotate,
+				   int allowTranslate) :
+  CoregPts(allowScale, allowRotate, allowTranslate)
+{
+}
+
 int CoregPtsAnalytic::computeTrans() {
   unsigned int i;
   if (validTrans_) return 1;
 
   // make sure we have the right number of points
-  if (origPtsA_.size() != 3 || origPtsP_.size() != 3) return 0;
+  int npts = Min(origPtsA_.size(), origPtsP_.size());
+  if (npts < 3) return 0;
 
   // make sure the three A points aren't colinear
   Vector a01 = origPtsA_[1] - origPtsA_[0];
@@ -134,76 +147,84 @@ int CoregPtsAnalytic::computeTrans() {
 			     origPtsA_[1], 1./3,
 			     origPtsA_[2], 1./3));
   TC_a.pre_translate(-(Ca.asVector()));
-  TCp.pre_translate(Cp.asVector());
+
+  if (allowTranslate_)
+    TCp.pre_translate(Cp.asVector());
+  else
+    TCp.pre_translate(Ca.asVector());
   
-  // find the normal and tangents for triangle a and for triangle p
-  Vector a20=Cross(a01, a21);
-  a20.normalize();
-  a20.find_orthogonal(a01, a21);
-
-  Vector p20=Cross(p01, p21);
-  p20.normalize();
-  p20.find_orthogonal(p01, p21);
-  
-  Transform temp;
-  double d[16];
-  temp.load_frame(Point(0,0,0), a01, a21, a20);
-  temp.get_trans(&(d[0]));
-  Ba.set(d);
-
-  Bpt.load_frame(Point(0,0,0), p01, p21, p20);
-
-//  Bpt.load_identity();
-//  Ba.load_identity();
-
-  // find optimal rotation theta
-  // this is easier if we transform the points through the above transform
-  // into their "canonical" position -- triangles centered at the origin,
-  // and lying in the xy plane.
-
-  double ra[3], rp[3], theta[3];  
   Point a[3], p[3];
+  if (allowRotate_) {
+    // find the normal and tangents for triangle a and for triangle p
+    Vector a20=Cross(a01, a21);
+    a20.normalize();
+    a20.find_orthogonal(a01, a21);
+    
+    Vector p20=Cross(p01, p21);
+    p20.normalize();
+    p20.find_orthogonal(p01, p21);
+    
+    Transform temp;
+    double d[16];
+    temp.load_frame(Point(0,0,0), a01, a21, a20);
+    temp.get_trans(&(d[0]));
+    Ba.set(d);
+    
+    Bpt.load_frame(Point(0,0,0), p01, p21, p20);
+    
+    //  Bpt.load_identity();
+    //  Ba.load_identity();
+    
+    // find optimal rotation theta
+    // this is easier if we transform the points through the above transform
+    // into their "canonical" position -- triangles centered at the origin,
+    // and lying in the xy plane.
+    
+    double ra[3], rp[3], theta[3];  
+    
+    for (i=0; i<3; i++) {
+      // build the canonically-posed vertices
+      a[i]=Ba.project(TC_a.project(origPtsA_[i]));
+      p[i]=Bpt.unproject(TCp.unproject(origPtsP_[i]));
+      
+      // compute their distance from the origin
+      ra[i] = a[i].asVector().length();
+      rp[i] = p[i].asVector().length();
 
-  for (i=0; i<3; i++) {
-    // build the canonically-posed vertices
-    a[i]=Ba.project(TC_a.project(origPtsA_[i]));
-    p[i]=Bpt.unproject(TCp.unproject(origPtsP_[i]));
-
-    // compute their distance from the origin
-    ra[i] = a[i].asVector().length();
-    rp[i] = p[i].asVector().length();
-
-    // find the angular distance (in radians) between corresponding points
-    Vector avn(a[i].asVector());
-    avn.normalize();
-    Vector pvn(p[i].asVector());
-    pvn.normalize();
-    theta[i] = Acos(Dot(avn,pvn));
-
-    // make sure we have the sign right
-    if (Cross(avn,pvn).z() < 0) theta[i]*=-1;    
+      // find the angular distance (in radians) between corresponding points
+      Vector avn(a[i].asVector());
+      avn.normalize();
+      Vector pvn(p[i].asVector());
+      pvn.normalize();
+      theta[i] = Acos(Dot(avn,pvn));
+      
+      // make sure we have the sign right
+      if (Cross(avn,pvn).z() < 0) theta[i]*=-1;    
+    }
+    
+    double theta_best = -theta[0] + Atan((ra[1]*rp[1]*Sin(theta[0]-theta[1])+
+					  ra[2]*rp[2]*Sin(theta[0]-theta[2]))/
+					 (ra[0]*rp[0]+
+					  ra[1]*rp[1]*Cos(theta[0]-theta[1])+
+					  ra[2]*rp[2]*Cos(theta[0]-theta[2])));
+    Theta.pre_rotate(-theta_best, Vector(0,0,1));
+    
+    // lastly, rotate the a points into position and solve for scale
   }
 
-  double theta_best = -theta[0] + Atan((ra[1]*rp[1]*Sin(theta[0]-theta[1])+
-					ra[2]*rp[2]*Sin(theta[0]-theta[2]))/
-				       (ra[0]*rp[0]+
-					ra[1]*rp[1]*Cos(theta[0]-theta[1])+
-					ra[2]*rp[2]*Cos(theta[0]-theta[2])));
-  Theta.pre_rotate(-theta_best, Vector(0,0,1));
-
-  // lastly, rotate the a points into position and solve for scale
-  
-  Vector av[3];
-  double scale_num=0, scale_denom=0;
-  for (i=0; i<3; i++) {
-    av[i] = Theta.project(a[i]).asVector();
-    scale_num += Dot(av[i], p[i].asVector());
-    scale_denom += av[i].length2();
+  if (allowScale_) {
+    Vector av[3];
+    double scale_num=0, scale_denom=0;
+    for (i=0; i<3; i++) {
+      av[i] = Theta.project(a[i]).asVector();
+      scale_num += Dot(av[i], p[i].asVector());
+      scale_denom += av[i].length2();
+    }
+    
+    double scale = scale_num/scale_denom;
+    S.pre_scale(Vector(scale, scale, scale));
   }
-  
-  double scale = scale_num/scale_denom;
-  S.pre_scale(Vector(scale, scale, scale));
-
+    
   transform_.load_identity();
   transform_.pre_trans(TC_a);
   transform_.pre_trans(Ba);
@@ -287,4 +308,206 @@ int CoregPtsAnalytic::computeTrans() {
   return 1;
 }
 
+CoregPtsProcrustes::~CoregPtsProcrustes() {
+}
+
+CoregPtsProcrustes::CoregPtsProcrustes(int allowScale, int allowRotate,
+				       int allowTranslate) :
+  CoregPts(allowScale, allowRotate, allowTranslate)
+{
+}
+
+int CoregPtsProcrustes::computeTrans() {
+  cerr << "ERROR - CoregPtsProcrustes::computeTrans() not yet implemented.\n";
+  return 0;
+}
+
+CoregPtsSimplexSearch::~CoregPtsSimplexSearch() {
+}
+
+CoregPtsSimplexSearch::CoregPtsSimplexSearch(int maxIters, double misfitTol,
+ 				     int &abort, ScalarFieldInterface *dField,
+				     MusilRNG &mr,
+				     int allowScale, int allowRotate,
+				     int allowTranslate) :
+  CoregPts(allowScale, allowRotate, allowTranslate),
+  maxIters_(maxIters), misfitTol_(misfitTol), abort_(abort), dField_(dField),
+  mr_(mr)
+{
+  NDIM_ = 7;
+  NSEEDS_ = 8;
+  params_.newsize(NSEEDS_+1, NDIM_);
+  misfit_.resize(NSEEDS_+1);
+}
+
+int CoregPtsSimplexSearch::getMisfit(double &misfit) {
+  if (!computeTransPtsA())
+    return 0;
+  misfit=0;
+  double m;
+  int npts = origPtsP_.size();
+  for (int i=0; i<npts; i++) {
+    dField_->interpolate(m, origPtsP_[i]);
+    misfit += m;
+  }
+  misfit = Sqrt(misfit/npts);
+  return 1;
+}
+
+void CoregPtsSimplexSearch::compute_misfit(int idx) {
+  // set up the transform_ matrix based on params_(idx, xx)
+  // theta, phi, rot, transx, transy, transz, scale;
+  // order: translate to the origin, rotate, scale, translate, translate back
+  double theta=params_(idx,0);
+  double phi=params_(idx,1);
+  Vector axis(sin(phi)*cos(theta), sin(phi)*sin(theta), cos(phi));
+  double rot=params_(idx,2);
+  Vector trans(params_(idx,3), params_(idx,4), params_(idx,5));
+  double scale=params_(idx,6);
+  transform_.load_identity();
+  transform_.pre_translate(-origPtsCenter_.asVector());
+  transform_.pre_rotate(rot, axis);
+  transform_.pre_scale(Vector(scale, scale, scale));
+  transform_.pre_translate(trans);
+  transform_.pre_translate(origPtsCenter_.asVector());
+  invalidate();
+  getMisfit(misfit_[idx]);
+}
+
+
+double CoregPtsSimplexSearch::simplex_step(Array1<double>& sum, double factor,
+					   int worst) {
+  double factor1 = (1 - factor)/NDIM_;
+  double factor2 = factor1-factor;
+  int i;
+  for (i=0; i<NDIM_; i++) 
+    params_(NSEEDS_,i) = sum[i]*factor1 - params_(worst,i)*factor2;
+
+  
+  // evaluate the new guess
+  compute_misfit(NSEEDS_);
+
+  // if this is better, swap it with the worst one
+  if (misfit_[NSEEDS_] < misfit_[worst]) {
+    misfit_[worst] = misfit_[NSEEDS_];
+    for (i=0; i<NDIM_; i++) {
+      sum[i] = sum[i] + params_(NSEEDS_,i)-params_(worst,i);
+      params_(worst,i) = params_(NSEEDS_,i);
+    }
+  }
+
+  return misfit_[NSEEDS_];
+}
+
+
+//! find the iterative least-squares fit between two uncorrelated point clouds
+//!  using a simplex search
+
+int CoregPtsSimplexSearch::computeTrans() {
+  BBox bbox;
+  origPtsCenter_ = origPtsA_[0];
+  bbox.extend(origPtsA_[0]);
+  int i,j;
+  for (i=1; i<origPtsA_.size(); i++) {
+    origPtsCenter_+=origPtsA_[i].asVector(); 
+    bbox.extend(origPtsA_[i]);
+  }
+  origPtsCenter_/=origPtsA_.size();
+
+  double t_scale=bbox.longest_edge()/20;
+  double r_scale=.03*2*PI;
+  double s_scale=0.03;
+
+  if (!allowScale_) s_scale=0;
+  if (!allowRotate_) r_scale=0;
+  if (!allowTranslate_) t_scale=0;
+
+  // theta, phi, rot, transx, transy, transz, scale;
+  // order: translate to the origin, rotate, scale, translate, translate back
+  for (j=0; j<2; j++)
+    for (i=0; i<NSEEDS_; i++)
+      params_(i,j)=mr_()*2*M_PI;
+  // j=2;
+    for (i=0; i<NSEEDS_; i++)
+      params_(i,j)=(mr_()-0.5)*r_scale;
+  for (j=3; j<6; j++)
+    for (i=0; i<NSEEDS_; i++)
+      params_(i,j)=(mr_()-0.5)*t_scale;
+  // j=6;
+    for (i=0; i<NSEEDS_; i++)
+      params_(i,j)=1+(mr_()-0.5)*s_scale;
+
+  for (i=0; i<NSEEDS_; i++)
+    compute_misfit(i);
+
+  // as long as we haven't exceded "iters" of iterations, and our
+  // error isn't below "tolerance", and we haven't been told to "abort",
+  // we continue to iterate...
+
+  Array1<double> sum(NDIM_);
+  sum.initialize(0);
+  for (i=0; i<NSEEDS_; i++)
+    for (j=0; j<NDIM_; j++)
+      sum[j]+=params_(i,j);
+
+  double relative_tolerance;
+  int num_evals = 0;
+
+  while(1) {
+    int best, worst, next_worst;
+    best = 0;
+    if (misfit_[0] > misfit_[1]) {
+      worst = 0;
+      next_worst = 1;
+    } else {
+      worst = 1;
+      next_worst = 0;
+    }
+    int i;
+    for (i=0; i<NSEEDS_; i++) {
+      if (misfit_[i] <= misfit_[best]) best=i;
+      if (misfit_[i] > misfit_[worst]) {
+	next_worst = worst;
+	worst = i;
+      } else 
+	if (misfit_[i] > misfit_[next_worst] && (i != worst)) 
+	  next_worst=i;
+      relative_tolerance = 2*(misfit_[worst]-misfit_[best])/
+	(misfit_[worst]+misfit_[best]);
+    }
+
+    if (relative_tolerance < misfitTol_ || num_evals > maxIters_ || abort_) 
+      break;
+
+    double step_misfit = simplex_step(sum, -1, worst);
+    num_evals++;
+    if (step_misfit <= misfit_[best]) {
+      step_misfit = simplex_step(sum, 2, worst);
+      num_evals++;
+    } else if (step_misfit >= misfit_[worst]) {
+      double old_misfit = misfit_[worst];
+      step_misfit = simplex_step(sum, 0.5, worst);
+      num_evals++;
+      if (step_misfit >= old_misfit) {
+	for (i=0; i<NSEEDS_; i++) {
+	  if (i != best) {
+	    int j;
+	    for (j=0; j<NDIM_; j++)
+	      params_(i,j) = params_(NSEEDS_,j) = 
+		0.5 * (params_(i,j) + params_(best,j));
+	    misfit_[i] = misfit_[NSEEDS_];
+	    num_evals++;
+	  }
+	}
+      }
+      sum.initialize(0);
+      for (i=0; i<NSEEDS_; i++) {
+	for (j=0; j<NDIM_; j++)
+	  sum[j]+=params_(i,j); 
+      }
+    }
+  }
+  cerr << "Coregistration -- num_evals = "<<num_evals << "\n";
+  return 1;
+}
 }

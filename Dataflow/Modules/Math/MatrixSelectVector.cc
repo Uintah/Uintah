@@ -27,11 +27,21 @@ class MatrixSelectVector : public Module {
   GuiString selectable_units_;
   GuiInt    range_min_;
   GuiInt    range_max_;
+  GuiString playmode_;
+  GuiInt    current_;
+  GuiString execmode_;
+  GuiInt    delay_;
+  int       inc_;
+  bool      stop_;
+
+  void send_selection(MatrixHandle mh, int which, bool use_row, bool last_p);
+  int increment(int which, int lower, int upper);
 
 public:
   MatrixSelectVector(const string& id);
   virtual ~MatrixSelectVector();
   virtual void execute();
+  virtual void tcl_command(TCLArgs&, void*);
 };
 
 
@@ -49,7 +59,13 @@ MatrixSelectVector::MatrixSelectVector(const string& id)
     selectable_inc_("selectable_inc", id, this),
     selectable_units_("selectable_units", id, this),
     range_min_("range_min", id, this),
-    range_max_("range_max", id, this)
+    range_max_("range_max", id, this),
+    playmode_("playmode", id, this),
+    current_("current", id, this),
+    execmode_("execmode", id, this),
+    delay_("delay", id, this),
+    inc_(1),
+    stop_(false)
 {
 }
 
@@ -57,6 +73,131 @@ MatrixSelectVector::MatrixSelectVector(const string& id)
 MatrixSelectVector::~MatrixSelectVector()
 {
 }
+
+
+void
+MatrixSelectVector::send_selection(MatrixHandle mh, int which,
+				   bool use_row, bool last_p)
+{
+  MatrixOPort *ovec = (MatrixOPort *)get_oport("Vector");
+  if (!ovec) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+
+  MatrixOPort *osel = (MatrixOPort *)get_oport("Selected Index");
+  if (!osel) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+
+  current_.set(which);
+
+  ColumnMatrix *cm;
+  if (use_row)
+  {
+    if (which < 0 || which >= mh->nrows())
+    {
+      warning("Row out of range, skipping.");
+      return;
+    }
+    cm = scinew ColumnMatrix(mh->ncols());
+    double *data = cm->get_data();
+    for (int c = 0; c<mh->ncols(); c++)
+    {
+      data[c] = mh->get(which, c);
+    }
+  }
+  else
+  {
+    if (which < 0 || which >= mh->ncols())
+    {
+      warning("Column out of range, skipping.");
+      return;
+    }
+    cm = scinew ColumnMatrix(mh->nrows());
+    double *data = cm->get_data();
+    for (int r = 0; r<mh->nrows(); r++)
+    {
+      data[r] = mh->get(r, which);
+    }
+  }	    
+
+  ColumnMatrix *selected = scinew ColumnMatrix(1);
+  selected->put(0, 0, (double)which);
+
+  if (last_p)
+  {
+    ovec->send(MatrixHandle(cm));
+    osel->send(MatrixHandle(selected));
+  }
+  else
+  {
+    ovec->send_intermediate(MatrixHandle(cm));
+    osel->send_intermediate(MatrixHandle(selected));
+  }
+}
+
+
+int
+MatrixSelectVector::increment(int which, int lower, int upper)
+{
+  // Do nothing if no range.
+  if (upper == lower)
+  {
+    if (playmode_.get() == "once")
+    {
+      stop_ = true;
+    }
+    return upper;
+  }
+  which += inc_;
+
+  if (which > upper)
+  {
+    if (playmode_.get() == "bounce1")
+    {
+      inc_ *= -1;
+      return increment(upper, lower, upper);
+    }
+    else if (playmode_.get() == "bounce2")
+    {
+      inc_ *= -1;
+      return upper;
+    }
+    else
+    {
+      if (playmode_.get() == "once")
+      {
+	stop_ = true;
+      }
+      return lower;
+    }
+  }
+  if (which < lower)
+  {
+    if (playmode_.get() == "bounce1")
+    {
+      inc_ *= -1;
+      return increment(lower, lower, upper);
+    }
+    else if (playmode_.get() == "bounce2")
+    {
+      inc_ *= -1;
+      return lower;
+    }
+    else
+    {
+      if (playmode_.get() == "once")
+      {
+	stop_ = true;
+      }
+      return upper;
+    }
+  }
+  return which;
+}
+
 
 
 void
@@ -72,19 +213,7 @@ MatrixSelectVector::execute()
   MatrixHandle mh;
   if (!(imat->get(mh) && mh.get_rep()))
   {
-    warning("Empty input matrix.");
-    return;
-  }
-  
-  MatrixOPort *ovec = (MatrixOPort *)get_oport("Vector");
-  if (!ovec) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
-    return;
-  }
-
-  MatrixOPort *osel = (MatrixOPort *)get_oport("Selected Index");
-  if (!osel) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    remark("Empty input matrix.");
     return;
   }
   
@@ -198,6 +327,12 @@ MatrixSelectVector::execute()
   MatrixHandle weightsH;
   if (ivec->get(weightsH) && weightsH.get_rep())
   {
+    MatrixOPort *ovec = (MatrixOPort *)get_oport("Vector");
+    if (!ovec) {
+      postMessage("Unable to initialize "+name+"'s oport\n");
+      return;
+    }
+
     ColumnMatrix *w = dynamic_cast<ColumnMatrix*>(weightsH.get_rep());
     ColumnMatrix *cm;
     if (use_row) 
@@ -235,52 +370,100 @@ MatrixSelectVector::execute()
   }
 #endif
 
+  // If there is a current index matrix, use it.
+  MatrixIPort *icur = (MatrixIPort *)get_iport("Current Index");
+  if (!icur) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  MatrixHandle currentH;
+  if (icur->get(currentH) && currentH.get_rep())
+  {
+    send_selection(mh, (int)(currentH->get(0, 0)), use_row, true);
+    return;
+  }
+
+  // Update the increment.
   const int start = range_min_.get();
   const int end = range_max_.get();
-  const int inc = (start>end)?-1:1;
-  int which;
-  for (which = start; ; which += inc)
+  if (changed_p || playmode_.get() == "once" || playmode_.get() == "loop")
   {
-    ColumnMatrix *cm;
-    if (use_row)
-    {
-      cm = scinew ColumnMatrix(mh->ncols());
-      double *data = cm->get_data();
-      for (int c = 0; c<mh->ncols(); c++)
-      {
-	data[c] = mh->get(which, c);
-      }
-    }
-    else
-    {
-      cm = scinew ColumnMatrix(mh->nrows());
-      double *data = cm->get_data();
-      for (int r = 0; r<mh->nrows(); r++)
-      {
-	data[r] = mh->get(r, which);
-      }
-    }	    
-
-    // Attempt to copy no-transient properties.
-    // TODO: update min/max to be the current value:  min + (max - min) * inc
-    //PropertyManager *cmp = cm;
-    //*cmp = *mh_prop;
-
-    ColumnMatrix *selected = scinew ColumnMatrix(1);
-    selected->put(0, 0, (double)which);
-
-    if (which == end)
-    {
-      ovec->send(MatrixHandle(cm));
-      osel->send(MatrixHandle(selected));
-      break;
-    }
-    else
-    {
-      ovec->send_intermediate(MatrixHandle(cm));
-      osel->send_intermediate(MatrixHandle(selected));
-    }
+    inc_ = (start>end)?-1:1;
   }
+
+  // If the current value is invalid, reset it to the start.
+  int lower = start;
+  int upper = end;
+  if (lower > upper) {int tmp = lower; lower = upper; upper = tmp; }
+  if (current_.get() < lower || current_.get() > upper)
+  {
+    current_.set(start);
+    inc_ = (start>end)?-1:1;
+  }
+
+  // Cash execmode and reset it in case we bail out early.
+  const string execmode = execmode_.get();
+  // If updating, we're done for now.
+  if (execmode == "update")
+  {
+  }
+  else if (execmode == "step")
+  {
+    int which = current_.get();
+
+    // TODO: INCREMENT
+    which = increment(which, lower, upper);
+    send_selection(mh, which, use_row, true);
+  }
+  else if (execmode == "play")
+  {
+    stop_ = false;
+    int which = current_.get();
+    if (which >= end && playmode_.get() == "once")
+    {
+      which = start;
+    }
+    const int delay = delay_.get();
+    int stop;
+    do {
+      int next;
+      if (playmode_.get() == "once")
+      {
+	next = increment(which, lower, upper);
+      }
+      stop = stop_;
+      send_selection(mh, which, use_row, stop);
+      if (!stop && delay > 0) { usleep(delay * 1000); }
+      if (playmode_.get() == "once")
+      {
+	which = next;
+      }
+      else if (!stop)
+      {
+	which = increment(which, lower, upper);
+      }
+    } while (!stop);
+  }
+  else
+  {
+    send_selection(mh, current_.get(), use_row, true);
+  }
+  execmode_.set("init");
+}
+
+
+void
+MatrixSelectVector::tcl_command(TCLArgs& args, void* userdata)
+{
+  if (args.count() < 2) {
+    args.error("MatrixSelectVector needs a minor command");
+    return;
+  }
+  if (args[1] == "stop")
+  {
+    stop_ = true;
+  }
+  else Module::tcl_command(args, userdata);
 }
 
 

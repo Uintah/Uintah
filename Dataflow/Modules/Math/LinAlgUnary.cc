@@ -14,11 +14,13 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 #include <sstream>
+#include <Core/Math/function.h>
 
 namespace SCIRun {
 
 class LinAlgUnary : public Module {
   GuiString op_;
+  GuiString function_;
   void insertion_sort(double *x, int n);
 public:
   LinAlgUnary(const string& id);
@@ -33,7 +35,7 @@ extern "C" Module* make_LinAlgUnary(const string& id)
 
 LinAlgUnary::LinAlgUnary(const string& id)
 : Module("LinAlgUnary", id, Filter,"Math", "SCIRun"),
-  op_("op", id, this)
+  op_("op", id, this), function_("function", id, this)
 {
 }
 
@@ -81,6 +83,15 @@ void LinAlgUnary::execute() {
     double *x = &((*(m.get_rep()))[0][0]);
     int n = m->nrows()*m->ncols();
     insertion_sort(x, n);
+    omat_->send(MatrixHandle(m));
+  } else if (op == "Function") {
+    Function *f = new Function(1);
+    fnparsestring(function_.get().c_str(), &f);
+    MatrixHandle m = mh->clone();
+    double *x = &((*(m.get_rep()))[0][0]);
+    int n = m->nrows()*m->ncols();
+    for (int i=0; i<n; i++)
+      x[i]=f->eval(&(x[i]));
     omat_->send(MatrixHandle(m));
   } else {
     warning("Don't know operation "+op);
