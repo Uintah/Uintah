@@ -97,9 +97,7 @@ ManageFieldData::execute()
   // Compute output matrix.
   CompileInfoHandle ci_field =
     ManageFieldDataAlgoField::
-    get_compile_info(ifieldhandle->get_type_description(),
-		     ifieldhandle->data_at_type_description(),
-		     svt_flag);
+    get_compile_info(ifieldhandle->get_type_description(), svt_flag);
   Handle<ManageFieldDataAlgoField> algo_field;
   if (!module_dynamic_compile(ci_field, algo_field)) return;
 
@@ -173,7 +171,6 @@ ManageFieldData::execute()
 
 CompileInfoHandle
 ManageFieldDataAlgoField::get_compile_info(const TypeDescription *fsrc,
-					   const TypeDescription *lsrc,
 					   int svt_flag)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
@@ -198,11 +195,10 @@ ManageFieldDataAlgoField::get_compile_info(const TypeDescription *fsrc,
 
   CompileInfo *rval = 
     scinew CompileInfo(base_class_name + extension + "." +
-		       fsrc->get_filename() + "." +
-		       lsrc->get_filename() + ".",
+		       fsrc->get_filename() + ".",
                        base_class_name, 
                        base_class_name + extension, 
-                       fsrc->get_name() + ", " + lsrc->get_name());
+                       fsrc->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
