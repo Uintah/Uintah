@@ -35,7 +35,6 @@ SRCS     += \
 	$(SRCDIR)/CastTVtoMLV.cc\
 	$(SRCDIR)/ClippingPlane.cc\
 	$(SRCDIR)/DirectInterpolate.cc\
-	$(SRCDIR)/DirectInterpolateAlgo.cc\
 	$(SRCDIR)/EditField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/Gradient.cc\
