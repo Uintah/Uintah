@@ -175,7 +175,7 @@ protected:
    double widget_scale;
    double epsilon;
 
-   Array1<GeometryOPort*> oports;
+   vector<GeometryOPort*> oports;
    void flushViews() const;
    
    // Individual widgets use this for tcl if necessary.
