@@ -156,7 +156,15 @@ void Exception::sci_throw(const Exception& exc)
     } else if(strcasecmp(emode, "dbx") == 0){
       // Fire up the debugger
       char command[100];
-      sprintf(command, "xterm -e gdb -p %d &", getpid());
+      if(getenv("SCI_DBXCOMMAND")){
+	sprintf(command, getenv("SCI_DBXCOMMAND"), getpid());
+      } else {
+#ifdef __sgi
+	sprintf(command, "winterm -c dbx -p %d &", getpid());
+#else
+	sprintf(command, "xterm -e gdb %d %p&", getpid());
+#endif
+      }
       cerr << "Starting: " << command << '\n';
       system(command);
       emode="ask";
