@@ -13,13 +13,13 @@
  */
 
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
-#include <PSECore/CommonDatatypes/SurfacePort.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
-#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
-#include <PSECore/CommonDatatypes/VectorFieldPort.h>
-#include <SCICore/CoreDatatypes/VectorFieldRG.h>
-#include <SCICore/CoreDatatypes/VectorFieldUG.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <PSECore/Datatypes/SurfacePort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Datatypes/ScalarFieldUG.h>
+#include <PSECore/Datatypes/VectorFieldPort.h>
+#include <SCICore/Datatypes/VectorFieldRG.h>
+#include <SCICore/Datatypes/VectorFieldUG.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/TclInterface/TCLvar.h>
@@ -30,7 +30,7 @@ namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Multitask;
@@ -138,6 +138,11 @@ void GradientMagnitude::execute()
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:47:47  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 23:17:45  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

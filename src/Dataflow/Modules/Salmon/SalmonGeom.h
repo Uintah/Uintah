@@ -31,7 +31,7 @@ namespace SCICore {
 }
 
 namespace PSECore {
-  namespace CommonDatatypes {
+  namespace Datatypes {
     class GeometryComm;
   }
 }
@@ -40,7 +40,7 @@ namespace PSECommon {
 namespace Modules {
 
 using PSECore::Dataflow::Module;
-using PSECore::CommonDatatypes::GeometryComm;
+using PSECore::Datatypes::GeometryComm;
 
 using SCICore::GeomSpace::GeomIndexedGroup;
 using SCICore::GeomSpace::GeomObj;
@@ -109,6 +109,11 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:47:58  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/17 23:50:16  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

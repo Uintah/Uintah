@@ -17,9 +17,9 @@
 #include <SCICore/Containers/String.h>
 #include <SCICore/Util/NotFinished.h>
 #include <PSECommon/Dataflow/Module.h>
-#include <SCICore/CoreDatatypes/BasicSurfaces.h>
-#include <PSECommon/CommonDatatypes/SurfacePort.h>
-#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <SCICore/Datatypes/BasicSurfaces.h>
+#include <PSECommon/Datatypes/SurfacePort.h>
+#include <SCICore/Datatypes/TriSurface.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <iostream.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -32,10 +32,10 @@ namespace PSECommon {
 namespace Modules {
 
 using PSECommon::Dataflow::Module;
-using PSECommon::CommonDatatypes::TriSurface;
-using PSECommon::CommonDatatypes::SurfaceIPort;
-using PSECommon::CommonDatatypes::SurfaceOPort;
-using PSECommon::CommonDatatypes::SurfaceHandle;
+using PSECommon::Datatypes::TriSurface;
+using PSECommon::Datatypes::SurfaceIPort;
+using PSECommon::Datatypes::SurfaceOPort;
+using PSECommon::Datatypes::SurfaceHandle;
 
 using SCICore::TclInterface::TCLint;
 using SCICore::Geometry::Point;
@@ -163,6 +163,11 @@ void SimpSurface::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:48:00  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/18 20:19:58  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

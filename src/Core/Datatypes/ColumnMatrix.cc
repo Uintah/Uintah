@@ -12,7 +12,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/CoreDatatypes/ColumnMatrix.h>
+#include <SCICore/Datatypes/ColumnMatrix.h>
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -21,7 +21,7 @@
 #include <iostream.h>
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 static Persistent* maker()
 {
@@ -300,11 +300,16 @@ void Mult(ColumnMatrix& result, const ColumnMatrix& a, double s)
 	result.data[i]=a.data[i]*s;
 }
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:48:31  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/19 23:18:04  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.
@@ -317,7 +322,7 @@ void Mult(ColumnMatrix& result, const ColumnMatrix& a, double s)
 // Initial commit
 //
 // Revision 1.1  1999/04/25 04:07:05  dav
-// Moved files into CoreDatatypes
+// Moved files into Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:50  dav
 // Import sources

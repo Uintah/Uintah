@@ -11,9 +11,9 @@
  */
 
 #include <PSECommon/Dataflow/Module.h>
-#include <PSECommon/CommonDatatypes/ScalarFieldPort.h>
-#include <PSECommon/CommonDatatypes/SurfacePort.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
+#include <PSECommon/Datatypes/ScalarFieldPort.h>
+#include <PSECommon/Datatypes/SurfacePort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Math/Expon.h>

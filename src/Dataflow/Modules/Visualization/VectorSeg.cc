@@ -22,9 +22,9 @@
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <PSECore/Dataflow/Module.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
-#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
-#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Datatypes/ScalarFieldUG.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Multitask/Task.h>
 #include <SCICore/TclInterface/TCLvar.h>
@@ -41,7 +41,7 @@ namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Containers;
@@ -282,6 +282,11 @@ void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &,
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:48:11  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 05:30:54  sparker
 // Configuration updates:
 //  - renamed config.h to sci_config.h
@@ -311,7 +316,7 @@ void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &,
 // Initial commit
 //
 // Revision 1.2  1999/04/27 22:58:02  dav
-// updates in Modules for CoreDatatypes
+// updates in Modules for Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:34  dav
 // Import sources

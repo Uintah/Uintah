@@ -14,8 +14,8 @@
 #ifndef SCI_project_Surface_h
 #define SCI_project_Surface_h 1
 
-#include <SCICore/CoreDatatypes/Datatype.h>
-#include <SCICore/CoreDatatypes/ColorMap.h>
+#include <SCICore/Datatypes/Datatype.h>
+#include <SCICore/Datatypes/ColorMap.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/HashTable.h>
@@ -31,7 +31,7 @@ namespace Geom {
   class GeomObj;
 }
 
-namespace CoreDatatypes {
+namespace Datatypes {
 
 using Containers::LockingHandle;
 using Geometry::Point;
@@ -109,11 +109,16 @@ public:
     static PersistentTypeID type_id;
 };
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:42  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:55  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -128,7 +133,7 @@ public:
 // added SCICore .h files to /include directories
 //
 // Revision 1.1  1999/04/27 21:14:29  dav
-// working on CoreDatatypes
+// working on Datatypes
 //
 // Revision 1.2  1999/04/25 04:14:44  dav
 // oopps...?

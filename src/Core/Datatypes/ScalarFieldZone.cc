@@ -12,13 +12,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/CoreDatatypes/ScalarFieldZone.h>
+#include <SCICore/Datatypes/ScalarFieldZone.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 using SCICore::Math::Min;
 using SCICore::Math::Max;
@@ -118,11 +118,16 @@ void ScalarFieldZone::get_boundary_lines(Array1<Point>& lines)
 	zones[i]->get_boundary_lines(lines);
 }
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:41  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:54  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -137,7 +142,7 @@ void ScalarFieldZone::get_boundary_lines(Array1<Point>& lines)
 // added back .h files
 //
 // Revision 1.1  1999/04/25 04:07:17  dav
-// Moved files into CoreDatatypes
+// Moved files into Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:48  dav
 // Import sources

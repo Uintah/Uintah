@@ -33,10 +33,10 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/Trig.h>
 #include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/CoreDatatypes/Image.h>
+#include <SCICore/Datatypes/Image.h>
 #include <SCICore/Multitask/AsyncReply.h>
 #include <SCICore/Multitask/Mailbox.h>
-#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <PSECore/Datatypes/GeometryPort.h>
 #include <PSECommon/Modules/Salmon/Ball.h>
 #include <PSECommon/Modules/Salmon/MpegEncoder.h>
 #include <PSECommon/Modules/Salmon/Renderer.h>
@@ -54,10 +54,10 @@ extern Tcl_Interp* the_interp;
 namespace PSECommon {
 namespace Modules {
 
-using PSECore::CommonDatatypes::GeometryData;
-using SCICore::CoreDatatypes::DepthImage;
+using PSECore::Datatypes::GeometryData;
+using SCICore::Datatypes::DepthImage;
 
-using SCICore::CoreDatatypes::ColorImage;
+using SCICore::Datatypes::ColorImage;
 using SCICore::Multitask::AsyncReply;
 using SCICore::GeomSpace::Light;
 using SCICore::GeomSpace::Lighting;
@@ -1466,6 +1466,11 @@ template class Mailbox<GetReq>;
 
 //
 // $Log$
+// Revision 1.6  1999/08/25 03:47:57  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.5  1999/08/23 20:11:49  sparker
 // GenAxes had no UI
 // Removed extraneous print statements
@@ -1495,7 +1500,7 @@ template class Mailbox<GetReq>;
 // added Mpeg stuff back to Salmon
 //
 // Revision 1.2  1999/04/27 22:57:55  dav
-// updates in Modules for CoreDatatypes
+// updates in Modules for Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:30  dav
 // Import sources

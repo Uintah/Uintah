@@ -27,7 +27,7 @@
 
 #include <SCICore/share/share.h>
 
-#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/HashTable.h>
 #include <SCICore/Containers/LockingHandle.h>
@@ -39,7 +39,7 @@
 * Class & function forward declarations and type declarations
 *******************************************************************************/
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 using SCICore::Containers::LockingHandle;
 using SCICore::Containers::Array1;
@@ -298,11 +298,16 @@ class SCICORESHARE HexMesh : public Datatype
     virtual void io (Piostream & p);
 };
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:33  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:46  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -317,7 +322,7 @@ class SCICORESHARE HexMesh : public Datatype
 // added SCICore .h files to /include directories
 //
 // Revision 1.1  1999/04/27 21:14:27  dav
-// working on CoreDatatypes
+// working on Datatypes
 //
 // Revision 1.2  1999/04/25 04:14:36  dav
 // oopps...?

@@ -21,6 +21,10 @@ AC_ARG_ENABLE(davew,
 	[  --enable-davew		Build the Dave Weinstein modules],
 	[davew="$enableval"],
 	[davew=${davew='no'}])
+AC_ARG_ENABLE(exename,
+	[  --enable-exename		Override the default executable name],
+	[exename="$enableval"],
+	[exename=${exename='default'}])
 
 if test "$scirun" = "no" -a "$uintah" = "no" -a "$davew" = "no"; then
   echo "Please at least use one of:"
@@ -31,22 +35,28 @@ if test "$scirun" = "no" -a "$uintah" = "no" -a "$davew" = "no"; then
 fi
 
 PACKAGE_DIRS=""
-PACKAGE_PATH="\$(OBJTOP_ABS)/PSECommon/libPSECommon.so\(\$(SRCTOP_ABS)/PSECommon/TCL\)"
+PACKAGE_PATH="\$(OBJTOP_ABS)/PSECommon/libPSECommon.so\(\$(SRCTOP_ABS)/PSECommon/GUI\)"
 
 if test "$scirun" = "yes"; then
 #  PACKAGE_DIRS=$PACKAGE_DIRS" SCIRun"
-#  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/SCIRun/libSCIRun.so\(\$(SRCTOP_ABS)/SCIRun/TCL\)"
+#  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/SCIRun/libSCIRun.so\(\$(SRCTOP_ABS)/SCIRun/GUI\)"
   EXENAME="scirun"
 fi
 if test "$uintah" = "yes"; then
   PACKAGE_DIRS=$PACKAGE_DIRS" Uintah"
-  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/Uintah/libUintah.so\(\$(SRCTOP_ABS)/Uintah/TCL\)"
+  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/Uintah/libUintah.so\(\$(SRCTOP_ABS)/Uintah/GUI\)"
   EXENAME="uintah"
 fi
 if test "$davew" = "yes"; then
   PACKAGE_DIRS=$PACKAGE_DIRS" DaveW"
-  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/DaveW/libDaveW.so\(\$(SRCTOP_ABS)/DaveW/GUIs\)"
+  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/DaveW/libDaveW.so\(\$(SRCTOP_ABS)/DaveW/GUI\)"
   EXENAME="davew"
+fi
+
+if test "$exename" = "default"; then
+  EXENAME=$EXENAME
+else
+  EXENAME=$exename
 fi
 
 AC_SUBST(PACKAGE_DIRS)
@@ -65,6 +75,8 @@ AC_ARG_ENABLE(threads,
 	[threads=${threads='unknown'}])
 AC_SUBST(LOCK_IMPL)
 AC_SUBST(TASK_IMPL)
+AC_SUBST(THREAD_IMPL)
+AC_SUBST(TIME_IMPL)
 
 ##-- Host-Specific Defaults --------------------------------------------------
 
@@ -126,6 +138,7 @@ case $host in
            if test "$threads" = "unknown"; then
              threads="irix"
            fi
+	   TIME_IMPL=Time_irix.cc
            ;;
   *-linux-gnu)
      AC_PROG_CC
@@ -136,6 +149,7 @@ case $host in
      LOCK_IMPL=""
      SOFLAGS="-shared ${SOFLAGS}"
      LDRUN_PREFIX="-L"
+     TIME_IMPL=Time_unix.cc
            ;;
   *)
      echo "WARNING: Untested configuration - you are on your own!"
@@ -161,6 +175,7 @@ case $threads in
 esac
 AC_SUBST(THREAD_LIBS)
 TASK_IMPL="Task_"$threads
+THREAD_IMPL="Thread_"$threads
 
 ##-- Find a C Compiler -------------------------------------------------------
 ## AC_PROG_CC
@@ -430,7 +445,7 @@ AC_OUTPUT(Makefile \
             scripts/targets.mk \
               SCICore/Makefile \
                 SCICore/Containers/Makefile \
-                SCICore/CoreDatatypes/Makefile \
+                SCICore/Datatypes/Makefile \
                 SCICore/Exceptions/Makefile \
                 SCICore/Geom/Makefile \
                 SCICore/Geometry/Makefile \
@@ -444,7 +459,7 @@ AC_OUTPUT(Makefile \
                 SCICore/Util/Makefile \
               PSECore/Makefile \
                 PSECore/Comm/Makefile \
-                PSECore/CommonDatatypes/Makefile \
+                PSECore/Datatypes/Makefile \
                 PSECore/Constraints/Makefile \
                 PSECore/Dataflow/Makefile \
                 PSECore/Widgets/Makefile \

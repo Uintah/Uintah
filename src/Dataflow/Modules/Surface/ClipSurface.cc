@@ -14,11 +14,11 @@
 
 #include <Util/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CommonDatatypes/BasicSurfaces.h>
-#include <CommonDatatypes/ScalarTriSurface.h>
-#include <CommonDatatypes/SurfTree.h>
-#include <CommonDatatypes/TriSurface.h>
+#include <Datatypes/SurfacePort.h>
+#include <Datatypes/BasicSurfaces.h>
+#include <Datatypes/ScalarTriSurface.h>
+#include <Datatypes/SurfTree.h>
+#include <Datatypes/TriSurface.h>
 #include <Geometry/BBox.h>
 #include <Math/Expon.h>
 #include <Math/MusilRNG.h>
@@ -31,14 +31,14 @@ namespace PSECommon {
 namespace Modules {
 
 using PSECommon::Dataflow::Module;
-using PSECommon::CommonDatatypes::SurfaceIPort;
-using PSECommon::CommonDatatypes::SurfaceOPort;
-using PSECommon::CommonDatatypes::SurfaceHandle;
-using PSECommon::CommonDatatypes::ScalarTriSurface;
-using PSECommon::CommonDatatypes::TriSurface;
-using PSECommon::CommonDatatypes::SurfTree;
-using PSECommon::CommonDatatypes::PointsSurface;
-using PSECommon::CommonDatatypes::NodeHandle;
+using PSECommon::Datatypes::SurfaceIPort;
+using PSECommon::Datatypes::SurfaceOPort;
+using PSECommon::Datatypes::SurfaceHandle;
+using PSECommon::Datatypes::ScalarTriSurface;
+using PSECommon::Datatypes::TriSurface;
+using PSECommon::Datatypes::SurfTree;
+using PSECommon::Datatypes::PointsSurface;
+using PSECommon::Datatypes::NodeHandle;
 using SCICore::Containers::clString;
 using SCICore::Containers::Array1;
 using SCICore::Geometry::Point;
@@ -163,6 +163,11 @@ void ClipSurface::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:47:59  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/18 20:19:55  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

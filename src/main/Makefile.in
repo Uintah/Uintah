@@ -16,8 +16,8 @@ OBJTOP_ABS    = $(shell cd $(OBJTOP) ; pwd)
 SRCTOP_ABS    = $(shell cd $(SRCTOP) ; pwd)
 
 SRCS      = main.cc
-CFLAGS   := $(CFLAGS) -DPSECORETCL=\"$(SRCTOP_ABS)/PSECore/TCL\" \
-                      -DSCICORETCL=\"$(SRCTOP_ABS)/SCICore/TCL\" \
+CFLAGS   := $(CFLAGS) -DPSECORETCL=\"$(SRCTOP_ABS)/PSECore/GUI\" \
+                      -DSCICORETCL=\"$(SRCTOP_ABS)/SCICore/GUI\" \
                       -DDEFAULT_PACKAGE_PATH=\"@PACKAGE_PATH@2\"
 INCLUDES  = -I$(OBJTOP)
             

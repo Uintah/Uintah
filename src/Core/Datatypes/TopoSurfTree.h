@@ -11,13 +11,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_CoreDatatypes_TopoSurfTree_h
-#define SCI_CoreDatatypes_TopoSurfTree_h 1
+#ifndef SCI_Datatypes_TopoSurfTree_h
+#define SCI_Datatypes_TopoSurfTree_h 1
 
-#include <SCICore/CoreDatatypes/SurfTree.h>
+#include <SCICore/Datatypes/SurfTree.h>
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 struct SrchLst;
 
@@ -106,11 +106,16 @@ void Pio(Piostream&, WireInfo&);
 void Pio(Piostream&, JunctionInfo&);
 void Pio(Piostream&, Region&);
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:43  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:56  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -125,8 +130,8 @@ void Pio(Piostream&, Region&);
 // added SCICore .h files to /include directories
 //
 // Revision 1.1  1999/04/27 21:14:30  dav
-// working on CoreDatatypes
+// working on Datatypes
 //
 //
 
-#endif /* SCI_CoreDatatypes_TopoSurfTree_h */
+#endif /* SCI_Datatypes_TopoSurfTree_h */

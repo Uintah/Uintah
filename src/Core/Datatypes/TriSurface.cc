@@ -12,13 +12,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <SCICore/Datatypes/TriSurface.h>
 
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/TrivialAllocator.h>
 #include <SCICore/Containers/Queue.h>
-#include <SCICore/CoreDatatypes/SurfTree.h>
+#include <SCICore/Datatypes/SurfTree.h>
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Geometry/Grid.h>
 #include <SCICore/Math/MiscMath.h>
@@ -32,7 +32,7 @@
 #endif
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 using SCICore::Containers::TrivialAllocator;
 using SCICore::Containers::Queue;
@@ -1126,11 +1126,16 @@ void Pio(Piostream& stream, TSEdge*& data)
     stream.end_cheap_delim();
 }
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:48:44  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/23 06:30:35  sparker
 // Linux port
 // Added X11 configuration options
@@ -1156,7 +1161,7 @@ void Pio(Piostream& stream, TSEdge*& data)
 // added beginnings of support for g++ compilation
 //
 // Revision 1.1  1999/04/27 21:14:30  dav
-// working on CoreDatatypes
+// working on Datatypes
 //
 // Revision 1.2  1999/04/25 04:14:45  dav
 // oopps...?
