@@ -33,13 +33,16 @@
 
 #include <stdio.h>
 
+/*
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/StructQuadSurfField.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/StructHexVolField.h>
 
+
 using namespace SCIRun;
+*/
 
 void
 macForceLoad()
@@ -52,10 +55,12 @@ macForceLoad()
   // think will fix this) I suggest that we just add the types to this
   // file as we find them "missing"...  -Dd
 
+/*
   PointCloudField<double> pcfd;
   TriSurfField<double> tsfd;
   StructQuadSurfField<double> sqsfd;
   TriSurfMesh tsmd;
   StructHexVolField<double> shvfd;
+*/
 
 }
