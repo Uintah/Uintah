@@ -159,6 +159,8 @@
       <save label = "g.volume"/>
       <save label = "g.velocity"/>
       <save label = "g.temperature"/> 
+      <!-- Need by the regression tester -->
+       <checkpoint interval="0.0025" cycle="2"/> 
    </DataArchiver>
 
    <Debug>
@@ -190,7 +192,7 @@
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "FirstOrderCE" />
-        <solution technique = "EQForm" />
+        <solution technique = "EqForm" />
       </ICE>        
     </CFD>
 
