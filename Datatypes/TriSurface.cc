@@ -60,8 +60,7 @@ void TriSurface::add_point(const Point& p) {
 int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
 				      const Point &p3) {
     if (grid==0) {
-	cerr << "Can't run TriSurface::get_closest_vertex_id() w/o a grid\n";
-	exit(0);
+	ASSERT(!"Can't run TriSurface::get_closest_vertex_id() w/o a grid\n");
     }
     int i[3], j[3], k[3];
     int maxi, maxj, maxk, mini, minj, mink;
@@ -87,19 +86,22 @@ int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
     surf->add_point(p3);
     surf->add_triangle(0,1,2);
 
+    Array1<int> cu;
     while (1) {
-	double dist;
+	double dist=0;
 	int vid=-1;
-	Array1<int> *cu=grid->get_cubes_at_distance(rad,ci,cj,ck);
-	for (int i=0; i<cu->size(); i+=3) {
-	    Array1<int> *el=grid->get_members((*cu)[i],(*cu)[i+1],(*cu)[i+2]);
-	    for (int j=0; j<el->size(); el++) {
-		Array1<int> res;
-		double tdist=surf->distance(points[elements[(*el)[j]]->i1],
-					    res);
-		if (vid==-1 || tdist<dist) {
-		    vid=elements[(*el)[j]]->i1;
-		    dist=tdist;
+	grid->get_cubes_at_distance(rad,ci,cj,ck, cu);
+	for (int i=0; i<cu.size(); i+=3) {
+	    Array1<int> &el=*grid->get_members(cu[i], cu[i+1], cu[i+2]);
+	    if (&el) {
+		for (int j=0; j<el.size(); j++) {
+		    Array1<int> res;
+		    double tdist=surf->distance(points[elements[el[j]]->i1],
+						res);
+		    if (vid==-1 || (Abs(tdist) < Abs(dist))) {
+			vid=elements[el[j]]->i1;
+			dist=tdist;
+		    }
 		}
 	    }
 	}
@@ -111,17 +113,18 @@ int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
 
 int TriSurface::find_or_add(const Point &p) {
     if (grid==0) {
-	cerr << "Can't run TriSurface::find_or_add() w/o a grid\n";
-	exit(0);
+	ASSERT("Can't run TriSurface::find_or_add() w/o a grid\n");
     }
     Array1<int> *el=grid->get_members(p);
-    for (int i=0, done=0; i<el->size() && !done; i++) {
-	if ((points[elements[(*el)[i]]->i1]-p).length2() < .000001)
-	    return elements[(*el)[i]]->i1;
-	if ((points[elements[(*el)[i]]->i2]-p).length2() < .000001)
-	    return elements[(*el)[i]]->i2;
-	if ((points[elements[(*el)[i]]->i3]-p).length2() < .000001)
-	    return elements[(*el)[i]]->i3;
+    if (el) {
+	for (int i=0; i<el->size(); i++) {
+	    if ((points[elements[(*el)[i]]->i1]-p).length2() < .000000001)
+		return elements[(*el)[i]]->i1;
+	    if ((points[elements[(*el)[i]]->i2]-p).length2() < .000000001)
+		return elements[(*el)[i]]->i2;
+	    if ((points[elements[(*el)[i]]->i3]-p).length2() < .000000001)
+		return elements[(*el)[i]]->i3;
+	}
     }
     points.add(p);
     return (points.size()-1);
@@ -131,18 +134,19 @@ int TriSurface::cautious_add_triangle(const Point &p1, const Point &p2,
 				       const Point &p3, int cw) {
     directed&=cw;
     if (grid==0) {
-	cerr << "Can't run TriSurface::cautious_add_triangle w/o a grid\n";
-	exit(0);
+	ASSERT("Can't run TriSurface::cautious_add_triangle w/o a grid\n");
     }
     int i1=find_or_add(p1);
     int i2=find_or_add(p2);
     int i3=find_or_add(p3);
-    return (add_triangle(i1,i2,i3,0));
+    return (add_triangle(i1,i2,i3,cw));
 }
 
 int TriSurface::add_triangle(int i1, int i2, int i3, int cw) {
     directed&=cw;
     int temp;
+    if (i1==i2 || i1==i3)	// don't even add degenerate triangles
+	return -1;
     if (empty_index == -1) {
 	elements.add(new TSElement(i1, i2, i3));
 	temp = elements.size()-1;
@@ -195,13 +199,11 @@ void TriSurface::construct_grid(int xdim, int ydim, int zdim,
 //		  [1]=triangle[1] vertex #
 //		   ...
 
-double TriSurface::distance(const Point &p,Array1<int> &res) {
+double TriSurface::distance(const Point &p,Array1<int> &res, Point *pp) {
 
     if (grid==0) {
-	cerr << "Can't run TriSurface::distance w/o a grid\n";
-	exit(0);
+	ASSERT("Can't run TriSurface::distance w/o a grid\n");
     }
-    Array1<int>* candid;
     Array1<int>* elem;
     Array1<int> tri;
     int i, j, k, imax, jmax, kmax;
@@ -216,44 +218,49 @@ double TriSurface::distance(const Point &p,Array1<int> &res) {
     double Dist=1000000;
     Array1<int> info;
     int type;
+    int max_dist=Max(imax,jmax,kmax);
+
+    Array1<int> candid;
     while (!done) {
 	while (!tri.size()) {
-	    candid=grid->get_cubes_at_distance(dist, i, j, k);
-	    for(int index=0; index<candid->size(); index+=3) {
-		elem=grid->get_members((*candid)[index], (*candid)[index+1], 
-				       (*candid)[index+2]);
+	    grid->get_cubes_within_distance(dist, i, j, k, candid);
+	    for(int index=0; index<candid.size(); index+=3) {
+		elem=grid->get_members(candid[index], candid[index+1], 
+				       candid[index+2]);
 		if (elem) {
 		    for (int a=0; a<elem->size(); a++) {
 			for (int duplicate=0, b=0; b<tri.size(); b++)
 			    if (tri[b]==(*elem)[a]) duplicate=1;
-			for (b=0; b<info.size(); b+=2)
-			    if (info[b]==(*elem)[a]) duplicate=1;
 			if (!duplicate) tri.add((*elem)[a]);
 		    }
 		}
 	    }
 	    dist++;
-	    delete candid;
+	    ASSERT(dist<=max_dist+2);
 	}
 	// now tri holds the indices of the triangles we're closest to
 
-
+	Point ptemp;
+	
 	for (int index=0; index<tri.size(); index++) {
-	    double d=distance(p, tri[index], &type);
+	    double d=distance(p, tri[index], &type, &ptemp);
 	    if (Abs(d-Dist)<.00001) {
 		if (type==0) {
 		    info.remove_all();
 		    Dist=d;
+		    if (pp!=0) (*pp)=ptemp;
 		    info.add(tri[index]);
 		} else {
 		    if (res.size() != 1) {
 			info.add(tri[index]);
 			info.add((type-1)%3);
+			if (pp!=0) (*pp)=ptemp;
 		    }
 		}
 	    } else if (Abs(d)<Abs(Dist)) {
 		info.remove_all();
 		Dist=d;
+		if (pp!=0) *pp=ptemp;
 		info.add(tri[index]);
 		if (type>0) info.add((type-1)%3);
 	    }
@@ -264,6 +271,8 @@ double TriSurface::distance(const Point &p,Array1<int> &res) {
 	// if our closest point is INSIDE of the squares we looked at...
 	if (Abs(Dist)<(dmin+(dist-1)*sp)) 
 	    done=1;		// ... we're done
+	else
+	    info.remove_all();
     }
 	
     res=info;
@@ -283,7 +292,7 @@ double TriSurface::distance(const Point &p,Array1<int> &res) {
 //	an edge,  then *type=1+vertex# (that we're furthest from)
 //      a vertex, then *type=4+vertex# (that we're closest to)
 
-double TriSurface::distance(const Point &p, int el, int *type) {
+double TriSurface::distance(const Point &p, int el, int *type, Point *pp) {
     Point a(points[elements[el]->i1]);	//load the vertices of this element...
     Point b(points[elements[el]->i2]);  //... into a, b and c
     Point c(points[elements[el]->i3]);
@@ -331,17 +340,25 @@ double TriSurface::distance(const Point &p, int el, int *type) {
     double alpha, beta;
     int inter=0;
 
-    if (u1==0) {
+    if (Abs(u1)<.0001) {
         beta=u0/u2;
-        if ((beta >= 0.) && (beta <= 1.)) {
+        if ((beta >= -0.0001) && (beta <= 1.0001)) {
             alpha = (v0-beta*v2)/v1;
-            inter=((alpha>=0.) && ((alpha+beta)<=1.));
+            if (inter=((alpha>=-0.0001) && ((alpha+beta)<=1.0001))) {
+		if (pp!=0) {
+		    (*pp)=Pp;
+		}
+	    }
         }       
     } else {
         beta=(v0*u1-u0*v1)/(v2*u1-u2*v1);
-        if ((beta >= 0.)&&(beta<=1.)) {            
+        if ((beta >= -0.000001)&&(beta<=1.0001)) {            
             alpha=(u0-beta*u2)/u1;
-            inter=((alpha>=0.) && ((alpha+beta)<=1.));
+            if (inter=((alpha>=-0.0001) && ((alpha+beta)<=1.0001))) {
+		if (pp!=0) {
+		    (*pp)=Pp;
+		}
+	    }
         }
     }
     *type = 0;
@@ -407,9 +424,21 @@ double TriSurface::distance(const Point &p, int el, int *type) {
 	for (int j=0; j<3; j++)
 	    out[X][j]=(A[X][j]*P[i[1]]+B[X][j]*P[i[2]]+C[X][j] < 0); 
 
-    if (out[2][0] && out[1][1]) { *type=1; return (sign*(p-a).length()); }
-    if (out[0][0] && out[2][1]) { *type=2; return (sign*(p-b).length()); }
-    if (out[1][0] && out[0][1]) { *type=3; return (sign*(p-c).length()); }
+    if (out[2][0] && out[1][1]) { 
+	*type=1; 
+	if (pp) (*pp)=a;
+	return (sign*(p-a).length()); 
+    }
+    if (out[0][0] && out[2][1]) { 
+	*type=2; 
+	if (pp) (*pp)=b;
+	return (sign*(p-b).length()); 
+    }
+    if (out[1][0] && out[0][1]) { 
+	*type=3; 
+	if (pp) (*pp)=c;
+	return (sign*(p-c).length()); 
+    }
 
     ASSERT(out[0][2] || out[1][2] || out[2][2]);
     double theDist=-100;
@@ -425,10 +454,17 @@ double TriSurface::distance(const Point &p, int el, int *type) {
 	    Vector v2(V[(X+1)%3][0]-V[(X+2)%3][0],
 		      V[(X+1)%3][1]-V[(X+2)%3][1],
 		      V[(X+1)%3][2]-V[(X+2)%3][2]);
-	    double dtemp=Abs(Cross(v1, v2).length()/v2.length());
+	    double dtemp=Sqrt(Cross(v1, v2).length2()/v2.length2());
 	    if (dtemp>theDist) {
 		theDist=dtemp;
 		*type=X+4;
+		if (pp)
+		    (*pp)=AffineCombination(Point(V[(X+1)%3][0],
+						  V[(X+1)%3][1],
+						  V[(X+1)%3][2]), .5,
+					    Point(V[(X+2)%3][0],
+						  V[(X+2)%3][1],
+						  V[(X+2)%3][2]), .5);
 	    }
 	}
     return sign*theDist;
