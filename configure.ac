@@ -1940,7 +1940,7 @@ for i in $_sci_lib; do
   #include <png.h>
   ],$i/include,png,$i/lib,,,optional)
 
-  if test "$HAVE_PNG"; then
+  if test "$HAVE_PNG" = "yes"; then
     DEF_PNG="#define HAVE_PNG 1"
     break
   fi
