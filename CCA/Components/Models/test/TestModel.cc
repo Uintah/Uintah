@@ -148,7 +148,7 @@ void TestModel::massExchange(const ProcessorGroup*,
     double volume = dx.x()*dx.y()*dx.z();                    
     DataWarehouse* dw;
     
-    if(d_is_mpm_matl){        
+    if(d_is_mpm_matl){
       dw = new_dw;            // MPM  (Just grab it)
       constCCVariable<double> cmass;
       dw->get(cmass,   MIlb->cMassLabel,    m0, patch, Ghost::None, 0); 
@@ -202,8 +202,8 @@ void TestModel::massExchange(const ProcessorGroup*,
 }
 
 void TestModel::scheduleMomentumAndEnergyExchange(SchedulerP&,
-				       const LevelP& level,
-				       const ModelInfo*)
+						  const LevelP& level,
+						  const ModelInfo*)
 {
   // None
 }
