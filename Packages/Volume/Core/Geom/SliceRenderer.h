@@ -83,8 +83,6 @@ public:
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
   virtual void draw();
   virtual void drawWireFrame();
-  virtual void setup();
-  virtual void cleanup();
   virtual void load_colormap();
 protected:
   void draw(Brick& b, Polygon* poly);

@@ -31,7 +31,7 @@ static const char* ShaderString4 =
 
 static const char* ShaderString1_2 =
 "!!ARBfp1.0 \n"
-"TEMP v; \n"
+"TEMP v, c; \n"
 "ATTRIB t = fragment.texcoord[0]; \n"
 "TEX v.x, t, texture[0], 3D; \n"
 "TEX v.y, t, texture[1], 3D; \n"
@@ -40,7 +40,7 @@ static const char* ShaderString1_2 =
 
 static const char* ShaderString4_2 =
 "!!ARBfp1.0 \n"
-"TEMP v; \n"
+"TEMP v, c; \n"
 "ATTRIB t = fragment.texcoord[0]; \n"
 "TEX v.w, t, texture[0], 3D; \n"
 "TEX v.x, t, texture[1], 3D; \n"
@@ -56,14 +56,29 @@ static const char* FogShaderString1 =
 "PARAM fogColor = state.fog.color; \n"
 "PARAM fogParam = state.fog.params; \n"
 "ATTRIB fogCoord = fragment.texcoord[1];\n"
-#if 0
-"ATTRIB fogCoord = fragment.fogcoord; \n"
-#endif
+"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
 "ATTRIB tf = fragment.texcoord[0]; \n"
 "SUB c, fogParam.z, fogCoord.x; \n"
 "MUL_SAT fogFactor.x, c, fogParam.w; \n"
 "TEX c0, tf, texture[0], 3D; \n"
 "TEX finalColor, c0, texture[2], 1D; \n"
+"LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
+"MOV result.color, finalColor; \n"
+"END";
+
+static const char* FogShaderString1_2 =
+"!!ARBfp1.0 \n"
+"TEMP v, c, fogFactor, finalColor; \n"
+"PARAM fogColor = state.fog.color; \n"
+"PARAM fogParam = state.fog.params; \n"
+"ATTRIB fogCoord = fragment.texcoord[1];\n"
+"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
+"ATTRIB tf = fragment.texcoord[0]; \n"
+"SUB c, fogParam.z, fogCoord.x; \n"
+"MUL_SAT fogFactor.x, c, fogParam.w; \n"
+"TEX v.x, tf, texture[0], 3D; \n"
+"TEX v.y, tf, texture[1], 3D; \n"
+"TEX finalColor, v, texture[2], 2D; \n"
 "LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
 "MOV result.color, finalColor; \n"
 "END";
@@ -74,14 +89,29 @@ static const char* FogShaderString4 =
 "PARAM fogColor = state.fog.color; \n"
 "PARAM fogParam = state.fog.params; \n"
 "ATTRIB fogCoord = fragment.texcoord[1];\n"
-#if 0
-"ATTRIB fogCoord = fragment.fogcoord; \n"
-#endif
+"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
 "ATTRIB tf = fragment.texcoord[0]; \n"
 "SUB c, fogParam.z, fogCoord.x; \n"
 "MUL_SAT fogFactor.x, c, fogParam.w; \n"
 "TEX c0, tf, texture[0], 3D; \n"
 "TEX finalColor, c0.w, texture[2], 1D; \n"
+"LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
+"MOV result.color, finalColor; \n"
+"END";
+
+static const char* FogShaderString4_2 =
+"!!ARBfp1.0 \n"
+"TEMP v, c, fogFactor, finalColor; \n"
+"PARAM fogColor = state.fog.color; \n"
+"PARAM fogParam = state.fog.params; \n"
+"ATTRIB fogCoord = fragment.texcoord[1];\n"
+"# this does not work: ATTRIB fogCoord = fragment.fogcoord; \n"
+"ATTRIB tf = fragment.texcoord[0]; \n"
+"SUB c, fogParam.z, fogCoord.x; \n"
+"MUL_SAT fogFactor.x, c, fogParam.w; \n"
+"TEX v.w, tf, texture[0], 3D; \n"
+"TEX v.x, tf, texture[1], 3D; \n"
+"TEX finalColor, v.wxyz, texture[2], 2D; \n"
 "LRP finalColor.xyz, fogFactor.x, finalColor.xyzz, fogColor.xyzz; \n"
 "MOV result.color, finalColor; \n"
 "END";
@@ -107,6 +137,28 @@ static const char* LitVolShaderString =
 "MOV result.color, c; \n"
 "END";
 
+static const char* LitVolShaderString_2 =
+"!!ARBfp1.0 \n"
+"ATTRIB t = fragment.texcoord[0];\n"
+"PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
+"PARAM k = program.local[1]; # {ka, kd, ks, ns} \n"
+"TEMP v, n, c, d, s; \n"
+"TEX v, t, texture[0], 3D; \n"
+"MAD n, v, 2.0, -1.0; \n"
+"DP3 n.w, n, n; \n"
+"RSQ n.w, n.w; \n"
+"MUL n, n, n.w; \n"
+"DP3 d.w, l, n; \n"
+"ABS_SAT d.w, d.w; # two-sided lighting \n"
+"POW s.w, d.w, k.w; \n"
+"MAD d.w, d.w, k.y, k.x; \n"
+"MAD d.w, s.w, k.z, d.w; \n"
+"TEX v.x, t, texture[1], 3D; \n"
+"TEX c, v.wxyz, texture[2], 2D; \n"
+"MUL c.xyz, c.xyzz, d.w; \n"
+"MOV result.color, c; \n"
+"END";
+
 static const char* LitFogVolShaderString =
 "!!ARBfp1.0 \n"
 "ATTRIB t = fragment.texcoord[0];\n"
@@ -115,9 +167,6 @@ static const char* LitFogVolShaderString =
 "PARAM fc = state.fog.color; \n"
 "PARAM fp = state.fog.params; \n"
 "ATTRIB f = fragment.texcoord[1];\n"
-#if 0
-"ATTRIB f = fragment.fogcoord; \n"
-#endif
 "TEMP v, n, c, d, s; \n"
 "TEX v, t, texture[0], 3D; \n"
 "MAD n, v, 2.0, -1.0; \n"
@@ -130,6 +179,34 @@ static const char* LitFogVolShaderString =
 "MAD d.w, d.w, k.y, k.x; \n"
 "MAD d.w, s.w, k.z, d.w; \n"
 "TEX c, v.w, texture[2], 1D; \n"
+"MUL c.xyz, c.xyzz, d.w; \n"
+"SUB d.x, fp.z, f.x; \n"
+"MUL_SAT d.x, d.x, fp.w; \n"
+"LRP c.xyz, d.x, c.xyzz, fc.xyzz; \n"
+"MOV result.color, c; \n"
+"END";
+
+static const char* LitFogVolShaderString_2 =
+"!!ARBfp1.0 \n"
+"ATTRIB t = fragment.texcoord[0];\n"
+"PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n"
+"PARAM k = program.local[1]; # {ka, kd, ks, ns} \n"
+"PARAM fc = state.fog.color; \n"
+"PARAM fp = state.fog.params; \n"
+"ATTRIB f = fragment.texcoord[1];\n"
+"TEMP v, n, c, d, s; \n"
+"TEX v, t, texture[0], 3D; \n"
+"MAD n, v, 2.0, -1.0; \n"
+"DP3 n.w, n, n; \n"
+"RSQ n.w, n.w; \n"
+"MUL n, n, n.w; \n"
+"DP3 d.w, l, n; \n"
+"ABS_SAT d.w, d.w; # two-sided lighting \n"
+"POW s.w, d.w, k.w; \n"
+"MAD d.w, d.w, k.y, k.x; \n"
+"MAD d.w, s.w, k.z, d.w; \n"
+"TEX v.x, t, texture[1], 3D; \n"
+"TEX c, v.wxyz, texture[2], 2D; \n"
 "MUL c.xyz, c.xyzz, d.w; \n"
 "SUB d.x, fp.z, f.x; \n"
 "MUL_SAT d.x, d.x, fp.w; \n"
@@ -164,12 +241,16 @@ VolumeRenderer::VolumeRenderer() :
 {
   VolShader1 = new FragmentProgramARB(ShaderString1, false);
   VolShader4 = new FragmentProgramARB(ShaderString4, false);
-  VolShader1_2 = new FragmentProgramARB(ShaderString1_2, false);
-  VolShader4_2 = new FragmentProgramARB(ShaderString4_2, false);
   FogVolShader1 = new FragmentProgramARB(FogShaderString1, false);
   FogVolShader4 = new FragmentProgramARB(FogShaderString4, false);
   LitVolShader = new FragmentProgramARB(LitVolShaderString, false);
   LitFogVolShader = new FragmentProgramARB(LitFogVolShaderString, false);
+  VolShader1_2 = new FragmentProgramARB(ShaderString1_2, false);
+  VolShader4_2 = new FragmentProgramARB(ShaderString4_2, false);
+  FogVolShader1_2 = new FragmentProgramARB(FogShaderString1_2, false);
+  FogVolShader4_2 = new FragmentProgramARB(FogShaderString4_2, false);
+  LitVolShader_2 = new FragmentProgramARB(LitVolShaderString_2, false);
+  LitFogVolShader_2 = new FragmentProgramARB(LitFogVolShaderString_2, false);
   FogVertexShader = new VertexProgramARB(FogVertexShaderString, false);
 }
 
@@ -181,12 +262,16 @@ VolumeRenderer::VolumeRenderer(TextureHandle tex, ColorMapHandle cmap, Colormap2
 {
   VolShader1 = new FragmentProgramARB(ShaderString1, false );
   VolShader4 = new FragmentProgramARB(ShaderString4, false );
-  VolShader1_2 = new FragmentProgramARB(ShaderString1_2, false);
-  VolShader4_2 = new FragmentProgramARB(ShaderString4_2, false);
   FogVolShader1 = new FragmentProgramARB(FogShaderString1, false );
   FogVolShader4 = new FragmentProgramARB(FogShaderString4, false );
   LitVolShader = new FragmentProgramARB(LitVolShaderString, false);
   LitFogVolShader = new FragmentProgramARB(LitFogVolShaderString, false);
+  VolShader1_2 = new FragmentProgramARB(ShaderString1_2, false);
+  VolShader4_2 = new FragmentProgramARB(ShaderString4_2, false);
+  FogVolShader1_2 = new FragmentProgramARB(FogShaderString1_2, false);
+  FogVolShader4_2 = new FragmentProgramARB(FogShaderString4_2, false);
+  LitVolShader_2 = new FragmentProgramARB(LitVolShaderString_2, false);
+  LitFogVolShader_2 = new FragmentProgramARB(LitFogVolShaderString_2, false);
   FogVertexShader = new VertexProgramARB(FogVertexShaderString, false);
 }
 
@@ -198,12 +283,16 @@ VolumeRenderer::VolumeRenderer( const VolumeRenderer& copy):
 {
   VolShader1 = copy.VolShader1;
   VolShader4 = copy.VolShader4;
-  VolShader1_2 = copy.VolShader1_2;
-  VolShader4_2 = copy.VolShader4_2;
   FogVolShader1 = copy.FogVolShader1;
   FogVolShader4 = copy.FogVolShader4;
   LitVolShader = copy.LitVolShader;
   LitFogVolShader = copy.LitFogVolShader;
+  VolShader1_2 = copy.VolShader1_2;
+  VolShader4_2 = copy.VolShader4_2;
+  FogVolShader1_2 = copy.FogVolShader1_2;
+  FogVolShader4_2 = copy.FogVolShader4_2;
+  LitVolShader_2 = copy.LitVolShader_2;
+  LitFogVolShader_2 = copy.LitFogVolShader_2;
   FogVertexShader = copy.FogVertexShader;
 }
 
@@ -218,100 +307,22 @@ void
 VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 {
   //AuditAllocator(default_allocator);
-  if(!pre_draw(di, mat, lighting_)) return;
+  if(!pre_draw(di, mat, shading_)) return;
   mutex_.lock();
   di_ = di;
   if(di->get_drawtype() == DrawInfoOpenGL::WireFrame ) {
     drawWireFrame();
   } else {
     //AuditAllocator(default_allocator);
-    setup();
-    //AuditAllocator(default_allocator);
     draw();
-    //AuditAllocator(default_allocator);
-    cleanup();
-    //AuditAllocator(default_allocator);
   }
   di_ = 0;
   mutex_.unlock();
 }
 
 void
-VolumeRenderer::setup()
-{
-  cerr << "VolumeRenderer::setup" << endl;
-  if(cmap2_.get_rep()) {
-    if(cmap2_dirty_) {
-      BuildTransferFunction2();
-    }
-  }
-  if(cmap_.get_rep()) {
-    if(cmap_has_changed_ || r_count_ != 1) {
-      BuildTransferFunction();
-      // cmap_has_changed_ = false;
-    }
-    load_colormap();
-  }
-
-  // First set up the Textures.
-  glActiveTexture(GL_TEXTURE0_ARB);
-  glEnable(GL_TEXTURE_3D);
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  glActiveTexture(GL_TEXTURE1_ARB);
-  glEnable(GL_TEXTURE_2D);
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  glActiveTexture(GL_TEXTURE0_ARB);
-
-  glColor4f(1.0, 1.0, 1.0, 1.0);
-  glDepthMask(GL_FALSE);
-  
-  // now set up the Blending
-  glEnable(GL_BLEND);
-  switch(mode_) {
-  case OVEROP:
-    glBlendEquation(GL_FUNC_ADD);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    break;
-  case MIP:
-    glBlendEquation(GL_MAX);
-    glBlendFunc(GL_ONE, GL_ONE);
-    break;
-  case ATTENUATE:
-    glBlendEquation(GL_FUNC_ADD);
-    glBlendFunc( GL_ONE, GL_ONE_MINUS_CONSTANT_ALPHA);
-    glBlendColor(1.0,1.0,1.0,1.0/slices_);
-    break;
-  }
-}
-
-void
-VolumeRenderer::cleanup()
-{
-  cerr << "VolumeRenderer::cleanup" << endl;
-  glDisable(GL_BLEND);
-  glDepthMask(GL_TRUE);
-  if(cmap_.get_rep()) {
-    glActiveTexture(GL_TEXTURE2_ARB);
-    glDisable(GL_TEXTURE_1D);
-    glActiveTexture(GL_TEXTURE0_ARB);
-  }
-  if(cmap2_.get_rep()) {
-    glActiveTexture(GL_TEXTURE2_ARB);
-    glDisable(GL_TEXTURE_2D);
-    glActiveTexture(GL_TEXTURE0_ARB);
-  }
-  glActiveTexture(GL_TEXTURE1_ARB);
-  glDisable(GL_TEXTURE_3D);
-  glActiveTexture(GL_TEXTURE0_ARB);
-  glDisable(GL_TEXTURE_3D);
-  // glEnable(GL_DEPTH_TEST);  
-}
-
-void
 VolumeRenderer::draw()
 {
-  cerr << "VolumeRenderer::draw" << endl;
-  
   GLenum errcode;
 
   Ray viewRay;
@@ -336,9 +347,58 @@ VolumeRenderer::draw()
 
   //--------------------------------------------------------------------------
 
+  if(cmap2_.get_rep()) {
+    if(cmap2_dirty_) {
+      BuildTransferFunction2();
+      cmap2_dirty_ = false;
+    }
+  }
+  if(cmap_.get_rep()) {
+    if(cmap_has_changed_ || r_count_ != 1) {
+      BuildTransferFunction();
+      // cmap_has_changed_ = false;
+    }
+    load_colormap();
+  }
+
+  // First set up the Textures.
+  glActiveTexture(GL_TEXTURE0_ARB);
+  glEnable(GL_TEXTURE_3D);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  if(cmap_.get_rep()) {
+    glActiveTexture(GL_TEXTURE2_ARB);
+    glEnable(GL_TEXTURE_1D);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  } else if(cmap2_.get_rep()) {
+    glActiveTexture(GL_TEXTURE1_ARB);
+    glEnable(GL_TEXTURE_3D);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glActiveTexture(GL_TEXTURE2_ARB);
+    glEnable(GL_TEXTURE_2D);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  }
+  glActiveTexture(GL_TEXTURE0_ARB);
+
+  glColor4f(1.0, 1.0, 1.0, 1.0);
+  glDepthMask(GL_FALSE);
+  
+  // now set up the Blending
+  glEnable(GL_BLEND);
+  switch(mode_) {
+  case OVEROP:
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    break;
+  case MIP:
+    glBlendEquation(GL_MAX);
+    glBlendFunc(GL_ONE, GL_ONE);
+    break;
+  }
+  
+  //--------------------------------------------------------------------------
+
   if(mode_ == OVEROP) {
     //glFogi(GL_FOG_COORDINATE_SOURCE, GL_FRAGMENT_DEPTH);
-    cerr << "FOG" << endl;
     GLboolean fog;
     glGetBooleanv(GL_FOG, &fog);
 
@@ -355,39 +415,84 @@ VolumeRenderer::draw()
 //     dbg << "COLOR: " << fog_color[0] << " " << fog_color[1] << " " << fog_color[2] << " " << fog_color[3] << endl;
 //     dbg << "SOURCE: " << fog_source << " " << GL_FRAGMENT_DEPTH << " " << GL_FOG_COORDINATE << endl;
 
-    cerr << "LIGHTING" << endl;
-    GLboolean lighting;
-    glGetBooleanv(GL_LIGHTING, &lighting);
     int nc = (*bricks.begin())->data()->nc();
     int nb0 = (*bricks.begin())->data()->nb(0);
     //int nb1 = (*bricks.begin())->data()->nb(1);
     
     if (fog) {
-        if (!FogVertexShader->valid()) {
-          FogVertexShader->create();
-        }
-        FogVertexShader->bind();
+      if (!FogVertexShader->valid()) {
+        FogVertexShader->create();
+      }
+      FogVertexShader->bind();
     }
 
     if(nc == 2 && cmap2_.get_rep()) {
-      switch(nb0) {
-      case 1: {
-        if(!VolShader1_2->valid()) {
-          VolShader1_2->create();
+      if (shading_ && nb0 == 4) {
+        if(fog) {
+          if (!LitFogVolShader_2->valid()) {
+            LitFogVolShader_2->create();
+          }
+          LitFogVolShader_2->bind();
+        } else {
+          if (!LitVolShader_2->valid()) {
+            LitVolShader_2->create();
+          }
+          LitVolShader_2->bind();
         }
-        VolShader1_2->bind();
-      } break;
-      case 4: {
-        cerr << "HIHI" << endl;
-        if(!VolShader4_2->valid()) {
-          VolShader4_2->create();
+        // set shader parameters
+        GLfloat pos[4];
+        glGetLightfv(GL_LIGHT0+light_, GL_POSITION, pos);
+        Vector l(pos[0], pos[1], pos[2]);
+        dbg << pos << endl;
+        double m[16], m_tp[16];
+        glGetDoublev(GL_MODELVIEW_MATRIX, m);
+        for (int ii=0; ii<4; ii++)
+          for (int jj=0; jj<4; jj++)
+            m_tp[ii*4+jj] = m[jj*4+ii];
+        Transform mv;
+        mv.set(m_tp);
+        Transform t = tex_->get_field_transform();
+        l = mv.unproject(l);
+        l = t.unproject(l);
+        if(fog) {
+          LitFogVolShader_2->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
+          LitFogVolShader_2->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
+        } else {
+          LitVolShader_2->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
+          LitVolShader_2->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
         }
-        cerr << "HIHI2" << endl;
-        VolShader4_2->bind();
-        cerr << "HIHI3" << endl;
-      }
-      default:
-        break;
+      } else { // !shading
+        if(fog) {
+          switch (nb0) {
+          case 1:
+            if(!FogVolShader1_2->valid()) {
+              FogVolShader1_2->create();
+            }
+            FogVolShader1_2->bind();
+            break;
+          case 4:
+            if(!FogVolShader4_2->valid()) {
+              FogVolShader4_2->create();
+            }
+            FogVolShader4_2->bind();
+            break;
+          }
+        } else { // !fog
+          switch(nb0) {
+          case 1:
+            if(!VolShader1_2->valid()) {
+              VolShader1_2->create();
+            }
+            VolShader1_2->bind();
+            break;
+          case 4:
+            if(!VolShader4_2->valid()) {
+              VolShader4_2->create();
+            }
+            VolShader4_2->bind();
+            break;
+          }
+        }
       }
     } else {// nc == 1
       if (shading_ && nb0 == 4) {
@@ -397,13 +502,10 @@ VolumeRenderer::draw()
           }
           LitFogVolShader->bind();
         } else {
-          cerr << "HIHI" << endl;
           if (!LitVolShader->valid()) {
             LitVolShader->create();
           }
-          cerr << "HIHI2" << endl;
           LitVolShader->bind();
-          cerr << "HIHI3" << endl;
         }
         // set shader parameters
         GLfloat pos[4];
@@ -462,17 +564,32 @@ VolumeRenderer::draw()
       }
     }
   } else if(mode_ == MIP) {
-    int nb = (*bricks.begin())->data()->nb(0);
-    if(nb == 4) {
-      if (!VolShader4->valid()) {
-        VolShader4->create();
+    int nc = (*bricks.begin())->data()->nc();
+    int nb0 = (*bricks.begin())->data()->nb(0);
+    if(nc > 1) {
+      if(nb0 == 4) {
+        if (!VolShader4_2->valid()) {
+          VolShader4_2->create();
+        }
+        VolShader4_2->bind();
+      } else {
+        if (!VolShader1_2->valid()) {
+          VolShader1_2->create();
+        }
+        VolShader1_2->bind();
       }
-      VolShader4->bind();
     } else {
-      if (!VolShader1->valid()) {
-        VolShader1->create();
+      if(nb0 == 4) {
+        if (!VolShader4->valid()) {
+          VolShader4->create();
+        }
+        VolShader4->bind();
+      } else {
+        if (!VolShader1->valid()) {
+          VolShader1->create();
+        }
+        VolShader1->bind();
       }
-      VolShader1->bind();
     }
   }
   
@@ -496,29 +613,21 @@ VolumeRenderer::draw()
   if(mode_ == OVEROP) {
     GLboolean fog;
     glGetBooleanv(GL_FOG, &fog);
-    GLboolean lighting;
-    glGetBooleanv(GL_LIGHTING, &lighting);
     int nc = (*bricks.begin())->data()->nc();
     int nb0 = (*bricks.begin())->data()->nb(0);
     //int nb1 = (*bricks.begin())->data()->nb(1);
 
     if (fog) {
-        FogVertexShader->release();
+      FogVertexShader->release();
     }
 
     if(nc == 2 && cmap2_.get_rep()) {
       switch(nb0) {
       case 1: {
-        if(!VolShader1_2->valid()) {
-          VolShader1_2->create();
-        }
-        VolShader1_2->bind();
+        VolShader1_2->release();
       } break;
       case 4: {
-        if(!VolShader4_2->valid()) {
-          VolShader4_2->create();
-        }
-        VolShader4_2->bind();
+        VolShader4_2->release();
       }
       default:
         break;
@@ -553,16 +662,36 @@ VolumeRenderer::draw()
       }
     }
   } else if(mode_ == MIP) {
-    int nb = (*bricks.begin())->data()->nb(0);
-    if(nb == 4) {
-      VolShader4->release();
+    int nc = (*bricks.begin())->data()->nc();
+    int nb0 = (*bricks.begin())->data()->nb(0);
+    if(nc > 1) {
+      if(nb0 == 4) {
+        VolShader4_2->release();
+      } else {
+        VolShader1_2->release();
+      }
     } else {
-      VolShader1->release();
+      if(nb0 == 4) {
+        VolShader4->release();
+      } else {
+        VolShader1->release();
+      }
     }
   }
   
   //--------------------------------------------------------------------------
 
+  glDisable(GL_BLEND);
+  glDepthMask(GL_TRUE);
+  glActiveTexture(GL_TEXTURE2_ARB);
+  glDisable(GL_TEXTURE_2D);
+  glDisable(GL_TEXTURE_1D);
+  glActiveTexture(GL_TEXTURE1_ARB);
+  glDisable(GL_TEXTURE_3D);
+  glActiveTexture(GL_TEXTURE0_ARB);
+  glDisable(GL_TEXTURE_3D);
+  // glEnable(GL_DEPTH_TEST);  
+  
   // Look for errors
   if ((errcode=glGetError()) != GL_NO_ERROR)
   {
@@ -737,13 +866,13 @@ VolumeRenderer::BuildTransferFunction2()
       }
     }
   }
-  cerr << "BuildTF::middle" << endl;
   if(size_dirty) {
     if(glIsTexture(cmap2_texture_)) {
       glDeleteTextures(1, &cmap2_texture_);
       cmap2_texture_ = 0;
     }
     glGenTextures(1, &cmap2_texture_);
+    glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, cmap2_texture_);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -751,12 +880,10 @@ VolumeRenderer::BuildTransferFunction2()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, cmap2_array_.dim2(), cmap2_array_.dim1(),
                  0, GL_RGBA, GL_UNSIGNED_BYTE, &cmap2_array_(0,0,0));
-    glBindTexture(GL_TEXTURE_2D, 0);
   } else {
     glBindTexture(GL_TEXTURE_2D, cmap2_texture_);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, cmap2_array_.dim2(), cmap2_array_.dim1(),
-                 0, GL_RGBA, GL_UNSIGNED_BYTE, &cmap2_array_(0,0,0));
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cmap2_array_.dim2(), cmap2_array_.dim1(),
+                    GL_RGBA, GL_UNSIGNED_BYTE, &cmap2_array_(0,0,0));
   }
-  cerr << "BuildTF::end" << endl;
+  cmap2_->unlock_array();
 }
