@@ -951,3 +951,20 @@ case $1 in
 esac
 
 ])
+
+
+
+AC_DEFUN([SCI_SUBST_THIRDPARTY_DIR], [
+##
+## SCI_SUBST_THIRDPARTY_DIR:
+##
+## arguments mean:
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir 
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
+##
+  _new_path=${$1}
+  _fulldir=`cd ${sci_thirdparty_dir}; pwd`
+  _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
+  _new_path=`echo $_new_path | sed 's%'${sci_thirdparty_dir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
+  eval $1='"$_new_path"'
+])
