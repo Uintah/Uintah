@@ -98,6 +98,7 @@ BLT_LIB_DIR    := @LIBBLT@
 BLT_LIB_FLAG   := -lBLT
 BLT_TLINK      := -L$(BLT_LIB_DIR)
 
+
 PLPLOT_LIB_DIR    := @LIBPLPLOT@
 PLPLOT_LIB_FLAG   := -lplplotd
 
@@ -106,6 +107,9 @@ ifneq ($(PLPLOT_LIB_DIR),)
 else
   PLPLOT_TLINK      :=
 endif
+
+DEF_PLPLOT  := @DEF_PLPLOT@
+
 
 TCL_SRC_DIR    := @TCL_SRC_DIR@
 TK_SRC_DIR     := @TK_SRC_DIR@
@@ -250,12 +254,14 @@ endif
 # Convenience variables - compounded from above definitions
 BLT_LIBRARY := $(LDRUN_PREFIX)$(BLT_LIB_DIR) -L$(BLT_LIB_DIR) $(BLT_LIB_FLAG)
 
-DEF_PLPLOT  := @DEF_PLPLOT@
-
-ifneq ($(PLPLOT_LIB_DIR),)
-  PLPLOT_LIBRARY := $(LDRUN_PREFIX)$(PLPLOT_LIB_DIR) -L$(PLPLOT_LIB_DIR) $(PLPLOT_LIB_FLAG)
+ifneq ($(DEF_PLPLOT),)
+  ifneq ($(PLPLOT_LIB_DIR),)
+    PLPLOT_LIBRARY := $(LDRUN_PREFIX)$(PLPLOT_LIB_DIR) -L$(PLPLOT_LIB_DIR) $(PLPLOT_LIB_FLAG)
+  else
+    PLPLOT_LIBRARY := $(PLPLOT_LIB_FLAG)
+  endif
 else
-  PLPLOT_LIBRARY := $(PLPLOT_LIB_FLAG)
+  PLPLOT_LIBRARY :=
 endif
 
 TCL_LIBRARY := $(LDRUN_PREFIX)$(TCL_LIB_DIR) -L$(TCL_LIB_DIR) $(TCL_LIB_FLAG)
