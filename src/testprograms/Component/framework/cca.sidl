@@ -106,7 +106,7 @@ package sci_cca {
   // 
 
   //// Selective Catalytic Reduction (SCR) Component
-  interface scrInterface {
+  interface scrInterface extends Port {
 
     void exec(in     int  cells,      // changed from long...
 	      in     double pressure, 
