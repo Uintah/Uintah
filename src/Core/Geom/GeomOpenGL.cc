@@ -1753,7 +1753,15 @@ void GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     if(!pre_draw(di, matl, 0)) return;
     di->polycount+=pts.size()/2;
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    double lwr[2], lw[1];
+    glGetDoublev(GL_LINE_WIDTH_RANGE, lwr);
+    glGetDoublev(GL_LINE_WIDTH, lw);
+//    cerr << "GeomLines::draw()\n";
+//    cerr << "  pre line width was "<<lw[0]<<"\n";
+//    cerr << "  Range = "<<lwr[0]<<" to "<<lwr[1]<<"\n";
     glLineWidth(di->point_size);
+    glGetDoublev(GL_LINE_WIDTH, lw);
+//    cerr << "  post line width is "<<lw[0]<<"\n";
     glBegin(GL_LINES);
     for(int i=0;i<pts.size();i++){
       Point& pt=pts[i];
@@ -2091,6 +2099,7 @@ void GeomPolyline::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
 {
     if(!pre_draw(di, matl, 0)) return;
     di->polycount+=verts.size()-1;
+    glPointSize(di->point_size);
     glBegin(GL_LINE_STRIP);
     if(times.size() == verts.size()){
       for(int i=0;i<verts.size() && currenttime >= times[i];i++){
@@ -4271,6 +4280,9 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.25  2000/10/29 04:47:55  dmw
+// trying to get linewidth to always work
+//
 // Revision 1.24  2000/09/25 17:59:54  sparker
 // Changed ifdef _USING_GPP to __GNUG__
 //
