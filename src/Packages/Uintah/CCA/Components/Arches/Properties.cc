@@ -37,6 +37,7 @@
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Time.h>
+#include <Core/Math/MiscMath.h>
 
 #include <iostream>
 using namespace std;
@@ -1632,5 +1633,17 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     else
     filterdrhodt.copy(drhodt, drhodt.getLowIndex(),
 		      drhodt.getHighIndex());
+
+    for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+      for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+        for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+          IntVector currcell(ii,jj,kk);
+
+	  double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
+	  if (Abs(filterdrhodt[currcell]/vol) < 1.0e-9)
+	      filterdrhodt[currcell] = 0.0;
+        }
+      }
+    }
   }
 }
