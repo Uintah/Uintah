@@ -18,4 +18,8 @@ PSELIBS := Core/Geometry \
 
 LIBS := $(GL_LIBRARY) $(M_LIBRARY)
 
+ifeq ($(OS_NAME),Darwin)
+LIBS := $(LIBS) -framework AGL
+endif
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -61,7 +61,9 @@ itcl_class Volume_Visualization_NrrdTextureBuilder {
 	    -command $n
 	radiobutton $bf.b6 -text 256 -variable $this-card_mem -value 256 \
 	    -command $n
-	pack $bf.b0 $bf.b1 $bf.b2 $bf.b3 $bf.b4 $bf.b5 $bf.b6 -side left -expand yes\
+	radiobutton $bf.b7 -text 512 -variable $this-card_mem -value 512 \
+	    -command $n
+	pack $bf.b0 $bf.b1 $bf.b2 $bf.b3 $bf.b4 $bf.b5 $bf.b6 $bf.b7 -side left -expand yes\
                 -fill x
 
 	makeSciButtonPanel $w $w $this
