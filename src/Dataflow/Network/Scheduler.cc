@@ -82,7 +82,7 @@ void Scheduler::main_loop()
       do_scheduling(0);
       break;
     default:
-      cerr << "Unknown message type: " << msg->type << endl;
+      cerr << "Unknown message type: " << msg->type << std::endl;
       break;
     };
     delete msg;
