@@ -121,7 +121,7 @@ private:
   // Ports (We only use one output port)
   SCIRun::FieldOPort*			ofield_[3];
   SCIRun::MatrixOPort*			omatrix_[3];
-  SCITeem::NrrdOPort*			onrrd_[3];
+  SCIRun::NrrdOPort*			onrrd_[3];
   // Class for translating matlab objects into SCIRun objects
   matlabconverter		translate_;
   
@@ -218,7 +218,7 @@ void MatlabDataReader::execute()
 		{
 	
 			// Find the output port the scheduler has created 
-			onrrd_[p] = static_cast<SCITeem::NrrdOPort *>(get_oport(static_cast<int>(p)+6));
+			onrrd_[p] = static_cast<SCIRun::NrrdOPort *>(get_oport(static_cast<int>(p)+6));
 
 			if(!onrrd_[p]) 
 			{
@@ -232,7 +232,7 @@ void MatlabDataReader::execute()
 				continue;
 			}
 
-			SCITeem::NrrdDataHandle mh;
+			SCIRun::NrrdDataHandle mh;
 			translate_.mlArrayTOsciNrrdData(ma,mh,static_cast<SCIRun::Module *>(this));
 			onrrd_[p]->send(mh);
 		}
