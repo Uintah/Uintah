@@ -730,7 +730,9 @@ OpenGL::redraw_frame()
   if( xres != pbuffer.width() || yres != pbuffer.height() ){
     //    cerr<<"width = "<<xres<<", height == "<<yres<<"\n";
     pbuffer.destroy();
-    pbuffer.create( dpy, screen, xres, yres, 8, 8 );
+    if( !pbuffer.create( dpy, screen, xres, yres, 8, 8 ) ) {
+      printf( "Pbuffer create failed.  PBuffering will not be used.\n" );
+    }
   }
 
   if(viewwindow->doingMovie && pbuffer.is_valid()){
