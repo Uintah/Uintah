@@ -21,7 +21,8 @@ namespace rtrt {
       framelessMode(1),
       nworkers(1),
       worker_run_gl_test(false),
-      display_run_gl_test(false)
+      display_run_gl_test(false),
+      exit_everybody(false)
     {}
     // semephores
     SCIRun::Mutex cameralock; // to synchronize camera...
@@ -47,6 +48,17 @@ namespace rtrt {
     // these are for performance testing purposes
     bool worker_run_gl_test;
     bool display_run_gl_test;
+
+    // exit stuff
+    bool exit_everybody;
+    int exit_status;
+    void exit_clean(int status = 0) {
+      exit_everybody = true;
+      exit_status = status;
+      SCIRun::Thread::exitAll(status);
+    }
+    bool stop_execution() { return exit_everybody; }
+       
   };
   
 } // end namespace rtrt
