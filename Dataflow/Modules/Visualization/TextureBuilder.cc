@@ -78,9 +78,8 @@ private:
   double vminval_, vmaxval_;
   double gminval_, gmaxval_;
 
-  ProgressReporter my_reporter_;
+  bool build_texture(FieldHandle, FieldHandle);
 
-  template<class Reporter> bool build_texture(Reporter*, FieldHandle, FieldHandle);
   bool new_vfield(FieldHandle field);
   bool new_gfield(FieldHandle field);
 };
@@ -188,24 +187,23 @@ TextureBuilder::execute()
     }
   }
   
-  if(build_texture(&my_reporter_, vfield, gfield)) {
+  if (build_texture(vfield, gfield))
+  {
     otexture->send(texture_);
   }
 }
 
 
-template<class Reporter>
 bool
-TextureBuilder::build_texture(Reporter* reporter, FieldHandle vfield,
-			      FieldHandle gfield)
+TextureBuilder::build_texture(FieldHandle vfield, FieldHandle gfield)
 {
   // start new algorithm based code
   const TypeDescription* td = vfield->get_type_description();
   LockingHandle<TextureBuilderAlgoBase> builder;
   CompileInfoHandle ci = TextureBuilderAlgoBase::get_compile_info(td);
-  if (!DynamicCompilation::compile(ci, builder, reporter))
+  if (!DynamicCompilation::compile(ci, builder, this))
   {
-    reporter->error("Texture Builder can not work with this type of field.");
+    error("Texture Builder can not work with this type of field.");
     return false;
   }
   builder->build(texture_, vfield, vminval_, vmaxval_,
