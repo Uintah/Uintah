@@ -142,7 +142,7 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
   }
 
   nrrdWrap(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
-	   ndims+1, sink_size, idim, jdim, kdim);
+	   ndims+1, sink_size, idim, kdim, jdim );
   nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
@@ -212,7 +212,7 @@ execute(vector< NrrdDataHandle >& nHandles,
   }
 
   nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	   ndims+1, sink_size, idim, jdim, kdim);
+	   ndims+1, sink_size, kdim, jdim, idim);
   nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
@@ -291,7 +291,7 @@ execute(vector< NrrdDataHandle >& nHandles,
   }
 
   nrrdWrap(nout->nrrd, ndata, nHandles[data[PHI]]->nrrd->type,
-	   ndims+1, sink_size, idim, jdim, kdim);
+	   ndims+1, sink_size, kdim, jdim, idim );
   nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
@@ -385,7 +385,7 @@ execute(vector< NrrdDataHandle >& nHandles,
   }
 
   nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	   ndims+1, sink_size, idim, jdim, kdim);
+	   ndims+1, sink_size, kdim, jdim, idim);
   nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
 		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
