@@ -40,6 +40,7 @@ namespace Uintah {
       const VarLabel* pMicrocrackSizeLabel; //for fracture
       const VarLabel* pMicrocrackPositionLabel; //for fracture
       const VarLabel* pCrackingSpeedLabel; //for fracture
+      const VarLabel* pEnergyReleaseRateLabel; //for fracture
       const VarLabel* pTemperatureLabel; //for heat conduction
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pTemperatureRateLabel; //for heat conduction
@@ -61,6 +62,7 @@ namespace Uintah {
       const VarLabel* pMicrocrackSizeLabel_preReloc; //for fracture
       const VarLabel* pMicrocrackPositionLabel_preReloc; //for fracture
       const VarLabel* pCrackingSpeedLabel_preReloc; //for fracture
+      const VarLabel* pEnergyReleaseRateLabel_preReloc; //for fracture
       const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
       const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
       const VarLabel* pTemperatureRateLabel_preReloc; //for heat conduction
@@ -110,6 +112,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.32  2000/09/11 03:12:20  tan
+// Added energy release rate computations for fracture.
+//
 // Revision 1.31  2000/09/11 01:08:37  tan
 // Modified time step calculation (in constitutive model computeStressTensor(...))
 // when fracture cracking speed involved.
