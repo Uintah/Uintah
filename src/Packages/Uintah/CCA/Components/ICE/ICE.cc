@@ -27,6 +27,8 @@
 #include <Core/Containers/StaticArray.h>
 #include <sstream>
 #include <float.h>
+#include <fstream.h>
+#include <stdio.h>
 
 using std::vector;
 using std::max;

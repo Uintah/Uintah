@@ -8,6 +8,8 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <fstream.h>
+#include <stdio.h>
 
 using namespace SCIRun;
 using namespace Uintah;
