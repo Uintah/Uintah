@@ -1776,7 +1776,7 @@ proc findRealConnections { conn } {
 	    lappend connections [makeConn $oport $iport]
 	}
     }
-    return $connections
+    return [lsort -integer -index 3 $connections]
 }
 
 proc drawPorts { modid { porttypes "i o" } } {

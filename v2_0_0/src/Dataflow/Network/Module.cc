@@ -610,8 +610,8 @@ void Module::tcl_command(GuiArgs& args, void*)
       args.error(args[0]+" "+args[1]+" cant parse port #"+args[2]);
     if (pnum >= oports.size() || pnum < 0)
       args.error(args[0]+" "+args[1]+" port #"+args[2]+" invalid");
-
-    args.result(oports[pnum]->get_colorname());
+    else
+      args.result(oports[pnum]->get_colorname());
 
   } else if(args[1] == "iportcolor") {
     if (args.count() != 3)
@@ -619,10 +619,12 @@ void Module::tcl_command(GuiArgs& args, void*)
     int pnum;
     if (!string_to_int(args[2], pnum))
       args.error(args[0]+" "+args[1]+" cant parse port #"+args[2]);
+    if (lastportdynamic && pnum >= iports.size())
+      pnum = iports.size()-1;
     if (pnum >= iports.size() || pnum < 0)
       args.error(args[0]+" "+args[1]+" port #"+args[2]+" invalid");
-
-    args.result(iports[pnum]->get_colorname());
+    else
+      args.result(iports[pnum]->get_colorname());
 
   } else if(args[1] == "oportname") {
     if (args.count() != 3)
@@ -632,8 +634,8 @@ void Module::tcl_command(GuiArgs& args, void*)
       args.error(args[0]+" "+args[1]+" cant parse port #"+args[2]);
     if (pnum >= oports.size() || pnum < 0)
       args.error(args[0]+" "+args[1]+" port #"+args[2]+" invalid");
-
-    args.result(oports[pnum]->get_typename()+" "+oports[pnum]->get_portname());
+    else
+      args.result(oports[pnum]->get_typename()+" "+oports[pnum]->get_portname());
 
   } else if(args[1] == "iportname") {
     if (args.count() != 3)
@@ -641,10 +643,14 @@ void Module::tcl_command(GuiArgs& args, void*)
     int pnum;
     if (!string_to_int(args[2], pnum))
       args.error(args[0]+" "+args[1]+" cant parse port #"+args[2]);
+
+    if (lastportdynamic && pnum >= iports.size())
+      pnum = iports.size()-1;
+
     if (pnum >= iports.size() || pnum < 0)
       args.error(args[0]+" "+args[1]+" port #"+args[2]+" invalid");
-
-    args.result(iports[pnum]->get_typename()+" "+iports[pnum]->get_portname());
+    else
+      args.result(iports[pnum]->get_typename()+" "+iports[pnum]->get_portname());
   } else if(args[1] == "oportcount") {
     if (args.count() != 2)
       args.error(args[0]+" "+args[1]+" takes no arguments");
