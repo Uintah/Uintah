@@ -33,6 +33,7 @@ SRCS     += \
 	$(SRCDIR)/ChooseColorMap.cc\
 	$(SRCDIR)/GLTextureBuilder.cc\
 	$(SRCDIR)/GenAxes.cc\
+	$(SRCDIR)/GenClock.cc\
 	$(SRCDIR)/GenStandardColorMaps.cc\
 	$(SRCDIR)/GenTransferFunc.cc\
 	$(SRCDIR)/Isosurface.cc\
