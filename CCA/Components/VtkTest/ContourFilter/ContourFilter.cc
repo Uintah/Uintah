@@ -27,94 +27,51 @@
  */
 
 #include <iostream>
+#include <vtkContourFilter.h>
+#include <vtkDataSet.h>
+#include <vtkStructuredPoints.h>
+#include <vtkPolyData.h>
+
 #include <SCIRun/Vtk/Port.h>
 #include <CCA/Components/VtkTest/ContourFilter/ContourFilter.h>
 
-#include "vtkContourFilter.h"
-#include "vtkDataSet.h"
-#include "vtkStructuredPoints.h"
-#include "vtkPolyData.h"
 using namespace std;
 using namespace SCIRun;
 using namespace vtk;
-
 
 extern "C" vtk::Component* make_Vtk_ContourFilter()
 {
   return new ContourFilter;
 }
 
-//Input Port
-IPort::IPort(vtkContourFilter *filter){
-  this->filter=filter;
-}
-  
-
-IPort::~IPort(){
-
-}
-
-bool
-IPort::isInput(){
-  return true;
-}
-
-std::string
-IPort::getName(){
-  return "ContourFilter::input";
-}
-
 bool 
-IPort::accept(Port* port){
-  return dynamic_cast<vtkDataSet*>(port->getObj())!=0;
+ContourFilter::accept(OutPort* port){
+  return dynamic_cast<vtkDataSet*>(port->getOutput())!=0;
 }
 
 void
-IPort::connect(Port* port){
-  filter->SetInput(dynamic_cast<vtkDataSet*>(port->getObj()));
+ContourFilter::connect(OutPort* port){
+  filter->SetInput(dynamic_cast<vtkDataSet*>(port->getOutput()));
   //TODO: use GUI
   filter->SetValue(0,70);
 }
 
-//Output Port
-
-OPort::OPort(vtkContourFilter *filter){
-  this->filter=filter;
-}
-
-OPort::~OPort(){
-
-}
-
-bool
-OPort::isInput(){
-  return false;
-}
-
-std::string
-OPort::getName(){
-  return "ContourFilter::output";
-}
-
-vtkObject *
-OPort::getObj(){
-  return filter->GetOutput();
-}
-
 ContourFilter::ContourFilter(){
+  //set input port name
+  InPort::setName("ContourFilter::input");
+
+  //set output port name
+  OutPort::setName("ContourFilter::output");
 
   filter=vtkContourFilter::New();
-  iports.push_back(new IPort(filter));
-  oports.push_back(new OPort(filter));
+
+  setOutput(filter->GetOutput());
+
+  addPort(dynamic_cast<InPort*>(this));
+  addPort(dynamic_cast<OutPort*>(this));
 }
 
 ContourFilter::~ContourFilter(){
-  for(unsigned int i=0; i<iports.size(); i++){
-    delete iports[i];
-  }
-  for(unsigned int i=0; i<oports.size(); i++){
-    delete oports[i];
-  }
   filter->Delete();
 }
 
