@@ -35,14 +35,15 @@ WARNING
 ****************************************/
 
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/SmagorinskyModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#include <iostream>
 
 namespace Uintah {
 class PhysicalConstants;
 class BoundaryCondition;
 
 
-class DynamicProcedure: public SmagorinskyModel {
+class DynamicProcedure: public TurbulenceModel {
 
 public:
 
@@ -86,8 +87,27 @@ public:
 					       const MaterialSet* matls,
 			    		const TimeIntegratorLabel* timelabels);
 
+      virtual void sched_computeScalarDissipation(SchedulerP&,
+						  const PatchSet* patches,
+					          const MaterialSet* matls,
+			    		 const TimeIntegratorLabel* timelabels);
+
+      // GROUP: Access Methods :
+      ///////////////////////////////////////////////////////////////////////
+      // Get the molecular viscosity
+      double getMolecularViscosity() const; 
+
+      ////////////////////////////////////////////////////////////////////////
+      // Get the Smagorinsky model constant
+      double getSmagorinskyConst() const {
+	cerr << "There is no Smagorinsky constant in Dynamic Procedure" << endl;
+	exit(0);
+	return 0;
+      }
 
 protected:
+      PhysicalConstants* d_physicalConsts;
+      BoundaryCondition* d_boundaryCondition;
 
 private:
 
@@ -98,6 +118,17 @@ private:
 
       // GROUP: Action Methods (private)  :
       ///////////////////////////////////////////////////////////////////////
+      // Petsc filter initialization
+      //    [in] 
+      //        documentation here
+      void initFilter(const ProcessorGroup*,
+		      const PatchSubset* patches,
+		      const MaterialSubset* matls,
+		      DataWarehouse* old_dw,
+		      DataWarehouse* new_dw);
+
+
+      ///////////////////////////////////////////////////////////////////////
       // Actually Calculate the Turbulence sub model
       //    [in] 
       //        documentation here
@@ -106,6 +137,20 @@ private:
 			       const MaterialSubset* matls,
 			       DataWarehouse* old_dw,
 			       DataWarehouse* new_dw);
+ 
+      void computeFilterValues(const ProcessorGroup*,
+			       const PatchSubset* patches,
+			       const MaterialSubset* matls,
+			       DataWarehouse* old_dw,
+			       DataWarehouse* new_dw);
+ 
+      void computeSmagCoeff(const ProcessorGroup*,
+			    const PatchSubset* patches,
+			    const MaterialSubset* matls,
+			    DataWarehouse* old_dw,
+			    DataWarehouse* new_dw);
+
+
 
 
       ///////////////////////////////////////////////////////////////////////
@@ -144,6 +189,20 @@ private:
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw,
 			         const TimeIntegratorLabel* timelabels);
+      void computeScalarDissipation(const ProcessorGroup*,
+				    const PatchSubset* patches,
+				    const MaterialSubset* matls,
+				    DataWarehouse* old_dw,
+				    DataWarehouse* new_dw,
+			            const TimeIntegratorLabel* timelabels);
+
+ protected:
+      double d_factorMesh; // lengthscale = fac_mesh*meshsize
+      double d_filterl; // prescribed filter length scale
+      double d_CFVar; // model constant for mixture fraction variance
+      double d_turbPrNo; // turbulent prandtl number
+      bool d_filter_cs_squared; //option for filtering Cs^2 in Dynamic Procedure
+      bool d_3d_periodic;
 
 
  private:

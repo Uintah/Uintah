@@ -164,7 +164,6 @@ private:
       double d_filterl; // prescribed filter length scale
       double d_CFVar; // model constant for mixture fraction variance
       double d_turbPrNo; // turbulent prandtl number
-      bool d_filter_cs_squared; //option for filtering Cs^2 in Dynamic Procedure
 
  private:
 

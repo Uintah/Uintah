@@ -321,7 +321,9 @@ void
 Discretization::computeDivergence(const ProcessorGroup* pc,
 				  const Patch* patch,
 				  ArchesVariables* vars,
-				  ArchesConstVariables* constvars) 
+				  ArchesConstVariables* constvars,
+				  const bool filter_divergence,
+			     	  const bool periodic) 
 {
 
   // Get the patch and variable indices
@@ -329,7 +331,7 @@ Discretization::computeDivergence(const ProcessorGroup* pc,
   IntVector indexHigh = patch->getCellFORTHighIndex();
 
   CCVariable<double> unfiltered_divergence;
-  unfiltered_divergence.resize(patch->getLowIndex(), patch->getHighIndex());
+  unfiltered_divergence.allocate(patch->getLowIndex(), patch->getHighIndex());
   unfiltered_divergence.initialize(0.0);
 
   for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
@@ -359,20 +361,24 @@ Discretization::computeDivergence(const ProcessorGroup* pc,
       }
     }
   }
-#define FILTER_DIVERGENCE
-#ifdef FILTER_DIVERGENCE
+
+    if ((filter_divergence)&&(!(periodic))) {
+    // filtering for periodic case is not implemented 
+    // if it needs to be then unfiltered_divergence will require 1 layer of boundary cells to be computed
 #ifdef PetscFilter
     d_filter->applyFilter(pc, patch, unfiltered_divergence, vars->divergence);
 #else
+    // filtering without petsc is not implemented
+    // if it needs to be then unfiltered_divergence will have to be computed with ghostcells
     vars->divergence.copy(unfiltered_divergence,
 			  unfiltered_divergence.getLowIndex(),
 		          unfiltered_divergence.getHighIndex());
 #endif
-#else
+    }
+    else
     vars->divergence.copy(unfiltered_divergence,
 			  unfiltered_divergence.getLowIndex(),
 		          unfiltered_divergence.getHighIndex());
-#endif
 }
 
 

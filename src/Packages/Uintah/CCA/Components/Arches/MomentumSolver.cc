@@ -87,6 +87,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 //    d_central = false;
   // make source and boundary_condition objects
   db->getWithDefault("pressure_correction",d_pressure_correction,false);
+  db->getWithDefault("filter_divergence_constraint",d_filter_divergence_constraint,false);
 
   d_source = scinew Source(d_turbModel, d_physicalConsts);
 
@@ -453,6 +454,9 @@ void MomentumSolver::solveVelHat(const LevelP& level,
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+
+  IntVector periodic_vector = level->getPeriodicBoundaries();
+  d_3d_periodic = (periodic_vector == IntVector(1,1,1));
 
 #ifdef filter_convection_terms
   sched_computeNonlinearTerms(sched, patches, matls, d_lab, timelabels);
@@ -1430,7 +1434,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
 //#ifdef divergenceconstraint    
     // compute divergence constraint to use in pressure equation
-    d_discretize->computeDivergence(pc, patch,&velocityVars,&constVelocityVars);
+    d_discretize->computeDivergence(pc, patch,&velocityVars,&constVelocityVars,
+		    d_filter_divergence_constraint,d_3d_periodic);
 
     double factor_old, factor_new, factor_divide;
     factor_old = timelabels->factor_old;

@@ -244,6 +244,7 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : densityCP
   d_props->sched_computeProps(sched, patches, matls);
 
+  sched_getCCVelocities(level, sched);
   // Compute Turb subscale model (output Varlabel have CTS appended to them)
   // require : densityCP, viscosityIN, [u,v,w]VelocitySP
   // compute : viscosityCTS
@@ -669,7 +670,7 @@ bool Arches::need_recompile(double time, double dt,
 // ****************************************************************************
 void 
 Arches::sched_readCCInitialCondition(const LevelP& level,
-			SchedulerP& sched)
+				     SchedulerP& sched)
 {
     // primitive variable initialization
     Task* tsk = scinew Task( "Arches::readCCInitialCondition",
@@ -687,10 +688,10 @@ Arches::sched_readCCInitialCondition(const LevelP& level,
 // ****************************************************************************
 void
 Arches::readCCInitialCondition(const ProcessorGroup* ,
-		  const PatchSubset* patches,
-		  const MaterialSubset*,
-		  DataWarehouse* ,
-		  DataWarehouse* new_dw)
+		  	       const PatchSubset* patches,
+			       const MaterialSubset*,
+	 		       DataWarehouse* ,
+			       DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -750,7 +751,7 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
 // ****************************************************************************
 void 
 Arches::sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
-			SchedulerP& sched)
+						    SchedulerP& sched)
 {
     // primitive variable initialization
     Task* tsk = scinew Task( "Arches::interpInitialConditionToStaggeredGrid",
@@ -773,10 +774,10 @@ Arches::sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
 // ****************************************************************************
 void
 Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
-		  const PatchSubset* patches,
-		  const MaterialSubset*,
-		  DataWarehouse* ,
-		  DataWarehouse* new_dw)
+		  			      const PatchSubset* patches,
+		  			      const MaterialSubset*,
+		  			      DataWarehouse* ,
+		 			      DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -839,6 +840,236 @@ Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
 	  wVelocity[currCell] = 0.5*(wVelocityCC[currCell] +
 			             wVelocityCC[zminusCell]);
 
+	}
+      }
+    }
+  }
+}
+// ****************************************************************************
+// Schedule Interpolate from SFCX, SFCY, SFCZ to CC
+// ****************************************************************************
+void 
+Arches::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
+{
+  string taskname =  "Arches::getCCVelocities";
+  Task* tsk = scinew Task(taskname, this, &Arches::getCCVelocities);
+
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+
+  tsk->modifies(d_lab->d_newCCUVelocityLabel);
+  tsk->modifies(d_lab->d_newCCVVelocityLabel);
+  tsk->modifies(d_lab->d_newCCWVelocityLabel);
+      
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+}
+// ****************************************************************************
+// Actual interpolation from FC to CC Variable
+// ****************************************************************************
+void 
+Arches::getCCVelocities(const ProcessorGroup* ,
+		        const PatchSubset* patches,
+		        const MaterialSubset*,
+		        DataWarehouse* ,
+		        DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+
+    constSFCXVariable<double> newUVel;
+    constSFCYVariable<double> newVVel;
+    constSFCZVariable<double> newWVel;
+    CCVariable<double> newCCUVel;
+    CCVariable<double> newCCVVel;
+    CCVariable<double> newCCWVel;
+
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+
+    new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    
+    new_dw->getModifiable(newCCUVel, d_lab->d_newCCUVelocityLabel,
+			   matlIndex, patch);
+    new_dw->getModifiable(newCCVVel, d_lab->d_newCCVVelocityLabel,
+			   matlIndex, patch);
+    new_dw->getModifiable(newCCWVel, d_lab->d_newCCWVelocityLabel,
+			   matlIndex, patch);
+    newCCUVel.initialize(0.0);
+    newCCVVel.initialize(0.0);
+    newCCWVel.initialize(0.0);
+
+
+    for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
+      for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
+	for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
+	  
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idxW]);
+	  
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+	}
+      }
+    }
+    // boundary conditions not to compute erroneous values in the case of ramping
+    if (xminus) {
+      int ii = idxLo.x()-1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idxU] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idxW]);
+	  
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+	}
+      }
+    }
+    if (xplus) {
+      int ii =  idxHi.x()+1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idx]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idxW]);
+	  
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+	}
+      }
+    }
+    if (yminus) {
+      int jj = idxLo.y()-1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idxV] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idxW]);
+	  
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+	}
+      }
+    }
+    if (yplus) {
+      int jj =  idxHi.y()+1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idx]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idxW]);
+	  
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+	}
+      }
+    }
+    if (zminus) {
+      int kk = idxLo.z()-1;
+      for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idxW] +
+			      newWVel[idxW]);
+	  
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+	}
+      }
+    }
+    if (zplus) {
+      int kk =  idxHi.z()+1;
+      for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idx]);
+	  
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
 	}
       }
     }
