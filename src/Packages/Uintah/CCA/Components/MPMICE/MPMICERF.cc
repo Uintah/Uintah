@@ -165,17 +165,17 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     //__________________________________
     //  Update boundary conditions
     for (int m = 0; m < numALLMatls; m++)   {
-       Material* matl = d_sharedState->getMaterial( m );
-       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-       int dwi = matl->getDWIndex();
+      Material* matl = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      int dwi = matl->getDWIndex();
        if(ice_matl){
-         d_ice->setBC(rho_CC[m],   "Density" ,patch, dwi);
+         setBC(rho_CC[m],   "Density" ,patch, d_sharedState, dwi);
        }  
-       d_ice->setBC(matl_press[m],rho_micro[SURROUND_MAT],
-                    "rho_micro", "Pressure", patch, 0, new_dw);
+       setBC(matl_press[m],rho_micro[SURROUND_MAT],
+             "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
     }  
-    d_ice->setBC(press_new, rho_micro[SURROUND_MAT], 
-                "rho_micro", "Pressure", patch, 0,  new_dw);
+    setBC(press_new, rho_micro[SURROUND_MAT], 
+          "rho_micro", "Pressure", patch, d_sharedState, 0,  new_dw);
 
     //__________________________________
     // compute sp_vol_CC
