@@ -1051,10 +1051,12 @@ itcl_class ViewWindow {
 	set "$this-$objid-dl" 0
 
 
-	pack $m.objlist.canvas.frame.objt$objid -side top -anchor w
+	pack $m.objlist.canvas.frame.objt$objid \
+	    -side top -anchor w -fill x -expand y
 	pack $m.objlist.canvas.frame.obj$objid \
-	    $m.objlist.canvas.frame.menu$objid \
-	    -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
+	    -in $m.objlist.canvas.frame.objt$objid -side left
+	pack $m.objlist.canvas.frame.menu$objid \
+	    -in $m.objlist.canvas.frame.objt$objid -side right
 
 	update idletasks
 	set width [winfo width $m.objlist.canvas.frame]
