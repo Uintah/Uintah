@@ -17,15 +17,19 @@
 
 # Makefile fragment for this subdirectory
 
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+
 SRCDIR   := osx
-SRCS      := $(SRCDIR)/osx_init.cc
-OBJS := $(patsubst %.c,%.o,$(filter %.c,$(SRCS))) \
 
+SRCS +=	$(SRCDIR)/osx_init.cc
+
+
+PSELIBS :=
 LIBS := 
-ALLTARGETS := $(OSX_FIX) $(ALLTARGETS)
-ALLSRCS := $(SRCS) $(ALLSRCS)
 
-OSX_FIX : $(OBJS)
-	cc -c $(SRCS)
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+clean::
+	rm -f $(GENSRCS)
+	rm -f $(patsubst %.cc,%.h,$(GENSRCS))
 
