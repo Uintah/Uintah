@@ -10,10 +10,15 @@ SRCS     += $(SRCDIR)/Fracture.cc \
 	$(SRCDIR)/Lattice.cc \
 	$(SRCDIR)/Cell.cc \
 	$(SRCDIR)/ParticlesNeighbor.cc \
-	$(SRCDIR)/CellsNeighbor.cc
+	$(SRCDIR)/CellsNeighbor.cc \
+	$(SRCDIR)/DamagedParticle.cc
 
 #
 # $Log$
+# Revision 1.9  2000/06/06 02:50:10  tan
+# Created class DamagedParticle to handle particle spliting when crack
+# pass through.
+#
 # Revision 1.8  2000/06/06 00:07:26  tan
 # Created class CellsNeighbor to handle cells neighbor computation.
 #
