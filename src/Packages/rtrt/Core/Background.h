@@ -1,6 +1,21 @@
 #ifndef BACKGROUND_H
 #define BACKGROUND_H 1
 
+///////////////////////////////////////////////////////////////////
+// Background.h
+//
+// Provides a common interface for the background color.  We would like
+// the background to do more than just pass a color back, but we want a
+// common interface for each.
+//
+// There used to be a notion of the background color changing with the
+// ambient level, but I find this to be very annoying (the background color
+// should be the background color, regardless of the ambient level).
+// I've added a new class called AmbientBackground which takes into account
+// the ambient levels.  Constant and Linear both don't take into account
+// the current abmbient levels, however, Ambient and EnvironmentMap do.
+//   -- James
+
 #include <Packages/rtrt/Core/Color.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Persistent/Persistent.h>
@@ -10,6 +25,7 @@
 namespace rtrt {
 class Background;
 class ConstantBackground;
+class AmbientBackground;
 class LinearBackground;
 class EnvironmentMapBackground;
 }
@@ -17,6 +33,7 @@ class EnvironmentMapBackground;
 namespace SCIRun {
 void Pio(Piostream&, rtrt::Background*&);
 void Pio(Piostream&, rtrt::ConstantBackground*&);
+void Pio(Piostream&, rtrt::AmbientBackground*&);
 void Pio(Piostream&, rtrt::LinearBackground*&);
 void Pio(Piostream&, rtrt::EnvironmentMapBackground*&);
 }
@@ -27,13 +44,9 @@ using SCIRun::Vector;
 using SCIRun::Dot;
 
 class Background : public virtual SCIRun::Persistent {
-  Color avg;
-  Color origAvg_;
 public:
-  Background(const Color& avg);
+  Background() {}
   virtual ~Background();
-
-  Background() {} // for Pio.
 
   //! Persistent I/O.
   static  SCIRun::PersistentTypeID type_id;
@@ -43,21 +56,12 @@ public:
   // expects a unit vector
   virtual void color_in_direction( const Vector& v, Color& c) const = 0;
 
-  // gives some approximate value
-  inline const Color& average( ) const {
-    return avg;
-  }
-
-  virtual void updateAmbient( double scale ) {
-    avg = origAvg_ * scale;
-  }
-
+  virtual void updateAmbient( double /*scale*/ ) = 0;
 };
 
 class ConstantBackground : public Background {
 protected:
   Color C;
-  Color origC_;
 public:
   ConstantBackground(const Color& C);
   virtual ~ConstantBackground();
@@ -70,6 +74,26 @@ public:
   friend void SCIRun::Pio(SCIRun::Piostream&, ConstantBackground*&);
 
   virtual void color_in_direction(const Vector& v, Color& c) const; 
+  virtual void updateAmbient( double ) {}
+};
+
+
+class AmbientBackground : public Background {
+protected:
+  Color C;
+  Color origC_; // This multiplied by the ambient scale is used for C.
+public:
+  AmbientBackground(const Color& C);
+  virtual ~AmbientBackground();
+
+  AmbientBackground() {} // for Pio.
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, AmbientBackground*&);
+
+  virtual void color_in_direction(const Vector& v, Color& c) const; 
   virtual void updateAmbient( double scale ) {
     C = origC_ * scale;
   }
@@ -80,8 +104,6 @@ class LinearBackground : public Background {
 protected:
   Color C1;
   Color C2;
-  Color origC1_;
-  Color origC2_;
   Vector direction_to_C1;
 public:
   LinearBackground( const Color& C1, const Color& C2,  
@@ -97,10 +119,7 @@ public:
 
   virtual void color_in_direction(const Vector& v, Color& c) const ;
 
-  virtual void updateAmbient( double scale ) {
-    C1 = origC1_ * scale;
-    C2 = origC2_ * scale;
-  }
+  virtual void updateAmbient( double ) {}
 };
 
 class EnvironmentMapBackground : public Background {
