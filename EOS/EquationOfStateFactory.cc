@@ -1,7 +1,9 @@
 #include "EquationOfStateFactory.h"
 #include "IdealGas.h"
+#if 0
 #include "Harlow.h"
 #include "StiffGas.h"
+#endif
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
