@@ -294,9 +294,11 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
     }
 
     method update_swatches {file} {
+        global env
         set row [set $this-row]
         set col [set $this-col]
-
+ 
+        set path $env(HOME)
         set w .ui[modname]
         if {[winfo exists $w.swatchpicker]} {
             set f [$w.swatchpicker childsite]
@@ -313,7 +315,7 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
             image create photo img-$r -format "gif" -file $file
             #Load in the image to diplay on the button and do that.
             
-            button $f.swatchFrame$row.swatch$num -image img-$r -command "swatch_load $num"
+            button $f.swatchFrame$row.swatch$num -image img-$r -command "set $this-filename $path/.scirun/$num.ppm.xff; $this swatch_load $num"
             grid configure $f.swatchFrame$row.swatch$num -row $row -col $col -sticky "nw"
             
             incr col
