@@ -21,7 +21,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Dataflow/Widgets
 
-SRCS     += $(SRCDIR)/BaseWidget.cc \
+SRCS     += \
+	$(SRCDIR)/BaseWidget.cc \
 	$(SRCDIR)/GuiGeom.cc\
 	$(SRCDIR)/GuiView.cc\
 	$(SRCDIR)/ArrowWidget.cc \
@@ -41,7 +42,7 @@ SRCS     += $(SRCDIR)/BaseWidget.cc \
 PSELIBS := \
 	Dataflow/Constraints Dataflow/Ports \
 	Core/Datatypes Core/Exceptions Core/Geom Core/Thread \
-	Core/GuiInterface Core/Containers Core/Geometry
+	Core/GuiInterface Core/Containers Core/Geometry Core/Parts
 LIBS := -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

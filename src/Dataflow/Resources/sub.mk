@@ -29,7 +29,7 @@ SRCS     += \
 	$(SRCDIR)/ResourcesParser.cc \
 	$(SRCDIR)/Resources.cc \
 
-PSELIBS := Core/Util 
+PSELIBS := Core/Util Core/Containers 
 
 LIBS := $(XML_LIBRARY)
 

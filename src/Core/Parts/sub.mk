@@ -28,6 +28,7 @@ SRCS     += $(SRCDIR)/EventManager.cc \
 #	$(SRCDIR)/PartManager.cc \
 
 PSELIBS := Core/Framework \
+	Core/Containers \
 	Core/Exceptions \
 	Core/Util \
 	Core/Thread \

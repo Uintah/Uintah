@@ -61,7 +61,7 @@ PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil \
 	 Core/Exceptions \
 	Core/Thread Core/Containers Core/GuiInterface Core/Geom \
 	Core/Datatypes Core/Geometry \
-	Core/Math Core/Util
+	Core/Math Core/Util Core/Parts
 LIBS := $(GL_LIBS) $(FLEX_LIBS) -lm $(XML_LIBRARY) $(THREAD_LIBS)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

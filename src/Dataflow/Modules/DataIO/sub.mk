@@ -45,7 +45,7 @@ PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/Widgets\
 	Core/Datatypes Core/Disclosure \
 	Core/Persistent Core/Exceptions Core/Thread Core/Containers \
 	Core/GuiInterface Core/Geometry Core/Datatypes \
-	Core/Util Core/Geom 
+	Core/Util Core/Geom Core/Parts
 LIBS := $(GL_LIBS) -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
