@@ -18,6 +18,7 @@ EMBMaterial::io(SCIRun::Piostream &str)
 {
   str.begin_class("EMBMaterial", EMBMATERIAL_VERSION);
   Material::io(str);
+  EnvironmentMapBackground::io(str);
   str.end_class();
 }
 
