@@ -619,6 +619,7 @@ void CI::emit_handler_table_body(EmitState& e, int& vtable_base, bool top)
     e.out << "\n  //setCallerDistribution handler";
     e.out << "\n  epc->registerHandler(" << (++i)
           << ",(void*)_handler" << callerDistHandler << ");";
+    callerDistHandler = i-1;
   }
   i++;
   e.out << "\n    // Red zone\n";    
