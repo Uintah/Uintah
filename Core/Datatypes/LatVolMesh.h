@@ -153,10 +153,11 @@ public:
   //! Storage types for the arguments passed to the 
   //  get_*() functions.  For lattice meshes, these all have
   //  known maximum sizes, so we use them.
-  typedef node_index  node_array[8];
-  typedef edge_index  edge_array[12];
-  typedef face_index  face_array[6];
-  typedef cell_index  cell_array[8];
+  typedef vector<node_index>  node_array;
+  typedef vector<edge_index>  edge_array;
+  typedef vector<face_index>  face_array;
+  typedef vector<cell_index>  cell_array;
+  typedef vector<double>      weight_array;
 
   friend class NodeIter;
   friend class CellIter;
@@ -221,10 +222,10 @@ public:
   void get_center(Point &result, face_index idx) const;
   void get_center(Point &result, cell_index idx) const;
 
-  void locate_node(node_index &node, const Point &p) const;
-  void locate_edge(edge_index &edge, const Point &p, double[2]) const;
-  void locate_face(face_index &face, const Point &p, double[4]) const;
-  void locate_cell(cell_index &cell, const Point &p, double[8]) const;
+  bool locate(node_index &node, const Point &p) const;
+  bool locate(edge_index &edge, const Point &p) const;
+  bool locate(face_index &face, const Point &p) const;
+  bool locate(cell_index &cell, const Point &p) const;
 
 
   void unlocate(Point &result, const Point &p) const;

@@ -47,7 +47,7 @@ interpolate(const Field &fld, const Point &p, Functor &f) {
   typedef typename Field::mesh_type Mesh;
   
   typename Mesh::cell_index ci;
-  typename Field::mesh_handle_type mesh = fld.get_typed_mesh();
+  const typename Field::mesh_handle_type &mesh = fld.get_typed_mesh();
   if (! mesh->locate(ci, p)) return false;
 
   calc_weights(mesh.get_rep(), ci, p, f.weights_);
@@ -83,7 +83,6 @@ interpolate(const Field &fld, const Point &p, Functor &f) {
   } 
   return true;
 } 
-
 
 template <class Field>
 struct InterpFunctor {

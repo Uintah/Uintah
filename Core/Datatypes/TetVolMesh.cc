@@ -44,16 +44,6 @@ TetVolMesh::~TetVolMesh()
 BBox
 TetVolMesh::get_bounding_box() const
 {
-#if 0
-  BBox result;
-
-  for (int i = 0; i < points_.size(); i++)
-  {
-    result.extend(points_[i]);
-  }
-
-  return result;
-#else
   BBox result;
 
   node_iterator ni = node_begin();
@@ -65,9 +55,39 @@ TetVolMesh::get_bounding_box() const
     ++ni;
   }
   return result;
-#endif
 }
-
+#if 0
+void 
+TetVolMesh::compute_edges()
+{
+  cell_iterator ci = cell_begin();
+  while (ci != cell_end())
+  {
+    node_array arr;
+    get_nodes(arr, *ci); ++ci;
+    pair<node_index, node_index> e;
+    e.first  = arr[0];
+    e.second = arr[1];
+    // hash me
+    e.first  = arr[0];
+    e.second = arr[2];
+    // hash me
+    e.first  = arr[0];
+    e.second = arr[3];
+    // hash me
+    e.first  = arr[1];
+    e.second = arr[1];
+    // hash me
+    e.first  = arr[1];
+    e.second = arr[2];
+    // hash me
+    e.first  = arr[1];
+    e.second = arr[3];
+    // hash me
+  }
+  return result;
+}
+#endif
 
 TetVolMesh::node_iterator
 TetVolMesh::node_begin() const
@@ -283,7 +303,7 @@ distance2(const Point &p0, const Point &p1)
 
 
 bool
-TetVolMesh::locate(node_index &loc, const Point &p)
+TetVolMesh::locate(node_index &loc, const Point &p) const
 {
   node_iterator ni = node_begin();
   if (ni == node_end()) { return false; }
@@ -304,7 +324,7 @@ TetVolMesh::locate(node_index &loc, const Point &p)
 
 
 bool
-TetVolMesh::locate(edge_index &/*edge*/, const Point & /* p */)
+TetVolMesh::locate(edge_index &/*edge*/, const Point & /* p */) const
 {
   //FIX_ME
   return false;
@@ -312,7 +332,7 @@ TetVolMesh::locate(edge_index &/*edge*/, const Point & /* p */)
 
 
 bool
-TetVolMesh::locate(face_index &/*face*/, const Point & /* p */)
+TetVolMesh::locate(face_index &/*face*/, const Point & /* p */) const
 {
   //FIX_ME
   return false;
@@ -320,15 +340,14 @@ TetVolMesh::locate(face_index &/*face*/, const Point & /* p */)
 
 
 bool
-TetVolMesh::locate(cell_index &cell, const Point &p)
+TetVolMesh::locate(cell_index &cell, const Point &p) const
 {
   bool found_p = false;
   cell_iterator ci = cell_begin();
   while (ci != cell_end()) {
     if (inside4_p((*ci) * 4, p)) {
       found_p = true;
-      break;
-      
+      break;     
     }
   }
   cell = *ci;
@@ -350,7 +369,7 @@ TetVolMesh::get_point(Point &result, node_index index) const
 
 
 bool
-TetVolMesh::inside4_p(int i, const Point &p)
+TetVolMesh::inside4_p(int i, const Point &p) const
 {
   // TODO: This has not been tested.
   // TODO: Looks like too much code to check sign of 4 plane/point tests.

@@ -75,10 +75,10 @@ public:
   void get_center(Point &result, cell_index idx) const;
 
   //! return false if point is out of range.
-  bool locate(node_index &loc, const Point &p);
-  bool locate(edge_index &loc, const Point &p);
-  bool locate(face_index &loc, const Point &p);
-  bool locate(cell_index &loc, const Point &p);
+  bool locate(node_index &loc, const Point &p) const;
+  bool locate(edge_index &loc, const Point &p) const;
+  bool locate(face_index &loc, const Point &p) const;
+  bool locate(cell_index &loc, const Point &p) const;
 
   void unlocate(Point &result, const Point &p);
 
@@ -101,7 +101,7 @@ public:
 
 private:
 
-  bool inside4_p(int, const Point &p);
+  bool inside4_p(int, const Point &p) const;
 
   //! all the nodes.
   vector<Point>        points_;
