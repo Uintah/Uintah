@@ -8,6 +8,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <iostream>
+#include <stdio.h>
 
 using namespace rtrt;
 using namespace SCIRun;
