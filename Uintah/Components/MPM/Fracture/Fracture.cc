@@ -184,7 +184,6 @@ labelSelfContactNodes(
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
-#if 0
   int numMatls = d_sharedState->getNumMatls();
 
   const MPMLabel* lb = MPMLabel::getLabels();
@@ -205,27 +204,17 @@ labelSelfContactNodes(
       
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++)
       {
-        IntVector cellIndex[8];
-        patch->findCellsFromNode(*iter,cellIndex);
-        
-        for(int k = 0; k < 8; k++) {
-          if( cellStatus(cSurfaceNormal[cellIndex[k]]) == 
-	    HAS_SEVERAL_BOUNDARY_SURFACE )
-          {
-	    gSelfContact[*iter] = true;
-            break;
-          }
-        }
-        gSelfContact[*iter] = true;
+        gSelfContact[*iter] = isSelfContactNode(*iter,patch,cSurfaceNormal);
       }
+
+      new_dw->put(gSelfContact, lb->gSelfContactLabel, vfindex, patch);
     }
   }
-#endif
 }
 
 bool
 Fracture::
-isSelfContactNode(const IntVector& nodeIndex,Patch* patch,
+isSelfContactNode(const IntVector& nodeIndex,const Patch* patch,
   const CCVariable<Vector>& cSurfaceNormal)
 {
   IntVector cellIndex[8];
@@ -334,6 +323,10 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.17  2000/06/02 21:54:22  tan
+// Finished function labelSelfContactNodes(...) to label the gSalfContact
+// according to the cSurfaceNormal information.
+//
 // Revision 1.16  2000/06/02 21:12:24  tan
 // Added function isSelfContactNode(...) to determine if a node is a
 // self-contact node.
