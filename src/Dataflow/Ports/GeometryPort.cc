@@ -123,9 +123,9 @@ GeometryOPort::finish()
 {
   if (dirty_)
   {
-    if (module->showStats()) turn_on(Finishing);
+    if (module->show_stats()) turn_on(Finishing);
     flush();
-    if (module->showStats()) turn_off();
+    if (module->show_stats()) turn_off();
   }
 }
 
@@ -134,7 +134,7 @@ GeometryOPort::finish()
 GeomID
 GeometryOPort::addObj(GeomHandle obj, const string& name, CrowdMonitor* lock)
 {
-  if (module->showStats()) turn_on();
+  if (module->show_stats()) turn_on();
   GeomID id = serial_++;
   for (unsigned int i = 0; i < outbox_.size(); i++)
   {
@@ -144,7 +144,7 @@ GeometryOPort::addObj(GeomHandle obj, const string& name, CrowdMonitor* lock)
   GeometryComm* msg = scinew GeometryComm(0, id, obj, name, lock);
   save_msg(msg);
   dirty_ = true;
-  if (module->showStats()) turn_off();
+  if (module->show_stats()) turn_off();
   return id;
 }
 
@@ -153,7 +153,7 @@ GeometryOPort::addLight(LightHandle obj,
 			const string& name, CrowdMonitor* lock)
 {
   //static LightID next_id = 1;
-  if (module->showStats()) turn_on();
+  if (module->show_stats()) turn_on();
   LightID id = lserial_++;;
 //   if( next_id > lserial_ ){
 //     id = next_id++;
@@ -171,7 +171,7 @@ GeometryOPort::addLight(LightHandle obj,
   GeometryComm* msg = scinew GeometryComm(0, id, obj, name, lock);
   save_msg(msg);
   dirty_ = true;
-  if (module->showStats()) turn_off();
+  if (module->show_stats()) turn_off();
   return id;
 }
 
@@ -208,7 +208,7 @@ GeometryOPort::forward(GeometryComm* msg0)
 void
 GeometryOPort::delObj(GeomID id, int del)
 {
-  if (module->showStats()) turn_on();
+  if (module->show_stats()) turn_on();
 
   for (unsigned int i=0; i < outbox_.size(); i++)
   {
@@ -218,13 +218,13 @@ GeometryOPort::delObj(GeomID id, int del)
   GeometryComm* msg = scinew GeometryComm(0, id);
   save_msg(msg);
   dirty_ = true;
-  if (module->showStats()) turn_off();
+  if (module->show_stats()) turn_off();
 }
 
 void
 GeometryOPort::delLight(LightID id, int del)
 {
-  if (module->showStats()) turn_on();
+  if (module->show_stats()) turn_on();
 
   for (unsigned int i=0; i < outbox_.size(); i++)
   {
@@ -234,7 +234,7 @@ GeometryOPort::delLight(LightID id, int del)
   GeometryComm* msg = scinew GeometryComm(0, id);
   save_msg(msg);
   dirty_ = true;
-  if (module->showStats()) turn_off();
+  if (module->show_stats()) turn_off();
 }
 
 
@@ -242,7 +242,7 @@ GeometryOPort::delLight(LightID id, int del)
 void
 GeometryOPort::delAll()
 {
-  if (module->showStats()) turn_on();
+  if (module->show_stats()) turn_on();
   for (unsigned int i = 0; i < outbox_.size(); i++)
   {
     GeometryComm* msg = scinew GeometryComm(MessageTypes::GeometryDelAll,
@@ -252,7 +252,7 @@ GeometryOPort::delAll()
   GeometryComm* msg = scinew GeometryComm(MessageTypes::GeometryDelAll, 0);
   save_msg(msg);
   dirty_ = true;
-  if (module->showStats()) turn_off();
+  if (module->show_stats()) turn_off();
 }
 
 
@@ -260,7 +260,7 @@ GeometryOPort::delAll()
 void
 GeometryOPort::flushViews()
 {
-  if (module->showStats()) turn_on();
+  if (module->show_stats()) turn_on();
   for (unsigned int i = 0; i < outbox_.size(); i++)
   {
     GeometryComm* msg = scinew GeometryComm(MessageTypes::GeometryFlushViews,
@@ -271,14 +271,14 @@ GeometryOPort::flushViews()
 					  0, (Semaphore*)0);
   save_msg(msg);
   dirty_ = false;
-  if (module->showStats()) turn_off();
+  if (module->show_stats()) turn_off();
 }
 
 
 void
 GeometryOPort::flushViewsAndWait()
 {
-  if (module->showStats()) turn_on();
+  if (module->show_stats()) turn_on();
   Semaphore waiter("flushViewsAndWait wait semaphore", 0);
   for (unsigned int i = 0; i < outbox_.size(); i++)
   {
@@ -296,7 +296,7 @@ GeometryOPort::flushViewsAndWait()
     waiter.down();
   }
   dirty_ = false;
-  if (module->showStats()) turn_off();
+  if (module->show_stats()) turn_off();
 }
 
 
@@ -428,7 +428,7 @@ GeometryOPort::attach(Connection* c)
   int which = outbox_.size();
 
   // Set up the outbox_ and portid_ variables.
-  if (module->showStats()) turn_on(Resetting);
+  if (module->show_stats()) turn_on(Resetting);
   Module* mod = c->iport->get_module();
   outbox_.push_back(&mod->mailbox);
   // Send the registration message.
@@ -436,10 +436,10 @@ GeometryOPort::attach(Connection* c)
   outbox_[which]->send(scinew GeometryComm(tmp));
   GeomReply reply = tmp->receive();
   portid_.push_back(reply.portid);
-  if (module->showStats()) turn_off();
+  if (module->show_stats()) turn_off();
 
   // Forward all of the queued up messages.
-  if (module->showStats()) turn_on();
+  if (module->show_stats()) turn_on();
   list<GeometryComm *>::iterator itr = saved_msgs_.begin();
   while (itr != saved_msgs_.end())
   {
@@ -448,7 +448,7 @@ GeometryOPort::attach(Connection* c)
     outbox_[which]->send(msg);
     ++itr;
   }
-  if (module->showStats()) turn_off();
+  if (module->show_stats()) turn_off();
 }
 
 

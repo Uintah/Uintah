@@ -166,8 +166,8 @@ public:
   bool haveUI();
   void popupUI();
   void delete_warn();
-  bool showStats() { return true; }
-
+  bool show_stats() { return show_stats_; }
+  void set_show_stats(bool v) {show_stats_ = v;}
   // ProgressReporter function
   virtual void error(const std::string&);
   virtual void warning(const std::string&);
@@ -299,7 +299,7 @@ private:
   Network* network;
 
   GuiString  notes ;
-
+  bool        show_stats_;
   Module(const Module&);
   Module& operator=(const Module&);
 };

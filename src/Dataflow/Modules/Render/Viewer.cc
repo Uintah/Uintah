@@ -537,15 +537,15 @@ void Viewer::delObj(GeomViewerPort* port, int serial)
 void Viewer::delAll(GeomViewerPort* port)
 {
   GeomIndexedGroup::IterIntGeomObj iter = port->getIter();
-  
-  for ( ; iter.first != iter.second; iter.first++)
-  {
-    GeomViewerItem* si =
-      (GeomViewerItem*)((*iter.first).second.get_rep());
-    for (unsigned int i=0; i<view_window_.size(); i++)
-      view_window_[i]->itemDeleted(si);
+  if (!stop_rendering_) {
+    for ( ; iter.first != iter.second; iter.first++)
+    {
+      GeomViewerItem* si =
+	(GeomViewerItem*)((*iter.first).second.get_rep());
+      for (unsigned int i=0; i<view_window_.size(); i++)
+	view_window_[i]->itemDeleted(si);
+    }
   }
-  
   port->delAll();
 }
 

@@ -138,7 +138,8 @@ Module::Module(const string& name, GuiContext* ctx,
     helper(0),
     helper_thread(0),
     network(0), 
-    notes(ctx->subVar("notes"))
+    notes(ctx->subVar("notes")),
+    show_stats_(true)
 {
   stacksize=0;
 
@@ -218,6 +219,7 @@ Module::~Module()
 
 void Module::delete_warn() 
 {
+  set_show_stats(false);
   MessageBase *msg = scinew MessageBase(MessageTypes::GoAwayWarn);
   mailbox.send(msg);
 }
