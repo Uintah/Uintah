@@ -1,5 +1,5 @@
-#ifndef PETSC_SOLVER_H
-#define PETSC_SOLVER_H
+#ifndef MPM_PETSC_SOLVER_H
+#define MPM_PETSC_SOLVER_H
 
 #include "Solver.h"
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
@@ -20,11 +20,11 @@ namespace Uintah {
   class ProcessorGroup;
   class Patch;
 
-  class PetscSolver : public Solver {
+  class MPMPetscSolver : public Solver {
 
   public:
-    PetscSolver();
-    virtual ~PetscSolver();
+    MPMPetscSolver();
+    virtual ~MPMPetscSolver();
 
     virtual void initialize();
 

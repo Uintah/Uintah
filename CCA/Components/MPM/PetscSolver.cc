@@ -6,19 +6,19 @@
 using namespace Uintah;
 using std::vector;
 
-PetscSolver::PetscSolver()
+MPMPetscSolver::MPMPetscSolver()
 {
 
 }
 
-PetscSolver::~PetscSolver()
+MPMPetscSolver::~MPMPetscSolver()
 {
 
 
 }
 
 
-void PetscSolver::initialize()
+void MPMPetscSolver::initialize()
 {
 #ifdef HAVE_PETSC
   int argc = 4;
@@ -35,7 +35,7 @@ void PetscSolver::initialize()
 #endif
 }
 
-void PetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
+void MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 					     const PatchSet* perproc_patches,
 					     const PatchSubset* patches)
 {
@@ -114,7 +114,7 @@ void PetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 
 }
 
-void PetscSolver::solve()
+void MPMPetscSolver::solve()
 {
 #ifdef HAVE_PETSC
   PC          pc;           
@@ -137,7 +137,7 @@ void PetscSolver::solve()
 #endif
 }
 
-void PetscSolver::createMatrix(const ProcessorGroup* d_myworld)
+void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld)
 {
   int me = d_myworld->myrank();
   int numlrows = d_numNodes[me];
@@ -167,7 +167,7 @@ void PetscSolver::createMatrix(const ProcessorGroup* d_myworld)
 }
 
 
-void PetscSolver::destroyMatrix(bool recursion)
+void MPMPetscSolver::destroyMatrix(bool recursion)
 {
 #ifdef HAVE_PETSC
   if (recursion) {
@@ -189,7 +189,7 @@ void PetscSolver::destroyMatrix(bool recursion)
 #endif
 }
 
-void PetscSolver::fillMatrix(int i,int j,double value)
+void MPMPetscSolver::fillMatrix(int i,int j,double value)
 {
 #ifdef HAVE_PETSC
   PetscScalar v = value;
@@ -197,7 +197,7 @@ void PetscSolver::fillMatrix(int i,int j,double value)
 #endif
 }
 
-void PetscSolver::flushMatrix()
+void MPMPetscSolver::flushMatrix()
 {
 #ifdef HAVE_PETSC
   MatAssemblyBegin(d_A,MAT_FLUSH_ASSEMBLY);
@@ -205,7 +205,7 @@ void PetscSolver::flushMatrix()
 #endif
 }
 
-void PetscSolver::fillVector(int i,double v)
+void MPMPetscSolver::fillVector(int i,double v)
 {
 #ifdef HAVE_PETSC
   PetscScalar value = v;
@@ -213,7 +213,7 @@ void PetscSolver::fillVector(int i,double v)
 #endif
 }
 
-void PetscSolver::assembleVector()
+void MPMPetscSolver::assembleVector()
 {
 #ifdef HAVE_PETSC
   VecAssemblyBegin(d_B);
@@ -221,12 +221,12 @@ void PetscSolver::assembleVector()
 #endif
 }
 
-void PetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
+void MPMPetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
 {
   mapping.copy(d_petscLocalToGlobal[patch]);
 }
 
-void PetscSolver::removeFixedDOF(set<int>& fixedDOF,int num_nodes)
+void MPMPetscSolver::removeFixedDOF(set<int>& fixedDOF,int num_nodes)
 {
 #ifdef HAVE_PETSC
   IS is;
@@ -278,7 +278,7 @@ void PetscSolver::removeFixedDOF(set<int>& fixedDOF,int num_nodes)
 
 
 
-void PetscSolver::finalizeMatrix()
+void MPMPetscSolver::finalizeMatrix()
 {
 #ifdef HAVE_PETSC
   MatAssemblyBegin(d_A,MAT_FINAL_ASSEMBLY);
@@ -286,7 +286,7 @@ void PetscSolver::finalizeMatrix()
 #endif
 }
 
-int PetscSolver::getSolution(vector<double>& xPetsc)
+int MPMPetscSolver::getSolution(vector<double>& xPetsc)
 {
 #ifdef HAVE_PETSC
   int nlocal,ierr,begin,end;
