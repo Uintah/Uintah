@@ -756,7 +756,7 @@ public:
 	    }
 	  break;
 	  default:
-	    cerr << "Particle Variable of unknown type: " << subtype->getType() << '\n';
+	    cerr << "Particle Variable of unknown type: " << subtype->getName() << '\n';
 	    break;
 	  } // end switch(subtype)
 	} // end case ParticleVariable
@@ -770,7 +770,7 @@ public:
 	// currently not implemented
 	break;
       default:
-	cerr << "Variable (" << var << ") is of unknown type: " << td->getType() << '\n';
+	cerr << "Variable (" << var << ") is of unknown type: " << td->getName() << '\n';
 	break;
       } // end switch(td->getType())
       if (debug) cerr << "Finished var " << var << "\n";
@@ -1224,7 +1224,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 		  }
 		break;
 		default:
-		  cerr << "Particle Variable of unknown type: " << subtype->getType() << '\n';
+		  cerr << "Particle Variable of unknown type: " << subtype->getName() << '\n';
 		  break;
 		} // end switch(subtype)
 	      } // end case ParticleVariable
@@ -1238,7 +1238,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	      // currently not implemented
 	      break;
 	    default:
-	      cerr << "Variable (" << var << ") is of unknown type: " << td->getType() << '\n';
+	      cerr << "Variable (" << var << ") is of unknown type: " << td->getName() << '\n';
 	      break;
 	    } // end switch(td->getType())
 	    if (debug) cerr << "Finished var " << var << "\n";
