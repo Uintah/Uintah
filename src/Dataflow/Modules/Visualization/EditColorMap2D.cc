@@ -452,6 +452,7 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
   } else if (args[1] == "swatch_save") {
     save_ppm_ = true;
     filename_.reset();
+    cmap_dirty_ = true;
     redraw();
   } else if (args[1] == "load") {
     // The implementation of this was taken almost directly from
@@ -512,6 +513,7 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
 
   } else if (args[1] == "saveppm") { 
     save_ppm_ = true;
+    cmap_dirty_ = true;
     redraw();
     // Now we trim off the .ppm, add a .xff and call
     // the save_function() method
