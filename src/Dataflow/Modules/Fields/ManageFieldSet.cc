@@ -302,7 +302,7 @@ ManageFieldSet::execute()
     if (ofs != NULL)
     {
       remark("Dumping out a field set.");
-      ofs->store("name", string("glomfield"));
+      ofs->store("name", string("glomfield"), false);
       FieldSetHandle ofsh(ofs);
       FieldSetOPort *ofsp = (FieldSetOPort *)get_oport("Output FieldSet");
       if (!ofsp) {

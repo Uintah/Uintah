@@ -297,6 +297,7 @@ void StreamLines::execute()
 		tolerance, stepsize, maxsteps, cmesh);
 
   cf->resize_fdata();
+  cf->freeze();
   oport_->send(cf);
 }
 

@@ -245,7 +245,7 @@ void ConductivitySearch::send_and_get_data(int which_conductivity) {
     conds.add(Tensor(c));
     (*cm)[i]=c;
   }
-  mesh_out_->store("conductivity_table", conds);
+  mesh_out_->store("conductivity_table", conds, true);
 
   fem_mat_ = build_composite_matrix(which_conductivity);
   

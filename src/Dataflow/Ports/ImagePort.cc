@@ -44,7 +44,7 @@ PSECORESHARE OPort* make_ImageOPort(Module* module, const string& name) {
 }
 }
 
-template<> string SimpleIPort<ImageHandle>::port_type("Image");
-template<> string SimpleIPort<ImageHandle>::port_color("misty rose");
+template<> string SimpleIPort<ImageHandle>::port_type_("Image");
+template<> string SimpleIPort<ImageHandle>::port_color_("misty rose");
 
 

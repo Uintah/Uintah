@@ -81,13 +81,15 @@ PersistentTypeID PropertyManager::type_id("PropertyManager",
 
 
 PropertyManager::PropertyManager() : 
-  size_(0)
+  size_(0),
+  frozen_(false)
 {
 }
 
 
 PropertyManager::PropertyManager(const PropertyManager &copy) :
-  size_(copy.size_)
+  size_(copy.size_),
+  frozen_(copy.frozen_)
 {
   map_type::const_iterator pi = copy.properties_.begin();
   while (pi != copy.properties_.end()) {
@@ -107,6 +109,25 @@ PropertyManager::~PropertyManager()
   }
 }
 
+void
+PropertyManager::thaw()
+{
+  lock.lock();
+  // Call detach on the mesh before thawing.  Assert that has happened.
+  ASSERT(ref_cnt <= 1);
+  // Clean up properties.
+  clear_transient();
+  frozen_ = false;
+  lock.unlock();
+}
+
+void
+PropertyManager::freeze()
+{
+  lock.lock();
+  frozen_ = true;
+  lock.unlock();
+}
 
 void
 PropertyManager::remove( const string &name )
@@ -121,6 +142,26 @@ PropertyManager::remove( const string &name )
 
   lock.unlock();
 }
+
+void
+PropertyManager::clear_transient()
+{
+  lock.lock();
+
+  map_type::iterator iter = properties_.begin();
+  if (iter != properties_.end()) {
+    pair<const string, PropertyBase *> p = *iter;
+    
+    if (p.second->transient()) {
+      properties_.erase(iter);
+      size_--;
+    }
+    ++iter;
+  }
+
+  lock.unlock();
+}
+
 
 #define PROPERTYMANAGER_VERSION 1
 

@@ -43,6 +43,7 @@ public:
   Field(data_location at = NONE);
   virtual ~Field();
   virtual Field *clone() const = 0;
+  
  
   data_location data_at() const { return data_at_; }
   virtual const TypeDescription *data_at_type_description() = 0;
@@ -66,7 +67,6 @@ public:
   virtual bool is_scalar() const = 0;
 
 protected:
-
   //! Where data is associated.
   data_location           data_at_;
 };

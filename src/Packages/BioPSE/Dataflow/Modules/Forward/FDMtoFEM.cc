@@ -249,9 +249,9 @@ void FDMtoFEM::execute() {
       }      
     }
     cerr << "Conds->size() == "<<conds->size()<<"\n";
-    tv->store("data_storage", string("table"));
-    tv->store("name", string("conductivity"));
-    tv->store("conductivity_table", *conds);
+    tv->store("data_storage", string("table"), false);
+    tv->store("name", string("conductivity"), false);
+    tv->store("conductivity_table", *conds, true);
     ofemH_ = tv;
     ofem_->send(ofemH_);
   } else {

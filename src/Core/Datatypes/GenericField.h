@@ -102,6 +102,10 @@ public:
   virtual const TypeDescription* get_type_description() const {
     ASSERTFAIL("TD MUST BE AT LEAF LEVEL OF INHERITENCE"); 
   }
+
+  // -- mutability --
+  virtual void freeze();
+  virtual void thaw();
 private:
 
   static Persistent *maker();
@@ -112,6 +116,22 @@ private:
   fdata_type                   fdata_;
 }; 
 
+template <class Mesh, class FData>
+void
+GenericField<Mesh, FData>::freeze()
+{
+  mesh_->freeze();
+  // Call base class freeze..
+  PropertyManager::freeze();
+}
+
+template <class Mesh, class FData>
+void
+GenericField<Mesh, FData>::thaw()
+{
+  // Call base class thaw..
+  PropertyManager::thaw();
+}
 
 template <class Mesh, class FData>
 void
@@ -201,7 +221,10 @@ void GenericField<Mesh, FData>::io(Piostream& stream)
   stream.begin_class(type_name(-1), GENERICFIELD_VERSION);
   Field::io(stream);
   mesh_->io(stream);
+  mesh_->flush_changes();
+  mesh_->freeze();
   Pio(stream, fdata_);
+  freeze();
   stream.end_class();
 }
 
@@ -262,8 +285,10 @@ template <class Mesh, class FData>
 void
 GenericField<Mesh, FData>::mesh_detach()
 {
+  thaw();
   mesh_->flush_changes();  // TODO: Fix synchronization on this.
   mesh_.detach();
+  mesh_->thaw();
 }
 
 template <class Mesh, class FData>

@@ -34,6 +34,8 @@ class Mesh : public PropertyManager {
 public:
 
   virtual Mesh *clone() = 0;
+
+  Mesh();
   virtual ~Mesh();
   
   //! Required virtual functions.
@@ -46,6 +48,12 @@ public:
   virtual bool has_normals() const { return false; }
   virtual bool is_editable() const { return false; } // supports add_elem(...)
   // Required interfaces
+  
+  //! -- mutability -- 
+  virtual void thaw();
+  virtual void freeze();
+  //! query frozen state of a field.
+  bool is_frozen() const { return frozen_; }
 
   //! Persistent I/O.
   void    io(Piostream &stream);
@@ -55,6 +63,8 @@ public:
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
   virtual const TypeDescription *get_type_description() const = 0;
+protected:
+  bool frozen_;
 };
 
 

@@ -78,7 +78,7 @@ void
 GenericReader<HType>::execute()
 {
   const string fn(filename_.get());
-
+  cerr << "here" << endl;
   // Read the status of this file so we can compare modification timestamps
   struct stat buf;
   if (stat(fn.c_str(), &buf)) {

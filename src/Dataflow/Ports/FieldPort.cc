@@ -38,8 +38,29 @@ PSECORESHARE OPort* make_FieldOPort(Module* module, const string& name) {
 }
 }
 
-template<> string SimpleIPort<FieldHandle>::port_type("Field");
-template<> string SimpleIPort<FieldHandle>::port_color("yellow");
+template<> string SimpleIPort<FieldHandle>::port_type_("Field");
+template<> string SimpleIPort<FieldHandle>::port_color_("yellow");
+
+
+//! Specialization for field ports.
+//! Field ports must only send const fields i.e. frozen fields.
+template<>
+void SimpleOPort<FieldHandle>::send(const FieldHandle& data)
+{
+  if (data.get_rep() && (! data->is_frozen())) {
+    data->freeze();
+  }
+  do_send(data);
+}
+
+template<>
+void SimpleOPort<FieldHandle>::send_intermediate(const FieldHandle& data)
+{
+  if (data.get_rep() && (! data->is_frozen())) {
+    data->freeze();
+  }
+  do_send_intermediate(data);
+}
 
 } // End namespace SCIRun
 
