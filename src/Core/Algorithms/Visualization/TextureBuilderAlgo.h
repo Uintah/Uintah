@@ -471,8 +471,8 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
     if (!gfld) { // fill only values
       unsigned char* tex = br->data(0);
       if(vfield->basis_order() == 0) {
-        typename FieldType::mesh_type::RangeCellIter iter(mesh, x0, y0, z0,
-                                                          x1, y1, z1);
+        typename FieldType::mesh_type::Cell::range_iter iter(mesh, x0, y0, z0,
+                                                             x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
@@ -499,8 +499,8 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
           }
         }
       } else {
-        typename FieldType::mesh_type::RangeNodeIter iter(mesh, x0, y0, z0,
-                                                          x1, y1, z1);
+        typename FieldType::mesh_type::Node::range_iter iter(mesh, x0, y0, z0,
+                                                             x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
@@ -532,8 +532,8 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
       unsigned char* tex1 = br->data(1);
       
       if(vfield->basis_order() == 0) {
-        typename FieldType::mesh_type::RangeCellIter iter(mesh, x0, y0, z0,
-                                                          x1, y1, z1);
+        typename FieldType::mesh_type::Cell::range_iter iter(mesh, x0, y0, z0,
+                                                             x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
@@ -585,8 +585,8 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
           }
         }
       } else {
-        typename FieldType::mesh_type::RangeNodeIter iter(mesh, x0, y0, z0,
-                                                          x1, y1, z1);
+        typename FieldType::mesh_type::Node::range_iter iter(mesh, x0, y0, z0,
+                                                             x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
