@@ -5,5 +5,3 @@ Please examine the documentation via ../doc/index.html.
 If you are anxious to build pse and are working on some flavor of unix, the 
 instructions for running "configure" are in ../doc/configure.html.
 
-If you are anxious to build pse and are working on windows NT, the
-instructions for getting started are in ../doc/nt.html
