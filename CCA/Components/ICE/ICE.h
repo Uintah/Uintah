@@ -5,7 +5,6 @@
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
 #include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
-#include <Packages/Uintah/CCA/Components/ICE/NearWallTreatment.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
