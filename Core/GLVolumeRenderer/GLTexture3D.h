@@ -32,12 +32,12 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Runnable.h>
 #include <iostream>
-#include <strstream>
+#include <sstream>
 #include <deque>
-using std::deque;
-using std::ostrstream;
 
 namespace SCIRun {
+using std::deque;
+using std::ostringstream;
 class Semaphore;
 class ThreadGroup;
 
@@ -332,7 +332,7 @@ GLTexture3D::replace_bon_tree_data(Point min, Point max,
       }
     }
     string  group_name("thread group ");
-    ostrstream osstr;
+    ostringstream osstr;
     osstr << level + 1;
     group_name = group_name + osstr.str();
     ThreadGroup *group = scinew ThreadGroup( group_name.c_str() );
@@ -604,7 +604,7 @@ GLTexture3D::build_bon_tree(Point min, Point max,
 //     }
 
     string  group_name("thread group ");
-    ostrstream osstr;
+    ostringstream osstr;
     osstr << level + 1;
     group_name = group_name + osstr.str();
     ThreadGroup *group = scinew ThreadGroup( group_name.c_str() );

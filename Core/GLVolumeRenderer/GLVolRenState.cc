@@ -24,6 +24,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <iostream>
+using namespace std;
 
 #if ! defined(__sgi)
 //PFNGLCOLORTABLEEXTPROC glColorTableEXT;
