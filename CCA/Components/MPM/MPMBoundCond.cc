@@ -167,7 +167,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 	temp_bcs  = patch->getArrayBCValues(face,dwi,"Temperature",bound,
 					    nbound,sfx,sfy,sfz,child);
 	
-	double dx;
+	double dx = -9;
 	if (face == Patch::xplus || face == Patch::xminus) dx = deltax.x();
 	if (face == Patch::yplus || face == Patch::yminus) dx = deltax.y();
 	if (face == Patch::zplus || face == Patch::zminus) dx = deltax.z();
