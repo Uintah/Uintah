@@ -712,14 +712,13 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups)
       newLevel->addPatch(startCell, endCell + IntVector(1,1,1), inStartCell, inEndCell + IntVector(1,1,1));
       //newPatch->setLayoutHint(oldPatch->layouthint);
     }
-    if((levelIdx < oldGrid->numLevels()) && oldGrid->getLevel(levelIdx)->getPeriodicBoundaries() != IntVector(0,0,0)) {
-      newLevel->finalizeLevel(oldGrid->getLevel(levelIdx)->getPeriodicBoundaries().x() != 0,
-			      oldGrid->getLevel(levelIdx)->getPeriodicBoundaries().y() != 0,
-			      oldGrid->getLevel(levelIdx)->getPeriodicBoundaries().z() != 0);
+    IntVector periodic;
+    if(levelIdx == 0){
+      periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
+    } else {
+      periodic = newGrid->getLevel(levelIdx-1)->getPeriodicBoundaries();
     }
-    else {
-      newLevel->finalizeLevel();
-    }
+    newLevel->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
     newLevel->assignBCS(grid_ps);
   }
 
@@ -737,4 +736,3 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups)
 
   return newGrid;
 }
-
