@@ -26,6 +26,8 @@
       <creationFunction>make_BuildFEMatrix</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="FEMError">
     <meta>
       <authors>
@@ -42,6 +44,8 @@
       <creationFunction>make_FEMError</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="MeshRefiner">
     <meta>
       <authors>
@@ -58,6 +62,8 @@
       <creationFunction>make_MeshRefiner</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="ComposeError">
     <meta>
       <authors>
@@ -74,6 +80,8 @@
       <creationFunction>make_ComposeError</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="ApplyBC">
     <meta>
       <authors>
@@ -90,6 +98,8 @@
       <creationFunction>make_ApplyBC</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="ErrorInterval">
     <meta>
       <authors>
@@ -106,6 +116,8 @@
       <creationFunction>make_ErrorInterval</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   </scirun-library>
   <scirun-library category="Readers">
   <soNames>
@@ -129,6 +141,8 @@
       <creationFunction>make_MatrixReader</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="MeshReader">
     <meta>
       <authors>
@@ -145,22 +159,8 @@
       <creationFunction>make_MeshReader</creationFunction>
     </implementation>
   </dataflow-component>
-  <dataflow-component name="Reader">
-    <meta>
-      <authors>
-        <author>Steven G. Parker</author>
-      </authors>
-      <version-date>July 1994</version-date>
-      <version>1.0</version>
-      <description>No description available</description>
-    </meta>
-    <inputs></inputs>
-    <outputs></outputs>
-    <parameters></parameters>
-    <implementation>
-      <creationFunction>make_Reader</creationFunction>
-    </implementation>
-  </dataflow-component>
+
+
   <dataflow-component name="SurfaceReader">
     <meta>
       <authors>
@@ -177,6 +177,8 @@
       <creationFunction>make_SurfaceReader</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="VoidStarReader">
     <meta>
       <authors>
@@ -193,6 +195,8 @@
       <creationFunction>make_VoidStarReader</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="ColumnMatrixReader">
     <meta>
       <authors>
@@ -209,6 +213,8 @@
       <creationFunction>make_ColumnMatrixReader</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="VectorFieldReader">
     <meta>
       <authors>
@@ -225,6 +231,8 @@
       <creationFunction>make_VectorFieldReader</creationFunction>
     </implementation>
   </dataflow-component>
+
+<!--
   <dataflow-component name="DukeRawRead">
     <meta>
       <authors>
@@ -241,6 +249,8 @@
       <creationFunction>make_DukeRawRead</creationFunction>
     </implementation>
   </dataflow-component>
+-->
+
   <dataflow-component name="ColorMapReader">
     <meta>
       <authors>
@@ -257,6 +267,8 @@
       <creationFunction>make_ColorMapReader</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="GeomReader">
     <meta>
       <authors>
@@ -273,6 +285,8 @@
       <creationFunction>make_GeomReader</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="ImageReader">
     <meta>
       <authors>
@@ -289,6 +303,8 @@
       <creationFunction>make_ImageReader</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="ScalarFieldReader">
     <meta>
       <authors>
@@ -305,6 +321,8 @@
       <creationFunction>make_ScalarFieldReader</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="GeometryReader">
     <meta>
       <authors>
@@ -321,6 +339,8 @@
       <creationFunction>make_GeometryReader</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="MultiSFRGReader">
     <meta>
       <authors>
@@ -337,6 +357,8 @@
       <creationFunction>make_MultiSFRGReader</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="PointsReader">
     <meta>
       <authors>
@@ -353,6 +375,8 @@
       <creationFunction>make_PointsReader</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   </scirun-library>
   <scirun-library category="Salmon">
   <soNames>
@@ -376,6 +400,8 @@
       <creationFunction>make_Salmon</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   </scirun-library>
   <scirun-library category="Example">
   <soNames>
@@ -399,6 +425,8 @@
       <creationFunction>make_GeomPortTest</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   </scirun-library>
   <scirun-library category="Matrix">
   <soNames>
@@ -422,6 +450,8 @@
       <creationFunction>make_MatVec</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="MatSelectVec">
     <meta>
       <authors>
@@ -438,6 +468,8 @@
       <creationFunction>make_MatSelectVec</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="MatMat">
     <meta>
       <authors>
@@ -454,6 +486,8 @@
       <creationFunction>make_MatMat</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="cPhase">
     <meta>
       <authors>
@@ -470,6 +504,8 @@
       <creationFunction>make_cPhase</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="VisualizeMatrix">
     <meta>
       <authors>
@@ -486,6 +522,8 @@
       <creationFunction>make_VisualizeMatrix</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="ExtractSubmatrix">
     <meta>
       <authors>
@@ -502,6 +540,8 @@
       <creationFunction>make_ExtractSubmatrix</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="BldTransform">
     <meta>
       <authors>
@@ -518,6 +558,8 @@
       <creationFunction>make_BldTransform</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="SolveMatrix">
     <meta>
       <authors>
@@ -534,6 +576,8 @@
       <creationFunction>make_SolveMatrix</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="EditMatrix">
     <meta>
       <authors>
@@ -550,6 +594,8 @@
       <creationFunction>make_EditMatrix</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="cConjGrad">
     <meta>
       <authors>
@@ -566,6 +612,8 @@
       <creationFunction>make_cConjGrad</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   </scirun-library>
   <scirun-library category="Surface">
   <soNames>
@@ -589,6 +637,8 @@
       <creationFunction>make_SurfInterpVals</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="SurfNewVals">
     <meta>
       <authors>
@@ -605,6 +655,8 @@
       <creationFunction>make_SurfNewVals</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="SurfExtractBCNodes">
     <meta>
       <authors>
@@ -621,6 +673,8 @@
       <creationFunction>make_SurfExtractBCNodes</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="LaceContoursTemp">
     <meta>
       <authors>
@@ -637,6 +691,8 @@
       <creationFunction>make_LaceContoursTemp</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="TransformCS">
     <meta>
       <authors>
@@ -653,6 +709,8 @@
       <creationFunction>make_TransformCS</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="LaceContours">
     <meta>
       <authors>
@@ -669,6 +727,8 @@
       <creationFunction>make_LaceContours</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="SimpSurface">
     <meta>
       <authors>
@@ -685,6 +745,8 @@
       <creationFunction>make_SimpSurface</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="RotateSurface">
     <meta>
       <authors>
@@ -701,6 +763,8 @@
       <creationFunction>make_RotateSurface</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="TranslateSurface">
     <meta>
       <authors>
@@ -717,6 +781,8 @@
       <creationFunction>make_TranslateSurface</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="SurfGen">
     <meta>
       <authors>
@@ -733,6 +799,8 @@
       <creationFunction>make_SurfGen</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="SurfToGeom">
     <meta>
       <authors>
@@ -749,6 +817,8 @@
       <creationFunction>make_SurfToGeom</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="TransformSurface">
     <meta>
       <authors>
@@ -765,6 +835,8 @@
       <creationFunction>make_TransformSurface</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="LabelSurface">
     <meta>
       <authors>
@@ -781,6 +853,8 @@
       <creationFunction>make_LabelSurface</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="SimpAbs">
     <meta>
       <authors>
@@ -797,6 +871,8 @@
       <creationFunction>make_SimpAbs</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="GenSurface">
     <meta>
       <authors>
@@ -813,6 +889,8 @@
       <creationFunction>make_GenSurface</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="AugmentSurf">
     <meta>
       <authors>
@@ -829,6 +907,8 @@
       <creationFunction>make_AugmentSurf</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="RescaleSurface">
     <meta>
       <authors>
@@ -845,6 +925,8 @@
       <creationFunction>make_RescaleSurface</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="ClipSurface">
     <meta>
       <authors>
@@ -861,6 +943,8 @@
       <creationFunction>make_ClipSurface</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="SFUGtoSurf">
     <meta>
       <authors>
@@ -877,6 +961,8 @@
       <creationFunction>make_SFUGtoSurf</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   </scirun-library>
   <scirun-library category="Iterators">
   <soNames>
@@ -884,22 +970,6 @@
     <soName>libPSECommon.so</soName>
   </soNames>
 
-  <dataflow-component name="Iterator">
-    <meta>
-      <authors>
-        <author>Steven G. Parker</author>
-      </authors>
-      <version-date>May 1996</version-date>
-      <version>1.0</version>
-      <description>No description available</description>
-    </meta>
-    <inputs></inputs>
-    <outputs></outputs>
-    <parameters></parameters>
-    <implementation>
-      <creationFunction>make_Iterator</creationFunction>
-    </implementation>
-  </dataflow-component>
   <dataflow-component name="MeshIterator">
     <meta>
       <authors>
@@ -916,6 +986,8 @@
       <creationFunction>make_MeshIterator</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   </scirun-library>
   <scirun-library category="Fields">
   <soNames>
@@ -939,6 +1011,8 @@
       <creationFunction>make_FieldFilter</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="ClipField">
     <meta>
       <authors>
@@ -955,6 +1029,8 @@
       <creationFunction>make_ClipField</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="FieldRGAug">
     <meta>
       <authors>
@@ -971,6 +1047,8 @@
       <creationFunction>make_FieldRGAug</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="FieldMedianFilter">
     <meta>
       <authors>
@@ -987,6 +1065,8 @@
       <creationFunction>make_FieldMedianFilter</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="MergeTensor">
     <meta>
       <authors>
@@ -1003,6 +1083,8 @@
       <creationFunction>make_MergeTensor</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="FieldGainCorrect">
     <meta>
       <authors>
@@ -1019,6 +1101,8 @@
       <creationFunction>make_FieldGainCorrect</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="ExtractSurfs">
     <meta>
       <authors>
@@ -1035,6 +1119,8 @@
       <creationFunction>make_ExtractSurfs</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="GradientMagnitude">
     <meta>
       <authors>
@@ -1051,6 +1137,8 @@
       <creationFunction>make_GradientMagnitude</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="Gradient">
     <meta>
       <authors>
@@ -1067,6 +1155,8 @@
       <creationFunction>make_Gradient</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="TrainSegment">
     <meta>
       <authors>
@@ -1083,6 +1173,8 @@
       <creationFunction>make_TrainSegment</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="SFRGfile">
     <meta>
       <authors>
@@ -1099,6 +1191,8 @@
       <creationFunction>make_SFRGfile</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="TrainSeg2">
     <meta>
       <authors>
@@ -1115,6 +1209,8 @@
       <creationFunction>make_TrainSeg2</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="TracePath">
     <meta>
       <authors>
@@ -1131,6 +1227,8 @@
       <creationFunction>make_TracePath</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="FieldSeed">
     <meta>
       <authors>
@@ -1147,6 +1245,8 @@
       <creationFunction>make_FieldSeed</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="OpenGL_Ex">
     <meta>
       <authors>
@@ -1163,6 +1263,8 @@
       <creationFunction>make_OpenGL_Ex</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="Downsample">
     <meta>
       <authors>
@@ -1179,6 +1281,8 @@
       <creationFunction>make_Downsample</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="TransformField">
     <meta>
       <authors>
@@ -1195,6 +1299,8 @@
       <creationFunction>make_TransformField</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   </scirun-library>
   <scirun-library category="Writers">
   <soNames>
@@ -1218,22 +1324,8 @@
       <creationFunction>make_MatrixWriter</creationFunction>
     </implementation>
   </dataflow-component>
-  <dataflow-component name="Writer">
-    <meta>
-      <authors>
-        <author>Steven G. Parker</author>
-      </authors>
-      <version-date>July 1994</version-date>
-      <version>1.0</version>
-      <description>No description available</description>
-    </meta>
-    <inputs></inputs>
-    <outputs></outputs>
-    <parameters></parameters>
-    <implementation>
-      <creationFunction>make_Writer</creationFunction>
-    </implementation>
-  </dataflow-component>
+
+
   <dataflow-component name="MeshWriter">
     <meta>
       <authors>
@@ -1250,6 +1342,8 @@
       <creationFunction>make_MeshWriter</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="SurfaceWriter">
     <meta>
       <authors>
@@ -1266,6 +1360,8 @@
       <creationFunction>make_SurfaceWriter</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="VoidStarWriter">
     <meta>
       <authors>
@@ -1282,6 +1378,8 @@
       <creationFunction>make_VoidStarWriter</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="TetraWriter">
     <meta>
       <authors>
@@ -1298,6 +1396,8 @@
       <creationFunction>make_TetraWriter</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="ColumnMatrixWriter">
     <meta>
       <authors>
@@ -1314,6 +1414,8 @@
       <creationFunction>make_ColumnMatrixWriter</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="VectorFieldWriter">
     <meta>
       <authors>
@@ -1330,6 +1432,8 @@
       <creationFunction>make_VectorFieldWriter</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="ColorMapWriter">
     <meta>
       <authors>
@@ -1346,6 +1450,8 @@
       <creationFunction>make_ColorMapWriter</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="MultiScalarFieldWriter">
     <meta>
       <authors>
@@ -1362,6 +1468,8 @@
       <creationFunction>make_MultiScalarFieldWriter</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="ScalarFieldWriter">
     <meta>
       <authors>
@@ -1378,6 +1486,8 @@
       <creationFunction>make_ScalarFieldWriter</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="GeometryWriter">
     <meta>
       <authors>
@@ -1394,6 +1504,8 @@
       <creationFunction>make_GeometryWriter</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   </scirun-library>
   <scirun-library category="Visualization">
   <soNames>
@@ -1417,6 +1529,8 @@
       <creationFunction>make_Streamline</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="ColorMapKey">
     <meta>
       <authors>
@@ -1433,6 +1547,8 @@
       <creationFunction>make_ColorMapKey</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="BitVisualize">
     <meta>
       <authors>
@@ -1449,6 +1565,8 @@
       <creationFunction>make_BitVisualize</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="Hedgehog">
     <meta>
       <authors>
@@ -1465,6 +1583,8 @@
       <creationFunction>make_Hedgehog</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="Span">
     <meta>
       <authors>
@@ -1481,6 +1601,8 @@
       <creationFunction>make_Span</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="CuttingPlane">
     <meta>
       <authors>
@@ -1497,6 +1619,8 @@
       <creationFunction>make_CuttingPlane</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="Noise">
     <meta>
       <authors>
@@ -1513,6 +1637,8 @@
       <creationFunction>make_Noise</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="GenTransferFunc">
     <meta>
       <authors>
@@ -1529,6 +1655,8 @@
       <creationFunction>make_GenTransferFunc</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="IsoSurfaceMRSG">
     <meta>
       <authors>
@@ -1545,6 +1673,8 @@
       <creationFunction>make_IsoSurfaceMRSG</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="GenFieldEdges">
     <meta>
       <authors>
@@ -1561,6 +1691,8 @@
       <creationFunction>make_GenFieldEdges</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="CuttingPlaneTex">
     <meta>
       <authors>
@@ -1577,6 +1709,8 @@
       <creationFunction>make_CuttingPlaneTex</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="BoxClipSField">
     <meta>
       <authors>
@@ -1593,6 +1727,8 @@
       <creationFunction>make_BoxClipSField</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="Ted">
     <meta>
       <authors>
@@ -1609,6 +1745,8 @@
       <creationFunction>make_Ted</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="AddWells2">
     <meta>
       <authors>
@@ -1625,6 +1763,8 @@
       <creationFunction>make_AddWells2</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="LevoyVis">
     <meta>
       <authors>
@@ -1641,6 +1781,8 @@
       <creationFunction>make_LevoyVis</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="BoundGrid">
     <meta>
       <authors>
@@ -1657,6 +1799,8 @@
       <creationFunction>make_BoundGrid</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="FieldCage">
     <meta>
       <authors>
@@ -1673,6 +1817,8 @@
       <creationFunction>make_FieldCage</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="VectorSeg">
     <meta>
       <authors>
@@ -1689,6 +1835,8 @@
       <creationFunction>make_VectorSeg</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="AddWells">
     <meta>
       <authors>
@@ -1705,6 +1853,8 @@
       <creationFunction>make_AddWells</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="IsoSurfaceDW">
     <meta>
       <authors>
@@ -1721,6 +1871,8 @@
       <creationFunction>make_IsoSurfaceDW</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="GenAxes">
     <meta>
       <authors>
@@ -1737,6 +1889,8 @@
       <creationFunction>make_GenAxes</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="IsoSurfaceSP">
     <meta>
       <authors>
@@ -1753,6 +1907,8 @@
       <creationFunction>make_IsoSurfaceSP</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="ImageViewer">
     <meta>
       <authors>
@@ -1769,6 +1925,8 @@
       <creationFunction>make_ImageViewer</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="VolVis">
     <meta>
       <authors>
@@ -1785,6 +1943,8 @@
       <creationFunction>make_VolVis</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="VolRendTexSlices">
     <meta>
       <authors>
@@ -1801,6 +1961,8 @@
       <creationFunction>make_VolRendTexSlices</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="GenColorMap">
     <meta>
       <authors>
@@ -1817,6 +1979,8 @@
       <creationFunction>make_GenColorMap</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="SimpVolVis">
     <meta>
       <authors>
@@ -1833,6 +1997,8 @@
       <creationFunction>make_SimpVolVis</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="IsoSurface">
     <meta>
       <authors>
@@ -1849,6 +2015,8 @@
       <creationFunction>make_IsoSurface</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="NoiseMCube">
     <meta>
       <authors>
@@ -1865,6 +2033,8 @@
       <creationFunction>make_NoiseMCube</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="IsoMask">
     <meta>
       <authors>
@@ -1881,6 +2051,8 @@
       <creationFunction>make_IsoMask</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="RescaleColorMap">
     <meta>
       <authors>
@@ -1897,6 +2069,8 @@
       <creationFunction>make_RescaleColorMap</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="GenStandardColorMaps">
     <meta>
       <authors>
@@ -1913,6 +2087,8 @@
       <creationFunction>make_GenStandardColorMaps</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="WidgetTest">
     <meta>
       <authors>
@@ -1929,6 +2105,8 @@
       <creationFunction>make_WidgetTest</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   <dataflow-component name="HedgehogLitLines">
     <meta>
       <authors>
@@ -1945,5 +2123,7 @@
       <creationFunction>make_HedgehogLitLines</creationFunction>
     </implementation>
   </dataflow-component>
+
+
   </scirun-library>
 </package>
