@@ -1,0 +1,130 @@
+<!--
+For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require("../../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<chapter id="getting_started">
+  <title>Getting Started</title>
+
+  <para>This chapter shows how to start the BioImage
+  application. Later chapters demonstrate how to load, process, and
+  visualize data.</para>
+
+  <section>
+    <title>Preparations</title>
+    <para> Before starting the tutorial a number of preparations must
+    be made. First, set the following environment variables:</para>
+
+    <variablelist>
+      <varlistentry>
+	<term><envar>SCIRUN_DATA</envar></term>
+	<listitem>
+	  <para><envar>SCIRUN_DATA</envar> points to the sample data sets
+	  directory. This tutorial assumes the SCIRun sample data
+	  directory is
+	  <filename>/usr/sci/data/SCIRunData/1.24.0</filename>.</para>
+	  <para>For a csh-like shell:</para>
+	  <literallayout class="monospaced">
+setenv SCIRUN_DATA /usr/sci/data/SCIRun/SCIRunData/1.24.0	    
+	  </literallayout>
+	  <para>For an  sh-like shell:</para>
+	  <literallayout class="monospaced">
+export SCIRUN_DATA=/usr/sci/data/SCIRun/SCIRunData/1.24.0
+	  </literallayout>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term><envar>SCIRUN_DATASET</envar></term>
+	<listitem>
+	  <para><envar>SCIRUN_DATASET</envar> points to a specific
+	  data set directory within the data directory. The tutorial
+	  requires <envar>SCIRUN_DATASET</envar> to be set to the
+	  "volume" dataset:</para>
+	  <para>For a csh-like shell:</para>
+	  <literallayout class="monospaced">
+setenv SCIRUN_DATASET volume	    
+	  </literallayout>
+	  <para>For an  sh-like shell:</para>
+	  <literallayout class="monospaced">
+export SCIRUN_DATASET=volume
+	  </literallayout>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      On Apple's OSX operating system, the limit on the number of open
+      files must be increased:
+    </para>
+
+    <para>For csh-like shells:</para>
+    <literallayout class="monospaced">
+limit descriptors unlimited      
+    </literallayout>
+
+    <para>For sh-like shells:</para>
+    <literallayout class="monospaced">
+ulimit -n unlimited
+    </literallayout>
+  </section>
+
+  <section>
+    <title>Starting BioImage</title>
+    <para>To launch the BioImage application, change the current
+    working directory (using the cd command) to the directory
+    containing the BioImage executable. The directory for an RPM
+    installation is <filename>/usr/local/SCIRun/bin/</filename>.  Type
+    <userinput>./BioImage</userinput> to start the program. BioImage
+    takes a few moments to start up, then launches the user interface
+    window shown in <xref linkend="fig.gui-launch"/>.</para>
+
+    <figure id="fig.gui-launch">
+      <title>BioImage Interface Window Initial State <!--%= doc.doIfHTML(){%Q{(<ulink url="Figures/gui-launch-large.gif">Larger image)</ulink>}} %--></title>
+      <mediaobject>
+	<textobject>
+	  <phrase>BioImage interface window just after
+	  launching.</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/gui-launch.gif" format="GIF"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/gui-launch.eps" format="EPS"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+
+  </section>
+
+  <section>
+    <title>The User Interface</title>
+    <para></para>
+  </section>
+
+</chapter>
