@@ -161,8 +161,6 @@ inline int FastHashTable<Key>::lookup(const Key* k, Key*& d)
 	for(Key* p=table[h];p!=0;p=p->next){
 	    count++;
 	    if((*p) == (*k)){
-//		if(count > 3)
-//		    cerr << "Count=" << count << endl;
 		d=p;
 		return 1;
 	    }
@@ -208,8 +206,6 @@ inline int FastHashTable<Key>::remove(const Key* k)
 //
 // Start of included FastHashTable.cc
 //
-
-#include <iostream.h>
 
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -372,6 +368,10 @@ Key* FastHashTableIter<Key>::get_key()
 
 //
 // $Log$
+// Revision 1.3  1999/08/19 23:52:58  sparker
+// Removed extraneous includes of iostream.h  Fixed a few NotFinished.h
+// problems.  May have broken KCC support.
+//
 // Revision 1.2  1999/08/17 06:38:35  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

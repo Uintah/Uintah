@@ -19,6 +19,7 @@
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/CommonDatatypes/GeometryPort.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Util/NotFinished.h>
 
 #ifdef _WIN32
 
@@ -724,6 +725,10 @@ BaseWidget& BaseWidget::operator=( const BaseWidget& )
 
 //
 // $Log$
+// Revision 1.3  1999/08/19 23:52:58  sparker
+// Removed extraneous includes of iostream.h  Fixed a few NotFinished.h
+// problems.  May have broken KCC support.
+//
 // Revision 1.2  1999/08/17 06:38:27  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
