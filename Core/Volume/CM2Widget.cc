@@ -32,7 +32,7 @@
 
 #include <Core/Volume/CM2Widget.h>
 #include <Core/Volume/ShaderProgramARB.h>
-#include <Core/Volume/CM2Shader.h>
+//#include <Core/Volume/CM2Shader.h>
 #include <Core/Volume/Pbuffer.h>
 #include <Core/Volume/Utils.h>
 #include <Core/Math/MinMax.h>
@@ -74,7 +74,9 @@ CM2Widget::CM2Widget()
     point_size_(7.0),
     color_(0.5, 0.5, 1.0),
     alpha_(0.7),
-    selected_(0)
+    selected_(0),
+    shadeType_(CM2_SHADE_REGULAR),
+    onState_(1)
 {}
 
 CM2Widget::~CM2Widget()
@@ -90,7 +92,9 @@ CM2Widget::CM2Widget(CM2Widget& copy)
     point_size_(copy.point_size_),
     color_(copy.color_),
     alpha_(copy.alpha_),
-    selected_(copy.selected_)
+    selected_(copy.selected_),
+    shadeType_(copy.shadeType_),
+    onState_(copy.onState_)
 {}
 
 void
@@ -99,13 +103,24 @@ CM2Widget::set_alpha(float a)
   alpha_ = Clamp((double)a, 0.0, 1.0);
 }
 
+void
+CM2Widget::set_shadeType(int type)
+{
+    shadeType_ = type;
+}
+
+void
+CM2Widget::set_onState(int state)
+{
+    onState_ = state;
+}
 
 static Persistent* TriangleCM2Widget_maker()
 {
   return scinew TriangleCM2Widget;
 }
 
-PersistentTypeID TriangleCM2Widget::type_id("TriangleCM2Widget", "Datatype",
+PersistentTypeID TriangleCM2Widget::type_id("TriangleCM2Widget", "CM2Widget",
 					    TriangleCM2Widget_maker);
 
 #define TRIANGLECM2WIDGET_VERSION 1
@@ -120,7 +135,9 @@ TriangleCM2Widget::io(Piostream &stream)
   Pio(stream, top_y_);
   Pio(stream, width_);
   Pio(stream, bottom_);
-
+  Pio(stream, shadeType_);
+  Pio(stream, onState_);
+  Pio(stream, color_);
   stream.end_class();
 }
 
@@ -164,6 +181,8 @@ TriangleCM2Widget::clone()
 void
 TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer)
 {
+  if(!onState_) return;
+
   CM2BlendType blend = CM2_BLEND_RASTER;
   if(pbuffer) {
     if(pbuffer->need_shader())
@@ -171,7 +190,8 @@ TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuf
     else
       blend = CM2_BLEND_FRAGMENT_ATI;
   }
-  FragmentProgramARB* shader = factory.shader(CM2_SHADER_TRIANGLE, faux, blend);
+
+  FragmentProgramARB* shader = factory.shader(CM2_SHADER_TRIANGLE, shadeType_, faux, blend);
 
   if(shader) {
     if(!shader->valid()) {
@@ -203,6 +223,8 @@ TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuf
 void
 TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
 {
+  if(!onState_) return;
+
   //std::cerr << tex->size(0) << " " << tex->size(1) << std::endl;
   if(array.dim3() != 4) return;
   int size_x = array.dim2();
@@ -213,7 +235,27 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
   int le = (int)(top_y_*size_y);
   int ilb = Clamp(lb, 0, size_y-1);
   int ile = Clamp(le, 0, size_y-1);
-  //cerr << lb << " | " << le << endl;
+  //cerr << lb << " | " << le << endl; 
+  if (shadeType_ == CM2_SHADE_FLAT) 
+  {
+    for(int i=ilb; i<=ile; i++) {
+      float fb = (i/(float)le)*top_left + base_;
+      float fe = (i/(float)le)*top_right + base_;
+//      float fm = (i/(float)le)*top_x_ + base_;
+      int rb = (int)(fb*size_x);
+      int re = (int)(fe*size_x);
+      int jrb = Clamp(rb, 0, size_x-1);
+      int jre = Clamp(re, 0, size_x-1);
+      
+      for(int j=jrb; j<jre; j++) {
+        array(i,j,0) = Clamp((float)color_.r(), 0.0f, 1.0f);
+        array(i,j,1) = Clamp((float)color_.g(), 0.0f, 1.0f);
+        array(i,j,2) = Clamp((float)color_.b(), 0.0f, 1.0f);
+        array(i,j,3) = Clamp(alpha_, 0.0f, 1.0f);
+      }
+    }
+  }
+
   if(faux) {
     for(int i=ilb; i<=ile; i++) {
       float fb = (i/(float)le)*top_left + base_;
@@ -292,6 +334,8 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
 void
 TriangleCM2Widget::draw()
 {
+  if(!onState_) return;
+
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -498,7 +542,7 @@ static Persistent* RectangleCM2Widget_maker()
   return scinew RectangleCM2Widget;
 }
 
-PersistentTypeID RectangleCM2Widget::type_id("RectangleCM2Widget", "Datatype",
+PersistentTypeID RectangleCM2Widget::type_id("RectangleCM2Widget", "CM2Widget",
 					     RectangleCM2Widget_maker);
 
 #define RECTANGLECM2WIDGET_VERSION 1
@@ -522,7 +566,9 @@ RectangleCM2Widget::io(Piostream &stream)
   Pio(stream, width_);
   Pio(stream, height_);
   Pio(stream, offset_);
-
+  Pio(stream, shadeType_);
+  Pio(stream, onState_);
+  Pio(stream, color_);
   stream.end_class();
 }
 
@@ -569,6 +615,8 @@ RectangleCM2Widget::clone()
 void
 RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer)
 {
+  if(!onState_) return;
+
   CM2BlendType blend = CM2_BLEND_RASTER;
   if(pbuffer) {
     if(pbuffer->need_shader())
@@ -579,7 +627,7 @@ RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbu
   CM2ShaderType type = CM2_SHADER_RECTANGLE_1D;
   if(type_ == CM2_RECTANGLE_ELLIPSOID)
     type = CM2_SHADER_RECTANGLE_ELLIPSOID;
-  FragmentProgramARB* shader = factory.shader(type, faux, blend);
+  FragmentProgramARB* shader = factory.shader(type, shadeType_, faux, blend);
 
   if(shader) {
     if(!shader->valid()) {
@@ -617,6 +665,7 @@ RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbu
 void
 RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
 {
+  if(!onState_) return;
 
   if(array.dim3() != 4) return;
   int size_x = array.dim2();
@@ -630,7 +679,7 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
   int le = int(top*size_y);
   int ilb = Clamp(lb, 0, size_y-1);
   int ile = Clamp(le, 0, size_y-1);
-  //int la = int((mBall.y*mSize.y+bottom)*size.y);
+//  int la = int((mBall.y*mSize.y+bottom)*size.y);
   int rb = int(left*size_x);
   int re = int(right*size_x);
   int ra = int((offset_*width_+left)*size_x);
@@ -661,6 +710,18 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
     } break;
 
     case CM2_RECTANGLE_1D: {
+      if (shadeType_ == CM2_SHADE_FLAT) 
+      {
+        for(int i=ilb; i<=ile; i++) {
+          for(int j=jrb; j<jre; j++) {
+            array(i,j,0) = Clamp((float)color_.r(), 0.0f, 1.0f);
+            array(i,j,1) = Clamp((float)color_.g(), 0.0f, 1.0f);
+            array(i,j,2) = Clamp((float)color_.b(), 0.0f, 1.0f);
+            array(i,j,3) = Clamp(alpha_, 0.0f, 1.0f);
+          }
+        }
+      }
+
       if(faux) {
         float da = ra <= rb+1 ? 0.0 : alpha_/(ra-rb-1);
         float dr = ra <= rb+1 ? 0.0 : color_.r()/(ra-rb-1);
@@ -724,7 +785,7 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
 				 a, 0.0f, 1.0f);
           }
         }
-      }
+      }  // end !faux
     } break;
 
   default:
@@ -751,6 +812,9 @@ CM2Widget::selectcolor(int obj)
 void
 RectangleCM2Widget::draw()
 {
+  if(!onState_)
+    return;
+
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
@@ -966,8 +1030,9 @@ static Persistent* ImageCM2Widget_maker()
   return scinew ImageCM2Widget;
 }
 
-PersistentTypeID ImageCM2Widget::type_id("ImageCM2Widget", "Datatype",
-					    ImageCM2Widget_maker);
+PersistentTypeID ImageCM2Widget::type_id("ImageCM2Widget", "CM2Widget", maker);
+
+#define IMAGECM2WIDGET_VERSION 1
 
 void
 ImageCM2Widget::io(Piostream &stream)

@@ -91,6 +91,10 @@ namespace SCIRun {
 #define CM2_FAUX \
 "MUL c, color, t.w; \n"
 
+#define CM2_FLAT \
+"MOV c.w, color.w; \n" \
+"MOV c.xyz, color.xyzz; \n"
+
 #define CM2_RASTER_BLEND \
 "MOV result.color, c; \n" \
 "END"
@@ -107,7 +111,12 @@ namespace SCIRun {
 "END"
 
 CM2Shader::CM2Shader(CM2ShaderType type, bool faux, CM2BlendType blend)
-  : type_(type), faux_(faux), blend_(blend),
+  : type_(type), shadeType_(CM2_SHADE_REGULAR), faux_(faux), blend_(blend),
+    program_(0)
+{}
+
+CM2Shader::CM2Shader(CM2ShaderType type, int shade, bool faux, CM2BlendType blend)
+  : type_(type), shadeType_(shade), faux_(faux), blend_(blend),
     program_(0)
 {}
 
@@ -147,6 +156,17 @@ CM2Shader::emit(string& s)
   } else {
     z << CM2_REGULAR;
   }
+
+  switch(shadeType_) {
+    case CM2_SHADE_REGULAR:
+      break;   // Regular shading shouldn't need any changes.
+    case CM2_SHADE_FLAT:
+      z << CM2_FLAT;
+      break;
+    default:
+      break;   // Do nothing for undefined cases.
+  }
+
   switch(blend_) {
   case CM2_BLEND_RASTER:
     z << CM2_RASTER_BLEND;
@@ -186,20 +206,20 @@ CM2ShaderFactory::destroy()
 }
 
 FragmentProgramARB*
-CM2ShaderFactory::shader(CM2ShaderType type, bool faux, CM2BlendType blend)
+CM2ShaderFactory::shader(CM2ShaderType type, int shading, bool faux, CM2BlendType blend)
 {
   if(prev_shader_ >= 0) {
-    if(shader_[prev_shader_]->match(type, faux, blend)) {
+    if(shader_[prev_shader_]->match(type, shading, faux, blend)) {
       return shader_[prev_shader_]->program();
     }
   }
   for(unsigned int i=0; i<shader_.size(); i++) {
-    if(shader_[i]->match(type, faux, blend)) {
+    if(shader_[i]->match(type, shading, faux, blend)) {
       prev_shader_ = i;
       return shader_[i]->program();
     }
   }
-  CM2Shader* s = new CM2Shader(type, faux, blend);
+  CM2Shader* s = new CM2Shader(type, shading, faux, blend);
   if(s->create()) {
     delete s;
     return 0;

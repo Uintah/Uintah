@@ -34,6 +34,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Containers/Array3.h>
+#include <Core/Persistent/Pstreams.h>
 
 #include <sci_gl.h>
 #include <Core/Volume/Pbuffer.h>
@@ -46,8 +47,12 @@
 #include <Core/Geom/GeomOpenGL.h>
 #include <tcl.h>
 #include <tk.h>
+#include <stdio.h>
 #include <stack>
+#include <sstream>
 #include <iostream>
+
+#include <string>
 
 // tcl interpreter corresponding to this module
 extern Tcl_Interp* the_interp;
@@ -77,28 +82,6 @@ struct UndoItem
 
 class EditTransferFunc2 : public Module {
 
-
-public:
-  EditTransferFunc2(GuiContext* ctx);
-  virtual ~EditTransferFunc2();
-
-  virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
-  virtual void presave();
-  
-  void resize_gui(int n = -1);
-  void update_from_gui();
-  void update_to_gui(bool forward = true);
-  void tcl_unpickle();
-
-  void undo();
-
-  void redraw();
-
-  void push(int x, int y, int button, int modifier);
-  void motion(int x, int y);
-  void release(int x, int y, int button);
 private:
 
   GLXContext ctx_;
@@ -134,6 +117,7 @@ private:
   GuiInt gui_faux_;
   GuiDouble gui_histo_;
 
+
   GuiInt			gui_num_entries_;
   vector<GuiString *>		gui_name_;
   vector<GuiDouble *>		gui_color_r_;
@@ -141,6 +125,36 @@ private:
   vector<GuiDouble *>		gui_color_b_;
   vector<GuiDouble *>		gui_color_a_;
   vector<GuiString *>           gui_wstate_;
+  vector<GuiInt *>		gui_sstate_;
+  vector<GuiInt *>              gui_onstate_;
+
+  // variables for file loading and saving
+  GuiFilename filename_;
+  string old_filename_;
+  time_t 	old_filemodification_;
+  
+
+public:
+  EditTransferFunc2(GuiContext* ctx);
+  virtual ~EditTransferFunc2();
+
+  virtual void execute();
+
+  virtual void tcl_command(GuiArgs&, void*);
+  virtual void presave();
+  
+  void resize_gui(int n = -1);
+  void update_from_gui();
+  void update_to_gui(bool forward = true);
+  void tcl_unpickle();
+
+  void undo();
+
+  void redraw();
+
+  void push(int x, int y, int button, int modifier);
+  void motion(int x, int y);
+  void release(int x, int y, int button);
 };
 
 
@@ -169,7 +183,9 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
     updating_(false),
     gui_faux_(ctx->subVar("faux")),
     gui_histo_(ctx->subVar("histo")),
-    gui_num_entries_(ctx->subVar("num-entries"))
+    gui_num_entries_(ctx->subVar("num-entries")),
+    filename_(ctx->subVar("filename")),
+    old_filemodification_(0)
 {
   widgets_.push_back(scinew TriangleCM2Widget());
   widgets_.push_back(scinew RectangleCM2Widget());
@@ -280,10 +296,108 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
       update_to_gui();
       want_to_execute();
     }
+  } else if (!args[1].compare(0, 12, "shadewidget-")) {
+    int i;
+    string_to_int(args[1].substr(12), i);
+
+    resize_gui();  // make sure the guivar vector exists
+    reset_vars();  // sync the guivar vectors to the TCL side
+    // Toggle the shading type from flat to normal and vice-versa
+    widgets_[i]->set_shadeType(gui_sstate_[i]->get());
+    cmap_dirty_ = true;
+    redraw();
+    update_to_gui();
+    want_to_execute();
+  } else if(!args[1].compare(0, 9, "toggleon-")) {
+    int i;
+    string_to_int(args[1].substr(9), i);
+    resize_gui();  // make sure the guivar vector exists
+    reset_vars();  // sync the guivar vectors to the TCL side
+    widgets_[i]->set_onState(gui_onstate_[i]->get());  // toggle on/off state.
+    
+    cmap_dirty_ = true;
+    redraw();
+    update_to_gui();
+    want_to_execute();
+    
   } else if (args[1] == "undowidget") {
     undo();
   } else if (args[1] == "reset_gui") {
     
+  } else if (args[1] == "load") {
+    // The implementation of this was taken almost directly from
+    // NrrdReader Module.  
+    filename_.reset();
+    string fn(filename_.get());
+    if(fn == "") {
+      error("Please Specify a Transfer Function filename.");
+      return;
+    }
+
+    struct stat buf;
+    if(stat(fn.c_str(), &buf) == -1) {
+      error(string("EditTransferFunc2 error - file not found: '")+fn+"'");
+      return;
+    }
+
+    // if we haven't read yet, or if it's new, or if time has changed, read.
+#ifdef __sgi
+    time_t new_filemodification = buf.st_mtim.tv_sec;
+#else 
+    time_t new_filemodification = buf.st_mtime;
+#endif
+    if( new_filemodification != old_filemodification_)
+    {
+      old_filemodification_ = new_filemodification;
+      old_filename_ = fn;
+      
+      int len = fn.size();
+      const string suffix(".xff");
+
+      // Check the suffix.
+      if (fn.substr(len - 4, 4) == suffix) {
+        BinaryPiostream *stream = new BinaryPiostream(fn, Piostream::Read);
+        if (!stream) {
+          error("Error reading file '" + fn + "'.");
+          return;
+        }
+
+        // read the file.
+        int size;
+        stream->io(size);
+        if(stream->reading()) widgets_.resize(size);
+        for(unsigned int i = 0; i < widgets_.size(); i++) {
+          Pio(*stream, widgets_[i]);
+        }
+        delete stream;
+
+        cmap_dirty_ = true;
+        redraw();
+        update_to_gui();
+        want_to_execute();
+      }
+    }    
+  } else if (args[1] == "save") {
+    const string fn(filename_.get());
+    if (fn == "") {
+      error("Warning;  No filename provided to EditTransferFunc2");
+      return;
+    }
+
+    // Open ostream
+    Piostream* stream;
+    stream = scinew BinaryPiostream(fn, Piostream::Write);
+    if (stream->error())
+      error("Could not open file for writing" + fn);
+    else { 
+      int size = widgets_.size();
+      Pio(*stream, size);
+      for(unsigned int i = 0; i < widgets_.size(); i++) {
+        Pio(*stream, widgets_[i]);
+      }
+      delete stream;
+    }
+
   } else {
     Module::tcl_command(args, userdata);
   }
@@ -314,6 +428,8 @@ EditTransferFunc2::presave()
     ctx->erase(num +"-color-b");
     ctx->erase(num +"-color-a");
     ctx->erase("state-" + num);
+    ctx->erase("shadeType-" + num);
+    ctx->erase("on-" + num);
 
     delete gui_name_[i];
     delete gui_color_r_[i];
@@ -321,6 +437,8 @@ EditTransferFunc2::presave()
     delete gui_color_b_[i];
     delete gui_color_a_[i];
     delete gui_wstate_[i];
+    delete gui_sstate_[i];
+    delete gui_onstate_[i];
   }
   if (widgets_.size() < gui_name_.size())
   {
@@ -331,6 +449,8 @@ EditTransferFunc2::presave()
     gui_color_b_.erase(gui_color_b_.begin() + ws, gui_color_b_.end());
     gui_color_a_.erase(gui_color_a_.begin() + ws, gui_color_a_.end());
     gui_wstate_.erase(gui_wstate_.begin() + ws, gui_wstate_.end());
+    gui_sstate_.erase(gui_sstate_.begin() + ws, gui_sstate_.end());
+    gui_onstate_.erase(gui_onstate_.begin() + ws, gui_onstate_.end());
   }
 }
 
@@ -387,6 +507,9 @@ EditTransferFunc2::resize_gui(int n)
     gui_color_b_.push_back(new GuiDouble(ctx->subVar(num +"-color-b")));
     gui_color_a_.push_back(new GuiDouble(ctx->subVar(num +"-color-a")));
     gui_wstate_.push_back(new GuiString(ctx->subVar("state-" + num)));
+    gui_sstate_.push_back(new GuiInt(ctx->subVar("shadeType-" + num)));
+    gui_onstate_.push_back(new GuiInt(ctx->subVar("on-" + num)));
+
   }
 
   if (i != 0)
@@ -411,6 +534,8 @@ EditTransferFunc2::update_to_gui(bool forward)
     gui_color_g_[i]->set(c.g());
     gui_color_b_[i]->set(c.b());
     gui_color_a_[i]->set(widgets_[i]->alpha());
+    gui_sstate_[i]->set(widgets_[i]->get_shadeType());
+    gui_onstate_[i]->set(widgets_[i]->get_onState());
   }
   if (forward) { gui->execute(id + " create_entries"); }
 }
@@ -431,6 +556,8 @@ EditTransferFunc2::update_from_gui()
 				 gui_color_g_[i]->get(),
 				 gui_color_b_[i]->get()));
     widgets_[i]->set_alpha(gui_color_a_[i]->get());
+    widgets_[i]->set_shadeType(gui_sstate_[i]->get());
+    widgets_[i]->set_onState(gui_onstate_[i]->get());
   }
   cmap_dirty_ = true;
   redraw();

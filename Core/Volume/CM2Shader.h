@@ -53,16 +53,25 @@ enum CM2BlendType
   CM2_BLEND_FRAGMENT_NV = 2
 };
 
+enum CM2ShadingType
+{
+  CM2_SHADE_REGULAR = 0,
+  CM2_SHADE_FLAT = 1,
+  CM2_SHADE_FALLOFF = 2
+};
+
 class CM2Shader
 {
 public:
   CM2Shader(CM2ShaderType type, bool faux, CM2BlendType blend);
+  CM2Shader(CM2ShaderType type, int shade, bool faux, CM2BlendType blend);
+  
   ~CM2Shader();
 
   bool create();
   
-  inline bool match(CM2ShaderType type, bool faux, CM2BlendType blend)
-  { return type_ == type && faux_ == faux && blend_ == blend; }
+  inline bool match(CM2ShaderType type, int shade, bool faux, CM2BlendType blend)
+  { return type_ == type && shadeType_ == shade && faux_ == faux && blend_ == blend; }
 
   inline FragmentProgramARB* program() { return program_; }
   
@@ -70,6 +79,7 @@ protected:
   bool emit(std::string& s);
 
   CM2ShaderType type_;
+  int shadeType_;
   bool faux_;
   CM2BlendType blend_;
 
@@ -84,7 +94,7 @@ public:
 
   void destroy();
   
-  FragmentProgramARB* shader(CM2ShaderType type, bool faux, CM2BlendType blend);
+  FragmentProgramARB* shader(CM2ShaderType type, int shading, bool faux, CM2BlendType blend);
 
 protected:
   std::vector<CM2Shader*> shader_;
