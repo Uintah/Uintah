@@ -87,8 +87,8 @@ void MWViscoElastic::computeStableTimestep(const Patch* patch,
   Vector dx = patch->dCell();
   int matlindex = matl->getDWIndex();
   ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
-  ParticleVariable<double> pmass, pvolume;
-  ParticleVariable<Vector> pvelocity;
+  constParticleVariable<double> pmass, pvolume;
+  constParticleVariable<Vector> pvelocity;
 
   new_dw->get(pmass,     lb->pMassLabel,     pset);
   new_dw->get(pvolume,   lb->pVolumeLabel,   pset);
@@ -137,18 +137,23 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     int matlindex = matl->getDWIndex();
     // Create array for the particle position
     ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
-    ParticleVariable<Point> px;
+    constParticleVariable<Point> px;
     ParticleVariable<Matrix3> deformationGradient, pstress;
-    ParticleVariable<double> pmass, pvolume, ptemperature;
-    ParticleVariable<Vector> pvelocity;
-    NCVariable<Vector> gvelocity;
+    ParticleVariable<double> pvolume;
+    constParticleVariable<double> pmass, ptemperature;
+    constParticleVariable<Vector> pvelocity;
+    constNCVariable<Vector> gvelocity;
     delt_vartype delT;
 
+    new_dw->allocate(pstress, lb->pStressLabel_afterStrainRate, pset);
+    new_dw->allocate(deformationGradient, lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocate(pvolume, lb->pVolumeDeformedLabel, pset);
+    
+    old_dw->copyOut(deformationGradient, lb->pDeformationMeasureLabel, pset);
+    old_dw->copyOut(pstress,             lb->pStressLabel,             pset);
+    old_dw->copyOut(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(px,                  lb->pXLabel,                  pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    old_dw->get(pstress,             lb->pStressLabel,             pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
-    old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
 
@@ -157,7 +162,7 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
 
     old_dw->get(delT, lb->delTLabel);
 
-    ParticleVariable<int> pConnectivity;
+    constParticleVariable<int> pConnectivity;
     ParticleVariable<Vector> pRotationRate;
     ParticleVariable<double> pStrainEnergy;
     if(matl->getFractureModel()) {
@@ -212,7 +217,7 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
       }
       else {
         for(int k = 0; k < 8; k++) {
-	  Vector& gvel = gvelocity[ni[k]];
+	  const Vector& gvel = gvelocity[ni[k]];
 	  for (int j = 0; j<3; j++){
 	    for (int i = 0; i<3; i++) {
 	      velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
@@ -263,17 +268,17 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
       d_se += e;		   
 
       // Compute wave speed at each particle, store the maximum
-
+      Vector pvelocity_idx = pvelocity[idx];
       if(pmass[idx] > 0){
         c_dil = sqrt((bulk + 4.*G/3.)*pvolume[idx]/pmass[idx]);
       }
       else{
         c_dil = 0.0;
-        pvelocity[idx] = Vector(0.0,0.0,0.0);
+        pvelocity_idx = Vector(0.0,0.0,0.0);
       }
-      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-		       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-		       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
+		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
     }
 
     WaveSpeed = dx/WaveSpeed;
