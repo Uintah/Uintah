@@ -18,7 +18,6 @@ namespace Uintah {
     const VarLabel* press_CCLabel;
     const VarLabel* press_equil_CCLabel;
     const VarLabel* matl_press_CCLabel;
-    const VarLabel* volFrac_advectedLabel; 
     const VarLabel* delP_DilatateLabel;
     const VarLabel* delP_MassXLabel;
     const VarLabel* rho_micro_CCLabel;

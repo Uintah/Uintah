@@ -19,8 +19,6 @@ ICELabel::ICELabel()
     VarLabel::create("matl_press_CC",CCVariable<double>::getTypeDescription());
   press_equil_CCLabel   =
     VarLabel::create("press_equil_CC",CCVariable<double>::getTypeDescription());
-  volFrac_advectedLabel  =
-    VarLabel::create("volFrac_advected",CCVariable<double>::getTypeDescription());
   delP_DilatateLabel  =
     VarLabel::create("delP_Dilatate",CCVariable<double>::getTypeDescription());
   delP_MassXLabel  =
@@ -167,7 +165,6 @@ ICELabel::~ICELabel()
     VarLabel::destroy(press_CCLabel);
     VarLabel::destroy(press_equil_CCLabel);
     VarLabel::destroy(matl_press_CCLabel);
-    VarLabel::destroy(volFrac_advectedLabel); 
     VarLabel::destroy(delP_DilatateLabel);
     VarLabel::destroy(delP_MassXLabel);
     VarLabel::destroy(rho_CCLabel);
