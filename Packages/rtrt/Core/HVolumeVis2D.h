@@ -125,147 +125,6 @@ public:
       for(int j = max(8,min_x_index); j <= max_x_index; j++)
 	course_hash2 |= 1ULL << (i*8+j-8);
     }
-
-//      scramble_bits();
-  }
-
-  void scramble_bits() {
-    unsigned long long temp_hash1 = 0;
-    unsigned long long temp_hash2 = 0;
-    unsigned long long temp_hash3 = 0;
-    unsigned long long temp_hash4 = 0;
-    for(int i = 0; i < 8; i++)
-      for(int j = 0; j < 8; j++) {
-	int hashNum = (j+i*2)%4;
-	if(hashNum == 0) {
-	  if(course_hash1 & (1ULL << (j/4+i*2)))
-	    temp_hash1 |= 1ULL << (i*8+j);
-	} else if(hashNum == 1) {
-	  if(course_hash2 & (1ULL << (j/4+i*2)))
-	    temp_hash1 |= 1ULL << (i*8+j);
-	} else if(hashNum == 2) {
-	  if(course_hash3 & (1ULL << (j/4+i*2)))
-	    temp_hash1 |= 1ULL << (i*8+j);
-	} else {
-	  if(course_hash4 & (1ULL << (j/4+i*2)))
-	    temp_hash1 |= 1ULL << (i*8+j);
-	}
-      }
-
-    for(int i = 0; i < 8; i++)
-      for(int j = 0; j < 8; j++) {
-	int hashNum = (j+i*2)%4;
-	if(hashNum == 0) {
-	  if(course_hash1 & (1ULL << (j/4+i*2 + 16)))
-	    temp_hash2 |= 1ULL << (i*8+j);
-	} else if(hashNum == 1) {
-	  if(course_hash2 & (1ULL << (j/4+i*2 + 16)))
-	    temp_hash2 |= 1ULL << (i*8+j);
-	} else if(hashNum == 2) {
-	  if(course_hash3 & (1ULL << (j/4+i*2 + 16)))
-	    temp_hash2 |= 1ULL << (i*8+j);
-	} else {
-	  if(course_hash4 & (1ULL << (j/4+i*2 + 16)))
-	    temp_hash2 |= 1ULL << (i*8+j);
-	}
-      }
-
-    for(int i = 0; i < 8; i++)
-      for(int j = 0; j < 8; j++) {
-	int hashNum = (j+i*2)%4;
-	if(hashNum == 0) {
-	  if(course_hash1 & (1ULL << (j/4+i*2 + 32)))
-	    temp_hash3 |= 1ULL << (i*8+j);
-	} else if(hashNum == 1) {
-	  if(course_hash2 & (1ULL << (j/4+i*2 + 32)))
-	    temp_hash3 |= 1ULL << (i*8+j);
-	} else if(hashNum == 2) {
-	  if(course_hash3 & (1ULL << (j/4+i*2 + 32)))
-	    temp_hash3 |= 1ULL << (i*8+j);
-	} else {
-	  if(course_hash4 & (1ULL << (j/4+i*2 + 32)))
-	    temp_hash3 |= 1ULL << (i*8+j);
-	}
-      }
-
-    for(int i = 0; i < 8; i++)
-      for(int j = 0; j < 8; j++) {
-	int hashNum = (j+i*2)%4;
-	if(hashNum == 0) {
-	  if(course_hash1 & (1ULL << (j/4+i*2 + 48)))
-	    temp_hash4 |= 1ULL << (i*8+j);
-	} else if(hashNum == 1) {
-	  if(course_hash2 & (1ULL << (j/4+i*2 + 48)))
-	    temp_hash4 |= 1ULL << (i*8+j);
-	} else if(hashNum == 2) {
-	  if(course_hash3 & (1ULL << (j/4+i*2 + 48)))
-	    temp_hash4 |= 1ULL << (i*8+j);
-	} else {
-	  if(course_hash4 & (1ULL << (j/4+i*2 + 48)))
-	    temp_hash4 |= 1ULL << (i*8+j);
-	}
-      }
-
-    for( int i = 7; i >= 0; i-- ) {
-      for( int j = 0; j < 8; j++ )
-	if(course_hash3 & (1ULL << i*8+j))
-	  cerr << "1";
-	else
-	  cerr << "0";
-      for( int j = 0; j < 8; j++ )
-	if(course_hash4 & (1ULL << i*8+j))
-	  cerr << "1";
-	else
-	  cerr << "0";
-      cerr << endl;
-    }
-    for( int i = 7; i >= 0; i-- ) {
-      for( int j = 0; j < 8; j++ )
-	if(course_hash1 & (1ULL << i*8+j))
-	  cerr << "1";
-	else
-	  cerr << "0";
-      for( int j = 0; j < 8; j++ )
-	if(course_hash2 & (1ULL << i*8+j))
-	  cerr << "1";
-	else
-	  cerr << "0";
-      cerr << endl;
-    }
-    cerr << endl;
-    
-    course_hash1 = temp_hash1;
-    course_hash2 = temp_hash2;
-    course_hash3 = temp_hash3;
-    course_hash4 = temp_hash4;
-    
-    for( int i = 7; i >= 0; i-- ) {
-      for( int j = 0; j < 8; j++ )
-	if(course_hash3 & (1ULL << i*8+j))
-	  cerr << "1";
-	else
-	  cerr << "0";
-      for( int j = 0; j < 8; j++ )
-	if(course_hash4 & (1ULL << i*8+j))
-	  cerr << "1";
-	else
-	  cerr << "0";
-      cerr << endl;
-    }
-    for( int i = 7; i >= 0; i-- ) {
-      for( int j = 0; j < 8; j++ )
-	if(course_hash1 & (1ULL << i*8+j))
-	  cerr << "1";
-	else
-	  cerr << "0";
-      for( int j = 0; j < 8; j++ )
-	if(course_hash2 & (1ULL << i*8+j))
-	  cerr << "1";
-	else
-	  cerr << "0";
-      cerr << endl;
-    }
-    cerr << endl;
   }
 
   inline VMCell4<DataT>& operator |= (const VMCell4<DataT>& v) {
@@ -276,10 +135,17 @@ public:
     return *this;
   }
   inline bool operator & (const VMCell4<DataT>& v) {
+#if 0
     return ((course_hash1 & v.course_hash1) != 0) ||
       ((course_hash2 & v.course_hash2) != 0) ||
       ((course_hash3 & v.course_hash3) != 0) ||
       ((course_hash4 & v.course_hash4) != 0);
+#else
+    return ((course_hash1 & v.course_hash1) |
+	    (course_hash2 & v.course_hash2) |
+	    (course_hash3 & v.course_hash3) |
+	    (course_hash4 & v.course_hash4)) != 0;
+#endif
   }
   void print(bool print_endl = true) {
     for( int i = 0; i < 256; i++) {
