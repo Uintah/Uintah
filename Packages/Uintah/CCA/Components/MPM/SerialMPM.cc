@@ -76,6 +76,8 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   NGN     = 1;
 
   d_artificialDampCoeff = 0.0;
+  d_accStrainEnergy = false; // Flag for accumulating strain energy
+  d_useLoadCurves = false; // Flag for using load curves
 }
 
 SerialMPM::~SerialMPM()
@@ -96,9 +98,11 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
    if(mpm_soln_ps) {
      mpm_soln_ps->get("nodes8or27", d_8or27);
      mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
-     mpm_soln_ps->get("maximum_particle_melocity",d_max_vel);
+     mpm_soln_ps->get("maximum_particle_velocity",d_max_vel);
      mpm_soln_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
      mpm_soln_ps->get("artificial_viscosity",     d_artificial_viscosity);
+     mpm_soln_ps->get("accumulate_strain_energy", d_accStrainEnergy);
+     mpm_soln_ps->get("use_load_curves", d_useLoadCurves);
    }
 
    if(d_8or27==8){
@@ -141,7 +145,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 
    for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
-     MPMMaterial *mat = scinew MPMMaterial(ps, lb, d_8or27,integrator_type);
+     MPMMaterial *mat = scinew MPMMaterial(ps, lb, d_8or27,integrator_type,
+                                           d_useLoadCurves);
      //register as an MPM material
      sharedState->registerMPMMaterial(mat);
    }
@@ -171,11 +176,15 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(d_sharedState->get_delt_label());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
 
-  // Computes the load curve ID associated with each particle
-  t->computes(lb->pLoadCurveIDLabel);
+  if (d_useLoadCurves) {
+    // Computes the load curve ID associated with each particle
+    t->computes(lb->pLoadCurveIDLabel);
+  }
 
-  // Computes accumulated strain energy
-  t->computes(lb->AccStrainEnergyLabel);
+  if (d_accStrainEnergy) {
+    // Computes accumulated strain energy
+    t->computes(lb->AccStrainEnergyLabel);
+  }
 
   // artificial damping coeff initialized to 0.0
   cout_doing << "Artificial Damping Coeff = " << d_artificialDampCoeff 
@@ -204,8 +213,10 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   if (zeroth_matl->removeReference())
     delete zeroth_matl; // shouln't happen, but...
 
-  // Schedule the initialization of pressure BCs per particle
-  scheduleInitializePressureBCs(level, sched);
+  if (d_useLoadCurves) {
+    // Schedule the initialization of pressure BCs per particle
+    scheduleInitializePressureBCs(level, sched);
+  }
 }
 
 void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
@@ -376,13 +387,15 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 
-  // Compute the accumulated strain energy
-  t = scinew Task("SerialMPM::computeAccStrainEnergy",
-		  this, &SerialMPM::computeAccStrainEnergy);
-  t->requires(Task::OldDW, lb->AccStrainEnergyLabel);
-  t->requires(Task::NewDW, lb->StrainEnergyLabel);
-  t->computes(lb->AccStrainEnergyLabel);
-  sched->addTask(t, patches, matls);
+  if (d_accStrainEnergy) {
+    // Compute the accumulated strain energy
+    t = scinew Task("SerialMPM::computeAccStrainEnergy",
+		    this, &SerialMPM::computeAccStrainEnergy);
+    t->requires(Task::OldDW, lb->AccStrainEnergyLabel);
+    t->requires(Task::NewDW, lb->StrainEnergyLabel);
+    t->computes(lb->AccStrainEnergyLabel);
+    sched->addTask(t, patches, matls);
+  }
 
   if(d_artificial_viscosity){
     scheduleComputeArtificialViscosity(   sched, patches, matls);
@@ -632,11 +645,13 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   Task* t=scinew Task("SerialMPM::applyExternalLoads",
 		    this, &SerialMPM::applyExternalLoads);
                   
-  t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
   t->computes(             lb->pExtForceLabel_preReloc);
-  t->requires(Task::OldDW, lb->pLoadCurveIDLabel,    Ghost::None);
-  t->computes(             lb->pLoadCurveIDLabel_preReloc);
+  if (d_useLoadCurves) {
+    t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
+    t->requires(Task::OldDW, lb->pLoadCurveIDLabel,    Ghost::None);
+    t->computes(             lb->pLoadCurveIDLabel_preReloc);
+  }
 
 //  t->computes(Task::OldDW, lb->pExternalHeatRateLabel_preReloc);
 
@@ -817,10 +832,10 @@ void SerialMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
 
 // Calculate the number of material points per load curve
 void SerialMPM::initializePressureBC(const ProcessorGroup*,
-				const PatchSubset* patches,
-				const MaterialSubset*,
-				DataWarehouse* ,
-				DataWarehouse* new_dw)
+				     const PatchSubset* patches,
+				     const MaterialSubset*,
+				     DataWarehouse* ,
+				     DataWarehouse* new_dw)
 {
   // Get the current time
   double time = 0.0;
@@ -907,8 +922,10 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     }
   }
 
-  // Initialize the accumulated strain energy
-  new_dw->put(max_vartype(0.0), lb->AccStrainEnergyLabel);
+  if (d_accStrainEnergy) {
+    // Initialize the accumulated strain energy
+    new_dw->put(max_vartype(0.0), lb->AccStrainEnergyLabel);
+  }
 
   // Initialize the artificial damping ceofficient (alpha) to zero
   if (d_artificialDampCoeff > 0.0) {
@@ -1895,75 +1912,90 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
   cout_doing << "Current Time (applyExternalLoads) = " << time << endl;
 
   // Calculate the force vector at each particle for each pressure bc
-  vector<double> forcePerPart;
-  vector<PressureBC*> pbcP;
-  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
-    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "Pressure") {
+  std::vector<double> forcePerPart;
+  std::vector<PressureBC*> pbcP;
+  if (d_useLoadCurves) {
+    for (int ii = 0; 
+             ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
+      string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+      if (bcs_type == "Pressure") {
 
-      // Get the material points per load curve
-      PressureBC* pbc = dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      pbcP.push_back(pbc);
+	// Get the material points per load curve
+	PressureBC* pbc = 
+          dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+	pbcP.push_back(pbc);
 
-      // Calculate the force per particle at current time
-      forcePerPart.push_back(pbc->forcePerParticle(time));
-    } 
+	// Calculate the force per particle at current time
+	forcePerPart.push_back(pbc->forcePerParticle(time));
+      } 
+    }
   }
 
   // Loop thru patches to update external force vector
   for(int p=0;p<patches->size();p++){
-   const Patch* patch = patches->get(p);
+    const Patch* patch = patches->get(p);
 
-   cout_doing <<"Doing applyExternalLoads on patch " 
-       << patch->getID() << "\t MPM"<< endl;
+    cout_doing <<"Doing applyExternalLoads on patch " 
+	       << patch->getID() << "\t MPM"<< endl;
 
-   // Place for user defined loading scenarios to be defined,
-   // otherwise pExternalForce is just carried forward.
+    // Place for user defined loading scenarios to be defined,
+    // otherwise pExternalForce is just carried forward.
 
-   int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
 
-   for(int m = 0; m < numMPMMatls; m++){
-     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-     int dwi = mpm_matl->getDWIndex();
-     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-     // Get the particle position data
-     constParticleVariable<Point>  px;
-     old_dw->get(px, lb->pXLabel, pset);
+      if (d_useLoadCurves) {
+	// Get the particle position data
+	constParticleVariable<Point>  px;
+	old_dw->get(px, lb->pXLabel, pset);
 
-     // Get the load curve data
-     constParticleVariable<int> pLoadCurveID;
-     old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+	// Get the load curve data
+	constParticleVariable<int> pLoadCurveID;
+	old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
 
-     // Get the external force data and allocate new space for
-     // external force
-     ParticleVariable<Vector> pExternalForce;
-     ParticleVariable<Vector> pExternalForce_new;
-     old_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
-     new_dw->allocateAndPut(pExternalForce_new, 
-			    lb->pExtForceLabel_preReloc,  pset);
+	// Get the external force data and allocate new space for
+	// external force
+	ParticleVariable<Vector> pExternalForce;
+	ParticleVariable<Vector> pExternalForce_new;
+	old_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
+	new_dw->allocateAndPut(pExternalForce_new, 
+			       lb->pExtForceLabel_preReloc,  pset);
 
-     // Iterate over the particles
-     ParticleSubset::iterator iter = pset->begin();
-     for(;iter != pset->end(); iter++){
-       particleIndex idx = *iter;
-       int loadCurveID = pLoadCurveID[idx]-1;
-       if (loadCurveID < 0) {
-	 pExternalForce_new[idx] = pExternalForce[idx];
-       } else {
-         PressureBC* pbc = pbcP[loadCurveID];
-         double force = forcePerPart[loadCurveID];
-	 pExternalForce_new[idx] = pbc->getForceVector(px[idx], force);
-       }
-     }
+	// Iterate over the particles
+	ParticleSubset::iterator iter = pset->begin();
+	for(;iter != pset->end(); iter++){
+	  particleIndex idx = *iter;
+	  int loadCurveID = pLoadCurveID[idx]-1;
+	  if (loadCurveID < 0) {
+	    pExternalForce_new[idx] = pExternalForce[idx];
+	  } else {
+	    PressureBC* pbc = pbcP[loadCurveID];
+	    double force = forcePerPart[loadCurveID];
+	    pExternalForce_new[idx] = pbc->getForceVector(px[idx], force);
+	  }
+	}
 
-     // Recycle the loadCurveIDs
-     ParticleVariable<int> pLoadCurveID_new;
-     new_dw->allocateAndPut(pLoadCurveID_new, 
-             lb->pLoadCurveIDLabel_preReloc, pset);
-     pLoadCurveID_new.copyData(pLoadCurveID);
+	// Recycle the loadCurveIDs
+	ParticleVariable<int> pLoadCurveID_new;
+	new_dw->allocateAndPut(pLoadCurveID_new, 
+			       lb->pLoadCurveIDLabel_preReloc, pset);
+	pLoadCurveID_new.copyData(pLoadCurveID);
+      } else {
 
-   } // matl loop
+	// Get the external force data and allocate new space for
+	// external force and copy the data
+	ParticleVariable<Vector> pExternalForce;
+	ParticleVariable<Vector> pExternalForce_new;
+	old_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
+	new_dw->allocateAndPut(pExternalForce_new, 
+			       lb->pExtForceLabel_preReloc,  pset);
+	pExternalForce_new.copyData(pExternalForce);
+      }
+    } // matl loop
   }  // patch loop
 }
 

@@ -8,7 +8,10 @@ namespace Uintah {
   class MembraneParticleCreator : public ParticleCreator {
   public:
     
-    MembraneParticleCreator(MPMMaterial* matl, MPMLabel* lb,int n8or27);
+    MembraneParticleCreator(MPMMaterial* matl, 
+			    MPMLabel* lb,
+			    int n8or27,
+			    bool haveLoadCurve);
     virtual ~MembraneParticleCreator();
     
     virtual ParticleSubset* createParticles(MPMMaterial* matl, 
