@@ -28,6 +28,9 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 	global $this-selectable_units
         global $this-range_min
         global $this-range_max
+	global $this-playmode
+	global $this-current
+	global $this-execmode
 
         set_defaults
     }
@@ -36,11 +39,29 @@ itcl_class SCIRun_Math_MatrixSelectVector {
         set $this-selectable_min     0
         set $this-selectable_max     100
         set $this-selectable_inc     1
-	set $this-selectable_units   Units
+	set $this-selectable_units   ""
         set $this-range_min          0
         set $this-range_max          0
+	set $this-playmode           onceforward
+	set $this-current            0
+	set $this-execmode           waiting
     }
 
+    method run_update {} {
+	set $this-execmode update
+	$this-c needexecute
+    }
+
+    method run_step {} {
+	set $this-execmode step
+	$this-c needexecute
+    }
+
+    method run_play {} {
+	set $this-execmode play
+	$this-c needexecute
+    }
+    
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -49,24 +70,57 @@ itcl_class SCIRun_Math_MatrixSelectVector {
         }
         toplevel $w
 
-        frame $w.f
-        scale $w.f.r -variable $this-range_min \
-		-label "Start" \
-                -showvalue true -orient horizontal
-        scale $w.f.c -variable $this-range_max \
-		-label "End" \
-                -showvalue true -orient horizontal
-        frame $w.f.ff
-        radiobutton $w.f.ff.r -text "Row" -variable $this-row_or_col \
-		-value row -command "$this-c needexecute"
-        radiobutton $w.f.ff.c -text "Column" -variable $this-row_or_col \
-		-value col -command "$this-c needexecute"
-        pack $w.f.ff.r $w.f.ff.c -side left -fill x -expand 1
-        frame $w.f.b
-        button $w.f.b.go -text "Execute" -command "$this-c needexecute"
-        pack $w.f.b.go -side left -fill x -expand 1
-        pack $w.f.r $w.f.c $w.f.ff $w.f.b -side top -fill x -expand yes
-        pack $w.f
+	
+	frame $w.location -borderwidth 2
+	frame $w.playmode -relief groove -borderwidth 2
+	frame $w.execmode -relief groove -borderwidth 2
+
+	frame $w.location.roc
+        radiobutton $w.location.roc.row -text "Row" \
+		-variable $this-row_or_col \
+		-value row -command "$this run_update"
+        radiobutton $w.location.roc.col -text "Column" \
+		-variable $this-row_or_col \
+		-value col -command "$this run_update"
+	pack $w.location.roc.row $w.location.roc.col \
+		-side left -expand yes -fill both
+
+        scale $w.location.min -variable $this-range_min -label "Start " \
+		-showvalue true -orient horizontal -relief groove -length 200
+        scale $w.location.max -variable $this-range_max -label "End " \
+		-showvalue true -orient horizontal -relief groove -length 200
+
+	frame $w.location.cur
+	label $w.location.cur.label -text "Current Value" -width 10 -just left
+	entry $w.location.cur.entry -width 10 -textvariable $this-current
+	pack $w.location.cur.label $w.location.cur.entry \
+		-side left -anchor n -expand yes -fill x
+
+        pack $w.location.roc $w.location.min $w.location.max $w.location.cur \
+		-side top -expand yes -fill both -pady 2
+
+
+	label $w.playmode.label -text "Play Mode"
+	radiobutton $w.playmode.once -text "Once" \
+		-variable $this-playmode -value once
+	radiobutton $w.playmode.loop -text "Loop" \
+		-variable $this-playmode -value loop
+	radiobutton $w.playmode.bounce -text "Bounce" \
+		-variable $this-playmode -value bounce
+
+	pack $w.playmode.label -side top -expand yes -fill both
+	pack $w.playmode.once $w.playmode.loop $w.playmode.bounce \
+		-side top -anchor w
+
+
+        button $w.execmode.play -text "Play" -command "$this run_play"
+        button $w.execmode.stop -text "Stop" -command "$this-c stop"
+        button $w.execmode.step -text "Step" -command "$this run_step"
+        pack $w.execmode.play $w.execmode.stop $w.execmode.step \
+		-side left -fill both -expand yes
+
+        pack $w.location $w.playmode $w.execmode \
+		-padx 5 -pady 5 -fill both -expand yes
 
 	update
     }
@@ -76,14 +130,14 @@ itcl_class SCIRun_Math_MatrixSelectVector {
         if {[winfo exists $w]} {
             #puts "updating!"
 
-            $w.f.r config -from [set $this-selectable_min]
-            $w.f.r config -to   [set $this-selectable_max]
-            $w.f.r config -label [concat "Start " [set $this-selectable_units]]
-            $w.f.c config -from [set $this-selectable_min]
-            $w.f.c config -to   [set $this-selectable_max]
-            $w.f.c config -label [concat "End " [set $this-selectable_units]]
+            $w.location.min config -from [set $this-selectable_min]
+            $w.location.min config -to   [set $this-selectable_max]
+            $w.location.min config -label [concat "Start " [set $this-selectable_units]]
+            $w.location.max config -from [set $this-selectable_min]
+            $w.location.max config -to   [set $this-selectable_max]
+            $w.location.max config -label [concat "End " [set $this-selectable_units]]
 
-	    pack $w.f.r $w.f.c $w.f.ff $w.f.b -side top -fill x -expand yes
+	    #pack $w.location.r $w.location.c $w.location.ff $w.location.b -side top -fill x -expand yes
         }
     }
 }

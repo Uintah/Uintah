@@ -27,11 +27,17 @@ class MatrixSelectVector : public Module {
   GuiString selectable_units_;
   GuiInt    range_min_;
   GuiInt    range_max_;
+  GuiString playmode_;
+  GuiInt    current_;
+  GuiString execmode_;
+  int       inc_;
+  bool      stop_;
 
 public:
   MatrixSelectVector(const string& id);
   virtual ~MatrixSelectVector();
   virtual void execute();
+  virtual void tcl_command(TCLArgs&, void*);
 };
 
 
@@ -49,7 +55,12 @@ MatrixSelectVector::MatrixSelectVector(const string& id)
     selectable_inc_("selectable_inc", id, this),
     selectable_units_("selectable_units", id, this),
     range_min_("range_min", id, this),
-    range_max_("range_max", id, this)
+    range_max_("range_max", id, this),
+    playmode_("playmode", id, this),
+    current_("current", id, this),
+    execmode_("execmode", id, this),
+    inc_(1),
+    stop_(false)
 {
 }
 
@@ -72,7 +83,7 @@ MatrixSelectVector::execute()
   MatrixHandle mh;
   if (!(imat->get(mh) && mh.get_rep()))
   {
-    warning("Empty input matrix.");
+    remark("Empty input matrix.");
     return;
   }
   
@@ -187,59 +198,27 @@ MatrixSelectVector::execute()
   
   reset_vars();
 
-#if 1
-  // Specialized matrix multiply, with Weight Vector given as a sparse
-  // matrix.  It's not clear what this has to do with MatrixSelectVector.
-  MatrixIPort *ivec = (MatrixIPort *)get_iport("Weight Vector");
-  if (!ivec) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
-    return;
-  }
-  MatrixHandle weightsH;
-  if (ivec->get(weightsH) && weightsH.get_rep())
-  {
-    ColumnMatrix *w = dynamic_cast<ColumnMatrix*>(weightsH.get_rep());
-    ColumnMatrix *cm;
-    if (use_row) 
-    {
-      cm = scinew ColumnMatrix(mh->ncols());
-      cm->zero();
-      double *data = cm->get_data();
-      for (int i = 0; i<w->nrows()/2; i++)
-      {
-	const int idx = (int)((*w)[i*2]);
-	double wt = (*w)[i*2+1];
-	for (int j = 0; j<mh->ncols(); j++)
-	{
-	  data[j]+=mh->get(idx, j)*wt;
-	}
-      }
-    }
-    else
-    {
-      cm = scinew ColumnMatrix(mh->nrows());
-      cm->zero();
-      double *data = cm->get_data();
-      for (int i = 0; i<w->nrows()/2; i++)
-      {
-	const int idx = (int)((*w)[i*2]);
-	double wt = (*w)[i*2+1];
-	for (int j = 0; j<mh->nrows(); j++)
-	{
-	  data[j]+=mh->get(j, idx)*wt;
-	}
-      }
-    }
-    ovec->send(MatrixHandle(cm));
-    return;
-  }
-#endif
+  if (execmode_.get() != "play" || execmode_.get() != "step") { return; }
+  stop_ = false;
 
   const int start = range_min_.get();
   const int end = range_max_.get();
-  const int inc = (start>end)?-1:1;
-  int which;
-  for (which = start; ; which += inc)
+  int which = start;
+  if (changed_p)
+  {
+    inc_ = (start>end)?-1:1;
+  }
+  if (execmode_.get() == "step")
+  {
+    int a = start;
+    int b = end;
+    if (a > b) {int tmp = a; a = b; b = tmp; }
+    if (current_.get() >= a && current_.get() <= b)
+    {
+      which = current_.get();
+    }
+  }
+  for (;!stop_; which += inc_, current_.set(which))
   {
     ColumnMatrix *cm;
     if (use_row)
@@ -271,9 +250,27 @@ MatrixSelectVector::execute()
 
     if (which == end)
     {
+      if (playmode_.get() == "bounce")
+      {
+	inc_ *= -1;
+      }
+      else
+      {
+	which = start - inc_;
+      }
+      if (playmode_.get() == "once")
+      {
+	stop_ = true;
+      }
+    }
+    if (execmode_.get() == "step")
+    {
+      stop_ = true;
+    }
+    if (stop_)
+    {
       ovec->send(MatrixHandle(cm));
       osel->send(MatrixHandle(selected));
-      break;
     }
     else
     {
@@ -281,6 +278,21 @@ MatrixSelectVector::execute()
       osel->send_intermediate(MatrixHandle(selected));
     }
   }
+}
+
+
+void
+MatrixSelectVector::tcl_command(TCLArgs& args, void* userdata)
+{
+  if (args.count() < 2) {
+    args.error("MatrixSelectVector needs a minor command");
+    return;
+  }
+  if (args[1] == "stop")
+  {
+    stop_ = true;
+  }
+  else Module::tcl_command(args, userdata);
 }
 
 
