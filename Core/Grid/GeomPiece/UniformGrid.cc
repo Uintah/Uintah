@@ -137,8 +137,6 @@ IntVector UniformGrid::cellID(Point point)
 
 void UniformGrid::buildUniformGrid(list<Tri>& polygons)
 {
-  cout << "Grid indices = " << d_grid.getHighIndex() << " " 
-       << d_grid.getLowIndex() << endl;
   for (list<Tri>::iterator tri = polygons.begin(); tri != polygons.end();
        tri++) {
     IntVector v0 = cellID(tri->vertex(0));
