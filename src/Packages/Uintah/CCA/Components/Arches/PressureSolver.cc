@@ -2057,7 +2057,7 @@ PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		  Ghost::AroundCells, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
 		  Ghost::AroundCells, numGhostCells+1);
-    tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
+    tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
 		  Ghost::AroundCells, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
 		  Ghost::AroundFaces, numGhostCells+1);
@@ -2143,7 +2143,7 @@ PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		  Ghost::AroundCells, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		  Ghost::AroundCells, numGhostCells+1);
-    tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
+    tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
 		  Ghost::AroundCells, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatCorrLabel,
 		  Ghost::AroundFaces, numGhostCells);
@@ -2202,7 +2202,7 @@ PressureSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
     new_dw->getCopy(pressureVars.new_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->getCopy(pressureVars.viscosity, d_lab->d_viscosityINLabel, 
+    new_dw->getCopy(pressureVars.viscosity, d_lab->d_viscosityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->getCopy(pressureVars.pressure, d_lab->d_pressurePredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
@@ -2517,7 +2517,7 @@ PressureSolver::buildLinearMatrixPressCorr(const ProcessorGroup* pc,
     // Get the required data
     new_dw->getCopy(pressureVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->getCopy(pressureVars.viscosity, d_lab->d_viscosityINLabel, 
+    new_dw->getCopy(pressureVars.viscosity, d_lab->d_viscosityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->getCopy(pressureVars.pressure, d_lab->d_pressurePredLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
