@@ -15,77 +15,52 @@
 #  University of Utah. All Rights Reserved.
 #
 
-#
-# The following env variables must be set:
-#
-# CLASSPATH: Points to .../saxon.jar.
-# STYLESHEET_XSL_HTML: Points at .../html
-# STYLESHEET_DSSSL_PRINT: Points at .../print
-# XML_DCL: Points at .../xml.dcl
-# CATALOG: Points at the catalog file that in turn points to
-#  .../openjade/dsssl/catalog and .../ISOEnts/isoent.cat (Ugh!).
-#
+# Make html and print versions of the installation guide.
 
-params_common=
-parms_chunk=${params_common} chunk.section.depth=1 use.id.as.filename=1
-params_nochunk=${params_common} 
-stylesheet_chunk=${STYLESHEET_XSL_HTML}/srdocbook-chunk.xsl
-stylesheet_nochunk=${STYLESHEET_XSL_HTML}/srdocbook.xsl
-stylesheet_print=${STYLESHEET_DSSSL_PRINT}/docbook.dsl
-srcs=Makefile \
- cvs.xml \
- intro.xml \
- recommendations.xml \
- requirements.xml \
- rpm_inst.xml \
- source_inst.xml \
- petsc.xml  \
- preparing.xml \
- starting.xml \
- help.xml
-htmlsrcs:=main.html.xml ${srcs}
-printsrcs:=main.print.xml ${srcs}
+parms_chunk := chunk.section.depth=1 use.id.as.filename=1
+stylesheet_chunk := ${STYLESHEET_XSL_HTML}/srdocbook-chunk.xsl
+stylesheet_nochunk := ${STYLESHEET_XSL_HTML}/srdocbook.xsl
+stylesheet_print := ${STYLESHEET_DSSSL_PRINT}/docbook.dsl
+params_print := -V %footnote-ulinks% -V %section-autolabel% \
+  -V "(define %default-quadding% 'justify)"
+rxmlsrcs := ${wildcard *.rxml}
+edition := ../../edition.xml
 
-.PHONY: default chunk nochunk pdf clean veryclean
+.PHONY: all html print clean veryclean
 
 .DELETE_ON_ERROR:
 
-bn := srig
+all: html print
 
-default: chunk nochunk pdf
+# HTML versions
+html: srig.html
 
-chunk: index.html
-
-main.html.xml: main.rxml ../../edition.xml
-	OUTPUT_MODE=html eruby --delimiters xml main.rxml > $@
-
-main.print.xml: main.rxml ../../edition.xml
-	OUTPUT_MODE=print eruby --delimiters xml main.rxml > $@
-
-index.html: ${htmlsrcs}
-	-java com.icl.saxon.StyleSheet -w2 \
-	main.html.xml ${stylesheet_chunk} ${parms_chunk}
-
-nochunk: ${bn}.html
-
-${bn}.html: ${htmlsrcs}
+srig.html: ${rxmlsrcs} ${edition}
+	for f in ${rxmlsrcs}; \
+	do \
+	   OUTPUT_MODE=html eruby --delimiters xml $$f > $${f%.rxml}.hxml ; \
+	done
 	java com.icl.saxon.StyleSheet -w2 \
-	main.html.xml ${stylesheet_nochunk} ${params_nochunk} >$@
+          main.hxml ${stylesheet_nochunk} >$@
+	java com.icl.saxon.StyleSheet -w2 \
+          main.hxml ${stylesheet_chunk} ${parms_chunk}
 
-pdf: ${bn}.pdf
+# Print version
+print: srig.pdf
 
-${bn}.pdf : ${bn}.dvi
-	dvipdfm -p letter ${bn}.dvi
+srig.pdf : ${rxmlsrcs} ${edition}
+	for f in ${rxmlsrcs}; \
+	do \
+	   OUTPUT_MODE=print eruby --delimiters xml $$f > $${f%.rxml}.pxml ; \
+	done
+	openjade -t tex -V tex-backend -c ${CATALOG} -o srig.tex \
+          -d ${stylesheet_print} ${params_print} ${XML_DCL} main.pxml
+	for i in 1 2 ; do jadetex srig.tex ; done
+	dvipdfm -p letter srig.dvi
 
-${bn}.dvi : ${bn}.tex
-	for i in 1 2 ; do jadetex ${bn}.tex ; done
-
-${bn}.tex : ${printsrcs}
-	openjade -t tex -V tex-backend -c ${CATALOG} -o ${bn}.tex \
--d ${stylesheet_print} ${XML_DCL} main.print.xml
-
+# Cleanage
 clean:
-	-rm -f ${bn}.aux ${bn}.log ${bn}.out ${bn}.dvi *~
+	-rm -f *.[ph]xml srig.aux srig.log srig.out srig.dvi srig.tex *~
 
 veryclean: clean
-	-rm -f main.*.xml *.html ${bn}.tex ${bn}.pdf
+	-rm -f *.html srig.pdf
