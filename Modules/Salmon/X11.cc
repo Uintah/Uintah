@@ -167,9 +167,9 @@ void X11::redraw(Salmon* salmon, Roe* roe)
     drawinfo->transform=&transform;
     drawinfo->current_matl=salmon->default_matl.get_rep();
     drawinfo->current_lit=1;
-    drawinfo->amblight=roe->ambient_light;
-    drawinfo->light=roe->light; // Copy whole array...
-    drawinfo->eyep=roe->eyep;
+    drawinfo->view=roe->view;
+    NOT_FINISHED("Light source selection");
+    drawinfo->lighting=salmon->lighting;
     AVLTree<double, GeomObj*> objs;
     for(int i=0;i<free.size();i++){
 	GeomObj* obj=free[i];
