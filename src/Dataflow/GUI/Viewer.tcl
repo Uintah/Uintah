@@ -116,6 +116,12 @@ itcl_class SCIRun_Render_Viewer {
 
 catch {rename ViewWindow ""}
 
+proc resizeWindow { w varname args } {
+    upvar \#0 $varname geometry
+    wm geometry $w $geometry
+}
+
+
 itcl_class ViewWindow {
     public viewer
     
@@ -248,6 +254,9 @@ itcl_class ViewWindow {
 
 	global $this-ortho-view
 	if {![info exists $this-ortho-view]} { set $this-ortho-view 0 }
+
+	setGlobal $this-geometry [wm geometry .ui[modname]]
+	trace variable $this-geometry w "resizeWindow .ui[modname] $this-geometry"
     }
 
     destructor {
