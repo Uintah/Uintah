@@ -113,8 +113,9 @@ itcl_class Uintah_Visualization_PatchVisualizer {
 	# loop for each level
 	for {set i 0} { $i < $nl} {incr i} {
 	    # color scheme menu stuff
-	    frame $w.colorscheme -borderwidth 3 -relief ridge
-	    pack $w.colorscheme -side left -anchor w -padx 2 -pady 2
+	    set colorscheme $w.$i
+	    frame $colorscheme -borderwidth 3 -relief ridge
+	    pack $colorscheme -side left -anchor w -padx 2 -pady 2
 	    
 	    # construct the variable name by the form
 	    #  $this-level(level)_color_scheme
@@ -122,25 +123,25 @@ itcl_class Uintah_Visualization_PatchVisualizer {
 	    append var "_color_scheme"
 
 	    # add all the radio buttons
-	    radiobutton $w.colorscheme.solid -text "solid" -variable $var \
+	    radiobutton $colorscheme.solid -text "solid" -variable $var \
 		    -command $n -value solid
-	    pack $w.colorscheme.solid -side top -anchor w -pady 2 -ipadx 3
+	    pack $colorscheme.solid -side top -anchor w -pady 2 -ipadx 3
 
-	    radiobutton $w.colorscheme.x -text "x" -variable $var \
+	    radiobutton $colorscheme.x -text "x" -variable $var \
 		    -command $n -value x
-	    pack $w.colorscheme.x -side top -anchor w -pady 2 -ipadx 3
+	    pack $colorscheme.x -side top -anchor w -pady 2 -ipadx 3
 
-	    radiobutton $w.colorscheme.y -text "y" -variable $var \
+	    radiobutton $colorscheme.y -text "y" -variable $var \
 		    -command $n -value y
-	    pack $w.colorscheme.y -side top -anchor w -pady 2 -ipadx 3
+	    pack $colorscheme.y -side top -anchor w -pady 2 -ipadx 3
 
-	    radiobutton $w.colorscheme.z -text "z" -variable $var \
+	    radiobutton $colorscheme.z -text "z" -variable $var \
 		    -command $n -value z
-	    pack $w.colorscheme.z -side top -anchor w -pady 2 -ipadx 3
+	    pack $colorscheme.z -side top -anchor w -pady 2 -ipadx 3
 
-	    radiobutton $w.colorscheme.random -text "random" -variable $var \
+	    radiobutton $colorscheme.random -text "random" -variable $var \
 		    -command $n -value random
-	    pack $w.colorscheme.random -side top -anchor w -pady 2 -ipadx 3
+	    pack $colorscheme.random -side top -anchor w -pady 2 -ipadx 3
 
 	    # create the solid color selection menue
 	    # st = $w.l(level)grid
