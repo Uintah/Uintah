@@ -49,7 +49,7 @@ namespace SCIRun {
 
     using std::vector;
   
-class SCICORESHARE Polyline : public DrawObj {
+class Polyline : public DrawObj {
 protected:
   vector<double> data_;
   double min_, max_;

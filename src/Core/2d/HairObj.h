@@ -47,7 +47,7 @@
 
 namespace SCIRun {
   
-class SCICORESHARE HairObj :  public Widget {
+class HairObj :  public Widget {
 protected:
   double from_, to_;
   double pos_;

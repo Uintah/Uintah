@@ -43,7 +43,6 @@
 #ifndef Point2d_h
 #define Point2d_h 
 
-#include <Core/share/share.h>
 #include <Core/Math/MinMax.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -59,7 +58,7 @@ class RigorousTest;
 class Piostream;
 class Vector2d;
 
-class SCICORESHARE Point2d {
+class Point2d {
   double x_,y_;
 public:
   Point2d(const Vector2d& v);
@@ -94,20 +93,20 @@ public:
   //! support dynamic compilation
   static const string& get_h_file_path();
     
-  friend SCICORESHARE class Vector2d;
-  friend SCICORESHARE inline double Dot(const Point2d&, const Point2d&);
-  friend SCICORESHARE inline double Dot(const Vector2d&, const Point2d&);
-  friend SCICORESHARE inline double Dot(const Point2d&, const Vector2d&);
+  friend class Vector2d;
+  friend inline double Dot(const Point2d&, const Point2d&);
+  friend inline double Dot(const Vector2d&, const Point2d&);
+  friend inline double Dot(const Point2d&, const Vector2d&);
   //friend inline double Dot(const Point2d&, const Vector2d&);
-  friend SCICORESHARE inline Point2d Min(const Point2d&, const Point2d&);
-  friend SCICORESHARE inline Point2d Max(const Point2d&, const Point2d&);
-  friend SCICORESHARE Point2d Interpolate(const Point2d&, const Point2d&, double);
+  friend inline Point2d Min(const Point2d&, const Point2d&);
+  friend inline Point2d Max(const Point2d&, const Point2d&);
+  friend Point2d Interpolate(const Point2d&, const Point2d&, double);
 
-  friend SCICORESHARE void Pio( Piostream&, Point2d& );
+  friend void Pio( Piostream&, Point2d& );
 };
 
-SCICORESHARE std::ostream& operator<<(std::ostream& os, const Point2d& p);
-SCICORESHARE std::istream& operator>>(std::istream& os, Point2d& p);
+std::ostream& operator<<(std::ostream& os, const Point2d& p);
+std::istream& operator>>(std::istream& os, Point2d& p);
 
 } // End namespace SCIRun
 

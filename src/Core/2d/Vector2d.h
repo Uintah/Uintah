@@ -43,8 +43,6 @@
 #ifndef Geometry_Vector2d_h
 #define Geometry_Vector2d_h 1
 
-#include <Core/share/share.h>
-
 #include <Core/Util/Assert.h>
 #include <Core/Math/Expon.h>
 
@@ -61,7 +59,7 @@ class Piostream;
 class Point;
 class TypeDescription;
 
-class SCICORESHARE Vector2d {
+class Vector2d {
   double x_,y_;
 public:
   inline explicit Vector2d(const Point2d&);
@@ -72,9 +70,9 @@ public:
   //inline Vector2d(double init) : x_(init), y_(init) {ASSERT(init==0)}
   inline double length() const;
   inline double length2() const;
-  friend SCICORESHARE inline double Dot(const Vector2d&, const Vector2d&);
-  friend SCICORESHARE inline double Dot(const Point2d&, const Vector2d&);
-  friend SCICORESHARE inline double Dot(const Vector2d&, const Point2d&);
+  friend inline double Dot(const Vector2d&, const Vector2d&);
+  friend inline double Dot(const Point2d&, const Vector2d&);
+  friend inline double Dot(const Vector2d&, const Point2d&);
   inline Vector2d& operator=(const Vector2d&);
 
   /* !!!
@@ -123,8 +121,8 @@ public:
   inline Vector2d& operator-=(const Vector2d&);
   inline double normalize();
   Vector2d normal() const;
-/*   friend SCICORESHARE inline Vector2d Cross(const Vector2d&, const Vector2d&); */
-  friend SCICORESHARE inline Vector2d Abs(const Vector2d&); 
+/*   friend inline Vector2d Cross(const Vector2d&, const Vector2d&); */
+  friend inline Vector2d Abs(const Vector2d&); 
   inline void x(double);
   inline double x() const;
   inline void y(double);
@@ -140,11 +138,11 @@ public:
 
   friend class Point2d;
     
-  //  friend SCICORESHARE inline Vector2d Interpolate(const Vector2d&, const Vector2d&, double);
+  //  friend inline Vector2d Interpolate(const Vector2d&, const Vector2d&, double);
     
   //void find_orthogonal(Vector2d&, Vector2d&) const;
     
-  friend SCICORESHARE void Pio( Piostream&, Vector2d& );
+  friend void Pio( Piostream&, Vector2d& );
 
   inline Point2d asPoint() const;
   inline double minComponent() const {
@@ -161,8 +159,8 @@ public:
   }
 };
 
-SCICORESHARE std::ostream& operator<<(std::ostream& os, const Vector2d& p);
-SCICORESHARE std::istream& operator>>(std::istream& os, Vector2d& p);
+std::ostream& operator<<(std::ostream& os, const Vector2d& p);
+std::istream& operator>>(std::istream& os, Vector2d& p);
 
 } // End namespace SCIRun
 
@@ -344,14 +342,14 @@ inline Point2d Vector2d::asPoint() const {
 }
 
 
-inline SCICORESHARE Vector2d Min(const Vector2d &v1, const Vector2d &v2)
+inline Vector2d Min(const Vector2d &v1, const Vector2d &v2)
 {
   return Vector2d(Min(v1.x(), v2.x()),
 		  Min(v1.y(), v2.y()));
 
 }
 
-inline SCICORESHARE Vector2d Max(const Vector2d &v1, const Vector2d &v2)
+inline Vector2d Max(const Vector2d &v1, const Vector2d &v2)
 {
   return Vector2d(Max(v1.x(), v2.x()),
 		  Max(v1.y(), v2.y()));

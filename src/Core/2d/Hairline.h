@@ -51,7 +51,7 @@ namespace SCIRun {
 
 class Diagram;  
 
-class SCICORESHARE Hairline :  public TclObj, public HairObj {
+class Hairline :  public TclObj, public HairObj {
 private:
   Array1< DrawObj *> poly_;
   Diagram *parent_;

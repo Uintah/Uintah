@@ -49,7 +49,7 @@
 
 namespace SCIRun {
   
-class SCICORESHARE LockedPolyline : public Polyline {
+class LockedPolyline : public Polyline {
 
 public:
   LockedPolyline( const string &name="") : Polyline(name) {} 

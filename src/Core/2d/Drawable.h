@@ -57,7 +57,7 @@ namespace SCIRun {
 class  BBox2D;
 class  OpenGLWindow;
 
-class SCICORESHARE Drawable : public Datatype {
+class Drawable : public Datatype {
 private:
   Mutex *lock_;
   string name_;
