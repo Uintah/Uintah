@@ -84,7 +84,7 @@ void GetFace(char *buf)
   int val;
   int what=0; // fi's
 
-  while(wptr = GetNum(wptr,val)) {
+  while((wptr = GetNum(wptr,val))) {
     switch(what) {
     case 0:
       fis.add(val);
@@ -210,8 +210,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   double ambient_scale=.5;
   Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
   //Material *glass = new DielectricMaterial(1.33333, 1.0);
-  Material *glass = new DielectricMaterial(1.5, 1.0, 0.04, 100.0, Color(.85, .97, .9), Color(1,1,1));
-  Material *glass2 = new DielectricMaterial(1.0, 1.5, 0.04, 100.0, Color(.85, .97, .9), Color(1,1,1));
+  Material *glass = new DielectricMaterial(1.5, 1.0, 0.04, 100, Color(.85, .97, .9), Color(1,1,1));
+  Material *glass2 = new DielectricMaterial(1.0, 1.5, 0.04, 100, Color(.85, .97, .9), Color(1,1,1));
 
   //Sphere *s;
   //Box *box;

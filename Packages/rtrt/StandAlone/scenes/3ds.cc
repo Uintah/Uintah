@@ -125,7 +125,7 @@ struct Mat {
     Color ambient;
     Color diffuse;
     Color specular;
-    float shininess;
+    int shininess;
     float transp;
     float xpfall;
     float refblur;
@@ -342,7 +342,7 @@ void read_light(Chunk* ch, Group*, State3D& state)
     float lz=ch->get_float(2);
     Color lightcolor(0,0,0);
     Chunk* chunk;
-    while(chunk=ch->next_chunk()){
+    while((chunk=ch->next_chunk())){
 	switch(chunk->type()){
 	case CH_COLOR_24:
 	    {
@@ -375,7 +375,7 @@ void read_view(Chunk* ch, Group*, State3D&)
 {
     ch->basic_length(0);
     Chunk* chunk;
-    while(chunk=ch->next_chunk()){
+    while((chunk=ch->next_chunk())){
 	switch(chunk->type()){
 	default:
 	    cerr << "read_view: Unknown chunk type: " << hex << chunk->type() << dec << '\n';
@@ -387,7 +387,7 @@ void read_view(Chunk* ch, Group*, State3D&)
 void read_facedata(Chunk* ch, State3D& state, Array1<Face>& faces)
 {
     Chunk* chunk;
-    while(chunk=ch->next_chunk()){
+    while((chunk=ch->next_chunk())){
 	switch(chunk->type()){
 	case CH_FACE_MATLS:
 	    {
@@ -421,7 +421,7 @@ void read_ntri_object(Chunk* ch, Group* world, State3D& state)
     Chunk* chunk;
     Array1<Point> points;
     Array1<Face> faces;
-    while(chunk=ch->next_chunk()){
+    while((chunk=ch->next_chunk())){
 	switch(chunk->type()){
 	case CH_POINT_ARRAY:
 	    {
@@ -485,7 +485,7 @@ void read_ntri_object(Chunk* ch, Group* world, State3D& state)
 void read_named_object(Chunk* ch, Group* world, State3D& state)
 {
     Chunk* chunk;
-    while(chunk=ch->next_chunk()){
+    while((chunk=ch->next_chunk())){
 	switch(chunk->type()){
 	case CH_NTRI_OBJECT:
 	    read_ntri_object(chunk, world, state);
@@ -549,7 +549,7 @@ void read_matentry(Chunk* ch, State3D& state)
     Mat mat;
     ch->basic_length(0);
     Chunk* chunk;
-    while(chunk=ch->next_chunk()){
+    while((chunk=ch->next_chunk())){
 	switch(chunk->type()){
 	case CH_MAT_NAME:
 	    mat.name=chunk->get_cstr(0);
@@ -565,7 +565,7 @@ void read_matentry(Chunk* ch, State3D& state)
 	    mat.specular=read_color(chunk);
 	    break;
 	case CH_MAT_SHININESS:
-	    mat.shininess=read_percent(chunk);
+	    mat.shininess=static_cast<int>(read_percent(chunk));
 	    break;
 	case CH_MAT_TRANSPARENCY:
 	    mat.transp=read_percent(chunk);
@@ -603,7 +603,7 @@ void read_edit3ds(Chunk* ch, Group* world, State3D& state)
     ch->basic_length(0);
 
     Chunk* chunk;
-    while(chunk=ch->next_chunk()){
+    while((chunk=ch->next_chunk())){
 	switch(chunk->type()){
 	case CH_MESH_VERSION:
 	    {
@@ -689,7 +689,7 @@ void read_3ds(char* filename, Scene* scene, double light_radius, int maxtri)
     state.maxtri=maxtri;
 
     Chunk* chunk;
-    while(chunk=mc->next_chunk()){
+    while((chunk=mc->next_chunk())){
 	switch(chunk->type()){
 	case CH_VERSION:
 	    {

@@ -121,10 +121,10 @@ read_ply(char *fname, Material* matl)
   char **elist;
   int file_type;
   float version;
-  int nprops;
-  int num_elems;
-  PlyProperty **plist;
-  Vertex **vlist;
+  //  int nprops = 0;
+  int num_elems = 0;
+  //  PlyProperty **plist;
+  Vertex **vlist = 0;
   char *elem_name;
   int num_comments;
   char **comments;
@@ -146,7 +146,7 @@ read_ply(char *fname, Material* matl)
 
     /* get the description of the first element */
     elem_name = elist[i];
-    plist = ply_get_element_description (ply, elem_name, &num_elems, &nprops);
+    //    plist = ply_get_element_description (ply, elem_name, &num_elems, &nprops);
     
     /* print the name of the element, for debugging */
     printf ("element %s %d\n", elem_name, num_elems);
@@ -295,7 +295,7 @@ void add_poster_on_wall (char *image_name, const Point &top_left,
   add_image_on_wall(image_name, top_left, right, down, wall_group);
 
   /* add glass frame */
-  Material* glass= new DielectricMaterial(1.5, 1.0, 0.05, 400.0, 
+  Material* glass= new DielectricMaterial(1.5, 1.0, 0.05, 400, 
 					  Color(.80, .93 , .87), 
 					  Color(1,1,1), false);
 
