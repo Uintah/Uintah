@@ -61,7 +61,7 @@
 
 <!ELEMENT parameters (param*)>
 
-<!ELEMENT param (name, type, call+, default)>
+<!ELEMENT param (name, type, call+, default?)>
 
 <!ELEMENT type (#PCDATA)>
 
