@@ -405,11 +405,11 @@ public:
   unsigned get_min_i() const { return min_i_; }
   unsigned get_min_j() const { return min_j_; }
   unsigned get_min_k() const { return min_k_; }
-  Array1<unsigned int> get_min() const;
+  vector<unsigned int> get_min() const;
   unsigned get_ni() const { return ni_; }
   unsigned get_nj() const { return nj_; }
   unsigned get_nk() const { return nk_; }
-  Array1<unsigned int> get_dim() const;
+  bool get_dim(vector<unsigned int>&) const;
   Vector diagonal() const;
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
@@ -422,11 +422,11 @@ public:
   void set_min_i(unsigned i) {min_i_ = i; }
   void set_min_j(unsigned j) {min_j_ = j; }
   void set_min_k(unsigned k) {min_k_ = k; }
-  void set_min(Array1<unsigned int> mins);
+  void set_min(vector<unsigned int> mins);
   void set_ni(unsigned i) { ni_ = i; }
   void set_nj(unsigned j) { nj_ = j; }
   void set_nk(unsigned k) { nk_ = k; }
-  void set_dim(Array1<unsigned int> dims);
+  void set_dim(vector<unsigned int> dims);
 
   void begin(Node::iterator &) const;
   void begin(Edge::iterator &) const;

@@ -62,6 +62,18 @@ StructQuadSurfMesh::StructQuadSurfMesh(const StructQuadSurfMesh &copy)
   normals_.copy( copy.normals_ );
 }
 
+bool
+StructQuadSurfMesh::get_dim(vector<unsigned int> &array) const
+{
+  array.resize(2);
+  array.clear();
+
+  array.push_back(ni_);
+  array.push_back(nj_);
+
+  return true;
+}
+
 BBox
 StructQuadSurfMesh::get_bounding_box() const
 {

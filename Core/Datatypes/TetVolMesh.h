@@ -226,6 +226,8 @@ public:
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
 
+  bool get_dim(vector<unsigned int>&) const { return false;  }
+
   void begin(Node::iterator &) const;
   void begin(Edge::iterator &) const;
   void begin(Face::iterator &) const;

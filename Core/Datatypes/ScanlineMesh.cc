@@ -30,9 +30,9 @@
  */
 
 #include <Core/Datatypes/ScanlineMesh.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Geometry/BBox.h>
 #include <iostream>
+#include <vector>
 
 
 namespace SCIRun {
@@ -76,34 +76,35 @@ ScanlineMesh::transform(Transform &t)
 }
 
 
-Array1<unsigned int>
+vector<unsigned int>
 ScanlineMesh::get_min() const
 {
-  Array1<unsigned int> array(2);
+  vector<unsigned int> array(2);
 
   array[0] = min_i_;
 
   return array;
 }
 
-Array1<unsigned int>
-ScanlineMesh::get_dim() const
+bool
+ScanlineMesh::get_dim(vector<unsigned int> &array) const
 {
-  Array1<unsigned int> array(1);
+  array.resize(1);
+  array.clear();
 
-  array[0] = ni_;
+  array.push_back(ni_);
 
-  return array;
+  return true;
 }
 
 void
-ScanlineMesh::set_min(Array1<unsigned int> min)
+ScanlineMesh::set_min(vector<unsigned int> min)
 {
   min_i_ = min[0];
 }
 
 void
-ScanlineMesh::set_dim(Array1<unsigned int> dim)
+ScanlineMesh::set_dim(vector<unsigned int> dim)
 {
   ni_ = dim[0];
 }

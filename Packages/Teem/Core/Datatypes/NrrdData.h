@@ -25,8 +25,8 @@
 //
 //  Copyright (C) 2001 SCI Institute
 
-#ifndef SCI_Teem_NrrdData_h
-#define SCI_Temm_NrrdData_h
+#if !defined(SCI_Teem_NrrdData_h)
+#define SCI_Teem_NrrdData_h
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
@@ -35,9 +35,6 @@
 namespace SCITeem {
 
 using namespace SCIRun;
-
-class NrrdData;
-typedef LockingHandle<NrrdData> NrrdDataHandle;
 
 /////////
 // Structure to hold NrrdData
@@ -49,13 +46,17 @@ public:
   Nrrd *nrrd;
   string fname;
 
-  NrrdData();
+  NrrdData(bool owned = true);
   NrrdData(const NrrdData&);
   ~NrrdData();
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+private:
+  bool     data_owned_;
 };
+
+typedef LockingHandle<NrrdData> NrrdDataHandle;
 } // end namespace SCITeem
 
-#endif
+#endif // SCI_Teem_NrrdData_h

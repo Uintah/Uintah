@@ -39,7 +39,10 @@ static Persistent* make_NrrdData() {
 
 PersistentTypeID NrrdData::type_id("NrrdData", "Datatype", make_NrrdData);
 
-NrrdData::NrrdData() : nrrd(0) {}
+NrrdData::NrrdData(bool owned) : 
+  nrrd(nrrdNew()),
+  data_owned_(owned)
+{}
 
 NrrdData::NrrdData(const NrrdData &copy) :
   fname(copy.fname) 
@@ -49,7 +52,11 @@ NrrdData::NrrdData(const NrrdData &copy) :
 }
 
 NrrdData::~NrrdData() {
-  nrrdNuke(nrrd);
+  if(data_owned_) {
+    nrrdNuke(nrrd);
+  } else {
+    nrrdNix(nrrd);
+  }
 }
 
 #define NRRDDATA_VERSION 1
