@@ -522,6 +522,38 @@ public:
               patchdata.variables.push_back(vardata);
             }
           break;
+          case Uintah::TypeDescription::float_type:
+            {
+              if (!do_PTvar_all) break;
+              VariableData vardata;
+              vardata.name = var;
+              for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                  matlIter != matls.end(); matlIter++){
+                int matl = *matlIter;
+                
+                ParticleVariable<float> value;
+                da->query(value, var, matl, patch, time);
+                ParticleSubset* pset = value.getParticleSubset();
+                if (!pset) break;
+                int numParticles = pset->numParticles();
+                if (numParticles > 0) {
+                  // extract the data
+                  MaterialData md(matl,numParticles);
+                  float *p = md.data;
+                  for(ParticleSubset::iterator iter = pset->begin();
+                      iter != pset->end(); iter++) {
+                    float temp_value= value[*iter];
+                    *p++ = temp_value;
+                  }
+                  // add the extracted data to the variable
+                  vardata.material_set.push_back(md);
+                }
+              } // end material loop
+              // now this variable for this patch is completely extracted
+              // put it in patchdata
+              patchdata.variables.push_back(vardata);
+            }
+          break;
           case Uintah::TypeDescription::int_type:
             {
               if (!do_PTvar_all) break;
