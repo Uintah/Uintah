@@ -5,6 +5,7 @@
 gold_standard_dir="$1"
 replacement_dir="$2"
 testname="$3"
+force="$4" # if set to -f then it won't ask you yes/no questions
 
 # prompt for and replace udas
 if [ $# -ne 3 ]; then
@@ -20,9 +21,12 @@ if [ ! -d $replacement_dir/$testname/*.uda ]; then
   echo "No udas to replace"
 else
   echo "Replace the udas at $gold_standard_dir/$testname with $replacement_dir/$testname? (Enter 'yes' or 'y' to continue.) "
-    
-  read yesno
 
+  if [ $force = "-f" ]; then
+    yesno="yes"
+  else
+    read yesno
+  fi
 
   # remove the udas, and copy the new ones
   if [ $yesno = "y" -o $yesno = "yes" ]; then
@@ -57,9 +61,11 @@ if [ ! -f $gold_standard_dir/$testname/malloc_stats ]; then
 else
   
   # replace the memory usage (both normal and restart)
-  echo "Replace $testname mem usage results? (Enter 'yes' or 'y' to continue.)"
 
-  read yesno
+  if [ "$force" != "-f" ];
+    echo "Replace $testname mem usage results? (Enter 'yes' or 'y' to continue.)"
+    read yesno
+  fi
   if [ $yesno = "y" -o $yesno = "yes" ]; then
     echo "Replacing $testname memory results"
     rm $gold_standard_dir/$testname/*malloc* > /dev/null 2>&1
@@ -81,8 +87,10 @@ if [ ! -f $gold_standard_dir/$testname/timestamp ]; then
 else
 
   # replace the performance results (both normal and restart)
-  echo "Replace $testname performance results? (Enter 'yes' or 'y' to continue.)"
-  read yesno
+  if [ "$force" = "-f" ]; then
+    echo "Replace $testname performance results? (Enter 'yes' or 'y' to continue.)"
+    read yesno
+  fi
 
   if [ $yesno = "y" -o $yesno = "yes" ]; then
     echo "Replacing $testname performance results"
