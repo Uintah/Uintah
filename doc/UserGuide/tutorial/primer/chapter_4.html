@@ -3,6 +3,7 @@
 <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
 <meta name="generator" content="Adobe GoLive 4">
 <title>Multi-Vis</title>
+<!-- Changed by: Ted Dustman, 21-Feb-2002 -->
 </head>
 
 <body bgcolor="#a9a9a9">
@@ -46,23 +47,32 @@
 	<ol>
 	<li value+"1.">Repeat all of the steps for creating A.
 
-	<li value="2.">Do the same for B and C, but use the FieldReader and Viewer from
-        A.</ol><br>
+	<li value="2.">Do the same for B and C, [but use the FieldReader and Viewer from
+        A|<I don't like this but I can't think of a better way right now>].</ol><br>
                   
         <p>At this point, all of the visualization from the previous
         chapter has existed in one network. Now, we will add isosurface
         visualization.<br> 
 		
-	<p>From the SCIRun/Visualization menu,<br>
+	[<p>From the SCIRun/Visualization menu,<br>|]
 	<ol>
-	<li value="1."> add in the Isosurface module;  
-	<li value="2.">connect the output from the field reader to the Isosurface module's
-        yellow Field input (named Field); 
-	<li value="3.">add the pink Geometry output to the Viewer module.</ol><br> 
+	<li value="1."> [Add in the|Create an] Isosurface module [|---
+	  select Visualization/Isosurface from the SCIRun menu.]
+	<li value="2.">[connect the output from the field
+	  reader to the Isosurface module's
+        yellow Field input.|Connect the FieldReader module's output port to the
+	Isosurface module's (yellow) input port.]
+	<li value="3.">[Add the pink Geometry output to the Viewer
+	  module|Connect the Isosurface module's (pink) output port to the
+	  Viewer's input port].</ol><br> 
 
-	<p>You will find the complete network in <b>Figure 4.1</b> color coated to show the previous chapter's networks. Yellow corresponds to 3A, green to 3B, and red to 3C. As soon as
-	Isosurface executes, you will see this surface appear in the viewer
-	<b>(Figure 4.2)</b>.
+	<p>[You will find t|T]he complete network [|is shown] in
+	  <b>Figure 4.1</b>[|. The network is] color
+	[coated|coded] to show the [previous chapter's networks|networks
+	from previous chapters, 3A, 3B, and 3C]. Yellow corresponds
+	to 3A, green to 3B, and red to 3C. [As soon as|After]
+	Isosurface executes, [you will see this surface appear in the
+	viewer|the surface shown in <b>[(|]Figure 4.2[)|]</b>.
 
       </div>
 	<center>
@@ -84,18 +94,25 @@
 	<ol>
         <p><b><a name="section 2">Isosurface</b><br></A>
 
-        <p>The isosurface module [link 4.0 UG Working with Networks]provides 
+	[|<p>The Isosurface module's input is a volume field and its
+	output is a surface field or scene graph data (visualized
+        with or without a color map).<br>]
+
+        [<p>The isosurface module's [|UI] [link 4.0 UG Working with Networks] provides 
 	the interface to isosurface creation.  The module takes a volume field in, 
 	and outputs a surface field or scene graph data, visualized
-        with or without a color map.<br>  
+        with or without a color map.<br>|]
 
-	<p>The Iso Value is the first item to set in UI for the Isosurface(<b>Figure 4.3</b>).
-	This determines where the surface resides throught the volume.<br> 
+	<p>[The Iso Value is the first item to set in UI for the Isosurface(<b>Figure 4.3</b>).
+	This determines where the surface resides throught the
+	volume|Isosurface's UI is shown in Figure <b>Figure 4.3</b>.  The
+	"iso-value" "slider" determines the location of the surface in the volume.<br> 
 
-	<p>To make the module update the visualization, you may:
+	<p>[To make the module update the visualization, you may:|The
+	  module will render the surface when you:]
 	<ol>
-	<li value="1.">change the value with the slider only by releasing your mouse button 
-	over the slider or;
+	<li value="1.">[change the value with the slider only by releasing your mouse button 
+	over the slider|release the mouse button after dragging the slider] or;
 	<li value="2.">press the extract button.</ol><br>
 
 	</div>
@@ -108,13 +125,21 @@
 	
 	<p><b><H3>Summary</b></H3><br>
                 
-	<p>Similar to the ShowField Module, you can set a default
+	<p>[Similar to the ShowField Module, you can set a default
         color for the Isosurface or, if it has a color map input, the
-        color map will visualize the data values.  You can also choose a
-        method for extracting the isosurface, and how many threads you
-        would like the algorithm to use (how many processors to use).
+        color map will visualize the data values|If you input a color map
+	then it will be used to visualize the surface, otherwise the
+	"Default Color" will be used].<br>
+
+	<p>[You can choose a
+        method for extracting the isosurface and the number of threads
+        the algorithm will use (how many processors to use).
         By default, we use a Marching Cubes algorithm, but you can
-        also use the NOISE algorithm.<br>
+        also use the NOISE algorithm.|By default the surface is extracted
+	using the the Marching Cubes algorithm
+	but you may instead use the NOISE
+	algorithm.  You may also choose the number of threads (processors)
+	the algorithm will use.]<br>
 	<br>
 	<br>
         </div>
