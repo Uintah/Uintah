@@ -122,9 +122,9 @@ void X11::setup_window()
     }
 
 
-    int sr=8;
-    int sg=8;
-    int sb=8;
+    int sr=6;
+    int sg=6;
+    int sb=6;
     while(1){
 	int failed=0;
 	ncolors=sr*sg*sb;
