@@ -62,10 +62,6 @@ private:
   GeomFTGLFontRendererHandle    label_font_;
   GeomFTGLFontRendererHandle    value_font_;
 #endif
-  vector<Vector>		axes_;
-  vector<Point>			origins_;
-  //vector<Vector&>		axes_permutations_;
-  
   BBox				bbox_;
   MaterialHandle		white_;
   MaterialHandle		red_;
@@ -78,12 +74,6 @@ private:
 					      const Vector dir,
 					      const double num);
 
-
-  GeomHandle			generateText(const Point  start,
-					     const Vector delta,
-					     const Vector up,
-					     const pair<double,double> range,
-					     const int num);
   
   typedef map<string, GuiVar*>	var_map_t;
   typedef var_map_t::iterator	var_iter_t;
@@ -110,6 +100,7 @@ DECLARE_MAKER(GenAxes)
 
 GenAxes::GenAxes(GuiContext* ctx)
   : Module("GenAxes", ctx, Filter, "Visualization", "SCIRun"),
+    bbox_(Point(-1.,-1.,-1.),Point(1.,1.,1.)),
     white_(scinew Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 20)),
     red_(scinew Material(Color(0,0,0), Color(1,0.4,0.4), Color(1,0.4,0.4), 20)),
     green_(scinew Material(Color(0,0,0), Color(0.4,1.,0.4), Color(0.4,1.,0.4), 20)),
@@ -124,8 +115,11 @@ GenAxes::GenAxes(GuiContext* ctx)
   add_GuiString("font");
   add_GuiInt("precision");
   add_GuiDouble("squash");
-  add_GuiString("value-font");
-  add_GuiString("label-font");
+  add_GuiString("valuefont");
+  add_GuiString("labelfont");
+  add_GuiDouble("valuerez");
+  add_GuiDouble("labelrez");
+
   for (int i = 0; i < 3; i++) {
     for (int dir = 0; dir < 2; dir++) {
       int axis = i/3*3+(i%3+1)/2+1;
@@ -231,7 +225,7 @@ GenAxes::get_GuiBool(const string &str) {
 }
 
 //#define DEBUGPRINT std::cerr << "adding GuiVar: " << str << std::endl; std::cerr.flush();
-
+//#define DEBUGPRINT
 void
 GenAxes::add_GuiString(const string &str) {
   DEBUGPRINT;
@@ -279,63 +273,25 @@ GenAxes::tcl_command(GuiArgs& args, void* userdata) {
     args.error("ShowField needs a minor command");
     return;
   }
-  if (args[1] == "setLabelFont") {
+  if (args[1] == "labelFontChanged") {
 #ifdef HAVE_FTGL
-    label_font_ = scinew GeomFTGLFontRenderer(args[2]);
+    //    double scale = bbox_.diagonal().maxComponent();    
+    //label_font_ = 0;
+    label_font_ = scinew GeomFTGLFontRenderer(get_GuiString("labelfont"),
+					      get_GuiDouble("labelrez"),72);
 #endif
     want_to_execute();
   } else 
-  if (args[1] == "setValueFont") {
+  if (args[1] == "valueFontChanged") {
 #ifdef HAVE_FTGL
-    value_font_ = scinew GeomFTGLFontRenderer(args[2]);
+    //value_font_ = 0;
+    value_font_ = scinew GeomFTGLFontRenderer(get_GuiString("valuefont"),
+					      get_GuiDouble("valuerez"),72);
 #endif
     want_to_execute();
   } else {
     Module::tcl_command(args, userdata);
   }
-}
-
-
-GeomHandle
-GenAxes::generateText(const Point  start,
-		      const Vector delta,
-		      const Vector up,
-		      const pair<double,double> range,
-		      const int num)
-{
-  GeomGroup *texts = scinew GeomGroup();
-  GeomLines *red = scinew GeomLines();
-  GeomLines *green = scinew GeomLines();
-  const double dr = (range.second - range.first)/double(num);
-  
-  std::cerr << "Generating Axis: start: " << start  << "  Delta: " << delta 
-	    << "   Up: " << up << std::endl;
-
-  Vector scaled_delta = delta;
-  scaled_delta.normalize();
-  scaled_delta *= up.length();
-  for (int i = 0; i <= num; i++) {
-    ostringstream str;
-    str.clear();
-    str.precision(2);
-    str << range.first+dr*i;
-    const Point pos = start + delta*i;
-#ifdef HAVE_FTGL
-    GeomTextTexture *text = scinew GeomTextTexture(value_font_,
-						   str.str(),
-						   pos,
-						   up,
-						   delta);
-
-    red->add(pos,pos+scaled_delta);
-    green->add(pos,pos+up);
-    text->set_anchor(GeomTextTexture::n);
-    texts->add(text);
-#endif
-  }
-  texts->add(scinew GeomMaterial(red,red_));
-  texts->add(scinew GeomMaterial(green,green_));
-  return texts;
 }
 
 
@@ -383,6 +339,8 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     primary[axisleft] = get_GuiDouble(base+"range-second")-get_GuiDouble(base+"range-first");
     primary[axisup] = 0.0;
     primary[axisnormal] = 0.0;
+
+    if (primary[axisleft] < 0.0000001) return group;
 
     const Vector left = primary * (1.0/primary.length());
 
@@ -472,9 +430,11 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
       ostringstream ostr;
       ostr.precision(precision);
       ostr << (origin+delta*i).asVector()[axisleft];
+      //      value_font_->set_resolution(textup.length()*5,72);
       GeomTextTexture *value_text = scinew GeomTextTexture
 	(value_font_, ostr.str(), Zero, textup, primary);
       value_text->set_anchor(GeomTextTexture::c);
+      if (axisleft == 1 && axisup == 0) value_text->up_hack_ = true;
       GeomTransform *value = scinew GeomTransform(value_text);
       value->scale(squash);
       value->translate(delta*i+tick_vec+textup*0.55);
@@ -536,6 +496,7 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
       GeomTextTexture *value_text = scinew GeomTextTexture
 	(value_font_, ostr.str(), Zero, textup, primary);
       value_text->set_anchor(GeomTextTexture::c);
+      if (axisleft == 1 && axisup == 0) value_text->up_hack_ = true;
       GeomTransform *value = scinew GeomTransform(value_text);
       value->scale(squash);
       value->translate(delta*i+tick_vec-textup*0.55);
@@ -582,18 +543,19 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     
     //    const string text = get_GuiString(base+"text"); 
     const string text(get_GuiString(base+"text"));//J^A^3^A^L   <<");
-
+    //    label_font_->set_resolution(textup.length()*10,72);
     label = scinew GeomTextTexture
       (label_font_, text, origin+secondary+textup/2.+primary/2+max_offset, 
        textup, primary);
+    if (axisleft == 1 && axisup == 0) label->up_hack_ = true;
     label->set_anchor(GeomTextTexture::c);
     
     show = get_GuiInt(base+"maxlabel");
     obj = scinew GeomSwitch(scinew GeomCull(label,(show<2?0:&secondary)),show>0);    
     grid->add(scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&normal),show>0));
-    
     label = scinew GeomTextTexture
       (label_font_, text, origin-textup/2+primary/2+min_offset, textup, primary);
+    if (axisleft == 1 && axisup == 0) label->up_hack_ = true;
     label->set_anchor(GeomTextTexture::c);
 
     show = get_GuiInt(base+"minlabel");
@@ -609,18 +571,18 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     mirror->rotate(M_PI,up);
     mirror->translate(center);
     
-    show = get_GuiInt(base+"minplane");
-    obj = scinew GeomSwitch(scinew GeomCull(grid, show<2?0:&normal),show>0);
-    group->add(obj);
+    //    show = get_GuiInt(base+"minplane");
+    //obj = scinew GeomSwitch(scinew GeomCull(grid, show<2?0:&normal),show>0);
+    //group->add(obj);
 
-    show = get_GuiInt(base+"maxplane");
-    obj = scinew GeomSwitch(scinew GeomCull(mirror, show<2?0:&nnormal),show>0);
-    group->add(obj);
+    //show = get_GuiInt(base+"maxplane");
+    //obj = scinew GeomSwitch(scinew GeomCull(mirror, show<2?0:&nnormal),show>0);
+    //group->add(obj);
     
     //    grid->add(scinew GeomSwitch(scinew GeomCull(obj, show<2?0:&normal),show>0));
 
-    //group->add(grid);
-    //group->add(mirror);
+    group->add(grid);
+    group->add(mirror);
   }
 
   return group;
@@ -648,12 +610,6 @@ GenAxes::execute()
     ++pi;
   }
 
-  axes_.push_back(Vector(bbox_.diagonal().x(),0,0));
-  axes_.push_back(Vector(0,bbox_.diagonal().y(),0));
-  axes_.push_back(Vector(0,0,bbox_.diagonal().z()));
-
-  origins_.push_back(bbox_.min());
-
   GeometryOPort *ogeom = (GeometryOPort *)get_oport("Axes");
   ogeom->delAll();
 
@@ -665,9 +621,9 @@ GenAxes::execute()
   //str << "Plane-" << prim << sec << "-" << ter << "-Axis-";
   //ogeom->addObj(generateAxisLines(prim,sec,ter),str.str());
 
-  ogeom->addObj(generateAxisLines(0,1,2),string("A"));
-  ogeom->addObj(generateAxisLines(1,2,0),string("B"));
-  ogeom->addObj(generateAxisLines(0,2,1),string("C"));
+  ogeom->addObj(generateAxisLines(0,1,2),string("XY Plane"));
+  ogeom->addObj(generateAxisLines(1,2,0),string("XZ Plane"));
+  ogeom->addObj(generateAxisLines(0,2,1),string("YZ Plane"));
 
   ogeom->flushViews();
 }
