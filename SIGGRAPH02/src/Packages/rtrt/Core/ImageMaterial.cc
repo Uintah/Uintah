@@ -52,8 +52,8 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
     ppm.get_dimensions_and_data(image, nu, nv);
   } else {
     cerr << "Error reading ImageMaterial: "<<texfile<<"\n";
-    image.resize(1,1);
-    image(0,0)=Color(0.7,0.7,0.7);
+    image.resize(3,3);
+    image(0,0)=Color(1,0,1);
   }
   outcolor=Color(0,0,0);
 }
@@ -73,8 +73,8 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
       ppm.get_dimensions_and_data(image, nu, nv);
   } else {
     cerr << "Error reading ImageMaterial: "<<texfile<<"\n";
-    image.resize(1,1);
-    image(0,0)=Color(0.7,0.7,0.7);
+    image.resize(3,3);
+    image(0,0)=Color(1,0,1);
   }
   outcolor=Color(0,0,0);
 }
