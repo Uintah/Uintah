@@ -210,3 +210,9 @@ else
 
 endif
 
+# Convenience targets for Specific executables (use make sus)
+sus: $(MAKEFILEDIRS) $(SUBMAKEFILES) $(LIBDIR) Packages/Uintah/StandAlone/sus
+
+puda: $(MAKEFILEDIRS) $(SUBMAKEFILES) $(LIBDIR) Packages/Uintah/StandAlone/puda
+
+compare_uda: $(MAKEFILEDIRS) $(SUBMAKEFILES) $(LIBDIR) Packages/Uintah/StandAlone/compare_uda
