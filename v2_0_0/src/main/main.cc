@@ -267,20 +267,24 @@ main(int argc, char *argv[] )
       if (HOME)
       {
 	string homerc = string(HOME) + "/.scirunrc";
-	if (creat(homerc.c_str(), S_IREAD | S_IWRITE) != -1)
-	{	  string tclresult;
+	int fd;
+	if ((fd = creat(homerc.c_str(), S_IREAD | S_IWRITE)) != -1)
+	{
+	  close(fd);
+	  unlink(homerc.c_str());
 
-	  cout << "Home directory found and is writeable.\n";
-
+	  string tclresult;
 	  gui->eval("licenseDialog 1", result);
 	  if (result == "cancel")
 	  {
-	    unlink(homerc.c_str());
 	    Thread::exitAll(1);
 	  }
-	  else if (result == "later")
+	  else if (result == "accept")
 	  {
-	    unlink(homerc.c_str());
+	    if ((fd = creat(homerc.c_str(), S_IREAD | S_IWRITE)) != -1)
+	    {
+	      close(fd);
+	    }
 	  }
 	}
       }	  
