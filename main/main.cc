@@ -40,6 +40,7 @@
  */
 
 #include <main/sci_version.h>
+#include <main/init.h>
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
@@ -53,7 +54,6 @@
 #include <Core/Thread/Time.h>
 #include <Core/Geom/ShaderProgramARB.h>
 
-
 #include <Core/Services/ServiceLog.h>
 #include <Core/Services/ServiceDB.h>
 #include <Core/Services/ServiceManager.h>
@@ -63,13 +63,6 @@
 
 #include <sys/stat.h>
 #include <fcntl.h>
-
-#if defined(__APPLE__)
-#  include <Core/Datatypes/MacForceLoad.h>
-   namespace SCIRun {
-     extern void macImportExportForceLoad();
-   }
-#endif
 
 #include <string>
 #include <iostream>
@@ -329,6 +322,7 @@ start_eai() {
 
 
 
+
 int
 main(int argc, char *argv[], char **environment) {
 
@@ -343,26 +337,15 @@ main(int argc, char *argv[], char **environment) {
   // Parse the command line arguments to find a network to execute
   const int startnetno = parse_args( argc, argv );
 
-  // Always switch on this option
-  // It is needed for running external applications
-  bool use_eai = true;
+  SCIRunInit();
+
+  // Always switch on this option, Its needed for running external applications
+  const bool use_eai = true;
   // bool use_eai = sci_getenv_p("SCIRUN_EXTERNAL_APPLICATION_INTERFACE");
-
-
-  // The environment has been setup
   // Now split of a process for running external processes
   if (use_eai) {
     systemcallmanager_ = scinew SystemCallManager();
     systemcallmanager_->create();
-  }
-
-#if defined(__APPLE__)  
-  macImportExportForceLoad(); // Attempting to force load (and thus
-                              // instantiation of static constructors) 
-  macForceLoad();             // of Core/Datatypes and Core/ImportExport.
-#endif
-
-  if (use_eai) {
     start_eai();
   }
   
