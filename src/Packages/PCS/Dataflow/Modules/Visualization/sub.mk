@@ -13,7 +13,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/PCS/Dataflow/Modules/Visualization
 
 SRCS     += \
-	$(SRCDIR)/Silhoettes.cc\
+	$(SRCDIR)/Silhouettes.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \

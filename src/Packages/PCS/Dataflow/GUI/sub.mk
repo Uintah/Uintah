@@ -12,8 +12,8 @@ SRCDIR := Packages/PCS/Dataflow/GUI
 
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
+$(SRCDIR)/Silhouettes.tcl \
 $(SRCDIR)/tclIndex: \
-$(SRCDIR)/Silhoettes.tcl \
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/PCS/Dataflow/GUI
 
