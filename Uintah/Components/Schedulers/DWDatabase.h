@@ -48,6 +48,8 @@ public:
    DWDatabase();
    ~DWDatabase();
 
+   // Note: for global variables, use matlIndex = -1, patch = NULL
+  
    bool exists(const VarLabel* label, int matlIndex, const Patch* patch) const;
    bool exists(const VarLabel* label, const Patch* patch) const;
    void put(const VarLabel* label, int matlindex, const Patch* patch,
@@ -81,6 +83,11 @@ private:
 
    typedef map<const VarLabel*, NameRecord*, VarLabel::Compare> nameDBtype;
    nameDBtype names;
+
+   typedef map<const VarLabel*, VarType*, VarLabel::Compare> globalDBtype;
+   // globals are defined for all patches and materials
+   // (patch == NULL, matlIndex = -1)
+   globalDBtype globals; 
 
    DWDatabase(const DWDatabase&);
    DWDatabase& operator=(const DWDatabase&);
@@ -159,13 +166,16 @@ template<class VarType>
 bool DWDatabase<VarType>::exists(const VarLabel* label, int matlIndex,
 				 const Patch* patch) const
 {
+   if (matlIndex < 0)
+      return (patch == NULL) && (globals.find(label) != globals.end());
+  
    nameDBtype::const_iterator nameiter = names.find(label);
    if(nameiter != names.end()) {
       NameRecord* nr = nameiter->second;
       patchDBtype::const_iterator patchiter = nr->patches.find(patch);
       if(patchiter != nr->patches.end()) {
 	 PatchRecord* rr = patchiter->second;
-	 if(matlIndex >= 0 && matlIndex < (int)rr->vars.size()){
+	 if(matlIndex < (int)rr->vars.size()){
 	    if(rr->vars[matlIndex] != 0){
 	       return true;
 	    }
@@ -191,6 +201,10 @@ bool DWDatabase<VarType>::exists(const VarLabel* label, const Patch* patch) cons
 	 }
       }
    }
+   if (patch == NULL) {
+      // try globals as last resort
+      return globals.find(label) != globals.end();
+   }
    return false;
 }
 
@@ -200,6 +214,22 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
 			      VarType* var,
 			      bool replace)
 {
+   if(matlIndex < 0) {
+      if (patch == NULL) {
+         // add to globals
+         globalDBtype::const_iterator globaliter = globals.find(label);
+         if (globaliter != globals.end() || replace) {
+	    globals[label] = var;
+	    return;
+	 }
+         else
+	    throw InternalError("Put replacing old variable");
+      }
+      else
+         throw InternalError("matlIndex must be >= 0");
+   }
+
+  
    nameDBtype::const_iterator nameiter = names.find(label);
    if(nameiter == names.end()){
       names[label] = scinew NameRecord(label);
@@ -214,13 +244,11 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
    }
 
    PatchRecord* rr = patchiter->second;
-   if(matlIndex < 0)
-      throw InternalError("matlIndex must be >= 0");
-
+      
    if(matlIndex >= (int)rr->vars.size()){
       unsigned long oldSize = rr->vars.size();
       rr->vars.resize(matlIndex+1);
-      for(int i=oldSize;i<matlIndex;i++)
+      for(unsigned long i=oldSize;i<matlIndex;i++)
 	 rr->vars[i]=0;
    }
 
@@ -239,32 +267,40 @@ template<class VarType>
 VarType* DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
 				  const Patch* patch) const
 {
+   if(matlIndex < 0) {
+      if (patch == NULL) {
+         // get from globals
+         globalDBtype::const_iterator globaliter = globals.find(label);
+         if (globaliter != globals.end())
+	    return (*globaliter).second;
+         else
+	    throw UnknownVariable(label->getName(),
+                                  "no global variable with this name");
+      }
+      else
+         throw InternalError("matlIndex must be >= 0");
+   }
+  
    nameDBtype::const_iterator nameiter = names.find(label);
    if(nameiter == names.end())
-      throw UnknownVariable(label->getName(), patch->getID(),
-			    patch->toString(), matlIndex,
+      throw UnknownVariable(label->getName(), patch, matlIndex,
 			    "no variable name");
 
    NameRecord* nr = nameiter->second;
 
    patchDBtype::const_iterator patchiter = nr->patches.find(patch);
    if(patchiter == nr->patches.end())
-      throw UnknownVariable(label->getName(), patch->getID(),
-			    patch->toString(), matlIndex,
+      throw UnknownVariable(label->getName(), patch, matlIndex,
 			    "no patch with this variable name");
 
    PatchRecord* rr = patchiter->second;
-   if(matlIndex < 0)
-      throw InternalError("matlIndex must be >= 0");
 
    if(matlIndex >= (int)rr->vars.size())
-      throw UnknownVariable(label->getName(), patch->getID(),
-			    patch->toString(), matlIndex,
+      throw UnknownVariable(label->getName(), patch, matlIndex,
 			    "no material with this patch and variable name");
 
    if(!rr->vars[matlIndex])
-      throw UnknownVariable(label->getName(), patch->getID(),
-			    patch->toString(), matlIndex,
+      throw UnknownVariable(label->getName(), patch, matlIndex,
 			    "no material with this patch and variable name");
 
    return rr->vars[matlIndex];
@@ -298,6 +334,8 @@ void DWDatabase<VarType>::copyAll(const DWDatabase& from,
       if(rr->vars[i])
 	 put(label, i, patch, rr->vars[i]->clone(), false);
    }
+
+   globals = from.globals;
 }
 
 template<class VarType>
@@ -313,17 +351,25 @@ void DWDatabase<VarType>::print(std::ostream& out)
 	 out <<  "  " << *(rr->patch) << '\n';
 	 for(int i=0;i<(int)rr->vars.size();i++){
 	    if(rr->vars[i]){
-	       cerr << "    Material " << i << '\n';
+	       out << "    Material " << i << '\n';
 	    }
 	 }
       }
    }
+
+   for (globalDBtype::iterator globaliter = globals.begin();
+	globaliter != globals.end(); globaliter++)
+     out << (*globaliter).first->getName() << '\n';
 }
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.18  2000/12/06 23:48:52  witzel
+// Added "globals" data member for variables used for all materials
+// (specified by matlIndex = -1 and patch = NULL)
+//
 // Revision 1.17  2000/10/13 20:46:39  sparker
 // Clean out foreign variables at finalize time
 //
