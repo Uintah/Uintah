@@ -726,11 +726,12 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
                                   int numMatls,
                                   const Patch* patch)
 { 
-  // Zero the arrays so they don't get wacky values
+  // initialize to -9 so bullet proofing will catch it any cell that
+  // isn't initialized
   vel_CC.initialize(Vector(0.,0.,0.));
-  rho_micro.initialize(0.);
-  rho_CC.initialize(0.);
-  temp.initialize(0.);
+  rho_micro.initialize(-9.0);
+  rho_CC.initialize(-9.0);
+  temp.initialize(-9.0);
   Vector dx = patch->dCell();
   
   for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
@@ -790,6 +791,7 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
         double vol_frac_CC= count/totalppc;       
         rho_micro[*iter]  = getInitialDensity();
         rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC +SMALL_NUM;
+        temp[*iter]       = 300.0;         
         Point pd = patch->cellPosition(*iter);
         if((pd.x() > b1low.x() && pd.y() > b1low.y() && pd.z() > b1low.z()) &&
            (pd.x() < b1up.x()  && pd.y() < b1up.y()  && pd.z() < b1up.z())){
