@@ -65,6 +65,13 @@ DECLARE_MAKER(HDF5DataReader)
 HDF5DataReader::HDF5DataReader(GuiContext *context)
   : Module("HDF5DataReader", context, Source, "Readers", "DataIO"),
     power_app_(context->subVar("power_app")),
+    power_app_cmd_(context->subVar("power_app_commmand")),
+    animate_frame_(ctx->subVar("animate_frame")),
+    animate_tab_(ctx->subVar("animate_tab")),
+    basic_tab_(ctx->subVar("basic_tab")),
+    extended_tab_(ctx->subVar("extended_tab")),
+    playmode_tab_(ctx->subVar("playmode_tab")),
+
     selectable_min_(ctx->subVar("selectable_min")),
     selectable_max_(ctx->subVar("selectable_max")),
     selectable_inc_(ctx->subVar("selectable_inc")),
@@ -93,6 +100,9 @@ HDF5DataReader::HDF5DataReader(GuiContext *context)
 
     mergedata_(-1),
     assumesvt_(-1),
+
+    update_(false),
+    which_(-1),
 
     loop_(false),
     error_(false)
@@ -226,9 +236,7 @@ void HDF5DataReader::execute() {
   time_t filemodification = buf.st_mtime;
 #endif
 
-  bool updateAll   = false;
-  bool updateFile  = false;
-
+  update_ = false;
 
   // If we haven't read yet, or if it's a new filename, 
   //  or if the datestamp has changed -- then read...
@@ -244,10 +252,12 @@ void HDF5DataReader::execute() {
     sel_filename_         = filename;
     sel_datasets_         = datasets;
 
-    updateFile = true;
+    update_ = true;
   }
 
   update_state(JustStarted);
+
+  bool resend = false;
 
   // get all the actual values from gui.
   reset_vars();
@@ -258,7 +268,7 @@ void HDF5DataReader::execute() {
     mergedata_ = mergeData_.get();
     assumesvt_ = assumeSVT_.get();
 
-    updateAll = true;
+    update_ = true;
   }
 
   for( int ic=0; ic<MAX_DIMS; ic++ ) {
@@ -271,12 +281,12 @@ void HDF5DataReader::execute() {
       counts_ [ic] = gCounts_ [ic]->get();
       strides_[ic] = gStrides_[ic]->get();
     
-      updateAll = true;
+      update_ = true;
     }
 
     if( dims_[ic] != gDims_[ic]->get() ) {
       dims_[ic] = gDims_[ic]->get();
-      updateFile = true;
+      update_ = true;
     }
 
     if( starts_[ic] + (counts_[ic]-1) * strides_[ic] >= dims_[ic] ) {
@@ -311,21 +321,25 @@ void HDF5DataReader::execute() {
 
     MatrixHandle mHandle;
     if (imatrix_port->get(mHandle) && mHandle.get_rep()) {
-      unsigned int which = (unsigned int) (mHandle->get(0, 0));
+      int which = (int) (mHandle->get(0, 0));
 
-      if( 0 <= which && which <= frame_paths.size() ) {
-	current_.set(which);
-	current_.reset();
-	
-	ReadandSendData( filename, frame_paths[which],
-			 frame_datasets[which], true, which );
+      if( 0 <= which && which <= (int) frame_paths.size() ) {
+	if( error_ ||
+	    update_ ||
+	    current_.get() != which ) {
+	  current_.set(which);
+	  current_.reset();
+	  
+	  ReadandSendData( filename, frame_paths[which],
+			   frame_datasets[which], true, which );
+	}
       } else {
 	error( "Input index is out of range" );
 	return;
       }
     } else {
 
-      if( nframes != selectable_max_.get() ) {
+      if( nframes-1 != selectable_max_.get() ) {
 	selectable_max_.set(nframes-1);
 
 	ostringstream str;
@@ -333,19 +347,19 @@ void HDF5DataReader::execute() {
 	gui->execute(str.str().c_str());
       }
 
-      animate_execute( filename, frame_paths, frame_datasets );
+      resend = animate_execute( filename, frame_paths, frame_datasets );
     }
   } else if( error_ ||
-	     updateFile ||
-	     updateAll )
-  {
+	     update_ ){
     error_ = false;
 
     ReadandSendData( filename, pathList, datasetList, true, -1 );
 
-  } else {
-    remark( "Already read the file " +  filename );
+  } else
+    resend = true;
 
+
+  if( resend ) {
     for( unsigned int ic=0; ic<MAX_PORTS; ic++ ) {
       // Get a handle to the output double port.
       if( nHandles_[ic].get_rep() ) {
@@ -382,6 +396,7 @@ void HDF5DataReader::execute() {
     }
   }
 
+  update_state(Completed);
 
 #else  
   error( "No HDF5 availible." );
@@ -1880,11 +1895,13 @@ HDF5DataReader::increment(int which, int lower, int upper)
   return which;
 }
 
-void
+bool
 HDF5DataReader::animate_execute( string new_filename,
 				 vector< vector<string> >& frame_paths,
 				 vector< vector<string> >& frame_datasets )
 {
+  bool resend = false;
+
   update_state(NeedData);
 
   reset_vars();
@@ -1973,15 +1990,25 @@ HDF5DataReader::animate_execute( string new_filename,
     else if( execmode == "fforward" )
       which = end;
 
-    ReadandSendData( new_filename, frame_paths[which],
-		     frame_datasets[which], cache, which );
-    
+    fprintf( stderr, "which is which %d %d %d\n", update_, which, which_ );
+
+    if( update_ ||
+	which != which_ )
+      ReadandSendData( new_filename, frame_paths[which],
+		       frame_datasets[which], cache, which );
+    else
+      resend = true;
+
     if (playmode_.get() == "inc_w_exec") {
       which = increment(which, lower, upper);
     }
   }
 
+  which_ = which;
+
   current_.set(which);
+
+  return resend;
 }
 
 } // End namespace DataIO
