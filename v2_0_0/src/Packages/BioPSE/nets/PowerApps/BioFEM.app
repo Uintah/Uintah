@@ -366,8 +366,6 @@ class BioFEMApp {
 	global DATADIR
 	global DATASET
 
-	puts $DATASET
-
 	source $DATADIR/$DATASET/$DATASET.settings
 
 	#Fix up global scale.
@@ -384,8 +382,6 @@ class BioFEMApp {
 	set $mods(ShowField-StreamLines)-edge_scale [expr 0.01 * ${global-scale}]
 	set $mods(StreamLines)-stepsize [expr 0.004 * ${global-scale}]
 	set $mods(StreamLines)-tolerance [expr 0.004 * ${global-scale}]
-
-
 
 	global $mods(FieldReader-conductivities)-filename
 	set $mods(FieldReader-conductivities)-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
@@ -416,6 +412,8 @@ class BioFEMApp {
 	set $mods(Viewer)-ViewWindow_0-view-up-z ${view-up-z}
 	set $mods(Viewer)-ViewWindow_0-view-fov ${view-fov}
 
+	global $mods(StreamLines-rake)-force-rake-reset
+	set $mods(StreamLines-rake)-force-rake-reset 1
 
 	$this execute_Data
     }
