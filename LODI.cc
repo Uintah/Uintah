@@ -379,21 +379,7 @@ void  lodi_bc_preprocess( const Patch* patch,
 
   //compute Di at boundary cells
   computeDi(di, is_LODI_face, rho_old,  press_tmp, vel_old, 
-            speedSound, patch);  
-  #if 0 
-  //--------------------TESTING---------------------//    
-  ostringstream desc;
-  desc <<"BOT_Advection_after_BC_Mat_" <<indx<<"_patch_"<<patch->getID();
-  printData(   indx, patch,1, desc.str(), "press_tmp",    press_tmp);
-  printData(   indx, patch,1, desc.str(), "rho_old",        rho_old);
-  printVector( indx, patch,1, desc.str(), "vel_old", 0, vel_old);
-  printVector( indx, patch,1, desc.str(), "nu",      0, nu);
-  printVector( indx, patch,1, desc.str(), "d1",      0, di[1]);    
-  printVector( indx, patch,1, desc.str(), "d2",      0, di[2]);    
-  printVector( indx, patch,1, desc.str(), "d3",      0, di[3]);    
-  printVector( indx, patch,1, desc.str(), "d4",      0, di[4]);    
-  printVector( indx, patch,1, desc.str(), "d5",      0, di[5]);             
-#endif
+            speedSound, patch);
 }  
  
 /*________________________________________________________
@@ -812,15 +798,15 @@ void FaceVel_LODI(const Patch* patch,
   vector<IntVector>::iterator itr;
   for(itr = crn.begin(); itr != crn.end(); ++ itr ) {
     IntVector c = *itr;
-    uVel = vel[c].x() - delT 
+    uVel = rho_tmp[c] * vel[c].x() - delT 
          * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].x()  
          +  (d[3][c].x() + d[4][c].y() + d[5][c].z()) * rho_tmp[c]);
 
-    vVel = vel[c].y() - delT 
+    vVel = rho_tmp[c] * vel[c].y() - delT 
          * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].y() 
          +  (d[4][c].x() + d[3][c].y() + d[4][c].z()) * rho_tmp[c]);
 
-    wVel = vel[c].z() - delT 
+    wVel = rho_tmp[c] * vel[c].z() - delT 
          * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].z() 
          +  (d[5][c].x() + d[5][c].y() + d[3][c].z()) * rho_tmp[c]);
 
