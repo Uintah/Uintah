@@ -11,7 +11,6 @@ SRCS     += \
 PSELIBS := \
 	Packages/Uintah/Core/Exceptions \
 	Core/Exceptions \
-	Dataflow/XMLUtil \
 	Core/Thread
 
 
