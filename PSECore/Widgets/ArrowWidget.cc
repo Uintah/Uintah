@@ -62,10 +62,10 @@ ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scal
 : BaseWidget(module, lock, "ArrowWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   direction(1, 0, 0)
 {
-   Real INIT = 3*widget_scale;
+   length = 1;
    variables[PointVar] = scinew PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
-   variables[HeadVar]  = scinew PointVariable("Head", solve, Scheme1, Point(INIT, 0, 0));
-   variables[DistVar]  = scinew RealVariable("Dist", solve,  Scheme1, INIT);
+   variables[HeadVar]  = scinew PointVariable("Head", solve, Scheme1, Point(length, 0, 0));
+   variables[DistVar]  = scinew RealVariable("Dist", solve,  Scheme1, length);
    
    constraints[ConstDist]=scinew DistanceConstraint("ConstDist",
    						    NumSchemes,
@@ -134,18 +134,12 @@ ArrowWidget::redraw()
    Point P(variables[PointVar]->point()), H(variables[HeadVar]->point());
    
    if (mode_switches[0]->get_state()) {
-      Vector direct(GetDirection()*widget_scale);
       ((GeomSphere*)geometries[GeomPoint])->move(P, widget_scale);
-
-      if (direct.length2() > 1.e-6) {
-	 ((GeomCylinder*)geometries[GeomShaft])->move(P, H, 0.5*widget_scale);
-	 ((GeomCappedCone*)geometries[GeomHead])->move(H, H +direct * 2.0, widget_scale, 0);
-      }
+      ((GeomCylinder*)geometries[GeomShaft])->move(P, H, 0.5*widget_scale);
+      ((GeomCappedCone*)geometries[GeomHead])->move(H, H +GetDirection()*widget_scale* 2.0, widget_scale, 0);
    }
-   
    if (mode_switches[1]->get_state()) {
-      Vector direct(GetDirection()*widget_scale);
-      ((GeomCappedCylinder*)geometries[GeomResize])->move(H+direct*1.0,  H + direct * 1.5, widget_scale);
+      ((GeomCappedCylinder*)geometries[GeomResize])->move(H+GetDirection()*widget_scale*1.0,  H + GetDirection()*widget_scale*1.5, widget_scale);
    }
 
    if (mode_switches[2]->get_state()) {
@@ -180,7 +174,7 @@ void
 ArrowWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
 			 const Vector& delta, int pick, const BState& )
 {   
-    ((DistanceConstraint*)constraints[ConstDist])->SetDefault(direction);
+    ((DistanceConstraint*)constraints[ConstDist])->SetDefault(GetDirection());
     switch(pick){
     case HeadP:
       variables[HeadVar]->SetDelta(delta, Scheme1);
@@ -244,9 +238,9 @@ ArrowWidget::GetPosition() const
 
 void
 ArrowWidget::SetDirection( const Vector& v )
-{
+{  
+   variables[HeadVar]->SetDelta(v-direction, Scheme1);
    direction = v;
-
    execute(0);
 }
 
@@ -261,6 +255,16 @@ ArrowWidget::GetDirection()
       return (direction = dir.normal());
 }
 
+void ArrowWidget::SetLength( double new_length ){
+  Vector delta=GetDirection()*(new_length-GetLength());
+  variables[HeadVar]->SetDelta(delta, Scheme2);
+  execute(0);
+}
+
+double ArrowWidget::GetLength() {
+  Vector dir(variables[HeadVar]->point() - variables[PointVar]->point());
+  return (length=dir.length());
+};
 
 /***************************************************************************
  * This standard method returns a string describing the functionality of
@@ -322,6 +326,9 @@ ArrowWidget::widget_tcl( TCLArgs& args )
 
 //
 // $Log$
+// Revision 1.5  2000/06/27 07:58:40  samsonov
+// Added Get/SetLength member function
+//
 // Revision 1.4  2000/06/22 22:51:34  samsonov
 // Added resizing mode and rotation in respect to base point. Translational behavior is changed.
 //

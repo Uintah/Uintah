@@ -50,6 +50,9 @@ public:
    void SetPosition( const Point& );
    Point GetPosition() const;
    
+   void SetLength( double );
+   double GetLength();
+   
    void SetDirection( const Vector& v );
    const Vector& GetDirection();
 
@@ -66,6 +69,7 @@ protected:
    
 private:
    Vector direction;
+   double length;
 };
 
 } // End namespace Widgets
@@ -77,6 +81,9 @@ private:
 
 //
 // $Log$
+// Revision 1.5  2000/06/27 07:57:48  samsonov
+// Added Get/SetLength member function
+//
 // Revision 1.4  2000/06/22 22:39:48  samsonov
 // Added resizing mode
 // Added rotational functionality in respect to base point
