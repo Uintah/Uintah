@@ -2453,34 +2453,35 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	    value = MLHatI[currCell]/MMHatI[currCell];
 	  tempCs[currCell] = value;
 
+// It makes more sence to compute inverse Sh numbers here
 	  double scalar_value;
 	  double enthalpy_value;
 	  double reactScalar_value;
           if (d_dynScalarModel) {
             if (d_reactingFlow) {
-	      if ((scalarDenomHat[currCell] < 1.0e-10)||
-	          (scalarNumHat[currCell] < 1.0e-7))
+	      if ((scalarNumHat[currCell] < 1.0e-7)||
+	          (scalarDenomHat[currCell] < 1.0e-10))
 	        scalar_value = 0.0;
 	      else
-	        scalar_value = scalarNumHat[currCell]/scalarDenomHat[currCell];
+	        scalar_value = scalarDenomHat[currCell]/scalarNumHat[currCell];
 	      tempShF[currCell] = scalar_value;
             }
             if (d_calcEnthalpy) {
-	      if ((enthalpyDenomHat[currCell] < 1.0e-10)||
-	          (enthalpyNumHat[currCell] < 1.0e-7))
+	      if ((enthalpyNumHat[currCell] < 1.0e-7/scalarNumHat[currCell]*enthalpyNumHat[currCell])||
+	          (enthalpyDenomHat[currCell] < 1.0e-10))
 	        enthalpy_value = 0.0;
 	      else
-	        enthalpy_value = enthalpyNumHat[currCell]/
-			         enthalpyDenomHat[currCell];
+	        enthalpy_value = enthalpyDenomHat[currCell]/
+			         enthalpyNumHat[currCell];
 	      tempShE[currCell] = enthalpy_value;
             }
             if (d_calcReactingScalar) {
-	      if ((reactScalarDenomHat[currCell] < 1.0e-10)||
-	          (reactScalarNumHat[currCell] < 1.0e-7))
+	      if ((reactScalarNumHat[currCell] < 1.0e-7)||
+	          (reactScalarDenomHat[currCell] < 1.0e-10))
 	        reactScalar_value = 0.0;
 	      else
-	        reactScalar_value = reactScalarNumHat[currCell]/
-			            reactScalarDenomHat[currCell];
+	        reactScalar_value = reactScalarDenomHat[currCell]/
+			            reactScalarNumHat[currCell];
 	      tempShRF[currCell] = reactScalar_value;
             }
           }      
@@ -2551,44 +2552,25 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 
             if (d_dynScalarModel) {
               if (d_reactingFlow) {
-	        ShF[currCell] *= Cs[currCell] * Cs[currCell];
 	        ShF[currCell] = Min(ShF[currCell],10.0);
-	        if (ShF[currCell] >= d_lower_limit)
-	          scalardiff[currCell] = Cs[currCell] * Cs[currCell] *
-	                                 filter * filter *
-	                                 IsI[currCell] * den[currCell] /
-				         ShF[currCell] + viscos*
-					 voidFraction[currCell]/laminarPrNo;
-	        else
-	          scalardiff[currCell] = viscos*voidFraction[currCell]/
-			                 laminarPrNo;
+	        scalardiff[currCell] = filter * filter *
+	                               IsI[currCell] * den[currCell] *
+				       ShF[currCell] + viscos*
+				       voidFraction[currCell]/laminarPrNo;
               }
               if (d_calcEnthalpy) {
-	        ShE[currCell] *= Cs[currCell] * Cs[currCell];
 	        ShE[currCell] = Min(ShE[currCell],10.0);
-	        if (ShE[currCell] >= d_lower_limit)
-	          enthalpydiff[currCell] = Cs[currCell] * Cs[currCell] *
-	                                   filter * filter *
-	                                   IsI[currCell] * den[currCell] /
-				           ShE[currCell] + viscos*
-					   voidFraction[currCell]/laminarPrNo;
-	        else
-	          enthalpydiff[currCell] = viscos*voidFraction[currCell]/
-			                   laminarPrNo;
+	        enthalpydiff[currCell] = filter * filter *
+	                                 IsI[currCell] * den[currCell] *
+				         ShE[currCell] + viscos*
+					 voidFraction[currCell]/laminarPrNo;
               }
               if (d_calcReactingScalar) {
-	        ShRF[currCell] *= Cs[currCell] * Cs[currCell];
 	        ShRF[currCell] = Min(ShRF[currCell],10.0);
-	        if (ShRF[currCell] >= d_lower_limit)
-	          reactScalardiff[currCell] = Cs[currCell] * Cs[currCell] *
-	                                      filter * filter *
-	                                      IsI[currCell] * den[currCell] /
-				              ShRF[currCell] +
-					      viscos*voidFraction[currCell]/
-					      laminarPrNo;
-	        else
-	          reactScalardiff[currCell] = viscos*voidFraction[currCell]/
-			                      laminarPrNo;
+	        reactScalardiff[currCell] = filter * filter *
+	                                    IsI[currCell] * den[currCell] *
+				            ShRF[currCell] + viscos*
+                                            voidFraction[currCell]/laminarPrNo;
               }
             }      
 	  }
@@ -2612,38 +2594,22 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 
             if (d_dynScalarModel) {
               if (d_reactingFlow) {
-	        ShF[currCell] *= Cs[currCell] * Cs[currCell];
 	        ShF[currCell] = Min(ShF[currCell],10.0);
-	        if (ShF[currCell] >= d_lower_limit)
-	          scalardiff[currCell] = Cs[currCell] * Cs[currCell] *
-	                                 filter * filter *
-	                                 IsI[currCell] * den[currCell] /
-				         ShF[currCell] + viscos/laminarPrNo;
-	        else
-	          scalardiff[currCell] = viscos/laminarPrNo;
+	        scalardiff[currCell] = filter * filter *
+	                               IsI[currCell] * den[currCell] *
+				       ShF[currCell] + viscos/laminarPrNo;
               }
               if (d_calcEnthalpy) {
-	        ShE[currCell] *= Cs[currCell] * Cs[currCell];
 	        ShE[currCell] = Min(ShE[currCell],10.0);
-	        if (ShE[currCell] >= d_lower_limit)
-	          enthalpydiff[currCell] = Cs[currCell] * Cs[currCell] *
-	                                   filter * filter *
-	                                   IsI[currCell] * den[currCell] /
-				           ShE[currCell] + viscos/laminarPrNo;
-	        else
-	          enthalpydiff[currCell] = viscos/laminarPrNo;
+	        enthalpydiff[currCell] = filter * filter *
+	                                 IsI[currCell] * den[currCell] *
+				         ShE[currCell] + viscos/laminarPrNo;
               }
               if (d_calcReactingScalar) {
-	        ShRF[currCell] *= Cs[currCell] * Cs[currCell];
 	        ShRF[currCell] = Min(ShRF[currCell],10.0);
-	        if (ShRF[currCell] >= d_lower_limit)
-	          reactScalardiff[currCell] = Cs[currCell] * Cs[currCell] *
-	                                      filter * filter *
-	                                      IsI[currCell] * den[currCell] /
-				              ShRF[currCell] +
-					      viscos/laminarPrNo;
-	        else
-	          reactScalardiff[currCell] = viscos/laminarPrNo;
+	        reactScalardiff[currCell] = filter * filter *
+	                                    IsI[currCell] * den[currCell] *
+				            ShRF[currCell] + viscos/laminarPrNo;
               }
             }      
 	  }
