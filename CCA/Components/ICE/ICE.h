@@ -240,13 +240,7 @@ using namespace SCIRun;
                                            const PatchSubset* patches,
                                            const MaterialSubset* matls,
                                            DataWarehouse*,
-                                           DataWarehouse*);
-
-      void addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
-                                          const PatchSubset* patches,
-                                          const MaterialSubset* matls,
-                                          DataWarehouse*,
-                                          DataWarehouse*);  
+                                           DataWarehouse*);  
 /*__________________________________
 * END OF RF TASKS
 *__________________________________*/                                
