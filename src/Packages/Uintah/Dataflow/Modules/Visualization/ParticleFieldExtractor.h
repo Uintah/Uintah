@@ -76,9 +76,13 @@ public:
 
   //////////
   // callback taking
-  // [in] index--an index into the particle set.
-  void callback( int index);
+  // [in] particleID--an index into the particle set.
+  void callback(long particleID);
 
+  //////////
+  // command from the tcl code
+  void tcl_command(TCLArgs& args, void* userdata);
+  
 protected:
   
 private:
@@ -107,7 +111,19 @@ private:
 		 ScalarParticles*& sp,
 		 VectorParticles*& vp,
 		 TensorParticles*& tp);
+  void graph(string varname, vector<string> mat_list, string particleID);
 
+  vector< double > times;
+  vector< int > indices;
+  vector< string > names;
+  vector< const TypeDescription *> types;
+  double time;
+
+  string vector_to_string(vector< int > data);
+  string vector_to_string(vector< string > data);
+  string vector_to_string(vector< double > data);
+  string vector_to_string(vector< Vector > data, string type);
+  string vector_to_string(vector< Matrix3 > data, string type);
 
   //  void graph(clString, clString);
 }; //class 
