@@ -51,6 +51,16 @@
 #define ASSERTL3(condition)
 #endif
 
+#if SCI_ASSERTION_LEVEL >= 4
+#define ASSERTL4(condition) \
+	if(!(condition)){ \
+		AssertionFailed exc(#condition); \
+		EXCEPTION(exc); \
+	}
+#else
+#define ASSERTL4(condition)
+#endif
+
 #if SCI_ASSERTION_LEVEL >= 2
 #define ASSERTEQ(c1, c2) \
 	if(c1 != c2){ \
@@ -72,6 +82,7 @@
 #define ASSERTL1(condition)
 #define ASSERTL2(condition)
 #define ASSERTL3(condition)
+#define ASSERTL4(condition)
 #define ASSERTEQ(c1, c2)
 #define ASSERTRANGE(c, l, h)
 
