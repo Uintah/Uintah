@@ -119,6 +119,7 @@ void connect( Signal &s, T &t, void (T::*fun)())
   s.add( slot);
 }
 
+inline
 void connect( Signal &s, void (*fun)() )
 {
   StaticSlot *slot = new StaticSlot( fun );
@@ -135,6 +136,7 @@ bool disconnect( Signal &s, T &t, void (T::*fun)())
   return s.rem(Slot<T>(&t, fun));
 }
 
+inline
 bool disconnect( Signal &s, void (*fun)() )
 {
   return s.rem( StaticSlot( fun ) );
