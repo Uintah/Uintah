@@ -800,7 +800,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   //  Iteration Loop
   int counter = 0;
   max_vartype max_RHS = 1/d_SMALL_NUM;
-  double max_RHS_old = max_RHS;
+  double smallest_max_RHS_sofar = max_RHS;
   bool restart = false;
   
   while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance) {
@@ -815,15 +815,19 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     counter ++;
     
     // restart timestep if working too hard
+    if(max_RHS < smallest_max_RHS_sofar){
+      smallest_max_RHS_sofar = max_RHS;
+    }
+    
     if (counter > d_iters_before_timestep_restart ){
       restart = true;
-      cout << "\nWARNING: max iterations befor timestep restart reached\n"<<endl;
+      cout <<"\nWARNING: max iterations befor timestep restart reached\n"<<endl;
     }
     if (subsched->get_dw(3)->timestepRestarted() ) {
       cout << "\nWARNING: Solver had requested a restart\n" <<endl;
       restart = true;
     }
-    if (((max_RHS - max_RHS_old) > 1000.0 * max_RHS_old) ){
+    if(((max_RHS - smallest_max_RHS_sofar) > 10.0*smallest_max_RHS_sofar) ){
       cout << "\nWARNING: outer interation is diverging now "
            << "restarting the timestep\n"<< endl;
       restart = true;
@@ -836,7 +840,6 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     
     if(pg->myrank() == 0) {
       cout << "Outer iteration " << counter<< " max_rhs "<< max_RHS<< endl;
-      max_RHS_old = max_RHS;
     }
   }
   //__________________________________
