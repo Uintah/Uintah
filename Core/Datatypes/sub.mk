@@ -24,6 +24,8 @@ SRCDIR   := Core/Datatypes
 SRCS += $(SRCDIR)/Brick.cc		    \
         $(SRCDIR)/ColorMap.cc		    \
         $(SRCDIR)/ColumnMatrix.cc	    \
+	$(SRCDIR)/ContourMesh.cc            \
+        $(SRCDIR)/cd_templates.cc	    \
         $(SRCDIR)/Datatype.cc		    \
         $(SRCDIR)/DenseMatrix.cc	    \
         $(SRCDIR)/Field.cc		    \
@@ -43,7 +45,6 @@ SRCS += $(SRCDIR)/Brick.cc		    \
         $(SRCDIR)/TriSurfMesh.cc	    \
 	$(SRCDIR)/TypeName.cc		    \
         $(SRCDIR)/VoidStar.cc		    \
-        $(SRCDIR)/templates.cc		    \
 	$(SRCDIR)/GLTexture3D.cc \
 	$(SRCDIR)/GLTextureIterator.cc \
 	$(SRCDIR)/GLTexRenState.cc \
@@ -64,7 +65,6 @@ SRCS += $(SRCDIR)/Brick.cc		    \
 	$(SRCDIR)/SliceTable.cc \
 	$(SRCDIR)/VolumeUtils.cc \
 	$(SRCDIR)/LatVolMesh.cc \
-	$(SRCDIR)/ContourMesh.cc \
 
 
 

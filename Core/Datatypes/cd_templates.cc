@@ -31,20 +31,29 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Malloc/Allocator.h>
 
+
+
 using namespace SCIRun;
 #ifdef __sgi
 #pragma set woff 1468
 #endif
 
 #include <Core/Geometry/Tensor.h>
-
 #include <Core/Datatypes/ColumnMatrix.h>
-template class LockingHandle<ColumnMatrix>;
-
 #include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Persistent/PersistentSTL.h>
+#include <Core/Datatypes/PropertyManager.h>
+
+
+
+template class LockingHandle<ColumnMatrix>;
 template class LockingHandle<Matrix>;
 
-#include <Core/Datatypes/TetVol.h>
 template class TetVol<Tensor>;
 template class TetVol<Vector>;
 template class TetVol<double>;
@@ -68,8 +77,6 @@ template class GenericField<TetVolMesh, vector<char> >;
 template class GenericField<TetVolMesh, vector<unsigned char> >;
 template class GenericField<TetVolMesh, vector<bool> >;
 
-
-#include <Core/Datatypes/LatticeVol.h>
 template class LatticeVol<Tensor>;
 template class LatticeVol<Vector>;
 template class LatticeVol<double>;
@@ -93,7 +100,8 @@ template class GenericField<LatVolMesh, FData3d<char> >;
 template class GenericField<LatVolMesh, FData3d<unsigned char> >;
 template class GenericField<LatVolMesh, FData3d<bool> >;
 
-#include <Core/Datatypes/TriSurf.h>
+
+
 template class TriSurf<Tensor>;
 template class TriSurf<Vector>;
 template class TriSurf<double>;
@@ -117,14 +125,9 @@ template class GenericField<TriSurfMesh, vector<char> >;
 template class GenericField<TriSurfMesh, vector<unsigned char> >;
 template class GenericField<TriSurfMesh, vector<bool> >;
 
-#include <Core/Datatypes/ContourField.h>
 template class ContourField<double>;
 template class GenericField<ContourMesh, vector<double> >;
 
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Persistent/PersistentSTL.h>
-
-#include <Core/Datatypes/PropertyManager.h>
 template class Property<string>;
 template class Property<Array1<double> >;
 template class Property<Array1<Tensor> >;
@@ -137,7 +140,6 @@ template class Property<pair<unsigned short,unsigned short> >;
 template class Property<pair<short,short> >;
 template class Property<pair<unsigned char,unsigned char> >;
 template class Property<pair<char,char> >;
-
 
 //! Compute the gradient g in cell ci.
 template <>
