@@ -703,6 +703,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pNormalLabel);
   VarLabel::destroy(pInitialNormalLabel);
   VarLabel::destroy(pNormalRotRateLabel); 
+  VarLabel::destroy(pRotationLabel);
   VarLabel::destroy(pDefGradTopLabel);
   VarLabel::destroy(pDefGradCenLabel);
   VarLabel::destroy(pDefGradBotLabel);
@@ -716,6 +717,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pNormalLabel_preReloc);
   VarLabel::destroy(pInitialNormalLabel_preReloc);
   VarLabel::destroy(pNormalRotRateLabel_preReloc); 
+  VarLabel::destroy(pRotationLabel_preReloc);
   VarLabel::destroy(pDefGradTopLabel_preReloc);
   VarLabel::destroy(pDefGradCenLabel_preReloc);
   VarLabel::destroy(pDefGradBotLabel_preReloc);
