@@ -53,7 +53,7 @@ public:
     void getParams(Point& origin, Vector& lookdir,
 		   Vector& up, double& fov);
 
-    void updatePosition( const Stealth & stealth );
+    void updatePosition( Stealth & stealth );
     void followPath( Stealth & stealth );
 };
 

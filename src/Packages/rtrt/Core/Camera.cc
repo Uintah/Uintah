@@ -151,14 +151,12 @@ void Camera::getParams(Point& origin, Vector& direction,
 void
 Camera::followPath( Stealth & stealth )
 {
-  Point new_loc = stealth.getNextLocation();
-  lookat = lookat + (new_loc - eye);
-  eye = new_loc;
+  stealth.getNextLocation( eye, lookat);
   setup();
 }
 
 void
-Camera::updatePosition( const Stealth & stealth )
+Camera::updatePosition( Stealth & stealth )
 {
   Vector forward( direction );
   Vector theUp( u );
@@ -168,39 +166,55 @@ Camera::updatePosition( const Stealth & stealth )
   theUp.normalize();
   side.normalize();
 
+  double speed;
+
+  // Move the eyepoint based on direction(s) of movement (up, right, forward)
   eye += forward * stealth.getSpeed(0);
   eye += side    * stealth.getSpeed(1);
-  eye += theUp    * stealth.getSpeed(2);
+  eye += theUp   * stealth.getSpeed(2);
 
-  double speed;
+  // Move the lookat point correspondingly.
+  lookat += forward * stealth.getSpeed(0);
+  lookat += side    * stealth.getSpeed(1);
+  lookat += theUp   * stealth.getSpeed(2);
 
   // Pitching
   if( ( speed = stealth.getSpeed(3) ) != 0 )
     {
-      // Seems that the Point(0,0,0) doesn't do anything. 
+      // Keeps you from pitching up or down completely!
       Transform t;
       t.post_translate( Vector(eye) );
       t.post_rotate( speed/20, side );
       t.post_translate( Vector(-eye) );
-      lookat = t.project( lookat );
+
+      Point old_lookat = lookat;
+      Point new_lookat = t.project( lookat );
+
+      lookat = new_lookat;
       setup();
+
+      Vector new_forward( direction );
+      new_forward.normalize();
+
+      if( Dot( new_forward, up ) > .9 || Dot( new_forward, up ) < -.9 )
+	{
+	  // We have pitched up or down too much.  Reset eye to before
+	  // this last pitch adjustment.  Tell stealth to stop pitching.
+	  lookat = old_lookat;
+	  setup();
+	  stealth.stopPitching();
+	}
     }
 
   // Rotating
   if( ( speed = stealth.getSpeed(4) ) != 0 )
     {
-      // Keeps you from pitching up or down completely!
-      if( Dot( forward, up ) < .9 || Dot( forward, up ) > -.9 )
-	{
-	  // Seems that the Point(0,0,0) doesn't do anything. 
-	  Transform t;
-	  t.post_translate( Vector(eye) );
-	  t.post_rotate( -speed/20, theUp );
-	  t.post_translate( Vector(-eye) );
-	  lookat = t.project( lookat );
-	  setup();
-	}
+      Transform t;
+      t.post_translate( Vector(eye) );
+      t.post_rotate( -speed/20, theUp );
+      t.post_translate( Vector(-eye) );
+      lookat = t.project( lookat );
+      setup();
     }
-
 }
 
