@@ -10,8 +10,8 @@ SRCDIR   := Kurt/Modules/Vis
 SRCS     += $(SRCDIR)/GLTextureBuilder.cc  $(SRCDIR)/PadField.cc \
 		$(SRCDIR)/TextureVolVis.cc \
 		$(SRCDIR)/TexCuttingPlanes.cc \
-		$(SRCDIR)/RescaleColorMapForParticles.cc \
 		$(SRCDIR)/ParticleColorMapKey.cc \
+		$(SRCDIR)/RescaleColorMapForParticles.cc \
 		$(SRCDIR)/AnimatedStreams.cc 
 #		$(SRCDIR)/VolVis.cc \
 #		$(SRCDIR)/KurtScalarFieldReader.cc \
@@ -34,6 +34,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.14  2000/09/27 16:24:08  kuzimmer
+# changes made to reflect the moved VisParticleSet files
+#
 # Revision 1.13  2000/09/26 19:02:45  kuzimmer
 # to remove dependency on libKurt_Geom.so
 #
