@@ -50,7 +50,7 @@ public:
   ~NrrdTextureBuilderAlgo();
 
   void build(TextureHandle texture,
-             NrrdDataHandle vnrrd, NrrdDataHandle gnrrd,
+             SCIRun::NrrdDataHandle vnrrd, SCIRun::NrrdDataHandle gnrrd,
              int card_mem);
 
 protected:
