@@ -198,9 +198,9 @@ itcl_class Teem_DataIO_HDF5DataReader {
   	pack $treeframe.tree -fill x -expand yes
 
 	$treeview column configure treeView -text Node
-	$treeview column insert end Type Value
-
-	$treeview column configure Type Value -justify left -edit no
+	$treeview column insert end "Node-Type" "Data-Type" "Value"
+	$treeview column configure "Node-Type" "Data-Type" "Value" \
+	    -justify left -edit no
 	$treeview column configure treeView -hide no -edit no
 	$treeview text configure -selectborderwidth 0
 
@@ -560,7 +560,8 @@ itcl_class Teem_DataIO_HDF5DataReader {
 
 	set name [process_name $input]
 	set info(type) @blt::tv::normalOpenFolder
-	set info(Type) ""
+	set info(Node-Type) ""
+	set info(Data-Type) ""
 	set info(Value) ""
 	set node [$tree insert $parent -tag "group" -label $name \
 		      -data [array get info]]
@@ -611,7 +612,8 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	} else {
 	    set name [process_name $input]
 	    set info(type) ""
-	    set info(Type) "Attribute"
+	    set info(Node-Type) "Attribute"
+	    set info(Data-Type) ""
 	    set info(Value) $attr
 	    $tree insert $parent -tag "attribute" -label $name \
 		-data [array get info]
@@ -619,6 +621,18 @@ itcl_class Teem_DataIO_HDF5DataReader {
     }
 
     method process_dataset { tree parent fileId input } {
+
+	if {[gets $fileId line] >= 0 && \
+	    [string first "DATATYPE" $line] == -1} {
+	    set message "Bad dataset formation: "
+	    append message $line
+	    $this-c error message
+	    return
+	}
+
+	set start [string first "\"" $line]
+	set end   [string  last "\"" $line]
+	set type  [string range $line [expr $start+1] [expr $end-1]]
 
 	if {[gets $fileId line] >= 0 && \
 	    [string first "DATASPACE" $line] == -1} {
@@ -639,7 +653,8 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	} else {
 	    set name [process_name $input]
 	    set info(type) ""
-	    set info(Type) "DataSet"
+	    set info(Node-Type) "DataSet"
+	    set info(Data-Type) $type
 	    set info(Value) $dims
 	    $tree insert $parent -tag "dataset" -label $name \
 		-data [array get info]

@@ -289,7 +289,10 @@ herr_t HDF5Dump_dataset(hid_t dataset_id, const char * name, ostream* iostr) {
   hid_t file_space_id = H5Dget_space( dataset_id );
 
   /* Open the data space in the file. */
-  if( file_space_id < 0 ) {
+  if( HDF5Dump_datatype( dataset_id, iostr ) < 0) {
+    cerr << "Unable to dump datatype \"" << name << "\"" << endl;
+    status = -1;
+  } else if( file_space_id < 0 ) {
     cerr << "Unable to open dataspace \"" << name << "\"" << endl;
     status = -1;
   } else if( HDF5Dump_dataspace( file_space_id, iostr ) < 0) {
@@ -308,6 +311,61 @@ herr_t HDF5Dump_dataset(hid_t dataset_id, const char * name, ostream* iostr) {
   HDF5Dump_indent--;
   HDF5Dump_tab( iostr );
   *iostr << "}" << endl;
+
+  return status;
+}
+
+
+herr_t HDF5Dump_datatype(hid_t dataset_id, ostream* iostr)
+{
+  herr_t status = 0;
+
+  hid_t type_id = H5Dget_type(dataset_id);
+
+  HDF5Dump_tab( iostr );
+  *iostr << "DATATYPE \"";
+
+  switch (H5Tget_class(type_id)) {
+  case H5T_INTEGER:
+    *iostr << "Integer";
+    break;
+
+  case H5T_FLOAT:
+    if (H5Tequal(type_id, H5T_IEEE_F32BE) ||
+	H5Tequal(type_id, H5T_IEEE_F32LE) ||
+	H5Tequal(type_id, H5T_NATIVE_FLOAT)) {
+      // Float
+      *iostr << "Float";
+
+    } else if (H5Tequal(type_id, H5T_IEEE_F64BE) ||
+	       H5Tequal(type_id, H5T_IEEE_F64LE) ||
+	       H5Tequal(type_id, H5T_NATIVE_DOUBLE) ||
+	       H5Tequal(type_id, H5T_NATIVE_LDOUBLE)) {
+      // Double
+      *iostr << "Double";
+
+    } else {
+      cerr << "Undefined HDF5 float." << endl;
+      return -1;
+    }
+    break;
+
+  case H5T_STRING:
+    *iostr << "String";
+    break;
+
+  case H5T_COMPOUND:
+    *iostr << "Compound - Unsupported";
+    break;
+      
+  default:
+    printf("Unsupported or unknown data type");
+    break;
+  }
+
+  *iostr << "\"" << endl;
+
+  H5Tclose(type_id);
 
   return status;
 }
