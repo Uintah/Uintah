@@ -8,4 +8,5 @@ patch.*
 SegToCS
 GenScalp
 ConvMesh
-ConvMesh
+VPtoTriSurf
+SurfToJAS

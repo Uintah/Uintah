@@ -64,6 +64,33 @@ SEG_LIBS = \
 SEG_LDFLAGS = SCI_LM
 SCIProgramTarget2($(SEG_TARGET), $(SEG_OBJS), $(SEG_LIBS), $(SEG_LDFLAGS))
 
+JAS_TARGET = SurfToJAS
+JAS_SRCS = SurfToJAS.cc
+JAS_OBJS = SurfToJAS.o
+JAS_LIBS = \
+	Datatypes/TriSurface.o \
+	Datatypes/libDatatypes.a \
+	Geometry/libGeometry.a \
+	Multitask/libMultitask.a \
+	Classlib/libClasslib.a \
+	Malloc/libMalloc.a
+
+JAS_LDFLAGS = SCI_LM
+SCIProgramTarget2($(JAS_TARGET), $(JAS_OBJS), $(JAS_LIBS), $(JAS_LDFLAGS))
+
+VP_TARGET = VPtoTriSurf
+VP_SRCS = VPtoTriSurf.cc
+VP_OBJS = VPtoTriSurf.o
+VP_LIBS = \
+	Datatypes/libDatatypes.a \
+	Geometry/libGeometry.a \
+	Multitask/libMultitask.a \
+	Classlib/libClasslib.a \
+	Malloc/libMalloc.a
+
+VP_LDFLAGS = SCI_LM
+SCIProgramTarget2($(VP_TARGET), $(VP_OBJS), $(VP_LIBS), $(VP_LDFLAGS))
+
 SC_TARGET = GenScalp
 SC_SRCS = GenScalp.cc
 SC_OBJS = GenScalp.o
@@ -90,7 +117,7 @@ MESH_LIBS = \
 MESH_LDFLAGS = SCI_LM
 SCIProgramTarget2($(MESH_TARGET), $(MESH_OBJS), $(MESH_LIBS), $(MESH_LDFLAGS))
 
-SRCS = $(SR_SRCS) $(SEG_SRCS) $(SC_SRCS) $(MESH_SRCS)
+SRCS = $(SR_SRCS) $(SEG_SRCS) $(JAS_SRCS) $(SC_SRCS) $(MESH_SRCS) $(VP_SRCS)
 SCIDependTarget($(SRCS))
 
 World:
