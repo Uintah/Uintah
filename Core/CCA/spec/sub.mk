@@ -21,7 +21,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := Core/CCA/spec
 
-$(SRCDIR)/cca.sidl: $(SRCDIR)/SCIRun2Ports.sidl $(SRCDIR)/SCIRun2Classes.sidl
+$(SRCDIR)/cca.sidl:$(SRCDIR)/SCIRun2Ports.sidl $(SRCDIR)/SCIRun2Classes.sidl
 
 SRCS := $(SRCS) $(SRCDIR)/cca.sidl $(SRCDIR)/cca_sidl.cc
 GENHDRS := $(GENHDRS) $(SRCDIR)/cca_sidl.h

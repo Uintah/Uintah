@@ -1,4 +1,11 @@
 //abstract interface 
+interface StringPort extends sci.cca.Port
+{
+	string getString();
+}
+
+
+//abstract interface 
 interface UIPort extends sci.cca.Port
 {
 	//return 0 for success, -1 for fatal error, other values for others errors

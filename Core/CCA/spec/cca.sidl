@@ -73,6 +73,7 @@ package cca {
     } // end class CCAException
 
 
+
     interface Services {
 
 	/** 
@@ -177,7 +178,8 @@ package cca {
 	void registerUsesPort(in string portName, 
 			      in string type, 
 			      in TypeMap properties ) throws CCAException ;
-	
+
+
 	/** 
 	 * Notify the framework that a Port, previously registered by this
 	 * component but currently not in use, is no longer desired. 
@@ -273,6 +275,7 @@ package cca {
 	 * This is the one method that every CCA Component
 	 * must implement. 
 	 */
+	collective
 	void setServices(in Services services);
     }
 
@@ -536,6 +539,22 @@ package cca {
 	 */
 	AbstractFramework createEmptyFramework() throws CCAException;
 	//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+	//non-spec interface
+	/* 
+	Registers the slave framework with the master framework. Intended to be called 
+	only by the representative slave framework process. 
+        ------
+        size -- total number of parallel slave frameworks 
+        slaveURLs -- urls of the slave framework
+        slaveName -- name of the slave resource
+        ----
+        returns a positive number or zero if framework was registerred 
+        successfully, negative number on error
+        */
+	int registerLoader(in string slaveName, in array<string,1> slaveURLs);
+	int unregisterLoader(in string slaveName);
+
 	/** start to share the CCA components with other CCA frameworks by
 	1. broadcasting its own framework URL
 	2. listening to other frameworks' broadcasting
@@ -607,6 +626,11 @@ package cca {
 	 *  Throws <code>CCAException</code> if <code>ComponentClassDescription</code> is invalid.
 	 */
 	string getComponentClassName() throws CCAException ;
+
+	// non-official interfaces
+	string getComponentModelName() throws CCAException; 
+
+	string getLoaderName() throws CCAException;
 	
     }  // end interface ComponentClassDescription
     
@@ -946,8 +970,13 @@ package cca {
 				       in string port1,
 				       in sci.cca.ComponentID c2);
 	    		
-	    //void registerFramework(in string frameworkURL); 	
-	    //void registerServices(in sci.cca.Services svc);
+	   int addLoader(in string loaderName, in string login, in string domain, in string path);
+
+	   int removeLoader(in string name);
+
+	   //void registerFramework(in string frameworkURL); 	
+	   //void registerServices(in sci.cca.Services svc);
+
 	    //>>>>>>>>>>>>>>>>>>>>>		
 	} // end interface BuilderService
 	
@@ -986,5 +1015,6 @@ package cca {
 } // end of package cca
 } // end package sci
 
+ 
 
 
