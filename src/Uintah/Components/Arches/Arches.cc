@@ -14,7 +14,8 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <Uintah/Grid/SoleVariable.h>
-
+#include <Uintah/Grid/Level.h>
+#include <Uintah/Grid/Task.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -70,11 +71,12 @@ void Arches::problemSetup(const ProblemSpecP& params, GridP&,
   NOT_FINISHED("Arches::problemSetup");
 #endif
 }
-#if 0
+
 void Arches::problemInit(const LevelP& level,
 			 SchedulerP& sched, DataWarehouseP& dw,
 			 bool restrt )
 {
+#if 0
   // initializes variables
   if (!restrt) {
     sched_paramInit(level, sched, dw);
@@ -84,8 +86,9 @@ void Arches::problemInit(const LevelP& level,
   d_properties->sched_computeProperties(level, sched, dw, dw);
   d_turbModel->sched_computeTurbSubmodel(level, sched, dw, dw);
   d_boundaryCondition->sched_pressureBC(level, sched, dw, dw);
-}
 #endif
+}
+
 void Arches::computeStableTimestep(const LevelP& level,
 				   SchedulerP& sched, DataWarehouseP& dw)
 {
@@ -96,6 +99,7 @@ void Arches::timeStep(double time, double dt,
 	      const LevelP& level, SchedulerP& sched,
 	      const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
+#ifdef WONT_COMPILE_YET
   int error_code = d_nlSolver->nonlinearSolve(time, dt, level, 
 					      sched, old_dw, new_dw);
   if (!error_code) {
@@ -106,12 +110,13 @@ void Arches::timeStep(double time, double dt,
   else {
     cerr << "Nonlinear Solver didn't converge" << endl;
   }
+#endif
 }
 
 void Arches::sched_paramInit(const LevelP& level,
 			     SchedulerP& sched, DataWarehouseP& dw)
 {
-#if 0
+#ifdef WONT_COMPILE_YET
     for(Level::const_regionIterator iter=level->regionsBegin();
       iter != level->regionsEnd(); iter++){
     const Region* region=*iter;
@@ -139,7 +144,7 @@ void Arches::paramInit(const ProcessorContext*,
 		       const Region* region,
 		       const DataWarehouseP& old_dw)
 {
-#if 0
+#ifdef WONT_COMPILE_YET
   FCVariable<Vector> velocity;
   // ....but will only compute for computational domain
   old_dw->allocate(velocity,"velocity",region, 1);
@@ -172,6 +177,10 @@ void Arches::paramInit(const ProcessorContext*,
 
 //
 // $Log$
+// Revision 1.17  2000/04/12 22:58:29  sparker
+// Resolved conflicts
+// Making it compile
+//
 // Revision 1.16  2000/04/12 22:46:42  dav
 // changes to make it compile
 //
