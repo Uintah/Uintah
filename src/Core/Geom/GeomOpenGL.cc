@@ -1,4 +1,4 @@
-/*g
+/*
  *  GeomOpenGL.cc: Rendering for OpenGL windows
  *
  *  Written by:
@@ -170,7 +170,7 @@ static void quad_error(GLenum code)
     cerr << "WARNING: Quadric Error (" << (char*)gluErrorString(code) << ")" << endl;
 }
 
-#ifdef _USING_GPP
+#ifdef __GNUC__
   typedef void (*gluQuadricCallbackType)(...);
 #else
   typedef void (*gluQuadricCallbackType)();
@@ -183,7 +183,7 @@ DrawInfoOpenGL::DrawInfoOpenGL()
 #ifdef _WIN32
 	gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (void (__stdcall*)())quad_error);
 #else
-    gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (gluQuadricCallbackType)quad_error);
+	gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (gluQuadricCallbackType)quad_error);
 #endif
 }
 
@@ -4271,6 +4271,9 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.24  2000/09/25 17:59:54  sparker
+// Changed ifdef _USING_GPP to __GNUG__
+//
 // Revision 1.23  2000/09/15 20:57:53  kuzimmer
 //  resurrected GeomEllipse from old code
 //
