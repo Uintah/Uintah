@@ -32,11 +32,10 @@
 #define CORE_CCA_COMM_DT_DATATRANSMITTER_H
 
 
-#include <sgi_stl_warnings_off.h>
+#include <iostream>
 #include <deque>
 #include <map>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 #include <Core/CCA/Comm/DT/DTAddress.h>
 
 namespace SCIRun {
@@ -88,8 +87,8 @@ namespace SCIRun {
 
     static const int SEGMENT_LEN=1024*32;
     typedef std::map<DTAddress, int> SocketMap;
-    SocketMap sockmap;
-
+    SocketMap send_sockmap;
+    SocketMap recv_sockmap;
 
     int sockfd; //listening socket
 
@@ -98,7 +97,8 @@ namespace SCIRun {
 
     Mutex *sendQ_mutex;
     Mutex *recvQ_mutex;
-    Mutex *sockmap_mutex;
+    Mutex *send_sockmap_mutex;
+    Mutex *recv_sockmap_mutex;
 
     ConditionVariable *sendQ_cond;
     ConditionVariable *recvQ_cond;

@@ -103,7 +103,9 @@ DataTransmitter::DataTransmitter(){
 
   sendQ_mutex=new Mutex("sendQ_mutex");
   recvQ_mutex=new Mutex("recvQ_mutex");
-  sockmap_mutex=new Mutex("sockmap_mutex");
+  send_sockmap_mutex=new Mutex("send_sockmap_mutex");
+  recv_sockmap_mutex=new Mutex("recv_sockmap_mutex");
+
   sendQ_cond=new ConditionVariable("sendQ_cond");
   recvQ_cond=new ConditionVariable("recvQ_cond");
   quit=false;
@@ -112,7 +114,8 @@ DataTransmitter::DataTransmitter(){
 DataTransmitter::~DataTransmitter(){
   delete sendQ_mutex;
   delete recvQ_mutex;
-  delete sockmap_mutex;
+  delete send_sockmap_mutex;
+  delete recv_sockmap_mutex;
   delete sendQ_cond;
   delete recvQ_cond;
 }
@@ -214,9 +217,9 @@ DataTransmitter::runSendingThread(){
     else
     {
     
-      SocketMap::iterator iter=sockmap.find(msg->to_addr);
+      SocketMap::iterator iter=send_sockmap.find(msg->to_addr);
       int new_fd;
-      if(iter==sockmap.end()){
+      if(iter==send_sockmap.end()){
 	new_fd=socket(AF_INET, SOCK_STREAM, 0);
 	if( new_fd  == -1){
 	  throw CommError("socket", errno);
@@ -259,9 +262,9 @@ DataTransmitter::runSendingThread(){
 	//immediate register the listening port
 	//cerr<<"register port "<<addr.port<<endl;
 	sendall(new_fd, &addr.port, sizeof(short));
-	sockmap_mutex->lock();
-	sockmap[msg->to_addr]=new_fd;
-	sockmap_mutex->unlock();
+	send_sockmap_mutex->lock();
+	send_sockmap[msg->to_addr]=new_fd;
+	send_sockmap_mutex->unlock();
       }
       else{
 	new_fd=iter->second;
@@ -283,11 +286,6 @@ DataTransmitter::runRecvingThread(){
   fd_set read_fds; // temp file descriptor list for select()
   struct timeval timeout;
   while(!quit){
-    /*cerr<<"Recving Thread is running: sockmap size="<<sockmap.size()<<endl;
-    for(SocketMap::iterator iter=sockmap.begin(); iter!=sockmap.end(); iter++){
-      cerr<<"\t"<<iter->first.ip<<"/"<<iter->first.port<<" uses socket "<<iter->second<<endl;
-      }*/
-
     timeout.tv_sec=0;
     timeout.tv_usec=20000;
     FD_ZERO(&read_fds);
@@ -296,7 +294,7 @@ DataTransmitter::runRecvingThread(){
     FD_SET(sockfd, &read_fds);
 
     // add all other sockets into read_fds
-    for(SocketMap::iterator iter=sockmap.begin(); iter!=sockmap.end(); iter++){
+    for(SocketMap::iterator iter=recv_sockmap.begin(); iter!=recv_sockmap.end(); iter++){
       FD_SET(iter->second, &read_fds);
       if(maxfd<iter->second) maxfd=iter->second;
     }
@@ -305,7 +303,7 @@ DataTransmitter::runRecvingThread(){
     }
 
     // run through the existing connections looking for data to read
-    for(SocketMap::iterator iter=sockmap.begin(); iter!=sockmap.end(); iter++){
+    for(SocketMap::iterator iter=recv_sockmap.begin(); iter!=recv_sockmap.end(); iter++){
       if(FD_ISSET(iter->second, &read_fds)){
 	DTMessage *msg=new DTMessage;
 	if(recvall(iter->second, msg, sizeof(DTMessage))!=0){
@@ -343,9 +341,9 @@ DataTransmitter::runRecvingThread(){
 	  //remote connection is closed, if receive 0 bytes
 	  //cerr<<"######: recved 0 bytes!\n";
 	  close(iter->second);
-	  sockmap_mutex->lock();
-	  sockmap.erase(iter);
-	  sockmap_mutex->unlock();
+	  recv_sockmap_mutex->lock();
+	  recv_sockmap.erase(iter);
+	  recv_sockmap_mutex->unlock();
 	}
       }
     }
@@ -395,9 +393,9 @@ DataTransmitter::runRecvingThread(){
       newAddr.port=ntohs(their_addr.sin_port);
       recvall(new_fd, &(newAddr.port), sizeof(short));
       //cerr<<"Done register port "<<newAddr.port<<endl;
-      sockmap_mutex->lock();
-      sockmap[newAddr]=new_fd;
-      sockmap_mutex->unlock();
+      recv_sockmap_mutex->lock();
+      recv_sockmap[newAddr]=new_fd;
+      recv_sockmap_mutex->unlock();
     }
   }
 
@@ -409,7 +407,7 @@ DataTransmitter::runRecvingThread(){
   //if send the close-connection request, wait until ACK 
   //  or peer's close-connection request.
 
-  for(SocketMap::iterator iter=sockmap.begin(); iter!=sockmap.end(); iter++){
+  for(SocketMap::iterator iter=recv_sockmap.begin(); iter!=recv_sockmap.end(); iter++){
     //should wait sending and receving threads to finish
     //close(iter->second);
     //shutdown(iter->second, SHUT_RDWR);
