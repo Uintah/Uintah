@@ -71,6 +71,8 @@ namespace SCIRun {
     int addLoader(resourceReference *rr);
     int removeLoader(const std::string &loaderName);
 
+    static const std::string DEFAULT_PATH;
+
   private:
     SCIRunFramework* framework;
     typedef std::map<std::string, BridgeComponentDescription*> componentDB_type;

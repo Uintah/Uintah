@@ -49,6 +49,7 @@
 #include <Dataflow/XMLUtil/StrX.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Util/soloader.h>
+#include <Core/Util/Environment.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <SCIRun/resourceReference.h>
 #include <string>
@@ -70,6 +71,9 @@
 #include <iostream>
 using namespace std;
 using namespace SCIRun;
+
+const std::string BridgeComponentModel::DEFAULT_PATH =
+    std::string("/src/CCA/Components/xml");
 
 int BridgeComponent::bridgeID(0);
 
@@ -105,7 +109,7 @@ void BridgeComponentModel::buildComponentList()
   }
 
   destroyComponentList();
-  string component_path = "../src/CCA/Components/xml";
+  string component_path = sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
   while(component_path != ""){
     unsigned int firstColon = component_path.find(':');
     string dir;

@@ -152,7 +152,21 @@ InternalComponentModel::releaseFrameworkService(const std::string& type,
 
 bool InternalComponentModel::haveComponent(const std::string& /*name*/)
 {
+  std::cerr << "Error: InternalComponentModel does not implement haveComponent"
+	    << std::endl;
     return false;
+}
+
+void InternalComponentModel::destroyComponentList()
+{
+  std::cerr << "Error: InternalComponentModel does not implement destroyComponentList"
+            << std::endl;
+}
+
+void InternalComponentModel::buildComponentList()
+{
+  std::cerr << "Error: InternalComponentModel does not implement buildComponentList"
+            << std::endl;
 }
 
 ComponentInstance* InternalComponentModel::createInstance(const std::string&,

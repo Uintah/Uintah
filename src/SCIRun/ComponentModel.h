@@ -91,7 +91,21 @@ public:
   virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
                                      bool) = 0;
 
+  /** ? */
+  virtual void destroyComponentList() = 0;
+
+  /** ? */
+  virtual void buildComponentList() = 0;
+
+  std::string getPrefixName() const { return prefixName; }
+
+  /** Breaks a concatenated list of paths into a vector of paths. Splits on
+   * the ';' character. */
+  std::vector<std::string> splitPathString(const std::string &path);
+
+protected:
   std::string prefixName;
+
 private:
   ComponentModel(const ComponentModel&);
   ComponentModel& operator=(const ComponentModel&);

@@ -84,7 +84,14 @@ public:
       registered in this ComponentModel. */
   virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
                                      bool);
+
   /** ? */
+  virtual void destroyComponentList();
+
+  /** ? */
+  virtual void buildComponentList();
+
+  /** Initialize SCIRun GUI elements. */
   static void initGuiInterface();
   static GuiInterface* gui;
   static Network* net;
