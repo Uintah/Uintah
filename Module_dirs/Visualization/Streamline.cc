@@ -200,8 +200,8 @@ int SRibbon::advance(const VectorFieldHandle& field, int rk4,
 	diag = stepsize<0?-diag:diag;
 	Point p1 = p +  diag;  
 	Point p2 = p -  diag; 
-	Vector n1 ( Cross(v1, diag) ); // the normals here are not percise,
-	Vector n2 ( Cross(v2, diag) ); // need to be improved .....
+	Vector n1 ( -Cross(v1, diag) ); // the normals here are not percise,
+	Vector n2 ( -Cross(v2, diag) ); // need to be improved .....
 
 	if(!have_sfield){
 	    tri->add(p1, n1); tri->add(p2, n2); 
@@ -249,8 +249,8 @@ int SRibbon::advance(const VectorFieldHandle& field, int rk4,
 	diag = stepsize<0?-diag:diag;
         Point p1 = p +  diag;  
         Point p2 = p -  diag; 
-        n1 = Cross(v1, diag); // the normals here are not percise,
-        n2 = Cross(v2, diag); // need to be improved .....
+        n1 = -Cross(v1, diag); // the normals here are not percise,
+        n2 = -Cross(v2, diag); // need to be improved .....
 
 	if(!have_sfield){
 	    tri->add(p1, n1); tri->add(p2, n2); 
