@@ -24,8 +24,9 @@ namespace SCIRun {
 
 using std::string;
 
-template<> string findTypeName(NeumannBC*){
-  return string("NeumannBC");
+template<> const string find_type_name(NeumannBC*)
+{
+  return "NeumannBC";
 }
 
 } // namespace BioPSE

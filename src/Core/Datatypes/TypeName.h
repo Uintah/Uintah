@@ -23,59 +23,56 @@ namespace SCIRun{
 
 using std::string;
 using std::vector;
-using std::map;
 
 //////////
 // Function to return name of type of its argument
-template <class T> string findTypeName(T*){
-  return T::typeName(0);
+template <class T> const string find_type_name(T*)
+{
+  return T::type_name(0);
 }
 
 class Vector;
 class Point;
 class Transform;
 
-template<> string findTypeName(float*);
-template<> string findTypeName(double*);
-template<> string findTypeName(long double*);
-template<> string findTypeName(short*);
-template<> string findTypeName(unsigned short*);
-template<> string findTypeName(int*);
-template<> string findTypeName(unsigned int*);
-template<> string findTypeName(long*);
-template<> string findTypeName(unsigned long*);
-template<> string findTypeName(long long*);
-template<> string findTypeName(unsigned long long*);
-template<> string findTypeName(char*);
-template<> string findTypeName(unsigned char*);
-template<> string findTypeName(bool*);
-template<> string findTypeName(Vector*);
-template<> string findTypeName(Point*);
-template<> string findTypeName(Transform*);
-template<> string findTypeName(string*);
+template<> const string find_type_name(float*);
+template<> const string find_type_name(double*);
+template<> const string find_type_name(long double*);
+template<> const string find_type_name(short*);
+template<> const string find_type_name(unsigned short*);
+template<> const string find_type_name(int*);
+template<> const string find_type_name(unsigned int*);
+template<> const string find_type_name(long*);
+template<> const string find_type_name(unsigned long*);
+template<> const string find_type_name(long long*);
+template<> const string find_type_name(unsigned long long*);
+template<> const string find_type_name(char*);
+template<> const string find_type_name(unsigned char*);
+template<> const string find_type_name(bool*);
+template<> const string find_type_name(Vector*);
+template<> const string find_type_name(Point*);
+template<> const string find_type_name(Transform*);
+template<> const string find_type_name(string*);
 
 //////////
 // Function overloading for templates 
 template<class T> class Array1;
 template<class T> class Array2;
 
-template <class T> string findTypeName(Array1<T>*){
-  return "Array1<"+findTypeName((T*)0)+">";
+template <class T> const string find_type_name(Array1<T>*)
+{
+  return "Array1<"+find_type_name((T*)0)+">";
 }
 
-template <class T> string findTypeName(Array2<T>*){
-  return "Array2<"+findTypeName((T*)0)+">";
+template <class T> const string find_type_name(Array2<T>*)
+{
+  return "Array2<"+find_type_name((T*)0)+">";
 }
 
-template <class T> string findTypeName(vector<T>*){
-  return "vector<"+findTypeName((T*)0)+">";
+template <class T> const string find_type_name(vector<T>*)
+{
+  return "vector<"+find_type_name((T*)0)+">";
 }
-
-/*
-template <class T, class S> string findTypeName(map<T, S>*){
-  return "map<"+findTypeName((T*)0)+","+findTypeName((S*)0)+">";
-}
-*/
 
 } // namespace SCIRun
 

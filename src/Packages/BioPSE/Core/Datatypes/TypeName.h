@@ -24,7 +24,7 @@ using std::string;
 using BioPSE::NeumannBC;
 
 class NeumannBC;
-template<> string findTypeName(NeumannBC*);
+template<> const string find_type_name(NeumannBC*);
 
 } // namespace SCIRun
 
