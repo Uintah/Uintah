@@ -49,10 +49,14 @@ Color color(1.0, 1.0, 1.0);
 int nsides=DEFAULT_NSIDES;
 int gdepth=DEFAULT_GDEPTH;
 char* cmap_fname=0;
+char *cmap_type = "InvRIsoLum";
 bool display=true;
 int ts_start=0;
 int ts_inc=1;
 int ntsteps=1;
+char *gridconfig = 0;
+string *var_names = 0;
+int colordata = 0;
 
 extern "C" 
 Scene* make_scene(int argc, char* argv[], int /*nworkers*/) {
@@ -78,6 +82,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/) {
       gdepth=atoi(argv[++i]);
     else if (strcmp(argv[i], "-cmap") == 0)
       cmap_fname=argv[++i];
+    else if (strcmp(argv[i], "-cmaptype") == 0)
+      cmap_type = argv[++i];
+    else if(strcmp(argv[i], "-colordata")==0) 
+      colordata=atoi(argv[++i]);
     else if (strcmp(argv[i],"-envmap")==0)
       envmap_fname=argv[++i];
     else if (strcmp(argv[i],"-no_dpy")==0)
@@ -90,7 +98,15 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/) {
       ntsteps=atoi(argv[++i]);
     else if (strcmp(argv[i], "-rate")==0)
       rate=atoi(argv[++i]);
-    else if(strcmp(argv[i],"--help")==0) {
+    else if (strcmp(argv[i], "-gridconfig") == 0)
+      gridconfig = argv[++i];
+    else if (strcmp(argv[i], "-varnames") == 0) {
+      int num_varnames = atoi(argv[++i]);
+      cerr << "Reading "<<num_varnames << " variable names\n";
+      var_names = new string[num_varnames];
+      for(int v = 0; v < num_varnames; v++)
+        var_names[v] = string(argv[++i]);
+    } else if(strcmp(argv[i],"--help")==0) {
       usage(me);
       exit(0);
     } else {
@@ -125,13 +141,19 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/) {
 
   // Create geometry
   Group* world=new Group();
-  GridSpheresDpy* dpy=new GridSpheresDpy(0);
+  GridSpheresDpy* dpy;
+  if (gridconfig)
+    dpy = new GridSpheresDpy(colordata, gridconfig);
+  else
+    dpy = new GridSpheresDpy(colordata);
   SelectableGroup* timesteps=new SelectableGroup(1.0/(float)rate);
 
   if (parseFile(in_fname, dpy, timesteps)) {
     cerr<<me<<":  error parsing \""<<in_fname<<"\""<<endl;
     return 0;
   }
+
+  if (var_names) dpy->set_var_names(var_names);
   
   if (display)
     (new Thread(dpy, "GridSpheres display thread"))->detach();
@@ -164,7 +186,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/) {
     }
   }
   
-  Light* mainLight=new Light(Point(0, 0, 0), Color(1, 1, 1), 0.01);
+  Light* mainLight=new Light(Point(0, 0, 0), Color(1, 1, 1), 0.01, 0.6);
   mainLight->name_="main light";
   scene->add_light(mainLight);
   scene->turnOffAllLights(0.0); 
@@ -200,6 +222,13 @@ void usage(char* me, const char* unknown) {
   cerr<<"  -ntsteps <int>          number of timesteps to load (1)"<<endl;
   cerr<<"  -rate <int>             target number of timesteps to render per second ("
       <<DEFAULT_RATE<<")"<<endl;
+
+  cerr<<"  -colordata [int]        defaults to "<<colordata<<"\n";
+  cerr<<"  -cmap <filename>        \n";
+  cerr<<"  -cmaptype <type>        defaults to "<<cmap_type<<"\n";
+  cerr<<"  -gridconfig <filename>  use this file as the config file for GridSpheresDpy.\n";
+  cerr<<"  -varnames [number] vname1 \"v name 2\"\n";
+
   cerr<<"  --help                  print this message and exit"<<endl;
 }
 
@@ -740,8 +769,10 @@ int parseFile(char* fname, GridSpheresDpy* dpy, SelectableGroup* timesteps) {
     RegularColorMap* cmap=0;
     if (cmap_fname)
       cmap=new RegularColorMap(cmap_fname);
-    else 
-      cmap=new RegularColorMap(RegularColorMap::RegCMap_InvRIsoLum);
+    else {
+      int cmap_type_index = RegularColorMap::parseType(cmap_type);
+      cmap=new RegularColorMap(cmap_type_index);
+    }
 
     if (!cmap) {
       cerr<<me<<":  error creating regular color map"<<endl;
