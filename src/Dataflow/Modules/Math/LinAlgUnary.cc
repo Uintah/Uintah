@@ -15,6 +15,7 @@
 #include <Core/Math/function.h>
 #include <iostream>
 #include <sstream>
+#include <math.h>
 
 namespace SCIRun {
 
@@ -24,6 +25,9 @@ class LinAlgUnary : public Module {
   void insertion_sort(double *x, int n);
   void subtract_mean(double *x, int n);
   void normalize(double *x, int n);
+  void round(double *x, int n);
+  void Floor(double *x, int n);
+  void Ceil(double *x, int n);
 public:
   LinAlgUnary(GuiContext* ctx);
   virtual ~LinAlgUnary();
@@ -70,7 +74,25 @@ void LinAlgUnary::normalize(double *x, int n) {
   }
   double mult = 1.0 / (max-min);
   for (int i=0; i<n; i++) {
-    x[i] = (x[i]-min) * mult;
+    x[i] = (int) ((x[i]-min) * mult);
+  }
+}
+
+void LinAlgUnary::round(double *x, int n) {
+  for (int i=0; i<n; i++) {
+    x[i] = (int) (x[i] + (x[i] < 0 ?  -0.5 : +0.5) );
+  }
+}
+
+void LinAlgUnary::Floor(double *x, int n) {
+  for (int i=0; i<n; i++) {
+    x[i] = floor(x[i]);
+  }
+}
+
+void LinAlgUnary::Ceil(double *x, int n) {
+  for (int i=0; i<n; i++) {
+    x[i] = ceil(x[i]);
   }
 }
 
@@ -118,6 +140,21 @@ void LinAlgUnary::execute() {
     double *x = &((*(m.get_rep()))[0][0]);
     int n = m->nrows()*m->ncols();
     normalize(x, n);
+  } else if (op == "Round") {
+    m = mh->clone();
+    double *x = &((*(m.get_rep()))[0][0]);
+    int n = m->nrows()*m->ncols();
+    round(x, n);
+  } else if (op == "Floor") {
+    m = mh->clone();
+    double *x = &((*(m.get_rep()))[0][0]);
+    int n = m->nrows()*m->ncols();
+    Floor(x, n);
+  } else if (op == "Ceil") {
+    m = mh->clone();
+    double *x = &((*(m.get_rep()))[0][0]);
+    int n = m->nrows()*m->ncols();
+    Ceil(x, n);
   } else if (op == "Function") {
     Function *f = new Function(1);
     fnparsestring(function_.get().c_str(), &f);
