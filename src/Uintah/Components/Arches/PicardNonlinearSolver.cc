@@ -5,8 +5,10 @@
 #include <Uintah/Components/Arches/TurbulenceModel.h>
 #include <Uintah/Components/Arches/PhysicalConstants.h>
 #include <Uintah/Components/Arches/PressureSolver.h>
-#include <Uintah/Components/Arches/MomentumSolver.h>
-#include <Uintah/Components/Arches/ScalarSolver.h>
+#if 0
+  #include <Uintah/Components/Arches/MomentumSolver.h>
+  #include <Uintah/Components/Arches/ScalarSolver.h>
+#endif
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <SCICore/Util/NotFinished.h>
@@ -44,14 +46,18 @@ void PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   bool calMom;
   db->require("cal_momentum", calMom);
   if (calMom) {
+#if 0
     d_momSolver = new MomentumSolver(d_turbModel, d_boundaryCondition);
     d_momSolver->problemSetup(db);
+#endif
   }
   bool calScalar;
   db->require("cal_scalar", calScalar);
   if (calScalar) {
+#if 0
     d_scalarSolver = new ScalarSolver(d_turbModel, d_boundaryCondition);
     d_scalarSolver->problemSetup(db);
+#endif
   }
   
 #endif
