@@ -11,7 +11,7 @@
  */
 
 #include <math.h>
-#include <SCICore/Math/LinAlg.h>
+#include <Core/Math/LinAlg.h>
 
 double linalg_norm2(int rows, double* data)
 {

@@ -1,13 +1,10 @@
 // Quadric.cpp - Classes for dealing with 3D Quadrics.
-//
 // Peter-Pike Sloan
 // Hacked by Dave McAllister, August 1999.
 
-#include <Remote/Tools/Math/Quadric.h>
+#include <Packages/Remote/Tools/Math/Quadric.h>
 
 namespace Remote {
-namespace Tools {
-
 bool Quadric3::FindMin(Vector& p) const
 {
   Matrix44 M(matrix44());
@@ -135,7 +132,6 @@ void Quadric3::CreateLine(const Vector &o, const Vector &p1)
   vals[8] = H*0.5;
   vals[9] = I*0.5;
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

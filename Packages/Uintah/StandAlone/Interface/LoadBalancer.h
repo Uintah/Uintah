@@ -2,13 +2,9 @@
 #ifndef UINTAH_HOMEBREW_LOADBALANCER_H
 #define UINTAH_HOMEBREW_LOADBALANCER_H
 
-#include <Uintah/Parallel/UintahParallelPort.h>
+#include <Packages/Uintah/Parallel/Packages/UintahParallelPort.h>
 
 namespace Uintah {
-   class Patch;
-   class ProcessorGroup;
-   class TaskGraph;
-/**************************************
 
 CLASS
    LoadBalancer
@@ -37,7 +33,7 @@ WARNING
   
 ****************************************/
 
-    class LoadBalancer : public UintahParallelPort {
+    class LoadBalancer : public Packages/UintahParallelPort {
     public:
        LoadBalancer();
        virtual ~LoadBalancer();
@@ -50,21 +46,8 @@ WARNING
        LoadBalancer(const LoadBalancer&);
        LoadBalancer& operator=(const LoadBalancer&);
     };
+} // End namespace Uintah
     
-} // end namespace Uintah
 
-//
-// $Log$
-// Revision 1.2  2000/09/20 15:50:30  sparker
-// Added problemSetup interface to scheduler
-// Added ability to get/release the loadBalancer from the scheduler
-//   (used for getting processor assignments to create per-processor
-//    tasks in arches)
-// Added getPatchwiseProcessorAssignment to LoadBalancer interface
-//
-// Revision 1.1  2000/06/17 07:06:46  sparker
-// Changed ProcessorContext to ProcessorGroup
-//
-//
 
 #endif

@@ -19,5 +19,5 @@ ParameterNotFound::~ParameterNotFound()
 
 const char* ParameterNotFound::type() const
 {
-    return "Uintah::Exceptions::ParameterNotFound";
+    return "Packages/Uintah::Exceptions::ParameterNotFound";
 }

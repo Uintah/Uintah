@@ -1,20 +1,16 @@
-#include <DaveW/Datatypes/General/TensorField.h>
-#include <DaveW/Datatypes/General/TensorFieldPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/VectorField.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Packages/DaveW/Core/Datatypes/General/TensorField.h>
+#include <Packages/DaveW/Core/Datatypes/General/TensorFieldPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Core/Containers/String.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/VectorField.h>
+#include <Core/Malloc/Allocator.h>
 
 #define TENSOR_CONFIG "tensor_cfg"  
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Containers;
+using namespace SCIRun;
 using namespace DaveW::Datatypes;
 
 class TensorAccessFields : public Module 
@@ -106,21 +102,6 @@ void TensorAccessFields::execute()
   o_scal1->send(*scinew ScalarFieldHandle( &((TensorField<float>*)tensor_field)->m_e_values[1]));
   o_scal2->send(*scinew ScalarFieldHandle( &((TensorField<float>*)tensor_field)->m_e_values[2]));
 
-} 
-} // End namespace Modules
 } // End namespace DaveW
+} 
 
-//
-// $Log$
-// Revision 1.3  2000/03/17 09:26:03  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.2  1999/09/08 02:26:31  sparker
-// Various #include cleanups
-//
-// Revision 1.1  1999/09/02 04:50:36  dmw
-// Eric's modules
-//
-//

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Spectrum.cc: Generate Spectrum points in a domain
@@ -12,14 +11,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <DaveW/Datatypes/CS684/Spectrum.h>
-#include <DaveW/Datatypes/CS684/xyz.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/Spectrum.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/xyz.h>
 #include <iostream>
 using std::cerr;
 
 namespace DaveW {
-namespace Datatypes {
-
 Spectrum::Spectrum()
 {
 }
@@ -173,7 +170,7 @@ Color XYZ_to_RGB(const Point& p) {
 
 void Pio(Piostream& stream, Spectrum& s)
 {
-    using SCICore::Containers::Pio;
+using namespace SCIRun;
 
     stream.begin_cheap_delim();
     Pio(stream, s.amplitude);
@@ -183,7 +180,6 @@ void Pio(Piostream& stream, Spectrum& s)
 
 void Pio(Piostream& stream, LiteSpectrum& s)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_cheap_delim();
     Pio(stream, s.min);
@@ -195,19 +191,6 @@ void Pio(Piostream& stream, LiteSpectrum& s)
 	Pio(stream, s.vals[i]);
     stream.end_cheap_delim();
 }
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.2  1999/10/07 02:06:19  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.1  1999/08/23 02:52:58  dmw
-// Dave's Datatypes
-//
-// Revision 1.2  1999/05/03 04:52:08  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

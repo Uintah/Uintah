@@ -1,32 +1,26 @@
-//static char *id="@(#) $Id$";
 
 /* ViewGrid.cc
    Display grid points for regular or curvilinear grids
 
-   Philip Sutton
+   Packages/Philip Sutton
    June 1999
 
   Copyright (C) 2000 SCI Group, University of Utah
 */
 
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomSphere.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomSphere.h>
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ColorMapPort.h>
 
 
 namespace Phil {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
+using namespace SCIRun;
 
 class ViewGrid : public Module {
 public:
@@ -242,21 +236,6 @@ ViewGrid::execute() {
   
 } // execute
 
-
-} // End namespace Modules
 } // End namespace Phil
 
-//
-// $Log$
-// Revision 1.3  2000/03/17 09:28:12  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.2  2000/02/04 22:16:48  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 21:16:47  psutton
-// initial revision
-//
-//
+

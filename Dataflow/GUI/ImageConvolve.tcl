@@ -1,7 +1,5 @@
-#
-#
 
-itcl_class SCIRun_Image_ImageConvolve {
+itcl_class Dataflow_Image_ImageConvolve {
     inherit Module
     constructor {config} {
 	set name ImageConvolve

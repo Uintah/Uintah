@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  WidgetTest.cc:  
@@ -12,40 +11,34 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/CrowdMonitor.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/CrowdMonitor.h>
 
-#include <PSECore/Widgets/PointWidget.h>
-#include <PSECore/Widgets/ArrowWidget.h>
-#include <PSECore/Widgets/CriticalPointWidget.h>
-#include <PSECore/Widgets/CrosshairWidget.h>
-#include <PSECore/Widgets/GaugeWidget.h>
-#include <PSECore/Widgets/RingWidget.h>
-#include <PSECore/Widgets/FrameWidget.h>
-#include <PSECore/Widgets/ScaledFrameWidget.h>
-#include <PSECore/Widgets/BoxWidget.h>
-#include <PSECore/Widgets/ScaledBoxWidget.h>
-#include <PSECore/Widgets/ViewWidget.h>
-#include <PSECore/Widgets/LightWidget.h>
-#include <PSECore/Widgets/PathWidget.h>
+#include <Dataflow/Widgets/PointWidget.h>
+#include <Dataflow/Widgets/ArrowWidget.h>
+#include <Dataflow/Widgets/CriticalPointWidget.h>
+#include <Dataflow/Widgets/CrosshairWidget.h>
+#include <Dataflow/Widgets/GaugeWidget.h>
+#include <Dataflow/Widgets/RingWidget.h>
+#include <Dataflow/Widgets/FrameWidget.h>
+#include <Dataflow/Widgets/ScaledFrameWidget.h>
+#include <Dataflow/Widgets/BoxWidget.h>
+#include <Dataflow/Widgets/ScaledBoxWidget.h>
+#include <Dataflow/Widgets/ViewWidget.h>
+#include <Dataflow/Widgets/LightWidget.h>
+#include <Dataflow/Widgets/PathWidget.h>
 
 #include <iostream>
 using std::cout;
 using std::cerr;
 using std::endl;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
 
 enum WidgetTypes { WT_Point, WT_Arrow, WT_Crit, WT_Cross, WT_Gauge, WT_Ring,
 		   WT_Frame, WT_SFrame, WT_Box, WT_SBox, WT_View, WT_Light,
@@ -182,50 +175,5 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
    }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.8  2000/03/17 09:27:37  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.7  1999/10/07 02:07:09  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.6  1999/08/29 00:46:49  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.5  1999/08/25 03:48:12  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.4  1999/08/19 23:18:00  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.3  1999/08/18 20:20:13  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:55  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:58:18  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:34  dav
-// Import sources
-//
-//

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Port.cc: Classes for module ports
@@ -12,17 +11,16 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Dataflow/Port.h>
+#include <Dataflow/Network/Port.h>
 
-#include <PSECore/Dataflow/Connection.h>
-#include <PSECore/Dataflow/Module.h>
+#include <Dataflow/Network/Connection.h>
+#include <Dataflow/Network/Module.h>
 
 #include <iostream>
 using std::cerr;
 #include <stdio.h>
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
 Port::Port(Module* module, const clString& type_name,
 	   const clString& portname, const clString& colorname,
@@ -198,25 +196,5 @@ clString Port::get_colorname()
     return colorname;
 }
 
-} // End namespace Dataflow
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/10/07 02:07:20  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/08 02:26:42  sparker
-// Various #include cleanups
-//
-// Revision 1.2  1999/08/17 06:38:25  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:00  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//

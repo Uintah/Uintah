@@ -1,5 +1,4 @@
 // -*- C++ -*-
-// $Id$
 
 #include "AdjModel.h"
 #include <gfx/math/Mat4.h>

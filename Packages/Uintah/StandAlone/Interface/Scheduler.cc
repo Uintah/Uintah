@@ -1,17 +1,14 @@
-//
-// $Id$
-//
 
-#include <Uintah/Interface/Scheduler.h>
+#include <Packages/Uintah/Interface/Scheduler.h>
 
-#include <SCICore/Exceptions/ErrnoException.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <PSECore/XMLUtil/XMLUtil.h>
+#include <Core/Exceptions/ErrnoException.h>
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
 
-#include <Uintah/Components/Schedulers/TaskGraph.h>
-#include <Uintah/Grid/Task.h>
-#include <Uintah/Grid/Patch.h>
-#include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Core/CCA/Components/Schedulers/TaskGraph.h>
+#include <Packages/Uintah/Grid/Task.h>
+#include <Packages/Uintah/Grid/Patch.h>
+#include <Packages/Uintah/Interface/DataWarehouse.h>
 
 #include <fstream>
 #include <iostream>
@@ -23,12 +20,10 @@
 #include <time.h>
 
 using namespace Uintah;
-using namespace PSECore::XMLUtil;
+using namespace SCIRun;
 
 using std::cerr;
 using std::string;
-using namespace SCICore::OS;
-using namespace SCICore::Exceptions;
 
 Scheduler::Scheduler(Output* oport)
   : m_outPort(oport), m_graphDoc(NULL), m_nodes(NULL)//, m_executeCount(0)
@@ -47,7 +42,7 @@ Scheduler::makeTaskGraphDoc(const vector<Task*>& tasks, bool emit_edges /* = tru
     
     DOM_DOMImplementation impl;
     m_graphDoc = scinew DOM_Document();
-    *m_graphDoc = impl.createDocument(0, "Uintah_TaskGraph", DOM_DocumentType());
+    *m_graphDoc = impl.createDocument(0, "Packages/Uintah_TaskGraph", DOM_DocumentType());
     DOM_Element root = m_graphDoc->getDocumentElement();
     
     DOM_Element meta = m_graphDoc->createElement("Meta");
@@ -170,65 +165,3 @@ Scheduler::problemSetup(const ProblemSpecP&)
 }
 
 
-//
-// $Log$
-// Revision 1.15  2000/12/10 09:06:21  sparker
-// Merge from csafe_risky1
-//
-// Revision 1.14.2.1  2000/10/10 05:28:10  sparker
-// Added support for NullScheduler (used for profiling taskgraph overhead)
-//
-// Revision 1.14  2000/09/29 05:35:07  sparker
-// Quiet g++ warnings
-//
-// Revision 1.13  2000/09/27 00:14:33  witzel
-// Changed emitEdges to makeTaskGraphDoc with an option to emit
-// the actual edges (only process 0 in the MPI version since all
-// process contain the same taskgraph edge information).
-//
-// Revision 1.12  2000/09/26 21:41:38  dav
-// minor formatting/include rearrangment
-//
-// Revision 1.11  2000/09/25 20:39:14  sparker
-// Quiet g++ compiler warnings
-//
-// Revision 1.10  2000/09/20 15:50:30  sparker
-// Added problemSetup interface to scheduler
-// Added ability to get/release the loadBalancer from the scheduler
-//   (used for getting processor assignments to create per-processor
-//    tasks in arches)
-// Added getPatchwiseProcessorAssignment to LoadBalancer interface
-//
-// Revision 1.9  2000/09/08 17:49:50  witzel
-// Changing finalizeNodes so that it outputs different taskgraphs
-// in different timestep directories and the taskgraph information
-// of different processes in different files.
-//
-// Revision 1.8  2000/08/08 01:32:48  jas
-// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
-// stuff.
-//
-// Revision 1.7  2000/07/26 20:14:13  jehall
-// Moved taskgraph/dependency output files to UDA directory
-// - Added output port parameter to schedulers
-// - Added getOutputLocation() to Uintah::Output interface
-// - Renamed output files to taskgraph[.xml]
-//
-// Revision 1.6  2000/07/25 20:59:27  jehall
-// - Simplified taskgraph output implementation
-// - Sort taskgraph edges; makes critical path algorithm eastier
-//
-// Revision 1.5  2000/07/25 17:55:27  jehall
-// - Added include in case the MIPSPro CC decides to use this file to
-//   instantiate Handle<DataWarehouse>.
-//
-// Revision 1.4  2000/07/19 21:41:53  jehall
-// - Added functions for emitting task graph information to reduce redundancy
-//
-// Revision 1.3  2000/04/26 06:49:12  sparker
-// Streamlined namespaces
-//
-// Revision 1.2  2000/03/16 22:08:23  dav
-// Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
-//
-//

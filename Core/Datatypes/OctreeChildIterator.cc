@@ -1,7 +1,6 @@
-#include <SCICore/Datatypes/OctreeChildIterator.h>
+#include <Core/Datatypes/OctreeChildIterator.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 int
 OctreeChildIterator::defaultOrder = {0,1,2,3,4,5,6,7};
@@ -38,5 +37,4 @@ OctreeChildIterator::Next()
     return 0;
 }
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun

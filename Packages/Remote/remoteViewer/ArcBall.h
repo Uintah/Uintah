@@ -1,14 +1,12 @@
 #ifndef _arcball_h
 #define _arcball_h
 
-#include <Remote/Tools/Math/Vector.h>
-#include <Remote/Tools/Math/Matrix44.h>
+#include <Packages/Remote/Tools/Math/Vector.h>
+#include <Packages/Remote/Tools/Math/Matrix44.h>
 
 using namespace Remote::Tools;
 
 namespace Remote {
-namespace Modules {
-    
 struct ArcBall
 {
   Vector Axis;
@@ -52,9 +50,8 @@ struct ArcBall
     M = R * M;
   }
 };
+} // End namespace Remote
 
-} // namespace Modules
-} // namespace Remote
 
 #endif
 

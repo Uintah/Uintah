@@ -1,13 +1,11 @@
 
-#include <Uintah/Datatypes/TensorFieldPort.h>
-#include <Uintah/share/share.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/Datatypes/TensorFieldPort.h>
+#include <Packages/Uintah/share/share.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace PSECore {
-namespace Datatypes {
+namespace Uintah {
 
-
-using SCICore::Datatypes::TensorFieldHandle;
+using namespace SCIRun;
 
 extern "C" {
 UINTAHSHARE IPort* make_TensorFieldIPort(Module* module,
@@ -23,7 +21,6 @@ UINTAHSHARE OPort* make_TensorFieldOPort(Module* module,
 template<> clString SimpleIPort<TensorFieldHandle>::port_type("TensorField");
 template<> clString SimpleIPort<TensorFieldHandle>::port_color("yellow4");
 
+} // End namespace Uintah
 
-} // End namespace Datatypes
-} // End namespace PSECore
 

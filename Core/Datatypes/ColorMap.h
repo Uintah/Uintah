@@ -14,27 +14,19 @@
 #ifndef SCI_project_ColorMap_h
 #define SCI_project_ColorMap_h 1
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomColormapInterface.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomColormapInterface.h>
 
 /* changed to work less stupid with transfer functions
  * Peter-Pike Sloan
  */
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Containers::LockingHandle;
-using SCICore::Containers::Array1;
-using SCICore::GeomSpace::MaterialHandle;
-using SCICore::GeomSpace::Color;
-using SCICore::GeomSpace::GeomColormapInterface;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
 
 class ColorMap;
 typedef LockingHandle<ColorMap> ColorMapHandle;
@@ -106,35 +98,7 @@ private:
    
 };
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  1999/08/25 03:48:31  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:43  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:19  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:55:46  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:04:36  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1  1999/04/25 04:07:04  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:48  dav
-// Import sources
-//
-//
 
 #endif

@@ -2,7 +2,7 @@
 
 <!-- @version:  -->
 
-<!ELEMENT Uintah_specification (Meta,Time,OutputVars,CFD,MPM,PhysicalConstants)>
+<!ELEMENT Packages/Uintah_specification (Meta,Time,OutputVars,CFD,MPM,PhysicalConstants)>
 
 <!-- Meta data -->
 

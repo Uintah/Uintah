@@ -1,7 +1,5 @@
-#
-#
 
-itcl_class SCIRun_Image_Noise {
+itcl_class Dataflow_Image_Noise {
     inherit Module
     constructor {config} {
 	set name Noise

@@ -1,11 +1,10 @@
-//static char *id="@(#) $Id$";
 
 /*
   WorkQueue.h
   list of jobs for parallel processes
   (most of this derives from Steve's rtrt)
 
-  Philip Sutton
+  Packages/Philip Sutton
   July 1999
 
   Copyright (C) 2000 SCI Group, University of Utah
@@ -20,14 +19,11 @@ extern "C" {
 }
 #include <iostream>
 
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Thread/Barrier.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Barrier.h>
 
 namespace Phil {
-namespace Modules {
-
-using SCICore::Thread::Barrier;
-using SCICore::Thread::Mutex;
+using namespace SCIRun;
 using namespace std;
 
 // this will be 1 on an R10k, where fetchop commands are available.
@@ -159,20 +155,10 @@ WorkQueue::getWork( int& start, int& end ) {
   end = assignments[i+1];
   return 1;
 }
+} // End namespace Phil
 
-} // end namespace Modules
-} // end namespace Phil
 
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:07:19  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 20:49:38  psutton
-// initial revision
-//
-//
 

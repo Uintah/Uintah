@@ -1,20 +1,18 @@
 
-#include <Kurt/Datatypes/VisParticleSetPort.h>
-#include <Kurt/share/share.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Packages/Kurt/Core/Datatypes/VisParticleSetPort.h>
+#include <Packages/Kurt/share/share.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace PSECore {
-namespace Datatypes {
-
+namespace Kurt {
 using namespace Kurt::Datatypes;
 
 
 extern "C" {
-KurtSHARE IPort* make_VisParticleSetIPort(Module* module,
+Packages/KurtSHARE IPort* make_VisParticleSetIPort(Module* module,
 					 const clString& name) {
   return scinew SimpleIPort<VisParticleSetHandle>(module,name);
 }
-KurtSHARE OPort* make_VisParticleSetOPort(Module* module,
+Packages/KurtSHARE OPort* make_VisParticleSetOPort(Module* module,
 					 const clString& name) {
   return scinew SimpleOPort<VisParticleSetHandle>(module,name);
 }
@@ -23,7 +21,6 @@ KurtSHARE OPort* make_VisParticleSetOPort(Module* module,
 template<> clString SimpleIPort<VisParticleSetHandle>::port_type("VisParticleSet");
 template<> clString SimpleIPort<VisParticleSetHandle>::port_color("chartreuse2");
 
+} // End namespace Kurt
 
-} // End namespace Datatypes
-} // End namespace PSECore
 

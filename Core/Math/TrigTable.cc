@@ -11,8 +11,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Math/TrigTable.h>
-#include <SCICore/Math/Trig.h>
+#include <Core/Math/TrigTable.h>
+#include <Core/Math/Trig.h>
 
 SinCosTable::SinCosTable(int n, double min, double max, double scale)
 {

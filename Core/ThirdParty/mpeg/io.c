@@ -107,8 +107,8 @@ void MakeFS(flag)
   int i;
 
   CFStore = MakeStructure(FSTORE);
-  CFStore->NumberComponents=CFrame->NumberComponents;
-  for(i=0;i<CFStore->NumberComponents;i++)
+  CFStore->NumberCore/CCA/Components=CFrame->NumberCore/CCA/Components;
+  for(i=0;i<CFStore->NumberCore/CCA/Components;i++)
     {
       if (!(CFStore->Iob[i]=MakeStructure(IOBUF)))
 	{
@@ -408,7 +408,7 @@ void CopyCFS2FS(fs)
   BEGIN("CopyIob2FS");
   int i;
 
-  for(i=0;i<CFStore->NumberComponents;i++)
+  for(i=0;i<CFStore->NumberCore/CCA/Components;i++)
     CopyMem(CFStore->Iob[i]->mem,fs->Iob[i]->mem);
 }
 
@@ -423,7 +423,7 @@ void ClearFS()
   BEGIN("ClearFS");
   int i;
 
-  for(i=0;i<CFStore->NumberComponents;i++)
+  for(i=0;i<CFStore->NumberCore/CCA/Components;i++)
     ClearMem(CFStore->Iob[i]->mem);
 }
 
@@ -439,7 +439,7 @@ void InitFS()
   BEGIN("InitFS");
   int i;
 
-  for(i=0;i<CFStore->NumberComponents;i++)
+  for(i=0;i<CFStore->NumberCore/CCA/Components;i++)
     {
       if (!(CFStore->Iob[i]=MakeStructure(IOBUF)))
 	{
@@ -473,17 +473,17 @@ void ReadFS()
 
   printf("this fuction shouldn't be called for SCI-anything.\n");
   /*
-  for(i=0;i<CFrame->NumberComponents;i++)
+  for(i=0;i<CFrame->NumberCore/CCA/Components;i++)
     {
       if (CImage->PartialFrame)
-	CFStore->Iob[i]->mem = LoadPartialMem(CFrame->ComponentFileName[i],
+	CFStore->Iob[i]->mem = LoadPartialMem(CFrame->Core/CCA/ComponentFileName[i],
 					      CFrame->PWidth[i],
 					      CFrame->PHeight[i],
 					      CFrame->Width[i],
 					      CFrame->Height[i],
 					      CFStore->Iob[i]->mem);
       else
-	CFStore->Iob[i]->mem = LoadMem(CFrame->ComponentFileName[i],
+	CFStore->Iob[i]->mem = LoadMem(CFrame->Core/CCA/ComponentFileName[i],
 				       CFrame->Width[i],
 				       CFrame->Height[i],
 				       CFStore->Iob[i]->mem);
@@ -502,17 +502,17 @@ void SCIReadFS(unsigned char* imageY, unsigned char* imageU,
   int i;
 
   /*
-  for(i=0;i<CFrame->NumberComponents;i++)
+  for(i=0;i<CFrame->NumberCore/CCA/Components;i++)
     {
       if (CImage->PartialFrame)
-	CFStore->Iob[i]->mem = LoadPartialMem(CFrame->ComponentFileName[i],
+	CFStore->Iob[i]->mem = LoadPartialMem(CFrame->Core/CCA/ComponentFileName[i],
 					      CFrame->PWidth[i],
 					      CFrame->PHeight[i],
 					      CFrame->Width[i],
 					      CFrame->Height[i],
 					      CFStore->Iob[i]->mem);
       else
-	CFStore->Iob[i]->mem = LoadMem(CFrame->ComponentFileName[i],
+	CFStore->Iob[i]->mem = LoadMem(CFrame->Core/CCA/ComponentFileName[i],
 				       CFrame->Width[i],
 				       CFrame->Height[i],
 				       CFStore->Iob[i]->mem);
@@ -557,15 +557,15 @@ void WriteFS()
   BEGIN("WriteIob");
   int i;
 
-  for(i=0;i<CFrame->NumberComponents;i++)
+  for(i=0;i<CFrame->NumberCore/CCA/Components;i++)
     {
       if (CImage->PartialFrame)
-	SavePartialMem(CFrame->ComponentFileName[i],
+	SavePartialMem(CFrame->Core/CCA/ComponentFileName[i],
 		       CFrame->PWidth[i],
 		       CFrame->PHeight[i],
 		       CFStore->Iob[i]->mem);
       else
-	SaveMem(CFrame->ComponentFileName[i],CFStore->Iob[i]->mem);
+	SaveMem(CFrame->Core/CCA/ComponentFileName[i],CFStore->Iob[i]->mem);
     }  
 }
 

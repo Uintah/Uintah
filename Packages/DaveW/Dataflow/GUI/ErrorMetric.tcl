@@ -1,19 +1,16 @@
 ##
  #  ErrorMetric.tcl: Compute and visualize error between two vectors
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   June 1999
- #
  #  Copyright (C) 1999 SCI Group
- #
  ##
 
-catch {rename DaveW_FEM_ErrorMetric ""}
+catch {rename Packages/DaveW_FEM_ErrorMetric ""}
 
-itcl_class DaveW_FEM_ErrorMetric {
+itcl_class Packages/DaveW_FEM_ErrorMetric {
     inherit Module
     constructor {config} {
         set name ErrorMetric

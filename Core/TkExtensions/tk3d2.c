@@ -1,6 +1,6 @@
 
 #include <sci_config.h>
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
 #include <tk.h>
 #include <tk3d.h>

@@ -10,13 +10,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Geom/GeomPick.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geom/GeomPick.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::ostream;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Persistent* make_GeomPick()
 {
@@ -205,6 +204,5 @@ bool GeomPick::saveobj(ostream& out, const clString& format, GeomSave* saveinfo)
     return child->saveobj(out, format, saveinfo);
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 

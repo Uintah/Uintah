@@ -1,6 +1,6 @@
 Gui and Help files have moved to a common location:
 
-PSECommon/
+Dataflow/
 	*.tcl
 	help/
 		*.html

@@ -14,15 +14,12 @@
 #ifndef SCI_project_VectorFieldRGCC_h
 #define SCI_project_VectorFieldRGCC_h 1
 
-#include <SCICore/Datatypes/VectorFieldRG.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array3.h>
+#include <Core/Datatypes/VectorFieldRG.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array3.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Containers::Array1;
-using SCICore::Containers::Array3;
 
 class SCICORESHARE VectorFieldRGCC : public VectorFieldRG {
 public:
@@ -40,7 +37,6 @@ public:
     static PersistentTypeID type_id;
 };
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
 #endif

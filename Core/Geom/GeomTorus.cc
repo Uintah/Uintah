@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  * Torus.cc: Torus objects
@@ -12,22 +11,18 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Geom/GeomTorus.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Math/Trig.h>
+#include <Core/Geom/GeomTorus.h>
+#include <Core/Containers/String.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Math/Trig.h>
 #include <iostream>
 using std::ostream;
 
-namespace SCICore {
-namespace GeomSpace {
-
-using SCICore::Math::Abs;
-using namespace Geometry;
+namespace SCIRun {
 
 
 Persistent* make_GeomTorus()
@@ -168,12 +163,11 @@ void GeomTorusArc::get_bounds(BBox& bb)
 
 void GeomTorus::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
   
     stream.begin_class("GeomTorus", GEOMTORUS_VERSION);
     GeomObj::io(stream);
-    SCICore::Geometry::Pio(stream, cen);
-    SCICore::Geometry::Pio(stream, axis);
+    Pio(stream, cen);
+    Pio(stream, axis);
     Pio(stream, rad1);
     Pio(stream, rad2);
     Pio(stream, nu);
@@ -193,14 +187,13 @@ bool GeomTorus::saveobj(ostream&, const clString&, GeomSave*)
 
 void GeomTorusArc::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomTorusArc", GEOMTORUSARC_VERSION);
     GeomTorus::io(stream);
-    SCICore::Geometry::Pio(stream, zero);
+    Pio(stream, zero);
     Pio(stream, start_angle);
     Pio(stream, arc_angle);
-    SCICore::Geometry::Pio(stream, yaxis);
+    Pio(stream, yaxis);
     stream.end_class();
 }
 
@@ -210,42 +203,6 @@ bool GeomTorusArc::saveobj(ostream&, const clString&, GeomSave*)
     return false;
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.7  1999/10/07 02:07:46  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.6  1999/09/04 06:01:50  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.5  1999/08/29 00:46:56  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.4  1999/08/28 17:54:42  sparker
-// Integrated new Thread library
-//
-// Revision 1.3  1999/08/17 23:50:27  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:15  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:45  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:53  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1.1.1  1999/04/24 23:12:21  dav
-// Import sources
-//
-//
 

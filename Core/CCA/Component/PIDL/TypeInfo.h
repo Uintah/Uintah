@@ -1,7 +1,6 @@
 
 /*
  *  TypeInfo.h: internal representation for a type.
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -12,15 +11,12 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Component_PIDL_TypeInfo_h
-#define Component_PIDL_TypeInfo_h
+#ifndef Core/CCA/Component_PIDL_TypeInfo_h
+#define Core/CCA/Component_PIDL_TypeInfo_h
 
 #include <string>
 
-namespace Component {
-    namespace PIDL {
-	class Object_interface;
-	class TypeInfo_internal;
+namespace SCIRun {
 
 /**************************************
  
@@ -106,50 +102,7 @@ DESCRIPTION
 	    // A pointer to the actual data.
 	    TypeInfo_internal* d_priv;
 	};
-    }
-}
+} // End namespace SCIRun
 
 #endif
 
-//
-// $Log$
-// Revision 1.5  1999/09/26 06:12:57  sparker
-// Added (distributed) reference counting to PIDL objects.
-// Began campaign against memory leaks.  There seem to be no more
-//   per-message memory leaks.
-// Added a test program to flush out memory leaks
-// Fixed other Component testprograms so that they work with ref counting
-// Added a getPointer method to PIDL handles
-//
-// Revision 1.4  1999/09/24 20:03:38  sparker
-// Added cocoon documentation
-//
-// Revision 1.3  1999/09/24 06:26:26  sparker
-// Further implementation of new Component model and IDL parser, including:
-//  - fixed bugs in multiple inheritance
-//  - added test for multiple inheritance
-//  - fixed bugs in object reference send/receive
-//  - added test for sending objects
-//  - beginnings of support for separate compilation of sidl files
-//  - beginnings of CIA spec implementation
-//  - beginnings of cocoon docs in PIDL
-//  - cleaned up initalization sequence of server objects
-//  - use globus_nexus_startpoint_eventually_destroy (contained in
-// 	the globus-1.1-utah.patch)
-//
-// Revision 1.2  1999/09/17 05:08:10  sparker
-// Implemented component model to work with sidl code generator
-//
-// Revision 1.1  1999/08/30 17:39:49  sparker
-// Updates to configure script:
-//  rebuild configure if configure.in changes (Bug #35)
-//  Fixed rule for rebuilding Makefile from Makefile.in (Bug #36)
-//  Rerun configure if configure changes (Bug #37)
-//  Don't build Makefiles for modules that aren't --enabled (Bug #49)
-//  Updated Makfiles to build sidl and Component if --enable-parallel
-// Updates to sidl code to compile on linux
-// Imported PIDL code
-// Created top-level Component directory
-// Added ProcessManager class - a simpler interface to fork/exec (not finished)
-//
-//

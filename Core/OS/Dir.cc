@@ -1,15 +1,15 @@
 
-#include <SCICore/OS/Dir.h>
-#include <SCICore/Exceptions/ErrnoException.h>
+#include <Core/OS/Dir.h>
+#include <Core/Exceptions/ErrnoException.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <iostream>
 #include <unistd.h>
 
-using namespace SCICore::OS;
-using namespace SCICore::Exceptions;
 using namespace std;
+
+using namespace SCIRun;
 
 Dir Dir::create(const string& name)
 {

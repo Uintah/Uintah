@@ -1,26 +1,20 @@
 #ifndef  UINTAH_DATATYPES_PSet_H
 #define  UINTAH_DATATYPES_PSet_H
 
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Datatypes/Datatype.h>
-#include <Uintah/Grid/ParticleVariable.h>
-#include <Uintah/Grid/Grid.h>
-#include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/Patch.h>
-#include <SCICore/Persistent/Persistent.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Packages/Uintah/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Grid/Grid.h>
+#include <Packages/Uintah/Grid/LevelP.h>
+#include <Packages/Uintah/Grid/Patch.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/Geometry/Point.h>
 #include <iostream>
 #include <vector>
 using std::vector;
 
 namespace Uintah {
-namespace Datatypes{
-
-using SCICore::Containers::LockingHandle;
-using SCICore::Datatypes::Datatype;
-using SCICore::Geometry::Point;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
+using namespace SCIRun;
 /**************************************
 
 CLASS
@@ -32,7 +26,7 @@ GENERAL INFORMATION
 
    PSet.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -129,9 +123,8 @@ class PSet : public Datatype {
   vector< ParticleVariable<Point> >  positions;
   vector< ParticleVariable<long> >  particle_ids;
   vector< const Patch* >  patches;
+} // End namespace Uintah
 };
-} // end namespace Datatypes
-} // end namespace Uintah
 
   
 #endif

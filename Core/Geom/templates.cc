@@ -11,16 +11,16 @@
 find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
  */
 
-#include <SCICore/Containers/Array1.h>
+#include <Core/Containers/Array1.h>
 
-#include <SCICore/Geom/Color.h>
+#include <Core/Geom/Color.h>
 
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Containers;
 
 #ifdef __sgi
 #pragma set woff 1468
 #endif
+
+using namespace SCIRun;
 
 template class Array1<Color>;
 

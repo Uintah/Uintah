@@ -1,10 +1,7 @@
 // Submatrix solver for A * Phi = 0 system.
-// 
 // s=scalp, v=volume, c=cortex
 // Phi's are our x's -- potentials throughout system
-//
 // Phi_c = [Asv*(Avv)^(-1)*Avc-Asc]^(-1) * [Ass-Asv*(Avv)^(-1)*Avs] * Phi_s
-//
 // This time we will use sparse storage and sparse solvers (LU Decomposition)
 // for the Avv inversion.  This should dramatically redulce the amount of
 // space required, and the amount of time required for the problem -- since
@@ -22,7 +19,6 @@
 //   Phi =     | Phi_v |
 //             | Phi_c |
 //             +-     -+
-//
 // Phi_c = [Asv*(Avv)^(-1)*Avc-Asc]^(-1) * [Ass-Asv*(Avv)^(-1)*Avs] * Phi_s
 // M = Asv * [(Avv)^(-1) * Avc] - Asc
 
@@ -46,23 +42,23 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <DaveW/ThirdParty/SparseLib/Leonid/Vector.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Datatypes/ColumnMatrix.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Datatypes/Matrix.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <SCICore/Datatypes/SparseRowMatrix.h>
-#include <SCICore/Datatypes/SurfTree.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
+#include <Packages/DaveW/Core/ThirdParty/SparseLib/Leonid/Vector.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Containers/String.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Datatypes/SurfTree.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
 
 #include <iostream>
 #include <stdio.h>
@@ -72,16 +68,16 @@
 //#include <malloc.h>
 //#include "string.h"
 
-#include <DaveW/ThirdParty/OldLinAlg/matrix.h>
-#include <DaveW/ThirdParty/OldLinAlg/vector.h>
-#include <DaveW/ThirdParty/NumRec/dsvdcmp.h>
-#include <DaveW/ThirdParty/NumRec/dsvbksb.h>
-#include <DaveW/ThirdParty/NumRec/dpythag.h>
-#include <DaveW/ThirdParty/OldLinAlg/cuthill.h>
-#include <DaveW/ThirdParty/NumRec/bandec.h>
-#include <DaveW/ThirdParty/NumRec/banbks.h>
-#include <DaveW/ThirdParty/NumRec/banmul.h>
-#include <DaveW/ThirdParty/NumRec/banmprv.h>
+#include <Packages/DaveW/Core/ThirdParty/OldLinAlg/matrix.h>
+#include <Packages/DaveW/Core/ThirdParty/OldLinAlg/vector.h>
+#include <Packages/DaveW/Core/ThirdParty/NumRec/dsvdcmp.h>
+#include <Packages/DaveW/Core/ThirdParty/NumRec/dsvbksb.h>
+#include <Packages/DaveW/Core/ThirdParty/NumRec/dpythag.h>
+#include <Packages/DaveW/Core/ThirdParty/OldLinAlg/cuthill.h>
+#include <Packages/DaveW/Core/ThirdParty/NumRec/bandec.h>
+#include <Packages/DaveW/Core/ThirdParty/NumRec/banbks.h>
+#include <Packages/DaveW/Core/ThirdParty/NumRec/banmul.h>
+#include <Packages/DaveW/Core/ThirdParty/NumRec/banmprv.h>
 
 //#include <nrutil.h>
 #define  COMPLEX std::complex<double>
@@ -118,16 +114,11 @@
 #include <ir.h>
 #include <gmres.h>
 
-#include <DaveW/ThirdParty/RegTools/reg_tools.h>
+#include <Packages/DaveW/Core/ThirdParty/RegTools/reg_tools.h>
 
 namespace DaveW {
-namespace Modules {
+using namespace SCIRun;
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-
-using namespace SCICore::TclInterface;
-using namespace SCICore::Thread;
 
 void linbcg(unsigned long n, double b[], double x[], int itol, double tol,
 	    int itmax, int *iter, double *err, double **a);
@@ -549,7 +540,7 @@ void writeit(SparseRowMatrix *matrix) {
 //    Pio(stream, matrix);
 }
 
-// we'll build a SCIRun SparseRowMatrix and ColumnMatrix and solve them.
+// we'll build a Dataflow SparseRowMatrix and ColumnMatrix and solve them.
 void InvEEGSolve::solveSparse(int nr, int ncol, double **AA, double *X, 
 			      double *B) {
     
@@ -657,7 +648,7 @@ void InvEEGSolve::solveSparse(int nr, int ncol, double **AA, double *X,
 	X[i+1]=xx[i];
 }
 
-// we'll build a SCIRun DenseMatrix and ColumnMatrix and solve them.
+// we'll build a Dataflow DenseMatrix and ColumnMatrix and solve them.
 void InvEEGSolve::solveDense(int nr, int nc, double **A, double *x, 
 			     double *b) {
 #if 0
@@ -839,9 +830,7 @@ void InvEEGSolve::execute() {
     // where
     //        Ac = [(Avv)^(-1) * Avc] - [(Asv)^(-1) * Asc]    and
     //        As = [(Asv)^(-1) * Ass] - [(Avv)^(-1) * Avs]
-    //
     // read in Avv, Avc, Asv, Asc, Ass, Avs
-    //
     // reorder Avv w/ a Cuthill-McKee algorithm
     // build an LU decomposition of reordered Avv
     // plug in Avc one column at a time to build [(Avv)^(-1) * Avc] -- AvcTmp
@@ -948,51 +937,7 @@ void InvEEGSolve::execute() {
     cerr << "Done with InvEEGSolve::execute (timer="<<timer.time()<<")\n";
     timer.stop();
 }
-
-} // End namespace Modules
 } // End namespace DaveW
 
 
-//
-// $Log$
-// Revision 1.10  2000/03/17 18:44:21  dahart
-// Replaced all instances of HashTable<class X, class Y> with the STL
-// map<class X, class Y>.  Removed all includes of HashTable.h
-//
-// Revision 1.9  2000/03/17 09:25:33  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.8  1999/11/23 01:39:43  dmw
-// fixed the DaveW ThirdParty stuff - life is swell again
-//
-// Revision 1.7  1999/10/07 02:06:27  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.6  1999/09/08 02:26:23  sparker
-// Various #include cleanups
-//
-// Revision 1.5  1999/09/03 06:07:19  dmw
-// added a Makefile.in for Leonid's files
-//
-// Revision 1.4  1999/09/02 05:21:44  dmw
-// trying to figure out a linking problem
-//
-// Revision 1.3  1999/08/29 00:46:37  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.2  1999/08/25 03:47:38  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/24 06:23:01  dmw
-// Added in everything for the DaveW branch
-//
-// Revision 1.2  1999/05/03 04:52:13  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

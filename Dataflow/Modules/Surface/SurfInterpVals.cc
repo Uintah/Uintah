@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  SurfInterpVals.cc:  Rescale a surface
@@ -28,29 +27,23 @@
 //  2) Interpolate data using a weighted n-nearest volume neighbors method
 //  3) Blur data values across surface using voronoi n-neaest surface neighbors
 
-#include <SCICore/Containers/Array2.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/BasicSurfaces.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/MusilRNG.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Core/Containers/Array2.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Datatypes/BasicSurfaces.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/MusilRNG.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <stdio.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 
 #define NBRHD 5
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
-using namespace SCICore::GeomSpace;
 
 class SurfInterpVals : public Module {
     SurfaceIPort* isurface1;
@@ -301,50 +294,5 @@ void SurfInterpVals::execute()
     osurface->send(isurf1);
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.8  2000/03/17 09:27:22  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.7  1999/11/09 08:32:59  dmw
-// added SurfInterpVals to index
-//
-// Revision 1.6  1999/10/07 02:07:00  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/09/05 05:32:26  dmw
-// updated and added Modules from old tree to new
-//
-// Revision 1.4  1999/08/25 03:48:01  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/18 20:19:59  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:44  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:59  mcq
-// Initial commit
-//
-// Revision 1.2  1999/04/29 03:19:29  dav
-// updates
-//
-// Revision 1.1.1.1  1999/04/24 23:12:31  dav
-// Import sources
-//
-//

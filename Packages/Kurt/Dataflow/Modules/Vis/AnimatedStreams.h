@@ -6,30 +6,23 @@
  * Simple interface to volume rendering stuff
  */
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Thread/Mutex.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Datatypes/VectorField.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Thread/Mutex.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Datatypes/VectorField.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 
-#include <Kurt/Datatypes/GLAnimatedStreams.h>
+#include <Packages/Kurt/Core/Datatypes/GLAnimatedStreams.h>
 
 namespace Kurt {
-namespace Modules {
+using namespace SCIRun;
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using SCICore::Thread::Mutex;
-
-class SCICore::GeomSpace::GeomObj;
+class GeomObj;
 
 class AnimatedStreams : public Module {
 
@@ -63,8 +56,7 @@ private:
 
 
 };
+} // End namespace Kurt
 
-} // namespace Modules
-} // namespace Uintah
 
 #endif

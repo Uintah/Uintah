@@ -1,10 +1,9 @@
 # Makefile.vc
-#
 # written by Chris Moulding 7/99
 
 ###########################  EDIT HERE  ###########################
 
-DLLNAME = SCICore
+DLLNAME = Core
 EXENAME = 
 
 OBJS = Containers\Sort.odll Containers\String.odll Containers\PQueue.odll\

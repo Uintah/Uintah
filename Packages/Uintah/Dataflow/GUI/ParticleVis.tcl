@@ -1,7 +1,7 @@
 
 catch {rename ParticleVis ""}
 
-itcl_class Uintah_Visualization_ParticleVis {
+itcl_class Packages/Uintah_Visualization_ParticleVis {
 
     inherit Module
     protected r ""

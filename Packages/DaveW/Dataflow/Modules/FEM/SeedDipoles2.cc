@@ -9,33 +9,25 @@
  *  Copyright (C) 2000 SCI Group
  */
  
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MusilRNG.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MusilRNG.h>
+#include <Core/Math/Trig.h>
+#include <Core/TclInterface/TCLvar.h>
 
-#include <DaveW/share/share.h>
+#include <Packages/DaveW/share/share.h>
 
 #include <iostream>
 using std::cerr;
 
 namespace DaveW {
-namespace Modules {
+using namespace SCIRun;
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Containers;
-using namespace SCICore::Datatypes;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
-using namespace SCICore::TclInterface;
-
-class DaveWSHARE SeedDipoles2 : public Module {
+class Packages/DaveWSHARE SeedDipoles2 : public Module {
   MeshIPort* imesh;
   MatrixOPort* omat;  
   TCLstring seedRandTCL;
@@ -47,7 +39,7 @@ public:
   virtual void execute();
 };
 
-extern "C" DaveWSHARE Module* make_SeedDipoles2(const clString& id) {
+extern "C" Packages/DaveWSHARE Module* make_SeedDipoles2(const clString& id) {
   return new SeedDipoles2(id);
 }
 
@@ -98,13 +90,7 @@ void SeedDipoles2::execute()
   }
   omat->send(MatrixHandle(m));
 }
-
-} // End namespace Modules
 } // End namespace DaveW
 
 
-//
-// $Log$
-// Revision 1.1  2000/10/29 03:51:45  dmw
-// SeedDipoles will place dipoles randomly within a mesh
-//
+

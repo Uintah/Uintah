@@ -1,15 +1,11 @@
 // Attrib.h - the base attribute class.
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
-//
 //  General storage class for Fields.
-//
 
 #ifndef SCI_project_Attrib_h
 #define SCI_project_Attrib_h 1
@@ -17,23 +13,17 @@
 #include <vector>
 #include <string>
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Exceptions/DimensionMismatch.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Util/FancyAssert.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Exceptions/DimensionMismatch.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Util/FancyAssert.h>
 
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 using namespace std;
-using SCICore::Containers::LockingHandle;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
 
 class Attrib;
 typedef LockingHandle<Attrib> AttribHandle;
@@ -71,8 +61,7 @@ protected:
   std::string d_name;
 };
 
-}  // end Datatypes
-}  // end SCICore
+} // End namespace SCIRun
 
 #endif
 

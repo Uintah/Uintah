@@ -2,9 +2,7 @@
 #define GLOVEROP_H
 #include "GLTexRenState.h"
 
-namespace SCICore {
-namespace GeomSpace  {
-
+namespace Kurt {
 /**************************************
 
 CLASS
@@ -16,7 +14,7 @@ GENERAL INFORMATION
 
    GLOverOp.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -54,12 +52,10 @@ public:
   // postdrawing functions
   virtual void postDraw();
   //////////
-  // 
 
 private:
 
 };
+} // End namespace Kurt
 
-} // end namespace Datatypes
-} // end namespace Kurt
 #endif

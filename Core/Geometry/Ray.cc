@@ -11,10 +11,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Geometry/Ray.h>
+#include <Core/Geometry/Ray.h>
 
-namespace SCICore {
-namespace Geometry {
+namespace SCIRun {
 
   
 Ray::Ray(const Point& o, const Vector& d)
@@ -65,6 +64,5 @@ void Ray::direction(const Vector& newdir)
 }
 
 
-}
-} 
+} // End namespace SCIRun
 

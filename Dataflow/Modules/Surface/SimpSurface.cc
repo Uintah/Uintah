@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  SimpSurface.cc - Simplify a surface using garland/heckbert code
@@ -13,32 +12,23 @@
  *
  */
 
-#include <SCICore/config.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Util/NotFinished.h>
-#include <PSECommon/Dataflow/Module.h>
-#include <SCICore/Datatypes/BasicSurfaces.h>
-#include <PSECommon/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/config.h>
+#include <Core/Containers/String.h>
+#include <Core/Util/NotFinished.h>
+#include <Dataflow/Dataflow/Module.h>
+#include <Core/Datatypes/BasicSurfaces.h>
+#include <Dataflow/Datatypes/SurfacePort.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <GHAbstraction.h>
 
 extern int placement_policy;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using PSECommon::Dataflow::Module;
-using PSECommon::Datatypes::TriSurface;
-using PSECommon::Datatypes::SurfaceIPort;
-using PSECommon::Datatypes::SurfaceOPort;
-using PSECommon::Datatypes::SurfaceHandle;
 
-using SCICore::TclInterface::TCLint;
-using SCICore::Geometry::Point;
-using SCICore::Containers::clString;
 
 GHAbstraction::GHAbstraction(TriSurface *surf) {
   InitAdd();
@@ -157,44 +147,5 @@ void SimpSurface::execute()
     oport->send(oSurf);
 }	
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.6  2000/03/17 09:27:21  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.5  1999/09/08 02:26:35  sparker
-// Various #include cleanups
-//
-// Revision 1.4  1999/08/25 03:48:00  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/18 20:19:58  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:43  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:58  mcq
-// Initial commit
-//
-// Revision 1.2  1999/04/29 03:19:28  dav
-// updates
-//
-// Revision 1.1.1.1  1999/04/24 23:12:31  dav
-// Import sources
-//
-//

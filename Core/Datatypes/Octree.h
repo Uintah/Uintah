@@ -1,8 +1,7 @@
 #ifndef OCTREE_H
 #define OCTREE_H
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 /**************************************
 
@@ -114,6 +113,5 @@ const Octree<T>* Octree<T>::operator[](int i) const
     return 0;
 }
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun
 #endif

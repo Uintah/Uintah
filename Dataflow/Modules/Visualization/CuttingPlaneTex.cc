@@ -10,36 +10,28 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <SCICore/Containers/Array1.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <SCICore/Geom/TimeGrid.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/CrowdMonitor.h>
+#include <Core/Containers/Array1.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Core/Geom/TimeGrid.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/CrowdMonitor.h>
 
-#include <PSECore/Widgets/ScaledFrameWidget.h>
+#include <Dataflow/Widgets/ScaledFrameWidget.h>
 #include <iostream>
 using std::cerr;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
 
 class CuttingPlaneTex : public Module {
   ScalarFieldIPort *inscalarfield;
@@ -324,6 +316,5 @@ void CuttingPlaneTex::tcl_command(TCLArgs& args, void* userdata)
     }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 

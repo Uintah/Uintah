@@ -10,12 +10,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Geometry/Plane.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Geometry/Plane.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 
-namespace SCICore {
-namespace Geometry {
+namespace SCIRun {
 
 Plane::Plane()
 : n(Vector(0,0,1)), d(0)
@@ -134,6 +133,5 @@ Plane::Intersect( Point s, Vector v, Point& hit )
   return 1;
 }
 
-} // End namespace Geometry
-} // End namespace SCICore
+} // End namespace SCIRun
 

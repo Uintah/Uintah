@@ -1,17 +1,14 @@
-#
 # Makefile fragment for this subdirectory
-# $Id$
-#
 
-SRCDIR := Remote/remoteViewer
+SRCDIR := Packages/Remote/remoteViewer
 
 FLEX := /usr/local/gnu/lib
 GLUT := /usr/local/contrib/moulding/glut
 
 ifeq ($(LARGESOS),yes)
-PSELIBS := SCICore Remote
+PSELIBS := Core Remote
 else
-PSELIBS := SCICore/OS SCICore/Thread Remote/Tools Remote/Modules/remoteSalmon
+PSELIBS := Core/OS Core/Thread Remote/Tools Remote/Modules/remoteSalmon
 endif
 LIBS := -L$(GLUT)/lib -lglut  $(XML_LIBRARY) $(TK_LIBRARY) $(GL_LIBS) \
 	 -lm
@@ -22,22 +19,3 @@ PROGRAM := $(SRCDIR)/VRMLView
 SRCS := $(SRCDIR)/VRMLView.cc
 include $(SRCTOP)/scripts/program.mk
 
-#
-# $Log$
-# Revision 1.2  2000/07/11 20:32:55  yarden
-# replace Timer with SCIRun's WallClockTimer
-# move main outside of the namespace
-# correct the libraries in sub.mk
-#
-# Revision 1.1  2000/07/10 20:44:26  dahart
-# initial commit
-#
-# Revision 1.2  2000/03/20 19:36:34  sparker
-# Added VPATH support
-#
-# Revision 1.1  2000/03/17 09:26:24  sparker
-# New makefile scheme: sub.mk instead of Makefile.in
-# Use XML-based files for module repository
-# Plus many other changes to make these two things work
-#
-#

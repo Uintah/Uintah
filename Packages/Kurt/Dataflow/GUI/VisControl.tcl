@@ -1,36 +1,28 @@
 ########################################
 #CLASS
 #    VizControl
-#
 #    Visualization control for simulation data that contains
 #    information on both a regular grid in particle sets.
-#
 #OVERVIEW TEXT
 #    This module receives a ParticleGridReader object.  The user
 #    interface is dynamically created based information provided by the
 #    ParticleGridReader.  The user can then select which variables he/she
 #    wishes to view in a visualization.
-#
-#
-#
 #KEYWORDS
 #    ParticleGridReader, Material/Particle Method
-#
 #AUTHOR
-#    Kurt Zimmerman
+#    Packages/Kurt Zimmerman
 #    Department of Computer Science
 #    University of Utah
 #    January 1999
-#
 #    Copyright (C) 1999 SCI Group
-#
 #LOG
 #    Created January 5, 1999
 ########################################
 
 catch {rename VisControl ""}
 
-itcl_class Kurt_Vis_VisControl { 
+itcl_class Packages/Kurt_Vis_VisControl { 
     inherit Module 
 
     protected psVarList ""

@@ -14,20 +14,16 @@
 using std::cerr;
 using std::ostream;
 
-#include <SCICore/Geom/GeomOpenGL.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Geom/BBoxCache.h>
-#include <SCICore/Thread/CrowdMonitor.h>
+#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geom/BBoxCache.h>
+#include <Core/Thread/CrowdMonitor.h>
 
-#include <PSECommon/Modules/Salmon/SalmonGeom.h>
-#include <PSECommon/Modules/Salmon/Roe.h>
+#include <Dataflow/Modules/Salmon/SalmonGeom.h>
+#include <Dataflow/Modules/Salmon/Roe.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using SCICore::PersistentSpace::Persistent;
-using SCICore::GeomSpace::GeomBBoxCache;
-using SCICore::Thread::CrowdMonitor;
 
 Persistent* make_GeomSalmonItem()
 {
@@ -93,8 +89,6 @@ void GeomSalmonItem::get_bounds(BBox& box)
 
 void GeomSalmonItem::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::GeomSpace::Pio;
 
     stream.begin_class("GeomSalmonItem", GEOMSALMONITEM_VERSION);
     int have_lock;
@@ -117,5 +111,4 @@ bool GeomSalmonItem::saveobj(ostream& out, const clString& format,
     return child->saveobj(out, format, saveinfo);
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun

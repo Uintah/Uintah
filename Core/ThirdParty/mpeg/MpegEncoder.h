@@ -1,7 +1,7 @@
 /*
- * SCIRunMpeg.h
+ * DataflowMpeg.h
  *
- * Defines interface for using the Stanford encoder with SCIRun.
+ * Defines interface for using the Stanford encoder with Dataflow.
  *
  * Cameron Christensen
  *
@@ -18,7 +18,7 @@
 
 /* The roots of this code (the Stanford encoder) are written in nasty C with
  * tons of nasty globals all over the place.  Hopefully this won't conflict
- * with anything in SCIRun.
+ * with anything in Dataflow.
  * These additional globals are also needed, although with some manipulation
  * they could probably be worked into the program.
  */
@@ -37,7 +37,7 @@ int StartMpegEncoder(int, char**);
 /* Call this function after each frame is generated (each time imageY, imageU,
  * and imageV are updated.
  */
-extern void SCIRunEncode(int lasttime, unsigned char* imageY,
+extern void DataflowEncode(int lasttime, unsigned char* imageY,
 			 unsigned char* imageU, unsigned char* imageV);
 #ifdef __cplusplus
 }

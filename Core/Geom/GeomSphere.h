@@ -14,14 +14,12 @@
 #ifndef SCI_Geom_Sphere_h
 #define SCI_Geom_Sphere_h 1
 
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/IntVector.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/IntVector.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using SCICore::Geometry::IntVector;
 
 class SCICORESHARE GeomSphere : public GeomObj {
 public:
@@ -59,7 +57,6 @@ public:
   
 };
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
 #endif /* SCI_Geom_Sphere_h */

@@ -24,17 +24,16 @@
 * Includes
 *******************************************************************************/
 
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/HexMesh.h>
-#include <SCICore/Containers/Array1.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/HexMesh.h>
+#include <Core/Containers/Array1.h>
 
 
 /*******************************************************************************
 * Hexahedral unstructured grid class
 *******************************************************************************/
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 class SCICORESHARE ScalarFieldHUG : public ScalarField 
 {
@@ -61,38 +60,7 @@ class SCICORESHARE ScalarFieldHUG : public ScalarField
     static PersistentTypeID type_id;
 };
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  1999/08/25 03:48:36  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:49  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:24  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:55:49  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:04:42  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1  1999/04/27 21:14:28  dav
-// working on Datatypes
-//
-// Revision 1.2  1999/04/25 04:14:39  dav
-// oopps...?
-//
-// Revision 1.1.1.1  1999/04/24 23:12:51  dav
-// Import sources
-//
-//
 
 #endif

@@ -14,31 +14,20 @@
 #ifndef sci_Modules_Salmon_Raytracer_h
 #define sci_Modules_Salmon_Raytracer_h 1
 
-#include <PSECommon/Modules/Salmon/Renderer.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/Material.h>
+#include <Dataflow/Modules/Salmon/Renderer.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/Material.h>
 
-namespace SCICore {
-  namespace Geometry {
-    class Point;
-    class Vector;
-    class Ray;
-  }
-  namespace GeomSpace {
-    class GeomGroup;
-    class Hit;
-  }
+namespace SCIRun {
+  class Point;
+  class Vector;
+  class Ray;
+  class GeomGroup;
+  class Hit;
 }
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Ray;
-using SCICore::GeomSpace::Hit;
-using SCICore::GeomSpace::GeomGroup;
-using SCICore::GeomSpace::MaterialHandle;
 
 class Raytracer : public Renderer {
     Renderer* rend;
@@ -76,24 +65,7 @@ public:
 		     const Vector& direction, double dist);
 };
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  1999/08/17 06:37:38  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:52  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 20:17:09  dav
-// added back PSECommon .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:31  dav
-// Import sources
-//
-//
 
 #endif

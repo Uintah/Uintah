@@ -1,14 +1,10 @@
-#
 #  Histogram.tcl
-#
 #  Written by:
 #   James T. Purciful
 #   Department of Computer Science
 #   University of Utah
 #   Apr. 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
 itcl_class Histogram {
     public title "Untitled"

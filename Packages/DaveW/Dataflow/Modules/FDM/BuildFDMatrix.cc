@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  BuildFDMatrix.cc:  Builds the global finite difference matrix
@@ -12,36 +11,30 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#include <DaveW/Datatypes/General/SigmaSetPort.h>
-#include <DaveW/Datatypes/General/SigmaSet.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/BasicSurfaces.h>
-#include <SCICore/Datatypes/ColumnMatrix.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldRGchar.h>
-#include <SCICore/Datatypes/SparseRowMatrix.h>
-#include <SCICore/Datatypes/SymSparseRowMatrix.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MiscMath.h>
+#include <Packages/DaveW/Core/Datatypes/General/SigmaSetPort.h>
+#include <Packages/DaveW/Core/Datatypes/General/SigmaSet.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Datatypes/BasicSurfaces.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/ScalarFieldRGchar.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Datatypes/SymSparseRowMatrix.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
 
 #include <map.h>
 #include <iostream>
 using std::cerr;
 
 namespace DaveW {
-namespace Modules {
-
 using namespace DaveW::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using SCICore::Math::Max;
+using namespace SCIRun;
 
 class BuildFDMatrix : public Module {
     ScalarFieldIPort* sfiport;
@@ -353,45 +346,6 @@ void BuildFDMatrix::add_lcl_gbl(Matrix& gbl_a,
 	    }
     //cerr << "\n";
 }
-
-} // End namespace Modules
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.6  2000/03/17 18:44:22  dahart
-// Replaced all instances of HashTable<class X, class Y> with the STL
-// map<class X, class Y>.  Removed all includes of HashTable.h
-//
-// Revision 1.5  2000/03/17 09:25:41  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.4  1999/10/07 02:06:33  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/08 02:26:26  sparker
-// Various #include cleanups
-//
-// Revision 1.2  1999/08/25 03:47:41  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/24 06:23:05  dmw
-// Added in everything for the DaveW branch
-//
-// Revision 1.2  1999/05/03 04:52:16  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-// Revision 1.1  1999/04/27 23:44:08  dav
-// moved FDM to DaveW
-//
-// Revision 1.2  1999/04/27 22:57:47  dav
-// updates in Modules for Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:30  dav
-// Import sources
-//
-//
+

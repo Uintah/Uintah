@@ -13,32 +13,22 @@
 #ifndef SCI_project_SimplePort_h
 #define SCI_project_SimplePort_h 1
 
-#include <PSECore/Dataflow/Port.h>
-#include <SCICore/Thread/Mailbox.h>
-#include <SCICore/Util/Timer.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <SCICore/Util/Assert.h>
-#include <PSECore/Dataflow/Connection.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/TclInterface/Remote.h>
+#include <Dataflow/Network/Port.h>
+#include <Core/Thread/Mailbox.h>
+#include <Core/Util/Timer.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Core/Util/Assert.h>
+#include <Dataflow/Network/Connection.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/TclInterface/Remote.h>
 #include <iostream>
 
 using std::cerr;
 using std::endl;
 
-namespace PSECore {
+namespace SCIRun {
 
-namespace Dataflow {
-  class Module;
-}
-
-namespace Datatypes {
-
-using PSECore::Dataflow::Module;
-using PSECore::Dataflow::IPort;
-using PSECore::Dataflow::OPort;
-using PSECore::Dataflow::Connection;
-using SCICore::Containers::clString;
+class Module;
 
 template<class T>
 struct SimplePortComm {
@@ -60,7 +50,7 @@ public:
 
 public:
     friend class SimpleOPort<T>;
-    SCICore::Thread::Mailbox<SimplePortComm<T>*> mailbox;
+    Mailbox<SimplePortComm<T>*> mailbox;
 
     static clString port_type;
     static clString port_color;
@@ -95,15 +85,12 @@ public:
     virtual void resend(Connection* conn);
 };
 
-} // End namespace Datatypes
-} // End namespace PSECore
+} // End namespace SCIRun
 
 extern char** global_argv;
 
-namespace PSECore {
-namespace Datatypes {
+namespace SCIRun {
 
-using namespace SCICore::PersistentSpace;
 
 template<class T>
 SimpleIPort<T>::SimpleIPort(Module* module, const clString& portname,
@@ -195,7 +182,6 @@ void SimpleOPort<T>::finish()
 template<class T>
 void SimpleOPort<T>::send(const T& data)
 {
-    using SCICore::Containers::Pio;
 
 #ifdef DEBUG
     cerr << "Entering SimpleOPort<T>::send (data)\n";
@@ -268,7 +254,6 @@ void SimpleOPort<T>::send_intermediate(const T& data)
 template<class T>
 int SimpleIPort<T>::get(T& data)
 {
-    using SCICore::Containers::Pio;
 
 #ifdef DEBUG
     cerr << "Entering SimpleIPort<T>::get (data)\n";
@@ -334,11 +319,7 @@ int SimpleIPort<T>::get(T& data)
 template<class T>
 int SimpleIPort<T>::special_get(T& data)
 {
-    using SCICore::PersistentSpace::Pio;
 
-    using PSECore::Comm::MessageTypes;
-    using PSECore::Comm::MessageBase;
-    using PSECore::Dataflow::Demand_Message;
 
     if(nconnections()==0)
 	return 0;
@@ -429,63 +410,7 @@ SimplePortComm<T>::SimplePortComm(const T& data)
 {
 }
 
-} // End namespace Datatypes
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.11  2000/03/21 03:01:24  sparker
-// Partially fixed special_get method in SimplePort
-// Pre-instantiated a few key template types, in an attempt to reduce
-//   initial compile time and reduce code bloat.
-// Manually instantiated templates are in */*/templates.cc
-//
-// Revision 1.10  1999/12/07 02:53:34  dmw
-// made show_status variable persistent with network maps
-//
-// Revision 1.9  1999/11/17 23:17:42  moulding
-// added using SCICore::Datatypes::*Handle; to help the vc++ compiler
-// and added <iostream> and using std::cerr and using std::endl (to SimplePort.h)
-//
-// Revision 1.8  1999/11/10 23:24:32  dmw
-// added show_status flag to module interface -- if you turn it off, the timer and port lights won't update
-//
-// Revision 1.7  1999/09/08 02:26:42  sparker
-// Various #include cleanups
-//
-// Revision 1.6  1999/08/29 00:58:48  sparker
-// Moved timer1 into ifdef DEBUG to avoid extraneous messages
-// about time stopped while already stopped
-//
-// Revision 1.5  1999/08/29 00:46:50  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.4  1999/08/28 17:54:32  sparker
-// Integrated new Thread library
-//
-// Revision 1.3  1999/08/25 03:48:23  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:12  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:50  mcq
-// Initial commit
-//
-// Revision 1.4  1999/07/07 21:10:20  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.3  1999/05/06 20:17:03  dav
-// added back PSECore .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:47  dav
-// Import sources
-//
-//
 
 #endif /* SCI_project_SimplePort_h */

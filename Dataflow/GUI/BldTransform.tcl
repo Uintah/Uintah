@@ -1,17 +1,13 @@
-#
 #  BldTransform.tcl
-#
 #  Written by:
 #   David Weinstein
 #   Department of Computer Science
 #   University of Utah
 #   March 1999
-#
 #  Copyright (C) 1999 SCI Group
-#
 catch {rename BldTransform ""}
 
-itcl_class PSECommon_Matrix_BldTransform {
+itcl_class Dataflow_Matrix_BldTransform {
     inherit Module
     constructor {config} {
 	set name BldTransform

@@ -1,8 +1,6 @@
-#
 # Makefile fragment for this subdirectory
-#
 
-SRCDIR := PSECore/GUI
+SRCDIR := Dataflow/GUI
 
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
@@ -18,7 +16,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/defaults.tcl $(SRCDIR)/devices.tcl \
 	$(SRCDIR)/platformSpecific.tcl $(SRCDIR)/ComponentWizard.tcl\
 #[INSERT NEW TCL FILE HERE]
-	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/PSECore/GUI
+	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Dataflow/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 

@@ -20,9 +20,9 @@ mpeg [-d] [-NTSC] [-CIF] [-QCIF] [-PF] [-NPS] [-MBPS mbps] [-UTC]
 .B
      [-s StreamFile]  [-x Target Filesize] [-y]
 .B
-     [-z ComponentFileSuffix i]
+     [-z Core/CCA/ComponentFileSuffix i]
 .B
-     ComponentFilePrefix1 [ComponentFilePrefix2 ComponentFilePrefix3]
+     Core/CCA/ComponentFilePrefix1 [Core/CCA/ComponentFilePrefix2 Core/CCA/ComponentFilePrefix3]
 .br
 .SH DESCRIPTION
 .I mpeg
@@ -188,7 +188,7 @@ given in bits per second.
 .B -s
 specifies the filename to store the coded image. If unspecified it
 defaults to
-.B ComponentFilePrefix0.mpg.
+.B Core/CCA/ComponentFilePrefix0.mpg.
 .TP
 .B -v
 designates that quantization decisions are to be written to standard
@@ -224,10 +224,10 @@ default to
 and
 .B \&.V.
 .TP
-.B ComponentFilePrefix\fIn\fR
+.B Core/CCA/ComponentFilePrefix\fIn\fR
 must be specified. In general, the other component files share the
 same prefix and will default to
-.B ComponentFilePrefix1
+.B Core/CCA/ComponentFilePrefix1
 if not
 explicitly specified. However, in some cases the prefix is what
 changes in the file and we can specify this individually.

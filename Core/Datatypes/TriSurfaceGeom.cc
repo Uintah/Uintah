@@ -1,17 +1,14 @@
 //  TriSurfaceGeom.cc - A group of Tets in 3 space
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
-#include <SCICore/Datatypes/TriSurfaceGeom.h>
+#include <Core/Datatypes/TriSurfaceGeom.h>
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
 
 PersistentTypeID TriSurfaceGeom::type_id("TriSurfaceGeom", "Datatype", 0);
 
@@ -37,5 +34,4 @@ void TriSurfaceGeom::io(Piostream&){
 }
 
 
-} // end Datatypes
-} // end SCICore
+} // End namespace SCIRun

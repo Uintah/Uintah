@@ -10,26 +10,22 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Datatypes/ColumnMatrix.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-#include <SCICore/Datatypes/VectorFieldRG.h>
-#include <SCICore/Datatypes/VectorFieldUG.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Core/Datatypes/VectorFieldRG.h>
+#include <Core/Datatypes/VectorFieldUG.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
 
 namespace SCIRun {
-namespace Modules {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Geometry;
 
 class ExtractMesh : public Module {
     ScalarFieldIPort* inports;
@@ -121,20 +117,6 @@ void ExtractMesh::execute()
 	omat->send(dmh);
     }
 }
-} // End namespace Modules
 } // End namespace SCIRun
 
 
-//
-// $Log$
-// Revision 1.3  2000/03/17 09:29:11  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.2  1999/09/05 23:15:32  dmw
-// output values through a second/third port when extracting mesh from a field
-//
-// Revision 1.1  1999/09/05 01:15:26  dmw
-// added all of the old SCIRun mesh modules
-//

@@ -1,6 +1,6 @@
-global SCICoreTCL
+global CoreTCL
 
-itcl_class Phil_Tbon_ElapsedTime {
+itcl_class Packages/Phil_Tbon_ElapsedTime {
 
     inherit Module
 

@@ -1,21 +1,17 @@
 //  LatticeGeom.cc - A base class for regular geometries with alligned axes
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
-#include <SCICore/Datatypes/LatticeGeom.h>
-#include <SCICore/Math/MinMax.h>
+#include <Core/Datatypes/LatticeGeom.h>
+#include <Core/Math/MinMax.h>
 
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using namespace SCICore::Math;
 
 PersistentTypeID LatticeGeom::type_id("LatticeGeom", "Datatype", 0);
 
@@ -276,5 +272,4 @@ LatticeGeom::updateTransform()
 
 
 
-} // end Datatypes
-} // end SCICore
+} // End namespace SCIRun

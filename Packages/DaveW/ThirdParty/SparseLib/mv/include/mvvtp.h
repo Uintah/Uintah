@@ -22,9 +22,7 @@
 /*                                                                           */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-//
 //      mvvtp.h     Basic templated vector class
-//
 
 #ifndef _MV_VECTOR_TPL_H_
 #define _MV_VECTOR_TPL_H_    
@@ -59,7 +57,6 @@ class MV_Vector
     MV_Vector(const TYPE*, unsigned int);       
     
     // reference of an exisiting data structure
-    //
     MV_Vector(TYPE*, unsigned int, MV_Vector_::ref_type i); 
     MV_Vector(const MV_Vector<TYPE>&); 
     ~MV_Vector();                              
@@ -109,7 +106,6 @@ class MV_Vector
     inline unsigned int             size() const { return dim_;}
     inline int                      ref() const { return  ref_;}
     inline int                      null() const {return dim_== 0;}
-            //
             // Create a new *uninitalized* vector of size N
             MV_Vector<TYPE> & newsize(unsigned int );
                                                                        
@@ -155,7 +151,6 @@ MV_Vector<TYPE>::MV_Vector(unsigned int n, const TYPE& v) :
 }
 
 // operators and member functions
-//
 
 
 
@@ -286,7 +281,6 @@ MV_Vector<TYPE>::MV_Vector(const MV_Vector<TYPE> & m) : p_(new TYPE[m.dim_]),
 // this is so compilers will not generate a warning that i was
 // not used in the construction.  (MV_Vector::ref_type is an enum that
 // can *only* have the value of 1.
-//
 template <class TYPE>
 MV_Vector<TYPE>::MV_Vector(TYPE* d, unsigned int n, MV_Vector_::ref_type i) : 
         p_(d), dim_(n) , ref_(i) {}
@@ -341,7 +335,6 @@ MV_Vector<TYPE> MV_Vector<TYPE>::operator()(const MV_VecIndex &I)
     else
     {
     // check that index is not out of bounds
-    //
         if ( I.end() >= dim_)
         {
             cerr << "MV_VecIndex: (" << I.start() << ":" << I.end() << 
@@ -357,7 +350,6 @@ template <class TYPE>
 const MV_Vector<TYPE> MV_Vector<TYPE>::operator()(const MV_VecIndex &I) const
 {
     // check that index is not out of bounds
-    //
     if ( I.end() >= dim_)
     {
         cerr << "MV_VecIndex: (" << I.start() << ":" << I.end() << 

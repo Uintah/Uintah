@@ -5,7 +5,6 @@
 
   SMF file parser.
 
-  $Id$
 
  ************************************************************************/
 
@@ -28,23 +27,17 @@ class SMF_Model
 public:
 
     ////////////////////////////////////////////////////////////////////////
-    //
     // SMF input methods
-    //
 
-    //
     // These are the REQUIRED methods
     virtual int in_Vertex(const Vec3&) = 0;
     virtual int in_Face(int v1, int v2, int v3) = 0;
 
-    //
     // By default, arbitrary faces are flagged as errors
     virtual int in_Face(const buffer<int> &);
-    // 
     // as are unknown commands
     virtual int in_Unparsed(const char *, string_buffer&);
 
-    //
     // These methods are optional.  By default, they'll be ignored
     virtual int in_VColor(const Vec3&);
     virtual int in_VNormal(const Vec3&);
@@ -59,9 +52,7 @@ public:
     virtual int note_Unparsed(const char *,string_buffer&);
 
     ////////////////////////////////////////////////////////////////////////
-    //
     // SMF output methods
-    //
 
 //     virtual void annotate_header(FILE *);
 //     virtual void annotate_Vertex(FILE *,int);
@@ -70,10 +61,8 @@ public:
 
 class SMF_State;
 
-//
 // Internal SMF variables
 // (not accessible via 'set' commands)
-//
 struct SMF_ivars
 {
     int next_vertex;

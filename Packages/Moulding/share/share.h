@@ -1,15 +1,15 @@
 /* share.h */
 
-#undef MouldingSHARE
+#undef Packages/MouldingSHARE
 
 #ifdef _WIN32
-  #if defined(BUILD_Moulding)
-    #define MouldingSHARE __declspec(dllexport)
+  #if defined(BUILD_Packages/Moulding)
+    #define Packages/MouldingSHARE __declspec(dllexport)
   #else
-    #define MouldingSHARE __declspec(dllimport)
+    #define Packages/MouldingSHARE __declspec(dllimport)
   #endif
 #else
-  #define MouldingSHARE
+  #define Packages/MouldingSHARE
 #endif
 
 

@@ -11,34 +11,33 @@
 find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
  */
 
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Datatypes/GenSField.h>
-#include <SCICore/Datatypes/FlatAttrib.h>
-#include <SCICore/Datatypes/LatticeGeom.h>
-#include <SCICore/Datatypes/AccelAttrib.h>
-#include <SCICore/Datatypes/BrickAttrib.h>
-#include <SCICore/Datatypes/IndexAttrib.h>
-#include <SCICore/Datatypes/AnalytAttrib.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/GenSField.h>
+#include <Core/Datatypes/FlatAttrib.h>
+#include <Core/Datatypes/LatticeGeom.h>
+#include <Core/Datatypes/AccelAttrib.h>
+#include <Core/Datatypes/BrickAttrib.h>
+#include <Core/Datatypes/IndexAttrib.h>
+#include <Core/Datatypes/AnalytAttrib.h>
 
-#include <SCICore/Datatypes/ScalarField.h>
-using namespace SCICore::Datatypes;
-
+#include <Core/Datatypes/ScalarField.h>
+using namespace SCIRun;
 #ifdef __sgi
 #pragma set woff 1468
 #endif
 
 template class LockingHandle<ScalarField>;
 
-#include <SCICore/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/ColumnMatrix.h>
 template class LockingHandle<ColumnMatrix>;
 
-#include <SCICore/Datatypes/Matrix.h>
+#include <Core/Datatypes/Matrix.h>
 template class LockingHandle<Matrix>;
 
-#include <SCICore/Datatypes/Mesh.h>
+#include <Core/Datatypes/Mesh.h>
 template class LockingHandle<Mesh>;
 
-#include <SCICore/Datatypes/Surface.h>
+#include <Core/Datatypes/Surface.h>
 template class LockingHandle<Surface>;
 
 template class DiscreteAttrib<double>;

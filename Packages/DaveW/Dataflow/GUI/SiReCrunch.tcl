@@ -1,19 +1,16 @@
 ##
  #  SiReCrunch.tcl: Crunch the data -- k-space to image space
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   Aug 1998
- #
  #  Copyright (C) 1998 SCI Group
- #
  ##
 
-catch {rename DaveW_SiRe_SiReCrunch ""}
+catch {rename Packages/DaveW_SiRe_SiReCrunch ""}
 
-itcl_class DaveW_SiRe_SiReCrunch {
+itcl_class Packages/DaveW_SiRe_SiReCrunch {
     inherit Module
     constructor {config} {
         set name SiReCrunch

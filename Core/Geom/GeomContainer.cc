@@ -10,15 +10,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Geom/GeomContainer.h>
-#include <SCICore/Containers/String.h>
+#include <Core/Geom/GeomContainer.h>
+#include <Core/Containers/String.h>
 
 #include <iostream>
 using std::cerr;
 using std::endl;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 PersistentTypeID GeomContainer::type_id("GeomContainer", "GeomObj", 0);
 
@@ -59,5 +58,4 @@ void GeomContainer::io(Piostream& stream)
     stream.end_class();
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun

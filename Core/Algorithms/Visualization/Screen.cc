@@ -3,17 +3,14 @@
 #include <math.h>
 #include <iostream>
 #include <GL/gl.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Containers/Stack.h>
-#include <PSECommon/Algorithms/Visualization/Screen.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Containers/Stack.h>
+#include <Core/Algorithms/Visualization/Screen.h>
 using std::cerr;
 using std::endl;
 
-namespace PSECommon {
-  namespace Algorithms {
+namespace SCIRun {
     
-    using namespace SCICore::Containers;
-    using namespace SCICore::Malloc;
     
     const Word EmptyWord = 0;
     const Word FullWord = ~EmptyWord;
@@ -847,6 +844,5 @@ namespace PSECommon {
       return 1;
     }
   
-  } // namespace Algorithms
-} // namespace PSECommon
+} // End namespace SCIRun
 

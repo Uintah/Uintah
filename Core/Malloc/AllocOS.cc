@@ -10,7 +10,7 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Malloc/AllocOS.h>
+#include <Core/Malloc/AllocOS.h>
 #include <sys/mman.h>
 #include <stdio.h>
 #include <string.h>
@@ -27,8 +27,7 @@
 #define MMAP_TYPE void
 #endif
 
-namespace SCICore {
-namespace Malloc {
+namespace SCIRun {
 
 static int devzero_fd=-1;
 
@@ -97,6 +96,5 @@ void OSHunk::free(OSHunk* hunk)
     }
 }
 
-} // End namespace Malloc
-} // End namespace SCICore
+} // End namespace SCIRun
 

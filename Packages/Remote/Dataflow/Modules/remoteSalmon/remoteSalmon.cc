@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Salmon.cc:  The Geometry Viewer
@@ -12,12 +11,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Remote/Modules/remoteSalmon/remoteSalmon.h>
+#include <Packages/Remote/Dataflow/Modules/remoteSalmon/remoteSalmon.h>
 
 namespace Remote {
-namespace Modules {
-
-using PSECore::Dataflow::Module;
+using namespace SCIRun;
 
 //----------------------------------------------------------------------
 extern "C" Module* make_remoteSalmon(const clString& id) {
@@ -36,7 +33,6 @@ void
 remoteSalmon::tcl_command(TCLArgs& a, void* v) {
   Salmon::tcl_command(a, v);
 }
-
-} // End namespace Modules
 } // End namespace Remote
+
 

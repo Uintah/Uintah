@@ -12,8 +12,7 @@
 
 #include <Datatypes/Particles/ParticleGridReader.h>
 
-using namespace SCICore::PersistentSpace;
-using namespace SCICore::Containers;
+using namespace SCIRun;
 using namespace Uintah::Datatypes;
 
 template void Pio<>(Piostream&, LockingHandle<ParticleGridReader>&);

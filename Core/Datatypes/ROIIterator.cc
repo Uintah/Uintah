@@ -1,14 +1,11 @@
-#include <SCICore/Datatypes/ROIIterator.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Datatypes/Brick.h>
+#include <Core/Datatypes/ROIIterator.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Datatypes/Brick.h>
 #include <iostream>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Geometry::BBox;
-using SCICore::Geometry::Vector;
 
 
 
@@ -99,6 +96,5 @@ ROIIterator::SetNext()
   next = (*node)();
 }
 
-} //Datatypes
-} //SCICore
+} // End namespace SCIRun
 

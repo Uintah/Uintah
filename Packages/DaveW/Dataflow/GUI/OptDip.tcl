@@ -1,6 +1,6 @@
-catch {rename DaveW_ISL_OptDip ""}
+catch {rename Packages/DaveW_ISL_OptDip ""}
 
-itcl_class DaveW_ISL_OptDip {
+itcl_class Packages/DaveW_ISL_OptDip {
     inherit Module
 
     constructor {config} {

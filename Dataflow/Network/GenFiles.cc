@@ -2,15 +2,14 @@
 
 #include <stdio.h>
 #include <sys/stat.h>
-#include <PSECore/Dataflow/ComponentNode.h>
-#include <PSECore/Dataflow/SkeletonFiles.h>
-#include <PSECore/Dataflow/GenFiles.h>
-#include <PSECore/Dataflow/FileUtils.h>
+#include <Dataflow/Network/ComponentNode.h>
+#include <Dataflow/Network/SkeletonFiles.h>
+#include <Dataflow/Network/GenFiles.h>
+#include <Dataflow/Network/FileUtils.h>
 
 #define PERM S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
 void GenPackage(char* packname, char* psepath)
 {
@@ -190,8 +189,7 @@ void GenComponent(component_node* n, char* packname, char* psepath)
   }
 }
 
-} // Dataflow
-} // PSECore
+} // End namespace SCIRun
 
 
 

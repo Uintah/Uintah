@@ -14,18 +14,13 @@
 #ifndef SCI_project_Matrix_h
 #define SCI_project_Matrix_h 1
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Containers/String.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Containers/String.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Containers::LockingHandle;
-using SCICore::Containers::Array1;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
 
 class SymSparseRowMatrix;
 class SparseRowMatrix;
@@ -114,7 +109,6 @@ inline MatrixRow Matrix::operator[](int row)
 
 void Mult(ColumnMatrix&, const Matrix&, const ColumnMatrix&);
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
 #endif

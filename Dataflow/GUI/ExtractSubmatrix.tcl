@@ -1,15 +1,11 @@
 
-#
 #  ExtractSubmatrix.tcl
-#
 #  Written by:
 #   David Weinstein
 #   Department of Computer Science
 #   University of Utah
 #   Novemeber 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
 itcl_class ExtractSubmatrix {
     inherit Module

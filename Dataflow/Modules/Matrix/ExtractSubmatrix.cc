@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ExtractSubmatrix.cc:  Visual matrix editor
@@ -12,21 +11,21 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <SCICore/Containers/String.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Datatypes/Matrix.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <SCICore/Datatypes/SymSparseRowMatrix.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Datatypes/SymSparseRowMatrix.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomOpenGL.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCL.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCL.h>
 #include <tcl.h>
 #include <tk.h>
 #include <iostream>
@@ -43,13 +42,8 @@ using std::endl;
 extern Tcl_Interp* the_interp;
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
 
 class ExtractSubmatrix : public Module {
     MatrixIPort *iport;
@@ -372,54 +366,5 @@ int ExtractSubmatrix::makeCurrent(int &xres, int &yres, int &nrows,
     return 1;
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.8  2000/03/20 21:45:34  yarden
-// Linux port: replace int with GLenum
-//
-// Revision 1.7  2000/03/17 09:27:06  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.6  1999/10/07 02:06:52  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/08/25 03:47:51  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.4  1999/08/19 23:17:48  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.3  1999/08/18 20:19:45  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:31  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:45  mcq
-// Initial commit
-//
-// Revision 1.3  1999/07/07 21:10:23  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.2  1999/04/27 22:57:50  dav
-// updates in Modules for Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:31  dav
-// Import sources
-//
-//

@@ -18,16 +18,13 @@
 #include <ulocks.h>
 #endif
 
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Thread/Runnable.h>
-#include <PSECommon/Modules/Salmon/Roe.h>
-#include <PSECommon/Modules/Salmon/BaWGL.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Runnable.h>
+#include <Dataflow/Modules/Salmon/Roe.h>
+#include <Dataflow/Modules/Salmon/BaWGL.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using SCICore::Thread::Runnable;
-using SCICore::Thread::Thread;
 
 class SCIBaWGL;
 
@@ -90,6 +87,6 @@ class SCIBaWGL : public BaWGL {
      void shutdown_ok( void );
  };
 
-}}
+} // End namespace SCIRun
 
 #endif

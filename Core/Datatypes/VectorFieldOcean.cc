@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  VectorFieldOcean.h: Vector Fields defined on a Regular grid
@@ -12,11 +11,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Datatypes/VectorFieldOcean.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Geom/GeomGrid.h>
-#include <SCICore/Math/MiscMath.h>
+#include <Core/Datatypes/VectorFieldOcean.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geom/GeomGrid.h>
+#include <Core/Math/MiscMath.h>
 #ifndef _WIN32
 #include <sys/mman.h>
 #endif
@@ -36,8 +35,7 @@ using std::endl;
 #include <io.h>
 #endif
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 static Persistent* maker()
 {
@@ -167,8 +165,6 @@ int VectorFieldOcean::interpolate(const Point& p, Vector& value, int&, int)
 
 int VectorFieldOcean::interpolate(const Point& p, Vector& value)
 {
-    using SCICore::Geometry::Interpolate;
-    using SCICore::Math::Interpolate;
 
     if(p.z() > depthval[0])return 0;
     if(p.z() < depthval[depthval.size()-1])return 0;
@@ -265,44 +261,5 @@ void VectorFieldOcean::get_boundary_lines(Array1<Point>&)
     NOT_FINISHED("VectorFieldOcean::get_boundary_lines");
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.7  1999/10/07 02:07:35  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.6  1999/09/23 01:07:07  moulding
-// #ifndef'ed out the io functions, in win32, for these datatypes.  They are
-// causing problems with Pio and namespaces in VC++.  Sooner or later these have
-// to actually get fixed
-//
-// Revision 1.5  1999/09/04 06:01:45  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.4  1999/08/25 03:48:45  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/23 06:30:35  sparker
-// Linux port
-// Added X11 configuration options
-// Removed many warnings
-//
-// Revision 1.2  1999/08/17 06:38:58  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:32  mcq
-// Initial commit
-//
-// Revision 1.1  1999/04/25 04:07:20  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:48  dav
-// Import sources
-//
-//

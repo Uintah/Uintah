@@ -1,7 +1,6 @@
 
 /*
  *  Runnable: The base class for all threads
- *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -12,14 +11,12 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef SCICore_Thread_Runnable_h
-#define SCICore_Thread_Runnable_h
+#ifndef Core_Thread_Runnable_h
+#define Core_Thread_Runnable_h
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
-namespace SCICore {
-    namespace Thread {
-	class Thread;
+namespace SCIRun {
 
 /**************************************
  
@@ -70,33 +67,11 @@ DESCRIPTION
 	    Runnable(const Runnable&);
 	    Runnable& operator=(const Runnable&);
 	};
-    }
-}
+} // End namespace SCIRun
 
 #endif
 
 
 
 
-//
-// $Log$
-// Revision 1.8  1999/09/24 18:55:07  moulding
-// added SCICORESHARE, for win32, to class declarations
-//
-// Revision 1.7  1999/09/02 16:52:43  sparker
-// Updates to cocoon documentation
-//
-// Revision 1.6  1999/08/28 03:46:50  sparker
-// Final updates before integration with PSE
-//
-// Revision 1.5  1999/08/25 19:00:50  sparker
-// More updates to bring it up to spec
-// Factored out common pieces in Thread_irix and Thread_pthreads
-// Factored out other "default" implementations of various primitives
-//
-// Revision 1.4  1999/08/25 02:37:59  sparker
-// Added namespaces
-// General cleanups to prepare for integration with SCIRun
-//
-//
 

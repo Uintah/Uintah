@@ -2,9 +2,7 @@
 #include <iostream>
 using std::cerr;
 
-namespace Kurt{
-  namespace Datatypes{
-
+namespace Kurt {
 template<class T>
 Octree<T>::Octree(const T stored, nodeType t, const Octree<T> *parent):
   t(t), stored(stored), Parent(parent)
@@ -48,6 +46,5 @@ const Octree<T>* Octree<T>::operator[](int i) const
 }
 
 
+} // End namespace Kurt
   
-} // namespace Datatypes
-} // namespace Kurt

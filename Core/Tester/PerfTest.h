@@ -14,7 +14,7 @@
 #ifndef TESTER_PERFTEST_H
 #define TESTER_PERFTEST_H 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 #include <sys/timeb.h>
 
 #define PERFTEST(testname) \
@@ -24,8 +24,7 @@
 #define MINTIME 2.0
 #define MULFACTOR 10
 
-namespace SCICore {
-namespace Tester {
+namespace SCIRun {
 
 class SCICORESHARE PerfTest {
 public:
@@ -49,8 +48,7 @@ private:
     bool is_sanity;
 };
 
-} // End namespace Tester
-} // End namespace SCICore
+} // End namespace SCIRun
 
 
 #endif

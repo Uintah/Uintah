@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  RotateSurface.cc:  Rotate a surface
@@ -12,40 +11,25 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Util/NotFinished.h>
-#include <PSECommon/Dataflow/Module.h>
-#include <PSECommon/Dataflow/ModuleList.h>
-#include <PSECommon/Datatypes/SurfacePort.h>
-#include <PSECommon/Datatypes/BasicSurfaces.h>
-#include <PSECommon/Datatypes/ScalarTriSurface.h>
-#include <PSECommon/Datatypes/SurfTree.h>
-#include <PSECommon/Datatypes/TriSurface.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/MusilRNG.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Core/Util/NotFinished.h>
+#include <Dataflow/Dataflow/Module.h>
+#include <Dataflow/Dataflow/ModuleList.h>
+#include <Dataflow/Datatypes/SurfacePort.h>
+#include <Dataflow/Datatypes/BasicSurfaces.h>
+#include <Dataflow/Datatypes/ScalarTriSurface.h>
+#include <Dataflow/Datatypes/SurfTree.h>
+#include <Dataflow/Datatypes/TriSurface.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/MusilRNG.h>
+#include <Core/Math/Trig.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <stdio.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using PSECommon::Dataflow::Module;
-using PSECommon::Datatypes::SurfTree;
-using PSECommon::Datatypes::SurfaceIPort;
-using PSECommon::Datatypes::SurfaceOPort;
-using PSECommon::Datatypes::SurfaceHandle;
-using PSECommon::Datatypes::ScalarTriSurface;
-using PSECommon::Datatypes::PointsSurface;
-using PSECommon::Datatypes::TriSurface;
-using PSECommon::Datatypes::NodeHandle;
 
-using SCICore::TclInterface::TCLdouble;
-using SCICore::Containers::clString;
-using SCICore::Containers::Array1;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
 
 void buildRotateMatrix(double rm[][3], double angle, const Vector& axis) {
     // From Foley and Van Dam, Pg 227
@@ -208,38 +192,5 @@ void RotateSurface::execute()
     return;
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.5  2000/03/17 09:27:21  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.4  1999/08/25 03:48:00  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/18 20:19:57  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:43  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:58  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:31  dav
-// Import sources
-//
-//

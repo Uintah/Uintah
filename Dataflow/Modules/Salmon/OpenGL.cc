@@ -12,7 +12,7 @@
  */
 //milan was here
 
-#include <PSECommon/Modules/Salmon/OpenGL.h>
+#include <Dataflow/Modules/Salmon/OpenGL.h>
 
 #ifdef __sgi
 #include <ifl/iflFile.h>
@@ -21,8 +21,7 @@
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern Tcl_Interp* the_interp;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
 #define DO_REDRAW 0
 #define DO_PICK 1
@@ -63,7 +62,7 @@ OpenGL::OpenGL()
   img_mb("OpenGL renderer image data mailbox", 5)
 {
     encoding_mpeg = false;
-    drawinfo=scinew SCICore::GeomSpace::DrawInfoOpenGL;
+    drawinfo=scinew DrawInfoOpenGL;
     fpstimer.start();
 
     /* Grey */
@@ -1306,7 +1305,7 @@ void OpenGL::redraw_frame()
     if (get_tcl_stringvar(id,"clip-visible",val) && 
 	get_tcl_intvar(id,num_clip,i)) {
 
-      int cur_flag = SCICore::GeomSpace::CLIP_P5;
+      int cur_flag = CLIP_P5;
       if ( (i>0 && i<7) ) {
 	while(i--) {
 		
@@ -1837,5 +1836,4 @@ if(glXGetConfig(dpy, &vinfo[i], attrib, &value) != 0){\
   {
   }
 
-  } // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun

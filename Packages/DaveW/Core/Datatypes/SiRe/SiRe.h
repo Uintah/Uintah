@@ -10,24 +10,20 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef SCI_DaveW_Datatypes_SiRe_h
-#define SCI_DaveW_Datatypes_SiRe_h 1
+#ifndef SCI_Packages/DaveW_Datatypes_SiRe_h
+#define SCI_Packages/DaveW_Datatypes_SiRe_h 1
 
-#include <SCICore/Datatypes/VoidStar.h>
-#include <DaveW/ThirdParty/SiRe/include/fftw.h>
-#include <DaveW/ThirdParty/SiRe/include/sire_const.h>
-#include <DaveW/ThirdParty/SiRe/include/sire_struct.h>
-#include <DaveW/ThirdParty/SiRe/include/sire_version.h>
-#include <SCICore/Thread/Semaphore.h>
+#include <Core/Datatypes/VoidStar.h>
+#include <Packages/DaveW/Core/ThirdParty/SiRe/include/fftw.h>
+#include <Packages/DaveW/Core/ThirdParty/SiRe/include/sire_const.h>
+#include <Packages/DaveW/Core/ThirdParty/SiRe/include/sire_struct.h>
+#include <Packages/DaveW/Core/ThirdParty/SiRe/include/sire_version.h>
+#include <Core/Thread/Semaphore.h>
 
 // SiRe class definition
 
 namespace DaveW {
-namespace Datatypes {
-
-using SCICore::Datatypes::VoidStar;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
+using namespace SCIRun;
 
 typedef struct _SiReDataS {
    /* User inputs */
@@ -75,7 +71,7 @@ typedef struct _SiReDataS {
 class SiReData : public VoidStar {
 public:
     SiReDataS s;
-    SCICore::Thread::Semaphore lockstepSem;
+    Semaphore lockstepSem;
 public:
     SiReData();
     SiReData(const SiReData& copy);
@@ -85,28 +81,8 @@ public:
     static PersistentTypeID type_id;
 };
 
-void Pio(Piostream&, SiReDataS&);
-} // End namespace Datatypes
 } // End namespace DaveW
+void Pio(Piostream&, SiReDataS&);
 
 
-//
-// $Log$
-// Revision 1.3  1999/08/29 00:46:35  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.2  1999/08/25 03:47:35  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/23 02:53:02  dmw
-// Dave's Datatypes
-//
-// Revision 1.2  1999/05/03 04:52:06  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
 #endif

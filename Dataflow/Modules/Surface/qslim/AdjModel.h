@@ -4,7 +4,6 @@
 /************************************************************************
 
   Adjacency model representation.
-  $Id$
 
   Adapted from:
      mlab: (Id: polymodel.h,v 1.13 1997/02/06 16:30:11 garland Exp)
@@ -37,9 +36,7 @@ public:
     int validEdgeCount;
     int validFaceCount;
 
-    //
     // Basic model accessor functions
-    //
     Vertex *vertex(int i) { return vertices(i); }
     Edge *edge(int i) { return edges(i); }
     Face *face(int i) { return faces(i); }
@@ -52,9 +49,7 @@ public:
     edge_buffer& allEdges()    { return edges;    }
     face_buffer& allFaces()    { return faces;    }
 
-    //
     // Simplification primitives
-    //
     Vertex   *newVertex(real x=0.0, real y=0.0, real z=0.0);
     Edge     *newEdge(Vertex *,Vertex *);
     Face *newFace(Vertex *, Vertex *, Vertex *);
@@ -75,18 +70,14 @@ public:
 		  face_buffer& changed);
 
 
-    //
     // Simplification convenience procedures
-    //
     void removeDegeneracy(face_buffer& changed);
     void contractionRegion(Vertex *v1, Vertex *v2, face_buffer& changed);
     void contractionRegion(Vertex *v1,
 			   const vert_buffer& vertices,
 			   face_buffer& changed);
 
-    //
     // SMF reader functions
-    //
     int in_Vertex(const Vec3&);
     int in_Face(int v1, int v2, int v3);
 #ifdef SUPPORT_VCOLOR
@@ -96,9 +87,7 @@ public:
     int in_FColor(const Vec3&);
 #endif
 
-    //
     // Some random functions that are mostly temporary
-    //
 
     Vec3 synthesizeNormal(Vertex *);
 };

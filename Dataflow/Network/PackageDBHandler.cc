@@ -1,14 +1,11 @@
-#include <PSECore/Dataflow/PackageDBHandler.h>
+#include <Dataflow/Network/PackageDBHandler.h>
 
-#include <SCICore/Containers/String.h>
-#include <PSECore/XMLUtil/XMLUtil.h>
-#include <PSECore/Dataflow/NetworkEditor.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Dataflow/Network/NetworkEditor.h>
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
-using namespace SCICore::Containers;
-using namespace PSECore::XMLUtil;
 
 PackageDBHandler::PackageDBHandler()
 {
@@ -49,5 +46,4 @@ void PackageDBHandler::resetErrors()
 {
 }
 
-} // Dataflow
-} // PSECore
+} // End namespace SCIRun

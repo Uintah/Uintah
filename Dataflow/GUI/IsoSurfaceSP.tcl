@@ -1,7 +1,7 @@
 
 catch {rename IsoSurfaceSP ""}
 
-itcl_class PSECommon_Visualization_IsoSurfaceSP {
+itcl_class Dataflow_Visualization_IsoSurfaceSP {
     inherit Module
     constructor {config} {
 	set name IsoSurfaceSP

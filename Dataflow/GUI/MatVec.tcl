@@ -1,21 +1,17 @@
 ##
  #  MatVec.tcl: Matrix - Matrix operations
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   July 1999
- #
  #  Copyright (C) 1999 SCI Group
- # 
  #  Log Information:
- #
  ##
 
 catch {rename MatVec ""}
 
-itcl_class PSECommon_Matrix_MatVec {
+itcl_class Dataflow_Matrix_MatVec {
     inherit Module
     constructor {config} {
         set name MatVec

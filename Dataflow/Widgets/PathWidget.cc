@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  PathWidget.cc
@@ -12,28 +11,21 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Widgets/PathWidget.h>
-#include <PSECore/Constraints/DistanceConstraint.h>
-#include <PSECore/Constraints/RatioConstraint.h>
-#include <SCICore/Geom/GeomCone.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <PSECore/Dataflow/Module.h>
+#include <Dataflow/Widgets/PathWidget.h>
+#include <Dataflow/Constraints/DistanceConstraint.h>
+#include <Dataflow/Constraints/RatioConstraint.h>
+#include <Core/Geom/GeomCone.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Network/Module.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 
-namespace PSECore {
-namespace Widgets {
+namespace SCIRun {
 
-using SCICore::GeomSpace::GeomSphere;
-using SCICore::GeomSpace::GeomCone;
-using SCICore::GeomSpace::GeomCappedCone;
-using SCICore::GeomSpace::GeomCylinder;
-using SCICore::Geometry::Cross;
 
-using namespace PSECore::Constraints;
 
 class PathPoint {
 public:
@@ -463,25 +455,5 @@ PathWidget::GetMaterialName( const Index mindex ) const
    }
 }
 
-} // End namespace Widgets
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/10/07 02:07:25  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/08 02:26:43  sparker
-// Various #include cleanups
-//
-// Revision 1.2  1999/08/17 06:38:31  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:07  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//

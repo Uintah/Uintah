@@ -1,14 +1,11 @@
 //////////////////////////////////////////////////////////////////////
 // SimpMesh.cpp - Simplifies the given model using quadric error metric.
-//
 // David K. McAllister, August 1999.
 
 #include <stdio.h>
-#include <Remote/Modules/remoteSalmon/SimpMesh.h>
+#include <Packages/Remote/Dataflow/Modules/remoteSalmon/SimpMesh.h>
 
 namespace Remote {
-namespace Modules {
-
 void SimpMesh::DeleteFace(Face *F, bool RemoveDead)
 {
   // cerr << "F";
@@ -546,7 +543,6 @@ void SimpMesh::PerformEdgeCollapses()
       // CheckIntegrity(FaceCount % 300 == 0);
     }
 }
+} // End namespace Remote
 
-} // namespace Tools {
-} // namespace Remote {
 

@@ -11,14 +11,13 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef SCICore_Process_ProcessManager_h
-#define SCICore_Process_ProcessManager_h
+#ifndef Core_Process_ProcessManager_h
+#define Core_Process_ProcessManager_h
 
-#include <SCICore/Process/ProcessManagerException.h>
+#include <Core/Process/ProcessManagerException.h>
 #include <string>
 
-namespace SCICore {
-    namespace Process {
+namespace SCIRun {
 	class ProcessManager {
 	public:
 	    static void start_process(const std::string& command,
@@ -28,7 +27,6 @@ namespace SCICore {
 	    ProcessManager();
 	    ~ProcessManager();
 	};
-    }
-}
+} // End namespace SCIRun
 
 #endif

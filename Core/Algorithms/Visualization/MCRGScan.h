@@ -17,38 +17,34 @@
 #include <stdio.h>
 
 
-#include <SCICore/Containers/String.h>
-#include <SCICore/Thread/Time.h>
-#include <PSECore/Dataflow/Module.h> 
-#include <SCICore/Datatypes/ScalarField.h> 
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h> 
-#include <SCICore/Datatypes/ScalarFieldRGfloat.h> 
-#include <SCICore/Datatypes/ScalarFieldRGint.h> 
-#include <SCICore/Datatypes/ScalarFieldRGshort.h> 
-#include <SCICore/Datatypes/ScalarFieldRGushort.h> 
-#include <SCICore/Datatypes/ScalarFieldRGchar.h> 
-#include <SCICore/Datatypes/ScalarFieldRGuchar.h> 
-#include <PSECore/Datatypes/ScalarFieldPort.h>  
-#include <SCICore/Thread/Thread.h>
+#include <Core/Containers/String.h>
+#include <Core/Thread/Time.h>
+#include <Dataflow/Network/Module.h> 
+#include <Core/Datatypes/ScalarField.h> 
+#include <Core/Datatypes/ScalarFieldRGdouble.h> 
+#include <Core/Datatypes/ScalarFieldRGfloat.h> 
+#include <Core/Datatypes/ScalarFieldRGint.h> 
+#include <Core/Datatypes/ScalarFieldRGshort.h> 
+#include <Core/Datatypes/ScalarFieldRGushort.h> 
+#include <Core/Datatypes/ScalarFieldRGchar.h> 
+#include <Core/Datatypes/ScalarFieldRGuchar.h> 
+#include <Dataflow/Ports/ScalarFieldPort.h>  
+#include <Core/Thread/Thread.h>
 
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Trig.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Trig.h>
 
-#include <PSECommon/Algorithms/Visualization/mcube_scan.h>
+#include <Core/Algorithms/Visualization/mcube_scan.h>
 
 
-namespace PSECommon {
-  namespace Algorithms {
+namespace SCIRun {
     
-    using namespace SCICore::Datatypes;
-    using namespace SCICore::GeomSpace;
-    using namespace SCICore::Geometry;
 
     template <class F>
       class MCRGScan
@@ -189,7 +185,6 @@ namespace PSECommon {
       }
 
      
-  }  // namespace Algorithms
-}  // namespace PSECommon
+} // End namespace SCIRun
 
 #endif

@@ -1,14 +1,10 @@
-#
 #  Doublebox.tcl
-#
 #  Written by:
 #   Carole Gitlin
 #   Department of Computer Science
 #   University of Utah
 #   April 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
 proc makeDoublebox {w var var2 command cancel} {
     global $w-filter $w-path $w-oldpath $w-oldsel

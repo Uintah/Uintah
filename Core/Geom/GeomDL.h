@@ -15,13 +15,12 @@
 #define SCI_Geom_GeomDL_h 1
 
 #ifdef SCI_OPENGL
-#include <SCICore/Geom/GeomOpenGL.h>
+#include <Core/Geom/GeomOpenGL.h>
 #endif
-#include <SCICore/Geom/GeomObj.h>
+#include <Core/Geom/GeomObj.h>
 
 
-namespace SCICore {
-  namespace GeomSpace {
+namespace SCIRun {
     
     class SCICORESHARE GeomDL : public GeomObj {
       GeomObj* child;
@@ -47,7 +46,6 @@ namespace SCICore {
       virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
     };
     
-  } // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
 #endif

@@ -5,7 +5,6 @@
 
   4D Vector class.
 
-  $Id$
 
  ************************************************************************/
 
@@ -17,9 +16,7 @@ protected:
     inline void copy(const Vec4& v);
 
 public:
-    //
     // Standard constructors
-    //
     Vec4(real x=0, real y=0, real z=0, real w=0) {
 	elt[0]=x; elt[1]=y; elt[2]=z; elt[3]=w;
     }
@@ -29,9 +26,7 @@ public:
     Vec4(const Vec4& v) { copy(v); }
     Vec4(const real *v) { elt[0]=v[0]; elt[1]=v[1]; elt[2]=v[2]; elt[3]=v[3]; }
 
-    //
     // Access methods
-    //
 #ifdef SAFETY
     real& operator()(int i)       { assert(i>=0 && i<4); return elt[i]; }
     real  operator()(int i) const { assert(i>=0 && i<4); return elt[i]; }
@@ -45,15 +40,11 @@ public:
     real *raw()             { return elt; }
     const real *raw() const { return elt; }
 
-    //
     // Comparison methods
-    //
     inline bool operator==(const Vec4&) const;
     inline bool operator!=(const Vec4&) const;
 
-    //
     // Assignment and in-place arithmetic methods
-    //
     inline void set(real x, real y, real z, real w){
 	elt[0]=x; elt[1]=y; elt[2]=z; elt[3]=w;
     }
@@ -63,9 +54,7 @@ public:
     inline Vec4& operator*=(real s);
     inline Vec4& operator/=(real s);
 
-    //
     // Binary arithmetic methods
-    //
     inline Vec4 operator+(const Vec4& v) const;
     inline Vec4 operator-(const Vec4& v) const;
     inline Vec4 operator-() const;
@@ -78,9 +67,7 @@ public:
 
 
 ////////////////////////////////////////////////////////////////////////
-//
 // Method definitions
-//
 
 inline void Vec4::copy(const Vec4& v)
 {
@@ -165,11 +152,8 @@ inline Vec4 operator*(real s, const Vec4& v) { return v*s; }
 
 
 ////////////////////////////////////////////////////////////////////////
-//
 // Primitive function definitions
-//
 
-//
 // Code adapted from VecLib4d.c in Graphics Gems V
 inline Vec4 cross(const Vec4& a, const Vec4& b, const Vec4& c)
 {
@@ -216,9 +200,7 @@ inline real unitize(Vec4& v)
 
 
 ////////////////////////////////////////////////////////////////////////
-//
 // Misc. function definitions
-//
 
 inline ostream& operator<<(ostream& out, const Vec4& v)
 {
@@ -236,18 +218,6 @@ inline void glV(const Vec4& v) { glVertex(v[X], v[Y], v[Z], v[W]); }
 inline void glC(const Vec4& v) { glColor(v[X], v[Y], v[Z], v[W]); }
 #endif
 
-//
-// $Log$
-// Revision 1.1  1999/07/27 16:58:04  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 20:17:15  dav
-// added back PSECommon .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:32  dav
-// Import sources
-//
-//
 
 
 #endif // GFXMATH_VEC4_INCLUDED

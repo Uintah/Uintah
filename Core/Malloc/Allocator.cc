@@ -15,9 +15,9 @@
 6) Destroy allocators
 */
 
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Malloc/AllocPriv.h>
-#include <SCICore/Malloc/AllocOS.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Malloc/AllocPriv.h>
+#include <Core/Malloc/AllocOS.h>
 
 // irix64 KCC stuff
 #include <strings.h>
@@ -43,13 +43,12 @@
 #endif
 
 extern "C" void audit() {
-    using namespace SCICore::Malloc;
-    AuditAllocator(DefaultAllocator());
-    fprintf(stderr, "Memory audit OK\n");
+  using namespace SCIRun;
+  AuditAllocator(DefaultAllocator());
+  fprintf(stderr, "Memory audit OK\n");
 }
 
-namespace SCICore {
-namespace Malloc {
+namespace SCIRun {
 
 Allocator* default_allocator;
 
@@ -1198,5 +1197,4 @@ void DumpAllocator(Allocator* a)
     fclose(fp);
 }
 
-} // End namespace Malloc
-} // End namespace SCICore
+} // End namespace SCIRun

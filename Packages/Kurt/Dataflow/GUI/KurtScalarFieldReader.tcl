@@ -1,4 +1,4 @@
-itcl_class Kurt_Vis_KurtScalarFieldReader { 
+itcl_class Packages/Kurt_Vis_Packages/KurtScalarFieldReader { 
 
     inherit Module 
     
@@ -6,7 +6,7 @@ itcl_class Kurt_Vis_KurtScalarFieldReader {
     protected filename
 
     constructor {config} { 
-        set name KurtScalarFieldReader 
+        set name Packages/KurtScalarFieldReader 
         set_defaults
     } 
   

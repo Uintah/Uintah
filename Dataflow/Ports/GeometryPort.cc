@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  GeometryPort.cc: Handle to the Geometry Data type
@@ -12,24 +11,23 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/GeometryComm.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/GeometryComm.h>
 
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Containers/String.h>
-#include <PSECore/Dataflow/Connection.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Dataflow/Port.h>
-#include <SCICore/Geom/View.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Thread/FutureValue.h>
+#include <Core/Util/Assert.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/Network/Connection.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/Port.h>
+#include <Core/Geom/View.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Thread/FutureValue.h>
 
 #include <iostream>
 using std::cerr;
 using std::endl;
 
-namespace PSECore {
-namespace Datatypes {
+namespace SCIRun {
 
 extern "C" {
 PSECORESHARE IPort* make_GeometryIPort(Module* module, const clString& name) {
@@ -353,50 +351,5 @@ GeometryData::Print()
   cerr << endl;
 }
 
-} // End namespace Datatypes
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.11  2000/11/29 09:49:36  moulding
-// changed all instances of "new" to "scinew"
-//
-// Revision 1.10  2000/11/22 17:14:41  moulding
-// added extern "C" make functions for input and output ports (to be used
-// by the auto-port facility).
-//
-// Revision 1.9  1999/12/07 02:53:34  dmw
-// made show_status variable persistent with network maps
-//
-// Revision 1.8  1999/12/03 00:36:08  dmw
-// more files for the setView message
-//
-// Revision 1.7  1999/11/11 19:56:37  dmw
-// added show_status check for GeometryPort and SoundPort
-//
-// Revision 1.6  1999/10/07 02:07:21  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/08/28 17:54:31  sparker
-// Integrated new Thread library
-//
-// Revision 1.4  1999/08/25 03:48:20  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/19 23:18:03  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.2  1999/08/17 06:38:08  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:47  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:49  dav
-// Import sources
-//
-//

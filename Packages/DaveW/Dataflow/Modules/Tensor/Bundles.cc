@@ -10,40 +10,31 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <DaveW/Datatypes/General/TensorFieldPort.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
-#include <PSECore/Widgets/GaugeWidget.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomPick.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/Switch.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/MusilRNG.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Packages/DaveW/Core/Datatypes/General/TensorFieldPort.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Dataflow/Widgets/GaugeWidget.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomPick.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/Switch.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/MusilRNG.h>
+#include <Core/Math/Trig.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 #include <values.h>
 
 namespace DaveW {
-namespace Modules {
-
 using namespace DaveW::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::Containers;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
 MusilRNG *mr=0;
 TensorFieldBase *tfield;
@@ -859,24 +850,6 @@ void Bundles::tcl_command(TCLArgs& args, void* userdata) {
         Module::tcl_command(args, userdata);
     }
 }
-
-} // End namespace Modules
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.4  2000/03/17 18:44:23  dahart
-// Replaced all instances of HashTable<class X, class Y> with the STL
-// map<class X, class Y>.  Removed all includes of HashTable.h
-//
-// Revision 1.3  2000/03/17 09:26:03  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.2  1999/10/07 02:06:41  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.1  1999/09/05 05:32:24  dmw
-// updated and added Modules from old tree to new
-//
+

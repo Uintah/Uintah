@@ -1,9 +1,8 @@
-//static char *id="@(#) $Id$";
 
 /* TbonTreeUG.h
    class declarations and code for the T-BON tree (unstructured grid version)
 
-   Philip Sutton
+   Packages/Philip Sutton
    May 1999
 
   Copyright (C) 2000 SCI Group, University of Utah
@@ -19,11 +18,9 @@
 #include <limits.h>
 #include <strings.h>
 
-using namespace SCICore::GeomSpace;
+using namespace SCIRun;
 
 namespace Phil {
-namespace Modules {
-
 struct Tetra {
   int v[4];
 };  
@@ -1270,18 +1267,8 @@ TbonTreeUG<T>::searchSecondPass( int myindex, double iso ) {
   } // if( tree[myindex] spans iso )
 } // searchSecondPass
 
+} // End namespace Phil
 
-} // end namespace Modules 
-} // end namespace Phil
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:15:08  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 21:07:59  psutton
-// initial revision
-//
-//

@@ -11,31 +11,25 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Geom/Switch.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/MusilRNG.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/CrowdMonitor.h>
-#include <PSECore/Widgets/ScaledBoxWidget.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Geom/Switch.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/MusilRNG.h>
+#include <Core/Math/Trig.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/CrowdMonitor.h>
+#include <Dataflow/Widgets/ScaledBoxWidget.h>
 #include <iostream>
 using std::cerr;
 #include <stdio.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::Geometry;
-using namespace SCICore::TclInterface;
 
 class BldTransform : public Module {
     MatrixIPort* imatrix;
@@ -269,5 +263,4 @@ void BldTransform::tcl_command(TCLArgs& args, void* userdata) {
     }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun

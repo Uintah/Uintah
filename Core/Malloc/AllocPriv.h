@@ -14,8 +14,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-namespace SCICore {
-namespace Malloc {
+namespace SCIRun {
 
 struct OSHunk;
 
@@ -103,38 +102,6 @@ struct Allocator {
 
 void AllocError(char*);
 
-} // End namespace Malloc
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/09/30 00:33:46  sparker
-// Added support for memalign (got orphaned in move from SCIRun)
-//
-// Revision 1.3  1999/09/25 08:30:54  sparker
-// Added support for MALLOC_STATS environment variable.  If set, it will
-//   send statistics about malloc and a list of all unfreed objects at
-//   program shutdown.  It isn't perfect yet - I need to figure out how
-//   to make it run after the C++ dtors.
-//
-// Revision 1.2  1999/09/17 05:04:43  sparker
-// Enhanced malloc tracing facility.  You can now set the environment
-// variable MALLOC_TRACE to a filename, where the allocator will dump
-// all calls to alloc/free.  It will also dump any unfreed objects
-// and some statistics at the end of the program.  Setting MALLOC_TRACE
-// to an empty string sends this information to stderr.
-//
-// Revision 1.1  1999/07/27 16:56:58  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:52:10  dav
-// adding .h files back to src tree
-//
-// Revision 1.1  1999/05/05 21:05:20  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:23  dav
-// Import sources
-//
-//
 

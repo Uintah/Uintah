@@ -1,11 +1,10 @@
-//static char *id="@(#) $Id$";
 
 /* BonoTreeCL.h
    class declarations and code for the BONO tree, curvilinear implementation
    NOTE: This contains some detritus from the T-BON implementation it's
          based on, but probably not enough to impact performance.
 
-   Philip Sutton
+   Packages/Philip Sutton
    June 1999
 
    Copyright (C) 2000 SCI Group, University of Utah
@@ -21,11 +20,9 @@
 #include <math.h>
 #include <strings.h>
 
-using namespace SCICore::GeomSpace;
+using namespace SCIRun;
 
 namespace Phil {
-namespace Modules {
-
 struct VertexCL {
   float pos[3];
 };
@@ -1060,18 +1057,8 @@ BonoTreeCL<T>::searchSecondPass( int currtree, int myindex, int d,
 
   } // if tree[myindex] spans iso
 } // searchSecondPass
+} // End namespace Phil
 
-} // end namespace Modules 
-} // end namespace SCIRun 
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:09:56  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 20:52:33  psutton
-// initial revision
-//
-//

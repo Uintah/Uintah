@@ -1,34 +1,25 @@
 //  DiscreteAttrib.h
-//
 //  Written by:
 //   Michael Callahan
 //   Department of Computer Science
 //   University of Utah
 //   August 2000
-//
 //  Copyright (C) 2000 SCI Institute
-//
 //  Attribute containing a finite number of discrete values.
-//
 
 #ifndef SCI_project_DiscreteAttrib_h
 #define SCI_project_DiscreteAttrib_h 1
 
 #include <vector>
 
-#include <SCICore/Datatypes/Attrib.h>
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/Datatypes/Attrib.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
 
-using SCICore::Containers::LockingHandle;
-using SCICore::Geometry::Point;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
 
 template <class T> class AttribFunctor
 {
@@ -348,8 +339,7 @@ DiscreteAttrib<T>::io(Piostream&)
 }
 
 
-}  // end Datatypes
-}  // end SCICore
+} // End namespace SCIRun
 
 #endif
 

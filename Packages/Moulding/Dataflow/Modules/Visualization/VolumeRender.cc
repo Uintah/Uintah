@@ -7,20 +7,17 @@
  *
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
 
-#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
 
-#include <Moulding/share/share.h>
+#include <Packages/Moulding/share/share.h>
 
 namespace Moulding {
-namespace Modules {
+using namespace SCIRun;
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-
-class MouldingSHARE VolumeRender : public Module {
+class Packages/MouldingSHARE VolumeRender : public Module {
 public:
   VolumeRender(const clString& id);
 
@@ -31,12 +28,12 @@ public:
   virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" MouldingSHARE Module* make_VolumeRender(const clString& id) {
+extern "C" Packages/MouldingSHARE Module* make_VolumeRender(const clString& id) {
   return scinew VolumeRender(id);
 }
 
 VolumeRender::VolumeRender(const clString& id)
-  : Module("VolumeRender", id, Source,"Visualization","Moulding")
+  : Module("VolumeRender", id, Source,"Visualization","Packages/Moulding")
 {
 }
 
@@ -66,8 +63,7 @@ void VolumeRender::tcl_command(TCLArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }
-
-} // End namespace Modules
 } // End namespace Moulding
+
 
 

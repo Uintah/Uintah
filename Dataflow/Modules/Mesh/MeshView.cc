@@ -12,24 +12,24 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Widgets/CrosshairWidget.h>
-#include <SCICore/Containers/Queue.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomPick.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/GeomTetra.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/Switch.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Math/Mat.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/Histogram.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Widgets/CrosshairWidget.h>
+#include <Core/Containers/Queue.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomPick.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/GeomTetra.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/Switch.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Math/Mat.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/Histogram.h>
 
 #include <map.h>
 #include <iostream>
@@ -41,16 +41,7 @@ using std::endl;
 using std::ostringstream;
 
 namespace SCIRun {
-namespace Modules {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::Containers;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
-using namespace SCICore::TclInterface;
 
 #define ALL 0
 #define OUTER 1
@@ -1637,31 +1628,6 @@ void MeshView::geom_moved(GeomPick*, int, double, const Vector&, void*)
 {
 }
 
-} // End namespace Modules
 } // End namespace SCIRun
 
 
-//
-// $Log$
-// Revision 1.6  2000/03/17 18:48:08  dahart
-// Included STL map header files where I forgot them, and removed less<>
-// parameter from map declarations
-//
-// Revision 1.5  2000/03/17 09:29:13  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.4  2000/03/11 00:41:55  dahart
-// Replaced all instances of HashTable<class X, class Y> with the
-// Standard Template Library's std::map<class X, class Y, less<class X>>
-//
-// Revision 1.3  1999/10/07 02:08:20  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/09/08 02:27:06  sparker
-// Various #include cleanups
-//
-// Revision 1.1  1999/09/05 01:15:28  dmw
-// added all of the old SCIRun mesh modules
-//

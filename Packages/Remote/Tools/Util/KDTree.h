@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////
 // KDTree.h - Implements a template class for a KD-Tree.
-//
 // by David K. McAllister, Sep. 1999.
 
 #ifndef _kdtree_h
@@ -21,8 +20,6 @@
 using namespace std;
 
 namespace Remote {
-namespace Tools {
-
 #define MAX_BOX_SIZE 64
 
 template<class _Tp>
@@ -216,8 +213,7 @@ public:
   }
 };
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

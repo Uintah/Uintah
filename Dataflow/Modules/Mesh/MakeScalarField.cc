@@ -10,19 +10,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace SCIRun {
-namespace Modules {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Geometry;
 
 class MakeScalarField : public Module {
     MeshIPort* inmesh;
@@ -92,6 +88,5 @@ void MakeScalarField::execute()
     ofield->send(ScalarFieldHandle(sf));
 }
 
-} // End namespace Modules
 } // End namespace SCIRun
 

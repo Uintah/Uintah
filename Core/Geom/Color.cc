@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Color.cc: Simple RGB color model
@@ -12,12 +11,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Persistent/Persistent.h>
+#include <Core/Geom/Color.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Persistent/Persistent.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Color::Color()
 : _r(0), _g(0), _b(0)
@@ -131,8 +129,6 @@ HSVColor::HSVColor(const HSVColor& copy)
 
 HSVColor::HSVColor(const Color& rgb)
 {
-  using SCICore::Math::Max;
-  using SCICore::Math::Min;
 
    double max(Max(rgb._r,rgb._g,rgb._b));
    double min(Min(rgb._r,rgb._g,rgb._b));
@@ -230,37 +226,23 @@ CharColor::operator!= ( const CharColor& c ) const
 void Pio(Piostream& stream, Color& p)
 {
     stream.begin_cheap_delim();
-    SCICore::PersistentSpace::Pio(stream, p._r);
-    SCICore::PersistentSpace::Pio(stream, p._g);
-    SCICore::PersistentSpace::Pio(stream, p._b);
+    Pio(stream, p._r);
+    Pio(stream, p._g);
+    Pio(stream, p._b);
     stream.end_cheap_delim();
 }
 
 void Pio(Piostream& stream, CharColor& p)
 {
     stream.begin_cheap_delim();
-    SCICore::PersistentSpace::Pio(stream, p.red);
-    SCICore::PersistentSpace::Pio(stream, p.green);
-    SCICore::PersistentSpace::Pio(stream, p.blue);
+    Pio(stream, p.red);
+    Pio(stream, p.green);
+    Pio(stream, p.blue);
     stream.end_cheap_delim();
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
 
 
-//
-// $Log$
-// Revision 1.2  1999/08/17 06:39:04  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:36  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:22  dav
-// Import sources
-//
-//
 

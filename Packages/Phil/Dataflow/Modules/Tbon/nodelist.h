@@ -1,10 +1,9 @@
-//static char *id="@(#) $Id$";
 
 /*
   nodelist.h
   Dynamic data structure containing node bricks for out-of-core algorithms
 
-  Philip Sutton
+  Packages/Philip Sutton
 
   Copyright (C) 2000 SCI Group, University of Utah
 */
@@ -16,8 +15,6 @@
 #include <strings.h>
 
 namespace Phil {
-namespace Modules {
-
 template <class T>
 class NodeList {
 public:
@@ -127,18 +124,8 @@ NodeList<T>::getNode( int bricknum, int nodenum ) {
   return list[i][nodenum];
 } // getValue
 
+} // End namespace Phil
 
-} // end namespace Modules
-} // end namespace Phil
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:15:09  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 21:11:59  psutton
-// initial revision
-//
-//

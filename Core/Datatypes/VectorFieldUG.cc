@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  VectorFieldUG.cc: Vector Fields defined on an unstructured grid
@@ -12,13 +11,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Datatypes/VectorFieldUG.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Datatypes/VectorFieldUG.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 static Persistent* maker()
 {
@@ -102,8 +100,6 @@ int VectorFieldUG::interpolate(const Point& p, Vector& value, int& ix, int exhau
 
 void VectorFieldUG::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     int version=stream.begin_class("VectorFieldUG", VECTORFIELDUG_VERSION);
     // Do the base class....
@@ -126,37 +122,6 @@ void VectorFieldUG::get_boundary_lines(Array1<Point>& lines)
     mesh->get_boundary_lines(lines);
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  1999/08/25 03:48:46  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:59  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:32  mcq
-// Initial commit
-//
-// Revision 1.4  1999/07/07 21:10:47  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.3  1999/04/27 21:14:31  dav
-// working on Datatypes
-//
-// Revision 1.2  1999/04/25 04:14:48  dav
-// oopps...?
-//
-// Revision 1.1  1999/04/25 04:07:22  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:48  dav
-// Import sources
-//
-//
 

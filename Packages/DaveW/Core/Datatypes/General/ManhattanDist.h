@@ -11,25 +11,17 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#ifndef SCI_DaveW_Datatypes_ManhattanDist_h
-#define SCI_DaveW_Datatypes_ManhattanDist_h 1
+#ifndef SCI_Packages/DaveW_Datatypes_ManhattanDist_h
+#define SCI_Packages/DaveW_Datatypes_ManhattanDist_h 1
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array3.h>
-#include <SCICore/Datatypes/ScalarFieldRGint.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array3.h>
+#include <Core/Datatypes/ScalarFieldRGint.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Geometry/Point.h>
 
 namespace DaveW {
-namespace Datatypes {
-
-using SCICore::Datatypes::ScalarFieldRGint;
-using SCICore::Datatypes::ScalarField;
-using SCICore::Geometry::Point;
-using SCICore::Containers::Array1;
-using SCICore::Containers::Array3;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
+using namespace SCIRun;
 
 class ManhattanDist : public ScalarFieldRGint {
     Array1<Point> pts;
@@ -54,24 +46,9 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.2  1999/08/25 03:47:34  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/23 02:52:59  dmw
-// Dave's Datatypes
-//
-// Revision 1.1  1999/05/03 04:52:01  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+
 
 #endif
 

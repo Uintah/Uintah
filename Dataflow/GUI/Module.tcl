@@ -161,9 +161,7 @@ itcl_class Module {
 
 
 
-    #
     #  Make the modules icon on a particular canvas
-    #
     method make_icon {canvas minicanvas modx mody} {
 	global modules
 	set modules "$modules [modname]"
@@ -206,23 +204,17 @@ itcl_class Module {
 		-outline "" -fill $basecolor \
 		-tags [modname]
 
-	#
 	# Make the title
-	#
 	label $p.title -text $name -font $modname_font -anchor w
 	pack $p.title -side top -padx 2 -anchor w
 
-	#
 	# Make the time label
-	#
 	if {$make_time} {
 	    label $p.time -text "00.00" -font $time_font
 	    pack $p.time -side left -padx 2
 	}
 
-	#
 	# Make the progress graph
-	#
 	if {$make_progress_graph} {
 	    frame $p.inset -relief sunken -height 4 -borderwidth 2 \
 		    -width $graph_width
@@ -237,24 +229,18 @@ itcl_class Module {
 	update_progress
 	update_time
 
-	#
 	# Stick it in the canvas
-	#
 	
 	
 	$canvas create window $modx $mody -window $modframe \
 		-tags [modname] -anchor nw 
 
-	#
 	# Set up input/output ports
-	#
 	$this configureIPorts $canvas
 	$this configureOPorts $canvas
 
-	#
 	# Try to find a position for the icon where it doesn't
 	# overlap other icons
-	#
 	set done 0	
 
 
@@ -650,9 +636,7 @@ itcl_class Module {
 	    set modframe $t.module[modname]
 	    $modframe.ff.inset.graph configure -background $color
 	}
-	#
 	# call update_progress
-	#
 	set progress $p
 	update_progress
     }

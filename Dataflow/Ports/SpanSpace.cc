@@ -10,18 +10,16 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Geometry/BBox.h>
-#include <PSECore/Datatypes/SpanSpace.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Geometry/BBox.h>
+#include <Dataflow/Ports/SpanSpace.h>
 
 
-namespace PSECore {
-  namespace Datatypes {
+namespace SCIRun {
     
-    using namespace SCICore::Datatypes;
 
     SpanSpaceBuildUG::SpanSpaceBuildUG ( ScalarFieldUG *field)
       {
@@ -63,5 +61,4 @@ void SpanForest::io(Piostream& stream) {
 */
 
     
-  }
-}
+} // End namespace SCIRun

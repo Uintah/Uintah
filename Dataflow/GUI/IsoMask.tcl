@@ -1,7 +1,7 @@
 
 catch {rename IsoMask ""}
 
-itcl_class PSECommon_Visualization_IsoMask {
+itcl_class Dataflow_Visualization_IsoMask {
     inherit Module
     constructor {config} {
 	set name IsoMask

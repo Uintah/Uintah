@@ -6,8 +6,7 @@
 #include <ulocks.h>
 #endif
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
 typedef struct SharedDataStruct {
 #ifdef __sgi
@@ -38,6 +37,6 @@ public:
   void unlock( void );
 };
 
-}}
+} // End namespace SCIRun
 
 #endif /* SHAREDMEMORY_H_ */

@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////
 // Quant.h - Quantize color images to 256 colors for saving.
-//
 // Modified by David K. McAllister, 1997-1999.
 // Taken from XV v. 3.10, which was taken from xgif and others 1987-1999.
 
@@ -12,8 +11,6 @@ using namespace std;
 #include <stdlib.h>
 
 namespace Remote {
-namespace Tools {
-
 typedef unsigned char byte;
 typedef long long INT64;
 
@@ -88,7 +85,6 @@ private:
 	color_count* ppm_computechash(int &colors);
 };
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

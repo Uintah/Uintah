@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  VectorFieldRG.cc: Vector Fields defined on a Regular grid
@@ -12,12 +11,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Datatypes/VectorFieldRG.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Datatypes/VectorFieldRG.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 static Persistent* maker()
 {
@@ -61,9 +59,6 @@ void VectorFieldRG::locate(const Point& p, int& ix, int& iy, int& iz)
 
 void VectorFieldRG::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Geometry::Pio;
 
     /*int version=*/
     stream.begin_class("VectorFieldRG", VectorFIELDRG_VERSION);
@@ -99,7 +94,6 @@ int VectorFieldRG::interpolate(const Point& p, Vector& value, int&, int)
 
 int VectorFieldRG::interpolate(const Point& p, Vector& value)
 {
-    using SCICore::Geometry::Interpolate;
 
     Vector pn=p-bmin;
     double dx=diagonal.x();
@@ -183,37 +177,6 @@ VectorField* VectorFieldRG::clone()
     return scinew VectorFieldRG(*this);
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/09/08 02:26:49  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/08/25 03:48:46  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:59  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:32  mcq
-// Initial commit
-//
-// Revision 1.3  1999/07/07 21:10:47  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.2  1999/06/21 23:52:31  dav
-// updated makefiles.main
-//
-// Revision 1.1  1999/04/25 04:07:21  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:48  dav
-// Import sources
-//
-//
 

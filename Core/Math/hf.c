@@ -7,7 +7,7 @@
   #define fsqrt(x) ((float)sqrt(x))
 #endif
 
-#include <SCICore/Math/hf.h>
+#include <Core/Math/hf.h>
 
 #ifdef _WIN32
   #include <float.h>

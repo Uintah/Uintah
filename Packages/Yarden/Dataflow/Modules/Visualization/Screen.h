@@ -2,8 +2,6 @@
 #define SCEREN_H
 
 namespace Yarden {
-  namespace Modules {
-
 typedef unsigned long long Word;
 typedef unsigned char Byte;
 typedef Byte Block[8];      // 1 word, 64 bits
@@ -85,8 +83,7 @@ class Screen {
   int validate();
 
 };
+} // End namespace Yarden
 
-  } // namespace Modules
-} // namespace Yarden
 
 #endif

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  SegFldReader.cc: SegFld Reader class
@@ -12,21 +11,16 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <DaveW/Datatypes/General/SegFldPort.h>
-#include <DaveW/Datatypes/General/SegFld.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Packages/DaveW/Core/Datatypes/General/SegFldPort.h>
+#include <Packages/DaveW/Core/Datatypes/General/SegFld.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
 
 namespace DaveW {
-namespace Modules {
-
 using namespace DaveW::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::PersistentSpace;
+using namespace SCIRun;
 
 class SegFldReader : public Module {
     SegFldOPort* outport;
@@ -75,7 +69,6 @@ static void watcher(double pd, void* cbdata)
 
 void SegFldReader::execute()
 {
-    using SCICore::Containers::Pio;
 
     clString fn(filename.get());
     if(!handle.get_rep() || fn != old_filename){
@@ -97,18 +90,6 @@ void SegFldReader::execute()
     }
     outport->send(handle);
 }
-
-} // End namespace Modules
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.2  2000/03/17 09:25:57  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.1  1999/09/01 07:19:52  dmw
-// new DaveW modules
-//
-//
+

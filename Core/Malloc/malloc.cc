@@ -10,8 +10,8 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Malloc/AllocPriv.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Malloc/AllocPriv.h>
 #include <sci_defs.h>
 
 // irix64 KCC stuff
@@ -41,7 +41,7 @@ void* memalign(size_t, size_t) THROWCLAUSE;
 void* valloc(size_t) THROWCLAUSE;
 }
 
-using namespace SCICore::Malloc;
+using namespace SCIRun;
 
 #ifndef DISABLE_SCI_MALLOC
 

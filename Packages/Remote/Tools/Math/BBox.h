@@ -4,11 +4,9 @@
 #ifndef _bbox_h
 #define _bbox_h
 
-#include <Remote/Tools/Math/Vector.h>
+#include <Packages/Remote/Tools/Math/Vector.h>
 
 namespace Remote {
-namespace Tools {
-
 class BBox
 {
 	bool valid;
@@ -100,8 +98,7 @@ inline istream& operator>>(istream& is, BBox& b)
   return is;
 }
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

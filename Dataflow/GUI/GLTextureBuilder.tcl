@@ -1,7 +1,7 @@
 
 catch {rename GLTextureBuilder ""}
 
-itcl_class PSECommon_Visualization_GLTextureBuilder {
+itcl_class Dataflow_Visualization_GLTextureBuilder {
     inherit Module
     constructor {config} {
 	set name GLTextureBuilder

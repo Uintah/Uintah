@@ -14,18 +14,15 @@
 #ifndef SCI_project_TensorParticlesPort_h
 #define SCI_project_TensorParticlesPort_h 1
 
-#include <PSECore/Datatypes/SimplePort.h>
+#include <Dataflow/Ports/SimplePort.h>
 #include "TensorParticles.h"
 
-namespace PSECore {
-namespace Datatypes {
-
+namespace Uintah {
 using namespace Uintah::Datatypes;
 
 typedef SimpleIPort<TensorParticlesHandle> TensorParticlesIPort;
 typedef SimpleOPort<TensorParticlesHandle> TensorParticlesOPort;
+} // End namespace Uintah
 
-} // End namespace Datatypes
-} // End namespace PSECore
 
 #endif

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  SurfTree.cc: Tree of non-manifold bounding surfaces
@@ -18,20 +17,17 @@
 #include <iostream>
 using std::cerr;
 
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/TrivialAllocator.h>
-#include <SCICore/Datatypes/SurfTree.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Grid.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Util/Assert.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/TrivialAllocator.h>
+#include <Core/Datatypes/SurfTree.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Grid.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace SCICore {
-namespace Datatypes {
-
-using Geometry::Cross;
+namespace SCIRun {
 
 static Persistent* make_SurfTree()
 {
@@ -319,7 +315,6 @@ void SurfTree::compute_bboxes() {
 }
 
 static void orderNormal(int i[], const Vector& v) {
-    using namespace SCICore::Math;
     if (Abs(v.x())>Abs(v.y())) {
         if (Abs(v.y())>Abs(v.z())) {  // x y z
             i[0]=0; i[1]=1; i[2]=2;
@@ -347,7 +342,6 @@ static void orderNormal(int i[], const Vector& v) {
 void SurfTree::distance(const Point &p, int &have_hit, double &distBest, 
 			int &compBest, int &faceBest, int comp) {
     
-    using SCICore::Geometry::Dot;
 
     double P[3], t, alpha, beta;
     double u0,u1,u2,v0,v1,v2;
@@ -444,8 +438,6 @@ int SurfTree::inside(const Point &p, int &/*component*/)
 
 void SurfTree::io(Piostream& stream) {
 
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     int version=stream.begin_class("SurfTree", SurfTree_VERSION);
     Surface::io(stream);		    
@@ -531,9 +523,6 @@ GeomObj* SurfTree::get_obj(const ColorMapHandle&)
 
 void Pio(Piostream& stream, SurfInfo& surf)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Geometry::Pio;
 
     stream.begin_cheap_delim();
     Pio(stream, surf.name);
@@ -549,8 +538,6 @@ void Pio(Piostream& stream, SurfInfo& surf)
 
 void Pio(Piostream& stream, FaceInfo& face)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_cheap_delim();
     Pio(stream, face.surfIdx);
@@ -564,8 +551,6 @@ void Pio(Piostream& stream, FaceInfo& face)
     
 void Pio(Piostream& stream, EdgeInfo& edge)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_cheap_delim();
     Pio(stream, edge.wireIdx);
@@ -576,8 +561,6 @@ void Pio(Piostream& stream, EdgeInfo& edge)
     
 void Pio(Piostream& stream, NodeInfo& node)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_cheap_delim();
     Pio(stream, node.surfs);
@@ -587,58 +570,5 @@ void Pio(Piostream& stream, NodeInfo& node)
     stream.end_cheap_delim();
 }
     
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.10  2000/03/13 04:47:53  dmw
-// SurfTree and TriSurface - made get_surfnodes and set_surfnodes work
-// ScalarFieldRG - interpolate uses epsilon bounds, so interpolate on
-// 	the point at (nx-1,ny-1,nz-1) returns a value (rather than
-// 	failing)
-//
-// Revision 1.9  1999/11/17 00:35:07  dmw
-// added support for not renumbering the nodes when extracting a trisurface from a surftree
-//
-// Revision 1.8  1999/11/02 06:06:13  moulding
-// added a #ifdef for win32 to quiet the C++ compiler.  This change
-// relates to bug # 61 in csafe's bugzilla.
-//
-// Revision 1.7  1999/10/07 02:07:34  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.6  1999/09/08 02:26:48  sparker
-// Various #include cleanups
-//
-// Revision 1.5  1999/09/01 06:16:27  dmw
-// took out dependence of SurfTree on TopoSurfTree
-//
-// Revision 1.4  1999/08/25 03:48:41  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/18 20:20:19  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:38:55  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:29  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:44  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1  1999/04/27 21:14:29  dav
-// working on Datatypes
-//
-//

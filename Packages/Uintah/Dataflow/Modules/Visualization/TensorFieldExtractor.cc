@@ -17,7 +17,7 @@ KEYWORDS
     ParticleGridReader, Material/Particle Method
 
 AUTHOR
-    Kurt Zimmerman
+    Packages/Kurt Zimmerman
     Department of Computer Science
     University of Utah
     January 1999
@@ -29,20 +29,20 @@ LOG
 ****************************************/
 #include "TensorFieldExtractor.h"
 
-#include <SCICore/Util/NotFinished.h>
-#include <Uintah/Grid/TypeDescription.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Geometry/IntVector.h>
-#include <SCICore/Geometry/BBox.h>
-#include <Uintah/Components/MPM/Util/Matrix3.h>
-#include <Uintah/Datatypes/NCTensorField.h>
-#include <Uintah/Datatypes/CCTensorField.h>
-#include <Uintah/Interface/DataArchive.h>
-#include <Uintah/Grid/Grid.h>
-#include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/Level.h>
-#include <Uintah/Grid/Patch.h>
+#include <Core/Util/NotFinished.h>
+#include <Packages/Uintah/Grid/TypeDescription.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/BBox.h>
+#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Datatypes/NCTensorField.h>
+#include <Packages/Uintah/Core/Datatypes/CCTensorField.h>
+#include <Packages/Uintah/Interface/DataArchive.h>
+#include <Packages/Uintah/Grid/Grid.h>
+#include <Packages/Uintah/Grid/GridP.h>
+#include <Packages/Uintah/Grid/Level.h>
+#include <Packages/Uintah/Grid/Patch.h>
  
 
 #include <iostream> 
@@ -55,13 +55,7 @@ using std::vector;
 using std::string;
 
 namespace Uintah {
-namespace Modules {
-
-using SCICore::Containers::to_string;
-using namespace SCICore::TclInterface;
-using SCICore::Geometry::BBox;
-using SCICore::Datatypes::NCTensorField;
-using SCICore::Datatypes::CCTensorField;
+using namespace SCIRun;
 using namespace Uintah;
 using namespace Uintah::Datatypes;
 
@@ -272,7 +266,6 @@ void TensorFieldExtractor::execute()
   }
   return;
 }
+} // End namespace Uintah
 //--------------------------------------------------------------- 
-} // end namespace Modules
-} // end namespace Kurt
   

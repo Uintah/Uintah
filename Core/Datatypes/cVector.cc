@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  cVector.cc : ?
@@ -12,7 +11,7 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Datatypes/cVector.h>
+#include <Core/Datatypes/cVector.h>
 #include <fstream>
 #include <iostream>
 using std::complex;
@@ -21,8 +20,7 @@ using std::abs;
 using std::conj;
 using std::endl;
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 // Dd: Should this be here?
 PersistentTypeID cVector::type_id("cVector", "Datatype", 0);
@@ -235,40 +233,5 @@ void cVector::io(Piostream&) {
   cerr << "cVector::io not finished\n";
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.7  1999/11/17 22:28:04  moulding
-// nuked some win32 #ifdef's and replaced #include <iostream.h> with #include <iostream>
-//
-// Revision 1.6  1999/10/26 21:52:05  moulding
-// added a #ifndef block for win32.  cerr isn't in visual c++'s std namespace yet.
-//
-// Revision 1.5  1999/10/07 02:07:36  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/09/04 06:01:46  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.3  1999/08/25 03:48:48  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:39:02  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:34  mcq
-// Initial commit
-//
-// Revision 1.1  1999/04/25 04:07:25  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:48  dav
-// Import sources
-//
-//

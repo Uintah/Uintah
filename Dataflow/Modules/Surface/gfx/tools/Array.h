@@ -90,17 +90,5 @@ inline void array<T>::resize(int l)
     delete[] old;
 }
 
-//
-// $Log$
-// Revision 1.1  1999/07/27 16:58:05  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 20:17:17  dav
-// added back PSECommon .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:32  dav
-// Import sources
-//
-//
 
 #endif // GFXTOOLS_ARRAY_INCLUDED

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  SegFld.cc:  SegFld dataype
@@ -13,21 +12,17 @@
  */
 
 
-#include <DaveW/Datatypes/General/SegFld.h>
-#include <SCICore/Datatypes/ScalarFieldRGchar.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Packages/DaveW/Core/Datatypes/General/SegFld.h>
+#include <Core/Datatypes/ScalarFieldRGchar.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <iostream>
 using std::cerr;
 #include <stdio.h>
 
 namespace DaveW {
-namespace Datatypes {
-
-using SCICore::Containers::Queue;
-using SCICore::Math::Max;
-using SCICore::Math::Min;
+using namespace SCIRun;
 
 static Persistent* make_SegFld()
 {
@@ -41,10 +36,10 @@ SegFld::SegFld()
 {
 }
 
-void SegFld::printComponents() {
+void SegFld::printCore/CCA/Components() {
     for (int i=0; i<comps.size(); i++) {
 	if (comps[i] != 0)
-	    cerr << "Component "<<i<<": size="<<get_size(comps[i])<<" type="<<get_type(comps[i])<<"\n";
+	    cerr << "Core/CCA/Component "<<i<<": size="<<get_size(comps[i])<<" type="<<get_type(comps[i])<<"\n";
     }
 }
 
@@ -139,7 +134,6 @@ ScalarField* SegFld::clone()
 
 void SegFld::io(Piostream& stream)
 {
-    using SCICore::Containers::Pio;
 
     stream.begin_class("SegFld", SegFld_VERSION);
 	// Do the base class first...
@@ -219,7 +213,7 @@ ScalarFieldRG* SegFld::getBitFld() {
 //   }
 //}
 
-void SegFld::annexComponent(int old_comp, int new_comp) {
+void SegFld::annexCore/CCA/Component(int old_comp, int new_comp) {
 //    cerr << "setting component "<<old_comp<<" to new comp:"<<new_comp<<"\n";
     int i;
     tripleInt idx;
@@ -423,7 +417,7 @@ void SegFld::bldFromChar(ScalarFieldRGchar* ch) {
 	    comps.add(get_index(WorkingMatls[i]-'0', 
 				compMembers[FinalLabels[i]]->size()));
 
-    printComponents();
+    printCore/CCA/Components();
 }
 
 void SegFld::bldFromCharOld(ScalarFieldRGchar* ch) {
@@ -500,11 +494,11 @@ void SegFld::bldFromCharOld(ScalarFieldRGchar* ch) {
 	}
     }
     cerr << "\n";
-    printComponents();
+    printCore/CCA/Components();
     cerr << "DONE!\n";
 }
 
-void SegFld::killSmallComponents(int min) {
+void SegFld::killSmallCore/CCA/Components(int min) {
     int i;
     int ii,jj,kk;
     tripleInt idx;
@@ -599,19 +593,18 @@ void SegFld::killSmallComponents(int min) {
 		    (ii != max_comp)) {
 //		    cerr << "annexing comp: "<<ii<<" (was "<<get_size(comps[ii])<<")  ";
 		    comps[ii]=0;
-		    annexComponent(ii, max_comp);
+		    annexCore/CCA/Component(ii, max_comp);
 		}
 	    }
 	cerr << " -- annexed by "<<max_comp<<", newsize="<<min_sz+max_sz<<"\n";
 	comps[min_comp]=0;
-	annexComponent(min_comp, max_comp);
+	annexCore/CCA/Component(min_comp, max_comp);
 	comps[max_comp] = get_index(max_type, max_sz+min_sz);
     }
     compress();
 }
 
 void Pio(Piostream& stream, tripleInt& t) {
-    using SCICore::PersistentSpace::Pio;
 
     int i;
     if (stream.reading()) {
@@ -624,28 +617,6 @@ void Pio(Piostream& stream, tripleInt& t) {
 	Pio(stream, i);
     }
 }
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.5  2000/03/04 00:16:32  dmw
-// update some DaveW stuff
-//
-// Revision 1.4  1999/10/07 02:06:21  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/02 04:45:51  dmw
-// magnetic field
-//
-// Revision 1.2  1999/09/01 05:27:36  dmw
-// more DaveW datatypes...
-//
-// Revision 1.1  1999/08/23 02:53:00  dmw
-// Dave's Datatypes
-//
-// Revision 1.1  1999/05/03 04:52:04  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

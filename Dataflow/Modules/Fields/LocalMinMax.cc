@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id: LocalMinMax.cc,v";
 
 /*
  *  LocalMinMax.cc:  Compute a classified SF with 0=min, 1=non-extermal, 2=max
@@ -12,20 +11,16 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-#include <SCICore/Math/MinMax.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Core/Math/MinMax.h>
 #include <iostream>
 using std::cerr;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using SCICore::Math::Max;
 
 class LocalMinMax : public Module {
     ScalarFieldIPort* ifield;
@@ -191,27 +186,5 @@ void LocalMinMax::execute()
     ofield->send(osfH);
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  2000/12/15 06:24:19  mcole
-// merge branch back into trunk
-//
-// Revision 1.1.2.1  2000/10/31 02:22:41  dmw
-// Merging PSECommon changes from HEAD to FIELD_REDESIGN branch
-//
-// Revision 1.1  2000/10/29 04:34:51  dmw
-// BuildFEMatrix -- ground an arbitrary node
-// SolveMatrix -- when preconditioning, be careful with 0's on diagonal
-// MeshReader -- build the grid when reading
-// SurfToGeom -- support node normals
-// IsoSurface -- fixed tet mesh bug
-// MatrixWriter -- support split file (header + raw data)
-//
-// LookupSplitSurface -- split a surface across a place and lookup values
-// LookupSurface -- find surface nodes in a sfug and copy values
-// Current -- compute the current of a potential field (- grad sigma phi)
-// LocalMinMax -- look find local min max points in a scalar field
-//

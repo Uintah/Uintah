@@ -1,8 +1,7 @@
-#include <SCICore/Datatypes/GLMIP.h>
+#include <Core/Datatypes/GLMIP.h>
 #include <GL/gl.h>
 
-namespace SCICore {
-namespace GeomSpace  {
+namespace SCIRun {
 
 
 
@@ -24,5 +23,4 @@ void GLMIP::postDraw()
 }
 
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun

@@ -10,31 +10,26 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomText.h>
-#include <SCICore/Geom/ColorMapTex.h>
-#include <SCICore/Geom/GeomTransform.h>
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Geom/Sticky.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomText.h>
+#include <Core/Geom/ColorMapTex.h>
+#include <Core/Geom/GeomTransform.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geom/Sticky.h>
 #include <values.h>
 #include <stdio.h>
 #include <iostream>
 using std::cerr;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
 
 class ColorMapKey : public Module {
   ColorMapIPort *imap;
@@ -146,5 +141,4 @@ void ColorMapKey::execute() {
   ogeom->addObj( sticky, "ColorMapKey" );
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun

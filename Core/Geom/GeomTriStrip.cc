@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  TriStrip.cc: Triangle Strip object
@@ -12,19 +11,18 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Geom/GeomTriStrip.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geom/GeomSave.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geom/GeomTriStrip.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Geom/GeomSave.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 using std::ostream;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Persistent* make_GeomTriStrip()
 {
@@ -159,14 +157,13 @@ int GeomTriStripList::size(void)
 
 void GeomTriStripList::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomTriStripList", GEOMTRISTRIPLIST_VERSION);
     GeomObj::io(stream);
     Pio(stream, n_strips);
-    SCICore::Containers::Pio(stream, pts);
-    SCICore::Containers::Pio(stream, nrmls);
-    SCICore::Containers::Pio(stream, strips);
+    Pio(stream, pts);
+    Pio(stream, nrmls);
+    Pio(stream, strips);
     stream.end_class();
 }
 
@@ -230,37 +227,5 @@ int GeomTriStripList::num_since(void)
 
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.6  1999/10/07 02:07:47  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/08/29 00:46:56  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.4  1999/08/28 17:54:43  sparker
-// Integrated new Thread library
-//
-// Revision 1.3  1999/08/17 23:50:28  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:16  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:46  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:54  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1.1.1  1999/04/24 23:12:22  dav
-// Import sources
-//
-//

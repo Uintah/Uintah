@@ -1,37 +1,29 @@
 //  RegLatticeGeom.h - A lattice with equally spaced axis in 1,
 //  2, or 3 dimensions
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
 
 #ifndef SCI_project_RegLatticeGeom_h
 #define SCI_project_RegLatticeGeom_h 1
 
-#include <SCICore/Datatypes/LatticeGeom.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/Datatypes/LatticeGeom.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
 
 #include <vector>
 #include <string>
 
 
-namespace SCICore {
-namespace Datatypes{
+namespace SCIRun {
 
-using SCICore::Containers::LockingHandle;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
 using std::vector;
 using std::string;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
 
 
 class SCICORESHARE RegLatticeGeom:public LatticeGeom{  
@@ -51,8 +43,7 @@ protected:
 };
 
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun
   
 
 #endif

@@ -1,14 +1,11 @@
 //  FieldWrapper.h - provides a wrapper for passing fields between the
 //  register module and the domain manager module.
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
-//
 //  TODO:
 //  - Test the use of FieldHandle rather than SFieldHandle, 
 //  VFieldHandle, ...
@@ -18,23 +15,19 @@
 #ifndef SCI_project_FieldWrapper_h
 #define SCI_project_FieldWrapper_h 1
 
-#include <SCICore/Datatypes/SField.h>
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Datatypes/Geom.h>
-#include <SCICore/Datatypes/Attrib.h>
+#include <Core/Datatypes/SField.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/Geom.h>
+#include <Core/Datatypes/Attrib.h>
 
 
 
 #include <vector>
 #include <string>
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
 
-using SCICore::Containers::LockingHandle;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
 
 class FieldWrapper;
 typedef LockingHandle<FieldWrapper> FieldWrapperHandle;
@@ -80,8 +73,7 @@ private:
 };
   
 
-} // end namesapace Datatypes
-} // end namesapace SCICore
+} // End namespace SCIRun
 
 
 #endif

@@ -12,25 +12,20 @@
  */
 
 
-#include <PSECommon/Modules/Salmon/Renderer.h>
-#include <PSECommon/Modules/Salmon/Roe.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Dataflow/Modules/Salmon/Renderer.h>
+#include <Dataflow/Modules/Salmon/Roe.h>
+#include <Core/Containers/String.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 #include <values.h>
-#include <SCICore/Thread/FutureValue.h>
-#include <SCICore/Util/NotFinished.h>
+#include <Core/Thread/FutureValue.h>
+#include <Core/Util/NotFinished.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using SCICore::Containers::AVLTreeIter;
-using SCICore::Geometry::Dot;
-using SCICore::Math::Min;
-using SCICore::Math::Max;
 
 static AVLTree<clString, RegisterRenderer*>* known_renderers=0;
 static int db_trimmed=0;
@@ -159,5 +154,4 @@ void Renderer::getData(int, FutureValue<GeometryData*>* result)
     result->send(0);
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun

@@ -1,16 +1,13 @@
 #ifndef FULLRESITERATOR_H
 #define FULLRESITERATOR_H
 
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Ray.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Ray.h>
 #include "GLTextureIterator.h"
 #include "GLTexture3D.h"
 
 namespace Kurt {
-namespace Datatypes {
-
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Ray;
+using namespace SCIRun;
 
 
 /**************************************
@@ -24,7 +21,7 @@ GENERAL INFORMATION
 
    FullResIterator.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -70,7 +67,6 @@ protected:
   void SetNext();
 private:
 };
+} // End namespace Kurt
 
-} // end namespace Datatypes
-} // end namespace Kurt
 #endif

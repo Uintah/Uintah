@@ -45,25 +45,20 @@ POSSIBLE REVISIONS:
 
 
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 #include <sstream>
 using std::ostringstream;
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Math;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
 class ErrorMetric : public Module {
 
@@ -206,46 +201,7 @@ void ErrorMetric::execute()
      }
 //     cerr << "Error="<<*val<<"\n";
      d_errorP->send(errorH);
-}
-} // End namespace Modules
 } // End namespace DaveW
+}
 
 
-//
-// $Log$
-// Revision 1.10  2000/08/01 18:03:03  dmw
-// fixed errors
-//
-// Revision 1.8  2000/07/12 16:42:47  lfox
-// Enhanced cocoon style comments
-//
-// Revision 1.7  2000/03/17 09:25:43  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.6  2000/02/02 21:54:00  dmw
-// Makefile, index - added new modules and removed no-longer-used
-// libraries
-// Radiosity - fixed 64-bit include guards
-// EEG/Makefile.in - removed InvEEGSolve from Makefile
-// Taubin - constrained relaxation
-// ErrorMetrix - no idea
-// all others are just new modules
-//
-// Revision 1.5  1999/12/11 05:43:20  dmw
-// need to take sqrt to get RMS error
-//
-// Revision 1.4  1999/10/07 02:06:34  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/22 18:43:25  dmw
-// added new GUI
-//
-// Revision 1.2  1999/09/08 02:26:27  sparker
-// Various #include cleanups
-//
-// Revision 1.1  1999/09/02 04:49:24  dmw
-// more of Dave's modules
-//
-//

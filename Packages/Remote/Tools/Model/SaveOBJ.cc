@@ -1,14 +1,11 @@
 // SaveOBJ.cpp - Save an OBJ model.
-//
 // David McAllister, Aug. 1999.
 
-#include <Remote/Tools/Model/Model.h>
+#include <Packages/Remote/Tools/Model/Model.h>
 
 #include <stdio.h>
 
 namespace Remote {
-namespace Tools {
-
 bool Model::SaveOBJ(const char *fname)
 {
   int i;
@@ -69,7 +66,6 @@ bool Model::SaveOBJ(const char *fname)
 
   return false;
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

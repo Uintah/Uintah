@@ -15,11 +15,10 @@
 #ifndef SCI_project_Point_Widget_h
 #define SCI_project_Point_Widget_h 1
 
-#include <PSECore/Widgets/BaseWidget.h>
-#include <SCICore/Geom/Material.h>
+#include <Dataflow/Widgets/BaseWidget.h>
+#include <Core/Geom/Material.h>
 
-namespace PSECore {
-namespace Widgets {
+namespace SCIRun {
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off warnings about partially overridden virtual functions
@@ -53,31 +52,11 @@ protected:
    virtual clString GetMaterialName( const Index mindex ) const;   
 };
 
-} // End namespace Widgets
-} // End namespace PSECore
+} // End namespace SCIRun
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1682
 #endif
 
-//
-// $Log$
-// Revision 1.3  1999/10/07 02:07:25  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/08/17 06:38:31  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:08  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 20:17:25  dav
-// added back PSECore .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//
 
 #endif

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Sample2D.cc: Generate Sample2D points in a domain
@@ -12,18 +11,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <DaveW/Datatypes/CS684/Sample2D.h>
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Math/Expon.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/Sample2D.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Math/Expon.h>
 
 #include <iostream>
 using std::cerr;
 
 namespace DaveW {
-namespace Datatypes {
-
-using namespace SCICore::PersistentSpace;
-using namespace SCICore::Containers;
+using namespace SCIRun;
 
 Sample2D::Sample2D(int mr)
 : mr(mr)
@@ -209,18 +205,5 @@ void Sample2D::genSamplesQuasiMonteCarlo(Array1<double>&x, Array1<double>&y,
 	y[k-start]=(k+0.5)/max;
     }
 }
-
-} // End namespace Datatypes
 } // End namespace DaveW
-//
-// $Log$
-// Revision 1.2  1999/10/07 02:06:19  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.1  1999/08/23 02:52:57  dmw
-// Dave's Datatypes
-//
-// Revision 1.2  1999/05/03 04:52:03  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

@@ -2,14 +2,13 @@
 //=======================
 // sock.h
 // David Hart
-//
 // Copyright 2000
 // Scientific Computing and Imaging,
 // University of Utah,
 //=======================
 
-#ifndef SCICore_OS_sock_H
-#define SCICore_OS_sock_H
+#ifndef Core_OS_sock_H
+#define Core_OS_sock_H
 
 #include <string.h>
 
@@ -33,8 +32,7 @@
 #include <sys/errno.h>
 #endif
 
-namespace SCICore {
-namespace OS {
+namespace SCIRun {
 
 //----------------------------------------------------------------------
 // class socketinitializer
@@ -192,7 +190,6 @@ private:
 
 //----------------------------------------------------------------------
 
-} // namespace OS
-} // namespace SCICore
+} // End namespace SCIRun
 
-#endif // SCICore_OS_sock_H
+#endif // Core_OS_sock_H

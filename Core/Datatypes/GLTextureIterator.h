@@ -1,18 +1,15 @@
 #ifndef GLTEXTUREITERATOR_H
 #define GLTEXTUREITERATOR_H
 
-#include <SCICore/Geometry/Ray.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Datatypes/GLTexture3D.h>
+#include <Core/Geometry/Ray.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Datatypes/GLTexture3D.h>
 #include <vector>
 #include <deque>
 
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
   
-  using SCICore::Geometry::Point;
-  using SCICore::Geometry::Ray;
   using std::vector;
   using std::deque;
 
@@ -87,6 +84,5 @@ private:
   GLTextureIterator(){}
 };
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun
 #endif

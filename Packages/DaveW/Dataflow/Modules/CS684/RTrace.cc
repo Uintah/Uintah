@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  RTrace.cc:  Take in a scene (through a VoidStarPort), and output the scene
@@ -13,36 +12,36 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Containers/String.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/VoidStarPort.h>
-#include <SCICore/Datatypes/VoidStar.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/VoidStarPort.h>
+#include <Core/Datatypes/VoidStar.h>
 #define Colormap XColormap
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
-#include <SCICore/Geom/GeomOpenGL.h>
+#include <Core/Geom/GeomOpenGL.h>
 #include <tcl.h>
 #include <tk.h>
 #undef Colormap
-#include <PSECore/Dataflow/Module.h>
-#include <DaveW/Datatypes/CS684/DRaytracer.h>
-#include <DaveW/Datatypes/CS684/RTPrims.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Util/Timer.h>
-#include <PSECore/Widgets/ViewWidget.h>
+#include <Dataflow/Network/Module.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/DRaytracer.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/RTPrims.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCL.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Util/Timer.h>
+#include <Dataflow/Widgets/ViewWidget.h>
 
 #include <iostream>
 using std::cerr;
@@ -57,16 +56,8 @@ extern Tcl_Interp* the_interp;
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
 namespace DaveW {
-namespace Modules {
-
 using namespace DaveW::Datatypes;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Widgets;
-using namespace SCICore::Containers;
-using namespace SCICore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Thread;
+using namespace SCIRun;
 
 class RTrace : public Module {
     VoidStarIPort *iRT;
@@ -543,11 +534,7 @@ int RTrace::makeCurrent() {
 //    glMatrixMode(GL_MODELVIEW);
 //    glLoadIdentity();
     return 1;
-}
 } // End namespace DaveW
-} // End namespace Uintah
+}
 
-//
 // $Log
-//
-//

@@ -12,48 +12,41 @@
 
 #include <stdio.h>
 #include <time.h>
-#include <SCICore/Containers/Queue.h>  
-#include <SCICore/Persistent/Pstreams.h>          
-#include <SCICore/Geometry/BBox.h>
-#include <PSECore/Datatypes/SpanSpace.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <SCICore/Geom/BBoxCache.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
+#include <Core/Containers/Queue.h>  
+#include <Core/Persistent/Pstreams.h>          
+#include <Core/Geometry/BBox.h>
+#include <Dataflow/Ports/SpanSpace.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/BBoxCache.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Material.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
 
-#include <PSECore/Datatypes/SpanSpace.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h> 
-#include <SCICore/Datatypes/ScalarFieldRGfloat.h> 
-#include <SCICore/Datatypes/ScalarFieldRGint.h> 
-#include <SCICore/Datatypes/ScalarFieldRGshort.h> 
-#include <SCICore/Datatypes/ScalarFieldRGushort.h> 
-#include <SCICore/Datatypes/ScalarFieldRGchar.h> 
-#include <SCICore/Datatypes/ScalarFieldRGuchar.h> 
+#include <Dataflow/Ports/SpanSpace.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h> 
+#include <Core/Datatypes/ScalarFieldRGfloat.h> 
+#include <Core/Datatypes/ScalarFieldRGint.h> 
+#include <Core/Datatypes/ScalarFieldRGshort.h> 
+#include <Core/Datatypes/ScalarFieldRGushort.h> 
+#include <Core/Datatypes/ScalarFieldRGchar.h> 
+#include <Core/Datatypes/ScalarFieldRGuchar.h> 
 
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/SpanPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/SpanPort.h>
 
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCL.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCL.h>
 
 #include <iostream>
 
 
-namespace PSECommon {
-  namespace Modules {
+namespace SCIRun {
     
-    using namespace SCICore::TclInterface;
-    using namespace SCICore::Containers;
-    using namespace SCICore::GeomSpace;
-    using namespace SCICore::Geometry;
-    using namespace PSECore::Dataflow;
-    using namespace PSECore::Datatypes;
-    //using namespace PSECommon::Algorithms;
+    //using namespace Dataflow::Algorithms;
     
     class Span : public Module 
     {
@@ -167,5 +160,4 @@ namespace PSECommon {
     }
 
 
-  } // namespace Modules
-} // namespace PSECommon
+} // End namespace SCIRun

@@ -1,14 +1,10 @@
-#
 #  Filebox.tcl
-#
 #  Written by:
 #   James Purciful
 #   Department of Computer Science
 #   University of Utah
 #   Mar. 1994
-#
 #  Copyright (C) 1994 SCI Group
-#
 
 proc updateFilebox { w } {
     set dirs $w.f.bro.dir.dirs

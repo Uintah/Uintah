@@ -2,12 +2,9 @@
 # This is a shell archive (produced by shar 3.49)
 # To extract the files from this archive, save it to a file, remove
 # everything above the "!/bin/sh" line above, and type "sh file_name".
-#
 # made 01/05/1995 18:23 UTC by pozo@salsa
 # Source directory /tmp_mnt/home/fs3b/pozo/projects/SparseLib++/1.3/iml/include
-#
 # existing files will NOT be overwritten unless -c is specified
-#
 # This shar contains:
 # length  mode       name
 # ------ ---------- ------------------------------------------
@@ -19,7 +16,6 @@
 #   3400 -r--r--r-- gmres.h
 #   1379 -r--r--r-- ir.h
 #   4089 -r--r--r-- qmr.h
-#
 # ============= bicg.h ==============
 if test -f 'bicg.h' -a X"$1" != X"-c"; then
 	echo 'x - skipping bicg.h (File already exists)'
@@ -28,23 +24,17 @@ echo 'x - extracting bicg.h (Text)'
 sed 's/^X//' << 'SHAR_EOF' > 'bicg.h' &&
 //*****************************************************************
 // Iterative template routine -- BiCG
-//
 // BiCG solves the unsymmetric linear system Ax = b 
 // using the Preconditioned BiConjugate Gradient method
-//
 // BiCG follows the algorithm described on p. 22 of the 
 // SIAM Templates book.
-//
 // The return value indicates convergence within max_iter (input)
 // iterations (0), or no convergence within max_iter iterations (1).
-//
 // Upon successful return, output arguments have the following values:
-//  
 //        x  --  approximate solution to Ax = b
 // max_iter  --  the number of iterations performed before the
 //               tolerance was reached
 //      tol  --  the residual after the final iteration
-//  
 //*****************************************************************
 X
 X
@@ -121,23 +111,17 @@ echo 'x - extracting bicgstab.h (Text)'
 sed 's/^X//' << 'SHAR_EOF' > 'bicgstab.h' &&
 //*****************************************************************
 // Iterative template routine -- BiCGSTAB
-//
 // BiCGSTAB solves the unsymmetric linear system Ax = b 
 // using the Preconditioned BiConjugate Gradient Stabilized method
-//
 // BiCGSTAB follows the algorithm described on p. 27 of the 
 // SIAM Templates book.
-//
 // The return value indicates convergence within max_iter (input)
 // iterations (0), or no convergence within max_iter iterations (1).
-//
 // Upon successful return, output arguments have the following values:
-//  
 //        x  --  approximate solution to Ax = b
 // max_iter  --  the number of iterations performed before the
 //               tolerance was reached
 //      tol  --  the residual after the final iteration
-//  
 //*****************************************************************
 X
 X
@@ -220,23 +204,17 @@ echo 'x - extracting cg.h (Text)'
 sed 's/^X//' << 'SHAR_EOF' > 'cg.h' &&
 //*****************************************************************
 // Iterative template routine -- CG
-//
 // CG solves the symmetric positive definite linear
 // system Ax=b using the Conjugate Gradient method.
-//
 // CG follows the algorithm described on p. 15 in the 
 // SIAM Templates book.
-//
 // The return value indicates convergence within max_iter (input)
 // iterations (0), or no convergence within max_iter iterations (1).
-//
 // Upon successful return, output arguments have the following values:
-//  
 //        x  --  approximate solution to Ax = b
 // max_iter  --  the number of iterations performed before the
 //               tolerance was reached
 //      tol  --  the residual after the final iteration
-//  
 //*****************************************************************
 X
 template < class Matrix, class Vector, class Preconditioner, class Real >
@@ -305,23 +283,17 @@ echo 'x - extracting cgs.h (Text)'
 sed 's/^X//' << 'SHAR_EOF' > 'cgs.h' &&
 //*****************************************************************
 // Iterative template routine -- CGS
-//
 // CGS solves the unsymmetric linear system Ax = b 
 // using the Conjugate Gradient Squared method
-//
 // CGS follows the algorithm described on p. 26 of the 
 // SIAM Templates book.
-//
 // The return value indicates convergence within max_iter (input)
 // iterations (0), or no convergence within max_iter iterations (1).
-//
 // Upon successful return, output arguments have the following values:
-//  
 //        x  --  approximate solution to Ax = b
 // max_iter  --  the number of iterations performed before the
 //               tolerance was reached
 //      tol  --  the residual after the final iteration
-//  
 //*****************************************************************
 X
 template < class Matrix, class Vector, class Preconditioner, class Real >
@@ -395,23 +367,17 @@ echo 'x - extracting cheby.h (Text)'
 sed 's/^X//' << 'SHAR_EOF' > 'cheby.h' &&
 //*****************************************************************
 // Iterative template routine -- CHEBY
-//
 // CHEBY solves the symmetric positive definite linear
 // system Ax = b using the Preconditioned Chebyshev Method
-//
 // CHEBY follows the algorithm described on p. 30 of the 
 // SIAM Templates book.
-//
 // The return value indicates convergence within max_iter (input)
 // iterations (0), or no convergence within max_iter iterations (1).
-//
 // Upon successful return, output arguments have the following values:
-//  
 //        x  --  approximate solution to Ax = b
 // max_iter  --  the number of iterations performed before the
 //               tolerance was reached
 //      tol  --  the residual after the final iteration
-//  
 //*****************************************************************
 X
 X
@@ -483,23 +449,17 @@ echo 'x - extracting gmres.h (Text)'
 sed 's/^X//' << 'SHAR_EOF' > 'gmres.h' &&
 //*****************************************************************
 // Iterative template routine -- GMRES
-//
 // GMRES solves the unsymmetric linear system Ax = b using the 
 // Generalized Minimum Residual method
-//
 // GMRES follows the algorithm described on p. 20 of the 
 // SIAM Templates book.
-//
 // The return value indicates convergence within max_iter (input)
 // iterations (0), or no convergence within max_iter iterations (1).
-//
 // Upon successful return, output arguments have the following values:
-//  
 //        x  --  approximate solution to Ax = b
 // max_iter  --  the number of iterations performed before the
 //               tolerance was reached
 //      tol  --  the residual after the final iteration
-//  
 //*****************************************************************
 X
 X
@@ -645,20 +605,15 @@ echo 'x - extracting ir.h (Text)'
 sed 's/^X//' << 'SHAR_EOF' > 'ir.h' &&
 //*****************************************************************
 // Iterative template routine -- Preconditioned Richardson
-//
 // IR solves the unsymmetric linear system Ax = b using 
 // Iterative Refinement (preconditioned Richardson iteration).
-//
 // The return value indicates convergence within max_iter (input)
 // iterations (0), or no convergence within max_iter iterations (1).
-//
 // Upon successful return, output arguments have the following values:
-//  
 //        x  --  approximate solution to Ax = b
 // max_iter  --  the number of iterations performed before the
 //               tolerance was reached
 //      tol  --  the residual after the final iteration
-//  
 //*****************************************************************
 X
 template < class Matrix, class Vector, class Preconditioner, class Real >
@@ -714,11 +669,9 @@ echo 'x - extracting qmr.h (Text)'
 sed 's/^X//' << 'SHAR_EOF' > 'qmr.h' &&
 //*****************************************************************
 // Iterative template routine -- QMR
-//
 // QMR.h solves the unsymmetric linear system Ax = b using the
 // Quasi-Minimal Residual method following the algorithm as described
 // on p. 24 in the SIAM Templates book.
-//
 //   -------------------------------------------------------------
 //   return value     indicates
 //   ------------     ---------------------
@@ -732,14 +685,11 @@ sed 's/^X//' << 'SHAR_EOF' > 'qmr.h' &&
 //        6             ep
 //        7             xi
 //   -------------------------------------------------------------
-//   
 // Upon successful return, output arguments have the following values:
-//
 //        x  --  approximate solution to Ax=b
 // max_iter  --  the number of iterations performed before the
 //               tolerance was reached
 //      tol  --  the residual after the final iteration
-//
 //*****************************************************************
 X
 X

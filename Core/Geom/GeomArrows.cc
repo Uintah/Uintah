@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  GeomArrows.cc: Arrows object
@@ -12,20 +11,19 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <SCICore/Geom/GeomArrows.h>
+#include <Core/Geom/GeomArrows.h>
 
-#include <SCICore/Geom/GeomSave.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Persistent/Persistent.h>
+#include <Core/Geom/GeomSave.h>
+#include <Core/Containers/String.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Persistent/Persistent.h>
 #include <iostream>
 using std::ostream;
 
 #include <stdio.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Persistent* make_GeomArrows()
 {
@@ -110,19 +108,18 @@ GeomObj* GeomArrows::clone()
 
 void GeomArrows::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomArrows", GEOMARROWS_VERSION);
     GeomObj::io(stream);
     Pio(stream, headwidth);
     Pio(stream, headlength);
-    SCICore::Containers::Pio(stream, shaft_matls);
-    SCICore::Containers::Pio(stream, back_matls);
-    SCICore::Containers::Pio(stream, head_matls);
-    SCICore::Containers::Pio(stream, positions);
-    SCICore::Containers::Pio(stream, directions);
-    SCICore::Containers::Pio(stream, v1);
-    SCICore::Containers::Pio(stream, v2);
+    Pio(stream, shaft_matls);
+    Pio(stream, back_matls);
+    Pio(stream, head_matls);
+    Pio(stream, positions);
+    Pio(stream, directions);
+    Pio(stream, v1);
+    Pio(stream, v2);
     stream.end_class();
 }
 
@@ -372,10 +369,7 @@ bool GeomArrows::saveobj(ostream& out, const clString&, GeomSave* saveinfo)
   return true;
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
 // $Log
-//
 

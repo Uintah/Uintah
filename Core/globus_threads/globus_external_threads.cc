@@ -17,19 +17,16 @@ CVS Information:
 #include "globus_common.h"
 #include "globus_thread_common.h"
 #include "globus_hashtable.h"
-#include <SCICore/Thread/ConditionVariable.h>
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Thread/Runnable.h>
-#include <SCICore/Thread/Semaphore.h>
-#include <SCICore/Thread/Thread.h>
+#include <Core/Thread/ConditionVariable.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Thread.h>
 #include <iostream>
-using SCICore::Thread::ConditionVariable;
-using SCICore::Thread::Mutex;
-using SCICore::Thread::Runnable;
-using SCICore::Thread::Semaphore;
-using SCICore::Thread::Thread;
 
 #define GLOBUS_L_LIBC_MAX_ERR_SIZE 512
+
+using namespace SCIRun;
 
 #define globus_i_thread_test_rc( a, b )				\
     do								\
@@ -270,7 +267,7 @@ globus_thread_create(globus_thread_t *user_thread,
 
     if(user_thread)
     {
-	*user_thread = (SCICore_Thread_Thread*)thread->thread;
+	*user_thread = (Core_Thread_Thread*)thread->thread;
     }
 
     return (0);

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ConstraintSolver.cc
@@ -12,8 +11,8 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <PSECore/Constraints/ConstraintSolver.h>
-#include <SCICore/Util/Debug.h>
+#include <Dataflow/Constraints/ConstraintSolver.h>
+#include <Core/Util/Debug.h>
 #include <iostream>
 using std::cerr;
 using std::cout;
@@ -22,10 +21,8 @@ using std::ostream;
 #include <stdio.h>
 #include <string.h>
 
-namespace PSECore {
-namespace Constraints {
+namespace SCIRun {
 
-using SCICore::Util::DebugSwitch;
 
 static DebugSwitch cs_debug("ConstraintSolver", "Print");
 static DebugSwitch cs2_debug("ConstraintSolver", "Stack");
@@ -265,29 +262,5 @@ void StackItem::print( ostream& os )
     os<<"StackItem:  "<<var->GetName()<<","<<rtype<<","<<iter<<endl;
 }
 
-} // End namespace Constraints
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.5  1999/10/07 02:07:15  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/09/08 02:26:38  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/08/18 21:45:25  sparker
-// Array1 const correctness, and subsequent fixes
-// Array1 bug fix courtesy Tom Thompson
-//
-// Revision 1.2  1999/08/17 06:38:16  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:54  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:52  dav
-// Import sources
-//
-//

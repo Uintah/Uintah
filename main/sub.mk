@@ -1,20 +1,18 @@
-#
 # Makefile fragment for this subdirectory
-#
 
 SRCDIR   := main
 SRCS      := $(SRCDIR)/main.cc
 
 ifeq ($(LARGESOS),yes)
-  PSELIBS := PSECore SCICore
+  PSELIBS := PSECore Core
   ifeq ($(BUILD_PARALLEL),yes)
-    PSELIBS := $(PSELIBS) Component
+    PSELIBS := $(PSELIBS) Core/CCA/Component
   endif
 else
-  PSELIBS := PSECore/Dataflow SCICore/Containers SCICore/TclInterface \
-	SCICore/Thread SCICore/Exceptions
+  PSELIBS := Dataflow/Network Core/Containers Core/TclInterface \
+	Core/Thread Core/Exceptions
   ifeq ($(BUILD_PARALLEL),yes)
-   PSELIBS := $(PSELIBS) Component/PIDL SCICore/globus_threads
+   PSELIBS := $(PSELIBS) Component/PIDL Core/globus_threads
   endif
 endif
 
@@ -28,8 +26,8 @@ endif
 
 PROGRAM := $(PROGRAM_PSE)
 
-CFLAGS_MAIN   := $(CFLAGS) -DPSECORETCL=\"$(SRCTOP_ABS)/PSECore/GUI\" \
-                      -DSCICORETCL=\"$(SRCTOP_ABS)/SCICore/GUI\" \
+CFLAGS_MAIN   := $(CFLAGS) -DPSECORETCL=\"$(SRCTOP_ABS)/Dataflow/GUI\" \
+                      -DSCICORETCL=\"$(SRCTOP_ABS)/Core/GUI\" \
                       -DITCL_WIDGETS=\"$(ITCL_WIDGETS)\" \
                       -DDEFAULT_PACKAGE_PATH=\"$(PACKAGE_PATH)\"
 

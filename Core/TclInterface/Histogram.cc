@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Histogram.cc: Histogram range widget
@@ -16,17 +15,14 @@
 #pragma warning(disable:4355) // quit complaining about 'this' in initializers
 #endif
 
-#include <SCICore/TclInterface/Histogram.h>
-#include <SCICore/Thread/Mutex.h>
+#include <Core/TclInterface/Histogram.h>
+#include <Core/Thread/Mutex.h>
 
 #include <string.h>
 
-using SCICore::Thread::Mutex;
 
-namespace SCICore {
-namespace TclInterface {
+namespace SCIRun {
 
-using SCICore::Containers::to_string;
 
 static clString widget_name("Histogram");
 
@@ -274,22 +270,5 @@ Histogram::SetNumBuckets( const int nb )
    FillBuckets();
 }
    
-} // End namespace TclInterface
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  1999/08/28 17:54:52  sparker
-// Integrated new Thread library
-//
-// Revision 1.2  1999/08/17 06:39:43  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:14  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:25  dav
-// Import sources
-//
-//

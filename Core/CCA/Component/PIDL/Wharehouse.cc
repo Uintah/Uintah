@@ -1,7 +1,6 @@
 
 /*
  *  Wharehouse.h: A pile of distributed objects
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -12,18 +11,17 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Component/PIDL/Wharehouse.h>
-#include <Component/PIDL/InvalidReference.h>
-#include <Component/PIDL/Object.h>
-#include <Component/PIDL/ServerContext.h>
-#include <Component/PIDL/URL.h>
-#include <SCICore/Exceptions/InternalError.h>
+#include <Core/CCA/Component/PIDL/Wharehouse.h>
+#include <Core/CCA/Component/PIDL/InvalidReference.h>
+#include <Core/CCA/Component/PIDL/Object.h>
+#include <Core/CCA/Component/PIDL/ServerContext.h>
+#include <Core/CCA/Component/PIDL/URL.h>
+#include <Core/Exceptions/InternalError.h>
 #include <iostream>
 #include <sstream>
 
 using Component::PIDL::Object_interface;
 using Component::PIDL::Wharehouse;
-using SCICore::Exceptions::InternalError;
 using std::map;
 
 Wharehouse::Wharehouse()
@@ -120,36 +118,3 @@ int Wharehouse::approval(char* urlstring, globus_nexus_startpoint_t* sp)
     return GLOBUS_SUCCESS;
 }
 
-//
-// $Log$
-// Revision 1.4  1999/10/02 07:05:44  sparker
-// Removed print statement
-// Use iostream instead of iostream.h
-//
-// Revision 1.3  1999/09/26 06:12:57  sparker
-// Added (distributed) reference counting to PIDL objects.
-// Began campaign against memory leaks.  There seem to be no more
-//   per-message memory leaks.
-// Added a test program to flush out memory leaks
-// Fixed other Component testprograms so that they work with ref counting
-// Added a getPointer method to PIDL handles
-//
-// Revision 1.2  1999/08/31 08:59:03  sparker
-// Configuration and other updates for globus
-// First import of beginnings of new component library
-// Added yield to Thread_irix.cc
-// Added getRunnable to Thread.{h,cc}
-//
-// Revision 1.1  1999/08/30 17:39:49  sparker
-// Updates to configure script:
-//  rebuild configure if configure.in changes (Bug #35)
-//  Fixed rule for rebuilding Makefile from Makefile.in (Bug #36)
-//  Rerun configure if configure changes (Bug #37)
-//  Don't build Makefiles for modules that aren't --enabled (Bug #49)
-//  Updated Makfiles to build sidl and Component if --enable-parallel
-// Updates to sidl code to compile on linux
-// Imported PIDL code
-// Created top-level Component directory
-// Added ProcessManager class - a simpler interface to fork/exec (not finished)
-//
-//

@@ -1,17 +1,13 @@
 
-#
 #  GenSurface.tcl
-#
 #  Written by:
 #   Steven Parker
 #   Department of Computer Science
 #   University of Utah
 #   June 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
-itcl_class PSECommon_Surface_GenSurface {
+itcl_class Dataflow_Surface_GenSurface {
     inherit Module
     constructor {config} {
 	set name GenSurface

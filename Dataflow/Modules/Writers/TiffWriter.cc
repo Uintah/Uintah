@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  TiffWriter.cc: TiffWriter class
@@ -8,13 +7,13 @@
  *    July 1997
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,13 +21,8 @@
 #include "tiffio.h"
 #endif
 
-namespace PSECore {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::PersistentSpace;
 
 class TiffWriter : public Module {
     ScalarFieldIPort *inscalarfield;
@@ -204,48 +198,5 @@ void TiffWriter::execute()
 #endif
 }
 
-} // End namespace Modules
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.7  2000/12/01 01:34:14  moulding
-// TiffWriter requires the TIFF library (go figure).  added #if for TIFF_LIB
-// which will presumably be defined by configure one day.
-//
-// Revision 1.6  2000/03/17 09:29:20  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.5  1999/09/08 02:27:06  sparker
-// Various #include cleanups
-//
-// Revision 1.4  1999/08/31 08:55:38  sparker
-// Bring SCIRun modules up to speed
-//
-// Revision 1.3  1999/08/25 03:49:02  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:40:04  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:58:57  mcq
-// Initial commit
-//
-// Revision 1.1  1999/06/21 20:27:01  dav
-// added TiffWriter.cc to SCIRun/Modules/Writers
-//
-// Revision 1.3  1999/04/27 22:58:06  dav
-// updates in Modules for Datatypes
-//
-// Revision 1.2  1999/04/25 03:11:11  dav
-// picking up anychanges I have made.
-//
-// Revision 1.1.1.1  1999/04/24 23:12:33  dav
-// Import sources
-//
-//

@@ -12,35 +12,34 @@
 
 #include <stdio.h>
 #include <time.h>
-#include <SCICore/Containers/Queue.h>  
-#include <SCICore/Persistent/Pstreams.h>          
-#include <SCICore/Geometry/BBox.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <SCICore/Geom/BBoxCache.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
+#include <Core/Containers/Queue.h>  
+#include <Core/Persistent/Pstreams.h>          
+#include <Core/Geometry/BBox.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/BBoxCache.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
 
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCL.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCL.h>
 
 #include <iostream>
 
-#include <PSECore/Datatypes/SpanTree.h>
-#include <PSECommon/Modules/Visualization/Noise.h>
+#include <Dataflow/Ports/SpanTree.h>
+#include <Dataflow/Modules/Visualization/Noise.h>
 //#include <Datatypes/Clock.h>
 
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
   using std::cerr;
 
@@ -576,5 +575,4 @@ r_interp( ScalarField *, GeomTrianglesP *triangles, int index, double v )
   mcube( triangles, v, index );
 }
 
-}
-}
+} // End namespace SCIRun

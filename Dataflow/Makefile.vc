@@ -1,11 +1,10 @@
 # Makefile.vc
-#
 # written by Chris Moulding 8/99
 
 ###########################  EDIT HERE  ###########################
 
 ## the name of the .dll and/or .exe to be built by linking the OBJS
-DLLNAME = PSECore
+DLLNAME = Dataflow
 EXENAME = 
 
 ## the files to be compiled. .odll and .oexe extensions indicate
@@ -46,7 +45,7 @@ LF   =
 INCS = 
 
 ## add to the default list of libraries to link against
-LIBS = SCICore$(APPENDIX).lib
+LIBS = Core$(APPENDIX).lib
 
 ###################################################################
 

@@ -1,10 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // Gif.cpp - Load and save GIF images.
-//
 // Modified by David K. McAllister, 1997-1999.
 // Taken from XV v. 3.10, which was taken from xgif and others 1987-1999.
 
-#include <Remote/Tools/Image/Quant.h>
+#include <Packages/Remote/Tools/Image/Quant.h>
 
 #include <iostream>
 #include <string.h>
@@ -15,8 +14,6 @@ using namespace std;
 #include <stdlib.h>
 
 namespace Remote {
-namespace Tools {
-
 typedef unsigned char byte;
 
 #define NEXTBYTE (*dataptr++)
@@ -1155,7 +1152,6 @@ int WriteGIF(const char *filename, int wid, int hgt, byte *Pix,
 
 	return gw.WriteGIF(filename, wid, hgt, Pix, GrayScale, comment);
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

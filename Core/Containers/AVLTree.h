@@ -18,11 +18,10 @@
 #pragma warning(disable:4786)
 #endif
 
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Util/Assert.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace SCICore {
-namespace Containers {
+namespace SCIRun {
 
 template<class Key, class Data> class AVLTree;
 template<class Key, class Data> class AVLTreeIter;
@@ -520,33 +519,7 @@ void AVLTree<Key, Data>::remove_all()
     nitems=0;
 }
 
-} // End namespace Containers
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/09/08 02:26:44  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/08/31 16:30:18  moulding
-// added a #pragma for win32 to disable a debug info warning
-//
-// Revision 1.2  1999/08/17 06:38:34  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:11  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:55:41  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:04:27  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:26  dav
-// Import sources
-//
-//
 
 #endif /* SCI_Containers_AVLTree_h */

@@ -1,5 +1,5 @@
 #include "LOS.h"
-#include <SCICore/Geometry/Ray.h>
+#include <Core/Geometry/Ray.h>
 #include "LOSIterator.h"
 #include "Brick.h"
 #include "Polygon.h"
@@ -7,10 +7,8 @@
 #include "GLVolumeRenderer.h"
 #include "VolumeUtils.h"
 
-namespace SCICore {
-namespace GeomSpace  {
-
-using SCICore::Geometry::Ray;
+namespace Kurt {
+using namespace SCIRun;
 
 
 LOS::LOS(const GLVolumeRenderer* glvr ) :
@@ -86,7 +84,6 @@ LOS::drawWireFrame()
     GLVolRenState::drawWireFrame( *brick );
   }
 }
+} // End namespace Kurt
 
-}  // namespace GeomSpace
-} // namespace SCICore
 

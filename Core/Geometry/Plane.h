@@ -14,13 +14,12 @@
 #ifndef SCI_project_Plane_h
 #define SCI_project_Plane_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 
-namespace SCICore {
-namespace Geometry {
+namespace SCIRun {
 
 class SCICORESHARE Plane {
    Vector n;
@@ -47,7 +46,6 @@ public:
    int Intersect( Point s, Vector v, Point& hit );
 };
 
-} // End namespace Geometry
-} // End namespace SCICore
+} // End namespace SCIRun
 
 #endif

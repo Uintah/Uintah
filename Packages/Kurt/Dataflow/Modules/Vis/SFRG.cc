@@ -6,48 +6,26 @@
  *   TODAY'S DATE HERE
  *
  */
-#include <PSECommon/Modules/Fields/SFRGfile.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <Uintah/Datatypes/NCScalarField.h>
-#include <Uintah/Datatypes/CCScalarField.h>
-#include <Kurt/share/share.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
-#include <SCICore/Datatypes/ScalarFieldRGint.h>
-#include <SCICore/Datatypes/ScalarFieldRGshort.h>
-#include <SCICore/Datatypes/ScalarFieldRGushort.h>
-#include <SCICore/Datatypes/ScalarFieldRGchar.h>
-#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
+#include <Dataflow/Modules/Fields/SFRGfile.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/Datatypes/NCScalarField.h>
+#include <Packages/Uintah/Core/Datatypes/CCScalarField.h>
+#include <Packages/Kurt/share/share.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRGfloat.h>
+#include <Core/Datatypes/ScalarFieldRGint.h>
+#include <Core/Datatypes/ScalarFieldRGshort.h>
+#include <Core/Datatypes/ScalarFieldRGushort.h>
+#include <Core/Datatypes/ScalarFieldRGchar.h>
+#include <Core/Datatypes/ScalarFieldRGuchar.h>
 
 namespace Kurt {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using PSECommon::Modules::SFRGfile;
-using SCICore::Datatypes::NCScalarField;
-using SCICore::Datatypes::CCScalarField;
-using SCICore::Datatypes::ScalarFieldRGdouble;
-using SCICore::Datatypes::ScalarFieldRGfloat;
-using SCICore::Datatypes::ScalarFieldRGint;
-using SCICore::Datatypes::ScalarFieldRGshort;
-using SCICore::Datatypes::ScalarFieldRGushort;
-using SCICore::Datatypes::ScalarFieldRGchar;
-using SCICore::Datatypes::ScalarFieldRGuchar;
-using SCICore::Datatypes::ScalarFieldHandle;
-using SCICore::Datatypes::ScalarFieldRGBase;
-using PSECommon::Modules::VTYPE;
-using PSECommon::Modules::DOUBLE;
-using PSECommon::Modules::INT;
-using PSECommon::Modules::FLOAT;
-using PSECommon::Modules::SHORT;
-using PSECommon::Modules::USHORT;
-using PSECommon::Modules::CHAR;
-using PSECommon::Modules::UCHAR;
+using namespace SCIRun;
 
 // ****************************************************************
 // There must be some bug in the SGI compiler.  This code will have
@@ -70,7 +48,7 @@ const VTYPE CCINT = 10;
 
 
 
-class KurtSHARE SFRG : public SFRGfile {
+class Packages/KurtSHARE SFRG : public SFRGfile {
 
 
   NCScalarField<int> *inci;
@@ -90,7 +68,7 @@ public:
 
 };
 
-extern "C" KurtSHARE Module* make_SFRG(const clString& id) {
+extern "C" Packages/KurtSHARE Module* make_SFRG(const clString& id) {
   return scinew SFRG(id);
 }
 
@@ -463,9 +441,8 @@ void SFRG::revoxelize() {
     }
   }
 }
-
-} // End namespace Modules
 } // End namespace Kurt
+
 
 
 

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ThreadStats.cc: Interface to memory stats...
@@ -12,12 +11,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/TclInterface/ThreadStats.h>
+#include <Core/TclInterface/ThreadStats.h>
 
-namespace SCICore {
-namespace TclInterface {
+namespace SCIRun {
 
-using SCICore::Containers::to_string;
 
 ThreadStats::ThreadStats()
 {
@@ -96,29 +93,5 @@ void ThreadStats::tcl_command(TCLArgs& args, void*)
 #endif
 }
 
-} // End namespace TclInterface
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.5  1999/09/08 02:26:55  sparker
-// Various #include cleanups
-//
-// Revision 1.4  1999/08/28 17:54:52  sparker
-// Integrated new Thread library
-//
-// Revision 1.3  1999/08/19 23:18:08  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.2  1999/08/17 06:39:46  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:17  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:25  dav
-// Import sources
-//
-//

@@ -1,4 +1,4 @@
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
 SCICORESHARE void ssmult(int beg, int end, int* rows, int* columns,
 	    double* a, double* xp, double* bp)

@@ -18,8 +18,7 @@
 
 #include "BallAux.h"
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
 typedef enum AxisSet{NoAxes, CameraAxes, BodyAxes, OtherAxes, NSets} AxisSet;
 typedef double *ConstraintSet;
@@ -62,21 +61,8 @@ void Ball_DrawConstraints(BallData *ball);
 void Ball_DrawDragArc(BallData *ball);
 void Ball_DrawResultArc(BallData *ball);
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.1  1999/07/27 16:57:50  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 20:17:08  dav
-// added back PSECommon .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:30  dav
-// Import sources
-//
-//
 
 
 

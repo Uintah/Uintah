@@ -15,8 +15,7 @@
 #ifndef _H_MANIFEST_VALUES
 #define _H_MANIFEST_VALUES
 
-namespace PSECore {
-namespace Constraints {
+namespace SCIRun {
 
 typedef double Real;
 typedef unsigned int Index;
@@ -28,7 +27,6 @@ RealAbs ( Real x )
 }
 
 
-} // End namespace Constraints
-} // End namespace PSECore
+} // End namespace SCIRun
 
 #endif

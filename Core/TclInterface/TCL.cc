@@ -11,14 +11,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Containers/String.h>
-//#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/GuiManager.h>
-#include <SCICore/TclInterface/Remote.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Core/Containers/String.h>
+//#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/GuiManager.h>
+#include <Core/TclInterface/Remote.h>
+#include <Core/TclInterface/TCL.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -33,8 +33,7 @@ using std::ostream;
 
 extern "C" Tcl_Interp* the_interp;
 
-namespace SCICore {
-namespace TclInterface {
+namespace SCIRun {
 
 struct TCLCommandData {
     TCL* object;
@@ -455,64 +454,5 @@ void TCL::set_tclvar(const clString& base, const clString& name,
     TCLTask::unlock();
 }
 
-} // End namespace TclInterface
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.11  1999/10/07 02:08:03  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.10  1999/09/23 06:33:26  sparker
-// Moved else inside win32 ifdef
-//
-// Revision 1.9  1999/09/23 06:16:24  sparker
-// Fixed win32 ifdef
-//
-// Revision 1.8  1999/09/23 01:13:03  moulding
-// for a win32 #if block, changed Tcl_Eval(the_interp, string) to
-// Tcl_Eval(the_interp, (char*)(string()))
-//
-// Revision 1.7  1999/09/04 06:01:55  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.6  1999/08/28 17:54:52  sparker
-// Integrated new Thread library
-//
-// Revision 1.5  1999/08/23 20:11:51  sparker
-// GenAxes had no UI
-// Removed extraneous print statements
-// Miscellaneous compilation issues
-// Fixed an authorship error
-//
-// Revision 1.4  1999/08/19 23:18:07  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.3  1999/08/18 20:20:21  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:39:44  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:15  mcq
-// Initial commit
-//
-// Revision 1.3  1999/07/07 21:11:03  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.2  1999/05/17 21:55:35  dav
-// added new Makefiles and Makefile.main to src tree
-//
-// Revision 1.1.1.1  1999/04/24 23:12:25  dav
-// Import sources
-//
-//

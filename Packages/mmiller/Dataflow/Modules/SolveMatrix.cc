@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  SolveMatrix.cc:  Unfinished modules
@@ -43,33 +42,24 @@
 
 
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <SCICore/Datatypes/SparseRowMatrix.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/SimpleReducer.h>
-#include <SCICore/Thread/Thread.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/SimpleReducer.h>
+#include <Core/Thread/Thread.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 #include <sstream>
 
-namespace PSECommon {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using SCICore::Containers::to_string;
-using SCICore::Thread::Parallel;
-using SCICore::Thread::SimpleReducer;
-using SCICore::Thread::Thread;
+namespace mmiller {
+using namespace SCIRun;
 
 struct CGData;
 
@@ -898,7 +888,6 @@ struct CGData {
   ColumnMatrix* R1;
   ColumnMatrix* P1;
   Matrix *trans;
-  //
   double max_error;
   SimpleReducer reducer;
   int np;
@@ -1290,7 +1279,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     data->R1=new ColumnMatrix(size);
     ColumnMatrix& R1=*data->R1;
     Copy(R1, R, stats->flop, stats->memref, 0, size);
-    //
     
     data->Z=new ColumnMatrix(size);
     //         ColumnMatrix& Z=*data->Z;
@@ -1300,7 +1288,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     data->Z1=new ColumnMatrix(size);
     //         ColumnMatrix& Z1=*data->Z1;
     //         matrix->mult(R, Z, stats->flop, stats->memref);
-	//
 
     data->P=new ColumnMatrix(size);
     //         ColumnMatrix& P=*data->P;
@@ -1308,7 +1295,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     // BiCG
     data->P1=new ColumnMatrix(size);
     //         ColumnMatrix& P1=*data->P1;
-    //
     
     data->err=R.vector_norm(stats->flop, stats->memref)/data->bnorm;
     if(data->err == 0){
@@ -1360,7 +1346,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     // BiCG
     ColumnMatrix& Z1=*data->Z1;
     ColumnMatrix& P1=*data->P1;
-    //
     
     if(processor==0){
       double new_error;
@@ -1402,19 +1387,16 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
       printf("BiCG[%d]: bknum == 0\n", processor);
       break;
     }
-    //
     
     if(data->niter==1){
       Copy(P, Z, stats->flop, stats->memref, beg, end);
       // BiCG
       Copy(P1, Z1, stats->flop, stats->memref, beg, end);
-      //
     } else {
       double bk=bknum/bkden;
       ScMult_Add(P, bk, P, Z, stats->flop, stats->memref, beg, end);
       // BiCG
       ScMult_Add(P1, bk, P1, Z1, stats->flop, stats->memref, beg, end);
-      //
     }
 
     data->reducer.wait(data->np);
@@ -1429,7 +1411,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 
     // BiCG = change P -> P1
     double my_akden=Dot(Z, P1, stats->flop, stats->memref, beg, end);
-    //
     double akden=data->reducer.sum(processor, data->np, my_akden);
 
     double ak=bknum/akden;
@@ -1439,7 +1420,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     ScMult_Add(R, -ak, Z, R, stats->flop, stats->memref, beg, end);
     // BiCG
     ScMult_Add(R1, -ak, Z1, R1, stats->flop, stats->memref, beg, end);
-    //
     
     double my_err=R.vector_norm(stats->flop, stats->memref, beg, end)/data->bnorm;
     err=data->reducer.sum(processor, data->np, my_err);
@@ -1506,81 +1486,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     
   }
 }
+} // End namespace mmiller
 
-} // End namespace Modules
-} // End namespace PSECommon
 
-//
-// $Log$
-// Revision 1.2  2000/03/17 09:30:52  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.1  2000/01/21 16:26:54  moulding
-// initial import of netsolve stuff
-//
-// Revision 1.12  1999/10/07 02:06:52  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.11  1999/09/22 04:06:15  dmw
-// removed debug info
-//
-// Revision 1.10  1999/09/21 23:20:10  dmw
-// fixed it so it works for RHS==0
-//
-// Revision 1.9  1999/09/16 00:38:11  dmw
-// fixed TCL files for SurfToGeom and SolveMatrix and added SurfToGeom to the Makefile
-//
-// Revision 1.8  1999/09/08 02:26:34  sparker
-// Various #include cleanups
-//
-// Revision 1.7  1999/08/29 00:46:40  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.6  1999/08/25 03:47:51  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.5  1999/08/19 23:17:48  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.4  1999/08/19 05:30:52  sparker
-// Configuration updates:
-//  - renamed config.h to sci_config.h
-//  - also uses sci_defs.h, since I couldn't get it to substitute vars in
-//    sci_config.h
-//  - Added flags for --enable-scirun, --enable-uintah, and
-//    --enable-davew, to build the specific package set.  More than one
-//    can be specified, and at least one must be present.
-//  - Added a --enable-parallel, to build the new parallel version.
-//    Doesn't do much yet.
-//  - Made construction of config.h a little bit more general
-//
-// Revision 1.3  1999/08/18 20:19:45  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:31  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:46  mcq
-// Initial commit
-//
-// Revision 1.2  1999/04/27 22:57:50  dav
-// updates in Modules for Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:31  dav
-// Import sources
-//
-//

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Persistent.h: Base class for persistent objects...
@@ -12,10 +11,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Persistent/Persistent.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -24,8 +23,7 @@ using std::ifstream;
 #include <sstream>
 using std::istringstream;
 
-namespace SCICore {
-namespace PersistentSpace {
+namespace SCIRun {
 
 static Piostream::MapClStringPersistentTypeID* table = 0;  
 
@@ -292,9 +290,6 @@ int Piostream::begin_class(const char* classname, int current_version)
   return begin_class(clString(classname), current_version);
 }
 
-} // End namespace PersistentSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
 // $log$
-//

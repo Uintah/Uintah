@@ -1,20 +1,15 @@
-#include <SCICore/Datatypes/GLVolumeRenderer.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Geom/GeomOpenGL.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Geom/Color.h>
+#include <Core/Datatypes/GLVolumeRenderer.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geom/Color.h>
 #include <GL/gl.h>
 #include <iostream>
 
-namespace SCICore {
-namespace GeomSpace  {
+namespace SCIRun {
 
 using std::cerr;
 
-using namespace SCICore::Geometry;
-using namespace SCICore::Datatypes;
-using SCICore::Datatypes::Octree;
-using SCICore::Datatypes::Brick;
 
 double GLVolumeRenderer::swapMatrix[16] = { 0,0,1,0,
 					    0,1,0,0,
@@ -98,23 +93,23 @@ GLVolumeRenderer::clone()
 void 
 GLVolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 {
-    //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+    //AuditAllocator(default_allocator);
   if( !pre_draw(di, mat, _lighting) ) return;
   mutex.lock();
   if( di->get_drawtype() == DrawInfoOpenGL::WireFrame ){
     drawWireFrame();
   } else {
-    //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+    //AuditAllocator(default_allocator);
     setup();
-    //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+    //AuditAllocator(default_allocator);
     preDraw();
-    //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+    //AuditAllocator(default_allocator);
     draw();
-    //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+    //AuditAllocator(default_allocator);
     postDraw();
-    //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+    //AuditAllocator(default_allocator);
     cleanup();
-    //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+    //AuditAllocator(default_allocator);
   }
   mutex.unlock();
 
@@ -257,5 +252,4 @@ GLVolumeRenderer::BuildTransferFunctions( )
 	}
   }
 }
-} // namespace SCICore
-} // namespace GeomSpace
+} // End namespace SCIRun

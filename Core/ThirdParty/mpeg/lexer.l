@@ -1058,9 +1058,9 @@ void parser()
 	      break;
 	    }
 	  sptr=getstr();
-	  strcpy(CFrame->ComponentFilePrefix[dest],sptr);
+	  strcpy(CFrame->Core/CCA/ComponentFilePrefix[dest],sptr);
 	  sptr=getstr();
-	  strcpy(CFrame->ComponentFileSuffix[dest],sptr);
+	  strcpy(CFrame->Core/CCA/ComponentFileSuffix[dest],sptr);
 	  ntoken=mylex();
 	  if (ntoken!=R_RBRACKET)
 	    {

@@ -1,7 +1,7 @@
 
 catch {rename ColorMapReader ""}
 
-itcl_class PSECommon_Readers_ColorMapReader {
+itcl_class Dataflow_Readers_ColorMapReader {
     inherit Module
     constructor {config} {
 	set name ColorMapReader

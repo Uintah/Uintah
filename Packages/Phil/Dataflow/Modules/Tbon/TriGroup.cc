@@ -1,26 +1,23 @@
-//static char *id="@(#) $Id$";
 
 /*
  * TriGroup.cc:  Group of triangles
  *    (stripped down to improve performance)
  *
- * Philip Sutton
+ * Packages/Philip Sutton
  * April 1999
 
   Copyright (C) 2000 SCI Group, University of Utah
  */
 
 #include "TriGroup.h"
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Geom/Material.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Geom/Material.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
-#include <SCICore/Geom/GeomOpenGL.h>
+#include <Core/Geom/GeomOpenGL.h>
 #include <unistd.h>
 
-namespace SCICore {
-namespace GeomSpace {
-
+namespace Phil {
 using namespace std;
 
 GeomTriGroup::GeomTriGroup( int n ) : GeomObj() {
@@ -289,16 +286,6 @@ GeomTriGroup::saveobj(std::ostream& out, const clString& format,
   NOT_FINISHED("GeomTriGroup::saveobj");
   return 0;
 }
+} // End namespace Phil
 
-} // End namespace GeomSpace
-} // End namespace SCICore
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:11:14  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 20:56:52  psutton
-// initial revision
-//
-//

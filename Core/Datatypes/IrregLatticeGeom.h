@@ -1,23 +1,20 @@
 //  IrregLatticeGeom.h - Cubic lattice with jittered geometry.
-//
 //  Written by:
 //   Michael Callahan
 //   Department of Computer Science
 //   University of Utah
 //   November 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
 
 #ifndef SCI_project_IrregLatticeGeom_h
 #define SCI_project_IrregLatticeGeom_h 1
 
-#include <SCICore/Datatypes/LatticeGeom.h>
-#include <SCICore/Datatypes/AccelAttrib.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/Datatypes/LatticeGeom.h>
+#include <Core/Datatypes/AccelAttrib.h>
+#include <Core/Geometry/Point.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 
 class IrregLatticeGeom : public LatticeGeom
@@ -85,7 +82,6 @@ IrregLatticeGeom::transform(const Point &p, Point &r)
 }
 
 
-}
-}
+} // End namespace SCIRun
 
 #endif

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ColumnMatrix.cc: for RHS and LHS
@@ -12,17 +11,16 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Datatypes/ColumnMatrix.h>
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/LinAlg.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Util/Assert.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/LinAlg.h>
 #include <iostream>
 using std::endl;
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 static Persistent* maker()
 {
@@ -301,35 +299,6 @@ void Mult(ColumnMatrix& result, const ColumnMatrix& a, double s)
 	result.data[i]=a.data[i]*s;
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.5  1999/10/07 02:07:30  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/08/25 03:48:31  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/19 23:18:04  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.2  1999/08/17 06:38:44  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:19  mcq
-// Initial commit
-//
-// Revision 1.1  1999/04/25 04:07:05  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:50  dav
-// Import sources
-//
-//
 

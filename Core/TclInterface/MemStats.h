@@ -14,21 +14,15 @@
 #ifndef SCI_project_MemStats_h
 #define SCI_project_MemStats_h 1
 
-#include <SCICore/TclInterface/TCL.h>
+#include <Core/TclInterface/TCL.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
 
-namespace SCICore {
-  namespace Malloc {
-    struct Allocator;
-  }
-}
+namespace SCIRun {
 
-namespace SCICore {
-namespace TclInterface {
+struct Allocator;
 
-using SCICore::Malloc::Allocator;
 
 class SCICORESHARE MemStats : public TCL {
     Allocator* a;
@@ -60,28 +54,8 @@ public:
     virtual void tcl_command(TCLArgs&, void*);
 };
 
-} // End namespace TclInterface
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  1999/08/17 06:39:44  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:15  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:56:23  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:05:33  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:25  dav
-// Import sources
-//
-//
 
 #endif
 

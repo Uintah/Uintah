@@ -1,10 +1,9 @@
 #ifndef LOS_H
 #define LOS_H
 
-#include <SCICore/Datatypes/GLVolRenState.h>
+#include <Core/Datatypes/GLVolRenState.h>
 
-namespace SCICore {
-namespace GeomSpace  {
+namespace SCIRun {
 
 /**************************************
 
@@ -61,7 +60,6 @@ protected:
 
 };
 
-}  // namespace GeomSpace
-} // namespace SCICore
+} // End namespace SCIRun
 
 #endif

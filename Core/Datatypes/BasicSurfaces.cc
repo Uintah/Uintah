@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  BasicSurfaces.cc: Cylinders and stuff
@@ -16,31 +15,23 @@
 #pragma warning(disable:4291) // quiet the visual C++ compiler
 #endif
 
-#include <SCICore/Datatypes/BasicSurfaces.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/Math/TrigTable.h>
-#include <SCICore/TclInterface/TCL.h>
+#include <Core/Datatypes/BasicSurfaces.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Trig.h>
+#include <Core/Math/TrigTable.h>
+#include <Core/TclInterface/TCL.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 #include <stdio.h>
 
-namespace SCICore {
-namespace Datatypes {
-
-using TclInterface::TCL;
-using GeomSpace::GeomGroup;
-using GeomSpace::GeomCappedCylinder;
-using GeomSpace::GeomSphere;
-using GeomSpace::GeomTrianglesPC;
-using GeomSpace::GeomPts;
+namespace SCIRun {
 
 static Persistent* make_CylinderSurface()
 {
@@ -84,7 +75,6 @@ Surface* CylinderSurface::clone()
 
 int CylinderSurface::inside(const Point& p)
 {
-    using namespace SCICore::Geometry;
 
     double l=Dot(p-p1, axis);
     if(l<0)
@@ -196,8 +186,6 @@ void CylinderSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 
 void CylinderSurface::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
 
     /*int version=*/stream.begin_class("CylinderSurface", CYLINDERSURFACE_VERSION);
     Surface::io(stream);
@@ -431,8 +419,6 @@ void SphereSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 
 void SphereSurface::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
 
     /*int version=*/stream.begin_class("SphereSurface", SPHERESURFACE_VERSION);
     Surface::io(stream);
@@ -625,8 +611,6 @@ void PointSurface::get_surfnodes(Array1<NodeHandle>& nodes)
 
 void PointSurface::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
 
     /*int version=*/stream.begin_class("PointSurface", POINTSURFACE_VERSION);
     Surface::io(stream);
@@ -712,9 +696,6 @@ int PointsSurface::inside(const Point&)
 
 void PointsSurface::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Geometry::Pio;
 
     /*int version=*/stream.begin_class("PointsSurface", POINTSSURFACE_VERSION);
     Surface::io(stream);
@@ -759,54 +740,5 @@ void PointsSurface::set_surfnodes(const Array1<NodeHandle>& nodes) {
     }
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.7  1999/11/02 06:06:13  moulding
-// added a #ifdef for win32 to quiet the C++ compiler.  This change
-// relates to bug # 61 in csafe's bugzilla.
-//
-// Revision 1.6  1999/10/07 02:07:30  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/08/25 03:48:30  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.4  1999/08/23 06:30:34  sparker
-// Linux port
-// Added X11 configuration options
-// Removed many warnings
-//
-// Revision 1.3  1999/08/18 20:20:19  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:38:42  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:18  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:37  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1  1999/04/27 21:14:26  dav
-// working on Datatypes
-//
-// Revision 1.2  1999/04/25 04:14:33  dav
-// oopps...?
-//
-// Revision 1.1.1.1  1999/04/24 23:12:48  dav
-// Import sources
-//
-//

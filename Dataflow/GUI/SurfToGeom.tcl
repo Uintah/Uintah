@@ -1,4 +1,4 @@
-itcl_class PSECommon_Surface_SurfToGeom {
+itcl_class Dataflow_Surface_SurfToGeom {
     inherit Module
     constructor {config} {
 	set name SurfToGeom

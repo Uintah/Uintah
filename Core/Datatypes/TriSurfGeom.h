@@ -1,25 +1,23 @@
 //  TriSurfGeom.h - A base class for regular geometries with alligned axes
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
 
 #ifndef SCI_project_TriSurfGeom_h
 #define SCI_project_TriSurfGeom_h 1
 
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Geom/GeomPolyline.h>
-#include <SCICore/Datatypes/ContourGeom.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Util/DebugStream.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/GeomPolyline.h>
+#include <Core/Datatypes/ContourGeom.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Util/DebugStream.h>
 //#include <sstream>
 #include <list>
 #include <vector>
@@ -27,8 +25,7 @@
 //#include <set>
 
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 
 struct TriSurfVertex
@@ -137,8 +134,7 @@ TriSurfGeom::getInfo()
   return retval.str();
 }
 
-} // end Datatypes
-} // end SCICore
+} // End namespace SCIRun
 
 
 #endif

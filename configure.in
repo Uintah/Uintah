@@ -11,8 +11,7 @@ AC_PREREQ(2.0)
 
 AC_ARG_ENABLE(package,
 	[  --enable-package		Build the specified packages],
-	[package="$enableval"],
-	[package=${package='SCIRun'}])
+	[package="$enableval"])
 AC_ARG_ENABLE(exename,
 	[  --enable-exename		Override the default executable name],
 	[exename="$enableval"],
@@ -20,14 +19,19 @@ AC_ARG_ENABLE(exename,
 
 if test "$package" = ""; then
   echo "--enable-package requires an argument, such as:"
-  echo "  --enable-package=\"Uintah SCIRun\""
+  echo "  --enable-package=\"Uintah BioPSE\""
   exit 1
 fi
 
-PACKAGE_DIRS=$package
-PACKAGE_PATH="\$(SRCTOP_ABS)/PSECommon"
+PACKAGE_DIRS=
+
 for i in $package; do
- PACKAGE_PATH=$PACKAGE_PATH,"\$(SRCTOP_ABS)/$i"
+ PACKAGE_DIRS=$PACKAGE_DIRS" Packages/$i"
+done
+
+PACKAGE_PATH="\$(SRCTOP_ABS)"
+for i in $package; do
+ PACKAGE_PATH=$PACKAGE_PATH,"\$(SRCTOP_ABS)/Packages/$i"
 done
 
 ##-- check for user supplied tcl paths --------------------------------------
@@ -66,15 +70,6 @@ AC_ARG_WITH(xerces,
 	[  --with-xerces=<path-to-xerces>  <path-to-xerces>],
 	[xerces="$withval"],
 	[xerces=""])
-
-##-- check for supplied vampir path ------------------------------------------
-
-AC_ARG_WITH(vampir,
-	[  --with-vampir=<path-to-vampir>  <path-to-vampir>],
-	[withvampir="$withval"],
-	[withvampir=""])
-VAMPIR_DIR=$withvampir
-AC_SUBST(VAMPIR_DIR)
 
 ##-- Canonical Host Type -----------------------------------------------------
 
@@ -115,10 +110,6 @@ if test "$optimize" = "yes"; then
   extra_cflags="-O2 ${extra_cflags}";
 elif ! test "$optimize" = "no"; then
   extra_cflags="$optimize ${extra_cflags}";
-fi
-
-if test "$withvampir" != ""; then
-  extra_cflags="-DUSE_VAMPIR ${extra_cflags}"
 fi
 
 if ! test "$output_avg_walltime" = "no"; then
@@ -472,7 +463,6 @@ AC_SUBST(TK_LIB_FLAG)
 AC_SUBST(TK_LIB_SPEC)
 AC_SUBST(TK_VERSION)
 
-
 ##-- Find iTcl ---------------------------------------------------------------
 
 echo -n "Looking for Pre-built iTcl and iTk 3... "
@@ -530,8 +520,10 @@ if test "$ITCL_MAJOR_VERSION" = "3" ; then
   ITK_LIB_DIR="${ITCL_PREFIX}/lib"
   ITCL_BIN_DIR="${ITCL_PREFIX}/bin"
   ITCLSH="${ITCL_BIN_DIR}/itclsh${ITCL_VERSION}"
+#  ITCL_LIB_FLAG="-litk3.1 -litcl3.1"
   ITCL_WIDGETS="${ITCL_LIB_DIR}/iwidgets/scripts"
   ITCL_INIT_DIR="${ITCL_LIB_DIR}/itcl${ITCL_VERSION}"
+  #echo -L$ITCL_PREFIX $ITCL_LIB_FLAG
   echo ${ITCL_LIB_SPEC}
 else
   if test -z "$ITCL_VERSION" ; then
@@ -595,7 +587,7 @@ AC_SUBST(BLT_LIB_FLAG)
 echo -n "Looking for Pre-built Xerces-c... "
 
 if test "$xerces"; then
-  XML_LIB_DIR=$xerces/lib
+  XML_LIB_DIR=$xerces
 fi
 
 if test -z "$XML_LIB_DIR"; then
@@ -773,13 +765,13 @@ if test "$enable_parallel" = "yes"; then
 
   PARALLEL_DEFINE="#define SCI_PARALLEL"
   parallel_output="
-	        SCICore/globus_threads/Makefile \
+	        Base/Core/globus_threads/Makefile \
 	      Component/Makefile \
 	        Component/CIA/Makefile \
 	        Component/PIDL/Makefile \
-	        PSECore/Interface/Makefile \
-	        PSECore/Controller/Makefile \
-	        PSECore/Builder/Makefile \
+	        Base/Dataflow/Interface/Makefile \
+	        Base/Dataflow/Controller/Makefile \
+	        Base/Dataflow/Builder/Makefile \
 	      newmain/Makefile \
 	        tools/sidl/Makefile \
 		testprograms/Component/Makefile \
@@ -868,3 +860,4 @@ AC_OUTPUT(Makefile \
 	  sci_defs.h \
 	      , echo timestamp > stamp-h
          )
+

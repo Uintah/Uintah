@@ -1,9 +1,9 @@
 
 /*
- *  NektarScalarField.h: The Nektar Scalar Field Data type
+ *  Packages/NektarScalarField.h: The Packages/Nektar Scalar Field Data type
  *
  *  Written by:
- *   Yarden Livnat
+ *   Packages/Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
  *   August 2000
@@ -11,22 +11,19 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef NektarScalarFieldPort_h
-#define NektarScalarFieldPort_h 
+#ifndef Packages/NektarScalarFieldPort_h
+#define Packages/NektarScalarFieldPort_h 
 
-#include <PSECore/Datatypes/SimplePort.h>
-#include <Nektar/Datatypes/NektarScalarField.h>
+#include <Dataflow/Ports/SimplePort.h>
+#include <Packages/Nektar/Core/Datatypes/NektarScalarField.h>
 
 namespace Nektar {
-  namespace Datatypes {
+using namespace SCIRun;
 
-    using namespace PSECore::Datatypes;
-
-    typedef SimpleIPort<NektarScalarFieldHandle> NektarScalarFieldIPort;
-    typedef SimpleOPort<NektarScalarFieldHandle> NektarScalarFieldOPort;
-    
-  } // End namespace Datatypes
+    typedef SimpleIPort<Packages/NektarScalarFieldHandle> Packages/NektarScalarFieldIPort;
+    typedef SimpleOPort<Packages/NektarScalarFieldHandle> Packages/NektarScalarFieldOPort;
 } // End namespace Nektar
+    
 
 #endif
 

@@ -10,17 +10,17 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECommon/Modules/Salmon/Salmon.h>
-#include <PSECommon/Modules/Salmon/Renderer.h>
-#include <PSECommon/Modules/Salmon/Roe.h>
-#include <PSECore/Comm/MessageTypes.h>
-#include <PSECore/Dataflow/Connection.h>
-#include <PSECore/Dataflow/ModuleHelper.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <PSECommon/Modules/Salmon/SalmonGeom.h>
-#include <SCICore/Geom/HeadLight.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Thread/FutureValue.h>
+#include <Dataflow/Modules/Salmon/Salmon.h>
+#include <Dataflow/Modules/Salmon/Renderer.h>
+#include <Dataflow/Modules/Salmon/Roe.h>
+#include <Dataflow/Comm/MessageTypes.h>
+#include <Dataflow/Network/Connection.h>
+#include <Dataflow/Network/ModuleHelper.h>
+#include <Core/Geom/GeomObj.h>
+#include <Dataflow/Modules/Salmon/SalmonGeom.h>
+#include <Core/Geom/HeadLight.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Thread/FutureValue.h>
 
 #include <iostream>
 using std::cerr;
@@ -31,17 +31,9 @@ using std::ostream;
 #include <sys/stat.h>
 #include <fcntl.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using PSECore::Dataflow::Module;
-using PSECore::Datatypes::GeometryIPort;
-using PSECore::Datatypes::GeometryComm;
 
-using SCICore::GeomSpace::HeadLight;
-using SCICore::Containers::to_string;
-using SCICore::Containers::AVLTreeIter;
-using SCICore::Thread::Mailbox;
 
 //----------------------------------------------------------------------
 extern "C" Module* make_Salmon(const clString& id) {
@@ -573,5 +565,4 @@ void Salmon::emit_vars(ostream& out)
   }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun

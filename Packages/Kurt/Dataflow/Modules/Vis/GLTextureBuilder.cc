@@ -11,20 +11,20 @@
 
 
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/String.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <SCICore/Datatypes/ScalarField.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Datatypes/ScalarField.h>
 
 
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <SCICore/TclInterface/TCLTask.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCL.h>
+#include <Core/TclInterface/TCLTask.h>
 
-#include <Kurt/Datatypes/VolumeUtils.h>
-#include <Kurt/Datatypes/GLTexture3D.h>
+#include <Packages/Kurt/Core/Datatypes/VolumeUtils.h>
+#include <Packages/Kurt/Core/Datatypes/GLTexture3D.h>
 
 //#include <GL/gl.h>
 //#include <GL/glx.h>
@@ -39,20 +39,8 @@ using std::endl;
 // static int attributeList[] = { GLX_RGBA, None };
 
 namespace Kurt {
-namespace Modules {
+using namespace SCIRun;
 
-using namespace SCICore::TclInterface;
-using namespace SCICore::Math;
-
-using namespace SCICore::Containers;
-using namespace SCICore::TclInterface;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
-using SCICore::Datatypes::ScalarFieldHandle;
-using SCICore::Datatypes::ScalarFieldRGBase;
-using PSECore::Datatypes::GLTexture3DOPort;
-using PSECore::Datatypes::GLTexture3DIPort;
-using PSECore::Datatypes::ScalarFieldOPort;
 
 using Kurt::Datatypes::GLTexture3D;
 using Kurt::Datatypes::GLTexture3DHandle;
@@ -187,8 +175,7 @@ void GLTextureBuilder::execute(void)
     otexture->send( 0 );
   }
 }
+} // End namespace Kurt
 
-} // End namespace Modules
-} // End namespace Uintah
 
 

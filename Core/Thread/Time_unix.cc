@@ -12,17 +12,17 @@
  */
 
 
-#include <SCICore/Thread/Time.h>
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Thread/ThreadError.h>
+#include <Core/Thread/Time.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/ThreadError.h>
 #include <stdio.h>
 #include <sys/time.h>
 #include <errno.h>
 
 static bool initialized=false;
 static struct timeval start_time;
-using SCICore::Thread::Thread;
-using SCICore::Thread::Time;
+
+using namespace SCIRun;
 
 void
 Time::initialize()

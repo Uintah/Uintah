@@ -1,8 +1,8 @@
 /*
- *  CVRTItoMesh.cc: Convert .grad, .tetra and .pot into SCIRun fields
+ *  CVRTItoMesh.cc: Convert .grad, .tetra and .pot into Dataflow fields
  *
  *  Written by:
- *   Chris Moulding
+ *   Chris Packages/Moulding
  *   Department of Computer Science
  *   University of Utah
  *   May 1999
@@ -10,22 +10,19 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <SCICore/Containers/String.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Datatypes/Mesh.h>
+#include <Core/Containers/String.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Datatypes/Mesh.h>
 #include <iostream.h>
 #include <fstream.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-using namespace SCICore::Containers;
-using namespace SCICore::PersistentSpace;
-using namespace SCICore::Datatypes;
-using namespace SCICore::Geometry;
+using namespace SCIRun;
 
 #ifdef _WIN32
 PersistentTypeID VectorField::type_id("VectorField", "Datatype", 0);

@@ -10,30 +10,22 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/FieldPort.h>
-//#include <PSECore/Datatypes/VFieldPort.h>
-#include <SCICore/Datatypes/SField.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Util/DebugStream.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/FieldPort.h>
+//#include <Dataflow/Ports/VFieldPort.h>
+#include <Core/Datatypes/SField.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Material.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Util/DebugStream.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
-using namespace SCICore::Util;
 
 class FieldCage : public Module {
   FieldIPort* insfield;
@@ -171,6 +163,5 @@ void FieldCage::execute()
   ogeom->addObj(all, "Field Cage");
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 

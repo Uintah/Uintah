@@ -15,14 +15,12 @@
 #ifndef SCI_project_Constraint_Solver_h
 #define SCI_project_Constraint_Solver_h 1
 
-#include <PSECore/share/share.h>
-#include <PSECore/Constraints/BaseConstraint.h>
-#include <SCICore/Containers/Stack.h>
+#include <Dataflow/share/share.h>
+#include <Dataflow/Constraints/BaseConstraint.h>
+#include <Core/Containers/Stack.h>
 
-namespace PSECore {
-namespace Constraints {
+namespace SCIRun {
 
-using SCICore::Containers::Stack;
 
 enum RecurseType { UnInit, RecurseInitial, RecurseNormal, RecurseMax };
 
@@ -76,33 +74,7 @@ private:
    Array1<BaseVariable*> variables;
 };
 
-} // End namespace Constraints
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.5  1999/10/07 02:07:16  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/09/08 02:26:38  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/08/26 23:57:02  moulding
-// changed SCICORESHARE to PSECORESHARE
-//
-// Revision 1.2  1999/08/17 06:38:17  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:54  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 20:17:06  dav
-// added back PSECore .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:52  dav
-// Import sources
-//
-//
 
 #endif

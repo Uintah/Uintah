@@ -45,7 +45,7 @@ extern void SCILoadFGroup(unsigned char* imageY,
 			  unsigned char* imageU,
 			  unsigned char* imageV,
 			  unsigned char* oldY);
-void SCIRunEncode(int, unsigned char*, unsigned char*, unsigned char*);
+void DataflowEncode(int, unsigned char*, unsigned char*, unsigned char*);
      
 /*PUBLIC*/
 
@@ -493,7 +493,7 @@ int StartMpegEncoder(argc,argv)
 	      UseIDct = ReferenceIDct;
 	      break;
 	    case 'z':
-	      strcpy(CFrame->ComponentFileSuffix[s++],argv[++i]);
+	      strcpy(CFrame->Core/CCA/ComponentFileSuffix[s++],argv[++i]);
 	      break;
 	    default:
 	      WHEREAMI();
@@ -504,13 +504,13 @@ int StartMpegEncoder(argc,argv)
 	}
       else
 	{
-	  strcpy(CFrame->ComponentFilePrefix[p++],argv[i]);
+	  strcpy(CFrame->Core/CCA/ComponentFilePrefix[p++],argv[i]);
 	}
     }
   if (!CImage->StreamFileName)
     {
       if (!(CImage->StreamFileName =
-	    (char *) calloc(strlen(CFrame->ComponentFilePrefix[0])+6,
+	    (char *) calloc(strlen(CFrame->Core/CCA/ComponentFilePrefix[0])+6,
 			    sizeof(char))))
 	{
 	  WHEREAMI();
@@ -518,7 +518,7 @@ int StartMpegEncoder(argc,argv)
 	  exit(ERROR_MEMORY);
 	}
       sprintf(CImage->StreamFileName,
-	      "%s.mpg",CFrame->ComponentFilePrefix[0]);
+	      "%s.mpg",CFrame->Core/CCA/ComponentFilePrefix[0]);
     }
 
   if (XING)
@@ -646,7 +646,7 @@ void MpegEncodeSequence()
   /*???*/
 }
 
-/* Call this function from SCIRun each time a frame is generated (where
+/* Call this function from Dataflow each time a frame is generated (where
    to store the frames will come later). When all frames are generated, call
    it with last_time  = 1 to finish whatever is around off and close the file.
    */
@@ -655,7 +655,7 @@ void MpegEncodeSequence()
  * 6? frames 
  */
  
-void SCIRunEncode(int last_time, unsigned char* imageY,
+void DataflowEncode(int last_time, unsigned char* imageY,
 		  unsigned char* imageU, unsigned char* imageV) {
   int i; int size = HorizontalSize*VerticalSize;
   static int first = 1;
@@ -665,7 +665,7 @@ void SCIRunEncode(int last_time, unsigned char* imageY,
   static unsigned char *oldY;
   static unsigned char *oldU, *oldV;
   */
-  /*printf("Entering SCIRunEncode(), mpeg_framecount = %i, frameinterval = %i.\n",mpeg_framecount, FrameInterval);*/
+  /*printf("Entering DataflowEncode(), mpeg_framecount = %i, frameinterval = %i.\n",mpeg_framecount, FrameInterval);*/
   /* this loop needs to know how many frames.  Put it in a function and
    * call it every time there are frames to add.
    * Use mpeg_framecount to determine whether to encode or not. (???)
@@ -751,7 +751,7 @@ void SCIRunEncode(int last_time, unsigned char* imageY,
     /*printf("END>SEQUENCE\n");
     printf("Number of buffer overflows: %d\n",NumberOvfl);*/
   }
-  /*printf("Leaving SCIRunEncode()...\n");*/
+  /*printf("Leaving DataflowEncode()...\n");*/
 }
 
 
@@ -1650,7 +1650,7 @@ static void MpegEncodeDFrame()
   int input[64];
   int dcval;
 
-  printf("Shouldn't be called in SCIRun (?)\n");
+  printf("Shouldn't be called in Dataflow (?)\n");
   if (PType != P_DCINTRA)
     {
       WHEREAMI();
@@ -2388,15 +2388,15 @@ void PrintFrame()
   printf("*** Frame ID: %x ***\n",CFrame);
   if (CFrame)
     {
-      printf("NumberComponents %d\n",
-	     CFrame->NumberComponents);
-      for(i=0;i<CFrame->NumberComponents;i++)
+      printf("NumberCore/CCA/Components %d\n",
+	     CFrame->NumberCore/CCA/Components);
+      for(i=0;i<CFrame->NumberCore/CCA/Components;i++)
 	{
-	  printf("Component: FilePrefix: %s FileSuffix: %s\n",
-		 ((*CFrame->ComponentFilePrefix[i]) ?
-		  CFrame->ComponentFilePrefix[i] : "Null"),
-		 ((*CFrame->ComponentFileSuffix[i]) ?
-		  CFrame->ComponentFileSuffix[i] : "Null"));
+	  printf("Core/CCA/Component: FilePrefix: %s FileSuffix: %s\n",
+		 ((*CFrame->Core/CCA/ComponentFilePrefix[i]) ?
+		  CFrame->Core/CCA/ComponentFilePrefix[i] : "Null"),
+		 ((*CFrame->Core/CCA/ComponentFileSuffix[i]) ?
+		  CFrame->Core/CCA/ComponentFileSuffix[i] : "Null"));
 	  printf("Height: %d  Width: %d\n",
 		 CFrame->Height[i],CFrame->Width[i]);
 	  printf("HorizontalFrequency: %d  VerticalFrequency: %d\n",
@@ -2445,7 +2445,7 @@ void MakeFrame()
       WHEREAMI();
       printf("Cannot make an frame structure.\n");
     }
-  CFrame->NumberComponents = 3;
+  CFrame->NumberCore/CCA/Components = 3;
   for(i=0;i<MAXIMUM_SOURCES;i++)
     {
       CFrame->PHeight[i] = 0;
@@ -2454,9 +2454,9 @@ void MakeFrame()
       CFrame->Width[i] = 0;
       CFrame->hf[i] = 1;
       CFrame->vf[i] = 1;
-      *CFrame->ComponentFileName[i]='\0';
-      *CFrame->ComponentFilePrefix[i]='\0';
-      *CFrame->ComponentFileSuffix[i]='\0';
+      *CFrame->Core/CCA/ComponentFileName[i]='\0';
+      *CFrame->Core/CCA/ComponentFilePrefix[i]='\0';
+      *CFrame->Core/CCA/ComponentFileSuffix[i]='\0';
     }
 }
 
@@ -2494,16 +2494,16 @@ void LoadFGroup(index)
   static char TheFileName[100];
 
   printf("this function shouldn't be called in SCI-anything.\n");
-  /* Grab the FrameInterval frames from SCIRun here rather than loading files.
+  /* Grab the FrameInterval frames from Dataflow here rather than loading files.
    * It seems like it could just always grab the same files and not have to
    * worry about which numbers they are.
    */
   /*for(i=0;i<=FrameInterval;i++) 
     {*/
   /* sprintf(TheFileName,"%s%d%s",
-	      CFrame->ComponentFilePrefix[0],
+	      CFrame->Core/CCA/ComponentFilePrefix[0],
 	      index+i,
-	      CFrame->ComponentFileSuffix[0]);
+	      CFrame->Core/CCA/ComponentFileSuffix[0]);
       printf("Loading file: %s\n",TheFileName);
       if (CImage->PartialFrame) {
 	FFS[i] =  LoadPartialMem(TheFileName,
@@ -2539,7 +2539,7 @@ void SCILoadFGroup(unsigned char* imageY,
 {
   BEGIN("LoadFGroup");
 
-  /* Grab the FrameInterval frames from SCIRun here rather than loading files.
+  /* Grab the FrameInterval frames from Dataflow here rather than loading files.
    * It seems like it could just always grab the same files and not have to
    * worry about which numbers they are.
    */
@@ -2565,7 +2565,7 @@ void MakeFStore()
   int i;
 
   CFStore = (FSTORE *) malloc(sizeof(FSTORE));
-  CFStore->NumberComponents = 0;
+  CFStore->NumberCore/CCA/Components = 0;
   for(i=0;i<MAXIMUM_SOURCES;i++)
     {
       CFStore->Iob[i] = NULL;
@@ -2633,29 +2633,29 @@ void CreateFrameSizes()
   BEGIN("CreateFrameSizes");
   int i,maxh,maxv;
 
-  CFrame->NumberComponents = 3;
+  CFrame->NumberCore/CCA/Components = 3;
   CFrame->hf[0] = 2;   /* Y*/         /* Default numbers */
   CFrame->vf[0] = 2;                  /* DO NOT CHANGE */
   CFrame->hf[1] = 1;   /* U-V */    
   CFrame->vf[1] = 1;
   CFrame->hf[2] = 1;
   CFrame->vf[2] = 1;
-  if (*CFrame->ComponentFilePrefix[0]=='\0')
+  if (*CFrame->Core/CCA/ComponentFilePrefix[0]=='\0')
     {
       WHEREAMI();
       printf("A file prefix should be specified.\n");
       exit(ERROR_BOUNDS);
     }
-  for(i=0;i<CFrame->NumberComponents;i++)
+  for(i=0;i<CFrame->NumberCore/CCA/Components;i++)
     {
-      if (*CFrame->ComponentFilePrefix[i]=='\0')
+      if (*CFrame->Core/CCA/ComponentFilePrefix[i]=='\0')
 	{
-	  strcpy(CFrame->ComponentFilePrefix[i],
-		 CFrame->ComponentFilePrefix[0]);
+	  strcpy(CFrame->Core/CCA/ComponentFilePrefix[i],
+		 CFrame->Core/CCA/ComponentFilePrefix[0]);
 	}
-      if (*CFrame->ComponentFileSuffix[i]=='\0')
+      if (*CFrame->Core/CCA/ComponentFileSuffix[i]=='\0')
 	{
-	  strcpy(CFrame->ComponentFileSuffix[i],
+	  strcpy(CFrame->Core/CCA/ComponentFileSuffix[i],
 		 DefaultSuffix[i]);
 	}
     }
@@ -2667,7 +2667,7 @@ void CreateFrameSizes()
 	 HorizontalSize,VerticalSize,CImage->Width,CImage->Height);*/
   maxh = CFrame->hf[0];                   /* Look for maximum vf, hf */
   maxv = CFrame->vf[0];                   /* Actually already known */
-  for(i=1;i<CFrame->NumberComponents;i++)
+  for(i=1;i<CFrame->NumberCore/CCA/Components;i++)
     {
       if (CFrame->hf[i]>maxh)
 	maxh = CFrame->hf[i];
@@ -2677,7 +2677,7 @@ void CreateFrameSizes()
 
   if (CImage->PartialFrame)
     {
-      for(i=0;i<CFrame->NumberComponents;i++)
+      for(i=0;i<CFrame->NumberCore/CCA/Components;i++)
 	{
 	  CFrame->Width[i]=CImage->Width*CFrame->hf[i]/maxh;
 	  CFrame->Height[i]=CImage->Height*CFrame->vf[i]/maxv;
@@ -2687,7 +2687,7 @@ void CreateFrameSizes()
     }
   else
     {
-      for(i=0;i<CFrame->NumberComponents;i++)
+      for(i=0;i<CFrame->NumberCore/CCA/Components;i++)
 	{
 	  CFrame->PWidth[i]=CFrame->Width[i]=
 	    CImage->Width*CFrame->hf[i]/maxh;
@@ -2715,8 +2715,8 @@ void Help()
   printf("     [-4] [-c] [-i MCSearchLimit] [-o] [-p PictureRate]\n");
   printf("     [-q Quantization] [-r Target Rate]\n");
   printf("     [-s StreamFile]  [-x Target Filesize] [-y]\n");
-  printf("     [-z ComponentFileSuffix i]\n");
-  printf("     ComponentFilePrefix1 [ComponentFilePrefix2 ComponentFilePrefix3]\n");
+  printf("     [-z Core/CCA/ComponentFileSuffix i]\n");
+  printf("     Core/CCA/ComponentFilePrefix1 [Core/CCA/ComponentFilePrefix2 Core/CCA/ComponentFilePrefix3]\n");
   printf("-NTSC (352x240)  -CIF (352x288) -QCIF (176x144) base filesizes.\n");
   printf("-PF is partial frame encoding/decoding...\n");
   printf("    is useful for files horizontalxvertical sizes not multiple of 16\n");
@@ -2746,10 +2746,10 @@ void Help()
   printf("-p gives the picture rate (see coding standard; default 30hz).\n");
   printf("-q denotes Quantization, between 1 and 31.\n");
   printf("-r gives the target rate in bits per second.\n");
-  printf("-s denotes StreamFile, which defaults to ComponentFilePrefix1.mpg\n");
+  printf("-s denotes StreamFile, which defaults to Core/CCA/ComponentFilePrefix1.mpg\n");
   printf("-x gives the target filesize in bits. (overrides -r option.)\n");
   printf("-y enables Reference DCT.\n");
-  printf("-z gives the ComponentFileSuffixes (repeatable).\n");
+  printf("-z gives the Core/CCA/ComponentFileSuffixes (repeatable).\n");
 }
 
 /*BFUNC
@@ -2766,10 +2766,10 @@ void MakeFileNames()
 
   for(i=0;i<3;i++)
     {
-      sprintf(CFrame->ComponentFileName[i],"%s%d%s",
-	      CFrame->ComponentFilePrefix[i],
+      sprintf(CFrame->Core/CCA/ComponentFileName[i],"%s%d%s",
+	      CFrame->Core/CCA/ComponentFilePrefix[i],
 	      CurrentFrame,
-	      CFrame->ComponentFileSuffix[i]);
+	      CFrame->Core/CCA/ComponentFileSuffix[i]);
     }
 }
 
@@ -2786,13 +2786,13 @@ void VerifyFiles()
   int i,FileSize;
   FILE *test;  
   
-  for(i=0;i<CFrame->NumberComponents;i++)
+  for(i=0;i<CFrame->NumberCore/CCA/Components;i++)
     {
-      if ((test = fopen(CFrame->ComponentFileName[i],"r")) == NULL)
+      if ((test = fopen(CFrame->Core/CCA/ComponentFileName[i],"r")) == NULL)
 	{
 	  WHEREAMI();
 	  printf("Cannot Open FileName %s\n",
-		 CFrame->ComponentFileName[i]);
+		 CFrame->Core/CCA/ComponentFileName[i]);
 	  exit(ERROR_BOUNDS);
 	}
       fseek(test,0,2);
@@ -2804,7 +2804,7 @@ void VerifyFiles()
 	    {
 	      WHEREAMI();
 	      printf("Bad File Specification for file %s\n",
-		     CFrame->ComponentFileName[i]);
+		     CFrame->Core/CCA/ComponentFileName[i]);
 	    }
 	  else
 	    {
@@ -2818,7 +2818,7 @@ void VerifyFiles()
 	  WHEREAMI();
 	  printf("Inaccurate File Sizes: Estimated %d: %s: %d \n",
 		 CFrame->PWidth[i] * CFrame->PHeight[i],
-		 CFrame->ComponentFileName[i],
+		 CFrame->Core/CCA/ComponentFileName[i],
 		 FileSize);
 	  exit(ERROR_BOUNDS);
 	}

@@ -16,24 +16,23 @@
  *    SIGQUIT: Tells all of the processes to quit
  */
 
-//
 // This is brutal, but effective.  We want this file to have access
 // to the private members of Thread, without having to explicitly
 // declare friendships in the class.
 #define private public
 #define protected public
-#include <SCICore/Thread/Thread.h>
+#include <Core/Thread/Thread.h>
 #undef private
 #undef protected
-#include <SCICore/Thread/AtomicCounter.h>
-#include <SCICore/Thread/Barrier.h>
-#include <SCICore/Thread/ConditionVariable.h>
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Thread/Semaphore.h>
-#include <SCICore/Thread/ThreadError.h>
-#include <SCICore/Thread/ThreadGroup.h>
-#include <SCICore/Thread/Time.h>
-#include <SCICore/Thread/WorkQueue.h>
+#include <Core/Thread/AtomicCounter.h>
+#include <Core/Thread/Barrier.h>
+#include <Core/Thread/ConditionVariable.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/ThreadError.h>
+#include <Core/Thread/ThreadGroup.h>
+#include <Core/Thread/Time.h>
+#include <Core/Thread/WorkQueue.h>
 #include "Thread_unix.h"
 #include <errno.h>
 #include <fcntl.h>
@@ -65,13 +64,6 @@ extern "C" {
 #include "CrowdMonitor_default.cc"
 #include "RecursiveMutex_default.cc"
 
-using SCICore::Thread::Barrier;
-using SCICore::Thread::Mutex;
-using SCICore::Thread::Semaphore;
-using SCICore::Thread::Thread;
-using SCICore::Thread::ThreadError;
-using SCICore::Thread::ThreadGroup;
-using SCICore::Thread::Time;
 
 extern "C" int __ateachexit(void(*)());
 
@@ -80,8 +72,7 @@ extern "C" int __ateachexit(void(*)());
 
 #define N_POOLMUTEX 301
 
-namespace SCICore {
-namespace Thread {
+namespace SCIRun {
 
 struct Thread_private {
   Thread* thread;
@@ -96,11 +87,6 @@ struct Thread_private {
   int bstacksize;
   const char* blockstack[MAXBSTACK];
 };
-
-}
-}
-
-using SCICore::Thread::Thread_private;
 
 static Thread_private* idle_main;
 static Thread_private* idle[MAXTHREADS];
@@ -266,11 +252,9 @@ Thread::initialize()
     throw ThreadError(std::string("Error calling usinit: ")
 		      +strerror(errno));
 
-  //
   // Fetchop init prints out a really annoying message.  This
   // ugly code is to make it not do that
   // failed to create fetchopable area error
-  // 
   int tmpfd=dup(2);
   close(2);
   int nullfd=open("/dev/null", O_WRONLY);
@@ -610,7 +594,7 @@ handle_quit(int sig, int /* code */, sigcontext_t*)
   const char* tname=self?self->getThreadName():"main?";
 
   // Kill all of the threads...
-  char* signam=SCICore_Thread_signal_name(sig, 0);
+  char* signam=Core_Thread_signal_name(sig, 0);
   int pid=getpid();
   fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s\n", tname, pid, signam);
   if(sig==SIGINT){
@@ -648,7 +632,7 @@ handle_abort_signals(int sig, int /* code */, sigcontext_t* context)
 #else
   caddr_t addr=(caddr_t)context->sc_badvaddr.lo32;
 #endif
-  char* signam=SCICore_Thread_signal_name(sig, addr);
+  char* signam=Core_Thread_signal_name(sig, addr);
   fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
   Thread::niceAbort();
 
@@ -864,8 +848,6 @@ Semaphore::up(int count)
   }
 }
 
-namespace SCICore {
-namespace Thread {
 struct Barrier_private {
   Barrier_private();
 
@@ -885,10 +867,6 @@ struct Barrier_private {
   volatile int flag;  // We want this on it's own cache line
   char pad2[128];
 };
-}
-}
-
-using SCICore::Thread::Barrier_private;
 
 Barrier_private::Barrier_private()
   : cond0("Barrier condition 0"), cond1("Barrier condition 1"),
@@ -968,8 +946,6 @@ Barrier::wait(int n)
   Thread::pop_bstack(p, oldstate);
 }
 
-namespace SCICore {
-namespace Thread {
 struct AtomicCounter_private {
   AtomicCounter_private();
 
@@ -977,11 +953,6 @@ struct AtomicCounter_private {
   Mutex lock;
   int value;
 };
-}
-}
-
-using SCICore::Thread::AtomicCounter_private;
-using SCICore::Thread::AtomicCounter;
 
 AtomicCounter_private::AtomicCounter_private()
   : lock("AtomicCounter lock")
@@ -1120,29 +1091,25 @@ AtomicCounter::set(int v)
   }
 }
 
-namespace SCICore {
-namespace Thread {
 struct ConditionVariable_private {
   int num_waiters;
   usema_t* semaphore;
   bool pollsema;
 };
-}
-}
 
-SCICore::Thread::ConditionVariable::ConditionVariable(const char* name)
+ConditionVariable::ConditionVariable(const char* name)
   : d_name(name)
 {
-  d_priv=new ConditionVariable_private();
-  d_priv->num_waiters=0;
-  d_priv->pollsema=false;
-  d_priv->semaphore=usnewsema(arena, 0);
-  if(!d_priv->semaphore)
-    throw ThreadError(std::string("usnewsema failed")
-		      +strerror(errno));
+d_priv=new ConditionVariable_private();
+d_priv->num_waiters=0;
+d_priv->pollsema=false;
+d_priv->semaphore=usnewsema(arena, 0);
+if(!d_priv->semaphore)
+  throw ThreadError(std::string("usnewsema failed")
+    +strerror(errno));
 }
 
-SCICore::Thread::ConditionVariable::~ConditionVariable()
+ConditionVariable::~ConditionVariable()
 {
   if(d_priv->semaphore){
     if(d_priv->pollsema)
@@ -1154,7 +1121,7 @@ SCICore::Thread::ConditionVariable::~ConditionVariable()
 }
 
 void
-SCICore::Thread::ConditionVariable::wait(Mutex& m)
+ConditionVariable::wait(Mutex& m)
 {
   if(d_priv->pollsema){
     if(!timedWait(m, 0)){
@@ -1179,7 +1146,7 @@ SCICore::Thread::ConditionVariable::wait(Mutex& m)
  * to be understood.
  */
 bool
-SCICore::Thread::ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
+ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
 {
   if(!d_priv->pollsema){
     // Convert to a pollable semaphore...
@@ -1303,7 +1270,7 @@ SCICore::Thread::ConditionVariable::timedWait(Mutex& m, const struct timespec* a
 }
 
 void
-SCICore::Thread::ConditionVariable::conditionSignal()
+ConditionVariable::conditionSignal()
 {
   if(d_priv->num_waiters > 0){
     d_priv->num_waiters--;
@@ -1314,7 +1281,7 @@ SCICore::Thread::ConditionVariable::conditionSignal()
 }
 
 void
-SCICore::Thread::ConditionVariable::conditionBroadcast()
+ConditionVariable::conditionBroadcast()
 {
   while(d_priv->num_waiters > 0){
     d_priv->num_waiters--;
@@ -1323,3 +1290,6 @@ SCICore::Thread::ConditionVariable::conditionBroadcast()
 			+strerror(errno));
   }
 }
+
+} // End namespace SCIRun
+

@@ -9,10 +9,10 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <SCICore/Malloc/Allocator.h>
-#include <PSECommon/Modules/Salmon/SCIBaWGL.h>
-#include <PSECommon/Modules/Salmon/Roe.h>
-#include <PSECommon/Modules/Salmon/Salmon.h>
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Modules/Salmon/SCIBaWGL.h>
+#include <Dataflow/Modules/Salmon/Roe.h>
+#include <Dataflow/Modules/Salmon/Salmon.h>
 
 #include <unistd.h>
 #include <math.h>
@@ -25,13 +25,10 @@
 using std::cerr;
 using std::endl;
 
-#include <PSECommon/Modules/Salmon/SCIBaWGL.h>
+#include <Dataflow/Modules/Salmon/SCIBaWGL.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using SCICore::Thread::Runnable;
-using SCICore::Thread::Thread;
 
 SCIBaWGLTimer::SCIBaWGLTimer( Roe* r, SCIBaWGL* b )
 { 
@@ -384,4 +381,4 @@ void SCIBaWGL::shutdown_ok()
     }
 }
 
-}}
+} // End namespace SCIRun

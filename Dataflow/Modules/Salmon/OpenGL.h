@@ -28,33 +28,33 @@
 #include <map.h>
 
 #include "image.h"
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Util/Timer.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/GeomOpenGL.h>
-#include <SCICore/Geom/Light.h>
-#include <SCICore/Geom/Lighting.h>
-#include <SCICore/Geom/RenderMode.h>
-#include <SCICore/Geom/View.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/Datatypes/Image.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECommon/Modules/Salmon/Ball.h>
-#include <PSECommon/Modules/Salmon/MpegEncoder.h>
-#include <PSECommon/Modules/Salmon/Renderer.h>
-#include <PSECommon/Modules/Salmon/Roe.h>
-#include <PSECommon/Modules/Salmon/Salmon.h>
-#include <SCICore/Thread/FutureValue.h>
-#include <SCICore/Thread/Runnable.h>
-#include <SCICore/Thread/Thread.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Util/Timer.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Geom/Light.h>
+#include <Core/Geom/Lighting.h>
+#include <Core/Geom/RenderMode.h>
+#include <Core/Geom/View.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Trig.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/Datatypes/Image.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Modules/Salmon/Ball.h>
+#include <Dataflow/Modules/Salmon/MpegEncoder.h>
+#include <Dataflow/Modules/Salmon/Renderer.h>
+#include <Dataflow/Modules/Salmon/Roe.h>
+#include <Dataflow/Modules/Salmon/Salmon.h>
+#include <Core/Thread/FutureValue.h>
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/Thread.h>
 
-#include <SCICore/Geom/GeomCone.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geom/GeomText.h>
+#include <Core/Geom/GeomCone.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geom/GeomText.h>
 
 #ifdef __sgi
 #include <X11/extensions/SGIStereo.h>
@@ -66,32 +66,15 @@
 #endif
 #endif
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
 using std::cerr;
 using std::endl;
 using std::ostringstream;
 using std::ofstream;
 
-using PSECore::Datatypes::GeometryData;
-using SCICore::Datatypes::DepthImage;
 
-using SCICore::Datatypes::ColorImage;
-using SCICore::GeomSpace::Light;
-using SCICore::GeomSpace::Lighting;
-using SCICore::GeomSpace::View;
-using SCICore::Containers::to_string;
-using SCICore::TclInterface::TCLTask;
-using SCICore::Thread::Runnable;
-using SCICore::Thread::Thread;
 
-using SCICore::GeomSpace::GeomCone;
-using SCICore::GeomSpace::GeomCylinder;
-using SCICore::GeomSpace::GeomCappedCylinder;
-using SCICore::GeomSpace::GeomSphere;
-using SCICore::GeomSpace::GeomTri;
-using SCICore::GeomSpace::GeomText;
 
 class OpenGLHelper;
 int query_OpenGL();
@@ -126,7 +109,7 @@ protected:
     Display* dpy;
     GLXContext cx;
     int maxlights;
-    SCICore::GeomSpace::DrawInfoOpenGL* drawinfo;
+    DrawInfoOpenGL* drawinfo;
     WallClockTimer fpstimer;
     double current_time;
 
@@ -138,7 +121,7 @@ protected:
     void pick_draw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
     OpenGLHelper* helper;
     clString my_openglname;
-    SCICore::Containers::Array1<XVisualInfo*> visuals;
+    Array1<XVisualInfo*> visuals;
 
    /* Call this each time an mpeg frame is generated. */
   void StartMpeg(const clString& fname);
@@ -189,10 +172,10 @@ GLint    get_depth_view[4];
 
     clString myname;
     virtual void redraw_loop();
-    SCICore::Thread::Mailbox<int> send_mb;
-    SCICore::Thread::Mailbox<int> recv_mb;
-    SCICore::Thread::Mailbox<GetReq> get_mb;
-    SCICore::Thread::Mailbox<ImgReq> img_mb;
+    Mailbox<int> send_mb;
+    Mailbox<int> recv_mb;
+    Mailbox<GetReq> get_mb;
+    Mailbox<ImgReq> img_mb;
 
     Salmon* salmon;
     Roe* roe;
@@ -238,7 +221,6 @@ protected:
 
 };
 
-} // namespace PSECommon
-} // namespace Modules
+} // End namespace SCIRun
 
 #endif // SCI_project_module_OpenGL_h

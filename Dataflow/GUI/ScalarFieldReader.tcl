@@ -1,7 +1,7 @@
 
 catch {rename ScalarFieldReader ""}
 
-itcl_class PSECommon_Readers_ScalarFieldReader {
+itcl_class Dataflow_Readers_ScalarFieldReader {
     inherit Module
     constructor {config} {
 	set name ScalarFieldReader

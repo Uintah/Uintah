@@ -1,16 +1,12 @@
-#
 #  CuttingPlane.tcl
-#
 #  Written by:
 #   Colette Mullenhoff
 #   Department of Computer Science
 #   University of Utah
 #   May. 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
-itcl_class PSECommon_Visualization_CuttingPlane {
+itcl_class Dataflow_Visualization_CuttingPlane {
     inherit Module
     constructor {config} {
 	set name CuttingPlane

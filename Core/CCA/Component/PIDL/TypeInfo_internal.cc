@@ -1,7 +1,6 @@
 
 /*
  *  TypeInfo_internal.cc: internal representation for a type.
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -12,11 +11,10 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Component/PIDL/TypeInfo_internal.h>
-#include <Component/PIDL/TypeInfo.h>
-#include <SCICore/Exceptions/InternalError.h>
+#include <Core/CCA/Component/PIDL/TypeInfo_internal.h>
+#include <Core/CCA/Component/PIDL/TypeInfo.h>
+#include <Core/Exceptions/InternalError.h>
 using Component::PIDL::TypeInfo_internal;
-using SCICore::Exceptions::InternalError;
 
 TypeInfo_internal::TypeInfo_internal(const std::string& fullclassname,
 				     const std::string& uuid,
@@ -69,15 +67,3 @@ void TypeInfo_internal::add_castables(TypeInfo_internal* parent, int vtoffset)
     }
 }
 
-//
-// $Log$
-// Revision 1.2  1999/09/21 06:13:00  sparker
-// Fixed bugs in multiple inheritance
-// Added round-trip optimization
-// To support this, we store Startpoint* in the endpoint instead of the
-//    object final type.
-//
-// Revision 1.1  1999/09/17 05:08:10  sparker
-// Implemented component model to work with sidl code generator
-//
-//

@@ -6,31 +6,24 @@
  * Simple interface to volume rendering stuff
  */
 
-#include <SCICore/Containers/Array1.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/CrowdMonitor.h>
-#include <PSECore/Widgets/PointWidget.h>
+#include <Core/Containers/Array1.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/CrowdMonitor.h>
+#include <Dataflow/Widgets/PointWidget.h>
 
-#include <SCICore/Datatypes/GLVolumeRenderer.h>
-#include <SCICore/Datatypes/GLTexture3D.h>
-#include <PSECore/Datatypes/GLTexture3DPort.h>
+#include <Core/Datatypes/GLVolumeRenderer.h>
+#include <Core/Datatypes/GLTexture3D.h>
+#include <Dataflow/Ports/GLTexture3DPort.h>
 
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-class SCICore::GeomSpace::GeomObj;
+class GeomObj;
 
 
 class TextureVolVis : public Module {
@@ -71,7 +64,6 @@ private:
   void SwapXZ( ScalarFieldHandle sfh );
 };
 
-} // namespace Modules
-} // namespace Uintah
+} // End namespace SCIRun
 
 #endif

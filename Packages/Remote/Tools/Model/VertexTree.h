@@ -1,11 +1,9 @@
 #ifndef _vertex_tree_h
 #define _vertex_tree_h
 
-#include <Remote/Tools/Util/KDTree.h>
+#include <Packages/Remote/Tools/Util/KDTree.h>
 
 namespace Remote {
-namespace Tools {
-
 struct KDVertex
 {
   Vertex *Vert;
@@ -68,8 +66,7 @@ struct KDVertex
   }
 };
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

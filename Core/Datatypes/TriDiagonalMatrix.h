@@ -14,10 +14,9 @@
 #ifndef DATATYPES_TRIDIAGONALMATRIX_H
 #define DATATYPES_TRIDIAGONALMATRIX_H 1
 
-#include <SCICore/Datatypes/Matrix.h>
+#include <Core/Datatypes/Matrix.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 typedef double TriRow[3];
 
@@ -46,8 +45,7 @@ public:
 				int end=-1, int spVec=0);
 };
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
 
 #endif

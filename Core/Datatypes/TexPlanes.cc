@@ -1,17 +1,14 @@
-#include <SCICore/Datatypes/TexPlanes.h>
-#include <SCICore/Geometry/Ray.h>
-#include <SCICore/Datatypes/FullResIterator.h>
-#include <SCICore/Datatypes/Brick.h>
-#include <SCICore/Datatypes/SliceTable.h>
-#include <SCICore/Datatypes/GLVolumeRenderer.h>
-#include <SCICore/Datatypes/VolumeUtils.h>
+#include <Core/Datatypes/TexPlanes.h>
+#include <Core/Geometry/Ray.h>
+#include <Core/Datatypes/FullResIterator.h>
+#include <Core/Datatypes/Brick.h>
+#include <Core/Datatypes/SliceTable.h>
+#include <Core/Datatypes/GLVolumeRenderer.h>
+#include <Core/Datatypes/VolumeUtils.h>
 #include <iostream>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using SCICore::Geometry::Ray;
-using SCICore::Datatypes::SliceTable;
 
 TexPlanes::TexPlanes(const GLVolumeRenderer* glvr ) :
   GLVolRenState( glvr )
@@ -127,6 +124,5 @@ TexPlanes::drawWireFrame()
   }
 }
 
-} // end namespace GeomSpace
-} // end namespace SCICore
+} // End namespace SCIRun
 

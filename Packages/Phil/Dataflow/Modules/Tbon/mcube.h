@@ -1,9 +1,8 @@
-//static char *id="@(#) $Id$";
 
 /*  mcube.h
     Marching Cubes style interpolation for structured and unstructured grids
 
-    Philip Sutton
+    Packages/Philip Sutton
     May 1999
 
   Copyright (C) 2000 SCI Group, University of Utah
@@ -15,16 +14,14 @@
 #include "TriGroup.h"
 #include "mcube_table.h"
 
-//#include <SCICore/Geometry/Point.h>
+//#include <Core/Geometry/Point.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 
 
 namespace Phil {
-namespace Modules {
-
-using namespace SCICore::GeomSpace;
+using namespace SCIRun;
 
 
 struct Tetra;
@@ -2172,18 +2169,8 @@ MCubesCL<T>::interpRegular8( int zone, int x, int y, int z, float iso ) {
   }
 } // interpRegular8
 
-
-} // End namespace Modules
 } // End namespace Phil
+
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:13:02  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 21:01:05  psutton
-// initial revision
-//
-//

@@ -1,18 +1,15 @@
 #ifndef __MCQ_EULER_H__
 #define __MCQ_EULER_H__
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Thread/Mutex.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Thread/Mutex.h>
 
 namespace McQ {
-  using namespace PSECore::Dataflow;
-  using namespace PSECore::Datatypes;
-  using namespace SCICore::GeomSpace;
-  using namespace SCICore::Thread;
+using namespace SCIRun;
 
   class Euler: public Module {
      public:
@@ -30,7 +27,7 @@ namespace McQ {
        GeomGroup* curBoxes;
        ScalarFieldHandle curPressure;
   };
+} // End namespace McQ
 
-}
 
 #endif // __MCQ_EULER_H__

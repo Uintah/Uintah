@@ -7,25 +7,25 @@
  *   University of Utah
  *   Feb. 1994
  *
- *  Modified for distributed SCIRun by:
+ *  Modified for distributed Dataflow by:
  *   Michelle Miller
  *   May 1998
  *
  *  Copyright (C) 1999 U of U
  */
 
-#include <PSECore/Dataflow/Network.h>
-#include <PSECore/Dataflow/NetworkEditor.h>
-//#include <PSECore/Distributed/SlaveController.h>
-#include <PSECore/Dataflow/PackageDB.h>
-#include <SCICore/TclInterface/GuiServer.h>
-#include <SCICore/TclInterface/GuiManager.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Containers/String.h>
+#include <Dataflow/Network/Network.h>
+#include <Dataflow/Network/NetworkEditor.h>
+//#include <Dataflow/Distributed/SlaveController.h>
+#include <Dataflow/Network/PackageDB.h>
+#include <Core/TclInterface/GuiServer.h>
+#include <Core/TclInterface/GuiManager.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCL.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Containers/String.h>
 #ifdef SCI_PARALLEL
-#include <Component/PIDL/PIDL.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
 #include <iostream>
 using std::cerr;
 using std::cout;
@@ -37,40 +37,26 @@ using Component::PIDL::PIDL;
 #include <afxwin.h>
 #endif
 
-using SCICore::TclInterface::TCLTask;
-using SCICore::TclInterface::GuiManager;
-using SCICore::TclInterface::GuiServer;
-using SCICore::Thread::Thread;
-using namespace SCICore::Containers;
-using namespace PSECore::Dataflow;
 
-using PSECore::Dataflow::Network;
-using PSECore::Dataflow::NetworkEditor;
+using namespace SCIRun;
 
+namespace SCIRun {
+extern bool global_remote;
+void set_guiManager( GuiManager * );
 
-namespace PSECore {
-  namespace Dataflow {
-    extern bool global_remote;
-  }
 }
 
-namespace SCICore {
-  namespace TclInterface {
-    void set_guiManager( GuiManager * );
-  }
-}
-
-//extern void SCICore::TclInterface::set_guiManager( GuiManager* );
+//extern void set_guiManager( GuiManager* );
 
 int global_argc;
 char** global_argv;
 
 #ifndef PSECORETCL
-#error You must set PSECORETCL to the PSECore/Tcl path
+#error You must set PSECORETCL to the Dataflow/Tcl path
 #endif
 
 #ifndef SCICORETCL
-#error You must set SCICORETCL to the SCICore/Tcl path
+#error You must set SCICORETCL to the Core/Tcl path
 #endif
 
 #ifndef DEFAULT_PACKAGE_PATH
@@ -90,14 +76,14 @@ int main(int argc, char** argv)
 #ifdef SCI_PARALLEL
     try {
 	PIDL::initialize(argc, argv);
-    } catch(const SCICore::Exceptions::Exception& e) {
+    } catch(const Exception& e) {
 	cerr << "Caught exception:\n";
 	cerr << e.message() << '\n';
 	abort();
     } catch(...) {
 	cerr << "Caught unexpected exception!\n";
 	abort();
-    }
+} // End namespace SCIRun
 #endif
 
     // Start up TCL...
@@ -108,9 +94,9 @@ int main(int argc, char** argv)
 
     // Set up the TCL environment to find core components
     clString result;
-    TCL::eval("global PSECoreTCL SCICoreTCL",result);
-    TCL::eval("set PSECoreTCL "PSECORETCL,result);
-    TCL::eval("set SCICoreTCL "SCICORETCL,result);
+    TCL::eval("global PSECoreTCL CoreTCL",result);
+    TCL::eval("set DataflowTCL "PSECORETCL,result);
+    TCL::eval("set CoreTCL "SCICORETCL,result);
     TCL::eval("lappend auto_path "SCICORETCL,result);
     TCL::eval("lappend auto_path "PSECORETCL,result);
     TCL::eval("lappend auto_path "ITCL_WIDGETS,result);
@@ -160,11 +146,11 @@ int main(int argc, char** argv)
 #endif
 
 #ifndef __sgi
-	SCICore::Thread::Semaphore wait("main wait", 0);
+	Semaphore wait("main wait", 0);
 	wait.down();
 #endif
 	
     // Never reached
     return 0;
-}
 
+}

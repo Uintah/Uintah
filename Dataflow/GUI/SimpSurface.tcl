@@ -1,4 +1,4 @@
-itcl_class PSECommon_Surface_SimpSurface {
+itcl_class Dataflow_Surface_SimpSurface {
     inherit Module
     constructor {config} {
         set name SimpSurface

@@ -1,9 +1,9 @@
 
 /*
- *  NektarScalarFieldPort.cc: The Scalar Field Data type
+ *  Packages/NektarScalarFieldPort.cc: The Scalar Field Data type
  *
  *  Written by:
- *   Yarden Livnat
+ *   Packages/Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
  *   August 2000
@@ -11,30 +11,30 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <Nektar/Datatypes/NektarScalarFieldPort.h>
-#include <Nektar/share/share.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Packages/Nektar/Core/Datatypes/NektarScalarFieldPort.h>
+#include <Packages/Nektar/share/share.h>
+#include <Core/Malloc/Allocator.h>
 
-//namespace Nektar {
+//namespace Packages/Nektar {
 //namespace Datatypes {
 
-using namespace SCICore::Containers;
+using namespace SCIRun;
 using namespace Nektar::Datatypes;
 
 extern "C" {
-  NektarSHARE IPort* make_NektarScalarFieldIPort(Module* module,
+  Packages/NektarSHARE IPort* make_Packages/NektarScalarFieldIPort(Module* module,
 						 const clString& name) {
-    return scinew SimpleIPort<NektarScalarFieldHandle>(module,name);
+    return scinew SimpleIPort<Packages/NektarScalarFieldHandle>(module,name);
   }
-  NektarSHARE OPort* make_NektarScalarFieldOPort(Module* module, const 
+  Packages/NektarSHARE OPort* make_Packages/NektarScalarFieldOPort(Module* module, const 
 						 clString& name) {
-    return scinew SimpleOPort<NektarScalarFieldHandle>(module,name);
+    return scinew SimpleOPort<Packages/NektarScalarFieldHandle>(module,name);
   }
 }
 
-template<> clString SimpleIPort<NektarScalarFieldHandle>::port_type("NektarScalarField");
-template<> clString SimpleIPort<NektarScalarFieldHandle>::port_color("Blue");
+template<> clString SimpleIPort<Packages/NektarScalarFieldHandle>::port_type("Packages/NektarScalarField");
+template<> clString SimpleIPort<Packages/NektarScalarFieldHandle>::port_color("Blue");
 
 //} // End namespace Datatypes
-//} // End namespace Nektar
+//} // End namespace Packages/Nektar
 

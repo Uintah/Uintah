@@ -1,19 +1,17 @@
-#include <Kurt/Datatypes/GLTexture3DPort.h>
-#include <Kurt/share/share.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Packages/Kurt/Core/Datatypes/GLTexture3DPort.h>
+#include <Packages/Kurt/share/share.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace PSECore {
-namespace Datatypes {
-
+namespace Kurt {
 using namespace Kurt::Datatypes;
 
 
 extern "C" {
-KurtSHARE IPort* make_GLTexture3DIPort(Module* module,
+Packages/KurtSHARE IPort* make_GLTexture3DIPort(Module* module,
 					 const clString& name) {
   return scinew SimpleIPort<GLTexture3DHandle>(module,name);
 }
-KurtSHARE OPort* make_GLTexture3DOPort(Module* module,
+Packages/KurtSHARE OPort* make_GLTexture3DOPort(Module* module,
 					 const clString& name) {
   return scinew SimpleOPort<GLTexture3DHandle>(module,name);
 }
@@ -22,7 +20,6 @@ KurtSHARE OPort* make_GLTexture3DOPort(Module* module,
 template<> clString SimpleIPort<GLTexture3DHandle>::port_type("GLTexture3D");
 template<> clString SimpleIPort<GLTexture3DHandle>::port_color("gray40");
 
+} // End namespace Kurt
 
-} // End namespace Datatypes
-} // End namespace PSECore
 

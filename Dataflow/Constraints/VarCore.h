@@ -15,15 +15,12 @@
 #ifndef SCI_project_VarCore_h
 #define SCI_project_VarCore_h 1
 
-#include <PSECore/share/share.h>
-#include <PSECore/Constraints/manifest.h>
-#include <SCICore/Geometry/Point.h>
+#include <Dataflow/share/share.h>
+#include <Dataflow/Constraints/manifest.h>
+#include <Core/Geometry/Point.h>
 
-namespace PSECore {
-namespace Constraints {
+namespace SCIRun {
 
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
 
 // VarCore is the data of a Variable.  It implements the polymorphism.
 class BaseVariable;
@@ -122,7 +119,6 @@ VarCore::epsilonequal( const Real Epsilon, const VarCore& v )
    }
 }
 
-} // End namespace Constraints
-} // End namespace PSECore
+} // End namespace SCIRun
 
 #endif

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
   Clock.h
@@ -11,8 +10,6 @@
 #define FAST_CLOCK_H
 
 namespace Phil {
-namespace Modules {
-
 typedef unsigned int TimerVal;
 struct ProfTimes {
   float time;
@@ -49,18 +46,8 @@ void PrintAvgTime(FILE *fp, int id, int n, char *txt);
 void ClearTime( int id );
 
 static double *clocks;
+} // End namespace Phil
 
-} // end namespace Modules
-} // end namespace Phil
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:11:13  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 20:56:52  psutton
-// initial revision
-//
-//

@@ -1,16 +1,14 @@
 #ifndef _Vector_h
 #define _Vector_h
 
-#include <Remote/Tools/Util/Assert.h>
-#include <Remote/Tools/Math/MiscMath.h>
+#include <Packages/Remote/Tools/Util/Assert.h>
+#include <Packages/Remote/Tools/Math/MiscMath.h>
 
 #include <string>
 #include <iostream>
 using namespace std;
 
 namespace Remote {
-namespace Tools {
-
 // #define SCI_VEC_DEBUG
 #ifdef SCI_VEC_DEBUG
 #define ASSERTVEC(x) ASSERT0(x)
@@ -59,9 +57,9 @@ public:
 	
   friend inline double Dot(const Vector&, const Vector&);
   friend inline Vector Cross(const Vector&, const Vector&);
-				// Component-wise absolute value.
+				// Core/CCA/Component-wise absolute value.
   friend inline Vector Abs(const Vector&);
-				// Component-wise multiply.
+				// Core/CCA/Component-wise multiply.
   friend inline Vector CompMult(const Vector&, const Vector&); 
 	
 				// Find the point p in terms of the
@@ -360,8 +358,7 @@ inline istream& operator>>(istream& is, Vector& v)
   return is;
 }
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

@@ -17,7 +17,6 @@
 // real symmetric matrix. Square 3x3 matrix a; output eigenvalues in w;
 // and output eigenvectors in v. Resulting eigenvalues/vectors are sorted
 // in decreasing order; eigenvectors are normalized.
-//
 static
 bool internal_jacobi(real a[3][3], real w[3], real v[3][3])
 {

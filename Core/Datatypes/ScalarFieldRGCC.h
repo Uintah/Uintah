@@ -19,13 +19,11 @@
 #ifndef SCI_project_ScalarFieldRGCC_h
 #define SCI_project_ScalarFieldRGCC_h 1
 
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Containers/Array3.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Containers/Array3.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Containers::Array3;
 
 class SCICORESHARE ScalarFieldRGCC : public ScalarFieldRG {
 public:
@@ -47,8 +45,7 @@ public:
     virtual void fill_gradmags();
 };
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
 
 #endif

@@ -1,17 +1,13 @@
 
-#
 #  EditMatrix.tcl
-#
 #  Written by:
 #   David Weinstein
 #   Department of Computer Science
 #   University of Utah
 #   Novemeber 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
-itcl_class PSECommon_Matrix_EditMatrix {
+itcl_class Dataflow_Matrix_EditMatrix {
     inherit Module
     constructor {config} {
 	set name EditMatrix

@@ -13,16 +13,8 @@
 #ifndef SCI_project_Span_h
 #define SCI_project_Span_h 1
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
-using namespace SCICore::Containers;
 
 class Span : public Module {
 public:
@@ -54,7 +46,6 @@ public:
 };
 
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
 #endif

@@ -1,6 +1,6 @@
-catch {rename Yarden_Readers_TensorFieldReader ""}
+catch {rename Packages/Yarden_Readers_TensorFieldReader ""}
 
-itcl_class Yarden_Readers_TensorFieldReader {
+itcl_class Packages/Yarden_Readers_TensorFieldReader {
     inherit Module
     constructor {config} {
 	set name TensorFieldReader

@@ -10,20 +10,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Persistent/Pstreams.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <SCICore/Datatypes/Matrix.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::PersistentSpace;
 
 class MatrixWriter : public Module {
     MatrixIPort* inport;
@@ -55,7 +50,6 @@ MatrixWriter::~MatrixWriter()
 
 void MatrixWriter::execute()
 {
-    using SCICore::Containers::Pio;
 
     MatrixHandle handle;
     if(!inport->get(handle))
@@ -78,6 +72,5 @@ void MatrixWriter::execute()
     delete stream;
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 

@@ -14,20 +14,13 @@
 #ifndef SCI_project_SoundPort_h
 #define SCI_project_SoundPort_h 1
 
-#include <PSECore/share/share.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Dataflow/Port.h>
-#include <SCICore/Thread/Mailbox.h>
+#include <Dataflow/share/share.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/Port.h>
+#include <Core/Thread/Mailbox.h>
 
-namespace PSECore {
-namespace Datatypes {
+namespace SCIRun {
 
-using PSECore::Dataflow::IPort;
-using PSECore::Dataflow::OPort;
-using PSECore::Dataflow::Module;
-using PSECore::Dataflow::Connection;
-using SCICore::Thread::Mailbox;
-using SCICore::Containers::clString;
 
 struct SoundComm {
     enum Action {
@@ -133,40 +126,7 @@ inline int SoundIPort::end_of_stream()
     return state==Done;
 }
 
-} // End namespace Datatypes
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.6  1999/11/12 01:38:31  ikits
-// Added ANL AVTC site visit modifications to make the demos work.
-// Fixed bugs in PSECore/Datatypes/SoundPort.[h,cc] and PSECore/Dataflow/NetworkEditor.cc
-// Put in temporary scale_changed fix into PSECore/Widgets/BaseWidget.cc
-//
-// Revision 1.5  1999/08/28 17:54:32  sparker
-// Integrated new Thread library
-//
-// Revision 1.4  1999/08/27 00:03:03  moulding
-// changed SCICORESHARE to PSECORESHARE
-//
-// Revision 1.3  1999/08/25 03:48:24  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:12  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:50  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 20:17:03  dav
-// added back PSECore .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:47  dav
-// Import sources
-//
-//
 
 #endif /* SCI_project_SoundPort_h */

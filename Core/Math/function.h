@@ -1,12 +1,10 @@
 
 //=======================
-//
 // function.h
 // David Hart
 // July 2000
 // SCI group
 // University of Utah
-//
 //=======================
 
 #ifndef __FUNCTION_H__
@@ -17,8 +15,7 @@
 #include <map>
 using namespace std;
 
-namespace SCICore {
-namespace Math {
+namespace SCIRun {
 
 class Function;
 class FunctionSoLoader;
@@ -190,8 +187,7 @@ public:
   void deleteHandle(handleIter);
 };
   
-} // namespace Math {
-} // namespace SCICore {
+} // End namespace SCIRun
 
 #endif // __FUNCTION_H__
 

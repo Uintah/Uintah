@@ -23,32 +23,25 @@ LOG
 
 
 
-#include <SCICore/Thread/CrowdMonitor.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Widgets/CrosshairWidget.h>
-#include <SCICore/Geom/Switch.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
+#include <Core/Thread/CrowdMonitor.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Widgets/CrosshairWidget.h>
+#include <Core/Geom/Switch.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
 #include <math.h>
 
-#include <PSECommon/share/share.h>
+#include <Dataflow/share/share.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Widgets;    
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
-using SCICore::Geometry::Point;
 
 const clString EMPTY_MSG="Not Available";
 
-class PSECommonSHARE ScalarFieldProbe : public Module {
+class PSECORESHARE ScalarFieldProbe : public Module {
   
   ScalarFieldIPort* iPort;
   ScalarFieldOPort* oPort;
@@ -86,7 +79,7 @@ public:
 };
 
 
-extern "C" PSECommonSHARE Module* make_ScalarFieldProbe(const clString& id) {
+extern "C" PSECORESHARE Module* make_ScalarFieldProbe(const clString& id) {
   return new ScalarFieldProbe(id);
 }
 
@@ -250,8 +243,7 @@ void ScalarFieldProbe::widget_moved(int lock)
     }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
 
 

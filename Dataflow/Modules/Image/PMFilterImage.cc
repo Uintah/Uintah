@@ -12,11 +12,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <SCIRun/Datatypes/Image/ImagePort.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Datatypes/Image/ImagePort.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Trig.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <math.h>
 #ifdef __linux
 #define fsqrt(x) sqrt(x)
@@ -25,12 +25,8 @@
 #endif
 
 namespace SCIRun {
-namespace Modules {
 
-using namespace SCICore::TclInterface;
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
 
 using namespace SCIRun::Datatypes;
 
@@ -184,38 +180,5 @@ void PMFilterImage::execute()
     oport->send(image);
 }
 
-} // End namespace Modules
 } // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.6  2000/03/17 09:29:05  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.5  1999/09/08 02:27:01  sparker
-// Various #include cleanups
-//
-// Revision 1.4  1999/08/31 08:55:34  sparker
-// Bring SCIRun modules up to speed
-//
-// Revision 1.3  1999/08/25 03:48:57  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:40:01  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:58:54  mcq
-// Initial commit
-//
-// Revision 1.2  1999/04/30 01:11:53  dav
-// moved TiffReader to SCIRun from PSECore
-//
-// Revision 1.1  1999/04/29 22:26:33  dav
-// Added image files to SCIRun
-//
-//

@@ -14,19 +14,14 @@
 #ifndef SCI_project_Debug_h
 #define SCI_project_Debug_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/AVLTree.h>
-#include <SCICore/Containers/String.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/AVLTree.h>
+#include <Core/Containers/String.h>
 
-namespace SCICore {
-namespace Util {
+namespace SCIRun {
 
-using SCICore::Containers::Array1;
-using SCICore::Containers::AVLTree;
-using SCICore::Containers::AVLTreeIter;
-using SCICore::Containers::clString;
 
 class DebugSwitch;
 typedef Array1<DebugSwitch*> DebugVars;
@@ -79,33 +74,7 @@ DebugSwitch::operator int() const
 #define PRINTVAR(sw, varname) \
     if(sw)cerr << sw << ": "#varname"=" << varname << endl
 
-} // End namespace Util
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  1999/10/07 02:08:11  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/08/17 06:39:55  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:35  mcq
-// Initial commit
-//
-// Revision 1.4  1999/07/09 01:18:58  moulding
-// added SHARE for win32 shared libraries (.dll's)
-//
-// Revision 1.3  1999/05/06 19:56:26  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:05:38  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:23  dav
-// Import sources
-//
-//
 
 #endif

@@ -15,8 +15,10 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Exceptions/Exception.h>
+#include <Core/Util/Assert.h>
+#include <Core/Exceptions/Exception.h>
+
+namespace SCIRun {
 
 /**************************************
 
@@ -47,7 +49,6 @@ WARNING
   
 ****************************************/
 
-using namespace SCICore::Exceptions;
 
 class ConsecutiveRangeSetException : public Exception
 {
@@ -62,7 +63,7 @@ public:
   { return d_msg.c_str(); }
   
   virtual const char* type() const
-  { return "SCICore::Containers::ConsecutiveRangeSetException"; }
+  { return "ConsecutiveRangeSetException"; }
 private:
   std::string d_msg;
 };
@@ -212,3 +213,15 @@ void ConsecutiveRangeSet::Range::display(std::ostream& out) const
   else
     out << d_low << " - " << high();
 }
+
+} // End namespace SCIRun
+
+
+
+
+
+
+
+
+
+

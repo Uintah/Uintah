@@ -12,11 +12,10 @@
 #define CONTROLLER_LEFT    0
 #define CONTROLLER_RIGHT   1
 
-#include <PSECommon/Modules/Salmon/glMath.h>
-#include <PSECommon/Modules/Salmon/SharedMemory.h>
+#include <Dataflow/Modules/Salmon/glMath.h>
+#include <Dataflow/Modules/Salmon/SharedMemory.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
 class Controller {
 
@@ -40,6 +39,6 @@ public:
 
 };
 
-}}
+} // End namespace SCIRun
 
 #endif /* CONTROLLER_H_ */

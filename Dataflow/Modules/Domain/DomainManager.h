@@ -1,47 +1,36 @@
 // Domain Manager.h - Provides an interface to manage a domain
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   March 2000
-//
 //  Copyright (C) 2000 SCI Group
-//
 //  Module DomainManager
-//
 //  Description: 
 //  Input ports: 
 //  Output ports:
-//
 
 #ifndef SCI_project_DomainManger_h
 #define SCI_project_DomainManger_h 1
 
 #include <stdio.h>
 
-#include <SCICore/Datatypes/Domain.h>
-#include <SCICore/Datatypes/Field.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Containers/String.h>
+#include <Core/Datatypes/Domain.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Containers/String.h>
 
-#include <SCICore/Malloc/Allocator.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/DomainPort.h>
-#include <PSECore/Datatypes/FieldWrapperPort.h>
-#include <PSECore/Datatypes/FieldPort.h>
-#include <SCICore/Util/DebugStream.h>
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/DomainPort.h>
+#include <Dataflow/Ports/FieldWrapperPort.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Util/DebugStream.h>
 
 #include <vector>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Util;
 
 class DomainManager : public Module {
 private:
@@ -68,8 +57,7 @@ public:
 };
 
 
-}
-}
+} // End namespace SCIRun
 
 
 #endif

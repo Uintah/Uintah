@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  GeomLine.cc:  Line object
@@ -16,21 +15,19 @@
 #pragma warning(disable:4291) // quiet the visual C++ compiler
 #endif
 
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/TrivialAllocator.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geometry/BBox.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/TrivialAllocator.h>
+#include <Core/Containers/String.h>
+#include <Core/Geometry/BBox.h>
 #include <iostream>
 using std::cerr;
 using std::ostream;
 
 #include <stdlib.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using SCICore::Containers::TrivialAllocator;
 
 Persistent* make_GeomLine()
 {
@@ -91,12 +88,11 @@ GeomLine::setLineWidth(float val)
 
 void GeomLine::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomLine", GEOMLINE_VERSION);
     GeomObj::io(stream);
-    SCICore::Geometry::Pio(stream, p1);
-    SCICore::Geometry::Pio(stream, p2);
+    Pio(stream, p1);
+    Pio(stream, p2);
     stream.end_class();
 }
 
@@ -145,11 +141,10 @@ void GeomLines::get_bounds(BBox& bb)
 
 void GeomLines::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomLines", GEOMLINES_VERSION);
     GeomObj::io(stream);
-    SCICore::Containers::Pio(stream, pts);
+    Pio(stream, pts);
     stream.end_class();
 }
 
@@ -206,11 +201,10 @@ void TexGeomLines::get_bounds(BBox& bb)
 
 void TexGeomLines::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("TexGeomLines", TexGeomLines_VERSION);
     GeomObj::io(stream);
-    SCICore::Containers::Pio(stream, pts);
+    Pio(stream, pts);
     stream.end_class();
 }
 
@@ -405,50 +399,5 @@ void TexGeomLines::SortVecs()
   // that should be everything...
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.9  2000/12/15 06:31:43  mcole
-// merge branch back into trunk
-//
-// Revision 1.8.2.1  2000/09/22 23:32:42  mcole
-// added support for local line width control
-//
-// Revision 1.8  1999/11/02 06:06:14  moulding
-// added a #ifdef for win32 to quiet the C++ compiler.  This change
-// relates to bug # 61 in csafe's bugzilla.
-//
-// Revision 1.7  1999/10/07 02:07:42  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.6  1999/09/08 02:26:50  sparker
-// Various #include cleanups
-//
-// Revision 1.5  1999/08/29 00:46:55  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.4  1999/08/28 17:54:40  sparker
-// Integrated new Thread library
-//
-// Revision 1.3  1999/08/17 23:50:21  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:08  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:40  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:51  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1.1.1  1999/04/24 23:12:18  dav
-// Import sources
-//
-//

@@ -11,21 +11,23 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Assert.h>
-#include <SCICore/Containers/NotFinished.h>
-#include <PSECommon/Dataflow/Module.h>
-#include <PSECommon/Datatypes/ContourSet.h>
-#include <PSECommon/Datatypes/ContourSetPort.h>
-#include <PSECommon/Datatypes/Surface.h>
-#include <PSECommon/Datatypes/SurfacePort.h>
-#include <PSECommon/Datatypes/TriSurface.h>
-#include <SCICore/Geometry/Grid.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/Expon.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Assert.h>
+#include <Core/Containers/NotFinished.h>
+#include <Dataflow/Dataflow/Module.h>
+#include <Dataflow/Datatypes/ContourSet.h>
+#include <Dataflow/Datatypes/ContourSetPort.h>
+#include <Dataflow/Datatypes/Surface.h>
+#include <Dataflow/Datatypes/SurfacePort.h>
+#include <Dataflow/Datatypes/TriSurface.h>
+#include <Core/Geometry/Grid.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/Expon.h>
 
 #include <iostream>
+
+using namespace SCIRun;
 
 class LaceContours : public Module {
     ContourSetIPort* incontour;

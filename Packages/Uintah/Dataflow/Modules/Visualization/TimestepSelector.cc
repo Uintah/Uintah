@@ -1,9 +1,9 @@
 
 
-#include <SCICore/Util/NotFinished.h>
-#include <Uintah/Interface/DataArchive.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Util/NotFinished.h>
+#include <Packages/Uintah/Interface/DataArchive.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
 #include "TimestepSelector.h"
 #include <iostream> 
 #include <sstream>
@@ -15,13 +15,8 @@ using std::vector;
 using std::string;
 
 namespace Uintah {
-namespace Modules {
-
-using SCICore::Containers::to_string;
-using namespace SCICore::TclInterface;
-using SCICore::Geometry::BBox;
+using namespace SCIRun;
 using namespace Uintah::Datatypes;
-using namespace PSECore::Datatypes;
 
 extern "C" Module* make_TimestepSelector( const clString& id ) {
   return scinew TimestepSelector( id ); 
@@ -109,7 +104,6 @@ void TimestepSelector::execute()
    out->send(handle);
    tcl_status.set("Done");
 }
+} // End namespace Uintah
 
-} // end namespace Modules
-} // end namespace Uintah
   

@@ -1,7 +1,6 @@
 
 /*
  *  Object.h: Base class for all PIDL distributed objects
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -12,14 +11,13 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Component_PIDL_Object_proxy_h
-#define Component_PIDL_Object_proxy_h
+#ifndef Core/CCA/Component_PIDL_Object_proxy_h
+#define Core/CCA/Component_PIDL_Object_proxy_h
 
-#include <Component/PIDL/ProxyBase.h>
-#include <Component/PIDL/Object.h>
+#include <Core/CCA/Component/PIDL/ProxyBase.h>
+#include <Core/CCA/Component/PIDL/Object.h>
 
-namespace Component {
-    namespace PIDL {
+namespace SCIRun {
 /**************************************
  
 CLASS
@@ -54,32 +52,7 @@ DESCRIPTION
 	    virtual ~Object_proxy();
 	private:
 	};
-    }
-}
+} // End namespace SCIRun
 
 #endif
 
-//
-// $Log$
-// Revision 1.4  1999/09/24 20:15:58  sparker
-// Cocoon documentation updates
-//
-// Revision 1.3  1999/09/24 20:03:35  sparker
-// Added cocoon documentation
-//
-// Revision 1.2  1999/09/17 05:08:08  sparker
-// Implemented component model to work with sidl code generator
-//
-// Revision 1.1  1999/08/30 17:39:46  sparker
-// Updates to configure script:
-//  rebuild configure if configure.in changes (Bug #35)
-//  Fixed rule for rebuilding Makefile from Makefile.in (Bug #36)
-//  Rerun configure if configure changes (Bug #37)
-//  Don't build Makefiles for modules that aren't --enabled (Bug #49)
-//  Updated Makfiles to build sidl and Component if --enable-parallel
-// Updates to sidl code to compile on linux
-// Imported PIDL code
-// Created top-level Component directory
-// Added ProcessManager class - a simpler interface to fork/exec (not finished)
-//
-//

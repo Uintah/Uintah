@@ -1,10 +1,7 @@
-#
 # Makefile fragment for this subdirectory
-# $Id$
-#
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
-SRCDIR   := Kurt/Datatypes
+SRCDIR   := Packages/Kurt/Core/Datatypes
 
 SRCS     += $(SRCDIR)/Brick.cc \
 	 $(SRCDIR)/GLTexture3D.cc \
@@ -32,12 +29,12 @@ SRCS     += $(SRCDIR)/Brick.cc \
 	 $(SRCDIR)/VisParticleSetPort.cc \
 	 $(SRCDIR)/GLAnimatedStreams.cc
 
-PSELIBS := SCICore/Exceptions SCICore/Geometry \
-	SCICore/Persistent SCICore/Datatypes \
-	SCICore/Containers  SCICore/Geom SCICore/Thread \
-	PSECore/Dataflow PSECore/XMLUtil \
-	Uintah/Grid Uintah/Datatypes Uintah/Exceptions \
-	Uintah/Modules/Visualization
+PSELIBS := Core/Exceptions Core/Geometry \
+	Core/Persistent Core/Datatypes \
+	Core/Containers  Core/Geom Core/Thread \
+	Dataflow/Network PSECore/XMLUtil \
+	Uintah/Grid Packages/Uintah/Core/Datatypes Uintah/Exceptions \
+	Packages/Uintah/Dataflow/Modules/Visualization
 
 
 
@@ -45,38 +42,3 @@ LIBS :=  $(LINK) $(XML_LIBRARY) $(GL_LIBS) -lmpi -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
-#
-# $Log$
-# Revision 1.7  2000/12/06 04:43:02  kuzimmer
-# Added PSECore/Dataflow and PSECore/XMLUtil to PSELIBS.  Added -lmpi to LIBS.  To remove unresolved symbol warnings on compile
-#
-# Revision 1.6  2000/09/27 16:23:18  kuzimmer
-# Moved these files from the now defunct DataArchive Directory
-#
-# Revision 1.5  2000/09/17 15:59:41  kuzimmer
-# updated texture planes for binary transparency
-#
-# Revision 1.4  2000/08/29 21:19:43  kuzimmer
-# Added some 3D texture mapping functionality
-#
-# Revision 1.3  2000/05/29 22:24:49  kuzimmer
-# A bunch of fixes, including making volumes work with udas, transforming volumes properly without copying data, and fixing coredumps when changing udas
-#
-# Revision 1.2  2000/05/20 02:23:28  kuzimmer
-# modifications for a texture slicing module
-#
-# Revision 1.1  2000/05/16 20:52:39  kuzimmer
-# files for new volume renderer
-#
-# Revision 1.3  2000/03/21 17:33:26  kuzimmer
-# updating volume renderer
-#
-# Revision 1.2  2000/03/20 19:36:38  sparker
-# Added VPATH support
-#
-# Revision 1.1  2000/03/17 09:26:31  sparker
-# New makefile scheme: sub.mk instead of Makefile.in
-# Use XML-based files for module repository
-# Plus many other changes to make these two things work
-#
-#

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ScalarTriSurface.cc: Triangulated Surface Data type
@@ -12,19 +11,17 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <DaveW/Datatypes/General/ScalarTriSurface.h>
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Containers/TrivialAllocator.h>
-#include <SCICore/Containers/Queue.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Grid.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Util/NotFinished.h>
+#include <Packages/DaveW/Core/Datatypes/General/ScalarTriSurface.h>
+#include <Core/Util/Assert.h>
+#include <Core/Containers/TrivialAllocator.h>
+#include <Core/Containers/Queue.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Grid.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Util/NotFinished.h>
 
 namespace DaveW {
-namespace Datatypes {
-
 static Persistent* make_ScalarTriSurface()
 {
     return scinew ScalarTriSurface;
@@ -58,8 +55,7 @@ ScalarTriSurface::~ScalarTriSurface() {
 #define ScalarTriSurface_VERSION 1
 
 void ScalarTriSurface::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
+using namespace SCIRun;
 
     /*int version=*/
     stream.begin_class("ScalarTriSurface", ScalarTriSurface_VERSION);
@@ -78,25 +74,6 @@ GeomObj* ScalarTriSurface::get_obj(const ColorMapHandle&)
     NOT_FINISHED("ScalarTriSurface::get_obj");
     return 0;
 }
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.4  1999/09/08 02:26:17  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/09/05 05:32:22  dmw
-// updated and added Modules from old tree to new
-//
-// Revision 1.2  1999/08/23 05:48:00  dmw
-// Put back the NOT_FINISHED messages I accidentally removed.
-//
-// Revision 1.1  1999/08/23 02:53:00  dmw
-// Dave's Datatypes
-//
-// Revision 1.1  1999/05/03 04:52:03  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

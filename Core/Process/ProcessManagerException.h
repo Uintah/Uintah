@@ -11,20 +11,18 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef SCICore_Process_ProcessManagerException_h
-#define SCICore_Process_ProcessManagerException_h
+#ifndef Core_Process_ProcessManagerException_h
+#define Core_Process_ProcessManagerException_h
 
-#include <SCICore/Exceptions/Exception.h>
+#include <Core/Exceptions/Exception.h>
 
-namespace SCICore {
-    namespace Process {
-	class ProcessManagerException : public SCICore::Exceptions::Exception {
+namespace SCIRun {
+	class ProcessManagerException : public Exception {
 	public:
 	    ProcessManagerException(const ProcessManagerException&);
 	protected:
 	private:
 	};
-    }
-}
+} // End namespace SCIRun
 
 #endif

@@ -3,12 +3,7 @@
 
 #include "GLVolRenState.h"
 
-namespace SCICore {
-  namespace Geometry {
-    class Polygon;
-  }
-namespace GeomSpace  {
-  using SCICore::Geometry::Polygon;
+namespace Kurt {
 
 /**************************************
 
@@ -21,7 +16,7 @@ GENERAL INFORMATION
 
    TexPlanes.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -62,9 +57,7 @@ public:
 protected:
   virtual void setAlpha(const Brick& brick);
   void draw(Brick&, Polygon*);
+} // End namespace Kurt
 
-};
 
-}  // namespace GeomSpace
-} // namespace SCICore
 #endif

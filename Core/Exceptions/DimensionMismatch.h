@@ -1,7 +1,6 @@
 
 /*
  *  DimensionMismatch.h: Exception to indicate a failed bounds check
- * $Id$
  *
  *  Written by:
  *   Michael Callahan
@@ -12,13 +11,12 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef SCICore_Exceptions_DimensionMismatch_h
-#define SCICore_Exceptions_DimensionMismatch_h
+#ifndef Core_Exceptions_DimensionMismatch_h
+#define Core_Exceptions_DimensionMismatch_h
 
-#include <SCICore/Exceptions/Exception.h>
+#include <Core/Exceptions/Exception.h>
 
-namespace SCICore {
-    namespace Exceptions {
+namespace SCIRun {
 	class DimensionMismatch : public Exception {
 	public:
 	    DimensionMismatch(long value, long expected);
@@ -33,9 +31,8 @@ namespace SCICore {
 
 	    DimensionMismatch& operator=(const DimensionMismatch);
 	};
-    }
-}
+} // End namespace SCIRun
 
-#endif  // SCICore_Exceptions_DimensionMismatch_h
+#endif  // Core_Exceptions_DimensionMismatch_h
 
 

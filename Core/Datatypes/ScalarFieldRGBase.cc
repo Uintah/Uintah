@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ScalarFieldRGBase.cc: Scalar Fields defined on a Regular grid base class
@@ -12,8 +11,8 @@
  *  Copyright (C) 1994, 1996 SCI Group 
  */
 
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <SCICore/Containers/String.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Containers/String.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -23,8 +22,7 @@ using std::endl;
 #define drand48() rand()
 #endif
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 PersistentTypeID ScalarFieldRGBase::type_id("ScalarFieldRGBase", "ScalarField", 0);
 
@@ -228,8 +226,6 @@ ScalarFieldRGBase::get_voxel( const Point& p, Point& ivoxel )
 
 void ScalarFieldRGBase::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
 
     /*int version=*/
     stream.begin_class("ScalarFieldRGBase", ScalarFieldRGBase_VERSION);
@@ -378,42 +374,5 @@ void ScalarFieldRGBase::distribute_samples()
   }
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.7  2000/12/06 04:16:07  kuzimmer
-// Added ScalarFieldRGushort* getRGUshort(); to be changed with new Field Redesign
-//
-// Revision 1.6  1999/12/28 20:45:17  kuzimmer
-// added cell-centered data structures
-//
-// Revision 1.5  1999/10/07 02:07:32  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/09/08 02:26:48  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/08/25 03:48:37  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:50  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:25  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:39  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1  1999/04/25 04:07:11  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:50  dav
-// Import sources
-//
-//

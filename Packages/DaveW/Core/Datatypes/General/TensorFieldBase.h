@@ -12,33 +12,23 @@
    Eric Lundberg,  10/8/1998
    
    */
-#ifndef SCI_DaveW_Datatypes_TensorFieldBase_h
-#define SCI_DaveW_Datatypes_TensorFieldBase_h 1
+#ifndef SCI_Packages/DaveW_Datatypes_TensorFieldBase_h
+#define SCI_Packages/DaveW_Datatypes_TensorFieldBase_h 1
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Containers/Array3.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Datatypes/VectorFieldRG.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Containers/Array3.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/VectorFieldRG.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <stdio.h>
 
 namespace DaveW {
-namespace Datatypes {
+using namespace SCIRun;
 
-using SCICore::Containers::LockingHandle;
-using SCICore::Containers::Array1;
-using SCICore::Containers::Array2;
-using SCICore::Containers::Array3;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
-
-using namespace SCICore::Datatypes;
 
 #define TENSOR_ELEMENTS 6 /*Number of elements in the 3x3 tensor we car about*/
 #define EVECTOR_ELEMENTS 3 /*Number of eigen vectors produced by the tensor matrix*/
@@ -89,14 +79,8 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 };
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.1  1999/09/01 05:27:37  dmw
-// more DaveW datatypes...
-//
 
-#endif /* SCI_DaveW_Datatypes_TensorFieldBase_h */
+
+#endif /* SCI_Packages/DaveW_Datatypes_TensorFieldBase_h */

@@ -1,7 +1,8 @@
 
+} // End namespace SCIRun
 
 The String class is a useful tool for manipulating strings.  To avoid
-namespace conflicts with other programs (notably X11), the class is
+namespace SCIRun {
 called clString (for Class Library String).
 
 The string operates through a reference counting model to avoid

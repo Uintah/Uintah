@@ -10,12 +10,10 @@
 *  Copyright (C) 1994 SCI Group
 */
 
-#include <Remote/Tools/Math/CatmullRomSpline.h>
-#include <Remote/Tools/Util/Assert.h>
+#include <Packages/Remote/Tools/Math/CatmullRomSpline.h>
+#include <Packages/Remote/Tools/Util/Assert.h>
 
 namespace Remote {
-namespace Tools {
-
 template<class T>
 CatmullRomSpline<T>::CatmullRomSpline()
 : d(0), nset(0), nintervals(0), mx(0)
@@ -101,7 +99,6 @@ T& CatmullRomSpline<T>::operator[]( const int idx )
 {
 	return d[idx];
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

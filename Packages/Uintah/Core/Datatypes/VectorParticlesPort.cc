@@ -1,11 +1,9 @@
 
-#include <Uintah/Datatypes/VectorParticlesPort.h>
-#include <Uintah/share/share.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/Datatypes/VectorParticlesPort.h>
+#include <Packages/Uintah/share/share.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace PSECore {
-namespace Datatypes {
-
+namespace Uintah {
 using namespace Uintah::Datatypes;
 
 
@@ -23,7 +21,6 @@ UINTAHSHARE OPort* make_VectorParticlesOPort(Module* module,
 template<> clString SimpleIPort<VectorParticlesHandle>::port_type("VectorParticles");
 template<> clString SimpleIPort<VectorParticlesHandle>::port_color("chartreuse3");
 
+} // End namespace Uintah
 
-} // End namespace Datatypes
-} // End namespace PSECore
 

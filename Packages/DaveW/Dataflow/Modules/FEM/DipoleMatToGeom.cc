@@ -9,33 +9,25 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <PSECore/Widgets/ArrowWidget.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/Switch.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Dataflow/Widgets/ArrowWidget.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/Switch.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Trig.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 
 namespace DaveW {
-namespace Modules {
-  
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
-using namespace SCICore::Geometry;
-using namespace SCICore::GeomSpace;
+using namespace SCIRun;
 
 class DipoleMatToGeom : public Module {
   MatrixIPort *imat;
@@ -258,34 +250,7 @@ void DipoleMatToGeom::widget_moved(int last) {
     execMsg="widget_moved";
     want_to_execute();
   }
-}
-} // End namespace Modules
 } // End namespace DaveW
+}
 
 
-//
-// $Log$
-// Revision 1.7  2000/11/16 03:39:53  dmw
-// added show lines flag
-//
-// Revision 1.6  2000/10/29 03:51:45  dmw
-// SeedDipoles will place dipoles randomly within a mesh
-//
-// Revision 1.5  2000/08/01 18:03:03  dmw
-// fixed errors
-//
-// Revision 1.4  2000/03/17 09:25:43  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.3  1999/10/07 02:06:34  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/09/08 02:26:27  sparker
-// Various #include cleanups
-//
-// Revision 1.1  1999/09/02 04:49:24  dmw
-// more of Dave's modules
-//
-//

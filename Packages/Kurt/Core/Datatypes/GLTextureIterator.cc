@@ -3,10 +3,7 @@
 #include <iostream>
 
 namespace Kurt {
-namespace Datatypes {
-
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Ray;
+using namespace SCIRun;
 
 int GLTextureIterator::traversalTable[27][8] = { {7,3,5,6,1,2,4,0},
 					  {6,7,2,3,4,5,0,1},
@@ -90,6 +87,5 @@ GLTextureIterator::traversal(const Octree<Brick*>* n)
   //  std::cerr<<std::endl;
   return q;
 }
+} // End namespace Kurt
 
-} //Datatypes
-} //Kurt

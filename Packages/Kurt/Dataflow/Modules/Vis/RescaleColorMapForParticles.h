@@ -8,7 +8,7 @@ CLASS
 GENERAL INFORMATION 
    RescaleColormap.h
    Written by:
-     Kurt Zimmerman
+     Packages/Kurt Zimmerman
      Department of Computer Science
      University of Utah
      June 1999
@@ -24,20 +24,13 @@ DESCRIPTION
 
 ****************************************/ 
 
-#include <SCICore/TclInterface/TCLvar.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Dataflow/Module.h>
-#include <Kurt/Datatypes/VisParticleSetPort.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Packages/Kurt/Core/Datatypes/VisParticleSetPort.h>
 
 namespace Kurt {
-namespace Modules {
-
-using PSECore::Datatypes::VisParticleSetIPort;
-using PSECore::Datatypes::ColorMapOPort;
-using PSECore::Datatypes::ColorMapIPort;
-using PSECore::Dataflow::Module;
-using SCICore::Containers::clString;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
 class RescaleColorMapForParticles : public Module {
     ColorMapOPort* omap;
@@ -53,6 +46,5 @@ protected:
   TCLdouble maxVal;
   TCLstring scaleMode;
 };
-
-} // End namespace Module
 } // End namespace Kurt
+

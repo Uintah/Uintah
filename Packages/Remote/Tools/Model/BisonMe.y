@@ -10,8 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <Remote/Tools/Math/Vector.h>
-#include <Remote/Tools/Model/ReadVRML.h>
+#include <Packages/Remote/Tools/Math/Vector.h>
+#include <Packages/Remote/Tools/Model/ReadVRML.h>
 using namespace Remote::Tools;
 
 int yylex();
@@ -363,5 +363,5 @@ fnum		: T_INT				{$$ = (double) $1;}
 
 %%
 /* get yylex() from FlexMe.cpp */
-#include <Remote/Tools/Model/FlexMe.cc>
+#include <Packages/Remote/Tools/Model/FlexMe.cc>
 

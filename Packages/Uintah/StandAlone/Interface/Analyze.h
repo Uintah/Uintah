@@ -1,17 +1,16 @@
 #ifndef UINTAH_HOMEBREW_ANALYZE_H
 #define UINTAH_HOMEBREW_ANALYZE_H
 
-#include <Uintah/Parallel/UintahParallelPort.h>
-#include <Uintah/Interface/DataWarehouseP.h>
-#include <Uintah/Interface/ProblemSpecP.h>
-#include <Uintah/Grid/SimulationStateP.h>
-#include <Uintah/Interface/SchedulerP.h>
-#include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/Handle.h>
+#include <Packages/Uintah/Parallel/Packages/UintahParallelPort.h>
+#include <Packages/Uintah/Interface/DataWarehouseP.h>
+#include <Packages/Uintah/Interface/ProblemSpecP.h>
+#include <Packages/Uintah/Grid/SimulationStateP.h>
+#include <Packages/Uintah/Interface/SchedulerP.h>
+#include <Packages/Uintah/Grid/GridP.h>
+#include <Packages/Uintah/Grid/LevelP.h>
+#include <Packages/Uintah/Grid/Handle.h>
 
 namespace Uintah {
-
 /**************************************
 
 CLASS
@@ -44,7 +43,7 @@ WARNING
    class Grid;
    class SimulationState;
 
-   class Analyze : public UintahParallelPort {
+   class Analyze : public Packages/UintahParallelPort {
    public:
       Analyze();
       virtual ~Analyze();
@@ -64,22 +63,8 @@ WARNING
       Analyze(const Analyze&);
       Analyze& operator=(const Analyze&);
    };
+} // End namespace Uintah
 
-} // end namespace Uintah
 
-//
-// $Log$
-// Revision 1.3  2000/09/04 23:20:35  tan
-// Control the information showing at each step in SimulationController by
-// Analyze module.
-//
-// Revision 1.2  2000/09/04 00:37:49  tan
-// Modified Analyze interface for scientific debugging under both
-// sigle processor and mpi environment.
-//
-// Revision 1.1  2000/07/17 23:37:26  tan
-// Added Analyze interface that will be especially useful for debugging
-// on scitific results.
-//
 
 #endif

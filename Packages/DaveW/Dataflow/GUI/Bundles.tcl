@@ -1,7 +1,7 @@
 
 catch {rename Bundles ""}
 
-itcl_class DaveW_Tensor_Bundles {
+itcl_class Packages/DaveW_Tensor_Bundles {
     inherit Module
     constructor {config} {
 	set name Bundles
@@ -55,9 +55,7 @@ itcl_class DaveW_Tensor_Bundles {
 	    return;
 	}
 
-	#
 	# Setup toplevel window
-	#
 	toplevel $w
 	wm minsize $w 100 100
 	set n "$this-c needexecute "

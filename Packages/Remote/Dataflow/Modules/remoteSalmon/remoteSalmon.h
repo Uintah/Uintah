@@ -16,16 +16,12 @@
 
 #include <queue>
 #include <iostream>
-#include <SCICore/Containers/String.h>
-#include <PSECommon/Modules/Salmon/Salmon.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/Modules/Salmon/Salmon.h>
 
 namespace Remote {
-namespace Modules {
+using namespace SCIRun;
 
-using PSECommon::Modules::Salmon;
-using SCICore::Containers::clString;
-
-using namespace SCICore::TclInterface;
 
 using namespace std;
 
@@ -39,8 +35,7 @@ public:
     void tcl_command(TCLArgs&, void*);
 
 };
-
-} // End namespace Modules
 } // End namespace Remote
+
 
 #endif // SCI_project_module_remoteSalmon_h

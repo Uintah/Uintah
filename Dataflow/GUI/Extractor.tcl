@@ -1,4 +1,4 @@
-itcl_class PSECommon_Domain_Extractor {
+itcl_class Dataflow_Domain_Extractor {
     inherit Module
 
     constructor {config} {

@@ -7,7 +7,7 @@
  *   University of Utah
  *   September 1994
  *
- *  Changes for distributed SCIRun:
+ *  Changes for distributed Dataflow:
  *   Michelle Miller 
  *   Thu May 14 01:24:12 MDT 1998
  * FIX: error cases and TCLvar* get()
@@ -15,14 +15,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCLvar.h>
 
-#include <SCICore/TclInterface/GuiManager.h>
-#include <SCICore/TclInterface/Remote.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/TclInterface/GuiManager.h>
+#include <Core/TclInterface/Remote.h>
+#include <Core/TclInterface/TCL.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 
 #include <tcl.h>
 #include <iostream>
@@ -59,8 +59,7 @@ using std::ostream;
 extern "C" Tcl_Interp* the_interp;
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
-namespace SCICore {
-namespace TclInterface {
+namespace SCIRun {
 
 extern GuiManager* gm;
 
@@ -518,5 +517,4 @@ void TCLVector::emit(ostream& out)
     z.emit(out);
 }
 
-} // End namespace TclInterface
-} // End namespace SCICore
+} // End namespace SCIRun

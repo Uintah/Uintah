@@ -14,18 +14,15 @@
 #ifndef SCI_project_VisParticleSetPort_h
 #define SCI_project_VisParticleSetPort_h 1
 
-#include <PSECore/Datatypes/SimplePort.h>
+#include <Dataflow/Ports/SimplePort.h>
 #include "VisParticleSet.h"
 
-namespace PSECore {
-namespace Datatypes {
-
+namespace Kurt {
 using namespace Kurt::Datatypes;
 
 typedef SimpleIPort<VisParticleSetHandle> VisParticleSetIPort;
 typedef SimpleOPort<VisParticleSetHandle> VisParticleSetOPort;
+} // End namespace Kurt
 
-} // End namespace Datatypes
-} // End namespace PSECore
 
 #endif

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  MemStats.cc: Interface to memory stats...
@@ -12,20 +11,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/TclInterface/MemStats.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/TclInterface/MemStats.h>
+#include <Core/Malloc/Allocator.h>
 #include <stdio.h>
 
-namespace SCICore {
-namespace TclInterface {
+namespace SCIRun {
 
-using SCICore::Containers::to_string;
-using SCICore::Malloc::GetNbins;
-using SCICore::Malloc::DefaultAllocator;
-using SCICore::Malloc::GetGlobalStats;
-using SCICore::Malloc::GetBinStats;
-using SCICore::Malloc::AuditAllocator;
-using SCICore::Malloc::DumpAllocator;
 
 MemStats::MemStats()
 {
@@ -214,22 +205,5 @@ void MemStats::tcl_command(TCLArgs& args, void*)
 #endif
 }
 
-} // End namespace TclInterface
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  1999/09/08 02:26:55  sparker
-// Various #include cleanups
-//
-// Revision 1.2  1999/08/17 06:39:43  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:15  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:25  dav
-// Import sources
-//
-//

@@ -21,12 +21,11 @@
 
 #include <stdio.h>
 
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geom/GeomSphere.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geom/GeomSphere.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 
 class GeomEllipsoid : public GeomSphere {
@@ -52,6 +51,5 @@ public:
     static PersistentTypeID type_id;
 };
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 #endif /* SCI_Geom_Ellipsoid_h */

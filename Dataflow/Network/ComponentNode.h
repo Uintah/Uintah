@@ -1,4 +1,4 @@
-/* ComponentNode.h 
+/* Core/CCA/ComponentNode.h 
  * 
  * written by 
  *   Chris Moulding
@@ -110,19 +110,15 @@ typedef struct {
   std::map<int,plan_node*>* testingplans;
 } component_node;
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
 //////////////////////////
-//
 // CreateComponentNode()
-// 
 // Returns a complete or partial component_node data structure 
 // depending on the value of "kind":
 //   1 - returns a complete structure
 //   2 - returns a structure with only the name field active
 //   3 - returns a structure with only the name and port fields active
-//
 // Where an active field is a field that will be copied/written/printed
 // when the component_node is subsequently used as a parameter in one
 // of the other functions listed below.  You can create your own
@@ -130,67 +126,50 @@ namespace Dataflow {
 // fields that you would like to use, and then by assigning zero's to
 // their sub-fields that you do _not_ want to activate and by assigning
 // NOT_SET (in XMLUtils.h) to to those that you _do_ want to activate.
-//
 
 component_node* CreateComponentNode(int kind);
 
 
 //////////////////////////
-//
 // DestroyComponentNode()
-//
 // deallocates all memory associated with "node", not just the
 // active fields inside of "node"
-//
 
 void DestroyComponentNode(component_node* node);
 
 
 //////////////////////////
-//
 // ProcessComponentNode()
-//
 // Copies the contents of "tree" into the active fields of "node"
-//
 
 void ProcessComponentNode(const DOM_Node& tree, component_node* node);
 
 
 //////////////////////////
-//
 // PrintComponentNode()
-//
 // Prints the contents of "node" to the screen.
 // Used for debugging only.  fields with value NOT_SET
 // are not printed.
-//
 
 void PrintComponentNode(component_node* node);
 
 
 //////////////////////////
-//
 // ReadComponentNodeFromFile()
-//
 // Parses "filename", which is in XML format, and then 
 // copies the resulting DOM tree into "node"
-//
 
 int ReadComponentNodeFromFile(component_node* node, const char* filename);
 
 
 //////////////////////////
-//
 // WriteComponentNodeToFile()
-//
 // Saves "node" to a file named "filename" in
 // XML format.  fields with value NOT_SET
 // are not written.
-//
 
 void WriteComponentNodeToFile(component_node* node,const char* filename);
 
-} // Dataflow
-} // PSECore
+} // End namespace SCIRun
 
 #endif

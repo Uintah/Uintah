@@ -1,16 +1,12 @@
-#
 #  Hedgehog.tcl
-#
 #  Written by:
 #   Steve Parker
 #   Department of Computer Science
 #   University of Utah
 #   May. 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
-itcl_class PSECommon_Visualization_Hedgehog {
+itcl_class Dataflow_Visualization_Hedgehog {
     inherit Module
     constructor {config} {
 	set name Hedgehog

@@ -5,8 +5,6 @@
 #include <stdlib.h>
 
 namespace Remote {
-namespace Tools {
-
 // Swap endian-ness of the array. length is the number of 4-byte words to swap.
 static inline void ConvertLong(unsigned int *array, int length)
 {
@@ -72,8 +70,7 @@ extern void SRand();
 // Makes a fairly random 32-bit number from a string.
 extern int HashString(const char *);
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

@@ -1,10 +1,9 @@
 
-#
 #  ViewTensors.tcl
 
 package require Iwidgets 3.0
 
-itcl_class Yarden_Visualization_ViewTensors {
+itcl_class Packages/Yarden_Visualization_ViewTensors {
     
     inherit Module
     

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  VectorSeg.cc:  Segment field based on multiply valued elements
@@ -15,35 +14,28 @@
 #include <sci_config.h>
 #undef SCI_ASSERTION_LEVEL_3
 #define SCI_ASSERTION_LEVEL_2
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Containers/Array3.h>
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Containers/Array3.h>
+#include <Core/Util/Assert.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
 #include <iostream>
 using std::cerr;
 #include <stdio.h>
 
 #define NUM_MATERIALS 5
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Containers;
-using namespace SCICore::Thread;
 
 class VectorSeg : public Module {
     Array1<ScalarFieldIPort*> ifields;
@@ -278,64 +270,5 @@ void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &,
     ofieldRG->grid(0,0,0)=isoChanged;
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.9  2000/03/17 09:27:36  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.8  2000/02/02 05:51:58  dmw
-// added new module to index.cc and fixed bugs
-//
-// Revision 1.7  1999/10/07 02:07:08  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.6  1999/08/29 00:46:48  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.5  1999/08/25 03:48:11  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.4  1999/08/19 05:30:54  sparker
-// Configuration updates:
-//  - renamed config.h to sci_config.h
-//  - also uses sci_defs.h, since I couldn't get it to substitute vars in
-//    sci_config.h
-//  - Added flags for --enable-scirun, --enable-uintah, and
-//    --enable-davew, to build the specific package set.  More than one
-//    can be specified, and at least one must be present.
-//  - Added a --enable-parallel, to build the new parallel version.
-//    Doesn't do much yet.
-//  - Made construction of config.h a little bit more general
-//
-// Revision 1.3  1999/08/18 20:20:12  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:54  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:58:17  mcq
-// Initial commit
-//
-// Revision 1.2  1999/04/27 22:58:02  dav
-// updates in Modules for Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:34  dav
-// Import sources
-//
-//

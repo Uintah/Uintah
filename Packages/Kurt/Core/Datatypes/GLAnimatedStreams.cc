@@ -1,20 +1,17 @@
 #include "GLAnimatedStreams.h"
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Geom/GeomOpenGL.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Malloc/Allocator.h>
 #include <GL/gl.h>
 #include <math.h>
 #include <float.h>
 #include <iostream>
 
-namespace SCICore {
-namespace GeomSpace  {
-
+namespace Kurt {
 using std::cerr;
 using std::endl;
 
-using namespace SCICore::Geometry;
-using namespace SCICore::Datatypes;
+using namespace SCIRun;
 
 const double GLAnimatedStreams::FADE = 9.0;
 const int GLAnimatedStreams::MAXN = 10;
@@ -352,6 +349,5 @@ GLAnimatedStreams::draw()
 }
 
 
+} // End namespace Kurt
   
-} // namespace SCICore
-} // namespace GeomSpace

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  DistanceConstraint.h
@@ -13,18 +12,16 @@
  */
 
 
-#include <PSECore/Constraints/DistanceConstraint.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Util/Debug.h>
+#include <Dataflow/Constraints/DistanceConstraint.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Util/Debug.h>
 #include <iostream>
 using std::cerr;
 using std::cout;
 using std::endl;
 
-namespace PSECore {
-namespace Constraints {
+namespace SCIRun {
 
-using SCICore::Util::DebugSwitch;
 
 static DebugSwitch dc_debug("Constraints", "Distance");
 
@@ -141,25 +138,5 @@ DistanceConstraint::SetMinimum( const Real min )
    minimum = min;
 }
 
-} // End namespace Constraints
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/10/07 02:07:16  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/08 02:26:38  sparker
-// Various #include cleanups
-//
-// Revision 1.2  1999/08/17 06:38:17  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:54  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:53  dav
-// Import sources
-//
-//

@@ -13,19 +13,19 @@
  */
 
 
-#include <SCICore/Containers/String.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array3.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <SCICore/Datatypes/Matrix.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <SCICore/Datatypes/ColumnMatrix.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Math/Trig.h>
+#include <Core/Containers/String.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array3.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Math/Trig.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -35,9 +35,7 @@ using std::cerr;
 using std::ifstream;
 using std::endl;
 
-using namespace SCICore::Containers;
-using namespace SCICore::PersistentSpace;
-using namespace SCICore::Datatypes;
+using namespace SCIRun;
 
 int main(int argc, char *argv[]) {
     //    if (argc != 3) {
@@ -90,19 +88,19 @@ int main(int argc, char *argv[]) {
 	}
    }
    cerr << "saving data\n";
-    clString fname(clString("/home/cs/zyp/PSE/src/DaveW/convert/integrity.1"));
+    clString fname(clString("/home/cs/zyp/PSE/src/Packages/DaveW/convert/integrity.1"));
     Piostream* stream = scinew TextPiostream(fname, Piostream::Write);
     MatrixHandle integrityHandle(integrity);  // save it all
     Pio(*stream, integrityHandle);
     delete(stream);
 
-    clString zcmfname(clString("/home/cs/zyp/PSE/src/DaveW/convert/values.1"));
+    clString zcmfname(clString("/home/cs/zyp/PSE/src/Packages/DaveW/convert/values.1"));
     stream = scinew TextPiostream(zcmfname, Piostream::Write);  // save the cylinder height values
     ColumnMatrixHandle vcMH(values);  // save it all
     Pio(*stream, vcMH);
     delete(stream);
 
-    clString ccmfname(clString("/home/cs/zyp/PSE/src/DaveW/convert/es.1"));
+    clString ccmfname(clString("/home/cs/zyp/PSE/src/Packages/DaveW/convert/es.1"));
     stream = scinew TextPiostream(ccmfname, Piostream::Write); 
     ColumnMatrixHandle escMH(electrodeSelection);  // save the cylinder conductivity values
     Pio(*stream, escMH);

@@ -1,18 +1,16 @@
-//static char *id="@(#) $Id$";
 
 /*
     Sort.cc
 
 */
 
-#include <SCICore/Containers/Sort.h>
+#include <Core/Containers/Sort.h>
 
 #include <iostream>
 #include <stdlib.h>
 using std::cerr;
 
-namespace SCICore {
-namespace Containers {
+namespace SCIRun {
 
 const unsigned int KEY_SIZE=8;       // #bits for the Key
 const int K = 1<<KEY_SIZE;  // size of psum table
@@ -564,28 +562,6 @@ void main(int argc, char* argv)
 
 #endif
 
-} // End namespace Containers
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/10/07 02:07:28  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/08/23 06:30:33  sparker
-// Linux port
-// Added X11 configuration options
-// Removed many warnings
-//
-// Revision 1.2  1999/08/17 06:38:37  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:14  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:26  dav
-// Import sources
-//
-//
 

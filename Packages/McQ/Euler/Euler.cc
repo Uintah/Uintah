@@ -1,11 +1,11 @@
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Thread/Runnable.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Containers/String.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Runnable.h>
 #include "Euler.h"
 
 #include <sys/types.h>
@@ -15,11 +15,7 @@
 #include <stdio.h>
 
 namespace McQ {
-
-  using namespace PSECore::Dataflow;
-  using namespace SCICore::Containers;
-  using namespace SCICore::GeomSpace;
-  using namespace SCICore::Thread;
+using namespace SCIRun;
 
   class SAMRAIListener: public Runnable {
     public:
@@ -234,5 +230,5 @@ namespace McQ {
 // XXX: I can't ever delete this?
 //    if(curPressure) delete curPressure;
     curPressure=pressure;
+} // End namespace McQ
   }
-}

@@ -10,21 +10,18 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef SCI_PSECore_Datatypes_CameraViewPort_h
-#define SCI_PSECore_Datatypes_CameraViewPort_h 1
+#ifndef SCI_Dataflow_Datatypes_CameraViewPort_h
+#define SCI_Dataflow_Datatypes_CameraViewPort_h 1
 
-#include <PSECore/Datatypes/SimplePort.h>
-#include <SCICore/Datatypes/CameraView.h>
+#include <Dataflow/Ports/SimplePort.h>
+#include <Core/Datatypes/CameraView.h>
 
-namespace PSECore {
-  namespace Datatypes {
+namespace SCIRun {
 
-    using SCICore::Datatypes::CameraViewHandle;
     
     typedef SimpleIPort<CameraViewHandle> CameraViewIPort;
     typedef SimpleOPort<CameraViewHandle> CameraViewOPort;
 
-  } // End namespace Datatypes
-} // End namespace PSECore
+} // End namespace SCIRun
 
 #endif

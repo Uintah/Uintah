@@ -14,29 +14,16 @@
 #ifndef Geometry_Polygon_h
 #define Geometry_Polygon_h 1
 
-#include <SCICore/share/share.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/share/share.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Geometry/Point.h>
 #include <iosfwd>
 #include <vector>
 
 
-namespace SCICore {
-    namespace Containers {
-	class clString;
-    }
-    namespace PersistentSpace {
-	class Piostream;
-    }
-    namespace Tester {
-	class RigorousTest;
-    }
-    
-namespace Geometry {
-using std::vector;
-using SCICore::Containers::clString;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::Tester::RigorousTest;
+namespace Kurt {
+namespace Kurt {
+using namespace SCIRun;
 
 /**************************************
 
@@ -49,7 +36,7 @@ GENERAL INFORMATION
 
    Polygon.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -133,7 +120,7 @@ private:
   SCICORESHARE std::ostream& operator<<(std::ostream& os, const Polygon& p);
   //SCICORESHARE std::istream& operator>>(std::istream& os, Polygon& p);
 
+} // End namespace Kurt
 } // End namespace Geometry
-} // End namespace SCICore
 
 #endif //ifndef Geometry_Polygon_h

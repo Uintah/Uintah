@@ -1,6 +1,6 @@
 #catch {rename Salmon ""} 
 
-itcl_class PSECommon_Salmon_Salmon {
+itcl_class Dataflow_Salmon_Salmon {
     inherit Module
 
     # List of Roe children of this sammon
@@ -107,14 +107,10 @@ itcl_class Roe {
 	set $this-totframes 30
         set $this-caxes 1
 
-	#
 	# Get the list of supported renderers for the pulldown
-	#
 	set r [$salmon-c listrenderers]
 	
-	#
 	# Need to initialize the background color
-	#
 	global $this-bgcolor-r
 	set $this-bgcolor-r 0
 	global $this-bgcolor-g
@@ -1199,9 +1195,9 @@ itcl_class Roe {
 		"$this doSaveObjects" "destroy .ui[modname]-save"
 	set ex .ui[modname]-save.f.extra
 	radiobutton $ex.geomb -variable $this-saveformat \
-		-text "SCIRun geom object file (Binary)" -value "scirun_binary"
+		-text "Dataflow geom object file (Binary)" -value "scirun_binary"
 	radiobutton $ex.geoma -variable $this-saveformat \
-		-text "SCIRun geom object file (ASCII)" -value "scirun_ascii"
+		-text "Dataflow geom object file (ASCII)" -value "scirun_ascii"
 	radiobutton $ex.vrml -variable $this-saveformat \
 		-text "VRML file" -value "vrml"
 	radiobutton $ex.rib -variable $this-saveformat \

@@ -10,14 +10,13 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Geom/BBoxCache.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geom/BBoxCache.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 using std::ostream;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Persistent* make_GeomBBoxCache()
 {
@@ -78,7 +77,6 @@ void GeomBBoxCache::get_bounds(BBox& box)
 
 void GeomBBoxCache::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     int version=stream.begin_class("GeomBBoxCache", GEOMBBOXCACHE_VERSION);
     Pio(stream, bbox_cached);
@@ -86,19 +84,19 @@ void GeomBBoxCache::io(Piostream& stream)
 	int bsphere_cached;
 	Pio(stream, bsphere_cached);
     }
-    SCICore::Geometry::Pio(stream, bbox);
+    Pio(stream, bbox);
     if(version < 2){
 	// Old BSphere stuff...
 	stream.begin_cheap_delim();
 	int have_some;
 	Pio(stream, have_some);
 	Point cen;
-	SCICore::Geometry::Pio(stream, cen);
+	Pio(stream, cen);
 	double rad;
 	Pio(stream, rad);
 	stream.end_cheap_delim();
     }
-    SCICore::GeomSpace::Pio(stream, child);
+    Pio(stream, child);
     stream.end_class();
 }
 
@@ -108,5 +106,4 @@ bool GeomBBoxCache::saveobj(ostream& out, const clString& format,
     return child->saveobj(out, format, saveinfo);
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun

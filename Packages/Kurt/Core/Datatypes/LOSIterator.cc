@@ -1,14 +1,11 @@
 #include "LOSIterator.h"
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Vector.h>
 #include "Brick.h"
 
 
 namespace Kurt {
-namespace Datatypes {
-
-using SCICore::Geometry::BBox;
-using SCICore::Geometry::Vector;
+using namespace SCIRun;
 
 
 
@@ -106,7 +103,6 @@ LOSIterator::SetNext()
   }
   next = (*node)();
 }
+} // End namespace Kurt
 
-} //Datatypes
-} //Kurt
 

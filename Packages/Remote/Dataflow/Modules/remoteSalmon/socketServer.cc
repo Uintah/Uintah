@@ -12,11 +12,9 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <Remote/Modules/remoteSalmon/socketServer.h>
+#include <Packages/Remote/Dataflow/Modules/remoteSalmon/socketServer.h>
 
 namespace Remote {
-namespace Modules {
-
 //----------------------------------------------------------------------
 socketServer::socketServer(OpenGLServer* opengl): opengl(opengl) {
   
@@ -319,7 +317,7 @@ socketServer::receiveView(Socket* sock) {
 
 				// read the up vector
   sock->Read(vect, 3);
-  tmpview.up(SCICore::Geometry::Vector(vect[0], vect[1], vect[2]));
+  tmpview.up(Vector(vect[0], vect[1], vect[2]));
 
 				// get previous fov
   tmpview.fov(opengl->roe->view.get().fov());
@@ -455,7 +453,6 @@ socketServer::sendZBuffer(Socket* sock) {
   
   //------------------------------
   // simplify and send zbuffer as a mesh
-  // 
   
   cout << "socketServer::sendZbuffer: simplifying zbuffer" << endl;
   
@@ -604,8 +601,7 @@ socketServer::sendGeom(Socket* sock)
   cerr << "socketServer::sendGeom: done writing" << endl;
 }
 
+} // End namespace Remote
 
-} // namespace Modules
-} // namespace Remote
 
 

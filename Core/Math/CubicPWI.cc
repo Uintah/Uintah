@@ -10,15 +10,13 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <SCICore/share/share.h>
-#include <SCICore/Math/CubicPWI.h>
-#include <SCICore/Containers/Array1.h>
-//#include <SCICore/Malloc/Allocator.h>
+#include <Core/share/share.h>
+#include <Core/Math/CubicPWI.h>
+#include <Core/Containers/Array1.h>
+//#include <Core/Malloc/Allocator.h>
 
-namespace SCICore{
-namespace Math{
+namespace SCIRun {
 
-using SCICore::Containers::Array1;
 
 CubicPWI::CubicPWI()
 {
@@ -177,8 +175,7 @@ bool CubicPWI::set_data(const Array1<double>& pts, const Array1<double>& vals){
   return data_valid;
 }
 
-} //Math
-} //SCICore
+} // End namespace SCIRun
 
 
 

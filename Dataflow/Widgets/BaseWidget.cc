@@ -15,30 +15,23 @@
 #pragma warning(disable:4355)
 #endif
 
-#include <PSECore/Widgets/BaseWidget.h>
-#include <PSECore/Constraints/BaseConstraint.h>
-#include <PSECore/Constraints/ConstraintSolver.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Thread/CrowdMonitor.h>
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Util/NotFinished.h>
+#include <Dataflow/Widgets/BaseWidget.h>
+#include <Dataflow/Constraints/BaseConstraint.h>
+#include <Dataflow/Constraints/ConstraintSolver.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Thread/CrowdMonitor.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Util/NotFinished.h>
 #include <iostream>
 using std::cerr;
 using std::cout;
 using std::endl;
 using std::ostream;
 
-namespace PSECore {
-namespace Widgets {
+namespace SCIRun {
 
-using SCICore::Geometry::BBox;
-using SCICore::GeomSpace::GeomGroup;
-using SCICore::GeomSpace::Material;
-using SCICore::GeomSpace::Color;
-using SCICore::Thread::Mutex;
-using SCICore::Containers::to_string;
 
 static const Index NumDefaultMaterials = 6;
 
@@ -723,5 +716,4 @@ BaseWidget& BaseWidget::operator=( const BaseWidget& )
     return *this;
 }
 
-} // End namespace Widgets
-} // End namespace PSECore
+} // End namespace SCIRun

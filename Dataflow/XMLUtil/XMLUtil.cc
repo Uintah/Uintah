@@ -1,9 +1,9 @@
 
-#include <PSECore/XMLUtil/XMLUtil.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/IntVector.h>
-#include <PSECore/Dataflow/NetworkEditor.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/IntVector.h>
+#include <Dataflow/Network/NetworkEditor.h>
 #include <dom/DOM_NamedNodeMap.hpp>
 #include <iostream>
 #include <sstream>
@@ -11,11 +11,8 @@
 #include <strings.h>
 #include <stdio.h>
 using namespace std;
-using namespace SCICore::Geometry;
-using namespace PSECore::Dataflow;
 
-namespace PSECore {
-namespace XMLUtil {
+namespace SCIRun {
 
 const char _NOTSET_[] = "(null string)";
 
@@ -92,13 +89,10 @@ string toString(const DOMString& str)
 }
 
 // ---------------------------------------------------------------------------
-//
 //  ostream << DOM_Node   
-//
 //                Stream out a DOM node, and, recursively, all of its children.
 //                This function is the heart of writing a DOM tree out as
 //                XML source.  Give it a document node and it will do the whole thing.
-//
 // ---------------------------------------------------------------------------
 ostream& operator<<(ostream& target, const DOM_Node& toWrite)
 {
@@ -158,10 +152,8 @@ ostream& operator<<(ostream& target, const DOM_Node& toWrite)
 	    target << '"';
 	 }
 	 
-	 //
 	 //  Test for the presence of children, which includes both
 	 //  text content and nested elements.
-	 //
 	 DOM_Node child = toWrite.getFirstChild();
 	 if (child != 0) {
 	    // There are children. Close start-tag, and output children.
@@ -174,10 +166,8 @@ ostream& operator<<(ostream& target, const DOM_Node& toWrite)
 	    // Done with children.  Output the end tag.
 	    target << "</" << nodeName << ">";
 	 } else {
-	    //
 	    //  There were no children.  Output the short form close of the
 	    //  element start tag, making it an empty-element tag.
-	    //
 	    target << "/>";
 	 }
 	 break;
@@ -212,11 +202,9 @@ ostream& operator<<(ostream& target, const DOM_Node& toWrite)
 
 
 // ---------------------------------------------------------------------------
-//
 //  outputContent  - Write document content from a DOMString to a C++ ostream.
 //                   Escape the XML special characters (<, &, etc.) unless this
 //                   is suppressed by the command line option.
-//
 // ---------------------------------------------------------------------------
 void outputContent(ostream& target, const DOMString &toWrite)
 {
@@ -252,12 +240,10 @@ void outputContent(ostream& target, const DOMString &toWrite)
 
 
 // ---------------------------------------------------------------------------
-//
 //  ostream << DOMString    Stream out a DOM string.
 //                          Doing this requires that we first transcode
 //                          to char * form in the default code page
 //                          for the system
-//
 // ---------------------------------------------------------------------------
 ostream& operator<<(ostream& target, const DOMString& s)
 {
@@ -675,5 +661,4 @@ DOMString findText(DOM_Node& node)
   return 0;
 }
 
-} // XMLUtil
-} // PSECore
+} // End namespace SCIRun

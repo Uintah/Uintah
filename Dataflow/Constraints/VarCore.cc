@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  VarCore.h
@@ -12,13 +11,12 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <PSECore/Constraints/VarCore.h>
+#include <Dataflow/Constraints/VarCore.h>
 #include <iostream>
 using std::ostream;
 #include <stdio.h>
 
-namespace PSECore {
-namespace Constraints {
+namespace SCIRun {
 
 int
 VarCore::operator==( const VarCore& c ) const
@@ -75,27 +73,7 @@ ostream& operator<<( ostream& os, VarCore& c ) {
    return os;
 }
 
-} // End namespace Constraints
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/10/07 02:07:17  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/08 02:26:40  sparker
-// Various #include cleanups
-//
-// Revision 1.2  1999/08/17 06:38:20  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:56  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:52  dav
-// Import sources
-//
-//
 
 

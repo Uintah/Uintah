@@ -1,34 +1,21 @@
 //  AccelAttrib.h - scalar attribute stored as a Accel array
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
 #ifndef SCI_project_AccelAttrib_h
 #define SCI_project_AccelAttrib_h 1
 
-#include <SCICore/Datatypes/FlatAttrib.h>
+#include <Core/Datatypes/FlatAttrib.h>
 
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 using std::vector;
-using SCICore::Containers::LockingHandle;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
-using SCICore::Exceptions::ArrayIndexOutOfBounds;
-using SCICore::Exceptions::DimensionMismatch;
-using SCICore::Math::Min;
-using SCICore::Math::Max;
 using std::ostringstream;
-using SCICore::Util::DebugStream;
 
 template <class T> class AccelAttrib : public FlatAttrib<T> 
 {
@@ -402,8 +389,7 @@ AccelAttrib<unsigned char>::getInfo()
 template <class T> void AccelAttrib<T>::io(Piostream&){
 }
 
-}  // end Datatypes
-}  // end SCICore
+} // End namespace SCIRun
 
 
 

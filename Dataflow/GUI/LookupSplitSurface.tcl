@@ -1,40 +1,15 @@
 ##
  #  LookupSplitSurface.tcl: General surface interpolation module
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   Jully 1997
- #
  #  Copyright (C) 1997 SCI Group
- # 
  #  Log Information:
- #
- #  $Log$
- #  Revision 1.2  2000/12/15 06:22:22  mcole
- #  merge branch back into trunk
- #
- #  Revision 1.1.2.1  2000/10/31 02:19:19  dmw
- #  Merging PSECommon changes from HEAD to FIELD_REDESIGN branch
- #
- #  Revision 1.1  2000/10/29 04:34:46  dmw
- #  BuildFEMatrix -- ground an arbitrary node
- #  SolveMatrix -- when preconditioning, be careful with 0's on diagonal
- #  MeshReader -- build the grid when reading
- #  SurfToGeom -- support node normals
- #  IsoSurface -- fixed tet mesh bug
- #  MatrixWriter -- support split file (header + raw data)
- #
- #  LookupSplitSurface -- split a surface across a place and lookup values
- #  LookupSurface -- find surface nodes in a sfug and copy values
- #  Current -- compute the current of a potential field (- grad sigma phi)
- #  LocalMinMax -- look find local min max points in a scalar field
- #
- #
  ##
 
-itcl_class PSECommon_Surface_LookupSplitSurface {
+itcl_class Dataflow_Surface_LookupSplitSurface {
     inherit Module
     constructor {config} {
         set name LookupSplitSurface

@@ -213,7 +213,6 @@ itcl_class macromodule {
 	
 	# Try to find a position for the icon where it doesn't
 	# overlap other icons
-	#
 	set done 0
 	while { $done == 0 } {
 	    set x1 $modx

@@ -1,21 +1,16 @@
 //////////////////////////////////////////////////////////////////////
-//
 // Model.h - Represent an entire model.
-//
 // Copyright David K. McAllister July 1999.
-//
 //////////////////////////////////////////////////////////////////////
 
 #ifndef _model_h
 #define _model_h
 
-#include <Remote/Tools/Model/Object.h>
+#include <Packages/Remote/Tools/Model/Object.h>
 #include <vector>
 using namespace std;
 
 namespace Remote {
-namespace Tools {
-
 struct TexInfo
 {
   const char *TexFName;
@@ -106,8 +101,7 @@ public:
   void RemoveTriangles(Vector& pos, double thresh=0.05);
 };
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

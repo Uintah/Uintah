@@ -11,10 +11,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_SCICore_String_h
-#define SCI_SCICore_String_h 1
+#ifndef SCI_Core_String_h
+#define SCI_Core_String_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
 #include <iosfwd>
 
@@ -23,21 +23,11 @@ class istream;
 class ostream;
 #endif
 
-namespace SCICore {
-  namespace PersistentSpace {
-    class Piostream;
-  }
-  namespace Tester {
-    class RigorousTest;
-    class PerfTest;
-  }
+namespace SCIRun {
 
-namespace Containers {
-
-using SCICore::Tester::RigorousTest;
-using SCICore::Tester::PerfTest;
-using SCICore::PersistentSpace::Piostream;
-
+class Piostream;
+class RigorousTest;
+class PerfTest;
 
 /**************************************
 
@@ -272,44 +262,8 @@ inline const char* clString::operator()() const
     return (p && p->s)?p->s:"";
 }
 
-} // End namespace Containers
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.5  2000/03/17 08:27:51  sparker
-// Added const to substr
-//
-// Revision 1.4  1999/10/07 02:07:28  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/04 06:01:43  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.2  1999/08/17 06:38:38  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:15  mcq
-// Initial commit
-//
-// Revision 1.5  1999/07/07 21:10:36  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.4  1999/05/06 19:55:45  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:04:34  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.2  1999/05/03 04:52:17  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-// Revision 1.1.1.1  1999/04/24 23:12:26  dav
-// Import sources
-//
-//
 
 #endif
 

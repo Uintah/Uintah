@@ -1,7 +1,7 @@
 
 catch {rename GeometryReader ""}
 
-itcl_class PSECommon_Readers_GeometryReader {
+itcl_class Dataflow_Readers_GeometryReader {
     inherit Module
     constructor {config} {
 	set name GeometryReader

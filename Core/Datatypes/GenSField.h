@@ -1,37 +1,27 @@
 //  GenSField.h - A general scalar field, comprised of one attribute and one geometry
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
-//
 //  DESCRIPTION:
-//
 //  This class represents a basic scalar field, containing one
 //  attribute and one geometry.  The attribute (template argument A)
 //  defaults to a DiscreteSAttrib unless otherwise specified at compile
 //  time.
-//
-//
 
 #ifndef SCI_project_GenSField_h
 #define SCI_project_GenSField_h 1
 
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Datatypes/SField.h>
-#include <SCICore/Datatypes/DiscreteAttrib.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/SField.h>
+#include <Core/Datatypes/DiscreteAttrib.h>
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
     
-using SCICore::Containers::LockingHandle;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
 
 
 template <class T, class G, class A=DiscreteAttrib<T> > 
@@ -295,7 +285,6 @@ bool GenSField<T,G,A>::longest_dimension(double &odouble)
 //BinaryFunction GenSField<T,G,A>::walk(const BBox& ibbox, BinaryFunction op){
 //  // foreach node inside ibbox
 //  op(thisnode);
-//
 //  // return the BinaryFunction
 //  return op;
 //}
@@ -321,7 +310,6 @@ template <class T, class G, class A >
 void GenSField<T,G,A>::io(Piostream&){
 }
 
-} // end SCICore
-} // end Datatypes
+} // End namespace SCIRun
 
 #endif

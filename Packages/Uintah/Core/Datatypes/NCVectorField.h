@@ -1,17 +1,15 @@
 #ifndef SCI_project_NCVectorField_h
 #define SCI_project_NCVectorField_h 1
 
-#include <SCICore/Datatypes/VectorFieldRG.h>
-#include <Uintah/Grid/NCVariable.h>
-#include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/LevelP.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/Datatypes/VectorFieldRG.h>
+#include <Packages/Uintah/Grid/NCVariable.h>
+#include <Packages/Uintah/Grid/GridP.h>
+#include <Packages/Uintah/Grid/LevelP.h>
+#include <Core/Geometry/Point.h>
 #include <vector>
 
-namespace SCICore {
-  namespace Datatypes {
-
-using namespace SCICore::Geometry;
+namespace Uintah {
+using namespace SCIRun;
 using namespace Uintah;
 using std::vector;
 
@@ -46,8 +44,7 @@ private:
   string _varname;
   int _matIndex;
 };
+} // End namespace Uintah
 
-} // End namespace Datatypes
-} // End namespace SCICore
 
 #endif

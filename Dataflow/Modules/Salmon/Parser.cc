@@ -23,7 +23,7 @@ using namespace std;
 #include <stdio.h>
 
 #include <string.h>
-#include <PSECommon/Modules/Salmon/BaWGL.h>
+#include <Dataflow/Modules/Salmon/BaWGL.h>
 
 const int TOKENSIZE = 1024;
 
@@ -54,8 +54,7 @@ const int CONTROLLER_SHARED_ARENA      = 51;
 const int CONTROLLER_RECEIVER          = 52;
 const int CONTROLLER_RECEIVER_OFFSET   = 53;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
 inline void tokerr( char* file, char* token, int line )
 {
@@ -375,4 +374,4 @@ int BaWGL :: parse( char* fname )
   return(0);
 }
 
-}}
+} // End namespace SCIRun

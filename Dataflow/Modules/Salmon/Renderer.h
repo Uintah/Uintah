@@ -14,45 +14,18 @@
 #ifndef SCI_project_Renderer_h
 #define SCI_project_Renderer_h
 
-#include <SCICore/Containers/AVLTree.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/Thread/FutureValue.h>
+#include <Core/Containers/AVLTree.h>
+#include <Core/Containers/String.h>
+#include <Core/Geometry/Point.h>
 
-namespace SCICore {
-  namespace GeomSpace {
-    class Color;
-    class GeomObj;
-    class GeomPick;
-    class View;
-  }
-  namespace TclInterface {
-    class TCLArgs;
-  }
-  namespace Thread {
-      template<class T> class FutureValue;
-  }
-}
-
-namespace PSECore {
-  namespace Datatypes {
-    struct GeometryData;
-  }
-}
-
-namespace PSECommon {
-namespace Modules {
-
-using PSECore::Datatypes::GeometryData;
-
-using SCICore::Containers::clString;
-using SCICore::Containers::AVLTree;
-using SCICore::GeomSpace::GeomObj;
-using SCICore::GeomSpace::GeomPick;
-using SCICore::GeomSpace::Color;
-using SCICore::GeomSpace::View;
-using SCICore::TclInterface::TCLArgs;
-using SCICore::Thread::FutureValue;
-using SCICore::Geometry::Point;
+namespace SCIRun {
+class Color;
+class GeomObj;
+class GeomPick;
+class View;
+class TCLArgs;
+struct GeometryData;
 
 class Roe;
 class Salmon;
@@ -103,8 +76,7 @@ public:
   ~RegisterRenderer();
 };
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
 
 #endif

@@ -1,6 +1,6 @@
-catch {rename DaveW_ISL_ConductivitySearch ""}
+catch {rename Packages/DaveW_ISL_ConductivitySearch ""}
 
-itcl_class DaveW_ISL_ConductivitySearch {
+itcl_class Packages/DaveW_ISL_ConductivitySearch {
     inherit Module
 
     constructor {config} {

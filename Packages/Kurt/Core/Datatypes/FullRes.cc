@@ -1,6 +1,6 @@
 #include "FullRes.h"
-#include <SCICore/Geometry/Ray.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geometry/Ray.h>
+#include <Core/Malloc/Allocator.h>
 #include "FullResIterator.h"
 #include "Brick.h"
 #include "Polygon.h"
@@ -8,10 +8,8 @@
 #include "GLVolumeRenderer.h"
 #include "VolumeUtils.h"
 #include <iostream>
-namespace SCICore {
-namespace GeomSpace {
-
-using SCICore::Geometry::Ray;
+namespace Kurt {
+using namespace SCIRun;
 using Kurt::Datatypes::SliceTable;
 
 FullRes::FullRes(const GLVolumeRenderer* glvr ) :
@@ -23,7 +21,7 @@ FullRes::FullRes(const GLVolumeRenderer* glvr ) :
 void
 FullRes::draw()
 {
-  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+  //AuditAllocator(default_allocator);
   static Ray* prev_view = 0;
   Ray viewRay;
   Brick* brick;
@@ -83,7 +81,7 @@ FullRes::draw()
 	prev_view = scinew Ray( viewRay );
     }
   }
-  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+  //AuditAllocator(default_allocator);
 }
 
 void FullRes::drawBrick(Brick& b, const vector<Polygon *>& polys)
@@ -119,7 +117,6 @@ FullRes::drawWireFrame()
     GLVolRenState::drawWireFrame( *brick );
   }
 }
+} // End namespace Kurt
 
-} // end namespace Datatypes
-} // end namespace Kurt
 

@@ -1,11 +1,7 @@
-#
 # Utility functions
-#
 
-#
 # To link two variables, so that when one changes the other changes, too
 # (update_vars is just the helper function, link_vars is the one to use
-#
 
 proc update_vars {v2 v1 vtmp op} {
     global $v1
@@ -23,9 +19,7 @@ proc link_vars {v1 v2} {
 }
 
 
-#
 # Convenience routine for making radiobuttons
-#
 
 proc make_labeled_radio {root labeltext command packside variable list} {
     frame $root
@@ -55,9 +49,7 @@ proc change_radio_var {root newvar} {
 }
 
 
-#
 # Exponential scale
-#
 itcl_class expscale {
 
     protected decimalplaces
@@ -69,9 +61,7 @@ itcl_class expscale {
 
     constructor {config} {
 
-	#
 	#  Create a window with the same name as this object
-	#
 
 	#puts "entering expscale constructor"
 	#puts "dollar this is $this"
@@ -94,7 +84,6 @@ itcl_class expscale {
 	# be destroyed in the first place... just close 
 	# (unmap) them and remap them when they need to
 	# be seen again.
-	#
 	bind $w <Destroy> "::delete object $this"
 
 	pack $w -side top -fill both -expand 1

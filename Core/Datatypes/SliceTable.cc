@@ -1,18 +1,16 @@
-#include <SCICore/Geometry/Ray.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Datatypes/VolumeUtils.h>
+#include <Core/Geometry/Ray.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Datatypes/VolumeUtils.h>
 #include <iostream>
 #include <string>
-#include <SCICore/Datatypes/SliceTable.h>
+#include <Core/Datatypes/SliceTable.h>
 using std::cerr;
 using std::endl;
 
 using std::string;
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using namespace SCICore::Geometry;
 
 
 SliceTable::SliceTable( const Point& min,  const Point& max,  const Ray& view,
@@ -81,5 +79,4 @@ void SliceTable::getParameters(const Brick& brick, double& tmin,
 
 #define SLICETABLE_VERSION 1
   
-} // namespace Datatypes
-} // namespace SCICore
+} // End namespace SCIRun

@@ -1,19 +1,16 @@
 ##
  #  SFRGtoSFUG.tcl: The SFRGtoSFUG UI
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   Jan 2000
- #
  #  Copyright (C) 2000 SCI Group
- #
  ##
 
-catch {rename DaveW_EEG_SFRGtoSFUG ""}
+catch {rename Packages/DaveW_EEG_SFRGtoSFUG ""}
 
-itcl_class DaveW_EEG_SFRGtoSFUG {
+itcl_class Packages/DaveW_EEG_SFRGtoSFUG {
     inherit Module
     constructor {config} {
         set name SFRGtoSFUG

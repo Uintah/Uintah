@@ -1,21 +1,17 @@
 //////////////////////////////////////////////////////////////////////
 // Filter.cpp - Stuff to filter images.
-//
 // Copyright 1998 by David K. McAllister
-//
 //////////////////////////////////////////////////////////////////////
 
-#include <Remote/Tools/Util/Assert.h>
-#include <Remote/Tools/Image/Image.h>
-#include <Remote/Tools/Image/RangeImage.h>
-#include <Remote/Tools/Math/MiscMath.h>
+#include <Packages/Remote/Tools/Util/Assert.h>
+#include <Packages/Remote/Tools/Image/Image.h>
+#include <Packages/Remote/Tools/Image/RangeImage.h>
+#include <Packages/Remote/Tools/Math/MiscMath.h>
 
 #include <iostream>
 using namespace std;
 
 namespace Remote {
-namespace Tools {
-
 // Shamelessly copied from Aly Ray Smith's Principles of Image Compositing
 #define INT_MULT(a, b, t) ((t) = (a) * (b) + 0x80, ((((t)>>8) + (t))>>8))
 
@@ -573,7 +569,6 @@ void RangeImage::DeSpeckle(float Thresh)
   
   cerr << "Modified " << ct << " pixels.\n";
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

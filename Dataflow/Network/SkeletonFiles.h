@@ -10,8 +10,7 @@
 #ifndef SKELETONFILES_H
 #define SKELETONFILES_H 1
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
 /* the following are skeleton files
    stored as string literals. */
@@ -26,8 +25,7 @@ extern char category_submk_skeleton[];
 extern char datatypes_submk_skeleton[];
 extern char gui_submk_skeleton[];
 
-} // Dataflow
-} // PSECore
+} // End namespace SCIRun
 
 #endif
 

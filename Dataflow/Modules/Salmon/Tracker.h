@@ -6,10 +6,9 @@
 #define TRACKER_FASTRAK 1
 #define TRACKER_FOB     2
 
-#include <PSECommon/Modules/Salmon/SharedMemory.h>
+#include <Dataflow/Modules/Salmon/SharedMemory.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
 class Tracker {
 
@@ -24,6 +23,6 @@ public:
   ~Tracker( void ) {}
 };
 
-}}
+} // End namespace SCIRun
 
 #endif /* TRACKER_H_ */

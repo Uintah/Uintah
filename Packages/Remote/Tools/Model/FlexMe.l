@@ -1,13 +1,11 @@
 /*** FlexMe.l ***/
 %{
-#include <Remote/Tools/Model/ReadVRML.h>
+#include <Packages/Remote/Tools/Model/ReadVRML.h>
 
 static char *stripquotes(void);
 static char *stripunderscore(void);
 
 namespace Remote {
-namespace Tools {
-
 int my_linecount = 2; /* Since we read the #VRML 1.0 line outside. */
 
 /* the input file */
@@ -19,7 +17,7 @@ extern FILE *InFile;
 char my_linetext[LINE_MAXLEN];
 
 } // namespace Tools
-} // namespace Remote
+} // namespace Packages/Remote
 
 /* New YY_INPUT to save input line (for error messages), and convert from
  * DOS format (\r\n) to Unix format (\n) as needed
@@ -173,8 +171,8 @@ char *stripquotes(void)
     result[topos++] = yytext[frompos];
   }
   result[topos] = '\0';
+} // End namespace Remote
   return(result);
-}
 
 /*
  * return pointer to yytext
@@ -182,5 +180,4 @@ char *stripquotes(void)
  */
 char *tokentext(void) {
   return(yytext);
-}
 

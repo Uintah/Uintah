@@ -29,37 +29,27 @@ POSSIBLE REVISIONS
     Adding additional interpolation modes (subject to experiment)
 ----------------------------------------------------------------------*/
 
-#ifndef SCI_SCICore_Datatypes_Path_h
-#define SCI_SCICore_Datatypes_Path_h 1
+#ifndef SCI_Core_Datatypes_Path_h
+#define SCI_Core_Datatypes_Path_h 1
 
-#include <SCICore/share/share.h>
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Containers/Handle.h>
+#include <Core/share/share.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Containers/Handle.h>
 
-#include <SCICore/Containers/String.h>
-#include <SCICore/Math/LinearPWI.h>
-#include <SCICore/Math/CubicPWI.h>
+#include <Core/Containers/String.h>
+#include <Core/Math/LinearPWI.h>
+#include <Core/Math/CubicPWI.h>
 
-#include <SCICore/Geom/View.h>
-#include <SCICore/Geometry/Quaternion.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/Geom/View.h>
+#include <Core/Geometry/Quaternion.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using namespace SCICore::Math;
-using namespace SCICore::Geometry;
 
-using SCICore::Containers::LockingHandle;
-using SCICore::Containers::Handle;
-using SCICore::Containers::Array1;
-using SCICore::GeomSpace::View;
-using SCICore::Containers::clString;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
 
 class Path;
 typedef LockingHandle<Path> PathHandle;
@@ -204,8 +194,7 @@ inline void Path::set_arc_param(){
 }
 
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
 #endif
 

@@ -5,37 +5,29 @@
  * Simple interface to volume rendering stuff
  */
 
-#include <SCICore/Containers/Array1.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
+#include <Core/Containers/Array1.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarFieldRGuchar.h>
 
-#include <SCICore/Geom/GeomTriangles.h>
+#include <Core/Geom/GeomTriangles.h>
 
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/CrowdMonitor.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/CrowdMonitor.h>
 
-#include <PSECommon/Modules/Salmon/Tex.h>
-// #include <PSECore/Modules/Salmon/NormQuant.h>
+#include <Dataflow/Modules/Salmon/Tex.h>
+// #include <Dataflow/Modules/Salmon/NormQuant.h>
 
-#include <PSECore/Widgets/PointWidget.h>
+#include <Dataflow/Widgets/PointWidget.h>
 #include <iostream>
 using std::cerr;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
 
 class SimpVolVis : public Module {
   ScalarFieldIPort *inscalarfield;
@@ -410,6 +402,5 @@ void SimpVolVis::widget_moved(int /*last*/)
     }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 

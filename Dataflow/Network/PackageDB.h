@@ -3,20 +3,15 @@
 #ifndef PSE_Dataflow_PackageDB_h
 #define PSE_Dataflow_PackageDB_h 1
 
-#include <PSECore/share/share.h>
+#include <Dataflow/share/share.h>
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/AVLTree.h>
-#include <SCICore/Containers/String.h>
-#include <PSECore/Dataflow/Module.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/AVLTree.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/Network/Module.h>
 
-namespace PSECore {
-  namespace Dataflow {
+namespace SCIRun {
 
-    using SCICore::Containers::clString;
-    using SCICore::Containers::Array1;
-    using SCICore::Containers::AVLTree;
-    using SCICore::Containers::AVLTreeIter;
 
     typedef struct {
       clString name;
@@ -83,7 +78,6 @@ namespace PSECore {
 
     PSECORESHARE extern PackageDB packageDB;
 
-  }
-}
+} // End namespace SCIRun
 
 #endif // PSE_Dataflow_PackageDB_h

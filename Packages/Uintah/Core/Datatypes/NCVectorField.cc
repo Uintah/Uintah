@@ -1,16 +1,14 @@
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Math/MinMax.h>
-#include <Uintah/Grid/Level.h>
-#include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/Handle.h>
-#include <Uintah/Grid/Grid.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Math/MinMax.h>
+#include <Packages/Uintah/Grid/Level.h>
+#include <Packages/Uintah/Grid/LevelP.h>
+#include <Packages/Uintah/Grid/Handle.h>
+#include <Packages/Uintah/Grid/Grid.h>
 #include "NCVectorField.h"
 using std::vector;
 
 
-namespace SCICore{
-  namespace Datatypes{
-
+namespace Uintah {
 
 NCVectorField::NCVectorField()
   :VectorFieldRG( )
@@ -19,7 +17,7 @@ NCVectorField::NCVectorField()
 
 
 NCVectorField::NCVectorField(const NCVectorField& copy)
-  //  : UintahScalarField( copy )
+  //  : Packages/UintahScalarField( copy )
   :VectorFieldRG( copy ), grid(copy.grid), _level(copy._level),
     _varname(copy._varname), _matIndex(copy._matIndex)
 {
@@ -32,7 +30,7 @@ NCVectorField::NCVectorField(const NCVectorField& copy)
 NCVectorField::NCVectorField(GridP grid, LevelP level,
 				string var, int mat,
 				const vector< NCVariable<Vector> >& vars)
-  //  : UintahScalarField( grid, level, var, mat )
+  //  : Packages/UintahScalarField( grid, level, var, mat )
   : VectorFieldRG( ), grid(grid), _level(level),
     _varname(var), _matIndex(mat)
 {
@@ -65,8 +63,8 @@ void NCVectorField::compute_bounds()
  
   for(Level::const_patchIterator r = _level->patchesBegin();
       r != _level->patchesEnd(); r++){
-    min = SCICore::Geometry::Min( min, (*r)->getBox().lower());
-    max = SCICore::Geometry::Max( max, (*r)->getBox().upper());
+    min = Min( min, (*r)->getBox().lower());
+    max = Max( max, (*r)->getBox().upper());
   }
 
   bmin = min;
@@ -109,7 +107,7 @@ int NCVectorField::interpolate(const Point& p, Vector& value, int&, int)
 
 int NCVectorField::interpolate(const Point& p, Vector& value)
 {
-  using SCICore::Math::Interpolate;
+using namespace SCIRun;
   Level::const_patchIterator r;
   int i;
   for(i = 0, r = _level->patchesBegin();
@@ -143,6 +141,5 @@ int NCVectorField::interpolate(const Point& p, Vector& value)
   return 0;
 }
 
+} // End namespace Uintah
   
-} // Datatypes
-} // SCICore

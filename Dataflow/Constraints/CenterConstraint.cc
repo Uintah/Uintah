@@ -11,18 +11,15 @@
  */
 
 
-#include <PSECore/Constraints/CenterConstraint.h>
-#include <SCICore/Util/Debug.h>
+#include <Dataflow/Constraints/CenterConstraint.h>
+#include <Core/Util/Debug.h>
 #include <iostream>
 using std::cout;
 using std::cerr;
 using std::endl;
 
-namespace PSECore {
-namespace Constraints {
+namespace SCIRun {
 
-using SCICore::Util::DebugSwitch;
-using namespace SCICore::Geometry;
 
 static DebugSwitch cc_debug("Constraints", "Center");
 
@@ -175,6 +172,5 @@ CenterConstraint::Satisfy( const Index index, const Scheme scheme, const Real,
    return 0;
 }
 
-} // End namespace Constraints
-} // End namespace PSECore
+} // End namespace SCIRun
 

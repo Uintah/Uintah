@@ -3,9 +3,7 @@
 
 #include "GLVolRenState.h"
 
-namespace SCICore {
-namespace GeomSpace  {
-
+namespace Kurt {
 
 /**************************************
 
@@ -18,7 +16,7 @@ GENERAL INFORMATION
 
    ROI.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -63,8 +61,7 @@ protected:
   void drawBrick( Brick& brick, const vector<Polygon *>& polys);
 
 };
+} // End namespace Kurt
 
-}  // namespace GeomSpace
-} // namespace SCICore
 
 #endif

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  PointWidget.cc
@@ -13,17 +12,14 @@
  */
 
 
-#include <PSECore/Widgets/PointWidget.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <PSECore/Dataflow/Module.h>
+#include <Dataflow/Widgets/PointWidget.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Network/Module.h>
 
-namespace PSECore {
-namespace Widgets {
+namespace SCIRun {
 
-using SCICore::GeomSpace::GeomSphere;
 
-using namespace PSECore::Constraints;
 
 const Index NumCons = 0;
 const Index NumVars = 1;
@@ -211,19 +207,5 @@ PointWidget::widget_tcl( TCLArgs& args )
    }
 }
 
-} // End namespace Widgets
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  1999/08/17 06:38:31  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:08  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//

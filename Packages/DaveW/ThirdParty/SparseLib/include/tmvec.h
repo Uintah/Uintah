@@ -28,16 +28,12 @@
 /*                                                                           */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-//
 //      mv_vector_TYPE.h        Basic vector class (TYPE precision)
-//
 
 #ifndef _MV_VECTOR_TYPE_H
 #define _MV_VECTOR_TYPE_H    
 
-//
 //      Key features:
-//
 //    o efficient indexing as fast as native C arrays 
 //    o supports only unit strides (for efficient indexing)
 //    o copy-by-value semantics
@@ -55,30 +51,22 @@
 //          float, complex, et.c)
 //    o support for both [] and () style indexing  ([] not available 
 //          for matrices.)
-//
 //  NOTES:
-//
 //      o  O(N) loops for copying and assigning scalars to vectors unroll
 //      loops to a depth of 4.  Thus on some machines, it is faster
 //      to execute A=scalar, than to manually assign a native C
 //      array using an explicit for loop:
-//      
 //          for (i=0; i<N; d[i++] = scalar);
-//
 //      o   function code for the () and [] operators has been 
 //      inlined into the class declaration, for compilers
 //      (e.g. Turbo C++ v. 3.0) that refuse to inline otherwise.
-//
 //      o  The MV_Vector(*TYPE, int len) constructor is now a deep-copy to
 //      match the MV_Vector(const &MV_Vector) constructor.  To create a view
 //      (share semantics) use
-//
 //          MV_Vector_TYPE A( &d[0], n, MV_Vector_::ref );
-//
 //      This allows one to construct vectors as views of any contiguous C
 //      array.  It will not destruct the memory space when the vector
 //      is destroyed or goes out of scope.
-//
 
                                  
 
@@ -123,7 +111,6 @@ class MV_Vector_TYPE
     MV_Vector_TYPE(const TYPE*, unsigned int);      // new copy ???
     
     // reference of an exisiting data structure
-    //
     MV_Vector_TYPE(TYPE*, unsigned int, MV_Vector_::ref_type i);    
     MV_Vector_TYPE(const MV_Vector_TYPE &); 
     ~MV_Vector_TYPE();                              
@@ -135,7 +122,6 @@ class MV_Vector_TYPE
 
     // code for operator() is defined here, otherwise some compilers 
     // (e.g. Turbo C++ v 3.0) cannot inline them properly...
-    //
     TYPE&       operator()(unsigned int i)
                   {
 #                   ifdef MV_VECTOR_BOUNDS_CHECK
@@ -172,15 +158,12 @@ class MV_Vector_TYPE
     MV_Vector_TYPE operator()(void);
     const MV_Vector_TYPE operator()(void) const;
     const MV_Vector_TYPE operator()(const MV_VecIndex &I) const;
-//
 //   the following line causes ambiguatities with template instantiations
 //   should be avoid.  Used &v(0) explicitly when converting to TYPE*.
-//
 //    inline                operator const  TYPE*() const {return p_;} 
     inline unsigned int             size() const { return dim_;}
     inline int                      ref() const { return  ref_;}
     inline int                      null() const {return dim_== 0;}
-            //
             // Create a new *uninitalized* vector of size N
             MV_Vector_TYPE & newsize(unsigned int );
                                                                        

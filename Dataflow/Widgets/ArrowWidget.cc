@@ -11,28 +11,20 @@
  */
 
 
-#include <PSECore/Widgets/ArrowWidget.h>
-#include <SCICore/Geom/GeomCone.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomPick.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Constraints/DistanceConstraint.h>
+#include <Dataflow/Widgets/ArrowWidget.h>
+#include <Core/Geom/GeomCone.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomPick.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Constraints/DistanceConstraint.h>
 
-namespace PSECore {
-namespace Widgets {
+namespace SCIRun {
 
-using SCICore::GeomSpace::GeomGroup;
-using SCICore::GeomSpace::GeomSphere;
-using SCICore::GeomSpace::GeomCylinder;
-using SCICore::GeomSpace::GeomCone;
-using SCICore::GeomSpace::GeomCappedCone;
-using SCICore::GeomSpace::GeomCappedCylinder;
 
-using namespace PSECore::Constraints;
 
 const Index NumCons = 1;
 const Index NumVars = 3;
@@ -322,5 +314,4 @@ ArrowWidget::widget_tcl( TCLArgs& args )
    }
 }
 
-} // End namespace Widgets
-} // End namespace PSECore
+} // End namespace SCIRun

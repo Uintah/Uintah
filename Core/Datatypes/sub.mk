@@ -1,10 +1,8 @@
-#
 # Makefile fragment for this subdirectory
-#
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
-SRCDIR   := SCICore/Datatypes
+SRCDIR   := Core/Datatypes
 
 GENSRCS := $(SRCDIR)/ScalarFieldRG.cc $(SRCDIR)/ScalarFieldRGchar.cc \
 	$(SRCDIR)/ScalarFieldRGuchar.cc $(SRCDIR)/ScalarFieldRGshort.cc \
@@ -145,9 +143,9 @@ $(SRCDIR)/ScalarFieldRGfloat.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/Scalar
 $(SRCDIR)/ScalarFieldRGdouble.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGdouble.h
 	sed 's/TYPE/double/g' < $< > $@
 
-PSELIBS := SCICore/Persistent SCICore/Exceptions SCICore/Containers \
-	SCICore/Thread SCICore/Geometry SCICore/Geom SCICore/TclInterface \
-	SCICore/Math
+PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
+	Core/Thread Core/Geometry Core/Geom Core/TclInterface \
+	Core/Math Core/Util
 LIBS := $(GL_LIBS) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

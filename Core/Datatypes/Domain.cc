@@ -1,18 +1,15 @@
 //  Domain.cc - Manages sets of Attributes and Geometries
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
-#include <SCICore/Datatypes/Domain.h>
+#include <Core/Datatypes/Domain.h>
 
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
 
 
 PersistentTypeID Domain::type_id("Domain", "Datatype", 0);
@@ -28,5 +25,4 @@ void Domain::io(Piostream&)
 {}
 
 
-}
-}
+} // End namespace SCIRun

@@ -1,14 +1,11 @@
-#
 # Makefile fragment for this subdirectory
-# $Id$
-#
 
-SRCDIR := DaveW/convert
+SRCDIR := Packages/DaveW/convert
 
 ifeq ($(LARGESOS),yes)
-PSELIBS := SCICore
+PSELIBS := Core
 else
-PSELIBS := PSECore/Datatypes DaveW/ThirdParty/NumRec SCICore/Datatypes SCICore/Containers SCICore/Persistent SCICore/Exceptions SCICore/Thread SCICore/Geometry
+PSELIBS := Core/Datatypes DaveW/ThirdParty/NumRec Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry
 endif
 LIBS := -lm
 
@@ -120,32 +117,3 @@ PROGRAM := $(SRCDIR)/GEtoSF
 SRCS := $(SRCDIR)/GEtoSF.cc
 include $(SRCTOP)/scripts/program.mk
 
-#
-# $Log$
-# Revision 1.7  2000/10/30 04:39:54  dmw
-# reverting to previous version
-#
-# Revision 1.5  2000/10/27 20:32:00  zyp
-# Fixed the sub.mk file.  Accidently included one of my test programs in
-# it (that I did not commit).  All better now...
-#
-# Revision 1.4  2000/10/24 23:58:19  zyp
-# This program (DuckWriter) converts a file containing a ColumnMatrix of
-# values from a forward problem solve of electrical injection into the
-# head on to the readout voltage points and a file containing a
-# ColumnMatrix of the injection points and creates a text file that
-# hopefully is simple enough for the University of Oregon people working
-# on this problem.
-#
-# Revision 1.3  2000/07/18 17:44:03  lfox
-# added GEtoSF.cc
-#
-# Revision 1.2  2000/03/20 19:36:34  sparker
-# Added VPATH support
-#
-# Revision 1.1  2000/03/17 09:26:24  sparker
-# New makefile scheme: sub.mk instead of Makefile.in
-# Use XML-based files for module repository
-# Plus many other changes to make these two things work
-#
-#

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Network.cc: The core of dataflow...
@@ -15,13 +14,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Dataflow/Network.h>
-#include <SCICore/Util/NotFinished.h>
-#include <PSECore/Dataflow/Connection.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Dataflow/PackageDB.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/Remote.h>
+#include <Dataflow/Network/Network.h>
+#include <Core/Util/NotFinished.h>
+#include <Dataflow/Network/Connection.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/PackageDB.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/Remote.h>
 
 #ifdef _WIN32
 #include <io.h>
@@ -33,12 +32,8 @@ using std::cerr;
 
 //#define DEBUG 1
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
-using SCICore::TclInterface::setupConnect;
-using SCICore::TclInterface::acceptConnect;
-using SCICore::TclInterface::Message;
 
 Network::Network(int first)
   : netedit(0), first(first), slave_socket(0), nextHandle(0),
@@ -101,7 +96,6 @@ Connection* Network::connection(int i)
 
 clString Network::connect(Module* m1, int p1, Module* m2, int p2)
 {
-  using namespace SCICore::Containers;
 
     Connection* conn=scinew Connection(m1, p1, m2, p2);
     clString id(m1->id+"_p"+to_string(p1)+"_to_"+m2->id+"_p"+to_string(p2));
@@ -240,8 +234,6 @@ Module* Network::add_module(const clString& packageName,
                             const clString& categoryName,
                             const clString& moduleName)
 { 
-  using namespace SCICore::Containers;
-  using namespace PSECore::Dataflow;
 
   // Find a unique id in the Network for the new instance of this module and
   // form an instance name from it
@@ -286,7 +278,7 @@ Module* Network::add_module(const clString& packageName,
 
 /* Thread "TCLTask"(pid 8291) caught signal SIGSEGV at address 6146200 (segmentation violation - Unknown code!)
 	    // rsh to startup sr, passing master port number 
-	    system ("rsh burn /a/home/sci/data12/mmiller/o_SCIRun/sr -slave burn 8888");
+	    system ("rsh burn /a/home/sci/data12/mmiller/o_Dataflow/sr -slave burn 8888");
  */ 	    slave_socket = acceptConnect (listen_socket);
             close (listen_socket);
 	}
@@ -404,44 +396,5 @@ int Network::delete_module(const clString& id)
     return 1;
 }
 
-} // End namespace Dataflow
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.8  2000/11/29 08:24:39  moulding
-// - changed startup print statements
-// - force some tcl commands to complete to allow "see it as it happens" behavior
-//
-// Revision 1.7  2000/03/11 00:40:55  dahart
-// Replaced all instances of HashTable<class X, class Y> with the
-// Standard Template Library's std::map<class X, class Y, less<class X>>
-//
-// Revision 1.6  1999/10/07 02:07:19  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/08/28 17:54:29  sparker
-// Integrated new Thread library
-//
-// Revision 1.4  1999/08/26 23:59:56  moulding
-// added #include <io.h> for win32
-//
-// Revision 1.3  1999/08/23 06:30:32  sparker
-// Linux port
-// Added X11 configuration options
-// Removed many warnings
-//
-// Revision 1.2  1999/08/17 06:38:23  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:58  mcq
-// Initial commit
-//
-// Revision 1.2  1999/05/13 18:19:56  dav
-// removed warning from Network.cc
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//

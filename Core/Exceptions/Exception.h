@@ -10,19 +10,18 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef SCICore_Exceptions_Exception_h
-#define SCICore_Exceptions_Exception_h
+#ifndef Core_Exceptions_Exception_h
+#define Core_Exceptions_Exception_h
 
 #include <sci_config.h>
 
 #if USE_SCI_THROW
-#define SCI_THROW(exc) do {SCICore::Exceptions::Exception::sci_throw(exc);throw exc;} while(SCICore::Exceptions::Exception::alwaysFalse())
+#define SCI_THROW(exc) do {SCIRun::Exception::sci_throw(exc);throw exc;} while(SCIRun::Exception::alwaysFalse())
 #else
 #define SCI_THROW(exc) throw exc
 #endif
 
-namespace SCICore {
-   namespace Exceptions {
+namespace SCIRun {
       class Exception {
       public:
 	 Exception();
@@ -41,7 +40,6 @@ namespace SCICore {
 	 Exception& operator=(const Exception&);
 	 const char* d_stacktrace;
       };
-   }
-}
+} // End namespace SCIRun
 
 #endif

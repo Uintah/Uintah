@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <limits.h>
 
-//
 // Generate random numbers in [0..1]
 inline real random1()
 {

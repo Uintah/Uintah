@@ -1,8 +1,8 @@
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Math/MinMax.h>
-#include <Uintah/Grid/Level.h>
-#include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/Grid.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Math/MinMax.h>
+#include <Packages/Uintah/Grid/Level.h>
+#include <Packages/Uintah/Grid/LevelP.h>
+#include <Packages/Uintah/Grid/Grid.h>
 #include "CCVectorField.h"
 #include <iostream>
 using std::cerr;
@@ -10,9 +10,7 @@ using std::endl;
 using std::vector;
 
 
-namespace SCICore{
-  namespace Datatypes{
-
+namespace Uintah {
 
 
 CCVectorField::CCVectorField()
@@ -22,7 +20,7 @@ CCVectorField::CCVectorField()
 
 
 CCVectorField::CCVectorField(const CCVectorField& copy)
-  //  : UintahScalarField( copy )
+  //  : Packages/UintahScalarField( copy )
   :VectorFieldRG( copy ), grid(copy.grid), level(copy.level),
     _varname(copy._varname), _matIndex(copy._matIndex)
 {
@@ -35,7 +33,7 @@ CCVectorField::CCVectorField(const CCVectorField& copy)
 CCVectorField::CCVectorField(GridP grid, LevelP level,
 				string var, int mat,
 				const vector< CCVariable<Vector> >& vars)
-  //  : UintahScalarField( grid, level, var, mat )
+  //  : Packages/UintahScalarField( grid, level, var, mat )
   : VectorFieldRG(), grid(grid), level(level),
     _varname(var), _matIndex(mat)
 {
@@ -68,8 +66,8 @@ void CCVectorField::compute_bounds()
  
   for(Level::const_patchIterator r = level->patchesBegin();
       r != level->patchesEnd(); r++){
-    min = SCICore::Geometry::Min( min, (*r)->getBox().lower());
-    max = SCICore::Geometry::Max( max, (*r)->getBox().upper());
+    min = Min( min, (*r)->getBox().lower());
+    max = Max( max, (*r)->getBox().upper());
   }
 
   bmin = min;
@@ -113,7 +111,7 @@ int CCVectorField::interpolate(const Point& p, Vector& value, int&,
 
 int CCVectorField::interpolate(const Point& p, Vector& value)
 {
-  using SCICore::Math::Interpolate;
+using namespace SCIRun;
 
 
   int i;
@@ -133,7 +131,6 @@ int CCVectorField::interpolate(const Point& p, Vector& value)
   value = _vars[i][index];
   return 1;
 }
+} // End namespace Uintah
 
-} // Datatypes
-} // SCICore
 

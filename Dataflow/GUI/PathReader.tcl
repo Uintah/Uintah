@@ -3,9 +3,9 @@
 # October 2000
 
 
-catch {rename PSECommon_Readers_PathReader ""}
+catch {rename Dataflow_Readers_PathReader ""}
 
-itcl_class PSECommon_Readers_PathReader {
+itcl_class Dataflow_Readers_PathReader {
     inherit Module
     constructor {config} {
 	set name PathReader
@@ -56,7 +56,6 @@ itcl_class PSECommon_Readers_PathReader {
 	    {{All Files}       {.*}   }
 	}
 	
-	#
 	######################################################
 	
 	makeOpenFilebox \

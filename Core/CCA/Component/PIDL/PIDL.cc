@@ -1,7 +1,6 @@
 
 /*
  *  PIDL.h: Include a bunch of PIDL files for external clients
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -12,16 +11,15 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Component/PIDL/PIDL.h>
-#include <Component/PIDL/GlobusError.h>
-#include <Component/PIDL/Object_proxy.h>
-#include <Component/PIDL/Wharehouse.h>
-#include <SCICore/Exceptions/InternalError.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/Component/PIDL/GlobusError.h>
+#include <Core/CCA/Component/PIDL/Object_proxy.h>
+#include <Core/CCA/Component/PIDL/Wharehouse.h>
+#include <Core/Exceptions/InternalError.h>
 #include <globus_nexus.h>
 #include <iostream>
 #include <sstream>
 
-using SCICore::Exceptions::InternalError;
 using Component::PIDL::GlobusError;
 using Component::PIDL::Object;
 using Component::PIDL::PIDL;
@@ -39,7 +37,7 @@ static int approval_fn(void*, char* urlstring, globus_nexus_startpoint_t* sp)
     try {
 	Wharehouse* wh=PIDL::getWharehouse();
 	return wh->approval(urlstring, sp);
-    } catch(const SCICore::Exceptions::Exception& e) {
+    } catch(const Exception& e) {
 	std::cerr << "Caught exception (" << e.message() << "): " << urlstring
 		  << ", rejecting client (code=1005)\n";
 	return 1005;
@@ -92,27 +90,3 @@ std::string PIDL::getBaseURL()
     return o.str();
 }
 
-//
-// $Log$
-// Revision 1.3  1999/09/17 05:08:08  sparker
-// Implemented component model to work with sidl code generator
-//
-// Revision 1.2  1999/08/31 08:59:01  sparker
-// Configuration and other updates for globus
-// First import of beginnings of new component library
-// Added yield to Thread_irix.cc
-// Added getRunnable to Thread.{h,cc}
-//
-// Revision 1.1  1999/08/30 17:39:46  sparker
-// Updates to configure script:
-//  rebuild configure if configure.in changes (Bug #35)
-//  Fixed rule for rebuilding Makefile from Makefile.in (Bug #36)
-//  Rerun configure if configure changes (Bug #37)
-//  Don't build Makefiles for modules that aren't --enabled (Bug #49)
-//  Updated Makfiles to build sidl and Component if --enable-parallel
-// Updates to sidl code to compile on linux
-// Imported PIDL code
-// Created top-level Component directory
-// Added ProcessManager class - a simpler interface to fork/exec (not finished)
-//
-//

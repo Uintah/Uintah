@@ -1,48 +1,29 @@
 #ifndef SFRGFILE_H
 #define SFRGFILE_H
 
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Geometry/Point.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Containers/Array2.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Geometry/Point.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
 
 
-namespace SCICore {
-  namespace Datatypes {
-    class ScalarFieldRGdouble;
-    class ScalarFieldRGfloat;
-    class ScalarFieldRGint;
-    class ScalarFieldRGshort;
-    class ScalarFieldRGushort;
-    class ScalarFieldRGchar;
-    class ScalarFieldRGuchar;
-    class ScalarFieldRGBase;
-  }
+namespace SCIRun {
+  class ScalarFieldRGdouble;
+  class ScalarFieldRGfloat;
+  class ScalarFieldRGint;
+  class ScalarFieldRGshort;
+  class ScalarFieldRGushort;
+  class ScalarFieldRGchar;
+  class ScalarFieldRGuchar;
+  class ScalarFieldRGBase;
 }
 
-namespace PSECommon{
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Containers;
-using SCICore::Geometry::Point;
 
-using SCICore::Datatypes::ScalarFieldRGdouble;
-using SCICore::Datatypes::ScalarFieldRGfloat;
-using SCICore::Datatypes::ScalarFieldRGint;
-using SCICore::Datatypes::ScalarFieldRGshort;
-using SCICore::Datatypes::ScalarFieldRGushort;
-using SCICore::Datatypes::ScalarFieldRGchar;
-using SCICore::Datatypes::ScalarFieldRGuchar;
-using SCICore::Datatypes::ScalarFieldHandle;
-using SCICore::Datatypes::ScalarFieldRGBase;
 
-using PSECore::Datatypes::ScalarFieldIPort;
-using PSECore::Datatypes::ScalarFieldOPort;
 
 
 
@@ -127,7 +108,6 @@ public:
 };
 
 
-} // end namespace Modules
-} // end namespace PSECommon
+} // End namespace SCIRun
 
 #endif

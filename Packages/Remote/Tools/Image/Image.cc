@@ -1,12 +1,11 @@
 //////////////////////////////////////////////////////////////////////
 // Image.cpp - Load and save images of many file formats.
-//
 // by David K. McAllister, 1997-1998.
 
-#include <Remote/Tools/Image/Image.h>
+#include <Packages/Remote/Tools/Image/Image.h>
 
-#include <Remote/Tools/Util/Assert.h>
-#include <Remote/Tools/Util/Utils.h>
+#include <Packages/Remote/Tools/Util/Assert.h>
+#include <Packages/Remote/Tools/Util/Utils.h>
 
 #include <stdio.h>
 /*
@@ -27,8 +26,6 @@ using namespace std;
 #include <stdlib.h>
 
 namespace Remote {
-namespace Tools {
-
 //////////////////////////////////////////////////////
 // Sun Raster File Format Header
 
@@ -1283,7 +1280,6 @@ void Image::VFlip()
 	}
   delete [] tbuf;
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

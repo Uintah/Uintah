@@ -1,10 +1,9 @@
-//static char *id="@(#) $Id$";
 
 /*
   TbonP.cc
   Parallel Temporal Branch-on-Need Octree (T-BON)
 
-  Philip Sutton
+  Packages/Philip Sutton
   July 1999
 
   Copyright (C) 2000 SCI Group, University of Utah
@@ -14,18 +13,18 @@
 #include "Clock.h"
 #include "TriGroup.h"
 
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Thread/Barrier.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Thread/CrowdMonitor.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Thread/Barrier.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/CrowdMonitor.h>
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
 
 #include <iostream>
 #include <fstream>
@@ -34,17 +33,7 @@
 #include <unistd.h>
 
 namespace Phil {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using SCICore::Thread::Barrier;
-using SCICore::Thread::Parallel;
-using SCICore::Thread::Thread;
-using SCICore::Thread::CrowdMonitor;
-using SCICore::Thread::Semaphore;
+using namespace SCIRun;
 using namespace std;
 
 typedef unsigned char type;
@@ -499,21 +488,6 @@ TbonP::parallel( int rank ) {
 }
 
 
+} // End namespace Phil
 
-} // end namespace Modules
-} // end namespace Phil
 
-//
-// $Log$
-// Revision 1.3  2000/03/17 09:28:12  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.2  2000/02/04 22:13:03  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 21:03:15  psutton
-// initial revision
-//
-//

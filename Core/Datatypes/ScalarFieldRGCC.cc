@@ -16,13 +16,12 @@
  *           the generation process.)
  */
 
-#include <SCICore/Datatypes/ScalarFieldRGCC.h>
-//#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Datatypes/ScalarFieldRGCC.h>
+//#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 static Persistent* maker()
 {
@@ -50,9 +49,6 @@ ScalarFieldRGCC::~ScalarFieldRGCC()
 
 void ScalarFieldRGCC::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Geometry::Pio;
 
     int version=stream.begin_class("ScalarFieldRGCC", ScalarFieldRGCC_VERSION);
     if(version == 1){
@@ -233,7 +229,6 @@ void ScalarFieldRGCC::fill_gradmags() // these guys ignor the vf
   }
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
 

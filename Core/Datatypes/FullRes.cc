@@ -1,19 +1,16 @@
-#include <SCICore/Datatypes/FullRes.h>
-#include <SCICore/Geometry/Ray.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Datatypes/FullResIterator.h>
-#include <SCICore/Datatypes/Brick.h>
-#include <SCICore/Datatypes/Polygon.h>
-#include <SCICore/Datatypes/SliceTable.h>
-#include <SCICore/Datatypes/GLVolumeRenderer.h>
-#include <SCICore/Datatypes/VolumeUtils.h>
+#include <Core/Datatypes/FullRes.h>
+#include <Core/Geometry/Ray.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Datatypes/FullResIterator.h>
+#include <Core/Datatypes/Brick.h>
+#include <Core/Datatypes/Polygon.h>
+#include <Core/Datatypes/SliceTable.h>
+#include <Core/Datatypes/GLVolumeRenderer.h>
+#include <Core/Datatypes/VolumeUtils.h>
 #include <iostream>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using SCICore::Geometry::Ray;
-using SCICore::Datatypes::SliceTable;
 
 FullRes::FullRes(const GLVolumeRenderer* glvr ) :
   GLVolRenState( glvr )
@@ -24,7 +21,6 @@ FullRes::FullRes(const GLVolumeRenderer* glvr ) :
 void
 FullRes::draw()
 {
-  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
   Ray viewRay;
   Brick* brick;
   computeView(viewRay);
@@ -65,7 +61,6 @@ FullRes::draw()
     disableTexCoords();
     
   }
-  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
 }
 
 void
@@ -89,5 +84,4 @@ FullRes::drawWireFrame()
   }
 }
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun

@@ -1,9 +1,8 @@
-//static char *id="@(#) $Id$";
 
 /* BonoTreeP.h
    class declarations for the parallel BONO tree
 
-   Philip Sutton
+   Packages/Philip Sutton
    July/October 1999
 
    Copyright (C) 2000 SCI Group, University of Utah
@@ -20,8 +19,6 @@
 #include <strings.h>
 
 namespace Phil {
-namespace Modules {
-
 template <class T>
 struct Data {
   int nx, ny, nz;
@@ -1118,18 +1115,8 @@ BonoTreeP<T>::assignPoints( int myindex, int d, int x, int y, int z,
   }; // switch
 
 } // assignPoints
+} // End namespace Phil
 
-} // end namespace Modules 
-} // end namespace Phil
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:07:19  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 20:49:38  psutton
-// initial revision
-//
-//

@@ -3,7 +3,7 @@
  *  Tensor.cc
  *
  *  Written by:
- *   Author: Yarden Livnat
+ *   Author: Packages/Yarden Livnat
  *   
  *   Department of Computer Science
  *   University of Utah
@@ -12,14 +12,11 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <Yarden/Datatypes/TensorField.h>
+#include <Packages/Yarden/Core/Datatypes/TensorField.h>
 
-namespace SCICore {
-  namespace Datatypes {
-
-    using namespace SCICore::Datatypes;
-    //    using SCICore::Containers::LockingHandle;
-    using SCICore::PersistentSpace::PersistentTypeID;
+namespace Yarden {
+using namespace SCIRun;
+    //    using LockingHandle;
 
     PersistentTypeID TensorFieldBase::type_id("TensorFieldBase", 
 	    "Datatype", 0 );
@@ -44,6 +41,5 @@ namespace SCICore {
 	    "TensorFieldBase", 
 	    make_TensorField< SymTensor<char,3> >);
 
+} // End namespace Yarden
 
-  } // End namespace Datatypes
-} // End namespace SCICore

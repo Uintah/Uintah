@@ -1,7 +1,6 @@
 
 /*
  *  memstress.cc
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -13,14 +12,16 @@
  */
 
 #include <iostream>
-#include <Component/PIDL/PIDL.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
 #include "memstress_sidl.h"
-#include <SCICore/Thread/Time.h>
+#include <Core/Thread/Time.h>
 #include <vector>
 using std::cerr;
 using std::cout;
 using std::vector;
 using memstress::Server;
+
+using namespace SCIRun;
 
 class Server_impl : public memstress::Server_interface {
 public:
@@ -71,7 +72,6 @@ int main(int argc, char* argv[])
     using Component::PIDL::Object;
     using Component::PIDL::PIDLException;
     using Component::PIDL::PIDL;
-    using SCICore::Thread::Time;
 
     try {
 	PIDL::initialize(argc, argv);
@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 	PIDL::serveObjects();
-    } catch(const SCICore::Exceptions::Exception& e) {
+    } catch(const Exception& e) {
 	cerr << "Caught exception:\n";
 	cerr << e.message() << '\n';
 	abort();
@@ -190,14 +190,3 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-//
-// $Log$
-// Revision 1.1  1999/09/26 06:12:59  sparker
-// Added (distributed) reference counting to PIDL objects.
-// Began campaign against memory leaks.  There seem to be no more
-//   per-message memory leaks.
-// Added a test program to flush out memory leaks
-// Fixed other Component testprograms so that they work with ref counting
-// Added a getPointer method to PIDL handles
-//
-//

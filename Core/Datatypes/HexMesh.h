@@ -25,28 +25,21 @@
 * Includes
 ******************************************************************************/
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 
 #include <map.h>
 
 /******************************************************************************
 * Class & function forward declarations and type declarations
 ******************************************************************************/
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Containers::LockingHandle;
-using SCICore::Containers::Array1;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
 
 class HexNode;
 class HexFace;
@@ -316,49 +309,7 @@ public:
   virtual void io (Piostream& p);
 };
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.6  2000/03/17 18:47:45  dahart
-// Included STL map header files where I forgot them, and removed less<>
-// parameter from map declarations
-//
-// Revision 1.5  2000/03/11 00:41:29  dahart
-// Replaced all instances of HashTable<class X, class Y> with the
-// Standard Template Library's std::map<class X, class Y, less<class X>>
-//
-// Revision 1.4  1999/10/07 02:07:31  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/08/25 03:48:33  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:46  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:21  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:55:47  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:04:38  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1  1999/04/27 21:14:27  dav
-// working on Datatypes
-//
-// Revision 1.2  1999/04/25 04:14:36  dav
-// oopps...?
-//
-// Revision 1.1.1.1  1999/04/24 23:12:47  dav
-// Import sources
-//
-//
 
 #endif

@@ -14,18 +14,15 @@
 #ifndef SCI_project_GLTexture3DPort_h
 #define SCI_project_GLTexture3DPort_h 1
 
-#include <PSECore/Datatypes/SimplePort.h>
-#include <SCICore/Datatypes/GLTexture3D.h>
+#include <Dataflow/Ports/SimplePort.h>
+#include <Core/Datatypes/GLTexture3D.h>
 
-namespace PSECore {
-namespace Datatypes {
+namespace SCIRun {
 
-using namespace SCICore::Datatypes;
 
 typedef SimpleIPort<GLTexture3DHandle> GLTexture3DIPort;
 typedef SimpleOPort<GLTexture3DHandle> GLTexture3DOPort;
 
-} // End namespace Datatypes
-} // End namespace PSECore
+} // End namespace SCIRun
 
 #endif

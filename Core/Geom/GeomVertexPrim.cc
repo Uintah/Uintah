@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  GeomVertexPrim.cc: Base class for primitives that use the Vertex class
@@ -16,15 +15,13 @@
 #pragma warning(disable:4291) // quiet the visual C++ compiler
 #endif
 
-#include <SCICore/Geom/GeomVertexPrim.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Containers/TrivialAllocator.h>
+#include <Core/Geom/GeomVertexPrim.h>
+#include <Core/Containers/String.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Containers/TrivialAllocator.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using SCICore::Containers::TrivialAllocator;
 
 static TrivialAllocator GeomVertex_alloc(sizeof(GeomVertex));
 static TrivialAllocator GeomNVertex_alloc(sizeof(GeomNVertex));
@@ -186,7 +183,6 @@ void GeomVertexPrim::add(double t, GeomVertex* vtx)
 
 void GeomVertexPrim::io(Piostream& stream)
 {
-    using SCICore::Containers::Pio;
 
     int version=stream.begin_class("GeomVertexPrim", GEOMVERTEXPRIM_VERSION);
     GeomObj::io(stream);
@@ -219,7 +215,6 @@ GeomVertex* GeomVertex::clone()
 
 void GeomVertex::io(Piostream& stream)
 {
-    using SCICore::Geometry::Pio;
 
     stream.begin_class("GeomVertex", GEOMVERTEX_VERSION);
     Pio(stream, p);
@@ -249,7 +244,6 @@ GeomNVertex::~GeomNVertex()
 
 void GeomNVertex::io(Piostream& stream)
 {
-    using SCICore::Geometry::Pio;
 
     stream.begin_class("GeomNVertex", GEOMNVERTEX_VERSION);
     GeomVertex::io(stream);
@@ -281,7 +275,6 @@ GeomNMVertex::~GeomNMVertex()
 
 void GeomNMVertex::io(Piostream& stream)
 {
-    using SCICore::Containers::Pio;
 
     stream.begin_class("GeomNMVertex", GEOMNMVERTEX_VERSION);
     GeomNVertex::io(stream);
@@ -312,7 +305,6 @@ GeomMVertex::~GeomMVertex()
 
 void GeomMVertex::io(Piostream& stream)
 {
-    using SCICore::Containers::Pio;
 
     stream.begin_class("GeomMVertex", GEOMMVERTEX_VERSION);
     GeomVertex::io(stream);
@@ -352,49 +344,12 @@ GeomCVertex::~GeomCVertex()
 void Pio(Piostream& stream, GeomVertex*& obj)
 {
     Persistent* tmp=obj;
-    stream.io(tmp, GeomSpace::GeomVertex::type_id);
+    stream.io(tmp, GeomVertex::type_id);
     if(stream.reading())
-	obj=(GeomSpace::GeomVertex*)tmp;
+	obj=(GeomVertex*)tmp;
 }
 
-}
-}
+} // End namespace SCIRun
 
 
 
-//
-// $Log$
-// Revision 1.9  1999/11/02 06:06:14  moulding
-// added a #ifdef for win32 to quiet the C++ compiler.  This change
-// relates to bug # 61 in csafe's bugzilla.
-//
-// Revision 1.8  1999/09/16 17:43:58  kuzimmer
-// corrected new and delete functions for GeomMVertex
-//
-// Revision 1.7  1999/09/16 17:08:56  kuzimmer
-// TrivialAllocator GeomMVertex_alloc(sizeof(GeomMVertex));   was missing,  added again, will prevent core dumps.
-//
-// Revision 1.6  1999/09/08 02:26:51  sparker
-// Various #include cleanups
-//
-// Revision 1.5  1999/08/23 07:06:33  sparker
-// Fix IRIX build
-//
-// Revision 1.4  1999/08/17 23:50:30  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.3  1999/08/17 06:39:17  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:47  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:55  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1.1.1  1999/04/24 23:12:20  dav
-// Import sources
-//
-//

@@ -1,19 +1,15 @@
 //////////////////////////////////////////
 // 4 x 4 transformation matrices.
-//
 // by David K. McAllister, 1998.
-//
 // To do: Add an is_identity flag to avoid multiplying by the identity matrix.
 // Also add a way to load and save them.
 
 #ifndef Math_Matrix44_h
 #define Math_Matrix44_h
 
-#include <Remote/Tools/Math/Vector.h>
+#include <Packages/Remote/Tools/Math/Vector.h>
 
 namespace Remote {
-namespace Tools {
-
 class Matrix44
 {
   double mat[4][4];
@@ -337,8 +333,7 @@ inline istream& operator>>(istream& is, Matrix44& m)
   return is;
 }
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

@@ -11,7 +11,7 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 {
 #ifdef DEBUG
 	char reason[100]="\0";
-	printf("\n*** Nektard.dll is initializing {%s,%d} ***\n",__FILE__,__LINE__);
+	printf("\n*** Packages/Nektard.dll is initializing {%s,%d} ***\n",__FILE__,__LINE__);
 	printf("*** hModule = %d ***\n",hModule);
 	switch (ul_reason_for_call){
 	  case DLL_PROCESS_ATTACH:sprintf(reason,"DLL_PROCESS_ATTACH"); break;

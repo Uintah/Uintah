@@ -14,11 +14,10 @@
 #ifndef Geometry_Ray_h
 #define Geometry_Ray_h
 
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 
-namespace SCICore {
-namespace Geometry {
+namespace SCIRun {
 
 
 class Ray {
@@ -42,6 +41,5 @@ public:
 };
 
 
-}
-}
+} // End namespace SCIRun
 #endif

@@ -16,7 +16,7 @@ KEYWORDS
     ParticleGridReader, Material/Particle Method
 
 AUTHOR
-    Kurt Zimmerman
+    Packages/Kurt Zimmerman
     Department of Computer Science
     University of Utah
     June, 2000
@@ -30,21 +30,17 @@ LOG
 #define VECTORFIELDEXTRACTOR_H 1
 
 
-#include <Uintah/Datatypes/Archive.h>
-#include <Uintah/Datatypes/ArchivePort.h>
-#include <Uintah/Datatypes/TensorFieldPort.h>
-#include <PSECore/Dataflow/Module.h> 
-#include <SCICore/TclInterface/TCLvar.h> 
+#include <Packages/Uintah/Core/Datatypes/Archive.h>
+#include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
+#include <Packages/Uintah/Core/Datatypes/TensorFieldPort.h>
+#include <Dataflow/Network/Module.h> 
+#include <Core/TclInterface/TCLvar.h> 
 #include <string>
 #include <vector>
 
 
 namespace Uintah {
-namespace Modules {
-using namespace Uintah::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
 class TensorFieldExtractor : public Module { 
   
@@ -86,9 +82,8 @@ private:
   void setVars();
 
 }; //class 
+} // End namespace Uintah
 
-} // end namespace Modules
-} // end namespace Uintah
 
 
 #endif

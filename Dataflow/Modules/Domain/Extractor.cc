@@ -1,37 +1,28 @@
 //  Extractor.cc - Extracts a field, attribute, or geometry from a domain 
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   March 2000
-//
 //  Copyright (C) 2000 SCI Group
-//
 //  Module Extractor
-//
 //  Description: 
 //  Input ports: 
 //  Output ports:
 
 #include <stdio.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCLvar.h>
 
-#include <SCICore/Malloc/Allocator.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/DomainPort.h>
-#include <PSECore/Datatypes/FieldPort.h>
-#include <PSECore/Datatypes/AttribPort.h>
-#include <PSECore/Datatypes/GeomPort.h>
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/DomainPort.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Ports/AttribPort.h>
+#include <Dataflow/Ports/GeomPort.h>
 
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
     
 class Extractor : public Module {
 private:
@@ -74,6 +65,5 @@ void Extractor::execute()
     
   }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 

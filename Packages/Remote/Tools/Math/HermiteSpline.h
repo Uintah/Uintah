@@ -17,8 +17,6 @@
 using namespace std;
 
 namespace Remote {
-namespace Tools {
-
 template<class T>
 class HermiteSpline {
    vector<T> d; // The control points
@@ -67,9 +65,8 @@ public:
   }
 };
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif /* SCI_Math_HermiteSpline_h */
 #endif

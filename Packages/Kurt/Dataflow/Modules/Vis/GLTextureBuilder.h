@@ -6,39 +6,25 @@
  * Simple interface to volume rendering stuff
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <Kurt/Datatypes/GLTexture3DPort.h>
-#include <Kurt/Datatypes/GLTexture3D.h>
-#include <SCICore/Datatypes/ScalarField.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Packages/Kurt/Core/Datatypes/GLTexture3DPort.h>
+#include <Packages/Kurt/Core/Datatypes/GLTexture3D.h>
+#include <Core/Datatypes/ScalarField.h>
 #include <GL/glx.h>
 
 
 
-namespace SCICore{
-  namespace Datatypes{
-   class ScalarFieldRGuchar;
-  }
+namespace SCIRun{
+  class ScalarFieldRGuchar;
 }
 
 namespace Kurt {
-  namespace Datatypes {
-  class GLTexture3D;
-  }
-namespace Modules {
+using namespace SCIRun;
 
-using namespace SCICore::TclInterface;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
-using SCICore::Datatypes::ScalarFieldRGuchar;
-
-using PSECore::Datatypes::GLTexture3DOPort;
-using PSECore::Datatypes::ScalarFieldIPort;
-using PSECore::Datatypes::ScalarFieldHandle;
-using PSECore::Dataflow::Module;
 using Kurt::Datatypes::GLTexture3D;
 using Kurt::Datatypes::GLTexture3DHandle;
 
@@ -67,10 +53,8 @@ private:
   TCLint isFixed;
 //  bool MakeContext(Display *dpy, GLXContext& cx);
   // void DestroyContext(Display *dpy, GLXContext& cx);
+} // End namespace Kurt
 
-};
 
-} // namespace Modules
-} // namespace Uintah
 
 #endif

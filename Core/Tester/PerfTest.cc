@@ -10,7 +10,7 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Tester/PerfTest.h>
+#include <Core/Tester/PerfTest.h>
 #include <iostream>
 #include <limits.h>
 #include <string.h>
@@ -28,8 +28,7 @@ using std::endl;
   #include <sys/param.h>
 #endif
 
-namespace SCICore {
-namespace Tester {
+namespace SCIRun {
 
 PerfTest::PerfTest(char* symname)
     : symname(symname)
@@ -109,6 +108,5 @@ void PerfTest::time(struct timeb* t)
 	ftime(t);
 }
 
-} // End namespace Tester
-} // End namespace SCICore
+} // End namespace SCIRun
 

@@ -11,13 +11,11 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <PSECore/Datatypes/CameraViewPort.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Dataflow/Ports/CameraViewPort.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace PSECore {
-  namespace Datatypes {
+namespace SCIRun {
 
-    using namespace SCICore::Containers;
     
     extern "C" {
       PSECORESHARE IPort* make_CameraViewIPort(Module* module,
@@ -33,5 +31,4 @@ namespace PSECore {
     template<> clString SimpleIPort<CameraViewHandle>::port_type("CameraView");
     template<> clString SimpleIPort<CameraViewHandle>::port_color("chocolate1");
 
-  } // End namespace Datatypes
-} // End namespace PSECore
+} // End namespace SCIRun

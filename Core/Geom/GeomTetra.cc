@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  GeomTetra.cc:  A tetrahedra object
@@ -12,17 +11,16 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Geom/GeomTetra.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geom/GeomTetra.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::ostream;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Persistent* make_GeomTetra()
 {
@@ -63,14 +61,13 @@ void GeomTetra::get_bounds(BBox& bb)
 
 void GeomTetra::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomTetra", GEOMTETRA_VERSION);
     GeomObj::io(stream);
-    SCICore::Geometry::Pio(stream, p1);
-    SCICore::Geometry::Pio(stream, p2);
-    SCICore::Geometry::Pio(stream, p3);
-    SCICore::Geometry::Pio(stream, p4);
+    Pio(stream, p1);
+    Pio(stream, p2);
+    Pio(stream, p3);
+    Pio(stream, p4);
     stream.end_class();
 }
 
@@ -80,37 +77,5 @@ bool GeomTetra::saveobj(ostream&, const clString&, GeomSave*)
     return false;
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.6  1999/10/07 02:07:45  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/08/29 00:46:56  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.4  1999/08/28 17:54:42  sparker
-// Integrated new Thread library
-//
-// Revision 1.3  1999/08/17 23:50:25  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:13  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:44  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:52  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1.1.1  1999/04/24 23:12:22  dav
-// Import sources
-//
-//

@@ -7,17 +7,13 @@
  */
 
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 
 namespace Kurt {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
 
 
@@ -40,8 +36,7 @@ private:
   TCLint ypad;
   TCLint zpad;
 };
+} // End namespace Kurt
 
-} // namespace Modules
-} // namespace Uintah
 
 #endif

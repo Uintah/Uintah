@@ -1,5 +1,5 @@
 # A simple mechaism to make cocoon skip directories
-SCICore/Thread/notdone
+Core/Thread/notdone
 DaveW/ThirdParty/Nrrd/include
 DaveW/ThirdParty/NumRec
 DaveW/ThirdParty/OldLinAlg
@@ -10,14 +10,14 @@ DaveW/ThirdParty/SparseLib/Leonid
 DaveW/ThirdParty/SparseLib/iml
 DaveW/ThirdParty/SparseLib/include
 DaveW/ThirdParty/SparseLib/mv/include
-PSECommon/ThirdParty/mpeg
-PSECommon/share
-PSECore/share
-PSECommon/Algorithms/Visualization
-SCICore/TkExtensions/internal-includes
-SCICore/Winfix/include/GL
-SCICore/globus_threads
-SCICore/share
-SCIRun/share
-Uintah/Components/Arches
-Uintah/Components/Arches/fortran
+Dataflow/ThirdParty/mpeg
+Dataflow/share
+Dataflow/share
+Core/Algorithms/Visualization
+Core/TkExtensions/internal-includes
+Core/Winfix/include/GL
+Core/globus_threads
+Core/share
+Dataflow/share
+Uintah/Core/CCA/Components/Arches
+Uintah/Core/CCA/Components/Arches/fortran

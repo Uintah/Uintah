@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  IsoMask.cc:  The first module!
@@ -12,33 +11,33 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Tester/RigorousTest.h>
-#include <SCICore/Containers/BitArray1.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/Queue.h>
-#include <SCICore/Containers/Stack.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-//#include <PSECore/Datatypes/ScalarFieldRGchar.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Geom/GeomTriStrip.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Plane.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <PSECore/Widgets/ArrowWidget.h>
+#include <Core/Tester/RigorousTest.h>
+#include <Core/Containers/BitArray1.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/Queue.h>
+#include <Core/Containers/Stack.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+//#include <Dataflow/Ports/ScalarFieldRGchar.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/GeomTriStrip.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Plane.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Dataflow/Widgets/ArrowWidget.h>
 
 #include <map.h>
 #include <iostream>
@@ -47,17 +46,8 @@ using std::endl;
 #include <sstream>
 using std::ostringstream;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Containers;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
 
 class IsoMask : public Module {
     ScalarFieldIPort* infield;
@@ -1826,57 +1816,5 @@ void IsoMask::widget_moved(int last)
     }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.9  2000/03/17 18:47:04  dahart
-// Included STL map header files where I forgot them, and removed less<>
-// parameter from map declarations
-//
-// Revision 1.8  2000/03/17 09:27:32  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.7  2000/03/11 00:39:55  dahart
-// Replaced all instances of HashTable<class X, class Y> with the
-// Standard Template Library's std::map<class X, class Y, less<class X>>
-//
-// Revision 1.6  1999/10/07 02:07:06  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/08/29 00:46:46  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.4  1999/08/25 03:48:08  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/18 20:20:08  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:50  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:58:14  mcq
-// Initial commit
-//
-// Revision 1.2  1999/04/27 22:57:58  dav
-// updates in Modules for Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:34  dav
-// Import sources
-//
-//

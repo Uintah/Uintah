@@ -17,8 +17,6 @@
 using namespace std;
 
 namespace Remote {
-namespace Tools {
-
 template<class T>
 class CatmullRomSpline {
 	vector<T> d;
@@ -41,8 +39,7 @@ public:
 	T& operator[]( const int );
 };
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif /* SCI_Math_CatmullRomSpline_h */

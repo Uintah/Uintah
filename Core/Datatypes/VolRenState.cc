@@ -1,7 +1,6 @@
-#include <SCICore/Datatypes/GLVolRenState.h>
+#include <Core/Datatypes/GLVolRenState.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 GLVolRenState::GLVolRenState(const GLVolumeRenderer* glvr)
     : volren( glvr )
@@ -239,6 +238,5 @@ GLVolRenState::drawWireFrame(const Brick& brick)
 
 }
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun
 

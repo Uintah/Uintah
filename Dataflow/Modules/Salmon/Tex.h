@@ -6,27 +6,15 @@
  * Peter-Pike Sloan
  */
 
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Containers/Handle.h>
-#include <SCICore/Persistent/Persistent.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Containers/Handle.h>
+#include <Core/Persistent/Persistent.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::BBox;
-using SCICore::GeomSpace::GeomObj;
-using SCICore::GeomSpace::GeomSave;
-using SCICore::GeomSpace::DrawInfoOpenGL;
-using SCICore::GeomSpace::Material;
-using SCICore::Containers::Array1;
-using SCICore::Containers::clString;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
 
 struct oCube;
 
@@ -202,32 +190,8 @@ public:
   virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/10/07 02:06:58  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/08/17 23:50:16  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:37:40  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:53  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 20:17:11  dav
-// added back PSECommon .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:30  dav
-// Import sources
-//
-//
 
 #endif
 

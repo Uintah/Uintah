@@ -1,10 +1,9 @@
 #ifndef OCTREE_CHILD_ITERATOR_H
 #define OCTREE_CHILD_ITERATOR_H
 
-#include <SCICore/Datatypes/Octree.h>
+#include <Core/Datatypes/Octree.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 /**************************************
 
@@ -79,6 +78,5 @@ private:
   bool isDone;
 };
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun
 #endif

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Gradient.cc:  Unfinished modules
@@ -12,22 +11,17 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
-#include <SCICore/Datatypes/VectorFieldRG.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Core/Datatypes/VectorFieldRG.h>
+#include <Core/Geometry/Point.h>
+#include <Core/TclInterface/TCLvar.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
 
 class MergeTensor : public Module {
     ScalarFieldIPort* infield;
@@ -146,45 +140,5 @@ void MergeTensor::execute()
 
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.6  2000/03/17 09:26:59  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.5  1999/08/25 03:47:48  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.4  1999/08/19 23:17:45  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.3  1999/08/18 20:19:41  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:29  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:43  mcq
-// Initial commit
-//
-// Revision 1.2  1999/04/28 20:51:12  dav
-// deleted some files that are dependent on DaveW files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:32  dav
-// Import sources
-//
-//

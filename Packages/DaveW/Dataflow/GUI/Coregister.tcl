@@ -1,58 +1,17 @@
 ##
  #  Coregister.tcl: The coregistration UI
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   Aug 1996
- #
  #  Copyright (C) 1996 SCI Group
- # 
  #  Log Information:
- #
- #  $Log$
- #  Revision 1.3  1999/09/02 21:30:42  moulding
- #  took out the modname method; it's in the base itcl clase module (module.tcl)
- #
- #  Revision 1.2  1999/08/29 01:02:19  dmw
- #  updated module names to be consistent with new loading mechanism
- #
- #  Revision 1.1  1999/08/24 06:22:55  dmw
- #  Added in everything for the DaveW branch
- #
- #  Revision 1.1.1.1  1999/04/24 23:12:17  dav
- #  Import sources
- #
- #  Revision 1.12  1999/01/04 05:31:55  dmw
- #  See Dave for details...
- #
- #  Revision 1.11  1997/03/11 22:05:53  dweinste
- #  fixed stuff
- #
- #  Revision 1.10  1996/10/22 20:00:05  dweinste
- #  nothing.
- #
- #  Revision 1.9  1996/10/22 19:57:52  dweinste
- #  it finally works!!
- #
- #  Revision 1.8  1996/10/22 00:12:19  dweinste
- #  still trying to get this to work!!!!
- #
- #  Revision 1.7  1996/10/21 23:51:54  dweinste
- #  weirdness
- #
- #  Revision 1.6  1996/10/21 23:07:55  dweinste
- #  ugh.
- #
- #  Revision 1.5  1996/10/21 23:03:04  dweinste
- #  seeing if log info works
- #
  ##
 
-catch {rename DaveW_EEG_Coregister ""}
+catch {rename Packages/DaveW_EEG_Coregister ""}
 
-itcl_class DaveW_EEG_Coregister {
+itcl_class Packages/DaveW_EEG_Coregister {
     inherit Module
     constructor {config} {
         set name Coregister
@@ -233,7 +192,6 @@ itcl_class DaveW_EEG_Coregister {
 	frame $w.f.mgd
 	pack $w.f.e $w.f.fr $w.f.fiducial $w.f.cb $w.f.b $w.f.p $w.f.tr \
 		$w.f.ti $w.f.sc -side top
-#       pack $w.f.v -side bottom -fill x -expand 1
 	frame $w.f.pr
 	button $w.f.pr.print -text "Print Trans" -command "$this printit"
 	button $w.f.pr.print2 -text "Print Pts" -command "$this-c print"
@@ -243,7 +201,6 @@ itcl_class DaveW_EEG_Coregister {
     }
     method fid {} {
 	global $this-fiducial
-#	puts [set $this-fiducial]
 	$this-c [set $this-fiducial]
     }
     method printit {} {

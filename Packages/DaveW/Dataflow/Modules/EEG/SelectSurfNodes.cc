@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  SelectSurfNodes.cc:  Select a set of nodes from a surface
@@ -13,35 +12,28 @@
  *
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <PSECore/Widgets/PointWidget.h>
-#include <SCICore/Datatypes/BasicSurfaces.h>
-#include <SCICore/Datatypes/SurfTree.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Dataflow/Widgets/PointWidget.h>
+#include <Core/Datatypes/BasicSurfaces.h>
+#include <Core/Datatypes/SurfTree.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/Trig.h>
+#include <Core/TclInterface/TCLvar.h>
 
 #include <iostream>
 using std::cerr;
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
-using namespace SCICore::Geometry;
-using namespace SCICore::GeomSpace;
+using namespace SCIRun;
 
 class SelectSurfNodes : public Module {
     SurfaceIPort* iport_surf;
@@ -225,38 +217,7 @@ void SelectSurfNodes::tcl_command(TCLArgs& args, void* userdata)
             Module::tcl_command(args, userdata);
     }
 }
-
-} // End namespace Modules
 } // End namespace DaveW
 
 
-//
-// $Log$
-// Revision 1.6  2000/03/17 09:25:35  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.5  1999/10/07 02:06:29  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/09/08 02:26:24  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/08/29 00:46:37  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.2  1999/08/25 03:47:39  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/24 06:23:03  dmw
-// Added in everything for the DaveW branch
-//
-// Revision 1.2  1999/05/03 04:52:14  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

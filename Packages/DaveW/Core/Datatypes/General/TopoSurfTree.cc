@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  TopoSurfTree.cc: Tree of non-manifold bounding surfaces
@@ -15,18 +14,16 @@
 #include <iostream>
 using std::cerr;
 
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/Queue.h>
-#include <SCICore/Containers/TrivialAllocator.h>
-#include <DaveW/Datatypes/General/TopoSurfTree.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Util/Assert.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/Queue.h>
+#include <Core/Containers/TrivialAllocator.h>
+#include <Packages/DaveW/Core/Datatypes/General/TopoSurfTree.h>
+#include <Core/Malloc/Allocator.h>
 #include <math.h>
 
 namespace DaveW {
-namespace Datatypes {
-
 static Persistent* make_TopoSurfTree()
 {
     return scinew TopoSurfTree;
@@ -231,7 +228,6 @@ void TopoSurfTree::BldPatches() {
 
     // create a recursive array structure that can be descended by
     // indexing all of the regions a face touches (allFaceRegions[])
-    //
     // the list of faces for a patch is stored in an items[][] array
     // there is also an array of orientations for a patch, orient[][][], 
     //   indexed by the patch, then the region, and then the face
@@ -634,7 +630,6 @@ void TopoSurfTree::BldWires() {
 
     // create a recursive array structure that can be descended by
     // indexing all of the patches an edge touches (allEdgePatches[])
-    //
     // the list of edges for a wire is stored in an items[][] array
     // there is also an array of orientations for wire, orient[][][], 
     //   indexed by the wire, then the patch, and then the edge
@@ -937,7 +932,6 @@ void TopoSurfTree::BldJunctions() {
 
     // create a recursive array structure that can be descended by
     // indexing all of the wires a node touches (allNodeWires[])
-    //
     // the list of nodes for a junction is stored in an items[][] array
 
     SrchLst *tmpJunctionIdx = new SrchLst;
@@ -1039,16 +1033,16 @@ GeomObj* TopoSurfTree::get_obj(const ColorMapHandle&)
 void TopoSurfTree::io(Piostream& stream) {
 /*  int version=*/stream.begin_class("TopoSurfTree", TopoSurfTree_VERSION);
     SurfTree::io(stream);		    
-    SCICore::Containers::Pio(stream, regions);
-    SCICore::Containers::Pio(stream, patches);
-    SCICore::Containers::Pio(stream, patchI);
-    SCICore::Containers::Pio(stream, wires);
-    SCICore::Containers::Pio(stream, wireI);
-    SCICore::Containers::Pio(stream, junctions);
-    SCICore::Containers::Pio(stream, junctionI);
-    SCICore::Containers::Pio(stream, topoNodes);
-    SCICore::Containers::Pio(stream, topoEdges);
-    SCICore::Containers::Pio(stream, topoFaces);
+    Pio(stream, regions);
+    Pio(stream, patches);
+    Pio(stream, patchI);
+    Pio(stream, wires);
+    Pio(stream, wireI);
+    Pio(stream, junctions);
+    Pio(stream, junctionI);
+    Pio(stream, topoNodes);
+    Pio(stream, topoEdges);
+    Pio(stream, topoFaces);
     stream.end_class();
 }
 
@@ -1056,51 +1050,51 @@ void Pio(Piostream& stream, TopoEntity& te)
 {
     stream.begin_cheap_delim();
     int* typep=(int*)&(te.type);
-    SCICore::PersistentSpace::Pio(stream, *typep);
-    SCICore::PersistentSpace::Pio(stream, te.idx);
+    Pio(stream, *typep);
+    Pio(stream, te.idx);
     stream.end_cheap_delim();
 }
 
 void Pio(Piostream& stream, Patch& p) {
     stream.begin_cheap_delim();
-    SCICore::Containers::Pio(stream, p.wires);
-    SCICore::Containers::Pio(stream, p.wiresOrient);
+    Pio(stream, p.wires);
+    Pio(stream, p.wiresOrient);
     stream.end_cheap_delim();
 }
 
 void Pio(Piostream& stream, PatchInfo& pi) {
     stream.begin_cheap_delim();
-    SCICore::Containers::Pio(stream, pi.faces);
-    SCICore::Containers::Pio(stream, pi.facesOrient);
-    SCICore::Containers::Pio(stream, pi.regions);
-    SCICore::Containers::Pio(stream, pi.bdryEdgeFace);
+    Pio(stream, pi.faces);
+    Pio(stream, pi.facesOrient);
+    Pio(stream, pi.regions);
+    Pio(stream, pi.bdryEdgeFace);
     stream.end_cheap_delim();
 }
 
 void Pio(Piostream& stream, Wire& w) {
     stream.begin_cheap_delim();
-    SCICore::Containers::Pio(stream, w.nodes);
+    Pio(stream, w.nodes);
     stream.end_cheap_delim();
 }
 
 void Pio(Piostream& stream, WireInfo& wi) {
     stream.begin_cheap_delim();
-    SCICore::Containers::Pio(stream, wi.edges);
-    SCICore::Containers::Pio(stream, wi.edgesOrient);
-    SCICore::Containers::Pio(stream, wi.patches);
+    Pio(stream, wi.edges);
+    Pio(stream, wi.edgesOrient);
+    Pio(stream, wi.patches);
     stream.end_cheap_delim();
 }
 
 void Pio(Piostream& stream, JunctionInfo& ji) {
     stream.begin_cheap_delim();
-    SCICore::Containers::Pio(stream, ji.wires);
+    Pio(stream, ji.wires);
     stream.end_cheap_delim();
 }
 
 void Pio(Piostream& stream, Region& r) {
     stream.begin_cheap_delim();
-    SCICore::Containers::Pio(stream, r.outerPatches);
-    SCICore::Containers::Pio(stream, r.innerPatches);
+    Pio(stream, r.outerPatches);
+    Pio(stream, r.innerPatches);
     stream.end_cheap_delim();
 }
 
@@ -1202,47 +1196,6 @@ void TopoSurfTree::TypesToSurfs() {
     }
 }
 #endif
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.3  2000/03/17 18:44:19  dahart
-// Replaced all instances of HashTable<class X, class Y> with the STL
-// map<class X, class Y>.  Removed all includes of HashTable.h
-//
-// Revision 1.2  1999/10/07 02:06:21  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.1  1999/09/01 05:27:37  dmw
-// more DaveW datatypes...
-//
-// Revision 1.4  1999/08/25 03:48:43  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/18 20:20:20  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:38:56  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:30  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:45  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1  1999/04/27 21:14:30  dav
-// working on Datatypes
-//
-//
+

@@ -14,16 +14,13 @@
 #ifndef GeomSave_h
 #define GeomSave_h 1
 
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
 
 #include <iosfwd>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
 
 struct GeomSave {
     int nindent;
@@ -53,30 +50,7 @@ struct GeomSave {
     void end_node(std::ostream&);
 };
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  1999/10/07 02:07:44  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/08/17 06:39:12  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:43  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:56:07  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:05:01  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:22  dav
-// Import sources
-//
-//
 
 #endif

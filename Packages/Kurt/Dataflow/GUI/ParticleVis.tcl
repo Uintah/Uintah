@@ -1,7 +1,7 @@
 
 catch {rename ParticleVis ""}
 
-itcl_class Kurt_Vis_ParticleVis {
+itcl_class Packages/Kurt_Vis_ParticleVis {
 
     inherit Module
     protected r ""

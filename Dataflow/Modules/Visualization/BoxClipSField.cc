@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  BoxClipSField.cc:  Clip a field using a box widget
@@ -12,35 +11,28 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Tester/RigorousTest.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array3.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Plane.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Core/Tester/RigorousTest.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array3.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Plane.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <stdio.h>
-#include <PSECore/Widgets/ScaledBoxWidget.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Dataflow/Widgets/ScaledBoxWidget.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
 
 class BoxClipSField : public Module {
     ScalarFieldIPort* ifield;
@@ -404,49 +396,5 @@ void BoxClipSField::tcl_command(TCLArgs& args, void* userdata)
         }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.7  2000/03/17 09:27:29  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.6  1999/10/07 02:07:04  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/08/29 00:46:45  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.4  1999/08/25 03:48:05  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/18 20:20:03  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:47  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:58:11  mcq
-// Initial commit
-//
-// Revision 1.2  1999/04/27 22:57:56  dav
-// updates in Modules for Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:33  dav
-// Import sources
-//
-//

@@ -1,14 +1,13 @@
-#ifndef Uintah_PatchDataAnalyze
-#define Uintah_PatchDataAnalyze
+#ifndef Packages/Uintah_PatchDataAnalyze
+#define Packages/Uintah_PatchDataAnalyze
 
-#include <Uintah/Interface/DataWarehouseP.h>
-#include <Uintah/Interface/ProblemSpecP.h>
-#include <Uintah/Grid/SimulationStateP.h>
-#include <Uintah/Interface/SchedulerP.h>
-#include <Uintah/Grid/GridP.h>
+#include <Packages/Uintah/Interface/DataWarehouseP.h>
+#include <Packages/Uintah/Interface/ProblemSpecP.h>
+#include <Packages/Uintah/Grid/SimulationStateP.h>
+#include <Packages/Uintah/Interface/SchedulerP.h>
+#include <Packages/Uintah/Grid/GridP.h>
 
 namespace Uintah {
-
 /**************************************
 
 CLASS
@@ -53,16 +52,8 @@ WARNING
 				  DataWarehouseP& new_dw) = 0;      
    private:
    };
+} // End namespace Uintah
 
-} // end namespace Uintah
 
 #endif
 
-//
-// $Log$
-// Revision 1.1  2000/11/21 23:52:23  tan
-// Implemented different models for fracture simulations.  SimpleFracture model
-// is for the simulation where the resolution focus only on macroscopic major
-// cracks. NormalFracture and ExplosionFracture models are more sophiscated
-// and specific fracture models that are currently underconstruction.
-//

@@ -1,20 +1,15 @@
-#
 # Makefile fragment for this subdirectory
-#
 
 # *** NOTE ***
-# 
 # Do not remove or modify the comment line:
-#
 # #[INSERT NEW ?????? HERE]
-#
 # It is required by the module maker to properly edit this file.
 # if you want to edit this file by hand, see the "Create A New Module"
 # documentation on how to do it correctly.
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
-SRCDIR   := PSECommon/Modules/Salmon
+SRCDIR   := Dataflow/Modules/Salmon
 
 SRCS     += \
 	$(SRCDIR)/Ball.cc\
@@ -41,11 +36,11 @@ SRCS     += \
 	$(SRCDIR)/EditPath.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := PSECore/Widgets PSECore/Dataflow PSECore/Datatypes PSECore/Comm \
-	SCICore/Persistent SCICore/Exceptions SCICore/Geometry \
-	SCICore/Geom SCICore/Thread SCICore/Containers \
-	SCICore/TclInterface SCICore/TkExtensions SCICore/Util \
-	SCICore/TkExtensions SCICore/Datatypes
+PSELIBS := Dataflow/Widgets Dataflow/Network Core/Datatypes Dataflow/Comm \
+	Core/Persistent Core/Exceptions Core/Geometry \
+	Core/Geom Core/Thread Core/Containers \
+	Core/TclInterface Core/TkExtensions Core/Util \
+	Core/TkExtensions Core/Datatypes
 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) $(IMAGE_LIBS) -lm
 

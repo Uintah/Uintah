@@ -1,8 +1,8 @@
 /*
- *  NektarScalarField.cc: Scalar Fields defined on an unstructured grid
+ *  Packages/NektarScalarField.cc: Scalar Fields defined on an unstructured grid
  *
  *  Written by:
- *   Yarden Livnat
+ *   Packages/Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
  *   August 2000
@@ -10,45 +10,42 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <Nektar/Datatypes/NektarScalarField.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Packages/Nektar/Core/Datatypes/NektarScalarField.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 
 namespace Nektar {
-  namespace Datatypes {
-
-    using namespace SCICore::Datatypes;
-    using namespace SCICore::Math;
+using namespace SCIRun;
     
     static Persistent* maker()
     {
-      return scinew NektarScalarField();
+      return scinew Packages/NektarScalarField();
     }
     
-    PersistentTypeID NektarScalarField::type_id("NektarScalarField", 
+    PersistentTypeID Packages/NektarScalarField::type_id("Packages/NektarScalarField", 
 						"ScalarField", 
 						maker);
 
-    NektarScalarField::NektarScalarField()
+    Packages/NektarScalarField::Packages/NektarScalarField()
       : ScalarField(ScalarField::UnstructuredGrid)
     {
     }
 
 
-    NektarScalarField::~NektarScalarField()
+    Packages/NektarScalarField::~Packages/NektarScalarField()
     {
     }
     
-    NektarScalarField* NektarScalarField::clone()
+    Packages/NektarScalarField* Packages/NektarScalarField::clone()
     {
-      NOT_FINISHED("NektarScalarField::clone()");
+      NOT_FINISHED("Packages/NektarScalarField::clone()");
       return 0;
     }
     
-    void NektarScalarField::compute_bounds()
+    void Packages/NektarScalarField::compute_bounds()
     {
 //       if(have_bounds || mesh->nodes.size() == 0)
 // 	return;
@@ -58,12 +55,10 @@ namespace Nektar {
 
 #define SCALARFIELD_NEKTAR_VERSION 1
     
-    void NektarScalarField::io(Piostream& stream)
+    void Packages/NektarScalarField::io(Piostream& stream)
     {
-      using SCICore::PersistentSpace::Pio;
-      using SCICore::Containers::Pio;
       
-//       int version=stream.begin_class("NektarScalarField", SCALARFIELDUG_VERSION);
+//       int version=stream.begin_class("Packages/NektarScalarField", SCALARFIELDUG_VERSION);
 //       // Do the base class....
 //       ScalarField::io(stream);
       
@@ -78,10 +73,10 @@ namespace Nektar {
 //       Pio(stream, data);
     }
     
-    void NektarScalarField::compute_minmax()
+    void Packages/NektarScalarField::compute_minmax()
     {
-//       using SCICore::Math::Min;
-//       using SCICore::Math::Max;
+//       using Min;
+//       using Max;
       
 //       if(have_minmax || data.size()==0)
 // 	return;
@@ -96,28 +91,27 @@ namespace Nektar {
 //       have_minmax=1;
     }
     
-    int NektarScalarField::interpolate(const Point&, double&, double, double)
+    int Packages/NektarScalarField::interpolate(const Point&, double&, double, double)
     {
       return 0;
     }
 
-    int NektarScalarField::interpolate(const Point&, 
+    int Packages/NektarScalarField::interpolate(const Point&, 
 				       double&, int&, double, double, int)
     {
       return 0;
     }
 
-    Vector NektarScalarField::gradient(const Point& p)
+    Vector Packages/NektarScalarField::gradient(const Point& p)
     {
       return Vector(0,0,0);
     }
 
-    void NektarScalarField::get_boundary_lines(Array1<Point>& lines)
+    void Packages/NektarScalarField::get_boundary_lines(Array1<Point>& lines)
     {
     }
     
-    
-  } // End namespace Datatypes
 } // End namespace Nektar
+    
 
 

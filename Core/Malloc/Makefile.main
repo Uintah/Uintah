@@ -1,9 +1,9 @@
 THISDIR = Malloc
-SECTION = SCICore
+SECTION = Core
 
 include $(TOP)/make.defaults
 
-C_DIR = $(TOP)/src/SCICore/$(THISDIR)
+C_DIR = $(TOP)/src/Core/$(THISDIR)
 O_DIR = $(ARCHDIR)/$(THISDIR)
 
 # VPATH is used by /usr/local/gnu/bin/make
@@ -11,7 +11,7 @@ VPATH = $(C_DIR)
 
 # .SUFFIXES and .PATH are used by smake
 .SUFFIXES : .cc .s
-.PATH : /home/dav/local/PSECore/src/SCICore/Malloc
+.PATH : /home/dav/local/PSECore/src/Core/Malloc
 
 INCLUDES = -I$(C_DIR)/..
 

@@ -1,11 +1,9 @@
 // a better way to do this is to move most of the functionality into the
 //   various surface classes.
-//
 // each one will have a:
 //	virtual void genGeom(int nodes, int spheres, ColorMap*, ScalarField*,
 //			     Array1<GeomObj*>&);
 // the base Surface class will print an error -- it shouldn't be called.
-//
 // all this module will do is to grab the TCL vars, set the ColorMap bounds
 //   if necessary, call this virtual genGeom method on the incoming surface
 //   and one at a time, send the GeomObj* 's from the Array out the GeomOPort
@@ -22,40 +20,34 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Datatypes/BasicSurfaces.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/SurfTree.h>
-#include <SCICore/Datatypes/Surface.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/TriSurface.h>
-//#include <PSECommon/Datatypes/ScalarTriSurface.h>
-#include <SCICore/Geom/GeomArrows.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Core/Datatypes/BasicSurfaces.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/SurfTree.h>
+#include <Core/Datatypes/Surface.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/TriSurface.h>
+//#include <Dataflow/Datatypes/ScalarTriSurface.h>
+#include <Core/Geom/GeomArrows.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
-using namespace SCICore::GeomSpace;
 
 class SurfToGeom : public Module {
   SurfaceIPort* isurface;
@@ -709,5 +701,4 @@ void SurfToGeom::execute()
     }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun

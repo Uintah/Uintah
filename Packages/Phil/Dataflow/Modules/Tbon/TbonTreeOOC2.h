@@ -1,10 +1,9 @@
-//static char *id="@(#) $Id$";
 
 /* TbonTreeOOC2.h
    class declarations and code for the T-BON tree
    Out-of-Core, algorithm 2
 
-   Philip Sutton
+   Packages/Philip Sutton
    April 1999
 
   Copyright (C) 2000 SCI Group, University of Utah
@@ -23,9 +22,7 @@
 #include <strings.h>
 
 namespace Phil {
-namespace Modules {
-
-using namespace SCICore::GeomSpace;
+using namespace SCIRun;
 using namespace std;
 
 template <class T>
@@ -1004,19 +1001,9 @@ TbonTreeOOC2<T>::searchSecondPass( int myindex, int d, double iso,
     } // if( d == 0 ) 
   } // if( tree[myindex] spans iso )
 } // searchSecondPass
+} // End namespace Phil
 
-} // end namespace Modules 
-} // end namespace Phil
 
 #endif
 
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:16:47  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 21:14:25  psutton
-// initial revision
-//
-//

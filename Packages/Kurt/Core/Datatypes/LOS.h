@@ -2,9 +2,7 @@
 #define LOS_H
 
 #include "GLVolRenState.h"
-namespace SCICore {
-namespace GeomSpace  {
-
+namespace Kurt {
 
 /**************************************
 
@@ -17,7 +15,7 @@ GENERAL INFORMATION
 
    LOS.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -61,8 +59,7 @@ protected:
   
 
 };
+} // End namespace Kurt
 
-}  // namespace GeomSpace
-} // namespace SCICore
 
 #endif

@@ -1,5 +1,5 @@
 
-itcl_class PSECommon_Fields_GenScalarField {
+itcl_class Dataflow_Fields_GenScalarField {
     inherit Module
     constructor {config} {
 	set name GenScalarField

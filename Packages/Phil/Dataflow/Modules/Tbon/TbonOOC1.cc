@@ -1,9 +1,8 @@
-//static char *id="@(#) $Id$";
 
 /* TbonOOC1.cc
    Temporal Branch-on-Need tree (T-BON) implementation
      Out-of-Core algorithm #1
-   Philip Sutton
+   Packages/Philip Sutton
    September 1999
 
   Copyright (C) 2000 SCI Group, University of Utah
@@ -13,15 +12,15 @@
 #include "TriGroup.h"
 #include "Clock.h"
 
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Thread/CrowdMonitor.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Thread/CrowdMonitor.h>
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
 
 #include <iostream>
 #include <fstream>
@@ -29,19 +28,13 @@
 #include <string.h>
 
 namespace Phil {
-namespace Modules {
-
 // MINIMUM settings (very important!)
 // NODEBRICKS = 1
 // DATABRICKS = 8
 static const int NODEBRICKS = 1;
 static const int DATABRICKS = 8;
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using SCICore::Thread::CrowdMonitor;
+using namespace SCIRun;
 using namespace std;
 
 //typedef unsigned char type;
@@ -357,21 +350,6 @@ TbonOOC1::processQuery() {
   t1 = read_time();
   PrintTime(t0,t1,"Isosurface time: ");
 }
-
-} // End namespace Modules
 } // End namespace Phil
 
-//
-// $Log$
-// Revision 1.3  2000/03/17 09:28:11  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.2  2000/02/04 22:15:08  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 21:11:58  psutton
-// initial revision
-//
-//
+

@@ -2,31 +2,24 @@
 #define VECTORPARTICLES_H
 
 #include "PSet.h"
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <Uintah/Interface/DataArchive.h>
-//#include <Uintah/Components/MPM/Util/Matrix3.h>
-#include <Uintah/Grid/ParticleVariable.h>
-#include <Uintah/Grid/Grid.h>
-#include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/Patch.h>
-#include <SCICore/Persistent/Persistent.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Packages/Uintah/Interface/DataArchive.h>
+//#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Grid/Grid.h>
+#include <Packages/Uintah/Grid/LevelP.h>
+#include <Packages/Uintah/Grid/Patch.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <iostream>
 #include <vector>
 using std::vector;
 
 namespace Uintah {
-namespace Datatypes {
-
 using namespace Uintah;
-using SCICore::Datatypes::Datatype;
-using SCICore::Containers::LockingHandle;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
+using namespace SCIRun;
 
 /**************************************
 
@@ -39,7 +32,7 @@ GENERAL INFORMATION
 
    VectorParticles.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -121,7 +114,6 @@ private:
   vector<ParticleVariable<Vector> >  vectors;
 
 };
+} // End namespace Uintah
 
-} // end namespace Datatypes
-} // end namespace Uintah
 #endif

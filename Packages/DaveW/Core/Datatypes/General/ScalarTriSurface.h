@@ -11,21 +11,17 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_DaveW_Datatypes_ScalarTriSurface_h
-#define SCI_DaveW_Datatypes_ScalarTriSurface_h 1
+#ifndef SCI_Packages/DaveW_Datatypes_ScalarTriSurface_h
+#define SCI_Packages/DaveW_Datatypes_ScalarTriSurface_h 1
 
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Geometry/Point.h>
 #include <stdlib.h> // For size_t
 
 namespace DaveW {
-namespace Datatypes {
+using namespace SCIRun;
 
-using SCICore::Containers::Array1;
-using SCICore::Geometry::Point;
-
-using namespace SCICore::Datatypes;
 
 class ScalarTriSurface : public TriSurface {
 public:
@@ -43,23 +39,8 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.2  1999/08/25 03:47:34  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/23 02:53:00  dmw
-// Dave's Datatypes
-//
-// Revision 1.1  1999/05/03 04:52:04  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+
 
 #endif

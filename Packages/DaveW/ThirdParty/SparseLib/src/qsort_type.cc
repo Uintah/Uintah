@@ -42,7 +42,6 @@
 #define CMP(A,B) ((A) < (B))
 
 // swap two items
-//
 static inline void SWAP_TYPE(TYPE &A, TYPE &B)
 {
     TYPE tmp = A; A = B; B = tmp;

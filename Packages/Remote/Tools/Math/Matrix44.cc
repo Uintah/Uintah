@@ -1,10 +1,8 @@
-#include <Remote/Tools/Math/Matrix44.h>
-#include <Remote/Tools/Math/Vector.h>
-#include <Remote/Tools/Math/MiscMath.h>
+#include <Packages/Remote/Tools/Math/Matrix44.h>
+#include <Packages/Remote/Tools/Math/Vector.h>
+#include <Packages/Remote/Tools/Math/MiscMath.h>
 
 namespace Remote {
-namespace Tools {
-
 //////////////////////////////////////////////////////////
 // Private member functions.
 
@@ -616,7 +614,6 @@ bool Matrix44::CheckNaN() const
 
   return true;
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

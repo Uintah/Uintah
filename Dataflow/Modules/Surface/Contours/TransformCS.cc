@@ -10,16 +10,18 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Util/NotFinished.h>
-#include <PSECommon/Dataflow/Module.h>
-#include <PSECommon/Datatypes/ContourSet.h>
-#include <PSECommon/Datatypes/ContourSetPort.h>
+#include <Core/Util/NotFinished.h>
+#include <Dataflow/Dataflow/Module.h>
+#include <Dataflow/Datatypes/ContourSet.h>
+#include <Dataflow/Datatypes/ContourSetPort.h>
 // #include <Devices/Dialbox.h>
 // #include <Devices/DBContext.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/Trig.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/Trig.h>
 
+
+using namespace SCIRun;
 
 class TransformCS : public Module {
     ContourSetIPort* icontour;

@@ -1,19 +1,16 @@
 ##
  #  SiReInput.tcl: Read in the k-space data for SiRe
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   Aug 1996
- #
  #  Copyright (C) 1996 SCI Group
- #
  ##
 
-catch {rename DaveW_SiRe_SiReInput ""}
+catch {rename Packages/DaveW_SiRe_SiReInput ""}
 
-itcl_class DaveW_SiRe_SiReInput {
+itcl_class Packages/DaveW_SiRe_SiReInput {
     inherit Module
     constructor {config} {
         set name SiReInput

@@ -12,26 +12,21 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <SCICore/Datatypes/HexMesh.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/HexMeshPort.h>
+#include <Core/Datatypes/HexMesh.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/Material.h>
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/HexMeshPort.h>
 
 #include <map.h>
 
 namespace SCIRun {
-namespace Modules {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Geometry;
-using namespace SCICore::GeomSpace;
 
 class HexMeshToGeom : public Module {
     HexMeshIPort* imesh;
@@ -123,25 +118,6 @@ void HexMeshToGeom::execute()
     ogeom->delAll();
     ogeom->addObj(matl, "Mesh1");
 }
-} // End namespace Modules
 } // End namespace SCIRun
 
 
-//
-// $Log$
-// Revision 1.4  2000/03/17 18:48:08  dahart
-// Included STL map header files where I forgot them, and removed less<>
-// parameter from map declarations
-//
-// Revision 1.3  2000/03/17 09:29:12  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.2  2000/03/11 00:41:55  dahart
-// Replaced all instances of HashTable<class X, class Y> with the
-// Standard Template Library's std::map<class X, class Y, less<class X>>
-//
-// Revision 1.1  1999/09/05 01:15:27  dmw
-// added all of the old SCIRun mesh modules
-//

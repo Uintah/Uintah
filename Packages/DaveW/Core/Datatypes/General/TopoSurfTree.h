@@ -11,19 +11,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_DaveW_Datatypes_TopoSurfTree_h
-#define SCI_DaveW_Datatypes_TopoSurfTree_h 1
+#ifndef SCI_Packages/DaveW_Datatypes_TopoSurfTree_h
+#define SCI_Packages/DaveW_Datatypes_TopoSurfTree_h 1
 
-#include <SCICore/Datatypes/SurfTree.h>
+#include <Core/Datatypes/SurfTree.h>
 
 namespace DaveW {
-namespace Datatypes {
+using namespace SCIRun;
 
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
-
-using namespace SCICore::Containers;
-using namespace SCICore::Datatypes;
 
 struct SrchLst;
 
@@ -111,39 +106,8 @@ void Pio(Piostream&, Wire&);
 void Pio(Piostream&, WireInfo&);
 void Pio(Piostream&, JunctionInfo&);
 void Pio(Piostream&, Region&);
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.2  1999/09/05 05:32:22  dmw
-// updated and added Modules from old tree to new
-//
-// Revision 1.1  1999/09/01 05:27:38  dmw
-// more DaveW datatypes...
-//
-// Revision 1.3  1999/08/25 03:48:43  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:56  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:30  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:55:57  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:04:48  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1  1999/04/27 21:14:30  dav
-// working on Datatypes
-//
-//
 
-#endif /* SCI_DaveW_Datatypes_TopoSurfTree_h */
+
+#endif /* SCI_Packages/DaveW_Datatypes_TopoSurfTree_h */

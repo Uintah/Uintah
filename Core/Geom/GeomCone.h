@@ -14,12 +14,11 @@
 #ifndef SCI_Geom_Cone_h
 #define SCI_Geom_Cone_h 1
 
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 class SCICORESHARE GeomCone : public GeomObj {
 protected:
@@ -76,38 +75,8 @@ public:
     virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.5  1999/11/19 06:43:25  dmw
-// fewer triangles in default size for cones and cylinders
-//
-// Revision 1.4  1999/10/07 02:07:41  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/08/17 23:50:19  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:06  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:38  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:56:03  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:04:55  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:19  dav
-// Import sources
-//
-//
 
 #endif /* SCI_Geom_Cone_h */
 

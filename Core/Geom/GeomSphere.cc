@@ -10,19 +10,18 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geom/GeomSave.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Geom/GeomSave.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 using std::ostream;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Persistent* make_GeomSphere()
 {
@@ -130,11 +129,10 @@ void GeomSphere::get_bounds(BBox& bb)
 
 void GeomSphere::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomSphere", GEOMSPHERE_VERSION);
     GeomObj::io(stream);
-    SCICore::Geometry::Pio(stream, cen);
+    Pio(stream, cen);
     Pio(stream, rad);
     Pio(stream, nu);
     Pio(stream, nv);
@@ -167,6 +165,5 @@ bool GeomSphere::saveobj(ostream& out, const clString& format,
     }
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 

@@ -4,9 +4,7 @@
 #include "GLVolRenState.h"
 
 
-namespace SCICore {
-namespace GeomSpace  {
-
+namespace Kurt {
 /**************************************
 
 CLASS
@@ -18,7 +16,7 @@ GENERAL INFORMATION
 
    FullRes.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -61,7 +59,6 @@ protected:
   void setAlpha(const Brick& brick);
 
 };
+} // End namespace Kurt
 
-}  // namespace GeomSpace
-} // namespace SCICore
 #endif

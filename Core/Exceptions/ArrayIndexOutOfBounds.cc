@@ -11,12 +11,12 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <SCICore/Exceptions/ArrayIndexOutOfBounds.h>
+#include <Core/Exceptions/ArrayIndexOutOfBounds.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-using SCICore::Exceptions::ArrayIndexOutOfBounds;
 
+namespace SCIRun {
 
 ArrayIndexOutOfBounds::ArrayIndexOutOfBounds(long value, long lower, long upper)
     : value(value), lower(lower), upper(upper)
@@ -45,6 +45,7 @@ const char* ArrayIndexOutOfBounds::message() const
 
 const char* ArrayIndexOutOfBounds::type() const
 {
-    return "SCICore::Exceptions::ArrayIndexOutOfBounds";
+    return "ArrayIndexOutOfBounds";
 }
 
+} // End namespace SCIRun

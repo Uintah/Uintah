@@ -1,5 +1,4 @@
 #   BioPSEFilebox.tcl
-#   
 #   Created by:
 #      Samsonov Alexei
 #      October 2000
@@ -14,7 +13,7 @@ proc makeSaveFilebox {args} {
 }
 
 #--------------------------------------------------------
-# procedure to conform with SCIRun readers
+# procedure to conform with Dataflow readers
 #proc makeFilebox {w var command cancel} {
 #    wm withdraw $w
 #    set initfile ""
@@ -24,7 +23,6 @@ proc makeSaveFilebox {args} {
 #    set filetypes {
 #	{{All Files}       {.*}   }
 #    }
-#
 #    makeOpenFilebox -parent $w \
 #	    -filevar $var \
 #	    -command $command \
@@ -41,39 +39,27 @@ proc makeSaveFilebox {args} {
 # procedures to call from readers/writers
 
 # tkfbox.tcl --
-#
 #	Implements the "TK" standard file selection dialog box. This
 #	dialog box is used on the Unix platforms whenever the tk_strictMotif
 #	flag is not set.
-#
 #	The "TK" standard file selection dialog box is similar to the
 #	file selection dialog box on Win95(TM). The user can navigate
 #	the directories by clicking on the folder icons or by
 #	selectinf the "Directory" option menu. The user can select
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
-#
-# RCS: @(#) $Id$
-#
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
-#
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
 
 #----------------------------------------------------------------------
-#
 #		      I C O N   L I S T
-#
 # This is a pseudo-widget that implements the icon list inside the 
 # biopseFDialog dialog box.
-#
 #----------------------------------------------------------------------
 
 # biopseIconList --
-#
 #	Creates an IconList widget.
-#
 proc biopseIconList {w args} {
     upvar #0 $w data
 
@@ -82,31 +68,25 @@ proc biopseIconList {w args} {
 }
 
 # biopseIconList_Config --
-#
 #	Configure the widget variables of IconList, according to the command
 #	line arguments.
-#
 proc biopseIconList_Config {w argList} {
     upvar #0 $w data
 
     # 1: the configuration specs
-    #
     set specs {
 	{-browsecmd "" "" ""}
 	{-command "" "" ""}
     }
 
     # 2: parse the arguments
-    #
     tclParseConfigSpec $w $specs "" $argList
 }
 
 # biopseIconList_Create --
-#
 #	Creates an IconList widget by assembling a canvas widget and a
 #	scrollbar widget. Sets all the bindings necessary for the IconList's
 #	operations.
-#
 proc biopseIconList_Create {w} {
     upvar #0 $w data
 
@@ -122,7 +102,6 @@ proc biopseIconList_Create {w} {
     $data(canvas) config -xscrollcommand "$data(sbar) set"
 
     # Initializes the max icon/text width and height and other variables
-    #
     set data(maxIW) 1
     set data(maxIH) 1
     set data(maxTW) 1
@@ -132,7 +111,6 @@ proc biopseIconList_Create {w} {
     set data(noScroll) 1
 
     # Creates the event bindings.
-    #
     bind $data(canvas) <Configure> "biopseIconList_Arrange $w"
 
     bind $data(canvas) <1>         "biopseIconList_Btn1 $w %x %y"
@@ -157,16 +135,13 @@ proc biopseIconList_Create {w} {
 }
 
 # biopseIconList_AutoScan --
-#
 # This procedure is invoked when the mouse leaves an entry window
 # with button 1 down.  It scrolls the window up, down, left, or
 # right, depending on where the mouse left the window, and reschedules
 # itself as an "after" command so that the window continues to scroll until
 # the mouse moves back into the window or the mouse button is released.
-#
 # Arguments:
 # w -		The IconList window.
-#
 proc biopseIconList_AutoScan {w} {
     upvar #0 $w data
     global biopsePriv
@@ -196,7 +171,6 @@ proc biopseIconList_AutoScan {w} {
 
 # Deletes all the items inside the canvas subwidget and reset the IconList's
 # state.
-#
 proc biopseIconList_DeleteAll {w} {
     upvar #0 $w data
     upvar #0 $w:itemList itemList
@@ -218,7 +192,6 @@ proc biopseIconList_DeleteAll {w} {
 }
 
 # Adds an icon into the IconList with the designated image and text
-#
 proc biopseIconList_Add {w image text} {
     upvar #0 $w data
     upvar #0 $w:itemList itemList
@@ -256,7 +229,6 @@ proc biopseIconList_Add {w image text} {
 }
 
 # Places the icons in a column-major arrangement.
-#
 proc biopseIconList_Arrange {w} {
     upvar #0 $w data
 
@@ -346,7 +318,6 @@ proc biopseIconList_Arrange {w} {
 
 # Gets called when the user invokes the IconList (usually by double-clicking
 # or pressing the Return key).
-#
 proc biopseIconList_Invoke {w} {
     upvar #0 $w data
 
@@ -356,7 +327,6 @@ proc biopseIconList_Invoke {w} {
 }
 
 # biopseIconList_See --
-#
 #	If the item is not (completely) visible, scroll the canvas so that
 #	it becomes visible.
 proc biopseIconList_See {w rTag} {
@@ -392,12 +362,10 @@ proc biopseIconList_See {w rTag} {
     set oldDispX $dispX
 
     # check if out of the right edge
-    #
     if {($x2 - $dispX) >= $cW} {
 	set dispX [expr {$x2 - $cW}]
     }
     # check if out of the left edge
-    #
     if {($x1 - $dispX) < 0} {
 	set dispX $x1
     }
@@ -459,7 +427,6 @@ proc biopseIconList_Unselect {w} {
 }
 
 # Returns the selected item
-#
 proc biopseIconList_Get {w} {
     upvar #0 $w data
 
@@ -479,7 +446,6 @@ proc biopseIconList_Btn1 {w x y} {
 }
 
 # Gets called on button-1 motions
-#
 proc biopseIconList_Motion1 {w x y} {
     global biopsePriv
     set biopsePriv(x) $x
@@ -522,13 +488,10 @@ proc biopseIconList_FocusIn {w} {
 }
 
 # biopseIconList_UpDown --
-#
 # Moves the active element up or down by one element
-#
 # Arguments:
 # w -		The IconList widget.
 # amount -	+1 to move down one item, -1 to move back one item.
-#
 proc biopseIconList_UpDown {w amount} {
     upvar #0 $w data
 
@@ -553,13 +516,10 @@ proc biopseIconList_UpDown {w amount} {
 }
 
 # biopseIconList_LeftRight --
-#
 # Moves the active element left or right by one column
-#
 # Arguments:
 # w -		The IconList widget.
 # amount -	+1 to move right one column, -1 to move left one column.
-#
 proc biopseIconList_LeftRight {w amount} {
     upvar #0 $w data
 
@@ -588,9 +548,7 @@ proc biopseIconList_LeftRight {w amount} {
 #----------------------------------------------------------------------
 
 # biopseIconList_KeyPress --
-#
 #	Gets called when user enters an arbitrary key in the listbox.
-#
 proc biopseIconList_KeyPress {w key} {
     global biopsePriv
 
@@ -659,17 +617,13 @@ proc biopseIconList_Reset {w} {
 }
 
 #----------------------------------------------------------------------
-#
 #		      F I L E   D I A L O G
-#
 #----------------------------------------------------------------------
 
 # biopseFDialog --
-#
 #	Implements the BIOPSE file selection dialog. This dialog is used when
 #	the tk_strictMotif flag is set to false. This procedure shouldn't
 #	be called directly. Call tk_getOpenFile or tk_getSaveFile instead.
-#
 #proc biopseFDialog {filename command cancel args} {
 proc biopseFDialog {argstring} {
     global biopsePriv
@@ -704,7 +658,6 @@ proc biopseFDialog {argstring} {
     }
     
     # (re)create the dialog box if necessary
-    #
     if {![winfo exists $w]} {
 	biopseFDialog_Create $w
     } elseif {[string compare [winfo class $w] TkFDialog]} {
@@ -729,7 +682,6 @@ proc biopseFDialog {argstring} {
 #    wm transient $w $data(-parent)
 
     # 5. Initialize the file types menu
-    #
     if {$data(-filetypes) != {}} {
 	$data(typeMenu) delete 0 end
 	foreach type $data(-filetypes) {
@@ -783,16 +735,13 @@ proc biopseFDialog {argstring} {
 }
 
 # biopseFDialog_Config --
-#
 #	Configures the BIOPSE filedialog according to the argument list
-#
 proc biopseFDialog_Config {w type argList} {
     upvar #0 $w data
 
     set data(type) $type
     
     # 1: the configuration specs
-    #
     if {![string compare $type "open"]} {
 	# options for Open-boxes
 	set specs {
@@ -824,7 +773,6 @@ proc biopseFDialog_Config {w type argList} {
     }
 
     # 2: default values depending on the type of the dialog
-    #
     if {![info exists data(selectPath)]} {
 	# first time the dialog has been popped up
 	set data(selectPath) [pwd]
@@ -832,7 +780,6 @@ proc biopseFDialog_Config {w type argList} {
     }
 
     # 3: parse the arguments
-    #
     tclParseConfigSpec $w $specs "" $argList
 
     if {![string compare $data(-title) ""]} {
@@ -856,7 +803,6 @@ proc biopseFDialog_Config {w type argList} {
     
     # 4.b: set the default directory and selection according to the -initial
     #    settings
-    #
     if {[string compare $data(-initialdir) ""]} {
 	if {[file isdirectory $data(-initialdir)]} {
 	    set data(selectPath) [glob $data(-initialdir)]
@@ -881,7 +827,6 @@ proc biopseFDialog_Config {w type argList} {
     set data(selectFile) $data(-initialfile)
 
     # 5. Parse the -filetypes option
-    #
     set data(-filetypes) [tkFDGetFileTypes $data(-filetypes)]
 
     if {![winfo exists $data(-parent)]} {
@@ -897,7 +842,6 @@ proc biopseFDialog_Create {w} {
     toplevel $w -class TkFDialog
 
     # f1: the frame with the directory option menu
-    #
     set f1 [frame $w.f1]
     label $f1.lab -text "Directory:" -under 0
     set data(dirMenuBtn) $f1.menu
@@ -924,13 +868,11 @@ static char updir_bits[] = {
     pack $f1.menu -expand yes -fill both -padx 4
 
     # data(icons): the IconList that list the files and directories.
-    #
     set data(icons) [biopseIconList $w.icons \
 	-browsecmd "biopseFDialog_ListBrowse $w" \
 	-command   "biopseFDialog_OkCmd $w"]
 
     # f2: the frame with the OK button and the "file name" field
-    #
     set f2 [frame $w.f2 -bd 0]
     label $f2.lab -text "File name:" -anchor e -width 14 -under 5 -pady 0
     set data(ent) [entry $f2.ent]
@@ -941,12 +883,10 @@ static char updir_bits[] = {
     set $w.icons(font) [$data(ent) cget -font]
 
     # f3: the frame with the cancel button and the file types field
-    #
     set f3 [frame $w.f3 -bd 0]
 
     # f4: the frame for Save dialog boxes with 
     # split-checkbutton (if -splitvar specified) and format menu
-    #
     set f4 [frame $w.f4 -bd 0]
 
     # The "File of types:" label needs to be grayed-out when
@@ -1028,7 +968,6 @@ static char updir_bits[] = {
     }
 
     # pack the widgets in f2 and f3
-    #
     pack $data(okBtn) -side right -padx 4 -anchor e
     pack $f2.lab -side left -padx 4
     pack $f2.ent -expand yes -fill x -padx 2 -pady 0
@@ -1039,7 +978,6 @@ static char updir_bits[] = {
 
     
     # Pack all the frames together. We are done with widget construction.
-    #
     pack $f1 -side top -fill x -pady 4
     pack $f4 -side bottom -fill x -pady 2
     pack $f3 -side bottom -fill x
@@ -1047,7 +985,6 @@ static char updir_bits[] = {
     pack $data(icons) -expand yes -fill both -padx 4 -pady 1
 
     # Set up the event handlers
-    #
     bind $data(ent) <Return>  "biopseFDialog_ActivateEnt $w"
     
     $data(upBtn)     config -command "biopseFDialog_UpDirCmd $w"
@@ -1071,19 +1008,16 @@ static char updir_bits[] = {
     wm protocol $w WM_DELETE_WINDOW "biopseFDialog_CancelCmd $w"
 
     # Build the focus group for all the entries
-    #
     tkFocusGroup_Create $w
     tkFocusGroup_BindIn $w  $data(ent) "biopseFDialog_EntFocusIn $w"
     tkFocusGroup_BindOut $w $data(ent) "biopseFDialog_EntFocusOut $w"
 }
 
 # biopseFDialog_UpdateWhenIdle --
-#
 #	Creates an idle event handler which updates the dialog in idle
 #	time. This is important because loading the directory may take a long
 #	time and we don't want to load the same directory for multiple times
 #	due to multiple concurrent events.
-#
 proc biopseFDialog_UpdateWhenIdle {w} {
     upvar #0 [winfo name $w] data
 
@@ -1095,11 +1029,9 @@ proc biopseFDialog_UpdateWhenIdle {w} {
 }
 
 # biopseFDialog_Update --
-#
 #	Loads the files and directories into the IconList widget. Also
 #	sets up the directory option menu for quick access to parent
 #	directories.
-#
 proc biopseFDialog_Update {w} {
 
     # This proc may be called within an idle handler. Make sure that the
@@ -1141,7 +1073,6 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 
     # Turn on the busy cursor. BUG?? We haven't disabled X events, though,
     # so the user may still click and cause havoc ...
-    #
     set entCursor [$data(ent) cget -cursor]
     set dlgCursor [$w         cget -cursor]
     $data(ent) config -cursor watch
@@ -1151,7 +1082,6 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     biopseIconList_DeleteAll $data(icons)
 
     # Make the dir list
-    #
     foreach f [lsort -dictionary [glob -nocomplain .* *]] {
 	if {![string compare $f .]} {
 	    continue
@@ -1167,7 +1097,6 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 	}
     }
     # Make the file list
-    #
     if {![string compare $data(filter) *]} {
 	set files [lsort -dictionary \
 	    [glob -nocomplain .* *]]
@@ -1189,7 +1118,6 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     biopseIconList_Arrange $data(icons)
 
     # Update the Directory: option menu
-    #
     set list ""
     set dir ""
     foreach subdir [file split $data(selectPath)] {
@@ -1204,19 +1132,15 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     }
 
     # Restore the PWD to the application's PWD
-    #
     cd $appPWD
 
     # turn off the busy cursor.
-    #
     $data(ent) config -cursor $entCursor
     $w         config -cursor $dlgCursor
 }
 
 # biopseFDialog_SetPathSilently --
-#
 # 	Sets data(selectPath) without invoking the trace procedure
-#
 proc biopseFDialog_SetPathSilently {w path} {
     upvar #0 [winfo name $w] data
     
@@ -1227,7 +1151,6 @@ proc biopseFDialog_SetPathSilently {w path} {
 
 
 # This proc gets called whenever data(selectPath) is set
-#
 proc biopseFDialog_SetPath {w name1 name2 op} {
     if {[winfo exists $w]} {
 	upvar #0 [winfo name $w] data
@@ -1236,7 +1159,6 @@ proc biopseFDialog_SetPath {w name1 name2 op} {
 }
 
 # This proc gets called whenever data(filter) is set
-#
 proc biopseFDialog_SetFilter {w type} {
     
     upvar #0 [winfo name $w] data
@@ -1261,23 +1183,18 @@ proc biopseFDialog_SetFormat { w format } {
 
 
 # biopseFDialogResolveFile --
-#
 #	Interpret the user's text input in a file selection dialog.
 #	Performs:
-#
 #	(1) ~ substitution
 #	(2) resolve all instances of . and ..
 #	(3) check for non-existent files/directories
 #	(4) check for chdir permissions
-#
 # Arguments:
 #	context:  the current directory you are in
 #	text:	  the text entered by the user
 #	defaultext: the default extension to add to files with no extension
-#
 # Return vaue:
 #	[list $flag $directory $file]
-#
 #	 flag = OK	: valid input
 #	      = PATTERN	: valid directory/pattern
 #	      = PATH	: the directory does not exist
@@ -1285,13 +1202,10 @@ proc biopseFDialog_SetFormat { w format } {
 #			  exist
 #	      = CHDIR	: Cannot change to the directory
 #	      = ERROR	: Invalid entry
-#
 #	 directory      : valid only if flag = OK or PATTERN or FILE
 #	 file           : valid only if flag = OK or PATTERN
-#
 #	directory may not be the same as context, because text may contain
 #	a subdirectory name
-#
 proc biopseFDialogResolveFile {context text defaultext} {
 
     set appPWD [pwd]
@@ -1306,9 +1220,7 @@ proc biopseFDialogResolveFile {context text defaultext} {
     if {[catch {file exists $path}]} {
 	# This "if" block can be safely removed if the following code
 	# stop generating errors.
-	#
 	#	file exists ~nonsuchuser
-	#
 	return [list ERROR $path ""]
     }
 
@@ -1364,7 +1276,6 @@ proc biopseFDialogResolveFile {context text defaultext} {
 # Gets called when the entry box gets keyboard focus. We clear the selection
 # from the icon list . This way the user can be certain that the input in the 
 # entry box is the selection.
-#
 proc biopseFDialog_EntFocusIn {w} {
     upvar #0 [winfo name $w] data
 
@@ -1393,7 +1304,6 @@ proc biopseFDialog_EntFocusOut {w} {
 
 
 # Gets called when user presses Return in the "File name" entry.
-#
 proc biopseFDialog_ActivateEnt {w} {
     upvar #0 [winfo name $w] data
 
@@ -1460,7 +1370,6 @@ proc biopseFDialog_ActivateEnt {w} {
 }
 
 # Gets called when user presses the Alt-s or Alt-o keys.
-#
 proc biopseFDialog_InvokeBtn {w key} {
     upvar #0 [winfo name $w] data
 
@@ -1470,7 +1379,6 @@ proc biopseFDialog_InvokeBtn {w key} {
 }
 
 # Gets called when user presses the "parent directory" button
-#
 proc biopseFDialog_UpDirCmd {w} {
     upvar #0 [winfo name $w] data
 
@@ -1481,7 +1389,6 @@ proc biopseFDialog_UpDirCmd {w} {
 
 # Join a file name to a path name. The "file join" command will break
 # if the filename begins with ~
-#
 proc biopseFDialog_JoinFile {path file} {
     if {[string match {~*} $file] && [file exists $path/$file]} {
 	return [file join $path ./$file]
@@ -1493,7 +1400,6 @@ proc biopseFDialog_JoinFile {path file} {
 
 
 # Gets called when user presses the "OK" button
-#
 proc biopseFDialog_OkCmd {w} {
     upvar #0 [winfo name $w] data
 
@@ -1510,7 +1416,6 @@ proc biopseFDialog_OkCmd {w} {
 }
 
 # Gets called when user presses the "Cancel" button
-#
 proc biopseFDialog_CancelCmd {w} {
     upvar #0 [winfo name $w] data
     global biopsePriv
@@ -1523,7 +1428,6 @@ proc biopseFDialog_CancelCmd {w} {
 
 # Gets called when user browses the IconList widget (dragging mouse, arrow
 # keys, etc)
-#
 proc biopseFDialog_ListBrowse {w text} {
     upvar #0 [winfo name $w] data
 
@@ -1548,7 +1452,6 @@ proc biopseFDialog_ListBrowse {w text} {
 
 # Gets called when user invokes the IconList widget (double-click, 
 # Return key, etc)
-#
 proc biopseFDialog_ListInvoke {w text} {
     upvar #0 [winfo name $w] data
 
@@ -1575,13 +1478,11 @@ proc biopseFDialog_ListInvoke {w text} {
 }
 
 # biopseFDialog_Done --
-#
 #	Gets called when user has input a valid filename.  Pops up a
 #	dialog box to confirm selection when necessary. Sets the
 #	biopsePriv(selectFilePath) variable, which will break the "tkwait"
 #	loop in biopseFDialog and return the selected filename to the
 #	script that calls biopse_getOpenFile or biopse_getSaveFile
-#
 proc biopseFDialog_Done {w {selectFilePath ""}} {
     upvar #0 [winfo name $w] data
     global biopsePriv

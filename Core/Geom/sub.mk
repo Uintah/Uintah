@@ -1,10 +1,8 @@
-#
 # Makefile fragment for this subdirectory
-#
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
-SRCDIR   := SCICore/Geom
+SRCDIR   := Core/Geom
 
 SRCS     += $(SRCDIR)/GeomObj.cc $(SRCDIR)/GeomOpenGL.cc \
 	$(SRCDIR)/GeomArrows.cc $(SRCDIR)/Pt.cc $(SRCDIR)/GeomText.cc \
@@ -31,9 +29,9 @@ SRCS     += $(SRCDIR)/GeomObj.cc $(SRCDIR)/GeomOpenGL.cc \
 	$(SRCDIR)/TCLGeom.cc $(SRCDIR)/TCLView.cc \
 	$(SRCDIR)/templates.cc 	$(SRCDIR)/GeomDL.cc
 
-PSELIBS := SCICore/Persistent SCICore/Geometry SCICore/Exceptions \
-	SCICore/Math SCICore/Containers SCICore/Thread \
-	SCICore/TclInterface
+PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
+	Core/Math Core/Containers Core/Thread \
+	Core/TclInterface
 LIBS := $(GL_LIBS) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

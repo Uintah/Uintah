@@ -11,38 +11,31 @@
  */
 
 
-#include <DaveW/Datatypes/General/VectorFieldMI.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Datatypes/VectorFieldRG.h>
-#include <SCICore/Datatypes/VectorFieldUG.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
+#include <Packages/DaveW/Core/Datatypes/General/VectorFieldMI.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Datatypes/VectorFieldRG.h>
+#include <Core/Datatypes/VectorFieldUG.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Math/Trig.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
 #include <iostream>
 using std::cerr;
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 using DaveW::Datatypes::VectorFieldMI;
-using SCICore::Thread::Mutex;
-using SCICore::Thread::Parallel;
-using SCICore::Thread::Thread;
 
 class MagneticScalarField : public Module {
   VectorFieldHandle vfh;
@@ -158,24 +151,6 @@ void MagneticScalarField::execute() {
   
   magnitudeFieldP->send(magField);
 
-}
-} // End namespace Modules
 } // End namespace DaveW
+}
 
-//
-// $Log$
-// Revision 1.4  2000/03/17 09:25:50  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.3  1999/10/07 02:06:38  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/09/08 02:26:29  sparker
-// Various #include cleanups
-//
-// Revision 1.1  1999/09/02 04:27:08  dmw
-// Rob V's modules
-//
-//

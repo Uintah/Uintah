@@ -8,7 +8,7 @@
  *   July 1994
  *
  *  Modified
- *   Kurt Zimmerman
+ *   Packages/Kurt Zimmerman
  *   Department of Computer Science
  *   University of Utah
  *   Dec 1998
@@ -16,47 +16,40 @@
  *  Copyright (C) 1994 SCI Group
  */
 #include "ParticleVis.h"
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <Uintah/Datatypes/ScalarParticlesPort.h>
-#include <Uintah/Datatypes/VectorParticlesPort.h>
-#include <Uintah/Datatypes/TensorParticlesPort.h>
-#include <SCICore/Geom/GeomArrows.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomPick.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/GeomEllipsoid.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <SCICore/Math/MinMax.h>
-#include <Uintah/Modules/Visualization/ParticleFieldExtractor.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <Uintah/Datatypes/ScalarParticlesPort.h>
-#include <Uintah/Datatypes/VectorParticlesPort.h>
-#include <Uintah/Datatypes/TensorParticlesPort.h>
-#include <Uintah/Datatypes/PSet.h>
-#include <Uintah/Components/MPM/Util/Matrix3.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Packages/Uintah/Core/Datatypes/ScalarParticlesPort.h>
+#include <Packages/Uintah/Core/Datatypes/VectorParticlesPort.h>
+#include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
+#include <Core/Geom/GeomArrows.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomPick.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/GeomEllipsoid.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Core/Math/MinMax.h>
+#include <Packages/Uintah/Dataflow/Modules/Visualization/ParticleFieldExtractor.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Packages/Uintah/Core/Datatypes/ScalarParticlesPort.h>
+#include <Packages/Uintah/Core/Datatypes/VectorParticlesPort.h>
+#include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
+#include <Packages/Uintah/Core/Datatypes/PSet.h>
+#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
 #include <stdio.h>
 #include <iostream>
 using std::cerr;
 
 namespace Uintah {
-namespace Modules {
+using namespace SCIRun;
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
-using namespace SCICore::GeomSpace;
-using SCICore::Math::Max;
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off warnings about partially overridden virtual functions
@@ -315,7 +308,7 @@ void ParticleVis::execute()
       if( drawVectors.get() == 1 && hasVectors){
 	obj->add( arrows );
       }
-      // Let's set it up so that we can pick the particle set -- Kurt Z. 12/18/98
+      // Let's set it up so that we can pick the particle set -- Packages/Kurt Z. 12/18/98
       GeomPick *pick = scinew GeomPick( obj, this);
       ogeom->delAll();
       ogeom->addObj(pick, "Particles");      
@@ -388,9 +381,8 @@ void ParticleVis::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked_obj)
 extern "C" Module* make_ParticleVis( const clString& id ) {
   return scinew ParticleVis( id );
 }
-
-} // End namespace Modules
 } // End namespace Uintah
+
 
 
 

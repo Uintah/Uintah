@@ -2,7 +2,7 @@
  *  Bon.cc    View Depended Iso Surface Extraction
  *             for Structures Grids (Bricks)
  *  Written by:
- *    Yarden Livnat
+ *    Packages/Yarden Livnat
  *    Department of Computer Science
  *    University of Utah
  *    Oct 1999
@@ -13,14 +13,11 @@
 #ifndef Bon_h
 #define Bon_h
 
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
-#include <SCICore/Datatypes/ScalarFieldRGshort.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRGfloat.h>
+#include <Core/Datatypes/ScalarFieldRGshort.h>
 
 namespace Yarden {
-  namespace Modules {
-  namespace BonTree {
-
   using namespace Yarden::Datatypes;
 
   template< class T >
@@ -239,10 +236,8 @@ namespace Yarden {
   pmin = min;
   pmax = max;
 } 
+} // End namespace Yarden
 
-} // namespace BonTree
-} // namespace Modules
-} // namespace Yarden
 
 
 #endif // BonTree_h

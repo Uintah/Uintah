@@ -1,11 +1,9 @@
-#include <SCICore/Datatypes/FullResIterator.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Datatypes/FullResIterator.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Geometry::Point;
 
 
 
@@ -14,7 +12,7 @@ FullResIterator::FullResIterator(const GLTexture3D* tex, Ray view,
     GLTextureIterator( tex, view, control)
 {
   const Octree< Brick* >* node = (tex->bontree);
-  // SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+  // AuditAllocator(default_allocator);
   if ( tex->depth() == 0 ){
     next = (*node)();
   } else {
@@ -84,5 +82,4 @@ FullResIterator::SetNext()
   next = (*node)();
 }
 
-} //Datatypes
-} //SCICore
+} // End namespace SCIRun

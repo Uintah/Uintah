@@ -10,20 +10,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::PersistentSpace;
 
 class MeshReader : public Module {
     MeshOPort* outport;
@@ -72,7 +67,6 @@ static void watcher(double pd, void* cbdata)
 
 void MeshReader::execute()
 {
-  using SCICore::Containers::Pio;
 
   clString fn(filename.get());
   if(!handle.get_rep() || fn != old_filename){
@@ -98,7 +92,6 @@ void MeshReader::execute()
   outport->send(handle);
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
 

@@ -1,7 +1,7 @@
 
 #include "Primes.h"
-#include <SCICore/Exceptions/InternalError.h>
-using SCICore::Exceptions::InternalError;
+#include <Core/Exceptions/InternalError.h>
+using namespace SCIRun;
 
 // From the primes FAQ
 // http://www.utm.edu/research/primes/lists/small/1000.txt

@@ -22,9 +22,7 @@
 /*                                                                           */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-//
 //          Basic vector class (COMPLEX precision)
-//
 
 
                                  
@@ -62,7 +60,6 @@ MV_Vector_COMPLEX::MV_Vector_COMPLEX(unsigned int n, const COMPLEX& v) :
 }
 
 // operators and member functions
-//
 
 
 MV_Vector_COMPLEX& MV_Vector_COMPLEX::operator=(const COMPLEX & m) 
@@ -235,7 +232,6 @@ MV_Vector_COMPLEX MV_Vector_COMPLEX::operator()(const MV_VecIndex &I)
     else
     {
     // check that index is not out of bounds
-    //
         if ( I.end() >= dim_)
         {
             cerr << "MV_VecIndex: (" << I.start() << ":" << I.end() << 
@@ -251,7 +247,6 @@ MV_Vector_COMPLEX MV_Vector_COMPLEX::operator()(const MV_VecIndex &I)
 const MV_Vector_COMPLEX MV_Vector_COMPLEX::operator()(const MV_VecIndex &I) const
 {
     // check that index is not out of bounds
-    //
     if (I.all())
         return MV_Vector_COMPLEX(p_, dim_, MV_Vector_::ref);
     else

@@ -1,16 +1,14 @@
-#include <SCICore/Datatypes/ROI.h>
-#include <SCICore/Geometry/Ray.h>
-#include <SCICore/Datatypes/ROIIterator.h>
-#include <SCICore/Datatypes/Brick.h>
-#include <SCICore/Datatypes/Polygon.h>
-#include <SCICore/Datatypes/SliceTable.h>
-#include <SCICore/Datatypes/GLVolumeRenderer.h>
-#include <SCICore/Datatypes/VolumeUtils.h>
+#include <Core/Datatypes/ROI.h>
+#include <Core/Geometry/Ray.h>
+#include <Core/Datatypes/ROIIterator.h>
+#include <Core/Datatypes/Brick.h>
+#include <Core/Datatypes/Polygon.h>
+#include <Core/Datatypes/SliceTable.h>
+#include <Core/Datatypes/GLVolumeRenderer.h>
+#include <Core/Datatypes/VolumeUtils.h>
 
-namespace SCICore {
-namespace GeomSpace  {
+namespace SCIRun {
 
-using SCICore::Geometry::Ray;
 
 ROI::ROI(const GLVolumeRenderer* glvr ) :
   GLVolRenState( glvr )
@@ -85,5 +83,4 @@ ROI::drawWireFrame()
   }
 }
 
-}  // namespace GeomSpace
-} // namespace SCICore
+} // End namespace SCIRun

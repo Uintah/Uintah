@@ -458,21 +458,3 @@ int yyerror(char* s)
   return 0;
 }
 
-//
-// $Log$
-// Revision 1.3  2000/03/20 19:39:41  sparker
-// Added VPATH support
-//
-// Revision 1.2  1999/08/30 17:39:55  sparker
-// Updates to configure script:
-//  rebuild configure if configure.in changes (Bug #35)
-//  Fixed rule for rebuilding Makefile from Makefile.in (Bug #36)
-//  Rerun configure if configure changes (Bug #37)
-//  Don't build Makefiles for modules that aren't --enabled (Bug #49)
-//  Updated Makfiles to build sidl and Component if --enable-parallel
-// Updates to sidl code to compile on linux
-// Imported PIDL code
-// Created top-level Component directory
-// Added ProcessManager class - a simpler interface to fork/exec (not finished)
-//
-//

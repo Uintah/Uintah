@@ -1,7 +1,5 @@
-#
-#
 
-itcl_class SCIRun_Image_ImageSel {
+itcl_class Dataflow_Image_ImageSel {
     inherit Module
     constructor {config} {
 	set name ImageSel

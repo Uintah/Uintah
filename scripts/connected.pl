@@ -1,13 +1,10 @@
 #!/usr/bin/perl
-#
 # Print out the "connectedness" of the .h files in the tree.
 # This determines how many .o files will get recompiled if you
 # touch the .h file.  It is good to minimize these numbers, to
 # reduce compile times.
-#
 # TODO:
 #  - Go through a list of directories from argv, instead of just .
-#
 
 open(FILES, "find . -name depend.mk -print|")
 	or die "Can't find depend.mk files";

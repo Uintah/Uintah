@@ -14,33 +14,24 @@
 #ifndef SCI_project_module_Salmon_h
 #define SCI_project_module_Salmon_h
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Comm/MessageBase.h>
-#include <SCICore/Containers/Array1.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/GeometryComm.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/Lighting.h>
-#include <SCICore/Geom/IndexedGroup.h>
-#include <PSECommon/Modules/Salmon/SalmonGeom.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <SCICore/Thread/CrowdMonitor.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Comm/MessageBase.h>
+#include <Core/Containers/Array1.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/GeometryComm.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/Lighting.h>
+#include <Core/Geom/IndexedGroup.h>
+#include <Dataflow/Modules/Salmon/SalmonGeom.h>
+#include <Core/TclInterface/TCL.h>
+#include <Core/Thread/CrowdMonitor.h>
 
 #include <map.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using PSECore::Datatypes::GeomID;
-using PSECore::Comm::MessageBase;
-using PSECore::Comm::MessageTypes;
-using PSECore::Datatypes::GeomReply;
 
-using SCICore::GeomSpace::MaterialHandle;
-using SCICore::TclInterface::TCLArgs;
-using SCICore::GeomSpace::Lighting;
-using SCICore::Thread::CrowdMonitor;
 
 class Renderer;
 class Roe;
@@ -91,10 +82,10 @@ public:
   Salmon(const clString& id, const clString& moduleName);
   virtual ~Salmon();
   virtual void execute();
-  void initPort(SCICore::Thread::Mailbox<GeomReply>*);
+  void initPort(Mailbox<GeomReply>*);
   void append_port_msg(GeometryComm*);
   void addObj(GeomSalmonPort* port, GeomID serial, GeomObj *obj,
-	      const clString&, SCICore::Thread::CrowdMonitor* lock);
+	      const clString&, CrowdMonitor* lock);
   void delObj(GeomSalmonPort* port, GeomID serial, int del);
   void delAll(GeomSalmonPort* port);
   void flushPort(int portid);
@@ -123,7 +114,7 @@ public:
   int lookup_specific(const clString& key, void*&);
   void insert_specific(const clString& key, void* data);
 
-  SCICore::Thread::CrowdMonitor geomlock;
+  CrowdMonitor geomlock;
 };
 
 class SalmonMessage : public MessageBase {
@@ -145,7 +136,6 @@ public:
   virtual ~SalmonMessage();
 };
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
 #endif

@@ -11,30 +11,21 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <DaveW/Datatypes/General/ContourSet.h>
-#include <DaveW/Datatypes/General/ContourSetPort.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Datatypes/ScalarFieldRGchar.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Packages/DaveW/Core/Datatypes/General/ContourSet.h>
+#include <Packages/DaveW/Core/Datatypes/General/ContourSetPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Datatypes/ScalarFieldRGchar.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 
 namespace DaveW {
-namespace Modules {
-
 using namespace DaveW::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Containers;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
-using namespace SCICore::Thread;
+using namespace SCIRun;
 using std::cerr;
 
 class Scanline {
@@ -391,6 +382,5 @@ void CStoSFRG::tcl_command(TCLArgs& args, void* userdata) {
         Module::tcl_command(args, userdata);
     }
 }
-
-} // End namespace Modules
 } // End namespace DaveW
+

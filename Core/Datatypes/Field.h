@@ -1,34 +1,28 @@
 // Field.h - This is the base class from which all other fields are derived.
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
 #ifndef SCI_project_Field_h
 #define SCI_project_Field_h 1
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Datatypes/FieldInterface.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Datatypes/Geom.h>
-#include <SCICore/Datatypes/Attrib.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/FieldInterface.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Datatypes/Geom.h>
+#include <Core/Datatypes/Attrib.h>
 
 #include <functional>
 #include <iostream>
 #include <vector>
 #include <string>
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
 
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
-using SCICore::Containers::LockingHandle;
 using std::vector;
 using std::string;
 using std::cerr;
@@ -72,9 +66,7 @@ public:
   // the given interface. As convention, the input string should be in
   // all lowercase and be exactly the same as the FieldInterface's
   // name.  For example:
-  //
   // SInterpolate *inter = some_field.query_interface("sinterpolate");
-  //
   // Returns NULL if the given interface is not available for the field.
   template <class T> T* query_interface(T *);
   
@@ -95,8 +87,7 @@ protected:
 
 
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun
 
 
 #endif

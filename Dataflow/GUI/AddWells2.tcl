@@ -1,7 +1,7 @@
 
 catch {rename AddWells2 ""}
 
-itcl_class PSECommon_Visualization_AddWells2 {
+itcl_class Dataflow_Visualization_AddWells2 {
     inherit Module
     constructor {config} {
 	set name AddWells2

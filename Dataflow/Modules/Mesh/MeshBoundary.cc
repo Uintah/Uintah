@@ -10,22 +10,17 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 
 namespace SCIRun {
-namespace Modules {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Geometry;
-using namespace SCICore::GeomSpace;
 
 class MeshBoundary : public Module {
     MeshIPort* inport;
@@ -123,23 +118,6 @@ void MeshBoundary::execute()
     osurf->send(tsHandle);
 }
 
-} // End namespace Modules
 } // End namespace SCIRun
 
 
-//
-// $Log$
-// Revision 1.4  2000/03/17 09:29:12  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.3  2000/03/04 00:21:27  dmw
-// need to delete previous mesh boundary
-//
-// Revision 1.2  1999/10/07 02:08:19  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.1  1999/09/05 01:15:27  dmw
-// added all of the old SCIRun mesh modules
-//

@@ -1,14 +1,11 @@
 #include "ROIIterator.h"
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Vector.h>
 #include "Brick.h"
 #include <iostream>
 
 namespace Kurt {
-namespace Datatypes {
-
-using SCICore::Geometry::BBox;
-using SCICore::Geometry::Vector;
+using namespace SCIRun;
 
 
 
@@ -98,7 +95,6 @@ ROIIterator::SetNext()
   }
   next = (*node)();
 }
+} // End namespace Kurt
 
-} //Datatypes
-} //Kurt
 

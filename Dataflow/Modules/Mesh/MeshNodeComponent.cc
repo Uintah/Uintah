@@ -1,5 +1,5 @@
 /*
- *  MeshNodeComponent.cc:  Unfinished modules
+ *  MeshNodeCore/CCA/Component.cc:  Unfinished modules
  *
  *  Written by:
  *   David Weinstein
@@ -10,48 +10,45 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 
 namespace SCIRun {
-namespace Modules {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
 
-class MeshNodeComponent : public Module {
+class MeshNodeCore/CCA/Component : public Module {
     MeshIPort* iport;
     ColumnMatrixOPort* oport;
     TCLstring compTCL;
 public:
-    MeshNodeComponent(const clString& id);
-    virtual ~MeshNodeComponent();
+    MeshNodeCore/CCA/Component(const clString& id);
+    virtual ~MeshNodeCore/CCA/Component();
     virtual void execute();
 };
 
-extern "C" Module* make_MeshNodeComponent(const clString& id)
+extern "C" Module* make_MeshNodeCore/CCA/Component(const clString& id)
 {
-    return scinew MeshNodeComponent(id);
+    return scinew MeshNodeCore/CCA/Component(id);
 }
 
-MeshNodeComponent::MeshNodeComponent(const clString& id)
-: Module("MeshNodeComponent", id, Filter), compTCL("compTCL", id, this)
+MeshNodeCore/CCA/Component::MeshNodeCore/CCA/Component(const clString& id)
+: Module("MeshNodeCore/CCA/Component", id, Filter), compTCL("compTCL", id, this)
 {
    // Create the input port
     iport=scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
     add_iport(iport);
-    oport=scinew ColumnMatrixOPort(this, "Component", ColumnMatrixIPort::Atomic);
+    oport=scinew ColumnMatrixOPort(this, "Core/CCA/Component", ColumnMatrixIPort::Atomic);
     add_oport(oport);
 }
 
-MeshNodeComponent::~MeshNodeComponent()
+MeshNodeCore/CCA/Component::~MeshNodeCore/CCA/Component()
 {
 }
 
-void MeshNodeComponent::execute()
+void MeshNodeCore/CCA/Component::execute()
 {
     MeshHandle mesh;
     if (!iport->get(mesh))
@@ -73,20 +70,6 @@ void MeshNodeComponent::execute()
     oport->send(ColumnMatrixHandle(comp));
 }
 
-} // End namespace Modules
 } // End namespace SCIRun
 
 
-//
-// $Log$
-// Revision 1.2  2000/12/15 06:35:42  mcole
-// merge branch back into trunk
-//
-// Revision 1.1.2.1  2000/10/31 02:33:17  dmw
-// Merging SCIRun changes in HEAD into FIELD_REDESIGN branch
-//
-// Revision 1.1  2000/10/29 04:42:23  dmw
-// MeshInterpVals -- fixed a bug
-// MeshNodeComponent -- build a columnmatrix of the x/y/z position of the nodes
-// MeshFindSurfNodes -- the surface nodes in a mesh
-//

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Taubin.cc:  
@@ -12,27 +11,20 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/ColumnMatrix.h>
-#include <SCICore/Datatypes/SparseRowMatrix.h>
-#include <SCICore/Datatypes/SurfTree.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Math/MusilRNG.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Datatypes/SurfTree.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Math/MusilRNG.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
+using namespace SCIRun;
 
 class Taubin : public Module {
     Array1<Array1<int> > nbrs;
@@ -407,54 +399,7 @@ void Taubin::tcl_command(TCLArgs& args, void* userdata)
 	Module::tcl_command(args, userdata);
     }
 }
-
-} // End namespace Modules
 } // End namespace DaveW
 
 
-//
-// $Log$
-// Revision 1.10  2000/10/29 04:02:46  dmw
-// cleaning up DaveW tree
-//
-// Revision 1.9  2000/03/17 09:25:35  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.8  2000/02/02 21:53:59  dmw
-// Makefile, index - added new modules and removed no-longer-used
-// libraries
-// Radiosity - fixed 64-bit include guards
-// EEG/Makefile.in - removed InvEEGSolve from Makefile
-// Taubin - constrained relaxation
-// ErrorMetrix - no idea
-// all others are just new modules
-//
-// Revision 1.7  1999/12/09 00:05:24  dmw
-// new modules
-//
-// Revision 1.6  1999/12/07 02:55:56  dmw
-// added constrained surface smoothing for Taubin, fixed ErrorMetric.tcl to work with new bltGraph, and fixed a bug in VDTtoMesh converter
-//
-// Revision 1.5  1999/11/17 00:32:01  dmw
-// fixed a bug in Taubin (nrows has to equal ncols) and added a flag to STreeExtractSurf so the node numbers dont change
-//
-// Revision 1.4  1999/10/07 02:06:29  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/08 02:26:25  sparker
-// Various #include cleanups
-//
-// Revision 1.2  1999/08/25 03:47:39  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/24 06:23:03  dmw
-// Added in everything for the DaveW branch
-//
-// Revision 1.2  1999/05/03 04:52:14  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

@@ -13,11 +13,10 @@
 #ifndef SCI_COLORMAPTEX_H
 #define SCI_COLORMAPTEX_H 1
 
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geometry/Point.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 class SCICORESHARE ColorMapTex : public GeomObj {
   Point a, b, c, d;
@@ -44,9 +43,7 @@ public:
   virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
   
 #endif

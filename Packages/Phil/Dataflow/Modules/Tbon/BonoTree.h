@@ -1,9 +1,8 @@
-//static char *id="@(#) $Id$";
 
 /* BonoTree.h
    class declarations for the BONO tree
 
-   Philip Sutton
+   Packages/Philip Sutton
    July 1999
 
    Copyright (C) 2000 SCI Group, University of Utah
@@ -19,8 +18,6 @@
 #include <strings.h>
 
 namespace Phil {
-namespace Modules {
-
 template <class T>
 struct Data {
   int nx, ny, nz;
@@ -866,18 +863,8 @@ BonoTree<T>::searchSecondPass( int myindex, int d, double iso,
 
 } // searchSecondPass
 
+} // End namespace Phil
 
-} // end namespace Modules 
-} // end namespace Phil
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:07:17  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 20:46:49  psutton
-// initial revision
-//
-//

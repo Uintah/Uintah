@@ -1,9 +1,7 @@
 #include "GLPlanes.h"
 #include <GL/gl.h>
 
-namespace SCICore {
-namespace GeomSpace  {
-
+namespace Kurt {
 
 GLPlanes::GLPlanes(const GLVolumeRenderer* glvr) :
   GLTexRenState( glvr )
@@ -21,6 +19,5 @@ void GLPlanes::postDraw()
 {
   glDisable(GL_ALPHA_TEST);
 }
+} // End namespace Kurt
 
-} // end namespace Datatypes
-} // end namespace Kurt

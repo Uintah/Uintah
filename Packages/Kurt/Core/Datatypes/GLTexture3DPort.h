@@ -14,18 +14,15 @@
 #ifndef SCI_project_GLTexture3DPort_h
 #define SCI_project_GLTexture3DPort_h 1
 
-#include <PSECore/Datatypes/SimplePort.h>
-#include <Kurt/Datatypes/GLTexture3D.h>
+#include <Dataflow/Ports/SimplePort.h>
+#include <Packages/Kurt/Core/Datatypes/GLTexture3D.h>
 
-namespace PSECore {
-namespace Datatypes {
-
+namespace Kurt {
 using namespace Kurt::Datatypes;
 
 typedef SimpleIPort<GLTexture3DHandle> GLTexture3DIPort;
 typedef SimpleOPort<GLTexture3DHandle> GLTexture3DOPort;
+} // End namespace Kurt
 
-} // End namespace Datatypes
-} // End namespace PSECore
 
 #endif

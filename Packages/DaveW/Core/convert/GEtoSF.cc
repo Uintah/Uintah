@@ -5,32 +5,28 @@
  *
  */
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
-#include <SCICore/Datatypes/ScalarFieldRGint.h>
-#include <SCICore/Datatypes/ScalarFieldRGshort.h>
-#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
-#include <SCICore/Datatypes/ScalarFieldRGchar.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Persistent/Pstreams.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRGfloat.h>
+#include <Core/Datatypes/ScalarFieldRGint.h>
+#include <Core/Datatypes/ScalarFieldRGshort.h>
+#include <Core/Datatypes/ScalarFieldRGuchar.h>
+#include <Core/Datatypes/ScalarFieldRGchar.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Persistent/Pstreams.h>
 #include <fstream>
 #include <iostream>
 #include <math.h>
 #include <stdio.h>
 
-using namespace SCICore::Containers;
-using namespace SCICore::Datatypes;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
-using namespace SCICore::PersistentSpace;
+using namespace SCIRun;
 using namespace std;
 
 int padn;
@@ -46,7 +42,6 @@ char out[100];
 char baseName[100];
 
 //  header file format:
-//
 //  [header length]
 //  width
 //  num_slices
@@ -64,7 +59,6 @@ int read_header(FILE **fpp) {
 
 
 //  segmentation file format:
-//
 //  [# structures]
 //  default_matl_id
 //  struct1_id  matl1_id

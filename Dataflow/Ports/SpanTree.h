@@ -14,18 +14,14 @@
 #ifndef SCI_project_SpanTree_h
 #define SCI_project_SpanTree_h 1
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Geometry/BBox.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Geometry/BBox.h>
 
-namespace PSECore {
-namespace Datatypes {
+namespace SCIRun {
 
-using namespace SCICore::Datatypes;
- using namespace SCICore::Containers;
- using namespace SCICore::Geometry;
 
 //#define FIELD_FLOAT
 
@@ -73,8 +69,7 @@ public:
   static PersistentTypeID type_id;
 };
 
-} // End namespace Datatypes
-} // End namespace PSECore}
+} // End namespace SCIRun
 
 
 #endif /* SCI_project_SpanTree_h */

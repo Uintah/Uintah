@@ -1,20 +1,17 @@
 #include "TensorParticles.h"
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <Uintah/Grid/Level.h>
-#include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/Grid.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Grid/Level.h>
+#include <Packages/Uintah/Grid/LevelP.h>
+#include <Packages/Uintah/Grid/GridP.h>
+#include <Packages/Uintah/Grid/Grid.h>
 using std::vector;
 namespace Uintah {
-namespace Datatypes {
-
 
 using Uintah::DataArchive;
 using Uintah::ParticleVariable;
 
-using SCICore::Datatypes::Persistent;
-using SCICore::PersistentSpace::PersistentTypeID;
+using namespace SCIRun;
 
 
 static Persistent* maker()
@@ -26,8 +23,6 @@ PersistentTypeID TensorParticles::type_id("TensorParticles", "ParticleSet", make
 #define TensorParticles_VERSION 3
 void TensorParticles::io(Piostream&)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
     NOT_FINISHED("TensorParticles::io(Piostream&)");
 }
 
@@ -88,6 +83,5 @@ void TensorParticles::get_minmax(double& v0, double& v1)
 
   v0 = data_min;
   v1 = data_max; 
+} // End namespace Uintah
 }
-} // end namespace Datatypes
-} // end namespace Uintah

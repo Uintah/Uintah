@@ -10,23 +10,23 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef SCI_DaveW_Datatypes_DRaytracer_h
-#define SCI_DaveW_Datatypes_DRaytracer_h 1
+#ifndef SCI_Packages/DaveW_Datatypes_DRaytracer_h
+#define SCI_Packages/DaveW_Datatypes_DRaytracer_h 1
 
-#include <DaveW/Datatypes/CS684/ImageR.h>
-#include <DaveW/Datatypes/CS684/RTPrims.h>
-#include <DaveW/Datatypes/CS684/Sample2D.h>
-#include <DaveW/Datatypes/CS684/Scene.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Datatypes/VoidStar.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/Trig.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/ImageR.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/RTPrims.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/Sample2D.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/Scene.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Containers/String.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/VoidStar.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/Material.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/Trig.h>
 
 #include <math.h>
 #include <string.h>
@@ -34,9 +34,7 @@
 #include <stdio.h>
 
 namespace DaveW {
-namespace Datatypes {
-
-using SCICore::PersistentSpace::Piostream;
+using namespace SCIRun;
 
 class DRaytracer : public VoidStar {
     double stepX;
@@ -77,8 +75,7 @@ public:
     virtual VoidStar* clone();
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-};
-} // End namespace Datatypes
 } // End namespace DaveW
+};
 
 #endif

@@ -22,11 +22,8 @@
 /*                                                                           */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-//
 //      mvm.h   
-//
 //      MV Matrix classes for double, float, int, and complex
-//
 
 #ifndef _MV_MATRIX_ALL_H_
 #define _MV_MATRIX_ALL_H_    

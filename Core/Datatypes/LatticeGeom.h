@@ -1,40 +1,31 @@
 //  LatticeGeom.h - A base class for regular geometries with alligned axes
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
 
 #ifndef SCI_project_LatticeGeom_h
 #define SCI_project_LatticeGeom_h 1
 
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Datatypes/StructuredGeom.h>
-#include <SCICore/Datatypes/DiscreteAttrib.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Geometry/Transform.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Datatypes/StructuredGeom.h>
+#include <Core/Datatypes/DiscreteAttrib.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Geometry/Transform.h>
 
 #include <sstream>
 #include <vector>
 #include <string>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
 using std::vector;
 using std::string;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
-using SCICore::Math::Interpolate;
-using SCICore::Geometry::Transform;
 
   
 class LatticeGeom : public StructuredGeom
@@ -239,10 +230,8 @@ LatticeGeom::interp(DiscreteAttrib<T> *att, const Point &p, T &out)
   // This interpolates using T as intermediate result, which is
   // most likely incorrect for T with low bit values.  This is
   // not particularly numerically stable.
-  //
   // For example, 8 bit rgb values should be interpolated by converting
   // to integer values first
-  //
   // Makes unnecessary copies of T if (size(T) <= 8).
   T x00 = Interpolate(att->get3(i0, j0, k0),
 		      att->get3(i1, j0, k0), fx);
@@ -259,9 +248,7 @@ LatticeGeom::interp(DiscreteAttrib<T> *att, const Point &p, T &out)
 #else
   // Interpolate should be void Interp(dest, s1, s2, fx, omfx);
   // type of dest should be bigger than s1, s2
-  //
   // TT is T with more precision.
-  //
   // Convert reduces precision from TT to T.
   TT a, b, c, d;
   Interp(a, att->get3(i0, j0, k0), att->get3(i1, j0, k0), fx, omfx);
@@ -316,10 +303,8 @@ LatticeGeom::finterp(A *att, const Point &p, T &out)
   // This interpolates using T as intermediate result, which is
   // most likely incorrect for T with low bit values.  This is
   // not particularly numerically stable.
-  //
   // For example, 8 bit rgb values should be interpolated by converting
   // to integer values first
-  //
   // Makes unnecessary copies of T if (size(T) <= 8).
   T x00 = Interpolate(att->fget3(i0, j0, k0),
 		      att->fget3(i1, j0, k0), fx);
@@ -336,9 +321,7 @@ LatticeGeom::finterp(A *att, const Point &p, T &out)
 #else
   // Interpolate should be void Interp(dest, s1, s2, fx, omfx);
   // type of dest should be bigger than s1, s2
-  //
   // TT is T with more precision.
-  //
   // Convert reduces precision from TT to T.
   TT a, b, c, d;
   Interp(a, att->fget3(i0, j0, k0), att->fget3(i1, j0, k0), fx, omfx);
@@ -356,8 +339,7 @@ LatticeGeom::finterp(A *att, const Point &p, T &out)
 }  
 
   
-} // end Datatypes
-} // end SCICore
+} // End namespace SCIRun
 
 
 #endif

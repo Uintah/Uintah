@@ -13,11 +13,9 @@
 #ifndef _TrigTable_h
 #define _TrigTable_h
 
-#include <Remote/Tools/Math/MiscMath.h>
+#include <Packages/Remote/Tools/Math/MiscMath.h>
 
 namespace Remote {
-namespace Tools {
-
 class SinCosTable
 {
     double* sindata;
@@ -56,8 +54,7 @@ public:
     }
 };
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

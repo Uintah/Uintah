@@ -1,10 +1,9 @@
-//static char *id="@(#) $Id$";
 
 /*
  * TriGroup.h:  Group of triangles
  *    (stripped down to improve performance)
  *
- * Philip Sutton
+ * Packages/Philip Sutton
  * April 1999
 
   Copyright (C) 2000 SCI Group, University of Utah
@@ -13,16 +12,14 @@
 #ifndef __GEOM_TRI_GROUP_H__
 #define __GEOM_TRI_GROUP_H__
 
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geometry/BBox.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geometry/BBox.h>
 
 #include <stdio.h>
 #include <iostream>
 
-namespace SCICore {
-namespace GeomSpace {
-
-using namespace SCICore::Geometry;
+namespace Phil {
+using namespace SCIRun;
 
 class pPoint {
 public:
@@ -112,19 +109,9 @@ private:
 };
 
 
+} // End namespace Phil
 
-} // End namespace GeomSpace
-} // End namespace SCICore
 
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:11:13  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 20:56:52  psutton
-// initial revision
-//
-//

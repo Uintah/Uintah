@@ -21,35 +21,29 @@
  */
 #include <stdio.h>
 
-#include <SCICore/Datatypes/Field.h>
-#include <SCICore/Datatypes/GenSField.h>
-#include <SCICore/Datatypes/GenVField.h>
-#include <SCICore/Datatypes/LatticeGeom.h>
-#include <SCICore/Datatypes/IrregLatticeGeom.h> // Test
-#include <SCICore/Datatypes/MeshGeom.h>
-#include <SCICore/Datatypes/MeshGeom.h>
-#include <SCICore/Datatypes/FlatAttrib.h>
-#include <SCICore/Datatypes/AccelAttrib.h>
-#include <SCICore/Datatypes/BrickAttrib.h>
-#include <SCICore/Datatypes/IndexAttrib.h>
-#include <SCICore/Datatypes/AnalytAttrib.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Containers/String.h>
-#include <PSECore/Datatypes/FieldPort.h>
-#include <SCICore/Util/DebugStream.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/GenSField.h>
+#include <Core/Datatypes/GenVField.h>
+#include <Core/Datatypes/LatticeGeom.h>
+#include <Core/Datatypes/IrregLatticeGeom.h> // Test
+#include <Core/Datatypes/MeshGeom.h>
+#include <Core/Datatypes/MeshGeom.h>
+#include <Core/Datatypes/FlatAttrib.h>
+#include <Core/Datatypes/AccelAttrib.h>
+#include <Core/Datatypes/BrickAttrib.h>
+#include <Core/Datatypes/IndexAttrib.h>
+#include <Core/Datatypes/AnalytAttrib.h>
+#include <Core/Geometry/Point.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Util/DebugStream.h>
 
-#include <PSECore/Dataflow/Module.h>
+#include <Dataflow/Network/Module.h>
 
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Util;
 
 class GenField : public Module {
 private:
@@ -516,8 +510,7 @@ GenField::execute()
 
 
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
 
 

@@ -1,7 +1,7 @@
 
 catch {rename MatrixReader ""}
 
-itcl_class PSECommon_Readers_MatrixReader {
+itcl_class Dataflow_Readers_MatrixReader {
     inherit Module
     constructor {config} {
 	set name MatrixReader

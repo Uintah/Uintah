@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  TrainSeg2.cc:  User selects "typical" material voxels
@@ -12,21 +11,21 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <SCICore/Containers/String.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/ScalarFieldRGchar.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/ScalarFieldRGchar.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomOpenGL.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCL.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCL.h>
 #include <tcl.h>
 #include <tk.h>
 #include <iostream>
@@ -39,14 +38,8 @@ using std::endl;
 extern Tcl_Interp* the_interp;
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Math;
 
 class TrainSeg2 : public Module {
     ScalarFieldIPort *iport;
@@ -773,54 +766,5 @@ int TrainSeg2::makeCurrent() {
     return 1;
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.8  2000/03/17 09:27:00  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.7  1999/11/16 00:02:46  yarden
-// replace init errcode  with GLenum errcode (needed by the egcs compiler)
-//
-// Revision 1.6  1999/10/07 02:06:48  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/08/25 03:47:48  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.4  1999/08/19 23:17:46  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.3  1999/08/18 20:19:43  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:29  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:43  mcq
-// Initial commit
-//
-// Revision 1.3  1999/07/07 21:10:22  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.2  1999/04/28 20:51:13  dav
-// deleted some files that are dependent on DaveW files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:32  dav
-// Import sources
-//
-//

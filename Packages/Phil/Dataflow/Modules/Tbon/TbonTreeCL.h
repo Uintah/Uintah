@@ -1,9 +1,8 @@
-//static char *id="@(#) $Id$";
 
 /* TbonTreeCL.h
    class declarations and code for the T-BON tree, curvilinear implementation
 
-   Philip Sutton
+   Packages/Philip Sutton
    June 1999
 
   Copyright (C) 2000 SCI Group, University of Utah
@@ -19,12 +18,10 @@
 #include <math.h>
 #include <strings.h>
 
-using namespace SCICore::GeomSpace;
+using namespace SCIRun;
 using namespace std;
 
 namespace Phil {
-namespace Modules {
-
 struct VertexCL {
   float pos[3];
 };
@@ -1821,18 +1818,8 @@ TbonTreeCL<T>::searchSecondPass( int currtree, int myindex, int d,
 
   } // if tree[myindex] spans iso, x, y, z
 } // searchSecondPass
+} // End namespace Phil
 
-} // end namespace Modules 
-} // end namespace Phil
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:13:04  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 21:05:41  psutton
-// initial revision
-//
-//

@@ -2,8 +2,6 @@
 
 
 namespace Kurt {
-namespace Datatypes {
-
 GLVolRenState::GLVolRenState(const GLVolumeRenderer* glvr)
     : volren( glvr )
 {
@@ -238,7 +236,6 @@ GLVolRenState::drawWireFrame(const Brick& brick)
   glDisable(GL_DEPTH_TEST);
 
 }
+} // End namespace Kurt
 
-} // end namespace Datatypes
-} // end namespace Kurt
 

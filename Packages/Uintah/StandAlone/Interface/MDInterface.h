@@ -1,17 +1,16 @@
 #ifndef UINTAH_HOMEBREW_MDInterface_H
 #define UINTAH_HOMEBREW_MDInterface_H
 
-#include <Uintah/Parallel/UintahParallelPort.h>
-#include <Uintah/Interface/DataWarehouseP.h>
-#include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/Handle.h>
-#include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/SimulationStateP.h>
-#include <Uintah/Interface/ProblemSpecP.h>
-#include <Uintah/Interface/SchedulerP.h>
+#include <Packages/Uintah/Parallel/Packages/UintahParallelPort.h>
+#include <Packages/Uintah/Interface/DataWarehouseP.h>
+#include <Packages/Uintah/Grid/GridP.h>
+#include <Packages/Uintah/Grid/Handle.h>
+#include <Packages/Uintah/Grid/LevelP.h>
+#include <Packages/Uintah/Grid/SimulationStateP.h>
+#include <Packages/Uintah/Interface/ProblemSpecP.h>
+#include <Packages/Uintah/Interface/SchedulerP.h>
 
 namespace Uintah {
-
 /**************************************
 
 CLASS
@@ -41,7 +40,7 @@ WARNING
   
 ****************************************/
 
-   class MDInterface : public UintahParallelPort {
+   class MDInterface : public Packages/UintahParallelPort {
    public:
       MDInterface();
       virtual ~MDInterface();
@@ -73,13 +72,8 @@ WARNING
       MDInterface(const MDInterface&);
       MDInterface& operator=(const MDInterface&);
    };
+} // End namespace Uintah
    
-} // end namespace Uintah
 
 #endif
 
-//
-// $Log$
-// Revision 1.1  2000/06/09 16:33:17  tan
-// Created MDInterface for molecular dynamics simulation.
-//

@@ -1,6 +1,6 @@
-catch {rename DaveW_Readers_SigmaSetReader ""}
+catch {rename Packages/DaveW_Readers_SigmaSetReader ""}
 
-itcl_class DaveW_Readers_SigmaSetReader {
+itcl_class Packages/DaveW_Readers_SigmaSetReader {
     inherit Module
     constructor {config} {
 	set name SigmaSetReader

@@ -19,7 +19,7 @@ char *strcpy( char *, const char *);
 }
 #endif
 
-#include <SCICore/Containers/String.h>
+#include <Core/Containers/String.h>
 
 #include <stdio.h>
 #include <iostream>
@@ -27,15 +27,14 @@ char *strcpy( char *, const char *);
 #include <iomanip>
 #include <ctype.h>
 
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Util/FancyAssert.h>
-#include <SCICore/Containers/TrivialAllocator.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Tester/RigorousTest.h>
-#include <SCICore/Tester/PerfTest.h>
+#include <Core/Util/Assert.h>
+#include <Core/Util/FancyAssert.h>
+#include <Core/Containers/TrivialAllocator.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Tester/RigorousTest.h>
+#include <Core/Tester/PerfTest.h>
 
-namespace SCICore {
-namespace Containers {
+namespace SCIRun {
 
 clString& clString::operator=(const char* s)
 {
@@ -200,14 +199,12 @@ std::istream& operator>>(std::istream& s, clString& str)
 }
 
 #if defined(__sgi) && !defined(__GNUC__)
-} // End namespace Containers
-} // End namespace SCICore
+} // End namespace SCIRun
 
 #include <iostream>
 #include <iomanip.h>
 
-namespace SCICore {
-namespace Containers {
+namespace SCIRun {
 
 ::ostream& operator<<(::ostream& s, const clString& str)
 {
@@ -228,40 +225,6 @@ namespace Containers {
   return s;
 }
 #endif
-    
-/* -----------------  Old version ----------------------
-istream& operator>>(istream& s, clString& str)
-{
-    char* buf=scinew char[1024];
-    s.get(buf,1024,'\n');
-#ifdef broken
-    char c;
-    if(cin.get(c) && c!='\n'){
-	// Longer than 1024...
-	int grow=1;
-	int size=1024;
-	while(grow){
-	    int newsize=size << 1; // Double size... 
-	    char* p=scinew char[newsize];
-	    strncpy(p, buf, size);
-	    s.get(buf+size,size,'\n');
-	    if(cin.get(c) && c!='\n'){
-		grow=1;
-	    } else {
-		grow=0;
-	    }
-	    delete[] buf;
-	    buf=p;
-	    size=newsize;
-	}
-    }
-#endif
-    str=buf; // Uses operator=
-    delete[] buf;
-    return s;
-}
------------------------------------------------------- */
-
 
 
 int clString::index(const char match) const
@@ -497,5 +460,4 @@ void clString::test_performance(PerfTest* __pt) {
     }
 }
 
-} // End namespace Containers
-} // End namespace SCICore
+} // End namespace SCIRun

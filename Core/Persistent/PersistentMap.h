@@ -11,32 +11,22 @@
 #ifndef SCI_project_Persistent_map_h
 #define SCI_project_Persistent_map_h 1
 
-#include <SCICore/Persistent/Persistent.h>
+#include <Core/Persistent/Persistent.h>
 
 #include <map.h>
 
 #define MAP_VERSION 1
 
-namespace SCICore {
-namespace PersistentSpace {
+namespace SCIRun {
 
-//----------------------------------------------------------------------
 
-				// persistent io for maps
+// persistent io for maps
 template <class Key, class Data>
 SCICORESHARE inline void
-  Pio(Piostream& stream, map<Key, Data>& data) {
+Pio(Piostream& stream, map<Key, Data>& data) {
 
 #ifdef __GNUG__
-  using namespace SCICore::PersistentSpace;
-  using namespace SCICore::GeomSpace;
-  using namespace SCICore::Containers;
-  using namespace SCICore::Datatypes;
 #else
-  using SCICore::PersistentSpace::Pio;
-  using SCICore::GeomSpace::Pio;
-  using SCICore::Containers::Pio;
-  using SCICore::Datatypes::Pio;
 #endif
 
   map<Key, Data>::iterator iter;
@@ -82,8 +72,8 @@ SCICORESHARE inline void
 }
 
 
-} // End namespace PersistentSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
 
 #endif // SCI_project_Persistent_map_h
+

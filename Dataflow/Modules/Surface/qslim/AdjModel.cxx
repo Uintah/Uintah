@@ -1,7 +1,6 @@
 /************************************************************************
 
   Adjacency model representation.
-  $Id$
 
   Adapted from:
      mlab: (Id: polymodel.cc,v 1.21 1997/02/06 16:34:14 garland Exp)
@@ -86,9 +85,7 @@ Vec3 Model::synthesizeNormal(Vertex *v)
 
 
 ////////////////////////////////////////////////////////////////////////
-//
 // Model Transmogrification:
-//
 // These routines are the basic model munging procedures.
 // All model simplification is implemented in terms of these
 // transmogrification primitives.
@@ -229,9 +226,7 @@ void Model::contract(Vertex *v1,
 	*logfile << ") " << to[X] << " " << to[Y] << " " << to[Z] << endl;
     }
 
-    //
     // Collect all the faces that are going to be changed
-    //
     contractionRegion(v1, rest, changed);
 
     reshapeVertex(v1, to[X], to[Y], to[Z]);
@@ -244,7 +239,6 @@ void Model::contract(Vertex *v1,
 
 void Model::maybeFixFace(Face *F)
 {
-    //
     // Invalid faces do not need to be fixed.
 #ifdef SAFETY
     assert( F->isValid() );
@@ -264,7 +258,6 @@ void Model::maybeFixFace(Face *F)
 
 	killFace(F);
     }
-    //
     // In the following 3 cases, the triangle has become an edge
     else if( a )
     {
@@ -302,7 +295,6 @@ void Model::contractionRegion(Vertex *v1,
 {
     changed.reset();
 
-    //
     // First, reset the marks on all reachable vertices
     int i;
 
@@ -310,7 +302,6 @@ void Model::contractionRegion(Vertex *v1,
     for(i=0; i<vertices.length(); i++)
 	untagFaceLoop(vertices(i));
 
-    //
     // Now, pick out all the unique reachable faces
     collectFaceLoop(v1, changed);
     for(i=0; i<vertices.length(); i++)
@@ -322,12 +313,10 @@ void Model::contractionRegion(Vertex *v1, Vertex *v2, face_buffer& changed)
 {
     changed.reset();
 
-    //
     // Clear marks on all reachable faces
     untagFaceLoop(v1);
     untagFaceLoop(v2);
 
-    //
     // Collect all the unique reachable faces
     collectFaceLoop(v1, changed);
     collectFaceLoop(v2, changed);
@@ -346,14 +335,11 @@ void Model::contract(Vertex *v1, Vertex *v2, const Vec3& to,
 		 << to[Y] << " "
 		 << to[Z] << endl;
 
-    //
     // Collect all the faces that are going to be changed
-    //
     contractionRegion(v1, v2, changed);
 
     reshapeVertex(v1, to[X], to[Y], to[Z]);
 
-    //
     // Map v2 ---> v1.  This accomplishes the topological change that we want.
     v2->remapTo(v1);
 

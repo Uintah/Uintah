@@ -3,7 +3,7 @@
  *  Tensor.h
  *
  *  Written by:
- *   Author: Yarden Livnat
+ *   Author: Packages/Yarden Livnat
  *   
  *   Department of Computer Science
  *   University of Utah
@@ -22,29 +22,20 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array3.h>
-#include <SCICore/Containers/LockingHandle.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array3.h>
+#include <Core/Containers/LockingHandle.h>
 
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Util/NotFinished.h>
 
 
-namespace SCICore {
-  namespace Datatypes {
-
-    using namespace SCICore::Datatypes;
-    using SCICore::Containers::LockingHandle;
-    using SCICore::Containers::Array1;
-    using SCICore::Containers::Array3;
-    using SCICore::PersistentSpace::Piostream;
-    using SCICore::PersistentSpace::PersistentTypeID;
+namespace Yarden {
+using namespace SCIRun;
     
-    //
     // Tensors
-    //
 
     class TensorBase  {
     public:
@@ -103,9 +94,7 @@ namespace SCICore {
 	Pio( stream, tensor.data[i] );
     }
 
-    // 
     // Tensor Fields
-    //
 
     class TensorFieldBase;
     typedef LockingHandle<TensorFieldBase> TensorFieldHandle;
@@ -299,9 +288,8 @@ namespace SCICore {
       
       stream.end_class();
     }
+} // End namespace Yarden
     
-  } // End namespace Datatypes
-} // End namespace SCICore
 
 
 

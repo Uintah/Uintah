@@ -8,24 +8,20 @@
  *    July 1997
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 #include <math.h>
 
 namespace SCIRun {
-namespace Modules {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
 
-using namespace SCICore::TclInterface;
 
 class ImageGen : public Module {
     ScalarFieldOPort* outport;
@@ -116,38 +112,5 @@ void ImageGen::tcl_command(TCLArgs& args, void* userdata)
   }
 }
 
-} // End namespace Modules
 } // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.7  2000/03/17 09:29:04  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.6  1999/10/07 02:08:15  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/09/08 02:27:00  sparker
-// Various #include cleanups
-//
-// Revision 1.4  1999/08/31 08:55:33  sparker
-// Bring SCIRun modules up to speed
-//
-// Revision 1.3  1999/08/25 03:48:56  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:40:00  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:58:53  mcq
-// Initial commit
-//
-// Revision 1.1  1999/04/29 22:26:32  dav
-// Added image files to SCIRun
-//
-//

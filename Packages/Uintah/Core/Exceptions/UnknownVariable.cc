@@ -1,6 +1,6 @@
 
-#include <Uintah/Exceptions/UnknownVariable.h>
-#include <Uintah/Grid/Patch.h>
+#include <Packages/Uintah/Exceptions/UnknownVariable.h>
+#include <Packages/Uintah/Grid/Patch.h>
 #include <sstream>
 
 using namespace Uintah;
@@ -51,20 +51,7 @@ const char* UnknownVariable::message() const
 
 const char* UnknownVariable::type() const
 {
-    return "Uintah::Exceptions::UnknownVariable";
+    return "Packages/Uintah::Exceptions::UnknownVariable";
 }
 
-//
-// $Log$
-// Revision 1.6  2000/12/06 23:41:39  witzel
-// Changed UnknownVariable constructor to take Patch* instead
-// of patch id and string and allow this pointer to be NULL.
-//
-// Revision 1.5  2000/09/26 21:32:24  dav
-// Formatting
-//
-// Revision 1.4  2000/06/19 22:36:32  sparker
-// Improved message for Unknown variable
-//
-//
 

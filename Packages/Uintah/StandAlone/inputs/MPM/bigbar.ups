@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- <!DOCTYPE Packages/Uintah_specification SYSTEM "input.dtd"> -->
 
 <!-- @version: -->
 
-<Uintah_specification>
+<Packages/Uintah_specification>
 
    <Meta>
 	<title>Three point bending problem</title>
@@ -108,4 +108,4 @@
 
     </InitialConditions>
 
-</Uintah_specification>
+</Packages/Uintah_specification>

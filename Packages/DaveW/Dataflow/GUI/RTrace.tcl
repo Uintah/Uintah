@@ -1,21 +1,17 @@
 
-#
 #  RTrace.tcl
-#
 #  Written by:
 #   David Weinstein
 #   Department of Computer Science
 #   University of Utah
 #   March 1997
-#
 #  Copyright (C) 1997 SCI Group
-#
 
 # source $sci_root/TCL/MaterialEditor.tcl
 
-catch {rename DaveW_CS684_RTrace ""}
+catch {rename Packages/DaveW_CS684_RTrace ""}
 
-itcl_class DaveW_CS684_RTrace {
+itcl_class Packages/DaveW_CS684_RTrace {
     inherit Module
     constructor {config} {
 	set name RTrace

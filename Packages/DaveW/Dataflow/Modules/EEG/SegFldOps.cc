@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  SegFldOps.cc:  Unfinished modules
@@ -12,27 +11,20 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <DaveW/Datatypes/General/SegFld.h>
-#include <DaveW/Datatypes/General/SegFldPort.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldRGchar.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Packages/DaveW/Core/Datatypes/General/SegFld.h>
+#include <Packages/DaveW/Core/Datatypes/General/SegFldPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/ScalarFieldRGchar.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 
 namespace DaveW {
-namespace Modules {
-
 using namespace DaveW::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
-using namespace SCICore::Geometry;
+using namespace SCIRun;
 
 class SegFldOps : public Module {
     ScalarFieldIPort* iscl;
@@ -136,7 +128,7 @@ void SegFldOps::execute()
 	if (meth.get()=="annex") {
 	    int ann=annexSize.get();
 	    if (ann>0) {
-		segFldHandle->killSmallComponents(ann);
+		segFldHandle->killSmallCore/CCA/Components(ann);
 	    }
 	}
 	tcl_exec=0;
@@ -161,7 +153,7 @@ void SegFldOps::tcl_command(TCLArgs& args, void* userdata) {
         if (segFldHandle.get_rep()) segFldHandle->audit();
 	else cerr << "Can't audit -- I don't have a segFld yet.\n";
     } else if (args[1] == "print") {
-	if (segFldHandle.get_rep()) segFldHandle->printComponents();
+	if (segFldHandle.get_rep()) segFldHandle->printCore/CCA/Components();
 	else cerr << "Can't print -- I don't have a segFld yet.\n";
     } else if (args[1] == "compress") {
 	if (segFldHandle.get_rep()) segFldHandle->compress();
@@ -170,36 +162,7 @@ void SegFldOps::tcl_command(TCLArgs& args, void* userdata) {
         Module::tcl_command(args, userdata);
     }
 }
-
-} // End namespace Modules
 } // End namespace DaveW
 
 
-//
-// $Log$
-// Revision 1.6  2000/03/17 09:25:34  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.5  2000/03/04 00:16:34  dmw
-// update some DaveW stuff
-//
-// Revision 1.4  1999/10/07 02:06:28  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/08 02:26:24  sparker
-// Various #include cleanups
-//
-// Revision 1.2  1999/08/25 03:47:39  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/24 06:23:02  dmw
-// Added in everything for the DaveW branch
-//
-// Revision 1.2  1999/05/03 04:52:14  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

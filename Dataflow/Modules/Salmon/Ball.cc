@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Ball.cc: ?
@@ -29,8 +28,7 @@
 #define DRAGCOLOR()   RGBcolor(127, 255, 255)
 #define RESCOLOR()    RGBcolor(195, 31, 31)
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
 HMatrix mId = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
 double otherAxis[][4] = {{-0.48, 0.80, 0.36, 1}};
@@ -291,18 +289,5 @@ void Ball_DrawResultArc(BallData *ball)
     if (ball->showResult) DrawAnyArc(ball->vrFrom, ball->vrTo);
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  1999/11/16 23:16:17  dav
-// Added typecast to GLenum for linux compile
-//
-// Revision 1.1  1999/07/27 16:57:50  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:31  dav
-// Import sources
-//
-//

@@ -1,20 +1,15 @@
-#
 # Makefile fragment for this subdirectory
-#
 
 # *** NOTE ***
-# 
 # Do not remove or modify the comment line:
-#
 # #[INSERT NEW ?????? HERE]
-#
 # It is required by the module maker to properly edit this file.
 # if you want to edit this file by hand, see the "Create A New Module"
 # documentation on how to do it correctly.
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
-SRCDIR   := SCIRun/Modules/Image
+SRCDIR   := Dataflow/Modules/Image
 
 SRCS     += \
 	$(SRCDIR)/Binop.cc\
@@ -47,10 +42,10 @@ SRCS     += \
 	$(SRCDIR)/WhiteNoiseImage.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := SCIRun/Datatypes/Image PSECore/Dataflow PSECore/Datatypes \
-	SCICore/Datatypes SCICore/Persistent SCICore/Exceptions \
-	SCICore/TclInterface SCICore/Containers SCICore/Thread \
-	SCICore/Math SCICore/TkExtensions
+PSELIBS := SCIRun/Datatypes/Image Dataflow/Network Core/Datatypes \
+	Core/Datatypes Core/Persistent Core/Exceptions \
+	Core/TclInterface Core/Containers Core/Thread \
+	Core/Math Core/TkExtensions
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  RatioConstraint.cc
@@ -13,17 +12,15 @@
  */
 
 
-#include <PSECore/Constraints/RatioConstraint.h>
-#include <SCICore/Util/Debug.h>
+#include <Dataflow/Constraints/RatioConstraint.h>
+#include <Core/Util/Debug.h>
 #include <iostream>
 using std::cerr;
 using std::cout;
 using std::endl;
 
-namespace PSECore {
-namespace Constraints {
+namespace SCIRun {
 
-using SCICore::Util::DebugSwitch;
 
 static DebugSwitch rc_debug("Constraints", "Ratio");
 
@@ -108,25 +105,5 @@ RatioConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
    return 0;
 }
 
-} // End namespace Constraints
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/10/07 02:07:17  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/08 02:26:39  sparker
-// Various #include cleanups
-//
-// Revision 1.2  1999/08/17 06:38:19  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:56  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:52  dav
-// Import sources
-//
-//

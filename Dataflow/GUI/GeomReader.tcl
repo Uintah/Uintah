@@ -1,7 +1,7 @@
 
 catch {rename GeomReader ""}
 
-itcl_class PSECommon_Readers_GeomReader {
+itcl_class Dataflow_Readers_GeomReader {
     inherit Module
     constructor {config} {
 	set name GeomReader

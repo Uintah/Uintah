@@ -1,5 +1,4 @@
 
-// $Id$
 
 /*
  *  FileNotFound.h: Exactly what you think
@@ -13,14 +12,13 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef SCICore_Exceptions_FileNotFound_h
-#define SCICore_Exceptions_FileNotFound_h
+#ifndef Core_Exceptions_FileNotFound_h
+#define Core_Exceptions_FileNotFound_h
 
-#include <SCICore/Exceptions/Exception.h>
+#include <Core/Exceptions/Exception.h>
 #include <string>
 
-namespace SCICore {
-    namespace Exceptions {
+namespace SCIRun {
 	class FileNotFound : public Exception {
 	public:
 	    FileNotFound(const std::string&);
@@ -33,15 +31,8 @@ namespace SCICore {
 	    std::string d_message;
 	    FileNotFound& operator=(const FileNotFound&);
 	};
-    }
-}
+} // End namespace SCIRun
 
 #endif
 
-//
-// $Log$
-// Revision 1.1  2000/05/20 08:06:14  sparker
-// New exception classes
-//
-//
 

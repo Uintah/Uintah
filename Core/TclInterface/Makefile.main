@@ -1,9 +1,9 @@
 THISDIR = TclInterface
-SECTION = SCICore
+SECTION = Core
 
 include $(TOP)/make.defaults
 
-C_DIR = $(TOP)/src/SCICore/$(THISDIR)
+C_DIR = $(TOP)/src/Core/$(THISDIR)
 O_DIR = $(ARCHDIR)/$(THISDIR)
 
 # VPATH is used by /usr/local/gnu/bin/make

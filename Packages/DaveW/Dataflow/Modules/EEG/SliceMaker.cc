@@ -11,35 +11,26 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <SCICore/Datatypes/ColumnMatrix.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array3.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Math/Trig.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/Material.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array3.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Math/Trig.h>
 #include <iostream>
 using std::cerr;
 
-namespace SCIRun {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Math;
-using namespace SCICore::Containers;
-using namespace SCICore::Datatypes;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::TclInterface;
+namespace DaveW {
+using namespace SCIRun;
 
 #define MAX_CLASS 6
 class SliceMaker : public Module {
@@ -194,39 +185,7 @@ void SliceMaker::execute()
 
 
 }
-
-} // End namespace Modules
-} // End namespace SCIRun
+} // End namespace DaveW
 
 
-//
-// $Log$
-// Revision 1.2  2000/10/29 04:02:46  dmw
-// cleaning up DaveW tree
-//
-// Revision 1.1  2000/09/07 20:43:11  zyp
-// This module creates a disc that represents the real and guessed
-// conductivity values for a cylinder.  It is for use in a demo.  It
-// receives a 6 row ColumnMatrix as the input with three values being the
-// real values and three values being the guess.  It outputs a geometry
-// that is color coded according to these values.  The idea is that we
-// can watch the conductivity values converge as we do inverse solving of
-// the conductivity of the fluids in a cylinder.
-//
-// Revision 1.5  2000/09/07 00:12:19  zyp
-// MakeScalarField.cc
-//
-// Revision 1.4  2000/03/17 09:29:13  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.3  1999/12/09 09:52:44  dmw
-// supports more than 7 unique regions now
-//
-// Revision 1.2  1999/10/07 02:08:20  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.1  1999/09/05 01:15:28  dmw
-// added all of the old SCIRun mesh modules
-//
+

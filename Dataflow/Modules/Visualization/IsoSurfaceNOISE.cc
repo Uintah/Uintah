@@ -12,53 +12,45 @@
 
 #include <stdio.h>
 #include <time.h>
-#include <SCICore/Containers/Queue.h>  
-#include <SCICore/Persistent/Pstreams.h>          
-#include <SCICore/Geometry/BBox.h>
-#include <PSECore/Datatypes/SpanSpace.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <SCICore/Geom/BBoxCache.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Malloc/Allocator.h>
-//#include <SCICore/Math/Expon.h>
-//#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
+#include <Core/Containers/Queue.h>  
+#include <Core/Persistent/Pstreams.h>          
+#include <Core/Geometry/BBox.h>
+#include <Dataflow/Ports/SpanSpace.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/BBoxCache.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Material.h>
+#include <Core/Malloc/Allocator.h>
+//#include <Core/Math/Expon.h>
+//#include <Core/Math/MiscMath.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
 
-#include <SCICore/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarField.h>
 
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
 
-//#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCL.h>
+//#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCL.h>
 //#include <tcl.h>
 //#include <tk.h>
 
 #include <iostream>
 
-#include <PSECore/Datatypes/SpanSpace.h>
-#include <PSECommon/Algorithms/Visualization/MCRGScan.h>
-#include <PSECommon/Algorithms/Visualization/MCUG.h>
-#include <PSECommon/Algorithms/Visualization/Noise.h>
+#include <Dataflow/Ports/SpanSpace.h>
+#include <Core/Algorithms/Visualization/MCRGScan.h>
+#include <Core/Algorithms/Visualization/MCUG.h>
+#include <Core/Algorithms/Visualization/Noise.h>
 
 
 
-namespace PSECommon {
-  namespace Modules {
+namespace SCIRun {
     
-    using namespace SCICore::TclInterface;
-    using namespace SCICore::Containers;
-    using namespace SCICore::GeomSpace;
-    using namespace SCICore::Geometry;
-    using namespace PSECore::Dataflow;
-    using namespace PSECore::Datatypes;
-    using namespace PSECommon::Algorithms;
     
     class IsoSurfaceNOISE : public Module 
     {
@@ -272,5 +264,4 @@ namespace PSECommon {
     return scinew Noise<T,MCRGScan<F>,Module> (span, mc,this);
   }
 
-  } // namespace Modules
-} // namespace PSECommon
+} // End namespace SCIRun

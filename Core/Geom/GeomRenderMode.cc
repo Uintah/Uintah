@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  * GeomRenderMode.cc: RenderMode objects
@@ -12,17 +11,16 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Geom/GeomRenderMode.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geom/GeomRenderMode.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::ostream;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Persistent* make_GeomRenderMode()
 {
@@ -59,7 +57,7 @@ void GeomRenderMode::io(Piostream& stream)
     stream.begin_class("GeomRenderMode", GEOMRENDERMODE_VERSION);
     GeomContainer::io(stream);
     int tmp=drawtype;
-    PersistentSpace::Pio(stream, tmp);
+    Pio(stream, tmp);
     if(stream.reading())
 	drawtype=(DrawType)tmp;
     stream.end_class();
@@ -71,27 +69,6 @@ bool GeomRenderMode::saveobj(ostream&, const clString&, GeomSave*)
     return false;
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/10/07 02:07:44  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/08/17 23:50:24  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:12  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:43  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:19  dav
-// Import sources
-//
-//
 

@@ -10,10 +10,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 using std::ostream;
@@ -24,11 +24,8 @@ using std::ostream;
 #include <values.h>
 #endif
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using SCICore::Math::Min;
-using SCICore::Containers::Array2;
 
 static Persistent* make_GeomGroup()
 {
@@ -115,13 +112,12 @@ void GeomGroup::reset_bbox()
 
 void GeomGroup::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomGroup", GEOMGROUP_VERSION);
     // Do the base class first...
     GeomObj::io(stream);
     Pio(stream, del_children);
-    SCICore::Containers::Pio(stream, objs);
+    Pio(stream, objs);
     stream.end_class();
 }
 
@@ -143,5 +139,4 @@ bool GeomGroup::saveobj(ostream& out, const clString& format,
     return true;
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun

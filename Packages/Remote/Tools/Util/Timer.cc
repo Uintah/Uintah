@@ -1,9 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // Timer.cpp - A wall clock timer.
-//
 // By Dave McAllister, 1998.
 
-#include <Remote/Tools/Util/Timer.h>
+#include <Packages/Remote/Tools/Util/Timer.h>
 
 #include <sys/times.h>
 #include <limits.h>
@@ -11,8 +10,6 @@
 static double clock_interval = 1./double(CLK_TCK);
 
 namespace Remote {
-namespace Tools {
-
 // Create the timer. It is stopped.
 Timer::Timer()
 {
@@ -72,6 +69,5 @@ double GetCurTime()
     double dtime=double(times(&buffer)) * clock_interval;
     return dtime;
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote

@@ -2,25 +2,16 @@
 #define GLVOLRENSTATE_H
 
 //#include "GLVolumeRenderer.h"
-#include <SCICore/Geometry/Ray.h>
+#include <Core/Geometry/Ray.h>
 #include <vector>
 #include <GL/glu.h>
 
-namespace Kurt {
-  namespace Datatypes {
   class Brick;
-  }
 }
 
-namespace SCICore {
-  namespace Geometry {
-  class Polygon;
-  }
-  namespace GeomSpace {
-  
+namespace Kurt {
 
-  using SCICore::Geometry::Ray;
-  using SCICore::Geometry::Polygon;
+using namespace SCIRun;
   using std::vector;
   using namespace Kurt::Datatypes;
   
@@ -35,7 +26,7 @@ GENERAL INFORMATION
 
    GLVolRenState.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -94,9 +85,7 @@ protected:
   GLuint* texName;
   unsigned char* reload;
 
+} // End namespace Kurt
 
-};
 
-} // end namespace GeomSpace
-} // end namespace SCICore
 #endif

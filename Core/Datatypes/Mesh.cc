@@ -14,39 +14,28 @@
 #pragma warning(disable:4291) // quiet the visual C++ compiler
 #endif
 
-#include <SCICore/Datatypes/Mesh.h>
+#include <Core/Datatypes/Mesh.h>
 
-#include <SCICore/Containers/FastHashTable.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Containers/TrivialAllocator.h>
-#include <SCICore/Datatypes/ColumnMatrix.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/GeomPolyline.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Mat.h>
+#include <Core/Containers/FastHashTable.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Containers/TrivialAllocator.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/GeomPolyline.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Mat.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 #include <fstream>
 using std::ofstream;
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Containers::TrivialAllocator;
-using SCICore::Containers::FastHashTable;
-using SCICore::Containers::FastHashTableIter;
-using SCICore::Geometry::Dot;
-using SCICore::Geometry::Min;
-using SCICore::Geometry::Max;
-using SCICore::GeomSpace::Material;
-using SCICore::GeomSpace::GeomPolyline;
-using SCICore::Math::Min;
-using SCICore::Math::Max;
 
 
 #define OCTREE_MAXDEPTH 2
@@ -177,7 +166,6 @@ Mesh* Mesh::clone()
 
 void Mesh::io(Piostream& stream)
 {
-    using SCICore::Containers::Pio;
 
     int version=stream.begin_class("Mesh", MESH_VERSION);
     if(version == 1){
@@ -207,7 +195,7 @@ void Mesh::io(Piostream& stream)
 	Pio(stream, cond_tensors);
     }
 
-    if (version >= 5) SCICore::PersistentSpace::Pio(stream, bld_grid);
+    if (version >= 5) Pio(stream, bld_grid);
 
     stream.end_class();
     if(stream.reading()){
@@ -229,10 +217,9 @@ void Mesh::io(Piostream& stream)
 
 void Node::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     int version=stream.begin_class("Node", NODE_VERSION);
-    SCICore::Geometry::Pio(stream, p);
+    Pio(stream, p);
     if(version >= 3){
       if (version >= 4) {
 	  Pio(stream, fluxBC);
@@ -247,7 +234,7 @@ void Node::io(Piostream& stream)
       if(stream.reading() && flag)
 	bc=new DirichletBC(0,0);
       if(flag){
-	  SCICore::Containers::Pio(stream, bc->fromsurf);
+	  Pio(stream, bc->fromsurf);
 	  Pio(stream, bc->value);
       }
     }
@@ -462,7 +449,6 @@ void Element::get_sphere2(Point& cen, double& rad2, double& err)
 
 Point Element::centroid()
 {
-    using SCICore::Geometry::AffineCombination;
   
     Point p0(mesh->nodes[n[0]]->p);
     Point p1(mesh->nodes[n[1]]->p);
@@ -2001,11 +1987,9 @@ Octree::~Octree()
 
 void Pio(Piostream& stream, Element*& data)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Datatypes::Pio;
 
     if(stream.reading())
-	data=new SCICore::Datatypes::Element(0,0,0,0,0);
+	data=new Element(0,0,0,0,0);
     stream.begin_cheap_delim();
     Pio(stream, data->n[0]);
     Pio(stream, data->n[1]);
@@ -2015,25 +1999,23 @@ void Pio(Piostream& stream, Element*& data)
     stream.end_cheap_delim();
 }
 
-void Pio(Piostream& stream, SCICore::Datatypes::NodeVersion1& node)
+void Pio(Piostream& stream, NodeVersion1& node)
 {
-    using SCICore::Geometry::Pio;
 
     stream.begin_cheap_delim();
     Pio(stream, node.p);
     stream.end_cheap_delim();
 }
 
-void Pio(Piostream& stream, SCICore::Datatypes::ElementVersion1& elem)
+void Pio(Piostream& stream, ElementVersion1& elem)
 {
     stream.begin_cheap_delim();
-    SCICore::PersistentSpace::Pio(stream, elem.n0);
-    SCICore::PersistentSpace::Pio(stream, elem.n1);
-    SCICore::PersistentSpace::Pio(stream, elem.n2);
-    SCICore::PersistentSpace::Pio(stream, elem.n3);
+    Pio(stream, elem.n0);
+    Pio(stream, elem.n1);
+    Pio(stream, elem.n2);
+    Pio(stream, elem.n3);
     stream.end_cheap_delim();
 }
 
-} // End namespace PersistentSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 

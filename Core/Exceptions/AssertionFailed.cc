@@ -1,7 +1,6 @@
 
 /*
  *  AssertionFailed.h: Generic exception for internal errors
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -12,12 +11,12 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <SCICore/Exceptions/AssertionFailed.h>
+#include <Core/Exceptions/AssertionFailed.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-using SCICore::Exceptions::AssertionFailed;
+namespace SCIRun {
 
 AssertionFailed::AssertionFailed(const char* message,
 				 const char* file,
@@ -45,15 +44,7 @@ const char* AssertionFailed::message() const
 
 const char* AssertionFailed::type() const
 {
-    return "SCICore::Exceptions::AssertionFailed";
+    return "AssertionFailed";
 }
 
-//
-// $Log$
-// Revision 1.2  2000/03/23 20:43:09  sparker
-// Added copy ctor to all exception classes (for Linux/g++)
-//
-// Revision 1.1  2000/03/23 10:25:40  sparker
-// New exception facility - retired old "Exception.h" classes
-//
-//
+} // End namespace SCIRun

@@ -10,23 +10,18 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef SCI_DaveW_Datatypes_VectorFieldMI_h
-#define SCI_DaveW_Datatypes_VectorFieldMI_h 1
+#ifndef SCI_Packages/DaveW_Datatypes_VectorFieldMI_h
+#define SCI_Packages/DaveW_Datatypes_VectorFieldMI_h 1
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <SCICore/Datatypes/VectorFieldUG.h>
-#include <SCICore/Datatypes/VectorFieldRG.h>
-#include <SCICore/Persistent/Pstreams.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/VectorFieldUG.h>
+#include <Core/Datatypes/VectorFieldRG.h>
+#include <Core/Persistent/Pstreams.h>
 
 namespace DaveW {
-namespace Datatypes {
+using namespace SCIRun;
 
-using SCICore::Containers::Array1;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
-
-using namespace SCICore::Datatypes;
 
 class VectorFieldMI : public VectorField {
 
@@ -54,15 +49,8 @@ private:
   int nelems;
 
 };
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.1  1999/09/02 04:45:51  dmw
-// magnetic field
-//
-//
+
 
 #endif

@@ -1,16 +1,12 @@
-#
 #  CuttingPlaneTex.tcl
-#
 #  Written by:
 #   Colette Mullenhoff
 #   Department of Computer Science
 #   University of Utah
 #   May. 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
-itcl_class PSECommon_Visualization_CuttingPlaneTex {
+itcl_class Dataflow_Visualization_CuttingPlaneTex {
     inherit Module
     constructor {config} {
 	set name CuttingPlaneTex

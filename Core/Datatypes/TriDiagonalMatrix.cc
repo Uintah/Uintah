@@ -10,15 +10,14 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Datatypes/TriDiagonalMatrix.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Datatypes/ColumnMatrix.h>
-#include <SCICore/Math/LinAlg.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/MiscMath.h>
+#include <Core/Datatypes/TriDiagonalMatrix.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Math/LinAlg.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 TriDiagonalMatrix::TriDiagonalMatrix(int rows)
 : Matrix(non_symmetric, tridiagonal), rows(rows)
@@ -80,7 +79,6 @@ void TriDiagonalMatrix::getRowNonzeros(int r, Array1<int>& idx, Array1<double>& 
 
 double TriDiagonalMatrix::minValue()
 {
-    using SCICore::Math::Min;
 
     double min=data[0][0];
     for(int i=0;i<rows;i++){
@@ -93,7 +91,6 @@ double TriDiagonalMatrix::minValue()
 
 double TriDiagonalMatrix::maxValue()
 {
-    using SCICore::Math::Max;
 
     double max=data[0][0];
     for(int i=0;i<rows;i++){
@@ -162,5 +159,4 @@ void TriDiagonalMatrix::solve(ColumnMatrix& cc)
 #endif
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun

@@ -12,12 +12,14 @@
  */
 
 #include "PingPong_impl.h"
-#include <SCICore/Util/NotFinished.h>
+#include <Core/Util/NotFinished.h>
 using PingPong::PingPong_impl;
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+
+using namespace SCIRun;
 
 PingPong_impl::PingPong_impl()
 {

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  DipoleInSphere: User gives us discretization of a surface and a dipole,
@@ -13,16 +12,16 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <DaveW/ThirdParty/NumRec/plgndr.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Datatypes/SurfTree.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Packages/DaveW/Core/ThirdParty/NumRec/plgndr.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Containers/String.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Datatypes/SurfTree.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Core/TclInterface/TCLvar.h>
 
 #include <iostream>
 using std::cerr;
@@ -30,14 +29,7 @@ using std::cerr;
 #include <math.h>
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
-using namespace SCICore::Geometry;
+using namespace SCIRun;
 
 class DipoleInSphere : public Module {
     SurfaceIPort* isurf;
@@ -166,21 +158,7 @@ void DipoleInSphere::execute() {
     SurfaceHandle sh2(newTS);
     osurf->send(sh2);
 }    
-
-} // End namespace Modules
 } // End namespace DaveW
 
 
-//
-// $Log$
-// Revision 1.3  2000/03/17 09:25:38  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.2  1999/10/07 02:06:31  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.1  1999/09/16 00:36:54  dmw
-// added new Module that Chris Butson will work on (DipoleInSphere) and fixed SRCDIR references in DaveW makefiles
-//
+

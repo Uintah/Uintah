@@ -2,7 +2,7 @@
 #ifndef Math_fft_h
 #define Math_fft_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
 #ifdef __cplusplus
 extern "C" {

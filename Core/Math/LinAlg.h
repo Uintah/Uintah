@@ -13,7 +13,7 @@
 #ifndef Math_LinAlg_h
 #define Math_LinAlg_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
 #ifdef __cplusplus
 extern "C" {

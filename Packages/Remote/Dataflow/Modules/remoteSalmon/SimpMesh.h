@@ -1,19 +1,15 @@
 //////////////////////////////////////////////////////////////////////
 // SimpMesh.h - Simplifies the given model using quadric error metric.
-//
 // David K. McAllister, August 1999.
-//
 // Implements a simplifiable mesh, which is a subclass of Mesh.
 
 #ifndef _simpmesh_h
 #define _simpmesh_h
 
-#include <Remote/Tools/Model/Mesh.h>
+#include <Packages/Remote/Tools/Model/Mesh.h>
 using namespace Remote::Tools;
 
 namespace Remote {
-namespace Modules {
-
 class SimpMesh : public Mesh
 {
   vector<Edge *> Collapses;
@@ -133,8 +129,7 @@ public:
   }
 
 };
+} // End namespace Remote
 
-} //namespace Modules
-} // namespace Remote
 
 #endif

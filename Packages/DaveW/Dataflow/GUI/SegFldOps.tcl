@@ -1,19 +1,16 @@
 ##
  #  SegFldOps.tcl: The segfld UI
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   Aug 1996
- #
  #  Copyright (C) 1996 SCI Group
- # 
  ##
 
-catch {rename DaveW_EEG_SegFldOps ""}
+catch {rename Packages/DaveW_EEG_SegFldOps ""}
 
-itcl_class DaveW_EEG_SegFldOps {
+itcl_class Packages/DaveW_EEG_SegFldOps {
     inherit Module
     constructor {config} {
         set name SegFldOps

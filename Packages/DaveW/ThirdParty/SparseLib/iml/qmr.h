@@ -1,10 +1,8 @@
 //*****************************************************************
 // Iterative template routine -- QMR
-//
 // QMR.h solves the unsymmetric linear system Ax = b using the
 // Quasi-Minimal Residual method following the algorithm as described
 // on p. 24 in the SIAM Templates book.
-//
 //   -------------------------------------------------------------
 //   return value     indicates
 //   ------------     ---------------------
@@ -18,14 +16,11 @@
 //        6             ep
 //        7             xi
 //   -------------------------------------------------------------
-//   
 // Upon successful return, output arguments have the following values:
-//
 //        x  --  approximate solution to Ax=b
 // max_iter  --  the number of iterations performed before the
 //               tolerance was reached
 //      tol  --  the residual after the final iteration
-//
 //*****************************************************************
 
 

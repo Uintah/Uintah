@@ -11,19 +11,15 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 #include <sstream>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
 
 class MatSelectVec : public Module {
     MatrixIPort* imat;
@@ -211,5 +207,4 @@ void MatSelectVec::tcl_command(TCLArgs& args, void* userdata)
     if(args[1] == "stop") stop=1;
     else Module::tcl_command(args, userdata);
 }
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun

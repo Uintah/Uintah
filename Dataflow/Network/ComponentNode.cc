@@ -7,16 +7,16 @@
  *   University of Utah
  */
 
-#include <PSECore/Dataflow/ComponentNode.h>
-#include <PSECore/XMLUtil/XMLUtil.h>
-#include <PSECore/Dataflow/PackageDBHandler.h>
-#include <PSECore/Dataflow/StrX.h>
+#include <Dataflow/Network/ComponentNode.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Dataflow/Network/PackageDBHandler.h>
+#include <Dataflow/Network/StrX.h>
 
 #include <iostream>
 #include <fstream>
 #include <strstream>
 #include <stdlib.h>
-#include <SCICore/Containers/String.h>
+#include <Core/Containers/String.h>
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1375
@@ -36,12 +36,10 @@ using std::cout;
 using std::endl;
 using std::strstream;
 
-using namespace PSECore::XMLUtil;
 
 #define rWSgSC(x) removeWhiteSpace(getSerializedChildren(x))
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
 typedef map<int,char*>::iterator char_iter;
 typedef map<int,parameter_node*>::iterator param_iter;
@@ -1099,7 +1097,6 @@ int ReadComponentNodeFromFile(component_node* n, const char* filename)
   return 1;
 }
 
-} // Dataflow
-} // PSECore
+} // End namespace SCIRun
 
 

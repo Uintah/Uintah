@@ -12,10 +12,10 @@
  */
 
 
-#include <SCICore/Thread/Time.h>
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Thread/ThreadError.h>
+#include <Core/Thread/Time.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/ThreadError.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
@@ -25,9 +25,7 @@
 #include <sys/time.h>
 #include <errno.h>
 
-using SCICore::Thread::Mutex;
-using SCICore::Thread::Thread;
-using SCICore::Thread::Time;
+using namespace SCIRun;
 
 static int timer_32bit;
 unsigned int iotimer_high;
@@ -47,6 +45,7 @@ static bool initialized=false;
 static Mutex initlock("Time initialization lock");
 
 #define TOPBIT ((unsigned int)0x80000000)
+
 
 static
 void

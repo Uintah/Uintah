@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  cSMatrix.cc: ?
@@ -12,15 +11,14 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Datatypes/cSMatrix.h>
+#include <Core/Datatypes/cSMatrix.h>
 #include <iostream>
 using std::cout;
 using std::endl;
 using std::complex;
 using std::ostream;
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 //-----------------------------------------------------------------
 cSMatrix::cSMatrix(int lnrows, int lncols,int lnnz, Complex *la, int * lrow, int *lcol ){
@@ -143,33 +141,5 @@ cSMatrix::Complex& cSMatrix::get(int i, int j) {
     }
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.5  1999/10/07 02:07:36  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/09/08 02:26:49  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/08/25 03:48:48  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:39:01  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:34  mcq
-// Initial commit
-//
-// Revision 1.1  1999/04/25 04:07:24  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:48  dav
-// Import sources
-//
-//

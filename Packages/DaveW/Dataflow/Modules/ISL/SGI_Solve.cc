@@ -1,5 +1,5 @@
 /****************************************************************
- *  Simple "SGI_Solve module"for the SCIRun                      *
+ *  Simple "SGI_Solve module"for the Dataflow                      *
  *                                                              *
  *  Written by:                                                 *
  *   Leonid Zhukov                                              *
@@ -13,10 +13,10 @@
  ****************************************************************/
 
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/TclInterface/TCLvar.h>
 
 #include <iostream>
 using std::cerr;
@@ -25,12 +25,7 @@ using std::endl;
 #include <time.h>
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
+using namespace SCIRun;
 
 /*
 extern "C" {
@@ -141,25 +136,7 @@ void SGI_Solve::execute()
  
 } 
 //---------------------------------------------------------------
-
-} // End namespace Modules
 } // End namespace DaveW
 
 
-//
-// $Log$
-// Revision 1.4  2000/03/17 09:25:48  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.3  1999/11/09 08:35:20  dmw
-// took out complibsgimath references, so this will compile on machines other than just rapture - as a result, SGI_LU and SGI_Solve don't work anymore
-//
-// Revision 1.2  1999/10/07 02:06:37  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.1  1999/09/02 04:50:05  dmw
-// more of Dave's modules
-//
-//
+

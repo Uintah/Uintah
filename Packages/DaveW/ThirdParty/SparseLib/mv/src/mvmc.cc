@@ -22,9 +22,7 @@
 /*                                                                           */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-//
 //          Basic matrix class (COMPLEX precision)
-//
 
 
 #define _NON_TEMPLATE_COMPLEX
@@ -79,7 +77,6 @@ MV_ColMat_COMPLEX& MV_ColMat_COMPLEX::operator=(const COMPLEX & s)
     {
     // this should run much faster than the just accessing each (i,j)
     // element individually 
-    //
 
         MV_VecIndex I(0,M-1);
         for (int j=0; j<N; j++)
@@ -205,7 +202,6 @@ MV_ColMat_COMPLEX::MV_ColMat_COMPLEX(COMPLEX* d, unsigned int m, unsigned int n,
 MV_ColMat_COMPLEX MV_ColMat_COMPLEX::operator()(const MV_VecIndex &I, const MV_VecIndex &J)
 {
     // check that index is not out of bounds
-    //
     if (I.end() >= dim0_  || J.end() >= dim1_)
     {
         cerr << "Matrix index: (" << I.start() << ":" << I.end()  
@@ -216,7 +212,6 @@ MV_ColMat_COMPLEX MV_ColMat_COMPLEX::operator()(const MV_VecIndex &I, const MV_V
     }
 
     // this automatically returns a reference
-    // 
     return MV_ColMat_COMPLEX(&v_[J.start()*lda_ + I.start()], 
             I.end() - I.start() + 1, 
             J.end() - J.start() + 1, lda_, MV_Matrix_::ref);
@@ -229,7 +224,6 @@ const MV_ColMat_COMPLEX MV_ColMat_COMPLEX::operator()(const MV_VecIndex &I,
     cerr << "Const operator()(MV_VecIndex, MV_VecIndex) called " << endl;
 
     // check that index is not out of bounds
-    //
     if (I.end() >= dim0_  || J.end() >= dim1_)
     {
         cerr << "Matrix index: (" << I.start() << ":" << I.end()  
@@ -242,7 +236,6 @@ const MV_ColMat_COMPLEX MV_ColMat_COMPLEX::operator()(const MV_VecIndex &I,
     // this automatically returns a reference.  we need to 
     // "cast away" constness here, so the &v_[] arg will
     // not cause a compiler error.
-    //
     MV_ColMat_COMPLEX *t =  (MV_ColMat_COMPLEX*) this;
     return MV_ColMat_COMPLEX(&(t->v_[J.start()*lda_ + I.start()]), 
             I.end() - I.start() + 1, 

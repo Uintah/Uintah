@@ -17,16 +17,14 @@
  */
 
 #include <string.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Datatypes/ScalarFieldRGTYPE.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MiscMath.h>
+#include <Core/Containers/String.h>
+#include <Core/Datatypes/ScalarFieldRGTYPE.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
 #include <iostream>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-  using namespace SCICore::Containers;
 
 static Persistent* maker()
 {
@@ -58,9 +56,6 @@ void ScalarFieldRGTYPE::resize(int x, int y, int z) {
 
 void ScalarFieldRGTYPE::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Geometry::Pio;
 
     int version=stream.begin_class("ScalarFieldRGTYPE", ScalarFieldRGTYPE_VERSION);
     if(version == 1){
@@ -139,9 +134,9 @@ void ScalarFieldRGTYPE::io(Piostream& stream)
 
 // void ScalarFieldRGTYPE::io(Piostream& stream)
 // {
-//     using SCICore::PersistentSpace::Pio;
-//     using SCICore::Containers::Pio;
-//     using SCICore::Geometry::Pio;
+//     using Pio;
+//     using Pio;
+//     using Pio;
 
 //     int version=stream.begin_class("ScalarFieldRGTYPE", ScalarFieldRGTYPE_VERSION);
 //     if(version == 1){
@@ -170,8 +165,6 @@ void ScalarFieldRGTYPE::io(Piostream& stream)
 
 void ScalarFieldRGTYPE::compute_minmax()
 {
-    using SCICore::Math::Min;
-    using SCICore::Math::Max;
 
     if(nx==0 || ny==0 || nz==0)return;
     double min=grid(0,0,0);
@@ -191,7 +184,6 @@ void ScalarFieldRGTYPE::compute_minmax()
 
 Vector ScalarFieldRGTYPE::gradient(const Point& p)
 {
-    using SCICore::Math::Interpolate;
 
     Vector pn=p-bmin;
     double diagx=diagonal.x();
@@ -241,7 +233,6 @@ int ScalarFieldRGTYPE::interpolate(const Point& p, double& value, int&,
 int ScalarFieldRGTYPE::interpolate(const Point& p, double& value, double eps,
 				   double)
 {
-    using SCICore::Math::Interpolate;
 
     Vector pn=p-bmin;
     double dx=diagonal.x();
@@ -409,62 +400,6 @@ void ScalarFieldRGTYPE::fill_gradmags() // these guys ignor the vf
   }
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.8  2000/12/12 20:31:21  yarden
-// use the new filename field. allow to use raw file relative to
-// the directory of the current file.
-//
-// Revision 1.7  2000/03/13 04:47:52  dmw
-// SurfTree and TriSurface - made get_surfnodes and set_surfnodes work
-// ScalarFieldRG - interpolate uses epsilon bounds, so interpolate on
-// 	the point at (nx-1,ny-1,nz-1) returns a value (rather than
-// 	failing)
-//
-// Revision 1.6  2000/02/04 01:25:53  dmw
-// added std:: before cerr and endl
-//
-// Revision 1.5  2000/02/04 00:19:31  yarden
-// enable to store the grid part of a ScalarField in a seperate file.
-// a flag (sererate_raw) signal if this ScalarField was read from a split
-// input file or should be writen as two. raw_filename specify the secondary
-// file name. if no filename is given during writing, the output routines
-// will try to extract the name from the output stream and attach a '.raw'
-// extension to the binary portion.
-//
-// replaced ScalarFieldRGxxx with ScalarFieldRGTYPE. it also replaces
-// the ScalarFieldRG files (i.e. the old RG with no type specification
-// which defaults to 'double'
-//
-// Revision 1.4  1999/10/07 02:07:33  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/08/25 03:48:37  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:50  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:25  mcq
-// Initial commit
-//
-// Revision 1.3  1999/07/07 21:10:39  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.2  1999/05/06 19:55:50  dav
-// added back .h files
-//
-// Revision 1.1  1999/04/25 04:07:12  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:50  dav
-// Import sources
-//
-//
 

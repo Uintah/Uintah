@@ -6,40 +6,27 @@
 #   **  *******  ***   **   ***      ***                 K. Remington   */
 #    ********   ********                                 A. Lumsdaine   */
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-#
 #          S p a r s e L i b  ++     m a k e f i l e . d e f
-#
 #    Compiler Specific Section:   Edit to reflect your environment
 #-------------------------------------------------------------------------
-#
 #	Macro                 Significance
-#
 #   CCC                   C++ compiler
 #   CCCFLAGS              flags to C++ compiler
 #   CC                    C compiler
 #   CFLAGS                flags to C compiler
 #   LDFLAGS				  libraries 
 #   HASRANLIB             't' if your system has ranlib, 'f' otherwise
-#
-#
 # Some defaults are below for Sun C++, and GNU g++.  Uncomment the 
 # relevant sections.
-#
-#
 
 
-#
 # Support for optional vector-bounds checking:
-#
 # Use -DMV_VECTOR_BOUNDS_CHECK to perform runtime checking of
 #		index bounds. Can be used to create a "debug" and a
 #		a "production" version of MV++ libraries.
-#
 # Support for vectors and matrices of type complex:
-#
 # Use -DCOMPLEX_OSTREAM if your compiler does not provide a predefine
 #			a way to print complex numbers (e.g. cout << u; ) 
-#
 # Define COMPLEX to expand to whatever name your compiler uses for
 #		complex numbers (e.g. g++ 2.7.0 uses templated classes
 #		as per ANSI C++)  Most other compilers use "complex" or
@@ -48,7 +35,6 @@
 
 
 # IBM xlC  v. 1.1
-#
 #CCC             = xlC
 #CC              = xlc
 #CCCFLAGS        = -+ -O -DCOMPLEX=complex
@@ -58,7 +44,6 @@
 
 
 # Sun C++ 4.0.1 
-#
 #CCC 			= CC
 #CC 				= acc	
 #CCCFLAGS 		= -O +w -DMV_VECTOR_BOUNDS_CHECK -g
@@ -69,7 +54,6 @@
 
 
 # g++ v. 2.6.3
-#
 #CCC 			= g++
 #CC 				= gcc	
 #CCCFLAGS 		=  -Wall -DMV_VECTOR_BOUNDS_CHECK -g -DCOMPLEX=complex
@@ -77,7 +61,6 @@
 						$(SPARSELIB_DIR)/lib/libmv.a -lm 
 
 # g++ v. 2.7.0
-#
 #CCC 			= g++
 #CC 				= gcc	
 #CCCFLAGS 		=   -DMV_VECTOR_BOUNDS_CHECK -g '-DCOMPLEX=complex<double>' 

@@ -1,6 +1,6 @@
 #catch {rename remoteSalmon ""} 
 
-itcl_class Remote_remoteSalmon_remoteSalmon {
+itcl_class Packages/Remote_remoteSalmon_remoteSalmon {
     inherit Module
 
     # List of Roe children of this sammon
@@ -91,14 +91,10 @@ itcl_class Roe {
 	set $this-framerate 15
 	global $this-totframes
 	set $this-totframes 30
-	#
 	# Get the list of supported renderers for the pulldown
-	#
 	set r [$salmon-c listrenderers]
 	
-	#
 	# Need to initialize the background color
-	#
 	global $this-bgcolor-r
 	set $this-bgcolor-r 0
 	global $this-bgcolor-g
@@ -284,7 +280,7 @@ itcl_class Roe {
 # 	checkbutton $w.bframe.remotetop.c -text Compress \
 # 		-variable $this-global-compress -command "$this-c redraw"
 # 	pack $w.bframe.remotetop.c -side left
-# 	button $w.bframe.remotetop.b -text "Remote" -command "$this-c remote"
+# 	button $w.bframe.remotetop.b -text "Packages/Remote" -command "$this-c remote"
 # 	pack $w.bframe.remotetop.b -fill x -side right -padx 4
 # 	pack $w.bframe.remotetop
 
@@ -973,9 +969,9 @@ itcl_class Roe {
 		"$this doSaveObjects" "destroy .ui[modname]-save"
 	set ex .ui[modname]-save.f.extra
 	radiobutton $ex.geomb -variable $this-saveformat \
-		-text "SCIRun geom object file (Binary)" -value "scirun_binary"
+		-text "Dataflow geom object file (Binary)" -value "scirun_binary"
 	radiobutton $ex.geoma -variable $this-saveformat \
-		-text "SCIRun geom object file (ASCII)" -value "scirun_ascii"
+		-text "Dataflow geom object file (ASCII)" -value "scirun_ascii"
 	radiobutton $ex.vrml -variable $this-saveformat \
 		-text "VRML file" -value "vrml"
 	radiobutton $ex.rib -variable $this-saveformat \

@@ -1,8 +1,6 @@
 #include "OctreeChildIterator.h"
 
 namespace Kurt {
-namespace Datatypes {
-
 int
 OctreeChildIterator::defaultOrder = {0,1,2,3,4,5,6,7};
 
@@ -37,6 +35,5 @@ OctreeChildIterator::Next()
   if( current >= 8)
     return 0;
 }
+} // End namespace Kurt
 
-} // end namespace Datatypes
-} // end namespace Kurt

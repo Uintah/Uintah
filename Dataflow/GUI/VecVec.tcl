@@ -1,21 +1,17 @@
 ##
  #  VecVec.tcl: Vector - Vector operations
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   October 2000
- #
  #  Copyright (C) 2000 SCI Group
- # 
  #  Log Information:
- #
  ##
 
 catch {rename VecVec ""}
 
-itcl_class PSECommon_Matrix_VecVec {
+itcl_class Dataflow_Matrix_VecVec {
     inherit Module
     constructor {config} {
         set name VecVec

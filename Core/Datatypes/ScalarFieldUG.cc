@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ScalarFieldUG.cc: Scalar Fields defined on an unstructured grid
@@ -12,11 +11,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Math/MusilRNG.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Math/MusilRNG.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 
@@ -25,10 +24,8 @@ using std::cerr;
 #define drand48() rand()
 #endif
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using namespace SCICore::Math;
 
 static Persistent* maker()
 {
@@ -78,8 +75,6 @@ void ScalarFieldUG::compute_bounds()
 
 void ScalarFieldUG::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     int version=stream.begin_class("ScalarFieldUG", SCALARFIELDUG_VERSION);
     // Do the base class....
@@ -98,8 +93,6 @@ void ScalarFieldUG::io(Piostream& stream)
 
 void ScalarFieldUG::compute_minmax()
 {
-    using SCICore::Math::Min;
-    using SCICore::Math::Max;
 
     if(have_minmax || data.size()==0)
 	return;
@@ -219,7 +212,6 @@ void ScalarFieldUG::get_boundary_lines(Array1<Point>& lines)
 
 inline Point RandomPoint(Element* e)
 {
-  using SCICore::Geometry::AffineCombination;
   
   Point p0(e->mesh->nodes[e->n[0]]->p);
   Point p1(e->mesh->nodes[e->n[1]]->p);
@@ -393,48 +385,6 @@ void ScalarFieldUG::over_grad_augment(double vol_wt, double grad_wt,
   cerr << vol_total << " Volume " << grad_total << " Gradient\n";
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.5  1999/10/07 02:07:34  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/08/25 03:48:40  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/23 06:30:35  sparker
-// Linux port
-// Added X11 configuration options
-// Removed many warnings
-//
-// Revision 1.2  1999/08/17 06:38:53  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:28  mcq
-// Initial commit
-//
-// Revision 1.5  1999/07/07 21:10:43  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.4  1999/05/06 19:55:55  dav
-// added back .h files
-//
-// Revision 1.3  1999/04/27 21:14:28  dav
-// working on Datatypes
-//
-// Revision 1.2  1999/04/25 04:14:43  dav
-// oopps...?
-//
-// Revision 1.1  1999/04/25 04:07:16  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:48  dav
-// Import sources
-//
-//
 

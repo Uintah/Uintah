@@ -1,22 +1,18 @@
-//
-// $Id$
-//
 
 #include "ProblemSpec.h"
 
 #include <iostream>
-#include <SCICore/Geometry/IntVector.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
-#include <Uintah/Exceptions/ParameterNotFound.h>
-#include <PSECore/XMLUtil/XMLUtil.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Packages/Uintah/Exceptions/ParameterNotFound.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/Malloc/Allocator.h>
 //#include <cstdlib>
 #include <map>
 using namespace Uintah;
 using namespace std;
-using namespace SCICore::Geometry;
-using namespace PSECore::XMLUtil;
+using namespace SCIRun;
 
 ProblemSpec::ProblemSpec(const DOM_Node& node, bool doWrite)
   : d_node(node), d_write(doWrite)
@@ -453,105 +449,3 @@ const TypeDescription* ProblemSpec::getTypeDescription()
     return 0;
 }
 
-//
-// $Log$
-// Revision 1.25  2000/10/13 19:50:29  sparker
-// Commented out chatter
-//
-// Revision 1.24  2000/09/26 23:12:19  witzel
-// Make the ProblemSpec carry on its d_write flag to the children
-// it creates.
-//
-// Revision 1.23  2000/09/26 21:34:07  witzel
-// minor revision of the change I submitted before
-//
-// Revision 1.22  2000/09/26 21:24:27  witzel
-// Added d_write flag and corresponding writeMessages(bool) method to
-// control whether or not to output error and warning messages.
-//
-// Revision 1.21  2000/09/25 20:39:14  sparker
-// Quiet g++ compiler warnings
-//
-// Revision 1.20  2000/06/23 19:24:57  jas
-// Added method to parse out the attributes for a given tag, i.e.
-// <sample label = "test" stuff = "extra" >.  A map is used with indices
-// label and stuff for the values "test" and "extra" in this particular
-// example.
-//
-// Revision 1.19  2000/05/30 20:19:41  sparker
-// Changed new to scinew to help track down memory leaks
-// Changed region to patch
-//
-// Revision 1.18  2000/05/20 08:09:38  sparker
-// Improved TypeDescription
-// Finished I/O
-// Use new XML utility libraries
-//
-// Revision 1.17  2000/04/27 21:26:37  jas
-// Fixed the parsing of Vector and IntVector, offsets were wrong for the
-// y and z values.
-//
-// Revision 1.16  2000/04/27 00:28:37  jas
-// Can now read the attributes field of a tag.
-//
-// Revision 1.15  2000/04/26 06:49:11  sparker
-// Streamlined namespaces
-//
-// Revision 1.14  2000/04/20 23:57:03  jas
-// Fixed the findBlock() and findNextBlock() to iterate through all the
-// nodes.  Now we can go thru the MPM setup without an error.  There is
-// still the problem of where the <res> tag should go.
-//
-// Revision 1.13  2000/04/20 22:37:17  jas
-// Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
-// to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).
-//
-// Revision 1.12  2000/04/19 05:26:18  sparker
-// Implemented new problemSetup/initialization phases
-// Simplified DataWarehouse interface (not finished yet)
-// Made MPM get through problemSetup, but still not finished
-//
-// Revision 1.11  2000/04/13 06:51:05  sparker
-// More implementation to get this to work
-//
-// Revision 1.10  2000/04/12 23:01:55  sparker
-// Implemented more of problem spec - added Point and IntVector readers
-//
-// Revision 1.9  2000/04/12 15:33:49  jas
-// Can now read a Vector type [num,num,num] from the ProblemSpec.
-//
-// Revision 1.8  2000/04/07 18:40:51  jas
-// Fixed bug in getNextBlock.
-//
-// Revision 1.7  2000/04/06 02:33:33  jas
-// Added findNextBlock which will find all of the tags named name within a
-// given block.
-//
-// Revision 1.6  2000/03/31 17:52:08  moulding
-// removed #include <cstdlib> and changed line 178 from "value = string(s);" to
-// "value = std::string(s);"
-//
-// Revision 1.5  2000/03/31 00:55:07  jas
-// Let the include stuff know we are using endl.
-//
-// Revision 1.4  2000/03/29 23:48:00  jas
-// Filled in methods for extracting data from the xml tree (requires and get)
-// and storing the result in a variable.
-//
-// Revision 1.3  2000/03/29 01:59:59  jas
-// Filled in the findBlock method.
-//
-// Revision 1.2  2000/03/23 20:00:17  jas
-// Changed the include files, namespace, and using statements to reflect the
-// move of ProblemSpec from Grid/ to Interface/.
-//
-// Revision 1.1  2000/03/23 19:47:55  jas
-// Moved the ProblemSpec stuff from Grid/ to Interface.
-//
-// Revision 1.3  2000/03/21 18:52:11  sparker
-// Prototyped header file for new problem spec functionality
-//
-// Revision 1.2  2000/03/16 22:08:00  dav
-// Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
-//
-//

@@ -1,15 +1,13 @@
-#
 # Makefile fragment for this subdirectory
-#
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
-SRCDIR := Uintah/testprograms/TestConsecutiveRangeSet
+SRCDIR := Packages/Uintah/testprograms/TestConsecutiveRangeSet
 
 SRCS := $(SRCDIR)/TestConsecutiveRangeSet.cc
 
-PSELIBS := SCICore/Exceptions SCICore/Thread \
-	SCICore/Containers Uintah/testprograms/TestSuite
+PSELIBS := Core/Exceptions Core/Thread \
+	Core/Containers Uintah/testprograms/TestSuite
 
 LIBS := $(XML_LIBRARY) -lmpi
 

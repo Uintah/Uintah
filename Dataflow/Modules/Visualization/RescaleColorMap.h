@@ -1,15 +1,11 @@
 
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Containers/Array1.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Containers/Array1.h>
+#include <Dataflow/Ports/ColorMapPort.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
 
 /**************************************
 CLASS
@@ -48,12 +44,9 @@ public:
 
         // GROUP:  Constructors:
         ///////////////////////////
-        //
         // Constructs an instance of class RescaleColorMap
-        //
         // Constructor taking
         //    [in] id as an identifier
-        //
   RescaleColorMap(const clString& id);
 
         // GROUP:  Destructor:
@@ -64,7 +57,6 @@ public:
 
         // GROUP:  Access functions:
         ///////////////////////////
-        //
         // execute() - execution scheduled by scheduler
   virtual void execute();
         ///////////////////////////
@@ -76,5 +68,4 @@ private:
   TCLdouble max;
 };
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun

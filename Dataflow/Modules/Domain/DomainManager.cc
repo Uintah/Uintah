@@ -1,24 +1,18 @@
 // Domain Manager.cc - Provides an interface to manage a domain
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   March 2000
-//
 //  Copyright (C) 2000 SCI Group
-//
 //  Module DomainManager
-//
 //  Description: 
 //  Input ports: 
 //  Output ports:
-//
 
-#include <PSECommon/Modules/Domain/DomainManager.h>
+#include <Dataflow/Modules/Domain/DomainManager.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
 extern "C" Module* make_DomainManager(const clString& id){
   return new DomainManager(id);
@@ -165,6 +159,5 @@ void DomainManager::update_lists(){
 }
 
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 

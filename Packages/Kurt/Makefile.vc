@@ -1,11 +1,10 @@
 # Makefile.vc
-#
-# written by Chris Moulding 11/99
+# written by Chris Packages/Moulding 11/99
 
 ###########################  EDIT HERE  ###########################
 
 ## the name of the .dll and/or .exe to be built by linking the OBJS
-DLLNAME = Uintah
+DLLNAME = Packages/Uintah
 EXENAME = 
 
 ## the files to be compiled. .odll and .oexe extensions indicate

@@ -1,13 +1,13 @@
 /* share.h */
 
-#undef NektarSHARE
+#undef Packages/NektarSHARE
 
 #ifdef _WIN32
-  #if defined(BUILD_Nektar)
-    #define NektarSHARE __declspec(dllexport)
+  #if defined(BUILD_Packages/Nektar)
+    #define Packages/NektarSHARE __declspec(dllexport)
   #else
-    #define NektarSHARE __declspec(dllimport)
+    #define Packages/NektarSHARE __declspec(dllimport)
   #endif 
 #else 
-  #define NektarSHARE 
+  #define Packages/NektarSHARE 
 #endif 

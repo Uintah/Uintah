@@ -5,7 +5,6 @@
 
   4x4 Matrix class
 
-  $Id$
 
  ************************************************************************/
 
@@ -162,9 +161,7 @@ inline Vec4 Mat4::operator*(const Vec4& v) const
     return Vec4(row[0]*v, row[1]*v, row[2]*v, row[3]*v);
 }
 
-//
 // Transform a homogeneous 3-vector and reproject into normal 3-space
-//
 inline Vec3 Mat4::operator*(const Vec3& v) const
 {
     Vec4 u=Vec4(v,1);
@@ -189,17 +186,5 @@ inline istream& operator>>(istream& in, Mat4& M)
 extern bool cholesky(Mat4&, Vec4&);
 extern bool jacobi(const Mat4& m, Vec4& vals, Vec4 vecs[4]);
 
-//
-// $Log$
-// Revision 1.1  1999/07/27 16:58:04  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 20:17:14  dav
-// added back PSECommon .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:32  dav
-// Import sources
-//
-//
 
 #endif // GFXMATH_MAT4_INCLUDED

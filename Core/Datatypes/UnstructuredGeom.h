@@ -1,49 +1,39 @@
 // UnstructuredGeom.h - Geometries that live in an unstructured
 // space. (Mesh, surface, etc.)
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
 
 #ifndef SCI_project_UnstructuredGeom_h
 #define SCI_project_UnstructuredGeom_h 1
 
-#include <SCICore/Datatypes/Geom.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Datatypes/Geom.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/Material.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <vector>
 #include <string>
 
 //#define BOUNDARY -2
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Containers::LockingHandle;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
 using std::vector;
 using std::string;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
-//using SCICore::GeomSpace::GeomGroup;
-//using SCICore::GeomSpace::GeomMaterial;
-//using SCICore::GeomSpace::MaterialHandle;
-//using SCICore::GeomSpace::GeomTrianglesP;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Malloc;
+//using GeomGroup;
+//using GeomMaterial;
+//using MaterialHandle;
+//using GeomTrianglesP;
 
 
 class NodeSimp {
@@ -118,8 +108,7 @@ protected:
 };
 
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun
   
 
 #endif

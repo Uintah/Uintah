@@ -1,10 +1,9 @@
-#ifndef SCICore_OS_Dir_H
-#define SCICore_OS_Dir_H
+#ifndef Core_OS_Dir_H
+#define Core_OS_Dir_H
 
 #include <string>
 
-namespace SCICore {
-   namespace OS {
+namespace SCIRun {
    
    /**************************************
      
@@ -54,8 +53,7 @@ namespace SCICore {
 
       std::string d_name;
    };
-}
-} // end namespace Uintah
+} // End namespace SCIRun
 
 #endif
 

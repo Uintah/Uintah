@@ -1,4 +1,4 @@
-itcl_class PSECommon_Fields_FieldGainCorrect {
+itcl_class Dataflow_Fields_FieldGainCorrect {
     inherit Module
     constructor {config} {
 	set name FieldGainCorrect

@@ -1,7 +1,7 @@
 
 catch {rename Streamline ""}
 
-itcl_class PSECommon_Visualization_Streamline {
+itcl_class Dataflow_Visualization_Streamline {
     inherit Module
     constructor {config} {
 	set name Streamline
@@ -19,9 +19,7 @@ itcl_class PSECommon_Visualization_Streamline {
 	    return;
 	}
 
-	#
 	# Setup toplevel window
-	#
 	toplevel $w
 	wm minsize $w 100 100
 	set n "$this-c needexecute "
@@ -74,14 +72,10 @@ itcl_class PSECommon_Visualization_Streamline {
     protected ss ""
     method make_sourcesel {c} {
 	set ss $c
-	#
 	# Panel for Source selection
-	#
 	frame $ss -relief groove -borderwidth 2
 
-	#
 	# The list of sources
-	#
 	label $ss.label -text "Sources:"
 	pack $ss.label -side top -anchor w
 	listbox $ss.list -height 6 -width 20 \
@@ -106,9 +100,7 @@ itcl_class PSECommon_Visualization_Streamline {
     protected si
     method make_sourceinfo {c} {
 	set si $c
-	#
 	# Source info
-	#
 	frame $si -relief groove -borderwidth 2
 
 	label $si.label -text "Source Info:"
@@ -119,9 +111,7 @@ itcl_class PSECommon_Visualization_Streamline {
 #		-orient horizontal
 #	pack $si.widgetscale -fill x -side bottom
 
-	#
 	# Selector for source type - point, line, square, ring
-	#
 	make_labeled_radio $si.widgets "Source:" "$this sourcetype" \
 		left $this-source \
 		{Point Line Square Ring}
@@ -142,25 +132,19 @@ itcl_class PSECommon_Visualization_Streamline {
     protected mi
     method make_markerinfo {c} {
 	set mi $c
-	#
 	# Marker information
-	#
 	frame $mi -relief groove -borderwidth 2
 
 	label $mi.label -text "Marker Info:"
 	pack $mi.label -side top -anchor w
 
-	#
 	# Selector for marker type - LumiLine, line, tube, ribbon, surface, 
-	#
 	make_labeled_radio $mi.marker "Marker:" "$this selectmarker" \
 		left $this-markertype \
 		{LumLine Line Tube Ribbon Surface}
 	pack $mi.marker -side top
 
-	#
 	# Parameters for different modes...
-	#
 	frame $mi.info
 	pack $mi.info -side top -fill x
 
@@ -205,16 +189,13 @@ itcl_class PSECommon_Visualization_Streamline {
 	label $ii.label -text "Integration Info:"
 	pack $ii.label -side top -anchor w
 
-	#
 	# Selector for algorithm - Exact, Euler, RK4, PC, Stream function
-	#
 
 	make_labeled_radio $ii.alg "Algorithm:" "$this set_algorithm" \
 		left $this-algorithm \
 		{Exact Euler RK4}
 	pack $ii.alg -side top -fill x
 
-	#
 	# Parameters
 #	expscale $ii.stepsize -label "Step size:" \
 #		-orient horizontal
@@ -241,9 +222,7 @@ itcl_class PSECommon_Visualization_Streamline {
 	label $ai.label -text "Animation Info:"
 	pack $ai.label -side top -anchor w
 
-	#
 	# Selector for animation type
-	#
 	make_labeled_radio $ai.anim "Animation:" "$this redo_animation" \
 		left $this-animation \
 		{None Time Position}
@@ -294,9 +273,7 @@ itcl_class PSECommon_Visualization_Streamline {
 	}
 	set sourcelist($sid) $sid
 
-	#
 	# Setup default parameters for this source
-	#
 	set s $this-$sid
 	global $s-source
 	set $s-source "Line"
@@ -390,9 +367,7 @@ itcl_class PSECommon_Visualization_Streamline {
 	    return;
 	}
 
-	#
 	# Connect all of the UI components to this source...
-	#
 #	$si.widgetscale config -variable $s-widget_scale
 	change_radio_var $si.widgets $s-source
 	$si.f.name delete 0 end

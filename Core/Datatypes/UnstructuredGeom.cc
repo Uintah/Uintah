@@ -1,17 +1,14 @@
 // UnstructuredGeom.cc - Geometries that live in a unstructured space
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
-#include <SCICore/Datatypes/UnstructuredGeom.h>
+#include <Core/Datatypes/UnstructuredGeom.h>
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
 
 
 NodeSimp::NodeSimp(){
@@ -104,5 +101,4 @@ bool TetSimp::draw(const vector<NodeSimp>& inodes, GeomTrianglesP* group){
   return true;
 }
 
-}
-}
+} // End namespace SCIRun

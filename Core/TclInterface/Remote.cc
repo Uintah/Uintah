@@ -27,15 +27,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <SCICore/TclInterface/Remote.h>
+#include <Core/TclInterface/Remote.h>
 
 using namespace std;
 //#define DEBUG 1
 
 // server-side function: returns the listening socket
 
-namespace SCICore {
-namespace TclInterface {
+namespace SCIRun {
 
 int setupConnect (int port)
 {
@@ -167,7 +166,6 @@ int receiveReply (TCLMessage* msg, int skt)
     return 1;
 }
 
-} // End namespace TclInterface
-} // End namespace SCICore
+} // End namespace SCIRun
 
 #endif // win32

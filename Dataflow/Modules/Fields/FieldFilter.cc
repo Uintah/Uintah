@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  FieldFilter.cc:  Unfinished modules
@@ -12,23 +11,23 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Containers/Array2.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
-#include <SCICore/Datatypes/ScalarFieldRGint.h>
-#include <SCICore/Datatypes/ScalarFieldRGshort.h>
-#include <SCICore/Datatypes/ScalarFieldRGchar.h>
-#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <PSECore/Widgets/ScaledBoxWidget.h>
-#include <SCICore/Thread/CrowdMonitor.h>
+#include <Core/Containers/Array2.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRGfloat.h>
+#include <Core/Datatypes/ScalarFieldRGint.h>
+#include <Core/Datatypes/ScalarFieldRGshort.h>
+#include <Core/Datatypes/ScalarFieldRGchar.h>
+#include <Core/Datatypes/ScalarFieldRGuchar.h>
+#include <Core/Geometry/Point.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Dataflow/Widgets/ScaledBoxWidget.h>
+#include <Core/Thread/CrowdMonitor.h>
 #include <stdio.h>
 #include <math.h>
 #include <iostream>
@@ -36,16 +35,8 @@ using std::cerr;
 
 #define RESIZE_MACRO   fX->resize(lastZ, isf->nx, isf->ny);fX->grid.initialize(0);fY->resize(lastY, lastZ, isf->nx);fY->grid.initialize(0);of->resize(lastX, lastY, lastZ);of->grid.initialize(0);fldX=fX;fldY=fY;osf=of;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Containers;
-using namespace SCICore::Geometry;
 
 class FieldFilter : public Module {
     void boxFilter(ScalarFieldRGBase *in, ScalarFieldRGBase *out, int, int);
@@ -660,53 +651,5 @@ void FieldFilter::buildOversampleMitchellTable(Array2<double> *table,
 //  printTable(table);
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.8  2000/03/17 09:26:57  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.7  1999/10/07 02:06:47  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.6  1999/08/29 00:46:38  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.5  1999/08/25 03:47:46  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.4  1999/08/19 23:17:43  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.3  1999/08/18 20:19:39  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:27  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:41  mcq
-// Initial commit
-//
-// Revision 1.2  1999/04/28 20:51:09  dav
-// deleted some files that are dependent on DaveW files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:32  dav
-// Import sources
-//
-//

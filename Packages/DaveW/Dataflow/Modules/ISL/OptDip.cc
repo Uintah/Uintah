@@ -1,5 +1,5 @@
 /****************************************************************
- *  Simple "OptDip module"for the SCIRun                      *
+ *  Simple "OptDip module"for the Dataflow                      *
  *                                                              *
  *  Written by:                                                 *
  *   Leonid Zhukov                                              *
@@ -12,20 +12,16 @@
  *                                                              *
  ****************************************************************/
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Core/Math/Expon.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
 double det_3x3(double* p1, double* p2, double* p3){
     double D = p1[0]*p2[1]*p3[2]-p1[0]*p2[2]*p3[1]-p1[1]*p2[0]*p3[2]+p2[0]*p1[2]*p3[1]+p3[0]*p1[1]*p2[2]-p1[2]*p2[1]*p3[0];
@@ -241,31 +237,7 @@ void OptDip::execute()
    } 
 }
 
-//---------------------------------------------------------------
-} // End namespace Modules
 } // End namespace DaveW
+//---------------------------------------------------------------
 
 
-//
-// $Log$
-// Revision 1.6  2000/10/29 04:02:48  dmw
-// cleaning up DaveW tree
-//
-// Revision 1.5  2000/03/17 09:25:47  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.4  1999/10/07 02:06:37  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/22 18:43:26  dmw
-// added new GUI
-//
-// Revision 1.2  1999/09/08 02:26:28  sparker
-// Various #include cleanups
-//
-// Revision 1.1  1999/09/02 04:50:04  dmw
-// more of Dave's modules
-//
-//

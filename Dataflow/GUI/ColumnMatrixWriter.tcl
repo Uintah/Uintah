@@ -1,7 +1,7 @@
 
 catch {rename ColumnMatrixWriter ""}
 
-itcl_class PSECommon_Writers_ColumnMatrixWriter {
+itcl_class Dataflow_Writers_ColumnMatrixWriter {
     inherit Module
     constructor {config} {
 	set name ColumnMatrixWriter

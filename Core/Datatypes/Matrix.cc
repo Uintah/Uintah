@@ -10,13 +10,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Datatypes/Matrix.h>
-#include <SCICore/Datatypes/ColumnMatrix.h>
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Containers/String.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Util/Assert.h>
+#include <Core/Containers/String.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 PersistentTypeID Matrix::type_id("Matrix", "Datatype", 0);
 
@@ -97,5 +96,4 @@ void Mult(ColumnMatrix& result, const Matrix& mat, const ColumnMatrix& v)
     mat.mult(v, result, flops, memrefs);
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun

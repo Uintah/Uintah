@@ -4,28 +4,20 @@
  *  Eric Lundberg 1998
  */
 
-#ifndef SCI_DaveW_Datatypes_TensorField_h
-#define SCI_DaveW_Datatypes_TensorField_h 1
+#ifndef SCI_Packages/DaveW_Datatypes_TensorField_h
+#define SCI_Packages/DaveW_Datatypes_TensorField_h 1
 
-#include <DaveW/Datatypes/General/TensorFieldBase.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Containers/Array3.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Datatypes/Datatype.h>
+#include <Packages/DaveW/Core/Datatypes/General/TensorFieldBase.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Containers/Array3.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/Datatype.h>
 #include <stdio.h>
 
 namespace DaveW {
-namespace Datatypes {
+using namespace SCIRun;
 
-using SCICore::Containers::LockingHandle;
-using SCICore::Containers::Array1;
-using SCICore::Containers::Array2;
-using SCICore::Containers::Array3;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
-
-using namespace SCICore::Datatypes;
 
 template<class DATA>
 class TensorField : public TensorFieldBase {
@@ -56,17 +48,8 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.2  2000/03/10 07:42:27  dmw
-// added a just_tensors flag to the constructor so evecs and evals dont have to be provided
-//
-// Revision 1.1  1999/09/01 05:27:37  dmw
-// more DaveW datatypes...
-//
 
-#endif /* SCI_DaveW_Datatypes_TensorField_h */
+
+#endif /* SCI_Packages/DaveW_Datatypes_TensorField_h */

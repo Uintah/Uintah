@@ -10,15 +10,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geometry/Vector.h>
 
 #include <iostream>
 using std::cerr;
 using std::endl;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 PersistentTypeID GeomObj::type_id("GeomObj", "Persistent", 0);
 
@@ -68,5 +67,4 @@ void Pio( Piostream & stream, GeomObj *& obj )
 	obj=(GeomObj*)tmp;
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun

@@ -11,18 +11,16 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Geometry/BBox.h>
-#include <PSECore/Datatypes/SpanPort.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Geometry/BBox.h>
+#include <Dataflow/Ports/SpanPort.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace PSECore {
-namespace Datatypes {
+namespace SCIRun {
 
-using namespace SCICore::Datatypes;
 
 extern "C" {
 PSECORESHARE IPort* make_SpanUniverseIPort(Module* module,
@@ -38,8 +36,7 @@ PSECORESHARE OPort* make_SpanUniverseOPort(Module* module,
 template<> clString SimpleIPort<SpanUniverseHandle>::port_type("SpanUniverse");
 template<> clString SimpleIPort<SpanUniverseHandle>::port_color("SteelBlue4");
 
-} // End namespace Datatypes
-} // End namespace PSECore
+} // End namespace SCIRun
 
 
 

@@ -1,20 +1,15 @@
-#
 # Makefile fragment for this subdirectory
-#
 
 # *** NOTE ***
-# 
 # Do not remove or modify the comment line:
-#
 # #[INSERT NEW ?????? HERE]
-#
 # It is required by the module maker to properly edit this file.
 # if you want to edit this file by hand, see the "Create A New Module"
 # documentation on how to do it correctly.
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
-SRCDIR   := PSECommon/Modules/Visualization
+SRCDIR   := Dataflow/Modules/Visualization
 
 SRCS     += \
 	$(SRCDIR)/AddWells.cc\
@@ -63,12 +58,12 @@ SRCS     += \
 #	$(SRCDIR)/NoiseMCube.cc\
 
 
-PSELIBS := PSECommon/Algorithms/Visualization \
-	PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
-	SCICore/Containers SCICore/Exceptions SCICore/Thread \
-	SCICore/TclInterface SCICore/Geom SCICore/Persistent \
-	SCICore/Datatypes SCICore/Geometry SCICore/Util \
-	SCICore/TkExtensions PSECommon/Modules/Salmon
+PSELIBS := Core/Algorithms/Visualization \
+	Dataflow/Network Core/Datatypes Dataflow/Widgets \
+	Core/Containers Core/Exceptions Core/Thread \
+	Core/TclInterface Core/Geom Core/Persistent \
+	Core/Datatypes Core/Geometry Core/Util \
+	Core/TkExtensions Dataflow/Modules/Salmon
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

@@ -1,6 +1,6 @@
-catch {rename DaveW_ISL_SGI_Solve ""}
+catch {rename Packages/DaveW_ISL_SGI_Solve ""}
 
-itcl_class DaveW_ISL_SGI_Solve {
+itcl_class Packages/DaveW_ISL_SGI_Solve {
     inherit Module
 
     constructor {config} {

@@ -1,9 +1,6 @@
-#
 # Makefile fragment for this subdirectory
-# $Id$
-#
 
-SRCDIR := DaveW/GUI
+SRCDIR := Packages/DaveW/Dataflow/GUI
 
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
@@ -32,30 +29,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Thermal.tcl $(SRCDIR)/TopoSurfToGeom.tcl \
 	$(SRCDIR)/XYZtoRGB.tcl\
 #[INSERT NEW TCL FILE HERE]
-	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/DaveW/GUI
+	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/DaveW/Dataflow/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
-#
-# $Log$
-# Revision 1.5  2000/12/13 20:54:40  dmw
-# Pressing return causes execution, added ContourSetReader to the sub.mk
-#
-# Revision 1.4  2000/10/29 03:47:58  dmw
-# new GUIs
-#
-# Revision 1.3  2000/10/24 05:57:07  moulding
-# new module maker Phase 2: new module maker goes online
-#
-# These changes clean out the last remnants of the old module maker and
-# bring the new module maker online.
-#
-# Revision 1.2  2000/03/20 19:36:00  sparker
-# Added VPATH support
-#
-# Revision 1.1  2000/03/17 09:25:25  sparker
-# New makefile scheme: sub.mk instead of Makefile.in
-# Use XML-based files for module repository
-# Plus many other changes to make these two things work
-#
-#

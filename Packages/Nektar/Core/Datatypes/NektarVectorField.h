@@ -1,24 +1,22 @@
-#ifndef NektarVectorField_h
-#define NektarVectorField_h 1
+#ifndef Packages/NektarVectorField_h
+#define Packages/NektarVectorField_h 1
 
-#include <SCICore/Datatypes/VectorField.h>
-#include <SCICore/Containers/Array1.h>
+#include <Core/Datatypes/VectorField.h>
+#include <Core/Containers/Array1.h>
 #include <vector>
 
 namespace Nektar {
-  namespace Datatypes {
+using namespace SCIRun;
 
-    using namespace SCICore::Datatypes;
-
-    class NektarVectorField;
-    typedef LockingHandle<NektarVectorField> NektarVectorFieldHandle;
+    class Packages/NektarVectorField;
+    typedef LockingHandle<Packages/NektarVectorField> Packages/NektarVectorFieldHandle;
 
     
-    class SCICORESHARE NektarVectorField : public VectorField {
+    class SCICORESHARE Packages/NektarVectorField : public VectorField {
     public:
-      NektarVectorField();
-      virtual ~NektarVectorField();
-      virtual NektarVectorField* clone();
+      Packages/NektarVectorField();
+      virtual ~Packages/NektarVectorField();
+      virtual Packages/NektarVectorField* clone();
       
       virtual void compute_bounds();
       virtual int interpolate(const Point&, Vector&);
@@ -28,8 +26,7 @@ namespace Nektar {
       virtual void io(Piostream&);
       static PersistentTypeID type_id;
     };
-    
-  } // End namespace Datatypes
 } // End namespace Nektar
+    
 
 #endif

@@ -2,7 +2,7 @@
  *  TensorFieldWriter.cc: TensorField Writer class
  *
  *  Written by:
- *   Yarden Livnat
+ *   Packages/Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
  *   Oct 2000
@@ -10,20 +10,15 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <Yarden/Datatypes/TensorFieldPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Packages/Yarden/Core/Datatypes/TensorFieldPort.h>
 
 namespace Yarden {
-  namespace Modules {
-    
-    using namespace SCICore::Datatypes;
-    using namespace PSECore::Dataflow;
-    //using namespace PSECore::Datatypes;
-    using namespace SCICore::TclInterface;
-    using namespace SCICore::PersistentSpace;
+using namespace SCIRun;
+    //using namespace Dataflow::Datatypes;
     
     class TensorFieldWriter : public Module {
       TensorFieldIPort* inport;
@@ -57,7 +52,6 @@ namespace Yarden {
     
     void TensorFieldWriter::execute()
     {
-      using SCICore::Containers::Pio;
       
       TensorFieldHandle handle;
       if(!inport->get(handle))
@@ -78,21 +72,6 @@ namespace Yarden {
       Pio(*stream, handle);
       delete stream;
     }
-    
-  } // End namespace Modules
 } // End namespace Yarden
+    
 
-//
-// $Log$
-// Revision 1.1  2000/10/23 23:43:46  yarden
-// initial commit
-//
-// Revision 1.2  2000/03/17 09:26:06  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.1  1999/09/01 07:21:01  dmw
-// new DaveW modules
-//
-//

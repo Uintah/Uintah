@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Point.cc: ?
@@ -12,14 +11,14 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Persistent/Persistent.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Tester/RigorousTest.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Util/Assert.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/Containers/String.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Tester/RigorousTest.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -27,10 +26,8 @@ using std::istream;
 using std::ostream;
 #include <stdio.h>
 
-namespace SCICore {
-namespace Geometry {
+namespace SCIRun {
 
-using SCICore::Math::Interpolate;
 
 Point Interpolate(const Point& p1, const Point& p2, double w)
 {
@@ -145,7 +142,7 @@ Point::InInterval( Point a, double epsilon )
 }
 
 
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Geometry/Vector.h>
 
 void Point::test_rigorous(RigorousTest* __test)
 {	
@@ -471,7 +468,6 @@ void Point::test_rigorous(RigorousTest* __test)
 
 void Pio(Piostream& stream, Point& p)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_cheap_delim();
     Pio(stream, p._x);
@@ -480,37 +476,8 @@ void Pio(Piostream& stream, Point& p)
     stream.end_cheap_delim();
 }
 
-} // End namespace Geometry
-} // End namespace SCICore
+} // End namespace SCIRun
 
 
-//
-// $Log$
-// Revision 1.5  1999/10/07 02:07:56  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/09/04 06:01:52  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.3  1999/08/23 06:30:37  sparker
-// Linux port
-// Added X11 configuration options
-// Removed many warnings
-//
-// Revision 1.2  1999/08/17 06:39:28  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:56  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:59  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1.1.1  1999/04/24 23:12:27  dav
-// Import sources
-//
-//
 
 

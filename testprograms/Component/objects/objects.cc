@@ -1,7 +1,6 @@
 
 /*
  *  objects.cc
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -13,15 +12,17 @@
  */
 
 #include <iostream>
-#include <Component/PIDL/PIDL.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
 #include "objects_sidl.h"
-#include <SCICore/Thread/Time.h>
+#include <Core/Thread/Time.h>
 #include <vector>
 using std::cerr;
 using std::cout;
 using std::vector;
 using objects_test::Client;
 using objects_test::RingMaster;
+
+using namespace SCIRun;
 
 class RingMaster_impl : public objects_test::RingMaster_interface {
     vector<Client> clients;
@@ -102,7 +103,6 @@ int main(int argc, char* argv[])
     using Component::PIDL::Object;
     using Component::PIDL::PIDLException;
     using Component::PIDL::PIDL;
-    using SCICore::Thread::Time;
 
     try {
 	PIDL::initialize(argc, argv);
@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
 	    cerr << "nclients now " << myid << '\n';
 	}
 	PIDL::serveObjects();
-    } catch(const SCICore::Exceptions::Exception& e) {
+    } catch(const Exception& e) {
 	cerr << "Caught exception:\n";
 	cerr << e.message() << '\n';
 	abort();
@@ -157,30 +157,3 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-//
-// $Log$
-// Revision 1.3  1999/09/28 08:20:34  sparker
-// Fixed bug in test program with new ref counting scheme
-//
-// Revision 1.2  1999/09/26 06:13:00  sparker
-// Added (distributed) reference counting to PIDL objects.
-// Began campaign against memory leaks.  There seem to be no more
-//   per-message memory leaks.
-// Added a test program to flush out memory leaks
-// Fixed other Component testprograms so that they work with ref counting
-// Added a getPointer method to PIDL handles
-//
-// Revision 1.1  1999/09/24 06:26:28  sparker
-// Further implementation of new Component model and IDL parser, including:
-//  - fixed bugs in multiple inheritance
-//  - added test for multiple inheritance
-//  - fixed bugs in object reference send/receive
-//  - added test for sending objects
-//  - beginnings of support for separate compilation of sidl files
-//  - beginnings of CIA spec implementation
-//  - beginnings of cocoon docs in PIDL
-//  - cleaned up initalization sequence of server objects
-//  - use globus_nexus_startpoint_eventually_destroy (contained in
-// 	the globus-1.1-utah.patch)
-//
-//

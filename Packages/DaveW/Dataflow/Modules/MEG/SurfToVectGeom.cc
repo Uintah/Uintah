@@ -10,48 +10,39 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <SCICore/Datatypes/BasicSurfaces.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/SurfTree.h>
-#include <SCICore/Datatypes/Surface.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Geom/GeomArrows.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Core/Datatypes/BasicSurfaces.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/SurfTree.h>
+#include <Core/Datatypes/Surface.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Geom/GeomArrows.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 
-#include <DaveW/Datatypes/General/VectorFieldMI.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
+#include <Packages/DaveW/Core/Datatypes/General/VectorFieldMI.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
 #include <math.h>
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Containers;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 using DaveW::Datatypes::VectorFieldMI;
-using SCICore::Thread::Mutex;
-using SCICore::Thread::Parallel;
-using SCICore::Thread::Thread;
 
 class SurfToVectGeom : public Module {
     SurfaceIPort* isurface;
@@ -213,21 +204,6 @@ void SurfToVectGeom::execute()
 	ogeom->delObj( old_grid_id );
 
     grid_id = ogeom->addObj(arrows, module_name);
-}
-} // End namespace Modules
 } // End namespace DaveW
+}
 
-//
-// $Log$
-// Revision 1.3  2000/03/17 09:25:51  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.2  1999/09/08 02:26:29  sparker
-// Various #include cleanups
-//
-// Revision 1.1  1999/09/02 04:27:09  dmw
-// Rob V's modules
-//
-//

@@ -1,26 +1,15 @@
 #ifndef GLVOLRENSTATE_H
 #define GLVOLRENSTATE_H
 
-#include <SCICore/Geometry/Ray.h>
+#include <Core/Geometry/Ray.h>
 #include <vector>
 #include <GL/glu.h>
 
-namespace SCICore {
-  namespace Datatypes {
-  class Brick;
-  }
-}
+namespace SCIRun {
 
-namespace SCICore {
-  namespace Geometry {
-  class Polygon;
-  }
-  namespace GeomSpace {
-  
-  using SCICore::Geometry::Ray;
-  using SCICore::Geometry::Polygon;
-  using std::vector;
-  using namespace SCICore::Datatypes;
+class Polygon;
+class Brick; 
+using std::vector;
   
 /**************************************
 					 
@@ -91,10 +80,10 @@ protected:
 
   GLuint* texName;
   unsigned char* reload;
-
-
 };
 
-} // end namespace GeomSpace
-} // end namespace SCICore
+} // End namespace SCIRun
+
 #endif
+
+

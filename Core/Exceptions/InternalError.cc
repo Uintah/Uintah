@@ -10,9 +10,9 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <SCICore/Exceptions/InternalError.h>
+#include <Core/Exceptions/InternalError.h>
+namespace SCIRun {
 
-using SCICore::Exceptions::InternalError;
 
 InternalError::InternalError(const std::string& message)
     : d_message(message)
@@ -35,5 +35,7 @@ const char* InternalError::message() const
 
 const char* InternalError::type() const
 {
-    return "SCICore::Exceptions::InternalError";
+    return "InternalError";
 }
+
+} // End namespace SCIRun

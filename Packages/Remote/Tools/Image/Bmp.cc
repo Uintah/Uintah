@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // Bmp.cpp - Read and Write Windows BMP images.
-//
 // Ripped off from XV v.3.10.
-//
 // Modified by Dave McAllister, 1999.
 
-#include <Remote/Tools/Image/Quant.h>
+#include <Packages/Remote/Tools/Image/Quant.h>
 
 #include <iostream>
 #include <strings.h>
@@ -15,8 +13,6 @@ using namespace std;
 #include <stdlib.h>
 
 namespace Remote {
-namespace Tools {
-
 //----------------------------------------------------------------------
 #if 0
 
@@ -733,7 +729,6 @@ int WriteBMP(FILE *fp, byte *pic824, int ptype, int w, int h,
 }
 
 #endif
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

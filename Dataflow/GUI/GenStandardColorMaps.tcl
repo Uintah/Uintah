@@ -1,4 +1,4 @@
-itcl_class PSECommon_Visualization_GenStandardColorMaps { 
+itcl_class Dataflow_Visualization_GenStandardColorMaps { 
     inherit Module 
     protected exposed
     protected colorMaps

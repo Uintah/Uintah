@@ -3,7 +3,7 @@ CFLAGS   = -g -xansi -fullwarn -n32 -mips4
 INCLUDES = -I..
 
 TOP = /home/sci/data16/ddestger/Reorg
-ARCHDIR = $(TOP)/irix32/SCICore
+ARCHDIR = $(TOP)/irix32/Core
 SHAREDLIB = $(CC) -shared -Wl,-no_unresolved -update_registry $(ARCHDIR)/lib/so_locations
 
 O_DIR = $(ARCHDIR)/Persistent

@@ -1,7 +1,7 @@
-global SCICoreTCL
-source $SCICoreTCL/Filebox.tcl
+global CoreTCL
+source $CoreTCL/Filebox.tcl
 
-itcl_class Phil_Tbon_TbonCL {
+itcl_class Packages/Phil_Tbon_TbonCL {
 
     inherit Module
     constructor {config} {

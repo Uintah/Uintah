@@ -1,6 +1,6 @@
 
 /*
- *  GuiServer.h: Server running on Master SCIRun to service remote GUI
+ *  GuiServer.h: Server running on Master Dataflow to service remote GUI
  *   requests.
  *
  *  Sets up a listening socket for incoming client requests.
@@ -20,19 +20,17 @@
 #ifndef SCI_project_GuiServer_h
 #define SCI_project_GuiServer_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/TclInterface/Remote.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/Thread/Runnable.h>
+#include <Core/Containers/Array1.h>
+#include <Core/TclInterface/Remote.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/Thread/Runnable.h>
 
-namespace SCICore {
-namespace TclInterface {
+namespace SCIRun {
 
-using SCICore::Containers::Array1;
 
-class SCICORESHARE GuiServer : public SCICore::Thread::Runnable {
+class SCICORESHARE GuiServer : public Runnable {
     private:
 	int gui_socket;
 	Array1<int> clients;
@@ -45,30 +43,7 @@ class SCICORESHARE GuiServer : public SCICore::Thread::Runnable {
 	void getValue (char*, TCLMessage*);
 };
 
-} // End namespace TclInterface
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  1999/08/28 17:54:51  sparker
-// Integrated new Thread library
-//
-// Revision 1.2  1999/08/17 06:39:43  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:14  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:56:23  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:05:32  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:25  dav
-// Import sources
-//
-//
 
 #endif

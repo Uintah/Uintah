@@ -1,9 +1,7 @@
 #ifndef GLTEXRENSTATE_H
 #define GLTEXRENSTATE_H
 
-namespace SCICore {
-namespace GeomSpace  {
-
+namespace Kurt {
 
 /**************************************
 
@@ -16,7 +14,7 @@ GENERAL INFORMATION
 
    GLTexRenState.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -55,16 +53,12 @@ public:
   // postdrawing functions
   virtual void postDraw() = 0;
   //////////
-  // 
   //////////
-  // 
   //////////
-  // 
 protected:
 
   const GLVolumeRenderer* volren;
 };
+} // End namespace Kurt
 
-} // end namespace Datatypes
-} // end namespace Kurt
 #endif

@@ -1,5 +1,5 @@
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
 #ifdef __cplusplus
 extern "C" {

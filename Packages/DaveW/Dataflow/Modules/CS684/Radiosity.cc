@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Radiosity.cc:  Take in a scene (through a VoidStarPort), and output 
@@ -13,29 +12,29 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <DaveW/Datatypes/CS684/DRaytracer.h>
-#include <DaveW/Datatypes/CS684/Spectrum.h>
-#include <DaveW/Datatypes/CS684/RTPrims.h>
-#include <DaveW/Datatypes/CS684/RadPrims.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/VoidStarPort.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Containers/Stack.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Datatypes/VoidStar.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomCone.h>
-#include <SCICore/Geom/GeomOpenGL.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomPick.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/DRaytracer.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/Spectrum.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/RTPrims.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/RadPrims.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/VoidStarPort.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Containers/Stack.h>
+#include <Core/Containers/String.h>
+#include <Core/Datatypes/VoidStar.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomCone.h>
+#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomPick.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MinMax.h>
+#include <Core/TclInterface/TCLvar.h>
 
 #include <map.h>
 #include <iostream>
@@ -45,18 +44,8 @@ using std::cerr;
 #include <stdio.h>
 
 namespace DaveW {
-namespace Modules {
-
 using namespace DaveW::Datatypes;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Widgets;
-using namespace SCICore::Containers;
-using namespace SCICore::Datatypes;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
 class Radiosity : public Module {
     VoidStarIPort *iRT;
@@ -584,11 +573,7 @@ void Radiosity::tcl_command(TCLArgs& args, void* userdata) {
     } else {
         Module::tcl_command(args, userdata);
     }
-}
 } // End namespace DaveW
-} // End namespace Uintah
+}
 
-//
 // $Log
-//
-//

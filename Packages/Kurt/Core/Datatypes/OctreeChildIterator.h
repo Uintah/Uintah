@@ -4,8 +4,6 @@
 #include "Octree.h"
 
 namespace Kurt {
-namespace Datatypes {
-
 /**************************************
 
 CLASS
@@ -17,7 +15,7 @@ GENERAL INFORMATION
 
    OctreeChildIterator.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -78,7 +76,6 @@ private:
   Octree<T> *current;
   bool isDone;
 };
+} // End namespace Kurt
 
-} // end namespace Datatypes
-} // end namespace Kurt
 #endif

@@ -1,17 +1,14 @@
 //  ContourGeom.cc - A group of Tets in 3 space
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
-#include <SCICore/Datatypes/ContourGeom.h>
+#include <Core/Datatypes/ContourGeom.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 PersistentTypeID ContourGeom::type_id("ContourGeom", "Datatype", 0);
 
@@ -53,5 +50,4 @@ void ContourGeom::io(Piostream&)
 }
 
 
-} // end Datatypes
-} // end SCICore
+} // End namespace SCIRun

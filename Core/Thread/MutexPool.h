@@ -1,7 +1,6 @@
 
 /*
  *  MutexPool: A set of mutex objects
- *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -12,15 +11,14 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef SCICore_Thread_MutexPool_h
-#define SCICore_Thread_MutexPool_h
+#ifndef Core_Thread_MutexPool_h
+#define Core_Thread_MutexPool_h
 
-#include <SCICore/Thread/AtomicCounter.h>
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/share/share.h>
+#include <Core/Thread/AtomicCounter.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/share/share.h>
 
-namespace SCICore {
-    namespace Thread {
+namespace SCIRun {
 /**************************************
  
 CLASS
@@ -80,16 +78,7 @@ DESCRIPTION
 	    // Private assignment operator to prevent accidental assignment
 	    MutexPool& operator=(const MutexPool&);
 	};
-    }
-}
+} // End namespace SCIRun
 
 #endif
 
-//
-// $Log$
-// Revision 1.1  1999/09/25 08:29:29  sparker
-// Added MutexPool class - a utility for sharing Mutexes among a large
-//  number of objects
-// Fixed comments in Guard
-//
-//

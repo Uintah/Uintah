@@ -14,17 +14,14 @@
 #ifndef SCI_Geom_View_h
 #define SCI_Geom_View_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
   
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geom/Color.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geom/Color.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
 
 class SCICORESHARE View {
 protected:
@@ -71,8 +68,8 @@ public:
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 /* 
-cc-1375 CC: REMARK File = ../../SCICore/Geom/View.h, Line = 71
-  The destructor for base class "SCICore::GeomSpace::View" is not virtual.
+cc-1375 CC: REMARK File = ../../Core/Geom/View.h, Line = 71
+  The destructor for base class "View" is not virtual.
   */
 #pragma set woff 1375
 #endif
@@ -103,38 +100,12 @@ public:
   
 };
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
 #endif
 
-//
-// $Log$
-// Revision 1.3  1999/10/07 02:07:51  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/08/17 06:39:25  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:54  mcq
-// Initial commit
-//
-// Revision 1.4  1999/07/07 21:10:57  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.3  1999/05/06 19:56:15  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:05:15  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:20  dav
-// Import sources
-//
-//
 
 #endif /* SCI_Geom_View_h */
 

@@ -22,9 +22,7 @@
 /*                                                                           */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-//
 //      mv_vector_float.h       Basic vector class (float precision)
-//
 
 #ifndef _MV_VECTOR_float_H
 #define _MV_VECTOR_float_H    
@@ -74,12 +72,10 @@ class MV_Vector_float
     MV_Vector_float(const MV_Vector_float &); 
     
     // reference of an exisiting data structure
-    //
     // note that ref() is initalized with i rather than 1.
     // this is so compilers will not generate a warning that i was
     // not used in the construction.  (MV_Vector::ref_type is an enum that
     // can *only* have the value of 1.
-    //
     MV_Vector_float(float* d, unsigned int N, MV_Vector_::ref_type i) :
                             p_(d), dim_(N), ref_(i) {}
 
@@ -133,7 +129,6 @@ class MV_Vector_float
     inline unsigned int             dim() const { return dim_;}
     inline int                      ref() const { return  ref_;}
     inline int                      null() const {return dim_== 0;}
-            //
             // Create a new *uninitalized* vector of size N
             MV_Vector_float & newsize(unsigned int );
                                                                        

@@ -1,5 +1,4 @@
 
-// $Id$
 
 /*
  *  InvalidGrid.h: 
@@ -13,14 +12,13 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef Uintah_Exceptions_InvalidGrid_h
-#define Uintah_Exceptions_InvalidGrid_h
+#ifndef Packages/Uintah_Exceptions_InvalidGrid_h
+#define Packages/Uintah_Exceptions_InvalidGrid_h
 
-#include <SCICore/Exceptions/Exception.h>
+#include <Core/Exceptions/Exception.h>
 #include <string>
 
 namespace Uintah {
-   class InvalidGrid : public SCICore::Exceptions::Exception {
    public:
       InvalidGrid(const std::string& msg);
       InvalidGrid(const InvalidGrid&);
@@ -31,18 +29,9 @@ namespace Uintah {
    private:
       std::string d_msg;
       InvalidGrid& operator=(const InvalidGrid&);
+} // End namespace Uintah
    };
-}
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  2000/04/26 06:48:39  sparker
-// Streamlined namespaces
-//
-// Revision 1.1  2000/04/12 22:57:47  sparker
-// Added new exception classes
-//
-//
 

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  GeomGrid.cc: Grid object
@@ -14,17 +13,16 @@
 
 #ifdef BROKEN
 
-#include <SCICore/Geom/GeomGrid.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geom/Save.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/hf.h>
+#include <Core/Geom/GeomGrid.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Geom/Save.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/BSphere.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/hf.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Persistent* make_GeomGrid()
 {
@@ -154,24 +152,22 @@ void GeomGrid::compute_normals()
 }
 
 } // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace Core
 
 #endif
 
-#include <SCICore/Geom/GeomGrid.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geom/GeomSave.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geom/GeomGrid.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Geom/GeomSave.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::ostream;
 #include <stdio.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using SCICore::Geometry::Cross;
 
 Persistent* make_GeomGrid()
 {
@@ -284,18 +280,17 @@ GeomObj* GeomGrid::clone()
 
 void GeomGrid::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomGrid", GEOMGRID_VERSION);
     GeomObj::io(stream);
-    SCICore::Containers::Pio(stream, verts);
+    Pio(stream, verts);
     Pio(stream, have_matls);
-    SCICore::Containers::Pio(stream, matls);
+    Pio(stream, matls);
     Pio(stream, have_normals);
-    SCICore::Containers::Pio(stream, normals);
-    SCICore::Geometry::Pio(stream, corner);
-    SCICore::Geometry::Pio(stream, u);
-    SCICore::Geometry::Pio(stream, v);
+    Pio(stream, normals);
+    Pio(stream, corner);
+    Pio(stream, u);
+    Pio(stream, v);
     if(stream.reading())
 	adjust();
     stream.end_class();
@@ -462,37 +457,5 @@ bool GeomGrid::saveobj(ostream& out, const clString& format,
     }
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.6  1999/10/07 02:07:41  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/08/29 00:46:54  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.4  1999/08/28 17:54:40  sparker
-// Integrated new Thread library
-//
-// Revision 1.3  1999/08/17 23:50:20  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:08  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:39  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:50  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1.1.1  1999/04/24 23:12:20  dav
-// Import sources
-//
-//

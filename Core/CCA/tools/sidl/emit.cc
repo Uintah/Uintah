@@ -23,7 +23,7 @@ static string handle_class = "\
 class @ {\n\
     @_interface* ptr;\n\
 public:\n\
-    static const ::Component::PIDL::TypeInfo* _getTypeInfo();\n\
+    static const ::Core/CCA/Component::PIDL::TypeInfo* _getTypeInfo();\n\
     typedef @_interface interfacetype;\n\
     inline @()\n\
     {\n\
@@ -69,7 +69,7 @@ public:\n\
     {\n\
         return ptr != 0;\n\
     }\n\
-    inline operator ::Component::PIDL::Object() const\n\
+    inline operator ::Core/CCA/Component::PIDL::Object() const\n\
     {\n\
         return ptr;\n\
     }\n\
@@ -144,11 +144,11 @@ void Specification::emit(std::ostream& out, std::ostream& hdr,
     hdr << "#ifndef _sidl_generated_" << ifname << '\n';
     hdr << "#define _sidl_generated_" << ifname << '\n';
     hdr << "\n";
-    hdr << "#include <Component/PIDL/Object.h>\n";
-    hdr << "#include <Component/PIDL/pidl_cast.h>\n";
-    hdr << "#include <Component/CIA/CIA_sidl.h>\n";
-    hdr << "#include <Component/CIA/array.h>\n";
-    hdr << "#include <Component/CIA/string.h>\n";
+    hdr << "#include <Core/CCA/Component/PIDL/Object.h>\n";
+    hdr << "#include <Core/CCA/Component/PIDL/pidl_cast.h>\n";
+    hdr << "#include <Core/CCA/Component/CIA/CIA_sidl.h>\n";
+    hdr << "#include <Core/CCA/Component/CIA/array.h>\n";
+    hdr << "#include <Core/CCA/Component/CIA/string.h>\n";
     hdr << "\n";
     hdr << e.fwd.str();
     hdr << e.decl.str();
@@ -161,17 +161,17 @@ void Specification::emit(std::ostream& out, std::ostream& hdr,
     out << " */\n";
     out << "\n";
     out << "#include \"" << hname << "\"\n";
-    out << "#include <SCICore/Exceptions/InternalError.h>\n";
-    out << "#include <Component/PIDL/GlobusError.h>\n";
-    out << "#include <Component/PIDL/Object_proxy.h>\n";
-    out << "#include <Component/PIDL/ProxyBase.h>\n";
-    out << "#include <Component/PIDL/ReplyEP.h>\n";
-    out << "#include <Component/PIDL/Reference.h>\n";
-    out << "#include <Component/PIDL/ServerContext.h>\n";
-    out << "#include <Component/PIDL/TypeInfo.h>\n";
-    out << "#include <Component/PIDL/TypeInfo_internal.h>\n";
-    out << "#include <SCICore/Util/NotFinished.h>\n";
-    out << "#include <SCICore/Thread/Thread.h>\n";
+    out << "#include <Core/Exceptions/InternalError.h>\n";
+    out << "#include <Core/CCA/Component/PIDL/GlobusError.h>\n";
+    out << "#include <Core/CCA/Component/PIDL/Object_proxy.h>\n";
+    out << "#include <Core/CCA/Component/PIDL/ProxyBase.h>\n";
+    out << "#include <Core/CCA/Component/PIDL/ReplyEP.h>\n";
+    out << "#include <Core/CCA/Component/PIDL/Reference.h>\n";
+    out << "#include <Core/CCA/Component/PIDL/ServerContext.h>\n";
+    out << "#include <Core/CCA/Component/PIDL/TypeInfo.h>\n";
+    out << "#include <Core/CCA/Component/PIDL/TypeInfo_internal.h>\n";
+    out << "#include <Core/Util/NotFinished.h>\n";
+    out << "#include <Core/Thread/Thread.h>\n";
     out << "#include <iostream>\n";
     out << "#include <globus_nexus.h>\n";
     out << "\n";
@@ -332,12 +332,12 @@ void CI::emit_typeinfo(EmitState& e)
 	exit(1);
     }
 #endif
-    e.out << "const ::Component::PIDL::TypeInfo* " << fn << "::_getTypeInfo()\n";
+    e.out << "const ::Core/CCA/Component::PIDL::TypeInfo* " << fn << "::_getTypeInfo()\n";
     e.out << "{\n";
-    e.out << "    static ::Component::PIDL::TypeInfo* ti=0;\n";
+    e.out << "    static ::Core/CCA/Component::PIDL::TypeInfo* ti=0;\n";
     e.out << "    if(!ti){\n";
-    e.out << "        ::Component::PIDL::TypeInfo_internal* tii=\n";
-    e.out << "            new ::Component::PIDL::TypeInfo_internal(\"" << cppfullname(0) << "\", \"" << uuid_str << "\",\n";
+    e.out << "        ::Core/CCA/Component::PIDL::TypeInfo_internal* tii=\n";
+    e.out << "            new ::Core/CCA/Component::PIDL::TypeInfo_internal(\"" << cppfullname(0) << "\", \"" << uuid_str << "\",\n";
     e.out << "                                                     _handler_table" << e.instanceNum << ",\n";
     e.out << "                                                     sizeof(_handler_table" << e.instanceNum << ")/sizeof(globus_nexus_handler_t),\n";
     e.out << "                                                     &" << fn << "_proxy::create_proxy);\n\n";
@@ -348,7 +348,7 @@ void CI::emit_typeinfo(EmitState& e)
 	iter != parent_ifaces.end(); iter++){
 	e.out << "        tii->add_parentiface(" << (*iter)->cppfullname(localScope) << "::_getTypeInfo(), " << (*iter)->vtable_base << ");\n";
     }
-    e.out << "        ti=new ::Component::PIDL::TypeInfo(tii);\n";
+    e.out << "        ti=new ::Core/CCA/Component::PIDL::TypeInfo(tii);\n";
     e.out << "    }\n";
     e.out << "    return ti;\n";
     e.out << "}\n\n";
@@ -379,34 +379,34 @@ void CI::emit_handlers(EmitState& e)
     e.out << "    int _addRef;\n";
     e.out << "    globus_nexus_get_int(_recvbuff, &_addRef, 1);\n";
     e.out << "    if(int _gerr=globus_nexus_get_startpoint(_recvbuff, &_sp, 1))\n";
-    e.out << "        throw ::Component::PIDL::GlobusError(\"get_startpoint\", _gerr);\n";
+    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"get_startpoint\", _gerr);\n";
     e.out << "    if(int _gerr=globus_nexus_buffer_destroy(_recvbuff))\n";
-    e.out << "        throw ::Component::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
-    e.out << "    const ::Component::PIDL::TypeInfo* ti=" << cppfullname(0) << "::_getTypeInfo();\n";
+    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
+    e.out << "    const ::Core/CCA/Component::PIDL::TypeInfo* ti=" << cppfullname(0) << "::_getTypeInfo();\n";
     e.out << "    int result=ti->isa(classname, uuid);\n";
     e.out << "    delete[] classname;\n";
     e.out << "    delete[] uuid;\n";
     e.out << "    int flag;\n";
-    e.out << "    if(result == ::Component::PIDL::TypeInfo::vtable_invalid) {\n";
+    e.out << "    if(result == ::Core/CCA/Component::PIDL::TypeInfo::vtable_invalid) {\n";
     e.out << "        flag=0;\n";
     e.out << "    } else {\n";
     e.out << "        flag=1;\n";
     e.out << "        if(_addRef){\n";
     e.out << "            void* _v=globus_nexus_endpoint_get_user_pointer(_ep);\n";
-    e.out << "            ::Component::PIDL::ServerContext* _sc=static_cast<::Component::PIDL::ServerContext*>(_v);\n";
+    e.out << "            ::Core/CCA/Component::PIDL::ServerContext* _sc=static_cast<::Core/CCA/Component::PIDL::ServerContext*>(_v);\n";
     e.out << "            _sc->d_objptr->_addReference();\n";
     e.out << "        }\n";
     e.out << "    }\n";
     e.out << "    globus_nexus_buffer_t sendbuff;\n";
     e.out << "    int rsize=globus_nexus_sizeof_int(2);\n";
     e.out << "    if(int gerr=globus_nexus_buffer_init(&sendbuff, rsize, 0))\n";
-    e.out << "        throw ::Component::PIDL::GlobusError(\"buffer_init\", gerr);\n";
+    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"buffer_init\", gerr);\n";
     e.out << "    globus_nexus_put_int(&sendbuff, &flag, 1);\n";
     e.out << "    globus_nexus_put_int(&sendbuff, &result, 1);\n";
     e.out << "    if(int _gerr=globus_nexus_send_rsr(&sendbuff, &_sp, 0, GLOBUS_TRUE, GLOBUS_FALSE))\n";
-    e.out << "        throw ::Component::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
+    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
     e.out << "    if(int _gerr=globus_nexus_startpoint_eventually_destroy(&_sp, GLOBUS_FALSE, 30))\n";
-    e.out << "        throw ::Component::PIDL::GlobusError(\"startpoint_eventually_destroy\", _gerr);\n";
+    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"startpoint_eventually_destroy\", _gerr);\n";
     e.out << "}\n\n";
 
     // Emit delete reference handler...
@@ -417,9 +417,9 @@ void CI::emit_handlers(EmitState& e)
     e.out << "                      globus_nexus_buffer_t* _recvbuff, globus_bool_t)\n";
     e.out << "{\n";
     e.out << "    if(int _gerr=globus_nexus_buffer_destroy(_recvbuff))\n";
-    e.out << "        throw ::Component::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
+    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
     e.out << "    void* _v=globus_nexus_endpoint_get_user_pointer(_ep);\n";
-    e.out << "    ::Component::PIDL::ServerContext* _sc=static_cast<::Component::PIDL::ServerContext*>(_v);\n";
+    e.out << "    ::Core/CCA/Component::PIDL::ServerContext* _sc=static_cast<::Core/CCA/Component::PIDL::ServerContext*>(_v);\n";
     e.out << "    _sc->d_objptr->_deleteReference();\n";
     e.out << "}\n\n";
 
@@ -625,14 +625,14 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     if(reply_required()){
 	e.out << "    globus_nexus_startpoint_t _sp;\n";
 	e.out << "    if(int _gerr=globus_nexus_get_startpoint(_recvbuff, &_sp, 1))\n";
-	e.out << "        throw ::Component::PIDL::GlobusError(\"get_startpoint\", _gerr);\n";
+	e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"get_startpoint\", _gerr);\n";
     }
     // Destroy the buffer...
     e.out << "    if(int _gerr=globus_nexus_buffer_destroy(_recvbuff))\n";
-    e.out << "        throw ::Component::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
+    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
     e.out << "    void* _v=globus_nexus_endpoint_get_user_pointer(_ep);\n";
     string myclass=emit_class->cppfullname(0)+"_interface";
-    e.out << "    ::Component::PIDL::ServerContext* _sc=static_cast<::Component::PIDL::ServerContext*>(_v);\n";
+    e.out << "    ::Core/CCA/Component::PIDL::ServerContext* _sc=static_cast<::Core/CCA/Component::PIDL::ServerContext*>(_v);\n";
     e.out << "    " << myclass << "* _obj=static_cast<" << myclass << "*>(_sc->d_ptr);\n";
     e.out << "\n";
 
@@ -690,7 +690,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
 	}
 	e.out << "    globus_nexus_buffer_t _sendbuff;\n";
 	e.out << "    if(int _gerr=globus_nexus_buffer_init(&_sendbuff, _rsize, 0))\n";
-	e.out << "        throw ::Component::PIDL::GlobusError(\"buffer_init\", _gerr);\n";
+	e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"buffer_init\", _gerr);\n";
 	e.out << "    int _flag=0;\n";
 	e.out << "    globus_nexus_put_int(&_sendbuff, &_flag, 1);\n";
 	if(return_type){
@@ -716,9 +716,9 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
 	e.out << "    // Send the reply...\n";
 	int reply_handler_id=0; // Always 0
 	e.out << "    if(int _gerr=globus_nexus_send_rsr(&_sendbuff, &_sp, " << reply_handler_id << ", GLOBUS_TRUE, GLOBUS_FALSE))\n";
-	e.out << "        throw ::Component::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
+	e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
 	e.out << "    if(int _gerr=globus_nexus_startpoint_eventually_destroy(&_sp, GLOBUS_FALSE, 30))\n";
-	e.out << "        throw ::Component::PIDL::GlobusError(\"startpoint_eventually_destroy\", _gerr);\n";
+	e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"startpoint_eventually_destroy\", _gerr);\n";
     }
     // Clean up inout and out arguments
     
@@ -749,9 +749,9 @@ void CI::emit_proxyclass(EmitState& e)
     std::string pname=name+"_proxy";
     std::string iname=name+"_interface";
 
-    e.proxy << leader << "class " << pname << " : public ::Component::PIDL::ProxyBase, public " << iname << " {\n";
+    e.proxy << leader << "class " << pname << " : public ::Core/CCA/Component::PIDL::ProxyBase, public " << iname << " {\n";
     e.proxy << leader << "public:\n";
-    e.proxy << leader << "    " << pname << "(const ::Component::PIDL::Reference&);\n";
+    e.proxy << leader << "    " << pname << "(const ::Core/CCA/Component::PIDL::Reference&);\n";
     std::string oldleader=e.proxy.push_leader();
     std::vector<Method*> vtab;
     gatherVtable(vtab, false);
@@ -766,9 +766,9 @@ void CI::emit_proxyclass(EmitState& e)
     e.proxy << leader << "protected:\n";
     e.proxy << leader << "    virtual ~" << pname << "();\n";
     e.proxy << leader << "private:\n";
-    e.proxy << leader << "    virtual void _getReference(::Component::PIDL::Reference&, bool copy) const;\n";
-    e.proxy << leader << "    friend const ::Component::PIDL::TypeInfo* " << name << "::_getTypeInfo();\n";
-    e.proxy << leader << "    static ::Component::PIDL::Object_interface* create_proxy(const ::Component::PIDL::Reference&);\n";
+    e.proxy << leader << "    virtual void _getReference(::Core/CCA/Component::PIDL::Reference&, bool copy) const;\n";
+    e.proxy << leader << "    friend const ::Core/CCA/Component::PIDL::TypeInfo* " << name << "::_getTypeInfo();\n";
+    e.proxy << leader << "    static ::Core/CCA/Component::PIDL::Object_interface* create_proxy(const ::Core/CCA/Component::PIDL::Reference&);\n";
     e.proxy << leader << "    " << pname << "(const " << pname << "&);\n";
     e.proxy << leader << "    " << pname << "& operator=(const " << pname << "&);\n";
     e.proxy << leader << "};\n\n";
@@ -801,7 +801,7 @@ void CI::emit_header(EmitState& e)
 	e.decl << "virtual public " << (*iter)->cppfullname(e.decl.currentPackage) << "_interface";
     }
     if(!haveone)
-	e.decl << "virtual public ::Component::PIDL::Object_interface";
+	e.decl << "virtual public ::Core/CCA/Component::PIDL::Object_interface";
     e.decl << " {\n";
 
     // The interace class body
@@ -816,7 +816,7 @@ void CI::emit_header(EmitState& e)
     }
     e.decl.pop_leader(oldleader);
     // The type signature method...
-    e.decl << leader << "    virtual const ::Component::PIDL::TypeInfo* _getTypeInfo() const;\n";
+    e.decl << leader << "    virtual const ::Core/CCA/Component::PIDL::TypeInfo* _getTypeInfo() const;\n";
     e.decl << leader << "protected:\n";
     e.decl << leader << "    " << iname << "(bool initServer=true);\n";
     e.decl << leader << "private:\n";
@@ -875,7 +875,7 @@ void CI::emit_interface(EmitState& e)
     e.out << "{\n";
     e.out << "}\n\n";
 
-    e.out << "const ::Component::PIDL::TypeInfo* " << fn << "::_getTypeInfo() const\n";
+    e.out << "const ::Core/CCA/Component::PIDL::TypeInfo* " << fn << "::_getTypeInfo() const\n";
     e.out << "{\n";
     e.out << "    return " << cppfullname(0) << "::_getTypeInfo();\n";
     e.out << "}\n\n";
@@ -887,7 +887,7 @@ void CI::emit_proxy(EmitState& e)
     if(fn[0] == ':' && fn[1] == ':')
 	fn=fn.substr(2);
     std::string cn=cppclassname()+"_proxy";
-    e.out << fn << "::" << cn << "(const ::Component::PIDL::Reference& ref)\n";
+    e.out << fn << "::" << cn << "(const ::Core/CCA/Component::PIDL::Reference& ref)\n";
     SymbolTable* localScope=symbols->getParent();
     e.out << " : " << cppfullname(localScope) << "_interface(false)";
     vector<Interface*> parents;
@@ -897,18 +897,18 @@ void CI::emit_proxy(EmitState& e)
 	e.out  << ",\n   "<< (*iter)->cppfullname(localScope) << "_interface(false)";
     }
     e.out << ",\n   ";
-    e.out << "::Component::PIDL::ProxyBase(ref)";
+    e.out << "::Core/CCA/Component::PIDL::ProxyBase(ref)";
     e.out << "\n";
     e.out << "{\n";
     e.out << "}\n\n";
     e.out << fn << "::~" << cn << "()\n";
     e.out << "{\n";
     e.out << "}\n\n";
-    e.out << "void " << fn << "::_getReference(::Component::PIDL::Reference& ref, bool copy) const\n";
+    e.out << "void " << fn << "::_getReference(::Core/CCA/Component::PIDL::Reference& ref, bool copy) const\n";
     e.out << "{\n";
     e.out << "    _proxyGetReference(ref, copy);\n";
     e.out << "}\n\n";
-    e.out << "::Component::PIDL::Object_interface* " << fn << "::create_proxy(const ::Component::PIDL::Reference& ref)\n";
+    e.out << "::Core/CCA/Component::PIDL::Object_interface* " << fn << "::create_proxy(const ::Core/CCA/Component::PIDL::Reference& ref)\n";
     e.out << "{\n";
     e.out << "    return new " << cn << "(ref);\n";
     e.out << "}\n\n";
@@ -929,7 +929,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     emit_prototype_defin(e, fn+"::", localScope);
     e.out << "\n{\n";
     if(reply_required())
-	e.out << "    ::Component::PIDL::ReplyEP* _reply=::Component::PIDL::ReplyEP::acquire();\n";
+	e.out << "    ::Core/CCA/Component::PIDL::ReplyEP* _reply=::Core/CCA/Component::PIDL::ReplyEP::acquire();\n";
     e.out << "    globus_nexus_startpoint_t _sp;\n";
     e.out << "    _reply->get_startpoint_copy(&_sp);\n\n";
     std::vector<Argument*>& list=args->getList();
@@ -952,7 +952,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     }
     e.out << "    globus_nexus_buffer_t _buffer;\n";
     e.out << "    if(int _gerr=globus_nexus_buffer_init(&_buffer, _size, 0))\n";
-    e.out << "        throw ::Component::PIDL::GlobusError(\"buffer_init\", _gerr);\n";
+    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"buffer_init\", _gerr);\n";
     if(list.size() != 0)
 	e.out << "    // Marshal the arguments\n";
     argNum=0;
@@ -972,12 +972,12 @@ void Method::emit_proxy(EmitState& e, const string& fn,
 	e.out << "    globus_nexus_put_startpoint_transfer(&_buffer, &_sp, 1);\n";
     }
     e.out << "    // Send the message\n";
-    e.out << "    ::Component::PIDL::Reference _ref;\n";
+    e.out << "    ::Core/CCA/Component::PIDL::Reference _ref;\n";
     e.out << "    _proxyGetReference(_ref, false);\n";
     e.out << "    int _handler=_ref.getVtableBase()+" << handlerOff << ";\n";
     e.out << "    if(int _gerr=globus_nexus_send_rsr(&_buffer, &_ref.d_sp,\n";
     e.out << "                                       _handler, GLOBUS_TRUE, GLOBUS_FALSE))\n";
-    e.out << "        throw ::Component::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
+    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
     if(reply_required()){
 	e.out << "    globus_nexus_buffer_t _recvbuff=_reply->wait();\n";
 	//... emit unmarshal...;
@@ -1005,9 +1005,9 @@ void Method::emit_proxy(EmitState& e, const string& fn,
 	    }
 	}
 	e.out.pop_leader(oldleader);
-	e.out << "    ::Component::PIDL::ReplyEP::release(_reply);\n";
+	e.out << "    ::Core/CCA/Component::PIDL::ReplyEP::release(_reply);\n";
 	e.out << "    if(int _gerr=globus_nexus_buffer_destroy(&_recvbuff))\n";
-	e.out << "        throw ::Component::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
+	e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
 	if(return_type){
 	    if(!return_type->isvoid()){
 		e.out << "    return _ret;\n";
@@ -1426,18 +1426,18 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
     e.out << leader << "if(" << arg << "_vtable_base == -1){\n";
     e.out << leader << "    " << arg << "=0;\n";
     e.out << leader << "} else {\n";
-    e.out << leader << "    ::Component::PIDL::Reference _ref;\n";
+    e.out << leader << "    ::Core/CCA/Component::PIDL::Reference _ref;\n";
     e.out << leader << "    globus_nexus_get_startpoint(" << bufname << ", &_ref.d_sp, 1);\n";
     e.out << leader << "    _ref.d_vtable_base=" << arg << "_vtable_base;\n";
     e.out << leader << "    if(globus_nexus_startpoint_to_current_context(&_ref.d_sp)){\n";
     e.out << leader << "        globus_nexus_endpoint_t* _ep;\n";
     e.out << leader << "        if(int _gerr=globus_nexus_startpoint_get_endpoint(&_ref.d_sp, &_ep))\n";
-    e.out << leader << "            throw ::Component::PIDL::GlobusError(\"get_endpoint\", _gerr);\n";
+    e.out << leader << "            throw ::Core/CCA/Component::PIDL::GlobusError(\"get_endpoint\", _gerr);\n";
     e.out << leader << "        void* _ptr=globus_nexus_endpoint_get_user_pointer(_ep);\n";
-    e.out << leader << "        ::Component::PIDL::ServerContext* _sc=static_cast<::Component::PIDL::ServerContext*>(_ptr);\n";
+    e.out << leader << "        ::Core/CCA/Component::PIDL::ServerContext* _sc=static_cast<::Core/CCA/Component::PIDL::ServerContext*>(_ptr);\n";
     e.out << leader << "        " << arg << "=dynamic_cast<" << name->cppfullname(0) << "_interface*>(_sc->d_objptr);\n";
     e.out << leader << "        if(int _gerr=globus_nexus_startpoint_destroy(&_ref.d_sp))\n";
-    e.out << leader << "            throw ::Component::PIDL::GlobusError(\"startpoint_destroy\", _gerr);\n";
+    e.out << leader << "            throw ::Core/CCA/Component::PIDL::GlobusError(\"startpoint_destroy\", _gerr);\n";
     e.out << leader << "    } else {\n";
     e.out << leader << "        " << arg << "=new " << name->cppfullname(0) << "_proxy(_ref);\n";
     e.out << leader << "    }\n";
@@ -1452,7 +1452,7 @@ void NamedType::emit_marshalsize(EmitState& e, const string& arg,
 	cerr << "NamedType::emit_marshalsize called with qty != 1: " << qty << '\n';
 	exit(1);
     }
-    e.out << leader << "::Component::PIDL::Reference " << arg << "_ref;\n";
+    e.out << leader << "::Core/CCA/Component::PIDL::Reference " << arg << "_ref;\n";
     e.out << leader << "if(" << arg << "){\n";
     e.out << leader << "    " << arg << "->_addReference();\n";
     e.out << leader << "    " << arg << "->_getReference(" << arg << "_ref, true);\n";
@@ -1475,10 +1475,10 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	exit(1);
     }
     e.out << leader << "if(" << arg << "){\n";
-    e.out << leader << "    const ::Component::PIDL::TypeInfo* _dt=" << arg << "->_getTypeInfo();\n";
-    e.out << leader << "    const ::Component::PIDL::TypeInfo* _bt=" << name->cppfullname(0) << "::_getTypeInfo();\n";
+    e.out << leader << "    const ::Core/CCA/Component::PIDL::TypeInfo* _dt=" << arg << "->_getTypeInfo();\n";
+    e.out << leader << "    const ::Core/CCA/Component::PIDL::TypeInfo* _bt=" << name->cppfullname(0) << "::_getTypeInfo();\n";
     e.out << leader << "    int _vtable_offset=_dt->computeVtableOffset(_bt);\n";
-    e.out << leader << "    ::Component::PIDL::Reference " << arg << "_ref;\n";
+    e.out << leader << "    ::Core/CCA/Component::PIDL::Reference " << arg << "_ref;\n";
     e.out << leader << "    " << arg << "->_getReference(" << arg << "_ref, true);\n";
     e.out << leader << "    int _vtable_base=" << arg << "_ref.getVtableBase()+_vtable_offset;\n";
     e.out << leader << "    globus_nexus_put_int(" << bufname << ", &_vtable_base, 1);\n";
@@ -1524,53 +1524,3 @@ bool NamedType::uniformsize() const
     return false; // Startpoints can vary in size
 }
 
-//
-// $Log$
-// Revision 1.8  2000/03/17 09:31:19  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.7  1999/10/07 02:08:40  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.6  1999/09/29 07:35:18  sparker
-// Finished marshal/unmarshaling of all different kinds of arrays (1D).
-// Cleaned up marshal/unmarshal code
-//
-// Revision 1.5  1999/09/28 08:21:43  sparker
-// Added support for arrays (incomplete)
-// Added support for strings
-// Added support for out and inout variables
-//
-// Revision 1.4  1999/09/26 06:13:01  sparker
-// Added (distributed) reference counting to PIDL objects.
-// Began campaign against memory leaks.  There seem to be no more
-//   per-message memory leaks.
-// Added a test program to flush out memory leaks
-// Fixed other Component testprograms so that they work with ref counting
-// Added a getPointer method to PIDL handles
-//
-// Revision 1.3  1999/09/24 06:26:30  sparker
-// Further implementation of new Component model and IDL parser, including:
-//  - fixed bugs in multiple inheritance
-//  - added test for multiple inheritance
-//  - fixed bugs in object reference send/receive
-//  - added test for sending objects
-//  - beginnings of support for separate compilation of sidl files
-//  - beginnings of CIA spec implementation
-//  - beginnings of cocoon docs in PIDL
-//  - cleaned up initalization sequence of server objects
-//  - use globus_nexus_startpoint_eventually_destroy (contained in
-// 	the globus-1.1-utah.patch)
-//
-// Revision 1.2  1999/09/21 06:13:01  sparker
-// Fixed bugs in multiple inheritance
-// Added round-trip optimization
-// To support this, we store Startpoint* in the endpoint instead of the
-//    object final type.
-//
-// Revision 1.1  1999/09/17 05:07:26  sparker
-// Added nexus code generation capability
-//
-//

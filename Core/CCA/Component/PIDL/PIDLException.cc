@@ -1,7 +1,6 @@
 
 /*
  *  PIDLException.h: Base class for PIDL Exceptions
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -12,7 +11,7 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <Component/PIDL/GlobusError.h>
+#include <Core/CCA/Component/PIDL/GlobusError.h>
 
 using Component::PIDL::PIDLException;
 
@@ -25,9 +24,3 @@ PIDLException::PIDLException(const PIDLException&)
 }
 
 
-//
-// $Log$
-// Revision 1.1  2000/03/23 20:43:07  sparker
-// Added copy ctor to all exception classes (for Linux/g++)
-//
-//

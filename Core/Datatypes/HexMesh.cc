@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  HexMesh.h: Unstructured meshes
@@ -24,15 +23,13 @@
 * Includes
 *******************************************************************************/
 
-#include <SCICore/Datatypes/HexMesh.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MiscMath.h>
-
-#include <SCICore/Persistent/PersistentMap.h>
-//#include <iostream>
-//#include <fstream>
+#include <Core/Datatypes/HexMesh.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/Persistent/PersistentMap.h>
 
 using std::cout;
 using std::endl;
@@ -46,8 +43,7 @@ using std::map;
 ********************************************************************************
 *******************************************************************************/
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 static Persistent* make_HexMesh();
 
@@ -161,8 +157,6 @@ HexFace::HexFace ()
 
 void HexFace::calc_face (HexMesh * m)
 {
-  using namespace SCICore::Geometry;
-  using namespace SCICore::Math;
 
 
   double d;
@@ -489,7 +483,6 @@ void Hexahedron::calc_coeff ()
 
 void Hexahedron::calc_centroid ()
 {
-  using namespace SCICore::Geometry;
 
   Vector v(0,0,0);
   int i, j, k=0;
@@ -535,7 +528,6 @@ void Hexahedron::calc_centroid ()
 
 void Hexahedron::find_stu (const Vector & p, double & s, double & t, double & u)
 {
-  using namespace SCICore::Geometry;
 
   double ts, tt, tu, e, err = 1.0e+49;
   Vector s1, s2, s3, s4, t1, t2;
@@ -1044,7 +1036,6 @@ void PushDown (KDTree * c, Hexahedron * h, int level)
 
 void HexMesh::classify ()
 {
-  using namespace SCICore::Geometry;
 
   Hexahedron * h;
   MapIntHexahedron::iterator hx;
@@ -1286,7 +1277,6 @@ double HexMesh::interpolate (const Point & P, const Array1<Vector> & data,
 
 void HexMesh::get_bounds (Point& min, Point& max)
 {
-  using namespace SCICore::Geometry;
   MapIntHexNode::iterator hn;
 
   // Loop through the nodes looking for min/max.  Assumes at least one node exists.
@@ -1356,8 +1346,6 @@ ostream & operator << (ostream & o, HexMesh & m)
 
 void HexMesh::io (Piostream & p)
 {
-  using SCICore::PersistentSpace::Pio;
-  using SCICore::Containers::Pio;
 
   int version;
   
@@ -1425,8 +1413,6 @@ void HexMesh::get_boundary_lines(Array1<Point>&)
 
 void Pio (Piostream & p, HexNode & n)
 {
-  using SCICore::PersistentSpace::Pio;
-  using SCICore::Geometry::Pio;
 
   // Write out or read in the data.
   
@@ -1476,12 +1462,12 @@ void Pio (Piostream & p, HexFace & f)
   
   p.begin_cheap_delim();
   
-  PersistentSpace::Pio(p, f.my_index);
-  PersistentSpace::Pio(p, f.my_contains_index);
-  PersistentSpace::Pio(p, f.my_neighbor_index);
+  Pio(p, f.my_index);
+  Pio(p, f.my_contains_index);
+  Pio(p, f.my_neighbor_index);
         
   for (c = 0; c < 4; c++)
-    PersistentSpace::Pio (p, f.corner.index[c]);    
+    Pio (p, f.corner.index[c]);    
         
   p.end_cheap_delim();
 }
@@ -1523,14 +1509,14 @@ void Pio (Piostream & p, Hexahedron & h)
 
   p.begin_cheap_delim();  
   
-  PersistentSpace::Pio(p, h.my_index);
-  PersistentSpace::Pio(p, h.num_faces);
+  Pio(p, h.my_index);
+  Pio(p, h.num_faces);
   
   for (c = 0; c < 8; c++)
-    PersistentSpace::Pio (p, h.corner.index[c]);
+    Pio (p, h.corner.index[c]);
     
   for (c = 0; c < 6; c++)
-    PersistentSpace::Pio (p, h.face.index[c]);
+    Pio (p, h.face.index[c]);
       
   p.end_cheap_delim();
 }
@@ -1555,43 +1541,5 @@ void Pio (Piostream & p, Hexahedron * & h)
   Pio (p, *h); 
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.6  2000/03/11 00:41:29  dahart
-// Replaced all instances of HashTable<class X, class Y> with the
-// Standard Template Library's std::map<class X, class Y, less<class X>>
-//
-// Revision 1.5  1999/10/07 02:07:31  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/09/08 02:26:47  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/08/25 03:48:33  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:45  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:21  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:38  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1  1999/04/27 21:14:27  dav
-// working on Datatypes
-//
-// Revision 1.2  1999/04/25 04:14:36  dav
-// oopps...?
-//
-// Revision 1.1.1.1  1999/04/24 23:12:48  dav
-// Import sources
-//
-//

@@ -19,7 +19,7 @@ KEYWORDS
     Quaternion
 
 DESCRIPTION
-    Datatype for passing SCICore::Geom::View as datatype
+    Datatype for passing View as datatype
 
 PATTERNS
 
@@ -29,24 +29,18 @@ WARNING
 POSSIBLE REVISIONS 
 ----------------------------------------------------------------------*/
 
-#ifndef SCI_SCICore_Datatypes_CameraView_h
-#define SCI_SCICore_Datatypes_CameraView_h 1
+#ifndef SCI_Core_Datatypes_CameraView_h
+#define SCI_Core_Datatypes_CameraView_h 1
 
-#include <SCICore/share/share.h>
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Containers/String.h>
+#include <Core/share/share.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Containers/String.h>
 
-#include <SCICore/Geom/View.h>
+#include <Core/Geom/View.h>
 
-namespace SCICore {
-  namespace Datatypes {
+namespace SCIRun {
 
-    using SCICore::Containers::LockingHandle;
-    using SCICore::GeomSpace::View;
-    using SCICore::Containers::clString;
-    using SCICore::PersistentSpace::Piostream;
-    using SCICore::PersistentSpace::PersistentTypeID;
 
     class CameraView;
     typedef LockingHandle<CameraView> CameraViewHandle;
@@ -71,8 +65,7 @@ namespace SCICore {
       return theView;
     }
 
-  } // end namespace Datatypes
-}   // end namespace SCICore
+} // End namespace SCIRun
 
 #endif
 

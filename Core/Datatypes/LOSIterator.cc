@@ -1,14 +1,11 @@
-#include <SCICore/Datatypes/LOSIterator.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Datatypes/Brick.h>
+#include <Core/Datatypes/LOSIterator.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Datatypes/Brick.h>
 
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Geometry::BBox;
-using SCICore::Geometry::Vector;
 
 
 
@@ -107,6 +104,5 @@ LOSIterator::SetNext()
   next = (*node)();
 }
 
-} //Datatypes
-} //SCICore
+} // End namespace SCIRun
 

@@ -12,7 +12,7 @@
     <description>
       <p>Version Date: December 1998</p><p>Version: 1.0</p>
       <p>This module is used to create some
-         "standard" non-editable colormaps in SCIRun/Uintah.
+         "standard" non-editable colormaps in Dataflow/Uintah.
          Non-editable simply means that the colors cannot be
          interactively manipulated.  The Module does, allow
          for the the resolution of the colormaps to be changed.

@@ -1,19 +1,16 @@
 ##
  #  CStoSFRG.tcl: Turn a contour set into a seg field
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   June 1999
- #
  #  Copyright (C) 1999 SCI Group
- # 
  ##
 
-catch {rename DaveW_FEM_CStoSFRG ""}
+catch {rename Packages/DaveW_FEM_CStoSFRG ""}
 
-itcl_class DaveW_FEM_CStoSFRG {
+itcl_class Packages/DaveW_FEM_CStoSFRG {
     inherit Module
     constructor {config} {
         set name CStoSFRG

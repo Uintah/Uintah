@@ -1,7 +1,7 @@
 
 catch {rename VectorFieldWriter ""}
 
-itcl_class PSECommon_Writers_VectorFieldWriter {
+itcl_class Dataflow_Writers_VectorFieldWriter {
     inherit Module
     constructor {config} {
 	set name VectorFieldWriter

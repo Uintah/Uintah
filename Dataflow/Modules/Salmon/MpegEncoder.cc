@@ -1,7 +1,7 @@
 /*
  * MpegEncoder.cc
  *
- * Defines interface for using the Stanford encoder with SCIRun.
+ * Defines interface for using the Stanford encoder with Dataflow.
  *
  * Cameron Christensen
  *
@@ -17,8 +17,7 @@
 using std::ofstream;
 using std::ios;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
 #define CCIR601
 
@@ -127,9 +126,9 @@ void MpegEncoder::EncodeFrame(unsigned char* red, unsigned char* green,
   outfileU.close();
   outfileV.close();
   
-  // call SCIRunEncode...
+  // call DataflowEncode...
 #ifdef BUSTED
-  SCIRunEncode(0, imageY, imageU, imageV);
+  DataflowEncode(0, imageY, imageU, imageV);
 #endif
 }
 
@@ -183,7 +182,7 @@ void MpegEncoder::BeginMpegEncode(char *name, int sizex, int sizey) {
 void MpegEncoder::DoneEncoding() {
   printf("Closing MPEG.\n");
 #ifdef BUSTED
-  SCIRunEncode(1, imageY, imageU, imageV);
+  DataflowEncode(1, imageY, imageU, imageV);
 #endif
   
   delete[] imageY;
@@ -191,5 +190,4 @@ void MpegEncoder::DoneEncoding() {
   delete[] imageV;
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun

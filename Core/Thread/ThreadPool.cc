@@ -11,18 +11,15 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <SCICore/Thread/ThreadPool.h>
-#include <SCICore/Thread/Barrier.h>
-#include <SCICore/Thread/Runnable.h>
-#include <SCICore/Thread/Semaphore.h>
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Thread/ThreadGroup.h>
-using SCICore::Thread::ParallelBase;
-using SCICore::Thread::ThreadPool;
+#include <Core/Thread/ThreadPool.h>
+#include <Core/Thread/Barrier.h>
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/ThreadGroup.h>
 #include <stdio.h>
 
-namespace SCICore {
-namespace Thread {
+namespace SCIRun {
 
 class ThreadPoolHelper : public Runnable {
   const ParallelBase* helper;
@@ -51,24 +48,21 @@ public:
   }
 };	
 
-}
-}
-
 ThreadPool::ThreadPool(const char* name)
-    : d_name(name), d_lock("ThreadPool lock"), barrier("ThreadPool barrier")
+  : d_name(name), d_lock("ThreadPool lock"), barrier("ThreadPool barrier")
 {
-    d_group = 0;
+  d_group = 0;
 }
 
 ThreadPool::~ThreadPool()
 {
-    // All of the threads will go away with this
-    delete d_group;
+  // All of the threads will go away with this
+  delete d_group;
 }
 
 void ThreadPool::wait()
 {
-    barrier.wait(d_threads.size()+1);
+  barrier.wait(d_threads.size()+1);
 }
 
 void
@@ -105,3 +99,5 @@ ThreadPool::parallel(const ParallelBase& helper, int nthreads)
   }
   d_lock.unlock();
 }
+
+} // End namespace SCIRun

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <iostream>
 using std::cerr;
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 struct X {
     int crap;
@@ -21,11 +21,10 @@ X::~X()
     cerr << "~X() : crap=" << crap << "\n";
 }
 
-using SCICore::Malloc::Allocator;
 
-void* operator new(size_t, Allocator*, const char*);
+void* operator new(size_t, SCIRun::Allocator*, const char*);
 #ifdef _BOOL
-void* operator new[](size_t, Allocator*, const char*);
+void* operator new[](size_t, SCIRun::Allocator*, const char*);
 #endif
 
 main()
@@ -37,9 +36,9 @@ main()
     delete pp;
     pp=new X[5];
     delete[] pp;
-    pp=new (SCICore::Malloc::default_allocator, "1") X;
+    pp=new (default_allocator, "1") X;
     delete pp;
-    pp=new (SCICore::Malloc::default_allocator, "2") X[5];
+    pp=new (default_allocator, "2") X[5];
     delete[] pp;
 #endif
     return 0;

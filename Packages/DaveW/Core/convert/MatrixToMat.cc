@@ -1,6 +1,6 @@
 
 /*
- *  MatrixToMat: Read in a SCIRun matrix, and output a .mat file for my
+ *  MatrixToMat: Read in a Dataflow matrix, and output a .mat file for my
  *		 'solve' inverse solving program.
  *
  *  Written by:
@@ -12,11 +12,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Containers/String.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <SCICore/Datatypes/Matrix.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/Containers/String.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Geometry/Point.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -26,10 +26,7 @@ using std::cerr;
 using std::ifstream;
 using std::endl;
 
-using namespace SCICore::Containers;
-using namespace SCICore::PersistentSpace;
-using namespace SCICore::Datatypes;
-using namespace SCICore::Geometry;
+using namespace SCIRun;
 
 int main(int argc, char **argv) {
 

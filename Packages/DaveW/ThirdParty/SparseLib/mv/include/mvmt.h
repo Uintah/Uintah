@@ -22,12 +22,8 @@
 /*                                                                           */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-//
 //      mvmtp.h  : basic templated numerical matrix class, storage
 //                  by columns (Fortran oriented.)
-//
-//
-//
 
 
 #ifndef _MV_MATRIX_$TYPE_H_
@@ -70,13 +66,10 @@ class MV_ColMat_$TYPE
 
     // usual copy by value
     // (can't use default parameter lda=m, because m is not a constant...)
-    //
     MV_ColMat_$TYPE($TYPE*, unsigned int m, unsigned int n);
     MV_ColMat_$TYPE($TYPE*, unsigned int m, unsigned int n, unsigned int lda);
 
     // the "reference" versions
-    //
-    //
     MV_ColMat_$TYPE(MV_ColMat_$TYPE &A, MV_Matrix_::ref_type i);
     MV_ColMat_$TYPE($TYPE*, unsigned int m, unsigned int n, MV_Matrix_::ref_type i);
     MV_ColMat_$TYPE($TYPE*, unsigned int m, unsigned int n, unsigned int lda,

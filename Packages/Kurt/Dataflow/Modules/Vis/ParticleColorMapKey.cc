@@ -1,12 +1,12 @@
-#include <SCICore/Datatypes/ColorMap.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomText.h>
-#include <SCICore/Geom/ColorMapTex.h>
-#include <SCICore/Geom/GeomTransform.h>
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Geom/Sticky.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomText.h>
+#include <Core/Geom/ColorMapTex.h>
+#include <Core/Geom/GeomTransform.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geom/Sticky.h>
 #include <values.h>
 #include <stdio.h>
 #include <iostream>
@@ -14,16 +14,8 @@ using std::cerr;
 
 #include "ParticleColorMapKey.h"
 
-namespace PSECommon {
 namespace Kurt {
-
-using namespace PSECore::Datatypes;
-using namespace SCICore::GeomSpace;
-using namespace PSECore::Dataflow;
-using namespace SCICore::TclInterface;
-using PSECore::Datatypes::VisParticleSetIPort;
-using PSECore::Datatypes::ColorMapOPort;
-using PSECore::Datatypes::ColorMapIPort;
+using namespace SCIRun;
 
 
 extern "C" Module *make_ParticleColorMapKey(const clString &id) {
@@ -119,6 +111,5 @@ void ParticleColorMapKey::execute() {
   ogeom->delAll();
   ogeom->addObj( sticky, "ParticleColorMapKey" );
 }
-
-} // End namespace Modules
 } // End namespace Kurt
+

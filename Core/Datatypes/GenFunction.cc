@@ -11,14 +11,12 @@
 */
 
 
-#include <SCICore/Datatypes/GenFunction.h>
-#include <SCICore/Math/MinMax.h>
+#include <Core/Datatypes/GenFunction.h>
+#include <Core/Math/MinMax.h>
 #include <sstream>
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
  
-using SCICore::Math::Max;
 
 //////////
 // Persistent representation
@@ -196,6 +194,5 @@ void GenFunction::set_num_comp(int nc){
   res_dims=nc+1;
 }
 
-} // Datatypes
-} // SCICore
+} // End namespace SCIRun
 

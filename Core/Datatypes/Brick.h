@@ -2,26 +2,21 @@
 #define BRICK_H
 
 
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Ray.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Containers/Array3.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Ray.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Containers/Array3.h>
 #include <string.h>
 #include <vector>
 
-#include <SCICore/Datatypes/Polygon.h>
-#include <SCICore/Datatypes/GLVolRenState.h>
+#include <Core/Datatypes/Polygon.h>
+#include <Core/Datatypes/GLVolRenState.h>
 
-namespace SCICore {
-namespace Datatypes  {
+namespace SCIRun {
 
-using namespace SCICore::Geometry;
-using SCICore::GeomSpace::GeomObj;
-using SCICore::Containers::Array3;
-using SCICore::Geometry::Polygon;
 using std::vector;
 
 
@@ -61,7 +56,7 @@ WARNING
 
 class Brick 
  {
-friend class SCICore::GeomSpace::GLVolRenState;
+friend class GLVolRenState;
 public:
 
   // GROUP: Constructors:
@@ -70,7 +65,6 @@ public:
   Brick(const Point& min, const Point& max,
 	int padx, int pady, int padz,int level,
 	Array3<unsigned char>* tex);
-  //
   Brick();
   // GROUP: Destructors
   //////////
@@ -127,7 +121,8 @@ protected:
 
 };
 
-}  // namespace Datatypes
-} // namespace SCICore
+} // End namespace SCIRun
 #endif
+
+
 

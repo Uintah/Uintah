@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
   Clock.cc
@@ -13,8 +12,6 @@
 #include <values.h>
 
 namespace Phil {
-namespace Modules {
-
 volatile iotimer_t counter_value, *iotimer_addr;
 unsigned int cycleval;
 
@@ -95,16 +92,6 @@ PrintTime(iotimer_t s, iotimer_t e, char *txt)
   //  fprintf(fp,"%s %lfms\n", txt,diff*(cycleval*1.0)*1E-9);
   printf("%s %lfs\n", txt,diff*(cycleval*1.0)*1E-12);
 }
+} // End namespace Phil
 
-} // end namespace Modules
-} // end namespace Phil
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:11:13  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 20:56:52  psutton
-// initial revision
-//
-//

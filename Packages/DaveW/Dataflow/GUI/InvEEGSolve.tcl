@@ -1,19 +1,16 @@
 ##
  #  Coregister.tcl: The coregistration UI
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   Aug 1996
- #
  #  Copyright (C) 1996 SCI Group
- #
  ##
 
-catch {rename DaveW_EEG_InvEEGSolve ""}
+catch {rename Packages/DaveW_EEG_InvEEGSolve ""}
 
-itcl_class DaveW_EEG_InvEEGSolve {
+itcl_class Packages/DaveW_EEG_InvEEGSolve {
     inherit Module
     constructor {config} {
         set name InvEEGSolve

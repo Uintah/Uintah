@@ -1,26 +1,20 @@
-#ifndef SCI_DaveW_Datatypes_RadPrims_h
-#define SCI_DaveW_Datatypes_RadPrims_h 1
+#ifndef SCI_Packages/DaveW_Datatypes_RadPrims_h
+#define SCI_Packages/DaveW_Datatypes_RadPrims_h 1
 
-#include <DaveW/Datatypes/CS684/Spectrum.h>
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Math/MusilRNG.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/Spectrum.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Math/MusilRNG.h>
 
 namespace DaveW {
-namespace Datatypes {
-
-using SCICore::Containers::LockingHandle;
-using SCICore::Containers::clString;
-using SCICore::Datatypes::Datatype;
-using SCICore::Datatypes::TriSurface;
-using SCICore::PersistentSpace::Piostream;
+using namespace SCIRun;
 
 class RTObject;
 typedef LockingHandle<RTObject> RTObjectHandle;
@@ -105,21 +99,6 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };
-
-} // End namespace Datatypes
 } // End namespace DaveW
-//
-// $Log$
-// Revision 1.2  1999/08/25 03:47:33  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/23 02:52:57  dmw
-// Dave's Datatypes
-//
-// Revision 1.2  1999/05/03 04:52:02  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+
 #endif

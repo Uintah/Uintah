@@ -1,10 +1,10 @@
 
 
-#include <SCICore/Containers/String.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Datatypes/TriSurface.h>
+#include <Core/Containers/String.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/TriSurface.h>
 #include <math.h>
 #include <iostream>
 #include <stdlib.h>
@@ -14,10 +14,7 @@ using std::cerr;
 using std::ifstream;
 using std::endl;
 
-using namespace SCICore::Containers;
-using namespace SCICore::PersistentSpace;
-using namespace SCICore::Datatypes;
-using namespace SCICore::Geometry;
+using namespace SCIRun;
 
 int main(int argc, char *argv[]) {
     double z=4;

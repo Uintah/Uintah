@@ -1,14 +1,10 @@
-#
 #  DebugSettings.tcl
-#
 #  Written by:
 #   James T. Purciful
 #   Department of Computer Science
 #   University of Utah
 #   Oct. 1994
-#
 #  Copyright (C) 1994 SCI Group
-#
 
 proc showDebugSettings {} {
     global debugsettings_window

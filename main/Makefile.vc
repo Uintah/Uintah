@@ -1,5 +1,4 @@
 # Makefile.vc
-#
 # written by Chris Moulding 11/99
 
 ###########################  EDIT HERE  ###########################
@@ -13,17 +12,17 @@ EXENAME = main
 OBJS = main.oexe
 
 ## override, or append to, the default compiler and/or linker flags with these
-CF   = -DPSECORETCL="\"/users/moulding/PSE/src/PSECore/Gui\""\
-       -DSCICORETCL="\"/users/moulding/PSE/src/SCICore/Gui\""\
-	   -DDEFAULT_PACKAGE_PATH="\"/users/moulding/PSE/src/PSECommon\""\
-	   -DITCL_WIDGETS="\"/users/moulding/PSE/src/PSECore/Widgets\""
+CF   = -DPSECORETCL="\"/users/moulding/PSE/src/Dataflow/Gui\""\
+       -DSCICORETCL="\"/users/moulding/PSE/src/Core/Gui\""\
+	   -DDEFAULT_PACKAGE_PATH="\"/users/moulding/PSE/src/Dataflow\""\
+	   -DITCL_WIDGETS="\"/users/moulding/PSE/src/Dataflow/Widgets\""
 LF   = 
 
 ## add to the default include paths
 INCS = 
 
 ## add to the default list of libraries to link against
-LIBS = PSECore$(APPENDIX).lib SCICore$(APPENDIX).lib
+LIBS = PSECore$(APPENDIX).lib Core$(APPENDIX).lib
 
 ###################################################################
 

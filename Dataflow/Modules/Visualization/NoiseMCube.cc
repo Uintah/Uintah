@@ -4,25 +4,20 @@
 #include <stdio.h>
 #include <iostream>
 #include <stdlib.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Containers/Array3.h>
-#include <PSECommon/Modules/Visualization/table.h>
-#include <PSECore/Datatypes/SpanTree.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Containers/Array3.h>
+#include <Dataflow/Modules/Visualization/table.h>
+#include <Dataflow/Ports/SpanTree.h>
 using std::cerr;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
   using std::cerr;
 
-  //using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-  //using namespace SCICore::Datatypes;
-  //using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-  //using namespace SCICore::Math;
-using namespace SCICore::Containers;
+  //using namespace Dataflow::Dataflow;
+  //using namespace Core::Datatypes;
+  //using namespace Core::TclInterface;
+  //using namespace Core::Math;
 
 static int i001, i010, i011, i100, i101, i110, i111;
 static int x_dim, y_dim;
@@ -833,6 +828,5 @@ mcube( GeomTrianglesP *triangles, double iso, int cell )
 
 
 
-}
-}
+} // End namespace SCIRun
 

@@ -1,20 +1,16 @@
 
-//
 // RenderModel.h
-//
 
 #ifndef __rendermodel_h__
 #define __rendermodel_h__
 
-#include <SCICore/OS/sock.h>
-#include <Remote/Tools/Math/Vector.h>
+#include <Core/OS/sock.h>
+#include <Packages/Remote/Tools/Math/Vector.h>
 
 namespace Remote {
-namespace Modules {
-
 using namespace Remote::Tools;
 using Remote::Tools::Vector;
-using SCICore::OS::Socket;
+using namespace SCIRun;
 
 void RenderModel(Model &M);
 void LoadTexture(int TexInd);
@@ -26,8 +22,7 @@ struct view {
   Vector pos;
   Vector lookat;
 };
+} // End namespace Remote
 
-} // namespace Modules
-} // namespace Remote
 
 #endif // __rendermodel_h__

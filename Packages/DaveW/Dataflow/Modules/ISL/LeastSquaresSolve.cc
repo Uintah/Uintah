@@ -12,23 +12,19 @@
  *                                                              *
  ****************************************************************/
 
-#include <DaveW/ThirdParty/OldLinAlg/matrix.h>
-#include <DaveW/ThirdParty/OldLinAlg/vector.h>
-#include <DaveW/ThirdParty/NumRec/dsvdcmp.h>
-#include <DaveW/ThirdParty/NumRec/dsvbksb.h>
+#include <Packages/DaveW/Core/ThirdParty/OldLinAlg/matrix.h>
+#include <Packages/DaveW/Core/ThirdParty/OldLinAlg/vector.h>
+#include <Packages/DaveW/Core/ThirdParty/NumRec/dsvdcmp.h>
+#include <Packages/DaveW/Core/ThirdParty/NumRec/dsvbksb.h>
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Core/Datatypes/DenseMatrix.h>
 #include <iostream>
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 using std::cerr;
 using std::endl;
 
@@ -127,23 +123,6 @@ void LeastSquaresSolve::execute()
     }
     x_port->send(bb);
 } 
-
-} // End namespace Modules
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.4  2000/03/17 09:25:47  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.3  1999/12/10 07:00:58  dmw
-// if DenseMatrix::solve() (Gaussian-Elimination) fails, use SVD and backsubstitution to get the least squares solution
-//
-// Revision 1.2  1999/12/09 09:56:26  dmw
-// got this module working
-//
-// Revision 1.1  1999/12/09 00:10:04  dmw
-// woops - wrong filename
-//
+

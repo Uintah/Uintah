@@ -14,28 +14,13 @@
 #ifndef SCI_Geom_Pickable_h
 #define SCI_Geom_Pickable_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
-namespace PSECommon {
-  namespace Modules {
-    class Roe;
-  }
-}
+namespace SCIRun {
 
-namespace SCICore {
-
-namespace Geometry {
-  class Vector;
-  class Point;
-}
-
-namespace GeomSpace {
-
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
-
-using PSECommon::Modules::Roe;
-
+class Vector;
+class Point;
+class Roe;
 class GeomPick;
 class GeomObj;
 
@@ -68,7 +53,6 @@ public:
   virtual void geom_moved(GeomPick*, int, double, const Vector&, const BState&, int) = 0;
 };
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
 #endif /* SCI_Geom_Pickable_h */

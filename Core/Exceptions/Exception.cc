@@ -11,7 +11,7 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <SCICore/Exceptions/Exception.h>
+#include <Core/Exceptions/Exception.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,8 +25,9 @@
 #include <string.h>
 #endif
 
+namespace SCIRun {
+
 using namespace std;
-using SCICore::Exceptions::Exception;
 
 Exception::Exception()
 {
@@ -161,3 +162,4 @@ void Exception::sci_throw(const Exception& exc)
   }
 }
 
+} // End namespace SCIRun

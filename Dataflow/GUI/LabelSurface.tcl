@@ -1,30 +1,12 @@
 ##
  #  LabelSurface.tcl: Label a specific surface in a surftree
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   Jully 1997
- #
  #  Copyright (C) 1997 SCI Group
- # 
  #  Log Information:
- #
- #  $Log$
- #  Revision 1.1  1999/07/27 16:58:27  mcq
- #  Initial commit
- #
- #  Revision 1.1.1.1  1999/04/24 23:12:42  dav
- #  Import sources
- #
- #  Revision 1.2  1999/01/04 05:32:31  dmw
- #  See Dave for details...
- #
- #  Revision 1.1  1997/08/23 06:27:19  dweinste
- #  Some trivial modules that I needed...
- #
- #
  ##
 
 itcl_class LabelSurface {

@@ -17,7 +17,7 @@ KEYWORDS
     ParticleGridReader, Material/Particle Method
 
 AUTHOR
-    Kurt Zimmerman
+    Packages/Kurt Zimmerman
     Department of Computer Science
     University of Utah
     January 1999
@@ -29,23 +29,23 @@ LOG
 ****************************************/
 #include "VisControl.h"
 
-#include <Kurt/DataArchive/VisParticleSet.h>
-#include <Kurt/DataArchive/VisParticleSetPort.h>
-#include <SCICore/Util/NotFinished.h>
-#include <Uintah/Interface/DataArchive.h>
-#include <Uintah/Grid/TypeDescription.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Geometry/IntVector.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Datatypes/VectorFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <Uintah/Interface/DataArchive.h>
-#include <Uintah/Grid/Grid.h>
-#include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/Level.h>
-#include <Uintah/Grid/Patch.h>
-#include <Uintah/Grid/NodeIterator.h>
+#include <Packages/Kurt/DataArchive/VisParticleSet.h>
+#include <Packages/Kurt/DataArchive/VisParticleSetPort.h>
+#include <Core/Util/NotFinished.h>
+#include <Packages/Uintah/Interface/DataArchive.h>
+#include <Packages/Uintah/Grid/TypeDescription.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Datatypes/VectorFieldRG.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Packages/Uintah/Interface/DataArchive.h>
+#include <Packages/Uintah/Grid/Grid.h>
+#include <Packages/Uintah/Grid/GridP.h>
+#include <Packages/Uintah/Grid/Level.h>
+#include <Packages/Uintah/Grid/Patch.h>
+#include <Packages/Uintah/Grid/NodeIterator.h>
 #include <iostream> 
 #include <sstream>
 #include <string>
@@ -56,16 +56,8 @@ using std::vector;
 using std::string;
 
 namespace Kurt {
-namespace Modules {
-
-using SCICore::Containers::to_string;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 using Kurt::Datatypes::VisParticleSet;
-using PSECore::Datatypes::VisParticleSetOPort;
-using PSECore::Datatypes::VisParticleSetIPort;
-using SCICore::Geometry::BBox;
-using SCICore::Datatypes::VectorFieldRG;
-using SCICore::Datatypes::ScalarFieldRGdouble;
 using namespace Uintah;
 using namespace Uintah::Datatypes;
 
@@ -439,7 +431,6 @@ VisControl::buildData(DataArchive& archive, vector< double >& times,
   vps = new VisParticleSet(positions, scalars, vectors, this);
 } 
 
+} // End namespace Kurt
 //--------------------------------------------------------------- 
-} // end namespace Modules
-} // end namespace Kurt
   

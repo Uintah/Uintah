@@ -10,14 +10,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Datatypes/Surface.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Geometry/Grid.h>
+#include <Core/Datatypes/Surface.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Geometry/Grid.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Geometry::Grid;
 
 PersistentTypeID Surface::type_id("Surface", "Datatype", 0);
 
@@ -51,8 +49,6 @@ void Surface::destroy_hash() {
 
 void Surface::io(Piostream& stream) {
 
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     int version=stream.begin_class("Surface", SURFACE_VERSION);
     Pio(stream, name);
@@ -105,6 +101,5 @@ void Surface::set_bc(const clString& bc_expr)
     boundary_type=DirichletExpression;
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 

@@ -44,7 +44,6 @@
 #define CMP(A,B) ((A) < (B))
 
 // swap two items
-//
 static inline void SWAP_int(int &A, int &B)
 {
     int tmp = A; A = B; B = tmp;

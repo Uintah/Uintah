@@ -1,24 +1,20 @@
 //  VField.h - Vector Field
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
 #ifndef SCI_project_VField_h
 #define SCI_project_VField_h 1
 
-#include <SCICore/Datatypes/Field.h>
-#include <SCICore/Containers/LockingHandle.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Containers/LockingHandle.h>
 
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
 
-using SCICore::Containers::LockingHandle;
 
 class Object;
 
@@ -38,7 +34,6 @@ private:
 };
 
 
-} // end SCICore
-} // end Datatypes
+} // End namespace SCIRun
 
 #endif

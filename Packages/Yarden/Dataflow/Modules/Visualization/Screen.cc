@@ -3,17 +3,14 @@
 #include <math.h>
 #include <iostream>
 #include <GL/gl.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Containers/Stack.h>
-#include <Yarden/Modules/Visualization/Screen.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Containers/Stack.h>
+#include <Packages/Yarden/Dataflow/Modules/Visualization/Screen.h>
 using std::cerr;
 using std::endl;
 
 namespace Yarden {
-  namespace Modules {
-  
-  using namespace SCICore::Containers;
-  using namespace SCICore::Malloc;
+using namespace SCIRun;
   
   inline
   int min(int a, int b) {return a<b ? a : b ;}
@@ -841,6 +838,5 @@ Screen::cover_pixel( int x, int y )
   check( y, x>>6, bit, bit, row );
   return 1;
   }
+} // End namespace Yarden
   
-  } // namespace Modules
-} // namespace Yarden

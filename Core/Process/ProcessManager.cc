@@ -11,11 +11,12 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <SCICore/Process/ProcessManager.h>
-#include <SCICore/Util/NotFinished.h>
+#include <Core/Process/ProcessManager.h>
+#include <Core/Util/NotFinished.h>
 
 using std::string;
-using SCICore::Process::ProcessManager;
+
+using namespace SCIRun;
 
 void ProcessManager::start_process(const string& command,
 				   const string& resourceSpec)

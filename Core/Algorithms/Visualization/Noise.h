@@ -15,13 +15,8 @@
 #ifndef Noise_h
 #define Noise_h
 
-namespace PSECommon {
-  namespace Algorithms {
+namespace SCIRun {
 
-    using namespace SCICore::Datatypes;
-    using namespace SCICore::GeomSpace;
-    using namespace SCICore::Geometry;
-    using namespace PSECore::Datatypes;
     
     // NoiseBase
 
@@ -73,9 +68,7 @@ namespace PSECommon {
      */
 
 
-    //
     // Noise
-    //
     
     template <class T, class I, class AI>
       Noise<T,I,AI>::Noise( SpanSpace<T> *space, I *interp, AI *ai ) 
@@ -364,7 +357,6 @@ namespace PSECommon {
       }
 
 
-  }  // namespace Algorithms
-}  // namespace PSECommon
+} // End namespace SCIRun
 
 #endif

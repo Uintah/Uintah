@@ -56,7 +56,7 @@ void Statistics(RefFS,NewFS)
   BEGIN("Statistics");
   int i;
 
-  for(i=0;i<CFrame->NumberComponents;i++)
+  for(i=0;i<CFrame->NumberCore/CCA/Components;i++)
     {
       StatisticsMem(RefFS->Iob[i]->mem,NewFS->Iob[i]->mem,CStat);
       /*printf("Comp: %d  MRSNR: %2.2f  SNR: %2.2f  PSNR: %2.2f  MSE: %4.2f  Entropy: %1.2f\n",

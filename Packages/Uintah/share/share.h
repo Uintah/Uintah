@@ -1,4 +1,4 @@
-/* share.h written by Chris Moulding 11/98 */
+/* share.h written by Chris Packages/Moulding 11/98 */
 
 #undef UINTAHSHARE
 

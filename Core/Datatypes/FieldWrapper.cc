@@ -1,19 +1,16 @@
 //  FieldWrapper.cc - provides a wrapper for passing fields between the
 //  register module and the domain manager module.
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
-#include <SCICore/Datatypes/FieldWrapper.h>
+#include <Core/Datatypes/FieldWrapper.h>
 
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
 
 PersistentTypeID FieldWrapper::type_id("FieldWrapper", "Datatype", 0);
 
@@ -34,5 +31,4 @@ FieldWrapper::FieldWrapper(const FieldHandle &handle, status_t intype):
 }
 
 
-}  // end Datatypes
-}  // end SCICore
+} // End namespace SCIRun

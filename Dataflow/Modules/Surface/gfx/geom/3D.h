@@ -17,9 +17,7 @@
 #include <gfx/math/Vec4.h>
 #include <gfx/tools/Array.h>
 
-//
 // Generally useful geometric functions
-//
 extern Vec3 randomPoint(const Vec3&, const Vec3&);  // on segment
 extern Vec3 randomPoint(const Vec3&, const Vec3&, const Vec3&); // in triangle
 
@@ -44,7 +42,6 @@ public:
 
 class Plane
 {
-    //
     // A plane is defined by the equation:  n*p + d = 0
     Vec3 n;
     real d;
@@ -72,9 +69,7 @@ public:
 };
 
 
-//
 // A triangular face in 3D (ie. a 2-simplex in E3)
-//
 class Face3
 {
 protected:
@@ -90,7 +85,6 @@ public:
 	: P(a,b,c)
     { }
 
-    //
     // Basic primitive operations on faces
     virtual const Vec3& vertexPos(int i) const = 0;
     virtual void vertexPos(int i, const Vec3&) = 0; 
@@ -101,18 +95,6 @@ public:
     real area();
 };
 
-//
-// $Log$
-// Revision 1.1  1999/07/27 16:58:03  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 20:17:13  dav
-// added back PSECommon .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:32  dav
-// Import sources
-//
-//
 
 
 #endif // GFXGEOM_3D_INCLUDED

@@ -10,24 +10,20 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 
-#include <PSECommon/Modules/Visualization/RescaleColorMap.h>
+#include <Dataflow/Modules/Visualization/RescaleColorMap.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
 
 
 extern "C" Module* make_RescaleColorMap(const clString& id) {
@@ -98,6 +94,5 @@ RescaleColorMap::connection(ConnectionMode mode, int which_port, int)
     }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 

@@ -1,16 +1,13 @@
 //////////////////////////////////////////////////////////////////////
 // Utils.cpp - Various utility functions.
-//
 // By Dave McAllister, 1998.
 
-#include <Remote/Tools/Util/Utils.h>
+#include <Packages/Remote/Tools/Util/Utils.h>
 
 #include <time.h>
 #include <unistd.h>
 
 namespace Remote {
-namespace Tools {
-
 void SRand()
 {
 	srand48(time(0) * getpid());
@@ -35,6 +32,5 @@ int HashString(const char *s)
 
   return H;
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote

@@ -1,7 +1,7 @@
 
 catch {rename Span ""}
 
-itcl_class PSECommon_Visualization_Span {
+itcl_class Dataflow_Visualization_Span {
     inherit Module
     constructor {config} {
 	set name Span

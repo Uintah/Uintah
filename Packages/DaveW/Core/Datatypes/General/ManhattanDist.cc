@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ManhattanDist.cc:  For coregistering a set of points to a surface
@@ -12,21 +11,17 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#include <DaveW/Datatypes/General/ManhattanDist.h>
-#include <SCICore/Containers/Queue.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Packages/DaveW/Core/Datatypes/General/ManhattanDist.h>
+#include <Core/Containers/Queue.h>
+#include <Core/Containers/String.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <iostream>
 using std::cerr;
 
 namespace DaveW {
-namespace Datatypes {
-
-using SCICore::Containers::Queue;
-using SCICore::Geometry::Vector;
-using SCICore::Datatypes::Persistent;
+using namespace SCIRun;
 
 static Persistent* make_ManhattanDist()
 {
@@ -40,8 +35,6 @@ ManhattanDist::ManhattanDist(const Array1<Point>&Pts, int n, int init,
 			     double maxX, double maxY, double maxZ)
 : pts(Pts), fullyInitialized(init)
 {
-    using SCICore::Math::Min;
-    using SCICore::Math::Max;
 
     Point min(minX, minY, minZ);
     Point max(maxX, maxY, maxZ);
@@ -322,8 +315,6 @@ double ManhattanDist::dist(const Point& p, int &idx) {
 #define ManhattanDist_VERSION 1
 
 void ManhattanDist::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     int version=stream.begin_class("ManhattanDist", ManhattanDist_VERSION);
     if (version == 1) {
@@ -339,27 +330,6 @@ ScalarField* ManhattanDist::clone()
 {
     return scinew ManhattanDist(*this);
 }
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.4  1999/10/07 02:06:21  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/01 05:27:36  dmw
-// more DaveW datatypes...
-//
-// Revision 1.2  1999/08/25 03:47:34  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/23 02:52:59  dmw
-// Dave's Datatypes
-//
-// Revision 1.1  1999/05/03 04:52:01  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

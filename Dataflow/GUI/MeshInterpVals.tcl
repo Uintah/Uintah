@@ -1,35 +1,17 @@
 ##
  #  MeshInterpVals.tcl: General Mesh interpolation module
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   Jully 1997
- #
  #  Copyright (C) 1997 SCI Group
- # 
  #  Log Information:
- #
- #  $Log$
- #  Revision 1.2  1999/12/10 06:58:12  dmw
- #  added another flag to MeshInterpVals
- #
- #  Revision 1.1  1999/09/04 23:14:52  dmw
- #  took out unused files and added the Mesh module GUI's
- #
- #  Revision 1.1  1999/01/04 05:32:33  dmw
- #  See Dave for details...
- #
- #  Revision 1.1  1997/08/23 06:27:19  dweinste
- #  Some trivial modules that I needed...
- #
- #
  ##
 
 catch {rename MeshInterpVals ""}
 
-itcl_class SCIRun_Mesh_MeshInterpVals {
+itcl_class Dataflow_Mesh_MeshInterpVals {
     inherit Module
     constructor {config} {
         set name MeshInterpVals

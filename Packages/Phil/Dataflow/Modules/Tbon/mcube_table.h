@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
   mcube_table.h
@@ -6,7 +5,7 @@
   Marching Cubes tables for regular (cube elements) and
     unstructured (tetrahedral elements) grids.
 
-  Philip Sutton
+  Packages/Philip Sutton
 
   Copyright (C) 2000 SCI Group, University of Utah
 */
@@ -1627,12 +1626,3 @@ static TRIANGLE_CASES_UG triCasesUG[] = {
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:11:14  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 20:56:53  psutton
-// initial revision
-//
-//

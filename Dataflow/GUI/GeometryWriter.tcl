@@ -1,7 +1,7 @@
 
 catch {rename GeometryWriter ""}
 
-itcl_class PSECommon_Writers_GeometryWriter {
+itcl_class Dataflow_Writers_GeometryWriter {
     inherit Module
     constructor {config} {
 	set name GeometryWriter

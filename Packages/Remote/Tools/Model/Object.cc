@@ -1,18 +1,14 @@
 //////////////////////////////////////////////////////////////////////
 // Object.cpp - Process an Object.
-//
 // Copyright David K. McAllister July 1999.
-//
 //////////////////////////////////////////////////////////////////////
 
-#include <Remote/Tools/Model/Model.h>
-#include <Remote/Tools/Model/Mesh.h>
+#include <Packages/Remote/Tools/Model/Model.h>
+#include <Packages/Remote/Tools/Model/Mesh.h>
 
-#include <Remote/Tools/macros.h>
+#include <Packages/Remote/Tools/macros.h>
 
 namespace Remote {
-namespace Tools {
-
 // Generate normals for each vertex.
 // The smaller the crease angle, the more smoothing.
 void Object::GenNormals(double CreaseAngle)
@@ -566,7 +562,6 @@ void Object::RemoveTriangles(Vector& pos, double thresh)
   if (hasalpha) alpha = _alpha;
   
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

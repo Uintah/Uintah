@@ -1,9 +1,7 @@
 #include "VolumeUtils.h"
 
 namespace Kurt {
-namespace Datatypes {
-
-using namespace SCICore::Geometry;
+using namespace SCIRun;
 
 bool
 isPowerOf2( int range)
@@ -90,7 +88,6 @@ sortParameters( double *t, int len_t )
     }
   }
 }
+} // End namespace Kurt
 
-} // end namespace Datatypes
-} // end namespace Kurt
 

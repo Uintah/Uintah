@@ -1,12 +1,9 @@
-#
 # Makefile for sparselb src
-#
 SHELL = /bin/sh
 SPARSELIB_DIR = ../..
 include $(SPARSELIB_DIR)/makefile.def
 
 # put MV++ library in the same place as SparseLib++ library
-#
 MV_LIB_A = ../../lib/libmv.a
 
 SRCS 	= \

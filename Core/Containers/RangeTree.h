@@ -1,4 +1,4 @@
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <vector>
 #include <list>
 #include <iostream>

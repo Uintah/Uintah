@@ -14,29 +14,20 @@
 #ifndef SCI_Geom_Pick_h
 #define SCI_Geom_Pick_h 1
 
-#include <SCICore/Geom/GeomContainer.h>
-#include <SCICore/Geom/Pickable.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Geom/GeomContainer.h>
+#include <Core/Geom/Pickable.h>
+#include <Core/Geom/Material.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Geometry/Vector.h>
 
-namespace PSECore {
-  namespace Widgets {
-    class BaseWidget;
-  }
-  namespace Comm {
-    class MessageBase;
-  }
-  namespace Modules {
-    class Roe;
-  }
+namespace SCIRun {
+  class BaseWidget;
+  class MessageBase;
+  class Roe;
 }
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using PSECore::Widgets::BaseWidget;
-using PSECore::Comm::MessageBase;
 
 class SCICORESHARE GeomPick : public GeomContainer {
   Pickable* module;
@@ -90,8 +81,7 @@ public:
   virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
   
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
 
 #endif /* SCI_Geom_Pick_h */

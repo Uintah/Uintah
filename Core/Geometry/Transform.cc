@@ -10,15 +10,14 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Math/Trig.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Math/Trig.h>
 #include <iostream>
 using std::cerr;
 #include <stdio.h>
 
-namespace SCICore {
-namespace Geometry {
+namespace SCIRun {
 
 Transform::Transform()
 {
@@ -420,7 +419,7 @@ void Transform::compute_imat()
     + i*b*g*p - i*b*h*o - i*f*c*p + i*f*d*o + i*n*c*h - i*n*d*g
     - m*b*g*l + m*b*h*k + m*f*c*l - m*f*d*k - m*j*c*h + m*j*d*g;
 
-  if (SCICore::Math::Abs(q)<0.000000001) {
+  if (Abs(q)<0.000000001) {
     imat[0][0]=imat[1][1]=imat[2][2]=imat[3][3]=1;
     imat[1][0]=imat[1][2]=imat[1][3]=0;
     imat[2][0]=imat[2][1]=imat[2][3]=0;
@@ -521,7 +520,6 @@ void Transform::perspective(const Point& eyep, const Point& lookat,
 
 void Transform::invmat(double m[4][4])
 {
-  using SCICore::Math::Abs;
 
   double imat[4][4];
   int i;
@@ -603,5 +601,4 @@ Transform& Transform::operator=(const Transform& copy)
   return *this;
 }
 
-} // End namespace Geometry
-} // End namespace SCICore
+} // End namespace SCIRun
