@@ -17,7 +17,6 @@
 
 namespace SCIRun {
 
-
 template <class T, class I, class A=AccelAttrib<I> > class IndexAttrib : public DiscreteAttrib<T>
 {
 public:
@@ -54,11 +53,28 @@ public:
   virtual void tset(int x, const T &val);
   void ftset(int x, const T &val);
 
+  //////////
+  // Returns index of the value in the indexed values vector
+  inline int addValue(const T& val){
+    index.push_back(val);
+    return indexSize()-1;
+  }
 
+  //////////
+  // Returns size of the indexed values vector
+  inline int indexSize() const {
+    return index.size();
+  }
+
+  //////////
+  // Set new size of the indexed values vector
+  void resizeIndex(int nsz){
+    index.resize(nsz);
+  }
 
   // Implement begin()
   // Implement end()
-
+  
   // Resize the attribute to the specified dimensions
   virtual void resize(int, int, int);
   virtual void resize(int, int);
@@ -70,47 +86,78 @@ public:
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+  static string typeName();
+  static Persistent* maker();
 
   virtual int iterate(AttribFunctor<T> &func);
 
-  //protected:
-
-  //private:
+protected:
+ 
   A iattrib;
 
   vector<T> index;
 };
 
+//////////
+// PIO support
+template <class T, class I, class A> string
+IndexAttrib<T, I, A>::typeName(){
+  static string typeName = "IndexAttrib<"+findTypeName((T*)0)+","+findTypeName((I*)0)+","+findTypeName((A*)0)+">";
+  return typeName;
+}
 
+template <class T, class I, class A> 
+Persistent* IndexAttrib<T, I, A>::maker(){
+   return new IndexAttrib<T, I, A>();
+}
+
+template <class T, class I, class A> PersistentTypeID 
+IndexAttrib<T, I, A>::type_id(IndexAttrib<T, I, A>::typeName(), 
+			      DiscreteAttrib<T>::typeName(), 
+			      maker);
+
+#define INDEXATTRIB_VERSION 1
+template <class T, class I, class A> void
+IndexAttrib<T, I, A>::io(Piostream& stream)
+{
+  stream.begin_class(typeName().c_str(), INDEXATTRIB_VERSION);
+  
+  // -- base class PIO
+  DiscreteAttrib<T>::io(stream);
+  
+  Pio(stream, iattrib);
+  Pio(stream, index);
+
+  stream.end_class();
+}
+
+//////////
+// Constructors/Destructor
 template <class T, class I, class A>
 IndexAttrib<T, I, A>::IndexAttrib() :
   DiscreteAttrib<T>(),
-  iattrib(),
-  index(sizeof(I) * 256, I())
+  iattrib()
 {
 }
 
 template <class T, class I, class A>
 IndexAttrib<T, I, A>::IndexAttrib(int ix) :
   DiscreteAttrib<T>(ix),
-  iattrib(ix),
-  index(sizeof(I) * 256, I())
+  iattrib(ix)
 {
 }
 
 template <class T, class I, class A>
 IndexAttrib<T, I, A>::IndexAttrib(int ix, int iy) :
   DiscreteAttrib<T>(ix, iy),
-  iattrib(ix, iy),
-  index(sizeof(I) * 256, I())
+  iattrib(ix, iy)
 {
 }
 
 template <class T, class I, class A>
 IndexAttrib<T, I, A>::IndexAttrib(int ix, int iy, int iz) :
   DiscreteAttrib<T>(ix, iy, iz),
-  iattrib(ix, iy, iz),
-  index(sizeof(I) * 256, I())
+  iattrib(ix, iy, iz)
 {
 }
 
@@ -302,10 +349,6 @@ IndexAttrib<T, I, A>::iterate(AttribFunctor<T> &func)
   return index.size();
 }
 
-
-template <class T, class I, class A> PersistentTypeID IndexAttrib<T, I, A>::type_id("IndexAttrib", "Datatype", 0);
-
-
 template <class T, class I, class A> string
 IndexAttrib<T, I, A>::getInfo()
 {
@@ -320,7 +363,7 @@ IndexAttrib<T, I, A>::getInfo()
   vector<T>::iterator itr = index.begin();
   int i = 0;
   for(;itr!=index.end() && i < 1000; itr++, i++)  {
-    retval << *itr << " ";
+    //    retval << *itr << " ";
   }
   if (itr != index.end()) { retval << "..."; }
   retval << endl;
@@ -328,12 +371,6 @@ IndexAttrib<T, I, A>::getInfo()
     "SubAttrib =" << endl << iattrib.getInfo();
   return retval.str();
 }
-
-template <class T, class I, class A> void
-IndexAttrib<T, I, A>::io(Piostream&)
-{
-}
-
 
 } // End namespace SCIRun
 
