@@ -34,92 +34,41 @@
 #include <Teem/Core/Datatypes/NrrdData.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 
-#include <Core/Containers/StringUtil.h>
-#include <iostream>
-
 namespace SCITeem {
 using namespace SCIRun;
-
-using std::endl;
-using std::pair;
 
 class UnuAxinfo : public Module {
 public:
   UnuAxinfo(GuiContext* ctx);
   virtual ~UnuAxinfo();
 
-  void load_gui();
-  void clear_vals();
   virtual void execute();
 
-  GuiInt              dimension_;
-  GuiString           type_;
-  GuiString           label0_;
-  GuiInt              gui_initialized_;
-  vector<GuiString*>  label_;
-  vector<GuiString*>  kind_;
-  vector<GuiString*>  center_;
-  vector<GuiDouble*>  size_;
-  vector<GuiDouble*>  min_;
-  vector<GuiDouble*>  max_;
-  vector<GuiDouble*>  spacing_;
-
+  GuiInt              axis_;
+  GuiString           label_;
+  GuiString           kind_;
+  GuiDouble           min_;
+  GuiDouble           max_;
+  GuiDouble           spacing_;
 private:
   int                 generation_;
-  int                 max_vectors_;
 };
 
 DECLARE_MAKER(UnuAxinfo)
 
 UnuAxinfo::UnuAxinfo(GuiContext* ctx)
   : Module("UnuAxinfo", ctx, Source, "Unu", "Teem"),
-    dimension_(ctx->subVar("dimension")),
-    type_(ctx->subVar("type")),
-    label0_(ctx->subVar("label0")),
-    gui_initialized_(ctx->subVar("initialized")),
-    generation_(-1),
-    max_vectors_(0)
+    axis_(ctx->subVar("axis")),
+    label_(ctx->subVar("label")),
+    kind_(ctx->subVar("kind")),
+    min_(ctx->subVar("min")),
+    max_(ctx->subVar("max")),
+    spacing_(ctx->subVar("spacing")),
+    generation_(-1)
 {
-  dimension_.set(0);
-  load_gui();
 }
 
 UnuAxinfo::~UnuAxinfo(){
-}
-
-
-// Build up vectors of GuiVars and connect
-// with corresponding tcl vars
-void UnuAxinfo::load_gui() {
-  dimension_.reset();
-  if (dimension_.get() == 0) { return; }
-  
-  if(max_vectors_ != dimension_.get()) {
-    for(int a = max_vectors_; a <= dimension_.get(); a++) {
-      ostringstream lab, kind, cntr, sz, min, max, spac;
-      lab << "label" << a;
-      label_.push_back(new GuiString(ctx->subVar(lab.str())));
-      kind << "kind" << a;
-      kind_.push_back(new GuiString(ctx->subVar(kind.str())));
-      cntr << "center" << a;
-      center_.push_back(new GuiString(ctx->subVar(cntr.str())));
-      sz << "size" << a;
-      size_.push_back(new GuiDouble(ctx->subVar(sz.str())));
-      min << "min" << a;
-      min_.push_back(new GuiDouble(ctx->subVar(min.str())));
-      max << "max" << a;
-      max_.push_back(new GuiDouble(ctx->subVar(max.str())));
-      spac << "spacing" << a;
-      spacing_.push_back(new GuiDouble(ctx->subVar(spac.str())));
-      
-      max_vectors_++;
-    }
-  }
-}
-
-void UnuAxinfo::clear_vals() 
-{
-  gui->execute(id.c_str() + string(" clear_axes"));
 }
 
 
@@ -127,228 +76,98 @@ void UnuAxinfo::execute()
 {
   NrrdIPort *iport = (NrrdIPort*)get_iport("Nrrd"); 
   NrrdOPort *oport = (NrrdOPort*)get_oport("Nrrd");
- 
+  
   update_state(NeedData);
-
+  
   if (!iport) 
-  {
-    error("Unable to initialize iport 'Nrrd'.");
-    return;
-  }
-
+    {
+      error("Unable to initialize iport 'Nrrd'.");
+      return;
+    }
+  
   if (!oport) 
-  {
-    error("Unable to initialize oport 'Nrrd'.");
-    return;
-  }
+    {
+      error("Unable to initialize oport 'Nrrd'.");
+      return;
+    }
   
   // The input port (with data) is required.
   NrrdDataHandle nh;
-  if (!iport->get(nh) || !nh.get_rep())
-  {
-    clear_vals();
-    generation_ = -1;
-    return;
-  }
-
-  dimension_.reset();
-  bool do_clear = false;
-  bool sizes_same = true;
-
-  load_gui();
-  // don't clear/reset if sizes that are saved are the same as nrrd's
-  if(dimension_.get() == nh->nrrd->dim) {
-    for(int a = 0; a < dimension_.get(); a++) {
-      if(size_[a]->get() != nh->nrrd->axis[a].size) {
-	sizes_same = false;
-	break;
-      }
+  if (!iport->get(nh)) 
+    {
+      return;
     }
-  } else {
-    sizes_same = false;
-  }
   
-  if (generation_ != nh.get_rep()->generation && !sizes_same) 
-  {
-    do_clear = true;
+  int axis = axis_.get();
+  if( !nh.get_rep() || generation_ != nh->generation ) {
+    if (axis >= nh->nrrd->dim) {
+      error("Please specify an axis within proper range.");
+      return;
+    }
+    
     generation_ = nh->generation;
-  }
-  
-  if (do_clear) {
-    // delete the guivars  in the vectors and then clear
-    // all of them
-    vector<GuiString*>::iterator iter1 = label_.begin();
-    while(iter1 != label_.end()) {
-      delete *iter1;
-      ++iter1;
-    }
-    label_.clear();
-    iter1 = kind_.begin();
-    while(iter1 != kind_.end()) {
-      delete *iter1;
-      ++iter1;
-    }
-    kind_.clear();
-    
-    iter1 = center_.begin();
-    while(iter1 != center_.end()) {
-      delete *iter1;
-      ++iter1;
-    }
-    center_.clear();
-    vector<GuiDouble*>::iterator iter2 = size_.begin();
-    while(iter2 != size_.end()) {
-      delete *iter2;
-      ++iter2;
-    } 
-    size_.clear();
-    iter2 = min_.begin();
-    while(iter2 != min_.end()) {
-      delete *iter2;
-      ++iter2;
-    } 
-    min_.clear();
-    iter2 = max_.begin();
-    while(iter2 != max_.end()) {
-      delete *iter2;
-      ++iter2;
-    } 
-    max_.clear();
-    iter2 = spacing_.begin();
-    while(iter2 != spacing_.end()) {
-      delete *iter2;
-      ++iter2;
-    } 
-    spacing_.clear();
-    max_vectors_ = 0;
-    
-    gui->execute(id.c_str() + string(" clear_axes"));
-    
-    dimension_.set(nh->nrrd->dim);
-    dimension_.reset();
-    
-    load_gui();
-    
-    gui->execute(id.c_str() + string(" init_axes"));
 
-    gui_initialized_.set(1);
-    
+    // if any tcl_values are different from defaults reset them
+    // set non-gui variables to be that of nrrd
     // set nrrd info to be like the nh->nrrd's
     // because this is new input
-    switch (nh->nrrd->type) {
-    case nrrdTypeChar :  
-      type_.set("char");
+    /*
+    if (nh->nrrd->axis[axis].label == NULL || 
+	string(nh->nrrd->axis[axis].label).length() == 0) {
+      label = "---";
+      nh->nrrd->axis[axis].label = "";
+    } else {
+      label = nh->nrrd->axis[axis].label;
+    }
+    
+    switch(nh->nrrd->axis[axis].kind) {
+    case nrrdKindDomain:
+      kind = "nrrdKindDomain";
       break;
-    case nrrdTypeUChar : 
-      type_.set("unsigned char");
+    case nrrdKindScalar:
+      kind = "nrrdKindScalar";
       break;
-    case nrrdTypeShort : 
-      type_.set("short");
+    case nrrdKind3Color:
+      kind = "nrrdKind3Color";
       break;
-    case nrrdTypeUShort :
-      type_.set("unsigned short");
+    case nrrdKind3Vector:
+      kind = "nrrdKind3Vector";
       break;
-    case nrrdTypeInt : 
-      type_.set("int");
+    case nrrdKind3Normal:
+      kind = "nrrdKind3Normal";
       break;
-    case nrrdTypeUInt :  
-      type_.set("unsigned int");
+    case nrrdKind3DSymTensor:
+      kind = "nrrdKind3DSymTensor";
       break;
-    case nrrdTypeLLong : 
-      type_.set("long long");
+    case nrrdKind3DMaskedSymTensor:
+      kind = "nrrdKind3DMaskedSymTensor";
       break;
-    case nrrdTypeULLong :
-      type_.set("unsigned long long");
+    case nrrdKind3DTensor:
+      kind = "nrrdKind3DTensor";
       break;
-    case nrrdTypeFloat :
-      type_.set("float");
+    case nrrdKindList:
+      kind = "nrrdKindList";
       break;
-    case nrrdTypeDouble :
-      type_.set("double");
+    case nrrdKindStub:
+      kind = "nrrdKindStub";
+      break;
+    default:
+      kind = "nrrdKindUnknown";
       break;
     }
-    for(int a = 0; a < dimension_.get(); a++) {
-      if (nh->nrrd->axis[a].label == NULL || string(nh->nrrd->axis[a].label).length() == 0) {
-	label_[a]->set("---");
-	nh->nrrd->axis[a].label = "";
-      } else {
-	label_[a]->set(nh->nrrd->axis[a].label);
-      }
-      switch(nh->nrrd->axis[a].kind) {
-      case nrrdKindDomain:
-	kind_[a]->set("nrrdKindDomain");
-	break;
-      case nrrdKindScalar:
-	kind_[a]->set("nrrdKindScalar");
-	break;
-      case nrrdKind3Color:
-	kind_[a]->set("nrrdKind3Color");
-	break;
-      case nrrdKind3Vector:
-	kind_[a]->set("nrrdKind3Vector");
-	break;
-      case nrrdKind3Normal:
-	kind_[a]->set("nrrdKind3Normal");
-	break;
-      case nrrdKind3DSymTensor:
-	kind_[a]->set("nrrdKind3DSymTensor");
-	break;
-      case nrrdKind3DMaskedSymTensor:
-	kind_[a]->set("nrrdKind3DMaskedSymTensor");
-	break;
-      case nrrdKind3DTensor:
-	kind_[a]->set("nrrdKind3DTensor");
-	break;
-      case nrrdKindList:
-	kind_[a]->set("nrrdKindList");
-	break;
-      case nrrdKindStub:
-	kind_[a]->set("nrrdKindStub");
-	break;
-      default:
-	kind_[a]->set("nrrdKindUnknown");
-	break;
-      }
-      
-      switch (nh->nrrd->axis[a].center) {
-      case nrrdCenterUnknown :
-	center_[a]->set("Unknown");
-	break;
-      case nrrdCenterNode :
-	center_[a]->set("Node");
-	break;
-      case nrrdCenterCell :
-	center_[a]->set("Cell");
-	break;
-      }
-      size_[a]->set(nh->nrrd->axis[a].size);
-      spacing_[a]->set(nh->nrrd->axis[a].spacing);
-      min_[a]->set(nh->nrrd->axis[a].min);
-      max_[a]->set(nh->nrrd->axis[a].max);
-    }
-  } 
-
-  
-  if (dimension_.get() == 0) { return; }
-  
-  // sync with gui
-  type_.reset();
-  label0_.reset();
-  for(int a = 0; a < dimension_.get(); a++) {
-    label_[a]->reset();
-    kind_[a]->reset();
-    center_[a]->reset();
-    size_[a]->reset();
-    min_[a]->reset();
-    max_[a]->reset();
-    spacing_[a]->reset();
+    
+    spacing = nh->nrrd->axis[axis].spacing;
+    min = nh->nrrd->axis[axis].min;
+    max = nh->nrrd->axis[axis].max;
+    */
   }
-
   
+  reset_vars();
+
   Nrrd *nin = nh->nrrd;
   Nrrd *nout = nrrdNew();
   
-  // copy input nrrd and modify its label, min, max and spacing
+  // copy input nrrd and modify its label, kind, min, max and spacing
   if (nrrdCopy(nout, nin)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble copying input nrrd: ") +  err);
@@ -356,57 +175,59 @@ void UnuAxinfo::execute()
     free(err);
     return;
   }
-
-  int dimension = nh->nrrd->dim;
-  for(int i=0; i<dimension; i++) {
-    if (strlen(label_[i]->get().c_str())) {
-      //AIR_FREE((void*)nout->axis[i].label);
-      nout->axis[i].label = (char*)airFree(nout->axis[i].label);
-      nout->axis[i].label = airStrdup(const_cast<char*>(label_[i]->get().c_str()));
-
-      string kind = kind_[i]->get();
-      if (kind == "nrrdKindDomain") {
-	nout->axis[i].kind = nrrdKindDomain;
-      } else if (kind == "nrrdKindScalar") {
-	nout->axis[i].kind = nrrdKindScalar;
-      } else if (kind == "nrrdKind3Color") {
-	nout->axis[i].kind = nrrdKind3Color;
-      } else if (kind == "nrrdKind3Vector") {
-	nout->axis[i].kind = nrrdKind3Vector;
-      } else if (kind == "nrrdKind3Normal") {
-	nout->axis[i].kind = nrrdKind3Normal;
-      } else if (kind == "nrrdKind3DSymTensor") {
-	nout->axis[i].kind = nrrdKind3DSymTensor;
-      } else if (kind == "nrrdKind3DMaskedSymTensor") {
-	nout->axis[i].kind = nrrdKind3DMaskedSymTensor;
-      } else if (kind == "nrrdKind3DTensor") {
-	nout->axis[i].kind = nrrdKind3DTensor;
-      } else if (kind == "nrrdKindList") {
-	nout->axis[i].kind = nrrdKindList;
-      } else if (kind == "nrrdKindStub") {
-	nout->axis[i].kind = nrrdKindStub;
-      } else {
-	nout->axis[i].kind = nrrdKindUnknown;
-      }
-
-
-      if (AIR_EXISTS(min_[i]->get())) {
-	nout->axis[i].min = min_[i]->get();
-      }
-      if (AIR_EXISTS(max_[i]->get())) {
-	nout->axis[i].max = max_[i]->get();
-      }
-      if (AIR_EXISTS(spacing_[i]->get())) {
-	nout->axis[i].spacing = spacing_[i]->get();
-      }
+  
+  
+  if (strlen(label_.get().c_str())) {
+    nout->axis[axis].label = (char*)airFree(nout->axis[axis].label);
+    nout->axis[axis].label = airStrdup(const_cast<char*>(label_.get().c_str()));
+    
+    string kind = kind_.get();
+    if (kind == "nrrdKindDomain") {
+      nout->axis[axis].kind = nrrdKindDomain;
+    } else if (kind == "nrrdKindScalar") {
+      nout->axis[axis].kind = nrrdKindScalar;
+    } else if (kind == "nrrdKind3Color") {
+      nout->axis[axis].kind = nrrdKind3Color;
+    } else if (kind == "nrrdKind3Vector") {
+      nout->axis[axis].kind = nrrdKind3Vector;
+    } else if (kind == "nrrdKind3Normal") {
+      nout->axis[axis].kind = nrrdKind3Normal;
+    } else if (kind == "nrrdKind3DSymTensor") {
+      nout->axis[axis].kind = nrrdKind3DSymTensor;
+    } else if (kind == "nrrdKind3DMaskedSymTensor") {
+      nout->axis[axis].kind = nrrdKind3DMaskedSymTensor;
+    } else if (kind == "nrrdKind3DTensor") {
+      nout->axis[axis].kind = nrrdKind3DTensor;
+    } else if (kind == "nrrdKindList") {
+      nout->axis[axis].kind = nrrdKindList;
+    } else if (kind == "nrrdKindStub") {
+      nout->axis[axis].kind = nrrdKindStub;
+    } else {
+      nout->axis[axis].kind = nrrdKindUnknown;
+    }
+    
+    if (AIR_EXISTS(min_.get())) {
+      nout->axis[axis].min = min_.get();
+    }
+    if (AIR_EXISTS(max_.get())) {
+      nout->axis[axis].max = max_.get();
+    }
+    if (AIR_EXISTS(spacing_.get())) {
+      nout->axis[axis].spacing = spacing_.get();
     }
   }
+  
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
-  // nout->axis[0].label = strdup(nin->axis[0].label);
-  //nrrd->copy_sci_data(*nh.get_rep());
+  
+  NrrdDataHandle out(nrrd);
+  
+  // Copy the properties.
+  *((PropertyManager *) out.get_rep()) =
+    *((PropertyManager *) nh.get_rep());
+  
+  oport->send(out);
 
-  oport->send(NrrdDataHandle(nrrd));
 }
 
 } // end SCITeem namespace
