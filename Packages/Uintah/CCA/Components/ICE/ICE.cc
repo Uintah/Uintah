@@ -1162,7 +1162,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
                                     const MaterialSet* matls)
 {
   Ghost::GhostType  gac  = Ghost::AroundCells; 
-
+  Ghost::GhostType  gn   = Ghost::None; 
   cout_doing << "ICE::scheduleAdvectAndAdvanceInTime" << endl;
   Task* task = scinew Task("ICE::advectAndAdvanceInTime",
                      this, &ICE::advectAndAdvanceInTime);
@@ -1497,6 +1497,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                                         !iter.done();iter++){
         IntVector c = *iter;
         sp_vol_CC[m][c] = 1.0/rho_micro[m][c];
+        vol_frac_CC[m][c] = rho_CC[m][c]*sp_vol_CC[m][c];  // needed for LODI BCs
       }
       //__________________________________
       //  Adjust pressure and Temp field if g != 0
@@ -4164,21 +4165,25 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 #ifdef LODI_BCS  
 cout << "using LODI BCS" <<endl;
       Ghost::GhostType  gn  = Ghost::None;  
-      constCCVariable<double> press_new,vol_frac_new;
-      CCVariable<double> rho_L;
-      CCVariable<Vector> vel_L_CC;
+      constCCVariable<double> press_old, rho_old, temp_old, sp_vol_old;
+      constCCVariable<double> vol_frac_old;
+      constCCVariable<Vector> vel_old;
       CCVariable<double> press_tmp;
       CCVariable<double> nux, nuy, nuz, e;
       CCVariable<double> d1_x, d2_x, d3_x, d4_x, d5_x;
       CCVariable<double> d1_y, d2_y, d3_y, d4_y, d5_y;
       CCVariable<double> d1_z, d2_z, d3_z, d4_z, d5_z;      
+      double gamma = ice_matl->getGamma();
 
-      new_dw->get(vol_frac_new,lb->vol_frac_CCLabel,      indx,patch,gn,0);
-      new_dw->get(press_new,   lb->press_CCLabel,         0,   patch,gn,0);  
+                                //  O L D   D W
+      old_dw->get(press_old,    lb->press_CCLabel,    0,   patch,gn,0);
+      old_dw->get(temp_old,     lb->temp_CCLabel,     indx,patch,gn,0);
+      old_dw->get(rho_old,      lb->rho_CCLabel,      indx,patch,gn,0);
+      old_dw->get(vel_old,      lb->vel_CCLabel,      indx,patch,gn,0);
+      old_dw->get(sp_vol_old,   lb->sp_vol_CCLabel,   indx,patch,gn,0);
+      old_dw->get(vol_frac_old, lb->vol_frac_CCLabel, indx,patch,gn,0);
  
       new_dw->allocateTemporary(press_tmp,  patch);
-      new_dw->allocateTemporary(rho_L,      patch);
-      new_dw->allocateTemporary(vel_L_CC,   patch);  
       new_dw->allocateTemporary(nux, patch);  
       new_dw->allocateTemporary(nuy, patch);  
       new_dw->allocateTemporary(nuz, patch);  
@@ -4220,68 +4225,82 @@ cout << "using LODI BCS" <<endl;
       nux.initialize(0.0);
       nuy.initialize(0.0);  
       nuz.initialize(0.0);  
-    
-      for(CellIterator iter = patch->getExtraCellIterator();
-                                     !iter.done();iter++){
-        IntVector c = *iter;
-        rho_L[c]      = mass_L[c] * invvol;              
-        vel_L_CC[c]   = mom_L_ME[c]/mass_L[c];           
-        e[c]          = int_eng_L_ME[c] * invvol;        
-        press_tmp[c]  = vol_frac_new[c] * press_new[c];  
-      } 
-
-      double gamma = ice_matl->getGamma();
-      double R_gas = cv * (gamma - 1.0);
- 
-      //__________________________________
-      //compute dissipation coefficients
-      computeNu(nux, nuy, nuz, press_tmp, patch);
-      
-#if 1       
+      press_tmp.initialize(0.0);  
+      e.initialize(0.0);
+#if 0      
       ostringstream desc1;
        desc1 <<"BOT_Advection_after_BC_Mat_" <<indx<<"_patch_"<<patch->getID();           
        printData(   indx, patch,1, desc1.str(), "nux",    nux);
        printData(   indx, patch,1, desc1.str(), "nuy",    nuy);
        printData(   indx, patch,1, desc1.str(), "nuz",    nuz);
 #endif
-      //__________________________________
-      //compute the total energy
-      computeEnergy(e, vel_L_CC, rho_L, patch);
-     
+    
+      //   T O   D O :  change to faceCellIterator
+      for(CellIterator iter = patch->getExtraCellIterator();
+                                     !iter.done();iter++){
+        IntVector c = *iter;
+        e[c] = rho_old[c] * (cv * temp_old[c] +  0.5 * vel_old[c].length2() );                                                 
+        press_tmp[c] = vol_frac_old[c] * press_old[c];        
+      } 
+
+      //compute dissipation coefficients
+      computeNu(nux, nuy, nuz, press_tmp, patch);
+      
       //compute Di at boundary cells
       computeLODIFirstOrder(d1_x, d2_x, d3_x, d4_x, d5_x, 
                             d1_y, d2_y, d3_y, d4_y, d5_y,
                             d1_z, d2_z, d3_z, d4_z, d5_z, 
-                            rho_L,  press_tmp, vel_L_CC, speedSound, 
-                            patch, indx);
-#if 0                                
-      computeLODISecondOrder(d1_x, d2_x, d3_x, d4_x, d5_x, 
+                            rho_old,  press_tmp, vel_old, 
+                            speedSound, patch, indx); 
+                           
+                                
+/*    computeLODISecondOrder(d1_x, d2_x, d3_x, d4_x, d5_x, 
                              d1_y, d2_y, d3_y, d4_y, d5_y,
                              d1_z, d2_z, d3_z, d4_z, d5_z, 
-                             rho_L,  press_tmp, vel_L_CC, speedSound, 
+                           rho_old,  press_tmp, vel_old, speedSound, 
                              patch, indx);
+    */ 
+#if 0
+      //--------------------TESTING---------------------//    
+      ostringstream desc;
+      desc <<"BOT_Advection_after_BC_Mat_" <<indx<<"_patch_"<<patch->getID();
+      printData(   indx, patch,1, desc.str(), "press_tmp",    press_tmp);
+      printData(   indx, patch,1, desc.str(), "rho_L",        rho_L);
+      printVector( indx, patch,1, desc.str(), "vel_L_CC", 0, vel_L_CC);
+      printData(   indx, patch,1, desc.str(), "d1_x",    d1_x);
+      printData(   indx, patch,1, desc.str(), "d1_y",    d1_y);
+      printData(   indx, patch,1, desc.str(), "d1_z",    d1_z);
+      printData(   indx, patch,1, desc.str(), "d2_x",    d2_x);
+      printData(   indx, patch,1, desc.str(), "d2_y",    d2_y);
+      printData(   indx, patch,1, desc.str(), "d2_z",    d2_z);
+      printData(   indx, patch,1, desc.str(), "d3_x",    d3_x);
+      printData(   indx, patch,1, desc.str(), "d3_y",    d3_y);
+      printData(   indx, patch,1, desc.str(), "d3_z",    d3_z);
+      printData(   indx, patch,1, desc.str(), "d4_x",    d4_x);
+      printData(   indx, patch,1, desc.str(), "d4_y",    d4_y);
+      printData(   indx, patch,1, desc.str(), "d4_z",    d4_z);
+      printData(   indx, patch,1, desc.str(), "d5_x",    d5_x);
+      printData(   indx, patch,1, desc.str(), "d5_y",    d5_y);
+      printData(   indx, patch,1, desc.str(), "d5_z",    d5_z);
+       //--------------------TESTING---------------------//             
 #endif          
+      setBCDensityLODI(rho_CC,d1_x, d1_y, d1_z, 
+                       nux, nuy, nuz,
+                       rho_old, press_tmp, 
+                       vel_old, delT, patch, indx);
+
+      setBCVelLODI(vel_CC, d1_x, d3_x, d4_x, d5_x, 
+                           d1_y, d3_y, d4_y, d5_y,
+                           d1_z, d3_z, d4_z, d5_z,
+                           nux, nuy, nuz, rho_old, press_tmp, 
+                           vel_old, delT, patch, indx);
                      
                        
-      //__________________________________
-      ///compute density at boundary cells
-      setBCDensityLODI(rho_CC,d1_x, d1_y, d1_z, nux, nuy, nuz, rho_L, press_tmp, 
-                              vel_L_CC, speedSound, delT, gamma, R_gas, patch, 
-                              indx);
-
-      //compute velocity at boundary cells
-      setBCVelLODI(vel_CC, d1_x, d3_x, d4_x, 
-                           d1_y, d3_y, d4_y, 
-                           d1_z, d3_z, d4_z,   
-                   nux, nuy, nuz, rho_L, press_tmp, 
-                   vel_L_CC, speedSound, delT, gamma, 
-                   R_gas, patch, indx);
- 
-      //compute temperature at boundary cells
       setBCTempLODI(temp, d1_x, d2_x, d3_x, d4_x, d5_x, 
                           d1_y, d2_y, d3_y, d4_y, d5_y,
-                          d1_z, d2_z, d3_z, d4_z, d5_z, e, rho_CC, nux, nuy, 
-                    nuz, rho_L, press_tmp, vel_L_CC, speedSound, 
+                          d1_z, d2_z, d3_z, d4_z, d5_z, 
+                          e, rho_CC, nux, nuy, nuz, 
+                          rho_old, press_tmp, vel_old, 
                     delT, cv, gamma, patch, indx);
 #endif
 
@@ -4289,6 +4308,9 @@ cout << "using LODI BCS" <<endl;
       if (switchDebug_advance_advect ) {
        ostringstream desc;
        desc <<"BOT_Advection_after_BC_Mat_" <<indx<<"_patch_"<<patch->getID(); 
+        
+       printData(   indx, patch,1, desc.str(), "mass_L",        mass_L); 
+       printData(   indx, patch,1, desc.str(), "mass_advected", mass_advected);
        printVector( indx, patch,1, desc.str(), "mom_L_CC", 0, mom_L_ME); 
        printData(   indx, patch,1, desc.str(), "sp_vol_L",    spec_vol_L);
        printData(   indx, patch,1, desc.str(), "int_eng_L_CC",int_eng_L_ME);
