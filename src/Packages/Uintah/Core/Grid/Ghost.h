@@ -3,6 +3,7 @@
 
 #include <Core/Util/Assert.h>
 #include <Core/Geometry/IntVector.h>
+#undef None
 
 namespace Uintah {
    /**************************************

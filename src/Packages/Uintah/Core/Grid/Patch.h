@@ -10,6 +10,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Containers/StaticArray.h>
+#undef None
 
 #include <string>
 #include <iosfwd>
