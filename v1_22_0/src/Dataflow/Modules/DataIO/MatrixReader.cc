@@ -77,9 +77,9 @@ MatrixReader::MatrixReader(GuiContext* ctx)
   for (unsigned int i = 0; i < importers.size(); i++)
   {
     MatrixIEPlugin *pl = mgr.get_plugin(importers[i]);
-    if (pl->fileextension != "")
+    if (pl->fileExtension_ != "")
     {
-      importtypes += "{{" + importers[i] + "} {" + pl->fileextension + "} } ";
+      importtypes += "{{" + importers[i] + "} {" + pl->fileExtension_ + "} } ";
     }
     else
     {
@@ -104,7 +104,7 @@ MatrixReader::call_importer(const string &filename)
   MatrixIEPlugin *pl = mgr.get_plugin(ft);
   if (pl)
   {
-    handle_ = pl->filereader(this, filename.c_str());
+    handle_ = pl->fileReader_(this, filename.c_str());
     return handle_.get_rep();
   }
   return false;
