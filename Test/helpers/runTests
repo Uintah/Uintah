@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# should have PATH, OS, PARALLISM, TMPDIR, BUILD_DIR, 
+# should have PATH, OS, PARALLISM, TMPDIR, BUILD_DIR, VERBOSE
 # BUILDROOT, TEST_DATA, OPT_CONFIGURE, HTMLLOG, and DBG_CONFIGURE all set
 PATH="$BUILDROOT"/src/Packages/Uintah/Test/helpers:"$PATH"
 export PATH OS MAKE_PARALLELISM PARALLELISM TMPDIR BUILD_DIR BUILDROOT TEST_DATA
@@ -18,13 +18,25 @@ failed=0
 dbg_failed=0
 opt_failed=0
 use_html=0
-build_and_run "dbg" "$DBG_CONFIGURE" > "$BUILDROOT"/dbg/log 2>&1
+
+#if VERBOSE is on, then have all output go to sdtout instead of log
+
+if [ $VERBOSE == "yes" ]; then
+  build_and_run "dbg" "$DBG_CONFIGURE"
+else
+  build_and_run "dbg" "$DBG_CONFIGURE" > "$BUILDROOT"/dbg/log 2>&1
+fi
 if [ $? != 0 ]; then
   failed=1
   dbg_failed=1
 fi
 
-build_and_run "opt" "$OPT_CONFIGURE" > "$BUILDROOT"/opt/log 2>&1
+if [ $VERBOSE == "yes" ]; then
+  build_and_run "dbg" "$OPT_CONFIGURE"
+else
+  build_and_run "opt" "$OPT_CONFIGURE" > "$BUILDROOT"/opt/log 2>&1
+fi
+
 if [ $? != 0 ]; then
   failed=1
   opt_failed=1
@@ -60,12 +72,12 @@ cat "$BUILDROOT"/opt/log >> "$BUILDROOT"/log
 # build_and_run should write summary_log files
 if [ -f "$BUILDROOT"/dbg/summary_log ]; then
     use_html=1
-    echo "" >> "$BUILDROOT"/log
-    echo "/--------------------------\\" >> "$BUILDROOT"/log
-    echo "|    DEBUG TEST SUMMARY    |" >> "$BUILDROOT"/log
-    echo "\\--------------------------/" >> "$BUILDROOT"/log
-    echo "" >> "$BUILDROOT"/log
-    cat "$BUILDROOT"/dbg/summary_log >> "$BUILDROOT"/log
+#    echo "" >> "$BUILDROOT"/log
+#    echo "/--------------------------\\" >> "$BUILDROOT"/log
+#    echo "|    DEBUG TEST SUMMARY    |" >> "$BUILDROOT"/log
+#    echo "\\--------------------------/" >> "$BUILDROOT"/log
+#    echo "" >> "$BUILDROOT"/log
+#    cat "$BUILDROOT"/dbg/summary_log >> "$BUILDROOT"/log
 
     echo "" >> "$HTMLLOG"
     echo "/--------------------------\\" >> "$HTMLLOG"
@@ -76,11 +88,11 @@ if [ -f "$BUILDROOT"/dbg/summary_log ]; then
 fi
 if [ -f "$BUILDROOT"/opt/summary_log ]; then
     use_html=1
-    echo "" >> "$BUILDROOT"/log
-    echo "/--------------------------\\" >> "$BUILDROOT"/log
-    echo "|  OPTIMIZED TEST SUMMARY  |" >> "$BUILDROOT"/log
-    echo "\\--------------------------/" >> "$BUILDROOT"/log
-    cat "$BUILDROOT"/opt/summary_log >> "$BUILDROOT"/log
+#    echo "" >> "$BUILDROOT"/log
+#    echo "/--------------------------\\" >> "$BUILDROOT"/log
+#    echo "|  OPTIMIZED TEST SUMMARY  |" >> "$BUILDROOT"/log
+#    echo "\\--------------------------/" >> "$BUILDROOT"/log
+#    cat "$BUILDROOT"/opt/summary_log >> "$BUILDROOT"/log
 
     echo "" >> "$HTMLLOG"
     echo "/--------------------------\\" >> "$HTMLLOG"
@@ -108,9 +120,11 @@ To: $SEND_MAIL_TO
 EOF
     cat "$BUILDROOT"/log >> "$BUILDROOT"/mail.msg
 
+    if [ $use_html == "1" ]; then
+	echo "See build and run logs at" >> "$BUILDROOT"/mail.msg
+	echo "$WEBLOG" >> "$BUILDROOT"/mail.msg
+    fi
     /usr/lib/sendmail "$SEND_MAIL_TO" < "$BUILDROOT"/mail.msg
-    echo "$WEBLOG" >> "$BUILDROOT"/mail.msg
-    /usr/lib/sendmail worthen@cs.utah.edu < "$BUILDROOT"/mail.msg
     rm -f "$BUILDROOT"/mail.msg
 fi
 
