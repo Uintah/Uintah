@@ -78,12 +78,12 @@ MultiBrick::MultiBrick(int id, int slices, double alpha,
                         z  
   */
 
-cerr<<min<<", "<<max<<", "<<X<<", "<<Y<<", "<<Z<<endl;
+  //cerr<<min<<", "<<max<<", "<<X<<", "<<Y<<", "<<Z<<endl;
 Vector diag = max - min;
 dx = diag.x()/(X-1);
 dy = diag.y()/(Y-1);
 dz = diag.z()/(Z-1); 
-cerr<<"(dx, dy, dz) = ("<<dx<<", "<<dy<<", "<<dz<<" )\n";
+//cerr<<"(dx, dy, dz) = ("<<dx<<", "<<dy<<", "<<dz<<" )\n";
 #ifdef SCI_OPENGL
 //octree = buildOctree(min, max, 0, 0, 0, X, Y, Z, 0);
   computeTreeDepth(); 
@@ -233,22 +233,40 @@ MultiBrick::buildBonTree(Point min, Point max,
 		      1.0/pow(2.0,level),true, debug,  brickData);
     node = new VolumeOctree<Brick*>(min, max, brick, id,
 				    VolumeOctree<Brick *>::PARENT );
+
+    int sx = xmax, sy = ymax, sz = zmax, tmp;
+    tmp = xmax;
+    while( tmp < xsize){
+      sx = tmp;
+      tmp = tmp*2 -1;
+    }
+    tmp = ymax;
+    while( tmp < ysize){
+      sy = tmp;
+      tmp = tmp*2 -1;
+    }
+    tmp = zmax;
+    while( tmp < zsize){
+      sz = tmp;
+      tmp = tmp*2 -1;
+    }   
+ 
     level++;
 
-    int nbx, nby, nbz;
-    nbx = largestPowerOf2( xsize/xmax );
-    nby = largestPowerOf2(ysize/ymax);
-    nbz = largestPowerOf2(zsize/zmax);
+/*     int nbx, nby, nbz; */
+/*     nbx = largestPowerOf2( xsize/xmax ); */
+/*      nby = largestPowerOf2(ysize/ymax); */
+/*      nbz = largestPowerOf2(zsize/zmax); */
+/*      int sx, sy, sz; */
+/*      sx = xmax + (xmax-1)*(nbx-1); */
+/*      sy = ymax + (ymax-1)*(nby-1); */
+/*      sz = zmax + (zmax-1)*(nbz-1); */
 
     int X2, Y2, Z2;
     X2 = largestPowerOf2( xsize -1);
     Y2 = largestPowerOf2( ysize -1);
     Z2 = largestPowerOf2( zsize -1);
 
-    int sx, sy, sz;
-    sx = xmax + (xmax-1)*(nbx-1);
-    sy = ymax + (ymax-1)*(nby-1);
-    sz = zmax + (zmax-1)*(nbz-1);
 
     Vector diag = max - min;
     Point mid;
@@ -476,9 +494,26 @@ void MultiBrick::makeLowResBrickData(int xmax, int ymax, int zmax,
       }
     }
   } else {
-    dx = pow(2.0, treeDepth - level);
-    dy = pow(2.0, treeDepth - level);
-    dz = pow(2.0, treeDepth - level);
+
+
+    if( xmax > xsize ) {
+      dx = 1; padx=(xmax - xsize);
+    } else {
+      dx = pow(2.0, treeDepth - level);
+    }
+    if( ymax > ysize ) {
+      dy = 1; pady = (ymax - ysize);
+    } else {
+      dy = pow(2.0, treeDepth - level);
+    }
+    if( zmax > zsize ) {
+      dz = 1; padz = (zmax - zsize);
+    } else {
+      dz = pow(2.0, treeDepth - level);
+    }
+    if(debug){
+      cerr<<"dx, dy, dz = "<< dx<<", "<<dy<<", "<<dz;
+    }
     for(kk = 0, k = zoff; kk < zmax; kk++, k+=dz){
       for(jj = 0, j = yoff; jj < ymax; jj++, j+=dy){
 	for(ii = 0, i = xoff; ii < xmax; ii++, i+=dx){
@@ -487,15 +522,8 @@ void MultiBrick::makeLowResBrickData(int xmax, int ymax, int zmax,
 	  }
 	}
       }
-    }
-    
-    if( xmax > xsize){ padx = xsize/dx; }
-    if( ymax > ysize){ pady = ysize/dy; }
-    if( zmax > zsize){ padz = zsize/dz; }
+    }    
   }
-	    
-  
-    
 }
 
 
@@ -627,8 +655,75 @@ MultiBrick::drawSlices()
   glDisable(GL_TEXTURE_3D_EXT);
   glEnable(GL_DEPTH_TEST);  
 }
+void MultiBrick::drawBonTree( const VolumeOctree<Brick*>* node, 
+			     const Ray&  viewRay, const SliceTable& st)
+{
+  int i;
+  //double  ts[8];
+  double tmin, tmax, dt;
 
-void MultiBrick::drawBonTree( const VolumeOctree<Brick*>* node,
+  if ( node == NULL ) return;
+   
+  Brick* brick = (*node)(); // get the contents of the node
+  ////cerr<<", level = "<<brick->getLevel()<<endl;
+  if( node->getType() == VolumeOctree<Brick*>::LEAF ){
+    st.getParameters( brick, tmin, tmax, dt );
+    if(debug)
+      cerr<<"drawing node "<< node->getId()<<" at level "<<brick->getLevel()<<endl;
+
+    brick->draw( viewRay, alpha, drawWireFrame, tmin, tmax, dt);
+/*     for( i = 0; i < 8; i++) */
+/*       ts[i] = intersectParam(-viewRay.direction(), */
+/* 			     brick->getCorner(i), viewRay); */
+/*     sortParameters(ts,8); */
+/*     brick->draw( viewRay, alpha, drawWireFrame, ts[7], ts[0], (ts[0]-ts[7])/slices ); */
+
+  } else {
+    int *traversal;
+    int traversalIndex, x, y, z;
+    Point min, max, mid;
+    const VolumeOctree<Brick*>* child;
+    child = node->child(0);
+    
+    mid = child->getMax();
+    min = child->getMin();
+    if(debug){
+      cerr<<"PARENT node "<< node->getId()<<endl;
+      //cerr<<"child 0: min,  max = "<<min<<", "<<mid<<endl;
+    }
+
+
+    if( viewRay.origin().x() < mid.x()) x = 0;
+    else if( viewRay.origin().x() == mid.x()) x = 1;
+    else x = 2;
+    if( viewRay.origin().y() < mid.y()) y = 0;
+    else if( viewRay.origin().y() == mid.y()) y = 1;
+    else y = 2;
+    if( viewRay.origin().z() < mid.z()) z = 0;
+    else if( viewRay.origin().z() == mid.z()) z = 1;
+    else z = 2;
+    
+    traversalIndex = 9*x + 3*y + z;
+    if(debug){
+      cerr<<"Traversal index = "<<traversalIndex<<endl;
+    }
+
+    traversal = traversalTable[ traversalIndex ];
+
+    int n;
+    for( i = 0; i < 8; i++){
+      //cerr<<"Child = "<<traversal[i]<<endl;
+      n = traversal[i];
+      if(n == 0 ||  n==2 ||  n==4 || n==6)
+	drawTree( node->child( traversal[i]), true,  viewRay, st);
+      else
+	drawTree( node->child( traversal[i] ), false,  viewRay, st);	
+    }
+  }
+}
+  
+
+void MultiBrick::drawTree( const VolumeOctree<Brick*>* node, bool useLevel,
 			     const Ray&  viewRay, const SliceTable& st)
 {
 
@@ -639,9 +734,8 @@ void MultiBrick::drawBonTree( const VolumeOctree<Brick*>* node,
   if ( node == NULL ) return;
    
   Brick* brick = (*node)(); // get the contents of the node
-  ////cerr<<", level = "<<brick->getLevel()<<endl;
   if( node->getType() == VolumeOctree<Brick*>::LEAF ||
-      brick->getLevel() >= drawLevel) {
+      (brick->getLevel() >= drawLevel && useLevel)) {
      st.getParameters( brick, tmin, tmax, dt );
   if(debug)
     cerr<<"drawing node "<< node->getId()<<" at level "<<brick->getLevel()<<endl;
@@ -687,8 +781,7 @@ void MultiBrick::drawBonTree( const VolumeOctree<Brick*>* node,
 
     for( i = 0; i < 8; i++){
       //cerr<<"Child = "<<traversal[i]<<endl;
-       drawBonTree( node->child( traversal[i] ), viewRay, st);
-/*       drawBonTree( node->child( traversal[i] ), viewRay); */
+       drawTree( node->child( traversal[i] ), useLevel, viewRay, st);
     }
   }
 }

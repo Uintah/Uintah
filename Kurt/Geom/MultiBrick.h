@@ -68,6 +68,7 @@ private:
   double alpha;
   double dx, dy, dz;
   bool drawWireFrame;
+  
   VolumeOctree<Brick*>*  octree;
   void computeTreeDepth();
   VolumeOctree<Brick*>* buildOctree(Point min, Point max,
@@ -83,7 +84,9 @@ private:
   void drawSlices();
   void drawOctree( const VolumeOctree<Brick*>* node,
 		   const Ray&  viewRay);
-  void drawBonTree( const VolumeOctree<Brick*>* node,
+  void drawBonTree(const VolumeOctree<Brick*>* node,
+		   const Ray&  viewRay, const SliceTable& st);
+  void drawTree( const VolumeOctree<Brick*>* node, bool useLevel,
 		   const Ray&  viewRay, const SliceTable& st);
   void makeBrickData(int x, int y, int z,
 		     int xsize, int ysize, int zsize,
