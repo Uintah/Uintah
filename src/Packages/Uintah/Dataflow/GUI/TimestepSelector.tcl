@@ -99,7 +99,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	pack $w.aframe.status -side right  -padx 2 -pady 2
 	label $w.l -text "Animation Sleep (seconds)" 
 	scale $w.s  -variable $this-anisleep  \
-	    -orient horizontal -from 0 -to 100 -resolution 1
+	    -orient horizontal -from 0 -to 600 -resolution 1
 	pack $w.l $w.s -side top -fill x
 	button $w.b -text "Close" -command "wm withdraw $w"
 	pack $w.b -side top -fill x -padx 2 -pady 2
