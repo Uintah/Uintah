@@ -107,7 +107,7 @@ fi
 if [ "$showusage" = "yes" ]; then
     cat <<EOF
 Usage: 
-compare_all - -u1 udadir -u1 udadir [...] [-u2 udadir] [...] -s susdir -o file 
+compare_all -u1 udadir -u1 udadir [...] [-u2 udadir] [...] -s susdir -o file -h helper_path
 
   -u1 uda_dir  paths to uda dirs you wish to compare, 2 required, up to 4
                These udas will all be compared against each other
@@ -116,6 +116,7 @@ compare_all - -u1 udadir -u1 udadir [...] [-u2 udadir] [...] -s susdir -o file
                from the u1 group.
   susdir       directory where compare_uda lives
   file         file to output to
+  helper_path  SCIRun/src/Packages/Uintah/Test/helpers path
 
   Prerequisites:
     Make sure that compare_uda has been compiled
@@ -137,6 +138,8 @@ fi
 
 PATH="$PATH":"$HELPERS"
 export PATH
+
+rm -f $OUTPUT
 
 if [ "$UDA1_4" != "" ]; then
     echo "comparing $UDA1_4 against $UDA1_3"
