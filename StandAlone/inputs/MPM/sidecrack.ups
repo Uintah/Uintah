@@ -50,7 +50,7 @@
                    <type>null</type>
                 </burn>
                 <fracture>
-                   <type>simple</type>
+                   <type>normal</type>
                 </fracture>
                 <density>1000.0</density>
                 <thermal_conductivity>237.0</thermal_conductivity>
@@ -69,9 +69,9 @@
 		    <res>[2,2,2]</res>
 		    <velocity>[0.,0.,0.]</velocity>
 		    <temperature>300.</temperature>
-                    <tensile_strength_min>  0.6e6 </tensile_strength_min>
-		    <tensile_strength_max>  0.6e6 </tensile_strength_max>
-		    <tensile_strength_variation>1</tensile_strength_variation>
+                    <toughness_min>  0.3 </toughness_min>
+		    <toughness_max>  0.3 </toughness_max>
+		    <toughness_variation>1</toughness_variation>
  		</geom_object>
 		<velocity_field>0</velocity_field>
 
@@ -108,12 +108,12 @@
 			<upper>[1.0,  0.2,  0.1]</upper>
 		        <force_density>[400.,0.,0.]</force_density>
 		</force>
-		<crack>
-			<corner1>[0., -0.1,  0.  ]</corner1>
-			<corner2>[0., -0.1,  0.1]</corner2>
-			<corner3>[0.,  0.4,  0.1]</corner3>
-			<corner4>[0.,  0.4,  0.  ]</corner4>
-		</crack>
+                <crack>
+                        <corner1>[0., 0.,  0. ]</corner1>
+                        <corner2>[0., 0.,  0.1]</corner2>
+                        <corner3>[0., 0.4, 0.1]</corner3>
+                        <corner4>[0., 0.4, 0. ]</corner4>
+                </crack>
 	</MPM>
     </PhysicalBC>
     
