@@ -183,7 +183,7 @@ private:
   bool                                  dig_init_;
   vector<Plot>                          plots_;
   NrrdDataHandle                        data_;
-  NrrdDataHandle                        data2_; // asade
+  NrrdDataHandle                        data2_;
   int                                   cur_idx_;
   bool                                  plots_dirty_;
 
@@ -707,8 +707,8 @@ ICUMonitor::draw_plots()
 
 	if (idx % (int)samp_rate == 0){
 	  float tick = gr_ht * .15;// * norm;
-	  //glColor4f(0.0, 0.1, 0.9, 1.0); //asade
-	  glColor4f(1.0, 1.0, 1.0, 1.0); //asade
+	  //glColor4f(0.0, 0.1, 0.9, 1.0);
+	  glColor4f(1.0, 1.0, 1.0, 1.0);
 	  glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
 		     (start_y + val + tick) * sy);
 	  glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
@@ -720,36 +720,22 @@ ICUMonitor::draw_plots()
       }
       glEnd();
 
-	// only plot 4 of 6 strips with jsim data
-	//if (g.index_ == 0 || g.index_ == 3 || g.index_ == 4) {
-	if (g.snd_ == 1) {
-	// jsim data
-      glBegin(GL_LINE_STRIP);
-      for (int i = 0; i < (int)samples; i++) {
-	int idx = i + cur_idx_;
-	if (idx > data2_->nrrd->axis[1].size) {
-	  idx -= data2_->nrrd->axis[1].size;
-	}
-	float *dat = (float*)data2_->nrrd->data;
-	int dat_index = idx * data2_->nrrd->axis[0].size + g.index_;
-	float val = (dat[dat_index] - g.min_) * norm;
-	glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, (start_y + val) * sy);
+      if (g.snd_ == 1 && data2_.get_rep()) {
+         glBegin(GL_LINE_STRIP);
+         for (int i = 0; i < (int)samples; i++) {
+            int idx = i + cur_idx_;
+            if (idx > data2_->nrrd->axis[1].size) {
+               idx -= data2_->nrrd->axis[1].size;
+            }
+            float *dat = (float*)data2_->nrrd->data;
+            int dat_index = idx * data2_->nrrd->axis[0].size + g.index_;
+            float val = (dat[dat_index] - g.min_) * norm;
+            glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, (start_y + val) * sy);
 
-	//if (idx % (int)samp_rate == 0){
-	 // float tick = gr_ht * .15;// * norm;
-	  //glColor4f(0.0, 0.1, 0.9, 1.0); //asade
-	  //glColor4f(1.0, 1.0, 1.0, 0.3); //asade
-	  //glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
-	//	     (start_y + val + tick) * sy);
-	  //glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
-	//	     (start_y + val - tick) * sy);
-	  //glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
-	//	     (start_y + val) * sy);
-	  glColor4f(0.5, 0.5, 0.5, 0.7);
-	//}
+            glColor4f(0.5, 0.5, 0.5, 0.7);
+         }
+         glEnd();
       }
-      glEnd();
-	}
 
       glEnable(GL_TEXTURE_2D);     
     }
@@ -841,7 +827,6 @@ ICUMonitor::execute()
     return;
   } 
   
-  // start asade
   NrrdIPort *nrrd2_port = (NrrdIPort*)get_iport("Nrrd2");
 
   if (!nrrd2_port) 
@@ -852,25 +837,11 @@ ICUMonitor::execute()
 
   nrrd2_port->get(data2_);
 
-  if (!data2_.get_rep())
-  {
-    error ("Unable to get input data for JSIM Nrrd.");
-    return;
-  } 
-
-  //float *datum = (float*)data2_->nrrd->data;
-//	cerr << datum[0] << endl;
-//	cerr << datum[1] << endl;
-//	cerr << datum[2] << endl;
-//	cerr << datum[3] << endl;
-//	cerr << "----" << endl;
-//	cerr << datum[4] << endl;
-//	cerr << datum[5] << endl;
-//	cerr << datum[6] << endl;
-//	cerr << datum[7] << endl;
- //int shit = data2_->nrrd->axis[1].size;
-//	cerr << shit << endl;
-  // asade
+  //if (!data2_.get_rep())
+  //{
+   // error ("Unable to get input data.");
+    //return;
+  //} 
   
   if (!runner_) {
     runner_ = scinew RTDraw(this);
