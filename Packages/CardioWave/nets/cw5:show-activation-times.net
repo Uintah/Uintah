@@ -31,7 +31,7 @@ addConnection $m0 0 $m3 0
 
 set $m0-notes {}
 set $m0-show_status 1
-set $m0-filename {/home/sci/dmw/mydata/duke/mesh/sr-data/0.1.32.hvs.fld}
+set $m0-filename {/home/sci/dmw/mydata/duke/mesh/sr-data/2cm/0.1.192-aniso-scar.hvs.fld}
 set $m1-notes {}
 set $m1-show_status 1
 $m1 ui
@@ -91,7 +91,8 @@ set $m1-ViewWindow_0-unused 1
 set $m1-ViewWindow_0-unused 1
 set $m2-notes {}
 set $m2-show_status 1
-set $m2-filename {/home/sci/dmw/mydata/duke/mesh/sr-data/0.1.32.act.mat}
+#set $m2-filename {/home/sci/dmw/mydata/duke/mesh/sr-data/2cm/0.1.32.act.mat}
+set $m2-filename {/local/sci/raid0/dmw/duke/0.1.192-aniso-scar.act.mat}
 set $m3-notes {}
 set $m3-show_status 1
 set $m4-notes {}

@@ -6,6 +6,8 @@ NOTE: I will refer to the place where the data files are being stored as
         $DUKEDATA -- on the SCI machines, this is ~dmw/mydata/duke/mesh/
 	and the root of SCIRun as $SCIRUN -- I'm using ~dmw/SCIRun/
 
+
+
 Resampling the Original Data Files
 ==================================
 
