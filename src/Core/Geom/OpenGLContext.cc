@@ -65,7 +65,7 @@ using namespace std;
   
 
 OpenGLContext::OpenGLContext(GuiInterface* gui, const string &id)
-  : tk_gl_context_(scinew TkOpenGLContext(id, 53)),
+  : tk_gl_context_(scinew TkOpenGLContext(id, 640, 480, 53)),
     gui_(gui)
 {
   ASSERT(tk_gl_context_);

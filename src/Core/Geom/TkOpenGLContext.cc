@@ -59,7 +59,7 @@ extern "C" Tcl_Interp* the_interp;
 static GLXContext first_context = NULL;
 vector<int> TkOpenGLContext::valid_visuals_ = vector<int>();
 
-TkOpenGLContext::TkOpenGLContext(const string &id, int visualid)
+TkOpenGLContext::TkOpenGLContext(const string &id, int width, int height, int visualid)
   : visualid_(visualid),
     id_(id)
     
@@ -146,7 +146,7 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid)
   tkwin_ = Tk_CreateWindowFromPath(the_interp, mainwin_, 
 				   ccast_unsafe(id),
 				   (char *) NULL);
-  Tk_GeometryRequest(tkwin_, 640, 480);
+  Tk_GeometryRequest(tkwin_, width, height);
 
   ASSERT(tkwin_);
   int result = Tk_SetWindowVisual(tkwin_, vi_->visual, vi_->depth, colormap_);
