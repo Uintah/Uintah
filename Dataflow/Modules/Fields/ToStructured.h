@@ -84,16 +84,23 @@ ToStructuredAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
 
   typename FSRC::mesh_type::Node::iterator bn, en;
   mesh->begin(bn); mesh->end(en);
-  typename FSRC::value_type v;
   while (bn != en)
   {
     Point np;
     mesh->get_center(np, *bn);
     outmesh->set_point(np, *bn);
-
-    ifield->value(v, *bn);
-    ofield->set_value(v, *bn);
     ++bn;
+  }
+
+  typename FSRC::fdata_type::iterator bdi, edi, bdo;
+  bdi = ifield->fdata().begin();
+  edi = ifield->fdata().end();
+  bdo = ofield->fdata().begin();
+  while (bdi != edi)
+  {
+    *bdo = *bdi;
+    ++bdi;
+    ++bdo;
   }
 
   return ofield;
