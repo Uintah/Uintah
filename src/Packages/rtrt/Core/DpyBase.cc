@@ -335,7 +335,7 @@ bool DpyBase::should_close() {
   return on_death_row ||
     (scene
      && scene->get_rtrt_engine()
-     && scene->get_rtrt_engine()->stop_execution());
+     && scene->get_rtrt_engine()->exit_scene);
 }
 
 extern bool pin;
