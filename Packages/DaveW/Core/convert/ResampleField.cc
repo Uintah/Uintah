@@ -69,10 +69,10 @@ void histo(ScalarFieldRGchar *sfc, int nx, int ny, int nz) {
   cerr << "\n";
 }
 
-void main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     if (argc != 7 && argc != 8) {
 	cerr << "Usage: "<<argv[0]<<" infile outfile {box|triangle|vote|wvote} nx ny nz [-pad]\n";
-	return;
+	return 0;
     }
     clString inname(argv[1]);
     clString outname(argv[2]);
@@ -82,30 +82,30 @@ void main(int argc, char *argv[]) {
     int nz=atoi(argv[6]);
     if (nx<1 || ny<1 || nz<1) {
 	cerr << "Error -- bad output dimensions.\n";
-	return;
+	return -1;
     }
     
     if (ftype != "box" && ftype != "triangle" && ftype != "vote" && ftype != "wvote") {
 	cerr << "Error: bad filter type "<<ftype<<"\n";
-	return;
+	return -1;
     }
 
     ScalarFieldHandle ifh;
     Piostream* stream=auto_istream(inname);
     if (!stream) {
 	cerr << "Error: couldn't open "<<inname<<".\n";
-	return;
+	return -1;
     }
     Pio(*stream, ifh);
     if (!ifh.get_rep()) {
 	cerr << "Error reading field "<<inname<<".\n";
-	return;
+	return -1;
     }
 
     isf=ifh->getRGBase();
     if(!isf){
 	cerr << "FieldFilter can't deal with unstructured grids.\n";
-	return;
+	return -1;
     }
     Point p1, p2;
     ifh->get_bounds(p1,p2);
@@ -233,6 +233,7 @@ void main(int argc, char *argv[]) {
     BinaryPiostream stream2(outname, Piostream::Write);
 //    oFldHandle->set_raw(1);
     Pio(stream2, oFldHandle);
+    return 1;
 }
 
 #if 0

@@ -161,7 +161,8 @@ r2),rPos[r2]*sin(angleOuter * PI/3 / r2),zPos[z]))); // create radial points
             }
         }
 }
-void main(int argc, char *argv[]) {
+
+int main(int argc, char *argv[]) {
     //    if (argc != 3) {
     //  cerr << "Usage: MakeRadialCylinder radius height\n";
     //  exit(0);
@@ -202,5 +203,5 @@ void main(int argc, char *argv[]) {
     MeshHandle mH(mesh);  // save it all
     Pio(*stream, mH);
     delete(stream);
-
+    return 1;
 }
