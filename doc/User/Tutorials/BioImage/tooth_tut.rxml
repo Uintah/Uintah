@@ -196,7 +196,7 @@ DEALINGS IN THE SOFTWARE.
   <section><title>Viewing the Data</title>
     <section><title>Viewer Layout</title>
       <para>
-        The viewer is composed of four main windows. The upper
+        The Rendering Window is composed of four main windows. The upper
         window is the 3D viewer window. By default the 3D viewer displays
         slice planes of the axial, sagittal and coronal planes oriented 
         relative to each other in 3-space.
@@ -211,7 +211,7 @@ DEALINGS IN THE SOFTWARE.
         window controls the coronal plane, and the lower left window controls the saggital plane,
       </para>
       <figure id="fig.2dview">
-        <title>2d Viewer Windows</title>
+        <title>2D Viewer Windows</title>
         <mediaobject>
 	  <textobject>
 	    <phrase>2d Viewer Window showing tooth dataset.</phrase>
@@ -293,8 +293,9 @@ DEALINGS IN THE SOFTWARE.
 	    It is possible to change the colormaps to use other ranges
 	    of colors. Instead of ranging from white to black there is
 	    an option that goes from blue to red, or uses a rainbow
-	    colors. To change the colormap, choose the "Vis Options" tab
-	    in the left control section, then choose the "Planes" tab.
+	    colors. To change the colormap, choose the "Planes" tab
+	    and select the desired colormap using the radiobuttons in
+	    the Color Planes By frame.
 	    <figure id="fig.planesTab">
 	      <title>Options for controlling planes</title>
 	      <mediaobject>
@@ -366,7 +367,7 @@ DEALINGS IN THE SOFTWARE.
 	  </figure>	
 	  <para>
 	    The easiest way to change the "window width" and "level" is using the slider 
-	    <xref linkend="fig.windowWidthLevelControlsDefault"/> in the Planes pane.
+	    <xref linkend="fig.windowWidthLevelControlsDefault"/> in the Planes tab.
 	    There are two sliders which can be used to set the window width and level. It is also possible to type
 	    in a numerical value for the window with and level by clicking on the digit displayed next to the 
 	    slider and typing in a value.
@@ -451,20 +452,14 @@ DEALINGS IN THE SOFTWARE.
 	    <member>Center Mouse Button: rotate the object</member>
 	  </simplelist>
 	</para>
-      </section><!-- end:Mouse Controls for the 3D Viewer -->
-      <section><title>Using AutoView</title>
         <para>
-	  If the object is no longer in view, you can go to the "Viewer
+	  If the object is no longer in view, you can go to the "3D
 	  Options" tab in the left control panel and click "Autoview"
-	  and a reasonable default view will be set.	  
+	  and a reasonable default view will be set.  Pressing the
+	  Control-V buttons inside of the 3D window will also autoview
+	  the volume.
 	</para>
-      </section><!-- end:Using AutoView -->
-      <section><title>Turning on MIP Views</title>
-        <para>
-	  Under the Planes tab of the Visualization Control Panel (left panel) there are
-	  options for turning on a Maximum Intensity Projection or MIP.
-	</para>
-      </section><!-- end:Turning on MIP Views -->
+      </section><!-- end:Mouse Controls for the 3D Viewer -->
       <section><title>Volume Rendering</title>
         <para>
 	  In addition to viewing 2D slices of the data, it is also possible to
@@ -563,7 +558,8 @@ DEALINGS IN THE SOFTWARE.
 	      or 'G' of the dataset. Areas with high Gradient Magnitude correspond to
 	      material borders in the dataset.
 	    </para>
-	    <section><title>Assigning color to the different tooth materials</title>
+	    <section>
+	      <title>Assigning Color to the Different Tooth Materials</title>
 	      <para>
 		In the tooth histogram <xref linkend="fig.histo"/> there are four distinct
 		materials, denoted by areas of high concentration near the bottom of the
@@ -719,7 +715,8 @@ DEALINGS IN THE SOFTWARE.
 	      </mediaobject>
 	      </figure>
 	    </section><!-- end:Assinging color to the borders between materials -->
-	    <section><title>Additional controls in the Edit Transfer Function window</title>
+	    <section>
+	      <title>Additional Controls in the Edit Transfer Function Window</title>
 	      <para>
 		The other controls in the Edit Transfer Function window can be used to
 		turn the individual color widget on/off, change their color or assign
