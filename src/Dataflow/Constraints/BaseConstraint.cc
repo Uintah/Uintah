@@ -46,7 +46,7 @@ namespace SCIRun {
 BaseConstraint::BaseConstraint( const string& name, const Index nschemes,
 				const Index varCount )
 : name(name), nschemes(nschemes), varCount(varCount),
-  vars(varCount), var_indexs(varCount), var_choices(nschemes, varCount)
+  vars(varCount), var_indices(varCount), var_choices(nschemes, varCount)
 {
    whichMethod = 0;
 }
@@ -74,25 +74,25 @@ BaseConstraint::Priorities( const VPriority p1,
    Index p=0;
    
    if (p == varCount) return;
-   vars[p]->RegisterPriority(var_indexs[p], p1);
+   vars[p]->RegisterPriority(var_indices[p], p1);
    p++;
    if (p == varCount) return;
-   vars[p]->RegisterPriority(var_indexs[p], p2);
+   vars[p]->RegisterPriority(var_indices[p], p2);
    p++;
    if (p == varCount) return;
-   vars[p]->RegisterPriority(var_indexs[p], p3);
+   vars[p]->RegisterPriority(var_indices[p], p3);
    p++;
    if (p == varCount) return;
-   vars[p]->RegisterPriority(var_indexs[p], p4);
+   vars[p]->RegisterPriority(var_indices[p], p4);
    p++;
    if (p == varCount) return;
-   vars[p]->RegisterPriority(var_indexs[p], p5);
+   vars[p]->RegisterPriority(var_indices[p], p5);
    p++;
    if (p == varCount) return;
-   vars[p]->RegisterPriority(var_indexs[p], p6);
+   vars[p]->RegisterPriority(var_indices[p], p6);
    p++;
    if (p == varCount) return;
-   vars[p]->RegisterPriority(var_indexs[p], p7);
+   vars[p]->RegisterPriority(var_indices[p], p7);
 }
 
 
@@ -154,14 +154,14 @@ BaseConstraint::print( ostream& os )
       for (i = 0; i < varCount; i++) {
 	 if (i != whichMethod) {
 	    os << "\t";
-	    vars[i]->printc(os, var_indexs[i]);
+	    vars[i]->printc(os, var_indices[i]);
 	    os << " (->" << var_choices(j, i) << ")";
 	    os << endl;
 	 }
       }
       os << "\t-> ";
       if (whichMethod < varCount) {
-	 vars[whichMethod]->printc(os, var_indexs[whichMethod]);
+	 vars[whichMethod]->printc(os, var_indices[whichMethod]);
 	 os << " (->" << var_choices(j, whichMethod) << ")";
       } else {
 	 os << "(Special option.";
@@ -181,13 +181,13 @@ BaseConstraint::printc( ostream& os, const Scheme scheme )
    for (i = 0; i < varCount; i++) {
       if (i != whichMethod) {
 	 os << "\t";
-	 vars[i]->printc(os, var_indexs[i]);
+	 vars[i]->printc(os, var_indices[i]);
 	 os << " (->" << var_choices(scheme, i) << ")";
 	 os << endl;
       }
    }
    os << "\t-> ";
-   vars[whichMethod]->printc(os, var_indexs[whichMethod]);
+   vars[whichMethod]->printc(os, var_indices[whichMethod]);
    os << " (->" << var_choices(scheme, whichMethod) << ")";
    os << ")" << endl;
 }
@@ -198,7 +198,7 @@ BaseConstraint::Register()
    Index index;
 
    for (index = 0; index < varCount; index++)
-      var_indexs[index] = vars[index]->Register(this, index);
+      var_indices[index] = vars[index]->Register(this, index);
 }
 
 } // End namespace SCIRun

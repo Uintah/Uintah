@@ -100,11 +100,11 @@ private:
 
    ConstraintSolver* solver;
    
-   unsigned int levellevel, level;
+   unsigned int level;
 
    Index numconstraints;
    vector<BaseConstraint*> constraints;
-   vector<Index>           constraint_indexs;
+   vector<Index>           constraint_indices;
    vector<VPriority>       constraint_priorities;
    vector<Index>           constraint_order;
    

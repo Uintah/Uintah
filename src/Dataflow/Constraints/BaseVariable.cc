@@ -42,7 +42,7 @@ BaseVariable::BaseVariable( const string& name,
 			    ConstraintSolver* s, const Scheme scheme,
 			    const Point& value )
 : name(name), data(value, VarCore::Rigid), solver(s),
-  levellevel(0), level(0), numconstraints(0), scheme(scheme)
+  level(0), numconstraints(0), scheme(scheme)
 {
    solver->AddVariable(this);
 }
@@ -52,7 +52,7 @@ BaseVariable::BaseVariable( const string& name,
 			    ConstraintSolver* s, const Scheme scheme,
 			    const double value )
 : name(name), data(value, VarCore::Rigid), solver(s),
-  levellevel(0), level(0), numconstraints(0), scheme(scheme)
+  level(0), numconstraints(0), scheme(scheme)
 {
    solver->AddVariable(this);
 }
@@ -160,7 +160,7 @@ Index
 BaseVariable::Register( BaseConstraint* constraint, const Index index )
 {
    constraints.push_back(constraint);
-   constraint_indexs.push_back(index);
+   constraint_indices.push_back(index);
    constraint_priorities.push_back(P_Default);
    constraint_order.push_back(0);
    numconstraints++;
@@ -189,7 +189,7 @@ void
 BaseVariable::printc( ostream& os, const Index c )
 {
    os << name << " " << data
-      << " (Index " << constraint_indexs[c] << ") "
+      << " (Index " << constraint_indices[c] << ") "
       << " (Constraint " << PriorityString(constraint_priorities[c]) << ")";
 }
 
