@@ -35,7 +35,6 @@ RigidBodyContact::RigidBodyContact(ProblemSpecP& ps,
   IntVector v_f;
   ps->require("vel_fields",v_f);
   ps->get("stop_time",d_stop_time);
-  std::cout << "vel_fields = " << v_f << endl;
   
   d_sharedState = d_sS;
 }

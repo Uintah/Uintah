@@ -31,7 +31,6 @@ NullContact::NullContact(ProblemSpecP& ps, SimulationStateP& d_sS)
  
   IntVector v_f;
   ps->require("vel_fields",v_f);
-  std::cout << "vel_fields = " << v_f << endl;
 
   d_sharedState = d_sS;
 
