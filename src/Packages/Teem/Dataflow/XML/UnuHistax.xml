@@ -25,6 +25,7 @@
     <summary>Replace each scanline along an axis with its histogram.
     </summary>
     <description>
+    <p>Replace each scanline along an axis with its histogram.</p>
     <p>Axis: axis to histogram along (int).</p>
     <p>Bins: the number of bins in histogram (int).</p>
     <p>Type: output type; default: nrrdTypeUChar.</p>

@@ -25,6 +25,8 @@
     <summary>Binary operation on two nrrds, or on a nrrd and a constant. Either
 the first or second operand can be a float constant, but not both. To perform the operation on two nrrds, connect both input ports.  To have one Nrrd on the left hand side of the operator, connect to the first port and vice versa for the right hand side.</summary>
     <description>
+    <p>Binary operation on two nrrds, or on a nrrd and a constant. Either
+the first or second operand can be a float constant, but not both. To perform the operation on two nrrds, connect both input ports.  To have one Nrrd on the left hand side of the operator, connect to the first port and vice versa for the right hand side.</p>
     <p>Operator: Binary operator. Possibilities include:</p>
     <p>    +, -, x, / : add, subtract, multiply, divide</p>
     <p>    ^ : exponentiation (pow)</p>

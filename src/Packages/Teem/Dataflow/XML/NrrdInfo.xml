@@ -29,10 +29,9 @@
     <description>
       <p> Display in the ui all attributes of the input nrrd for each
 axis in the Nrrd. Display all info in the modules UI. The data type,
-dimensionality, and label, data center, size, spacing, min, max along
+dimensionality, and label, data center, kind, size, spacing, min, max along
 each axis in the Nrrd.  If it is not stored in the Nrrd --- is
-displayed. The tuple axis tab shows all the elements of the tuple in
-order, i.e. the first listing is the 0'th element of the tuple.</p>
+displayed. </p>
     </description>
     <examplesr>Teem/nets/test/NrrdInfo-test.net</examplesr>
   </overview>

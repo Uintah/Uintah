@@ -25,6 +25,7 @@
     <summary>Modify attributes of a nrrd for a given axis. The only attributes which are set are the label, kind, minimum and maximum values, and the spacing.
     </summary>
     <description>
+    <p>Modify attributes of a nrrd for a given axis. The only attributes which are set are the label, kind, minimum and maximum values, and the spacing.</p>
     <p>The values given in the UI will be set to be the corresponding values of the new nrrd.</p>
     </description>
   </overview>

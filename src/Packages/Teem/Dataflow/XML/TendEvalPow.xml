@@ -23,9 +23,11 @@
     <authors>
       <author>Martin Cole</author>
     </authors>
-    <summary>Still stub docs.</summary>
+    <summary>Modify shape by raising eigenvalues to some power.</summary>
     <description>
-      <p>Still stub docs </p>
+      <p>Modify shape by raising eigenvalues to some power. 
+      The orientation of the tensor is unchanged.</p>
+      <p>Power: Power to which to raise all the eigenvalues. This value should be a float. </p>
     </description>
     <examplesr></examplesr>
   </overview>

@@ -24,6 +24,7 @@
     </author>
     <summary>Permute slices along one axis.</summary>
     <description>
+    <p>Permute slices along one axis.</p>
     <p>Slices along one axis are re-arranged as units according to 
     the given permutation (or its inverse). The permutation tells 
     which old slice to put at each new position. For example,

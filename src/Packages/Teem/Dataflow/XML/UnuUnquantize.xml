@@ -21,8 +21,9 @@
   <overview>
     <author>Darby Van Uitert
     </author>
-    <summary>Recover floating point values from quantized data</summary>
+    <summary>Recover floating point values from quantized data.</summary>
     <description>
+    <p>Recover floating point values from quantized data.</p>
     <p>InputNrrd - Nrrd to unquantize.</p>
     <p>OutputNrrd - Unquantized output Nrrd.</p>
     <p>Min = Lowest value prior to quantization. If a value of

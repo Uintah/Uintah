@@ -25,6 +25,8 @@
     <summary>Calculate structure tensors from a scalar field. Not a diffusion
 tensor, but it is symmetric and positive-definate.</summary>
     <description>
+    <p>Calculate structure tensors from a scalar field. Not a diffusion
+tensor, but it is symmetric and positive-definate.</p>
     <p>Difference Scale : the radius of the kernel used for differentiation
     to computer gradient vectors (in pixels).  This number should be an 
     integer.</p>

@@ -30,6 +30,13 @@ of the control point, and the remaining values give are the range of the map
 for that control point. The output value(s) is the result of linearly
 interpolating between value(s) from the map.</summary>
     <description>
+    <p>Map nrrd through *irregular* univariate map (colormap). A map is
+irregular if the control points are not evenly spaced along the domain, and
+hence their position must be explicitly represented in the map. As nrrds,
+these maps are necessarily 2D. Along axis 0, the first value is the location
+of the control point, and the remaining values give are the range of the map
+for that control point. The output value(s) is the result of linearly
+interpolating between value(s) from the map.</p>
     <p>Length : length of accelerator array, used to try to speed-up task of
     finding between which pair of control points a given value
     lies. Not terribly useful for small maps (about 10 points or

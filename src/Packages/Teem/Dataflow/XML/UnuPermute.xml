@@ -28,7 +28,7 @@
     <summary>Specify axes to be swapped with eachother</summary>
     <description>
       <p>Specify in the UI which axes are to be swapped with
-eachother. It is not allowed to swap the Tuple axis from axis 0.</p>
+eachother. </p>
     </description>
     <examplesr>Teem/nets/test/permute.net</examplesr>
   </overview>

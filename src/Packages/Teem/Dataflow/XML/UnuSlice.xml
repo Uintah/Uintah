@@ -23,9 +23,12 @@
     <authors>
       <author>Martin Cole</author>
     </authors>
-    <summary>Still stub docs.</summary>
+    <summary></summary>
     <description>
-      <p>Still stub docs </p>
+      <p>Slice at a position along an axis. Output nrrd dimension is one
+less than input nrrd dimension. Per-axis information is preserved. </p>
+      <p>Axis : the axis to slice along, integer.</p>
+      <p>Position : the position to slice at, integer.</p>
     </description>
     <examplesr></examplesr>
   </overview>
