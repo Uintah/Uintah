@@ -78,6 +78,10 @@ public:
   
   virtual void allocate(const Patch* patch, const IntVector& boundary) = 0;
 
+  virtual void getSizeInfo(string& elems, unsigned long& totsize, void*& ptr) const = 0;
+
+  virtual void copyPointer(Variable&) = 0;
+
   // Only affects grid variables
   virtual void offsetGrid(const IntVector& /*offset*/);
 
