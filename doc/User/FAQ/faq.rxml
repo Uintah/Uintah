@@ -111,7 +111,19 @@ doc.insertDocType("article", entities)
       </question>
       <answer>
 	<para>
-	  Type the following commands (example output provided):
+	  There are two commands that can be used: lspci and glxinfo. The lspci command
+	  can be used to identify the card even when no graphics drivers are installed,
+	  but it may not report the exact model of the card correctly.
+	</para>
+	<para>
+	  The glxinfo command will report the exact model of the card installed, but it
+	  will only work if the graphics drivers are properly installed and Xwindows is
+	  up and running. The glxinfo command 
+	  must be run from an xterm that is being displayed on the machine's local monitor
+	  (it cannot be run from a remote ssh login or from a text-only console).
+	</para>
+	<para>
+	  Here is a sample run of lspci and glxinfo:
 	  <literallayout class="monospaced">
 $ /sbin/lspci | grep VGA
 01:00.0 VGA compatible controller: nVidia Corporation NV35GL [GeForce FX 5900]  
@@ -125,8 +137,9 @@ $
 $ glxinfo |grep renderer
 OpenGL renderer string: GeForce FX 5900 Ultra/AGP/SSE
 	  </literallayout>
+	  
 	  If your card was detected when linux was loaded on the
-	  machine, then a section in /etc/X11/XFree86, similar to the
+	  machine, then a section in /etc/X11/XFree86Config, similar to the
 	  following, will be found:
 <literallayout class="monospaced">
 Section "Device"
@@ -136,6 +149,19 @@ Section "Device"
      BoardName   "NVIDIA GeForce 4 (generic)"
 EndSection
 </literallayout>
+	</para>
+	<para>
+	  If there are multiple "Device" sections, look towards the end of the 
+	  file for a section named "Screen" to determine which "Device" 
+	  is currently being used.
+	</para>
+	<para>
+	  Please note that there are multiple X11 implementations, and the exact
+	  configuration file names, locations and formats may vary slightly depending
+	  on your linux distribution. Please see
+	  <ulink url="http://www.xfree86.org">XFree86</ulink> and 
+	  <ulink url="http://www.x.org">X.org</ulink> for an up to date description
+	  of the configuration files.
 	</para>
       </answer>
     </qandaentry>
