@@ -1601,9 +1601,9 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     }   // numMatls
 
     if (switchDebugInitialize){     
-      ostringstream desc;
-      desc << "Initialization_patch_"<< patch->getID();
-      printData(0, patch, 1, "Initialization", "press_CC", press_CC);         
+      ostringstream desc, desc1;
+      desc1 << "Initialization_patch_"<< patch->getID();
+      printData(0, patch, 1, desc1.str(), "press_CC", press_CC);         
       for (int m = 0; m < numMatls; m++ ) { 
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
         int indx = ice_matl->getDWIndex();      
@@ -1672,7 +1672,7 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
       if (switchDebugInitialize){     
         ostringstream desc, desc1;
         desc << "hydroStaticAdj_patch_"<< patch->getID();
-        printData(0, patch, 1, "hydroStaticAdj", "press_CC", press_CC);         
+        printData(0, patch, 1, desc.str(), "press_CC", press_CC);         
         for (int m = 0; m < numMatls; m++ ) { 
           ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
           int indx = ice_matl->getDWIndex();      
