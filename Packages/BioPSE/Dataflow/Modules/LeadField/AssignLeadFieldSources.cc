@@ -165,7 +165,7 @@ AssignLeadFieldSources::execute()
     // get all of the nodes that are attached to this cell
     // for each one, increment its count and add this value to its sum
     TetVolMesh::Node::array_type::iterator ni;
-    TetVolMesh::Node::array_type na(4);
+    TetVolMesh::Node::array_type na;
     tvm->get_nodes(na,TetVolMesh::Cell::index_type(i));
     for (ni = na.begin(); ni != na.end(); ++ni) {
       node_refs[*ni]++;

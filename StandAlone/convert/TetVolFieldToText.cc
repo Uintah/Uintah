@@ -163,7 +163,7 @@ main(int argc, char **argv) {
   TetVolMesh::Cell::size_type csize; 
   TetVolMesh::Cell::iterator citer; 
   TetVolMesh::Cell::iterator citer_end; 
-  TetVolMesh::Node::array_type cell_nodes(4);
+  TetVolMesh::Node::array_type cell_nodes;
   tvm->size(csize);
   tvm->begin(citer);
   tvm->end(citer_end);
