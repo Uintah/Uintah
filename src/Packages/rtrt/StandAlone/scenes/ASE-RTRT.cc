@@ -161,15 +161,15 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
               new Phong(Color(ambient),
                         Color(diffuse),
                         Color(specular),
-                        token->GetShine(),
+                        token->GetShine()*1000,
                         0);
           } else if (token->GetTMapFilename()=="") {
             ase_matls[token->GetIndex()] = 
-              new DielectricMaterial(token->GetTransparency(),
-                                     token->GetTransparency(),
-                                     .3,
+              new DielectricMaterial(.9,
+                                     1.1,
+                                     1-token->GetTransparency(),
                                      token->GetShine(),
-                                     Color(diffuse),
+                                     Color(diffuse)*1000,
                                      Color(diffuse));
           } else {
             ase_matls[token->GetIndex()] = 
@@ -179,7 +179,7 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
                                 Color(ambient),
                                 1.,
                                 Color(specular),
-                                token->GetShine(),
+                                token->GetShine()*1000,
                                 token->GetTransparency(),
                                 0);
             ((ImageMaterial*)(ase_matls[token->GetIndex()]))->flip();
