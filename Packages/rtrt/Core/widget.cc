@@ -377,46 +377,56 @@ TriWidget::manipulate( float x, float dx, float y, float dy ) {
 
 // paints this widget's texture onto a background texture
 void 
-TriWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4],
-			   float master_alpha ) {
-  float startyf = (midLeftVertex[1]-55.0f)*(float)textureHeight/240.0f;
-  float endyf = (upperLeftVertex[1]-55.0f)*(float)textureHeight/240.0f;
-  float height = endyf-startyf;
-  float heightFactor = (float)textureHeight/height;
+TriWidget::paintTransFunc(GLfloat texture_dest[textureHeight][textureWidth][4],
+			  float master_alpha ) {
+  // to prevent from excessive type casting
+  float f_textureHeight = (float)textureHeight;
+  float f_textureWidth = (float)textureWidth;
+
+  // precise values for variable computation
+  float startyf = (midLeftVertex[1]-55.0f)*f_textureHeight/240.0f;
+  float endyf = (upperLeftVertex[1]-55.0f)*f_textureHeight/240.0f;
+
+  // casted values for array index use
   int starty = (int)startyf;
   int endy = (int)endyf;
+
+  float heightInverse = 1.0f/(endyf-startyf);
+  float heightFactor = f_textureHeight*heightInverse;
   float fractionalHeight = ((midLeftVertex[1]-lowerVertex[1])/
 			    (upperLeftVertex[1]-lowerVertex[1]));
+
   // fractionalHeight iterative increment-step value
-  float fhInterval = (1.0f-fractionalHeight)/height;
+  float fhInterval = (1.0f-fractionalHeight)*heightInverse;
   float opacity_offset = 2.0f*((opac_x-upperLeftVertex[0])/
 			       (upperRightVertex[0]-upperLeftVertex[0]))-1.0f;
+
   for( int y = starty; y < endy; y++ ) {
     int texture_y = (int)(((float)y-startyf)*heightFactor);
-    int texture_x = texture_y*textureWidth/textureHeight;
+    int texture_x = texture_y*f_textureWidth/f_textureHeight;
     // higher precision values for intensity computation
     float startxf = (lowerVertex[0]-5-(lowerVertex[0]-upperLeftVertex[0])*
-		     fractionalHeight)*textureWidth/490.0f;
+		     fractionalHeight)*f_textureWidth/490.0f;
     float endxf = (lowerVertex[0]-5+(upperRightVertex[0]-lowerVertex[0])*
-		   fractionalHeight)*textureWidth/490.0f;
-    float widthFactor = (float)textureWidth/(endxf-startxf);
+		   fractionalHeight)*f_textureWidth/490.0f;
+    float widthFactor = f_textureWidth/(endxf-startxf);
 
     int startx = (int)startxf;
     int endx = (int)endxf;
     // paint one row of this widget's texture onto background texture
     if( !switchFlag )
       for( int x = startx; x < endx; x++ ) {
-	int texture_x = (int)((x-startxf)*widthFactor);
+	int texture_x = (int)(((float)x-startxf)*widthFactor);
 	if( texture_x < 0 )
 	  texture_x = 0;
-	else if( texture_x >= textureWidth )
+	else if( texture_x >= f_textureWidth )
 	  texture_x = textureWidth-1;
 	blend( texture_dest[y][x], 
 	       transText->current_color[0], 
 	       transText->current_color[1], 
 	       transText->current_color[2],
-	       (transText->textArray[0][texture_x][3]+
-		opacity_offset)*master_alpha );
+	       (transText->textArray[0][texture_x][3]+opacity_offset), 
+	       master_alpha );
       } // for()
     else
       for( int x = startx; x < endx; x++ )
@@ -424,7 +434,8 @@ TriWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4],
 	       transText->current_color[0],
 	       transText->current_color[1],
 	       transText->current_color[2],
-	       (transText->textArray[0][texture_y][3]+opacity_offset)*master_alpha );
+	       (transText->textArray[0][texture_y][3]+opacity_offset),
+	       master_alpha );
 
     fractionalHeight += fhInterval;
   } // for
@@ -622,8 +633,8 @@ void
 RectWidget::translate( float dx, float dy ) {
   // if x and y translations keep widget inside its window,
   //  then a faster computation can be undertaken
-  if(upperLeftVertex[0]+dx >= 5.0 && lowerRightVertex[0]+dx <= 495.0 &&
-     upperLeftVertex[1]+dy <= 295.0 &&lowerRightVertex[1]+dy >= 55.0 ) {
+  if(upperLeftVertex[0]+dx > 5.0 && lowerRightVertex[0]+dx < 495.0 &&
+     upperLeftVertex[1]+dy < 295.0 &&lowerRightVertex[1]+dy > 55.0 ) {
     translateStar->translate( dx, dy );
     barRounder->translate( dx, dy );
     resizeStar->translate( dx, dy );
@@ -641,7 +652,7 @@ RectWidget::translate( float dx, float dy ) {
   } // if
   // otherwise each dimension must be inspected separately (slower)
   else {
-    if( upperLeftVertex[0]+dx >= 5.0 && lowerRightVertex[0]+dx <= 495.0 ) {
+    if( upperLeftVertex[0]+dx > 5.0 && lowerRightVertex[0]+dx < 495.0 ) {
       translateStar->translate( dx, 0 );
       barRounder->translate( dx, 0 );
       resizeStar->translate( dx, 0 );
@@ -653,7 +664,7 @@ RectWidget::translate( float dx, float dy ) {
       upperLeftVertex[0] += dx;
       lowerRightVertex[0] += dx;
     } // if
-    else if( upperLeftVertex[1]+dy <= 295.0 && lowerRightVertex[1]+dy >= 55.0 ) {
+    else if( upperLeftVertex[1]+dy < 295.0 && lowerRightVertex[1]+dy > 55.0 ) {
       translateStar->translate( 0, dy );
       translateBar->translate( 0, dy );
       barRounder->translate( 0, dy );
@@ -678,7 +689,7 @@ RectWidget::resize( float dx, float dy ) {
 		     (lowerRightVertex[0]-upperLeftVertex[0]));
   // restricts width to positive values
   if( lowerRightVertex[0]+dx-3 > upperLeftVertex[0] && 
-      lowerRightVertex[0]+dx <= 495.0 && upperLeftVertex[0] >= 5.0 ) {
+      lowerRightVertex[0]+dx < 495.0 ) {
     frac_dist = ((focus_x-upperLeftVertex[0])/
 		 (lowerRightVertex[0]-upperLeftVertex[0]));
     focusStar->translate( dx*frac_dist, 0 );
@@ -696,7 +707,7 @@ RectWidget::resize( float dx, float dy ) {
   } // if
   // restricts height to positive values
   if( lowerRightVertex[1]+dy+3 < upperLeftVertex[1] && 
-      lowerRightVertex[1]+dy >= 55.0 && upperLeftVertex[1]+dy <= 295.0) {
+      lowerRightVertex[1]+dy > 55.0 ) {
     frac_dist = 1-((focus_y-lowerRightVertex[1])/
 		   (upperLeftVertex[1]-lowerRightVertex[1]));
     height -= dy;
@@ -806,44 +817,52 @@ RectWidget::reflectTrans( void ) {
 
 // paints this widget's texture onto a background texture
 void
-RectWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4],
+RectWidget::paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
 			    float master_alpha ) {
-  float startxf = (upperLeftVertex[0]-5.0f)*(float)textureWidth/490.0f;
-  float endxf = (lowerRightVertex[0]-5.0f)*(float)textureWidth/490.0f;
-  int startx = (int)startxf;
-  int endx = (int)endxf;
-  float startyf = (float)textureHeight*(lowerRightVertex[1]-55.0f)/240.0f;
-  float endyf = (float)textureHeight*(upperLeftVertex[1]-55.0f)/240.0f;
-  int starty = (int)startyf;
-  int endy = (int)endyf;
-  float midx = (endxf+startxf)*0.5f;
-  float midy = (endyf+startyf)*0.5f;
-  float opacStar_alpha_off = 2.0f*((opac_x-upperLeftVertex[0])/
-				(lowerRightVertex[0]-upperLeftVertex[0]))-1.0f; 
-  float height = endyf-startyf;
-  float width = endxf-startxf;
-  float halfWidth = width*0.5f;
-  float halfHeight = height*0.5f;
-  float half_x = (focus_x-upperLeftVertex[0])/this->width*width+startxf;
-  float half_y = ((focus_y-(upperLeftVertex[1]-this->height))/
-		  this->height*height+startyf);
+  float f_textureHeight = (float)textureHeight;
+  float f_textureWidth = (float)textureWidth;
+  float f_startx = (upperLeftVertex[0]-5.0f)*f_textureWidth/490.0f;
+  float f_endx = (lowerRightVertex[0]-5.0f)*f_textureWidth/490.0f;
+  int startx = (int)f_startx;
+  int endx = (int)f_endx;
+  float f_starty = f_textureHeight*(lowerRightVertex[1]-55.0f)/240.0f;
+  float f_endy = f_textureHeight*(upperLeftVertex[1]-55.0f)/240.0f;
+  int starty = (int)f_starty;
+  int endy = (int)f_endy;
+  float midx = (f_endx+f_startx)*0.5f;
+  float midy = (f_endy+f_starty)*0.5f;
+  float opacStar_alpha_off = (2.0f*(opac_x-upperLeftVertex[0])/
+			      (lowerRightVertex[0]-upperLeftVertex[0]))-1.0f; 
+  float height = f_endy-f_starty;
+  float width = f_endx-f_startx;
   float alpha_x_off = 2.0f*(focus_x-upperLeftVertex[0])/this->width-1.0f;
   float alpha_y_off = 2.0f*(focus_y-lowerRightVertex[1])/this->height-1.0f;
+
+  // the following variables are used only in the first case
+  float halfWidthSqrd = width*width*0.25f;
+  float halfHeightSqrd = height*height*0.25f;
+  float half_x = (focus_x-upperLeftVertex[0])/this->width*width+f_startx;
+  float half_y = ((focus_y-(upperLeftVertex[1]-this->height))/
+		  this->height*height+f_starty);
 
   switch( type ) {
     // elliptical texture
   case 1:
     for( int y = starty; y < endy; y++ ) {
+      // part of the intensity equation can be pre-computed here
+      float I_const = 1.0f - (y-half_y)*(y-half_y)/halfHeightSqrd;
       for( int x = startx; x < endx; x++ ) {
-	float intensity = 1.0f - (2.0f*(x-half_x)*(x-half_x)/(halfWidth*halfWidth)+
-				  2.0f*(y-half_y)*(y-half_y)/(halfHeight*halfHeight));
+	// float intensity = 1.0f - ((x-half_x)*(x-half_x)/halfWidthSqrd+
+	//       		     (y-half_y)*(y-half_y)/halfHeightSqrd);
+	float intensity = I_const-(x-half_x)*(x-half_x)/halfWidthSqrd;
 	if( intensity < 0.0f )
 	  intensity = 0.0f;
-	blend( texture_dest[y][x], 
+	blend( dest[y][x], 
 	       transText->current_color[0], 
 	       transText->current_color[1], 
 	       transText->current_color[2],
-	       (intensity+opacStar_alpha_off)*master_alpha );
+	       intensity+opacStar_alpha_off,
+	       master_alpha );
       } // for()
     } // for()
     break;
@@ -851,32 +870,34 @@ RectWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4]
     for( int y = starty; y < endy; y++ ) {
       if( !switchFlag )
 	for( int x = startx; x < endx; x++ ) {
-	  int texture_x = (int)(((float)x-startxf)/width*(float)textureWidth);
+	  int texture_x = (int)(((float)x-f_startx)/width*f_textureWidth);
 	  if( texture_x >= textureWidth )
 	    texture_x = textureWidth-1;
 	  else if( texture_x < 0 )
 	    texture_x = 0;
-	  blend( texture_dest[y][x],
+	  blend( dest[y][x],
 		 transText->current_color[0],
 		 transText->current_color[1],
 		 transText->current_color[2],
 		 (transText->textArray[0][texture_x][3]+opacStar_alpha_off+
-		  alpha_x_off*((float)x-midx)/width)*master_alpha );
+		  alpha_x_off*((float)x-midx)/width),
+		 master_alpha );
 	} // for()
       else {
 	float y_alpha = alpha_y_off*((float)y-midy)/height;
 	for( int x = startx; x < endx; x++ ) {
-	  int texture_x = (int)(((float)y-startyf)/height*(float)textureWidth);
+	  int texture_x = (int)(((float)y-f_starty)/height*f_textureWidth);
 	  if( texture_x >= textureWidth )
 	    texture_x = textureWidth-1;
 	  else if( texture_x < 0 )
 	    texture_x = 0;
-	  blend( texture_dest[y][x],
+	  blend( dest[y][x],
 		 transText->current_color[0],
 		 transText->current_color[1],
 		 transText->current_color[2],
 		 (transText->textArray[0][texture_x][3]+opacStar_alpha_off+
-		  y_alpha)*master_alpha );
+		  y_alpha), 
+		 master_alpha );
 	  } // for()
       } // else
     } // for()
@@ -889,29 +910,31 @@ RectWidget::paintTransFunc( GLfloat texture_dest[textureHeight][textureWidth][4]
       float init_intensity = 0.5f+opacStar_alpha_off+y_alpha;
       if( !switchFlag )
 	for( int x = startx; x < endx; x++ ) {
-	  int texture_x = (int)(((float)x-startxf)/width*textureWidth);
+	  int texture_x = (int)(((float)x-f_startx)/width*f_textureWidth);
 	  if( texture_x >= textureWidth )
 	    texture_x = textureWidth-1;
 	  else if( texture_x < 0 )
 	    texture_x = 0;
-	  blend( texture_dest[y][x],
+	  blend( dest[y][x],
 		 transText->textArray[0][texture_x][0],
 		 transText->textArray[0][texture_x][1],
 		 transText->textArray[0][texture_x][2],
-		 (init_intensity+x_alpha*((float)x-midx))*master_alpha );
+		 (init_intensity+x_alpha*((float)x-midx)),
+		 master_alpha );
 	} // for()
       else {
-	int texture_x = (int)(((float)y-startyf)/height*textureWidth);
+	int texture_x = (int)(((float)y-f_starty)/height*f_textureWidth);
 	if( texture_x >= textureWidth )
 	  texture_x = textureWidth-1;
 	else if( texture_x < 0 )
 	  texture_x = 0;
 	for( int x = startx; x < endx; x++ )
-	  blend( texture_dest[y][x],
+	  blend( dest[y][x],
 		 transText->textArray[0][texture_x][0],
 		 transText->textArray[0][texture_x][1],
 		 transText->textArray[0][texture_x][2],
-		 (init_intensity+x_alpha*((float)x-midx))*master_alpha );
+		 (init_intensity+x_alpha*((float)x-midx)),
+		 master_alpha );
       } // else
     } // for()
     break;
@@ -970,13 +993,16 @@ RectWidget::changeColor( float r, float g, float b ) {
 
 // blends the RGBA components of widget's texture with background texture
 void
-Widget::blend( GLfloat texture_dest[4], float r, float g, float b, float a ) {
+Widget::blend( GLfloat dest[4], float r, float g, float b, float a, float m ) {
   if( a < 0 )
     a = 0;
   else if( a > 1 )
     a = 1;
-  texture_dest[0] = a*r + (1-a)*texture_dest[0];
-  texture_dest[1] = a*g + (1-a)*texture_dest[1];
-  texture_dest[2] = a*b + (1-a)*texture_dest[2];
-  texture_dest[3] = a + (1-a)*texture_dest[3];
+  a *= m;
+  if( a > 1 )
+    a = 1;
+  dest[0] = a*r + (1-a)*dest[0];
+  dest[1] = a*g + (1-a)*dest[1];
+  dest[2] = a*b + (1-a)*dest[2];
+  dest[3] = a + (1-a)*dest[3];
 } // blend()
