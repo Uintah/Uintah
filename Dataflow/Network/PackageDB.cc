@@ -33,7 +33,7 @@
 #undef ASSERT
 #endif
 
-#include <include/sci_defs/environment_defs.h>
+#include <sci_defs/environment_defs.h>
 
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/FileUtils.h>

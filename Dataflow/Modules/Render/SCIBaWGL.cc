@@ -38,7 +38,7 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <include/sci_defs/ogl_defs.h>
+#include <sci_defs/ogl_defs.h>
 
 #if defined( HAVE_GLEW )
 #include <GL/glew.h>

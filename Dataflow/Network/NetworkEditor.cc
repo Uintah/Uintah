@@ -47,7 +47,7 @@
 #pragma warning(disable:4786)
 #endif
 
-#include <include/sci_defs/environment_defs.h>
+#include <sci_defs/environment_defs.h>
 
 #include <Dataflow/Network/NetworkEditor.h>
 

@@ -39,7 +39,7 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <include/sci_defs/bits_defs.h>
+#include <sci_defs/bits_defs.h>
 
 #include <Core/Malloc/AllocOS.h>
 #include <Core/Malloc/AllocPriv.h>

@@ -43,7 +43,7 @@
 #ifndef SCI_Geom_GeomObj_h
 #define SCI_Geom_GeomObj_h 1
 
-#include <include/sci_defs/ogl_defs.h>
+#include <sci_defs/ogl_defs.h>
 
 #include <Core/Containers/Array1.h>
 #include <Core/Thread/Mutex.h>

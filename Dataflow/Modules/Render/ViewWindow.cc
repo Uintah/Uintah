@@ -39,8 +39,8 @@
  *
  *  Copyright (C) 1994 SCI Group
  */
-#include <include/sci_defs/collab_vis_defs.h>
-#include <include/sci_defs/chromium_defs.h>
+#include <sci_defs/collab_vis_defs.h>
+#include <sci_defs/chromium_defs.h>
 
 #include <Dataflow/Modules/Render/Viewer.h>
 #include <Dataflow/Modules/Render/ViewWindow.h>

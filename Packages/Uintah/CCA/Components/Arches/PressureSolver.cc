@@ -1,6 +1,6 @@
 //----- PressureSolver.cc ----------------------------------------------
 
-#include <sci_defs.h>
+#include <sci_defs/hypre_defs.h>
 
 #include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>

@@ -39,7 +39,7 @@
  *
  *  Copyright (C) 2002 U of U
  */
-#include <include/sci_defs/config_defs.h> // For MPIPP_H on SGI
+#include <sci_defs/config_defs.h> // For MPIPP_H on SGI
 #include <iostream>
 #include <stdlib.h>
 #include <algo.h>

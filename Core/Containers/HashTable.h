@@ -44,7 +44,7 @@
 #ifndef SCI_Containers_HashTable_h
 #define SCI_Containers_HashTable_h 1
 
-#include <include/sci_defs/template_defs.h>
+#include <sci_defs/template_defs.h>
 
 #include <Core/share/share.h>
 #include <Core/Malloc/Allocator.h>

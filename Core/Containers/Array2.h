@@ -43,7 +43,7 @@
 #ifndef SCI_Containers_Array2_h
 #define SCI_Containers_Array2_h 1
 
-#include <include/sci_defs/template_defs.h>
+#include <sci_defs/template_defs.h>
 #include <Core/Persistent/Persistent.h>
 
 #ifdef _WIN32

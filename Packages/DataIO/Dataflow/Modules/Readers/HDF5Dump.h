@@ -36,7 +36,7 @@
 #ifndef HDF5_DUMP_API
 #define HDF5_DUMP_API
 
-#include <include/sci_defs/hdf5_defs.h>
+#include <sci_defs/hdf5_defs.h>
 
 #include <iostream>
 

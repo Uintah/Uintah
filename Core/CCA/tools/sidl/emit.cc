@@ -28,7 +28,7 @@
 
  
 
-#include <include/sci_defs/config_defs.h>
+#include <sci_defs/config_defs.h>
 #include "Spec.h"
 #include "SymbolTable.h"
 #include "uuid_wrapper.h"
@@ -262,7 +262,7 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   out << "#include <Core/Thread/Thread.h>\n";
   out << "#include <iostream>\n";
   out << "#include <vector>\n"; 
-  out << "#include <include/sci_defs/config_defs.h>\n";
+  out << "#include <sci_defs/config_defs.h>\n";
 #ifdef MxNDEBUG 
   out << "#include <mpi.h> //Debugging purposes\n";
 #endif

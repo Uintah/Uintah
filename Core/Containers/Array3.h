@@ -43,7 +43,7 @@
 #ifndef SCI_Containers_Array3_h
 #define SCI_Containers_Array3_h 1
 
-#include <include/sci_defs/template_defs.h>
+#include <sci_defs/template_defs.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>

@@ -29,7 +29,7 @@
 
 // soloader.cpp written by Chris Moulding 11/98
 
-#include <include/sci_defs/environment_defs.h>
+#include <sci_defs/environment_defs.h>
 
 #include <Core/Util/soloader.h>
 #include <sgi_stl_warnings_off.h>

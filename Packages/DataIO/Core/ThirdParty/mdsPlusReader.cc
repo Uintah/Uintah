@@ -50,7 +50,7 @@
   For more information on the calls see mdsPlusAPI.c
 */
 
-#include <include/sci_defs/mdsplus_defs.h>
+#include <sci_defs/mdsplus_defs.h>
 
 #include <Packages/DataIO/Core/ThirdParty/mdsPlusReader.h>
 

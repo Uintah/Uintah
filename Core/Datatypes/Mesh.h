@@ -30,7 +30,7 @@
 #ifndef Datatypes_Mesh_h
 #define Datatypes_Mesh_h
 
-#include <include/sci_defs/hashmap_defs.h>
+#include <sci_defs/hashmap_defs.h>
 
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Containers/LockingHandle.h>
