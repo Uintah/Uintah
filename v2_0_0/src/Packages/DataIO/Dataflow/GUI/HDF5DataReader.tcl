@@ -160,7 +160,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	######################################################
 	
 	makeOpenFilebox \
-	    -parent $w \
+	    -parent . \
 	    -filevar $this-filename \
 	    -command "$this-c update_file; destroy " \
 	    -cancel "destroy " \
