@@ -40,30 +40,25 @@ using std::endl;
 namespace SCITeem {
 
 class NrrdCrop : public Module {
-  NrrdIPort* inrrd_;
-  NrrdOPort* onrrd_;
-  GuiInt minAxis0_;
-  GuiInt maxAxis0_;
-  GuiInt minAxis1_;
-  GuiInt maxAxis1_;
-  GuiInt minAxis2_;
-  GuiInt maxAxis2_;
-  GuiInt minAxis3_;
-  GuiInt maxAxis3_;
-  GuiInt absmaxAxis0_;
-  GuiInt absmaxAxis1_;
-  GuiInt absmaxAxis2_;
-  GuiInt absmaxAxis3_;
-  int lastmin_[4];
-  int lastmax_[4];
-  int last_generation_;
-  NrrdDataHandle last_nrrdH_;
 public:
   int valid_data(string *minS, string *maxS, int *min, int *max, Nrrd *nrrd);
   int getint(const char *str, int *n);
   NrrdCrop(SCIRun::GuiContext *ctx);
   virtual ~NrrdCrop();
   virtual void execute();
+  void load_gui();
+  virtual void tcl_command(GuiArgs& args, void* userdata);
+private:
+  NrrdIPort*      inrrd_;
+  NrrdOPort*      onrrd_;
+  vector<GuiInt*> mins_;
+  vector<GuiInt*> maxs_;
+  vector<GuiInt*> absmaxs_;
+  GuiInt          num_axes_;
+  vector<int>     lastmin_;
+  vector<int>     lastmax_;
+  int             last_generation_;
+  NrrdDataHandle  last_nrrdH_;
 };
 
 } // End namespace SCITeem
@@ -72,30 +67,39 @@ DECLARE_MAKER(NrrdCrop)
 
 NrrdCrop::NrrdCrop(SCIRun::GuiContext *ctx) : 
   Module("NrrdCrop", ctx, Filter, "Filters", "Teem"), 
-  minAxis0_(ctx->subVar("minAxis0")),
-  maxAxis0_(ctx->subVar("maxAxis0")),
-  minAxis1_(ctx->subVar("minAxis1")),
-  maxAxis1_(ctx->subVar("maxAxis1")),
-  minAxis2_(ctx->subVar("minAxis2")),
-  maxAxis2_(ctx->subVar("maxAxis2")), 
-  minAxis3_(ctx->subVar("minAxis3")),
-  maxAxis3_(ctx->subVar("maxAxis3")),
-  absmaxAxis0_(ctx->subVar("absmaxAxis0")),
-  absmaxAxis1_(ctx->subVar("absmaxAxis1")),
-  absmaxAxis2_(ctx->subVar("absmaxAxis2")),
-  absmaxAxis3_(ctx->subVar("absmaxAxis3")),
+  num_axes_(ctx->subVar("num-axes")),
   last_generation_(-1), 
   last_nrrdH_(0)
 {
-  for (int i = 0; i < 4; i++) {
-    lastmin_[i] = -1;
-    lastmax_[i] = -1;
-  }
+  // this will get overwritten when tcl side initializes, but 
+  // until then make sure it is initialized.
+  num_axes_.set(0); 
+  load_gui();
 }
 
 NrrdCrop::~NrrdCrop() {
 }
 
+void
+NrrdCrop::load_gui() {
+  num_axes_.reset();
+  if (num_axes_.get() == 0) { return; }
+
+  lastmin_.resize(num_axes_.get(), -1);
+  lastmax_.resize(num_axes_.get(), -1);  
+  for (int a = 0; a < num_axes_.get(); a++) {
+    ostringstream str;
+    str << "minAxis" << a;
+    mins_.push_back(new GuiInt(ctx->subVar(str.str())));
+    ostringstream str1;
+    str1 << "maxAxis" << a;
+    maxs_.push_back(new GuiInt(ctx->subVar(str1.str())));
+    ostringstream str2;
+    str2 << "absmaxAxis" << a;
+    absmaxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
+  }
+}
+  
 void 
 NrrdCrop::execute()
 {
@@ -118,66 +122,79 @@ NrrdCrop::execute()
     error("Empty input Nrrd.");
     return;
   }
-  absmaxAxis0_.reset();
-  absmaxAxis1_.reset();
-  absmaxAxis2_.reset();
-  absmaxAxis3_.reset();
-  minAxis0_.reset();
-  maxAxis0_.reset();
-  minAxis1_.reset();
-  maxAxis1_.reset();
-  minAxis2_.reset();
-  maxAxis2_.reset();
-  minAxis3_.reset();
-  maxAxis3_.reset();
+  
+  num_axes_.reset();
   
   if (last_generation_ != nrrdH->generation) {
     ostringstream str;
-    
-    absmaxAxis0_.set(nrrdH->get_tuple_axis_size() - 1);
-    maxAxis0_.set(nrrdH->get_tuple_axis_size() - 1);
-    absmaxAxis1_.set(nrrdH->nrrd->axis[1].size - 1);
-    maxAxis1_.set(nrrdH->nrrd->axis[1].size - 1);
-    if (nrrdH->nrrd->dim > 2) { 
-      absmaxAxis2_.set(nrrdH->nrrd->axis[2].size - 1); 
-      maxAxis2_.set(nrrdH->nrrd->axis[2].size - 1);
-    } else {
-      absmaxAxis2_.set(0);
-      maxAxis2_.set(0);
+
+    if (last_generation_ != -1) {
+      lastmin_.clear();
+      lastmax_.clear();
+      vector<GuiInt*>::iterator iter = mins_.begin();
+      while(iter != mins_.end()) {
+	delete *iter;
+	++iter;
+      }
+      mins_.clear();
+      iter = maxs_.begin();
+      while(iter != maxs_.end()) {
+	delete *iter;
+	++iter;
+      }
+      maxs_.clear();
+      iter = absmaxs_.begin();
+      while(iter != absmaxs_.end()) {
+	delete *iter;
+	++iter;
+      }
+      absmaxs_.clear();
+      gui->execute(id.c_str() + string(" clear_axes"));
     }
-    if (nrrdH->nrrd->dim > 3) { 
-      absmaxAxis3_.set(nrrdH->nrrd->axis[3].size - 1); 
-      maxAxis3_.set(nrrdH->nrrd->axis[3].size - 1);
-    } else {
-      absmaxAxis3_.set(0);
-      maxAxis3_.set(0);
+
+    num_axes_.set(nrrdH->nrrd->dim);
+    num_axes_.reset();
+    load_gui();
+    gui->execute(id.c_str() + string(" init_axes"));
+
+    for (int a = 0; a < num_axes_.get(); a++) {
+      maxs_[a]->reset();
+    }
+    for (int a = 0; a < num_axes_.get(); a++) {
+      mins_[a]->set(0);
+      if (a == 0) {
+	absmaxs_[a]->set(nrrdH->get_tuple_axis_size() - 1);
+      } else {
+	absmaxs_[a]->set(nrrdH->nrrd->axis[a].size - 1);
+      }
+      maxs_[a]->reset();
+      absmaxs_[a]->reset();
     }
     
     str << id.c_str() << " set_max_vals" << endl; 
     gui->execute(str.str());
   }
 
-
-  int min[4], max[4];
-  min[0] = minAxis0_.get();
-  max[0] = maxAxis0_.get();
-  min[1] = minAxis1_.get();
-  max[1] = maxAxis1_.get();
-  min[2] = minAxis2_.get();
-  max[2] = maxAxis2_.get();
-  min[3] = minAxis3_.get();
-  max[3] = maxAxis3_.get();
+  if (num_axes_.get() == 0) { return; }
   
+  for (int a = 0; a < num_axes_.get(); a++) {
+    mins_[a]->reset();
+    maxs_[a]->reset();
+    absmaxs_[a]->reset();
+  }
+
+
+
   if (last_generation_ == nrrdH->generation && last_nrrdH_.get_rep()) {
     bool same = true;
-    for (int i = 0; i < 4; i++) {
-      if (lastmin_[i] != min[i]) {
+    for (int i = 0; i < num_axes_.get(); i++) {
+      if (lastmin_[i] != mins_[i]->get()) {
 	same = false;
-	lastmin_[i] = min[i];
+	lastmin_[i] = mins_[i]->get();
       }
-      if (lastmax_[i] != max[i]) {
+      if (lastmax_[i] != maxs_[i]->get()) {
 	same = false;
-	lastmax_[i] = max[i];
+	lastmax_[i] = maxs_[i]->get();
       }
     }
     if (same) {
@@ -192,23 +209,32 @@ NrrdCrop::execute()
 
   // translate the tuple index into the real offsets for a tuple axis.
   int tmin, tmax;
-  if (! nrrdH->get_tuple_index_info(min[0], max[0], tmin, tmax)) {
+  if (! nrrdH->get_tuple_index_info(mins_[0]->get(), maxs_[0]->get(), 
+				    tmin, tmax)) {
     error("Tuple index out of range");
     return;
   }
   vector<string> elems;
   nrrdH->get_tuple_indecies(elems);
   string olabel;
-  for (int i = min[0]; i <= max[0]; i++) {
-    if (i == min[0]) { // first one;
+  for (int i = mins_[0]->get(); i <= maxs_[0]->get(); i++) {
+    if (i == mins_[0]->get()) { // first one;
       olabel = elems[i];
     } else {
       olabel = olabel + "," + elems[i];
     }
   }
 
+  int *min = new int[num_axes_.get()];
+  int *max = new int[num_axes_.get()];
+
+  for(int i = 1; i <  num_axes_.get(); i++) {
+    min[i] = mins_[i]->get();
+    max[i] = maxs_[i]->get();
+  }
   min[0] = tmin;
   max[0] = tmax;
+
   if (nrrdCrop(nout, nin, min, max)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble resampling: ") + err);
@@ -224,3 +250,16 @@ NrrdCrop::execute()
   onrrd_->send(last_nrrdH_);
 }
 
+void 
+NrrdCrop::tcl_command(GuiArgs& args, void* userdata) 
+{
+  if(args.count() < 2){
+    args.error("NrrdCrop needs a minor command");
+    return;
+  }
+  if (args[1] == "get_axes") {
+    load_gui();
+  } else {
+    Module::tcl_command(args, userdata);
+  }
+}
