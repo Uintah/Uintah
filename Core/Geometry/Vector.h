@@ -54,6 +54,7 @@ public:
 
   // checks if one vector is exactly the same as another
   int operator==(const Vector&) const;
+  int operator!=(const Vector&) const;
 
   inline Vector operator*(const double) const;
   inline Vector operator*(const Vector&) const;
@@ -99,7 +100,7 @@ public:
   friend SCICORESHARE void Pio( Piostream&, Vector& );
 
   inline Point asPoint() const;
-  inline double minCoreComponent() const {
+  inline double minComponent() const {
     if(_x<_y){
       if(_x<_z)
 	return _x;
@@ -112,7 +113,7 @@ public:
 	return _z;
     }
   }
-  inline double maxCoreComponent() const {
+  inline double maxComponent() const {
     if(_x>_y){
       if(_x>_z)
 	return _x;
