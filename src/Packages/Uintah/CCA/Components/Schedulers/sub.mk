@@ -16,6 +16,7 @@ SRCS += \
 	$(SRCDIR)/OnDemandDataWarehouse.cc \
 	$(SRCDIR)/Relocate.cc \
 	$(SRCDIR)/RoundRobinLoadBalancer.cc \
+	$(SRCDIR)/ParticleLoadBalancer.cc \
 	$(SRCDIR)/SchedulerCommon.cc \
 	$(SRCDIR)/SendState.cc \
 	$(SRCDIR)/SimpleLoadBalancer.cc \
