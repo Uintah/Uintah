@@ -1,83 +1,70 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-
-<!--Converted with LaTeX2HTML 99.2beta6 (1.42)
-original version by:  Nikos Drakos, CBLU, University of Leeds
+<!--Converted with LaTeX2HTML 98.1p1 release (March 2nd, 1998)
+originally by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
 * revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
 * with significant contributions from:
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>7 Importing data into SCIRun</TITLE>
-<META NAME="description" CONTENT="7 Importing data into SCIRun">
+<TITLE>7. Importing data into SCIRun</TITLE>
+<META NAME="description" CONTENT="7. Importing data into SCIRun">
 <META NAME="keywords" CONTENT="usersguide">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
-
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
-<META NAME="Generator" CONTENT="LaTeX2HTML v99.2beta6">
-<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
-
 <LINK REL="STYLESHEET" HREF="usersguide.css">
-
 <LINK REL="next" HREF="node9.html">
 <LINK REL="previous" HREF="node7.html">
 <LINK REL="up" HREF="usersguide.html">
 <LINK REL="next" HREF="node9.html">
 </HEAD>
-
 <BODY >
 <!--Navigation Panel-->
-<A NAME="tex2html242"
-  HREF="node9.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.gif"></A> 
-<A NAME="tex2html236"
-  HREF="usersguide.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.gif"></A> 
-<A NAME="tex2html230"
-  HREF="node7.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.gif"></A> 
-<A NAME="tex2html238"
-  HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.gif"></A> 
-<A NAME="tex2html240"
-  HREF="node10.html">
-<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.gif"></A> 
+<A NAME="tex2html224"
+ HREF="node9.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html220"
+ HREF="usersguide.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html214"
+ HREF="node7.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html222"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html223"
+ HREF="node10.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
 <BR>
-<B> Next:</B> <A NAME="tex2html243"
-  HREF="node9.html">Bibliography</A>
-<B> Up:</B> <A NAME="tex2html237"
-  HREF="usersguide.html">usersguide</A>
-<B> Previous:</B> <A NAME="tex2html231"
-  HREF="node7.html">6 Packages</A>
- &nbsp <B>  <A NAME="tex2html239"
-  HREF="node1.html">Contents</A></B> 
- &nbsp <B>  <A NAME="tex2html241"
-  HREF="node10.html">Index</A></B> 
+<B> Next:</B> <A NAME="tex2html225"
+ HREF="node9.html">Bibliography</A>
+<B> Up:</B> <A NAME="tex2html221"
+ HREF="usersguide.html">No Title</A>
+<B> Previous:</B> <A NAME="tex2html215"
+ HREF="node7.html">6. Packages</A>
 <BR>
 <BR>
 <!--End of Navigation Panel-->
 <!--Table of Child-Links-->
-<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
-
+<A NAME="CHILD_LINKS"><strong>Subsections</strong></A>
 <UL>
-<LI><A NAME="tex2html244"
-  HREF="node8.html#SECTION00081000000000000000">7.1 CVRTI converters</A>
+<LI><A NAME="tex2html226"
+ HREF="node8.html#SECTION00081000000000000000">7.1 CVRTI converters</A>
 </UL>
 <!--End of Table of Child-Links-->
 <HR>
 
-<H1><A NAME="SECTION00080000000000000000"></A>
-<A NAME="sec:import"></A> 
-<A NAME="2237"></A>
+<H1><A NAME="SECTION00080000000000000000">&#160;</A>
+<A NAME="sec:import">&#160;</A> 
+<A NAME="2150">&#160;</A>
 <BR>
-7 Importing data into <I>SCIRun</I>
+7. Importing data into <EM>SCIRun</EM>
 </H1>
 
 <P>
 Here we describe some of the channels through which you can import data
-into <I>SCIRun</I>.  The basic paradigm a this point requires converting existing
-files into standard <I>SCIRun</I> files.  We will extend this very soon to support
-readers within <I>SCIRun</I> that will accept other formats.
+into <EM>SCIRun</EM>.  The basic paradigm a this point requires converting existing
+files into standard <EM>SCIRun</EM> files.  We will extend this very soon to support
+readers within <EM>SCIRun</EM> that will accept other formats.
 
 <P>
 
@@ -88,50 +75,41 @@ readers within <I>SCIRun</I> that will accept other formats.
 <P>
 The Cardiovascular Research and Training Institute (CVRTI) has developed a
 number of scalar and vector data and geometry file formats which required
-converters for <I>SCIRun</I>.  The result is a set of stand-alone programs that read
+converters for <EM>SCIRun</EM>.  The result is a set of stand-alone programs that read
 in one more more existing CVRTI files and generate a particular form of
-<I>SCIRun</I> file, the details of which depend on the particular combination of
+<EM>SCIRun</EM> file, the details of which depend on the particular combination of
 nodes, connectivities, and associated attributes.
 
 <P>
 The programs and their parameters as as follows (go to the end of the list
 to see the definitions of the different parameter and file types):
 <DL>
-<DT><STRONG>CVRTItoTriSurfGrad: </STRONG></DT>
+<DT><STRONG>CVRTItoTriSurfGrad: </STRONG>
 <DD>converts nodes, triangle connectivities, and
-        vector (grad) files into a field with associated vector attribute:
-<BR>        <PRE>
+vector (grad) files into a field with associated vector attribute:
+<BR>
+        <PRE>
         CVRTItoTriSurfGrad pts fac grad [channels] fieldout
-</PRE>
-  
-</DD>
-<DT><STRONG>CVRTItoTriSurfPot: </STRONG></DT>
+</PRE>  <DT><STRONG>CVRTItoTriSurfPot: </STRONG>
 <DD>converts nodes, triangle connectivities, and
         scalar (pot) data files into a field with associated scalar
         attributes. 
         <PRE>
         CVRTItoTriSurfPot pts fac pot [channels] fieldout
-</PRE>
-  
-</DD>
-<DT><STRONG>CVRTItoTetVolGrad: </STRONG></DT>
+</PRE>  <DT><STRONG>CVRTItoTetVolGrad: </STRONG>
 <DD>converts nodes, tetrahedral connectivities, and
         vector (grad) files into a field with associated vector
         attributes:
-<BR>        <PRE>
+<BR>
+        <PRE>
         CVRTItoTetVolGrad pts tetras grad [channels] fieldout
-</PRE>
-  
-</DD>
-<DT><STRONG>CVRTItoTetVolPot: </STRONG></DT>
+</PRE>  <DT><STRONG>CVRTItoTetVolPot: </STRONG>
 <DD>converts nodes, tetrahedral connectivities, and
         scalar (pot) files into a field with associated scalar attributes:
-<BR>        <PRE>
+<BR>
+        <PRE>
         CVRTItoTetVolPot pts tetras pot [channels] fieldout
-</PRE>
-</DD>
-</DL>
-
+</PRE></DL>
 <P>
 
 <H4><A NAME="SECTION00081010000000000000">
@@ -151,58 +129,56 @@ to see the definitions of the different parameter and file types):
 </TR>
 <TR><TD ALIGN="CENTER">fac</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=288>CVRTI triangle connectivity (facet) file; ASCII file with one
-triangle defined per line.  Each value points to a node number in the
-associated .pts file, with 1 (not 0) as the first node number.*</TD>
+    triangle defined per line.  Each value points to a node number in the
+    associated .pts file, with 1 (not 0) as the first node number.*</TD>
 </TR>
 <TR><TD ALIGN="CENTER">tetras</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=288>CVRTI tetrahedra file; ASCII file with the nodes from one
-tetrahedron on each line, pointing to the nodes in the associated .pts
-file.  Pointers begin with 1 (not 0).*</TD>
+    tetrahedron on each line, pointing to the nodes in the associated .pts
+    file.  Pointers begin with 1 (not 0).*</TD>
 </TR>
 <TR><TD ALIGN="LEFT" COLSPAN=2>Data</TD>
 </TR>
 <TR><TD ALIGN="CENTER">grad</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=288>CVRTI vector file; ASCII file with two x,y,z triplets per line;
-first triplet is origin of the vector and second is the endpoint.*</TD>
+    first triplet is origin of the vector and second is the endpoint.*</TD>
 </TR>
 <TR><TD ALIGN="CENTER">pot</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=288>CVRTI scalar (potentials) data file; ASCII file,  each line contains
-one scalar value.  Without .channels file, all programs assume a
-one-to-one mapping of scalar value to the  nodes in the associated .pts
-file.*</TD>
+    one scalar value.  Without .channels file, all programs assume a
+    one-to-one mapping of scalar value to the  nodes in the associated .pts
+    file.*</TD>
 </TR>
 <TR><TD ALIGN="LEFT" COLSPAN=2>Channel Mapping</TD>
 </TR>
 <TR><TD ALIGN="CENTER">channels</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=288>CVRTI data channel mapping file; ASCII file that begins with the
-line ``N channels'', where N is the number of channels in the file.
-Subsequent lines contain two values, the first refers to a node number in
-the geometry and the second points to the associated channel of any scalar
-or vector data files.  Thus a .channels file must have an entry for each
-node of the associated .pts file but the associated .pot file can have more
-(or even fewer) entries.</TD>
+    line ``N channels'', where N is the number of channels in the file.
+    Subsequent lines contain two values, the first refers to a node number in
+    the geometry and the second points to the associated channel of any scalar
+    or vector data files.  Thus a .channels file must have an entry for each
+    node of the associated .pts file but the associated .pot file can have more
+    (or even fewer) entries.</TD>
 </TR>
 <TR><TD ALIGN="LEFT" COLSPAN=2>Field File</TD>
 </TR>
 <TR><TD ALIGN="CENTER">field</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=288>SCIRun fields file that contains both the geometry and associated
-scalar or vector data as attributes.</TD>
+    scalar or vector data as attributes.</TD>
 </TR>
 <TR><TD ALIGN="CENTER">&nbsp;</TD>
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH=288>*<B>Note</B>: to find the length of all CVRTI ASCII geometry,
 scalar, and vector files, count the number of lines in the file.</TD>
 </TR>
-</TABLE>
-</DIV>
-
+</TABLE></DIV>
 <P>
 
 <H4><A NAME="SECTION00081020000000000000">
 7.1.0.2 Location of converter programs:</A>
 </H4>
 All converter programs are normally available in the subdirectory of the
-<I>SCIRun</I> distribution called <TT>src/StandAlone/convert</TT>.  If they are
-not easily available, ask the local person who installed <I>SCIRun</I> for
+<EM>SCIRun</EM> distribution called <TT>src/StandAlone/convert</TT>.  If they are
+not easily available, ask the local person who installed <EM>SCIRun</EM> for
 assistance.
 
 <P>
@@ -211,36 +187,32 @@ assistance.
 
 <HR>
 <!--Navigation Panel-->
-<A NAME="tex2html242"
-  HREF="node9.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.gif"></A> 
-<A NAME="tex2html236"
-  HREF="usersguide.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.gif"></A> 
-<A NAME="tex2html230"
-  HREF="node7.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.gif"></A> 
-<A NAME="tex2html238"
-  HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.gif"></A> 
-<A NAME="tex2html240"
-  HREF="node10.html">
-<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.gif"></A> 
+<A NAME="tex2html224"
+ HREF="node9.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html220"
+ HREF="usersguide.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html214"
+ HREF="node7.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html222"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html223"
+ HREF="node10.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
 <BR>
-<B> Next:</B> <A NAME="tex2html243"
-  HREF="node9.html">Bibliography</A>
-<B> Up:</B> <A NAME="tex2html237"
-  HREF="usersguide.html">usersguide</A>
-<B> Previous:</B> <A NAME="tex2html231"
-  HREF="node7.html">6 Packages</A>
- &nbsp <B>  <A NAME="tex2html239"
-  HREF="node1.html">Contents</A></B> 
- &nbsp <B>  <A NAME="tex2html241"
-  HREF="node10.html">Index</A></B> 
+<B> Next:</B> <A NAME="tex2html225"
+ HREF="node9.html">Bibliography</A>
+<B> Up:</B> <A NAME="tex2html221"
+ HREF="usersguide.html">No Title</A>
+<B> Previous:</B> <A NAME="tex2html215"
+ HREF="node7.html">6. Packages</A>
 <!--End of Navigation Panel-->
 <ADDRESS>
-Rob MacLeod
-2001-10-30
+<I>Rob MacLeod</I>
+<BR><I>2001-11-03</I>
 </ADDRESS>
 </BODY>
 </HTML>

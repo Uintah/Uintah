@@ -114,12 +114,12 @@ $key = q/sec:stopping/;
 $ref_files{$key} = "$dir".q|node4.html|; 
 $noresave{$key} = "$nosave";
 
-$key = q/sec:srversuspse/;
-$ref_files{$key} = "$dir".q|node3.html|; 
-$noresave{$key} = "$nosave";
-
 $key = q/sec:view-gaugewidget/;
 $ref_files{$key} = "$dir".q|node6.html|; 
+$noresave{$key} = "$nosave";
+
+$key = q/sec:srversuspse/;
+$ref_files{$key} = "$dir".q|node3.html|; 
 $noresave{$key} = "$nosave";
 
 $key = q/sec:deleteconnections/;
