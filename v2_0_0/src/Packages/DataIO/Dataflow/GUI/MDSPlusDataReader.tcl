@@ -117,60 +117,108 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	global $this-search-signal
 	global $this-search-regexp
 
-	frame $search.title
-	label $search.title.server -text "Server" -width 24 -relief groove
-	label $search.title.tree   -text "Tree"   -width 12 -relief groove
-	label $search.title.shot   -text "Shot"   -width  8 -relief groove
-	label $search.title.signal -text "Signal" -width 32 -relief groove
-	label $search.title.blank  -text ""       -width 22
 
-	pack $search.title.server $search.title.tree \
-	    $search.title.shot $search.title.signal \
+	frame $search.box
+
+	frame $search.box.title
+	label $search.box.title.server -text "Server" -width 24 -relief groove
+	label $search.box.title.tree   -text "Tree"   -width 12 -relief groove
+	label $search.box.title.shot   -text "Shot"   -width  8 -relief groove
+	label $search.box.title.signal -text "Signal" -width 32 -relief groove
+	label $search.box.title.blank  -text ""       -width 22
+
+	pack $search.box.title.server $search.box.title.tree \
+	    $search.box.title.shot $search.box.title.signal \
 	    -side left
 
-	pack $search.title
+	pack $search.box.title
 
-	frame $search.entry
-	entry $search.entry.server -textvariable $this-search-server -width 24
-	entry $search.entry.tree   -textvariable $this-search-tree   -width 12
-	entry $search.entry.shot   -textvariable $this-search-shot   -width  8
-	entry $search.entry.signal -textvariable $this-search-signal -width 32
+	frame $search.box.entry
+	entry $search.box.entry.server -textvariable $this-search-server \
+	    -width 24
+	entry $search.box.entry.tree   -textvariable $this-search-tree   \
+	    -width 12
+	entry $search.box.entry.shot   -textvariable $this-search-shot   \
+	    -width  8
+	entry $search.box.entry.signal -textvariable $this-search-signal \
+	    -width 32
 
-	pack $search.entry.server $search.entry.tree \
-	    $search.entry.shot $search.entry.signal $search.title.blank \
+	pack $search.box.entry.server $search.box.entry.tree \
+	    $search.box.entry.shot $search.box.entry.signal \
+	    $search.box.title.blank \
 	    -side left 
 
-	label $search.label -text "Reg-Exp" -width 7 -anchor w -just left
-	checkbutton $search.regexp -variable $this-search-regexp
-	button $search.search -text " Search " -command "$this-c search"
-
-	pack $search.entry $search.label $search.regexp $search.search \
-	    -side left 
-
-	pack $w.search -side top -fill both -expand yes -pady 10
+	pack $search.box.title $search.box.entry -side top \
+	     -fill both -expand yes
 
 
+	frame $search.options
+
+	frame $search.options.regexp
+
+	checkbutton $search.options.regexp.button -variable $this-search-regexp
+	label $search.options.regexp.label -text "Reg-Exp" -width 10 \
+	    -anchor w -just left
+	pack $search.options.regexp.button $search.options.regexp.label \
+	    -side left
+
+	button $search.options.search -text " Search " \
+	    -command "$this-c search"
+
+	pack $search.options.regexp $search.options.search -side top
+
+	pack  $search.box $search.options -side left
+
+
+
+	pack $w.search -fill x -expand yes -side top
 
 
 	iwidgets::labeledframe $w.dm -labeltext "Data Management"
 	set dm [$w.dm childsite]
 
-	label $dm.mlikelabel -text "Merge like data" -width 15 -anchor w -just left
-	radiobutton $dm.mergelike -variable $this-mergeData -value 1
+	frame $dm.merge
+
+	frame $dm.merge.none
+
+	radiobutton $dm.merge.none.button -variable $this-mergeData -value 0
+	label $dm.merge.none.label -text "No Merging" -width 12 \
+	    -anchor w -just left
 	
-	label $dm.mtimelabel -text "Merge time data" -width 15 -anchor w -just left
-	radiobutton $dm.mergetime -variable $this-mergeData -value 2
+	pack $dm.merge.none.button $dm.merge.none.label -side left
+
+
+	frame $dm.merge.like
+
+	radiobutton $dm.merge.like.button -variable $this-mergeData -value 1
+	label $dm.merge.like.label -text "Merge like data" -width 16 \
+	    -anchor w -just left
 	
-	label $dm.asvt -text "Assume Vector-Tensor data" \
-	    -width 33 -anchor w -just left
-	checkbutton $dm.svt -variable $this-assumeSVT
+	pack $dm.merge.like.button $dm.merge.like.label -side left
+
+
+	frame $dm.merge.time
+
+	radiobutton $dm.merge.time.button -variable $this-mergeData -value 2
+	label $dm.merge.time.label -text "Merge time data" -width 16 \
+	    -anchor w -just left
 	
-	pack $dm.mlikelabel -side left
-	pack $dm.mergelike  -side left
-	pack $dm.mtimelabel -side left -padx  20
-	pack $dm.mergetime  -side left
-	pack $dm.asvt   -side left -padx  20
-	pack $dm.svt    -side left
+	pack $dm.merge.time.button $dm.merge.time.label -side left
+
+
+	pack $dm.merge.none $dm.merge.like $dm.merge.time -side left
+
+	frame $dm.svt
+
+	checkbutton $dm.svt.button -variable $this-assumeSVT
+	label $dm.svt.label -text "Assume Vector-Tensor data" \
+	    -width 30 -anchor w -just left
+	
+	pack $dm.svt.button $dm.svt.label -side left
+
+	pack $dm.merge $dm.svt -side left
+
+
 
 	pack $w.dm -fill x -expand yes -side top
 
