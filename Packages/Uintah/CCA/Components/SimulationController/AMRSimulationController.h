@@ -49,51 +49,34 @@ class Regridder;
    //! Controls the execution of an AMR Simulation
    class AMRSimulationController : public SimulationController {
    public:
-      AMRSimulationController(const ProcessorGroup* myworld);
+      AMRSimulationController(const ProcessorGroup* myworld, bool doAMR);
       virtual ~AMRSimulationController();
 
-      virtual void doRestart(std::string restartFromDir, int timestep,
-		     bool fromScratch, bool removeOldDir);
       virtual void run();
 
    private:
+      //! Set up, compile, and execute initial timestep
+      void doInitialTimestep(GridP& grid, double& t);
+
+      //! Does regridding based on initialization timestep
+      //! Return true if a new grid is created.
+      bool doInitialTimestepRegridding(GridP& grid);
+
+      void doRegridding(GridP& grid);
+
+      void recompile(double t, double delt, GridP& currentGrid, int totalFine);
+
+      void executeTimestep(double t, double& delt, GridP& currentGrid, int totalFine);
+
       //! Asks a variety of components if one of them needs the taskgraph
       //! to recompile.
-      bool needRecompile(double t, double delt, const GridP& level,
-			 SimulationInterface* cfd, Output* output,
-			 LoadBalancer* lb, Regridder* regridder,
-                         std::vector<int>& levelids);
+      bool needRecompile(double t, double delt, const GridP& level);
       AMRSimulationController(const AMRSimulationController&);
       AMRSimulationController& operator=(const AMRSimulationController&);
 
       //! recursively schedule refinement, coarsening, and time advances for
       //! finer levels - compensating for time refinement.
-      void subCycle(GridP& grid, SchedulerP& scheduler,
-		    SimulationStateP& sharedState,
-		    int startDW, int dwStride, int numLevel,
-		    SimulationInterface* sim);
-
-      //! initialize the refineFlag variable for this domain (a task callback)
-      void initializeErrorEstimate(const ProcessorGroup*,
-				   const PatchSubset* patches,
-				   const MaterialSubset* matls,
-				   DataWarehouse*, DataWarehouse* new_dw,
-				   SimulationStateP sharedState);
-
-      /* for restarting */
-      bool           d_restarting;
-      std::string d_restartFromDir;
-      int d_restartTimestep;
-
-      // If d_restartFromScratch is true then don't copy or move any of
-      // the old timesteps or dat files from the old directory.  Run as
-      // as if it were running from scratch but with initial conditions
-      // given by the restart checkpoint.
-      bool d_restartFromScratch;
-
-      // If !d_restartFromScratch, then this indicates whether to move
-      // or copy the old timesteps.
-      bool d_restartRemoveOldDir;
+      void subCycle(GridP& grid, int startDW, int dwStride, int numLevel);
    };
 
 } // End namespace Uintah
