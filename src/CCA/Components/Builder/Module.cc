@@ -32,15 +32,11 @@ Module::Module(QWidget *parent, const string& moduleName,
   pd=10; //distance between two ports
   pw=10; //port width
   ph=4; //prot height
-
-  for(unsigned int i=0; i<pp.size(); i++){
-    if(pp[i]!="ui") this->pp.push_back(pp[i]);
-  }
 		
   int dx=5;
-/*  int dy=10;
-    int d=5;
-*/
+  // int dy=10;
+  //  int d=5;
+
   int w=120;
   int h=60;
 
@@ -53,24 +49,21 @@ Module::Module(QWidget *parent, const string& moduleName,
   setFrameStyle(Panel|Raised);
   setLineWidth(4);
 
-	
-  menu=new QPopupMenu(this);
-  menu->insertItem("Execute",this, SLOT(execute()) );
-  menu->insertSeparator();	
-  menu->insertItem("Stop",this,  SLOT(stop()) );
+  hasGoPort=hasUIPort=false;
   gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(builder.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
-  } else {
+  } 
+  else {
     CIA::array1<string> ports = builder->getProvidedPortNames(cid);
-    unsigned int i = 0;
-    for(; i < ports.size(); i++){
-      cerr << "ports[i] = " << ports[i] << '\n';
-      if(ports[i] == "ui")
-	break;
+    for(unsigned int i=0; i < ports.size(); i++){
+      if(ports[i]=="ui") hasUIPort=true;
+      else if(ports[i]=="go") hasGoPort=true;
+      else this->pp.push_back(ports[i]); 
     }
-    if(i != ports.size()){
-      // Have UI port
+  }
+
+  if(hasUIPort){
       QPushButton *ui=new QPushButton("UI", this,"ui");
       //	ui->setDefault(false);
       ui->setGeometry(QRect(dx,h-dx-20,20,20));
@@ -81,9 +74,24 @@ Module::Module(QWidget *parent, const string& moduleName,
       services->registerUsesPort(uiPortName, "gov.cca.UIPort",
 				 gov::cca::TypeMap::pointer(0));
       builder->connect(services->getComponentID(), uiPortName, cid, "ui");
-    }
-    services->releasePort("cca.BuilderService");
   }
+
+  menu=new QPopupMenu(this);
+
+  if(hasGoPort){
+      menu->insertItem("Go",this, SLOT(go()) );
+      menu->insertItem("Stop",this,  SLOT(stop()) );
+      menu->insertSeparator();	
+
+      string instanceName = cid->getInstanceName();
+      string goPortName = instanceName+" goPort";
+      services->registerUsesPort(goPortName, "gov.cca.GoPort",
+				 gov::cca::TypeMap::pointer(0));
+      builder->connect(services->getComponentID(), goPortName, cid, "go");
+  }
+
+  menu->insertItem("Destroy",this,  SLOT(destroy()) );
+  services->releasePort("cca.BuilderService");
 }
 
 
@@ -193,14 +201,29 @@ QRect Module::portRect(int portnum, PortType porttype)
 	}
 }
 
-void Module::execute()
+void Module::go()
 {
-	cerr<<"execute() "<<endl;	
+  string instanceName = cid->getInstanceName();
+  string goPortName = instanceName+" goPort";
+  gov::cca::Port::pointer p = services->getPort(goPortName);
+  gov::cca::ports::GoPort::pointer goPort = pidl_cast<gov::cca::ports::GoPort::pointer>(p);
+  if(goPort.isNull()){
+    cerr << "goPort is not connected, cannot bring up Go!\n";
+  } 
+  else {
+    goPort->go();
+    services->releasePort(goPortName);
+  }
 }
 
 void Module::stop()
 {
-	cerr<<"stop()"<<endl;	
+	cerr<<"stop() not implemented"<<endl;	
+}
+
+void Module::destroy()
+{
+	cerr<<"destroy() not implemented"<<endl;	
 }
 
 void Module::ui()
