@@ -601,6 +601,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
     //__________________________________ 
     //  Compute spec_vol_L[m] = Mass[m] * sp_vol[m]
     //  this is consistent with 4.8c.
+    //  
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
@@ -624,9 +625,10 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
        double term2 = delT * vol * (vol_frac[m][c] * alpha *  Tdot[m][c] -
                                    f_theta[c] * sum_therm_exp[c]);
                                    
-        // This is actually Vol * sp_vol
+        // This is actually mass * sp_vol
        spec_vol_source[c] = term1 + if_mpm_matl_ignore[m] * term2;
-       spec_vol_L[c] = vol*sp_vol_CC[c] + spec_vol_source[c]/rho_CC[c];
+ 
+       spec_vol_L[c] = (rho_CC[c] * vol)*sp_vol_CC[c] + spec_vol_source[c];
      }
 
       //  Set Neumann = 0 if symmetric Boundary conditions
