@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Util/Handle.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
@@ -146,6 +147,8 @@ WARNING
                                            const PatchSet* patches,
                                            const ModelInfo* mi)=0;    
 
+     virtual void setMPMLabel(MPMLabel* MLB);
+                                               
     bool computesThermoTransportProps() const;
     bool d_modelComputesThermoTransportProps;
     Output* d_dataArchiver;
