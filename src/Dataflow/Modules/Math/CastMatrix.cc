@@ -43,6 +43,8 @@ class CastMatrix : public Module {
 
   GuiString oldtype_;
   GuiString newtype_;
+  GuiInt nrow_;
+  GuiInt ncol_;
 public:
   CastMatrix(const string& id);
   virtual ~CastMatrix();
@@ -56,7 +58,8 @@ extern "C" Module* make_CastMatrix(const string& id)
 
 CastMatrix::CastMatrix(const string& id)
 : Module("CastMatrix", id, Filter,"Math", "SCIRun"),
-  oldtype_("oldtype", id, this), newtype_("newtype", id, this)
+  oldtype_("oldtype", id, this), newtype_("newtype", id, this),
+  nrow_("nrow", id, this), ncol_("ncol", id, this)
 {
 }
 
@@ -85,6 +88,8 @@ void CastMatrix::execute() {
     warning("Empty input matrix.");
     return;
   }
+  nrow_.set(imH->nrows());
+  ncol_.set(imH->ncols());
 
   oldtype_.set(imH->type_name());
 
