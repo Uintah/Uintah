@@ -69,7 +69,7 @@ proc canvasTooltip {canvas w msg} {
 }
 
 
-# the following code is curtosey the TCLer's Wiki (http://mini.net/tcl/)
+# the following code is courtesy the TCLer's Wiki (http://mini.net/tcl/)
 proc balloon_aux {w x y msg} {
     set t .balloon_help
     catch {destroy $t}

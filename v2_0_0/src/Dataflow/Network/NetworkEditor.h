@@ -44,7 +44,7 @@ namespace SCIRun {
     NetworkEditor(Network*, GuiInterface* gui);
     ~NetworkEditor();
   private:
-    void		save_network(const string&);
+    void		save_network(const string&, const string&);
     virtual void	tcl_command(GuiArgs&, void*);
 
     Network *		net;
