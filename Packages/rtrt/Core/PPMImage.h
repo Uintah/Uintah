@@ -65,12 +65,12 @@ class PPMImage
     nv=v_;
     flipped_ = flipped;
     if (!flipped_) {
-      for (int u=0; u<u_; ++u)
-        for (int v=0; v<v_; ++v)
+      for (unsigned u=0; u<u_; ++u)
+        for (unsigned v=0; v<v_; ++v)
           c(u,v)=image_[v*u_+u];
     } else {
-      for (int u=0; u<u_; ++u)
-        for (int v=0; v<v_; ++v)
+      for (unsigned u=0; u<u_; ++u)
+        for (unsigned v=0; v<v_; ++v)
           c(u,v_-v-1)=image_[v*u_+u];
     }
   }
