@@ -52,11 +52,13 @@ void NormalFracture::computeBoundaryContact(
     ParticleVariable<double> pVolume_pg;
     ParticleVariable<int>    pIsBroken_pg;
     ParticleVariable<Vector> pCrackNormal_pg;
+    ParticleVariable<Vector> pVelocity_pg;
 
     old_dw->get(pX_pg, lb->pXLabel, pset_pg);
     old_dw->get(pVolume_pg, lb->pVolumeLabel, pset_pg);
     old_dw->get(pIsBroken_pg, lb->pIsBrokenLabel, pset_pg);
     old_dw->get(pCrackNormal_pg, lb->pCrackNormalLabel, pset_pg);
+    old_dw->get(pVelocity_pg, lb->pVelocityLabel, pset_pg);
 
     //patchOnly data
     ParticleSubset* pset_p = old_dw->getParticleSubset(matlindex, patch);
@@ -101,6 +103,9 @@ void NormalFracture::computeBoundaryContact(
           const Vector& n1 = pCrackNormal_pg[idx_pg];
       
           Vector dis = particlePoint - pX_pg[idx_pg];
+	  if( Dot( (pVelocity_pg[pIdx_pg]-pVelocity_pg[idx_pg]),
+	           dis ) >= 0 ) continue;
+
           double vDis = Dot( dis, n1 );
 	  
           if( vDis>0 && vDis<(size0+size1)/2 ) {
@@ -114,20 +119,25 @@ void NormalFracture::computeBoundaryContact(
       }
 
       //self side
-      const Vector& n0 = pCrackNormal_pg[pIdx_pg];
-      for(int j=0; j<particlesNumber; j++) {
-        int idx_pg = particles[j];
-        if( pIdx_pg == idx_pg ) continue;
+      if(pIsBroken_pg[pIdx_pg] > 0) {
+        const Vector& n0 = pCrackNormal_pg[pIdx_pg];
+        for(int j=0; j<particlesNumber; j++) {
+          int idx_pg = particles[j];
+          if( pIdx_pg == idx_pg ) continue;
  
-        double size1 = pow(pVolume_pg[idx_pg],1./3.);
-        Vector dis = pX_pg[idx_pg] - particlePoint;
+          Vector dis = pX_pg[idx_pg] - particlePoint;
+	  if( Dot( (pVelocity_pg[idx_pg]-pVelocity_pg[pIdx_pg]),
+	           dis ) >= 0 ) continue;
 
-        double vDis = Dot( dis, n0 );
-        if( vDis>0 && vDis<(size0+size1)/2 ) {
-          double hDis = (dis - n0 * vDis).length();
-          if(hDis < size0/2) {
-	    pTouchNormal_p_new[pIdx_p] += n0;
-  	    touchFacetsNum ++;
+          double size1 = pow(pVolume_pg[idx_pg],1./3.);
+
+          double vDis = Dot( dis, n0 );
+          if( vDis>0 && vDis<(size0+size1)/2 ) {
+            double hDis = (dis - n0 * vDis).length();
+            if(hDis < size0/2) {
+	      pTouchNormal_p_new[pIdx_p] += n0;
+  	      touchFacetsNum ++;
+            }
           }
         }
       }
@@ -232,8 +242,8 @@ void NormalFracture::computeConnectivity(
 	  }
 	
 	  else {
-            double r = pow(pVolume_pg[pidx_pg],0.3333333333)/2;
-            double r2 = 2*r*r;
+            double r = pow(pVolume_pg[pidx_pg],0.333333)/2;
+            double r2 = 3*r*r;
 	
             if( pTouchNormal_pg[pidx_pg].length2() > 0.5 ) {
               Point O = pX_pg[pidx_pg] + pTouchNormal_pg[pidx_pg] * r;
@@ -281,9 +291,11 @@ void NormalFracture::computeFracture(
        patch, Ghost::AroundCells, 1, lb->pXLabel);
 
     ParticleVariable<Point>  pX_pg;
+    ParticleVariable<Vector> pVelocity_pg;
     ParticleVariable<double> pVolume_pg;
 
     old_dw->get(pX_pg, lb->pXLabel, pset_pg);
+    new_dw->get(pVelocity_pg, lb->pVelocityLabel_preReloc, pset_pg);
     old_dw->get(pVolume_pg, lb->pVolumeLabel, pset_pg);
 
     //patchOnly data
@@ -354,7 +366,7 @@ void NormalFracture::computeFracture(
       ParticlesNeighbor particles;
       lattice.getParticlesNeighbor(pTip, particles);
 
-      double sigma = Dot(pStress_p[pIdx_p]*ny,ny);
+      //double sigma = Dot(pStress_p[pIdx_p]*ny,ny);
       //cout<<"stress: "<<pStress_p[pIdx_p]<<endl;
       //cout<<"sigma: "<<sigma<<" position: "<<pX_p[pIdx_p]<<endl;
       //cout<<"pTipNormal: "<<pTipNormal_p[pIdx_p]<<endl;
@@ -362,10 +374,10 @@ void NormalFracture::computeFracture(
 
       //cout<<"sigma*cellLength*2: "<<sigma*cellLength*2
       //    <<" pToughness: "<<pToughness_p[pIdx_p]<<endl;
-      if(sigma*cellLength*2 < pToughness_p[pIdx_p]) continue;
+      //if(sigma*cellLength*2 < pToughness_p[pIdx_p]) continue;
 
       double G = particles.computeCrackClosureIntegral(
-        pTip,R,nx,ny,sigma,pX_pg,pVolume_pg);
+        pTip,R,nx,ny,pStress_p[pIdx_p],pX_pg,pVelocity_pg,pVolume_pg,delT);
 
       if(G>Gmax) {
         Gmax=G;
@@ -380,11 +392,12 @@ void NormalFracture::computeFracture(
 	if( rel < 0 ) N = -N;
 
         //stress release
+/*
         for(int i=1;i<=3;++i)
         for(int j=1;j<=3;++j) {
           pStress_p_new[pIdx_p](i,j) -= N[i] * sigmay * N[j];
         }
-
+*/
         pIsBroken_p_new[pIdx_p] = 1;
       
         cout<<"crack! "

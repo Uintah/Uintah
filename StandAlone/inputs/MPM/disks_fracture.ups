@@ -33,7 +33,10 @@
 	<MPM>
 	    <material>
 		<burn type = "null" />
-		<fracture type = "normal" />
+		<fracture type = "normal">
+		  <constraint> 3 </constraint>
+		  <pressure_rate> 0. </pressure_rate>
+		</fracture>
 		<density>1000.0</density>
 		<constitutive_model type="comp_mooney_rivlin"> 
 		   <he_constant_1>100000.0</he_constant_1>
@@ -53,8 +56,8 @@
 		    <res>[2,2,2]</res>
 		    <velocity>[2,2,0]</velocity>
 		    <temperature>12</temperature>
-                    <toughness_min> 4000.0 </toughness_min>
-		    <toughness_max> 4000.0 </toughness_max>
+                    <toughness_min> .2 </toughness_min>
+		    <toughness_max> .2 </toughness_max>
 		    <toughness_variation>1</toughness_variation>
  		</geom_object>
 
@@ -67,8 +70,8 @@
 		    <res>[2,2,2]</res>
 		    <velocity>[-2,-2,0]</velocity>
 		    <temperature>12</temperature>
-                    <toughness_min> 20 </toughness_min>
-		    <toughness_max> 20 </toughness_max>
+                    <toughness_min> .2 </toughness_min>
+		    <toughness_max> .2 </toughness_max>
 		    <toughness_variation>1</toughness_variation>
  		</geom_object>
 
@@ -116,7 +119,7 @@
 		<lower>[0.,0.,0]</lower>
 		<upper>[1.0,1.0,.15]</upper>
 	        <resolution>[20,20,3]</resolution>
-		<patches>[1,1,1]</patches>
+		<patches>[2,2,1]</patches>
 	    </Box>
 	</Level>
     </Grid>
@@ -124,16 +127,22 @@
     <PhysicalBC>
 	<MPM>
 		<crack>
-			<corner1>[0.29, 0.34,  0. ]</corner1>
-			<corner2>[0.29, 0.34,  1. ]</corner2>
-			<corner3>[0.39, 0.34,  1. ]</corner3>
-			<corner4>[0.39, 0.34,  0. ]</corner4>
+			<corner1>[0.60, 0.70,  0. ]</corner1>
+			<corner2>[0.60, 0.70,  1. ]</corner2>
+			<corner3>[0.65, 0.60,  1. ]</corner3>
+			<corner4>[0.65, 0.60,  0. ]</corner4>
 		</crack>
 		<crack>
-			<corner1>[0.66, 0.61,  0. ]</corner1>
-			<corner2>[0.66, 0.61,  1. ]</corner2>
-			<corner3>[0.66, 0.71,  1. ]</corner3>
-			<corner4>[0.66, 0.71,  0. ]</corner4>
+			<corner1>[0.70, 0.72,  0. ]</corner1>
+			<corner2>[0.70, 0.72,  1. ]</corner2>
+			<corner3>[0.80, 0.79,  1. ]</corner3>
+			<corner4>[0.80, 0.79,  0. ]</corner4>
+		</crack>
+		<crack>
+			<corner1>[0.60, 0.52,  0. ]</corner1>
+			<corner2>[0.60, 0.52,  1. ]</corner2>
+			<corner3>[0.70, 0.60,  1. ]</corner3>
+			<corner4>[0.70, 0.60,  0. ]</corner4>
 		</crack>
 	</MPM>
     </PhysicalBC>

@@ -277,7 +277,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 	 double particle_half_size = pow( pvolume[pIdx], 1./3.) /2;
 
 	 if(inside) {
-	   if(vdis > 0 && vdis < particle_half_size * 2) {
+	   if(vdis > 0 && vdis < particle_half_size) {
 	     pIsBroken[pIdx] = 1;
 	     pCrackNormal[pIdx] = - bc->e3();
 	   }
@@ -287,7 +287,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 	   }
 	 }
 	 else {
-	   if( fabs(vdis) < particle_half_size*2 ) {
+	   if( fabs(vdis) < particle_half_size ) {
 	     Point P1(bc->x1(),bc->y1(),0);
 	     Point P2(bc->x2(),bc->y2(),0);
   	     Point P3(bc->x3(),bc->y3(),0);

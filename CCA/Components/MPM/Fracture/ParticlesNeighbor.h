@@ -57,10 +57,12 @@ public:
         const Point& pTip,
 	double R,
 	const Vector& nx,
-	const Vector& ny,
-        double sigma,
+	Vector ny,
+        const Matrix3& stress,
 	const ParticleVariable<Point>& pX,
-	const ParticleVariable<double>& pVolume ) const;
+	const ParticleVariable<Vector>& pVelocity,
+	const ParticleVariable<double>& pVolume,
+	double delT ) const;
 
 private:
 
