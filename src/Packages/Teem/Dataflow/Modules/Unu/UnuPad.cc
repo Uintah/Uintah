@@ -62,8 +62,6 @@ public:
 private:
   void load_gui();
   
-  NrrdIPort          *inrrd_;
-  NrrdOPort          *onrrd_;
   vector<GuiInt*>     mins_;
   vector<int>         last_mins_;
   vector<GuiInt*>     maxs_;
@@ -116,23 +114,19 @@ UnuPad::execute()
 {
   NrrdDataHandle nrrdH;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("Nrrd");
-  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
 
-  if (!inrrd_) {
+  NrrdIPort *inrrd = (NrrdIPort *)get_iport("Nrrd");
+
+  if (!inrrd) {
     error("Unable to initialize iport 'Nrrd'.");
     return;
   }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
+
+  if (!(inrrd->get(nrrdH) && nrrdH.get_rep())) {
+    error("No input nrrd handle or representation.");
     return;
   }
-  if (!inrrd_->get(nrrdH))
-    return;
-  if (!nrrdH.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
+
   dim_.reset();
 
   // test for new input
@@ -193,28 +187,51 @@ UnuPad::execute()
     }
   }
 
-  if (! changed) { 
-    // send old nrrd
-    onrrd_->send(last_nrrdH_);
-    return;
+  if ( changed) { 
+
+    Nrrd *nin = nrrdH->nrrd;
+    Nrrd *nout = nrrdNew();
+    int *minp = &(min[0]);
+    int *maxp = &(max[0]);
+
+    if (nrrdPad(nout, nin, minp, maxp, nrrdBoundaryBleed)) 
+      {
+	char *err = biffGetDone(NRRD);
+	error(string("Trouble resampling: ") + err);
+	msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+	free(err);
+      }
+
+    NrrdData *nrrd = scinew NrrdData;
+    nrrd->nrrd = nout;
+    //nrrd->copy_sci_data(*nrrdH.get_rep());
+    last_nrrdH_ = nrrd;
+
+    // Copy the properies, kinds, and labels.
+    *((PropertyManager *)nrrd) = *((PropertyManager *)(nrrdH.get_rep()));
+
+    for( int i=0; i<nin->dim; i++ ) {
+      nout->axis[i].kind  = nin->axis[i].kind;
+      nout->axis[i].label = nin->axis[i].label;
+    }
+
+    if( nout->axis[0].size == 3)
+      nout->axis[0].kind = nrrdKind3Vector;
+    else if( nout->axis[0].size == 6 )
+      nout->axis[0].kind = nrrdKind3DSymTensor;
+    else
+      nout->axis[0].kind = nrrdKindDomain;
   }
 
-  Nrrd *nin = nrrdH->nrrd;
-  Nrrd *nout = nrrdNew();
-  int *minp = &(min[0]);
-  int *maxp = &(max[0]);
 
-  if (nrrdPad(nout, nin, minp, maxp, nrrdBoundaryBleed)) 
-  {
-    char *err = biffGetDone(NRRD);
-    error(string("Trouble resampling: ") + err);
-    msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
-    free(err);
+  if (last_nrrdH_.get_rep()) {
+
+    NrrdOPort* onrrd = (NrrdOPort *)get_oport("Nrrd");
+    if (!onrrd) {
+      error("Unable to initialize oport 'Nrrd'.");
+      return;
+    }
+
+    onrrd->send(last_nrrdH_);
   }
-
-  NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = nout;
-  //nrrd->copy_sci_data(*nrrdH.get_rep());
-  last_nrrdH_ = nrrd;
-  onrrd_->send(last_nrrdH_);
 }
