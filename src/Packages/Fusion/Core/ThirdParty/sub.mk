@@ -16,6 +16,7 @@ INCLUDES += $(MDSPLUS_INCLUDE)
 
 SRCS     += \
 	$(SRCDIR)/mdsPlusAPI.c\
+	$(SRCDIR)/mdsPlusReader.cc\
 
 #[INSERT NEW CODE FILE HERE]
 
