@@ -33,9 +33,10 @@
 #include <qpainter.h>
 #include <qmessagebox.h>
 #include <iostream>
+#include "NetworkCanvasView.h"
 using namespace std;
 
-Module::Module(QWidget *parent, const string& moduleName,
+Module::Module(NetworkCanvasView *parent, const string& moduleName,
 	       CIA::array1<std::string> & up, CIA::array1<std::string> &pp,
 	       const gov::cca::Services::pointer& services,
 	       const gov::cca::ComponentID::pointer& cid)
@@ -125,6 +126,7 @@ Module::Module(QWidget *parent, const string& moduleName,
   }
   menu->insertItem("Destroy",this,  SLOT(destroy()) );
   services->releasePort("cca.BuilderService");
+  viewWindow=parent;
 }
 
 
@@ -177,6 +179,11 @@ QPoint Module::providePortPoint(const std::string &portname)
 	return providePortPoint(i);
   }
   return QPoint(0,0);
+}
+
+QPoint Module::posInCanvas()
+{
+  return viewWindow->viewportToContents(pos());
 }
 
 std::string Module::usesPortName(int num)

@@ -35,17 +35,20 @@
 #include <qprogressbar.h>
 #include "Core/CCA/spec/cca_sidl.h"
 #include "Core/CCA/Component/PIDL/PIDL.h"
+class NetworkCanvasView;
+
 class Module:public QFrame
 {
-	Q_OBJECT
+  Q_OBJECT
 
 public:
   enum PortType{USES, PROVIDES}; 
-  Module(QWidget *parent, const std::string& name,
+  Module(NetworkCanvasView *parent, const std::string& name,
 	 CIA::array1<std::string> & up, CIA::array1<std::string> &pp,
 	 const gov::cca::Services::pointer& services,
 	 const gov::cca::ComponentID::pointer &cid);
   QPoint usePortPoint(int num);
+  QPoint posInCanvas();
   QPoint usePortPoint(const std::string &portname);
 	
   QPoint providePortPoint(int num);
@@ -80,6 +83,7 @@ private:
   bool hasGoPort;
   bool hasUIPort;
   QProgressBar *progress;
+  NetworkCanvasView * viewWindow;
 public:
   gov::cca::ComponentID::pointer cid;
 };
