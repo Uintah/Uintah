@@ -701,7 +701,7 @@ void HVolumeVG<T,A,B>::intersect(Ray& ray, HitInfo& hit,
     y1=yinv_dir*(max.y()-orig.y());
     diy_dy=1;
     ddy=1;
-  } else if(dir.y() <-1.e-6){
+  } else {
     y0=yinv_dir*(max.y()-orig.y());
     y1=yinv_dir*(min.y()-orig.y());
     diy_dy=-1;
