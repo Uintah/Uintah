@@ -15,7 +15,7 @@ int minBiggerBoxCount;
 
 #include <set>
 #include <vector>
-#include <hash_map>
+#include <sci_hash_map.h>
 #include <algorithm>
 #include <Core/Malloc/Allocator.h>
 
