@@ -76,4 +76,12 @@ namespace Uintah {
   
 }
 
+// Added for compatibility with core types
+#include <Core/Datatypes/TypeName.h>
+#include <string>
+namespace SCIRun {
+void swapbytes( Uintah::FirstOrderCEAdvector::eflux& );
+void swapbytes( Uintah::FirstOrderCEAdvector::cflux& );
+} // namespace SCIRun
+
 #endif
