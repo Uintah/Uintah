@@ -56,7 +56,7 @@ void HypoElasticImplicit::initializeCMData(const Patch* patch,
      pstress[*iter] = zero;
   }
 
-  computeStableTimestep(patch, matl, new_dw);
+//  computeStableTimestep(patch, matl, new_dw);
 }
 
 void HypoElasticImplicit::addParticleState(std::vector<const VarLabel*>& from,
@@ -355,7 +355,6 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(pp);
     Matrix3 dispGrad,deformationGradientInc,Identity,zero(0.),One(1.);
     double c_dil=0.0,Jinc;
-    Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     double onethird = (1.0/3.0);
 
     Identity.Identity();
@@ -459,17 +458,9 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
                   D(2,3)*AvgStress(2,3))) * pvolume_deformed[idx]*delT;
 
       se += e;
-
-      // Compute wave speed at each particle, store the maximum
-      Vector pvelocity_idx = pvelocity[idx];
-      c_dil = sqrt((bulk + 4.*G/3.)*pvolume_deformed[idx]/pmass[idx]);
-      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
     }
 
-    WaveSpeed = dx/WaveSpeed;
-    double delT_new = WaveSpeed.minComponent();
+    double delT_new = delT;
     new_dw->put(delt_vartype(delT_new),lb->delTLabel);
     new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
   }
