@@ -102,6 +102,8 @@ else
   PSELIBS := \
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
+        Packages/Uintah/Core/Util          \
+        Packages/Uintah/Core/Variables     \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/Parallel      \
         Packages/Uintah/Core/Disclosure    \
@@ -136,6 +138,8 @@ else
   PSELIBS := \
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
+        Packages/Uintah/Core/Util          \
+        Packages/Uintah/Core/Variables     \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/Parallel      \
         Packages/Uintah/Core/Disclosure    \
@@ -194,6 +198,8 @@ else
   PSELIBS := \
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
+        Packages/Uintah/Core/Util          \
+        Packages/Uintah/Core/Variables     \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/Parallel      \
         Packages/Uintah/Core/Disclosure    \
@@ -234,6 +240,8 @@ else
   PSELIBS := \
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
+        Packages/Uintah/Core/Util          \
+        Packages/Uintah/Core/Variables     \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/Disclosure    \
         Packages/Uintah/Core/ProblemSpec   \
@@ -253,7 +261,7 @@ else
         Core/Containers
 endif
 
-LIBS := $(XML_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY)
+LIBS := $(XML_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY)
 
 SRCS := $(SRCDIR)/uda2nrrd.cc
 PROGRAM := Packages/Uintah/StandAlone/uda2nrrd
@@ -274,6 +282,8 @@ else
   PSELIBS := \
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
+        Packages/Uintah/Core/Util          \
+        Packages/Uintah/Core/Variables     \
         Packages/Uintah/Core/Disclosure    \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/ProblemSpec   \
@@ -303,6 +313,7 @@ else
   PSELIBS := \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Util \
+	Packages/Uintah/Core/Variables \
 	Packages/Uintah/Core/GeometryPiece \
 	Packages/Uintah/Core/Parallel \
 	Packages/Uintah/Core/Exceptions \
@@ -329,6 +340,8 @@ else
 PSELIBS := \
         Packages/Uintah/Core/Exceptions \
         Packages/Uintah/Core/Grid \
+	Packages/Uintah/Core/Util \
+	Packages/Uintah/Core/Variables \
         Packages/Uintah/Core/Parallel \
         Packages/Uintah/Core/Disclosure \
         Packages/Uintah/Core/DataArchive \
@@ -343,7 +356,7 @@ PSELIBS := \
         Core/OS          \
         Core/Containers
 endif
-LIBS    := $(XML_LIBRARY) $(M_LIBRARY)
+LIBS    := $(XML_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -384,6 +397,7 @@ else
   PSELIBS := \
       Packages/Uintah/Core/Grid \
       Packages/Uintah/Core/Util \
+      Packages/Uintah/Core/Variables \
       Packages/Uintah/Core/Parallel \
       Packages/Uintah/Core/Exceptions \
       Packages/Uintah/Core/Math \
