@@ -199,7 +199,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 {
   // compute ith componenet of velocity stencil coefficients
   // inputs : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
-  // outputs: scalCoefSBLM
+  // outputs: scalCoefSBLM, scalConvCoefSBLM
   d_discretize->calculateScalarCoeff(pc, patch, old_dw, new_dw, 
 				     delta_t, index);
 
@@ -229,6 +229,10 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.16  2000/07/14 05:23:50  bbanerje
+// Added scalcoef.F and updated related stuff in C++. scalcoef ==> coefs.f
+// in Kumar's code.
+//
 // Revision 1.15  2000/07/03 05:30:16  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //

@@ -208,6 +208,7 @@ private:
       const VarLabel* d_vVelocityMSLabel;
       const VarLabel* d_wVelocityMSLabel;
       const VarLabel* d_scalCoefSBLMLabel;
+      const VarLabel* d_scalConvCoefSBLMLabel;
 
       // Input/output for calculateScalarDiagonal
       const VarLabel* d_scalLinSrcSBLMLabel;
@@ -220,6 +221,10 @@ private:
   
 //
 // $Log$
+// Revision 1.25  2000/07/14 05:23:50  bbanerje
+// Added scalcoef.F and updated related stuff in C++. scalcoef ==> coefs.f
+// in Kumar's code.
+//
 // Revision 1.24  2000/07/08 23:42:54  bbanerje
 // Moved all enums to Arches.h and made corresponding changes.
 //
