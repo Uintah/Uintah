@@ -8,6 +8,7 @@ SUBDIRS := \
 	$(SRCDIR)/Models \
 	$(SRCDIR)/LoadBalancers \
 	$(SRCDIR)/Schedulers \
+	$(SRCDIR)/Scheduler3 \
 	$(SRCDIR)/Regridder \
 	$(SRCDIR)/SimulationController \
 	$(SRCDIR)/MPM \
