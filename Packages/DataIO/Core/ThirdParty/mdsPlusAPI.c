@@ -214,13 +214,13 @@ void* get_value( const char *signal, int dtype ) {
     break;
 
   case DTYPE_FLOAT:
-  case DTYPE_FS:
+  case 52: //DTYPE_FS:
     dtype = DTYPE_FLOAT;
     value = (void*) malloc( sizeof( float ) );
     break;
 
   case DTYPE_DOUBLE:
-  case DTYPE_FT:
+  case 53: //DTYPE_FT:
     dtype = DTYPE_DOUBLE;
     value = (void*) malloc( sizeof( double ) );
     break;
@@ -238,7 +238,6 @@ void* get_value( const char *signal, int dtype ) {
 
   default:
     return NULL;
-    break;
   }
 
   /* Build a descriptor for fectching the data. */
@@ -299,13 +298,13 @@ void* get_values( const char *signal, int dtype ) {
     break;
 
   case DTYPE_FLOAT:
-  case DTYPE_FS:
+  case 52: //DTYPE_FS:
     dtype = DTYPE_FLOAT;
     values = (void*) malloc( size * sizeof( float ) );
     break;
 
   case DTYPE_DOUBLE:
-  case DTYPE_FT:
+  case 53: //DTYPE_FT:
     dtype = DTYPE_DOUBLE;
     values = (void*) malloc( size * sizeof( double ) );
     break;
@@ -317,7 +316,6 @@ void* get_values( const char *signal, int dtype ) {
 
   default:
     return NULL;
-    break;
   }
 
   memset(values,0,sizeof(values));
