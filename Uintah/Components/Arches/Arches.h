@@ -15,7 +15,7 @@ namespace Uintah {
 namespace Components {
   using Uintah::Interface::CFDInterface;
   using Uintah::Parallel::UintahParallelComponent;
-  using Uintah::Grid::ProblemSpecP;
+  using Uintah::Interface::ProblemSpecP;
   using Uintah::Grid::GridP;
   using Uintah::Grid::LevelP;
   using Uintah::Grid::Region;
@@ -57,6 +57,10 @@ private:
 
 //
 // $Log$
+// Revision 1.8  2000/03/23 20:05:13  jas
+// Changed the location of ProblemSpec from Grid to Interface in the include
+// file path.
+//
 // Revision 1.7  2000/03/21 21:27:03  dav
 // namespace fixs
 //

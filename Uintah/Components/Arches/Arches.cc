@@ -4,7 +4,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/Arches/Arches.h>
 #include <Uintah/Components/Arches/PicardNonlinearSolver.h>
 #include <SCICore/Util/NotFinished.h>
-#include <Uintah/Grid/ProblemSpec.h>
+#include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <Uintah/Grid/SoleVariable.h>
@@ -66,6 +66,10 @@ void Arches::timeStep(double time, double dt,
 
 //
 // $Log$
+// Revision 1.8  2000/03/23 20:05:13  jas
+// Changed the location of ProblemSpec from Grid to Interface in the include
+// file path.
+//
 // Revision 1.7  2000/03/21 23:14:47  rawat
 // Implemented more of problem setup routines
 //

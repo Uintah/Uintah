@@ -35,7 +35,7 @@ WARNING
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/ProblemSpecP.h>
+#include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 
 namespace Uintah {
