@@ -55,7 +55,7 @@ using std::endl;
 #include <afxwin.h>
 #endif
 
-#define VERSION "1.1.2"
+#define VERSION "1.3.0"
 
 using namespace SCIRun;
 
