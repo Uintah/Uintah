@@ -58,7 +58,7 @@ void PWorld::setServices(const sci::cca::Services::pointer& svc){
   services=svc;
   urlString *buf;
 
-  sci::cca::TypeMap::pointer props = svc->createTypeMap();
+  sci::cca::TypeMap::pointer props(0); // = svc->createTypeMap();
 
   /////////////////////////////////////////////////
   //add StringPort
@@ -75,7 +75,7 @@ void PWorld::setServices(const sci::cca::Services::pointer& svc){
       URLs.push_back(url);
       cerr<<"stringport URL["<<i<<"]="<<url<<endl;
     }
-    Object::pointer obj=PIDL::objectFrom(URLs);
+    Object::pointer obj=PIDL::objectFrom(URLs,1,mpi_rank);
     sci::cca::ports::StringPort::pointer pstrport=pidl_cast<sci::cca::ports::StringPort::pointer>(obj);
 
     //cerr<<"$$$ "<<pstrport->getString()<< " $$$"<<endl ;
@@ -96,7 +96,6 @@ StringPort::getString(){
   int mpi_size, mpi_rank;
   MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
   MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-  cerr<<"### mpi_rank="<<mpi_rank<<"###"<<endl;
   if(mpi_rank==0) return "PWorld One";
   else if(mpi_rank==1) return "PWorld Two";
   else return "PWorld ...";

@@ -32,7 +32,7 @@
 #include <CCA/Components/Builder/QtUtils.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <mpi.h>
-
+#include <unistd.h>
 using namespace std;
 using namespace SCIRun;
 
@@ -58,7 +58,7 @@ void PHello::setServices(const sci::cca::Services::pointer& svc){
   services=svc;
   urlString *buf;
 
-  sci::cca::TypeMap::pointer props = svc->createTypeMap();
+  sci::cca::TypeMap::pointer props(0); // = svc->createTypeMap();
 
   /////////////////////////////////////////////////
   //add UI Port
@@ -74,7 +74,7 @@ void PHello::setServices(const sci::cca::Services::pointer& svc){
       string url(buf[i]);
       URLs.push_back(url);
     }
-    Object::pointer obj=PIDL::objectFrom(URLs);
+    Object::pointer obj=PIDL::objectFrom(URLs,1,mpi_rank);
     sci::cca::ports::UIPort::pointer puip=pidl_cast<sci::cca::ports::UIPort::pointer>(obj);
     svc->addProvidesPort(puip,"ui","sci.cca.ports.UIPort", props);
     delete buf;
@@ -95,7 +95,7 @@ void PHello::setServices(const sci::cca::Services::pointer& svc){
       string url(buf[i]);
       URLs.push_back(url);
     }
-    Object::pointer obj=PIDL::objectFrom(URLs);
+    Object::pointer obj=PIDL::objectFrom(URLs, 1, mpi_rank);
     sci::cca::ports::GoPort::pointer pgop=pidl_cast<sci::cca::ports::GoPort::pointer>(obj);
     svc->addProvidesPort(pgop,"go","sci.cca.ports.GoPort", props);
     delete buf;
@@ -109,6 +109,7 @@ void PHello::setServices(const sci::cca::Services::pointer& svc){
   }
 
   MPI_Barrier(MPI_COMM_WORLD );
+  
 }
 
 int myUIPort::ui(){
@@ -128,16 +129,15 @@ int myGoPort::go(){
     cerr<<"Null services!\n";
     return 1;
   }
-  cerr<<"PHello.go.getPort...";
-  
   sci::cca::Port::pointer pp=services->getPort("stringport");	
-  cerr<<"Done\n";
   if(pp.isNull()){
     cerr<<"stringport is not available!\n";
     return 1;
   }  
   sci::cca::ports::StringPort::pointer sp=pidl_cast<sci::cca::ports::StringPort::pointer>(pp);
   std::string name=sp->getString();
+  //  MPI_Barrier(MPI_COMM_WORLD );
+
   services->releasePort("stringport");
   cout<<"PHello "<<name<<endl;
   return 0;
