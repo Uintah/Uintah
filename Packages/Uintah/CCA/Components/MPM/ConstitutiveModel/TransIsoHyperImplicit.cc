@@ -162,13 +162,9 @@ void TransIsoHyperImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
 void TransIsoHyperImplicit::addParticleState(std::vector<const VarLabel*>& from,
                                    std::vector<const VarLabel*>& to)
 {
-   from.push_back(lb->pDeformationMeasureLabel);
-   from.push_back(lb->pStressLabel);
    from.push_back(lb->pFiberDirLabel);
    from.push_back(pStretchLabel);
 
-   to.push_back(lb->pDeformationMeasureLabel_preReloc);
-   to.push_back(lb->pStressLabel_preReloc);
    to.push_back(lb->pFiberDirLabel_preReloc);
    to.push_back(pStretchLabel_preReloc);
 }

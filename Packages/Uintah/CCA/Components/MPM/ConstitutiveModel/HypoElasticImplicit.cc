@@ -115,10 +115,7 @@ void
 HypoElasticImplicit::addParticleState( std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to )
 {
-   from.push_back(lb->pDeformationMeasureLabel);
-   from.push_back(lb->pStressLabel);
-   to.push_back(lb->pDeformationMeasureLabel_preReloc);
-   to.push_back(lb->pStressLabel_preReloc);
+
 }
 
 void HypoElasticImplicit::computeStableTimestep(const Patch*,

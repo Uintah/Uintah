@@ -558,7 +558,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
 
   matl->getConstitutiveModel()->addParticleState(particle_state,
 						 particle_state_preReloc);
-
 }
 
 int ParticleCreator::checkForSurface(const GeometryPiece* piece, const Point p,

@@ -141,10 +141,19 @@ ImplicitParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
 
   vector<const VarLabel*>::iterator r7,r8;
   r7 = find(particle_state.begin(), particle_state.end(),lb->pSizeLabel);
-  particle_state.erase(r5);
+  particle_state.erase(r7);
 
   r8 = find(particle_state_preReloc.begin(), particle_state_preReloc.end(),
 	 lb->pSizeLabel_preReloc);
-  particle_state_preReloc.erase(r6);
+  particle_state_preReloc.erase(r8);
+
+  vector<const VarLabel*>::iterator r9,r10;
+  r9  = find(particle_state.begin(), particle_state.end(),
+             lb->pInternalHeatRateLabel);
+  particle_state.erase(r9);
+
+  r10 = find(particle_state_preReloc.begin(), particle_state_preReloc.end(),
+	 lb->pInternalHeatRateLabel_preReloc);
+  particle_state_preReloc.erase(r10);
 
 }

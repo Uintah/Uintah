@@ -128,12 +128,8 @@ void CompNeoHookImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
 void CompNeoHookImplicit::addParticleState(std::vector<const VarLabel*>& from,
                                    std::vector<const VarLabel*>& to)
 {
-   from.push_back(lb->pDeformationMeasureLabel);
-   from.push_back(lb->pStressLabel);
    from.push_back(lb->bElBarLabel);
 
-   to.push_back(lb->pDeformationMeasureLabel_preReloc);
-   to.push_back(lb->pStressLabel_preReloc);
    to.push_back(lb->bElBarLabel_preReloc);
 }
 
