@@ -556,25 +556,25 @@ using namespace SCIRun;
       friend class MPMICE;
       
       void computeTauX( const Patch* patch,
-                        const CCVariable<double>& rho_CC,     
-                        const CCVariable<double>& sp_vol_CC,  
-                        const CCVariable<Vector>& vel_CC,     
+                        constCCVariable<double>& rho_CC,     
+                        constCCVariable<double>& sp_vol_CC,  
+                        constCCVariable<Vector>& vel_CC,     
                         const double viscosity,               
                         const Vector dx,                      
                         SFCXVariable<Vector>& tau_X_FC);      
                           
       void computeTauY( const Patch* patch,
-                        const CCVariable<double>& rho_CC,     
-                        const CCVariable<double>& sp_vol_CC,  
-                        const CCVariable<Vector>& vel_CC,     
+                        constCCVariable<double>& rho_CC,     
+                        constCCVariable<double>& sp_vol_CC,  
+                        constCCVariable<Vector>& vel_CC,     
                         const double viscosity,               
                         const Vector dx,                      
                         SFCYVariable<Vector>& tau_Y_FC);      
                           
       void computeTauZ( const Patch* patch,
-                        const CCVariable<double>& rho_CC,     
-                        const CCVariable<double>& sp_vol_CC,  
-                        const CCVariable<Vector>& vel_CC,     
+                        constCCVariable<double>& rho_CC,     
+                        constCCVariable<double>& sp_vol_CC,  
+                        constCCVariable<Vector>& vel_CC,     
                         const double viscosity,               
                         const Vector dx,                      
                         SFCZVariable<Vector>& tau_Z_FC); 
@@ -645,7 +645,6 @@ using namespace SCIRun;
       vector<int> d_dbgMatls; 
       int d_dbgSigFigs;
       
-      vector<bool> d_is_LODI_face;
       bool d_usingLODI;
       
       Advector* d_advector;
