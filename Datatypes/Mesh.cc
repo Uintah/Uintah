@@ -117,9 +117,15 @@ Mesh::Mesh(const Mesh& copy)
 
 Mesh::~Mesh()
 {
+    remove_all_elements();
+}
+
+void Mesh::remove_all_elements()
+{
     for(int i=0;i<elems.size();i++)
 	if(elems[i])
 	    delete elems[i];
+    elems.remove_all();
 }
 
 Mesh* Mesh::clone()
@@ -180,6 +186,8 @@ void Node::io(Piostream& stream)
 
 Node::~Node()
 {
+    if(bc)
+	delete bc;
 }
 
 Element::Element(Mesh* mesh, int n1, int n2, int n3, int n4)
@@ -203,13 +211,12 @@ Element::Element(const Element& copy, Mesh* mesh)
 }
 
 Node::Node(const Point& p)
-: p(p), elems(0, 4), ndof(1), nodetype(Interior)
+: p(p), elems(0, 4), bc(0)
 {
 }
 
 Node::Node(const Node& copy)
-: p(copy.p), elems(copy.elems), ndof(copy.ndof), nodetype(copy.nodetype),
-  value(copy.value)
+: p(copy.p), elems(copy.elems), bc(copy.bc?new DirichletBC(*copy.bc):0)
 {
 }
 
@@ -265,7 +272,7 @@ int Mesh::unify(Element* not,
     return -1;
 }
 
-void Element::get_sphere2(Point& cen, double& rad2)
+void Element::get_sphere2(Point& cen, double& rad2, double& err)
 {
     Point p0(mesh->nodes[n[0]]->p);
     Point p1(mesh->nodes[n[1]]->p);
@@ -292,9 +299,33 @@ void Element::get_sphere2(Point& cen, double& rad2)
     rhs[0]=(c1-c0)*0.5;
     rhs[1]=(c2-c0)*0.5;
     rhs[2]=(c3-c0)*0.5;
-    matsolve3by3(mat, rhs);
+    double rcond;
+    matsolve3by3(mat, rhs, rcond);
+//    cerr << "rcond=" << rcond << endl;
+    if(rcond < 1.e-6){
+	cerr << "WARNING - degenerate element, rcond=" << rcond << endl;
+    }
     cen=Point(rhs[0], rhs[1], rhs[2]);
     rad2=(p0-cen).length2();
+    if(Abs(rad2-(p1-cen).length2())>1.e-6 || Abs(rad2-(p2-cen).length2())>1.e-6 || Abs(rad2-(p3-cen).length2()>1.e-6)){
+	cerr << "ERROR!!!!!!!!\n";
+	cerr << (p0-cen).length2() << " " << (p1-cen).length2() << " " << (p2-cen).length2() << " " << (p3-cen).length2() << endl;
+	cerr << cen << endl;
+	cerr << p0 << endl;
+	cerr << p1 << endl;
+	cerr << p2 << endl;
+	cerr << p3 << endl;
+    }
+    err=Max(1.e-6, 1.e-6/rcond);
+}
+
+Point Element::centroid()
+{
+    Point p0(mesh->nodes[n[0]]->p);
+    Point p1(mesh->nodes[n[1]]->p);
+    Point p2(mesh->nodes[n[2]]->p);
+    Point p3(mesh->nodes[n[3]]->p);
+    return AffineCombination(p0, .25, p1, .25, p2, .25, p3, .25);
 }
 
 void Mesh::detach_nodes()
@@ -520,7 +551,9 @@ int Mesh::locate(const Point& p, int& ix)
 {
     int i=0;
     while(!elems[i])i++;
-    while(1){
+    int count=0;
+    int nelems=elems.size();
+    while(count++<nelems){
 	Element* elem=elems[i];
 	Point p1(nodes[elem->n[0]]->p);
 	Point p2(nodes[elem->n[1]]->p);
@@ -586,7 +619,7 @@ int Mesh::locate(const Point& p, int& ix)
 	ix=i;
 	return 1;
     }
-//    return 0;
+    return 0;
 }
 
 void* Element::operator new(size_t)
@@ -839,12 +872,10 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
 		if(ne->generation != current_generation){
 		    Point cen;
 		    double rad2;
-		    ne->get_sphere2(cen, rad2);
+		    double err;
+		    ne->get_sphere2(cen, rad2, err);
 		    double ndist2=(p-cen).length2();
-		    double diff=ndist2-rad2;
-//		    if(Abs(diff) < 1.e-6)
-//			cerr << "diff=" << diff << endl;
-		    if(diff < 1.e-7){
+		    if(ndist2 < rad2-err){
 			// This one must go...
 			to_remove.add(neighbor);
 		    }
@@ -1049,7 +1080,8 @@ void Mesh::add_node_neighbors(int node, Array1<int>& idx)
 	Element* e=elems[ei];
 	for(int j=0;j<4;j++){
 	    int n=e->n[j];
-	    neighbor_nodes[nodesi++]=n;
+	    if(!nodes[n]->bc)
+		neighbor_nodes[nodesi++]=n;
 	}
     }
     // Sort it...
@@ -1073,6 +1105,11 @@ void Mesh::add_node_neighbors(int node, Array1<int>& idx)
 	if(i==0 || neighbor_nodes[i] != neighbor_nodes[i-1])
 	    idx.add(neighbor_nodes[i]);
     }
+}
+
+DirichletBC::DirichletBC(const SurfaceHandle& fromsurf, double value)
+: fromsurf(fromsurf), value(value)
+{
 }
 
 #ifdef __GNUG__

@@ -19,6 +19,11 @@
 #include <Classlib/Array1.h>
 #include <Classlib/LockingHandle.h>
 #include <Datatypes/GeometryPort.h>
+
+struct Node;
+typedef LockingHandle<Node> NodeHandle;
+
+#include <Datatypes/Surface.h>
 #include <Geometry/Point.h>
 
 #include <stdlib.h> // For size_t
@@ -41,28 +46,25 @@ struct Element {
 
     double volume();
     int orient();
-    void get_sphere(Point& cen, double& rad);
-    void get_sphere2(Point& cen, double& rad2);
+    void get_sphere2(Point& cen, double& rad2, double& err);
+    Point centroid();
 };
 
 void Pio(Piostream&, Element*&);
 
-struct Node;
-typedef LockingHandle<Node> NodeHandle;
+struct DirichletBC {
+    SurfaceHandle fromsurf;
+    double value;
+    DirichletBC(const SurfaceHandle&, double);
+};
 
 struct Node : public Datatype {
     Point p;
     Node(const Point&);
     Array1<int> elems;
 
-    int ndof;
-    enum NodeType {
-	VSource,
-	ISource,
-	Interior,
-    };
-    NodeType nodetype;
-    double value;
+    DirichletBC* bc;
+
     Node(const Node&);
     virtual ~Node();
     virtual void io(Piostream&);
@@ -138,6 +140,7 @@ public:
     int face_idx(int, int);
     void add_node_neighbors(int node, Array1<int>& idx);
     void new_element(Element* ne, HashTable<Face, int> *new_faces);
+    void remove_all_elements();
 
     void draw_element(int, GeomGroup*);
     void draw_element(Element* e, GeomGroup*);

@@ -13,9 +13,15 @@
 
 #include <Datatypes/BasicSurfaces.h>
 #include <Classlib/NotFinished.h>
+#include <Geom/Cylinder.h>
+#include <Geom/Group.h>
+#include <Geom/Triangles.h>
 #include <Malloc/Allocator.h>
 #include <Math/Trig.h>
 #include <Math/TrigTable.h>
+#include <TCL/TCL.h>
+#include <stdio.h>
+#include <strstream.h>
 
 static Persistent* make_CylinderSurface()
 {
@@ -71,33 +77,87 @@ int CylinderSurface::inside(const Point& p)
     return 1;
 }
 
-void CylinderSurface::get_surfpoints(Array1<Point>& pts)
+void CylinderSurface::add_node(Array1<NodeHandle>& nodes,
+			       char* id, const Point& p, double r, double rn,
+			       double theta, double h, double hn)
 {
-    pts.add(p1);
-    SinCosTable tab(nv, 0, 2*Pi, radius);
+    Node* node=new Node(p);
+    if(boundary_type == DirichletExpression){
+	char str [200];
+	ostrstream s(str, 200);
+	s << id << " " << p.x() << " " << p.y() << " " << p.z()
+	  << " " << r << " " << rn << " " << theta << " " << h
+	  << " " << hn << '\0';
+	clString retval;
+	int err=TCL::eval(str, retval);
+	if(err){
+	    cerr << "Error evaluating boundary value" << endl;
+	    boundary_type = None;
+	    return;
+	}
+	double value;
+	if(!retval.get_double(value)){
+	    cerr << "Bad result from boundary value" << endl;
+	    boundary_type = None;
+	    return;
+	}
+	node->bc=new DirichletBC(this, value);
+    }
+    nodes.add(node);
+}
+
+void CylinderSurface::get_surfnodes(Array1<NodeHandle>& nodes)
+{
+    char id[100];
+    if(boundary_type == DirichletExpression){
+	// Format this string - we will use it later...
+	char proc_string[1000];
+	sprintf(id, "CylinderSurface%p%p", this, &nodes);
+	ostrstream proc(proc_string, 1000);
+	proc << "proc " << id << " {x y z r rn theta h hn} { expr "
+	     << boundary_expr << "}" << '\0';
+	TCL::execute(proc_string);
+    }
+    add_node(nodes, id, p1, 0, 0, 0, 0, 0);
+    if(boundary_type == None)
+	return;
+    SinCosTable tab(nv+1, 0, 2*Pi, radius);
     int i;
     for(i=1;i<ndiscu-1;i++){
 	double r=double(i)/double(ndiscu-1);
 	for(int j=0;j<nv;j++){
+	    double theta=double(j)/double(nv)*2*Pi;
 	    Point p(p1+(u*tab.sin(j)+v*tab.cos(j))*r);
-	    pts.add(p);
+	    add_node(nodes, id, p, r*radius, r, theta, 0, 0);
+	    if(boundary_type == None)
+		return;
 	}
     }
     for(i=0;i<=nu;i++){
-	double h=double(i)/double(nu)*height;
+	double h=double(i)/double(nu);
+	double hh=h*height;
 	for(int j=0;j<nv;j++){
-	    Point p(p1+u*tab.sin(j)+v*tab.cos(j)+axis*h);
-	    pts.add(p);
+	    double theta=double(j)/double(nv)*2*Pi;
+	    Point p(p1+u*tab.sin(j)+v*tab.cos(j)+axis*hh);
+	    add_node(nodes, id, p, radius, 1, theta, hh, h);
+	    if(boundary_type == None)
+		return;
 	}
     }
     for(i=ndiscu-2;i>=1;i--){
 	double r=double(i)/double(ndiscu-1);
 	for(int j=0;j<nv;j++){
-	    Point p(p1+(u*tab.sin(j)+v*tab.cos(j))*r);
-	    pts.add(p);
+	    double theta=double(j)/double(nv)*2*Pi;
+	    Point p(p2+(u*tab.sin(j)+v*tab.cos(j))*r);
+	    add_node(nodes, id, p, r*radius, r, theta, height, 1);
+	    if(boundary_type == None)
+		return;
 	}
     }
-    pts.add(p2);
+    add_node(nodes, id, p2, 0, 0, 0, height, 1);
+    if(boundary_type == None)
+	return;
+    TCL::execute(clString("rename ")+id+" \"\"");
 }
 
 #define CYLINDERSURFACE_VERSION 1
@@ -123,6 +183,80 @@ void CylinderSurface::construct_grid(int, int, int, const Point&, double)
 void CylinderSurface::construct_grid()
 {
     NOT_FINISHED("CylinderSurface::construct_grid");
+}
+
+GeomObj* CylinderSurface::get_obj(const ColormapHandle& cmap)
+{
+    if(boundary_type == None)
+	return scinew GeomCappedCylinder(p1, p2, radius);
+
+    Array1<NodeHandle> nodes;
+    get_surfnodes(nodes);
+
+    // This is here twice, since get_surfnodes may reduce back to 
+    // no BC's if there is an error...
+    if(boundary_type == None)
+	return scinew GeomCappedCylinder(p1, p2, radius);
+
+    GeomGroup* group=new GeomGroup;
+    GeomTrianglesPC* tris=new GeomTrianglesPC;
+    group->add(tris);
+
+    int s=1;
+    int i;
+    double v1=nodes[0]->bc->value;
+    Color cc1(cmap->lookup(v1)->diffuse);
+    Point& pp1(nodes[0]->p);
+    for(int j=0;j<nv;j++){
+	int i2=1+(j%nv);
+	int i3=1+((j+1)%nv);
+	double v2=nodes[i2]->bc->value;
+	double v3=nodes[i3]->bc->value;
+	Color cc2(cmap->lookup(v2)->diffuse);
+	Color cc3(cmap->lookup(v3)->diffuse);
+	Point& pp2(nodes[i2]->p);
+	Point& pp3(nodes[i3]->p);
+	tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
+    }
+    for(i=0;i<2*(ndiscu-2)+nu;i++){
+	for(int j=0;j<nv;j++){
+	    int i1=s+(j%nv);
+	    int i2=s+((j+1)%nv);
+	    int i3=i1+nv;
+	    int i4=i2+nv;
+	    double v1=nodes[i1]->bc->value;
+	    double v2=nodes[i2]->bc->value;
+	    double v3=nodes[i3]->bc->value;
+	    double v4=nodes[i4]->bc->value;
+	    Color cc1(cmap->lookup(v1)->diffuse);
+	    Color cc2(cmap->lookup(v2)->diffuse);
+	    Color cc3(cmap->lookup(v3)->diffuse);
+	    Color cc4(cmap->lookup(v4)->diffuse);
+	    Point& pp1(nodes[i1]->p);
+	    Point& pp2(nodes[i2]->p);
+	    Point& pp3(nodes[i3]->p);
+	    Point& pp4(nodes[i4]->p);
+	    tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
+	    tris->add(pp2, cc2, pp3, cc3, pp4, cc4);
+	}
+	s+=nv;
+    }
+    int last=nodes.size()-1;
+    double v3=nodes[last]->bc->value;
+    Color cc3(cmap->lookup(v3)->diffuse);
+    Point& pp3(nodes[last]->p);
+    for(j=0;j<nv;j++){
+	int i1=s+(j%nv);
+	int i2=s+((j+1)%nv);
+	double v1=nodes[i1]->bc->value;
+	double v2=nodes[i2]->bc->value;
+	Color cc1(cmap->lookup(v1)->diffuse);
+	Color cc2(cmap->lookup(v2)->diffuse);
+	Point& pp1(nodes[i1]->p);
+	Point& pp2(nodes[i2]->p);
+	tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
+    }
+    return group;
 }
 
 static Persistent* make_PointSurface()
@@ -157,9 +291,44 @@ int PointSurface::inside(const Point&)
     return 0;
 }
 
-void PointSurface::get_surfpoints(Array1<Point>& pts)
+void PointSurface::add_node(Array1<NodeHandle>& nodes,
+			    char* id, const Point& p)
 {
-    pts.add(pos);
+    Node* node=new Node(p);
+    if(boundary_type == DirichletExpression){
+	char str [200];
+	ostrstream s(str, 200);
+	s << id << " " << p.x() << " " << p.y() << " " << p.z() << '\0';
+	clString retval;
+	int err=TCL::eval(str, retval);
+	if(err){
+	    cerr << "Error evaluating boundary value" << endl;
+	    return;
+	}
+	double value;
+	if(!retval.get_double(value)){
+	    cerr << "Bad result from boundary value" << endl;
+	    return;
+	}
+	node->bc=new DirichletBC(this, value);
+    }
+    nodes.add(node);
+}
+
+void PointSurface::get_surfnodes(Array1<NodeHandle>& nodes)
+{
+    char id[100];
+    if(boundary_type == DirichletExpression){
+	// Format this string - we will use it later...
+	char proc_string[1000];
+	sprintf(id, "PointSurface%p", this);
+	ostrstream proc(proc_string, 1000);
+	proc << "proc " << id << " {x y z} { expr "
+	     << boundary_expr << "}" << '\0';
+	TCL::execute(proc_string);
+    }
+    add_node(nodes, id, pos);
+    TCL::execute(clString("rename ")+id+" \"\"");
 }
 
 #define POINTSURFACE_VERSION 1

@@ -15,17 +15,20 @@
 #define SCI_project_Surface_h 1
 
 #include <Datatypes/Datatype.h>
-#include <Classlib/Array1.h>
 #include <Classlib/LockingHandle.h>
+
+class Surface;
+typedef LockingHandle<Surface> SurfaceHandle;
+
+#include <Datatypes/Colormap.h>
+#include <Datatypes/Mesh.h>
+#include <Classlib/Array1.h>
 #include <Classlib/HashTable.h>
 #include <Classlib/String.h>
 #include <Geometry/Point.h>
 
 class TriSurface;
 class Grid;
-class Surface;
-typedef LockingHandle<Surface> SurfaceHandle;
-
 class Surface : public Datatype {
 protected:
     enum Representation {
@@ -44,16 +47,17 @@ public:
     clString name;
     Grid *grid;
     HashTable<int, int> *pntHash;
-    enum Boundary_type {
-	Interior,
-	Exterior,
-	VSource,
-	ISource,
+
+    // Boundary conditions...
+    enum BoundaryType {
+	DirichletExpression,
+	DirichletData,
+	None,
     };
-    Boundary_type bdry_type;
-    
-    Array1<double> conductivity;	// this will hold the conductivity
-                                  // tensor of the stuff this surface encloses.
+    clString boundary_expr;
+    BoundaryType boundary_type;
+    void set_bc(const clString& expr);
+
     Surface(const Surface& copy);
     virtual ~Surface();
     virtual Surface* clone()=0;
@@ -64,7 +68,8 @@ public:
     virtual void destroy_hash();
     TriSurface* getTriSurface();
 
-    virtual void get_surfpoints(Array1<Point>&)=0;
+    virtual void get_surfnodes(Array1<NodeHandle>&)=0;
+    virtual GeomObj* get_obj(const ColormapHandle&)=0;
 
     // Persistent representation...
     virtual void io(Piostream&);

@@ -24,8 +24,14 @@ public:
     MeshHandle mesh;
     Array1<Vector> data;
 
-    VectorFieldUG();
-    VectorFieldUG(const MeshHandle&);
+    enum Type {
+	NodalValues,
+	ElementValues,
+    };
+    Type typ;
+
+    VectorFieldUG(Type typ);
+    VectorFieldUG(const MeshHandle&, Type typ);
     virtual ~VectorFieldUG();
     virtual VectorField* clone();
 

@@ -17,7 +17,7 @@
 PersistentTypeID Surface::type_id("Surface", "Datatype", 0);
 
 Surface::Surface(Representation rep, int closed)
-: rep(rep), grid(0), closed(closed), pntHash(0)
+: rep(rep), grid(0), closed(closed), pntHash(0), boundary_type(None)
 {
 }
 
@@ -42,17 +42,21 @@ void Surface::destroy_hash() {
     if (pntHash) delete pntHash;
 }
 
-#define SURFACE_VERSION 2
+#define SURFACE_VERSION 3
 
 void Surface::io(Piostream& stream) {
     int version=stream.begin_class("Surface", SURFACE_VERSION);
     Pio(stream, name);
-    if (version >= 2) {
+    if (version >= 3){
+	int* btp=(int*)&boundary_type;
+	Pio(stream, *btp);
+	Pio(stream, boundary_expr);
+    }
+    if (version == 2) {
+	Array1<double> conductivity;
 	Pio(stream, conductivity);
-	int bt=bdry_type;
+	int bt;
 	Pio(stream, bt);
-	if(stream.reading())
-	    bdry_type=(Boundary_type)bt;
     }
     stream.end_class();
 }
@@ -63,6 +67,12 @@ TriSurface* Surface::getTriSurface()
 	return (TriSurface*)this;
     else
 	return 0;
+}
+
+void Surface::set_bc(const clString& bc_expr)
+{
+    boundary_expr=bc_expr;
+    boundary_type=DirichletExpression;
 }
 
 #ifdef __GNUG__

@@ -20,6 +20,7 @@ class Datatype : public Persistent {
 public:
     int ref_cnt;
     Mutex lock;
+    int generation;
     Datatype();
     virtual ~Datatype();
 };

@@ -12,8 +12,14 @@
 
 #include <Datatypes/Datatype.h>
 
+Mutex generation_lock;
+int current_generation;
+
 Datatype::Datatype() {
     ref_cnt=0;
+    generation_lock.lock();
+    generation=++current_generation;
+    generation_lock.unlock();
 }
 
 Datatype::~Datatype() {

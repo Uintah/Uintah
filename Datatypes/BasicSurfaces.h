@@ -32,6 +32,9 @@ class CylinderSurface : public Surface {
     Vector axis;
     double rad2;
     double height;
+    void add_node(Array1<NodeHandle>& nodes,
+		  char* id, const Point& p, double r, double rn,
+		  double theta, double h, double hn);
 public:
     CylinderSurface(const Point& p1, const Point& p2, double radius,
 		    int nu, int nv, int ndiscu);
@@ -39,9 +42,11 @@ public:
     virtual ~CylinderSurface();
     virtual Surface* clone();
     virtual int inside(const Point& p);
-    virtual void get_surfpoints(Array1<Point>&);
+    virtual void get_surfnodes(Array1<NodeHandle>&);
     virtual void construct_grid(int, int, int, const Point &, double);
     virtual void construct_grid();
+
+    virtual GeomObj* get_obj(const ColormapHandle&);
 
     // Persistent representation...
     virtual void io(Piostream&);
@@ -50,15 +55,19 @@ public:
 
 class PointSurface : public Surface {
     Point pos;
+    void add_node(Array1<NodeHandle>& nodes,
+		  char* id, const Point& p);
 public:
     PointSurface(const Point& pos);
     PointSurface(const PointSurface&);
     virtual ~PointSurface();
     virtual Surface* clone();
     virtual int inside(const Point& p);
-    virtual void get_surfpoints(Array1<Point>&);
+    virtual void get_surfnodes(Array1<NodeHandle>&);
     virtual void construct_grid(int, int, int, const Point &, double);
     virtual void construct_grid();
+
+    virtual GeomObj* get_obj(const ColormapHandle&);
     // Persistent representation...
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
