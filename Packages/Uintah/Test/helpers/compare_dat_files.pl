@@ -31,7 +31,7 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
 	($time1, @values1) = getTimeAndValue($line1);
 	($time2, @values2) = getTimeAndValue($line2);
 	if (@values1 != @values2) {
-	    print "Error: the dat files do have the same number of values per line\n";
+	    print "Error: the dat files do not have the same number of values per line\n";
 	    exit(1);
 	}
 	# prepend the time onto the value list to be compared as values
