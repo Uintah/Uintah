@@ -137,7 +137,7 @@ protected:
   {
     int nx, ny, nz, nb;
     uint id;
-    TextureBrick* brick;
+    TextureBrickHandle brick;
     int comp;
     TexParam() : nx(0), ny(0), nz(0), nb(0), id(0), brick(0), comp(0) {}
     TexParam(int x, int y, int z, int b, uint i)
@@ -146,7 +146,7 @@ protected:
   vector<TexParam> tex_pool_;
   
   Ray compute_view();
-  void load_brick(TextureBrick* b);
+  void load_brick(TextureBrickHandle b);
   void draw_polygons(vector<float>& vertex, vector<float>& texcoord,
 		     vector<int>& poly,
                      bool normal, bool fog, Pbuffer* buffer);

@@ -45,7 +45,8 @@ TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb,
 			    int mx, int my, int mz,
 			    const BBox& bbox, const BBox& tbox)
   : nx_(nx), ny_(ny), nz_(nz), nc_(nc), ox_(ox), oy_(oy), oz_(oz),
-    mx_(mx), my_(my), mz_(mz), bbox_(bbox), tbox_(tbox), dirty_(true)
+    mx_(mx), my_(my), mz_(mz), bbox_(bbox), tbox_(tbox), dirty_(true),
+    ref_cnt(0), lock("LockingHandle lock")
 {
   for (int c=0; c<nc_; c++)
   {

@@ -77,11 +77,11 @@ Texture::~Texture()
 // }
 
 void
-Texture::get_sorted_bricks(vector<TextureBrick*>& bricks, const Ray& view,
+Texture::get_sorted_bricks(vector<TextureBrickHandle> &bricks, const Ray& view,
 			   int idx)
 {
   bricks.resize(0);
-  vector<TextureBrick*>& brick_ = bricks_[idx];
+  vector<TextureBrickHandle> &brick_ = bricks_[idx];
   vector<double> dist;
   for(unsigned int i=0; i<brick_.size(); i++) {
     bricks.push_back(brick_[i]);
@@ -94,20 +94,8 @@ Texture::get_sorted_bricks(vector<TextureBrick*>& bricks, const Ray& view,
 void
 Texture::clear()
 {
-  std::vector<std::vector<TextureBrick*> >::iterator it = bricks_.begin();
-  std::vector<std::vector<TextureBrick*> >::iterator end = bricks_.end();
-    
-  std::vector<TextureBrick*>::iterator b_it;
-  std::vector<TextureBrick*>::iterator b_end;
-  for(; it != end; ++it){
-    b_it = (*it).begin();
-    b_end = (*it).end();
-    for( ; b_it != b_end; ++b_it){
-      TextureBrick* b = *b_it;
-      delete b;
-    }
-  }
-  
+  bricks_.clear();
+
   nx_ = 0;
   ny_ = 0;
   nz_ = 0;

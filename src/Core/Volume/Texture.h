@@ -73,13 +73,12 @@ public:
   inline const Transform &transform() const { return transform_; }
   inline void set_transform(Transform tform) { transform_ = tform; }
   
-//   void get_sorted_bricks(std::vector<TextureBrick*>& bricks, const Ray& view);
-//   inline std::vector<TextureBrick*>& bricks() { return brick_; }
-  void get_sorted_bricks(std::vector<TextureBrick*>& bricks,
+  void get_sorted_bricks(std::vector<TextureBrickHandle>& bricks,
 			 const Ray& view, int idx = 0);
-  inline std::vector<TextureBrick*>& bricks( int i = 0) { return bricks_[i]; }
+  inline std::vector<TextureBrickHandle>& bricks( int i = 0)
+  { return bricks_[i]; }
   inline int nlevels(){ return bricks_.size(); }
-  inline void add_level(std::vector<TextureBrick*> brick )
+  inline void add_level(std::vector<TextureBrickHandle> brick )
   { bricks_.push_back( brick ); }
   void clear();
   
@@ -101,8 +100,7 @@ public:
   static PersistentTypeID type_id;
 
 protected:
-//   std::vector<TextureBrick*> brick_;
-  std::vector<std::vector<TextureBrick*> > bricks_;
+  std::vector<std::vector<TextureBrickHandle> > bricks_;
   Mutex brick_lock_;
   int nx_, ny_, nz_; // data size
   int nc_;

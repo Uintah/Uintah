@@ -38,6 +38,8 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Volume/GLinfo.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Containers/LockingHandle.h>
 
 #include <vector>
 
@@ -45,7 +47,7 @@ namespace SCIRun {
 
 using std::vector;
 
-class TextureBrick 
+class TextureBrick
 {
 public:
   TextureBrick(int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int oz,
@@ -95,7 +97,15 @@ protected:
   Ray edge_[12]; // bbox edges
   Ray tex_edge_[12]; // tbox edges
   bool dirty_;
+
+public:
+  //! needed for our smart pointers -- LockingHandle<T>
+  int ref_cnt;
+  Mutex lock;
 };
+
+typedef LockingHandle<TextureBrick> TextureBrickHandle;
+
 
 template <typename T>
 class TextureBrickT : public TextureBrick
