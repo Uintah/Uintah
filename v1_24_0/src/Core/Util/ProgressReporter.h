@@ -60,28 +60,26 @@ class SCICORESHARE ProgressReporter
 {
 public:
   typedef enum {Starting, Compiling, CompilationDone, Done } ProgressState;
-  ProgressReporter() :
-    current_(0),
-    progress_lock_("ProgressReporter")
-  {}
+
+  ProgressReporter();
   virtual ~ProgressReporter();
 
-  virtual void error(const std::string& msg)      { std::cerr << "Error: " << msg << std::endl; }
-  virtual void warning(const std::string& msg)    { std::cerr << "Warning: " << msg << std::endl; }
-  virtual void remark(const std::string& msg)     { std::cerr << "Remark: " << msg << std::endl; }
-  virtual void postMessage(const std::string&msg) { std::cerr << "Msg: " << msg << std::endl; }
+  virtual void error(const std::string& msg);
+  virtual void warning(const std::string& msg);
+  virtual void remark(const std::string& msg);
+  virtual void postMessage(const std::string&msg);
 
-  virtual std::ostream &msgStream() { return std::cerr; }
-  virtual void msgStream_flush() {}
+  virtual std::ostream &msgStream();
+  virtual void msgStream_flush();
 
   // Compilation progress.  Should probably have different name.
-  virtual void report_progress( ProgressState ) {}
+  virtual void report_progress( ProgressState );
 
   // Execution time progress.
   // Percent is number between 0.0-1.0
   // unsigned int will probably become size_t
-  virtual void update_progress(double percent) {}
-  virtual void update_progress(unsigned int n, unsigned int max) {}
+  virtual void update_progress(double percent);
+  virtual void update_progress(unsigned int n, unsigned int max);
 
 protected:
   // accumulation storage;
