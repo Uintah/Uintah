@@ -1137,7 +1137,7 @@ BB::RenderBRaster()
   TexGeomGrid *tgrid = scinew TexGeomGrid(aRaster,aRaster,p1.point()
 					  ,p2-p1,p3-p1);
 
-  tgrid->set(aImage,VV_VIEW_PORT_SIZE);
+  //  tgrid->set(aImage,VV_VIEW_PORT_SIZE);
 
   texGeomID = aGeometry->addObj(tgrid,"Texture Plane");
   
