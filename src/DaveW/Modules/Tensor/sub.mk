@@ -7,8 +7,12 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := DaveW/Modules/Tensor
 
-SRCS     += $(SRCDIR)/Bundles.cc $(SRCDIR)/Flood.cc \
-	$(SRCDIR)/TensorAccessFields.cc $(SRCDIR)/TensorAnisotropy.cc
+SRCS     += \
+	$(SRCDIR)/Bundles.cc\
+	$(SRCDIR)/Flood.cc\
+	$(SRCDIR)/TensorAccessFields.cc\
+	$(SRCDIR)/TensorAnisotropy.cc\
+#[INSERT NEW MODULE HERE]
 
 PSELIBS := DaveW/Datatypes/General PSECore/Datatypes PSECore/Dataflow \
 	PSECore/Widgets SCICore/Persistent SCICore/Geometry \
@@ -21,6 +25,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/06/07 20:55:01  moulding
+# made changes to allow the module maker to add to and edit this file
+#
 # Revision 1.2  2000/03/20 19:36:20  sparker
 # Added VPATH support
 #
