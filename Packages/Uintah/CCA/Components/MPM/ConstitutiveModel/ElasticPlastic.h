@@ -8,6 +8,8 @@
 #include "PlasticityModels/PlasticityModel.h"
 #include "PlasticityModels/DamageModel.h"
 #include "PlasticityModels/MPMEquationOfState.h"
+#include "PlasticityModels/ShearModulusModel.h"
+#include "PlasticityModels/MeltingTempModel.h"
 #include <math.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
@@ -124,6 +126,8 @@ namespace Uintah {
     PlasticityModel*    d_plastic;
     DamageModel*        d_damage;
     MPMEquationOfState* d_eos;
+    ShearModulusModel*  d_shear;
+    MeltingTempModel*   d_melt;
 	 
     // Prevent copying of this class
     // copy constructor

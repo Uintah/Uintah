@@ -4,6 +4,8 @@
 #include "PlasticityModels/PlasticityModelFactory.h"
 #include "PlasticityModels/DamageModelFactory.h"
 #include "PlasticityModels/MPMEquationOfStateFactory.h"
+#include "PlasticityModels/ShearModulusModelFactory.h"
+#include "PlasticityModels/MeltingTempModelFactory.h"
 #include "PlasticityModels/PlasticityState.h"
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -102,6 +104,20 @@ ElasticPlastic::ElasticPlastic(ProblemSpecP& ps,
          << " Biswajit.  "<< endl;
     throw ParameterNotFound(desc.str());
   }
+
+  d_shear = ShearModulusModelFactory::create(ps);
+  if (!d_shear) {
+    ostringstream desc;
+    desc << "ElasticPlastic::Error in shear modulus model factory" << endl;
+    throw ParameterNotFound(desc.str());
+  }
+  
+  d_melt = MeltingTempModelFactory::create(ps);
+  if (!d_melt) {
+    ostringstream desc;
+    desc << "ElasticPlastic::Error in melting temp model factory" << endl;
+    throw ParameterNotFound(desc.str());
+  }
   
   setErosionAlgorithm();
   getInitialPorosityData(ps);
@@ -163,6 +179,8 @@ ElasticPlastic::ElasticPlastic(const ElasticPlastic* cm)
   d_plastic = PlasticityModelFactory::createCopy(cm->d_plastic);
   d_damage = DamageModelFactory::createCopy(cm->d_damage);
   d_eos = MPMEquationOfStateFactory::createCopy(cm->d_eos);
+  d_shear = ShearModulusModelFactory::createCopy(cm->d_shear);
+  d_melt = MeltingTempModelFactory::createCopy(cm->d_melt);
   
   initializeLocalMPMLabels();
 }
@@ -193,6 +211,8 @@ ElasticPlastic::~ElasticPlastic()
   delete d_stable;
   delete d_damage;
   delete d_eos;
+  delete d_shear;
+  delete d_melt;
 }
 
 void
@@ -852,8 +872,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     
       // Calculate the shear modulus and the melting temperature at the
       // start of the time step
-      double mu_cur = d_plastic->computeShearModulus(state);
-      double Tm_cur = d_plastic->computeMeltingTemp(state);
+      double mu_cur = d_shear->computeShearModulus(state);
+      double Tm_cur = d_melt->computeMeltingTemp(state);
 
       // Update the plasticity state
       state->shearModulus = mu_cur ;
@@ -901,6 +921,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                                  traceOfTrialStress, 
                                                  porosity, sig);
         // Compute the deviatoric stress
+        //cerr << "Phi = " << Phi << " s_eq = " << equivStress
+        //     << " s_flow = " << flowStress << endl;
         if (Phi <= 0.0) {
 
           elastic = true;
@@ -1060,7 +1082,10 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // If the particle has already failed, apply various erosion algorithms
       if (flag->d_doErosion) {
         if (pLocalized[idx]) {
-          if (d_allowNoTension && p > 0.0) tensorSig = tensorS;
+          if (d_allowNoTension) {
+	    if (p > 0.0) tensorSig = zero;
+	    else tensorSig = tensorHy;
+	  }
           else if (d_setStressToZero) tensorSig = zero;
         }
       }
@@ -1146,8 +1171,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
             // Calculate values needed for tangent modulus calculation
             state->temperature = temperature;
-            mu_cur = d_plastic->computeShearModulus(state);
-            Tm_cur = d_plastic->computeMeltingTemp(state);
+            mu_cur = d_shear->computeShearModulus(state);
+            Tm_cur = d_melt->computeMeltingTemp(state);
             double sigY = d_plastic->computeFlowStress(state, delT, d_tol, 
                                                        matl, idx);
             if (!(sigY > 0.0)) isLocalized = true;
@@ -1191,7 +1216,10 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
             pPorosity_new[idx] = 0.0;
 
             // Apply various erosion algorithms
-            if (d_allowNoTension && p > 0.0) tensorSig = tensorS;
+            if (d_allowNoTension) {
+	      if (p > 0.0) tensorSig = zero;
+	      else tensorSig = tensorHy;
+	    }
             else if (d_setStressToZero) tensorSig = zero;
 	  }
 
