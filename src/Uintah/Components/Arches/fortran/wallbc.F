@@ -4,7 +4,7 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE wallbc(domLo, domHi, idxLo, idxHi,
+      SUBROUTINE wallbc(domLo, domHi, domLong, domHing, idxLo, idxHi,
      &     AE,AW,AN,AS,AT,AB,
      &     PCELL, WALL)
 *--------------------------------------------------------------------
@@ -24,19 +24,20 @@ c #include "pcell.h"
 c*********************************************************************
 c     Arguments :
 c*********************************************************************
-      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
-      double precision AE(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AW(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AN(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AS(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AT(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AB(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      integer domLo(3), domHi(3), domLong(3), domHing(3)
+      integer idxLo(3), idxHi(3)
+      double precision AE(domLong(1):domHing(1), 
+     &     domLong(2):domHing(2), domLong(3):domHing(3))
+      double precision AW(domLong(1):domHing(1), 
+     &     domLong(2):domHing(2), domLong(3):domHing(3))
+      double precision AN(domLong(1):domHing(1), 
+     &     domLong(2):domHing(2), domLong(3):domHing(3))
+      double precision AS(domLong(1):domHing(1), 
+     &     domLong(2):domHing(2), domLong(3):domHing(3))
+      double precision AT(domLong(1):domHing(1), 
+     &     domLong(2):domHing(2), domLong(3):domHing(3))
+      double precision AB(domLong(1):domHing(1), 
+     &     domLong(2):domHing(2), domLong(3):domHing(3))
       integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
       integer WALL
@@ -102,6 +103,9 @@ c*********************************************************************
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/09/26 19:59:19  sparker
+c Work on MPI petsc
+c
 c Revision 1.2  2000/07/13 04:51:35  bbanerje
 c Added pressureBC (bcp) .. now called bcpress.F (bcp.F removed)
 c

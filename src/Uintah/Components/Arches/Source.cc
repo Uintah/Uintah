@@ -62,7 +62,7 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   // get iref, jref, kref and ref density by broadcasting from a patch that contains
   // iref, jref and kref
   //  double den_ref = vars->density[IntVector(3,3,3)]; // change it!!! use ipref, jpref and kpref
-  double den_ref = 1.184344;
+  double den_ref = 1.184344; // change it!!! use ipref, jpref and kpref
   cerr << " ref_ density" << den_ref << endl;
   // Get the patch and variable indices
   IntVector domLoU = vars->uVelocity.getFortLowIndex();
@@ -132,6 +132,10 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    cellinfo->iesdu.get_objs(), cellinfo->iwsdu.get_objs());
 
 #ifdef ARCHES_SRC_DEBUG
+    cerr << "patch: " << *patch << '\n';
+    cerr << "dom: " << domLoU << ", " << domHiU << '\n';
+    Array3Window<double>* win = vars->uVelNonlinearSrc.getWindow();
+    cerr << "usrc: " << win->getLowIndex() << ", " << win->getHighIndex() << ", " << win->getOffset() << '\n';
     cerr << "AFTER U Velocity Source" << endl;
     for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
       cerr << "SU for U velocity for ii = " << ii << endl;
@@ -818,6 +822,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.41  2000/09/26 19:59:18  sparker
+//Work on MPI petsc
+//
 //Revision 1.40  2000/09/26 04:35:28  rawat
 //added some more multi-patch support
 //

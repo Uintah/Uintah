@@ -216,8 +216,7 @@ public:
 			       DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw, 
 			       ArchesVariables* vars,
-			       const ArchesLabel* lab,
-			       int patchNumber);
+			       const ArchesLabel* lab);
    
 
    virtual void pressLinearSolve();
@@ -234,7 +233,8 @@ private:
       double d_residual;
    const ProcessorGroup* d_myworld;
 #ifdef HAVE_PETSC
-   vector<int> d_petscIndex;
+   map<const Patch*, int> d_petscGlobalStart;
+   map<const Patch*, Array3<int> > d_petscLocalToGlobal;
    Mat A;
    Vec d_x, d_b, d_u;
    SLES sles;
@@ -248,6 +248,9 @@ private:
   
 //
 // $Log$
+// Revision 1.6  2000/09/26 19:59:17  sparker
+// Work on MPI petsc
+//
 // Revision 1.5  2000/09/21 21:45:05  rawat
 // added petsc parallel stuff
 //

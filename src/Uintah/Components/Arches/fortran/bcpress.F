@@ -166,7 +166,7 @@ C$DIR SCALAR
      $        LPRDJK, LPRDKK)
       ENDIF
 
-      CALL WALLBC(domLo, domHi, idxLo, idxHi,
+      CALL WALLBC(domLo, domHi, domLong, domHing, idxLo, idxHi,
      $     AE,AW,AN,AS,AT,AB,
      &     PCELL,WALL)
       RETURN
@@ -175,6 +175,9 @@ C$DIR SCALAR
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/09/26 19:59:19  sparker
+c Work on MPI petsc
+c
 c Revision 1.3  2000/09/26 04:35:34  rawat
 c added some more multi-patch support
 c

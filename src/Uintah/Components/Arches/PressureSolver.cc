@@ -246,6 +246,7 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
   vector<Task*> tasks(numProcessors, (Task*)0);
   LoadBalancer* lb = sched->getLoadBalancer();
 
+  cerr << "In sched_PressureLinearSolve\n";
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -254,7 +255,7 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
        Task* tsk = tasks[proc];
        if(!tsk){
 	  tsk = scinew Task("PressureSolver::PressLinearSolve",
-			    0, old_dw, new_dw, this,
+			    patch, old_dw, new_dw, this,
 			    &PressureSolver::pressureLinearSolve_all,
 			    level, sched);
 	  tasks[proc]=tsk;
@@ -277,12 +278,15 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
        //      tsk->computes(new_dw, d_lab->d_presResidPSLabel, matlIndex, patch);
        //      tsk->computes(new_dw, d_lab->d_presTruncPSLabel, matlIndex, patch);
        tsk->computes(new_dw, d_lab->d_pressurePSLabel, matlIndex, patch);
+       cerr << "Adding computes on patch: " << patch->getID() << '\n';
 
     }
   }
   for(int i=0;i<tasks.size();i++)
-     if(tasks[i])
+     if(tasks[i]){
 	sched->addTask(tasks[i]);
+	cerr << "Adding task: " << *tasks[i] << '\n';
+     }
   sched->releaseLoadBalancer();
 #endif
 }
@@ -452,7 +456,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // Calculate Pressure Coeffs
   //  inputs : densityIN, pressureIN, [u,v,w]VelCoefPBLM[Arches::AP]
   //  outputs: presCoefPBLM[Arches::AE..AB] 
-  for (int ii = 0; ii < nofStencils; ii++) 
+  for (int ii = 0; ii < nofStencils; ii++)
     new_dw->allocate(d_pressureVars->pressCoeff[ii], 
 			d_lab->d_presCoefPBLMLabel, ii, patch);
   
@@ -510,33 +514,40 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
   d_linearSolver->matrixCreate(level, lb);
   cerr << "Finished creating petsc matrix\n";
 
-#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
     {
-       int proc = find_processor_assignment(patch);
+       int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
        if(proc == me){
 	  // Underrelax...
 
 	  // This calls fillRows on linear(petsc) solver
-	  pressureLinearSolve(pc, patch, old_dw, new_dw);
+	  cerr << "Calling pressureLinearSolve for patch: " << patch->getID() << '\n';
+	  pressureLinearSolve(pg, patch, old_dw, new_dw);
+	  cerr << "Done with pressureLinearSolve for patch: " << patch->getID() << '\n';
        }
     }
   }
-  MPI_Reduce();
+  // MPI_Reduce();
   // solve
+  cerr << "Calling pressLinearSolve\n";
   d_linearSolver->pressLinearSolve();
+  cerr << "Done with pressLinearSolve\n";
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
     {
-       int proc = find_processor_assignment(patch);
+       int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
+       //int proc = find_processor_assignment(patch);
        if(proc == me){
 	 //	  unpack from linear solver.
 	 d_linearSolver->copyPressSoln(patch, d_pressureVars);
-	 normPressure(pc, patch, d_pressureVars);
+	 cerr << "Calling normPressure for patch: " << patch->getID() << '\n';
+	 normPressure(pg, patch, d_pressureVars);
+	 cerr << "Done with normPressure for patch: " << patch->getID() << '\n';
 	 // put back the results
+	 int matlIndex = 0;
 	 new_dw->put(d_pressureVars->pressure, d_lab->d_pressurePSLabel, 
 		     matlIndex, patch);
 
@@ -545,7 +556,6 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
   }
   // destroy matrix
   d_linearSolver->destroyMatrix();
-#endif
 }
 
 // Actual linear solve
@@ -565,6 +575,7 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
   for (int ii = 0; ii < nofStencils; ii++) 
     new_dw->get(d_pressureVars->pressCoeff[ii], d_lab->d_presCoefPBLMLabel, 
 		   ii, patch, Ghost::None, zeroGhostCells);
+
   new_dw->get(d_pressureVars->pressNonlinearSrc, 
 		 d_lab->d_presNonLinSrcPBLMLabel, 
 		 matlIndex, patch, Ghost::None, zeroGhostCells);
@@ -572,11 +583,16 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
   // compute eqn residual, L1 norm
   new_dw->allocate(d_pressureVars->residualPressure, d_lab->d_pressureRes,
 			  matlIndex, patch);
+#if 0
   d_linearSolver->computePressResidual(pc, patch, old_dw, new_dw, 
 				       d_pressureVars);
+#else
+  d_pressureVars->residPress=d_pressureVars->truncPress=0;
+#endif
   new_dw->put(sum_vartype(d_pressureVars->residPress), d_lab->d_presResidPSLabel);
   new_dw->put(sum_vartype(d_pressureVars->truncPress), d_lab->d_presTruncPSLabel);
   // apply underelaxation to eqn
+#if 0
   d_linearSolver->computePressUnderrelax(pc, patch, old_dw, new_dw,
 					 d_pressureVars);
     cerr << "After underrelax" << endl;
@@ -585,6 +601,7 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
 	  cerr.width(10);
 	  cerr << *iter << ": " << d_pressureVars->pressNonlinearSrc[*iter] << "\n" ; 
     }
+#endif
   // put back computed matrix coeffs and nonlinear source terms 
   // modified as a result of underrelaxation 
   // into the matrix datawarehouse
@@ -598,16 +615,16 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
   // for parallel code lisolve will become a recursive task and 
   // will make the following subroutine separate
   // get patch numer ***warning****
-  int patchNumber = 0;
   // sets matrix
-  d_linearSolver->setPressMatrix(pc, patch, old_dw, new_dw, d_pressureVars, d_lab,
-				 patchNumber);
-  //  d_linearSolver->pressLisolve(pc, patch, old_dw, new_dw, d_pressureVars, d_lab);
+  d_linearSolver->setPressMatrix(pc, patch, old_dw, new_dw, d_pressureVars, d_lab);
+  //  d_linearSolver->pressLinearSolve();
 
+#if 0
   normPressure(pc, patch, d_pressureVars);
   // put back the results
   new_dw->put(d_pressureVars->pressure, d_lab->d_pressurePSLabel, 
 	      matlIndex, patch);
+#endif
 }
   
   
@@ -647,6 +664,9 @@ PressureSolver::normPressure(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.52  2000/09/26 19:59:17  sparker
+// Work on MPI petsc
+//
 // Revision 1.51  2000/09/25 16:29:23  rawat
 // modified requires in PressureSolver for multiple patches
 //
