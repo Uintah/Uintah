@@ -72,8 +72,21 @@ public:
 
 
 class SCICORESHARE GeomSuperquadric : public GeomObj {
+  int axis_;
+  double A_, B_;
+  int nu_, nv_;
+
+  vector<float> points_;
+  vector<float> normals_;
+  vector<unsigned short> tindices_;
+  vector<unsigned short> qindices_;
+
+  void compute_geometry();
+
+  GeomSuperquadric();
+
 public:
-  GeomSuperquadric(int resolution);
+  GeomSuperquadric(int axis, double A, double B, int nu, int nv);
   GeomSuperquadric(const GeomSuperquadric &copy);
   virtual ~GeomSuperquadric();
   
@@ -87,6 +100,8 @@ public:
   
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+
+  static Persistent *maker();
 };
 
 

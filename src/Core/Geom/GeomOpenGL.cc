@@ -3384,9 +3384,25 @@ void GeomSuperquadric::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
 
-  //di->polycount+=2*(nu-1)*(nv-1);
+  di->polycount += nu_ * nv_;
 
-  gluSphere(di->qobj, 1.0, 5, 5);
+  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+  glEnableClientState(GL_VERTEX_ARRAY);
+
+  glNormalPointer(GL_FLOAT, 0, &(normals_.front()));
+  glEnableClientState(GL_NORMAL_ARRAY);
+
+  glDrawElements(GL_TRIANGLE_FAN, nu_ + 2, GL_UNSIGNED_SHORT,
+    		 &(tindices_[0]));
+
+  glDrawElements(GL_TRIANGLE_FAN, nu_ + 2, GL_UNSIGNED_SHORT,
+		 &(tindices_[nu_+2]));
+
+  for (int pi = 0; pi < nv_-2; pi++)
+  {
+    glDrawElements(GL_QUAD_STRIP, (nu_+1)*2, GL_UNSIGNED_SHORT,
+		   &(qindices_[pi * (nu_+1) * 2]));
+  }
 
   post_draw(di);
 }
