@@ -16,7 +16,6 @@ SRCS     += \
 
 PSELIBS := \
 	Dataflow/Network \
-	Dataflow/XMLUtil \
 	Core/Exceptions  \
 	Core/Geom        \
 	Core/Geometry    \
@@ -34,7 +33,7 @@ PSELIBS := \
         Packages/Uintah/Core/Exceptions  
 
 
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) 
+LIBS := $(MPI_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
