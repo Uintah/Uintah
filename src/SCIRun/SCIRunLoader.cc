@@ -187,7 +187,7 @@ int SCIRunLoader::createPInstance(const std::string& componentName,
   sci::cca::Component::pointer component = (*maker)();
   //TODO: need keep a reference in the loader's creatation recored.
   component->addReference();
-  component->setCommunicator((int)(&MPI_COMM_COM) );
+//  component->setCommunicator((int)(&MPI_COMM_COM) );
 
 
 
