@@ -54,6 +54,10 @@ NewStaticMixingTable::problemSetup(const ProblemSpecP& params)
   db->require("adiabatic",d_adiabatic);
   db->require("rxnvars",d_numRxnVars);
   db->require("mixstatvars",d_numMixStatVars);
+
+  db->getWithDefault("co_output",d_co_output,false);
+  db->getWithDefault("sulfur_chem",d_sulfur_chem,false);
+
   db->require("inputfile",d_inputfile);
   if ((db->findBlock("h_fuel"))&&(db->findBlock("h_air"))) {
     db->require("h_fuel",d_H_fuel);
@@ -149,6 +153,14 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
     outStream.d_enthalpy=0.0;
   outStream.d_co2=tableLookUp(mixFrac, mixFracVars, current_heat_loss, co2_index);  
   outStream.d_h2o=tableLookUp(mixFrac, mixFracVars, current_heat_loss, h2o_index);  
+
+  if (d_sulfur_chem) {
+    outStream.d_h2s=tableLookUp(mixFrac, mixFracVars, current_heat_loss, h2s_index);  
+    outStream.d_so2=tableLookUp(mixFrac, mixFracVars, current_heat_loss, so2_index);
+    outStream.d_so3=tableLookUp(mixFrac, mixFracVars, current_heat_loss, so3_index);  
+  }
+  if (d_co_output)
+    outStream.d_co=tableLookUp(mixFrac, mixFracVars, current_heat_loss, co_index);  
   /*if((outStream.d_temperature - 293.0) <= -0.01 || (outStream.d_density - 1.20002368329336) >= 0.001){
   	cout<<"Temperature for properties outbound is:  "<<outStream.d_temperature<<endl;
   	cout<<"Density for properties outbound is:  "<<outStream.d_density<<endl;
@@ -332,6 +344,10 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   Hs_index = -1;
   co2_index = -1;
   h2o_index = -1;
+  h2s_index = -1;
+  so2_index = -1;
+  so3_index = -1;
+  co_index = -1;
   for (int ii = 0; ii < d_varscount; ii++) {
     fd >> vars_names[ii];
     if(vars_names[ii]== "Rho" || vars_names[ii]== "density")
@@ -348,6 +364,14 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
 	    co2_index = ii;
     else if(vars_names[ii]== "H2O")
 	    h2o_index = ii;
+    else if(vars_names[ii]== "H2S")
+	    h2s_index = ii;
+    else if(vars_names[ii]== "SO2")
+	    so2_index = ii;
+    else if(vars_names[ii]== "SO3")
+	    so3_index = ii;
+    else if(vars_names[ii]== "CO")
+	    co_index = ii;
     cout<<vars_names[ii]<<endl;
   }
   if ((Hs_index == -1)&&(!(d_adiabatic))) {
@@ -356,6 +380,10 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   }
   cout<<"CO2 index is " << co2_index<<endl;
   cout<<"H2O index is " << h2o_index<<endl;
+  cout<<"H2S index is " << h2s_index<<endl;
+  cout<<"SO2 index is " << so2_index<<endl;
+  cout<<"SO3 index is " << so3_index<<endl;
+  cout<<"CO index is " << co_index<<endl;
 
   // Not sure if we care about units in runtime, read them just in case
   vars_units= vector<string>(d_varscount);

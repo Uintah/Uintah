@@ -119,6 +119,20 @@ namespace Uintah {
         else
                 return d_speciesConcn[d_H2Oindex];
       }
+
+      inline double getH2S() const {
+        return d_h2s;
+      }
+      inline double getSO2() const {
+        return d_so2;
+      }
+      inline double getSO3() const {
+        return d_so3;
+      }
+      inline double getCO() const {
+        return d_co;
+      }
+
       inline double getC2H2() const {
                 return d_c2h2;
       }
@@ -184,6 +198,12 @@ namespace Uintah {
       double d_sootFV;
       double d_co2;
       double d_h2o;
+
+      double d_h2s;
+      double d_so2;
+      double d_so3;
+      double d_co;
+
       double d_c2h2;
       double d_fvtfive;
       double d_tfour;
