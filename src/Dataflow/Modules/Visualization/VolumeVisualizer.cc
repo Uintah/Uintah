@@ -169,19 +169,22 @@ VolumeVisualizer::execute()
   bool c1 = icmap1->get(cmap1);
   bool c2 = icmap2->get(cmap2);
 
-#ifndef HAVE_AVR_SUPPORT
-  warning("2D transfer functions are not supported by this build, ignoring.");
-  cmap2 = 0;
-  c2 = false;
-#else
-  if (tex->nc() == 1)
+  if (c2)
   {
-    warning("No gradient magnitude in texture, required for ColorMap2 usage.");
+#ifndef HAVE_AVR_SUPPORT
+    warning("ColorMap2 usage is not supported by this build.");
     cmap2 = 0;
     c2 = false;
-  }
+#else
+    if (tex->nc() == 1)
+    {
+      warning("ColorMap2 requires gradient magnitude in the texture.")
+      cmap2 = 0;
+      c2 = false;
+    }
 #endif
-  
+  }
+
   if (!c1 && !c2)
   {
     error("No colormap available to render.  Nothing drawn.");
