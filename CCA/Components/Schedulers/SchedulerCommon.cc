@@ -1,6 +1,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
@@ -63,6 +64,13 @@ SchedulerCommon::~SchedulerCommon()
     delete dts_;
   if(memlogfile)
     delete memlogfile;
+
+  // list of vars used for AMR regridding
+  for ( label_matl_map::iterator iter = label_matls_.begin(); iter != label_matls_.end(); iter++)
+    if (iter->second.second->removeReference())
+      delete iter->second.second;
+
+  label_matls_.clear();
 }
 
 void
@@ -429,56 +437,112 @@ SchedulerCommon::finalizeTimestep()
 }
 
 void
-SchedulerCommon::scheduleDataCopy(const GridP& grid, SimulationStateP& state)
-{
-  typedef vector<const Task::Dependency*> dep_vector;
-  dep_vector initreqs = graph.getOldInitialRequires();
-
+SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& state, 
+                                       SimulationInterface* sim)
+{  
+  // clear the old list of vars and matls
   for ( label_matl_map::iterator iter = label_matls_.begin(); iter != label_matls_.end(); iter++)
-    if (iter->second->removeReference())
-      delete iter->second;
+    if (iter->second.second->removeReference())
+      delete iter->second.second;
 
   label_matls_.clear();
+
+  // produce a map from all tasks' requires from the Old DW.  Store the varlabel and matls
+  for (int i = 0; i < graph.getNumTasks(); i++) {
+    for(Task::Dependency* dep = graph.getTask(i)->getRequires(); dep != 0; dep=dep->next){
+      if(this->isOldDW(dep->mapDataWarehouse())) {
+        if (dep->var->typeDescription()->getType() == TypeDescription::ReductionVariable)
+          // we will take care of reduction variables in a different section
+          continue;
+
+        // check the level on the case where variables are only computed on certain levels
+        const PatchSet* ps = graph.getTask(i)->getPatchSet();
+        int level = -1;
+        if (ps) 
+          if (ps->getSubset(0))
+            level = getLevel(ps->getSubset(0))->getIndex();
+        
+        if (level == -1)
+          // shouldn't really happen...
+          continue;
+
+        const MaterialSubset* matSubset = (dep->matls != 0) ?
+          dep->matls : dep->task->getMaterialSet()->getUnion();
+
+        // if var was already found, make a union of the materials
+        MaterialSubset* matls = scinew MaterialSubset(matSubset->getVector());
+        matls->addReference();
+        
+        MaterialSubset* union_matls;
+        union_matls = label_matls_[dep->var].second;
+        if (union_matls) {
+          for (int i = 0; i < union_matls->size(); i++) 
+            if (!matls->contains(union_matls->get(i)))
+              matls->add(union_matls->get(i));
+        }
+        matls->sort();        
+        label_matls_[dep->var] = make_pair(level, matls);
+      }
+    }
+  }
   
-  for (dep_vector::const_iterator iter = initreqs.begin();
-       iter != initreqs.end(); iter++) {
-    const Task::Dependency* dep = *iter;
-    if (dep->var->typeDescription()->getType() == TypeDescription::ReductionVariable)
-      // we will take care of reduction variables in a different section
-      continue;
-    const MaterialSubset* matSubset = (dep->matls != 0) ?
-      dep->matls : dep->task->getMaterialSet()->getUnion();
-
-    MaterialSubset* matls = scinew MaterialSubset(matSubset->getVector());
-    matls->addReference();
-
-    MaterialSubset* union_matls;
-    union_matls = label_matls_[dep->var];
-    if (union_matls) {
-      for (int i = 0; i < union_matls->size(); i++) 
-        if (!matls->contains(union_matls->get(i)))
-          matls->add(union_matls->get(i));
-    }
-    matls->sort();
-    label_matls_[dep->var] = matls;
-  }
-
+  this->advanceDataWarehouse(grid);
+  this->initialize(1, 1);
+  this->clearMappings();
+  this->mapDataWarehouse(Task::OldDW, 0);
+  this->mapDataWarehouse(Task::NewDW, 1);
+  
+  this->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
+  this->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
+  
+  DataWarehouse* oldDataWarehouse = this->get_dw(0);
+  DataWarehouse* newDataWarehouse = this->getLastDW();
+  
+  vector<Task*> tasks;
   for (int i = 0; i < grid->numLevels(); i++) {
-    Task* task = scinew Task("SchedulerCommon::copyDataToNewGrid", this,                          
-                             &SchedulerCommon::copyDataToNewGrid);
-
-    // assume that all vars are required for all levels
-    for ( label_matl_map::iterator iter = label_matls_.begin(); iter != label_matls_.end(); iter++) {
-      const VarLabel* var = iter->first;
-      MaterialSubset* matls = iter->second;
-      
-      task->requires(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
-      task->computes(var, matls);
-      cout << "  CDTNG: " << var->getName() << " matls " << *matls << endl;
-    }
-    addTask(task, grid->getLevel(i)->eachPatch(), state->allMaterials());
+    tasks.push_back(scinew Task("SchedulerCommon::copyDataToNewGrid", this,                          
+                             &SchedulerCommon::copyDataToNewGrid));
+    addTask(tasks[i], grid->getLevel(i)->eachPatch(), state->allMaterials());
   }
- 
+
+  // assume that all vars are required for all levels
+  for ( label_matl_map::iterator iter = label_matls_.begin(); iter != label_matls_.end(); iter++) {
+    const VarLabel* var = iter->first;
+    MaterialSubset* matls = iter->second.second;
+    int level = iter->second.first;
+
+    tasks[level]->requires(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
+    tasks[level]->computes(var, matls);
+  }
+
+  for ( int levelIndex = 1; levelIndex < grid->numLevels(); levelIndex++ ) {
+    SchedulerP sched(dynamic_cast<Scheduler*>(this));
+    sim->scheduleRefine(grid->getLevel(levelIndex), sched);
+  }
+
+  this->compile(); 
+  this->execute();
+  
+  vector<VarLabelMatl<Level> > levelVariableInfo;
+  oldDataWarehouse->getVarLabelMatlLevelTriples(levelVariableInfo);
+  
+  // copy reduction variables
+  
+  newDataWarehouse->unfinalize();
+  for ( unsigned int i = 0; i < levelVariableInfo.size(); i++ ) {
+    VarLabelMatl<Level> currentReductionVar = levelVariableInfo[i];
+    // cout << "REDUNCTION:  Label(" << setw(15) << currentReductionVar.label_->getName() << "): Patch(" << reinterpret_cast<int>(currentReductionVar.level_) << "): Material(" << currentReductionVar.matlIndex_ << ")" << endl; 
+    const Level* oldLevel = currentReductionVar.domain_;
+    const Level* newLevel = NULL;
+    if (oldLevel) {
+      newLevel = (newDataWarehouse->getGrid()->getLevel( oldLevel->getIndex() )).get_rep();
+    }
+    
+    ReductionVariableBase* v = dynamic_cast<ReductionVariableBase*>(currentReductionVar.label_->typeDescription()->createInstance());
+    oldDataWarehouse->get(*v, currentReductionVar.label_, currentReductionVar.domain_, currentReductionVar.matlIndex_);
+    newDataWarehouse->put(*v, currentReductionVar.label_, newLevel, currentReductionVar.matlIndex_);
+  }
+  newDataWarehouse->refinalize();
 }
 
 
@@ -492,11 +556,6 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
   OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(new_dw);
 
   // For each patch in the patch subset which contains patches in the new grid
-
-  for ( int idx = 0; idx < patches->size(); idx++ ) {
-    //cerr << "Patches[ " << idx << " ] = " << patches->get(idx)->getID() << endl;
-  }
-
   for ( int p = 0; p < patches->size(); p++ ) {
     const Patch* newPatch = patches->get(p);
     const Level* newLevel = newPatch->getLevel();
@@ -511,16 +570,19 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
     
     for ( label_matl_map::iterator iter = label_matls_.begin(); iter != label_matls_.end(); iter++) {
       const VarLabel* label = iter->first;
-      MaterialSubset* var_matls = iter->second;
-      
+      MaterialSubset* var_matls = iter->second.second;
+      int level = iter->second.first;
+      if (level != newLevel->getIndex())
+        continue;
+         
       // get the low/high for what we'll need to get
       Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), true);
       IntVector newLowIndex, newHighIndex;
       newPatch->computeVariableExtents(basis, label->getBoundaryLayer(), Ghost::AroundCells, 0, newLowIndex, newHighIndex);
 
       for (int m = 0; m < var_matls->size(); m++) {
-
         int matl = var_matls->get(m);
+
         if (!matls->contains(matl)) {
           //cout << "We are skipping material " << currentVar.matlIndex_ << endl;
           continue;
