@@ -16,3 +16,4 @@ lappend auto_path $sci_root/Widgets
 lappend auto_path $sci_root/TCL
 lappend auto_path $sci_root/Devices
 lappend auto_path $sci_root/Modules/Matrix
+lappend auto_path $sci_root/Modules/Remote

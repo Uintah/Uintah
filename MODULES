@@ -85,7 +85,9 @@ GenerateMesh
 HexMeshToGeom
 InsertDelaunay
 MakeScalarField
+MeshReceiver
 MeshRender
+MeshSender
 MeshToGeom
 MeshView
 OctreeToGeom
@@ -110,6 +112,10 @@ SurfaceReader
 TiffReader
 VectorFieldReader
 VectorFieldOceanReader
+
+Category: Remote
+rMeshReader
+rMeshWriter
 
 Category: Salmon
 Salmon
