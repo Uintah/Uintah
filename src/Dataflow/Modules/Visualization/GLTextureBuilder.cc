@@ -114,18 +114,23 @@ GLTextureBuilder::DestroyContext(Display *dpy, GLXContext& cx)
 
 void GLTextureBuilder::execute(void)
 {
-  reset_vars();
 
   FieldHandle sfield;
   if (!infield_->get(sfield))
   {
     return;
   }
-  else if (!sfield.get_rep() || sfield->get_type_name(0) != "LatticeVol")
+  real_execute(sfield);
+}
+
+void GLTextureBuilder::real_execute(FieldHandle sfield)
+{
+  if (!sfield.get_rep() || sfield->get_type_name(0) != "LatticeVol")
   {
     return;
   }
 
+  reset_vars();
 
   double minV, maxV;
   double min = min_.get();

@@ -50,7 +50,7 @@ public:
   virtual ~GLTextureBuilder();
 
   virtual void execute();
-
+  void real_execute(FieldHandle fh);
 protected:
   FieldIPort *infield_;
 
