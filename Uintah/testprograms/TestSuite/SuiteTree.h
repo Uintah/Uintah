@@ -50,7 +50,14 @@ public:
   void addSubTree(SuiteTree* subTree)
   { mySubTrees.push_back(subTree); }
 
+  SuiteTreeNode* addSubTree(string name)
+  { SuiteTreeNode* node = new SuiteTreeNode(name); addSubTree(node);
+    return node; }
+
   inline void addSuite(Suite* suite);
+
+  Suite* addSuite(string name)
+  { Suite* suite = new Suite(name); addSuite(suite); return suite; }
   
   string getName()
   { return myName; }
