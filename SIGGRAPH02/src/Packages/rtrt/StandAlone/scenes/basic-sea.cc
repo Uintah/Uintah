@@ -313,7 +313,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   north_tube->add(new Cylinder(black, Point(3.9, 10, 1), Point(4, 10, 1), 1.9));
   north_tube->add(new Cylinder(black, Point(3.9, 10, 1), Point(4, 10, 1), 2.2));
 
-  bv = new BV1(north_tube);
+  Object* bv = new BV1(north_tube);
   bv->set_name("north_tube");
   all_tubes->add(bv);
  /* 
