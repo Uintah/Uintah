@@ -8,7 +8,7 @@ Useful configuration flags:<p>
 
   <tr>
     <td>--enable-package=&lt;package_name&gt; <BR>
-    <td>&lt;package_name&gt; should be one (or more of): 
+    <td>&lt;package_name&gt; should be one (or more) of: 
            Uintah, SCIRun, BioPSE, DaveW, Yarden, Kurt, Phil.
            ( eg: --enable-package="Uintah SCIRun" )
   </tr>
@@ -60,7 +60,7 @@ Useful configuration flags:<p>
   </tr>
 
   <tr>
-    <td>--enable-parllel
+    <td>--enable-parallel
     <td>Compile the new distributed memory parallel PSE.  This is
         very experimental and may break many things.  It is also a
         much different world.
@@ -70,6 +70,19 @@ Useful configuration flags:<p>
     <td>--enable-globus=DIR
     <td>Use the globus installation in DIR.  Only applicatble
         with the --enable-parallel option.
+  </tr>
+
+  <tr>
+    <td>--with-tcl=DIR
+    <td>Use the tcl installation in DIR, where DIR is the location
+        of the /lib, /bin and /include dirs for tcl8.0.4, tk8.0.4,
+        itcl/itk3.0 and blt2.4.
+  </tr>
+
+  <tr>
+    <td>--with-xerces=DIR
+    <td>Use the xerces-c library file (libxerces-c1_1.so or libxerces-c1_2.so)
+        located in DIR.
   </tr>
 
 </table></center><p>
