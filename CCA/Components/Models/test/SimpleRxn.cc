@@ -324,7 +324,7 @@ void SimpleRxn::initialize(const ProcessorGroup*,
             string filename=udaDir + "/" + d_probePtsNames[i].c_str() + ".dat";
             fp = fopen(filename.c_str(), "a");
             fprintf(fp, "\%Time Scalar Field at [%e, %e, %e], at cell [%i, %i, %i]\n", 
-                    d_probePts[i].x(),d_probePts[i].y(), d_probePts[i].x(),
+                    d_probePts[i].x(),d_probePts[i].y(), d_probePts[i].z(),
                     cell.x(), cell.y(), cell.z() );
             fclose(fp);
         }
