@@ -51,7 +51,7 @@ int main()
   assert(x == -5); 
 
   //Intersection tests
-  assert(mxnarep3->isIntersect(mxnarep2) == false);
+  assert(mxnarep3->isIntersect(mxnarep2) == true);
   Index* nsect1 = mxnarep3->Intersect(mxnarep2,1);
   assert(nsect1->myfirst == 33); 
   assert(nsect1->mylast == 37);
