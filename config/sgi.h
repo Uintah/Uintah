@@ -51,7 +51,7 @@
 #define SCI_DeltaCppCompiler CC
 #define SCI_DeltaOptimizeCppFlags SCI_DeltaOptimizeCFlags
 #define SCI_DeltaDebugCppFlags SCI_DeltaDebugCFlags
-#ifdef SCI_IRIX_BIN_32_mips2
+#ifdef SCI_IRIX_BIN_o32
 #define SCI_BoolFlags -Dbool=int -Dtrue=1 -Dfalse=0
 #else
 #define SCI_BoolFlags
