@@ -31,7 +31,6 @@
 #ifndef Component_PIDL_pidl_cast_h
 #define Component_PIDL_pidl_cast_h
 
-// In global namespace for now...
 #include <Core/CCA/Component/PIDL/Object.h>
 #include <Core/CCA/Component/PIDL/TypeInfo.h>
 #include <Core/Exceptions/InternalError.h>
@@ -61,6 +60,8 @@ DESCRIPTION
    (in TypeInfo::pidl_cast) if required.
 ****************************************/
 
+// Some compilers (gcc 3 at least) cannot find this unless it is in the
+// global namespace
 template<class T, class F>
 T
 pidl_cast(const F& ptr)
@@ -71,8 +72,8 @@ pidl_cast(const F& ptr)
     dynamic_cast<ptr_type* >(ptr.getPointer());
   if(iface)
     return T(iface);
-  const PIDL::TypeInfo* typeinfo = ptr_type::_static_getTypeInfo();
-  PIDL::Object* result=typeinfo->pidl_cast(ptr.getPointer());
+  const SCIRun::TypeInfo* typeinfo = ptr_type::_static_getTypeInfo();
+  SCIRun::Object* result=typeinfo->pidl_cast(ptr.getPointer());
   if(result){
     ptr_type* p=dynamic_cast<ptr_type*>(result);
     if(!p)

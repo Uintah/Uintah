@@ -36,7 +36,7 @@
 #include <Core/CCA/Component/Comm/EpChannel.h>
 #include <Core/CCA/Component/PIDL/Reference.h>
 
-namespace PIDL {
+namespace SCIRun {
 /**************************************
  
 CLASS
@@ -90,7 +90,7 @@ DESCRIPTION
     // Bind this reference's startpoint to my endpoint
     void bind(Reference& ref);
   };
-} // End namespace PIDL
+} // End namespace SCIRun
 
 #endif
 

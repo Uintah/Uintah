@@ -29,9 +29,7 @@
 #include <string>
 
 using namespace std;
-
-using PIDL::Object_proxy;
-using PIDL::TypeInfo;
+using namespace SCIRun;
 
 Object_proxy::Object_proxy(const Reference& ref)
     : ProxyBase(ref)

@@ -30,7 +30,6 @@
 #include <iostream>
 
 using namespace std;
-using namespace PIDL;
 using namespace SCIRun;
 
 Object::Object()

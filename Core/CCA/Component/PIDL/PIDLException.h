@@ -33,7 +33,7 @@
 
 #include <Core/Exceptions/Exception.h>
 
-namespace PIDL {
+namespace SCIRun {
 /**************************************
  
 CLASS
@@ -57,7 +57,7 @@ DESCRIPTION
 	private:
 	    PIDLException& operator=(const PIDLException&);
 	};
-} // End namespace PIDL
+} // End namespace SCIRun
 
 #endif
 

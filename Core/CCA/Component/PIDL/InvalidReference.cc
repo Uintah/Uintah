@@ -29,8 +29,7 @@
  */
 
 #include "InvalidReference.h"
-
-using PIDL::InvalidReference;
+using namespace SCIRun;
 
 InvalidReference::InvalidReference(const std::string& msg)
     : d_msg(msg)
@@ -53,6 +52,6 @@ const char* InvalidReference::message() const
 
 const char* InvalidReference::type() const
 {
-    return "Core/CCA/Component::PIDL::InvalidReference";
+    return "SCIRun::InvalidReference";
 }
 

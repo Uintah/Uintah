@@ -37,10 +37,8 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+using namespace SCIRun;
 using namespace std;
-
-using PIDL::Object;
-using PIDL::Warehouse;
 using std::map;
 
 Warehouse::Warehouse()

@@ -34,7 +34,7 @@
 #include <Core/CCA/Component/PIDL/ProxyBase.h>
 #include <Core/CCA/Component/PIDL/Object.h>
 
-namespace PIDL {
+namespace SCIRun {
 /**************************************
  
 CLASS
@@ -69,7 +69,7 @@ DESCRIPTION
     virtual ~Object_proxy();
   private:
   };
-} // End namespace PIDL
+} // End namespace SCIRun
 
 #endif
 

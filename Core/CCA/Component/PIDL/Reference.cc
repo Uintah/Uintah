@@ -31,34 +31,35 @@
 #include "Reference.h"
 #include <Core/CCA/Component/PIDL/TypeInfo.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
+using namespace SCIRun;
 
-PIDL::Reference::Reference()
+Reference::Reference()
 {
-  chan = PIDL::PIDL::getSpChannel();
+  chan = PIDL::getSpChannel();
   d_vtable_base=TypeInfo::vtable_invalid;    
 }
 
-PIDL::Reference::Reference(const Reference& copy)
+Reference::Reference(const Reference& copy)
     :d_vtable_base(copy.d_vtable_base)
 {
   chan = (copy.chan)->SPFactory(false);
 }
 
-PIDL::Reference::~Reference(){
+Reference::~Reference(){
   if (chan != NULL) {
     delete chan;
     chan = NULL;
   }
 }
 
-PIDL::Reference& PIDL::Reference::operator=(const Reference& copy)
+Reference& Reference::operator=(const Reference& copy)
 {
   d_vtable_base=copy.d_vtable_base;
   chan = (copy.chan)->SPFactory(false);
   return *this;
 }
 
-int PIDL::Reference::getVtableBase() const
+int Reference::getVtableBase() const
 {
     return d_vtable_base;
 }

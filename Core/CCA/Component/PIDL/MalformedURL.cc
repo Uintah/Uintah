@@ -29,8 +29,7 @@
  */
 
 #include "MalformedURL.h"
-
-using PIDL::MalformedURL;
+using namespace SCIRun;
 
 MalformedURL::MalformedURL(const std::string& url,
 			   const std::string& error)
@@ -55,6 +54,6 @@ const char* MalformedURL::message() const
 
 const char* MalformedURL::type() const
 {
-    return "Core/CCA/Component::PIDL::MalformedURL";
+    return "SCIRnu::MalformedURL";
 }
 

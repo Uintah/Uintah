@@ -30,8 +30,7 @@
 
 #include <Core/CCA/Component/PIDL/GlobusError.h>
 #include <sstream>
-
-using PIDL::GlobusError;
+using namespace SCIRun;
 
 GlobusError::GlobusError(const std::string& msg, int code)
     : d_msg(msg), d_code(code)
@@ -57,6 +56,6 @@ const char* GlobusError::message() const
 
 const char* GlobusError::type() const
 {
-    return "Core/CCA/Component::PIDL::GlobusError";
+    return "SCIRun::GlobusError";
 }
 

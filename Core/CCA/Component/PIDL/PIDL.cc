@@ -31,16 +31,21 @@
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/PIDL/Object_proxy.h>
 #include <Core/CCA/Component/PIDL/Warehouse.h>
+#include <Core/CCA/Component/Comm/NexusSpChannel.h>
+#include <Core/CCA/Component/Comm/NexusEpChannel.h>
+#include <Core/CCA/Component/Comm/SocketSpChannel.h>
+#include <Core/CCA/Component/Comm/SocketEpChannel.h>
 #include <Core/Exceptions/InternalError.h> 
 #include <iostream>
 #include <sstream>
 
-
-namespace PIDL {
-
+#define COMM_SOCKET 1
+#define COMM_NEXUS 2
 static int comm_type = 0;
 
-Warehouse* ::PIDL::PIDL::warehouse;
+using namespace SCIRun;
+
+Warehouse* PIDL::warehouse;
 
 void
 PIDL::initialize(int, char*[])
@@ -117,9 +122,3 @@ PIDL::setCommunication(int c)
     comm_type = c;
   }
 }
-
-}
-
-
-
-

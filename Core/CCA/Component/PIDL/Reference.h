@@ -33,7 +33,7 @@
 
 #include <Core/CCA/Component/Comm/SpChannel.h>
 
-namespace PIDL {
+namespace SCIRun {
 /**************************************
  
 CLASS
@@ -76,7 +76,7 @@ DESCRIPTION
     // The vtable base offset
     int d_vtable_base;
   };
-} // End namespace PIDL
+} // End namespace SCIRun
 
 #endif
 
