@@ -1,32 +1,10 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <filter name="GradientAnisotropicDiffusionImageFilter">
    <include href="../../../../ITK/itk_GradientAnisotropicDiffusionImageFilter.xml"/>
-   <include href="gui_GradientAnisotropicDiffusionImageFilter_Darby.xml"/>
    <filter-sci name="GradientAnisotropicDiffusionImageFilter">
       <package>Insight</package>
       <category>Filters</category>
-      <instantiations>
-         <instance num="1">
-            <type name="InputImageType">
-               <datatype>ITKDatatype</datatype>
-               <value>itk::Image&lt;float, 2&gt;</value>
-            </type>
-            <type name="OutputImageType">
-               <datatype>ITKDatatype</datatype>
-               <value>itk::Image&lt;float, 2 &gt;</value>
-            </type>
-         </instance>
-         <instance num="2">
-            <type name="InputImageType">
-               <datatype>ITKDatatype</datatype>
-               <value>itk::Image&lt;float, 3&gt;</value>
-            </type>
-            <type name="OutputImageType">
-               <datatype>ITKDatatype</datatype>
-               <value>itk::Image&lt;float, 3 &gt;</value>
-            </type>
-        </instance>
-     </instantiations>
+      <instantiations use-defaults="yes"/>
      <includes>
         <include>Packages/Insight/Dataflow/Ports/ITKDatatypePort.h</include>
      </includes>

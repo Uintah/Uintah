@@ -35,7 +35,12 @@
       <default>1.0</default>
     </param>
     <param name="isovalue">
-      <gui>text-entry</gui>
+      <gui>radiobutton</gui>
+      <values>
+      <val>0.0</val>
+      <val>0.5</val>
+      <val>1.0</val>
+      </values>
       <default>0.5</default>
     </param>
   </parameters>

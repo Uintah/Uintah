@@ -11,19 +11,15 @@
   <instantiations>
     <instance num="1">
       <type name="ScalarType">
-        <datatype>ITKDatatype</datatype>
         <value>float</value>
       </type>
       <type name="itk::watershed::SegmentTable&lt;ScalarType&gt;">
-        <datatype>ITKDatatype</datatype>
         <value>itk::watershed::SegmentTable&lt;ScalarType&gt;</value>
       </type>
       <type name="itk::watershed::EquivalencyTable">
-        <datatype>ITKDatatype</datatype>
         <value>itk::watershed::EquivalencyTable</value>
       </type>
       <type name="itk::watershed::SegmentTree&lt;ScalarType&gt;">
-        <datatype>ITKDatatype</datatype>
         <value>itk::watershed::SegmentTree&lt; ScalarType &gt;</value>
       </type>
      </instance>
