@@ -36,10 +36,18 @@
 #include <Core/Thread/ThreadError.h>
 #include <Core/SystemCall/SystemCallError.h>
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424
+#pragma set woff 1209 
+#endif
+
 namespace SCIRun { 
 
 ServiceFrame::ServiceFrame(IComSocket socket, ServiceDBHandle db, ServiceLogHandle log) :
-Runnable(true), socket_(socket), db_(db), log_(log)
+    Runnable(true), 
+    socket_(socket), 
+    db_(db), 
+    log_(log)
 {
 }
 
@@ -336,7 +344,6 @@ bool ServiceFrame::runservice()
 		log_->putmsg(str);
         delete serv;
         throw;
-        return(false);
 	}
 
     
@@ -383,7 +390,6 @@ bool ServiceFrame::runservice()
 		return(false);
 	}
 
-	return(true);
 }
 
 
@@ -394,4 +400,9 @@ bool ServiceFrame::close()
 	return(true);
 }
 
-}
+} // namespace
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#pragma reset woff 1209 
+#endif

@@ -36,7 +36,11 @@
  */
 
 #include <Core/ICom/IComINetSocket.h>
-#include <iostream>
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424
+#pragma set woff 1209 
+#endif
 
 namespace SCIRun {
 
@@ -158,7 +162,7 @@ std::string IComINetSocket::getsenderror(int errnr)
 
 std::string IComINetSocket::getrecverror(int errnr)
 {
-	switch(errno)
+	switch(errnr)
 	{
 		case EBADF: return(std::string("Sock descriptor is not valid"));
 		case ENOTSOCK: return(std::string("Socket descriptor is not a socket"));
@@ -274,6 +278,7 @@ int		IComINetSocket::connect_timeout(int sockfd, const sockaddr* sa, socklen_t s
 // By default Unix will timeout after 75 secs anyway.
 // So there is no major problem if this function is not included
 
+// This still needs to be finished
 #ifdef _JGS_USE_CONNECT_TIMEOUT 
 	sig_t	sigfunc;
 	int		ret;
@@ -927,7 +932,7 @@ bool	IComINetSocket::recv(IComPacketHandle &packet, IComSocketError &err)
 	
 	if (header[0] > 255)
 	{	// The whole thing must be byte swapped if the first number is over 255
-		packet->swap_bytes(header,4,4);
+		packet->swap_bytes(header,6,4);
 		byteswap = true;
 	}
 	
@@ -998,4 +1003,10 @@ bool	IComINetSocket::isconnected(IComSocketError &err)
 } 
 
 
-}
+} // end namespace
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424
+#pragma set woff 1209 
+#endif
+

@@ -207,7 +207,7 @@ bool FileTransferClient::translate_scirun_tempdir(std::string& tempdir)
     }
 }
         
-bool FileTransferClient::get_file(std::string localfilename,std::string remotefilename)
+bool FileTransferClient::get_file(std::string remotefilename,std::string localfilename)
 {
     FILE* localfile;
     int fileid = fileidcnt_++;
@@ -252,33 +252,33 @@ bool FileTransferClient::get_file(std::string localfilename,std::string remotefi
             seterror(packet->getstring());
             return(false);
         }
-        if ((packet->gettag() != TAG_FDATA)||(packet->gettag() != TAG_FEND))
+        if ((packet->gettag() != TAG_FDATA)&&(packet->gettag() != TAG_FEND))
         {
             ::fclose(localfile);
-            seterror("Received unknown packet");
             packet->clear();
             packet->settag(TAG_FRESET);
             send(packet);
+            seterror("Received unknown packet");
             return(false);
         }
         
         if ( ::fseek(localfile,static_cast<long>(packet->getparam1()),SEEK_SET) < 0)
         {
             ::fclose(localfile);
-            seterror("Fseek error writing local file");
             packet->clear();
             packet->settag(TAG_FRESET);
             send(packet);
+            seterror("Fseek error writing local file");
             return(false);
         }
         
         if ( ::fwrite(packet->getbuffer(),1,static_cast<size_t>(packet->getdatasize()),localfile) != static_cast<size_t>(packet->getdatasize()))
         {
             ::fclose(localfile);
-            seterror("Error writing local file");
             packet->clear();
             packet->settag(TAG_FRESET);
             send(packet);
+            seterror("Error writing local file");
             return(false);        
         }
         
@@ -309,7 +309,7 @@ bool FileTransferClient::get_file(std::string localfilename,std::string remotefi
 }
 
 
-bool FileTransferClient::put_file(std::string remotefilename,std::string localfilename)
+bool FileTransferClient::put_file(std::string localfilename,std::string remotefilename)
 {
     
     FILE* localfile;
@@ -355,23 +355,23 @@ bool FileTransferClient::put_file(std::string remotefilename,std::string localfi
             seterror(packet->getstring());
             return(false);
         }
-        if ((packet->gettag() != TAG_FNEXTDATA)||(packet->gettag() != TAG_FEND))
+        if ((packet->gettag() != TAG_FNEXTDATA)&&(packet->gettag() != TAG_FEND))
         {
             ::fclose(localfile);
-            seterror("Received unknown packet");
             packet->clear();
             packet->settag(TAG_FRESET);
             send(packet);
+            seterror("Received unknown packet");
             return(false);
         }
         
         if ( ::fseek(localfile,static_cast<long>(packet->getparam1()),SEEK_SET) < 0)
         {
             ::fclose(localfile);
-            seterror("Fseek error reading local file");
             packet->clear();
             packet->settag(TAG_FRESET);
             send(packet);
+            seterror("Fseek error reading local file");
             return(false);
         }
         
@@ -383,15 +383,15 @@ bool FileTransferClient::put_file(std::string remotefilename,std::string localfi
         packet->setid(fileid);
         packet->setparam1(seekpos);
         
-        bytesread = ::fwrite(packet->getbuffer(),1,buffersize_,localfile) != static_cast<size_t>(packet->getdatasize());
+        bytesread = ::fread(packet->getbuffer(),1,buffersize_,localfile);
         
         if (bytesread < 0)
         {
             ::fclose(localfile);
-            seterror("Error reading local file");
             packet->clear();
             packet->settag(TAG_FRESET);
             send(packet);
+            seterror("Error reading local file");
             return(false);        
         }
         

@@ -125,9 +125,11 @@ void FileTransfer::handle_service(IComPacketHandle &packet)
     int bytesread;
     int seekpos;
     
+    
 	switch (packet->gettag())
 	{
 		case TAG_FPUT:
+           
             // open a file for writing
             if (file_ != 0)
             {
@@ -161,7 +163,8 @@ void FileTransfer::handle_service(IComPacketHandle &packet)
             packet->setparam1(0);
             packet->setid(fileID_);
             send_packet(packet);
-            break;
+            
+            return;
         
         case TAG_FDATA:
             
@@ -207,7 +210,8 @@ void FileTransfer::handle_service(IComPacketHandle &packet)
             packet->settag(TAG_FNEXTDATA);
             packet->setparam1(nextpos);
             send_packet(packet);
-            break;
+            
+            return;
             
         case TAG_FEND:
 
@@ -254,7 +258,7 @@ void FileTransfer::handle_service(IComPacketHandle &packet)
             
             packet->clear();
             packet->settag(TAG_FTSUCCESS);
-            break;
+            return;
             
         case TAG_FGET:
 
@@ -323,7 +327,7 @@ void FileTransfer::handle_service(IComPacketHandle &packet)
             packet->setparam1(0);
             packet->setid(fileID_);
             send_packet(packet);
-            break;
+            return;
             
         case TAG_FNEXTDATA:    
         
@@ -413,12 +417,12 @@ void FileTransfer::handle_service(IComPacketHandle &packet)
                 packet->settag(TAG_TDIR);
                 send_packet(packet);
             }
-            break;
+            return;
         case TAG_FRESET:
             if (file_) ::fclose(file_);
             file_ = 0;
             fileID_ = 0;
-            break;
+            return;
 	}
 }
 

@@ -43,13 +43,13 @@ Mutex internalsocketlock_("internal_socket_list");
 std::map<std::string,IComInternalSocket *> internalsocketlist_;
 
 IComInternalSocket::IComInternalSocket() :
-	waitpacket_("packet_list_condition_variable"),
-	waitconnection_("connection_list_condition_variable"),
-	localaddress_("internal","no_name"),
-	remotesocket_(0),
 	listen_(false),
 	connected_(false),
 	registered_(false),
+	localaddress_("internal","no_name"),
+	remotesocket_(0),
+	waitpacket_("packet_list_condition_variable"),
+	waitconnection_("connection_list_condition_variable"),
 	secs_(0),
 	microsecs_(0)
 {
@@ -175,9 +175,6 @@ bool	IComInternalSocket::connect(IComAddress& address, conntype conn, IComSocket
 		return(false);
 	}
 
-	err.errnr = 0;
-	err.error = "";
-	return(true);
 }
 
 

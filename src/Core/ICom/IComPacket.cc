@@ -35,8 +35,12 @@
  *
  */
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424
+#pragma set woff 1209 
+#endif
+
 #include <Core/ICom/IComPacket.h>
-#include <iostream>
  
 namespace SCIRun {
 
@@ -243,7 +247,6 @@ void	IComPacket::swap_bytes(void *vbuffer,int size,int elsize)
    	    break;
       default:
         throw invalid_data_format();
-     	break; 
    }  
 }
 
@@ -264,5 +267,8 @@ IComPacket* IComPacket::clone()
 		
 } // end namespace
 
-
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#pragma reset woff 1209 
+#endif
 

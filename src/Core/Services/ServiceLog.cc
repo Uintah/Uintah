@@ -35,7 +35,9 @@
 namespace SCIRun {
 
 ServiceLog::ServiceLog(std::string filename) :
-  lock("servicelog lock"), haslog_(false), ref_cnt(0)
+  lock("servicelog lock"), 
+  ref_cnt(0),
+  haslog_(false) 
 {	
   if (filename != "") 
   {

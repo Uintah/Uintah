@@ -35,9 +35,9 @@ namespace SCIRun {
 
 
 Service::Service(ServiceContext &ctx) :
-	ctx_(ctx),
 	lock("Service Lock"),
-	ref_cnt(0)
+	ref_cnt(0),
+	ctx_(ctx)
 {
 }
 

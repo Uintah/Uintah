@@ -41,7 +41,10 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
  
 using namespace ICom;
 using namespace std;

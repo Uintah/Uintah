@@ -42,8 +42,18 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/LockingHandle.h>
 #include <sys/types.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+// Keep the MIPS compiler from putting REMARKS on implicit template
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424
+#endif
 
 namespace SCIRun {
 
@@ -324,5 +334,9 @@ inline int IComPacket::buffersize()
 
 } // end namespace
 
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#endif
 #endif
 
