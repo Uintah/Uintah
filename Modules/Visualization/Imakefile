@@ -3,10 +3,10 @@
 
 #ifdef SCI_DIR_Modules_Visualization
 
-OBJS = FrameTest.o  GenColormap.o  Hedgehog.o  \
-	IsoSurface.o  Streamline.o  Streamsurf.o
-SRCS = FrameTest.cc GenColormap.cc Hedgehog.cc \
-	IsoSurface.cc Streamline.cc Streamsurf.cc
+OBJS = GenColormap.o  Hedgehog.o  IsoSurface.o  \
+	Streamline.o  Streamsurf.o  WidgetTest.o
+SRCS = GenColormap.cc Hedgehog.cc IsoSurface.cc \
+	Streamline.cc Streamsurf.cc WidgetTest.cc
 
 LIBNAME = Visualization
 
