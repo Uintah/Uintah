@@ -164,8 +164,8 @@ FusionFieldSetReader::execute()
   NrrdData *nout = scinew NrrdData(1);
   nrrdWrap(nout->nrrd, nrrd_data, nrrdTypeDouble, 5, 
 	   d_vals, isz, jsz, ksz, fnames.size());
-  nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, nrrdCenterNode,
-	      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, nrrdCenterNode,
+		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
   nout->nrrd->axis[0].label = strdup(tup.str().c_str());
   nout->nrrd->axis[1].label = strdup("i");
   nout->nrrd->axis[2].label = strdup("j");
