@@ -43,11 +43,18 @@ using namespace SCIRun;
                                       const LevelP&,
 				          SchedulerP&);
                                                      
-      void scheduleComputeEquilibrationPressure(SchedulerP&, 
-                                              const PatchSet*,
-                                              const MaterialSubset*,
-						    const MaterialSet*);
-      
+      void scheduleComputePressure(SchedulerP&, 
+                                   const PatchSet*,
+                                   const MaterialSubset*,
+				       const MaterialSet*);
+                                   
+      void scheduleComputeFCPressDiffRF(SchedulerP& sched,
+                                        const PatchSet*,
+                                        const MaterialSubset*,
+                                        const MaterialSubset*,
+                                        const MaterialSubset*,
+                                        const MaterialSet*);
+                                              
       void scheduleComputeFaceCenteredVelocities(SchedulerP&, 
                                                 const PatchSet*,
                                                 const MaterialSubset*,
@@ -85,16 +92,17 @@ using namespace SCIRun;
       void scheduleComputeLagrangianValues(SchedulerP&, 
                                           const PatchSet*,
                                           const MaterialSubset*,
-					  const MaterialSet*);
+                                          const MaterialSet*);
                  
       void scheduleComputeLagrangianSpecificVolume(SchedulerP&,
                                                    const PatchSet*,
+                                                   const MaterialSubset*,
                                                    const MaterialSubset*,
                                                    const MaterialSet*);
 
       void scheduleAddExchangeToMomentumAndEnergy(SchedulerP&, 
                                                   const PatchSet*,
-						  const MaterialSet*);
+                                                  const MaterialSet*);
       
       void scheduleAdvectAndAdvanceInTime(SchedulerP&, 
                                           const PatchSet*,
@@ -107,54 +115,6 @@ using namespace SCIRun;
       void schedulePrintConservedQuantities(SchedulerP&, const PatchSet*,
 					    const MaterialSubset*,
 					    const MaterialSet*);
-/*__________________________________
-*   PUT THE RF SCHEDULES HERE
-*   FOR NOW
-*__________________________________*/
-     void scheduleComputeNonEquilibrationPressureRF(SchedulerP&, 
-                                               const PatchSet*,
-                                               const MaterialSubset*,
-                                               const MaterialSubset*,
-					            const MaterialSet*);                                              
-
-     void scheduleComputeFCPressDiffRF( SchedulerP&,
-                                      const PatchSet*,
-                                      const MaterialSubset*,
-                                      const MaterialSubset*,
-                                      const MaterialSubset*,
-					   const MaterialSet*);
-                                                                               
-      void scheduleComputeFaceCenteredVelocitiesRF(SchedulerP&, 
-                                                const PatchSet*,
-                                                const MaterialSubset*,
-                                                const MaterialSubset*,
-                                                const MaterialSubset*,
-                                                const MaterialSet*);
-      
-      void scheduleAccumulateMomentumSourceSinksRF(SchedulerP&, 
-                                            const PatchSet*,
-                                            const MaterialSubset*,
-                                            const MaterialSubset*,
-						  const MaterialSet*);
-      
-      void scheduleAccumulateEnergySourceSinksRF(SchedulerP&, 
-                                            const PatchSet*,
-                                            const MaterialSubset*,
-					         const MaterialSet*);
-      
-                 
-      void scheduleComputeLagrangianSpecificVolumeRF(SchedulerP&, 
-                                                   const PatchSet*,
-                                                   const MaterialSubset*,
-                                                   const MaterialSubset*,
-                                                   const MaterialSet*);
-
-      void scheduleAddExchangeToMomentumAndEnergyRF(SchedulerP&, 
-                                                  const PatchSet*,
-						        const MaterialSet*);
-/*__________________________________
-*   END OF RF 
-*__________________________________*/
       
       void setICELabel(ICELabel* Ilb) {
 	delete lb;
@@ -246,7 +206,7 @@ using namespace SCIRun;
 *   PUT THE RF TASKS HERE FOR 
 *   NOW
 *__________________________________*/                               
-     void computeNonEquilibrationPressureRF(const ProcessorGroup*,
+     void computeRateFormPressure(const ProcessorGroup*,
 				       const PatchSubset* patch,
 				       const MaterialSubset* matls,
 				       DataWarehouse*, 
@@ -381,7 +341,8 @@ using namespace SCIRun;
       bool switchTestConservation; 
       
       bool d_massExchange;
-      
+      bool d_RateForm;
+      bool d_EqForm;
       int d_max_iter_equilibration;
      
     private:
