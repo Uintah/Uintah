@@ -80,16 +80,6 @@ RescaleColorMap::RescaleColorMap(const string& id)
     min("min", id, this ),
     max("max", id, this)
 {
-    // Create the output port
-  //omap=scinew ColorMapOPort(this, "ColorMap", ColorMapIPort::Atomic);
-  //add_oport(omap);
-
-    // Create the input ports
-  //imap=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
-  //add_iport(imap);
-  //FieldIPort* ifield=scinew FieldIPort(this, "ScalarField",FieldIPort::Atomic);
-  //add_iport(ifield);
-  //fieldports.add(ifield);
 }
 
 RescaleColorMap::~RescaleColorMap()
@@ -114,48 +104,29 @@ RescaleColorMap::execute()
   if( isFixed.get() ){
     cmap->Scale(min.get(), max.get());
   } else {
-    for(int i=0;i<fieldports.size()-1;i++){
+    dynamic_port_range range = get_iports("Field");
+    port_iter pi = range.first;
+    while (pi != range.second)
+    {
+      FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);
       FieldHandle field;
-      if(fieldports[i]->get(field)){
-        const string type = field->get_type_name();
-	
+      if (ifield->get(field)) {
         if ( !field->is_scalar() ) {
           error("Not a scalar input field.");
           return;
         }
-	
 	get_minmax(field);
-	
 	if (!success_) {
 	  error("Can not compute minmax for input field.");
 	  return;
 	}
-	
 	cmap->Scale( minmax_.first, minmax_.second);
 	min.set( minmax_.first );
 	max.set( minmax_.second );
       }
+      ++pi;
     }
   }
   omap->send(cmap);
 }
-
-/*
-void 
-RescaleColorMap::connection(ConnectionMode mode, int which_port, int)
-{
-    if(which_port > 0){
-        if(mode==Disconnected){
-            remove_iport(which_port);
-            fieldports.remove(which_port-1);
-        } else {
-            FieldIPort* p=scinew FieldIPort(this, "Field",
-                                                        FieldIPort::Atomic);
-            fieldports.add(p);
-            add_iport(p);
-        }
-    }
-}
-*/
 } // End namespace SCIRun
-
