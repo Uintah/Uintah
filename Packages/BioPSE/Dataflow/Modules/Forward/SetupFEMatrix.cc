@@ -265,7 +265,7 @@ void SetupFEMatrix::execute(){
   string units;
   if (uiUseCond_.get()==1 /*&& hField->mesh()->get_property("units", units)*/) {
 	if(tet) {
-	  if(hCondMeshTet->get_property("units", units)) {
+	  if(hCondMeshTet->mesh()->get_property("units", units)) {
 		msgStream_  << "units = "<< units <<"\n";
 		if (units == "mm") unitsScale = 1./1000;
 		else if (units == "cm") unitsScale = 1./100;
@@ -278,7 +278,7 @@ void SetupFEMatrix::execute(){
 	  }
 	}
 	else {
-	  if(hLHHexVolField->get_property("units", units)) {
+	  if(hLHHexVolField->mesh()->get_property("units", units)) {
 		msgStream_  << "units = "<< units <<"\n";
 		if (units == "mm") unitsScale = 1./1000;
 		else if (units == "cm") unitsScale = 1./100;
