@@ -241,6 +241,8 @@ private:
 
   GLUI_Button  * lightOnOffBtn_;
 
+  GLUI_Spinner * light_radius_spinner;
+
   GLUI_Spinner * r_color_spin;
   GLUI_Spinner * g_color_spin;
   GLUI_Spinner * b_color_spin;
@@ -267,6 +269,8 @@ private:
   float lightX_;
   float lightY_;
   float lightZ_;
+
+  float light_radius;
 
   ////////////////////////////////////////////////////////////////
   //
@@ -354,6 +358,7 @@ private:
   static void updateAmbientCB( int id );
   static void updateLightPanelCB( int id );
   static void updateLightPositionCB( int id );
+  static void updateLightRadiusCB( int id );
 
   // Object Window Callbacks
   void createObjectWindow( GLUI * window );
