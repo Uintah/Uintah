@@ -67,10 +67,9 @@ public:
 		       int axis) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *iftd,
-				       const TypeDescription *oftd);
+  static CompileInfoHandle get_compile_info(const TypeDescription *iftd,
+					    const TypeDescription *oftd);
 };
-
 
 template< class IFIELD, class OFIELD >
 class FieldSlicerWorkAlgoT : public FieldSlicerWorkAlgo
@@ -95,58 +94,38 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
   FIELD *ifield = (FIELD *) ifield_h.get_rep();
   typename FIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
 
-  unsigned int omx, omy, omz;
-  unsigned int onx, ony, onz;
+  unsigned int old_min_i, old_min_j, old_min_k;
+  unsigned int old_i, old_j, old_k;
 
-  unsigned int mx, my, nx, ny;
+  unsigned int new_min_i, new_min_j, new_i, new_j;
 
   Array1<unsigned int> dim = imesh->get_dim();
   Array1<unsigned int> min = imesh->get_min();
 
   if( dim.size() == 3 ) {
-    omx = min[0];
-    omy = min[1];
-    omz = min[2];
+    old_min_i = min[0];           old_i = dim[0];
+    old_min_j = min[1];           old_j = dim[1];
+    old_min_k = min[2];           old_k = dim[2];
 
-    onx = dim[0];
-    ony = dim[1];
-    onz = dim[2];
   } else if( dim.size() == 2 ) {
-    omx = min[0];
-    omy = min[1];
-    omy = 0;
-
-    onx = dim[0];
-    ony = dim[1];
-    onz = 1;
+    old_min_i = min[0];           old_i = dim[0];
+    old_min_j = min[1];           old_j = dim[1];
+    old_min_j = 0;                old_k = 1;
   } else if( dim.size() == 1 ) {
-    omx = min[0];
-    omy = 0;
-    omy = 0;
-
-    onx = dim[0];
-    ony = 1;
-    onz = 1;
+    old_min_i = min[0];           old_i = dim[0];
+    old_min_j = 0;                old_j = 1;
+    old_min_j = 0;                old_k = 1;
   }
 
   if (axis == 0) {
-    nx = ony;
-    ny = onz;
-
-    mx = omy;
-    my = omz;
+    new_i = old_j;                new_min_i = old_min_j;
+    new_j = old_k;                new_min_j = old_min_k;
   } else if (axis == 1) {
-    nx = onx;
-    ny = onz;
-
-    mx = omx;
-    my = omz;
+    new_i = old_i;                new_min_i = old_min_i;
+    new_j = old_k;                new_min_j = old_min_k;
   } else if (axis == 2) {
-    nx = onx;
-    ny = ony;
-
-    mx = omx;
-    my = omy;
+    new_i = old_i;                new_min_i = old_min_i;
+    new_j = old_j;                new_min_j = old_min_j;
   }
 
   // Build the correct output field given the input field and and type.
@@ -157,10 +136,10 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
     typename ImageField<TYPE>::mesh_type *omesh =
       scinew typename ImageField<TYPE>::mesh_type();
 
-    omesh->set_min_i( mx );
-    omesh->set_min_j( my );
-    omesh->set_ni( nx );
-    omesh->set_nj( ny );
+    omesh->set_min_i( new_min_i );
+    omesh->set_min_j( new_min_j );
+    omesh->set_ni( new_i );
+    omesh->set_nj( new_j );
 
     ImageField<TYPE> *ofield = scinew ImageField<TYPE>(omesh, Field::NODE);
 
@@ -169,7 +148,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
     // 3D StructHexVol to 2D StructQuadSurf
   } else if( ifield->get_type_description(0)->get_name() == "StructHexVolField" ) {
     typename StructQuadSurfField<TYPE>::mesh_type *omesh =
-      scinew typename StructQuadSurfField<TYPE>::mesh_type(nx,ny);
+      scinew typename StructQuadSurfField<TYPE>::mesh_type(new_i,new_j);
 
     StructQuadSurfField<TYPE> *ofield = scinew StructQuadSurfField<TYPE>(omesh, Field::NODE);
 
@@ -180,8 +159,8 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
     typename ScanlineField<TYPE>::mesh_type *omesh =
       scinew typename ScanlineField<TYPE>::mesh_type();
 
-    omesh->set_min_i( mx );
-    omesh->set_ni( nx );
+    omesh->set_min_i( new_min_i );
+    omesh->set_ni( new_i );
 
     ScanlineField<TYPE> *ofield = scinew ScanlineField<TYPE>(omesh, Field::NODE);
 
@@ -190,7 +169,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
     // 2D StructQuadSurf to 1D StructCurve
   } else if( ifield->get_type_description(0)->get_name() == "StructQuadSurfField" ) {
     typename StructCurveField<TYPE>::mesh_type *omesh =
-      scinew typename StructCurveField<TYPE>::mesh_type(nx);
+      scinew typename StructCurveField<TYPE>::mesh_type(new_i);
 
     StructCurveField<TYPE> *ofield = scinew StructCurveField<TYPE>(omesh, Field::NODE);
 
@@ -201,8 +180,8 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
     typename ScanlineField<TYPE>::mesh_type *omesh =
       scinew typename ScanlineField<TYPE>::mesh_type();
 
-    omesh->set_min_i( mx );
-    omesh->set_ni( nx );
+    omesh->set_min_i( new_min_i );
+    omesh->set_ni( new_i );
 
     ScanlineField<TYPE> *ofield = scinew ScanlineField<TYPE>(omesh, Field::NODE);
 
@@ -211,7 +190,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
     // 1D StructCurve to 0D StructCurve
   } else if( ifield->get_type_description(0)->get_name() == "StructCurveField" ) {
     typename StructCurveField<TYPE>::mesh_type *omesh =
-      scinew typename StructCurveField<TYPE>::mesh_type(nx);
+      scinew typename StructCurveField<TYPE>::mesh_type(new_i);
 
     StructCurveField<TYPE> *ofield = scinew StructCurveField<TYPE>(omesh, Field::NODE);
 
@@ -225,9 +204,9 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
 template< class IFIELD, class OFIELD >
 void
 FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle ifield_h,
-					       FieldHandle ofield_h,
-					       unsigned int index,
-					       int axis)
+					      FieldHandle ofield_h,
+					      unsigned int index,
+					      int axis)
 {
   IFIELD *ifield = (IFIELD *) ifield_h.get_rep();
   typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
@@ -248,11 +227,11 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle ifield_h,
     old_i = dim[0];
     old_j = dim[1];
     old_k = 1;        // By setting this it is possible to slice from 2D to 1D easily.
- } else if( dim.size() == 1 ) {
+  } else if( dim.size() == 1 ) {
     old_i = dim[0];
     old_j = 1;
     old_k = 1;        // By setting this it is possible to slice from 1D to 0D easily.
- }
+  }
 
   if (axis == 0) {
     new_i = old_j;
