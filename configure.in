@@ -1364,6 +1364,11 @@ case $host in
     AC_MSG_WARN(Configure script only allows SGI compilers on IRIX.)
     AC_MSG_WARN(If this is a problem email scirun-develop@cs.utah.edu.)
 
+    # doesn't not need/want an "_" on the names of fortran  
+    # functions.  This var is used in fspec.pl.in in order not to
+    # add the _ to the cname of the function.
+    FORTRAN_UNDERSCORE=0
+
     ac_objext=o
     SCI_CHECK_VERSION($CC,-version,7.3.1.1,,
                       echo configure: error: wrong $CC version.; exit)
