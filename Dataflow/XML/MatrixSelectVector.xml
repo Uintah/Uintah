@@ -38,11 +38,31 @@
     data propogates throughout the image, the Viewer window displays the
     animation of points on the mesh.</p>  
     </summary>
+<<<<<<< MatrixSelectVector.xml
+      <description>
+	<p>MatrixSelectVector runs in one of three different modes:</p>
+	<orderedlist>
+	  <listitem>
+	    <p>The MatrixSelecxtVector module runs in interactive mode by using
+=======
       <description>
 	<p>MatrixSelectVector runs in one of three different modes:</p>
 	<p>The MatrixSelecxtVector module runs in interactive mode by using
+>>>>>>> 1.11
       the "Matrix" input port (first port) only.  The other two ports,
       Weight Vector and Current Index, run the module without having to
+<<<<<<< MatrixSelectVector.xml
+      select vectors by hand.</listitem></p>
+
+	<p>When the module runs in interactive mode, the user selects which vectors
+they want to include in the playback.  In the MatrixSelectVector module
+dialog window, Start and End sliders enable the user to set the playback
+range, the Current Value function specifies which row or column to send
+downstream, and the Delay function controls the time delay and speed of the
+animated points on the mesh.</p>
+
+	<p>There are several Play Modes in the MatrixSelectVector GUI Dialog
+=======
       select vectors by hand.</p>
       
 	<p>When the module runs in interactive mode, the user selects which 
@@ -54,6 +74,7 @@
            animated points on the mesh.</p>
 	
 	<p>There are several Play Modes in the MatrixSelectVector GUI Dialog
+>>>>>>> 1.11
 window: Once, Loop, Bounce1, and Bounce2.  The Once mode plays the
 animation from current value to the end of the selected range of column and
 rows on the matrix.  The Loop mode playas the selected range endlessly,
@@ -65,17 +86,66 @@ the GUI dialog window, the user specifies a delay (in milliseconds)that
 controls the speed at which the selected rows or columns may be sent to the
 output port.</p>
 
+<<<<<<< MatrixSelectVector.xml
+	<p><listitem>The second input port of the MatrixSelectVector module, Weight
+=======
 	<p>The second input port of the MatrixSelectVector module, Weight
+>>>>>>> 1.11
 Vector, allows the user to to select mutliple columns of a matrix and add
-them together. The Weight Vector portcan only take a column vector as
+them together. The Weight Vector port can only take a column vector as
 input.  In the MatrixSelectVector module, the user selects the indices of
 the column or row they are working with to calculate this
 weighting.</p>
 
+<<<<<<< MatrixSelectVector.xml
+	<p><listitem>The third input port, Current Index, synchronizes the playback
+=======
 	<p>The third input port, Current Index, synchronizes the playback
+>>>>>>> 1.11
 of two MatrixSelectVector modules; the Selected Index of one can be
 connected to the Current Index Port of another.</p>
 
+<<<<<<< MatrixSelectVector.xml
+	    <p>The following examples show use of the input ports:</p>
+	    <desclist>
+	      <desclistitem>
+		<desclistterm><p>Send Row 5 of a matrix</desclistterm>
+<desclistdef>
+		      <orderedlist>
+			<listitem><p>Select Row, making sure that 5 falls between the start and end
+ranges.</p></listitem>
+			<listitem><p>Enter '5' intro the Current Index slot.</p></listitem>
+			<listitem>Execute the module.</listitem></orderedlist></p>
+		</desclistdef>
+	      </desclistitem>
+	      <desclistitem>
+		<desclistterm><p>Send Rows 1 through 5 of a matrix.</desclistterm>
+   <desclistdef></p>
+		  <listitem><p>Select Row with a start value of 1.</p>
+		    <listitem><p>Set the end value to 5.</p>
+		      <listitem><p>Set the Current Index to 1.</p>
+			<listitem><p>Select 'Once' from the play modes.</p>
+			  <listitem><p>Press the 'Play' buttons, and rows 1-5 will be sent, one after
+   the other, to the output port.</p>
+			  </orderedlist></p>
+      </desclistdef>
+      </desclistitem>
+	<desclistitem>
+	  <desclistterm>Synchronize two MatrixSelectVector modules as follows:</p>
+	    <orderedlist>
+		<p><listitem>Attach the module's Selected Index output port to the
+MatrixSelectVector module to be synchronized.</p>
+	      <listitem><p>Be sure that the Row and Column selections for each module are
+consistent.</p>
+	      <listitem><p>You have now synchronized the downstream and upstream
+MatrixSelectVector modules</p></orderedlist>
+	  </desclistdef>
+	</desclistitem>
+	<desclistitem>
+	  <desclistterm><p>Use of the Second Input Port/desclistterm></p>
+	    <desclistdef>
+	      <p>The LeadFieldSourceLocalization module uses the second input port to
+=======
 	<p>The following examples show use of the input ports:</p>
 	<desclist>
 	  <desclistitem>
@@ -121,18 +191,31 @@ MatrixSelectVector modules</p></listitem>
 	    <desclistterm><p>Use of the Second Input Port/desclistterm></p></desclistterm>
 	      <desclistdef>
 		<p>The LeadFieldSourceLocalization module uses the second input port to
+>>>>>>> 1.11
 extract three components from a mtrix and add them together with
+<<<<<<< MatrixSelectVector.xml
+weighting.</p>
+	      <p>For example, if you wanted to extract the matrix 2, 5, and 7, the column
+=======
 weighting. For example, if you wanted to extract the matrix 2, 5, and 7, the column
+>>>>>>> 1.11
 matrix would have only those column entries.  Since we also have weighting,
 you can take the weighted combination of that matrix.  You can do this by
 taking half of column 2, half of column 5, and a quarter of column 7.  The
 column matrix would show these weights in column 2 as 1/2, column 5 as 1/2,
 and column 7 as 1/4, for a vector length of 6 as a column matrix for that
 second entry.</p>
+<<<<<<< MatrixSelectVector.xml
+	    </desclistdef>
+
+
+      </description>
+=======
 	      </desclistdef>
 	  </desclistitem>
 	</desclist>
       </description>
+>>>>>>> 1.11
   </overview>
   <io>
     <inputs lastportdynamic="no"> /usr/local/gnu/bin/emacs
