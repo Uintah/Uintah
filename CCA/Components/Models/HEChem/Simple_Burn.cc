@@ -65,11 +65,11 @@ void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
   d_sharedState = sharedState;
   bool defaultActive=true;
   params->getWithDefault("Active", d_active, defaultActive);
+  params->require("ThresholdTemp",    d_thresholdTemp);
+  params->require("ThresholdPressure",d_thresholdPress);
+  matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
   if(d_active){
-    matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
     matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
-    params->require("ThresholdTemp",    d_thresholdTemp);
-    params->require("ThresholdPressure",d_thresholdPress);
     params->require("Enthalpy",         d_Enthalpy);
     params->require("BurnCoeff",        d_BurnCoeff);
     params->require("refPressure",      d_refPress);
@@ -95,30 +95,43 @@ void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
     }
     mymatls->addReference();
   }
+  else{
+    int matl0_DWI = matl0->getDWIndex();
+    mymatls = new MaterialSet();            
+    if( matl0_DWI != 0){
+      vector<int> m(2);
+      m[0] = 0;    // needed for the pressure and NC_CCWeight 
+      m[1] = matl0_DWI;
+      mymatls->addAll(m);
+    }else{
+      vector<int> m(1);
+      m[0] = matl0_DWI;
+      mymatls->addAll(m);
+    }
+    mymatls->addReference();
+  }
 }
 void Simple_Burn::activateModel(GridP&, SimulationStateP& sharedState,
 			        ModelSetup*)
 {
-  cout << "I'm in problem setup" << endl;
+  cout << "I'm in activateModel" << endl;
   d_active=true;
-  matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
-  params->require("ThresholdTemp",    d_thresholdTemp);
-  params->require("ThresholdPressure",d_thresholdPress);
   params->require("Enthalpy",         d_Enthalpy);
   params->require("BurnCoeff",        d_BurnCoeff);
   params->require("refPressure",      d_refPress);
                                                                               
   //__________________________________
-  //  define the materialSet
+  //  REdefine the materialSet
+  delete mymatls;
   vector<int> m_tmp(2);
   m_tmp[0] = matl0->getDWIndex();
   m_tmp[1] = matl1->getDWIndex();
-  mymatls = new MaterialSet();
-                                                                              
+  mymatls = new MaterialSet();            
+
   if( m_tmp[0] != 0 && m_tmp[1] != 0){
     vector<int> m(3);
-    m[0] = 0;    // needed for the pressure and NC_CCWeight
+    m[0] = 0;    // needed for the pressure and NC_CCWeight 
     m[1] = m_tmp[0];
     m[2] = m_tmp[1];
     mymatls->addAll(m);
@@ -128,8 +141,7 @@ void Simple_Burn::activateModel(GridP&, SimulationStateP& sharedState,
     m[1] = m_tmp[1];
     mymatls->addAll(m);
   }
-  mymatls->addReference();
-
+//  mymatls->addReference();
 }
 //______________________________________________________________________
 //     
@@ -224,7 +236,7 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
     
     cout_doing << "Doing computeModelSources on patch "<< patch->getID()
                <<"\t\t\t\t  Simple_Burn" << endl;
-    CCVariable<double> mass_src_0, mass_src_1, mass_0;
+    CCVariable<double> mass_src_0, mass_src_1;
     CCVariable<Vector> momentum_src_0, momentum_src_1;
     CCVariable<double> energy_src_0, energy_src_1;
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
@@ -417,6 +429,136 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
    
   }
 }
+
+void Simple_Burn::scheduleCheckNeedAddMaterial(SchedulerP& sched,
+                                         const LevelP& level,
+                                         const ModelInfo* mi)
+{
+  Task* t = scinew Task("Simple_Burn::checkNeedAddMaterial", this, 
+                        &Simple_Burn::checkNeedAddMaterial, mi);
+  cout_doing << "Simple_Burn::scheduleCheckNeedAddMaterial "<<  endl;  
+
+  MaterialSubset* one_matl     = scinew MaterialSubset();
+  one_matl->add(0);
+  one_matl->addReference();
+  if(!d_active){
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn  = Ghost::None;
+    const MaterialSubset* react_matl = matl0->thisMaterial();
+    MaterialSubset* one_matl     = scinew MaterialSubset();
+    one_matl->add(0);
+    one_matl->addReference();
+    MaterialSubset* press_matl   = one_matl;
+
+    t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, press_matl,gn);
+    t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   one_matl,  gac, 1);
+                                                                                
+    //__________________________________
+    // Reactants
+    t->requires(Task::NewDW, Ilb->TempX_FCLabel,    react_matl, gac,2);
+    t->requires(Task::NewDW, Ilb->TempY_FCLabel,    react_matl, gac,2);
+    t->requires(Task::NewDW, Ilb->TempZ_FCLabel,    react_matl, gac,2);
+    t->requires(Task::NewDW, Mlb->gMassLabel,       react_matl, gac,1);
+
+    t->computes(Simple_Burn::surfaceTempLabel,   one_matl);
+  }
+  t->computes(Ilb->NeedAddIceMaterialLabel);
+                                                                                
+  sched->addTask(t, level->eachPatch(), mymatls);
+
+  if (one_matl->removeReference())
+    delete one_matl;
+}
+
+void Simple_Burn::checkNeedAddMaterial(const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset*,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw,
+                                      const ModelInfo* mi)
+{
+  double need_add=0.;
+  if(!d_active){
+
+   int m0 = matl0->getDWIndex();
+ 
+   for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);  
+    
+    cout_doing << "Doing checkNeedAddMaterial on patch "<< patch->getID()
+               <<"\t\t\t\t  Simple_Burn" << endl;
+    
+    constCCVariable<double> press_CC,gasTemp,gasVol_frac;
+    constCCVariable<double> solidTemp,solidMass,solidSp_vol;
+
+    CCVariable<double> surfaceTemp;
+
+    constNCVariable<double> NC_CCweight,NCsolidMass;
+    constSFCXVariable<double> gasTempX_FC,solidTempX_FC;
+    constSFCYVariable<double> gasTempY_FC,solidTempY_FC;
+    constSFCZVariable<double> gasTempZ_FC,solidTempZ_FC;
+    constCCVariable<Vector> vel_CC;
+    
+    Ghost::GhostType  gn  = Ghost::None;    
+    Ghost::GhostType  gac = Ghost::AroundCells;   
+   
+    //__________________________________
+    // Reactant data
+    new_dw->get(solidTempX_FC,   Ilb->TempX_FCLabel, m0,patch,gac,2);
+    new_dw->get(solidTempY_FC,   Ilb->TempY_FCLabel, m0,patch,gac,2);
+    new_dw->get(solidTempZ_FC,   Ilb->TempZ_FCLabel, m0,patch,gac,2);
+    new_dw->get(NCsolidMass,     Mlb->gMassLabel,    m0,patch,gac,1);
+
+    //__________________________________
+    //   Misc.
+    new_dw->get(press_CC,         Ilb->press_equil_CCLabel,0,  patch,gn, 0);
+    old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,   0,  patch,gac,1);   
+    new_dw->allocateAndPut(surfaceTemp,Simple_Burn::surfaceTempLabel, 0, patch);
+    surfaceTemp.initialize(0.);
+  
+    IntVector nodeIdx[8];
+    
+    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+
+     //__________________________________
+     // Find if the cell contains surface:
+      patch->findNodesFromCell(*iter,nodeIdx);
+      double MaxMass = d_SMALL_NUM;
+      double MinMass = 1.0/d_SMALL_NUM;
+      for (int nN=0; nN<8; nN++) {
+        MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*
+                                   NCsolidMass[nodeIdx[nN]]);
+        MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*
+                                   NCsolidMass[nodeIdx[nN]]); 
+      }               
+
+      if ( (MaxMass-MinMass)/MaxMass > 0.4       // Find the "surface"
+        && (MaxMass-MinMass)/MaxMass < 1.0
+        &&  MaxMass > d_TINY_RHO){
+
+        //__________________________________
+        //  On the surface, determine the maxiumum temperature
+        //  use this to determine if it is time to activate the model.
+        double Temp = 0.;
+
+        Temp =std::max(Temp, solidTempX_FC[c] );    //L
+        Temp =std::max(Temp, solidTempY_FC[c] );    //Bot
+        Temp =std::max(Temp, solidTempZ_FC[c] );    //BK
+        Temp =std::max(Temp, solidTempX_FC[c + IntVector(1,0,0)] );
+        Temp =std::max(Temp, solidTempY_FC[c + IntVector(0,1,0)] );
+        Temp =std::max(Temp, solidTempZ_FC[c + IntVector(0,0,1)] );
+        surfaceTemp[c] = Temp;
+        if(Temp > .95*d_thresholdTemp){
+          need_add=1.;
+        }
+      }  // if (maxMass-MinMass....)
+    }  // cell iterator  
+   }
+  }
+  new_dw->put(sum_vartype(need_add),     Ilb->NeedAddIceMaterialLabel);
+}
+
 //______________________________________________________________________
 //
 void Simple_Burn::scheduleModifyThermoTransportProperties(SchedulerP&,
