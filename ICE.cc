@@ -32,7 +32,7 @@
 #include <float.h>
 #include <iostream>
 #include <Core/Util/DebugStream.h>
-
+#include <Packages/Uintah/CCA/Components/ICE/MathToolbox.h>
 
 using std::vector;
 using std::max;
@@ -1552,8 +1552,8 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     
     // Extract the momentum exchange coefficients
     vector<double> b(numMatls);
+    vector<double> X(numMatls);
     DenseMatrix beta(numMatls,numMatls),a(numMatls,numMatls);
-
     DenseMatrix K(numMatls,numMatls), junk(numMatls,numMatls);
 
     beta.zero();
@@ -1624,7 +1624,6 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       //__________________________________
       //      S  O  L  V  E  
       //   - backout velocities           
-      vector<double> X(numMatls);
       matrixSolver(numMatls,a,b,X);
       for(int m = 0; m < numMatls; m++) {
        vvel_FCME[m][curcell] = vvel_FC[m][curcell] + X[m];
@@ -1670,7 +1669,6 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       //__________________________________
       //      S  O  L  V  E
       //   - backout velocities
-      vector<double> X(numMatls);
       matrixSolver(numMatls,a,b,X);
       for(int m = 0; m < numMatls; m++) {
        uvel_FCME[m][curcell] = uvel_FC[m][curcell] + X[m];
@@ -1713,7 +1711,6 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       //__________________________________
       //      S  O  L  V  E
       //   - backout velocities 
-      vector<double> X(numMatls);
       matrixSolver(numMatls,a,b,X);
       for(int m = 0; m < numMatls; m++) {
        wvel_FCME[m][curcell] = wvel_FC[m][curcell] + X[m];
@@ -2856,7 +2853,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         }
       }
   
-      vector<double> X(numMatls);
+
       multiplyMatrixAndVector(numMatls,a_inverse,b,X);
       for(int m = 0; m < numMatls; m++) {
         vel_CC[m][c].x( vel_CC[m][c].x() + X[m] );
