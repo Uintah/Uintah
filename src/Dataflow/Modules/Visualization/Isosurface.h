@@ -78,8 +78,12 @@ private:
   GuiInt     gui_build_geom_;
   GuiInt     gui_np_;          
   GuiString  gui_active_isoval_selection_tab_;
-  GuiString  gui_active_tab_; //! for saving nets state
-  GuiString  gui_update_type_; //! for saving nets state
+  GuiString  gui_active_tab_; 
+  //gui_update_type_ must be declared after gui_iso_value_max_ which is
+  //traced in the tcl code. If gui_update_type_ is set to Auto having it
+  //last will prevent the net from executing when it is instantiated.
+  GuiString  gui_update_type_;
+
   GuiDouble  gui_color_r_;
   GuiDouble  gui_color_g_;
   GuiDouble  gui_color_b_;
