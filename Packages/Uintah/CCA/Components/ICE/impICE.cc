@@ -856,7 +856,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                                                         press_matl,  
                                                         all_matls);
 
-  subsched->compile(d_myworld);      
+  subsched->compile();      
                                                       
   //__________________________________
   //  Move data from parentOldDW to subSchedNewDW.
@@ -880,7 +880,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     subNewDW = subsched->get_dw(3);
     subOldDW->setScrubbing(DataWarehouse::ScrubComplete);
     subNewDW->setScrubbing(DataWarehouse::ScrubNone);
-    subsched->execute(d_myworld);
+    subsched->execute();
     subNewDW->get(max_RHS,   lb->max_RHSLabel);
     counter ++;
     

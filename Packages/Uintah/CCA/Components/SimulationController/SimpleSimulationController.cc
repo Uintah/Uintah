@@ -261,13 +261,13 @@ SimpleSimulationController::run()
    if(output)
       output->finalizeTimestep(t, 0, grid, scheduler, true);
 
-   scheduler->compile(d_myworld);
+   scheduler->compile();
    
    double dt=Time::currentSeconds()-start;
    if(d_myworld->myrank() == 0)
      cout << "done taskgraph compile (" << dt << " seconds)\n";
    scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
-   scheduler->execute(d_myworld);
+   scheduler->execute();
 
    if(output)
      output->executedTimestep();
@@ -451,7 +451,7 @@ SimpleSimulationController::run()
         
         // Begin next time step...
         sim->scheduleComputeStableTimestep(level, scheduler);
-        scheduler->compile(d_myworld);
+        scheduler->compile();
         
         double dt=Time::currentSeconds()-start;
         if(d_myworld->myrank() == 0)
@@ -470,11 +470,11 @@ SimpleSimulationController::run()
 	if (restartable)
 	  scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
 	else
-	  scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
-	
+          scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
+	  	
 	scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
 
-	scheduler->execute(d_myworld);
+	scheduler->execute();
 
 	if(scheduler->get_dw(1)->timestepRestarted()){
 	  ASSERT(restartable);

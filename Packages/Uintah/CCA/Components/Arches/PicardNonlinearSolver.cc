@@ -495,7 +495,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     if (d_probe_data)
       sched_probeData(subsched, local_patches, local_matls);
 
-    subsched->compile(d_myworld);
+    subsched->compile();
     int nlIterations = 0;
     double norm;
     subsched->advanceDataWarehouse(grid);
@@ -554,7 +554,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       subsched->advanceDataWarehouse(grid);
       subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
       subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
-      subsched->execute(d_myworld);    
+      subsched->execute();    
       
       max_vartype nm;
       subsched->get_dw(3)->get(nm, d_lab->d_InitNormLabel);

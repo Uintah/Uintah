@@ -194,14 +194,14 @@ void AMRSimulationController::run()
       output->finalizeTimestep(t, 0, grid, scheduler, true);
 
    amrout << "Compiling initial schedule\n";
-   scheduler->compile(d_myworld);
+   scheduler->compile();
    
    double dt=Time::currentSeconds()-start;
    if(d_myworld->myrank() == 0)
      cout << "done taskgraph compile (" << dt << " seconds)\n";
    // No scrubbing for initial step
    scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
-   scheduler->execute(d_myworld);
+   scheduler->execute();
 
    int n = 0;
    double prevWallTime = Time::currentSeconds();
@@ -395,7 +395,7 @@ void AMRSimulationController::run()
        if(output)
 	 output->finalizeTimestep(t, delt, grid, scheduler,true);
 
-       scheduler->compile(d_myworld);
+       scheduler->compile();
 
        double dt=Time::currentSeconds()-start;
        if(d_myworld->myrank() == 0)
@@ -429,7 +429,7 @@ void AMRSimulationController::run()
      for(int i=0;i<totalFine;i++)
        scheduler->get_dw(i)->setScrubbing(DataWarehouse::ScrubComplete);
      scheduler->get_dw(totalFine)->setScrubbing(DataWarehouse::ScrubNonPermanent);
-     scheduler->execute(d_myworld);
+     scheduler->execute();
      if(output)
        output->executedTimestep();
      // remesh here!
