@@ -169,7 +169,7 @@ void    ICE::printData(const Patch* patch, int include_EC,
         for(int j = low.y(); j < high.y(); j++) {
           for(int i = low.x(); i < high.x(); i++) {
             IntVector idx(i, j, k);
-            fprintf(fp, "%16.15E %16.15E\n", x+=dx, q_CC[idx]);
+            fprintf(fp, "%16.15E %i\n", x+=dx, q_CC[idx]);
           }
         }
       }
@@ -262,7 +262,7 @@ void    ICE::printVector(const Patch* patch, int include_EC,
           for(int j = low.y(); j < high.y(); j++) {
             for(int i = low.x(); i < high.x(); i++) {
               IntVector idx(i, j, k);
-              fprintf(fp, "%16.15E %16.15E\n", x+=dx, q_CC[idx]);
+              fprintf(fp, "%16.15E %16.15E\n", x+=dx, q_CC[idx](dir));
             }
           }
         }
