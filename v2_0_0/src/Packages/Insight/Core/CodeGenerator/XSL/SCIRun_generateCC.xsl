@@ -213,6 +213,7 @@ GuiDouble </xsl:otherwise>
 </xsl:for-each>
 <xsl:if test="$has_defined_objects != ''">
   GuiInt gui_dimension_;</xsl:if>
+  bool execute_;
 </xsl:template>
 
 
@@ -294,6 +295,9 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 </xsl:choose>
 </xsl:for-each>
 
+  <xsl:if test="$has_defined_objects != ''">
+  execute_ = true;
+  </xsl:if>
   typedef typename <xsl:value-of select="$itk-name"/>&lt; <xsl:for-each select="/filter/filter-itk/templated/template"><xsl:value-of select="."/>
   <xsl:if test="position() &lt; last()">   
   <xsl:text>, </xsl:text>
@@ -341,6 +345,58 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   }
 
   // set filter parameters
+   
+  <xsl:if test="$has_defined_objects!=''">
+  // instantiate any defined objects
+  </xsl:if>
+  <xsl:for-each select="/filter/filter-itk/parameters/param">
+  <xsl:variable name="type"><xsl:value-of select="type"/></xsl:variable>
+  <xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
+  <xsl:variable name="const"><xsl:call-template name="determine_if_const_parameter"/></xsl:variable>
+  <xsl:variable name="defined_object">
+  <xsl:call-template name="determine_type"/>
+  </xsl:variable>
+  <xsl:if test="$const != 'yes'">
+  <xsl:if test="$defined_object='yes'">
+  typename <xsl:value-of select="type"/><xsl:text> </xsl:text><xsl:value-of select="name"/>;
+  </xsl:if></xsl:if>  
+  </xsl:for-each>
+
+  <xsl:if test="$has_defined_objects != ''">
+  // clear defined object guis if things aren't in sync
+  <!-- Find the first one and use that in the if statement -->
+  <xsl:variable name="control"><xsl:call-template name="create_if"/></xsl:variable>
+  <xsl:for-each select="/filter/filter-itk/parameters/param">
+  <xsl:variable name="type"><xsl:value-of select="type"/></xsl:variable>
+  <xsl:variable name="n"><xsl:value-of select="name"/></xsl:variable>
+  <xsl:if test="$control=$n">
+  <xsl:variable name="call"><xsl:value-of select="/filter/filter-itk/datatypes/array[@name=$type]/size-call"/></xsl:variable>
+  if(<xsl:value-of select="$control"/>.<xsl:value-of select="$call"/>() != gui_dimension_.get()) { 
+    gui_dimension_.set(<xsl:value-of select="name"/>.<xsl:value-of select="$call"/>());    
+  </xsl:if>
+  </xsl:for-each>
+  </xsl:if>
+  <xsl:if test="$has_defined_objects!=''">
+    // for each defined object, clear gui
+  </xsl:if>
+    <xsl:for-each select="/filter/filter-itk/parameters/param">
+  <xsl:variable name="type"><xsl:value-of select="type"/></xsl:variable>
+  <xsl:variable name="call"><xsl:value-of select="/filter/filter-itk/datatypes/array[@name=$type]/size-call"/></xsl:variable>
+  <xsl:variable name="const"><xsl:call-template name="determine_if_const_parameter"/></xsl:variable>
+  <xsl:variable name="defined_object">
+  <xsl:call-template name="determine_type"/>
+  </xsl:variable>
+  <xsl:if test="$const != 'yes'">
+  <xsl:if test="$defined_object='yes'">
+    gui-&gt;execute(id.c_str() + string(&quot; clear_<xsl:value-of select="name"/>_gui&quot;));
+    gui-&gt;execute(id.c_str() + string(&quot; init_<xsl:value-of select="name"/>_dimensions&quot;));
+    </xsl:if></xsl:if>
+    </xsl:for-each>
+  <xsl:if test="$has_defined_objects != ''">
+    execute_ = false;
+  }
+  </xsl:if>
+  
   <xsl:for-each select="/filter/filter-itk/parameters/param">
   <xsl:variable name="type"><xsl:value-of select="type"/></xsl:variable>
   <xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
@@ -351,7 +407,6 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 
   <xsl:choose>
   <xsl:when test="$defined_object = 'yes'">
-  <xsl:value-of select="type"/><xsl:text> </xsl:text><xsl:value-of select="name"/>;
   <xsl:variable name="call"><xsl:value-of select="/filter/filter-itk/datatypes/array[@name=$type]/size-call"/></xsl:variable>
   <xsl:variable name="type2"><xsl:value-of select="/filter/filter-itk/datatypes/array[@name=$type]/elem-type"/></xsl:variable>
 
@@ -364,20 +419,14 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 
   </xsl:when>
   <xsl:otherwise>
-  if(<xsl:value-of select="name"/>.<xsl:value-of select="$call"/>() != gui_dimension_.get()) {
-	gui-&gt;execute(id.c_str() + string(&quot; clear_gui&quot;));
-        gui_dimension_.set(<xsl:value-of select="name"/>.<xsl:value-of select="$call"/>());
-	gui-&gt;execute(id.c_str() + string(&quot; init_<xsl:value-of select="name"/>_dimensions&quot;));
-  }
-  
   // register GuiVars
   // avoid pushing onto vector each time if not needed
-  int start = 0;
+  int start_<xsl:value-of select="name"/> = 0;
   if(gui_<xsl:value-of select="name"/>_.size() &gt; 0) {
-    start = gui_<xsl:value-of select="name"/>_.size();
+    start_<xsl:value-of select="name"/> = gui_<xsl:value-of select="name"/>_.size();
   }
 
-  for(int i=start; i&lt;<xsl:value-of select="name"/>.<xsl:value-of select="$call"/>(); i++) {
+  for(unsigned int i=start_<xsl:value-of select="name"/>; i&lt;<xsl:value-of select="name"/>.<xsl:value-of select="$call"/>(); i++) {
     ostringstream str;
     str &lt;&lt; &quot;<xsl:value-of select="name"/>&quot; &lt;&lt; i;
 <xsl:text>    </xsl:text>
@@ -469,6 +518,9 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   </xsl:for-each>
 
   // execute the filter
+  <xsl:if test="$has_defined_objects != ''">
+  if (execute_) {
+  </xsl:if>
   try {
 
     dynamic_cast&lt;FilterType* &gt;(filter_.GetPointer())->Update();
@@ -500,6 +552,9 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 <xsl:text>);
   </xsl:text>
   </xsl:for-each>
+  <xsl:if test="$has_defined_objects!=''">
+  }
+  </xsl:if>
 
   return true;
 <xsl:text>}
@@ -533,7 +588,7 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 </xsl:if>
 </xsl:for-each>
 <xsl:if test="$has_defined_objects != ''">,
-    gui_dimension_(ctx-&gt;subVar(&quot;dimension&quot;))</xsl:if>
+     gui_dimension_(ctx-&gt;subVar(&quot;dimension&quot;))</xsl:if>
 <xsl:for-each select="/filter/filter-itk/inputs/input">, 
      last_<xsl:value-of select="@name"/>_(-1)</xsl:for-each>
 <xsl:text>
@@ -758,6 +813,32 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 <xsl:otherwise>no</xsl:otherwise>
 </xsl:choose>
 
+</xsl:template>
+
+
+<!-- This doesn't need a "break;" -->
+<xsl:template name="create_if">
+  <xsl:apply-templates select="/filter/filter-itk/parameters/param[1]" mode="create_if" />
+</xsl:template>
+
+<xsl:template match="/filter/filter-itk/parameters/param" mode="create_if">
+  <xsl:variable name="type"><xsl:value-of select="type"/></xsl:variable>
+  <xsl:variable name="defined_object">
+  <xsl:call-template name="determine_type"/>
+  </xsl:variable>
+  <xsl:choose>
+  <xsl:when test="$defined_object='yes'">
+    <xsl:value-of select="name"/>
+  </xsl:when>
+  <xsl:otherwise>
+  <xsl:variable
+    name="next"
+    select="following-sibling::param[position() &gt; 1]" />
+    <xsl:if test="$next">
+      <xsl:apply-templates select="$next" mode="create_if" />
+    </xsl:if>
+  </xsl:otherwise>
+  </xsl:choose>
 </xsl:template>
 
 </xsl:stylesheet>
