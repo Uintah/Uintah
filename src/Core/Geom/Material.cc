@@ -127,7 +127,7 @@ void Material::io(Piostream& stream)
     Pio(stream, refraction_index);
 }
 
-GeomMaterial::GeomMaterial(GeomObj* obj, const MaterialHandle& matl)
+GeomMaterial::GeomMaterial(GeomHandle obj, const MaterialHandle& matl)
 : GeomContainer(obj), matl(matl)
 {
 }
