@@ -303,8 +303,7 @@ void HDF5DataReader::execute() {
       ofield_port->send( nHandles_[ic] );
     }
   }
-#else
-  
+#else  
   error( "No HDF5 availible." );
   
 #endif
@@ -710,7 +709,11 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     return;
   }
 
-  if (args[1] == "error") {
+  if (args[1] == "remark") {
+
+    remark( string(args[2]) );
+
+  } else if (args[1] == "error") {
 
     error( string(args[2]) );
 
