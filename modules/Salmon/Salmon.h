@@ -1,4 +1,3 @@
-
 /*
  *  Salmon.h: The Geometry Viewer!
  *
@@ -16,7 +15,6 @@
 
 #include <Module.h>
 #include <Classlib/Array1.h>
-#include <Geometry/Point.h>
 class CallbackData;
 class DialogShellC;
 class DrawingAreaC;
@@ -25,9 +23,12 @@ class FrameC;
 class GeometryIPort;
 class GLwMDrawC;
 class XQColor;
+class Roe;
+class GeomObj;
 
 class Salmon : public Module {
     Array1<GeometryIPort*> iports;
+    Array1<Roe*> topRoe;
     virtual void do_execute();
     virtual void create_interface();
     virtual int should_execute();
@@ -40,11 +41,19 @@ class Salmon : public Module {
     FormC* form;
     FrameC* gr_frame;
     GLwMDrawC* graphics;
+
+    //gotta store the geometry!
+
 public:
     Salmon();
     Salmon(const Salmon&, int deep);
     virtual ~Salmon();
     virtual Module* clone(int deep);
+    void addObj(int serial, GeomObj *obj);
+    void delObj(int serial);
+    void addTopRoe(Roe *r);
+    void makeTopRoe();
+    void delTopRoe(Roe *r);
 };
 
 #endif

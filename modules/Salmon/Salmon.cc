@@ -1,4 +1,3 @@
-
 /*
  *  Salmon.cc:  The Geometry Viewer
  *
@@ -19,6 +18,7 @@
 #include "myShell.h"
 
 #include <Salmon/Salmon.h>
+#include <Salmon/Roe.h>
 #include <Connection.h>
 #include <GeometryPort.h>
 #include <MotifCallback.h>
@@ -26,14 +26,11 @@
 #include <NetworkEditor.h>
 #include <NotFinished.h>
 #include <XQColor.h>
-#include <Mt/DialogShell.h>
 #include <Mt/DrawingArea.h>
-#include <Mt/Form.h>
-#include <Mt/Frame.h>
-#include <Mt/GLwMDraw.h>
 #include <iostream.h>
 
 extern MtXEventLoop* evl;
+class GeomObj;
 
 Salmon::Salmon()
 : Module("Salmon", Sink)
@@ -93,41 +90,12 @@ void Salmon::create_interface()
 
 
     // Create the viewer window...
-    dialog=new DialogShellC;
-    dialog->Create("sci", "sci", evl->get_display());
-
-#if 0
-    form=new FormC;
-    form->Create(*dialog, "viewer_form");
-#endif
-
-    gr_frame=new FrameC;
-    gr_frame->SetShadowType(XmSHADOW_IN);
-#if 0
-    gr_frame->SetLeftAttachment(XmATTACH_FORM);
-    gr_frame->SetRightAttachment(XmATTACH_POSITION);
-    gr_frame->SetRightPosition(100);
-    gr_frame->SetTopAttachment(XmATTACH_FORM);
-#endif
-    gr_frame->Create(*dialog, "frame");
-
-    graphics=new GLwMDrawC;
-    graphics->SetWidth(600);
-    graphics->SetHeight(500);
-#if 0
-    graphics->SetNavigationType(XmSTICKY_TAB_GROUP);
-    graphics->SetTraversalOn(True);
-#endif
-    graphics->Create(*gr_frame, "opengl_viewer");
+    topRoe.add(new Roe(this));
     evl->unlock();
 }
 
 void Salmon::redraw_widget(CallbackData*, void*)
 {
-    // This doesn't belong here!!!
-    evl->lock();
-    XtPopup(*dialog, XtGrabNone);
-    evl->unlock();
 }
 
 int Salmon::should_execute()
@@ -146,5 +114,30 @@ int Salmon::should_execute()
 	}
     }
     return changed;
+}
+
+void Salmon::addObj(int serial, GeomObj *obj)
+{
+    NOT_FINISHED("Salmon::addObj");
+}
+
+void Salmon::delObj(int serial)
+{
+    NOT_FINISHED("Salmon::delObj");
+}
+
+void Salmon::addTopRoe(Roe *r)
+{
+    NOT_FINISHED("Salmon::addTopRoe");
+}
+
+void Salmon::makeTopRoe()
+{
+    NOT_FINISHED("Salmon::makeTopRoe");
+}
+
+void Salmon::delTopRoe(Roe *r)
+{
+    NOT_FINISHED("Salmon::delTopRoe");
 }
 
