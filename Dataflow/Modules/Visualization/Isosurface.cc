@@ -467,9 +467,8 @@ Isosurface::new_field( FieldHandle field )
   sfi->compute_min_max(minmax.first, minmax.second);
   if (minmax.first != prev_min_ || minmax.second != prev_max_)
   {
-    ostringstream str;
-    str << id << " set_minmax " << minmax.first << " " << minmax.second;
-    gui->execute(str.str().c_str());
+    gui_iso_value_min_.set(minmax.first);
+    gui_iso_value_max_.set(minmax.second);
     prev_min_ = minmax.first;
     prev_max_ = minmax.second;
   }
