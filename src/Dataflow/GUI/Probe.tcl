@@ -133,6 +133,7 @@ itcl_class SCIRun_FieldsCreate_Probe {
         if {[winfo exists $w]} {
             return
         }
+
         toplevel $w
 
 	frame $w.f
@@ -191,6 +192,8 @@ itcl_class SCIRun_FieldsCreate_Probe {
 	bind $w.f.slide <B1-Motion> "$this-c needexecute"
 
 	pack $w.f.slide $w.f.g -side bottom -expand yes -fill x
+
+	pack $w.f -side top -expand yes -fill both -padx 5 -pady 5
 
 	bind $w.f.g.entries.loc.locx <KeyPress-Return> "$this move_location"
 	bind $w.f.g.entries.loc.locy <KeyPress-Return> "$this move_location"
