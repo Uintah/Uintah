@@ -27,8 +27,6 @@ MPMPetscSolver::MPMPetscSolver()
 
 MPMPetscSolver::~MPMPetscSolver()
 {
-
-
 }
 
 
@@ -210,15 +208,26 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 		    PETSC_NULL, &d_A);
 #endif
 #if 1
+    // This one works
     MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 		    globalcolumns, PETSC_DEFAULT, diag, 
 		    PETSC_DEFAULT,PETSC_NULL, &d_A);
+    MatSetOption(d_A,MAT_KEEP_ZEROED_ROWS);
+#endif
+#if 0
+    MatCreateMPIBAIJ(PETSC_COMM_WORLD, 3, numlrows, numlcolumns, globalrows,
+		    globalcolumns, PETSC_DEFAULT, diag, 
+		    PETSC_DEFAULT,PETSC_NULL, &d_A);
+    MatSetOption(d_A,MAT_KEEP_ZEROED_ROWS);
+#endif
+#if 0
+    MatCreateMPIDense(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
+		      globalcolumns, PETSC_NULL, &d_A);
 #endif
    /* 
      Create vectors.  Note that we form 1 vector from scratch and
      then duplicate as needed.
   */
-    MatSetOption(d_A,MAT_KEEP_ZEROED_ROWS);
     VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_B);
     VecDuplicate(d_B,&d_diagonal);
     VecDuplicate(d_B,&d_x);
@@ -251,21 +260,6 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
 #endif
   if (recursion == false)
     d_DOF.clear();
-}
-
-void MPMPetscSolver::fillMatrix(int i,int j,double value)
-{
-#ifdef HAVE_PETSC
-#if 0
-  set<int>::iterator find_itr_j = d_DOF.find(j);
-  if (find_itr_j == d_DOF.end() ) {
-#endif
-    PetscScalar v = value;
-    MatSetValues(d_A,1,&i,1,&j,&v,ADD_VALUES);
-#if 0
-  }
-#endif
-#endif
 }
 
 void MPMPetscSolver::flushMatrix()

@@ -27,7 +27,8 @@ using namespace SCIRun;
  class Patch;
  class VarLabel;
  class Task; 
- class Solver;
+ class MPMPetscSolver;
+ class SimpleSolver;
 
 /**************************************
 
@@ -349,7 +350,11 @@ private:
   
   const PatchSet* d_perproc_patches;
 
-  vector<Solver*> d_solver;
+#ifdef HAVE_PETSC
+  vector<MPMPetscSolver*> d_solver;
+#else
+  vector<SimpleSolver*> d_solver;
+#endif
 
   bool dynamic;
   bool d_rigid_body;
