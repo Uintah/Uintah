@@ -38,7 +38,9 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
   rc = system("%s %s > %s 2>&1" % (command, susinput, log))
   if rc != 0:
     print "\t*** Test %s failed with code %d" % (testname, rc)
-    return 1;
+    if do_restart == "yes":
+	print "\t*** Make sure the problem makes checkpoints before finishing"
+    return 1
   else:
     print "\tComparing dat files"
     errors_to = environ['ERRORS_TO']
