@@ -15,18 +15,21 @@
 #include <Datatypes/ColumnMatrixPort.h>
 #include <Datatypes/MatrixPort.h>
 #include <Datatypes/Matrix.h>
-#include <Datatypes/MeshPort.h>
-#include <Datatypes/Mesh.h>
+#include <Datatypes/ScalarFieldPort.h>
+#include <Datatypes/ScalarFieldHUG.h>
 #include <Datatypes/SparseRowMatrix.h>
 #include <Geometry/Point.h>
 #include <TCL/TCLvar.h>
 
 class TreatFEM : public Module {
 public:
-    MeshIPort* inmesh;
     MatrixOPort* outmatrix;
     ColumnMatrixOPort* outrhs;
     ColumnMatrixIPort* loopsol;
+    HexMeshOPort* outmesh;
+    ScalarFieldOPort* outfield;
+    ScalarFieldOPort* outpower;
+    VectorFieldOPort* outvfield;
     TreatFEM(const clString& id);
     TreatFEM(const TreatFEM&, int deep);
     virtual ~TreatFEM();
@@ -44,8 +47,6 @@ Module* make_TreatFEM(const clString& id)
 TreatFEM::TreatFEM(const clString& id)
 : Module("TreatFEM", id, Filter)
 {
-    inmesh=new MeshIPort(this, "Mesh", MeshIPort::Atomic);
-    add_iport(inmesh);
     loopsol=new ColumnMatrixIPort(this, "Solution - feedback", ColumnMatrixIPort::Atomic);
     add_iport(loopsol);
     // Create the output port
@@ -53,6 +54,14 @@ TreatFEM::TreatFEM(const clString& id)
     add_oport(outmatrix);
     outrhs=new ColumnMatrixOPort(this, "RHS", ColumnMatrixIPort::Atomic);
     add_oport(outrhs);
+    outmesh=new HexMeshOPort*this, "Mesh", HexMeshOPort::Atomic);
+    add_oport(outmesh);
+    outfield=new ScalarFieldOPort(this, "Temp", ScalarFieldIPort::Atomic);
+    add_oport(outfield);
+    outpower=new ScalarFieldOPort(this, "Power Field", ScalarFieldIPort::Atomic);
+    add_oport(outpower);
+    outvfield=new VectorFieldOPort(this, "Velocity", VectorFieldOPort::Atomic);
+    add_oport(outfield);
 }
 
 TreatFEM::TreatFEM(const TreatFEM& copy, int deep)
@@ -110,6 +119,41 @@ void TreatFEM::execute()
     cout << "All data files read successfully." << endl;
   }
 
+  cout << "Creating HexMesh data structure\n";
+  HexMesh* hexmesh=new HexMesh;
+  for(i=0;i<nodeList.size();i++){
+      Node* n=nodeList[i];
+      hexmesh->add_node(n->getNum(), n->getX(), n->getY(), n->getZ());
+  }
+  for(i=0;i<elementList.size();i++){
+      Element* in=elementList[i];
+      EightHexNodes e;
+      e.index[0]=in->getNode(0)->getNum();
+      e.index[1]=in->getNode(1)->getNum();
+      e.index[2]=in->getNode(2)->getNum();
+      e.index[3]=in->getNode(3)->getNum();
+      e.index[4]=in->getNode(4)->getNum();
+      e.index[5]=in->getNode(5)->getNum();
+      e.index[6]=in->getNode(6)->getNum();
+      e.index[7]=in->getNode(7)->getNum();
+      hexmesh->add_element(i+1, e);
+  }
+  outmesh->send(hexmesh);
+  ScalarFieldHUG* pfield=new ScalarFieldHUG(hexmesh);
+  pfield->data.resize(nodeList.size()+1);
+  for (i=0;i<nodeList.size();i++) {
+      pfield->data[i+1]=nodeList[i]->getSarc();
+  }
+  outpower->send(pfield);
+
+  ScalarFieldHUG* vfield=new ScalarFieldHUG(hexmesh);
+  vfield->data.resize(nodeList.size()+1);
+  for (i=0;i<nodeList.size();i++) {
+      Node* n=nodeList[i];
+      field->data[i+1]=Vector(n->getVX(), n->getVY(), n->getVZ());
+  }
+  outfield->send(field);
+
   cout << "Number of nodes:   " << nodeList.size() << endl;
   cout << "Number of element: " << elementList.size() << endl;
  
@@ -125,7 +169,7 @@ void TreatFEM::execute()
   for (i=0;i<elementList.size();i++) {
     elementList[i]->makeStiff();
   }
-  
+
   // ----------------------------------------------------------
   // assemble the global mass and stiffness matrix
   // ----------------------------------------------------------
@@ -188,8 +232,8 @@ void TreatFEM::execute()
     // Write A Matrix (left hand side) to file
     // ----------------------------------------------------------
 
-    cout << "\nWriting A matrix... " << endl;
-    globalSystem.writeMatrix(2);
+    //cout << "\nWriting A matrix... " << endl;
+    //globalSystem.writeMatrix(2);
     
     // ----------------------------------------------------------
     // Write Solution to File
@@ -237,6 +281,14 @@ void TreatFEM::execute()
   } while ( (!ss) && (iteration_total < num_time_steps) && (residual > eps) );
 
   cout << "\n\nDone with FEM " << endl;
+
+  ScalarFieldHUG* field=new ScalarFieldHUG(hexmesh);
+  field->data.resize(nodeList.size()+1);
+  for (i=0;i<nodeList.size();i++) {
+      field->data[i+1]=nodeList[i]->getTemp();
+  }
+  outfield->send(field);
+
 }
 
 class MatrixAdapter : public Matrix {

@@ -16,16 +16,16 @@ public:
 
   // accessor member functions
   
-  inline const double getN(const int i, const int j) const {
+  inline double getN(const int i, const int j) const {
     return N[i][j];
   }
-  inline const double getdNds(const int i, const int j) const {
+  inline double getdNds(const int i, const int j) const {
     return dNds[i][j];
   }
-  inline const double getdNdt(const int i, const int j) const {
+  inline double getdNdt(const int i, const int j) const {
     return dNdt[i][j];
   }
-  inline const double getdNdu(const int i, const int j) const {
+  inline double getdNdu(const int i, const int j) const {
     return dNdu[i][j];
   }
   void setNode(const int i, Node *mynode) { 

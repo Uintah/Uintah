@@ -45,7 +45,7 @@ public:
                                                     // list to the list
   BOOL remove(const int index, const int num = 1);  // remove element(s)
   BOOL clear();                                     // clean out the list
-  const int size() const { return size_of_list; } // the size observer
+  int size() const { return size_of_list; } // the size observer
                                                          // function
 private:
 
