@@ -84,4 +84,4 @@ all: $(OTF_LIBS)
 	$(CXX) $(CFLAGS) $(INCLUDES) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(LIBS)
 
 clean::
-	@rm -f *.o *.d *.cc *.dylib *.so *.log *~
+	@rm -rf *.o *.d *.cc *.dylib *.so *.log *~ ii_files
