@@ -43,6 +43,18 @@ ProblemSpecP ProblemSpec::findBlock() const
   prob_spec->setNode(this->d_node);
   prob_spec->setDoc(this->d_doc);
 
+  DOM_Node child = d_node.getFirstChild();
+  if (child != 0) {
+    if (child.getNodeType() == DOM_Node::TEXT_NODE) {
+      child = child.getNextSibling();
+    }
+  }
+  if (child.isNull() ) {
+    prob_spec = 0;
+  }
+  else {
+    prob_spec->setNode(child);
+  }
   return prob_spec;
 
 }
@@ -85,8 +97,21 @@ ProblemSpecP ProblemSpec::findNextBlock() const
   ProblemSpecP prob_spec = new ProblemSpec;
   prob_spec->setNode(this->d_node);
   prob_spec->setDoc(this->d_doc);
-
-  prob_spec->setNode(d_node.getNextSibling());
+  
+  DOM_Node found_node = d_node.getNextSibling();
+  
+  if (found_node != 0) {
+    if (found_node.getNodeType() == DOM_Node::TEXT_NODE) {
+      found_node = found_node.getNextSibling();
+    }
+  }
+    
+  if (found_node.isNull() ) {
+    prob_spec = 0;
+  }
+  else {
+    prob_spec->setNode(found_node);
+  }
 
   return prob_spec;
 
@@ -458,6 +483,11 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.14  2000/04/20 23:57:03  jas
+// Fixed the findBlock() and findNextBlock() to iterate through all the
+// nodes.  Now we can go thru the MPM setup without an error.  There is
+// still the problem of where the <res> tag should go.
+//
 // Revision 1.13  2000/04/20 22:37:17  jas
 // Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
 // to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).
