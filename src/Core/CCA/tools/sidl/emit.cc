@@ -150,10 +150,13 @@ struct EmitState {
   SState decl;
   SState out;
   SState proxy;
+
+  //Used for the exception casting method
+  SState xcept; 
 };
 
 EmitState::EmitState()
-  : fwd(this), decl(this), out(this), proxy(this)
+  : fwd(this), decl(this), out(this), proxy(this), xcept(this)
 {
   instanceNum=0;
   handlerNum=0;
@@ -854,7 +857,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   e.out << ");\n";
   if(throws_clause) {
     e.out.pop_leader(x_leader);
-    int cnt = 1;
+    int cnt = 1+(100*handlerOff);
     const std::vector<ScopedName*>& thlist=throws_clause->getList();
     for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++, cnt++){
       ::std::string name = (*iter)->cppfullname();
@@ -1093,6 +1096,8 @@ void CI::emit_proxyclass(EmitState& e)
     
   e.proxy << "\n";
   e.proxy << leader2 << "virtual void createSubset(int localsize, int remotesize);\n";   
+  e.proxy << "\n";
+  e.proxy << leader2 << "virtual void getException();\n";
 
   if (doRedistribution) {
     e.proxy << '\n';  
@@ -1103,6 +1108,7 @@ void CI::emit_proxyclass(EmitState& e)
   e.proxy << leader2 << "protected:\n";
   e.proxy << leader2 << "  virtual ~" << pname << "();\n";
   e.proxy << leader2 << "private:\n";
+  e.proxy << leader2 << "  void _castException(int xid, SCIRun::Message** _xMsg);\n";
   e.proxy << leader2 << "  virtual void _getReferenceCopy(::SCIRun::ReferenceMgr**) const;\n";
   e.proxy << leader2 << "  friend const ::SCIRun::TypeInfo* " << name << "::_static_getTypeInfo();\n";
   e.proxy << leader2 << "  static ::SCIRun::Object* create_proxy(const ::SCIRun::ReferenceMgr&);\n";
@@ -1156,7 +1162,9 @@ void CI::emit_header(EmitState& e)
 
   e.decl << "\n";
   e.decl << leader2 << "virtual void createSubset(int localsize, int remotesize);\n";   
-
+  e.decl << "\n";
+  e.decl << leader2 << "virtual void getException();\n";
+    
   if (doRedistribution) {
     e.decl << '\n';  
     e.decl << leader2 << "virtual void setCallerDistribution(std::string distname,\n";
@@ -1211,6 +1219,11 @@ void CI::emit_interface(EmitState& e)
 
   e.out << "// subsetting method\n";
   e.out << "void " << fn << "::createSubset(int localsize, int remotesize)\n"; 
+  e.out << "{\n";
+  e.out << "}\n\n";
+
+  e.out << "// retreive all exceptions method\n";
+  e.out << "void " << fn << "::getException()\n";
   e.out << "{\n";
   e.out << "}\n\n";
 
@@ -1322,7 +1335,24 @@ void CI::emit_proxy(EmitState& e)
 #ifdef HAVE_MPI
   e.out << "  _proxycreateSubset(localsize, remotesize);\n";
 #endif
+  e.out << "}\n";
+
+  e.out << "\n// \"smoke\" out all exceptions method\n";
+  e.out << "void " << fn << "::getException()\n";
+  e.out << "{\n";
+#ifdef HAVE_MPI
+  e.out << "  _proxygetException();\n";
+#endif
+  e.out << "}\n";
+
+  e.out << "\n//cast exceptions\n";
+  e.out << "void " << fn << "::_castException(int _xid, SCIRun::Message** _xMsg)\n";
+  e.out << "{\n";
+  e.out << leader2 << "  switch (_xid) {\n";
+  e.out << e.xcept.str();
+  e.out << leader2 << "  }\n";
   e.out << "}\n\n";
+
 
   // Emit setCallerDistribution proxy
   if(doRedistribution) {
@@ -1411,11 +1441,24 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "::SCIRun::Message* save_callonly_msg = NULL;\n";
     if(throws_clause) {
       e.out << leader2 << "::std::vector < ::SCIRun::Message*> save_callnoret_msg;\n";
-#ifdef HAVE_MPI 
       e.out << leader2 << "//Imprecise exception check if someone caught an exception\n";
-      e.out << leader2 << "xr->checkException();\n";
-#endif
-    }
+      e.out << leader2 << "::SCIRun::Message* _xMsg;\n";
+      e.out << leader2 << "int _xid = xr->checkException(&_xMsg);\n";
+      e.out << leader2 << "if(_xid != 0) {\n";
+      e.out << leader2 << "  _castException(_xid,&_xMsg);\n";
+      //Write things for the castException method
+      int cnt = 1+(100*handlerOff);
+      const std::vector<ScopedName*>& thlist=throws_clause->getList();
+      for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++, cnt++){
+	::std::string name = (*iter)->cppfullname();
+	e.xcept << leader2 << "  case " << cnt << ":\n";
+	e.xcept << leader2 << "    " << name << "* _e_ptr = _unmarshal_exception<" << name << ", " << name << "_proxy>(*_xMsg);\n";
+	e.xcept << leader2 << "    throw _e_ptr;\n";
+	e.xcept << leader2 << "    break;\n";
+      }
+      //EOF write things for the castException method
+      e.out << leader2 << "}\n";
+    } 
   }
 
   if(reply_required()){
@@ -1662,16 +1705,16 @@ e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _se
     if(throws_clause) {
       //Blah
       e.out << leader2 << "  switch (_x_flag) {\n";
-      int cnt = 1;
+      int cnt = 1+(100*handlerOff);
       const std::vector<ScopedName*>& thlist=throws_clause->getList();
       for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++, cnt++){
 	::std::string name = (*iter)->cppfullname();
 	e.out << leader2 << "  case " << cnt << ":\n";
-	e.out << leader2 << "    " << name << "* _e_ptr = _unmarshal_exception<" << name << ", " << name << "_proxy>(message);\n";
 #ifdef HAVE_MPI
 	if(isCollective) 
 	  e.out << leader2 << "    xr->relayException(" << cnt << ", message);\n";
 #endif
+	e.out << leader2 << "    " << name << "* _e_ptr = _unmarshal_exception<" << name << ", " << name << "_proxy>(message);\n";
 	e.out << leader2 << "    throw _e_ptr;\n";
 	e.out << leader2 << "    break;\n";
       }
@@ -1723,15 +1766,15 @@ e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _se
       e.out << leader2 << "    if(_x_flag != 0) {\n";
       //Blah
       e.out << leader2 << "      switch (_x_flag) {\n";
-      int cnt = 1;
+      int cnt = 1+(100*handlerOff);
       const std::vector<ScopedName*>& thlist=throws_clause->getList();
       for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++, cnt++){
 	::std::string name = (*iter)->cppfullname();
 	e.out << leader2 << "      case " << cnt << ":\n";
-	e.out << leader2 << "        " << name << "* _e_ptr = _unmarshal_exception<" << name << ", " << name << "_proxy>(*iter);\n";
 #ifdef HAVE_MPI
 	e.out << leader2 << "        xr->relayException(" << cnt << ", (*iter));\n";
 #endif
+	e.out << leader2 << "        " << name << "* _e_ptr = _unmarshal_exception<" << name << ", " << name << "_proxy>(*iter);\n";
 	e.out << leader2 << "        throw _e_ptr;\n";
 	e.out << leader2 << "        break;\n";
       }

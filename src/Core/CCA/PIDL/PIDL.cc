@@ -70,11 +70,10 @@ Warehouse* PIDL::warehouse;
 DataTransmitter *PIDL::theDataTransmitter;
 
 int
-PIDL::mpi_rank(0);
+PIDL::rank(0);
 
 int
-PIDL::mpi_size(1);
-
+PIDL::size(1);
 
 void
 PIDL::initialize(int, char*[])
@@ -102,8 +101,6 @@ PIDL::initialize(int, char*[])
   }
 
 #ifdef HAVE_MPI
-  MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
-  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
   setIntraCommunication(INTRA_COMM_MPI);
 #endif
 

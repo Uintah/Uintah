@@ -115,9 +115,13 @@ DESCRIPTION
 
     /////////
     // Created a subset of processes on the callee to service
-	  // all collective calls.
+    // all collective calls.
     void _proxycreateSubset(int localsize, int remotesize);
-    
+
+    /////////
+    // Synchronizes parallel processes and throws all necessary exceptions
+    void _proxygetException(); 
+
   private:
     
     ////////

@@ -74,7 +74,7 @@ DESCRIPTION
     // Checks whether a message for an exception has arrived. 
     // Ignores all messages that are to come later than the 
     // current lineID.
-    void checkException();
+    int checkException(Message** _xMsg);
 
 
   private:
