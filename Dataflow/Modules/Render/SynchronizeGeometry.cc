@@ -101,7 +101,7 @@ SynchronizeGeometry::process_event(MessageBase* msg)
 {
   GeometryComm* gmsg = (GeometryComm*)msg;
 
-  switch (gmsg->type)
+  switch (msg->type)
   {
   case MessageTypes::GoAway:
     return 86;
