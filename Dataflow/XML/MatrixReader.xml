@@ -30,6 +30,12 @@
     </description>
   </overview>
   <io>
+    <outputs>
+      <port>
+	<name>Output Data</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
   </io>
   <testing>
   </testing>

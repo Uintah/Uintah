@@ -34,7 +34,7 @@
     </inputs>
     <outputs>
       <port>
-	<name>Output FieldSet</name>
+	<name>Output Data</name>
 	<datatype>SCIRun::FieldSet</datatype>
       </port>
     </outputs>
