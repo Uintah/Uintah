@@ -160,8 +160,8 @@ TextPointCloudString_writer(ProgressReporter *pr,
 
 #ifndef __APPLE__
 // On the Mac, this is done in FieldIEPlugin.cc, in the
-// macFieldIEInit() function to force the loading of this (and other)
-// plugins.
+// macImportExportForceLoad() function to force the loading of this
+// (and other) plugins.
 static FieldIEPlugin
 TextPointCloudString_plugin("TextPointCloudString",
 			    ".pcs.txt", "",
