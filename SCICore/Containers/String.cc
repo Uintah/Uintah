@@ -205,7 +205,7 @@ std::istream& operator>>(std::istream& s, clString& str)
 } // End namespace Containers
 } // End namespace SCICore
 
-#include <iostream.h>
+#include <iostream>
 #include <iomanip.h>
 
 namespace SCICore {
@@ -504,6 +504,9 @@ void clString::test_performance(PerfTest* __pt) {
 
 //
 // $Log$
+// Revision 1.7  1999/11/17 22:27:07  moulding
+// changed #include<iostream.h> to #include<iostream>
+//
 // Revision 1.6  1999/10/13 15:30:04  sparker
 // Fixed ifdef for redefining operator<<
 //
