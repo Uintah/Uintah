@@ -36,8 +36,7 @@ ICELabel::ICELabel()
   sp_vol_CCLabel =
     VarLabel::create("sp_vol_CC",    CCVariable<double>::getTypeDescription());
   DLabel =
-    VarLabel::create("D",            CCVariable<double>::getTypeDescription());
-
+    VarLabel::create("D",            CCVariable<Vector>::getTypeDescription()); 
   mass_CCLabel =
     VarLabel::create("mass_CC",      CCVariable<double>::getTypeDescription());
   speedSound_CCLabel =
@@ -125,11 +124,11 @@ ICELabel::ICELabel()
   tau_Z_FCLabel       =
     VarLabel::create("tau_Z_FC",  SFCZVariable<Vector>::getTypeDescription() );
   press_diffX_FCLabel = VarLabel::create("press_diffX_FC",
-                              SFCXVariable<double>::getTypeDescription() );
+                                  SFCXVariable<double>::getTypeDescription() );
   press_diffY_FCLabel = VarLabel::create("press_diffY_FC",
-                              SFCYVariable<double>::getTypeDescription() );
+                                  SFCYVariable<double>::getTypeDescription() );
   press_diffZ_FCLabel = VarLabel::create("press_diffZ_FC",
-                              SFCZVariable<double>::getTypeDescription() );
+                                  SFCZVariable<double>::getTypeDescription() );  
     
     // Misc labels
     scratchLabel     =
