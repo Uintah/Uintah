@@ -53,11 +53,13 @@ class Streamline : public UserModule {
     int markertype;
     double lineradius;
 
+public:
     enum Algorithm {
 	AEuler,
 	ARK4,
 	AStreamFunction,
     };
+private:
     int alg;
 
     double stepsize;
