@@ -742,7 +742,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
     constNCVariable<double>   pressNC;    
     Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->get(pressNC, MIlb->press_NCLabel,  0, patch, gac, 1);
-        
+
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int indx = mpm_matl->getDWIndex();
@@ -753,7 +753,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
       new_dw->get(mass,             MIlb->cMassLabel,        indx,patch,gac,1); 
       new_dw->allocate(gradPAccNC,  Mlb->gradPAccNCLabel,    indx,patch);
       gradPAccNC.initialize(Vector(0.,0.,0.));    
-        
+
       ParticleSubset* pset = old_dw->getParticleSubset(indx, patch);
       ParticleVariable<double> pPressure;
       constParticleVariable<Point> px;
@@ -796,8 +796,6 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
           gradPAccNC[*iter](1) += (press_force[c](1)/mass_CC) * .125;
                                 
           gradPAccNC[*iter](2) += (press_force[c](2)/mass_CC) * .125;      
-
-//        gradPAccNC[*iter]+=(mom_source[cIdx[in]]/(mass[cIdx[in]]*delT))*.125; 
         }
       }
       //---- P R I N T   D A T A ------ 
@@ -1342,6 +1340,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
     //__________________________________
     // Compute rho_micro, speedSound, volfrac, rho_CC
+
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       IntVector c = *iter;
       double total_mat_vol = 0.0;
