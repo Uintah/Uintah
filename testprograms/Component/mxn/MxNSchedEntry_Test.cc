@@ -36,7 +36,7 @@ int main()
   mxnentry1->addCallerRep(mxnarep2);
   
   //Report that the Meta Data is received
-  mxnentry1->reportMetaRecvFinished(1);
+  mxnentry1->reportMetaRecvDone(1);
 
   //Set the Array
   SSIDL::array1<int>* main_arr = new  SSIDL::array1<int>(5);
@@ -46,7 +46,7 @@ int main()
   mxnentry1->doReceive(0);
 
   //Retrieve the Complete Array
-  void* arr = mxnentry1->getCompleteArray();
+  void* arr = mxnentry1->waitCompleteArray();
   delete ((SSIDL::array1<int>*) arr);
 
   delete mxnentry1;
