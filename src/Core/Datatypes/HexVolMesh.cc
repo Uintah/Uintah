@@ -744,6 +744,18 @@ HexVolMesh::locate(Face::index_type &face, const Point &p)
 bool
 HexVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
+  // Check last cell found first.  Copy cache to cell first so that we
+  // don't care about thread safeness, such that worst case on
+  // context switch is that cache is not found.
+  static Cell::index_type cache(0);
+  cell = cache;
+  if (cell > Cell::index_type(0) &&
+      cell < Cell::index_type(cells_.size()/8) &&
+      inside8_p(cell, p))
+  {
+    return true;
+  }
+
   if ( (!synchronized_) & LOCATE_E) // I hope I got the () right.
     synchronize(LOCATE_E);
   ASSERT(grid_.get_rep());
