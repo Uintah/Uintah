@@ -121,6 +121,8 @@ make
 make install
 
 cd $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}
+export TEEM_ZLIB=1
+export TEEM_PNG=1
 python $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}/install /usr/local/SCIRun/Thirdparty 32 1
 
 rm -rf /usr/local/SCIRun/bin
