@@ -61,7 +61,7 @@ void Connection::connect()
 
 Connection::~Connection()
 {
-  iport->detach(this);
   oport->detach(this);
+  iport->detach(this);
 }
 
