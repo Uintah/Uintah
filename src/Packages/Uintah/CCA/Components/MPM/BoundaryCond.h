@@ -6,11 +6,9 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 
+namespace Uintah {
 using namespace SCIRun;
 using namespace Uintah;
-
-namespace Uintah {
-
 
  template<class T> void fillFace(NCVariable<T>& var,const Patch* patch, 
 				 Patch::FaceType face, const T& value, 
