@@ -39,9 +39,9 @@ itcl_class rtrt_Scenes_GeoProbeScene {
 	global $this-color-r
 	global $this-color-g
 	global $this-color-b
-	set $this-color-r 0.4
-	set $this-color-g 0.2
-	set $this-color-b 0.9
+	set $this-color-r 0.5
+	set $this-color-g 0.5
+	set $this-color-b 0.5
 
 	global $this-iso_min
 	global $this-iso_max
