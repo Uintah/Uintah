@@ -378,7 +378,8 @@ DWDatabase<VarType, DomainType>::DomainRecord::removeVar(int matlIndex)
 {
   ASSERT(matlIndex+1 < (int)vars.size());
   ASSERT(vars[matlIndex+1].var != 0);
-  ASSERT(vars[matlIndex+1].scrubCount == 0);
+  // This assertion is invalid when timestep restarts occur
+  //ASSERT(vars[matlIndex+1].scrubCount == 0);
   delete vars[matlIndex+1].var;
   vars[matlIndex+1].var = 0;
   count--;

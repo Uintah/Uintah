@@ -164,7 +164,8 @@ MPIScheduler::wait_till_all_done()
 }
 
 void
-MPIScheduler::initiateTask( DetailedTask          * task )
+MPIScheduler::initiateTask( DetailedTask          * task,
+			    bool only_old_recvs, int abort_point )
 {
   long long start_total_comm_flops = mpi_info_.totalcommflops;
   long long start_total_exec_flops = mpi_info_.totalexecflops;
@@ -176,8 +177,10 @@ MPIScheduler::initiateTask( DetailedTask          * task )
 #endif  
   CommRecMPI recvs;
   list<DependencyBatch*> externalRecvs;
-  postMPIRecvs( task, recvs, externalRecvs );
+  postMPIRecvs( task, recvs, externalRecvs, only_old_recvs, abort_point );
   processMPIRecvs( task, recvs, externalRecvs );
+  if(only_old_recvs)
+    return;
 #ifdef USE_PERFEX_COUNTERS
   read_counters(0, &dummy, 19, &recv_flops);
   mpi_info_.totalcommflops += recv_flops;
@@ -388,7 +391,8 @@ MPIScheduler::postMPISends( DetailedTask         * task )
 
 void
 MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
-			    list<DependencyBatch*>& externalRecvs )
+			    list<DependencyBatch*>& externalRecvs,
+			    bool only_old_recvs, int abort_point)
 {
   TAU_PROFILE("MPIScheduler::postMPIRecvs()", " ", TAU_USER); 
 
@@ -433,6 +437,18 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
       cerrLock.unlock();
     }
 
+    if(only_old_recvs){
+      if(mixedDebug.active()){
+	mixedDebug << "abort analysis: " << batch->fromTask->getTask()->getName()
+		   << ", so=" << batch->fromTask->getTask()->getSortedOrder()
+		   << ", abort_point=" << abort_point << '\n';
+	if(batch->fromTask->getTask()->getSortedOrder() <= abort_point)
+	  mixedDebug << "posting MPI recv for pre-abort message " 
+		     << batch->messageTag << '\n';
+      }
+      if(!(batch->fromTask->getTask()->getSortedOrder() <= abort_point))
+	continue;
+    }
 
     // Prepare to receive a message
     BatchReceiveHandler* pBatchRecvHandler = 
@@ -658,6 +674,8 @@ MPIScheduler::execute(const ProcessorGroup * pg)
     cerrLock.unlock();
   }
 
+  bool abort=false;
+  int abort_point = 987654;
   while( numTasksDone < ntasks ) {
 
     if( mixedDebug.active() ) {
@@ -691,7 +709,8 @@ MPIScheduler::execute(const ProcessorGroup * pg)
 	mixedDebug << "\n";
 	cerrLock.unlock();
       }
-      initiateReduction(task);
+      if(!abort)
+	initiateReduction(task);
       break;
     case Task::Normal:
     case Task::InitialSend:
@@ -704,7 +723,7 @@ MPIScheduler::execute(const ProcessorGroup * pg)
 	  cerrLock.unlock();  
 	}
 
-	initiateTask( task );
+	initiateTask( task, abort, abort_point );
 
 	if( mixedDebug.active() ) {
 	  cerrLock.lock();
@@ -718,9 +737,10 @@ MPIScheduler::execute(const ProcessorGroup * pg)
       SCI_THROW(InternalError("Unknown task type"));
     } // end switch( task->getTask()->getType() )
 
-    if(dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
+    if(!abort && dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
+      abort = true;
+      abort_point = task->getTask()->getSortedOrder();
       dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
-      break;
     }
   } // end while( numTasksDone < ntasks )
 
