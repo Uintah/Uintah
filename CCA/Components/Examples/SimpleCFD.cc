@@ -1123,7 +1123,7 @@ void SimpleCFD::applyForces(const ProcessorGroup*,
 //______________________________________________________________________
 //          A P P L Y B C
 void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
-			const IntVector&, const IntVector& h2,
+			const IntVector&, const IntVector& /*h2*/,
 			const Array3<double>& field, double delt,
 			const Vector& inv_dx2, double diff,
 			constNCVariable<int>& bctype,
@@ -1983,7 +1983,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	case BC::FixedFlux:
 	  {
 	    BCRegion<double>* bcr = pbc->get(bctype[idx]);
-	    double pr;
+	    double pr = -98765; // Remove compiler warning and hopefully easier to catch if pr is not set.
 	    switch(bcr->getType()){
 	    case BC::FreeFlow:
 	    case BC::FixedRate:
@@ -2001,7 +2001,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
               BREAK;
 	    }
 	    BCRegion<double>* bcl = pbc->get(bctype[idx+IntVector(-1,0,0)]);
-	    double pl;
+	    double pl = -98765; // Remove compiler warning and hopefully easier to catch if pl is not set.
 	    switch(bcl->getType()){
 	    case BC::FreeFlow:
 	    case BC::FixedRate:
@@ -2039,7 +2039,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	case BC::FixedFlux:
 	  {
 	    BCRegion<double>* bcr = pbc->get(bctype[idx]);
-	    double pr;
+	    double pr = -98765; // Remove compiler warning and hopefully easier to catch if pr is not set.
 	    switch(bcr->getType()){
 	    case BC::FreeFlow:
 	    case BC::FixedRate:
@@ -2057,7 +2057,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	      BREAK;
 	    }
 	    BCRegion<double>* bcl = pbc->get(bctype[idx+IntVector(0,-1,0)]);
-	    double pl;
+	    double pl = -98765; // Remove compiler warning and hopefully easier to catch if pl is not set.
 	    switch(bcl->getType()){
 	    case BC::FreeFlow:
 	    case BC::FixedRate:
@@ -2095,7 +2095,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	case BC::FixedFlux:
 	  {
 	    BCRegion<double>* bcr = pbc->get(bctype[idx]);
-	    double pr;
+	    double pr = -98765; // Remove compiler warning and hopefully easier to catch if pr is not set.
 	    switch(bcr->getType()){
 	    case BC::FreeFlow:
 	    case BC::FixedRate:
@@ -2113,7 +2113,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	      BREAK;
 	    }
 	    BCRegion<double>* bcl = pbc->get(bctype[idx+IntVector(0,0,-1)]);
-	    double pl;
+	    double pl = -98765; // Remove compiler warning and hopefully easier to catch if pl is not set.
 	    switch(bcl->getType()){
 	    case BC::FreeFlow:
 	    case BC::FixedRate:
