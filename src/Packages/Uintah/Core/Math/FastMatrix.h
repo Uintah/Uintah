@@ -65,10 +65,10 @@ namespace Uintah {
     void print(std::ostream& out);
 
   private:
-    static const int smallSize = 16;
-    static const int smallRows = 4;
-    double smallMat[smallSize];
-    double* smallMatPtr[smallRows];
+    static const int smallSize;
+    static const int smallRows;
+    double smallMat[16];    // Make sure this equals smallSize
+    double* smallMatPtr[4]; // Make sure this equals smallRows
     double** mat;
     int rows, cols;
 
@@ -78,6 +78,12 @@ namespace Uintah {
     FastMatrix(const FastMatrix&);
     FastMatrix& operator=(const FastMatrix&);
   };
+
+const int FastMatrix::smallSize = 16; // Make sure smallMat and smallMatPtr
+const int FastMatrix::smallRows = 4;  // are updated (above) if you change
+                                      // these.
+
+
 }
 
 #endif
