@@ -283,7 +283,8 @@ ShowField::~ShowField()
 
 
 bool
-ShowField::check_for_vector_data(FieldHandle fld_handle) {
+ShowField::check_for_vector_data(FieldHandle fld_handle)
+{
   // Test for vector data possibility
   if (fld_handle.get_rep() == 0) { return false; }
 
@@ -291,6 +292,8 @@ ShowField::check_for_vector_data(FieldHandle fld_handle) {
   has_tensor_data_.set(0);
   has_scalar_data_.set(0);
   nodes_as_disks_.reset();
+  bool disks = false;
+  bool result = false;
   if (fld_handle->query_vector_interface(this).get_rep() != 0)
   {
     if (! has_vector_data_.get())
@@ -299,9 +302,9 @@ ShowField::check_for_vector_data(FieldHandle fld_handle) {
     }
     if (fld_handle->data_at() == Field::NODE && nodes_as_disks_.get() == 0)
     {
-      nodes_as_disks_.set(1); 
+      disks = true;
     }
-    return true;
+    result = true;
   }
   else if (fld_handle->query_tensor_interface(this).get_rep() != 0)
   {
@@ -309,6 +312,7 @@ ShowField::check_for_vector_data(FieldHandle fld_handle) {
     {
       has_tensor_data_.set(1);
     }
+    result = true;
   }
   else if (fld_handle->query_scalar_interface(this).get_rep() != 0)
   {
@@ -316,12 +320,13 @@ ShowField::check_for_vector_data(FieldHandle fld_handle) {
     {
       has_scalar_data_.set(1);
     }
+    result = true;
   }
-  if (nodes_as_disks_.get() == 1)
+  if (nodes_as_disks_.get() != disks)
   {
-    nodes_as_disks_.set(0);
+    nodes_as_disks_.set(disks);
   }
-  return false;
+  return result;
 }
 
 
