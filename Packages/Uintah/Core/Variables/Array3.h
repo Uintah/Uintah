@@ -6,6 +6,7 @@
 #include <Core/Util/Endian.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Math/MinMax.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
@@ -411,8 +412,8 @@ WARNING
     }
     else {
       // will have to re-allocate and copy
-      IntVector encompassingLow = Min(lowIndex, oldWindow->getLowIndex());
-      IntVector encompassingHigh = Max(highIndex, oldWindow->getHighIndex());
+      IntVector encompassingLow = SCIRun::Min(lowIndex, oldWindow->getLowIndex());
+      IntVector encompassingHigh = SCIRun::Max(highIndex, oldWindow->getHighIndex());
       
       Array3Data<T>* newData =
 	new Array3Data<T>(encompassingHigh - encompassingLow);
