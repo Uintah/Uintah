@@ -97,6 +97,10 @@ using namespace SCIRun;
                               const PatchSet*,
                               const MaterialSubset*,
                               const MaterialSet*);
+                              
+     void scheduleComputeThermoTransportProperties(SchedulerP&, 
+                                                  const LevelP& level,
+                                                  const MaterialSet*);
       
       void scheduleAccumulateMomentumSourceSinks(SchedulerP&, 
                                             const PatchSet*,
@@ -291,7 +295,13 @@ using namespace SCIRun;
                                          constCCVariable<double>& sum_rho,
                                          constCCVariable<double>& press_CC,
                                          T& press_FC);
-                   
+
+      void computeThermoTransportProperties(const ProcessorGroup*,
+                                            const PatchSubset* patches,
+                                            const MaterialSubset* ice_matls,
+                                            DataWarehouse* old_dw,
+                                            DataWarehouse* new_dw);
+                                           
       void accumulateMomentumSourceSinks(const ProcessorGroup*,
                                          const PatchSubset* patches,
                                          const MaterialSubset* matls,
@@ -620,23 +630,28 @@ using namespace SCIRun;
       SolverInterface* solver;
       SolverParameters* solver_parameters;    
 
-      // For attachable models
+      //______________________________________________________________________
+      //        models
       std::vector<ModelInterface*> d_models;
       ModelInfo* d_modelInfo;
+      
       struct TransportedVariable {
-	const MaterialSubset* matls;
-	const VarLabel* var;
-	const VarLabel* src;
-	const VarLabel* Lvar;
+       const MaterialSubset* matls;
+       const VarLabel* var;
+       const VarLabel* src;
+       const VarLabel* Lvar;
       };
+      
+      
       class ICEModelSetup : public ModelSetup {
       public:
-	ICEModelSetup();
-	virtual ~ICEModelSetup();
-	virtual void registerTransportedVariable(const MaterialSubset* matls,
-						 const VarLabel* var,
-						 const VarLabel* src);
-	std::vector<TransportedVariable*> tvars;
+       ICEModelSetup();
+       virtual ~ICEModelSetup();
+       virtual void registerTransportedVariable(const MaterialSubset* matls,
+                                           const VarLabel* var,
+                                           const VarLabel* src);
+                                           
+       std::vector<TransportedVariable*> tvars;
       };
       ICEModelSetup* d_modelSetup;
     };
