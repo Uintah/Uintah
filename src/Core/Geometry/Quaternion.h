@@ -62,12 +62,6 @@ POSSIBLE REVISIONS
 #include <Core/Geometry/Point.h>
 #include <math.h>
 
-/*
-#include <iostream>
-using std::cout;
-using std::endl;
-*/
-
 namespace SCIRun {
 
 #define NUM_ZERO 10e-9

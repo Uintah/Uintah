@@ -39,9 +39,9 @@
 #include <string>
 #include <iosfwd>
 
+namespace SCIRun {
 using std::string;
 
-namespace SCIRun {
 
 class Piostream;
 class Point;
