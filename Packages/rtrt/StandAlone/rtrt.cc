@@ -276,7 +276,8 @@ int main(int argc, char* argv[])
   }
   
   if(!scenename){
-    cerr << "Must specify a scene with -scene\n";
+    cerr << "Must specify a scene with '-scene'\n\n";
+    usage(argv[0]);
     exit(1);
   }
   char scenefile[MAXPATHLEN];
