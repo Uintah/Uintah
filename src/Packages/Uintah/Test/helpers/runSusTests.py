@@ -245,7 +245,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
   if environ['OS'] == "OSF":
     MPIHEAD="prun -n"
   elif environ['OS'] == "Linux":
-    MPIHEAD="%s -x MALLOC_STATS" % MPIHEAD
+    MPIHEAD="mpirun -x MALLOC_STATS -np" 
 
   # set where to view the log files
   logpath = environ['WEBLOG']
