@@ -76,11 +76,21 @@ public:
 				   const LevelP& level, SchedulerP&,
 				   DataWarehouseP&, DataWarehouseP&);
 
+  void setSharedState(SimulationStateP& ssp)
+  {
+	d_sharedState = ssp;
+  };
+
+  void setMPMLabel(MPMLabel* Mlb)
+  {
+	lb = Mlb;
+  };
+
   enum bctype { NONE=0,
                 FIXED,
                 SYMMETRY,
                 NEIGHBOR };
-protected:
+public:
   //////////
   // Insert Documentation Here:
   void actuallyInitialize(const ProcessorGroup*,
@@ -96,11 +106,10 @@ protected:
 
   //////////
   // Insert Documentation Here:
-  void computeNodeVisibility(
-                               const ProcessorGroup*,
-			       const Patch* patch,
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw);
+  void computeNodeVisibility(const ProcessorGroup*,
+			     const Patch* patch,
+			     DataWarehouseP& old_dw,
+			     DataWarehouseP& new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -241,6 +250,10 @@ protected:
    
 //
 // $Log$
+// Revision 1.61  2000/11/15 01:39:43  guilkey
+// Made the way in which materials were looped over more consistent.
+// Got rid of references to VFIndex, use only DWIndex now.
+//
 // Revision 1.60  2000/09/22 07:12:33  tan
 // MPM code works with fracture in three point bending.
 //

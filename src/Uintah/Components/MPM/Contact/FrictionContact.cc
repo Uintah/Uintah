@@ -92,13 +92,13 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
-      new_dw->get(gmass[matlindex], lb->gMassLabel,matlindex, patch,
+      new_dw->get(gmass[m], lb->gMassLabel,matlindex, patch,
 		  Ghost::None, 0);
-      new_dw->get(gvelocity[matlindex], lb->gVelocityLabel, matlindex, patch,
+      new_dw->get(gvelocity[m], lb->gVelocityLabel, matlindex, patch,
 		  Ghost::None, 0);
-      old_dw->get(normtraction[matlindex],lb->gNormTractionLabel,matlindex,
+      old_dw->get(normtraction[m],lb->gNormTractionLabel,matlindex,
 	   patch, Ghost::None, 0);
-      old_dw->get(surfnorm[matlindex],lb->gSurfNormLabel,matlindex, patch,
+      old_dw->get(surfnorm[m],lb->gSurfNormLabel,matlindex, patch,
 		  Ghost::None, 0);
   }
   delt_vartype delT;
@@ -172,7 +172,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
   // Store new velocities in DataWarehouse
   for(int n=0; n< numMatls; n++){
-    new_dw->put(gvelocity[n], lb->gMomExedVelocityLabel, n, patch);
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( n );
+    int matlindex = mpm_matl->getDWIndex();
+    new_dw->put(gvelocity[n], lb->gMomExedVelocityLabel, matlindex, patch);
   }
 }
 
@@ -213,10 +215,10 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-      new_dw->get(gmass[dwi], lb->gMassLabel, dwi, patch, Ghost::None, 0);
-      new_dw->allocate(gsurfnorm[dwi],lb->gSurfNormLabel, dwi, patch);
+      new_dw->get(gmass[m], lb->gMassLabel, dwi, patch, Ghost::None, 0);
+      new_dw->allocate(gsurfnorm[m],lb->gSurfNormLabel, dwi, patch);
 
-      gsurfnorm[dwi].initialize(Vector(0.0,0.0,0.0));
+      gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
 
       IntVector lowi(gsurfnorm[dwi].getLowIndex());
       IntVector highi(gsurfnorm[dwi].getHighIndex());
@@ -229,12 +231,12 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
         for(int j = lowi.y()+1; j < highi.y()-1; j++){
           for(int k = lowi.z()+1; k < highi.z()-1; k++){
 	     surnor = Vector(
-	        -(gmass[dwi][IV(i+1,j,k)] - gmass[dwi][IV(i-1,j,k)])/dx.x(),
-         	-(gmass[dwi][IV(i,j+1,k)] - gmass[dwi][IV(i,j-1,k)])/dx.y(), 
-	        -(gmass[dwi][IV(i,j,k+1)] - gmass[dwi][IV(i,j,k-1)])/dx.z()); 
+	        -(gmass[m][IV(i+1,j,k)] - gmass[m][IV(i-1,j,k)])/dx.x(),
+         	-(gmass[m][IV(i,j+1,k)] - gmass[m][IV(i,j-1,k)])/dx.y(), 
+	        -(gmass[m][IV(i,j,k+1)] - gmass[m][IV(i,j,k-1)])/dx.z()); 
 	     double length = surnor.length();
 	     if(length>0.0){
-	    	 gsurfnorm[dwi][IntVector(i,j,k)] = surnor/length;;
+	    	 gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
 	     }
           }
         }
@@ -250,20 +252,20 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
            int i=lowi.x();
 	   surnor = Vector(
 	      0.0,
-	      -(gmass[dwi][IV(i,j+1,k)] - gmass[dwi][IV(i,j-1,k)])/dx.y(), 
-	      -(gmass[dwi][IV(i,j,k+1)] - gmass[dwi][IV(i,j,k-1)])/dx.z()); 
+	      -(gmass[m][IV(i,j+1,k)] - gmass[m][IV(i,j-1,k)])/dx.y(), 
+	      -(gmass[m][IV(i,j,k+1)] - gmass[m][IV(i,j,k-1)])/dx.z()); 
 	   double length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[dwi][IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
 	   }
            i=highi.x()-1;
 	   surnor = Vector(
 	      0.0,
-	      -(gmass[dwi][IV(i,j+1,k)] - gmass[dwi][IV(i,j-1,k)])/dx.y(), 
-	      -(gmass[dwi][IV(i,j,k+1)] - gmass[dwi][IV(i,j,k-1)])/dx.z()); 
+	      -(gmass[m][IV(i,j+1,k)] - gmass[m][IV(i,j-1,k)])/dx.y(), 
+	      -(gmass[m][IV(i,j,k+1)] - gmass[m][IV(i,j,k-1)])/dx.z()); 
 	   length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[dwi][IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
 	   }
         }
       }
@@ -273,21 +275,21 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
         for(int k = lowi.z()+1; k < highi.z()-1; k++){
            int j=lowi.y();
 	   surnor = Vector(
-	      -(gmass[dwi][IV(i+1,j,k)] - gmass[dwi][IV(i-1,j,k)])/dx.x(),
+	      -(gmass[m][IV(i+1,j,k)] - gmass[m][IV(i-1,j,k)])/dx.x(),
 	      0.0,
-	      -(gmass[dwi][IV(i,j,k+1)] - gmass[dwi][IV(i,j,k-1)])/dx.z()); 
+	      -(gmass[m][IV(i,j,k+1)] - gmass[m][IV(i,j,k-1)])/dx.z()); 
 	   double length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[dwi][IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
 	   }
            j=highi.y()-1;
 	   surnor = Vector(
-	      -(gmass[dwi][IV(i+1,j,k)] - gmass[dwi][IV(i-1,j,k)])/dx.x(),
+	      -(gmass[m][IV(i+1,j,k)] - gmass[m][IV(i-1,j,k)])/dx.x(),
 	      0.0,
-	      -(gmass[dwi][IV(i,j,k+1)] - gmass[dwi][IV(i,j,k-1)])/dx.z()); 
+	      -(gmass[m][IV(i,j,k+1)] - gmass[m][IV(i,j,k-1)])/dx.z()); 
 	   length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[dwi][IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
 	   }
         }
       }
@@ -297,26 +299,26 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
         for(int j = lowi.y()+1; j < highi.y()-1; j++){
            int k=lowi.z();
 	   surnor = Vector(
-	      -(gmass[dwi][IV(i+1,j,k)] - gmass[dwi][IV(i-1,j,k)])/dx.x(),
-	      -(gmass[dwi][IV(i,j+1,k)] - gmass[dwi][IV(i,j-1,k)])/dx.y(), 
+	      -(gmass[m][IV(i+1,j,k)] - gmass[m][IV(i-1,j,k)])/dx.x(),
+	      -(gmass[m][IV(i,j+1,k)] - gmass[m][IV(i,j-1,k)])/dx.y(), 
 	      0.0);
 	   double length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[dwi][IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
 	   }
            k=highi.z()-1;
 	   surnor = Vector(
-	      -(gmass[dwi][IV(i+1,j,k)] - gmass[dwi][IV(i-1,j,k)])/dx.x(),
-	      -(gmass[dwi][IV(i,j+1,k)] - gmass[dwi][IV(i,j-1,k)])/dx.y(), 
+	      -(gmass[m][IV(i+1,j,k)] - gmass[m][IV(i-1,j,k)])/dx.x(),
+	      -(gmass[m][IV(i,j+1,k)] - gmass[m][IV(i,j-1,k)])/dx.y(), 
 	      0.0);
 	   length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[dwi][IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
 	   }
         }
       }
 
-      new_dw->put(gsurfnorm[dwi],lb->gSurfNormLabel, dwi, patch);
+      new_dw->put(gsurfnorm[m],lb->gSurfNormLabel, dwi, patch);
   }
 
   // Next, interpolate the stress to the grid
@@ -379,15 +381,15 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
-      new_dw->get(gmass[matlindex], lb->gMassLabel,matlindex,
+      new_dw->get(gmass[m], lb->gMassLabel,matlindex,
 					patch,Ghost::None, 0);
-      new_dw->get(gvelocity_star[matlindex], lb->gVelocityStarLabel,matlindex,
+      new_dw->get(gvelocity_star[m], lb->gVelocityStarLabel,matlindex,
 					patch, Ghost::None, 0);
-      new_dw->get(gacceleration[matlindex],lb->gAccelerationLabel,matlindex,
+      new_dw->get(gacceleration[m],lb->gAccelerationLabel,matlindex,
 					patch, Ghost::None, 0);
-      new_dw->get(normtraction[matlindex],lb->gNormTractionLabel,matlindex,
+      new_dw->get(normtraction[m],lb->gNormTractionLabel,matlindex,
 					patch, Ghost::None, 0);
-      new_dw->get(gsurfnorm[matlindex],lb->gSurfNormLabel,matlindex,
+      new_dw->get(gsurfnorm[m],lb->gSurfNormLabel,matlindex,
 					patch, Ghost::None, 0);
   }
 
@@ -472,8 +474,12 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 
   // Store new velocities and accelerations in DataWarehouse
   for(int n = 0; n < numMatls; n++){
-    new_dw->put(gvelocity_star[n], lb->gMomExedVelocityStarLabel, n, patch);
-    new_dw->put(gacceleration[n], lb->gMomExedAccelerationLabel, n, patch);
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( n );
+    int matlindex = mpm_matl->getDWIndex();
+    new_dw->put(gvelocity_star[n], lb->gMomExedVelocityStarLabel,
+						matlindex, patch);
+    new_dw->put(gacceleration[n], lb->gMomExedAccelerationLabel,
+						matlindex, patch);
   }
 }
 
@@ -517,6 +523,10 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.35  2000/11/15 01:39:49  guilkey
+// Made the way in which materials were looped over more consistent.
+// Got rid of references to VFIndex, use only DWIndex now.
+//
 // Revision 1.34  2000/11/07 22:52:22  guilkey
 // Changed the way that materials are looped over.  Instead of each
 // function iterating over all materials, and then figuring out which ones
