@@ -118,7 +118,7 @@ string Network::connect(Module* m1, int p1, Module* m2, int p2)
     string id(m1->id+"_p"+to_string(p1)+"_to_"+m2->id+"_p"+to_string(p2));
     conn->id=id;
     conn->connect();
-    connections.add(conn);
+    connections.push_back(conn);
     // Reschedule next time we can...
     reschedule=1;
 
@@ -186,9 +186,9 @@ string Network::connect(Module* m1, int p1, Module* m2, int p2)
 
 int Network::disconnect(const string& connId)
 {
-  Message msg;
+    Message msg;
 
-    int i;
+    unsigned int i;
     for (i = 0; i < connections.size(); i++)
         if (connections[i]->id == connId)
 		break;
@@ -227,7 +227,7 @@ int Network::disconnect(const string& connId)
     // remove connection ref from iport and oport
 
     delete connections[i];	//connection destructor,tears down data channel
-    connections.remove(i);
+    connections.erase(connections.begin() + i);
     return 1;
 }
 
@@ -274,7 +274,7 @@ Module* Network::add_module(const string& packageName,
     cerr << "Error: can't create instance " << instanceName << "\n";
     return 0;
   }
-  modules.add(mod);
+  modules.push_back(mod);
 
 //-----------------------------------------------------------------------------
 // XXX: McQ, 7/19/99.  We need to re-examine things like "if(name(0)=='r')"
@@ -402,7 +402,7 @@ int Network::delete_module(const string& id)
     }
 
     // traverse array of ptrs to Modules in Network to find this module
-    int i;
+    unsigned int i;
     for (i = 0; i < modules.size(); i++)
         if (modules[i] == mod)
 	    break;
@@ -410,7 +410,7 @@ int Network::delete_module(const string& id)
 	return 0;
 
     // remove array element corresponding to module, remove from hash table
-    modules.remove(i);
+    modules.erase(modules.begin() + i);
     module_ids.erase(id);
     delete mod;			
     return 1;

@@ -34,7 +34,6 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Math/MusilRNG.h>
 
 #include <vector>

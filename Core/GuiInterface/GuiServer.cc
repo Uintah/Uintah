@@ -34,15 +34,16 @@
  */
 
 #ifndef _WIN32
-#include <Core/GuiInterface/GuiServer.h>
-
+#include <Core/Containers/Array1.h>
 #include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiServer.h>
 #include <unistd.h>
-#include <string>
 #include <sys/types.h>
 #include <tcl.h>
 #include <tk.h>
+
 #include <iostream>
+#include <string>
 
 using namespace std;
 

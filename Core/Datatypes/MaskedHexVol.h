@@ -72,34 +72,6 @@ public:
     return true;
   }
 
-#if 0
-  bool get_valid_cells_and_data(Array1<HexVolMesh::Cel::index_type> &nodes,
-				Array1<T> &data) {
-    nodes.resize(0);
-    data.resize(0);
-    if (data_at() != CELL) return false;
-    HexVolMesh::Node::iterator ni, nie;
-    get_typed_mesh()->begin(ni);
-    get_typed_mesh()->end(nie);
-    for (; ni != nie; ++ni) { 
-      if (mask_[*ni]) { nodes.add(*ni); data.add(fdata()[*ni]); }
-    }
-    return true;
-  }
-
-  // we're not really supporting edge-centered data yet
-  bool get_valid_edge_and_data(Array1<HexVolMesh::Edge::index_type> &nodes,
-				Array1<T> &data) {
-    return false;
-  }
-
-  // we're not really supporting face-centered data yet
-  bool get_valid_face_and_data(Array1<HexVolMesh::Face::index_type> &nodes,
-				Array1<T> &data) {
-    return false;
-  }
-#endif
-
   virtual ~MaskedHexVol() {};
 
   bool value(T &val, typename HexVolMesh::Node::index_type i) const

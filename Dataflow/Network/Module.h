@@ -38,7 +38,6 @@
 #include <Dataflow/share/share.h>
 #include <Dataflow/Network/Port.h>
 #include <Dataflow/Network/NetworkEditor.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Util/Timer.h>
 #include <Core/GuiInterface/TCL.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -63,19 +62,18 @@ class Module;
 typedef IPort* (*iport_maker)(Module*, const string&);
 typedef OPort* (*oport_maker)(Module*, const string&);
 typedef std::multimap<string,int> port_map;
-typedef port_map::iterator port_iter;
-typedef std::pair<string,int> port_pair;
 typedef std::pair<port_map::iterator,port_map::iterator> dynamic_port_range;
 
 template<class T> 
 class PortManager {
-public:
-  port_map namemap;
-  Array1<T> ports;
+private:
+  port_map namemap_;
+  vector<T> ports_;
 
+public:
   int size();
-  void add(T);
-  void remove(int);
+  void add(const T &item);
+  void remove(int item);
   const T& operator[](int);
   dynamic_port_range operator[](string);
 };
@@ -243,41 +241,48 @@ typedef Module* (*ModuleMaker)(const string& id);
 
 
 template<class T>
-int PortManager<T>::size() { 
-  return ports.size(); 
+int
+PortManager<T>::size()
+{ 
+  return ports_.size(); 
 }
 
 template<class T>
-void PortManager<T>::add(T item) { 
-  namemap.insert(port_pair(item->get_portname(), ports.size())); 
-  ports.add(item);
+void
+PortManager<T>::add(const T &item)
+{ 
+  namemap_.insert(pair<string, int>(item->get_portname(), ports_.size())); 
+  ports_.push_back(item);
 }
 
-template<class T>
-void PortManager<T>::remove(int item) {
-  string name = ports[item]->get_portname();
-  port_iter erase_me;
 
-  dynamic_port_range p = namemap.equal_range(name);
-  for (port_iter i=p.first;i!=p.second;i++)
+template<class T>
+void
+PortManager<T>::remove(int item)
+{
+  string name = ports_[item]->get_portname();
+  port_map::iterator erase_me;
+
+  dynamic_port_range p = namemap_.equal_range(name);
+  for (port_map::iterator i=p.first;i!=p.second;i++)
     if ((*i).second>item)
       (*i).second--;
     else if ((*i).second==item)
       erase_me = i;
 
-  ports.remove(item);
-  namemap.erase(erase_me);
+  ports_.erase(ports_.begin() + item);
+  namemap_.erase(erase_me);
 }
 
 template<class T>
 const T& PortManager<T>::operator[](int item) {
   ASSERT(size() > item);
-  return ports[item];
+  return ports_[item];
 }
 
 template<class T>
 dynamic_port_range PortManager<T>::operator[](string item) {
-  return dynamic_port_range(namemap.equal_range(item));
+  return dynamic_port_range(namemap_.equal_range(item));
 }
 
 
