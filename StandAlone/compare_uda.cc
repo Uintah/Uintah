@@ -445,7 +445,7 @@ compare(MaterialParticleVarData& data2, int matl, double time1, double time2,
 		   dynamic_cast<ParticleVariable<Matrix3>*>(pvb2), matl,
 		   time1, time2, abs_tolerance, rel_tolerance);
   default:
-    cerr << "ParticleVariable of unknown type: " << pvb1->virtualGetTypeDescription()->getName() << '\n';
+    cerr << "ParticleVariable of unsupported type: " << pvb1->virtualGetTypeDescription()->getName() << '\n';
     Thread::exitAll(-1);
   }
   return 0;
@@ -576,7 +576,7 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
 	    pvb = scinew ParticleVariable<Matrix3>();
 	    break;
 	  default:
-	    cerr << "ParticleVariable of unknown type: " << subtype->getName() << '\n';
+	    cerr << "ParticleVariable of unsupported type: " << subtype->getName() << '\n';
 	    Thread::exitAll(-1);
 	  }
 	  da->query(*pvb, var, matl, patch, time);
@@ -970,6 +970,10 @@ int main(int argc, char** argv)
 	  const Uintah::TypeDescription* td = types[v];
 	  const Uintah::TypeDescription* subtype = td->getSubType();
 	  cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
+	  if (td->getName() == string("-- unknown type --")) {
+	    cerr << "\t\tParticleVariable of unknown type; skipping comparison...\n";
+	    continue;
+	  }
 	  for(int l=0;l<grid->numLevels();l++){
 	    LevelP level = grid->getLevel(l);
 	    LevelP level2 = grid2->getLevel(l);
@@ -1043,7 +1047,7 @@ int main(int argc, char** argv)
 					      time, time2, abs_tolerance, rel_tolerance);
 		    break;
 		  default:
-		    cerr << "ParticleVariable of unknown type: " << subtype->getType() << '\n';
+		    cerr << "ParticleVariable of unsupported type: " << subtype->getType() << '\n';
 		    Thread::exitAll(-1);
 		  }
 		}
@@ -1093,6 +1097,11 @@ int main(int argc, char** argv)
 	if (td->getType() == Uintah::TypeDescription::ParticleVariable)
 	  continue;
 	cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
+	if (td->getName() == string("-- unknown type --")) {
+	  cerr << "\t\tParticleVariable of unknown type; skipping comparison...\n";
+	  continue;
+	}
+	
 	for(int l=0;l<grid->numLevels();l++){
 	  LevelP level = grid->getLevel(l);
 	  LevelP level2 = grid2->getLevel(l);
@@ -1176,7 +1185,7 @@ int main(int argc, char** argv)
 		   abs_tolerance, rel_tolerance, patch->getNodeIterator());
 		break;
 	      default:
-		cerr << "NC Variable of unknown type: " << subtype->getName() << '\n';
+		cerr << "NC Variable of unsupported type: " << subtype->getName() << '\n';
 		Thread::exitAll(-1);
 	      }
 	      break;
@@ -1208,7 +1217,7 @@ int main(int argc, char** argv)
 		     abs_tolerance, rel_tolerance, patch->getCellIterator());
 		  break;
 	      default:
-		cerr << "CC Variable of unknown type: " << subtype->getName() << '\n';
+		cerr << "CC Variable of unsupported type: " << subtype->getName() << '\n';
 		Thread::exitAll(-1);
 	      }
 	      break;
