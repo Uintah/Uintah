@@ -1,4 +1,46 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
 # SCI Network 1.0
+
+if {[llength [array get env SCIRUN_DATA]] == 0} {
+   puts ""
+   puts "*** Error: this net depends on the SCIRUN_DATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
+   puts ""
+   ::netedit scheduleok
+   return
+}
+set DATADIR $env(SCIRUN_DATA)
+puts "*** Using SCIRUN_DATA $DATADIR"
+
+if {[llength [array get env SCIRUN_DATASET]] == 0} {
+   puts ""
+   puts "*** Environment variable 'SCIRUN_DATASET' was not set -- "
+   puts "*** using 'sphere' as the default."
+   puts ""
+   set DATASET sphere
+} else {
+   set DATASET $env(SCIRUN_DATASET)
+   puts "*** Using DATASET $DATASET"
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
 
 ::netedit dontschedule
 
@@ -110,7 +152,7 @@ addConnection $m30 1 $m6 5
 
 set $m0-notes {}
 set $m0-show_status {1}
-set $m0-filename {/yikes1/mcole/SCIRunData/utahtorso/utahtorso-mesh-01.tvt.fld}
+set $m0-filename $DATADIR/utahtorso-lowres/utahtorso-lowres-mesh.tvt.fld
 
 set $m1-target_error {0.000001}
 set $m1-orig_error {1}
@@ -134,48 +176,23 @@ set $m4-showLastVecGui_ {1}
 set $m4-showLinesGui_ {0}
 set $m5-notes {}
 set $m5-show_status {1}
-set $m5-filename {/yikes1/mcole/SCIRunData/utahtorso-lowres/utahtorso-lowres-dipole.pcv.fld}
+set $m5-filename $DATADIR/utahtorso-lowres/utahtorso-lowres-dipole.pcv.fld
 set $m6-notes {}
 set $m6-show_status {1}
 $m6 ui
 set $m6-ViewWindow_0-pos {}
 set $m6-ViewWindow_0-caxes {0}
 set $m6-ViewWindow_0-iaxes {483}
-set $m6-ViewWindow_0-view-eyep-x {335.003}
-set $m6-ViewWindow_0-view-eyep-y {-2214.46}
-set $m6-ViewWindow_0-view-eyep-z {-1.07539}
-set $m6-ViewWindow_0-view-lookat-x {-8.54381}
-set $m6-ViewWindow_0-view-lookat-y {-3.37321}
-set $m6-ViewWindow_0-view-lookat-z {294.945}
-set $m6-ViewWindow_0-view-up-x {0.0187689}
-set $m6-ViewWindow_0-view-up-y {-0.129808}
-set $m6-ViewWindow_0-view-up-z {0.991362}
-set $m6-ViewWindow_0-view-fov {16.6845}
-set $m6-ViewWindow_0-view-eyep-x {335.003}
-set $m6-ViewWindow_0-view-eyep-y {-2214.46}
-set $m6-ViewWindow_0-view-eyep-z {-1.07539}
-set $m6-ViewWindow_0-view-eyep-x {335.003}
-set $m6-ViewWindow_0-view-eyep-y {-2214.46}
-set $m6-ViewWindow_0-view-eyep-z {-1.07539}
-set $m6-ViewWindow_0-view-lookat-x {-8.54381}
-set $m6-ViewWindow_0-view-lookat-y {-3.37321}
-set $m6-ViewWindow_0-view-lookat-z {294.945}
-set $m6-ViewWindow_0-view-lookat-x {-8.54381}
-set $m6-ViewWindow_0-view-lookat-y {-3.37321}
-set $m6-ViewWindow_0-view-lookat-z {294.945}
-set $m6-ViewWindow_0-view-up-x {0.0187689}
-set $m6-ViewWindow_0-view-up-y {-0.129808}
-set $m6-ViewWindow_0-view-up-z {0.991362}
-set $m6-ViewWindow_0-view-up-x {0.0187689}
-set $m6-ViewWindow_0-view-up-y {-0.129808}
-set $m6-ViewWindow_0-view-up-z {0.991362}
-set $m6-ViewWindow_0-view-fov {16.6845}
-set $m6-ViewWindow_0-view-eyep_offset-x {6.86677e-311}
-set $m6-ViewWindow_0-view-eyep_offset-y {2.38066e-310}
-set $m6-ViewWindow_0-view-eyep_offset-z {-nan}
-set $m6-ViewWindow_0-view-eyep_offset-x {6.86677e-311}
-set $m6-ViewWindow_0-view-eyep_offset-y {2.38066e-310}
-set $m6-ViewWindow_0-view-eyep_offset-z {-nan}
+set $m6-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m6-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m6-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m6-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m6-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m6-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m6-ViewWindow_0-view-up-x ${view-up-x}
+set $m6-ViewWindow_0-view-up-y ${view-up-y}
+set $m6-ViewWindow_0-view-up-z ${view-up-z}
+set $m6-ViewWindow_0-view-fov ${view-fov}
 set $m6-ViewWindow_0-bgcolor-r {0}
 set $m6-ViewWindow_0-bgcolor-g {0}
 set $m6-ViewWindow_0-bgcolor-b {0}
@@ -231,7 +248,7 @@ set $m9-color-g {0.2}
 set $m9-color-b {0.9}
 set $m10-notes {}
 set $m10-show_status {1}
-set $m10-filename {/yikes1/mcole/SCIRunData/utahtorso-lowres/utahtorso-lowres-electrodes.pcd.fld}
+set $m10-filename $DATADIR/utahtorso-lowres/utahtorso-lowres-electrodes.pcd.fld
 set $m11-notes {}
 set $m11-show_status {1}
 set $m11-interp_op_gui {}
@@ -374,7 +391,7 @@ set $m26-color-g {0.2}
 set $m26-color-b {0.9}
 set $m27-notes {}
 set $m27-show_status {1}
-set $m27-filename {/yikes1/mcole/SCIRunData/utahtorso-lowres/utahtorso-lowres-electrodes.pcd.fld}
+set $m27-filename $DATADIR/utahtorso-lowres/utahtorso-lowres-electrodes.pcd.fld
 set $m28-notes {}
 set $m28-show_status {1}
 set $m28-interp_op_gui {}
