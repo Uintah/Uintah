@@ -2234,7 +2234,7 @@ class BioImageApp {
 		-fill x -expand 1
 	    radiobutton $maps.rainbow.b -text "Rainbow" \
 		-variable planes_mapType \
-		-value 2 \
+		-value 3 \
 		-command "$this update_planes_color_by"
             Tooltip $maps.rainbow.b "Select color map for coloring planes"
 	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
@@ -2252,7 +2252,7 @@ class BioImageApp {
 		-fill x -expand 1
 	    radiobutton $maps.darkhue.b -text "Darkhue" \
 		-variable planes_mapType \
-		-value 5 \
+		-value 4 \
 		-command "$this update_planes_color_by"
             Tooltip $maps.darkhue.b "Select color map for coloring planes"
 	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
