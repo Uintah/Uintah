@@ -287,6 +287,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
                                                                   mpm_matls_sub,
                                                                   all_matls);
   d_ice->scheduleModelMassExchange(               sched, level,   all_matls);
+
+  d_ice->scheduleUpdateVolumeFraction(            sched, level,   all_matls);
   
   if(d_ice->d_impICE) {        //  I M P L I C I T 
     d_ice->scheduleImplicitPressureSolve(         sched, level,   patches,
