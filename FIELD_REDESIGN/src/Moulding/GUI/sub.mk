@@ -14,6 +14,7 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/VolumeRender.tcl\
+	$(SRCDIR)/StreamLines.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Moulding/GUI
 
