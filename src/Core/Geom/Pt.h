@@ -36,6 +36,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Geom/Material.h>
 
 namespace SCIRun {
 
@@ -60,7 +61,7 @@ public:
 	scalars.add(v); // use this as well...
     }
 
-    inline void add(const Point& p, const Color &v) {
+    inline void add(const Point& p, MaterialHandle c) {
 	int s=pts.size();
 	pts.grow(3);
  	pts[s]=p.x();
@@ -68,10 +69,8 @@ public:
 	pts[s+2]=p.z();
 	
 	int ss=colors.size();
-	colors.grow(3);
-	colors[ss]=v.r();
-	colors[ss+1]=v.g();
-	colors[ss+2]=v.b();
+	colors.grow(1);
+	colors[ss]=c;
     }
 
     inline void add(const Point& p, const float &sv, const Vector& v) {
@@ -96,7 +95,7 @@ public:
 
     Array1<float>  scalars;  // change to something else???
     Array1<float>  normals;  // ditto?
-    Array1<float> colors;
+    Array1<MaterialHandle> colors;
 
     int list_pos; // posistion in the list...
 

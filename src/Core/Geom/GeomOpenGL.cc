@@ -2236,13 +2236,16 @@ void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
   if ( have_normal ) {
     float* n=&normals[0];
     if(colors.size() > 0){
-      float* c=&colors[0];
+      float rgb[3];  
       for (int i=0; i<pts.size(); i+=3) {
-	glColor3fv(c);
+	MaterialHandle c = colors[i/3];
+	rgb[0] = c->diffuse.r();
+	rgb[1] = c->diffuse.g();
+	rgb[2] = c->diffuse.b();
+	glColor3fv(rgb);
 	glNormal3fv(n);
 	glVertex3fv(p);
 	p+=3;
-	c+=3;
 	n+=3;
       }
     } else {
@@ -2256,12 +2259,15 @@ void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
   else { // no normals
     if(colors.size() > 0){
-      float* c=&colors[0];
+      float rgb[3];  
       for (int i=0; i<pts.size(); i+=3) {
-	glColor3fv(c);
+	MaterialHandle c = colors[i/3];
+	rgb[0] = c->diffuse.r();
+	rgb[1] = c->diffuse.g();
+	rgb[2] = c->diffuse.b();
+	glColor3fv(rgb);
 	glVertex3fv(p);
 	p+=3;
-	c+=3;
       }
     } else {
       for (int i=0; i<pts.size(); i+=3) {
