@@ -104,14 +104,12 @@ protected:
 
   // If this flag is true, then the display() will be called at the
   // next available opportunity.  Note: more than one event may be
-  // handled before display is called.  To get the window to actually
-  // redraw, you need to call post_redraw.
+  // handled before display is called.
   bool redraw;
 
-  // Call this function if you want to redraw the window
-  void post_redraw();
-
-  // This blocks until an even occurs and then handles all of them.
+  // If there are no events this sleeps the thread for a short time to
+  // prevent busy spinning.  If there are events pending it does not
+  // sleep but handles as many events as are queued.
   void wait_and_handle_events();
   
   // State variables indicating if the control or shift buttons are
