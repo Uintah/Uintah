@@ -4,6 +4,7 @@
 // Headers
 #include <Core/Util/Assert.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 
 // Base class
 #include <Packages/Uintah/Core/Math/Tensor4D.h>
@@ -40,12 +41,18 @@ namespace Uintah {
       TangentModulusTensor& operator=(const TangentModulusTensor& tensor); 
   
       /** Convert the 3x3x3x3 tangent modulus to a 6x6 matrix */
-      void convertToVoigtForm(FastMatrix& C_6x6);
+      void convertToVoigtForm(FastMatrix& C_6x6) const;
 
       /** Convert a 6x6 tangent modulus to a 3x3x3x3 matrix */
       void convertToTensorForm(const FastMatrix& C_6x6); 
+
+      /*! \brief Contract a fourth order tensor with a second order tensor */ 
+      void contract(const Matrix3& D, Matrix3& sigrate) const;
     };
 
 } // namespace Uintah
+
+std::ostream& operator<<(std::ostream& out, 
+                         const Uintah::TangentModulusTensor& C);
 
 #endif //__UINTAH_TANGENT_MODULUS_4D_H__
