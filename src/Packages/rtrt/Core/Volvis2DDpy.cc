@@ -155,7 +155,6 @@ Volvis2DDpy::drawBackground( void ) {
   glBindTexture( GL_TEXTURE_2D, bgTextName );
 
   if( hist_changed ) {
-    cerr << "hist has changed\n";
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, 
 		  textureHeight, 0, GL_RGBA, GL_FLOAT, bgTextImage );
     hist_changed = false;
@@ -179,7 +178,6 @@ Volvis2DDpy::drawBackground( void ) {
   glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, GL_BLEND );
   glBindTexture( GL_TEXTURE_2D, transFuncTextName );
   if( transFunc_changed ) {
-    cerr << "transfunc has changed\n";
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, 
 		  textureHeight, 0, GL_RGBA, GL_FLOAT, transTexture1 );
     transFunc_changed = false;
@@ -399,6 +397,9 @@ Volvis2DDpy::pickShape( int x, int y ) {
 // template<class T>
 void
 Volvis2DDpy::init() {
+  // initialize point size for cutplane voxel display
+  glPointSize( (GLfloat) 4.0 );
+
   // initialize adjustable global variables from volume data
   selected_vmin = current_vmin = vmin;
   selected_vmax = current_vmax = vmax;
@@ -518,11 +519,11 @@ void
 Volvis2DDpy::display() {
   glClear( GL_COLOR_BUFFER_BIT );
   loadCleanTexture();
-  if( cut ) { display_cp_voxels(); }
   display_controls();
   drawBackground();
   drawWidgets( GL_RENDER );
   if( hist_adjust ) { display_hist_perimeter(); }
+  if( cut ) { display_cp_voxels(); }
   glFlush();
   glXSwapBuffers(dpy, win);
 } // display()
@@ -661,6 +662,7 @@ Volvis2DDpy::key_pressed(unsigned long key) {
   case XK_c:
   case XK_C:
     render_mode = CLEAN;
+    cerr << "rendering hack is now " << render_mode << ".\n";
     break;
 
     // volume rendering hack to improve performance (>1.5x)
@@ -860,12 +862,14 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
     selected_vmax = fx*(current_vmax-current_vmin)+current_vmin;
     if( selected_vmax > current_vmax ) { selected_vmax = current_vmax; }
     else if( selected_vmax < current_vmin ) { selected_vmax = current_vmin; }
+
     float fy = ((height-(float)y)/pixel_height - UIwind->menu_height -
 		UIwind->border)/(UIwind->height - UIwind->menu_height -
 				 2*UIwind->border);
     selected_gmax = fy*(current_gmax-current_gmin)+current_gmin;
     if( selected_gmax > current_gmax ) { selected_gmax = current_gmax; }
     else if( selected_gmax < current_gmin ) { selected_gmax = current_gmin; }
+
     redraw = true;
     return;
   }
@@ -1087,25 +1091,26 @@ Volvis2DDpy::delete_voxel_storage( void )
 {
   while( cp_voxels.size() > 0 )
     cp_voxels.pop_back();
+  redraw = true;
 }
 
 // Displays cutplane voxels on the histogram
 void
 Volvis2DDpy::display_cp_voxels( void )
 {
-//    for( int i = 0; i < cp_voxels.size(); i++ ) {
-//      bgTextImage->textArray[cp_voxels[i]->gradient][cp_voxels[i]->value][0]=0.0;
-//      bgTextImage->textArray[cp_voxels[i]->gradient][cp_voxels[i]->value][1]=0.2;
-//      bgTextImage->textArray[cp_voxels[i]->gradient][cp_voxels[i]->value][2]=0.9;
-//      bgTextImage->textArray[cp_voxels[i]->gradient][cp_voxels[i]->value][3]=1.0;
-//        }
+  // connect points
   glColor3f( 0.0, 0.4, 0.7 );
+  for( int i = 1; i < cp_voxels.size(); i++ ) {
+    
+  }
 
+  // display points (after connections to draw points on top)
   glColor3f( 0.0, 0.2, 0.9 );
-  glBegin( GL_POINT );
-  for( int i = 0; i < cp_voxels.size(); i++ )
+  for( int i = 0; i < cp_voxels.size(); i++ ) {
+    glBegin( GL_POINTS );
     glVertex2f( cp_voxels[i]->value, cp_voxels[i]->gradient );
-  glEnd();
+    glEnd();
+  }
 
 //    for( int i = 1; i < cp_voxels.size(); i++ ) {
 //      glColor4f( 0.0, 0.2, 0.9, 1.0 );
@@ -1128,12 +1133,10 @@ Volvis2DDpy::store_voxel( Voxel2D<float> voxel )
 {
   if( voxel.g() < current_gmax && voxel.v() < current_vmax &&
       voxel.g() > current_gmin && voxel.v() > current_vmin ) {
-//      int x_index = (int)((voxel.v()-current_vmin)*text_x_convert);
-//      int y_index = (int)((voxel.g()-current_gmin)*text_y_convert);
-    float x = ((voxel.v()-current_vmin)/(current_vmax-current_vmin)*
-	       UIwind->width - 2*UIwind->border) + UIwind->border;
-    float y = ((voxel.g()-current_gmin)/(current_gmax-current_gmin)*
-	       UIwind->height - 2*UIwind->border - UIwind->menu_height) +
+    float x = (voxel.v()-current_vmin)/(current_vmax-current_vmin)*
+	       (UIwind->width - 2*UIwind->border) + UIwind->border;
+    float y = (voxel.g()-current_gmin)/(current_gmax-current_gmin)*
+	       (UIwind->height - 2*UIwind->border - UIwind->menu_height) +
       UIwind->menu_height + UIwind->border;
     voxel_valuepair *vvp = new voxel_valuepair;
     vvp->value = x;
