@@ -48,6 +48,74 @@ doc.insertDocType("article", entities)
 
   <qandaset defaultlabel="number">
 
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>02/22/05</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+	  What are the units associated with the bioelectric field
+	  simulations in BioPSE?
+	</para>
+      </question>
+      <answer>
+	<para>
+	  Here are the quantities that we're interested in and the
+	  units that they carry:
+
+	  <literallayout>
+conductivity [sigma] = (amps / volts) / meter = siemens / meter
+potentials [phi] = volts
+electric field [E] = volts / meter
+dipole source [p] = amps / meter
+current density [J] = amps / (meter^2)
+current source density [I] = amps / (meter^3)
+
+Recall that:
+  J = sigma x E
+and
+  E = - gradient (phi)
+and
+  I = divergence (J)
+	  </literallayout>
+	</para>
+	<para>
+	  As for the scales of those units (e.g. centi-, milli-, etc),
+	  those are up to the user&#x2014;SCIRun doesn't actually keep
+	  track of them all that well.  SCIRun assumes that the dipole
+	  source are in amps / meter, that the conductivities are in
+	  siemens / meter, that the model geometry is in meters, and
+	  it therefore reports its results in volts.  If this isn't
+	  true (e.g. you know that your model is in mm), then you have
+	  to carry those scale factors through your computation
+	  (e.g. know that the results you get out are in kv).
+	</para>
+	<para>
+	  The rule of thumb is that if we
+	  <emphasis>increase</emphasis> the conductivity, then we
+	  <emphasis>decrease</emphasis> the potentials by that same
+	  scale factor.  Conversely, if we
+	  <emphasis>increase</emphasis> the dipole source moment, then
+	  we <emphasis>increase</emphasis> the potentials by that same
+	  scale factor.  i.e. V = I / sigma.  Similarly, if we hold
+	  everything else constant, but <emphasis>increase</emphasis>
+	  the size of the domain, then we
+	  <emphasis>decrease</emphasis> the potentials by that same
+	  scale factor.
+	</para>
+	<para>
+	  For example, the SCIRun Utah Torso model has a length scale
+	  of centimeters (10^(-2) meters) and conductivity units of
+	  (siemens / meter), so our output potentials are in
+	  hectovolts (10^2 volts).
+	</para>
+      </answer>
+    </qandaentry>
+
     <qandaentry>
       <revhistory>
 	<revision>
