@@ -49,6 +49,7 @@ public:
   virtual ~CriticalPointWidget();
 
   virtual void redraw();
+  virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
   virtual void geom_moved(GeomPick*, int, double, const Vector&, int,
 			  const BState&, const Vector &pick_offset);
 
@@ -80,6 +81,7 @@ protected:
 private:
   CriticalType crittype;
   Vector direction;
+  Point pick_position_;
 };
 
 } // End namespace SCIRun
