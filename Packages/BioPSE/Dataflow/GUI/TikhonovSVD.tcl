@@ -15,12 +15,12 @@
 #  University of Utah. All Rights Reserved.
 #
 
-    catch {rename BioPSE_Inverse_Tikhonov ""}
+    catch {rename BioPSE_Inverse_TikhonovSVD ""}
 
-    itcl_class BioPSE_Inverse_Tikhonov {
+    itcl_class BioPSE_Inverse_TikhonovSVD {
     inherit Module
     constructor {config} {
-        set name Tikhonov
+        set name TikhonovSVD
         set_defaults
     }
     method set_defaults {} {
