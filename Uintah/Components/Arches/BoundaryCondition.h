@@ -38,6 +38,7 @@ WARNING
 none
 ****************************************/
 
+#include <Uintah/Components/Arches/ArchesLabel.h>
 #include <Uintah/Components/Arches/StencilMatrix.h>
 #include <Uintah/Components/Arches/CellInformation.h>
 #include <Uintah/Grid/LevelP.h>
@@ -157,25 +158,6 @@ public:
 
       ////////////////////////////////////////////////////////////////////////
       //
-      // Schedule Computation of Pressure boundary conditions terms. 
-      //
-      void sched_pressureBC(const LevelP& level,
-			    SchedulerP& sched,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw);
-
-      ////////////////////////////////////////////////////////////////////////
-      //
-      // Schedule Computation of Scalar boundary conditions terms. 
-      //
-      void sched_scalarBC(const LevelP& level,
-			  SchedulerP& sched,
-			  DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw,
-			  int index);
-
-      ////////////////////////////////////////////////////////////////////////
-      //
       // Schedule Setting inlet velocity bc's
       // we need to do it because of staggered grid
       // 
@@ -235,7 +217,7 @@ public:
 		      const Patch* patch,
 		      DataWarehouseP& old_dw,
 		      DataWarehouseP& new_dw,
-		      int eqnType);
+		      int eqnType, int labID);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -269,7 +251,7 @@ private:
 		       SFCXVariable<double>* uVelocity, 
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
-		       int eqnType);
+		       int eqnType, int labID);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -281,7 +263,7 @@ private:
 		       SFCYVariable<double>* vVelocity, 
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
-		       int eqnType);
+		       int eqnType, int labID);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -293,7 +275,7 @@ private:
 		       SFCZVariable<double>* wVelocity, 
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
-		       int eqnType);
+		       int eqnType, int labID);
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -420,70 +402,8 @@ private:
       FlowOutlet* d_outletBC;
       int d_flowfieldCellTypeVal;
 
-      // const VarLabel* inputs
-      const VarLabel* d_cellInfoLabel;
-      const VarLabel* d_cellTypeLabel;
-      const VarLabel* d_pressureINLabel;
-      const VarLabel* d_densityINLabel;
-      const VarLabel* d_viscosityINLabel;
-      const VarLabel* d_uVelocityINLabel;
-      const VarLabel* d_vVelocityINLabel;
-      const VarLabel* d_wVelocityINLabel;
-
-      // Labels for data computed by setProfile()
-      const VarLabel* d_densitySPLabel;
-      const VarLabel* d_uVelocitySPLabel;
-      const VarLabel* d_vVelocitySPLabel;
-      const VarLabel* d_wVelocitySPLabel;
-      const VarLabel* d_scalarSPLabel;
-
-      // Labels for calcPressureBC
-      const VarLabel* d_uVelocitySPBCLabel;
-      const VarLabel* d_vVelocitySPBCLabel;
-      const VarLabel* d_wVelocitySPBCLabel;
-      const VarLabel* d_pressureSPBCLabel;
-      
-      // Labels for data used/computed by setInletVelocityBC()
-      const VarLabel* d_densityCPLabel;
-      const VarLabel* d_uVelocitySIVBCLabel;
-      const VarLabel* d_vVelocitySIVBCLabel;
-      const VarLabel* d_wVelocitySIVBCLabel;
-
-      // Labels for data computed by recomputePressureBC()
-      const VarLabel* d_pressurePSLabel;
-      const VarLabel* d_uVelocityCPBCLabel;
-      const VarLabel* d_vVelocityCPBCLabel;
-      const VarLabel* d_wVelocityCPBCLabel;
-      const VarLabel* d_pressureCPBCLabel;
-
-      // VelocityBC
-      const VarLabel* d_uVelCoefPBLMLabel;
-      const VarLabel* d_vVelCoefPBLMLabel;
-      const VarLabel* d_wVelCoefPBLMLabel;
-      const VarLabel* d_uVelLinSrcPBLMLabel;
-      const VarLabel* d_vVelLinSrcPBLMLabel;
-      const VarLabel* d_wVelLinSrcPBLMLabel;
-      const VarLabel* d_uVelNonLinSrcPBLMLabel;
-      const VarLabel* d_vVelNonLinSrcPBLMLabel;
-      const VarLabel* d_wVelNonLinSrcPBLMLabel;
-      const VarLabel* d_uVelCoefMBLMLabel;
-      const VarLabel* d_vVelCoefMBLMLabel;
-      const VarLabel* d_wVelCoefMBLMLabel;
-      const VarLabel* d_uVelLinSrcMBLMLabel;
-      const VarLabel* d_vVelLinSrcMBLMLabel;
-      const VarLabel* d_wVelLinSrcMBLMLabel;
-      const VarLabel* d_uVelNonLinSrcMBLMLabel;
-      const VarLabel* d_vVelNonLinSrcMBLMLabel;
-      const VarLabel* d_wVelNonLinSrcMBLMLabel;
-
-      // PressureBC
-      const VarLabel* d_presCoefPBLMLabel;
-      const VarLabel* d_presLinSrcPBLMLabel;
-      const VarLabel* d_presNonLinSrcPBLMLabel;
-
-      // ScalarBC
-      const VarLabel* d_scalarINLabel;
-      const VarLabel* d_scalCoefSBLMLabel;
+      // const VarLabel* 
+      const ArchesLabel* d_lab;
 
 }; // End of class BoundaryCondition
 } // End namespace ArchesSpace
@@ -492,6 +412,10 @@ private:
   
 //
 // $Log$
+// Revision 1.39  2000/07/19 06:30:01  bbanerje
+// ** MAJOR CHANGES **
+// If you want to get the old code go two checkins back.
+//
 // Revision 1.38  2000/07/18 22:33:51  bbanerje
 // Changes to PressureSolver for put error. Added ArchesLabel.
 //

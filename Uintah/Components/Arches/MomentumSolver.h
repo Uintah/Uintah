@@ -34,6 +34,7 @@ WARNING
    none
 
 ************************************************************************/
+#include <Uintah/Components/Arches/ArchesLabel.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
@@ -142,26 +143,7 @@ private:
       PhysicalConstants* d_physicalConsts;
 
       // const VarLabel* (required)
-      const VarLabel* d_pressurePSLabel;
-      const VarLabel* d_uVelocityCPBCLabel;
-      const VarLabel* d_vVelocityCPBCLabel;
-      const VarLabel* d_wVelocityCPBCLabel;
-      const VarLabel* d_densityCPLabel;
-      const VarLabel* d_viscosityCTSLabel;
-
-      // const VarLabel* (computed)
-      const VarLabel* d_uVelConvCoefMBLMLabel;
-      const VarLabel* d_vVelConvCoefMBLMLabel;
-      const VarLabel* d_wVelConvCoefMBLMLabel;
-      const VarLabel* d_uVelCoefMBLMLabel;
-      const VarLabel* d_vVelCoefMBLMLabel;
-      const VarLabel* d_wVelCoefMBLMLabel;
-      const VarLabel* d_uVelLinSrcMBLMLabel;
-      const VarLabel* d_vVelLinSrcMBLMLabel;
-      const VarLabel* d_wVelLinSrcMBLMLabel;
-      const VarLabel* d_uVelNonLinSrcMBLMLabel;
-      const VarLabel* d_vVelNonLinSrcMBLMLabel;
-      const VarLabel* d_wVelNonLinSrcMBLMLabel;
+      const ArchesLabel* d_lab;
 
       // DataWarehouse generation
       int d_generation;
@@ -175,6 +157,10 @@ private:
 
 //
 // $Log$
+// Revision 1.11  2000/07/19 06:30:01  bbanerje
+// ** MAJOR CHANGES **
+// If you want to get the old code go two checkins back.
+//
 // Revision 1.10  2000/07/03 05:30:15  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //

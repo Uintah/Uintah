@@ -26,13 +26,6 @@ using namespace Uintah::ArchesSpace;
 using namespace std;
 
 //****************************************************************************
-// Private constructor for MomentumSolver
-//****************************************************************************
-MomentumSolver::MomentumSolver()
-{
-}
-
-//****************************************************************************
 // Default constructor for MomentumSolver
 //****************************************************************************
 MomentumSolver::MomentumSolver(TurbulenceModel* turb_model,
@@ -43,43 +36,7 @@ MomentumSolver::MomentumSolver(TurbulenceModel* turb_model,
 				   d_physicalConsts(physConst),
 				   d_generation(0)
 {
-  // inputs/outputs for sched_buildLinearMatrix
-  d_pressurePSLabel = scinew VarLabel("pressurePS",
-				    CCVariable<double>::getTypeDescription() );
-  d_uVelocityCPBCLabel = scinew VarLabel("uVelocityCPBC",
-				     SFCXVariable<double>::getTypeDescription() );
-  d_vVelocityCPBCLabel = scinew VarLabel("vVelocityCPBC",
-				     SFCYVariable<double>::getTypeDescription() );
-  d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC",
-				     SFCZVariable<double>::getTypeDescription() );
-  d_densityCPLabel = scinew VarLabel("densityCP",
-				   CCVariable<double>::getTypeDescription() );
-  d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
-				     CCVariable<double>::getTypeDescription() );
-  d_uVelConvCoefMBLMLabel = scinew VarLabel("uVelConvCoefMBLM",
-				   SFCXVariable<double>::getTypeDescription() );
-  d_vVelConvCoefMBLMLabel = scinew VarLabel("vVelConvCoefMBLM",
-				   SFCYVariable<double>::getTypeDescription() );
-  d_wVelConvCoefMBLMLabel = scinew VarLabel("wVelConvCoefMBLM",
-				   SFCZVariable<double>::getTypeDescription() );
-  d_uVelCoefMBLMLabel = scinew VarLabel("uVelCoefMBLM",
-				   SFCXVariable<double>::getTypeDescription() );
-  d_vVelCoefMBLMLabel = scinew VarLabel("vVelCoefMBLM",
-				   SFCYVariable<double>::getTypeDescription() );
-  d_wVelCoefMBLMLabel = scinew VarLabel("wVelCoefMBLM",
-				   SFCZVariable<double>::getTypeDescription() );
-  d_uVelLinSrcMBLMLabel = scinew VarLabel("uVelLinSrcMBLM",
-				   SFCXVariable<double>::getTypeDescription() );
-  d_vVelLinSrcMBLMLabel = scinew VarLabel("vVelLinSrcMBLM",
-				   SFCYVariable<double>::getTypeDescription() );
-  d_wVelLinSrcMBLMLabel = scinew VarLabel("wVelLinSrcMBLM",
-				   SFCZVariable<double>::getTypeDescription() );
-  d_uVelNonLinSrcMBLMLabel = scinew VarLabel("uVelNonLinSrcMBLM",
-				   SFCXVariable<double>::getTypeDescription() );
-  d_vVelNonLinSrcMBLMLabel = scinew VarLabel("vVelNonLinSrcMBLM",
-				   SFCYVariable<double>::getTypeDescription() );
-  d_wVelNonLinSrcMBLMLabel = scinew VarLabel("wVelNonLinSrcMBLM",
-				   SFCZVariable<double>::getTypeDescription() );
+  d_lab = scinew ArchesLabel();
 }
 
 //****************************************************************************
@@ -98,26 +55,20 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("MomentumSolver");
   string finite_diff;
   db->require("finite_difference", finite_diff);
-  if (finite_diff == "second") 
-    d_discretize = scinew Discretization();
-  else {
+  if (finite_diff == "second") d_discretize = scinew Discretization();
+  else 
     throw InvalidValue("Finite Differencing scheme "
 		       "not supported: " + finite_diff);
-    //throw InvalidValue("Finite Differencing scheme "
-	//	       "not supported: " + finite_diff, db);
-  }
+
   // make source and boundary_condition objects
   d_source = scinew Source(d_turbModel, d_physicalConsts);
+   
   string linear_sol;
   db->require("linear_solver", linear_sol);
-  if (linear_sol == "linegs")
-    d_linearSolver = scinew RBGSSolver();
-  else {
+  if (linear_sol == "linegs") d_linearSolver = scinew RBGSSolver();
+  else
     throw InvalidValue("linear solver option"
 		       " not supported" + linear_sol);
-    //throw InvalidValue("linear solver option"
-	//	       " not supported" + linear_sol, db);
-  }
   d_linearSolver->problemSetup(db);
 }
 
@@ -165,6 +116,7 @@ MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
 					DataWarehouseP& new_dw,
 					double delta_t, int index)
 {
+  /*
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -213,11 +165,255 @@ MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+  */
+
+  // Create tasks for each of the actions in BuildLinearMatrix for the
+  // three Momentum Solves
+  int eqnType = Arches::MOMENTUM;
+  std::string dir("XMOM");
+  if (index == 0) dir = "XMOM";
+  else if (index == 1) dir = "YMOM";
+  else if (index == 2) dir = "ZMOM";
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
+
+    // Task 1 : CalculateVelocityCoeff
+    // requires : [u,v,w]VelocityCPBC, densityCP, viscosityCTS
+    // computes : [u,v,w]VelConvCoefMBLM, [u,v,w]VelCoefM0
+    {
+      Task* tsk = scinew Task("Momentum::VelCoef"+dir,
+			      patch, old_dw, new_dw, d_discretize,
+			      &Discretization::calculateVelocityCoeff, 
+			      delta_t, eqnType, index);
+      int numGhostCells = 0;
+      int matlIndex = 0;
+      tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->densityCPLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->viscosityCTSLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelocityCPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelocityCPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelocityCPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      
+      tsk->computes(new_dw, d_lab->uVelCoefM0Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelCoefM0Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelCoefM0Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->uVelConvCoefMBLMLabel[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelConvCoefMBLMLabel[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelConvCoefMBLMLabel[index], matlIndex, patch);
+      
+      sched->addTask(tsk);
+    }
+    
+    // Task 2: CalculateVelocitySource
+    // requires : [u,v,w]VelocityCPBC, densityCP, viscosityCTS
+    // computes : [u,v,w]VelLinSrcM0, [u,v,w]VelNonLinSrcM0
+    {
+      Task* tsk = scinew Task("Momentum::VelSource"+dir,
+			      patch, old_dw, new_dw, d_source,
+			      &Source::calculateVelocitySource, 
+			      delta_t, eqnType, index);
+      int numGhostCells = 0;
+      int matlIndex = 0;
+      tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->densityCPLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->viscosityCTSLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelocityCPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelocityCPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelocityCPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      
+      tsk->computes(new_dw, d_lab->uVelLinSrcM0Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelLinSrcM0Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelLinSrcM0Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->uVelNonLinSrcM0Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelNonLinSrcM0Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelNonLinSrcM0Label[index], matlIndex, patch);
+      
+      sched->addTask(tsk);
+    }
+
+    // Task 3: VelocityBC
+    // requires : densityCP, [u,v,w]VelocityCPBC, [u,v,w]VelCoefM0
+    //            [u,v,w]VelLinSrcM0, [u,v,w]VelNonLinSrcM0
+    // computes : [u,v,w]VelCoefM1, [u,v,w]VelLinSrcM1, 
+    //            [u,v,w]VelNonLinSrcM1
+    {
+      Task* tsk = scinew Task("Momentum::VelBC"+dir,
+			      patch, old_dw, new_dw, d_boundaryCondition,
+			      &BoundaryCondition::velocityBC, 
+			      eqnType, index);
+      int numGhostCells = 0;
+      int matlIndex = 0;
+      tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelocityCPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelocityCPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelocityCPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelCoefM0Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelCoefM0Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelCoefM0Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      
+      tsk->computes(new_dw, d_lab->uVelCoefM1Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelCoefM1Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelCoefM1Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->uVelLinSrcM1Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelLinSrcM1Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelLinSrcM1Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->uVelNonLinSrcM1Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelNonLinSrcM1Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelNonLinSrcM1Label[index], matlIndex, patch);
+      
+      sched->addTask(tsk);
+    }
+
+    // Task 4: Modify Velocity Mass Source
+    // requires : [u,v,w]VelocityCPBC, [u,v,w]VelCoefM1, 
+    //            [u,v,w]VelConvCoefMBLM, [u,v,w]VelLinSrcM1, 
+    //            [u,v,w]VelNonLinSrcM1
+    // computes : [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcM2
+    {
+      Task* tsk = scinew Task("Momentum::VelMassSource"+dir,
+			      patch, old_dw, new_dw, d_source,
+			      &Source::modifyVelMassSource, 
+			      delta_t, eqnType, index);
+      int numGhostCells = 0;
+      int matlIndex = 0;
+      tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelocityCPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelocityCPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelocityCPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelCoefM1Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelCoefM1Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelCoefM1Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelConvCoefMBLMLabel[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelConvCoefMBLMLabel[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelConvCoefMBLMLabel[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelLinSrcM1Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelLinSrcM1Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelLinSrcM1Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelNonLinSrcM1Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelNonLinSrcM1Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelNonLinSrcM1Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+
+      tsk->computes(new_dw, d_lab->uVelLinSrcMBLMLabel[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelLinSrcMBLMLabel[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelLinSrcMBLMLabel[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->uVelNonLinSrcM2Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelNonLinSrcM2Label[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelNonLinSrcM2Label[index], matlIndex, patch);
+      
+      sched->addTask(tsk);
+    }
+
+    // Task 5: Calculate Velocity Diagonal
+    // requires : [u,v,w]VelCoefM1, [u,v,w]VelLinSrcMBLM
+    // computes : [u,v,w]VelCoefMBLM
+    {
+      Task* tsk = scinew Task("Momentum::VelDiagonal"+dir,
+			      patch, old_dw, new_dw, d_discretize,
+			      &Discretization::calculateVelDiagonal, 
+			      eqnType, index);
+      int numGhostCells = 0;
+      int matlIndex = 0;
+      tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelCoefM1Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelCoefM1Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelCoefM1Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelLinSrcMBLMLabel[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelLinSrcMBLMLabel[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelLinSrcMBLMLabel[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+
+      tsk->computes(new_dw, d_lab->uVelCoefMBLMLabel[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelCoefMBLMLabel[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelCoefMBLMLabel[index], matlIndex, patch);
+      
+      sched->addTask(tsk);
+    }
+
+    // Task 6: Add the pressure source terms
+    // requires : [u,v,w]VelNonlinSrcM2, pressurePS, densityCP(old_dw), 
+    //            [u,v,w]VelocityCPBC
+    // computes : [u,v,w]VelNonlinSrcMBLM
+    {
+      Task* tsk = scinew Task("Momentum::AddPresSrc"+dir,
+			      patch, old_dw, new_dw, d_source,
+			      &Source::addPressureSource, 
+			      delta_t, index);
+      int numGhostCells = 0;
+      int matlIndex = 0;
+      tsk->requires(old_dw, d_lab->cellTypeLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(old_dw, d_lab->densityCPLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->pressurePSLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelocityCPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelocityCPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelocityCPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->uVelNonLinSrcM2Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->vVelNonLinSrcM2Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->wVelNonLinSrcM2Label[index], matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      
+      tsk->computes(new_dw, d_lab->uVelNonLinSrcMBLMLabel[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->vVelNonLinSrcMBLMLabel[index], matlIndex, patch);
+      tsk->computes(new_dw, d_lab->wVelNonLinSrcMBLMLabel[index], matlIndex, patch);
+      
+      sched->addTask(tsk);
+    }
+  }
 }
 
 //****************************************************************************
 // Actual build of the linear matrix
 //****************************************************************************
+/*
 void 
 MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  const Patch* patch,
@@ -227,51 +423,56 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 {
   // compute ith componenet of velocity stencil coefficients
   // inputs : [u,v,w]VelocityCPBC, densityCP, viscosityCTS
-  // outputs: [u,v,w]VelConvCoefMBLM, [u,v,w]VelCoefMBLM
+  // outputs: [u,v,w]VelConvCoefMBLM, [u,v,w]VelCoefM0
   d_discretize->calculateVelocityCoeff(pc, patch, old_dw, new_dw, 
 				       delta_t, 
 				       Arches::MOMENTUM);
 
   // Calculate velocity source
   // inputs : [u,v,w]VelocityCPBC, densityCP, viscosityCTS
-  // outputs: [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
+  // outputs: [u,v,w]VelLinSrcM0, [u,v,w]VelNonLinSrcM0
   d_source->calculateVelocitySource(pc, patch, old_dw, new_dw, 
 				    delta_t, 
 				    Arches::MOMENTUM);
 
   // Velocity Boundary conditions
-  //  inputs : densityCP, [u,v,w]VelocityCPBC, [u,v,w]VelCoefMBLM
-  //           [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
-  //  outputs: [u,v,w]VelCoefMBLM, [u,v,w]VelLinSrcMBLM, 
-  //           [u,v,w]VelNonLinSrcMBLM
+  //  inputs : densityCP, [u,v,w]VelocityCPBC, [u,v,w]VelCoefM0
+  //           [u,v,w]VelLinSrcM0, [u,v,w]VelNonLinSrcM0
+  //  outputs: [u,v,w]VelCoefM1, [u,v,w]VelLinSrcM1, 
+  //           [u,v,w]VelNonLinSrcM1
   d_boundaryCondition->velocityBC(pc, patch, old_dw, new_dw, 
 				  Arches::MOMENTUM);
 
   // Modify Velocity Mass Source
-  //  inputs : [u,v,w]VelocityCPBC, [u,v,w]VelCoefMBLM, 
-  //           [u,v,w]VelConvCoefMBLM, [u,v,w]VelLinSrcMBLM, 
-  //           [u,v,w]VelNonLinSrcMBLM
-  //  outputs: [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
+  //  inputs : [u,v,w]VelocityCPBC, [u,v,w]VelCoefM1, 
+  //           [u,v,w]VelConvCoefMBLM, [u,v,w]VelLinSrcM1, 
+  //           [u,v,w]VelNonLinSrcM1
+  //  outputs: [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcM2
   d_source->modifyVelMassSource(pc, patch, old_dw,
 				new_dw, delta_t, 
 				Arches::MOMENTUM);
 
   // Calculate Velocity Diagonal
-  //  inputs : [u,v,w]VelCoefMBLM, [u,v,w]VelLinSrcMBLM
+  //  inputs : [u,v,w]VelCoefM1, [u,v,w]VelLinSrcMBLM
   //  outputs: [u,v,w]VelCoefMBLM
   d_discretize->calculateVelDiagonal(pc, patch, new_dw, new_dw, 
 				     Arches::MOMENTUM);
 
   // Add the pressure source terms
-  // inputs :[u,v,w]VelNonlinSrcMBLM, pressurePS, densityCP(old_dw), 
+  // inputs :[u,v,w]VelNonlinSrcM2, pressurePS, densityCP(old_dw), 
   // [u,v,w]VelocityCPBC
   // outputs:[u,v,w]VelNonlinSrcMBLM
   d_source->addPressureSource(pc, patch, new_dw, new_dw, delta_t, index);
 
 }
+*/
 
 //
 // $Log$
+// Revision 1.19  2000/07/19 06:30:01  bbanerje
+// ** MAJOR CHANGES **
+// If you want to get the old code go two checkins back.
+//
 // Revision 1.18  2000/07/18 22:33:51  bbanerje
 // Changes to PressureSolver for put error. Added ArchesLabel.
 //
