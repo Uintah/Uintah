@@ -1,10 +1,6 @@
 #ifndef __IDEAL_GAS_H__
 #define __IDEAL_GAS_H__
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include "EquationOfState.h"
 
@@ -43,48 +39,7 @@ WARNING
 	 
 	 IdealGas(ProblemSpecP& ps);
 	 virtual ~IdealGas();
-
-	 //////////
-	 // Create space in data warehouse for CM data
-	 virtual void initializeEOSData(const Patch* patch,
-				       const ICEMaterial* matl,
-				       DataWarehouseP& new_dw);
-
-	 // C&R for sound speed calc.
-	 virtual void addComputesAndRequiresSS(Task* task,
-					       const ICEMaterial* matl,
-					       const Patch* patch,
-					       DataWarehouseP& old_dw,
-					       DataWarehouseP& new_dw) const;
-
-	 // C&R for rho micro calc.
-	 virtual void addComputesAndRequiresRM(Task* task,
-					       const ICEMaterial* matl,
-					       const Patch* patch,
-					       DataWarehouseP& old_dw,
-					       DataWarehouseP& new_dw) const;
-	 // C&R for press eos calc.
-	 virtual void addComputesAndRequiresPEOS(Task* task,
-					       const ICEMaterial* matl,
-					       const Patch* patch,
-					       DataWarehouseP& old_dw,
-					       DataWarehouseP& new_dw) const;
-
-	 // Per patch
-         virtual void computeSpeedSound(const Patch* patch,
-					const ICEMaterial* matl,
-                                        DataWarehouseP& old_dw,
-                                        DataWarehouseP& new_dw);
-
-         virtual void computePressEOS(const Patch* patch,
-				      const ICEMaterial* matl,
-				      DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw);
-
-	 virtual void computeRhoMicro(const Patch* patch,
-				      const ICEMaterial* matl,
-				      DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw);
+        
 	 // Per cell
 	 virtual double computeRhoMicro(double& press,double& gamma,
 				        double& cv, double& Temp);
