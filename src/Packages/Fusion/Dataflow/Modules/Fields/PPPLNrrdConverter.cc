@@ -64,18 +64,12 @@ private:
   GuiInt jWrap_;
   GuiInt kWrap_;
 
-
-  int rank_;
-
   int grid_;
+  int data_;
 
   int iwrap_;
   int jwrap_;
   int kwrap_;
-
-  int dims_;
-
-
 
   vector< int > nGenerations_;
 
@@ -96,12 +90,11 @@ PPPLNrrdConverter::PPPLNrrdConverter(GuiContext* context)
     kWrap_(context->subVar("k-wrap")),
 
     grid_(-1),
+    data_(-1),
 
     iwrap_(0),
     jwrap_(0),
-    kwrap_(0),
-
-    rank_(0)
+    kwrap_(0)
 {
 }
 
@@ -238,63 +231,103 @@ PPPLNrrdConverter::execute(){
 
     grid_ = gridData_.get();
 
-    int data;
-
     // For flexibility allow the user not to enter a dataset for the data. 
     // This can be merged later with ManageData or when animating.
     if( nHandles.size() < 2 )
-      data = -1;
+      data_ = -1;
     else
-      data = grid_ ? 0 : 1;
+      data_ = grid_ ? 0 : 1;
 
     int idim;
     int jdim;
     int kdim;
 
+    vector<unsigned int> mdims;
+
     nHandle = nHandles[grid_];
 
     // Create the mesh.
-
     if( nHandle->nrrd->dim == 5 ) {
       // 3D StructHexVol
       idim = nHandle->nrrd->axis[1].size;
       jdim = nHandle->nrrd->axis[2].size;
       kdim = nHandle->nrrd->axis[3].size;
       
-      mHandle = scinew
-	StructHexVolMesh( nHandle->nrrd->axis[1].size+iwrap_,
-			  nHandle->nrrd->axis[2].size+jwrap_,
-			  nHandle->nrrd->axis[3].size+kwrap_ );
- 
     } else if( nHandle->nrrd->dim == 4 ) {
       // 2D StructQuadSurf
       idim = nHandle->nrrd->axis[1].size;
       jdim = nHandle->nrrd->axis[2].size;
       kdim = 1;
-
-      kwrap_ = 0;
-
-      mHandle = scinew
-	StructQuadSurfMesh(nHandle->nrrd->axis[1].size+iwrap_,
-			   nHandle->nrrd->axis[2].size+jwrap_ );
-	      
     } else if( nHandle->nrrd->dim == 3 ) {
       // 1D StructCurve
       idim = nHandle->nrrd->axis[1].size;
       jdim = 1;
       kdim = 1;
-
-      jwrap_ = 0;
-      kwrap_ = 0;
-
-      mHandle = scinew
-	StructCurveMesh(nHandle->nrrd->axis[1].size+iwrap_ );
-
     } else {
       error( "Grid dimensions do not make sense." );
       return;
     }
 
+    // Create the mesh.
+    if( idim > 1 && jdim > 1 && kdim > 1 ) {
+      // 3D StructHexVol
+      mHandle = scinew
+	StructHexVolMesh( idim+iwrap_, jdim+jwrap_, kdim+kwrap_ );
+ 
+      mdims.push_back( idim );
+      mdims.push_back( jdim );
+      mdims.push_back( kdim );
+
+    } else if( idim >  1 && jdim >  1 && kdim == 1 ) {
+      // 2D StructQuadSurf
+      mHandle = scinew StructQuadSurfMesh(idim+iwrap_, jdim+jwrap_ );
+
+      mdims.push_back( idim );
+      mdims.push_back( jdim );
+      kwrap_ = 0;
+
+    } else if( idim >  1 && jdim == 1 && kdim  > 1 ) {
+      // 2D StructQuadSurf
+      mHandle = scinew StructQuadSurfMesh(idim+iwrap_, kdim+kwrap_ );
+
+      mdims.push_back( idim );
+      mdims.push_back( kdim );
+      jwrap_ = 0;
+
+    } else if( idim == 1 && jdim >  1 && kdim  > 1 ) {
+      // 2D StructQuadSurf
+      mHandle = scinew StructQuadSurfMesh(jdim+jwrap_, kdim+kwrap_ );
+
+      mdims.push_back( jdim );
+      mdims.push_back( kdim );
+      iwrap_ = 0;
+
+    } else if( idim  > 1 && jdim == 1 && kdim == 1 ) {
+      // 1D StructCurveMesh
+      mHandle = scinew StructCurveMesh( idim+iwrap_ );
+
+      mdims.push_back( idim );
+      jwrap_ = kwrap_ = 0;
+
+    } else if( idim == 1 && jdim  > 1 && kdim == 1 ) {
+      // 1D StructCurveMesh
+      mHandle = scinew StructCurveMesh( jdim+jwrap_ );
+
+      mdims.push_back( jdim );
+      iwrap_ = kwrap_ = 0;
+
+    } else if( idim == 1 && jdim == 1 && kdim  > 1 ) {
+      // 1D StructCurveMesh
+      mHandle = scinew StructCurveMesh( kdim+kwrap_ );
+
+      mdims.push_back( kdim );
+      iwrap_ = jwrap_ = 0;
+
+    } else {
+      error( "Grid dimensions do not make sense." );
+      return;
+    }
+  
     const TypeDescription *mtd = mHandle->get_type_description();
       
     CompileInfoHandle ci_mesh =
@@ -308,71 +341,101 @@ PPPLNrrdConverter::execute(){
 		       idim, jdim, kdim,
 		       iwrap_, jwrap_, kwrap_);
 
+    int ndims = mHandle.get_rep()->dimensionality();
 
     
     // Set the rank of the data Scalar(1), Vector(3), Tensor(6).
     // Assume all of the input nrrd data is scalar with the last axis
     // size being the rank of the data.
-    rank_ = 1;
 
-    if( data != -1 )
-      nHandle = nHandles[data];
-    else
+    vector<unsigned int> ddims;
+    int rank = 0;
+
+    if( data_ != -1 ) {
+      nHandle = nHandles[data_];
+
+      int tuples = nHandle->get_tuple_axis_size();
+
+      if( tuples != 1 ) {
+	error( "Too many tuples listed in the tuple axis." );
+	return;
+      }
+
+      // Do not allow joined Nrrds
+      vector< string > dataset;
+
+      nHandle->get_tuple_indecies(dataset);
+
+      if( dataset.size() != 1 ) {
+	error( "Too many sets listed in the tuple axis." );
+	return;
+      }
+
+      for( int ic=1; ic<nHandle->nrrd->dim; ic++ ) {
+
+	if( nHandle->nrrd->axis[ic].size != 1 )
+	  ddims.push_back( nHandle->nrrd->axis[ic].size );
+      }
+
+      if( ddims.size() == mdims.size() ||
+	  ddims.size() == mdims.size() + 1 ) {
+	
+	for( int ic=0; ic<mdims.size(); ic++ ) {
+	  if( ddims[ic] != mdims[ic] ) {
+	    error( "Data and grid sizes do not match." );
+	    return;
+	  }
+	}
+
+	if( ddims.size() == mdims.size() )
+	  rank = 1;
+	else if(ddims.size() == mdims.size() + 1)
+	  rank = ddims[mdims.size()];
+      }
+    } else {
       nHandle = NULL;
+      rank = 1;
+    }
 
-    // Create the data.
-
-    if( dynamic_cast<StructHexVolMesh *>(mHandle.get_rep()) ) {
+    // Add in the data.
+    if( ndims == 3 ) {
 
       // 3D StructHexVol
       StructHexVolMesh *mesh = (StructHexVolMesh *) mHandle.get_rep();
-	
-      if( data != -1  && (nHandle->nrrd->dim == 5) )
-	rank_ = nHandle->nrrd->axis[4].size;
 
-      if( rank_ == 1 ) {
+      if( rank == 1 ) {
 	// Now after the mesh has been created, create the field.
 	fHandle_ =
 	  scinew StructHexVolField<float>(mesh, Field::NODE);
-      } else if( rank_ == 3 ) {
+      } else if( rank == 3 ) {
 	// Now after the mesh has been created, create the field.
 	fHandle_ =
 	  scinew StructHexVolField< vector<float> >(mesh, Field::NODE);
       }
-      else {
-	error( "Bad data rank." );
-	return;
-      }
-    } else if(dynamic_cast<StructQuadSurfMesh *>(mHandle.get_rep()) ) {
+    } else if( ndims == 2 ) {
 
       // 2D StructQuadSurf
       StructQuadSurfMesh *mesh = (StructQuadSurfMesh *) mHandle.get_rep();
 
-      if( data != -1 && (nHandle->nrrd->dim == 4) )
-	rank_ = nHandle->nrrd->axis[3].size;
-
-      if( rank_ == 1 ) {
+      if( rank == 1 ) {
 	// Now after the mesh has been created, create the field.
 	fHandle_ =
 	  scinew StructQuadSurfField<float >(mesh, Field::NODE);
-      } else if( rank_ == 3 ) {
+      } else if( rank == 3 ) {
 	// Now after the mesh has been created, create the field.
 	fHandle_ =
 	  scinew StructQuadSurfField< vector<float> >(mesh, Field::NODE);
       }
-    } else if(dynamic_cast<StructCurveMesh *>(mHandle.get_rep()) ) {
+    } else if( ndims == 1 ) {
 
       // 2D StructCurve
-      if( data != -1 && (nHandle->nrrd->dim == 3) )
-	rank_ = nHandle->nrrd->axis[2].size;
-
       StructCurveMesh *mesh = (StructCurveMesh *) mHandle.get_rep();
 
-      if( rank_ == 1 ) {
+      if( rank == 1 ) {
 	// Now after the mesh has been created, create the field.
 	fHandle_ =
 	  scinew StructCurveField<float >(mesh, Field::NODE);
-      } else if( rank_ == 3 ) {
+      } else if( rank == 3 ) {
 	// Now after the mesh has been created, create the field.
 	fHandle_ =
 	  scinew StructCurveField< vector<float> >(mesh, Field::NODE);
@@ -382,11 +445,11 @@ PPPLNrrdConverter::execute(){
       return;
     }
 		
-    if( data != -1 ) {
+    if( data_ != -1 ) {
       const TypeDescription *ftd = fHandle_->get_type_description();
       
       CompileInfoHandle ci =
-	PPPLNrrdConverterFieldAlgo::get_compile_info(ftd, nHandle->nrrd->type, rank_);
+	PPPLNrrdConverterFieldAlgo::get_compile_info(ftd, nHandle->nrrd->type, rank);
       
       Handle<PPPLNrrdConverterFieldAlgo> algo;
 
