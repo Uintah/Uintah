@@ -448,7 +448,7 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
 {			       
 
 
-  cout << "Doing interpolatePressCCToPressNC \t\t MPMICE" << endl;
+//  cout << "Doing interpolatePressCCToPressNC \t\t MPMICE" << endl;
   
   CCVariable<double> pressCC;
   NCVariable<double> pressNC;
@@ -479,7 +479,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
                                   DataWarehouseP& old_dw,
                                   DataWarehouseP& new_dw)
 {
-  cout << "Doing interpolatePressureToParticles \t\t MPMICE" << endl;
+//  cout << "Doing interpolatePressureToParticles \t\t MPMICE" << endl;
   
   NCVariable<double> pressNC;
   IntVector ni[8];
@@ -605,7 +605,8 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
   int numMatls = d_sharedState->getNumMPMMatls();
   Vector zero(0.0,0.0,0.);
   Vector dx = patch->dCell();
-  cout << "Doing interpolateNCToCC_0 \t\t\t MPMICE" << endl;
+  double cell_vol = dx.x()*dx.y()*dx.z();
+//  cout << "Doing interpolateNCToCC_0 \t\t\t MPMICE" << endl;
 
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -622,8 +623,8 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
     new_dw->allocate(vel_CC,    MIlb->vel_CCLabel,      matlindex, patch);
     new_dw->allocate(Temp_CC,   MIlb->temp_CCLabel,     matlindex, patch);
     
-    cmass.initialize(0.);
-    cvolume.initialize(0.);
+    cmass.initialize(d_SMALL_NUM*cell_vol);
+    cvolume.initialize(d_SMALL_NUM);
     vel_CC.initialize(zero); 
     
     new_dw->get(gmass,Mlb->gMassLabel,matlindex, patch,Ghost::AroundCells, 1);
@@ -639,7 +640,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
     Temp_CC.initialize(300.0);
     
     
-#if 1
+#if 0
     Vector nodal_mom(0.,0.,0.);
     for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
       nodal_mom+=gvelocity[*iter]*gmass[*iter];
@@ -656,10 +657,9 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 	cvolume[*iter]  += .125*gvolume[nodeIdx[in]];
 	vel_CC[*iter]   +=      gvelocity[nodeIdx[in]]*.125*gmass[nodeIdx[in]];
       }
-      vel_CC[*iter]      /= (cmass[*iter]     + d_SMALL_NUM);
-      cell_mom += vel_CC[*iter];
+      vel_CC[*iter]      /= cmass[*iter];
     }
-    cout << "Solid matl CC momentum = " << cell_mom << endl;
+//    cout << "Solid matl CC momentum = " << cell_mom << endl;
     
     //  Set BC's and put into new_dw
     d_ice->setBC(vel_CC,  "Velocity",   patch);
@@ -680,7 +680,7 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 {
   int numMatls = d_sharedState->getNumMPMMatls();
   Vector zero(0.,0.,0.);
-  cout << "Doing interpolateNCToCC \t\t\t MPMICE" << endl;
+//  cout << "Doing interpolateNCToCC \t\t\t MPMICE" << endl;
 
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -728,9 +728,7 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
  	 cmomentum[*iter] += gvelocity[nodeIdx[in]]*gmass[nodeIdx[in]]*.125;
  	 int_eng[*iter]   += gtempstar[nodeIdx[in]]*gmass[nodeIdx[in]]*cv*.125;
        }
-//       cell_momwpg += cmomentum[*iter];
      }
-//     cout << "Solid matl CC momentum (wpg) = " << cell_momwpg << endl;
 
      new_dw->put(cmomentum,     Ilb->mom_L_CCLabel, matlindex, patch);
      new_dw->put(int_eng,       Ilb->int_eng_L_CCLabel,  matlindex, patch);
@@ -744,7 +742,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
                              DataWarehouseP& old_dw,
                              DataWarehouseP& new_dw)
 {
-  cout << "Doing Heat and momentum exchange \t\t MPMICE" << endl;
+//  cout << "Doing Heat and momentum exchange \t\t MPMICE" << endl;
 
   int numMPMMatls = d_sharedState->getNumMPMMatls();
   int numICEMatls = d_sharedState->getNumICEMatls();
@@ -844,7 +842,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   // Convert momenta to velocities.  Slightly different for MPM and ICE.
   for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     for (int m = 0; m < numALLMatls; m++) {
-      mass[m]           = rho_CC[m][*iter] * vol + d_SMALL_NUM;
+      mass[m]           = rho_CC[m][*iter] * vol;
       Temp_CC[m][*iter] = int_eng_L[m][*iter]/(mass[m]*cv[m]);
       vel_CC[m][*iter]  = mom_L[m][*iter]/mass[m];
     }
@@ -982,7 +980,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   // Convert vars. primitive-> flux 
   for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     for (int m = 0; m < numALLMatls; m++) {
-        mass[m] = rho_CC[m][*iter] * vol + d_SMALL_NUM;
+        mass[m] = rho_CC[m][*iter] * vol;
         int_eng_L_ME[m][*iter] = Temp_CC[m][*iter] * cv[m] * mass[m];
         mom_L_ME[m][*iter]     = vel_CC[m][*iter] * mass[m];
     }
@@ -1054,7 +1052,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
 			       DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw)
 {
-  cout << "Doing interpolation of CC to NC  \t\t MPMICE" << endl;
+//  cout << "Doing interpolation of CC to NC  \t\t MPMICE" << endl;
   //__________________________________
   // This is where I interpolate the CC 
   // changes to NCs for the MPMMatls
@@ -1175,7 +1173,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   char warning[100];
   static int n_passes;                  
   n_passes ++; 
-  cout << "Doing calc_equilibration_pressure \t\t MPMICE" << endl;
+//  cout << "Doing calc_equilibration_pressure \t\t MPMICE" << endl;
  
   vector<double> delVol_frac(numALLMatls),press_eos(numALLMatls);
   vector<double> dp_drho(numALLMatls),dp_de(numALLMatls);
@@ -1301,8 +1299,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
      }
 
      for (int m = 0; m < numALLMatls; m++) {
-       vol_frac[m][*iter] = mat_volume[m]/(total_mat_vol + d_SMALL_NUM);
-       rho_CC[m][*iter] = vol_frac[m][*iter]*rho_micro[m][*iter] +d_SMALL_NUM;
+       vol_frac[m][*iter] = mat_volume[m]/total_mat_vol;
+       rho_CC[m][*iter] = vol_frac[m][*iter]*rho_micro[m][*iter];
      }
   }
  
@@ -1427,7 +1425,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
      // - compute the updated volume fractions
      //  There are two different way of doing it
      for (int m = 0; m < numALLMatls; m++)  {
-       delVol_frac[m]       = -(Q[m] + delPress)/( y[m] + d_SMALL_NUM );
        vol_frac[m][*iter]   = rho_CC[m][*iter]/rho_micro[m][*iter];
      }
      //__________________________________
@@ -1534,7 +1531,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
      for (int m = 0; m < numALLMatls; m++) {
        mat_mass[m] = mass_CC[m][*iter];
           
-       rho_CC[m][*iter]   = mat_mass[m]/cell_vol + d_SMALL_NUM;           
+       rho_CC[m][*iter]   = mat_mass[m]/cell_vol;
      }
   }
  /*==========TESTING==========`*/
