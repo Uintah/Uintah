@@ -428,16 +428,15 @@ void BuildMultiMesh::execute()
     mesh->elems.add(el);
 
     int count=0;
-mmesh->add_mesh(mesh_handle.get_rep(), 0);
     for (i=0; i<level_sets.size(); i++) {
 	for (int j=0; j<level_sets[i].size(); j++) {
 	    mesh->insert_delaunay(mesh_handle->nodes[(level_sets[i])[j]]->p);
-//	    if (!((count++)%50)) {	//update progress every fifty nodes
-//		update_progress(count, mesh_handle->nodes.size());
-//	    }
+	    if (!((count++)%50)) {	//update progress every fifty nodes
+		update_progress(count, mesh_handle->nodes.size());
+	    }
 	}
 //	mesh->pack_elems();
-//	mmesh->add_mesh(mesh_handle.get_rep(), i);
+	mmesh->add_mesh(mesh_handle.get_rep(), i);
     }
 //    mmesh->clean_up();
     ommesh->send(mmeshHndl);
