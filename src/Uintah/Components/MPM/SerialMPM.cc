@@ -496,6 +496,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			Ghost::AroundCells, 1);
 	    t->requires(old_dw, lb->pXLabel, idx, region,
 			Ghost::None);
+			
 	    t->requires(old_dw, lb->pMassLabel, idx, region, Ghost::None);
 	    t->requires(old_dw, lb->pExternalForceLabel, idx, region, Ghost::None);
 	    t->requires(old_dw, lb->deltLabel );
@@ -503,6 +504,12 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    t->computes(new_dw, lb->pXLabel, idx, region );
 	    t->computes(new_dw, lb->pMassLabel, idx, region);
 	    t->computes(new_dw, lb->pExternalForceLabel, idx, region);
+
+	    if(d_heatConductionInvolved) {
+	      t->requires(new_dw, lb->gTemperatureRateLabel, idx, region,
+			Ghost::AroundCells, 1);
+              t->computes(new_dw, lb->pTemperatureLabel, idx, region);
+	    }
 	 }
 
 	 sched->addTask(t);
@@ -1081,6 +1088,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
   // velocity and position respectively
   Vector vel(0.0,0.0,0.0);
   Vector acc(0.0,0.0,0.0);
+  double temp = 0; //for heat conduction
   double ke=0,se=0;
   int numPTotal = 0;
 
@@ -1112,6 +1120,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       ParticleVariable<Point> px;
       ParticleVariable<Vector> pvelocity;
       ParticleVariable<double> pmass;
+      ParticleVariable<double> pTemperature; //for heat conduction
+      NCVariable<double> gTemperatureRate; //for heat conduction
 
       old_dw->get(px,        lb->pXLabel, matlindex, region, Ghost::None, 0);
       old_dw->get(pvelocity, lb->pVelocityLabel, matlindex, region, Ghost::None,0);
@@ -1126,6 +1136,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 		  Ghost::AroundCells, 1);
       new_dw->get(gacceleration, lb->gMomExedAccelerationLabel, vfindex, region,
 		  Ghost::AroundCells, 1);
+		  
+      if(d_heatConductionInvolved) {
+        old_dw->get(pTemperature, lb->pTemperatureLabel, matlindex, region, Ghost::None, 0);
+        new_dw->get(gTemperatureRate, lb->gTemperatureRateLabel, vfindex, region,
+		  Ghost::AroundCells, 1);
+      }
 
 #if 0
       // Apply grid boundary conditions to the velocity_star and
@@ -1178,15 +1194,20 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
         vel = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
 
+        if(d_heatConductionInvolved) temp = 0;
+
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < 8; k++) {
 	   vel += gvelocity_star[ni[k]]  * S[k];
 	   acc += gacceleration[ni[k]]   * S[k];
+           if(d_heatConductionInvolved) temp = gTemperatureRate[ni[k]] * S[k];
         }
 
         // Update the particle's position and velocity
         px[idx]        += vel * delt;
         pvelocity[idx] += acc * delt;
+        if(d_heatConductionInvolved) pTemperature[idx] += temp * delt;
+        
         ke += .5*pmass[idx]*pvelocity[idx].length2();
 
        // If we were storing particles in cellwise lists, this
@@ -1212,6 +1233,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       old_dw->get(pexternalforce, lb->pExternalForceLabel, matlindex, region,
 		  Ghost::None, 0);
       new_dw->put(pexternalforce, lb->pExternalForceLabel, matlindex, region);
+
+      if(d_heatConductionInvolved) {
+        new_dw->put(pTemperature, lb->pTemperatureLabel, matlindex, region);
+      }
+
     }
   }
 
@@ -1286,6 +1312,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.67  2000/05/26 23:07:03  tan
+// Rewrite interpolateToParticlesAndUpdate to include heat conduction.
+//
 // Revision 1.66  2000/05/26 21:37:30  jas
 // Labels are now created and accessed using Singleton class MPMLabel.
 //
