@@ -78,6 +78,9 @@ GLVolRenState::computeView(Ray& ray)
   
   // transform the view vector opposite the transform that we draw polys with,
   // so that polys are normal to the view post opengl draw.
+  //  GLTexture3DHandle tex = volren->get_tex3d_handle();
+  //  Transform field_trans = tex->get_field_transform();
+
   GLTexture3DHandle tex = volren->get_tex3d_handle();
   Transform field_trans = tex->get_field_transform();
 
@@ -88,6 +91,7 @@ GLVolRenState::computeView(Ray& ray)
   viewPt = Point(-mvmat[12], -mvmat[13], -mvmat[14]);
 
   viewPt = field_trans.unproject( viewPt );
+  view = field_trans.unproject( view );
 
   /* set the translation to zero */
   mvmat[12]=mvmat[13] = mvmat[14]=0;
@@ -107,15 +111,14 @@ GLVolRenState::computeView(Ray& ray)
   /* Since mat is the transpose, we then multiply the view space viewPt
      by the mat to get the world or model space viewPt, which we need
      for calculations */
-  //  view = field_trans.unproject( view );
-
+  viewPt = mat.project( viewPt );
+ 
   ray =  Ray(viewPt, view);
 }
 
 void
 GLVolRenState::drawPolys( vector<Polygon *> polys )
 {
-
   double mvmat[16];
   GLTexture3DHandle tex = volren->get_tex3d_handle();
   Transform field_trans = tex->get_field_transform();
@@ -126,7 +129,6 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glMultMatrixd(mvmat);
-
 
   unsigned int i;
   volren->di_->polycount += polys.size();
@@ -205,7 +207,7 @@ GLVolRenState::loadColorMap(Brick& brick)
                GL_RGBA,  // need an alpha value...
                GL_UNSIGNED_BYTE, // try shorts...
                volren->TransferFunctions[brick.level()]);
-   glCheckForError("After glColorTableEXT");
+//   glCheckForError("After glColorTableEXT");
 #endif
 }
 
@@ -219,28 +221,34 @@ GLVolRenState::loadTexture(Brick& brick)
     }
 
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
+//      glCheckForError("After glBindTexture");
 
     if( volren->_interp ){
       glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//        glCheckForError("glTexParameteri GL_LINEAR");
     } else {
       glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//        glCheckForError("glTexParameteri GL_NEAREST");
     }
 
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S,
 		    GL_CLAMP);
+//      glCheckForError("glTexParameteri GL_TEXTURE_WRAP_S GL_CLAMP");
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T,
 		    GL_CLAMP);
+//      glCheckForError("glTexParameteri GL_TEXTURE_WRAP_T GL_CLAMP");
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_R_EXT,
 		    GL_CLAMP);
-
+//      glCheckForError("glTexParameteri GL_TEXTURE_WRAP_R GL_CLAMP");
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+//      glCheckForError("After glPixelStorei(GL_UNPACK_ALIGNMENT, 1)");
     
 #ifdef GL_TEXTURE_COLOR_TABLE_SGI 
     // set up the texture
     //glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0,
-    glTexImage3D(GL_TEXTURE_3D_EXT, 0,
+    glTexImage3D(GL_TEXTURE_3D, 0,
 		    GL_INTENSITY8,
 		    (brick.texture())->dim1(), 
 		    (brick.texture())->dim2(), 
@@ -248,6 +256,7 @@ GLVolRenState::loadTexture(Brick& brick)
 		    0,
 		    GL_RED, GL_UNSIGNED_BYTE,
 		    &(*(brick.texture()))(0,0,0));
+//      glCheckForError("After glTexImage3D SGI");
 #elif defined( GL_SHARED_TEXTURE_PALETTE_EXT )
     glTexImage3D(GL_TEXTURE_3D_EXT, 0,
 		    GL_COLOR_INDEX8_EXT,
@@ -257,7 +266,7 @@ GLVolRenState::loadTexture(Brick& brick)
 		    0,
 		    GL_COLOR_INDEX, GL_UNSIGNED_BYTE,
 		    &(*(brick.texture()))(0,0,0));
-    glCheckForError("After glTexImage3D");
+//      glCheckForError("After glTexImage3D Linux");
 #endif
   } else {
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
@@ -358,6 +367,17 @@ void
 GLVolRenState::drawWireFrame(const Brick& brick)
 {
   int i;
+  double mvmat[16];
+  GLTexture3DHandle tex = volren->get_tex3d_handle();
+  Transform field_trans = tex->get_field_transform();
+  // set double array transposed.  Our matricies are stored transposed 
+  // from OpenGL matricies.
+  field_trans.get_trans(mvmat);
+  
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glMultMatrixd(mvmat);
+
   glEnable(GL_DEPTH_TEST);
 //   double r,g,b;
 //   char c;
@@ -391,6 +411,8 @@ GLVolRenState::drawWireFrame(const Brick& brick)
   glPopMatrix();
   glDisable(GL_DEPTH_TEST);
 
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
 }
 
 } // End namespace SCIRun
