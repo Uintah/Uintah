@@ -22,7 +22,7 @@
 #include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/DataArchive.h>
+#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <TauProfilerForSCIRun.h>
@@ -426,7 +426,7 @@ SimpleSimulationController::run()
       t += delt;
    }
    TAU_DB_DUMP();
-   ups->getNode()->getOwnerDocument()->release();
+   ups->releaseDocument();
 }
 
 void 

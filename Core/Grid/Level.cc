@@ -17,7 +17,6 @@
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
 
 #include <iostream>
 #include <algorithm>
