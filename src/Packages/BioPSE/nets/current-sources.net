@@ -198,11 +198,13 @@ setGlobal $m4-sizeFlag {1}
 setGlobal $m7-modeTCL {sources and sinks}
 
 # Setup GUI for the SCIRun->FieldsData->BuildInterpolant Module
+setGlobal $m8-exhaustive_search {1}
 
 # Setup GUI for the SCIRun->FieldsData->ChangeFieldDataAt Module
 
 # Setup GUI for the SCIRun->FieldsData->BuildInterpolant Module
 setGlobal $m10-interpolation_basis {constant}
+setGlobal $m10-exhaustive_search {1}
 
 # Setup GUI for the BioPSE->Forward->ApplyFEMCurrentSource Module
 setGlobal $m11-modeTCL {sources and sinks}
