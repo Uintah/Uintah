@@ -280,21 +280,21 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(const LevelP& level,
       Task* tsk = scinew Task("PicardNonlinearSolver::interpolateFCToCC",patch,
 			   old_dw, new_dw, this,
 			   &PicardNonlinearSolver::interpolateFromFCToCC);
-      int numGhostCells = 0;
+      int numGhostCells = 1;
       int matlIndex = 0;
 
       tsk->requires(new_dw, d_lab->d_uVelocityINLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_vVelocityINLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_wVelocityINLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
 
       tsk->computes(new_dw, d_lab->d_oldCCVelocityLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_newCCVelocityLabel, matlIndex, patch);
@@ -411,29 +411,29 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 					     DataWarehouseP& new_dw)
 {
   int matlIndex = 0;
-  int nofGhostCells = 0;
+  int nofGhostCells = 1;
 
   // Get the old velocity
   SFCXVariable<double> oldUVel;
   SFCYVariable<double> oldVVel;
   SFCZVariable<double> oldWVel;
   new_dw->get(oldUVel, d_lab->d_uVelocityINLabel, matlIndex, patch, 
-	      Ghost::None, nofGhostCells);
+	      Ghost::AroundCells, nofGhostCells);
   new_dw->get(oldVVel, d_lab->d_vVelocityINLabel, matlIndex, patch, 
-	      Ghost::None, nofGhostCells);
+	      Ghost::AroundCells, nofGhostCells);
   new_dw->get(oldWVel, d_lab->d_wVelocityINLabel, matlIndex, patch, 
-	      Ghost::None, nofGhostCells);
+	      Ghost::AroundCells, nofGhostCells);
 
   // Get the new velocity
   SFCXVariable<double> newUVel;
   SFCYVariable<double> newVVel;
   SFCZVariable<double> newWVel;
   new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-	      Ghost::None, nofGhostCells);
+	      Ghost::AroundCells, nofGhostCells);
   new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-	      Ghost::None, nofGhostCells);
+	      Ghost::AroundCells, nofGhostCells);
   new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-	      Ghost::None, nofGhostCells);
+	      Ghost::AroundCells, nofGhostCells);
 
   // Get the low and high index for the Cell Centered Variables
   IntVector idxLo = patch->getCellLowIndex();
@@ -524,6 +524,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& /*level*/,
 
 //
 // $Log$
+// Revision 1.53  2000/10/16 16:48:28  sparker
+// Ghost cells required for interpolate FC to CC
+//
 // Revision 1.52  2000/10/16 16:24:12  sparker
 // Commented in pleaseSave
 //
