@@ -57,7 +57,7 @@ public:
   // only Pio should use this constructor
   GenericField() : 
     Field(),
-    mesh_(mesh_handle_type(new mesh_type())),
+    mesh_(mesh_handle_type(new mesh_type()))
   {}
 
   GenericField(data_location data_at) : 
