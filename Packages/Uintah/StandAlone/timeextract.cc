@@ -129,9 +129,10 @@ void usage(const std::string& badarg, const std::string& progname)
 // the arguments to archive->query for data values.  Then comes a type 
 // dexcription of the variable being queried, and last is an output stream.
 
+template<class T>
 void printData(DataArchive* archive, string& variable_name, int material, IntVector& var_id,
                unsigned long time_step_lower, unsigned long time_step_upper,
-	       const Uintah::TypeDescription* subtype, ostream& out) 
+	       ostream& out) 
 
 {
   vector<int> index;
@@ -169,42 +170,16 @@ void printData(DataArchive* archive, string& variable_name, int material, IntVec
   
   // for each type available, we need to query the values for the time range, 
   // variable name, and material
-  switch (subtype->getType()) {
-  case Uintah::TypeDescription::double_type:
-    {
-      vector<double> values;
-      try {
-	archive->query(values, variable_name, material, var_id, times[time_step_lower], times[time_step_upper]);
-      } catch (const VariableNotFoundInGrid& exception) {
-	cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-	exit(1);
-      }
-      // Print out data
-      for(unsigned int i = 0; i < values.size(); i++) {
-	out << values[i] << endl;
-      }
-    }
-  break;
-  case Uintah::TypeDescription::int_type:
-    {
-      vector<int> values;
-      try {
-	archive->query(values, variable_name, material, var_id, times[time_step_lower], times[time_step_upper]);
-      } catch (const VariableNotFoundInGrid& exception) {
-	cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-	exit(1);
-      }
-      // Print out data
-      for(unsigned int i = 0; i < values.size(); i++) {
-	out << values[i] << endl;
-      }
-    }
-  break;
-  default:
-    {
-      cerr << "Unknown subtype\n";
-      exit(1);
-    }
+  vector<T> values;
+  try {
+    archive->query(values, variable_name, material, var_id, times[time_step_lower], times[time_step_upper]);
+  } catch (const VariableNotFoundInGrid& exception) {
+    cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+    exit(1);
+  }
+  // Print out data
+  for(unsigned int i = 0; i < values.size(); i++) {
+    out << values[i] << endl;
   }
 } 
 
@@ -284,8 +259,10 @@ int main(int argc, char** argv)
     bool var_found = false;
     unsigned int var_index = 0;
     for (;var_index < vars.size(); var_index++) {
-      var_found = true;
-      break;
+      if (variable_name == vars[var_index]) {
+	var_found = true;
+	break;
+      }
     }
     
     if (!var_found) {
@@ -309,6 +286,7 @@ int main(int argc, char** argv)
 
     // Open output file, call printData with it's ofstream
     // if no output file, call with cout
+    ostream *output_stream = &cout;
     if (output_file_name != "-") {
       ofstream output;
       output.open(output_file_name.c_str());
@@ -317,12 +295,27 @@ int main(int argc, char** argv)
 	cerr << "Could not open "<<output_file_name<<" for writing.\n";
 	exit(1);
       }
-      printData(archive, variable_name, material, var_id, time_step_lower,
-                time_step_upper, subtype, output);
+      output_stream = &output;
     } else {
-      printData(archive, variable_name, material, var_id, time_step_lower,
-              time_step_upper, subtype, cout);
+      //output_stream = cout;
     }
+  switch (subtype->getType()) {
+  case Uintah::TypeDescription::double_type:
+    printData<double>(archive, variable_name, material, var_id,
+		      time_step_lower, time_step_upper, *output_stream);
+    break;
+  case Uintah::TypeDescription::int_type:
+    printData<int>(archive, variable_name, material, var_id,
+		   time_step_lower, time_step_upper, *output_stream);
+    break;
+  default:
+    {
+      cerr << "Unknown subtype\n";
+      exit(1);
+    }
+  }
+    
+
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << endl;
     exit(1);
