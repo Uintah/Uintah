@@ -16,10 +16,13 @@ We need an object which can switch from time to time, into something else.
 namespace rtrt {
 
 class SelectableGroup : public Group {
+  // Remember that child < 0 means that no child is selected
   int child; //which sub is currently showing
+  
   bool autoswitch; //should animate automatically switch showing child?
-  float autoswitch_secs; //how many second should autoswitch dwell on each child?
+  bool no_skip; // This ignores autoswitch_secs and does the next object
 public:
+  float autoswitch_secs; //how many second should autoswitch dwell on each child?
 
   SelectableGroup(float secs=1.0);
   virtual ~SelectableGroup();
@@ -44,28 +47,33 @@ public:
   virtual void animate(double t, bool& changed);
 
 
-  inline void Child(int i) { if (i<objs.size()) child = i;/*neg means none*/ };
+  virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
+  virtual bool interior_value( double& value, const Ray &ray, const double t)
+  { return objs[child]->interior_value(value,ray,t); }
+
+  // Returns the currently active child object.
+  Object * getCurrentChild();
+
+
+  // Interfaces for gui
+  inline void SetAutoswitch(bool b) {autoswitch = b;}
+  inline int GetAutoswitch() {if (autoswitch) return 1; else return 0;}
+  inline void toggleAutoswitch() {autoswitch = !autoswitch;}
+
+  inline void SetNoSkip(bool b) { no_skip = b;}
+  inline int GetNoSkip() { if (no_skip) return 1; else return 0; }
+  inline void toggleNoSkip() {no_skip = !no_skip;}
+
+  
+  inline int GetChild() { return child; }
+  // Remember that setting child less than 0 will not select any child.
+  inline void SetChild(int i) { if (i<objs.size()) child = i;}
   inline void nextChild() { 
     autoswitch = false; 
     child++;
     if (child == objs.size())
       child = 0;
   };
-
-  // Returns the currently active child object.
-  Object * getCurrentChild();
-
-
-  inline void Autoswitch(bool b) {autoswitch = b;};
-  inline int Autoswitch() {if (autoswitch) return 1; else return 0;};
-  inline void toggleAutoswitch() {autoswitch = !autoswitch;};
-  virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize) {
-    Group::preprocess(maxradius, pp_offset, scratchsize);
-    if (objs.size() == 0)
-      child = -1;
-  }
-  virtual bool interior_value( double& value, const Ray &ray, const double t)
-  { return objs[child]->interior_value(value,ray,t); }; 
 
 };
 
