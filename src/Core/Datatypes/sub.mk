@@ -9,6 +9,7 @@ SRCDIR   := SCICore/Datatypes
 
 GENSRCS := $(SRCDIR)/ScalarFieldRG.cc $(SRCDIR)/ScalarFieldRGchar.cc \
 	$(SRCDIR)/ScalarFieldRGuchar.cc $(SRCDIR)/ScalarFieldRGshort.cc \
+	$(SRCDIR)/ScalarFieldRGushort.cc \
 	$(SRCDIR)/ScalarFieldRGint.cc $(SRCDIR)/ScalarFieldRGfloat.cc \
 	$(SRCDIR)/ScalarFieldRGdouble.cc
 
@@ -44,6 +45,9 @@ $(SRCDIR)/ScalarFieldRGuchar.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 $(SRCDIR)/ScalarFieldRGshort.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 	sed 's/TYPE/short/g' < $< > $@
 
+$(SRCDIR)/ScalarFieldRGushort.h: $(SRCDIR)/ScalarFieldRGTYPE.h
+	sed 's/TYPE/ushort/g' < $< > $@
+
 $(SRCDIR)/ScalarFieldRGint.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 	sed 's/TYPE/int/g' < $< > $@
 
@@ -68,6 +72,9 @@ $(SRCDIR)/ScalarFieldRGuchar.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/Scalar
 $(SRCDIR)/ScalarFieldRGshort.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGshort.h
 	sed 's/TYPE/short/g' < $< >$@
 
+$(SRCDIR)/ScalarFieldRGushort.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGushort.h
+	sed 's/TYPE/ushort/g' < $< >$@
+
 $(SRCDIR)/ScalarFieldRGint.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGint.h
 	sed 's/TYPE/int/g' < $< > $@
 
@@ -90,6 +97,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.6  2000/07/17 18:33:38  dmw
+# deleted ushort and added it to sub.mk
+#
 # Revision 1.5  2000/07/17 16:29:40  bigler
 # Removed reference to ScalarFieldRGushort.cc which did not exist.
 #
