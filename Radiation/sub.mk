@@ -27,7 +27,7 @@ PSELIBS := \
 	Core/Geometry   \
 	Dataflow/XMLUtil
 
-LIBS := $(PETSC_LIBS) $(XML_LIBRARY) $(MPI_LIBRARY) -lm $(FLIBS)
+LIBS := $(PETSC_LIBS) $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(FLIBS)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
