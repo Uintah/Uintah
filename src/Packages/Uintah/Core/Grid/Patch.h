@@ -99,6 +99,15 @@ WARNING
        return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
          && p.x() < hp.x() && p.y() < hp.y() && p.z() < hp.z();
      }
+     //determine if a point is in the patch's real cells
+     inline bool containsPointInRealCells(const Point& p) const {
+       IntVector l(getInteriorNodeLowIndex());
+       IntVector h(d_inHighIndex);
+       Point lp = nodePosition(l);
+       Point hp = nodePosition(h);
+       return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
+         && p.x() < hp.x() && p.y() < hp.y() && p.z() < hp.z();
+     }
      //Above for Fracture *************************************************
 
      static VariableBasis translateTypeToBasis(TypeDescription::Type type,
