@@ -66,7 +66,7 @@ int DpyBase::open_display(Window parent, bool needevents) {
   // criteria is a string constant that represents the type of window
   //   ex: "db, max rgb" - double buffered, max color depth for rgb
   //     : "sb, max rgb" - single buffered, max color depth for rgb
-  char* criteria;
+  char criteria[50]; // leave space for additional options
   if (window_mode & BufferModeMask == DoubleBuffered)
     criteria = strdup("db");
   else
