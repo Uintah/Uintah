@@ -60,39 +60,6 @@ using namespace std;
 namespace SCIRun {
 
 
-// This function was added by Mohamed Dekhil for CSAFE
-void NetworkEditor::init_notes ()
-{
-    char d[40] ;
-    char t[20] ;
-    char n[80] ;
-    time_t t1 ;
-    struct tm *t2 ;
-    char *days[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-    char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-			"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-    
-    
-    // Construct date, time and user name strings here and pass then to TCL.
-#ifndef _WIN32
-    char *name = getenv("LOGNAME");
-    if ( !name ) name = getenv("USER");
-    if ( !name ) name = "unknown";
-    strcpy(n, name );
-    printf ("User Name: %s\n", n) ;
-#endif
-
-    t1 = time(NULL) ;
-    t2 = localtime (&t1) ;
-    sprintf (d, " %s  %s %0d %d", days[t2->tm_wday], months[t2->tm_mon], 
-	     t2->tm_mday, t2->tm_year+1900) ;
-    sprintf (t, " %0d:%0d:%0d", t2->tm_hour, t2->tm_min, t2->tm_sec) ;
-
-    gui->set("userName", n);
-    gui->set("runDate", d);
-    gui->set("runTime", t);
-}
-
 NetworkEditor::NetworkEditor(Network* net, GuiInterface* gui)
   : net(net), gui(gui)
 {
@@ -100,9 +67,6 @@ NetworkEditor::NetworkEditor(Network* net, GuiInterface* gui)
   gui->add_command("netedit", this, 0);
   gui->source_once("$DataflowTCL/NetworkEditor.tcl");
   gui->execute("makeNetworkEditor");
-
-  // This part was added by Mohamed Dekhil for CSAFE
-  init_notes () ;
 }
 
 NetworkEditor::~NetworkEditor()
@@ -208,7 +172,6 @@ void NetworkEditor::save_network(const string& filename)
 
 void NetworkEditor::tcl_command(GuiArgs& args, void*)
 {
-
     if(args.count() < 2){
 	args.error("netedit needs a minor command");
 	return;
