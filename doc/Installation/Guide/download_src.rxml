@@ -38,111 +38,101 @@ DEALINGS IN THE SOFTWARE.
   <orderedlist>
 
     <listitem id="src_download">
-      <para>Three <firstterm>problem solving
-      environments</firstterm> (<acronym>PSE</acronym>) can be built
-      from &sr;'s sources: BioPSE, Fusion, and Insight.  Each PSE
-      requires a particular set of sources, which can be downloaded
-      from the <ulink
-      url="http://software.sci.utah.edu/archive_entry.html">software
-      archive</ulink>.</para>
-
       <para>
-	To build BioPSE, download the following:
+	Any number of SCIRun <firstterm>Problem Solving
+	Environment</firstterm>s (<acronym>PSE</acronym>) can be built
+	from source code.  A <acronym>PSE</acronym> is built from a
+	particular set of SCIRun packages, which can be downloaded
+	from SCI's <ulink
+	url="http://software.sci.utah.edu/archive_entry.html">software
+	archive</ulink> web site.  For example, to build the BioPSE
+	<acronym>PSE</acronym>, download the following:
+
 	<simplelist>
 	  <member>
-	    <filename>SCIRun.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    <filename>SCIRun.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
-	    <filename>BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    <filename>BioPSE.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
-	    <filename>MatlabInterface.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    <filename>Insight.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
-	    <filename>TEEM.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    <filename>MatlabInterface.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
-	    <filename>Thirdparty_install<!--%= osx %-->.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	  </member>
-	  <member>
-	    <filename>SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz</filename> 
-	  </member>
-	  <member>
-	    <filename>SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    <filename>TEEM.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	</simplelist>
       </para>
 
       <para>
-	To build Fusion, download the following:
+	To build the Fusion <acronym>PSE</acronym>, download the following:
 	<simplelist>
 	  <member>
-	    <filename>SCIRun.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    <filename>SCIRun.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
-	    <filename>Fusion.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    <filename>Fusion.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
-	    <filename>TEEM.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    <filename>TEEM.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
-	    <filename>DataIO.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	  </member>
-	  <member>
-	    <filename>Thirdparty_install<!--%= osx %-->.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	  </member>
-	  <member>
-	    <filename>SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz</filename> 
-	  </member>
-	  <member>
-	    <filename>SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    <filename>DataIO.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	</simplelist>
       </para>
 
       <para os="linux;osx">
-	To build Insight, download the following:
+	To build, for example, an Insight only <acronym>PSE</acronym>,
+	download the following:
 	<simplelist>
 	  <member>
-	    <filename>SCIRun.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    <filename>SCIRun.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
-	    <filename>Insight.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    <filename>Insight.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
-	    <filename>TEEM.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	  </member>
-	  <member>
-	    <filename>Thirdparty_install<!--$#{osx}$-->.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	  </member>
-	  <member>
-	    <filename>SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz</filename> 
-	  </member>
-	  <member>
-	    <filename>SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    <filename>TEEM.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	</simplelist>
       </para>
+
+      <para>In all cases, the file <filename>Thirdparty_install<!--%= osx
+      %-->.<!--%= doc.version() %-->.tar.gz</filename> must also be
+      obtained.</para>
+
+      <para>SCIRun's sample data, <filename>SCIRunData.<!--%=
+      doc.version() %-->.tar.gz</filename> should also be
+      downloaded.</para>
+
+      <para>SCIRun documentation, <filename>SCIRunDocs.<!--%=
+      doc.version() %-->.tar.gz</filename>, can be also be
+      downloaded.</para>
+
     </listitem>
     
     <listitem id="src_unpack">
       <para>
-	Unpack &sr; sources:
+	Unpack SCIRun sources:
 	<literallayout class="monospaced">
-gunzip -c &sr;.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+gunzip -c SCIRun.<!--%= doc.version() %-->.tar.gz | tar xf -
 	</literallayout>
-	This creates a directory called <filename>&sr;</filename>.
-	Below, the term <filename>&sr;</filename> refers to this directory.
+	This creates a directory called <filename>SCIRun</filename>.
+	Below, the term <filename>SCIRun</filename> refers to this directory.
       </para>
     </listitem>
 
     <listitem>
       <para>
 	Unpack the compressed package sources into
-	<filename>&sr;/src/Packages</filename>. For example, to unpack the
+	<filename>SCIRun/src/Packages</filename>. For example, to unpack the
 	BioPSE package type:
 	<literallayout class="monospaced">
-gunzip -c BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz | (cd &sr;/src/Packages &amp;&amp; tar xf -)
+gunzip -c BioPSE.PKG.<!--%= doc.version() %-->.tar.gz | (cd SCIRun/src/Packages &amp;&amp; tar xf -)
 	</literallayout>
 	Repeat for other packages.
       </para>
@@ -152,11 +142,11 @@ gunzip -c BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz | (cd &sr;/src/Pack
       <para>
 	Unpack the sample datasets:
 	<literallayout class="monospaced">
-gunzip -c SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+gunzip -c SCIRunData.<!--%= doc.version() %-->.tar.gz | tar xf -
 	</literallayout>
-	This creates the directory <filename>&sr;Data</filename>.
-	<filename>&sr;Data</filename> should be moved to a location
-	accessible to all &sr; users, say
+	This creates the directory <filename>SCIRunData</filename>.
+	<filename>SCIRunData</filename> should be moved to a location
+	accessible to all SCIRun users, say
 	<filename>/usr/local</filename>.
       </para>
     </listitem>
@@ -167,9 +157,9 @@ gunzip -c SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
       </para>
       <para>
 	<literallayout class="monospaced">
-gunzip -c Thirdparty_install<!--%= osx %-->.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+gunzip -c Thirdparty_install<!--%= osx %-->.<!--%= doc.version() %-->.tar.gz | tar xf -
 	</literallayout>
-	This creates the directory <filename>Thirdparty_install<!--%= osx %-->.<replaceable>x.x.x</replaceable></filename>.
+	This creates the directory <filename>Thirdparty_install<!--%= osx %-->.<!--%= doc.version() %--></filename>.
       </para>
     </listitem>
 
@@ -177,14 +167,14 @@ gunzip -c Thirdparty_install<!--%= osx %-->.<replaceable>x.x.x</replaceable>.tar
       <para>
 	Unpack the documentation:
 	<literallayout class="monospaced">
-gunzip -c SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+gunzip -c SCIRunDocs.<!--%= doc.version() %-->.tar.gz | tar xf -
 	</literallayout>
 	This creates the directory
-	<filename>&sr;Docs</filename>.<replaceable>x.x.x</replaceable>. This
+	<filename>SCIRunDocs</filename>.<!--%= doc.version() %-->. This
 	directory can be moved to a new location, say
-	<filename>/usr/local</filename>, accessible to all &sr; users.
+	<filename>/usr/local</filename>, accessible to all SCIRun users.
 	Point a browser at
-	<filename>&sr;Docs.<replaceable>x.x.x</replaceable>/doc/index.html</filename> to access &sr;'s
+	<filename>SCIRunDocs.<!--%= doc.version() %-->/doc/index.html</filename> to access SCIRun's
 	online documentation.
       </para>
     </listitem>
@@ -195,10 +185,10 @@ gunzip -c SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
     <title>Note</title>
 
     <para><xref linkend="ap.lsrcvs"/> discusses a
-    method for putting the downloaded &sr; sources under control of the
-    CVS version control system.  This is useful if the &sr; distribution
+    method for putting the downloaded SCIRun sources under control of the
+    CVS version control system.  This is useful if the SCIRun distribution
     will be used for development.  This is <emphasis>not</emphasis> a
-    requirement for installing &sr;.</para>
+    requirement for installing SCIRun.</para>
   </note>
 
   <para>Proceed to <xref linkend="sec.third_party_inst"/></para>

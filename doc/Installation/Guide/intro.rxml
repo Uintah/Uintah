@@ -177,13 +177,6 @@ DEALINGS IN THE SOFTWARE.
     Additional platform notes:
     <itemizedlist>
       <listitem>
-	<para>The &sr; <acronym>RPM</acronym> distribution does
-	<emphasis>not</emphasis> provide support for
-	<acronym>PETSc</acronym>.  <acronym>PETSc</acronym> support is
-	available only through the &sr; source code
-	distribution.</para>
-      </listitem>
-      <listitem>
 	<para>Nvidia drivers, versions 1.0-5328 and 1.0-5336, will not
 	work for hardware based texture volume rendering in SCIRun.
 	Please do not update to these drivers if you wish your volume
