@@ -264,12 +264,11 @@ itcl_class Module {
 	}
 	$m configure -background $color
 	$m.ff configure -background $color
-	$m.ff.title configure -background $color
 	if {[$this have_ui]} { $m.ff.ui configure -background $color }
 	if {$make_time} { $m.ff.time configure -background $color }
 	if {$isSubnetModule} { $m.ff.subnet configure -background $color }
 	if {![llength $args]} { set args $name }
-	$m.ff.title configure -text "$args" -justify left
+	$m.ff.title configure -text "$args" -justify left -background $color
     }
        
     method addSelected {} {
@@ -459,6 +458,9 @@ itcl_class Module {
 	    set width [expr 8+$nports*$port_spacing] 
 	    set width [expr ($width < $initial_width)?$initial_width:$width]
 	    $canvas itemconfigure [modname] -width $width
+	    #$canvas create window [lindex $pos 0] [lindex $pos 1] -anchor
+	    #-window $m -tags "module [modname]"
+
 	}
     }
 
@@ -830,6 +832,12 @@ proc addConnection { omodid owhich imodid iwhich } {
 
 proc createConnection { conn { undo 0 } { tell_SCIRun 1 } } {
     global Subnet Notes Disabled Color
+    if {[string equal [oMod conn] Subnet]&& [info exists Subnet([iMod conn])] } {
+	set conn [lreplace $conn 0 0 Subnet$Subnet([iMod conn])]
+    }
+    if {[string equal [iMod conn] Subnet]&& [info exists Subnet([oMod conn])] } {
+	set conn [lreplace $conn 2 2 Subnet$Subnet([oMod conn])]
+    }
     if {![string length [iMod conn]] || ![string length [oMod conn]]} {return}
     if { ![info exists Subnet([oMod conn])] ||
 	 ![info exists Subnet([iMod conn])] ||
@@ -1610,12 +1618,6 @@ proc blend { c1 c2 { alpha 0.5 } } {
     return [format "\#%02x%02x%02x" $r $g $b]
  } 
 
-
-# Returns all connections including subnet connections
-proc getModuleConnections { module } {
-    global Subnet
-    return $Subnet(${module}_connections)
-}
 
 proc connectablePorts { port } { 
     if { [string equal i [pType port]] && [portIsConnected $port] } { return }
