@@ -15,9 +15,8 @@
   University of Utah. All Rights Reserved.
 */
 
-
 /*
- *  MDSPlusAPI.cc:
+ *  MDSPlusReader.cc:
  *
  *  Written by:
  *   Allen Sanderson
@@ -28,8 +27,15 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-/* This is a C/C++ interface for fetching data from a MDSPlus Server.
-   It also contains many helper functions for fetching the data.
+/*
+  This is a C++ interface for fetching data from a MDSPlus Server.
+
+  Unfortunately, because MDSPlus has several short commings this interface
+  is need is to provide a link between SCIRun and MDSPlus. The two items
+  addressed are making MDSPlus thread safe and allowing seemless access to
+  multiple connections (e.g. MDSPlus sockets).
+
+  For more information on the calls see mdsPlusAPI.c
 */
 
 #include <Packages/Fusion/Core/ThirdParty/mdsPlusReader.h>
@@ -46,7 +52,7 @@ MDSPlusReader::MDSPlusReader() : socket_(-1)
 {
 }
 
-/* Simple interface to interface bewteen the C and C++ calls. */
+// Simple connection interface that insures thread safe calls and the correct socket.
 int MDSPlusReader::connect( std::string server )
 {
 #ifdef HAVE_MDSPLUS
@@ -54,9 +60,10 @@ int MDSPlusReader::connect( std::string server )
 
   mdsPlusLock_.lock();
 
-  /* Connect to MDSplus */
-  MDS_SetSocket( -1 );  // Insure that there will not be a disconnect.
+  // Insure that there will not be a disconnect if another connection is present.
+  MDS_SetSocket( -1 );
 
+  /* Connect to MDSplus */
   socket_ = MDS_Connect((char*)server.c_str());
 
   if( socket_ > 0 )
@@ -72,7 +79,7 @@ int MDSPlusReader::connect( std::string server )
 #endif
 }
 
-/* simple interface to interface bewteen the C and C++ calls. */
+// Simple open interface that insures thread safe calls and the correct socket.
 int MDSPlusReader::open( const std::string tree,
 			 const int shot )
 {
@@ -94,7 +101,7 @@ int MDSPlusReader::open( const std::string tree,
 #endif
 }
 
-/* Simple interface to interface bewteen the C and C++ calls. */
+// Simple disconnect interface that insures thread safe calls and the correct socket.
 void MDSPlusReader::disconnect()
 {
 #ifdef HAVE_MDSPLUS
@@ -111,7 +118,8 @@ void MDSPlusReader::disconnect()
 #endif
 }
 
-/*  Query the rank of the node - as in the number of dimensions. */
+// Simple rank (number of dimensions) interface that insures thread safe calls and
+// the correct socket.
 int MDSPlusReader::rank( const std::string signal )
 {
 #ifdef HAVE_MDSPLUS
@@ -129,7 +137,8 @@ int MDSPlusReader::rank( const std::string signal )
 #endif
 }
 
-/*  Query the size of the node  - as in the number of elements. */
+// Simple size (number of elements) interface that insures thread safe calls and
+// the correct socket.
 int MDSPlusReader::size( const std::string signal )
 {
 #ifdef HAVE_MDSPLUS
@@ -147,7 +156,8 @@ int MDSPlusReader::size( const std::string signal )
 #endif
 }
 
-/*  Query the server for the cylindrical or cartesian components of the grid. */
+// Simple grid (elements) interface that insures thread safe calls and
+// the correct socket.
 double* MDSPlusReader::grid( const std::string axis, int *dims )
 {
 #ifdef HAVE_MDSPLUS
@@ -165,7 +175,8 @@ double* MDSPlusReader::grid( const std::string axis, int *dims )
 #endif
 }
 
-/*  Query the server for the slice nids for the shot. */
+// Simple slice nids (nids number are ids) interface that insures thread safe calls and
+// the correct socket.
 int MDSPlusReader::slice_ids( int **nids ) 
 {
 #ifdef HAVE_MDSPLUS
@@ -183,7 +194,7 @@ int MDSPlusReader::slice_ids( int **nids )
 #endif
 }
 
-/*  Query the server for the slice name. */
+// Simple slice name interface that insures thread safe calls and the correct socket.
 std::string MDSPlusReader::slice_name( const int *nids,
 				       int slice )
 {
@@ -202,7 +213,7 @@ std::string MDSPlusReader::slice_name( const int *nids,
 #endif
 }
 
-/*  Query the server for the slice time. */
+// Simple slice time interface that insures thread safe calls and the correct socket.
 double MDSPlusReader::slice_time( const std::string name )
 {
 #ifdef HAVE_MDSPLUS
@@ -221,7 +232,7 @@ double MDSPlusReader::slice_time( const std::string name )
 }
 
 
-/*  Query the server for the slice real space data. */
+// Simple slice data interface that insures thread safe calls and the correct socket.
 double *MDSPlusReader::slice_data( const std::string name,
 				   const std::string space,
 				   const std::string node,

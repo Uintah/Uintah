@@ -15,7 +15,6 @@
   University of Utah. All Rights Reserved.
 */
 
-
 /*
  *  MDSPlusAPI.h:
  *
@@ -30,6 +29,10 @@
 
 /* This is a C/C++ interface for fetching data from a MDSPlus Server.
    It also contains many helper functions for fetching the data.
+
+   This interface is geared towards fetching NIMROD data from the server.
+   It is not a complete general purpose interface although several of
+   the functions are.
 */
 
 #ifndef MDS_PLUS_API
