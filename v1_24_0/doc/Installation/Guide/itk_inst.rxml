@@ -106,11 +106,12 @@ setenv PATH $JAVA_HOME/bin:$PATH
 
     <para>
       The Insight toolkit must be installed before building SCIRun.
-      The Insight toolkit and its installation instructions are
-      available on the <ulink
+      The Insight toolkit and its complete installation instructions
+      are available on the <ulink
       url="http://www.itk.org"><acronym>ITK</acronym> web
-      site</ulink>.  SCIRun supports <acronym>ITK</acronym> versions
-      1.6, 1.8, and 2.0.
+      site</ulink>.  A brief set of ITK installation instructions are
+      given <link linkend="sec.cmake">below</link>.  SCIRun supports
+      <acronym>ITK</acronym> versions 1.6, 1.8, and 2.0.
     </para>
 
     <note os="linux;osx">
@@ -136,76 +137,71 @@ setenv PATH $JAVA_HOME/bin:$PATH
   </section>
 
   <section id="sec.cmake">
-    <title id="sec.title.cmake">CMake Special Instructions</title>
+    <title id="sec.title.cmake">Building ITK</title>
 
-    <para>CMake is a program that generates ITK's Makefiles.  CMake's
-    configuration variables determine how ITK is built.  Command
-    <command>ccmake</command> is used to configure CMake's variables.
-    After starting <command>ccmake</command>, turn on its advanced
-    mode by pressing key <keycap>t</keycap>, and then set the
-    following CMake variables to the indicated values:</para>
-    
-    <variablelist>
-      <varlistentry>
-	<term><varname>BUILD_SHARED_LIBS</varname></term>
-	<listitem>
-	  <para>Set the value of <varname>BUILD_SHARED_LIBS</varname>
-	  to <userinput os="linux">ON</userinput><userinput
-	  os="osx">OFF</userinput></para>
-	</listitem>
-      </varlistentry>
-      <varlistentry>
-	<term><varname>BUILD_TESTING</varname></term>
-	<listitem>
-	  <para>Set the value of <varname>BUILD_TESTING</varname> to
-	  <userinput>OFF</userinput></para>
-	</listitem>
-      </varlistentry>
-      <varlistentry>
-	<term><varname>BUILD_EXAMPLES</varname></term>
-	<listitem>
-	  <para>Set the value of <varname>BUILD_EXAMPLES</varname> to
-	  <userinput>OFF</userinput></para>
-	</listitem>
-      </varlistentry>
-      <varlistentry>
-	<term><varname>ITK_USE_SYSTEM_PNG</varname></term>
-	<listitem>
-	  <para>If <acronym>PNG</acronym> support in the third party
-	  Teem software has been enabled (<xref
-	  linkend="sec.third_party_inst"/>) then CMake variable
-	  <varname>ITK_USE_SYSTEM_PNG</varname> should be set to
-	  <literal>ON</literal>, otherwise
-	  <varname>ITK_USE_SYSTEM_PNG</varname> should be set to
-	  <literal>OFF</literal>.  When
-	  <varname>ITK_USE_SYSTEM_PNG</varname> is set to
-	  <literal>ON</literal>, variables
-	  <varname>PNG_LIBRARY</varname> and
-	  <varname>PNG_PNG_INCLUDE_DIR</varname> may also need to be
-	  set.</para>
-	</listitem>
-      </varlistentry>
-      <varlistentry>
-	<term><varname>PNG_LIBRARY</varname></term>
-	<listitem>
-	  <para>Set <varname>PNG_LIBRARY</varname> to the absolute
-	  pathname of the PNG library, for example, <filename
-	  os="linux">/usr/local/lib/libpng.so</filename><filename
-	  os="osx">/sw/lib/libpng.a</filename></para>
-	</listitem>
-      </varlistentry>
-      <varlistentry>
-	<term><varname>PNG_PNG_INCLUDE_DIR</varname></term>
-	<listitem>
-	  <para>Set <varname>PNG_PNG_INCLUDE_DIR</varname> to the
-	  absolute pathname of the directory containing PNG include
-	  files, for example, <filename
-	  os="linux">/usr/local/include</filename><filename
-	  os="osx">/sw/include</filename></para>
-	</listitem>
-      </varlistentry>
-    </variablelist>
-
+    <note os="osx">
+      <title>Gcc Note</title>
+      <para>
+	If using gcc 3.3 be sure the command <command>gcc
+	-v</command> yields build number 1671.  If the build number is
+	1666 then gcc must be updated with Apple's
+	<filename>November2004GCCUpdater</filename> package, available
+	from <ulink url="http://developer.apple.com/">Apple's
+	Developer Connection page</ulink>.
+      </para>
+    </note>
+    <para>
+      <command>CMake</command> is a program that generates ITK's
+      makefiles.  After running <command>cmake</command>,
+      <command>make</command> must be invoked to build ITK.
+    </para>
+    <para>
+      To build ITK, first unpack its tarball.  The following command
+      creates directory
+      <filename>InsightToolkit-<replaceable>x.x.x</replaceable></filename>:
+      <literallayout class="monospaced">
+gunzip -c InsightToolkit-<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+      </literallayout>
+    </para>
+    <para>
+      Create an ITK binary directory and <command>cd</command> to it:
+      <literallayout class="monospaced">
+mkdir InsightToolkit-<replaceable>x.x.x</replaceable>-bin
+cd InsightToolkit-<replaceable>x.x.x</replaceable>-bin
+      </literallayout>
+    </para>
+    <para>
+      Run <command>cmake</command> as follows:
+      <literallayout class="monospaced">
+cmake <replaceable>path-to-itk-source-directory</replaceable> \
+ -DBUILD_EXAMPLES:BOOL=OFF \
+ -DBUILD_SHARED_LIBS:BOOL=ON \
+ -DBUILD_TESTING:BOOL=OFF \
+ -DITK_USE_SYSTEM_PNG:BOOL=ON \
+ -DPNG_LIBRARY:STRING=<replaceable>path-to-png-lib</replaceable> \
+ -DPNG_PNG_INCLUDE_DIR:STRING=<replaceable>path-png-include-directory</replaceable>
+      </literallayout>
+      Above, replace
+      <replaceable>path-to-itk-source-directory</replaceable> with the
+      path to the ITK source code directory (
+      <filename>InsightToolkit-<replaceable>x.x.x</replaceable></filename>).
+      Replace <replaceable>path-to-png-lib</replaceable>
+      with the path to the PNG library, typically
+      <filename os="osx">/sw/lib/libpng.a</filename><filename
+      os="linux;irix">/usr/lib/libpng.a</filename>.  Replace
+      <replaceable>path-png-include-directory</replaceable> with the
+      path to a directory containing PNG header (include or
+      <filename>.h</filename>) files, typically <filename
+      os="osx">/sw/include</filename><filename
+      os="linux;irix">/usr/include</filename>.
+    </para>
+    <para>
+      After <command>cmake</command> completes, type:
+      <literallayout class="monospaced">
+make  
+      </literallayout>
+      to build ITK.
+    </para>
   </section>
 
   <section id="sec.itk_configsr">
@@ -234,11 +230,12 @@ setenv PATH $JAVA_HOME/bin:$PATH
     <para>Here is an example SCIRun <command>configure</command> command:
     <literallayout class="monospaced">
 ../src/configure \
-<phrase os="linux">--with-thirdparty=/usr/local/Thirdparty/1.8.0/Linux/gcc-3.2-32bit \</phrase>
-<phrase os="osx">--with-thirdparty=/usr/local/Thirdparty_osx \</phrase>
+<phrase os="linux">--with-thirdparty=/usr/local/Thirdparty/1.8.0/Linux/gcc-3.2-32bit \</phrase><phrase os="osx">--with-thirdparty=/usr/local/Thirdparty_osx \</phrase>
 --enable-package="BioPSE Teem Insight" \
 --with-insight=/usr/local/lib/InsightToolkit
-&#x22EE;
+.
+.
+.
     </literallayout>
     Note that package Teem must be enabled.
     </para>

@@ -154,8 +154,19 @@ DEALINGS IN THE SOFTWARE.
 		<para>OS X 10.3 (Panther)</para>
 	      </listitem>
 	      <listitem>
-		<para>Apple's X11 server software, Xcode developer
+		<para>Apple's X11 server software, Xcode 1.5 developer
 		tools, and X11 software development kit.</para>
+		<para>The compiler distributed with Xcode 1.5 may need
+		updating with Apple's
+		<filename>November2004GCCUpdater</filename> package.
+		If the command <command>gcc -v</command> yields build
+		number 1666 then the updater package must be applied.
+		If the build number is 1671 then the updater package
+		does not need to be applied.
+		<filename>November2004GCCUpdater</filename> is
+		available from <ulink
+		url="http://developer.apple.com/">Apple's Developer
+		Connection page</ulink>.</para>
 	      </listitem>
 	      <!--%= matlab_info %-->
 	      <listitem>
