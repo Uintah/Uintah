@@ -59,7 +59,7 @@ namespace Uintah {
 
   private:
 
-    CMData d_initialData;
+    CMData d_CM;
          
     // Prevent copying of this class
     // copy constructor
@@ -120,6 +120,45 @@ namespace Uintah {
 				       const MPMMaterial* matl,
 				       TangentModulusTensor& Ce,
 				       TangentModulusTensor& Cep);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Evaluate derivative of flow stress with respect to scalar and
+      internal variables.
+
+      \return Three derivatives in Vector deriv 
+      (deriv[0] = \f$d\sigma_Y/d\dot\epsilon\f$,
+      deriv[1] = \f$d\sigma_Y/dT\f$, 
+      deriv[2] = \f$d\sigma_Y/d\epsilon\f$)
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    void evalDerivativeWRTScalarVars(double edot,
+                                     double T,
+                                     const particleIndex idx,
+                                     Vector& derivs);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Evaluate derivative of flow stress with respect to plastic strain
+
+      The Johnson-Cook yield stress is given by :
+      \f[
+      \sigma_Y(\epsilon_p) := D\left[A+B\epsilon_p^n\right]
+      \f]
+
+      The derivative is given by
+      \f[
+      \frac{d\sigma_Y}{d\epsilon_p} := nDB\epsilon_p^{n-1}
+      \f]
+
+      \return Derivative \f$ d\sigma_Y / d\epsilon_p\f$.
+
+      \warning Expect error when \f$ \epsilon_p = 0 \f$. 
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double evalDerivativeWRTPlasticStrain(double edot, double T,
+                                          const particleIndex idx);
+
   protected:
 
     double evaluateFlowStress(const double& ep, 
@@ -127,6 +166,50 @@ namespace Uintah {
 			      const double& T,
 			      const MPMMaterial* matl,
 			      const double& tolerance);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Evaluate derivative of flow stress with respect to temperature.
+
+      The Johnson-Cook yield stress is given by :
+      \f[
+      \sigma_Y(T) := F\left[1-\left(\frac{T-T_r}{T_m-T_r}\right)^m\right]
+      \f]
+
+      The derivative is given by
+      \f[
+      \frac{d\sigma_Y}{dT} := -\frac{mF\left(\frac{T-T_r}{T_m-T_r}\right)^m}
+      {T-T_r}
+      \f]
+
+      \return Derivative \f$ d\sigma_Y / dT \f$.
+ 
+      \warning Expect error when \f$ T < T_{room} \f$. 
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double evalDerivativeWRTTemperature(double edot, double T,
+					const particleIndex idx);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Evaluate derivative of flow stress with respect to strain rate.
+
+      The Johnson-Cook yield stress is given by :
+      \f[
+      \sigma_Y(\dot\epsilon_p) := E\left[1+C\ln\left(\frac{\dot\epsilon_p}
+      {\dot\epsilon_{p0}}\right)\right]
+      \f]
+
+      The derivative is given by
+      \f[
+      \frac{d\sigma_Y}{d\dot\epsilon_p} := \frac{EC}{\dot\epsilon_p}
+      \f]
+
+      \return Derivative \f$ d\sigma_Y / d\dot\epsilon_p \f$.
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double evalDerivativeWRTStrainRate(double edot, double T,
+				       const particleIndex idx);
 
   };
 

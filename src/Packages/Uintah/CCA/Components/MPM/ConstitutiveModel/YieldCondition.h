@@ -2,6 +2,7 @@
 #define __YIELD_CONDITION_H__
 
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
 
 namespace Uintah {
 
@@ -74,6 +75,19 @@ namespace Uintah {
 					     const double flowStress,
 					     const double porosity,
 					     Matrix3& derivative) = 0;
+
+    /////////////////////////////////////////////////////////////////////////
+    /*! 
+      \brief Compute the elastic-plastic tangent modulus.
+    */
+    /////////////////////////////////////////////////////////////////////////
+    virtual void computeElasPlasTangentModulus(const TangentModulusTensor& Ce,
+					       const Matrix3& sigma, 
+					       double sigY,
+					       double dsigYdV,
+					       double porosity,
+					       double voidNuclFac,
+					       TangentModulusTensor& Cep) = 0;
   };
 } // End namespace Uintah
       

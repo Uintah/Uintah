@@ -19,13 +19,13 @@ namespace Uintah {
 
     The flow rule is given by
     \f[
-    f(\sigma) = K \alpha + \sigma_Y
+    f(\sigma) = K \alpha + \sigma_0
     \f]
 
     where \f$f(\sigma)\f$ = flow stress \n
     \f$K\f$ = hardening modulus \n
     \f$\alpha\f$ = evolution parameter for hardening law \n
-    \f$\sigma_Y\f$ = yield stress \n
+    \f$\sigma_0\f$ = initial yield stress \n
 
     Evolution of alpha is given by
     \f[
@@ -41,7 +41,7 @@ namespace Uintah {
   public:
     struct CMData {
       double K;
-      double sigma_Y;
+      double sigma_0;
     };	 
 
     constParticleVariable<double> pAlpha;
@@ -56,7 +56,7 @@ namespace Uintah {
 
   private:
 
-    CMData d_const;
+    CMData d_CM;
          
     // Prevent copying of this class
     // copy constructor
@@ -71,7 +71,7 @@ namespace Uintah {
     virtual ~IsoHardeningPlastic();
 	 
     // Computes and requires for internal evolution variables
-    // Only one internal variable for Johnson-Cook :: plastic strain
+    // Only one internal variable for Isotropic-Hardening :: plastic strain
     virtual void addInitialComputesAndRequires(Task* task,
 					       const MPMMaterial* matl,
 					       const PatchSet* patches) const;
@@ -117,6 +117,111 @@ namespace Uintah {
 				       const MPMMaterial* matl,
 				       TangentModulusTensor& Ce,
 				       TangentModulusTensor& Cep);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Evaluate derivative of flow stress with respect to scalar and
+      internal variables.
+
+      \return Three derivatives in Vector deriv 
+      (deriv[0] = \f$d\sigma_Y/d\dot\epsilon\f$,
+      deriv[1] = \f$d\sigma_Y/dT\f$, 
+      deriv[2] = \f$d\sigma_Y/d\alpha\f$)
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    void evalDerivativeWRTScalarVars(double edot,
+                                     double T,
+                                     const particleIndex idx,
+                                     Vector& derivs);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Evaluate derivative of flow stress with respect to plastic
+      strain.
+
+      The Isotropic-Hardening yield stress is given by :
+      \f[
+      \sigma_Y(\alpha) := \sigma_0 + K\alpha
+      \f]
+
+      The derivative is given by
+      \f[
+      \frac{d\sigma_Y}{d\epsilon_p} := K
+      \f]
+
+      \return Derivative \f$ d\sigma_Y / d\alpha\f$.
+
+      \warning Not implemented yet.
+
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double evalDerivativeWRTPlasticStrain(double edot, double T,
+                                          const particleIndex idx);
+
+  protected:
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Evaluate derivative of flow stress with respect to temperature.
+
+      The Isotropic-Hardening yield stress is given by :
+      \f[
+      \sigma_Y(T) := C
+      \f]
+
+      The derivative is given by
+      \f[
+      \frac{d\sigma_Y}{dT} := 0
+      \f]
+
+      \return Derivative \f$ d\sigma_Y / dT \f$.
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double evalDerivativeWRTTemperature(double edot, double T,
+					const particleIndex idx);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Evaluate derivative of flow stress with respect to strain rate.
+
+      The Isotropic-Hardening yield stress is given by :
+      \f[
+      \sigma_Y(\dot\epsilon_p) := C
+      \f]
+
+      The derivative is given by
+      \f[
+      \frac{d\sigma_Y}{d\dot\epsilon_p} := 0
+      \f]
+
+      \return Derivative \f$ d\sigma_Y / d\dot\epsilon_p \f$.
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double evalDerivativeWRTStrainRate(double edot, double T,
+				       const particleIndex idx);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Evaluate derivative of flow stress with respect to alpha
+
+      The Isotropic-Hardening yield stress is given by :
+      \f[
+      \sigma_Y(\alpha) := \sigma_0 + K\alpha
+      \f]
+
+      The derivative is given by
+      \f[
+      \frac{d\sigma_Y}{d\alpha} := K
+      \f]
+
+      \return Derivative \f$ d\sigma_Y / d\alpha\f$.
+
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double evalDerivativeWRTAlpha(double edot, double T,
+				  const particleIndex idx);
+
+
   };
 
 } // End namespace Uintah

@@ -9,14 +9,15 @@ namespace Uintah {
   /*! \class StabilityCheck
     \brief  A generic wrapper for various methods of checking stability. 
    
-    Examples: loss of hyperbolicity/ellipticity, Drucker 
-    stability criterion, Hill condition etc.
-    Provides an abstract base class for various methods of checking 
-    the stability of motion/bifurcation points
     \author  Biswajit Banerjee, \n
     C-SAFE and Department of Mechanical Engineering,\n
     University of Utah.\n
     Copyright (C) 2003 Container Dynamics Group\n
+
+    Examples: loss of hyperbolicity/ellipticity, Drucker 
+    stability criterion, Hill condition etc.
+    Provides an abstract base class for various methods of checking 
+    the stability of motion/bifurcation points
   */
   class StabilityCheck {
 
@@ -29,11 +30,11 @@ namespace Uintah {
     virtual ~StabilityCheck();
 	 
     /*! Check the stability and return the direction of instability
-        if any */
+      if any */
     virtual bool checkStability(const Matrix3& cauchyStress,
-                               const Matrix3& strainMeasure,
-                               TangentModulusTensor& tangentModulus,
-                               Vector& direction) = 0;
+				const Matrix3& deformRate,
+				const TangentModulusTensor& tangentModulus,
+				Vector& direction) = 0;
   };
 } // End namespace Uintah
       

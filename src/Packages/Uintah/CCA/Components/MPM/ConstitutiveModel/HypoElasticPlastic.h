@@ -64,12 +64,14 @@ namespace Uintah {
     const VarLabel* pLeftStretchLabel_preReloc;  // For Hypoelastic-plasticity
     const VarLabel* pRotationLabel;  // For Hypoelastic-plasticity
     const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
-    const VarLabel* pDamageLabel;  // For Hypoelastic-plasticity
-    const VarLabel* pDamageLabel_preReloc;  // For Hypoelastic-plasticity
-    const VarLabel* pPorosityLabel;  // For Hypoelastic-plasticity
-    const VarLabel* pPorosityLabel_preReloc;  // For Hypoelastic-plasticity
-    const VarLabel* pPlasticTempLabel;  // For Hypoelastic-plasticity
-    const VarLabel* pPlasticTempLabel_preReloc;  // For Hypoelastic-plasticity
+    const VarLabel* pDamageLabel;  
+    const VarLabel* pDamageLabel_preReloc;  
+    const VarLabel* pPorosityLabel;  
+    const VarLabel* pPorosityLabel_preReloc;  
+    const VarLabel* pPlasticTempLabel;  
+    const VarLabel* pPlasticTempLabel_preReloc;  
+    const VarLabel* pLocalizedLabel;  
+    const VarLabel* pLocalizedLabel_preReloc;  
 
   private:
 
@@ -81,7 +83,7 @@ namespace Uintah {
 
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;
-    PlasticityModel*    d_plasticity;
+    PlasticityModel*    d_plastic;
     DamageModel*        d_damage;
     MPMEquationOfState* d_eos;
 	 
@@ -235,6 +237,10 @@ namespace Uintah {
     double updatePorosity(const Matrix3& rateOfDeform,
                           double delT, double oldPorosity,
                           double plasticStrain);
+
+    /*! Calculate void nucleation factor */
+    double voidNucleationFactor(double plasticStrain);
+
   };
 
 } // End namespace Uintah

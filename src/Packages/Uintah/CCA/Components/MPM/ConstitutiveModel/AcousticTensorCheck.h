@@ -41,8 +41,8 @@ namespace Uintah {
     /*! Check the stability and return the direction of instability
       if any */
     bool checkStability(const Matrix3& cauchyStress,
-                        const Matrix3& strainMeasure,
-                        TangentModulusTensor& tangentModulus,
+                        const Matrix3& deformRate,
+                        const TangentModulusTensor& tangentModulus,
                         Vector& direction);
 
   private:
@@ -51,13 +51,13 @@ namespace Uintah {
      *  the ellipticity of the tangent modulus
      *  \return true if the acoustic tensor is not positive definite
      *  false otherwise.  Also return normal to surface of localization. */
-    bool isLocalized(TangentModulusTensor& tangentModulus,
+    bool isLocalized(const TangentModulusTensor& tangentModulus,
                      Vector& normal);
 
     /*! Find approximate local minima */
     void findApproxLocalMins(double** detA, 
                              int** localmin, 
-                             TangentModulusTensor& C);
+                             const TangentModulusTensor& C);
 
     /*! Form the acoustic tensor 
      *  The Acoustic tensor is given by 
@@ -69,7 +69,7 @@ namespace Uintah {
               \f$ \mathbf{C} \f$ is the tangent modulus tensor.
     */
     void formAcousticTensor(const Vector& normal,
-                            TangentModulusTensor& C,
+                            const TangentModulusTensor& C,
                             Matrix3& A);
 
     /*! Choose new normal */
@@ -78,7 +78,7 @@ namespace Uintah {
 
     /*! Choose normal from normal set */
     Vector chooseNormalFromNormalSet(vector<Vector>& normalSet, 
-                                     TangentModulusTensor& C);
+                                     const TangentModulusTensor& C);
 
     // Prevent copying of this class and copy constructor
     AcousticTensorCheck(const AcousticTensorCheck &);
