@@ -39,7 +39,7 @@ using namespace SCIRun;
 
 /////////
 // Structure to hold NrrdData
-class NrrdData : public Datatype {
+class NrrdData : public PropertyManager {
 public:  
   // GROUP: public data
   //////////
