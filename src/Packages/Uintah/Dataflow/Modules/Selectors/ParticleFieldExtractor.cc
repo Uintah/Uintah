@@ -450,7 +450,7 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
   if( sema )
     delete sema;
 } 
-void ParticleFieldExtractor::PFEThread::run(){     
+void PFEThread::run(){     
 
 
   ParticleSubset* dest_subset = scinew ParticleSubset();
@@ -473,7 +473,7 @@ void ParticleFieldExtractor::PFEThread::run(){
     ParticleSubset* source_subset;
     bool have_subset = false;
 
-    eval(pfe->id + " isOn p" + to_string(matl), result);
+    pfe->eval(pfe->id + " isOn p" + to_string(matl), result);
     if ( result == "0")
       continue;
     if (pfe->pvVar.get() != ""){
