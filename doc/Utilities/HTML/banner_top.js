@@ -16,20 +16,12 @@ University of Utah. All Rights Reserved.
 */
 
 // Generate top banner.
-document.write('<div class="top-banner-margins">')
-document.write('<table border="0" cellspacing="0" cellpadding="0" width="100%" height="91">')
-document.write('<tr>')
-document.write('<td align="center" width="%100" background="',treetop,'doc/Utilities/Figures/banner_top_fill.jpg">')
-document.write("<img src='",treetop,"doc/Utilities/Figures/banner_top.jpg' width='744' height='91' border='0' usemap='#banner'/>")
-document.write('</td>')
-document.write("<map name='banner'>")
-document.write("<area href='http://www.sci.utah.edu' alt='Home' coords='118,37,161,53'/>")
-document.write("<area href='http://software.sci.utah.edu' alt='Software' coords='117,62,213,84' />")
-document.write("<area href='",treetop, "doc/index.html' alt='Doc Home' coords='223,62,370,84' />")
-document.write("<area href='",treetop, "doc/Installation/index.html' alt='Installation' coords='384,62,506,84' />")
-document.write("<area href='",treetop, "doc/User/index.html' alt='User' coords='516,62,576,84' />")
-document.write("<area href='", treetop, "doc/Developer/index.html' alt='Developer' coords='586,62,690,84' />")
-document.write("</map>")
-document.write("</tr>")
-document.write("</table>")
-document.write('</div>')
+document.write('<img class="top-banner" src="', treetop, 'doc/Utilities/Figures/doc_banner04.jpg" border="0" usemap="#banner"> \
+<map name="banner">\
+<area href="http://www.sci.utah.edu" coords="133,103,212,124" alt="SCI Home">\
+<area href="http://software.sci.utah.edu" coords="213,103,296,124" alt="Software">\
+<area href="', treetop, 'doc/" coords="297,103,420,124" alt="Documentation">\
+<area href="', treetop, 'doc/Installation" coords="421,103,524,124" alt="Installation">\
+<area href="', treetop, 'doc/User/" coords="525,103,571,124" alt="User">\
+<area href="', treetop, 'doc/Developer/" coords="572,103,667,124" alt="Developer">\
+</map>');

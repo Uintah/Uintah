@@ -23,6 +23,9 @@
 # and index-by-cat.html file for each package.
 #
 
+# Path to top of tree from Modules directory.
+TREE_TOP = "../../../"
+
 # An Entry.  Consists of a value, is sortable, and provides the
 # overridable entry function.
 class Entry
@@ -115,40 +118,19 @@ University of Utah. All Rights Reserved.
 -->
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<script type="text/javascript">
-var treetop="";
-var path = location.pathname;
-if (path.charAt(path.length-1) == "/") {
-  path += "bogus.html"
-}
-var base = path.substr(path.lastIndexOf("/")+1);
-var roottag = "doc";
-while (base != roottag && base != "") {
-  treetop += "../";
-  path = path.substr(0, path.lastIndexOf("/"));
-  base = path.substr(path.lastIndexOf("/")+1);
-}
-var inDocTree = base == roottag;
-if (inDocTree) {
-  document.write("<link href='",treetop,"doc/Utilities/HTML/moduleindex.css' rel='stylesheet' type='text/css'/>")
-}
-</script>
+<script type="text/javascript" src="#{TREE_TOP}doc/Utilities/HTML/tools.js"></script>
+<script type="text/javascript">var doc = new ModuleIndexDocument();</script>
 <title>#{packageName} Module Descriptions</title>
 </head>
 <body>
-<script type="text/javascript">
-if (inDocTree) {
-    document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/tools.js"><\\/script>');
-}
-</script>
-<script type="text/javascript">preContent();</script>
+<script type="text/javascript">doc.preContent();</script>
 BOILER_PLATE_TEXT
 end
 
 def insertBottomBoilerPlate(file)
   # Generate end of file boilerplate.
   file.print <<BOILER_PLATE_TEXT
-<script type="text/javascript">postContent();</script>
+<script type="text/javascript">doc.postContent();</script>
 </body>
 </html>
 BOILER_PLATE_TEXT
@@ -198,10 +180,15 @@ def genPage(packageName, list)
     file.print("<table cellspacing='0' border='1' cellpadding='2'>\n")
     # Generate page title and subtitle
     file.print("
+<thead>
+<tr>
 <th colspan=\"#{numCols}\">
 <h1>#{packageName} Module Descriptions (v. #{version})</h1>
 <h2><a class=\"alt\" href=\"index.html\">package index</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a class=\"alt\" href=\"#{packageName}.html\">alphabetically</a></h2>
 </th>
+</tr>
+</thead>
+<tbody>
 ")
 
     numRows.times do |r|
@@ -217,7 +204,7 @@ def genPage(packageName, list)
       file.print("</tr>\n")
     end
 
-    file.print("</table>\n")
+    file.print("</tbody>\n</table>\n")
     if LatexEntry.count > 0
       file.print("<p><sup>*</sup>Denotes additional documentation for a module.</p>\n")
     end

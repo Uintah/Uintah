@@ -24,9 +24,8 @@ body {
 }
 
 h1.page-title {
-  text-align: center;
-  font-weight: bold;
-  font-size: 110%;
+  margin-left: auto;
+  margin-right: auto;
   color: white;
 }
 
@@ -38,24 +37,6 @@ h2.page-sub-title {
   margin-right: auto;
 }
 
-img.top-banner {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-div.content {
-  width: 800px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-div.content-layer1 {
-  width: 700px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
 div.doc-group {
   background-color: white;
   float: left;
@@ -63,7 +44,7 @@ div.doc-group {
   margin-right: 5px;
   margin-top: 10px;
   margin-bottom: 10px;
-  width: 220px;
+  width: 250px;
   border: 1px dotted rgb(73, 91, 105);
 }
 
@@ -82,10 +63,8 @@ h2 {
 
 p {
   font-size: 75%;
-  padding-left: 2px;
-  padding-right:2px;
+  width: 220px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-div.clear-left {
-  clear: left;
-}

@@ -33,23 +33,6 @@ img.top-banner {
   margin-right: auto;
 }
 
-div.content {
-  background-color: rgb(73, 91, 105);
-  width: 800px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-div.content-layer1 {
-  padding-left: 5px;
-  padding-right: 5px;
-  background-color: white;
-  margin-left: 0.25in;
-  margin-right: 0.25in;
-  border-top: 0.25in solid rgb(73, 91, 105);
-  border-bottom: 0.25in solid rgb(73, 91, 105);;
-}
-
 .title {
   color: rgb(73, 91, 105);
   text-align: left;
