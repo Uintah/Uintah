@@ -19,7 +19,7 @@ This filter is a process object class that implements a step in the N-d watershe
       <name>Segment_Table</name>
     </input>  
     <input optional="yes" num="2">
-      <value>itk::watershed::EquivalencyTable</value>
+      <value>itk::EquivalencyTable</value>
       <call>SetInputEquivalencyTable</call>
       <name>Equivalency_Table</name>
     </input>  
