@@ -33,7 +33,7 @@
 define xmltohtml
 @echo $@
 @sed "s#\".*component.dtd#\"${treetop}/doc/Utilities/XML/component.dtd#" $< >${notdir $<}
-@java org.apache.xalan.xslt.Process -IN ${notdir $<} -XSL ${stylesheet} \
+@-java org.apache.xalan.xslt.Process -IN ${notdir $<} -XSL ${stylesheet} \
 -OUT $@ -PARAM treetop ${1} -HTML
 @-rm ${notdir $<}
 endef
