@@ -1983,7 +1983,7 @@ class BioTensorApp {
  	set tips(DataExecute) \
  	    "Click to load data"
  	set tips(DataNext) \
- 	    "Click to proceed to\nthe Registration step\nonly after completing\nthe Load Data step"
+ 	    "Click to proceed to\nthe Registration step\nonly after completing\nthe Load Data step. If Tensors were loaded\ndirectly, proceed to\nvisualization"
 
  	# Registration Tab
  	set tips(RegToggle) \
@@ -3886,10 +3886,10 @@ class BioTensorApp {
 		    
 		    configure_sample_planes
 		    
-		    set data_completed 1
-		    set reg_completed 1
-		    set dt_completed 1
-		    activate_vis
+		    #set data_completed 1
+		    #set reg_completed 1
+		    #set dt_completed 1
+		    #activate_vis
 		}
 	    }
 # 	} elseif {$which == $mods(SamplePlane-X) && $state == "JustStarted"} {
@@ -4034,23 +4034,39 @@ class BioTensorApp {
     method execute_Data {} {
 	global mods 
 	global data_mode
-	
-	if {$data_mode == "tensor"} {
-	    disableModule $mods(ChooseNrrd-DT) 0
-	    disableModule $mods(TendEstim) 1
-	}
-
-	$mods(ChooseNrrd1)-c needexecute
 
 	set data_completed 1
 
-	activate_registration
+	if {$data_mode == "DWI"} {
+	    if {!$dt_completed} {
+		disableModule $mods(ChooseNrrd-DT) 1
+	    }
 
-	# enable Next button
-	$data_next_button1 configure -state normal \
-	    -foreground black -background $next_color
-	$data_next_button2 configure -state normal \
-	    -foreground black -background $next_color
+	    activate_registration
+
+	    # enable Next button
+	    $data_next_button1 configure -state normal \
+		-foreground black -background $next_color
+	    $data_next_button2 configure -state normal \
+		-foreground black -background $next_color
+	} else {
+	    disableModule $mods(TendEpireg) 1
+	    disableModule $mods(ChooseNrrd-DT) 0
+	    disableModule $mods(TendEstim) 1
+
+	    activate_vis
+	}
+	
+	# determine which type of data (nrrd, dicom, analyze)
+	# and execute that module
+	global $mods(ChooseNrrd1)-port-index
+	if {[set $mods(ChooseNrrd1)-port-index] == 0} {
+	    $mods(NrrdReader1)-c needexecute
+	} elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
+	    $mods(DicomToNrrd1)-c needexecute
+	} else {
+	    $mods(AnalyzeToNrrd1)-c needexecute
+	}
     }
 
 
@@ -4092,6 +4108,7 @@ class BioTensorApp {
 	    $analyze_tab2.load2 configure -state normal
 	    
 	    set $mods(NrrdReader1)-type Scalar
+
 	    # configure ChooseNrrd
 	    set $mods(ChooseNrrd-DT)-port-index 0
 	    
@@ -4171,18 +4188,6 @@ class BioTensorApp {
 	    
         }
 
-	# re-execute reader
-	global $mods(ChooseNrrd1)-port-index
-	if {[set $mods(ChooseNrrd1)-port-index] == 0} {
-	    # nrrd
-	    $mods(NrrdReader1)-c needexecute
-	} elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
-	    # dicom
-	    $mods(DicomReader1)-c needexecute
-	} else {
-	    # analyze
-	    $mods(AnalyzeReader1)-c needexecute
-	}
     }
 
 
@@ -5081,7 +5086,6 @@ class BioTensorApp {
 	    
 	    global $mods(GenStandardColorMaps-ColorPlanes)-mapType
 	    
-	    
 	    # Gray
 	    frame $maps.gray
 	    pack $maps.gray -side top -anchor nw -padx 3 -pady 1 \
@@ -5250,9 +5254,15 @@ class BioTensorApp {
 	    # rescale is disabled and it isn't Principle Eigenvector
 	    $planes_tab1.color.childsite.select.colorFrame.set_color configure -state normal
 	    $planes_tab2.color.childsite.select.colorFrame.set_color configure -state normal
+	    disable_planes_colormaps
+	} elseif {$port == 3} {
+	    $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
+	    $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
+	    disable_planes_colormaps
 	} else {
 	    $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
 	    $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
+	    enable_planes_colormaps
 	}
     }
 
@@ -5277,6 +5287,7 @@ class BioTensorApp {
 	    #disableModule $mods(RescaleColorMap-ColorPlanes) 1
 	    set $mods(ChooseColorMap-Planes)-port-index 1
 	    set $mods(ChooseField-ColorPlanes)-port-index 3
+	    disable_planes_colormaps
         } elseif {$which == "Fractional Anisotropy"} {
 	    set plane_type "Fractional Anisotropy"
             $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
@@ -5284,6 +5295,7 @@ class BioTensorApp {
 	    #disableModule $mods(RescaleColorMap-ColorPlanes) 0
 	    set $mods(ChooseColorMap-Planes)-port-index 0
 	    set $mods(ChooseField-ColorPlanes)-port-index 0
+	    enable_planes_colormaps
         } elseif {$which == "Linear Anisotropy"} {
 	    set plane_type "Linear Anisotropy"
             $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
@@ -5291,6 +5303,7 @@ class BioTensorApp {
 	    #disableModule $mods(RescaleColorMap-ColorPlanes) 0
 	    set $mods(ChooseColorMap-Planes)-port-index 0
 	    set $mods(ChooseField-ColorPlanes)-port-index 1
+	    enable_planes_colormaps
         } elseif {$which == "Planar Anisotropy"} {
 	    set plane_type "Planar Anisotropy"
             $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
@@ -5298,6 +5311,7 @@ class BioTensorApp {
 	    #disableModule $mods(RescaleColorMap-ColorPlanes) 0
 	    set $mods(ChooseColorMap-Planes)-port-index 0
 	    set $mods(ChooseField-ColorPlanes)-port-index 2
+	    enable_planes_colormaps
         } else {
 	    set plane_type "Constant"
 	    # specified color
@@ -5310,6 +5324,7 @@ class BioTensorApp {
 	    set $mods(ShowField-X)-faces-usedefcolor 1
 	    set $mods(ShowField-Y)-faces-usedefcolor 1
 	    set $mods(ShowField-Z)-faces-usedefcolor 1
+	    disable_planes_colormaps
         }
 
 	$planes_tab1.color.childsite.select.color select $which
@@ -5320,6 +5335,26 @@ class BioTensorApp {
 	$mods(ShowField-X)-c rerender_faces
 	$mods(ShowField-Y)-c rerender_faces
 	$mods(ShowField-Z)-c rerender_faces
+    }
+
+    method disable_planes_colormaps {} {
+	foreach w [winfo children $planes_tab1.color.childsite.maps] {
+	    disable_widget $w
+	}
+
+	foreach w [winfo children $planes_tab2.color.childsite.maps] {
+	    disable_widget $w
+	}
+    }
+
+    method enable_planes_colormaps {} {
+	foreach w [winfo children $planes_tab1.color.childsite.maps] {
+	    activate_widget $w
+	}
+
+	foreach w [winfo children $planes_tab2.color.childsite.maps] {
+	    activate_widget $w
+	}
     }
   
     method initialize_clip_info {} {
@@ -6116,6 +6151,12 @@ class BioTensorApp {
 		if {$plane_type == "Constant"} {
 		    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state normal
 		    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state normal
+		    disable_isosurface_colormaps
+		} elseif {$plane_type == "Principle Eigenvector"} {
+		    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
+		    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled
+		    disable_isosurface_colormaps
+		    
 		} else {
 		    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 		    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled
@@ -6205,24 +6246,28 @@ class BioTensorApp {
 	    #disableModule $mods(RescaleColorMap-Isosurface) 1
 	    set $mods(ChooseColorMap-Isosurface)-port-index 1
 	    set $mods(ChooseField-Isosurface)-port-index 3
+	    disable_isosurface_colormaps
         } elseif {$which == "Fractional Anisotropy"} {
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled	    
   	    #disableModule $mods(RescaleColorMap-Isosurface) 0
 	    set $mods(ChooseColorMap-Isosurface)-port-index 0
 	    set $mods(ChooseField-Isosurface)-port-index 0
+	    enable_isosurface_colormaps
         } elseif {$which == "Linear Anisotropy"} {
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled	   
 	    #disableModule $mods(RescaleColorMap-Isosurface) 0
 	    set $mods(ChooseColorMap-Isosurface)-port-index 0
 	    set $mods(ChooseField-Isosurface)-port-index 1
+	    enable_isosurface_colormaps
         } elseif {$which == "Planar Anisotropy"} {
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled	    
 	    #disableModule $mods(RescaleColorMap-Isosurface) 0
 	    set $mods(ChooseColorMap-Isosurface)-port-index 0
 	    set $mods(ChooseField-Isosurface)-port-index 2
+	    enable_isosurface_colormaps
         } else {
 	    # constant color
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state normal
@@ -6231,6 +6276,7 @@ class BioTensorApp {
 	    set $mods(ChooseColorMap-Isosurface)-port-index 1
 	    set $mods(ChooseField-Isosurface)-port-index 0
 	    set $mods(ShowField-Isosurface)-faces-usedefcolor 1
+	    disable_isosurface_colormaps
         }
 
 	$isosurface_tab1.isocolor.childsite.select.color select $which
@@ -6241,6 +6287,26 @@ class BioTensorApp {
 	$mods(ShowField-Isosurface)-c rerender_faces
     }
     
+    method disable_isosurface_colormaps {} {
+	foreach w [winfo children $isosurface_tab1.isocolor.childsite.maps] {
+	    disable_widget $w
+	}
+
+	foreach w [winfo children $isosurface_tab2.isocolor.childsite.maps] {
+	    disable_widget $w
+	}
+    }
+
+    method enable_isosurface_colormaps {} {
+	foreach w [winfo children $isosurface_tab1.isocolor.childsite.maps] {
+	    activate_widget $w
+	}
+
+	foreach w [winfo children $isosurface_tab2.isocolor.childsite.maps] {
+	    activate_widget $w
+	}
+    }
+  
 
     method select_isoval_based_on { w } {
 	global mods
@@ -6738,6 +6804,11 @@ class BioTensorApp {
 	    if {$glyph_type == "Constant"} {
 		$glyphs_tab1.rep.childsite.select.colorFrame.set_color configure -state normal
 		$glyphs_tab2.rep.childsite.select.colorFrame.set_color configure -state normal
+		disable_glyphs_colormaps
+	    } elseif {$glyph_type == "Principle Eigenvector"} {
+		$glyphs_tab1.rep.childsite.select.colorFrame.set_color configure -state disabled
+		$glyphs_tab2.rep.childsite.select.colorFrame.set_color configure -state disabled
+		disable_glyphs_colormaps
 	    } else {
 		$glyphs_tab1.rep.childsite.select.colorFrame.set_color configure -state disabled
 		$glyphs_tab2.rep.childsite.select.colorFrame.set_color configure -state disabled
@@ -6748,9 +6819,13 @@ class BioTensorApp {
 	    if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
 		$glyphs_tab1.seed.childsite.a.rakef.w configure -state normal
 		$glyphs_tab2.seed.childsite.a.rakef.w configure -state normal
+		$glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
+		$glyphs_tab2.seed.childsite.a.pointf.w configure -state disabled
 	    } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index]== 0} {
 		$glyphs_tab1.seed.childsite.a.pointf.w configure -state normal
 		$glyphs_tab2.seed.childsite.a.pointf.w configure -state normal
+		$glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
+		$glyphs_tab2.seed.childsite.a.rakef.w configure -state disabled
 	    } else {
 		$glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
 		$glyphs_tab2.seed.childsite.a.rakef.w configure -state disabled
@@ -6857,6 +6932,7 @@ class BioTensorApp {
    	        #disableModule $mods(RescaleColorMap-Glyphs) 1
 		set $mods(ChooseColorMap-Glyphs)-port-index 1
 		set $mods(ChooseColorMap-Glyphs)-port-index 0
+		disable_glyphs_colormaps
 	    } else {
 		set $mods(ShowField-Glyphs)-tensor_display_type Boxes
 	    }
@@ -6868,21 +6944,25 @@ class BioTensorApp {
 	    set $mods(ChooseField-Glyphs)-port-index 3
 	    #disableModule $mods(RescaleColorMap-Glyphs) 1
 	    set $mods(ChooseColorMap-Glyphs)-port-index 1
+	    disable_glyphs_colormaps
 	} elseif {$type == "Fractional Anisotropy"} {
 	    set glyph_type "Fractional Anisotropy"
 	    set $mods(ChooseField-Glyphs)-port-index 0
 	    #disableModule $mods(RescaleColorMap-Glyphs) 0
-	    set $mods(ChooseColorMap-Glyphs)-port-index 0
+	    set $mods(ChooseColorMap-Glyphs)-port-index 
+	    enable_glyphs_colormaps
 	} elseif {$type == "Linear Anisotropy"} {
 	    set glyph_type "Linear Anisotropy"
 	    set $mods(ChooseField-Glyphs)-port-index 1
 	    #disableModule $mods(RescaleColorMap-Glyphs) 0
 	    set $mods(ChooseColorMap-Glyphs)-port-index 0
+	    enable_glyphs_colormaps
 	} elseif {$type == "Planar Anisotropy"} {
 	    set glyph_type "Planar Anisotropy"
 	    set $mods(ChooseField-Glyphs)-port-index 2
 	    #disableModule $mods(RescaleColorMap-Glyphs) 0
 	    set $mods(ChooseColorMap-Glyphs)-port-index 0
+	    enable_glyphs_colormaps
 	} elseif {$type == "Constant"} {
 	    set glyph_type "Constant"
 	    #disableModule $mods(RescaleColorMap-Glyphs) 1
@@ -6890,6 +6970,7 @@ class BioTensorApp {
 	    set $mods(ShowField-Glyphs)-tensor-usedefcolor 1
 	    set $mods(ChooseColorMap-Glyphs)-port-index 0
 	    set $mods(ShowField-Glyphs)-tensors-usedefcolor 1
+	    disable_glyphs_colormaps
 	}
 	
 	# sync attached/detached optionmenus
@@ -6897,6 +6978,26 @@ class BioTensorApp {
 
 	$mods(ShowField-Glyphs)-c data_display_type
 	$mods(ChooseField-Glyphs)-c needexecute
+    }
+
+    method disable_glyphs_colormaps {} {
+	foreach w [winfo children $glyphs_tab1.rep.childsite.maps] {
+	    disable_widget $w
+	}
+
+	foreach w [winfo children $glyphs_tab2.rep.childsite.maps] {
+	    disable_widget $w
+	}
+    }
+
+    method enable_glyphs_colormaps {} {
+	foreach w [winfo children $glyphs_tab1.rep.childsite.maps] {
+	    activate_widget $w
+	}
+
+	foreach w [winfo children $glyphs_tab2.rep.childsite.maps] {
+	    activate_widget $w
+	}
     }
 
     method update_glyph_seed_method {} {
@@ -6998,6 +7099,7 @@ class BioTensorApp {
 	if {$vis_activated} {
 	    global mods
 	    $mods(ShowField-Glyphs)-c data_resolution_scale
+	    $mods(ShowField-Glyphs)-c needexecute
 	}
     }
 
@@ -7477,9 +7579,15 @@ class BioTensorApp {
 	    if {$fiber_type == "Constant"} {
 		$fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state normal
 		$fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state normal
+		disable_fibers_colormaps
+	    } elseif {$fiber_type == "Principle Eigenvector"} {
+		$fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state disabled
+		$fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
+		disable_fibers_colormaps
 	    } else {
 		$fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state disabled
 		$fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
+		enable_fibers_colormaps
 	    }
 
 	    # configure glyph rake
@@ -7487,9 +7595,13 @@ class BioTensorApp {
 	    if {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
 		$fibers_tab1.seed.childsite.a.rakef.w configure -state normal
 		$fibers_tab2.seed.childsite.a.rakef.w configure -state normal
+		$fibers_tab1.seed.childsite.a.pointf.w configure -state disabled
+		$fibers_tab2.seed.childsite.a.pointf.w configure -state disabled
 	    } elseif {[set $mods(ChooseField-FiberSeeds)-port-index]== 0} {
 		$fibers_tab1.seed.childsite.a.pointf.w configure -state normal
 		$fibers_tab2.seed.childsite.a.pointf.w configure -state normal
+		$fibers_tab1.seed.childsite.a.rakef.w configure -state disabled
+		$fibers_tab2.seed.childsite.a.rakef.w configure -state disabled
 	    } else {
 		$fibers_tab1.seed.childsite.a.rakef.w configure -state disabled
 		$fibers_tab2.seed.childsite.a.rakef.w configure -state disabled
@@ -7644,27 +7756,32 @@ class BioTensorApp {
 	    set $mods(ChooseField-Fibers)-port-index 3
 	    #disableModule $mods(RescaleColorMap-Fibers) 1
 	    set $mods(ChooseColorMap-Fibers)-port-index 1
+	    disable_fibers_colormaps
 	} elseif {$type == "Fractional Anisotropy"} {
 	    set fiber_type "Fractional Anisotropy"
 	    set $mods(ChooseField-Fibers)-port-index 0
 	    #disableModule $mods(RescaleColorMap-Fibers) 0
 	    set $mods(ChooseColorMap-Fibers)-port-index 0
+	    enable_fibers_colormaps
 	} elseif {$type == "Linear Anisotropy"} {
 	    set fiber_type "Linear Anisotropy"
 	    set $mods(ChooseField-Fibers)-port-index 1
 	    #disableModule $mods(RescaleColorMap-Fibers) 0
 	    set $mods(ChooseColorMap-Fibers)-port-index 0
+	    enable_fibers_colormaps
 	} elseif {$type == "Planar Anisotropy"} {
 	    set fiber_type "Planar Anisotropy"
 	    set $mods(ChooseField-Fibers)-port-index 2
 	    #disableModule $mods(RescaleColorMap-Fibers) 0
 	    set $mods(ChooseColorMap-Fibers)-port-index 0
+	    enable_fibers_colormaps
 	} elseif {$type == "Constant"} {
 	    set fiber_type "Constant"
 	    #disableModule $mods(RescaleColorMap-Fibers) 1
 	    set $mods(ChooseColorMap-Fibers)-port-index 1
 	    set $mods(ShowField-Fibers)-edges-usedefcolor 1
 	    set $mods(ChooseField-Fibers)-port-index 0
+	    disable_fibers_colormaps
 	}
 	
 	# sync attached/detached optionmenus
@@ -7677,6 +7794,26 @@ class BioTensorApp {
 	$mods(ShowField-Fibers)-c rerender_edges
     }
  
+    method disable_fibers_colormaps {} {
+	foreach w [winfo children $fibers_tab1.rep.childsite.maps] {
+	    disable_widget $w
+	}
+
+	foreach w [winfo children $fibers_tab2.rep.childsite.maps] {
+	    disable_widget $w
+	}
+    }
+
+    method enable_fibers_colormaps {} {
+	foreach w [winfo children $fibers_tab1.rep.childsite.maps] {
+	    activate_widget $w
+	}
+
+	foreach w [winfo children $fibers_tab2.rep.childsite.maps] {
+	    activate_widget $w
+	}
+    }
+
 
     method configure_fibers_stepsize {} {
 	if {$vis_activated} {
@@ -7761,18 +7898,18 @@ class BioTensorApp {
     method toggle_show_fibers {} {
 	global mods
         global $mods(ShowField-Fibers)-edges-on
-#        global $mods(ShowField-Fibers)-nodes-on
+	# global $mods(ShowField-Fibers)-nodes-on
 	
         if {[set $mods(ShowField-Fibers)-edges-on] == 0} {
 	    # sync nodes
-#	    set $mods(ShowField-Fibers)-nodes-on 0 
+	    # set $mods(ShowField-Fibers)-nodes-on 0 
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
 
 	    # disable rest of fibers tab except for checkbutton
         } else {
 	    # sync nodes
-#	    set $mods(ShowField-Fibers)-nodes-on 1
+	    # set $mods(ShowField-Fibers)-nodes-on 1
             global $mods(ChooseField-FiberSeeds)-port-index
             if {[set $mods(ChooseField-FiberSeeds)-port-index] == 0} {
 		# enable Probe Widget
@@ -7786,7 +7923,7 @@ class BioTensorApp {
 	configure_fibers_tabs
 	
         $mods(ShowField-Fibers)-c toggle_display_edges
-#        $mods(ShowField-Fibers)-c toggle_display_nodes
+	# $mods(ShowField-Fibers)-c toggle_display_nodes
         after 100 "$mods(Viewer)-ViewWindow_0-c redraw"
     }
     
