@@ -22,7 +22,8 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Core/CCA/tools
 
 SUBDIRS := \
-	$(SRCDIR)/sidl \
+	$(SRCDIR)/strauss \
+        $(SRCDIR)/sidl \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
