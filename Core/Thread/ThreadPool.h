@@ -38,7 +38,9 @@
 #include <Core/Thread/Parallel2.h>
 #include <Core/Thread/Parallel3.h>
 #include <Core/share/share.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
   class ThreadGroup;

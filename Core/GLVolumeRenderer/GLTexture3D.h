@@ -35,12 +35,12 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Util/ProgressReporter.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sstream>
-#include <deque>
+#include <sgi_stl_warnings_off.h>
 
 namespace SCIRun {
-using std::deque;
 using std::ostringstream;
 class Semaphore;
 class ThreadGroup;

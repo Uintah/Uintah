@@ -33,9 +33,6 @@
 #include <iostream>
 using std::cerr;
 using std::ostream;
-#include <sstream>
-using std::ostringstream;
-using std::endl;
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/BoxObj.h>
 #include <Core/2d/Point2d.h>

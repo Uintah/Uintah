@@ -35,7 +35,9 @@
 #include <Core/Persistent/Persistent.h>
 #include <Core/Math/Expon.h>
 #include <Core/Math/MiscMath.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_off.h>
 #include <stdio.h>
 
 using std::istream;

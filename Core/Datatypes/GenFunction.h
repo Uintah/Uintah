@@ -70,8 +70,10 @@ POSSIBLE REVISIONS
 #include <Core/Util/NotFinished.h>
 #include <Core/Exceptions/DimensionMismatch.h>
 #include <Core/Exceptions/InternalError.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
   using std::string;

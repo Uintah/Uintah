@@ -23,7 +23,9 @@
 
 #include <Core/Containers/Sort.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 #include <stdlib.h>
 using std::cerr;
 

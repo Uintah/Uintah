@@ -43,6 +43,11 @@
 // o Time stamp option
 
 #include <Core/Util/DebugStream.h>
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <fstream>
+#include <sgi_stl_warnings_on.h>
+using namespace std;
 
 namespace SCIRun {
 

@@ -32,8 +32,10 @@
 #define SCIRun_Core_GuiInterface_GuiCallback_h
 
 #include <Core/share/share.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

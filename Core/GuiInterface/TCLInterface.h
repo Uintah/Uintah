@@ -32,7 +32,9 @@
 #define SCIRun_Core_GuiInterface_TCLInterface_h
 
 #include <Core/GuiInterface/GuiInterface.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
   using namespace std;

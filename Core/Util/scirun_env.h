@@ -18,8 +18,10 @@
 #ifndef Core_Util_scirun_env_h
 #define Core_Util_scirun_env_h 1
 
+#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

@@ -12,9 +12,6 @@
 #ifndef ScrolledOpenGLWindow_h
 #define ScrolledOpenGLWindow_h
 
-#include <string>
-#include <map>
-
 #include <GL/gl.h>
 #include <sci_glu.h>
 #include <GL/glx.h>

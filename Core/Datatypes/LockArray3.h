@@ -33,7 +33,9 @@
 
 #include <Core/Util/Assert.h>
 #include <Core/Datatypes/Datatype.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

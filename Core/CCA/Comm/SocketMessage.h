@@ -32,7 +32,6 @@
 #define CORE_CCA_COMM_SOCKETMESSAGE_H
 
 #include <Core/CCA/Comm/Message.h>
-#include <string>
 
 namespace SCIRun {
   class SocketEpChannel;

@@ -20,8 +20,9 @@
 
 #include <sci_config.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 #if HAVE_SYS_UUID_H
 extern "C" { // SGI uuid.h doesn't have this, so we need extern C here

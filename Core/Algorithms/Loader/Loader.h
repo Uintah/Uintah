@@ -31,8 +31,10 @@
 #ifndef Loader_h
 #define Loader_h 
 
+#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

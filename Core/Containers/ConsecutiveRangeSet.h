@@ -31,10 +31,12 @@
 #ifndef SCI_Containers_ConsecutiveRangeSet_h
 #define SCI_Containers_ConsecutiveRangeSet_h
 
+#include <sgi_stl_warnings_off.h>
 #include <list>
 #include <vector>
 #include <string>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 #include <Core/Util/Assert.h>
 #include <Core/Exceptions/Exception.h>
 

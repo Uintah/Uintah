@@ -28,12 +28,6 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <iostream>
-using std::cerr;
-using std::ostream;
-#include <sstream>
-using std::ostringstream;
-
 #include <stdio.h>
 
 #include <Core/Malloc/Allocator.h>

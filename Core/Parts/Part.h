@@ -31,11 +31,12 @@
 #ifndef SCI_Part_h
 #define SCI_Part_h 
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
-//#include <typeinfo>
 #include <map>
-#include <stdio.h>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
+#include <stdio.h>
 
 namespace SCIRun {
 

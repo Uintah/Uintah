@@ -17,8 +17,10 @@
 
 #include <Core/Util/MacroSubstitute.h>
 #include <stdio.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 
@@ -37,7 +39,7 @@ char* MacroSubstitute(char* var_val, env_map& env)
   if (var_val==0)
     return 0;
 
-  int length = strlen(var_val);
+  int length = (int)strlen(var_val);
 
   while (cur < length-1) {
     if (var_val[cur] == '$' && var_val[cur+1]=='(') {

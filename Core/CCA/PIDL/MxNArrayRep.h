@@ -31,8 +31,10 @@
 #ifndef CCA_PIDL_MxNArrayRep_h
 #define CCA_PIDL_MxNArrayRep_h
 
-#include <iostream>
+#include <sgi_stl_warnings_off.h>
+#include <iosfwd>
 #include <algorithm>
+#include <sgi_stl_warnings_on.h>
 #include <math.h>
 #include <Core/CCA/SSIDL/array.h>
 #include <Core/CCA/PIDL/Reference.h>

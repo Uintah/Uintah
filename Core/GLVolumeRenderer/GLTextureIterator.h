@@ -21,8 +21,10 @@
 #include <Core/Geometry/Ray.h>
 #include <Core/Geometry/Point.h>
 #include <Core/GLVolumeRenderer/GLTexture3D.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <deque>
+#include <sgi_stl_warnings_on.h>
 
 
 namespace SCIRun {

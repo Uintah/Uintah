@@ -31,7 +31,9 @@
 #ifndef Geometry_IntVector_h
 #define Geometry_IntVector_h
 
+#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
+#include <sgi_stl_warnings_on.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Vector.h>
 

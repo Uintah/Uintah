@@ -98,7 +98,7 @@ vector<string> split_string(const std::string& str, char sep)
   vector<string> result;
   string s(str);
   while(s != ""){
-    unsigned int first = s.find(sep);
+    unsigned long first = s.find(sep);
     if(first < s.size()){
       result.push_back(s.substr(0, first));
       s = s.substr(first+1);

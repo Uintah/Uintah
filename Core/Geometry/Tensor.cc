@@ -33,7 +33,9 @@
 #include <Core/Util/Assert.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Math/MiscMath.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 using std::istream;
 using std::ostream;
 #include <stdio.h>
@@ -220,7 +222,6 @@ void Tensor::build_eigens_from_mat()
 {
   if (have_eigens_) return;
   ASSERTFAIL("not yet implemented");
-  have_eigens_=1;
 }
 
 void Tensor::get_eigenvectors(Vector &e1, Vector &e2, Vector &e3)

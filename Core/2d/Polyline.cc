@@ -32,11 +32,6 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/2d/Polyline.h>
 #include <Core/2d/BBox2d.h>
-#include <iostream>
-using std::cerr;
-using std::ostream;
-#include <sstream>
-using std::ostringstream;
 
 #include <stdio.h>
 

@@ -43,15 +43,14 @@
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Runnable.h>
-#include <iostream>
+#include <sgi_stl_warnings_off.h>
 #include <sstream>
-#include <deque>
+#include <sgi_stl_warnings_on.h>
 
 #include <Core/Util/DynamicLoader.h>
 #include <Core/GLVolumeRenderer/GLTexture3D.h>
 
 namespace SCIRun {
-using std::deque;
 using std::ostringstream;
 class Semaphore;
 class ThreadGroup;

@@ -31,9 +31,11 @@
 #ifndef SCIRun_Core_GuiInterface_GuiContext_h
 #define SCIRun_Core_GuiInterface_GuiContext_h
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
 #include <iosfwd>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
   class GuiInterface;

@@ -35,7 +35,9 @@ SEE ALSO
 #define NEXUS_EP_MESSAGE_H 
 
 #include <Core/CCA/Comm/Message.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 #include <stdio.h>
 #undef IOV_MAX
 #include <globus_nexus.h>

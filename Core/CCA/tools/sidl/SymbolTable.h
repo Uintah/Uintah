@@ -19,8 +19,10 @@
 #ifndef SYMBOLTABLE_H
 #define SYMBOLTABLE_H
 
+#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 class Definition;
 class Method;

@@ -34,9 +34,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <sgi_stl_warnings_on.h>
 #include <string.h>
 #ifdef HAVE_EXC
 #include <libexc.h>

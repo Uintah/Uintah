@@ -4,9 +4,11 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
 #include <Core/Exceptions/InternalError.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <list>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 #include <limits.h>
 #include <math.h>
 

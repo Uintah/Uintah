@@ -31,7 +31,9 @@
 #ifndef SCI_PartManager_h
 #define SCI_PartManager_h 
 
+#include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 #include <Core/Util/Signals.h>
 #include <Core/Parts/Part.h>
 #include <Core/Parts/PartInterface.h>

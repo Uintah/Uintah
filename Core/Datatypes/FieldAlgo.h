@@ -29,17 +29,14 @@
 #ifndef Datatypes_FieldAlgo_h
 #define Datatypes_FieldAlgo_h
 
-#include <iostream>
+#include <sgi_stl_warnings_off.h>
 #include <utility>
-#include <map>
+#include <sgi_stl_warnings_on.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
 namespace SCIRun {
-using std::cout;
-using std::cerr;
-using std::endl;
 using std::pair;
 
 //! Instead of calling this with a Node::index_type just call get_point yourself.

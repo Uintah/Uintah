@@ -31,8 +31,10 @@
 #ifndef CCA_PIDL_MxNScheduleEntry_h
 #define CCA_PIDL_MxNScheduleEntry_h
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/CCA/PIDL/MxNArrayRep.h>

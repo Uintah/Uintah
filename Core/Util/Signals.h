@@ -31,8 +31,10 @@
 #ifndef Signals_h
 #define Signals_h
 
-#include <iostream>
+#include <sgi_stl_warnings_off.h>
+//#include <iostream>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 #include <Core/Thread/Mutex.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -41,8 +43,8 @@
 
 namespace SCIRun {
 
-using std::cerr;
-using std::endl;
+  //using std::cerr;
+  //using std::endl;
 using std::vector;
 /*
  * SlotBase & SignalBase
@@ -642,7 +644,3 @@ bool disconnect( Signal4<Arg1, Arg2, Arg3, Arg4> &s,
 #endif
 
 #endif // Signals_h
-
-
-
-

@@ -34,13 +34,11 @@
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/StringUtil.h>
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
-using std::ifstream;
-using std::ofstream;
 #include <iostream>
-using std::cerr;
-using std::endl;
-using std::ostream;
+#include <sgi_stl_warnings_on.h>
+using namespace std;
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -843,7 +841,7 @@ void FastPiostream::io(string& data)
   unsigned int chars = 0;
   if(dir==Write) {
     const char* p=data.c_str();
-    chars = strlen(p) + 1;
+    chars = static_cast<int>(strlen(p)) + 1;
     fwrite(&chars, sizeof(unsigned int), 1, fp_);
     fwrite(p, sizeof(char), chars, fp_);
   }

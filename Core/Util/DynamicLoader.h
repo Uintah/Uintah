@@ -26,10 +26,12 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/ConditionVariable.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <list>
 #include <string>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 using namespace std;

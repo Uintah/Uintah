@@ -34,7 +34,6 @@
 #include <Core/share/share.h>
 #include <Core/Math/MusilRNG.h>
 #include <math.h>
-#include <iostream>
 
 namespace SCIRun {
 

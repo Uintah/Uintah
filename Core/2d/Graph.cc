@@ -9,12 +9,6 @@
 
 
 
-#include <iostream>
-using std::cin;
-using std::endl;
-#include <sstream>
-using std::ostringstream;
-
 #include <tcl.h>
 #include <tk.h>
 

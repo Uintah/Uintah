@@ -31,8 +31,10 @@
 #ifndef Tree_h
 #define Tree_h
 
+#include <sgi_stl_warnings_off.h>
 #include <utility> // for pair
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 #include <Core/Containers/Array3.h>
 

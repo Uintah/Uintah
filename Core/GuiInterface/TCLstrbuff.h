@@ -32,8 +32,10 @@
 
 #include <Core/GuiInterface/GuiVar.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <sstream>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

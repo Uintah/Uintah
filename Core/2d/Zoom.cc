@@ -29,13 +29,6 @@
  */
 
 
-#include <stdio.h>
-#include <iostream>
-using std::cerr;
-using std::ostream;
-#include <sstream>
-using std::ostringstream;
-
 #include <Core/Datatypes/Color.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/Zoom.h>

@@ -20,7 +20,9 @@
 // accessing shared libraries (.so for unix and .dll for windows)
 
 #include <Core/share/share.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
 #include <afxwin.h> // for LoadLibrary(), GetProcAddress() and HINSTANCE

@@ -33,7 +33,9 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 #if HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif

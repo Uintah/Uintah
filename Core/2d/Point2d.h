@@ -33,9 +33,10 @@
 
 #include <Core/share/share.h>
 #include <Core/Math/MinMax.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
-
 #include <iosfwd>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 using std::string;

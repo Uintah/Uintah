@@ -31,8 +31,10 @@
 #ifndef SCI_PartGui_h
 #define SCI_PartGui_h 
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <map>
+#include <sgi_stl_warnings_on.h>
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/TclObj.h>
