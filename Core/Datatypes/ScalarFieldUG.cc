@@ -45,10 +45,10 @@ ScalarFieldUG::ScalarFieldUG(const MeshHandle& mesh, Type typ)
 {
   switch(typ){
   case NodalValues:
-    data.resize(mesh->nodes.size());
+    data.resize(mesh->nodesize());
     break;
   case ElementValues:
-    data.resize(mesh->elems.size());
+    data.resize(mesh->elemsize());
     break;
   }
 }
@@ -65,7 +65,7 @@ ScalarField* ScalarFieldUG::clone()
 
 void ScalarFieldUG::compute_bounds()
 {
-    if(have_bounds || mesh->nodes.size() == 0)
+    if(have_bounds || mesh->nodesize() == 0)
 	return;
     mesh->get_bounds(bmin, bmax);
     have_bounds=1;
@@ -114,7 +114,7 @@ int ScalarFieldUG::interpolate(const Point& p, double& value, double epsilon1, d
 	return 0;
     if(typ == NodalValues){
       double s1,s2,s3,s4;
-      Element* e=mesh->elems[ix];
+      Element *e = mesh->element(ix);
       mesh->get_interp(e, p, s1, s2, s3, s4);
       value=data[e->n[0]]*s1+data[e->n[1]]*s2+data[e->n[2]]*s3+data[e->n[3]]*s4;
     } else {
@@ -132,10 +132,10 @@ int ScalarFieldUG::interpolate(const Point& p, double& value, int& ix, double ep
     if (!mesh->locate(p,ix,epsilon1,epsilon2)) {
 	if (exhaustive > 0) {
 	    MusilRNG mr;
-	    ix=(int)(mr()*mesh->nodes.size());
+	    ix=(int)(mr()*mesh->nodesize());
 	    int cntr=0;
 	    while(!mesh->locate(p,ix,epsilon1, epsilon2) && cntr<5) {
-		ix=(int)(mr()*mesh->nodes.size());
+		ix=(int)(mr()*mesh->nodesize());
 		cntr++;
 	    }
 	    if (cntr==5) {
@@ -152,7 +152,7 @@ int ScalarFieldUG::interpolate(const Point& p, double& value, int& ix, double ep
     }
     if(typ == NodalValues){
         double s1,s2,s3,s4;
-	Element* e=mesh->elems[ix];
+	Element* e=mesh->element(ix);
 	mesh->get_interp(e, p, s1, s2, s3, s4);
 	value=data[e->n[0]]*s1+data[e->n[1]]*s2+data[e->n[2]]*s3+data[e->n[3]]*s4;
     } else {
@@ -167,7 +167,7 @@ Vector ScalarFieldUG::gradient(const Point& p)
     if(!mesh->locate(p, ix))
 	return Vector(0,0,0);
     Vector g1, g2, g3, g4;
-    Element* e=mesh->elems[ix];
+    Element* e=mesh->element(ix);
     mesh->get_grad(e, p, g1, g2, g3, g4);
     return g1*data[e->n[0]]+g2*data[e->n[1]]+g3*data[e->n[2]]+g4*data[e->n[3]];
 }
@@ -213,10 +213,10 @@ void ScalarFieldUG::get_boundary_lines(Array1<Point>& lines)
 inline Point RandomPoint(Element* e)
 {
   
-  Point p0(e->mesh->nodes[e->n[0]]->p);
-  Point p1(e->mesh->nodes[e->n[1]]->p);
-  Point p2(e->mesh->nodes[e->n[2]]->p);
-  Point p3(e->mesh->nodes[e->n[3]]->p);
+  const Point &p0(e->mesh->node(e->n[0]).p);
+  const Point &p1(e->mesh->node(e->n[1]).p);
+  const Point &p2(e->mesh->node(e->n[2]).p);
+  const Point &p3(e->mesh->node(e->n[3]).p);
   double alpha,gamma,beta; // 3 random variables...
 
   alpha = pow(drand48(),1.0/3.0);
@@ -246,12 +246,12 @@ void ScalarFieldUG::compute_samples(int nsamp)
 
   // starting from scratch...
   
-  aug_elems.resize(mymesh->elems.size());
+  aug_elems.resize(mymesh->elemsize());
   double total_volume=0.0;
 
-  for(int i=0;i<mymesh->elems.size();i++) {
-    if (mymesh->elems[i]) {
-      aug_elems[i].importance = mymesh->elems[i]->volume();
+  for(int i=0;i<mymesh->elemsize();i++) {
+    if (mymesh->element(i)) {
+      aug_elems[i].importance = mymesh->element(i)->volume();
       total_volume += aug_elems[i].importance;
     }
   }
@@ -266,11 +266,11 @@ void ScalarFieldUG::distribute_samples()
 
   double total_importance =0.0;
   Mesh* mymesh = mesh.get_rep(); // handles can be bad...
-  Array1<double> psum(mymesh->elems.size());
+  Array1<double> psum(mymesh->elemsize());
   
   int i;
-  for(i=0;i<mymesh->elems.size();i++) {
-    if (mymesh->elems[i]) {
+  for(i=0;i<mymesh->elemsize();i++) {
+    if (mymesh->element(i)) {
       total_importance += aug_elems[i].importance;
       psum[i] = total_importance;
       aug_elems[i].pt_samples.remove_all();
@@ -295,7 +295,7 @@ void ScalarFieldUG::distribute_samples()
       cerr << "Over flow!\n";
     } else {
       aug_elems[pi].pt_samples.add(i);
-      samples[i].loc = RandomPoint(mymesh->elems[pi]);
+      samples[i].loc = RandomPoint(mymesh->element(pi));
     }
   }
 }
@@ -309,12 +309,12 @@ void ScalarFieldUG::fill_gradmags() // these guys ignor the vf
 
   total_gradmag = 0.0;
   
-  grad_mags.resize(mesh->elems.size());
+  grad_mags.resize(mesh->elemsize());
 
   // MAKE PARALLEL
 
-  for(int i=0;i<mesh->elems.size();i++) {
-    Element *e = mesh->elems[i];
+  for(int i=0;i<mesh->elemsize();i++) {
+    Element *e = mesh->element(i);
     if (e) {
       Vector g0,g1,g2,g3,grad;
       Point p;
@@ -343,7 +343,7 @@ void ScalarFieldUG::over_grad_augment(double vol_wt, double grad_wt,
   
   int i;
   for(i=0;i<grad_mags.size();i++) {
-    Element *e = mesh->elems[i];  // have to grab these...
+    Element *e = mesh->element(i);  // have to grab these...
     if (e) {
       grads[i] = grad_mags[i]; // already compute this...
 
@@ -374,8 +374,8 @@ void ScalarFieldUG::over_grad_augment(double vol_wt, double grad_wt,
   vol_wt /= vol_total;
   grad_wt /= grad_total;
 
-  for(i=0;i<mesh->elems.size();i++) {
-    Element *e = mesh->elems[i];
+  for(i=0;i<mesh->elemsize();i++) {
+    Element *e = mesh->element(i);
     if (e) {
       aug_elems[i].importance =
 	vol_wt*aug_elems[i].importance + grads[i]*grad_wt;

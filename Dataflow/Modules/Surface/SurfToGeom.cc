@@ -1,3 +1,4 @@
+
 // a better way to do this is to move most of the functionality into the
 //   various surface classes.
 // each one will have a:
@@ -55,7 +56,7 @@ class SurfToGeom : public Module {
   ColorMapIPort* icmap;
   ColorMapOPort* ocmap;
   GeometryOPort* ogeom;
-  
+
   Array1<MaterialHandle> c;
 
   TCLdouble range_min;
@@ -71,7 +72,6 @@ class SurfToGeom : public Module {
   TCLdouble clr_b;
   TCLint normals;
   TCLstring ntype;
-  TCLstring outofboundsval;
   int have_sf, have_cm;
 
   void surf_to_geom(const SurfaceHandle&, GeomGroup*);
@@ -92,7 +92,7 @@ SurfToGeom::SurfToGeom(const clString& id)
     ntype("ntype", id, this), rad("rad", id, this), resol("resol", id, this),
     named("named", id, this), clr_r("clr-r", id, this), 
     clr_g("clr-g", id, this), clr_b("clr-b", id, this), 
-    normals("normals", id, this), outofboundsval("outofboundsval", id, this)
+    normals("normals", id, this)
 {
   // Create the input port
   isurface=scinew SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);
@@ -329,7 +329,7 @@ void SurfToGeom::execute()
       surf->monitor.readUnlock();
     } else {	// draw triangles! (not nodes)
       int nrm=normals.get();
-      if (nrm) ts->bldNormals(TriSurface::PointType);
+      if (nrm) ts->buildNormals(TriSurface::PointType);
 
       //	    int i;
       //	    for (i=0; i<ts->nodeNormals.size(); i+=100) {
@@ -362,11 +362,7 @@ void SurfToGeom::execute()
 	    cmap->min=min;
 	    cmap->max=max;
 	  }
-	  clString obvalStr=outofboundsval.get();
-	  double obval;
-	  if (!obvalStr.get_double(obval))
-	    obval=(max+min)/2;
-	  MaterialHandle omatl = cmap->lookup(obval);
+	  MaterialHandle omatl = cmap->lookup(max+min/2);
 	  cerr << "LOOKING GOOD!\n";
 	  for (int i=0; i< ts->elements.size(); i++) {
 	    double interp;
@@ -599,7 +595,7 @@ void SurfToGeom::execute()
     } else {
       int nrm=normals.get();
       if (nrm) {
-	st->bldNormals();
+	st->buildNormals();
 	VPMgroup.resize(st->surfI.size());
 	int i;
 	for (i=0; i<VPMgroup.size(); i++)
@@ -702,3 +698,4 @@ void SurfToGeom::execute()
 }
 
 } // End namespace SCIRun
+

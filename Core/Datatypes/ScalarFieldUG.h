@@ -65,5 +65,4 @@ public:
 
 } // End namespace SCIRun
 
-
 #endif

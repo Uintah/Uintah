@@ -68,7 +68,7 @@ FEMError::~FEMError()
 
 void FEMError::parallel(int proc)
 {
-    int nelems=mesh->elems.size();
+    int nelems=mesh->elemsize();
     int start_elem=nelems*proc/np;
     int end_elem=nelems*(proc+1)/np;
     double umin=MAXDOUBLE;
@@ -76,7 +76,7 @@ void FEMError::parallel(int proc)
     double umax=-MAXDOUBLE;
     double lmax=-MAXDOUBLE;
     for(int i=start_elem;i<end_elem;i++){
-        Element* e=mesh->elems[i];
+        Element* e=mesh->element(i);
 	Vector pv(0,0,0);
 	Vector dv(0,0,0);
 	int nneighbors=0;
@@ -91,10 +91,10 @@ void FEMError::parallel(int proc)
 	for(int j=0;j<4;j++){
 	    if(e->face(j) != -1){
 	        nneighbors++;
-	        Element* ne=mesh->elems[e->face(j)];
+	        Element* ne=mesh->element(e->face(j));
 
 		Point ncenter(ne->centroid());
-		Vector ngrad(element_gradient(mesh->elems[e->face(j)], sfield));
+		Vector ngrad(element_gradient(mesh->element(e->face(j)), sfield));
 
 		Vector dgrad(ngrad-egrad);
 		Vector dcenter(ncenter-ecenter);
@@ -121,7 +121,7 @@ void FEMError::parallel(int proc)
 	Vector pvz(pv/(totalvolume*dv.z()));
 	Vector vupper(Abs(pvx)+Abs(pvy)+Abs(pvz));
 	double uu=vupper.x()+vupper.y()+vupper.z();
-	Point& p0=mesh->nodes[e->n[0]]->p;
+	const Point &p0 = mesh->node(e->n[0]).p;
 	double rad1=(e->centroid()-p0).length2();
 	double upper=4*e->volume()*uu*uu*rad1;
 	upf->data[i]=upper;
@@ -160,7 +160,7 @@ void FEMError::execute()
     }
     mesh=sfield->mesh.get_rep();
     //int nnodes=mesh->nodes.size();
-    int nelems=mesh->elems.size();
+    int nelems=mesh->elemsize();
     upf=scinew ScalarFieldUG(ScalarFieldUG::ElementValues);
     upf->mesh=mesh;
     upf->data.resize(nelems);

@@ -36,10 +36,10 @@ VectorFieldUG::VectorFieldUG(const MeshHandle& mesh, Type typ)
 {
   switch(typ){
   case NodalValues:
-    data.resize(mesh->nodes.size());
+    data.resize(mesh->nodesize());
     break;
   case ElementValues:
-    data.resize(mesh->elems.size());
+    data.resize(mesh->elemsize());
     break;
   }
 }
@@ -56,7 +56,7 @@ VectorField* VectorFieldUG::clone()
 
 void VectorFieldUG::compute_bounds()
 {
-    if(have_bounds || mesh->nodes.size() == 0)
+    if(have_bounds || mesh->nodesize() == 0)
 	return;
     mesh->get_bounds(bmin, bmax);
     have_bounds=1;
@@ -68,7 +68,7 @@ int VectorFieldUG::interpolate(const Point& p, Vector& value)
     if(!mesh->locate(p, ix, 0)) return 0;
     if(typ == NodalValues){
 	double s1,s2,s3,s4;
-	Element* e=mesh->elems[ix];
+	Element* e=mesh->element(ix);
 	mesh->get_interp(e, p, s1, s2, s3, s4);
 	value=data[e->n[0]]*s1+data[e->n[1]]*s2+data[e->n[2]]*s3+data[e->n[3]]*s4;
     } else {
@@ -87,7 +87,7 @@ int VectorFieldUG::interpolate(const Point& p, Vector& value, int& ix, int exhau
 	    return 0;
     if(typ == NodalValues){
 	double s1,s2,s3,s4;
-	Element* e=mesh->elems[ix];
+	Element* e=mesh->element(ix);
 	mesh->get_interp(e, p, s1, s2, s3, s4);
 	value=data[e->n[0]]*s1+data[e->n[1]]*s2+data[e->n[2]]*s3+data[e->n[3]]*s4;
     } else {

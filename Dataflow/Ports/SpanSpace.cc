@@ -23,11 +23,10 @@ namespace SCIRun {
 
     SpanSpaceBuildUG::SpanSpaceBuildUG ( ScalarFieldUG *field)
       {
-	Array1<Element*> &elems = field->mesh->elems;
 	Array1<double> &data = field->data;
-	
-	for (int i=0; i<field->mesh->elems.size(); i++ ) {
-	  int *n = elems[i]->n;
+
+	for (int i=0; i<field->mesh->elemsize(); i++ ) {
+	  int *n = field->mesh->element(i)->n;
 	  
 	  double min, max;
 	  min = max = data[n[0]];

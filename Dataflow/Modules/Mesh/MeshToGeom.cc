@@ -81,44 +81,44 @@ void MeshToGeom::execute()
     int j; 
     for(j=0;j<MAX_CLASS;j++)
       have_tris[j]=false;
-    for (i=0; i<mesh->elems.size(); i++) {
-	if (i%500 == 0) update_progress(i, mesh->elems.size());
-	if (mesh->elems[i]) {
-	    if ((mesh->nodes[mesh->elems[i]->n[0]].get_rep() == 0) ||
-		(mesh->nodes[mesh->elems[i]->n[1]].get_rep() == 0) ||
-		(mesh->nodes[mesh->elems[i]->n[2]].get_rep() == 0) ||
-		(mesh->nodes[mesh->elems[i]->n[3]].get_rep() == 0)) {
+    for (i=0; i<mesh->elemsize(); i++) {
+	if (i%500 == 0) update_progress(i, mesh->elemsize());
+	if (mesh->element(i)) {
+	    if ((mesh->nodes[mesh->element(i)->n[0]].get_rep() == 0) ||
+		(mesh->nodes[mesh->element(i)->n[1]].get_rep() == 0) ||
+		(mesh->nodes[mesh->element(i)->n[2]].get_rep() == 0) ||
+		(mesh->nodes[mesh->element(i)->n[3]].get_rep() == 0)) {
 		cerr << "Element shouldn't refer to empty node!\n";
 	    } else {
-		int cond = mesh->elems[i]->cond;
+		int cond = mesh->element(i)->cond;
 #if 0
-	    groups[cond]->add(scinew GeomTri(mesh->nodes[mesh->elems[i]->n[0]]->p,
-				       mesh->nodes[mesh->elems[i]->n[1]]->p,
-				       mesh->nodes[mesh->elems[i]->n[2]]->p));
-	    groups[cond]->add(scinew GeomTri(mesh->nodes[mesh->elems[i]->n[1]]->p,
-				   mesh->nodes[mesh->elems[i]->n[2]]->p,
-				   mesh->nodes[mesh->elems[i]->n[3]]->p));
-	    groups[cond]->add(scinew GeomTri(mesh->nodes[mesh->elems[i]->n[0]]->p,
-				   mesh->nodes[mesh->elems[i]->n[1]]->p,
-				   mesh->nodes[mesh->elems[i]->n[3]]->p));
-	    groups[cond]->add(scinew GeomTri(mesh->nodes[mesh->elems[i]->n[0]]->p,
-				   mesh->nodes[mesh->elems[i]->n[2]]->p,
-				   mesh->nodes[mesh->elems[i]->n[3]]->p));
+	    groups[cond]->add(scinew GeomTri(mesh->nodes[mesh->element(i)->n[0]]->p,
+				       mesh->nodes[mesh->element(i)->n[1]]->p,
+				       mesh->nodes[mesh->element(i)->n[2]]->p));
+	    groups[cond]->add(scinew GeomTri(mesh->nodes[mesh->element(i)->n[1]]->p,
+				   mesh->nodes[mesh->element(i)->n[2]]->p,
+				   mesh->nodes[mesh->element(i)->n[3]]->p));
+	    groups[cond]->add(scinew GeomTri(mesh->nodes[mesh->element(i)->n[0]]->p,
+				   mesh->nodes[mesh->element(i)->n[1]]->p,
+				   mesh->nodes[mesh->element(i)->n[3]]->p));
+	    groups[cond]->add(scinew GeomTri(mesh->nodes[mesh->element(i)->n[0]]->p,
+				   mesh->nodes[mesh->element(i)->n[2]]->p,
+				   mesh->nodes[mesh->element(i)->n[3]]->p));
 
 #else
 	    have_tris[cond%MAX_CLASS]=true;
-	    groups[cond%MAX_CLASS]->add(mesh->nodes[mesh->elems[i]->n[0]]->p,
-			      mesh->nodes[mesh->elems[i]->n[1]]->p,
-			      mesh->nodes[mesh->elems[i]->n[2]]->p);
-	    groups[cond%MAX_CLASS]->add(mesh->nodes[mesh->elems[i]->n[1]]->p,
-			      mesh->nodes[mesh->elems[i]->n[2]]->p,
-			      mesh->nodes[mesh->elems[i]->n[3]]->p);
-	    groups[cond%MAX_CLASS]->add(mesh->nodes[mesh->elems[i]->n[0]]->p,
-			      mesh->nodes[mesh->elems[i]->n[1]]->p,
-			      mesh->nodes[mesh->elems[i]->n[3]]->p);
-	    groups[cond%MAX_CLASS]->add(mesh->nodes[mesh->elems[i]->n[0]]->p,
-			      mesh->nodes[mesh->elems[i]->n[2]]->p,
-			      mesh->nodes[mesh->elems[i]->n[3]]->p);
+	    groups[cond%MAX_CLASS]->add(mesh->nodes[mesh->element(i)->n[0]]->p,
+			      mesh->nodes[mesh->element(i)->n[1]]->p,
+			      mesh->nodes[mesh->element(i)->n[2]]->p);
+	    groups[cond%MAX_CLASS]->add(mesh->nodes[mesh->element(i)->n[1]]->p,
+			      mesh->nodes[mesh->element(i)->n[2]]->p,
+			      mesh->nodes[mesh->element(i)->n[3]]->p);
+	    groups[cond%MAX_CLASS]->add(mesh->nodes[mesh->element(i)->n[0]]->p,
+			      mesh->nodes[mesh->element(i)->n[1]]->p,
+			      mesh->nodes[mesh->element(i)->n[3]]->p);
+	    groups[cond%MAX_CLASS]->add(mesh->nodes[mesh->element(i)->n[0]]->p,
+			      mesh->nodes[mesh->element(i)->n[2]]->p,
+			      mesh->nodes[mesh->element(i)->n[3]]->p);
 #endif
 	}
 	} else {
@@ -133,10 +133,10 @@ void MeshToGeom::execute()
 	have_pts[i]=false;
     }
 
-    for (i=0; i<mesh->elems.size(); i++) {
-	if (mesh->elems[i]) {
-	  have_pts[mesh->elems[i]->cond%MAX_CLASS]=true;
-	    pts[mesh->elems[i]->cond%MAX_CLASS]->add(mesh->elems[i]->centroid());
+    for (i=0; i<mesh->elemsize(); i++) {
+	if (mesh->element(i)) {
+	  have_pts[mesh->element(i)->cond%MAX_CLASS]=true;
+	    pts[mesh->element(i)->cond%MAX_CLASS]->add(mesh->element(i)->centroid());
 	}
     }
 
@@ -190,3 +190,5 @@ void MeshToGeom::execute()
 }
 
 } // End namespace SCIRun
+
+

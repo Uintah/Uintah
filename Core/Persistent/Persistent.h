@@ -20,18 +20,21 @@
 #include <Core/Containers/String.h>
 #include <Core/share/share.h>
 
+namespace SCIRun {
+  class clString;
+}
 
 namespace SCIRun {
 
-class clString;
+
 class Persistent;
 
 //----------------------------------------------------------------------
 struct SCICORESHARE PersistentTypeID {
-  char* type;
-  char* parent;
+  const char* type;
+  const char* parent;
   Persistent* (*maker)();
-  PersistentTypeID(char* type, char* parent, Persistent* (*maker)());
+  PersistentTypeID(const char* type, const char* parent, Persistent* (*maker)());
 };
 
 //----------------------------------------------------------------------
@@ -120,9 +123,7 @@ template <class Key, class Data>
 SCICORESHARE void
   Pio(Piostream& stream, map<Key, Data>& data );
 
-
 } // End namespace SCIRun
-
 
 #endif
 

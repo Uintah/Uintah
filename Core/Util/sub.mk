@@ -4,8 +4,11 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Core/Util
 
-SRCS     += $(SRCDIR)/Debug.cc $(SRCDIR)/Timer.cc \
-	$(SRCDIR)/soloader.cc $(SRCDIR)/DebugStream.cc
+SRCS     += \
+	$(SRCDIR)/Debug.cc \
+	$(SRCDIR)/soloader.cc \
+	$(SRCDIR)/DebugStream.cc \
+	$(SRCDIR)/Timer.cc \
 
 PSELIBS := Core/Containers Core/Exceptions
 LIBS := $(DL_LIBRARY)

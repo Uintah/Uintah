@@ -66,21 +66,21 @@ void MeshBoundary::execute()
     mesh->compute_face_neighbors();
 
     int facei[8] = {0,1,2,3,0,1,2,3};
-    Array1<int> bdryNodes(mesh->nodes.size());
+    Array1<int> bdryNodes(mesh->nodesize());
     bdryNodes.initialize(0);
 
     int i;
-    for(i=0;i<mesh->elems.size();i++) {
-      Element *teste = mesh->elems[i];
+    for(i=0;i<mesh->elemsize();i++) {
+      Element *teste = mesh->element(i);
       if (teste) {
 	for(int j=0;j<4;j++) {
 	  if (teste->faces[j] == -1) {
 	      bdryNodes[teste->n[facei[j+1]]] = 1;
 	      bdryNodes[teste->n[facei[j+2]]] = 1;
 	      bdryNodes[teste->n[facei[j+3]]] = 1;
-	      tris->add(mesh->nodes[teste->n[facei[j+1]]]->p,
-			mesh->nodes[teste->n[facei[j+2]]]->p,
-			mesh->nodes[teste->n[facei[j+3]]]->p);
+	      tris->add(mesh->node(teste->n[facei[j+1]]).p,
+			mesh->node(teste->n[facei[j+2]]).p,
+			mesh->node(teste->n[facei[j+3]]).p);
 	  }
 	}
       }
@@ -89,15 +89,15 @@ void MeshBoundary::execute()
     Array1<int> nodeMap(bdryNodes.size());
     nodeMap.initialize(-1);
     int count=0;
-    for (i=0; i<mesh->nodes.size(); i++) {
+    for (i=0; i<mesh->nodesize(); i++) {
 	if (bdryNodes[i]) {
 	    nodeMap[i] = count;
 	    count++;
-	    ts->points.add(mesh->nodes[i]->p);
+	    ts->points.add(mesh->node(i).p);
 	}
     }
-    for (i=0; i<mesh->elems.size(); i++) {
-	Element *teste = mesh->elems[i];
+    for (i=0; i<mesh->elemsize(); i++) {
+	Element *teste = mesh->element(i);
 	if (teste) {
 	    for(int j=0;j<4;j++) {
 		if (teste->faces[j] == -1) {

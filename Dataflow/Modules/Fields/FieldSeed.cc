@@ -326,21 +326,17 @@ void FieldSeed::ComputeWidgetNodes()
   Mesh* ugmesh = ug->mesh.get_rep();
 
 
-  for(i=0;i<ugmesh->nodes.size();i++) {
-    Node *test = ugmesh->nodes[i].get_rep();
+  for (i=0;i<ugmesh->nodesize();i++) {
+    const Node &test = ugmesh->node(i);
+    int j;
+    for (j = 0; j < 3; j++) {
+      double dist = Dot(test.p, n[j])+d[j];
+      if ((dist < 0) || (dist > testd[j])) 
+	j = 8;
+    }
 
-    if (test) {
-      int j=0;
-
-      for(;j<3;j++) {
-	double dist = Dot(test->p,n[j])+d[j];
-	if ((dist < 0) || (dist > testd[j])) 
-	  j = 8;
-      }
-
-      if (j != 9) { // this means you passed...
-	nodes_in_widget.add(i);
-      }
+    if (j != 9) { // this means you passed...
+      nodes_in_widget.add(i);
     }
   }
 }
@@ -357,11 +353,11 @@ void FieldSeed::DoElementAug(double weight)
   }
 
   Mesh* ugmesh = ug->mesh.get_rep();
-  BitArray1 emask(ugmesh->elems.size(),0);
+  BitArray1 emask(ugmesh->elemsize(),0);
 
   for (int i=0;i<nodes_in_widget.size();i++) {
-    for(int j=0;j<ugmesh->nodes[nodes_in_widget[i]]->elems.size();j++) {
-      int test = ugmesh->nodes[nodes_in_widget[i]]->elems[j];
+    for(int j=0;j<ugmesh->node(nodes_in_widget[i]).elems.size();j++) {
+      int test = ugmesh->node(nodes_in_widget[i]).elems[j];
       if (!emask.is_set(test)) {
 	emask.set(test); // flag it...
 

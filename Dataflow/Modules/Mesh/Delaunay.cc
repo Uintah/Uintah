@@ -71,11 +71,11 @@ void Delaunay::execute()
     mesh->elems.remove_all();
     mesh->compute_neighbors();
 
-    int nn=mesh->nodes.size();
+    int nn=mesh->nodesize();
     BBox bbox;
     int i;
     for(i=0;i<nn;i++)
-	bbox.extend(mesh->nodes[i]->p);
+	bbox.extend(mesh->node(i).p);
 
     double epsilon=.1*bbox.longest_edge();
 
@@ -150,9 +150,9 @@ cerr << "Adding node " << node << endl;
     }
     mesh->pack_all();
     double vol=0;
-    cerr << "There are " << mesh->elems.size() << " elements" << endl;
-    for(i=0;i<mesh->elems.size();i++){
-	vol+=mesh->elems[i]->volume();
+    cerr << "There are " << mesh->elemsize() << " elements" << endl;
+    for(i=0;i<mesh->elemsize();i++){
+	vol+=mesh->element(i)->volume();
     }
     cerr << "Total volume: " << vol << endl;
     oport->send(mesh);

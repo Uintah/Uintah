@@ -28,8 +28,8 @@ namespace SCIRun {
 static Piostream::MapClStringPersistentTypeID* table = 0;  
 
 //----------------------------------------------------------------------
-PersistentTypeID::PersistentTypeID(char* type, char* parent,
-  Persistent* (*maker)()):
+PersistentTypeID::PersistentTypeID(const char* type, const char* parent,
+				   Persistent* (*maker)()) :
   type(type), parent(parent), maker(maker)
 {
 

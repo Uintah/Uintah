@@ -6,7 +6,7 @@ SRCDIR   := Dataflow/XMLUtil
 
 SRCS     += $(SRCDIR)/SimpleErrorHandler.cc $(SRCDIR)/XMLUtil.cc
 
-PSELIBS := 
+PSELIBS := Core/Containers
 LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

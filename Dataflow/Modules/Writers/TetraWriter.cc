@@ -65,25 +65,25 @@ void TetraWriter::execute()
     strcat(str2, ".pts");
     ofstream outfile(str2);
 
-    outfile << handle -> nodes.size() << endl;
+    outfile << handle->nodesize() << endl;
     int i;
-    for (i = 0; i < handle -> nodes.size(); i++)
+    for (i = 0; i < handle->nodesize(); i++)
     {
-	outfile << handle -> nodes[i] -> p.x() << " " <<
-	           handle -> nodes[i] -> p.y() << " " <<
-	           handle -> nodes[i] -> p.z() << endl;
+	outfile << handle->node(i).p.x() << " " <<
+	           handle->node(i).p.y() << " " <<
+	           handle->node(i).p.z() << endl;
     }
 
     strcpy(str2, str1);
     strcat(str2,".tetra");
     ofstream tetfile(str2);
 
-    tetfile << handle ->elems.size() << endl;
+    tetfile << handle->elemsize() << endl;
 
-    for (i = 0; i < handle -> elems.size(); i++)
+    for (i = 0; i < handle->elemsize(); i++)
     {
 	for (int j = 0; j < 4; j++)
-	    tetfile << handle -> elems[i] -> n[j] << " ";
+	    tetfile << handle->element(i)->n[j] << " ";
 	tetfile << endl;
     }
 

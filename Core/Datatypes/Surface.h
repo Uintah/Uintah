@@ -27,6 +27,7 @@
 #include <map.h>
 
 namespace SCIRun {
+
 class Grid;
 class GeomObj;
 class  Surface;
@@ -39,6 +40,10 @@ typedef LockingHandle<Surface> SurfaceHandle;
 typedef Handle<Node> NodeHandle;
 
 class SCICORESHARE Surface : public Datatype {
+public:
+  CrowdMonitor monitor;
+  clString name;
+
 protected:
   enum Representation {
     TriSurf,
@@ -48,18 +53,16 @@ protected:
     RepOther
   };
   Surface(Representation, int closed);
-private:
+
   Representation rep;
-public:
-  CrowdMonitor monitor;
+
   int hash_x;
   int hash_y;
   Point hash_min;
   double resolution;
   int closed;
-  clString name;
   Grid *grid;
-  
+
   //HashTable<int, int> *pntHash;
   typedef map<int, int> MapIntInt;
   MapIntInt* pntHash;
@@ -72,19 +75,24 @@ public:
   };
   clString boundary_expr;
   BoundaryType boundary_type;
-  void set_bc(const clString& expr);
+
+public:
 
   Surface(const Surface& copy);
   virtual ~Surface();
-  virtual Surface* clone()=0;
+  virtual Surface *clone() = 0;
+
+  SurfTree* getSurfTree();
+  TriSurface* getTriSurface();
+  PointsSurface* getPointsSurface();
+
+  void set_bc(const clString& expr);
+
   virtual int inside(const Point& p)=0;
   virtual void construct_grid(int, int, int, const Point &, double)=0;
   virtual void construct_grid()=0;
   virtual void destroy_grid();
   virtual void destroy_hash();
-  SurfTree* getSurfTree();
-  TriSurface* getTriSurface();
-  PointsSurface* getPointsSurface();
   virtual void get_surfnodes(Array1<NodeHandle>&)=0;
   virtual void set_surfnodes(const Array1<NodeHandle>&)=0;
   virtual GeomObj* get_obj(const ColorMapHandle&)=0;
@@ -95,6 +103,5 @@ public:
 };
 
 } // End namespace SCIRun
-
 
 #endif /* SCI_project_Surface_h */

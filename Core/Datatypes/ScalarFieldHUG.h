@@ -62,5 +62,4 @@ class SCICORESHARE ScalarFieldHUG : public ScalarField
 
 } // End namespace SCIRun
 
-
 #endif

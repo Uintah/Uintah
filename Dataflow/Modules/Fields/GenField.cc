@@ -327,8 +327,8 @@ GenField::send_scalar_field()
       GenSField<double, LatticeGeom> *osf =
 	new GenSField<double, LatticeGeom>(geom, iatt);
 
-      FieldHandle *hndl = new FieldHandle(osf);
-      ofield->send(*hndl);
+      FieldHandle hndl(osf);
+      ofield->send(hndl);
     }
   else
     {
@@ -336,8 +336,8 @@ GenField::send_scalar_field()
       GenSField<double, LatticeGeom> *osf =
 	new GenSField<double, LatticeGeom>(geom, attrib);
 
-      FieldHandle *hndl = new FieldHandle(osf);
-      ofield->send(*hndl);
+      FieldHandle hndl(osf);
+      ofield->send(hndl);
     }
 }
 
@@ -405,8 +405,8 @@ GenField::send_vector_field()
   GenVField<Vector, LatticeGeom> *osf =
     new GenVField<Vector, LatticeGeom>(geom, attrib);
 
-  FieldHandle *hndl = new FieldHandle(osf);
-  ofield->send(*hndl);
+  FieldHandle hndl(osf);
+  ofield->send(hndl);
 }
 
 
@@ -480,8 +480,8 @@ GenField::send_tensor_field()
   GenVField<Tensor, LatticeGeom> *osf =
     new GenVField<Tensor, LatticeGeom>(geom, attrib);
 
-  FieldHandle *hndl = new FieldHandle(osf);
-  ofield->send(*hndl);
+  FieldHandle hndl(osf);
+  ofield->send(hndl);
 #endif
 }
 

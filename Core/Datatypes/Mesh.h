@@ -33,7 +33,6 @@ namespace SCIRun {
 
 class GeomGroup;
 struct Node;
-
 typedef Handle<Node> NodeHandle;
 
 #define STORE_ELEMENT_BASIS
@@ -41,6 +40,7 @@ typedef Handle<Node> NodeHandle;
 class RPoint;
 class BigRational;
 class Mesh;
+
 
 struct Element {
   int faces[4];
@@ -71,17 +71,20 @@ struct Element {
   Point centroid();
 };
 
+
 struct DirichletBC {
   SurfaceHandle fromsurf;
   double value;
   DirichletBC(const SurfaceHandle&, double);
 };
 
+
 struct PotentialDifferenceBC {
   int diffNode;
   double diffVal;
   PotentialDifferenceBC(int, double);
 };
+
 
 struct Node : public Persistent {
   //struct Node {
@@ -97,15 +100,17 @@ struct Node : public Persistent {
   Node(const Node&);
   virtual ~Node();
   virtual void io(Piostream&);
-  virtual Node* clone();
+  virtual Node *clone();
   static PersistentTypeID type_id;
   void* operator new(size_t);
   void operator delete(void*, size_t);
 };
 
+
 struct NodeVersion1 {
   Point p;
 };
+
 
 struct ElementVersion1 {
   int n0;
@@ -113,6 +118,7 @@ struct ElementVersion1 {
   int n2;
   int n3;
 };
+
 
 struct Face {
   Face* next;
@@ -128,7 +134,8 @@ struct Face {
   void operator delete(void*, size_t);
 };
 
-struct Edge{
+
+struct Edge {
   int n[2];
   Edge();
   Edge(int, int);
@@ -137,6 +144,7 @@ struct Edge{
   int operator<(const Edge&) const;
 };
 
+
 struct MeshGrid {
   Point min, max;
   int nx, ny, nz;
@@ -144,53 +152,75 @@ struct MeshGrid {
   int locate(Mesh* mesh, const Point& p, double epsilon);
 };
 
-struct Octree{
+struct MeshOctree {
   Point mid;
   Array1<int> elems;
-  Octree* child[8];
-  Octree();
-  ~Octree();
+  MeshOctree* child[8];
+  MeshOctree();
+  ~MeshOctree();
 
   int locate(Mesh* mesh, const Point& p, double epsilon);
 };
+
 
 class Mesh;
 typedef LockingHandle<Mesh> MeshHandle;
 
 class SCICORESHARE Mesh : public Datatype {
+  friend class MeshGrid;
+  friend class MeshOctree;
+protected:
   MeshGrid grid;
-  Octree* octree;
-public:
+  MeshOctree* octree;
   int bld_grid;
   Array1<int> ids;
-  Array1<NodeHandle> nodes;
-  Array1<Element*> elems;
-  Array1<Array1<double> > cond_tensors;
+  //Array1<NodeHandle> nodes;
+  //Array1<Element*> elems;
+  //Array1<Array1<double> > cond_tensors;
   int have_all_neighbors;
-  void compute_face_neighbors();
+
+public:
+  Array1<NodeHandle> nodes;
+  Array1<Element *> elems;
+  Array1<Array1<double> > cond_tensors;
+
+  const Node &node(int i) { return *(nodes[i].get_rep()); }
+  Element *element(int i) { return elems[i]; }
+  int nodesize() const { return nodes.size(); }
+  int elemsize() const { return elems.size(); }
+
+  // Constructors and destructors.
   Mesh();
-  Mesh(const Mesh&);
+  Mesh(const Mesh &copy);
   Mesh(int nnodes, int nelems);
-  virtual Mesh* clone();
+  virtual Mesh *clone();
   virtual ~Mesh();
 
-  int current_generation;
+  // Persistent representation...
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
 
-  void detach_nodes();
-  void get_elem_nbrhd(int eidx, Array1<int>& nbrs, int dupsOk=1);
-  void get_node_nbrhd(int nidx, Array1<int>& nbrs, int dupsOk=1);
-  void compute_neighbors();
-  int locate(const Point&, int&, double epsilon1=1.e-6, double epsilon2=1.e-6);
-  int locate(const RPoint&, int&);
-  int locate2(const Point&, int&, double epsilon1=1.e-6);
-  int inside(const Point& p, Element* elem);
+  bool locate(const Point &p, int &strt, double eps1=1.e-6, double eps2=1.e-6);
+  bool locate2(const Point &p, int &strt, double epsilon1=1.e-6);
+
   void get_interp(Element* elem, const Point& p, double& s1,
 		  double& s2, double& s3, double& s4);
-  double get_grad(Element* elem, const Point& p, Vector& g1,
-		  Vector& g2, Vector& g3, Vector& g4);
-  void get_bounds(Point& min, Point& max);
+
   int unify(Element*, const Array1<int>&, const Array1<int>&,
 	    const Array1<int>&);
+
+  void get_bounds(Point& min, Point& max);
+
+  void get_boundary_lines(Array1<Point>& lines);
+  void get_elem_nbrhd(int eidx, Array1<int>& nbrs, int dupsOk=1);
+  void get_node_nbrhd(int nidx, Array1<int>& nbrs, int dupsOk=1);
+
+  double get_grad(Element* elem, const Point& p, Vector& g1,
+		  Vector& g2, Vector& g3, Vector& g4);
+
+  void detach_nodes();
+  void compute_neighbors();
+  void compute_face_neighbors();
 
   int insert_delaunay( int node );
   int insert_delaunay( const Point& );
@@ -198,13 +228,19 @@ public:
   void pack_nodes();
   void pack_elems();
   void pack_all();
-  int face_idx(int, int);
-  void add_node_neighbors(int node, Array1<int>& idx, int apBC=1);
-  void new_element(Element* ne, HashTable<Face, int> *new_faces);
-  void remove_all_elements();
-  void get_boundary_nodes(Array1<int> &pts);
 
-  void get_boundary_lines(Array1<Point>& lines);
+  void remove_all_elements();
+
+  void add_node_neighbors(int node, Array1<int>& idx, int apBC=1);
+  int inside(const Point& p, Element* elem);
+
+private:
+
+  int current_generation;
+
+  int face_idx(int, int);
+  void new_element(Element* ne, HashTable<Face, int> *new_faces);
+  void get_boundary_nodes(Array1<int> &pts);
 
   void draw_element(int, GeomGroup*);
   void draw_element(Element* e, GeomGroup*);
@@ -215,31 +251,29 @@ public:
 			 const Point& orig, const Vector& dir);
   bool overlaps(Element* e, const Point& min, const Point& max);
 
-  void make_octree(int level, Octree*& octree, const Point& min,
+  void make_octree(int level, MeshOctree*& octree, const Point& min,
 		   const Point& max, const Array1<int>& elems);
 
   void make_grid(int nx, int ny, int nz, const Point &min, const Point &max,
 		 double eps);
-
-  // Persistent representation...
-  virtual void io(Piostream&);
-  static PersistentTypeID type_id;
 };
+
 
 inline int Element::face(int i)
 {
-  if(faces[i] == -2){
+  if (faces[i] == -2) {
     int i1=n[(i+1)%4];
     int i2=n[(i+2)%4];
     int i3=n[(i+3)%4];
-    Node* n1=mesh->nodes[i1].get_rep();
-    Node* n2=mesh->nodes[i2].get_rep();
-    Node* n3=mesh->nodes[i3].get_rep();
+    const Node &n1=mesh->node(i1);
+    const Node &n2=mesh->node(i2);
+    const Node &n3=mesh->node(i3);
     // Compute it...
-    faces[i]=mesh->unify(this, n1->elems, n2->elems, n3->elems);
+    faces[i]=mesh->unify(this, n1.elems, n2.elems, n3.elems);
   }
   return faces[i];
 }
+
 
 void Pio(Piostream&, Element*&);
 void Pio(Piostream& stream, NodeVersion1& node);

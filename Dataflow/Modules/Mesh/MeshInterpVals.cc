@@ -134,7 +134,7 @@ void MeshInterpVals::execute()
 	    cols=new int[(ts->bcIdx.size()-1)];
 	    a=new double[(ts->bcIdx.size()-1)];
 	    mm=scinew SparseRowMatrix(ts->bcIdx.size()-1,
-				      meshH->nodes.size(),
+				      meshH->nodesize(),
 				      rows, cols,
 				      ts->bcIdx.size()-1, a);
 	    for (i=0; i<ts->bcIdx.size(); i++) { rows[i]=i; }
@@ -143,7 +143,7 @@ void MeshInterpVals::execute()
 	    cols=new int[ts->bcIdx.size()];
 	    a=new double[ts->bcIdx.size()];
 	    mm=scinew SparseRowMatrix(ts->bcIdx.size(),
-				      meshH->nodes.size(),
+				      meshH->nodesize(),
 				      rows, cols,
 				      ts->bcIdx.size(), a);
 	    for (i=0; i<=ts->bcIdx.size()+1; i++) { rows[i]=i; }
@@ -159,8 +159,8 @@ void MeshInterpVals::execute()
 	}
 	int firstIdx;
 	if (m == "project") {
-	    if (p.size() > meshH->nodes.size()) {
-		cerr << "Too many points to project ("<<p.size()<<" to "<<meshH->nodes.size()<<")\n";
+	    if (p.size() > meshH->nodesize()) {
+		cerr << "Too many points to project ("<<p.size()<<" to "<<meshH->nodesize()<<")\n";
 		return;
 	    }
 
@@ -168,16 +168,16 @@ void MeshInterpVals::execute()
 //	    for (int ii=0; ii<ts->points.size(); ii++)
 //		cerr << "  "<<ts->points[ii]<<"\n";
 
-	    Array1<int> selected(meshH->nodes.size());
+	    Array1<int> selected(meshH->nodesize());
 	    selected.initialize(0);
 	    int counter=0;
 	    for (int aa=0; aa<p.size(); aa++) {
 		double dt;
 		int si=-1;
 		double d;
-		for (int bb=firstNode; bb<meshH->nodes.size(); bb++) {
+		for (int bb=firstNode; bb<meshH->nodesize(); bb++) {
 		    if (selected[bb]) continue;
-		    dt=Vector(p[aa]-meshH->nodes[bb]->p).length2();
+		    dt=Vector(p[aa]-meshH->node(bb).p).length2();
 		    if (si==-1 || dt<d) {
 			si=bb;
 			d=dt;
@@ -191,7 +191,7 @@ void MeshInterpVals::execute()
 		    counter++;
 		}
 		vals[aa]=si;
-		ots->points.add(meshH->nodes[si]->p);
+		ots->points.add(meshH->node(si).p);
 	    }
 	}
     } else {
@@ -204,4 +204,5 @@ void MeshInterpVals::execute()
 }
 
 } // End namespace SCIRun
+
 

@@ -1,9 +1,9 @@
 //  TriSurfGeom.h - A base class for regular geometries with alligned axes
 //  Written by:
-//   Eric Kuehne
+//   Michael Callahan
 //   Department of Computer Science
 //   University of Utah
-//   April 2000
+//   November 2000
 //  Copyright (C) 2000 SCI Institute
 
 
@@ -31,7 +31,7 @@ namespace SCIRun {
 struct TriSurfVertex
 {
   int pointIndex() { return d_point_index; }
-
+  int pointIndex(int i) { return d_point_index = i; }
   int d_point_index;
   int d_neighbor;
   //d_ni;
@@ -59,16 +59,20 @@ public:
   TriSurfVertex &edge(int index) { return d_mesh[index]; }
   Point &point(int index) { return d_points[index]; }
 
-  int nextEdgeIndex(int e) { return (e + 1) % 3; }
-  int prevEdgeIndex(int e) { return (e + 2) % 3; }
+  int nextEdgeIndex(int e) { return (e%3==2)?(e - 2):(e+1);}
+  int prevEdgeIndex(int e) { return (e%3==0)?(e + 2):(e-1);}
 
   void pushPoint(double a, double b, double c);
 
   void trivialConnect();
+  void remove_duplicates(vector<Point> old_points,
+			 vector<Point> new_points,
+			 vector<int> mapping);
+  void collapse_points();
 
   // TODO: remove this crap from GenField
-  bool resize(int x, int y, int z) { return false;}
-  void interp(Attrib *a, const Point &p, double &out) {}
+  bool resize(int, int, int) { return false;}
+  void interp(Attrib *, const Point &, double &) {}
 
 protected:
   bool computeBoundingBox();
@@ -133,6 +137,86 @@ TriSurfGeom::getInfo()
 
   return retval.str();
 }
+
+
+// TODO: make faster, not O(n^2).  Use better equality test for points.
+void
+TriSurfGeom::remove_duplicates(vector<Point> old_points,
+			       vector<Point> new_points,
+			       vector<int> mapping)
+{
+  int i, j;
+
+  for (i=0; i < old_points.size(); i++)
+  {
+    for (j = 0; j < new_points.size(); j++)
+    {
+      if (old_points[i] == new_points[j])
+      {
+	break;
+      }
+    }
+    if (j == new_points.size())
+    {
+      new_points.push_back(old_points[i]);
+    }
+    mapping[i] = j;
+  }
+}
+
+
+void
+TriSurfGeom::collapse_points()
+{
+  int i;
+  vector<Point> new_points;
+  vector<int> index;
+
+  // Find the subset, dump it int d_new_points and the mapping in index
+  remove_duplicates(d_points, new_points, index);
+
+  // Set the old points to be the new points.
+  d_points = new_points;
+
+  // Fix all the references to the old points.
+  for (i = 0; i < d_mesh.size(); i++)
+  {
+    d_mesh[i].pointIndex(index[d_mesh[i].pointIndex()]);
+  }
+}
+
+
+#if 0
+void
+clockwise_faces(cell)
+{
+  const int a = cell * 4 + 0;
+  const int b = cell * 4 + 1;
+  const int c = cell * 4 + 2;
+  const int d = cell * 4 + 3;
+
+  (a, b, c); //	  a b c;
+  (d, c, b); //	  b c d;
+  (c, d, a); //	  c d a;
+  (b, a, d); //	  d a b;
+}
+
+
+void
+anticlockwise_faces(cell)
+{
+  const int a = cell * 4 + 0;
+  const int b = cell * 4 + 1;
+  const int c = cell * 4 + 2;
+  const int d = cell * 4 + 3;
+
+  (c, b, a); //   a b c;
+  (b, c, d); //   b c d;
+  (a, d, c); //   c d a;
+  (d, a, b); //   d a b;
+}
+#endif
+
 
 } // End namespace SCIRun
 

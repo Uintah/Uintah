@@ -101,7 +101,7 @@ void PointsReader::execute()
 		mesh->nodes.add(NodeHandle(new Node(Point(x, y, z))));
 	    }
 	}
-	cerr << "nnodes=" << mesh->nodes.size() << endl;
+	cerr << "nnodes=" << mesh->nodesize() << endl;
 
     }
     outport->send(mesh);

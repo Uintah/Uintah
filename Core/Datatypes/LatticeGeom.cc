@@ -145,7 +145,7 @@ LatticeGeom::getPoint(int x, int y, int z)
 }
 
 
-void
+bool
 LatticeGeom::locate(const Point &p, int &i, int &j, int &k)
 {
   Point r;
@@ -153,24 +153,14 @@ LatticeGeom::locate(const Point &p, int &i, int &j, int &k)
   i = r.x() + 0.5;
   j = r.y() + 0.5;
   k = r.z() + 0.5;
-}
-
-
-#if 0
-bool LatticeGeom::locate(const Point& p, int& ix, int& iy, int& iz){
-  Vector pn=p-d_bbox.min();
-  double mdx=diagonal.x();
-  double mdy=diagonal.y();
-  double mdz=diagonal.z();
-  double x=pn.x()*(d_nx-1)/mdx;
-  double y=pn.y()*(d_ny-1)/mdy;
-  double z=pn.z()*(d_nz-1)/mdz;
-  ix=(int)x;
-  iy=(int)y;
-  iz=(int)z;
+  if (i < 0 || i >= d_nx ||
+      j < 0 || j >= d_ny ||
+      k < 0 || k >= d_nz)
+  {
+    return false;
+  }
   return true;
 }
-#endif
 
 
 void
@@ -203,32 +193,6 @@ LatticeGeom::resize(int x, int y, int z)
   updateTransform();
 }
 
-#if 0  
-void
-LatticeGeom::setBoundingBox(const Point& imin, const Point& imax)
-{
-  bbox.reset();
-  // extend the bbox to include min and max
-  bbox.extend(imin);
-  bbox.extend(imax);
-  has_bbox = true;
-  diagonal = imax - imin;
-  compute_deltas();
-}
-
-void LatticeGeom::setBoundingBox(const BBox& ibbox){
-  bbox = ibbox;
-  has_bbox = true;
-  compute_deltas();
-}
-
-void LatticeGeom::compute_deltas(){
-  dx = (bbox.max().x() - bbox.min().x())/(double) d_nx;
-  dy = (bbox.max().y() - bbox.min().y())/(double) d_ny;
-  dz = (bbox.max().z() - bbox.min().z())/(double) d_nz;
-}
-#endif
-    
 
 void
 LatticeGeom::setBoundingBox(BBox &box)

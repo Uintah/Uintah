@@ -1,3 +1,4 @@
+
 /*
  *  TriSurface.cc: Triangulated Surface Data type
  *
@@ -127,7 +128,7 @@ void TriSurface::add_point(const Point& p) {
     points.add(p);
 }
 
-void TriSurface::bldNormals(NormalsType nt) {
+void TriSurface::buildNormals(NormalsType nt) {
 
   normals.resize(0);
   normType=NrmlsNone;
@@ -235,7 +236,7 @@ void TriSurface::bldNormals(NormalsType nt) {
     normType=nt;
 }
 
-void TriSurface::bldNodeInfo() {
+void TriSurface::buildNodeInfo() {
     if (haveNodeInfo) return;
     haveNodeInfo=1;
     nodeNbrs.resize(points.size());
@@ -1155,3 +1156,4 @@ void Pio(Piostream& stream, TSEdge*& data)
 }
 
 } // End namespace SCIRun
+

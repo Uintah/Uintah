@@ -24,7 +24,6 @@
 
 namespace SCIRun {
 
-
 class SCICORESHARE CylinderSurface : public Surface {
   Point p1;
   Point p2;
@@ -48,6 +47,7 @@ public:
   CylinderSurface(const CylinderSurface&);
   virtual ~CylinderSurface();
   virtual Surface* clone();
+
   virtual int inside(const Point& p);
   virtual void get_surfnodes(Array1<NodeHandle>&);
   virtual void set_surfnodes(const Array1<NodeHandle>&);
@@ -60,6 +60,7 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 };
+
 
 class SCICORESHARE PointSurface : public Surface {
   Point pos;
@@ -70,17 +71,19 @@ public:
   PointSurface(const PointSurface&);
   virtual ~PointSurface();
   virtual Surface* clone();
+
   virtual int inside(const Point& p);
   virtual void get_surfnodes(Array1<NodeHandle>&);
   virtual void set_surfnodes(const Array1<NodeHandle>&);
   virtual void construct_grid(int, int, int, const Point &, double);
   virtual void construct_grid();
-
   virtual GeomObj* get_obj(const ColorMapHandle&);
+
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 };
+
 
 class SCICORESHARE SphereSurface : public Surface {
   Point cen;
@@ -102,18 +105,19 @@ public:
   SphereSurface(const SphereSurface&);
   virtual ~SphereSurface();
   virtual Surface* clone();
+
   virtual int inside(const Point& p);
   virtual void set_surfnodes(const Array1<NodeHandle>&);
   virtual void get_surfnodes(Array1<NodeHandle>&);
   virtual void construct_grid(int, int, int, const Point &, double);
   virtual void construct_grid();
-
   virtual GeomObj* get_obj(const ColorMapHandle&);
 
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 };
+
 
 class SCICORESHARE PointsSurface : public Surface {
 public:
@@ -125,20 +129,20 @@ public:
   PointsSurface(const PointsSurface&);
   virtual ~PointsSurface();
   virtual Surface* clone();
+
   virtual int inside(const Point& p);
   virtual void get_surfnodes(Array1<NodeHandle>&);
   virtual void set_surfnodes(const Array1<NodeHandle>&);
   virtual void construct_grid(int, int, int, const Point &, double);
   virtual void construct_grid();
-
   virtual GeomObj* get_obj(const ColorMapHandle&);
+
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 };
 
 } // End namespace SCIRun
-
 
 #endif /* SCI_Datatypes_BasicSurfaces_h */
 

@@ -167,12 +167,12 @@ ScalarField* BoxClipSField::UGtoUG(const Point &minPt, const Point &maxPt,
 				   int isAlligned) {
     ScalarFieldUG* sf = scinew ScalarFieldUG(ScalarFieldUG::NodalValues);
     MeshHandle m=sfug->mesh;
-    Array1<int> in_nodes(m->nodes.size());
-    Array1<int> in_elements(m->elems.size());
+    Array1<int> in_nodes(m->nodesize());
+    Array1<int> in_elements(m->elemsize());
     //Array1<int> new_nodes;
     if (isAlligned) {
-	for (int i=0; i<m->nodes.size(); i++) {
-	    Point p=m->nodes[i]->p;
+	for (int i=0; i<m->nodesize(); i++) {
+	    const Point &p=m->node(i).p;
 	    if (p.x()>=minPt.x() && p.y()>=minPt.y() && p.z()>=minPt.z() &&
 		p.x()<=maxPt.x() && p.y()<=maxPt.y() && p.z()<=maxPt.z())
 		in_nodes[i]=-2;
@@ -196,8 +196,8 @@ ScalarField* BoxClipSField::UGtoUG(const Point &minPt, const Point &maxPt,
 	pln.add(Plane(pnt[7], pnt[4], pnt[0]));
 	pln.add(Plane(pnt[2], pnt[6], pnt[7]));
 	pln.add(Plane(pnt[4], pnt[5], pnt[1]));
-	for (int i=0; i<m->nodes.size(); i++) {
-	    Point p=m->nodes[i]->p;
+	for (int i=0; i<m->nodesize(); i++) {
+	    const Point &p = m->node(i).p;
 	    if (pln[0].eval_point(p)<=0 && pln[1].eval_point(p)<=0 &&
 		pln[2].eval_point(p)<=0 && pln[3].eval_point(p)<=0 &&
 		pln[4].eval_point(p)<=0 && pln[5].eval_point(p)<=0)
@@ -208,21 +208,21 @@ ScalarField* BoxClipSField::UGtoUG(const Point &minPt, const Point &maxPt,
     }
     int nelems=0;
     int i;
-    for (i=0; i<m->elems.size(); i++) {
-	if (in_nodes[m->elems[i]->n[0]]>-3 && 
-	    in_nodes[m->elems[i]->n[1]]>-3 &&
-	    in_nodes[m->elems[i]->n[2]]>-3 && 
-	    in_nodes[m->elems[i]->n[3]]>-3) {
+    for (i=0; i<m->elemsize(); i++) {
+	if (in_nodes[m->element(i)->n[0]]>-3 && 
+	    in_nodes[m->element(i)->n[1]]>-3 &&
+	    in_nodes[m->element(i)->n[2]]>-3 && 
+	    in_nodes[m->element(i)->n[3]]>-3) {
 	    in_elements[i]=1;
 	    nelems++;
-	    if (in_nodes[m->elems[i]->n[0]]==-2) 
-		in_nodes[m->elems[i]->n[0]] = -1;
-	    if (in_nodes[m->elems[i]->n[1]]==-2) 
-		in_nodes[m->elems[i]->n[1]] = -1;
-	    if (in_nodes[m->elems[i]->n[2]]==-2) 
-		in_nodes[m->elems[i]->n[2]] = -1;
-	    if (in_nodes[m->elems[i]->n[3]]==-2) 
-		in_nodes[m->elems[i]->n[3]] = -1;
+	    if (in_nodes[m->element(i)->n[0]]==-2) 
+		in_nodes[m->element(i)->n[0]] = -1;
+	    if (in_nodes[m->element(i)->n[1]]==-2) 
+		in_nodes[m->element(i)->n[1]] = -1;
+	    if (in_nodes[m->element(i)->n[2]]==-2) 
+		in_nodes[m->element(i)->n[2]] = -1;
+	    if (in_nodes[m->element(i)->n[3]]==-2) 
+		in_nodes[m->element(i)->n[3]] = -1;
 	} else
 	    in_elements[i]=0;
     }
@@ -231,7 +231,7 @@ ScalarField* BoxClipSField::UGtoUG(const Point &minPt, const Point &maxPt,
     for (i=0; i<in_nodes.size(); i++) {
 	if (in_nodes[i] == -1) {
 	    in_nodes[i] = nnodes;
-	    sf->mesh->nodes.add(new Node(m->nodes[i]->p));
+	    sf->mesh->nodes.add(new Node(m->node(i).p));
 	    sf->data.add(sfug->data[i]);
 	    nnodes++;
 	}
@@ -239,18 +239,19 @@ ScalarField* BoxClipSField::UGtoUG(const Point &minPt, const Point &maxPt,
     int currEl=0;
     for (i=0; i<in_elements.size(); i++) {
 	if (in_elements[i]) {
-	    sf->mesh->elems[currEl]=new Element(sf->mesh.get_rep(),
-						in_nodes[m->elems[i]->n[0]],
-						in_nodes[m->elems[i]->n[1]],
-						in_nodes[m->elems[i]->n[2]],
-						in_nodes[m->elems[i]->n[3]]);
+	    sf->mesh->elems[currEl] =
+	      new Element(sf->mesh.get_rep(),
+			  in_nodes[m->element(i)->n[0]],
+			  in_nodes[m->element(i)->n[1]],
+			  in_nodes[m->element(i)->n[2]],
+			  in_nodes[m->element(i)->n[3]]);
 	    currEl++;
 	}
     }
     cerr << "currEl="<<currEl<<" and nelems="<<nelems<<"\n";
-    cerr << "New mesh has " << nnodes << "/" << m->nodes.size();
-    cerr <<" nodes and " << nelems << "/" << m->elems.size() << " elements.\n";
-    if (sf->mesh->elems.size()>0) {
+    cerr << "New mesh has " << nnodes << "/" << m->nodesize();
+    cerr <<" nodes and " << nelems << "/" << m->elemsize() << " elements.\n";
+    if (sf->mesh->elemsize()>0) {
 	sf->mesh->compute_neighbors();
     } else {
 	free(sf);
