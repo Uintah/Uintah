@@ -73,6 +73,7 @@ WARNING
     CMData d_initialData;
 
     double d_tol;
+    bool d_useModifiedEOS;
     PlasticityModel* d_plasticity;
     DamageModel* d_damage;
     MPMEquationOfState* d_eos;
