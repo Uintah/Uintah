@@ -349,8 +349,8 @@ GeomHandle GenClock::generateTime( int &nchars )
 
   if( format_.find("%") == std::string::npos ||
       format_.find("%") != format_.find_last_of("%") ) {
-    cerr << "Bad C Style format for the clock." << std::endl;
-    cerr << "The format should be of the form: '%7.4f seconds'" << std::endl;
+    error("Bad C Style format for the clock.");
+    error("The format should be of the form: '%7.4f seconds'");
     sprintf( timestr, "Bad Format" );
   } else {
     sprintf( timestr, format_.c_str(), current_ );
