@@ -96,6 +96,7 @@ class ShowField : public Module
   GuiInt                   faces_normals_;
   GuiInt                   faces_transparency_;
   GuiInt                   faces_usedefcolor_;
+  GuiInt                   faces_usetexture_;
   bool                     faces_dirty_;
 
   //! Options for rendering non-scalar data.
@@ -223,6 +224,7 @@ ShowField::ShowField(GuiContext* ctx) :
   faces_normals_(ctx->subVar("use-normals")),
   faces_transparency_(ctx->subVar("use-transparency")),
   faces_usedefcolor_(ctx->subVar("faces-usedefcolor")),
+  faces_usetexture_(ctx->subVar("faces-usetexture")),
   faces_dirty_(true),
   vectors_on_(ctx->subVar("vectors-on")),
   normalize_vectors_(ctx->subVar("normalize-vectors")),
@@ -755,7 +757,8 @@ ShowField::execute()
 		      faces_transparency_.get(),
 		      nodes_usedefcolor_.get(),
 		      edges_usedefcolor_.get(),
-		      faces_usedefcolor_.get());
+		      faces_usedefcolor_.get(),
+		      faces_usetexture_.get());
   }
 
   // Cleanup.
