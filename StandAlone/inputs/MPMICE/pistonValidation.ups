@@ -32,11 +32,11 @@
        </Level>
     <BoundaryConditions>
       <Face side = "x-">
-        <BCType id = "0" var = "symmetry" label = "Symmetric">
+        <BCType id = "all" var = "symmetry" label = "Symmetric">
         </BCType>
       </Face>
       <Face side = "x+">
-        <BCType id = "0" var = "symmetry" label = "Symmetric">
+        <BCType id = "all" var = "symmetry" label = "Symmetric">
         </BCType>
       </Face>
       <Face side = "y-">
@@ -68,11 +68,11 @@
         </BCType>
       </Face>
       <Face side = "z-">
-        <BCType id = "0" var = "symmetry" label = "Symmetric">
+        <BCType id = "all" var = "symmetry" label = "Symmetric">
         </BCType>
       </Face>                  
       <Face side = "z+">
-        <BCType id = "0" var = "symmetry" label = "Symmetric">
+        <BCType id = "all" var = "symmetry" label = "Symmetric">
         </BCType>
       </Face>
     </BoundaryConditions>
