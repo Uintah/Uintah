@@ -128,7 +128,7 @@ bool Generator::generate( void )
     return false;
 
   // write out new xml file FIX
-  string temp_file = "/home/sci/darbyb/work/temp.xml";
+  string temp_file = "/tmp/mp.xml";
   std::ofstream out;
   out.open(temp_file.c_str());
   out << "<?xml version=\"1.0\"?>\n";
