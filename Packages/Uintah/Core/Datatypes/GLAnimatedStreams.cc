@@ -1,5 +1,4 @@
 #include "GLAnimatedStreams.h"
-#include "LevelField.h"
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Geom/GeomOpenGL.h>
@@ -544,18 +543,7 @@ GLAnimatedStreams::interpolate(FieldHandle texfld_, const Point& p, Vector& val)
 {
   //  const string field_type = texfld_->get_type_name(0);
   const string type = texfld_->get_type_name(1);
-  if( texfld_->get_type_name(0) == "LevelField" ){
-    // this should be faster than the virtual function call, but
-    // it hasn't been tested.
-    if (type == "Vector") {
-      LevelField<Vector> *fld =
-	dynamic_cast<LevelField<Vector>*>(texfld_.get_rep());
-      return fld->interpolate(val ,p);
-    } else {
-      cerr << "Uintah::AnimatedStreams::interpolate:: error - unimplemented Field type: " << type << endl;
-      return false;
-    }
-  } else if( texfld_->get_type_name(0) == "LatVolField" ){
+  if( texfld_->get_type_name(0) == "LatVolField" ){
     VectorFieldInterface *vfi;
     // use virtual field interpolation
     if( (vfi = texfld_->query_vector_interface()) ){

@@ -10,12 +10,9 @@ SRCS     += \
 	$(SRCDIR)/VectorParticles.cc \
 	$(SRCDIR)/TensorParticles.cc \
 	$(SRCDIR)/PSet.cc \
-	$(SRCDIR)/LevelField.cc \
-	$(SRCDIR)/LevelMesh.cc \
-	$(SRCDIR)/GLTexture3D.cc \
 	$(SRCDIR)/GLAnimatedStreams.cc \
 	$(SRCDIR)/VariableCache.cc \
-	$(SRCDIR)/cd_templates.cc \
+#	$(SRCDIR)/cd_templates.cc \
 
 PSELIBS := \
 	Dataflow/Network \
