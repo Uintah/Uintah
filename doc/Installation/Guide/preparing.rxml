@@ -48,16 +48,16 @@ changed by setting the value of the environment variable
 <envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar> to the desired directory
 For example, in a shell terminal type:
 <literallayout class="monospaced">
-mkdir ~/&sr;_otf
+mkdir $(HOME)/&sr;_otf
 </literallayout>
 then for sh-type shells type:
 <literallayout class="monospaced">
-SCIRUN_ON_THE_FLY_LIBS_DIR=~/&sr;_otf
+SCIRUN_ON_THE_FLY_LIBS_DIR=$(HOME)/&sr;_otf
 export SCIRUN_ON_THE_FLY_LIBS_DIR
 </literallayout>
 and for csh-type shells type:
 <literallayout class="monospaced">
-setenv SCIRUN_ON_THE_FLY_LIBS_DIR ~/&sr;_otf
+setenv SCIRUN_ON_THE_FLY_LIBS_DIR $(HOME)/&sr;_otf
 </literallayout>
 Changing the location of the <quote>on-the-fly</quote> library
 directory provides a number of benefits <link
