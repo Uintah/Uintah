@@ -8,7 +8,7 @@ include $(OBJTOP)/scripts/targets.mk
 # debugging output more than we want speed
 
 ifneq (.,$(RECURSIVE_PATH))
-MAKEFLAGS += -j$(MAKE_PARALELLISM)
+MAKEFLAGS += -j$(MAKE_PARALLELISM)
 endif
 
 OBJS  = $(addsuffix .o,$(basename $(SRCS)))
