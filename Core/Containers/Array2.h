@@ -46,10 +46,6 @@
 #include <sci_defs/template_defs.h>
 #include <Core/Persistent/Persistent.h>
 
-#ifdef _WIN32
-#pragma warning(disable:4786)
-#endif
-
 namespace SCIRun {
 
 class RigorousTest;

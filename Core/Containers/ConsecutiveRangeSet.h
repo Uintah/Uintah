@@ -51,6 +51,7 @@
 #include <sgi_stl_warnings_on.h>
 #include <Core/Util/Assert.h>
 #include <Core/Exceptions/Exception.h>
+#include <Core/Containers/share.h>
 
 namespace SCIRun {
 
@@ -225,7 +226,7 @@ public:
   { return (int)rangeSet_.size(); }
 
   static const ConsecutiveRangeSet empty;
-  static const ConsecutiveRangeSet all;  
+  SHARE static const ConsecutiveRangeSet all;  
   friend class ConsecutiveRangeSet::iterator;
 private:
   template <class InputIterator>
