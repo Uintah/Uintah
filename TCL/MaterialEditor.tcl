@@ -47,14 +47,6 @@ proc setMaterial {to from} {
 proc makeMaterialEditor {w var command cancel} {
     global $var
 
-    global $var-ambient-r $var-ambient-g $var-ambient-b
-    global $var-diffuse-r $var-diffuse-g $var-diffuse-b
-    global $var-specular-r $var-specular-g $var-specular-b
-    global $var-shininess
-    global $var-emission-r $var-emission-g $var-emission-b
-    global $var-reflectivity
-    global $var-transparency
-    global $var-refraction_index
     global $w-ambient-r $w-ambient-g $w-ambient-b
     global $w-diffuse-r $w-diffuse-g $w-diffuse-b
     global $w-specular-r $w-specular-g $w-specular-b
@@ -66,146 +58,208 @@ proc makeMaterialEditor {w var command cancel} {
 
     setMaterial $w $var
 
-    frame $w.lmr -relief groove -borderwidth 4
+    frame $w.lmr
     frame $w.lmr.left
     set left $w.lmr.left
-    frame $w.lmr.middle
-    set middle $w.lmr.middle
-    frame $w.lmr.right
-    set right $w.lmr.right
+    frame $w.lmr.mr -relief groove -borderwidth 4
+    frame $w.lmr.mr.middle
+    set middle $w.lmr.mr.middle
+    frame $w.lmr.mr.right
+    set right $w.lmr.mr.right
 
-    label $left.ambient -text Ambient
+    label $middle.ambient -text Ambient
     set ir [expr int([set $w-ambient-r] * 65535)]
     set ig [expr int([set $w-ambient-g] * 65535)]
     set ib [expr int([set $w-ambient-b] * 65535)]
-    button $left.amb -relief sunken -borderwidth 4 -height 2 -width 34 \
+    button $right.amb -relief sunken -borderwidth 4 -height 1 -width 17 \
 	    -background [format #%04x%04x%04x $ir $ig $ib] \
 	    -activebackground [format #%04x%04x%04x $ir $ig $ib]
     global ambient
-    set ambient $left.amb
+    set ambient $right.amb
 
     label $middle.diffuse -text Diffuse
     set ir [expr int([set $w-diffuse-r] * 65535)]
     set ig [expr int([set $w-diffuse-g] * 65535)]
     set ib [expr int([set $w-diffuse-b] * 65535)]
-    button $middle.dif -relief sunken -borderwidth 4 -height 2 -width 34 \
+    button $right.dif -relief sunken -borderwidth 4 -height 1 -width 17 \
 	    -background [format #%04x%04x%04x $ir $ig $ib] \
 	    -activebackground [format #%04x%04x%04x $ir $ig $ib]
     global diffuse
-    set diffuse $middle.dif
+    set diffuse $right.dif
 
-    label $right.specular -text Specular
+    label $middle.specular -text Specular
     set ir [expr int([set $w-specular-r] * 65535)]
     set ig [expr int([set $w-specular-g] * 65535)]
     set ib [expr int([set $w-specular-b] * 65535)]
-    button $right.spe -relief sunken -borderwidth 4 -height 2 -width 34 \
+    button $right.spe -relief sunken -borderwidth 4 -height 1 -width 17 \
 	    -background [format #%04x%04x%04x $ir $ig $ib] \
 	    -activebackground [format #%04x%04x%04x $ir $ig $ib]
     global specular
     set specular $right.spe
 
-    label $right.shiny -text Shininess
-    scale $right.shi -from 0.0 -to 128.0 -showvalue true \
+    label $middle.shiny -text Shininess
+    scale $right.shi -from 0.0 -to 128.0 -showvalue true -width 3m \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable $w-shininess
     set shiny $right.shi
 
-    label $left.emission -text Emission
+    label $middle.emission -text Emission
     set ir [expr int([set $w-emission-r] * 65535)]
     set ig [expr int([set $w-emission-g] * 65535)]
     set ib [expr int([set $w-emission-b] * 65535)]
-    button $left.emi -relief sunken -borderwidth 4 -height 2 -width 34 \
+    button $right.emi -relief sunken -borderwidth 4 -height 1 -width 17 \
 	    -background [format #%04x%04x%04x $ir $ig $ib] \
 	    -activebackground [format #%04x%04x%04x $ir $ig $ib]
     global emission
-    set emission $left.emi
+    set emission $right.emi
 
     label $middle.reflect -text Reflectivity
-    scale $middle.ref -from 0.0 -to 1.0 -showvalue true \
+    scale $right.ref -from 0.0 -to 1.0 -showvalue true -width 3m \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable $w-reflectivity
-    set reflect $middle.ref
+    set reflect $right.ref
 
-    label $left.transp -text Transparency
-    scale $left.tra -from 0.0 -to 1.0 -showvalue true \
+    label $middle.transp -text Transparency
+    scale $right.tra -from 0.0 -to 1.0 -showvalue true -width 3m \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable $w-transparency
-    set transp $left.tra
+    set transp $right.tra
 
     label $middle.refract -text "Refraction Index"
-    scale $middle.rin -from 0.5 -to 2.0 -showvalue true \
+    scale $right.rin -from 0.5 -to 2.0 -showvalue true -width 3m \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable $w-refraction_index
-    set refract $middle.rin
+    set refract $right.rin
 
-    pack $left.ambient -in $left -side top -padx 2 -pady 2 -anchor nw -fill y
-    pack $ambient -in $left -side top -padx 2 -pady 2 -anchor nw -fill y
-    pack $middle.diffuse -in $middle -side top -padx 2 -pady 2 -anchor nw -fill y
-    pack $diffuse -in $middle -side top -padx 2 -pady 2 -anchor nw -fill y
-    pack $right.specular -in $right -side top -padx 2 -pady 2 -anchor nw -fill y
-    pack $specular -in $right -side top -padx 2 -pady 2 -anchor nw -fill y
-    pack $right.shiny -in $right -side top -padx 2 -pady 2 -anchor nw -fill y
-    pack $shiny -in $right -side top -pady 2 -anchor nw -fill both -expand 1
-    pack $left.emission -in $left -side top -padx 2 -pady 2 -anchor nw -fill y
-    pack $emission -in $left -side top -padx 2 -pady 2 -anchor nw -fill y
-    pack $middle.reflect -in $middle -side top -padx 2 -pady 2 -anchor nw -fill y
-    pack $reflect -in $middle -side top -pady 2 -anchor nw -fill both -expand 1
-    pack $left.transp -in $left -side top -padx 2 -pady 2 -anchor nw -fill y
-    pack $transp -in $left -side top -pady 2 -anchor nw -fill both -expand 1
-    pack $middle.refract -in $middle -side top -padx 2 -pady 2 -anchor nw -fill y
-    pack $refract -in $middle -side top -pady 2 -anchor nw -fill both -expand 1
-
-    pack $left -in $w.lmr -side left -pady 2 -anchor nw -fill y
-    pack $middle -in $w.lmr -side left -pady 2 -anchor nw -fill y
-    pack $right -in $w.lmr -side left -pady 2 -anchor nw -fill y
-    pack $w.lmr -in $w -side top -padx 4 -pady 4 -expand 1 -fill both
+    pack $middle.ambient -in $middle -side top -padx 2 -anchor nw -expand y -fill y
+    pack $ambient -in $right -side top -padx 2 -anchor nw -fill y
+    pack $middle.diffuse -in $middle -side top -padx 2 -anchor nw -expand y -fill y
+    pack $diffuse -in $right -side top -padx 2 -anchor nw -fill y
+    pack $middle.specular -in $middle -side top -padx 2 -anchor nw -expand y -fill y
+    pack $specular -in $right -side top -padx 2 -anchor nw -fill y
+    pack $middle.shiny -in $middle -side top -padx 2 -anchor nw -expand y -fill y
+    pack $shiny -in $right -side top -anchor nw -fill both -expand 1
+    pack $middle.emission -in $middle -side top -padx 2 -anchor nw -expand y -fill y
+    pack $emission -in $right -side top -padx 2 -anchor nw -fill y
+    pack $middle.reflect -in $middle -side top -padx 2 -anchor nw -expand y -fill y
+    pack $reflect -in $right -side top -anchor nw -fill both -expand 1
+    pack $middle.transp -in $middle -side top -padx 2 -anchor nw -expand y -fill y
+    pack $transp -in $right -side top -anchor nw -fill both -expand 1
+    pack $middle.refract -in $middle -side top -padx 2 -anchor nw -expand y -fill y
+    pack $refract -in $right -side top -anchor nw -fill both -expand 1
 
     frame $w.material
     frame $w.material.color -relief groove -borderwidth 4
     set material $w.material.color
 
-    set ir [expr int([set $w-ambient-r] * 65535)]
-    set ig [expr int([set $w-ambient-g] * 65535)]
-    set ib [expr int([set $w-ambient-b] * 65535)]
-    frame $material.col -relief sunken -borderwidth 4 -height 1.5c -width 6c \
-	    -background [format #%04x%04x%04x $ir $ig $ib]
-    set col $material.col
-
     frame $material.picks
     set picks $material.picks
 
     frame $picks.rgb -relief groove -borderwidth 4
-    set rgb $picks.rgb
-    scale $rgb.s1 -label Red -from 0.0 -to 1.0 -length 6c -showvalue true \
+    frame $picks.rgb.labels
+    set labels $picks.rgb.labels
+    label $labels.r -text R
+    label $labels.g -text G
+    label $labels.b -text B
+    pack $labels.r -in $labels -side top -padx 2 -pady 2 -anchor nw -expand y -fill y
+    pack $labels.g -in $labels -side top -padx 2 -pady 2 -anchor nw -expand y -fill y
+    pack $labels.b -in $labels -side top -padx 2 -pady 2 -anchor nw -expand y -fill y
+    frame $picks.rgb.sliders
+    set rgb $picks.rgb.sliders
+    scale $rgb.s1 -from 0.0 -to 1.0 -length 5c -showvalue true -width 3m \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable $material-r
-    scale $rgb.s2 -label Green -from 0.0 -to 1.0 -length 6c -showvalue true \
+    scale $rgb.s2 -from 0.0 -to 1.0 -length 5c -showvalue true -width 3m \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable $material-g
-    scale $rgb.s3 -label Blue -from 0.0 -to 1.0 -length 6c -showvalue true \
+    scale $rgb.s3 -from 0.0 -to 1.0 -length 5c -showvalue true -width 3m \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable $material-b
-    pack $rgb.s1 -in $picks.rgb -side top -padx 2 -pady 2 -anchor nw -fill y
-    pack $rgb.s2 -in $picks.rgb -side top -padx 2 -pady 2 -anchor nw -fill y
-    pack $rgb.s3 -in $picks.rgb -side top -padx 2 -pady 2 -anchor nw -fill y
+    pack $rgb.s1 -in $rgb -side top -padx 2 -anchor nw -fill y
+    pack $rgb.s2 -in $rgb -side top -padx 2 -anchor nw -fill y
+    pack $rgb.s3 -in $rgb -side top -padx 2 -anchor nw -fill y
+    pack $labels -in $picks.rgb -side left -padx 2 -anchor nw -fill y
+    pack $rgb -in $picks.rgb -side left -padx 2 -anchor nw -fill y
+    pack $picks.rgb -in $picks -side left -padx 2 -anchor nw -expand y -fill y
     $rgb.s1 set [set $w-ambient-r]
     $rgb.s2 set [set $w-ambient-g]
     $rgb.s3 set [set $w-ambient-b]
 
     frame $picks.hsv -relief groove -borderwidth 4 
-    set hsv $picks.hsv
-    scale $hsv.s1 -label Hue -from 0.0 -to 360.0 -length 6c -showvalue true \
+    frame $picks.hsv.labels
+    set labels $picks.hsv.labels
+    label $labels.h -text H
+    label $labels.s -text S
+    label $labels.v -text V
+    pack $labels.h -in $labels -side top -padx 2 -anchor nw -expand y -fill y
+    pack $labels.s -in $labels -side top -padx 2 -anchor nw -expand y -fill y
+    pack $labels.v -in $labels -side top -padx 2 -anchor nw -expand y -fill y
+    frame $picks.hsv.sliders
+    set hsv $picks.hsv.sliders
+    scale $hsv.s1 -from 0.0 -to 360.0 -length 5c -showvalue true -width 3m \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable $material-h
-    scale $hsv.s2 -label Saturation -from 0.0 -to 1.0 -length 6c -showvalue true \
+    scale $hsv.s2 -from 0.0 -to 1.0 -length 5c -showvalue true -width 3m \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable $material-s
-    scale $hsv.s3 -label Value -from 0.0 -to 1.0 -length 6c -showvalue true \
+    scale $hsv.s3 -from 0.0 -to 1.0 -length 5c -showvalue true -width 3m \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable $material-v
-    pack $hsv.s1 -in $picks.hsv -side top -padx 2 -pady 2 -anchor nw -fill y
-    pack $hsv.s2 -in $picks.hsv -side top -padx 2 -pady 2 -anchor nw -fill y
-    pack $hsv.s3 -in $picks.hsv -side top -padx 2 -pady 2 -anchor nw -fill y
+    pack $hsv.s1 -in $hsv -side top -padx 2 -anchor nw -fill y
+    pack $hsv.s2 -in $hsv -side top -padx 2 -anchor nw -fill y
+    pack $hsv.s3 -in $hsv -side top -padx 2 -anchor nw -fill y
+    pack $labels -in $picks.hsv -side left -padx 2 -anchor nw -fill y
+    pack $hsv -in $picks.hsv -side left -padx 2 -anchor nw -fill y
+    pack $picks.hsv -in $picks -side left -padx 2 -anchor nw -expand y -fill y
+
+    frame $material.opts
+    set ir [expr int([set $w-ambient-r] * 65535)]
+    set ig [expr int([set $w-ambient-g] * 65535)]
+    set ib [expr int([set $w-ambient-b] * 65535)]
+    frame $material.opts.col -relief sunken -borderwidth 4 -height 8m -width 2.5c \
+	    -background [format #%04x%04x%04x $ir $ig $ib]
+    set col $material.opts.col
+    global $w-i
+    set $w-i 0
+    radiobutton $material.opts.amb -text Ambient -value 0 -variable $w-i \
+	    -command "meset $w $col 0 $rgb.s1 $rgb.s2 $rgb.s3 $hsv.s1 $hsv.s2 $hsv.s3"
+    radiobutton $material.opts.dif -text Diffuse -value 1 -variable $w-i \
+	    -command "meset $w $col 1 $rgb.s1 $rgb.s2 $rgb.s3 $hsv.s1 $hsv.s2 $hsv.s3"
+    radiobutton $material.opts.spe -text Specular -value 2 -variable $w-i \
+	    -command "meset $w $col 2 $rgb.s1 $rgb.s2 $rgb.s3 $hsv.s1 $hsv.s2 $hsv.s3"
+    radiobutton $material.opts.emi -text Emission -value 3 -variable $w-i \
+	    -command "meset $w $col 3 $rgb.s1 $rgb.s2 $rgb.s3 $hsv.s1 $hsv.s2 $hsv.s3"
+    button $material.opts.replace -text Replace -command "mecommitcolor $w $rgb.s1 $rgb.s2 $rgb.s3"
+    pack $material.opts.amb $material.opts.dif $material.opts.spe $material.opts.emi $col \
+	    -in $material.opts -side left -pady 2 -fill both -anchor w
+    pack $material.opts.replace -in $material.opts -side left -padx 2 -pady 2 -anchor w
+    pack $picks $material.opts -in $material -side top \
+	    -padx 2 -pady 2 -expand 1 -fill both
+    pack $material
+
+    pack $w.material.color -in $w.material -side left -padx 2 -pady 2 -anchor nw
+
+    frame $left.sample -relief groove -borderwidth 4
+    frame $left.sample.opts
+    set opts $left.sample.opts
+
+    button $opts.ok -text OK -command "mecommit $w $var \"$command\""
+    button $opts.cancel -text Cancel -command $cancel
+    button $opts.update -text Update -command "puts \"Preview not implemented!\""
+    button $opts.resync -text Resync -command "meresync $w $var $col $rgb.s1 $rgb.s2 $rgb.s3 $hsv.s1 $hsv.s2 $hsv.s3"
+    pack $opts.ok $opts.cancel $opts.update $opts.resync -in $opts -side left -anchor nw
+    pack $opts -in $left.sample -side top -fill both -anchor nw
+
+    canvas $left.sample.sam -width 5.9c -height 5.9c -background #000000
+    pack $left.sample.sam -in $left.sample -side top -padx 2 -pady 2 -expand 1 -fill both -anchor nw
+    $left.sample.sam create text 2c 3c -text Preview -anchor sw -fill white
+    $left.sample.sam create text 2.5c 3.5c -text Not -anchor sw -fill red
+    $left.sample.sam create text 1.5c 4c -text Implemented -anchor sw -fill white
+    pack $left.sample -in $left -side left -padx 2 -pady 2 -expand 1 -fill both -anchor nw
+
+    pack $middle $right -in $w.lmr.mr -side left -pady 2 -anchor nw -fill both
+    pack $left $w.lmr.mr -in $w.lmr -side left -pady 2 -anchor nw -fill both 
+    pack $w.lmr $w.material -in $w -side top -padx 2 -pady 2 -anchor nw -expand 1 -fill both
 
     $rgb.s1 configure -command "mesetrgb $col $rgb.s1 $rgb.s2 $rgb.s3 \
 	    $hsv.s1 $hsv.s2 $hsv.s3 "
@@ -229,52 +283,6 @@ proc makeMaterialEditor {w var command cancel} {
     $emission configure -command "meset $w $col 3 $rgb.s1 $rgb.s2 $rgb.s3 \
 	    $hsv.s1 $hsv.s2 $hsv.s3"
 
-    frame $material.opts
-    button $material.opts.replace -text Replace -command "mecommitcolor $w $rgb.s1 $rgb.s2 $rgb.s3"
-    global $w-i
-    set $w-i 0
-    radiobutton $material.opts.amb -text Ambient -value 0 -variable $w-i \
-	    -command "meset $w $col 0 $rgb.s1 $rgb.s2 $rgb.s3 $hsv.s1 $hsv.s2 $hsv.s3"
-    radiobutton $material.opts.dif -text Diffuse -value 1 -variable $w-i \
-	    -command "meset $w $col 1 $rgb.s1 $rgb.s2 $rgb.s3 $hsv.s1 $hsv.s2 $hsv.s3"
-    radiobutton $material.opts.spe -text Specular -value 2 -variable $w-i \
-	    -command "meset $w $col 2 $rgb.s1 $rgb.s2 $rgb.s3 $hsv.s1 $hsv.s2 $hsv.s3"
-    radiobutton $material.opts.emi -text Emission -value 3 -variable $w-i \
-	    -command "meset $w $col 3 $rgb.s1 $rgb.s2 $rgb.s3 $hsv.s1 $hsv.s2 $hsv.s3"
-    pack $material.opts.replace -in $material.opts -side left -padx 2 -pady 2 -anchor w
-    pack $material.opts.amb -in $material.opts -side left -padx 2 -pady 2 -anchor w
-    pack $material.opts.dif -in $material.opts -side left -padx 2 -pady 2 -anchor w
-    pack $material.opts.spe -in $material.opts -side left -padx 2 -pady 2 -anchor w
-    pack $material.opts.emi -in $material.opts -side left -padx 2 -pady 2 -anchor w
-
-    pack $rgb -in $picks -side left -padx 2 -pady 2 -expand 1 -fill x
-    pack $hsv -in $picks -side left -padx 2 -pady 2 -expand 1 -fill x
-
-    pack $material.opts $picks $col -in $material -side top \
-	    -padx 2 -pady 2 -expand 1 -fill both
-    pack $material
-
-    frame $w.material.sample -relief groove -borderwidth 4
-    frame $w.material.sample.opts
-    set opts $w.material.sample.opts
-
-    button $opts.ok -text OK -command "mecommit $w $var \"$command\""
-    button $opts.cancel -text Cancel -command $cancel
-    button $opts.update -text Update -command "puts \"Preview not implemented!\""
-    pack $opts.ok -in $opts -side left -padx 2 -pady 2 -anchor w
-    pack $opts.cancel -in $opts -side left -padx 2 -pady 2 -anchor w
-    pack $opts.update -in $opts -side top -padx 2 -pady 2 -anchor nw
-    pack $opts -in $w.material.sample -side top -padx 2 -pady 2 -expand 1 -fill both
-
-    canvas $w.material.sample.sam -width 7c -height 7c -background #000000
-    pack $w.material.sample.sam -in $w.material.sample -side left -padx 2 -pady 2 -anchor nw
-    $w.material.sample.sam create text 2.6c 3c -text Preview -anchor sw -fill white
-    $w.material.sample.sam create text 3c 3.5c -text Not -anchor sw -fill red
-    $w.material.sample.sam create text 2c 4c -text Implemented -anchor sw -fill white
-
-    pack $w.material.sample -in $w.material -side left -padx 2 -pady 2 -anchor nw
-    pack $w.material.color -in $w.material -side left -padx 4 -pady 2 -anchor nw
-    pack $w.material -in $w -side top -padx 2 -pady 2 -anchor nw -fill y
 }
 
 proc Max {n1 n2 n3} {
@@ -468,8 +476,46 @@ proc mecommitcolor {w rs gs bs} {
     $mattype config -activebackground [format #%04x%04x%04x $ir $ig $ib]
 }
 
+proc meresync {w var col rs gs bs hs ss vs} {
+    global $w-ambient-r $w-ambient-g $w-ambient-b
+    global $w-diffuse-r $w-diffuse-g $w-diffuse-b
+    global $w-specular-r $w-specular-g $w-specular-b
+    global $w-shininess
+    global $w-emission-r $w-emission-g $w-emission-b
+    global $w-reflectivity
+    global $w-transparency
+    global $w-refraction_index
+
+    setMaterial $w $var
+
+    set ir [expr int([set $w-ambient-r] * 65535)]
+    set ig [expr int([set $w-ambient-g] * 65535)]
+    set ib [expr int([set $w-ambient-b] * 65535)]
+    $w.lmr.mr.right.amb config -background [format #%04x%04x%04x $ir $ig $ib] \
+	    -activebackground [format #%04x%04x%04x $ir $ig $ib]
+    set ir [expr int([set $w-diffuse-r] * 65535)]
+    set ig [expr int([set $w-diffuse-g] * 65535)]
+    set ib [expr int([set $w-diffuse-b] * 65535)]
+    $w.lmr.mr.right.dif config -background [format #%04x%04x%04x $ir $ig $ib] \
+	    -activebackground [format #%04x%04x%04x $ir $ig $ib]
+    set ir [expr int([set $w-specular-r] * 65535)]
+    set ig [expr int([set $w-specular-g] * 65535)]
+    set ib [expr int([set $w-specular-b] * 65535)]
+    $w.lmr.mr.right.spe config -background [format #%04x%04x%04x $ir $ig $ib] \
+	    -activebackground [format #%04x%04x%04x $ir $ig $ib]
+    set ir [expr int([set $w-emission-r] * 65535)]
+    set ig [expr int([set $w-emission-g] * 65535)]
+    set ib [expr int([set $w-emission-b] * 65535)]
+    $w.lmr.mr.right.emi config -background [format #%04x%04x%04x $ir $ig $ib] \
+	    -activebackground [format #%04x%04x%04x $ir $ig $ib]
+
+    global $w-i
+    meset $w $col [set $w-i] $rs $gs $bs $hs $ss $vs
+}
+
 proc mecommit {w var command} {
     global $var $w
     setMaterial $var $w
     eval $command
 }
+
