@@ -124,6 +124,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     //           pressurePS (new_dw)
     d_pressSolver->solve(level, sched, old_dw, new_dw, time, delta_t);
 
+#if 0
     // if external boundary then recompute velocities using new pressure
     // and puts them in nonlinear_dw
     // require : densityCP, pressurePS, [u,v,w]VelocitySIVBC
@@ -171,10 +172,10 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
     // residual represents the degrees of inaccuracies
     nlResidual = computeResidual(level, sched, old_dw, new_dw);
-
+#endif
   }while((nlIterations < d_nonlinear_its)&&(nlResidual > d_resTol));
 
-
+#if 0
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
   sched_interpolateFromFCToCC(level, sched, old_dw, new_dw);
@@ -202,7 +203,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
   // Save the new velocity as a CC<Vector> Variable
   new_dw->pleaseSave(d_lab->d_newCCVelocityLabel, 1);
-
+#endif
   return(0);
 }
 
@@ -522,6 +523,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& /*level*/,
 
 //
 // $Log$
+// Revision 1.47  2000/09/21 22:45:41  sparker
+// Towards compiling petsc stuff
+//
 // Revision 1.46  2000/09/20 18:05:33  sparker
 // Adding support for Petsc and per-processor tasks
 //

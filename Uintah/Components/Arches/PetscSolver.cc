@@ -173,8 +173,8 @@ PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
 	                 (phighIndex[1]-plowIndex[1])*
 	                 (phighIndex[2]-plowIndex[2]);
      d_petscIndex[patchNumber++] = globalIndex;
-#if 0
      int me = d_myworld->myrank();
+#if 0
      if (me == proc) {
        int petscglobalindex = globalIndex;
        for (int colZ = plowIndex.z(); colZ < phighIndex.z(); colZ ++) {
@@ -184,6 +184,7 @@ PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
 	   }
 	 }
        }
+     }
 #endif
   }
   int me = d_myworld->myrank();
@@ -288,8 +289,8 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
   // Get the patch bounds and the variable bounds
   IntVector domLo = vars->pressure.getFortLowIndex();
   IntVector domHi = vars->pressure.getFortHighIndex();
-  IntVector idxLo = patch->getCellFoLowIndex();
-  IntVector idxHi = patch->getCellFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
          Compute the matrix and right-hand-side vector that define
          the linear system, Ax = b.
@@ -310,6 +311,7 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
          MatCreateMPIBAIJ() - parallel block AIJ
      See the matrix chapter of the users manual for details.
   */
+  int ierr;
   int row;
   int col[7];
   double value[7];
@@ -321,6 +323,7 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
   // fill matrix for internal patches
   // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
   // petsc matrix
+#if 0
   if ((patchNumber != 0)&&(patchNumber != sizeof(d_petscIndex)-1)) {
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
@@ -403,9 +406,9 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	}
       }
     }
-    colX = 0;
-    colY = 0;
-    colZ = 0;
+    int colX = 0;
+    int colY = 0;
+    int colZ = 0;
     col[0] = d_petscGlobalIndex[IntVector(colX, colY, colZ)]; //ap
     col[1] = d_petscGlobalIndex[IntVector(colX+1, colY, colZ)]; // ae
     col[2] = d_petscGlobalIndex[IntVector(colX, colY+1, colZ)]; // an
@@ -476,9 +479,10 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	}
       }
     }
-    colX = idxHi.x()-1;
-    colY = idxHi.y()-1;
-    colZ = idxHi.z()-1;
+    int colX = idxHi.x()-1;
+    int colY = idxHi.y()-1;
+    int colZ = idxHi.z()-1;
+
     col[0] = d_petscGlobalIndex[IntVector(colX, colY, colZ-1)]; // ab
     col[1] = d_petscGlobalIndex[IntVector(colX, colY-1, colZ)]; // as
     col[2] = d_petscGlobalIndex[IntVector(colX-1, colY, colZ)]; // aw
@@ -505,6 +509,7 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	}
       }
     }
+#endif
 }
 
 
@@ -548,15 +553,15 @@ PetscSolver::pressLinearSolve()
   int its;
   ierr = SLESSolve(sles,d_b,d_x,&its);CHKERRA(ierr);
 
-  ierr = VecNorm(x,NORM_1,&norm);CHKERRQ(ierr);
+  ierr = VecNorm(d_x,NORM_1,&norm);CHKERRQ(ierr);
   ierr = PetscPrintf(PETSC_COMM_WORLD,"AFTER SOLVE vector x norm = %g\n",norm);CHKERRQ(ierr);
-  ierr = VecView(x, VIEWER_STDOUT_WORLD); CHKERRQ(ierr);
+  ierr = VecView(d_x, VIEWER_STDOUT_WORLD); CHKERRQ(ierr);
 
   // check the error
   double neg_one = -1.0;
   ierr = MatMult(A, d_x, d_u);CHKERRA(ierr);
   ierr = VecAXPY(&neg_one, d_b, d_u); CHKERRA(ierr);
-  ierr  = VecNorm(u,NORM_2,&norm);CHKERRA(ierr);
+  ierr  = VecNorm(d_u,NORM_2,&norm);CHKERRA(ierr);
   ierr = PetscPrintf(PETSC_COMM_WORLD,"Norm of error %A, Iterations %d\n",norm,its);CHKERRA(ierr);
 }
 
@@ -565,10 +570,12 @@ void
 PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
 {
   // copy solution vector back into the array
-  IntVector idxLo = patch->getCellFoLowIndex();
-  IntVector idxHi = patch->getCellFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
   double* xvec;
+  int ierr;
   ierr = VecGetArray(d_x, &xvec); CHKERRQ(ierr);
+#if 0
   for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
@@ -577,6 +584,7 @@ PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
       }
     }
   }
+#endif
   ierr = VecRestoreArray(d_x, &xvec); CHKERRQ(ierr);
 }
   
@@ -587,6 +595,7 @@ PetscSolver::destroyMatrix()
      Free work space.  All PETSc objects should be destroyed when they
      are no longer needed.
   */
+  int ierr;
   ierr = SLESDestroy(sles);CHKERRA(ierr); 
   ierr = VecDestroy(d_u);CHKERRA(ierr);
   ierr = VecDestroy(d_b);CHKERRA(ierr);
@@ -1734,6 +1743,9 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.10  2000/09/21 22:45:41  sparker
+// Towards compiling petsc stuff
+//
 // Revision 1.9  2000/09/21 21:45:05  rawat
 // added petsc parallel stuff
 //

@@ -369,8 +369,10 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
       Box geomBox = piece->getBoundingBox();
       Box b = geomBox.intersect(patchBox);
       // check for another geometry
-      if (b.degenerate())
-	continue; // continue the loop for other inlets
+      if (b.degenerate()){
+	 old_dw->put(sum_vartype(0),d_flowInlets[ii].d_area_label);
+	 continue; // continue the loop for other inlets
+      }
 
       // iterates thru box b, converts from geometry space to index space
       // make sure this works
@@ -382,6 +384,7 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
       double inlet_area;
       int cellid = d_flowInlets[ii].d_cellTypeID;
 
+#define ARCHES_GEOM_DEBUG
 #ifdef ARCHES_GEOM_DEBUG
       cerr << "Domain Lo = [" << domLo.x() << "," <<domLo.y()<< "," <<domLo.z()
 	   << "] Domain hi = [" << domHi.x() << "," <<domHi.y()<< "," <<domHi.z() 
@@ -2190,6 +2193,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.57  2000/09/21 22:45:41  sparker
+// Towards compiling petsc stuff
+//
 // Revision 1.56  2000/09/07 23:07:17  rawat
 // fixed some bugs in bc and added pressure solver using petsc
 //
