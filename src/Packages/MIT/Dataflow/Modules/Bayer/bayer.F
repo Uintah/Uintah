@@ -82,7 +82,7 @@ c  atol and rtol describe the error tolerance of the problem.  atol is
 c  the absolute error tolerance and rtol is relative error tolerance.
 c
       atol = 1.d-6
-      rtol = 1.d-4
+      rtol = 1.d-6
       tfinal = tend
 
 c     Use itol = 1 if atol is a scalar and itol = 2 if atol is an array
@@ -153,16 +153,16 @@ c  had more than one equation, you would define the others similarly.
 c  Remember that y(2) = alpha in this model.
 c
       double precision t, y, ydot
-	double precision k1,k2,k21,k22,k31,k32
+      double precision k1,k2,k21,k22,k31,k32
       dimension y(neq), ydot(neq)
 
-	common /ks/ k1,k2,k21,k22,k31,k32
+      common /ks/ k1,k2,k21,k22,k31,k32
 
-	ydot(1) = k1*y(2)*y(3)-k21*y(1)+k22*y(4)*y(7)-k2*y(2)*y(1)
+      ydot(1) = k1*y(2)*y(3)-k21*y(1)+k22*y(4)*y(7)-k2*y(2)*y(1)
       ydot(2) =-k1*y(2)*y(3)-2.0*k31*y(2)*y(2)+
      1               2.0*k32*y(5)*y(7)-k2*y(2)*y(1)
       ydot(3) =-k1*y(2)*y(3)
-	ydot(4) = k21*y(1)-k22*y(4)*y(7)
+      ydot(4) = k21*y(1)-k22*y(4)*y(7)
       ydot(5) = k31*y(2)*y(2)-k32*y(5)*y(7)
       ydot(6) = k2*y(2)*y(1)
       ydot(7) =k21*y(1)-k22*y(4)*y(7)+k31*y(2)*y(2)-k32*y(5)*y(7)
@@ -182,15 +182,15 @@ c  Jacobian are provided by pd(i,j) = dy_i/dx_j.
 c
       integer neq, ml, mu, nrowpd
       double precision y, pd
-	double precision k1,k2,k21,k22,k31,k32
+      double precision k1,k2,k21,k22,k31,k32
       dimension y(neq), pd(neq,neq)
 
-	common /ks/ k1,k2,k21,k22,k31,k32
+      common /ks/ k1,k2,k21,k22,k31,k32
 
 
 
       pd(1,1) = -k21-k2*y(2) 
-	pd(1,2) = k1*y(3)-k2*y(1)
+      pd(1,2) = k1*y(3)-k2*y(1)
       pd(1,3) = k1*y(2)
       pd(1,4) = k22*y(7)
       pd(1,5) = 0.0

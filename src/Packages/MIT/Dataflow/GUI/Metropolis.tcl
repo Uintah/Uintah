@@ -53,8 +53,8 @@ itcl_class MIT_Bayer_Metropolis {
 	toplevel $w
 	frame $w.f 
 
-	pack $w.f -padx 2 -pady 2 -expand 1 -fill x
-	set n "$this-c needexecute "
+	pack $w.f -padx 2 -pady 2 -fill both -expand yes
+#	set n "$this-c needexecute "
 
         iwidgets::entryfield $w.f.burning -labeltext "Burning:" \
 	    -validate numeric -command "$this change_burning" 
@@ -74,7 +74,8 @@ itcl_class MIT_Bayer_Metropolis {
 
 	iwidgets::Labeledframe $w.f.graph -labeltext "Progress"
 
-	pack $w.f.burning $w.f.monitor $w.f.thin $w.f.cvode $w.f.exec -anchor w
+	pack $w.f.burning $w.f.monitor $w.f.thin $w.f.exec -anchor w
+	pack $w.f.cvode -anchor w
 	pack $w.f.graph -expand yes -fill both
 
 	$this-c graph-window [$w.f.graph childsite]
