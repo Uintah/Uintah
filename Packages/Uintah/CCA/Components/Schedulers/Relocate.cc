@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 
 #include <Core/Containers/Array2.h>
@@ -28,6 +29,7 @@ using namespace Uintah;
 // multiple threads at the same time)  From sus.cc:
 extern Mutex cerrLock;
 extern DebugStream mixedDebug;
+extern SCIRun::DebugStream brydbg;
 
 Relocate::Relocate()
 {
@@ -350,7 +352,8 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 	adding_new_particles = true;
       if(subsets.size() == 1 && keepset == orig_pset && !adding_new_particles){
 	// carry forward old data
-	new_dw->saveParticleSubset(matl, patch, orig_pset);
+	//new_dw->saveParticleSubset(orig_pset, matl, patch);
+        new_dw->saveParticleSubset(matl, patch, orig_pset);
 	ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
 	new_dw->put(*posvar, reloc_new_posLabel);
 	for(int v=0;v<numVars;v++){
@@ -478,7 +481,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   }
   const PatchSet* patches;
   if(lb)
-    patches = lb->createPerProcessorPatchSet(level, pg);
+    patches = lb->createPerProcessorPatchSet(level);
   else
     patches = level->allPatches();
   sched->addTask(t, patches, matls);
@@ -567,7 +570,7 @@ void MPIScatterRecords::addNeighbor(LoadBalancer* lb, const ProcessorGroup* pg,
 				    const Patch* neighbor)
 {
   neighbor = neighbor->getRealPatch();
-  int toProc = lb->getPatchwiseProcessorAssignment(neighbor, pg);
+  int toProc = lb->getPatchwiseProcessorAssignment(neighbor);
   ASSERTRANGE(toProc, 0, pg->size());
   procmaptype::iterator iter = procs.find(toProc);
   if(iter == procs.end()){
@@ -848,6 +851,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     // Send (isend) the message
     MPI_Request rid;
     int to=iter->first;
+    brydbg << Parallel::getMPIRank() << " Sending RELOCATE message number " << RELOCATE_TAG << ", to " << to << ", length: " << sendsize << "\n"; cerrLock.unlock();
     MPI_Isend(buf, sendsize, MPI_PACKED, to, RELOCATE_TAG,
 	      pg->getComm(), &rid);
     sendbuffers.push_back(buf);
@@ -878,6 +882,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     
     char* buf = scinew char[size];
     recvbuffers[idx]=buf;
+    brydbg << Parallel::getMPIRank() << " Posting RELOCATE receive for message number " << RELOCATE_TAG << " from " << iter->first << ", length=" << size << "\n";      
     MPI_Recv(recvbuffers[idx], size, MPI_PACKED, iter->first,
 	     RELOCATE_TAG, pg->getComm(), &status);
 
@@ -903,7 +908,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
       MPI_Unpack(buf, size, &position, &datasize, 1, MPI_INT,
 		 pg->getComm());
       char* databuf=buf+position;
-      ASSERTEQ(lb->getPatchwiseProcessorAssignment(toPatch, pg), me);
+      ASSERTEQ(lb->getPatchwiseProcessorAssignment(toPatch), me);
       scatter_records.saveRecv(toPatch, matl,
 			       databuf, datasize, numParticles);
       position+=datasize;
@@ -934,7 +939,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
       subsets.push_back(keepset);
       for(int i=0;i<(int)neighbors.size();i++){
 	const Patch* fromPatch=neighbors[i];
-	int from = lb->getPatchwiseProcessorAssignment(fromPatch->getRealPatch(), pg);
+	int from = lb->getPatchwiseProcessorAssignment(fromPatch->getRealPatch());
 	ASSERTRANGE(from, 0, pg->size());
 	if(from == me){
 	  ScatterRecord* record = scatter_records.findRecord(fromPatch, patch, matl);
@@ -948,7 +953,8 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
       ParticleSubset* orig_pset = old_dw->getParticleSubset(matl, patch);
       if(recvs == 0 && subsets.size() == 1 && keepset == orig_pset){
 	// carry forward old data
-	new_dw->saveParticleSubset(matl, patch, orig_pset);
+	//new_dw->saveParticleSubset(orig_pset, matl, patch);
+        new_dw->saveParticleSubset(matl, patch, orig_pset);
 	ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
 	new_dw->put(*posvar, reloc_new_posLabel);
 	for(v=0;v<numVars;v++){
