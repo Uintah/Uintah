@@ -46,6 +46,12 @@ itcl_class VS_Render_ICUMonitor {
 	global  $this-edit
 	global  $this-edit-target
 	global  $this-selected_marker
+	global  $this-top_margin
+	global  $this-left_margin
+	global  $this-plot_spacing
+	global  $this-font_scale
+	global  $this-show_name
+	global  $this-show_date
 	global  $this-dump_frames
 
 	set $this-edit          0
@@ -59,6 +65,12 @@ itcl_class VS_Render_ICUMonitor {
 	set $this-time_markers_mode  1
 	set $this-plot_count    0
 	set $this-selected_marker -1
+	set $this-top_margin 30
+	set $this-left_margin 20
+	set $this-plot_spacing 20
+	set $this-font_scale 1.0
+	set $this-show_name 0
+	set $this-show_date 0
 	set $this-dump_frames   0
     }
 
@@ -126,6 +138,35 @@ itcl_class VS_Render_ICUMonitor {
 	$this-c "init"
     }
 
+    method prefs_accept {win} {
+	destroy $win
+	$this-c "init"
+    }
+
+    method centerWindow {w1 w2} {
+        update
+        #wm overrideredirect $w1 1
+        wm geometry $w1 ""
+        update idletasks
+        set w [winfo width $w2]
+        set h [winfo height $w2]
+                                                                                
+        if {$w < 2} { set w [winfo screenwidth .] }
+        if {$h < 2} { set h [winfo screenheight .] }
+                                                                                
+        set x [expr [winfo x $w2]+($w - [winfo width $w1])/2]
+        set y [expr [winfo y $w2]+($h - [winfo height $w1])/2]
+        wm geometry $w1 +${x}+${y}
+
+        if { [winfo ismapped $w1] } {
+            #raise $w1
+            SciRaise $w1
+        } else {
+            wm deiconify $w1
+        }
+
+        grab $w1
+    }
 
     method edit_plot {} {
 	set w .ui[modname]
@@ -140,6 +181,7 @@ itcl_class VS_Render_ICUMonitor {
 	    }
 
 	    toplevel $w.edit
+	    wm withdraw $w.edit
 
 	    set which 0
 
@@ -155,6 +197,102 @@ itcl_class VS_Render_ICUMonitor {
 
 	    pack $w.edit.accept.accept -side left -fill x -padx 10
 	    pack $w.edit.accept -side top -fill x -padx 2 -pady 2
+
+	    centerWindow $w.edit $w
+	}
+    }
+    
+    method set_prefs {} {
+	set w .ui[modname]
+	if {[winfo exists $w.prefs]} {
+	    SciRaise $w.prefs
+	    return
+	} else {
+	    toplevel $w.prefs
+	    wm title $w.prefs "Preferences"
+	    wm withdraw $w.prefs
+	    wm resizable $w.prefs 0 0
+
+            iwidgets::labeledframe $w.prefs.gen -labeltext "General" \
+		-labelpos nw
+            set gen [$w.prefs.gen childsite]
+
+	    checkbutton $gen.showname -text "Show Name" -padx 6 \
+		-justify left -relief flat -variable $this-show_name \
+		-onvalue 1 -offvalue 0 -anchor w
+            pack $gen.showname -side top -fill x -pady 2
+
+	    checkbutton $gen.showdate -text "Show Date" -padx 6 \
+		-justify left -relief flat -variable $this-show_date \
+		-onvalue 1 -offvalue 0 -anchor w 
+            pack $gen.showdate -side top -fill x -pady 2
+
+	    frame $gen.fs -borderwidth 4
+            pack $gen.fs -side top -fill x -pady 2
+	    scale $gen.fs.font -variable $this-font_scale \
+                 -from 0.0 -to 3.0 -label "Font Scale:" \
+                 -showvalue true -resolution 0.1 \
+                 -orient horizontal -command "$this-c init"
+	    pack $gen.fs.font -fill x
+
+            pack $w.prefs.gen -fill x -expand yes -side top
+
+            iwidgets::labeledframe $w.prefs.plots -labeltext "Plots" \
+		-labelpos nw
+            set plots [$w.prefs.plots childsite]
+
+	    frame $plots.f -borderwidth 2
+            pack $plots.f -side top -fill both
+
+	    frame $plots.f.tmf
+            pack $plots.f.tmf -side top -fill x -pady 2
+	    label $plots.f.tmf.topml -text "Top Margin:"
+	    entry $plots.f.tmf.topm -textvariable $this-top_margin \
+		-width 12
+	    pack $plots.f.tmf.topm -side right
+	    pack $plots.f.tmf.topml -side right
+
+	    frame $plots.f.lmf
+            pack $plots.f.lmf -side top -fill x -pady 2
+	    label $plots.f.lmf.leftml -text "Left Margin:"
+	    entry $plots.f.lmf.leftm -textvariable $this-left_margin \
+		-width 12
+	    pack $plots.f.lmf.leftm -side right
+	    pack $plots.f.lmf.leftml -side right
+
+	    frame $plots.f.psf
+            pack $plots.f.psf -side top -fill x -pady 2
+	    label $plots.f.psf.spacingl -text "Spacing:"
+	    entry $plots.f.psf.spacing -textvariable $this-plot_spacing \
+		-width 12
+	    pack $plots.f.psf.spacing -side right
+	    pack $plots.f.psf.spacingl -side right
+
+	    frame $plots.f.phf
+            pack $plots.f.phf -side top -fill x -pady 2
+	    label $plots.f.phf.heightl -text "Height:"
+	    entry $plots.f.phf.height  -textvariable $this-plot_height \
+		-width 12
+	    pack $plots.f.phf.height -side right
+	    pack $plots.f.phf.heightl -side right
+
+	    #frame $plots.f.fs -borderwidth 4
+            #pack $plots.f.fs -side top -fill x -pady 2
+	    #scale $plots.f.fs.font -variable $this-font_scale \
+                 -from 0.0 -to 3.0 -label "Font Scale:" \
+                 -showvalue true -resolution 0.1 \
+                 -orient horizontal -command "$this-c init"
+	    #pack $plots.f.fs.font -fill x
+
+            pack $w.prefs.plots -fill x -expand yes -side top
+
+	    frame $w.prefs.donef
+	    button $w.prefs.donef.done -text "Done" \
+		-command "$this prefs_accept $w.prefs"
+	    pack $w.prefs.donef.done -side top -fill x
+	    pack $w.prefs.donef -side top -fill x -expand yes -pady 4 -padx 8
+
+            centerWindow $w.prefs $w
 	}
     }
     
@@ -177,12 +315,15 @@ itcl_class VS_Render_ICUMonitor {
 	 set window .ui[modname]
 	 if {[winfo exists $window.color]} {
 	     SciRaise $window.color
+             grab $window.color
 	     return
 	 } else {
 	     # makeColorPicker now creates the $window.color toplevel.
 	     makeColorPicker $window.color $color \
 		     "$this setColor $col $color $colMsg" \
 		     "destroy $window.color"
+
+             grab $window.color
 	 }
     }
 
@@ -228,7 +369,9 @@ itcl_class VS_Render_ICUMonitor {
 	    return
 	} else {
 	    global $this-plot_count
+
 	    toplevel $w.add
+	    wm withdraw $w.add
 
 	    set v [$this $fn]
 
@@ -250,7 +393,10 @@ itcl_class VS_Render_ICUMonitor {
 		-textvariable $this-max_ref_label-$v -width 8
 	    checkbutton  $w.add.f.lines -text "Draw Min/Max Lines" -padx 6 \
 		-justify left -relief flat -variable $this-lines-$v \
-		-onvalue 1 -offvalue 0 -anchor n
+		-onvalue 1 -offvalue 0 -anchor w
+	    checkbutton  $w.add.f.clamp -text "Clamp Data to Min/Max" -padx 6 \
+		-justify left -relief flat -variable $this-clamp-$v \
+		-onvalue 1 -offvalue 0 -anchor w
 	    label $w.add.f.minl -text "Min Value:" -relief groove
 	    entry $w.add.f.min -textvariable $this-min-$v \
 		-width 8
@@ -268,10 +414,10 @@ itcl_class VS_Render_ICUMonitor {
 		-width 8
 	    checkbutton  $w.add.f.trace -text "Compare Traces" -padx 6 \
 		-justify left -relief flat -variable $this-snd-$v \
-		-onvalue 1 -offvalue 0 -anchor n
+		-onvalue 1 -offvalue 0 -anchor w
 	    checkbutton  $w.add.f.draw_aux_data -text "Draw Derived Data" \
 		-padx 6 -justify left -relief flat -variable \
-		$this-draw_aux_data-$v -onvalue 1 -offvalue 0 -anchor n
+		$this-draw_aux_data-$v -onvalue 1 -offvalue 0 -anchor w
 
 	    frame $w.add.f.col -borderwidth 2
 	    addColorSelection $w.add.f.col "Plot Color" $this-plot_color-$v  \
@@ -279,8 +425,11 @@ itcl_class VS_Render_ICUMonitor {
  
 	    pack  $w.add.f.pl $w.add.f.p $w.add.f.nwl $w.add.f.nw \
 		$w.add.f.swl $w.add.f.sw $w.add.f.minrl $w.add.f.minr \
-		$w.add.f.maxrl $w.add.f.maxr $w.add.f.lines $w.add.f.minl \
-		$w.add.f.min $w.add.f.maxl $w.add.f.max $w.add.f.idxl \
+		$w.add.f.maxrl $w.add.f.maxr \
+		$w.add.f.minl \
+		$w.add.f.min $w.add.f.maxl $w.add.f.max \
+		$w.add.f.lines $w.add.f.clamp \
+		$w.add.f.idxl \
 		$w.add.f.idx $w.add.f.trace $w.add.f.adl $w.add.f.ad \
 		$w.add.f.auxidxl $w.add.f.auxidx $w.add.f.draw_aux_data \
 		$w.add.f.col -side top -fill x -padx 2 -pady 2
@@ -298,6 +447,8 @@ itcl_class VS_Render_ICUMonitor {
 
 
 	    pack $w.add.accept -side top -fill x -padx 2 -pady 2
+
+            centerWindow $w.add $w
 	}
     }
 
@@ -318,6 +469,12 @@ itcl_class VS_Render_ICUMonitor {
 
             frame $w.f.menu -relief raised -borderwidth 2
             pack $w.f.menu -fill x -padx 2 -pady 2
+            menubutton $w.f.menu.edit -text "Edit" -underline 0 \
+		-menu $w.f.menu.edit.menu -state normal
+            menu $w.f.menu.edit.menu -tearoff 0
+	    $w.f.menu.edit.menu add command -label "Preferences..." \
+		-command "$this set_prefs"
+            pack $w.f.menu.edit -side left
             menubutton $w.f.menu.mkrs -text "Markers" -underline 0 \
 		-menu $w.f.menu.mkrs.menu -state disabled
             menu $w.f.menu.mkrs.menu -tearoff 0
@@ -381,12 +538,13 @@ itcl_class VS_Render_ICUMonitor {
 	    entry $w.f.settings.ss  -textvariable $this-sweep_speed -width 8
 	    label $w.f.settings.dpil -text "Monitor dpi:"
 	    entry $w.f.settings.dpi -textvariable $this-dots_per_inch -width 8
-	    label $w.f.settings.ghl -text "Plot Height:"
-	    entry $w.f.settings.gh  -textvariable $this-plot_height -width 8
+	    #label $w.f.settings.ghl -text "Plot Height:"
+	    #entry $w.f.settings.gh  -textvariable $this-plot_height -width 8
 
 	    pack $w.f.settings.srl $w.f.settings.sr $w.f.settings.ssl \
 		$w.f.settings.ss $w.f.settings.dpil $w.f.settings.dpi \
-		$w.f.settings.ghl $w.f.settings.gh \
+		-side left -padx 4 -pady 2
+		#$w.f.settings.ghl $w.f.settings.gh \
 		-side left -padx 4 -pady 2
         }
     }
