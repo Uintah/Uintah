@@ -764,7 +764,7 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
     GeomGroup *tmp = scinew GeomGroup;
     tmp->add(faces);
     tmp->add(qfaces);
-    face_switch = scinew GeomSwitch(tmp);
+    face_switch = scinew GeomSwitch(scinew GeomColorMap(scinew GeomMaterial(tmp, def_mat_handle_), color_handle_));
   }
   else
   {
@@ -773,8 +773,8 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
     GeomGroup *tmp = scinew GeomGroup;
     tmp->add(faces);
     tmp->add(qfaces);
-    GeomDL *display_list = scinew GeomDL(tmp);
-    face_switch = scinew GeomSwitch(display_list);
+    GeomDL *dl = scinew GeomDL(tmp);
+    face_switch = scinew GeomSwitch(scinew GeomColorMap(scinew GeomMaterial(dl, def_mat_handle_), color_handle_));
   }
 
   // Third pass: over the faces
@@ -790,7 +790,6 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
     unsigned int i;
     vector<Point> points(nodes.size());
     vector<Vector> normals(nodes.size());
-    vector<MaterialHandle> mats(nodes.size());
     for (i = 0; i < nodes.size(); i++)
     {
       mesh->get_point(points[i], nodes[i]);
@@ -805,17 +804,92 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
     switch (sfld->data_at()) {
     case Field::NODE:
       {
-	for (i=0; i < nodes.size(); i++) {
-	  mats[i] = choose_mat(false, nodes[i]);
+	vector<typename Fld::value_type> vals(nodes.size());
+	vector<double> dvals(nodes.size());
+	for (i = 0; i < nodes.size(); i++)
+	{
+	  sfld->value(vals[i], nodes[i]);
+	  to_double(vals[i], dvals[i]);
+	}
+	if (nodes.size() == 4)
+	{
+	  if (with_normals)
+	  {
+	    qfaces->add(points[0], normals[0], dvals[0],
+			points[1], normals[1], dvals[1],
+			points[2], normals[2], dvals[2],
+			points[3], normals[3], dvals[3]);
+	  }
+	  else
+	  {
+	    qfaces->add(points[0], dvals[0],
+			points[1], dvals[1],
+			points[2], dvals[2],
+			points[3], dvals[3]);
+	  }
+	}
+	else
+	{
+	  for (i=2; i<nodes.size(); i++)
+	  {
+	    if (with_normals)
+	    {
+	      faces->add(points[0], normals[0], dvals[0],
+			 points[i-1], normals[i-1], dvals[i-1],
+			 points[i], normals[i], dvals[i]);
+	    }
+	    else
+	    {
+	      faces->add(points[0], dvals[0],
+			 points[i-1], dvals[i-1],
+			 points[i], dvals[i]);
+	    }
+	  }
 	}
       }
       break;
       
     case Field::FACE: 
       {
-	MaterialHandle m = choose_mat(false, *fiter);
-	for (i = 0; i < nodes.size(); i++) {
-	  mats[i] = m;
+	typename Fld::value_type val;
+	double dval;
+	sfld->value(val, *fiter);
+	to_double(val, dval);
+
+	if (nodes.size() == 4)
+	{
+	  if (with_normals)
+	  {
+	    qfaces->add(points[0], normals[0], dval,
+			points[1], normals[1], dval,
+			points[2], normals[2], dval,
+			points[3], normals[3], dval);
+	  }
+	  else
+	  {
+	    qfaces->add(points[0], dval,
+			points[1], dval,
+			points[2], dval,
+			points[3], dval);
+	  }
+	}
+	else
+	{
+	  for (i=2; i<nodes.size(); i++)
+	  {
+	    if (with_normals)
+	    {
+	      faces->add(points[0], normals[0], dval,
+			 points[i-1], normals[i-1], dval,
+			 points[i], normals[i], dval);
+	    }
+	    else
+	    {
+	      faces->add(points[0], dval,
+			 points[i-1], dval,
+			 points[i], dval);
+	    }
+	  }
 	}
       }
       break;
@@ -823,47 +897,35 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
     case Field::EDGE:
     case Field::CELL:
     case Field::NONE:
-      {
-	MaterialHandle m = choose_mat(true, 0);
-	for (i = 0; i < nodes.size(); i++) {
-	  mats[i] = m;
-	}
-      }
-      break;
-    }
-
-    if (nodes.size() == 4)
-    {
-      if (with_normals)
-      {
-	qfaces->add(points[0], normals[0], mats[0],
-		    points[1], normals[1], mats[1],
-		    points[2], normals[2], mats[2],
-		    points[3], normals[3], mats[3]);
-      }
-      else
-      {
-	qfaces->add(points[0], mats[0],
-		    points[1], mats[1],
-		    points[2], mats[2],
-		    points[3], mats[3]);
-      }
-    }
-    else
-    {
-      for (i=2; i<nodes.size(); i++)
+    default:
+      if (nodes.size() == 4)
       {
 	if (with_normals)
 	{
-	  faces->add(points[0], normals[0], mats[0],
-		     points[i-1], normals[i-1], mats[i-1],
-		     points[i], normals[i], mats[i]);
+	  qfaces->add(points[0], normals[0],
+		      points[1], normals[1],
+		      points[2], normals[2],
+		      points[3], normals[3]);
 	}
 	else
 	{
-	  faces->add(points[0], mats[0],
-		     points[i-1], mats[i-1],
-		     points[i], mats[i]);
+	  qfaces->add(points[0], points[1], points[2], points[3]);
+	}
+      }
+      else
+      {
+	for (i=2; i<nodes.size(); i++)
+	{
+	  if (with_normals)
+	  {
+	    faces->add(points[0], normals[0],
+		       points[i-1], normals[i-1],
+		       points[i], normals[i]);
+	  }
+	  else
+	  {
+	    faces->add(points[0], points[i-1], points[i]);
+	  }
 	}
       }
     }
