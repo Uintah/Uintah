@@ -9,7 +9,7 @@ using std::ifstream;
 FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
 {
   string file_name,var_name;
-  ps->require("file",file_name);
+  ps->require("name",file_name);
 
   if (ps->get("var",var_name))
     readPoints(file_name,true);
