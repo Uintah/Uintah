@@ -31,7 +31,8 @@ ArchiveReader::~ArchiveReader(){}
 //-------------------------------------------------------------- 
 
 
-void ArchiveReader::execute() 
+void
+ArchiveReader::execute() 
 { 
   struct stat statbuffer;
 
@@ -57,7 +58,6 @@ void ArchiveReader::execute()
    }
 
    out->send( archiveH );
-
 }
 
   
