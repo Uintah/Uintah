@@ -39,7 +39,7 @@ set mouseY 0
 
 global maincanvas
 set maincanvas ".bot.neteditFrame.canvas"
-global minicanvs
+global minicanvas
 set minicanvas ".top.globalViewFrame.canvas"
 global Subnet
 set Subnet(Subnet0_minicanvas) $minicanvas
@@ -394,7 +394,7 @@ proc createModulesMenu { subnet } {
     }
     global SCIRUN_SRCDIR
     set filelist1 [glob -nocomplain -dir $SCIRUN_SRCDIR/Subnets *.net]
-    set filelist2 [glob -nocomplain -dir ~/Subnets *.net]
+    set filelist2 [glob -nocomplain -dir ~/SCIRun/Subnets *.net]
     set subnetfiles [concat $filelist1 $filelist2]
     if [llength $subnetfiles] {
 	if { [$canvas.modulesMenu index end] != "none" } \
@@ -650,8 +650,8 @@ proc compute_bbox { canvas { items "" } { cheat 0 } } {
 proc popupLoadMenu {} {
     global NetworkChanged
     if $NetworkChanged {
-	set result [tk_messageBox -type yesnocancel -parent . -message -title "Warning" \
-			"Your network has not been saved.\n\nWould you like to save before loading a new one?" -icon warning ]
+	set result [tk_messageBox -type yesnocancel -parent . -title "Warning" \
+			-message "Your network has not been saved.\n\nWould you like to save before loading a new one?" -icon warning ]
 	if {![string compare "yes" $result]} { popupSaveMenu }
 	if {![string compare "cancel" $result]} { return }
     }
@@ -1183,15 +1183,37 @@ proc licenseAccept { } {
     }
 }
 
-
-global debug
-set debug 0
-proc d {} {
-    global debug
-    puts "Debug $debug"
-    incr debug
+proc validDir { name } {
+    return [expr [file isdirectory $name] && \
+		 [file writable $name] && [file readable $name]]
 }
 
+proc getOnTheFlyLibsDir {} {
+    global env SCIRUN_OBJDIR tcl_platform
+    set binOTF [file join $SCIRUN_OBJDIR on-the-fly-libs]
+    set dir ""
+    if [info exists env(SCIRUN_ON_THE_FLY_LIBS_DIR)] {
+	set dir $env(SCIRUN_ON_THE_FLY_LIBS_DIR)
+	catch "file mkdir $dir"
+    }
+
+    if ![validDir $dir] {
+	set dir $binOTF
+    }
+
+    if ![validDir $dir] {
+	set home [file nativename ~]
+	set dir [file join $home SCIRun on-the-fly-libs $tcl_platform(os)]
+	catch "file mkdir $dir"
+    }
+    set makefile [file join $SCIRUN_OBJDIR on-the-fly-libs Makefile]
+    if { ![validDir $dir] || [catch "file copy -force $makefile $dir"] } {
+	tk_messageBox -type ok -parent . -icon error -message \
+	    "SCIRun cannot find a directory to store dynamically compiled code.  Please quit and set the environment variable SCIRUN_ON_THE_FLY_LIBS to a writable directory.  If you continue, networks may not execute correctly."
+	return $binOTF
+    }
+    return $dir
+}
 
 
 
