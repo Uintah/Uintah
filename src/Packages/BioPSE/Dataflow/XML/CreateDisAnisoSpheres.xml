@@ -2,60 +2,122 @@
 <!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
 
 <component name="CreateDisAnisoSpheres" category="Forward">
-  <overview>
+<overview>
 
-    <authors>
-      <author>Sascha Moehrs</author>
-    </authors>
+<authors>
+<author>Sascha Moehrs</author>
+</authors>
 
-	<summary>Scale the geometry of a sphere to a requested size and assign a conductivity tensor to each cell;</summary>
+<summary>Scale the geometry of a sphere to a requested size and assign
+a conductivity tensor to each cell.</summary>
 
-    <description>
-      <p>Date: January 2003; Version: 1.0</p>
-	  <p>The module creates a discrete version of a 4-layer anisotropic spherical volume conductor which resembles the human head.
-         The volume conductor consists of four concentric spheres, where each sphere can have different radial and tangential conductivities.
-         Thus, the input mesh, which is supposed to be a discrete unit sphere, is scaled to the outer radius of the model. 
-         The radii of all four layers should be provided via the input port 'SphereRadii'. Moreover, a conductivity tensor is assigned to
-         each cell, i.e. based on the distance of the cell to the sphere center the cell is associated with one of the four layers, then,
-         based on the radial and tangential conductivities at port 'AnisoConductivities', a conductivity tensor is computed for that
-         cell.
-    </p>
-    </description>
+<description>
+<p>The module creates a discrete version of a four-layer anisotropic
+spherical volume conductor, resembling the human head.  The volume
+conductor consists of four concentric spheres. Each sphere can
+have different radial and tangential conductivities. The input
+mesh, which is a discrete unit sphere, is scaled to the
+outer radius of the model.  The radii of all four layers should be
+provided via the input port 'SphereRadii'. Moreover, a conductivity
+tensor is assigned to each cell (i.e. the cell is associated with one
+of the four layers based on the distance of the cell to the sphere
+center). Then, based on the radial and tangential conductitities at 
+port 'AnisoConductivities', a conductivity tensor is computed for that
+cell.</p>
+</description>
 
-  </overview>
+</overview>
 
-  <io>
+<io>
 
-    <inputs lastportdynamic="no">
-      <port>
-        <name>Mesh</name>
-		<description> The port takes a handle of the Hex / or Tet Field</description>
-		<datatype>SCIRun::Field</datatype>
-      </port>
-	  <port>
-		<name>SphereRadii</name>
-		<description>Radii of the brain, cbsf, skull, scalp</description>
-		<datatype>SCIRun::Matrix</datatype>
-	  </port>
-	  <port>
-		<name>AnisoConductivities</name>
-		<description> The port takes a matrix containing radial and tangential conductivities of all 4 layers</description>
-		<datatype>SCIRun::Matrix</datatype>
-	  </port>
-    </inputs>
+<inputs lastportdynamic="no">
+<port>
+<name>Mesh</name>
+<description>
+<p>The port takes a handle of the Hex / or Tet Field</p>
+</description>
+<datatype>SCIRun::Field</datatype>
+</port>
+<port>
+<name>SphereRadii</name>
+<description>
+<p>Radii of the brain, cbsf, skull, scalp</p>
+</description>
+<datatype>SCIRun::Matrix</datatype>
+</port>
+<port>
+<name>AnisoConductivities</name> 
 
-    <outputs>
-      <port>
-        <name>Mesh</name>
-		<description>Hex Field with conductivities assigned to each element</description>
-		<datatype>SCIRun::Field</datatype>
-      </port>
-	  
-    </outputs>
-  </io>
+<description>
+<p>The port takes a matrix
+containing radial and tangential conductivities of all four
+layers</p>
+</description>
 
-  <gui>
-	
-  </gui>
-  
+<datatype>SCIRun::Matrix</datatype>
+
+</port>
+</inputs>
+
+<outputs>
+<port>
+<name>Mesh</name>
+<description>
+<p>Hex Field with conductivities assigned to each element</p>
+</description>
+<datatype>SCIRun::Field</datatype>
+</port>
+
+</outputs>
+</io>
+
+<nets>
+<net>
+<title>Human Head Model Network</title>
+
+<p>A network demonstrating use of module CreateDisAnisoSpheres is
+shown in <xref target="fig.hhmn"/></p>
+
+<figure id="fig.hhmn">
+<img>../Modules/Forward/doc/sphere2.gif</img>
+<caption>Human Head Model Network showing output of the <modref
+package="SCIRun" name="Viewer"/> module.</caption>
+</figure>
+
+<p>In <xref target="fig.hhmn"/>, CreateDisAnisoSpheres takes the unit sphere
+produced by module <modref package="BioPSE" name="SphereModel"/> and
+scales the mesh to geometry specified by <modref
+package="BioPSE" name="AnisoSphereModel"/>. Each cell of
+the sphere mesh is assigned a conductivity tensor, which is computed
+from radial and tangential conductivities of the <modref
+package="BioPSE" name="AnisoSphereModel"/>. The resulting discrete
+sphere mesh can be used for numerical simulations (e.g. finite
+elements or finite differences).</p>
+
+<section>
+<title>Inputs</title>
+
+<p><modref package="BioPSE" name="SphereModel"/> provides a volume
+mesh of a unit sphere.</p>
+
+<p><modref package="BioPSE" name="AnisoSphereModel"/> provides the
+sphere's electrode positions, radii data, and conductivity data.</p>
+
+<p>Note that module <modref package="SCIRun" name="FieldReader"/>
+supplies electrode positions to <modref package="BioPSE"
+name="AnisoSphereModel"/> from data stored in a file.</p>
+
+</section>
+
+<section>
+<title>Outputs</title> 
+
+<p>Module CreateDisAnisoSpheres transmits, on its sole output port, a
+field that represents a discrete four-layer anisotropic spherical volume
+conductor, resembling the human head</p>
+
+</section>
+</net>
+</nets>
+
 </component>

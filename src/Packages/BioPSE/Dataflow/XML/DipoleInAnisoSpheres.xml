@@ -1,66 +1,150 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
 
+
 <component name="DipoleInAnisoSpheres" category="Forward">
-  <overview>
+<overview>
 
-    <authors>
-      <author>Sascha Moehrs</author>
-    </authors>
+<authors>
+<author>Sascha Moehrs</author>
+</authors>
 
-    <summary>
-      Due to a specified dipole, the potential on the outer sphere of a four layer spherical volume conductor is computed.
-    </summary>
+<summary>
+Due to a specified dipole, the potential on the outer sphere of a four
+layer 
+spherical volume conductor is computed.
+</summary>
 
-    <description>
-      <p>Date: January 2003</p>
-	  <p>Version: 1.0</p>
-	  <p>The potentials on the outer sphere are calculated analytically at the electrode positions.
-         The spherical volume consists of four layers (skalp, skull, cerebrospinal fluid, brain), where every layer can
-         have different radial and tangential conductivities. The dipole has to be in the innermost sphere.</p>
-    </description>
+<description>
+<p>The potentials on the outer sphere are calculated analytically at
+the electrode positions.  The spherical volume consists of four layers
+(skalp, skull, cerebrospinal fluid, brain). Every layer can have
+different radial and tangential conductivities. The dipole has to be
+in the innermost sphere.</p>
+</description>
 
-  </overview>
+</overview>
 
-  <io>
+<io>
 
-    <inputs lastportdynamic="no">
-      <port>
-        <name>Electrodes</name>
-		<description> The port takes a handle of the electrode positions, where the potential has to be computed.</description>
-		<datatype>SCIRun::Field</datatype>
-      </port>
-	  <port>
-		<name>Dipole Sources</name>
-		<description>The port takes a handle to the matrix that is 1-by-6 in size, containing parameters of 1 dipole.
-                     The first three columns are dipole position, the other three are dipole moments. If the dipole lies
-                     outside the innermost sphere, the log window creates a warning message.</description>
-		<datatype>SCIRun::Field</datatype>
-	  </port>
-	  <port>
-		<name>Radii</name>
-		<description> The port takes a matrix containing the radii for scalp, skull, cerebrospinal fluid and the brain.</description>
-		<datatype>SCIRun::Matrix</datatype>
-	  </port>
-	  <port>
-		<name>AnisoConductivities</name>
-		<description> The port takes a matrix containing radial and tangential conductivities of all 4 layers.</description>
-		<datatype>SCIRun::Matrix</datatype>
-	  </port>
-    </inputs>
+<inputs lastportdynamic="no">
+<port>
+<name>Electrodes</name>
+<description>
+<p>The port takes a handle of the electrode positions where the
+potential has to be computed.</p>
+</description>
+<datatype>SCIRun::Field</datatype>
+</port>
+<port>
+<name>Dipole Sources</name>
+<description>
+<p>The port takes a handle to the matrix that is 1-by-6 in size,
+containing parameters of 1 dipole.  The first three columns are dipole
+position. The last three colums are dipole moments. If the dipole lies
+outside the innermost sphere, the log window creates a warning
+message.</p>
+</description> 
+<datatype>SCIRun::Field</datatype>
+</port>
 
-    <outputs>
+<port>
+<name>Radii</name>
+<description>
+<p>The port takes a matrix containing the radii for scalp, skull,
+cerebrospinal fluid and the brain.</p>
+</description>
+<datatype>SCIRun::Matrix</datatype>
+</port>
 
-      <port>
-        <name>ElectrodePotentials</name>
-		<description>The initial field is populated with potential values.</description>
-		<datatype>SCIRun::Field</datatype>
-      </port>
-	  
-    </outputs>
+<port>
+<name>AnisoConductivities</name>
+<description>
+<p>The port takes a matrix containing radial and tangential
+conductivities of all 4 layers.</p>
+</description>
+<datatype>SCIRun::Matrix</datatype>
+</port>
+</inputs>
 
-  </io>
+<outputs>
 
-  <gui> </gui>
-  
+<port>
+<name>ElectrodePotentials</name>
+<description>
+<p>The initial field is populated with potential values.</p>
+</description>
+<datatype>SCIRun::Field</datatype>
+</port>
+
+</outputs>
+
+</io>
+
+<gui> 
+<description>
+</description>
+<parameter>
+<widget>Text Entry</widget>
+<datatype>float</datatype>
+<label></label>
+<description>
+</description>
+</parameter>
+<parameter>
+<widget>Text Entry</widget>
+<datatype>int</datatype>
+<label>Expansion Terms</label>
+<description>
+</description>
+</parameter>
+</gui>
+
+<nets>
+<net id="new.das">
+<title>Dipole In Anisotropic Spheres</title>
+
+<p>Use of module DipoleInAnisoSpheres is shown in 
+<xref target="fig.das"/>.  The network computes potentials on the
+surface of a sphere.</p>
+
+<figure id="fig.das">
+<img>../Modules/Forward/doc/sphere.gif</img> 
+<caption>Anisotropic Sphere Model Network</caption>
+</figure>
+
+<section>
+<title>Inputs</title> 
+
+<p>DipoleInAnisoSpheres receives sphere model
+parameters from module <modref package="BioPSE"
+name="AnisoSphereModel"/>.  Electrode positions are recieved, as a
+field, on the first yellow port. Sphere radii parameters are recieved,
+as a matrix, on the first blue port. Conductivity data are
+recieved, as a matrix, on the second blue port.</p> 
+
+<p>Dipole field data are recieved on the second yellow port from module
+<modref package="BioPSE" name="ShowDipoles"/>.</p>
+
+</section>
+
+<section>
+<title>Outputs</title>
+
+ <p>DipoleInAnisoSpheres generate  a potential
+field (electrode positions and corresponding potential values, which
+is then transmitted on its
+sole output port to modules <modref package="SCIRun"
+name="ShowField"/> and <modref package="SCIRun"
+name="RescaleColorMap"/>.</p> 
+
+<p>The potential field and dipole
+are rendered by module <modref package="SCIRun" name="Viewer"/> from
+scene graph data produced by modules <modref package="SCIRun"
+name="ShowField"/> and <modref package="BioPSE"
+name="ShowDipoles"/>.</p>
+</section>
+
+</net>
+</nets>
 </component>
