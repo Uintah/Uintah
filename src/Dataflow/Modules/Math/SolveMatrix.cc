@@ -49,10 +49,10 @@
 #include <iostream>
 #include <sstream>
 
-extern "C" {
-#include "/local/include/petsc.h"
-#include "/local/include/petscsles.h"
-}
+//extern "C" {
+//#include "/local/include/petsc.h"
+//#include "/local/include/petscsles.h"
+//}
 
 #ifdef UNI_PETSC
 /*  
