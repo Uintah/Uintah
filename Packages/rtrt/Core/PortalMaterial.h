@@ -80,8 +80,7 @@ class PortalMaterial : public Material
 
       Ray pray(p2,v2);
 
-      cx->worker->traceRay(result, pray, depth+1,  atten,
-                           accumcolor, cx);
+      Worker::traceRay(result, pray, depth+1,  atten, accumcolor, cx);
     } else {
       result = Color(.1,.1,.65);
     }
