@@ -10,7 +10,7 @@
  *  Copyright (C) 2001 SCI Institute
  */
 
-#include <map.h>
+#include <map>
 #include <iostream>
 using std::cerr;
 using std::cin;
@@ -24,6 +24,8 @@ using std::ostringstream;
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/LatticeVol.h>
+
+#include <Core/Algorithms/Loader/Loader.h>
 #include <Core/Algorithms/Visualization/TetMC.h>
 #include <Core/Algorithms/Visualization/HexMC.h>
 #include <Core/Algorithms/Visualization/MarchingCubes.h>
@@ -37,6 +39,21 @@ using std::ostringstream;
 
 namespace SCIRun {
 
+class MinmaxFunctor {
+public:
+  virtual bool get( Field *, pair<double,double>& ) = 0;
+};
+
+template<class F>
+class Minmax : public MinmaxFunctor {
+public:
+  virtual bool get( Field *field, pair<double,double> &p ) {
+    F *f = dynamic_cast<F *>(field);
+    if ( !f ) return false;
+    cerr << "compute minmax...\n";
+    return field_minmax( *f, p );
+  }
+};
 
 class Isosurface : public Module {
 
@@ -71,6 +88,8 @@ class Isosurface : public Module {
   bool have_ColorMap;
 
   MarchingCubesAlg *mc_alg;
+  Loader loader;
+  Loader minmax_loader;
 
   MaterialHandle matl;
 
@@ -138,7 +157,6 @@ void Isosurface::execute()
     return;
   }
 
-  
   update_state(JustStarted);
 
   if( init ) {
@@ -157,8 +175,6 @@ void Isosurface::execute()
     // fall through and extract isosurface from the new field
   }
 
-  cerr << "continue...\n";
-
   // Color the surface
   have_colorfield=incolorfield->get(colorfield);
   have_ColorMap=inColorMap->get(cmap);
@@ -171,18 +187,25 @@ void Isosurface::execute()
     if ( !mc_alg ) {
       string type = field->get_type_name();
       cerr << "field type = " << type << endl;
-      if ( type == "TetVol<double>" ) {
-	mc_alg = make_tet_mc_alg( this, 
-			      dynamic_cast<TetVol<double> *>(field.get_rep()));
-      }
-      if ( type == "LatticeVol<double>" ) {
-	mc_alg = make_lattice_mc_alg( this, 
-			 dynamic_cast<LatticeVol<double> *>(field.get_rep()));
-      }
-      else {
+      if ( !loader.get( type, mc_alg ) ) {
 	error( "can not work with this field\n");
 	return;
       }
+      cerr << "mc alg. found\n";
+      mc_alg->set_field( field.get_rep() );
+
+//       if ( type == "TetVol<double>" ) {
+// 	mc_alg = make_tet_mc_alg( this, 
+// 			      dynamic_cast<TetVol<double> *>(field.get_rep()));
+//       }
+//       if ( type == "LatticeVol<double>" ) {
+// 	mc_alg = make_lattice_mc_alg( this, 
+// 			 dynamic_cast<LatticeVol<double> *>(field.get_rep()));
+//       }
+//       else {
+// 	error( "can not work with this field\n");
+// 	return;
+//       }
     }
     // mc_alg should be set now
     surface = mc_alg->search( iso_value );
@@ -242,30 +265,50 @@ Isosurface::send_results()
 void
 Isosurface::initialize()
 {
+  minmax_loader.store("TetVol<double>", new Minmax<TetVol<double> > );
+  loader.store("TetVol<double>", 
+	       new MarchingCubes<Module,TetMC<TetVol<double> > >(this) );
+
+  minmax_loader.store("LatticeVol<double>", new Minmax<LatticeVol<double> > );
+  loader.store("LatticeVol<double>", 
+	       new MarchingCubes<Module,HexMC<LatticeVol<double> > >(this) );
+
+  
 //   widget_id = ogeom->addObj(widget->GetWidget(), widget_name, &widget_lock);
 //   widget->Connect(ogeom);
 }
 
+
 void
 Isosurface::new_field( FieldHandle &field )
 {
+  string type = field->get_type_name();
+  cerr << "field type = " << type << endl;
 
-  // reset the GUI
-  pair<double, double> minmax;
-  if ( !field->get("minmax", minmax) ) {
-    cerr << "field does not have minmax\n";
+  if ( !field->is_scalar() ) {
+    cerr << "Isosurface: not a scalar field\n";
     return;
   }
 
-  double min = minmax.first;
-  double max = minmax.second;
+  MinmaxFunctor *functor;
+  if ( !minmax_loader.get( type, functor ) ) {
+    cerr << "isosurface module: can not compute minmax for field\n";
+    return;
+  }
+
+  pair<double, double> minmax;
+  if ( !functor->get( field.get_rep(), minmax ) ) {
+    cerr << "field does not have minmax\n";
+    return;
+  }
   
-  if(min != prev_min || max != prev_max){
+  // reset the GUI
+  if(minmax.first != prev_min || minmax.second != prev_max){
     ostringstream str;
-    str << id << " set_minmax " << min << " " << max;
+    str << id << " set_minmax " << minmax.first << " " << minmax.second;
     TCL::execute(str.str().c_str());
-    prev_min = min;
-    prev_max = max;
+    prev_min = minmax.first;
+    prev_max = minmax.second;
   }
 
   // delete any algorithms created for the previous field.
