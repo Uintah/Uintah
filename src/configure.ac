@@ -980,7 +980,7 @@ case $host in
     CPP="$CC"
     CXXCPP="$CXX -c"
     ##  this WOFF is required for configure 
-    WOFF=" -woff 3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
+    WOFF=" -woff 3625,3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
     CPPFLAGS=" $WOFF -LANG:std"
     if test "$enable_64bit" = "yes"; then
       BINARYFLAGS="-64 -mips4"
@@ -1767,9 +1767,9 @@ fi
 
 if test "$avr" = "yes"; then
   AC_MSG_WARN([
-  *** Will include the advance volume rendering code in compilation.  ***
-  *** configure can erroneously determine this platform can use avr.  ***
-  *** use --disable-advanced-volume-rendering if compilation fails.   ***
+  *** Including the Advance Volume Rendering (AVR) code in compilation.        ***
+  *** Note: configure can erroneously determine this platform can use AVR.     ***
+  *** use --disable-advanced-volume-rendering if compilation fails due to AVR. ***
   ])  
   COMPILE_AVR=1
   DEF_HAVE_AVR="#define HAVE_AVR_SUPPORT 1"
@@ -2309,7 +2309,7 @@ if test "$with_magick" = "yes"; then
 else 
   if test "$with_magick"; then
     # If --with-magick has a parameter, then use it
-    _sci_lib="$with_magick"
+    _sci_lib="$with_magick/lib"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_inc="$with_magick/include"
     _sci_optional=specific
@@ -2319,30 +2319,28 @@ fi
 AC_MSG_CHECKING(for $_sci_optional ImageMagick)
 
 found_magic_config="no"
-for dir in "" $_sci_lib; do
 
-   if test -e $dir/../bin/Magick-config; then
-       found_magic_config="yes"
-       echo
-       AC_MSG_RESULT(Using $dir/../bin/Magick-config to set ImageMagick variables.)
+if test -e $_sci_lib/../bin/Magick-config; then
+    found_magic_config="yes"
+    echo
+    AC_MSG_RESULT(Using $_sci_lib/../bin/Magick-config to set ImageMagick variables.)
 
-       MAG_LIBS=`$dir/../bin/Magick-config --libs`
-       MAG_DIRS=`$dir/../bin/Magick-config --ldflags`
+    MAG_LIBS=`$_sci_lib/../bin/Magick-config --libs`
+    MAG_DIRS=`$_sci_lib/../bin/Magick-config --ldflags`
 
-       #MAGICK_LIB_DIR_FLAG=
-       #SCI_REMOVE_MINUS_L(MAGICK_LIB_FLAG,$MAG_DIRS,$MAG_LIBS)
+    #MAGICK_LIB_DIR_FLAG=
+    #SCI_REMOVE_MINUS_L(MAGICK_LIB_FLAG,$MAG_DIRS,$MAG_LIBS)
 
-       MAGICK_LIB_DIR_FLAG=`$dir/../bin/Magick-config --ldflags`
-       MAGICK_LIB_FLAG=`$dir/../bin/Magick-config --libs`
-       includes=`$dir/../bin/Magick-config --cppflags`
+    MAGICK_LIB_DIR_FLAG=`$_sci_lib/../bin/Magick-config --ldflags`
+    MAGICK_LIB_FLAG=`$_sci_lib/../bin/Magick-config --libs`
+    includes=`$_sci_lib/../bin/Magick-config --cppflags`
 
-       SCI_TRY_LINK(MAGICK,ImageMagick library and headers,magick/magick.h,
-                    $includes,$MAGICK_LIB_FLAG,$MAGICK_LIB_DIR_FLAG,,,required)
+    SCI_TRY_LINK(MAGICK,ImageMagick library and headers,magick/magick.h,
+                 $includes,$MAGICK_LIB_FLAG,$MAGICK_LIB_DIR_FLAG,,,required)
 
-       DEF_MAGICK="#define HAVE_MAGICK 1"
-       break
-    fi
-done
+    DEF_MAGICK="#define HAVE_MAGICK 1"
+    break
+fi
 
 if test "$found_magic_config" = "no"; then
    AC_MSG_RESULT(no.)
@@ -3512,17 +3510,12 @@ _sci_optional=optional
 
 if test "$with_freetype" = "yes"; then
   # If --with-freetype is specified without a parameter, then it makes it required
-  _sci_lib="/usr/lib"
-  _sci_inc="/usr/include"
   _sci_optional=required
 elif test "$with_freetype"; then
   # If --with-freetype has a parameter, then use it
   _sci_lib="$with_freetype/lib"
   _sci_inc="$with_freetype/include"
   _sci_optional=specific
-else
-  _sci_lib="/usr/lib"
-  _sci_inc="/usr/include"
 fi
 
 AC_MSG_CHECKING(for $_sci_optional freetype)
@@ -3540,7 +3533,7 @@ for dir in "" $_sci_lib; do
        FREETYPE_LIB_FLAG=`$dir/../bin/freetype-config --libs`
 
        SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
-                    _sci_inc,$FREETYPE_LIB_FLAG,$dir,$includes,,required)
+                    $_sci_inc,$FREETYPE_LIB_FLAG,$dir,$includes,,$_sci_optional)
 
        INC_FREETYPE_H="$INC_FREETYPE_H $includes"
 
