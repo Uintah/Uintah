@@ -69,13 +69,6 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps)
 
       piece_num++;
       d_geom_objs.push_back(scinew GeometryObject2(this,mainpiece,geom_obj_ps));
-      // Step 4 -- Assign the boundary conditions to the object
-
-
-      // Step 5 -- Assign the velocity field
-      int vf;
-      ps->require("velocity_field",vf);
-      setVFIndex(vf);
    }
 
    lb = scinew ICELabel();
@@ -192,6 +185,9 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 }
 
 // $Log$
+// Revision 1.13  2001/01/11 22:38:50  guilkey
+// Get rid of requirement for velocity_field flag from ps.
+//
 // Revision 1.12  2001/01/11 00:22:06  harman
 // -remove if(count) conditional around, vel, cv, temp, cv, speedSound,visc_CC
 //  these need to be defined in everycell for every mat.
