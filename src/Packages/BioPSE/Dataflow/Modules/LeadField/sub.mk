@@ -28,6 +28,7 @@ SRCDIR   := Packages/BioPSE/Dataflow/Modules/LeadField
 
 SRCS     += \
 	$(SRCDIR)/BuildLeadField.cc\
+	$(SRCDIR)/BuildMisfitField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
