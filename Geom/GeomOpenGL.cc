@@ -17,6 +17,7 @@
 #include <Geom/Cylinder.h>
 #include <Geom/Disc.h>
 #include <Geom/Geom.h>
+#include <Geom/Grid.h>
 #include <Geom/Group.h>
 #include <Geom/HeadLight.h>
 #include <Geom/Light.h>
@@ -192,6 +193,96 @@ void GeomDisc::draw(DrawInfoOpenGL* di, Material* matl, double)
     di->polycount+=2*(nu-1)*(nv-1);
     gluDisk(di->qobj, 0, rad, nu, nv);
     glPopMatrix();
+}
+
+void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+    pre_draw(di, matl, 1);
+    int nu=verts.dim1();
+    int nv=verts.dim2();
+    di->polycount+=2*(nu-1)*(nv-1);
+    Vector uu(u/(nu-1));
+    Vector vv(v/(nv-1));
+
+    switch(di->get_drawtype()){
+    case DrawInfoOpenGL::WireFrame:
+	{
+	    Point rstart(corner);
+	    for(int i=0;i<nu;i++){
+		Point p1(rstart);
+		glBegin(GL_LINE_STRIP);
+		for(int j=0;j<nv;j++){
+		    Point pp1(p1+w*verts(i, j));
+		    if(have_matls)
+			di->set_matl(matls(i, j).get_rep());
+		    if(have_normals){
+			Vector normal(normals(i, j));
+			glNormal3d(normal.x(), normal.y(), normal.z());
+		    }
+		    glVertex3d(pp1.x(), pp1.y(), pp1.z());
+
+		    p1+=uu;
+		}
+		glEnd();
+		rstart+=vv;
+	    }
+	    rstart=corner;
+	    for(int j=0;j<nv;j++){
+		Point p1(rstart);
+		glBegin(GL_LINE_STRIP);
+		for(int i=0;i<nu;i++){
+		    Point pp1(p1+w*verts(i, j));
+		    if(have_matls)
+			di->set_matl(matls(i, j).get_rep());
+		    if(have_normals){
+			Vector normal(normals(i, j));
+			glNormal3d(normal.x(), normal.y(), normal.z());
+		    }
+		    glVertex3d(pp1.x(), pp1.y(), pp1.z());
+
+		    p1+=vv;
+		}
+		glEnd();
+		rstart+=uu;
+	    }
+	}
+	break;
+    case DrawInfoOpenGL::Flat:
+    case DrawInfoOpenGL::Gouraud:
+    case DrawInfoOpenGL::Phong:
+	{
+	    Point rstart(corner);
+	    for(int i=0;i<nu-1;i++){
+		Point p1(rstart);
+		Point p2(rstart+vv);
+		rstart=p2;
+		glBegin(GL_TRIANGLE_STRIP);
+		for(int j=0;j<nv;j++){
+		    Point pp1(p1+w*verts(i, j));
+		    Point pp2(p2+w*verts(i+1, j));
+		    if(have_matls)
+			di->set_matl(matls(i, j).get_rep());
+		    if(have_normals){
+			Vector normal(normals(i, j));
+			glNormal3d(normal.x(), normal.y(), normal.z());
+		    }
+		    glVertex3d(pp1.x(), pp1.y(), pp1.z());
+
+		    if(have_matls)
+			di->set_matl(matls(i+1, j).get_rep());
+		    if(have_normals){
+			Vector normal(normals(i+1, j));
+			glNormal3d(normal.x(), normal.y(), normal.z());
+		    }
+		    glVertex3d(pp2.x(), pp2.y(), pp2.z());
+		    p1+=uu;
+		    p2+=uu;
+		}
+		glEnd();
+	    }
+	}
+	break;
+    }
 }
 
 void GeomGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
