@@ -70,14 +70,14 @@ WARNING
    double getSpeedOfSound() const;
    
    void initializeCells(CCVariable<double>& rhom,
-			CCVariable<double>&sp_vol,
-			CCVariable<double>& rhC,
-			CCVariable<double>& temp, 
-			CCVariable<double>& ss,
-			CCVariable<double>& volf,  CCVariable<Vector>& vCC,
-			CCVariable<double>& press,
-			int numMatls,
-			const Patch* patch, DataWarehouse* new_dw);
+                     CCVariable<double>&sp_vol,
+                     CCVariable<double>& rhC,
+                     CCVariable<double>& temp, 
+                     CCVariable<double>& ss,
+                     CCVariable<double>& volf,  CCVariable<Vector>& vCC,
+                     CCVariable<double>& press,
+                     int numMatls,
+                     const Patch* patch, DataWarehouse* new_dw);
    
  private:
    

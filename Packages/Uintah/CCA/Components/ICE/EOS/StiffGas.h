@@ -36,34 +36,34 @@ WARNING
 
       class StiffGas : public EquationOfState {
       public:
-	 
-	 StiffGas(ProblemSpecP& ps);
-	 virtual ~StiffGas();
         
-	 // Per cell
-	 virtual double computeRhoMicro(double press,double gamma,
-				        double cv, double Temp);
-	 
-	 virtual void computePressEOS(double rhoM, double gamma,
-				      double cv, double Temp,
-				      double& press, double& dp_drho,
-				      double& dp_de);
+        StiffGas(ProblemSpecP& ps);
+        virtual ~StiffGas();
+        
+        // Per cell
+        virtual double computeRhoMicro(double press,double gamma,
+                                    double cv, double Temp);
+        
+        virtual void computePressEOS(double rhoM, double gamma,
+                                  double cv, double Temp,
+                                  double& press, double& dp_drho,
+                                  double& dp_de);
         //per patch                          
         virtual void computeTempCC(const Patch* patch,
                                 const CCVariable<double>& press, 
                                 const double& gamma,
-				    const double& cv,
+                                const double& cv,
                                 const CCVariable<double>& rho_micro, 
                                 CCVariable<double>& Temp);
 
 
-	 double getGasConstant() const;
+        double getGasConstant() const;
 
         protected:
 
-	 ICELabel* lb;
+        ICELabel* lb;
       private:
-	double d_gas_constant;
+       double d_gas_constant;
       };
 } // End namespace Uintah
       

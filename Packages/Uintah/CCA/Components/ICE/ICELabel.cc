@@ -123,11 +123,11 @@ ICELabel::ICELabel()
   tau_Z_FCLabel       =
     VarLabel::create("tau_Z_FC",  SFCZVariable<Vector>::getTypeDescription() );
   press_diffX_FCLabel = VarLabel::create("press_diffX_FC",
-				  SFCXVariable<double>::getTypeDescription() );
+                              SFCXVariable<double>::getTypeDescription() );
   press_diffY_FCLabel = VarLabel::create("press_diffY_FC",
-				  SFCYVariable<double>::getTypeDescription() );
+                              SFCYVariable<double>::getTypeDescription() );
   press_diffZ_FCLabel = VarLabel::create("press_diffZ_FC",
-				  SFCZVariable<double>::getTypeDescription() );
+                              SFCZVariable<double>::getTypeDescription() );
     
     // Misc labels
     scratchLabel     =
@@ -143,7 +143,7 @@ ICELabel::ICELabel()
 
     scratch_FCVectorLabel   =
      VarLabel::create("scratch_FCVector",
-		     SFCXVariable<Vector>::getTypeDescription());
+                   SFCXVariable<Vector>::getTypeDescription());
     IveBeenHereLabel     =
      VarLabel::create("IveBeenHere",CCVariable<int>::getTypeDescription() );
      

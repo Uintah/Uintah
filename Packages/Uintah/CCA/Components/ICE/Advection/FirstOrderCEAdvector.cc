@@ -17,15 +17,15 @@ FirstOrderCEAdvector::FirstOrderCEAdvector()
 }
 
 FirstOrderCEAdvector::FirstOrderCEAdvector(DataWarehouse* new_dw, 
-					       const Patch* patch)
+                                          const Patch* patch)
   :   d_advector(new_dw,patch)
 {
 
 
   OFE_CCLabel = VarLabel::create("OFE_CC",
-				 CCVariable<eflux>::getTypeDescription());
+                             CCVariable<eflux>::getTypeDescription());
   OFC_CCLabel = VarLabel::create("OFC_CC",
-				 CCVariable<cflux>::getTypeDescription());
+                             CCVariable<cflux>::getTypeDescription());
   new_dw->allocate(d_OFE, OFE_CCLabel,0, patch, Ghost::AroundCells,1);
   new_dw->allocate(d_OFC, OFC_CCLabel,0, patch, Ghost::AroundCells,1);
 }
@@ -38,7 +38,7 @@ FirstOrderCEAdvector::~FirstOrderCEAdvector()
 }
 
 FirstOrderCEAdvector* FirstOrderCEAdvector::clone(DataWarehouse* new_dw,
-					const Patch* patch)
+                                   const Patch* patch)
 {
   return scinew FirstOrderCEAdvector(new_dw,patch);
 }
@@ -66,10 +66,10 @@ See schematic diagram at bottom of ice.cc for del* definitions
 
 void FirstOrderCEAdvector::inFluxOutFluxVolume(
                            const SFCXVariable<double>& uvel_FC,
-			   const SFCYVariable<double>& vvel_FC,
-			   const SFCZVariable<double>& wvel_FC,
-			   const double& delT, 
-			   const Patch* patch)
+                        const SFCYVariable<double>& vvel_FC,
+                        const SFCZVariable<double>& wvel_FC,
+                        const double& delT, 
+                        const Patch* patch)
 
 {
   Vector dx = patch->dCell();
@@ -138,7 +138,7 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
     //  Bullet proofing
     double total_fluxout = 0.0;
     for(int face = FOA::TOP; face <= FOA::BACK; 
-	face++ )  {
+       face++ )  {
       total_fluxout  += d_advector.d_OFS[curcell].d_fflux[face];
     }
     for(int edge = TOP_R; edge <= LEFT_FR; edge++ )  {
@@ -178,8 +178,8 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
  ---------------------------------------------------------------------  */
 
 void FirstOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
-				 const Patch* patch,
-				 CCVariable<double>& q_advected)
+                             const Patch* patch,
+                             CCVariable<double>& q_advected)
 {
 
   advect<double>(q_CC,patch,q_advected);
@@ -188,8 +188,8 @@ void FirstOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
 
 
 void FirstOrderCEAdvector::advectQ(const CCVariable<Vector>& q_CC,
-				 const Patch* patch,
-				 CCVariable<Vector>& q_advected)
+                             const Patch* patch,
+                             CCVariable<Vector>& q_advected)
 {
 
   advect<Vector>(q_CC,patch,q_advected);
@@ -198,8 +198,8 @@ void FirstOrderCEAdvector::advectQ(const CCVariable<Vector>& q_CC,
 
 
 template <class T> void FirstOrderCEAdvector::advect(const CCVariable<T>& q_CC,
-						    const Patch* patch,
-						    CCVariable<T>& q_advected)
+                                              const Patch* patch,
+                                              CCVariable<T>& q_advected)
 {
   T sum_q_outflux(0.), sum_q_outflux_EF(0.), sum_q_outflux_CF(0.);
   T sum_q_influx(0.), sum_q_influx_EF(0.), sum_q_influx_CF(0.);
@@ -221,7 +221,7 @@ template <class T> void FirstOrderCEAdvector::advect(const CCVariable<T>& q_CC,
     //__________________________________
     //  OUTFLUX: SLAB 
     for(int face = FOA::TOP; face <= FOA::BACK; 
-	face++ )  {
+       face++ )  {
       sum_q_outflux  += q_CC[curcell] * d_advector.d_OFS[curcell].d_fflux[face];
     }
     //__________________________________
@@ -231,68 +231,68 @@ template <class T> void FirstOrderCEAdvector::advect(const CCVariable<T>& q_CC,
     }
     //__________________________________
     //  OUTFLUX: CORNER FLUX
-    for(int corner = TOP_R_BK; 	corner <= BOT_L_FR; corner++ )  {
+    for(int corner = TOP_R_BK;        corner <= BOT_L_FR; corner++ )  {
       sum_q_outflux_CF +=  q_CC[curcell] * d_OFC[curcell].d_cflux[corner];
     } 
 
     //__________________________________
     //  INFLUX: SLABS
-    adjcell = IntVector(i, j+1, k);	// TOP
+    adjcell = IntVector(i, j+1, k);       // TOP
     sum_q_influx  += q_CC[adjcell] * d_advector.d_OFS[adjcell].d_fflux[FOA::BOTTOM];
-    adjcell = IntVector(i, j-1, k);	// BOTTOM
+    adjcell = IntVector(i, j-1, k);       // BOTTOM
     sum_q_influx  += q_CC[adjcell] * d_advector.d_OFS[adjcell].d_fflux[FOA::TOP];
-    adjcell = IntVector(i+1, j, k);	// RIGHT
+    adjcell = IntVector(i+1, j, k);       // RIGHT
     sum_q_influx  += q_CC[adjcell] * d_advector.d_OFS[adjcell].d_fflux[FOA::LEFT];
-    adjcell = IntVector(i-1, j, k);	// LEFT
+    adjcell = IntVector(i-1, j, k);       // LEFT
     sum_q_influx  += q_CC[adjcell] * d_advector.d_OFS[adjcell].d_fflux[FOA::RIGHT];
-    adjcell = IntVector(i, j, k+1);	// FRONT
+    adjcell = IntVector(i, j, k+1);       // FRONT
     sum_q_influx  += q_CC[adjcell] * d_advector.d_OFS[adjcell].d_fflux[FOA::BACK];
-    adjcell = IntVector(i, j, k-1);	// BACK
+    adjcell = IntVector(i, j, k-1);       // BACK
     sum_q_influx  += q_CC[adjcell] * d_advector.d_OFS[adjcell].d_fflux[FOA::FRONT];
     //__________________________________
     //  INFLUX: EDGES
-    adjcell = IntVector(i+1, j+1, k);	// TOP_R
+    adjcell = IntVector(i+1, j+1, k);       // TOP_R
     sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[BOT_L];
     adjcell = IntVector(i, j+1, k+1);   // TOP_FR
     sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[BOT_BK];
-    adjcell = IntVector(i-1, j+1, k);	// TOP_L
+    adjcell = IntVector(i-1, j+1, k);       // TOP_L
     sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[BOT_R];
-    adjcell = IntVector(i, j+1, k-1);	// TOP_BK
+    adjcell = IntVector(i, j+1, k-1);       // TOP_BK
     sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[BOT_FR];
-    adjcell = IntVector(i+1, j-1, k);	// BOT_R
+    adjcell = IntVector(i+1, j-1, k);       // BOT_R
     sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[TOP_L];
-    adjcell = IntVector(i, j-1, k+1);	// BOT_FR
+    adjcell = IntVector(i, j-1, k+1);       // BOT_FR
     sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[TOP_BK];
-    adjcell = IntVector(i-1, j-1, k);	// BOT_L
+    adjcell = IntVector(i-1, j-1, k);       // BOT_L
     sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[TOP_R];
-    adjcell = IntVector(i, j-1, k-1);	// BOT_BK
+    adjcell = IntVector(i, j-1, k-1);       // BOT_BK
     sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[TOP_FR];
-    adjcell = IntVector(i+1, j, k-1);	// RIGHT_BK
+    adjcell = IntVector(i+1, j, k-1);       // RIGHT_BK
     sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[LEFT_FR];
-    adjcell = IntVector(i+1, j, k+1);	// RIGHT_FR
+    adjcell = IntVector(i+1, j, k+1);       // RIGHT_FR
     sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[LEFT_BK];
-    adjcell = IntVector(i-1, j, k-1);	// LEFT_BK
+    adjcell = IntVector(i-1, j, k-1);       // LEFT_BK
     sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[RIGHT_FR];
-    adjcell = IntVector(i-1, j, k+1);	// LEFT_FR
+    adjcell = IntVector(i-1, j, k+1);       // LEFT_FR
     sum_q_influx_EF += q_CC[adjcell] * d_OFE[adjcell].d_eflux[RIGHT_BK];
 
     //__________________________________
     //   INFLUX: CORNER FLUX
-    adjcell = IntVector(i+1, j+1, k-1);	// TOP_R_BK
+    adjcell = IntVector(i+1, j+1, k-1);       // TOP_R_BK
     sum_q_influx_CF += q_CC[adjcell] * d_OFC[adjcell].d_cflux[BOT_L_FR];
-    adjcell = IntVector(i+1, j+1, k+1);	// TOP_R_FR
+    adjcell = IntVector(i+1, j+1, k+1);       // TOP_R_FR
     sum_q_influx_CF += q_CC[adjcell] * d_OFC[adjcell].d_cflux[BOT_L_BK];
-    adjcell = IntVector(i-1, j+1, k-1);	// TOP_L_BK
+    adjcell = IntVector(i-1, j+1, k-1);       // TOP_L_BK
     sum_q_influx_CF += q_CC[adjcell] * d_OFC[adjcell].d_cflux[BOT_R_FR];
-    adjcell = IntVector(i-1, j+1, k+1);	// TOP_L_FR
+    adjcell = IntVector(i-1, j+1, k+1);       // TOP_L_FR
     sum_q_influx_CF += q_CC[adjcell] * d_OFC[adjcell].d_cflux[BOT_R_BK];
-    adjcell = IntVector(i+1, j-1, k-1);	// BOT_R_BK
+    adjcell = IntVector(i+1, j-1, k-1);       // BOT_R_BK
     sum_q_influx_CF += q_CC[adjcell] * d_OFC[adjcell].d_cflux[TOP_L_FR];
-    adjcell = IntVector(i+1, j-1, k+1);	// BOT_R_FR
+    adjcell = IntVector(i+1, j-1, k+1);       // BOT_R_FR
     sum_q_influx_CF += q_CC[adjcell] * d_OFC[adjcell].d_cflux[TOP_L_BK];
     adjcell = IntVector(i-1, j-1, k-1); // BOT_L_BK
     sum_q_influx_CF += q_CC[adjcell] * d_OFC[adjcell].d_cflux[TOP_R_FR];
-    adjcell = IntVector(i-1, j-1, k+1);	// BOT_L_FR
+    adjcell = IntVector(i-1, j-1, k+1);       // BOT_L_FR
     sum_q_influx_CF += q_CC[adjcell] * d_OFC[adjcell].d_cflux[TOP_R_BK];
 
     //__________________________________
@@ -320,8 +320,8 @@ namespace Uintah {
     static TypeDescription* td = 0;
     if(!td){
       td = scinew TypeDescription(TypeDescription::Other,
-				  "FirstOrderCEAdvector::eflux", true, 
-				  &makeMPI_eflux);
+                              "FirstOrderCEAdvector::eflux", true, 
+                              &makeMPI_eflux);
     }
     return td;
   }
@@ -340,8 +340,8 @@ namespace Uintah {
     static TypeDescription* td = 0;
     if(!td){
       td = scinew TypeDescription(TypeDescription::Other,
-				  "FirstOrderCEAdvector::cflux", true, 
-				  &makeMPI_cflux);
+                              "FirstOrderCEAdvector::cflux", true, 
+                              &makeMPI_cflux);
     }
     return td;
   }
