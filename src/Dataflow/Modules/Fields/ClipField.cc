@@ -196,7 +196,7 @@ ClipField::execute()
   }
   if (!ifieldhandle->mesh()->is_editable())
   {
-    error("Not an editable mesh type.");
+    error("Not an editable mesh type (try passing Field through an Unstructure module first).");
     return;
   }
 
