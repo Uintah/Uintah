@@ -16,7 +16,6 @@
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
-//#include <Packages/rtrt/Core/VolumeCutPlane.h>
 #include <float.h>
 #include <iostream>
 
@@ -75,6 +74,10 @@ VolumeVis2D::VolumeVis2D( BrickArray3<Voxel2D<float> >& _data,
     inv_diag.z(0);
   else
     inv_diag.z(1.0/diag.z());
+
+  norm_step_x = inv_diag.x() * (nx - 1 );
+  norm_step_y = inv_diag.y() * (ny - 1 );
+  norm_step_z = inv_diag.z() * (nz - 1 );
 
   dpy->attach(this);
 }
@@ -151,15 +154,14 @@ void VolumeVis2D::intersect(Ray& ray, HitInfo& hit, DepthStats* ,
       vs.coe = Neither;
       // Compute cutting plane intersection (t_cp)
       double dt = Dot( ray.direction(), cutplane_normal );
-      double plane = Dot( cutplane_normal, ray.origin() ) -
-	                  cutplane_displacement;
-      double t_cp = (cutplane_displacement -
-		     Dot( cutplane_normal, ray.origin() ))/dt;
-      if( plane > 0 || (plane <= 0 && t_cp < t2) ) {
+//        double t_cp = (cutplane_displacement -
+//  		     Dot( cutplane_normal, ray.origin() ))/dt;
+      double plane = Dot(cutplane_normal, ray.origin())-cutplane_displacement;
+      double t_cp = -plane/dt;
+      if( plane > 0 || t_cp < t2 ) {
 	if( dt > 1.e-6 || dt < -1.e-6 ) {
 	  // and determine what to do with t_cp
 	  if( t_cp >= t1 && t_cp <= t2 ) {
-//  	  if( plane > 0 ) {
 	    // Determine which direction the normal is facing
 	    if( dt < 0 ) {
 	      vs.coe = OverwroteTMax;
@@ -168,17 +170,6 @@ void VolumeVis2D::intersect(Ray& ray, HitInfo& hit, DepthStats* ,
 	      vs.coe = OverwroteTMin;
 	      t1 = t_cp;
 	    }
-//  	    vs.coe = OverwroteTMin;
-//  	    t1 = t_cp;
-//  	  } else if( t_cp <= 0 ) {
-//  	    vs.coe = Neither;
-//  	  } else {
-//  	    vs.coe = OverwroteTMax;
-//  	    t2 = t_cp;
-//  	  }
-//  	  } else if ( plane < 0 ) {
-//  	    return;
-//  	  }
 	  } else if( t_cp < t1 ) {
 	    if( dt < 0 ) {
 	      return;
@@ -189,8 +180,6 @@ void VolumeVis2D::intersect(Ray& ray, HitInfo& hit, DepthStats* ,
 	    }
 	  }
 	}
-//  	} else if( dt <= 1.e-6 && dt >= -1.e-6 ) {
-	// if perpendicular to the cutting plane, don't overwrite t values
 	// Check to see which side of the plane the origin of the ray is
       } else if( plane <= 0 ) {
 	// on the back side of the plane, so there is no intersection
@@ -345,6 +334,7 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
 			Context* cx) {
 
   //  cerr <<__LINE__<<"Number of lights in the scene is "<<cx->scene->nlights()<<"\n";
+
   // deal with whether or not a cutting plane is being used
   VolumeVis2D_scratchpad* vsp;
   float t_min = hit.min_t;
@@ -357,13 +347,11 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
     t_maxp = (float*)hit.scratchpad;
     t_max = *t_maxp;
   }
-  unsigned int render_mode = dpy->render_mode;
-  //#endif
 
-  // alpha is the accumulating opacities
-  // alphas are in levels of opacity: 1 - completly opaque
-  //                                  0 - completly transparent
-  float alpha = 0;
+  // opacity is the accumulating opacities of each voxel sample
+  // values of opacities: 1 - completly opaque
+  //                      0 - completly transparent
+  float opacity = 0;
   Color total(0,0,0);
 
   Vector p_inc = dpy->t_inc*ray.direction();
@@ -373,33 +361,33 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
   float norm_step_y = inv_diag.y() * (ny - 1 );
   float norm_step_z = inv_diag.z() * (nz - 1 );
 
-  p -= p_inc;
-
-  float step;
-  int x_low, x_high, y_low, y_high, z_low, z_high;
-  float x_weight_low, y_weight_low, z_weight_low;
-  Voxel2D<float> a,b,c,d,e,f,g,h;
-  Voxel2D<float> lz1, lz2, lz3, lz4, ly1, ly2, value;
-  float alpha_factor;
-  Color value_color;
-  float dx, dy, dz;
-  float dy1, dy2;
-  float dz1, dz2, dz3, dz4, dzly1, dzly2;
 
   //  cerr <<__LINE__<<"("<<cx->scene->nlights()<<")Number of lights in the scene\n"; cerr.flush();
-  Light* light=cx->scene->light(0);
-  Vector light_dir;
 
+  float opacity_factor;
+  Color value_color;
   // If the cutting plane is in front add the cutting plane's color
+  Color plane_color(1,0,1);
   if(cutplane_active ) {
     if (vsp->coe == OverwroteTMin) {
-      total = Color(1,0,1);
-      alpha = 1;
+      Voxel2D<float> value;
+      lookup_value( p, value, false );
+      float sample_opacity;
+      Color sample_color;
+      dpy->voxel_lookup(value, sample_color, sample_opacity);
+      opacity = dpy->cp_opacity;
+      float gray_scale = (value.v() -data_min.v())/(data_max.v()-data_min.v());
+      Color composite_plane_color = plane_color * (1-dpy->cp_gs) +
+	Color(gray_scale,gray_scale,gray_scale) * dpy->cp_gs;
+      total = (composite_plane_color * (1-sample_opacity) +
+	       sample_color * sample_opacity) * opacity;
     }
-  }
+  } // if cutplane is active
+  p -= p_inc;
+
   for(float t = t_min; t < t_max; t += dpy->t_inc) {
-    // opaque values are 1, so terminate the ray at alpha values close to one
-    if( alpha >= RAY_TERMINATION_THRESHOLD )
+    // opaque values are 1, so terminate the ray at opacity values close to one
+    if( opacity >= RAY_TERMINATION_THRESHOLD )
       break;
     // get the point to interpolate
     p += p_inc;
@@ -408,37 +396,39 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
     // interpolate the point
     
     // get the indices and weights for the indices
-    step = p.x() * norm_step_x;
-    x_low = bound((int)step, 0, data.dim1()-2);
-    x_high = x_low+1;
-    x_weight_low = x_high - step;
+    float step = p.x() * norm_step_x;
+    int x_low = bound((int)step, 0, data.dim1()-2);
+    int x_high = x_low+1;
+    float x_weight_low = x_high - step;
     
     step = p.y() * norm_step_y;
-    y_low = bound((int)step, 0, data.dim2()-2);
-    y_high = y_low+1;
-    y_weight_low = y_high - step;
+    int y_low = bound((int)step, 0, data.dim2()-2);
+    int y_high = y_low+1;
+    float y_weight_low = y_high - step;
     
     step = p.z() * norm_step_z;
-    z_low = bound((int)step, 0, data.dim3()-2);
-    z_high = z_low+1;
-    z_weight_low = z_high - step;
+    int z_low = bound((int)step, 0, data.dim3()-2);
+    int z_high = z_low+1;
+    float z_weight_low = z_high - step;
     
     ////////////////////////////////////////////////////////////
     // do the interpolation
     
+    Voxel2D<float> a, b, c, d, e, f, g, h;
     a = data(x_low,  y_low,  z_low);
     d = data(x_low,  y_high, z_high);
     f = data(x_high, y_low,  z_high);
     g = data(x_high, y_high, z_low);
     // user-selectable acceleration method
     // (works best when widget areas are larger)
-    if( render_mode && dpy->skip_alpha( a, d, f, g ) )
+    if( dpy->render_mode && dpy->skip_opacity( a, d, f, g ) )
       continue;
     b = data(x_low,  y_low,  z_high);
     c = data(x_low,  y_high, z_low);
     e = data(x_high, y_low,  z_low);
     h = data(x_high, y_high, z_high);
     
+    Voxel2D<float> lz1, lz2, lz3, lz4, ly1, ly2, value;
     lz1 = a * z_weight_low + b * (1 - z_weight_low);
     lz2 = c * z_weight_low + d * (1 - z_weight_low);
     lz3 = e * z_weight_low + f * (1 - z_weight_low);
@@ -470,21 +460,23 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
       flush(cerr);
     }
 #endif
-    dpy->lookup(value, value_color, alpha_factor);
-    alpha_factor *= 1-alpha;
-    if (alpha_factor > 0.001) {
+    dpy->voxel_lookup(value, value_color, opacity_factor);
+    opacity_factor *= 1-opacity;
+    if (opacity_factor > 0.001) {
       //if (true) {
       // the point is contributing, so compute the color
       
       // compute the gradient This should probably take into
       // consideration the other value of the voxel, but I'm not
       // sure how to compute that just yet.
-      dx = ly2.v() - ly1.v();
+      float dx = ly2.v() - ly1.v();
       
+      float dy1, dy2, dy;
       dy1 = lz2.v() - lz1.v();
       dy2 = lz4.v() - lz3.v();
       dy = dy1 * x_weight_low + dy2 * (1 - x_weight_low);
       
+      float dz1, dz2, dz3, dz4, dzly1, dzly2, dz;
       dz1 = b.v() - a.v();
       dz2 = d.v() - c.v();
       dz3 = f.v() - e.v();
@@ -503,36 +495,60 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
 	gradient = Vector(0,0,0);
       }
       
+      Light* light=cx->scene->light(0);
+      Vector light_dir;
       light_dir = light->get_pos()-p;
       
       Color temp = color(gradient, ray.direction(), light_dir.normal(), 
 			 value_color,light->get_color());
-      total += temp * alpha_factor;
-      alpha += alpha_factor;
+      total += temp * opacity_factor;
+      opacity += opacity_factor;
     }
   }
 
-  if (alpha < RAY_TERMINATION_THRESHOLD) {
+  if (opacity < RAY_TERMINATION_THRESHOLD) {
     if (vsp->coe == OverwroteTMax ) {
-      float alpha_factor = 1;
-      alpha_factor *= 1 - alpha;
-      total += Color(1,0,1) * alpha_factor;
-      alpha += alpha_factor;
+      Voxel2D<float> value;
+      lookup_value( p, value, false );
+      float sample_opacity;
+      Color sample_color;
+      dpy->voxel_lookup(value, sample_color, sample_opacity);
+      float gray_scale = (value.v() -data_min.v())/(data_max.v()-data_min.v());
+      Color composite_plane_color = plane_color * (1-dpy->cp_gs) +
+  	Color(gray_scale,gray_scale,gray_scale) * dpy->cp_gs;
+      total += (composite_plane_color * (1-sample_opacity) +
+		sample_color * sample_opacity) * (Max(0.0f,dpy->cp_opacity -
+						      opacity));
+      opacity += dpy->cp_opacity * (1 - opacity);
     }
   }
   
-  if (alpha < RAY_TERMINATION_THRESHOLD) {
+  if (opacity < RAY_TERMINATION_THRESHOLD) {
     Color bgcolor;
     Point origin(p.x(),p.y(),p.z());
     Ray r(origin,ray.direction());
     cx->worker->traceRay(bgcolor, r, depth+1, atten,
 			 accumcolor, cx);
-    total += bgcolor * (1-alpha);
+    total += bgcolor * (1-opacity);
   }
   result = total;
+} // shade()
+
+void VolumeVis2D::compute_grad( Ray ray, Point p, Vector gradient,
+				float &opacity, Color value_color,
+				Color &total, Context* cx )
+{
+  Light* light=cx->scene->light(0);
+  Vector light_dir;
+  light_dir = light->get_pos()-p;
+  
+  Color temp = color(gradient, ray.direction(), light_dir.normal(), 
+		     value_color,light->get_color());
+  total += temp * (1 - opacity);
+  opacity += opacity;//_factor;
 }
 
-// template<class T>
+//template<class T>
 void VolumeVis2D::animate(double, bool& changed)
 {
   if( cdpy ) {
@@ -550,10 +566,84 @@ void VolumeVis2D::animate(double, bool& changed)
   dpy->animate(changed);
 }
 
-const int VVIS2D_VERSION = 1;
+void VolumeVis2D::point2indexspace(Point &p,
+		      int& x_low, int& x_high, float& x_weight_low,
+		      int& y_low, int& y_high, float& y_weight_low,
+		      int& z_low, int& z_high, float& z_weight_low) {
+  float step = p.x() * norm_step_x;
+  x_low = bound((int)step, 0, data.dim1()-2);
+  x_high = x_low+1;
+  x_weight_low = x_high - step;
+  
+  step = p.y() * norm_step_y;
+  y_low = bound((int)step, 0, data.dim2()-2);
+  y_high = y_low+1;
+  y_weight_low = y_high - step;
+  
+  step = p.z() * norm_step_z;
+  z_low = bound((int)step, 0, data.dim3()-2);
+  z_high = z_low+1;
+  z_weight_low = z_high - step;
+}
+
+// Should return true if the value was completely computed
+bool VolumeVis2D::lookup_value(Voxel2D<float>& return_value,
+			       bool exit_early,
+		  int x_low, int x_high, float x_weight_low,
+		  int y_low, int y_high, float y_weight_low,
+		  int z_low, int z_high, float z_weight_low)
+{
+  Voxel2D<float> a, b, c, d, e, f, g, h;
+  a = data(x_low,  y_low,  z_low);
+  d = data(x_low,  y_high, z_high);
+  f = data(x_high, y_low,  z_high);
+  g = data(x_high, y_high, z_low);
+  // user-selectable acceleration method
+  // (works best when widget areas are larger)
+  if( exit_early && dpy->skip_opacity( a, d, f, g ) )
+    return false;
+  b = data(x_low,  y_low,  z_high);
+  c = data(x_low,  y_high, z_low);
+  e = data(x_high, y_low,  z_low);
+  h = data(x_high, y_high, z_high);
+  Voxel2D<float> lz1, lz2, lz3, lz4, ly1, ly2, value;
+  lz1 = a * z_weight_low + b * (1 - z_weight_low);
+  lz2 = c * z_weight_low + d * (1 - z_weight_low);
+  lz3 = e * z_weight_low + f * (1 - z_weight_low);
+  lz4 = g * z_weight_low + h * (1 - z_weight_low);
+  
+  ly1 = lz1 * y_weight_low + lz2 * (1 - y_weight_low);
+  ly2 = lz3 * y_weight_low + lz4 * (1 - y_weight_low);
+  
+  return_value = ly1 * x_weight_low + ly2 * (1 - x_weight_low);
+
+  return true;
+}
+
+// Returns true if the value was completely computed
+bool VolumeVis2D::lookup_value(Point &p,
+			       Voxel2D<float>& return_value,
+			       bool exit_early) {
+  int x_low, x_high;
+  float x_weight_low;
+  int y_low, y_high;
+  float y_weight_low;
+  int z_low, z_high;
+  float z_weight_low;
+  point2indexspace(p,
+		   x_low, x_high, x_weight_low,
+		   y_low, y_high, y_weight_low,
+		   z_low, z_high, z_weight_low);
+  return lookup_value(return_value, exit_early,
+		      x_low, x_high, x_weight_low,
+		      y_low, y_high, y_weight_low,
+		      z_low, z_high, z_weight_low);
+}
+
+//const int VVIS2D_VERSION = 1;
 
 // template<class T>
-void VolumeVis2D::cblookup( Object* obj )
+void VolumeVis2D::cblookup( Object* /*obj*/ )
 {
 
 }
