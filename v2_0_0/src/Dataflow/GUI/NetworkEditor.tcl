@@ -143,7 +143,7 @@ proc makeNetworkEditor {} {
 
     # Mac hack to fix size of 'About' window ... sigh... 
     .main_menu.help.menu add command -label "About..." -underline 0 \
-	-command  "showSplash; after 0 {wm geometry .splash \"\"}"
+	-command  "showSplash main/scisplash.ppm; after 0 {wm geometry .splash \"\"}"
 
     .main_menu.help.menu add command -label "License..." -underline 0 \
 	-command  "licenseDialog"
@@ -937,17 +937,22 @@ proc sourceSettingsFile {} {
    set DATADIR [lindex [array get env SCIRUN_DATA] 1]
    set DATASET [lindex [array get env SCIRUN_DATASET] 1]
 
-   if { [string compare "$DATASET" ""] == 0 } {
+   if { "$DATASET" == "" } {
        # if env var SCIRUN_DATASET not set... default to sphere:
        set DATASET "sphere"
    } else {
-       if { [string compare "$DATADIR" ""] == 0 } {
+       if { "$DATADIR" == 0 } {
           # DATASET specified, but not DATADIR.  Ask for DATADIR
           set DATADIR [getDataDirectory $DATASET]
+	  # Push out to the environment so user doesn't get asked
+	  # again if we need to check for this var again.
+	  # (Do it twice do to tcl bug...)
+	  array set env "SCIRUN_DATA    $DATADIR"
+	  array set env "SCIRUN_DATA    $DATADIR"
        }
    }
 
-   if { [string compare "$DATADIR" ""] != 0 && \
+   if { "$DATADIR" != "" && \
         [verifyFile $DATADIR/$DATASET/$DATASET.settings] == "true" } {
       displayErrorWarningOrInfo "*** Using SCIRUN_DATA $DATADIR" "info"
       displayErrorWarningOrInfo "*** Using DATASET $DATASET" "info"
@@ -970,6 +975,13 @@ proc sourceSettingsFile {} {
             set done "true"
 	 }
          set warn_user "false"
+
+	 # Push out to the environment so user doesn't get asked
+	 # again if we need to check for these vars again.
+	 # NOTE: For some reason you have to do this twice... perhaps
+	 # a newer version of TCL will fix this...
+	 array set env [list SCIRUN_DATA $DATADIR SCIRUN_DATASET $DATASET]
+	 array set env [list SCIRUN_DATA $DATADIR SCIRUN_DATASET $DATASET]
       }
    }
    source $DATADIR/$DATASET/$DATASET.settings
@@ -1001,14 +1013,28 @@ proc displayErrorWarningOrInfo { msg status } {
     .top.errorFrame.text see end
 }
 
+# if reset == "true" then remove the progress buttons so that
+# when it is brought up by the "About" menu, it will only have
+# the "ok" button.
+proc hideSplash { reset } {
+    wm withdraw .splash
+    if { $reset == "true" } {
+	destroy .splash.fb
+	button .splash.ok -text " OK " -command "wm withdraw .splash"
+	pack .splash.ok -side bottom -padx 5 -pady 5 -fill none
+    }
+}
+
 proc showSplash { imgname {steps none} } {
     global SCIRUN_SRCDIR
 
     if {[winfo exists .splash]} {
-	if { [winfo ismapped $w] == 1} {
-	    raise $w
+	# Center on main SCIRun window
+        wm geometry .splash +[expr 135+[winfo x .]]+[expr 170+[winfo y .]]
+	if { [winfo ismapped .splash] == 1} {
+	    raise .splash
 	} else {
-	    wm deiconify $w
+	    wm deiconify .splash
 	}
 	return
     }
@@ -1016,7 +1042,13 @@ proc showSplash { imgname {steps none} } {
     set filename [file join $SCIRUN_SRCDIR $imgname]
     image create photo ::img::splash -file "$filename"
     toplevel .splash
-    wm geometry .splash +135+170
+
+    # Center splash in main SCIRun window:
+    #
+    # Must do it this way as "." isn't positioned at this point...({}
+    # delays the execution of the winfo command.)
+    #
+    after 0 {wm geometry .splash +[expr 135+[winfo x .]]+[expr 170+[winfo y .]]}
 
     wm protocol .splash WM_DELETE_WINDOW "wm withdraw .splash"
 
@@ -1030,9 +1062,6 @@ proc showSplash { imgname {steps none} } {
 	# The following line forces the window to be the correct size... this is a
 	# hack to fix things on the mac. -Dav
 	wm geometry .splash "" 
-    } else {
-	button .splash.ok -text " OK " -command "wm withdraw .splash"
-	pack .splash.ok -side bottom -padx 5 -pady 5 -fill none
     }
     update idletasks
 }

@@ -83,17 +83,13 @@ itcl_class SCIRun_Math_SolveMatrix {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    raise $w
-	    return;
+	    return
 	}
 	
 	toplevel $w
 	wm minsize $w 300 20
 	set n "$this-c needexecute "
 	
-	button $w.execute -text "Execute" -command $n
-	pack $w.execute -side top -fill x -pady 2 -padx 2
-        
 	frame $w.np
 	pack $w.np -side top
 	
@@ -303,6 +299,9 @@ itcl_class SCIRun_Math_SolveMatrix {
 	pack $w.graph -fill x
 	reset_graph
 	switchmethod
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
     
     protected error_selected false
