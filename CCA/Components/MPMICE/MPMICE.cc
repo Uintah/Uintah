@@ -134,6 +134,12 @@ void MPMICE::scheduleTimeAdvance(double, double,
                                                                   all_matls);
                                                                
   d_ice->scheduleAddExchangeContributionToFCVel(  sched, patches, all_matls);
+  
+  scheduleHEChemistry(                            sched, patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  press_matl,
+                                                                  all_matls);
+                                                                  
   d_ice->scheduleComputeDelPressAndUpdatePressCC( sched, patches, press_matl,
                                                                   ice_matls_sub,
                                                                   all_matls);
@@ -142,11 +148,6 @@ void MPMICE::scheduleTimeAdvance(double, double,
   
   d_mpm->scheduleExMomInterpolated(               sched, patches, mpm_matls);
   d_mpm->scheduleComputeStressTensor(             sched, patches, mpm_matls);
-     
-  scheduleComputeMassBurnRate(                    sched, patches, ice_matls_sub,
-                                                                  mpm_matls_sub,
-                                                                  press_matl,
-                                                                  all_matls);
 
   scheduleInterpolateMassBurnFractionToNC(        sched, patches, mpm_matls);
 
@@ -417,9 +418,9 @@ void MPMICE::scheduleComputeEquilibrationPressure(SchedulerP& sched,
   sched->addTask(t, patches, all_matls);
 }
 /* ---------------------------------------------------------------------
- Function~  MPMICE::scheduleComputeMassBurnRate--
+ Function~  MPMICE::scheduleHEChemistry--
 _____________________________________________________________________*/
-void MPMICE::scheduleComputeMassBurnRate(SchedulerP& sched,
+void MPMICE::scheduleHEChemistry(SchedulerP& sched,
 					 const PatchSet* patches,
                                     const MaterialSubset* ice_matls,
                                     const MaterialSubset* mpm_matls,
@@ -427,13 +428,13 @@ void MPMICE::scheduleComputeMassBurnRate(SchedulerP& sched,
 					 const MaterialSet* all_matls)
 {
 #ifdef DOING
-  cout << "MPMICE::scheduleComputeMassBurnRate" << endl;
+  cout << "MPMICE::scheduleHEChemistry" << endl;
 #endif 
-  Task* t = scinew Task("MPMICE::computeMassBurnRate",
-		    this, &MPMICE::computeMassBurnRate);
+  Task* t = scinew Task("MPMICE::HEChemistry",
+		    this, &MPMICE::HEChemistry);
  
-  t->requires(Task::NewDW, Ilb->press_CCLabel, press_matl, Ghost::None);
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,  ice_matls,  Ghost::None);
+  t->requires(Task::NewDW, Ilb->press_equil_CCLabel, press_matl, Ghost::None);
+  t->requires(Task::OldDW, Ilb->temp_CCLabel,     ice_matls,  Ghost::None);
   t->requires(Task::OldDW, Ilb->vol_frac_CCLabel, ice_matls, Ghost::None);
 
   t->requires(Task::NewDW, MIlb->temp_CCLabel,mpm_matls, Ghost::None);
@@ -1689,13 +1690,13 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   }  //patches
 }
 /* --------------------------------------------------------------------- 
- Function~  MPMICE::computeMassBurnRate--
+ Function~  MPMICE::HEChemistry--
  Steps:   
     - Pull out temp_CC(matl 0) and press data from ICE
     - Loop over all the mpm matls and compute heat and mass released
     - Put the heat and mass into ICE matl (0).
 _____________________________________________________________________*/ 
-void MPMICE::computeMassBurnRate(const ProcessorGroup*,
+void MPMICE::HEChemistry(const ProcessorGroup*,
 				 const PatchSubset* patches,
 				 const MaterialSubset* ,
 				 DataWarehouse* old_dw,
@@ -1703,7 +1704,7 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
 
 {
 #ifdef DOING
-  cout << "Doing computeMassBurnRate" << endl;
+  cout << "Doing HEChemistry" << endl;
 #endif 
 
   for(int p=0;p<patches->size();p++){
@@ -1739,7 +1740,7 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
     old_dw->get(gasVolumeFraction, Ilb->vol_frac_CCLabel, 
 		dwindex,patch,Ghost::None,0);
     old_dw->get(gasTemperature, Ilb->temp_CCLabel, dwindex,patch,Ghost::None,0);
-    new_dw->get(gasPressure,    Ilb->press_CCLabel,0,patch,Ghost::None,0);
+    new_dw->get(gasPressure,    Ilb->press_equil_CCLabel,0,patch,Ghost::None,0);
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
