@@ -17,7 +17,7 @@ PSELIBS := \
 	Core/Thread \
 	Core/Exceptions \
 	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Grid
+	Packages/Uintah/Core/Util
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY) 
 

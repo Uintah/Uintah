@@ -4,7 +4,7 @@
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Variables/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 
 #include <math.h>
 

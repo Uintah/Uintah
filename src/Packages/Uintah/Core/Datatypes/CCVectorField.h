@@ -2,7 +2,7 @@
 #define SCI_project_CCVectorField_h 1
 
 //#include "Packages/UintahVectorField.h"
-#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Core/Datatypes/VectorFieldRG.h>
