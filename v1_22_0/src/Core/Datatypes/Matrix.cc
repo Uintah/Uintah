@@ -98,13 +98,8 @@ DenseMatrix *
 Matrix::direct_inverse()
 {
   if (nrows() != ncols()) return 0;
-  int n=nrows();
-  DenseMatrix *A;
-  if (is_dense()) {
-    A = scinew DenseMatrix(*A);
-  } else {
-    A = dense();
-  }
+  DenseMatrix *A=dense();
+  if (is_dense()) A=scinew DenseMatrix(*A);
   A->invert();
   return A;
 }
