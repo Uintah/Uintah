@@ -61,7 +61,6 @@ TransIsoHyperImplicit::TransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* Mlb,
 
   pStretchLabel_preReloc = VarLabel::create("p.stretch+",
         ParticleVariable<double>::getTypeDescription());
-
 }
 
 TransIsoHyperImplicit::TransIsoHyperImplicit(const TransIsoHyperImplicit* cm)
@@ -117,13 +116,15 @@ void TransIsoHyperImplicit::initializeCMData(const Patch* patch,
 
 void TransIsoHyperImplicit::allocateCMDataAddRequires(Task* task,
                                                     const MPMMaterial* matl,
-                                                    const PatchSet* patch,
+                                                    const PatchSet* ,
                                                     MPMLabel* lb) const
 {
 
-  //const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
+                 matlset, Ghost::None);
 }
 
 
@@ -131,26 +132,24 @@ void TransIsoHyperImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
                                             ParticleSubset* addset,
                                             map<const VarLabel*, ParticleVariableBase*>* newState,
                                             ParticleSubset* delset,
-                                            DataWarehouse* old_dw)
+                                            DataWarehouse* )
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
-  Matrix3  zero(0.);
   
   ParticleVariable<Matrix3> deformationGradient, pstress;
-  constParticleVariable<Matrix3> o_deformationGradient, o_stress;
+  constParticleVariable<Matrix3> o_defGrad, o_stress;
   
   new_dw->allocateTemporary(deformationGradient,addset);
   new_dw->allocateTemporary(pstress,addset);
   
-  old_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel,delset);
-  old_dw->get(o_stress,lb->pStressLabel,delset);
-
+  new_dw->get(o_defGrad,lb->pDeformationMeasureLabel_preReloc,delset);
+  new_dw->get(o_stress,lb->pStressLabel_preReloc,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
-    deformationGradient[*n] = o_deformationGradient[*o];
-    pstress[*n] = zero;
+    deformationGradient[*n] = o_defGrad[*o];
+    pstress[*n] = o_stress[*o];
   }
   
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
@@ -194,7 +193,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 #else
                                          SimpleSolver* solver,
 #endif
-                                         const bool recursion)
+                                         const bool )
 //___________________________________COMPUTES THE STRESS ON ALL THE PARTICLES IN A GIVEN PATCH FOR A GIVEN MATERIAL
 //___________________________________CALLED ONCE PER TIME STEP
 //___________________________________CONTAINS A COPY OF computeStableTimestep
@@ -214,8 +213,9 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
     double p;
     Matrix3 rightCauchyGreentilde_new, leftCauchyGreentilde_new;
     double I1tilde,I2tilde,I4tilde,lambda_tilde;
-    double dWdI4tilde, d2WdI4tilde2;
-    double shear;
+    double dWdI4tilde;
+    double d2WdI4tilde2;
+    //double shear = 0.0;
     Vector deformed_fiber_vector;
 //
     Matrix3 Identity;
@@ -384,8 +384,8 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         //________________________________strain energy derivatives
         if (lambda_tilde < 1.)
          {dWdI4tilde = 0.;
-         d2WdI4tilde2 = 0.;
-         shear = 2.*c1+c2;
+          d2WdI4tilde2 = 0.;
+         //shear = 2.*c1+c2;
          }
         else
         if (lambda_tilde < lambda_star)
@@ -396,16 +396,16 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                         -1./lambda_tilde*(exp(c4*(lambda_tilde-1.))-1.))
                           /(lambda_tilde*lambda_tilde*lambda_tilde);
 
-          shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
-                                   -2.*dWdI4tilde*lambda_tilde);
+          //shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
+          //                         -2.*dWdI4tilde*lambda_tilde);
           }
         else
          {
           dWdI4tilde = 0.5*(c5+c6/lambda_tilde)/lambda_tilde;
           d2WdI4tilde2 = -0.25*c6
                          /(lambda_tilde*lambda_tilde*lambda_tilde*lambda_tilde);
-          shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
-                                -2.*dWdI4tilde*lambda_tilde);
+          //shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
+          //                      -2.*dWdI4tilde*lambda_tilde);
           }
 
         //_______________________________ assemble Cauchy stress
@@ -615,8 +615,9 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      double p;
      Matrix3 rightCauchyGreentilde_new, leftCauchyGreentilde_new;
      double I1tilde,I2tilde,I4tilde,lambda_tilde;
-     double dWdI4tilde, d2WdI4tilde2;
-     double shear;
+     double dWdI4tilde;
+     //double d2WdI4tilde2;
+     //double shear = 0.0;
      Vector deformed_fiber_vector;
      Matrix3 deformationGradientInc,dispGrad;
 
@@ -695,11 +696,11 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
 #if 0
         if(ptemperature[idx] < 300.0){
-          shear = d_initialData.Shear*2.0;
+          //shear = d_initialData.Shear*2.0;
           bulk  = d_initialData.Bulk *2.0;
         }
         else{
-           shear = d_initialData.Shear;
+           //shear = d_initialData.Shear;
            bulk  = d_initialData.Bulk ;
         }
 #endif
@@ -762,28 +763,28 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         //________________________________strain energy derivatives
         if (lambda_tilde < 1.)
          {dWdI4tilde = 0.;
-         d2WdI4tilde2 = 0.;
-         shear = 2.*c1+c2;
+         //d2WdI4tilde2 = 0.;
+         //shear = 2.*c1+c2;
          }
         else
         if (lambda_tilde < lambda_star)
          {
           dWdI4tilde = 0.5*c3*(exp(c4*(lambda_tilde-1.))-1.)
                            /lambda_tilde/lambda_tilde;
-          d2WdI4tilde2 = 0.25*c3*(c4*exp(c4*(lambda_tilde-1.))
-                        -1./lambda_tilde*(exp(c4*(lambda_tilde-1.))-1.))
-                          /(lambda_tilde*lambda_tilde*lambda_tilde);
+          //d2WdI4tilde2 = 0.25*c3*(c4*exp(c4*(lambda_tilde-1.))
+          //              -1./lambda_tilde*(exp(c4*(lambda_tilde-1.))-1.))
+          //                /(lambda_tilde*lambda_tilde*lambda_tilde);
 
-          shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
-                                   -2.*dWdI4tilde*lambda_tilde);
+          //shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
+          //                         -2.*dWdI4tilde*lambda_tilde);
           }
         else
          {
           dWdI4tilde = 0.5*(c5+c6/lambda_tilde)/lambda_tilde;
-          d2WdI4tilde2 = -0.25*c6
-                         /(lambda_tilde*lambda_tilde*lambda_tilde*lambda_tilde);
-          shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
-                                -2.*dWdI4tilde*lambda_tilde);
+          //d2WdI4tilde2 = -0.25*c6
+          //               /(lambda_tilde*lambda_tilde*lambda_tilde*lambda_tilde);
+          //shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
+          //                      -2.*dWdI4tilde*lambda_tilde);
           }
 
         //_______________________________ assemble Cauchy stress
@@ -803,8 +804,8 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
 void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
                                                  const MPMMaterial* matl,
-                                                 const PatchSet* patches,
-                                                 const bool recursion) const
+                                                 const PatchSet* ,
+                                                 const bool ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 

@@ -229,15 +229,6 @@ namespace Uintah {
 					const bool recursion) const;
 
     ////////////////////////////////////////////////////////////////////////
-    /*! \brief Compute stress tension with erosion on. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void computeStressTensorWithErosion(const PatchSubset* patches,
-						const MPMMaterial* matl,
-						DataWarehouse* old_dw,
-						DataWarehouse* new_dw);
-
-
-    ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
     virtual void addRequiresDamageParameter(Task* task,

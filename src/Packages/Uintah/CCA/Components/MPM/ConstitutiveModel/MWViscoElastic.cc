@@ -40,10 +40,9 @@ MWViscoElastic::MWViscoElastic(ProblemSpecP& ps, MPMLabel* Mlb,
   ps->require("ve_volumetric_viscosity",d_initialData.V_Viscosity);
   ps->require("ve_deviatoric_viscosity",d_initialData.D_Viscosity);
   
-  d_8or27 = flag->d_8or27;
-  if(d_8or27==8){
+  if(flag->d_8or27==8){
     NGN=1;
-  } else if(d_8or27==27){
+  } else if(flag->d_8or27==27){
     NGN=2;
   }
 }
@@ -52,7 +51,6 @@ MWViscoElastic::MWViscoElastic(const MWViscoElastic* cm)
 {
   lb = cm->lb;
   flag = cm->flag;
-  d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
   
   d_initialData.E_Shear = cm->d_initialData.E_Shear;
@@ -105,17 +103,22 @@ void MWViscoElastic::initializeCMData(const Patch* patch,
 
 void MWViscoElastic::allocateCMDataAddRequires(Task* task,
 					       const MPMMaterial* matl,
-					       const PatchSet* patch,
+					       const PatchSet* ,
 					       MPMLabel* lb) const
 {
-  //const MaterialSubset* matlset = matl->thisMaterial(); <- Unused
-  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStress_eLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStress_ve_vLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStress_ve_dLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStress_e_vLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStress_e_dLabel, Ghost::None);
-
+  const MaterialSubset* matlset = matl->thisMaterial(); 
+  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pStress_eLabel, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pStress_ve_vLabel, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pStress_ve_dLabel, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pStress_e_vLabel, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pStress_e_dLabel, 
+                 matlset, Ghost::None);
 }
 
 
@@ -123,11 +126,10 @@ void MWViscoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
 				       ParticleSubset* addset,
 				       map<const VarLabel*, ParticleVariableBase*>* newState,
 				       ParticleSubset* delset,
-				       DataWarehouse* old_dw)
+				       DataWarehouse* )
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
-  Matrix3 zero(0.);
   
   ParticleVariable<Matrix3> deformationGradient,pstress_e,pstress_ve_d,
     pstress_e_d;
@@ -144,12 +146,12 @@ void MWViscoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(pstress_e_v,addset);
   new_dw->allocateTemporary(pstress_e_d,addset);
 
-  old_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel,delset);
-  old_dw->get(o_stress_e,          lb->pStress_eLabel,          delset);
-  old_dw->get(o_stress_ve_v,       lb->pStress_ve_vLabel,       delset);
-  old_dw->get(o_stress_ve_d,       lb->pStress_ve_dLabel,       delset);
-  old_dw->get(o_stress_e_v,        lb->pStress_e_vLabel,        delset);
-  old_dw->get(o_stress_e_d,        lb->pStress_e_dLabel,        delset);
+  new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,delset);
+  new_dw->get(o_stress_e,          lb->pStress_eLabel,          delset);
+  new_dw->get(o_stress_ve_v,       lb->pStress_ve_vLabel,       delset);
+  new_dw->get(o_stress_ve_d,       lb->pStress_ve_dLabel,       delset);
+  new_dw->get(o_stress_e_v,        lb->pStress_e_vLabel,        delset);
+  new_dw->get(o_stress_e_d,        lb->pStress_e_dLabel,        delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
@@ -265,7 +267,7 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
     
-    if(d_8or27==27){
+    if(flag->d_8or27==27){
       old_dw->get(psize,             lb->pSizeLabel,               pset);
     }
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
@@ -307,16 +309,16 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
       // Get the node indices that surround the cell
       IntVector ni[MAX_BASIS];
       Vector d_S[MAX_BASIS];
-      if(d_8or27==8){
+      if(flag->d_8or27==8){
           patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
        }
-       else if(d_8or27==27){
+       else if(flag->d_8or27==27){
           patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
        }
       
        Vector gvel;
        velGrad.set(0.0);
-       for(int k = 0; k < d_8or27; k++) {
+       for(int k = 0; k < flag->d_8or27; k++) {
 #ifdef FRACTURE
 	 if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]]; 
          if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
@@ -411,7 +413,7 @@ void MWViscoElastic::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pTemperatureLabel,       matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
-  if(d_8or27==27){
+  if(flag->d_8or27==27){
     task->requires(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
   }
   task->requires(Task::NewDW, lb->gVelocityLabel,          matlset,gac, NGN);

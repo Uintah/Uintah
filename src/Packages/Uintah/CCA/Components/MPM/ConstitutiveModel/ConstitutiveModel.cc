@@ -26,17 +26,10 @@ using namespace Uintah;
 
 ConstitutiveModel::ConstitutiveModel()
 {
-  d_adiabaticHeating = 0.0;
 }
 
 ConstitutiveModel::~ConstitutiveModel()
 {
-}
-
-void
-ConstitutiveModel::setAdiabaticHeating(double flag)
-{
-  d_adiabaticHeating = flag;
 }
 
 void ConstitutiveModel::computeStressTensor(const PatchSubset*,
@@ -57,16 +50,16 @@ void ConstitutiveModel::computeStressTensor(const PatchSubset*,
 					    DataWarehouse*,
 					    DataWarehouse*,
 #ifdef HAVE_PETSC
-                                            MPMPetscSolver* solver,
+                                            MPMPetscSolver* ,
 #else
-                                            SimpleSolver* solver,
+                                            SimpleSolver* ,
 #endif
 					    const bool)
 {
 }
 
-void ConstitutiveModel::addInitialComputesAndRequires(Task* task,
-						      const MPMMaterial* matl,
+void ConstitutiveModel::addInitialComputesAndRequires(Task* ,
+						      const MPMMaterial* ,
 						      const PatchSet*) const
 {
 }
@@ -98,54 +91,14 @@ void ConstitutiveModel::addRequiresDamageParameter(Task*,
 }
 
 void 
-ConstitutiveModel::getDamageParameter(const Patch* patch,
-				      ParticleVariable<int>& damage,int dwi,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw)
+ConstitutiveModel::getDamageParameter(const Patch* ,
+				      ParticleVariable<int>& ,int ,
+				      DataWarehouse* ,
+				      DataWarehouse* )
 {
 
 }
 
-/////////
-// Add initial computes with erosion
-void 
-ConstitutiveModel::addInitialComputesAndRequiresWithErosion(Task* task,
-				     const MPMMaterial* matl,
-				     const PatchSet* patches,
-				     std::string algorithm)
-{
-  d_erosionAlgorithm = algorithm;
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(lb->pErosionLabel, matlset);
-  cout << "Erosion Algorithm = " << d_erosionAlgorithm << endl;
-
-  addInitialComputesAndRequires(task, matl, patches);
-}
-
-//////////
-// Computes and requires with erosion
-void 
-ConstitutiveModel::addComputesAndRequiresWithErosion(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet* patch) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, lb->pErosionLabel, matlset, Ghost::None);
-  task->computes(lb->pErosionLabel_preReloc, matlset);
-  addComputesAndRequires(task, matl, patch);
-}
-
-//////////
-// Stress update with erosion
-void 
-ConstitutiveModel::computeStressTensorWithErosion(const PatchSubset* patches,
-				const MPMMaterial* matl,
-				DataWarehouse* old_dw,
-				DataWarehouse* new_dw)
-{
-  cout << "Using dummy compute stress tensor" << endl;
-  computeStressTensor(patches, matl, old_dw, new_dw);
-}
 
 void 
 ConstitutiveModel::getPlasticTemperatureIncrement(ParticleSubset* ,
@@ -159,14 +112,6 @@ void ConstitutiveModel::carryForward(const PatchSubset*,
 				     DataWarehouse*,
 				     DataWarehouse*)
 {
-}
-
-void ConstitutiveModel::carryForwardWithErosion(const PatchSubset* patches,
-                                                const MPMMaterial* matl,
-                                                DataWarehouse* old_dw,
-                                                DataWarehouse* new_dw)
-{
-  carryForward(patches, matl, old_dw, new_dw);
 }
 
 //______________________________________________________________________
@@ -206,19 +151,44 @@ ConstitutiveModel::computeVelocityGradient(const Patch* patch,
 
   patch->findCellAndShapeDerivatives27(px, ni, d_S, psize);
 
-  //cout << "ni = " << ni << endl;
-  for(int k = 0; k < d_8or27; k++) {
-    //if(patch->containsNode(ni[k])) {
+  for(int k = 0; k < flag->d_8or27; k++) {
     const Vector& gvel = gVelocity[ni[k]];
-    //cout << "GridVel = " << gvel << endl;
     for (int j = 0; j<3; j++){
       for (int i = 0; i<3; i++) {
 	velGrad(i,j) += gvel[i] * d_S[k][j] * oodx[j];
       }
     }
-    //}
   }
-  //cout << "VelGrad = " << velGrad << endl;
+  return velGrad;
+}
+
+Matrix3
+ConstitutiveModel::computeVelocityGradient(const Patch* patch,
+					   const double* oodx, 
+					   const Point& px, 
+					   const Vector& psize, 
+					   constNCVariable<Vector>& gVelocity,
+                                           double erosion) 
+{
+  // Initialize
+  Matrix3 velGrad(0.0);
+
+  // Get the node indices that surround the cell
+  IntVector ni[MAX_BASIS];
+  Vector d_S[MAX_BASIS];
+
+  patch->findCellAndShapeDerivatives27(px, ni, d_S, psize);
+
+  for(int k = 0; k < flag->d_8or27; k++) {
+    const Vector& gvel = gVelocity[ni[k]];
+    d_S[k] *= erosion;
+    for (int j = 0; j<3; j++){
+      double d_SXoodx = d_S[k][j]*oodx[j];
+      for (int i = 0; i<3; i++) {
+	velGrad(i,j) += gvel[i]*d_SXoodx;
+      }
+    }
+  }
   return velGrad;
 }
 
@@ -237,16 +207,43 @@ ConstitutiveModel::computeVelocityGradient(const Patch* patch,
 
   patch->findCellAndShapeDerivatives(px, ni, d_S);
 
-  for(int k = 0; k < d_8or27; k++) {
+  for(int k = 0; k < flag->d_8or27; k++) {
     const Vector& gvel = gVelocity[ni[k]];
-    //cout << "GridVel = " << gvel << endl;
     for (int j = 0; j<3; j++){
       for (int i = 0; i<3; i++) {
 	velGrad(i,j) += gvel[i] * d_S[k][j] * oodx[j];
       }
     }
   }
-  //cout << "VelGrad = " << velGrad << endl;
+  return velGrad;
+}
+
+Matrix3
+ConstitutiveModel::computeVelocityGradient(const Patch* patch,
+					   const double* oodx, 
+					   const Point& px, 
+					   constNCVariable<Vector>& gVelocity,
+                                           double erosion) 
+{
+  // Initialize
+  Matrix3 velGrad(0.0);
+
+  // Get the node indices that surround the cell
+  IntVector ni[MAX_BASIS];
+  Vector d_S[MAX_BASIS];
+
+  patch->findCellAndShapeDerivatives(px, ni, d_S);
+
+  for(int k = 0; k < flag->d_8or27; k++) {
+    const Vector& gvel = gVelocity[ni[k]];
+    d_S[k] *= erosion;
+    for (int j = 0; j<3; j++){
+      double d_SXoodx = d_S[k][j]*oodx[j];
+      for (int i = 0; i<3; i++) {
+	velGrad(i,j) += gvel[i]*d_SXoodx;
+      }
+    }
+  }
   return velGrad;
 }
 
@@ -271,7 +268,7 @@ ConstitutiveModel::computeVelocityGradient(const Patch* patch,
 
   Vector gvel;
   //cout << "ni = " << ni << endl;
-  for(int k = 0; k < d_8or27; k++) {
+  for(int k = 0; k < flag->d_8or27; k++) {
     //if(patch->containsNode(ni[k])) {
     if(pgFld[k]==1) gvel = gVelocity[ni[k]];
     if(pgFld[k]==2) gvel = GVelocity[ni[k]];
@@ -306,7 +303,7 @@ ConstitutiveModel::computeVelocityGradient(const Patch* patch,
   patch->findCellAndShapeDerivatives(px, ni, d_S);
 
   Vector gvel;
-  for(int k = 0; k < d_8or27; k++) {
+  for(int k = 0; k < flag->d_8or27; k++) {
     if(pgFld[k]==1)  gvel = gVelocity[ni[k]];
     if(pgFld[k]==2)  gvel = GVelocity[ni[k]];
     //cout << "GridVel = " << gvel << endl;
@@ -330,8 +327,8 @@ ConstitutiveModel::ConvertJToK(const MPMMaterial*,
 
 // Determine crack-propagating direction (for FRACTURE)
 double
-ConstitutiveModel::GetPropagationDirection(const double& KI,
-                                           const double& KII)
+ConstitutiveModel::GetPropagationDirection(const double& ,
+                                           const double& )
 {
   double PI=3.141592654;
   return PI;
@@ -339,8 +336,8 @@ ConstitutiveModel::GetPropagationDirection(const double& KI,
 
 // Detect if crack propagtes (for FRACTURE)
 short
-ConstitutiveModel::CrackSegmentPropagates(const double& Vc, 
-		        const double& KI, const double& KII)
+ConstitutiveModel::CrackSegmentPropagates(const double& , 
+		        const double& , const double& )
 {
   enum {NO=0, YES};
   return NO;
@@ -400,8 +397,13 @@ ConstitutiveModel::BtDB(double B[6][24],
   double t1641, t1646, t1651, t1657, t1662, t1732,t1737,t1742,t1747,t1753,t1758;
   double t1828, t1833, t1838, t1843, t1849, t1854, t19, t1924,t1929,t1934,t1939;
   double t1945, t1950, t196, t201, t2020, t2025, t2030, t2035,t2041,t2046, t206;
-  double t211, t2116, t2121, t2126, t2131, t2137, t2142, t217,t2212,t2217, t222;
-  double t2222, t2227, t2233, t2238, t25, t292, t297, t30, t302, t307, t313;
+  double t211, t2121, t2126;
+  double t2131, t2137, t2142, t217;
+  //double t2212, t2217;
+  double t222;
+  double t2222;
+  //double t2227;
+  double t2233, t2238, t25, t292, t297, t30, t302, t307, t313;
   double t318, t388, t393, t398, t4, t403, t409, t414, t484, t489, t494;
   double t499, t505, t510, t580, t585, t590, t595, t601, t606, t676, t681;
   double t686, t691, t697, t702, t772, t777, t782, t787, t793, t798, t868;
@@ -1067,7 +1069,7 @@ ConstitutiveModel::BtDB(double B[6][24],
     Kmat[21][21] = t2020*B[0][21]+t2025*B[3][21]+t2030*B[5][21];
     Kmat[21][22] = t2035*B[1][22]+t2025*B[3][22]+t2041*B[4][22];
     Kmat[21][23] = t2046*B[2][23]+t2041*B[4][23]+t2030*B[5][23];
-    t2116 = B[1][22]*D[0][1]+B[3][22]*D[0][3]+B[4][22]*D[0][4];
+    //t2116 = B[1][22]*D[0][1]+B[3][22]*D[0][3]+B[4][22]*D[0][4];
     t2121 = B[1][22]*D[1][3]+B[3][22]*D[3][3]+B[4][22]*D[3][4];
     t2126 = B[1][22]*D[1][5]+B[3][22]*D[3][5]+B[4][22]*D[4][5];
     Kmat[22][0] = Kmat[0][22];
@@ -1097,11 +1099,11 @@ ConstitutiveModel::BtDB(double B[6][24],
     Kmat[22][21] = Kmat[21][22];
     Kmat[22][22] = t2131*B[1][22]+t2121*B[3][22]+t2137*B[4][22];
     Kmat[22][23] = t2142*B[2][23]+t2137*B[4][23]+t2126*B[5][23];
-    t2212 = B[2][23]*D[0][2]+B[4][23]*D[0][4]+B[5][23]*D[0][5];
-    t2217 = B[2][23]*D[2][3]+B[4][23]*D[3][4]+B[5][23]*D[3][5];
+    //t2212 = B[2][23]*D[0][2]+B[4][23]*D[0][4]+B[5][23]*D[0][5];
+    //t2217 = B[2][23]*D[2][3]+B[4][23]*D[3][4]+B[5][23]*D[3][5];
     t2222 = B[2][23]*D[2][5]+B[4][23]*D[4][5]+B[5][23]*D[5][5];
     Kmat[23][0] = Kmat[0][23];
-    t2227 = B[2][23]*D[1][2]+B[4][23]*D[1][4]+B[5][23]*D[1][5];
+    //t2227 = B[2][23]*D[1][2]+B[4][23]*D[1][4]+B[5][23]*D[1][5];
     t2233 = B[2][23]*D[2][4]+B[4][23]*D[4][4]+B[5][23]*D[4][5];
     Kmat[23][1] = Kmat[1][23];
     t2238 = B[2][23]*D[2][2]+B[4][23]*D[2][4]+B[5][23]*D[2][5];

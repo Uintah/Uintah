@@ -16,6 +16,7 @@
 #include <Packages/Uintah/Core/Grid/NodeIterator.h> 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
@@ -36,10 +37,9 @@ IdealGasMP::IdealGasMP(ProblemSpecP& ps,  MPMLabel* Mlb,
   ps->require("gamma", d_initialData.gamma);
   ps->require("specific_heat",d_initialData.cv);
 
-  d_8or27 = flag->d_8or27;
-  if(d_8or27==8){
+  if(flag->d_8or27==8){
     NGN=1;
-  } else if(d_8or27==27){
+  } else if(flag->d_8or27==27){
     NGN=2;
   }
 
@@ -49,7 +49,6 @@ IdealGasMP::IdealGasMP(const IdealGasMP* cm)
 {
   lb = cm->lb;
   flag = cm->flag;
-  d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
 
   d_initialData.gamma = cm->d_initialData.gamma;
@@ -83,23 +82,25 @@ void IdealGasMP::initializeCMData(const Patch* patch,
 }
 
 void IdealGasMP::allocateCMDataAddRequires(Task* task,
-						   const MPMMaterial* matl,
-						   const PatchSet* patch,
+						   const MPMMaterial* matl ,
+						   const PatchSet* ,
 						   MPMLabel* lb) const
 {
-  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+  const MaterialSubset* matlset = matl->thisMaterial(); 
+  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
+                 matlset, Ghost::None);
 }
 
 void IdealGasMP::allocateCMDataAdd(DataWarehouse* new_dw,
 				   ParticleSubset* addset,
 				   map<const VarLabel*, ParticleVariableBase*>* newState,
 				   ParticleSubset* delset,
-				   DataWarehouse* old_dw)
+				   DataWarehouse* )
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
-  Matrix3  zero(0.);
   ParticleSubset::iterator n,o;
 
   ParticleVariable<Matrix3> deformationGradient, pstress;
@@ -109,13 +110,14 @@ void IdealGasMP::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(deformationGradient,addset);
   new_dw->allocateTemporary(pstress,addset);
 
-  old_dw->get(o_DeformGrad,lb->pDeformationMeasureLabel,delset);
-  old_dw->get(o_Stress,lb->pStressLabel,delset);
+  new_dw->get(o_DeformGrad,lb->pDeformationMeasureLabel_preReloc,
+              delset);
+  new_dw->get(o_Stress,lb->pStressLabel_preReloc,delset);
 
   n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     deformationGradient[*n] = o_DeformGrad[*o];
-    pstress[*n] = zero;
+    pstress[*n] = o_Stress[*o];
   }
 
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
@@ -218,7 +220,7 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     old_dw->get(deformationGradient,         lb->pDeformationMeasureLabel,pset);
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
-    if(d_8or27==27){
+    if(flag->d_8or27==27){
       old_dw->get(psize,                     lb->pSizeLabel,              pset);
     }
     new_dw->allocateAndPut(deformationGradient_new,
@@ -247,16 +249,16 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
        IntVector ni[MAX_BASIS];
        Vector d_S[MAX_BASIS];
 
-       if(d_8or27==8){
+       if(flag->d_8or27==8){
           patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
         }
-        else if(d_8or27==27){
+        else if(flag->d_8or27==27){
           patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
         }
 
         Vector gvel;
         velGrad.set(0.0);
-        for(int k = 0; k < d_8or27; k++) {
+        for(int k = 0; k < flag->d_8or27; k++) {
 #ifdef FRACTURE
 	   if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
 	   if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
@@ -320,7 +322,7 @@ void IdealGasMP::addComputesAndRequires(Task* task,
    task->requires(Task::OldDW, lb->pVelocityLabel,      matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
 						        matlset, Ghost::None);
-   if(d_8or27==27){
+   if(flag->d_8or27==27){
      task->requires(Task::OldDW, lb->pSizeLabel,        matlset, Ghost::None);
    }
    task->requires(Task::NewDW,lb->gVelocityLabel,matlset,gac,NGN);

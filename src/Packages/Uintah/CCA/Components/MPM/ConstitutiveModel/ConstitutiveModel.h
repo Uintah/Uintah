@@ -51,11 +51,6 @@ namespace Uintah {
     ConstitutiveModel();
     virtual ~ConstitutiveModel();
 	 
-    /////////////////////////////////////////////////////////////////////
-    /*! Set the adiabatic heating flag */
-    /////////////////////////////////////////////////////////////////////
-    virtual void setAdiabaticHeating(double flag);
-
     // Basic constitutive model calculations
     virtual void computeStressTensor(const PatchSubset* patches,
                                    const MPMMaterial* matl,
@@ -128,35 +123,6 @@ namespace Uintah {
 
     ////////////////////////////////////////////////////////////////////////
     /*!
-      \brief Add initial computes for erosion.
-    */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void addInitialComputesAndRequiresWithErosion(Task* task,
-				     const MPMMaterial* matl,
-				     const PatchSet* patches,
-				     std::string algorithm);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*!
-      \brief Computes and requires for erosion update.
-    */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void addComputesAndRequiresWithErosion(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet* patch) const;
-
-    ////////////////////////////////////////////////////////////////////////
-    /*!
-      \brief Stress computation with erosion.
-    */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void computeStressTensorWithErosion(const PatchSubset* patches,
-				const MPMMaterial* matl,
-				DataWarehouse* old_dw,
-				DataWarehouse* new_dw);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*!
       \brief Get the increment of temperature due to conversion of plastic
              work.
     */
@@ -171,13 +137,6 @@ namespace Uintah {
 			      const MPMMaterial* matl,
 			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw);
-
-    //////////
-    // Carry forward CM variables for RigidMPM with Erosion
-    virtual void carryForwardWithErosion(const PatchSubset* patches,
-                                         const MPMMaterial* matl,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw);
 
     //////////
     // Convert J-integral into stress intensity for hypoelastic materials 
@@ -217,6 +176,15 @@ namespace Uintah {
 				    const Point& px, 
 				    const Vector& psize, 
 				    constNCVariable<Vector>& gVelocity);
+
+    // Calculate velocity gradient for 27 noded interpolation (for Erosion)
+    Matrix3 computeVelocityGradient(const Patch* patch,
+				    const double* oodx, 
+				    const Point& px, 
+				    const Vector& psize, 
+				    constNCVariable<Vector>& gVelocity,
+                                    double erosion);
+
     // Calculate velocity gradient for 27 noded interpolation (for FRACTURE)
     Matrix3 computeVelocityGradient(const Patch* patch,
                                     const double* oodx,
@@ -226,6 +194,13 @@ namespace Uintah {
                                     constNCVariable<Vector>& gVelocity,
                                     constNCVariable<Vector>& GVelocity);
  
+    // Calculate velocity gradient for 8 noded interpolation (for Erosion)
+    Matrix3 computeVelocityGradient(const Patch* patch,
+				    const double* oodx, 
+				    const Point& px, 
+				    constNCVariable<Vector>& gVelocity,
+                                    double erosion);
+
     // Calculate velocity gradient for 8 noded interpolation
     Matrix3 computeVelocityGradient(const Patch* patch,
 				    const double* oodx, 
@@ -251,11 +226,8 @@ namespace Uintah {
 
     MPMLabel* lb;
     MPMFlags* flag;
-    int d_8or27;
     int NGP;
     int NGN;
-    std::string d_erosionAlgorithm;
-    double d_adiabaticHeating;
     const ProcessorGroup* d_world;
   };
 } // End namespace Uintah

@@ -2,7 +2,7 @@
 #define __ELASTIC_PLASTIC_H__
 
 
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include "ConstitutiveModel.h"
 #include "PlasticityModels/YieldCondition.h"
 #include "PlasticityModels/StabilityCheck.h"
 #include "PlasticityModels/PlasticityModel.h"
@@ -73,7 +73,6 @@ namespace Uintah {
       std::string scalarDamageDist; /*< Initial damage distrinution */
     };
 
-    const VarLabel* pLeftStretchLabel;  // For Hypoelastic-plasticity
     const VarLabel* pRotationLabel;  // For Hypoelastic-plasticity
     const VarLabel* pStrainRateLabel;  
     const VarLabel* pPlasticStrainLabel;  
@@ -83,7 +82,6 @@ namespace Uintah {
     const VarLabel* pPlasticTempIncLabel;  
     const VarLabel* pLocalizedLabel;  
 
-    const VarLabel* pLeftStretchLabel_preReloc;  // For Hypoelastic-plasticity
     const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
     const VarLabel* pStrainRateLabel_preReloc;  
     const VarLabel* pPlasticStrainLabel_preReloc;  
@@ -102,11 +100,14 @@ namespace Uintah {
     double d_tol;
     double d_initialMaterialTemperature;
     bool   d_useModifiedEOS;
-    bool   d_removeParticles;
-    bool   d_setStressToZero;
     bool   d_evolvePorosity;
     bool   d_evolveDamage;
     bool   d_checkTeplaFailureCriterion;
+
+    // Erosion algorithms
+    bool   d_setStressToZero;
+    bool   d_allowNoTension;
+    bool   d_removeMass;
 
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;
@@ -229,15 +230,6 @@ namespace Uintah {
 					const bool recursion) const;
 
     ////////////////////////////////////////////////////////////////////////
-    /*! \brief Compute stress tension with erosion on. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void computeStressTensorWithErosion(const PatchSubset* patches,
-						const MPMMaterial* matl,
-						DataWarehouse* old_dw,
-						DataWarehouse* new_dw);
-
-
-    ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
     virtual void addRequiresDamageParameter(Task* task,
@@ -347,6 +339,15 @@ namespace Uintah {
     ////////////////////////////////////////////////////////////////////////
     inline double voidNucleationFactor(double plasticStrain);
 
+  private:
+
+    void initializeLocalMPMLabels();
+
+    void getInitialPorosityData(ProblemSpecP& ps);
+
+    void getInitialDamageData(ProblemSpecP& ps);
+
+    void setErosionAlgorithm();
   };
 
 } // End namespace Uintah

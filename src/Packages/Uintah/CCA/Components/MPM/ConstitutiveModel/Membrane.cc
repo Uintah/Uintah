@@ -42,20 +42,17 @@ Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb,
   defGradInPlaneLabel_preReloc  = VarLabel::create( "p.defgrad_in_plane+",
                         ParticleVariable<Matrix3>::getTypeDescription() );
 
-  d_8or27 = flag->d_8or27;
-  if(d_8or27==8){
+  if(flag->d_8or27==8){
     NGN=1;
-  } else if(d_8or27==27){
+  } else if(flag->d_8or27==27){
     NGN=2;
   }
-
 }
 
 Membrane::Membrane(const Membrane* cm)
 {
   lb = cm->lb;
   flag = cm->flag;
-  d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
 
   d_initialData.Bulk = cm->d_initialData.Bulk;
@@ -104,13 +101,16 @@ void Membrane::initializeCMData(const Patch* patch,
 
 void Membrane::allocateCMDataAddRequires(Task* task,
 					 const MPMMaterial* matl,
-					 const PatchSet* patch,
+					 const PatchSet* ,
 					 MPMLabel* lb) const
 {
-  //const MaterialSubset* matlset = matl->thisMaterial(); <- Unused
-  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
-  task->requires(Task::OldDW,defGradInPlaneLabel, Ghost::None);
+  const MaterialSubset* matlset = matl->thisMaterial(); 
+  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,defGradInPlaneLabel_preReloc, 
+                 matlset, Ghost::None);
 }
 
 
@@ -118,12 +118,10 @@ void Membrane::allocateCMDataAdd(DataWarehouse* new_dw,
 				 ParticleSubset* addset,
 				 map<const VarLabel*, ParticleVariableBase*>* newState,
 				 ParticleSubset* delset,
-				 DataWarehouse* old_dw)
+				 DataWarehouse* )
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
-  Matrix3 Identity, zero(0.);
-  Identity.Identity();
 
   ParticleVariable<Matrix3> deformationGradient, pstress, defGradIP;
   constParticleVariable<Matrix3> o_deformationGradient, o_stress, o_defGradIP;
@@ -132,21 +130,21 @@ void Membrane::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(defGradIP,addset);
   new_dw->allocateTemporary(pstress,addset);
 
-  old_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel,delset);
-  old_dw->get(o_defGradIP,defGradInPlaneLabel,delset);
-  old_dw->get(o_stress,lb->pStressLabel,delset);
+  new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,
+              delset);
+  new_dw->get(o_defGradIP,defGradInPlaneLabel_preReloc,delset);
+  new_dw->get(o_stress,lb->pStressLabel_preReloc,delset);
 
   ParticleSubset::iterator o,n=addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     deformationGradient[*n] = o_deformationGradient[*o];
     defGradIP[*n] = o_defGradIP[*o];
-    pstress[*n] = zero;
+    pstress[*n] = o_stress[*o];
   }
 
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
   (*newState)[defGradInPlaneLabel]=defGradIP.clone();
   (*newState)[lb->pStressLabel]=pstress.clone();
-
 }
 
 
@@ -240,7 +238,7 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
-    if(d_8or27==27){
+    if(flag->d_8or27==27){
       old_dw->get(psize,                    lb->pSizeLabel,               pset);
     }
     old_dw->get(px,                         lb->pXLabel,                  pset);
@@ -284,16 +282,16 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
        IntVector ni[MAX_BASIS];
        Vector d_S[MAX_BASIS];
 
-       if(d_8or27==8){
+       if(flag->d_8or27==8){
           patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
         }
-        else if(d_8or27==27){
+        else if(flag->d_8or27==27){
           patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
         }
 
         Vector gvel;
         velGrad.set(0.0);
-        for(int k = 0; k < d_8or27; k++) {
+        for(int k = 0; k < flag->d_8or27; k++) {
 #ifdef FRACTURE
 	  if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]]; 
 	  if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
@@ -549,7 +547,7 @@ void Membrane::addComputesAndRequires(Task* task,
    task->requires(Task::OldDW,lb->pTang1Label,             matlset,Ghost::None);
    task->requires(Task::OldDW,lb->pTang2Label,             matlset,Ghost::None);
    task->requires(Task::OldDW,lb->pNormLabel,              matlset,Ghost::None);
-   if(d_8or27==27){
+   if(flag->d_8or27==27){
      task->requires(Task::OldDW, lb->pSizeLabel,           matlset,Ghost::None);
    }
    task->requires(Task::NewDW, lb->gVelocityLabel,         matlset,gac, NGN);
