@@ -213,7 +213,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	# Iso Value using quantity
 	
-	set sel [$isf.tabs add -label "Quantity" -command "set $this-active-isoval-selection-tab 2"]
+	set sel [$isf.tabs add -label "Quantity" -command "set $this-active-isoval-selection-tab 1"]
 	
 	frame $sel.f
 	label $sel.f.l -text "Number of evenly-spaced isovals:"
