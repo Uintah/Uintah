@@ -18,14 +18,18 @@
 #include <Datatypes/Matrix.h>
 #include <Classlib/Array1.h>
 
+class AddMatrices;
 class SymSparseRowMatrix : public Matrix {
     int nnrows;
     int nncols;
-    double* a;
-    int* columns;
     int* rows;
     int nnz;
     double dummy;
+    double minVal;
+    double maxVal;
+protected:
+    double* a;
+    int* columns;
 public:
     SymSparseRowMatrix();
     SymSparseRowMatrix(int, int, Array1<int>&, Array1<int>&);
@@ -36,6 +40,10 @@ public:
     virtual void put(int, int, const double&);
     virtual int nrows();
     virtual int ncols();
+    virtual double minValue();
+    virtual double maxValue();
+    double density();
+    virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
     virtual void solve(ColumnMatrix&);
     virtual void zero();
     virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
@@ -44,6 +52,7 @@ public:
 				int& flops, int& memrefs, int beg=-1, int end=-1);
     virtual void print();
     MatrixRow operator[](int r);
+    friend class AddMatrices;
 
     // Persistent representation...
     virtual void io(Piostream&);

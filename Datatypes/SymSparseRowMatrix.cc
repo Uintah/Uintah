@@ -17,7 +17,7 @@ static Persistent* maker()
 PersistentTypeID SymSparseRowMatrix::type_id("SymSparseRowMatrix", "Matrix", maker);
 
 SymSparseRowMatrix::SymSparseRowMatrix()
-: Matrix(Matrix::symmetric), nnrows(0), nncols(0), a(0),
+: Matrix(Matrix::symmetric, Matrix::symsparse), nnrows(0), nncols(0), a(0),
   columns(0), rows(0), nnz(0)
 {
 }
@@ -25,7 +25,8 @@ SymSparseRowMatrix::SymSparseRowMatrix()
 SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
 				       Array1<int>& in_rows,
 				       Array1<int>& in_cols)
-: Matrix(Matrix::symmetric), nnrows(nnrows), nncols(nncols)
+: Matrix(Matrix::symmetric, Matrix::symsparse), nnrows(nnrows), 
+  nncols(nncols)
 {
     nnz=in_cols.size();
     a=scinew double[nnz];
@@ -57,14 +58,6 @@ double& SymSparseRowMatrix::get(int i, int j)
     int l=row_idx;
     int h=next_idx-1;
     while(1){
-	int m=(l+h)/2;
-	if(j<columns[m]){
-	    h=m-1;
-	} else if(j>columns[m]){
-	    l=m+1;
-	} else {
-	    return a[m];
-	}
 	if(h<l){
 #if 0
 	    cerr << "column " << j << " not found in row: ";
@@ -76,6 +69,14 @@ double& SymSparseRowMatrix::get(int i, int j)
 	    static double zero;
 	    zero=0;
 	    return zero;
+	}
+	int m=(l+h)/2;
+	if(j<columns[m]){
+	    h=m-1;
+	} else if(j>columns[m]){
+	    l=m+1;
+	} else {
+	    return a[m];
 	}
     }
 }
@@ -95,6 +96,55 @@ int SymSparseRowMatrix::ncols()
     return nncols;
 }
 
+double SymSparseRowMatrix::density()
+{	
+    return (1.*nnz)/(1.*nnrows*nncols);
+}
+
+double SymSparseRowMatrix::minValue() {
+    if (extremaCurrent)
+	return minVal;
+    if (nnz == 0) return 0;
+    minVal=maxVal=a[0];
+    for (int idx=0; idx<nnz; idx++) {
+	if (a[idx] < minVal)
+	    minVal = a[idx];
+	if (a[idx] > maxVal)
+	    maxVal = a[idx];
+    }
+    extremaCurrent=1;
+    return minVal;
+}
+
+double SymSparseRowMatrix::maxValue() {
+    if (extremaCurrent)
+	return maxVal;
+    if (nnz == 0) return 0;
+    minVal=maxVal=a[0];
+    for (int idx=0; idx<nnz; idx++) {
+	if (a[idx] < minVal)
+	    minVal = a[idx];
+	if (a[idx] > maxVal)
+	    maxVal = a[idx];
+    }
+    extremaCurrent=1;
+    return maxVal;
+}
+
+void SymSparseRowMatrix::getRowNonzeros(int r, Array1<int>& idx, 
+					Array1<double>& val)
+{
+    int row_idx=rows[r];
+    int next_idx=rows[r+1];
+    idx.resize(next_idx-row_idx);
+    val.resize(next_idx-row_idx);
+    int i=0;
+    for (int c=row_idx; c<next_idx; c++, i++) {
+	idx[i]=columns[c];
+	val[i]=a[c];
+    }
+}
+    
 void SymSparseRowMatrix::zero()
 {
     double* ptr=a;

@@ -19,6 +19,8 @@
 class DenseMatrix : public Matrix {
     int nc;
     int nr;
+    double minVal;
+    double maxVal;
     double** data;
     double* dataptr;
 public:
@@ -30,6 +32,9 @@ public:
     virtual void put(int, int, const double&);
     virtual int nrows();
     virtual int ncols();
+    virtual double minValue();
+    virtual double maxValue();
+    virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
     virtual void solve(ColumnMatrix&);
     virtual void zero();
 

@@ -15,8 +15,12 @@
 #define SCI_project_Matrix_h 1
 
 #include <Datatypes/Datatype.h>
+#include <Classlib/Array1.h>
 #include <Classlib/LockingHandle.h>
+#include <Classlib/String.h>
 
+class SymSparseRowMatrix;
+class DenseMatrix;
 class ColumnMatrix;
 class Matrix;
 class MatrixRow;
@@ -25,13 +29,25 @@ typedef LockingHandle<Matrix> MatrixHandle;
 class Matrix : public Datatype {
 protected:
     enum Sym {
-        symmetric,
         non_symmetric,
+        symmetric,
     };
+    enum Representation {
+	symsparse,
+	dense,
+    };
+
     Sym sym;
-    Matrix(Sym symmetric);
+    Matrix(Sym symmetric, Representation dense);
+    int extremaCurrent;
+private:
+    Representation rep;
 public:
+    clString getType();
+    SymSparseRowMatrix* getSymSparseRow();
+    DenseMatrix* getDense();
     int is_symmetric();
+    void is_symmetric(int symm);
     virtual ~Matrix();
     virtual Matrix* Matrix::clone();
     virtual double& get(int, int)=0;
@@ -40,11 +56,13 @@ public:
     virtual void zero()=0;
     virtual int nrows()=0;
     virtual int ncols()=0;
+    virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& v)=0;
+    virtual double minValue()=0;
+    virtual double maxValue()=0;
     virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
-		     int& flops, int& memrefs, int beg=-1, int end=-1)=0;
+		      int& flops, int& memrefs, int beg=-1, int end=-1)=0;
     virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
-				int& flops, int& memrefs,
-				int beg=-1, int end=-1)=0;
+				int& flops, int& memrefs, int beg=-1, int end=-1)=0;
 
     // Persistent representation...
     virtual void io(Piostream&);

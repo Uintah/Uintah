@@ -7,7 +7,7 @@
 #include <iostream.h>
 
 DenseMatrix::DenseMatrix(int r, int c)
-: Matrix(Matrix::non_symmetric)
+: Matrix(Matrix::non_symmetric, Matrix::dense)
 {
     ASSERT(r>0);
     ASSERT(c>0);
@@ -29,7 +29,7 @@ DenseMatrix::~DenseMatrix()
 }
 
 DenseMatrix::DenseMatrix(const DenseMatrix& m)
-: Matrix(Matrix::non_symmetric)
+: Matrix(Matrix::non_symmetric, Matrix::dense)
 {
     nc=m.nc;
     nr=m.nr;
@@ -75,7 +75,40 @@ void DenseMatrix::put(int r, int c, const double& d)
 {
     ASSERT(r>=0 && r<nr);
     ASSERT(c>=0 && c<nc);
+    extremaCurrent=0;
     data[r][c]=d;
+}
+
+double DenseMatrix::minValue() {
+    if (extremaCurrent)
+	return minVal;
+    minVal=maxVal=data[0][0];
+    for (int r=0; r<nr; r++) {
+	for (int c=0; c<nr; c++) {
+	   if (data[r][c] < minVal)
+	       minVal = data[r][c];
+	   if (data[r][c] > maxVal)
+	       maxVal = data[r][c];
+       }
+    }
+    extremaCurrent=1;
+    return minVal;
+}
+
+double DenseMatrix::maxValue() {
+    if (extremaCurrent)
+	return maxVal;
+    minVal=maxVal=data[0][0];
+    for (int r=0; r<nr; r++) {
+	for (int c=0; c<nr; c++) {
+	   if (data[r][c] < minVal)
+	       minVal = data[r][c];
+	   if (data[r][c] > maxVal)
+	       maxVal = data[r][c];
+       }
+    }
+    extremaCurrent=1;
+    return maxVal;
 }
 
 int DenseMatrix::nrows()
@@ -88,6 +121,20 @@ int DenseMatrix::ncols()
     return nc;
 }
 
+void DenseMatrix::getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val)
+{
+    idx.resize(nc);
+    val.resize(nc);
+    int i=0;
+    for (int c=0; c<nc; c++) {
+	if (data[r][c]!=0.0) {
+	    idx[i]=c;
+	    val[i]=data[r][c];
+	    i++;
+	}
+    }
+}
+    
 void DenseMatrix::zero()
 {
     for(int r=0;r<nr;r++){
@@ -96,6 +143,7 @@ void DenseMatrix::zero()
 	    row[c]=0.0;
 	}
     }
+    extremaCurrent=0;
 }
 
 void DenseMatrix::solve(ColumnMatrix& sol)

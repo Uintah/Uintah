@@ -19,13 +19,50 @@
 
 PersistentTypeID Matrix::type_id("Matrix", "Datatype", 0);
 
-Matrix::Matrix(Sym sym)
-: sym(sym)
+int Matrix::is_symmetric() {
+    return sym==symmetric;
+}
+
+void Matrix::is_symmetric(int symm) {
+    if (symm)
+	sym=symmetric;
+    else 
+	sym=non_symmetric;
+}
+
+Matrix::Matrix(Sym sym, Representation rep)
+: sym(sym), rep(rep), extremaCurrent(0)
 {
 }
 
 Matrix::~Matrix()
 {
+}
+
+clString Matrix::getType()
+{
+    if (rep==symsparse)
+	return ("symsparse");
+    else if (rep==dense)
+	return ("dense");
+    else
+	return ("unknown");
+}
+	
+SymSparseRowMatrix* Matrix::getSymSparseRow()
+{
+    if (rep==symsparse)
+	return (SymSparseRowMatrix*)this;
+    else
+	return 0;
+}
+
+DenseMatrix* Matrix::getDense()
+{
+    if (rep==dense)
+	return (DenseMatrix*)this;
+    else
+	return 0;
 }
 
 Matrix* Matrix::clone()
