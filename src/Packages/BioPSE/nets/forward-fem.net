@@ -42,29 +42,38 @@ source $DATADIR/$DATASET/$DATASET.settings
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 9 6]
-set m1 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 27 164]
-set m2 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 45 244]
-set m3 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 27 309]
-set m4 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 9 376]
-set m5 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 654 461]
-set m6 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 417 157]
-set m7 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 417 89]
-set m8 [addModuleAtPosition "SCIRun" "Render" "Viewer" 399 803]
-set m9 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 177 397]
-set m10 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 177 602]
-set m11 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 9 710]
-set m12 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 244 461]
-set m13 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 226 524]
-set m14 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 227 680]
-set m15 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 672 530]
-set m16 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 636 723]
-set m17 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 654 593]
-set m18 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 636 659]
-set m19 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 453 624]
-set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 453 724]
-set m21 [addModuleAtPosition "BioPSE" "Forward" "ModifyConductivities" 27 87]
+global userName
+set userName "dmw"
 
+global runDate
+set runDate " Tue  Jan 1 2002"
+
+global runTime
+set runTime " 14:25:13"
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 9 8]
+set m1 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 27 87]
+set m2 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 45 160]
+set m3 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 27 224]
+set m4 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 9 289]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 640 369]
+set m6 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 411 81]
+set m7 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 411 10]
+set m8 [addModuleAtPosition "SCIRun" "Render" "Viewer" 393 694]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 233 434]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 233 497]
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 9 610]
+set m12 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 233 309]
+set m13 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 215 375]
+set m14 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 215 593]
+set m15 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 658 432]
+set m16 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 622 617]
+set m17 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 640 493]
+set m18 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 622 554]
+set m19 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 447 415]
+set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 447 479]
+
+addConnection $m0 0 $m1 0
 addConnection $m0 0 $m2 0
 addConnection $m1 0 $m3 0
 addConnection $m2 0 $m3 1
@@ -96,8 +105,6 @@ addConnection $m20 0 $m8 3
 addConnection $m15 1 $m8 4
 addConnection $m16 0 $m8 5
 addConnection $m0 0 $m19 0
-addConnection $m0 0 $m21 0
-addConnection $m21 0 $m1 0
 
 set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
 
@@ -115,7 +122,7 @@ set $m6-showLastVecGui_ {1}
 
 set $m7-filename $DATADIR/$DATASET/$DATASET-dipole.pcv.fld
 
-#$m8 initialize_ui
+$m8 initialize_ui
 set $m8-ViewWindow_0-view-eyep-x ${view-eyep-x}
 set $m8-ViewWindow_0-view-eyep-y ${view-eyep-y}
 set $m8-ViewWindow_0-view-eyep-z ${view-eyep-z}
