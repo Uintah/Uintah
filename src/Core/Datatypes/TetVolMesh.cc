@@ -978,6 +978,21 @@ TetVolMesh::locate(Face::index_type &face, const Point &p)
 bool
 TetVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
+#if 1
+  Cell::iterator bi, ei;
+  begin(bi);
+  end(ei);
+  while (bi != ei)
+  {
+    if (inside4_p(*bi * 4, p))
+    {
+      cell = *bi;
+      return true;
+    }
+    ++bi;
+  }
+  return false;
+#else
   if (grid_.get_rep() == 0)
   {
     compute_grid();
@@ -997,6 +1012,7 @@ TetVolMesh::locate(Cell::index_type &cell, const Point &p)
     ++iter;
   }
   return false;
+#endif
 }
 
 
@@ -1080,6 +1096,8 @@ TetVolMesh::compute_grid()
   Cell::size_type csize;  size(csize);
   const int s = ((int)ceil(pow((double)csize , one_third))) / 2 + 2;
   const Vector cell_epsilon = bb.diagonal() * (0.01 / s);
+  bb.extend(bb.min() - cell_epsilon);
+  bb.extend(bb.max() + cell_epsilon);
 
   LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
   grid_ = scinew LatVolField<vector<Cell::index_type> >(mesh, Field::CELL);
@@ -1156,28 +1174,28 @@ TetVolMesh::inside4_p(int i, const Point &p)
   const double c0 = + (x2*z3-x3*z2) + (x3*z1-x1*z3) + (x1*z2-x2*z1);
   const double d0 = - (x2*y3-x3*y2) - (x3*y1-x1*y3) - (x1*y2-x2*y1);
   const double s0 = iV6 * (a0 + b0*p.x() + c0*p.y() + d0*p.z());
-  if (s0 < -1.e-6)
+  if (s0 < -1.e-12)
     return false;
 
   const double b1 = + (y3*z0-y0*z3) + (y0*z2-y2*z0) + (y2*z3-y3*z2);
   const double c1 = - (x3*z0-x0*z3) - (x0*z2-x2*z0) - (x2*z3-x3*z2);
   const double d1 = + (x3*y0-x0*y3) + (x0*y2-x2*y0) + (x2*y3-x3*y2);
   const double s1 = iV6 * (a1 + b1*p.x() + c1*p.y() + d1*p.z());
-  if (s1 < -1.e-6)
+  if (s1 < -1.e-12)
     return false;
 
   const double b2 = - (y0*z1-y1*z0) - (y1*z3-y3*z1) - (y3*z0-y0*z3);
   const double c2 = + (x0*z1-x1*z0) + (x1*z3-x3*z1) + (x3*z0-x0*z3);
   const double d2 = - (x0*y1-x1*y0) - (x1*y3-x3*y1) - (x3*y0-x0*y3);
   const double s2 = iV6 * (a2 + b2*p.x() + c2*p.y() + d2*p.z());
-  if (s2 < -1.e-6)
+  if (s2 < -1.e-12)
     return false;
 
   const double b3 = +(y1*z2-y2*z1) + (y2*z0-y0*z2) + (y0*z1-y1*z0);
   const double c3 = -(x1*z2-x2*z1) - (x2*z0-x0*z2) - (x0*z1-x1*z0);
   const double d3 = +(x1*y2-x2*y1) + (x2*y0-x0*y2) + (x0*y1-x1*y0);
   const double s3 = iV6 * (a3 + b3*p.x() + c3*p.y() + d3*p.z());
-  if (s3 < -1.e-6)
+  if (s3 < -1.e-12)
     return false;
 
   return true;
