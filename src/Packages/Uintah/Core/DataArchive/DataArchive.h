@@ -471,34 +471,48 @@ private:
 	case TypeDescription::CCVariable:
 	  for (Level::const_patchIterator iter = level->patchesBegin();
 	       (iter != level->patchesEnd()) && (patch == NULL); iter++) {
-	    if ((*iter)->containsCell(loc))
+	    if ((*iter)->containsCell(loc)) {
 	      patch = *iter;
+	      // We found our patch, quit looking.
+	      break;
+	    }
 	  }
 	  break;
 	  
 	case TypeDescription::NCVariable:
-	  // Unfortunately, this const cast hack is necessary.
-	  patch = ((LevelP)level)->getPatchFromPoint(level->getNodePosition(loc));
+	  for (Level::const_patchIterator iter = level->patchesBegin();
+	       (iter != level->patchesEnd()) && (patch == NULL); iter++) {
+	    if ((*iter)->containsNode(loc)) {
+	      patch = *iter;
+	      break;
+	    }
+	  }
 	  break;
 	case TypeDescription::SFCXVariable:
 	  for (Level::const_patchIterator iter = level->patchesBegin();
 	       (iter != level->patchesEnd()) && (patch == NULL); iter++) {
-	    if ((*iter)->containsSFCX(loc))
+	    if ((*iter)->containsSFCX(loc)) {
 	      patch = *iter;
+	      break;
+	    }
 	  }
 	  break;
 	case TypeDescription::SFCYVariable:
 	  for (Level::const_patchIterator iter = level->patchesBegin();
 	       (iter != level->patchesEnd()) && (patch == NULL); iter++) {
-	    if ((*iter)->containsSFCY(loc))
+	    if ((*iter)->containsSFCY(loc)) {
 	      patch = *iter;
+	      break;
+	    }
 	  }
 	  break;
 	case TypeDescription::SFCZVariable:
 	  for (Level::const_patchIterator iter = level->patchesBegin();
 	       (iter != level->patchesEnd()) && (patch == NULL); iter++) {
-	    if ((*iter)->containsSFCZ(loc))
+	    if ((*iter)->containsSFCZ(loc)) {
 	      patch = *iter;
+	      break;
+	    }
 	  }
 	  break;
 	  
