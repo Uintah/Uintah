@@ -45,9 +45,9 @@ class CuttingPlane : public Module {
    TCLint num_contours;   
    TCLdouble offset;
    TCLdouble scale;
+   TCLint need_find;
    MaterialHandle outcolor;
    int grid_id;
-   int need_find;
 
 public:
    CuttingPlane(const clString& id);
@@ -72,6 +72,7 @@ static clString widget_name("CuttingPlane Widget");
 CuttingPlane::CuttingPlane(const clString& id)
 : Module("CuttingPlane", id, Filter), 
   cutting_plane_type("cutting_plane_type",id, this),
+  need_find("need_find",id,this),
   scale("scale", id, this), offset("offset", id, this),
   num_contours("num_contours", id, this)
 {
@@ -94,13 +95,14 @@ CuttingPlane::CuttingPlane(const clString& id)
     widget = scinew ScaledFrameWidget(this, &widget_lock, INIT);
     grid_id=0;
 
-    need_find=3;
+    need_find.set(1);
     
     outcolor=scinew Material(Color(0,0,0), Color(0,0,0), Color(0,0,0), 0);
 }
 
 CuttingPlane::CuttingPlane(const CuttingPlane& copy, int deep)
 : Module(copy, deep), cutting_plane_type("cutting_plane_type",id, this),
+  need_find("need_find",id,this),
   scale("scale", id, this), offset("offset", id, this),
    num_contours("num_contours", id, this)
 {
@@ -119,6 +121,7 @@ Module* CuttingPlane::clone(int deep)
 void CuttingPlane::execute()
 {
     int old_grid_id = grid_id;
+    static int find = -1;
 
     // get the scalar field and ColorMap...if you can
     ScalarFieldHandle sfield;
@@ -137,13 +140,13 @@ void CuttingPlane::execute()
 	widget->SetRatioR( 0.2 );
 	widget->SetRatioD( 0.2 );
     }
-    if (need_find != 0)
+    if (need_find.get() != find)
     {
 	Point min, max;
 	sfield->get_bounds( min, max );
 	Point center = min + (max-min)/2.0;
 	double max_scale;
-	if (need_find == 1) {
+	if (need_find.get() == 1) {
 	  // Find the field and put in optimal place
 	  // in xy plane with reasonable frame thickness
 	  Point right( max.x(), center.y(), center.z());
@@ -151,7 +154,7 @@ void CuttingPlane::execute()
 	  max_scale = Max( (max.x() - min.x()), (max.y() - min.y()) );
 	  widget->SetScale( max_scale/30. );
 	  widget->SetPosition( center, right, down);
-	} else if (need_find == 2) {
+	} else if (need_find.get() == 2) {
 	  // Find the field and put in optimal place
 	  // in yz plane with reasonable frame thickness
 	  Point right( center.x(), center.y(), max.z());
@@ -168,7 +171,7 @@ void CuttingPlane::execute()
 	  widget->SetScale( max_scale/30. );
 	  widget->SetPosition( center, right, down);
 	}
-	need_find = 0;
+	find = need_find.get();
     }
 
     // get the position of the frame widget
@@ -403,17 +406,17 @@ void CuttingPlane::tcl_command(TCLArgs& args, void* userdata)
     }
     if(args[1] == "findxy")
     {
-	need_find=1;
+	need_find.set(1);
 	want_to_execute();
     }
     else if(args[1] == "findyz")
     {
-	need_find=2;
+	need_find.set(2);
 	want_to_execute();
     }
     else if(args[1] == "findxz")
     {
-	need_find=3;
+	need_find.set(3);
 	want_to_execute();
     }
     else
