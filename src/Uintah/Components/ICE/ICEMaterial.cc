@@ -137,7 +137,17 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 				  const Patch* patch,
 				  DataWarehouseP& new_dw)
 {
-  double volume_fraction = 1.0;
+  // Zero the arrays so they don't get wacky values
+  uvel_CC.initialize(0.);
+  vvel_CC.initialize(0.);
+  wvel_CC.initialize(0.);
+  rho_micro.initialize(0.);
+  rho_CC.initialize(0.);
+  temp.initialize(0.);
+  vol_frac_CC.initialize(0.);
+  speedSound.initialize(0.);
+  visc_CC.initialize(0.);
+  cv.initialize(0.);
 
   for(int i=0; i<(int)d_geom_objs.size(); i++){
    GeometryPiece* piece = d_geom_objs[i]->getPiece();
@@ -147,21 +157,48 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
    if(b.degenerate())
       cerr << "b.degenerate" << endl;
 
-    // Set the initial conditions:
-    uvel_CC.initialize(d_geom_objs[i]->getInitialVelocity().x());
-    vvel_CC.initialize(d_geom_objs[i]->getInitialVelocity().y());
-    wvel_CC.initialize(d_geom_objs[i]->getInitialVelocity().z());
-    rho_micro.initialize(d_density);
-    rho_CC.initialize(d_density*volume_fraction);
-    temp.initialize(d_geom_objs[i]->getInitialTemperature());
-    vol_frac_CC.initialize(volume_fraction);
-    speedSound.initialize(d_speed_of_sound);
-    visc_CC.initialize(d_viscosity);
-    cv.initialize(d_specificHeat);
+   IntVector ppc = d_geom_objs[i]->getNumParticlesPerCell();
+   Vector dxpp = patch->dCell()/ppc;
+   Vector dcorner = dxpp*0.5;
+   double totalppc = ppc.x()*ppc.y()*ppc.z();
+
+   for(CellIterator iter = patch->getCellIterator(b); !iter.done(); iter++){
+      Point lower = patch->nodePosition(*iter) + dcorner;
+      int count = 0;
+      for(int ix=0;ix < ppc.x(); ix++){
+         for(int iy=0;iy < ppc.y(); iy++){
+            for(int iz=0;iz < ppc.z(); iz++){
+               IntVector idx(ix, iy, iz);
+               Point p = lower + dxpp*idx;
+
+               if(piece->inside(p))
+                  count++;
+            }
+         }
+      }
+
+      if( count > 0){
+	uvel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity().x();
+	vvel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity().y();
+	wvel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity().z();
+	speedSound[*iter] = d_speed_of_sound;
+	visc_CC[*iter]    = d_viscosity;
+	temp[*iter]       = d_geom_objs[i]->getInitialTemperature();
+	cv[*iter]         = d_specificHeat;
+	rho_micro[*iter]  = d_density;
+	vol_frac_CC[*iter]= count/totalppc;
+	rho_CC[*iter]     = d_density*vol_frac_CC[*iter];
+      }
+   }
   }
 }
 
 // $Log$
+// Revision 1.7  2000/11/23 00:45:45  guilkey
+// Finished changing the way initialization of the problem was done to allow
+// for different regions of the domain to be easily initialized with different
+// materials and/or initial values.
+//
 // Revision 1.6  2000/11/22 01:28:05  guilkey
 // Changed the way initial conditions are set.  GeometryObjects are created
 // to fill the volume of the domain.  Each object has appropriate initial

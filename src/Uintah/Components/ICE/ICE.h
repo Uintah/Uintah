@@ -266,16 +266,6 @@ namespace Uintah {
       double d_pressure;
       Vector d_K_mom, d_K_heat; // exchange coefficients -- off diagonal terms
       
-      struct ic {
-	Vector d_velocity;
-	double d_micro_density;
-	double d_temperature;
-	double d_volume_fraction;
-      };
-      
-      vector<struct ic> d_ic;
-      
-      
       ICE(const ICE&);
       ICE& operator=(const ICE&);
       
@@ -317,6 +307,11 @@ namespace Uintah {
 #endif
 
 // $Log$
+// Revision 1.38  2000/11/23 00:45:45  guilkey
+// Finished changing the way initialization of the problem was done to allow
+// for different regions of the domain to be easily initialized with different
+// materials and/or initial values.
+//
 // Revision 1.37  2000/11/21 21:53:24  jas
 // Added methods for the different schedules that make up scheduleTimeAdvance.
 //

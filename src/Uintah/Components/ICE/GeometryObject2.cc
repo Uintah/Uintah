@@ -21,7 +21,17 @@ GeometryObject2::~GeometryObject2()
 {
 }
 
+IntVector GeometryObject2::getNumParticlesPerCell()
+{
+  return d_resolution;
+}
+
 // $Log$
+// Revision 1.2  2000/11/23 00:45:45  guilkey
+// Finished changing the way initialization of the problem was done to allow
+// for different regions of the domain to be easily initialized with different
+// materials and/or initial values.
+//
 // Revision 1.1  2000/11/22 01:28:05  guilkey
 // Changed the way initial conditions are set.  GeometryObjects are created
 // to fill the volume of the domain.  Each object has appropriate initial
