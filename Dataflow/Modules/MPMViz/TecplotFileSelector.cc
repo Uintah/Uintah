@@ -1,10 +1,5 @@
 //static char *id="@(#) $Id$";
 
-#include <TecplotFileSelector.h>
-#include <TecplotReader.h>
-
-#include <Malloc/Allocator.h>
-
 #include <iostream.h> 
 #include <iomanip.h>
 #include <strstream.h>
@@ -12,6 +7,11 @@
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
+
+#include <SCICore/Malloc/Allocator.h>
+
+#include "TecplotFileSelector.h"
+#include "TecplotReader.h"
 
 namespace Uintah {
 namespace Modules {
@@ -157,7 +157,7 @@ void TecplotFileSelector::doAnimation()
   
 //--------------------------------------------------------------- 
   
-PSECommon::Dataflow::Module* make_TecplotFileSelector( const clString& id ) { 
+PSECore::Dataflow::Module* make_TecplotFileSelector( const clString& id ) { 
   return new TecplotFileSelector( id );
 }
 
@@ -166,6 +166,10 @@ PSECommon::Dataflow::Module* make_TecplotFileSelector( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:12  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 17:08:58  mcq
 // Initial commit
 //

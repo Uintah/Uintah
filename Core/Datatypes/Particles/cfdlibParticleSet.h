@@ -14,8 +14,9 @@
 #ifndef SCI_Datatypes_cfdlibParticleSet_h
 #define SCI_Datatypes_cfdlibParticleSet_h 1
 
-#include <Datatypes/Particles/ParticleSet.h>
-#include <Containers/LockingHandle.h>
+#include <SCICore/Containers/LockingHandle.h>
+
+#include <Uintah/Datatypes/Particles/ParticleSet.h>
 
 // struct cfdlibTimeStep {
 //     double time;
@@ -79,6 +80,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:09  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:59:01  mcq
 // Initial commit
 //

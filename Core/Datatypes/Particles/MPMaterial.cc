@@ -12,14 +12,15 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Datatypes/Particles/MPMaterial.h>
-#include <Malloc/Allocator.h>
-#include <Util/NotFinished.h>
-
 #include <iostream.h>
 #include <fstream.h>
 #include <strstream.h>
 #include <string.h>
+
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Util/NotFinished.h>
+
+#include <Uintah/Datatypes/Particles/MPMaterial.h>
 
 namespace Uintah {
 namespace Datatypes {
@@ -121,6 +122,10 @@ void MPMaterial::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:06  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:58  mcq
 // Initial commit
 //
