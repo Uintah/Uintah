@@ -15,6 +15,19 @@
 using namespace rtrt;
 using namespace SCIRun;
 
+
+void BumpMaterial::print()
+{
+printf("Enter BUMPMATERIAL print\n");
+for(int j = 0; j < dimension_y; j++) 
+  for(int i = 0; i < dimension_x; i++)
+    printf("[%d,%d]=%d\n",i,j,bumpimage[j*dimension_x+i]);
+printf("  End BUMPMATERIAL print\n");
+}
+
+//BumpMaterial::BumpMaterial(Material *m, char *filename, double ntiles, double bump_scale) : ntiles(ntiles), bump_scale(bump_scale)
+
+
 Persistent* bumpMaterial_maker() {
   return new BumpMaterial();
 }
@@ -55,8 +68,7 @@ void BumpMaterial::perturbnormal(Vector &normal, const Ray& ray,
   if(map != NULL) {
     float u,v;
     Vector pu,pv,d;
-    double fu,fv;
-    
+    double fu,fv;    
     map->uv(uv_m,hitpos,hit);
     u = uv_m.u()*ntiles;
     v = uv_m.v()*ntiles;
@@ -67,18 +79,50 @@ void BumpMaterial::perturbnormal(Vector &normal, const Ray& ray,
     map->get_frame(hitpos, hit, normal,pu,pv);
     if(dimension_x == dimension_y && dimension_x == 1)
       return;
-    //how to get things form a file
     fu = (fval(u+evaru,v)-fval(u-evaru,v))/255;//  / (2*evaru);
     fv = (fval(u,v+evarv)-fval(u,v-evarv))/255;//  / (2*evarv);
-    // could use fwd diff too 
-    //normal += sin(u*M_PI*2*10)*pv; //use this for a sphere - procedural
-    //normal += sin(u/120)*pv; // use this for a plane - procedural
     d = (fu*pu - fv*pv)*bump_scale;
-//         d.safe_normalize();
     normal += d;
     normal.safe_normalize();
   }
 }
+
+// this take the current bump map and writes it out to a normal map
+// since this is taken out of the context of an object,
+// the normal should be constant over the object (a plane)
+// as such, the user can also define what the tangent vectors should be
+
+void BumpMaterial::CreateNormalMap(char *bumpfile, char *filename, Vector nrml, Vector pu, Vector pv)
+{
+  int i,j; //i and j can also be called u and v
+  Vector normal = nrml;
+  double fu,fv;
+  Vector *vlist = new Vector[dimension_x*dimension_y], d;
+  printf("***CreateNormalMap\n");
+  cout << "   bumpfile=" << bumpfile << endl << "   filename=" << filename << endl;
+  for( j = 0; j < dimension_y; j++)
+    for( i = 0; i < dimension_x; i++)
+      {
+	normal.x(nrml.x());normal.y(nrml.y());normal.z(nrml.z());
+	int id = i+1, jd = j+1, ic = i-1, jc = j -1;
+	if(id == dimension_x)	  id = 0;
+	if(jd == dimension_y)	  jd = 0;
+	if(ic == -1)              ic = dimension_x-1;
+	if(jc == -1)              jc = dimension_y-1;
+	fu = (bumpimage[j*dimension_x+id] - 
+	      bumpimage[j*dimension_x+ic])/255; // * dimension_x/2.f;
+	fv = (bumpimage[jd*dimension_x+i] - 
+	      bumpimage[jc*dimension_x+i])/255; // *dimension_y/2.f;
+	d = (fu*pu - fv*pv)*bump_scale;
+	normal += d;
+	normal.safe_normalize();
+	vlist[j*dimension_x+i] = normal;
+      }
+  writetoppm(filename,bumpfile,vlist);
+}
+
+
+
 
 void BumpMaterial::shade(Color& result, const Ray& ray,
 		  const HitInfo& hit, int depth,
@@ -144,10 +188,10 @@ int BumpMaterial::readfromppm6(char *filename)
   fscanf(fin,"%d\n",&temp);
   unsigned char ra,ga,ba;
   int r,g,b;
-  double max = temp;
+  //double max = temp;
   bumpimage = (int *)malloc(dimension_x*dimension_y*sizeof(int));
   printf("Converting from 0->%d (x3) to Vector 0->1 by division\n",temp);
-  printf("Reading Bump Map File: %s\n",filename);
+  printf("Reading in File for a Bump Map=%s\n",filename);
   for(int j = dimension_y-1; j >= 0; j--)
     for(int i = 0; i < dimension_x; i++)
     { //ramsey
@@ -155,8 +199,8 @@ int BumpMaterial::readfromppm6(char *filename)
       r = (int)ra; g = (int)ga; b = (int)ba; 
       bumpimage[j*dimension_x+i] = (r+g+b)/3;
     }
-  evaru = 1.0f/(dimension_x*ntiles);
-  evarv = 1.0f/(dimension_y*ntiles);
+  evaru = 1.0f/(dimension_x);
+  evarv = 1.0f/(dimension_y);
   printf("File read\n");
   fclose(fin);
   return 1;
@@ -182,55 +226,31 @@ int BumpMaterial::read_file(char *filename)
       return readfromppm6(filename);
     }
   }
-  
-  int temp;
-  fin = readcomments(fin);
-  fscanf(fin,"%d %d\n", &dimension_x, &dimension_y);
-  fin = readcomments(fin);
-  fscanf(fin,"%d",&temp);
-  double max = temp;
-  int r,g,b;
-  bumpimage = (int *)malloc(dimension_x*dimension_y*sizeof(int));
-  printf("Reading Bump Map File: %s\n",filename);
-  for(int j = dimension_y-1; j >= 0; j--)
-    for(int i = 0; i < dimension_x; i++)
-    {
-      fscanf(fin,"%d %d %d",&r,&g,&b);
-      bumpimage[j*dimension_x+i] = (r+g+b)/3.0f;
-    }   
-  evaru = 1.0f/(dimension_x*ntiles);
-  evarv = 1.0f/(dimension_y*ntiles);
-  
-  printf("File read\n");
-  fclose(fin);
-  return 1;
 
-  /*
-  ifstream fin;
-  int dimension;
-  //char buf[256];
-  int i,j;
-  fin.open(filename);
-  if(!fin)
-    { //couldn't open file
-      return 0;
-    }
-  fin >> dimension;
-  dimension_x = dimension_y = dimension;
-  bumpimage = new int[dimension*dimension];
-  for(i = 0; i < dimension; i++)
-    for(j = 0; j < dimension; j++)
-      {
-	if(fin.eof()) // endo f file too early
-	  {
-	    return 0;
-	  }
-	fin >> bumpimage[i*dimension + j];
-      }
-  evaru = 1./(double)(dimension);
-  evarv = evaru;
-  */
-  return 1;
+  //otherwise readfromppm3
+
+    int temp;
+    fin = readcomments(fin);
+    fscanf(fin,"%d %d\n", &dimension_x, &dimension_y);
+    fin = readcomments(fin);
+    fscanf(fin,"%d",&temp);
+    //double max = temp;
+    int r,g,b;
+    bumpimage = (int *)malloc(dimension_x*dimension_y*sizeof(int));
+    printf("Reading in File for a Bump Map Open File=%s\n",filename);
+    for(int j = dimension_y-1; j >= 0; j--)
+      for(int i = 0; i < dimension_x; i++)
+        {
+          fscanf(fin,"%d %d %d",&r,&g,&b);
+	  bumpimage[j*dimension_x+i] = (r+g+b)/3.0f;
+        }   
+    evaru = 1.0f/(dimension_x);
+    evarv = 1.0f/(dimension_y);
+	
+    printf("\n***File %s read\n",filename);
+    fclose(fin);
+    return 1;
+
 }
 
 
@@ -240,7 +260,9 @@ double BumpMaterial::fval(double u, double v)
   int f1,f2,f3,f4,iu,iv,iu1,iv1;
   double fu0,fu1,du,dv;
   iu = ((double)dimension_x*u);
-  iv = dimension_y - (int)((double)dimension_y*v);
+  iv = ((double)dimension_y*v);
+  du = dimension_x*u - (double)iu;
+  dv = dimension_y*v - (double)iv;
   if(iu >= dimension_x || iu < 0) iu = 0;
   if(iv >= dimension_y || iv < 0) iv = 0;
   iu1 = iu+1; 
@@ -253,12 +275,47 @@ double BumpMaterial::fval(double u, double v)
   f2 = bumpimage[iv*dimension_x +iu1];
   f3 = bumpimage[iv1*dimension_x +iu];
   f4 = bumpimage[iv1*dimension_x +iu1];
-  du = dimension_x*u - (double)iu;
-  dv = dimension_y*v - (double)iv;
   fu0 = f1+du*(f2-f1);
   fu1 = f3+du*(f4-f3);
   return fu0 + dv * (fu1-fu0);
 }
+
+
+
+
+
+void BumpMaterial::writetoppm(char *filename,char *bumpfile,Vector *v)
+{
+  FILE *fout;
+  if(!v)
+    {printf("invalid vector list\n");
+    return; }
+  fout = fopen(filename,"w");
+  if(!fout) //couldn't open file
+    {printf("Couldn't open file %s\n",filename);
+    return; }
+  printf("Begin Output to file %s\n",filename);
+  fprintf(fout,"P3\n");
+  fprintf(fout,"# Ramsey: Normal Map created from Bump File %s\n",bumpfile);
+  fprintf(fout,"\n%d %d 255\n",dimension_x, dimension_y);
+  for(int j = dimension_y-1; j >=0; j--)
+    for(int i = 0; i < dimension_x; i++)
+      {
+	Vector rgb = v[j*dimension_x+i];
+	int r = (rgb.x()+1)*128, 
+            g = (rgb.y()+1)*128, 
+            b = (rgb.z()+1)*128; 
+	if(r > 255 || r < 0) {printf("warning [%d,%d] r=%d\n",i,j,r); r = 255;}
+	if(g > 255 || g < 0) {printf("warning [%d,%d] g=%d\n",i,j,g); g = 255;}
+	if(b > 255 || b < 0) {printf("warning [%d,%d] b=%d\n",i,j,b); b = 255;}
+	fprintf(fout,"%d %d %d \n",
+		r,g,b); //else would output unsigned char
+
+      }
+  fclose(fout);
+  printf("Output complete %s\n",filename);
+}
+
 
 const int BUMPMATERIAL_VERSION = 1;
 
@@ -285,6 +342,7 @@ BumpMaterial::io(SCIRun::Piostream &str)
   }
   str.end_class();
 }
+
 
 namespace SCIRun {
 void Pio(SCIRun::Piostream& stream, rtrt::BumpMaterial*& obj)
