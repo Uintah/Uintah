@@ -1,7 +1,7 @@
 // One of the derived HEBurn classes.  This particular
 // class is used when no burn is desired.  
 
-#include "NullBurn.h"
+#include <Packages/Uintah/CCA/Components/HETransformation/NullBurn.h>
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>

@@ -1,8 +1,8 @@
 //  MPMMaterial.cc
 
-#include "MPMMaterial.h"
-#include "ConstitutiveModel.h"
-#include "ConstitutiveModelFactory.h"
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Membrane.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
@@ -26,10 +26,10 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
-#include "ImplicitParticleCreator.h"
-#include "DefaultParticleCreator.h"
-#include "MembraneParticleCreator.h"
-#include "FractureParticleCreator.h"
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ImplicitParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DefaultParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MembraneParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/FractureParticleCreator.h>
 #include <Core/Util/NotFinished.h>
 #include <iostream>
 

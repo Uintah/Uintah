@@ -1062,7 +1062,7 @@ void ImpMPM::printParticleCount(const ProcessorGroup* pg,
     if(!printed){
       sumlong_vartype pcount;
       new_dw->get(pcount, lb->partCountLabel);
-      cerr << "Created " << pcount << " total particles\n";
+      cerr << "Created " << (long) pcount << " total particles\n";
       printed=true;
     }
   }

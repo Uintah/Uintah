@@ -51,7 +51,7 @@
 #include <Core/Thread/ThreadError.h>
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/WorkQueue.h>
-#include "Thread_unix.h"
+#include <Core/Thread/Thread_unix.h>
 #include <errno.h>
 extern "C" {
 #include <semaphore.h>
@@ -97,9 +97,9 @@ typedef void (*SIG_HANDLER_T)(int);
  *
  */
 
-#include "AtomicCounter_default.cc"
-#include "Barrier_default.cc"
-#include "CrowdMonitor_default.cc"
+#include <Core/Thread/AtomicCounter_default.cc>
+#include <Core/Thread/Barrier_default.cc>
+#include <Core/Thread/CrowdMonitor_default.cc>
 
 using SCIRun::ConditionVariable;
 using SCIRun::Mutex;

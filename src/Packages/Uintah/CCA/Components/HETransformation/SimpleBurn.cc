@@ -1,7 +1,7 @@
 // One of the derived Burn classes.  This particular
 // class is used when no burn is desired.  
 
-#include "SimpleBurn.h"
+#include <Packages/Uintah/CCA/Components/HETransformation/SimpleBurn.h>
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>

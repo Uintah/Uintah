@@ -1,4 +1,4 @@
-#include "GeometryObject.h"
+#include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <iostream>

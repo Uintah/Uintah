@@ -1,7 +1,7 @@
-#include "UnionGeometryPiece.h"
+#include <Packages/Uintah/Core/Grid/UnionGeometryPiece.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
-#include "GeometryPieceFactory.h"
+#include <Packages/Uintah/Core/Grid/GeometryPieceFactory.h>
 
 using namespace SCIRun;
 using namespace Uintah;

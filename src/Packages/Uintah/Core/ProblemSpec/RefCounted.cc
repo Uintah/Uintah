@@ -1,5 +1,5 @@
 
-#include "RefCounted.h"
+#include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/Assert.h>

@@ -1,4 +1,4 @@
-#include "ParticleCreator.h"
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
