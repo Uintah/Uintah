@@ -15,7 +15,8 @@ SphereGeometryPiece::SphereGeometryPiece(ProblemSpecP& ps)
   Point orig;
   double rad;
 
-  ps->require("origin",orig);
+  if(!ps->get("center", orig)) // Alternate specification
+    ps->require("origin",orig);
   ps->require("radius",rad);
   
   if ( rad <= 0.0)
