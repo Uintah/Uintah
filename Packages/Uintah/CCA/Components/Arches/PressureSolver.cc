@@ -129,8 +129,8 @@ void PressureSolver::solve(const LevelP& level,
   sched_pressureLinearSolve(level, sched, timelabels);
 
   if (d_MAlab) {
-    if (timelabels->integrator_step_name == "FE")
-      sched_addHydrostaticTermtoPressure(sched, patches, matls);
+      sched_addHydrostaticTermtoPressure(sched, patches, matls,
+					 timelabels);
   }
 
 }
@@ -541,21 +541,28 @@ PressureSolver::pressureLinearSolve(const ProcessorGroup* pc,
 void
 PressureSolver::sched_addHydrostaticTermtoPressure(SchedulerP& sched, 
 						   const PatchSet* patches,
-						   const MaterialSet* matls)
+						   const MaterialSet* matls,
+						   const TimeIntegratorLabel* timelabels)
 
 {
   Task* tsk = scinew Task("Psolve:addhydrostaticterm",
-			  this, &PressureSolver::addHydrostaticTermtoPressure);
+			  this, &PressureSolver::addHydrostaticTermtoPressure,
+			  timelabels);
 
   
-  tsk->requires(Task::NewDW, d_lab->d_pressurePSLabel,
+  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  tsk->computes(d_lab->d_pressPlusHydroLabel);
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+    tsk->computes(d_lab->d_pressPlusHydroLabel);
+  }
+  else {
+    tsk->modifies(d_lab->d_pressPlusHydroLabel);
+  }
   
   sched->addTask(tsk, patches, matls);
 
@@ -570,8 +577,8 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
 					     const PatchSubset* patches,
 					     const MaterialSubset*,
 					     DataWarehouse* old_dw,
-					     DataWarehouse* new_dw)
-
+					     DataWarehouse* new_dw,
+					     const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
 
@@ -606,15 +613,21 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->get(prel, d_lab->d_pressurePSLabel,
+    old_dw->get(prel, d_lab->d_pressurePSLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     old_dw->get(denMicro, d_lab->d_densityMicroLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(cellType, d_lab->d_cellTypeLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    new_dw->allocateAndPut(pPlusHydro, d_lab->d_pressPlusHydroLabel,
-		     matlIndex, patch);
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      new_dw->allocateAndPut(pPlusHydro, 
+			     d_lab->d_pressPlusHydroLabel,
+			     matlIndex, patch);
+    else
+      new_dw->getModifiable(pPlusHydro,
+			    d_lab->d_pressPlusHydroLabel, 
+			    matlIndex, patch);
 
     IntVector valid_lo = patch->getCellFORTLowIndex();
     IntVector valid_hi = patch->getCellFORTHighIndex();
@@ -628,11 +641,6 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
 					 cellinfo->yy, cellinfo->zz,
 					 valid_lo, valid_hi,
 					 cellType, mmwallid);
-		
-    // allocateAndPut instead:
-    /* new_dw->put(pPlusHydro, d_lab->d_pressPlusHydroLabel,
-		matlIndex, patch); */;
-
   }
 }
 

@@ -417,7 +417,8 @@ int ExplicitSolver::noSolve(const LevelP& level,
   d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
 					   nosolve_timelabels);
   
-  d_pressSolver->sched_addHydrostaticTermtoPressure(sched, patches, matls);
+  d_pressSolver->sched_addHydrostaticTermtoPressure(sched, patches, matls,
+						    nosolve_timelabels);
  
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
