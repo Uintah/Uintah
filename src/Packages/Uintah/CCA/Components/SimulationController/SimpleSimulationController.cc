@@ -99,6 +99,11 @@ SimpleSimulationController::run()
    UintahParallelPort* pp = getPort("problem spec");
    ProblemSpecInterface* psi = dynamic_cast<ProblemSpecInterface*>(pp);
    
+   if( !psi ){
+     cout << "SimpleSimulationController::run() psi dynamic_cast failed...\n";
+     throw InternalError("psi dynamic_cast failed");
+   }
+
    // Get the problem specification
    ProblemSpecP ups = psi->readInputFile();
    ups->writeMessages(d_myworld->myrank() == 0);
@@ -121,6 +126,11 @@ SimpleSimulationController::run()
 #endif
 
    Output* output = dynamic_cast<Output*>(getPort("output"));
+
+   if( !output ){
+     cout << "dynamic_cast of 'output' failed!\n";
+     throw InternalError("dynamic_cast of 'output' failed!");
+   }
    output->problemSetup(ups);
    
    // Setup the initial grid
@@ -142,7 +152,8 @@ SimpleSimulationController::run()
    SimulationStateP sharedState = scinew SimulationState(ups);
    
    // Initialize the CFD and/or MPM components
-   SimulationInterface* sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
+   SimulationInterface* sim = 
+     dynamic_cast<SimulationInterface*>(getPort("sim"));
 
    if(!sim)
      throw InternalError("No simulation component");
@@ -388,7 +399,7 @@ SimpleSimulationController::run()
       if(need_recompile(t, delt, grid, sim, output) || first){
 	first=false;
 	if(d_myworld->myrank() == 0)
-	  cout << "Compiling taskgraph...\n";
+	  cout << "COMPILING TASKGRAPH...\n";
 	double start = Time::currentSeconds();
 	scheduler->initialize();
 

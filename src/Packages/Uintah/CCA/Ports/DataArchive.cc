@@ -68,7 +68,13 @@ DataArchive::DataArchive(const std::string& filebase,
   if(handler.foundError)
     throw InternalError("Error reading file: "+ string(to_char_ptr(d_base.getURLText())));
   
-  d_indexDoc = dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
+  d_indexDoc = 
+    dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
+
+  if( !d_indexDoc ) {
+    cout << "dynamic_cast for d_indexDoc failed!\n";
+    throw InternalError("dynamic_cast for d_indexDoc failed!\n");
+  }
 
   delete parser;
   d_swapBytes = queryEndianness() != SCIRun::endianness();
@@ -172,9 +178,17 @@ DataArchive::queryTimesteps( std::vector<int>& index,
 	  parser->parse(url.getURLText());
 	  if(handler.foundError)
 	    throw InternalError("Cannot read timestep file");
-	  
-	  DOMNode* top = dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true))->getDocumentElement();
-	  
+
+	  DOMDocument * theDoc =
+	    dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
+
+	  if( !theDoc ){
+	    cout << "dynamic_cast for 'theDoc' failed!\n";
+	    throw InternalError("dynamic_cast for 'theDoc' failed!\n");
+	  }
+
+	  DOMNode* top = theDoc->getDocumentElement();
+
 	  delete parser;
 	  d_tstop.push_back(top);
 	  d_tsurl.push_back(url);
@@ -832,7 +846,14 @@ void DataArchive::PatchHashMaps::parse()
     if(handler.foundError)
       throw InternalError("Cannot read timestep file");
     
-    DOMDocument* doc = dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
+    DOMDocument* doc = 
+      dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
+
+    if( !doc ) {
+      cout << "dynamic_cast for 'doc' failed!\n";
+      throw InternalError("dynamic_cast for 'doc' failed!\n");
+    }
+
     DOMNode* top = doc->getDocumentElement();
 
     docs.push_back(doc);
