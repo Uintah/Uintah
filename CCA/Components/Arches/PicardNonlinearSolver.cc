@@ -486,7 +486,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> new_enthalpy;
     if (d_enthalpySolve) {
       new_dw->allocate(new_enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
-      new_enthalpy.copy(enthalpy);
+      new_enthalpy.copyData(enthalpy);
     }
 
     CCVariable<double> density_new;
