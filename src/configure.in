@@ -34,7 +34,14 @@ AC_PREREQ(2.0)
 ##-- Canonical Host Type -----------------------------------------------------
 AC_CANONICAL_HOST
 
-##-- Compiler options --------------------------------------------------------
+##-- Thread libraries --------------------------------------------------------
+
+AC_ARG_ENABLE(threads,
+	[  --enable-threads		Specify a thread implementation (pthreads, irix)],
+	[threads="$enableval"],
+	[threads=${threads='unknown'}])
+
+###-- Compiler options --------------------------------------------------------
 AC_ARG_ENABLE(debug,
 	  [ --enable-debug		Turn on debugging (usually -g flag)],
 	  [debug="$enableval"],
@@ -251,16 +258,7 @@ AC_ARG_WITH(xerces,
 	[xerces="$withval"],
 	[xerces=""])
 
-##-- Thread libraries --------------------------------------------------------
-
-AC_ARG_ENABLE(threads,
-	[  --enable-threads		Specify a thread implementation (pthreads, irix)],
-	[threads="$enableval"],
-	[threads=${threads='unknown'}])
-AC_SUBST(THREAD_IMPL)
-AC_SUBST(TIME_IMPL)
-
-##-- Check for TAU --------------------------------------------------------
+#-- Check for TAU --------------------------------------------------------
 AC_ARG_WITH(tau,
 	  [  --with-tau=<tau-makefile>  Specify Tau Makefile],
 	  [tau="$withval"],
@@ -418,6 +416,8 @@ esac
 AC_SUBST(THREAD_LIBS)
 AC_SUBST(THREAD_DEFINE)
 THREAD_IMPL="Thread_"$threads".cc"
+AC_SUBST(THREAD_IMPL)
+AC_SUBST(TIME_IMPL)
 
 ##-- Find a C Compiler -------------------------------------------------------
 ## AC_PROG_CC
@@ -1511,3 +1511,10 @@ fi
 ##-- Generate Output Files ---------------------------------------------------
 AC_OUTPUT( [$output_files], echo timestamp > stamp-h )
 
+if cmp -s sci_defs.h sci_testdefs.h 2>/dev/null; then
+  echo "sci_defs.h is unchanged"
+  rm -f sci_testdefs.h
+else
+  mv sci_testdefs.h sci_defs.h
+  echo "sci_defs.h is changed"
+fi
