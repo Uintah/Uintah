@@ -934,6 +934,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->computes(lb->term3Label,           press_matl, oims);
   task->computes(lb->sum_rho_CCLabel,      press_matl, oims);  // only one mat subset
   
+  sched->setRestartable(true);
   sched->addTask(task, patches, matls);
 }
 
@@ -1354,7 +1355,9 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
       task->requires(Task::NewDW, tvar->var_Lagrangian, tvar->matls, gac, 2);
       task->computes(tvar->var,   tvar->matls);
     }
-  }  
+  }
+  
+  sched->setRestartable(true);
   sched->addTask(task, patch_set, ice_matls);
 }
 /* ---------------------------------------------------------------------
@@ -4785,7 +4788,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
         }
       }
 
-/*`==========TESTING==========*/
       //__________________________________
       // Advect internal energy and backout Temp_CC
       advector->advectQ(int_eng_L_ME,patch,q_advected, new_dw);
@@ -4811,7 +4813,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
       setBC(vel_CC, "Velocity", patch,d_sharedState, indx, new_dw, lv);       
       setBC(temp,"Temperature",gamma, cv,patch,d_sharedState,
                                                      indx, new_dw,lv); 
-/*===========TESTING==========`*/
+                                                     
       //__________________________________
       // Compute Auxilary quantities
       for(CellIterator iter = patch->getExtraCellIterator();
