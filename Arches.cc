@@ -277,6 +277,10 @@ Arches::sched_paramInit(const LevelP& level,
 
     for (int ii = 0; ii < d_nofScalars; ii++) 
       tsk->computes(d_lab->d_scalarINLabel); // only work for 1 scalar
+    for (int ii = 0; ii < d_nofScalarStats; ii++) {
+      tsk->computes(d_lab->d_scalarVarSPLabel); // only work for 1 scalarStat
+      tsk->computes(d_lab->d_scalarDissSPLabel); // only work for 1 scalarStat
+    }
     if (d_calcReactingScalar)
       tsk->computes(d_lab->d_reactscalarINLabel);
     if (d_calcEnthalpy) {
@@ -468,6 +472,8 @@ Arches::paramInit(const ProcessorGroup* ,
     CCVariable<double> pressurePred;
     CCVariable<double> pressureInterm;
     StaticArray< CCVariable<double> > scalar(d_nofScalars);
+    StaticArray< CCVariable<double> > scalarVar_new(d_nofScalarStats);
+    CCVariable<double> scalarDiss_new;
     CCVariable<double> enthalpy;
     CCVariable<double> density;
     CCVariable<double> viscosity;
@@ -501,6 +507,11 @@ Arches::paramInit(const ProcessorGroup* ,
     // will only work for one scalar
     for (int ii = 0; ii < d_nofScalars; ii++) {
       new_dw->allocateAndPut(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch);
+    }
+    for (int ii = 0; ii < d_nofScalarStats; ii++) {
+      new_dw->allocateAndPut(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch);
+      new_dw->allocateAndPut(scalarDiss_new, d_lab->d_scalarDissSPLabel, matlIndex, patch);
+      
     }
     CCVariable<double> reactscalar;
     if (d_calcReactingScalar) {
