@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
 #include <Packages/Uintah/Core/Grid/BoundCondReader.h>
@@ -15,6 +16,7 @@
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Util/ProgressiveWarning.h>
 
 #include <iostream>
 #include <algorithm>
@@ -557,7 +559,10 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 {
   ProblemSpecP bc_ps = grid_ps->findBlock("BoundaryConditions");
   if (bc_ps == 0) {
-    cerr << "No BoundaryConditions specified" << endl;
+    if (Parallel::getMPIRank() == 0) {
+      static ProgressiveWarning warn("No BoundaryConditions specified", -1);
+      warn.invoke();
+    }
     return;
   }
 
