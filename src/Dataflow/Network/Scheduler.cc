@@ -99,6 +99,7 @@ void Scheduler::multisend(OPort* oport)
   int nc=oport->nconnections();
   for(int c=0;c<nc;c++){
     Connection* conn=oport->connection(c);
+    if (conn->is_blocked()) { continue; }
     IPort* iport=conn->iport;
     Module* m=iport->get_module();
     if(!m->need_execute){
@@ -142,6 +143,7 @@ void Scheduler::do_scheduling(Module* exclude)
       int nc=oport->nconnections();
       for(int c=0;c<nc;c++){
 	Connection* conn=oport->connection(c);
+	if (conn->is_blocked()) { continue; }
 	IPort* iport=conn->iport;
 	Module* m=iport->get_module();
 	if(m != exclude && !m->need_execute){
@@ -157,6 +159,7 @@ void Scheduler::do_scheduling(Module* exclude)
       IPort* iport=module->getIPort(i);
       if(iport->nconnections()){
 	Connection* conn=iport->connection(0);
+	if (conn->is_blocked()) { continue; }
 	OPort* oport=conn->oport;
 	Module* m=oport->get_module();
 	if(!m->need_execute){
@@ -180,6 +183,7 @@ void Scheduler::do_scheduling(Module* exclude)
   // Trigger the ports in the trigger list...
   for(i=0;i<(int)(to_trigger.size());i++) {
     Connection* conn=to_trigger[i];
+    if (conn->is_blocked()) { continue; }
     OPort* oport=conn->oport;
     Module* module=oport->get_module();
     if(module->need_execute){

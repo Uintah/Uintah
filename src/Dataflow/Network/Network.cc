@@ -117,6 +117,35 @@ string Network::connect(Module* m1, int p1, Module* m2, int p2)
     return conn->id;
 }
 
+void
+Network::block_connection(const string& connId)
+{
+  unsigned int i;
+  for (i = 0; i < connections.size(); i++)
+    if (connections[i]->id == connId)
+      break;
+  if (i == connections.size()) {
+    return;
+  }
+ 
+  connections[i]->block();
+}
+
+void
+Network::unblock_connection(const string& connId)
+{
+  unsigned int i;
+  for (i = 0; i < connections.size(); i++)
+    if (connections[i]->id == connId)
+      break;
+  if (i == connections.size()) {
+    return;
+  }
+ 
+  connections[i]->unblock();
+}
+
+
 int Network::disconnect(const string& connId)
 {
   unsigned int i;

@@ -47,7 +47,8 @@ using std::endl;
 
 using namespace SCIRun;
 
-Connection::Connection(Module* m1, int p1, Module* m2, int p2)
+Connection::Connection(Module* m1, int p1, Module* m2, int p2) :
+  blocked_(false)
 {
   oport=m1->getOPort(p1);
   iport=m2->getIPort(p2);
