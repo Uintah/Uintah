@@ -9220,13 +9220,6 @@ fi
 done
 
 
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-
 ##  --  search for tcl stuff  ---------------------------------------------
 echo
 { echo "$as_me:$LINENO: checking for required Tcl components......" >&5
@@ -11131,11 +11124,6 @@ else
   _xer_lib_path="$sci_thirdparty_libs"
   _xer_inc="$sci_thirdparty_includes"
 fi
-ac_ext=cc
-ac_cpp='$CXXCPP $CPPFLAGS'
-ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 _xer_lib="xerces-c"
 case $host in
@@ -11499,12 +11487,6 @@ else
    # Use SCIRun sstream compatibility files...
    SSTREAM_COMPAT="yes"
 fi
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
 
 
 
@@ -16304,12 +16286,6 @@ if test "$with_xalan"; then
   _xalan_lib_path="$with_xalan/c/lib"
   _xalan_inc="$with_xalan/c/src $_xer_inc"
 
-  ac_ext=cc
-ac_cpp='$CXXCPP $CPPFLAGS'
-ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
-
   _xalan_lib="xalan-c1_5_0"
 
 
@@ -17600,12 +17576,6 @@ if test "$sci_check_glui" = "yes"; then
      _sci_inc="$sci_thirdparty_includes"
    fi
 
-   ac_ext=cc
-ac_cpp='$CXXCPP $CPPFLAGS'
-ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
-
 
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
@@ -17784,12 +17754,6 @@ _sci_lib_path=''
 _sci_libs=''
 _sci_includes=''
 
-
-   ac_ext=cc
-ac_cpp='$CXXCPP $CPPFLAGS'
-ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 fi # end sci_check_glui
@@ -19876,6 +19840,9 @@ if test "$sci_check_qt" = "yes"; then
     _sci_lib="$sci_thirdparty_libs"
   fi
 
+  _qt_inc="$with_qt/include"
+
+  # Only looking for one .h file... assuming all the rest are in the same place.
 
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
@@ -19909,6 +19876,17 @@ _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
 
+for i in $_qt_inc; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_includes"; then
+      _sci_includes=-I$i
+    else
+      _sci_includes="$_sci_includes -I$i"
+    fi
+  fi
+done
+
 
 for i in qt-mt; do
   if test -z "$_sci_libs"; then
@@ -19939,6 +19917,8 @@ LIBS="$_sci_libs  $LIBS"
 cat >conftest.$ac_ext <<_ACEOF
 #line $LINENO "configure"
 #include "confdefs.h"
+
+     #include <qcanvas.h>
 
 #ifdef F77_DUMMY_MAIN
 #  ifdef __cplusplus
@@ -20564,12 +20544,6 @@ esac
 
 if test "$sci_check_uuid" = "yes"; then
   # This is typical on SGI and ??
-  ac_ext=cc
-ac_cpp='$CXXCPP $CPPFLAGS'
-ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
-
   echo "$as_me:$LINENO: checking for uuid_create in sys/uuid.h" >&5
 echo $ECHO_N "checking for uuid_create in sys/uuid.h... $ECHO_C" >&6
   cat >conftest.$ac_ext <<_ACEOF
@@ -20770,12 +20744,6 @@ echo "${ECHO_T}not found" >&6
     fi
     LIBS="$old_LIBS"
   fi
-  ac_ext=cc
-ac_cpp='$CXXCPP $CPPFLAGS'
-ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
-
 
 fi # end sci_check_uuid
 
