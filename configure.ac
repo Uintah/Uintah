@@ -2167,6 +2167,17 @@ AC_SUBST(DEF_MAGICK)
 
 sci_defs_files="$sci_defs_files include/sci_defs/image_testdefs.h"
 
+#
+##  --  search for scisock --------------------------------------
+
+AC_SUBST(SCISOCK_LIB_FLAG)
+AC_SUBST(SCISOCK_LIB_DIR_FLAG)
+AC_SUBST(INC_SCISOCK_H)
+
+
+sci_defs_files="$sci_defs_files include/sci_defs/scisock_testdefs.h"
+
+#
 ##  --  search for unp --------------------------------------
 
 if test "$with_unp" = "yes"; then
