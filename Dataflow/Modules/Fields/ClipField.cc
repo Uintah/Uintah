@@ -152,7 +152,7 @@ ClipField::execute()
 
   bool do_clip_p = false;
 
-  // Get input field.
+  // Maybe get clip field.
   FieldIPort *cfp = (FieldIPort *)get_iport("Clip Field");
   if (!cfp) {
     error("Unable to initialize " + name + "'s iport\n");
@@ -162,7 +162,7 @@ ClipField::execute()
   if (cfp->get(cfieldhandle) && cfieldhandle.get_rep() &&
       cfieldhandle->generation != last_clip_generation_)
   {
-    cfieldhandle->generation = last_clip_generation_;
+    last_clip_generation_ = cfieldhandle->generation;
 
     const TypeDescription *ftd = cfieldhandle->mesh()->get_type_description();
     CompileInfo *ci = ClipFieldMeshAlgo::get_compile_info(ftd);
@@ -183,6 +183,7 @@ ClipField::execute()
     do_clip_p = true;
   }
 
+#if 0
   // Update the widget.
   BBox obox = ifieldhandle->mesh()->get_bounding_box();
   if (!bbox_similar_to(last_bounds_, obox))
@@ -237,6 +238,7 @@ ClipField::execute()
     // Force clipper to sync with new widget.
     if (!clipper_->mesh_p()) { clipper_ = 0; }
   }
+#endif
 
   if (!clipper_.get_rep())
   {
