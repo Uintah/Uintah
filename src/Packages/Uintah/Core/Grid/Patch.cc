@@ -19,7 +19,8 @@ using namespace std;
 
 static map<int, const Patch*> patches;
 
-static AtomicCounter ids("Patch ID counter", 0);
+static AtomicCounter* ids = 0;
+static Mutex ids_init("ID init");
 
 Patch::Patch(const Level* level,
 	     const IntVector& lowIndex, const IntVector& highIndex,
@@ -32,7 +33,15 @@ Patch::Patch(const Level* level,
 {
   have_layout=false;
   if(d_id == -1){
-    d_id = ids++;
+    if(!ids){
+      ids_init.lock();
+      if(!ids){
+	ids = new AtomicCounter("Patch ID counter", 0);
+      }
+      ids_init.unlock();
+      
+    }
+    d_id = (*ids)++;
 
     if(patches.find(d_id) != patches.end()){
       cerr << "id=" << d_id << '\n';
