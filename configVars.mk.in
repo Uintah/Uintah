@@ -20,8 +20,9 @@
 # copy of the vars. This file has all of the variables and rules common to 
 # all generated makefiles.
 
-ifneq (@TAU_MAKEFILE@,)
-  include @TAU_MAKEFILE@
+TAU_MAKEFILE := @TAU_MAKEFILE@
+ifneq ($(TAU_MAKEFILE),)
+  include $(TAU_MAKEFILE)
 endif
 
 # Blow away a bunch of makes internal rules to improve the performance
@@ -119,15 +120,13 @@ LIBIMAGE_INCLUDE  := @LIBIMAGE_INCLUDE@
 LIBIMAGE_LIBRARY  := @LIBIMAGE_LIBRARY@
 LIBIMAGE_DEF_FLAG := @LIBIMAGE_DEF_FLAG@
 
-LDRUN_PREFIX       := @LDRUN_PREFIX@
+LDRUN_PREFIX      := @LDRUN_PREFIX@
 
-TAU_MAKEFILE      := @TAU_MAKEFILE@
-
-ifneq (@TAU_MAKEFILE@,)
+ifneq ($(TAU_MAKEFILE),)
   TAU_LIB_DIR       := $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
   TAU_LIB_FLAG      := $(TAU_MPI_LIBS) $(TAU_SHLIBS)
 
-  CFLAGS := $(CFLAGS) $(TAU_DEFS)
+  CFLAGS := $(CFLAGS) -DUSE_TAU_PROFILING $(TAU_DEFS)
   TAU_LIBRARY := $(LDRUN_PREFIX)$(TAU_LIB_DIR) -L$(TAU_LIB_DIR) $(TAU_LIB_FLAG)
 else
   TAU_LIBRARY :=
@@ -142,6 +141,7 @@ ifneq ($(MPI_LIB_DIR),)
 else
   MPI_LIBRARY := $(MPI_LIB_FLAG)
 endif
+
 ifneq (@MPI_INCLUDE_DIR@,)
 MPI_INCLUDE := -I@MPI_INCLUDE_DIR@
 endif
