@@ -25,6 +25,8 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 	global $this-scale
 	global $this-units
 	global $this-text_color
+	global $this-text-fontsize
+
         set_defaults
     }
 
@@ -35,6 +37,7 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 	set $this-scale 1.0
 	set $this-units ""
 	set $this-text_color 1
+	set $this-text-fontsize 2
     }
 
     method ui {} {
@@ -110,6 +113,13 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 
 	pack $w.side_length -padx 4 -pady 4 -anchor w
 	pack $w.tc_uns      -padx 4 -pady 4 -anchor w
+
+	make_labeled_radio $w.size \
+	    "Text Size:" "$this-c needexecute" left \
+	    $this-text-fontsize \
+	    {{"T" 0} {"S" 1} {"M" 2} {"L" 3} {"XL" 4}}
+
+	pack $w.size -side top -fill x
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
