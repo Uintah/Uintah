@@ -244,15 +244,15 @@ set data_mode "DWI"
 #######################################################
 wm withdraw .
 
-class ForwardFEMApp {
+class BioFEMApp {
     
     method modname {} {
-	return "ForwardFEMApp"
+	return "BioFEMApp"
     }
     
     constructor {} {
 	toplevel .standalone
-	wm title .standalone "ForwardFEM"	 
+	wm title .standalone "BioFEM"	 
 	set win .standalone
 	
 	set notebook_width 350
@@ -399,7 +399,7 @@ class ForwardFEMApp {
 	$win.main_menu.help.menu add command -label "Help Contents" \
 	    -underline 0 -command "$this show_help" -state active
 
-	$win.main_menu.help.menu add command -label "About ForwardFEM" \
+	$win.main_menu.help.menu add command -label "About BioFEM" \
 	    -underline 0 -command "$this show_about" -state active
 	
 	pack $win.main_menu.help -side left
@@ -908,7 +908,7 @@ class ForwardFEMApp {
 	    set fileid [open $savefile w]
 	    
 	    # Save out data information 
-	    puts $fileid "# ForwardFEM Session\n"
+	    puts $fileid "# BioFEM Session\n"
 	    puts $fileid "set version 1.0"
 
 	    save_module_variables $fileid
@@ -1053,11 +1053,11 @@ class ForwardFEMApp {
     }
     
     method show_help {} {
-	tk_messageBox -message "Please refer to the online ForwardFEM Tutorial\nhttp://software.sci.utah.edu/doc/User/ForwardFEMTutorial" -type ok -icon info -parent .standalone
+	tk_messageBox -message "Please refer to the online BioFEM Tutorial\nhttp://software.sci.utah.edu/doc/User/BioFEMTutorial" -type ok -icon info -parent .standalone
     }
     
     method show_about {} {
-	tk_messageBox -message "ForwardFEM About Box" -type ok -icon info -parent .standalone
+	tk_messageBox -message "BioFEM About Box" -type ok -icon info -parent .standalone
     }
     
     method display_module_error {} {
@@ -2011,7 +2011,7 @@ class ForwardFEMApp {
 
 }
 
-ForwardFEMApp app
+BioFEMApp app
 
 app build_app
 
