@@ -182,7 +182,7 @@ packages := SCIRun
 endif
 
 ifeq (${SRGROUP},biopse)
-packages := SCIRun BioPSE Teem MatlabInterface Insight Fusion
+packages := SCIRun BioPSE Teem MatlabInterface Insight Fusion DataIO
 endif
 
 ifeq (${SRGROUP},uintah)
@@ -539,6 +539,58 @@ Fusion_veryclean_xml_tex_files
 	${call rmfiles,${Fusion_xml_html_files}}
 	${call rmfiles,${Fusion_tex_html_files}}
 	${call rmdirs,${Fusion_tex_html_dirs}}
+
+# ########## DataIO
+DataIO : DataIO.html DataIO_modules.tex
+
+DataIO_xml_dir:=${call xmldir,DataIO}
+DataIO_xml_html_files:=${call xmlhtmlfiles,${DataIO_xml_dir}}
+DataIO_tex_dir:=${call texdir,DataIO}
+DataIO_tex_html_dirs:=${call texhtmldirs,${DataIO_tex_dir}}
+
+DataIO.html : ${edition} ${DataIO_xml_html_files} ${DataIO_tex_html_dirs} \
+		${pkgindexgenscript} ${pkgbycatgenscript}
+	${call makepkgindex,DataIO,${DataIO_xml_dir},${DataIO_tex_dir}}
+
+${DataIO_xml_html_files}: %.html: %.xml ${html_stylesheet}
+	${call xmltohtml,${xmlpkgtreetop}}
+
+${DataIO_tex_html_dirs}: %: %.tex
+	${call textohtml,${dir $@}}
+
+DataIO_xml_tex_files := ${call xmltexfiles,DataIO}
+DataIO_jpg_eps_files := ${call imageepsfiles,jpg,DataIO}
+DataIO_gif_eps_files := ${call imageepsfiles,gif,DataIO}
+DataIO_tex_files := ${call texfiles}
+
+DataIO_modules.tex : ${DataIO_jpg_eps_files} ${DataIO_gif_eps_files} \
+${DataIO_xml_tex_files} ${DataIO_tex_files}
+	${call makemodtexfile,DataIO,${DataIO_xml_tex_files} ${DataIO_tex_files}}
+
+${DataIO_jpg_eps_files}: %.${eps} : %.jpg
+	${call imagetoeps}
+
+${DataIO_gif_eps_files}: %.${eps} : %.gif
+	${call imagetoeps}
+
+${DataIO_xml_tex_files}: %.tex : %.xml ${print_stylesheet}
+	${call xmltotex}
+
+DataIO_veryclean_eps_files:
+	${call rmfiles,${DataIO_jpg_eps_files}}
+	${call rmfiles,${DataIO_gif_eps_files}}
+
+DataIO_veryclean_xml_tex_files:
+	${call rmfiles,${DataIO_xml_tex_files} DataIO_modules.tex}
+
+DataIO_clean:
+	@echo $@
+
+DataIO_veryclean: DataIO_clean DataIO_veryclean_eps_files \
+DataIO_veryclean_xml_tex_files
+	${call rmfiles,${DataIO_xml_html_files}}
+	${call rmfiles,${DataIO_tex_html_files}}
+	${call rmdirs,${DataIO_tex_html_dirs}}
 
 # ########## Cleanage
 clean: ${addsuffix _clean,${packages}}
