@@ -205,6 +205,10 @@ class Matlab : public Module, public ServiceBase
 	std::vector<std::string>   output_field_name_list_;
 	std::vector<std::string>   output_nrrd_name_list_;
 
+    std::vector<int> input_matrix_generation_old_;
+    std::vector<int> input_field_generation_old_;
+    std::vector<int> input_nrrd_generation_old_;
+
 	std::string	matlab_code_list_;
 	
 	// Ports for input and output
@@ -448,6 +452,13 @@ Matlab::Matlab(GuiContext *context) :
 	input_field_name_list_old_.resize(NUM_FIELD_PORTS);
 	input_nrrd_name_list_.resize(NUM_NRRD_PORTS);
 	input_nrrd_name_list_old_.resize(NUM_NRRD_PORTS);
+
+	input_matrix_generation_old_.resize(NUM_MATRIX_PORTS);
+    for (int p = 0; p<NUM_MATRIX_PORTS; p++)  input_matrix_generation_old_[p] = -1;
+	input_field_generation_old_.resize(NUM_MATRIX_PORTS);
+    for (int p = 0; p<NUM_FIELD_PORTS; p++)  input_field_generation_old_[p] = -1;
+	input_nrrd_generation_old_.resize(NUM_MATRIX_PORTS);
+    for (int p = 0; p<NUM_NRRD_PORTS; p++)  input_nrrd_generation_old_[p] = -1;
 
      CleanupManager::add_callback(Matlab::cleanup_callback,reinterpret_cast<void *>(this));
 
@@ -1140,7 +1151,7 @@ bool Matlab::save_input_matrices()
 			}
 			// if the data as the same before
 			// do nothing
-			if ((handle == matrix_handle_[p])&&(input_matrix_name_list_[p]==input_matrix_name_list_old_[p]))
+			if ((handle == matrix_handle_[p])&&(input_matrix_name_list_[p]==input_matrix_name_list_old_[p])&&(matrix_handle_[p]->generation == input_matrix_generation_old_[p]))
 			{
 				// this one was not created again
 				// hence we do not need to translate it again
@@ -1188,6 +1199,8 @@ bool Matlab::save_input_matrices()
                 
             }
             input_matrix_name_list_old_[p] = input_matrix_name_list_[p];
+            input_matrix_generation_old_[p] = handle->generation;
+
 		}
 
 		for (int p = 0; p < NUM_FIELD_PORTS; p++)
@@ -1207,7 +1220,7 @@ bool Matlab::save_input_matrices()
 			}
 			// if the data as the same before
 			// do nothing
-			if ((handle == field_handle_[p])&&(input_field_name_list_[p]==input_field_name_list_old_[p]))
+			if ((handle == field_handle_[p])&&(input_field_name_list_[p]==input_field_name_list_old_[p])&&(field_handle_[p]->generation == input_field_generation_old_[p]))
 			{
 				// this one was not created again
 				// hence we do not need to translate it again
@@ -1253,6 +1266,7 @@ bool Matlab::save_input_matrices()
                 
             }
             input_field_name_list_old_[p] = input_field_name_list_[p];
+            input_field_generation_old_[p] = handle->generation;            
         }
 
 		for (int p = 0; p < NUM_NRRD_PORTS; p++)
@@ -1272,7 +1286,7 @@ bool Matlab::save_input_matrices()
 			}
 			// if the data as the same before
 			// do nothing
-			if ((handle == nrrd_handle_[p])&&(input_nrrd_name_list_[p]==input_nrrd_name_list_old_[p]))
+			if ((handle == nrrd_handle_[p])&&(input_nrrd_name_list_[p]==input_nrrd_name_list_old_[p])&&(nrrd_handle_[p]->generation == input_nrrd_generation_old_[p]))
 			{
 				// this one was not created again
 				// hence we do not need to translate it again
@@ -1317,7 +1331,8 @@ bool Matlab::save_input_matrices()
                 }
                 
             }  
-            input_nrrd_name_list_old_[p] = input_nrrd_name_list_[p];          
+            input_nrrd_name_list_old_[p] = input_nrrd_name_list_[p];       
+            input_nrrd_generation_old_[p] = handle->generation;       
 		}
 	}
 	catch (matlabfile::could_not_open_file)
