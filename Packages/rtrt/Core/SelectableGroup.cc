@@ -27,6 +27,13 @@ void SelectableGroup::light_intersect(const Ray& ray, HitInfo& hit,
   if (child >=0) objs[child]->light_intersect(ray, hit, atten, st, ppc);
 }
 
+void SelectableGroup::softshadow_intersect(Light* light, const Ray& ray, HitInfo& hit,
+				 double dist, Color& atten, DepthStats* st,
+				 PerProcessorContext* ppc)
+{
+  if (child >=0) objs[child]->light_intersect(ray, hit, atten, st, ppc);
+}
+
 void SelectableGroup::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 		      PerProcessorContext* ppc)
 {

@@ -29,8 +29,8 @@ SpinningInstance::SpinningInstance(InstanceWrapperObject* o, Transform* trans, P
   Point b000 = bbox.min();
   Point b111 = bbox.max();
 
-  cerr << "BBMIN " << b000 << endl;
-  cerr << "BBMAX " << b111 << endl;
+  //cerr << "BBMIN " << b000 << endl;
+  //cerr << "BBMAX " << b111 << endl;
 
   double x0 = b000.x();
   double y0 = b000.y();
@@ -135,9 +135,8 @@ SpinningInstance::SpinningInstance(InstanceWrapperObject* o, Transform* trans, P
   b000 = bbox.min();
   b111 = bbox.max();
 
-  cerr << "BBMIN " << b000 << endl;
-  cerr << "BBMAX " << b111 << endl;
-
+  //cerr << "BBMIN " << b000 << endl;
+  //cerr << "BBMAX " << b111 << endl;
 }
 
 void SpinningInstance::compute_bounds(BBox& b, double /*offset*/)
@@ -163,8 +162,9 @@ void SpinningInstance::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
   
   double min_t = hit.min_t;
   if (!bbox.intersect(ray, min_t)) return;	  
-  
+
   Ray tray;
+  HitInfo thit=hit;
   
   ray.transform(t,tray);
   
@@ -172,17 +172,20 @@ void SpinningInstance::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
   //it accounts for the fact that the spinning bbox is larger than original
   min_t = hit.min_t;
   if (!bbox_orig.intersect(tray, min_t)) return;
+
+  min_t = hit.min_t;
   
-  o->intersect(tray,hit,st,ppc);
+  o->intersect(tray,thit,st,ppc);
   
   // if the ray hit one of our objects....
-  if (min_t > hit.min_t)
+  if (min_t > thit.min_t)
     {
-      InstanceHit* i = (InstanceHit*)(hit.scratchpad);
-      Point p = ray.origin() + hit.min_t*ray.direction();
-      i->normal = hit.hit_obj->normal(p,hit);
-      i->obj = hit.hit_obj;
-      hit.hit_obj = this;
+      InstanceHit* i = (InstanceHit*)(thit.scratchpad);
+      Point p = ray.origin() + thit.min_t*ray.direction();
+      i->normal = thit.hit_obj->normal(p,thit);
+      i->obj = thit.hit_obj;
+      thit.hit_obj = this;
+      hit = thit;
     }
 }
 

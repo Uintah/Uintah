@@ -368,9 +368,9 @@ void Grid::softshadow_intersect(Light*, const Ray& lightray,
   intersect(lightray, hit, ds, ppc);
 }
 
-void Grid::animate(double, bool&)
+void Grid::animate(double t, bool&changed)
 {
-    //obj->animate(t);
+    obj->animate(t, changed);
 }
 
 void Grid::collect_prims(Array1<Object*>& prims)
