@@ -84,7 +84,7 @@
               <lower>        [0.,   0.,   0.]      </lower>
               <upper>        [1.e-1,1.5e-2,1.5e-2] </upper>
               <extraCells>   [1,1,1]            </extraCells>
-              <patches>      [1,1,1]            </patches>
+              <patches>      [2,1,1]            </patches>
               <resolution>   [100, 15, 15]      </resolution>
            </Box>
        </Level>
@@ -131,7 +131,8 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.5</cfl>
+       <cfl>0.5</cfl>
+       <CanAddMaterial>true</CanAddMaterial>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "FirstOrder" />
