@@ -31,15 +31,14 @@ void XceptionRelay::relayException(int x_id, Message* message)
   //Marshal all the necessary data in the buffer
   int length = 0;
   char* p_sbuf = sbuf + sizeof(int);
-  (*p_sbuf) = x_id;
+  memcpy(p_sbuf,&x_id,sizeof(int));
   p_sbuf += sizeof(int);
   length += sizeof(int);
-  (*p_sbuf) = lineID;
+  memcpy(p_sbuf,&lineID,sizeof(int));
   p_sbuf += sizeof(int);
   length += sizeof(int);
   length += (message->getRecvBufferCopy(p_sbuf));
-  (*sbuf) = length;
-  ::std::cout << "Packed Message\n";
+  memcpy(sbuf,&length,sizeof(int));
 
   //Send to all cohorts
   for(int k=0; k < mypb->rm.getSize(); k++) {
@@ -66,12 +65,12 @@ int XceptionRelay::checkException(Message** _xMsg)
       if(icomm->async_receive(k,rbuf,MAX_X_MSG_LENGTH)) {
 	//Unmarshal data 
 	char* p_rbuf = rbuf;
-	int length = (int)(*p_rbuf);
+	int length = *(int *)(p_rbuf);
 	assert(length <= MAX_X_MSG_LENGTH);
 	p_rbuf += sizeof(int);
-	int xID = (int)(*p_rbuf);
+	int xID = *(int *)(p_rbuf);
 	p_rbuf += sizeof(int);	
-	int xlineID = (int)(*p_rbuf);
+	int xlineID = *(int *)(p_rbuf);
 	p_rbuf += sizeof(int);
 	length -= (3*sizeof(int));
 
@@ -84,7 +83,9 @@ int XceptionRelay::checkException(Message** _xMsg)
 	if(xlineID <= lineID) {
 	  ::std::cerr << "New exception; x_id=" << xID << ", lineID="
 	              << lineID << ", xlineID=" << xlineID << "\n";
+	  //Synchronize before throwing
 
+	  //Throw
 	  (*_xMsg) = message;
 	  return (xID);
 	}
@@ -94,8 +95,6 @@ int XceptionRelay::checkException(Message** _xMsg)
         newX.xID = xID;
 	newX.xMsg = message;
         xdb.insert(XDB_valType(xlineID, newX));
-
-
       } //EndIf msgReceived
     }
   }

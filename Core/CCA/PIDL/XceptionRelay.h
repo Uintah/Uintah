@@ -37,7 +37,7 @@
 #include <Core/CCA/Comm/Message.h>
 #include <map>
 
-#define MAX_X_MSG_LENGTH 200
+#define MAX_X_MSG_LENGTH 300
 
 namespace SCIRun {
 /**************************************

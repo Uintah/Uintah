@@ -25,6 +25,8 @@ using std::map;
 using std::set;
 using std::vector;
 
+int exceptionCount = 0;
+
 void SpecificationList::staticCheck()
 {
   globals=new SymbolTable(0, "Global Symbols");
@@ -186,9 +188,9 @@ void Class::staticCheck(SymbolTable* names)
     Class* c=(Class*)d;
     parentclass=c;
 
-    //if it extends BaseException this class is an exception
-    if((parentclass->name == "BaseException")||(parentclass->iam_exception))
-      iam_exception = true;
+    //if it extends BaseException or an exception this class is an exception
+    if((parentclass->name == "BaseException")||(parentclass->exceptionID))
+      exceptionID = exceptionCount++;
   }
   /* Check implements list */
   if(class_implements){

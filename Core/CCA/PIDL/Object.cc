@@ -200,10 +200,6 @@ void Object::createSubset(int localsize, int remotesize)
 {
   ::std::cerr << "createSubset(int,int) has no effect on this object\n";
 }
-void Object::getException()
-{
-  ::std::cerr << "getException() has no effect on this object\n";
-}
 
 int Object::getRefCount(){
 
