@@ -7,7 +7,7 @@ using namespace std;
 
 ostream& operator<<(ostream& out, const CellIterator& c)
 {
-   out << "[CellIterator at " << c.current() << " of " << c.end() << ']';
+   out << "[CellIterator at " << *c << " of " << c.end() << ']';
    return out;
 }
 
