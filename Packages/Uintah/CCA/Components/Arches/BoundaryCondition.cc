@@ -404,27 +404,6 @@ BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched, const PatchSet* p
   tsk->computes(d_lab->d_mmgasVolFracLabel);
   
   sched->addTask(tsk, patches, matls);
-#if 0
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-
-    // cell type initialization
-    Task* tsk = scinew Task("BoundaryCondition::mmWallCellTypeInit",
-			 patch, old_dw, new_dw, this,
-			 &BoundaryCondition::mmWallCellTypeInit);
-    int matlIndex = 0;
-    int numGhostcells = 0;
-    tsk->requires(new_dw, d_MAlab->void_frac_CCLabel, matlIndex, patch,
-		  Ghost::None, numGhostcells);
-    tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::None, numGhostcells);
-    tsk->computes(new_dw, d_lab->d_mmcellTypeLabel, matlIndex, patch);
-    tsk->computes(new_dw, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
-    
-    sched->addTask(tsk);
-  }
-#endif
 }
 
 //****************************************************************************
@@ -464,6 +443,80 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
     fort_mmcelltypeinit(idxLo, idxHi, mmvoidFrac, mmcellType, d_mmWallID,
 			d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);
     
+    new_dw->put(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch);
+    // save in arches label
+    new_dw->put(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
+  }  
+}
+
+
+    
+// for multimaterial
+//****************************************************************************
+// schedule the initialization of mm wall cell types for the very first
+// time step
+//****************************************************************************
+void 
+BoundaryCondition::sched_mmWallCellTypeInit_first(SchedulerP& sched, 
+						  const PatchSet* patches,
+						  const MaterialSet* matls)
+{
+  // cell type initialization
+  Task* tsk = scinew Task("BoundaryCondition::mmWallCellTypeInit_first",
+			  this,
+			  &BoundaryCondition::mmWallCellTypeInit_first);
+  
+  int numGhostcells = 0;
+  tsk->requires(Task::NewDW, d_MAlab->void_frac_CCLabel, 
+		Ghost::None, numGhostcells);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
+		Ghost::None, numGhostcells);
+  tsk->computes(d_lab->d_mmcellTypeLabel);
+  tsk->computes(d_lab->d_mmgasVolFracLabel);
+  
+  sched->addTask(tsk, patches, matls);
+}
+
+//****************************************************************************
+// Actual initialization of celltype
+//****************************************************************************
+void 
+BoundaryCondition::mmWallCellTypeInit_first(const ProcessorGroup*,
+					    const PatchSubset* patches,
+					    const MaterialSubset* matls,
+					    DataWarehouse* old_dw,
+					    DataWarehouse* new_dw)	
+{
+
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int numGhostcells = 0;
+    constCCVariable<int> cellType;
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
+		Ghost::None, numGhostcells);
+    constCCVariable<double> voidFrac;
+    new_dw->get(voidFrac, d_MAlab->void_frac_CCLabel, matlIndex, patch,
+		Ghost::None, numGhostcells);
+    CCVariable<int> mmcellType;
+    new_dw->allocate(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch);
+    mmcellType.copyData(cellType);
+    CCVariable<double> mmvoidFrac;
+    new_dw->allocate(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
+    mmvoidFrac.copyData(voidFrac);
+	
+    IntVector domLo = mmcellType.getFortLowIndex();
+    IntVector domHi = mmcellType.getFortHighIndex();
+    IntVector idxLo = domLo;
+    IntVector idxHi = domHi;
+    // resets old mmwall type back to flow field and sets cells with void fraction
+    // of less than .01 to mmWall
+
+    fort_mmcelltypeinit(idxLo, idxHi, mmvoidFrac, mmcellType, d_mmWallID,
+			d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);
+
     new_dw->put(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch);
     // save in arches label
     new_dw->put(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);

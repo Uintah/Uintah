@@ -170,6 +170,11 @@ public:
       void sched_mmWallCellTypeInit( SchedulerP&, const PatchSet* patches,
 				     const MaterialSet* matls);
 
+      ////////////////////////////////////////////////////////////////////////
+      // Initialize multimaterial wall cell types for first time step
+      void sched_mmWallCellTypeInit_first( SchedulerP&, const PatchSet* patches,
+					   const MaterialSet* matls);
+
       // GROUP:  Actual Computations :
       ////////////////////////////////////////////////////////////////////////
       // Initialize celltyping
@@ -226,14 +231,22 @@ public:
 			     ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
-      // Initialize multi-material wall celltyping
-      // Details here
+      // Initialize multi-material wall celltyping and void fraction 
+      // calculation
       void mmWallCellTypeInit(const ProcessorGroup*,
 			      const PatchSubset* patches,
 			      const MaterialSubset* matls,
 			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw);
 
+      ////////////////////////////////////////////////////////////////////////
+      // Initialize multi-material wall celltyping and void fraction 
+      // calculation for first time step
+      void mmWallCellTypeInit_first(const ProcessorGroup*,
+				    const PatchSubset* patches,
+				    const MaterialSubset* matls,
+				    DataWarehouse* old_dw,
+				    DataWarehouse* new_dw);
 
       // compute multimaterial wall bc
       void mmvelocityBC(const ProcessorGroup*,
