@@ -57,13 +57,16 @@ class GuiInterface;
 
 class GuiContext {
   public:
-    GuiContext(GuiInterface* ctx, const string& name, bool save=true);
+    GuiContext(GuiInterface* ctx, 
+	       const string& name, 
+	       bool save=true,
+	       GuiContext *parent = 0);
     ~GuiContext();
 
     GuiInterface*	getInterface();
     GuiContext*		subVar(const string& name, bool save=true);
 
-    void		erase(const string& subname);
+  //    
 
     void		lock();
     void		unlock();
@@ -93,6 +96,8 @@ class GuiContext {
     
     void		setUseDatadir(bool flag);
   private:  
+  //    void		erase(const string& subname);
+
     bool		setType();
   
     string		getPrefix();
@@ -109,6 +114,7 @@ class GuiContext {
     bool		setString(const string &varname, const string &value);
 
     GuiInterface*	gui;
+    GuiContext *	parent;
     string		name;
     vector<GuiContext*> children;
 

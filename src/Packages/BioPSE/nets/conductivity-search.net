@@ -124,6 +124,7 @@ set $m4-use_previous_soln 1
 set $m4-emit_partial 0
 set $m4-np 1
 set $m5-use_interp {0}
+set $m5-exhaustive_search {1}
 set $m7-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
 set $m9-target_error 1e-07
 set $m9-orig_error 9.65643e-06

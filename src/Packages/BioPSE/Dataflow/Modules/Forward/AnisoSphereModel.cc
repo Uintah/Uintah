@@ -171,7 +171,7 @@ void AnisoSphereModel::execute() {
 	mesh_->get_point(p, *nii);
 	electrodePositions.push_back(p);
   }
-  int numElectrodes = electrodePositions.size();
+  int numElectrodes = (int)electrodePositions.size();
 
   // get size of the spheres
   radii = scinew ColumnMatrix(4);
@@ -218,7 +218,7 @@ void AnisoSphereModel::execute() {
 	electrodeMesh->add_point(p);
   }
   PointCloudMeshHandle hElectrodeMesh(electrodeMesh);
-  PointCloudField<int> *newElectrodePositions = scinew PointCloudField<int>(hElectrodeMesh, 1);
+  PointCloudField<int> *newElectrodePositions = scinew PointCloudField<int>(hElectrodeMesh, 0);
   // enumerate the nodes
   electrodeMesh->begin(nii);
   electrodeMesh->end(nie);

@@ -86,7 +86,7 @@ struct NodeIterator : public FieldIteratorBase<T> {
 
   //! Required interface for an FieldIterator.
   inline 
-  NodeIndex<T> operator*() { return NodeIndex<T>(index_); }
+  NodeIndex<T> operator*() { return NodeIndex<T>(this->index_); }
 };
 
 //! Distinct type for edge Iterator.
@@ -99,7 +99,7 @@ struct EdgeIterator : public FieldIteratorBase<T> {
 
   //! Required interface for an FieldIterator.
   inline 
-  EdgeIndex<T> operator*() { return EdgeIndex<T>(index_); }
+  EdgeIndex<T> operator*() { return EdgeIndex<T>(this->index_); }
 };
 
 //! Distinct type for face Iterator.
@@ -112,7 +112,7 @@ struct FaceIterator : public FieldIteratorBase<T> {
 
   //! Required interface for an FieldIterator.
   inline 
-  FaceIndex<T> operator*() { return FaceIndex<T>(index_); }
+  FaceIndex<T> operator*() { return FaceIndex<T>(this->index_); }
 };
 
 //! Distinct type for cell Iterator.
@@ -125,7 +125,7 @@ struct CellIterator : public FieldIteratorBase<T> {
 
   //! Required interface for an FieldIterator.
   inline 
-  CellIndex<T> operator*() { return CellIndex<T>(index_); }
+  CellIndex<T> operator*() { return CellIndex<T>(this->index_); }
 };
 
 

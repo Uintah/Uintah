@@ -62,26 +62,30 @@
 
 namespace SCIRun {
 
+typedef unsigned int under_type;
+
+//! Index and Iterator types required for Mesh Concept.
+struct TetVolMeshNode {
+  typedef NodeIndex<under_type>       index_type;
+  typedef NodeIterator<under_type>    iterator;
+  typedef NodeIndex<under_type>       size_type;
+  typedef StackVector<index_type, 10> array_type; // 10 = quadratic size
+};					
+
+struct TetVolMeshCell {
+  typedef CellIndex<under_type>       index_type;
+  typedef CellIterator<under_type>    iterator;
+  typedef CellIndex<under_type>       size_type;
+  typedef vector<index_type>          array_type;
+};
+
+
 class SCICORESHARE TetVolMesh : public Mesh
 {
 public:
-  typedef unsigned int under_type;
 
-  //! Index and Iterator types required for Mesh Concept.
-  struct Node {
-    typedef NodeIndex<under_type>       index_type;
-    typedef NodeIterator<under_type>    iterator;
-    typedef NodeIndex<under_type>       size_type;
-    typedef StackVector<index_type, 10> array_type; // 10 = quadratic size
-  };					
-
-  struct Cell {				
-    typedef CellIndex<under_type>       index_type;
-    typedef CellIterator<under_type>    iterator;
-    typedef CellIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
-
-  };
+  typedef TetVolMeshNode Node;
+  typedef TetVolMeshCell Cell;
 
   // Used for hashing operations below
   static const int sizeof_uint = sizeof(unsigned int) * 8; // in bits
@@ -758,7 +762,7 @@ TetVolMesh::fill_points(Iter begin, Iter end, Functor fill_ftor) {
     ++piter; ++iter;
   }
   points_lock_.unlock();
-  dirty_ = true;
+  //dirty_ = true; // FIXME
 }
 
 template <class Iter, class Functor>
@@ -780,7 +784,7 @@ TetVolMesh::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
     ++citer; ++iter;
   }
   cells_lock_.unlock();
-  dirty_ = true;
+  //dirty_ = true; // FIXME
 }
 
 

@@ -92,7 +92,7 @@ usage()
   cout << "    [-]-v[ersion]       : prints out version information\n";
   cout << "    [-]-h[elp]          : prints usage information\n";
   cout << "    [-]-p[ort] [PORT]   : start remote services port on port number PORT\n";
-  cout << "    [-]-eai             : enable external applications interface\n";
+  //  cout << "    [-]-eai             : enable external applications interface\n";
   cout << "    [--nosplash]        : disable the splash screen\n";
   cout << "    net_file            : SCIRun Network Input File\n";
   cout << "    session_file        : PowerApp Session File\n";
@@ -239,8 +239,19 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
   // If the user accepted the license then create a .scirunrc for them
   if (tclresult == "accept") {
     string homerc = string(HOME)+"/.scirunrc";
-    string cmd = string("cp -f ")+srcdir+string("/scirunrc ")+homerc;
-    std::cout << "Copying default " << srcdir << "/scirunrc to " <<
+    string cmd;
+    if (gui->eval("validFile "+homerc) == "1") {
+      string backuprc = homerc+"."+string(SCIRUN_VERSION)+
+	string(SCIRUN_RCFILE_SUBVERSION);
+      cmd = string("cp -f ")+homerc+" "+backuprc;
+      std::cout << "Backing up " << homerc << " to " << backuprc << std::endl;
+      if (sci_system(cmd.c_str())) {
+	std::cerr << "Error executing: " << cmd << std::endl;
+      }
+    }
+
+    cmd = string("cp -f ")+srcdir+string("/scirunrc ")+homerc;
+    std::cout << "Copying " << srcdir << "/scirunrc to " <<
       homerc << "...\n";
     if (sci_system(cmd.c_str())) {
       std::cerr << "Error executing: " << cmd << std::endl;
@@ -284,12 +295,15 @@ main(int argc, char *argv[], char **environment) {
   // Setup the SCIRun key/value environment
   create_sci_environment(environment, 0);
   sci_putenv("SCIRUN_VERSION", SCIRUN_VERSION);
+  sci_putenv("SCIRUN_RCFILE_SUBVERSION", SCIRUN_RCFILE_SUBVERSION);
 
   // Parse the command line arguments to find a network to execute
   const int startnetno = parse_args( argc, argv );
 
-  bool use_eai = false;
-  if (sci_getenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE")) use_eai = true;
+  // Always switch on this option
+  // It is needed for running external applications
+  bool use_eai = true;
+  // if (sci_getenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE")) use_eai = true;
 
   // The environment has been setup
   // Now split of a process for running external processes
@@ -412,7 +426,20 @@ main(int argc, char *argv[], char **environment) {
   new NetworkEditor(net, gui);
 
   // If the user doesnt have a .scirunrc file, provide them with a default one
-  if (!find_and_parse_scirunrc()) show_license_and_copy_scirunrc(gui);
+  if (!find_and_parse_scirunrc()) 
+    show_license_and_copy_scirunrc(gui);
+  else { 
+    const char *rcversion = sci_getenv("SCIRUN_RCFILE_VERSION");
+    const string ver =string(SCIRUN_VERSION)+"."+string(SCIRUN_RCFILE_SUBVERSION);
+    // If the .scirunrc is an old version
+    if (!rcversion || string(rcversion) != ver)
+      // Ask them if they want to copy over a new one
+      if (gui->eval("promptUserToCopySCIRunrc") == "1")
+	show_license_and_copy_scirunrc(gui);
+  }
+
+
+    
 
   // Activate the scheduler.  Arguments and return values are meaningless
   Thread* t2=new Thread(sched_task, "Scheduler");
@@ -441,8 +468,8 @@ main(int argc, char *argv[], char **environment) {
       gui->eval("showProgress 1 465 1");
     } else if(strstr(argv[startnetno], "BioImage")) {
       // need to make a BioImage splash screen
-      gui->eval("set splashImageFile $bioFEMSplashImageFile");
-      gui->eval("showProgress 1 310 1");
+      gui->eval("set splashImageFile $bioImageSplashImageFile");
+      gui->eval("showProgress 1 660 1");
     } else if(strstr(argv[startnetno], "FusionViewer")) {
       // need to make a FusionViewer splash screen
       gui->eval("set splashImageFile $fusionViewerSplashImageFile");
@@ -450,6 +477,7 @@ main(int argc, char *argv[], char **environment) {
     }
 
   }
+
 
   packageDB->loadPackage();  // load the packages
 

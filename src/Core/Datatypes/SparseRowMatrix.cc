@@ -502,7 +502,7 @@ AddSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
     rows[r+1] = rows[r];
     ca = a.rows[r];
     cb = b.rows[r];
-    while (1)
+    for (;;)
     {
       if (ca >= a.rows[r+1] && cb >= b.rows[r+1])
       {
@@ -560,7 +560,7 @@ AddSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
   }
 
   return scinew SparseRowMatrix(a.nrows(), a.ncols(), rows,
-				vcols, vals.size(), vvals);
+				vcols, (int)vals.size(), vvals);
 }
 
 
@@ -581,7 +581,7 @@ SubSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
     rows[r+1] = rows[r];
     ca = a.rows[r];
     cb = b.rows[r];
-    while (1)
+    for( ;; )
     {
       if (ca >= a.rows[r+1] && cb >= b.rows[r+1])
       {
@@ -640,7 +640,7 @@ SubSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
   }
 
   return scinew SparseRowMatrix(a.nrows(), a.ncols(), rows,
-				vcols, vals.size(), vvals);
+				vcols, (int)vals.size(), vvals);
 }
 
 
@@ -693,7 +693,7 @@ SparseRowMatrix::submatrix(int r1, int c1, int r2, int c2)
     vals[i] = valsv[i];
   }
 
-  return scinew SparseRowMatrix(r2-r1+1, c2-c1+1, rs, cs, valsv.size(), vals);
+  return scinew SparseRowMatrix(r2-r1+1, c2-c1+1, rs, cs, (int)valsv.size(), vals);
 }
 
 } // End namespace SCIRun

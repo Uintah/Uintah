@@ -55,6 +55,14 @@
         Nx9 or 9xN matrix present on that port, then default
         conductivities will be extracted from that matrix.
       </p>
+      <p>
+        Generating the GUI table can become intractable as the number
+        of entries in the table grows.  The default is to not generate
+        the GUI table if there are more than 250 entries.  You can force the
+        GUI to update anyway by checking the "Force GUI Update"
+        button.  It is not recommended that you do so with more than a
+        thousand or so entries.
+      </p>
     </description>
   </overview>
   <io>

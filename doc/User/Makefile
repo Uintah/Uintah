@@ -30,11 +30,13 @@
 # Makefile for User directory.
 .PHONY: products
 
-PRODUCTS = Guide Nets FAQ
+PRODUCTS = Guide FAQ Tutorials/BioImage
+treetop := ../..
+edition := ${treetop}/src/main/sci_version.h
 
 default: index.html products
 
-index.html: index.rhtml ../edition.xml
+index.html: index.rhtml ${edition}
 	eruby --delimiters html $< >$@
 
 products:

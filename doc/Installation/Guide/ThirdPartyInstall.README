@@ -1,6 +1,19 @@
 Third Party Installation README
 -------------------------------
 
+Version Numbering
+-----------------
+
+The SCIRun Thirdparty software tarball changes much more slowly then
+SCIRun itself.  However, to make things as straightforward as possible
+and to avoid confusion, the version number of the Thirdparty is
+updated to match the version number for the release of SCIRun.  Actual
+changes to the Thirdparty will be listed in the SCIRun release notes
+for each release.
+
+Necessary Tools
+---------------
+
 Python 1.5.2 (or later) and GNU make (3.79 or later) must be present
 before running the third party installation script.
 

@@ -49,7 +49,7 @@ SRCS     += \
 PSELIBS := Core/Datatypes Core/Containers \
 	 Core/Exceptions Core/Thread \
 	 Core/Persistent Core/Geometry \
-	 Core/Util  
+	 Core/Util Core/Bundle 
 
 LIBS := $(Z_LIBRARY) $(TEEM_LIBRARY)
 

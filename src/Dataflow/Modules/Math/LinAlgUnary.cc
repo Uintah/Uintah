@@ -203,7 +203,7 @@ void LinAlgUnary::execute() {
     // Compile the function.
     int hoffset = 0;
     Handle<LinAlgUnaryAlgo> algo;
-    while (1)
+    for( ;; )
     {
       CompileInfoHandle ci =
 	LinAlgUnaryAlgo::get_compile_info(func, hoffset);

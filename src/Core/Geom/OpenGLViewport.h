@@ -38,7 +38,6 @@
 #ifndef SCIRun_Core_Geom_OpenGLViewport_h
 #define SCIRun_Core_Geom_OpenGLViewport_h
 
-
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <map>
@@ -47,11 +46,12 @@
 using std::string;
 
 namespace SCIRun {
-class OpenGLContext;
-class GuiInterface;
+
+class TkOpenGLContext;
+
 class OpenGLViewport {
 private:
-  OpenGLContext *	context_;
+  TkOpenGLContext *	context_;
   float			x_;
   float			y_;
   float			width_;
@@ -60,11 +60,7 @@ private:
 
   void			check_bounds();
 public:
-  OpenGLViewport(OpenGLContext *ctx=0, 
-		 float x = 0.0, float y = 0.0, 
-		 float w = 1.0, float h = 1.0);
-
-  OpenGLViewport(GuiInterface *gui, const std::string &,
+  OpenGLViewport(TkOpenGLContext *ctx=0, 
 		 float x = 0.0, float y = 0.0, 
 		 float w = 1.0, float h = 1.0);
 

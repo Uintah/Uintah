@@ -50,6 +50,6 @@ PSELIBS := Core/Persistent Core/Containers Core/Util \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/TkExtensions Dataflow/Network Dataflow/Ports
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(TEEM_LIBRARY) $(M_LIBRARY)
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

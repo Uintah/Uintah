@@ -252,7 +252,7 @@ int
 Matrix::bicg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
 		   double &err, int &niter,
 		   int &flops, int &memrefs,
-		   double max_error, int toomany, int useLhsAsGuess) const
+		   double max_error, int /*toomany*/, int useLhsAsGuess) const
 {
   if (rhs.ncols() != lhs.ncols()) return 0;
   for (int i=0; i<rhs.ncols(); i++) {

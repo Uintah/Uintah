@@ -41,6 +41,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/DataIO
 
 SRCS     += \
+        $(SRCDIR)/BundleReader.cc\
+        $(SRCDIR)/BundleWriter.cc\
 	$(SRCDIR)/ColorMap2Reader.cc\
 	$(SRCDIR)/ColorMap2Writer.cc\
 	$(SRCDIR)/ColorMapReader.cc\
@@ -57,7 +59,7 @@ PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Core/Persistent Core/Exceptions Core/Thread Core/Containers \
 	Core/GuiInterface Core/Geometry Core/Datatypes Core/Volume \
 	Core/Util Core/Geom Core/TkExtensions Core/GeomInterface \
-	Dataflow/Widgets Core/ImportExport
+	Dataflow/Widgets Core/ImportExport Core/Bundle
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

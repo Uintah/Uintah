@@ -58,6 +58,7 @@ public:
   LinearAlgebra(GuiContext* ctx);
   virtual ~LinearAlgebra();
   virtual void execute();
+  virtual void presave();
 };
 
 
@@ -151,12 +152,13 @@ LinearAlgebra::execute()
   int hoffset = 0;
   Handle<LinearAlgebraAlgo> algo;
 
-  // remove trailing white-space from the function string
+  // Remove trailing white-space from the function string
+  gui->execute(id + " update_text"); // update gFunction_ before get.
   string func=function_.get();
   while (func.size() && isspace(func[func.size()-1]))
     func.resize(func.size()-1);
 
-  while (1)
+  for( ;; )
   {
     CompileInfoHandle ci =
       LinearAlgebraAlgo::get_compile_info(mcount, func, hoffset);
@@ -216,6 +218,13 @@ LinearAlgebra::execute()
     return;
   }
   omatrix_port5->send(omh[4]);
+}
+
+
+void
+LinearAlgebra::presave()
+{
+  gui->execute(id + " update_text"); // update gFunction_ before saving.
 }
 
 

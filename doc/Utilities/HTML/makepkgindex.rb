@@ -114,8 +114,11 @@ DEALINGS IN THE SOFTWARE.
 <script type="text/javascript">doc.preContent();</script>
 EndOfString
 
-      version = File.open("../../edition.xml") do |f|
-        /<edition>(.*)<\/edition>/.match(f.read())[1]
+      versionFile = TREE_TOP + "src/main/sci_version.h"
+      version = File.open(versionFile) do |f|
+	match = /SCIRUN_VERSION +"(\d+\.\d+\.\d+)"/.match(f.read())
+	raise "Couldn't match edition from #{versionFile}" if match == nil
+	match[1]
       end
 
       index.print("<br/>")
@@ -172,8 +175,11 @@ cellpadding='2'> \n")
 <thead>
 <tr>
 <th colspan=\"#{numCols}\">
-<h1>#{packageName} Module Descriptions (v. #{version})</h1>
+<div class=\"page-title\">
+<h1>#{packageName} Module Descriptions</h1>
+<h2>(v. #{version})</h2>
 <h2><a class=\"alt\" href=\"index.html\">package index</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a class=\"alt\" href=\"#{packageName}_bycat.html\">by category</a></h2>
+</div>		  
 </th>
 </tr>
 </thead>

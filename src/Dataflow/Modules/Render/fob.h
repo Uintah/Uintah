@@ -44,7 +44,7 @@
 #ifndef FOB_H_
 #define FOB_H_
 
-#include "receiver.h"
+#include <Dataflow/Modules/Render/receiver.h>
 
 #define FOB_MAX_RECEIVER 14
 

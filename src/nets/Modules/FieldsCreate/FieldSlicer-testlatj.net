@@ -219,6 +219,7 @@ setGlobal $m7-i-dim {5}
 setGlobal $m7-j-dim {7}
 setGlobal $m7-k-dim {13}
 setGlobal $m7-i-index {2}
+setGlobal $m7-j-index {1}
 setGlobal $m7-k-index {7}
 $m7 initialize_ui
 

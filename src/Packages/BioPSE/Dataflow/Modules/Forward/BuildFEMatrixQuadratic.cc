@@ -223,10 +223,11 @@ BuildFEMatrixQuadratic::execute()
     remark("Averaging of all nodes to zero.");
   }
 
-    QuadraticTetVolMesh::Cell::array_type array;
+  QuadraticTetVolMesh::Cell::array_type array;
   qtvm_->get_cells(array,(QuadraticTetVolMesh::Node::index_type)0);
 
-  Thread::parallel(Parallel<BuildFEMatrixQuadratic>(this, &BuildFEMatrixQuadratic::parallel), np, true);
+  Parallel<BuildFEMatrixQuadratic> p(this, &BuildFEMatrixQuadratic::parallel);
+  Thread::parallel(p, np, true);
 
 
   current_time = time(NULL);

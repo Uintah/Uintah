@@ -106,7 +106,7 @@ UnuHeq::execute()
 
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
-
+  nrrdKeyValueCopy(nout, nin);
   NrrdDataHandle out(nrrd);
 
   onrrd_->send(out);

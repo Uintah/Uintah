@@ -226,7 +226,7 @@ int DicomSeriesReader::read( DicomImage & di )
   if( num_files == 1 ) 
   {
     //cerr << "(DicomSeriesReader::read) Reading single file" << endl;
-    itk::DicomImageIO::Pointer io = itk::DicomImageIO::New();
+    itk::DICOMImageIO2::Pointer io = itk::DICOMImageIO2::New();
 
     // Create a new reader
     typedef itk::ImageFileReader<ImageNDType> ReaderType;
@@ -254,7 +254,7 @@ int DicomSeriesReader::read( DicomImage & di )
   }
   else if( num_files > 1 ) 
   { 
-    itk::DicomImageIO::Pointer io = itk::DicomImageIO::New();
+    itk::DICOMImageIO2::Pointer io = itk::DICOMImageIO2::New();
 
     // Create a new reader
     typedef itk::ImageSeriesReader<ImageNDType> ReaderType;

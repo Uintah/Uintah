@@ -32,7 +32,7 @@
 #ifndef CM2Widget_h
 #define CM2Widget_h
 
-#include "CM2Shader.h"
+#include <Core/Volume/CM2Shader.h>
 
 #include <Core/Datatypes/Color.h>
 #include <Core/Datatypes/Datatype.h>
@@ -48,7 +48,7 @@ namespace SCIRun {
 class CM2ShaderFactory;
 class Pbuffer;
 
-class CM2Widget : public SCIRun::Datatype
+class CM2Widget : public Datatype
 {
 public:
   CM2Widget();
@@ -58,48 +58,60 @@ public:
   // appearance
   virtual void draw() = 0;
   virtual void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer) = 0;
-  virtual void rasterize(SCIRun::Array3<float>& array, bool faux) = 0;
+  virtual void rasterize(Array3<float>& array, bool faux) = 0;
   virtual CM2Widget* clone() = 0;
-  virtual int  get_shadeType() = 0;
-  virtual int  get_onState() = 0;
+  virtual int  get_shadeType();
+  virtual void set_shadeType(int type);
+  virtual int  get_onState();
+  virtual void set_onState(int state);
   
   virtual bool is_empty() { return false; }
   // behavior
   virtual int pick1 (int x, int y, int w, int h) = 0;
   virtual int pick2 (int x, int y, int w, int h, int m) = 0;
-  virtual void move (int obj, int x, int y, int w, int h) = 0;
-  virtual void release (int obj, int x, int y, int w, int h) = 0;
+  virtual void move (int x, int y, int w, int h) = 0;
+  virtual void release (int x, int y, int w, int h) = 0;
 
   virtual std::string tcl_pickle() = 0;
   virtual void tcl_unpickle(const std::string &p) = 0;
 
   void select(int obj) { selected_ = obj; }
   void unselect_all() { selected_ = 0; }
-  SCIRun::Color color() const { return color_; }
-  void set_color(const SCIRun::Color &c) { color_ = c; }
+  Color color() const { return color_; }
+  virtual void set_color(const Color &c) { color_ = c; }
   float alpha() const { return alpha_; }
   void set_alpha(float a);
-  virtual void set_shadeType(int type);
-  virtual void set_onState(int state);
-  virtual void io(SCIRun::Piostream &stream) = 0;
-  static SCIRun::PersistentTypeID type_id;
+  virtual void set_value_range(double, double) {};
 
+  virtual void io(Piostream &stream) = 0;
+  static PersistentTypeID type_id;
+  string &	name() { return name_; }
+  virtual string	tk_cursorname(int) { return "left_ptr"; };
 protected:
-  void selectcolor(int obj);
 
-  SCIRun::Color line_color_;
-  float line_alpha_;
-  SCIRun::Color selected_color_;
-  float selected_alpha_;
-  float thin_line_width_;
-  float thick_line_width_;
-  float point_size_;
-  SCIRun::Color color_;
-  float alpha_;
-  int selected_;
-  int shadeType_;
-  int onState_;
-  SCIRun::HSVColor last_hsv_;
+  virtual void		selectcolor(int obj);
+  virtual void		draw_thick_gl_line(double x1, double y1, 
+					   double x2, double y2,
+					   double r, double g, double b);
+  virtual void		draw_thick_gl_point(double x1, double y1,
+					    double r, double g, double b);
+
+  string	name_;
+  Color		line_color_;
+  float		line_alpha_;
+  Color		selected_color_;
+  float		selected_alpha_;
+  float		thin_line_width_;
+  float		thick_line_width_;
+  float		point_size_;
+  Color		color_;
+  float		alpha_;
+  int		selected_;
+  int		shadeType_;
+  int		onState_;
+  HSVColor	last_hsv_;
+  double	value_min_;
+  double	value_scale_;
 };
 
 typedef LockingHandle<CM2Widget> CM2WidgetHandle;
@@ -119,22 +131,23 @@ public:
   // appearance
   void draw();
   void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
-  void rasterize(SCIRun::Array3<float>& array, bool faux);
-  int  get_shadeType() {return shadeType_;}
-  int  get_onState() {return onState_;}
+  void rasterize(Array3<float>& array, bool faux);
   
   // behavior
   virtual int pick1 (int x, int y, int w, int h);
   virtual int pick2 (int x, int y, int w, int h, int m);
-  virtual void move (int obj, int x, int y, int w, int h);
-  virtual void release (int obj, int x, int y, int w, int h);
+  virtual void move (int x, int y, int w, int h);
+  virtual void release (int x, int y, int w, int h);
+
+  virtual void set_value_range(double min, double scale);
 
   virtual std::string tcl_pickle();
   virtual void tcl_unpickle(const std::string &p);
 
-  virtual void io(SCIRun::Piostream &stream);
-  static SCIRun::PersistentTypeID type_id;
+  virtual void io(Piostream &stream);
+  static PersistentTypeID type_id;
 
+  virtual string	tk_cursorname(int obj);
 protected:
   float base_;
   float top_x_, top_y_;
@@ -166,21 +179,22 @@ public:
   // appearance
   void draw();
   void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
-  void rasterize(SCIRun::Array3<float>& array, bool faux);
-  int  get_shadeType() {return shadeType_;}
-  int  get_onState() {return onState_;}
+  void rasterize(Array3<float>& array, bool faux);
 
   // behavior
   virtual int pick1 (int x, int y, int w, int h);
   virtual int pick2 (int x, int y, int w, int h, int m);
-  virtual void move (int obj, int x, int y, int w, int h);
-  virtual void release (int obj, int x, int y, int w, int h);
+  virtual void move (int x, int y, int w, int h);
+  virtual void release (int x, int y, int w, int h);
+  virtual string	tk_cursorname(int obj);
+
+  virtual void set_value_range(double min, double scale);
   
   virtual std::string tcl_pickle();
   virtual void tcl_unpickle(const std::string &p);
 
-  virtual void io(SCIRun::Piostream &stream);
-  static SCIRun::PersistentTypeID type_id;
+  virtual void io(Piostream &stream);
+  static PersistentTypeID type_id;
 
 protected:
   CM2RectangleType type_;
@@ -206,22 +220,20 @@ public:
   // appearance
   void draw();
   void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
-  void rasterize(SCIRun::Array3<float>& array, bool faux);
-  int  get_shadeType() {return shadeType_;}
-  int  get_onState() {return onState_;}
+  void rasterize(Array3<float>& array, bool faux);
   
   bool is_empty() { return ! pixels_.get_rep(); }
   // behavior
   virtual int pick1 (int x, int y, int w, int h) { return 0;}
   virtual int pick2 (int x, int y, int w, int h, int m) { return 0;}
-  virtual void move (int obj, int x, int y, int w, int h) {}
-  virtual void release (int obj, int x, int y, int w, int h) {}
+  virtual void move (int x, int y, int w, int h) {}
+  virtual void release (int x, int y, int w, int h) {}
   
   virtual std::string tcl_pickle() {return "i";}
   virtual void tcl_unpickle(const std::string &/*p*/) {}
 
-  virtual void io(SCIRun::Piostream &stream);
-  static SCIRun::PersistentTypeID type_id;
+  virtual void io(Piostream &stream);
+  static PersistentTypeID type_id;
 
 protected:
   // nrrdSpatialResample ...
@@ -229,6 +241,59 @@ protected:
 
   NrrdDataHandle pixels_;
 };
+
+
+
+class PaintCM2Widget : public CM2Widget
+{
+public:
+  typedef pair<double, double>		Coordinate;
+  typedef vector<Coordinate>		Stroke;
+  typedef vector<Stroke>		Strokes;
+
+  PaintCM2Widget();
+  ~PaintCM2Widget();
+  PaintCM2Widget(PaintCM2Widget& copy);
+
+  virtual CM2Widget* clone();
+
+  // appearance
+  void draw();
+  void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
+  void rasterize(Array3<float>& array, bool faux);
+  
+  bool is_empty() { return strokes_.empty(); }
+  // behavior
+  virtual int pick1 (int x, int y, int w, int h) { return 0;}
+  virtual int pick2 (int x, int y, int w, int h, int m) { return 0;}
+  virtual void move (int x, int y, int w, int h) {}
+  virtual void release (int x, int y, int w, int h) {}
+  
+  virtual std::string tcl_pickle() {return "p";}
+  virtual void tcl_unpickle(const std::string &/*p*/) {}
+
+  virtual void io(Piostream &stream);
+  static PersistentTypeID type_id;
+
+  void		add_stroke();
+  bool		pop_stroke();
+  void		add_coordinate(const Coordinate &);
+  void		set_dirty(bool dirty){ dirty_ = dirty; }
+  virtual void	set_color(const Color &c);
+  virtual void	set_shadeType(int type); 
+  virtual void	set_value_range(double, double);
+protected:
+  // nrrdSpatialResample ...
+  void				line(Array3<float> &, int, int, int, int, bool first);
+  void				draw_point(Array3<float> &, int, int);
+  void				splat(Array3<float> &, int, int);
+  Strokes			strokes_;
+  Array3<float>			pixels_;
+  bool				dirty_;
+  bool				faux_;
+};
+
+
 
 } // End namespace SCIRun
 

@@ -86,6 +86,9 @@ itcl_class Module {
     protected old_width 0
     protected indicator_width 15
     protected initial_width 0
+    protected done_building_icon 0
+    protected progress_bar_is_mapped 0
+    protected time_is_mapped 0
     # flag set when the module is compiling
     protected compiling_p 0
     # flag set when the module has all incoming ports blocked
@@ -196,8 +199,8 @@ itcl_class Module {
 
     #  Make the modules icon on a particular canvas
     method make_icon {modx mody { ignore_placement 0 } } {
-	global $this-done_bld_icon Disabled Subnet Color ToolTipText
-	set $this-done_bld_icon 0
+	global Disabled Subnet Color ToolTipText
+	set done_building_icon 0
 	set Disabled([modname]) 0
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
 	set minicanvas $Subnet(Subnet$Subnet([modname])_minicanvas)
@@ -557,7 +560,6 @@ itcl_class Module {
 
 
     method resize_icon {} {
-	upvar \#0 $this-done_bld_icon done_building_icon
 	if { !$done_building_icon } return
 
 	global Subnet port_spacing modname_font
@@ -585,13 +587,12 @@ itcl_class Module {
 
     method setDone {} {
 	#module already mapped to the canvas
-	upvar \#0 $this-done_bld_icon done
 	upvar \#0 $this-progress_mapped progress_mapped
 	upvar \#0 $this-time_mapped time_mapped
-	if { $done } return
+	if { $done_building_icon } return
 	if { [info exists progress_mapped] && !$progress_mapped } return
 	if { [info exists time_mapped] && !$time_mapped } return
-	set done 1
+	set done_building_icon 1
 	    
 	global Subnet IconWidth modname_font
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
@@ -795,7 +796,7 @@ itcl_class Module {
 		    append script "${tab}set $varname "
 		    append script "\"[subDATADIRandDATASET $val]\"\n"
 		} else {
-		    if { [llength $val] == 1 && ![string is integer $val] } {
+		    if { ![string is integer $val] } {
 			set failed [catch "set num [format %.[string length $val]e $val]"]
 			if { !$failed } {
 			    set failed [catch "set num [expr $num]"]
@@ -903,14 +904,9 @@ proc regenModuleMenu { modid menu_id } {
     $menu_id add command -label "Notes" \
 	-command "notesWindow $modid notesDoneModule"
 
-    # 'Destroy Selected' Menu Option
-    if { [$modid is_selected] } { 
-	$menu_id add command -label "Destroy Selected" \
-	    -command "moduleDestroySelected"
-    }
-
     # 'Destroy' module Menu Option
-    $menu_id add command -label "Destroy" -command "moduleDestroy $modid"
+    $menu_id add command -label "Destroy" \
+	-command "moduleDestroySelected $modid"
 
     # 'Duplicate' module Menu Option
     if { ![$modid is_subnet] } {
@@ -1548,6 +1544,7 @@ proc moduleHelp { modid } {
 
 
     $w.help.txt insert end [$modid-c help]
+    $w.help.txt configure -state disabled
 }
 
 proc moduleDestroy {modid} {
@@ -1571,11 +1568,13 @@ proc moduleDestroy {modid} {
     $Subnet(Subnet$Subnet($modid)_canvas) delete $modid $modid-notes $modid-notes-shadow
     destroy $Subnet(Subnet$Subnet($modid)_canvas).module$modid
     $Subnet(Subnet$Subnet($modid)_minicanvas) delete $modid
-    
     # Remove references to module is various state arrays
     listFindAndRemove Subnet(Subnet$Subnet($modid)_Modules) $modid
     listFindAndRemove CurrentlySelectedModules $modid
-    array unset Subnet ${modid}*
+
+    # Must have the '_' on the unset, other wise modid 1* deletes 1_* and 1#_*, etc.
+    array unset Subnet ${modid}_*
+
     array unset Disabled $modid
     array unset Notes $modid*
 
@@ -1595,9 +1594,13 @@ proc moduleDuplicate { module } {
     global Subnet
     networkHasChanged
  
-    set bbox [$Subnet(Subnet$Subnet($module)_canvas) bbox $module]
-    set x [lindex $bbox 0]
-    set y [expr 20 + [lindex $bbox 3]]
+    set canvas $Subnet(Subnet$Subnet($module)_canvas) 
+    set canvassize [$canvas cget -scrollregion]
+    set ulx [expr [lindex [$canvas xview] 0]*[lindex $canvassize 2]]
+    set uly [expr [lindex [$canvas yview] 0]*[lindex $canvassize 3]]
+    set bbox [$canvas bbox $module]
+    set x [expr [lindex $bbox 0]-$ulx]
+    set y [expr 20 + [lindex $bbox 3] - $uly]
 
     set newmodule [eval addModuleAtPosition [modulePath $module] $x $y]
 
@@ -1613,6 +1616,8 @@ proc moduleDuplicate { module } {
 	upvar \#0 $oldvar oldval $newvar newval
 	catch "set newval \{$oldval\}"
     }
+    setGlobal $newmodule-progress_mapped 0
+    setGlobal $newmodule-time_mapped 0
 }
 
 
@@ -1754,9 +1759,16 @@ proc replaceModule { oldmodule package category module } {
 }
 
 
-proc moduleDestroySelected {} {
+proc moduleDestroySelected { module } {
     global CurrentlySelectedModules 
-    foreach mnum $CurrentlySelectedModules { moduleDestroy $mnum }
+
+    if { [llength $CurrentlySelectedModules] <= 1 } {
+	moduleDestroy $module
+    } else {
+	foreach mnum $CurrentlySelectedModules { 
+	    moduleDestroy $mnum
+	}
+    }
 }
 
 

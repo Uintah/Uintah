@@ -51,6 +51,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
+#include <Core/Util/Environment.h>
 
 using std::cerr;
 
@@ -80,6 +81,11 @@ PBuffer::create(Display* dpy, int screen, GLXContext sharedcontext,
   width_ = width;
   height_ = height;
   colorBits_ = colorBits;
+
+  if (sci_getenv_p("SCIRUN_DISABLE_PBUFFERS"))
+  {
+    return false;
+  }
   
   // Set up a pbuffer associated with dpy
   int minor = 0 , major = 0;

@@ -214,14 +214,14 @@ void matlabarray::setdims(std::vector<long> &dims)
     if (m_ == 0) throw internal_error();
     if (dims.size() == 0)
 	{
-		std::vector<long> ndims;
+		std::vector<long> ndims(2);
 		ndims[0] = 0; ndims[1] = 0;
 		m_->dims_ = ndims;
 		return;
 	}
     if (dims.size() == 1)
 	{
-		std::vector<long> ndims;
+		std::vector<long> ndims(2);
 		ndims[0] = dims[0]; ndims[1] = 1;
 		m_->dims_ = ndims;
 		return;

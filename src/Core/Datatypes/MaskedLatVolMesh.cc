@@ -820,7 +820,7 @@ get_type_description(MaskedLatVolMesh *)
 
 
 const TypeDescription* 
-get_type_description(MaskedLatVolMesh::NodeIndex *)
+get_type_description(MLVMNodeIndex *)
 {
   static TypeDescription* td = 0;
   if(!td){
@@ -832,7 +832,7 @@ get_type_description(MaskedLatVolMesh::NodeIndex *)
 }
 
 const TypeDescription* 
-get_type_description(MaskedLatVolMesh::CellIndex *)
+get_type_description(MLVMCellIndex *)
 {
   static TypeDescription* td = 0;
   if(!td){
@@ -897,31 +897,508 @@ get_type_description(MaskedLatVolMesh::Cell *)
 }
 
 std::ostream& 
-operator<<(std::ostream& os, const MaskedLatVolMesh::CellIndex& n) {
+operator<<(std::ostream& os, const MLVMCellIndex& n) {
   os << "[" << n.i_ << "," << n.j_ << "," << n.k_ << "]";
   return os;
 }
 
 std::ostream& 
-operator<<(std::ostream& os, const MaskedLatVolMesh::NodeIndex& n) {
+operator<<(std::ostream& os, const MLVMNodeIndex& n) {
   os << "[" << n.i_ << "," << n.j_ << "," << n.k_ << "]";
   return os;
 }
 
 
 std::ostream& 
-operator<<(std::ostream& os, const MaskedLatVolMesh::NodeSize& n) {
+operator<<(std::ostream& os, const MLVMNodeSize& n) {
   os << (int)n << " (" << n.i_ << "," << n.j_ << "," << n.k_ << ")";
   return os;
 }
 
 
 std::ostream& 
-operator<<(std::ostream& os, const MaskedLatVolMesh::CellSize& n) {
+operator<<(std::ostream& os, const MLVMCellSize& n) {
   os << (int)n << " (" << n.i_ << "," << n.j_ << "," << n.k_ << ")";
   return os;
 }
 
+
+MLVMCellIndex::operator unsigned() const
+{
+  ASSERT(mesh_);
+  return i_ + (mesh_->ni_-1)*j_ + (mesh_->ni_-1)*(mesh_->nj_-1)*k_;
+}
+
+
+MLVMNodeIndex::operator unsigned() const
+{
+  ASSERT(mesh_);
+  return i_ + mesh_->ni_*j_ + mesh_->ni_*mesh_->nj_*k_;
+}
+
+
+MLVMEdgeIndex::operator unsigned() const
+{
+  ASSERT(mesh_);
+  switch (dir_)
+  {
+  case 0: return (i_ + (mesh_->ni_-1)*j_ + 
+                  (mesh_->ni_-1)*mesh_->nj_*k_); 
+  case 1: return (j_ + (mesh_->nj_-1)*k_ + 
+                  (mesh_->nj_-1)*mesh_->nk_*i_ + 
+                  (mesh_->ni_-1)*mesh_->nj_*mesh_->nk_); 
+  case 2: return (k_ + (mesh_->nk_-1)*i_ + 
+                  (mesh_->nk_-1)*mesh_->ni_*j_ +
+                  (mesh_->ni_-1)*mesh_->nj_*mesh_->nk_ + 
+                  mesh_->ni_*(mesh_->nj_-1)*mesh_->nk_); 
+  default: return 0;
+  }
+}
+
+MLVMFaceIndex::operator unsigned() const
+{ 
+  ASSERT(mesh_);
+  switch (dir_)
+  {
+  case 0: return (i_ + (mesh_->ni_-1)*j_ + 
+                  (mesh_->ni_-1)*(mesh_->nj_-1)*k_); 
+  case 1: return (j_ + (mesh_->nj_-1)*k_ + 
+                  (mesh_->nj_-1)*(mesh_->nk_-1)*i_ + 
+                  (mesh_->ni_-1)*(mesh_->nj_-1)*mesh_->nk_);
+  case 2: return (k_ + (mesh_->nk_-1)*i_ + 
+                  (mesh_->nk_-1)*(mesh_->ni_-1)*j_ +
+                  (mesh_->ni_-1)*(mesh_->nj_-1)*mesh_->nk_ + 
+                  mesh_->ni_*(mesh_->nj_-1)*(mesh_->nk_-1));
+  default: return 0; //ASSERTFAIL("MLVMFaceIndex dir_ off."); 
+  }
+}
+
+
+MLVMNodeIter::operator unsigned() const
+{
+  ASSERT(mesh_);
+  return i_ + mesh_->ni_*j_ + mesh_->ni_*mesh_->nj_*k_;
+}
+
+void
+MLVMNodeIter::next() 
+{
+  i_++;
+  if (i_ >= mesh_->min_i_+mesh_->ni_) {
+    i_ = mesh_->min_i_;
+    j_++;
+    if (j_ >=  mesh_->min_j_+mesh_->nj_) {
+      j_ = mesh_->min_j_;
+      k_++;
+    }
+  }
+}
+
+void
+MLVMNodeIter::prev()
+{
+  if (i_ == mesh_->min_i_) {
+    i_ = mesh_->min_i_ + mesh_->ni_;
+    if (j_ == mesh_->min_j_) {
+      j_ = mesh_->min_j_ + mesh_->nj_;
+      ASSERTMSG(k_ != mesh_->min_k_-1, "Cant prev() from first node!");
+      k_--;
+    }
+    else {
+      j_--;
+    }
+  }
+  else {
+    i_--;
+  }
+}
+
+
+MLVMNodeIter &
+MLVMNodeIter::operator++()
+{
+  do next(); while (!mesh_->check_valid(*this) && 
+                    (k_ < (mesh_->min_k_+mesh_->nk_)));
+  return *this;
+}
+
+MLVMNodeIter &
+MLVMNodeIter::operator--()
+{
+  do prev(); while (!mesh_->check_valid(*this));
+  return *this;
+}
+
+
+void
+MLVMEdgeIter::next() 
+{
+  switch (dir_)
+  {
+  case 0:
+    i_++;
+    if (i_ >= mesh_->min_i_+mesh_->ni_-1) {
+      i_ = mesh_->min_i_;
+      j_++;
+      if (j_ >=  mesh_->min_j_+mesh_->nj_) {
+        j_ = mesh_->min_j_;
+        k_++;	 
+        if (k_ >= mesh_->min_k_+mesh_->nk_) {
+          dir_++;
+          i_ = 0;
+          j_ = 0;
+          k_ = 0;
+        }
+      }
+    }
+    break;
+  case 1:
+    j_++;
+    if (j_ >= mesh_->min_j_+mesh_->nj_-1) {
+      j_ = mesh_->min_j_;
+      k_++;
+      if (k_ >=  mesh_->min_k_+mesh_->nk_) {
+        k_ = mesh_->min_k_;
+        i_++;	 
+        if (i_ >= mesh_->min_i_+mesh_->ni_) {
+          dir_++;
+          i_ = 0;
+          j_ = 0;
+          k_ = 0;
+        }
+      }
+    }
+    break;
+
+  case 2:
+    k_++;
+    if (k_ >= mesh_->min_k_+mesh_->nk_-1) {
+      k_ = mesh_->min_k_;
+      i_++;
+      if (i_ >=  mesh_->min_i_+mesh_->ni_) {
+        i_ = mesh_->min_i_;
+        j_++;	 
+        if (j_ >= mesh_->min_j_+mesh_->nj_) {
+          dir_++;
+          i_ = 0;
+          j_ = 0;
+          k_ = 0;
+        }
+      }
+    }
+    break;
+  default:
+  case 3:
+    ASSERTFAIL("Iterating beyond MaskedLatVolMesh edge boundaries.");
+    BREAK;
+  }
+}
+
+void
+MLVMEdgeIter::prev()
+{
+  switch(dir_)
+  {
+  case 2:
+    if (k_ == mesh_->min_k_) {
+      k_ = mesh_->min_k_ + mesh_->nk_-1;
+      if (i_ == mesh_->min_i_) {
+        i_ = mesh_->min_i_ + mesh_->ni_;
+        if (j_ == mesh_->min_j_) {
+          i_ = mesh_->min_i_ + mesh_->ni_;
+          j_ = mesh_->min_j_ + mesh_->nj_-1;
+          k_ = mesh_->min_k_ + mesh_->nk_;
+          dir_--;
+        }
+        else {
+          j_--;
+        }
+      }
+      else {
+        i_--;
+      }
+    }
+    else {
+      k_--;
+    }
+    break;
+
+  case 1:
+    if (j_ == mesh_->min_j_) {
+      j_ = mesh_->min_j_ + mesh_->nj_-1;
+      if (k_ == mesh_->min_k_) {
+        k_ = mesh_->min_k_ + mesh_->nk_;
+        if (i_ == mesh_->min_i_) {
+          i_ = mesh_->min_i_ + mesh_->ni_-1;
+          j_ = mesh_->min_j_ + mesh_->nj_;
+          k_ = mesh_->min_k_ + mesh_->nk_;
+          dir_--;
+        }
+        else {
+          i_--;
+        }
+      }
+      else {
+        k_--;
+      }
+    }
+    else {
+      j_--;
+    }
+    break;
+
+  case 0:
+    if (i_ == mesh_->min_i_) {
+      i_ = mesh_->min_i_ + mesh_->ni_-1;
+      if (j_ == mesh_->min_j_) {
+        j_ = mesh_->min_j_ + mesh_->nj_;
+        if (k_ == mesh_->min_k_) {
+          ASSERTFAIL("Iterating b4 MaskedLatVolMesh edge boundaries.");
+        }
+        else {
+          k_--;
+        }
+      }
+      else {
+        j_--;
+      }
+    }
+    else {
+      i_--;
+    }
+    break;
+  default:
+    ASSERTFAIL("Iterating beyond MaskedLatVolMesh edge boundaries.");
+    BREAK;
+  }
+}
+
+MLVMEdgeIter &
+MLVMEdgeIter::operator++()
+{
+  do next(); while (!mesh_->check_valid(*this) && dir_ < 3);
+  return *this;
+}
+
+MLVMEdgeIter &
+MLVMEdgeIter::operator--()
+{
+  do prev(); while (!mesh_->check_valid(*this));
+  return *this;
+}
+
+
+void
+MLVMFaceIter::next() 
+{
+  switch (dir_)
+  {
+  case 0:
+    i_++;
+    if (i_ >= mesh_->min_i_+mesh_->ni_-1) {
+      i_ = mesh_->min_i_;
+      j_++;
+      if (j_ >=  mesh_->min_j_+mesh_->nj_-1) {
+        j_ = mesh_->min_j_;
+        k_++;	 
+        if (k_ >= mesh_->min_k_+mesh_->nk_) {
+          dir_++;
+          i_ = 0;
+          j_ = 0;
+          k_ = 0;
+        }
+      }
+    }
+    break;
+  case 1:
+    j_++;
+    if (j_ >= mesh_->min_j_+mesh_->nj_-1) {
+      j_ = mesh_->min_j_;
+      k_++;
+      if (k_ >=  mesh_->min_k_+mesh_->nk_-1) {
+        k_ = mesh_->min_k_;
+        i_++;	 
+        if (i_ >= mesh_->min_i_+mesh_->ni_) {
+          dir_++;
+          i_ = 0;
+          j_ = 0;
+          k_ = 0;
+        }
+      }
+    }
+    break;
+
+  case 2:
+    k_++;
+    if (k_ >= mesh_->min_k_+mesh_->nk_-1) {
+      k_ = mesh_->min_k_;
+      i_++;
+      if (i_ >=  mesh_->min_i_+mesh_->ni_-1) {
+        i_ = mesh_->min_i_;
+        j_++;	 
+        if (j_ >= mesh_->min_j_+mesh_->nj_) {
+          dir_++;
+          i_ = 0;
+          j_ = 0;
+          k_ = 0;
+        }
+      }
+    }
+    break;
+  default:
+  case 3:
+    ASSERTFAIL("Iterating beyond MaskedLatVolMesh edge boundaries.");
+    BREAK;
+  }
+}
+
+void
+MLVMFaceIter::prev()
+{
+  switch(dir_)
+  {
+  case 2:
+    if (k_ == mesh_->min_k_) {
+      k_ = mesh_->min_k_ + mesh_->nk_-1;
+      if (i_ == mesh_->min_i_) {
+        i_ = mesh_->min_i_ + mesh_->ni_-1;
+        if (j_ == mesh_->min_j_) {
+          i_ = mesh_->min_i_ + mesh_->ni_;
+          j_ = mesh_->min_j_ + mesh_->nj_-1;
+          k_ = mesh_->min_k_ + mesh_->nk_-1;
+          dir_--;
+        }
+        else {
+          j_--;
+        }
+      }
+      else {
+        i_--;
+      }
+    }
+    else {
+      k_--;
+    }
+    break;
+
+  case 1:
+    if (j_ == mesh_->min_j_) {
+      j_ = mesh_->min_j_ + mesh_->nj_-1;
+      if (k_ == mesh_->min_k_) {
+        k_ = mesh_->min_k_ + mesh_->nk_-1;
+        if (i_ == mesh_->min_i_) {
+          i_ = mesh_->min_i_ + mesh_->ni_-1;
+          j_ = mesh_->min_j_ + mesh_->nj_-1;
+          k_ = mesh_->min_k_ + mesh_->nk_;
+          dir_--;
+        }
+        else {
+          i_--;
+        }
+      }
+      else {
+        k_--;
+      }
+    }
+    else {
+      j_--;
+    }
+    break;
+
+  case 0:
+    if (i_ == mesh_->min_i_) {
+      i_ = mesh_->min_i_ + mesh_->ni_-1;
+      if (j_ == mesh_->min_j_) {
+        j_ = mesh_->min_j_ + mesh_->nj_-1;
+        if (k_ == mesh_->min_k_) {
+          ASSERTFAIL("Iterating b4 MaskedLatVolMesh face boundaries.");
+        }
+        else {
+          k_--;
+        }
+      }
+      else {
+        j_--;
+      }
+    }
+    else {
+      i_--;
+    }
+    break;
+  default:
+    ASSERTFAIL("Iterating beyond MaskedLatVolMesh face boundaries.");
+    BREAK;
+  }
+}
+
+MLVMFaceIter &
+MLVMFaceIter::operator++()
+{
+  do next(); while (!mesh_->check_valid(*this) && dir_ < 3);
+  return *this;
+}
+
+MLVMFaceIter &
+MLVMFaceIter::operator--()
+{
+  do prev(); while (!mesh_->check_valid(*this));
+  return *this;
+}
+
+
+MLVMCellIter::operator unsigned() const 
+{ 
+  ASSERT(mesh_);
+  return i_ + (mesh_->ni_-1)*j_ + (mesh_->ni_-1)*(mesh_->nj_-1)*k_;
+}
+
+void
+MLVMCellIter::next() 
+{
+  i_++;
+  if (i_ >= mesh_->min_i_+mesh_->ni_-1)	{
+    i_ = mesh_->min_i_;
+    j_++;
+    if (j_ >=  mesh_->min_j_+mesh_->nj_-1) {
+      j_ = mesh_->min_j_;
+      k_++;
+    }
+  }
+}
+
+void
+MLVMCellIter::prev()
+{
+  if (i_ == mesh_->min_i_) {
+    i_ = mesh_->min_i_ + mesh_->ni_-1;
+    if (j_ == mesh_->min_j_) {
+      j_ = mesh_->min_j_ + mesh_->nj_-1;
+      ASSERTMSG(k_ != mesh_->min_k_, "Cant prev() from first cell!");
+      k_--;
+    }
+    else {
+      j_--;
+    }
+  }
+  else {
+    i_--;
+  }
+}
+
+MLVMCellIter &
+MLVMCellIter::operator++()
+{
+  do next(); while (!mesh_->check_valid(i_,j_,k_) && 
+                    k_ < mesh_->min_k_ + mesh_->nk_ - 1);
+  return *this;
+}
+
+MLVMCellIter &
+MLVMCellIter::operator--()
+{
+  do prev(); while (!mesh_->check_valid(i_,j_,k_));
+  return *this;
+}
 
 
 } // namespace SCIRun

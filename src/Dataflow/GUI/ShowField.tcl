@@ -140,6 +140,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-vectors-usedefcolor 0
 	set $this-tensors-usedefcolor 0
 	set $this-text-use-default-color 1
+	set $this-faces-usetexture  0
 	set $this-text-color-r 1.0
 	set $this-text-color-g 1.0
 	set $this-text-color-b 1.0
@@ -353,8 +354,12 @@ itcl_class SCIRun_Visualization_ShowField {
 		-text "Use Default Color" \
 	        -command "$this-c rerender_faces" \
 		-variable $this-faces-usedefcolor
+	checkbutton $face.use_texture \
+	        -text "Use 2D texture if available" \
+	        -command "$this-c rerender_faces" \
+	        -variable $this-faces-usetexture
 	pack $face.show_faces $face.use_transparency \
-	    $face.udc $face.use_normals \
+	    $face.udc $face.use_normals $face.use_texture \
 	    -side top -fill y -anchor w
     }
 

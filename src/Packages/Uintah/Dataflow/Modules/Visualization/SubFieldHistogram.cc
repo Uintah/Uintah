@@ -48,10 +48,10 @@
 #include <Dataflow/Widgets/PointWidget.h>
 #include <iostream>
 #ifdef __sgi
-#include <ios>
+#  include <ios>
 #endif
 #include <algorithm>
-#include <Core/GLVolumeRenderer/VolumeUtils.h>
+
 using std::cerr;
 using std::hex;
 using std::dec;

@@ -46,7 +46,7 @@ set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 10 5]
 set m2 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 10 88]
 set m3 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 216 5]
 set m4 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 216 83]
-set m5 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 216 164]
+set m5 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 216 164]
 set m6 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 416 86]
 
 addConnection $m1 0 $m2 0

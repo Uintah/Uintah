@@ -46,29 +46,74 @@
 
 namespace SCIRun {
 
-std::vector<CleanupManagerCallback> CleanupManager::callbacks_;
+std::vector<std::pair<CleanupManagerCallback, void *> > CleanupManager::callbacks_;
+bool    CleanupManager::initialized_ = false;
+Mutex * CleanupManager::lock_ = NULL;
+
+typedef std::pair<CleanupManagerCallback, void *> CMCPair;
 
 void
-CleanupManager::add_callback(CleanupManagerCallback callback)
+CleanupManager::initialize()
 {
-  remove_callback(callback);
-  callbacks_.push_back(callback);
+  if( initialized_ )
+    return;
+  initialized_ = true;
+
+  lock_ = new Mutex("CleanupManager lock");
 }
 
 void
-CleanupManager::remove_callback(CleanupManagerCallback callback)
+CleanupManager::add_callback(CleanupManagerCallback cb, void *data)
 {
-  std::remove(callbacks_.begin(), callbacks_.end(), callback);
+  if( !initialized_ ) initialize();
+
+  lock_->lock();
+  if (std::find(callbacks_.begin(), callbacks_.end(), CMCPair(cb, data))
+      == callbacks_.end())
+  {
+    callbacks_.push_back(CMCPair(cb, data));
+  }
+  lock_->unlock();
+}
+
+void
+CleanupManager::invoke_remove_callback(CleanupManagerCallback callback,
+				       void *data)
+{
+  if( !initialized_ ) initialize();
+
+  lock_->lock();
+  callback(data);
+  callbacks_.erase(std::remove(callbacks_.begin(), callbacks_.end(),
+			       CMCPair(callback, data)),
+		   callbacks_.end());
+  lock_->unlock();
+}
+
+void
+CleanupManager::remove_callback(CleanupManagerCallback callback, void *data)
+{
+  if( !initialized_ ) initialize();
+
+  lock_->lock();
+  callbacks_.erase(std::remove(callbacks_.begin(), callbacks_.end(),
+			       CMCPair(callback, data)),
+		   callbacks_.end());
+  lock_->unlock();
 }
 
 void
 CleanupManager::call_callbacks()
 {
+  if( !initialized_ ) initialize();
+
+  lock_->lock();
   for (unsigned int i = 0; i < callbacks_.size(); i++)
   {
-    callbacks_[i]();
+    callbacks_[i].first(callbacks_[i].second);
   }
   callbacks_.clear();
+  lock_->unlock();
 }
 
 

@@ -82,7 +82,7 @@ public:
   ITKIterator2d() : ITKConstIterator2d<Data>() { }
   ITKIterator2d(const ImageType* ptr, const region_type &region) : ITKConstIterator2d<Data>(ptr, region) { }
   virtual ~ITKIterator2d() {}
-  Data &operator*() { return Value();}
+  Data &operator*() { return this->Value();}
 };
 
 
@@ -362,7 +362,7 @@ public:
   virtual const TypeDescription* get_type_description(int n = -1) const;
 
 
-  itk::Object* get_image() { return fdata().get_image(); }
+  itk::Object* get_image() { return this->fdata().get_image(); }
 
 private:
   bool image_set_;
@@ -410,7 +410,7 @@ template <class Data>
 void ITKImageField<Data>::SetImage(itk::Object* img)
 {
   if(dynamic_cast<itk::Image<Data, 2>* >(img)) {
-    fdata().set_image(dynamic_cast<itk::Image<Data, 2>* >(img));
+    this->fdata().set_image(dynamic_cast<itk::Image<Data, 2>* >(img));
     image_set_ = true;
   }
   else {
@@ -461,7 +461,7 @@ ITKImageField<Data>::io(Piostream &stream)
       
       // set spacing
       typedef typename itk::Image<Data, 2> ImageType;
-      const BBox bbox = mesh()->get_bounding_box();
+      const BBox bbox = this->mesh()->get_bounding_box();
       Point mesh_center;
       Vector mesh_size;
       if(bbox.valid()) {
@@ -478,13 +478,13 @@ ITKImageField<Data>::io(Piostream &stream)
       origin[0] = mesh_center.x();
       origin[1] = mesh_center.y();
       
-      fdata().set_image_origin( origin );
+      this->fdata().set_image_origin( origin );
       
       double spacing[ ImageType::ImageDimension ];
-      spacing[0] = mesh_size.x()/fdata().dim1();
-      spacing[1] = mesh_size.y()/fdata().dim2();
+      spacing[0] = mesh_size.x()/this->fdata().dim1();
+      spacing[1] = mesh_size.y()/this->fdata().dim2();
       
-      fdata().set_image_spacing( spacing );
+      this->fdata().set_image_spacing( spacing );
       
       return;
     } else {

@@ -69,9 +69,10 @@ for SCIRun</p>
 <li> <a href="#e">Creating a hierarchy by hand</a>
 <li> <a href="#f">Adding a user interface</a>
 <li> <a href="#g">Adding ports and functionality</a>
-<li> <a href="#h">Advanced topics</a>
-<li> <a href="#i">Trouble shooting</a>
-<li> <a href="#j">Appendix</a>
+<li> <a href="#h">Coding a module</a>
+<li> <a href="#i">Advanced topics</a>
+<li> <a href="#j">Trouble shooting</a>
+<li> <a href="#k">Appendix</a>
 </ol>
 	
 <p class="head"><a name="a">Prerequisites</a></p>
@@ -348,52 +349,261 @@ for SCIRun</p>
  
 <p class="nextpara">The other type of module is the kind that takes data into an input  port, runs some algorithm on the data, and then sends output data to the  output port. This is the most common type of module, and perhaps the  most useful. In order to create such a module, you will need to add  lines of code to the module's .cc file.</p> 
  
-<p class="nextpara">You will need to identify the SCIRun data type that you will use for  each port, input and output. Then add #include statements to the top  of the file for the header files that define the data type(s) you want.  For example, suppose you want to have a Mesh input port and a Matrix  output port. You would add the following lines to the top of your  module's .cc file:</p> 
+<p class="nextpara">You will need to identify the SCIRun data type that you will use for  each port, input and output. Then add #include statements to the top  of the file for the header files that define the data type(s) you want.  For example, suppose you want to have a Field input port and a Field output port. You would add the following lines to the top of your module's .cc file:</p> 
  
 <pre class="example">
 #include &lt;Dataflow/Ports/FieldPort.h&gt;
-#include &lt;Dataflow/Ports/MatrixPort.h&gt;
 </pre> 
  
 <p class="nextpara">The data types can come from any package or core directory within your SCIRun source tree (i.e. they don't have to come from src/Dataflow).</p> 
  
-<p class="nextpara">Next, add lines of code to the data declaration section of your module's  class declaration, and declare your ports:</p> 
+<p class="nextpara">When a module begins it's execution cycle, it
+calls the execute() member function of your module.  It is in this
+function that you need to add lines of code to extract data from the
+input ports, run your module's algorithm on that data, and send the
+result to the output port:</p>
  
 <pre class="example">
-MeshIPort* imesh;
-MatrixOPort* omatr;
-</pre> 
- 
-<p class="nextpara">Finally, add lines of code to the module's constructor to allocate "new"  instances for each port and add them to the list of ports for this  module:</p> 
- 
-<pre class="example">imesh=scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
-add_iport(imesh);
-omatr=scinew MatrixOPort(this, "Matrix", MatrixIPort::Atomic);
-add_oport(omatr);
-</pre> 
+void
+MyModule::execute()
+{
+  FieldIPort* ifieldport = (FieldIPort *)get_iport("Input Field");
 
-<p class="nextpara">Once you have ports, you can retrieve data. When a module begins it's  execution cycle, it calls the execute() member function of your module.  It is in this function that you need to add lines of code to extract  data from the input ports, run your module's algorithm on that data,  and send the result to the output port:</p> 
+  FieldHandle fieldin;
+
+  if (!ifieldport) {
+    error( "Unable to initialize iport 'Input Field'.");
+    return;
+  }
+
+  if (!(ifieldport->get(fieldin) && fieldin.get_rep())) {
+    error( "No handle or representation." );
+    return;
+  }
+
+  if( is_it_necessary_to_execute ) {
+    // See the next section on how to determine is_it_necessary_to_execute
+
+    fieldout_ = do_something_based_on_the_input_field( fieldin );
+  }
+
+  // If output data get the port and send it down stream.
+  if ( fieldout_.get_rep() ) {
+    // Get a handle to the output field port.
+    FieldOPort* ofp = (FieldOPort *) get_oport("Output VectorMagnitude");
+
+    if (!ofp) {
+      error("Unable to initialize oport 'Output Field'.");
+      return;
+    }
+
+    // Send the data downstream
+    ofp->send(fieldout_);
+  }
+</pre> 
  
+<p class="head"><a name="h">Coding a Module </a></p>
+
+<p class="firstpara">After creating a module you need to make it
+work. There are two areas that deserve attention:</p>
+
+<p class="nextpara">GUI variable interface,</p> 
+<p class="nextpara">Excute only when needed,</p> 
+
+
+<p class="head">GUI variable interface</p> 
+ <p class="nextpara">The GUI variable interface consists of two parts:
+the declaration of the variable on the Tcl/Tk side and the declaration
+on the C++ side. When declaring a variable that would be used for user
+input on the Tcl/Tk side the variable must be declared as "global"
+variable and use the module's name as a prefix. This is accomplished
+by using "$this" as a prefix. Putting this all together would
+yield:</p>
+
 <pre class="example">
-	MeshHandle mesh;
-	MatrixHandle matrix;
+method set_defaults {} {
+    global $this-myvariable
+    ...
+</pre>
 
-	/* get the data from the port */
+ <p class="nextpara">which would be declared in the Tcl/Tk method
+set_defaults. This would be repeated for all variables that would be
+used for user input within the GUI. When matched with their counter
+part declaration on the C++ side each variable will be saved in the
+.net file. Variables that do not need to be saved do not </p>
 
-	if (!imesh->get(mesh))  return; 
- 
-	/* run your algorithm here. For example: */
- 
-	matrix = GenerateMatrixFromMesh(mesh); 
+ <p class="nextpara">The matching C++ variable decalaration has two
+parts; declaration in the class definition and its initalization in
+the class constructor. There are three types of Gui variables;
+strings, doubles, and ints. There types are:</p>
 
-	/* this function is defined  in other code you wrote */
- 
-	/* send the results to the output port */ 
- 
-	omatr->send(matrix); 
+
+ <pre class="example">
+GuiString
+GuiDouble
+GuiInt
+</pre>
+
+ <p class="nextpara">respectively. Each variable declared must be have
+the prefix "gui_" and end with "_" with the varaible name in
+between. Further, the name should be exactly the same as the Tcl/Tk
+name. Putting this all together would yield:</p>
+
+<pre class="example">
+class MyModule : public Module
+{
+...
+protected:
+  GuiString gui_myvariable_;
+</pre>
+  
+ <p class="nextpara">The variable would be initialized in the definition of the constrcutor of the containing class:</p>
+
+<pre class="example">
+MyModule::MyModule(GuiContext* ctx)
+  : Module("MyModule", ... ),
+    gui_myvariable_(ctx->subVar("myvariable", false))
+</pre>
+
+<p class="nextpara">Where the value in quotes, e.g. "myvariable" would
+exactly match the variable name of the Tcl/tk side but without the
+"$this-" prefix. </p>
+
+<p class="nextpara">The next C++ declaration is another member
+variable that wil be used to hold the state of the gui variable. This
+would be either a std::string, double, or int. Again it would use the
+exact same name as the gui variable but without the "gui_"
+prefix. This would yield:</p>
+
+ <pre class="example">std::string myvariable_;</pre>
+  
+ <p class="nextpara">If needed, the variable would also be initialized
+in the definition of the constrcutor of the containing class. The
+inital vallue should a value that would never be used in the normal
+course of ececuting the module such as, "-1".</p>
+
+ <p class="nextpara">This completes the needed Tcl/Tk GUI variable
+declarations.</p>
+
+
+<p class="head">Excute only when needed</p> 
+<p class="nextpara">The next part of constructing a module is to
+determine whether it really needs to do anything when the execute
+method is called. Often a module will execute due to an upstream or
+downstream module executing, or because the user forces the module to
+execute. However, if the incoming data and the gui variables have not
+changed then there is no need for the module to do any work other than
+to resend the data. </p>
+
+ <p class="nextpara">Assume the new module has one input and one
+output port each containing a field. The first step would be to
+declare two member variables within the class that will be used as
+state variables:</p>
+
+<pre class="example">
+class MyModule : public Module
+{
+...
+protected:
+  GuiString gui_myvariable_;
+  FieldHandle fieldout_;
+  int fGeneration_;
+</pre>
+
+
+<p class="nextpara">The "fieldout_" member variable would hold the
+resulting output field handle while the "fGeneration_" member variable
+would hold the generation number of the input field. Each would be
+initalize to be 0 and -1 respectively. This would make the constructor
+be:</p>
+
+<pre class="example">
+MyModule::MyModule(GuiContext* ctx)
+  : Module("MyModule", ... ),
+    gui_myvariable_(ctx->subVar("myvariable", false)),
+    myvariable_(-1),
+    fieldout_(0),
+    fGeneration_(-1)
+</pre>
+
+
+<p class="nextpara">For each output handle there needs to be a member
+variable to hold its handle. At the same for each input handle there
+needs to be a member variable to hold its generation number. </p>
+
+<p class="nextpara">At this point code can now be added that checks
+the state of the output field, gui variable, and input field. If the
+output field does exist, which it will not initally, or if the gui
+variable has changed, or if the input field's generation has changed
+then operate on the input field.
+
+<pre class="example">
+void
+MyModule::execute()
+{
+  FieldIPort* ifieldport = (FieldIPort *)get_iport("Input Field");
+
+  FieldHandle fieldin;
+
+  if (!ifieldport) {
+    error( "Unable to initialize iport 'Input Field'.");
+    return;
+  }
+
+  if (!(ifieldport->get(fieldin) && fieldin.get_rep())) {
+    error( "No handle or representation." );
+    return;
+  }
+
+  // If no output data, a change in the gui variable or a changed in the
+  // input field generation number then do something.
+  if( !fieldout_.get_rep() ||
+      gui_myvariable_.get() != myvaraible_ ||
+      fGeneration_ != fieldin->generation )
+  {
+    // Save the state of the gui variable and the input field.
+    myvariable_  = gui_myvariable_.get();
+    fGeneration_ = fieldin->generation;
+
+    fieldout_ = do_something_based_on_the_input_field( myvariable_, fieldin );
+  }
+
+  // If output data get the port and send it down stream.
+  if ( fieldout_.get_rep() ) {
+    // Get a handle to the output field port.
+    FieldOPort* ofp = (FieldOPort *) get_oport("Output VectorMagnitude");
+
+    if (!ofp) {
+      error("Unable to initialize oport 'Output Field'.");
+      return;
+    }
+
+    // Send the data downstream
+    ofp->send(fieldout_);
+  }
 </pre> 
- 
-<p class="head"><a name="h">Advanced topics </a></p> 
+
+<p class="nextpara">Looking at this code shows that it will operate on
+the input field only when necessary. Further, if nothing needs to be
+done the previous output field handle which has been saved will be
+sent downstream.
+
+
+<p class="nextpara">Final part of building a module is to allow it to
+operate on a variety of field types. These types include scalar,
+vector, and tensor. This can be done using Dynamic Compilation which
+is explained in a later chapter. </p>
+
+
+
+
+
+
+
+
+
+
+<p class="head"><a name="i">Advanced topics </a></p> 
  
 <p class="firstpara">What you're still reading? You know, the more you read, the more I  have to write - arrgh!?!? Alright smarty pants, you asked for it...</p> 
  
@@ -413,7 +623,7 @@ add_oport(omatr);
  
 <p class="nextpara">When SCIRun starts it searches the enabled packages (defined  at configure time: --enable-package="...") for components.xml files.  It parses those that it finds and builds the package menus. The .xml  file tells SCIRun where each module's .tcl file be found, which  library(s) to load, and tells it what the name of each module's make  function is. If an entry in the .xml file cannot be confirmed (i.e.  can't find the indicated make function), the associated module will  not be listed. Packages that have no valid modules are also not  listed.</p> 
  
-<p class="head"><a name="i">Trouble shooting </a></p> 
+<p class="head"><a name="j">Trouble shooting </a></p> 
  
 <p class="firstpara"> If you attempted to automatically generate a module and got  back an error or warning message, you can search the following  table for the error you saw, and find the associated solution:</p> 
 
@@ -473,7 +683,7 @@ add_oport(omatr);
 
 </table>
  
-<p class="head"><a name="j">Appendix</a></p> 
+<p class="head"><a name="k">Appendix</a></p> 
  
 <p class="firstpara"> The following are examples or skeletons for files that are required  for building a package hierarchy. Many of the skeletons contain  macros which must be expanded before the files can be used. The  macros are:</p>
 

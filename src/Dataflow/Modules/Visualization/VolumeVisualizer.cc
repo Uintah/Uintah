@@ -168,16 +168,25 @@ VolumeVisualizer::execute()
   }
   
   if (!intexture->get(tex)) {
+    warning("No texture, nothing done.");
     return;
   }
   else if (!tex.get_rep()) {
+    warning("No texture, nothing done.");
     return;
   }
+
+#ifdef HAVE_AVR_SUPPORT
+  const bool shading_state = (tex->nb(0) == 1);
+#else
+  const bool shading_state = false;
+#endif
+  gui->execute(id + " change_shading_state " + (shading_state?"0":"1"));
   
   ColorMapHandle cmap1;
   ColorMap2Handle cmap2;
-  bool c1 = icmap1->get(cmap1);
-  bool c2 = icmap2->get(cmap2);
+  bool c1 = (icmap1->get(cmap1) && cmap1.get_rep());
+  bool c2 = (icmap2->get(cmap2) && cmap2.get_rep());
 
   if (c2)
   {

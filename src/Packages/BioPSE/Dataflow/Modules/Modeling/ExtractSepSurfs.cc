@@ -41,6 +41,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
 #include <Packages/BioPSE/Core/Datatypes/SegLatVolField.h>
 #include <Packages/BioPSE/Core/Datatypes/SepSurf.h>
 #include <Core/GuiInterface/GuiVar.h>

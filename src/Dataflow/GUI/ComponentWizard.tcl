@@ -213,7 +213,7 @@ proc update_title_entry_bind {a b c} {
     set tmp [set .componentWizard.tmpdata(title)]
     set_prompted_entry $title_pentry $tmp
 
-    puts "I think the module name is $tmp"
+    #puts "I think the module name is $tmp"
 }
 
 

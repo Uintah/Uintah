@@ -41,13 +41,13 @@
 namespace SCIRun {
 
 SystemCallProcess::SystemCallProcess(int processid) :
-    lock_("system_call_process"),
     processid_(processid),    
+    pid_(0),
     fd_stdin_(-1),
     fd_stdout_(-1),
     fd_stderr_(-1),
     fd_exit_(-1),
-    pid_(0)
+    lock_("system_call_process")
 {
 }
 
@@ -61,20 +61,23 @@ SystemCallProcess::~SystemCallProcess()
 void SystemCallProcess::kill(int secs, bool processexit)
 {
 #ifndef _WIN32
+    int pid;
+    int fd_exit;
+
+    // Make the critical zone as tiny as possible
+    // We do not want the exit routine to get stuck in here
+    // The latter will crash the exit mechanism as a lockinghandle
+    // cannot be freed
     dolock();
-    if ((pid_ > 0)&&(processexit == false))
+    
+    if ((pid > 0)&&(processexit == false))
     {
         bool killprocess = true; // Do we need to kill the child process
-
-// THIS NEEDS TO BE REPLACED
-// since simulations can run for a long time, the pid numbers can have been reused in the mean time
-// hence we need to find a better construction. The next one does this, but at the exit waiting for signal
-// results in an abort. We need to have a better exit strategy in SCIRun
 
         struct timeval tv;
         tv.tv_sec = secs;
         tv.tv_usec = 0;
-        int ret;
+        int ret = 0;
         
         fd_set fdset;
         FD_ZERO(&fdset);
@@ -88,8 +91,8 @@ void SystemCallProcess::kill(int secs, bool processexit)
         }
     }
     pid_ = 0;
-
     unlock();
+
 #endif
 }
 
@@ -157,18 +160,17 @@ void SystemCallProcess::wait()
 SystemCallManager::SystemCallManager() :
     lock("system_call_manager_lock"),
     ref_cnt(0),
-    processidcnt_(1),
+    exit_(false),
+    childpid_(0),
     child_in_(0),
     child_out_(0),
-    childpid_(0)
+    processidcnt_(1)
 {
 }
 
 SystemCallManager::~SystemCallManager()
 {
 #ifndef _WIN32
-    // check whether this one is being called
-    killall();
 #endif    
 }
 
@@ -236,7 +238,9 @@ void SystemCallManager::create()
 
         child_in_ = fd_tochild[1];
         child_out_ = fd_fromchild[0];
-        
+   
+        CleanupManager::add_callback(SystemCallManager::cleanup,reinterpret_cast<void *>(this));
+                  
         // We forked a child so we can return to SCIRun
         // To communicate with the new child we will use
         // the newly created pipes.
@@ -248,11 +252,23 @@ void SystemCallManager::create()
 #endif
 }
 
+void SystemCallManager::cleanup(void *data)
+{
+    SystemCallManager* syscall = reinterpret_cast<SystemCallManager*>(data);
+    syscall->killall();
+}
+
 
 int SystemCallManager::exec(std::string command)
 {
 #ifndef _WIN32
     dolock();
+    if (exit_)
+    {
+        unlock();
+        return(0);
+    }
+
     
     if (childpid_ == 0) throw (SystemCallError("SystemManager has not been opened",0,SCE_NOSYSMANAGER));
     if (child_in_ < 0) throw (SystemCallError("SystemManager has not been opened",0,SCE_NOSYSMANAGER));
@@ -584,14 +600,15 @@ void SystemCallManager::childmain()
                 ::fcntl(STDERR_FILENO,F_SETFD,0);
                 ::fcntl(fd_exit,F_SETFD,0);
             
-                ::system(command.c_str());
+                int retcode = ::system(command.c_str());
                 
                 // Write the word exit on this channel to indicate that the process
                 // is terminated
-                std::string exitstr = "EXIT\n";
-                ::write(fd_exit,&(exitstr[0]),5);
+                std::ostringstream oss;
+                oss << retcode << "\n";
+                std::string exitstr = oss.str();
+                ::write(fd_exit,&(exitstr[0]),exitstr.size());
 
-                
                 ::close(fd_stdin);
                 ::close(fd_stdout);
                 ::close(fd_stderr);
@@ -628,6 +645,12 @@ int    SystemCallManager::getstdin(int processid)
 {
 #ifndef _WIN32
     dolock();
+    if (exit_)
+    {
+        unlock();
+        return -1;
+    }
+
     std::list<SystemCallProcess*>::iterator it = processlist_.begin();
     for (;it != processlist_.end(); it++)
     {
@@ -649,6 +672,12 @@ int    SystemCallManager::getstdout(int processid)
 {
 #ifndef _WIN32
     dolock();
+    if (exit_)
+    {
+        unlock();
+        return(-1);
+    }
+
     std::list<SystemCallProcess*>::iterator it = processlist_.begin();
     for (;it != processlist_.end(); it++)
     {
@@ -670,6 +699,12 @@ int    SystemCallManager::getstderr(int processid)
 {
 #ifndef _WIN32
     dolock();
+    if (exit_)
+    {
+        unlock();
+        return(-1);
+    }
+
     std::list<SystemCallProcess*>::iterator it = processlist_.begin();
     for (;it != processlist_.end(); it++)
     {
@@ -691,6 +726,13 @@ int    SystemCallManager::getexit(int processid)
 {
 #ifndef _WIN32
     dolock();
+    if (exit_)
+    {
+        unlock();
+        return(-1);
+    }
+
+
     std::list<SystemCallProcess*>::iterator it = processlist_.begin();
     for (;it != processlist_.end(); it++)
     {
@@ -715,6 +757,13 @@ void SystemCallManager::wait(int  processid)
 {
 #ifndef _WIN32
     dolock();
+    if (exit_)
+    {
+        unlock();
+        return;
+    }
+
+
     std::list<SystemCallProcess*>::iterator it = processlist_.begin();
     for (;it != processlist_.end(); it++)
     {
@@ -735,16 +784,23 @@ void SystemCallManager::kill(int processid, int secs, bool processexit)
 {
 #ifndef _WIN32
     dolock();
+    if (exit_)
+    {
+        unlock();
+        return;
+    }
+
     std::list<SystemCallProcess*>::iterator it = processlist_.begin();
     for (;it != processlist_.end(); it++)
     {
         if ((*it)->processid_ == processid) 
         {
-            (*it)->kill(secs,processexit);
-            unlock();
+            SystemCallProcess* ptr = (*it);
+            unlock();            
+            ptr->kill(secs,processexit);
             return;
         }
-    }
+    } 
     unlock();
 #endif    
 }
@@ -754,16 +810,22 @@ void SystemCallManager::close(int processid)
 {
 #ifndef _WIN32
     dolock();
+    if (exit_)
+    {
+        unlock();
+        return;
+    }
+    
     std::list<SystemCallProcess*>::iterator it = processlist_.begin();
     for (;it != processlist_.end(); it++)
     {
         if ((*it)->processid_ == processid) 
         {
             SystemCallProcess *proc = (*it);
-            proc->close();
             processlist_.erase(it);
-            delete proc;
             unlock();
+            proc->close();
+            delete proc;
             
             return;
         }
@@ -846,7 +908,9 @@ bool SystemCallManager::writeline(int fd, std::string str)
 void SystemCallManager::killall()
 {
 #ifndef WIN32_
+
     dolock();
+    exit_ = true;
 
     // If main child is already gone, this function was called before
     // so bail out as there should be nothing left to do
@@ -859,7 +923,7 @@ void SystemCallManager::killall()
     childpid_ = 0;
     writeline(child_in_,"exit");
 
-    // Destroy the process the creates the new child processes
+    // Destroy the process that creates the new child processes
     // If this one is gone, no new processses can be launched
 
     std::list<SystemCallProcess*>::iterator it = processlist_.begin();
@@ -873,9 +937,7 @@ void SystemCallManager::killall()
 #endif    
 }
 
-
-
-SystemCallManagerHandle    systemcallmanager_;
+SystemCallManager*    systemcallmanager_;
 
 } // end namespace
 

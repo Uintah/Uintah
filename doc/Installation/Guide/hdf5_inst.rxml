@@ -1,4 +1,6 @@
-<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
 <!--
@@ -29,7 +31,10 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
-<appendix id="sec.hdf5_inst">
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<section id="sec.hdf5_inst">
   <title>HDF5 Installation</title>
 
   <para>The <ulink url="http://hdf.ncsa.uiuc.edu">Hierarchicial Data
@@ -41,7 +46,7 @@ DEALINGS IN THE SOFTWARE.
   supports HDF5 versions 1.6.x.</para>
   <note>
     <itemizedlist>
-      <listitem>
+      <listitem os="linux">
 	<para>The &sr; RPMs include support for HDF5 and the HDF5
 	libraries are distributed with the &sr; RPMs.</para>
       </listitem>
@@ -87,7 +92,7 @@ doc.doIfPrint {
 	  <para>
 	    Unpack.  In a terminal window type:
 	    <literallayout>
-gunzip -c hdf5-1.6.2.tar.gz | tar xvf -	      
+gunzip -c hdf5-1.6.3.tar.gz | tar xvf -	      
 	    </literallayout>
 	  </para>
 	</listitem>
@@ -106,7 +111,7 @@ gunzip -c hdf5-1.6.2.tar.gz | tar xvf -
 	<para>
 	  Change the working directory to the HDF5 directory:
 	  <literallayout class="monospaced">
-cd <replaceable>path-to</replaceable>/hdf5-1.6.2
+cd <replaceable>path-to</replaceable>/hdf5-1.6.3
 	  </literallayout>
 	</para>
       </listitem>
@@ -168,4 +173,4 @@ make install
     </para>
   </section>
 
-</appendix>
+</section>

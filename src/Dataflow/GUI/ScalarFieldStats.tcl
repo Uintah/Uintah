@@ -40,6 +40,10 @@ itcl_class SCIRun_FieldsOther_ScalarFieldStats {
         global $this-sigma
         global $this-is_fixed
         global $this-nbuckets
+	global $this-setdata
+	global $this-nmin
+	global $this-nmax
+        global $this-args
 
         set_defaults
     }
@@ -52,6 +56,10 @@ itcl_class SCIRun_FieldsOther_ScalarFieldStats {
         set $this-sigma "?"
         set $this-is_fixed 0
         set $this-nbuckets 256
+	set $this-setdata 0
+	set $this-nmin 0
+	set $this-nmax 256
+	set $this-args "?"
    }
 
     method ui {} {
@@ -106,7 +114,8 @@ itcl_class SCIRun_FieldsOther_ScalarFieldStats {
 
         blt::barchart $w.graph -title "Histogram" \
             -height [expr [set $this-nbuckets]*3/4.0] \
-            -width [set $this-nbuckets] -plotbackground gray80
+            -width [set $this-nbuckets] -plotbackground gray80 \
+	    -barmode aligned
         pack $w.graph
 
         frame $w.size -relief flat
@@ -182,13 +191,23 @@ itcl_class SCIRun_FieldsOther_ScalarFieldStats {
         
     }
 
+    method tick_format { w val } {
+	set s [format "%2.2e" $val]
+	return $s
+    }
     method graph_data { nmin nmax args } {
         global $this-min
         global $this-min
+        global $this-setdata
         
         set w .ui[modname]
         if {[winfo exists $w.graph] != 1} {
             set draw_graph_needed 1
+	    if {[set $this-setdata] == 1} {
+		set $this-nmin $nmin
+		set $this-nmax $nmax
+		set $this-args $args
+	    }
             return
         } else {
             set draw_graph_needed 0
@@ -202,27 +221,39 @@ itcl_class SCIRun_FieldsOther_ScalarFieldStats {
 
         set min [set $this-min]
         set max [set $this-max]
+
         set xvector {}
         set yvector {}
         set yvector [concat $yvector $args]
-        set frac [expr double(1.0/[llength $yvector])]
+        set frac [expr 1.0/double([llength $yvector]-1)]
+	set bw [expr ($max - $min)/double([llength $yvector] -1)]
+	$w.graph configure -barwidth $bw
 
-        $w.graph configure -barwidth $frac
-        $w.graph axis configure x -min $min -max $max -subdivisions 4 -loose 1
+	set interval [expr ($max - $min)/3.0]
+	$w.graph axis configure x -min $min \
+	    -max $max -command "$this tick_format" \
+	    -subdivisions 2 -loose 1 -stepsize $interval
 
         for {set i 0} { $i < [llength $yvector] } {incr i} {
-            set val [expr $min + $i*$frac*($max-$min)]
+  	    set val  [expr $min + $i*$frac*($max-$min)]
             lappend xvector $val
         }
         
-#       lappend yvector [split $args]
 
-        if { [$w.graph element exists "h"] == 1 } {
-            $w.graph element delete "h"
-        }
+         if { [$w.graph element exists data] == 1 } {
+             $w.graph element delete data
+         }
 
-        $w.graph element create "h" -xdata $xvector -ydata $yvector
-            
+	$w.graph element create data -label {} -xdata $xvector -ydata $yvector
+	$w.graph element configure data -fg blue -relief flat -stipple ""
+    }
+    method clear_data { } {
+	set w .ui[modname]
+        if {[winfo exists $w.graph]} {
+	    if { [$w.graph element exists data] == 1 } {
+		$w.graph element delete data
+	    }
+	}
     }
 }
 

@@ -40,10 +40,11 @@
  *  Copyright (c) 199? SCI Group
  */
 
-#include "TexSquare.h"
+#include <Core/Geom/TexSquare.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
+
 using std::ostream;
 
 namespace SCIRun {
@@ -60,7 +61,8 @@ TexSquare::TexSquare()
     numcolors(0),
     width_(2),
     height_(2),
-    texname_(0)
+    texname_(0),
+    alpha_cutoff_(0.0)
 {
 }
 
@@ -92,6 +94,12 @@ TexSquare::set_texture( unsigned char *tex, int num, int w, int h) {
 void
 TexSquare::set_texname(unsigned int texname) {
   texname_ = texname;
+}
+
+
+void
+TexSquare::set_alpha_cutoff(double alpha) {
+  alpha_cutoff_ = alpha;
 }
 
 

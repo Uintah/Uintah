@@ -69,7 +69,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([SCIRun],[1.22],[scirun-users@sci.utah.edu])
+AC_INIT([SCIRun],[1.24],[scirun-users@sci.utah.edu])
 
 ##  require autoconf version 2.59 
 ##  type "autoconf --version" to find out what version you have.
@@ -104,6 +104,15 @@ AC_COPYRIGHT(
 ##  DEALINGS IN THE SOFTWARE.
 ##
 )
+
+##
+## Any error/warning/note/remark messages that need to be turned off
+## globally should be appended to this variable.  This should only be
+## done if the message is pervasive and has been determined to be
+## benign.  WOFF_NUMBERS should be a 'space' delimited list of numbers.
+## Eg: '123 124 155'
+##
+WOFF_NUMBERS=
 
 ## Clean up files that could be left around if configure was 
 ## interrupted (by control-c, ^c) because I do not know how to add
@@ -607,9 +616,18 @@ if test "$pkg_Fusion" = "yes"; then
   fi
 fi
 
+# Make sure the Package directories exist.
+#   Do an 'ls' of all files in the Packages directory and then grep for the
+#   package in this list.  (We used to just do a "test -d $package", but on
+#   a case-insensitive Mac file system, this fails.)
+
+packages_list=`ls $path_to_src/Packages`
 for i in $package; do
-   # Make sure the Package directories exist.
-   if test ! -d "$path_to_src/Packages/$i"; then
+   found_package=`echo $packages_list | grep $i`
+   if test -z "$found_package"; then
+      if test "$i" = "TEEM"; then
+         AC_MSG_WARN(Try using 'Teem' instead of 'TEEM')
+      fi
       AC_MSG_ERROR(Package '$i' does not exist (in $path_to_src/Packages/)!)
    fi
 done
@@ -618,13 +636,6 @@ if test "$sci_required_unipetsc" = "yes"; then
    sci_required_blas=yes
    sci_required_lapack=yes
 fi
-
-# Set the subdir name in the bin tree for matlab engine.
-if test "$pkg_MatlabInterface" = "yes"; then
-  MATLAB_ENG=matlab
-fi
-
-AC_SUBST(MATLAB_ENG)
 
 # Set the collaborative vars.
 if test "$pkg_CollabVis" = "yes"; then
@@ -672,6 +683,7 @@ case $host in
     SCI_CHECK_OS_VERSION(6.5,,
       configure: error: wrong Irix version. exiting.;exit)
     NUM_CPUS="`TERM=dumb top -n 1 | fgrep CPUs | cut -d' ' -f1`"    
+    WOFF_NUMBERS="$WOFF_NUMBERS 3625 3649"
     ;;
   *linux*)
     SCI_CHECK_OS_VERSION(2.2.17,,
@@ -958,7 +970,7 @@ case $host in
     CPP="$CC"
     CXXCPP="$CXX -c"
     ##  this WOFF is required for configure 
-    WOFF=" -woff 3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
+    WOFF=" -woff 3625,3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
     CPPFLAGS=" $WOFF -LANG:std"
     if test "$enable_64bit" = "yes"; then
       BINARYFLAGS="-64 -mips4"
@@ -1399,7 +1411,7 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.22
+  sci_tp_version=1.24
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
 
@@ -1745,9 +1757,9 @@ fi
 
 if test "$avr" = "yes"; then
   AC_MSG_WARN([
-  *** Will include the advance volume rendering code in compilation.  ***
-  *** configure can erroneously determine this platform can use avr.  ***
-  *** use --disable-advanced-volume-rendering if compilation fails.   ***
+  *** Including the Advance Volume Rendering (AVR) code in compilation.        ***
+  *** Note: configure can erroneously determine this platform can use AVR.     ***
+  *** use --disable-advanced-volume-rendering if compilation fails due to AVR. ***
   ])  
   COMPILE_AVR=1
   DEF_HAVE_AVR="#define HAVE_AVR_SUPPORT 1"
@@ -1938,7 +1950,7 @@ AC_SUBST(INC_TCL_H)
 # -- tk --
 if test -f "$_sci_lib/tkConfig.sh"; then 
   . $_sci_lib/tkConfig.sh; 
-  _sci_tk_inc="$_sci_inc $TK_SRC_DIR/generic"
+  _sci_tk_inc="$_sci_inc $TK_SRC_DIR/generic $TK_SRC_DIR/unix"
 fi
 
 # Note: TK_DEFS (used below to help resolve tk issues) comes from tkConfig.sh
@@ -2287,7 +2299,7 @@ if test "$with_magick" = "yes"; then
 else 
   if test "$with_magick"; then
     # If --with-magick has a parameter, then use it
-    _sci_lib="$with_magick"
+    _sci_lib="$with_magick/lib"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_inc="$with_magick/include"
     _sci_optional=specific
@@ -2297,30 +2309,28 @@ fi
 AC_MSG_CHECKING(for $_sci_optional ImageMagick)
 
 found_magic_config="no"
-for dir in "" $_sci_lib; do
 
-   if test -e $dir/../bin/Magick-config; then
-       found_magic_config="yes"
-       echo
-       AC_MSG_RESULT(Using $dir/../bin/Magick-config to set ImageMagick variables.)
+if test -e $_sci_lib/../bin/Magick-config; then
+    found_magic_config="yes"
+    echo
+    AC_MSG_RESULT(Using $_sci_lib/../bin/Magick-config to set ImageMagick variables.)
 
-       MAG_LIBS=`$dir/../bin/Magick-config --libs`
-       MAG_DIRS=`$dir/../bin/Magick-config --ldflags`
+    MAG_LIBS=`$_sci_lib/../bin/Magick-config --libs`
+    MAG_DIRS=`$_sci_lib/../bin/Magick-config --ldflags`
 
-       #MAGICK_LIB_DIR_FLAG=
-       #SCI_REMOVE_MINUS_L(MAGICK_LIB_FLAG,$MAG_DIRS,$MAG_LIBS)
+    #MAGICK_LIB_DIR_FLAG=
+    #SCI_REMOVE_MINUS_L(MAGICK_LIB_FLAG,$MAG_DIRS,$MAG_LIBS)
 
-       MAGICK_LIB_DIR_FLAG=`$dir/../bin/Magick-config --ldflags`
-       MAGICK_LIB_FLAG=`$dir/../bin/Magick-config --libs`
-       includes=`$dir/../bin/Magick-config --cppflags`
+    MAGICK_LIB_DIR_FLAG=`$_sci_lib/../bin/Magick-config --ldflags`
+    MAGICK_LIB_FLAG=`$_sci_lib/../bin/Magick-config --libs`
+    includes=`$_sci_lib/../bin/Magick-config --cppflags`
 
-       SCI_TRY_LINK(MAGICK,ImageMagick library and headers,magick/magick.h,
-                    $includes,$MAGICK_LIB_FLAG,$MAGICK_LIB_DIR_FLAG,,,required)
+    SCI_TRY_LINK(MAGICK,ImageMagick library and headers,magick/magick.h,
+                 $includes,$MAGICK_LIB_FLAG,$MAGICK_LIB_DIR_FLAG,,,required)
 
-       DEF_MAGICK="#define HAVE_MAGICK 1"
-       break
-    fi
-done
+    DEF_MAGICK="#define HAVE_MAGICK 1"
+    break
+fi
 
 if test "$found_magic_config" = "no"; then
    AC_MSG_RESULT(no.)
@@ -2661,9 +2671,24 @@ if test "$sci_required_mpi" = "yes"; then
               _sci_inc="$with_mpi/include"
            fi
         fi
+
+	# After each attempt to locate mpi, we need to verify that the mpi it
+	# chose is in the path we specified.  This is because some machines
+	# have MPI installed in a standard location and sometimes will choose
+	# that one over the one we specified.
+	the_file=libmpi
+	
         # /usr/include/mpi is the standard location of mpi on some linux dists.
         SCI_TRY_LINK(MPI,mpi library and header-1,mpi.h,
                      $_sci_inc /usr/include/mpi,mpi lam util pmpi,$_sci_lib,,,optional)
+
+        if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
+           test ! -e $with_mpi/lib/$the_file.so &&
+           test ! -e $with_mpi/lib/$the_file.a &&
+           test ! -e $with_mpi/lib/$the_file.dylib; then
+             AC_MSG_WARN(Found libmpi but not in requested directory: $with_mpi/lib)
+	     HAVE_MPI="no"
+        fi
 
         if test "$HAVE_MPI" != "yes"; then
           # Try without pmpi (and with pthreads) (for the newer version
@@ -2673,9 +2698,27 @@ if test "$sci_required_mpi" = "yes"; then
           SCI_TRY_LINK(MPI,mpi library and header-2,mpi.h,
           $_sci_inc /usr/include/mpi,mpi lam util pthread,$_sci_lib,-DMPIPP_H,,optional)
 
+          # verify that it was found in the location requested.
+          if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
+             test ! -e $with_mpi/lib/$the_file.so &&
+             test ! -e $with_mpi/lib/$the_file.a &&
+             test ! -e $with_mpi/lib/$the_file.dylib; then
+             AC_MSG_WARN(Found libmpi but not in requested directory: $with_mpi/lib)
+	     HAVE_MPI="no"
+          fi
+
           if test "$HAVE_MPI" != "yes"; then
              SCI_TRY_LINK(MPI,mpi library and header-3,mpi.h,
              $_sci_inc /usr/include/mpi,mpi,$_sci_lib,-DMPIPP_H,,optional)
+
+             # verify that it was found in the location requested.
+             if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
+                test ! -e $with_mpi/lib/$the_file.so &&
+                test ! -e $with_mpi/lib/$the_file.a &&
+                test ! -e $with_mpi/lib/$the_file.dylib; then
+                AC_MSG_WARN(Found libmpi but not in requested directory: $with_mpi/lib)
+	        HAVE_MPI="no"
+             fi
 
              if test "$HAVE_MPI" != "yes"; then
                 SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
@@ -3016,12 +3059,18 @@ if test "$sci_required_insight" = "yes"; then
     insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | sed 's/
 //'`"
     INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
-    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -litkjpeg -lITKDICOMParser -litkzlib"
+    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -lITKDICOMParser -litkzlib"
 
     INSIGHT_VERSION_MINOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MINOR' | sed 's/SET(ITK_VERSION_MINOR \"//' | sed 's/\")//' | sed 's/
 //'`"
-    if test "$INSIGHT_VERSION_MINOR" = "6"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff"
+    if test "$INSIGHT_VERSION_MINOR" = "9" || test "$INSIGHT_VERSION_MINOR" = "10"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
+    fi
+    if test "$INSIGHT_VERSION_MINOR" = "8" || test "$INSIGHT_VERSION_MINOR" = "6"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg"
+    fi
+    if test "$INSIGHT_VERSION_MINOR" = "4"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg"
     fi
 
     if ! test "$HAVE_PNG" = "yes"; then
@@ -3394,45 +3443,40 @@ _sci_optional=optional
 
 if test "$with_freetype" = "yes"; then
   # If --with-freetype is specified without a parameter, then it makes it required
-  _sci_lib="/usr/lib"
-  _sci_inc="/usr/include"
   _sci_optional=required
 elif test "$with_freetype"; then
   # If --with-freetype has a parameter, then use it
   _sci_lib="$with_freetype/lib"
   _sci_inc="$with_freetype/include"
   _sci_optional=specific
-else
-  _sci_lib="/usr/lib"
-  _sci_inc="/usr/include"
 fi
 
 AC_MSG_CHECKING(for $_sci_optional freetype)
 
 found_freetype_config="no"
 
-for dir in "" $_sci_lib; do
+if test -z "$_sci_lib"; then
+   freetype_bin=/usr/bin
+else
+   freetype_bin=$_sci_lib/../bin
+fi
 
-   if test -e $dir/../bin/freetype-config; then
-       found_freetype_config="yes"
-       echo
-       AC_MSG_RESULT(Using $dir/../bin/freetype-config to set freetype variables.)
+if test -e $freetype_bin/freetype-config; then
+    found_freetype_config="yes"
+    echo
+    AC_MSG_RESULT(Using $freetype_bin/freetype-config to set freetype variables.)
 
-       includes=`$dir/../bin/freetype-config --cflags`
-       FREETYPE_LIB_FLAG=`$dir/../bin/freetype-config --libs`
+    includes=`$freetype_bin/freetype-config --cflags`
+    SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
+                 $_sci_inc,freetype,$_sci_lib,$includes,,$_sci_optional)
 
-       SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
-                    _sci_inc,$FREETYPE_LIB_FLAG,$dir,$includes,,required)
+    INC_FREETYPE_H="$INC_FREETYPE_H $includes"
 
-       INC_FREETYPE_H="$INC_FREETYPE_H $includes"
-
-       DEF_FREETYPE="#define HAVE_FREETYPE 1"
-       break
-    fi
-done
+    DEF_FREETYPE="#define HAVE_FREETYPE 1"
+fi
 
 if test "$found_freetype_config" = "no"; then
-   AC_MSG_RESULT(no.)
+   AC_MSG_RESULT(No 'freetype-config' file found in $freetype_bin.  Skipping Freetype check.)
    if test "$_sci_optional" != "optional"; then
      echo
      AC_MSG_WARN(Cannot find a freetype-config file to get freetype variables.)
@@ -3461,11 +3505,11 @@ if test "$with_ftgl" = "yes"; then
   _sci_optional=required
 elif test "$with_ftgl"; then
   _sci_lib="$with_ftgl/lib"
-  _sci_inc="$with_ftgl/include/FTGL"
+  _sci_inc="$with_ftgl/include"
   _sci_optional=specific
 fi
 
-SCI_TRY_LINK(FTGL,ftgl library,FTGLTextureFont.h,$_sci_inc,ftgl,$_sci_lib,$INC_FREETYPE_H $FREETYPE_LIB_DIR_FLAG $FREETYPE_LIB_FLAG,,$_sci_optional)
+SCI_TRY_LINK(FTGL,ftgl library,FTGL/FTGLTextureFont.h,$_sci_inc,ftgl,$_sci_lib,$INC_FREETYPE_H $FREETYPE_LIB_DIR_FLAG $FREETYPE_LIB_FLAG,,$_sci_optional)
 
 if test "$HAVE_FTGL" = "yes"; then
   DEF_FTGL="#define HAVE_FTGL 1"
@@ -3617,9 +3661,6 @@ sci_defs_files="$sci_defs_files include/sci_defs/mdsplus_testdefs.h"
 # The sci_required_hdf5 could have been set to yes when using the
 # with_hdf5 agument or from a package in the aclocal.m4 it.
 # These are the only two locations that the sci_required_* should be set.
-
-_sci_lib="/usr/local/lib"			# default directory
-_sci_inc="/usr/local/include"
 
 if test "$sci_required_hdf5" = "yes"; then 
 
@@ -4143,6 +4184,20 @@ AC_SUBST(BUILD_SCIRUN2)
 ##  ---------------------------------------------------------------------
 ##  --------------------  generate output files  ------------------------
 ##  ---------------------------------------------------------------------
+
+if test -n "$WOFF_NUMBERS"; then
+  for num in $WOFF_NUMBERS; do
+    if test -z "$WOFF_COMMA_LIST"; then
+       WOFF_COMMA_LIST="$num"
+    else
+       WOFF_COMMA_LIST="$WOFF_COMMA_LIST,$num"
+    fi
+    WOFF_STRING="$WOFF_STRING -Wl,-woff -Wl,$num"
+  done
+  WOFF_STRING="-woff $WOFF_COMMA_LIST $WOFF_STRING"
+fi
+AC_SUBST(WOFF_STRING)
+
 SCI_ARG_VAR(CXXFLAGS,C++ compiler flags)
 
 scirun_obj_dir=`pwd`;

@@ -46,6 +46,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/HexVolField.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/Field.h>

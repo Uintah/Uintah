@@ -209,10 +209,14 @@ ShowMatrix::get_color(MatrixHandle mh, int row, int col)
   const MatrixData &data = get_matrix_data(mh);
   switch (color_mode_)
     {
-    case COLOR_BY_ROW: return cmap_->lookup((row-data.row_begin)/double(data.row_end-data.row_begin));break;
-    case COLOR_BY_COL: return cmap_->lookup((col-data.col_begin)/double(data.col_end-data.col_begin));break;
+    case COLOR_BY_ROW: 
+      return cmap_->lookup((row-data.row_begin)/double(data.row_end-data.row_begin));
+    case COLOR_BY_COL:
+      return cmap_->lookup((col-data.col_begin)/double(data.col_end-data.col_begin));
+    case COLOR_BY_VAL: 
+      return cmap_->lookup(get_value(mh,row,col));
     default:
-    case COLOR_BY_VAL: return cmap_->lookup(get_value(mh,row,col));break;
+      return NULL;
     }
 }
 

@@ -510,7 +510,7 @@ SetupFEMatrix::execute()
 	  tens.size() != (unsigned int)(dataBasis_.size())) {
         meshGen_ = hField->mesh()->generation;
         //! Need to build basis matrices
-        build_TriBasis_matrices(tsfiH, tens.size(), unitsScale, nprocs);
+        build_TriBasis_matrices(tsfiH, (int)tens.size(), unitsScale, nprocs);
       }
       //! Have basis matrices, compute combined matrix
       hGblMtrx_ = build_composite_matrix(tens);

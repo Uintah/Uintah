@@ -130,6 +130,10 @@ public:
   void			getData(int mask, FutureValue<GeometryData*>* result);
   GeomHandle		createGenAxes();   
 
+  void                  setMovie( int state );
+  void                  setMovieFrame( int movieframe );
+  void                  setMessage( string message );
+
   // UNICAM START
   void			unicam_choose(int X, int Y);
   void			unicam_rot(int X, int Y);
@@ -194,6 +198,7 @@ private:
   OpenGL*		renderer_;
   GuiInterface*		gui_;
   GuiContext*		ctx_;
+  string                tclID_;
   map<string,GuiInt*>	visible_;   // Which of the objects do we draw?
   map<string,int>	obj_tag_;
   bool			need_redraw_;

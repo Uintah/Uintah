@@ -35,6 +35,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Geometry/Tensor.h>
 #include <sci_hash_map.h>
 
 namespace BioPSE {

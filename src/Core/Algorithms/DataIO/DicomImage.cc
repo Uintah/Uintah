@@ -83,7 +83,7 @@ DicomImage::DicomImage()
 // Arguments   : none
 //
  
-DicomImage::DicomImage( itk::DicomImageIO::Pointer io, 
+DicomImage::DicomImage( itk::DICOMImageIO2::Pointer io, 
                         ImageNDType::Pointer image, string id )
 {
   ImageNDType::RegionType region = image->GetLargestPossibleRegion();
@@ -96,7 +96,11 @@ DicomImage::DicomImage( itk::DicomImageIO::Pointer io,
 
   memcpy( pixel_buffer_, data, num_pixels_ * sizeof(PixelType) );
 
+#if ((ITK_VERSION_MAJOR == 1) && (ITK_VERSION_MINOR >= 8)) || (ITK_VERSION_MAJOR > 1)
+  const std::type_info& type = io->GetComponentTypeInfo();
+#else
   const std::type_info& type = io->GetPixelType();
+#endif
 
   if( type == typeid(short) )
   {

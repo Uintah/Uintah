@@ -691,29 +691,30 @@ void ApplyFEMCurrentSource::execute()
 //
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMeshHandle hTriMesh )
+void
+ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMeshHandle hTriMesh )
 {
-    int numParams=4;
+  int numParams=4;
 
     // Get the electrode parameters input vector
     // -----------------------------------------
-    MatrixHandle  hElectrodeParams;
+  MatrixHandle  hElectrodeParams;
 
-    if (!iportElectrodeParams_->get(hElectrodeParams) || !hElectrodeParams.get_rep()) 
+  if (!iportElectrodeParams_->get(hElectrodeParams) || !hElectrodeParams.get_rep()) 
     {
-        error("Can't get handle to electrode parameters matrix.");
-        return;
+      error("Can't get handle to electrode parameters matrix.");
+      return;
     }
 
-    ColumnMatrix* electrodeParams = scinew ColumnMatrix(numParams);
-    electrodeParams=dynamic_cast<ColumnMatrix*>(hElectrodeParams.get_rep());
+  ColumnMatrix* electrodeParams = scinew ColumnMatrix(numParams);
+  electrodeParams=dynamic_cast<ColumnMatrix*>(hElectrodeParams.get_rep());
 
-    unsigned int electrodeModel = (unsigned int)((*electrodeParams)[0]);
-    int numElectrodes           = (int) ( (*electrodeParams)[1]);
-    double electrodeLen         = (*electrodeParams)[2];
-    int startNodeIndex          = (int) ( (*electrodeParams)[3]);
+  unsigned int electrodeModel = (unsigned int)((*electrodeParams)[0]);
+  int numElectrodes           = (int) ( (*electrodeParams)[1]);
+  double electrodeLen         = (*electrodeParams)[2];
+  int startNodeIndex          = (int) ( (*electrodeParams)[3]);
 
-    cout << "electrode model = " << electrodeModel << "  length= " << electrodeLen << endl;
+  cout << "electrode model = " << electrodeModel << "  length= " << electrodeLen << endl;
 
 
     // Get the current pattern input
@@ -724,199 +725,199 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
     // so that it doesn't influence the computation. 
     // This input is used only for models other than the continuum model
 
-    MatrixHandle  hCurrentPattern;
-    if ((!iportCurrentPattern_->get(hCurrentPattern) || !hCurrentPattern.get_rep()) && (electrodeModel != CONTINUUM_MODEL)) 
+  MatrixHandle  hCurrentPattern;
+  if ((!iportCurrentPattern_->get(hCurrentPattern) || !hCurrentPattern.get_rep()) && (electrodeModel != CONTINUUM_MODEL)) 
     {
-        error("Can't get handle to current pattern matrix.");
-        return;
+      error("Can't get handle to current pattern matrix.");
+      return;
     }
 
-    // Get the current pattern index
-    // -----------------------------
-    // This is used for calculating the current value if the continuum model is used 
-    MatrixHandle  hCurrentPatternIndex;
-    ColumnMatrix* currPatIdx;
-    int           k = 0;
+  // Get the current pattern index
+  // -----------------------------
+  // This is used for calculating the current value if the continuum model is used 
+  MatrixHandle  hCurrentPatternIndex;
+  ColumnMatrix* currPatIdx;
+  int           k = 0;
 
-    // Copy the input current index into local variable, k 
-    // ---------------------------------------------------
-    if (iportCurrentPatternIndex_->get(hCurrentPatternIndex) && 
-        (currPatIdx=dynamic_cast<ColumnMatrix*>(hCurrentPatternIndex.get_rep())) && 
-        (currPatIdx->nrows() == 1))
+  // Copy the input current index into local variable, k 
+  // ---------------------------------------------------
+  if (iportCurrentPatternIndex_->get(hCurrentPatternIndex) && 
+      (currPatIdx=dynamic_cast<ColumnMatrix*>(hCurrentPatternIndex.get_rep())) && 
+      (currPatIdx->nrows() == 1))
     {
-        k=static_cast<int>((*currPatIdx)[0]);
+      k=static_cast<int>((*currPatIdx)[0]);
     }
-    else
+  else
     {
-        msgStream_ << "The supplied current pattern index is not a 1x1 matrix" << endl;
+      msgStream_ << "The supplied current pattern index is not a 1x1 matrix" << endl;
     }
 
-    // Get the FieldBoundary input
-    // ---------------------------
-    FieldHandle      hFieldBoundary;
-    CurveMeshHandle  hBoundaryMesh;
-    LockingHandle<CurveField<double> > hCurveBoundary;
-    bool boundary = false;
-    if ( iportFieldBoundary_->get(hFieldBoundary) )
+  // Get the FieldBoundary input
+  // ---------------------------
+  FieldHandle      hFieldBoundary;
+  CurveMeshHandle  hBoundaryMesh;
+  LockingHandle<CurveField<double> > hCurveBoundary;
+  bool boundary = false;
+  if ( iportFieldBoundary_->get(hFieldBoundary) )
     { 
-        if (hFieldBoundary.get_rep())
+      if (hFieldBoundary.get_rep())
         {
-            // Check field type - this only works for CurveFields<double> extracted from a TriSurf
-            // -----------------------------------------------------------------------------------
-            if ( (hFieldBoundary->get_type_name(0) == "CurveField") &&
-                 (hFieldBoundary->get_type_name(1) == "double") )
+          // Check field type - this only works for CurveFields<double> extracted from a TriSurf
+          // -----------------------------------------------------------------------------------
+          if ( (hFieldBoundary->get_type_name(0) == "CurveField") &&
+               (hFieldBoundary->get_type_name(1) == "double") )
             {
-	        remark("Field boundary input is a CurveField<double>");
-                hCurveBoundary = dynamic_cast<CurveField<double>*> ( hFieldBoundary.get_rep() );
-                hBoundaryMesh = hCurveBoundary->get_typed_mesh();
+              remark("Field boundary input is a CurveField<double>");
+              hCurveBoundary = dynamic_cast<CurveField<double>*> ( hFieldBoundary.get_rep() );
+              hBoundaryMesh = hCurveBoundary->get_typed_mesh();
 
-  	        CurveMesh::Node::size_type nsize;
-                hBoundaryMesh->size(nsize);
-                int numCurveNodes = (int) nsize;
-                cout << "There are " << numCurveNodes << " nodes in the boundary field." << endl;
+              CurveMesh::Node::size_type nsize;
+              hBoundaryMesh->size(nsize);
+              int numCurveNodes = (int) nsize;
+              cout << "There are " << numCurveNodes << " nodes in the boundary field." << endl;
 
-                boundary = true;
+              boundary = true;
 	    }
-            else
+          else
 	    {
-                remark("Supplied boundary field is not of type CurveField<double>");
+              remark("Supplied boundary field is not of type CurveField<double>");
 	    }
 	}
     }
-    else
+  else
     {
-        msgStream_ << "There is an error in the supplied boundary field" << endl;
+      msgStream_ << "There is an error in the supplied boundary field" << endl;
     }
 
-    // If a boundary field was supplied, check for the matrix that maps boundary
-    // nodes to mesh nodes. This matrix is the output of the module: InterpolantToTransferMatrix
-    // -----------------------------------------------------------------------------------------
+  // If a boundary field was supplied, check for the matrix that maps boundary
+  // nodes to mesh nodes. This matrix is the output of the module: InterpolantToTransferMatrix
+  // -----------------------------------------------------------------------------------------
 
-    MatrixHandle      hBoundaryToMesh;
+  MatrixHandle      hBoundaryToMesh;
 
-    if (boundary)
+  if (boundary)
     {
-        if ( !(iportBoundaryToMesh_->get(hBoundaryToMesh) &&
-	       hBoundaryToMesh.get_rep()) )
+      if ( !(iportBoundaryToMesh_->get(hBoundaryToMesh) &&
+             hBoundaryToMesh.get_rep()) )
 	{
-     	    // disable susequent boundary-related code if we had a problem here
-            boundary = false;
+          // disable susequent boundary-related code if we had a problem here
+          boundary = false;
 	}
 
     }
     
     
-    // Get the interp field 
-    // --------------------
-    // This is the location of the electrodes interpolated onto the body mesh. The 
-    // presence of this input means the user is electing to specify electrode locations
-    // manually rather than use an automatic placement scheme selected through the 
-    // electrode manager.
-    // --------------------------------------------------------------------------------
-    FieldHandle hInterp;
-    int numInterpFieldElectrodes;
+  // Get the interp field 
+  // --------------------
+  // This is the location of the electrodes interpolated onto the body mesh. The 
+  // presence of this input means the user is electing to specify electrode locations
+  // manually rather than use an automatic placement scheme selected through the 
+  // electrode manager.
+  // --------------------------------------------------------------------------------
+  FieldHandle hInterp;
+  //int numInterpFieldElectrodes;
 
-    if ( iportInterp_->get(hInterp) && hInterp.get_rep()) 
+  if ( iportInterp_->get(hInterp) && hInterp.get_rep()) 
     {
-        // determine the dimension (number of electrodes) in the interp'd field of electrodes
-        // ----------------------------------------------------------------------------------
-        PointCloudMesh::Node::size_type nsize; 
-        LockingHandle<PointCloudField<vector<pair<NodeIndex<int>,double> > > >hInterpField;
-        PointCloudMeshHandle hPtCldMesh;
-        PointCloudField<vector<pair<NodeIndex<int>,double> > >* interp = 
-            dynamic_cast<PointCloudField<vector<pair<NodeIndex<int>,double> > > *> (hInterp.get_rep());
-        hPtCldMesh = interp->get_typed_mesh();
-        hPtCldMesh->size(nsize);
-        numInterpFieldElectrodes = (int) nsize;
+      // determine the dimension (number of electrodes) in the interp'd field of electrodes
+      // ----------------------------------------------------------------------------------
+      PointCloudMesh::Node::size_type nsize; 
+      LockingHandle<PointCloudField<vector<pair<NodeIndex<int>,double> > > >hInterpField;
+      PointCloudMeshHandle hPtCldMesh;
+      PointCloudField<vector<pair<NodeIndex<int>,double> > >* interp = 
+        dynamic_cast<PointCloudField<vector<pair<NodeIndex<int>,double> > > *> (hInterp.get_rep());
+      hPtCldMesh = interp->get_typed_mesh();
+      hPtCldMesh->size(nsize);
+      //numInterpFieldElectrodes = (int) nsize;
     }
-    // if electrode interp field is not supplied, determine electrode centers using 
-    // number of electrodes, spacing from the electrode manager and extracted field boundary
-    // -------------------------------------------------------------------------------------
-    else
+  // if electrode interp field is not supplied, determine electrode centers using 
+  // number of electrodes, spacing from the electrode manager and extracted field boundary
+  // -------------------------------------------------------------------------------------
+  else
     {
 
     }
     
-    // Make a local copy of the input current pattern 
-    // Hold off on copying the current pattern until after we check if there's an interpolated 
-    // electrode field as this could influence the value of numElectrodes
-    // Also, this input is not needed for the continuum case and may not be present in this case.
-    // ------------------------------------------------------------------------------------------
-    ColumnMatrix* currentPattern = scinew ColumnMatrix(numElectrodes);
-    currentPattern=dynamic_cast<ColumnMatrix*>(hCurrentPattern.get_rep()); 
+  // Make a local copy of the input current pattern 
+  // Hold off on copying the current pattern until after we check if there's an interpolated 
+  // electrode field as this could influence the value of numElectrodes
+  // Also, this input is not needed for the continuum case and may not be present in this case.
+  // ------------------------------------------------------------------------------------------
+  ColumnMatrix* currentPattern = scinew ColumnMatrix(numElectrodes);
+  currentPattern=dynamic_cast<ColumnMatrix*>(hCurrentPattern.get_rep()); 
 
 
     // Allocate vector for the mesh-to-electrode-map
-    ColumnMatrix* meshToElectrodeMap;
-    TriSurfMesh::Node::size_type msize;
-    hTriMesh->size(msize);
-    int numMeshNodes = (int) msize;
+  ColumnMatrix* meshToElectrodeMap;
+  TriSurfMesh::Node::size_type msize;
+  hTriMesh->size(msize);
+  int numMeshNodes = (int) msize;
 
-    meshToElectrodeMap = scinew ColumnMatrix(msize);
+  meshToElectrodeMap = scinew ColumnMatrix(msize);
 
-    // Initialize meshToElectrodeMap to all -1s. -1 indicates a non-electrode node; later we will 
-    // identify the electrode nodes.
-    for (int i = 0; i < numMeshNodes; i++)
+  // Initialize meshToElectrodeMap to all -1s. -1 indicates a non-electrode node; later we will 
+  // identify the electrode nodes.
+  for (int i = 0; i < numMeshNodes; i++)
     {
-        (*meshToElectrodeMap)[i] = -1;
+      (*meshToElectrodeMap)[i] = -1;
     }
 
 
-    // TRI + ELECTRODE SET + CONTINUUM MODEL
-    // -------------------------------------
-    if (electrodeModel == CONTINUUM_MODEL)
+  // TRI + ELECTRODE SET + CONTINUUM MODEL
+  // -------------------------------------
+  if (electrodeModel == CONTINUUM_MODEL)
     {
-        if (boundary)
+      if (boundary)
   	{
-	    // Visit each node on the boundary mesh.
-  	    CurveMesh::Node::iterator nodeItr;
-	    CurveMesh::Node::iterator nodeItrEnd;
+          // Visit each node on the boundary mesh.
+          CurveMesh::Node::iterator nodeItr;
+          CurveMesh::Node::iterator nodeItrEnd;
   	  
-            hBoundaryMesh->begin(nodeItr);
-            hBoundaryMesh->end(nodeItrEnd);
+          hBoundaryMesh->begin(nodeItr);
+          hBoundaryMesh->end(nodeItrEnd);
   
-            Array1<int>       meshNodeIndex;
-            Array1<double>    weight;
+          Array1<int>       meshNodeIndex;
+          Array1<double>    weight;
 
-            int numBoundaryNodes = hBoundaryToMesh->nrows();
+          int numBoundaryNodes = hBoundaryToMesh->nrows();
 
-            for (; nodeItr != nodeItrEnd; ++nodeItr) 
+          for (; nodeItr != nodeItrEnd; ++nodeItr) 
             {		  
-                Point p;
-	        hBoundaryMesh->get_point(p, *nodeItr);
+              Point p;
+              hBoundaryMesh->get_point(p, *nodeItr);
 
-  	        cout << "Cont------------ *nodeItr  = " << *nodeItr << " -----------------------------" << endl;
+              cout << "Cont------------ *nodeItr  = " << *nodeItr << " -----------------------------" << endl;
 		                                                
-                cout << " p=" << p << endl;
+              cout << " p=" << p << endl;
 
-                // Find the corresponding node index in the body (TriSurf) mesh.
-    		hBoundaryToMesh->getRowNonzeros(*nodeItr, meshNodeIndex, weight);
+              // Find the corresponding node index in the body (TriSurf) mesh.
+              hBoundaryToMesh->getRowNonzeros(*nodeItr, meshNodeIndex, weight);
 		
-                cout << "Boundary node " << (int) (*nodeItr) << " maps to mesh node " << meshNodeIndex[0] << endl; 
+              cout << "Boundary node " << (int) (*nodeItr) << " maps to mesh node " << meshNodeIndex[0] << endl; 
                 
-                int rhsIndex = meshNodeIndex[0];
+              int rhsIndex = meshNodeIndex[0];
 
-                // Get the value for the current at this node and store this value in the RHS output vector
-	        (*rhs)[rhsIndex] = CalcContinuumTrigCurrent(p, k, numBoundaryNodes);
+              // Get the value for the current at this node and store this value in the RHS output vector
+              (*rhs)[rhsIndex] = CalcContinuumTrigCurrent(p, k, numBoundaryNodes);
 
-                // Tag this node as an "electrode" node
-                (*meshToElectrodeMap)[rhsIndex] = (*nodeItr);
+              // Tag this node as an "electrode" node
+              (*meshToElectrodeMap)[rhsIndex] = (*nodeItr);
 	    }
     
 	} // end if (boundary)
 
     } // end else (if model == CONTINUUM_MODEL) 
 
-    // TRI + ELECTRODE SET + GAP MODEL
-    // -------------------------------
-    else if (electrodeModel == GAP_MODEL ) 
+  // TRI + ELECTRODE SET + GAP MODEL
+  // -------------------------------
+  else if (electrodeModel == GAP_MODEL ) 
     {
       // print out the current pattern
       // -----------------------------
       for (int i = 0; i < numElectrodes; i++)
-      {
+        {
       	  cout << i << "  " << (*currentPattern)[i] << endl;
-      }
+        }
 
       // print out number of electrodes according to electrode manager
       cout << "Creating " << numElectrodes << " electrodes of length " << electrodeLen << endl;
@@ -934,10 +935,10 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
 
       // Traverse the boundary (curve) field and determine its length
       if (!boundary)
-      {
+        {
 	  error("Cannot proceed without a field boundary");
 	  return;
-      }
+        }
                               
       // Iterate over edges in the boundary and build a look-up-table that maps each
       // node index to its neighbor node indices
@@ -965,7 +966,7 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
       double boundaryLength = 0.0;
 
       for (; edgeItr != edgeItrEnd; ++edgeItr) 
-      {		  
+        {		  
           hBoundaryMesh->get_nodes(childNodes, *edgeItr);
           unsigned int nodeIndex0 = (unsigned int) childNodes[0];
           unsigned int nodeIndex1 = (unsigned int) childNodes[1];
@@ -981,7 +982,7 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
           // Accumulate the total boundary length
           boundaryLength += edgeLength[(unsigned int) *edgeItr];
 
-      }
+        }
 
       cout << "Boundary length: " << boundaryLength << endl;
 
@@ -997,39 +998,39 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
       Array1<int> nodeElectrodeMap;
       nodeElectrodeMap.resize(numBoundaryNodes);
       for (int i = 0; i < numBoundaryNodes; i++)
-      {
+        {
           nodeElectrodeMap[i] = -1;
-      }
+        }
 
       Array1<Array1<bool> > nodeFlags;
       nodeFlags.resize(numBoundaryNodes);
       for (int i = 0; i < numBoundaryNodes; i++)
-      {
+        {
 	  nodeFlags[i].resize(2);
           for (int j = 0; j < 2; j++)
-	  {
+            {
               nodeFlags[i][j] = false;
-	  }
-      }
+            }
+        }
 
       Array1<Array1<double> > adjacentEdgeLengths;
       adjacentEdgeLengths.resize(numBoundaryNodes);
       for (int i = 0; i < numBoundaryNodes; i++)
-      {
+        {
 	  adjacentEdgeLengths[i].resize(2);
           for (int j = 0; j < 2; j++)
-	  {
-             adjacentEdgeLengths[i][j] = 0.0;
-	  }
-      }
+            {
+              adjacentEdgeLengths[i][j] = 0.0;
+            }
+        }
 
       // Let the node in the boundary mesh given by startNodeIndex (in the electrodeParams input) be the 
       // first node in the first electrode.
       int prevNode = -1;
       int currNode = startNodeIndex;
       int nextNode = neighborNodes[currNode][1];  // selecting element [0] or [1] influences the direction
-                                                  // in which we traverse the boundary (this should be investigated;
-                                                  // [1] seems to work well relative to the analytic solution.
+      // in which we traverse the boundary (this should be investigated;
+      // [1] seems to work well relative to the analytic solution.
 
       double cumulativeElectrodeLength = 0.0;
       double cumulativeElectrodeSeparation = 0.0;
@@ -1044,25 +1045,24 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
       bool firstNode = true;  // flag to indicate this is the first node in an electrode
 
       for (int i = 0; i < numElectrodes; i++)
-      {
-
-          int lastElectrodeNode = -1;  // for use in determining first node in next electrode
+        {
+          //int lastElectrodeNode = -1;  // for use in determining first node in next electrode
 
 	  cout << "Gap=================== i = " << i << " =============================" << endl;
           while (!done)
-	  {
+            {
 	      // Label the current node with the current electrode ID 
 	      if (nodeElectrodeMap[currNode] == -1) 
-              {
+                {
                   nodeElectrodeMap[currNode] = i;
-	      }
+                }
 
               if (firstNode) 
-              {
+                {
 		  cout << "First node is: " << currNode << endl;
                   nodeFlags[currNode][0] = true;
                   firstNode = false;
-	      }
+                }
 
   	      // Traverse the boundary until distance closest to the desired electrode length is achieved.
               // -----------------------------------------------------------------------------------------
@@ -1070,13 +1070,13 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
               // First, determine if this is the degenerate 1-node electrode case
               // ----------------------------------------------------------------
               if (electrodeLen <= maxError)
-	      {
+                {
                   nodeFlags[currNode][1] = true;  // the current node is the last node
                   done = true;
                   cumulativeElectrodeLength = 0.0;
                   cout << "done with this electrode (aa) " << currNode << " is last node in this electrode" << endl;
-                  lastElectrodeNode = currNode;
-	      }
+                  //lastElectrodeNode = currNode;
+                }
              
               // Find the index of the edge between currNode and nextNode
               // --------------------------------------------------------
@@ -1084,31 +1084,31 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
 	      int candidateEdgeIndex1 = neighborEdges[currNode][1];
 
               if ((int) neighborEdges[nextNode][0] == candidateEdgeIndex0 )
-	      {
+                {
   		  currEdgeIndex = candidateEdgeIndex0;
-	      }
+                }
               else if ((int) neighborEdges[nextNode][1] == candidateEdgeIndex0 )
-	      {
+                {
 		  currEdgeIndex = candidateEdgeIndex0;
-	      }
+                }
               else if ((int) neighborEdges[nextNode][0] == candidateEdgeIndex1 )
-	      {
+                {
 	          currEdgeIndex = candidateEdgeIndex1;
-	      }
+                }
               else if ((int) neighborEdges[nextNode][1] == candidateEdgeIndex1 )
-	      {
+                {
 	          currEdgeIndex = candidateEdgeIndex1;
-	      }
+                }
 
 	      // For first nodes that are not also last nodes, store the forward direction adjacent edge length
               if (nodeFlags[currNode][1] != true)
-	      {
+                {
                   adjacentEdgeLengths[currNode][1] = edgeLength[currEdgeIndex];
-	      }
+                }
               
               // Handle case where electrode covers more than one node
               if (!done)  
-	      {
+                {
 		  // Determine if it is better to include the next node or the next two nodes 
                   // (If the effective electrode length will be closer to the desired electrode length.)
 
@@ -1120,13 +1120,13 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
                   int tempCurrNode = nextNode;
                   int tempNextNode = -1;
                   if ((int) neighborNodes[tempCurrNode][1] != tempPrevNode)
-	          {
+                    {
                       tempNextNode = (int) neighborNodes[tempCurrNode][1];
-	          }
+                    }
 	          else
-	          {
+                    {
                       tempNextNode = (int) neighborNodes[tempCurrNode][0];
-	          }
+                    }
   
                   // Find the index of the edge between tempCurrNode and tempNextNode
                   // ----------------------------------------------------------------
@@ -1136,27 +1136,27 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
                   int tempEdgeIndex = -1;
 
                   if ((int) neighborEdges[tempNextNode][0] == candidateEdgeIndex0 )
-	          {
+                    {
   		      tempEdgeIndex = candidateEdgeIndex0;
-	          }
+                    }
                   else if ((int) neighborEdges[tempNextNode][1] == candidateEdgeIndex0 )
-	          {
+                    {
 		      tempEdgeIndex = candidateEdgeIndex0;
-	          }
+                    }
                   else if ((int) neighborEdges[tempNextNode][0] == candidateEdgeIndex1 )
-	          {
+                    {
 	              tempEdgeIndex = candidateEdgeIndex1;
-	          }
+                    }
                   else if ((int) neighborEdges[tempNextNode][1] == candidateEdgeIndex1 )
-	          {
+                    {
 	              tempEdgeIndex = candidateEdgeIndex1;
-	          }
+                    }
 
 	          double testLength2 = testLength1 + edgeLength[tempEdgeIndex];
                   double testError2 = Abs(electrodeLen - testLength2);
 
                   if (testError1 < testError2)
-		  {
+                    {
   		      // this means the nearer node achieves an electrode length closer to that desired
                       // and that this node is the last node in the electrode
   		      nodeElectrodeMap[nextNode] = i;
@@ -1168,11 +1168,11 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
 
                       done = true;
 		      cout << "Last node is: " << nextNode << endl;
-                      lastElectrodeNode = nextNode;
+                      //lastElectrodeNode = nextNode;
 
-		  }
+                    }
                   else
-		  {
+                    {
                       // this means the further node achieves an electrode length closer to that desired
   		      nodeElectrodeMap[nextNode] = i;
                       cumulativeElectrodeLength = testLength1;
@@ -1183,16 +1183,16 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
 
 		      cout << "Node " << nextNode << " is a middle node" << endl;
 
-		  }
+                    }
 
                   // advance node pointers whether the electrode stops or continues
                   prevNode = tempPrevNode;
                   currNode = tempCurrNode;
                   nextNode = tempNextNode;
 
-	      } // end if (!done)
+                } // end if (!done)
 
-          }  // end while (!done)
+            }  // end while (!done)
 
 	  // At this point, we've finished with the current electrode.
           // Now we need to find the first node in the next electrode - this will be based on the value of
@@ -1203,40 +1203,40 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
           bool startNewElectrode = false;
 
           while (!startNewElectrode)
-	  {
+            {
 	      cumulativeElectrodeSeparation += edgeLength[currEdgeIndex];
 
               currError = Abs(electrodeSeparation - cumulativeElectrodeSeparation);
 
               if (currError <= maxError)
-	      {
+                {
 		  // We're within 1/2 an edge segment of the ideal electrode separation.
 		  prevNode = currNode;
                   currNode = nextNode;
 
                   // Initialize nextNode
                   if ((int) neighborNodes[currNode][1] != prevNode)
-	          {
+                    {
                       nextNode = neighborNodes[currNode][1];
-	          }
+                    }
 	          else
-	          {
+                    {
                       nextNode = neighborNodes[currNode][0];
-	          }
+                    }
 
                   startNewElectrode = true;
                       
 
 		  cout << "First node in next electrode : " << currNode << endl;
-	      }
+                }
               else if (cumulativeElectrodeSeparation > electrodeSeparation)
-	      {
+                {
 		  // The current error is greater than we allow, and we've exceeded the separation we want.
 		  // We're trying to make the first node in the next electrode equal to the last node 
                   // in the last electrode - this is not allowed
 	          error("Electrodes cannot overlap.");
 	          return;                  
-	      }
+                }
               // Otherwise,
               // The current error is greater than 1/2 an edge segment, and the cumulativeElectrodeSeparation
               // is still less than what we want. This happens when we have more than one non-electrode
@@ -1244,45 +1244,45 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
               // do nothing in this case... 
                  
 	      if (!startNewElectrode)
-	      {
+                {
                   prevNode = currNode;
                   currNode = nextNode;
                   if ((int)neighborNodes[currNode][1] != prevNode)
-	          {
+                    {
                       nextNode = neighborNodes[currNode][1];
-	          }
+                    }
 	          else
-	          {
+                    {
                       nextNode = neighborNodes[currNode][0];
-	          }
+                    }
                   cout << "prev: " << prevNode << " curr: " << currNode << " next: " << nextNode << endl;        
-	      }
+                }
 
-	  }  // end while (!startNewElectrode)
+            }  // end while (!startNewElectrode)
 
 	  done = false;
           firstNode = true;
           cumulativeElectrodeLength = 0.0;
           cumulativeElectrodeSeparation = 0.0;
 
-      } 
+        } 
 
       // The following code was used for testing while under development - commented out for now
      
       for (int i = 0; i < numBoundaryNodes; i++)
-      {
+        {
           cout << i << "  " << nodeElectrodeMap[i] << endl;
-      }
+        }
 
       for (int i = 0; i < numBoundaryNodes; i++)
-      {
+        {
       	  cout << i << "  " << (int) nodeFlags[i][0] << " " << (int) nodeFlags[i][1] << endl;
-      }
+        }
 
       for (int i = 0; i < numBoundaryNodes; i++)
-      {
+        {
       	  cout << i << "  " << adjacentEdgeLengths[i][0] << "  " << adjacentEdgeLengths[i][1] << endl;
-      }
+        }
       
 
       cout << "Currents assigned to electrode nodes" << endl;
@@ -1291,34 +1291,34 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
       // Determine the currents for the RHS vector
       // -----------------------------------------
       for (int i = 0; i < numBoundaryNodes; i++)
-      {
-	// Note: size of the currentPattern vector must be equal to the number of electrodes!!
-        // test this above
-        // -----------------------------------------------------------------------------------
+        {
+          // Note: size of the currentPattern vector must be equal to the number of electrodes!!
+          // test this above
+          // -----------------------------------------------------------------------------------
 	  if (nodeElectrodeMap[i] != -1 )  // this is an electrode node
-	  {
+            {
 	      double basisInt = 0.0;
               double current = 0.0;
               if ( (nodeFlags[i][0] == 1) && (nodeFlags[i][1] == 1) )  // special case: single node electrode
-	      {
+                {
 		  current = (*currentPattern)[ nodeElectrodeMap[i] ];
-	      }
+                }
   	      else if (nodeFlags[i][0] == 1)  // this is the first node in an electrode
-	      {
+                {
 		  basisInt = 0.5 * adjacentEdgeLengths[i][1];
                   current = basisInt * (*currentPattern)[ nodeElectrodeMap[i] ];
-	      }
+                }
               else if (nodeFlags[i][1] == 1)  // this is the last node in an electrode
-	      {
+                {
 		  basisInt = 0.5 * adjacentEdgeLengths[i][0];
                   current = basisInt * (*currentPattern)[ nodeElectrodeMap[i] ];
 
-	      }
+                }
 	      else  // this is a middle node in an electrode
-	      {
+                {
 	          basisInt = 0.5 * adjacentEdgeLengths[i][0] + 0.5 * adjacentEdgeLengths[i][1];
                   current = basisInt * (*currentPattern)[ nodeElectrodeMap[i] ];
-              }
+                }
 
               Array1<int>       meshNodeIndex;
               Array1<double>    weight;
@@ -1337,8 +1337,8 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
               // Tag this node as an "electrode" node using the electrode index
               (*meshToElectrodeMap)[rhsIndex] = nodeElectrodeMap[i];
 
-          }
-      }
+            }
+        }
 
       // The following code was used for testing while under development - commented out for now
       
@@ -1356,18 +1356,18 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
 
     } // end if GAP model
    
-    //  Debugging statements - leave commented out for now
-    //  TriSurfMesh::Node::size_type msize;
-    //  hTriMesh->size(msize);
-    //  int numMeshNodes = (int) msize;
+  //  Debugging statements - leave commented out for now
+  //  TriSurfMesh::Node::size_type msize;
+  //  hTriMesh->size(msize);
+  //  int numMeshNodes = (int) msize;
 
-    //  for (int i = 0; i < numMeshNodes; i++)
-    //  {
-    //	if ( abs( (*rhs)[i] ) > 0 )  cout << "mesh node index: " << i << " "<< (*rhs)[i] << endl;
-    //  }
+  //  for (int i = 0; i < numMeshNodes; i++)
+  //  {
+  //	if ( abs( (*rhs)[i] ) > 0 )  cout << "mesh node index: " << i << " "<< (*rhs)[i] << endl;
+  //  }
 
-    //! Send the meshToElectrodeMap
-    oportMeshToElectrodeMap_->send(MatrixHandle(meshToElectrodeMap)); 
+  //! Send the meshToElectrodeMap
+  oportMeshToElectrodeMap_->send(MatrixHandle(meshToElectrodeMap)); 
     
 }
 
@@ -1384,27 +1384,27 @@ void ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMe
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 double ApplyFEMCurrentSource::CalcContinuumTrigCurrent(Point p, int k, int numBoundaryNodes)
 {
-    double current;
+  double current;
 
-    double theta = ComputeTheta(p);
+  double theta = ComputeTheta(p);
 
-    cout << "p = " << p.x() << "," << p.y() << "  theta = " << theta*180/PI << " k = " << k ;
-    cout << " numBoundaryNodes = " << numBoundaryNodes << endl;  
+  cout << "p = " << p.x() << "," << p.y() << "  theta = " << theta*180/PI << " k = " << k ;
+  cout << " numBoundaryNodes = " << numBoundaryNodes << endl;  
     
-    if ( k < (numBoundaryNodes/2) + 1 )
+  if ( k < (numBoundaryNodes/2) + 1 )
     {
-        cout << "using cos" << endl;
-        current = cos(k*theta);
+      cout << "using cos" << endl;
+      current = cos(k*theta);
     }
-    else
+  else
     {
-        cout << "using sin" << endl;
-        current = sin((k-numBoundaryNodes/2)*theta);
+      cout << "using sin" << endl;
+      current = sin((k-numBoundaryNodes/2)*theta);
     }
 
-    cout << "current = " << current << endl;
+  cout << "current = " << current << endl;
 
-    return current;
+  return current;
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -47,6 +47,7 @@
 #include <sci_defs/template_defs.h>
 
 #include <Core/share/share.h>
+#include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Persistent.h>
 

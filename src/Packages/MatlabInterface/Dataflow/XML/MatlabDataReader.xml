@@ -296,14 +296,17 @@
 	<section>
 	<title>See Also </title>
 	<p>
+	<modref package="MatlabInterface" name="Matlab" />,	
+	<modref package="MatlabInterface" name="MatlabBundelsReader" />,	
+	<modref package="MatlabInterface" name="MatlabBundlesWriter" />,	
 	<modref package="MatlabInterface" name="MatlabDataReader" />,	
 	<modref package="MatlabInterface" name="MatlabDataWriter" />,	
 	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
-	<modref package="MatlabInterface" name="MatlabFieldsWriteer" />,
+	<modref package="MatlabInterface" name="MatlabFieldsWriter" />,
 	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
-	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
-	<modref package="MatlabInterface" name="MatlabMatricesWriter" />,
-	<modref package="MatlabInterface" name="MatlabFieldsWriter" />	
+	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
+	<modref package="MatlabInterface" name="MatlabNrrdsWriter" />,
+	<modref package="MatlabInterface" name="MatlabNrrdsReader" />	
 	</p>
 	</section>  
 	  
@@ -313,6 +316,13 @@
   </implementation>
   <io>
     <inputs lastportdynamic="no">
+<!--
+      <port>
+        <name>filename</name>
+        <datatype>SCIRun::Nrrd</datatype>
+        <description>filename store as a char array in a nrrd</description>
+      </port>
+-->        
     </inputs>
     <outputs>
       <port>
@@ -330,7 +340,7 @@
 		</description>		
       </port>
 	  <port>
-        <name>Fiekd3</name>
+        <name>Field3</name>
 		<datatype>SCIRun::Field</datatype>
 		<description>
 		<p> SCIRun Field imported from the MATLAB file using port 3. </p>

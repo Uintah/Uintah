@@ -176,7 +176,7 @@ void
 BaseWidget::init_tcl()
 {
   gui->add_command(id_ + "-c", this, 0);
-  gui->execute(name_ + " " + id_);
+  gui->eval(name_ + " " + id_);
 }
 
 
@@ -396,6 +396,10 @@ BaseWidget::tcl_command(GuiArgs& args, void*)
   else if(args[1] == "dialdone")
   {
     module_->widget_moved(true, this);
+  }
+  else if(args[1] == "ui")
+  {
+    module_->warning("UI not implemented");
   }
   else
   {

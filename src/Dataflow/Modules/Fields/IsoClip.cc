@@ -170,6 +170,26 @@ IsoClip::execute()
   {
     ext = "Tri";
   }
+  else if (mtd->get_name() == "HexVolMesh")
+  {
+    error("HexVolFields are not directly supported in this module.  Please first convert it into a TetVolField by inserting a SCIRun::FieldsGeometry::HexToTet module upstream.");
+    return;
+  }
+  else if (mtd->get_name() == "QuadSurfMesh")
+  {
+    error("QuadSurfFields are not directly supported in this module.  Please first convert it into a TriSurfField by inserting a SCIRun::FieldsGeometry::QuadToTri module upstream.");
+    return;
+  }
+  else if (mtd->get_name() == "LatVolMesh")
+  {
+    error("LatVolFields are not directly supported in this module.  Please first convert it into a TetVolField by inserting an upstream SCIRun::FieldsGeometry::Unstructure module, followed by a SCIRun::FieldsGeometry::HexToTet module.");
+    return;
+  }
+  else if (mtd->get_name() == "ImageMesh")
+  {
+    error("ImageFields are not supported in this module.  Please first convert it into a TriSurfField by inserting an upstream SCIRun::FieldsGeometry::Unstructure module, followed by a SCIRun::FieldsGeometry::QuadToTri module.");
+    return;
+  }
   else
   {
     error("Unsupported mesh type.  This module only works on Tets and Tris.");
@@ -184,7 +204,7 @@ IsoClip::execute()
   
   if (ifieldhandle->basis_order() != 1)
   {
-    error("Isoclipping can only done for fields with data at nodes.");
+    error("Isoclipping can only be done for fields with data at nodes.  Note: you can insert a ChangeFieldDataAt module (and an ApplyInterpMatrix module) upstream to push element data to the nodes.");
     return;
   }
 

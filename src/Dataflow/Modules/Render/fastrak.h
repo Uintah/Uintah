@@ -44,7 +44,7 @@
 #ifndef FASTRAK_H_
 #define FASTRAK_H_
 
-#include "receiver.h"
+#include <Dataflow/Modules/Render/receiver.h>
 
 #define FASTRAK_MAX_RECEIVER 4
 

@@ -110,8 +110,22 @@ GenericReader<HType>::execute()
     error("No file has been selected.  Please choose a file.");
     return;
   } else if (stat(fn.c_str(), &buf)) {
-    error("File '" + fn + "' not found.");
-    return;
+    if (!importing_)
+    {
+      error("File '" + fn + "' not found.");
+      return;
+    }
+    else
+    {
+      warning("File '" + fn + "' not found.  Maybe the plugin can find it.");
+
+      // This causes the item to cache.  Maybe a forced reread would be better?
+#ifdef __sgi
+      buf.st_mtim.tv_sec = 0;
+#else
+      buf.st_mtime = 0;
+#endif
+    }
   }
 
   // If we haven't read yet, or if it's a new filename, 

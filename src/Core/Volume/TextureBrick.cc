@@ -55,11 +55,11 @@ TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb,
 
   /* The cube is numbered in the following way 
      
-  2________6        y
-  /|        |        |  
-  / |       /|        |
-  /  |      / |        |
-  /   0_____/__4        |
+       2________6        y
+      /|        |        |  
+     / |       /|        |
+    /  |      / |        |
+   /   0_____/__4        |
   3---------7   /        |_________ x
   |  /      |  /         /
   | /       | /         /

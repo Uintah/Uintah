@@ -32,7 +32,7 @@
 <component name="SetupBEMatrix" category="Forward">
   <overview>
     <authors>
-      <author>Saeed B. Zadeh , Michael Callahan</author>
+      <author>Saeed Babaeizadeh , Michael Callahan</author>
     </authors>
     <summary>
       <p>The module solves a discretized model of Laplace's equation in a 3D volume
