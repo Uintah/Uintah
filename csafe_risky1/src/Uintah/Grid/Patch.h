@@ -82,7 +82,8 @@ WARNING
        zplus,
        startFace = xminus,
        endFace = zplus,
-       numFaces // 6
+       numFaces, // 6
+       invalidFace
      };
      
      //////////
@@ -302,6 +303,10 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.19.4.2  2000/10/07 06:10:36  sparker
+// Optimized implementation of Level::selectPatches
+// Cured g++ warnings
+//
 // Revision 1.19.4.1  2000/09/29 06:12:29  sparker
 // Added support for sending data along patch edges
 //
