@@ -6,8 +6,9 @@ SRCDIR := Packages/rtrt/StandAlone
 SRCS := $(SRCDIR)/rtrt.cc
 
 ifneq ($(USE_SOUND),no)
+   AUDIOFILE_LIBRARY := -L/home/sci/dav
    SOUNDDIR := Packages/rtrt/Sound
-   SOUNDLIBS := -laudio -laudiofile
+   SOUNDLIBS := -laudio $(AUDIOFILE_LIBRARY) -laudiofile
 endif
 
 PROGRAM := Packages/rtrt/StandAlone/rtrt

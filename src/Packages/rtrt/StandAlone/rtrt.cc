@@ -338,9 +338,9 @@ main(int argc, char* argv[])
   sprintf(scenefile, "./%s.mo", scenename);
   void* handle=dlopen(scenefile, RTLD_NOW);
   if(!handle){
-    cerr << "Error opening scene: " << scenefile << '\n';
-    cerr << dlerror() << '\n';
-    cerr << "Trying: "<< scenename << "\n";
+//    cerr << "Error opening scene: " << scenefile << '\n';
+//    cerr << dlerror() << '\n';
+//    cerr << "Trying: "<< scenename << "\n";
     handle=dlopen(scenename, RTLD_NOW);
     if(!handle){
       cerr << "Error opening scene: " << scenename << '\n';
