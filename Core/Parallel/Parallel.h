@@ -43,10 +43,20 @@ WARNING
 	 Abort
       };
 
+      // Determines if MPI is being used.  MUST BE CALLED BEFORE
+      // initializeManager()!  Also must be called before any one
+      // calls "Uintah::Parallel::usingMPI()".  argc/argv are only
+      // passed in so that they can be parsed to see if we are using
+      // mpich. (mpich mpirun adds some flags to the args.)
+      static void determineIfRunningUnderMPI( int argc, char** argv );
+
       //////////
-      // Determines if MPI is being used, and if so, initializes MPI.
-      // "scheduler" is used to determine if MPI is initialized with
-      // thread safety on (ie: on if scheduler == "MixedScheduler").
+
+      // Initializes MPI if necessary.  "scheduler" is used to tell
+      // MPI to initialize the thread safety MPI libs (ie: MPI lib
+      // thread safety is requested if (scheduler ==
+      // "MixedScheduler")) If MPI thread safety is not needed, then
+      // in theory MPI uses a faster library.
       static void initializeManager( int& argc, char**& argv, 
 				     const std::string & scheduler );
       
