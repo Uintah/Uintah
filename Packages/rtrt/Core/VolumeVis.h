@@ -16,7 +16,7 @@ namespace rtrt {
 #endif
 
 class VolumeVisDpy;
-  
+
 class VolumeVis : public Object, public Material {
 protected:
   friend class VolumeVisDpy;
@@ -31,7 +31,7 @@ protected:
   double spec_coeff, ambient, diffuse, specular;
   float delta_x2, delta_y2, delta_z2;
   
-  inline int bound(const int val, const int min, const int max) {
+  inline int clamp(const int min, const int val, const int max) {
     return (val>min?(val<max?val:max):min);
   }
   Color color(const Vector &N, const Vector &V, const Vector &L, 
