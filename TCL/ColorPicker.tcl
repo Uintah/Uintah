@@ -54,7 +54,7 @@ proc makeColorPicker {w var command cancel} {
 	    $hsv.s1 $hsv.s2 $hsv.s3 "
 
     frame $w.c.opts
-    button $w.c.opts.ok -text OK -command $command
+    button $w.c.opts.ok -text OK -command "cpcommitcolor $var $rgb.s1 $rgb.s2 $rgb.s3 \"$command\""
     button $w.c.opts.cancel -text Cancel -command $cancel
     checkbutton $w.c.opts.rgb -text RGB -variable rgb,$w \
 	    -command "cptogrgb $w $picks $rgb"
@@ -149,11 +149,7 @@ proc cpsetrgb {w var col rs gs bs hs ss vs val} {
     }
     $vs set $max
 
-    set r [expr int([$rs get] * 65535)]
-    set g [expr int([$gs get] * 65535)]
-    set b [expr int([$bs get] * 65535)]
-    
-    cpsetcol $var $col [format #%04x%04x%04x $r $g $b]
+    cpsetcol $var $col [$rs get] [$gs get] [$bs get]
 
     update idletasks
 }
@@ -182,20 +178,28 @@ proc cpsethsv {w var col rs gs bs hs ss vs val} {
 	default {$rs set 0 ; $gs set 0 ; $bs set 0}
     }
 
-    set r [expr int([$rs get] * 65535)]
-    set g [expr int([$gs get] * 65535)]
-    set b [expr int([$bs get] * 65535)]
-
-    cpsetcol $var $col [format #%04x%04x%04x $r $g $b]
+    cpsetcol $var $col [$rs get] [$gs get] [$bs get]
 
     update idletasks
 }
 
-proc cpsetcol {var col color} {
-    global $var
+proc cpsetcol {var col r g b} {
+    set ir [expr int($r * 65535)]
+    set ig [expr int($g * 65535)]
+    set ib [expr int($b * 65535)]
 
-    $col config -background $color
-    set $var $color
+    $col config -background [format #%04x%04x%04x $ir $ig $ib]
+}
+
+proc cpcommitcolor {var rs gs bs command} {
+    set r [$rs get]
+    set g [$gs get]
+    set b [$bs get]
+    global r,$var g,$var b,$var
+    set r,$var $r
+    set g,$var $g
+    set b,$var $b
+    eval $command
 }
 
 proc cptogrgb {w picks rgb} {
