@@ -61,7 +61,6 @@ WARNING
   
 ****************************************/
 
-
    
    class ProblemSpec : public RefCounted {
    public:
@@ -86,6 +85,12 @@ WARNING
       void require(const std::string& name, SCICore::Geometry::IntVector& value);
       void require(const std::string& name, SCICore::Geometry::Vector& value);
       void require(const std::string& name, SCICore::Geometry::Point& value);
+
+   // Get any optional attributes associated with a tag
+
+   void requireOptional(const std::string& name, std::string& value);
+   ProblemSpecP getOptional(const std::string& name, std::string& value);
+
       
       ProblemSpecP get(const std::string& name, double& value);
       ProblemSpecP get(const std::string& name, int& value);
@@ -109,10 +114,14 @@ WARNING
       
    };
    
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.12  2000/04/27 00:28:38  jas
+// Can now read the attributes field of a tag.
+//
 // Revision 1.11  2000/04/26 06:49:11  sparker
 // Streamlined namespaces
 //
