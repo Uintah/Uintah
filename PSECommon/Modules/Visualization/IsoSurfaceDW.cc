@@ -598,8 +598,13 @@ void IsoSurfaceDW::parallel_reg_grid(int proc)
 
     myThreadTime.start();
     myOuterExtract.start();
-    Array1<TSElement *>* elems=&all_elems[proc];
-    Array1<Point>* pts=&all_pts[proc];
+    Array1<TSElement *>* elems=0;
+    Array1<Point>* pts=0;
+    if (emit) {
+	elems=&all_elems[proc];
+	pts=&all_pts[proc];
+    }
+
     for(int i=sx;i<ex;i++){
 	for(int j=0;j<ny-1;j++){
 	    for(int k=0;k<nz-1;k++){
@@ -1907,6 +1912,9 @@ void IsoSurfaceDW::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.9  2000/03/13 09:15:11  dmw
+// fixed a problem with surfaceless MC
+//
 // Revision 1.8  2000/03/11 00:39:55  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>
