@@ -43,3 +43,6 @@ LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common -lglobus_io $(
 include $(SCIRUN_SCRIPTS)/program.mk
 
 $(SRCDIR)/Builder.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/BuilderWindow.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/moc_BuilderWindow.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/builder.o: Core/CCA/spec/cca_sidl.h
