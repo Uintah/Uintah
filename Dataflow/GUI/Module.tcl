@@ -932,7 +932,7 @@ proc moduleDrag {modid x y} {
 
 proc do_moduleDrag {modid x y} {
     networkHasChanged
-    global Subnet lastX lastY grouplastX grouplastY SCALEX SCALEY
+    global Subnet lastX lastY grouplastX grouplastY SCALEX SCALEY botFrame
     set canvas $Subnet(Subnet$Subnet($modid)_canvas)
     set minicanvas $Subnet(Subnet$Subnet($modid)_minicanvas)
 
@@ -1018,7 +1018,7 @@ proc do_moduleDrag {modid x y} {
     if { [expr $x-$Xbounds] > $width } {
 	cursor warp $canvas $width [expr $y-$Ybounds]
 	set currx $width
-	set scrollwidth [.bot.neteditFrame.vscroll cget -width]
+	set scrollwidth [$botFrame.vscroll cget -width]
 	set grouplastX [expr $Xbounds + $width - 5 - $scrollwidth]
     }
     if { [expr $x-$Xbounds] < 0 } {
@@ -1030,7 +1030,7 @@ proc do_moduleDrag {modid x y} {
     #cursor-boundary check and warp for y-axis
     if { [expr $y-$Ybounds] > $height } {
 	cursor warp $canvas $currx $height
-	set scrollwidth [.bot.neteditFrame.hscroll cget -width]
+	set scrollwidth [$botFrame.hscroll cget -width]
 	set grouplastY [expr $Ybounds + $height - 5 - $scrollwidth]
     }
     if { [expr $y-$Ybounds] < 0 } {
@@ -1196,11 +1196,13 @@ proc moduleDestroy {modid} {
     $Subnet(Subnet$Subnet($modid)_minicanvas) delete $modid
     
     # Remove references to module is various state arrays
-    array unset Subnet ${modid}_connections
+    listFindAndRemove Subnet(Subnet$Subnet($modid)_Modules) $modid
+    listFindAndRemove CurrentlySelectedModules $modid
+    array unset Subnet ${modid}*
     array unset Disabled $modid
     array unset Notes $modid*
-    listFindAndRemove CurrentlySelectedModules $modid
-    listFindAndRemove Subnet(Subnet$Subnet($modid)_Modules) $modid
+
+
 
     $modid delete
     if { ![isaSubnetIcon $modid] } {
