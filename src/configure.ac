@@ -371,11 +371,7 @@ SCI_ARG_ENABLE(package,
                  example: --enable-package='BioPSE Teem'
                  default: all directories under SCIRun/src/Packages),
   [package="$enableval"],
-  [
-   AC_MSG_WARN("Enabling all the packages in your SCIRun/src/Packages directory.")
-   _sci_tmp=`ls $path_to_src/Packages`
-   package=`echo $_sci_tmp | sed 's/CVS //g'`
-  ])
+  [package=""])
 SCI_ARG_ENABLE(exename,
   AC_HELP_STRING(--enable-exename=<name>,
                  Use name for executable name instead of the default: scirun),
@@ -433,6 +429,13 @@ myargs=`echo $args | sed 's%\^% %g'`
 # Setting IFS breaks standard autoconf tests.  
 # It thinks we are cross compiling. Don't set it.
 #IFS=' '
+
+if test "$package" = "all"; then
+  AC_MSG_RESULT(Enabling all the packages in your SCIRun/src/Packages directory.)
+  _sci_tmp=`ls $path_to_src/Packages`
+  package=`echo $_sci_tmp | sed 's/CVS //g'`
+  AC_MSG_RESULT(Packages include $package)
+fi
 
 PACKAGE_DIRS=""
 # make sure the package dir exists

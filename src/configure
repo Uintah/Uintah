@@ -2145,11 +2145,7 @@ if test "${enable_package+set}" = set; then
   enableval="$enable_package"
   package="$enableval"
 else
-  { echo "$as_me:$LINENO: WARNING: \"Enabling all the packages in your SCIRun/src/Packages directory.\"" >&5
-echo "$as_me: WARNING: \"Enabling all the packages in your SCIRun/src/Packages directory.\"" >&2;}
-   _sci_tmp=`ls $path_to_src/Packages`
-   package=`echo $_sci_tmp | sed 's/CVS //g'`
-
+  package=""
 fi;
   sci_arg_enable_list="$sci_arg_enable_list --enable-package --disable-package"
 
@@ -2326,6 +2322,15 @@ myargs=`echo $args | sed 's%\^% %g'`
 # Setting IFS breaks standard autoconf tests.
 # It thinks we are cross compiling. Don't set it.
 #IFS=' '
+
+if test "$package" = "all"; then
+  echo "$as_me:$LINENO: result: Enabling all the packages in your SCIRun/src/Packages directory." >&5
+echo "${ECHO_T}Enabling all the packages in your SCIRun/src/Packages directory." >&6
+  _sci_tmp=`ls $path_to_src/Packages`
+  package=`echo $_sci_tmp | sed 's/CVS //g'`
+  echo "$as_me:$LINENO: result: Packages include $package" >&5
+echo "${ECHO_T}Packages include $package" >&6
+fi
 
 PACKAGE_DIRS=""
 # make sure the package dir exists
@@ -4071,7 +4076,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4074:" \
+echo "$as_me:4079:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
