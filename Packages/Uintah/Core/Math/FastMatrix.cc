@@ -45,6 +45,9 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
+const int FastMatrix::smallSize = 16; // Make sure smallMat and smallMatPtr
+const int FastMatrix::smallRows = 4;  // are updated (in .h file) if
+                                      // you change these.
 FastMatrix::FastMatrix(int rows, int cols)
   : rows(rows), cols(cols)
 {
