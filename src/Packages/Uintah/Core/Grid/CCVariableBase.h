@@ -14,6 +14,7 @@ namespace Uintah {
 using SCIRun::IntVector;
 
 class OutputContext;
+   class Patch;
 
 /**************************************
 
