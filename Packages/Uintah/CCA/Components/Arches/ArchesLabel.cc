@@ -257,6 +257,7 @@ ArchesLabel::ArchesLabel()
 
   // Labels that access the velocity stored as a cell centered vector
   // after interpolation (for use in visualization)
+
   d_oldCCVelocityLabel = scinew VarLabel("oldCCVelocity",
 				CCVariable<Vector>::getTypeDescription() );
   d_newCCVelocityLabel = scinew VarLabel("newCCVelocity",
@@ -269,6 +270,7 @@ ArchesLabel::ArchesLabel()
 				CCVariable<double>::getTypeDescription() );
 
   // for pressure grad term in momentum
+
   d_pressGradUSuLabel = scinew VarLabel("pressGradUSu",
 					SFCXVariable<double>::getTypeDescription() );
   d_pressGradVSuLabel = scinew VarLabel("pressGradVSu",
@@ -276,11 +278,37 @@ ArchesLabel::ArchesLabel()
   d_pressGradWSuLabel = scinew VarLabel("pressGradWSu",
 					SFCZVariable<double>::getTypeDescription() );
   // multimaterial labels
+
+  // multimaterial wall/intrusion cells
+
   d_mmcellTypeLabel = scinew VarLabel("mmcellType",
 				      CCVariable<int>::getTypeDescription() );
+
+  // Label for void fraction, after correction for wall cells using cutoff
+
   d_mmgasVolFracLabel = scinew VarLabel("mmgasVolFrac",
 					CCVariable<double>::getTypeDescription() );
 
+  // Array containing the reference density multiplied by the void fraction
+  // used for correct reference density subtraction in the multimaterial
+  // case
+
+  d_denRefArrayLabel = scinew VarLabel("denRefArray",
+					CCVariable<double>::getTypeDescription() );
+
+  // Microscopic density (i.e., without void fraction) of gas
+
+  d_densityMicroLabel = scinew VarLabel("denMicro",
+					CCVariable<double>::getTypeDescription() );
+  d_densityMicroINLabel = scinew VarLabel("denMicroIN",
+					CCVariable<double>::getTypeDescription() );
+
+  // Label for the sum of the relative pressure and the hydrostatic 
+  // contribution
+
+  d_pressPlusHydroLabel = scinew VarLabel("pPlusHydro",
+					CCVariable<double>::getTypeDescription() );
+;
 }
 
 //****************************************************************************

@@ -49,6 +49,19 @@ C-----------------------------------------------------------------------
  100        continue
  200     continue
  300  continue
+
+      print*, 'value of pressure after normalization = ',
+     $     'at wall location 5, 9, 9 = ',press(5,9,9)
+
+      print*, 'value of pressure after normalization = ',
+     $     'at wall location 5, 9, 10 = ',press(5,9,10)
+
+      print*, 'value of pressure after normalization = ',
+     $     'at wall location 5, 10, 9 = ',press(5,10,9)
+
+      print*, 'value of pressure after normalization = ',
+     $     'at wall location 5, 10, 10 = ',press(5,10,10)
+
 C-----------------------------------------------------------------------
       RETURN
       END

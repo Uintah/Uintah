@@ -257,6 +257,8 @@ Arches::sched_paramInit(const LevelP& level,
       tsk->computes(d_lab->d_scalarINLabel); // only work for 1 scalar
     tsk->computes(d_lab->d_densityINLabel);
     tsk->computes(d_lab->d_viscosityINLabel);
+
+    tsk->computes(d_lab->d_pressPlusHydroLabel);
     sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
   
@@ -370,6 +372,7 @@ Arches::paramInit(const ProcessorGroup* ,
     vector<CCVariable<double> > scalar(d_nofScalars);
     CCVariable<double> density;
     CCVariable<double> viscosity;
+    CCVariable<double> pPlusHydro;
     std::cerr << "Material Index: " << matlIndex << endl;
     new_dw->allocate(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
     new_dw->allocate(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
@@ -381,6 +384,9 @@ Arches::paramInit(const ProcessorGroup* ,
     new_dw->allocate(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
     new_dw->allocate(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
     new_dw->allocate(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
+
+    new_dw->allocate(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
+    pPlusHydro.initialize(0.0);
 
     // will only work for one scalar
     for (int ii = 0; ii < d_nofScalars; ii++) {
@@ -444,6 +450,8 @@ Arches::paramInit(const ProcessorGroup* ,
     }
     new_dw->put(density, d_lab->d_densityINLabel, matlIndex, patch);
     new_dw->put(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
+
+    new_dw->put(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
 
   }
 }
