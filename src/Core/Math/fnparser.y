@@ -116,7 +116,7 @@ extern char *yytext;
   
 session: function {
   *(Function**)param = $1;
-}
+};
   
 function : TCONST {
   $$ = new Function($1);
