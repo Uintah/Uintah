@@ -274,6 +274,8 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
         tsk->requires(Task::OldDW, d_lab->d_radiationFluxBINLabel,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
+        tsk->requires(Task::OldDW, d_lab->d_abskgINLabel,
+		      Ghost::None, Arches::ZEROGHOSTCELLS);
       }
     } 
   }
@@ -448,7 +450,8 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     }
 
     d_props->sched_reComputeProps(subsched, local_patches, local_matls,
-				  d_timeIntegratorLabels[curr_level], true);
+				  d_timeIntegratorLabels[curr_level],
+				  true, false);
     d_props->sched_computeDenRefArray(subsched, local_patches, local_matls,
 				      d_timeIntegratorLabels[curr_level]);
     //sched_syncRhoF(subsched, local_patches, local_matls,
@@ -476,7 +479,8 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
 					    d_timeIntegratorLabels[curr_level]);
       }
       d_props->sched_reComputeProps(subsched, local_patches, local_matls,
-				    d_timeIntegratorLabels[curr_level], false);
+				    d_timeIntegratorLabels[curr_level],
+				    false, false);
 
       d_momSolver->sched_averageRKHatVelocities(subsched, local_patches, local_matls,
 					    d_timeIntegratorLabels[curr_level]);
@@ -580,6 +584,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_radiationFluxSINLabel, patches, matls); 
       subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_radiationFluxTINLabel, patches, matls); 
       subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_radiationFluxBINLabel, patches, matls); 
+      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_abskgINLabel, patches, matls); 
       }
     }	    
     }

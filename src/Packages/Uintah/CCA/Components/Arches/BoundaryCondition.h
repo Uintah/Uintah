@@ -194,6 +194,9 @@ public:
       void sched_setProfile(SchedulerP&, const PatchSet* patches,
 			    const MaterialSet* matls);
 
+      void sched_initInletBC(SchedulerP&, const PatchSet* patches,
+			    const MaterialSet* matls);
+
       ////////////////////////////////////////////////////////////////////////
       // Initialize multimaterial wall cell types
       void sched_mmWallCellTypeInit( SchedulerP&, const PatchSet* patches,
@@ -578,6 +581,12 @@ private:
       ////////////////////////////////////////////////////////////////////////
       // Actually set the velocity, density and props flat profile
       void setFlatProfile(const ProcessorGroup* pc,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw);
+
+      void initInletBC(const ProcessorGroup* pc,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,

@@ -73,7 +73,6 @@ void
 Properties::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Properties");
-  db->require("denUnderrelax", d_denUnderrelax);
   db->getWithDefault("filter_drhodt",d_filter_drhodt,false);
   db->getWithDefault("first_order_drhodt",d_first_order_drhodt,false);
   db->require("ref_point", d_denRef);
@@ -149,141 +148,189 @@ Properties::computeInletProperties(const InletStream& inStream,
   }
 }
   
+
 //****************************************************************************
-// Schedule the computation of properties
+// Schedule the recomputation of properties
 //****************************************************************************
 void 
-Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
-			       const MaterialSet* matls)
+Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
+				 const MaterialSet* matls,
+				 const TimeIntegratorLabel* timelabels,
+			         bool modify_ref_density, bool initialize)
 {
-  Task* tsk = scinew Task("Properties::ComputeProps",
-			  this,
-			  &Properties::computeProps);
+  string md = "";
+  if (!(modify_ref_density)) md += "RKSSP";
+  string taskname =  "Properties::ReComputeProps" +
+		     timelabels->integrator_step_name + md;
+  Task* tsk = scinew Task(taskname, this,
+			  &Properties::reComputeProps,
+			  timelabels, modify_ref_density, initialize);
 
-  // requires scalars
-  // will only work for one mixing variable
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  if (d_numMixStatVars > 0) {
-    tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-  }
+
+  if (d_numMixStatVars > 0)
+    tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
   if (d_mixingModel->getNumRxnVars())
-    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, Ghost::None,
-		  Arches::ZEROGHOSTCELLS);
-  // For steady flamelet mixing tables
-  if (d_steadyflamelet){
-    tsk->requires(Task::NewDW, d_lab->d_scalarDissSPLabel, Ghost::None,
-    Arches::ZEROGHOSTCELLS);
-  }
-  if (d_MAlab) {
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  // Scalar dissipation for steady flamelet tables
+  if (d_steadyflamelet)
+    tsk->requires(Task::NewDW, d_lab->d_scalarDissSPLabel,
+    Ghost::None, Arches::ZEROGHOSTCELLS);
+
+   // Added for Thermal NOx :Needed to compute the phi
+  if(d_thermalNOx)
+    tsk->requires(Task::NewDW, d_lab->d_thermalnoxSPLabel,
+              Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  if (!(d_mixingModel->isAdiabatic()) && initialize)
+    tsk->modifies(d_lab->d_enthalpySPLabel);
+  else
+    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  if (d_MAlab)
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, Ghost::None,
+    		  Arches::ZEROGHOSTCELLS);
+
+  if (d_MAlab && initialize) {
 #ifdef ExactMPMArchesInitialize
     tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel, Ghost::None,
 		  Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, Ghost::None,
-    		  Arches::ZEROGHOSTCELLS);
 #else
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
 		  Arches::ZEROGHOSTCELLS);
 #endif
-    tsk->computes(d_lab->d_densityMicroLabel);
   }
   else
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
 		  Arches::ZEROGHOSTCELLS);
 
+  if (d_MAlab && !initialize && d_DORadiationCalc)
+    tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, Ghost::None,
+		  Arches::ZEROGHOSTCELLS);
+
   tsk->modifies(d_lab->d_densityCPLabel);
-  tsk->computes(d_lab->d_refDensity_label);
 
-  if (d_enthalpySolve)
-    tsk->modifies(d_lab->d_enthalpySPLabel);
+// assuming ref_density is not changed by RK averaging
+  if (modify_ref_density)
+    tsk->computes(timelabels->ref_density);
 
-  if (d_reactingFlow) {
-    tsk->computes(d_lab->d_tempINLabel);
-    tsk->computes(d_lab->d_co2INLabel);
-    tsk->computes(d_lab->d_h2oINLabel);
-    tsk->computes(d_lab->d_enthalpyRXNLabel);
-    tsk->computes(d_lab->d_cpINLabel);
-    if (d_mixingModel->getNumRxnVars())
-      tsk->computes(d_lab->d_reactscalarSRCINLabel);
-    if (d_steadyflamelet)
-      tsk->computes(d_lab->d_c2h2INLabel);
-    if (d_thermalNOx)
-      tsk->computes(d_lab->d_thermalnoxSRCINLabel);
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+    tsk->computes(d_lab->d_drhodfCPLabel);
+    if (d_reactingFlow) {
+      tsk->computes(d_lab->d_tempINLabel);
+      tsk->computes(d_lab->d_cpINLabel);
+      tsk->computes(d_lab->d_co2INLabel);
+      tsk->computes(d_lab->d_h2oINLabel);
+      tsk->computes(d_lab->d_enthalpyRXNLabel);
+      if (d_mixingModel->getNumRxnVars())
+        tsk->computes(d_lab->d_reactscalarSRCINLabel);
+      if (d_steadyflamelet)
+        tsk->computes(d_lab->d_c2h2INLabel);
+      if (d_thermalNOx)
+        tsk->computes(d_lab->d_thermalnoxSRCINLabel);
+    }
+    if (d_flamelet) {
+      tsk->computes(d_lab->d_tempINLabel);
+      tsk->computes(d_lab->d_sootFVINLabel);
+      tsk->computes(d_lab->d_co2INLabel);
+      tsk->computes(d_lab->d_h2oINLabel);
+      tsk->computes(d_lab->d_fvtfiveINLabel);
+      tsk->computes(d_lab->d_tfourINLabel);
+      tsk->computes(d_lab->d_tfiveINLabel);
+      tsk->computes(d_lab->d_tnineINLabel);
+      tsk->computes(d_lab->d_qrgINLabel);
+      tsk->computes(d_lab->d_qrsINLabel);
+    }
+    if (d_radiationCalc) {
+      tsk->computes(d_lab->d_absorpINLabel);
+      tsk->computes(d_lab->d_sootFVINLabel);
+    }
+  }
+  else {
+    tsk->modifies(d_lab->d_drhodfCPLabel);
+    if (d_reactingFlow) {
+      tsk->modifies(d_lab->d_tempINLabel);
+      tsk->modifies(d_lab->d_cpINLabel);
+      tsk->modifies(d_lab->d_co2INLabel);
+      tsk->modifies(d_lab->d_h2oINLabel);
+      tsk->modifies(d_lab->d_enthalpyRXNLabel);
+      if (d_mixingModel->getNumRxnVars())
+        tsk->modifies(d_lab->d_reactscalarSRCINLabel);
+      if (d_steadyflamelet)
+        tsk->modifies(d_lab->d_c2h2INLabel);
+      if (d_thermalNOx)
+        tsk->modifies(d_lab->d_thermalnoxSRCINLabel);
+    }
+    if (d_flamelet) {
+      tsk->modifies(d_lab->d_tempINLabel);
+      tsk->modifies(d_lab->d_sootFVINLabel);
+      tsk->modifies(d_lab->d_co2INLabel);
+      tsk->modifies(d_lab->d_h2oINLabel);
+      tsk->modifies(d_lab->d_fvtfiveINLabel);
+      tsk->modifies(d_lab->d_tfourINLabel);
+      tsk->modifies(d_lab->d_tfiveINLabel);
+      tsk->modifies(d_lab->d_tnineINLabel);
+      tsk->modifies(d_lab->d_qrgINLabel);
+      tsk->modifies(d_lab->d_qrsINLabel);
+    }
+    if (d_radiationCalc) {
+      tsk->modifies(d_lab->d_absorpINLabel);
+      tsk->modifies(d_lab->d_sootFVINLabel);
+    }
   }
 
-  if (d_flamelet) {
-    tsk->computes(d_lab->d_tempINLabel);
-    tsk->computes(d_lab->d_sootFVINLabel);
-    tsk->computes(d_lab->d_co2INLabel);
-    tsk->computes(d_lab->d_h2oINLabel);
-    tsk->computes(d_lab->d_fvtfiveINLabel);
-    tsk->computes(d_lab->d_tfourINLabel);
-    tsk->computes(d_lab->d_tfiveINLabel);
-    tsk->computes(d_lab->d_tnineINLabel);
-    tsk->computes(d_lab->d_qrgINLabel);
-    tsk->computes(d_lab->d_qrsINLabel);
-  }
-
-  if (d_radiationCalc) {
-    tsk->computes(d_lab->d_absorpINLabel);
-    tsk->computes(d_lab->d_sootFVINLabel);
-  }
+  if (d_MAlab) 
+    tsk->computes(d_lab->d_densityMicroLabel);
 
   sched->addTask(tsk, patches, matls);
 }
+
+  
 //****************************************************************************
-// Actually compute the properties here
+// Actually recompute the properties here
 //****************************************************************************
 void 
-Properties::computeProps(const ProcessorGroup* pc,
-			 const PatchSubset* patches,
-			 const MaterialSubset*,
-			 DataWarehouse*,
-			 DataWarehouse* new_dw)
+Properties::reComputeProps(const ProcessorGroup* pc,
+			   const PatchSubset* patches,
+			   const MaterialSubset*,
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw,
+			   const TimeIntegratorLabel* timelabels,
+			   bool modify_ref_density,
+			   bool initialize)
 {
-  const Patch* patch_for_level = patches->get(0);
-  const Level* level = patch_for_level->getLevel();
-  IntVector periodic_vector = level->getPeriodicBoundaries();
-  d_3d_periodic = (periodic_vector == IntVector(1,1,1));
+  if (d_bc == 0)
+    throw InvalidValue("BoundaryCondition pointer not assigned");
 
   for (int p = 0; p < patches->size(); p++) {
 
+    TAU_PROFILE_TIMER(input, "Input", "[Properties::reCompute::input]" , TAU_USER);
+    TAU_PROFILE_TIMER(compute, "Compute", "[Properties::reCompute::compute]" , TAU_USER);
+    TAU_PROFILE_TIMER(mixing, "Mixing", "[Properties::reCompute::mixing]" , TAU_USER);
+
+    TAU_PROFILE_START(input);
+
+    double start_mixTime = Time::currentSeconds();
+
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    // Get the cellType and density from the old datawarehouse
+    int matlIndex = d_lab->d_sharedState->
+		     getArchesMaterial(archIndex)->getDWIndex(); 
 
     constCCVariable<int> cellType;
-    CCVariable<double> density;
     StaticArray<constCCVariable<double> > scalar(d_numMixingVars);
-    CCVariable<double> enthalpy;
-
-    new_dw->getModifiable(density, d_lab->d_densityCPLabel, 
-		matlIndex, patch);
-
-    if (d_enthalpySolve) {
-      new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel,
-			     matlIndex, patch);
-      enthalpy.initialize(0.0);
-    }
-    
-    if (d_MAlab) {
-#ifdef ExactMPMArchesInitialize
-      new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch, 
-    		  Ghost::None, Arches::ZEROGHOSTCELLS);
-#else
-      new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-#endif
-    }
-    else {
-      new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
-
+    StaticArray<constCCVariable<double> > scalarVar(d_numMixStatVars);
+    StaticArray<constCCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
+    constCCVariable<double> scalarDisp;
+    constCCVariable<double> voidFraction;
+    CCVariable<double> new_density;
     CCVariable<double> temperature;
     CCVariable<double> cp;
     CCVariable<double> co2;
@@ -291,28 +338,7 @@ Properties::computeProps(const ProcessorGroup* pc,
     CCVariable<double> c2h2;
     CCVariable<double> enthalpyRXN;
     CCVariable<double> reactscalarSRC;
-    CCVariable<double> thermalnoxSRC;
-    if (d_reactingFlow) {
-      new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel, matlIndex, patch);
-      new_dw->allocateAndPut(cp, d_lab->d_cpINLabel, matlIndex, patch);
-      new_dw->allocateAndPut(co2, d_lab->d_co2INLabel, matlIndex, patch);
-      new_dw->allocateAndPut(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
-      new_dw->allocateAndPut(enthalpyRXN, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
-      if (d_mixingModel->getNumRxnVars()) {
-	new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
-			 matlIndex, patch);
-	reactscalarSRC.initialize(0.0);
-      }
-      if (d_steadyflamelet) {
-        new_dw->allocateAndPut(c2h2, d_lab->d_c2h2INLabel,matlIndex, patch);
-        c2h2.initialize(0.0);
-      }
-      if (d_thermalNOx) {
-         new_dw->allocateAndPut(thermalnoxSRC, d_lab->d_thermalnoxSRCINLabel,
-                          matlIndex, patch);
-         thermalnoxSRC.initialize(0.0);
-      }
-    }
+    CCVariable<double> drhodf;
     CCVariable<double> absorption;
     CCVariable<double> sootFV;
     CCVariable<double> fvtfive;
@@ -321,106 +347,229 @@ Properties::computeProps(const ProcessorGroup* pc,
     CCVariable<double> tnine;
     CCVariable<double> qrg;
     CCVariable<double> qrs;
-    if (d_flamelet) {
-      new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel, matlIndex, patch);
-      new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
-      new_dw->allocateAndPut(co2, d_lab->d_co2INLabel, matlIndex, patch);
-      new_dw->allocateAndPut(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
-      new_dw->allocateAndPut(fvtfive, d_lab->d_fvtfiveINLabel, matlIndex, patch);
-      new_dw->allocateAndPut(tfour, d_lab->d_tfourINLabel, matlIndex, patch);
-      new_dw->allocateAndPut(tfive, d_lab->d_tfiveINLabel, matlIndex, patch);
-      new_dw->allocateAndPut(tnine, d_lab->d_tnineINLabel, matlIndex, patch);
-      new_dw->allocateAndPut(qrg, d_lab->d_qrgINLabel, matlIndex, patch);
-      new_dw->allocateAndPut(qrs, d_lab->d_qrsINLabel, matlIndex, patch);
+    CCVariable<double> denMicro;
+    constCCVariable<double> solidTemp;
+    CCVariable<double> mod_enthalpy;
+    constCCVariable<double> const_enthalpy;
 
+    CCVariable<double> thermalnoxSRC;
+    constCCVariable<double> thermalnox;
+
+
+    if (d_MAlab && initialize) {
+#ifdef ExactMPMArchesInitialize
+      new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch, 
+    		  Ghost::None, Arches::ZEROGHOSTCELLS);
+#else
+      new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+#endif
     }
-    if (d_radiationCalc) {
-      new_dw->allocateAndPut(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
-      new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
-      absorption.initialize(0.0);
-      sootFV.initialize(0.0);
-    }
+    else
+      new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
     for (int ii = 0; ii < d_numMixingVars; ii++)
       new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    StaticArray<constCCVariable<double> > scalarVar(d_numMixStatVars);
-
     if (d_numMixStatVars > 0) {
-    for (int ii = 0; ii < d_numMixStatVars; ii++)
-      new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      for (int ii = 0; ii < d_numMixStatVars; ii++)
+	new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
-    StaticArray<constCCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
     
     if (d_mixingModel->getNumRxnVars() > 0) {
       for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
 	new_dw->get(reactScalar[ii], d_lab->d_reactscalarSPLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
-    // Scalar dissipation
-    constCCVariable<double>  scalarDisp;
-    if(d_steadyflamelet)
-        new_dw->get(scalarDisp, d_lab->d_scalarDissSPLabel,matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    // Scalar dissipation for steady flamelet tables
+    if (d_steadyflamelet) {
+        new_dw->get(scalarDisp, d_lab->d_scalarDissSPLabel,
+        matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
 
-    // get multimaterial vars
+    if (!(d_mixingModel->isAdiabatic()) && initialize) {
+      new_dw->getModifiable(mod_enthalpy, d_lab->d_enthalpySPLabel, 
+		            matlIndex, patch);
+    }
+    else {
+      new_dw->get(const_enthalpy, d_lab->d_enthalpySPLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
 
-    CCVariable<double> denMicro;
-    constCCVariable<double> voidFraction;
+    new_dw->getModifiable(new_density, d_lab->d_densityCPLabel,
+			  matlIndex, patch);
+    new_density.initialize(0.0);
+
+    if (d_thermalNOx)
+       new_dw->get(thermalnox, d_lab->d_thermalnoxSPLabel,
+                   matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+      new_dw->allocateAndPut(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
+
+      if (d_reactingFlow) {
+        new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel, 
+			       matlIndex, patch);
+        new_dw->allocateAndPut(cp, d_lab->d_cpINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(co2, d_lab->d_co2INLabel, matlIndex, patch);
+        new_dw->allocateAndPut(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(enthalpyRXN, d_lab->d_enthalpyRXNLabel,
+			       matlIndex, patch);
+        if (d_mixingModel->getNumRxnVars())
+	  new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
+			         matlIndex, patch);
+	if (d_steadyflamelet)
+	  new_dw->allocateAndPut(c2h2, d_lab->d_c2h2INLabel, matlIndex, patch);
+        if (d_thermalNOx)
+          new_dw->allocateAndPut(thermalnoxSRC, d_lab->d_thermalnoxSRCINLabel,
+                                 matlIndex, patch);
+      }
+
+      if (d_flamelet) {
+        new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel,
+			       matlIndex, patch);
+        new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
+        new_dw->allocateAndPut(co2, d_lab->d_co2INLabel, matlIndex, patch);
+        new_dw->allocateAndPut(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(fvtfive, d_lab->d_fvtfiveINLabel,
+			       matlIndex, patch);
+        new_dw->allocateAndPut(tfour, d_lab->d_tfourINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(tfive, d_lab->d_tfiveINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(tnine, d_lab->d_tnineINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(qrg, d_lab->d_qrgINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(qrs, d_lab->d_qrsINLabel, matlIndex, patch);
+      }
+
+      if (d_radiationCalc) {
+        new_dw->allocateAndPut(absorption, d_lab->d_absorpINLabel,
+			       matlIndex, patch);
+        new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
+      }
+    }
+    else {
+      new_dw->getModifiable(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
+
+      if (d_reactingFlow) {
+        new_dw->getModifiable(temperature, d_lab->d_tempINLabel, 
+			       matlIndex, patch);
+        new_dw->getModifiable(cp, d_lab->d_cpINLabel, matlIndex, patch);
+        new_dw->getModifiable(co2, d_lab->d_co2INLabel, matlIndex, patch);
+        new_dw->getModifiable(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
+        new_dw->getModifiable(enthalpyRXN, d_lab->d_enthalpyRXNLabel,
+			       matlIndex, patch);
+        if (d_mixingModel->getNumRxnVars())
+	  new_dw->getModifiable(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
+			         matlIndex, patch);
+	if (d_steadyflamelet)
+          new_dw->getModifiable(c2h2, d_lab->d_c2h2INLabel, matlIndex, patch);
+        if (d_thermalNOx)
+          new_dw->getModifiable(thermalnoxSRC, d_lab->d_thermalnoxSRCINLabel,
+                                 matlIndex, patch);
+      }
+
+      if (d_flamelet) {
+        new_dw->getModifiable(temperature, d_lab->d_tempINLabel,
+			       matlIndex, patch);
+        new_dw->getModifiable(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
+        new_dw->getModifiable(co2, d_lab->d_co2INLabel, matlIndex, patch);
+        new_dw->getModifiable(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
+        new_dw->getModifiable(fvtfive, d_lab->d_fvtfiveINLabel,
+			       matlIndex, patch);
+        new_dw->getModifiable(tfour, d_lab->d_tfourINLabel, matlIndex, patch);
+        new_dw->getModifiable(tfive, d_lab->d_tfiveINLabel, matlIndex, patch);
+        new_dw->getModifiable(tnine, d_lab->d_tnineINLabel, matlIndex, patch);
+        new_dw->getModifiable(qrg, d_lab->d_qrgINLabel, matlIndex, patch);
+        new_dw->getModifiable(qrs, d_lab->d_qrsINLabel, matlIndex, patch);
+      }
+
+      if (d_radiationCalc) {
+        new_dw->getModifiable(absorption, d_lab->d_absorpINLabel,
+			       matlIndex, patch);
+        new_dw->getModifiable(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
+      }
+    }
+
+    drhodf.initialize(0.0);
+    if (d_reactingFlow) {
+      temperature.initialize(0.0); 
+      cp.initialize(0.0);
+      co2.initialize(0.0);
+      h2o.initialize(0.0);
+      enthalpyRXN.initialize(0.0);
+        if (d_mixingModel->getNumRxnVars())
+	  reactscalarSRC.initialize(0.0);
+	if (d_steadyflamelet)
+          c2h2.initialize(0.0);
+        if (d_thermalNOx)
+          thermalnoxSRC.initialize(0.0);
+    }    
+    if (d_flamelet) {
+      temperature.initialize(0.0);
+      sootFV.initialize(0.0);
+      co2.initialize(0.0);
+      h2o.initialize(0.0);
+      fvtfive.initialize(0.0);
+      tfour.initialize(0.0);
+      tfive.initialize(0.0);
+      tnine.initialize(0.0);
+      qrg.initialize(0.0);
+      qrs.initialize(0.0);
+    }
+    if (d_radiationCalc) {
+      absorption.initialize(0.0);
+      sootFV.initialize(0.0);
+    }
 
     if (d_MAlab){
-#ifdef ExactMPMArchesInitialize
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-#endif
-      new_dw->allocateAndPut(denMicro, d_lab->d_densityMicroLabel,
-		       matlIndex, patch);
+      new_dw->allocateAndPut(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
+      if (!initialize && d_DORadiationCalc)
+	new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
-    
+
     IntVector indexLow = patch->getCellLowIndex();
     IntVector indexHigh = patch->getCellHighIndex();
 
-    // construct an InletStream for input to the computeProps of mixingModel
-    InletStream inStream(d_numMixingVars, d_mixingModel->getNumMixStatVars(),
+    TAU_PROFILE_STOP(input);
+    TAU_PROFILE_START(compute);
+    InletStream inStream(d_numMixingVars,
+		         d_mixingModel->getNumMixStatVars(),
 		         d_mixingModel->getNumRxnVars());
     Stream outStream;
-
-    // set density for the whole domain
 
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
-
-	  // Store current cell
 	  IntVector currCell(colX, colY, colZ);
 
-	  // for combustion calculations mixingmodel will be called
-	  // this is similar to prcf.f
-
+	  // construct an InletStream for input to the computeProps
+	  // of mixingModel
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
-
 	    inStream.d_mixVars[ii] = (scalar[ii])[currCell];
-
 	  }
 
 	  if (d_numMixStatVars > 0) {
-
 	    for (int ii = 0; ii < d_numMixStatVars; ii++ ) {
-
 	      inStream.d_mixVarVariance[ii] = (scalarVar[ii])[currCell];
-
 	    }
-
 	  }
 
+	  // currently not using any reaction progress variables
 	  if (d_mixingModel->getNumRxnVars() > 0) {
 	    for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++ ) 
 	      inStream.d_rxnVars[ii] = (reactScalar[ii])[currCell];
 	  }
-	  // Scalar dissipation for steady flamelet mixing tables
+
+	  // Scalar dissipation for steady flamelet tables
 	  if (d_steadyflamelet) {
 	      inStream.d_scalarDisp = scalarDisp[currCell];
 	  }
+
 	  // This will set the flag to compute thermal NOx
 	  if (d_thermalNOx) {
 	      inStream.d_calcthermalNOx = true;
@@ -433,27 +582,25 @@ Properties::computeProps(const ProcessorGroup* pc,
 	      inStream.d_axialLoc = 0;
 	  }
 
-	  if (!d_mixingModel->isAdiabatic())
+	  if ((!d_mixingModel->isAdiabatic()))
+	      //	      &&(cellType[currCell] != d_bc->getIntrusionID()))
+            if (initialize)
+	      inStream.d_enthalpy = 0.0;
+	    else
+	      inStream.d_enthalpy = const_enthalpy[currCell];
+	  else
 	    inStream.d_enthalpy = 0.0;
-          // This flag ensures properties for heatloss=0.0 during the initialization
-          inStream.d_initEnthalpy = true;
+           // This flag ensures properties for heatloss=0.0
+	   // during the initialization
+           inStream.d_initEnthalpy = initialize;
+
+  TAU_PROFILE_START(mixing);
 	  d_mixingModel->computeProps(inStream, outStream);
+  TAU_PROFILE_STOP(mixing);
+
 	  double local_den = outStream.getDensity();
-	  if (d_enthalpySolve)
-	    enthalpy[currCell] = outStream.getEnthalpy();
-	  if (d_reactingFlow) {
-	    temperature[currCell] = outStream.getTemperature();
-	    cp[currCell] = outStream.getCP();
-	    co2[currCell] = outStream.getCO2();
-	    h2o[currCell] = outStream.getH2O();
-	    enthalpyRXN[currCell] = outStream.getEnthalpy();
-	    if (d_mixingModel->getNumRxnVars())
-	      reactscalarSRC[currCell] = outStream.getRxnSource();
-	    if (d_steadyflamelet)
-              c2h2[currCell] = outStream.getC2H2();
-            if (d_thermalNOx)
-              thermalnoxSRC[currCell] = outStream.getnoxRxnSource();
-	  }
+	  drhodf[currCell] = outStream.getdrhodf();
+
 	  if (d_flamelet) {
 	    temperature[currCell] = outStream.getTemperature();
 	    sootFV[currCell] = outStream.getSootFV();
@@ -465,46 +612,103 @@ Properties::computeProps(const ProcessorGroup* pc,
 	    tnine[currCell] = outStream.gettnine();
 	    qrg[currCell] = outStream.getqrg();
 	    qrs[currCell] = outStream.getqrs();
-
-
 	  }
 
-	  if (d_bc == 0)
-	    throw InvalidValue("BoundaryCondition pointer not assigned");
+	  if (d_enthalpySolve && initialize)
+	    mod_enthalpy[currCell] = outStream.getEnthalpy();
+	  if (d_reactingFlow) {
+	    temperature[currCell] = outStream.getTemperature();
+	    cp[currCell] = outStream.getCP();
+	    co2[currCell] = outStream.getCO2();
+	    h2o[currCell] = outStream.getH2O();
+	    enthalpyRXN[currCell] = outStream.getEnthalpy();
+	    if (d_mixingModel->getNumRxnVars())
+	      reactscalarSRC[currCell] = outStream.getRxnSource();
+	    if (d_steadyflamelet)
+	      c2h2[currCell] = outStream.getC2H2();
+            if (d_thermalNOx)
+              thermalnoxSRC[currCell] = outStream.getnoxRxnSource();
+	  }
+	  
+
+	  if (d_radiationCalc) {
+	    // bc is the mass-atoms 0f carbon per mas of reactnat mixture
+	    // taken from radcoef.f
+	    //	double bc = d_mixingModel->getCarbonAtomNumber(inStream)*local_den;
+	    if (d_mixingModel->getNumRxnVars()) 
+	      sootFV[currCell] = outStream.getSootFV();
+	    else {
+	      if (d_empirical_soot) {
+	        if (temperature[currCell] > 1000) {
+		  double bc = inStream.d_mixVars[0]*(84.0/100.0)*local_den;
+		  double c3 = 0.1;
+		  double rhosoot = 1950.0;
+		  double cmw = 12.0;
+		  double factor = 0.01;
+
+		  if (inStream.d_mixVars[0] > 0.1)
+		    sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
+		  else
+		    sootFV[currCell] = 0.0;
+	        }
+	        else 
+		  sootFV[currCell] = 0.0;
+	      }
+	      else sootFV[currCell] = 0.0;
+	    }  
+	    absorption[currCell] = 0.01+ Min(0.5,(4.0/d_opl)*log(1.0+350.0*
+				   sootFV[currCell]*temperature[currCell]*d_opl));
+	  }
+	  // check if the density is greater than air...implement a better way
+          /*if (d_DORadiationCalc) {
+	    double cutoff_air_density = 1.1845;
+	    double cutoff_temperature = 298.0;
+	    if ((scalar[0])[currCell] < 0.4) {
+	      if (local_den > cutoff_air_density) {
+	        local_den = cutoff_air_density;
+	        temperature[currCell] = cutoff_temperature;
+	      }
+	    }
+	  }*/
 
 	  if (d_MAlab) {
 	    denMicro[currCell] = local_den;
+	    if (initialize) {
 #ifdef ExactMPMArchesInitialize
-	    local_den *= voidFraction[currCell];
+	      local_den *= voidFraction[currCell];
 #endif
+	    }
+	    else
+	      local_den *= voidFraction[currCell];
 	  }
-	  
-//	  if (cellType[currCell] != d_bc->wallCellType()) 
-	    density[currCell] = local_den;
-// d_denRef is usually [-1,-1,-1] so if not do the following, den_ref
-// will be messed up since it will be set to 0 because of the condition above
-// This error doesn't matter to much unless density underrelaxation is used
-//	  if ((patch->containsCell(d_denRef))&&(currCell==d_denRef))
-//	    density[currCell] = local_den;
+	  // density underrelaxation is bogus here and has been removed
+	  new_density[currCell] = local_den;
 	}
       }
     }
-    if ((d_bc->getIntrusionBC())&&(d_reactingFlow||d_flamelet))
-      d_bc->intrusionTemperatureBC(pc, patch, cellType, temperature);
-    if (patch->containsCell(d_denRef)) {
-
-      double den_ref = density[d_denRef];
-
-      new_dw->put(sum_vartype(den_ref),d_lab->d_refDensity_label);
+    // Write the computed density to the new data warehouse
+    if (modify_ref_density) {
+      double den_ref = 0.0;
+      if (patch->containsCell(d_denRef)) {
+        den_ref = new_density[d_denRef];
+        cerr << "density_ref " << den_ref << endl;
+      }
+      new_dw->put(sum_vartype(den_ref),timelabels->ref_density);
     }
 
-    else
-      new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
-    
-  }
-cout<<"Computation of properties for the first time is completed:"<<endl;
-}
+    if ((d_bc->getIntrusionBC())&&(d_reactingFlow||d_flamelet))
+      d_bc->intrusionTemperatureBC(pc, patch, cellType, temperature);
 
+    if (d_MAlab && d_DORadiationCalc && !initialize)
+      d_bc->mmWallTemperatureBC(pc, patch, cellType, solidTemp, temperature);
+
+    if (pc->myrank() == 0)
+      cerr << "Time in the Mixing Model: " << 
+	   Time::currentSeconds()-start_mixTime << " seconds\n";
+
+  TAU_PROFILE_STOP(compute);
+  }
+}
 //****************************************************************************
 // Schedule the computation of properties for the first actual time step
 // in an MPMArches run
@@ -575,6 +779,8 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_radiationFluxBINLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_abskgINLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
     }
   }
 
@@ -606,6 +812,7 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
     tsk->computes(d_lab->d_radiationFluxSINLabel);
     tsk->computes(d_lab->d_radiationFluxTINLabel);
     tsk->computes(d_lab->d_radiationFluxBINLabel);
+    tsk->computes(d_lab->d_abskgINLabel);
     }
   }
   tsk->computes(d_lab->d_oldDeltaTLabel);
@@ -734,6 +941,7 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     constCCVariable<double> radiationFluxSIN;
     constCCVariable<double> radiationFluxTIN;
     constCCVariable<double> radiationFluxBIN;
+    constCCVariable<double> abskg;
     CCVariable<double> absorpIN_new;
     //    CCVariable<double> abskgIN_new;
     CCVariable<double> sootFVIN_new;
@@ -745,6 +953,7 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     CCVariable<double> radiationFluxSIN_new;
     CCVariable<double> radiationFluxTIN_new;
     CCVariable<double> radiationFluxBIN_new;
+    CCVariable<double> abskg_new;
     if (d_radiationCalc) {
 
       old_dw->get(absorpIN, d_lab->d_absorpINLabel, matlIndex, patch,
@@ -793,6 +1002,9 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
       old_dw->get(radiationFluxBIN, d_lab->d_radiationFluxBINLabel,
 		  matlIndex, patch,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      old_dw->get(abskg, d_lab->d_abskgINLabel,
+		  matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocateAndPut(h2oIN_new, d_lab->d_h2oINLabel, 
 		       matlIndex, patch);
       h2oIN_new.copyData(h2oIN);
@@ -817,6 +1029,9 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
       new_dw->allocateAndPut(radiationFluxBIN_new,
 			     d_lab->d_radiationFluxBINLabel, matlIndex, patch);
       radiationFluxBIN_new.copyData(radiationFluxBIN);
+      new_dw->allocateAndPut(abskg_new,
+			     d_lab->d_abskgINLabel, matlIndex, patch);
+      abskg_new.copyData(abskg);
       }
     }
 
@@ -859,533 +1074,6 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     else
       new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
 
-  }
-}
-//****************************************************************************
-// Schedule the recomputation of properties
-//****************************************************************************
-void 
-Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
-				 const MaterialSet* matls,
-				 const TimeIntegratorLabel* timelabels,
-			         bool modify_ref_density)
-{
-  string md = "";
-  if (!(modify_ref_density)) md += "RKSSP";
-  string taskname =  "Properties::ReComputeProps" +
-		     timelabels->integrator_step_name + md;
-  Task* tsk = scinew Task(taskname, this,
-			  &Properties::reComputeProps,
-			  timelabels, modify_ref_density);
-
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-
-  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-
-  if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    if (d_DORadiationCalc)
-      tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, Ghost::None,
-		    Arches::ZEROGHOSTCELLS);
-  }
-
-  if (d_numMixStatVars > 0) {
-    tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-  }
-
-  if (d_mixingModel->getNumRxnVars())
-    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-   // Added for Thermal NOx :Needed to compute the phi
-  if(d_thermalNOx){
-    tsk->requires(Task::OldDW, d_lab->d_thermalnoxSPLabel,
-              Ghost::None, Arches::ZEROGHOSTCELLS);
-  }
-  // Scalar dissipation for steady flamelet tables
-  if (d_steadyflamelet) {
-    tsk->requires(Task::NewDW, d_lab->d_scalarDissSPLabel,
-    Ghost::None, Arches::ZEROGHOSTCELLS);
-  }
-
-  if (!(d_mixingModel->isAdiabatic()))
-    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-
-  tsk->modifies(d_lab->d_densityCPLabel);
-
-// assuming ref_density is not changed by RK averaging
-  if (modify_ref_density)
-    tsk->computes(timelabels->ref_density);
-
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->computes(d_lab->d_drhodfCPLabel);
-    if (d_reactingFlow) {
-      tsk->computes(d_lab->d_tempINLabel);
-      tsk->computes(d_lab->d_cpINLabel);
-      tsk->computes(d_lab->d_co2INLabel);
-      tsk->computes(d_lab->d_h2oINLabel);
-      tsk->computes(d_lab->d_enthalpyRXNLabel);
-      if (d_mixingModel->getNumRxnVars())
-        tsk->computes(d_lab->d_reactscalarSRCINLabel);
-      if (d_steadyflamelet)
-        tsk->computes(d_lab->d_c2h2INLabel);
-      if (d_thermalNOx)
-        tsk->computes(d_lab->d_thermalnoxSRCINLabel);
-    }
-    if (d_flamelet) {
-      tsk->computes(d_lab->d_tempINLabel);
-      tsk->computes(d_lab->d_sootFVINLabel);
-      tsk->computes(d_lab->d_co2INLabel);
-      tsk->computes(d_lab->d_h2oINLabel);
-      tsk->computes(d_lab->d_fvtfiveINLabel);
-      tsk->computes(d_lab->d_tfourINLabel);
-      tsk->computes(d_lab->d_tfiveINLabel);
-      tsk->computes(d_lab->d_tnineINLabel);
-      tsk->computes(d_lab->d_qrgINLabel);
-      tsk->computes(d_lab->d_qrsINLabel);
-    }
-    if (d_radiationCalc) {
-      tsk->computes(d_lab->d_absorpINLabel);
-      tsk->computes(d_lab->d_sootFVINLabel);
-    }
-  }
-  else {
-    tsk->modifies(d_lab->d_drhodfCPLabel);
-    if (d_reactingFlow) {
-      tsk->modifies(d_lab->d_tempINLabel);
-      tsk->modifies(d_lab->d_cpINLabel);
-      tsk->modifies(d_lab->d_co2INLabel);
-      tsk->modifies(d_lab->d_h2oINLabel);
-      tsk->modifies(d_lab->d_enthalpyRXNLabel);
-      if (d_mixingModel->getNumRxnVars())
-        tsk->modifies(d_lab->d_reactscalarSRCINLabel);
-      if (d_steadyflamelet)
-        tsk->modifies(d_lab->d_c2h2INLabel);
-      if (d_thermalNOx)
-        tsk->modifies(d_lab->d_thermalnoxSRCINLabel);
-    }
-    if (d_flamelet) {
-      tsk->modifies(d_lab->d_tempINLabel);
-      tsk->modifies(d_lab->d_sootFVINLabel);
-      tsk->modifies(d_lab->d_co2INLabel);
-      tsk->modifies(d_lab->d_h2oINLabel);
-      tsk->modifies(d_lab->d_fvtfiveINLabel);
-      tsk->modifies(d_lab->d_tfourINLabel);
-      tsk->modifies(d_lab->d_tfiveINLabel);
-      tsk->modifies(d_lab->d_tnineINLabel);
-      tsk->modifies(d_lab->d_qrgINLabel);
-      tsk->modifies(d_lab->d_qrsINLabel);
-    }
-    if (d_radiationCalc) {
-      tsk->modifies(d_lab->d_absorpINLabel);
-      tsk->modifies(d_lab->d_sootFVINLabel);
-    }
-  }
-
-  if (d_MAlab) 
-    tsk->computes(d_lab->d_densityMicroLabel);
-
-  sched->addTask(tsk, patches, matls);
-}
-
-  
-//****************************************************************************
-// Actually recompute the properties here
-//****************************************************************************
-void 
-Properties::reComputeProps(const ProcessorGroup* pc,
-			   const PatchSubset* patches,
-			   const MaterialSubset*,
-			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw,
-			   const TimeIntegratorLabel* timelabels,
-			   bool modify_ref_density)
-{
-  for (int p = 0; p < patches->size(); p++) {
-
-    TAU_PROFILE_TIMER(input, "Input", "[Properties::reCompute::input]" , TAU_USER);
-    TAU_PROFILE_TIMER(compute, "Compute", "[Properties::reCompute::compute]" , TAU_USER);
-    TAU_PROFILE_TIMER(mixing, "Mixing", "[Properties::reCompute::mixing]" , TAU_USER);
-
-    TAU_PROFILE_START(input);
-
-    double start_mixTime = Time::currentSeconds();
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
-		     getArchesMaterial(archIndex)->getDWIndex(); 
-
-    constCCVariable<int> cellType;
-    constCCVariable<double> density;
-    StaticArray<constCCVariable<double> > scalar(d_numMixingVars);
-    StaticArray<constCCVariable<double> > scalarVar(d_numMixStatVars);
-    StaticArray<constCCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
-    constCCVariable<double> scalarDisp;
-    constCCVariable<double> enthalpy;
-    constCCVariable<double> voidFraction;
-    CCVariable<double> new_density;
-    CCVariable<double> temperature;
-    CCVariable<double> cp;
-    CCVariable<double> co2;
-    CCVariable<double> h2o;
-    CCVariable<double> c2h2;
-    CCVariable<double> enthalpyRXN;
-    CCVariable<double> reactscalarSRC;
-    CCVariable<double> drhodf;
-    CCVariable<double> absorption;
-    CCVariable<double> sootFV;
-    CCVariable<double> fvtfive;
-    CCVariable<double> tfour;
-    CCVariable<double> tfive;
-    CCVariable<double> tnine;
-    CCVariable<double> qrg;
-    CCVariable<double> qrs;
-    CCVariable<double> denMicro;
-    constCCVariable<double> solidTemp;
-
-    CCVariable<double> thermalnoxSRC;
-    constCCVariable<double> thermalnox;
-
-
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-
-    old_dw->get(density, d_lab->d_densityCPLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    for (int ii = 0; ii < d_numMixingVars; ii++)
-      new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-
-    if (d_numMixStatVars > 0) {
-      for (int ii = 0; ii < d_numMixStatVars; ii++)
-	new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
-    
-    if (d_mixingModel->getNumRxnVars() > 0) {
-      for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
-	new_dw->get(reactScalar[ii], d_lab->d_reactscalarSPLabel, 
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
-    // Scalar dissipation for steady flamelet tables
-    if (d_steadyflamelet) {
-        new_dw->get(scalarDisp, d_lab->d_scalarDissSPLabel,
-        matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
-
-    if (!(d_mixingModel->isAdiabatic()))
-      new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-
-    new_dw->getModifiable(new_density, d_lab->d_densityCPLabel,
-			  matlIndex, patch);
-    new_density.initialize(0.0);
-
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      new_dw->allocateAndPut(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
-
-      if (d_reactingFlow) {
-        new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel, 
-			       matlIndex, patch);
-        new_dw->allocateAndPut(cp, d_lab->d_cpINLabel, matlIndex, patch);
-        new_dw->allocateAndPut(co2, d_lab->d_co2INLabel, matlIndex, patch);
-        new_dw->allocateAndPut(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
-        new_dw->allocateAndPut(enthalpyRXN, d_lab->d_enthalpyRXNLabel,
-			       matlIndex, patch);
-        if (d_mixingModel->getNumRxnVars())
-	  new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
-			         matlIndex, patch);
-	if (d_steadyflamelet)
-	  new_dw->allocateAndPut(c2h2, d_lab->d_c2h2INLabel, matlIndex, patch);
-        if (d_thermalNOx){
-          new_dw->allocateAndPut(thermalnoxSRC, d_lab->d_thermalnoxSRCINLabel,
-                                 matlIndex, patch);
-          new_dw->get(thermalnox, d_lab->d_thermalnoxSPLabel,
-                          matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-        }
-
-      }
-
-      if (d_flamelet) {
-        new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel,
-			       matlIndex, patch);
-        new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
-        new_dw->allocateAndPut(co2, d_lab->d_co2INLabel, matlIndex, patch);
-        new_dw->allocateAndPut(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
-        new_dw->allocateAndPut(fvtfive, d_lab->d_fvtfiveINLabel,
-			       matlIndex, patch);
-        new_dw->allocateAndPut(tfour, d_lab->d_tfourINLabel, matlIndex, patch);
-        new_dw->allocateAndPut(tfive, d_lab->d_tfiveINLabel, matlIndex, patch);
-        new_dw->allocateAndPut(tnine, d_lab->d_tnineINLabel, matlIndex, patch);
-        new_dw->allocateAndPut(qrg, d_lab->d_qrgINLabel, matlIndex, patch);
-        new_dw->allocateAndPut(qrs, d_lab->d_qrsINLabel, matlIndex, patch);
-      }
-
-      if (d_radiationCalc) {
-        new_dw->allocateAndPut(absorption, d_lab->d_absorpINLabel,
-			       matlIndex, patch);
-        new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
-      }
-    }
-    else {
-      new_dw->getModifiable(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
-
-      if (d_reactingFlow) {
-        new_dw->getModifiable(temperature, d_lab->d_tempINLabel, 
-			       matlIndex, patch);
-        new_dw->getModifiable(cp, d_lab->d_cpINLabel, matlIndex, patch);
-        new_dw->getModifiable(co2, d_lab->d_co2INLabel, matlIndex, patch);
-        new_dw->getModifiable(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
-        new_dw->getModifiable(enthalpyRXN, d_lab->d_enthalpyRXNLabel,
-			       matlIndex, patch);
-        if (d_mixingModel->getNumRxnVars())
-	  new_dw->getModifiable(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
-			         matlIndex, patch);
-	if (d_steadyflamelet)
-          new_dw->getModifiable(c2h2, d_lab->d_c2h2INLabel, matlIndex, patch);
-        if (d_thermalNOx){
-          new_dw->getModifiable(thermalnoxSRC, d_lab->d_thermalnoxSRCINLabel,
-                                 matlIndex, patch);
-          old_dw->get(thermalnox, d_lab->d_thermalnoxSPLabel,
-                                 matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-        }
-
-      }
-
-      if (d_flamelet) {
-        new_dw->getModifiable(temperature, d_lab->d_tempINLabel,
-			       matlIndex, patch);
-        new_dw->getModifiable(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
-        new_dw->getModifiable(co2, d_lab->d_co2INLabel, matlIndex, patch);
-        new_dw->getModifiable(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
-        new_dw->getModifiable(fvtfive, d_lab->d_fvtfiveINLabel,
-			       matlIndex, patch);
-        new_dw->getModifiable(tfour, d_lab->d_tfourINLabel, matlIndex, patch);
-        new_dw->getModifiable(tfive, d_lab->d_tfiveINLabel, matlIndex, patch);
-        new_dw->getModifiable(tnine, d_lab->d_tnineINLabel, matlIndex, patch);
-        new_dw->getModifiable(qrg, d_lab->d_qrgINLabel, matlIndex, patch);
-        new_dw->getModifiable(qrs, d_lab->d_qrsINLabel, matlIndex, patch);
-      }
-
-      if (d_radiationCalc) {
-        new_dw->getModifiable(absorption, d_lab->d_absorpINLabel,
-			       matlIndex, patch);
-        new_dw->getModifiable(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
-      }
-    }
-
-    drhodf.initialize(0.0);
-    if (d_reactingFlow) {
-      temperature.initialize(0.0); 
-      cp.initialize(0.0);
-      co2.initialize(0.0);
-      h2o.initialize(0.0);
-      enthalpyRXN.initialize(0.0);
-        if (d_mixingModel->getNumRxnVars())
-	  reactscalarSRC.initialize(0.0);
-	if (d_steadyflamelet)
-          c2h2.initialize(0.0);
-        if (d_thermalNOx)
-          thermalnoxSRC.initialize(0.0);
-    }    
-    if (d_flamelet) {
-      temperature.initialize(0.0);
-      sootFV.initialize(0.0);
-      co2.initialize(0.0);
-      h2o.initialize(0.0);
-      fvtfive.initialize(0.0);
-      tfour.initialize(0.0);
-      tfive.initialize(0.0);
-      tnine.initialize(0.0);
-      qrg.initialize(0.0);
-      qrs.initialize(0.0);
-    }
-    if (d_radiationCalc) {
-      absorption.initialize(0.0);
-      sootFV.initialize(0.0);
-    }
-
-    if (d_MAlab){
-      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->allocateAndPut(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
-      if (d_DORadiationCalc)
-	new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
-
-    IntVector indexLow = patch->getCellLowIndex();
-    IntVector indexHigh = patch->getCellHighIndex();
-
-    TAU_PROFILE_STOP(input);
-    TAU_PROFILE_START(compute);
-    InletStream inStream(d_numMixingVars,
-		         d_mixingModel->getNumMixStatVars(),
-		         d_mixingModel->getNumRxnVars());
-    Stream outStream;
-    for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-
-	  // construct an InletStream for input to the computeProps
-	  // of mixingModel
-	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
-	    inStream.d_mixVars[ii] = (scalar[ii])[currCell];
-	  }
-
-	  if (d_numMixStatVars > 0) {
-	    for (int ii = 0; ii < d_numMixStatVars; ii++ ) {
-	      inStream.d_mixVarVariance[ii] = (scalarVar[ii])[currCell];
-	    }
-	  }
-	  // Scalar dissipation for steady flamelet tables
-	  if (d_steadyflamelet) {
-	      inStream.d_scalarDisp = scalarDisp[currCell];
-	  }
-
-	  // This will set the flag to compute thermal NOx
-	  if (d_thermalNOx) {
-	      inStream.d_calcthermalNOx = true;
-	  }
-
-	  if (d_mixingModel->getNumRxnVars() > 0) {
-	    for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++ ) 
-	      inStream.d_rxnVars[ii] = (reactScalar[ii])[currCell];
-	  }
-
-	  // currently not using any reaction progress variables
-
-	  if ((!d_mixingModel->isAdiabatic()))
-	      //	      &&(cellType[currCell] != d_bc->getIntrusionID()))
-	    inStream.d_enthalpy = enthalpy[currCell];
-	  else
-	    inStream.d_enthalpy = 0.0;
-          inStream.d_initEnthalpy = false;
-
-	  if (d_flamelet) {
-	    if (colX >= 0)
-	      inStream.d_axialLoc = colX;
-	    else
-	      inStream.d_axialLoc = 0;
-	  }
-
-  TAU_PROFILE_START(mixing);
-	  d_mixingModel->computeProps(inStream, outStream);
-  TAU_PROFILE_STOP(mixing);
-
-	  double local_den = outStream.getDensity();
-	  drhodf[currCell] = outStream.getdrhodf();
-
-	  if (d_flamelet) {
-	    temperature[currCell] = outStream.getTemperature();
-	    sootFV[currCell] = outStream.getSootFV();
-	    co2[currCell] = outStream.getCO2();
-	    h2o[currCell] = outStream.getH2O();
-	    fvtfive[currCell] = outStream.getfvtfive();
-	    tfour[currCell] = outStream.gettfour();
-	    tfive[currCell] = outStream.gettfive();
-	    tnine[currCell] = outStream.gettnine();
-	    qrg[currCell] = outStream.getqrg();
-	    qrs[currCell] = outStream.getqrs();
-	  }
-
-	  if (d_reactingFlow) {
-	    temperature[currCell] = outStream.getTemperature();
-	    cp[currCell] = outStream.getCP();
-	    co2[currCell] = outStream.getCO2();
-	    h2o[currCell] = outStream.getH2O();
-	    enthalpyRXN[currCell] = outStream.getEnthalpy();
-	    if (d_mixingModel->getNumRxnVars())
-	      reactscalarSRC[currCell] = outStream.getRxnSource();
-	    if (d_steadyflamelet)
-	      c2h2[currCell] = outStream.getC2H2();
-            if (d_thermalNOx)
-              thermalnoxSRC[currCell] = outStream.getnoxRxnSource();
-	  }
-	  
-
-	  if (d_radiationCalc) {
-	    // bc is the mass-atoms 0f carbon per mas of reactnat mixture
-	    // taken from radcoef.f
-	    //	double bc = d_mixingModel->getCarbonAtomNumber(inStream)*local_den;
-	    if (d_mixingModel->getNumRxnVars()) 
-	      sootFV[currCell] = outStream.getSootFV();
-	    else {
-	      if (d_empirical_soot) {
-	        if (temperature[currCell] > 1000) {
-		  double bc = inStream.d_mixVars[0]*(84.0/100.0)*local_den;
-		  double c3 = 0.1;
-		  double rhosoot = 1950.0;
-		  double cmw = 12.0;
-		  double factor = 0.01;
-
-		  if (inStream.d_mixVars[0] > 0.1)
-		    sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
-		  else
-		    sootFV[currCell] = 0.0;
-	        }
-	        else 
-		  sootFV[currCell] = 0.0;
-	      }
-	      else sootFV[currCell] = 0.0;
-	    }  
-	    absorption[currCell] = 0.01+ Min(0.5,(4.0/d_opl)*log(1.0+350.0*
-				   sootFV[currCell]*temperature[currCell]*d_opl));
-	  }
-	  // check if the density is greater than air...implement a better way
-          /*if (d_DORadiationCalc) {
-	    double cutoff_air_density = 1.1845;
-	    double cutoff_temperature = 298.0;
-	    if ((scalar[0])[currCell] < 0.4) {
-	      if (local_den > cutoff_air_density) {
-	        local_den = cutoff_air_density;
-	        temperature[currCell] = cutoff_temperature;
-	      }
-	    }
-	  }*/
-
-	  if (d_MAlab) {
-	    denMicro[currCell] = local_den;
-	    local_den *= voidFraction[currCell];
-	    // no under-relaxation for MPMArches
-	    new_density[currCell] = local_den;
-	  }
-	  else {
-	    new_density[currCell] = d_denUnderrelax * local_den +
-	      (1.0-d_denUnderrelax) * density[currCell];
-	  }
-	}
-      }
-    }
-    // Write the computed density to the new data warehouse
-    if (modify_ref_density) {
-      double den_ref = 0.0;
-      if (patch->containsCell(d_denRef)) {
-        den_ref = new_density[d_denRef];
-        cerr << "density_ref " << den_ref << endl;
-      }
-      new_dw->put(sum_vartype(den_ref),timelabels->ref_density);
-    }
-
-    if ((d_bc->getIntrusionBC())&&(d_reactingFlow||d_flamelet))
-      d_bc->intrusionTemperatureBC(pc, patch, cellType, temperature);
-
-    if (d_MAlab && d_DORadiationCalc)
-      d_bc->mmWallTemperatureBC(pc, patch, cellType, solidTemp, temperature);
-
-    if (pc->myrank() == 0)
-      cerr << "Time in the Mixing Model: " << 
-	   Time::currentSeconds()-start_mixTime << " seconds\n";
-
-  TAU_PROFILE_STOP(compute);
   }
 }
 //****************************************************************************
@@ -1512,6 +1200,15 @@ Properties::sched_averageRKProps(SchedulerP& sched, const PatchSet* patches,
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
+  tsk->requires(Task::NewDW, d_lab->d_scalarFELabel, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (d_mixingModel->getNumRxnVars())
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarFELabel, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (!(d_mixingModel->isAdiabatic()))
+    tsk->requires(Task::NewDW, d_lab->d_enthalpyFELabel, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
   tsk->modifies(d_lab->d_scalarSPLabel);
   if (d_mixingModel->getNumRxnVars())
     tsk->modifies(d_lab->d_reactscalarSPLabel);
@@ -1543,10 +1240,13 @@ Properties::averageRKProps(const ProcessorGroup*,
     constCCVariable<double> rho1_density;
     constCCVariable<double> new_density;
     StaticArray<constCCVariable<double> > old_scalar(d_numMixingVars);
+    StaticArray<constCCVariable<double> > fe_scalar(d_numMixingVars);
     StaticArray<CCVariable<double> > new_scalar(d_numMixingVars);
     StaticArray<constCCVariable<double> > old_reactScalar(d_mixingModel->getNumRxnVars());
+    StaticArray<constCCVariable<double> > fe_reactScalar(d_mixingModel->getNumRxnVars());
     StaticArray<CCVariable<double> > new_reactScalar(d_mixingModel->getNumRxnVars());
     constCCVariable<double> old_enthalpy;
+    constCCVariable<double> fe_enthalpy;
     CCVariable<double> new_enthalpy;
     CCVariable<double> density_guess;
 
@@ -1575,13 +1275,23 @@ Properties::averageRKProps(const ProcessorGroup*,
     for (int ii = 0; ii < d_numMixingVars; ii++)
       new_dw->getModifiable(new_scalar[ii], d_lab->d_scalarSPLabel, 
 		            matlIndex, patch);
+    for (int ii = 0; ii < d_numMixingVars; ii++)
+      new_dw->get(fe_scalar[ii], d_lab->d_scalarFELabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     if (d_mixingModel->getNumRxnVars() > 0)
       for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
 	new_dw->getModifiable(new_reactScalar[ii], d_lab->d_reactscalarSPLabel,
 		    	      matlIndex, patch);
+    if (d_mixingModel->getNumRxnVars() > 0)
+      for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
+	new_dw->get(fe_reactScalar[ii], d_lab->d_reactscalarFELabel,
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     if (!(d_mixingModel->isAdiabatic()))
       new_dw->getModifiable(new_enthalpy, d_lab->d_enthalpySPLabel, 
 			    matlIndex, patch);
+    if (!(d_mixingModel->isAdiabatic()))
+      new_dw->get(fe_enthalpy, d_lab->d_enthalpyFELabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     new_dw->getModifiable(density_guess, d_lab->d_densityGuessLabel, 
 			  matlIndex, patch);
@@ -1609,34 +1319,56 @@ Properties::averageRKProps(const ProcessorGroup*,
 	  else
 	    predicted_density = new_density[currCell];
 
+	  bool average_failed = false;
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
 	    (new_scalar[ii])[currCell] = (factor_old*old_density[currCell]*
-		(old_scalar[ii])[currCell] + factor_new*rho1_density[currCell]*
+		(old_scalar[ii])[currCell] + factor_new*new_density[currCell]*
 		(new_scalar[ii])[currCell])/(factor_divide*predicted_density);
-            if ((new_scalar[ii])[currCell] > 1.0) 
-		(new_scalar[ii])[currCell] = 1.0;
-            else if ((new_scalar[ii])[currCell] < 0.0)
-            	(new_scalar[ii])[currCell] = 0.0;
+	    /*(new_scalar[ii])[currCell] = (factor_old*old_density[currCell]*
+		(old_scalar[ii])[currCell] + factor_new*new_density[currCell]*
+		(new_scalar[ii])[currCell])/factor_divide;
+	    (new_scalar[ii])[currCell] = (new_scalar[ii])[currCell] *
+		    0.133/(0.133*1.184344+(new_scalar[ii])[currCell]*
+				    (0.133-1.184344));*/
+            if ((new_scalar[ii])[currCell] > 1.0) {
+//		(new_scalar[ii])[currCell] = 1.0;
+	      cout << "average failed with scalar > 1 at " << currCell << endl;
+	      (new_scalar[ii])[currCell] = (fe_scalar[ii])[currCell];
+	      average_failed = true;
+	    }
+            else if ((new_scalar[ii])[currCell] < 0.0) {
+//            	(new_scalar[ii])[currCell] = 0.0;
+	      cout << "average failed with scalar < 0 at " << currCell << endl;
+	      (new_scalar[ii])[currCell] = (fe_scalar[ii])[currCell];
+	      average_failed = true;
+            }
           }
 
 	  if (d_mixingModel->getNumRxnVars() > 0) {
 	    for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++ ) {
+	      if (!average_failed) {
 	      (new_reactScalar[ii])[currCell] = (factor_old *
 		old_density[currCell]*(old_reactScalar[ii])[currCell] +
-		factor_new*rho1_density[currCell]*
+		factor_new*new_density[currCell]*
 		(new_reactScalar[ii])[currCell])/
 		(factor_divide*predicted_density);
-            if ((new_reactScalar[ii])[currCell] > 1.0) 
+            if ((new_reactScalar[ii])[currCell] > 1.0)
 		(new_reactScalar[ii])[currCell] = 1.0;
             else if ((new_reactScalar[ii])[currCell] < 0.0)
             	(new_reactScalar[ii])[currCell] = 0.0;
+	      }
+	      else
+            	(new_reactScalar[ii])[currCell] = (fe_reactScalar[ii])[currCell];
             }
 	  }
 
 	  if (!d_mixingModel->isAdiabatic())
+	    if (!average_failed)
 	    new_enthalpy[currCell] = (factor_old*old_density[currCell]*
-		old_enthalpy[currCell] + factor_new*rho1_density[currCell]*
+		old_enthalpy[currCell] + factor_new*new_density[currCell]*
 		new_enthalpy[currCell])/(factor_divide*predicted_density);
+	    else
+	    new_enthalpy[currCell] = fe_enthalpy[currCell];
 
 	  density_guess[currCell] = predicted_density;
 
@@ -1756,6 +1488,8 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
     new_dw->put(delT, d_lab->d_oldDeltaTLabel);
   double delta_t = delT;
+  delta_t *= timelabels->time_multiplier *
+	     timelabels->time_position_multiplier_after_average;
   parent_old_dw->get(old_delT, d_lab->d_oldDeltaTLabel);
   double  old_delta_t = old_delT;
 

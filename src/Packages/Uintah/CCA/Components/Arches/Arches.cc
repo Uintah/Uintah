@@ -2,6 +2,7 @@
 
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
@@ -77,6 +78,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_mmInterface = 0;
 #endif
   nofTimeSteps = 0;
+  init_timelabel_allocated = false;
 }
 
 // ****************************************************************************
@@ -93,6 +95,8 @@ Arches::~Arches()
 #ifdef multimaterialform
   delete d_mmInterface;
 #endif
+  if (init_timelabel_allocated)
+    delete init_timelabel;
 }
 
 // ****************************************************************************
@@ -241,17 +245,38 @@ Arches::scheduleInitialize(const LevelP& level,
     d_boundaryCondition->sched_mmWallCellTypeInit_first(sched, patches, matls);
 #endif
 
+  IntVector periodic_vector = level->getPeriodicBoundaries();
+  bool d_3d_periodic = (periodic_vector == IntVector(1,1,1));
+  d_turbModel->set3dPeriodic(d_3d_periodic);
+  d_props->set3dPeriodic(d_3d_periodic);
   // Compute props (output Varlabel have CP appended to them)
   // require : densitySP
   // require scalarSP
   // compute : densityCP
-  d_props->sched_computeProps(sched, patches, matls);
+  init_timelabel = scinew TimeIntegratorLabel(d_lab,
+		  			      TimeIntegratorStepType::FE);
+  init_timelabel_allocated = true;
+  d_props->sched_reComputeProps(sched, patches, matls,
+				init_timelabel, true, true);
+
+  d_boundaryCondition->sched_initInletBC(sched, patches, matls);
 
   sched_getCCVelocities(level, sched);
   // Compute Turb subscale model (output Varlabel have CTS appended to them)
   // require : densityCP, viscosityIN, [u,v,w]VelocitySP
   // compute : viscosityCTS
-  d_turbModel->sched_computeTurbSubmodel(level, sched, patches, matls);
+
+  // check if filter is defined...
+#ifdef PetscFilter
+  if (d_turbModel->getFilter()) {
+    // if the matrix is not initialized
+    if (!d_turbModel->getFilter()->isInitialized()) 
+      d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
+  }
+#endif
+
+  d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
+					   init_timelabel);
 
   // Computes velocities at apecified pressure b.c's
   // require : densityCP, pressureIN, [u,v,w]VelocitySP
@@ -306,6 +331,7 @@ Arches::sched_paramInit(const LevelP& level,
       tsk->computes(d_lab->d_radiationFluxSINLabel); 
       tsk->computes(d_lab->d_radiationFluxTINLabel);
       tsk->computes(d_lab->d_radiationFluxBINLabel); 
+      tsk->computes(d_lab->d_abskgINLabel); 
     }
 
     tsk->computes(d_lab->d_densityCPLabel);
@@ -422,6 +448,7 @@ Arches::paramInit(const ProcessorGroup* ,
       CCVariable<double> qfluxs;
       CCVariable<double> qfluxt;
       CCVariable<double> qfluxb;
+      CCVariable<double> abskg;
       CCVariable<double> radEnthalpySrc;;
 
       new_dw->allocateAndPut(radEnthalpySrc, d_lab->d_radiationSRCINLabel,
@@ -446,6 +473,9 @@ Arches::paramInit(const ProcessorGroup* ,
       new_dw->allocateAndPut(qfluxb, d_lab->d_radiationFluxBINLabel,
 			     matlIndex, patch);
       qfluxb.initialize(0.0);
+      new_dw->allocateAndPut(abskg, d_lab->d_abskgINLabel,
+			     matlIndex, patch);
+      abskg.initialize(0.0);
 
     }
     new_dw->allocateAndPut(density, d_lab->d_densityCPLabel, matlIndex, patch);
@@ -505,6 +535,12 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
+  if (d_boundaryCondition->getOutletBC())
+    tsk->requires(Task::NewDW, d_lab->d_maxUxplus_label);
+
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
   if (d_MAlab) {
     tsk->requires(Task::NewDW, d_MAlab->KStabilityULabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -534,12 +570,20 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    
+    double maxUxplus = 0.0;
+    if (d_boundaryCondition->getOutletBC()) {
+      max_vartype mxUxp;
+      new_dw->get(mxUxp, d_lab->d_maxUxplus_label);
+      maxUxplus = mxUxp;
+    }
 
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
     constCCVariable<double> den;
     constCCVariable<double> visc;
+    constCCVariable<int> cellType;
 
     constCCVariable<double> KStabilityU;
     constCCVariable<double> KStabilityV;
@@ -570,6 +614,8 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(visc, d_lab->d_viscosityCTSLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     if (d_MAlab) {
       new_dw->get(KStabilityU, d_MAlab->KStabilityULabel,
@@ -582,6 +628,34 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 
     IntVector indexLow = patch->getCellFORTLowIndex();
     IntVector indexHigh = patch->getCellFORTHighIndex() + IntVector(1,1,1);
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    int press_celltypeval = d_boundaryCondition->pressureCellType();
+    int out_celltypeval = d_boundaryCondition->outletCellType();
+    if ((xminus)&&((cellType[indexLow - IntVector(1,0,0)]==press_celltypeval)
+		 ||(cellType[indexLow - IntVector(1,0,0)]==out_celltypeval)))
+     indexLow = indexLow - IntVector(1,0,0);
+    if ((yminus)&&((cellType[indexLow - IntVector(0,1,0)]==press_celltypeval)
+		 ||(cellType[indexLow - IntVector(0,1,0)]==out_celltypeval)))
+     indexLow = indexLow - IntVector(0,1,0);
+    if ((zminus)&&((cellType[indexLow - IntVector(0,0,1)]==press_celltypeval)
+		 ||(cellType[indexLow - IntVector(0,0,1)]==out_celltypeval)))
+     indexLow = indexLow - IntVector(0,0,1);
+    if ((xplus)&&((cellType[indexHigh - IntVector(0,1,1)]==press_celltypeval)
+		||(cellType[indexHigh - IntVector(0,1,1)]==out_celltypeval)))
+     indexHigh = indexHigh + IntVector(1,0,0);
+    if ((yplus)&&((cellType[indexHigh - IntVector(1,0,1)]==press_celltypeval)
+		||(cellType[indexHigh - IntVector(1,0,1)]==out_celltypeval)))
+     indexHigh = indexHigh + IntVector(0,1,0);
+    if ((zplus)&&((cellType[indexHigh - IntVector(1,1,0)]==press_celltypeval)
+		||(cellType[indexHigh - IntVector(1,1,0)]==out_celltypeval)))
+     indexHigh = indexHigh + IntVector(0,0,1);
+//    IntVector indexLow = patch->getCellLowIndex();
+//    IntVector indexHigh = patch->getCellHighIndex();
   // set density for the whole domain
     double delta_t = d_deltaT; // max value allowed
     double small_num = 1e-30;
@@ -630,6 +704,13 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 	}
       }
     }
+
+    if (d_boundaryCondition->getOutletBC()) {
+      double tmp_time;
+      tmp_time=Abs(maxUxplus)/(cellinfo->sew[indexHigh.x()-1])+small_num;
+      delta_t2=Min(1.0/tmp_time, delta_t2);
+    }
+
     if (d_variableTimeStep) {
       delta_t = delta_t2;
     }

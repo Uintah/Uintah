@@ -66,14 +66,6 @@ public:
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
-      // Schedule the computation of Turbulence Model data
-      //    [in] 
-      //        data User data needed for solve 
-      virtual void sched_computeTurbSubmodel(const LevelP&,
-					     SchedulerP&, const PatchSet* patches,
-					     const MaterialSet* matls);
-
-      ///////////////////////////////////////////////////////////////////////
       // Schedule the recomputation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
@@ -121,16 +113,6 @@ private:
       SmagorinskyModel();
 
       // GROUP: Action Methods (private)  :
-      ///////////////////////////////////////////////////////////////////////
-      // Actually Calculate the Turbulence sub model
-      //    [in] 
-      //        documentation here
-      void computeTurbSubmodel(const ProcessorGroup*,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw,
-			       DataWarehouse* new_dw);
-
       ///////////////////////////////////////////////////////////////////////
       // Actually reCalculate the Turbulence sub model
       //    [in] 

@@ -141,6 +141,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       d_cellTypes.push_back(total_cellTypes);
       // compute density and other dependent properties
       d_flowInlets[d_numInlets].streamMixturefraction.d_initEnthalpy=true;
+      d_flowInlets[d_numInlets].streamMixturefraction.d_scalarDisp=0.0;
       d_props->computeInletProperties(
                         d_flowInlets[d_numInlets].streamMixturefraction,
 		        d_flowInlets[d_numInlets].calcStream);
@@ -171,6 +172,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_pressureBC->problemSetup(press_db);
     // compute density and other dependent properties
     d_pressureBC->streamMixturefraction.d_initEnthalpy=true;
+    d_pressureBC->streamMixturefraction.d_scalarDisp=0.0;
     d_props->computeInletProperties(
                 		 d_pressureBC->streamMixturefraction, 
 		        	 d_pressureBC->calcStream);
@@ -188,6 +190,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_outletBC->problemSetup(outlet_db);
     // compute density and other dependent properties
     d_outletBC->streamMixturefraction.d_initEnthalpy=true;
+    d_outletBC->streamMixturefraction.d_scalarDisp=0.0;
     d_props->computeInletProperties(
 			       d_outletBC->streamMixturefraction, 
 			       d_outletBC->calcStream);
@@ -806,23 +809,12 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
     
   // This task computes new density, uVelocity, vVelocity and wVelocity, scalars
   tsk->modifies(d_lab->d_densityCPLabel);
-  tsk->computes(d_lab->d_densityOldOldLabel);
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
   tsk->modifies(d_lab->d_uVelRhoHatLabel);
   tsk->modifies(d_lab->d_vVelRhoHatLabel);
   tsk->modifies(d_lab->d_wVelRhoHatLabel);
-
-  tsk->computes(d_lab->d_maxAbsU_label);
-  tsk->computes(d_lab->d_maxAbsV_label);
-  tsk->computes(d_lab->d_maxAbsW_label);
-  tsk->computes(d_lab->d_maxUxplus_label);
-  tsk->computes(d_lab->d_avUxplus_label);
-
-//#ifdef divergenceconstraint
-    tsk->computes(d_lab->d_divConstraintLabel);
-//#endif
 
   for (int ii = 0; ii < d_props->getNumMixVars(); ii++) 
     tsk->modifies(d_lab->d_scalarSPLabel);
@@ -845,7 +837,6 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     constCCVariable<int> cellType;
     CCVariable<double> density;
-    CCVariable<double> density_oldold;
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
@@ -867,7 +858,6 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
     new_dw->getModifiable(density, d_lab->d_densityCPLabel, matlIndex, patch);
-    new_dw->allocateAndPut(density_oldold, d_lab->d_densityOldOldLabel, matlIndex, patch);
     for (int ii = 0; ii < d_nofScalars; ii++) {
       new_dw->getModifiable(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch);
     }
@@ -967,97 +957,9 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 			xminus, xplus, yminus, yplus, zminus, zplus);
       }
     }
-    
-    density_oldold.copyData(density); // copy old into new
     uVelRhoHat.copyData(uVelocity); 
     vVelRhoHat.copyData(vVelocity); 
     wVelRhoHat.copyData(wVelocity); 
-
-//#ifdef divergenceconstraint
-    CCVariable<double> divergence;
-    new_dw->allocateAndPut(divergence,
-			     d_lab->d_divConstraintLabel, matlIndex, patch);
-    divergence.initialize(0.0);
-//#endif
-
-    double maxAbsU = 0.0;
-    double maxAbsV = 0.0;
-    double maxAbsW = 0.0;
-    IntVector indexLow;
-    IntVector indexHigh;
-    double maxUxplus = -10000000000.0;
-    double avUxplus = 0.0;
-    const Level* level = patch->getLevel();
-    IntVector low, high;
-    level->findCellIndexRange(low, high);
-    IntVector range = high-low;
-    double num_elem = range.y()*range.z();
-    
-      indexLow = patch->getSFCXFORTLowIndex();
-      indexHigh = patch->getSFCXFORTHighIndex();
-    
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-
-              IntVector currCell(colX, colY, colZ);
-
-	      maxAbsU = Max(Abs(uVelocity[currCell]), maxAbsU);
-          }
-        }
-      }
-      new_dw->put(max_vartype(maxAbsU), d_lab->d_maxAbsU_label); 
-
-      if ((d_outletBoundary)&&(xplus)) {
-        int outlet_celltypeval = outletCellType();
-        int colX = indexHigh.x();
-        for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-          for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-
-              IntVector currCell(colX, colY, colZ);
-              IntVector xplusCell(colX+1, colY, colZ);
-
-	      if (cellType[xplusCell] == outlet_celltypeval) {
-	        maxUxplus = Max(uVelocity[currCell], maxUxplus);
-		avUxplus += uVelocity[currCell];
-	      }
-          }
-        }
-      }
-      new_dw->put(max_vartype(maxUxplus), d_lab->d_maxUxplus_label);
-      avUxplus /= num_elem;
-      new_dw->put(sum_vartype(avUxplus), d_lab->d_avUxplus_label);
-
-      indexLow = patch->getSFCYFORTLowIndex();
-      indexHigh = patch->getSFCYFORTHighIndex();
-    
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-
-              IntVector currCell(colX, colY, colZ);
-
-	      maxAbsV = Max(Abs(vVelocity[currCell]), maxAbsV);
-          }
-        }
-      }
-      new_dw->put(max_vartype(maxAbsV), d_lab->d_maxAbsV_label); 
-
-      indexLow = patch->getSFCZFORTLowIndex();
-      indexHigh = patch->getSFCZFORTHighIndex();
-    
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-
-              IntVector currCell(colX, colY, colZ);
-
-	      maxAbsW = Max(Abs(wVelocity[currCell]), maxAbsW);
-          }
-        }
-      }
-      new_dw->put(max_vartype(maxAbsW), d_lab->d_maxAbsW_label); 
-    
   }
 }
 
@@ -1311,7 +1213,7 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
 	       vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
 	       vars->pressNonlinearSrc, vars->pressLinearSrc,
 	       constvars->cellType, wall_celltypeval, outlet_celltypeval,
-	       neumann_bc,
+	       dirichlet_bc,
 	       xminus, xplus, yminus, yplus, zminus, zplus);
 
   fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
@@ -2938,7 +2840,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
         if (constvars->cellType[xminusCell] == pressure_celltypeval)
-//	  if (constvars->uVelocity[currCell] <= 0.0)
+//	  if (constvars->uVelocity[currCell] < 0.0)
                         vars->scalar[xminusCell] = vars->scalar[currCell];
 //	  else vars->scalar[xminusCell] = 0.0;
       }
@@ -2951,7 +2853,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xplusCell] == pressure_celltypeval)
-//	  if (constvars->uVelocity[xplusCell] >= 0.0)
+//	  if (constvars->uVelocity[xplusCell] > 0.0)
                         vars->scalar[xplusCell] = vars->scalar[currCell];
 //	  else vars->scalar[xplusCell] = 0.0;
       }
@@ -2964,7 +2866,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
         if (constvars->cellType[yminusCell] == pressure_celltypeval)
-//	  if (constvars->vVelocity[currCell] <= 0.0)
+//	  if (constvars->vVelocity[currCell] < 0.0)
                         vars->scalar[yminusCell] = vars->scalar[currCell];
 //	  else vars->scalar[yminusCell] = 0.0;
       }
@@ -2977,7 +2879,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         if (constvars->cellType[yplusCell] == pressure_celltypeval)
-//	  if (constvars->vVelocity[yplusCell] >= 0.0)
+//	  if (constvars->vVelocity[yplusCell] > 0.0)
                         vars->scalar[yplusCell] = vars->scalar[currCell];
 //	  else vars->scalar[yplusCell] = 0.0;
       }
@@ -2990,7 +2892,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
         if (constvars->cellType[zminusCell] == pressure_celltypeval)
-//	  if (constvars->wVelocity[currCell] <= 0.0)
+//	  if (constvars->wVelocity[currCell] < 0.0)
                         vars->scalar[zminusCell] = vars->scalar[currCell];
 //	  else vars->scalar[zminusCell] = 0.0;
       }
@@ -3003,7 +2905,7 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
         if (constvars->cellType[zplusCell] == pressure_celltypeval)
-//	  if (constvars->wVelocity[zplusCell] >= 0.0)
+//	  if (constvars->wVelocity[zplusCell] > 0.0)
                         vars->scalar[zplusCell] = vars->scalar[currCell];
 //	  else vars->scalar[zplusCell] = 0.0;
       }
@@ -3258,7 +3160,10 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
 	       cellinfo->dxpw[colX+1] +
 	       constvars->old_old_density[xplusCell]*constvars->old_old_scalar[xplusCell])/
 	      constvars->density_guess[xplusCell];
+	   if (constvars->uVelocity[xplusCell] > 0.0)
            vars->scalar[xplusCell]= vars->scalar[currCell];
+	   else
+	   vars->scalar[xplusCell]= 0.0;
            if (vars->scalar[xplusCell] > 1.0)
                vars->scalar[xplusCell] = 1.0;
            else if (vars->scalar[xplusCell] < 0.0)
@@ -3997,7 +3902,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
   if (xplus) {
       cout.precision(25);
 //      cout << maxAbsU << endl;
-//    double gravity = d_physicalConsts->getGravity(Arches::XDIR);
+    double gravity = d_physicalConsts->getGravity(Arches::XDIR);
     int colX = idxHi.x();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -4018,20 +3923,21 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 			             constvars->old_density[currCell]);
            double avden = 0.5 * (constvars->density[xplusCell] +
 			         constvars->density[currCell]);
-//           double ref_avden = 0.5 * (constvars->denRefArray[xplusCell] +
-//			         constvars->denRefArray[currCell]);
+           double ref_avden = 0.5 * (constvars->denRefArray[xplusCell] +
+			         constvars->denRefArray[currCell]);
            double avdenlow = 0.5 * (constvars->density[currCell] +
 			            constvars->density[xminusCell]);
            double new_avden = 0.5 * (constvars->new_density[xplusCell] +
 			             constvars->new_density[currCell]);
 	   double out_vel = constvars->uVelocity[currCell];
 	   out_vel = maxAbsU;
+//	   out_vel = 25.0;
 
            vars->uVelRhoHat[xplusCell] = ( delta_t * (- out_vel *
             (avden*constvars->uVelocity[xplusCell] - 
 	     avdenlow*constvars->uVelocity[currCell]) / cellinfo->dxpwu[colX+1]
-//	    +
-//	     (avden-ref_avden) * gravity
+	    +
+	     (avden-ref_avden) * gravity
 	     )+
 	    old_avden*constvars->old_uVelocity[xplusCell]) / new_avden;
 //	   if (vars->uVelRhoHat[xplusCell] < 0.0) vars->uVelRhoHat[xplusCell] = 0.0;
@@ -4095,6 +4001,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 	   out_vel = 0.5 * (constvars->uVelocity[xplusCell] +
 			    constvars->uVelocity[xplusyminusCell]);
 	   out_vel = maxAbsU;
+//	   out_vel = 25.0;
 
            vars->vVelRhoHat[xplusCell] = (- delta_t * out_vel *
             (avden*constvars->vVelocity[xplusCell] - 
@@ -4114,6 +4021,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 	   out_vel = 0.5 * (constvars->uVelocity[xplusCell] +
 			    constvars->uVelocity[xpluszminusCell]);
 	   out_vel = maxAbsU;
+//	   out_vel = 25.0;
 
            vars->wVelRhoHat[xplusCell] = (- delta_t * out_vel * 
             (avden*constvars->wVelocity[xplusCell] - 
@@ -4685,9 +4593,9 @@ BoundaryCondition::addPresGradVelocityOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         IntVector xplusplusCell(colX+2, colY, colZ);
-     //   if ((constvars->cellType[xplusCell] == outlet_celltypeval)||
-       //     (constvars->cellType[xplusCell] == pressure_celltypeval)) {
-        if (constvars->cellType[xplusCell] == pressure_celltypeval) {
+        if ((constvars->cellType[xplusCell] == outlet_celltypeval)||
+            (constvars->cellType[xplusCell] == pressure_celltypeval)) {
+//        if (constvars->cellType[xplusCell] == pressure_celltypeval) {
            double avden = 0.5 * (constvars->density[xplusCell] +
 			         constvars->density[currCell]);
 
@@ -5183,4 +5091,194 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
       }
       }
     }
+}
+//****************************************************************************
+// Schedule init inlet bcs
+//****************************************************************************
+void 
+BoundaryCondition::sched_initInletBC(SchedulerP& sched, const PatchSet* patches,
+				    const MaterialSet* matls)
+{
+  Task* tsk = scinew Task("BoundaryCondition::initInletBC",
+			  this,
+			  &BoundaryCondition::initInletBC);
+
+  // This task requires cellTypeVariable and areaLabel for inlet boundary
+  // Also densityIN, [u,v,w] velocityIN, scalarIN
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    
+  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_uVelRhoHatLabel);
+  tsk->modifies(d_lab->d_vVelRhoHatLabel);
+  tsk->modifies(d_lab->d_wVelRhoHatLabel);
+
+  tsk->computes(d_lab->d_densityOldOldLabel);
+  tsk->computes(d_lab->d_maxAbsU_label);
+  tsk->computes(d_lab->d_maxAbsV_label);
+  tsk->computes(d_lab->d_maxAbsW_label);
+  tsk->computes(d_lab->d_maxUxplus_label);
+  tsk->computes(d_lab->d_avUxplus_label);
+
+//#ifdef divergenceconstraint
+    tsk->computes(d_lab->d_divConstraintLabel);
+//#endif
+  sched->addTask(tsk, patches, matls);
+}
+
+//****************************************************************************
+// Actually initialize inlet BCs
+//****************************************************************************
+void 
+BoundaryCondition::initInletBC(const ProcessorGroup* /*pc*/,
+				  const PatchSubset* patches,
+				  const MaterialSubset*,
+				  DataWarehouse*,
+				  DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    constCCVariable<int> cellType;
+    constCCVariable<double> density;
+    CCVariable<double> density_oldold;
+    SFCXVariable<double> uVelocity;
+    SFCYVariable<double> vVelocity;
+    SFCZVariable<double> wVelocity;
+    SFCXVariable<double> uVelRhoHat;
+    SFCYVariable<double> vVelRhoHat;
+    SFCZVariable<double> wVelRhoHat;
+
+    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
+    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
+    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
+    new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel, matlIndex, patch);
+    new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel, matlIndex, patch);
+    new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel, matlIndex, patch);
+    
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+    new_dw->allocateAndPut(density_oldold, d_lab->d_densityOldOldLabel, matlIndex, patch);
+
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+    if (d_inletBoundary) {
+      double current_time = 0.0; 
+      for (int indx = 0; indx < d_numInlets; indx++) {
+        // Get a copy of the current flow inlet
+        FlowInlet fi = d_flowInlets[indx];
+    
+        fort_inlbcs(uVelocity, vVelocity, wVelocity,
+      	                 idxLo, idxHi, density, cellType, 
+      	                 fi.d_cellTypeID, current_time,
+      	                 xminus, xplus, yminus, yplus, zminus, zplus,
+	                 d_ramping_inlet_flowrate);
+      }
+    }  
+    
+    density_oldold.copyData(density); // copy old into new
+    uVelRhoHat.copyData(uVelocity); 
+    vVelRhoHat.copyData(vVelocity); 
+    wVelRhoHat.copyData(wVelocity); 
+
+//#ifdef divergenceconstraint    
+    CCVariable<double> divergence;
+    new_dw->allocateAndPut(divergence,
+			     d_lab->d_divConstraintLabel, matlIndex, patch);
+    divergence.initialize(0.0);
+//#endif
+
+    double maxAbsU = 0.0;
+    double maxAbsV = 0.0;
+    double maxAbsW = 0.0;
+    IntVector indexLow;
+    IntVector indexHigh;
+    double maxUxplus = -10000000000.0;
+    double avUxplus = 0.0;
+    const Level* level = patch->getLevel();
+    IntVector low, high;
+    level->findCellIndexRange(low, high);
+    IntVector range = high-low;
+    double num_elem = range.y()*range.z();
+    
+      indexLow = patch->getSFCXFORTLowIndex();
+      indexHigh = patch->getSFCXFORTHighIndex();
+    
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+
+	      maxAbsU = Max(Abs(uVelocity[currCell]), maxAbsU);
+          }
+        }
+      }
+      new_dw->put(max_vartype(maxAbsU), d_lab->d_maxAbsU_label); 
+
+      if ((d_outletBoundary)&&(xplus)) {
+        int outlet_celltypeval = outletCellType();
+        int colX = indexHigh.x();
+        for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+          for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+
+              IntVector currCell(colX, colY, colZ);
+              IntVector xplusCell(colX+1, colY, colZ);
+
+	      if (cellType[xplusCell] == outlet_celltypeval) {
+	        maxUxplus = Max(uVelocity[currCell], maxUxplus);
+		avUxplus += uVelocity[currCell];
+	      }
+          }
+        }
+      }
+      new_dw->put(max_vartype(maxUxplus), d_lab->d_maxUxplus_label);
+      avUxplus /= num_elem;
+      new_dw->put(sum_vartype(avUxplus), d_lab->d_avUxplus_label);
+
+      indexLow = patch->getSFCYFORTLowIndex();
+      indexHigh = patch->getSFCYFORTHighIndex();
+    
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+
+	      maxAbsV = Max(Abs(vVelocity[currCell]), maxAbsV);
+          }
+        }
+      }
+      new_dw->put(max_vartype(maxAbsV), d_lab->d_maxAbsV_label); 
+
+      indexLow = patch->getSFCZFORTLowIndex();
+      indexHigh = patch->getSFCZFORTHighIndex();
+    
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+
+	      maxAbsW = Max(Abs(wVelocity[currCell]), maxAbsW);
+          }
+        }
+      }
+      new_dw->put(max_vartype(maxAbsW), d_lab->d_maxAbsW_label); 
+    
+  }
 }

@@ -124,6 +124,7 @@ namespace Uintah {
 
       const VarLabel* d_scalarSPLabel;
       const VarLabel* d_scalarTempLabel;
+      const VarLabel* d_scalarFELabel;
 
       // Scalar variance labels
 
@@ -157,6 +158,7 @@ namespace Uintah {
 
       const VarLabel* d_reactscalarSPLabel;
       const VarLabel* d_reactscalarTempLabel;
+      const VarLabel* d_reactscalarFELabel;
 
       // Reactscalar variance labels
       // computed for new_dw in Smagorinsky Model
@@ -300,6 +302,7 @@ namespace Uintah {
       // for enthalpy equation
       const VarLabel* d_enthalpySPLabel;
       const VarLabel* d_enthalpyTempLabel;
+      const VarLabel* d_enthalpyFELabel;
       // for validation
       const VarLabel* d_enthalpyRXNLabel;
 
