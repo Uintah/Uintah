@@ -56,6 +56,9 @@ WARNING
      virtual void scheduleInitialize(const LevelP& level,
 				     SchedulerP&) = 0;
      //////////
+     virtual void scheduleInitializeAddedMaterial(const LevelP& level,
+                                                  SchedulerP&);
+     //////////
      // Insert Documentation Here:
      virtual void restartInitialize() {}
       
