@@ -82,7 +82,8 @@ itcl_class SCIRun_DataIO_ColorMapWriter {
 	makeSaveFilebox \
 		-parent $w \
 		-filevar $this-filename \
-		-command "$this-c needexecute; wm withdraw $w" \
+		-command "wm withdraw $w" \
+		-execute "$this-c needexecute; wm withdraw $w" \
 		-cancel "wm withdraw $w" \
 		-title $title \
 		-filetypes $types \
