@@ -5,6 +5,8 @@
 
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 
+#include <iomanip>
+#include <iostream>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
@@ -307,8 +309,8 @@ class Crack
      void OutputCrackPlaneMesh(const int&);
      void CheckCrackFrontSegments(const int&);
 
-     // Smooth crack front 
-     short SmoothCrackFront(const int&);
+     // Calculate crack-front tangential direction 
+     short GetCrackFrontTangentialVector(const int&);
      
      // Cubic spline fitting
      short CubicSpline(const int& n, const int& m, const int& n1,
