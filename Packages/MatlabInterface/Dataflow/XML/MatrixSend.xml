@@ -37,11 +37,11 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Matrix</name>
+        <name>Matrix1</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
-        <name>Matrix</name>
+        <name>Matrix2</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
