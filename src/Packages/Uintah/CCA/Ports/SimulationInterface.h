@@ -77,9 +77,6 @@ WARNING
      virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
 					SchedulerP& sched);
 
-   protected:
-     virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&);
-     
    private:
      SimulationInterface(const SimulationInterface&);
      SimulationInterface& operator=(const SimulationInterface&);
