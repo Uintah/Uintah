@@ -170,7 +170,6 @@ void RTRTViewer::start_rtrt() {
   
   // extract the parameters from the tcl code
   rtrt_engine->nworkers = nworkers.get();
-  rtrt_engine->np = rtrt_engine->nworkers;
 
   cout << "xres = "<<xres<<", yres = "<<yres<<endl;
   // set the scenes rtrt_engine pointer
@@ -240,7 +239,6 @@ void RTRTViewer::start_rtrt() {
   
   // Start up display thread...
   Dpy* dpy=new Dpy(current_scene, rtrt_engine, criteria1, criteria2,
-                   rtrt_engine->nworkers,
 		   bench, ncounters, c0, c1, 1.0, 1.0, display_frames,
 		   pp_size, scratchsize, false, do_frameless==true, false);
 
