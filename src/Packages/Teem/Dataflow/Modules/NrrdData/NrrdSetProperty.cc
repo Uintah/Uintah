@@ -38,7 +38,6 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Teem/Core/Datatypes/NrrdData.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 
 #include <Core/GuiInterface/GuiVar.h>
