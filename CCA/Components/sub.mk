@@ -12,6 +12,8 @@ SUBDIRS := \
 	$(SRCDIR)/MPMICE \
 	$(SRCDIR)/MPMArches \
 	$(SRCDIR)/Arches \
+	$(SRCDIR)/Arches/fortran \
+	$(SRCDIR)/Arches/Mixing \
 	$(SRCDIR)/ProblemSpecification \
 	$(SRCDIR)/HETransformation
 
