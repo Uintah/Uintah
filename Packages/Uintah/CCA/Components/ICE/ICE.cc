@@ -139,7 +139,7 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
     debug_ps->get("dbg_timeStart",     d_dbgStartTime);
     debug_ps->get("dbg_timeStop",      d_dbgStopTime);
     debug_ps->get("dbg_outputInterval",d_dbgOutputInterval);
-    d_dbgOldTime = 0.0;
+    d_dbgOldTime = -d_dbgOutputInterval;
     d_dbgNextDumpTime = 0.0;
 
     for (ProblemSpecP child = debug_ps->findBlock("debug"); child != 0;
@@ -738,17 +738,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       double delt_CFL = 100000, fudge_factor = 1.;
       CCVariable<double> speedSound;
       CCVariable<Vector> vel;
-
-//    This shit is ass.  I think this ::iterNum variable is essentially
-//    a common variable as in FORTRAN77.  
-//      double CFL,N_ITERATIONS_TO_STABILIZE = 1;
-//      if (iterNum < N_ITERATIONS_TO_STABILIZE) {
-//        CFL = d_CFL * (double)(::iterNum)  *
-//                        (1./(double)N_ITERATIONS_TO_STABILIZE);
-//      } else {
-//        CFL = d_CFL;
-//      }
-
       for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
         int indx= ice_matl->getDWIndex();
@@ -783,6 +772,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
     new_dw->put(delt_vartype(delt_CFL), lb->delTLabel);
   }  // patch loop
+  //  update when you should dump debugging data. 
+  d_dbgNextDumpTime = d_dbgOldTime + d_dbgOutputInterval;
 }
 
 /* --------------------------------------------------------------------- 
@@ -1322,7 +1313,8 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       if(doMechOld < -1.5){
       //__________________________________
       //   B O T T O M   F A C E S 
-      int offset=1;
+      int offset=0; // 0=Compute all faces in computational domain
+                    // 1=Skip the faces at the border between interior and gc
       for(CellIterator iter=patch->getSFCYIterator(offset);!iter.done();iter++){
 	 IntVector curcell = *iter;
 	 IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z()); 
@@ -1521,7 +1513,8 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     //  Note this includes b[m][m]
     //  You need to make sure that mom_exch_coeff[m][m] = 0
     //   - form off diagonal terms of (a) 
-    int offset=1;
+    int offset=0;   // 0=Compute all faces in computational domain
+                    // 1=Skip the faces at the border between interior and gc
     for(CellIterator iter=patch->getSFCYIterator(offset);!iter.done();iter++){
       IntVector curcell = *iter;
       IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z()); 
@@ -1676,7 +1669,6 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       #endif
       // Turn off the old way if setBC_FC_John is turned on.
       #ifndef setBC_FC_John 
-//      cout << "Not doing setBC_FC_John . . ." << endl;
       setBC(uvel_FCME[m],"Velocity","x",patch,indx);
       setBC(vvel_FCME[m],"Velocity","y",patch,indx);
       setBC(wvel_FCME[m],"Velocity","z",patch,indx);
@@ -2942,9 +2934,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       new_dw->put(vel_CC,   lb->vel_CCLabel,           indx,patch);
       new_dw->put(temp,     lb->temp_CCLabel,          indx,patch);
     }
-  }  // patch loop
-   // This belongs at the bottom of the timestep
-  d_dbgNextDumpTime = d_dbgOldTime + d_dbgOutputInterval; 
+  }  // patch loop 
 }
 
 
@@ -3140,7 +3130,6 @@ void ICE::setBC(CCVariable<Vector>& variable, const string& kind,
 void ICE::setBC(SFCXVariable<double>& variable, const  string& kind, 
 		const string& comp, const Patch* patch, const int mat_id) 
 {
-  Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
     BoundCondBase *bcs;
@@ -3157,12 +3146,17 @@ void ICE::setBC(SFCXVariable<double>& variable, const  string& kind,
 	 if (comp == "x")
 	   variable.fillFace(patch, face,new_bcs->getValue().x(),offset);
       }
-
-      
+/*`==========TESTING==========*/ 
+#if 0
+// fillFaceFlux is broken and can probably be deleted
+// currently vel_FC[gc] = vel_FC[interior] which is WRONG
       if (new_bcs->getKind() == "Neumann") {
 	 if (comp == "x")
+          Vector dx = patch->dCell();
 	   variable.fillFaceFlux(patch, face,new_bcs->getValue().x(),dx,offset);
       }
+#endif
+ /*==========TESTING==========`*/
     }
   }
 }
@@ -3173,7 +3167,6 @@ void ICE::setBC(SFCXVariable<double>& variable, const  string& kind,
 void ICE::setBC(SFCYVariable<double>& variable, const  string& kind, 
 		const string& comp, const Patch* patch, const int mat_id) 
 {
-  Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
     BoundCondBase *bcs;
@@ -3191,10 +3184,17 @@ void ICE::setBC(SFCYVariable<double>& variable, const  string& kind,
 	   variable.fillFace(patch, face,new_bcs->getValue().y(),offset);
       }
  
+/*`==========TESTING==========*/
+#if 0
+// fillFaceFlux is broken and can probably be deleted
+// currently vel_FC[gc] = vel_FC[interior] which is WRONG
       if (new_bcs->getKind() == "Neumann") {
 	 if (comp == "y")
+         Vector dx = patch->dCell();
 	  variable.fillFaceFlux(patch, face,new_bcs->getValue().y(),dx, offset);
       }
+#endif
+ /*==========TESTING==========`*/
     }
   }
 }
@@ -3205,7 +3205,6 @@ void ICE::setBC(SFCYVariable<double>& variable, const  string& kind,
 void ICE::setBC(SFCZVariable<double>& variable, const  string& kind, 
 		const string& comp, const Patch* patch, const int mat_id) 
 {
-  Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
     BoundCondBase *bcs;
@@ -3223,11 +3222,17 @@ void ICE::setBC(SFCZVariable<double>& variable, const  string& kind,
 	  variable.fillFace(patch, face,new_bcs->getValue().z(),offset);
       }
 
-      
+/*`==========TESTING==========*/
+#if 0
+// fillFaceFlux is broken and can probably be deleted
+// currently vel_FC[gc] = vel_FC[interior] which is WRONG     
       if (new_bcs->getKind() == "Neumann") {
 	 if (comp == "z")
+          Vector dx = patch->dCell();
 	   variable.fillFaceFlux(patch, face,new_bcs->getValue().z(),dx,offset);
       }
+#endif
+ /*==========TESTING==========`*/
     }
   }
 }
