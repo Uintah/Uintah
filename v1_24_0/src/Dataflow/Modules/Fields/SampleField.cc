@@ -331,7 +331,7 @@ SampleField::execute_rake(FieldHandle ifield)
 
   mesh->freeze();
   PointCloudField<double> *seeds =
-    scinew PointCloudField<double>(mesh, 1);
+    scinew PointCloudField<double>(mesh, 0);
   PointCloudField<double>::fdata_type &fdata = seeds->fdata();
   
   for (loop=0;loop<(num_seeds-0.99999);++loop)
@@ -438,7 +438,7 @@ SampleField::execute_ring(FieldHandle ifield)
 
   mesh->freeze();
   PointCloudField<double> *seeds =
-    scinew PointCloudField<double>(mesh, 1);
+    scinew PointCloudField<double>(mesh, 0);
   PointCloudField<double>::fdata_type &fdata = seeds->fdata();
   
   for (int loop=0; loop<num_seeds; ++loop) {
@@ -551,7 +551,7 @@ SampleField::execute_frame(FieldHandle ifield)
 
   mesh->freeze();
   PointCloudField<double> *seeds =
-    scinew PointCloudField<double>(mesh, 1);
+    scinew PointCloudField<double>(mesh, 0);
   PointCloudField<double>::fdata_type &fdata = seeds->fdata();
   
   for (int loop=0; loop<num_seeds; ++loop)

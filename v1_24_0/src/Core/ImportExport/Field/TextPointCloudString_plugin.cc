@@ -116,7 +116,7 @@ TextPointCloudString_reader(ProgressReporter *pr, const char *filename)
   }
 
   PointCloudField<string> *pc = 
-    scinew PointCloudField<string>(pcm, 1);
+    scinew PointCloudField<string>(pcm, 0);
   for (unsigned int i=0; i < strings.size(); i++)
   {
     pc->set_value(strings[i], PointCloudMesh::Node::index_type(i));

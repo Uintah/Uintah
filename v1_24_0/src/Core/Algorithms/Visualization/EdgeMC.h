@@ -306,7 +306,7 @@ EdgeMC<Field>::get_field(double value)
   PointCloudField<double> *fld = 0;
   if (out_mesh_.get_rep())
   {
-    fld = scinew PointCloudField<double>(out_mesh_, 1);
+    fld = scinew PointCloudField<double>(out_mesh_, 0);
     vector<double>::iterator iter = fld->fdata().begin();
     while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
   }

@@ -258,7 +258,7 @@ void DipoleInAnisoSpheres::execute() {
   // create new output field containing the potential values
   newElectrodeMesh = scinew PointCloudMesh(*hMeshE->clone());
   PointCloudMeshHandle hNewMesh(newElectrodeMesh);
-  nElectrodes = scinew PointCloudField<double>(hNewMesh, 1);
+  nElectrodes = scinew PointCloudField<double>(hNewMesh, 0);
   
   // set new electrode values
   vector<double>& newElectrodeValues = nElectrodes->fdata();
