@@ -16,7 +16,6 @@
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/MatrixOperations.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/Math/function.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <iostream>
 #include <sstream>
@@ -118,20 +117,9 @@ void LinAlgBinary::execute() {
       error("Function only works if input matrices have the same number of elements.");
       return;
     }
-    Function *f = new Function(1);
-    fnparsestring(function_.get().c_str(), &f);
-    MatrixHandle m = aH->clone();
-    double *x = &((*(m.get_rep()))[0][0]);
-    double *a = &((*(aH.get_rep()))[0][0]);
-    double *b = &((*(bH.get_rep()))[0][0]);
-    int n = m->nrows()*m->ncols();
-    double *ab = new double[2];
-    for (int i=0; i<n; i++) {
-      ab[0]=a[i]; ab[1]=b[i];
-      x[i]=f->eval(ab);
-    }
-    omat_->send(MatrixHandle(m));
-    delete[] ab;
+
+    // TODO: Dynamically compile this
+
   } else if (op == "SelectColumns") {
     if (!aH.get_rep() || !bH.get_rep()) {
       cerr << "LinAlgBinary:SelectColumns Error - can't have an empty input matrix for this operation.\n";
