@@ -62,7 +62,7 @@ extern "C" {
 #include <string>
 #include <unistd.h>
 
-#ifdef _AIX
+#if defined(_AIX)
 
 #  include <sys/mman.h>
 #  define sem_type msemaphore *
@@ -74,7 +74,7 @@ extern "C" {
 #  define SEM_INIT_SUCCESS(val)      (((val)!= 0)?true:false)
 #  define SEM_DESTROY(sem)           msem_remove(*(sem)) 
 
-#elif defined __APPLE__
+#elif defined(__APPLE__)
 
 #  include <semaphore.h>
 #  define sem_type sem_t*
@@ -86,6 +86,10 @@ extern "C" {
 
 sem_t* SEM_INIT( const char *name, int shared, unsigned int val )
 {
+  static int num_inits = 0;
+  static int num_fails = 0;
+
+  num_inits++;
   // what is the maximum length ?
   char local[40];
   if ( strlen(name) > 25 ) {
@@ -93,15 +97,29 @@ sem_t* SEM_INIT( const char *name, int shared, unsigned int val )
     local[25] = 0;
     name = local;
   }
-  sem_t *sem = sem_open(name, O_CREAT , shared, val );
+  sem_t *sem = sem_open( name, O_CREAT, shared, val );
   if ( sem == (sem_t *)SEM_FAILED) {
+    num_fails++;
     // why does it fail the first time ?
     //perror("failed:");
     sem_unlink(name);
     sem = sem_open( name, O_CREAT , shared, val );
-    //if ( sem == (sem_t *)SEM_FAILED) 
-    //  perror("failed twice! :");
+    if ( sem == (sem_t *)SEM_FAILED )
+      {
+	num_fails++;
+	char errmsg[1024];
+	printf("error: num_inits %d, num_fails %d\n", num_inits, num_fails);
+	sprintf( errmsg,
+		 "Thread_pthreads.cc: Mac OSX SEM_INIT: sem_open failed (twice): %s",
+		 name );
+	perror( errmsg );
+      } else {
+	num_inits++;
+      }
+  } else {
+    num_inits++;
   }
+
   return sem;
 } 
 
@@ -156,7 +174,7 @@ bool exiting=false;
 
 namespace SCIRun {
 struct Thread_private {
-#ifdef _AIX
+#if defined(_AIX)
   Thread_private();
 #endif
   Thread* thread;
@@ -171,7 +189,7 @@ struct Thread_private {
   bool ismain;
 };
 
-#ifdef _AIX
+#if defined(_AIX)
 Thread_private::Thread_private()
 {
   done = (msemaphore*) mmap(NULL,sizeof(msemaphore),
@@ -201,12 +219,14 @@ static const char* bstack_init="Unused block stack entry";
 using SCIRun::Thread_private;
 
 static Thread_private* active[MAXTHREADS];
-static int numActive;
+static int numActive = 0;
+
 static pthread_mutex_t sched_lock;
-static pthread_key_t thread_key;
+static pthread_key_t   thread_key;
+
 static sem_type main_sema;
 static sem_type control_c_sema;
-static Thread* mainthread;
+static Thread*  mainthread = 0;
 
 static
 void
@@ -390,19 +410,20 @@ Thread::os_start(bool stopped)
 
   priv_=new Thread_private;
 
-#ifdef __APPLE__
+#if defined(__APPLE__)
   std::string name=threadname_;
   priv_->done = SEM_INIT( name+"-done", 0, 0);
   if (!SEM_INIT_SUCCESS( priv_->done ))
-    throw ThreadError(std::string("SEM_INIT failed") + strerror(errno));
+    throw ThreadError(std::string("SEM_INIT failed (priv_->done): ")+strerror(errno));
   priv_->delete_ready = SEM_INIT( name+"-delete_ready", 0, 0);
   if (!SEM_INIT_SUCCESS( priv_->delete_ready ))
-    throw ThreadError(std::string("SEM_INIT failed") + strerror(errno));
+    throw ThreadError(std::string("SEM_INIT failed (priv_->delete_ready): ") +
+		      strerror(errno));
 #else
   if( !SEM_INIT_SUCCESS( SEM_INIT(&priv_->done, 0, 0) ) )
-    throw ThreadError(std::string("SEM_INIT failed") + strerror(errno));
+    throw ThreadError(std::string("SEM_INIT failed: ") + strerror(errno));
   if( !SEM_INIT_SUCCESS( SEM_INIT(&priv_->delete_ready, 0, 0) ) )
-    throw ThreadError(std::string("SEM_INIT failed") + strerror(errno));
+    throw ThreadError(std::string("SEM_INIT failed: ") + strerror(errno));
 #endif
 
   priv_->state=STARTUP;
@@ -415,10 +436,11 @@ Thread::os_start(bool stopped)
   priv_->is_blocked=false;
   priv_->ismain=false;
 
-#ifdef __APPLE__
+#if defined(__APPLE__)
   priv_->block_sema = SEM_INIT( name+"-block", 0, stopped?0:1);
   if( !SEM_INIT_SUCCESS( priv_->block_sema ))
-    throw ThreadError(std::string("SEM_INIT failed") + strerror(errno));
+    throw ThreadError(std::string("SEM_INIT failed (priv_->block_sema): ") +
+		      strerror(errno));
 #else
   if( !SEM_INIT_SUCCESS( SEM_INIT(&priv_->block_sema, 0, stopped?0:1)) )
     throw ThreadError(std::string("SEM_INIT failed") + strerror(errno));
@@ -540,7 +562,7 @@ Thread::exitAll(int code)
 static
 void
 handle_abort_signals(int sig,
-#ifdef __sgi
+#if defined(__sgi)
 		     int,
 		     struct sigcontext* ctx)
 #else
@@ -557,20 +579,20 @@ handle_abort_signals(int sig,
 
     Thread* self=Thread::self();
     const char* tname=self?self->getThreadName():"idle or main";
-#ifdef __sgi
+#if defined(__sgi)
 #  if defined(_LONGLONG)
      caddr_t addr=(caddr_t)ctx->sc_badvaddr;
 #  else
      caddr_t addr=(caddr_t)ctx->sc_badvaddr.lo32;
 #  endif
 #else
-#  ifdef PPC
+#  if defined(PPC)
     void* addr=(void*)ctx.regs->dsisr;
 #  else
-#    ifdef _AIX
+#    if defined(_AIX)
        // Not sure if this is correct, but here it is.
        // On IMB SP2 sigcontext is defined in /usr/include/sys/context.h
-#      ifdef SCI_64BITS
+#      if defined(SCI_64BITS)
          void* addr=(void*)ctx.sc_jmpbuf.jmp_context.except;
 #      else
          void* addr=(void*)ctx.sc_jmpbuf.jmp_context.o_vaddr;
@@ -750,7 +772,7 @@ Thread::initialize()
   mainthread->priv_->threadid=pthread_self();
   mainthread->priv_->ismain=true;
 
-#ifdef _AIX
+#if defined(_AIX)
   main_sema = 
     (msemaphore*) mmap(NULL,sizeof(msemaphore),
 		       PROT_READ | PROT_WRITE,
@@ -767,20 +789,20 @@ Thread::initialize()
     throw ThreadError(std::string("pthread_setspecific failed")
 		      +strerror(errno));
 
-#ifdef __APPLE__
+#if defined(__APPLE__)
   mainthread->priv_->done = SEM_INIT( "main_done", 0, 0);
   if( !SEM_INIT_SUCCESS( mainthread->priv_->done ) )
-    throw ThreadError(std::string("sem_init failed") + strerror(errno));
+    throw ThreadError(std::string("sem_init failed (main done): ") + strerror(errno));
   mainthread->priv_->delete_ready = SEM_INIT( "main_delete_ready", 0, 0);
   if( !SEM_INIT_SUCCESS( mainthread->priv_->delete_ready ) )
-    throw ThreadError(std::string("sem_init failed") + strerror(errno));
+    throw ThreadError(std::string("sem_init failed (main del): ") + strerror(errno));
 
   main_sema = SEM_INIT( "main_sema", 0, 0);
   if( !SEM_INIT_SUCCESS( main_sema ) )
-    throw ThreadError(std::string("sem_init failed") + strerror(errno));
+    throw ThreadError(std::string("sem_init failed (main_sema): ") + strerror(errno));
   control_c_sema = SEM_INIT( "control_c", 0, 1);
   if( !SEM_INIT_SUCCESS( control_c_sema ) )
-    throw ThreadError(std::string("sem_init failed") + strerror(errno));
+    throw ThreadError(std::string("sem_init failed (control_c): ") + strerror(errno));
 #else
   if( !SEM_INIT_SUCCESS( SEM_INIT(&mainthread->priv_->done, 0, 0) ) ) 
     throw ThreadError(std::string("sem_init failed") + strerror(errno));
@@ -957,13 +979,13 @@ Semaphore::Semaphore(const char* name, int value)
     Thread::initialize();    
   priv_=new Semaphore_private;
 
-#ifdef __APPLE__
+#if defined(__APPLE__)
   priv_->sem = SEM_INIT( name, 0, value );
   if ( !SEM_INIT_SUCCESS( priv_->sem ) )
     throw ThreadError(std::string("SEM_INIT: ") + strerror(errno));
 #else
 
-#ifdef _AIX
+#if defined(_AIX)
   priv_->sem = 
     (msemaphore*) mmap(NULL,sizeof(msemaphore),
 		       PROT_READ | PROT_WRITE,
@@ -976,7 +998,7 @@ Semaphore::Semaphore(const char* name, int value)
     
 Semaphore::~Semaphore()
 {
-#if !defined _AIX 
+#if !defined(_AIX)
   // Dd: Don't know exactly what to do about this for AIX...
   int val;
 #ifndef __APPLE__
