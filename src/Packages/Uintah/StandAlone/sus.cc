@@ -23,6 +23,7 @@
 #include <Uintah/Components/Schedulers/BrainDamagedScheduler.h>
 #include <Uintah/Components/DataArchiver/DataArchiver.h>
 #include <SCICore/Exceptions/Exception.h>
+#include <ieeefp.h>
 
 #include <iostream>
 #include <string>
@@ -44,6 +45,8 @@ void usage(const std::string& badarg, const std::string& progname)
 
 int main(int argc, char** argv)
 {
+    fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
+
     /*
      * Default values
      */
@@ -183,6 +186,11 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.12  2000/06/15 21:56:56  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.11  2000/05/30 20:18:40  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
