@@ -32,7 +32,7 @@ SUBDIRS := \
 	$(SRCDIR)/mxnargtest    \
 	$(SRCDIR)/Jacobi        \
 	$(SRCDIR)/LUFactor      \
-	$(SRCDIR)/OESort	\ 
+	$(SRCDIR)/OESort	\
 	$(SRCDIR)/pp
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
