@@ -545,18 +545,37 @@ LatVolMesh::get_cell_range(Cell::range_iter &iter, Cell::iterator &end_iter,
   // If one of the locates return true, then we have a valid iteration
   bool min_located = locate(min_index, min);
   bool mai_located = locate(mai_index, max);
-  if (min_located || mai_located) {
-    // Initialize the range iterator
-    iter = Cell::range_iter(this,
-			    min_index.i_, min_index.j_, min_index.k_,
-			    mai_index.i_, mai_index.j_, mai_index.k_);
-  } else {
+  if (!min_located && !mai_located) {
     // If both of these are false then we are outside the boundary.
     // Set the min and max extents of the range iterator to be the same thing.
     // When they are the same end_iter will be set to the starting state of
     // the range iterator, thereby causing any for loop using these
     // iterators [for(;iter != end_iter; iter++)] to never enter.
     iter = Cell::range_iter(this, 0, 0, 0, 0, 0, 0);
+  } else {
+    if ( !min_located ) {    
+      const Point r = transform_.unproject(min);
+      const double rx = floor(r.x());
+      const double ry = floor(r.y());
+      const double rz = floor(r.z());
+      min_index.i_ = (unsigned int)Max(rx, 0.0);
+      min_index.j_ = (unsigned int)Max(ry, 0.0);
+      min_index.k_ = (unsigned int)Max(rz, 0.0);
+      				       
+    } else {			       
+      const Point r = transform_.unproject(max);
+      const double rx = floor(r.x());
+      const double ry = floor(r.y());
+      const double rz = floor(r.z());
+      mai_index.i_ = (unsigned int)Min(rx, (double)(ni_-1));
+      mai_index.j_ = (unsigned int)Min(ry, (double)(nj_-1));
+      mai_index.k_ = (unsigned int)Min(rz, (double)(nk_-1));
+    }
+    // Initialize the range iterator
+    iter = Cell::range_iter(this,
+			    min_index.i_, min_index.j_, min_index.k_,
+			    mai_index.i_, mai_index.j_, mai_index.k_);
+    
   }
   // initialize the end iterator
   iter.end(end_iter);
@@ -580,18 +599,32 @@ LatVolMesh::get_node_range(Node::range_iter &iter, Node::iterator &end_iter,
   // If one of the locates return true, then we have a valid iteration
   bool min_located = locate(min_index, min);
   bool mai_located = locate(mai_index, max);
-  if (min_located || mai_located) {
-    // Initialize the range iterator
-    iter = Node::range_iter(this,
-			    min_index.i_, min_index.j_, min_index.k_,
-			    mai_index.i_, mai_index.j_, mai_index.k_);
-  } else {
+  if (!min_located && !mai_located) {
     // If both of these are false then we are outside the boundary.
     // Set the min and max extents of the range iterator to be the same thing.
     // When they are the same end_iter will be set to the starting state of
     // the range iterator, thereby causing any for loop using these
     // iterators [for(;iter != end_iter; iter++)] to never enter.
     iter = Node::range_iter(this, 0, 0, 0, 0, 0, 0);
+  } else {
+    // Initialize the range iterator
+    const Point r = transform_.unproject(min);
+    const double rx = floor(r.x());
+    const double ry = floor(r.y());
+    const double rz = floor(r.z());
+    if ( !min_located ) {    
+      min_index.i_ = (unsigned int)Max(rx, 0.0);
+      min_index.j_ = (unsigned int)Max(ry, 0.0);
+      min_index.k_ = (unsigned int)Max(rz, 0.0);
+      		     		       
+    } else {	     		       
+      mai_index.i_ = (unsigned int)Min(rx, (double)ni_);
+      mai_index.j_ = (unsigned int)Min(ry, (double)nj_);
+      mai_index.k_ = (unsigned int)Min(rz, (double)nk_);
+    }
+    iter = Node::range_iter(this,
+			    min_index.i_, min_index.j_, min_index.k_,
+			    mai_index.i_, mai_index.j_, mai_index.k_);
   }
   // initialize the end iterator
   iter.end(end_iter);
