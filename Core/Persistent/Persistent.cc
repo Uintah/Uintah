@@ -357,7 +357,7 @@ bool Piostream::readHeader(const string& filename, char* hdr,
 //----------------------------------------------------------------------
 int Piostream::begin_class(const char* classname, int current_version)
 {
-  return begin_class(classname, current_version);
+  return begin_class(string(classname), current_version);
 }
 
 //----------------------------------------------------------------------
