@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
   <title id="title.third_party_inst">Building Third Party Software</title>
 
   <para>Third party software must be built before building &sr;.
-  Instructions for SGI and Linux are slightly different from
+  Instructions for SGI and Linux are different from
   instructions for &osx;.  The next two sections are instructions for
   SGI/Linux and &osx; platforms respectively.</para>
 
@@ -61,9 +61,10 @@ cd Thirdparty_install.<replaceable>x.x.x</replaceable>
 	</listitem>
 
 	<listitem>
-	  <para>Enable <acronym>PNG</acronym> support in the TEEM
-	  third party library.  Set the <envar>TEEM_ZLIB</envar> and
-	  <envar>TEEM_PNG</envar>environment variables:</para>
+	  <para><emphasis>Optional:</emphasis> Enable
+	  <acronym>PNG</acronym> support in the TEEM third party
+	  library.  Set the <envar>TEEM_ZLIB</envar> and
+	  <envar>TEEM_PNG</envar> environment variables:</para>
 	  <para>
 	    For sh-type shells:
 	    <literallayout class="monospaced">
@@ -83,7 +84,11 @@ setenv TEEM_PNG
 	  <acronym>PNG</acronym> libraries (and corresponding header
 	  files) are not installed in a standard location then
 	  environment variables <envar>TEEM_PNG_IPATH</envar> and
-	  <envar>TEEM_PNG_LPATH</envar> must be set.</para>
+	  <envar>TEEM_PNG_LPATH</envar> must be set.  For example, if
+	  PNG libraries and headers are installed in
+	  <filename>/usr/local</filename> then
+	  <envar>TEEM_PNG_IPATH</envar> and
+	  <envar>TEEM_PNG_LPATH</envar> are set as follows:</para>
 	  <para>
 	    For sh-type shells:
 	    <literallayout class="monospaced">
@@ -101,7 +106,11 @@ setenv TEEM_PNG_IPATH -I/usr/local/include
 	  corresponding header files) are not installed in a
 	  standard location then environment variables
 	  <envar>TEEM_ZLIB_IPATH</envar> and
-	  <envar>TEEM_ZLIB_LPATH</envar> must be set.</para>
+	  <envar>TEEM_ZLIB_LPATH</envar> must be set.  For example, if
+	  ZLIB libraries and headers are installed in
+	  <filename>/usr/local</filename> then
+	  <envar>TEEM_ZLIB_IPATH</envar> and
+	  <envar>TEEM_ZLIB_LPATH</envar> are set as follows:</para>
 	  <para>
 	    For sh-type shells:
 	    <literallayout class="monospaced">
@@ -149,11 +158,11 @@ python install /usr/local/&sr;/Thirdparty 64 2
 	    <literallayout class="monospaced">
 python install /usr/local/&sr;/Thirdparty 32 1
 	    </literallayout>
-	    When finished, the installation script displays the complete path of
-	    the third-party software installation directory. Make note of this
-	    value, it is used in the configure step of the build process described
-	    in Section&nbsp;<link endterm="title.build-sr"
-	    linkend="sec.build-sr"/>.
+	    When finished, the installation script displays the
+	    complete path of the third-party software installation
+	    directory. Make note of this value, it is used in the
+	    configure step of the &sr; build process described in
+	    <xref linkend="sec.build-sr"/>.
 	  </para>
 	</listitem>
 
@@ -230,7 +239,11 @@ setenv TEEM_PNG
 	<acronym>PNG</acronym> libraries (and corresponding header
 	files) are not installed in a standard location then
 	environment variables <envar>TEEM_PNG_IPATH</envar> and
-	<envar>TEEM_PNG_LPATH</envar> must be set.</para>
+	<envar>TEEM_PNG_LPATH</envar> must be set.  For example, if
+	PNG libraries and headers are installed in
+	<filename>/usr/local</filename> then
+	<envar>TEEM_PNG_IPATH</envar> and
+	<envar>TEEM_PNG_LPATH</envar> are set as follows:</para>
 	<para>
 	  For sh-type shells:
 	  <literallayout class="monospaced">
@@ -244,11 +257,14 @@ setenv TEEM_PNG_LPATH -I/usr/local/lib
 setenv TEEM_PNG_IPATH -I/usr/local/include
 	  </literallayout>
 	</para>
-	<para>If <acronym>ZLIB</acronym> libraries (and
-	corresponding header files) are not installed in a
-	standard location then environment variables
+	<para>If <acronym>ZLIB</acronym> libraries (and corresponding
+	header files) are not installed in a standard location then
+	environment variables <envar>TEEM_ZLIB_IPATH</envar> and
+	<envar>TEEM_ZLIB_LPATH</envar> must be set.  For example, if
+	ZLIB libraries and headers are installed in
+	<filename>/usr/local</filename> then
 	<envar>TEEM_ZLIB_IPATH</envar> and
-	<envar>TEEM_ZLIB_LPATH</envar> must be set.</para>
+	<envar>TEEM_ZLIB_LPATH</envar> are set as follows:</para>
 	<para>
 	  For sh-type shells:
 	  <literallayout class="monospaced">
@@ -276,15 +292,23 @@ setenv TEEM_ZLIB_IPATH -I/usr/local/include
 	  <literallayout class="monospaced">
 ./install.sh /usr/local/&sr;/Thirdparty_osx
 	  </literallayout>
-	  The path to the third-party installation directory is used in the
-	  configure step of the build process described in Section&nbsp;<link
-	  endterm="title.build-sr" linkend="sec.build-sr"/>.
+	  The path to the third-party installation directory is used
+	  in the configure step of the &sr; build process.  The configure
+	  step is described in Section<xref linkend="sec.build-sr"/>.
 	</para>
       </listitem>
 
     </orderedlist>
 
     </para>
+  </section>
+
+  <section>
+    <title>Next</title>
+    <para>Proceed to <xref linkend="sec.opt_inst"/> if support for
+    <acronym>BLAS</acronym>, <acronym>LAPACK</acronym>,
+    <acronym>PETSc</acronym>, or Insight is desired.  Otherwise
+    proceed to <xref linkend="sec.build-sr"/>.</para>
   </section>
 
 </section>

@@ -39,13 +39,13 @@ DEALINGS IN THE SOFTWARE.
     <acronym>BLAS</acronym>/<acronym>ATLAS</acronym> and
     <acronym>LAPACK</acronym> must be installed before installing
     <acronym>PETSc</acronym>.  A vendor version of
-    <acronym>BLAS</acronym><acronym>ATLAS</acronym> is recommended.
+    <acronym>BLAS</acronym>/<acronym>ATLAS</acronym> is recommended.
     <link linkend="sec.petsc_inst">Skip</link> this section if
-    <acronym>BLAS</acronym><acronym>ATLAS</acronym> and
+    <acronym>BLAS</acronym>/<acronym>ATLAS</acronym> and
     <acronym>LAPACK</acronym> are installed.  There is no need to
     install <acronym>BLAS</acronym>/<acronym>ATLAS</acronym> or
     <acronym>LAPACK</acronym> on an &osx; system.  &osx; users can
-    skip to <xref linkend="sec.petsc_inst"/>.
+    skip to <xref linkend="sec.petsc"/>.
   </para>
 
   <para>
