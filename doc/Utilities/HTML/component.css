@@ -23,23 +23,54 @@ University of Utah. All Rights Reserved.
 
 .title {
 font-weight:bold;
-font-size:x-large;
+font-size:175%;
+font-variant: small-caps;
 color:#003333;
 text-align:center}
 
 .subtitle {
 text-align:center;
-font-size:small;
+font-size:125%;
 font-weight:bold;
 color:#003333}
 
 .head {
 color:#003333;
 font-weight: bold;
-font-size:large;
+font-size:160%;
+font-variant: small-caps;
 padding-left: 5px;
 border-left: 1px dotted;
 border-bottom: 1px dotted}
+
+.secttitle1 {
+text-align:left;
+font-size:140%;
+font-weight:bold;
+color:#003333}
+
+.secttitle2 {
+text-align:left;
+font-size:120%;
+font-weight:bold;
+color:#003333}
+
+.secttitle3 {
+text-align:left;
+font-size:105%;
+font-weight:bold;
+color:#003333}
+
+.nettitle { 
+text-align:left;
+font-size:140%;
+font-weight:bold;
+color:#003333}
+
+.authors { 
+text-align:center;
+font-size:100%;
+}
 
 .admon {
 margin-top: 1.5em;
@@ -52,15 +83,29 @@ font-weight:bold;
 color:#003333;
 }
 
-.term {
+.firstterm {
 font-style: oblique}
 
-.keyboard {
+.abbr {
+}
+
+.keyword {
+}
+
+.userinput {
 font-family: monospace;
 color:#000066}
 
 .cite {
 font-style: italic}
+
+.path { 
+font-family: monospace;
+color:#000066}
+
+.emph { 
+font-style: italic;
+font-weight: bolder}
 
 th {
 font-family: sans-serif;
