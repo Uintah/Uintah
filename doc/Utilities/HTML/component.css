@@ -64,21 +64,12 @@ font-style: italic}
 
 th {
 font-family: sans-serif;
-border: 1px dotted white;
-padding-left: 4px;
 color: white;
 background: #003333}
 
 td { 
-font-size: small;
-border: 1px solid black}
+font-size: small;}
 
-.gui {
-width: 100%;
-border: 1px solid black;
-border-collapse: collapse}
+.gui { }
 
-.io {
-width: 100%;
-border: 1px solid black;
-border-collapse: collapse}
+.io { }
