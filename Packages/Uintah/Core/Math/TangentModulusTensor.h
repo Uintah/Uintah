@@ -34,7 +34,7 @@ namespace Uintah {
       TangentModulusTensor(const TangentModulusTensor& tensor);
 
       /** Destructor */
-      ~TangentModulusTensor();
+      virtual ~TangentModulusTensor();
 
       /** Assignment operator */
       TangentModulusTensor& operator=(const TangentModulusTensor& tensor); 
