@@ -64,7 +64,6 @@ void ModuleHelper::run()
       MessageBase* msg=module->mailbox.receive();
       switch(msg->type){
       case MessageTypes::GoAway:
-	module->helper_done.send(1);
 	return;
       case MessageTypes::ExecuteModule:
 	module->do_execute();

@@ -57,6 +57,7 @@ Field::get_type_name(int n) const
 ScalarFieldInterface*
 Field::query_scalar_interface(ModuleReporter *m)
 {
+  if (data_at_ == Field::NONE) { return 0; }
   const TypeDescription *ftd = get_type_description();
   const TypeDescription *ltd = data_at_type_description();
   CompileInfoHandle ci = ScalarFieldInterfaceMaker::get_compile_info(ftd, ltd);
@@ -88,6 +89,7 @@ Field::query_scalar_interface(ModuleReporter *m)
 VectorFieldInterface*
 Field::query_vector_interface(ModuleReporter *m)
 {
+  if (data_at_ == Field::NONE) { return 0; }
   const TypeDescription *ftd = get_type_description();
   const TypeDescription *ltd = data_at_type_description();
   CompileInfoHandle ci = VectorFieldInterfaceMaker::get_compile_info(ftd, ltd);
@@ -119,6 +121,7 @@ Field::query_vector_interface(ModuleReporter *m)
 TensorFieldInterface*
 Field::query_tensor_interface(ModuleReporter *m)
 {
+  if (data_at_ == Field::NONE) { return 0; }
   const TypeDescription *ftd = get_type_description();
   const TypeDescription *ltd = data_at_type_description();
   CompileInfoHandle ci = TensorFieldInterfaceMaker::get_compile_info(ftd, ltd);

@@ -21,7 +21,7 @@
 #include <Core/Geometry/Ray.h>
 #include <Core/Geometry/BBox.h>
 #include <vector>
-#include <GL/glu.h>
+#include <sci_glu.h>
 
 namespace SCIRun {
 

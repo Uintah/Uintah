@@ -207,7 +207,21 @@ ImageMesh::get_neighbor(Face::index_type &neighbor,
   return true;
 }
 
-
+void 
+ImageMesh::get_neighbors(Face::array_type &array, Face::index_type idx) const
+{
+  Edge::array_type edges;
+  get_edges(edges, idx);
+  array.clear();
+  Edge::array_type::iterator iter = edges.begin();
+  while(iter != edges.end()) {
+    Face::index_type nbor;
+    if (get_neighbor(nbor, idx, *iter)) {
+      array.push_back(nbor);
+    }
+    ++iter;
+  }
+}
 
 int
 ImageMesh::get_valence(Edge::index_type idx) const

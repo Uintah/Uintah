@@ -54,7 +54,7 @@ public:
     GeometryComm(Mailbox<GeomReply>*);
     GeometryComm(int, GeomID, GeomHandle,
 		 const string&, CrowdMonitor* lock);
-    GeometryComm(int, GeomID, int del);
+    GeometryComm(int, GeomID);
     GeometryComm(MessageTypes::MessageType, int);
     GeometryComm(MessageTypes::MessageType, int, Semaphore* wait);
     GeometryComm(MessageTypes::MessageType, int, int, View);
@@ -63,6 +63,7 @@ public:
 		 int which_viewwindow, int datamask);
     GeometryComm(MessageTypes::MessageType, int portid,
 		 FutureValue<int>* reply);
+    GeometryComm(const GeometryComm &copy);
     virtual ~GeometryComm();
 
     Mailbox<GeomReply>* reply;
@@ -72,7 +73,6 @@ public:
     string name;
     CrowdMonitor* lock;
     Semaphore* wait;
-    int del;
     View view;
 
     GeometryComm* next;

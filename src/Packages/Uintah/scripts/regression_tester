@@ -28,12 +28,15 @@ do_mpmarches=0
 do_examples=0
 do_remove=0
 
+ALL=
+
 usage () {
-    echo;
+    echo
     echo "Usage: regression_tester [OPTION]..."
     echo "Run the regression tester.  With no OPTION, run all the tests."
-    echo;
-    echo "  -a             run the mpm,ice,mpmice,arches and mpmarches tests"
+    echo
+    echo "  -main          run the mpm,ice,mpmice,arches and mpmarches tests"
+    echo "  -all           run all tests (overrides other tests flags)"
     echo "  -ar            run the arches tests"
     echo "  -e             run the example tests"
     echo "  -m             run the mpm tests"
@@ -43,16 +46,19 @@ usage () {
     echo "  -im            run the implicit mpm tests"
     echo "  -dbg           use the dbg TestData"
     echo "  -opt           use the opt TestData"
-    echo "  -r             remove the *.out *.compare and uda directories"
-    echo "  -h             display this help and exit"
+    echo "  -clean         remove the *.out *.compare and uda directories"
+    echo "  -h[elp]        display this help and exit"
     echo;
     exit
 }
 
+for arg in $*; do
 
-for args in $*; do
-    case $args in
-	-a)
+    case $arg in
+	-all)
+            ALL=yes
+            ;;
+        -main)
 	    echo; echo "Running mpm, ice, and mpmice tests . . ."
 	    do_ice=1
 	    do_mpm=1
@@ -81,7 +87,7 @@ for args in $*; do
 	-im)
 	    echo; echo "Running the implicit mpm tests . . ."
 	    do_impm=1;;
-	-r)
+	-clean)
 	    echo; echo "Removing *.out *.compare and *.uda files . . ."
 	    do_remove=1;;
 	-dbg)
@@ -90,10 +96,16 @@ for args in $*; do
 	-opt)
 	    echo; echo "Using the opt TestData . . ."
 	    DIR=opt;;
-	-h)
+        *)
 	    usage ;;
     esac
 done
+
+# If no args, do all tests.
+if test $# = 0; then
+   ALL=yes
+fi
+
 
 # Set up the various test cases
 
@@ -107,31 +119,32 @@ examples_test_cases="poisson1"
 
 # Check if the applications sus and compare_uda are available
 
-if test -x sus;
-    then continue;
-    else
+if test ! -x sus; then
     echo; echo "sus is not available . . . exiting"
     exit
 fi
 
-if test -x compare_uda;
-    then continue;
-    else
+if test ! -x compare_uda; then
     echo; echo "compare_uda is not available . . . exiting"
     exit
 fi
 
+if test ! -e inputs; then
+    echo; echo "'inputs' data directory is not available . . . exiting"
+    exit
+fi
+
 REMOVE () {
-    rm *.out;
+    rm -f *.out;
     if test -a chem.bin
     	then
-    	rm chem.bin;
+    	rm -f chem.bin;
     fi	
     if test -a input.dtd
        then
-       rm input.dtd;
+       rm -f input.dtd;
     fi
-    rm *.compare; 
+    rm -f *.compare; 
     rm -rf *.uda*
 }
 
@@ -353,63 +366,51 @@ examples_test () {
     done
 }
 
-
-
-
-if test $# = 0;
-    then
-    echo; echo "Using $test_dir"
-    echo; echo "Running all the tests . . ."
+if test -n "$ALL"; then
+    echo; echo "Running all the tests (Using $test_dir)"
     mpm_test;
     ice_test;
     mpmice_test;
     arches_test;
     mpmarches_test;
     examples_test;
+    exit
 fi
-
-
 
 # Actually do the tests
 
-echo; echo "Using $test_dir"
+echo
+echo "Using $test_dir"
+echo
 
-if test $do_mpm -eq 1;
-    then
+if test $do_mpm -eq 1; then
     mpm_test
 fi
 
-if test $do_ice -eq 1;
-    then
+if test $do_ice -eq 1; then
     ice_test
 fi
 
-if test $do_mpmice -eq 1;
-    then
+if test $do_mpmice -eq 1; then
     mpmice_test
 fi
 
-if test $do_impm -eq 1;
-    then
+if test $do_impm -eq 1; then
     impm_test
 fi
 
-if test $do_arches -eq 1;
-    then
+if test $do_arches -eq 1; then
     arches_test
 fi
 
-if test $do_mpmarches -eq 1;
-    then
+if test $do_mpmarches -eq 1; then
     mpmarches_test
 fi
 
-if test $do_examples -eq 1;
-    then
+if test $do_examples -eq 1; then
     examples_test
 fi
 
-if test $do_remove -eq 1;
-    then
+if test $do_remove -eq 1; then
     REMOVE
 fi

@@ -77,11 +77,6 @@ int GenPackage(char* packname, char* psepath)
   if (check)
     printf("could not create directory \"%s\"\n",string);
 
-  sprintf(string,"%s/src/Packages/%s/Core/ThirdParty",psepath,packname);
-  checkall |= check = mkdir(string,PERM);
-  if (check)
-    printf("could not create directory \"%s\"\n",string);
-
   sprintf(string,"%s/src/Packages/%s/Core/Datatypes",psepath,packname);
   checkall |= check = mkdir(string,PERM);
   if (check)

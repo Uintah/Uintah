@@ -102,18 +102,7 @@ DECLARE_MAKER(Probe)
 
 Probe::~Probe()
 {
-  if (widgetid_)
-  {
-    GeometryOPort *ogport = (GeometryOPort*)get_oport("Probe Widget");
-    if (!ogport)
-    {
-      error("Unable to initialize " + name + "'s oport.");
-      return;
-    }
-    ogport->delObj(widgetid_);
-    ogport->flushViews();
-    widgetid_ = 0;
-  }
+  delete widget_;
 }
 
 
@@ -355,7 +344,7 @@ Probe::execute()
   ScalarFieldInterface *sfi = 0;
   VectorFieldInterface *vfi = 0;
   TensorFieldInterface *tfi = 0;
-  if (!input_field_p)
+  if (!input_field_p || ifieldhandle->data_at() == Field::NONE)
   {
     valstr << 0;
     PointCloudField<double> *field =

@@ -160,6 +160,10 @@ OpenGL::~OpenGL()
     EndMpeg();
   }
 
+  int r;
+  while (send_mb.tryReceive(r)) ;
+  while (recv_mb.tryReceive(r)) ;
+
   fpstimer.stop();
 }
 
@@ -196,6 +200,7 @@ void
 OpenGL::redraw(Viewer* s, ViewWindow* r, double _tbeg, double _tend,
 	       int _nframes, double _framerate)
 {
+  if (dead_) return;
   viewer_ = s;
   viewwindow=r;
   tbeg=_tbeg;
@@ -209,7 +214,6 @@ OpenGL::redraw(Viewer* s, ViewWindow* r, double _tbeg, double _tend,
     my_openglname= "OpenGL: " + myname_;
     helper=new OpenGLHelper(this);
     helper_thread_ = new Thread(helper, my_openglname.c_str());
-    helper_thread_->detach();
   }
 
   send_mb.send(DO_REDRAW);
@@ -226,7 +230,12 @@ OpenGL::kill_helper()
 {
   // kill the helper thread
   dead_ = true;
-  send_mb.send(86);
+  if (helper_thread_)
+  {
+    send_mb.send(86);
+    helper_thread_->join();
+    helper_thread_ = 0;
+  }
 }
 
 
@@ -241,7 +250,6 @@ OpenGL::redraw_loop()
   double newtime=0;
   for(;;)
   {
-    if (dead_) return;
     int nreply=0;
     if(viewwindow->inertia_mode)
     {
@@ -277,7 +285,12 @@ OpenGL::redraw_loop()
 
       while (send_mb.tryReceive(r))
       {
-	if (r == DO_PICK)
+	if (r == 86)
+	{
+	  throttle.stop();
+	  return;
+	}
+	else if (r == DO_PICK)
 	{
 	  real_get_pick(viewer_, viewwindow, send_pick_x, send_pick_y,
 			ret_pick_obj, ret_pick_pick, ret_pick_index);
@@ -344,10 +357,12 @@ OpenGL::redraw_loop()
     {
       for (;;)
       {
-	if (dead_) return;
 	int r=send_mb.receive();
 	if (r == 86)
+	{
+	  throttle.stop();
 	  return;
+	}
 	else if (r == DO_PICK)
 	{
 	  real_get_pick(viewer_, viewwindow, send_pick_x, send_pick_y,
@@ -408,7 +423,7 @@ OpenGL::render_and_save_image(int x, int y,
 #endif
 
   cerr << "Saving Image: " << fname << " with width=" << x
-       << " and height=" << y <<"... ";
+       << " and height=" << y <<"...\n";
 
 
   // FIXME: this next line was apparently meant to raise the Viewer to the
@@ -611,6 +626,7 @@ OpenGL::make_image()
 void
 OpenGL::redraw_frame()
 {
+  if (dead_) return;
   gui->lock();
   Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname_),
 				      Tk_MainWindow(the_interp));
@@ -1569,10 +1585,10 @@ OpenGL::put_scanline(int y, int width, Color* scanline, int repeat)
 
 
 void
-OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomObj* obj)
+OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomHandle obj)
 {
 #if (_MIPS_SZPTR == 64)
-  unsigned long o=(unsigned long)obj;
+  unsigned long o=(unsigned long)(obj.get_rep());
   unsigned int o1=(o>>32)&0xffffffff;
   unsigned int o2=o&0xffffffff;
   glPopName();
@@ -1583,7 +1599,7 @@ OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomObj* obj)
   glPushName(0x12345678);
 #else
   glPopName();
-  glPushName((GLuint)obj);
+  glPushName((GLuint)(obj.get_rep()));
   glPushName(0x12345678);
 #endif
   obj->draw(drawinfo, viewer->default_material_.get_rep(), current_time);
@@ -1592,7 +1608,7 @@ OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomObj* obj)
 
 
 void
-OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj)
+OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomHandle obj)
 {
   drawinfo->viewwindow = viewwindow;
   obj->draw(drawinfo, viewer->default_material_.get_rep(), current_time);
@@ -2265,7 +2281,8 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
 #ifdef HAVE_COLLAB_VIS
 void OpenGL::collect_triangles(Viewer *viewer,
 			       ViewWindow *viewwindow,
-			       GeomObj *obj) {
+			       GeomHandle obj)
+{
   cerr << "[HAVE_COLLAB_VIS] (OpenGL::collect_triangles) 0" << endl;
   obj->get_triangles(*triangles);
   cerr << "found " << (*triangles).size()/3 << "  triangles" << endl;
@@ -2556,10 +2573,12 @@ OpenGL::render_rotation_axis(const View &view,
   const double zfar = eyedist + 2.0;
 
   glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
   glLoadIdentity();
-
   gluPerspective(fovy, aspect, znear, zfar);
+
   glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
   glLoadIdentity();
 
   Vector oldeye(view.eyep().asVector() - view.lookat().asVector());
@@ -2583,7 +2602,13 @@ OpenGL::render_rotation_axis(const View &view,
 	    lookat.x(), lookat.y(), lookat.z(),
 	    up.x(), up.y(), up.z());
   if(do_hi_res)
-    setFrustumToWindowPortion();
+  {
+    // Draw in upper right hand corner of total image, not viewport image.
+    const int xysize = Min(hi_res.resx, hi_res.resy) / 4;
+    const int xoff = hi_res.resx - hi_res.col * viewport[2];
+    const int yoff = hi_res.resy - hi_res.row * viewport[3];
+    glViewport(xoff - xysize, yoff - xysize, xysize, xysize);
+  }
 
   // Disable fog for the orientation axis.
   const bool fog = drawinfo->fog;
@@ -2615,6 +2640,12 @@ OpenGL::render_rotation_axis(const View &view,
   glDepthRange(0.0, 1.0);
 
   drawinfo->fog = fog;  // Restore fog state.
+
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
 
   glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 }

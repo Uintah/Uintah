@@ -51,6 +51,7 @@ $stdout.print("#{root}/doc/index.html
 #{root}/doc/Utilities/Figures
 #{root}/doc/Utilities/TeX/scirun-doc.sty
 #{root}/doc/Utilities/TeX/scirun-doc.tex
+#{root}/doc/ReleaseNotes
 ")
 
 # Now do wildcards

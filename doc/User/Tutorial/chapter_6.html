@@ -51,15 +51,15 @@
 	    visualization</H4></b></A> 
         <p><b>Chapter Overview</b><br>
 
-        <p>In Chapters 1-4, we constructed a set of visualization
+        <p>Chapters 1-4, demonstrate the construction of a set of visualization
 	networks to explore scalar and vector fields. In the previous chapter, 
-	we implemented a network to solve a bioelectric finite element problem.  
+	A network to solve a bioelectric finite element problem was implemented.  
 	The output of that network was a solution vector, <img height="16"
 	    width="13" 
 	src="images/phi.gif">, containing the potential at each of the
 	nodes in the finite element mesh.
 
-	<p>In this chapter, we will reuse the finite element simulation network from <a
+	<p>This chapter will reuse the finite element simulation network from <a
 	    href="chapter_5.html">Chapter 5</a>,  
 	as well as the visualization network from  <a
 	    href="chapter_4.html">Chapter 4</a>.  The 
@@ -75,13 +75,13 @@
 <p>There are a few rules for the behavior of the module that
 increase its versatility and its complexity:
        
-        <p><ul><li>If the module has no input matrix then the output Field will be
+        <p><ul><li>If the module has no input matrix, then the output Field will be
             the same as the input Field.</p>
-        <p><li>If the input Field's data are scalar then the output matrix
+        <p><li>If the input Field's data are scalar, then the output matrix
             will be a column matrix.</p>
         <p><li>If the input Field's data contains N vectors, then the output
 	    matrix will be of dimension Nx3.</p>
-        <p><li>If the Field contains N tensors the output matrix will be of
+        <p><li>If the Field contains N tensors, the output matrix will be of
             dimension Nx9 where the
              tensor is flattened out in left-to-right, top-to-bottom, order.</p>
          <p><li>The number of rows in the input matrix should equal the number
@@ -101,7 +101,7 @@ increase its versatility and its complexity:
 	with the visualization net from <a
 	href="chapter_4.html#figure-4.1">Chapter 4, Figure 4.1.</a> 
 	   Add a ManageFieldData module between them, and you
-	should have a net that looks like that in <b>Figure 6.1</b>.  Note that all of the modules from the Chapter 4 net that were connected to the left FieldReader module, are now connected to the ManageFieldData module. 
+	should have a net that looks like that in <b>Figure 6.1</b>.  Note that all of the modules from the Chapter 4 net, that were connected to the left FieldReader module, are now connected to the ManageFieldData module. 
 
       </div>
 	<center>
@@ -111,7 +111,7 @@ increase its versatility and its complexity:
 	<div align="left">
 	</p>
 
-	<p> Executing the network, the image in your
+	<p> Executing the network, the image in the
 	ViewWindow should look like <b>Figure 6.2</b>.</p>
 
       </div>
@@ -122,11 +122,15 @@ increase its versatility and its complexity:
 	<div align="left">
 	<p><br>
 	<p><H4><b>Summary</H4></b>
-	<p>In this chapter, we have combined two pieces, reusing the finite element simulation network from Chapter 5, 
-	as well as the visualization network from Chapter 4. We have used a module that connects the solution vector 
-	of scalar values to the nodes of the tetrahedral finite element mesh, via the module ManageFieldData.
+	<p>This chapter demonstrated how to combine two existing
+	networks , reusing the finite element simulation network from
+	Chapter 5, and the visualization network from Chapter 4. The
+	ManageFieldData module was used to connect the solution vector
+	of scalar values to the nodes of the tetrahedral finite
+	element mesh .
 
-	<p>In Chapter 7, we will add a feedback module and interactively visualize the results. 
+	<p>Chapter 7 illustrates how to add a feedback module and
+	interactively visualize the results.
 	<p>	
 	<br>
 	<br><A href="#section-3">Return to Top</A>

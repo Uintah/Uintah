@@ -70,7 +70,9 @@ AttractNormalsAlgoT<MSRC, FLOC, FDST>::execute(FieldHandle field_h,
 					       AttractorHandle attr)
 {
   MSRC *mesh = static_cast<MSRC *>(field_h->mesh().get_rep());
-  FDST *fdst = scinew FDST(mesh, field_h->data_at());
+  Field::data_location at = field_h->data_at();
+  if (at == Field::NONE) { at = Field::NODE; }
+  FDST *fdst = scinew FDST(mesh, at);
 
   typename FLOC::iterator bi, ei;
   mesh->begin(bi);

@@ -73,6 +73,17 @@ const TypeDescription* get_type_description(MaskedTetVolField<unsigned int> *);
 const TypeDescription* get_type_description(MaskedTetVolField<unsigned short> *);
 const TypeDescription* get_type_description(MaskedTetVolField<unsigned char> *);
 
+template class GenericField<QuadraticTetVolMesh, vector<Tensor> >;
+template class GenericField<QuadraticTetVolMesh, vector<Vector> >;
+template class GenericField<QuadraticTetVolMesh, vector<double> >;
+template class GenericField<QuadraticTetVolMesh, vector<float> >;
+template class GenericField<QuadraticTetVolMesh, vector<int> >;
+template class GenericField<QuadraticTetVolMesh, vector<short> >;
+template class GenericField<QuadraticTetVolMesh, vector<char> >;
+template class GenericField<QuadraticTetVolMesh, vector<unsigned int> >;
+template class GenericField<QuadraticTetVolMesh, vector<unsigned short> >;
+template class GenericField<QuadraticTetVolMesh, vector<unsigned char> >;
+
 template class QuadraticTetVolField<Tensor>;
 template class QuadraticTetVolField<Vector>;
 template class QuadraticTetVolField<double>;
@@ -95,6 +106,17 @@ const TypeDescription* get_type_description(QuadraticTetVolField<char> *);
 const TypeDescription* get_type_description(QuadraticTetVolField<unsigned int> *);
 const TypeDescription* get_type_description(QuadraticTetVolField<unsigned short> *);
 const TypeDescription* get_type_description(QuadraticTetVolField<unsigned char> *);
+
+template class GenericField<QuadraticLatVolMesh, vector<Tensor> >;
+template class GenericField<QuadraticLatVolMesh, vector<Vector> >;
+template class GenericField<QuadraticLatVolMesh, vector<double> >;
+template class GenericField<QuadraticLatVolMesh, vector<float> >;
+template class GenericField<QuadraticLatVolMesh, vector<int> >;
+template class GenericField<QuadraticLatVolMesh, vector<short> >;
+template class GenericField<QuadraticLatVolMesh, vector<char> >;
+template class GenericField<QuadraticLatVolMesh, vector<unsigned int> >;
+template class GenericField<QuadraticLatVolMesh, vector<unsigned short> >;
+template class GenericField<QuadraticLatVolMesh, vector<unsigned char> >;
 
 template class QuadraticLatVolField<Tensor>;
 template class QuadraticLatVolField<Vector>;

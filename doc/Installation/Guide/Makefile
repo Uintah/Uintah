@@ -22,12 +22,14 @@
 #  e.g. /Applications/docbook-xsl-1.51.1/html/.
 
 PARAMS_COMMON=
-PARMS_CHUNK=${PARAMS_COMMON} chunk.section.depth=0 use.id.as.filename=1
+PARMS_CHUNK=${PARAMS_COMMON} chunk.section.depth=1 use.id.as.filename=1
 PARAMS_NOCHUNK=${PARAMS_COMMON} 
 STYLESHEET_CHUNK=${STYLESHEET_PATH}/srdocbook-chunk.xsl
 STYLESHEET_NOCHUNK=${STYLESHEET_PATH}/srdocbook.xsl
-SRCS=main.xml appendix.xml cvs.xml inst.xml quickstart.xml \
-recommendations.xml requirements.xml
+SRCS=Makefile main.xml cvs.xml intro.xml \
+recommendations.xml requirements.xml \
+rpm_inst.xml source_inst.xml petsc.xml  \
+preparing.xml starting.xml help.xml
 
 .PHONY: default chunk nochunk clean veryclean
 

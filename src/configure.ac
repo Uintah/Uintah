@@ -430,6 +430,22 @@ for i in $package; do
    SCI_SET_PACKAGE_CHECKS($i)
 done
 
+# Set the subdir name in the bin tree for matlab engine.
+if test $pkg_MatlabInterface == yes; then
+  MATLAB_ENG=matlab
+  AC_SUBST(MATLAB_ENG)
+fi
+
+# Take care of package dependencies
+if test $pkg_Fusion == yes; then
+  # Fusion depends upon Teem Package.  
+  if test -z $pkg_Teem; then
+    AC_MSG_ERROR([The Fusion Package depends on the Teem Package. Please 
+                  make sure you have the Teem Package and configure 
+                  with it enabled.])
+  fi
+fi
+
 LOAD_PACKAGE="SCIRun"
 for i in $package; do
  LOAD_PACKAGE=$LOAD_PACKAGE,"$i"
@@ -959,6 +975,8 @@ if test "$MAKE" = "NOT_FOUND"; then
   SCI_MSG_ERROR(GNU make not found.)
 fi
 
+AC_SUBST(MAKE)
+
 SCI_CHECK_VERSION($MAKE,--version,3.78.1,,
   echo configure: error: wrong GNU make version.; exit)
 
@@ -1086,7 +1104,7 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.8
+  sci_tp_version=1.10
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
   ac_try="$CC -v > /dev/null 2> conftest.out"
@@ -1358,8 +1376,18 @@ fi
 
 SCI_TRY_LINK(GL,OpenGL libraries and headers,[
 #include<GL/gl.h>
+
+#ifndef GLAPIENTRY
+  #define GLAPIENTRY
+#endif
+
+#ifndef GLAPI
+  #define GLAPI
+#endif
+
 #include<GL/glu.h>
 #include<GL/glx.h>
+
 ],$_sci_inc,GL GLU,$_sci_lib $GLU_OTHERS,,,not-optional)
 
 AC_SUBST(GL_LIB_FLAG)

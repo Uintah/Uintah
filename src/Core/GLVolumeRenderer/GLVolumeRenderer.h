@@ -26,7 +26,7 @@
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomObj.h>
 #include <GL/gl.h>
-#include <GL/glu.h>
+#include <sci_glu.h>
 
 #include <Core/Containers/Octree.h>
 

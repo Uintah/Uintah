@@ -96,7 +96,7 @@ TexCuttingPlanes::tcl_command( GuiArgs& args, void* userdata)
       } else if (args[2] == "zat") {
 	w=dmin_+ddz_*atof(args[3].c_str());
       } else if (args[2] == "vplus"){
-	GeometryData* data = ogeom_->getData( 0, 1);
+	GeometryData* data = ogeom_->getData(0, 0, 1);
 	Vector view = data->view->lookat() - data->view->eyep();
 	view.normalize();
 	w += view*ddview_*atof(args[3].c_str());

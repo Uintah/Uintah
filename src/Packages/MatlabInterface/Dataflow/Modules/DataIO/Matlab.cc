@@ -118,6 +118,14 @@ remove_newlines(const string &str)
     {
       result[i] = ' ';
     }
+
+    if (result[i] == '%')
+    {
+      while (result[i] != '\n' && i < result.size()) {
+	result[i] = ' ';
+	i++;
+      }
+    }
   }
   return result;
 }
@@ -225,7 +233,7 @@ Matlab::execute()
      
       strcpy(cl,"echo 'path('\\''"); 
       strcat(cl,SCIRUN_OBJDIR);
-      strcat(cl,"/../src/Packages/MatlabInterface/matlab/engine");
+      strcat(cl,"/matlab/engine");
       strcat(cl,"'\\'',path); mlabengine(");
       sprintf(cl,"%s%i",cl,wordy-2);
       strcat(cl,",'\\''"); 

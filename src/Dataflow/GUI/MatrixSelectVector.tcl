@@ -46,7 +46,7 @@ itcl_class SCIRun_Math_MatrixSelectVector {
         set $this-selectable_inc     1
 	set $this-selectable_units   ""
         set $this-range_min          0
-        set $this-range_max          0
+        set $this-range_max          100
 	set $this-playmode           once
 	set $this-current            0
 	set $this-execmode           "init"
@@ -78,7 +78,10 @@ itcl_class SCIRun_Math_MatrixSelectVector {
         }
         toplevel $w
 
-	
+	# Save range, creating the scale resets it to defaults.
+	set rmin [set $this-range_min]
+	set rmax [set $this-range_max]
+
 	frame $w.loc -borderwidth 2
 	frame $w.playmode -relief groove -borderwidth 2
 	frame $w.execmode -relief groove -borderwidth 2
@@ -157,21 +160,21 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 		-padx 5 -pady 5 -fill both -expand yes
 
 	update
+
+	# Restore range to pre-loaded value
+	set $this-range_min $rmin
+	set $this-range_max $rmax
     }
 
     method update {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            #puts "updating!"
-
             $w.loc.min config -from [set $this-selectable_min]
             $w.loc.min config -to   [set $this-selectable_max]
             $w.loc.min config -label [concat "Start " [set $this-selectable_units]]
             $w.loc.max config -from [set $this-selectable_min]
             $w.loc.max config -to   [set $this-selectable_max]
             $w.loc.max config -label [concat "End " [set $this-selectable_units]]
-
-	    #pack $w.loc.r $w.loc.c $w.loc.ff $w.loc.b -side top -fill x -expand yes
         }
     }
 }

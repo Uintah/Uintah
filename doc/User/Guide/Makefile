@@ -49,7 +49,7 @@ styfile := srugmacros.sty
 # User created/edited sources (generated sources come into play further
 # down). 
 srcs:=${styfile} title.tex intro.tex concepts.tex \
-running.tex network.tex viewer.tex import.tex \
+running.tex network.tex viewer.tex converters.tex \
 modules.tex ../../Utilities/TeX/scirun-doc.tex
 
 # Latex2html options.  Change as needed.

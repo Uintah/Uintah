@@ -66,8 +66,6 @@ ChangeFieldDataAtAlgoCreateT<FSRC, FOUT>::execute(FieldHandle fsrc_h,
 
   // Create the field with the new mesh and data location.
   FOUT *fout = scinew FOUT(fsrc->get_typed_mesh(), at);
-
-  // Copy the (possibly transformed) data to the new field.
   fout->resize_fdata();
 
   *((PropertyManager *)fout) = *(PropertyManager *)fsrc;

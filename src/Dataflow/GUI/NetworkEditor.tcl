@@ -56,6 +56,11 @@ set modulesBbox {0 0 0 0}
 global netedit_savefile
 set netedit_savefile ""
 
+# List of all currently existing modules
+global modules
+set modules ""
+
+
 proc resource {} {
 }
 
@@ -73,18 +78,22 @@ proc makeNetworkEditor {} {
     menu .main_menu.file.menu.new -tearoff false
     .main_menu.file.menu.new add command -label "Module..." \
         -underline 0 -command "ComponentWizard"
+
+    # Create the "File" Menu sub-menus.  Create (most of) them in the
+    # disabled state.  They will be enabled when all packages are loaded.
     .main_menu.file.menu add command -label "Save" -underline 0 \
-	-command "popupSaveMenu"
+	-command "popupSaveMenu" -state disabled
     .main_menu.file.menu add command -label "Save As..." -underline 0 \
-	-command "popupSaveAsMenu"
+	-command "popupSaveAsMenu" -state disabled
     .main_menu.file.menu add command -label "Load..." -underline 0 \
-	-command "popupLoadMenu"
+	-command "popupLoadMenu" -state disabled
+
     .main_menu.file.menu add command -label "Insert" -underline 0 \
-	-command "popupInsertMenu"
+	-command "popupInsertMenu" -state disabled
     .main_menu.file.menu add command -label "Clear" -underline 0 \
-	-command "ClearCanvas"
+	-command "ClearCanvas" -state disabled
     .main_menu.file.menu add cascade -label "New" -underline 0\
-        -menu .main_menu.file.menu.new
+        -menu .main_menu.file.menu.new -state disabled
 
 # This was added by Mohamed Dekhil to add some infor to the net
     .main_menu.file.menu add command -label "Add Info..." -underline 0 \
@@ -175,6 +184,8 @@ proc makeNetworkEditor {} {
     .top.errorFrame.text insert end "Messages:\n"
     .top.errorFrame.text insert end "--------------------------\n\n"
     .top.errorFrame.text tag configure errtag -foreground red
+    .top.errorFrame.text tag configure warntag -foreground orange
+    .top.errorFrame.text tag configure infotag -foreground yellow
 
 # Why on earth was this here?
 #    .top.errorFrame.text configure -state disabled
@@ -227,6 +238,20 @@ proc makeNetworkEditor {} {
     bind . <Destroy> {if {"%W"=="."} {exit 1}} 
 }
 
+proc activate_file_submenus { } {
+    # Activate the "File" menu items
+    .main_menu.file.menu entryconfig 0 -state active
+    .main_menu.file.menu entryconfig 1 -state active
+    .main_menu.file.menu entryconfig 2 -state active
+    .main_menu.file.menu entryconfig 3 -state active
+    .main_menu.file.menu entryconfig 4 -state active
+    .main_menu.file.menu entryconfig 5 -state active
+}
+
+proc handle_bad_startnet { netfile } {
+    set answer [tk_messageBox -type ok -parent . -message "Unable to load $netfile as a network.  Exiting." -icon error]
+    netedit quit
+}
 
 proc modulesMenuPressCB { x y } {
     set canvas .bot.neteditFrame.canvas
@@ -525,6 +550,12 @@ proc addModule2 {package category module modid} {
 proc addConnection {omodid owhich imodid iwhich} {
 
     set connid [netedit addconnection $omodid $owhich $imodid $iwhich]
+    if {"" == $connid} {
+	tk_messageBox -type ok -parent . -message \
+	    "Invalid connection found while loading network: addConnection $omodid $owhich $imodid $iwhich -- discarding." \
+	    -icon warning
+	return
+    }
     set portcolor [lindex [lindex [$omodid-c oportinfo] $owhich] 0]
     
     global connection_list
@@ -753,8 +784,8 @@ proc ClearCanvas {} {
    # destroy all modules
     
     set result [tk_messageBox -type okcancel -parent . -message \
-	    "ALL modules and connections will be cleared. \nDo you wish to proceed?"\
-	    -icon warning ]
+	        "ALL modules and connections will be cleared.\nReally clear?"\
+		-icon warning ]
     
     if {[string compare "ok" $result] == 0} {
 	global modules
@@ -825,8 +856,7 @@ proc ClearCanvas {} {
 proc NiceQuit {} {
 
     set result [tk_messageBox -type okcancel -parent . -message \
-		    "Exiting SCIRun\nDo you wish to proceed?"\
-		    -icon warning ]
+		    "Please confirm exit." -icon warning ]
 
     if {[string compare "ok" $result] == 0} {
 	# Disable this for now, module deletion is blocking.
@@ -1243,5 +1273,137 @@ proc loadMacroModules {group_info} {
 	    set CurrentlySelectedModules $temp
 	}
     }   
+}
+
+#
+# Ask the user to select a data directory (because the enviroment variable 
+# SCIRUN_DATA was not set.)
+#
+proc getDataDirectory { dataset } {
+    tk_messageBox -type ok -parent . -message \
+         "The '$dataset' dataset was specified (either by the enviroment variable SCIRUN_DATASET or by the network loaded).  However, the location of this dataset was not specified (with the SCIRUN_DATA env var).  Please select a directory (eg: /usr/sci/data/SCIRunData/1.10.0).  Note, this directory must have the '$dataset' subdirectory in it." 
+   return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.10.0]
+}
+
+#
+# Tell the user the reason that they are being asked for the data, and
+# then ask for the data.  If "warn_user" is "true", warning is displayed,
+# otherwise we bring up the choose directory dialog directly.  "warn_user"
+# most likely should only be displayed the first time.
+#
+proc getSettingsDirectory { warn_user } {
+
+   if { "$warn_user" == "true" } {
+      tk_messageBox -type ok -parent . -message \
+         "The enviroment variables SCIRUN_DATA and/or SCIRUN_DATASET are not set (or are invalid).  You must specify a valid data set directory in order to use this net!  You will now be asked to select the directory of the dataset you are interested in.  (eg: /usr/sci/data/SCIRunData/1.10.0/sphere) (FYI, if you set these environment variables, you will not need to select a directory manually when you load this network.)" 
+   }
+   return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.10.0]
+}
+
+#
+# Verify that the "file_name" file exists.  If not, tells the user that
+# they will next have to input valid data.  It is up to the calling routine
+# to check if verifyFile() returns "true", and if not, to ask the user for
+# new information.
+#
+proc verifyFile { file_name } {
+  if {![file isfile $file_name]} {
+
+     set message "Error: $file_name is not a valid file.  Please select a valid directory (eg: /usr/sci/data/SCIRunData/1.10.0/sphere)"
+
+     # This occurs if the user presses "cancel".
+     if { "$file_name" == "//.settings" } {
+        set message "You must select a data set directory for use with this network. Eg: /usr/sci/data/SCIRunData/1.10.0/sphere"
+     }
+
+     tk_messageBox -type ok -parent . -message "$message" -icon warning
+
+     return "false"
+  }
+  return "true"
+}
+
+#
+# sourceSettingsFile()
+#
+# Finds and then sources the ".settings" file.  Uses environment
+# variables SCIRUN_DATA (for directory) and SCIRUN_DATASET (for data
+# set) to find .settings file.  If these environment variables are not
+# set or if they to not point to a valid file, then proc asks the user
+# for input.  
+#
+# Returns "DATADIR DATASET"
+#
+proc sourceSettingsFile {} {
+
+   global env
+
+   # Attempt to get environment variables:
+   set DATADIR [lindex [array get env SCIRUN_DATA] 1]
+   set DATASET [lindex [array get env SCIRUN_DATASET] 1]
+
+   if { [string compare "$DATASET" ""] == 0 } {
+       # if env var SCIRUN_DATASET not set... default to sphere:
+       set DATASET "sphere"
+   } else {
+       if { [string compare "$DATADIR" ""] == 0 } {
+          # DATASET specified, but not DATADIR.  Ask for DATADIR
+          set DATADIR [getDataDirectory $DATASET]
+       }
+   }
+
+   if { [string compare "$DATADIR" ""] != 0 && \
+        [verifyFile $DATADIR/$DATASET/$DATASET.settings] == "true" } {
+      displayErrorWarningOrInfo "*** Using SCIRUN_DATA $DATADIR" "info"
+      displayErrorWarningOrInfo "*** Using DATASET $DATASET" "info"
+   } else {
+      set done "false"
+      set warn_user "true"
+      while { $done == "false" } {
+
+         # "result" is the directory of the dataset (eg: /usr/sci/data/sphere)
+	 set result [getSettingsDirectory "$warn_user"]
+         # cut off beginning: if /my/data/sets/sphere, this gives "sphere"
+	 set DATASET [lrange [split "$result" / ] end end]
+         # cut off end: if /my/data/sets/sphere, this gives "/my/data/sets"
+	 set DATADIR [string range "$result" 0 \
+		[expr [string length $result] - [string length $DATASET] - 2]]
+
+         if { [verifyFile $DATADIR/$DATASET/$DATASET.settings] == "true" } {
+            displayErrorWarningOrInfo "*** Using SCIRUN_DATA $DATADIR" "info"
+            displayErrorWarningOrInfo "*** Using DATASET $DATASET" "info"
+            set done "true"
+	 }
+         set warn_user "false"
+      }
+   }
+   source $DATADIR/$DATASET/$DATASET.settings
+   return "$DATADIR $DATASET"
+}
+
+#
+# displayErrorWarningOrInfo(): 
+#
+# Generic function that should be called to display to Error/Warning
+# window.  (Ie: don't write to the window directly, use this function.)
+#
+# Displays the message "msg" (a string) to the Error/Warning window.
+# "status" (Possible values: "error", "warning", "info") determines if
+# the message should be displayed as an error, as a warning, or as
+# information.
+#
+proc displayErrorWarningOrInfo { msg status } {
+
+    # Yellow Message
+    set status_tag "infotag"
+    if { "$status" == "error" } {
+       # Red Message
+       set status_tag "errtag" 
+    } elseif { "$status" == "warning" } {
+       # Orange Message
+       set status_tag "warntag" 
+    }
+    .top.errorFrame.text insert end "$msg\n" "$status_tag"
+    .top.errorFrame.text see end
 }
 

@@ -47,24 +47,24 @@
 	<p><b><H4><A href="#section-1">Isosurface</H4></b></A>
 	<p><b><H4><A href="#section-2">Putting the nets together</p></b></H4></A>
 	<p><b>Chapter Overview</b><br>
-        <p>In the previous chapter, we constructed three networks to
+        <p>\Chapter three demonstrates the construction of three networks to
 	    visualize the utahtorso-lowres-voltage  
-	dataset.  In this chapter, we will merge those networks into one
+	dataset.  This chapter, demonstrates how to merge the three networks into one
 	    larger network 
 	that performs all visualizations concurrently. For details, see the
 	    <a HREF="../Guide/usersguide/srug4.html#sec:navnetwork">User's
 	    Guide 4.15, 
-	    Navigating a Network</a>.  We will add a fourth visualization
-	    tool--isosurface extraction.</p>
+	    Navigating a Network</a>.  A fourth visualization
+	    tool will be added--isosurface extraction.</p>
  
-	<p> First, add the following to your canvas:</p>
+	<p> First, add the following to the canvas:</p>
 
 	<p><ul><li>A FieldReader module loading the utahtorso-lowres-voltage.tvd.fld file.</p>
-<p><li>Add an Isosurface module from the SCIRun/Visualization menu and connect with the FieldReader.</p>
-<p><li>Add a Viewer module and connect to the Isosurface.</p></ul>
+<p><li>An Isosurface module from the SCIRun/Visualization menu and connect with the FieldReader.</p>
+<p><li>A Viewer module and connect to the Isosurface.</p></ul>
 <p><b><a name="section-1">Isosurface</b></A>
 
-	<p>The Isosurface takes a volume Field as input and outputs a surface Field or scene graph data (visualized with or without a color map).
+	<p>The Isosurface takes a volume Field as input, and outputs a surface Field or scene graph data (visualized with or without a color map).
 
         <p><b>Figure 4.1</b> shows the Isosurface module UI.  The
 	Iso Value slider widget determines the surface value for the
@@ -81,26 +81,26 @@
 	
       
 	<p>If a color map is not connected to the Isosurface input port, the module uses the Default Color. By default, the module extracts a surface using the Marching Cubes
-	algorithm, and you can choose the number of threads (processors) 
-	the algorithm will use. Or, you may use the NOISE algorithm.</p>
+	algorithm. The user can choose the number of threads (processors) 
+	the algorithm will use, or use the NOISE algorithm.</p>
 
         <p><b><A name="section-2">Putting the nets together</b></A>
 
-        <p>Now we will add the visualization techniques from Chapter 3, a procedure that involves sharing the FieldReader and Viewer modules across the 3A, 3B, and 3C networks.  You may choose from the following two options for rebuilding the nets you saved in Chapter 3.  The first option is to manually reconstruct the nets by,
+        <p>Now add the visualization techniques from Chapter 3, a procedure that involves sharing the FieldReader and Viewer modules across the 3A, 3B, and 3C networks.  Choose from the following two options for rebuilding the nets saved in Chapter 3.  The first option is to manually reconstruct the nets:
 	<p><ul>
-	<li>Repeat all of the steps for creating <b><A href="chapter_3.html#section-1">3A</b></A> in Chapter 3.</p>
+	<li>Repeat all  steps for creating <b><A href="chapter_3.html#section-1">3A</b></A> in Chapter 3.</p>
 	<p><li>Do the same for <b><A href="chapter_3.html#section-2">3B</b></A> and <b><A href="chapter_3.html#section-3">3C</b></A>, but use the FieldReader and
 	  Viewer from 
        3A.</ul></p>
                   
-        <p>You can use the complete, color-coded network in <b>Figure 4.2</b> that shows the  
+        <p>Use the complete, color-coded network in <b>Figure 4.2</b> that shows the  
 	previous chapter's networks. Yellow corresponds to 3A, green to 3B,
 	and red to 3C.</p>
 
-<p>Or, as the second option, you may use the File/Insert command to insert all of the nets you saved in Chapter 3, along with their settings.  You will need to destroy all but one Viewer module by right-clicking on the module and selecting the Destroy option.  To destroy a connection between two modules, right-click on the pipe connecting those modules. In addition to the Viewer, these nets will also share the FieldReader module (in the left uppermost corner of <b>Figure 4.2</b>), which loads the utahtorso-lowres-voltage.tvd.fld file.</p>
+<p>The second option is to use the File/Insert command to insert all nets saved in Chapter 3, along with their settings. Destroy all but one Viewer module by right-clicking on the module and selecting the Destroy option.  To destroy a connection between two modules, right-click on the pipe connecting those modules. In addition to the Viewer, these nets share the FieldReader module (in the upper left corner of <b>Figure 4.2</b>), which loads the utahtorso-lowres-voltage.tvd.fld file.</p>
 
-<p>You can move module groupings by holding the middle-mouse button and drawing a box that contains the modules you wish to relocate. The selected modules will turn a darker gray.  You can then left-click the mouse in order to move the entire group to a new location in the NetEdit frame. </p>
-<p>Be sure to save this net since you will use it again in Chapter 6.</p>
+<p>Move module groupings by holding the middle-mouse button and drawing a box that contains the modules to relocate. The selected modules will turn a darker gray.  Then left-click the mouse to move the entire group to a new location in the NetEdit frame. </p>
+<p>Save this net, it will be used in Chapter 6.</p>
 	
       </div>
 	<center>
@@ -121,10 +121,10 @@
         
 	
 	<p><b>Summary</b><br>
-	<p>Now that you can perform concurrent visualizations, in Chapter 5 we
-	begin  
-	to use modules from the bioelectric problem solving environment
-	(BioPSE) package.  
+	<p>At this point in the tutorial, the user has learned how to perform concurrent visualizations. 
+	
+	Chapter 5 gives instruction on using modules from the bioelectric problem solving 
+	environment (BioPSE) package.  
 
 	<br>
 	<br><A HREF="#section-3">Return to Top</A>

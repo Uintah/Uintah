@@ -78,7 +78,6 @@ void SynchronizeGeometry::do_execute() {
   for(;;){
     msg = mailbox.receive();
     if(enforce_barrier(msg) == 86) {
-      helper_done.send(1);
       return;
     }
   }

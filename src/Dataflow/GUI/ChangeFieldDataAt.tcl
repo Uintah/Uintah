@@ -62,7 +62,7 @@ itcl_class SCIRun_Fields_ChangeFieldDataAt {
 			       
 	pack $w.edit 
 	set edit [$w.edit childsite]
-	labelcombo $edit.l1 "Data at" {Nodes Edges Faces Cells} \
+	labelcombo $edit.l1 "Data at" {Nodes Edges Faces Cells None} \
 		   $this-outputdataat $this-cdataat
 	pack $edit.l1 -side top 
 

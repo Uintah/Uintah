@@ -23,12 +23,13 @@
 \label{sec:intro}
 
 
-This is the \etitle{\srug}.  It describes the purpose and use, of the \sr{}
-problem solving environment.  It is for those users who will be building
-and executing \dfn{networks} within the \sr{} environment.
+This is the \etitle{\srug}.  It describes the purpose and use of the
+\sr{} problem solving environment (\pse).  This guide is for users who
+will be building and executing \dfn{networks} within the \sr{}
+environment.
 
-Those who will be installing \sr{} should read the
-\htmladdnormallinkfoot{\srig{}}{\installguideurl}.
+Users installing \sr{} should read the
+\htmladdnormallinkfoot{\srig}{\htmlurl{\latexhtml{\scisoftware/doc}{../../..}/Installation/Guide/ch.inst.html}}.
 
 
 %\subsection{Conventions}
@@ -39,59 +40,85 @@ Those who will be installing \sr{} should read the
 \subsection{Road Map}
 \label{sec:roadmap}
 
-This document is organized into the following main sections:
+This document is organized into the following sections:
 
 \begin{description}
-  \item \secref{Introduction}{sec:intro} is what you are reading now.
-  \item \secref{Concepts}{sec:concepts} introduces the concept of an
-        integrated problem solving environment  and describes how \SR{}
-        embodies some of these ideas.
-  \item \secref{Starting \sr}{sec:startingup}  outlines the procedure for
-        starting \sr{} and related information.
-  \item \secref{Working with Networks}{sec:workwithnets} discusses tasks
-        involved in building, editing, and executing networks.
-  \item \secref{Visualization with the \viewer{}}{sec:viewer} describes the
-        purpose and use of a visualization module called the \viewer{}.  The
-        \viewer{} is probably \sr{}'s most commonly used module.
-  \item \secref{Packages}{sec:packages} offers an overview of the content
-        of the \sr{} and \pse{} packages (which provide nearly all of
-        \sr{}'s computational services).
-  \item \secref{Importing data into \sr{}}{sec:import} summarize ways to
-        get data in your local format into and out of \SR{}.
+  \descitem{\secref{Introduction}{sec:intro}} This introduction.
+  
+  \descitem{\secref{Concepts}{sec:concepts}} Introduces the concept of
+  an integrated problem solving environment and describes how \SR{}
+  embodies these ideas.
+  
+  \descitem{\secref{Starting \sr}{sec:startingup}} Outlines procedure
+  for starting \sr{} and related information.
+
+  \descitem{\secref{Working with Networks}{sec:workwithnets}}
+  Discusses tasks involved in building, editing, and executing
+  networks.
+
+  \descitem{\secref{Visualization}{sec:viewer}}
+  Describes the purpose and use of the \viewer{} (visualization) module.
+
+  \descitem{\secref{Packages}{sec:packages}} Gives an overview
+  of the \sr{} and \biopse{} packages.
+  
+  \descitem{\secref{Importing data into \sr{}}{sec:import_export}}
+  Describes ways to import/export ``foreign'' data into/out of \SR{}.
 \end{description}
 
-\subsection{Getting Help}
+\subsection{Help}
 \label{sec:help}
 
-Help is available from several sources.
+Help is available from the following sources.
 
-\subsubsection{In the Distribution}
+\subsubsection{Documentation Distribution}
 
-This document and others related to \sr{} can be found in your \sr{}
-distribution.  Point your browser at \filename{index.html} which is in your
-distribution's top level \directory{doc} directory (\ie{} \ab{top of
-distribution}/doc/index.html).  Latex and postscript versions of some
-documents are also in the distribution's \directory{doc} directory.
+\sr{} documentation is distributed separately from its source code.
+\sr{}'s documentation distribution can be downloaded from
+\htmladdnormallinkfoot{\sr{}'s software download
+  page}{\scisoftwarearchiveurl}.  See the 
+\htmladdnormallinkfoot{\srig}{\htmlurl{\latexhtml{\scisoftware/doc}{../../..}/Installation/Guide/ch.inst.html}}
+for instructions on downloading and installing the documentation
+distribution.
 
-\subsubsection{On the Web}
+After installing the documentation, point the browser at the
+\filename{index.html} file located in the distribution's top level
+\directory{doc} directory (\ie{} \ab{top of documentation
+  distribution}/doc/index.html).
 
-This and other documents related to \sr{} can be found in the
-\htmladdnormallinkfoot{document}{\scidocurl{}} section of the
-\htmladdnormallinkfoot{\sci{}}{\sciurl{}} web site.
+\subsubsection{The Web}
 
-Be sure to visit the main \sci{} web site for lots of other
+This and other documents related to \sr{} can be found 
+\htmladdnormallinkfoot{online}{\scidocurl{}}.
+
+Visit the \sci{} web site for more
 information related to \sr{} and the \scii{}.
 
-\subsubsection{From the Mailing Lists}
+\subsubsection{Mailing Lists}
 
-The \sr{} users mail list is a forum for discussing \sr{} related issues.
-To subscribe send mail to:
+The \sr{} \emph{users} mail list is a forum for discussing \sr{}
+related issues.  To subscribe send mail to:
 
 \mailto{Majordomo@sci.utah.edu}
 
-with the following command in the body of your message:
+with the following command in the body of the message:
 
 \keyboard{subscribe scirun-users}
+
+After subscribing,  questions can be sent to
+\mailto{scirun-users@sci.utah.edu}.
+
+The \sr{} \emph{developers} list is a forum for network and module
+developers.  To subscribe send mail to:
+
+\mailto{Majordomo@sci.utah.edu}
+
+with the following command in the body of the message:
+
+\keyboard{subscribe scirun-develop}
+
+After subscribing, questions can be sent to
+\mailto{scirun-develop@sci.utah.edu}.
 
 \subsection{Reporting Bugs}
 \label{sec:bugs}
@@ -99,10 +126,8 @@ with the following command in the body of your message:
 Please report bugs!  To report a bug visit \sr{}'s
 \htmladdnormallinkfoot{bug database}{\bugsurl} web page.
 
-Reporting bugs this way (rather than by way of the mailing list) ensures
-that they will be fixed in timely manner.
-
-
+Reporting bugs to the bug database, rather than the mailing list,  ensures
+bugs will be fixed in a timely manner.
 
 %%% Local Variables: 
 %%% mode: latex

@@ -40,7 +40,7 @@
 #include <Core/Datatypes/CurveField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
-
+#include <StandAlone/convert/FileUtils.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -91,32 +91,26 @@ int parseArgs(int argc, char *argv[]) {
   return 1;
 }
 
-int getNumNonEmptyLines(char *fname) {
-  // read through the file -- when you see a non-white-space set a flag to one.
-  // when you get to the end of the line (or EOF), see if the flag has
-  // been set.  if it has, increment the count and reset the flag to zero.
-
-  FILE *fin = fopen(fname, "rt");
-  int count=0;
-  int haveNonWhiteSpace=0;
-  int c;
-  while ((c=fgetc(fin)) != EOF) {
-    if (!isspace(c)) haveNonWhiteSpace=1;
-    else if (c=='\n' && haveNonWhiteSpace) {
-      count++;
-      haveNonWhiteSpace=0;
-    }
-  }
-  if (haveNonWhiteSpace) count++;
-  cerr << "number of nonempty lines was: "<<count<<"\n";
-  return count;
+void printUsageInfo(char *progName) {
+  cerr << "\n Usage: "<<progName<<" pts edges CurveMesh [-noPtsCount] [-noEdgesCount] [-oneBasedIndexing] [-binOutput] [-debug]\n\n";
+  cerr << "\t This program will read in a .pts (specifying the x/y/z \n";
+  cerr << "\t coords of each point, one per line, entries separated by \n";
+  cerr << "\t white space, file can have an optional one line header \n";
+  cerr << "\t specifying number of points... and if it doesn't, you have \n";
+  cerr << "\t to use the -noPtsCount command-line argument) and a .edge \n";
+  cerr << "\t file (specifying i/j indices for each edge, also one per \n";
+  cerr << "\t line, again with an optional one line header (use \n";
+  cerr << "\t -noEdgesCount if it's not there).  The edge entries are \n";
+  cerr << "\t assumed to be zero-based, unless you specify \n";
+  cerr << "\t -oneBasedIndexing.  And the SCIRun output file is written in \n";
+  cerr << "\t ASCII, unless you specify -binOutput.\n\n";
 }
 
 int
 main(int argc, char **argv) {
   CurveMesh *cm = new CurveMesh();
   if (argc < 4 || argc > 9) {
-    cerr << "Usage: "<<argv[0]<<" pts edges CurveMesh [-noPtsCount] [-noEdgesCount] [-oneBasedIndexing] [-binOutput] [-debug]\n";
+    printUsageInfo(argv[0]);
     return 0;
   }
   setDefaults();
@@ -124,7 +118,10 @@ main(int argc, char **argv) {
   char *ptsName = argv[1];
   char *edgesName = argv[2];
   char *fieldName = argv[3];
-  if (!parseArgs(argc, argv)) return 0;
+  if (!parseArgs(argc, argv)) {
+    printUsageInfo(argv[0]);
+    return 0;
+  }
 
   int npts;
   if (!ptsCountHeader) npts = getNumNonEmptyLines(ptsName);

@@ -6,7 +6,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Packages/Morgan/Core/PackagePathIterator
 
-CFLAGS += -DDEFAULT_PACKAGE_PATH=\"$(PACKAGE_PATH)\"
+CXXFLAGS += -DDEFAULT_PACKAGE_PATH=\"$(PACKAGE_PATH)\"
 SRCS     += $(SRCDIR)/PackagePathIterator.cc
 
 PSELIBS := 

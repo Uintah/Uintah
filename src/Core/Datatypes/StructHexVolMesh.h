@@ -128,6 +128,10 @@ public:
 private:
   void compute_grid();
   double inside8_p(Cell::index_type i, const Point &p) const;
+  double polygon_area(const Node::array_type &, const Vector) const;
+  double pyramid_volume(const Node::array_type &, const Point &) const;
+  Point get_point(const Node::index_type &i) const 
+  { return points_(i.i_, i.j_, i.k_); }
 
   Array3<Point> points_;
 

@@ -37,7 +37,7 @@
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
-
+#include <StandAlone/convert/FileUtils.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -55,7 +55,7 @@ void setDefaults() {
 }
 
 int parseArgs(int argc, char *argv[]) {
-  int currArg = 4;
+  int currArg = 3;
   while (currArg < argc) {
     if (!strcmp(argv[currArg],"-noPtsCount")) {
       ptsCountHeader=false;
@@ -68,38 +68,31 @@ int parseArgs(int argc, char *argv[]) {
   return 1;
 }
 
-int getNumNonEmptyLines(char *fname) {
-  // read through the file -- when you see a non-white-space set a flag to one.
-  // when you get to the end of the line (or EOF), see if the flag has
-  // been set.  if it has, increment the count and reset the flag to zero.
-
-  FILE *fin = fopen(fname, "rt");
-  int count=0;
-  int haveNonWhiteSpace=0;
-  int c;
-  while ((c=fgetc(fin)) != EOF) {
-    if (!isspace(c)) haveNonWhiteSpace=1;
-    else if (c=='\n' && haveNonWhiteSpace) {
-      count++;
-      haveNonWhiteSpace=0;
-    }
-  }
-  if (haveNonWhiteSpace) count++;
-  cerr << "number of nonempty lines was: "<<count<<"\n";
-  return count;
+void printUsageInfo(char *progName) {
+  cerr << "\n Usage: "<<progName<<" PointCloudField pts [-noPtsCount]\n\n";
+  cerr << "\t This program will read in a SCIRun PointCloudField, and \n";
+  cerr << "\t will save out the PointCloudMesh into a .pts file. \n";
+  cerr << "\t The .pts file will specify the x/y/z coordinates of each \n";
+  cerr << "\t point, one per line, entries separated by white space; the \n";
+  cerr << "\t file will also have a one line header, specifying number \n";
+  cerr << "\t of points, unless the user specifies the -noPtsCount \n";
+  cerr << "\t command-line argument.\n\n";
 }
 
 int
 main(int argc, char **argv) {
   if (argc < 3 || argc > 4) {
-    cerr << "Usage: "<<argv[0]<<" PointCloudField pts [-noPtsCount]\n";
+    printUsageInfo(argv[0]);
     return 0;
   }
   setDefaults();
 
   char *fieldName = argv[1];
   char *ptsName = argv[2];
-  if (!parseArgs(argc, argv)) return 0;
+  if (!parseArgs(argc, argv)) {
+    printUsageInfo(argv[0]);
+    return 0;
+  }
 
   FieldHandle handle;
   Piostream* stream=auto_istream(fieldName);

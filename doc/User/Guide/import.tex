@@ -16,54 +16,47 @@
 %  University of Utah. All Rights Reserved.
 %
 
-\section{Importing data into \sr{}}
+\section{Importing Data into \sr{}}
 \label{sec:import} 
 \index{importing}
 
-Here we describe some of the channels through which you can import data
-into \sr{}.  The basic paradigm a this point requires converting existing
-files into standard \sr{} files.  We will extend this very soon to support
-readers within \sr{} that will accept other formats.
+\sr{} cannot import "foreign" data. Programs called converters must perform this translation. Converters create a \sr{} data object, read foreign data, and copy data to the object. then the \sr{} data object writes itself to a file.
 
-
-\subsection{CVRTI converters}
+\subsection{CVRTI Converters}
 
 The Cardiovascular Research and Training Institute (CVRTI) has developed a
-number of scalar and vector data and geometry file formats which required
+number of scalar and vector data and geometry file formats that require
 converters for \sr{}.  The result is a set of stand-alone programs that read
-in one more more existing CVRTI files and generate a particular form of
-\sr{} file, the details of which depend on the particular combination of
-nodes, connectivities, and associated attributes.
+existing CVRTI files and generate \sr{} data files.
 
-The programs and their parameters as as follows (go to the end of the list
-to see the definitions of the different parameter and file types):
+The programs and their parameters are as follows (definitions for different parameter and file types are at the end of the list):
 %
 \begin{description}
-  \item [CVRTItoTriSurfGrad: ] converts nodes, triangle connectivities, and
+  \descitem{CVRTItoTriSurfGrad} Converts nodes, triangle connectivities, and
         vector (grad) files into a field with associated vector attribute:\\
         \begin{verbatim}
         CVRTItoTriSurfGrad pts fac grad [channels] fieldout
         \end{verbatim}
-  \item [CVRTItoTriSurfPot: ] converts nodes, triangle connectivities, and
+  \descitem{CVRTItoTriSurfPot} Converts nodes, triangle connectivities, and
         scalar (pot) data files into a field with associated scalar
         attributes. 
         \begin{verbatim}
         CVRTItoTriSurfPot pts fac pot [channels] fieldout
         \end{verbatim}
-  \item [CVRTItoTetVolGrad: ] converts nodes, tetrahedral connectivities, and
+  \descitem{CVRTItoTetVolGrad} Converts nodes, tetrahedral connectivities, and
         vector (grad) files into a field with associated vector
         attributes:\\
         \begin{verbatim}
         CVRTItoTetVolGrad pts tetras grad [channels] fieldout
         \end{verbatim}
-  \item [CVRTItoTetVolPot: ] converts nodes, tetrahedral connectivities, and
+  \descitem{CVRTItoTetVolPot} Converts nodes, tetrahedral connectivities, and
         scalar (pot) files into a field with associated scalar attributes:\\
         \begin{verbatim}
         CVRTItoTetVolPot pts tetras pot [channels] fieldout
         \end{verbatim}
 \end{description}
 
-\paragraph{Definitions:}
+\paragraph{Definitions}
 
 \begin{center}
 \begin{tabular}{|c|p{4in}|} \hline
@@ -102,7 +95,6 @@ scalar, and vector files, count the number of lines in the file. \\
 \end{center}
 
 \paragraph{Location of converter programs:}
-All converter programs are normally available in the subdirectory of the
+All converter programs should be available in the subdirectory of the
 \sr{} distribution called \directory{src/StandAlone/convert}.  If they are
-not easily available, ask the local person who installed \sr{} for
-assistance.
+not available, contact your local \sr{} installer.

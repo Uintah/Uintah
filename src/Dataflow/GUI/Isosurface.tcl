@@ -60,7 +60,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-quantity-range "colormap"
 	set $this-quantity-min 0
 	set $this-quantity-max 100
-	set $this-isoval-list "0"
+	set $this-isoval-list "0.0 1.0 2.0 3.0"
 	set $this-active-isoval-selection-tab 0
 	set $this-continuous 0
 	set $this-extract-from-new-field 1
@@ -261,8 +261,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set isolist [$isf.tabs add -label "List" -command "set $this-active-isoval-selection-tab 2"]
 	
 	frame $isolist.f
-	label $isolist.f.l -text "Number of evenly-spaced isovals:"
-	entry $isolist.f.e -width 20 -text $this-isoval-list
+	label $isolist.f.l -text "List of Isovals:"
+	entry $isolist.f.e -width 40 -text $this-isoval-list
 	bind $isolist.f.e <Return> "$this-c needexecute"
 	pack $isolist.f.l $isolist.f.e -side left -fill both -expand 1
 	button $isolist.extract -text "Extract" -command "$this-c needexecute"

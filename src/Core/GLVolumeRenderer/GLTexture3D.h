@@ -85,7 +85,7 @@ public:
   //////////
   // Constructor
   GLTexture3D(FieldHandle texfld, double &min, double &max, bool use_minmax,
-	      int bricksize = 64);
+	      int bricksize = 128);
   //////////
   // Constructor
   GLTexture3D();

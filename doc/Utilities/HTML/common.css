@@ -31,8 +31,14 @@ margin-top:0em}
 a:link {
 color:#003333}
 
+a.alt:link { 
+color:#FFCC33;}
+
 a:visited {
 color:#336666}
+
+a.alt:visited { 
+color:#FFCC33;}
 
 div.top-banner-margins {
 margin-left:-50px;
@@ -47,12 +53,21 @@ border-style: none}
 
 div.bottom-banner-margins {
 margin-left:-50px;
-margin-right:-50px;
-}
+margin-right:-50px}
 
 div.bottom-banner-margins table {
 border-style: none}
 
 div.bottom-banner-margins td {
 border-style: none}
+
+.block-center {
+display: table;
+margin-left: auto;
+margin-right: auto;}
+
+table.default {
+margin-left: auto;
+margin-right: auto}
+
 

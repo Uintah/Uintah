@@ -512,7 +512,7 @@ RenderField<Fld, Loc>::render_materials(const Fld *sfld,
 
   case Field::NONE:
   default:
-    cerr << "Unknown data location." << endl;
+    // Is known, we do nothing here.
     break;
   }
 

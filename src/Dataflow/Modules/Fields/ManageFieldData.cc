@@ -80,6 +80,9 @@ ManageFieldData::execute()
     return;
   }
 
+  // TODO: Using datasize this way appears to be wrong, as it depends
+  // on the input DATA_AT size and not the one picked for output.
+  int datasize = 0;
   int svt_flag = 0;
   if (ifieldhandle->query_scalar_interface(this))
   {
@@ -93,21 +96,28 @@ ManageFieldData::execute()
   {
     svt_flag = 2;
   }
-  
-  // Compute output matrix.
-  CompileInfoHandle ci_field =
-    ManageFieldDataAlgoField::
-    get_compile_info(ifieldhandle->get_type_description(), svt_flag);
-  Handle<ManageFieldDataAlgoField> algo_field;
-  if (!module_dynamic_compile(ci_field, algo_field)) return;
 
-  MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
-  if (!omp) {
-    error("Unable to initialize oport 'Output Matrix'.");
+  // Compute output matrix.
+  if (ifieldhandle->data_at() == Field::NONE)
+  {
+    remark("Input field contains no data, no matrix created.");
   }
   else
   {
-    omp->send(algo_field->execute(ifieldhandle));
+    CompileInfoHandle ci_field =
+      ManageFieldDataAlgoField::
+      get_compile_info(ifieldhandle->get_type_description(), svt_flag);
+    Handle<ManageFieldDataAlgoField> algo_field;
+    if (!module_dynamic_compile(ci_field, algo_field)) return;
+
+    MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
+    if (!omp) {
+      error("Unable to initialize oport 'Output Matrix'.");
+    }
+    else
+    {
+      omp->send(algo_field->execute(ifieldhandle, datasize));
+    }
   }
 
   // Compute output field.
@@ -144,7 +154,32 @@ ManageFieldData::execute()
       error("Input matrix does not appear to fit in the field.");
       return;
     }
-
+    if (matrix_svt_flag == 2 && datasize == 9)
+    {
+      if (imatrixhandle->nrows() == 3 || imatrixhandle->ncols() == 3)
+      {
+	matrix_svt_flag = 1;
+      }
+      else if (imatrixhandle->nrows() == 1 || imatrixhandle->ncols() == 1)
+      {
+	matrix_svt_flag = 0;
+      }
+    }
+    if (matrix_svt_flag == 1 && datasize == 3)
+    {
+      if (imatrixhandle->nrows() == 1 || imatrixhandle->ncols() == 1)
+      {
+	matrix_svt_flag = 0;
+      }
+    }
+    if (imatrixhandle->nrows() == 9 && imatrixhandle->ncols() == 9)
+    {
+      remark("Input matrix is 9x9.  Using rows or columns as tensors is ambiguous.");
+    }
+    else if (imatrixhandle->nrows() == 3 && imatrixhandle->ncols() == 3)
+    {
+      remark("Input matrix is 3x3.  Using rows/columns for vectors is ambiguous.");
+    }
     CompileInfoHandle ci_mesh =
       ManageFieldDataAlgoMesh::
       get_compile_info(ifieldhandle->get_type_description(), matrix_svt_flag);

@@ -1671,14 +1671,23 @@ itcl_class ViewWindow {
 	global $this-resx
 	global $this-resy
 	global $this-aspect
+
 	set $this-resx [winfo width .ui[modname].wframe.draw]
 	set $this-resy [winfo height .ui[modname].wframe.draw]
 	
-	toplevel .ui[modname]-saveImage
 	set w .ui[modname]-saveImage
+
+	if {[winfo exists $w]} {
+	   raise $w
+           return
+        }
+
+	toplevel $w
+
+        wm title $w "Save ViewWindow Image"
+    
 	makeFilebox $w \
-	    $this-saveFile "$this doSaveImage" \
-	    "destroy $w"
+	    $this-saveFile "$this doSaveImage" "destroy $w"
 	#$w.f.sel.sel configure -textvariable $saveFile
 	set ex $w.f.extra
 	radiobutton $ex.raw -variable $this-saveType \

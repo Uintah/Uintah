@@ -22,7 +22,7 @@
 #include <afxwin.h>
 #endif
 #include <GL/gl.h>
-#include <GL/glu.h>
+#include <sci_glu.h>
 #include <stdio.h>
 
 #define MY_FILTER GL_LINEAR_MIPMAP_LINEAR

@@ -124,7 +124,10 @@ EndOfString
         entries << LatexEntry.new(f)
       end
       entries.sort!
-      index.print("<table align='center' cellspacing='0' border='1' cellpadding='2'>\n")
+      index.print("<div class=\"block-center\">\n")
+      index.print("<a href=\"index.html\">Back to Package Listing</a>\n")
+      index.print("<table class=\"default\" cellspacing='0' border='1' l
+cellpadding='2'> \n")
       # Generate page title and subtitle
       etable = []
       if entries.size() <= 25
@@ -184,6 +187,8 @@ EndOfString
       if LatexEntry.count > 0
         index.print("<p><sup>*</sup>Denotes additional documentation for a module.</p>\n")
       end
+
+      index.print("</div>\n")
 
       # Generate end of file boilerplate.
       index.print <<EndOfString

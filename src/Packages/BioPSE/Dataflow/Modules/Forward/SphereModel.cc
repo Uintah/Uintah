@@ -68,6 +68,10 @@ void SphereModel::execute() {
   }
 
   // get the mesh
+  if(!(field_->get_type_name(0) == "HexVolField") || !(field_->get_type_name(1) == "int")) {
+	error("input field is not of type 'HexVolField<int>'");
+	return;
+  }
   LockingHandle<HexVolField<int> > field = dynamic_cast<HexVolField<int>* >(field_.get_rep()); 
   HexVolMeshHandle mesh_ = field->get_typed_mesh();
   

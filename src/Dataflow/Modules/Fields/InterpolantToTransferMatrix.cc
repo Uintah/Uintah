@@ -87,7 +87,11 @@ InterpolantToTransferMatrix::execute()
     Interp2TransferAlgo::get_compile_info(fitp_h->get_type_description(),
 					  fitp_h->data_at_type_description());
   Handle<Interp2TransferAlgo> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
+  if (!module_dynamic_compile(ci, algo))
+  {
+    error("Unsupported input field type, probably not an interpolant field.");
+    return;
+  }
 
   MatrixOPort *omp = (MatrixOPort *)getOPort("Transfer");
   if (!omp) {

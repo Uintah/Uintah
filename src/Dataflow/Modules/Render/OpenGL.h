@@ -35,7 +35,7 @@
 #include <tcl.h>
 #include <tk.h>
 #include <GL/gl.h>
-#include <GL/glu.h>
+#include <sci_glu.h>
 #include <GL/glx.h>
 #include <iostream>
 #include <sstream>
@@ -207,13 +207,13 @@ private:
 
   void make_image();
 
-  void redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj);
-  void pick_draw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj);
+  void redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomHandle obj);
+  void pick_draw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomHandle obj);
 
 
   // CollabVis code begin
 #ifdef HAVE_COLLAB_VIS
-  void collect_triangles(Viewer *viewer, ViewWindow *viewwindow, GeomObj *obj);
+  void collect_triangles(Viewer *viewer, ViewWindow *vwindow, GeomHandle obj);
   Array1<float> *triangles;
   Transform ZTexTransform;
   View ZTexView;

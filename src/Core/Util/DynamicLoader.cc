@@ -214,14 +214,15 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
   LIBRARY_HANDLE so = 0;
   struct stat buf;
   if (stat(full_so.c_str(), &buf) == 0) {
-    compile_so(info, serr); // make sure
-    so = GetLibraryHandle(full_so.c_str());
+    if (compile_so(info, serr)) { // make sure
+      so = GetLibraryHandle(full_so.c_str());
+    }
   } else {
     // the lib does not exist.  
     create_cc(info, false, serr);
-    compile_so(info, serr);
-    so = GetLibraryHandle(full_so.c_str());
-
+    if (compile_so(info, serr)) { 
+      so = GetLibraryHandle(full_so.c_str());
+    }
     if (maybe_compile_p && so == 0)
     {
       create_cc(info, true, serr);
@@ -274,7 +275,7 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
 bool 
 DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 {
-  string command = ("cd " + get_compile_dir() + "; gmake " + 
+  string command = ("cd " + get_compile_dir() + "; " + MAKE_CMMD + " " + 
 		    info.filename_ + ext);
 
   serr << "DynamicLoader - Executing: " << command << endl;

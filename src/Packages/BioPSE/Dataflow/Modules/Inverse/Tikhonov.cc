@@ -365,6 +365,11 @@ void Tikhonov::execute()
   else 
   {
     matrixRegMatD = make_dense(hMatrixRegMat);
+    if (N != matrixRegMatD->ncols()) 
+    {
+    	error("The dimension of Reg. Matrix is not compatible with forward matrix.");
+    	return;
+    }
     mat_RtrR = mat_trans_mult_mat(matrixRegMatD);
   }
 

@@ -67,6 +67,7 @@ ClipFieldAlgoT<FIELD>::execute_cell(ModuleReporter *mod,
   typename FIELD::mesh_type *mesh =
     dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
   typename FIELD::mesh_type *clipped = scinew typename FIELD::mesh_type();
+  *(PropertyManager *)clipped = *(PropertyManager *)mesh;
 
 #ifdef HAVE_HASH_MAP
   typedef hash_map<unsigned int,
@@ -145,7 +146,7 @@ ClipFieldAlgoT<FIELD>::execute_cell(ModuleReporter *mod,
   }
   else
   {
-    mod->warning("Unable to copy data at this data locations.");
+    mod->warning("Unable to copy data at this field data location.");
   }
 
   return ofield;
@@ -162,6 +163,7 @@ ClipFieldAlgoT<FIELD>::execute_node(ModuleReporter *mod,
   typename FIELD::mesh_type *mesh =
     dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
   typename FIELD::mesh_type *clipped = scinew typename FIELD::mesh_type();
+  *(PropertyManager *)clipped = *(PropertyManager *)mesh;
 
 #ifdef HAVE_HASH_MAP
   typedef hash_map<unsigned int,
@@ -262,7 +264,7 @@ ClipFieldAlgoT<FIELD>::execute_node(ModuleReporter *mod,
   }
   else
   {
-    mod->warning("Unable to copy data at this data locations.");
+    mod->warning("Unable to copy data at this field data location.");
   }
 
   return ofield;
