@@ -6,12 +6,14 @@
 #ifndef _heightsimp_h
 #define _heightsimp_h
 
-#include <Remote/Modules/remoteSalmon/ZImage.h>
-using Remote::Modules::ZImage;
-
 #include <Remote/Modules/remoteSalmon/SimpMesh.h>
 
-#include <Remote/Modules/remoteSalmon/macros.h>
+#include <Remote/Tools/macros.h>
+#include <Remote/Tools/Image/ZImage.h>
+using namespace Remote::Tools;
+
+namespace Remote {
+namespace Modules {
 
 // C has the following bits:
 // 0 - Top vert edge exists.
@@ -178,5 +180,8 @@ public:
 
   SimpMesh *HFSimp();
 };
+
+} // namespace Modules {
+} // namespace Remote {
 
 #endif // _heightsimp_h

@@ -14,15 +14,24 @@
 
 #include <SCICore/OS/sock.h>
 
-#include <Remote/Modules/remoteSalmon/Model.h>
-#include <Remote/Modules/remoteSalmon/RenderModel.h>
-#include <Remote/Modules/remoteSalmon/macros.h>
-#include <Remote/Modules/remoteSalmon/Assert.h>
+#include <Remote/Tools/macros.h>
+#include <Remote/Tools/Model/Model.h>
+#include <Remote/Tools/Util/Assert.h>
 
-using SCICore::OS::Socket;
+#include <Remote/Modules/remoteSalmon/RenderModel.h>
+
+using namespace SCICore::OS;
+using namespace Remote::Tools;
 
 //----------------------------------------------------------------------
-TextureDB Model::TexDB;
+namespace Remote {
+  namespace Tools {
+    TextureDB Model::TexDB;
+  }
+}
+
+namespace Remote {
+namespace Modules {
 
 //----------------------------------------------------------------------
 struct GLObject : public Object
@@ -207,7 +216,7 @@ void sendModel(Model& M, Socket* sock) {
       return;
     }
     if (sock->Write((char*)&(M.Objs[i].verts[0]),
-      n * sizeof(dVector)) == SOCKET_ERROR) {
+      n * sizeof(Vector)) == SOCKET_ERROR) {
       cerr << "error writing model vertices" << endl;
       return;
     }
@@ -218,7 +227,7 @@ void sendModel(Model& M, Socket* sock) {
       return;
     }
     if (sock->Write((char*)&(M.Objs[i].texcoords[0]),
-      n * sizeof(dVector)) == SOCKET_ERROR) {
+      n * sizeof(Vector)) == SOCKET_ERROR) {
       cerr << "error writing model texcoords" << endl;
       return;
     }
@@ -248,7 +257,7 @@ Model* receiveModel(Socket* sock) {
       M->Objs[i].verts.push_back();
     }
     if (sock->Read((char*)&(M->Objs[i].verts[0]),
-      numverts * sizeof(dVector)) == SOCKET_ERROR) {
+      numverts * sizeof(Vector)) == SOCKET_ERROR) {
       cerr << "error reading model vertices" << endl;
       delete M;
       return NULL;
@@ -264,7 +273,7 @@ Model* receiveModel(Socket* sock) {
       M->Objs[i].texcoords.push_back();
     }
     if (sock->Read((char*)&(M->Objs[i].texcoords[0]),
-      numtexcoords * sizeof(dVector)) == SOCKET_ERROR) {
+      numtexcoords * sizeof(Vector)) == SOCKET_ERROR) {
       cerr << "error reading model texcoords" << endl;
       delete M;
       return NULL;
@@ -274,3 +283,7 @@ Model* receiveModel(Socket* sock) {
   //M->GenNormals();
   return M;
 }
+
+} // namespace Modules {
+} // namespace Remote {
+

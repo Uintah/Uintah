@@ -19,20 +19,20 @@
 
 #include <PSECommon/Modules/Salmon/OpenGL.h>
 
-#include <Remote/Modules/remoteSalmon/OpenGLServer.h>
+#include <Remote/Tools/macros.h>
+#include <Remote/Tools/Image/ZImage.h>
+
 #include <Remote/Modules/remoteSalmon/message.h>
-#include <Remote/Modules/remoteSalmon/ZImage.h>
-#include <Remote/Modules/remoteSalmon/macros.h>
+#include <Remote/Modules/remoteSalmon/OpenGLServer.h>
 #include <Remote/Modules/remoteSalmon/HeightSimp.h>
-#include <Remote/Modules/remoteSalmon/Vector.h>
 #include <Remote/Modules/remoteSalmon/RenderModel.h>
 
 namespace Remote {
 namespace Modules {
 
-using SCICore::Thread::Runnable;
-using SCICore::Thread::Thread;
-using SCICore::OS::Socket;
+using namespace Remote::Tools;
+using namespace SCICore::Thread;
+using namespace SCICore::OS;
 
 class OpenGLServer;
 

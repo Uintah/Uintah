@@ -14,9 +14,7 @@
 #define SCI_project_module_OpenGLServer_h
 
 #include <SCICore/Thread/Thread.h>
-
 #include <PSECommon/Modules/Salmon/OpenGL.h>
-
 #include <Remote/Modules/remoteSalmon/socketServer.h>
 
 #define DO_GETGLSTATE 6

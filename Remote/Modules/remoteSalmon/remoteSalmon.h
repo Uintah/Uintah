@@ -14,12 +14,10 @@
 #ifndef SCI_project_module_remoteSalmon_h
 #define SCI_project_module_remoteSalmon_h
 
-#include <SCICore/Containers/String.h>
-
-#include <PSECommon/Modules/Salmon/Salmon.h>
-
 #include <queue>
 #include <iostream>
+#include <SCICore/Containers/String.h>
+#include <PSECommon/Modules/Salmon/Salmon.h>
 
 namespace Remote {
 namespace Modules {

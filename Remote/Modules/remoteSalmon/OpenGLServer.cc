@@ -16,6 +16,8 @@ namespace Remote {
 namespace Modules {
 
 using SCICore::Containers::Array1;
+using Remote::Tools::DtoR;
+using Remote::Tools::RtoD;
 
 extern Tcl_Interp* the_interp;
 Array1<float> *triangles;

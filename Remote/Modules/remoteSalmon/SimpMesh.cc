@@ -5,6 +5,9 @@
 
 #include <Remote/Modules/remoteSalmon/SimpMesh.h>
 
+namespace Remote {
+namespace Modules {
+
 void SimpMesh::DeleteFace(Face *F, bool RemoveDead)
 {
   // cerr << "F";
@@ -96,7 +99,7 @@ int SimpMesh::Simplify(int target_tris, double _BoundaryScale)
 void SimpMesh::FixBoundary(Edge *E)
 {
   // Make a plane perp. to the face containing the edge.
-  dVector P0, P1, P2;
+  Vector P0, P1, P2;
   if(E->Faces[0]->v1 != E->v0 && E->Faces[0]->v1 != E->v1)
     {
       P0 = E->Faces[0]->v1->V;
@@ -118,12 +121,12 @@ void SimpMesh::FixBoundary(Edge *E)
     }
 
   // The edge.
-  dVector En = P2 - P1;
+  Vector En = P2 - P1;
   En.normalize();
-  dVector E2 = P0 - P1;
+  Vector E2 = P0 - P1;
 	      
-  dVector F = En * Dot(E2, En);
-  dVector N = E2 - F;
+  Vector F = En * Dot(E2, En);
+  Vector N = E2 - F;
   N.normalize();
   double D = -Dot(N, P1);
 	      
@@ -144,7 +147,7 @@ void SimpMesh::ComputeQuadrics()
   // Compute the plane equation for each face.
   for(Face *F = Faces; F; F = F->next)
     {
-      dVector N;
+      Vector N;
       double D;
 
       ComputePlane(F->v0->V, F->v1->V, F->v2->V, N, D);
@@ -186,7 +189,7 @@ void SimpMesh::FindCollapseTarget(Edge *E)
   
       double e0 = E->Q.MulPt(E->v0->V);
       double e1 = E->Q.MulPt(E->v1->V);
-      dVector M = (E->v0->V + E->v1->V) * 0.5;
+      Vector M = (E->v0->V + E->v1->V) * 0.5;
       double em = E->Q.MulPt(M);
 	  
       if(e0 < e1)
@@ -542,3 +545,7 @@ void SimpMesh::PerformEdgeCollapses()
       // CheckIntegrity(FaceCount % 300 == 0);
     }
 }
+
+} // namespace Tools {
+} // namespace Remote {
+
