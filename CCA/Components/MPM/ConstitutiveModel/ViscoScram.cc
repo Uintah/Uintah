@@ -562,8 +562,9 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       // Deviatoric stress integration
       for(int imw=0;imw<5;imw++){
         // First Runga-Kutta Term
-        double con1 = 3.*crad*crad*cdot/arad3;
-        double con3 = (crad*crad*crad)/arad3;
+        double crad_rk = crad;
+        double con1 = (3.0*crad_rk*crad_rk*cdot)/arad3;
+        double con3 = (crad_rk*crad_rk*crad_rk)/arad3;
         double con2 = 1. + con3;
         Matrix3 DevStressOld = pStatedata[idx].DevStress[imw];
         Matrix3 DevStressS = zero; 
@@ -580,8 +581,9 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
                        *(Gmw[imw]/G))*delT;
 
         // Second Runga-Kutta Term
-        con1 = 3.*(crad+.5*rk1c)*(crad+.5*rk1c)*cdot/arad3;
-        con3 = (crad + .5*rk1c)*(crad + .5*rk1c)*(crad + .5*rk1c)/arad3;
+        crad_rk = crad+0.5*rk1c;
+        con1 = (3.0*crad_rk*crad_rk*cdot)/arad3;
+        con3 = (crad_rk*crad_rk*crad_rk)/arad3;
         con2 = 1. + con3;
         DevStressOld = pStatedata[idx].DevStress[imw] + rk1*.5;
         DevStressS = zero; 
@@ -598,8 +600,9 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
                        *(Gmw[imw]/G))*delT;
 
         // Third Runga-Kutta Term
-        con1 = 3.*(crad+.5*rk2c)*(crad+.5*rk2c)*cdot/arad3;
-        con3 = (crad + .5*rk2c)*(crad + .5*rk2c)*(crad + .5*rk2c)/arad3;
+        crad_rk = crad+0.5*rk2c;
+        con1 = (3.0*crad_rk*crad_rk*cdot)/arad3;
+        con3 = (crad_rk*crad_rk*crad_rk)/arad3;
         con2 = 1. + con3;
         DevStressOld = pStatedata[idx].DevStress[imw] + rk2*.5;
         DevStressS = zero; 
@@ -616,8 +619,9 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
                        *(Gmw[imw]/G))*delT;
 
         // Fourth Runga-Kutta Term
-        con1 = 3.*(crad+.5*rk3c)*(crad+.5*rk3c)*cdot/arad3;
-        con3 = (crad + .5*rk3c)*(crad + .5*rk3c)*(crad + .5*rk3c)/arad3;
+        crad_rk = crad+rk3c;
+        con1 = (3.0*crad_rk*crad_rk*cdot)/arad3;
+        con3 = (crad_rk*crad_rk*crad_rk)/arad3;
         con2 = 1. + con3;
         DevStressOld = pStatedata[idx].DevStress[imw] + rk3;
         DevStressS = zero; 
@@ -640,9 +644,9 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       // Update the Cauchy stress
       double ekkdot = D.Trace();
-      DevStress = pStatedata[idx].DevStress[0]+pStatedata[idx].DevStress[1]
-        + pStatedata[idx].DevStress[2]+pStatedata[idx].DevStress[3]
-        + pStatedata[idx].DevStress[4];
+      DevStress = pStatedata[idx].DevStress[0]+pStatedata[idx].DevStress[1]+ 
+                  pStatedata[idx].DevStress[2]+pStatedata[idx].DevStress[3]+ 
+                  pStatedata[idx].DevStress[4];
       sig_m += ekkdot*bulk*delT;
       pStress_new[idx] = DevStress + Identity*sig_m;
 
@@ -659,7 +663,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       pDefGrad_new[idx] = pDefGradInc*pDefGrad[idx];
 
       // Update the volume
-      pVol_new[idx]=Jinc*pVol[idx];
+      pVol_new[idx] = Jinc*pVol[idx];
 
       // Update the internal heating rate 
       double cpnew = Cp0 + d_initialData.DCp_DTemperature*pTemperature[idx];
