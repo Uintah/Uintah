@@ -28,6 +28,7 @@
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 
+#include <Core/Containers/StaticArray.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
@@ -349,7 +350,7 @@ Arches::paramInit(const ProcessorGroup* ,
     CCVariable<double> vVelocityCC;
     CCVariable<double> wVelocityCC;
     CCVariable<double> pressure;
-    vector<CCVariable<double> > scalar(d_nofScalars);
+    StaticArray< CCVariable<double> > scalar(d_nofScalars);
     CCVariable<double> density;
     CCVariable<double> viscosity;
     CCVariable<double> pPlusHydro;
@@ -440,6 +441,5 @@ Arches::paramInit(const ProcessorGroup* ,
     new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch);
 
     new_dw->put(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
-
   }
 }

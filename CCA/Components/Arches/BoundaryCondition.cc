@@ -37,6 +37,7 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/TypeUtils.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Containers/StaticArray.h>
 #include <iostream>
 
 using namespace std;
@@ -1883,7 +1884,7 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
     CCVariable<int> cellType;
     CCVariable<double> density;
     CCVariable<double> pressure;
-    vector<CCVariable<double> > scalar(d_nofScalars);
+    StaticArray< CCVariable<double> > scalar(d_nofScalars);
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
@@ -2055,7 +2056,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
-    vector<CCVariable<double> > scalar(d_nofScalars);
+    StaticArray< CCVariable<double> > scalar(d_nofScalars);
     int nofGhostCells = 0;
     
     // get cellType, density and velocity
