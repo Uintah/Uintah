@@ -186,6 +186,10 @@ PROGRAM := $(SRCDIR)/PictToNrrd
 SRCS := $(SRCDIR)/PictToNrrd.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/GeoProbeToNhdr
+SRCS := $(SRCDIR)/GeoProbeToNhdr.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 
 ####################################
 # added by C.Wolters, Nov.18 2004:
