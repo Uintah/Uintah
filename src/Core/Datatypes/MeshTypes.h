@@ -71,14 +71,10 @@ class LatVolMeshCell;
 const TypeDescription *get_type_description(LatVolMeshNode *);
 const TypeDescription *get_type_description(LatVolMeshCell *);
 
-//class MaskedLatVolMeshNode;
-//class MaskedLatVolMeshEdge;
-//class MaskedLatVolMeshFace;
-//class MaskedLatVolMeshCell;
-//const TypeDescription *get_type_description(MaskedLatVolMeshNode *);
-//const TypeDescription *get_type_description(MaskedLatVolMeshEdge *);
-//const TypeDescription *get_type_description(MaskedLatVolMeshFace *);
-//const TypeDescription *get_type_description(MaskedLatVolMeshCell *);
+class MaskedLatVolMeshNode;
+class MaskedLatVolMeshCell;
+const TypeDescription *get_type_description(MaskedLatVolMeshNode *);
+const TypeDescription *get_type_description(MaskedLatVolMeshCell *);
 
 class PointCloudMeshNode;
 const TypeDescription *get_type_description(PointCloudMeshNode *);
