@@ -79,6 +79,7 @@ SRCS     += \
 	$(SRCDIR)/MoveNodeToElem.cc\
 	$(SRCDIR)/NodeGradient.cc\
 	$(SRCDIR)/QuadToTri.cc\
+	$(SRCDIR)/PlanarTransformField.cc\
 	$(SRCDIR)/Probe.cc\
 	$(SRCDIR)/RefineTetVol.cc\
 	$(SRCDIR)/ReplaceScalarDataValue.cc\

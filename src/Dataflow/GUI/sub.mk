@@ -103,6 +103,7 @@ SRCS := \
 	$(SRCDIR)/PathReader.tcl \
 	$(SRCDIR)/PathWidget.tcl \
 	$(SRCDIR)/PathWriter.tcl \
+	$(SRCDIR)/PlanarTransformField.tcl \
 	$(SRCDIR)/PointWidget.tcl \
 	$(SRCDIR)/Port.tcl \
 	$(SRCDIR)/Probe.tcl \
