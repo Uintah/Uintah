@@ -70,13 +70,14 @@ static bool execute_flag = false;
 void
 usage()
 {
-  cout << "Usage: scirun [args] [net_file]\n";
+  cout << "Usage: scirun [args] [net_file] [session_file]\n";
   cout << "       [-]-r[egression] : regression test a network\n";
   cout << "       [-]-e[xecute]    : executes the given network on startup\n";
   cout << "       [-]-v[ersion]    : prints out version information\n";
   cout << "       [-]-h[elp]       : prints usage information\n";
   cout << "       [--nosplash]     : disable the splash screen\n";
   cout << "       net_file         : SCIRun Network Input File\n";
+  cout << "       session_file     : PowerApp Session File\n";
   exit( 0 );
 }
 
@@ -87,6 +88,7 @@ int
 parse_args( int argc, char *argv[] )
 {
   int found = 0;
+  bool powerapp = false;
   for( int cnt = 1; cnt < argc; cnt++ )
   {
     string arg( argv[ cnt ] );
@@ -124,11 +126,20 @@ parse_args( int argc, char *argv[] )
 	     << ".\nNo such file or directory.  Exiting." << endl;
 	exit(0);
       }
-      if (found)
+
+      if (found && !powerapp)
       {
 	usage();
       }
-      found = cnt;
+
+      // determine if it is a PowerApp
+      if(strstr(arg.c_str(),".app")) {
+	powerapp = true;
+	found = cnt;
+      }
+      else if(!powerapp) {
+	found = cnt;
+      }
     }
   }
   return found;
@@ -204,12 +215,18 @@ main(int argc, char *argv[] )
     gui->execute("wm deiconify .");
     gui->execute("tkwait visibility .top.globalViewFrame.canvas");
   } else {
-    // set that we are loading an app
-    packageDB->setLoadingApp(true);
+    // set that we are loading an app and set the session file if provided
+    if((startnetno + 1) < argc) {
+      packageDB->setLoadingApp(true, argv[startnetno+1]);
+    }
+    else {
+      packageDB->setLoadingApp(true);
+    }
+
     // determine which standalone and set splash
     if(strstr(argv[startnetno], "BioTensor")) {
       packageDB->setSplashPath("Packages/Teem/Dataflow/GUI/splash-tensor.ppm");
-    }
+    }   
   }
 
   // load the packages
