@@ -205,7 +205,7 @@ template <class T, typename F>
          
     for(int f = TOP; f <= BACK; f++ )  {    
       double slab_vol = 0.0;
-      T q_slab_flux = 0.0;       
+      T q_slab_flux = T(0.0);
       
       //__________________________________
       //   S L A B S
@@ -222,7 +222,7 @@ template <class T, typename F>
        
     //__________________________________
     //  sum up all the contributions
-    q_advected[c] = 0.0;        
+    q_advected[c] = T(0.0);        
     for(int f = TOP; f <= BACK; f++ )  {
       q_advected[c] += q_face_flux[f];
     }

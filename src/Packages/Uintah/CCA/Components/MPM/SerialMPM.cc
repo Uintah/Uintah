@@ -1855,7 +1855,7 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
       // Create variables for the results
       NCVariable<Vector> velocity_star;
       new_dw->allocateAndPut(velocity_star, lb->gVelocityStarLabel, dwi, patch);
-      velocity_star.initialize(0.0);
+      velocity_star.initialize(Vector(0.0));
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;

@@ -1941,7 +1941,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       burnedMass[m].initialize(0.0);
       createdVol[m].initialize(0.0);
       int_eng_react[m].initialize(0.0); 
-      mom_comb[m].initialize(0.0);
+      mom_comb[m].initialize(Vector(0.0));
 
       //__________________________________
       // Product Data, should be only
@@ -1969,7 +1969,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
         new_dw->allocateAndPut(onSurface,     MIlb->onSurfaceLabel,   0, patch);
         new_dw->allocateAndPut(surfaceTemp,   MIlb->surfaceTempLabel, 0, patch);
         onSurface.initialize(0.0);
-        sumMom_comb.initialize(0.0);
+        sumMom_comb.initialize(Vector(0.0));
         surfaceTemp.initialize(0.0);
         sumBurnedMass.initialize(0.0); 
         sumCreatedVol.initialize(0.0);
