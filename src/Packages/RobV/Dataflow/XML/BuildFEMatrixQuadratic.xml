@@ -14,7 +14,7 @@
     <inputs lastportdynamic="no">
       <port>
         <name>QuadTetVolField</name>
-        <datatype>SCIRun:Field</datatype>
+        <datatype>SCIRun::Field</datatype>
       </port>
       <port>
         <name>RefNode</name>

@@ -557,6 +557,94 @@ QuadraticTetVolMesh::get_gradient_basis(Cell::index_type ci, const Point& p,
   return(jac_el);
 }
 
+void
+QuadraticTetVolMesh::calc_node_cells_map() 
+{
+  node_cells_table_lock_.lock();
+  have_node_cells_table_ = true;
+  
+  Cell::iterator iter, endit;
+  begin(iter); 
+  end(endit);
+  while (iter != endit) {
+    Cell::index_type idx = *iter;
+    ++iter;
+    Node::array_type nodes;
+    get_nodes(nodes, idx);    
+    for (int i = 0; i < 10; i++) {
+      node_cells_table_[nodes[i]].push_back(idx);
+    }
+  }
+  node_cells_table_lock_.unlock();
+}
+
+
+void 
+QuadraticTetVolMesh::heapify(QuadraticTetVolMesh::Node::array_type &data,
+			     int n, int i)
+{
+  int l=2*i+1;
+  int r=l+1;
+  int largest=i;
+  if(l<n && data[l] > data[i])
+    largest=l;
+  if(r<n && data[r] > data[largest])
+    largest=r;
+  if(largest != i){
+    int tmp=data[i];
+    data[i]=data[largest];
+    data[largest]=tmp;
+    heapify(data, n, largest);
+  }
+}
+
+void
+QuadraticTetVolMesh::add_node_neighbors(Node::array_type &array, 
+					Node::index_type node, 
+					const bit_vector &bc, bool apBC)
+{
+  Cell::array_type tets;
+  get_cells(tets, node);
+  Node::array_type neighbor_nodes(10 * tets.size() + 1);
+  int nodesi=0;
+  // Gather all of the nodes
+  
+  Cell::array_type::iterator iter = tets.begin();
+  while (iter != tets.end()) {
+    // nodes in this tet...
+    Node::array_type cnodes;
+    get_nodes(cnodes, *iter);
+    for(int j = 0; j < 10; j++) {
+      // each node in tet
+      Node::index_type n = cnodes[j];
+      if(!bc[n] || !apBC) 
+	neighbor_nodes[nodesi++] = n; 
+    }
+    ++iter;
+  }
+
+  // Sort it...
+  // Build the heap...
+  int i = -1;
+  for(i = nodesi / 2 - 1; i >= 0; i--){
+    heapify(neighbor_nodes, nodesi, i);
+  }
+  // Sort
+  for(i=nodesi-1;i>0;i--){
+    // Exchange 1 and i
+    int tmp=neighbor_nodes[i];
+    neighbor_nodes[i]=neighbor_nodes[0];
+    neighbor_nodes[0]=tmp;
+    heapify(neighbor_nodes, i, 0);
+  }
+
+  // Find the unique set...
+  for(i=0;i<nodesi;i++){
+    if(i==0 || neighbor_nodes[i] != neighbor_nodes[i-1])
+      array.push_back(neighbor_nodes[i]);
+  }
+}
+
 double 
 QuadraticTetVolMesh::calc_jac_derivs(Vector &dxi, Vector &dnu, Vector &dgam, 
 				     double xi, double nu, double gam, 
