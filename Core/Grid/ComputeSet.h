@@ -60,11 +60,10 @@ namespace Uintah {
       }
       return false;
     }
-    // Note: sort is specialized in ComputeSet_special for const Patch*'s
-    // to use Patch::Compare.
-    void sort() {
-      std::sort(items.begin(), items.end());
-    }
+
+    void sort();
+    bool is_sorted() const;
+
     const vector<T>& getVector() const 
     { return items; }
 
@@ -95,6 +94,10 @@ namespace Uintah {
 	intersectionAndMaybeDifferences<true>(A, B, AminusB, BminusA);
     }
 
+    static bool overlaps(const ComputeSubset<T>* s1,
+			 const ComputeSubset<T>* s2);
+
+    static bool compareElems(T e1, T e2);
   private:
     // May pass back Handles to same sets that came in.
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -108,9 +111,7 @@ namespace Uintah {
 			      constHandle< ComputeSubset<T> >& setDifference2);
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1424
-#endif  
-
- 
+#endif      
     vector<T> items;
 
     ComputeSubset(const ComputeSubset&);
@@ -126,6 +127,8 @@ namespace Uintah {
     void addAll(const vector<T>&);
     void addEach(const vector<T>&);
     void add(const T&);
+
+    void sortSubsets();
 
     int size() const {
        return (int)set.size();
@@ -202,6 +205,15 @@ namespace Uintah {
   }
 
   template<class T>
+  void ComputeSet<T>::sortSubsets()
+  {
+    for(int i=0;i<(int)set.size();i++){
+      ComputeSubset<T>* ss = set[i];
+      ss->sort();
+    }
+  }
+
+  template<class T>
   void ComputeSet<T>::createEmptySubsets(int n)
   {
     ASSERT(!un);
@@ -237,7 +249,18 @@ namespace Uintah {
       total+=set[i]->size();
     return total;
   }
-  
+
+  // Note: sort is specialized in ComputeSet_special for const Patch*'s
+  // to use Patch::Compare.
+  template<class T>
+  void ComputeSubset<T>::sort() {
+    std::sort(items.begin(), items.end());
+  }
+
+  // specialized for patch in ComputeSet_special.cc
+  template<class T>
+  bool ComputeSubset<T>::compareElems(T e1, T e2)
+  { return e1 < e2; }
   
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1424 // template parameter not used in declaring arguments
@@ -284,21 +307,18 @@ namespace Uintah {
       setDifference1 = s1_minus_s2 = scinew ComputeSubset<T>;
       setDifference2 = s2_minus_s1 = scinew ComputeSubset<T>;
     }
-    
-    T el1 = s1->get(0);
-    for(int i=1;i<s1->size();i++){
-      T el = s1->get(i);
-      if(el <= el1){
-	ostringstream msgstr;
-	msgstr << "Set not sorted: " << el1 << ", " << el;
-	throw InternalError(msgstr.str());
-      }
-      el1=el;
+
+    if (!s1->is_sorted()) {
+      throw InternalError("ComputeSubset s1 not sorted in ComputeSubset<T>::intersectionAndMaybeDifference");
     }
+    if (!s2->is_sorted()) {
+      throw InternalError("ComputeSubset s2 not sorted in ComputeSubset<T>::intersectionAndMaybeDifference");
+    }
+  
     T el2 = s2->get(0);
     for(int i=1;i<s2->size();i++){
       T el = s2->get(i);
-      if(el <= el2){
+      if(!compareElems(el2, el)) {
 	ostringstream msgstr;
 	msgstr << "Set not sorted: " << el2 << ", " << el;
 	throw InternalError(msgstr.str()); 
@@ -311,7 +331,7 @@ namespace Uintah {
       if(s1->get(i1) == s2->get(i2)){
 	intersection->add(s1->get(i1));
 	i1++; i2++;
-      } else if(s1->get(i1) < s2->get(i2)){
+      } else if(compareElems(s1->get(i1), s2->get(i2))){
 	if (passBackDifferences) {
 	  s1_minus_s2->add(s1->get(i1)); // alters setDifference1
 	}
@@ -359,7 +379,52 @@ namespace Uintah {
 #pragma reset woff 1424
 #pragma reset woff 1209  
 #endif  
-  
+
+  template<class T>
+  bool ComputeSubset<T>::overlaps(const ComputeSubset<T>* s1,
+				  const ComputeSubset<T>* s2)
+  {
+    if (s1 == s2) {
+      return true;
+    }
+    if(s1->size() == 0 || s2->size() == 0) {
+      return false;
+    }
+    if (!s1->is_sorted()) {
+      throw InternalError("ComputeSubset s1 not sorted in ComputeSubset<T>::overlaps");
+    }
+    if (!s2->is_sorted()) {
+      throw InternalError("ComputeSubset s2 not sorted in ComputeSubset<T>::overlaps");
+    }
+    int i1=0;
+    int i2=0;
+    for(;;){
+      if(s1->get(i1) == s2->get(i2)){
+	return true;
+      } else if(compareElems(s1->get(i1), s2->get(i2))){
+	if (++i1 == s1->size())
+	  break;
+      } else {
+	if (++i2 == s2->size())
+	  break;
+      }
+    }
+    return false;
+  }
+
+  template<class T>
+  bool ComputeSubset<T>::is_sorted() const
+  {
+    T cur = get(0);
+    for(int i=1;i<size();i++){
+      T next = get(i);
+      if(!compareElems(cur, next)) {
+	return false;
+      }
+      cur=next;
+    }
+    return true;
+  }
 }
 
 #endif
