@@ -3,6 +3,8 @@
 "../../Utilities/XML/Docbook_dtd/docbookx.dtd" 
 [
 <!ENTITY edition  SYSTEM "../../edition.xml">
+<!ENTITY requirements  SYSTEM "requirements.xml">
+<!ENTITY recommendations  SYSTEM "recommendations.xml">
 <!ENTITY p1c1 SYSTEM "p1c1.xml">
 <!ENTITY p1c2 SYSTEM "p1c2.xml">
 <!ENTITY p1c3 SYSTEM "p1c3.xml">

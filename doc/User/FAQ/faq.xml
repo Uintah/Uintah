@@ -297,7 +297,7 @@ with associated vector attribute: </para>
         contains both the geometry and associated scalar or vector data as
         attributes.</td>
         </tr>
-        <tr><td ALIGN="CENTER">&nbsp;</td>
+        <tr><td ALIGN="CENTER">&#xa0;</td>
         <td ALIGN="LEFT" VALIGN="TOP" WIDTH="288">*<B>Note</B>: to find the
         length of all CVRTI ASCII geometry, scalar, and vector files, count
         the number of lines in the file.</td>

@@ -24,21 +24,34 @@
 # The variable SRGROUP is expected to be set to one of biopse, scirun, or
 #  unitah. If its not set or is empty then biopse is assumed.
 #
-# This file uses xalan-java 2.3.1 or higher to process the xml files.
-# The environment variable CLASSPATH must point to xalan.jar, xml-api.jar,
-#  and xercesImpl.jar.
-#
 
 # ########## Macros (Used with ${call ...} function)
 
 #  Convert xml file to html
+
+#
+# If using saxon 6.3 or higher to process the xml files then
+# the environment variable CLASSPATH must point to saxon.jar.
+#
 define xmltohtml
 @echo $@
 @-sed "s#\".*component.dtd#\"${treetop}/doc/Utilities/XML/component.dtd#" $< >${notdir $<}
-@-java org.apache.xalan.xslt.Process -IN ${notdir $<} -XSL ${stylesheet} \
--OUT $@ -PARAM treetop ${1} -HTML
+@-java com.icl.saxon.StyleSheet -w2 ${notdir $<} ${stylesheet} \
+treetop=${1} > $@
 @-rm ${notdir $<}
 endef
+
+# If using xalan-java 2.3.1 or higher to process the xml files then
+# the environment variable CLASSPATH must point to xalan.jar, xml-api.jar,
+#  and xercesImpl.jar.
+#
+# define xmltohtml
+# @echo $@
+# @-sed "s#\".*component.dtd#\"${treetop}/doc/Utilities/XML/component.dtd#" $< >${notdir $<}
+# @-java org.apache.xalan.xslt.Process -IN ${notdir $<} -XSL ${stylesheet} \
+# -OUT $@ -PARAM treetop ${1} -HTML
+# @-rm ${notdir $<}
+# endef
 
 # Produce list of html files which correspond to xml files in package
 #  given by ${1}

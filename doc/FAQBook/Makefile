@@ -15,13 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-#
-# This file uses xalan-java 2.3.1 or higher to process the xml files.
-# The environment variable CLASSPATH must point to xalan.jar, xml-api.jar,
-#  and xercesImpl.jar.
-#
-
-.PHONY: all
+.PHONY: default
 
 STYLESHEET=../Utilities/XML/faq.xsl
 FAQBOOK=faqbook.xml
@@ -31,27 +25,40 @@ DEVFAQ=../Developer/FAQ/faq.xml
 FAQS=${INSTFAQ} ${USERFAQ} ${DEVFAQ}
 TREETOP=../../
 
-all: index.html faq1.html faq2.html faq3.html printable.html
+#
+# If using saxon 6.3 or higher to process the xml files then
+# the environment variable CLASSPATH must point to saxon.jar.
+#
+define xmltohtml
+-java com.icl.saxon.StyleSheet -w2 ${FAQBOOK} ${STYLESHEET} \
+treetop=${TREETOP} cont=${2} >${1}
+endef
+
+# If using xalan-java 2.3.1 or higher to process the xml files then
+# the environment variable CLASSPATH must point to xalan.jar, xml-api.jar,
+#  and xercesImpl.jar.
+#
+# define xmltohtml
+# -java org.apache.xalan.xslt.Process -IN ${FAQBOOK} -XSL ${STYLESHEET} \
+# -OUT ${1} -PARAM treetop ${TREETOP} -PARAM cont ${2} -HTML
+# endef
+
+default: index.html faq1.html faq2.html faq3.html printable.html
 
 index.html: ${FAQBOOK} ${FAQS} ${STYLESHEET}
-	-java org.apache.xalan.xslt.Process -IN ${FAQBOOK} -XSL ${STYLESHEET} \
-	-OUT index.html -PARAM treetop ${TREETOP} -PARAM cont 0 -HTML
+	${call xmltohtml,index.html,0}
 
 faq1.html: ${INSTFAQ} ${STYLESHEET}
-	-java org.apache.xalan.xslt.Process -IN ${FAQBOOK} -XSL ${STYLESHEET} \
-	-OUT faq1.html -PARAM treetop ${TREETOP} -PARAM cont 1 -HTML
+	${call xmltohtml,faq1.html,1}
 
 faq2.html: ${USERFAQ} ${STYLESHEET}
-	-java org.apache.xalan.xslt.Process -IN ${FAQBOOK} -XSL ${STYLESHEET} \
-	-OUT faq2.html -PARAM treetop ${TREETOP} -PARAM cont 2 -HTML
+	${call xmltohtml,faq2.html,2}
 
 faq3.html: ${DEVFAQ} ${STYLESHEET}
-	-java org.apache.xalan.xslt.Process -IN ${FAQBOOK} -XSL ${STYLESHEET} \
-	-OUT faq3.html -PARAM treetop ${TREETOP} -PARAM cont 3 -HTML
+	${call xmltohtml,faq3.html,3}
 
 printable.html: ${FAQBOOK} ${STYLESHEET}
-	-java org.apache.xalan.xslt.Process -IN ${FAQBOOK} -XSL ${STYLESHEET} \
-	-OUT printable.html -PARAM treetop ${TREETOP} -PARAM cont print -HTML
+	${call xmltohtml,printable.html,print}
 
 clean:
 	-rm *~
