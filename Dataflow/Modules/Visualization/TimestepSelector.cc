@@ -27,10 +27,10 @@ extern "C" Module* make_TimestepSelector( const string& id ) {
 TimestepSelector::TimestepSelector(const string& id) 
   : Module("TimestepSelector", id, Filter),
     tcl_status("tcl_status", id, this), 
-    time("time", id, this),
-    timeval("timeval", id, this),
     animate("animate",id, this),
     anisleep("anisleep", id, this),
+    time("time", id, this),
+    timeval("timeval", id, this),
     archiveH(0)
 { 
   //////////// Initialization code goes here
