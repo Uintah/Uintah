@@ -36,7 +36,12 @@ SRCS     += \
 	$(SRCDIR)/UnuCmedian.cc\
 	$(SRCDIR)/UnuConvert.cc\
 	$(SRCDIR)/UnuCrop.cc\
+	$(SRCDIR)/UnuDhisto.cc\
 	$(SRCDIR)/UnuFlip.cc\
+	$(SRCDIR)/UnuGamma.cc\
+	$(SRCDIR)/UnuHeq.cc\
+	$(SRCDIR)/UnuHistax.cc\
+	$(SRCDIR)/UnuHisto.cc\
 	$(SRCDIR)/UnuInset.cc\
 	$(SRCDIR)/UnuJoin.cc\
 	$(SRCDIR)/UnuMake.cc\
