@@ -26,13 +26,13 @@ void GeomBBoxCache::reset_bbox()
 void GeomBBoxCache::get_bounds(BBox& box)
 {
     if (!bbox_cached) {
-	child->get_bounds(box);
-	bbox = box;
+	bbox.reset();
+	child->get_bounds(bbox);
 	bbox_cached = 1;
     }
-    else {
-	box.extend( bbox );
-    }
+
+    box.extend( bbox );
+
 }
 
 void GeomBBoxCache::get_bounds(BSphere& sphere)

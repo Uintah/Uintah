@@ -1630,9 +1630,10 @@ void GeomTriStripList::draw(DrawInfoOpenGL* di, Material* matl, double)
     pre_draw(di, matl, 1);
     
     di->polycount += size();
-
+    cerr << "doing slist...\n";
     if (di->currently_lit || 1) {
-	glDisable(GL_NORMALIZE);
+//	glDisable(GL_NORMALIZE);
+	glEnable(GL_NORMALIZE);
 	switch(di->get_drawtype()){
 	case DrawInfoOpenGL::WireFrame:
 	    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
