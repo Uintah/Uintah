@@ -49,8 +49,9 @@ static DebugStream cout_doing("ICE_DOING_COUT", false);
 
 //#define ANNULUSICE
 #undef ANNULUSICE
-
-
+/*`==========TESTING==========*/ 
+#define RATE_FORM 0
+ /*==========TESTING==========`*/
 
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
@@ -305,44 +306,101 @@ void ICE::scheduleTimeAdvance(const LevelP& level,
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
 
+/*`==========TESTING==========*/ 
+//__________________________________
+//    RATE FORM 
+//    This duplication will go away soon
+#if RATE_FORM
+  scheduleComputeNonEquilibrationPressureRF(sched, patches, press_matl,
+                                                            all_matls);
+                                                          
+  scheduleComputeFCPressDiff(               sched, patches, ice_matls_sub,
+                                                            mpm_matls_sub,
+                                                            press_matl,
+                                                            all_matls);
+
+  scheduleComputeFaceCenteredVelocitiesRF(  sched, patches, ice_matls_sub,
+                                                            mpm_matls_sub,
+                                                            press_matl,
+                                                            all_matls);
+
+  scheduleAddExchangeContributionToFCVel(   sched, patches, all_matls);
+
+  scheduleMassExchange(                     sched, patches, all_matls);
+
+  scheduleComputeDelPressAndUpdatePressCC(  sched, patches, press_matl,
+                                                            ice_matls_sub,
+                                                            mpm_matls_sub,
+                                                            all_matls);
+
+  scheduleComputePressFC(                   sched, patches, press_matl,
+                                                            all_matls);
+
+  scheduleAccumulateMomentumSourceSinksRF(  sched, patches, press_matl,
+                                                            ice_matls_sub,
+                                                            all_matls);
+
+  scheduleAccumulateEnergySourceSinksRF(    sched, patches, press_matl,
+                                                            all_matls);
+
+  scheduleComputeLagrangianValues(          sched, patches, mpm_matls_sub,
+                                                            all_matls);
+
+  scheduleAddExchangeToMomentumAndEnergyRF( sched, patches, all_matls);
+
+  scheduleComputeLagrangianSpecificVolumeRF(sched, patches, press_matl, 
+                                                            all_matls);
+
+  scheduleAdvectAndAdvanceInTime(           sched, patches, all_matls);
   
-  scheduleComputeEquilibrationPressure(sched, patches, press_matl,
-                                                       all_matls);
+  if(switchTestConservation) {
+    schedulePrintConservedQuantities(       sched, patches, press_matl,
+                                                            all_matls); 
+  }
+#endif
+//__________________________________
+  
+ /*==========TESTING==========`*/
+  scheduleComputeEquilibrationPressure(   sched, patches, press_matl,
+                                                          all_matls);
 
-  scheduleComputeFaceCenteredVelocities(sched, patches, ice_matls_sub,
-                                                        mpm_matls_sub,
-                                                        press_matl, 
-                                                        all_matls);
+  scheduleComputeFaceCenteredVelocities(  sched, patches, ice_matls_sub,
+                                                          mpm_matls_sub,
+                                                          press_matl, 
+                                                          all_matls);
 
-  scheduleAddExchangeContributionToFCVel(sched, patches, all_matls);    
+  scheduleAddExchangeContributionToFCVel( sched, patches, all_matls);    
 
-  scheduleMassExchange(sched, patches, all_matls);
+  scheduleMassExchange(                   sched, patches, all_matls);
 
   scheduleComputeDelPressAndUpdatePressCC(sched, patches, press_matl,
                                                           ice_matls_sub, 
                                                           mpm_matls_sub,
                                                           all_matls);
 
-  scheduleComputePressFC(sched, patches, press_matl,
-                                        all_matls);
+  scheduleComputePressFC(                 sched, patches, press_matl,
+                                                          all_matls);
 
-  scheduleAccumulateMomentumSourceSinks(sched, patches, press_matl,
-                                        ice_matls_sub, all_matls);
+  scheduleAccumulateMomentumSourceSinks(  sched, patches, press_matl,
+                                                          ice_matls_sub,
+                                                          all_matls);
 
-  scheduleAccumulateEnergySourceSinks(sched, patches, press_matl,
-                                                      all_matls);
+  scheduleAccumulateEnergySourceSinks(    sched, patches, press_matl,
+                                                          all_matls);
 
-  scheduleComputeLagrangianValues(sched, patches,   mpm_matls_sub,
-                                                    all_matls);
+  scheduleComputeLagrangianValues(        sched, patches, mpm_matls_sub,
+                                                          all_matls);
 
-  scheduleAddExchangeToMomentumAndEnergy(sched, patches, all_matls);
+  scheduleAddExchangeToMomentumAndEnergy( sched, patches, all_matls);
 
-  scheduleComputeLagrangianSpecificVolume(sched, patches, press_matl, all_matls);
+  scheduleComputeLagrangianSpecificVolume(sched, patches, press_matl, 
+                                                          all_matls);
 
-  scheduleAdvectAndAdvanceInTime(sched, patches, all_matls);
+  scheduleAdvectAndAdvanceInTime(         sched, patches, all_matls);
   
   if(switchTestConservation) {
-    schedulePrintConservedQuantities(sched, patches, press_matl,all_matls); 
+    schedulePrintConservedQuantities(     sched, patches, press_matl,
+                                                          all_matls); 
   }
 
   // whatever tasks use press_matl will have their own reference to it.
@@ -3606,6 +3664,10 @@ void ICE::getExchangeCoefficients( DenseMatrix& K,
      throw InvalidValue("Number of exchange components don't match.");
   
 }
+/*---------------------------------------------------------------------
+Bring in all the RF code here
+ ---------------------------------------------------------------------  */
+#include "ICERF.cc" 
 
 
 #ifdef __sgi
