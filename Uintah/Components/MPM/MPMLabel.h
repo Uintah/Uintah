@@ -25,6 +25,7 @@ namespace Uintah {
       const VarLabel* pXLabel;
       const VarLabel* pSurfLabel;
       const VarLabel* pSurfaceNormalLabel; //for fracture
+      const VarLabel* pAverageMicrocrackLength; //for fracture
       const VarLabel* pTemperatureLabel; //for heat conduction
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pTemperatureRateLabel; //for heat conduction
@@ -59,6 +60,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.7  2000/06/06 03:17:42  tan
+// Added particle variable lable pAverageMicrocrackLength for fracture simulation.
+//
 // Revision 1.6  2000/06/02 23:16:32  guilkey
 // Added ParticleID labels.
 //
