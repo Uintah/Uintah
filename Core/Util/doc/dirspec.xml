@@ -80,7 +80,7 @@ phase 2 content files still need work. * tjd * -->
       Ensure that the variable 'n' is greater than 0:
     </p>
     <code>
-      ASSERT(n > 0);
+      ASSERT(n &lt; 0);
     </code>
     <p>
       Ensure that 'a' is equal to 999:
@@ -147,14 +147,14 @@ phase 2 content files still need work. * tjd * -->
     <code>
       CPUTimer cpuTimer;
       cpuTimer.start();
-      for (i =0; i<3; ++i) {
+      for (i =0; i&lt;3; ++i) {
         .
         .
         .
       }
       cpuTimer.stop();
-      cout << "Loop used " << cpuTimer.time()
-           << " seconds of cpu" << endl;
+      cout &lt;&lt; "Loop used " &lt;&lt; cpuTimer.time()
+           &lt;&lt; " seconds of cpu" &lt;&lt; endl;
     </code>
   </example>
   <definition>
@@ -172,14 +172,14 @@ phase 2 content files still need work. * tjd * -->
     <code>
       WallClockTimer wcTimer;
       wcTimer.start();
-      for (i =0; i<3; ++i) {
+      for (i =0; i&lt;3; ++i) {
         .
         .
         .
       }
       wcTimer.stop();
-      cout << "Loop used " << wcTimer.time()
-           << " seconds of real time" << endl;
+      cout &lt;&lt; "Loop used " &lt;&lt; wcTimer.time()
+           &lt;&lt; " seconds of real time" &lt;&lt; endl;
     </code>
   </example>
   <definition>
