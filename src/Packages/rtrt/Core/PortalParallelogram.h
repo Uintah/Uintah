@@ -18,7 +18,7 @@ class PortalParallelogram : public Parallelogram
  public:
 
   PortalParallelogram(const Point &p, const Vector &u, const Vector &v)
-    : Parallelogram(&portal_m_, p, u, v) { portal_m_.set(p,u,v); }
+    : Parallelogram(&portal_m_, p, u, v), portal_m_(p,u,v) {}
   virtual ~PortalParallelogram() {}
 
   PortalMaterial *get_portal() { return &portal_m_; }
@@ -27,8 +27,8 @@ class PortalParallelogram : public Parallelogram
   {
     PortalMaterial *a_ = a->get_portal();
     PortalMaterial *b_ = b->get_portal();
-
-    a_->attach(b_); /* this call also does b_->attach(a_) */
+    a_->attach(b->get_anchor(), b->get_u(), b->get_v());
+    b_->attach(a->get_anchor(), a->get_u(), a->get_v());
   }
 };
 
