@@ -13,7 +13,7 @@ GLMIP::GLMIP(const GLVolumeRenderer* glvr) :
 void GLMIP::preDraw()
 {
   glEnable(GL_BLEND);
-  glBlendEquationEXT(GL_MAX_EXT);
+  glBlendEquation(GL_MAX_EXT);
   glBlendFunc(GL_ONE, GL_ONE);
 }
 
