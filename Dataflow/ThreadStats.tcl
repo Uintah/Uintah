@@ -14,10 +14,10 @@ proc showThreadStats {} {
 	pack .tsw.vscroll -side right -fill y -padx 4 -pady 4
 	pack .tsw.canvas -expand yes -fill y -pady 4
 	set lineheight [winfo pixels .tsw.canvas 8p]
-	set tleft [winfo pixels .tsw.canvas 1.1c]
+	set tleft [winfo pixels .tsw.canvas 1.2c]
 	set gleft [winfo pixels .tsw.canvas 5.5c]
-	set gwidth [winfo pixels .tsw.canvas 2c]
-	set font -Adobe-courier-medium-r-*-80-75-*
+	set gwidth [winfo pixels .tsw.canvas 1.9c]
+	set font -Adobe-courier-bold-r-*-100-75-*
 	set ntasks 0
     }
     after 0 updateThreadStats $lineheight $tleft $gleft $gwidth $font $ntasks
@@ -37,7 +37,7 @@ proc updateThreadStats {lineheight tleft gleft gwidth font old_ntasks} {
     } else {
 	# add some more...
 	for {set i $old_ntasks} {$i<$ntasks} {incr i} {
-	    set top [expr $i*$lineheight*3]
+	    set top [expr $i*$lineheight*3+4]
 	    set mid [expr $top+$lineheight/2]
 	    button .tsw.b$i -text DBX -command "threadstats dbx $i" \
 		    -font $font -borderwidth 3 -padx 4 -pady 2
@@ -58,7 +58,7 @@ proc updateThreadStats {lineheight tleft gleft gwidth font old_ntasks} {
 	set stack [lindex $info 0]
 	set tstack [lindex $info 1]
 	set title [lindex $info 2]
-	set top [expr $i*$lineheight*3]
+	set top [expr $i*$lineheight*3+4]
 	set bot [expr $top+$lineheight*2]
 	set g1 [expr $gleft+$gwidth*$stack/$tstack]
 	set gright [expr $gleft+$gwidth]

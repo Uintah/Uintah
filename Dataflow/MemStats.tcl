@@ -9,26 +9,27 @@ proc showMemStats {} {
 	set memstats_window .msw
 	canvas .msw.canvas -yscroll ".msw.vscroll set" \
 		-scrollregion {0c 0c 11c 50c} \
-		-width 11c -height 18c
+		-width 11c -height 18c -borderwidth 0
 	scrollbar .msw.vscroll -relief sunken -command ".msw.canvas yview"
 	pack .msw.vscroll -side right -fill y -padx 4 -pady 4
 	pack .msw.canvas -expand yes -fill y -pady 4
 	set lineheight [winfo pixels .msw.canvas 8p]
 	set gleft [winfo pixels .msw.canvas 8.5c]
 	set gwidth [winfo pixels .msw.canvas 2c]
-	set font -Adobe-courier-medium-r-*-80-75-*
+	set font -Adobe-courier-bold-r-*-100-75-*
 	set bins [memstats nbins]
+        set left 4
 	for {set i 0} {$i<$bins} {incr i} {
 	    set top [expr ($i+7)*$lineheight]
-	    .msw.canvas create text 0 [expr $top+1] \
-		    -tag t$i -font $font -anchor nw
-	    .msw.canvas create text 0 $top -tag gt$i -font $font -anchor nw
-	    .msw.canvas create rectangle 0 0 0 0 -tag ga$i \
+	    .msw.canvas create text $left [expr $top+1] \
+		    -tag t$i -anchor nw -font $font
+	    .msw.canvas create text $left $top -tag gt$i -anchor nw -font $font
+	    .msw.canvas create rectangle $left 0 0 0 -tag ga$i \
 		    -fill blue
-	    .msw.canvas create rectangle 0 0 0 0 -tag gb$i \
+	    .msw.canvas create rectangle $left 0 0 0 -tag gb$i \
 		    -fill red
 	}
-	.msw.canvas create text 0 0 -tag glob -font $font -anchor nw
+	.msw.canvas create text $left 4 -tag glob -anchor nw -font $font
 	after 0 updateMemStats $lineheight $gleft $gwidth
     }
 }

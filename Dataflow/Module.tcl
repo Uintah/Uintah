@@ -8,7 +8,7 @@ itcl_class Module {
     }
     method config {config} {}
     public name
-    protected canvases
+    protected canvases ""
     protected make_progress_graph 1
     protected make_time 1
     protected graph_width 50
@@ -30,6 +30,7 @@ itcl_class Module {
 	update_progress
 	update_time
 	update idletasks
+	#tk_dialog .xx xx xx "" 0 OK
     }
 
     #
@@ -236,6 +237,22 @@ itcl_class Module {
 	    incr i
 	}
 	rebuildConnections [netedit getconnected $this]
+    }
+    method lightOPort {which color} {
+	foreach t $canvases {
+	    set p $t.module$this.oportlight$which
+	    if {[winfo exists $p]} {
+		$p configure -background $color
+	    }
+	}
+    }
+    method lightIPort {which color} {
+	foreach t $canvases {
+	    set p $t.module$this.iportlight$which
+	    if {[winfo exists $p]} {
+		$p configure -background $color
+	    }
+	}
     }
     method update_progress {} {
 	if {!$make_progress_graph} return

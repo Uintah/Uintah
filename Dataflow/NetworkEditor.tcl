@@ -115,7 +115,7 @@ proc makeNetworkEditor {} {
     
     frame .cframe.f -relief sunken -borderwidth 3
     canvas .cframe.f.canvas -scrollregion {0c 0c 100c 100c} \
-	-xscroll ".cframe.hscroll set" -yscroll ".cframe.vscroll set" \
+	-xscrollcommand ".cframe.hscroll set" -yscrollcommand ".cframe.vscroll set" \
 	-bg "#224488" -width 9c -height 9c
     scrollbar .cframe.vscroll -relief sunken \
 	-command ".cframe.f.canvas yview"
