@@ -107,5 +107,6 @@ itcl_class SCIRun_DataIO_MatrixWriter {
 		-formatvar $this-filetype \
 		-splitvar $this-split \
 	        -confirmvar $this-confirm
+	moveToCursor $w	
     }
 }

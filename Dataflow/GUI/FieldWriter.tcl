@@ -103,5 +103,7 @@ itcl_class SCIRun_DataIO_FieldWriter {
 		-formatvar $this-filetype \
 	        -confirmvar $this-confirm
 		#-splitvar $this-split
+
+	moveToCursor $w	
     }
 }
