@@ -451,11 +451,11 @@ OpenGL::render_and_save_image(int x, int y,
     glXMakeCurrent(dpy, win, cx);
   }
   deriveFrustum();
-  gui->unlock();
 
   // Get Viewport dimensions
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT,vp);
+  gui->unlock();
 
   hi_res.resx = x;
   hi_res.resy = y;
