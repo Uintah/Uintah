@@ -18,7 +18,6 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := PSECommon/Modules/Fields
 
 SRCS     += \
-	$(SRCDIR)/ClipField.cc\
 	$(SRCDIR)/Downsample.cc\
 	$(SRCDIR)/ExtractSurfs.cc\
         $(SRCDIR)/FieldFilter.cc\
@@ -26,19 +25,21 @@ SRCS     += \
 	$(SRCDIR)/FieldMedianFilter.cc\
 	$(SRCDIR)/FieldRGAug.cc\
 	$(SRCDIR)/FieldSeed.cc\
+	$(SRCDIR)/GenField.cc\
+	$(SRCDIR)/GenVectorField.cc\
+	$(SRCDIR)/GenScalarField.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/GradientMagnitude.cc\
 	$(SRCDIR)/LocalMinMax.cc\
 	$(SRCDIR)/MergeTensor.cc\
 	$(SRCDIR)/OpenGL_Ex.cc\
+	$(SRCDIR)/ScalarFieldProbe.cc\
 	$(SRCDIR)/SFRGfile.cc\
+	$(SRCDIR)/ShowGeometry.cc\
 	$(SRCDIR)/TracePath.cc\
 	$(SRCDIR)/TrainSeg2.cc\
 	$(SRCDIR)/TrainSegment.cc\
 	$(SRCDIR)/TransformField.cc\
-	$(SRCDIR)/ScalarFieldProbe.cc\
-	$(SRCDIR)/GenVectorField.cc\
-	$(SRCDIR)/GenScalarField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
@@ -52,6 +53,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2.2.8  2000/10/31 18:14:31  mcole
+# fix compile by removing ClipFields from the build, add back GenField and ShowGeometry
+#
 # Revision 1.2.2.7  2000/10/31 02:22:41  dmw
 # Merging PSECommon changes from HEAD to FIELD_REDESIGN branch
 #
