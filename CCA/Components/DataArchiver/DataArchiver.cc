@@ -72,6 +72,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
       attributes.clear();
       save->getAttributes(attributes);
       saveItem.labelName = attributes["label"];
+      saveItem.compressionMode = attributes["compression"];
       try {
          saveItem.matls = ConsecutiveRangeSet(attributes["material"]);
       }
@@ -766,7 +767,7 @@ void DataArchiver::outputReduction(const ProcessorGroup*,
 	 ofstream out(filename.str().c_str(), ios_base::app);
 #endif
 	 out << setprecision(17) << time << "\t";
-	 new_dw->emit(out, var, matlIndex);
+	 new_dw->print(out, var, matlIndex);
 	 out << "\n";
       }
    }
@@ -885,6 +886,8 @@ void DataArchiver::output(const ProcessorGroup*,
    appendElement(pdElem, "variable", var->getName());
    appendElement(pdElem, "index", matlIndex);
    appendElement(pdElem, "patch", patchID);
+   if (var->getCompressionMode() != "")
+     appendElement(pdElem, "compression", var->getCompressionMode());
    pdElem.setAttribute("type", var->typeDescription()->getName().c_str());
 
    // Open the data file
@@ -1053,7 +1056,10 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
       if (var == NULL)
          throw ProblemSetupException((*it).labelName +
 				     " variable not found to save.");
-       
+
+      if ((*it).compressionMode != "")
+	var->setCompressionMode((*it).compressionMode);
+      
       Scheduler::VarLabelMaterialMap::iterator found =
 	pLabelMatlMap->find(var->getName());
 
