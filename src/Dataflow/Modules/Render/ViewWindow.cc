@@ -2359,10 +2359,35 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
 					Color(r,g,b)));
 
   } else if (args[1] == "killwindow") {
-    current_renderer->kill_helper();
+    
+    class KillRenderer :public Runnable {
+    public:
+      KillRenderer(OpenGL *cr, Viewer* m, ViewWindow *vw) :
+	cur_renderer_(cr),
+	manager_(m),
+	vw_(vw)
+      {}
+      
+      void run() {
+	cur_renderer_->kill_helper();
+	manager_->delete_viewwindow(vw_);
+      }
+    private:
+      OpenGL     *cur_renderer_;
+      Viewer     *manager_;
+      ViewWindow *vw_;
+    };
+    
+    
+
     inertia_mode=0;
-    manager->delete_viewwindow(this);
+    KillRenderer *kr = scinew KillRenderer(current_renderer, manager, 
+					   (ViewWindow*)this);
+    string tname(id + "VW kill current renderer thread");
+    Thread *ren_deleter = scinew Thread(kr, tname.c_str());
+    ren_deleter->detach();
     return;
+
   } else if(args[1] == "saveobj") {
     if(args.count() != 6){
       args.error("ViewWindow::dump_viewwindow needs an output file name and format!");
