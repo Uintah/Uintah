@@ -107,7 +107,7 @@ void MPWriter::tcl_command( TCLArgs& args, void* userdata)
 	Array1<clString> varnames;
 	mat->getScalarNames( varnames );
 	result = varnames[0];
-	for( i = 1; i < varnames.size(); i++) {
+	for( i = 1; i < (int)varnames.size(); i++) {
 	  result += clString( " " + varnames[i]);
 	}
 	args.result( result );
@@ -129,7 +129,7 @@ void MPWriter::tcl_command( TCLArgs& args, void* userdata)
 	Array1<clString> varnames;
 	mat->getVectorNames( varnames );
 	result = varnames[0];
-	for( i = 1; i < varnames.size(); i++) {
+	for( i = 1; i < (int)varnames.size(); i++) {
 	  result += clString( " " + varnames[i]);
 	}
 	args.result( result );
@@ -195,13 +195,13 @@ void MPWriter::SaveFile( clString fname, int isBin)
     Array1<clString> svarnames;
     mat->getScalarNames( svarnames );
     clString sresult = svarnames[0];
-    for( i = 1; i < svarnames.size(); i++) {
+    for( i = 1; i < (int)svarnames.size(); i++) {
       sresult += clString( " " + svarnames[i]);
     }
     Array1<clString> vvarnames;
     mat->getVectorNames( vvarnames );
     clString vresult = vvarnames[0];
-    for( i = 1; i < vvarnames.size(); i++) {
+    for( i = 1; i < (int)vvarnames.size(); i++) {
       vresult += clString( " " + vvarnames[i]);
     }
     clString mresult("");
@@ -242,7 +242,7 @@ void MPWriter::SaveFile( clString fname, int isBin)
       mat = tr->getMaterial(j);
       svarnames.remove_all();
       mat->getScalarNames( svarnames );
-      for( i = 0; i < svarnames.size(); i++){
+      for( i = 0; i < (int)svarnames.size(); i++){
 	ScalarFieldHandle sfh = mat->getScalarField( svarnames[i] );
 	ScalarField *sfp = sfh.get_rep();
 	writer.AddSVarToGrid(svarnames[i], sfp);
@@ -253,7 +253,7 @@ void MPWriter::SaveFile( clString fname, int isBin)
       mat = tr->getMaterial(j);
       vvarnames.remove_all();
       mat->getVectorNames( vvarnames );
-      for( i = 0; i < vvarnames.size(); i++){
+      for( i = 0; i < (int)vvarnames.size(); i++){
 	vfh = mat->getVectorField( vvarnames[i] );
 	VectorField *vfp = vfh.get_rep();
 	if(VectorFieldRG *vfrg = dynamic_cast<VectorFieldRG*> (vfp)){
@@ -287,24 +287,24 @@ void MPWriter::SaveFile( clString fname, int isBin)
 	cfdps->get(0, posid, pos);
 	vid = 1; sid = 0;      cfdps->list_scalars(snames);
 	cfdps->list_vectors(vnames);
-	for(i = sid; i < snames.size(); i++){
+	for(i = sid; i < (int)snames.size(); i++){
 	  sn += (snames[i]);
 	  sn += " ";
 	}
-	for(i = vid; i < vnames.size(); i++){
+	for(i = vid; i < (int)vnames.size(); i++){
 	  vn += (vnames[i]);
 	  vn += " ";
 	}
 	writer.BeginParticles("steel", s.size(),  sn, vn );
 
-	for(j = 0; j < pos.size(); j++){
+	for(j = 0; j < (int)pos.size(); j++){
 	  s.remove_all();
 	  v.remove_all();
 
-	  for(i = sid; i < snames.size(); i++) {
+	  for(i = sid; i < (int)snames.size(); i++) {
 	    s.add( cfdps->getScalar(0,i,j));
 	  }
-	  for(i = vid; i < vnames.size(); i++) {
+	  for(i = vid; i < (int)vnames.size(); i++) {
 	    v.add(cfdps->getVector(0,i,j));
 	  }
 	  writer.AddParticle( pos[j].asPoint(), s, v);
@@ -422,7 +422,7 @@ void MPWriter::checkVars(ParticleGridReaderHandle reader)
 	setVars(r);
 	return;
       } else {
-	for( i = 0; i < str1.size(); i++)
+	for( i = 0; i < (int)str1.size(); i++)
 	  {
 	    if( str1[i] != str2[i] ) {
 	      setVars(r);
@@ -437,7 +437,7 @@ void MPWriter::checkVars(ParticleGridReaderHandle reader)
 	setVars(r);
 	return;
       } else {
-	for( i = 0; i < str1.size(); i++)
+	for( i = 0; i < (int)str1.size(); i++)
 	  {
 	    if( str1[i] != str2[i] ) {
 	      setVars(r);

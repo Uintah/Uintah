@@ -178,7 +178,7 @@ void ParticleViz::updateLoop(int)
 	}
 	array1<double> timesteps=vi->listTimesteps();
 	int s=0;
-	while(s < timesteps.size() && time > timesteps[s])
+	while(s < (int)timesteps.size() && time > timesteps[s])
 	    s++;
 	time=timesteps[s];
 
@@ -296,6 +296,9 @@ extern "C" Module* make_ParticleViz( const clString& id )
 
 //
 // $Log$
+// Revision 1.5  2000/12/05 16:03:37  jas
+// Remove g++ warnings.
+//
 // Revision 1.4  2000/08/09 03:18:07  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //

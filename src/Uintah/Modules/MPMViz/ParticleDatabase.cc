@@ -102,10 +102,10 @@ void ParticleDatabase::timestep(double time, int myrank, int nproc,
 	// This sucks - consider trying to be smarter about already sorted data
 	int totalParticles=0;
 	for(int i=0;i<nproc;i++)
-	    totalParticles+=its->ids[i].size();
+	    totalParticles+=its->(int)ids[i].size();
 	cerr << "totalParticles: " << totalParticles << '\n';
 
-	int nvars=varnames.size();
+	int nvars=(int)varnames.size();
 #ifdef SUCKS
 	cerr << "Sorting and processing...\n";
 	int part=0;
@@ -115,13 +115,13 @@ void ParticleDatabase::timestep(double time, int myrank, int nproc,
 	    vector<int>& pids=its->ids[p];
 	    array2<double>& pdata=its->data[p];
 	    int sp=part;
-	    for(int i=0;i<pids.size();i++){
+	    for(int i=0;i<(int)pids.size();i++){
 		ids[part]=pids[i];
 		part++;
 	    }
 	    for(int j=0;j<nvars;j++){
 		part=sp;
-		for(int i=0;i<pids.size();i++){
+		for(int i=0;i<(int)pids.size();i++){
 		    data[j][part]=pdata[j][i];
 		    part++;
 		}
@@ -144,13 +144,13 @@ void ParticleDatabase::timestep(double time, int myrank, int nproc,
 	    vector<int>& pids=its->ids[p];
 	    array2<double>& pdata=its->data[p];
 	    int sp=part;
-	    for(int i=0;i<pids.size();i++){
+	    for(int i=0;i<(int)pids.size();i++){
 		ts->ids[part]=pids[i];
 		part++;
 	    }
 	    for(int j=0;j<nvars;j++){
 		part=sp;
-		for(int i=0;i<pids.size();i++){
+		for(int i=0;i<(int)pids.size();i++){
 		    ts->data[j][part]=pdata[j][i];
 		    part++;
 		}
@@ -255,6 +255,9 @@ void ParticleDatabase::unregisterNotify(int cbid)
 
 //
 // $Log$
+// Revision 1.3  2000/12/05 16:03:37  jas
+// Remove g++ warnings.
+//
 // Revision 1.2  1999/10/15 20:23:00  sparker
 // Mostly working
 //
