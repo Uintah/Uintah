@@ -52,7 +52,7 @@ void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname)
 {
 #ifdef _WIN32
   return GetProcAddress(handle,symbolname);
-#elif defined(__APPLE__) && __GNUC__ == 3 && __GNUC_MINOR == 1 
+#elif defined(__APPLE__) && (__GNUC__ >= 3) && (__GNUC_MINOR__ == 1 )
   string name("_");
   name += symbolname;
   return dlsym(handle, name.c_str());
