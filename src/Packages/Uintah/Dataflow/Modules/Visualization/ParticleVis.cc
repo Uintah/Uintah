@@ -16,8 +16,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 #include "ParticleVis.h"
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
 #include <Core/Geom/GeomArrows.h>
 #include <Core/Geom/Color.h>
 #include <Core/Geom/GeomObj.h>
