@@ -65,7 +65,6 @@ void ShowLeads::execute(){
     return;
   }
   if (mh->generation == gen_) { return; }
-  if (gen_ != -1) gui->execute("clear_graph");
   gen_ = mh->generation;
 
   DenseMatrix *dm = dynamic_cast<DenseMatrix*>(mh.get_rep());
