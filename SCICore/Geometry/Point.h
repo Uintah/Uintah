@@ -49,24 +49,24 @@ public:
     inline Point();
     int operator==(const Point&) const;
     int operator!=(const Point&) const;
-    Point& operator=(const Point&);
-    Vector operator-(const Point&) const;
-    Point operator+(const Vector&) const;
-    Point operator-(const Vector&) const;
-    Point operator*(double) const;
-    Point& operator*=(const double);
-    Point& operator+=(const Vector&);
-    Point& operator-=(const Vector&);
-    Point& operator/=(const double);
-    Point operator/(const double) const;
-    Point operator-() const;
-    void x(const double);
+    inline Point& operator=(const Point&);
+    inline Vector operator-(const Point&) const;
+    inline Point operator+(const Vector&) const;
+    inline Point operator-(const Vector&) const;
+    inline Point operator*(double) const;
+    inline Point& operator*=(const double);
+    inline Point& operator+=(const Vector&);
+    inline Point& operator-=(const Vector&);
+    inline Point& operator/=(const double);
+    inline Point operator/(const double) const;
+    inline Point operator-() const;
+    inline void x(const double);
     inline double x() const;
-    void y(const double);
+    inline void y(const double);
     inline double y() const;
-    void z(const double);
+    inline void z(const double);
     inline double z() const;
-    Vector vector() const;
+    inline Vector vector() const;
     inline Vector asVector() const;
     
     clString string() const;
@@ -273,6 +273,9 @@ inline double Dot(const Point& p1, const Point& p2)
 
 //
 // $Log$
+// Revision 1.7  2000/06/15 20:43:19  sparker
+// Added "inline" statements in class file
+//
 // Revision 1.6  2000/04/12 22:56:00  sparker
 // Added IntVector (a vector of you-guess-what)
 // Added explicit ctors from point to vector and vice-versa
