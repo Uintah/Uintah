@@ -69,6 +69,7 @@ public:
   friend void Pio_old(Piostream&, Transform&);
   friend void Pio(Piostream&, Transform*&);
 
+  void load_basis(const Point&,const Vector&, const Vector&, const Vector&);
   void load_frame(const Point&,const Vector&, const Vector&, const Vector&);
 
   void change_basis(Transform&);

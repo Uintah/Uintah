@@ -75,6 +75,16 @@ Transform::~Transform()
 {
 }
 
+void Transform::load_basis(const Point &p,
+                           const Vector &x,
+                           const Vector &y,
+                           const Vector &z)
+{
+  load_frame(p,x,y,z);
+  post_translate(-(p.asVector()));
+  compute_imat();
+}
+
 void Transform::load_frame(const Point&,
 			   const Vector& x, 
 			   const Vector& y, 
@@ -118,7 +128,6 @@ void Transform::change_basis(Transform& T)
 {
   T.compute_imat();
   pre_mulmat(T.imat);
-  post_mulmat(T.mat);
 }
 
 void Transform::post_trans(Transform& T)
