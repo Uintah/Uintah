@@ -391,4 +391,6 @@ main(int argc, char** argv)
     if (thrownException) {
       Thread::exitAll(1);
     }
+
+    Thread::exitAll(0);
 }
