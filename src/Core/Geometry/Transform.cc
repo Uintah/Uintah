@@ -319,20 +319,12 @@ void Transform::post_rotate(double angle, const Vector& axis)
 
 void Transform::rotate(const Vector& from, const Vector& to)
 {
-  Vector axis(Cross(from, to));
-  if(axis.length2() < 0.00001) {
-    if (Dot(from,to) > 0.9) return; // Don't bother
-    pre_rotate(M_PI, Vector(0,1,0)); // rotate 180 degrees
-  }
-  double sintheta=axis.normalize();
-  if(sintheta >= 1.0){
-    pre_rotate(M_PI/2, axis);
-  } else if(sintheta <= -1.0){
-    pre_rotate(-M_PI/2, axis);
-  } else {
-    double theta=asin(sintheta);
-    pre_rotate(theta, axis);
-  }
+  Vector t(to); t.normalize();
+  Vector f(from); f.normalize();
+  Vector axis(Cross(f,t));
+  double sinth=axis.length();
+  double costh=Dot(f,t);
+  pre_rotate(atan2(sinth, costh), axis);
 }
 
 void Transform::build_permute(double m[4][4],int xmap, int ymap, int zmap, 
