@@ -901,11 +901,12 @@ Mutex::lock()
 bool
 Mutex::tryLock()
 {
-    if((errno = pthread_mutex_trylock(&priv_->mutex)) != 0){
-	if(errno == EBUSY)
+  int errcode;
+    if((errcode = pthread_mutex_trylock(&priv_->mutex)) != 0){
+	if(errcode == EBUSY)
 	    return false;
 	throw ThreadError(std::string("pthread_mutex_trylock: ")
-			  +strerror(errno));
+			  +strerror(errcode));
     }
     return true;
 }
