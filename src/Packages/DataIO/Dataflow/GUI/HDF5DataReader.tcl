@@ -149,6 +149,10 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	toplevel $w -class TkFDialog
 
+	global current_cursor
+	set current_cursor [$w cget -cursor]
+
+
 	# place to put preferred data directory
 	# it's used if $this-filename is empty
 	set initdir [netedit getenv SCIRUN_DATA]
@@ -171,7 +175,10 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	makeOpenFilebox \
 	    -parent $w \
 	    -filevar $this-filename \
-	    -command "$this-c update_file 0; wm withdraw $w" \
+	    -command "$w config -cursor watch; \
+	              update idletasks; \
+                      $this-c update_file 0; \
+                      wm withdraw $w" \
 	    -cancel "wm withdraw $w" \
 	    -title $title \
 	    -filetypes $types \
@@ -474,6 +481,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set allow_selection false
 
 	if { [string length [set $this-dumpname]] > 0 } {
+	    $w config -cursor watch
+	    update idletasks
+                      
 	    # Make sure the dump file is up to date.
 	    $this-c check_dumpfile 0
 	    # Rebuild the tree.
@@ -509,6 +519,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		    }
 		}
 	    }
+
+	    reset_cursor
 	}
 
 	# Makesure the datasets are saved once everything is built.
@@ -1409,5 +1421,15 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		-from 1 -to [expr $max-$min]
 
         }
+    }
+
+    method reset_cursor {} {
+	set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+	    global current_cursor
+	    $w config -cursor $current_cursor
+	    update idletasks
+	}
     }
 }

@@ -1806,11 +1806,17 @@ HDF5DataReader::createDumpFile( string filename, string dumpname ) {
 
   if( !sPtr ) {
     error( string("Unable to open output file: ") + dumpname );
+    gui->execute( "reset_cursor" );
     return -1;
   }
   
-  if( DataIO::HDF5Dump_file( filename.c_str(), &sPtr ) < 0 ) {
-    error( string("Could not create dump file: ") + dumpname );
+  if( DataIO::HDF5Dump_file( filename, &sPtr ) < 0 ) {
+    error( DataIO::HDF5Dump_error() );
+    gui->execute( "reset_cursor" );
+
+    sPtr.flush();
+    sPtr.close();
+
     return -1;
   }
 
