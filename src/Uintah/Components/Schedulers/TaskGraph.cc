@@ -23,8 +23,11 @@ using namespace Uintah;
 
 using SCICore::Exceptions::InternalError;
 using namespace PSECore::XMLUtil;
-using namespace std;
+using std::cerr;
+
 static SCICore::Util::DebugStream dbg("TaskGraph", false);
+
+#define DAV_DEBUG 0
 
 TaskGraph::TaskGraph()
 {
@@ -50,34 +53,80 @@ TaskGraph::initialize()
    d_allcomps.clear();
 }
 
+map<DependData, int> depToSN;
+
+void
+TaskGraph::assignUniqueSerialNumbers()
+{
+  vector<Task*>::iterator iter;
+  int num = 0;
+
+  depToSN.clear();
+
+  for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ){
+    Task* task = *iter;
+
+#if DAV_DEBUG
+    cerr << "Assigning to task: " << *task << "\n";
+#endif
+    
+    const vector<Task::Dependency*>& reqs = task->getRequires();
+    for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
+	iter != reqs.end(); iter++){
+
+      Task::Dependency * dep = *iter;
+      DependData         depData( dep );
+
+      map<DependData, int, DependData>::iterator dToSnIter;
+      dToSnIter = depToSN.find( depData );
+
+      if( dToSnIter == depToSN.end() ){
+	dep->d_serialNumber = num++;
+	depToSN[ depData ] = dep->d_serialNumber;
+#if DAV_DEBUG
+	cerr << "Dep: " << *dep << "added with serial number:" << dep->d_serialNumber << "\n";
+#endif
+      } else {
+	dep->d_serialNumber = dToSnIter->first.dep->d_serialNumber;
+#if 0//DAV_DEBUG
+	cerr << "Dep: " << *dep << "already has a serial number, reusing:"
+	     << dep->d_serialNumber << "\n";
+#endif
+      }
+    }
+  }
+} // end assignUniqueSerialNumbers()
+
 void
 TaskGraph::assignSerialNumbers()
 {
-   vector<Task*>::iterator iter;
-   int num = 0;
+  vector<Task*>::iterator iter;
+  int num = 0;
 
-   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ){
+  for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ){
+    Task* task = *iter;
+    const vector<Task::Dependency*>& reqs = task->getRequires();
+    for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
+	iter != reqs.end(); iter++){
+      Task::Dependency* dep = *iter;
+      dep->d_serialNumber = num++;
+    }
+  }
+  if(dbg.active()){
+    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ){
       Task* task = *iter;
       const vector<Task::Dependency*>& reqs = task->getRequires();
       for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
 	  iter != reqs.end(); iter++){
-	 Task::Dependency* dep = *iter;
-	 dep->d_serialNumber = num++;
+	Task::Dependency* dep = *iter;
+	cerr << *dep << '\n';
       }
-   }
-   if(dbg.active()){
-      for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ){
-	 Task* task = *iter;
-	 const vector<Task::Dependency*>& reqs = task->getRequires();
-	 for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
-	     iter != reqs.end(); iter++){
-	    Task::Dependency* dep = *iter;
-	    cerr << dep->d_serialNumber << ": " << *dep << '\n';
-	 }
-      }
-   }
-}
+    }
+  } 
+} // end assignSerialNumbers()
 
+
+// setupTaskConnections also adds Reduction Tasks to the graph...
 void
 TaskGraph::setupTaskConnections()
 {
@@ -148,7 +197,7 @@ TaskGraph::setupTaskConnections()
       task->visited=false;
       task->sorted=false;
    }
-}
+} // end setupTaskConnections()
 
 void
 TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
@@ -207,6 +256,24 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
    if(task->getPatch())
       dbg << " on patch " << task->getPatch()->getID();
    dbg << '\n';
+} // end processTask()
+
+void
+TaskGraph::nullSort( vector<Task*>& tasks )
+{
+  // setupTaskConnections also creates the reduction tasks...
+  setupTaskConnections();
+
+  vector<Task*>::iterator iter;
+
+  // No longer going to sort them... let the MixedScheduler take care
+  // of calling the tasks when all dependencies are satisfied.
+  // Sorting the tasks causes problem because now tasks (actually task
+  // groups) run in different orders on different MPI processes.
+
+  for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
+    tasks.push_back( *iter );
+  }
 }
 
 void
@@ -226,6 +293,12 @@ TaskGraph::topologicalSort(vector<Task*>& sortedTasks)
 void
 TaskGraph::addTask(Task* task)
 {
+#if 0// DAV_DEBUG
+  cerr << "Adding task: " << *task << "\n";
+  cerr << " with: " << task->getRequires().size() << " requires.\n";
+  cerr << " with: " << task->getComputes().size() << " computes.\n";
+#endif
+
    d_tasks.push_back(task);
  
    const vector<Task::Dependency*>& comps = task->getComputes();
@@ -298,8 +371,51 @@ Task* TaskGraph::getTask(int idx)
    return d_tasks[idx];
 }
 
+bool
+DependData::operator==( const DependData & d1 ) const {
+  if( ( d1.dep->d_matlIndex      == dep->d_matlIndex ) &&
+      ( d1.dep->d_var->getName() == dep->d_var->getName() ) ) {
+    if( d1.dep->d_patch && dep->d_patch )
+      return ( d1.dep->d_patch->getID() == dep->d_patch->getID() );
+    else if( ( d1.dep->d_patch && !dep->d_patch ) ||
+	     ( !d1.dep->d_patch && dep->d_patch ) )
+      return false;
+    else
+      return true;
+  } else {
+    return false;
+  }
+}
+
+bool
+DependData::operator<( const DependData & d ) const {
+  if( dep->d_var->getName() > d.dep->d_var->getName() )
+    return true;
+  else if( dep->d_var->getName() == d.dep->d_var->getName() )
+    if( dep->d_matlIndex > d.dep->d_matlIndex )
+      return true;
+    else if( dep->d_matlIndex == d.dep->d_matlIndex )
+      if( dep->d_patch > d.dep->d_patch )
+	return true;
+      else
+	return false;
+    else
+      return false;
+  else
+    return false;
+}
+
+bool
+DependData::operator()( const DependData & d1, const DependData & d2 ) const {
+
+  return d1 < d2;
+}
+
 //
 // $Log$
+// Revision 1.9  2000/09/27 02:15:29  dav
+// Mixed model updates
+//
 // Revision 1.8  2000/09/25 16:25:30  sparker
 // Display more info when two tasks compute the same result
 //
