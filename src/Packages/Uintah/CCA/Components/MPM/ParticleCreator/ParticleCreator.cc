@@ -1,20 +1,20 @@
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/ParticleSet.h>
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/Core/Grid/ParticleSet.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/FileGeometryPiece.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/Core/Grid/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/FileGeometryPiece.h>
 
 using namespace Uintah;
 using std::vector;
@@ -169,7 +169,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 
 		// Apply the force BC if applicable
 		Vector pExtForce(0,0,0);
-		applyForceBC(dxpp, p, partMass, pExtForce);
+		ParticleCreator::applyForceBC(dxpp, p, partMass, pExtForce);
 		pexternalforce[pidx] = pExtForce;
 		
 		// Determine if particle is on the surface
