@@ -234,7 +234,7 @@ namespace Uintah {
   }
 
   template <class T>
-  static constHandle< ComputeSubset<T> > ComputeSubset<T>::emptySubset =
+  constHandle< ComputeSubset<T> > ComputeSubset<T>::emptySubset =
   scinew ComputeSubset<T>(0);
   
   
