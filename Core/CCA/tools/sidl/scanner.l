@@ -24,33 +24,49 @@ char* curfile;
 #define YY_DECL extern "C" int yylex (void)
 %}
 
+integer [0-9]+
+
 %%
 
-"package"	return PACKAGE;
-"class"		return CLASS;
-"extends"	return EXTENDS;
-"implements"	return IMPLEMENTS;
-"interface"	return INTERFACE;
 "abstract"	return ABSTRACT;
-"final"		return FINAL;
-"static"	return STATIC;
-"void"		return VOID;
-"throws"	return THROWS;
+"array"		return ARRAY;
 "bool"		return BOOL;
 "char"		return CHAR;
+"class"		return CLASS;
+"copy"          return COPY;
 "dcomplex"	return DCOMPLEX;
 "double"	return DOUBLE;
+"enum"          return ENUM;
+"extends"	return EXTENDS;
 "fcomplex"	return FCOMPLEX;
+"final"		return FINAL;
 "float"		return FLOAT;
-"int"		return INT;
-"string"	return STRING;
-"array"		return ARRAY;
+"implements-all" return IMPLEMENTSALL;
+"implements"	return IMPLEMENTS;
+"import"        return IMPORT;
 "in"		return IN;
-"out"		return OUT;
 "inout"		return INOUT;
+"int"		return INT;
+"interface"	return INTERFACE;
+"local"         return LOCAL;
+"long"          return LONG;
+"oneway"        return ONEWAY;
+"opaque"        return OPAQUE;
+"out"		return OUT;
+"package"	return PACKAGE;
+"static"	return STATIC;
+"string"	return STRING;
+"throws"	return THROWS;
+"version"       return VERSION;
+"void"		return VOID;
 
-[0-9]+ { yylval.number = strtol(yytext, 0, 0);
-	 return NUMBER;
+{integer} { yylval.number = strtol(yytext, 0, 0);
+	 return INTEGER;
+       }
+
+{integer}("."{integer})+ {
+         yylval.string = strdup(yytext);
+         return VERSION_STRING;
        }
 
 [A-Za-z][A-Za-z0-9_]* { yylval.ident = strdup(yytext);
@@ -88,6 +104,7 @@ char* curfile;
 ")"  { return ')'; }
 "<"  { return '<'; }
 ">"  { return '>'; }
+"="  { return '='; }
 
 . { fprintf(stderr, "Illegal character: %c (%d)\n", yytext[0],
             yytext[0]); 

@@ -15,6 +15,11 @@
   University of Utah. All Rights Reserved.
 */
 
+/*
+TODO:
+class
+*/
+
 
 %{
 
@@ -24,96 +29,169 @@ extern int yylex(void);
 int yyerror(char*);
 }
 #include <Core/CCA/tools/sidl/Spec.h>
-Specification specs;
+ Specification* parse_spec;
 extern char* curfile;
 extern int lineno;
 #define YYDEBUG 1
 #include <stdlib.h>
 #include <iostream>
 
+#define LOCAL 0x01
+#define ONEWAY 0x02
+
+ using namespace std;
+
 %}
 
 %union {
-    char* ident;
-    int number;
-    DefinitionList* definition_list;
-    Definition* definition;
-    Interface* interface;
-    Package* package;
-    ScopedName* scoped_name;
-    Class* c_class;
-    struct {
-       ScopedName* class_extends;
-       ScopedNameList* class_implements;
-    } class_inherit;
-    bool boolean;
-    ScopedNameList* scoped_name_list;
-    MethodList* method_list;
-    Method* method;
-    Method::Modifier method_modifier;
+  char* ident;
+  char* string;
+  int number;
+  DefinitionList* definition_list;
+  Definition* definition;
+  Interface* interface;
+  Package* package;
+  ScopedName* scoped_identifier;
+  Class* c_class;
+  Class::Modifier class_modifier;
+  Enum* c_enum;
+  Enumerator* enumerator;
+  struct {
+    ScopedName* class_extends;
+    ScopedNameList* class_implementsall;
+    ScopedNameList* class_implements;
+  } class_inherit;
+  bool boolean;
+  ScopedNameList* scoped_identifier_list;
+  MethodList* method_list;
+  Method* method;
+  Method::Modifier method_modifier;
+  Method::Modifier2 method_modifiers2;
+  Type* type;
+  struct {
     Type* type;
-    ArgumentList* argument_list;
-    Argument* argument;
-    Argument::Mode mode;
+    bool copy;
+  } return_type;
+  ArgumentList* argument_list;
+  Argument* argument;
+  Argument::Mode mode;
+  Version* version;
+  VersionList* version_list;
 };
 
 %start specification
 
-%token PACKAGE
-%token<ident> IDENTIFIER
-%token CLASS
-%token EXTENDS
-%token IMPLEMENTS
-%token INTERFACE
 %token ABSTRACT
-%token FINAL
-%token STATIC
-%token VOID
-%token THROWS
+%token ARRAY
 %token BOOL
 %token CHAR
+%token CLASS
+%token COPY
 %token DCOMPLEX
 %token DOUBLE
+%token ENUM
+%token EXTENDS
 %token FCOMPLEX
+%token FINAL
 %token FLOAT
-%token INT
-%token STRING
-%token ARRAY
-%token<number> NUMBER
+%token IMPLEMENTS
+%token IMPLEMENTSALL
+%token IMPORT
 %token IN
-%token OUT
 %token INOUT
+%token INT
+%token INTERFACE
+%token LOCAL
+%token LONG
+%token ONEWAY
+%token OPAQUE
+%token OUT
+%token PACKAGE
+%token STATIC
+%token STRING
+%token THROWS
+%token VERSION
+%token VOID
+%token<ident> IDENTIFIER
+%token<number> INTEGER
+%token<string> VERSION_STRING
 
-%type<definition_list> definition_star
-%type<definition> definition
-%type<interface> interface
-%type<package> package
-%type<scoped_name> scoped_name dot_identifier_star
+%type<argument> argument
+%type<argument_list> arguments comma_argument_star
+%type<boolean> opt_dot opt_copy
 %type<c_class> class
 %type<class_inherit> class_inherit
-%type<scoped_name> class_extends
-%type<scoped_name_list> class_implements
-%type<boolean> opt_dot
-%type<method_list> modified_methods modified_method_star
-%type<scoped_name_list> comma_scoped_name_star
-%type<scoped_name_list> interface_extends
+%type<class_modifier> class_modifier
+%type<definition> definition
+%type<definition_list> definition_star
+%type<enumerator> enumerator
+%type<c_enum> enumerator_list enum
+%type<interface> interface
+%type<scoped_identifier_list> import_star
+%type<scoped_identifier> import
+%type<method> method class_method
 %type<method_list> methods method_star
-%type<method> method
+%type<method_list> class_methods class_method_star
 %type<method_modifier> method_modifier
-%type<type> return_type type
-%type<argument_list> arguments comma_argument_star
-%type<scoped_name_list> opt_throws_clause throws_clause
-%type<argument> argument
+%type<method_modifiers2> method_modifiers2
 %type<mode> mode
 %type<number> opt_comma_number
+%type<package> package
+%type<definition_list> package_star
+%type<scoped_identifier> class_extends
+%type<scoped_identifier> scoped_identifier dot_identifier_star
+%type<scoped_identifier_list> class_implements class_implements_all
+%type<scoped_identifier_list> comma_scoped_identifier_star
+%type<scoped_identifier_list> interface_extends
+%type<scoped_identifier_list> opt_throws_clause throws_clause
+%type<type> type
+%type<return_type> return_type;
+%type<version> version
+%type<version_list> version_star
 
 %%
 
-specification: definition_star
-	       {
-                   specs.add($1);
+specification: version_star import_star package_star
+               {
+		 cerr << "$3=" << $3 << '\n';
+		 parse_spec=new Specification($1, $2, $3);
 	       }
 	       ;
+
+version_star: /* Empty */
+	      {
+		   $$=new VersionList();
+	      }
+	      |
+	      version_star version
+	      {
+	         $$=$1;
+		 $$->add($2);
+	      }
+	      ;
+
+version: VERSION IDENTIFIER INTEGER ';'
+         {
+	   $$=new Version($2, $3);
+         }
+         |
+         VERSION IDENTIFIER VERSION_STRING ';'
+         {
+	   $$=new Version($2, $3);
+         }
+         ;
+
+package_star: /* Empty */
+              {
+		$$=new DefinitionList();
+	      }
+              |
+	      package_star package
+              {
+		$$=$1;
+		$$->add($2);
+	      }
+              ;
 
 definition_star: /* Empty */
 	       {
@@ -127,29 +205,58 @@ definition_star: /* Empty */
                }
 	       ;
 
-definition:    package ';'
+import_star: /* Empty */
+             {
+	       $$=new ScopedNameList();
+	     }
+             |
+	     import_star import
+             {
+	       $$=$1;
+	       $$->add($2);
+	     }
+             ;
+
+import: IMPORT scoped_identifier ';'
+        {
+	  $$=$2;
+	}
+        ;
+
+definition:    class
 	       {
 	          $$=$1;
 	       }
 	       |
-	       class ';'
+	       enum
 	       {
 	          $$=$1;
 	       }
 	       |
-	       interface ';'
+	       interface
+	       {
+	          $$=$1;
+	       }
+	       |
+               package
 	       {
 	          $$=$1;
 	       }
 	       ;
 
-package:       PACKAGE IDENTIFIER '{' definition_star '}'
+package:       PACKAGE scoped_identifier '{' definition_star '}' opt_semi
 	       {
-	           $$=new Package(curfile, lineno, $2, $4);
+		 Package* pack = new Package(curfile, lineno, $2->name($2->nnames()-1), $4);
+		 for(int i=$2->nnames()-2;i>=0;i--){
+		   DefinitionList* defs = new DefinitionList();
+		   defs->add(pack);
+		   pack = new Package(curfile, lineno, $2->name(i), defs);
+		 }
+		 $$=pack;
 	       }
-	       ;
+               ;
 
-scoped_name:   opt_dot IDENTIFIER dot_identifier_star
+scoped_identifier:   opt_dot IDENTIFIER dot_identifier_star
 	       {
 	           $$=$3;
 		   $$->prepend($2);
@@ -168,6 +275,11 @@ opt_dot:       /* Empty */
 	       }
 	       ;
 
+opt_semi:      /* Empty */
+	       |
+	       ';'
+               ;
+
 dot_identifier_star: /* Empty */
 		     {
 		         $$=new ScopedName();
@@ -181,22 +293,30 @@ dot_identifier_star: /* Empty */
 		     ;
 
 
-class:	       CLASS IDENTIFIER
+class:	       class_modifier CLASS IDENTIFIER class_inherit class_methods opt_semi
 	       {
-	           $$=new Class(curfile, lineno, $2);
-	       }
-	       |
-	       CLASS IDENTIFIER class_inherit modified_methods
-	       {
-	           $$=new Class(curfile, lineno, $2,
-				$3.class_extends, $3.class_implements, $4);
+	           $$=new Class(curfile, lineno, $1, $3,
+				$4.class_extends, $4.class_implementsall,
+				$4.class_implements, $5);
 	       }
 	       ;
 
-class_inherit: class_extends class_implements
+class_modifier: /* Empty */
+                {	
+		  $$=Class::None;
+		}
+                |
+                ABSTRACT
+                {
+		  $$=Class::Abstract;
+		}
+		;
+
+class_inherit: class_extends class_implements_all class_implements
 	       {
 	           $$.class_extends=$1;
-		   $$.class_implements=$2;
+		   $$.class_implementsall=$2;
+		   $$.class_implements=$3;
 	       }
 	       ;
 
@@ -205,97 +325,145 @@ class_extends: /* Empty */
 	           $$=0;
 	       }
 	       |
-	       EXTENDS scoped_name
+	       EXTENDS scoped_identifier
 	       {
 	           $$=$2;
 	       }
 	       ;
+
+class_implements_all: /* Empty */
+		      {
+			$$=0;
+		      }
+		      |
+		      IMPLEMENTSALL scoped_identifier comma_scoped_identifier_star
+                      {
+			$3->prepend($2);
+			$$=$3;
+		      }
+                      ;
 
 class_implements: /* Empty */
 		  {
 		     $$=0;
 		  }
 		  |
-		  IMPLEMENTS scoped_name comma_scoped_name_star
+		  IMPLEMENTS scoped_identifier comma_scoped_identifier_star
 		  {
 		     $3->prepend($2);
 		     $$=$3;
 		  }
 		  ;
 
-comma_scoped_name_star: /* Empty */
+comma_scoped_identifier_star: /* Empty */
 			{
 			    $$=new ScopedNameList();
 			}
 			|
-			comma_scoped_name_star ',' scoped_name
+			comma_scoped_identifier_star ',' scoped_identifier
 			{
 			    $$=$1;
 			    $$->add($3);
 			}
 			;
 
-interface:     INTERFACE IDENTIFIER
-               {
-	           $$=new Interface(curfile, lineno, $2);
-	       }
-	       |
-	       INTERFACE IDENTIFIER interface_extends methods
+enum: ENUM IDENTIFIER '{' enumerator_list opt_comma '}' opt_semi
+      {
+	$$=$4;
+        $$->setName($2);
+      }
+      ;
+
+opt_comma: /* Empty */
+           |
+           ','
+           ;
+
+enumerator_list: enumerator
+                 {
+		   $$=new Enum(curfile, lineno, "tmp_enum");
+		   $$->add($1);
+		 }
+                 |
+                 enumerator_list ',' enumerator
+                 {
+		   $$=$1;
+		   $$->add($3);
+		 }
+                 ;
+
+enumerator: IDENTIFIER
+            {
+	      $$=new Enumerator(curfile, lineno, $1);
+	    }
+            |
+            IDENTIFIER '=' INTEGER
+            {
+	      $$=new Enumerator(curfile, lineno, $1, $3);
+	    }
+            ;
+
+interface:     INTERFACE IDENTIFIER interface_extends methods opt_semi
 	       {
 	           $$=new Interface(curfile, lineno, $2, $3, $4);
 	       }
 	       ;
 
-modified_methods: '{' modified_method_star '}'
-		  {
-		      $$=$2;
-		  }
-		  ;
+class_methods: '{' class_method_star '}'
+		{
+		    $$=$2;
+		}
+		;
 
-modified_method_star: /* Empty */
-		      {
-		          $$=new MethodList();
-		      }
-		      |
-		      modified_method_star method ';'
-		      {
-		          $$=$1;
-			  $$->add($2);
-		      }
-		      |
-		      modified_method_star method_modifier method ';'
-		      {
-		          $$=$1;
-			  $3->setModifier($2);
-			  $$->add($3);
-		      }
-		      ;
+class_method_star: /* Empty */
+		   {
+		     $$=new MethodList();
+		   }
+		   |
+		   class_method_star class_method
+		   {
+		     $$=$1;
+		     $$->add($2);
+		   }
+                   ;
 
 interface_extends: /* Empty */
 		   {
 		       $$=0;
 		   }
 		   |
-		   EXTENDS scoped_name comma_scoped_name_star
+		   EXTENDS scoped_identifier comma_scoped_identifier_star
 		   {
 		       $3->prepend($2);
 		       $$=$3;
 		   }
 		   ;
 
-method_modifier: ABSTRACT
+class_method: method_modifier method
+              {
+		$$=$2;
+		$$->setModifier($1);
+	      }
+              ;
+
+method_modifier: /* Empty */
+                 {
+		   $$=Method::NoModifier;
+		 }
+                 |
+		 ABSTRACT
 		 {
-		     $$=Method::Abstract;
+		   $$=Method::Abstract;
 		 }
 		 |
 		 FINAL
 		 {
-		     $$=Method::Final;
+		   $$=Method::Final;
 		 }
 		 |
 		 STATIC
 		 {
-		     $$=Method::Static;
+		   $$=Method::Static;
 		 }
 		 ;
 
@@ -310,18 +478,34 @@ method_star: /* Empty */
 	         $$=new MethodList();
              }
 	     |
-	     method_star method ';'
+	     method_star method
 	     {
 	         $$=$1;
 		 $$->add($2);
              }
 	     ;
 
-method: return_type IDENTIFIER arguments opt_throws_clause
+method: return_type IDENTIFIER arguments method_modifiers2 opt_throws_clause ';'
 	{
-	    $$=new Method(curfile, lineno, $1, $2, $3, $4);
+	    $$=new Method(curfile, lineno, $1.copy, $1.type, $2, $3, $4, $5);
 	}
 	;
+
+method_modifiers2: /* Empty */
+                  {
+		    $$=Method::None;
+		  }
+                  |
+                  LOCAL
+                  {
+		    $$=Method::Local;
+		  }
+		  |
+		  ONEWAY
+                  {
+		    $$=Method::Oneway;
+		  }
+		  ;
 
 opt_throws_clause: /* Empty */
 		   {
@@ -336,12 +520,14 @@ opt_throws_clause: /* Empty */
 
 return_type: VOID
 	     {
-	         $$=Type::voidtype();
+	         $$.type=Type::voidtype();
+		 $$.copy=false;
              }
 	     |
-	     type
+	     opt_copy type
 	     {
-	         $$=$1;
+	         $$.type=$2;
+		 $$.copy=$1;
 	     }
 	     ;
 
@@ -357,14 +543,25 @@ arguments: '(' ')'
 	   }
 	   ;
 
-argument: mode type
-	  {
-	      $$=new Argument($1, $2);
+opt_copy: /* Empty */
+          {
+	    $$=false;
 	  }
-	  |
-	  mode type IDENTIFIER
+          |
+	  COPY
+          {
+	    $$=true;
+	  }
+          ;
+
+argument: opt_copy mode type
 	  {
 	      $$=new Argument($1, $2, $3);
+	  }
+	  |
+	  opt_copy mode type IDENTIFIER
+	  {
+	      $$=new Argument($1, $2, $3, $4);
 	  }
 	  ;
 
@@ -396,7 +593,7 @@ comma_argument_star: /* Empty */
 		     }
 		     ;
 
-throws_clause: THROWS scoped_name comma_scoped_name_star
+throws_clause: THROWS scoped_identifier comma_scoped_identifier_star
 	       {
 	           $3->prepend($2);
 	           $$=$3;
@@ -438,6 +635,16 @@ type: BOOL
          $$=Type::inttype();
       }
       |
+      LONG
+      {
+	$$=Type::longtype();
+      }
+      |
+      OPAQUE
+      {
+	$$=Type::opaquetype();
+      }
+      |
       STRING
       {
          $$=Type::stringtype();
@@ -448,7 +655,7 @@ type: BOOL
          $$=Type::arraytype($3, $4);
       }
       |
-      scoped_name
+      scoped_identifier
       {
          $$=new NamedType(curfile, lineno, $1);
       }
@@ -459,7 +666,7 @@ opt_comma_number: /* Empty */
 		      $$=0;
 		  }
 		  |
-		  ',' NUMBER
+		  ',' INTEGER
 		  {
 		      $$=$2;
 		  }

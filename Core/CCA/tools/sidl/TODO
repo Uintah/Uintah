@@ -1,23 +1,8 @@
-try from lanl
-memory leak cleanups
-demand from disk
-
-
-std::string vs. clString
-std::map vs. AVLTree and Hashtable
-std::vector vs. bitarray1
-std::vector vs. array1?
-FLPQueue?
-PQueue
-Queue?
-Ring?
-
-Nix Handle
-
-Better ParticleDatabase
-MPI sim code
-
-CCA demo?
+Look at babel...
+imports
+versions
+Check CI::cppfullname
+Write framework...
 
 marshalling for array					argtest
   - multidimensional arrays
@@ -55,9 +40,5 @@ only update uuid if signature changes, or if parent uuid changes
 
 Better fault_tolerance callback...
 getURL for proxys - requires message?
-
-other new sidl stuff 
- - enums?
- - import
 
 documentation
