@@ -186,14 +186,14 @@ inline void Vector::rotz90(const int c)
     switch(c%4){
     case 0:
 	// 0 degrees, do nothing
+	break;
+    case 1:
+	// 90 degrees
 	{
 	    double newx=-_y;
 	    _y=_x;
 	    _x=newx;
 	}
-	break;
-    case 1:
-	// 90 degrees
 	break;
     case 2:
 	// 180 degrees
