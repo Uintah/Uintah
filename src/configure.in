@@ -136,7 +136,6 @@ AC_ARG_ENABLE(threads,
 	[  --enable-threads		Specify a thread implementation (pthreads, irix)],
 	[threads="$enableval"],
 	[threads=${threads='unknown'}])
-AC_SUBST(LOCK_IMPL)
 AC_SUBST(THREAD_IMPL)
 AC_SUBST(TIME_IMPL)
 
@@ -315,7 +314,6 @@ case $host in
            LDRUN_PREFIX="-Wl,-rpath -Wl,"
 	   TEMPLATE_TAG=
 	   TEMPLATE_BOX="<>"
-	   LOCK_IMPL=lock_mips.s
            if test "$threads" = "unknown"; then
              threads="irix"
            fi
@@ -332,7 +330,6 @@ case $host in
      CFLAGS="-Wall $extra_cflags"
      TEMPLATE_TAG=
      TEMPLATE_BOX="<>"
-     LOCK_IMPL=""
      SOFLAGS="-shared ${SOFLAGS}"
      NEED_SONAME=yes
      LDRUN_PREFIX="-Wl,-rpath -Wl,"
