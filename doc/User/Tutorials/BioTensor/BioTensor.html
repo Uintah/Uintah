@@ -550,7 +550,7 @@
       </p>
       <ol>
 	<li><p>Click on the Processing Pane's Load Data tab.</p></li>
-	<li><p>Click the radio button labeled: DWI with B0 Reference Data.</p></li>
+	<li><p>Click the radio button labeled: DWI with separate B0 Reference Data.</p></li>
 	<li><p>Click on the Load Data panel's Nrrd tab.</p></li> 
 	<li><p>Use the Nrrd panel's Browse buttons to select DWI data, 
 	    <tt>/usr/sci/data/SCIRunData/1.22.0/demo-DWI.nrrd</tt>, and B0 data,
@@ -1214,6 +1214,18 @@
 	changing "fastest", i.e. the data is stored as 12 volumes (each
 	128x256x90) concatenated together into one big array), and the B0
 	volume would have dimensions 128x256x90.
+      </p>
+
+      <p>
+        BioTensor can also accept a single file containing the DWI volume
+        and B0 image. For this case, select the &quot;B0 Reference Data and
+        DWI (single file)&quot radiobutton in the Load Data tab. When this
+        load method is selected, users must also specify the number of 
+        DWI channels in the data and whether the volume is ordered so that
+        the volumes are changing fastest (i.e 128.256x90x13) or the z slices are changing
+        fastest (i.e. 13x128x256x90). When loading a single file containg the DWI and B0
+        data, the user must also indicate whether or not the B0 slices are
+        located before or after the DWI slices.
       </p>
 
       <p>
