@@ -25,13 +25,21 @@ InvalidReference::~InvalidReference()
 {
 }
 
-std::string InvalidReference::message() const
+const char* InvalidReference::message() const
 {
-    return d_msg;
+    return d_msg.c_str();
+}
+
+const char* InvalidReference::type() const
+{
+    return "Component::PIDL::InvalidReference";
 }
 
 //
 // $Log$
+// Revision 1.4  2000/03/23 10:27:36  sparker
+// Added "name" method to match new Exception base class
+//
 // Revision 1.3  1999/09/17 05:08:07  sparker
 // Implemented component model to work with sidl code generator
 //
