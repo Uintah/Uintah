@@ -142,15 +142,18 @@ void GetFace(char *buf, Array1<Point> &pts, Array1<Vector> &nml,
 			t.project_normal(nml[nrmis[s0]]), 
 			t.project_normal(nml[nrmis[s1]]), 
 			t.project_normal(nml[nrmis[s2]]));
-      tri->set_texcoords(tex[uvis[s0]], tex[uvis[s1]], tex[uvis[s2]]);
-      g->add(tri);
+      if( !tri->isbad() ) {
+	tri->set_texcoords(tex[uvis[s0]], tex[uvis[s1]], tex[uvis[s2]]);
+	g->add(tri);
+      }
     } else {
       Tri *tri = 
 	new Tri(mat, t.project(p1), t.project(p2), t.project(p3), 
 		t.project_normal(nml[nrmis[s0]]), 
 		t.project_normal(nml[nrmis[s1]]), 
 		t.project_normal(nml[nrmis[s2]]));
-      g->add(tri);
+      if( !tri->isbad() )
+	g->add(tri);
     }
   }
 }
