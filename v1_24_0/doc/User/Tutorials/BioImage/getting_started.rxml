@@ -49,8 +49,8 @@ DEALINGS IN THE SOFTWARE.
     intensity projection. The 2D views provide standard zooming and
     translation capabilities as well as the ability to change the
     brightness and contrast (also known as window and level) of the
-    images. <xref linkend="sec.2dviewers"/> discusses 2D visualization
-    in detail.</para>
+    images.
+    </para>
 
     <para>BioImage provides a powerful volume rendering tool that allows
     the user to interactively visualize an area of interest by assigning
@@ -58,7 +58,7 @@ DEALINGS IN THE SOFTWARE.
     
     <para>In this tutorial the user will: launch BioImage, load a tooth
     volume dataset, resample and crop the tooth volume using dynamic
-    filter, and visualize tooth planes and the tooth volume.</para>
+    filters, and visualize tooth planes and the tooth volume.</para>
 
     <para>This tutorial provides a simple example of a BioImage
     session. See <xref linkend="part.reference"/> for information on all
@@ -86,23 +86,6 @@ setenv SCIRUN_DATA /usr/sci/data/SCIRun/SCIRunData/1.24.0
 	  <para>For an  sh-like shell:</para>
 	  <literallayout class="monospaced">
 export SCIRUN_DATA=/usr/sci/data/SCIRun/SCIRunData/1.24.0
-	  </literallayout>
-	</listitem>
-      </varlistentry>
-      <varlistentry>
-	<term><envar>SCIRUN_DATASET</envar></term>
-	<listitem>
-	  <para><envar>SCIRUN_DATASET</envar> points to a specific
-	  data set directory within the data directory. The tutorial
-	  requires <envar>SCIRUN_DATASET</envar> to be set to the
-	  "volume" dataset:</para>
-	  <para>For a csh-like shell:</para>
-	  <literallayout class="monospaced">
-setenv SCIRUN_DATASET volume	    
-	  </literallayout>
-	  <para>For an  sh-like shell:</para>
-	  <literallayout class="monospaced">
-export SCIRUN_DATASET=volume
 	  </literallayout>
 	</listitem>
       </varlistentry>
@@ -138,7 +121,7 @@ cd /usr/local/SCIRun/bin
     interface window shown in <xref linkend="fig.gui-launch"/>.</para>
 
     <figure id="fig.gui-launch">
-      <title>BioImage Interface Window Initial State <!--%= doc.doIfHTML(){%Q{(<ulink url="Figures/gui-launch-large.gif">Larger image)</ulink>}} %--></title>
+      <title>BioImage Interface Window Initial State</title>
       <mediaobject>
 	<textobject>
 	  <phrase>BioImage interface window just after
@@ -159,7 +142,8 @@ cd /usr/local/SCIRun/bin
     <title>The User Interface</title>
     <para>
       BioImage is divided into three main panes: the Processing Pane on the left, 
-      the Rendering Windows in the center, and the Visualization Pane on the right. 
+      the Rendering Windows in the center, and the Visualization Pane on the right
+      as labeled in <xref linkend="fig.gui-launch"/>.
       The two side panes can be detached from the Rendering Windows by clicking on 
       the pane detachment/attachment controls which are the vertical dashed lines 
       separating the panes. 
@@ -170,7 +154,6 @@ cd /usr/local/SCIRun/bin
       2D images of the standard slice planes (in order from left to right)
       of Sagittal, Coronal, and Axial.
     </para>
-    <!-- DV: Need figure of most of ui greyed out and 3 panes and maybe vis windows labeled -->
   </section>
 
 </chapter>
