@@ -64,7 +64,7 @@ set $m2-function {x+10}
 set $m2-imin {         -5.25315}
 set $m2-imax {          4.31926}
 set $m2-omin {0}
-set $m2-omax {5}
+set $m2-omax {256}
 set $m3-notes {}
 set $m3-show_status {1}
 set $m3-nodes-on {1}
