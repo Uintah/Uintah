@@ -32,43 +32,57 @@
 #include <Core/Util/NotFinished.h>
 
 using SSIDL::BaseException;
-std::string BaseException::getMessage(){
-    NOT_FINISHED("string BaseException::getMessage()");
-    return "";
+using std::string;
+
+string
+BaseException::getMessage()
+{
+  NOT_FINISHED("string BaseException::getMessage()");
+  return "";
 }
 
 /**
  * Set the message associated with the exception.
  */
-void BaseException::setMessage(const std::string &message){
-    NOT_FINISHED("string BaseException::setMessage()");
-    return;
+void
+BaseException::setMessage(const string &message)
+{
+  NOT_FINISHED("string BaseException::setMessage()");
+  return;
 }
 
 /**
  * Returns formatted string containing the concatenation of all 
  * tracelines.
  */
-std::string BaseException::getTrace(){
-    NOT_FINISHED("string BaseException::getTrace()");
-    return "";
+string
+BaseException::getTrace()
+{
+  NOT_FINISHED("string BaseException::getTrace()");
+  return "";
 }
 
 /**
  * Adds a stringified entry/line to the stack trace.
  */
-void BaseException::addToStackTrace(const std::string &traceline){
-    NOT_FINISHED("string BaseException::addToStackTrace()");
-    return;
+void
+BaseException::addToStackTrace(const string &/*traceline*/)
+{
+  NOT_FINISHED("string BaseException::addToStackTrace()");
+  return;
 }
 
 /**
  * Formats and adds an entry to the stack trace based on the 
  * file name, line number, and method name.
  */
-void BaseException::addToTrace(const std::string &filename, int lineno, const std::string &methodname){
-    NOT_FINISHED("string BaseException::addToTrace()");
-    return;
+void
+BaseException::addToTrace( const string &/*filename*/,
+			   int /*lineno*/, 
+			   const string &/*methodname*/)
+{
+  NOT_FINISHED("string BaseException::addToTrace()");
+  return;
 }
 
 
