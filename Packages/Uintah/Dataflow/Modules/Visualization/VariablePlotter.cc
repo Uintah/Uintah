@@ -240,7 +240,7 @@ void VariablePlotter::tcl_command(GuiArgs& args, void* userdata)
     args.error("Streamline needs a minor command");
     return;
   }
-  else if(args[1] == "pick") {
+  else if(args[1] == "update_sn") {
     pick();
   }
   else if(args[1] == "extract_data") {
