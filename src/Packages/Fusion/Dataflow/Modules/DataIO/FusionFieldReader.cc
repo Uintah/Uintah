@@ -45,7 +45,7 @@ using namespace SCIRun;
 
 class FusionSHARE FusionFieldReader : public Module {
 public:
-  FusionFieldReader(const string& id);
+  FusionFieldReader(GuiContext *context);
 
   virtual ~FusionFieldReader();
 
@@ -61,13 +61,13 @@ private:
   FieldHandle  pHandle_;
 };
 
-extern "C" FusionSHARE Module* make_FusionFieldReader(const string& id) {
-  return scinew FusionFieldReader(id);
-}
 
-FusionFieldReader::FusionFieldReader(const string& id)
-  : Module("FusionFieldReader", id, Source, "DataIO", "Fusion"),
-    filename_("filename", id, this)
+DECLARE_MAKER(FusionFieldReader)
+
+
+FusionFieldReader::FusionFieldReader(GuiContext *context)
+  : Module("FusionFieldReader", context, Source, "DataIO", "Fusion"),
+    filename_(context->subVar("filename"))
 {
 }
 

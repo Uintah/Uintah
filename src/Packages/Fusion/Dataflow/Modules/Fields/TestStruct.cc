@@ -40,7 +40,7 @@ namespace SCIRun {
 class TestStruct : public Module
 {
 public:
-  TestStruct(const string& id);
+  TestStruct(GuiContext *context);
   virtual ~TestStruct();
 
   virtual void execute();
@@ -49,13 +49,11 @@ private:
 };
 
 
-extern "C" Module* make_TestStruct(const string& id) {
-  return new TestStruct(id);
-}
+DECLARE_MAKER(TestStruct)
 
 
-TestStruct::TestStruct(const string& id)
-  : Module("TestStruct", id, Filter, "Fields", "Fusion")
+TestStruct::TestStruct(GuiContext *context)
+  : Module("TestStruct", context, Filter, "Fields", "Fusion")
 {
 }
 

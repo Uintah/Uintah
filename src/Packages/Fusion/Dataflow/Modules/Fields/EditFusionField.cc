@@ -42,7 +42,7 @@ using namespace SCIRun;
 
 class FusionSHARE EditFusionField : public Module {
 public:
-  EditFusionField(const string& id);
+  EditFusionField(GuiContext *context);
 
   virtual ~EditFusionField();
 
@@ -87,28 +87,28 @@ private:
   int mGeneration_;
 };
 
-extern "C" FusionSHARE Module* make_EditFusionField(const string& id) {
-  return scinew EditFusionField(id);
-}
 
-EditFusionField::EditFusionField(const string& id)
-  : Module("EditFusionField", id, Source, "Fields", "Fusion"),
+DECLARE_MAKER(EditFusionField)
 
-    iDim_("idim", id, this),
-    jDim_("jdim", id, this),
-    kDim_("kdim", id, this),
 
-    iStart_("istart", id, this),
-    jStart_("jstart", id, this),
-    kStart_("kstart", id, this),
+EditFusionField::EditFusionField(GuiContext *context)
+  : Module("EditFusionField", context, Source, "Fields", "Fusion"),
 
-    iDelta_("idelta", id, this),
-    jDelta_("jdelta", id, this),
-    kDelta_("kdelta", id, this),
+    iDim_(context->subVar("idim")),
+    jDim_(context->subVar("jdim")),
+    kDim_(context->subVar("kdim")),
 
-    iSkip_("iskip", id, this),
-    jSkip_("jskip", id, this),
-    kSkip_("kskip", id, this),
+    iStart_(context->subVar("istart")),
+    jStart_(context->subVar("jstart")),
+    kStart_(context->subVar("kstart")),
+
+    iDelta_(context->subVar("idelta")),
+    jDelta_(context->subVar("jdelta")),
+    kDelta_(context->subVar("kdelta")),
+
+    iSkip_(context->subVar("iskip")),
+    jSkip_(context->subVar("jskip")),
+    kSkip_(context->subVar("kskip")),
 
     idim_(0),
     jdim_(0),
@@ -187,7 +187,7 @@ void EditFusionField::execute(){
     ostringstream str;
     str << id << " set_size " << idim_ << " " << jdim_-1 << " " << kdim_-1;
 
-    TCL::execute(str.str().c_str());
+    gui->execute(str.str().c_str());
 
     updateAll = true;
   }

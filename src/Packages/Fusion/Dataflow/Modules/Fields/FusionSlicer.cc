@@ -42,7 +42,7 @@ using namespace SCIRun;
 
 class FusionSHARE FusionSlicer : public Module {
 public:
-  FusionSlicer(const string& id);
+  FusionSlicer(GuiContext *context);
 
   virtual ~FusionSlicer();
 
@@ -75,22 +75,22 @@ private:
   int mGeneration_;
 };
 
-extern "C" FusionSHARE Module* make_FusionSlicer(const string& id) {
-  return scinew FusionSlicer(id);
-}
 
-FusionSlicer::FusionSlicer(const string& id)
-  : Module("FusionSlicer", id, Source, "Fields", "Fusion"),
+DECLARE_MAKER(FusionSlicer)
+
+
+FusionSlicer::FusionSlicer(GuiContext *context)
+  : Module("FusionSlicer", context, Source, "Fields", "Fusion"),
     
-    Axis_("axis", id, this),
+    Axis_(context->subVar("axis")),
 
-    iDim_("idim", id, this),
-    jDim_("jdim", id, this),
-    kDim_("kdim", id, this),
+    iDim_(context->subVar("idim")),
+    jDim_(context->subVar("jdim")),
+    kDim_(context->subVar("kdim")),
 
-    iIndex_("iindex", id, this),
-    jIndex_("jindex", id, this),
-    kIndex_("kindex", id, this),
+    iIndex_(context->subVar("iindex")),
+    jIndex_(context->subVar("jindex")),
+    kIndex_(context->subVar("kindex")),
 
     axis_(2),
 
@@ -161,7 +161,7 @@ void FusionSlicer::execute(){
     ostringstream str;
     str << id << " set_size " << idim_+1 << " " << jdim_ << " " << kdim_;
 
-    TCL::execute(str.str().c_str());
+    gui->execute(str.str().c_str());
 
     updateAll = true;
   }
