@@ -68,7 +68,7 @@ WARNING
          ContactMaterialSpec(ProblemSpecP & ps);
          
          // require this material to apply contact
-         void add(int matlIndex);
+         void add(unsigned int matlIndex);
          
          // is this material used
          bool requested(int imat) const { 

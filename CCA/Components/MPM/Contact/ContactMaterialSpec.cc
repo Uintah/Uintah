@@ -21,7 +21,7 @@ ContactMaterialSpec::ContactMaterialSpec(ProblemSpecP & ps)
 }
 
 void
-ContactMaterialSpec::add(int matlIndex)
+ContactMaterialSpec::add(unsigned int matlIndex)
 {
   // we only add things once at the start, but want 
   // quick lookup, so keep logical for each material
