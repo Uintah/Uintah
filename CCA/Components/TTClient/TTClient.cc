@@ -39,9 +39,9 @@
 using namespace std;
 using namespace SCIRun;
 
-extern "C" gov::cca::Component::pointer make_SCIRun_TTClient()
+extern "C" sci::cca::Component::pointer make_SCIRun_TTClient()
 {
-  return gov::cca::Component::pointer(new TTClient());
+  return sci::cca::Component::pointer(new TTClient());
 }
 
 
@@ -56,17 +56,17 @@ TTClient::~TTClient()
 
 }
 
-void TTClient::setServices(const gov::cca::Services::pointer& svc)
+void TTClient::setServices(const sci::cca::Services::pointer& svc)
 {
   services=svc;
   //register provides ports here ...  
 
-  gov::cca::TypeMap::pointer props = svc->createTypeMap();
+  sci::cca::TypeMap::pointer props = svc->createTypeMap();
   ttUIPort::pointer uip(&uiPort);
   ttGoPort::pointer gop(&goPort);
-  svc->addProvidesPort(uip,"ui","gov.cca.UIPort", props);
-  svc->addProvidesPort(gop,"go","gov.cca.GoPort", props);
-  svc->registerUsesPort("tt","gov.cca.TTPort", props);
+  svc->addProvidesPort(uip,"ui","sci.cca.UIPort", props);
+  svc->addProvidesPort(gop,"go","sci.cca.GoPort", props);
+  svc->registerUsesPort("tt","sci.cca.TTPort", props);
   // Remember that if the PortInfo is created but not used in a call to the svc object
   // then it must be freed.
   // Actually - the ref counting will take care of that automatically - Steve
@@ -83,7 +83,7 @@ int ttGoPort::go()
 {
   //QMessageBox::warning(0, "TTClient", "Go ...");
   cout<<"GoGoGo!"<<endl;
-  gov::cca::Port::pointer pp=TTCl->getServices()->getPort("tt");
+  sci::cca::Port::pointer pp=TTCl->getServices()->getPort("tt");
   if(pp.isNull()){
     //QMessageBox::warning(0, "Tri", "Port tt is not available!");
     cout<<"pp_isNULL"<<endl;
