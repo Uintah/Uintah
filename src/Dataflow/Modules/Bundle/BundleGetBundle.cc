@@ -108,6 +108,13 @@ BundleGetBundle::execute()
       return;
     }
 
+  if (handle.get_rep() == 0)
+    {   
+      warning("Empty bundle connected to the input port");
+      return;
+    }
+
+
   int numBundles = handle->numBundles();
   for (int p = 0; p < numBundles; p++)
     {

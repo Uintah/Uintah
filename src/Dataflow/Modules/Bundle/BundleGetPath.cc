@@ -115,6 +115,14 @@ BundleGetPath::execute()
       pathlist += "{" + handle->getPathName(p) + "} ";
     }
 
+
+  if (handle.get_rep() == 0)
+    {   
+      warning("Empty bundle connected to the input port");
+      return;
+    }
+
+
   guipaths_.set(pathlist);
   ctx->reset();
 
