@@ -451,7 +451,7 @@ void DipoleSearch::read_field_ports(int &valid_data, int &new_data) {
   if (seeds_iport_->get(seeds) && seeds.get_rep() &&
       (seedsH_->get_type_name(0) == "PointCloud") &&
       (d=dynamic_cast<PointCloud<double> *>(seedsH_.get_rep())) &&
-      (d->get_typed_mesh()->nodes_size() == NSEEDS_)) {
+      (d->get_typed_mesh()->nodes_size() == (unsigned int)NSEEDS_)) {
     if (!seedsH_.get_rep() || (seedsH_->generation != seeds->generation)) {
       new_data = 1;
       seedsH_=seeds;

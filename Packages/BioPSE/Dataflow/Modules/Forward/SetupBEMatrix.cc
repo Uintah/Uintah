@@ -193,7 +193,7 @@ void SetupBEMatrix::execute(){
     }
     
     vector<double>& pinn = pIn->fdata(); 
-    if (pinn.size()==pIn->get_typed_mesh()->nodes_size()){
+    if (pinn.size()==(unsigned int)pIn->get_typed_mesh()->nodes_size()){
       ColumnMatrix phiInn(pinn.size());
       phiOut_.resize(pOut->get_typed_mesh()->nodes_size());
       
