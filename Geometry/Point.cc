@@ -480,9 +480,11 @@ void Point::test_rigorous(RigorousTest* __test)
 		
 		
 		//Min/Max Tests
-		Point pa(x,y,z);
+		Point pa(x,y,z); //These Points are also used for the AffineCombination() Tests
 		Point pb(z,x,y);
-	       
+		Point pc(y,z,x);
+		Point pd((z-10),(x+15),(y-7));
+		
 		Point max=Max(pa,pb);
 
 		if(pa.x()>=pb.x())
@@ -499,22 +501,63 @@ void Point::test_rigorous(RigorousTest* __test)
 		  TEST(max.z()==pa.z());
 		if(pa.z()<pb.z())
 		  TEST(max.z()==pb.z());
-	      
 
 		
-		   
+		//AffineCombination Tests
+
+		double c=0;
+		double d=0;
+		double e=0;
+		double f=0;
+		Point a;
 		
-		
-		
+		for(int i=1;i<=10;++i){
+		  TEST(pa.x()==x);
 		  
+		  c = .1*double(i);
+		  d = 1-c;
 
-		 
+		  a = AffineCombination(pa,c,pb,d);
+		  TEST(a.x()==((c*pa.x())+(d*pb.x())));
+		  TEST(a.y()==((c*pa.y())+(d*pb.y())));
+		  TEST(a.z()==((c*pa.z())+(d*pb.z())));
+		  
+		}
+		    
+		for(i=0;i<=10;++i){
+		  c=.1*double(i);
+		  for(int i2=0;i2<=(10-i);++i2){
+		    d = .1*double(i2);
+		    e = (1-(c+d));
+		    
+		    TEST(c+d+e==1);
+
+		    a = AffineCombination(pa,c,pb,d,pc,e);
+		    TEST((a.x())==((c*pa.x())+(d*pb.x())+(e*pc.x())));
+		    TEST((a.y())==((c*pa.y())+(d*pb.y())+(e*pc.y())));
+		    TEST((a.z())==((c*pa.z())+(d*pb.z())+(e*pc.z())));   
+		  }
+		}	
+
+
+		for(i=0;i<=10;++i){
+		  c=.1*double(i);
+		  for(int i2=0;i2<=(10-i);++i2){
+		    d=.1*double(i2);
+		    for(int i3=0;i3<=(10-(i+i2));++i3){
+		      e=.1*double(i3);
+		      f=1-(c+d+e);
+		      TEST(c+d+e+f==1);
+		      a = AffineCombination(pa,c,pb,d,pc,e,pd,f);
+		      TEST((a.x())==((c*pa.x())+(d*pb.x())+(e*pc.x())+(f*pd.x())));
+		     
+		      
+		    }
+		  }
+		}
+		    
 	    }
-
-
-
 	}
-
     }
 }
 
