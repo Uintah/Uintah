@@ -38,6 +38,8 @@ void* valloc(size_t);
 
 using namespace SCICore::Malloc;
 
+#if 1
+
 void* malloc(size_t size)
 {
     if(!default_allocator)
@@ -78,8 +80,14 @@ void* valloc(size_t size)
 				       "Unknown - valloc");
 }
 
+#endif
+
 //
 // $Log$
+// Revision 1.6  2000/02/24 06:04:55  sparker
+// 0xffff5a5a (NaN) is now the fill pattern
+// Added #if 1 to malloc/new.cc to make it easier to turn them on/off
+//
 // Revision 1.5  1999/09/30 00:33:46  sparker
 // Added support for memalign (got orphaned in move from SCIRun)
 //
