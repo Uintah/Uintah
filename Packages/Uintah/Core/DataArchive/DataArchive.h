@@ -231,7 +231,11 @@ public:
 		     vector< const TypeDescription *>&  );
   void queryTimesteps( vector<int>& index,
 		       vector<double>& times );
-  GridP queryGrid( double time );
+
+  //! the ups is for the assignBCS that needs to happen
+  //! if we are reading the simulation grid from the uda,
+  //! and thus is only necessary on a true restart.
+  GridP queryGrid( double time, const ProblemSpec* ups = 0);
 
 #if 0
   //////////
@@ -360,6 +364,7 @@ private:
   XMLURL d_base;
   XMLURL d_restartTimestepURL;
 
+  bool d_simRestart;
   bool d_swapBytes;
   int d_nBytes;
   

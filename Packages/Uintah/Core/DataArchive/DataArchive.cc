@@ -221,7 +221,7 @@ DataArchive::findVariable(const string& name, const Patch* patch,
 }
 
 GridP
-DataArchive::queryGrid( double time )
+DataArchive::queryGrid( double time, const ProblemSpec* ups)
 {
   double start = Time::currentSeconds();
   XMLURL url;
@@ -278,10 +278,14 @@ DataArchive::queryGrid( double time )
 	  IntVector highIndex;
 	  if(!r->get("highIndex", highIndex))
 	    throw InternalError("Error parsing patch highIndex");
+          IntVector inLowIndex = lowIndex;
+          IntVector inHighIndex = highIndex;
+          r->get("interiorLowIndex", inLowIndex);
+          r->get("interiorHighIndex", inHighIndex);
 	  long totalCells;
 	  if(!r->get("totalCells", totalCells))
 	    throw InternalError("Error parsing patch total cells");
-	  USE_IF_ASSERTS_ON(Patch* patch =) level->addPatch(lowIndex, highIndex,lowIndex, highIndex,id);
+	  USE_IF_ASSERTS_ON(Patch* patch =) level->addPatch(lowIndex, highIndex,inLowIndex, inHighIndex,id);
 	  ASSERTEQ(patch->totalCells(), totalCells);
 	} else if(r->getNodeName() == "anchor"
 		  || r->getNodeName() == "cellspacing"
@@ -305,6 +309,12 @@ DataArchive::queryGrid( double time )
       else {
 	level->finalizeLevel();
       }
+      if (ups) {
+        // this is not necessary on non-restarts.
+        ProblemSpecP grid_ps = ups->findBlock("Grid");
+        level->assignBCS(grid_ps);
+       }
+
     } else if(n->getNodeType() != ProblemSpec::TEXT_NODE){
       cerr << "WARNING: Unknown grid data: " << n->getNodeName() << '\n';
     }
@@ -549,7 +559,7 @@ DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
 }
 
 void
-DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* dw, 
+DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* dw,
                                LoadBalancer* lb, double* pTime, double* pDelt)
 {
   unsigned int i = 0;  
