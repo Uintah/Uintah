@@ -1973,7 +1973,7 @@ class BioTensorApp {
 	set vis_activated 0
 
 	set c_procedure_tab "Load Data"
-	set c_data_tab "Nrrd"
+	set c_data_tab "Generic"
 	set c_left_tab "Vis Options"
 	set c_vis_tab "Variance"
 
@@ -3848,6 +3848,9 @@ class BioTensorApp {
 	$proc_tab1 view $c_procedure_tab
 	$proc_tab2 view $c_procedure_tab
 
+	if {$c_data_tab == "Nrrd"} {
+	    set c_data_tab "Generic"
+	}
 	$data_tab1 view $c_data_tab
 	$data_tab2 view $c_data_tab
 
@@ -4858,7 +4861,7 @@ class BioTensorApp {
 	global $mods(ChooseNrrd-ToProcess)-port-index
         global data_mode
 
-	if {$which == "Nrrd"} {
+	if {$which == "Generic"} {
 	    set $mods(ChooseNrrd1)-port-index 0
 	    set $mods(ChooseNrrd-T2)-port-index 0
 	    set last_B0_port 0	    
@@ -4881,9 +4884,9 @@ class BioTensorApp {
 	    }
 
 	    if {$initialized != 0} {
-		$data_tab1 view "Nrrd"
-		$data_tab2 view "Nrrd"
-		set c_data_tab "Nrrd"
+		$data_tab1 view "Generic"
+		$data_tab2 view "Generic"
+		set c_data_tab "Generic"
 	    }
         } elseif {$which == "Dicom"} {
 	    set $mods(ChooseNrrd1)-port-index 1
