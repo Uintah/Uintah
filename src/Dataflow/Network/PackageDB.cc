@@ -772,8 +772,15 @@ void PackageDB::setSplashPath(string p) {
   splash_path_ = p;
 }
 
-void PackageDB::setLoadingApp(bool b) {
+void PackageDB::setLoadingApp(bool b, string ses) {
   loading_app_ = b;
+
+  if (ses != "") {
+    gui->execute("global PowerAppSession");
+    string command = "set PowerAppSession ";
+    command += ses;
+    gui->execute(command);
+  }
 }
 
 
