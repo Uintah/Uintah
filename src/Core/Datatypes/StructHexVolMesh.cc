@@ -413,6 +413,8 @@ StructHexVolMesh::compute_grid()
   const double dsize = csize.i_ * csize.j_ * csize.k_;
   const int s = ((int)ceil(pow(dsize , one_third))) / 2 + 2;
   const Vector cell_epsilon = bb.diagonal() * (0.01 / s);
+  bb.extend(bb.min() - cell_epsilon*2);
+  bb.extend(bb.max() + cell_epsilon*2);
 
   LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
   grid_ = scinew LatVolField<vector<Cell::index_type> >(mesh, Field::CELL);
