@@ -35,7 +35,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 
-#include <Packages/Fusion/Dataflow/Modules/Fields/NrrdFieldConverter.h>
+#include <Fusion/Dataflow/Modules/Fields/NrrdFieldConverter.h>
 
 #include <sci_defs.h>
 
@@ -872,9 +872,9 @@ NrrdFieldConverter::tcl_command(GuiArgs& args, void* userdata)
 }
 
 
-void get_nrrd_type( const unsigned int type,
-		    string & typeStr,
-		    string & typeName )
+static void get_nrrd_compile_type( const unsigned int type,
+				   string & typeStr,
+				   string & typeName )
 {
   switch (type) {
   case nrrdTypeChar :  
@@ -925,9 +925,9 @@ void get_nrrd_type( const unsigned int type,
 
 CompileInfoHandle
 NrrdFieldConverterMeshAlgo::get_compile_info( const string topoStr,
-					 const TypeDescription *mtd,
-					 const unsigned int ptype,
-					 const unsigned int ctype)
+					      const TypeDescription *mtd,
+					      const unsigned int ptype,
+					      const unsigned int ctype)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -937,8 +937,8 @@ NrrdFieldConverterMeshAlgo::get_compile_info( const string topoStr,
   string pTypeStr,  cTypeStr;
   string pTypeName, cTypeName;
 
-  get_nrrd_type( ptype, pTypeStr, pTypeName );
-  get_nrrd_type( ctype, cTypeStr, cTypeName );
+  get_nrrd_compile_type( ptype, pTypeStr, pTypeName );
+  get_nrrd_compile_type( ctype, cTypeStr, cTypeName );
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
@@ -957,9 +957,9 @@ NrrdFieldConverterMeshAlgo::get_compile_info( const string topoStr,
 
 CompileInfoHandle
 NrrdFieldConverterFieldAlgo::get_compile_info(const TypeDescription *mtd,
-					 const string fname,
-					 const unsigned int type,
-					 int rank)
+					      const string fname,
+					      const unsigned int type,
+					      int rank)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -967,7 +967,7 @@ NrrdFieldConverterFieldAlgo::get_compile_info(const TypeDescription *mtd,
 
   string typeStr, typeName;
 
-  get_nrrd_type( type, typeStr, typeName );
+  get_nrrd_compile_type( type, typeStr, typeName );
 
   string extension;
   switch (rank)
@@ -1004,5 +1004,3 @@ NrrdFieldConverterFieldAlgo::get_compile_info(const TypeDescription *mtd,
 }
 
 } // End namespace Fusion
-
-
