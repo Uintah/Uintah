@@ -40,7 +40,6 @@ itcl_class SCIRun_Visualization_GenTransferFunc {
 	toplevel $w
 	frame $w.f
 	pack $w.f -padx 2 -pady 2
-	set n "$this-c needexecute"
 	
 	global $this-rgbhsv
 	global $this-linespline
@@ -59,7 +58,12 @@ itcl_class SCIRun_Visualization_GenTransferFunc {
             raise $w
         } else {
 
+	set n "$this-c needexecute"
+	make_labeled_radio $w.f.types "Color Space" $n left \
+	    $this-rgbhsv { { "RGB" 0 }  { "HSV" 1 } }
+	    
             # initialize geometry and placement of the widget
+	pack $w.f.types -side top -anchor w
             
 	    frame $w.f.gl1
 	    pack $w.f.gl1 -padx 2 -pady 2
