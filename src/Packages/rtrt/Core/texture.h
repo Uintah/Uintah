@@ -15,7 +15,6 @@ class Texture
  public:
   Texture()
     {
-      //printf( "In Texture creation\n" ); 
       int i, j, k;
       for( i = 0; i < textureHeight; i++ )
 	for( j = 0; j < textureWidth; j++ )
@@ -24,7 +23,7 @@ class Texture
       current_color[0] = 0;
       current_color[1] = 1;
       current_color[2] = 0;
-      colormap_x_offset = 160;
+      colormap_x_offset = 133;
       colormap_y_offset = 215;
     }
 
@@ -40,7 +39,6 @@ class Texture
   void 
     assign_color(float color[3], float r, float g, float b) 
     {
-      //printf( "In Texture::assign_color\n" );
       color[0] = r;
       color[1] = g;
       color[2] = b;
@@ -51,24 +49,17 @@ class Texture
     interpolate_color(float color_1[3], float color_2[3],
 		      float out_color[3], float interpolate) 
     {
-      //printf( "In Texture::interpolate_color\n" );
       int i;
-      /*  printf("interpolate = %g\n", interpolate);*/
       if (interpolate < 0) interpolate = 0;
       else if (interpolate > 1) interpolate = 1;
   
       for(i = 0; i < 3; i++) 
-	{
-	  out_color[i] = color_1[i] * (1-interpolate) + color_2[i] * interpolate;
-	  /*    printf("i = %d, out_color = %g, color_1 = %g, color_2 = %g\n", i,
-		out_color[i], color_1[i], color_2[i]);*/
-	}
+	out_color[i] = color_1[i] * (1-interpolate) + color_2[i] * interpolate;
     }
 
   void 
     colormap(int x, int y, int dx, int dy, float color[3]) 
     {
-      //printf( "In Texture::colormap\n" );
       const int xmin = 0;
       const int ymin = 30;
       const int xmax = 400;
@@ -92,14 +83,14 @@ class Texture
   
       if (hue_index < hue_size) 
 	{
-	  /* from red to yello */
+	  /* from red to yellow */
 	  assign_color(bottom_hue, 1,0,0);
 	  assign_color(top_hue, 1,1,0);
 	  hue_interpolant = hue_index/hue_size;
 	}
       else if (hue_index < hue_size*2)
 	{
-	  /* from yello to green */
+	  /* from yellow to green */
 	  assign_color(bottom_hue, 1,1,0);
 	  assign_color(top_hue, 0,1,0);
 	  hue_interpolant = (hue_index-hue_size)/hue_size;
@@ -137,7 +128,6 @@ class Texture
 
       /* Now to do the interpolation with the black and white components. */
 
-      /*  printf("y = %d, y(%d, %d, %d)\n", y, ymin, ymid, ymax);*/
       if (y < ymid)
 	{
 	  /* from black to hue */
@@ -173,7 +163,6 @@ class Texture
   void
     makeOneDimTextureImage( void )
     {
-      //printf( "In Texture::makeOneDimTextureImage\n" );
       int i, j;
       float intensity;
       for( i = 0; i < textureHeight; i++ )
@@ -201,7 +190,6 @@ class Texture
   void
     makeEllipseTextureImage( void )
     {
-      //printf( "In Texture::makeEllipseTextureImage\n" );
       int i, j;
       float intensity;
       for( i = 0; i < textureHeight; i++ )
@@ -232,19 +220,18 @@ class Texture
   void
     makeDefaultTextureImage( void )
     {
-      //printf( "In Texture::makeDefaultTextureImage\n" );
       int i, j;
       float red = 1;
       float green = 0;
       float blue = 0;
       float hue_width = textureWidth/6;
-      float intensity;
+      //      float intensity;
       float color_step = 1/hue_width;
       for( i = 0; i < textureHeight; i++ )
 	{
 	  red = 1;
 	  green = blue = 0;
-	  intensity = i*100/textureHeight;
+	  //	  intensity = i*100/textureHeight;
 	  for( j = 0; j < textureWidth; j++ )
 	    {
 	      if( j < hue_width )
@@ -270,7 +257,8 @@ class Texture
 	      textArray[i][j][0] = red;
 	      textArray[i][j][1] = green;
 	      textArray[i][j][2] = blue;
-	      textArray[i][j][3] = intensity;
+	      //	      textArray[i][j][3] = intensity;
+	      textArray[i][j][3] = 0.50f;
 	    }
 	}			
 			
@@ -283,7 +271,7 @@ class Texture
       glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
       glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_FLOAT, textArray );
     }
-};
+}; // class Texture
 
 } // end namespace rtrt
 
