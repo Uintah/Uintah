@@ -16,7 +16,7 @@
 -->
 
 <section id="sec.rpminst">
-<title>&sr; Installation from RPMs (Linux)</title>
+<title id="title.rpminst">&sr; Installation from RPMs (Linux)</title>
 
 <section>
 <title>Introduction</title>

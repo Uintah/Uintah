@@ -63,9 +63,13 @@ installing but before starting &sr;.
 </para>
 
 <para>
-Start with <xref linkend="sec.petsc" endterm="title.petsc"/> if installing
-<acronym>PETSc</acronym>.  Otherwise start with <xref linkend="sec.source_inst"
-endterm="title.source_inst" />
+Start with <citetitle pubwork="section"><xref linkend="sec.petsc"
+endterm="title.petsc"/></citetitle> if installing
+<acronym>PETSc</acronym>.  Otherwise start with <citetitle
+pubwork="section"><xref linkend="sec.source_inst"
+endterm="title.source_inst" /></citetitle> or <citetitle
+pubwork="section"><xref linkend="sec.rpminst"
+endterm="title.rpminst"/></citetitle>.
 </para>
 
 </section>

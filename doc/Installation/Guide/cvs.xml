@@ -67,8 +67,8 @@ extracting files, and importing files into the CVS repository</para>
 <para>This procedure should be followed once for each release in order
 to import the released source code into the CVS repository. No
 compilation is done, and therefore the result is not a working
-tree. See <xref linkend="sec.create-work-dir"
-endterm="title.create-work-dir"/> to create a working directory.</para>
+tree. See <citetitle pubwork="section"><xref endterm="title.create-work-dir"
+linkend="sec.create-work-dir"/></citetitle> to create a working directory.</para>
 
 <orderedlist>
 <listitem>
