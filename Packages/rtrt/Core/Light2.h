@@ -5,6 +5,7 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Satellite.h>
 #include <Packages/rtrt/Core/Sphere.h>
+#include <Packages/rtrt/Core/UVSphere.h>
 #include <Packages/rtrt/Core/LightMaterial.h>
 #include <Packages/rtrt/Core/Group.h>
 
@@ -25,7 +26,13 @@ class Light2 : public Light
     light_group = new Group();
     LightMaterial *lm = new LightMaterial(c);
     light_group->add( new Sphere(new HaloMaterial(lm, h), p, r*1.3) );
-    light_group->add( new Satellite("sun light",m,p,r,up) );
+    Satellite *light = new Satellite("light",m,p,r,0,up);
+    light->set_rev_speed(.2);
+    light->set_orb_speed(0);
+    light->set_orb_radius(0);
+    light->set_parent(0);
+    light->set_center(p);
+    light_group->add( light );
   }
   virtual ~Light2() {}
 
