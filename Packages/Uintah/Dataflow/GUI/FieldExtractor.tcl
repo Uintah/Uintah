@@ -46,21 +46,16 @@ itcl_class Uintah_Selectors_FieldExtractor {
     method ui {} { 
         set w .ui[modname] 
 
-        if {[winfo exists $w]} { 
-	    wm deiconify $w
-            raise $w 
-        } else { 
-	    $this buildTopLevel
-	    wm deiconify $w
-            raise $w 
-	}
+        if {[winfo exists $w]} {
+            return
+        }
     }
 
     method buildTopLevel {} {
         set w .ui[modname] 
 
         if {[winfo exists $w]} { 
-            return;
+            return
         } 
 	
         toplevel $w 
@@ -69,10 +64,11 @@ itcl_class Uintah_Selectors_FieldExtractor {
 	set n "$this-c needexecute"
 	frame $w.f -relief flat
  	pack $w.f -side top -expand yes -fill both
-        button $w.b -text "Close" -command "wm withdraw $w"
-        pack $w.b -side top -fill x -padx 2 -pady 2
-	
+
 	makeFrames $w.f
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
 
