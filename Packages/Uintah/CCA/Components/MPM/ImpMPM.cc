@@ -422,7 +422,7 @@ void ImpMPM::scheduleFormStiffnessMatrixR(SchedulerP& sched,
 #endif
   cerr << "ImpMPM::scheduleFormStiffnessMatrixR needs a fix for assumeDataInNewDW\n";
   t->requires(Task::ParentNewDW,lb->gMassLabel, Ghost::None);
-  t->requires(Task::OldDW,d_sharedState->get_delt_label());
+  t->requires(Task::ParentOldDW,d_sharedState->get_delt_label());
 
   sched->addTask(t, patches, matls);
 }
@@ -769,7 +769,7 @@ void ImpMPM::scheduleFormQR(SchedulerP& sched,const PatchSet* patches,
 			&ImpMPM::formQ,recursion);
 #endif
   cerr << "ImpMPM::scheduleFormQR needs a fix for assumeDataInNewDW\n";
-  t->requires(Task::OldDW,d_sharedState->get_delt_label());
+  t->requires(Task::ParentOldDW,d_sharedState->get_delt_label());
   t->requires(Task::NewDW,lb->gInternalForceLabel,Ghost::None,0);
   t->requires(Task::OldDW,lb->dispNewLabel,Ghost::None,0);
 
@@ -925,7 +925,7 @@ void ImpMPM::scheduleUpdateGridKinematicsR(SchedulerP& sched,
   t->requires(Task::OldDW,lb->dispNewLabel,Ghost::None,0);
   t->computes(lb->dispNewLabel);
   t->computes(lb->gVelocityLabel);
-  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  t->requires(Task::ParentOldDW, d_sharedState->get_delt_label() );
   t->requires(Task::NewDW,lb->dispIncLabel,Ghost::None,0);
   t->requires(Task::ParentNewDW,lb->gVelocityOldLabel,Ghost::None,0);
   
@@ -1658,16 +1658,19 @@ void ImpMPM::formStiffnessMatrixPetsc(const ProcessorGroup*,
       int matlindex = mpm_matl->getDWIndex();
    
       constNCVariable<double> gmass;
+      delt_vartype dt;
       if (recursion) {
 	DataWarehouse* parent_new_dw = 
 	  new_dw->getOtherDataWarehouse(Task::ParentNewDW);
 	parent_new_dw->get(gmass, lb->gMassLabel,matlindex,patch,
 			   Ghost::None,0);
-      } else
+	DataWarehouse* parent_old_dw =
+	  new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+	parent_old_dw->get(dt,d_sharedState->get_delt_label());
+      } else {
 	new_dw->get(gmass, lb->gMassLabel,matlindex,patch, Ghost::None,0);
-      
-      delt_vartype dt;
-      old_dw->get(dt, d_sharedState->get_delt_label() );
+      	old_dw->get(dt, d_sharedState->get_delt_label() );
+      }
 
     
             
@@ -1926,9 +1929,6 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
     l2g.copy(d_petscLocalToGlobal[patch]);
 
     delt_vartype dt;
-    old_dw->get(dt, d_sharedState->get_delt_label());
-    double fodts = 4./(dt*dt);
-    double fodt = 4./dt;
 
     int matlindex = 0;
 
@@ -1938,6 +1938,9 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
     if (recursion) {
       DataWarehouse* parent_new_dw = 
 	new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+      DataWarehouse* parent_old_dw = 
+	new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+      parent_old_dw->get(dt,d_sharedState->get_delt_label());
       new_dw->get(internalForce,lb->gInternalForceLabel,matlindex,patch,
 		  Ghost::None,0);
       parent_new_dw->get(externalForce,lb->gExternalForceLabel,matlindex,patch,
@@ -1948,7 +1951,10 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
       parent_new_dw->get(accel,lb->gAccelerationLabel,matlindex,patch,
 		Ghost::None,0);
       parent_new_dw->get(mass,lb->gMassLabel,matlindex,patch,Ghost::None,0);
+
+      
     } else {
+      cerr << "Not in recursion . . ." << endl;
       new_dw->get(internalForce,lb->gInternalForceLabel,matlindex,patch,
 		  Ghost::None,0);
       new_dw->get(externalForce,lb->gExternalForceLabel,matlindex,patch,
@@ -1959,7 +1965,10 @@ void ImpMPM::formQPetsc(const ProcessorGroup*, const PatchSubset* patches,
       new_dw->get(accel,lb->gAccelerationLabel,matlindex,patch,
 		Ghost::None,0);
       new_dw->get(mass,lb->gMassLabel,matlindex,patch,Ghost::None,0);
+      old_dw->get(dt, d_sharedState->get_delt_label());
     }
+    double fodts = 4./(dt*dt);
+    double fodt = 4./dt;
     
     
     for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
@@ -2118,8 +2127,9 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
     // Just look on the grid to see if the gmass is 0 and then remove that
 
     IntVector nodes = patch->getNNodes();
+#ifdef OLD_SPARSE
     int num_nodes = (nodes.x())*(nodes.y())*(nodes.z())*3;
-    
+#endif
     int matlindex = 0;
 
     constNCVariable<double> mass;
@@ -2624,10 +2634,13 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
     constNCVariable<Vector> dispInc,dispNew_old,velocity_old;
 
     delt_vartype dt;
-    old_dw->get(dt, d_sharedState->get_delt_label());
 
     if (recursion) {
-      DataWarehouse* parent_new_dw = new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+      DataWarehouse* parent_new_dw = 
+	new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+      DataWarehouse* parent_old_dw = 
+	new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+      parent_old_dw->get(dt, d_sharedState->get_delt_label());
       old_dw->get(dispNew_old, lb->dispNewLabel,matlindex,patch,Ghost::None,0);
       new_dw->get(dispInc, lb->dispIncLabel, matlindex,patch,Ghost::None,0);
       new_dw->allocateAndPut(dispNew, lb->dispNewLabel, matlindex,patch);
@@ -2641,6 +2654,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
       new_dw->get(dispInc, lb->dispIncLabel, matlindex,patch,Ghost::None,0);
       new_dw->get(velocity_old,lb->gVelocityOldLabel,matlindex,patch,
 		  Ghost::None,0);
+      old_dw->get(dt, d_sharedState->get_delt_label());
     } 
 
     

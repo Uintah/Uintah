@@ -146,7 +146,6 @@ EquationOfState* MPMMaterial::getEOSModel() const
 particleIndex MPMMaterial::countParticles(const Patch* patch)
 {
   return d_particle_creator->countParticles(patch,d_geom_objs);
-
 }
 
 void MPMMaterial::createParticles(particleIndex numParticles,
