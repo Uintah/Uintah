@@ -3,14 +3,29 @@
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
    <meta name="GENERATOR" content="Mozilla/4.61 [en] (X11; U; IRIX64 6.5 IP28) [Netscape]">
+   <LINK TITLE="default style" TYPE="text/css" REL="STYLESHEET" HREF="../style.css">
 </head>
-<BODY BGCOLOR="#FFFFCC" TEXT="#000000" LINK=#CC0000 VLINK=#990000 ALINK=#FF0000>
+<!--<BODY BGCOLOR="#FFFFCC" TEXT="#000000" LINK=#CC0000 VLINK=#990000 ALINK=#FF0000> -->
 
 Annotated spec.xml created in emacs in xml-mode. (<a href="psgmlInEmacs.html">psgml
 in your emacs</a>)
 <br>Colors mean...
 <br><font color="#006600">comment (more clues as to what to do next, what to add if necessary)</font>
 <br><font color="#3333FF">Text body (the real info you should fill in)</font>
+<br>&nbsp;</br>
+Note: to create any kind of list, use tags for each list element rather than one set of tags for a 
+comma or space-delimited list.
+<br>
+&nbsp;&nbsp;&nbsp;Do this:  
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;img> Image 1 &lt;/img>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;img> Image 2 &lt;/img>
+<br>
+&nbsp;&nbsp;&nbsp;Not this:
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;img> Image 1, Image 2 &lt;/img>
+<br>
 <br>
 <hr WIDTH="100%">
 <br>&lt;?xml version='1.0' encoding='us-ascii' ?>
@@ -25,7 +40,7 @@ item that launches this module --></font>
 <br>&nbsp;&nbsp;&nbsp; &lt;creation><font color="#3333FF">Ex. make_BuildFEMatrix</font>&lt;/creation>
 <br>&nbsp;&nbsp;&nbsp; &lt;description>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;summary><font color="#3333FF">Short
-summary of modules purpose</font>&lt;/summary>
+summary of module's purpose</font>&lt;/summary>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;info-builder>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!--
 one or more paragraphs --></font>
@@ -36,15 +51,18 @@ someone who does not write PSE modules</font>&lt;/para>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/info-builder>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;info-developer>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!--
-one or more paragraphs --></font>
+one or more paragraphs.  --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;para><font color="#3333FF">Put
 module implementation details here, for module</font>
+<br> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 <br><font color="#3333FF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 writers and PSE maintainers. If a drawing or two would</font>
 <br><font color="#3333FF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 help explain things, there is a place for them in the</font>
 <br><font color="#3333FF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 next tag (img).</font>&lt;/para>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!--
+&lt;para> second paragraph blah blah blah &lt;/para>  --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!--
 zero or more images --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;img><font color="#3333FF">Put
@@ -55,6 +73,8 @@ images in the doc directory, and name them after the</font>
 module you are documenting. For example:</font>
 <br><font color="#3333FF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ./doc/ModuleXFig1.jpg</font>&lt;/img>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#006600">&lt;!--
+&lt;img> second image url &lt;/img>  --></font>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/info-developer>
 <br>&nbsp;&nbsp;&nbsp; &lt;/description>
 <br>&nbsp;&nbsp;&nbsp; &lt;author>
@@ -66,7 +86,9 @@ name original author, successive names include major edits</font>
 to the module for additions, changes. The last name on this list</font>
 <br><font color="#3333FF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 is assumed to be the current maintainer of the module</font>&lt;/name>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#006600"> &lt;!-- &lt;name> second author &lt;/name> -->
 <br>&nbsp;&nbsp;&nbsp; &lt;/author>
+
 <br>&nbsp;&nbsp;&nbsp; &lt;version><font color="#3333FF">Version/revision
 number 1.0 (not currently supported)</font>&lt;/version>
 <br>&nbsp;&nbsp;&nbsp; &lt;IO>
@@ -75,7 +97,7 @@ number 1.0 (not currently supported)</font>&lt;/version>
 <br>&nbsp;&nbsp; &lt;port><font color="#3333FF">Port type</font>&lt;/port>
 <br>&nbsp;&nbsp; <font color="#006600">&lt;!-- one or more datatype fields
 (list all valid) --></font>
-<br>&nbsp;&nbsp; &lt;datatype><font color="#3333FF">Exact datatype name</font>&lt;/datatype>
+<br>&nbsp;&nbsp; &lt;datatype><font color="#3333FF">Exact datatype name (e.g. SCICore::Datatypes::ColorMap)</font>&lt;/datatype>
 <br>&nbsp;&nbsp; <font color="#006600">&lt;!-- zero or one usage field
 --></font>
 <br>&nbsp;&nbsp; &lt;usage>
