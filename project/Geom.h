@@ -16,7 +16,10 @@
 
 #include <Classlib/Array1.h>
 #include <Geometry/Point.h>
+#include <Geometry/BBox.h>
 #include <Color.h>
+
+class BBox;
 
 class MaterialProp {
 public:
@@ -35,12 +38,18 @@ public:
     GeomObj();
     virtual ~GeomObj();
     virtual void draw() = 0;
-
+    virtual BBox bbox() = 0;
     void set_matl(MaterialProp*);
 };
 
+inline int Hash(const GeomObj*& k, int hash_size)
+{
+   return ((int)k^(3*hash_size+1))%hash_size;
+}
+
 class ObjGroup : public GeomObj {
     Array1<GeomObj*> objs;
+    BBox bb;
 public:
     ObjGroup();
     virtual ~ObjGroup();
@@ -48,9 +57,11 @@ public:
     void add(GeomObj*);
     int size();
     virtual void draw();
+    BBox bbox();
 };
 
 class Triangle : public GeomObj {
+    BBox bb;
 public:
     Point p1;
     Point p2;
@@ -59,9 +70,11 @@ public:
     Triangle(const Point&, const Point&, const Point&);
     virtual ~Triangle();
     virtual void draw();
+    BBox bbox();
 };
 
 class Tetra : public GeomObj {
+    BBox bb;
 public:
     Point p1;
     Point p2;
@@ -71,9 +84,11 @@ public:
     Tetra(const Point&, const Point&, const Point&, const Point&);
     virtual ~Tetra();
     virtual void draw();
+    BBox bbox();
 };
 
 class GeomSphere : public GeomObj {
+    BBox bb;
 public:
     Point cen;
     double rad;
@@ -83,15 +98,18 @@ public:
     GeomSphere(const Point&, double, int nu=20, int nv=10);
     virtual ~GeomSphere();
     virtual void draw();
+    BBox bbox();
 };
 
 class GeomPt : public GeomObj {
+    BBox bb;
 public:
     Point p1;
 
     GeomPt(const Point&);
     virtual ~GeomPt();
     virtual void draw();
+    BBox bbox();
 };
 
 #endif

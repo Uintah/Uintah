@@ -18,6 +18,7 @@
 #include <Math/Trig.h>
 #include <Math/TrigTable.h>
 #include <iostream.h>
+#include <Geometry/BBox.h>
 
 GeomObj::GeomObj()
 : matl(0)
@@ -42,6 +43,7 @@ ObjGroup::~ObjGroup()
 void ObjGroup::add(GeomObj* obj)
 {
     objs.add(obj);
+    bb.extend(obj->bbox());
 }
 
 int ObjGroup::size()
@@ -62,9 +64,17 @@ void ObjGroup::draw()
     }
 }
 
+BBox ObjGroup::bbox()
+{
+    return bb;
+}
+
 Triangle::Triangle(const Point& p1, const Point& p2, const Point& p3)
 : p1(p1), p2(p2), p3(p3)
 {
+    bb.extend(p1);
+    bb.extend(p2);
+    bb.extend(p3);
 }
 
 Triangle::~Triangle()
@@ -84,9 +94,17 @@ void Triangle::draw() {
     glEnd();
 }
 
+BBox Triangle::bbox() {
+    return bb;
+}
+
 Tetra::Tetra(const Point& p1, const Point& p2, const Point& p3, const Point& p4)
 : p1(p1), p2(p2), p3(p3), p4(p4)
 {
+    bb.extend(p1);
+    bb.extend(p2);
+    bb.extend(p3);
+    bb.extend(p4);
 }
 
 Tetra::~Tetra()
@@ -107,9 +125,14 @@ void Tetra::draw() {
     glEnd();
 }
 
+BBox Tetra::bbox() {
+    return bb;
+}
+
 GeomSphere::GeomSphere(const Point& cen, double rad, int nu, int nv)
 : cen(cen), rad(rad), nu(nu), nv(nv)
 {
+    bb.extend(cen, rad);
 }
 
 GeomSphere::~GeomSphere()
@@ -141,9 +164,14 @@ void GeomSphere::draw()
     }
 }
 
+BBox GeomSphere::bbox() {
+    return bb;
+}
+
 GeomPt::GeomPt(const Point& p)
 : p1(p)
 {
+    bb.extend(p);
 }
 
 GeomPt::~GeomPt() {
@@ -154,6 +182,10 @@ void GeomPt::draw() {
     glBegin(GL_POINTS);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glEnd();
+}
+
+BBox GeomPt::bbox() {
+    return bb;
 }
 
 void MaterialProp::set()
