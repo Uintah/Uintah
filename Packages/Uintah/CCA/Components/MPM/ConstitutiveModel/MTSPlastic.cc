@@ -96,6 +96,7 @@ MTSPlastic::allocateCMDataAddRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW,pPlasticStrainLabel, Ghost::None);
+  task->requires(Task::OldDW,pMTSLabel, Ghost::None);
 }
 
 void 
@@ -108,20 +109,23 @@ MTSPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
  
-  ParticleVariable<double> plasticStrain;
+  ParticleVariable<double> plasticStrain,pMTS;
+  constParticleVariable<double> o_plasticStrain,o_MTS;
 
   new_dw->allocateTemporary(plasticStrain,addset);
+  new_dw->allocateTemporary(pMTS,addset);
 
-  for(ParticleSubset::iterator iter = addset->begin();iter != addset->end(); 
-      iter++){
+  old_dw->get(o_plasticStrain,pPlasticStrainLabel,delset);
+  old_dw->get(o_MTS,pMTSLabel,delset);
 
-    // To fix : For a material that is initially stressed we need to
-    // modify the leftStretch and the stress tensors to comply with the
-    // initial stress state
-    plasticStrain[*iter] = 0.0;
+  ParticleSubset::iterator o,n = addset->begin();
+  for(o = delset->begin(); o != delset->end(); o++, n++) {
+    plasticStrain[*n] = o_plasticStrain[*o];
+    pMTS[*n] = o_MTS[*o];
   }
 
   (*newState)[pPlasticStrainLabel]=plasticStrain.clone();
+  (*newState)[pMTSLabel]=pMTS.clone();
 
 }
 

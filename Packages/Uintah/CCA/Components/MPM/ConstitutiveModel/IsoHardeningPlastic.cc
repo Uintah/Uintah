@@ -72,6 +72,7 @@ IsoHardeningPlastic::allocateCMDataAddRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW,pPlasticStrainLabel, Ghost::None);
+  task->requires(Task::OldDW,pAlphaLabel, Ghost::None);
 }
 
 void IsoHardeningPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
@@ -83,20 +84,23 @@ void IsoHardeningPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
  
-  ParticleVariable<double> plasticStrain;
+  ParticleVariable<double> plasticStrain,pAlpha;
+  constParticleVariable<double> o_plasticStrain,o_Alpha;
 
   new_dw->allocateTemporary(plasticStrain,addset);
+  new_dw->allocateTemporary(pAlpha,addset);
 
-  for(ParticleSubset::iterator iter = addset->begin();iter != addset->end(); 
-      iter++){
+  old_dw->get(o_plasticStrain,pPlasticStrainLabel,delset);
+  old_dw->get(o_Alpha,pAlphaLabel,delset);
 
-    // To fix : For a material that is initially stressed we need to
-    // modify the leftStretch and the stress tensors to comply with the
-    // initial stress state
-    plasticStrain[*iter] = 0.0;
+  ParticleSubset::iterator o,n = addset->begin();
+  for(o = delset->begin(); o != delset->end(); o++, n++) {
+    plasticStrain[*n] = o_plasticStrain[*o];
+    pAlpha[*n] = o_Alpha[*o];
   }
 
   (*newState)[pPlasticStrainLabel]=plasticStrain.clone();
+  (*newState)[pAlphaLabel]=pAlpha.clone();
 
 }
 
