@@ -17,8 +17,8 @@
 
 #!/bin/tcsh -f
 
-ITCLSH << END
+TCLSH << END
 source TCL_INIT_DIR/init.tcl
-source ITCL_INIT_DIR/itcl.tcl 
+package require Itcl
 auto_mkindex $1
 END
