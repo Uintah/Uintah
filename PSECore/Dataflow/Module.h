@@ -14,6 +14,10 @@
 #ifndef SCI_project_Module_h
 #define SCI_project_Module_h 1
 
+#ifdef _WIN32
+#pragma warning(disable:4355 4786)
+#endif
+
 #include <PSECore/share/share.h>
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/String.h>
@@ -199,6 +203,9 @@ typedef Module* (*ModuleMaker)(const clString& id);
 
 //
 // $Log$
+// Revision 1.9  1999/11/17 23:14:30  moulding
+// added a warning pragma to quiet the vc++ compiler (debug name truncation)
+//
 // Revision 1.8  1999/11/10 23:24:31  dmw
 // added show_status flag to module interface -- if you turn it off, the timer and port lights won't update
 //
