@@ -65,6 +65,8 @@ private:
   map<long int, TriSurfMesh::Node::index_type> vertex_map_;
   int nx_, ny_, nz_;
   TriSurfMesh::Node::index_type find_or_add_edgepoint(node_index_type, node_index_type, const Point &);
+  void extract_c( const cell_index_type &, double);
+  void extract_n( const cell_index_type &, double);
 
 public:
   HexMC( Field *field ) : field_(field), mesh_(field->get_typed_mesh()) {}
@@ -131,8 +133,56 @@ HexMC<Field>::find_or_add_edgepoint(node_index_type n0, node_index_type n1, cons
   return node_idx;
 }
 
+
 template<class Field>
-void HexMC<Field>::extract( const cell_index_type& cell, double iso )
+void
+HexMC<Field>::extract( const cell_index_type& cell, double iso )
+{
+  if (field_->data_at() == Field::NODE)
+    extract_n(cell, iso);
+  else
+    extract_c(cell, iso);
+}
+
+
+template<class Field>
+void
+HexMC<Field>::extract_c( const cell_index_type& cell, double iso )
+{
+  value_type selfvalue;
+  if (!field_->value( selfvalue, cell )) return;
+  typename mesh_type::Face::array_type faces;
+  mesh_->synchronize(Mesh::FACES_E);
+  mesh_->get_faces(faces, cell);
+  for (unsigned int f=0; f<faces.size(); f++) {
+    cell_index_type nbr_cell;
+    if (mesh_->get_neighbor(nbr_cell, cell, faces[f])) {
+      value_type nbrvalue;
+      if (field_->value( nbrvalue, nbr_cell ) && ( selfvalue > nbrvalue ) &&
+	  (( selfvalue-iso ) * ( nbrvalue-iso ) < 0 )) {
+	node_array_type face_nodes;
+	mesh_->get_nodes(face_nodes, faces[f]);
+	Point p[4];
+	int n;
+	for (n=0; n<4; n++) mesh_->get_center(p[n], face_nodes[n]);
+	triangles_->add(p[0], p[1], p[2]);
+	triangles_->add(p[2], p[3], p[0]);
+	if (build_trisurf_) {
+	  //TriSurfMesh::Node::index_type vertices[4];
+	  //for (n=0; n<4; n++) {
+	  //vertices[n]=find_or_add_nodepoint(face_nodes[n]);
+	  //}
+	  //trisurf_->add_triangle(vertices[0], vertices[1], vertices[2]);
+	  //trisurf_->add_triangle(vertices[2], vertices[3], vertices[0]);
+	}
+      }
+    }
+  }
+}
+
+
+template<class Field>
+void HexMC<Field>::extract_n( const cell_index_type& cell, double iso )
 {
   node_array_type node(8);
   Point p[8];
