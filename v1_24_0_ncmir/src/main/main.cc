@@ -488,6 +488,10 @@ main(int argc, char *argv[], char **environment) {
       // need to make a FusionViewer splash screen
       gui->eval("set splashImageFile $fusionViewerSplashImageFile");
       gui->eval("showProgress 1 310 1");
+    } else if(strstr(argv[startnetno], "LevelSetSegmenter")) {
+      // need to make a LevelSetSegmenter splash screen
+      gui->eval("set splashImageFile $levelSetSegmenterSplashImageFile");
+      gui->eval("showProgress 1 310 1");
     }
 
   }
