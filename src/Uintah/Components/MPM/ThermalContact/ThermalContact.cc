@@ -18,6 +18,11 @@ ThermalContact::ThermalContact(ProblemSpecP& ps,SimulationStateP& d_sS)
   lb = scinew MPMLabel();
 }
 
+ThermalContact::~ThermalContact()
+{
+  delete lb;
+}
+
 void ThermalContact::computeHeatExchange(const ProcessorGroup*,
 					const Patch* patch,
 					DataWarehouseP& old_dw,
@@ -120,6 +125,9 @@ void ThermalContact::addComputesAndRequires(Task* t,
 
 //
 // $Log$
+// Revision 1.13  2000/08/09 03:18:03  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.12  2000/07/20 19:43:28  guilkey
 // Changed the functionality of the ThermalContact to be similar to the
 // SingleVelocityField momentum contact algorithm.

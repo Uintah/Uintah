@@ -125,7 +125,7 @@ ICE::ICE()
     vel_CCLabel_6_7   = scinew VarLabel("vel_CC_6_7",  CCVariable<Vector>::getTypeDescription() );
  
     cv_CCLabel        = scinew VarLabel("cv_CC",     CCVariable<double>::getTypeDescription() );
-    div_velfc_CCLabel =new VarLabel("div_velfc_CC", CCVariable<double>::getTypeDescription() );
+    div_velfc_CCLabel = scinew VarLabel("div_velfc_CC", CCVariable<double>::getTypeDescription() );
 
   // Face centered variables
     vel_FCLabel       = scinew VarLabel("vel_FC",    FCVariable<Vector>::getTypeDescription() );

@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <SCICore/Exceptions/ErrnoException.h>
 #include <SCICore/Exceptions/InternalError.h>
+#include <SCICore/Malloc/Allocator.h>
 #include "DaVinci.h"
 #include "graphview.h"
 #include "TaskGraph.h"
@@ -82,7 +83,7 @@ DaVinci::run()
   close(pipes[0][0]);
   close(pipes[1][1]);
 
-  DaVinci* davinci = new DaVinci(pid, pipes[0][1], pipes[1][0]);
+  DaVinci* davinci = scinew DaVinci(pid, pipes[0][1], pipes[1][0]);
 
   return davinci;
 }
@@ -169,7 +170,7 @@ DaVinci::handleInput()
   string input = readline(m_fromDV);
 
   // from the input, parse out the command and arguments list
-  char* cmd = new char[input.size() + 1];
+  char* cmd = scinew char[input.size() + 1];
   strcpy(cmd, input.c_str());
 
   std::list<char*> args;

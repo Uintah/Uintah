@@ -21,6 +21,7 @@ ConstitutiveModel::ConstitutiveModel()
 
 ConstitutiveModel::~ConstitutiveModel()
 {
+  delete lb;
 }
 
 

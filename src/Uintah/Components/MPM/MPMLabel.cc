@@ -250,8 +250,6 @@ MPMLabel::~MPMLabel()
   delete pDeformationMeasureLabel_preReloc;
   delete pStressLabel_preReloc;
   delete pVolumeLabel_preReloc;
-  delete pVolumeLabel_preReloc;
-  delete pMassLabel_preReloc;
   delete pMassLabel_preReloc;
   delete pVelocityLabel_preReloc;
   delete pExternalForceLabel_preReloc;
@@ -274,6 +272,11 @@ MPMLabel::~MPMLabel()
   delete gInternalForceLabel;
   delete gVelocityStarLabel;
   delete gMomExedVelocityStarLabel;
+  delete gNormTractionLabel;
+  delete gStressLabel;
+  delete gSurfNormLabel;
+  delete pCrackSurfaceNormalLabel;
+  delete pCrackSurfaceNormalLabel_preReloc;
   delete gSelfContactLabel;
   delete gTemperatureLabel;
   delete gTemperatureStarLabel;
@@ -292,6 +295,13 @@ MPMLabel::~MPMLabel()
   delete CenterOfMassVelocityLabel;
   delete ppNAPIDLabel;
 
+  for (int i = 0; i<d_particleState.size(); i++)
+    for (int j = 0; j< d_particleState[i].size(); j++)
+      delete d_particleState[i][j];
+
+  for (int i = 0; i<d_particleState_preReloc.size(); i++)
+    for (int j = 0; j< d_particleState_preReloc[i].size(); j++)
+      delete d_particleState_preReloc[i][j];
 
 }
 
@@ -305,6 +315,9 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.25  2000/08/09 03:17:58  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.24  2000/08/08 20:00:32  tan
 // Added cCrackedCellLabel and pCrackSurfaceNormalLabel for fracture.
 //

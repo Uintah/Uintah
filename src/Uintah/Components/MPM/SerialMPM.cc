@@ -73,9 +73,9 @@ SerialMPM::~SerialMPM()
 {
   for(vector<MPMPhysicalBC*>::iterator bc = d_physicalBCs.begin();
       bc != d_physicalBCs.end(); ++bc )
-  {
     delete (*bc);
-  }
+
+
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
@@ -1725,6 +1725,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.114  2000/08/09 03:17:58  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.113  2000/08/07 20:22:32  tan
 // Applied force boundary conditions on particles during each simulation step.
 //

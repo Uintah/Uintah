@@ -82,6 +82,7 @@ public:
 
          Fracture();
 	 Fracture(ProblemSpecP& ps, SimulationStateP& d_sS);
+	 ~Fracture();
                 
 private:
   void   labelCellSurfaceNormal (
@@ -134,6 +135,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.23  2000/08/09 03:18:02  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.22  2000/07/06 16:58:45  tan
 // Least square interpolation added for particle velocities and stresses
 // updating.

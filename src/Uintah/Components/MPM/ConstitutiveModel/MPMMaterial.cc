@@ -84,7 +84,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 
       piece_num++;
       d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps));
-
+      
       // Step 4 -- Assign the boundary conditions to the object
 
       
@@ -101,6 +101,16 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 MPMMaterial::~MPMMaterial()
 {
   // Destructor
+
+  delete d_cm;
+  delete lb;
+  delete d_burn;
+
+  for (int i = 0; i<d_geom_objs.size(); i++) {
+    GeometryObject* obj = d_geom_objs[i];
+    delete obj;
+    delete d_geom_objs[i];
+  }
 }
 
 ConstitutiveModel * MPMMaterial::getConstitutiveModel()
@@ -344,6 +354,9 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.44  2000/08/09 03:18:00  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.43  2000/08/08 04:43:13  tan
 // For the default initial state, we set particle crack surface normal
 // to be zero.

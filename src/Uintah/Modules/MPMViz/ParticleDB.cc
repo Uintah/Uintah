@@ -52,10 +52,10 @@ class ParticleDB : public Module {
 ParticleDB::ParticleDB(const clString& id)
   : Module("ParticleDB", id, Filter)
 {
-    osim=new PIDLObjectOPort(this, "SimulationInterface",
+    osim=scinew PIDLObjectOPort(this, "SimulationInterface",
 			     PIDLObjectIPort::Atomic);
     add_oport(osim);
-    oviz=new PIDLObjectOPort(this, "VisualizationInterface",
+    oviz=scinew PIDLObjectOPort(this, "VisualizationInterface",
 			     PIDLObjectIPort::Atomic);
     add_oport(oviz);
 }
@@ -67,8 +67,8 @@ ParticleDB::~ParticleDB()
 void ParticleDB::execute()
 {
     if(!db){
-	db=new Uintah::Modules::ParticleDatabase(this);
-	dbhandle=new PIDLObject(db);
+	db=scinew Uintah::Modules::ParticleDatabase(this);
+	dbhandle=scinew PIDLObject(db);
 	cerr << "ParticleDatabase instantated at:\n";
 	std::cerr << db->getURL().getString() << '\n';
     }
@@ -78,7 +78,7 @@ void ParticleDB::execute()
 
 extern "C" Module* make_ParticleDB( const clString& id )
 {
-  return new ParticleDB( id );
+  return scinew ParticleDB( id );
 }
 
 } // End namespace Modules
@@ -87,6 +87,9 @@ extern "C" Module* make_ParticleDB( const clString& id )
 
 //
 // $Log$
+// Revision 1.4  2000/08/09 03:18:06  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.3  2000/03/17 09:30:11  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

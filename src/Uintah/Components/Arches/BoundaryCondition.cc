@@ -35,6 +35,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Grid/TypeUtils.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream>
 using namespace std;
 using namespace Uintah::MPM;
@@ -134,7 +135,7 @@ BoundaryCondition::sched_cellTypeInit(const LevelP& level,
     const Patch* patch=*iter;
 
     // cell type initialization
-    Task* tsk = new Task("BoundaryCondition::cellTypeInit",
+    Task* tsk = scinew Task("BoundaryCondition::cellTypeInit",
 			 patch, old_dw, new_dw, this,
 			 &BoundaryCondition::cellTypeInit);
     int matlIndex = 0;
@@ -2086,6 +2087,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.51  2000/08/09 03:17:56  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.50  2000/08/04 03:02:01  bbanerje
 // Add some inits.
 //

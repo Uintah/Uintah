@@ -10,13 +10,21 @@ HEBurn::HEBurn()
   lb = scinew MPMLabel();
 }
 
+HEBurn::~HEBurn()
+{
+  delete lb;
+}
+
 bool HEBurn::isBurnable() 
 {
    return d_burnable;
 }
-	
+       
 
 // $Log$
+// Revision 1.3  2000/08/09 03:17:59  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.2  2000/07/05 23:43:31  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling

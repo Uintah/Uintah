@@ -2,6 +2,7 @@
 #include <PSECore/XMLUtil/SimpleErrorHandler.h>
 #include <PSECore/XMLUtil/XMLUtil.h>
 #include "TaskGraph.h"
+#include <SCICore/Malloc/Allocator.h>
 
 using namespace std;
 using namespace PSECore::XMLUtil;
@@ -32,7 +33,7 @@ Edge* Task::addDependency(Task* task)
       return 0;
   }
 
-  Edge* newEdge = new Edge(this, task);
+  Edge* newEdge = scinew Edge(this, task);
   
   m_dependencyEdges.push_back(newEdge);
   task->m_dependentEdges.push_back(newEdge); 
@@ -81,7 +82,7 @@ TaskGraph::inflate(string xmlFileName)
     return 0;
   }
   
-  return new TaskGraph(parser.getDocument());
+  return scinew TaskGraph(parser.getDocument());
 }
 
 TaskGraph::TaskGraph(DOM_Document xmlDoc)
@@ -97,7 +98,7 @@ TaskGraph::TaskGraph(DOM_Document xmlDoc)
     get(node, "name", task_name);
     get(node, "duration", task_duration);
     
-    Task* task = new Task(task_name, task_duration, this);
+    Task* task = scinew Task(task_name, task_duration, this);
     m_tasks.push_back(task);
     m_taskMap[task_name] = task;
   }
