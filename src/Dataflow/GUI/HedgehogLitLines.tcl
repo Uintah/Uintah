@@ -18,11 +18,6 @@ itcl_class PSECommon_Visualization_HedgehogLitLines {
 	set_defaults
     }
     destructor {
-	set w .ui[modname]
-	if {[winfo exists $w]} {
-	    ::delete object $l_s
-	}
-
 	set l_s ""
     }
     method set_defaults {} {
@@ -40,7 +35,8 @@ itcl_class PSECommon_Visualization_HedgehogLitLines {
     }
     method ui {} {
 	set w .ui[modname]
-		if {[winfo exists $w]} {
+	if {[winfo exists $w]} {
+	    wm deiconify $w
 	    raise $w
 	    return;
 	}
@@ -108,15 +104,9 @@ itcl_class PSECommon_Visualization_HedgehogLitLines {
 	pack $w.a.shaft_scale -side left -fill x -pady 2
 
 
-	button $w.close -text "Close" -command "$this close"
+	button $w.close -text "Close" -command "wm withdraw $w"
 	pack $w.close -side top -expand yes -fill x
 
-    }
-
-    method close {} {
-	set w .ui[modname]
-	::delete object $l_s
-	destroy $w
     }
 
 
