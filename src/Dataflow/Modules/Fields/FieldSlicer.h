@@ -370,7 +370,7 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle ifield_h,
 	// Get the point and value at this location
 #ifdef SET_POINT_DEFINED
 	imesh->get_center(p, *inodeItr);
-	omesh->set_point(*onodeItr, p);
+	omesh->set_point(p, *onodeItr);
 #endif       
 	ifield->value(v, *inodeItr);
 	ofield->set_value(v, *onodeItr);
@@ -399,7 +399,7 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle ifield_h,
 	// Get the point and value at this location
 #ifdef SET_POINT_DEFINED
 	imesh->get_center(p, *inodeItr);
-	omesh->set_point(*onodeItr, p);
+	omesh->set_point(p, *onodeItr);
 #endif
 	ifield->value(v, *inodeItr);
 	ofield->set_value(v, *onodeItr);
@@ -432,7 +432,7 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle ifield_h,
 	// Get the point and value at this location
 #ifdef SET_POINT_DEFINED
 	imesh->get_center(p, *inodeItr);
-	omesh->set_point(*onodeItr, p);
+	omesh->set_point(p, *onodeItr);
 #endif
 	ifield->value(v, *inodeItr);
 	ofield->set_value(v, *onodeItr);

@@ -295,7 +295,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
 
 #ifdef SET_POINT_DEFINED
 	imesh->get_center(pt, *inodeItr);
-	omesh->set_point(*onodeItr, pt);
+	omesh->set_point(pt, *onodeItr);
 #endif
 	ifield->value(value, *inodeItr);
 	ofield->set_value(value, *onodeItr);
