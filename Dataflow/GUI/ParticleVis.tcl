@@ -162,16 +162,18 @@ itcl_class Uintah_Visualization_ParticleVis {
 
     method scalable { truefalse } {
 	set w .ui[modname]
-	puts "scalable is $truefalse"
-	if { $truefalse } {
-	    $w.f3.sf.cb configure -state normal -foreground black
-	    $w.f3.l configure -foreground black
-	} else {
-	    set color "#505050" 
-	    $w.f3.sf.cb configure -state disabled -foreground $color
-	    $w.f3.l configure  -foreground $color
+	if {[winfo exists $w]} { 
+	    puts "scalable is $truefalse"
+	    if { $truefalse } {
+		$w.f3.sf.cb configure -state normal -foreground black
+		$w.f3.l configure -foreground black
+	    } else {
+		set color "#505050" 
+		$w.f3.sf.cb configure -state disabled -foreground $color
+		$w.f3.l configure  -foreground $color
+	    }
+	    $this fixedScale
 	}
-	$this fixedScale
     }
     
     method fixedScale { } {
