@@ -14,7 +14,6 @@ SRCDIR   := Dataflow/Modules/Fields
 SRCS     += \
 	$(SRCDIR)/AddAttribute.cc\
 	$(SRCDIR)/CastField.cc\
-	$(SRCDIR)/ChangeCellType.cc\
 	$(SRCDIR)/GenScalarField.cc\
 	$(SRCDIR)/GenVectorField.cc\
 	$(SRCDIR)/LocateNbrhd.cc\
@@ -34,6 +33,7 @@ SRCS     += \
 #	$(SRCDIR)/SimpSurface.cc\
 #	$(SRCDIR)/TransformContours.cc\
 #	$(SRCDIR)/ClipField.cc\
+#	$(SRCDIR)/ChangeCellType.cc\
 
 CFLAGS   := $(CFLAGS)
 
