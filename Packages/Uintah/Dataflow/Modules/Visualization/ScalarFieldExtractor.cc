@@ -218,7 +218,7 @@ void ScalarFieldExtractor::execute()
     switch ( subtype->getType() ) {
     case TypeDescription::double_type:
       {
-	NCScalarField<double> *sfd  = new NCScalarField<double>();
+	NCScalarField<double> *sfd  = scinew NCScalarField<double>();
 	NCVariable< double > sv;
 	
 	if(var != ""){
@@ -239,7 +239,7 @@ void ScalarFieldExtractor::execute()
       break;
     case TypeDescription::int_type:
       {
-	NCScalarField<int> *sfd  = new NCScalarField<int>();
+	NCScalarField<int> *sfd  = scinew NCScalarField<int>();
 	NCVariable< int > sv;
 	
 	if(var != ""){
@@ -260,7 +260,7 @@ void ScalarFieldExtractor::execute()
       break;
     case TypeDescription::long_type:
       {
-	NCScalarField<long int> *sfd  = new NCScalarField<long int>();
+	NCScalarField<long int> *sfd  = scinew NCScalarField<long int>();
 	NCVariable< long int > sv;
 	
 	if(var != ""){
@@ -288,7 +288,7 @@ void ScalarFieldExtractor::execute()
     switch ( subtype->getType() ) {
     case TypeDescription::double_type:
       {
-	CCScalarField<double> *sfd  = new CCScalarField<double>();
+	CCScalarField<double> *sfd  = scinew CCScalarField<double>();
 	CCVariable< double > sv;
 	
 	if(var != ""){
@@ -310,7 +310,7 @@ void ScalarFieldExtractor::execute()
       break;
     case TypeDescription::int_type:
       {
-	CCScalarField<int> *sfd  = new CCScalarField<int>();
+	CCScalarField<int> *sfd  = scinew CCScalarField<int>();
 	CCVariable< int > sv;
 	
 	if(var != ""){
@@ -332,7 +332,7 @@ void ScalarFieldExtractor::execute()
       break;
     case TypeDescription::long_type:
       {
-	CCScalarField<long int> *sfd  = new CCScalarField<long int>();
+	CCScalarField<long int> *sfd  = scinew CCScalarField<long int>();
 	CCVariable< long int > sv;
 	
 	if(var != ""){

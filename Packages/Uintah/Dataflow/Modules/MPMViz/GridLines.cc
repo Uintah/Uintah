@@ -67,7 +67,7 @@ GeomObj* GeomLineFactory::Create(int id , const Point& p1, const Point& p2,
   if( id == 0 )
     return new GeomLine( p1, p2 );
   else if(id ==1)
-    return new GeomCylinder( p1, p2, rad, nu, nv);
+    return scinew GeomCylinder( p1, p2, rad, nu, nv);
   else
     return 0;
 }
@@ -79,17 +79,17 @@ GridLines::GridLines(const clString& id)
   plane("plane",id,this), planeLoc("planeLoc", id, this)
 {
   // Create the input ports
-  insfield=new ScalarFieldIPort(this,"ScalarField",ScalarFieldIPort::Atomic);
+  insfield=scinew ScalarFieldIPort(this,"ScalarField",ScalarFieldIPort::Atomic);
   add_iport(insfield);
-  invfield=new VectorFieldIPort(this,"VectorField",VectorFieldIPort::Atomic);
+  invfield=scinew VectorFieldIPort(this,"VectorField",VectorFieldIPort::Atomic);
   add_iport(invfield);
     
   // Create the output port
-  ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+  ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
   add_oport(ogeom);
-  matl = new Material(Color(0,0,0), Color(0.2, 0.2, 0.2),
+  matl = scinew Material(Color(0,0,0), Color(0.2, 0.2, 0.2),
 			 Color(.5,.5,.5), 20);
-  white = new Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 20);
+  white = scinew Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 20);
 
 }
 
@@ -135,7 +135,7 @@ void GridLines::execute()
   }
   if(!haveit)
     return;
-  GeomGroup* all=new GeomGroup();
+  GeomGroup* all=scinew GeomGroup();
 
   int m = mode.get();
   int lR = lineRep.get();
@@ -157,7 +157,7 @@ void GridLines::execute()
       for( int iy = 0; iy < 2; iy++){
 	double py = min.y() + dy * iy;
 	
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						  Point(max.x(), py, pz),
 						  Point(min.x(), py, pz),
 						  rad.get(), 3, 1 ),
@@ -168,7 +168,7 @@ void GridLines::execute()
       double py = min.y() + dy * iy;
       for( int ix = 0; ix < 2; ix++){
 	double px = min.x() + dx * ix;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						  Point(px, py, min.z()),
 						  Point(px, py, max.z()),
 						  rad.get(), 3, 1 ),
@@ -179,7 +179,7 @@ void GridLines::execute()
       double pz = min.z() + dz * iz;
       for( int ix = 0; ix < 2; ix++){
 	double px = min.x() + dx * ix;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						  Point(px, min.y(), pz),
 						  Point(px, max.y(), pz),
 						  rad.get(), 3, 1 ),
@@ -210,7 +210,7 @@ void GridLines::execute()
       double pz = min.z() + dz * iz;
       for( int iy = 0; iy < numy; iy++){
 	double py = min.y() + dy * iy;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						  Point(max.x(), py, pz),
 						  Point(min.x()-xsize,py,pz),
 						  rad.get(), 3, 1 ),
@@ -221,7 +221,7 @@ void GridLines::execute()
       double py = min.y() + dy * iy;
       for( int ix = 1; ix < numx - 2; ix ++){
 	double px = min.x() + dx * ix;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 							     Point(px, py,
 							min.z() - zsize),
 						  Point(px, py, max.z()),
@@ -233,7 +233,7 @@ void GridLines::execute()
       double pz = min.z() + dz * iz;
       for( int ix = 0; ix < numx; ix++){
 	double px = min.x() + dx * ix;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 							     Point(px,
 							min.y()-ysize, pz),
 						  Point(px, max.y(), pz),
@@ -256,7 +256,7 @@ void GridLines::execute()
       // draw inside lines
       for( int iy = 0; iy < numy; iy++){
 	double py = min.y() + dy * iy;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						  Point(max.x(), py, pz),
 						  Point(min.x() - xsize,
 							py, pz     ),
@@ -265,7 +265,7 @@ void GridLines::execute()
       }
       for( int ix = 0; ix < numx; ix++){
 	double px = min.x() + dx * ix;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						  Point(px, max.y(), pz),
 						  Point(px, min.y() - ysize,
 						        pz     ),
@@ -276,7 +276,7 @@ void GridLines::execute()
       double py = min.y() + planeLoc.get() *(max.y() - min.y());
       for( int iz = 0; iz < numz; iz++){
 	double pz = min.z() + dz * iz;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						  Point(max.x(), py, pz),
 						  Point(min.x() - xsize,
 							py, pz     ),
@@ -285,7 +285,7 @@ void GridLines::execute()
       }
       for( int ix = 0; ix < numx; ix++){
 	double px = min.x() + dx * ix;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						  Point(px, py,
 							min.z() - zsize),
 						  Point(px, py, max.z()),
@@ -296,7 +296,7 @@ void GridLines::execute()
       double px = min.x() + planeLoc.get()*(max.x() - min.x());
       for( int iy = 0; iy < numy; iy++){
 	double py = min.y() + dy * iy;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						  Point(px, py,
 							min.z() - zsize),
 						  Point(px, py, max.z()),
@@ -305,7 +305,7 @@ void GridLines::execute()
       }
       for( int iz = 0; iz < numz; iz++){
 	double pz = min.z() + dz * iz;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						  Point(px, min.y()-ysize, pz),
 						  Point(px, max.y(), pz),
 						  rad.get(), 3, 1 ),
@@ -320,7 +320,7 @@ void GridLines::execute()
     zsize = (max.z() - min.z()) / textSpace.get();
     for( int iy = 0; iy < numy; iy++){
       double py = min.y() + dy * iy;
-      all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+      all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						       Point(min.x()-xsize, py,
 							     min.z()),
 						       Point(min.x(), py,
@@ -330,7 +330,7 @@ void GridLines::execute()
     }
     for( int ix = 0; ix < numx; ix ++){
       double px = min.x() + dx * ix;
-      all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+      all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 					     Point(px, min.y(), min.z()-zsize),
 					     Point(px, min.y(), min.z()),
 					     rad.get(), 3, 1 ),
@@ -338,7 +338,7 @@ void GridLines::execute()
     }
     for( int iz = 0; iz < numz; iz++){
       double pz = min.z() + dz * iz;
-      all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+      all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 					     Point(min.x(), min.y()-ysize, pz),
 					     Point(min.x(), min.y(), pz),
 					     rad.get(), 3, 1 ),
@@ -354,7 +354,7 @@ void GridLines::execute()
       double pz = min.z() + planeLoc.get()*(max.z()- min.z());
       for( int iy = 0; iy < numy; iy++){
 	double py = min.y() + dy * iy;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						       Point(min.x()-xsize, py,
 							     pz),
 						       Point(min.x(), py,
@@ -364,7 +364,7 @@ void GridLines::execute()
       }
       for( int ix = 0; ix < numx; ix++){
 	double px = min.x() + dx * ix;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						  Point(px, min.y()-ysize, pz),
 						  Point(px, min.y(), pz),
 						  rad.get(), 3, 1 ),
@@ -374,7 +374,7 @@ void GridLines::execute()
       double py = min.y() + planeLoc.get()*(max.y() - min.y());
       for( int ix = 0; ix < numx; ix++){
 	double px = min.x() + dx * ix;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						  Point(px, py, min.z()-zsize),
 						  Point(px, py, min.z()),
 						  rad.get(), 3, 1 ),
@@ -382,7 +382,7 @@ void GridLines::execute()
       }
       for( int iz = 0; iz < numz; iz++){
 	double pz = min.z() + dz * iz;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						  Point(min.x(), py, pz),
 						  Point(min.x()-xsize,py,pz),
 						  rad.get(), 3, 1 ),
@@ -392,7 +392,7 @@ void GridLines::execute()
       double px = min.x() + planeLoc.get()*(max.x() - min.x() );
       for( int iy = 0; iy < numy; iy++){
 	double py = min.y() + dy * iy;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						  Point(px, py, min.z()-zsize),
 						  Point(px, py, min.z()),
 						  rad.get(), 3, 1 ),
@@ -400,7 +400,7 @@ void GridLines::execute()
       }
       for( int iz = 0; iz < numz; iz++){
 	double pz = min.z() + dz * iz;
-	all->add( new GeomMaterial( GeomLineFactory::Create( lR,
+	all->add( scinew GeomMaterial( GeomLineFactory::Create( lR,
 						  Point(px, min.y(), pz),
 						  Point(px, min.y()-ysize, pz),
 						  rad.get(), 3, 1 ),
@@ -417,41 +417,41 @@ void GridLines::execute()
       // inside only - place numbers close to field
       for( i = 0; i < numx; i+=textSpace.get() ) {
 	sprintf( txt, "%d", i );
-	all->add(new GeomMaterial(new GeomText(txt,
+	all->add(scinew GeomMaterial(scinew GeomText(txt,
 					       Point(min.x()+i*dx
 						     ,min.y()-ysize/2.0,
 						     min.z() - zsize/2.0)),
 				  white) );
       }
       sprintf( txt, "%d", numx );
-      all->add(new GeomMaterial(new GeomText(txt,
+      all->add(scinew GeomMaterial(scinew GeomText(txt,
 					     Point(max.x(), min.y()-ysize/2.0,
 						   min.z() - zsize/2.0 )),
 				white) );
       for( i = 0; i < numy; i+=textSpace.get() ) {
 	sprintf( txt, "%d", i );
-	all->add(new GeomMaterial(new GeomText(txt,
+	all->add(scinew GeomMaterial(scinew GeomText(txt,
 					       Point(min.x()-xsize/2.0,
 						     min.y()+i*dy,
 						     min.z() - zsize/2.0)),
 				  white) );
       }
       sprintf( txt, "%d", numy );
-      all->add(new GeomMaterial(new GeomText(txt,
+      all->add(scinew GeomMaterial(scinew GeomText(txt,
 					     Point(min.x()-xsize/2.0,
 						   max.y(),min.z() - zsize/2.0)),
 				white) );
       
       for( i = 0; i < numz; i+=textSpace.get() ) {
 	sprintf( txt, "%d", i );
-	all->add(new GeomMaterial(new GeomText(txt,
+	all->add(scinew GeomMaterial(scinew GeomText(txt,
 					       Point(min.x()-xsize/2.0,
 						     min.y() - ysize/2.0,
 						     min.z()+i*dz)),
 				  white) );
       }
       sprintf( txt, "%d", numy );
-      all->add(new GeomMaterial(new GeomText(txt,
+      all->add(scinew GeomMaterial(scinew GeomText(txt,
 					     Point(min.x()-xsize/2.0,
 						   min.z() - zsize/2.0,
 						   max.z())),
@@ -461,40 +461,40 @@ void GridLines::execute()
       // outside & both - place numbers further away because of outside lines
       for( i = 0; i < numx; i+=textSpace.get() ) {
 	sprintf( txt, "%d", i );
-	all->add(new GeomMaterial(new GeomText(txt,
+	all->add(scinew GeomMaterial(scinew GeomText(txt,
 					       Point(min.x()+i*dx
 						     ,min.y()-ysize,
 						     min.z() - zsize)),
 				  white));
       }
       sprintf( txt, "%d", numx );
-      all->add(new GeomMaterial(new GeomText(txt,
+      all->add(scinew GeomMaterial(scinew GeomText(txt,
 					     Point(max.x(), min.y()-ysize,
 						   min.z() - zsize )),
 				white) );
       for( i = 0; i < numy; i+=textSpace.get() ) {
 	sprintf( txt, "%d", i );
-	all->add(new GeomMaterial(new GeomText(txt,
+	all->add(scinew GeomMaterial(scinew GeomText(txt,
 					       Point(min.x()-xsize,
 						     min.y()+i*dy,
 						     min.z() - zsize)),
 				  white) );
       }
       sprintf( txt, "%d", numy );
-      all->add(new GeomMaterial(new GeomText(txt,
+      all->add(scinew GeomMaterial(scinew GeomText(txt,
 					     Point(min.x()-xsize,
 						   max.y(),min.z() - zsize)),
 				white) );
       for( i = 0; i < numz; i+=textSpace.get() ) {
 	sprintf( txt, "%d", i );
-	all->add(new GeomMaterial(new GeomText(txt,
+	all->add(scinew GeomMaterial(scinew GeomText(txt,
 					       Point(min.x()-xsize,
 						     min.y() - ysize,
 						     min.z()+i*dz)),
 				  white) );
       }
       sprintf( txt, "%d", numy );
-      all->add(new GeomMaterial(new GeomText(txt,
+      all->add(scinew GeomMaterial(scinew GeomText(txt,
 					     Point(min.x()-xsize,
 						   min.z() - zsize,
 						   max.z())),
@@ -507,7 +507,7 @@ void GridLines::execute()
 
 extern "C" PSECore::Dataflow::Module*
     make_GridLines( const SCICore::Containers::clString& id ) {
-  return new Uintah::Modules::GridLines( id );
+  return scinew Uintah::Modules::GridLines( id );
 }
 
 } // End namespace Modules
