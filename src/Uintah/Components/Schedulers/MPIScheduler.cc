@@ -348,6 +348,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
    // things in the future:
    //  - make a flag to turn this off
    //  - make the checksum more sophisticated
+#if 0
    int checksum = graph.getMaxSerialNumber();
    int result_checksum;
    MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN,
@@ -362,6 +363,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 #ifdef USE_VAMPIR
    VT_end(VT_CHECKSUM);
 #endif
+#endif
 
    emitTime("checksum reduction");
 
@@ -374,6 +376,11 @@ MPIScheduler::execute(const ProcessorGroup * pc,
    double totalsend=0;
    double totalrecv=0;
    double totaltask=0;
+   double totalreducempi=0;
+   double totalsendmpi=0;
+   double totalrecvmpi=0;
+   double totaltestmpi=0;
+   double totalwaitmpi=0;
    for(int i=0;i<ntasks;i++){
       Task* task = tasks[i];
       switch(task->getType()){
@@ -384,11 +391,13 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	    ASSERTEQ(comps.size(), 1);
 	    const Task::Dependency* dep = &comps[0];
 	    OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw);
+	    double reducestart2 = Time::currentSeconds();
 	    dw->reduceMPI(dep->d_var, d_myworld);
 	    double reduceend = Time::currentSeconds();
 	    time_t t(0);
 	    emitNode(tasks[i], t, reduceend - reducestart);
 	    totalreduce += reduceend-reducestart;
+	    totalreducempi += reduceend-reducestart2;
 	 }
 	 break;
       case Task::Scatter:
@@ -424,10 +433,12 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 			ASSERT(req->d_serialNumber >= 0);
 			dbg << me << " <-- receiving " << req->d_var->getName() << " serial " << req->d_serialNumber << ' ' << *req << '\n';
 			int size;
+			double start = Time::currentSeconds();
 			dw->recvMPI(ss, old_dw, req->d_var, req->d_matlIndex,
 				    req->d_patch, d_myworld, req,
 				    MPI_ANY_SOURCE,
 				    req->d_serialNumber, &size, &requestid);
+			totalrecvmpi+=Time::currentSeconds()-start;
 			if(size != -1){
 			   log.logRecv(req, size);
 			   recv_ids.push_back(requestid);
@@ -439,7 +450,9 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	       vector<MPI_Status> statii(recv_ids.size());
 	       if(recv_ids.size() > 0){
 		  dbg << me << " Calling recv(2) waitall with " << recv_ids.size() << " waiters\n";
+		  double start = Time::currentSeconds();
 		  MPI_Waitall((int)recv_ids.size(), &recv_ids[0], &statii[0]);
+		  totalwaitmpi+=Time::currentSeconds()-start;
 		  dbg << me << " Done calling recv(2) waitall with " << recv_ids.size() << " waiters\n";
 	       }
 	    }
@@ -521,11 +534,13 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 			   ASSERT(dep->d_serialNumber >= 0);
 			   dbg << me << " --> sending " << dep->d_var->getName() << " serial " << dep->d_serialNumber << ", to " << dep->d_task->getAssignedResourceIndex() << " " << *dep << '\n';
 			   int size;
+			   double start = Time::currentSeconds();
 			   dw->sendMPI(ss, dep->d_var, dep->d_matlIndex,
 				       dep->d_patch, d_myworld, dep,
 				       dep->d_task->getAssignedResourceIndex(),
 				       dep->d_serialNumber,
 				       &size, &requestid);
+			   totalsendmpi += Time::currentSeconds()-start;
 			   if(size != -1){
 			      log.logSend(dep, size);
 			      send_ids.push_back(requestid);
@@ -540,8 +555,10 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 		  indices.resize(send_ids.size());
 		  dbg << me << " Calling send Testsome(2) with " << send_ids.size() << " waiters\n";
 		  int donecount;
+	   	  double start = Time::currentSeconds();
 		  MPI_Testsome((int)send_ids.size(), &send_ids[0], &donecount,
 			       &indices[0], &send_statii[0]);
+		  totaltestmpi += Time::currentSeconds()-start;
 		  dbg << me << " Done calling send Testsome with " << send_ids.size() << " waiters and got " << donecount << " done\n";
 		  if(donecount == (int)send_ids.size() || donecount == MPI_UNDEFINED){
 		     send_ids.clear();
@@ -571,10 +588,15 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	 throw InternalError("Unknown task type");
       }
    }
-   emitTime("Total send time", totalsend);
-   emitTime("Total recv time", totalrecv);
+   emitTime("MPI send time", totalsendmpi);
+   emitTime("MPI Testsome time", totaltestmpi);
+   emitTime("Total send time", totalsend-totalsendmpi-totaltestmpi);
+   emitTime("MPI recv time", totalrecvmpi);
+   emitTime("MPI wait time", totalwaitmpi);
+   emitTime("Total recv time", totalrecv-totalrecvmpi-totalwaitmpi);
    emitTime("Total task time", totaltask);
-   emitTime("Total reduction time", totalreduce);
+   emitTime("Total MPI reduce time", totalreducempi);
+   emitTime("Total reduction time", totalreduce-totalreducempi);
    double time = Time::currentSeconds();
    double totalexec = time-d_lasttime;
    d_lasttime=time;
@@ -611,15 +633,15 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	 for(int j=len;j<55;j++)
 	    timeout << ' ';
 	 double percent=d_totaltimes[i]/total*100;
-	 timeout << d_totaltimes[i] << " seconds (" << setfill(' ') << setw(3) << setprecision(2) << percent << "%)\n";
+	 timeout << d_totaltimes[i] << " seconds (" << percent << "%)\n";
       }
       double time = Time::currentSeconds();
       double rtime=time-d_lasttime;
       d_lasttime=time;
-      timeout << "MPIScheduler: TOTAL                                      "
-	   << total << '\n';
-      timeout << "MPIScheduler: time sum reduction (one processor only):   " 
-	   << rtime << '\n';
+      timeout << "MPIScheduler: TOTAL                                    "
+	      << total << '\n';
+      timeout << "MPIScheduler: time sum reduction (one processor only): " 
+	      << rtime << '\n';
    }
 
 #ifdef USE_VAMPIR
@@ -1023,6 +1045,9 @@ MPIScheduler::emitTime(char* label, double dt)
 
 //
 // $Log$
+// Revision 1.25.4.6  2000/10/17 01:00:37  sparker
+// More instrumentation
+//
 // Revision 1.25.4.5  2000/10/10 05:28:03  sparker
 // Added support for NullScheduler (used for profiling taskgraph overhead)
 //
