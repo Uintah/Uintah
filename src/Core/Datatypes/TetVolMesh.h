@@ -124,6 +124,7 @@ public:
   // Used for hashing operations below
   static const int sizeof_uint = sizeof(unsigned int) * 8; // in bits
 
+  typedef map<Cell::index_type, Cell::index_type> cell_2_cell_map_t;
 
   //! An edge is indexed via the cells structure.
   //! There are 6 unique edges in each cell of 4 nodes.
@@ -540,8 +541,12 @@ public:
   Node::index_type	insert_node_watson(const Point &p, 
 					   Cell::array_type *new_cells = 0, 
 					   Cell::array_type *mod_cells = 0);
-  void                  refine_elements_levels(Cell::array_type cells, vector<int> refine_level);
-  void                  refine_elements(set<Cell::index_type> cells, map<Cell::index_type, set<Cell::index_type> > &cell_parent_2_children);
+  void                  refine_elements_levels(const Cell::array_type &cells, 
+					       const vector<int> &refine_level,
+					       cell_2_cell_map_t &);
+  void                  refine_elements(const Cell::array_type &cells,
+					vector<Cell::array_type> &cell_children,
+					cell_2_cell_map_t &green_children);
   void			bisect_element(const Cell::index_type c);
 
 

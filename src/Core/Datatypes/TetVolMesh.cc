@@ -1611,10 +1611,10 @@ void TetVolMesh::get_basis(Cell::index_type ci, int gaussPt, double& g0, double&
 			       double& g2, double& g3)
 {
 
-  Point& p1 = points_[cells_[ci * 4]];
-  Point& p2 = points_[cells_[ci * 4+1]];
-  Point& p3 = points_[cells_[ci * 4+2]];
-  Point& p4 = points_[cells_[ci * 4+3]];
+  //Point& p1 = points_[cells_[ci * 4]];
+  //Point& p2 = points_[cells_[ci * 4+1]];
+  //Point& p3 = points_[cells_[ci * 4+2]];
+  //Point& p4 = points_[cells_[ci * 4+3]];
 
  //  double x1=p1.x();
 //   double y1=p1.y();
@@ -2080,83 +2080,82 @@ TetVolMesh::insert_node_watson(const Point &p, Cell::array_type *new_cells, Cell
 }
 
 void
-TetVolMesh::refine_elements_levels(vector<Cell::index_type> cells, vector<int> refine_level)
+TetVolMesh::refine_elements_levels(const Cell::array_type &cells, 
+				   const vector<int> &refine_level,
+				   cell_2_cell_map_t &child_2_parent)
 {
   synchronize(FACE_NEIGHBORS_E | EDGE_NEIGHBORS_E);
-  typedef map<Cell::index_type, set<Cell::index_type> > parent_2_children_t;
-         
-  set <Cell::index_type> todo;
-  map <Cell::index_type, int> level;
 
-  for (int c = 0; c < cells.size(); ++c) {
-    todo.insert(cells[c]);
-    level.insert(make_pair(cells[c],refine_level[c]));
-  }
-  int current_level = 0;
+  int current_level = 0;         
+  Cell::array_type todo = cells;
+  vector<int> new_level = refine_level, level;
 
   while(!todo.empty()) {
     ++current_level;
-    
-    parent_2_children_t cell_p2c;
-    refine_elements(todo,cell_p2c);
+    const unsigned int num_todo = todo.size();    
+    vector<Cell::array_type> todo_children(num_todo);;
+    cell_2_cell_map_t green_children;
+    refine_elements(todo, todo_children, green_children);
 
     todo.clear();
+    level = new_level;
+    new_level.clear();
 
-    parent_2_children_t::iterator iter = cell_p2c.begin();
-    parent_2_children_t::iterator end = cell_p2c.end();
-    while (iter != end) {
-      const Cell::index_type &parent_cell = (*iter).first;
-      map<Cell::index_type,int>::iterator level_iter = level.find(parent_cell);
-      ASSERT(level_iter != level.end());
-      const int &cell_level = (*level_iter).second;
-      
-      if (cell_level > current_level) {
-        const set<Cell::index_type> &children = (*iter).second;
-        set<Cell::index_type>::iterator iter2 = children.begin();
-        set<Cell::index_type>::iterator end2 = children.end();
-        while(iter2 != end2) {
-	  todo.insert(*iter2);
-	  level.insert(make_pair(*iter2, cell_level));
-          ++iter2;
-        }
+    for (unsigned int i = 0; i < num_todo; ++i) {
+      Cell::index_type parent = todo_children[i][0];
+      const unsigned int num_children = todo_children[i].size(); 
+      ASSERT(num_children == 8);
+
+      const cell_2_cell_map_t::iterator pos = child_2_parent.find(parent);
+      if (pos != child_2_parent.end())
+	parent = (*pos).second;
+
+      for (unsigned int j = 0; j < num_children; ++j) {
+	child_2_parent.insert(make_pair(todo_children[i][j],parent));
+	if (level[i] > current_level) {
+	  todo.push_back(todo_children[i][j]);
+	  new_level.push_back(level[i]);
+	}
       }
-      ++iter;
+    }
+    
+    cell_2_cell_map_t::iterator iter = green_children.begin();
+    const cell_2_cell_map_t::iterator iter_end = green_children.end();
+    while (iter != iter_end) {
+      child_2_parent.insert(*iter);
     }
   }
 }
                                                                                
 void
-TetVolMesh::refine_elements(set<Cell::index_type> cells, map<Cell::index_type,
-set<Cell::index_type> > &cell_parent_2_children)
+TetVolMesh::refine_elements(const Cell::array_type &cells, 
+			    vector<Cell::array_type> &cell_children,
+			    cell_2_cell_map_t &green_children)
 {
-                                                                               
   typedef hash_multimap<Edge::index_type, Node::index_type,
     Edge::CellEdgeHasher, Edge::eqEdge>  HalfEdgeMap;
                                                                                
   HalfEdgeMap inserted_nodes(100, edge_hasher_, edge_eq_);
                                                                                
   // iterate over the cells
-  set<Cell::index_type>::iterator iter = cells.begin();
-  set<Cell::index_type>::iterator end = cells.end();
-                                                                               
-  while(iter != end) {
+  const unsigned int num_cells = cells.size();
+  for (unsigned int c = 0; c < num_cells; ++c) {
     Node::array_type nodes;
-    Cell::index_type cell = *iter;
-    iter++;
+    const Cell::index_type &cell = cells[c];
     get_nodes(nodes,cell);
-                                                                               
+
     // Loop through edges and create new nodes at center
     for (unsigned int edge = 0; edge < 6; ++edge)
     {
       unsigned int edgeNum = cell*6+edge;
-     pair<Edge::HalfEdgeSet::iterator, Edge::HalfEdgeSet::iterator> range =
+      pair<Edge::HalfEdgeSet::iterator, Edge::HalfEdgeSet::iterator> range =
         all_edges_.equal_range(edgeNum);
-                                                                               
+      
       Node::index_type newnode;
-                                                                               
+      
       pair<HalfEdgeMap::iterator,HalfEdgeMap::iterator> iter =
         inserted_nodes.equal_range(edgeNum);
-                                                                               
+
       if (iter.first == iter.second) {
         Point p;
         get_center(p, Edge::index_type(edgeNum));
@@ -2219,15 +2218,15 @@ set<Cell::index_type> > &cell_parent_2_children)
       t7 = add_tet(nodes[9], nodes[4], nodes[6], nodes[5]);
       t8 = add_tet(nodes[9], nodes[7], nodes[5], nodes[8]);
     }
-                                                                                  
-    cell_parent_2_children[cell].insert(t1);
-    cell_parent_2_children[cell].insert(t2);
-    cell_parent_2_children[cell].insert(t3);
-    cell_parent_2_children[cell].insert(t4);
-    cell_parent_2_children[cell].insert(t5);
-    cell_parent_2_children[cell].insert(t6);
-    cell_parent_2_children[cell].insert(t7);
-    cell_parent_2_children[cell].insert(t8);
+
+    cell_children[c].push_back(t1);
+    cell_children[c].push_back(t2);
+    cell_children[c].push_back(t3);
+    cell_children[c].push_back(t4);
+    cell_children[c].push_back(t5);
+    cell_children[c].push_back(t6);
+    cell_children[c].push_back(t7);
+    cell_children[c].push_back(t8);
   }
 
   typedef pair<Node::index_type, Node::index_type> node_pair_t;
@@ -2247,28 +2246,35 @@ set<Cell::index_type> > &cell_parent_2_children)
   }
                                                                                   
   set<Cell::index_type>::iterator splitcell = centersplits.begin();
-
+  hash_map<Cell::index_type, Cell::index_type> green_parent;
   while (splitcell != centersplits.end()) {
     const Cell::index_type cell = *splitcell;
     ++splitcell;
-                                                                                  
+
     // Make Center point of cell
     Point p;
     get_center(p, cell);
     Node::index_type center = add_point(p);
-                                                                                  
+
     // Get the nodes of the original cell
     Node::array_type cnodes;
     get_nodes(cnodes,cell);
-                                                                                  
-    // Modify the first tet to be 1 of 4
-    mod_tet(cell,center, cnodes[1], cnodes[0], cnodes[2]);
-    // Create the last 3 tets
-    add_tet(center, cnodes[2], cnodes[0], cnodes[3]);
-    add_tet(center, cnodes[0], cnodes[1], cnodes[3]);
-    add_tet(center, cnodes[1], cnodes[2], cnodes[3]);
 
+    Cell::index_type t1, t2, t3, t4;
+
+    // Modify the first tet to be 1 of 4
+    t1 = mod_tet(cell, center, cnodes[1], cnodes[0], cnodes[2]);
+    // Create the last 3 tets
+    t2 = add_tet(center, cnodes[2], cnodes[0], cnodes[3]);
+    t3 = add_tet(center, cnodes[0], cnodes[1], cnodes[3]);
+    t4 = add_tet(center, cnodes[1], cnodes[2], cnodes[3]);
+
+    green_children.insert(make_pair(t1, cell));
+    green_children.insert(make_pair(t2, cell));
+    green_children.insert(make_pair(t3, cell));
+    green_children.insert(make_pair(t4, cell));
   }
+
   edge_centers_t::iterator enodes_iter = edge_centers.begin();
   while (enodes_iter != edge_centers.end()) {
     const node_pair_t enodes = (*enodes_iter).first;
@@ -2282,11 +2288,20 @@ set<Cell::index_type> > &cell_parent_2_children)
         pair<Node::index_type, Node::index_type> nnodes = Edge::edgei(edge);
         pair<Node::index_type, Node::index_type> onodes =
           Edge::edgei(Edge::opposite_edge(edge));
-                                                          
-        // Perform the 2:1 split
-        orient(add_tet(center, cells_[nnodes.first],
-                       cells_[onodes.second], cells_[onodes.first]));
 
+        // Perform the 2:1 split
+	
+	const Elem::index_type t1 = 
+	  add_tet(center, cells_[nnodes.first],
+		  cells_[onodes.second], cells_[onodes.first]);
+        orient(t1);
+
+	const cell_2_cell_map_t::iterator green_iter = 
+	  green_children.find(cell);
+	ASSERT(green_iter != green_children.end());
+	
+	green_children.insert(make_pair(t1, (*green_iter).second));
+              
         orient(mod_tet(cell, center, cells_[nnodes.second],
                        cells_[onodes.second], cells_[onodes.first]));
 
