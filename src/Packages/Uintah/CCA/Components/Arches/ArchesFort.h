@@ -77,7 +77,8 @@ WARNING
 #define FORT_LINEGS linegs_
 #define FORT_NORMPRESS normpress_
 #define FORT_EXPLICIT explicit_
-
+// for multimaterial
+#define FORT_MMCELLTYPEINIT mmcelltypeinit_
 // GROUP: Function Declarations:
 ////////////////////////////////////////////////////////////////////////
 
@@ -217,6 +218,7 @@ extern "C"
 			  double* scalarVar,
 			  const int* domLo, const int* domHi, 
 			  double* dxpw, double * dyps, double* dzpb,
+			  double* sew, double* sns, double* stb,
 			  double* cfvar, double* fac_msh, double* filterl);
 
     ////////////////////////////////////////////////////////////////////////
@@ -913,6 +915,17 @@ extern "C"
 		double* delta_t);
 
 }
+
+
+// multimaterial functions
+////////////////////////////////////////////////////////////////////////
+// Initialize mmwall celltype variables :
+void
+FORT_MMCELLTYPEINIT(const int* domainLow, const int* domainHigh, 
+		    const int* indexLow, const int* indexHigh,
+		    double* voidFrac, int* celltype, 
+		    const int* mmwallid, const int* mmflowid, 
+		    const double* cutoff);
 
 #endif
 

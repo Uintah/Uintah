@@ -36,6 +36,7 @@ WARNING
 
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 
 namespace Uintah {
@@ -49,7 +50,9 @@ public:
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
       // Blank constructor for SmagorinskyModel.
-      SmagorinskyModel(const ArchesLabel* label, PhysicalConstants* phyConsts);
+      SmagorinskyModel(const ArchesLabel* label, 
+		       const MPMArchesLabel* MAlb,
+		       PhysicalConstants* phyConsts);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -162,6 +165,7 @@ private:
       double d_CFVar; // model constant for mixture fraction variance
       // const VarLabel* variables 
       const ArchesLabel* d_lab;
+      const MPMArchesLabel* d_MAlab;
 
 }; // End class SmagorinkyModel
 } // End namespace Uintah

@@ -36,6 +36,7 @@ WARNING
 
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/NonlinearSolver.h>
 
 namespace Uintah {
@@ -56,6 +57,7 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // Solver initialized with all input data 
       PicardNonlinearSolver(const ArchesLabel* label,
+			    const MPMArchesLabel* MAlb,
 			    Properties* props, 
 			    BoundaryCondition* bc,
 			    TurbulenceModel* turbModel, 
@@ -179,6 +181,7 @@ private:
 
       // const VarLabel*
       const ArchesLabel* d_lab;
+      const MPMArchesLabel* d_MAlab;
       // generation variable for DataWarehouse creation
   
 }; // End class PicardNonlinearSolver

@@ -30,10 +30,11 @@ using namespace std;
 // Default constructor for PressureSolver
 //****************************************************************************
 ScalarSolver::ScalarSolver(const ArchesLabel* label,
+			   const MPMArchesLabel* MAlb,
 			   TurbulenceModel* turb_model,
 			   BoundaryCondition* bndry_cond,
 			   PhysicalConstants* physConst) :
-                                 d_lab(label),
+                                 d_lab(label), d_MAlab(MAlb),
                                  d_turbModel(turb_model), 
                                  d_boundaryCondition(bndry_cond),
 				 d_physicalConsts(physConst)
