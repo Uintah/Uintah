@@ -38,6 +38,7 @@
 
 using namespace SCIRun;
 
+int
 main(int argc, char **argv) {
 
   FieldHandle handle;
