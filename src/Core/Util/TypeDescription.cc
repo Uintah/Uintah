@@ -61,33 +61,36 @@ KillMap::~KillMap()
 
 KillMap killit;
 
-void TypeDescription::register_type()
+
+void
+TypeDescription::register_type()
 {
-  if(!types){
+  typelist_lock.lock();
+  if (!types)
+  {
     ASSERT(!killed);
     ASSERT(!typelist);
 
-    typelist_lock.lock();
     // This will make sure that if types was not initialized when we
     // entered this block, that we will not try and reinitialize types
     // and typelist.
-    if (!types) {
-      types=scinew map<string, const TypeDescription*>;
-      typelist=new vector<const TypeDescription*>;
+    if (!types)
+    {
+      types = scinew map<string, const TypeDescription*>;
+      typelist = scinew vector<const TypeDescription*>;
     }
-
-    typelist_lock.unlock();
   }
-  // We don't want to modify shared variables without a lock
-  typelist_lock.lock();
-  
+
   map<string, const TypeDescription*>::iterator iter = types->find(get_name());
-  if(iter == types->end())
-    (*types)[get_name()]=this;
+  if (iter == types->end())
+  {
+    (*types)[get_name()] = this;
+  }
   typelist->push_back(this);
   
   typelist_lock.unlock();
 }
+
 
 TypeDescription::TypeDescription(const string &name, const string &path,
 				 const string &namesp) : 
