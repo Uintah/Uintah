@@ -1,9 +1,8 @@
 #ifndef UINTAH_HOMEBREW_FRACTUREMPM_H
 #define UINTAH_HOMEBREW_FRACTUREMPM_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
+#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
@@ -52,14 +51,12 @@ WARNING
   
 ****************************************/
 
-class FractureMPM : public SimulationInterface, public UintahParallelComponent {
-public:
-  FractureMPM(const ProcessorGroup* myworld);
-  virtual ~FractureMPM();
-
-  Contact*         contactModel;
-  ThermalContact*  thermalContactModel;
-  Crack*           crackMethod;           // for Fracture
+ class FractureMPM : public SerialMPM {
+ public:
+   FractureMPM(const ProcessorGroup* myworld);
+   virtual ~FractureMPM();
+   
+   Crack*           crackMethod;           // for Fracture
 	 
   //////////
   // Insert Documentation Here:
@@ -79,40 +76,6 @@ public:
   virtual void scheduleTimeAdvance(const LevelP& level, 
 				   SchedulerP&, int step, int nsteps );
 
-  void setSharedState(SimulationStateP& ssp);
-
-  void setMPMLabel(MPMLabel* Mlb)
-  {
-        delete lb;
-	lb = Mlb;
-  };
-
-  void setWithICE()
-  {
-	d_with_ice = true;
-  };
-
-  void setWithArches()
-  {
-	d_with_arches = true;
-  };
-
-  int get8or27()
-  {
-       return flags->d_8or27;
-  };
-
-  enum bctype { NONE=0,
-                FIXED,
-                SYMMETRY,
-                NEIGHBOR };
-
-  enum IntegratorType {
-    Explicit,
-    Implicit,
-    Fracture
-  };
-
 private:
   //////////
   // Insert Documentation Here:
@@ -124,38 +87,6 @@ private:
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw);
-
-  void printParticleCount(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw);
-
-  //////////
-  // Initialize particle data with a default values using 
-  // a temporary variable
-  void setParticleDefaultWithTemp(constParticleVariable<double>& pvar,
-                                  ParticleSubset* pset,
-                                  DataWarehouse* new_dw,
-                                  double val);
-
-  //////////
-  // Initialize particle data with a default values in the
-  // new datawarehouse
-  void setParticleDefault(ParticleVariable<double>& pvar,
-                          const VarLabel* label,
-                          ParticleSubset* pset,
-                          DataWarehouse* new_dw,
-                          double val);
-
-  void scheduleInitializePressureBCs(const LevelP& level,
-				     SchedulerP&);
-	 
-  void countMaterialPointsPerLoadCurve(const ProcessorGroup*,
-				       const PatchSubset* patches,
-				       const MaterialSubset* matls,
-				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw);
 
   void initializePressureBC(const ProcessorGroup*,
 			    const PatchSubset* patches,
@@ -364,24 +295,8 @@ private:
   FractureMPM(const FractureMPM&);
   FractureMPM& operator=(const FractureMPM&);
 	 
-  SimulationStateP d_sharedState;
   Output* dataArchiver;
-  MPMLabel* lb;
-  MPMFlags* flags;
 
-  double           d_nextOutputTime;
-  double           d_outputInterval;
-  double           d_SMALL_NUM_MPM;
-  double           d_min_part_mass; // Minimum particle mass before it's deleted
-  double           d_max_vel; // Maxmimum particle velocity before it's deleted
-  int              NGP;       // Number of ghost particles needed.
-  int              NGN;       // Number of ghost nodes     needed.
-
-  vector<MPMPhysicalBC*> d_physicalBCs;
-  bool             d_fracture;
-  bool             d_with_ice;
-  bool             d_with_arches;
-  IntegratorType d_integrator;
 };
       
 } // end namespace Uintah
