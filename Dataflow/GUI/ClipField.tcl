@@ -25,8 +25,6 @@ itcl_class SCIRun_Fields_ClipField {
 	global $this-autoexecute    # Execute on widget button up?
 	global $this-autoinvert     # Invert again when executing?
 	global $this-execmode       # Which of three executes to use.
-	global $this-usefunction    # Function for clipping via data value.
-	global $this-clipfunction   # Function for clipping via data value.
 
         set_defaults
     }
@@ -37,8 +35,6 @@ itcl_class SCIRun_Fields_ClipField {
 	set $this-autoexecute 0
 	set $this-autoinvert 0
 	set $this-execmode 0
-	set $this-usefunction 0
-	set $this-clipfunction "\$x > 0"
     }
 
     method execrunmode {} {
@@ -63,13 +59,6 @@ itcl_class SCIRun_Fields_ClipField {
     method locationclip {} {
 	set $this-execmode location
 	$this-c needexecute
-    }
-
-    method functioneval {x function} {
-	if {![catch {expr $function} result]} {
-	    return $result
-	}
-	return 0
     }
 
     method ui {} {
@@ -106,16 +95,7 @@ itcl_class SCIRun_Fields_ClipField {
 
 	checkbutton $w.whenexecute.icheck -text "Invert automatically" -variable $this-autoinvert -command "$this locationclip"
 	
-	checkbutton $w.whenexecute.data -text "Function Clip" -variable $this-usefunction
-	
-	frame $w.whenexecute.funframe
-	label $w.whenexecute.funframe.label -text "Function"
-	entry $w.whenexecute.funframe.entry -textvariable $this-clipfunction
-	
-	pack $w.whenexecute.funframe.label $w.whenexecute.funframe.entry \
-	    -side left -fill x
-
-	pack $w.whenexecute.check $w.whenexecute.icheck $w.whenexecute.data $w.whenexecute.funframe -side top -anchor w -padx 10
+	pack $w.whenexecute.check $w.whenexecute.icheck -side top -anchor w -padx 10
 
 	button $w.executes.execute -text "Execute" -command "$this execrunmode"
 	button $w.executes.invert -text "Invert" -command "$this invert"
