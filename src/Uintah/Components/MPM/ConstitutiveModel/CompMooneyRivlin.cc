@@ -29,20 +29,9 @@ using SCICore::Geometry::Vector;
 CompMooneyRivlin::CompMooneyRivlin(const Region* /*region*/,
 				   const MPMMaterial* /*matl*/)
 {
-   // Constructor
-   px_label = new VarLabel("p.x", ParticleVariable<Point>::getTypeDescription());
-   p_deformationMeasure_label = new VarLabel("p.deformationMeasure",
-					     ParticleVariable<Matrix3>::getTypeDescription());
-   p_stress_label = new VarLabel("p.stress",
-				 ParticleVariable<Matrix3>::getTypeDescription());
-   p_mass_label = new VarLabel("p.mass",
-			       ParticleVariable<double>::getTypeDescription());
-   p_volume_label = new VarLabel("p.volume",
-				 ParticleVariable<double>::getTypeDescription());
-   g_velocity_label = new VarLabel("g.velocity",
-				   NCVariable<Vector>::getTypeDescription());
    p_cmdata_label = new VarLabel("p.cmdata",
-				 ParticleVariable<CMData>::getTypeDescription());
+                    ParticleVariable<CMData>::getTypeDescription());
+
 }
 
 CompMooneyRivlin::~CompMooneyRivlin()
@@ -277,6 +266,10 @@ ConstitutiveModel* CompMooneyRivlin::create(double *p_array)
 }
 
 // $Log$
+// Revision 1.9  2000/04/21 01:22:55  guilkey
+// Put the VarLabels which are common to all constitutive models in the
+// base class.  The only one which isn't common is the one for the CMData.
+//
 // Revision 1.8  2000/04/20 18:56:18  sparker
 // Updates to MPM
 //
