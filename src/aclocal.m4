@@ -70,6 +70,9 @@ fi
 ])
 
 AC_DEFUN([BASE_LIB_PATH], [
+##
+## BASE_LIB_PATH:
+##
 ## arguments mean:
 ## arg 1 : This argument will be written with the result
 ## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
@@ -96,13 +99,16 @@ AC_DEFUN([BASE_LIB_PATH], [
 ])
 
 AC_DEFUN([SCI_TRY_LINK], [
+##
+## SCI_TRY_LINK:
+##
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
 ## arg 2 : checking message
 ## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
+## arg 4 : include path -I (Only one may be given)
+## arg 5 : list of libs to link against (note, this script adds -l to each name.)
+## arg 6 : lib paths (note, this script adds -L to each name.)
 ## arg 7 : extra link flags 
 ## arg 8 : body of code to compile. can be empty
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
@@ -251,6 +257,7 @@ else
   eval $1_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
 
+#eval $1_LIB_FLAG='"$LIBS"'
 eval $1_LIB_FLAG='"$_sci_libs"'
 eval HAVE_$1="yes"
 
@@ -409,7 +416,14 @@ AC_DEFUN(SCI_REMOVE_MINUS_L,
      # list of libraries that have been found
      found_libs=
 
+     got_it=
      for libflag in $libs; do
+
+       # If the entry starts with -L, then we ignore it... (All libs should be -l!)
+       has_minus_L=`echo $libflag | grep "\-L"`
+       if test -n "$has_minus_L"; then
+          continue
+       fi
 
        # Cut of the '-l'
        the_lib=lib`echo $libflag | sed 's/-l//'`
@@ -425,7 +439,7 @@ AC_DEFUN(SCI_REMOVE_MINUS_L,
            continue
          fi
 
-         already_checked=`echo $checked_dirs | grep "$the_dir "`
+         already_checked=`echo \"$checked_dirs\" | grep "$the_dir "`
          if test -n "$already_checked"; then
            AC_MSG_WARN($the_dir listed more than once as a -L flag.  Skipping.)
            continue
@@ -461,11 +475,19 @@ AC_DEFUN(SCI_REMOVE_MINUS_L,
          else
            if test -n "$sci_found"; then
              found_libs="$found_libs$the_dir/$sci_found "
+             got_it=true
            fi
          fi
        done
+
+       if test -z "$got_it"; then
+         # Add -l<lib> flag to line as it is a generic lib.
+         sci_temp_lib="$sci_temp_lib $libflag"
+       fi
+       got_it=
      done 
      $1=$sci_temp_lib
+
   fi
   ])
 
@@ -756,7 +778,7 @@ case $1 in
     sci_required_xalan=yes
   ;;
   *)
-    AC_MSG_WARN(No known dependencies for Package $1)
+    AC_MSG_WARN(In aclocal.m4: No known dependencies for Package $1)
   ;;
 esac
 
