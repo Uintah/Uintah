@@ -101,6 +101,18 @@ public:
   // <i>tryRecieve</i>.  
   bool trySend(const Item& msg);
     
+  
+  //////////
+  // Send <i>msg</i> to the queue only if the <i>checker</i> function
+  // fails to compare the <i>msg</i> to what is already the last item
+  // there.  This is useful if we want to make certain that at least
+  // one of a particular message (like a viewer resize redraw) gets
+  // put on the mailbox without spamming it.  This blocks like
+  // <i>send</i> does.  It returns true if <i>msg</i> was added to the
+  // queue and false if it wasn't.
+  bool sendIfNotSentLast(const Item& msg,
+                         bool (*checker)(const Item &a, const Item &b));
+
   //////////
   // Receive an item from the queue.  If the queue is empty,
   // the thread will block until another thread sends an item.
@@ -222,6 +234,42 @@ Mailbox<Item>::trySend(const Item& msg)
                             // will wake us up
     return true;
 }
+
+
+template<class Item>
+bool
+Mailbox<Item>::sendIfNotSentLast(const Item& msg,
+                                 bool (*checker)(const Item &a, const Item &b))
+{
+    int s = Thread::couldBlock(name_);
+    mutex_.lock();
+    // See if the message buffer is full...
+    int rmax=max_==0?1:max_;
+    while(len_ == rmax){
+        send_wait_++;
+        full_.wait(mutex_);
+        send_wait_--;
+    }
+    if (len_ < 1 || checker(ring_buffer_[ringNext(len_-1)], msg))
+    {
+      ring_buffer_[ringNext(len_)]=msg;
+      len_++;
+      if(recv_wait_)
+        empty_.conditionSignal();
+      mutex_.unlock();
+      if(max_==0)
+        rendezvous_.down();
+      Thread::couldBlockDone(s);
+      return true;
+    }
+    else
+    {
+      mutex_.unlock();
+      Thread::couldBlockDone(s);
+      return false;
+    }
+}
+
 
 template<class Item>
 Item
