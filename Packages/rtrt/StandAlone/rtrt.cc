@@ -17,18 +17,21 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
-#include <dlfcn.h>
+#include <Packages/rtrt/Core/Gui.h>
+
 #include <iostream>
+
+#include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
 
+#include <GL/glut.h>
+#include <glui.h>
+
 using namespace rtrt;
 using namespace std;
-//using std::endl;
-
-//static int nworkers=1;
 
 using SCIRun::Thread;
 using SCIRun::ThreadGroup;
@@ -76,7 +79,6 @@ static void usage(char* progname)
     cerr << " -udp             - update rate - how often to synchronuze cameras\n";
     cerr << "                    as a fraction of pixels per/proc\n";
     cerr << " -jitter          - jittered masks - fixed table for now\n";
-    cerr << " -logframes       - save all frames and a time log\n";
     cerr << " -worker_gltest   - calls run_gl_test from worker threads\n";
     cerr << " -display_gltest  - calls run_gl_test from display thread\n";
     cerr << " -displayless     - do not display and write a frame to displayless\n";
@@ -107,7 +109,14 @@ namespace rtrt {
 
 //extern int do_jitter;
 
-int main(int argc, char* argv[])
+// For glut to call, but since we are always redrawing (currently)
+// glut doesn't need to redraw for use.
+void doNothingCB()
+{
+}
+
+int
+main(int argc, char* argv[])
 {
   RTRT* rtrt_engine = new RTRT();
 
@@ -126,7 +135,7 @@ int main(int argc, char* argv[])
   int c1;
   int ncounters=0;
   bool bench=false;
-  char* shadow_mode=0;
+  ShadowType shadow_mode = No_Shadows;
   bool no_aa=false;
   double bvscale=.3;
   char* criteria1="db, stereo, max rgb, max accumrgb";
@@ -134,12 +143,12 @@ int main(int argc, char* argv[])
   double light_radius=-1;
   
   bool do_frameless=false;
-  bool logframes=false;
   bool display_frames=true;
-  bool followpath=false;
 
-  FILE *path_fp=0;
-  
+  printf("before glutInit\n");
+  glutInit( &argc, argv );
+  printf("after glutInit\n");
+
   Camera usercamera(Point(1,0,0), Point(0,0,0), Vector(0,0,1), 60);
   bool use_usercamera;
   
@@ -206,10 +215,10 @@ int main(int argc, char* argv[])
     } else if(strcmp(argv[i], "-bench")==0){
       bench=true;
     } else if(strcmp(argv[i], "-no_shadows")==0){
-      shadow_mode="none";
+      shadow_mode = No_Shadows;
     } else if(strcmp(argv[i], "-shadows")==0){
       i++;
-      shadow_mode=argv[i];
+      shadow_mode = (ShadowType)atoi(argv[i]);
     } else if(strcmp(argv[i], "-no_aa")==0){
       no_aa=true;
     } else if(strcmp(argv[i], "-bvscale")==0){
@@ -254,8 +263,6 @@ int main(int argc, char* argv[])
       }
     } else if(strcmp(argv[i],"-jitter")==0) {
       rtrt_engine->do_jitter=1;
-    } else if(strcmp(argv[i], "-logframes") == 0){
-      logframes=true;
     } else if(strcmp(argv[i], "-eye") == 0){
       Point p;
       i++;
@@ -291,10 +298,6 @@ int main(int argc, char* argv[])
       double fov=atof(argv[i]);
       usercamera.set_fov(fov);
       use_usercamera=true;
-    } else if(strcmp(argv[i], "-camerapath") == 0) {
-	i++;	
-	followpath = true;
-	path_fp = fopen(argv[i],"r");
     } else if (strcmp(argv[i], "-worker_gltest") == 0) {
       rtrt_engine->worker_run_gl_test = true;
     } else if (strcmp(argv[i], "-display_gltest") == 0) {
@@ -334,12 +337,11 @@ int main(int argc, char* argv[])
   // set the scenes rtrt_engine pointer
   scene->set_rtrt_engine(rtrt_engine);
   
-  if(shadow_mode){
-    if(!scene->select_shadow_mode(shadow_mode)){
-      cerr << "Unknown shadow mode: " << shadow_mode << '\n';
-      exit(1);
-    }
+  if(shadow_mode > Uncached_Shadows ){
+    cerr << "Unknown shadow mode: " << shadow_mode << '\n';
+    exit(1);
   }
+
   scene->no_aa=no_aa;
   
   if(use_bv){
@@ -424,25 +426,44 @@ int main(int argc, char* argv[])
     rtrt_engine->Gjitter_valsb[ii] *= 0.25;
   }
   
-  scene->logframes=logframes;
-  scene->followpath = followpath;
-  scene->path_fp = path_fp;  
-
-  //  ThreadGroup *group = new ThreadGroup("rtrt group");
-
   // Start up display thread...
   Dpy* dpy=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
 		   ncounters, c0, c1, 1.0, 1.0, display_frames,
 		   pp_size, scratchsize, do_frameless==true);
+  Gui * gui = new Gui;
+
+  Gui::setActiveGui( gui );
+  gui->setDpy( dpy );
+
+  // Initialize GLUT and GLUI stuff.
+  printf("start glut inits\n");
+  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
+
+  int mainWindowId = glutCreateWindow("RTRT");
+
+  glutInitWindowPosition( 20, 20 );
+  glutReshapeWindow( xres, yres );
+
+  glutKeyboardFunc( Gui::handleKeyPressCB );
+  glutSpecialFunc( Gui::handleSpecialKeyCB );
+  glutMouseFunc( Gui::handleMouseCB );
+  glutMotionFunc( Gui::handleMouseMotionCB );
+  glutReshapeFunc( Gui::handleWindowResizeCB );
+  glutDisplayFunc( doNothingCB );
+
+  Gui::createMenus( mainWindowId );  // Must do this after glut is initialized.
+
+  // Let the GUI know about the lights.
+  for( int cnt = 0; cnt < scene->nlights(); cnt++ ) {
+    gui->addLight( scene->light( cnt ) );
+  }
+  printf("end glut inits\n");
+
+  /* Register the idle callback with GLUI, *not* with GLUT */
+  GLUI_Master.set_glutIdleFunc( Gui::idleFunc );
+
   /* <<<< bigler >>>> */
   (new Thread(dpy, "Display thread"))->detach();
-  //new Thread(dpy, "Display thread", group);
-#if 0
-  Dpy* dpy2=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
-		    ncounters, c0, c1, 1.0, 1.0, display_frames,
-		    pp_size, scratchsize, do_frameless==true);
-  new Thread(dpy2, "Display thread2");
-#endif
   
   // Start up worker threads...
   for(int i=0;i<rtrt_engine->nworkers;i++){
@@ -459,10 +480,13 @@ int main(int argc, char* argv[])
 			  ncounters, c0, c1), buf))->detach();
     //			     ncounters, c0, c1), buf, group);
 #endif
-  }
+  } // end for (create workers)
 
   //  group->join();
   //  cout << "Threads exited" << endl;
-  
+
+  printf("start main loop\n");
+  glutMainLoop();
+ 
 }
 
