@@ -175,7 +175,7 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
     for(int m = 0; m < matls->size(); m++){
       int matl = matls->get(m);
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
-      ParticleVariable<Point> px;
+      constParticleVariable<Point> px;
       new_dw->get(px, reloc_old_posLabel, pset);
 
       ParticleSubset* relocset = scinew ParticleSubset(pset->getParticleSet(),
@@ -342,12 +342,14 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
 				     const vector<vector<const VarLabel*> >& old_labels,
 				     const VarLabel* new_posLabel,
 				     const vector<vector<const VarLabel*> >& new_labels,
+				     const VarLabel* particleIDLabel,
 				     const MaterialSet* matls)
 {
   reloc_old_posLabel = old_posLabel;
   reloc_old_labels = old_labels;
   reloc_new_posLabel = new_posLabel;
   reloc_new_labels = new_labels;
+  particleIDLabel_ = particleIDLabel;
   if(reloc_matls && reloc_matls->removeReference())
     delete reloc_matls;
   reloc_matls = matls;
@@ -496,7 +498,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 			       DataWarehouse* old_dw,
 			       DataWarehouse* new_dw)
 {
-  int total_reloc[3];
+  int total_reloc[3], v;
   total_reloc[0]=total_reloc[1]=total_reloc[2]=0;
   typedef MPIScatterRecords::maptype maptype;
   typedef MPIScatterRecords::procmaptype procmaptype;
@@ -527,7 +529,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     for(int m = 0; m < matls->size(); m++){
       int matl = matls->get(m);
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
-      ParticleVariable<Point> px;
+      constParticleVariable<Point> px;
       new_dw->get(px, reloc_old_posLabel, pset);
 
       ParticleSubset* relocset = scinew ParticleSubset(pset->getParticleSet(),
@@ -640,7 +642,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	  ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, pset);
 	  ParticleSubset* sendset=record->sendset;
 	  posvar->packsizeMPI(&sendsize, pg, sendset);
-	  for(int v=0;v<numVars;v++){
+	  for(v=0;v<numVars;v++){
 	    ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[matl][v], pset);
 	    var->packsizeMPI(&sendsize, pg, sendset);
 	  }
@@ -685,7 +687,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	  ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, pset);
 	  ParticleSubset* sendset=record->sendset;
 	  posvar->packMPI(buf, sendsize, &position, pg, sendset);
-	  for(int v=0;v<numVars;v++){
+	  for(v=0;v<numVars;v++){
 	    ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[matl][v], pset);
 	    var->packMPI(buf, sendsize, &position, pg, sendset);
 	  }
@@ -808,7 +810,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	new_dw->saveParticleSubset(matl, patch, orig_pset);
 	ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
 	new_dw->put(*posvar, reloc_new_posLabel);
-	for(int v=0;v<numVars;v++){
+	for(v=0;v<numVars;v++){
 	  ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[matl][v], orig_pset);
 	  new_dw->put(*var, reloc_new_labels[matl][v]);
 	}
@@ -834,7 +836,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	newpos->gather(newsubset, subsets, invars, numRemote);
 
 	vector<ParticleVariableBase*> vars(numVars);
-	for(int v=0;v<numVars;v++){
+	for(v=0;v<numVars;v++){
 	  const VarLabel* label = reloc_old_labels[matl][v];
 	  ParticleVariableBase* var = new_dw->getParticleVariable(label, orig_pset);
 	  for(int i=0;i<(int)subsets.size();i++)
@@ -853,17 +855,30 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	    unpackset->addParticle(idx);
 	  newpos->unpackMPI(buf->databuf, buf->bufsize, &position,
 			    pg, unpackset);
-	  for(int v=0;v<numVars;v++)
+	  for(v=0;v<numVars;v++)
 	    vars[v]->unpackMPI(buf->databuf, buf->bufsize, &position,
 			       pg, unpackset);
 	  ASSERT(position <= buf->bufsize);
 	  delete unpackset;
 	}
 	ASSERTEQ(idx, totalParticles);
+
+#if 0
+	for(v=0;v<numVars;v++){
+	  const VarLabel* label = reloc_new_labels[matl][v];
+	  if (label == particleIDLabel_)
+	    break;
+	}
+
+	// must have a p.particleID variable in reloc labels
+	ASSERT(v < numVars); 
+	newsubset->sort(vars[v] /* particleID variable */);
+#endif
+	
 	// Put the data back in the data warehouse
 	new_dw->put(*newpos, reloc_new_posLabel);
 	delete newpos;
-	for(int v=0;v<numVars;v++){
+	for(v=0;v<numVars;v++){
 	  new_dw->put(*vars[v], reloc_new_labels[matl][v]);
 	  delete vars[v];
 	}
