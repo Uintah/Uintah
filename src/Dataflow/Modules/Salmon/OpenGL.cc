@@ -1327,9 +1327,9 @@ void Roe::setClip(DrawInfoOpenGL* drawinfo)
 			rval = get_tcl_doublevar(id,nz,plane[2]);
 			rval = get_tcl_doublevar(id,nd,plane[3]);
 			
-			double mag = plane[0]*plane[0] +
+			double mag = sqrt(plane[0]*plane[0] +
 			    plane[1]*plane[1] +
-				plane[2]*plane[2];
+				plane[2]*plane[2]);
 			plane[0] /= mag;
 			plane[1] /= mag;
 			plane[2] /= mag;
@@ -1841,6 +1841,9 @@ ImgReq::ImgReq(const clString& n, const clString& t)
 
 //
 // $Log$
+// Revision 1.32  2000/12/13 21:03:53  dmw
+// Clipping planes were not being normalized correctly (a sqrt was missing)
+//
 // Revision 1.31  2000/12/01 23:24:42  yarden
 // remove Alexi's rotations.
 // add new 3D navigation from Brown.
