@@ -45,17 +45,15 @@ Integrator::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Integrator");
   db->require("favre",d_lfavre);
-  string pdfType;
-  db->require("PDFSHAPE",pdfType);
   // dimPDF need to define based on mix fraction and variance or
   // BetaPDFShape can be assumed to be a univariate PDF, higher
   // dim beta pdf can be called multivariateBetaPDF
   int dimPDF = pdfMixModel->getNumMixStatVars();
-  if (pdfType == "BetaPDFShape") 
+  if (pdfMixModel->getPDFShape() == "BetaPDFShape") 
     d_mixingPDF = new BetaPDFShape(dimPDF);
   else
     throw InvalidValue("PDF shape not implemented "
-		       + pdfType);
+		       + pdfMixModel->getPDFShape());
 }
 
 
@@ -201,50 +199,6 @@ Integrator::integrate(int* tableKeyIndex)
   return resultStateVars;
 
 }
-
-Stream
-Integrator::computeMeanValues(int* tableKeyIndex)
-{
-  // compute d_meanValues from tableKeyIndex; store mean values in 
-  // vector d_meanValues
-  convertKeytoMeanValues(tableKeyIndex);
-  int mixIndex = 0;
-  if (!(pdfMixModel->isAdiabatic()))
-    ++mixIndex;
-  int rxnIndex = mixIndex + pdfMixModel->getNumMixStatVars() + 1;
-  vector<double> mixVars(pdfMixModel->getNumMixVars());
-  for (int jj = 0; jj < pdfMixModel->getNumMixVars(); jj++)
-    mixVars[jj] = d_meanValues[mixIndex+jj];
-  Stream unreactedStream = pdfMixModel->speciesStateSpace(mixVars);
-  //cerr << "unreacted Stream: " << d_meanValues[0] << std::endl;
-  ChemkinInterface* rxnData = d_rxnModel->getChemkinInterface();
-  //unreactedStream.print(cerr, rxnData); 
-  // Write independent variables, excluding variance, to separate vector
-  // for use by reaction model
-  //*****FIX THIS****I think it is now
-  int inc = 0;
-  if (!(pdfMixModel->isAdiabatic()))
-    {
-      d_varsHFPi[inc] = d_meanValues[0];
-      ++inc;
-      //cout << "Int::varsHFPi = " << d_varsHFPi[0] << endl;
-    }
-  for (int ii = mixIndex; ii < mixIndex+pdfMixModel->getNumMixVars(); ii++)
-    {
-      d_varsHFPi[inc++] = d_meanValues[ii];
-      //cout << "Int::varsHFPi = " << d_varsHFPi[ii] << endl;
-    }
-  for (int ii = rxnIndex; ii < rxnIndex+pdfMixModel->getNumRxnVars(); ii++)
-    {
-     d_varsHFPi[inc++] = d_meanValues[ii];
-     //cout << "Int::varsHFPi = " << d_varsHFPi[ii] << endl;
-    }
- 
-  Stream outStream;
-  d_rxnModel->getRxnStateSpace(unreactedStream, d_varsHFPi, outStream);
-  return outStream;
-  }
-
 
 void
 Integrator::convertKeytoMeanValues(int tableKeyIndex[]) {
