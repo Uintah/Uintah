@@ -103,8 +103,6 @@ VolumeVis2D::~VolumeVis2D() {
 void
 VolumeVis2D::mouseDown(int x, int y, const Ray& ray, const HitInfo& hit)
 {
-  cerr << "mouseDown was called\n";
-
   Point p = ray.origin() + ray.direction() * hit.min_t - min.vector();
 
   float norm_step_x = inv_diag.x() * (nx - 1 );
@@ -165,17 +163,14 @@ VolumeVis2D::mouseDown(int x, int y, const Ray& ray, const HitInfo& hit)
 void
 VolumeVis2D::mouseUp( int x, int y, const Ray& ray, const HitInfo& hit )
 {
-  cerr << "mouseUp was called\n";
   dpy->delete_voxel_storage();
 }
 
 void
 VolumeVis2D::mouseMotion( int x, int y, const Ray& ray, const HitInfo& hit )
 {
-  cerr << "mouseMotion was called\n";
   dpy->delete_voxel_storage();
   
-  cerr << dpy->cp_voxels.size();
   Point p = ray.origin() + ray.direction() * hit.min_t - min.vector();
 
   float norm_step_x = inv_diag.x() * (nx - 1 );
