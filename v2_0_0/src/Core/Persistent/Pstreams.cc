@@ -34,6 +34,9 @@
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/StringUtil.h>
+
+#include <sci_defs.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
@@ -877,7 +880,7 @@ void FastPiostream::emit_pointer(int& have_data, int& pointer_id)
 // BinaryPiostream -- portable
 BinaryPiostream::~BinaryPiostream()
 {
-#if defined(__APPLE__) && (__GNUC__ == 3) && (__GNUC_MINOR__  <= 3)
+#if (NEED_OSX_HACK == 1)
   if (xdr)
     if ((xdr)->x_ops)
       if ((xdr)->x_ops->x_destroy)
