@@ -2,7 +2,7 @@
 // This file contains a simple scene suitable for ray tracing
 // on 1 processor.
 //
-// It contains one sphere and a "ground".
+// It contains one sphere and a "ground" and a ring.
 //
 
 #include <Packages/rtrt/Core/Camera.h>
@@ -13,6 +13,7 @@
 #include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Sphere.h>
+#include <Packages/rtrt/Core/Ring.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <Packages/rtrt/Core/MetalMaterial.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
@@ -33,14 +34,17 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
   Material* matl=new MetalMaterial( Color( .9,.1,.4 ) );
   Material* matl2=new MetalMaterial( Color( .1,.9,.1 ) );
+  Material* matl3=new MetalMaterial( Color( .1,.9,.9 ) );
 
   Object* obj  = new Sphere( matl, Point(0,-10,0), 1 );
   Object* obj1 = new Rect(matl2, Point(0,0,0), Vector(6,0,0), Vector(0,6,0));
-
+  Object* obj2 = new Ring(matl3, Point(0, -8, 1), Vector(0,0,1), 5, 1);
+			  
 
   Group * group = new Group();
   group->add( obj );
   group->add( obj1 );
+  group->add( obj2 );
 
   double ambient_scale=1.0;
   Color bgcolor(0.1, 0.2, 0.45);

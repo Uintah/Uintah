@@ -1,6 +1,7 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Grid.h>
 #include <Packages/rtrt/Core/Disc.h>
+#include <Packages/rtrt/Core/Ring.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
@@ -13,6 +14,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/Mesh.h>
+#include <Packages/rtrt/Core/ASEReader.h>
 #include <Packages/rtrt/Core/Bezier.h>
 #include <Packages/rtrt/Core/BV1.h>
 #include <Packages/rtrt/Core/Checker.h>
@@ -128,8 +130,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 		       Vector(0, 2.5, 0), Vector(0, 0, 1)));
 
   // add the ceiling
-  ceiling_floor->add(new Rect(white, Point(-8, 8, 4),
-		       Vector(4, 0, 0), Vector(0, 4, 0)));
+//  ceiling_floor->add(new Rect(white, Point(-8, 8, 4),
+//		       Vector(4, 0, 0), Vector(0, 4, 0)));
 
   west_wall->add(pic1);
   north_wall->add(pic2);
@@ -141,6 +143,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   double i2m = 1./36.;             // convert inches to meters
   Point center(-8, 8, 0);
 
+#if 0
   // N/S horizontal bar to support glass
   table->add(new Box(silver, center+Vector(-1,-24,31.85)*i2m, 
 		     center+Vector(1,24,32.15)*i2m));
@@ -167,28 +170,44 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 		      Vector(0,0,-1), 23.75*i2m));
 
   // rim
-  // TODO: need a hollow cylinder type: matl, top, bottom, inner rad, thickness
-  // table->add(new HollowCylinder(silver, center+Vector(0,0,32.171)*i2m,
-  //				 center+Vector(0,0,31.671)*i2m, 
-  //				 center+Vector(0,0,32.171)*i2m, 
-  //                             32.*i2m, 23.5*i2m, 2*i2m));
+  table->add(new Cylinder(silver, center+Vector(0,0,32.151)*i2m,
+			  center+Vector(0,0,32.451)*i2m, 23.80*i2m));
+  table->add(new Cylinder(silver, center+Vector(0,0,32.151)*i2m,
+			  center+Vector(0,0,32.451)*i2m, 24.80*i2m));
+  table->add(new Ring(silver, center+Vector(0,0,32.151)*i2m, Vector(0,0,-1),
+		      23.80*i2m, 1.*i2m));
+  table->add(new Ring(silver, center+Vector(0,0,32.451)*i2m, Vector(0,0,1),
+		      23.80*i2m, 1.*i2m));
 
   // N leg
-  table->add(new Box(silver, center+Vector(22,-1,0)*i2m, 
-		     center+Vector(24,1,31.672)*i2m));
+  table->add(new Box(silver, center+Vector(22.8,-1,0)*i2m, 
+		     center+Vector(24.8,1,31.672)*i2m));
   
   // S leg
-  table->add(new Box(silver, center+Vector(-24,-1,0)*i2m, 
-		     center+Vector(-22,1,31.672)*i2m));
+  table->add(new Box(silver, center+Vector(-24.8,-1,0)*i2m, 
+		     center+Vector(-22.8,1,31.672)*i2m));
   
   // E leg
-  table->add(new Box(silver, center+Vector(-1,22,0)*i2m, 
-		     center+Vector(1,24,31.672)*i2m));
+  table->add(new Box(silver, center+Vector(-1,22.8,0)*i2m, 
+		     center+Vector(1,24.8,31.672)*i2m));
   
   // W leg
-  table->add(new Box(silver, center+Vector(-1,-24,0)*i2m, 
-		     center+Vector(1,-22,31.672)*i2m));
+  table->add(new Box(silver, center+Vector(-1,-24.8,0)*i2m, 
+		     center+Vector(1,-22.8,31.672)*i2m));
+
+#endif
   
+  // table base
+  table->add(new Cylinder(silver, center+Vector(0,0,0.01)*i2m,
+			  center+Vector(0,0,24)*i2m, 12*i2m));
+  // table top
+  table->add(new Cylinder(silver, center+Vector(0,0,24)*i2m,
+			  center+Vector(0,0,36)*i2m, 30*i2m));
+  table->add(new Disc(silver, center+Vector(0,0,24)*i2m,
+		      Vector(0,0,-1)*i2m, 30*i2m));
+  table->add(new Disc(silver, center+Vector(0,0,36)*i2m,
+		      Vector(0,0,1)*i2m, 30*i2m));
+
   // TODO: need a way to bevel the corners with a normal map
 
   Group *g = new Group();
@@ -204,16 +223,35 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   g->add(south_wall);
   g->add(east_wall);
   g->add(table);
-  
-  Color cdown(0.1, 0.1, 0.7);
-  Color cup(0.5, 0.5, 0.0);
+
+  Array1<Material *> matls;
+  string env_map;
+  Transform corbusier_trans;
+
+  // first, get it centered at the origin (in x and y), and scale it
+  corbusier_trans.pre_scale(Vector(0.007, 0.007, 0.007));
+  corbusier_trans.pre_translate(Vector(0.5,0.2,0));
+
+  // now rotate/translate it to the right angle/position
+  for (int i=0; i<5; i++) {
+    Transform t(corbusier_trans);
+    double rad=(65+35*i)*(M_PI/180.);
+    t.pre_rotate(rad, Vector(0,0,1));
+    t.pre_translate(center.vector()+Vector(cos(rad),sin(rad),0)*2.9);
+    if (!readASEFile("/usr/sci/projects/rtrt/geometry/lebebe.ASE", t, g, matls, env_map)) {
+      exit(0);
+    }
+  }
+
+  Color cdown(0.1, 0.1, 0.1);
+  Color cup(0.1, 0.1, 0.1);
 
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(0.3, 0.3, 0.3);
   Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane, 0.5);
   scene->ambient_hack = false;
 
-  scene->select_shadow_mode("hard");
+  scene->select_shadow_mode("none");
   scene->maxdepth = 8;
   scene->add_light(new Light(Point(-8, 8, 3.9), Color(.8,.8,.8), 0));
   scene->animate=false;
