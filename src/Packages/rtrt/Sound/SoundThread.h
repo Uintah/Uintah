@@ -18,14 +18,14 @@ using std::vector;
 class Sound;
 class Scene;
 class Camera;
-class Gui;
+class GGT;
 
 class SoundThread : public Runnable {
 
   friend class Sound;
 
 public:
-  SoundThread( const Camera * eyepoint, Scene * scene, Gui * gui );
+  SoundThread( const Camera * eyepoint, Scene * scene, GGT * gui );
   virtual ~SoundThread();
   virtual void run();
 
@@ -53,7 +53,7 @@ private:
   // want to create a circular dependency, lib sound can only call
   // core functions.  So we will ask the gui for the current sound
   // and then update information about the current sound for the gui.
-  Gui   * gui_;
+  GGT   * gui_;
   Sound * currentSound_;
 
   static const int   numChannels_;

@@ -18,11 +18,11 @@ using SCIRun::Point;
 using std::string;
 using std::vector;
 
-class Gui;
+class GGT;
 
 class Sound {
 
-  friend class Gui;
+  friend class GGT;
 
 public:
 

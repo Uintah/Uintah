@@ -30,7 +30,7 @@ static int portNum = 0;
 const int SoundThread::numChannels_ = 2;
 
 SoundThread::SoundThread( const Camera * eyepoint, Scene * scene,
-			  Gui * gui ) :
+			  GGT * gui ) :
   eyepoint_( eyepoint ), scene_( scene ), gui_( gui ), sleepTime_(0.0)
 {
   ALpv  pv;
