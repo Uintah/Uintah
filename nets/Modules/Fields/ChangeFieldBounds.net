@@ -30,7 +30,6 @@ if { $results == "failed" } {
 
 source $DATADIR/$DATASET/$DATASET.settings
 
-
 ::netedit dontschedule
 
 global notes
@@ -50,10 +49,8 @@ addConnection $m0 0 $m1 0
 addConnection $m1 0 $m3 0
 
 set $m0-notes {}
-set $m0-show_status {1}
-set $m0-filename $DATADIR/sphere/sphere-voltage.tvd.fld
+set $m0-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
 set $m1-notes {}
-set $m1-show_status {1}
 set $m1-outputcenterx {0.8655488232993986}
 set $m1-outputcentery {-0.1303803778581298}
 set $m1-outputcenterz {-0.3424932036610332}
@@ -77,7 +74,6 @@ set $m1-box-in-y {-0.1100696747775234}
 set $m1-box-in-z {0.5222700425895321}
 set $m1-resetting {0}
 set $m2-notes {}
-set $m2-show_status {1}
 set $m2-nodes-on {0}
 set $m2-nodes-transparency {0}
 set $m2-nodes-as-disks {0}
@@ -112,7 +108,7 @@ set $m2-text-show-cells {0}
 set $m2-def-color-r {0.50}
 set $m2-def-color-g {0.50}
 set $m2-def-color-b {0.50}
-set $m2-def-color-a {0.28}
+set $m2-def-color-a {0.74}
 set $m2-node_display_type {Points}
 set $m2-edge_display_type {Lines}
 set $m2-data_display_type {Arrows}
@@ -126,11 +122,12 @@ set $m2-tensors_scale {0.30}
 set $m2-scalars_scale {0.300}
 set $m2-show_progress {}
 set $m2-interactive_mode {Interactive}
+set $m2-field-name {Original Field}
+set $m2-field-name-update {1}
 set $m2-node-resolution {6}
 set $m2-edge-resolution {6}
 set $m2-data-resolution {6}
 set $m3-notes {}
-set $m3-show_status {1}
 set $m3-nodes-on {0}
 set $m3-nodes-transparency {0}
 set $m3-nodes-as-disks {0}
@@ -176,29 +173,30 @@ set $m3-node_scale {0.0300}
 set $m3-edge_scale {0.0150}
 set $m3-vectors_scale {0.30}
 set $m3-tensors_scale {0.30}
-set $m3-scalars_scale {0.30}
+set $m3-scalars_scale {0.300}
 set $m3-show_progress {}
 set $m3-interactive_mode {Interactive}
+set $m3-field-name {Transformed Field}
+set $m3-field-name-update {1}
 set $m3-node-resolution {6}
 set $m3-edge-resolution {6}
 set $m3-data-resolution {6}
 set $m4-notes {}
-set $m4-show_status {1}
 $m4 ui
 set $m4-ViewWindow_0-pos {}
 set $m4-ViewWindow_0-caxes {0}
 set $m4-ViewWindow_0-raxes {1}
 set $m4-ViewWindow_0-iaxes {}
 set $m4-ViewWindow_0-have_collab_vis {0}
-set $m4-ViewWindow_0-view-eyep-x {3.089339595082914}
-set $m4-ViewWindow_0-view-eyep-y {0.3100337410071506}
-set $m4-ViewWindow_0-view-eyep-z {11.3964105176304}
+set $m4-ViewWindow_0-view-eyep-x {0.6525340749581632}
+set $m4-ViewWindow_0-view-eyep-y {1.756879324038727}
+set $m4-ViewWindow_0-view-eyep-z {11.54983406464109}
 set $m4-ViewWindow_0-view-lookat-x {0.4716818676465125}
 set $m4-ViewWindow_0-view-lookat-y {-0.09581710158158288}
 set $m4-ViewWindow_0-view-lookat-z {-0.1015524808996493}
-set $m4-ViewWindow_0-view-up-x {0.07766478286905705}
-set $m4-ViewWindow_0-view-up-y {0.9955791862595155}
-set $m4-ViewWindow_0-view-up-z {-0.05282296270319715}
+set $m4-ViewWindow_0-view-up-x {0.1114490602772472}
+set $m4-ViewWindow_0-view-up-y {0.9811702811996658}
+set $m4-ViewWindow_0-view-up-z {-0.1577465887234577}
 set $m4-ViewWindow_0-view-fov {20}
 set $m4-ViewWindow_0-view-eyep_offset-x {}
 set $m4-ViewWindow_0-view-eyep_offset-y {}
