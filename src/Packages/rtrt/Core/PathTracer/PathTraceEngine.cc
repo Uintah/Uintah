@@ -132,7 +132,8 @@ void PathTraceWorker::run() {
   for (int i = 0; i < inv_num_samples.size(); i++) {
     inv_num_samples[i] = 1./ptc->num_samples[i];
   }
-  
+
+  int* reflect_sample_set = new int[ptc->max_depth];
   // Iterate over our spheres
   for(int sindex = 0; sindex < local_spheres->objs.size(); sindex++) {
     TextureSphere *sphere =
@@ -159,7 +160,8 @@ void PathTraceWorker::run() {
       
       for(int u=0;u<width;u++) {
 	int sgindex = (int)(rng()*(NUM_SAMPLE_GROUPS-1));
-	int sgindex2 = (int)(rng()*(NUM_SAMPLE_GROUPS-1));
+        for(int rss = 0; rss < ptc->max_depth; rss++)
+          reflect_sample_set[rss] = (int)(rng()*(NUM_SAMPLE_GROUPS-1));
 #if 0
 	sphere->texture(u,v)+=div_index;
 	continue;
@@ -234,9 +236,6 @@ void PathTraceWorker::run() {
 		  (normal_dot_sr/(distance*distance*M_PI));
 	    }
 			      
-	    if (depth==ptc->max_depth)
-	      break;
-	    
 	    // Pick a random direction on the hemisphere
 	    Vector v0(Cross(normal, Vector(1,0,0)));
 	    if(v0.length2()==0)
@@ -247,7 +246,8 @@ void PathTraceWorker::run() {
 	    
 	    Vector v_out;
 	    {
-	      Point2D hemi_sample=sample_points(sgindex2, div_index)[sample];
+	      Point2D hemi_sample=sample_points(reflect_sample_set[depth],
+                                                div_index)[sample];
 	      double phi=2.0*M_PI*hemi_sample.x();
 	      double r=sqrt(hemi_sample.y());
 	      double x=r*cos(phi);
