@@ -188,7 +188,7 @@
              <om>0.35</om>
              <rho0>1160.0</rho0>
            </EOS>
-           <viscosity>              0.0                 </viscosity>
+           <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          544.96               </specific_heat>
            <speed_of_sound>         374.17              </speed_of_sound>

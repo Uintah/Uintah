@@ -218,7 +218,7 @@
            <isSurroundingMatl> true                     </isSurroundingMatl> 
            <burn type = "null"/>
            <EOS type = "ideal_gas">                     </EOS>
-           <viscosity>          15.6e-6                 </viscosity>
+           <dynamic_viscosity>  15.6e-6                 </dynamic_viscosity>
            <thermal_conductivity>100                    </thermal_conductivity>
            <specific_heat>      716.0                   </specific_heat>
            <speed_of_sound>     376                     </speed_of_sound>
