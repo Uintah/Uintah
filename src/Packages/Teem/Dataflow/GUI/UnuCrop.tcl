@@ -46,6 +46,14 @@ itcl_class Teem_Unu_UnuCrop {
 		}
 	    }
 	    set $this-reset 0
+	} else {
+	    for {set i 0} {$i < [set $this-num-axes]} {incr i} {
+
+		if {[set $this-maxAxis$i] == 0 || [set $this-reset]} {
+		    set $this-maxAxis$i [set $this-absmaxAxis$i]
+		}
+	    }
+	    set $this-reset 0
 	}
     }
 
@@ -89,7 +97,6 @@ itcl_class Teem_Unu_UnuCrop {
    method clear_axes {} {
 	set w .ui[modname]
         if {[winfo exists $w]} {
-  
 	    if {[winfo exists $w.f.mmf.t]} {
 		destroy $w.f.mmf.t
 	    }
