@@ -4,7 +4,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Exceptions/OutFluxVolume.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
@@ -14,7 +14,6 @@ FirstOrderCEAdvector::FirstOrderCEAdvector()
 {
   OFE_CCLabel = 0;
   OFC_CCLabel = 0;
-
 }
 
 FirstOrderCEAdvector::FirstOrderCEAdvector(DataWarehouse* new_dw, 
@@ -80,6 +79,10 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
 
   // Compute outfluxes 
   const IntVector gc(1,1,1);
+  bool err=false;
+  IntVector err_cell(0,0,0);
+  double err_total_fluxout = 0;
+  double err_vol = 0;
   for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
     IntVector curcell = *iter;
     delY_top    = std::max(0.0, (vvel_FC[curcell+IntVector(0,1,0)] * delT));
@@ -131,7 +134,6 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
     d_OFC[curcell].d_cflux[BOT_L_BK]  = delY_bottom   * delX_left  * delZ_back;
     d_OFC[curcell].d_cflux[BOT_L_FR]  = delY_bottom   * delX_left  * delZ_front;
 
-
     //__________________________________
     //  Bullet proofing
     double total_fluxout = 0.0;
@@ -147,17 +149,15 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
     }
     
     if (total_fluxout > vol) {
-      ostringstream warning;
-      IntVector c = *iter;
-      warning << " cell["<<c.x()<<"]["<<c.y()<<"]["<<c.z()
-	      << "], total_outflux (" << total_fluxout << ") > vol (" 
-	      << vol << ")";
-      string warn = "FirstOrderCEAdvector::influxOutFluxVolume" 
-	+ warning.str();
-      throw InvalidValue(warn); 
+      err_cell = *iter;
+      err_total_fluxout = total_fluxout;
+      err_vol = vol;
+      err=true;
    }
-
   }
+  if(err)
+    throw OutFluxVolume(err_cell,err_total_fluxout,err_vol);
+ 
 }
 
 
@@ -345,8 +345,6 @@ namespace Uintah {
     }
     return td;
   }
-  
-  
   
 }
 
