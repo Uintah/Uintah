@@ -55,7 +55,7 @@ NewStaticMixingTable::problemSetup(const ProblemSpecP& params)
   db->require("rxnvars",d_numRxnVars);
   db->require("mixstatvars",d_numMixStatVars);
   db->require("inputfile",d_inputfile);
-  if ((db->findBlock("h_fuel"))&&(db->findBlock("h_fuel"))) {
+  if ((db->findBlock("h_fuel"))&&(db->findBlock("h_air"))) {
     db->require("h_fuel",d_H_fuel);
     db->require("h_air",d_H_air);
     d_adiab_enth_inputs = true;
@@ -165,10 +165,6 @@ double NewStaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, dou
   double small = 1.0e-10;
   // compute index
   // nx - mixfrac, ny - mixfracVars, var_index - index of the variable
-  //cout<<"Mixture fraction is :"<<mixfrac<<endl;
-  //mixfrac=0.5;
-  //mixfracVars=0.0;
-  //cout<< "Mixture fraction variance is :"<<mixfracVars<<endl;
   // Enthalpy loss lookup
   double fmg, fpmg,s1,s2,var_value;
   int nhl_lo=0, nhl_hi=0;
@@ -207,9 +203,8 @@ double NewStaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, dou
   //Non-unifrom mixture fraction 
   double df1,df2; 
   for(int index=0; index < d_mixfraccount-1; index++){
-	df1 = meanMix[m_index*d_mixfraccount+index][var_index]-mixfrac;
-	df2 = meanMix[m_index*d_mixfraccount+index+1][var_index]-mixfrac;
-        //cout<<"df1*df2 value is  : "<<df1*df2<<endl;
+	df1 = meanMix[var_index][index]-mixfrac;
+	df2 = meanMix[var_index][index+1]-mixfrac;
 	if((df1*df2) == 0.0 && index != 0){
 		nx_lo=index+1;
 		nx_hi=nx_lo;
@@ -222,51 +217,83 @@ double NewStaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, dou
 	}
   }
 
- // cout<<"nx_lo index is  : "<<nx_lo<<endl;
-  //cout<<"nx_hi index is  : "<<nx_lo<<endl;
+  //cout<<"nx_lo index is  : "<<nx_lo<<endl;
+  //cout<<"nx_hi index is  : "<<nx_hi<<endl;
 
   
   // variance is uniform table
   double max_curr_Zvar = mixfrac*(1.0-mixfrac);
   double max_Zvar = min(mixfracVars,max_curr_Zvar);
   double g, gi1, gp, gi2;
-  if(meanMix[m_index*d_mixfraccount+nx_lo][var_index]<=small || fabs(meanMix[m_index*d_mixfraccount+nx_lo][var_index]-1.0)<=small)
+  //Index for variances
+  int k1,k2,k1p,k2p;
+  //Weighing factors for variance
+  double dk1,dk2,dk1p,dk2p;
+  if(meanMix[var_index][nx_lo]<=small || fabs(meanMix[var_index][nx_lo]-1.0)<=small){
+	// Set the values to get the first entry
 	g=0.0;
+        k1=0;
+	k1p=1;
+	dk1=0.0;
+	dk1p=1.0;
+  }
   else{
-	gi1=max_Zvar*meanMix[m_index*d_mixfraccount+nx_lo][var_index]*(1.0-meanMix[m_index*d_mixfraccount+nx_lo][var_index])/(max_curr_Zvar+small);
-        g=gi1*double(d_mixvarcount-1)/(meanMix[m_index*d_mixfraccount+nx_lo][var_index]*(1.0-meanMix[m_index*d_mixfraccount+nx_lo][var_index]));
+	gi1=max_Zvar*meanMix[var_index][nx_lo]*(1.0-meanMix[var_index][nx_lo])/(max_curr_Zvar+small);
+	// Normalizing
+        g=gi1/(meanMix[var_index][nx_lo]*(1.0-meanMix[var_index][nx_lo]));
+	// Finding the table entry
+  	for(int index=0; index < d_mixvarcount-1; index++){
+		dk1 = variance[index]-g;
+		dk1p = variance[index+1]-g;
+		if((dk1*dk1p) == 0.0 && index != 0){
+			k1=index+1;
+			k1p=k1;
+                	break;
+		}
+		else if((dk1*dk1p) <= 0.0){
+			k1=index;
+			k1p=k1+1;
+                	break;
+		}
+  	}
   }
 
-  if(meanMix[m_index*d_mixfraccount+nx_hi][var_index]<=small || fabs(meanMix[m_index*d_mixfraccount+nx_hi][var_index]-1.0)<=small)
+  if(meanMix[var_index][nx_hi]<=small || fabs(meanMix[var_index][nx_hi]-1.0)<=small){
+	// Set the values to get the first entry
 	gp=0.0;
+        k2=0;
+	k2p=1;
+	dk2=0.0;
+	dk2p=1.0;
+  }
   else{
-	gi2=max_Zvar*meanMix[m_index*d_mixfraccount+nx_hi][var_index]*(1.0-meanMix[m_index*d_mixfraccount+nx_hi][var_index])/(max_curr_Zvar+small);
-        gp=gi2*double(d_mixvarcount-1)/(meanMix[m_index*d_mixfraccount+nx_hi][var_index]*(1.0-meanMix[m_index*d_mixfraccount+nx_hi][var_index]));
+	gi2=max_Zvar*meanMix[var_index][nx_hi]*(1.0-meanMix[var_index][nx_hi])/(max_curr_Zvar+small);
+	// Normalizing
+        gp=gi2/(meanMix[var_index][nx_hi]*(1.0-meanMix[var_index][nx_hi]));
+	// Finding the table entry
+  	for(int index=0; index < d_mixvarcount-1; index++){
+		dk2 = variance[index]-gp;
+		dk2p = variance[index+1]-gp;
+		if((dk2*dk2p) == 0.0 && index != 0){
+			k2=index+1;
+			k2p=k2;
+                	break;
+		}
+		else if((dk2*dk2p) <= 0.0){
+			k2=index;
+			k2p=k2+1;
+                	break;
+		}
+  	}
 
   }
   //cout<<" G value is :"<<g<<endl;
   //cout<<"GP value is :"<<gp<<endl;
-  int k1,k2,k1p,k2p;
-  k1=floor(g);
-  if(k1 < 0)
-	k1=0;
-  if(k1 > d_mixvarcount-2)
-	k1=d_mixvarcount-2;
-  //cout<<"Index of K1 is: "<<k1<<endl;
-  k1p=k1+1;
-  k2=floor(gp);
-  if(k2 < 0)
-	k2=0;
-  if(k2 > d_mixvarcount-2)
-	k2=d_mixvarcount-2;
-  //cout<<"Index of K2 is: "<<k2<<endl;
-  k2p=k2+1;
   //Interpolating the values
-  fmg=(g-double(k1))*table[m_index*d_mixfraccount*d_mixvarcount+nx_lo*d_mixvarcount+k1p][var_index]-(g-double(k1p))*table[m_index*d_mixfraccount*d_mixvarcount+nx_lo*d_mixvarcount+k1][var_index];
+  fmg=(g-double(k1))*table[var_index][m_index*d_mixfraccount*d_mixvarcount+k1p*d_mixfraccount+nx_lo]-(g-double(k1p))*table[var_index][m_index*d_mixfraccount*d_mixvarcount+k1*d_mixfraccount+nx_lo];
   //cout<< "FMG is :"<<fmg<<endl;
-  fpmg=(gp-double(k2))*table[m_index*d_mixfraccount*d_mixvarcount+nx_hi*d_mixvarcount+k2p][var_index]-(gp-double(k2p))*table[m_index*d_mixfraccount*d_mixvarcount+nx_hi*d_mixvarcount+k2][var_index];
+  fpmg=(gp-double(k2))*table[var_index][m_index*d_mixfraccount*d_mixvarcount+k2p*d_mixfraccount+nx_hi]-(gp-double(k2p))*table[var_index][m_index*d_mixfraccount*d_mixvarcount+k2*d_mixfraccount+nx_hi];
   //cout<< "FPMG is : "<<fpmg<<endl;
-
   if(nhl_lo==nhl_hi){
 	s1=(df1*fpmg-df2*fmg)/(df1-df2);
         s2=s1;
@@ -337,15 +364,15 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   h2o_index = -1;
   for (int ii = 0; ii < d_varscount; ii++) {
     fd >> vars_names[ii];
-    if(vars_names[ii]== "Rho")
+    if(vars_names[ii]== "Rho" || vars_names[ii]== "density")
 	    Rho_index = ii;
-    else if(vars_names[ii]== "T")
+    else if(vars_names[ii]== "T" || vars_names[ii]== "Temp")
 	    T_index = ii;
-    else if(vars_names[ii]== "Cp")
+    else if(vars_names[ii]== "Cp" || vars_names[ii]== "heat_capac")
 	    Cp_index = ii;
     else if(vars_names[ii]== "Entalpy")
 	    Enthalpy_index = ii;
-    else if(vars_names[ii]== "Hs")
+    else if(vars_names[ii]== "Hs" || vars_names[ii]== "sensible_h")
 	    Hs_index = ii;
     else if(vars_names[ii]== "CO2")
 	    co2_index = ii;
@@ -383,10 +410,14 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   // Reading heat loss values
   for (int mm=0; mm< d_heatlosscount; mm++){
 	fd >> heatLoss[mm];
+	//cout << heatLoss[mm] << endl;
   }
+  // Non-dimensionalized variance values normalized by maximum mixture fraction: f_mean*(1.0-f_mean)
+  variance=vector<double>(d_mixvarcount);
   // Reading variance values
   for (int mm=0; mm< d_mixvarcount; mm++){
 	fd >> variance[mm];
+	//cout << variance[mm] << endl;
   }
 
   //Reading the data
@@ -395,6 +426,7 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
     // Reading mixture fraction values
     for (int ii=0; ii< d_mixfraccount; ii++){
       fd >> meanMix[kk][ii];
+      //cout << meanMix[kk][ii] << "      ";
     }
     // Enthaply loss loop
     for (int mm=0; mm< d_heatlosscount; mm++){
@@ -402,7 +434,8 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
       for (int jj=0;jj<d_mixvarcount; jj++){
   	// Mixture fraction loop 
   	for (int ii=0; ii< d_mixfraccount; ii++){
-	  fd >> table[kk][mm*(d_mixfraccount*d_mixvarcount)+ii*d_mixvarcount+jj];
+	  fd >> table[kk][mm*(d_mixfraccount*d_mixvarcount)+jj*d_mixfraccount+ii];
+	  //cout << table[kk][mm*(d_mixfraccount*d_mixvarcount)+jj*d_mixfraccount+ii]<< "  ";
   	}// End of mixture fraction loop
       } // End of variance loop
     }//End of enthalpy loss loop
@@ -410,4 +443,5 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
 
   // Closing the file pointer
   fd.close();
+  cout << "Table reading is successful" << endl;
 }
