@@ -594,7 +594,7 @@ void Sage<Field>::extract( double iso, int x, int y, int z )
       
   // >> Begin new projection
       
-  TriangleCase *tcase=&tri_case[code];
+  TriangleCase *tcase= &(this->tri_case[code]);
   int *vertex = tcase->vertex;
   Pt p[12];
   Point q[12];
@@ -604,8 +604,8 @@ void Sage<Field>::extract( double iso, int x, int y, int z )
   for (int t=0; t<tcase->n; t++) {
     int id = vertex[v++];
     for ( ; id != -1; id=vertex[v++] ) {
-      int v1 = edge_table[id][0];
-      int v2 = edge_table[id][1];
+      int v1 = this->edge_table[id][0];
+      int v2 = this->edge_table[id][1];
       q[id] = Interpolate(vp[v1], vp[v2], 
 			  (value[v1]-iso)/double(value[v1]-value[v2]));
       if ( scan ) project( q[id], p[id] );
