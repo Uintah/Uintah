@@ -936,6 +936,8 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	do_mouse(&Roe::mouse_rotate, args);
     } else if(args[1] == "mscale"){
 	do_mouse(&Roe::mouse_scale, args);
+    } else if(args[1] == "mpick"){
+	do_mouse(&Roe::mouse_pick, args);
     } else if(args[1] == "sethome"){
 	homeview=view.get();
     } else if(args[1] == "gohome"){

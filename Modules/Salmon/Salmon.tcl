@@ -128,9 +128,9 @@ proc bindEvents {w rid} {
     bind $w <ButtonPress-3> "$rid mscale start %x %y"
     bind $w <Button3-Motion> "$rid mscale move %x %y"
     bind $w <ButtonRelease-3> "$rid mscale end %x %y"
-    bind $w <Shift-ButtonPress-1> "$rid mscale start %x %y"
-    bind $w <Shift-Button1-Motion> "$rid mscale move %x %y"
-    bind $w <Shift-ButtonRelease-1> "$rid mscale end %x %y"
+    bind $w <Shift-ButtonPress-1> "$rid mpick start %x %y"
+    bind $w <Shift-Button1-Motion> "$rid mpick move %x %y"
+    bind $w <Shift-ButtonRelease-1> "$rid mpick end %x %y"
 }
 
 proc removeMFrame {w rid} {
