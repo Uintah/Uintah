@@ -4,6 +4,9 @@
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Grid.h>
 #include "CCVectorField.h"
+#include <iostream>
+using std::cerr;
+using std::endl;
 using std::vector;
 
 

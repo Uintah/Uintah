@@ -97,6 +97,21 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
+  // returns the min and max L2 norm
+  void get_minmax(double& v0, double& v1);
+  void get_bounds(Point& p0, Point& p1);
+protected:
+  bool have_bounds;
+  Point bmin;
+  Point bmax;
+  Vector diagonal;
+  void compute_bounds();
+
+  bool have_minmax;
+  double data_min;
+  double data_max;
+  void compute_minmax();
+
 private:
 
 

@@ -1,9 +1,14 @@
 #include "ScalarParticles.h"
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Malloc/Allocator.h>
-
+#include <Uintah/Grid/Level.h>
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/Grid.h>
+using std::vector;
 namespace Uintah {
 namespace Datatypes {
+
 
 using Uintah::DataArchive;
 using Uintah::ParticleVariable;
@@ -31,10 +36,11 @@ ScalarParticles::ScalarParticles()
 {
 }
 
-ScalarParticles::ScalarParticles(const ParticleVariable<Point>& positions,
-			       const ParticleVariable<double>& scalars,
-			       void* callbackClass) :
-  positions(positions), scalars(scalars), cbClass(callbackClass),
+ScalarParticles::ScalarParticles(
+		 const vector <ParticleVariable<Point> >& positions,
+		 const vector <ParticleVariable<double> >& scalars,
+		 void* callbackClass):
+  positions(positions), scalars(scalars),  cbClass(callbackClass),
   have_bounds(false), have_minmax(false)
 {
 }
@@ -51,13 +57,16 @@ void ScalarParticles::compute_bounds()
 
   Point min(1e30,1e30,1e30), max(-1e30,-1e30,-1e30);
 
-  ParticleSubset *ps = positions.getParticleSubset();
-  for(ParticleSubset::iterator iter = ps->begin();
-      iter != ps->end(); iter++){
-    max = SCICore::Geometry::Max(positions[ *iter ], max);
-    min = SCICore::Geometry::Min(positions[ *iter ], min);
+  vector<ParticleVariable<Point> >::iterator it;
+  for( it = positions.begin(); it != positions.end(); it++){
+    
+    ParticleSubset *ps = (*it).getParticleSubset();
+    for(ParticleSubset::iterator iter = ps->begin();
+	iter != ps->end(); iter++){
+      max = SCICore::Geometry::Max((*it)[ *iter ], max);
+      min = SCICore::Geometry::Min((*it)[ *iter ], min);
+    }
   }
-
   if (min == max) {
     min = Point(0,0,0);
     max = Point(1,1,1);
@@ -65,6 +74,14 @@ void ScalarParticles::compute_bounds()
   have_bounds = true;
   bmin = min;
   bmax = max;
+}
+
+void ScalarParticles:: AddVar( const ParticleVariable<Point> locs,
+			       const ParticleVariable<double> parts,
+			       const Patch*)
+{
+  positions.push_back( locs );
+  scalars.push_back( parts );
 }
 
 void ScalarParticles::get_bounds(Point& p0, Point& p1)
@@ -82,13 +99,17 @@ void ScalarParticles::compute_minmax()
     return;
 
   double min = 1e30, max = -1e30;
-  ParticleSubset *ps = positions.getParticleSubset();
-  for(ParticleSubset::iterator iter = ps->begin();
-      iter != ps->end(); iter++){
-    max = ( scalars[ *iter ] > max ) ?
-      scalars[ *iter ] : max;
-    min = ( scalars[ *iter ] < min ) ?
-      scalars[ *iter ] : min;
+  vector<ParticleVariable<double> >::iterator it;
+  for( it = scalars.begin(); it != scalars.end(); it++){
+    
+    ParticleSubset *ps = (*it).getParticleSubset();
+    for(ParticleSubset::iterator iter = ps->begin();
+	iter != ps->end(); iter++){
+      max = ( (*it)[ *iter ] > max ) ?
+	(*it)[ *iter ] : max;
+      min = ( (*it)[ *iter ] < min ) ?
+	(*it)[ *iter ] : min;
+    }
   }
   if (min == max) {
     min -= 0.001;
