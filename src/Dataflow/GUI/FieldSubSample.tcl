@@ -160,10 +160,9 @@ itcl_class SCIRun_Fields_FieldSubSample {
 	}
 
 	frame $w.misc
-
-	button $w.misc.b -text "Execute" -command "$this-c needexecute"
-
-	pack $w.misc.b  -side left -padx 25
+	button $w.misc.execute -text "Execute" -command "$this-c needexecute"
+	button $w.misc.close -text Close -command "destroy $w"
+	pack $w.misc.execute $w.misc.close -side left -padx 25
 
 	if { [set $this-dims] == 3 } {
 	    pack $w.l $w.i $w.j $w.k $w.misc -side top -padx 10 -pady 5
