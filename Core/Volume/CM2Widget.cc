@@ -1030,7 +1030,8 @@ static Persistent* ImageCM2Widget_maker()
   return scinew ImageCM2Widget;
 }
 
-PersistentTypeID ImageCM2Widget::type_id("ImageCM2Widget", "CM2Widget", maker);
+PersistentTypeID ImageCM2Widget::type_id("ImageCM2Widget", "CM2Widget",
+					 ImageCM2Widget_maker);
 
 #define IMAGECM2WIDGET_VERSION 1
 
