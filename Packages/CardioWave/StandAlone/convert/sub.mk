@@ -21,7 +21,7 @@ SRCDIR := Packages/CardioWave/StandAlone/convert
 ifeq ($(LARGESOS),yes)
 PSELIBS := Packages/CardioWave/StandAlone/convert
 else
-PSELIBS := Core/Datatypes Core/Math Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry
+PSELIBS := Core/Datatypes Core/Math Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry Core/Util
 endif
 LIBS := $(M_LIBRARY)
 
