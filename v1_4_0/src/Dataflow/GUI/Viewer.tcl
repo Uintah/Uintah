@@ -132,15 +132,6 @@ itcl_class ViewWindow {
 	if {![info exists $this-sr]} {set $this-sr 1}
 	global $this-do_stereo
 	if {![info exists $this-do_stereo]} {set $this-do_stereo 0}
-
-	global $this-resx
-	set $this-resx 640
-	global $this-resy
-	set $this-resy 512
-
-	global $this-aspect
-	set $this-aspect 1
-	global $this-aspect-rat
     }
 
     destructor {
@@ -1420,6 +1411,9 @@ itcl_class ViewWindow {
 	global $this-resx
 	global $this-resy
 	global $this-aspect
+	set $this-resx [winfo width .ui[modname].wframe.draw]
+	set $this-resy [winfo height .ui[modname].wframe.draw]
+	
 	toplevel .ui[modname]-saveImage
 	set w .ui[modname]-saveImage
 	makeFilebox $w \
