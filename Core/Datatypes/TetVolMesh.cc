@@ -1054,59 +1054,63 @@ void
 TetVolMesh::compute_grid()
 {
   grid_lock_.lock();
-  //  if (grid_.get_rep() != 0) {grid_lock_.unlock(); return;} // only create once.
 
   BBox bb = get_bounding_box();
-  if (!bb.valid()) { grid_lock_.unlock(); return; }
-  // cubed root of number of cells to get a subdivision ballpark
-  const double one_third = 1.L/3.L;
-  Cell::size_type csize;  size(csize);
-  const int s = ((int)ceil(pow((double)csize , one_third))) / 2 + 2;
-  const Vector cell_epsilon = bb.diagonal() * (0.01 / s);
-  bb.extend(bb.min() - cell_epsilon*2);
-  bb.extend(bb.max() + cell_epsilon*2);
-
-  LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
-  grid_ = scinew LatVolField<vector<Cell::index_type> >(mesh, Field::CELL);
-  grid_->resize_fdata();
-  LatVolField<vector<Cell::index_type> >::fdata_type &fd = grid_->fdata();
-
-  BBox box;
-  Node::array_type nodes;
-  Cell::iterator ci, cie;
-  begin(ci); end(cie);
-  while(ci != cie)
+  if (bb.valid())
   {
-    get_nodes(nodes, *ci);
+    // Cubed root of number of cells to get a subdivision ballpark.
+    Cell::size_type csize;  size(csize);
+    const int s = (int)(ceil(pow((double)csize , (1.0/3.0)))) / 2 + 2;
+    const Vector cell_epsilon = bb.diagonal() * (1.0e-4 / s);
+    bb.extend(bb.min() - cell_epsilon*2);
+    bb.extend(bb.max() + cell_epsilon*2);
 
-    box.reset();
-    box.extend(points_[nodes[0]]);
-    box.extend(points_[nodes[1]]);
-    box.extend(points_[nodes[2]]);
-    box.extend(points_[nodes[3]]);
-    const Point padmin(box.min() - cell_epsilon);
-    const Point padmax(box.max() + cell_epsilon);
-    box.extend(padmin);
-    box.extend(padmax);
+    LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
+    grid_ = scinew LatVolField<vector<Cell::index_type> >(mesh, Field::CELL);
+    grid_->resize_fdata();
+    LatVolField<vector<Cell::index_type> >::fdata_type &fd = grid_->fdata();
 
-    // add this cell index to all overlapping cells in grid_
-    LatVolMesh::Cell::array_type carr;
-    mesh->get_cells(carr, box);
-    LatVolMesh::Cell::array_type::iterator giter = carr.begin();
-    while (giter != carr.end()) {
-      // Would like to just get a reference to the vector at the cell
-      // but can't from value. Bypass the interface.
-      vector<Cell::index_type> &v = fd[*giter];
-      v.push_back(*ci);
-      ++giter;
+    BBox box;
+    Node::array_type nodes;
+    Cell::iterator ci, cie;
+    begin(ci); end(cie);
+    while(ci != cie)
+    {
+      get_nodes(nodes, *ci);
+
+      box.reset();
+      box.extend(points_[nodes[0]]);
+      box.extend(points_[nodes[1]]);
+      box.extend(points_[nodes[2]]);
+      box.extend(points_[nodes[3]]);
+      const Point padmin(box.min() - cell_epsilon);
+      const Point padmax(box.max() + cell_epsilon);
+      box.extend(padmin);
+      box.extend(padmax);
+
+      // Add this cell index to all overlapping cells in grid_
+      LatVolMesh::Cell::array_type carr;
+      mesh->get_cells(carr, box);
+      LatVolMesh::Cell::array_type::iterator giter = carr.begin();
+      while (giter != carr.end())
+      {
+	// Would like to just get a reference to the vector at the cell
+	// but can't from value. Bypass the interface.
+	vector<Cell::index_type> &v = fd[*giter];
+	v.push_back(*ci);
+
+	++giter;
+      }
+      ++ci;
     }
-    ++ci;
   }
+
   synchronized_ |= LOCATE_E;
   grid_lock_.unlock();
 }
 
 
+#if 0
 bool
 TetVolMesh::inside(Cell::index_type idx, const Point &p)
 {
@@ -1142,6 +1146,66 @@ TetVolMesh::inside(Cell::index_type idx, const Point &p)
   }
   return true;
 }
+#else
+bool
+TetVolMesh::inside(Cell::index_type idx, const Point &p)
+{
+  // TODO: This has not been tested.
+  // TODO: Looks like too much code to check sign of 4 plane/point tests.
+  const Point &p0 = points_[cells_[idx*4+0]];
+  const Point &p1 = points_[cells_[idx*4+1]];
+  const Point &p2 = points_[cells_[idx*4+2]];
+  const Point &p3 = points_[cells_[idx*4+3]];
+  const double x0 = p0.x();
+  const double y0 = p0.y();
+  const double z0 = p0.z();
+  const double x1 = p1.x();
+  const double y1 = p1.y();
+  const double z1 = p1.z();
+  const double x2 = p2.x();
+  const double y2 = p2.y();
+  const double z2 = p2.z();
+  const double x3 = p3.x();
+  const double y3 = p3.y();
+  const double z3 = p3.z();
+
+  const double a0 = + x1*(y2*z3-y3*z2) + x2*(y3*z1-y1*z3) + x3*(y1*z2-y2*z1);
+  const double a1 = - x2*(y3*z0-y0*z3) - x3*(y0*z2-y2*z0) - x0*(y2*z3-y3*z2);
+  const double a2 = + x3*(y0*z1-y1*z0) + x0*(y1*z3-y3*z1) + x1*(y3*z0-y0*z3);
+  const double a3 = - x0*(y1*z2-y2*z1) - x1*(y2*z0-y0*z2) - x2*(y0*z1-y1*z0);
+  const double iV6 = 1.0 / (a0+a1+a2+a3);
+
+  const double b0 = - (y2*z3-y3*z2) - (y3*z1-y1*z3) - (y1*z2-y2*z1);
+  const double c0 = + (x2*z3-x3*z2) + (x3*z1-x1*z3) + (x1*z2-x2*z1);
+  const double d0 = - (x2*y3-x3*y2) - (x3*y1-x1*y3) - (x1*y2-x2*y1);
+  const double s0 = iV6 * (a0 + b0*p.x() + c0*p.y() + d0*p.z());
+  if (s0 < -1.e-12)
+    return false;
+
+  const double b1 = + (y3*z0-y0*z3) + (y0*z2-y2*z0) + (y2*z3-y3*z2);
+  const double c1 = - (x3*z0-x0*z3) - (x0*z2-x2*z0) - (x2*z3-x3*z2);
+  const double d1 = + (x3*y0-x0*y3) + (x0*y2-x2*y0) + (x2*y3-x3*y2);
+  const double s1 = iV6 * (a1 + b1*p.x() + c1*p.y() + d1*p.z());
+  if (s1 < -1.e-12)
+    return false;
+
+  const double b2 = - (y0*z1-y1*z0) - (y1*z3-y3*z1) - (y3*z0-y0*z3);
+  const double c2 = + (x0*z1-x1*z0) + (x1*z3-x3*z1) + (x3*z0-x0*z3);
+  const double d2 = - (x0*y1-x1*y0) - (x1*y3-x3*y1) - (x3*y0-x0*y3);
+  const double s2 = iV6 * (a2 + b2*p.x() + c2*p.y() + d2*p.z());
+  if (s2 < -1.e-12)
+    return false;
+
+  const double b3 = +(y1*z2-y2*z1) + (y2*z0-y0*z2) + (y0*z1-y1*z0);
+  const double c3 = -(x1*z2-x2*z1) - (x2*z0-x0*z2) - (x0*z1-x1*z0);
+  const double d3 = +(x1*y2-x2*y1) + (x2*y0-x0*y2) + (x0*y1-x1*y0);
+  const double s3 = iV6 * (a3 + b3*p.x() + c3*p.y() + d3*p.z());
+  if (s3 < -1.e-12)
+    return false;
+
+  return true;
+}
+#endif
 
 
 //! This code uses the robust geometric predicates 
