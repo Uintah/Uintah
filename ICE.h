@@ -290,17 +290,6 @@ using namespace SCIRun;
 			       CCVariable<eflux>& OFE,
 			       CCVariable<cflux>& OFC);
       
-      void outflowVolCentroid(const SFCXVariable<double>& uvel_CC,
-			      const SFCYVariable<double>& vvel_CC,
-			      const SFCZVariable<double>& wvel_CC,
-			      const double& delT, const Vector& dx,
-			      CCVariable<fflux>& r_out_x,
-			      CCVariable<fflux>& r_out_y,
-			      CCVariable<fflux>& r_out_z,
-			      CCVariable<eflux>& r_out_x_CF,
-			      CCVariable<eflux>& r_out_y_CF,
-			      CCVariable<eflux>& r_out_z_CF);
-      
       template<class T> void advectQFirst(const CCVariable<T>& q_CC,
 			const Patch* patch,
 			const CCVariable<fflux>& OFS,
@@ -308,30 +297,6 @@ using namespace SCIRun;
 			const CCVariable<cflux>& OFC,
 			CCVariable<T>& q_advected);
 
-
-      void qOutfluxFirst(const CCVariable<double>& q_CC,const Patch* patch,
-			 CCVariable<fflux>& q_out,
-			 CCVariable<eflux>& q_out_EF,
-			 CCVariable<cflux>& q_out_CF);
-      
-      
-      void qInfluxFirst(const CCVariable<fflux>& q_out,
-		        const CCVariable<eflux>& q_out_EF,
-		        const CCVariable<cflux>& q_out_CF, 
-		        const Patch* patch,
-		        CCVariable<fflux>& q_in,
-		        CCVariable<eflux>& q_in_EF,
-		        CCVariable<cflux>& q_in_CF);
-
-      void qOutfluxSecond(CCVariable<fflux>& OFS,
-			  CCVariable<fflux>& IFS,
-			  CCVariable<fflux>& r_out_x,
-			  CCVariable<fflux>& r_out_y,
-			  CCVariable<fflux>& r_out_z,
-			  CCVariable<eflux>& r_out_x_CF,
-			  CCVariable<eflux>& r_out_y_CF,
-			  CCVariable<eflux>& r_out_z_CF,
-			  const Vector& dx);
 
       void computeTauX_Components( const Patch* patch,
                           const CCVariable<Vector>& vel_CC,
