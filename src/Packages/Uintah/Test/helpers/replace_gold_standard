@@ -31,9 +31,11 @@ else
   # remove the udas, and copy the new ones
   if [ $yesno = "y" -o $yesno = "yes" ]; then
   # echo "rm -rf $gold_standard_dir/$testname/*.uda"
+    failcode="0"
     echo -n "Replacing $testname udas ... "
-    rm -r $gold_standard_dir/$testname/*.uda
+    rm -rf $gold_standard_dir/$testname/*.uda
     if [ $? != "0" ]; then
+      failcode="1"
       echo "$testname replacement failed - could not remove old udas"
     fi
 
@@ -47,10 +49,13 @@ else
     # echo "cp -r $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/."
       cp -r $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/.
       if [ $? != "0" ]; then
+        failcode="1"
 	echo "$testname replacement failed - could not copy new udas"
       fi
     fi
-    echo "udas successfully replaced"
+    if [ "$failcode" = "0" ]; then
+      echo "udas successfully replaced"
+    fi
   else
     echo "udas not replaced"
   fi
