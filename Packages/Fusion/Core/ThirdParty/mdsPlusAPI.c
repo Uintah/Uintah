@@ -51,17 +51,18 @@ void MdsDisconnect();
 int MDS_Connect( const char *server )
 {
   /* Connect to MDSplus */
-  return MdsConnect((char*)server);
+  int retVal = MdsConnect((char*)server);
+
+  return retVal;
 }
 
 /* Simple interface to interface bewteen the C and C++ calls. */
 int MDS_Open( const char *tree, int shot )
 {
   /* Open tree */
-  if ( !status_ok( MdsOpen((char*)tree,&shot) ) )
-    return -1;
-  else
-    return 0;
+  int retVal = status_ok( MdsOpen((char*)tree,&shot) ) ? 0 : -1;
+
+  return retVal;
 }
 
 /* Simple interface to interface bewteen the C and C++ calls. */
@@ -116,15 +117,9 @@ int get_value( const char *signal ) {
   sprintf(buf,"%s", signal);
     
   /* Use MdsValue to get the value */
-  if( !status_ok( MdsValue(buf, &dsc, &null, &len) ) )
-  {
-#ifdef __DEBUG
-    fprintf( stderr, "Unable to get the value for %s\n", signal);
-#endif
-    return -1;
-  }
-  else
-    return value;
+  int retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? value : -1;
+
+  return retVal;
 }
 
 /*  Query the long values of the node - as in the nids the of slices. */
@@ -144,17 +139,11 @@ int* get_values( const char *signal, int size ) {
   /* Put the signal in the buffer passed to mds. */
   memset(buf,0,sizeof(buf));
   sprintf(buf,"%s", signal);
-    
-  /* Use MdsValue to get the values */
-  if( !status_ok( MdsValue(buf, &dsc, &null, &len) ) )
-  {
-#ifdef __DEBUG
-    fprintf( stderr, "Unable to get the values for %s\n", signal);
-#endif
-    return NULL;
-  }
-  else
-    return values;
+
+  /* Use MdsValue to get the value */
+  int* retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? values : NULL;
+
+  return retVal;
 }
 
 /*  Query the double value of the node - as in the number of slices. */
@@ -176,15 +165,9 @@ double get_datum( const char *signal ) {
   sprintf(buf,"%s", signal);
     
   /* Use MdsValue to get the value */
-  if( !status_ok( MdsValue(buf, &dsc, &null, &len) ) )
-  {
-#ifdef __DEBUG
-    fprintf( stderr, "Unable to get the value for %s\n", signal);
-#endif
-    return -1;
-  }
-  else
-    return datum;
+  double retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? datum : -1;
+
+  return retVal;
 }
 
 /*  Query the double values of the node - as in the signal for the of slices. */
@@ -209,18 +192,10 @@ double* get_data( const char *signal, int size )
   memset(buf,0,sizeof(buf));
   sprintf(buf,"%s", signal);
 
-    /* Use MdsValue to get the signal. */
-  if( !status_ok( MdsValue(buf, &dsc, &null, &len) ) )
-  {
-#ifdef __DEBUG
-    fprintf( stderr, "Unable to get the signal for %s\n", signal);
-#endif
-    free(data);
+  /* Use MdsValue to get the value */
+  double* retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? data : NULL;
 
-    return NULL;
-  }
-  else
-    return data;
+  return retVal;
 }
 
 /*  Query the string values of the node - as in the name of the slices. */
@@ -244,18 +219,10 @@ char* get_string( const char *signal )
   memset(buf,0,sizeof(buf));
   sprintf(buf,"%s", signal);
 
-    /* Use MdsValue to get the string */
-  if( !status_ok( MdsValue(buf, &dsc, &null, &len) ) )
-  {
-#ifdef __DEBUG
-    fprintf( stderr, "Unable to get the signal for %s\n", signal);
-#endif
-    free(data);
+  /* Use MdsValue to get the value */
+  char* retVal = status_ok( MdsValue(buf, &dsc, &null, &len) ) ? data : NULL;
 
-    return NULL;
-  }
-  else
-    return data;
+  return retVal;
 }
 
 /* Get the rank and number of dimensions for a particular signal. */
