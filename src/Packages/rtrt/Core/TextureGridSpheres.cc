@@ -86,13 +86,9 @@ void TextureGridSpheres::shade(Color& result, const Ray& ray,
   // Get the hitpos
   Point hitpos(ray.origin()+ray.direction()*hit.min_t);
 
-  // Get the center
-  float* p=spheres+cell;
-  Point cen(p[0], p[1], p[2]);
-  
   // Get the UV coordinates
   UV uv;
-  get_uv(uv, hitpos, cen);
+  get_uv(uv, hitpos, hit);
 
   // Do the uv lookup stuff.  Here we are only clamping
   double u=uv.u()*uscale;
@@ -125,13 +121,14 @@ void TextureGridSpheres::shade(Color& result, const Ray& ray,
   }
 }
 
-void TextureGridSpheres::get_uv(UV& uv, const Point& hitpos, const Point& cen)
+void TextureGridSpheres::get_uv(UV& uv, const Point& hitpos,
+                                const HitInfo& hit)
 {
   // Get point on unit sphere
-  Point point_on_sphere((hitpos - cen) * iradius);
+  Vector point_on_unit_sphere(normal(hitpos, hit));
   double uu,vv,theta,phi;  
-  theta = acos(-point_on_sphere.y());
-  phi = atan2(point_on_sphere.z(), point_on_sphere.x());
+  theta = acos(-point_on_unit_sphere.y());
+  phi = atan2(point_on_unit_sphere.z(), point_on_unit_sphere.x());
   if (phi < 0)
     phi += 2*M_PI;
   uu = phi * 0.5 * M_1_PI;
