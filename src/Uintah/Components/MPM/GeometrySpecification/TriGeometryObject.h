@@ -12,13 +12,50 @@ using Uintah::Grid::Box;
 namespace Uintah {
 namespace Components {
 
+/**************************************
+	
+CLASS
+   GeometryObject
+	
+   Short description...
+	
+GENERAL INFORMATION
+	
+   GeometryObject.h
+	
+   John A. Schmidt
+   Department of Mechanical Engineering
+   University of Utah
+	
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+	
+ 
+	
+KEYWORDS
+   GeometryObject
+	
+DESCRIPTION
+   Long description...
+	
+WARNING
+	
+****************************************/
+
 class TriGeometryObject : public GeometryObject {
  public:
-
+  //////////
+  // Insert Documentation Here:
   TriGeometryObject(ProblemSpecP &);
+  //////////
+  // Insert Documentation Here:
   virtual ~TriGeometryObject();
 
+  //////////
+  // Insert Documentation Here:
   virtual bool inside(const Point &p) const;
+
+  //////////
+  // Insert Documentation Here:
   virtual Box getBoundingBox() const;
 
  private:
@@ -32,6 +69,10 @@ class TriGeometryObject : public GeometryObject {
 #endif // __TRI_GEOMETRY_OBJECT_H__
 
 // $Log$
+// Revision 1.4  2000/04/22 16:51:04  jas
+// Put in a skeleton framework for documentation (coccoon comment form).
+// Comments still need to be filled in.
+//
 // Revision 1.3  2000/04/20 22:37:14  jas
 // Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
 // to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).

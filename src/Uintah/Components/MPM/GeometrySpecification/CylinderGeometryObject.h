@@ -12,14 +12,51 @@ using Uintah::Grid::Box;
 namespace Uintah {
 namespace Components {
 
+/**************************************
+	
+CLASS
+   CylinderGeometryObject
+	
+   Short description...
+	
+GENERAL INFORMATION
+	
+   CylinderGeometryObject.h
+	
+   John A. Schmidt
+   Department of Mechanical Engineering
+   University of Utah
+	
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+	
+ 
+	
+KEYWORDS
+   CylinderGeometryObject
+	
+DESCRIPTION
+   Long description...
+	
+WARNING
+	
+****************************************/
+
 class CylinderGeometryObject : public GeometryObject {
 
  public:
-
+  //////////
+  // Insert Documentation Here:
   CylinderGeometryObject(ProblemSpecP &);
+  //////////
+  // Insert Documentation Here:
   virtual ~CylinderGeometryObject();
 
+  //////////
+  // Insert Documentation Here:
   virtual bool inside(const Point &p) const;
+
+  //////////
+  // Insert Documentation Here:
   virtual Box getBoundingBox() const;
  
  private:
@@ -37,6 +74,10 @@ class CylinderGeometryObject : public GeometryObject {
 #endif // __CYLINDER_GEOMTRY_OBJECT_H__
 
 // $Log$
+// Revision 1.6  2000/04/22 16:51:04  jas
+// Put in a skeleton framework for documentation (coccoon comment form).
+// Comments still need to be filled in.
+//
 // Revision 1.5  2000/04/21 22:59:25  jas
 // Can create a generalized cylinder (removed the axis aligned constraint).
 // Methods for finding bounding box and the inside test are completed.

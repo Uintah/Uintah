@@ -14,13 +14,52 @@ using SCICore::Geometry::Point;
 namespace Uintah {
 namespace Components {
 
+/**************************************
+	
+CLASS
+   IntersectionGeometryObject
+	
+   Short description...
+	
+GENERAL INFORMATION
+	
+   IntersectionGeometryObject.h
+	
+   John A. Schmidt
+   Department of Mechanical Engineering
+   University of Utah
+	
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+	
+ 
+	
+KEYWORDS
+   IntersectionGeometryObject
+	
+DESCRIPTION
+   Long description...
+	
+WARNING
+	
+****************************************/
+
 class IntersectionGeometryObject : public GeometryObject {
 
  public:
+  //////////
+  // Insert Documentation Here:
   IntersectionGeometryObject(ProblemSpecP &);
+
+  //////////
+  // Insert Documentation Here:
   virtual ~IntersectionGeometryObject();
-  
+
+  //////////
+  // Insert Documentation Here:  
   virtual bool inside(const Point &p) const;
+
+  //////////
+  // Insert Documentation Here:
   virtual Box getBoundingBox() const;
 
  private:

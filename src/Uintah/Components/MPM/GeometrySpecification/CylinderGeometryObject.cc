@@ -4,9 +4,9 @@
 #include <Uintah/Grid/Box.h>
 #include <SCICore/Geometry/Vector.h>
 
-using SCICore::Geometry::Vector;
 
 using namespace Uintah::Components;
+using namespace SCICore::Geometry;
 
 
 CylinderGeometryObject::CylinderGeometryObject(ProblemSpecP& ps) {
@@ -65,6 +65,10 @@ Box CylinderGeometryObject::getBoundingBox() const
 }
 
 // $Log$
+// Revision 1.7  2000/04/22 16:51:03  jas
+// Put in a skeleton framework for documentation (coccoon comment form).
+// Comments still need to be filled in.
+//
 // Revision 1.6  2000/04/21 22:59:25  jas
 // Can create a generalized cylinder (removed the axis aligned constraint).
 // Methods for finding bounding box and the inside test are completed.
