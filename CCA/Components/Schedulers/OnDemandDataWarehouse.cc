@@ -1708,12 +1708,10 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
 
   VarAccessMap& currentTaskAccesses = getCurrentTaskAccesses();
   
-  PatchSubset default_patches;
-  MaterialSubset default_matls;
-  default_patches.add(0);
-  default_matls.add(-1);
-  default_patches.addReference();
-  default_matls.addReference();
+  Handle<PatchSubset> default_patches = scinew PatchSubset();
+  Handle<MaterialSubset> default_matls = scinew MaterialSubset();
+  default_patches->add(0);
+  default_matls->add(-1);
   
   for (; dep != 0; dep = dep->next) {
     if ((isFinalized() && dep->dw == Task::NewDW) ||
@@ -1722,23 +1720,22 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
     
     const VarLabel* label = dep->var;
 
-    const PatchSubset* patches = dep->getPatchesUnderDomain(domainPatches);
-    const MaterialSubset* matls = dep->getMaterialsUnderDomain(domainMatls);
+    Handle<const PatchSubset> patches = dep->getPatchesUnderDomain(domainPatches);
+    Handle<const MaterialSubset> matls = dep->getMaterialsUnderDomain(domainMatls);
     if (label->typeDescription() &&
 	label->typeDescription()->isReductionVariable()) {
-      if(patches && patches->getReferenceCount() == 0)
-	delete patches;
-      patches = &default_patches;
+      patches = default_patches.get_rep();
     }
     else if (patches == 0) {
-      patches = &default_patches;
+      patches = default_patches.get_rep();
     }
     if (matls == 0) {
-      matls = &default_matls;
+      matls = default_matls.get_rep();
     }
  
-    if (string(currentTask->getName()) == "Relocate::relocateParticles")
+    if (string(currentTask->getName()) == "Relocate::relocateParticles") {
       continue;
+    }
     
     for (int m = 0; m < matls->size(); m++) {
       int matl = matls->get(m);
@@ -1772,14 +1769,7 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
 	}
       }
     }
-    if(patches && patches->getReferenceCount() == 0)
-      delete patches;
-    if(matls && matls->getReferenceCount() == 0)
-      delete matls;
   }
-
-  default_patches.removeReference();
-  default_matls.removeReference(); 
 }
 
 
