@@ -134,7 +134,7 @@ set $m2-node_display_type {Spheres}
 set $m2-edge_display_type {Lines}
 set $m2-active_tab {Nodes}
 set $m2-node_scale {0.03}
-set $m2-edge_scale {0.015}
+set $m2-edge_scale {1.0}
 set $m2-vectors_scale {0.30}
 set $m2-show_progress {}
 set $m2-interactive_mode {Interactive}
