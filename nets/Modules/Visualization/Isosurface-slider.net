@@ -188,7 +188,7 @@ set $m3-build_trisurf {1}
 set $m3-np {1}
 set $m3-active-isoval-selection-tab {0}
 set $m3-active_tab {NOISE}
-set $m3-update_type {on release}
+set $m3-update_type {Auto}
 set $m3-color-r {0.4}
 set $m3-color-g {0.2}
 set $m3-color-b {0.9}
