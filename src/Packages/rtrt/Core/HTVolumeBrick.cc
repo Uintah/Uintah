@@ -118,7 +118,7 @@ bool HTVolumeBrick::tetra_edge_in_box(const Point&  min, const Point&  max,
   if(dir.y() > 0){
     y0=yinv_dir*(min.y()-orig.y());
     y1=yinv_dir*(max.y()-orig.y());
-  } else if(dir.y() <-1.e-6){
+  } else {
     y0=yinv_dir*(max.y()-orig.y());
     y1=yinv_dir*(min.y()-orig.y());
   }
@@ -1029,7 +1029,7 @@ void HTVolumeBrick::intersect(Ray& ray, HitInfo& hit,
     y1=yinv_dir*(max.y()-orig.y());
     diy_dy=1;
     ddy=1;
-  } else if(dir.y() <-1.e-6){
+  } else {
     y0=yinv_dir*(max.y()-orig.y());
     y1=yinv_dir*(min.y()-orig.y());
     diy_dy=-1;

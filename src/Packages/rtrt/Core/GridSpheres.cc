@@ -430,7 +430,7 @@ void GridSpheres::intersect(Ray& ray, HitInfo& hit,
     didx_dy=nz;
     diy_dy=1;
     ddy=1;
-  } else if(dir.y() <-1.e-6){
+  } else {
     double inv_dir=1./dir.y();
     y0=inv_dir*(max.y()-orig.y());
     y1=inv_dir*(min.y()-orig.y());
@@ -640,7 +640,7 @@ void GridSpheres::intersect(Ray& ray, HitInfo& hit,
     didx_dy=cellsize;
     diy_dy=1;
     ddy=1;
-  } else if(dir.y() <-1.e-6){
+  } else {
     double inv_dir=1./dir.y();
     y0=inv_dir*(max.y()-orig.y());
     y1=inv_dir*(min.y()-orig.y());
@@ -768,7 +768,7 @@ void GridSpheres::intersect_print(Ray& ray, HitInfo& hit,
     y1=inv_dir*(max.y()-orig.y());
     diy_dy=1;
     ddy=1;
-  } else if(dir.y() <-1.e-6){
+  } else {
     double inv_dir=1./dir.y();
     y0=inv_dir*(max.y()-orig.y());
     y1=inv_dir*(min.y()-orig.y());
@@ -963,7 +963,7 @@ void GridSpheres::intersect(Ray& ray, HitInfo& hit,
     y1=inv_dir*(max.y()-orig.y());
     diy_dy=1;
     ddy=1;
-  } else if(dir.y() <-1.e-6){
+  } else {
     double inv_dir=1./dir.y();
     y0=inv_dir*(max.y()-orig.y());
     y1=inv_dir*(min.y()-orig.y());
