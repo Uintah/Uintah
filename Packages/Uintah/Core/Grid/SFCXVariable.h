@@ -83,13 +83,22 @@ WARNING
     void copyPatch(const SFCXVariable<T>& src)
     { copyPatch(&src, src.getLowIndex(), src.getHighIndex()); }
      
-    virtual void* getBasePointer();
+    virtual void* getBasePointer() const;
     virtual const TypeDescription* virtualGetTypeDescription() const;
     virtual void getSizes(IntVector& low, IntVector& high,
 			  IntVector& siz) const;
     virtual void getSizes(IntVector& low, IntVector& high,
 			  IntVector& dataLow, IntVector& siz,
 			  IntVector& strides) const;
+    virtual void getSizeInfo(string& elems, unsigned long& totsize,
+			     void*& ptr) const {
+      IntVector siz = size();
+      ostringstream str;
+      str << siz.x() << "x" << siz.y() << "x" << siz.z();
+      elems=str.str();
+      totsize=siz.x()*siz.y()*siz.z()*sizeof(T);
+      ptr = (void*)getPointer();
+    }
 
     // Replace the values on the indicated face with value
     void fillFace(Patch::FaceType face, const T& value, 
@@ -429,9 +438,9 @@ WARNING
    
   template<class T>
   void*
-  SFCXVariable<T>::getBasePointer()
+  SFCXVariable<T>::getBasePointer() const
   {
-    return getPointer();
+    return (void*)getPointer();
   }
 
   template<class T>
