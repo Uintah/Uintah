@@ -399,7 +399,9 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
 	    if (neighbors[n]->containsNode(ni[k])) {
 	      const Patch* neighbor = neighbors[n];
 	      // I had to comment out the following to get it to compile
+#ifdef HAVE_PETSC
 	      l2g_node_num = (d_petscLocalToGlobal)[neighbor][ni[k]];
+#endif
 	      cerr << "l2g_node_num = " << l2g_node_num << endl;
 	      dof. push_back(l2g_node_num);
 	      dof.push_back(l2g_node_num+1);
@@ -408,7 +410,9 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
 	  }
 	 } else {
 	  // I had to comment out the following to get it to compile
+#ifdef HAVE_PETSC
 	  l2g_node_num = l2g[ni[k]];
+#endif
 	  cerr << "l2g_node_num = " << l2g_node_num << endl;
 	  dof.push_back(l2g_node_num);
 	  dof.push_back(l2g_node_num+1);
