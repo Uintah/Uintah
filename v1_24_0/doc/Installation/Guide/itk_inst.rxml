@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 <!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
-<appendix id="sec.itk_inst">
+<section id="sec.itk_inst">
   <title id="title.itk_inst">Insight Toolkit (<acronym>ITK</acronym>) Installation</title>
 
   <section>
@@ -181,4 +181,4 @@ setenv PATH $JAVA_HOME/bin:$PATH
 
   </section>
 
-</appendix>
+</section>

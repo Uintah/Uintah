@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 <!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
-<appendix id="sec.blas_lapack_inst">
+<section id="sec.blas_lapack_inst">
   <title id="title.blas_lapack_inst">
     <acronym>BLAS</acronym>(or <acronym>ATLAS</acronym>), and
     <acronym>LAPACK</acronym> Installation
@@ -196,4 +196,4 @@ make install arch=<replaceable>arch-string</replaceable>
     </para>
   </section>
 
-</appendix>
+</section>

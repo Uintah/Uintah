@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 <!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
-<appendix id="sec.petsc">
+<section id="sec.petsc">
   <title id="title.petsc"><acronym>PETSc</acronym> Installation</title>
 
   <section>
@@ -316,4 +316,4 @@ make test
     </para>
   </section>
 
-</appendix>
+</section>
