@@ -82,7 +82,7 @@ void HexMC<Field>::reset( int n, bool build_trisurf )
 {
   build_trisurf_ = build_trisurf;
   triangles_ = new GeomTrianglesP;
-  triangles_->reserve_clear(n*2.5);
+  triangles_->reserve_clear((int)(n*2.5));
   vertex_map_.clear();
   nx_ = mesh_->get_nx();
   ny_ = mesh_->get_ny();
