@@ -25,10 +25,10 @@
 SRCDIR := Packages/Teem/Dataflow/GUI
 
 SRCS := \
-	$(SRCDIR)/AnalyzeToNrrd.tcl\
+	$(SRCDIR)/AnalyzeNrrdReader.tcl\
 	$(SRCDIR)/axis_info_sel_box.tcl\
 	$(SRCDIR)/ChooseNrrd.tcl\
-	$(SRCDIR)/DicomToNrrd.tcl\
+	$(SRCDIR)/DicomNrrdReader.tcl\
 	$(SRCDIR)/FieldToNrrd.tcl\
 	$(SRCDIR)/ImageImporter.tcl\
 	$(SRCDIR)/ImageExporter.tcl\

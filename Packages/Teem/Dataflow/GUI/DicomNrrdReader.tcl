@@ -15,10 +15,10 @@
 #  University of Utah. All Rights Reserved.
 #
 
-itcl_class Teem_DataIO_DicomToNrrd {
+itcl_class Teem_DataIO_DicomNrrdReader {
     inherit Module
     constructor {config} {
-        set name DicomToNrrd
+        set name DicomNrrdReader
         set_defaults
     }
 
