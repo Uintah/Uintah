@@ -78,16 +78,23 @@ WARNING
     //! Returns the max number of levels this regridder will store
     virtual int maxLevels() { return d_maxLevels; }
 
-    enum {
+    enum FilterType {
       FILTER_STAR,
       FILTER_BOX
+    };
+
+    enum DilationType {
+      DILATE_CREATION,
+      DILATE_DELETION,
+      DILATE_PATCH
     };
 
     void Dilate2(const ProcessorGroup*,
 		const PatchSubset* patches,
 		const MaterialSubset* ,
 		DataWarehouse* old_dw,
-		DataWarehouse* new_dw);
+		DataWarehouse* new_dw,
+                DilationType dilate_which, FilterType filter_type, IntVector depth);
 
   protected:
      SimulationStateP d_sharedState; ///< to keep track of timesteps
@@ -98,7 +105,7 @@ WARNING
     IntVector d_cellCreationDilation;
     IntVector d_cellDeletionDilation;
     IntVector d_minBoundaryCells; //! min # of cells to be between levels' boundaries
-    int d_filterType;
+    FilterType d_filterType;
 
     vector< CCVariable<int>* > d_flaggedCells;
     vector< CCVariable<int>* > d_dilatedCellsCreated;

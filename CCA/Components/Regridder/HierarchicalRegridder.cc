@@ -3,6 +3,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -13,10 +14,18 @@ using namespace SCIRun;
 
 extern DebugStream rdbg;
 
-
 HierarchicalRegridder::HierarchicalRegridder(const ProcessorGroup* pg) : RegridderCommon(pg)
 {
-
+  patchCells = VarLabel::create("PatchCells",
+                             CCVariable<int>::getTypeDescription());
+  dilatedCellsCreation  = VarLabel::create("DilatedCellsCreation",
+                             CCVariable<int>::getTypeDescription());
+  dilatedCellsDeletion = VarLabel::create("DilatedCellsDeletion",
+                             CCVariable<int>::getTypeDescription());
+  dilatedCellsPatch = VarLabel::create("DilatedCellsPatch",
+                             CCVariable<int>::getTypeDescription());
+  activePatches = VarLabel::create("activePatches",
+                             CCVariable<int>::getTypeDescription());
 }
 
 HierarchicalRegridder::~HierarchicalRegridder()
@@ -31,19 +40,80 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP scheduler, const P
     throw InternalError("HierarchicalRegridder::regrid() Grid section of UPS file not found!");
   }
 
-  /*
+  int levelIdx;
+
+#ifdef BRYAN
+  // this is for dividing the entire regridding problem into patchwise domains
   scheduler->initialize();
 
+  int ngc;
   for ( int levelIndex = 0; levelIndex < oldGrid->numLevels(); levelIndex++ ) {
-    Task* task = new Task("RegridderCommon::Dilate2",
-			  dynamic_cast<RegridderCommon*>(this),
-			  &RegridderCommon::Dilate2);
-    scheduler->addTask(task, oldGrid->getLevel(levelIndex)->eachPatch(), sharedState->allMaterials());
+    Task* dummy_task = new Task("DUMMY", this, &HierarchicalRegridder::dummyTask);
+    dummy_task->computes(d_sharedState->get_refineFlag_label());
+    scheduler->addTask(dummy_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
+
+    Task* dilate_task = new Task("RegridderCommon::Dilate2 Creation",
+                                 dynamic_cast<RegridderCommon*>(this),
+                                 &RegridderCommon::Dilate2, DILATE_CREATION, d_filterType,
+                                 d_cellCreationDilation);
+    ngc = Max(d_cellCreationDilation.x(), d_cellCreationDilation.y());
+    ngc = Max(ngc, d_cellCreationDilation.z());
+    
+    dilate_task->requires(Task::NewDW, d_sharedState->get_refineFlag_label(), Ghost::AroundCells, ngc);
+    dilate_task->computes(dilatedCellsCreation);
+    scheduler->addTask(dilate_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
+    if (d_cellCreationDilation != d_cellDeletionDilation) {
+      // change somehow for deletion instead of creation
+      Task* dilate_delete_task = new Task("RegridderCommon::Dilate2 Deletion",
+                                          dynamic_cast<RegridderCommon*>(this),
+                                          &RegridderCommon::Dilate2, DILATE_DELETION, d_filterType,
+                                          d_cellDeletionDilation);
+      ngc = Max(d_cellDeletionDilation.x(), d_cellDeletionDilation.y());
+      ngc = Max(ngc, d_cellDeletionDilation.z());
+
+      dilate_delete_task->requires(Task::NewDW, d_sharedState->get_refineFlag_label(), Ghost::AroundCells, ngc);
+      dilate_delete_task->computes(dilatedCellsDeletion);
+      scheduler->addTask(dilate_delete_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
+    }
+    Task* mark_task = new Task("HierarchicalRegridder::MarkPatches2",
+                               this, &HierarchicalRegridder::MarkPatches2);
+    mark_task->requires(Task::NewDW, dilatedCellsCreation, Ghost::None);
+    if (d_cellCreationDilation != d_cellDeletionDilation)
+      mark_task->requires(Task::NewDW, dilatedCellsDeletion, Ghost::None);
+    
+    mark_task->computes(activePatches);
+    mark_task->computes(patchCells);
+    scheduler->addTask(mark_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
+
+
+    
+    if (levelIndex > 0 && levelIndex < d_maxLevels - 1) {
+      Task* dilate_patch_task = new Task("RegridderCommon::Dilate2 Patch",
+                                         dynamic_cast<RegridderCommon*>(this),
+                                         &RegridderCommon::Dilate2, DILATE_PATCH, FILTER_BOX,
+                                         d_minBoundaryCells);
+      ngc = Max(d_minBoundaryCells.x(), d_minBoundaryCells.y());
+      ngc = Max(ngc, d_minBoundaryCells.z());
+
+      dilate_patch_task->requires(Task::NewDW, patchCells, Ghost::AroundCells, ngc);
+      dilate_patch_task->computes(dilatedCellsPatch);
+      scheduler->addTask(dilate_patch_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
+      
+      Task* extend_task = new Task("HierarchicalRegridder::ExtendPatches2",
+                                 this, &HierarchicalRegridder::ExtendPatches2);
+      extend_task->requires(Task::NewDW, dilatedCellsPatch, Ghost::None);
+      extend_task->requires(Task::NewDW, activePatches, 0, Task::FineLevel,
+                            0, Task::NormalDomain, Ghost::None, 0);
+      extend_task->modifies(activePatches);
+      scheduler->addTask(extend_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
+    }
   }
-	
+  
   scheduler->compile();
   scheduler->execute();
-  */
+
+  // now we need to gather the activePatches
+#else
 
   rdbg << "HierarchicalRegridder::regrid() BGN" << endl;
 
@@ -55,8 +125,6 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP scheduler, const P
   d_dilatedCellsDeleted.resize(d_maxLevels);
   d_numCreated.resize(d_maxLevels);
   d_numDeleted.resize(d_maxLevels);
-
-  int levelIdx;
 
   rdbg << "HierarchicalRegridder::regrid() HERE 1" << endl;
 
@@ -70,6 +138,8 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP scheduler, const P
     MarkPatches( oldGrid, levelIdx  );
     ExtendPatches( oldGrid, levelIdx );
   }
+
+#endif
 
   rdbg << "HierarchicalRegridder::regrid() HERE 2" << endl;
 
@@ -220,8 +290,7 @@ void HierarchicalRegridder::ExtendPatches( const GridP& oldGrid, int levelIdx  )
       // parentEndCell             = Min(parentEndCell, d_cellNum[parentLevelIdx]);
       rdbg << " SC: " << startCell << " EC: " << endCell << " PSC: " << parentStartCell << " pec " << parentEndCell << endl;
       for (CellIterator parent_iter(parentStartCell, parentEndCell); !iter.done(); iter++) {
-        IntVector parent_idx(*parent_iter);
-        patchCells[parent_idx] = 1;
+        patchCells[*parent_iter] = 1;
       }
       rdbg << "Done Marking child patch at: " << idx << endl;
     }
@@ -254,4 +323,22 @@ void HierarchicalRegridder::ExtendPatches( const GridP& oldGrid, int levelIdx  )
 IntVector HierarchicalRegridder::StartCellToLattice ( IntVector startCell, int levelIdx )
 {
   return startCell / d_patchSize[levelIdx];
+}
+
+void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* ,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
+{
+  cout << "MP2\n";
+}
+void HierarchicalRegridder::ExtendPatches2(const ProcessorGroup*,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* ,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw)
+{
+  cout << "EP2\n";
+
 }
