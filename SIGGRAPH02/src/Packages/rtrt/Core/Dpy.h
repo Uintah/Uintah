@@ -79,6 +79,8 @@ class Dpy : public Runnable {
   DynamicInstance * attachedObject_;
   float             objectRotationMatrix_[4][4];
 
+  bool     holoToggle_;
+
   // End Gui Interaction Flags.
 
   Scene    * scene;
