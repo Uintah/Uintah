@@ -123,6 +123,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 					  lb->pMicrocrackPositionLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pCrackingSpeedLabel,
 					  lb->pCrackingSpeedLabel_preReloc); 
+       lb->registerPermanentParticleState(m,lb->pTensileStrengthLabel,
+					  lb->pTensileStrengthLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pIsBrokenLabel,
 					  lb->pIsBrokenLabel_preReloc); 
      }
@@ -708,6 +710,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			 Ghost::None);
 	      t->requires( old_dw, lb->pCrackingSpeedLabel, idx, patch,
 			 Ghost::None);
+	      t->requires( old_dw, lb->pTensileStrengthLabel, idx, patch,
+			 Ghost::None);
 	      t->requires( old_dw, lb->pVolumeLabel, idx, patch,
 			 Ghost::None);
 	      t->requires( new_dw, lb->pDilationalWaveSpeedLabel, idx, patch,
@@ -722,6 +726,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	      t->computes( new_dw, lb->pMicrocrackSizeLabel_preReloc, idx, patch );
 	      t->computes( new_dw, lb->pMicrocrackPositionLabel_preReloc, idx, patch );
 	      t->computes( new_dw, lb->pCrackingSpeedLabel_preReloc, idx, patch );
+	      t->computes( new_dw, lb->pTensileStrengthLabel_preReloc, idx, patch );
 	    }
 	 }
 
@@ -847,6 +852,7 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
           new_dw->allocate(gweight, lb->gWeightLabel, vfindex, patch);
           ParticleVariable<Point> px;
           old_dw->get(px, lb->pXLabel, pset);
+
 
           if (vars[i]->typeDescription()->getSubType()->getType()
 			 == TypeDescription::Vector) {
@@ -1131,7 +1137,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
   	   vis = pVisibility[idx];
       	   vis.modifyWeights(S);
    	 }
-
+	 
 	 // Add each particles contribution to the local mass & velocity 
 	 // Must use the node indices
 	 for(int k = 0; k < 8; k++) {
@@ -1827,9 +1833,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
 	else {        
    	  //for isolated particles in fracture
+	  /*
           px[idx]        += pvelocity[idx] * delT;
           pvelocity[idx] += (pexternalForce[idx] + pCrackSurfaceContactForce[idx])
 	     /pmass[idx] * delT;
+	     */
         }
 	
 	
@@ -1919,6 +1927,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.150  2000/09/16 04:27:34  tan
+// Modifications to make fracture works well.
+//
 // Revision 1.149  2000/09/15 00:12:40  guilkey
 // Recommitting the (hopefully) fixed interpolateParticlesForSaving
 // code.
