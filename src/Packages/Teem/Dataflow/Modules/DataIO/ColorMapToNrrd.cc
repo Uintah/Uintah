@@ -116,7 +116,7 @@ ColorMapToNrrd::execute()
     memcpy(val, data, sizeof(float) * size * 4);
 
     // Send the data nrrd.
-    nd->nrrd->axis[0].label = "Colors";
+    nd->nrrd->axis[0].label = strdup("Colors");
     NrrdDataHandle dataH(nd);
     nout_->send(dataH);
   }
