@@ -59,10 +59,13 @@ set NetworkChanged 0
 
 
 proc makeNetworkEditor {} {
+
     wm protocol . WM_DELETE_WINDOW { NiceQuit }
     wm minsize . 100 100
     wm geometry . 800x800+0+0
     wm title . "SCIRun"
+
+    loadToolTipText
 
     frame .main_menu -relief raised -borderwidth 3
     pack .main_menu -fill x
@@ -105,6 +108,8 @@ proc makeNetworkEditor {} {
 
 
     pack .main_menu.file -side left
+    global ToolTipText
+    Tooltip .main_menu.file $ToolTipText(FileMenu)
     
     menubutton .main_menu.help -text "Help" -underline 0 \
 	-menu .main_menu.help.menu -direction below
