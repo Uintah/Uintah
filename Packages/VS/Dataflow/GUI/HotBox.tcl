@@ -28,6 +28,8 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_label9
     global $this-FME_on
     global $this-currentselection
+    global $this-datafile
+    global $this-datasource
     global $this-anatomydatasource
     global $this-adjacencydatasource
 
@@ -42,6 +44,8 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_label9 "label9"
     set $this-FME_on "yes"
     set $this-currentselection ""
+    set $this-datafile ""
+    set $this-datasource ""
     set $this-anatomydatasource ""
     set $this-adjacencydatasource ""
   }
@@ -75,7 +79,7 @@ itcl_class VS_DataFlow_HotBox {
                                                                                 
     makeOpenFilebox \
         -parent $w \
-        -filevar $this-datasource \
+        -filevar $this-datafile \
         -command "$this-c needexecute; wm withdraw $w" \
         -cancel "wm withdraw $w" \
         -title $title \
@@ -138,6 +142,11 @@ itcl_class VS_DataFlow_HotBox {
   }
   # end method set_selection
 
+  method set_data_source { datasource } {
+    set $this-datasource $datasource
+  }
+  # end method set_data_source
+
   method ui {} {
     set w .ui[modname]
     if { [winfo exists $w] } {
@@ -171,13 +180,15 @@ itcl_class VS_DataFlow_HotBox {
         -side left -anchor n -expand yes -fill x
 
     frame $w.controls
-    button $w.controls.adjds -text "Adjacency Data Source" -command ""
+    set ::datasource "2"
+    radiobutton $w.controls.adjOQAFMA -value 1 -text "OQAFMA" -variable datasource -command "$this set_data_source $::datasource"
+    radiobutton $w.controls.adjFILES -value 2 -text "Files" -variable datasource -command "$this set_data_source $::datasource"
 
-    checkbutton $w.controls.togFME -text "Conenct to FME" -command "$this toggle_FME_on"
+    checkbutton $w.controls.togFME -text "Connect to FME" -command "$this toggle_FME_on"
     $w.controls.togFME select
 
     button $w.controls.close -text "Close" -command "destroy $w"
-    pack $w.controls.adjds $w.controls.togFME $w.controls.close -side left -expand yes -fill x
+    pack $w.controls.adjOQAFMA $w.controls.adjFILES $w.controls.togFME $w.controls.close -side left -expand yes -fill x
 
     pack $w.f $w.controls -side top -expand yes -fill both -padx 5 -pady 5
 # pack $w.title -side top
