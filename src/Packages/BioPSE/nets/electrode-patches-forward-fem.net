@@ -216,6 +216,4 @@ set $m17-voltage {-5}
 
 set $m19-bcFlag {DirSub}
 
-$m9 initialize_ui
-
 ::netedit scheduleok

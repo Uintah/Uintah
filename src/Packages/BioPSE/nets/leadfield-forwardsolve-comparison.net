@@ -149,7 +149,6 @@ set $m11-ViewWindow_0-specular-scale {0.4}
 set $m12-interp_op_gui {}
 set $m13-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
 set $m17-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
-$m5 initialize_ui
 $m6 initialize_ui
 set $m18-notes {}
 set $m18-show_status {1}
