@@ -75,17 +75,18 @@ ICE::ICE(const ProcessorGroup* myworld)
                                 CCVariable<cflux>::getTypeDescription());
 
   // Turn off all the debuging switches
-  switchDebugInitialize = false;
+  switchDebugInitialize           = false;
   switchDebug_equilibration_press = false;
-  switchDebug_vel_FC = false;
-  switchDebug_Exchange_FC = false;
-  switchDebug_explicit_press = false;
-  switchDebug_PressFC = false;
-  switchDebugLagrangianValues = false;
-  switchDebugMomentumExchange_CC = false;
-  switchDebugSource_Sink = false;
-  switchDebug_advance_advect = false;
-  switchDebug_advectQFirst = false;
+  switchDebug_vel_FC              = false;
+  switchDebug_Exchange_FC         = false;
+  switchDebug_explicit_press      = false;
+  switchDebug_PressFC             = false;
+  switchDebugLagrangianValues     = false;
+  switchDebugMomentumExchange_CC  = false;
+  switchDebugSource_Sink          = false;
+  switchDebug_advance_advect      = false;
+  switchDebug_advectQFirst        = false;
+  switchTestConservation          = false;
   
 }
 
@@ -146,6 +147,8 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
 	switchDebug_advance_advect       = true;
       else if (debug_attr["label"] == "switchDebug_advectQFirst")
 	switchDebug_advectQFirst         = true;
+      else if (debug_attr["label"] == "switchTestConservation")
+	switchTestConservation           = true;
     }
   }
   cerr << "Pulled out the debugging switches from input file" << endl;
@@ -205,8 +208,6 @@ endl;
 //  Print out what I've found
   cout << "Number of ICE materials: " 
        << d_sharedState->getNumICEMatls()<< endl;
-  
-
 
   if (switchDebugInitialize == true) 
     cout << "switchDebugInitialize is ON" << endl;
@@ -228,6 +229,8 @@ endl;
     cout << "switchDebug_advance_advect is ON" << endl;
   if (switchDebug_advectQFirst == true) 
     cout << "switchDebug_advectQFirst is ON" << endl;
+  if (switchTestConservation == true) 
+    cout << "switchTestConservation is ON" << endl;
 
 }
 /* ---------------------------------------------------------------------
@@ -336,6 +339,9 @@ void ICE::scheduleTimeAdvance(double, double, const LevelP& level,
     
     scheduleAdvectAndAdvanceInTime(
         patch,  sched,  old_dw, new_dw);
+ 
+    schedulePrintConservedQuantities(
+        patch,  sched,  old_dw, new_dw);       
   }
 }
 
@@ -670,7 +676,36 @@ void ICE::scheduleAdvectAndAdvanceInTime(
   }
   sched->addTask(task);
 }
-
+/* ---------------------------------------------------------------------
+ Function~  ICE::schedulePrintConservedQuantities--
+ Purpose~   dump out the conserved quantities
+_____________________________________________________________________*/
+void ICE::schedulePrintConservedQuantities(
+            const Patch* patch,SchedulerP& sched,
+            DataWarehouseP& old_dw,
+	     DataWarehouseP& new_dw)
+{
+  Task* task = scinew Task("ICE::printConservedQuantities",
+                        patch, new_dw, new_dw, this,
+			   &ICE::printConservedQuantities);
+  int numMatls=d_sharedState->getNumICEMatls();
+  task->requires(new_dw,    lb->delPress_CCLabel, 0, patch, Ghost::None);  
+  for (int m = 0; m < numMatls; m++)  {
+    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    int dwindex = matl->getDWIndex();
+    task->requires( new_dw,lb->rho_CCLabel,         dwindex,patch,Ghost::None);
+    task->requires( new_dw,lb->vel_CCLabel,         dwindex,patch,Ghost::None);
+    task->requires( new_dw,lb->temp_CCLabel,        dwindex,patch,Ghost::None);
+    task->requires( new_dw,lb->cv_CCLabel,          dwindex,patch,Ghost::None);
+#if 0
+    task->requires( new_dw,lb->mom_source_CCLabel,  dwindex,patch,Ghost::None);
+    task->requires( new_dw,lb->mom_L_ME_CCLabel,    dwindex,patch,Ghost::None);
+    task->requires( new_dw,lb->int_eng_L_CCLabel,   dwindex,patch,Ghost::None);
+    task->requires( new_dw,lb->int_eng_L_ME_CCLabel,dwindex,patch,Ghost::None);
+#endif
+  }
+  sched->addTask(task);
+}
 
 /* ---------------------------------------------------------------------
  Function~  ICE::actuallyComputeStableTimestep--
@@ -724,7 +759,6 @@ void ICE::actuallyComputeStableTimestep(
     }
     dT = delt_CFL;
   }
-  cout << "new dT is " << dT << endl;
   new_dw->put(delt_vartype(dT), lb->delTLabel);
   computeDt = true;
 
@@ -1039,11 +1073,10 @@ void ICE::computeEquilibrationPressure(
      double vol_frac_not_close_packed = 1.;
      delPress = (A - vol_frac_not_close_packed - B)/C;
 
-  // EEEK!!
-     if(count>5){
-        delPress*=2.;
-     }
-     
+// EEEK!!
+//      if(count>5){
+//         delPress*=2.;
+//      } 
      press_new[*iter] += delPress;
      
      //__________________________________
@@ -2226,7 +2259,6 @@ void ICE::addExchangeToMomentumAndEnergy(
   K.zero();
   H.zero();
   a.zero();
-    
 
   for(int m = 0; m < numMatls; m++)  {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
@@ -2280,7 +2312,7 @@ void ICE::addExchangeToMomentumAndEnergy(
     //---------- X - M O M E N T U M
     // -  F O R M   R H S   (b)
     // -  push a copy of (a) into the solver
-    // -  Adde exchange contribution to orig value
+    // -  Add exchange contribution to orig value
     for(int m = 0; m < numMatls; m++) {
       b[m] = 0.0;
 
@@ -2299,7 +2331,7 @@ void ICE::addExchangeToMomentumAndEnergy(
     //---------- Y - M O M E N T U M
     // -  F O R M   R H S   (b)
     // -  push a copy of (a) into the solver
-    // -  Adde exchange contribution to orig value
+    // -  Add exchange contribution to orig value
     for(int m = 0; m < numMatls; m++) {
       b[m] = 0.0;
 
@@ -2379,7 +2411,7 @@ void ICE::addExchangeToMomentumAndEnergy(
       int_eng_L_ME[m][*iter] = Temp_CC[m][*iter] * cv_CC[m][*iter] * mass[m];
       mom_L_ME[m][*iter]     = vel_CC[m][*iter] * mass[m];
     }  
-  }
+  } 
    
   for(int m = 0; m < numMatls; m++) {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
@@ -2403,6 +2435,7 @@ void ICE::advectAndAdvanceInTime(
 	     DataWarehouseP& old_dw,DataWarehouseP& new_dw)
 {
 
+
 //  cout << "Doing Advect and Advance in Time \t\t ICE" << endl;
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
@@ -2410,8 +2443,6 @@ void ICE::advectAndAdvanceInTime(
   Vector dx = patch->dCell();
   double vol = dx.x()*dx.y()*dx.z(),mass;
   double invvol = 1.0/vol;
-
-  Vector total_mom(0.,0.,0.);
 
   int numALLmatls = d_sharedState->getNumMatls();
   int numICEmatls = d_sharedState->getNumICEMatls();
@@ -2570,9 +2601,6 @@ void ICE::advectAndAdvanceInTime(
     setBC(vel_CC,   "Velocity",             patch);
     for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
       mass_CC[*iter] = rho_CC[*iter] * vol;
-
-      // Calculate the momentum at the end of the step.
-      total_mom += vel_CC[*iter]*mass_CC[*iter];
     }
     
     /*`==========DEBUG============*/  
@@ -2602,9 +2630,158 @@ void ICE::advectAndAdvanceInTime(
     new_dw->put(cv,       lb->cv_CCLabel,            dwindex,patch);
   }
 
-  cout << "Fluid momentum after advection = " << total_mom << endl;
-
 }
+
+/* 
+ ======================================================================*
+ Function:  printConservedQuantities--
+ If the switch is turned on then print out the conserved quantities.
+_______________________________________________________________________ */
+void ICE::printConservedQuantities(
+            const ProcessorGroup*,  const Patch* patch,
+            DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+{
+  Vector mom_xyz_dir(0.0, 0.0, 0.0);
+  Vector total_mom(0.,0.,0.);
+  CCVariable<Vector> vel_CC;
+  CCVariable<double> rho_CC;
+  CCVariable<double> Temp_CC;
+  CCVariable<double> cv_CC;
+  CCVariable<double> delPress_CC;
+  double mass, total_mass, mat_mass;
+  double mat_total_mom, total_momentum;
+  double mat_total_eng, total_energy;
+  static double initial_total_eng = 0.0;
+  static double initial_total_mom = 0.0;
+  static int n_passes;
+  Vector dx        = patch->dCell();
+  double cell_vol = dx.x()*dx.y()*dx.z();
+  int numICEmatls = d_sharedState->getNumICEMatls();
+  
+if (switchTestConservation){  
+    new_dw->get(delPress_CC,lb->delPress_CCLabel, 0, patch,Ghost::None, 0);
+    for (int m = 0; m < numICEmatls; m++ ) {
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      int dwindex = ice_matl->getDWIndex();
+      new_dw->get(vel_CC, lb->vel_CCLabel, dwindex, patch,  Ghost::None, 0);
+      new_dw->get(rho_CC, lb->rho_CCLabel, dwindex, patch,  Ghost::None, 0);
+      new_dw->get(Temp_CC,lb->temp_CCLabel, dwindex, patch, Ghost::None, 0);
+      new_dw->get(cv_CC,  lb->cv_CCLabel,   dwindex, patch, Ghost::None, 0);
+      double total_KE      = 0.0;
+      double total_int_eng = 0.0;
+      mat_total_mom        = 0.0;
+      mat_total_eng        = 0.0;
+      mat_mass             = 0.0;
+
+       //NEED TO LOOP OVER  ALL PATCHES  
+      //__________________________________
+      // Compute the momenta and energy
+      for (CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
+       mass            = rho_CC[*iter] * cell_vol;
+
+       mom_xyz_dir    += vel_CC[*iter]*rho_CC[*iter] * mass;
+
+       total_KE       += 0.5 * mass * pow(vel_CC[*iter].length(), 2); 
+
+       total_int_eng  += mass * cv_CC[*iter] * Temp_CC[*iter];
+
+       mat_mass     += mass;
+
+      }
+      mat_total_mom   = mom_xyz_dir.x() + mom_xyz_dir.y() + mom_xyz_dir.z();
+      mat_total_eng   = total_int_eng + total_KE;
+      total_momentum += mat_total_mom;
+      total_energy   += mat_total_eng;
+      total_mass     += mat_mass;
+
+      fprintf(stderr, "[%i]Fluid mass %6.5g \n",m, mat_mass);
+      fprintf(stderr, "[%i]Fluid momentum[ %6.5g, %6.5g %6.5g]\t",
+                      m,mom_xyz_dir.x(), mom_xyz_dir.y(), mom_xyz_dir.z()); 
+      fprintf(stderr, "Components Sum: %6.5g\n",mat_total_mom);
+
+      fprintf(stderr, "[%i]Fluid eng[internal %6.5g, Kinetic: %6.5g]:  %6.5g\n",
+                      m,total_int_eng, total_KE, mat_total_eng);
+      if ( n_passes < numICEmatls )  {
+        initial_total_eng += mat_total_eng;
+        initial_total_mom += mat_total_mom;
+        n_passes ++;
+      }
+    }
+
+
+      double change_total_mom = 
+                  100.0 * (total_momentum - initial_total_mom)/initial_total_mom;
+      double change_total_eng = 
+                  100.0 * (total_energy - initial_total_eng)/initial_total_eng;
+
+      fprintf(stderr, "Totals: \t mass %5.6g \t\tmomentum %5.6f \t\t energy %5.6g\n",
+                      total_mass, total_momentum, total_energy);
+      fprintf(stderr, "Percent change in total fluid momentum: %4.5f \t fluid total eng: %4.5f\n",
+                      change_total_mom, change_total_eng);
+
+    //__________________________________
+    // This grossness checks to see if delPress
+    // near a ghost cell is > 0
+    IntVector low, hi;
+    int flag = -9;
+    low = delPress_CC.getLowIndex();
+    hi  = delPress_CC.getHighIndex();
+    // x_plus
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+        if( fabs(delPress_CC[IntVector(hi.x()-2,j,k)]) > 0.0 )  {
+          flag = 1;
+        }
+      }
+    }
+    // x_minus
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+        if( fabs(delPress_CC[IntVector(low.x()+1,j,k)]) > 0.0 )  {
+          flag = 1;
+        }
+      }
+    }
+    // y_plus
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+        if( fabs(delPress_CC[IntVector(i,hi.y()-2,k)]) > 0.0 )  {
+          flag = 1;
+        }
+      }
+    }
+    // y_minus
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+        if( fabs(delPress_CC[IntVector(i,low.y()+1,k)]) > 0.0 )  {
+          flag = 1;
+        }
+      }
+    }
+    // z_plus
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+        if( fabs(delPress_CC[IntVector(i,j,hi.z()-2)]) > 0.0 )   {
+          flag = 1;
+        }
+      }
+    }
+    // z_minus
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+        if( fabs(delPress_CC[IntVector(i,j,low.z()+1)]) > 0.0 )   {
+          flag = 1;
+        }
+      }
+    }
+    if (flag == 1)  {
+      cout<< " D E L P R E S S   >   0   O N   B O U N D A R Y"<<endl;
+      cout<< " *******  N O   L O N G E R   C O N S E R V I N G  *******  \n"<<endl;
+    }
+  
+  } //end if(switchTestConservation)   
+}
+
 /* --------------------------------------------------------------------- 
  Function~  ICE::setBC--
  Purpose~   Takes care of Density_CC, Pressure_CC and Temperature_CC
