@@ -35,6 +35,7 @@ int MemoryManager::lockedbin=0;
 int MemoryManager::initialized=0;
 int MemoryManager::bin=0;
 int MemoryManager::nbins=0;
+static unsigned long largest_bin;
 MemoryManager::Bin* MemoryManager::bins=0;
 #ifdef SCI_LOGNEW
 static FILE* log_fp;
@@ -92,6 +93,7 @@ void MemoryManager::initialize()
 	}
     }
     if(n != nbins)error("Bad mismatch!");
+    largest_bin=bins[nbins-1].lsize;
     lock=new LibMutex;
 #ifdef SCI_LOGNEW
     if(lognew){
@@ -109,6 +111,8 @@ void* MemoryManager::malloc(size_t size)
     int l=0;
     int r=nbins;
     int m=bin;
+    if(osize > largest_bin)
+	error("Request for allocation too large");
     while(1){
 	Bin* b=&bins[m];
 	if(osize > b->lsize){
@@ -316,6 +320,8 @@ void MemoryManager::fillbin(int b)
 	int l=0;
 	int r=nbins;
 	int m=bin;
+	if(spaceleft > largest_bin)
+	    error("spaceleft is too large!");
 	while(1){
 	    Bin* b=&bins[m];
 	    if(spaceleft < b->lsize){
