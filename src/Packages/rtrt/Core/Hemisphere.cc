@@ -39,7 +39,7 @@ void Hemisphere::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
     st->sphere_isect++;
     if(l2oc < (rad2+0.00000001)){
 	// Inside the sphere
-        if (Dot(OC,orientation)<0) return;
+        if (Dot(OC,orientation)>0) return;
 	double t2hc=rad2-l2oc+tca*tca;
 	double thc=sqrt(t2hc);
 	double t=tca+thc;
