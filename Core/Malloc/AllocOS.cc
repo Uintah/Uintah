@@ -57,8 +57,6 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable)
     if(offset != 0)
       offset = ALIGN-offset;
     size_t asize=size+sizeof(OSHunk)+offset;
-  if(returnable && asize%4096 != 0)
-    fprintf(stderr, "OOPS: asize=%d\n", asize);
     void* ptr;
     if(returnable){
        if(devzero_fd == -1){
@@ -118,8 +116,6 @@ void OSHunk::free(OSHunk* hunk)
       abort();
    }
     size_t len=hunk->alloc_len;
-    if(len%4096 != 0)
-      fprintf(stderr, "OOPS2: len=%d\n", len);
 
     if(munmap((MMAP_TYPE*)hunk, len) == -1){
 	int i;
