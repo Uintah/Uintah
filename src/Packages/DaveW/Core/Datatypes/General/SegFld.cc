@@ -28,12 +28,12 @@ using SCICore::Containers::Queue;
 using SCICore::Math::Max;
 using SCICore::Math::Min;
 
-static Persistent* maker()
+static Persistent* make_SegFld()
 {
     return scinew SegFld;
 }
 
-PersistentTypeID SegFld::type_id("SegFld", "ScalarFieldRGint", maker);
+PersistentTypeID SegFld::type_id("SegFld", "ScalarFieldRGint", make_SegFld);
 
 SegFld::SegFld()
 : ScalarFieldRGint()
@@ -421,6 +421,9 @@ void Pio(Piostream& stream, tripleInt& t) {
 
 //
 // $Log$
+// Revision 1.2  1999/09/01 05:27:36  dmw
+// more DaveW datatypes...
+//
 // Revision 1.1  1999/08/23 02:53:00  dmw
 // Dave's Datatypes
 //

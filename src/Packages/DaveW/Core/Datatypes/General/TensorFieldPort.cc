@@ -1,7 +1,7 @@
 //static char *id="@(#) $Id$";
 
 /*
- *  SegFldPort.cc: The SegFldPort datatype
+ *  TensorFieldPort.cc: The TensorFieldPort datatype
  *
  *  Written by:
  *   David Weinstein
@@ -12,7 +12,7 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <DaveW/Datatypes/General/SegFldPort.h>
+#include <DaveW/Datatypes/General/TensorFieldPort.h>
 
 //namespace DaveW {
 //namespace Datatypes {
@@ -20,15 +20,15 @@
 using namespace SCICore::Containers;
 using namespace DaveW::Datatypes;
 
-template<> clString SimpleIPort<SegFldHandle>::port_type("SegFld");
-template<> clString SimpleIPort<SegFldHandle>::port_color("Green");
+template<> clString SimpleIPort<TensorFieldHandle>::port_type("TensorField");
+template<> clString SimpleIPort<TensorFieldHandle>::port_color("green3");
 
 //} // End namespace Datatypes
 //} // End namespace DaveW
 
 //
 // $Log$
-// Revision 1.3  1999/09/01 05:27:36  dmw
+// Revision 1.1  1999/09/01 05:27:37  dmw
 // more DaveW datatypes...
 //
 //
