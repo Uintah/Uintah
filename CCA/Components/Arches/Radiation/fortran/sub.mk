@@ -15,8 +15,8 @@ SRCS += \
 	$(SRCDIR)/fixradval.F \
 	$(SRCDIR)/radarray.F \
 	$(SRCDIR)/radcoef.F \
-	$(SRCDIR)/radcoefthin.F \
 	$(SRCDIR)/radcal.F \
+	$(SRCDIR)/radwsgg.F \
 	$(SRCDIR)/rdombc.F \
 	$(SRCDIR)/rdombmcalc.F \
 	$(SRCDIR)/rdomflux.F \
@@ -26,6 +26,8 @@ SRCS += \
 	$(SRCDIR)/rordr.F \
 	$(SRCDIR)/rordrss.F \
 	$(SRCDIR)/rordrtn.F \
+	$(SRCDIR)/rshsolve.F \
+	$(SRCDIR)/rshresults.F \
 	$(SRCDIR)/soot.F
 
 PSELIBS := 
@@ -37,7 +39,7 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 $(SRCDIR)/radarray.o: $(SRCDIR)/radarray_fort.h
 $(SRCDIR)/radcal.o: $(SRCDIR)/radcal_fort.h
 $(SRCDIR)/radcoef.o: $(SRCDIR)/radcoef_fort.h
-$(SRCDIR)/radcoefthin.o: $(SRCDIR)/radcoefthin_fort.h
+$(SRCDIR)/radwsgg.o: $(SRCDIR)/radwsgg_fort.h
 $(SRCDIR)/rordr.o: $(SRCDIR)/rordr_fort.h
 $(SRCDIR)/rordrss.o: $(SRCDIR)/rordrss_fort.h
 $(SRCDIR)/rordrtn.o: $(SRCDIR)/rordrtn_fort.h
@@ -47,6 +49,6 @@ $(SRCDIR)/rdomsolve.o: $(SRCDIR)/rdomsolve_fort.h
 $(SRCDIR)/rdomsrc.o: $(SRCDIR)/rdomsrc_fort.h
 $(SRCDIR)/rdomflux.o: $(SRCDIR)/rdomflux_fort.h
 $(SRCDIR)/rdomvolq.o: $(SRCDIR)/rdomvolq_fort.h
-
-
+$(SRCDIR)/rshsolve.o: $(SRCDIR)/rshsolve_fort.h
+$(SRCDIR)/rshresults.o: $(SRCDIR)/rshresults_fort.h
 
