@@ -160,6 +160,7 @@ private:
 
       // const VarLabel* variables 
       // for computeTurbulenceSubmodel
+      const VarLabel* d_cellInfoLabel;
       const VarLabel* d_uVelocitySPLabel;
       const VarLabel* d_vVelocitySPLabel;
       const VarLabel* d_wVelocitySPLabel;

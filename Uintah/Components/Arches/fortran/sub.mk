@@ -9,7 +9,7 @@ SRCDIR   := Uintah/Components/Arches/fortran
 
 SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/cellg.F $(SRCDIR)/areain.F $(SRCDIR)/profv.F \
-	$(SRCDIR)/profscalar.F
+	$(SRCDIR)/profscalar.F $(SRCDIR)/smagmodel.F
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
 #	$(SRCDIR)/arrmax.F $(SRCDIR)/assign.F $(SRCDIR)/bcp.F \
@@ -42,6 +42,9 @@ PSELIBS :=
 
 #
 # $Log$
+# Revision 1.12  2000/06/30 04:19:18  rawat
+# added turbulence model and compute properties
+#
 # Revision 1.11  2000/06/20 20:42:38  rawat
 # added some more boundary stuff and modified interface to IntVector. Before
 # compiling the code you need to update /SCICore/Geometry/IntVector.h

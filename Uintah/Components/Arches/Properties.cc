@@ -21,6 +21,8 @@ using namespace Uintah::ArchesSpace;
 //****************************************************************************
 Properties::Properties()
 {
+  d_scalarSPLabel = scinew VarLabel("scalarSP", 
+				    CCVariable<double>::getTypeDescription() );
   d_densitySPLabel = scinew VarLabel("densitySP",
 				   CCVariable<double>::getTypeDescription() );
   d_densityCPLabel = scinew VarLabel("densityCP",
@@ -103,6 +105,9 @@ Properties::sched_computeProps(const LevelP& level,
       // requires scalars
       tsk->requires(old_dw, d_densitySPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
+      for (int ii = 0; ii < d_numMixingVars; ii++) 
+	tsk->requires(old_dw, d_scalarSPLabel, ii, patch, Ghost::None,
+			 numGhostCells);
       tsk->computes(new_dw, d_densityCPLabel, matlIndex, patch);
       sched->addTask(tsk);
     }
@@ -148,30 +153,46 @@ Properties::computeProps(const ProcessorGroup*,
 {
   // Get the CCVariable (density) from the old datawarehouse
   CCVariable<double> density;
+  std::vector<CCVariable<double> > scalar(d_numMixingVars);
   int matlIndex = 0;
   int nofGhostCells = 0;
   old_dw->get(density, d_densitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
-  // Create the CCVariable for storing the computed density
+  for (int ii = 0; ii < d_numMixingVars; ii++)
+    old_dw->get(scalar[ii], d_scalarSPLabel, ii, patch, Ghost::None,
+		nofGhostCells);
   CCVariable<double> new_density;
   new_dw->allocate(new_density, d_densityCPLabel, matlIndex, patch);
-
-#ifdef WONT_COMPILE_YET
-  // Get the low and high index for the patch
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
-
-  // Calculate the properties
-  // this calculation will be done by MixingModel class
-  // for more complicated cases...this will only work for
-  // helium plume
-  FORT_COLDPROPS(new_density, density,
-		 lowIndex, highIndex, d_denUnderrelax);
-#endif
-
+  IntVector indexLow = patch->getCellLowIndex();
+  IntVector indexHigh = patch->getCellHighIndex();
+  // set density for the whole domain
+  for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
+    for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
+      for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+	// for combustion calculations mixingmodel will be called
+	// this is similar to prcf.f
+	double local_den = 0.0;
+	double mixFracSum = 0.0;
+	for (int ii = 0; ii < d_numMixingVars; ii++ ) {
+	  local_den += (scalar[ii])[IntVector(colX, colY, colZ)]/d_streams[ii].d_density;
+	  mixFracSum += (scalar[ii])[IntVector(colX, colY, colZ)];
+	}
+	local_den += (1.0 - mixFracSum)/d_streams[d_numMixingVars].d_density;
+	std::cerr << "local_den " << local_den << endl;
+	if (local_den <= 0.0)
+	  throw InvalidValue("Computed zero density in props" );
+	else
+	  local_den = (1.0/local_den);
+	new_density[IntVector(colX, colY, colZ)] = d_denUnderrelax*local_den +
+                 	  (1.0-d_denUnderrelax)*density[IntVector(colX, colY, colZ)];
+      }
+    }
+  }
+  
   // Write the computed density to the new data warehouse
   new_dw->put(new_density, d_densityCPLabel, matlIndex, patch);
+
 }
 
 //****************************************************************************
@@ -230,6 +251,9 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.20  2000/06/30 04:19:17  rawat
+// added turbulence model and compute properties
+//
 // Revision 1.19  2000/06/21 06:12:12  bbanerje
 // Added missing VarLabel* mallocs .
 //

@@ -146,11 +146,12 @@ Arches::scheduleInitialize(const LevelP& level,
 
   // Set the profile (output Varlabel have SP appended to them)
   // require : densityIN,[u,v,w]VelocityIN
-  // compute : densitySP, [u,v,w]VelocitySP
+  // compute : densitySP, [u,v,w]VelocitySP, scalarSP
   d_boundaryCondition->sched_setProfile(level, sched, dw, dw);
 
   // Compute props (output Varlabel have CP appended to them)
   // require : densitySP
+  // require scalarSP
   // compute : densityCP
   d_props->sched_computeProps(level, sched, dw, dw);
 
@@ -334,6 +335,9 @@ Arches::paramInit(const ProcessorGroup* ,
   
 //
 // $Log$
+// Revision 1.48  2000/06/30 04:19:16  rawat
+// added turbulence model and compute properties
+//
 // Revision 1.47  2000/06/29 06:22:47  bbanerje
 // Updated FCVariable to SFCX, SFCY, SFCZVariables and made corresponding
 // changes to profv.  Code is broken until the changes are reflected

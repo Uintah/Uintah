@@ -11,7 +11,6 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Stencil.h>
 #include <Uintah/Components/Arches/TurbulenceModel.h>
 #include <Uintah/Components/Arches/Properties.h>
-#include <Uintah/Components/Arches/CellInformation.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/SFCXVariable.h>
@@ -799,6 +798,7 @@ BoundaryCondition::sched_setProfile(const LevelP& level,
       for (int ii = 0; ii < d_numInlets; ii++) {
 	tsk->requires(old_dw, d_flowInlets[ii].d_area_label);
       }
+      // This task requires old density, uVelocity, vVelocity and wVelocity
       tsk->requires(old_dw, d_densityINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(old_dw, d_uVelocityINLabel, matlIndex, patch, Ghost::None,
@@ -809,10 +809,8 @@ BoundaryCondition::sched_setProfile(const LevelP& level,
 		    numGhostCells);
       for (int ii = 0; ii < d_props->getNumMixVars(); ii++) 
 	tsk->requires(old_dw, d_scalarINLabel, ii, patch, Ghost::None,
-		    numGhostCells);
-
-      // This task computes new density, uVelocity, vVelocity and wVelocity, 
-      // scalars
+		      numGhostCells);
+      // This task computes new density, uVelocity, vVelocity and wVelocity, scalars
       tsk->computes(new_dw, d_densitySPLabel, matlIndex, patch);
       tsk->computes(new_dw, d_uVelocitySPLabel, matlIndex, patch);
       tsk->computes(new_dw, d_vVelocitySPLabel, matlIndex, patch);
@@ -1789,6 +1787,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.31  2000/06/30 04:19:16  rawat
+// added turbulence model and compute properties
+//
 // Revision 1.30  2000/06/29 06:22:47  bbanerje
 // Updated FCVariable to SFCX, SFCY, SFCZVariables and made corresponding
 // changes to profv.  Code is broken until the changes are reflected
