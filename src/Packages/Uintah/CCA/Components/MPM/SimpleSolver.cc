@@ -14,9 +14,7 @@ SimpleSolver::SimpleSolver()
 SimpleSolver::~SimpleSolver()
 {
 
-
 }
-
 
 void SimpleSolver::initialize()
 {
@@ -104,10 +102,23 @@ void SimpleSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 
 void SimpleSolver::solve()
 {
+  double Qtot=0.;
+  for (int i = 0; i < (int)Q.size(); i++){
+    Qtot += fabs(Q[i]);
+  }
+  cout << "Qtot = " << Qtot << endl;
+
   d_x.resize(Q.size());
-  int conflag = 0;
-  d_x = cgSolve(KK,Q,conflag);
- 
+
+  if (compare(Qtot,0.0)){
+    for (int i = 0; i < (int)Q.size(); i++){
+      d_x[i] = 0.0;
+    }
+  }
+  else{
+    int conflag = 0;
+    d_x = cgSolve(KK,Q,conflag);
+  }
 }
 
 void SimpleSolver::createMatrix(const ProcessorGroup* d_myworld)
@@ -117,10 +128,7 @@ void SimpleSolver::createMatrix(const ProcessorGroup* d_myworld)
   
   KK.setSize(globalrows,globalcolumns);
   Q.resize(globalrows);
-
-
 }
-
 
 void SimpleSolver::destroyMatrix(bool recursion)
 {
