@@ -21,6 +21,18 @@ itcl_class rtrt_Render_RTRTViewer {
     method set_defaults {} {
 	global $this-nworkers
 	set $this-nworkers 1
+	global $this-xres_gui
+	set $this-xres_gui 400
+	global $this-yres_gui
+	set $this-yres_gui 400
+	global $this-render_mode
+	set $this-render_mode 0
+	global $this-scene_opt_type
+	set $this-scene_opt_type 1
+	global $this-gridcellsize_gui
+	set $this-gridcellsize_gui 4
+#	global $this-
+#	set $this-
     }
     # returns 1 if the window is visible, 0 otherwise
     method isVisible {} {
@@ -63,6 +75,63 @@ itcl_class rtrt_Render_RTRTViewer {
 	make_entry $w.options.nworkers "Number of processors" $this-nworkers \
 		"$this do_nothing"
 	pack $w.options.nworkers -side top -fill x -padx 2 -pady 2
+
+	# add the xres box
+	make_entry $w.options.xres "xres" $this-xres_gui \
+		"$this do_nothing"
+	pack $w.options.xres -side top -fill x -padx 2 -pady 2
+
+	# add the yres box
+	make_entry $w.options.yres "yres" $this-yres_gui \
+		"$this do_nothing"
+	pack $w.options.yres -side top -fill x -padx 2 -pady 2
+
+	menubutton $w.options.renmode -text "Render Mode" \
+	    -menu $w.options.renmode.list -relief groove
+	pack $w.options.renmode -side top -anchor w -padx 2 -pady 2
+	
+	menu $w.options.renmode.list
+	$w.options.renmode.list add radiobutton \
+	    -variable $this-render_mode \
+	    -command "$this do_nothing" \
+	    -label Frames \
+	    -value 0
+	$w.options.renmode.list add radiobutton \
+	    -variable $this-render_mode \
+	    -command "$this do_nothing" \
+	    -label Frameless \
+	    -value 1
+
+	menubutton $w.options.sceneopt -text "Scene Optimization Type" \
+	    -menu $w.options.sceneopt.list -relief groove
+	pack $w.options.sceneopt -side top -anchor w -padx 2 -pady 2
+	
+	menu $w.options.sceneopt.list
+	$w.options.sceneopt.list add radiobutton \
+	    -variable $this-scene_opt_type \
+	    -command "$this do_nothing" \
+	    -label None \
+	    -value 0
+	$w.options.sceneopt.list add radiobutton \
+	    -variable $this-scene_opt_type \
+	    -command "$this do_nothing" \
+	    -label BVH1 \
+	    -value 1
+	$w.options.sceneopt.list add radiobutton \
+	    -variable $this-scene_opt_type \
+	    -command "$this do_nothing" \
+	    -label BVH2 \
+	    -value 2
+	$w.options.sceneopt.list add radiobutton \
+	    -variable $this-scene_opt_type \
+	    -command "$this do_nothing" \
+	    -label Grid \
+	    -value 3
+	
+	# add the gridcellsize variable
+	make_entry $w.options.gridcellsize "Grid cell size" \
+	    $this-gridcellsize_gui "$this do_nothing"
+	pack $w.options.gridcellsize -side top -fill x -padx 2 -pady 2
 
 	frame $w.render
 	pack $w.render  -side top -fill x -padx 2 -pady 2
