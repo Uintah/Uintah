@@ -14,8 +14,9 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Math/function.h>
+#include <Dataflow/Ports/MatrixPort.h>
 #include <iostream>
 #include <sstream>
 
@@ -27,6 +28,7 @@ class LinAlgBinary : public Module {
   MatrixOPort* omat_;
 
   GuiString op_;
+  GuiString function_;
 public:
   LinAlgBinary(const string& id);
   virtual ~LinAlgBinary();
@@ -40,7 +42,7 @@ extern "C" Module* make_LinAlgBinary(const string& id)
 
 LinAlgBinary::LinAlgBinary(const string& id)
 : Module("LinAlgBinary", id, Filter,"Math", "SCIRun"),
-  op_("op", id, this)
+  op_("op", id, this), function_("function", id, this)
 {
 }
 
@@ -68,9 +70,11 @@ void LinAlgBinary::execute() {
   
   update_state(NeedData);
   MatrixHandle aH, bH;
-  if (!imatA_->get(aH) && !imatB_->get(bH))
-    return;
-  
+  if (!imatA_->get(aH)) {
+    if (!imatB_->get(bH))
+      return;
+  } else imatB_->get(bH);
+      
   if (!aH.get_rep()) {
     warning("Empty input matrix A.");
   }
@@ -102,6 +106,25 @@ void LinAlgBinary::execute() {
       error("LinAlgBinary: Mult has only been implemented for 4x4 matrices.");
       return;
     }
+  } else if (op == "Function") {
+    if (aH->nrows()*aH->ncols() != bH->nrows()*bH->ncols()) {
+      cerr << "LinAlgBinary: Error - function only works if input matrices have the same number of elements.\n";
+      return;
+    }
+    Function *f = new Function(1);
+    fnparsestring(function_.get().c_str(), &f);
+    MatrixHandle m = aH->clone();
+    double *x = &((*(m.get_rep()))[0][0]);
+    double *a = &((*(aH.get_rep()))[0][0]);
+    double *b = &((*(bH.get_rep()))[0][0]);
+    int n = m->nrows()*m->ncols();
+    double *ab = new double[2];
+    for (int i=0; i<n; i++) {
+      ab[0]=a[i]; ab[1]=b[i];
+      x[i]=f->eval(ab);
+    }
+    omat_->send(MatrixHandle(m));
+    delete[] ab;
   } else {
     warning("Don't know operation "+op);
     return;

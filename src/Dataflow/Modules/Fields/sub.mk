@@ -42,6 +42,7 @@ SRCS     += \
 	$(SRCDIR)/DirectInterpolate.cc\
 	$(SRCDIR)/EditField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
+	$(SRCDIR)/FieldMeasures.cc\
 	$(SRCDIR)/GatherPoints.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/ManageFieldData.cc\
