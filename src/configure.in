@@ -93,6 +93,15 @@ AC_DEFUN(SCI_CHECK_LIB,
     _SCI_VAR_NAME_=LIB`echo $2 | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
     _SCI_VAR_HAVE_="HAVE_$_SCI_VAR_NAME_"
 
+    if test "$1" = "/usr/lib" ||
+       test "$1" = "/lib" ||
+       test "$1" = "/usr/lib/" ||
+       test "$1" = "/lib/"; then
+      LIBRARY=
+    else
+      LIBRARY=-L$1
+    fi
+
     if test "$4"; then
       _SCI_FOUND_='$4'
     fi
@@ -121,7 +130,7 @@ AC_DEFUN(SCI_CHECK_LIB,
 EOF
 
     rm -f conftest.out a.out
-    ac_try="$ac_link -L$1 -l$2 $6 >/dev/null 2>conftest.out"
+    ac_try="$ac_link $LIBRARY -l$2 $6 >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
     ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$" | grep -v "libg2c\.a(open\.o" | grep -v "open\.o(\.text+"`
@@ -254,7 +263,7 @@ EOF
         eval $_SCI_NOTFOUND_
       fi
 
-      rm -f conftest* a.out
+#      rm -f conftest* a.out
     done
 
     if test "$_SCI_LOOPTEST_" = "true"; then
@@ -901,10 +910,10 @@ case $host in
       fi
     fi
     CPP="$CC"
-    CXXCPP="$CXX"
+    CXXCPP="$CXX -c"
     ##  this WOFF is required for configure 
-    WOFF="-woff 1047 -Wl,-woff -Wl,84"
-    CPPFLAGS=" -E $WOFF -LANG:std"
+    WOFF="-woff 3303 -woff 1047 -Wl,-woff -Wl,84"
+    CPPFLAGS=" $WOFF -LANG:std"
     if test "$is_64bit" = "yes"; then
       BINARYFLAGS="-64 -mips4"
     else
@@ -1253,7 +1262,7 @@ AC_CHECK_HEADERS(stdio.h stdlib.h stddef.h stdarg.h string.h limits.h \
   ctype.h signal.h locale.h malloc.h dirent.h assert.h sys/select.h \
   sys/types.h sys/time.h sys/stat.h sys/socket.h sys/timeb.h \
   sys/mman.h sys/param.h sys/ioctl.h sys/resource.h sys/wait.h \
-  sys/utsname.h sys/prctl.h rpc/types.h rpc/xdr.h netinet/in.h,,
+  sys/utsname.h rpc/types.h netinet/in.h,,
   echo configure: error: could not find a required standard header. exiting.
   exit)
 
