@@ -1,0 +1,284 @@
+#!/bin/sh
+
+# to differentiate among the build names & even directories
+OS=`uname -s`
+
+BUILD_DIR=/usr/sci/projects/Uintah/tester/"$OS"
+SCRIPT_DIR=/usr/sci/projects/Uintah/tester/bin
+TEST_DATA=/usr/sci/projects/Uintah/tester/"$OS"/TestData
+USE_PREVTREE="no"
+USE_TREE="new"
+SEND_MAIL_TO=""
+MAIL_REMAKE_LOG_TO=""
+DEFAULT_MAIL_TO="csafe-homebrew@cs.utah.edu, mcole@cs.utah.edu"
+DEFAULT_REMAKE_LOG_TO="kuzimmer@cs.utah.edu, bigler@cs.utah.edu, witzel@cs.utah.edu, sparker@cs.utah.edu, dav@cs.utah.edu, worthen@cs.utah.edu"
+PARALLELISM=0
+VERBOSE="no"
+WEEKLY="0"
+
+# test OS, if Linux or IRIX, set appropriate compiler env. vars, else, abort
+if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
+    CC=cc
+    CXX=CC
+    F77=f77
+elif [ "$OS" == "Linux" ]; then
+    CC="/usr/sci/local/bin/gcc"
+    CXX="/usr/sci/local/bin/c++"
+    F77="/usr/sci/local/bin/g77"
+else
+    echo "Unknown OS. Abort"
+    exit -1
+fi
+
+export OS CC CXX F77
+
+unset SHELL
+umask 002
+
+show_help=0
+if [ "$#" == 0 ]; then
+    show_help=1
+fi
+
+# command line arguments
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+    -sendmail)
+	SEND_MAIL_TO="$DEFAULT_MAIL_TO"
+	MAIL_REMAKE_LOG_TO="$DEFAULT_REMAKE_LOG_TO"
+	;;
+    -sendmailto)
+	if [ "$#" -gt 1 ]; then
+	    shift
+	    SEND_MAIL_TO="$1"
+	fi
+	;;
+    -verbose)
+        VERBOSE="yes"
+	;;
+    -use_prevtree)
+	USE_PREVTREE="yes"
+	;;
+    -use_tree)
+	if [ "$#" -gt 1 ]; then
+	    shift
+	    USE_TREE="$1"
+	fi
+	;;
+    -j)
+	if [ "$#" -gt 1 ]; then
+	    shift
+	    PARALLELISM="$1"
+	fi
+	;;
+
+    -weekly)
+        WEEKLY="1"
+        ;;
+     -help)
+	show_help=1
+	;;
+     *)
+	echo "$1: Unknown option, -help for help"
+	exit 1
+	;;
+     esac
+     shift
+done
+
+# usage string - exit
+if [ $show_help != "0" ]; then
+    cat <<EOF
+    Usage: startTester should only be run by at(1) or cron(1)
+	To run immediately, use "at now" with the path to this script as stdin.
+	Options:
+	    -sendmail:  Send error messages to the default people
+	    -sendmailto "emails":  Send error messages to these people
+	    -j #:  Use # number of processors maximum
+	    -use_tree "tree": Use the given tree instead of checking one out
+	    -use_prevtree: Use the previous (last_ran.lock) checkout and/or build
+            -verbose: Display verbose output
+            -weekly:  Run longer regression tests (meant for once a week)
+	    -help:    Display this option summary
+EOF
+    exit 0
+fi
+
+if [ "$WEEKLY" == "1" ]; then
+  BUILD_DIR="$BUILD_DIR"/Weekly
+fi
+
+PATH="$SCRIPT_DIR":/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/usr/bin:/bin:"$PATH":.
+CVSROOT="csf.cs.utah.edu:/csafe_noexport/cvs/cvsroot"
+CVS_RSH=ssh
+export PATH CVSROOT CVS_RSH WEEKLY
+
+# set number of processors to use when building
+if [ "$PARALLELISM" == "0" ]; then
+    if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
+	MAKE_PARALLELISM=`/usr/sbin/sysconf NPROC_ONLN`
+    else
+	MAKE_PARALLELISM=1
+    fi
+else
+	MAKE_PARALLELISM="$PARALLELISM"
+fi
+
+# use /usr/var/tmp on machines that have it, with the assumption that it will
+# have more space than /tmp (true for burn at least)
+if [ -d /usr/var/tmp ]; then
+	TMPDIR=/usr/var/tmp
+	export TMPDIR
+fi
+
+export BUILD_DIR BUILDROOT TEST_DATA PARALLELISM MAKE_PARALLELISM SEND_MAIL_TO MAIL_REMAKE_LOG_TO
+
+if [ $VERBOSE == "yes" ]; then
+    echo "TIME STAMP: Regression Tester Starting at:"
+    date
+fi
+
+# find the ID to append to SCIRun based on time of run - i.e., SCIRun.080102
+if [ $WEEKLY == "1" ]; then
+  ID=`date +%a%b%d%y`
+else
+  ID=`date +%m%d%y`
+fi
+
+if [ $USE_TREE != "new" ]; then
+# use the SCIRun specified on the command line
+    cd "$USE_TREE"
+    BUILDROOT=`pwd`
+    cd ..
+    echo "Using tree at " > "$BUILDROOT"/log
+    echo "$BUILDROOT" >> "$BUILDROOT"/log
+    ID="$ID"-old
+elif [ $USE_PREVTREE == "yes" ]; then
+# use the previous build of SCIRun
+    if [ ! -d "${BUILD_DIR}/last_ran.lock" ]; then
+	echo "No previous build found"
+	echo "${BUILD_DIR}/last_ran.lock does not exist"
+	exit -1
+    fi
+    cd "${BUILD_DIR}/last_ran.lock"
+    BUILDROOT=`pwd`
+    cd ..
+    echo "Using previous tree at " > "$BUILDROOT"/log
+    echo "$BUILDROOT" >> "$BUILDROOT"/log
+    ID="$ID"-old
+else
+#check out the current version
+    if [ $VERBOSE == "yes" ]; then
+       echo "cd $BUILD_DIR"
+    fi
+    cd "$BUILD_DIR"
+
+    BUILDROOT="${BUILD_DIR}/SCIRun.${ID}"
+    if [ -d "$BUILDROOT" ]; then
+	ID=`date +%m%d%y_%H`
+	BUILDROOT="${BUILD_DIR}/SCIRun.${ID}"
+	if [ -d "$BUILDROOT" ]; then
+	    ID=`date +%m%d%y_%H%M`
+	    BUILDROOT="${BUILD_DIR}/SCIRun.${ID}"
+	    if [ -d "$BUILDROOT" ]; then
+		echo "SCIRun.${ID} dir already exists"
+		exit -1
+	    fi
+	fi
+    fi
+
+
+    if [ $VERBOSE == "yes" ]; then
+       echo "mkdir $BUILDROOT"
+    fi
+
+    mkdir "$BUILDROOT"
+    chgrp csafe "$BUILDROOT"
+    chmod g+s "$BUILDROOT"
+
+    if [ -L "${BUILD_DIR}/last_ran.lock" ]; then
+	rm -f "${BUILD_DIR}/last_ran.lock" 
+    fi
+    ln -s "$BUILDROOT" "${BUILD_DIR}/last_ran.lock"
+
+    if [ $VERBOSE == "yes" ]; then
+      echo "Checking out latest version of Uintah at `date`" 
+    fi
+    echo "Checking out latest version of Uintah at `date` to " > "$BUILDROOT"/log
+    echo "$BUILDROOT" >> "$BUILDROOT"/log
+
+    if [ $VERBOSE == "yes" ]; then
+	echo "TIME STAMP: CVS CHECKOUT STARTING AT:"
+	date
+    fi
+    cd "$BUILD_DIR"
+
+# currently a hack to get SCIRun in the right place w/o using a temp directory
+    cvs checkout -P -N -d SCIRun."$ID" Uintah > "$BUILDROOT"/cvs_co.log 2>&1
+    retval=$?
+
+    if [ $VERBOSE == "yes" ]; then
+      cat "$BUILDROOT"/cvs_co.log
+    fi
+
+    cd "$BUILDROOT"
+    rm -rf CVS/
+    cd SCIRun
+    mv * ..
+    cd ..
+    rm -rf SCIRun
+
+    cd "$BUILD_DIR"
+
+    if [ $VERBOSE == "yes" ]; then
+	echo "TIME STAMP: CVS CHECKOUT DONE AT:"
+	date
+    fi
+    if [ $retval != "0" ]; then
+	echo "CVS checkout failed with code $retval"
+	echo "Look at ${BUILDROOT}/cvs_co.log for more information"
+	exit 1
+    fi
+fi
+
+# set configure command options based on architecture
+if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
+	DBG_CONFIGURE="'--enable-package=Uintah' '--enable-debug' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.1.1'"
+	OPT_CONFIGURE="'--enable-package=Uintah' '--enable-optimize=-Ofast -G0 -OPT:div_split=OFF' '--disable-sci-malloc' '--enable-assertion-level=0' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.1.1'"
+else
+	DBG_CONFIGURE="--enable-package='Uintah' --enable-debug --with-thirdparty=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.0.4-32bit --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.0.4-32bit/petsc-2.1.1"
+	OPT_CONFIGURE="--enable-package='Uintah' --enable-optimize --disable-sci-malloc --enable-assertion-level=0 --with-thirdparty=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.0.4-32bit --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.0.4-32bit/petsc-2.1.1"
+fi
+
+# where the webpage will be, and init webpage
+HTMLLOG=/usr/sci/www/worthen/tester/"$OS"/SCIRun.${ID}
+WEBLOG=http://www.sci.utah.edu/~worthen/tester/"$OS"/SCIRun.${ID}
+
+rm -f $HTMLLOG
+TITLE=`date`
+echo "<HTML><HEAD><TITLE> $OS tests on $TITLE</TITLE></HEAD><BODY><pre>" >> $HTMLLOG 
+echo "Regression Tester results from `hostname`" >> $HTMLLOG
+echo "Architecture: ${OS}" >> $HTMLLOG
+echo ""
+echo "Using build: ${BUILDROOT}" >> $HTMLLOG
+echo "LOG: $HTMLLOG" >> $HTMLLOG
+
+
+PATH="$BUILDROOT"/src/Packages/Uintah/Test/helpers:"$PATH"
+
+export PATH DBG_CONFIGURE OPT_CONFIGURE HTMLLOG WEBLOG VERBOSE
+
+if [ $VERBOSE == "yes" ]; then
+   echo "Running Tests"
+fi
+
+runTests
+retval=$?
+
+if [ $VERBOSE == "yes" ]; then
+    echo "TIME STAMP: REGRESSION TESTER DONE AT:"
+    date
+fi
+
+exit $retval
+
