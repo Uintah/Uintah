@@ -1,84 +1,60 @@
 #ifndef __GEOMETRY_OBJECT_H__
 #define __GEOMETRY_OBJECT_H__
 
-#include <Uintah/Components/MPM/GeometrySpecification/GeometryPiece.h>
-#include <Uintah/Components/MPM/BoundCond.h>
-#include <Uintah/Interface/DataWarehouseP.h>
-#include <iosfwd>
-#include <vector>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/IntVector.h>
 #include <Uintah/Interface/ProblemSpecP.h>
-#include <Uintah/Interface/ProblemSpec.h>
-#include <Uintah/Grid/Box.h>
-
-
-using Uintah::Interface::ProblemSpecP;
-using Uintah::Interface::ProblemSpec;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::IntVector;
-using Uintah::Grid::Box;
 
 namespace SCICore {
     namespace Geometry {
+	class Point;
 	class Vector;
     }
 }
+
 namespace Uintah {
-namespace Components {
-class Material;
-class ParticleSet;
-class Region;
-
-class GeometryObject {
-       
- public:
-
-  GeometryObject();
-  virtual ~GeometryObject();
-  
-  void setObjInfo(int n, Point low, Point hi, Vector dx,IntVector ppc);
-  Point getObjInfoBoundsLower();
-  Point getObjInfoBoundsUpper();
-  void setObjInfoBounds(Point lo, Point up);
-  int getObjInfoNumPieces();
-  Vector getObjInfoDx();
-  IntVector getObjInfoNumParticlesPerCell();
-  void addPieces(ProblemSpecP prob_spec);
-  int  getPieceInfo();
-  void readFromFile(std::ifstream &filename);
-  void fillWithParticles(std::vector<Material *> &materials,
-		      std::vector<BoundCond> &BC,
-		      const Region* region,
-		      Uintah::Interface::DataWarehouseP&);
-  int checkShapes(Point part_pos, int &np);
-  void surface(Point part_pos, int surf[7], int &np);
-  void norm(Vector &norm,Point part_pos, int surf[7], int ptype, int &np);
-
-  virtual Box getBoundingBox() const;
-  virtual bool inside(const Point &p) const;
-  virtual GeometryObject* readParameters(const ProblemSpec &ps);
-
- private:
-
-  int d_num_pieces;
-  int d_object_number;
-  int d_in_piece;
-  Vector d_xyz;
-  IntVector d_num_par_per_cell;
-  std::vector<GeometryPiece *> d_geom_pieces;
-  Point d_upper_prob_coord;
-  Point d_lower_prob_coord;
-  Vector d_particle_spacing; // distance between particles
-
-};
-} // end namespace Components
+   namespace Grid {
+      class Box;
+   }
+   namespace Components {
+      
+      using Uintah::Interface::ProblemSpecP;
+      using Uintah::Interface::ProblemSpec;
+      using SCICore::Geometry::Point;
+      using SCICore::Geometry::Vector;
+      using SCICore::Geometry::IntVector;
+      using Uintah::Grid::Box;
+      
+      class GeometryObject {
+	 
+      public:
+	 
+	 GeometryObject();
+	 virtual ~GeometryObject();
+	 
+	 IntVector getObjInfoNumParticlesPerCell();
+#ifdef FUTURE
+	 void surface(Point part_pos, int surf[7], int &np);
+	 void norm(Vector &norm,Point part_pos, int surf[7], int ptype, int &np);
+#endif
+	 
+	 virtual Box getBoundingBox() const = 0;
+	 virtual bool inside(const Point &p) const = 0;
+	 virtual GeometryObject* readParameters(ProblemSpecP &ps);
+	 
+      private:
+	 IntVector d_num_par_per_cell;
+      };
+      
+   } // end namespace Components
 } // end namespace Uintah
 
 #endif // __GEOMETRY_OBJECT_H__
+
+
 // $Log$
+// Revision 1.9  2000/04/20 18:56:21  sparker
+// Updates to MPM
+//
 // Revision 1.8  2000/04/20 15:09:25  jas
 // Added factory methods for GeometryObjects.
 //

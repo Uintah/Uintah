@@ -19,8 +19,8 @@ using Uintah::Parallel::UintahParallelComponent;
 using Uintah::Interface::ProblemSpecP;
 using Uintah::Grid::GridP;
 using Uintah::Grid::LevelP;
+using Uintah::Grid::SimulationStateP;
 using Uintah::Grid::Region;
-using Uintah::Grid::VarLabel;
 using Uintah::Interface::DataWarehouseP;
 using Uintah::Interface::SchedulerP;
 using Uintah::Parallel::ProcessorContext;
@@ -38,7 +38,8 @@ public:
     Arches( int MpiRank, int MpiProcesses );
     virtual ~Arches();
 
-    virtual void problemSetup(const ProblemSpecP& params, GridP& grid);
+    virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
+			      const SimulationStateP&);
 
     virtual void problemInit(const LevelP& level,
 			     SchedulerP& sched, DataWarehouseP& dw,
@@ -49,7 +50,6 @@ public:
 	 
     virtual void scheduleComputeStableTimestep(const LevelP& level,
 					       SchedulerP&,
-					       const VarLabel*,
 					       DataWarehouseP&);
     virtual void scheduleTimeAdvance(double t, double dt,
 				     const LevelP& level, SchedulerP&,
@@ -80,6 +80,9 @@ private:
 
 //
 // $Log$
+// Revision 1.15  2000/04/20 18:56:10  sparker
+// Updates to MPM
+//
 // Revision 1.14  2000/04/19 20:59:11  dav
 // adding MPI support
 //

@@ -1,21 +1,15 @@
 #include "UnionGeometryObject.h"
 #include <SCICore/Geometry/Point.h>
-#include <SCICore/Math/MinMax.h>
 #include "GeometryObjectFactory.h"
 
 using SCICore::Geometry::Point;
-using SCICore::Math::Min;
-using SCICore::Math::Max;
+using SCICore::Geometry::Min;
+using SCICore::Geometry::Max;
 
 using namespace Uintah::Components;
 
 UnionGeometryObject::UnionGeometryObject() 
 {
-}
-
-UnionGeometryObject::UnionGeometryObject(const UnionGeometryObject& copy)
-{
-  // Need some help
 }
 
 UnionGeometryObject::~UnionGeometryObject()

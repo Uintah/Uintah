@@ -39,31 +39,27 @@ void Task::subregionCapable(bool state)
   d_subregionCapable = state;
 }
 
-void Task::requires(const DataWarehouseP& ds, const std::string& name,
-		    const TypeDescription* td)
+void Task::requires(const DataWarehouseP& ds, const VarLabel* var)
 {
-  d_reqs.push_back(new Dependency(this, ds, name, td, 0, 0));
+  d_reqs.push_back(new Dependency(this, ds, var, 0, 0));
 }
 
-void Task::requires(const DataWarehouseP& ds, const std::string& name,
-		    const Region* region, int numGhostCells,
-		    const TypeDescription* td)
+void Task::requires(const DataWarehouseP& ds, const VarLabel* var,
+		    const Region* region, int numGhostCells)
 {
-  d_reqs.push_back(new Dependency(this, ds, name, td, region, numGhostCells));
+  d_reqs.push_back(new Dependency(this, ds, var, region, numGhostCells));
 }
 
-void Task::computes(const DataWarehouseP& ds, const std::string& name,
-		    const TypeDescription* td)
+void Task::computes(const DataWarehouseP& ds, const VarLabel* var)
 {
-  d_comps.push_back(new Dependency(this, ds, name, td, 0, 0));
+  d_comps.push_back(new Dependency(this, ds, var, 0, 0));
 }
 
-void Task::computes(const DataWarehouseP& ds, const std::string& name,
-		    const Region*, int numGhostCells,
-		    const TypeDescription* td)
+void Task::computes(const DataWarehouseP& ds, const VarLabel* var,
+		    const Region*)
 {
-  d_comps.push_back(new Dependency(this, ds, name, td, 
-				   d_region, numGhostCells));
+  d_comps.push_back(new Dependency(this, ds, var,
+				   d_region, 0));
 }
 
 void Task::doit(const ProcessorContext* pc)
@@ -75,13 +71,11 @@ void Task::doit(const ProcessorContext* pc)
 }
 
 Task::Dependency::Dependency(Task* task, const DataWarehouseP& dw,
-			     std::string varname,
-			     const TypeDescription* vartype,
+			     const VarLabel* var,
 			     const Region* region, int numGhostCells)
     : d_task(task),
       d_dw(dw),
-      d_varname(varname),
-      d_vartype(vartype),
+      d_var(var),
       d_region(region),
       d_numGhostCells(numGhostCells)
 {
@@ -109,6 +103,9 @@ void Task::addComps(std::vector<Dependency*>& to) const
 
 //
 // $Log$
+// Revision 1.6  2000/04/20 18:56:31  sparker
+// Updates to MPM
+//
 // Revision 1.5  2000/04/11 07:10:50  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications

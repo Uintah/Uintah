@@ -1,22 +1,15 @@
 #include "DifferenceGeometryObject.h"
 #include <SCICore/Geometry/Point.h>
-#include <SCICore/Math/MinMax.h>
 
 using SCICore::Geometry::Point;
-using SCICore::Math::Min;
-using SCICore::Math::Max;
+using SCICore::Geometry::Min;
+using SCICore::Geometry::Max;
 
 using namespace Uintah::Components;
 
 
 DifferenceGeometryObject::DifferenceGeometryObject() 
 {
-}
-
-DifferenceGeometryObject::DifferenceGeometryObject(const DifferenceGeometryObject& copy)
-{
-  // Need some help
-
 }
 
 DifferenceGeometryObject::~DifferenceGeometryObject()
@@ -26,17 +19,6 @@ DifferenceGeometryObject::~DifferenceGeometryObject()
   delete right;
  
 }
-
-void DifferenceGeometryObject::add(const GeometryObject *go)
-{
-
-  // How do I figure out the type of geometry object to create, use RTTI?
-  GeometryObject* new_go;
-
-  // Implement a factory method to create the new type
-  
-}
-
 
 bool DifferenceGeometryObject::inside(const Point &p) const 
 {

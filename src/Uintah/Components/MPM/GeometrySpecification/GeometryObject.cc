@@ -5,7 +5,6 @@
 #include "SphereGeometryPiece.h"
 #include "CylinderGeometryPiece.h"
 #include "TriGeometryPiece.h"   
-#include "Material.h"
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Interface/DataWarehouse.h>
@@ -32,64 +31,12 @@ GeometryObject::~GeometryObject()
 {
 }
 
-bool GeometryObject::inside(const Point &p) const
-{
-}
-
-GeometryObject* GeometryObject::readParamaters(ProblemSpecP &ps)
-{
-}
-
-Box GeometryObject::getBoundingBox() const
-{
-}
-
-void GeometryObject::setObjInfo(int n,Point lo,Point hi,
-				Vector dx,IntVector nppc)
-{
-
-  d_object_number=n;
-  
-  d_xyz = dx;
-  d_num_par_per_cell  = nppc;
-  
-
-  d_upper_prob_coord = hi;
-  d_lower_prob_coord = lo;
-}
-
-Point GeometryObject::getObjInfoBoundsLower()
-{
-  return d_lower_prob_coord;
-}
-
-Point GeometryObject::getObjInfoBoundsUpper()
-{
-  return d_upper_prob_coord;
-}
-
-void GeometryObject::setObjInfoBounds(Point lo, Point hi)
-{
-  d_lower_prob_coord = lo;
-  d_upper_prob_coord = hi;    
-}
-
-int GeometryObject::getObjInfoNumPieces()
-{
-  return d_num_pieces;
-}
-
-Vector GeometryObject::getObjInfoDx()
-{
-  return d_xyz;
-}
-
 IntVector GeometryObject::getObjInfoNumParticlesPerCell()
 {
   return d_num_par_per_cell;
 }
-   
 
+#if 0
 void GeometryObject::addPieces(ProblemSpecP prob_spec)
 {
   int pt,pn,mn,i,m,vf_num;
@@ -151,44 +98,9 @@ void GeometryObject::addPieces(ProblemSpecP prob_spec)
   d_geom_pieces.push_back(geom_piece);
   
 }
+#endif
 
-
-int GeometryObject::checkShapes(Point part_pos, int &np)
-{
-  int pp=0,ppold;
-  double dlpp;
-  
-  dlpp=d_particle_spacing.x();
-  if(dlpp<d_particle_spacing.y()){
-    dlpp=d_particle_spacing.y();
-  }
-  if(dlpp<d_particle_spacing.z()){
-    dlpp=d_particle_spacing.z();
-  }
-  
-  for(int i=1;i<=d_geom_pieces.size();i++){
-   
-    //  "Positive" space objects go here
-  
-    if((pp<=0)&&(d_geom_pieces[i]->getPosNeg()>=1.0)){
-       pp = d_geom_pieces[i]->checkShapesPositive(part_pos,np,i,d_particle_spacing, ppold);
-       d_in_piece = d_geom_pieces[i]->getInPiece();
-
-    }      /* if (pp<=0)           */
-
-
-/* Negative stuff       */
-    if((pp>0)&&(d_geom_pieces[i]->getPosNeg()==0.0)){
-      ppold=pp;
-      pp = d_geom_pieces[i]->checkShapesNegative(part_pos,np,i,d_particle_spacing, ppold);
-    }      /* if (pp>0)            */
-
-  }         /* for */
-  
-  return pp;
-
-}
-
+#ifdef FUTURE
 void GeometryObject::surface(Point part_pos,int surf[7], int &np)
 {
   Point check_point;
@@ -299,8 +211,10 @@ void GeometryObject::norm(Vector &norm, Point part_pos, int sf[7],
 
 
 }
+#endif
 
 
+#ifdef WONT_COMPILE_YET
 
 void GeometryObject::fillWithParticles(vector<Material *> &materials,
 				vector<BoundCond> &BC,
@@ -308,7 +222,6 @@ void GeometryObject::fillWithParticles(vector<Material *> &materials,
 				DataWarehouseP& dw)
 {
 
-#ifdef WONT_COMPILE_YET
 
     cerr << "In FillWParticles\n";
     ParticleVariable<Vector> pposition;
@@ -478,12 +391,15 @@ void GeometryObject::fillWithParticles(vector<Material *> &materials,
     dw->put(pexternalforce, "p.externalforce", region, 0);
     dw->put(pconmod, "p.conmod", region, 0);
 
-#endif
 }
 
+#endif
 
   
 // $Log$
+// Revision 1.7  2000/04/20 18:56:21  sparker
+// Updates to MPM
+//
 // Revision 1.6  2000/04/20 15:09:25  jas
 // Added factory methods for GeometryObjects.
 //

@@ -2,7 +2,7 @@
 #define UINTAH_HOMEBREW_NCVARIABLE_H
 
 #include <Uintah/Grid/Array3.h>
-#include <Uintah/Grid/DataItem.h>
+#include <Uintah/Grid/NCVariableBase.h>
 #include <SCICore/Exceptions/InternalError.h>
 
 namespace Uintah {
@@ -40,7 +40,7 @@ WARNING
 ****************************************/
 
 template<class T>
-class NCVariable : public Array3<T>, public DataItem {
+class NCVariable : public Array3<T>, public NCVariableBase{
 public:
     NCVariable();
     NCVariable(const NCVariable<T>&);
@@ -49,10 +49,6 @@ public:
     //////////
     // Insert Documentation Here:
     static const TypeDescription* getTypeDescription();
-
-    //////////
-    // Insert Documentation Here:
-    virtual void get(DataItem&) const;
 
     virtual NCVariable<T>* clone() const;
 
@@ -76,16 +72,6 @@ NCVariable<T>::getTypeDescription()
 template<class T>
 NCVariable<T>::~NCVariable()
 {
-}
-
-template<class T>
-void
-NCVariable<T>::get(DataItem& copy) const
-{
-    NCVariable<T>* ref=dynamic_cast<NCVariable<T>*>(&copy);
-    if(!ref)
-	throw TypeMismatchException("NCVariable<T>");
-    *ref = *this;
 }
 
 template<class T>
@@ -132,6 +118,9 @@ NCVariable<T>::allocate(const Region* region)
 
 //
 // $Log$
+// Revision 1.7  2000/04/20 18:56:30  sparker
+// Updates to MPM
+//
 // Revision 1.6  2000/04/12 23:00:48  sparker
 // Starting problem setup code
 // Other compilation fixes

@@ -4,6 +4,8 @@
 #include "MPMMaterial.h"
 #include "ConstitutiveModel.h"
 
+using namespace Uintah::Components;
+
 MPMMaterial::MPMMaterial(int dwi, int vfi, ConstitutiveModel *cm)
 {
   // Constructor

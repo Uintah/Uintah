@@ -3,6 +3,11 @@
 
 #include <Uintah/Interface/DataWarehouseP.h>
 
+namespace Uintah {
+  namespace Grid {
+    
+
+
 /**************************************
 
 CLASS
@@ -45,12 +50,12 @@ public:
   //////////
   // Return index associated with this material's
   // location in the data warehouse
-  int getDWIndex();
+  int getDWIndex() const;
 
   //////////
   // Return index associated with this material's
   // velocity field
-  int getVFIndex();
+  int getVFIndex() const;
 
 protected:
 
@@ -65,9 +70,15 @@ private:
   Material& operator=(const Material &mat);
 };
 
+  } // end namespace Grid
+} // end namespace Uintah
+
 #endif // __MATERIAL_H__
 
 // $Log$
+// Revision 1.4  2000/04/20 18:56:30  sparker
+// Updates to MPM
+//
 // Revision 1.3  2000/03/30 18:28:52  guilkey
 // Moved Material class into Grid directory.  Put indices to velocity
 // field and data warehouse into the base class.

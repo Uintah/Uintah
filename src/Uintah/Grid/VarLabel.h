@@ -40,6 +40,10 @@ namespace Uintah {
     class VarLabel {
     public:
        VarLabel(const std::string&, const TypeDescription*);
+
+       const std::string& getName() const {
+	  return d_name;
+       }
     private:
        std::string d_name;
        const TypeDescription* d_td;
@@ -54,6 +58,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.2  2000/04/20 18:56:32  sparker
+// Updates to MPM
+//
 // Revision 1.1  2000/04/19 05:26:15  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)

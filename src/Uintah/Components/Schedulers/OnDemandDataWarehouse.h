@@ -20,6 +20,8 @@ using Uintah::Interface::DataWarehouse;
 using Uintah::Grid::DataItem;
 using Uintah::Grid::TypeDescription;
 using Uintah::Grid::Region;
+using Uintah::Grid::NCVariableBase;
+using Uintah::Grid::ParticleVariableBase;
 using Uintah::Grid::ReductionVariableBase;
 using Uintah::Grid::GridP;
 using Uintah::Grid::VarLabel;
@@ -60,7 +62,16 @@ public:
 
   virtual void setGrid(const GridP&);
 
-  virtual void get(ReductionVariableBase&, const VarLabel*) const ;
+  virtual void get(ReductionVariableBase&, const VarLabel*) const;
+  virtual void put(const ReductionVariableBase&, const VarLabel*);
+  virtual void get(ParticleVariableBase&, const VarLabel*,
+		   int matlIndex, const Region*, int numGhostCells) const;
+  virtual void put(const ParticleVariableBase&, const VarLabel*,
+		   int matlIndex, const Region*);
+  virtual void get(NCVariableBase&, const VarLabel*,
+		   int matlIndex, const Region*, int numGhostCells) const;
+  virtual void put(const NCVariableBase&, const VarLabel*,
+		   int matlIndex, const Region*);
 #if 0
   //////////
   // Insert Documentation Here:
@@ -127,6 +138,9 @@ private:
 
 //
 // $Log$
+// Revision 1.8  2000/04/20 18:56:26  sparker
+// Updates to MPM
+//
 // Revision 1.7  2000/04/19 21:20:03  dav
 // more MPI stuff
 //

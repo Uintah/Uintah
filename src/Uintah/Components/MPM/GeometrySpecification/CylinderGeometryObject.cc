@@ -1,5 +1,7 @@
 #include "CylinderGeometryObject.h"
 #include "GeometryObjectFactory.h"
+#include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Grid/Box.h>
 
 using namespace Uintah::Components;
 
@@ -16,11 +18,6 @@ CylinderGeometryObject::CylinderGeometryObject(CylinderGeometryObject::AXIS a,
 
 CylinderGeometryObject::~CylinderGeometryObject()
 {
-}
-
-void CylinderGeometryObject::add(const CylinderGeometryObject* go)
-{
-
 }
 
 bool CylinderGeometryObject::inside(const Point &p) const
@@ -63,6 +60,9 @@ GeometryObject* CylinderGeometryObject::readParameters(ProblemSpecP &ps)
 
 
 // $Log$
+// Revision 1.3  2000/04/20 18:56:20  sparker
+// Updates to MPM
+//
 // Revision 1.2  2000/04/20 15:09:25  jas
 // Added factory methods for GeometryObjects.
 //

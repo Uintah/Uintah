@@ -35,7 +35,8 @@ Arches::~Arches()
 
 }
 
-void Arches::problemSetup(const ProblemSpecP& params, GridP&)
+void Arches::problemSetup(const ProblemSpecP& params, GridP&,
+			  const SimulationStateP&)
 {
   ProblemSpecP db = params->findBlock("CFD")->findBlock("Arches");
 
@@ -93,7 +94,6 @@ void Arches::scheduleInitialize(const LevelP& level,
 
 void Arches::scheduleComputeStableTimestep(const LevelP& level,
 					   SchedulerP& sched,
-					   const VarLabel*,
 					   DataWarehouseP& dw)
 {
 #ifdef WONT_COMPILE_YET
@@ -183,6 +183,9 @@ void Arches::paramInit(const ProcessorContext*,
 
 //
 // $Log$
+// Revision 1.21  2000/04/20 18:56:10  sparker
+// Updates to MPM
+//
 // Revision 1.20  2000/04/19 20:59:11  dav
 // adding MPI support
 //

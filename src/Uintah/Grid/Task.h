@@ -3,6 +3,7 @@
 
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/Handle.h>
+#include <Uintah/Grid/VarLabel.h>
 #include <string>
 #include <vector>
 
@@ -17,6 +18,7 @@ namespace Parallel {
 
 namespace Grid {
 
+class VarLabel;
 class Region;
 class TypeDescription;
 
@@ -113,6 +115,27 @@ public:
     d_subregionCapable = false;
   }
 
+  template<class T>
+  Task(const string&         taskName,
+       const DataWarehouseP& fromDW,
+       DataWarehouseP&       toDW,
+       T*                     ptr,
+       void (T::*pmf)(const ProcessorContext*,
+		      const Region*,
+		      const DataWarehouseP&,
+			    DataWarehouseP&) )
+    : d_taskName( taskName ), 
+      d_region( 0 ),
+      d_action( new Action<T>(ptr, pmf) ),
+      d_fromDW( fromDW ),
+      d_toDW( toDW )
+  {
+    d_completed = false;
+    d_usesThreads = false;
+    d_usesMPI = false;
+    d_subregionCapable = false;
+  }
+
   template<class T, class Arg1>
   Task(const string&         taskName,
        const Region*         region,
@@ -151,25 +174,21 @@ public:
 
   //////////
   // Insert Documentation Here:
-  void requires(const DataWarehouseP& ds, const string& name,
-		const TypeDescription* td);
+  void requires(const DataWarehouseP& ds, const VarLabel*);
 
   //////////
   // Insert Documentation Here:
-  void requires(const DataWarehouseP& ds, const string& name,
-		const Region* region, int numGhostCells,
-		const TypeDescription* td);
+  void requires(const DataWarehouseP& ds, const VarLabel*,
+		const Region* region, int numGhostCells);
 
   //////////
   // Insert Documentation Here:
-  void computes(const DataWarehouseP& ds, const string& name,
-		const TypeDescription* td);
+  void computes(const DataWarehouseP& ds, const VarLabel*);
 
   //////////
   // Insert Documentation Here:
-  void computes(const DataWarehouseP& ds, const string& name,
-		const Region* region, int numGhostCells,
-		const TypeDescription* td);
+  void computes(const DataWarehouseP& ds, const VarLabel*,
+		const Region* region);
 
   //////////
   // Insert Documentation Here:
@@ -187,23 +206,21 @@ public:
   struct Dependency {
           Task*            d_task;
           DataWarehouseP   d_dw;
-          string           d_varname;
-    const TypeDescription* d_vartype;
+          const VarLabel*  d_var;
 
     const Region*          d_region;
     int                    d_numGhostCells;
 
     Dependency(      Task*           task,
 	       const DataWarehouseP& dw,
-		     string varname,
-	       const TypeDescription*,
+	       const VarLabel* d_var,
 	       const Region*,
 		     int numGhostcells );
 
     bool operator<(const Dependency& c) const {
-      if(d_varname < c.d_varname) {
+      if(d_var->getName() < c.d_var->getName()) {
 		return true;
-	    } else if(d_varname == c.d_varname){
+	    } else if(d_var->getName() == c.d_var->getName()){
 		if(d_region < c.d_region){
 		    return true;
 		} else if(d_region == c.d_region) {
@@ -256,6 +273,9 @@ private:
 
 //
 // $Log$
+// Revision 1.7  2000/04/20 18:56:31  sparker
+// Updates to MPM
+//
 // Revision 1.6  2000/03/22 00:32:13  sparker
 // Added Face-centered variable class
 // Added Per-region data class

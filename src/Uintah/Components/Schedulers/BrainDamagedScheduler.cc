@@ -183,11 +183,7 @@ BrainDamagedScheduler::execute(const ProcessorContext* pc)
 void
 BrainDamagedScheduler::addTarget(const VarLabel* target)
 {
-#if 0
     d_targets.push_back(target);
-#else
-    cerr << "BrainDamagedScheduler::addTarget not done!\n";
-#endif
 }
 
 void
@@ -238,6 +234,9 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.7  2000/04/20 18:56:25  sparker
+// Updates to MPM
+//
 // Revision 1.6  2000/04/19 21:20:02  dav
 // more MPI stuff
 //

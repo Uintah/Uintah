@@ -12,6 +12,7 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/Level.cc $(SRCDIR)/Material.cc $(SRCDIR)/ParticleSet.cc \
 	$(SRCDIR)/ParticleSubset.cc $(SRCDIR)/ReductionVariableBase.cc \
 	$(SRCDIR)/RefCounted.cc $(SRCDIR)/Region.cc \
+	$(SRCDIR)/SimulationState.cc \
 	$(SRCDIR)/SimulationTime.cc $(SRCDIR)/SubRegion.cc \
 	$(SRCDIR)/Task.cc $(SRCDIR)/VarLabel.cc
 
@@ -23,6 +24,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/04/20 18:56:32  sparker
+# Updates to MPM
+#
 # Revision 1.6  2000/04/19 05:26:15  sparker
 # Implemented new problemSetup/initialization phases
 # Simplified DataWarehouse interface (not finished yet)

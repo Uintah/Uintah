@@ -2,6 +2,7 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Uintah/Components/MPM/Contact/Contact.h>
 #include <Uintah/Components/MPM/SerialMPM.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
@@ -15,6 +16,8 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/Region.h>
 #include <Uintah/Grid/NodeIterator.h> // Must be included after Region.h
+#include <Uintah/Grid/ReductionVariable.h>
+#include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SoleVariable.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Interface/DataWarehouse.h>
@@ -41,296 +44,281 @@ using std::cerr;
 using std::string;
 using std::ofstream;
 using Uintah::Grid::Level;
+using Uintah::Grid::Material;
 using Uintah::Grid::ParticleSubset;
 using Uintah::Grid::ParticleVariable;
 using Uintah::Grid::Task;
 using Uintah::Grid::SoleVariable;
 using Uintah::Interface::ProblemSpec;
 using Uintah::Grid::Region;
+using Uintah::Grid::ReductionVariable;
 using Uintah::Grid::NodeIterator;
 using Uintah::Grid::NCVariable;
+using Uintah::Grid::VarLabel;
 
 SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
 {
+   g_velocity_label = new VarLabel("g.velocity",
+				   NCVariable<Vector>::getTypeDescription());
+   p_deformationMeasure_label = new VarLabel("p.deformationMeasure",
+					     ParticleVariable<Matrix3>::getTypeDescription());
+   p_stress_label = new VarLabel("p.stress",
+				 ParticleVariable<Matrix3>::getTypeDescription());
 }
 
 SerialMPM::~SerialMPM()
 {
 }
 
-void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid)
+void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
+			     const SimulationStateP& sharedState)
 {
-
-  Problem prob_description;
-  prob_description.preProcessor(prob_spec,grid);  
-#if 0
-    for(Level::const_regionIterator iter=level->regionsBegin();
-	iter != level->regionsEnd(); iter++){
-	const Region* region=*iter;
-	ParticleSet* pset = new ParticleSet();
-	ParticleSubset* psubset = new ParticleSubset(pset);
-
-	ParticleVariable<Vector>  px(psubset);
-	ParticleVariable<double>  pvolume(psubset);
-	ParticleVariable<double>  pmass(psubset);
-	ParticleVariable<Vector>  pvel(psubset);
-	ParticleVariable<Matrix3> pstress(psubset);
-	ParticleVariable<Matrix3> pdeformationMeasure(psubset);
-	ParticleVariable<Vector>  pexternalforce(psubset);
-
-	dw->put(px,      	     "p.x", 		region, 0);
-	dw->put(pvolume, 	     "p.volume", 	region, 0);
-	dw->put(pmass,   	     "p.mass", 		region, 0);
-	dw->put(pvel,    	     "p.velocity", 	region, 0);
-	dw->put(pstress,	     "p.stress", 	region, 0);
-	dw->put(pdeformationMeasure, "p.deformationMeasure", region, 0);
-	dw->put(pexternalforce,      "p.externalforce", region, 0);
-
-	cerr << "Creating particles for region\n";
-
-	prob_description.createParticles(region, dw);
-    }
-#endif
-    cerr << "SerialMPM::problemSetup not done\n";
+   d_sharedState = sharedState;
+   Problem prob_description;
+   prob_description.preProcessor(prob_spec, grid, sharedState);
+   cerr << "SerialMPM::problemSetup not done\n";
 }
 
 void SerialMPM::scheduleInitialize(const LevelP& level,
 				   SchedulerP& sched,
 				   DataWarehouseP& dw)
 {
-   cerr << "SerialMPM::scheduleInitialize not done\n";
+   for(Level::const_regionIterator iter=level->regionsBegin();
+       iter != level->regionsEnd(); iter++){
+      const Region* region=*iter;
+      
+      {
+	 Task* t = new Task("SerialMPM::initialize", region, dw, dw,
+			    this, SerialMPM::actuallyInitialize);
+	 sched->addTask(t);
+	 t->computes(dw, d_sharedState->get_delt_label());
+      }
+   }
 }
 
-void SerialMPM::scheduleComputeStableTimestep(const LevelP& level,
-					      SchedulerP& sched,
-					      const VarLabel*,
-					      DataWarehouseP& dw)
+void SerialMPM::scheduleComputeStableTimestep(const LevelP&,
+					      SchedulerP&,
+					      DataWarehouseP&)
 {
-    for(Level::const_regionIterator iter=level->regionsBegin();
-	iter != level->regionsEnd(); iter++){
-	const Region* region=*iter;
-
-	Task* t = new Task("SerialMPM::computeStableTimestep", region, dw, dw,
-			   this, SerialMPM::actuallyComputeStableTimestep);
-	t->requires(dw, "params", ProblemSpec::getTypeDescription());
-	t->requires(dw, "MaxWaveSpeed",
-				SoleVariable<double>::getTypeDescription());
-	t->computes(dw, "delt", SoleVariable<double>::getTypeDescription());
-	sched->addTask(t);
-    }
+   // Nothing to do here - delt is computed as a by-product of the
+   // consitutive model
 }
 
 void SerialMPM::scheduleTimeAdvance(double t, double dt,
 				    const LevelP& level, SchedulerP& sched,
 				    const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-    for(Level::const_regionIterator iter=level->regionsBegin();
-	iter != level->regionsEnd(); iter++){
-	const Region* region=*iter;
-	{
-	    /*
-	     * interpolateParticlesToGrid
-	     *   in(P.MASS, P.VELOCITY, P.NAT_X)
-	     *   operation(interpolate the P.MASS and P.VEL to the grid
-	     *             using P.NAT_X and some shape function evaluations)
-	     * out(G.MASS, G.VELOCITY)
-	     */
-	    Task* t = new Task("SerialMPM::interpolateParticlesToGrid",
-			       region, old_dw, new_dw,
-			       this, SerialMPM::interpolateParticlesToGrid);
-	    t->requires(old_dw, "p.mass", region, 0,
-			ParticleVariable<double>::getTypeDescription());
-	    t->requires(old_dw, "p.velocity", region, 0,
-			ParticleVariable<Vector>::getTypeDescription());
-	    t->requires(old_dw, "p.externalforce", region, 0,
-			ParticleVariable<Vector>::getTypeDescription());
-	    t->requires(old_dw, "p.x", region, 0,
-			ParticleVariable<Point>::getTypeDescription());
-	    t->computes(new_dw, "g.mass", region, 0,
-			NCVariable<double>::getTypeDescription());
-	    t->computes(new_dw, "g.velocity", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-	    t->computes(new_dw, "g.externalforce", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-	    sched->addTask(t);
-	}
-
-	{
-	   /* exMomInterpolated
-	    *   in(G.MASS, G.VELOCITY)
-	    *   operation(peform operations which will cause each of
-	    *		  velocity fields to feel the influence of the
-	    *		  the others according to specific rules)
-	    *   out(G.VELOCITY)
-	    */
+   for(Level::const_regionIterator iter=level->regionsBegin();
+       iter != level->regionsEnd(); iter++){
+      const Region* region=*iter;
+#ifdef WONT_COMPILE_YET
+      {
+	 /*
+	  * interpolateParticlesToGrid
+	  *   in(P.MASS, P.VELOCITY, P.NAT_X)
+	  *   operation(interpolate the P.MASS and P.VEL to the grid
+	  *             using P.NAT_X and some shape function evaluations)
+	  * out(G.MASS, G.VELOCITY)
+	  */
+	 Task* t = new Task("SerialMPM::interpolateParticlesToGrid",
+			    region, old_dw, new_dw,
+			    this, SerialMPM::interpolateParticlesToGrid);
+	 t->requires(old_dw, "p.mass", region, 0,
+		     ParticleVariable<double>::getTypeDescription());
+	 t->requires(old_dw, "p.velocity", region, 0,
+		     ParticleVariable<Vector>::getTypeDescription());
+	 t->requires(old_dw, "p.externalforce", region, 0,
+		     ParticleVariable<Vector>::getTypeDescription());
+	 t->requires(old_dw, "p.x", region, 0,
+		     ParticleVariable<Point>::getTypeDescription());
+	 t->computes(new_dw, "g.mass", region, 0,
+		     NCVariable<double>::getTypeDescription());
+	 t->computes(new_dw, "g.velocity", region, 0,
+		     NCVariable<Vector>::getTypeDescription());
+	 t->computes(new_dw, "g.externalforce", region, 0,
+		     NCVariable<Vector>::getTypeDescription());
+	 sched->addTask(t);
+      }
+      
+      {
+	 /* exMomInterpolated
+	  *   in(G.MASS, G.VELOCITY)
+	  *   operation(peform operations which will cause each of
+	  *		  velocity fields to feel the influence of the
+	  *		  the others according to specific rules)
+	  *   out(G.VELOCITY)
+	  */
 #if 0
-	    Task* t = new Task("Contact::exMomInterpolated",
-			       region, old_dw, new_dw,
-			       this, Contact::dav); // Contact::exMomInterpolated);
-	    t->requires(new_dw, "g.mass", region, 0,
-			NCVariable<double>::getTypeDescription());
-	    t->requires(new_dw, "g.velocity", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-	    t->computes(new_dw, "g.velocity", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-	    sched->addTask(t);
+	 Task* t = new Task("Contact::exMomInterpolated",
+			    region, old_dw, new_dw,
+			    this, Contact::dav); // Contact::exMomInterpolated);
+	 t->requires(new_dw, "g.mass", region, 0,
+		     NCVariable<double>::getTypeDescription());
+	 t->requires(new_dw, "g.velocity", region, 0,
+		     NCVariable<Vector>::getTypeDescription());
+	 t->computes(new_dw, "g.velocity", region, 0,
+		     NCVariable<Vector>::getTypeDescription());
+	 sched->addTask(t);
 #endif
-	}
-
-	{
-	    /*
-	     * computeStressTensor
-	     *   in(G.VELOCITY, P.X, P.DEFORMATIONMEASURE)
-	     *   operation(evaluate the gradient of G.VELOCITY at P.X, feed
-	     *             this into a constitutive model, which will
-             *	           evaluate the stress and store it in the
-             *             DataWarehouse.  Each CM also computes the maximum
-             *             elastic wave speed for that material in the
-             *             region.  This is used in calculating delt.)
-	     * out(P.DEFORMATIONMEASURE,P.STRESS)
-	     */
-	    Task* t = new Task("SerialMPM::computeStressTensor",
-			       region, old_dw, new_dw,
-			       this, SerialMPM::computeStressTensor);
-	    t->requires(new_dw, "g.velocity", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-/*
-#warning
-	    t->requires(old_dw, "p.cmdata", region, 0,
-			ParticleVariable<Uintah::Components::
-                            ConstitutiveModel::CMData>::getTypeDescription());
-*/
-	    t->requires(new_dw, "p.deformationMeasure", region, 0,
-			ParticleVariable<Matrix3>::getTypeDescription());
-	    t->requires(old_dw, "delt",
-			SoleVariable<double>::getTypeDescription());
-	    t->computes(new_dw, "p.stress", region, 0,
-			ParticleVariable<Matrix3>::getTypeDescription());
-	    t->computes(new_dw, "p.deformationMeasure", region, 0,
-			ParticleVariable<Matrix3>::getTypeDescription());
-	    t->computes(new_dw, "MaxWaveSpeed",
-			SoleVariable<double>::getTypeDescription());
-	    sched->addTask(t);
-	}
-
-	{
-	    /*
-	     * computeInternalForce
-	     *   in(P.CONMOD, P.NAT_X, P.VOLUME)
-	     *   operation(evaluate the divergence of the stress (stored in
-	     *	       P.CONMOD) using P.NAT_X and the gradients of the
-	     *             shape functions)
-	     * out(G.F_INTERNAL)
-	     */
-	    Task* t = new Task("SerialMPM::computeInternalForce",
-			       region, old_dw, new_dw,
-			       this, SerialMPM::computeInternalForce);
-	    t->requires(new_dw, "p.stress", region, 0,
-			ParticleVariable<Matrix3>::getTypeDescription());
-	    t->requires(old_dw, "p.volume", region, 0,
-			ParticleVariable<double>::getTypeDescription());
-	    t->computes(new_dw, "g.internalforce", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-	    sched->addTask(t);
-	}
-
-	{
-	    /*
-	     * solveEquationsMotion
-	     *   in(G.MASS, G.F_INTERNAL)
-	     *   operation(acceleration = f/m)
-	     *   out(G.ACCELERATION)
-	     * 
-	     */
-	    Task* t = new Task("SerialMPM::solveEquationsMotion",
-			       region, old_dw, new_dw,
-			       this, SerialMPM::solveEquationsMotion);
-	    t->requires(new_dw, "g.mass", region, 0,
-			NCVariable<double>::getTypeDescription());
-	    t->requires(new_dw, "g.internalforce", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-	    t->computes(new_dw, "g.acceleration", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-	    sched->addTask(t);
-	}
-
-	{
-	    /*
-	     * integrateAcceleration
-	     *   in(G.ACCELERATION, G.VELOCITY)
-	     *   operation(v* = v + a*dt)
-	     *   out(G.VELOCITY_STAR)
-	     * 
-	     */
-	    Task* t = new Task("SerialMPM::integrateAcceleration",
-			       region, old_dw, new_dw,
-			       this, SerialMPM::integrateAcceleration);
-	    t->requires(new_dw, "g.acceleration", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-	    t->requires(new_dw, "g.velocity", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-	    t->requires(old_dw, "delt",
-			SoleVariable<double>::getTypeDescription());
-	    t->computes(new_dw, "g.velocity_star", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-	    sched->addTask(t);
-	}
-
-	{
-	   /* exMomIntegrated
-	    *   in(G.MASS, G.VELOCITY_STAR, G.ACCELERATION)
-	    *   operation(peform operations which will cause each of
-	    *		  velocity fields to feel the influence of the
-	    *		  the others according to specific rules)
-	    *   out(G.VELOCITY_STAR, G.ACCELERATION)
-	    */
-/*
-#warning
-	    Task* t = new Task("Contact::exMomIntegrated",
-				region, old_dw, new_dw,
-				this, Contact::exMomIntegrated);
-	    t->requires(new_dw, "g.mass", region, 0,
-			NCVariable<double>::getTypeDescription());
-	    t->requires(new_dw, "g.velocity_star", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-	    t->requires(new_dw, "g.acceleration", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-	    t->computes(new_dw, "g.velocity_star", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-	    t->computes(new_dw, "g.acceleration", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-	    sched->addTask(t);
-*/
-	}
-
-	{
-	    /*
-	     * interpolateToParticlesAndUpdate
-	     *   in(G.ACCELERATION, G.VELOCITY_STAR, P.NAT_X)
-	     *   operation(interpolate acceleration and v* to particles and
-	     *             integrate these to get new particle velocity and
-	     *             position)
-	     * out(P.VELOCITY, P.X, P.NAT_X)
-	     */
-	    Task* t = new Task("SerialMPM::interpolateToParticlesAndUpdate",
-			      region, old_dw, new_dw,
-			      this, SerialMPM::interpolateToParticlesAndUpdate);
-	    t->requires(new_dw, "g.acceleration", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-	    t->requires(new_dw, "g.velocity_star", region, 0,
-			NCVariable<Vector>::getTypeDescription());
-	    t->requires(old_dw, "p.x", region, 0,
-			ParticleVariable<Point>::getTypeDescription());
-	    t->requires(old_dw, "delt",
-			SoleVariable<double>::getTypeDescription());
-	    t->computes(new_dw, "p.velocity", region, 0,
-			ParticleVariable<Vector>::getTypeDescription());
-	    t->computes(new_dw, "p.x", region, 0,
-			ParticleVariable<Point>::getTypeDescription());
-	    sched->addTask(t);
-	}
+      }
+#endif
+      
+      {
+	 /*
+	  * computeStressTensor
+	  *   in(G.VELOCITY, P.X, P.DEFORMATIONMEASURE)
+	  *   operation(evaluate the gradient of G.VELOCITY at P.X, feed
+	  *             this into a constitutive model, which will
+	  *	           evaluate the stress and store it in the
+	  *             DataWarehouse.  Each CM also computes the maximum
+	  *             elastic wave speed for that material in the
+	  *             region.  This is used in calculating delt.)
+	  * out(P.DEFORMATIONMEASURE,P.STRESS)
+	  */
+	 Task* t = new Task("SerialMPM::computeStressTensor",
+			    region, old_dw, new_dw,
+			    this, SerialMPM::computeStressTensor);
+	 t->requires(new_dw, g_velocity_label, region, 0);
+	 /*
+	   #warning
+	   t->requires(old_dw, "p.cmdata", region, 0,
+	   ParticleVariable<Uintah::Components::
+	   ConstitutiveModel::CMData>::getTypeDescription());
+	   */
+	 t->requires(new_dw, p_deformationMeasure_label, region, 0);
+	 t->computes(new_dw, d_sharedState->get_delt_label());
+	 t->computes(new_dw, p_stress_label, region);
+	 t->computes(new_dw, p_deformationMeasure_label, region);
+	 sched->addTask(t);
+      }
+      
+#ifdef WONT_COMPILE_YET
+      {
+	 /*
+	  * computeInternalForce
+	  *   in(P.CONMOD, P.NAT_X, P.VOLUME)
+	  *   operation(evaluate the divergence of the stress (stored in
+	  *	       P.CONMOD) using P.NAT_X and the gradients of the
+	  *             shape functions)
+	  * out(G.F_INTERNAL)
+	  */
+	 Task* t = new Task("SerialMPM::computeInternalForce",
+			    region, old_dw, new_dw,
+			    this, SerialMPM::computeInternalForce);
+	 t->requires(new_dw, "p.stress", region, 0,
+		     ParticleVariable<Matrix3>::getTypeDescription());
+	 t->requires(old_dw, "p.volume", region, 0,
+		     ParticleVariable<double>::getTypeDescription());
+	 t->computes(new_dw, "g.internalforce", region, 0,
+		     NCVariable<Vector>::getTypeDescription());
+	 sched->addTask(t);
+      }
+      
+      {
+	 /*
+	  * solveEquationsMotion
+	  *   in(G.MASS, G.F_INTERNAL)
+	  *   operation(acceleration = f/m)
+	  *   out(G.ACCELERATION)
+	  * 
+	  */
+	 Task* t = new Task("SerialMPM::solveEquationsMotion",
+			    region, old_dw, new_dw,
+			    this, SerialMPM::solveEquationsMotion);
+	 t->requires(new_dw, "g.mass", region, 0,
+		     NCVariable<double>::getTypeDescription());
+	 t->requires(new_dw, "g.internalforce", region, 0,
+		     NCVariable<Vector>::getTypeDescription());
+	 t->computes(new_dw, "g.acceleration", region, 0,
+		     NCVariable<Vector>::getTypeDescription());
+	 sched->addTask(t);
+      }
+      
+      {
+	 /*
+	  * integrateAcceleration
+	  *   in(G.ACCELERATION, G.VELOCITY)
+	  *   operation(v* = v + a*dt)
+	  *   out(G.VELOCITY_STAR)
+	  * 
+	  */
+	 Task* t = new Task("SerialMPM::integrateAcceleration",
+			    region, old_dw, new_dw,
+			    this, SerialMPM::integrateAcceleration);
+	 t->requires(new_dw, "g.acceleration", region, 0,
+		     NCVariable<Vector>::getTypeDescription());
+	 t->requires(new_dw, "g.velocity", region, 0,
+		     NCVariable<Vector>::getTypeDescription());
+	 t->requires(old_dw, "delt",
+		     SoleVariable<double>::getTypeDescription());
+	 t->computes(new_dw, "g.velocity_star", region, 0,
+		     NCVariable<Vector>::getTypeDescription());
+	 sched->addTask(t);
+      }
+      
+      {
+	 /* exMomIntegrated
+	  *   in(G.MASS, G.VELOCITY_STAR, G.ACCELERATION)
+	  *   operation(peform operations which will cause each of
+	  *		  velocity fields to feel the influence of the
+	  *		  the others according to specific rules)
+	  *   out(G.VELOCITY_STAR, G.ACCELERATION)
+	  */
+	 /*
+	   #warning
+	   Task* t = new Task("Contact::exMomIntegrated",
+	   region, old_dw, new_dw,
+	   this, Contact::exMomIntegrated);
+	   t->requires(new_dw, "g.mass", region, 0,
+	   NCVariable<double>::getTypeDescription());
+	   t->requires(new_dw, "g.velocity_star", region, 0,
+	   NCVariable<Vector>::getTypeDescription());
+	   t->requires(new_dw, "g.acceleration", region, 0,
+	   NCVariable<Vector>::getTypeDescription());
+	   t->computes(new_dw, "g.velocity_star", region, 0,
+	   NCVariable<Vector>::getTypeDescription());
+	   t->computes(new_dw, "g.acceleration", region, 0,
+	   NCVariable<Vector>::getTypeDescription());
+	   sched->addTask(t);
+	   */
+      }
+      
+      {
+	 /*
+	  * interpolateToParticlesAndUpdate
+	  *   in(G.ACCELERATION, G.VELOCITY_STAR, P.NAT_X)
+	  *   operation(interpolate acceleration and v* to particles and
+	  *             integrate these to get new particle velocity and
+	  *             position)
+	  * out(P.VELOCITY, P.X, P.NAT_X)
+	  */
+	 Task* t = new Task("SerialMPM::interpolateToParticlesAndUpdate",
+			    region, old_dw, new_dw,
+			    this, SerialMPM::interpolateToParticlesAndUpdate);
+	 t->requires(new_dw, "g.acceleration", region, 0,
+		     NCVariable<Vector>::getTypeDescription());
+	 t->requires(new_dw, "g.velocity_star", region, 0,
+		     NCVariable<Vector>::getTypeDescription());
+	 t->requires(old_dw, "p.x", region, 0,
+		     ParticleVariable<Point>::getTypeDescription());
+	 t->requires(old_dw, "delt",
+		     SoleVariable<double>::getTypeDescription());
+	 t->computes(new_dw, "p.velocity", region, 0,
+		     ParticleVariable<Vector>::getTypeDescription());
+	 t->computes(new_dw, "p.x", region, 0,
+		     ParticleVariable<Point>::getTypeDescription());
+	 sched->addTask(t);
+      }
+#endif
     }
+}
+
+void SerialMPM::actuallyInitialize(const ProcessorContext*,
+				   const Region* region,
+				   const DataWarehouseP& old_dw,
+				   DataWarehouseP& new_dw)
+{
 }
 
 void SerialMPM::actuallyComputeStableTimestep(const ProcessorContext*,
@@ -338,22 +326,6 @@ void SerialMPM::actuallyComputeStableTimestep(const ProcessorContext*,
 					      const DataWarehouseP& old_dw,
 					      DataWarehouseP& new_dw)
 {
-#ifdef WONT_COMPILE_YET
-    using SCICore::Math::Min;
-
-    SoleVariable<double> MaxWaveSpeed;
-    new_dw->get(MaxWaveSpeed, "MaxWaveSpeed");
-
-    Vector dCell = region->dCell();
-    double width = Min(dCell.x(), dCell.y(), dCell.z());
-    double delt = 0.5*width/MaxWaveSpeed;
-#else
-    cerr << "actuallyComputeStableTimestep not done\n";
-#endif
-/*
- DataWarehouse needs a Min function implemented
-    new_dw->put(SoleVariable<double>(delt), "delt", DataWarehouse::Min);
-*/
 }
 
 void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
@@ -438,23 +410,21 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 #endif
 }
 
-
 void SerialMPM::computeStressTensor(const ProcessorContext*,
 				    const Region* region,
 				    const DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
 {
-#if 0 // This needs the datawarehouse to allow indexing by material
-      // for both the particle and the grid data.
-    for(int m = 0; m < numMatls; m++){
-        Material* matl = materials[m];
-        MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-        if(mpm_matl){
-            ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-            cm->computeStressTensor(region, mpm_matl, old_dw, new_dw);
-	}
-    }
-#endif
+   // This needs the datawarehouse to allow indexing by material
+   // for both the particle and the grid data.
+   for(int m = 0; m < d_sharedState->getNumMatls(); m++){
+      Material* matl = d_sharedState->getMaterial(m);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      if(mpm_matl){
+	 ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+	 cm->computeStressTensor(region, mpm_matl, old_dw, new_dw);
+      }
+   }
 }
 
 void SerialMPM::computeInternalForce(const ProcessorContext*,
@@ -699,6 +669,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.21  2000/04/20 18:56:16  sparker
+// Updates to MPM
+//
 // Revision 1.20  2000/04/19 22:38:16  dav
 // Make SerialMPM a UintahParallelComponent
 //
