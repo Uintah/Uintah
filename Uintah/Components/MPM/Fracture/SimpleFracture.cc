@@ -155,7 +155,7 @@ crackGrow(const Patch* patch,
 	 fabs(maxStress));
 
       //cout<<"eigenVectorsSize: "<<eigenVectors.size()<<endl;
-      for(int i=0;i<eigenVectors.size();++i) {
+      for(int i=0;i<(int)eigenVectors.size();++i) {
         //cout<<"eigenVectors: "<<eigenVectors[i]<<endl;
         eigenVectors[i].normalize();
       }
@@ -406,6 +406,9 @@ SimpleFracture(ProblemSpecP& ps)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.2  2000/12/05 15:53:38  jas
+// Remove g++ warnings.
+//
 // Revision 1.1  2000/11/21 20:46:28  tan
 // Implemented different models for fracture simulations.  SimpleFracture model
 // is for the simulation where the resolution focus only on macroscopic major

@@ -102,7 +102,7 @@ crackGrow(const Patch* patch,
      vector<Vector> eigenVectors = pStress[idx].
         getEigenVectors(maxStress,maxStress);
 
-     for(int i=0;i<eigenVectors.size();++i) {
+     for(int i=0;i<(int)eigenVectors.size();++i) {
          eigenVectors[i].normalize();
      }
 	
@@ -298,6 +298,9 @@ ExplosiveFracture(ProblemSpecP& ps)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.2  2000/12/05 15:53:38  jas
+// Remove g++ warnings.
+//
 // Revision 1.1  2000/11/21 20:47:31  tan
 // Implemented different models for fracture simulations.  SimpleFracture model
 // is for the simulation where the resolution focus only on macroscopic major
