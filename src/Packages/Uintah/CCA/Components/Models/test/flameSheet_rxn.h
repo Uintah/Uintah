@@ -20,7 +20,7 @@ GENERAL INFORMATION
 
    flameSheet_rxn.h
 
-   Steven G. Parker
+   Todd Harman
    Department of Computer Science
    University of Utah
 
@@ -44,29 +44,19 @@ WARNING
     flameSheet_rxn(const ProcessorGroup* myworld, ProblemSpecP& params);
     virtual ~flameSheet_rxn();
     
-    //////////
-    // Insert Documentation Here:
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			      ModelSetup* setup);
     
-    //////////
-    // Insert Documentation Here:
     virtual void scheduleInitialize(SchedulerP&,
 				    const LevelP& level,
 				    const ModelInfo*);
 
-    //////////
-    // Insert Documentation Here:
     virtual void restartInitialize() {}
       
-    //////////
-    // Insert Documentation Here:
     virtual void scheduleComputeStableTimestep(SchedulerP&,
 					       const LevelP& level,
 					       const ModelInfo*);
       
-    //////////
-    // Insert Documentation Here:
     virtual void scheduleMassExchange(SchedulerP&,
 				      const LevelP& level,
 				      const ModelInfo*);
@@ -111,10 +101,11 @@ WARNING
 
     vector<Scalar*> scalars;
     map<string, Scalar*> names;
-
-    double d_cv;
-    double d_gamma;
+    double d_del_h_comb;
+    double d_f_stoic;
     double d_cp;
+    double d_T_oxidizer_inf;
+    double d_T_fuel_init;
     SimulationStateP sharedState;
   };
 }
