@@ -166,9 +166,9 @@ class matfiledata : public matfilebase {
 	template<class T> void getandcast(T *dataptr,long size);
 	template<class T> void getandcast(T **dataptr,long dim1, long dim2);
 	template<class T> void getandcast(T ***dataptr,long dim1, long dim2, long dim3);
-	template<class T> void putandcast(const T *dataptr,long size,mitype type);
-	template<class T> void putandcast(const T **dataptr,long dim1, long dim2, mitype type);
-	template<class T> void putandcast(const T ***dataptr,long dim1, long dim2, long dim3, mitype type);
+	template<class T> void putandcast(T *dataptr,long size,mitype type);
+	template<class T> void putandcast(T **dataptr,long dim1, long dim2, mitype type);
+	template<class T> void putandcast(T ***dataptr,long dim1, long dim2, long dim3, mitype type);
 
 
 	// For smaller arrays use the STL and put the data in a vector. These
@@ -176,11 +176,11 @@ class matfiledata : public matfilebase {
 	// there is no need to do memory management
 
 	template<class T> void getandcastvector(std::vector<T> &vec);
-	template<class T> void putandcastvector(const std::vector<T> &vec,mitype type);
+	template<class T> void putandcastvector(std::vector<T> &vec,mitype type);
 
 	// Access functions per element. 
 	template<class T> T getandcastvalue(long index);
-	template<class T> void putandcastvalue(const T value,long index);
+	template<class T> void putandcastvalue(T value,long index);
 
 	// string functions	
 	// support functions for reading and writing fieldnames and matrixnames
@@ -550,7 +550,7 @@ template<class T> T matfiledata::getandcastvalue(long index)
 // functions inserting data
 
 
-template<class T> void matfiledata::putandcast(const T *dataptr,long dsize,mitype dtype)
+template<class T> void matfiledata::putandcast(T *dataptr,long dsize,mitype dtype)
 {
     // This function copies and casts the data in the matfilebuffer into
     // a new buffer specified by dataptr (address of this new buffer) with
@@ -611,7 +611,7 @@ template<class T> void matfiledata::putandcast(const T *dataptr,long dsize,mityp
 }
 
 
-template<class T> void matfiledata::putandcast(const T **dataptr,long dim1, long dim2 ,mitype dtype)
+template<class T> void matfiledata::putandcast(T **dataptr,long dim1, long dim2 ,mitype dtype)
 {
     // This function copies and casts the data in the matfilebuffer into
     // a new buffer specified by dataptr (address of this new buffer) with
@@ -681,7 +681,7 @@ template<class T> void matfiledata::putandcast(const T **dataptr,long dim1, long
     }
 }
 
-template<class T> void matfiledata::putandcast(const T ***dataptr,long dim1, long dim2, long dim3 ,mitype dtype)
+template<class T> void matfiledata::putandcast(T ***dataptr,long dim1, long dim2, long dim3 ,mitype dtype)
 {
     // This function copies and casts the data in the matfilebuffer into
     // a new buffer specified by dataptr (address of this new buffer) with
@@ -752,7 +752,7 @@ template<class T> void matfiledata::putandcast(const T ***dataptr,long dim1, lon
 }
 
 
-template<class T> void matfiledata::putandcastvector(const std::vector<T> &vec,mitype type)
+template<class T> void matfiledata::putandcastvector(std::vector<T> &vec,mitype type)
 {
     clear();
     
@@ -811,7 +811,7 @@ template<class T> void matfiledata::putandcastvector(const std::vector<T> &vec,m
 }
 
 
-template<class T> void matfiledata::putandcastvalue(const T val,long index)
+template<class T> void matfiledata::putandcastvalue(T val,long index)
 {
     if (index >= size()) throw out_of_range();
     

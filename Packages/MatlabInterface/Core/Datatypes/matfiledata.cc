@@ -350,7 +350,7 @@ matfiledata matfiledata::reorder(const std::vector<long> &newindices)
 	
 	// get the sizes of the of the old and new datablocks in elements
 	
-	long osize = size();
+	// long osize = size();
 	long dsize = newindices.size();
 	
 	// check limits

@@ -319,7 +319,9 @@ class matlabarray : public matfilebase {
     
     void createdensearray(std::vector<long> &dims,mitype type);  
     void createsparsearray(std::vector<long> &dims,mitype type); 
-       
+    void createdensearray(long m, long n,mitype type);  
+    void createsparsearray(long m, long n,mitype type); 
+	       
     void createcellarray(std::vector<long> &dims); 
 	void createstructarray();
     void createstructarray(std::vector<std::string> &fieldnames); 
@@ -429,6 +431,19 @@ class matlabarray : public matfilebase {
 	void transpose();   // matrix must be 2D
 	void permute(std::vector<long> permorder);  // N dimensional equivalent for transpose
     
+	// Conversion tools to mitype
+	
+	template<class T> mitype getmitype(T &test);
+	mitype  getmitype(char &test);
+	mitype  getmitype(unsigned char &test);
+	mitype  getmitype(unsigned short &test);
+	mitype  getmitype(signed short &test);
+	mitype  getmitype(unsigned long &test);
+	mitype  getmitype(signed long &test);
+	mitype  getmitype(float &test);
+	mitype  getmitype(double &test); 
+
+
   private:
 	// helper functions:
 	
@@ -550,28 +565,28 @@ template<class T> inline void matlabarray::setimagnumericarray(T *data,long size
 template<class T> inline void matlabarray::setnumericarray(T **data,long dim1, long dim2)
 {
     if(m_ == 0) throw internal_error();
-    if((size != getnumelements())&&(m_->class_ != mlSPARSE)) throw internal_error();
+    if(((dim1*dim2) != getnumelements())&&(m_->class_ != mlSPARSE)) throw internal_error();
     m_->preal_.putandcast(data,dim1,dim2,m_->type_);
 }	
 
 template<class T> inline void matlabarray::setnumericarray(T **data,long dim1, long dim2 ,mitype type)
 {
     if(m_ == 0) throw internal_error();
-    if((size != getnumelements())&&(m_->class_ != mlSPARSE)) throw internal_error();
+    if(((dim1*dim2) != getnumelements())&&(m_->class_ != mlSPARSE)) throw internal_error();
     m_->preal_.putandcast(data,dim1,dim2,type);
 }
 
 template<class T> inline void matlabarray::setimagnumericarray(T **data,long dim1, long dim2)
 {
     if(m_ == 0) throw internal_error();
-    if((size != getnumelements())&&(m_->class_ != mlSPARSE)) throw internal_error();
+    if(((dim1*dim2) != getnumelements())&&(m_->class_ != mlSPARSE)) throw internal_error();
     m_->pimag_.putandcast(data,dim1,dim2,m_->type_);
 }	
 
 template<class T> inline void matlabarray::setimagnumericarray(T **data,long dim1, long dim2 ,mitype type)
 {
     if(m_ == 0) throw internal_error();
-    if((size != getnumelements())&&(m_->class_ != mlSPARSE)) throw internal_error();
+    if(((dim1*dim2) != getnumelements())&&(m_->class_ != mlSPARSE)) throw internal_error();
     m_->pimag_.putandcast(data,dim1,dim2,type);
 }
 
@@ -579,28 +594,28 @@ template<class T> inline void matlabarray::setimagnumericarray(T **data,long dim
 template<class T> inline void matlabarray::setnumericarray(T ***data,long dim1, long dim2, long dim3)
 {
     if(m_ == 0) throw internal_error();
-    if((size != getnumelements())&&(m_->class_ != mlSPARSE)) throw internal_error();
+    if(((dim1*dim2*dim3) != getnumelements())&&(m_->class_ != mlSPARSE)) throw internal_error();
     m_->preal_.putandcast(data,dim1,dim2,dim3,m_->type_);
 }	
 
 template<class T> inline void matlabarray::setnumericarray(T ***data,long dim1, long dim2, long dim3 ,mitype type)
 {
     if(m_ == 0) throw internal_error();
-    if((size != getnumelements())&&(m_->class_ != mlSPARSE)) throw internal_error();
+    if(((dim1*dim2*dim3) != getnumelements())&&(m_->class_ != mlSPARSE)) throw internal_error();
     m_->preal_.putandcast(data,dim1,dim2,dim3,type);
 }
 
 template<class T> inline void matlabarray::setimagnumericarray(T ***data,long dim1, long dim2, long dim3)
 {
     if(m_ == 0) throw internal_error();
-    if((size != getnumelements())&&(m_->class_ != mlSPARSE)) throw internal_error();
+    if(((dim1*dim2*dim3) != getnumelements())&&(m_->class_ != mlSPARSE)) throw internal_error();
     m_->pimag_.putandcast(data,dim1,dim2,dim3,m_->type_);
 }	
 
 template<class T> inline void matlabarray::setimagnumericarray(T ***data,long dim1, long dim2, long dim3 ,mitype type)
 {
     if(m_ == 0) throw internal_error();
-    if((size != getnumelements())&&(m_->class_ != mlSPARSE)) throw internal_error();
+    if(((dim1*dim2*dim3) != getnumelements())&&(m_->class_ != mlSPARSE)) throw internal_error();
     m_->pimag_.putandcast(data,dim1,dim2,dim3,type);
 }
 
@@ -713,6 +728,36 @@ template<class T>  inline void matlabarray::setcolsarray(T *cols,long size)
     if (m_ == 0) throw internal_error();
     m_->pcols_.putandcast(cols,size,miINT32);
 }    
+
+template<class T> inline matlabarray::mitype matlabarray::getmitype(T &test) 
+{ return(matlabarray::miUNKNOWN); }
+
+matlabarray::mitype  inline matlabarray::getmitype(unsigned char &test)		
+{ return(matlabarray::miUINT8); }
+
+matlabarray::mitype  inline matlabarray::getmitype(char &test) 
+{ return(matlabarray::miINT8); }
+
+matlabarray::mitype  inline matlabarray::getmitype(unsigned short &test) 
+{ return(matlabarray::miUINT16); }
+
+matlabarray::mitype  inline matlabarray::getmitype(signed short &test)
+{ return(matlabarray::miINT16); }
+
+matlabarray::mitype  inline matlabarray::getmitype(unsigned long &test) 
+{ return(matlabarray::miUINT32); }
+
+matlabarray::mitype  inline matlabarray::getmitype(signed long &test) 
+{ return(matlabarray::miINT32); }
+
+matlabarray::mitype  inline matlabarray::getmitype(float &test) 
+{ return(matlabarray::miSINGLE); }
+
+matlabarray::mitype  inline matlabarray::getmitype(double &test) 
+{ return(matlabarray::miDOUBLE); } 
+
+
+
 
 }
 
