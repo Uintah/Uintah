@@ -52,6 +52,10 @@ public:
   virtual void execute();
 
   void matrix_to_transform(MatrixHandle mH, Transform& t);
+  
+protected:
+  int ifield_generation_;
+  int imatrix_generation_;
 };
 
 
@@ -61,7 +65,9 @@ extern "C" Module* make_TransformField(const string& id) {
 
 
 TransformField::TransformField(const string& id)
-  : Module("TransformField", id, Source, "Fields", "SCIRun")
+  : Module("TransformField", id, Source, "Fields", "SCIRun"),
+    ifield_generation_(0),
+    imatrix_generation_(0)
 {
 }
 
@@ -104,25 +110,32 @@ TransformField::execute()
     postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
-  if (!(imp->get(imatrix)))
+  if (!(imp->get(imatrix) && imatrix.get_rep()))
   {
     return;
   }
 
-  Transform trans;
-  matrix_to_transform(imatrix, trans);
+  if (ifield_generation_ != ifield->generation ||
+      imatrix_generation_ != imatrix->generation)
+  {
+    ifield_generation_ = ifield->generation;
+    imatrix_generation_ = imatrix->generation;
 
-  FieldHandle ofield(ifield->clone());
-  ofield->mesh_detach();
+    Transform trans;
+    matrix_to_transform(imatrix, trans);
+
+    FieldHandle ofield(ifield->clone());
+    ofield->mesh_detach();
   
-  ofield->mesh()->transform(trans);
-
-  FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
-  if (!ofp) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
-    return;
+    ofield->mesh()->transform(trans);
+    
+    FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
+    if (!ofp) {
+      postMessage("Unable to initialize "+name+"'s oport\n");
+      return;
+    }
+    ofp->send(ofield);
   }
-  ofp->send(ofield);
 }
 
 
