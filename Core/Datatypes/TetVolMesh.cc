@@ -409,7 +409,6 @@ TetVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
   array.push_back(base + table[off][0]);
   array.push_back(base + table[off][1]);
   array.push_back(base + table[off][2]);
-  array.push_back(base + table[off][3]);
 }
 
 
