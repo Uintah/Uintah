@@ -1519,6 +1519,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
       }
     }
   }
+  //ZZZZZZZZZ
   //eof special redistribution code for IN args
 
 
@@ -2631,6 +2632,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 {
   Symbol::Type symtype = name->getSymbol()->getType();
   if(symtype == Symbol::EnumType){
+    if(specialRedis) return;
     if(qty != "1"){
       cerr << "NamedType::emit_marshal called with qty != 1: " << qty << '\n';
       exit(1);
@@ -2659,6 +2661,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
     }
 
   } else if(symtype == Symbol::ClassType || symtype == Symbol::InterfaceType){
+    if(specialRedis) return;
     if(qty != "1"){
       cerr << "NamedType::emit_marshal called with qty != 1: " << qty << '\n';
       exit(1);
