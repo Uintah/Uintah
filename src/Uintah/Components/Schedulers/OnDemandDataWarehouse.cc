@@ -771,26 +771,6 @@ OnDemandDataWarehouse::registerOwnership( const VarLabel * label,
 }
 
 void
-OnDemandDataWarehouse::carryForward(const DataWarehouseP& /*fromp*/)
-{
-#if 0
-   OnDemandDataWarehouse* from = dynamic_cast<OnDemandDataWarehouse*>(fromp.get_rep());
-
-   d_grid = from->d_grid;
-
-   for(int l = 0; l < d_grid->numLevels(); l++){
-      const LevelP& level = d_grid->getLevel(l);
-      for(Level::const_patchIterator iter = level->patchesBegin();
-	  iter != level->patchesEnd(); iter++){
-	 const Patch* patch = *iter;
-
-	 d_particleDB.copyAll(from->d_particleDB, d_positionLabel, patch);
-      }
-   }
-#endif
-}
-
-void
 OnDemandDataWarehouse::pleaseSave(const VarLabel* var, int number)
 {
    ASSERT(!d_finalized);
@@ -1128,6 +1108,9 @@ OnDemandDataWarehouse::scheduleParticleRelocation(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.35  2000/06/16 19:48:55  sparker
+// Eliminated carryForward
+//
 // Revision 1.34  2000/06/16 05:03:07  sparker
 // Moved timestep multiplier to simulation controller
 // Fixed timestep min/max clamping so that it really works now
