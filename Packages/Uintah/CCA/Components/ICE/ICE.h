@@ -478,6 +478,7 @@ using namespace SCIRun;
       bool switchDebugInitialize;
       bool switchDebug_EQ_RF_press;
       bool switchDebug_vel_FC;
+      bool switchDebug_Temp_FC;
       bool switchDebug_PressDiffRF;
       bool switchDebug_Exchange_FC;
       bool switchDebug_explicit_press;
