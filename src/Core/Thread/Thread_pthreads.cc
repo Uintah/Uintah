@@ -86,6 +86,7 @@ extern "C" {
 
 sem_t* SEM_INIT( const char *name, int shared, unsigned int val )
 {
+  // what is the maximum length ?
   char local[40];
   if ( strlen(name) > 25 ) {
     strncpy( local, name, 25 );
@@ -94,11 +95,12 @@ sem_t* SEM_INIT( const char *name, int shared, unsigned int val )
   }
   sem_t *sem = sem_open(name, O_CREAT , shared, val );
   if ( sem == (sem_t *)SEM_FAILED) {
-    perror("failed:");
+    // why does it fail the first time ?
+    //perror("failed:");
     sem_unlink(name);
     sem = sem_open( name, O_CREAT , shared, val );
-    if ( sem == (sem_t *)SEM_FAILED) 
-      perror("failed twice! :");
+    //if ( sem == (sem_t *)SEM_FAILED) 
+    //  perror("failed twice! :");
   }
   return sem;
 } 
