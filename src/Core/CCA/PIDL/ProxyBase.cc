@@ -40,18 +40,21 @@ using namespace SCIRun;
 ProxyBase::ProxyBase() 
 : proxy_uuid("NONENONENONENONENONENONENONENONENONE") 
 {
+  xr = new XceptionRelay(this);
 }
 
 //remove it later
 ProxyBase::ProxyBase(const Reference& ref)
 : proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
+  xr = new XceptionRelay(this);
   rm.insertReference( ((Reference*)&ref)->clone());
 }
 
 ProxyBase::ProxyBase(Reference *ref)
 : proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
+  xr = new XceptionRelay(this);
   rm.insertReference(ref);
 }
 
@@ -59,6 +62,7 @@ ProxyBase::ProxyBase(const ReferenceMgr& refM)
 : proxy_uuid("NONENONENONENONENONENONENONENONENONE"),
   rm(refM)
 { 
+  xr = new XceptionRelay(this);
 }
 
 ProxyBase::~ProxyBase()
@@ -73,6 +77,10 @@ ProxyBase::~ProxyBase()
     delete (rm.intracomm);
     rm.intracomm = NULL; 
   }  
+  /*Delete exception relay*/
+  if(xr) {
+    delete xr;
+  }
 }
 
 void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
@@ -98,7 +106,7 @@ ReferenceMgr* ProxyBase::_proxyGetReferenceMgr() const
     }
     if(rm.getSize() > 1) { 
       // Exchange component ID among all parallel processes
-      std::cout << rm.getRank() << "='" << proxy_uuid.c_str() << "'=" << proxy_uuid.size() << "\n";
+      //std::cout << rm.getRank() << "='" << proxy_uuid.c_str() << "'=" << proxy_uuid.size() << "\n";
       (rm.intracomm)->broadcast(0,const_cast<char*>(proxy_uuid.c_str()),36);
     }
   }

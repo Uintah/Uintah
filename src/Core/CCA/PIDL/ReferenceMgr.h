@@ -70,7 +70,6 @@ DESCRIPTION
     
 
   class ReferenceMgr {
-    friend class ProxyBase;
   public:
     /////////
     // Default constructor
@@ -139,6 +138,7 @@ DESCRIPTION
     // These class is involved in setting up ReferenceMgr
     friend class Object_proxy;
     friend class TypeInfo;
+    friend class ProxyBase;
 
   private:
     /////////
