@@ -600,7 +600,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 	if (bcs_type == "Pressure") {
 	  PressureBoundCond* bc = 
 	    static_cast<PressureBoundCond*>(bcs[i]);
-	  cout << "bc value = " << bc->getPressure() << endl;
+	  //cout << "bc value = " << bc->getPressure() << endl;
 	  for (int m = 0; m<numMatls; m++)
 	    press_new[m].fillFace(face,bc->getPressure());
 	}
@@ -1164,6 +1164,9 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.42  2000/10/18 03:57:22  jas
+// Don't print out bc values.
+//
 // Revision 1.41  2000/10/18 03:43:01  jas
 // Implemented pressure boundary conditions during equilibration computation (1b).
 //
