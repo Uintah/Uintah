@@ -12,8 +12,7 @@ using namespace Uintah;
 using SCIRun::Thread;
 using SCIRun::InternalError;
 using SCIRun::AllocatorSetDefaultTagMalloc;
-using SCIRun::AllocatorMallocStatsAppendPID;
-;
+using SCIRun::AllocatorMallocStatsAppendNumber;
 
 using std::cerr;
 using std::cout;
@@ -171,7 +170,7 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
      if((status=MPI_Comm_rank(worldComm, &worldRank)) != MPI_SUCCESS)
        MpiError("MPI_Comm_rank", status);
      AllocatorSetDefaultTagMalloc(oldtag);
-     AllocatorMallocStatsAppendPID();
+     AllocatorMallocStatsAppendNumber(worldRank);
      rootContext = scinew ProcessorGroup(0, worldComm, true,
 					 worldRank,worldSize);
 
