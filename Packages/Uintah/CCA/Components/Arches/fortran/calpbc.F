@@ -171,26 +171,29 @@ C
                   DELP = PPP - PP(I-1,J,K)
                   UMAG = -SIGN(SQRT(2.0*ABS(DELP)/DENFACE),DELP)
                   UMAG = UMAG/SQRT(FACK)
-                  UVEL = UU(I-1,J,K)
-                  VVEL = VV(I-1,J,K)
-                  WVEL = WW(I-1,J,K)
-                  UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                  IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
-                     UVEL = UMAG
-                     VVEL = 0.0
-                     WVEL = 0.0
-                  ELSE
-                     UVEL = UMAG*ABS(UVEL)/UMAGINT
-                     VVEL = VVEL*ABS(UMAG)/UMAGINT
-                     WVEL = WVEL*ABS(UMAG)/UMAGINT
-                  END IF
-                  UVEL = UVEL*URFBC + UU(I+1,J,K)*(1.0-URFBC)
-                  UU(I,J,K) = UVEL
-                  UU(I+1,J,K) = UVEL
-                  IF (UVEL.LT.0.0) THEN
+                  if (umag.lt.0.0) then
+                     UVEL = UU(I-1,J,K)
+                     VVEL = VV(I-1,J,K)
+                     WVEL = WW(I-1,J,K)
+                     UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
+                     IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                        UVEL = UMAG
+                        VVEL = 0.0
+                        WVEL = 0.0
+                     ELSE
+                        UVEL = UMAG*ABS(UVEL)/UMAGINT
+                        VVEL = VVEL*ABS(UMAG)/UMAGINT
+                        WVEL = WVEL*ABS(UMAG)/UMAGINT
+                     END IF
+                     UVEL = UVEL*URFBC + UU(I+1,J,K)*(1.0-URFBC)
+                     UU(I,J,K) = UVEL
+                     UU(I+1,J,K) = UVEL
                      VV(I,J,K) = VVEL
                      WW(I,J,K) = WVEL
                      PP(I,J,K) = PPP
+                  else
+                     uu(i,j,k) = sqrt(umag*umag+uu(I-1,j,k)*uu(i-1,j,k))
+                     uu(i+1,j,k) = uu(i,j,k)
                   END IF
                END IF
  180        CONTINUE

@@ -110,11 +110,11 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double tin,
   //Both lengths computed here are kluged; I don't know wny formula doesn't work
   int nofSpecies = d_reactionData->getNumSpecies();
   int nofElements = d_reactionData->getNumElements();
-  int lenieq = 22 + 14*nofElements + 4*nphase + 8*nofSpecies + 
-               2*nofElements*nofSpecies+200;
-  int lenreq = 24 + 16*nofElements + 12*nofElements*nofElements + 
+  int lenieq = 3*(22 + 14*nofElements + 4*nphase + 8*nofSpecies + 
+               2*nofElements*nofSpecies);
+  int lenreq = 3*(24 + 16*nofElements + 12*nofElements*nofElements + 
                3*nphase*nofElements + 6*nphase + 18*nofSpecies + 4*nofElements
-               *nofElements + 2*nofElements+600;
+               *nofElements + 2*nofElements);
   int *ieqwrk = new int[lenieq]; // integer equilibrium work space
   double *reqwrk = new double[lenreq]; // real equilibrium work space
 

@@ -171,8 +171,8 @@ Integrator::computeMeanValues(int* tableKeyIndex)
   d_keyValues = d_meanValues;
   // store mean values in vector
   Stream unreactedStream = pdfMixModel->speciesStateSpace(d_meanValues);
-  cerr << "unreacted Stream: " << d_keyValues[0] << std::endl;
-  unreactedStream.print(cerr);
+  // cerr << "unreacted Stream: " << d_keyValues[0] << std::endl;
+  //  unreactedStream.print(cerr);
   return d_rxnModel->computeRxnStateSpace(unreactedStream);
 }
 

@@ -102,7 +102,7 @@ PDFMixingModel::problemSetup(const ProblemSpecP& params)
     d_streams[nofstrm].d_moleWeight=chemInterf->getMixMoleWeight(ymassFrac);
     d_streams[nofstrm].d_cp=chemInterf->getMixSpecificHeat(strmTemp, ymassFrac);
     // store as mass fraction
-    d_streams[nofstrm].print(cerr);
+    //    d_streams[nofstrm].print(cerr);
     delete[] ymassFrac;
     ++nofstrm;
   }
@@ -281,8 +281,8 @@ PDFMixingModel::tableLookUp(int* tableKeyIndex) {
       vec_stateSpaceVars = stateSpaceVars.convertStreamToVec(flag);
       // defined in K-D tree implementation
       d_dynamicTable->Insert(tableKeyIndex, vec_stateSpaceVars);
-      cerr << "state space vars in PDFMixModel: " << tableKeyIndex[0] << endl;
-      stateSpaceVars.print(cerr);
+      //      cerr << "state space vars in PDFMixModel: " << tableKeyIndex[0] << endl;
+      //      stateSpaceVars.print(cerr);
     }
   else {
     bool flag = false;
