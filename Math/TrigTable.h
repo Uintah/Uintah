@@ -21,8 +21,8 @@ class SinCosTable {
 public:
     SinCosTable(int n, double min, double max, double scale=1.0);
     ~SinCosTable();
-    double sin(int);
-    double cos(int);
+    double sin(int) const;
+    double cos(int) const;
 };
 
 #endif

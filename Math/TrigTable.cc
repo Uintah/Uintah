@@ -32,12 +32,12 @@ SinCosTable::~SinCosTable()
     delete[] cosdata;
 }
 
-double SinCosTable::sin(int i)
+double SinCosTable::sin(int i) const
 {
     return sindata[i];
 }
 
-double SinCosTable::cos(int i)
+double SinCosTable::cos(int i) const
 {
     return cosdata[i];
 }
