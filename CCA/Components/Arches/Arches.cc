@@ -268,6 +268,9 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_uVelocitySPBCLabel);
     tsk->computes(d_lab->d_vVelocitySPBCLabel);
     tsk->computes(d_lab->d_wVelocitySPBCLabel);
+    tsk->computes(d_lab->d_uVelRhoHatLabel);
+    tsk->computes(d_lab->d_vVelRhoHatLabel);
+    tsk->computes(d_lab->d_wVelRhoHatLabel);
     tsk->computes(d_lab->d_newCCUVelocityLabel);
     tsk->computes(d_lab->d_newCCVVelocityLabel);
     tsk->computes(d_lab->d_newCCWVelocityLabel);
@@ -510,6 +513,9 @@ Arches::paramInit(const ProcessorGroup* ,
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
+    SFCXVariable<double> uVelRhoHat;
+    SFCYVariable<double> vVelRhoHat;
+    SFCZVariable<double> wVelRhoHat;
     CCVariable<double> uVelocityCC;
     CCVariable<double> vVelocityCC;
     CCVariable<double> wVelocityCC;
@@ -533,6 +539,12 @@ Arches::paramInit(const ProcessorGroup* ,
     new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
     new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
     new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
+    new_dw->allocateAndPut(uVelRhoHat, d_lab->d_uVelRhoHatLabel, matlIndex, patch);
+    new_dw->allocateAndPut(vVelRhoHat, d_lab->d_vVelRhoHatLabel, matlIndex, patch);
+    new_dw->allocateAndPut(wVelRhoHat, d_lab->d_wVelRhoHatLabel, matlIndex, patch);
+    uVelRhoHat.initialize(0.0);
+    vVelRhoHat.initialize(0.0);
+    wVelRhoHat.initialize(0.0);
     new_dw->allocateAndPut(pressure, d_lab->d_pressurePSLabel, matlIndex, patch);
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))) {
       new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel,
