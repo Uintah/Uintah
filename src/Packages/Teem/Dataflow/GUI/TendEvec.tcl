@@ -36,7 +36,7 @@ itcl_class Teem_Tend_TendEvec {
 	set $this-minor 0
 
         global $this-threshold
-        set $this-threshold 0.0
+        set $this-threshold 0.5
     }
 
     method ui {} {
@@ -60,7 +60,7 @@ itcl_class Teem_Tend_TendEvec {
 	checkbutton $w.f.options.medium -text "Medium" -variable $this-medium
         pack $w.f.options.medium -side top -expand yes -fill x
 
-	checkbutton $w.f.options.minor -text "Major" -variable $this-minor
+	checkbutton $w.f.options.minor -text "Minor" -variable $this-minor
         pack $w.f.options.minor -side top -expand yes -fill x
 
         iwidgets::entryfield $w.f.options.threshold -labeltext "Threshold:" \
