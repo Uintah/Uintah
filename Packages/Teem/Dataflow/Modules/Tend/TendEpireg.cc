@@ -49,7 +49,7 @@ private:
   GuiInt       reference_;
   GuiDouble    blur_x_;
   GuiDouble    blur_y_;
-  GuiDouble    use_default_threshold_;
+  GuiInt       use_default_threshold_;
   GuiDouble    threshold_;
   GuiInt       cc_analysis_;
   GuiDouble    fitting_;
@@ -176,6 +176,9 @@ TendEpireg::execute()
     kern = nrrdKernelBCCubic; 
     p[1] = 1; 
     p[2] = 0; 
+  } else if (kernel_.get() == "hann") { 
+    kern = nrrdKernelHann;
+    p[1] = 8; 
   } else  { // default is quartic
     kern = nrrdKernelAQuartic; 
     p[1] = 0.0834; 
