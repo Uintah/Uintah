@@ -26,24 +26,28 @@ public:
   MarchingCubesAlg() {}
   virtual ~MarchingCubesAlg() {}
 
+  virtual void set_field( Field * ) = 0;
   virtual GeomObj* search( double ) = 0;
 };
 
   
-template < class AI, class Tesselator, class Mesh >
+template < class AI, class Tesselator>
 class MarchingCubes : public MarchingCubesAlg
 {
-  typedef LockingHandle<Mesh> MeshHandle;
+  typedef typename Tesselator::field_type       field_type;
+  typedef typename Tesselator::mesh_type        mesh_type;
+  typedef typename Tesselator::mesh_handle_type mesh_handle_type;
 
 protected:
   AI *ai_;
   Tesselator *tess_;
-  MeshHandle mesh_;
+  mesh_handle_type mesh_;
 public:
-  MarchingCubes( AI *ai, Tesselator *tess, MeshHandle mesh) 
-    : ai_(ai), tess_(tess), mesh_(mesh) {}
+  MarchingCubes() {}
+  MarchingCubes( AI *ai ) : ai_(ai), tess_(0), mesh_(0) {}
   virtual ~MarchingCubes() {}
 
+  virtual void set_field( Field * );
   virtual GeomObj* search( double );
 };
     
@@ -51,11 +55,25 @@ public:
     
 // MarchingCubes
 
-template <class AI, class Tesselator, class Mesh>
-GeomObj *MarchingCubes<AI,Tesselator, Mesh>::search( double iso ) 
+template<class AI, class Tesselator>
+void 
+MarchingCubes<AI,Tesselator>::set_field( Field *f )
 {
+  if ( field_type *field = dynamic_cast<field_type *>(f) ) {
+    if ( tess_ ) delete tess_;
+    tess_ = new Tesselator( field );
+    mesh_ = field->get_typed_mesh();
+  }
+}
+
+template<class AI, class Tesselator>
+GeomObj *
+MarchingCubes<AI,Tesselator>::search( double iso ) 
+{
+  ASSERT(tess_ != 0);
+
   tess_->reset(0);
-  typename Mesh::cell_iterator cell = mesh_->cell_begin(); 
+  typename mesh_type::cell_iterator cell = mesh_->cell_begin(); 
   while ( cell != mesh_->cell_end() )
   {
     tess_->extract( *cell, iso );
@@ -65,29 +83,6 @@ GeomObj *MarchingCubes<AI,Tesselator, Mesh>::search( double iso )
 }
 
 
-template<class AI, class Field> MarchingCubesAlg* 
-make_tet_mc_alg(AI *ai, Field *field)
-{
-  typedef typename Field::mesh_type Mesh;
-
-  TetMC<Field> *tmc = new TetMC<Field>(field);
-  MarchingCubesAlg *alg 
-    = new MarchingCubes<AI, TetMC<Field>, Mesh>( ai, tmc, 
-						 field->get_typed_mesh());
-  return alg;
-}
-
-template<class AI, class Field> MarchingCubesAlg* 
-make_lattice_mc_alg(AI *ai, Field *field)
-{
-  typedef typename Field::mesh_type Mesh;
-
-  HexMC<Field> *tmc = new HexMC<Field>(field);
-  MarchingCubesAlg *alg 
-    = new MarchingCubes<AI, HexMC<Field>, Mesh>( ai, tmc, 
-						 field->get_typed_mesh());
-  return alg;
-}
 } // End namespace SCIRun
 
 #endif
