@@ -12,9 +12,12 @@ PSELIBS := \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
 	Packages/Uintah/Core/Disclosure \
 	Packages/Uintah/Core/Grid \
+	Packages/Uintah/Core/Variables \
+	Packages/Uintah/Core/Util \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Exceptions \
 	Core/Exceptions  \
+	Core/Util  \
 	Core/Geometry \
 	Core/Thread 
 
