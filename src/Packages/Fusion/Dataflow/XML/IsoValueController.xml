@@ -45,11 +45,11 @@
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>2D Field</name>
+        <name>(N)D Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>3D Field</name>
+        <name>(N-1)D Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
@@ -67,11 +67,11 @@
 	<datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
-        <name>2D Fields</name>
+        <name>(N)D Fields</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>3D Fields</name>
+        <name>(N-1)D Fields</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
