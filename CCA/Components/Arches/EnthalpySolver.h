@@ -83,6 +83,14 @@ public:
       // Set up the problem specification database
       void problemSetup(const ProblemSpecP& params);
 
+      // GROUP: Access Functions :
+      ///////////////////////////////////////////////////////////////////////
+	// Boolean to see whether or not DO Radiation model
+	// is used
+      inline bool checkDORadiation() const{
+	return d_DORadiationCalc;
+      }
+
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
       // Schedule Solve of linearized scalar equation

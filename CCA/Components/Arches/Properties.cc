@@ -14,6 +14,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -131,9 +132,6 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
 			  this,
 			  &Properties::computeProps);
 
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-
   // requires scalars
   // will only work for one mixing variable
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::None,
@@ -153,8 +151,15 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
 		  Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, Ghost::None,
     		  Arches::ZEROGHOSTCELLS);
+#else
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
+		  Arches::ZEROGHOSTCELLS);
 #endif
+    tsk->computes(d_lab->d_densityMicroLabel);
   }
+  else
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
+		  Arches::ZEROGHOSTCELLS);
 
   tsk->modifies(d_lab->d_densityINLabel);
   tsk->computes(d_lab->d_refDensity_label);
@@ -190,9 +195,6 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
     tsk->computes(d_lab->d_absorpINLabel);
     tsk->computes(d_lab->d_sootFVINLabel);
   }
-
-  if (d_MAlab)
-    tsk->computes(d_lab->d_densityMicroLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -467,6 +469,10 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
   tsk->requires(Task::OldDW, d_lab->d_densityINLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
+  if (d_DORadiationCalc)
+    tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);    
+
   if (d_reactingFlow) {
     tsk->requires(Task::OldDW, d_lab->d_tempINLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -602,6 +608,12 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     CCVariable<double> co2IN_new;
     CCVariable<double> enthalpyRXN_new;
     CCVariable<double> reactScalarSrc_new;
+    constCCVariable<double> solidTemp;
+
+    if (d_DORadiationCalc)
+      new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
     if (d_reactingFlow) {
       old_dw->get(tempIN, d_lab->d_tempINLabel, matlIndex, patch,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -749,6 +761,9 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 	  }
 	  else{
 	    density[currCell] = 0.0;
+	    if (d_DORadiationCalc)
+	      //	      tempIN_new[currCell] = solidTemp[currCell];
+	      tempIN_new[currCell] = 298.0;
 	  }
 	}
       }
@@ -795,6 +810,9 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
   if (d_MAlab) {
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (d_DORadiationCalc)
+      tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, Ghost::None,
+		    Arches::ZEROGHOSTCELLS);
   }
 
   if (d_numMixStatVars > 0) {
@@ -933,6 +951,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> qrg;
     CCVariable<double> qrs;
     CCVariable<double> denMicro;
+    constCCVariable<double> solidTemp;
 
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -1073,6 +1092,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocateAndPut(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
+      if (d_DORadiationCalc)
+	new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
     IntVector indexLow = patch->getCellLowIndex();
@@ -1246,6 +1268,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 
     if ((d_bc->getIntrusionBC())&&(d_reactingFlow||d_flamelet))
       d_bc->intrusionTemperatureBC(pc, patch, cellType, temperature);
+
+    if (d_MAlab && d_DORadiationCalc)
+      d_bc->mmWallTemperatureBC(pc, patch, cellType, solidTemp, temperature);
 
     if (pc->myrank() == 0)
       cerr << "Time in the Mixing Model: " << 

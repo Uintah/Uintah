@@ -38,6 +38,7 @@ WARNING
 ****************************************/
 
 namespace Uintah {
+  class EnthalpySolver;
 class TimeIntegratorLabel;
 class NonlinearSolver {
 
@@ -58,6 +59,16 @@ public:
       ///////////////////////////////////////////////////////////////////////
       // Interface for Set up of the problem specification database
       virtual void problemSetup(const ProblemSpecP& db) = 0;
+
+      // GROUP: Access Functions:
+
+      // GROUP: Access Functions
+      ///////////////////////////////////////////////////////////////////////
+	
+	EnthalpySolver* getEnthalpySolver() const
+	  {
+	    return d_enthalpySolver;
+	  }
 
       virtual void sched_interpolateFromFCToCC(SchedulerP&, const PatchSet* patches,
 					       const MaterialSet* matls,
@@ -89,6 +100,8 @@ protected:
    const ProcessorGroup* d_myworld;
    string d_timeIntegratorType;
    int d_conv_scheme;
+   // enthalpy solver
+   EnthalpySolver* d_enthalpySolver;
 private:
 
 }; // End class NonlinearSolver

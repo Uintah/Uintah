@@ -305,6 +305,12 @@ public:
 				  constCCVariable<int>& cellType,
 				  CCVariable<double>& temperature);
 
+      void mmWallTemperatureBC(const ProcessorGroup*,
+			       const Patch* patch,
+			       constCCVariable<int>& cellType,
+			       constCCVariable<double> solidTemp,
+			       CCVariable<double>& temperature);
+
       void calculateIntrusionVel(const ProcessorGroup*,
 				 const Patch* patch,
 				 int index,
