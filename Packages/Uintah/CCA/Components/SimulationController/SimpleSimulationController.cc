@@ -51,7 +51,7 @@ using namespace Uintah;
 static DebugStream dbg("SimpleSimCont", false);
 
 SimpleSimulationController::SimpleSimulationController(const ProcessorGroup* myworld) :
-  SimulationController(myworld)
+  SimulationController(myworld, false)
 {
    d_restarting = false;
    d_combinePatches = false;
@@ -122,7 +122,7 @@ SimpleSimulationController::run()
    
    // Setup the initial grid
    GridP grid=scinew Grid();
-   grid->problemSetup(ups, d_myworld);
+   grid->problemSetup(ups, d_myworld, false);
    
 
    if(grid->numLevels() == 0){
