@@ -4,7 +4,7 @@
   <include href="ITK/itk_GradientMagnitudeImageFilter.xml"/>
   <include href="Dataflow/Modules/Filters/XML/gui_GradientMagnitudeImageFilter_Darby.xml"/>
 
-<filter-sci name="GradientMagnitude">
+<filter-sci name="GradientMagnitudeImageFilter">
   <package>Insight</package>
 
   <category>Filters</category>

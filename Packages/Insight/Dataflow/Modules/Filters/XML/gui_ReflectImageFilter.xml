@@ -1,0 +1,15 @@
+<?xml version="1.0"  encoding="iso-8859-1"?>
+<!DOCTYPE filter-gui SYSTEM "gui_filter.dtd">
+<filter-gui name="GradientAnistotropicDiffusionImageFilter">
+  <parameters>
+    <param name="direction">
+      <gui>radiobutton</gui>
+      <values>
+      <val>0</val>
+      <val>1</val>
+      </values>
+      <default>1</default>
+    </param>
+  </parameters>
+
+</filter-gui>
