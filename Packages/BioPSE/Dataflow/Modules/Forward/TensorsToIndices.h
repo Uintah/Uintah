@@ -55,7 +55,7 @@ TensorsToIndicesAlgoT<FSRC, FDST>::execute(FieldHandle srcH)
   typename FSRC::fdata_type::iterator end = src->fdata().end();
   int count=0;
   while (in != end) {
-    conds.add(pair<string, Tensor>("x", *in));
+    conds.push_back(pair<string, Tensor>("x", *in));
     *out = count;
     ++in; ++out; ++count;
   }
