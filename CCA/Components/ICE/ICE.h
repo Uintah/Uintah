@@ -12,6 +12,7 @@
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Containers/StaticArray.h>
 #include <vector>
@@ -340,19 +341,19 @@ using namespace SCIRun;
 			  const Vector& dx);
 
       void computeTauX_Components( const Patch* patch,
-                          const CCVariable<Vector> vel_CC,
+                          const CCVariable<Vector>& vel_CC,
                           const double viscosity,
                           const Vector dx,
                           SFCXVariable<Vector>& tau_X_FC);
                           
       void computeTauY_Components( const Patch* patch,
-                          const CCVariable<Vector> vel_CC,
+                          const CCVariable<Vector>& vel_CC,
                           const double viscosity,
                           const Vector dx,
                           SFCYVariable<Vector>& tau_Y_FC);
                           
       void computeTauZ_Components( const Patch* patch,
-                          const CCVariable<Vector> vel_CC,
+                          const CCVariable<Vector>& vel_CC,
                           const double viscosity,
                           const Vector dx,
                           SFCZVariable<Vector>& tau_Z_FC);
@@ -369,6 +370,7 @@ using namespace SCIRun;
       ICELabel* lb; 
       MPMICELabel* MIlb;
       SimulationStateP d_sharedState;
+      Output* dataArchiver;
       double d_SMALL_NUM;
       double d_pressure;
       double d_initialDt;
