@@ -27,7 +27,7 @@
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Datatypes/Octree.h>
+#include <Core/Containers/Octree.h>
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Runnable.h>

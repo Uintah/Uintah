@@ -18,7 +18,7 @@
 #ifndef OCTREE_CHILD_ITERATOR_H
 #define OCTREE_CHILD_ITERATOR_H
 
-#include <Core/Datatypes/Octree.h>
+#include <Core/Containers/Octree.h>
 
 namespace SCIRun {
 

@@ -29,7 +29,7 @@
 #include <GL/glu.h>
 
 #include <Core/Datatypes/Brick.h>
-#include <Core/Datatypes/Octree.h>
+#include <Core/Containers/Octree.h>
 
 #include <Core/Datatypes/GLTexRenState.h>
 #include <Core/Datatypes/GLVolRenState.h>
