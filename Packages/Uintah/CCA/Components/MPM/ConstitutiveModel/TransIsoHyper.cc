@@ -58,6 +58,9 @@ TransIsoHyper::TransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
   pStretchLabel = VarLabel::create("p.stretch",
         ParticleVariable<double>::getTypeDescription());
 
+  pStretchLabel_preReloc = VarLabel::create("p.stretch+",
+        ParticleVariable<double>::getTypeDescription());
+
 }
 
 TransIsoHyper::TransIsoHyper(const TransIsoHyper* cm)
@@ -82,6 +85,7 @@ TransIsoHyper::~TransIsoHyper()
 // _______________________DESTRUCTOR
 {
   VarLabel::destroy(pStretchLabel);
+  VarLabel::destroy(pStretchLabel_preReloc);
 }
 
 void TransIsoHyper::initializeCMData(const Patch* patch,
@@ -99,7 +103,7 @@ void TransIsoHyper::initializeCMData(const Patch* patch,
 
    new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,
                           pset);
-   new_dw->allocateAndPut(pstress,lb->pStressLabel,pset);
+   new_dw->allocateAndPut(pstress, lb->pStressLabel,pset);
 
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
@@ -159,10 +163,12 @@ void TransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
    from.push_back(lb->pDeformationMeasureLabel);
    from.push_back(lb->pStressLabel);
    from.push_back(lb->pFiberDirLabel);
+   from.push_back(pStretchLabel);
 
    to.push_back(lb->pDeformationMeasureLabel_preReloc);
    to.push_back(lb->pStressLabel_preReloc);
    to.push_back(lb->pFiberDirLabel_preReloc);
+   to.push_back(pStretchLabel_preReloc);
 }
 
 void TransIsoHyper::computeStableTimestep(const Patch* patch,
@@ -272,7 +278,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pfiberdir_carry,  lb->pFiberDirLabel_preReloc,pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
-    new_dw->allocateAndPut(stretch,          pStretchLabel,          pset);
+    new_dw->allocateAndPut(stretch,          pStretchLabel_preReloc,     pset);
 
     new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
     old_dw->get(delT, lb->delTLabel);
@@ -429,9 +435,9 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
 
 void TransIsoHyper::carryForward(const PatchSubset* patches,
-                               const MPMMaterial* matl,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw)
+                                 const MPMMaterial* matl,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw)
 //___________________________________________________________used with RigidMPM
 {
   for(int p=0;p<patches->size();p++){
@@ -441,7 +447,7 @@ void TransIsoHyper::carryForward(const PatchSubset* patches,
     constParticleVariable<Matrix3> pdefm;
     constParticleVariable<double> pmass;
     constParticleVariable<Vector> pfibdir;
-    ParticleVariable<double> pvolume_deformed;
+    ParticleVariable<double> pvolume_deformed,pstretch;
     ParticleVariable<Vector> pfibdir_new;
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     old_dw->get(pdefm,           lb->pDeformationMeasureLabel,         pset);
@@ -453,6 +459,7 @@ void TransIsoHyper::carryForward(const PatchSubset* patches,
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
     new_dw->allocateAndPut(pfibdir_new,      lb->pFiberDirLabel_preReloc, pset);
+    new_dw->allocateAndPut(pstretch,         pStretchLabel_preReloc,      pset);
     double rho_orig = matl->getInitialDensity();
 
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
@@ -461,6 +468,7 @@ void TransIsoHyper::carryForward(const PatchSubset* patches,
       pstress_new[idx] = Matrix3(0.0);
       pvolume_deformed[idx]=(pmass[idx]/rho_orig);
       pfibdir_new[idx] = pfibdir[idx];
+      pstretch[idx] = 1.0;
     }
     new_dw->put(delt_vartype(1.e10), lb->delTLabel);
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
@@ -492,7 +500,7 @@ void TransIsoHyper::addComputesAndRequires(Task* task,
     task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
     task->computes(lb->pVolumeDeformedLabel,              matlset);
     task->computes(lb->pFiberDirLabel_preReloc,           matlset);
-    task->computes(pStretchLabel,                         matlset);
+    task->computes(pStretchLabel_preReloc,                matlset);
 }
 
 void TransIsoHyper::addComputesAndRequires(Task* ,
