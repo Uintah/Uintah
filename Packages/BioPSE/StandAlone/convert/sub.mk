@@ -24,7 +24,7 @@ SRCDIR := Packages/BioPSE/StandAlone/convert
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
-PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry
+PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry Core/Disclosure
 endif
 LIBS := -lm
 
