@@ -26,7 +26,7 @@ SRCS     += \
 	$(SRCDIR)/SurfNewVals.cc\
 	$(SRCDIR)/SurfToGeom.cc\
 	$(SRCDIR)/TransformSurface.cc\
-#[INSERT NEW MODULE HERE]
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
 	SCICore/Persistent SCICore/Exceptions SCICore/Thread \
@@ -38,6 +38,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/10/24 05:57:38  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.5  2000/08/04 19:19:45  dmw
 # adding TransformSurface.cc to makefile
 #

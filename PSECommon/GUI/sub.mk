@@ -7,7 +7,8 @@ SRCDIR := PSECommon/GUI
 
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
-$(SRCDIR)/tclIndex: $(SRCDIR)/AddWells.tcl $(SRCDIR)/AddWells2.tcl \
+$(SRCDIR)/tclIndex: \
+	$(SRCDIR)/AddWells.tcl $(SRCDIR)/AddWells2.tcl \
 	$(SRCDIR)/BitVisualize.tcl $(SRCDIR)/BldTransform.tcl \
 	$(SRCDIR)/BoundGrid.tcl $(SRCDIR)/BoxClipSField.tcl \
 	$(SRCDIR)/BuildFEMatrix.tcl $(SRCDIR)/ClipField.tcl \
@@ -53,13 +54,20 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/AddWells.tcl $(SRCDIR)/AddWells2.tcl \
 	$(SRCDIR)/PathWriter.tcl \
 	$(SRCDIR)/IsoSurfaceSAGE.tcl $(SRCDIR)/IsoSurfaceNOISE.tcl \
 	$(SRCDIR)/SearchNOISE.tcl \
-	$(SRCDIR)/GenVectorField.tcl $(SRCDIR)/GenScalarField.tcl
+	$(SRCDIR)/GenVectorField.tcl $(SRCDIR)/GenScalarField.tcl\
+#[INSERT NEW TCL FILE HERE]
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/PSECommon/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.7  2000/10/24 05:57:28  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.6  2000/07/28 21:18:03  yarden
 # add IsoSurfaceNOISE and SearchNOISE
 #

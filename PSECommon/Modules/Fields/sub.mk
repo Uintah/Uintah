@@ -38,7 +38,7 @@ SRCS     += \
 	$(SRCDIR)/ScalarFieldProbe.cc\
 	$(SRCDIR)/GenVectorField.cc\
 	$(SRCDIR)/GenScalarField.cc\
-#[INSERT NEW MODULE HERE]
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
 	SCICore/Persistent SCICore/Exceptions SCICore/Thread \
@@ -51,6 +51,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/10/24 05:57:33  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.6  2000/07/23 18:30:11  dahart
 # Initial commit / Modules to generate scalar & vector fields from
 # symbolic functions
