@@ -198,7 +198,7 @@ private:
   DrawInfoOpenGL       *di_;
  
   //! Sets the state function without having to write a bunch of code
-  template <class T> T* state( T* st, int l);
+  template <class T> T* state( T*& st, int l);
   
   bool                  interp_;
   int                   lighting_;
@@ -208,7 +208,7 @@ private:
 };
 
 template <class T> 
-T* GLVolumeRenderer::state( T* st, int l)
+T* GLVolumeRenderer::state( T*& st, int l)
 { 
   if(st == 0) 
     st = scinew T(this);
