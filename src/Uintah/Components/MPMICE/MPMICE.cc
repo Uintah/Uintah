@@ -232,9 +232,12 @@ void MPMICE::scheduleCCMomExchange(const Patch* patch,
     ICEMaterial* matl = d_sharedState->getICEMaterial(m);
     int iceidx = matl->getDWIndex();
     t->requires(old_dw,Ilb->rho_CCLabel,       iceidx,patch,Ghost::None);
+    t->requires(new_dw,Ilb->mom_L_CCLabel,    iceidx,patch,Ghost::None);
+#if 0
     t->requires(new_dw,Ilb->xmom_L_CCLabel,    iceidx,patch,Ghost::None);
     t->requires(new_dw,Ilb->ymom_L_CCLabel,    iceidx,patch,Ghost::None);
     t->requires(new_dw,Ilb->zmom_L_CCLabel,    iceidx,patch,Ghost::None);
+#endif
     t->requires(new_dw,Ilb->int_eng_L_CCLabel, iceidx,patch,Ghost::None);
     t->requires(new_dw,Ilb->vol_frac_CCLabel,  iceidx,patch,Ghost::None);
     t->requires(old_dw,Ilb->cv_CCLabel,        iceidx,patch,Ghost::None);
@@ -288,6 +291,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 
   // Create variables for the required values
   vector<CCVariable<double> > rho_CC(numICEMatls);
+  vector<CCVariable<Vector> > mom_L(numICEMatls);
   vector<CCVariable<double> > xmom_L(numICEMatls);
   vector<CCVariable<double> > ymom_L(numICEMatls);
   vector<CCVariable<double> > zmom_L(numICEMatls);
@@ -318,12 +322,16 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     int dwindex = matl->getDWIndex();
     old_dw->get(rho_CC[m],       Ilb->rho_CCLabel,
                                 dwindex, patch, Ghost::None, 0);
+    new_dw->get(mom_L[m],       Ilb->mom_L_CCLabel,
+                                dwindex, patch, Ghost::None, 0);
+#if 0
     new_dw->get(xmom_L[m],       Ilb->xmom_L_CCLabel,
                                 dwindex, patch, Ghost::None, 0);
     new_dw->get(ymom_L[m],       Ilb->ymom_L_CCLabel,
                                 dwindex, patch, Ghost::None, 0);
     new_dw->get(zmom_L[m],       Ilb->zmom_L_CCLabel,
                                 dwindex, patch, Ghost::None, 0);
+#endif
     new_dw->get(int_eng_L[m],    Ilb->int_eng_L_CCLabel,
                                 dwindex, patch, Ghost::None, 0);
     new_dw->get(vol_frac_CC[m],  Ilb->vol_frac_CCLabel,
@@ -341,9 +349,12 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 
    
   for (int m = 0; m < numICEMatls; m++) {
-    xmom_L_ME[m] = xmom_L[m];
-    ymom_L_ME[m] = ymom_L[m];
-    zmom_L_ME[m] = zmom_L[m];
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+	iter++){
+      xmom_L_ME[m][*iter] = mom_L[m][*iter].x();
+      ymom_L_ME[m][*iter] = mom_L[m][*iter].y();
+      zmom_L_ME[m][*iter] = mom_L[m][*iter].z();
+    }
     int_eng_L_ME[m] = int_eng_L[m];
   }
 
@@ -406,6 +417,9 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.8  2001/01/08 18:29:22  jas
+// Replace {x,y,z}mom_L with a single CCVariable<Vector> mom_L.
+//
 // Revision 1.7  2000/12/29 00:32:03  guilkey
 // More.
 //
