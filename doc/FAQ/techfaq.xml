@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<?xml-stylesheet href="faq.xsl" type="text/xsl"?>
+<?xml-stylesheet href="../faq.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
 <!-- 
 
   each faq is a collection of entries.  Entries are a paired question and
   answer, along with a set of keywords.  Questions and answers are delimited
-  with <p>, <pre> or <img> tags.
+  with <p> or <pre> tags.
 
   <entry>
     <keywords>SGI, endian</keywords>
@@ -32,9 +32,12 @@
     <keywords>SGI, runtime, pthreads, SIGABRT</keywords>
     <question>
       <p>
-        Using an SGI machine I successfully built all the required thirdparty
-        software by hand and successfully built SCIRun, but when I run SCIRun
-        it immediately signals an abort:
+        I successfully installed SCIRun and it's required thirdparty software
+        (by hand) onto an SGI target install machine, but when I run SCIRun it 
+        immediately signals an abort (SIGABRT).
+      </p>
+      <p>
+        The output of SCIRun after it signals the abort looks like this:
       </p>
       <pre>
         Thread "main"(pid 251775) caught signal SIGABRT (Abort)
@@ -69,8 +72,7 @@
         threads instead of pthreads.  It is illegal to use both sproc and 
         pthreads in a single process.  When two binaries are linked together
         into a single process at runtime (e.g. scirun and libxerces-c1_4.so)
-        a segmentation fault is signalled and the process is
-        shutdown.
+        an abort is signalled and the process is shutdown.
       </p>
       <p>
         The solution is to rebuild the offending libraries, configuring them
@@ -79,8 +81,8 @@
         threads.  See the <a href="InstallGuide/ThirdpartyInfo.html">Thirdparty
         Software Installation and Build Information</a> for recommended
 	configure arguments for the thirdparty software.  Note that when the
-	automatic install script is used that all the software is automatically
-        correctly configured and built.
+	automatic install script is used, all the software is automatically
+        configured and built correctly.
       </p>
     </answer>
   </entry>
@@ -89,8 +91,9 @@
     <keywords>Compile, Red Hat, Mandrake, GCC 2.96, GCC 2.97</keywords> 
     <question>
       <p>
-        I'm trying to build SCIRun using a Red Hat or Mandrake 8.0+ linux
-	machine but the compile fails.  What's wrong?
+        I successfully installed the thirdparty software onto a Redhat or
+        Mandrake (v8.0 +) linux target install machine, but when I try
+        to build SCIRun it fails while compiling.
       </p>
     </question>
     <answer>
@@ -102,53 +105,16 @@
         </a> regarding this problem.
       </p>
       <p>
-        The solution to this problem is to update your compiler to version
-        2.95.2 or 2.95.3.
-      </p>
-    </answer>
-  </entry>
-
-  <entry>
-    <keywords>unable to load module, can't find symbol</keywords>
-    <question>
-      <p>
-        When I run SCIRun, one or more of the following messages appear
-        in the message window.  What is going on?
+        The solution is to update your compiler to version 2.95.2 or 2.95.3.
+        You can check your existing compilers version by typing:
       </p>
       <pre>
-        Loading package 'SCIRun'
-        Unable to load module 'CastField' :
-         - can't find symbol 'make_CastField'
-
+        gcc --version
+       
         or
-
-        Unable to load all of package 'Teem' (category 'DataIO' failed) :
-        - libPackages_Teem_Dataflow.so: cannot open shared object file: No such file or directory
-        - libPackages_Teem_Dataflow_Modules_DataIO.so: cannot open shared object file: No such file or directory
-
+  
+        g++ --version
       </pre>
-    </question>
-    <answer>
-      <p>
-        Each module for a given package has it's own .xml file that 
-        describes it.  When SCIRun starts, it parses all the .xml files
-        in the packages (under Dataflow/XML) and tries to find the 
-	matching code within the related .so files.  If the .so files cannot
-        be found the message "No such file or directory" is given.  If the .so
-        can be found, but the code for a particular module does not exist 
-        within the library, then the message "can't find symbol" is given.
-      </p>
-      <p>
-        The message may or may not indicate a problem.  For some modules, the
-        .xml file is listed but the code has not yet been completed (this may
-        be common for module developers).  For others it may mean that the
-        SCIRun installation is some how corrupt (files have been deleted,
-        moved, etc.)
-      </p>
-      <p>
-        The solution to this problem is to either a) build the libraries
-        that the .xml files need, or b) remove the offending .xml files.
-      </p>
     </answer>
   </entry>
 
@@ -156,8 +122,12 @@
     <keywords>SGI, LANG:std, MIPSpro</keywords>
     <question>
       <p>
-        When I compile SCIRun I get the following warning, and the
-        build fails.  What is wrong:
+	I successfully installed the thirdparty software onto an SGI
+        target install machine, but when I try to build SCIRun it fails
+        during the compile phase.
+      </p>
+      <p>
+        The error message displayed contains the following warning:
       </p>
       <pre>
         ...
