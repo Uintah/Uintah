@@ -17,7 +17,7 @@ stamp-h: ${SRCTOP}/sci_config.h.in ${SRCTOP}/sci_defs.h.in \
 		${OBJTOP}/config.status
 	./config.status
 
-config.status: ${SRCTOP}/configure
+config.status: ${SRCTOP}/configure ${SRCTOP}/configVars.mk.in
 	./config.status --recheck
 	./config.status
 
