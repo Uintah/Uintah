@@ -240,9 +240,9 @@ public:
   void get_center(Point &result, const Node::index_type &index) const;
 
   int get_weights(const Point &p, Node::array_type &l, double *w);
-  int get_weights(const Point & , Edge::array_type & , double *w)
+  int get_weights(const Point & , Edge::array_type & , double *)
   { ASSERTFAIL("QuadraticLatVolMesh::get_weights for edges isn't supported"); }
-  int get_weights(const Point & , Face::array_type & , double *w)
+  int get_weights(const Point & , Face::array_type & , double *)
   { ASSERTFAIL("QuadraticLatVolMesh::get_weights for faces isn't supported"); }
   int get_weights(const Point &p, Cell::array_type &l, double *w)
   { return LatVolMesh::get_weights(p, l, w); }

@@ -155,7 +155,7 @@ QuadraticLatVolMesh::size(Node::size_type &s) const
 }
 
 void
-QuadraticLatVolMesh::to_index(Node::index_type &idx, unsigned int a)
+QuadraticLatVolMesh::to_index(Node::index_type &/*idx*/, unsigned int /*a*/)
 {
   // TODO: Implement this.
   ASSERTFAIL("UNIMPLEMENTED!");
