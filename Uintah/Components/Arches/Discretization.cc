@@ -163,7 +163,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   switch(eqnType) {
-  case PRESSURE:
+  case Arches::PRESSURE:
     new_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
     new_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
@@ -171,7 +171,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
     new_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
     break;
-  case MOMENTUM:
+  case Arches::MOMENTUM:
     new_dw->get(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
     new_dw->get(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
@@ -196,19 +196,19 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   
   // Allocate space in new datawarehouse
   switch(eqnType) {
-  case PRESSURE:
+  case Arches::PRESSURE:
     if (index == Arches::UVEL) {
       new_dw->allocate(variableCalledDU, d_DUPBLMLabel, matlIndex, patch);
     } 
     break;
-  case MOMENTUM:
+  case Arches::MOMENTUM:
     break;
   default:
     break;
   }
   for (int ii = 0; ii < nofStencils; ii++) {
     switch(eqnType) {
-    case PRESSURE:
+    case Arches::PRESSURE:
       if (index == Arches::UVEL) {
 	new_dw->allocate(uVelocityCoeff[ii], d_uVelCoefPBLMLabel, ii, patch);
 	new_dw->allocate(uVelocityConvectCoeff[ii], d_uVelConvCoefPBLMLabel, ii, 
@@ -227,7 +227,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
       else
 	throw InvalidValue("Invalid index, should lie between {1,3]");
       break;
-    case MOMENTUM:
+    case Arches::MOMENTUM:
       if (index == Arches::UVEL) {
 	new_dw->allocate(uVelocityCoeff[ii], d_uVelCoefMBLMLabel, ii, patch);
 	new_dw->allocate(uVelocityConvectCoeff[ii], d_uVelConvCoefMBLMLabel, ii, 
@@ -456,7 +456,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 
   for (int ii = 0; ii < nofStencils; ii++) {
     switch(eqnType) {
-    case PRESSURE:
+    case Arches::PRESSURE:
       if (index == Arches::UVEL) {
 	new_dw->put(uVelocityCoeff[ii], d_uVelCoefPBLMLabel, ii, patch);
 	new_dw->put(uVelocityConvectCoeff[ii], d_uVelConvCoefPBLMLabel, ii, 
@@ -471,7 +471,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		    patch);
       }
       break;
-    case MOMENTUM:
+    case Arches::MOMENTUM:
       if (index == Arches::UVEL) {
 	new_dw->put(uVelocityCoeff[ii], d_uVelCoefMBLMLabel, ii, patch);
 	new_dw->put(uVelocityConvectCoeff[ii], d_uVelConvCoefMBLMLabel, ii, 
@@ -760,7 +760,7 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
   SFCZVariable<double> wVelLinearSrc;
 
   switch(eqnType) {
-  case PRESSURE:
+  case Arches::PRESSURE:
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->get(uVelCoeff[ii], d_uVelCoefPBLMLabel, ii, patch, Ghost::None,
 		  numGhostCells);
@@ -776,7 +776,7 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
     new_dw->get(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch, 
 		Ghost::None, numGhostCells);
     break;
-  case MOMENTUM:
+  case Arches::MOMENTUM:
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->get(uVelCoeff[ii], d_uVelCoefMBLMLabel, ii, patch, Ghost::None,
 		  numGhostCells);
@@ -844,14 +844,14 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 #endif
 
   switch(eqnType) {
-  case PRESSURE:
+  case Arches::PRESSURE:
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->put(uVelCoeff[ii], d_uVelCoefPBLMLabel, ii, patch);
       new_dw->put(vVelCoeff[ii], d_vVelCoefPBLMLabel, ii, patch);
       new_dw->put(wVelCoeff[ii], d_wVelCoefPBLMLabel, ii, patch);
     }
     break;
-  case MOMENTUM:
+  case Arches::MOMENTUM:
     for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->put(uVelCoeff[ii], d_uVelCoefMBLMLabel, ii, patch);
       new_dw->put(vVelCoeff[ii], d_vVelCoefMBLMLabel, ii, patch);
@@ -969,6 +969,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.25  2000/07/08 23:42:54  bbanerje
+// Moved all enums to Arches.h and made corresponding changes.
+//
 // Revision 1.24  2000/07/08 23:08:54  bbanerje
 // Added vvelcoef and wvelcoef ..
 // Rawat check the ** WARNING ** tags in these files for possible problems.

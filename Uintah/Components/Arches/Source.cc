@@ -151,7 +151,7 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
 
   // get data
   switch(eqnType) {
-  case Discretization::PRESSURE:
+  case Arches::PRESSURE:
     new_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
     new_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
@@ -159,7 +159,7 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
     new_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
     break;
-  case Discretization::MOMENTUM:
+  case Arches::MOMENTUM:
     new_dw->get(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
     new_dw->get(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
@@ -191,7 +191,7 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
 
   // allocate
   switch(eqnType) {
-  case Discretization::PRESSURE:
+  case Arches::PRESSURE:
     new_dw->allocate(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch);
     new_dw->allocate(uVelNonlinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, 
 		     patch);
@@ -202,7 +202,7 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
     new_dw->allocate(wVelNonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, 
 		     patch);
     break;
-  case Discretization::MOMENTUM:
+  case Arches::MOMENTUM:
     new_dw->allocate(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch);
     new_dw->allocate(uVelNonlinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, 
 		     patch);
@@ -276,7 +276,7 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
 #endif
 
   switch(eqnType) {
-  case Discretization::PRESSURE:
+  case Arches::PRESSURE:
     new_dw->put(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch);
     new_dw->put(uVelNonlinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch);
     new_dw->put(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch);
@@ -284,7 +284,7 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
     new_dw->put(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch);
     new_dw->put(wVelNonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
     break;
-  case Discretization::MOMENTUM:
+  case Arches::MOMENTUM:
     new_dw->put(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch);
     new_dw->put(uVelNonlinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch);
     new_dw->put(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch);
@@ -409,35 +409,35 @@ Source::calculatePressureSource(const ProcessorGroup*,
 		   domLoU.get_pointer(), domHiU.get_pointer(),
 		   idxLoU.get_pointer(), idxHiU.get_pointer(),
 		   uVelocity.getPointer(), 
-		   uVelCoeff[StencilMatrix::AP].getPointer(),
-		   uVelCoeff[StencilMatrix::AE].getPointer(),
-		   uVelCoeff[StencilMatrix::AW].getPointer(),
-		   uVelCoeff[StencilMatrix::AN].getPointer(),
-		   uVelCoeff[StencilMatrix::AS].getPointer(),
-		   uVelCoeff[StencilMatrix::AT].getPointer(),
-		   uVelCoeff[StencilMatrix::AB].getPointer(),
+		   uVelCoeff[Arches::AP].getPointer(),
+		   uVelCoeff[Arches::AE].getPointer(),
+		   uVelCoeff[Arches::AW].getPointer(),
+		   uVelCoeff[Arches::AN].getPointer(),
+		   uVelCoeff[Arches::AS].getPointer(),
+		   uVelCoeff[Arches::AT].getPointer(),
+		   uVelCoeff[Arches::AB].getPointer(),
 		   uNonlinearSrc.getPointer(),
 		   domLoV.get_pointer(), domHiV.get_pointer(),
 		   idxLoV.get_pointer(), idxHiV.get_pointer(),
 		   vVelocity.getPointer(), 
-		   vVelCoeff[StencilMatrix::AP].getPointer(),
-		   vVelCoeff[StencilMatrix::AE].getPointer(),
-		   vVelCoeff[StencilMatrix::AW].getPointer(),
-		   vVelCoeff[StencilMatrix::AN].getPointer(),
-		   vVelCoeff[StencilMatrix::AS].getPointer(),
-		   vVelCoeff[StencilMatrix::AT].getPointer(),
-		   vVelCoeff[StencilMatrix::AB].getPointer(),
+		   vVelCoeff[Arches::AP].getPointer(),
+		   vVelCoeff[Arches::AE].getPointer(),
+		   vVelCoeff[Arches::AW].getPointer(),
+		   vVelCoeff[Arches::AN].getPointer(),
+		   vVelCoeff[Arches::AS].getPointer(),
+		   vVelCoeff[Arches::AT].getPointer(),
+		   vVelCoeff[Arches::AB].getPointer(),
 		   vNonlinearSrc.getPointer(),
 		   domLoW.get_pointer(), domHiW.get_pointer(),
 		   idxLoW.get_pointer(), idxHiW.get_pointer(),
 		   wVelocity.getPointer(), 
-		   wVelCoeff[StencilMatrix::AP].getPointer(),
-		   wVelCoeff[StencilMatrix::AE].getPointer(),
-		   wVelCoeff[StencilMatrix::AW].getPointer(),
-		   wVelCoeff[StencilMatrix::AN].getPointer(),
-		   wVelCoeff[StencilMatrix::AS].getPointer(),
-		   wVelCoeff[StencilMatrix::AT].getPointer(),
-		   wVelCoeff[StencilMatrix::AB].getPointer(),
+		   wVelCoeff[Arches::AP].getPointer(),
+		   wVelCoeff[Arches::AE].getPointer(),
+		   wVelCoeff[Arches::AW].getPointer(),
+		   wVelCoeff[Arches::AN].getPointer(),
+		   wVelCoeff[Arches::AS].getPointer(),
+		   wVelCoeff[Arches::AT].getPointer(),
+		   wVelCoeff[Arches::AB].getPointer(),
 		   wNonlinearSrc.getPointer(),
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
 		   cellinfo->dxep, cellinfo->dxpw, cellinfo->dynp,
@@ -607,6 +607,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.20  2000/07/08 23:42:56  bbanerje
+//Moved all enums to Arches.h and made corresponding changes.
+//
 //Revision 1.19  2000/07/08 08:03:35  bbanerje
 //Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
 //made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc

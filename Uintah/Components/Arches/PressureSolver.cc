@@ -257,14 +257,14 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM 
     d_discretize->calculateVelocityCoeff(pc, patch, old_dw, new_dw, 
 					 delta_t, index,
-					 Discretization::PRESSURE);
+					 Arches::PRESSURE);
 
     // Calculate Velocity source
     //  inputs : [u,v,w]VelocitySIVBC, densityCP, viscosityCTS
     //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
     d_source->calculateVelocitySource(pc, patch, old_dw, new_dw, 
 				      delta_t, index,
-				      Discretization::PRESSURE);
+				      Arches::PRESSURE);
 
     // Calculate the Velocity BCS
     //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
@@ -273,7 +273,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     //           [u,v,w]VelNonLinSrcPBLM
     d_boundaryCondition->velocityBC(pc, patch, old_dw, new_dw, 
 				    index,
-				    Discretization::PRESSURE);
+				    Arches::PRESSURE);
 
     // Modify Velocity Mass Source
     //  inputs :
@@ -285,7 +285,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     //  outputs: [u,v,w]VelCoefPBLM
     d_discretize->calculateVelDiagonal(pc, patch, new_dw, new_dw, 
 				       index,
-				       Discretization::PRESSURE);
+				       Arches::PRESSURE);
   }
 
   // Calculate Pressure Coeffs
@@ -335,6 +335,9 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.30  2000/07/08 23:42:55  bbanerje
+// Moved all enums to Arches.h and made corresponding changes.
+//
 // Revision 1.29  2000/07/08 08:03:34  bbanerje
 // Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
 // made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
