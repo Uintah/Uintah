@@ -33,7 +33,7 @@
 
 namespace SCIRun {
   class SCIRunComponentInstance;
-  class SCIRunUIPort : public gov::cca::ports::UIPort {
+  class SCIRunUIPort : public sci::cca::ports::UIPort {
   public:
     SCIRunUIPort(SCIRunComponentInstance* component);
     virtual ~SCIRunUIPort();
