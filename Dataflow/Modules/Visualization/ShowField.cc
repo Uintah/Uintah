@@ -305,7 +305,10 @@ ShowField::execute()
     face_id_ = 0;
     faces_dirty_ = false;
     if (alg && faces_on_.get()) 
-      face_id_ = ogeom_->addObj(alg->face_switch_, "Faces");
+    {
+      const char *name = use_transparency_.get()?"TransParent Faces":"Faces";
+      face_id_ = ogeom_->addObj(alg->face_switch_, name);
+    }
   }  
   if (data_dirty_) {
     if (data_id_) ogeom_->delObj(data_id_); 
