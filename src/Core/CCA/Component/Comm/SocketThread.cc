@@ -50,4 +50,5 @@ SocketThread::run()
 {
   //cerr<<"calling handler #"<<id<<"\n";
   ep->handler_table[id](msg);
+  //handler will call destroyMessage
 }

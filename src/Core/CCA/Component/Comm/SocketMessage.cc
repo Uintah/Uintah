@@ -76,7 +76,10 @@ SocketMessage::SocketMessage(SocketSpChannel *spchan)
 }
 
 SocketMessage::~SocketMessage() {
-  if(msg!=NULL) free(msg);
+  if(dtmsg!=NULL)  delete dtmsg;
+  else{
+    if(msg!=NULL) free(msg);
+  }
 }
 
 void 
@@ -89,6 +92,7 @@ SocketMessage::createMessage()  {
 void 
 SocketMessage::marshalInt(const int *buf, int size){
   marshalBuf(buf, size*sizeof(int));
+  //  cerr<<"Marshal Int("<<size<<")="<<*buf<<endl;
 }
 
 void 
@@ -99,6 +103,9 @@ SocketMessage::marshalByte(const char *buf, int size){
 void 
 SocketMessage::marshalChar(const char *buf, int size){
   marshalBuf(buf, size*sizeof(char));
+  //cerr<<"Marshal Char("<<size<<")=";
+  //for(int i=0; i<size; i++) cerr<<*(buf+i);
+  //cerr<<endl;
 }
 
 void 
@@ -130,7 +137,7 @@ SocketMessage::sendMessage(int handler){
   wmsg->buf=(char*)msg;
   wmsg->length=msg_size;
   wmsg->autofree=true;
-
+  msg=NULL;   //DT is responsible to delete it.
   if(dtmsg!=NULL){
     wmsg->recver=dtmsg->sender;
     wmsg->to_addr=dtmsg->fr_addr;
@@ -206,7 +213,11 @@ SocketMessage::getLocalObj(){
 }
 
 void SocketMessage::destroyMessage() {
-  if(msg!=NULL) free(msg);
+  if(dtmsg!=NULL)  delete dtmsg;
+  else{
+    if(msg!=NULL) free(msg);
+  }
+  dtmsg=NULL;
   msg=NULL;
   delete this;
 }
