@@ -26,6 +26,7 @@ extern DebugStream mixedDebug;
 extern DebugStream brydbg;
 static DebugStream dbg("TaskGraph", false);
 static DebugStream scrubout("Scrubbing", false);
+static DebugStream messagedbg("MessageTags", false);
 
 DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
 			     const TaskGraph* taskgraph,
@@ -96,6 +97,9 @@ DetailedTasks::assignMessageTags(int me)
       pair<int, int> fromToPair = make_pair(from, to);    
       batches_[i]->messageTag = ++perPairBatchIndices[fromToPair]; /* start with
 								     one */
+      if (messagedbg.active())
+        messagedbg << me << " assigning message num " << batch->messageTag << " from task " << batch->fromTask->getName() 
+                   << ", process " << from << " to process " << to << "\n";
     }
   }
   
@@ -106,8 +110,8 @@ DetailedTasks::assignMessageTags(int me)
       int from = iter->first.first;
       int to = iter->first.second;
       int num = iter->second;
-      dbg << num << " messages from process " << from << " to process " << to
-	  << "\n";
+      dbg << num << " messages from process " << from 
+          << " to process " << to << "\n";
     }
   }
 } // end assignMessageTags()

@@ -40,6 +40,8 @@ extern DebugStream mixedDebug;
 
 static DebugStream dbg("MPIScheduler", false);
 static DebugStream timeout("MPIScheduler.timings", false);
+static DebugStream taskdbg("TaskDBG", false);
+DebugStream mpidbg("MPIDBG",false);
 static Mutex sendsLock( "sendsLock" );
 
 static
@@ -293,8 +295,8 @@ MPIScheduler::runTask( DetailedTask         * task )
   mpi_info_.totalcommflops += send_flops;
 #endif
   
-  dbg << d_myworld->myrank() << " Completed task: ";
-  printTask(dbg, task); dbg << '\n';
+  taskdbg << d_myworld->myrank() << " Completed task: ";
+  printTask(taskdbg, task); taskdbg << '\n';
 
   mpi_info_.totalsend += dsend;
   mpi_info_.totaltask += dtask;
@@ -310,8 +312,8 @@ MPIScheduler::runReductionTask( DetailedTask         * task )
   dw->reduceMPI(comp->var, comp->reductionLevel, comp->matls);
   task->done(dws);
 
-  dbg << d_myworld->myrank() << " Completed task: ";
-  printTask(dbg, task); dbg << '\n';
+  taskdbg << d_myworld->myrank() << " Completed task: ";
+  printTask(taskdbg, task); taskdbg << '\n';
 
 }
 
@@ -378,8 +380,8 @@ MPIScheduler::postMPISends( DetailedTask         * task )
 	cerrLock.lock();
 	dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag 
             << " to " << to << ": " << ostr.str() << "\n"; cerrLock.unlock();
-        dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n"; cerrLock.unlock();
       }
+      mpidbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n"; cerrLock.unlock();
 
       MPI_Request requestid;
       MPI_Isend(buf, count, datatype, to, batch->messageTag,
@@ -517,7 +519,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
       int from = batch->fromTask->getAssignedResourceIndex();
       ASSERTRANGE(from, 0, d_myworld->size());
       MPI_Request requestid;
-      dbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from << ", length=" << count << "\n";      
+      mpidbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from << ", length=" << count << "\n";      
       MPI_Irecv(buf, count, datatype, from, batch->messageTag,
 		d_myworld->getComm(), &requestid);
       int bytes = count;
@@ -559,13 +561,13 @@ MPIScheduler::processMPIRecvs( DetailedTask *, CommRecMPI& recvs,
 
   // This will allow some receives to be "handled" by their
   // AfterCommincationHandler while waiting for others.  
-  dbg << d_myworld->myrank() << " Start waiting...\n";
+  mpidbg << d_myworld->myrank() << " Start waiting...\n";
   while( (recvs.numRequests() > 0)) {
     bool keep_waiting = recvs.waitsome(d_myworld);
     if (!keep_waiting)
       break;
   }
-  dbg << d_myworld->myrank() << " Done  waiting...\n";
+  mpidbg << d_myworld->myrank() << " Done  waiting...\n";
 
   mpi_info_.totalwaitmpi+=Time::currentSeconds()-start;
 
@@ -657,7 +659,7 @@ MPIScheduler::execute()
     //cerr << "Got task: " << task->getTask()->getName() << "\n";
 
     numTasksDone++;
-    dbg << me << " Initiating task: "; printTask(dbg, task); dbg << '\n';
+    taskdbg << me << " Initiating task: "; printTask(taskdbg, task); taskdbg << '\n';
 
     switch(task->getTask()->getType()){
     case Task::Reduction:
