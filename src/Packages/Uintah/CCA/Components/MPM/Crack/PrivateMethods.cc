@@ -612,28 +612,26 @@ void Crack::DetectIfDoingFractureAnalysisAtThisTimeStep(double time)
   static double timeforcalculateJK=0.0;
   static double timeforpropagation=0.0;
 
-  double calJKInterval=0.0;
   if(d_calFractParameters=="true") {
     if(time>=timeforcalculateJK) {
       calFractParameters=YES;
-      timeforcalculateJK+=calJKInterval;
+      timeforcalculateJK+=calFractParasInterval;
     }
     else {
      calFractParameters=NO;
     }
   }
   else if(d_calFractParameters=="false") {
-   calFractParameters=0;
+   calFractParameters=NO;
   }
   else if(d_calFractParameters=="every_time_step"){
-    calFractParameters=1;
+    calFractParameters=YES;
   }
 
-  double propagationInterval=0.0;
   if(d_doCrackPropagation=="true") {
     if(time>=timeforpropagation){
       doCrackPropagation=YES;
-      timeforpropagation+=propagationInterval;
+      timeforpropagation+=crackPropInterval;
     }
     else {
       doCrackPropagation=NO;
@@ -1097,61 +1095,53 @@ void Crack::OutputCrackGeometry(const int& matIdx, const int& timestepIdx)
     // ce.matXXX.timestepYYYYY (crack elems)
     // cx.matXXX.timestepYYYYY (crack points)
     // cf.matXXX.timestepYYYYY (crack front nodes)
-    char matbuf[10], timebuf[10];
-    sprintf(matbuf,"%d",matIdx);
+    // Those files are stored in .uda.XXX/tXXXXX/crackData/
+
+    char timebuf[10],matbuf[10];
     sprintf(timebuf,"%d",timestepIdx);
+    sprintf(matbuf,"%d",matIdx);
 
     // Task 1: Create output directories
-    string cdDir=udaDir+"/crackGeometryData/";
-    mkdir( cdDir.c_str(), 0777 );
+    char crackDir[200]="";
+    strcat(crackDir,udaDir.c_str());
+    strcat(crackDir,"/t");
+    if(timestepIdx<10) strcat(crackDir,"0000");
+    else if(timestepIdx<100) strcat(crackDir,"000");
+    else if(timestepIdx<1000) strcat(crackDir,"00");
+    else if(timestepIdx<10000) strcat(crackDir,"0");
+    strcat(crackDir,timebuf);
+    strcat(crackDir,"/crackData");
+    
+    mkdir(crackDir,0777);
 
     // Task 2: Specify output file names 
     char ceFileName[200]="";
-    strcat(ceFileName,cdDir.c_str()); 
-    strcat(ceFileName,"ce.mat");
+    strcat(ceFileName,crackDir); 
+    strcat(ceFileName,"/ce.mat");
     if(matIdx<10) strcat(ceFileName,"00");
     else if(matIdx<100) strcat(ceFileName,"0");
-    
     strcat(ceFileName,matbuf);
-    strcat(ceFileName,".t");
-    if(timestepIdx<10) strcat(ceFileName,"0000");
-    else if(timestepIdx<100) strcat(ceFileName,"000");
-    else if(timestepIdx<1000) strcat(ceFileName,"00");
-    else if(timestepIdx<10000) strcat(ceFileName,"0");
-    strcat(ceFileName,timebuf);
 
     char cxFileName[200]="";
-    strcat(cxFileName,cdDir.c_str());
-    strcat(cxFileName,"cx.mat");
+    strcat(cxFileName,crackDir);
+    strcat(cxFileName,"/cx.mat");
     if(matIdx<10) strcat(cxFileName,"00");
     else if(matIdx<100) strcat(cxFileName,"0");
     strcat(cxFileName,matbuf);
-    strcat(cxFileName,".t");
-    if(timestepIdx<10) strcat(cxFileName,"0000");
-    else if(timestepIdx<100) strcat(cxFileName,"000");
-    else if(timestepIdx<1000) strcat(cxFileName,"00");
-    else if(timestepIdx<10000) strcat(cxFileName,"0");
-    strcat(cxFileName,timebuf);
 
     char cfFileName[200]="";
-    strcat(cfFileName,cdDir.c_str());
-    strcat(cfFileName,"cf.mat");
+    strcat(cfFileName,crackDir);
+    strcat(cfFileName,"/cf.mat");
     if(matIdx<10) strcat(cfFileName,"00");
     else if(matIdx<100) strcat(cfFileName,"0");
     strcat(cfFileName,matbuf);
-    strcat(cfFileName,".t");
-    if(timestepIdx<10) strcat(cfFileName,"0000");
-    else if(timestepIdx<100) strcat(cfFileName,"000");
-    else if(timestepIdx<1000) strcat(cfFileName,"00");
-    else if(timestepIdx<10000) strcat(cfFileName,"0");
-    strcat(cfFileName,timebuf);
 
     ofstream outputCE(ceFileName, ios::out);
     ofstream outputCX(cxFileName, ios::out);
     ofstream outputCF(cfFileName, ios::out);
 
     if(!outputCE || !outputCX || !outputCF) {
-      cout << "Files for storing crack data are not opened" << endl;
+      cout << "Files for storing crack fail to be opened" << endl;
       exit(1);
     }
 
