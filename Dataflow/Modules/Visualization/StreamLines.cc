@@ -100,7 +100,12 @@ private:
   GuiInt                        maxsteps_;
 
   //! interpolate using the generic linear interpolator
-  bool interpolate(const Point &p, Vector &v);
+  bool interpolate(const Point &p, Vector &v) {
+    bool b = interp_->interpolate(p,v);
+    if (b)
+      v.normalize(); // try not to skip cells - needs help from stepsize
+    return b;
+  }
 
   //! loop through the nodes in the seed field
   template <class VectorField, class SeedField>
@@ -137,12 +142,6 @@ StreamLines::StreamLines(const clString& id)
 
 StreamLines::~StreamLines()
 {
-}
-
-bool StreamLines::interpolate(const Point &p, Vector &v)
-{
-  return interp_->interpolate(p,v);
-  v /= v.length2(); // try not to skip cells - needs help from stepsize
 }
 
 template <class VectorField>
