@@ -24,7 +24,10 @@ itcl_class SCIRun_Fields_SeedField {
     }
 
     method set_defaults {} {
-
+	global $this-random_seed
+	global $this-number_dipoles
+	set $this-random_seed 12345678
+	set $this-number_dipoles 1
     }
 
     method ui {} {
@@ -35,17 +38,24 @@ itcl_class SCIRun_Fields_SeedField {
         }
         toplevel $w
 
-	frame $w.row1
-	frame $w.row2
-	frame $w.row3
-	frame $w.row4
+	frame $w.f1
+	frame $w.f2
+	frame $w.f3
 
-	pack $w.row1 $w.row2 $w.row3 $w.row4 -side top -e y -f both \
-		-padx 5 -pady 5
-	
-	button $w.row4.execute -text "Execute" -command "$this-c execute"
-	
-	pack $w.row4.execute -side top -e n -f both
+	pack $w.f1 $w.f2 $w.f3 -side top -expand yes -fill x
+
+	label $w.f1.l1 -text "Random Seed"
+	entry $w.f1.e1 -textvariable $this-random_seed
+	pack $w.f1.l1 -side left -expand yes
+	pack $w.f1.e1 -side right -expand yes
+
+	label $w.f2.l1 -text "Number of Dipoles"
+	entry $w.f2.e1 -textvariable $this-number_dipoles
+	pack $w.f2.l1 -side left -expand yes
+	pack $w.f2.e1 -side right -expand yes
+
+	button $w.f3.execute -text "Execute" -command "$this-c execute"
+	pack $w.f3.execute -side left -expand yes
     }
 }
 
