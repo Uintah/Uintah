@@ -40,6 +40,10 @@
 
 extern "C" Display *__glutDisplay;
 
+double ORBIT_SPEED  = 1;
+double ROTATE_SPEED = 1;
+bool   HOLO_ON      = false;
+
 using namespace rtrt;
 using namespace SCIRun;
 using namespace std;
@@ -320,16 +324,37 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   // int     & left           = priv->left;
   // int     & up             = priv->up;
 
+  int mods   = glutGetModifiers();
+  activeGui->shiftDown_ = mods & GLUT_ACTIVE_SHIFT;
+  activeGui->altDown_   = mods & GLUT_ACTIVE_ALT;
+  activeGui->ctrlDown_  = mods & GLUT_ACTIVE_CTRL;
+
   switch( key ){
 
   // KEYPAD KEYS USED FOR MOVEMENT
 
-  // SPEED up or slow down
   case '+':
-    activeGui->stealth_->accelerate();
+    if (activeGui->shiftDown_) {
+      // increase planet orbit speed
+      ORBIT_SPEED*=1.1;
+    } else if (activeGui->ctrlDown_) {
+      // increase planet rotate speed
+      ROTATE_SPEED*=1.1;
+    } else {
+      // SPEED up or slow down
+      activeGui->stealth_->accelerate();
+    }
     break;
   case '-':
-    activeGui->stealth_->decelerate();
+    if (activeGui->shiftDown_) {
+      // decrease planet orbit speed
+      ORBIT_SPEED*=.9;
+    } else if (activeGui->ctrlDown_) {
+      // decrease planet rotate speed
+      ROTATE_SPEED*=.9;
+    } else {
+      activeGui->stealth_->decelerate();
+    }
     break;
   // PITCH up and down
   case '8':
@@ -433,7 +458,12 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     }
     break;
   case 13: // Enter
-    activeGui->camera_->flatten(); // Right yourself (0 pitch, 0 roll)
+    if (activeGui->shiftDown_) {
+      // toggle holo room on/off
+      HOLO_ON = !HOLO_ON;
+    } else {
+      activeGui->camera_->flatten(); // Right yourself (0 pitch, 0 roll)
+    }
     break;
   case 'x':
     traverseRouteCB(-1);
@@ -515,7 +545,7 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   }
 } // end handleKeyPress();
 
-// WARNING: THERE ARE NOT THE KEYPAD KEYS!
+// WARNING: THESE ARE NOT THE KEYPAD KEYS!
 void
 Gui::handleSpecialKeyCB( int key, int /*mouse_x*/, int /*mouse_y*/ )
 {
@@ -567,7 +597,10 @@ Gui::handleMousePress(int button, int mouse_x, int mouse_y)
 
   // Figure out if the shift is down at this point because you can't
   // do it in the mouse motion handler.
-  shiftDown_ = glutGetModifiers() & GLUT_ACTIVE_SHIFT;
+  int mods   = glutGetModifiers();
+  shiftDown_ = mods & GLUT_ACTIVE_SHIFT;
+  altDown_   = mods & GLUT_ACTIVE_ALT;
+  ctrlDown_  = mods & GLUT_ACTIVE_CTRL;
 
   activeGui->last_x_ = mouse_x;
   activeGui->last_y_ = mouse_y;
