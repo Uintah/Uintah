@@ -53,6 +53,13 @@ DECLARE_MAKER(<xsl:value-of select="/filter/filter-sci/@name"/>)
 <xsl:call-template name="define_constructor" />
 <xsl:call-template name="define_destructor" />
 <xsl:call-template name="define_execute" />
+<xsl:call-template name="define_processevent" />
+<xsl:call-template name="define_constprocessevent" />
+<xsl:if test="/filter/filter-sci/outputs/output">
+<xsl:call-template name="define_update_after_iteration" />
+</xsl:if>
+<xsl:call-template name="define_do_its" />
+<xsl:call-template name="define_observe" />
 <xsl:call-template name="define_tcl_command" />
 } // End of namespace Insight
 </xsl:template>
@@ -110,6 +117,7 @@ DECLARE_MAKER(<xsl:value-of select="/filter/filter-sci/@name"/>)
 <xsl:for-each select="/filter/filter-itk/includes/file">
 #include &lt;<xsl:value-of select="."/>&gt;
 </xsl:for-each>
+#include &lt;itkCommand.h&gt;
 </xsl:template>
 
 
@@ -121,7 +129,9 @@ DECLARE_MAKER(<xsl:value-of select="/filter/filter-sci/@name"/>)
 <xsl:text> : public Module 
 {
 public:
-
+</xsl:text>
+  typedef itk::MemberCommand&lt; <xsl:value-of select="/filter/filter-sci/@name"/> &gt; RedrawCommandType;
+<xsl:text>
   // Filter Declaration
   itk::Object::Pointer filter_;
 
@@ -160,6 +170,33 @@ public:
 </xsl:if>
 </xsl:for-each><xsl:text> &gt; 
   bool run( </xsl:text><xsl:for-each select="/filter/filter-itk/inputs/input">itk::Object* <xsl:text> </xsl:text><xsl:if test="position() &lt; last()"><xsl:text>, </xsl:text></xsl:if></xsl:for-each> );
+
+  // progress bar
+<xsl:if test="/filter/filter-sci/outputs/output">
+  void update_after_iteration();
+</xsl:if>
+  void ProcessEvent(itk::Object * caller, const itk::EventObject &amp; event );
+  void ConstProcessEvent(const itk::Object * caller, const itk::EventObject &amp; event );
+  void Observe( itk::Object *caller );
+  RedrawCommandType::Pointer m_RedrawCommand;
+<xsl:for-each select="/filter/filter-sci/outputs/output">
+<xsl:variable name="send"><xsl:value-of select="@send_intermediate"/></xsl:variable>
+<xsl:if test="$send='yes'"><xsl:text>
+  template&lt;</xsl:text>
+<xsl:for-each select="/filter/filter-itk/templated/template">
+<xsl:choose>
+   <xsl:when test="@type"><xsl:value-of select="@type"/><xsl:text> </xsl:text> </xsl:when>
+   <xsl:otherwise>class </xsl:otherwise>
+</xsl:choose> 
+<xsl:value-of select="."/>
+<xsl:if test="position() &lt; last()">
+<xsl:text>, </xsl:text>
+</xsl:if>
+</xsl:for-each>&gt;
+  bool do_it_<xsl:value-of select="@name"/>();
+  unsigned int iterationCounter_<xsl:value-of select="@name"/>;
+</xsl:if>
+</xsl:for-each>
 };
 
 </xsl:template>
@@ -209,6 +246,13 @@ GuiDouble </xsl:otherwise>
 <xsl:text> gui_</xsl:text><xsl:value-of select="name"/>
 <xsl:text>_;
   </xsl:text></xsl:if>
+</xsl:for-each>
+<xsl:for-each select="/filter/filter-sci/outputs/output">
+<xsl:variable name="send"><xsl:value-of select="@send_intermediate"/></xsl:variable>
+<xsl:if test="$send='yes'">
+  GuiInt gui_update_<xsl:value-of select="@name"/>_;
+  GuiInt gui_update_iters_<xsl:value-of select="@name"/>_;
+</xsl:if>
 </xsl:for-each>
 <xsl:if test="$has_defined_objects != ''">
   GuiInt gui_dimension_;</xsl:if>
@@ -263,7 +307,8 @@ template&lt;</xsl:text>
 <xsl:text>, </xsl:text>
 </xsl:if>
 </xsl:for-each><xsl:text>&gt;
-bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
+bool 
+</xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 
 <xsl:for-each select="/filter/filter-itk/inputs/input">
 <xsl:variable name="var">obj_<xsl:value-of select="@name"/> </xsl:variable>itk::Object<xsl:text> *</xsl:text><xsl:value-of select="$var"/>
@@ -325,6 +370,9 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
      // create a new one
      filter_ = FilterType::New();
 
+     // attach observer for progress bar
+     Observe( filter_.GetPointer() );
+
      // set inputs 
      <xsl:for-each select="/filter/filter-itk/inputs/input">
   <!-- if input is optional, only call if we have data -->
@@ -341,6 +389,9 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   </xsl:choose>
    </xsl:for-each>     
   }
+
+  // reset progress bar
+  update_progress(0.0);
 
   // set filter parameters
    
@@ -584,7 +635,10 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 <xsl:value-of select="name"/>
 <xsl:text disable-output-escaping="yes">&quot;))</xsl:text></xsl:if>
 </xsl:if>
-</xsl:for-each>
+</xsl:for-each><xsl:for-each select="/filter/filter-sci/outputs/output"><xsl:variable name="send"><xsl:value-of select="@send_intermediate"/></xsl:variable><xsl:if test="$send='yes'"><xsl:text>,
+     gui_</xsl:text>update_<xsl:value-of select="@name"/>_(ctx->subVar(&quot;update_<xsl:value-of select="@name"/>&quot;))<xsl:text>,
+     gui_</xsl:text>update_iters_<xsl:value-of select="@name"/>_(ctx->subVar(&quot;update_iters_<xsl:value-of select="@name"/>&quot;))<!-- FIX ME --></xsl:if></xsl:for-each>
+
 <xsl:if test="$has_defined_objects != ''">,
      gui_dimension_(ctx-&gt;subVar(&quot;dimension&quot;))</xsl:if>
 <xsl:for-each select="/filter/filter-itk/inputs/input">, 
@@ -602,6 +656,18 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 </xsl:choose></xsl:for-each>
 <xsl:if test="$has_defined_objects != ''">
   gui_dimension_.set(0);</xsl:if>
+<xsl:text>
+</xsl:text>
+  m_RedrawCommand = RedrawCommandType::New();
+  m_RedrawCommand-&gt;SetCallbackFunction( this, &amp;<xsl:value-of select="/filter/filter-sci/@name"/>::ProcessEvent );
+  m_RedrawCommand-&gt;SetCallbackFunction( this, &amp;<xsl:value-of select="/filter/filter-sci/@name"/>::ConstProcessEvent );
+<xsl:for-each select="/filter/filter-sci/outputs/output">
+<xsl:variable name="send"><xsl:value-of select="@send_intermediate"/></xsl:variable>
+<xsl:if test="$send='yes'">
+  iterationCounter_<xsl:value-of select="@name"/> = 0;
+</xsl:if>
+</xsl:for-each>
+  update_progress(0.0);
 <xsl:text>
 }
 
@@ -625,7 +691,8 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 
 <!-- ====== DEFINE_EXECUTE ====== -->
 <xsl:template name="define_execute">
-<xsl:text>void </xsl:text>
+<xsl:text>void 
+</xsl:text>
 <xsl:value-of select="/filter/filter-sci/@name"/>
 <xsl:text>::execute() 
 {
@@ -688,6 +755,14 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 </xsl:text>
 </xsl:for-each>
 
+<xsl:for-each select="/filter/filter-sci/outputs/output">
+<xsl:variable name="send"><xsl:value-of select="@send_intermediate"/></xsl:variable>
+<xsl:if test="$send='yes'">
+  iterationCounter_<xsl:value-of select="@name"/> = 0;	
+  gui_update_<xsl:value-of select="@name"/>_.reset();
+  gui_update_iters_<xsl:value-of select="@name"/>_.reset();
+</xsl:if>
+</xsl:for-each>
 <xsl:text>
   // get input
   </xsl:text>
@@ -766,9 +841,199 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 
 
 
+<!-- ======= DEFINE_PROCESSEVENT ======= -->
+<xsl:template name="define_processevent">
+// Manage a Progress event 
+void 
+<xsl:value-of select="/filter/filter-sci/@name"/>::ProcessEvent( itk::Object * caller, const itk::EventObject &amp; event )
+{
+  if( typeid( itk::ProgressEvent )   ==  typeid( event ) )
+  {
+    ::itk::ProcessObject::Pointer  process = 
+        dynamic_cast&lt; itk::ProcessObject *&gt;( caller );
+
+    const double value = static_cast&lt;double&gt;(process->GetProgress() );
+    update_progress( value );
+    }
+<xsl:if test="/filter/filter-sci/outputs/output">
+  else if ( typeid( itk::IterationEvent ) == typeid( event ) )
+  {
+    ::itk::ProcessObject::Pointer  process = 
+	dynamic_cast&lt; itk::ProcessObject *&gt;( caller );
+    
+    update_after_iteration();
+  }
+</xsl:if>
+}
+
+</xsl:template>
+
+<!-- ======= DEFINE_CONSTPROCESSEVENT ======= -->
+<xsl:template name="define_constprocessevent">
+// Manage a Progress event 
+void 
+<xsl:value-of select="/filter/filter-sci/@name"/>::ConstProcessEvent(const itk::Object * caller, const itk::EventObject &amp; event )
+{
+  if( typeid( itk::ProgressEvent )   ==  typeid( event ) )
+  {
+    ::itk::ProcessObject::ConstPointer  process = 
+        dynamic_cast&lt; const itk::ProcessObject *&gt;( caller );
+
+    const double value = static_cast&lt;double&gt;(process->GetProgress() );
+    update_progress( value );
+    }
+<xsl:if test="/filter/filter-sci/outputs/output">
+  else if ( typeid( itk::IterationEvent ) == typeid( event ) )
+  {
+    ::itk::ProcessObject::ConstPointer  process = 
+	dynamic_cast&lt; const itk::ProcessObject *&gt;( caller );
+    
+    update_after_iteration();
+  }
+</xsl:if>
+}
+
+</xsl:template>
+
+
+<!-- ======= DEFINE_UPDATE_AFTER_ITERATION ======= -->
+<xsl:template name="define_update_after_iteration">
+void 
+<xsl:value-of select="/filter/filter-sci/@name"/>::update_after_iteration()
+{
+<xsl:for-each select="/filter/filter-sci/outputs/output">
+<xsl:variable name="send"><xsl:value-of select="@send_intermediate"/></xsl:variable>
+<xsl:variable name="funcName"><xsl:value-of select="@name"/></xsl:variable>
+<xsl:if test="$send='yes'">
+  if(gui_update_<xsl:value-of select="$funcName"/>_.get() &amp;&amp; iterationCounter_<xsl:value-of select="$funcName"/>%gui_update_iters_<xsl:value-of select="$funcName"/>_.get() == 0 &amp;&amp; iterationCounter_<xsl:value-of select="$funcName"/> &gt; 0) {
+<xsl:variable name="defaults"><xsl:value-of select="/filter/filter-sci/instantiations/@use-defaults"/></xsl:variable>
+    // determine type and call do it
+    if(0) { } 
+  <xsl:choose>
+    <xsl:when test="$defaults = 'yes'">
+<xsl:for-each select="/filter/filter-itk/templated/defaults"><xsl:text>
+    else if(do_it_</xsl:text><xsl:value-of select="$funcName"/><xsl:text>&lt; </xsl:text>
+  <xsl:for-each select="default">
+  <xsl:value-of select="."/><xsl:if test="position() &lt; last()">
+<xsl:text>, </xsl:text>
+</xsl:if>
+    </xsl:for-each>
+<xsl:text> &gt;( )) {} </xsl:text>
+</xsl:for-each>
+    </xsl:when>
+    <xsl:otherwise>
+  <xsl:for-each select="/filter/filter-sci/instantiations/instance">
+  <xsl:variable name="num"><xsl:value-of select="position()"/></xsl:variable>
+  <xsl:text> 
+    else if(do_it_</xsl:text><xsl:value-of select="$funcName"/><xsl:text>&lt; </xsl:text>
+<xsl:for-each select="type">
+<xsl:variable name="type"><xsl:value-of select="@name"/></xsl:variable>
+<xsl:for-each select="/filter/filter-itk/templated/template">
+<xsl:variable name="templated_type"><xsl:value-of select="."/></xsl:variable>	      
+<xsl:if test="$type = $templated_type">
+<xsl:value-of select="/filter/filter-sci/instantiations/instance[position()=$num]/type[@name=$type]/value"/>
+<xsl:if test="position() &lt; last()">
+<xsl:text>, </xsl:text>
+</xsl:if>
+</xsl:if>
+</xsl:for-each>
+</xsl:for-each>
+<xsl:text> &gt;( )) { }</xsl:text></xsl:for-each>
+</xsl:otherwise>
+</xsl:choose>
+    else {
+      // error
+      error("Incorrect filter type");
+      return;
+    }
+  }
+  iterationCounter_<xsl:value-of select="@name"/>++;
+</xsl:if>
+</xsl:for-each>
+}
+
+</xsl:template>
+
+
+
+<!-- ======= DEFINE_DO_ITS ======= -->
+<xsl:template name="define_do_its">
+<xsl:for-each select="/filter/filter-sci/outputs/output">
+<xsl:variable name="send"><xsl:value-of select="@send_intermediate"/></xsl:variable>
+<xsl:if test="$send='yes'"><xsl:text>
+template&lt;</xsl:text>
+<xsl:for-each select="/filter/filter-itk/templated/template">
+<xsl:choose>
+   <xsl:when test="@type"><xsl:value-of select="@type"/><xsl:text> </xsl:text> </xsl:when>
+   <xsl:otherwise>class </xsl:otherwise>
+</xsl:choose> 
+<xsl:value-of select="."/>
+<xsl:if test="position() &lt; last()">
+<xsl:text>, </xsl:text>
+</xsl:if>
+</xsl:for-each>&gt;
+bool 
+<xsl:value-of select="/filter/filter-sci/@name"/>::do_it_<xsl:value-of select="@name"/>()
+{
+  // Move the pixel container and image information of the image 
+  // we are working on into a temporary image to  use as the 
+  // input to the mini-pipeline.  This avoids a complete copy of the image.
+
+  typedef typename <xsl:value-of select="$itk-name"/>&lt; <xsl:for-each select="/filter/filter-itk/templated/template"><xsl:value-of select="."/>
+  <xsl:if test="position() &lt; last()">   
+  <xsl:text>, </xsl:text>
+  </xsl:if>
+ </xsl:for-each> &gt; FilterType;
+  
+  if(!dynamic_cast&lt;FilterType*&gt;(filter_.GetPointer())) {
+    return false;
+  }
+ 
+  <xsl:variable name="name"><xsl:value-of select="@name"/></xsl:variable> 
+  <xsl:variable name="type"><xsl:value-of select="/filter/filter-itk/outputs/output[@name=$name]/type"/></xsl:variable>
+  typename <xsl:value-of select="$type"/>::Pointer tmp = <xsl:value-of select="$type"/>::New();
+  tmp->SetRequestedRegion( dynamic_cast&lt;FilterType*&gt;(filter_.GetPointer())->GetOutput()->GetRequestedRegion() );
+  tmp->SetBufferedRegion( dynamic_cast&lt;FilterType*&gt;(filter_.GetPointer())->GetOutput()->GetBufferedRegion() );
+  tmp->SetLargestPossibleRegion( dynamic_cast&lt;FilterType*&gt;(filter_.GetPointer())->GetOutput()->GetLargestPossibleRegion() );
+  tmp->SetPixelContainer( dynamic_cast&lt;FilterType*&gt;(filter_.GetPointer())->GetOutput()->GetPixelContainer() );
+  tmp->CopyInformation( dynamic_cast&lt;FilterType*&gt;(filter_.GetPointer())->GetOutput() );
+  
+  
+  // send segmentation down
+  ITKDatatype* out_<xsl:value-of select="@name"/>_ = scinew ITKDatatype; 
+  out_OutputImage_->data_ = tmp;
+  outhandle_<xsl:value-of select="@name"/>_ = out_<xsl:value-of select="@name"/>_; 
+  outport_<xsl:value-of select="@name"/>_->send_intermediate(outhandle_<xsl:value-of select="@name"/>_);
+  return true;
+}
+</xsl:if>
+
+</xsl:for-each>
+
+</xsl:template>
+
+
+
+
+<!-- ======= DEFINE_OBSERVE ======= -->
+<xsl:template name="define_observe">
+// Manage a Progress event 
+void 
+<xsl:value-of select="/filter/filter-sci/@name"/>::Observe( itk::Object *caller )
+{
+  caller->AddObserver(  itk::ProgressEvent(), m_RedrawCommand.GetPointer() );
+  caller->AddObserver(  itk::IterationEvent(), m_RedrawCommand.GetPointer() );
+}
+
+</xsl:template>
+
+
+
+
 <!-- ====== DEFINE_TCL_COMMAND ====== -->
 <xsl:template name="define_tcl_command">
-<xsl:text>void </xsl:text>
+<xsl:text>void 
+</xsl:text>
 <xsl:value-of select="/filter/filter-sci/@name"/>
 <xsl:text disable-output-escaping="yes">::tcl_command(GuiArgs&amp; args, void* userdata)
 {
