@@ -40,6 +40,7 @@
 namespace SCIRun {
 
 class CM2Widget;
+typedef LockingHandle<CM2Widget> CM2WidgetHandle;
 
 using std::vector;
 
@@ -47,10 +48,11 @@ class Colormap2 : public SCIRun::Datatype
 {
 public:
   Colormap2();
-  Colormap2(vector<CM2Widget*>& widgets, bool updating, bool faux);
+  Colormap2(const vector<CM2WidgetHandle>& widgets,
+	    bool updating, bool faux);
   virtual ~Colormap2();
 
-  inline vector<CM2Widget*>& widgets() { return widgets_; }
+  inline vector<CM2WidgetHandle>& widgets() { return widgets_; }
   
   inline bool updating() { return updating_; }
   inline bool faux() { return faux_; }
@@ -61,7 +63,7 @@ public:
 protected:
   bool updating_;
   bool faux_;
-  vector<CM2Widget *> widgets_;
+  vector<CM2WidgetHandle> widgets_;
 };
 
 typedef SCIRun::LockingHandle<Colormap2> Colormap2Handle;

@@ -36,6 +36,7 @@
 #include <Core/Volume/Pbuffer.h>
 #include <Core/Volume/Utils.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <iostream>
 #include <sstream>
@@ -45,6 +46,21 @@
 using namespace std;
 
 namespace SCIRun {
+
+PersistentTypeID CM2Widget::type_id("CM2Widget", "Datatype", 0);
+
+#if 0
+#define CM2WIDGET_VERSION 1
+
+void
+CM2Widget::io(Piostream &stream)
+{
+  ASSERTFAIL("SHOULD BE CALLING SUBCLASS VERSION DIRECTLY");
+  const int version = stream.begin_class("CM2Widget", CM2WIDGET_VERSION);
+  
+  stream.end_class();
+}
+#endif
 
 CM2Widget::CM2Widget()
   : line_color_(0.75, 0.75, 0.75),
@@ -81,6 +97,30 @@ CM2Widget::set_alpha(float a)
   alpha_ = Clamp((double)a, 0.0, 1.0);
 }
 
+
+static Persistent* TriangleCM2Widget_maker()
+{
+  return scinew TriangleCM2Widget;
+}
+
+PersistentTypeID TriangleCM2Widget::type_id("TriangleCM2Widget", "Datatype",
+					    TriangleCM2Widget_maker);
+
+#define TRIANGLECM2WIDGET_VERSION 1
+
+void
+TriangleCM2Widget::io(Piostream &stream)
+{
+  stream.begin_class("TriangleCM2Widget", TRIANGLECM2WIDGET_VERSION);
+  
+  Pio(stream, base_);
+  Pio(stream, top_x_);
+  Pio(stream, top_y_);
+  Pio(stream, width_);
+  Pio(stream, bottom_);
+
+  stream.end_class();
+}
 
 TriangleCM2Widget::TriangleCM2Widget()
   : base_(0.5), top_x_(0.15), top_y_(0.5), width_(0.25), bottom_(0.5)
@@ -449,8 +489,34 @@ TriangleCM2Widget::tcl_unpickle(const string &p)
 }
 
 
+static Persistent* RectangleCM2Widget_maker()
+{
+  return scinew RectangleCM2Widget;
+}
+
+PersistentTypeID RectangleCM2Widget::type_id("RectangleCM2Widget", "Datatype",
+					     RectangleCM2Widget_maker);
+
+#define RECTANGLECM2WIDGET_VERSION 1
+
+void
+RectangleCM2Widget::io(Piostream &stream)
+{
+  stream.begin_class("RectangleCM2Widget", RECTANGLECM2WIDGET_VERSION);
+  
+  Pio(stream, (int)type_);
+  Pio(stream, left_x_);
+  Pio(stream, left_y_);
+  Pio(stream, width_);
+  Pio(stream, height_);
+  Pio(stream, offset_);
+
+  stream.end_class();
+}
+
 RectangleCM2Widget::RectangleCM2Widget()
-  : type_(CM2_RECTANGLE_1D), left_x_(0.25), left_y_(0.5), width_(0.25), height_(0.25),
+  : type_(CM2_RECTANGLE_1D), left_x_(0.25), left_y_(0.5),
+    width_(0.25), height_(0.25),
     offset_(0.25)
 {
   color_.r(1.0);
