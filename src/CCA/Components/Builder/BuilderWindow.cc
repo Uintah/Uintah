@@ -569,7 +569,7 @@ void BuilderWindow::writeFile()
   
     if (saveOutputFile.is_open()) {
 	for (unsigned int j = 0; j < saveModules.size(); j++) {
-	    saveOutputFile << saveModules[j]->moduleName() << std::endl;
+	    saveOutputFile << saveModules[j]->moduleName << std::endl;
 	    saveOutputFile << saveModules[j]->x() << std::endl;
 	    saveOutputFile << saveModules[j]->y() << std::endl;
 	}
@@ -712,7 +712,7 @@ void BuilderWindow::clear()
 
     for (unsigned int j = 0; j < clearModules.size(); j++) {
 	std::cerr << "modules->getName = " <<
-	    clearModules[j]->moduleName() << std::endl;
+	    clearModules[j]->moduleName << std::endl;
 	clearModules[j]->destroy();
     }
     unsetCursor();
