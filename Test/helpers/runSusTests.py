@@ -246,7 +246,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
       malloc_stats_file = "malloc_stats"
     environ['MALLOC_STATS'] = malloc_stats_file
 
-  rc = system("nice %s %s > sus.log 2>&1" % (command, susinput))
+  rc = system("nice %s %s > sus.log.txt 2>&1" % (command, susinput))
 
   if mode == "dbg":
     environ['MALLOC_STATS'] = "compare_uda_malloc_stats"
@@ -255,7 +255,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     print "\t*** Test %s failed with code %d" % (testname, rc)
     if do_restart == "yes":
 	print "\t\tMake sure the problem makes checkpoints before finishing"
-    print "\tSee %s/sus.log for details" % (logpath)
+    print '\t<A href=\"%s/sus.log.txt\">See sus.log</a> for details' % (logpath)
     return 1
   else:
     if do_restart == "yes":
@@ -265,11 +265,11 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
       chdir("restart")
     print "\tComparing udas on %s" % (date())
     replace_msg = "\tTo replace the gold standard uda and memory usage with these results,\n\trun: %s/replace_gold_standard" % (getcwd())
-    rc = system("compare_sus_runs %s %s %s %s > compare_sus_runs.log 2>&1" % (testname, getcwd(), compare_root, susdir))
+    rc = system("compare_sus_runs %s %s %s %s > compare_sus_runs.log.txt 2>&1" % (testname, getcwd(), compare_root, susdir))
     if rc != 0:
 	if rc == 5 * 256:
      	    print "\t*** Warning, %s has changed.  You must update the gold standard." % (input(test))
-    	    print "\tSee %s/compare_sus_runs.log for more comparison information." % (logpath)
+    	    print '\t<A href=\"%s/compare_sus_runs.log.txt\">See compare_sus_runs.log</A> for more comparison information.' % (logpath)
  	    print "%s" % replace_msg
 	    return 1
 	elif rc == 10 * 256:
@@ -279,7 +279,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
 	    return 1
 	elif rc == 1 * 256:
     	    print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, rc)
-    	    print "\tSee %s/compare_sus_runs.log for details" % (logpath)
+            print '\t<A href=\"%s/compare_sus_runs.log.txt\">See compare_sus_runs.log</a> for more comparison information.' % (logpath)
 	    if do_restart != "yes":
  	    	print "%s" % replace_msg
 	    return 1
@@ -291,7 +291,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
         print "\tComparison tests passed."
 
     if mode == "dbg":
-	rc = system("mem_leak_check %s %s %s/%s/%s %s > mem_leak_check.log 2>&1" % (testname, malloc_stats_file, compare_root, testname, malloc_stats_file, "."))
+	rc = system("mem_leak_check %s %s %s/%s/%s %s > mem_leak_check.log.txt 2>&1" % (testname, malloc_stats_file, compare_root, testname, malloc_stats_file, "."))
 	try:
 	  short_message_file = open("highwater_shortmessage.txt", 'r+', 500)
 	  short_message = rstrip(short_message_file.readline(500))
@@ -306,13 +306,13 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
 	    print "\t* Warning, no malloc_stats file created.  No memory leak test performed."
 	elif rc == 256:
 	    print "\t*** Warning, test %s failed memory leak test." % (testname)
-	    print "\tSee %s/mem_leak_check.log" % (logpath)
+            print '\t<A href=\"%s/mem_leak_check.log.txt\">See compare_sus_runs.log</a> for more comparison information.' % (logpath)
 	    return 1
 	elif rc == 2*256:
 	    print "\t*** Warning, test %s failed memory highwater test." % (testname)
 	    if short_message != "":
 		print "\t%s" % (short_message)
-	    print "\tSee %s/mem_leak_check.log" % (logpath)
+            print '\t<A href=\"%s/mem_leak_check.log.txt\">See compare_sus_runs.log</a> for more comparison information.' % (logpath)
  	    print "%s" % replace_msg
 	    return 1
 	else:
