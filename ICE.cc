@@ -66,18 +66,7 @@ ICE::ICE(const ProcessorGroup* myworld)
                                 CCVariable<cflux>::getTypeDescription());
   OFC_CCLabel = VarLabel::create("OFC_CC",
                                 CCVariable<cflux>::getTypeDescription());
-  q_outLabel = VarLabel::create("q_out",
-                                CCVariable<fflux>::getTypeDescription());
-  q_out_EFLabel = VarLabel::create("q_out_EF",
-                                CCVariable<eflux>::getTypeDescription());
-  q_out_CFLabel = VarLabel::create("q_out_CF",
-                                CCVariable<cflux>::getTypeDescription());
-  q_inLabel = VarLabel::create("q_in",
-                                CCVariable<fflux>::getTypeDescription());
-  q_in_EFLabel = VarLabel::create("q_in_EF",
-                                CCVariable<eflux>::getTypeDescription());
-  q_in_CFLabel = VarLabel::create("q_in_CF",
-                                CCVariable<cflux>::getTypeDescription());
+
 
   // Turn off all the debuging switches
   switchDebugInitialize           = false;
@@ -106,13 +95,6 @@ ICE::~ICE()
   VarLabel::destroy(OFE_CCLabel);
   VarLabel::destroy(IFC_CCLabel);
   VarLabel::destroy(OFC_CCLabel);
-  VarLabel::destroy(q_outLabel);
-  VarLabel::destroy(q_out_EFLabel);
-  VarLabel::destroy(q_out_CFLabel);
-  VarLabel::destroy(q_inLabel);
-  VarLabel::destroy(q_in_EFLabel);
-  VarLabel::destroy(q_in_CFLabel);
-
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::problemSetup--
@@ -3433,162 +3415,9 @@ template <class T> void ICE::advectQFirst(const CCVariable<T>&   q_CC,
     //  Calculate the advected q at t + delta t
     q_advected[*iter] = - sum_q_outflux - sum_q_outflux_EF - sum_q_outflux_CF
                         + sum_q_influx  + sum_q_influx_EF  + sum_q_influx_CF;
-
-  }
-
-}
-
-
-/*---------------------------------------------------------------------
- Function~  ICE::qOutfluxFirst-- 
- Purpose~  Calculate the quantity \langle q \rangle for each outflux, including
-    the corner flux terms
-
- References:
-    "Compatible Fluxes for van Leer Advection" W.B VanderHeyden and 
-    B.A. Kashiwa, Journal of Computational Physics, 
-    146, 1-28, (1998) 
-
- See schematic diagram at bottom of ice.cc
- FIRST ORDER ONLY AT THIS TIME 10/21/00
----------------------------------------------------------------------  */ 
-void  ICE::qOutfluxFirst(const CCVariable<double>&   q_CC,const Patch* patch,
-			CCVariable<fflux>& q_out, CCVariable<eflux>& q_out_EF,
-			CCVariable<cflux>& q_out_CF)
-{
-  const IntVector gc(1,1,1);
-  for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
-    //__________________________________
-    //  SLABS
-    for(int face = TOP; face <= BACK; face++ ) {
-      q_out[*iter].d_fflux[face] = q_CC[*iter];
-    }
-    //__________________________________
-    //  EDGE fluxes
-    for(int edge = TOP_R; edge <= LEFT_FR; edge++ )  {
-      q_out_EF[*iter].d_eflux[edge] = q_CC[*iter];
-    }
-    
-    //__________________________________
-    //  CORNER fluxes
-    for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ )  {
-      q_out_CF[*iter].d_cflux[corner] = q_CC[*iter];
-    }
   }
 }
 
-/*---------------------------------------------------------------------
- Function~  ICE::qInflux
- Purpose~
-    Calculate the influx contribution \langle q \rangle for each slab and 
-    corner flux.   
- 
- References:
-    "Compatible Fluxes for van Leer Advection" W.B VanderHeyden 
-    and B.A. Kashiwa, Journal of Computational Physics, 146, 1-28, (1998) 
-              
-Implementation Notes:
-    The quantity q_outflux is needed from one layer of extra cells surrounding
-    the computational domain.
-
-See schematic diagram at bottom of file ice.cc
----------------------------------------------------------------------  */
-void ICE::qInfluxFirst(const CCVariable<fflux>& q_out, 
-		  const CCVariable<eflux>& q_out_EF, 
-		  const CCVariable<cflux>& q_out_CF, const Patch* patch,
-		  CCVariable<fflux>& q_in, CCVariable<eflux>& q_in_EF, 
-		  CCVariable<cflux>& q_in_CF)
-{
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-    IntVector curcell = *iter,adjcell;
-    int i = curcell.x();
-    int j = curcell.y();
-    int k = curcell.z();
-    
-    //   INFLUX SLABS
-    adjcell = IntVector(i, j+1, k);
-    q_in[*iter].d_fflux[TOP]    = q_out[adjcell].d_fflux[BOTTOM];
-    
-    adjcell = IntVector(i, j-1, k);
-    q_in[*iter].d_fflux[BOTTOM] = q_out[adjcell].d_fflux[TOP];
-    
-    adjcell = IntVector(i+1, j, k);
-    q_in[*iter].d_fflux[RIGHT]  = q_out[adjcell].d_fflux[LEFT];
-    
-    adjcell = IntVector(i-1, j, k);
-    q_in[*iter].d_fflux[LEFT]   = q_out[adjcell].d_fflux[RIGHT];
-    
-    adjcell = IntVector(i, j, k+1);
-    q_in[*iter].d_fflux[FRONT]  = q_out[adjcell].d_fflux[BACK];
-    
-    adjcell = IntVector(i, j, k-1);
-    q_in[*iter].d_fflux[BACK]   = q_out[adjcell].d_fflux[FRONT];
-    
-    //    INFLUX EDGES
-    adjcell = IntVector(i+1, j+1, k);
-    q_in_EF[*iter].d_eflux[TOP_R]    = q_out_EF[adjcell].d_eflux[BOT_L];
-    
-    adjcell = IntVector(i, j+1, k+1);
-    q_in_EF[*iter].d_eflux[TOP_FR]   = q_out_EF[adjcell].d_eflux[BOT_BK];
-    
-    adjcell = IntVector(i-1, j+1, k);
-    q_in_EF[*iter].d_eflux[TOP_L]    = q_out_EF[adjcell].d_eflux[BOT_R];
-    
-    adjcell = IntVector(i, j+1, k-1);
-    q_in_EF[*iter].d_eflux[TOP_BK]   = q_out_EF[adjcell].d_eflux[BOT_FR];
-    
-    adjcell = IntVector(i+1, j-1, k);
-    q_in_EF[*iter].d_eflux[BOT_R]    = q_out_EF[adjcell].d_eflux[TOP_L];
-    
-    adjcell = IntVector(i, j-1, k+1);
-    q_in_EF[*iter].d_eflux[BOT_FR]    = q_out_EF[adjcell].d_eflux[TOP_BK];
-    
-    adjcell = IntVector(i-1, j-1, k);
-    q_in_EF[*iter].d_eflux[BOT_L]    = q_out_EF[adjcell].d_eflux[TOP_R];
-    
-    adjcell = IntVector(i, j-1, k-1);
-    q_in_EF[*iter].d_eflux[BOT_BK]    = q_out_EF[adjcell].d_eflux[TOP_FR];
-    
-    adjcell = IntVector(i+1, j, k-1);
-    q_in_EF[*iter].d_eflux[RIGHT_BK]  = q_out_EF[adjcell].d_eflux[LEFT_FR];
-    
-    adjcell = IntVector(i+1, j, k+1);
-    q_in_EF[*iter].d_eflux[RIGHT_FR]  = q_out_EF[adjcell].d_eflux[LEFT_BK];
-    
-    adjcell = IntVector(i-1, j, k-1);
-    q_in_EF[*iter].d_eflux[LEFT_BK]  = q_out_EF[adjcell].d_eflux[RIGHT_FR];
-    
-    adjcell = IntVector(i-1, j, k+1);
-    q_in_EF[*iter].d_eflux[LEFT_FR]  = q_out_EF[adjcell].d_eflux[RIGHT_BK];
-    
-    /*__________________________________
-     *   INFLUX CORNER FLUXES
-     *___________________________________*/
-    adjcell = IntVector(i+1, j+1, k-1);
-    q_in_CF[*iter].d_cflux[TOP_R_BK]= q_out_CF[adjcell].d_cflux[BOT_L_FR];
-    
-    adjcell = IntVector(i+1, j+1, k+1);
-    q_in_CF[*iter].d_cflux[TOP_R_FR]= q_out_CF[adjcell].d_cflux[BOT_L_BK];
-    
-    adjcell = IntVector(i-1, j+1, k-1);
-    q_in_CF[*iter].d_cflux[TOP_L_BK]= q_out_CF[adjcell].d_cflux[BOT_R_FR];
-    
-    adjcell = IntVector(i-1, j+1, k+1);
-    q_in_CF[*iter].d_cflux[TOP_L_FR]= q_out_CF[adjcell].d_cflux[BOT_R_BK];
-    
-    adjcell = IntVector(i+1, j-1, k-1);
-    q_in_CF[*iter].d_cflux[BOT_R_BK]= q_out_CF[adjcell].d_cflux[TOP_L_FR];
-    
-    adjcell = IntVector(i+1, j-1, k+1);
-    q_in_CF[*iter].d_cflux[BOT_R_FR]= q_out_CF[adjcell].d_cflux[TOP_L_BK];
-    
-    adjcell = IntVector(i-1, j-1, k-1);
-    q_in_CF[*iter].d_cflux[BOT_L_BK]= q_out_CF[adjcell].d_cflux[TOP_R_FR];
-    
-    adjcell = IntVector(i-1, j-1, k+1);
-    q_in_CF[*iter].d_cflux[BOT_L_FR]= q_out_CF[adjcell].d_cflux[TOP_R_BK];
-  }
-}
 /* 
  ======================================================================*
  Function:  hydrostaticPressureAdjustment--
