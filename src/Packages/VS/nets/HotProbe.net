@@ -3,8 +3,8 @@
 
 set name {Main}
 set bbox {20 1 698 447}
-set creationDate {Tue Jan 11 2005}
-set creationTime {15:33:24}
+set creationDate {Thu Jan 27 2005}
+set creationTime {14:41:32}
 set runDate {}
 set runTime {}
 set notes {}
@@ -33,51 +33,83 @@ set m7 [addModuleAtPosition "SCIRun" "Visualization" "VolumeSlicer" 458 227]
 # Create a SCIRun->Visualization->GenStandardColorMaps Module
 set m8 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 392 27]
 
+# Create a SCIRun->FieldsOther->FieldInfo Module
+set m9 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 48 101]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 59 258]
+
 # Create the Connections between Modules
-set c1 [addConnection $m1 0 $m5 0]
-set c2 [addConnection $m1 0 $m2 0]
-set c3 [addConnection $m5 0 $m7 0]
-set c4 [addConnection $m5 0 $m4 0]
-set c5 [addConnection $m2 1 $m3 0]
-set c6 [addConnection $m6 0 $m7 1]
-set c7 [addConnection $m8 0 $m4 1]
-set c8 [addConnection $m4 0 $m3 1]
-set c9 [addConnection $m7 0 $m3 2]
+set c1 [addConnection $m1 0 $m9 0]
+set c2 [addConnection $m1 0 $m5 0]
+set c3 [addConnection $m1 0 $m2 0]
+set c4 [addConnection $m5 0 $m7 0]
+set c5 [addConnection $m5 0 $m4 0]
+set c6 [addConnection $m2 1 $m3 0]
+set c7 [addConnection $m2 2 $m10 0]
+set c8 [addConnection $m6 0 $m7 1]
+set c9 [addConnection $m8 0 $m4 1]
+set c10 [addConnection $m4 0 $m3 1]
+set c11 [addConnection $m7 0 $m3 2]
+set c12 [addConnection $m10 0 $m3 3]
 
 # Set GUI variables for the SCIRun->DataIO->FieldReader Module
-set $m1-filename "/scratch/mjc/virtual_soldier/data/SCIRun-converted/vs-data-cells.lvs.fld"
+set $m1-filename "/home/dickson/Digital_Human_Work/VS_atlas/SCIRun-converted/vs-data-cells.lvs.fld"
 set $m1-filetype {SCIRun Field File (*.fld)}
 
 # Set GUI variables for the VS->DataFlow->HotBox Module
-set $m2-gui_label1 {accessory hemiazygous vein}
-set $m2-gui_label2 {all ribs}
-set $m2-gui_label3 {anterior ascending br left pulmonary}
-set $m2-gui_label4 {anterior ascending br right pulmonary}
-set $m2-gui_label5 {unknown}
-set $m2-gui_label6 {anterior basal br inferior rt pul vein}
-set $m2-gui_label7 {anterior basal br of left pulmonary}
-set $m2-gui_label8 {anterior basal br right pulmonary}
-set $m2-gui_label9 {anterior br superior lt pul vein}
-set $m2-anatomydatasource {/scratch/mjc/virtual_soldier/data/hotbox/MasterAnatomy.csv}
-set $m2-adjacencydatasource {/scratch/mjc/virtual_soldier/data/hotbox/AdjacencyMapping.csv}
-set $m2-boundingboxdatasource {/scratch/mjc/virtual_soldier/data/hotbox/AnatomyBoundingBoxes.csv}
-set $m2-injurylistdatasource {/scratch/mjc/virtual_soldier/data/hotbox/LabelMapInjList.xml}
-set $m2-currentselection {unknown}
-set $m2-gui_probe_scale {5.8}
+set $m2-gui_label(1) {accessory hemiazygous vein}
+set $m2-gui_label(2) {all ribs}
+set $m2-gui_label(3) {anterior ascending br left pulmonary}
+set $m2-gui_label(4) {anterior ascending br right pulmonary}
+set $m2-gui_label(5) {right ventricle}
+set $m2-gui_label(6) {anterior basal br inferior rt pul vein}
+set $m2-gui_label(7) {anterior basal br of left pulmonary}
+set $m2-gui_label(8) {anterior basal br right pulmonary}
+set $m2-gui_label(9) {anterior br superior lt pul vein}
+set $m2-gui_name {::VS_DataFlow_HotBox_0}
+set $m2-gui_parlist_name {::VS_DataFlow_HotBox_0-gui_parent_list}
+set $m2-gui_sibling(0) {right ventricle}
+set $m2-gui_siblist_name {::VS_DataFlow_HotBox_0-gui_sibling_list}
+set $m2-gui_child(0) {Interventricular septum}
+set $m2-gui_child(1) {Muscular part of interventricular septum}
+set $m2-gui_child(2) {Membranous part of interventricular septum}
+set $m2-gui_child(3) {Outflow part of right ventricle}
+set $m2-gui_child(4) {Tricuspid valve}
+set $m2-gui_child(5) {Anterior leaflet of tricuspid valve}
+set $m2-gui_child(6) {Posterior leaflet of tricuspid valve}
+set $m2-gui_child(7) {Septal leaflet of tricuspid valve}
+set $m2-gui_childlist_name {::VS_DataFlow_HotBox_0-gui_child_list}
+set $m2-datasource {1}
+set $m2-querytype {3}
+set $m2-selectionsource {fromProbe}
+set $m2-anatomydatasource {/home/dickson/Digital_Human_Work/VS_atlas/csv/MasterAnatomy.csv}
+set $m2-adjacencydatasource {/home/dickson/Digital_Human_Work/VS_atlas/csv/AdjacencyMapping.csv}
+set $m2-boundingboxdatasource {/home/dickson/Digital_Human_Work/VS_atlas/csv/AnatomyBoundingBoxes.csv}
+set $m2-injurylistdatasource {/home/dickson/Digital_Human_Work/VS_atlas/csv/LabelMapInjList.xml}
+set $m2-geometrypath {/home/dickson/Digital_Human_Work/VS_atlas/decimField}
+set $m2-currentselection {right ventricle}
+set $m2-gui_probeLocx {65.4184424666}
+set $m2-gui_probeLocy {16.9202654867}
+set $m2-gui_probeLocz {55.9268929504}
+set $m2-gui_probe_scale {2.8}
+
+# Open the VS->DataFlow->HotBox UI
+$m2 initialize_ui
 
 $m3 addViewer
-set $m3-ViewWindow_0-geometry 654x654+8+28
+set $m3-ViewWindow_0-geometry 654x650+571+222
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
-set $m3-ViewWindow_0-view-eyep-x {-543.091693389}
-set $m3-ViewWindow_0-view-eyep-y {9.90072606866}
-set $m3-ViewWindow_0-view-eyep-z {56.6783852854}
-set $m3-ViewWindow_0-view-lookat-x {81.09}
-set $m3-ViewWindow_0-view-lookat-y {31.7793966402}
-set $m3-ViewWindow_0-view-lookat-z {63.75}
-set $m3-ViewWindow_0-view-up-x {0.0125036512866}
-set $m3-ViewWindow_0-view-up-y {-0.0337089727127}
-set $m3-ViewWindow_0-view-up-z {-0.999353472933}
+set $m3-ViewWindow_0-view-eyep-x {28.1868890736}
+set $m3-ViewWindow_0-view-eyep-y {-528.835062202}
+set $m3-ViewWindow_0-view-eyep-z {-216.540176563}
+set $m3-ViewWindow_0-view-lookat-x {81.5408326944}
+set $m3-ViewWindow_0-view-lookat-y {27.544124377}
+set $m3-ViewWindow_0-view-lookat-z {62.255497297}
+set $m3-ViewWindow_0-view-up-x {-0.244493980838}
+set $m3-ViewWindow_0-view-up-y {0.453035062261}
+set $m3-ViewWindow_0-view-up-z {-0.857310868761}
 set $m3-ViewWindow_0-view-fov {20.0}
 set $m3-ViewWindow_0-sr {1}
 set $m3-ViewWindow_0-do_stereo {0}
@@ -119,10 +151,10 @@ set $m3-ViewWindow_0-global-clip {1}
 set $m3-ViewWindow_0-global-cull {0}
 set $m3-ViewWindow_0-global-dl {0}
 set $m3-ViewWindow_0-global-type {Gouraud}
-set "$m3-ViewWindow_0-Probe Selection Widget (1)" {1}
 set "$m3-ViewWindow_0-Volume Slicer (3)" {1}
 set "$m3-ViewWindow_0-Control Widget (3)" {1}
 set "$m3-ViewWindow_0-VolumeRenderer Transparent (2)" {1}
+set "$m3-ViewWindow_0-Probe Selection Widget (1)" {1}
 
 # Set GUI variables for the SCIRun->Visualization->VolumeVisualizer Module
 set $m4-sampling_rate_hi {3.8}
@@ -136,7 +168,7 @@ set $m4-shine {30}
 # Set GUI variables for the SCIRun->Visualization->TextureBuilder Module
 set $m5-vmin {0.0}
 set $m5-vmax {432.0}
-set $m5-card_mem {256}
+set $m5-card_mem {128}
 
 # Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
 set $m6-positionList {{0 40} {14 14} {112 15} {336 12} {565 13} {649 10} {749 13} {779 40}}
@@ -148,9 +180,9 @@ set $m6-faux {1}
 
 # Set GUI variables for the SCIRun->Visualization->VolumeSlicer Module
 set $m7-control_pos_saved {1}
-set $m7-control_x {87.5991582021}
-set $m7-control_y {30.1562131003}
-set $m7-control_z {66.9299319719}
+set $m7-control_x {87.5096823749}
+set $m7-control_y {30.4130068734}
+set $m7-control_z {54.5671292981}
 set $m7-drawX {1}
 set $m7-drawY {1}
 set $m7-drawZ {1}
