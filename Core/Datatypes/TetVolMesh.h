@@ -57,12 +57,16 @@ public:
 
   node_iterator node_begin() const;
   node_iterator node_end() const;
+  index_type    nodes_size() const { return points_.size(); }
   edge_iterator edge_begin() const;
   edge_iterator edge_end() const;
+  index_type    edges_size() const { return edges_.size(); }
   face_iterator face_begin() const;
   face_iterator face_end() const;
+  //index_type    faces_size() const { return faces_.size(); }
   cell_iterator cell_begin() const;
   cell_iterator cell_end() const;
+  index_type    cells_size() const { return cells_.size() >> 2; }
 
   void get_nodes(node_array &array, edge_index idx) const;
   void get_nodes(node_array &array, face_index idx) const;
