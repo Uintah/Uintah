@@ -5,12 +5,11 @@ from helpers.runSusTests import runSusTests
 
 UNUSED = [ 	    ("periodic_disks", "periodic_disks.ups", "", 6, "Linux")	]
 
-TESTS = [   ("disks2mat4patch1proc", "disks2mat4patch.ups", "", 1, "ALL"), \
-	    ("disks2mat4patch4proc", "disks2mat4patch.ups", "", 4, "ALL"), \
+TESTS = [   ("disks2mat4patch4proc", "disks2mat4patch.ups", "", 4, "ALL"), \
 	    ("heatcond2mat", "heatcond2mat.ups", "", 1, "ALL"), \
     	    ("inclined_plane_sphere", "inclined_plane_sphere.ups", "", 1, "ALL"), \
+	    ("foam_crush", "foam_crush.ups", "", 1, "ALL"), \
 	    ("const_test_hypo", "const_test_hypo.ups", "", 1, "Linux"), \
-	    ("const_test_nh", "const_test_nh.ups", "", 1, "Linux"), \
 	    ("const_test_cmr", "const_test_cmr.ups", "", 1, "ALL"), \
 	    ("const_test_nhp", "const_test_nhp.ups", "", 1, "ALL"), \
 	    ("const_test_vs", "const_test_vs.ups", "", 1, "Linux"), \
