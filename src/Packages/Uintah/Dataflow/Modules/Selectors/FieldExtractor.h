@@ -400,16 +400,21 @@ void FieldExtractor::build_field(DataArchive& archive,
        PatchToFieldThread<Var, T> *ptft = 
         scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,//low, hi, 
   					  thread_sema, lock); 
-       ptft->run(); 
-
 //        cerr<<"low = "<<low<<", hi = "<<hi<<", min_i = "<<min_i 
 //  	  <<", max_i = "<<max_i<<endl; 
-  
-//       Thread *thrd = scinew Thread( 
-//         (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,// low, hi,
-// 				      thread_sema, lock)),
-// 	"patch_to_field_worker");
-//       thrd->detach();
+
+#if 1
+       // Non threaded version
+       ptft->run();
+       delete ptft;
+#else
+       // Threaded version
+       Thread *thrd = scinew Thread( 
+        (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,// low, hi,
+                                           thread_sema, lock)),
+	"patch_to_field_worker");
+       thrd->detach();
+#endif
     }
   }
   thread_sema->down(max_workers);
