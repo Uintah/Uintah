@@ -13,9 +13,10 @@ using SCIRun::IntVector;
 
 PersistentTypeID LevelMesh::type_id("LevelMesh", "MeshBase", maker);
 
-LevelMesh::LevelMesh( GridP  g, int level) : grid_(g), level_(level)
+void
+LevelMesh::init()
 {
-  LevelP l = grid_->getLevel( level );
+  LevelP l = grid_->getLevel( level_ );
   
   IntVector low, high;
   
@@ -29,17 +30,15 @@ LevelMesh::LevelMesh( GridP  g, int level) : grid_(g), level_(level)
 
   min_ = grid_->getLevel( level_ )->getNodePosition( low );
   max_ = grid_->getLevel( level_)->getNodePosition( high );
-  
-}
+}  
 
-LevelMesh::LevelIndex::LevelIndex( const LevelMesh *m, unsigned i,
-				   unsigned j, unsigned k) :
-  mesh_(m), i_(i), j_(j), k_(k) 
+LevelMesh::LevelIndex::LevelIndex(const LevelMesh *m, unsigned i,
+				unsigned j, unsigned k ) :
+  mesh_(m), i_(i), j_(j), k_(k)
 {
   LevelP l = mesh_->grid_->getLevel( mesh_->level_ );
   patch_ = l->selectPatch( mesh_->idxLow_ + IntVector(i_,j_,k_));
 }
- 
 
 BBox LevelMesh::get_bounding_box() const
 {
@@ -52,14 +51,30 @@ BBox LevelMesh::get_bounding_box() const
 void 
 LevelMesh::get_nodes(node_array &array, cell_index idx) const
 {
-  array[0].i_ = idx.i_;   array[0].j_ = idx.j_;   array[0].k_ = idx.k_; 
-  array[1].i_ = idx.i_+1; array[1].j_ = idx.j_;   array[1].k_ = idx.k_; 
+  array.resize(8);
+  array[0].i_ = idx.i_; array[0].j_ = idx.j_;  array[0].k_ = idx.k_; 
+  array[0].mesh_ = idx.mesh_;  array[0].patch_ = idx.patch_;
+  array[1].i_ = idx.i_+1; array[1].j_ = idx.j_; array[1].k_ = idx.k_; 
+  array[1].mesh_ = idx.mesh_; array[1].patch_ = idx.patch_;
   array[2].i_ = idx.i_+1; array[2].j_ = idx.j_+1; array[2].k_ = idx.k_; 
-  array[3].i_ = idx.i_;   array[3].j_ = idx.j_+1; array[3].k_ = idx.k_; 
-  array[4].i_ = idx.i_;   array[4].j_ = idx.j_;   array[4].k_ = idx.k_+1;
-  array[5].i_ = idx.i_+1; array[5].j_ = idx.j_;   array[5].k_ = idx.k_+1;
+  array[2].mesh_ = idx.mesh_; array[2].patch_ = idx.patch_;
+  array[3].i_ = idx.i_; array[3].j_ = idx.j_+1; array[3].k_ = idx.k_; 
+  array[3].mesh_ = idx.mesh_; array[3].patch_ = idx.patch_;
+  array[4].i_ = idx.i_; array[4].j_ = idx.j_; array[4].k_ = idx.k_+1;
+  array[4].mesh_ = idx.mesh_; array[4].patch_ = idx.patch_;
+  array[5].i_ = idx.i_+1; array[5].j_ = idx.j_; array[5].k_ = idx.k_+1;
+  array[5].mesh_ = idx.mesh_; array[5].patch_ = idx.patch_;
   array[6].i_ = idx.i_+1; array[6].j_ = idx.j_+1; array[6].k_ = idx.k_+1;
-  array[7].i_ = idx.i_;   array[7].j_ = idx.j_+1; array[7].k_ = idx.k_+1;
+  array[6].mesh_ = idx.mesh_; array[6].patch_ = idx.patch_;
+  array[7].i_ = idx.i_; array[7].j_ = idx.j_+1; array[7].k_ = idx.k_+1;
+  array[7].mesh_ = idx.mesh_; array[7].patch_ = idx.patch_;
+  for(int i = 1; i < 8; i++){
+    IntVector index(array[i].i_, array[i].j_, array[i].k_);
+    if( !(array[i].patch_->containsNode( index ) ) )
+      array[i].patch_ =
+	array[i].mesh_->
+	  grid_->getLevel(array[i].mesh_->level_)->selectPatch( index ); 
+  }
 }
 
 void 
