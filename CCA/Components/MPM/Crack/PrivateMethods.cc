@@ -29,6 +29,14 @@
 #include <iostream>
 #include <fstream>
 
+// The AIX header files have hz defined for some reason
+// and programmers like to use this as a variable name so...
+#if defined( _AIX )
+  #if defined( hz )
+    #undef hz
+  #endif
+#endif
+
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
