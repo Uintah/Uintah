@@ -41,9 +41,6 @@ namespace Uintah {
       enum Type {
 	 CCVariable,
 	 NCVariable,
-	 XFCVariable,
-	 YFCVariable,
-	 ZFCVariable,
 	 SFCXVariable,
 	 SFCYVariable,
 	 SFCZVariable,
@@ -113,6 +110,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.11  2000/12/22 00:10:31  jas
+// Got rid of the X,Y,Z FCVariable and friends.
+//
 // Revision 1.10  2000/11/28 03:47:26  jas
 // Added FCVariables for the specific faces X,Y,and Z.
 //

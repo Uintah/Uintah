@@ -370,47 +370,6 @@ Patch::getNodeIterator(const Box& b) const
    return NodeIterator(low, high);
 }
 
-IntVector Patch::getXFaceHighIndex() const
-{
-  IntVector nodes(getNNodes());
-  IntVector cells(getCellHighIndex() - getCellLowIndex());
-
-  cout << "Nodes = " << nodes << " Cells = " << cells << endl;
-
-  int face_x = nodes.x()*cells.y()*cells.z();
-  int face_y = nodes.y()*cells.x()*cells.z();
-  int face_z = nodes.z()*cells.x()*cells.y();
-
-  return IntVector(nodes.x(),cells.y(),cells.z());
-}
-  
-IntVector Patch::getYFaceHighIndex() const
-{
-  IntVector nodes(getNNodes());
-  IntVector cells(getCellHighIndex() - getCellLowIndex());
-
-  cout << "Nodes = " << nodes << " Cells = " << cells << endl;
-
-  int face_x = nodes.x()*cells.y()*cells.z();
-  int face_y = nodes.y()*cells.x()*cells.z();
-  int face_z = nodes.z()*cells.x()*cells.y();
-
-  return IntVector(nodes.y(),cells.x(),cells.z());
-}
-
-IntVector Patch::getZFaceHighIndex() const
-{
-  IntVector nodes(getNNodes());
-  IntVector cells(getCellHighIndex() - getCellLowIndex());
-
-  cout << "Nodes = " << nodes << " Cells = " << cells << endl;
-
-  int face_x = nodes.x()*cells.y()*cells.z();
-  int face_y = nodes.y()*cells.x()*cells.z();
-  int face_z = nodes.z()*cells.x()*cells.y();
-
-  return IntVector(nodes.z(),cells.x(),cells.y());
-}
 
 IntVector Patch::getSFCXHighIndex() const
 {
@@ -794,15 +753,6 @@ void Patch::computeVariableExtents(TypeDescription::Type basis,
     case TypeDescription::NCVariable:
          translation=NodeBased;
          break;
-    case TypeDescription::XFCVariable:
-         translation=XFaceBased;
-	 break;
-    case TypeDescription::YFCVariable:
-	translation=YFaceBased;
-	break;
-    case TypeDescription::ZFCVariable:
-	translation=ZFaceBased;
-	break;
     case TypeDescription::SFCXVariable:
 	translation=XFaceBased;
 	break;
@@ -827,6 +777,9 @@ void Patch::computeVariableExtents(TypeDescription::Type basis,
 
 //
 // $Log$
+// Revision 1.32  2000/12/22 00:10:30  jas
+// Got rid of the X,Y,Z FCVariable and friends.
+//
 // Revision 1.31  2000/12/10 09:06:17  sparker
 // Merge from csafe_risky1
 //
