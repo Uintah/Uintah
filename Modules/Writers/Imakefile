@@ -1,15 +1,18 @@
 
 #include <config/sci.cf>
 
-OBJS = ContourSetWriter.o   MeshWriter.o   \
+OBJS = ColumnMatrixWriter.o  ContourSetWriter.o   \
+	MatrixWriter.o  MeshWriter.o   \
 	MultiMeshWriter.o   ScalarFieldWriter.o   \
 	SurfaceWriter.o   VectorFieldWriter.o \
 	TetraWriter.o
-GENSRCS = ContourSetWriter.cc  MeshWriter.cc  \
+GENSRCS = ColumnMatrixWriter.cc ContourSetWriter.cc  \
+	MatrixWriter.cc MeshWriter.cc  \
 	MultiMeshWriter.cc  ScalarFieldWriter.cc  \
 	SurfaceWriter.cc  VectorFieldWriter.cc
 SRCS = $(GENSRCS) TetraWriter.cc
-GENTCLS = ContourSetWriter.tcl MeshWriter.tcl \
+GENTCLS = ColumnMatrixWriter.tcl ContourSetWriter.tcl \
+	MatrixWriter.tcl MeshWriter.tcl \
 	MultiMeshWriter.tcl ScalarFieldWriter.tcl \
 	SurfaceWriter.tcl VectorFieldWriter.tcl
 TCLS = $(GENTCLS) TetraWriter.tcl
@@ -29,11 +32,23 @@ SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME), $(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
 AllTarget($(GENTCLS))
 
+ColumnMatrixWriter.cc: Writer.cc
+	sed 's/TYPE/ColumnMatrix/g' < Writer.cc > ColumnMatrixWriter.cc
+
+ColumnMatrixWriter.tcl: Writer.tcl
+	sed 's/TYPE/ColumnMatrix/g' < Writer.tcl > ColumnMatrixWriter.tcl
+
 ContourSetWriter.cc: Writer.cc
 	sed 's/TYPE/ContourSet/g' < Writer.cc > ContourSetWriter.cc
 
 ContourSetWriter.tcl: Writer.tcl
 	sed 's/TYPE/ContourSet/g' < Writer.tcl > ContourSetWriter.tcl
+
+MatrixWriter.cc: Writer.cc
+	sed 's/TYPE/Matrix/g' < Writer.cc > MatrixWriter.cc
+
+MatrixWriter.tcl: Writer.tcl
+	sed 's/TYPE/Matrix/g' < Writer.tcl > MatrixWriter.tcl
 
 MeshWriter.cc: Writer.cc
 	sed 's/TYPE/Mesh/g' < Writer.cc > MeshWriter.cc
