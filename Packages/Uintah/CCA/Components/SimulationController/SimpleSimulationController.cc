@@ -177,7 +177,7 @@ SimpleSimulationController::run()
    
    LoadBalancer* lb = dynamic_cast<LoadBalancer*>
      (dynamic_cast<SchedulerCommon*>(sched)->getPort("load balancer"));
-   lb->problemSetup(ups/*, sharedState*/);
+   lb->problemSetup(ups, sharedState);
 
    // done after the sim->problemSetup to get defaults into the
    // input.xml, which it writes along with index.xml
@@ -191,7 +191,7 @@ SimpleSimulationController::run()
    scheduler->initialize();
    scheduler->advanceDataWarehouse(grid);
    // for dynamic lb's, set up initial patch config
-   //lb->dynamicReallocation(grid, scheduler); 
+   lb->dynamicReallocation(grid, scheduler); 
 
    double t;
 
@@ -490,7 +490,7 @@ SimpleSimulationController::run()
           cout << "COMPILING TASKGRAPH...\n";
         double start = Time::currentSeconds();
         scheduler->initialize();
-        //lb->dynamicReallocation(grid, scheduler); 
+        lb->dynamicReallocation(grid, scheduler); 
         
         sim->scheduleTimeAdvance(level, scheduler, 0, 1);
         
@@ -520,7 +520,7 @@ SimpleSimulationController::run()
 	  scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
 	else
           scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
-          //scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+        //scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
 	  	
 	scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
 
