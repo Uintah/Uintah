@@ -352,51 +352,85 @@ void HashTable<char*, int>::test_rigorous(RigorousTest* __test)
     TEST(table2.lookup("nine",i)&&i==9);
     TEST(table2.lookup("ten",i)&&i==10); 
 
+    TEST(table2.size()!=0);
+    table2.remove_all();
+    TEST(table2.size()==0);
+    
+
     HashTable<int,int> int_table;
     TEST(int_table.size()==0);
     
-    int y;
+    int val1[1001];
+    int size=0;
     for(int x=1;x<=1000;x++){
-	y=x*11;
-	int_table.insert(x,y);
-	TEST(int_table.size()==x);
+	val1[x]=x+11;
+	int_table.insert(x,val1[x]);
+	size=x;
+	TEST(int_table.size()==size);
     }
 
+    int val2[1001];
     for(x=1;x<=1000;x++){
-	i=0;
-	y=x*11;
-	TEST(int_table.lookup(x,i)&&i==y);
-    }
-
-    
-    for(x=1;x<=1000;x++){
-	i=0;
-	TEST(int_table.remove(x)==1);
-	TEST(!int_table.lookup(x,i));
-	TEST(int_table.size()==(1000-x));
-    }
-
-    TEST(int_table.size()==0);
-
-    //Create a hash table containing the ASCII values 97-122 and their
-    //corresponding characters (a-z)
-    
-    HashTable<char,int> char_table;
-
-    y=0;
-    char z=0;
-    for(z=97;z<=122;z++){
-	y=int(z);
-	char_table.insert(z,y);
-	++y;
-	TEST(char_table.size()==y);
+	val2[x]=x+21;
+	int_table.insert(x,val2[x]);
+	size++;
+	TEST(int_table.size()==size);
     }
 	
-    TEST(y==26&&char_table.size()==26);
+   
+
+    for(x=1;x<=1000;x++){
+	int_table.lookup(x,i);
+	TEST((i==val1[x])||(i==val2[x]));
+    }
+
+    TEST(int_table.size()==size);
+
+    for(x=1;x<=1000;x++){
+	TEST(int_table.remove(x)==2);
+	size-=2;
+	TEST(int_table.size()==size);
+    }
+    
+   TEST(int_table.size()==0);
+
+    
+   //Iterator Testing
+
+   HashTable<int,int> table3;
+   TEST(table3.size()==0);
+
+   int y=0;
+   x=0;
+   for(i=1;x<=1000;x++){
+       table3.insert(x,x);
+       TEST((table3.lookup(x,y)&&y==x));
+   }
+
+   HashTableIter<int,int> iter(&table3);
+
+   int count=0;
+   for(iter.first();iter.ok();++iter){
+       TEST(iter.get_key()==iter.get_data());
+       count++;
+   }
+
+   TEST(count==table3.size());
 
 
+   HashTableIter<clString,int> iter2(&table);
 
+   count=0;
+   for (iter2.first();iter2.ok();++iter2)
+   {
+       count++;
+   }
+   
+   TEST(table.size()==count);
+       
 }
+
+
 
 
 
