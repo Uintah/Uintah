@@ -70,9 +70,6 @@ using namespace std;
   // should match the values in the tcl code
 #define NC_VAR 0
 #define CC_VAR 1
-#define XFC_VAR 2
-#define YFC_VAR 3
-#define ZFC_VAR 4
 
 struct ID {
   IntVector id;
@@ -357,36 +354,6 @@ void GridVisualizer::setVars(GridP grid) {
 	add_type(type_list,types[i]->getSubType());
       }
       break;
-    case TypeDescription::XFCVariable:
-      if (var_orientation.get() == XFC_VAR) {
-	varNames += " ";
-	varNames += names[i];
-	ostringstream mat;
-	mat << " " << archive->queryNumMaterials(names[i], patch, time);
-	matls += mat.str();
-	add_type(type_list,types[i]->getSubType());
-      }
-      break;
-    case TypeDescription::YFCVariable:
-      if (var_orientation.get() == YFC_VAR) {
-	varNames += " ";
-	varNames += names[i];
-	ostringstream mat;
-	mat << " " << archive->queryNumMaterials(names[i], patch, time);
-	matls += mat.str();
-	add_type(type_list,types[i]->getSubType());
-      }
-      break;
-    case TypeDescription::ZFCVariable:
-      if (var_orientation.get() == ZFC_VAR) {
-	varNames += " ";
-	varNames += names[i];
-	ostringstream mat;
-	mat << " " << archive->queryNumMaterials(names[i], patch, time);
-	matls += mat.str();
-	add_type(type_list,types[i]->getSubType());
-      }
-      break;
     }
   }
 
@@ -590,16 +557,6 @@ void GridVisualizer::execute()
 	  }
 	}
 	break;
-	
-      case XFC_VAR:
-	// not implemented
-	break;
-      case YFC_VAR:
-	// not implemented
-	break;
-      case ZFC_VAR:
-	// not implemented
-	break;
       }
     }
 
@@ -629,15 +586,6 @@ void GridVisualizer::execute()
       break;
     case CC_VAR:
       //p = patch->cellPosition(currentNode);
-      break;
-    case XFC_VAR:
-      // not implemented
-      break;
-    case YFC_VAR:
-      // not implemented
-      break;
-    case ZFC_VAR:
-      // not implemented
       break;
     }
     //seleted_sphere->move(p);
@@ -941,15 +889,6 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
     case CC_VAR:
       //p = patch->cellPosition(currentNode);
       break;
-    case XFC_VAR:
-      // not implemented
-      break;
-    case YFC_VAR:
-      // not implemented
-      break;
-    case ZFC_VAR:
-      // not implemented
-      break;
     }
     if (!node_selected) {
       selected_sphere = scinew GeomSphere(p,rad,nu,nv,
@@ -971,6 +910,9 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
 
 //
 // $Log$
+// Revision 1.9  2000/12/22 00:15:38  jas
+// Remove X,Y,Z FCVariable and fix some g++ warnings.
+//
 // Revision 1.8  2000/11/28 04:13:31  jas
 // Got rid of compiler warnings and added X,Y,Z FCVariables.
 //
