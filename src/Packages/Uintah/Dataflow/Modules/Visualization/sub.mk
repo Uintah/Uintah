@@ -27,6 +27,7 @@ PSELIBS := \
         Core/Geom \
 	Core/Geometry Dataflow/Widgets Dataflow/XMLUtil \
 	Core/Util \
+	Core/Disclosure \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/CCA/Ports       \
 	Packages/Uintah/Core/ProblemSpec \
