@@ -191,7 +191,7 @@ printf("main = %p\n", main);
     }
     printf("tk, ");
     if (Tk_Init(interp) == TCL_ERROR) {
-      printf("Tk_Init() failed\n");
+      printf("Tk_Init() failed.  Is the DISPLAY environment variable set properly?\n");
 	return TCL_ERROR;
     }
     Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
