@@ -64,6 +64,7 @@ public:
   GuiInt      ni_, nj_, nk_;
   int         data_generation_, points_generation_;
   int         connect_generation_, origfield_generation_;
+  FieldHandle last_field_;
 
   NrrdToField(GuiContext*);
 
@@ -78,25 +79,34 @@ public:
   // valid dataH. The nrrd should be a 1D array of data values
   // when scalar, a 3xn 2D array for vector data, and 6/7/9xn
   // 2D array for tensor data depending on the type of tensor.
+
   // pointsH is a handle to the nrrd containing the points. There
   // must be points for structured or unstructured data. The points
   // nrrd should be a 2D array of nx3 where n is the number of points
   // and 3 is for an x,y,z.
+
   // connectH is a handle to the nrrd of connections. The connections
   // nrrd should be a 2D array of nxp where n is the number of connections
   // and p is the number of points per cell type.
   // permute indicates whether the data should be permuted because it
   // is stored as KxJxI.
+
+  // build_eigens should be set to 1 if the for a field of vectors,
+  // the eigendecomposition should be computed.  if data is scalar
+  // or vector, pass a 0 in.
+
   // For unstructured data with 4 points per cell, there is ambiguity
   // whether or not it is a tet or quad.  Set to "Auto" to try to 
   // determine based on Nrrd properties or "Tet" or "Quad".  If it
   // in unclear and "Auto" has been selected, it will default to "Tet".
+
   // In the case of only points, it must be indicated whether it is
   // a Point Cloud, StructCurve, StructQuad, or StructHex.  For the
   // Quad and Hex, an ni, nj, and nk are needed.  Pass the string 
   // "Auto" to determine based on Nrrd properties, "StructCurve",
   // "StructQuad" or "StructHex".  If "Auto" is selected and it cannot
   // be determined, a PointCloud will be created.
+
   // In the case of having data and points with the points being an nx1
   // nrrd, it is unclear if it should be a PointCloud or StructCurve.  
   // Pass the string "Auto" to determine from the Nrrd Properties, or
@@ -107,9 +117,10 @@ public:
 				      NrrdDataHandle pointsH,
 				      NrrdDataHandle connectH,
 				      FieldHandle    origfieldH,
+				      int build_eigens,
 				      int permute,
-				      string quad_or_tet,
-				      string struct_unstruct,
+				      const string &quad_or_tet,
+				      const string &struct_unstruct,
 				      int ni, int nj, int nk);
   
 };
@@ -126,7 +137,8 @@ NrrdToField::NrrdToField(GuiContext* ctx)
     nj_(ctx->subVar("nj")),
     nk_(ctx->subVar("nk")),
     data_generation_(-1), points_generation_(-1),
-    connect_generation_(-1), origfield_generation_(-1)
+    connect_generation_(-1), origfield_generation_(-1),
+    last_field_(0)
 {
 }
 
@@ -165,8 +177,6 @@ void
     return;
   }
   
-  cerr << "FIX ME : NEED TO CHECK GENERATIONS BEFORE EXECUTING\n";
-
   NrrdDataHandle dataH;
   NrrdDataHandle pointsH;
   NrrdDataHandle connectH;
@@ -182,19 +192,43 @@ void
   if (!ifield_->get(origfieldH))
     origfieldH = 0;
 
-  FieldHandle ofield_handle = create_field_from_nrrds(dataH, pointsH, connectH, origfieldH,
-						      permute_.get(), quad_or_tet_.get(),
-						      struct_unstruct_.get(), ni_.get(),
-						      nj_.get(), nk_.get());
+  bool do_execute = false;
+  // check the generations to see if we need to re-execute
+  if (dataH != 0 && data_generation_ != dataH->generation) {
+    data_generation_ = dataH->generation;
+    do_execute = true;
+  }
+  if (pointsH != 0 && points_generation_ != pointsH->generation) {
+    points_generation_ = pointsH->generation;
+    do_execute = true;
+  }
+  if (connectH != 0 && connect_generation_ != connectH->generation) {
+    connect_generation_ = connectH->generation;
+    do_execute = true;
+  }
+  if (origfieldH != 0 && origfield_generation_ != origfieldH->generation) {
+    origfield_generation_ = origfieldH->generation;
+    do_execute = true;
+  }
 
-  ofield_->send(ofield_handle);  
+  if (do_execute) {
+    last_field_ = create_field_from_nrrds(dataH, pointsH, connectH, origfieldH,
+							build_eigens_.get(), permute_.get(), 
+							quad_or_tet_.get(),
+							struct_unstruct_.get(), ni_.get(),
+							nj_.get(), nk_.get());
+    
+  } 
+  if (last_field_ != 0)
+    ofield_->send(last_field_);  
 }
 
 FieldHandle 
 NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle pointsH,
-				    NrrdDataHandle connectH, FieldHandle origfieldH,
-				    int permute, string quad_or_tet, string struct_unstruct,
-				      int ni, int nj, int nk) {
+				     NrrdDataHandle connectH, FieldHandle origfieldH,
+				     int build_eigens, int permute, const string &quad_or_tet, 
+				     const string &struct_unstruct,
+				     int ni, int nj, int nk) {
 				    
   int connectivity = 0;
   MeshHandle mHandle;
@@ -226,7 +260,6 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
   data_rank = 1;
   if (has_origfield_) {
     // Attempt to use the field provided
-    cerr << "Use Field provided\n";
     
     if (has_data_) {
       // Based on the gui checkbox indicating whether or not
@@ -234,7 +267,6 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
       // the dim accordingly.
       int non_scalar_data = 0;
       if (nrrdKindSize( dataH->nrrd->axis[0].kind ) > 1) {
-	cerr << "Vector/tensor data\n";
 	non_scalar_data = 1;
       }
       
@@ -253,7 +285,6 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 
     mHandle = origfieldH->mesh();
     
-    cerr << "Creating FIELD2\n";
     // Now create field based on the mesh created above and send it
     const TypeDescription *mtd = mHandle->get_type_description();
     
@@ -281,13 +312,17 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
     
     if (!has_data_) 
       dataH = 0;
+
+    if (has_data_ && (nrrdKindSize( dataH->nrrd->axis[0].kind) == 9) && build_eigens) {
+      warning("Attempting to build eigendecomposition of Tensors with non symmetric tensor");
+    }
     
     //if( topology_ & STRUCTURED ) {
     if (idim != 0) { // has been changed 
-      ofield_handle = algo->execute( mHandle, dataH, idim, jdim, kdim, permute);
+      ofield_handle = algo->execute( mHandle, dataH, build_eigens, idim, jdim, kdim, permute);
       
     } else  {
-      ofield_handle = algo->execute( mHandle, dataH );
+      ofield_handle = algo->execute( mHandle, dataH, build_eigens);
     }
     
     return ofield_handle;
@@ -301,7 +336,6 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
   /////////////////// DETERMINE MESH BASED ON INPUTS AND GUI INFO ///////////////////
   int non_scalar_data = 0;
   if (has_data_ && nrrdKindSize( dataH->nrrd->axis[0].kind ) > 1) {
-    cerr << "Vector/tensor data\n";
     non_scalar_data = 1;
   }
   
@@ -318,7 +352,6 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
   // No field given, does it have connections?
   if (has_connect_) {
     if (has_points_) {
-      cerr << "Creating curve, tri, quad/tet, or hex\n";
       Nrrd* connect = connectH->nrrd;
       // Look at connections nrrd's 2nd dimension
       // account for vector/scalar data
@@ -332,7 +365,6 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
       switch (pts) {
       case 2:
 	// 2 -> curve
-	cerr << "\tCurveMesh\n";
 	mHandle = scinew CurveMesh();
 	connectivity = 2;
 	topology_ = STRUCTURED;
@@ -340,7 +372,6 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	break;
       case 3:
 	// 3 -> tri
-	cerr << "\tTriSurfMesh\n";
 	mHandle = scinew TriSurfMesh();
 	connectivity = 3;
 	topology_ = UNSTRUCTURED;
@@ -383,12 +414,10 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	  topology_ = UNSTRUCTURED;
 	}
 	else if (quad_or_tet == "Quad") {
-	  cerr << "\tQuadSurfMesh\n";
 	  mHandle = scinew QuadSurfMesh();
 	  connectivity = 4;
 	  topology_ = UNSTRUCTURED;
 	} else {
-	  cerr << "\tTetVolMesh\n";
 	  mHandle = scinew TetVolMesh();
 	  connectivity = 4;
 	  topology_ = UNSTRUCTURED;
@@ -397,14 +426,12 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	break;
       case 6:
 	// 6 -> prism
-	cerr << "\tPrismVolMesh\n";
 	mHandle = scinew PrismVolMesh();
 	connectivity = 6;
 	topology_ = UNSTRUCTURED;
 	break;
       case 8:
 	// 8 -> hex
-	cerr << "\tHexVolMesh\n";
 	mHandle = scinew HexVolMesh();
 	connectivity = 8;
 	  topology_ = UNSTRUCTURED;
@@ -441,10 +468,8 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
     if (has_data_) {
       // does it have a point set
       if (has_points_) {
-	cerr << "Creating point cloud, structcurve, structquad, or structhex\n";
 	int offset = 0;
 	if (nrrdKindSize(dataH->nrrd->axis[0].kind) > 1) {
-	  cerr << "Vector/Tensor data\n";
 	  offset = 1;
 	}
 	Nrrd* data = dataH->nrrd;
@@ -452,12 +477,10 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	if (dim == 1) {
 	  // data 1D ask if point cloud or structcurvemesh
 	  if (struct_unstruct == "PointCloud") {
-	    cerr << "\tPoint Cloud\n";
 	    mHandle = scinew PointCloudMesh();
 	    connectivity = 0;
 	    topology_ = UNSTRUCTURED;
 	  } else if (struct_unstruct == "StructCurve") {
-	    cerr << "\tStructCurveMesh\n";
 	    topology_ = STRUCTURED;
 	    geometry_ = IRREGULAR;
 	    if (offset)
@@ -468,12 +491,10 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	    // search properties if auto to figure out
 	    if( pointsH->get_property( "Topology", property ) ) {
 	      if( property.find( "Unstructured" ) != string::npos ) {
-		cerr << "\tPoint Cloud\n";
 		mHandle = scinew PointCloudMesh();
 		connectivity = 0;
 		topology_ = UNSTRUCTURED;	      
 	      } else {
-		cerr << "\tStructCurveMesh\n";
 		topology_ = STRUCTURED;
 		geometry_ = IRREGULAR;
 		if (offset) {
@@ -487,12 +508,10 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	      }
 	    } else if (dataH->get_property( "Topology", property )) {
 	      if( property.find( "Unstructured" ) != string::npos ) {
-		cerr << "\tPoint Cloud\n";
 		mHandle = scinew PointCloudMesh();
 		connectivity = 0;
 		topology_ = UNSTRUCTURED;	      
 	      } else {
-		cerr << "\tStructCurveMesh\n";
 		topology_ = STRUCTURED;
 		geometry_ = IRREGULAR;
 		if (offset) {
@@ -506,12 +525,10 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	      }	      
 	    } else if (has_connect_ && connectH->get_property( "Topology", property)) {
 	      if( property.find( "Unstructured" ) != string::npos ) {
-		cerr << "\tPoint Cloud\n";
 		mHandle = scinew PointCloudMesh();
 		connectivity = 0;
 		topology_ = UNSTRUCTURED;	      
 	      } else {
-		cerr << "\tStructCurveMesh\n";
 		topology_ = STRUCTURED;
 		geometry_ = IRREGULAR;
 		if (offset) {
@@ -530,40 +547,22 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	    }
 	  } 
 	} else if (dim == 2) {
-	  cerr << "\tStructQuadSurf\n";
 	  topology_ = STRUCTURED;
 	  geometry_ = IRREGULAR;
 	  // data 2D -> structquad
-	  if (offset) {
-	    cerr << "FIX ME : INCORPORATE THE ni, nj, nk FROM UI\n";
-	    mHandle = scinew StructQuadSurfMesh(data->axis[1].size, data->axis[2].size);
-	    idim = data->axis[1].size;
-	    jdim = data->axis[2].size;
-	  }
-	  else {
-	    mHandle = scinew StructQuadSurfMesh(data->axis[0].size, data->axis[1].size);
-	    idim = data->axis[0].size;
-	    jdim = data->axis[1].size;
-	  }
+	  mHandle = scinew StructQuadSurfMesh(ni,nj);
+	  idim = ni;
+	  jdim = nj;
 	} else if (dim == 3) {
-	  cerr << "\tStructHexVol\n";
 	  topology_ = STRUCTURED;
 	  geometry_ = IRREGULAR;
 	  // data 3D -> structhexvol
-	  if (offset) {
-	    mHandle = scinew StructHexVolMesh(data->axis[1].size, data->axis[2].size, data->axis[3].size);
-	    idim = data->axis[1].size;
-	    jdim = data->axis[2].size;
-	    kdim = data->axis[3].size;
-	  }
-	  else {
-	    mHandle = scinew StructHexVolMesh(data->axis[0].size, data->axis[1].size, data->axis[2].size);
-	    idim = data->axis[0].size;
-	    jdim = data->axis[1].size;
-	    kdim = data->axis[2].size;
-	  }
+	  mHandle = scinew StructHexVolMesh( ni, nj, nk);
+	  idim = ni;
+	  jdim = nj;
+	  kdim = nk;
 	} else {
-	  cerr << "Incorrect dimensions for Data Nrrd\n";
+	  error("Incorrect dimensions for Data Nrrd");
 	  return 0;
 	}
 
@@ -588,10 +587,8 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	
 	algo_mesh->execute(mHandle, pointsH, idim, jdim, kdim );
       } else {
-	cerr << "Creating scanline, image, or latvol\n";
 	int non_scalar_data = 0;
 	if (has_data_ && nrrdKindSize(dataH->nrrd->axis[0].kind) > 1) {
-	  cerr << "Vector/tensor data\n";
 	  non_scalar_data = 1;
 	}
 	int dim = dataH->nrrd->dim;
@@ -633,7 +630,6 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	case 1:
 	  {
 	    //get data from x axis and stuff into a Scanline
-	    cerr << "\tCreating a ScanlineField from input nrrd";
 	    topology_ = STRUCTURED;
 	    geometry_ = REGULAR;
 	    if (offset && data->dim == 2) {
@@ -652,7 +648,6 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	case 2:
 	  {
 	    //get data from x,y axes and stuff into an Image
-	    cerr << "\tCreating a ImageField from input nrrd";
 	    topology_ = STRUCTURED;
 	    geometry_ = REGULAR;
 	    if (offset && data->dim == 3) {
@@ -677,7 +672,6 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	case 3:
 	  {
 	    //get data from x,y,z axes and stuff into a LatVol
-	    cerr << "\tCreating a LatVolField from input nrrd";
 	    topology_ = STRUCTURED;
 	    geometry_ = REGULAR;
 	    if (offset && data->dim == 4) {
@@ -704,39 +698,13 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	  }
 	  break;
 	default:
-	  error("Cannot convert > 3 dimesional data to a SCIRun Field. If first dimension is vector or tensor data, please indicate on NrrdToField UI.");
+	  error("Cannot convert > 3 dimesional data to a SCIRun Field. If first dimension is vector/tensor data, make sure the nrrdKind is set for that axis.");
 	  return 0;
 	}
-
-// 	cerr << "Creating the mesh...\n";
-// 	// create the mesh
-// 	const TypeDescription *mtd = mHandle->get_type_description();
-// 	int data_size = 1; // scalar
-// 	if (offset) 
-// 	  data_size = data->axis[0].size;
-
-	
-// 	remark( "Creating a structured " + mtd->get_name() );
-	
-// 	CompileInfoHandle ci_mesh =
-// 	  NrrdFieldConverterMeshAlgo::get_compile_info( "Regular",
-// 							mtd,
-// 							data->type,
-// 							data->type);
-// 	cerr << "Done with compileinfohandle\n";
-	
-// 	Handle<RegularNrrdFieldConverterMeshAlgo> algo_mesh;
-	
-// 	if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return;
-// 	cerr << "Done dynamically compiling\n";
-	
-	// algo_mesh->execute(mHandle, dataH, data_size);
-	
       }
     } else {
       // does it have points?
       if (has_points_) {
-	cerr << "Creating point cloud, structcurve, structquad, structhex\n";
 	// ask if point cloud, structcurve, structquad, structhex
 	// in the case of structquad, need ni and nj
 	// in the case of structhex, need ni, nj, and nk
@@ -744,16 +712,13 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	Nrrd* points = pointsH->nrrd;
 	int offset = 0;
 	if (has_data_ && nrrdKindSize(dataH->nrrd->axis[0].kind) > 1) {
-	  cerr << "Vector/Tensor data\n";
 	  offset = 1;
 	}
 	string which = struct_unstruct;
 	if (which == "PointCloud") {
-	  cerr << "\tPoint Cloud\n";
 	  mHandle = scinew PointCloudMesh();
 	    topology_ = UNSTRUCTURED;
 	} else if (which == "StructCurve") {
-	  cerr << "\tStruct Curve\n";
 	  topology_ = STRUCTURED;
 	  geometry_ = IRREGULAR;
 	  if (offset) {
@@ -762,7 +727,6 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	    mHandle = scinew StructCurveMesh( points->axis[0].size );
 	  }
 	} else if (which == "StructQuad") {
-	  cerr << "\tStruct Quad\n";
 	  topology_ = STRUCTURED;
 	  geometry_ = IRREGULAR;
 	  if (offset) {
@@ -771,7 +735,6 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	    mHandle = scinew StructQuadSurfMesh( points->axis[0].size, points->axis[1].size );
 	  }
 	} else if (which == "StructHex") {
-	  cerr << "\tStruct Hex\n";
 	  topology_ = STRUCTURED;
 	  geometry_ = IRREGULAR;
 	  if (offset) {
@@ -783,23 +746,61 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	  // Try to figure out based on properties
 	  if (pointsH->get_property( "Topology" , property)) {
 	    if( property.find( "Unstructured" ) != string::npos ) {
-	      cerr << "\tPoint Cloud\n";
 	      topology_ = UNSTRUCTURED;
 	      mHandle = scinew PointCloudMesh();
 	    } else {
-	      cerr << "FIX ME : NOT SURE THIS IS CORRECT\n";
+	      if ( property.find( "Structured" ) != string::npos ) {
+		topology_ = STRUCTURED;
+		geometry_ = IRREGULAR;
+		if (pointsH->get_property( "Cell Type", property)) { 
+		  if ( property.find( "Curve") != string::npos ) {
+		    // Struct Curve
+		    if (offset) {
+		      mHandle = scinew StructCurveMesh( points->axis[1].size );
+		    } else {
+		      mHandle = scinew StructCurveMesh( points->axis[0].size );
+		    }
+		  } else if ( property.find( "Quad") != string::npos ) {
+		    // Struct Quad
+		    if (offset) {
+		      mHandle = scinew StructQuadSurfMesh( points->axis[1].size, 
+							   points->axis[2].size );
+		    } else {
+		      mHandle = scinew StructQuadSurfMesh( points->axis[0].size, 
+							   points->axis[1].size );
+		    }
+		  } else if ( property.find( "Hex") != string::npos ) {
+		    // Struct Hex Vol
+		    if (offset) {
+		      mHandle = scinew StructHexVolMesh( points->axis[1].size, 
+							 points->axis[2].size, 
+							 points->axis[3].size );
+		    } else {
+		      mHandle = scinew StructHexVolMesh( points->axis[0].size, 
+							 points->axis[1].size, 
+							 points->axis[2].size );
+		    }
+		  }
+		} else {
+		  // Struct Curve Mesh
+		  if (offset) {
+		    mHandle = scinew StructCurveMesh( points->axis[1].size );
+		  } else {
+		    mHandle = scinew StructCurveMesh( points->axis[0].size );
+		  }
+		}
+	      }
 	    }
 	  }
 	}
       } else {
 	// no data given
-	error("Not enough information given to create a Field.");
+	//error("Not enough information given to create a Field.");
 	return 0;
       }
     }
   }
   
-  cerr << "Creating FIELD\n";
   // Now create field based on the mesh created above and send it
   const TypeDescription *mtd = mHandle->get_type_description();
   
@@ -811,16 +812,6 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
   
   CompileInfoHandle ci;
   
-  // if (non_scalar_data_.get() && has_data_) {
-  //if (dataH->nrrd->axis[0].size == 3) {
-  //data_rank = 3;
-  //} else if (dataH->nrrd->axis[0].size >= 6) {
-  //data_rank = dataH->nrrd->axis[1].size;
-  //} else {
-  //return;
-  //}
-  //}
-  cerr << "Data rank: " << data_rank << "\n";
   if (has_data_) {
     ci = NrrdFieldConverterFieldAlgo::get_compile_info(mtd,
 						       fname,
@@ -839,14 +830,17 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
   
   if (!module_dynamic_compile(ci, algo)) return 0;
   
-  
+  if (has_data_ && (nrrdKindSize( dataH->nrrd->axis[0].kind) == 9) && build_eigens) {
+    warning("Attempting to build eigendecomposition of Tensors with non symmetric tensor");
+  }
+
   //if( topology_ & STRUCTURED ) {
   //if (idim != 0) { // has been changed 
   if (topology_ == STRUCTURED && geometry_ == IRREGULAR) {
-    ofield_handle = algo->execute( mHandle, dataH, idim, jdim, kdim, permute);
+    ofield_handle = algo->execute( mHandle, dataH, build_eigens, idim, jdim, kdim, permute);
     
   } else  {
-    ofield_handle = algo->execute( mHandle, dataH );
+    ofield_handle = algo->execute( mHandle, dataH, build_eigens);
   }
   
   return ofield_handle;  
