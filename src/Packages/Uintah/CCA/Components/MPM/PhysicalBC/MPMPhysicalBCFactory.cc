@@ -28,3 +28,9 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps)
    }
 }
 
+void MPMPhysicalBCFactory::clean()
+{
+  for (int i = 0; i < mpmPhysicalBCs.size(); i++)
+    delete mpmPhysicalBCs[i];
+  mpmPhysicalBCs.clear();
+}
