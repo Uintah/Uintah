@@ -122,8 +122,8 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
       constNCVariable<double> phi;
       old_dw->get(phi, lb_->phi, matl, patch, Ghost::None, 0);
       NCVariable<double> newphi;
+      subsched->get_new_dw()->allocateAndPut(newphi, lb_->phi, matl, patch);
       newphi.copyData(phi);
-      subsched->get_new_dw()->put(newphi, lb_->phi, matl, patch);
     }
   }
   subsched->advanceDataWarehouse(grid);
@@ -160,8 +160,8 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
       // DW has been advanced, so it is old now
       subsched->get_old_dw()->get(phi, lb_->phi, matl, patch, Ghost::None, 0);
       NCVariable<double> newphi;
+      new_dw->allocateAndPut(newphi, lb_->phi, matl, patch);
       newphi.copyData(phi);
-      new_dw->put(newphi, lb_->phi, matl, patch);
     }
   }
   cerr << "Poisson2 time advance done!\n";
