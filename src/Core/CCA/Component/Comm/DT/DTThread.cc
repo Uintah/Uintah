@@ -41,6 +41,7 @@ DTThread::DTThread(DataTransmitter *dt, int id){
 void 
 DTThread::run()
 {
+  
   switch(id){
   case 0:
     dt->runListeningThread();
