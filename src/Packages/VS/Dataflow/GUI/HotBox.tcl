@@ -71,6 +71,7 @@ itcl_class VS_DataFlow_HotBox {
     global $this-adjacencydatasource
     global $this-boundingboxdatasource
     global $this-injurylistdatasource
+    global $this-oqafmadatasource
     global $this-geometrypath
     global $this-querytype
     # The Probe Widget UI
@@ -144,6 +145,7 @@ itcl_class VS_DataFlow_HotBox {
     set $this-adjacencydatasource ""
     set $this-boundingboxdatasource ""
     set $this-injurylistdatasource ""
+    set $this-oqafmadatasource ""
     set $this-geometrypath ""
     set $this-querytype "2"
     set $this-gui_probeLocx "0"
@@ -227,7 +229,7 @@ itcl_class VS_DataFlow_HotBox {
     set $this-geometrypath [ tk_chooseDirectory \
         -title $title \
         -initialdir $initdir ]
-    if { [set  $this-injurylistdatasource] != "" } {
+    if { [set  $this-geometrypath] != "" } {
          $this-c needexecute
        }
     }
@@ -366,11 +368,15 @@ itcl_class VS_DataFlow_HotBox {
     button  $w.files.row4.browsebutton -text "Browse..." -command "$this launch_filebrowser injurylist"
 
     frame $w.files.row5
-    label $w.files.row5.gepmpathlabel -text "Geometry Directory: "
+    label $w.files.row5.geompathlabel -text "Geometry Directory: "
     entry $w.files.row5.dirnamentry -textvar $this-geometrypath -width 50
     button  $w.files.row5.browsebutton -text "Browse..." -command "$this launch_filebrowser geometry"
 
-    pack $w.files.row1 $w.files.row2 $w.files.row3 $w.files.row4 $w.files.row5 -side top -anchor w
+    frame $w.files.row6
+    label $w.files.row6.oqafmaURIlabel -text "OQAFMA URL: "
+    entry $w.files.row6.oqafmaURIentry -textvar $this-oqafmadatasource -width 50
+
+    pack $w.files.row1 $w.files.row2 $w.files.row3 $w.files.row4 $w.files.row5 $w.files.row6 -side top -anchor w
     pack $w.files.row1.anatomylabel $w.files.row1.filenamentry\
 	$w.files.row1.browsebutton\
         -side left -anchor n -expand yes -fill x
@@ -383,9 +389,11 @@ itcl_class VS_DataFlow_HotBox {
     pack $w.files.row4.injurylistlabel $w.files.row4.filenamentry\
 	$w.files.row4.browsebutton\
         -side left -anchor n -expand yes -fill x
-    pack $w.files.row5.gepmpathlabel $w.files.row5.dirnamentry\
+    pack $w.files.row5.geompathlabel $w.files.row5.dirnamentry\
         $w.files.row5.browsebutton\
         -side left -anchor n -expand yes -fill x
+    pack $w.files.row6.oqafmaURIlabel $w.files.row6.oqafmaURIentry\
+	-side left -anchor n -expand yes -fill x
     }
     # end if { [set $this-Files_on] == "yes" }
 
