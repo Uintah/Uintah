@@ -10,22 +10,23 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-//#include <Packages/FieldConverters/Datatypes/ScalarFieldRG.h>
-//#include <Core/Datatypes/LatticeVol.h>
+#include <FieldConverters/Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Persistent/Pstreams.h>
 
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
-#include <stdio.h>
 
 using std::cerr;
 using std::ifstream;
 using std::endl;
 
-//using namespace SCIRun;
-//using namespace FieldConverters;
+using namespace SCIRun;
+using namespace FieldConverters;
 
-main(int argc, char **argv) {
+int main(int argc, char **argv) {
 #if 0
   ScalarFieldHandle handle;
   
