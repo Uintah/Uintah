@@ -90,19 +90,11 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
     }
 
     // Set each field's velocity equal to the velocity of material 0
-    if(!compare(gmass[1][*iter],0.0)){
-      centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
+    if(!compare(gmass[0][*iter],0.0)){
       for(int n = 1; n < numMatls; n++){
-       if(!compare(gvelocity[n][*iter].x(),centerOfMassVelocity.x()) ||
-	  !compare(gvelocity[n][*iter].y(),centerOfMassVelocity.y()) ||	
-	  !compare(gvelocity[n][*iter].z(),centerOfMassVelocity.z()) ){	
-//           cout << "gvn = " << gvelocity[n][*iter] << " " << n << endl;
-//           cout << "cmv = " << centerOfMassVelocity << endl;
-//           cout << "gmass = " << gmass[n][*iter] << " " << n << endl;
-//           cout << "cmmmm = " << centerOfMassMass << endl;
-	    gvelocity[n][*iter] = gvelocity[0][*iter];
+	    gvelocity[n][*iter].z( gvelocity[0][*iter].z() );
 	}
-      }
+      
     }
   }
 
@@ -122,7 +114,7 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
   Vector zero(0.0,0.0,0.0);
   Vector centerOfMassVelocity(0.0,0.0,0.0);
   Vector centerOfMassMom(0.0,0.0,0.0);
-  Vector Dvdt;
+  Vector Dvdt(0.0,0.0,0.0);
   double centerOfMassMass;
 
   int numMatls = d_sharedState->getNumMPMMatls();
@@ -154,18 +146,13 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
 
     // Set each field's velocity equal to the center of mass velocity
     // and adjust the acceleration of each field to account for this
-    if(!compare(gmass[1][*iter],0.0)){  // Non-rigid matl
-      centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
+    if(!compare(gmass[0][*iter],0.0)){  // Non-rigid matl
       for(int  n = 1; n < numMatls; n++){
-       if(!compare(gvelocity_star[n][*iter].x(),centerOfMassVelocity.x()) ||
-	  !compare(gvelocity_star[n][*iter].y(),centerOfMassVelocity.y()) ||	
-	  !compare(gvelocity_star[n][*iter].z(),centerOfMassVelocity.z()) ){
-//           cout << "vstarn =  " << gvelocity_star[n][*iter] << endl;
-//           cout << "cmvstar = " << centerOfMassVelocity << endl;
-	    Dvdt = -(gvelocity_star[n][*iter] - gvelocity_star[0][*iter])/delT;
-	    gvelocity_star[n][*iter] = gvelocity_star[0][*iter];
-	    gacceleration[n][*iter]+=Dvdt;
-       }
+	Dvdt.z( -(gvelocity_star[n][*iter].z() 
+		 - gvelocity_star[0][*iter].z())/delT);
+	gvelocity_star[n][*iter].z( gvelocity_star[0][*iter].z() );
+	gacceleration[n][*iter]+=Dvdt;
+       
       }
     }
   }
@@ -211,6 +198,12 @@ void RigidBodyContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.2  2001/01/15 23:44:06  bard
+// Modified algorithm to only enforce rigid contact in z-direction.
+//
+// Generalized algorithm to handle multiple non rigid bodies (all
+// materials with indices > 0).  Material 0 is the rigid one.
+//
 // Revision 1.1  2001/01/11 03:31:31  guilkey
 // Created new contact model for rigid bodies.
 //
