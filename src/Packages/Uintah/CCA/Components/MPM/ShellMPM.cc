@@ -120,6 +120,8 @@ ShellMPM::schedInterpolateParticleRotToGrid(SchedulerP& sched,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    //cerr << "Material = " << m << " numMatls = " << numMatls 
+    //	 << " mpm_matl = " << mpm_matl << " Cm = " << cm  << endl;
     ShellMaterial* smcm = dynamic_cast<ShellMaterial*>(cm);
     if (smcm) smcm->addComputesRequiresParticleRotToGrid(t, mpm_matl, patches);
   }

@@ -76,8 +76,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 	if (type == "Symmetric")
 	  if (vel_bcs != 0) {
 	    if (face == Patch::xplus || face == Patch::xminus)
-	      for (b=nbound.begin(); b != nbound.end();b++)
+	      for (b=nbound.begin(); b != nbound.end();b++) {
 		variable[*b] = Vector(0.,variable[*b].y(), variable[*b].z());
+	      }
               if(n8or27==27){
 	        for (b=nbound.begin(); b != nbound.end();b++){
                   variable[*b+oneCell] = Vector(0.,variable[*b+oneCell].y(),
