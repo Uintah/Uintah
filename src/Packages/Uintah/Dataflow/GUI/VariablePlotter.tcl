@@ -448,12 +448,16 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	    }
 	}
 	
-	if { ($max - $min) > 1000 || ($max - $min) < 1e-3 } {
-	    $w.graph yaxis configure -logscale true -title $var
-	} else {
-	    $w.graph yaxis configure -title $var
-	}
-	
+#==========TESTING==========*/
+#	if { ($max - $min) > 1000 || ($max - $min) < 1e-3 } {
+#	    $w.graph yaxis configure -logscale true -title $var
+#	} else {
+#	    $w.graph yaxis configure -title $var
+#	}
+
+      $w.graph yaxis configure -title $var 
+#==========TESTING==========`*/	
+
 	$w.graph xaxis configure -title "Timestep" -loose true
 	
 	set vvlist_length [llength $var_val_list]
