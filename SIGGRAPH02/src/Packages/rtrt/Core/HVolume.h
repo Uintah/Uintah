@@ -37,6 +37,9 @@ struct VMCell {
 template<class T, class A, class B>
 class HVolume : public VolumeBase {
 protected:
+  inline int bound(const int val, const int min, const int max) {
+    return (val>min?(val<max?val:max):min);
+  }
 public:
   Point min;
   Vector datadiag;
@@ -86,6 +89,10 @@ public:
   virtual void compute_hist(int nhist, int* hist,
 			    float datamin, float datamax);
   virtual void get_minmax(float& min, float& max);
+
+  virtual void print(ostream& out);
+  virtual bool interior_value( double& /*value*/, const Ray &/*ray*/,
+			       const double /*t*/);
 };
   
 
@@ -1028,12 +1035,15 @@ void HVolume<T,A,B>::intersect(Ray& ray, HitInfo& hit,
   Vector cellcorner((orig-min)*ihierdiag*cellsize);
   Vector celldir(dir*ihierdiag*cellsize);
   float isoval=dpy->isoval;
+  //cerr << "isoval = "<<isoval<<" ";
   
   isect(depth-1, isoval, t, dtdx, dtdy, dtdz, next_x, next_y, next_z,
 	ix, iy, iz, dix_dx, diy_dy, diz_dz,
 	0, 0, 0,
 	cellcorner, celldir,
-	ray, hit, st, ppc);    
+	ray, hit, st, ppc);
+  //  if (hit.was_hit && hit.hit_obj == this)
+  //    cerr << name_ << " was hit."<<endl;
 }
 
 template<class T, class A, class B>
@@ -1139,6 +1149,91 @@ void HVolume<T,A,B>::get_minmax(float& min, float& max)
 {
   min=datamin;
   max=datamax;
+}
+
+template<class T, class A, class B>
+void HVolume<T,A,B>::print(ostream& out) {
+  out << "name_ = "<<name_<<endl;
+  out << "min = "<<min<<endl;
+  out << "datadiag = "<<datadiag<<", hierdiag = "<<hierdiag<<", ihierdiag = "<<ihierdiag<<", sdiag = "<<sdiag<<endl;
+  out << "dim = ("<<nx<<", "<<ny<<", "<<nz<<")\n";
+  out << "indata.get_datasize() = "<<indata.get_datasize()<<endl;
+  out << "blockdata.get_datasize() = "<<blockdata.get_datasize()<<endl;
+  out << "datamin = "<<datamin<<", datamax = "<<datamax<<endl;
+  out << "depth = "<<depth<<endl;
+}
+
+template<class T, class A, class B>
+bool HVolume<T,A,B>::interior_value( double& value, const Ray &ray,
+				     const double t) {
+  // Get the location of the point
+  Point p = ray.eval(t);
+
+  ////////////////////////////////////////////////////////////
+  // Check bounds and return false if the point is outside
+
+  if (p.x() < min.x() || p.y() < min.y() || p.z() < min.z())
+    return false;
+  Vector max(min+datadiag);
+  if (p.x() > max.x() || p.y() > max.y() || p.z() > max.z())
+    return false;
+  
+  ////////////////////////////////////////////////////////////
+  // interpolate the point
+
+  p = p - min.vector();
+  // get the indices and weights for the indicies
+  //  float norm = p.x() * inv_diag.x();
+  //  float step = norm * (nx - 1);
+  float step = p.x() / sdiag.x();
+  int x_low = bound((int)step, 0, blockdata.dim1()-2);
+  //  int x_low = (int)step;
+  //  if (x_low > blockdata.dim1()-2) x_low = blockdata.dim1()-2;
+  int x_high = x_low+1;
+  float x_weight_low = x_high - step;
+  
+  //  norm = p.y() * inv_diag.y();
+  //  step = norm * (ny - 1);
+  step = p.y() / sdiag.y();
+  int y_low = bound((int)step, 0, blockdata.dim2()-2);
+  //  int y_low = (int)step;
+  //  if (y_low > blockdata.dim1()-2) y_low = blockdata.dim2()-2;
+  int y_high = y_low+1;
+  float y_weight_low = y_high - step;
+  
+  //  norm = p.z() * inv_diag.z();
+  //  step = norm * (nz - 1);
+  step = p.z() / sdiag.z();
+  int z_low = bound((int)step, 0, blockdata.dim3()-2);
+  //  int z_low = (int)step;
+  //  if (z_low > blockdata.dim3()-2) z_low = blockdata.dim3()-2;
+  int z_high = z_low+1;
+  float z_weight_low = z_high - step;
+  
+  ////////////////////////////////////////////////////////////
+  // do the interpolation
+  
+  float a,b,c,d,e,f,g,h;
+  a = blockdata(x_low,  y_low,  z_low);
+  b = blockdata(x_low,  y_low,  z_high);
+  c = blockdata(x_low,  y_high, z_low);
+  d = blockdata(x_low,  y_high, z_high);
+  e = blockdata(x_high, y_low,  z_low);
+  f = blockdata(x_high, y_low,  z_high);
+  g = blockdata(x_high, y_high, z_low);
+  h = blockdata(x_high, y_high, z_high);
+  
+  float lz1, lz2, lz3, lz4, ly1, ly2;
+  lz1 = a * z_weight_low + b * (1 - z_weight_low);
+  lz2 = c * z_weight_low + d * (1 - z_weight_low);
+  lz3 = e * z_weight_low + f * (1 - z_weight_low);
+  lz4 = g * z_weight_low + h * (1 - z_weight_low);
+  
+  ly1 = lz1 * y_weight_low + lz2 * (1 - y_weight_low);
+  ly2 = lz3 * y_weight_low + lz4 * (1 - y_weight_low);
+  
+  value = ly1 * x_weight_low + ly2 * (1 - x_weight_low);
+  return true;
 }
 
 } // end namespace rtrt
