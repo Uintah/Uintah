@@ -13,6 +13,8 @@
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
 #include <Packages/Uintah/Core/Grid/ParticleData.h>
 #include <Packages/Uintah/Core/Grid/ParticleSubset.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
@@ -106,21 +108,35 @@ public:
     ASSERTRANGE(idx, 0, (particleIndex)d_pdata->data.size());
     return d_pdata->data[idx];
   }
-      
+
   virtual void copyPointer(ParticleVariable<T>&);
   virtual void copyPointer(ParticleVariableBase&);
   virtual void allocate(ParticleSubset*);
   virtual void allocate(const Patch*)
   { throw InternalError("Should not call ParticleVariable<T>::allocate(const Patch*), use allocate(ParticleSubset*) instead."); }
+
+  // specialized for T=Point
+  virtual void gather(ParticleSubset* dest,
+		      std::vector<ParticleSubset*> subsets,
+		      std::vector<ParticleVariableBase*> srcs,
+		      const std::vector<const Patch*>& /*srcPatches*/,
+		      particleIndex extra = 0)
+  { gather(dest, subsets, srcs, extra); }
   
   virtual void gather(ParticleSubset* dest,
 		      std::vector<ParticleSubset*> subsets,
 		      std::vector<ParticleVariableBase*> srcs,
 		      particleIndex extra = 0);
+  
   virtual void unpackMPI(void* buf, int bufsize, int* bufpos,
 			 const ProcessorGroup* pg, ParticleSubset* pset);
   virtual void packMPI(void* buf, int bufsize, int* bufpos,
 		       const ProcessorGroup* pg, ParticleSubset* pset);
+  // specialized for T=Point
+  virtual void packMPI(void* buf, int bufsize, int* bufpos,
+		       const ProcessorGroup* pg, ParticleSubset* pset,
+		       const Patch* /*forPatch*/)
+  { packMPI(buf, bufsize, bufpos, pg, pset); }
   virtual void packsizeMPI(int* bufpos,
 			   const ProcessorGroup* pg,
 			   ParticleSubset* pset);
@@ -151,6 +167,7 @@ private:
     //////////
     // Insert Documentation Here:
   ParticleData<T>* d_pdata;
+  Vector offset_; // only used when T is Point
 
   static const ParticleVariable<T>& castFromBase(const ParticleVariableBase* srcptr);
   static TypeDescription::Register registerMe;
@@ -324,6 +341,15 @@ private:
     }
     ASSERT(dstiter+extra == pset->end());
   }
+
+  // specialization for T=Point
+  template <>
+  void ParticleVariable<Point>::gather(ParticleSubset* pset,
+				       vector<ParticleSubset*> subsets,
+				       vector<ParticleVariableBase*> srcs,
+				       const vector<const Patch*>& srcPatches,
+				       particleIndex extra);
+
   
   template<class T>
   void*
@@ -377,6 +403,14 @@ private:
       throw InternalError("packMPI not finished\n");
     }
   }
+
+  // specialized for T=Point
+  template<>
+  void
+  ParticleVariable<Point>::packMPI(void* buf, int bufsize, int* bufpos,
+				   const ProcessorGroup* pg,
+				   ParticleSubset* pset,
+				   const Patch* forPatch);
 
   template<class T>
   void

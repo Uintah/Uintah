@@ -73,12 +73,20 @@ WARNING
 			  std::vector<ParticleSubset*> subsets,
 			  std::vector<ParticleVariableBase*> srcs,
 			  particleIndex extra = 0) = 0;
+      virtual void gather(ParticleSubset* dest,
+			  std::vector<ParticleSubset*> subsets,
+			  std::vector<ParticleVariableBase*> srcs,
+			  const std::vector<const Patch*>& srcPatches,
+			  particleIndex extra = 0) = 0;
       virtual void unpackMPI(void* buf, int bufsize, int* bufpos,
 			     const ProcessorGroup* pg,
 			     ParticleSubset* pset) = 0;
       virtual void packMPI(void* buf, int bufsize, int* bufpos,
 			   const ProcessorGroup* pg,
 			   ParticleSubset* pset) = 0;
+      virtual void packMPI(void* buf, int bufsize, int* bufpos,
+			   const ProcessorGroup* pg,
+			   ParticleSubset* pset, const Patch* forPatch) = 0;
       virtual void packsizeMPI(int* bufpos,
 			       const ProcessorGroup* pg,
 			       ParticleSubset* pset) = 0;
