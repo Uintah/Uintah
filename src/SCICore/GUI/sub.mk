@@ -10,7 +10,7 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 $(SRCDIR)/tclIndex: $(SRCDIR)/BaseDial.tcl $(SRCDIR)/ColorPicker.tcl \
 	$(SRCDIR)/DebugSettings.tcl $(SRCDIR)/Dial.tcl \
 	$(SRCDIR)/Dialbox.tcl $(SRCDIR)/Doublefile.tcl \
-	$(SRCDIR)/Filebox.tcl $(SRCDIR)/HelpPage.tcl \
+	$(SRCDIR)/Filebox.tcl $(SRCDIR)/HelpPage.tcl $(SRCDIR)/BioPSEFilebox.tcl\
 	$(SRCDIR)/Histogram.tcl $(SRCDIR)/MaterialEditor.tcl \
 	$(SRCDIR)/MemStats.tcl $(SRCDIR)/PointVector.tcl \
 	$(SRCDIR)/ThreadStats.tcl $(SRCDIR)/Util.tcl \
@@ -21,6 +21,9 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.3  2000/10/20 05:27:43  samsonov
+# Initial commit: new file dialog
+#
 # Revision 1.2  2000/03/20 19:37:38  sparker
 # Added VPATH support
 #
