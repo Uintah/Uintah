@@ -402,11 +402,34 @@ void ViewWindow::mouse_dolly(int action, int x, int y, int, int, int)
 	  Max(current_renderer->xres, current_renderer->yres);
 	dolly_throttle=1;
       }
+
       last_x=x;
       last_y=y;
-      total_dolly=0;
+
+      View tmpview(view.get());
+      float curpt[2];
+      NormalizeMouseXY(x, y, &curpt[0], &curpt[1]);
+      dolly_vector = tmpview.lookat() - tmpview.eyep();
+
+      // if the user clicked near the center of the screen, just move
+      //   towards the lookat point, since read the z-values is sorta slow
+      if (fabs(curpt[0])>.2 || fabs(curpt[1])>.2) {
+
+	// gather the buffer's z-values
+	extern int CAPTURE_Z_DATA_HACK;
+	CAPTURE_Z_DATA_HACK = 1;
+	redraw();
+
+	Point pick_pt;
+	if (current_renderer->pick_scene(x, y, &pick_pt)) {
+	  dolly_vector = pick_pt - tmpview.eyep();
+	}
+      }
+
+      dolly_vector.normalize();
+      dolly_total=0;
       char str[100];
-      sprintf(str, "dolly: %.3g (th=%.3g)", total_dolly,
+      sprintf(str, "dolly: %.3g (th=%.3g)", dolly_total,
 	      dolly_throttle);
       update_mode_string(str);
     }
@@ -425,17 +448,15 @@ void ViewWindow::mouse_dolly(int action, int x, int y, int, int, int)
 	dolly_throttle *= scl;
       } else {
 	dly=-ymtn*(dolly_throttle*dolly_throttle_scale);
-	total_dolly+=dly;
+	dolly_total+=dly;
 	View tmpview(view.get());
-	Vector dolly(tmpview.lookat()-tmpview.eyep());
-	dolly*=dly;
-	tmpview.lookat(tmpview.lookat()+dolly);
-	tmpview.eyep(tmpview.eyep()+dolly);
+	tmpview.lookat(tmpview.lookat()+dolly_vector*dly);
+	tmpview.eyep(tmpview.eyep()+dolly_vector*dly);
 	view.set(tmpview);
 	need_redraw=1;
       }
       char str[100];
-      sprintf(str, "dolly: %.3g (th=%.3g)", total_dolly, 
+      sprintf(str, "dolly: %.3g (th=%.3g)", dolly_total, 
 	      dolly_throttle);
       update_mode_string(str);
     }

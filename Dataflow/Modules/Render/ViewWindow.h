@@ -165,9 +165,6 @@ public:
   Transform prev_trans;
   double eye_dist;
   double total_scale;
-  double total_dolly;
-  double dolly_throttle;
-  double dolly_throttle_scale;
   int prev_time[3];		// history for quaternions and time
   HVect prev_quat[3];
   
@@ -176,6 +173,12 @@ public:
   int curFrame;
   clString curName;
   
+  // variables for dollying into / out-of the scene
+  double dolly_total;
+  Vector dolly_vector;
+  double dolly_throttle;
+  double dolly_throttle_scale;
+
   void LoadTexture1D(TexStruct1D*);
   void LoadTexture2D(TexStruct2D*);
   void LoadTexture3D(TexStruct3D*);
