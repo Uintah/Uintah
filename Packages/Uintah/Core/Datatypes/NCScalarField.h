@@ -1,22 +1,24 @@
 #ifndef SCI_project_NCScalarField_h
 #define SCI_project_NCScalarField_h 1
 
-#include <Core/Datatypes/ScalarFieldRGBase.h>
 #include <Packages/Uintah/Grid/NCVariable.h>
 #include <Packages/Uintah/Grid/Grid.h>
 #include <Packages/Uintah/Grid/GridP.h>
 #include <Packages/Uintah/Grid/Level.h>
 #include <Packages/Uintah/Grid/LevelP.h>
 #include <Packages/Uintah/Grid/Patch.h>
-#include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Grid/NodeIterator.h>
+
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
+
 #include <values.h>
 #include <vector>
 
 namespace Uintah {
+
 using namespace SCIRun;
-using namespace Uintah;
 using std::vector;
 
 template <class T>

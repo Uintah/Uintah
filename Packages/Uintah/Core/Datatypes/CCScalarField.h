@@ -2,19 +2,21 @@
 #define SCI_project_CCScalarField_h 1
 
 //#include "Packages/UintahScalarField.h"
-#include <Core/Datatypes/ScalarFieldRGBase.h>
 #include <Packages/Uintah/Grid/CCVariable.h>
 #include <Packages/Uintah/Grid/GridP.h>
 #include <Packages/Uintah/Grid/LevelP.h>
 #include <Packages/Uintah/Grid/CellIterator.h>
+
+#include <Core/Datatypes/ScalarFieldRGBase.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
+
 #include <values.h>
 #include <vector>
 
 namespace Uintah {
+
 using namespace SCIRun;
-using namespace Uintah;
 using std::vector;
 
 template <class T>
@@ -343,6 +345,5 @@ Vector CCScalarField<T>::gradient(const Point& p)
 }  
 
 } // End namespace Uintah
-
 
 #endif

@@ -1,5 +1,3 @@
-
-
 /*
  *  ParameterNotFound.h: 
  *
@@ -12,13 +10,15 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef Packages/Uintah_Exceptions_ParameterNotFound_h
-#define Packages/Uintah_Exceptions_ParameterNotFound_h
+#ifndef UINTAH_EXCEPTIONS_PARAMETERNOTFOUND_H
+#define UINTAH_EXCEPTIONS_PARAMETERNOTFOUND_H
 
 #include <Packages/Uintah/Exceptions/ProblemSetupException.h>
 #include <string>
 
 namespace Uintah {
+
+   class ParameterNotFound : public ProblemSetupException {
    public:
       ParameterNotFound(const std::string&);
       ParameterNotFound(const ParameterNotFound&);
@@ -27,8 +27,9 @@ namespace Uintah {
    protected:
    private:
       ParameterNotFound& operator=(const ParameterNotFound&);
-} // End namespace Uintah
    };
+
+} // End namespace Uintah
 
 #endif
 

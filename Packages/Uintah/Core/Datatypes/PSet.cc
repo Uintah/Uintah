@@ -1,14 +1,15 @@
-#include "PSet.h"
-#include <Core/Util/NotFinished.h>
-#include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/Datatypes/PSet.h>
 #include <Packages/Uintah/Grid/Level.h>
 #include <Packages/Uintah/Grid/LevelP.h>
 #include <Packages/Uintah/Grid/GridP.h>
 #include <Packages/Uintah/Grid/Grid.h>
+
+#include <Core/Util/NotFinished.h>
+#include <Core/Malloc/Allocator.h>
+
 using std::vector;
 namespace Uintah {
 
-using Uintah::ParticleVariable;
 using namespace SCIRun;
 
 static Persistent* maker()
@@ -87,6 +88,4 @@ void PSet::compute_bounds()
   bmax = max;
 }
 
-
 } // End namespace Uintah
-

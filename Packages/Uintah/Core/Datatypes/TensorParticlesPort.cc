@@ -4,8 +4,6 @@
 #include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
-using namespace Uintah::Datatypes;
-
 
 extern "C" {
 UINTAHSHARE IPort* make_TensorParticlesIPort(Module* module,

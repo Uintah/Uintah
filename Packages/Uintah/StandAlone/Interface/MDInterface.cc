@@ -1,5 +1,5 @@
 
-#include "MDInterface.h"
+#include <Packages/Uintah/Interface/MDInterface.h>
 
 using namespace Uintah;
 

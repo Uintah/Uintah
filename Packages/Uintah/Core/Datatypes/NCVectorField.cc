@@ -1,12 +1,13 @@
-#include <Core/Geometry/Vector.h>
-#include <Core/Math/MinMax.h>
+#include <Packages/Uintah/Core/Datatypes/NCVectorField.h>
 #include <Packages/Uintah/Grid/Level.h>
 #include <Packages/Uintah/Grid/LevelP.h>
 #include <Packages/Uintah/Grid/Handle.h>
 #include <Packages/Uintah/Grid/Grid.h>
-#include "NCVectorField.h"
-using std::vector;
 
+#include <Core/Geometry/Vector.h>
+#include <Core/Math/MinMax.h>
+
+using std::vector;
 
 namespace Uintah {
 
@@ -142,4 +143,4 @@ using namespace SCIRun;
 }
 
 } // End namespace Uintah
-  
+

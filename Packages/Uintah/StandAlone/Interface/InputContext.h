@@ -45,9 +45,7 @@ namespace Uintah {
       InputContext(const InputContext&);
       InputContext& operator=(const InputContext&);
       
-} // End namespace Uintah
    };
-
+} // End namespace Uintah
 
 #endif
-

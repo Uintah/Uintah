@@ -52,9 +52,7 @@ namespace Uintah {
       OutputContext(const OutputContext&);
       OutputContext& operator=(const OutputContext&);
       
-} // End namespace Uintah
    };
-
+} // End namespace Uintah
 
 #endif
-

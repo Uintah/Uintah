@@ -1,5 +1,5 @@
 
-#include "MPMInterface.h"
+#include <Packages/Uintah/Interface/MPMInterface.h>
 
 using namespace Uintah;
 
