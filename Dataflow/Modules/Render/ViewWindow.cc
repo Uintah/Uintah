@@ -53,6 +53,7 @@
 #include <Core/Geom/GeomCone.h>      
 #include <Core/Geom/GeomCylinder.h>  
 #include <Core/Geom/GeomGroup.h>     
+#include <Core/Geom/GeomSticky.h>     
 #include <Core/Geom/Material.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
@@ -139,7 +140,7 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
   viewwindow_objs_draw.push_back(true);              
 
   // 1 - Unicam control sphere, not visible by default.
-  focus_sphere      = scinew GeomSphere;
+  focus_sphere = scinew GeomSphere;
   Color c(0.0, 0.0, 1.0);
   MaterialHandle focus_color = scinew Material(c);
   viewwindow_objs.push_back(scinew GeomMaterial(focus_sphere, focus_color));
@@ -265,8 +266,8 @@ void ViewWindow::get_bounds(BBox& bbox)
   // XXX - START - ASF ADDED FOR UNICAM
   //   cerr << "viewwindow_objs.size() = " << viewwindow_objs.size() << "\n";
   //int objs_size = viewwindow_objs.size();
-  int draw_size = viewwindow_objs_draw.size();
-  for(int i=0;i<viewwindow_objs.size();i++) {
+  unsigned int draw_size = viewwindow_objs_draw.size();
+  for(unsigned int i=0;i<viewwindow_objs.size();i++) {
     
     if (i<draw_size && viewwindow_objs_draw[i])
       viewwindow_objs[i]->get_bounds(bbox);
@@ -2216,7 +2217,8 @@ void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
 
   // now run through the transparent objects...
 
-  for(i=0;i<(int)transp_objs.size();i++) {
+  for(i=0;i<transp_objs.size();i++)
+  {
     GeomViewerItem *si = transp_objs[i];    
 
     if(si->crowd_lock_)
