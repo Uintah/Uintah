@@ -738,10 +738,13 @@ proc popupLoadMenu {} {
 proc ClearCanvas {} {
     # destroy all modules
     global modules
-    foreach m $modules {
-	moduleDestroy .bot.neteditFrame.canvas .top.globalViewFrame.canvas $m
+    if { [info exists modules] } {
+	foreach m $modules {
+	    moduleDestroy .bot.neteditFrame.canvas \
+		    .top.globalViewFrame.canvas $m
+	}
     }
-    
+
     # reset all the NetworkEditor globals to their initial values
     set mainCanvasWidth    4500.0
     set mainCanvasHeight   4500.0
@@ -797,7 +800,6 @@ proc ClearCanvas {} {
     
     global modules
     set modules ""
-
 }
 
 
