@@ -193,7 +193,7 @@ void MDSPlusDataReader::execute(){
       for( int phi=0; phi<nPhi-1; phi++ ) {
 	node = phi;
 
-	slm->set_point( node, Point(phi,phi,phi) );
+	slm->set_point(  Point(phi,phi,phi), node );
 	pField->set_value(phi_data[phi], node);
       }
     }
