@@ -5,6 +5,7 @@ SRCDIR := Packages/Uintah/CCA/Components
 SUBDIRS := \
 	$(SRCDIR)/DataArchiver \
 	$(SRCDIR)/Examples \
+	$(SRCDIR)/Models \
 	$(SRCDIR)/Schedulers \
 	$(SRCDIR)/SimulationController \
 	$(SRCDIR)/MPM \
@@ -22,4 +23,3 @@ SUBDIRS := \
 	$(SRCDIR)/Solvers
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
-
