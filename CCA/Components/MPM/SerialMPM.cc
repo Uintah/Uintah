@@ -743,6 +743,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
           pmom = pvelocity[idx]*pmass[idx];
           total_mom += pvelocity[idx]*pmass[idx];
+	  pexternalheatrate[idx] = 0.0;
 
 	  // Add each particles contribution to the local mass & velocity 
 	  // Must use the node indices
