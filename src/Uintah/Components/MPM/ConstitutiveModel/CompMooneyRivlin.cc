@@ -421,6 +421,7 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
 
   //time step requirement
 
+  /*
   double delT_new = 1.0e12;
 
   ParticleVariable<double> pMass;
@@ -440,6 +441,7 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   }
 
   new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+  */
 }
 
 void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
@@ -461,7 +463,6 @@ void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
 			Ghost::AroundCells, 1 );
   task->requires(new_dw, lb->pCrackNormalLabel_preReloc, idx, patch,
 			Ghost::AroundCells, 1 );
-  task->requires(new_dw, lb->delTLabel );
   task->requires(new_dw, lb->pMassLabel_preReloc, idx, patch, Ghost::None);
 		  
   task->computes(new_dw, lb->pCrackSurfaceContactForceLabel_preReloc, idx, patch );
@@ -497,6 +498,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.80  2001/01/17 18:51:47  tan
+// Comment out the computations of delT in fracture.
+//
 // Revision 1.79  2001/01/15 22:44:44  tan
 // Fixed parallel version of fracture code.
 //

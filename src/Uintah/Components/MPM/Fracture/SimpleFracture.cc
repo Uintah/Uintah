@@ -274,9 +274,16 @@ stressRelease(const Patch* patch,
     else pCrackNormal_new[pIdx] = -N;
   }
 
+  /*
+  double delT_new = delT;
+  new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+  */
+
   new_dw->put(pCrackNormal_new, lb->pCrackNormalLabel_preReloc);
   new_dw->put(pIsBroken_new, lb->pIsBrokenLabel_preReloc);
 
+  new_dw->put(pStress, lb->pStressAfterFractureReleaseLabel);
+  new_dw->put(pVelocity, lb->pVelocityAfterFractureLabel);
 }
 
 SimpleFracture::
@@ -289,6 +296,9 @@ SimpleFracture(ProblemSpecP& ps)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.9  2001/01/17 18:51:49  tan
+// Comment out the computations of delT in fracture.
+//
 // Revision 1.8  2001/01/15 22:44:46  tan
 // Fixed parallel version of fracture code.
 //

@@ -799,6 +799,8 @@ void SerialMPM::scheduleStressRelease(const Patch* patch,
 			    patch, old_dw, new_dw,
 			    this,&SerialMPM::stressRelease);
 
+  t->requires(old_dw, d_sharedState->get_delt_label() );
+
   for(int m = 0; m < numMatls; m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     int idx = mpm_matl->getDWIndex();
@@ -824,9 +826,11 @@ void SerialMPM::scheduleStressRelease(const Patch* patch,
       t->computes( new_dw, lb->pVelocityAfterFractureLabel,       idx, patch);
       t->computes( new_dw, lb->pIsBrokenLabel_preReloc,           idx, patch);
       t->computes( new_dw, lb->pCrackNormalLabel_preReloc,        idx, patch);
+
+      //t->computes( new_dw, d_sharedState->get_delt_label() );
     }
   }
-  t->computes(new_dw, d_sharedState->get_delt_label() );
+
   sched->addTask(t);
 }
 
@@ -845,6 +849,9 @@ void SerialMPM::scheduleComputeCrackSurfaceContactForce(const Patch* patch,
 	    "SerialMPM::computeCrackSurfaceContactForce",
 	    patch, old_dw, new_dw,
 	    this,&SerialMPM::computeCrackSurfaceContactForce);
+
+  t->requires(old_dw, d_sharedState->get_delt_label() );
+
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     if(mpm_matl->getFractureModel()) {
@@ -853,7 +860,7 @@ void SerialMPM::scheduleComputeCrackSurfaceContactForce(const Patch* patch,
 					(t,mpm_matl, patch,old_dw,new_dw);
     }
   }
-  t->computes(new_dw, d_sharedState->get_delt_label() );
+  //t->computes(new_dw, d_sharedState->get_delt_label() );
   sched->addTask(t);
 }
 
@@ -2182,6 +2189,9 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.185  2001/01/17 18:51:40  tan
+// Comment out the computations of delT in fracture.
+//
 // Revision 1.184  2001/01/16 23:58:58  guilkey
 // Added "computes" to scheduleInitialze.
 //
