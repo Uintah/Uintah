@@ -53,7 +53,7 @@ while [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; do
 	echo ""
 	echo "Showing make errors:"
 	# show the compile errors (just the stuff it can't compile)
-	nice /usr/local/gnu/bin/make -k -j$MAKE_PARALLELISM
+	nice gmake -k -j$MAKE_PARALLELISM
 	echo ""
 
 	# failed make, set a lock for this build
