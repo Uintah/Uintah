@@ -16,8 +16,7 @@ INCLUDES += $(MDSPLUS_INCLUDE)
 
 SRCS     += \
 	$(SRCDIR)/FusionFieldReader.cc\
-	$(SRCDIR)/MDSPlusFieldReader.cc\
-	$(SRCDIR)/MDSPlusDataReader.cc\
+	$(SRCDIR)/MDSPlusFieldReader.cc
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
