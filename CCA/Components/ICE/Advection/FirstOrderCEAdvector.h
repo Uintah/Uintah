@@ -35,22 +35,33 @@ namespace Uintah {
                                  DataWarehouse* new_dw);
                                  
     virtual void  advectQ(const CCVariable<double>& q_CC,
-                             const Patch* patch,
-                             CCVariable<double>& q_advected,
-                             SFCXVariable<double>& q_XFC,
-                             SFCYVariable<double>& q_YFC,
-                             SFCZVariable<double>& q_ZFC,
-				 DataWarehouse* /*new_dw*/);
+                          const Patch* patch,
+                          CCVariable<double>& q_advected,
+                          SFCXVariable<double>& q_XFC,
+                          SFCYVariable<double>& q_YFC,
+                          SFCZVariable<double>& q_ZFC,
+			     DataWarehouse* /*new_dw*/);
 
-    virtual void advectQ(const CCVariable<double>& q_CC,
-                      const Patch* patch,
-                      CCVariable<double>& q_advected,
-			 DataWarehouse* new_dw);
+    virtual void advectQ(const bool useCompatibleFluxes,
+                         const bool is_Q_massSpecific,
+                         const CCVariable<double>& q_CC,
+                         const CCVariable<double>& mass,
+                         const Patch* patch,
+                         CCVariable<double>& q_advected,
+                         DataWarehouse* new_dw);
     
-    virtual void advectQ(const CCVariable<Vector>& q_CC,
-                      const Patch* patch,
-                      CCVariable<Vector>& q_advected,
-			 DataWarehouse* new_dw);
+    virtual void advectQ(const bool useCompatibleFluxes,
+                         const bool is_Q_massSpecific,
+                         const CCVariable<Vector>& q_CC,
+                         const CCVariable<double>& mass,
+                         const Patch* patch,
+                         CCVariable<Vector>& q_advected,
+                         DataWarehouse* new_dw); 
+                         
+    virtual void advectMass(const CCVariable<double>& mass,
+                            const Patch* patch,
+                            CCVariable<double>& q_advected,
+			       DataWarehouse* new_dw);
 
 
   private:

@@ -147,57 +147,77 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   }
 }
 
-/* ---------------------------------------------------------------------
+/*_____________________________________________________________________
  Function~ advectQ
 _____________________________________________________________________*/
-//     D O U B L E
-void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
-                             const Patch* patch,
-                             CCVariable<double>& q_advected,
-				 DataWarehouse* /*new_dw*/)
+//     M A S S
+void FirstOrderAdvector::advectMass(const CCVariable<double>& q_CC,
+                                    const Patch* patch,
+                                    CCVariable<double>& q_advected,
+			               DataWarehouse* /*new_dw*/)
 {
         
   advectSlabs<double>(q_CC,patch,q_advected, 
                       d_notUsedX, d_notUsedY, d_notUsedZ, 
                       ignoreFaceFluxesD());
 }
+
+//__________________________________
+//     D O U B L E
+void FirstOrderAdvector::advectQ(const bool /*useCompatibleFluxes*/,
+                                 const bool /*is_Q_massSpecific*/,
+                                 const CCVariable<double>& q_CC,
+                                 const CCVariable<double>& /*mass*/,
+                                 const Patch* patch,
+                                 CCVariable<double>& q_advected,
+                                 DataWarehouse* /*new_dw*/)
+{
+        
+  advectSlabs<double>(q_CC,patch,q_advected, 
+                      d_notUsedX, d_notUsedY, d_notUsedZ, 
+                      ignoreFaceFluxesD());
+}
+
 //__________________________________
 //  S P E C I A L I Z E D   D O U B L E 
 //  needed by implicit ICE
 void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
-                             const Patch* patch,
-                             CCVariable<double>& q_advected,
-                             SFCXVariable<double>& q_XFC,
-                             SFCYVariable<double>& q_YFC,
-                             SFCZVariable<double>& q_ZFC,
-				 DataWarehouse* /*new_dw*/)
+                                 const Patch* patch,
+                                 CCVariable<double>& q_advected,
+                                 SFCXVariable<double>& q_XFC,
+                                 SFCYVariable<double>& q_YFC,
+                                 SFCZVariable<double>& q_ZFC,
+				     DataWarehouse* /*new_dw*/)
 {
   advectSlabs<double>(q_CC,patch,q_advected,  
                       q_XFC, q_YFC, q_ZFC, saveFaceFluxes());
 }
 //__________________________________
 //     V E C T O R
-void FirstOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
-                             const Patch* patch,
-                             CCVariable<Vector>& q_advected,
-				 DataWarehouse* /*new_dw*/)
+void FirstOrderAdvector::advectQ(const bool /*useCompatibleFluxes*/,
+                                 const bool /*is_Q_massSpecific*/,
+                                 const CCVariable<Vector>& q_CC,
+                                 const CCVariable<double>& /*mass*/,
+                                 const Patch* patch,
+                                 CCVariable<Vector>& q_advected,
+                                 DataWarehouse* /*new_dw*/)
 {
   advectSlabs<Vector>(q_CC,patch,q_advected, 
                       d_notUsedX, d_notUsedY, d_notUsedZ, 
                       ignoreFaceFluxesV());
 } 
 
-/* ---------------------------------------------------------------------
+/*_____________________________________________________________________
  Function~  Advect--  driver program that does the advection  
 _____________________________________________________________________*/
 template <class T, typename F> 
   void FirstOrderAdvector::advectSlabs(const CCVariable<T>& q_CC,
-                                  const Patch* patch,                   
-                                  CCVariable<T>& q_advected,
-                                  SFCXVariable<double>& q_XFC,
-                                  SFCYVariable<double>& q_YFC,
-                                  SFCZVariable<double>& q_ZFC,
-                                  F save_q_FC) // function is passed in
+                                       const Patch* patch,                   
+                                       CCVariable<T>& q_advected,
+                                       SFCXVariable<double>& q_XFC,
+                                       SFCYVariable<double>& q_YFC,
+                                       SFCZVariable<double>& q_ZFC,
+                                       F save_q_FC) // function is passed in
 {                                
                                   //  W A R N I N G
   Vector dx = patch->dCell();    // assumes equal cell spacing             
