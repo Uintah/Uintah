@@ -19,6 +19,8 @@
 #define NEXUS_SP_CHANNEL_H
 
 #include <Core/CCA/Component/Comm/SpChannel.h>
+#include <stdio.h>
+#undef IOV_MAX
 #include <globus_nexus.h>
 #include <string>
 
