@@ -72,11 +72,11 @@ itcl_class Uintah_Visualization_NodeHedgehog {
 	make_labeled_radio $w.f1.type "NodeHedgehog type:" $n \
 		top $this-type \
 		{2D 3D}
-	pack $w.f1.type -side left -padx 5 -anchor w
+	pack $w.f1.type -side left -padx 2 -anchor w
 	
 	make_labeled_radio $w.f1.shaft "Shaft style:" $n \
 		top $this-drawcylinders { {Lines 0} {Cylinders 1} }
-	pack $w.f1.shaft -side left -padx 5 -anchor w
+	pack $w.f1.shaft -side left -padx 2 -anchor w
 
 	frame $w.f1.b
 	pack $w.f1.b -side right -fill x -padx 2 -pady 2
@@ -95,6 +95,10 @@ itcl_class Uintah_Visualization_NodeHedgehog {
 
 	frame $w.f2.var
 	pack $w.f2.var -side left -anchor w -pady 2 -ipadx 3
+
+	checkbutton $w.f2.var.normhead -text "Uniform Headsize" -command $n \
+		-variable $this-norm_head
+	pack $w.f2.var.normhead -side left -anchor w -pady 2 -ipadx 3
 
 	make_entry $w.f2.var.skip "Node Skip:" $this-skip_node $n
 	pack $w.f2.var.skip -side left -padx 5 -pady 2 -anchor w -fill x
