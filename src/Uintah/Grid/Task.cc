@@ -157,7 +157,7 @@ void
 Task::doit(const ProcessorGroup* pc)
 {
   if( d_completed )
-      throw InternalError("Task performed, but already completed");
+      throw InternalError("Task doit() called, but has already completed");
   if(d_action)
      d_action->doit(pc, d_patch, d_fromDW, d_toDW);
   d_completed=true;
@@ -191,14 +191,31 @@ Task::getRequires() const
 void
 Task::display( ostream & out ) const
 {
-  out << d_taskName << " (" << d_tasktype << "): ";
+  out << d_taskName << " (" << d_tasktype << "): [Own: " << d_resourceIndex
+      << ", ";
   if( d_patch != 0 ){
-    out << "[Patch: " << d_patch->getID() << ", DW: " << d_fromDW->getID()
+    out << "P: " << d_patch->getID()
+	<< ", DW: " << d_fromDW->getID()
 	<< ", " << d_toDW->getID() << ", ";
   } else {
     out << "(No Patch), ";
   }
-  if( d_completed ){ out << "Completed]"; } else { out << "Not Completed]"; }
+  if( d_completed ){ out << "Completed, "; } else { out << "Pending, "; }
+  out << "(R: " << d_reqs.size() << ", C: " << d_comps.size() << ")]";
+}
+
+ostream &
+operator << ( ostream & out, const Uintah::Task::Dependency & dep )
+{
+  out << "[" << *(dep.d_var) << " Patch: ";
+  if( dep.d_patch ){
+    out << dep.d_patch->getID();
+  } else {
+    out << "none";
+  }
+  out << " MI: " << dep.d_matlIndex << " DW: " << dep.d_dw->getID() << " SN: " 
+      << dep.d_serialNumber << "]";
+  return out;
 }
 
 void
@@ -206,11 +223,10 @@ Task::displayAll(ostream& out) const
 {
    display(out);
    out << '\n';
-   out << "Dependency information: \n";
    for(int i=0;i<d_reqs.size();i++)
-      out << "requires " << *d_reqs[i] << '\n';
+      out << "requires: " << *d_reqs[i] << '\n';
    for(int i=0;i<d_comps.size();i++)
-      out << "computes " << *d_comps[i] << '\n';
+      out << "computes: " << *d_comps[i] << '\n';
 }
 
 ostream &
@@ -218,16 +234,6 @@ operator << (ostream &out, const Task & task)
 {
   task.display( out );
   return out;
-}
-
-ostream&
-operator << (ostream& out, const Task::Dependency& dep)
-{
-   out << "[dep: var=" << dep.d_var->getName();
-   if(dep.d_patch)
-      out << ", patch=" << dep.d_patch->getID();
-   out << ", matl=" << dep.d_matlIndex << ", dw=" << dep.d_dw->getID() << " ]";
-   return out;
 }
 
 ostream &
@@ -252,6 +258,9 @@ operator << (ostream &out, const Task::TaskType & tt)
 
 //
 // $Log$
+// Revision 1.23  2000/09/26 21:38:36  dav
+// minor updates
+//
 // Revision 1.22  2000/09/25 17:30:07  sparker
 // Use correct patch for computes
 //
