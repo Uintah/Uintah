@@ -33,6 +33,8 @@
 #include <Packages/Uintah/Core/Grid/VelocityBoundCond.h>
 #include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/DensityBoundCond.h>
+#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 
 using std::vector;
 using std::max;
@@ -160,7 +162,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& grid,
   cerr << "Pulled out Time block of the input file" << endl;
 
   // Pull out Initial Conditions
-  ProblemSpecP mat_ps       =  prob_spec->findBlock("InitialConditions");
+  ProblemSpecP mat_ps       =  prob_spec->findBlock("MaterialProperties");
   ProblemSpecP ice_mat_ps   = mat_ps->findBlock("ICE");  
 
   for (ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != 0;
@@ -363,19 +365,34 @@ void ICE::scheduleComputeFaceCenteredVelocities(
 			   &ICE::computeFaceCenteredVelocities);
 
   task->requires(new_dw,lb->press_equil_CCLabel,0,patch,Ghost::None);
-
-  int numMatls=d_sharedState->getNumICEMatls();
-  for (int m = 0; m < numMatls; m++)  {
+  //__________________________________
+  //     I C E
+  for (int m = 0; m < d_sharedState->getNumICEMatls(); m++)  {
     ICEMaterial* matl = d_sharedState->getICEMaterial(m);
     int dwindex = matl->getDWIndex();
     task->requires(old_dw,lb->rho_CCLabel,   dwindex,patch,Ghost::None);
     task->requires(old_dw,lb->vel_CCLabel,   dwindex,patch,Ghost::None);
     task->requires(new_dw,lb->rho_micro_CCLabel,
-		                               dwindex,patch,Ghost::None);
+                                             dwindex,patch,Ghost::None);
+
     task->computes(new_dw,lb->uvel_FCLabel,  dwindex, patch);
     task->computes(new_dw,lb->vvel_FCLabel,  dwindex, patch);
     task->computes(new_dw,lb->wvel_FCLabel,  dwindex, patch);
   }
+  //__________________________________
+  //     M P M
+  for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++)  {
+    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
+    int dwindex = matl->getDWIndex();
+    task->requires(new_dw,lb->rho_CCLabel,   dwindex,patch,Ghost::None);
+    task->requires(new_dw,lb->vel_CCLabel,   dwindex,patch,Ghost::None);
+    task->requires(new_dw,lb->rho_micro_CCLabel,
+                                             dwindex,patch,Ghost::None);
+
+    task->computes(new_dw,lb->uvel_FCLabel,  dwindex, patch);
+    task->computes(new_dw,lb->vvel_FCLabel,  dwindex, patch);
+    task->computes(new_dw,lb->wvel_FCLabel,  dwindex, patch);
+  }  
   sched->addTask(task);
 }
 
@@ -391,10 +408,10 @@ void ICE::scheduleAddExchangeContributionToFCVel(
   Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
                         patch, old_dw, new_dw,this,
 			   &ICE::addExchangeContributionToFCVel);
-  int numMatls=d_sharedState->getNumICEMatls();
+  int numMatls=d_sharedState->getNumMatls();
   
   for (int m = 0; m < numMatls; m++) {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    Material* matl = d_sharedState->getICEMaterial(m);
     int dwindex = matl->getDWIndex();
     task->requires(new_dw,lb->rho_micro_CCLabel,
 		                                  dwindex,patch,Ghost::None);
@@ -423,9 +440,9 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(
 			   &ICE::computeDelPressAndUpdatePressCC);
   
   task->requires(new_dw,lb->press_equil_CCLabel, 0,patch,Ghost::None);
-  int numMatls=d_sharedState->getNumICEMatls();
+  int numMatls=d_sharedState->getNumMatls();
   for (int m = 0; m < numMatls; m++)  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    Material* matl = d_sharedState->getMaterial(m);
     int dwindex = matl->getDWIndex();
     task->requires( new_dw, lb->vol_frac_CCLabel,  dwindex,patch,Ghost::None);
     task->requires( new_dw, lb->uvel_FCMELabel,    dwindex,patch,Ghost::None);
@@ -446,25 +463,30 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(
 _____________________________________________________________________*/
 void ICE::scheduleComputePressFC(const Patch* patch, SchedulerP& sched,
 			DataWarehouseP& old_dw, DataWarehouseP& new_dw)
-{
+{                     
   Task* task = scinew Task("ICE::computePressFC",patch, old_dw, new_dw,this,
-			   &ICE::computePressFC);
-  
+                           &ICE::computePressFC);
+
   task->requires(   new_dw,lb->press_CCLabel, 0,      patch,  Ghost::None);
-  int numMatls = d_sharedState->getNumICEMatls();
-  for (int m = 0; m < numMatls; m++)  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+  for (int m = 0; m < d_sharedState->getNumMatls(); m++)  {
+    Material* matl = d_sharedState->getMaterial(m);
     int dwindex = matl->getDWIndex();
-    task->requires( old_dw, lb->rho_CCLabel,    dwindex, patch, Ghost::None);
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(ice_matl){
+      task->requires(old_dw,lb->rho_CCLabel,   dwindex,patch,Ghost::None);
+    }
+    if(mpm_matl){
+      task->requires(new_dw,lb->rho_CCLabel,   dwindex,patch,Ghost::None);
+    }
   }
-  
+
   task->computes(   new_dw, lb->pressX_FCLabel, 0,      patch);
   task->computes(   new_dw, lb->pressY_FCLabel, 0,      patch);
   task->computes(   new_dw, lb->pressZ_FCLabel, 0,      patch);
-  
+
   sched->addTask(task);
 }
-
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleAccumulateMomentumSourceSinks--
  Purpose~   Schedule compute sources and sinks of momentum
@@ -483,7 +505,7 @@ void ICE::scheduleAccumulateMomentumSourceSinks(
   int numMatls=d_sharedState->getNumICEMatls();
   
   for (int m = 0; m < numMatls; m++) {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    Material* matl = d_sharedState->getMaterial(m);
     int dwindex = matl->getDWIndex();
     task->requires(old_dw,  lb->rho_CCLabel,        dwindex,patch,Ghost::None);
     task->requires(old_dw,  lb->vel_CCLabel,        dwindex,patch,Ghost::None);
@@ -1125,7 +1147,7 @@ void ICE::computeFaceCenteredVelocities(
 {
   cout << "Doing actually step1c -- compute_face_centered_velocities" << endl;
 
-  int numMatls = d_sharedState->getNumICEMatls();
+  int numMatls = d_sharedState->getNumMatls();
 
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
@@ -1136,17 +1158,26 @@ void ICE::computeFaceCenteredVelocities(
   CCVariable<Vector> vel_CC;
   CCVariable<double> press_CC;
   new_dw->get(press_CC,lb->press_equil_CCLabel, 0, patch, Ghost::None, 0);
-
+  
+  
   // Compute the face centered velocities
   for(int m = 0; m < numMatls; m++) {
-    ICEMaterial* ice_matl = d_sharedState->getICEMaterial( m );
-    int dwindex = ice_matl->getDWIndex();
-    
-    old_dw->get(rho_CC,  lb->rho_CCLabel, dwindex, patch, Ghost::None, 0);
+    Material* matl = d_sharedState->getMaterial( m );
+    int dwindex = matl->getDWIndex();
+
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(ice_matl){
+      old_dw->get(rho_CC, lb->rho_CCLabel, dwindex, patch, Ghost::None, 0);
+      old_dw->get(vel_CC, lb->vel_CCLabel, dwindex, patch, Ghost::None, 0);
+    }
+    if(mpm_matl){
+      new_dw->get(rho_CC, lb->rho_CCLabel, dwindex, patch, Ghost::None, 0);
+      new_dw->get(vel_CC, lb->vel_CCLabel, dwindex, patch, Ghost::None, 0);
+    }
     new_dw->get(rho_micro_CC, lb->rho_micro_CCLabel,dwindex,patch,
-		                                            Ghost::None, 0);        
-    old_dw->get(vel_CC, lb->vel_CCLabel,  dwindex, patch, Ghost::None, 0);
-    
+                                                            Ghost::None, 0);
+ 
     SFCXVariable<double> uvel_FC;
     SFCYVariable<double> vvel_FC;
     SFCZVariable<double> wvel_FC;
@@ -1306,7 +1337,7 @@ void ICE::addExchangeContributionToFCVel(
 {
   cout << "Doing actually step1d -- Add_exchange_contribution_to_FC_vel" << endl;
   
-  int numMatls = d_sharedState->getNumICEMatls();
+  int numMatls = d_sharedState->getNumMatls();
   int itworked;
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
@@ -1335,7 +1366,7 @@ void ICE::addExchangeContributionToFCVel(
   }
   
   for(int m = 0; m < numMatls; m++) {
-    ICEMaterial* matl = d_sharedState->getICEMaterial( m );
+    Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
     new_dw->get(rho_micro_CC[m], lb->rho_micro_CCLabel, dwindex, patch, 
 		                                                Ghost::None, 0);         
@@ -1532,7 +1563,7 @@ void ICE::computeDelPressAndUpdatePressCC(
 	     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
   cout << "Doing actually step2 -- explicit delPress" << endl;
-  int numMatls  = d_sharedState->getNumICEMatls();
+  int numMatls  = d_sharedState->getNumMatls();
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
   Vector dx     = patch->dCell();
@@ -1577,7 +1608,7 @@ void ICE::computeDelPressAndUpdatePressCC(
   delPress.initialize(0.0);
   
   for(int m = 0; m < numMatls; m++) {
-    ICEMaterial* matl = d_sharedState->getICEMaterial( m );
+    Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
     SFCXVariable<double> uvel_FC;
     SFCYVariable<double> vvel_FC;
@@ -1673,7 +1704,7 @@ void ICE::computePressFC(
 			DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
   cout << "Doing actually step3 -- press_face_MM" << endl;
-  int numMatls = d_sharedState->getNumICEMatls();
+  int numMatls = d_sharedState->getNumMatls();
   double sum_rho, sum_rho_adj;
   double A;                                 
   
@@ -1690,10 +1721,18 @@ void ICE::computePressFC(
 
   // Compute the face centered velocities
   for(int m = 0; m < numMatls; m++)  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial( m );
+    Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
-    old_dw->get(rho_CC[m], lb->rho_CCLabel, dwindex, patch, Ghost::None, 0);
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(ice_matl){
+      old_dw->get(rho_CC[m], lb->rho_CCLabel, dwindex, patch, Ghost::None, 0);
+    }
+    if(mpm_matl){
+      new_dw->get(rho_CC[m], lb->rho_CCLabel, dwindex, patch, Ghost::None, 0);
+    }
   }
+
 
   for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
     IntVector curcell = *iter;
@@ -1803,11 +1842,20 @@ void ICE::accumulateMomentumSourceSinks(
   new_dw->get(pressZ_FC,lb->pressZ_FCLabel, 0, patch,Ghost::None, 0);
 
   for(int m = 0; m < numMatls; m++) {
-    ICEMaterial* matl = d_sharedState->getICEMaterial( m );
+     Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
-    old_dw->get(rho_CC,  lb->rho_CCLabel,      dwindex,patch,Ghost::None, 0);  
-    old_dw->get(vel_CC, lb->vel_CCLabel,     dwindex,patch,Ghost::None, 0);
-    old_dw->get(visc_CC, lb->viscosity_CCLabel,dwindex,patch,Ghost::None, 0);
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(ice_matl){
+      old_dw->get(rho_CC, lb->rho_CCLabel, dwindex, patch, Ghost::None, 0);
+    }
+    if(mpm_matl){
+      new_dw->get(rho_CC, lb->rho_CCLabel, dwindex, patch, Ghost::None, 0);
+    }
+/*`==========TESTING==========*/ 
+//    old_dw->get(vel_CC,  lb->vel_CCLabel,      dwindex,patch,Ghost::None, 0);
+//    old_dw->get(visc_CC, lb->viscosity_CCLabel,dwindex,patch,Ghost::None, 0);
+ /*==========TESTING==========`*/
     new_dw->get(vol_frac,lb->vol_frac_CCLabel, dwindex,patch,Ghost::None, 0);
 
     CCVariable<Vector>   mom_source;
@@ -3366,6 +3414,54 @@ void    ICE::printData(const Patch* patch, int include_GC,
   fprintf(stderr," ______________________________________________\n");
 }
 
+/* 
+ ======================================================================*
+ Function:  printData--
+ Purpose:  Print to stderr a cell-centered, single material
+_______________________________________________________________________ */
+void    ICE::printData(const Patch* patch, int include_GC,
+        char    message1[],             /* message1                     */
+        char    message2[],             /* message to user              */
+        const CCVariable<int>& q_CC)
+{
+  int i, j, k,xLo, yLo, zLo, xHi, yHi, zHi;
+  IntVector lowIndex, hiIndex; 
+  
+  fprintf(stderr,"______________________________________________\n");
+  fprintf(stderr,"$%s\n",message1);
+  fprintf(stderr,"$%s\n",message2);
+  
+  if (include_GC == 1)  { 
+    lowIndex = patch->getCellLowIndex();
+    hiIndex  = patch->getCellHighIndex();
+  }
+  if (include_GC == 0) {
+    lowIndex = patch->getInteriorCellLowIndex();
+    hiIndex  = patch->getInteriorCellHighIndex();
+  }
+  xLo = lowIndex.x();
+  yLo = lowIndex.y();
+  zLo = lowIndex.z();
+  
+  xHi = hiIndex.x();
+  yHi = hiIndex.y();
+  zHi = hiIndex.z();
+  
+  for(k = zLo; k < zHi; k++)  {
+    for(j = yLo; j < yHi; j++) {
+      for(i = xLo; i < xHi; i++) {
+	IntVector idx(i, j, k);
+	fprintf(stderr,"[%d,%d,%d]~ %i  ",
+		i,j,k, q_CC[idx]);
+	
+	/*  fprintf(stderr,"\n"); */
+      }
+      fprintf(stderr,"\n");
+    }
+    fprintf(stderr,"\n");
+  }
+  fprintf(stderr," ______________________________________________\n");
+}
 /* 
  ======================================================================*
  Function:  printVector--
