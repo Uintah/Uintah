@@ -52,7 +52,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/SeedField.tcl \
 	$(SRCDIR)/ShowField.tcl \
 	$(SRCDIR)/SolveMatrix.tcl \
-	$(SRCDIR)/Streamline.tcl \
+	$(SRCDIR)/StreamLines.tcl \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
 	$(SRCDIR)/TextureVolVis.tcl \
 	$(SRCDIR)/ViewWidget.tcl \
