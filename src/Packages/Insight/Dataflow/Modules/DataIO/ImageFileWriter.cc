@@ -27,8 +27,6 @@ public:
   //! GUI variables
   GuiString gui_FileName_;
 
-  itk::Object::Pointer writer_;
-  
   ITKDatatypeIPort* inport_;
   ITKDatatypeHandle inhandle_;
 
@@ -39,10 +37,47 @@ public:
   virtual void execute();
 
   virtual void tcl_command(GuiArgs&, void*);
+
+  template<class T1, class T2> bool run(itk::Object* );
 };
 
+template<class T1, class T2>
+bool ImageFileWriter::run( itk::Object *obj )
+{
+  T1 *data1 = dynamic_cast<T1 * >(obj);
+
+  if ( !data1 ) {
+    return false;
+  }
+
+  // create a new writer
+  itk::ImageFileWriter<T2>::Pointer writer = itk::ImageFileWriter<T2>::New();
+  
+  // cast it to a writable type
+  itk::CastImageFilter<T1, T2>::Pointer to_char = itk::CastImageFilter<T1, T2>::New();
+  
+  to_char->SetInput( data1 );
+  to_char->Update();
+
+  // set writer
+  string fn = gui_FileName_.get();    
+  writer->SetFileName( fn.c_str() );
+  writer->SetInput(to_char->GetOutput());
+  
+  // write
+  try
+    {
+      writer->Update();
+    }
+  catch (itk::ExceptionObject &e)
+    {
+      std::cerr << e << std::endl;
+    }
+  return true;
+}
 
 DECLARE_MAKER(ImageFileWriter)
+
 ImageFileWriter::ImageFileWriter(GuiContext* ctx)
   : Module("ImageFileWriter", ctx, Source, "DataIO", "Insight"),
     gui_FileName_(ctx->subVar("FileName"))
@@ -64,82 +99,20 @@ void ImageFileWriter::execute(){
     return;
   }
 
-  string fn = gui_FileName_.get();
 
-  ///////////////////////
-  // <float, 2>
-  ///////////////////////
-  if(dynamic_cast<itk::Image<float,2>* >(inhandle_.get_rep()->data_.GetPointer())) {
-    typedef itk::Image<float, 2> ImageType;
-    typedef itk::Image<unsigned short, 2> ShortImageType;
-    typedef itk::ImageFileWriter<ShortImageType> FileWriterType;
+  // get input
+  itk::Object* data = inhandle_.get_rep()->data_.GetPointer();
 
-    writer_ = FileWriterType::New();
-
-    itk::CastImageFilter<ImageType, ShortImageType>::Pointer to_char = itk::CastImageFilter<ImageType, ShortImageType>::New();
-    
-    itk::Object *object = inhandle_.get_rep()->data_.GetPointer();
-    ImageType *img = dynamic_cast<ImageType *>(object);
-    
-    if( !img ) {
-      // error
-      return;
-    }
-    to_char->SetInput(img);
-    to_char->Update();
-    
-    dynamic_cast<FileWriterType *>(writer_.GetPointer())->SetFileName( fn.c_str() );
-    dynamic_cast<FileWriterType *>(writer_.GetPointer())->SetInput(to_char->GetOutput());
-    
-    try
+  // can we operate on it?
+  if ( !run<itk::Image<float,2>, itk::Image<unsigned short,2> >( data )
+       &&
+       !run<itk::Image<float,3>, itk::Image<unsigned short,3> >( data )
+       )
     {
-      dynamic_cast<FileWriterType *>(writer_.GetPointer())->Update();
-    }
-    catch (itk::ExceptionObject &e)
-    {
-      std::cerr << e << std::endl;
-    }
-  }
-  ///////////////////////
-  // <float, 3>
-  ///////////////////////
-  else if(dynamic_cast<itk::Image<float,3>* >(inhandle_.get_rep()->data_.GetPointer())) {
-    typedef itk::Image<float, 3> ImageType;
-    typedef itk::Image<unsigned short, 3> ShortImageType;
-    typedef itk::ImageFileWriter<ShortImageType> FileWriterType;
-    
-    writer_ = FileWriterType::New();
-
-    itk::CastImageFilter<ImageType, ShortImageType>::Pointer to_char = itk::CastImageFilter<ImageType, ShortImageType>::New();
-    
-    itk::Object *object = inhandle_.get_rep()->data_.GetPointer();
-    ImageType *img = dynamic_cast<ImageType *>(object);
-    
-    if( !img ) {
-      // error
-      return;
-    }
-    to_char->SetInput(img);
-    to_char->Update();
-    
-    dynamic_cast<FileWriterType *>(writer_.GetPointer())->SetFileName( fn.c_str() );
-    dynamic_cast<FileWriterType *>(writer_.GetPointer())->SetInput(to_char->GetOutput());
-    
-    try
-    {
-      dynamic_cast<FileWriterType *>(writer_.GetPointer())->Update();
-    }
-    catch (itk::ExceptionObject &e)
-    {
-      std::cerr << e << std::endl;
-    }
-  }
-  else 
-  {
-    // unknown type
+          // error 
     error("Unknown type");
     return;
-  }
+    }
 }
 
 void
