@@ -1318,10 +1318,10 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
 	if(mass[*iter]>0.0){
 	  temperatureRate[*iter] = internalHeatRate[*iter]
 		   /*+ externalHeatRate[*iter]*/;
+	  temperatureRate[*iter] /= (mass[*iter] * specificHeat);
           if(MPMPhysicalModules::thermalContactModel) {
             temperatureRate[*iter] += thermalContactHeatExchangeRate[*iter];
           }
-	  temperatureRate[*iter] /= (mass[*iter] * specificHeat);
 	}
 	else{
 	  temperatureRate[*iter] = 0;
@@ -1441,8 +1441,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   
   double tempRate; /* tan: tempRate stands for "temperature variation
                            time rate", used for heat conduction.  */
-  double temp;
-
+//  double thermal_energy = 0.0;
   double ke=0;
   Vector CMX(0.0,0.0,0.0);
   Vector CMV(0.0,0.0,0.0);
@@ -1533,6 +1532,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       numPTotal += pset->numParticles();
 
+//      double Cp=mpm_matl->getSpecificHeat();
+
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
 	 particleIndex idx = *iter;
@@ -1553,7 +1554,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         if(MPMPhysicalModules::heatConductionModel) {
           pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
           tempRate = 0;
-          temp = 0;
         }
 
         // Accumulate the contribution from each surrounding vertex
@@ -1562,7 +1562,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	   acc += gacceleration[ni[k]]   * S[k];
 	   
 	   if(MPMPhysicalModules::heatConductionModel) {
-              temp += gTemperature[ni[k]]   * S[k];
 	      tempRate += gTemperatureRate[ni[k]] * S[k];
 	      for (int j = 0; j<3; j++){
 		 pTemperatureGradient[idx](j) += 
@@ -1576,8 +1575,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pvelocity[idx] += acc * delT;
         if(MPMPhysicalModules::heatConductionModel) {
           pTemperatureRate[idx] = tempRate;
-          pTemperature[idx] = temp;
-          //pTemperature[idx] += tempRate * delT;
+          pTemperature[idx] += tempRate * delT;
+//          thermal_energy += pTemperature[idx] * Cp;
         }
         
         ke += .5*pmass[idx]*pvelocity[idx].length2();
@@ -1610,6 +1609,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
     }
   }
+//   cout << "THERMAL ENERGY " << thermal_energy << endl;
 
 #if 0
   static int ts=0;
@@ -1670,8 +1670,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
-// Revision 1.101  2000/07/19 20:49:06  tan
-// Modified particle temperature updating algorithm.
+// Revision 1.102  2000/07/20 19:42:25  guilkey
+// Made minor changes to the heat conduction algorithm, mainly involving
+// the thermal contact.
 //
 // Revision 1.100  2000/07/17 23:45:03  tan
 // Fixed problems in MPM heat conduction.
