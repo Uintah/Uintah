@@ -24,7 +24,7 @@ BioImage Tutorial
 		2. unlimit command 
 	b. Launching BioImage
 
-3. User Interface Organization (briefly touch on each)
+3. User Interface Organization (briefly touch on each) HARTNER
         a. menus 
         b. processing tab (see Reference Guide)
         c. rendering windows (see Reference Guide for more information on controls for the 2D and 3D viewers)
@@ -42,7 +42,7 @@ BioImage Tutorial
 	a. explain motivation behind dynamic filters and maintaining a history
 	b. walk through process of resampling tooth dataset (see Reference Guide for more pre-processing filters)
 
-6. Visualization
+6. Visualization HARTNER
 	a. Planes
 	       1. change the slices
                2. change the colormap (see Reference Guide for more Planes visualizaiton options)
