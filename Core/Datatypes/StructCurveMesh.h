@@ -109,7 +109,8 @@ public:
   double get_volume(Cell::index_type idx) const { return get_size(idx); };
 
   int get_valence(Node::index_type idx) const 
-  { return (idx == 0 || idx == points_.size()  - 1) ? 1 : 2; }
+  { return (idx == (unsigned int) 0 ||
+	    idx == (unsigned int) (points_.size()-1)) ? 1 : 2; }
   int get_valence(Edge::index_type idx) const { return 0; }
   int get_valence(Face::index_type idx) const { return 0; }
   int get_valence(Cell::index_type idx) const { return 0; }
