@@ -82,6 +82,8 @@ bool BuildFEMatrix::build_FEMatrix(TetVolFieldIntHandle hFieldInt,
     }
   }
 
+  if (num_procs > 0) { np = num_procs; }
+
   hA = 0;
 
   BuildFEMatrixHandle hMaker =
