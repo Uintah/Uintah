@@ -5,6 +5,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/CCA/Components/MPM
 
 SRCS     += $(SRCDIR)/SerialMPM.cc \
+	$(SRCDIR)/RigidMPM.cc \
 	$(SRCDIR)/FractureMPM.cc \
 	$(SRCDIR)/ImpMPM.cc \
 	$(SRCDIR)/MPMLabel.cc \
