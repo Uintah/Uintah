@@ -89,6 +89,10 @@ extern "C" void audit() {
   AuditDefaultAllocator();
 }
 
+Mutex data_allocator("Data Allocator");
+unsigned long long total_allocated = 0;
+unsigned long long total_freed = 0;
+
 class SphereData {
 public:
   float* data;
@@ -244,7 +248,10 @@ void append_spheres(rtrt::Array1<SphereData> &data_group,
   //---------
   // allocate memory for particle data
   SphereData sphere_data;
+  size_t num_bytes = num_variables*num_particles*sizeof(float);
   sphere_data.data = (float*)malloc(num_variables*num_particles*sizeof(float));
+  data_allocator.lock(); total_allocated += num_bytes; data_allocator.unlock();
+  //cerr << "Allocated "<<num_bytes<<" of memory to "<<sphere_data.data<<endl;
   float* p=sphere_data.data;
   if (do_verbose) cerr << "Past data allocation\n";
   // Loop over each material set for the position variables.
@@ -380,6 +387,10 @@ GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
     for (long j = 0; j < ndata; j++) {
       data[index++] = data_group[g].data[j];
     }
+    // Delete the memory we don't use anymore
+    if (data_group[g].data) free(data_group[g].data);
+    size_t num_bytes = data_group[g].nspheres * numvars * sizeof(float);
+    data_allocator.lock(); total_freed += num_bytes; data_allocator.unlock();
   }
   if (index != total_spheres * numvars) {
     cerr << "Wrong number of vars copied: index = " << index << ", total_spheres * numvars = " << total_spheres * numvars << endl;
@@ -1208,6 +1219,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
                                             gridcellsize,griddepth, cmap,
                                             t);
       thread_sema->up(rtrt::Min(nworkers,5));
+      if (total_allocated != total_freed) {
+        cerr << "total_allocated != total_freed\n";
+        cerr << "total_allocated = "<<total_allocated
+             <<", total_freed = "<<total_freed<<endl;
+      }
       display->attach(obj);
       alltime->add((Object*)obj);
       prepro_sema->down();
@@ -1216,10 +1232,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       thrd->detach();
       //      cerr << "Finished timestep t["<<t<<"]\n";
     } // end timestep
+    all->add(alltime);
     if( thread_sema ) delete thread_sema;
     prepro_sema->down(rtrt::Min(nworkers,8));
     if (prepro_sema) delete prepro_sema;
-    all->add(alltime);
+    if (amutex) delete amutex;
+    if (da) delete da;
     AuditDefaultAllocator();
     if (debug) cerr << "Finished adding all timesteps.\n";
   } catch (SCIRun::Exception& e) {
