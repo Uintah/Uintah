@@ -127,6 +127,7 @@ using namespace SCIRun;
                                           const PatchSet*,
                                           const MaterialSubset*,
                                           const MaterialSubset*,
+                                          const MaterialSubset*,
                                           const MaterialSet*); 
 
       void scheduleMassExchange(SchedulerP&, 
