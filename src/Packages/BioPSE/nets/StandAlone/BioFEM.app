@@ -362,7 +362,7 @@ class BioFEMApp {
 	
 	# Embed the Viewer
 	set eviewer [$mods(Viewer) ui_embedded]
-	$eviewer setWindow $win.viewer
+	$eviewer setWindow $win.viewer $viewer_width $viewer_height
 	
 	### Menu
 	frame $win.main_menu -relief raised -borderwidth 3
