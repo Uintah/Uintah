@@ -100,7 +100,7 @@ class VarLabel;
       void setElapsedTime(double t) {
 	d_elapsed_time = t;
       }
-
+      bool d_mpm_cfd;
    private:
 
       void registerMaterial(Material*);
@@ -114,7 +114,6 @@ class VarLabel;
       std::vector<ICEMaterial*> ice_matls;
       Vector d_gravity;
       double d_elapsed_time;
-
    };
 
 } // End namespace Uintah
