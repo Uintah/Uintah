@@ -66,7 +66,7 @@ public:
   virtual ~ShowDipoles();
 
   virtual void execute();
-  virtual void widget_moved(bool last);
+  virtual void widget_moved(bool last, BaseWidget*);
   virtual void tcl_command(GuiArgs& args, void* userdata);
 private:
   void new_input_data(PointCloudField<Vector> *in);
@@ -475,7 +475,7 @@ ShowDipoles::generate_output_field()
 
 
 void
-ShowDipoles::widget_moved(bool release)
+ShowDipoles::widget_moved(bool release, BaseWidget*)
 {
   if (release) {
     output_dirty_ = true;
