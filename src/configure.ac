@@ -2114,6 +2114,7 @@ if test "$with_lapack" && test ! "$DEF_LAPACK"; then
   echo
 fi
 
+AC_SUBST(DEF_LAPACK)
 AC_SUBST(LAPACK_LIB_FLAG)
 AC_SUBST(LAPACK_LIB_DIR_FLAG)
 
