@@ -10,6 +10,10 @@
 #include <PSECore/Dataflow/PackageDB.h>
 #include <PSECore/Dataflow/FileUtils.h>
 #include <PSECore/Dataflow/ComponentNode.h>
+#include <PSECore/Dataflow/PackageDBHandler.h>
+#include <PSECore/Dataflow/StrX.h>
+#include <PSECore/Dataflow/NetworkEditor.h>
+#include <PSECore/XMLUtil/XMLUtil.h>
 #include <iostream>
 #include <ctype.h>
 using std::cerr;
@@ -33,7 +37,7 @@ using std::vector;
 #pragma reset woff 1375
 #endif
 
-#define NEW_MODULE_MAKER 0
+#define NEW_MODULE_MAKER 1
 typedef std::map<int,char*>::iterator char_iter;
 
 namespace PSECore {
@@ -42,6 +46,7 @@ namespace Dataflow {
 using namespace SCICore::Containers;
 using SCICore::Containers::AVLTree;
 using SCICore::Containers::AVLTreeIter;
+using namespace PSECore::XMLUtil;
 
 typedef struct ModuleInfo_tag {
   ModuleMaker maker;
@@ -69,170 +74,6 @@ PackageDB::~PackageDB(void)
 }
 
 typedef void (*pkgInitter)(const clString& tclPath);
-
-static void postMessage(const clString& errmsg, bool err=true)
-{
-  clString tag;
-  if(err)
-    tag += " errtag";
-  TCL::execute(clString(".top.errorFrame.text insert end \"")+errmsg+"\\n\""+tag);
-  TCL::execute(".top.errorFrame.text see end");
-}
-
-class PackageDBHandler : public ErrorHandler
-{
-public:
-  bool foundError;
-  
-  PackageDBHandler();
-  ~PackageDBHandler();
-  
-  void warning(const SAXParseException& e);
-  void error(const SAXParseException& e);
-  void fatalError(const SAXParseException& e);
-  void resetErrors();
-  
-private :
-  PackageDBHandler(const PackageDBHandler&);
-  void operator=(const PackageDBHandler&);
-};
-
-// ---------------------------------------------------------------------------
-//  This is a simple class that lets us do easy (though not terribly efficient)
-//  trancoding of XMLCh data to local code page for display.
-// ---------------------------------------------------------------------------
-class StrX
-{
-public :
-  // -----------------------------------------------------------------------
-  //  Constructors and Destructor
-  // -----------------------------------------------------------------------
-  StrX(const XMLCh* const toTranscode)
-  {
-    // Call the private transcoding method
-    fLocalForm = XMLString::transcode(toTranscode);
-  }
-  
-  StrX(const DOMString& str)
-  {
-    // Call the transcoding method
-    fLocalForm = str.transcode();
-  }
-  
-  ~StrX()
-  {
-    delete [] fLocalForm;
-  }
-  
-  
-  // -----------------------------------------------------------------------
-  //  Getter methods
-  // -----------------------------------------------------------------------
-  const char* localForm() const
-  {
-    return fLocalForm;
-  }
-  
-private :
-  // -----------------------------------------------------------------------
-  //  Private data members
-  //
-  //  fLocalForm
-  //      This is the local code page form of the string.
-  // -----------------------------------------------------------------------
-  char*   fLocalForm;
-};
-
-inline ostream& operator<<(ostream& target, const StrX& toDump)
-{
-  target << toDump.localForm();
-  return target;
-}
-
-clString xmlto_string(const DOMString& str)
-{
-  char* s = str.transcode();
-  clString ret = clString(s);
-  delete[] s;
-  return ret;
-}
-
-clString xmlto_string(const XMLCh* const str)
-{
-  char* s = XMLString::transcode(str);
-  clString ret = clString(s);
-  delete[] s;
-  return ret;
-}
-
-PackageDBHandler::PackageDBHandler()
-{
-  foundError=false;
-}
-
-PackageDBHandler::~PackageDBHandler()
-{
-}
-
-void PackageDBHandler::error(const SAXParseException& e)
-{
-  foundError=true;
-  postMessage(clString("Error at (file ")+xmlto_string(e.getSystemId())
-	      +", line "+to_string((int)e.getLineNumber())
-	      +", char "+to_string((int)e.getColumnNumber())
-		+"): "+xmlto_string(e.getMessage()));
-}
-
-void PackageDBHandler::fatalError(const SAXParseException& e)
-{
-  foundError=true;
-  postMessage(clString("Fatal Error at (file ")+xmlto_string(e.getSystemId())
-	      +", line "+to_string((int)e.getLineNumber())
-	      +", char "+to_string((int)e.getColumnNumber())
-	      +"): "+xmlto_string(e.getMessage()));
-}
-
-void PackageDBHandler::warning(const SAXParseException& e)
-{
-  postMessage(clString("Warning at (file ")+xmlto_string(e.getSystemId())
-	      +", line "+to_string((int)e.getLineNumber())
-	      +", char "+to_string((int)e.getColumnNumber())
-	      +"): "+xmlto_string(e.getMessage()));
-}
-
-void PackageDBHandler::resetErrors()
-{
-}
-
-static void invalidNode(const DOM_Node& n, const clString& filename)
-{
-  if(n.getNodeType() == DOM_Node::COMMENT_NODE)
-      return;
-  if(n.getNodeType() == DOM_Node::TEXT_NODE){
-    DOMString s = n.getNodeValue();
-    char* str = s.transcode();
-    bool allwhite=true;
-    for(char* p = str; *p != 0; p++){
-      if(!isspace(*p))
-	allwhite=false;
-      }
-    if(!allwhite){
-      postMessage(clString("Extraneous text: ")+str+"after node: "+xmlto_string(n.getNodeName())+"(in file "+filename+")");
-    }
-    delete[] str;
-    return;
-  }
-  postMessage(clString("Do not understand node: ")+xmlto_string(n.getNodeName())+"(in file "+filename+")");
-}
-
-static DOMString findText(DOM_Node& node)
-{
-  for(DOM_Node n = node.getFirstChild();n != 0; n = n.getNextSibling()){
-    if(n.getNodeType() == DOM_Node::TEXT_NODE)
-      return n.getNodeValue();
-  }
-  return 0;
-}
 
 #if !NEW_MODULE_MAKER
 static void processDataflowComponent(PackageDB* db, const DOMString& pkgname,
@@ -741,6 +582,10 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.20  2000/10/21 18:33:44  moulding
+// removed the PackageDBHandler and StrX classes from PackageDB.cc and put them
+// into their own files.  This allows other pieces of code to use those classes.
+//
 // Revision 1.19  2000/10/19 15:13:26  moulding
 // set NEW_MODULE_MAKER to 0;  I accidentally committed a version with it set
 // to 1.
