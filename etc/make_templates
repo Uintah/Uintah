@@ -50,4 +50,4 @@ echo "" >> $m
 
 
 built:
-(cd $1 && make -d)
+(cd $1 && make)
