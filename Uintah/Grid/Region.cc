@@ -2,12 +2,13 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Grid/Region.h>
-#include <Uintah/Grid/NodeSubIterator.h>
-#include <Uintah/Math/Primes.h>
-#include <Uintah/Grid/SubRegion.h>
 #include <SCICore/Math/MiscMath.h>
 #include <Uintah/Exceptions/InvalidGrid.h>
 #include <Uintah/Grid/CellIterator.h>
+#include <Uintah/Grid/NodeIterator.h>
+#include <Uintah/Grid/NodeSubIterator.h>
+#include <Uintah/Grid/SubRegion.h>
+#include <Uintah/Math/Primes.h>
 #include <values.h>
 
 using namespace Uintah;
@@ -231,9 +232,18 @@ CellIterator Region::getCellIterator(const Box& b) const
 		       RoundUp(u.x()), RoundUp(u.y()), RoundUp(u.z()));
 }
       
+NodeIterator Region::getNodeIterator() const
+{
+   return NodeIterator(0, 0, 0,
+		       d_res.x()+1, d_res.y()+1, d_res.z()+1);
+}
+      
 
 //
 // $Log$
+// Revision 1.10  2000/05/02 06:07:23  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.9  2000/04/28 20:24:44  jas
 // Moved some private copy constructors to public for linux.  Velocity
 // field is now set from the input file.  Simulation state now correctly

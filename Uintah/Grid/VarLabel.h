@@ -55,6 +55,12 @@ namespace Uintah {
       bool isPositionVariable() const {
 	 return d_vartype == PositionVariable;
       }
+      class Compare {
+      public:
+	 bool operator()(const VarLabel* v1, const VarLabel* v2) const;
+      private:
+      };
+
    private:
       std::string d_name;
       const TypeDescription* d_td;
@@ -63,12 +69,14 @@ namespace Uintah {
       VarLabel(const VarLabel&);
       VarLabel& operator=(const VarLabel&);
    };
-   
-    
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.6  2000/05/02 06:07:23  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.5  2000/04/28 20:24:44  jas
 // Moved some private copy constructors to public for linux.  Velocity
 // field is now set from the input file.  Simulation state now correctly

@@ -72,6 +72,7 @@ WARNING
 				       particleIndex start,
 				       ParticleVariable<Point>& position,
 				       ParticleVariable<Vector>& velocity,
+				       ParticleVariable<Vector>& pexternalforce,
 				       ParticleVariable<double>& mass,
 				       ParticleVariable<double>& volume,
 				       const Region*);
@@ -107,6 +108,9 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.12  2000/05/02 06:07:12  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.11  2000/05/01 17:10:28  jas
 // Added allocations for mass and volume.
 //

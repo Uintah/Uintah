@@ -65,7 +65,14 @@ public:
    virtual void put(const NCVariableBase&, const VarLabel*,
 		    int matlIndex, const Region*);
 private:
+   DWDatabase<NCVariableBase> ncdb;
    DWDatabase<ParticleVariableBase> particledb;
+   struct ReductionRecord {
+      ReductionVariableBase* var;
+      ReductionRecord(ReductionVariableBase*);
+   };
+   typedef std::map<const VarLabel*, ReductionRecord*, VarLabel::Compare> reductionDBtype;
+   reductionDBtype reductiondb;
    //////////
    // Insert Documentation Here:
    mutable SCICore::Thread::CrowdMonitor  d_lock;
@@ -79,6 +86,9 @@ private:
 
 //
 // $Log$
+// Revision 1.13  2000/05/02 06:07:16  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.12  2000/04/28 07:35:34  sparker
 // Started implementation of DataWarehouse
 // MPM particle initialization now works

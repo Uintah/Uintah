@@ -71,8 +71,7 @@ void FrictionContact::exMomInterpolated(const ProcessorContext*,
     }
   }
 
-  for(NodeIterator iter = region->begin();
-             iter != region->end(); iter++){
+  for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
     centerOfMassMass=0.0; 
     for(int n = 0; n < NVFs; n++){
@@ -123,11 +122,10 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
       new_dw->get(gacceleration[vfindex], gAccelerationLabel, vfindex, region, 0);
     }
   }
-  ReductionVariable<double> delt;
+  delt_vartype delt;
   old_dw->get(delt, deltLabel);
 
-  for(NodeIterator iter = region->begin();
-             iter != region->end(); iter++){
+  for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
     centerOfMassMass=0.0; 
     for(int  n = 0; n < NVFs; n++){
@@ -155,6 +153,9 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.4  2000/05/02 06:07:14  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.3  2000/04/28 07:35:29  sparker
 // Started implementation of DataWarehouse
 // MPM particle initialization now works

@@ -24,6 +24,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/SimulationStateP.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Uintah/Grid/VarTypes.h>
 #include <vector>
 
 
@@ -31,8 +32,6 @@ using namespace Uintah::MPM;
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::IntVector;
 using std::vector;
-
-
 
 SingleVelContact::SingleVelContact(ProblemSpecP& ps, 
 				    SimulationStateP& d_sS)
@@ -78,8 +77,7 @@ void SingleVelContact::exMomInterpolated(const ProcessorContext*,
     }
   }
 
-  for(NodeIterator iter = region->begin();
-             iter != region->end(); iter++){
+  for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
     centerOfMassMass=0.0; 
     for(int n = 0; n < NVFs; n++){
@@ -130,11 +128,10 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
       new_dw->get(gacceleration[vfindex], gAccelerationLabel, vfindex, region, 0);
     }
   }
-  ReductionVariable<double> delt;
+  delt_vartype delt;
   old_dw->get(delt, deltLabel);
 
-  for(NodeIterator iter = region->begin();
-             iter != region->end(); iter++){
+  for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
     centerOfMassMass=0.0; 
     for(int  n = 0; n < NVFs; n++){
@@ -162,6 +159,9 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.9  2000/05/02 06:07:14  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.8  2000/04/28 07:35:29  sparker
 // Started implementation of DataWarehouse
 // MPM particle initialization now works

@@ -37,6 +37,7 @@ using namespace Uintah::MPM;
 
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
+using SCICore::Math::Min;
 using SCICore::Math::Max;
 using namespace std;
 
@@ -85,8 +86,7 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
 
    // I'm not sure about this one:
    deltLabel = 
-     new VarLabel( "delt",
-		   ReductionVariable<double>::getTypeDescription() );
+     new VarLabel( "delt", delt_vartype::getTypeDescription() );
 
 }
 
@@ -370,14 +370,14 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       int matlindex = matl->getDWIndex();
       int vfindex = matl->getVFIndex();
       // Create arrays for the particle data
-      ParticleVariable<Vector> px;
+      ParticleVariable<Point> px;
       ParticleVariable<double> pmass;
       ParticleVariable<Vector> pvelocity;
       ParticleVariable<Vector> pexternalforce;
 
       old_dw->get(px,             pXLabel, matlindex, region, 0);
       old_dw->get(pmass,          pMassLabel, matlindex, region, 0);
-      old_dw->get(pvelocity,      pVelocityLabel, vfindex, region, 0);
+      old_dw->get(pvelocity,      pVelocityLabel, matlindex, region, 0);
       old_dw->get(pexternalforce, pExternalForceLabel, matlindex, region, 0);
 
       // Create arrays for the grid data
@@ -407,7 +407,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 	 particleIndex idx = *iter;
 
 	// Get the node indices that surround the cell
-	Array3Index ni[8];
+	IntVector ni[8];
 	double S[8];
 	if(!region->findCellAndWeights(px[idx], ni, S))
 	    continue;
@@ -422,7 +422,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 	}
       }
 
-      for(NodeIterator iter = region->begin(); iter != region->end(); iter++){
+      for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
 	if(gmass[*iter] != 0.0){
 	    gvelocity[*iter] *= 1./gmass[*iter];
 	}
@@ -477,7 +477,7 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
       int vfindex = matl->getVFIndex();
       // Create arrays for the particle position, volume
       // and the constitutive model
-      ParticleVariable<Vector>  px;
+      ParticleVariable<Point>  px;
       ParticleVariable<double>  pvol;
       ParticleVariable<Matrix3> pstress;
       NCVariable<Vector>        internalforce;
@@ -500,7 +500,7 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
          particleIndex idx = *iter;
   
          // Get the node indices that surround the cell
-         Array3Index ni[8];
+         IntVector ni[8];
          Vector d_S[8];
          if(!region->findCellAndShapeDerivatives(px[idx], ni, d_S))
   	   continue;
@@ -546,8 +546,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
       new_dw->allocate(acceleration, gAccelerationLabel, vfindex, region);
 
       // Do the computation of a = F/m for nodes where m!=0.0
-      for(NodeIterator  iter  = region->begin();
-			iter != region->end(); iter++){
+      for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
 	if(mass[*iter]>0.0){
 	  acceleration[*iter] =
 		 (internalforce[*iter] + externalforce[*iter])/ mass[*iter];
@@ -581,7 +580,7 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       // Get required variables for this region
       NCVariable<Vector>        acceleration;
       NCVariable<Vector>        velocity;
-      ReductionVariable<double> delt;
+      delt_vartype delt;
 
       new_dw->get(acceleration, gAccelerationLabel, vfindex, region, 0);
       new_dw->get(velocity, gVelocityLabel, vfindex, region, 0);
@@ -594,8 +593,7 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
 
       // Do the computation
 
-      for(NodeIterator  iter  = region->begin();
-			iter != region->end(); iter++) {
+      for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
 	velocity_star[*iter] = velocity[*iter] + acceleration[*iter] * delt;
       }
 
@@ -628,7 +626,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       int matlindex = matl->getDWIndex();
       int vfindex = matl->getVFIndex();
       // Get the arrays of particle values to be changed
-      ParticleVariable<Vector> px;
+      ParticleVariable<Point> px;
       ParticleVariable<Vector> pvelocity;
 
       old_dw->get(px,        pXLabel, matlindex, region, 0);
@@ -637,7 +635,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       // Get the arrays of grid data on which the new particle values depend
       NCVariable<Vector> gvelocity_star;
       NCVariable<Vector> gacceleration;
-      ReductionVariable<double> delt;
+      delt_vartype delt;
 
       new_dw->get(gvelocity_star, gVelocityStarLabel, vfindex, region, 0);
       new_dw->get(gacceleration,  gAccelerationLabel, vfindex, region, 0);
@@ -653,7 +651,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 	 particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        Array3Index ni[8];
+	IntVector ni[8];
         double S[8];
         if(!region->findCellAndWeights(px[idx], ni, S))
 	  continue;
@@ -705,6 +703,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.36  2000/05/02 06:07:08  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.35  2000/05/01 16:18:07  sparker
 // Completed more of datawarehouse
 // Initial more of MPM data

@@ -5,14 +5,17 @@
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/ReductionVariable.h>
+#include <Uintah/Grid/VarTypes.h>
 #include <SCICore/Geometry/Vector.h>
+#include <SCICore/Math/MinMax.h>
 
 #include <math.h>
 
-using SCICore::Geometry::Vector;
-
 class SimulationStateP;
 namespace Uintah {
+   using SCICore::Geometry::Vector;
+   using SCICore::Math::Min;
+
    class ProcessorContext;
    class Region;
    class VarLabel;
@@ -60,7 +63,7 @@ WARNING
 	 gAccelerationLabel = new VarLabel( "g.acceleration",
                               NCVariable<Vector>::getTypeDescription() );
 	 deltLabel          = new VarLabel( "delt",
-			      ReductionVariable<double>::getTypeDescription() );
+					    delt_vartype::getTypeDescription() );
 
 	 };
 
@@ -111,6 +114,9 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.9  2000/05/02 06:07:14  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.8  2000/04/27 20:00:25  guilkey
 // Finished implementing the SingleVelContact class.  Also created
 // FrictionContact class which Scott will be filling in to perform

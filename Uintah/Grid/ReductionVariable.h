@@ -38,11 +38,11 @@ WARNING
   
 ****************************************/
 
-   template<class T> class ReductionVariable : public ReductionVariableBase {
+   template<class T, class Op> class ReductionVariable : public ReductionVariableBase {
    public:
       inline ReductionVariable() {}
       inline ReductionVariable(T value) : value(value) {}
-      inline ReductionVariable(const ReductionVariable<T>& copy) : value(copy.value) {}
+      inline ReductionVariable(const ReductionVariable<T, Op>& copy) : value(copy.value) {}
       virtual ~ReductionVariable();
       
       static const TypeDescription* getTypeDescription();
@@ -50,62 +50,70 @@ WARNING
       inline operator T () const {
 	 return value;
       }
-      virtual void get(DataItem&) const;
-      virtual ReductionVariable<T>* clone() const;
-      virtual void allocate(const Region*);
+      virtual ReductionVariable<T, Op>* clone() const;
+      virtual void copyPointer(const ReductionVariableBase&);
+      virtual void reduce(const ReductionVariableBase&);
    private:
-      ReductionVariable<T>& operator=(const ReductionVariable<T>& copy);
+      ReductionVariable<T, Op>& operator=(const ReductionVariable<T, Op>& copy);
       T value;
    };
    
-   template<class T>
+   template<class T, class Op>
       const TypeDescription*
-      ReductionVariable<T>::getTypeDescription()
+      ReductionVariable<T, Op>::getTypeDescription()
       {
 	 //cerr << "ReductionVariable::getTypeDescription not done\n";
 	 return 0;
       }
    
-   template<class T>
+   template<class T, class Op>
+      ReductionVariable<T, Op>::~ReductionVariable()
+      {
+      }
+   
+   template<class T, class Op>
+      ReductionVariable<T, Op>*
+      ReductionVariable<T, Op>::clone() const
+      {
+	 return new ReductionVariable<T, Op>(*this);
+      }
+
+   template<class T, class Op>
       void
-      ReductionVariable<T>::get(DataItem& copy) const
+      ReductionVariable<T, Op>::copyPointer(const ReductionVariableBase& copy)
       {
-	 ReductionVariable<T>* ref = dynamic_cast<ReductionVariable<T>*>(&copy);
-	 if(!ref)
-	    throw TypeMismatchException("ReductionVariable<T>");
-	 *ref = *this;
+	 const ReductionVariable<T, Op>* c = dynamic_cast<const ReductionVariable<T, Op>* >(&copy);
+	 if(!c)
+	    throw TypeMismatchException("Type mismatch in reduction variable");
+	 *this = *c;
       }
    
-   template<class T>
-      ReductionVariable<T>::~ReductionVariable()
+   template<class T, class Op>
+      void
+      ReductionVariable<T, Op>::reduce(const ReductionVariableBase& other)
       {
+	 const ReductionVariable<T, Op>* c = dynamic_cast<const ReductionVariable<T, Op>* >(&other);
+	 if(!c)
+	    throw TypeMismatchException("Type mismatch in reduction variable");
+	 Op op;
+	 value = op(value, c->value);
       }
    
-   template<class T>
-      ReductionVariable<T>*
-      ReductionVariable<T>::clone() const
-      {
-	 return new ReductionVariable<T>(*this);
-      }
-   
-   template<class T>
-      ReductionVariable<T>&
-      ReductionVariable<T>::operator=(const ReductionVariable<T>& copy)
+   template<class T, class Op>
+      ReductionVariable<T, Op>&
+      ReductionVariable<T, Op>::operator=(const ReductionVariable<T, Op>& copy)
       {
 	 value = copy.value;
 	 return *this;
       }
    
-   template<class T>
-      void
-      ReductionVariable<T>::allocate(const Region*)
-      {
-	 throw TypeMismatchException("ReductionVariable shouldn't use allocate");
-      }
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.3  2000/05/02 06:07:22  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.2  2000/04/26 06:48:53  sparker
 // Streamlined namespaces
 //

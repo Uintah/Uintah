@@ -2,7 +2,7 @@
 #define UINTAH_HOMEBREW_ARRAY3_H
 
 #include "Array3Window.h"
-#include "Array3Index.h"
+#include <SCICore/Geometry/IntVector.h>
 #include <iostream> // TEMPORARY
 
 /**************************************
@@ -33,6 +33,7 @@ WARNING
 ****************************************/
 
 namespace Uintah {
+   using SCICore::Geometry::IntVector;
    template<class T> class Array3 {
       
    public:
@@ -43,7 +44,7 @@ namespace Uintah {
 	 d_window=new Array3Window<T>(new Array3Data<T>(size1, size2, size3));
 	 d_window->addReference();
       }
-      Array3(const Array3Index& lowIndex, const Array3Index& highIndex);
+      Array3(const IntVector& lowIndex, const IntVector& highIndex);
       virtual ~Array3();
       Array3(const Array3& copy)
 	 : d_window(copy.d_window)
@@ -95,19 +96,19 @@ namespace Uintah {
 	 d_window=new Array3Window<T>(new Array3Data<T>(size1, size2, size3));
 	 d_window->addReference();
       }
-      T& operator[](const Array3Index& idx) const {
-	 return d_window->get(idx.i(), idx.j(), idx.k());
+      T& operator[](const IntVector& idx) const {
+	 return d_window->get(idx.x(), idx.y(), idx.z());
       }
       
       inline Array3Window<T>* getWindow() const {
 	 return d_window;
       }
-      T& operator[](const Array3Index& idx) {
-	 return d_window->get(idx.i(), idx.j(), idx.k());
+      T& operator[](const IntVector& idx) {
+	 return d_window->get(idx.x(), idx.y(), idx.z());
       }
       
-      Array3Index getLowIndex() const;
-      Array3Index getHighIndex() const;
+      IntVector getLowIndex() const;
+      IntVector getHighIndex() const;
       
    private:
       Array3Window<T>* d_window;
@@ -124,6 +125,9 @@ namespace Uintah {
    
 //
 // $Log$
+// Revision 1.7  2000/05/02 06:07:21  sparker
+// Implemented more of DataWarehouse and SerialMPM
+//
 // Revision 1.6  2000/04/26 06:48:46  sparker
 // Streamlined namespaces
 //
@@ -134,7 +138,7 @@ namespace Uintah {
 // Added Face-centered variable class
 // Added Per-region data class
 // Added new task constructor for procedures with arguments
-// Use Array3Index more often
+// Use IntVector more often
 //
 // Revision 1.3  2000/03/21 02:22:57  dav
 // few more updates to make it compile including moving Array3 stuff out of namespace as I do not know where it should be

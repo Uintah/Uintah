@@ -4,7 +4,7 @@
 using namespace Uintah;
 
 UnknownVariable::UnknownVariable(const std::string& msg)
-    : d_msg(msg)
+    : d_msg("Unknown variable: "+msg)
 {
 }
 
