@@ -353,7 +353,11 @@ void SolveMatrix::execute()
     return;
   }
 
-  solport->send(solution, intermediate);
+  if( intermediate )
+    solport->send_intermediate(solution);
+  else
+    solport->send(solution);
+
 }
 
 #ifdef PETSC_UNI
@@ -685,7 +689,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
 	    double progress=(log_orig-log(err))/(log_orig-log_targ);
 	    update_progress(progress);
 	    if(ep && niter%epcount == 0)
-	      solport->send(rhs.clone(), true);
+	      solport->send_intermediate(rhs.clone());
 	}
     }
     iteration.set(niter);
@@ -929,7 +933,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
 	}
 
 	if(ep && data.niter%epcount == 0)
-	  solport->send(lhs.clone(), true);
+	  solport->send_intermediate(lhs.clone());
 
       }
     }

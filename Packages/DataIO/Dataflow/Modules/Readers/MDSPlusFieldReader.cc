@@ -816,7 +816,7 @@ void MDSPlusFieldReader::execute(){
 	    }
 
 	    // Send the data downstream
-	    ofield_port->send( sHandle_[n], true );
+	    ofield_port->send_intermediate( sHandle_[n] );
 	  }
 	}
 
@@ -836,7 +836,7 @@ void MDSPlusFieldReader::execute(){
 	    }
 
 	    // Send the data downstream
-	    ofield_port->send( vHandle_[n], true );
+	    ofield_port->send_intermediate( vHandle_[n] );
 	  }
 	}
       }
