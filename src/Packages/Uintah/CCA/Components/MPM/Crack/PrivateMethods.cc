@@ -163,44 +163,53 @@ short Crack::PhysicalGlobalGridContainsPoint(const double& dx,const Point& pt)
           (pz>lz || fabs(pz-lz)/dx<0.01) && (pz<hz || fabs(pz-hz)/dx<0.01));
 }         
 
-// Find the intersection between a line-segment (p1->p2) and grid boundary
-void Crack::FindIntersectionLineAndGridBoundary(const Point& p1, Point& p2)
+// Find the intersection between a line-segment (p1->p2) and a box
+short Crack::TrimCrackFrontWithGrid(const Point& p1, Point& p2,
+ 	                 	const Point& lp, const Point& hp)
 {
-  // If p2 is outside of global grid, find the intersection 
-  // between line-segment (p1->p2) and grid boundary, and store it in p2
-
-  double lx=GLP.x(), ly=GLP.y(), lz=GLP.z();
-  double hx=GHP.x(), hy=GHP.y(), hz=GHP.z();
+  // For a box with the lowest and highest points (lp & hp) and 
+  // a line-seement (p1->p2), p1 is inside the box. If p2 is outside,
+  // find the intersection between the line-segment (p1->p2) and the box,
+  // and store the intersection in p2.
+	
+  double xl=lp.x(), yl=lp.y(), zl=lp.z();
+  double xh=hp.x(), yh=hp.y(), zh=hp.z();
 
   double x1=p1.x(), y1=p1.y(), z1=p1.z();
   double x2=p2.x(), y2=p2.y(), z2=p2.z();
 
-  Vector v=TwoPtsDirCos(p1,p2);
-  double l=v.x(), m=v.y(), n=v.z();
+  // Detect if line-segment p1->p2 crosses with the box
+  short cross=YES;
+  if(x2>xl && x2<xh && y2>yl && y2<yh && z2>zl && z2<zh) cross=NO;
+    
+  if(cross) { // Find the intersection
+    Vector v=TwoPtsDirCos(p1,p2);
+    double l=v.x(), m=v.y(), n=v.z();
 
-  if(x2>hx || x2<lx) {
-    if(x2>hx) x2=hx;
-    if(x2<lx) x2=lx;
-    y2=y1+(x2-x1)/l*m;
-    z2=z1+(x2-x1)/l*n;
-  }
+    if(x2>xh || x2<xl) {
+      if(x2>xh) x2=xh;
+      if(x2<xl) x2=xl;
+      y2=y1+(x2-x1)/l*m;
+      z2=z1+(x2-x1)/l*n;
+    }
 
-  if(y2>hy || y2<ly) {
-    if(y2>hy) y2=hy;
-    if(y2<ly) y2=ly;
-    x2=x1+(y2-y1)/m*l;
-    z2=z1+(y2-y1)/m*n;
-  }
+    if(y2>yh || y2<yl) {
+      if(y2>yh) y2=yh;
+      if(y2<yl) y2=yl;
+      x2=x1+(y2-y1)/m*l;
+      z2=z1+(y2-y1)/m*n;
+    }
 
-  if(z2>hz || z2<lz) {
-    if(z2>hz) z2=hz;
-    if(z2<lz) z2=lz;
-    x2=x1+(z2-z1)/n*l;
-    y2=y1+(z2-z1)/n*m;
-  }
-
+    if(z2>zh || z2<zl) {
+      if(z2>zh) z2=zh;
+      if(z2<zl) z2=zl;
+      x2=x1+(z2-z1)/n*l;
+      y2=y1+(z2-z1)/n*m;
+    }
+  }  
   p2=Point(x2,y2,z2);
-}
+  return cross;
+}  
 
 // Calculate normal of a triangle
 Vector Crack::TriangleNormal(const Point& p1,
@@ -1083,9 +1092,19 @@ short Crack::CubicSpline(const int& n, const int& m, const int& n1,
 
 void Crack::PruneCrackFrontAfterPropagation(const int& m)
 {
-  // If the angle between the two line-segments connected by 
-  // a point is larger than 45 dgree, move the point to
-  // the center of the two points around to it
+  // If the angle between two line-segments connected by 
+  // a point is larger than 30 dgree, move the point to
+  // the mass center of the triangle which is composed of the three points
+
+  int num=(int)cfSegNodes[m].size();
+  
+  vector<Point> cfSegPtsPruned;
+  cfSegPtsPruned.resize(num);
+  
+  for(int i=0; i<num; i++) {
+    cfSegPtsPruned[i]=cfSegPtsT[m][i];	  
+  }
+  
   for(int i=0; i<(int)cfSegNodes[m].size(); i++) {
     int preIdx=cfSegPreIdx[m][i];
     if(preIdx<0) { // not operated
@@ -1095,16 +1114,23 @@ void Crack::PruneCrackFrontAfterPropagation(const int& m)
         Point pt2=cfSegPtsT[m][i+2];
         Vector v1=TwoPtsDirCos(pt1,pt);
 	Vector v2=TwoPtsDirCos(pt,pt2);
-	double theta=acos(Dot(v1,v2));
-	if(fabs(theta)*180/3.141592654>90) {
-	  cfSegPtsT[m][i]=pt1+(pt2-pt1)/2.;	
+	double theta=acos(Dot(v1,v2))*180/3.141592654;
+	if(fabs(theta)>30) {
+	  cfSegPtsPruned[i]=pt1+(pt2-pt1)/2.;	
 	}
       }	// End of if(i>minIdx && i<maxIdx)
     }	    
     else { // operated
-      cfSegPtsT[m][i]=cfSegPtsT[m][preIdx];
+      cfSegPtsPruned[i]=cfSegPtsPruned[preIdx];
     }	    
   } // End of loop over i	  
+
+  for(int i=0; i<num; i++) {
+    cfSegPtsT[m][i]=cfSegPtsPruned[i];
+  }  
+
+  cfSegPtsPruned.clear();
+  
 }
 
 void Crack::CalculateCrackFrontNormals(const int& mm)
@@ -1268,7 +1294,7 @@ void Crack::OutputCrackGeometry(const int& m, const int& timestep)
     ofstream outputCF(cfFileName, ios::out);
 
     if(!outputCE || !outputCX || !outputCF) {
-      cout << "Files for storing crack fail to be opened" << endl;
+      cout << "Failure to open files for storing crack geometry" << endl;
       exit(1);
     }
 
