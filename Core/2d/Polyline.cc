@@ -79,7 +79,7 @@ Polyline::at( double v )
 {
   if ( v < 0 )
     return data_[0];
-  if ( v > data_.size()-1 )
+  if ( v >= data_.size()-1 )
     return data_[data_.size()-1];
 
   int p = int(v);
@@ -90,6 +90,17 @@ void
 Polyline::set_color( const Color &c )
 {
   color_ = c;
+}
+
+string
+Polyline::tcl_color()
+{
+  std::ostringstream s;
+  s.setf(ios::hex,ios::basefield);
+  s << " #" << int(color_.r()*255) 
+    << int(color_.g()*255) << int(color_.b()*255);
+
+  return s.str();
 }
 
 void

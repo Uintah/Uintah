@@ -73,7 +73,7 @@ Diagram::draw()
 {
   GLenum errcode;
 
-  if ( graph_.size() == 0 ) return; 
+  if ( poly_.size() == 0 ) return; 
 
   glMatrixMode(GL_PROJECTION);
 
@@ -81,67 +81,63 @@ Diagram::draw()
   case Draw:
     if ( select_mode_ == 2 ) { // select_mode_ = many
       if ( scale_mode_ == 1 ) { // scale_mode_ = all
+
 	reset_bbox();
 	
-	if ( !graphs_bounds_.valid() ) return;
+	if ( graphs_bounds_.valid() ) {
 	
-	glPushMatrix();
-	glOrtho( graphs_bounds_.min().x(),  graphs_bounds_.max().x(),
-		 graphs_bounds_.min().y(),  graphs_bounds_.max().y(),
-		 -1, 1 );
-	
-	glColor3f( 0,0,0 );
-	for (int i=0; i<graph_.size(); i++) 
-	  if ( graph_[i]->is_enabled() ) 
-	    graph_[i]->draw();
-	glPopMatrix();
+	  glPushMatrix();
+	  glOrtho( graphs_bounds_.min().x(),  graphs_bounds_.max().x(),
+		   graphs_bounds_.min().y(),  graphs_bounds_.max().y(),
+		   -1, 1 );
+	  
+	  glColor3f( 0,0,0 );
+	  for (int i=0; i<poly_.size(); i++) 
+	    if ( active_[i] ) 
+	      poly_[i]->draw();
+	  glPopMatrix();
+	}
       }
       else { // scale_mode == each
-	for (int i=0; i<graph_.size(); i++) 
-	  if ( graph_[i]->is_enabled() ) {
+	for (int i=0; i<poly_.size(); i++) 
+	  if ( active_[i] ) {
 	    BBox2d bbox;
-	    graph_[i]->get_bounds( bbox );
+	    poly_[i]->get_bounds( bbox );
 	    if ( bbox.valid() ) {
 	      glMatrixMode(GL_PROJECTION);
 	      glPushMatrix();
 	      glOrtho( bbox.min().x(),  bbox.max().x(),
 		       bbox.min().y(),  bbox.max().y(),
 		       -1, 1 );
-	      graph_[i]->draw();
+	      poly_[i]->draw();
 	      glPopMatrix();
 	    }
 	  }
       }
     }
     else { // select_mode == one
-      if ( graph_[selected_]->is_enabled() ) {
+      if ( poly_[selected_]->is_enabled() ) {
 	BBox2d bbox;
-	graph_[selected_]->get_bounds( bbox );
+	poly_[selected_]->get_bounds( bbox );
 	if ( bbox.valid() ) {
 	  glMatrixMode(GL_PROJECTION);
 	  glPushMatrix();
 	  glOrtho( bbox.min().x(),  bbox.max().x(),
 		   bbox.min().y(),  bbox.max().y(),
 		   -1, 1 );
-	  graph_[selected_]->draw();
+	  poly_[selected_]->draw();
 	  glPopMatrix();
 	}
       }
     }  
-    {
-      BBox2d b1, b2;
-      get_bounds( b1 );
-      b2.extend( Point2d( b1.min().x(), 0 ) );
-      b2.extend( Point2d( b1.max().x(), 1 ) );
-      
-      for (int i=0; i<widget_.size(); i++) {
-	widget_[i]->set_bbox( b2 );
-	widget_[i]->draw();
-      }
-    }
+
+    // display the widgets
+    for (int i=0; i<widget_.size(); i++) 
+      widget_[i]->draw();
     break;
     
   case Pick:
+    // in pick mode we only draw the widgets
     for (int i=0; i<widget_.size(); i++) {
       glLoadName( i );
       widget_[i]->draw();
@@ -158,6 +154,7 @@ Diagram::draw()
 void
 Hairline::draw()
 {
+  update();
   hair_->draw();
 }
 

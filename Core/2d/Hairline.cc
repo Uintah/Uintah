@@ -36,9 +36,10 @@ using std::ostream;
 #include <sstream>
 using std::ostringstream;
 
+#include <Core/Geom/Color.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/Hairline.h>
-
+#include <Core/2d/Diagram.h>
 
 namespace SCIRun {
 
@@ -49,10 +50,19 @@ Persistent* make_Hairline()
 
 PersistentTypeID Hairline::type_id("Hairline", "Widget", make_Hairline);
 
-Hairline::Hairline( const BBox2d &bbox, const string &name)
-  : TclObj( name ), Widget(name), hair_(0)
+Hairline::Hairline( Diagram *p, const string &name)
+  : TclObj( "Hairline" ), Widget(name), hair_(0), parent_(p)
 {
-  hair_ = scinew HairObj( bbox, "hair" );
+  parent_->get_active( poly_ );
+
+  BBox2d bb;
+  for (int i=0; i<poly_.size(); i++) 
+    poly_[i]->get_bounds( bb );
+  
+  bbox_.extend( Point2d( bb.min().x(), 0 ) );
+  bbox_.extend( Point2d( bb.max().x(), 1 ) );
+
+  hair_ = scinew HairObj( bbox_, "hair" );
 }
 
 
@@ -60,18 +70,6 @@ Hairline::~Hairline()
 {
 }
 
-
-void 
-Hairline::add( Polyline *p )
-{
-  poly_.add( p );
-  Color c = p->get_color();
-  tcl_ << " add " << (poly_.size()-1) << " #";
-  tcl_.setf(ios::hex,ios::basefield);
-  tcl_<< int(c.r()*255) << int(c.g()*255) << int(c.b()*255) << " "
-       << p->at( hair_->at() );
-  tcl_exec();
-}
 
 void
 Hairline::select( double x, double y, int b )
@@ -91,7 +89,6 @@ void
 Hairline::release( double x, double y, int b)
 {
   hair_->release( x, y, b );
-  cerr << "release\n";
   update();
 }
   
@@ -99,12 +96,50 @@ Hairline::release( double x, double y, int b)
 void
 Hairline::update()
 {
-  tcl_ << " values ";
-  double at = hair_->at();
+  parent_->get_active( poly_ );
+
+  // resert hair postion
+
+  bbox_.reset();
   for (int i=0; i<poly_.size(); i++) 
-    tcl_ << poly_[i]->at( at ) << " ";
+    poly_[i]->get_bounds( bbox_ );
+
+  if ( !bbox_.valid() )
+    return;
+
+  hair_->set_bbox ( BBox2d( Point2d( bbox_.min().x(), 0 ),
+			    Point2d( bbox_.max().x(), 1 ) ) );
+
+  // get and sort the values
+
+  double at = hair_->at();
+  int index[poly_.size()];
+  double value[poly_.size()];
+
+  // get value and insert them in acsending order (using insert sort)
+  for (int i=0; i<poly_.size(); i++) {
+    double v = poly_[i]->at(at);
+    int j;
+    for (j=i; j>0; j--) {
+      if ( value[j-1] < v ) {
+	value[j] = value[j-1];
+	index[j] = index[j-1];
+      }
+      else 
+	break;
+    }
+    value[j] = v;
+    index[j] = i;
+  }
+
+  // send the sorted list to the tcl side
+  tcl_ << " values ";
+  for (int i=0; i<poly_.size(); i++) 
+    tcl_ << " { " << poly_[index[i]]->tcl_color()
+	 << " " << value[i] << " } ";
   tcl_exec();
 }
+
 
 #define HAIRLINE_VERSION 1
 

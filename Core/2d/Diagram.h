@@ -39,9 +39,12 @@
 
 namespace SCIRun {
   
+  class Polyline;
+
 class SCICORESHARE Diagram : public TclObj, public DrawObj {
 private:
-  Array1<DrawObj *> graph_;
+  Array1<bool> active_;
+  Array1<Polyline *> poly_;
   Array1<Widget *> widget_;
 
   BBox2d graphs_bounds_;
@@ -63,7 +66,7 @@ public:
   Diagram( const string &name="" );
   virtual ~Diagram();
 
-  void add( DrawObj * );
+  void add( Polyline * );
   int add_widget( Widget *);
   void redraw() { if ( parent() ) parent()->need_redraw(); }
   virtual void reset_bbox();
@@ -72,6 +75,8 @@ public:
   virtual void tcl_command(TCLArgs&, void*);
   virtual void set_id( const string &);
   virtual void set_window( const string& );
+
+  void get_active( Array1<Polyline *> &);
 
  private:  
   void button_press( int x, int y, int button );

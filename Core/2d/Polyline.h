@@ -53,6 +53,7 @@ public:
 
   void add( double );
   void clear() { data_.remove_all(); }
+  string tcl_color();
   void set_color( const Color &);
   Color get_color() { return color_; }
   //virtual void reset_bbox();
