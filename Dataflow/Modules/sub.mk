@@ -16,6 +16,7 @@ SUBDIRS := \
 	$(SRCDIR)/Render\
 	$(SRCDIR)/SIP\
         $(SRCDIR)/Visualization\
+	$(SRCDIR)/ManipFields\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SRCTOP)/scripts/recurse.mk

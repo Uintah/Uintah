@@ -4,32 +4,72 @@
 <component name="ManipFields" category="Fields">
   <overview>
     <authors>
-      <author>Martin Cole</author>
+      <author>Chris Moulding</author>
     </authors>
     <summary>
-      General framework for field manipulation
+      <p>
+        Manipulate one or more fields to generate another field.  Example
+        manipulations are merge, clip, cull, re-scale, re-position, etc.
+      </p>
     </summary>
     <description>
-      <p>Version Date: Fri Nov 17 12:03:26 MST 2000</p><p>Version: 1.0</p>
+      <p>
+        ManipFields is used to create a new Field from applying some operation
+        (or manipulation) on one or more other fields.  Example operations
+        include merging two (or more) fields into one field, clipping a field
+        against a clipping plane, culling elements from a field based on some
+        criteria, re-scaling or re-positioning a field's mesh.
+      </p>
     </description>
   </overview>
   <implementation>
-    <!-- one of (ffile cfile ccfile) -->
   </implementation>
   <io>
     <inputs lastportdynamic="yes">
       <port>
-        <name>ManipFields</name>
-	<datatype>SCIRun::Field</datatype>
+        <name>Input Field</name>
+        <description>
+          <p>
+            A field, or fields, to be manipulated. (dynamic)
+          </p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+        <componentname>GenField</componentname>
+        <componentname>ReadField</componentname>
       </port>
-      <!-- one of (device port file) -->
     </inputs>
     <outputs>
-      <!-- one of (device port file) -->
+      <port>
+        <name>Output Field</name>
+        <description>
+          <p>
+            The field that results from applying the indicated manipulation
+            to the input fields.
+          </p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+        <componentname>Render3D</componentname>
+        <componentname>WriteGeometry</componentname>
+      </port>
     </outputs>
   </io>
-
   <gui>
+    <description>
+      <p>
+        A tab control that contains all the currently known manipulations,
+        which have UI's specific to those manipulations.
+      </p>
+    </description>
+    <parameter>
+      <widget>Button</widget>
+      <label>Execute</label>
+      <description>
+        <p>
+          Sends a request to the scheduler to have this component
+          started.
+        </p>
+      </description>
+    </parameter>
   </gui>
   <testing>
   </testing>
