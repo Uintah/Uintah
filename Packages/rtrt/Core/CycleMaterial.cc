@@ -20,15 +20,15 @@ CycleMaterial::~CycleMaterial()
 }
 
 void CycleMaterial::next() {
-  if (!members.size()) return;
   current++;
-  if (current==members.size()) current=0;
+  if (current<=members.size())
+    current=0;
 }
 
 void CycleMaterial::prev() {
-  if (!members.size()) return;
   current--;
-  if (current==-1) current=members.size()-1;
+  if (current<0)
+    current=members.size()-1;
 }
 
 void CycleMaterial::shade(Color& result, const Ray& ray,
