@@ -128,7 +128,7 @@ int Renderer::compute_depth(Roe* roe, const View& view,
     }
 }
 
-void Renderer::dump_image(const clString&) {
+void Renderer::dump_image(const clString&, const clString&) {
     NOT_FINISHED("This is not implemented!");
 }
 
@@ -164,6 +164,9 @@ void Renderer::getData(int, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.7  2000/06/07 20:59:26  kuzimmer
+// Modifications to make the image save menu item work on SGIs
+//
 // Revision 1.6  2000/03/11 00:39:52  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>
