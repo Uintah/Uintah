@@ -41,16 +41,15 @@
 
 <question>
 <para>
-Should I use <type>std::vector</type> or <type>SCIRun::Array1</type>?
+Should <type>std::vector</type> or <type>SCIRun::Array1</type> be used?
 </para>
 </question>
 <answer>
 <para>
-In cases where performance does not matter please use
-<type>std::vector</type>.  However, in cases where you need optimal
-performance then you should compare the performance of
-<type>std::vector</type> and <type>SCIRun::Array1</type>.  We have
-found in some cases that <type>SCIRun::Array1</type> is significantly
+In cases where performance does not matter, use
+<type>std::vector</type>.  However, in cases where optimal
+performance is needed, compare the performance of
+<type>std::vector</type> and <type>SCIRun::Array1</type>. In some cases, <type>SCIRun::Array1</type> is significantly
 faster. 
 </para>
 </answer>
@@ -67,8 +66,7 @@ faster.
 </revhistory>
 
 <question>
-<para>My SCIRun dies with a memory allocation error.  Specifically
-this one:
+<para>SCIRun dies with a memory allocation error.  Specifically:
 <literallayout class="monospaced">
 Error allocating memory (32833536 bytes requested) mmap: errno=12 Thread
 </literallayout>
@@ -76,8 +74,8 @@ Error allocating memory (32833536 bytes requested) mmap: errno=12 Thread
 </question>
 
 <answer>
-<para>If you did not configure with <option>--enable-64bit</option>, then
-your program will not be able to use more than approximately 2G of
+<para>If SCIRun is not configured with <option>--enable-64bit</option>,
+the program will not be able to use more than approximately 2G of
 memory.</para>
 </answer>
 
@@ -100,15 +98,15 @@ What is the granularity of modules?
 
 <answer>
 <para>
-There is no simple answer to this question and modules that start at
-one level sometimes divide or merge to move to a different level.
-When designing and writing the code, it is therefore important to
-think in terms of modularity even within a single module so that
-subsequent divisions or reorganization is possible.  One approach we
-take within the group is to present the design for a new module or set
-of modules to the group and see if there are others interested in some
-part of the functionality or can provide existing modules for the new
-module.  In this way we at least benefit from the collective plans and
+Modules that start at
+one level sometimes divide or merge to a different level.
+When designing and writing the code, it is important to
+think in terms of modularity, even within a single module, so
+subsequent divisions or reorganization is possible.  One approach is to
+present the design for a new module or set
+of modules to the group. Perhaps others are interested in some
+part of the functionality, or can provide existing modules for the new
+module.  This way, there is benefit from the collective plans and
 knowledge of the group.
 </para>
 </answer>
@@ -132,7 +130,7 @@ Are there Emacs tools for coding standard?
 
 <answer>
 <para>
-Yes, here is the code we use to support the coding standard:
+Yes, here is the code used to support the coding standard:
 </para>
 
 <programlisting>
@@ -164,7 +162,7 @@ retval)))
 </programlisting>
 
 <para>
-Place this in a file that you load, or directly in your .emacs file.
+Place this in the .emacs file.
 </para>
 
 <para>
@@ -186,17 +184,16 @@ url=<!--%=doc.treeUrl("doc/Developer/Guide/dev.codingstandards.html") %-->>onlin
 
 <question>
 <para>
-Do we need to get accounts for your CVS? How do we handle checking
-out the latest version of SCIRun or BioPSE?
+Are accounts needed for the CVS? How are the latest version of SCIRun or BioPSE checked out?
 </para>
 </question>
 
 <answer>
 <para>
-At present, remote access to the code repository does require an
-account on our server.  To get the most recent released version,
-visit our web site to download archives.  You may place the resulting
-files on your own code repository site and manage your own
+At present, remote access to the code repository requires a
+SCI account.  To get the most recent released version,
+visit SCI's web site to download archives.  Users may place the resulting
+files on their own code repository site and manage their own
 development.
 </para>
 </answer>
@@ -221,16 +218,14 @@ strategy?
 
 <answer>
 <para>
-The nature of SCIRun as a very interactive, user driven
-program makes testing modules and their interactions very
-challenging.  Our approach to this is to develop a user interface the
-contains a state manager that will accept and manage input from all
-user interface elements.  One advantage of such a manager is that it
-will be possible to replace the interactive input with a program that
-supplies a script of interaction requests to which the state manager
-will respond, just as if a user had executed the requests manually.
-The development of this structure is in progress and we hope to have
-the essential elements in place soon.
+The nature of SCIRun as an interactive, user driven
+program makes testing modules and their interactions 
+challenging.  A user interface that
+contains a state manager that accepts and manages input from all
+user interface elements is being developed.  One advantage of such a manager is the replacement  of the interactive input with a program that
+supplies a script of interaction requests. the state manager
+can respond as if a user executed the requests manually.
+Development of this structure is in progress.
 </para>
 </answer>
 
@@ -253,8 +248,8 @@ What is XML?
 
 <answer>
 <para>
-The best place to find the answer to this in on one of the XML web
-sites such as <ulink url="http://faq.oreillynet.com/XML/index0.shtm">
+Go to an XML web
+site such as <ulink url="http://faq.oreillynet.com/XML/index0.shtm">
 faq.oreillynet.com/XML/index0.shtm</ulink> or
 <ulink url="http://www.xml.com/pub/a/98/10/guide0.html">
 www.xml.com/pub/a/98/10/guide0.html</ulink>.
@@ -280,13 +275,14 @@ What does XML have to do with SCIRun?
 
 <answer>
 <para>
-Each module in BioPSE requires an XML format description of its
-functionality.  The information in the XML specification provides
+Each module in BioPSE requires an XML-based  description of its
+functionality.  The information in the XML module description provides
 information to assist the <ulink
-url=<!--%=doc.treeUrl("doc/Developer/Guide/create_module.html") %-->> module-maker</ulink> do
-its job and help create the template for a module.  It also forms the
-basis of a Reference Manual of all modules.  And it even provides
-information to SCIRun about the number of type of ports that the
+url=<!--%=doc.treeUrl("doc/Developer/Guide/create_module.html") %-->>
+module-maker</ulink>, and helps create the template for a module.  The
+XML module description also forms the
+basis of a Reference Manual of all modules, and provides
+information to SCIRun about the number of types of ports the
 module needs when it appears in a network diagram.  The document
 <citetitle><ulink url=<!--%=doc.treeUrl("doc/Documentum/module-xml/index.html") %-->>XML
 Module Descriptions (Explicated)</ulink></citetitle> describes the
@@ -314,12 +310,12 @@ specification in XML?
 
 <answer>
 <para>
-One of the powerful elements of XML is that it requires adherence to
-the language standard, unlike HTML, which permits many implicit
-actions like environments that are never closed properly.  You should
-use a <ulink
+XML requires adherence to
+the language standard, unlike HTML, that permits  implicit
+actions such as environments that are never closed properly.   
+Use a <ulink
 url="http://mom.cvrti.utah.edu/~dustman/srvalidate.html">validation
-tool</ulink> to ensure that an XML module description file adheres to
+tool</ulink> to ensure an XML module description file adheres to
 BioPSE specifications.
 </para>
 </answer>
@@ -337,8 +333,8 @@ BioPSE specifications.
 
 <question>
 <para>
-Recently I've been getting the following message across my screen
-while running SCIRun on my sgi octane:
+The following message appears
+while running SCIRun on sgi octane:
 <literallayout class="monospaced">
 Error unmapping memory
 munmap: errno=16
@@ -347,16 +343,16 @@ Unmap failed - leaking memory
 </para>
 
 <para>
-Is this something that I'm causing via a coding error or is this a
-memory issue with my machine?
+Is this a coding error, or is this a
+memory issue with the machine?
 </para>
 </question>
 
 <answer>
 <para>
-There is nothing wrong with your machine, nor is it your fault.  It
-is something weird about IRIX and the SCIRun memory allocator that
-has never been tracked down, and it is a fairly rare occurrence.
+There is nothing wrong with the machine, nor is it a coding error.
+There is a conflict with IRIX and the SCIRun memory allocator that
+has never been tracked down. It is a rare occurrence.
 </para>
 </answer>
 
@@ -373,17 +369,16 @@ has never been tracked down, and it is a fairly rare occurrence.
 
 <question>
 <para>
-I created some simple geometry objects like cylinders, but I don't
-know how to customize their color, anyone knows that?
+How does one customize the color of simple geometry objects such as cylinders?
 </para>
 </question>
 
 <answer>
 <para>
-We have container classes for GeomObj's -- these are themselves
-GeomObj's that contain one of more other GeomObj's inside of them.
-They're very useful for building up scene graphs.  The
-container you want to use is a GeomMaterial -- its constructor
+There are container classes for GeomObj's -- these are themselves
+GeomObj's that contain one or more GeomObj's inside of them.
+They are useful for building up scene graphs.  The
+container used is a GeomMaterial -- its constructor
 takes a GeomObj (e.g. a GeomCylinder) and a MaterialHandle.  (Note:
 the constructor for a Material can be as simple as passing in a
 Color triple!)
@@ -403,16 +398,15 @@ Color triple!)
 
 <question>
 <para>
-I created a user data type, but I don't know how to specify a new
-color to represent its port type in the module. Now I'm using
-yellow, the same color as field.
+When creating a user data type, how does one specify a new
+color to represent its port type in the module. 
 </para>
 </question>
 
 <answer>
 <para>
-When you created the new Port, you added a file into Dataflow/Ports/
--- the .cc file for your new Port type should have a specification for
+When creating a new Port, add a file into Dataflow/Ports/.
+The .cc file for the new Port type should have a specification for
 a name and for a color.  See
 <filename>SCIRun/src/Dataflow/Ports/MatrixPort.cc</filename> as an
 example.
@@ -432,23 +426,23 @@ example.
 
 <question>
 <para>
-When I save my network, why don't the settings in my modules GUI get saved?
+Why don't the settings in the modules GUI save when saving the network?
 </para>
 </question>
 
 <answer>
 <para>
-You need to use GuiVars.  these are how you share a variable between 
-C++ and tcl, and are also the only values that get saved to the tcl 
+GuiVars are needed. GuiVars enable the sharing of a variable between 
+C++ and tcl, and are the only values that save to the tcl 
 scripts.
 
-Look and any module with a gui for an example, Look for GuiString or 
-GuiInt or GuiDouble, and in particular look at their constructor.   
-You need to synch with the tcl side by specifying the name of the var 
-on the tcl side.  That will be reffered to on the tcl side like so...
+Look at any module with a gui for an example (GuiString,
+GuiInt,  GuiDouble, and in particular, look at their constructor).   
+Synch with the tcl side by specifying the name of the var 
+on the tcl side.  
 </para>
 <para>
-C++ side:
+On the C++ side:
 <programlisting>
 GuiInt myint_;
 
@@ -458,7 +452,7 @@ myint_("myint", id, &hellip;)
 </para>
 
 <para>
-tcl side:
+One the tcl side:
 
 <programlisting>
 set $this-myint 1    # or whatever value you want
@@ -480,16 +474,14 @@ Look at ShowField.cc and .tcl for examples.
 </revhistory>
 
 <question>
-<para>When exactly does a thread start running?  Is it when you instantiate a
-Thread or when you do something like join or detach?</para>
+<para>When does a thread start running?</para>
 </question>
 
 
 <answer>
-<para>It starts running immediately, unless you specify Stopped or
-NotActivated in the Thread constructor.  In that case, you then use
-thread->resume() or thread->activate() (respectively) to start it
-going.  Stopped/thread->resume() is the preferred method.</para>
+<para>A thread starts running immediately, unless Stopped or
+NotActivated in the Thread constructor.  In that case, use
+thread->resume() or thread->activate() (respectively) to start the thread running.  Stopped/thread->resume() is the preferred method.</para>
 </answer>
 </qandaentry>
 
