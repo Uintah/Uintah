@@ -92,10 +92,11 @@ Task::requires(WhichDW dw, const VarLabel* var,
 	       const MaterialSubset* matls, DomainSpec matls_dom,
 	       Ghost::GhostType gtype, int numGhostCells)
 {
-  if (matls == 0 && var->typeDescription()->isReductionVariable())
+  if (matls == 0 && var->typeDescription()->isReductionVariable()) {
     // default material for a reduction variable is the global material (-1)
     matls = getGlobalMatlSubset();
-  
+    matls_dom = OutOfDomain;
+  }  
   Dependency* dep = scinew Dependency(this, dw, var, patches, matls,
 				      patches_dom, matls_dom,  gtype, numGhostCells);
   dep->next=0;
@@ -175,6 +176,12 @@ Task::computes(const VarLabel* var,
 	       const PatchSubset* patches, DomainSpec patches_dom,
 	       const MaterialSubset* matls, DomainSpec matls_dom)
 {
+  if (matls == 0 && var->typeDescription()->isReductionVariable()) {
+    // default material for a reduction variable is the global material (-1)
+    matls = getGlobalMatlSubset();
+    matls_dom = OutOfDomain;
+  }  
+
   Dependency* dep = scinew Dependency(this, NewDW, var, patches, matls,
 				      patches_dom, matls_dom);
   dep->next=0;
