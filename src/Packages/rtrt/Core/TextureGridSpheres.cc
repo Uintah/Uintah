@@ -111,14 +111,18 @@ void TextureGridSpheres::shade(Color& result, const Ray& ray,
   unsigned char *texture = tex_data + (tex_index * tex_res * tex_res);
 
   float luminance = interp_luminance(texture, u, v);
-  Color surface;
   if (cmap && dpy->shade_method == 1) {
-    surface = surface_color(hit);
+    result = surface_color(hit) * luminance;
+  } else if (dpy->shade_method == 2) {
+    result = color * luminance;
+  } else if (dpy->shade_method == 3) {
+    lambertianshade(result, color, Color(luminance, luminance, luminance),
+                    ray, hit, depth, cx);
   } else {
-    surface = color;
+    lambertianshade(result, surface_color(hit),
+                    Color(luminance, luminance, luminance),
+                    ray, hit, depth, cx);
   }
-
-  result = surface * luminance;
 }
 
 void TextureGridSpheres::get_uv(UV& uv, const Point& hitpos, const Point& cen)
@@ -153,6 +157,7 @@ float TextureGridSpheres::interp_luminance(unsigned char *image,
 
   return lum*one_over_255;
 #else
+#if 1
   u *= tex_res;
   int iu = (int)u;
   int iu_high;
@@ -162,6 +167,13 @@ float TextureGridSpheres::interp_luminance(unsigned char *image,
     iu = tex_res - 1;
     iu_high = 0;
   }
+#else
+  u *= tex_res-1;
+  int iu = (int)u;
+  if (iu > tex_res - 2)
+    iu = tex_res - 2;
+  int iu_high = iu+1;
+#endif
   double u_weight_high = u-iu;
 
   v *= tex_res-1;
