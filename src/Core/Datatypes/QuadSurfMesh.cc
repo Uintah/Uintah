@@ -62,6 +62,7 @@ QuadSurfMesh::QuadSurfMesh(const QuadSurfMesh &copy)
     edges_(copy.edges_),
     faces_(copy.faces_),
     edge_neighbors_(copy.edge_neighbors_),
+    normals_( copy.normals_ ),
     synchronized_(copy.synchronized_)
 {
 }
@@ -692,6 +693,8 @@ QuadSurfMesh::compute_normals()
     ++nif_iter;
   }
   synchronized_ |= NORMALS_E;
+
+  cerr << normals_.size() << endl;
 }
 
 
