@@ -58,7 +58,6 @@ public:
   virtual ~NrrdTextureBuilder();
 
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
 
 private:
   GuiInt gui_card_mem_;
@@ -68,9 +67,6 @@ private:
   int nvfield_last_generation_;
   int gmfield_last_generation_;
   
-  ProgressReporter my_reporter_;
-  template<class Reporter> bool build_texture(Reporter*, NrrdDataHandle, NrrdDataHandle);
-
   NrrdTextureBuilderAlgo builder_;
   TextureHandle texture_;
 };
@@ -117,7 +113,7 @@ NrrdTextureBuilder::execute()
 
   // check type
   if (nvfield->nrrd->type != nrrdTypeUChar) {
-    error("Input nrrd type is not unsigned char");
+    error("Normal-Value input nrrd type is not unsigned char.");
     return;
   }
   
@@ -134,30 +130,17 @@ NrrdTextureBuilder::execute()
       }
       // check type
       if (gmfield->nrrd->type != nrrdTypeUChar) {
-        error("Input nrrd type is not unsigned char");
+        error("Gradmag input nrrd type is not unsigned char.");
         return;
       }
     }
   }
 
-  if(build_texture(&my_reporter_, nvfield, gmfield)) {
+  if (builder_.build(this, texture_, nvfield, gmfield, gui_card_mem_.get()))
+  {
     otexture->send(texture_);
   }
 }
 
-template<class Reporter>
-bool
-NrrdTextureBuilder::build_texture(Reporter* reporter,
-                                  NrrdDataHandle nvfield, NrrdDataHandle gmfield)
-{
-  builder_.build(texture_, nvfield, gmfield, gui_card_mem_.get());
-  return true;
-}
-
-void
-NrrdTextureBuilder::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // namespace SCIRun
