@@ -22,7 +22,7 @@ namespace Uintah {
   using namespace SCIRun;
   struct BC {
     enum Type {
-      FreeFlow, FixedRate, FixedValue, FixedFlux
+      FreeFlow, FixedRate, FixedValue, FixedFlux, CoarseGrid, Exterior
     };
     BC() {} // Shutup warning about all member function being private...
     private:
@@ -33,8 +33,9 @@ namespace Uintah {
   class BCRegionBase {
   public:
   protected:
-    BCRegionBase(const IntVector& offset, const GeometryPiece* piece)
-      : piece(piece), offset(offset)
+    BCRegionBase(const IntVector& offset, const GeometryPiece* piece,
+		 BC::Type type)
+      : piece(piece), offset(offset), type(type)
       {
       }
     virtual ~BCRegionBase();
@@ -43,6 +44,7 @@ namespace Uintah {
     const GeometryPiece* piece;
     IntVector offset;
     int idx;
+    BC::Type type;
 
     void set(NCVariable<int>& bctype, const Patch*, int mask,
 	     const IntVector& topoffset);
@@ -66,17 +68,16 @@ namespace Uintah {
 	return type;
       }
     private:
-      BC::Type type;
       T value;
       int idx;
       BCRegion(const IntVector& offset, BC::Type type)
-	: BCRegionBase(offset, 0), type(type), value(0)
+	: BCRegionBase(offset, 0, type), value(0)
 	{
-	  ASSERT(type == BC::FreeFlow);
+	  ASSERT(type == BC::FreeFlow || type == BC::CoarseGrid || type == BC::Exterior);
 	}
       BCRegion(const IntVector& offset, const GeometryPiece* piece,
 	       BC::Type type, T value)
-	: BCRegionBase(offset, piece), type(type), value(value)
+	: BCRegionBase(offset, piece, type), value(value)
 	{
 	}
 
@@ -124,6 +125,7 @@ namespace Uintah {
     virtual void parseGlobal(ProblemSpecP& node) = 0;
     virtual void parseCondition(ProblemSpecP&, const GeometryPiece*,
 				BC::Type bctype, bool valueRequired) = 0;
+    virtual void merge(int& bc1, int bc2, bool pressure) = 0;
 
   private:
     ConditionBase(const ConditionBase&);
@@ -157,11 +159,74 @@ namespace Uintah {
       }
       addRegion(new BCRegion<T>(offset, piece, bctype, value));
     }
+    virtual void merge(int& bc1, int bc2, bool pressure) {
+      if(!mask)
+	return;
+      int b1=(bc1&mask)>>shift;
+      int b2=(bc2&mask)>>shift;
+      BCRegion<T>* r1=regions[b1];
+      BCRegion<T>* r2=regions[b2];
+      if(pressure){
+	if(r1->type == BC::CoarseGrid){
+	  if(r2->type == BC::Exterior){
+	    ASSERTFAIL("Bad BC combo 1");
+	  } else if(r2->type != BC::CoarseGrid) {
+	    bc1 = (bc1&~mask)|(bc2&mask);
+	  }
+	} else if(r1->type == BC::Exterior){
+	  if(r2->type == BC::CoarseGrid) {
+	    ASSERTFAIL("Bad BC combo 2");
+	  } else if(r2->type != BC::Exterior) {
+	    bc1 = (bc1&~mask)|(bc2&mask);
+	  }
+	} else if(r1->type == BC::FreeFlow) {
+	  if(r2->type == BC::CoarseGrid || r2->type == BC::Exterior) {
+	    bc1 = (bc1&~mask)|(bc2&mask);
+	  } else if(r2->type != BC::FreeFlow){
+	    ASSERTFAIL("Bad BC combo 3");
+	  }
+	}  else if(r2->type == BC::CoarseGrid && r1->type != BC::FreeFlow){
+	  // Leave bc1...
+	} else if(r2->type == BC::Exterior && r1->type != BC::FreeFlow){
+	  // Leave bc1...
+	} else {
+	  if(r1->type != BC::FreeFlow && r2->type != BC::FreeFlow){
+	    ASSERT(r1 == r2);
+	  }
+	}
+      } else {
+	if(r1->type == BC::CoarseGrid){
+	  if(r2->type == BC::Exterior){
+	    ASSERTFAIL("Bad BC combo 1");
+	  } else if(r2->type != BC::CoarseGrid) {
+	    bc1 = (bc1&~mask)|(bc2&mask);
+	  }
+	} else if(r1->type == BC::Exterior){
+	  if(r2->type == BC::CoarseGrid) {
+	    ASSERTFAIL("Bad BC combo 2");
+	  } else if(r2->type != BC::Exterior) {
+	    bc1 = (bc1&~mask)|(bc2&mask);
+	  }
+	}  else if(r2->type == BC::CoarseGrid){
+	  // Leave bc1...
+	} else if(r2->type == BC::Exterior){
+	  // Leave bc1...
+	} else {
+	  if(r1->type != BC::FreeFlow && r2->type != BC::FreeFlow){
+	    ASSERT(r1 == r2);
+	  }
+	}
+      }
+    }
   protected:
-    Condition(const IntVector& offset)
+    Condition(const IntVector& offset, bool addBoundaries)
       : ConditionBase(offset) {
       // Global is always region #0
       addRegion(new BCRegion<T>(offset, BC::FreeFlow));
+      if(addBoundaries){
+	addRegion(new BCRegion<T>(offset, BC::Exterior));
+	addRegion(new BCRegion<T>(offset, BC::CoarseGrid));
+      }
     }
     virtual ~Condition() {
       for(typename vector<BCRegion<T>*>::iterator iter = regions.begin(); iter != regions.end(); iter++)
@@ -199,7 +264,7 @@ namespace Uintah {
     }
     template<class T>
       void setupCondition(const std::string& name, const IntVector& offset) {
-      setupCondition(name, new Condition<T>(offset));
+      setupCondition(name, new Condition<T>(offset, false));
     }
 
     InitialConditions();
@@ -225,16 +290,22 @@ namespace Uintah {
     }
     template<class T>
       void setupCondition(const std::string& name, const IntVector& offset) {
-      setupCondition(name, new Condition<T>(offset), Patch::CellBased);
-      setupCondition(name, new Condition<T>(offset), Patch::NodeBased);
-      setupCondition(name, new Condition<T>(offset), Patch::XFaceBased);
-      setupCondition(name, new Condition<T>(offset), Patch::YFaceBased);
-      setupCondition(name, new Condition<T>(offset), Patch::ZFaceBased);
+      setupCondition(name, new Condition<T>(offset, offset==IntVector(0,0,0)),
+		     Patch::CellBased);
+      setupCondition(name, new Condition<T>(offset, offset==IntVector(1,1,1)),
+		     Patch::NodeBased);
+      setupCondition(name, new Condition<T>(offset, offset==IntVector(1,0,0)),
+		     Patch::XFaceBased);
+      setupCondition(name, new Condition<T>(offset, offset==IntVector(0,1,0)),
+		     Patch::YFaceBased);
+      setupCondition(name, new Condition<T>(offset, offset==IntVector(0,0,1)),
+		     Patch::ZFaceBased);
     }
     BoundaryConditions();
     ~BoundaryConditions();
     void problemSetup(ProblemSpecP&, const RegionDB& regiondb);
     void set(NCVariable<int>& bctype, const Patch* patch);
+    void merge(int& bc1, int bc2);
   private:
     void setupCondition(const std::string& name, ConditionBase* cond,
 			Patch::VariableBasis basis);

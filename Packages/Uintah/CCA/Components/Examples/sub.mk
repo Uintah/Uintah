@@ -10,6 +10,7 @@ SRCS     += \
 	$(SRCDIR)/Burger.cc \
 	$(SRCDIR)/Poisson3.cc \
 	$(SRCDIR)/SimpleCFD.cc \
+	$(SRCDIR)/AMRSimpleCFD.cc \
 	$(SRCDIR)/Interpolator.cc \
 	$(SRCDIR)/ExamplesLabel.cc \
 	$(SRCDIR)/BoundaryConditions.cc \
