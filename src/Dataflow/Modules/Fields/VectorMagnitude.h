@@ -53,16 +53,11 @@ public:
   virtual FieldHandle execute(FieldHandle& src) = 0;
 
   //! support the dynamically compiled algorithm concept
-#ifdef __sgi
   static CompileInfoHandle get_compile_info(const TypeDescription *iftd,
 					    const TypeDescription *oftd);
-#else
-  static CompileInfoHandle get_compile_info(const TypeDescription *ftd);
-#endif
 };
 
 
-#ifdef __sgi
 template< class IFIELD, class OFIELD >
 class VectorMagnitudeAlgoT : public VectorMagnitudeAlgo
 {
@@ -70,6 +65,7 @@ public:
   //! virtual interface. 
   virtual FieldHandle execute(FieldHandle& src);
 };
+
 
 template< class IFIELD, class OFIELD >
 FieldHandle
@@ -84,7 +80,8 @@ VectorMagnitudeAlgoT<IFIELD, OFIELD>::execute(FieldHandle& field_h)
   typename IFIELD::fdata_type::iterator end = ifield->fdata().end();
   typename OFIELD::fdata_type::iterator out = ofield->fdata().begin();
 
-  while (in != end) {
+  while (in != end)
+  {
     *out = in->length();;
     ++in; ++out;
   }
@@ -92,38 +89,6 @@ VectorMagnitudeAlgoT<IFIELD, OFIELD>::execute(FieldHandle& field_h)
   return FieldHandle( ofield );
 }
 
-#else
-template< template<class> class FIELD >
-
-class VectorMagnitudeAlgoT : public VectorMagnitudeAlgo
-{
-public:
-  //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle& src);
-};
-
-template< template<class> class FIELD >
-
-FieldHandle
-VectorMagnitudeAlgoT<FIELD>::execute(FieldHandle& field_h)
-{
-  FIELD<Vector> *ifield = (FIELD<Vector> *) field_h.get_rep();
-
-  FIELD<double> *ofield = 
-    scinew FIELD<double>(ifield->get_typed_mesh(), ifield->data_at());
-
-  typename FIELD<Vector>::fdata_type::iterator in  = ifield->fdata().begin();
-  typename FIELD<Vector>::fdata_type::iterator end = ifield->fdata().end();
-  typename FIELD<double>::fdata_type::iterator out = ofield->fdata().begin();
-
-  while (in != end) {
-    *out = in->length();;
-    ++in; ++out;
-  }
-
-  return FieldHandle( ofield );
-}
-#endif
 
 } // end namespace SCIRun
 
