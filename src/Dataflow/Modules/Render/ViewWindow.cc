@@ -175,7 +175,8 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     gui_global_dl_(ctx->subVar("global-dl")),
     gui_global_type_(ctx->subVar("global-type")),
     gui_ortho_view_(ctx->subVar("ortho-view")),
-    gui_current_time_(ctx->subVar("current_time",false))
+    gui_current_time_(ctx->subVar("current_time",false)),
+    gui_currentvisual_(ctx->subVar("currentvisual"))
 {
   inertia_mode=0;
   bgcolor.set(Color(0,0,0));
