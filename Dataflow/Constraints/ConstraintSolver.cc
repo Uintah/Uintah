@@ -50,22 +50,16 @@ static DebugSwitch cs_debug("ConstraintSolver", "Print");
 
 ostream& operator<<( ostream& os, const StackItem& i ) {
    os << i.var->GetName() << ":  ";
-   switch (i.rtype) {
-   case UnInit:
-      os << "UnInit";
-      break;
-   case RecurseInitial:
-      os << "RecurseInitial";
-      break;
-   case RecurseNormal:
-      os << "RecurseNormal";
-      break;
-   }
    os << " " << (int)i.iter << "/" << i.var->GetNumConstraints();
 
    return os;
 }
 
+
+void StackItem::print( ostream& os )
+{
+  os << *this << endl;
+}
 
 
 ConstraintSolver::ConstraintSolver()
@@ -141,7 +135,6 @@ ConstraintSolver::Solve(BaseVariable* var,
    
   VarCore newval(newValue);
   list<StackItem> itemstack;
-  bool abort_flag = false;
   unsigned int i;
 
   for (i=0; i < variables.size(); i++)
@@ -150,112 +143,54 @@ ConstraintSolver::Solve(BaseVariable* var,
   }
   itemstack.push_front(StackItem(var));
 
-  while (!itemstack.empty() && !abort_flag)
+  while (!itemstack.empty())
   {
     StackItem& item = itemstack.front();
     BaseVariable *v = item.var;
 
-    switch (item.rtype)
+    if (item.iter == 0)
     {
-    case RecurseInitial:
+      // Skip this item if there is no real change to be made.
+      if (v->data.epsilonequal(Epsilon, newval))
       {
-	const bool notnew = v->data.epsilonequal(Epsilon, newval);
-
-	if (cs_debug)
-	{
-	  cout << "Recursion level = " << itemstack.size() << endl;
-	    
-	  cout << v->name << " S(" << v->level / v->numconstraints << ")*";
-	  for (i=0; i < (v->level % v->numconstraints); i++)
-	    cout << " ";
-	  cout << "*" << endl;
-	    
-	  cout << "Old value (" << v->data << ") " << (notnew?"==":"!=")
-	       << " newval (" << newval << ").  Using Epsilon of ("
-	       << Epsilon << ")." << endl;
-	    
-	  cout << "LevelLevel is " << v->level / v->numconstraints
-	       << " and Level is " << v->level % v->numconstraints 
-	       << "." << endl;
-	}
-	 
-	if (notnew)
-	{
-	  itemstack.pop_front();
-	  break;
-	}
-	 
-	v->data = newval;
-	v->level++;
-	if (v->level > v->numconstraints * MaxDepth)
-	{
-	  if (cs_debug)
-	  {
-	    cout << v->name << " E(" << v->level / v->numconstraints << ")*";
-	    for (i=0; i < v->level; i++)
-	    {
-	      cout << " ";
-	    }
-	    cout << "*" << endl;
-	    
-	    cout << "Recursion level = " << itemstack.size()-1 << endl;
-	  }
-	       
-	  cerr << "Maximum level reached for all constraints!" << endl;
-	  cout << "Accepting current approximation." << endl;
-	  cout << "Recursion level = " << itemstack.size()-1 << endl;
-	       
-	  abort_flag = true;	       
-	}
-	else
-	{
-	  item.rtype = RecurseNormal;
-	}
-      }
-      break;
-
-    case RecurseNormal:
-      if (item.iter < v->numconstraints)
-      {
-	const unsigned int offset = v->level / v->numconstraints;
-	const unsigned int index = (item.iter + offset) % v->numconstraints;
-	const unsigned int order = v->constraint_order[index];
-	BaseVariable *nextv;
-	if (v->constraints[order]->Satisfy(v->constraint_indices[order],
-					   scheme, Epsilon, nextv, newval))
-	{
-	  itemstack.push_front(StackItem(nextv));
-	}
-	item.iter++;
-      }
-      else
-      {
-	v->level--;
-	
-	if (cs_debug)
-	{
-	  cout << v->name << " E(" << v->level / v->numconstraints << ")*";
-	  for (i = 0; i <v->level % v->numconstraints; i++)
-	    cout << " ";
-	  cout << "*" << endl;
-	  cout << "Recursion level = " << itemstack.size()-1 << endl;
-	}
 	itemstack.pop_front();
+	continue;
       }
-      break;
 
-    default:
-      cerr << "ConstraintSolver::Solve something wrong." << endl;
-      break;
+      v->data = newval;
+      v->level++;
+      if (v->level > v->numconstraints * MaxDepth)
+      {
+	cerr << "Maximum level reached for all constraints!" << endl;
+	cout << "Accepting current approximation." << endl;
+	cout << "Recursion level = " << itemstack.size()-1 << endl;
+	break;
+      }
+    }
+    
+    if (item.iter < v->numconstraints)
+    {
+      // Ordered depth first search on the current constraints.
+      // If level is getting too high, try a different order.
+      const unsigned int offset = v->level / v->numconstraints;
+      const unsigned int index = (item.iter + offset) % v->numconstraints;
+      const unsigned int order = v->constraint_order[index];
+      BaseVariable *nextv;
+      if (v->constraints[order]->Satisfy(v->constraint_indices[order],
+					 scheme, Epsilon, nextv, newval))
+      {
+	itemstack.push_front(StackItem(nextv));
+      }
+      item.iter++;
+    }
+    else
+    {
+      v->level--;
+      itemstack.pop_front();
     }
   }
 }
 
-
-void StackItem::print( ostream& os )
-{
-  os<<"StackItem:  "<<var->GetName()<<","<<rtype<<","<<iter<<endl;
-}
 
 } // End namespace SCIRun
 

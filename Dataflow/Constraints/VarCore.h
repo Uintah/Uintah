@@ -71,7 +71,7 @@ public:
    VarCore& operator+=( const Vector& v );
    VarCore& operator+=( const double r );
 
-   inline int epsilonequal( const double Epsilon, const VarCore& v );
+   inline bool epsilonequal( const double Epsilon, const VarCore& v );
    friend PSECORESHARE std::ostream& operator<<( std::ostream& os, VarCore& c );
 private:
    VarType vartype;
@@ -121,7 +121,7 @@ VarCore::operator=( const double r )
 }
 
 
-inline int
+inline bool
 VarCore::epsilonequal( const double Epsilon, const VarCore& v )
 {
    if (isPoint() && v.isPoint())

@@ -41,23 +41,20 @@ using std::stack;
 namespace SCIRun {
 
 
-enum RecurseType { UnInit, RecurseInitial, RecurseNormal };
-
 typedef unsigned char uchar;
 struct PSECORESHARE StackItem {
-   inline StackItem() : var(0), rtype(UnInit), iter(0) {}
-   inline StackItem( BaseVariable* v ) : var(v), rtype(RecurseInitial), iter(0) {}
-   inline StackItem( BaseVariable* v, const uchar rt, const uchar i ) : var(v), rtype(rt), iter(i) {}
-   inline StackItem( const StackItem& i ) : var(i.var), rtype(i.rtype), iter(i.iter) {}
+   inline StackItem() : var(0), iter(0) {}
+   inline StackItem( BaseVariable* v ) : var(v), iter(0) {}
+   inline StackItem( BaseVariable* v, const uchar i ) : var(v), iter(i) {}
+   inline StackItem( const StackItem& i ) : var(i.var), iter(i.iter) {}
    inline ~StackItem() {}
    
-   StackItem& operator=( const StackItem& i ) { var=i.var; rtype=i.rtype; iter=i.iter; return *this; }
-   int operator==( const StackItem& i ) { return (var==i.var)&&(rtype==i.rtype)&&(iter==i.iter); }
+   StackItem& operator=( const StackItem& i ) { var=i.var; iter=i.iter; return *this; }
+   int operator==( const StackItem& i ) { return (var==i.var)&&(iter==i.iter); }
 
    void print( std::ostream& os );
    
    BaseVariable* var;
-   uchar rtype;
    uchar iter;
 };
 
