@@ -211,12 +211,20 @@ itcl_class SCIRun_Render_ViewImage {
 	    "$this-c redraw $gl"
 	update_clut_range
 
-	checkbutton $f.guidelines -text "Show Guidelines" \
+	frame $f.f -bd 0
+	checkbutton $f.f.guidelines -text "Show Guidelines" \
 	    -variable $prefix-show_guidelines \
 	    -command "$this-c redraw $gl"
 
+	checkbutton $f.f.mip -text "MIP" \
+	    -variable $prefix-mode \
+	    -onvalue 1 \
+	    -offvalue 0 \
+	    -command "$this-c rebind $gl"
+	pack $f.f.mip $f.f.guidelines -side left -anchor w
+
 	bind $gl <ButtonPress> "+$w.cp.tabs select \"$name\""
-	pack $f.guidelines -side top -anchor w
+	pack $f.f -side top -anchor w
     }	
 	
 	
