@@ -29,6 +29,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/MaskedLatVolField.h>
@@ -53,6 +54,7 @@ private:
   FieldHandle create_scanline_field(NrrdDataHandle &nrd);
   FieldHandle create_image_field(NrrdDataHandle &nrd);
   FieldHandle create_latvol_field(NrrdDataHandle &nrd);
+  GuiInt build_eigens_;
 };
 
 } // end namespace SCITeem
@@ -61,7 +63,8 @@ using namespace SCITeem;
 DECLARE_MAKER(NrrdToField)
 
 NrrdToField::NrrdToField(GuiContext *ctx):
-  Module("NrrdToField", ctx, Filter, "DataIO", "Teem")
+  Module("NrrdToField", ctx, Filter, "DataIO", "Teem"),
+  build_eigens_(ctx->subVar("build-eigens"))
 {
 }
 
@@ -273,13 +276,19 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
       ScanlineMesh::Edge::iterator iter, end;
       mh->begin(iter);
       mh->end(end);
-      fill_data((ScanlineField<Tensor>*)fh.get_rep(), n, iter, end);
+      if (build_eigens_.get() && n->type == nrrdTypeFloat)
+	fill_eigen_data((ScanlineField<Tensor>*)fh.get_rep(), n, iter, end);
+      else
+	fill_data((ScanlineField<Tensor>*)fh.get_rep(), n, iter, end);
     } else {
       fh = new ScanlineField<Tensor>(mh, Field::NODE);
       ScanlineMesh::Node::iterator iter, end;
       mh->begin(iter);
       mh->end(end);
-      fill_data((ScanlineField<Tensor>*)fh.get_rep(), n, iter, end);
+      if (build_eigens_.get() && n->type == nrrdTypeFloat)
+	fill_eigen_data((ScanlineField<Tensor>*)fh.get_rep(), n, iter, end);
+      else
+	fill_data((ScanlineField<Tensor>*)fh.get_rep(), n, iter, end);
     }
 
     break;
@@ -484,13 +493,19 @@ NrrdToField::create_image_field(NrrdDataHandle &nrd)
       ImageMesh::Face::iterator iter, end;
       mh->begin(iter);
       mh->end(end);
-      fill_data((ImageField<Vector>*)fh.get_rep(), n, iter, end);
+      if (build_eigens_.get() && n->type == nrrdTypeFloat)
+	fill_eigen_data((ImageField<Tensor>*)fh.get_rep(), n, iter, end);
+      else
+	fill_data((ImageField<Tensor>*)fh.get_rep(), n, iter, end);
     } else {
       fh = new ImageField<Tensor>(mh, Field::NODE);
       ImageMesh::Node::iterator iter, end;
       mh->begin(iter);
       mh->end(end);
-      fill_data((ImageField<Vector>*)fh.get_rep(), n, iter, end);
+      if (build_eigens_.get() && n->type == nrrdTypeFloat)
+	fill_eigen_data((ImageField<Tensor>*)fh.get_rep(), n, iter, end);
+      else
+	fill_data((ImageField<Tensor>*)fh.get_rep(), n, iter, end);
     }
     break;
   default:
@@ -696,13 +711,19 @@ NrrdToField::create_latvol_field(NrrdDataHandle &nrd)
       LatVolMesh::Cell::iterator iter, end;
       mh->begin(iter);
       mh->end(end);
-      fill_data((LatVolField<Tensor>*)fh.get_rep(), n, iter, end);
+      if (build_eigens_.get() && n->type == nrrdTypeFloat)
+	fill_eigen_data((LatVolField<Tensor>*)fh.get_rep(), n, iter, end);
+      else
+	fill_data((LatVolField<Tensor>*)fh.get_rep(), n, iter, end);
     } else {
       fh = new LatVolField<Tensor>(mh, Field::NODE);
       LatVolMesh::Node::iterator iter, end;
       mh->begin(iter);
       mh->end(end);
-      fill_data((LatVolField<Tensor>*)fh.get_rep(), n, iter, end);
+      if (build_eigens_.get() && n->type == nrrdTypeFloat)
+	fill_eigen_data((LatVolField<Tensor>*)fh.get_rep(), n, iter, end);
+      else
+	fill_data((LatVolField<Tensor>*)fh.get_rep(), n, iter, end);
     }
     break;
   default:

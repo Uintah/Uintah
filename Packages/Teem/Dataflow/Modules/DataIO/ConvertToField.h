@@ -75,7 +75,7 @@ public:
 };
 
 
-
+void get_val_and_eigens_and_inc_nrrdptr(Tensor &v, void *&ptr);
 
 template <class Val>
 void get_val_and_inc_nrrdptr(Val &v, void *&ptr, unsigned);
@@ -94,6 +94,19 @@ void get_val_and_inc_nrrdptr(Val &v, void *&ptr, unsigned)
   ++p;
 }
 
+template <class Fld, class Iter>
+void 
+fill_eigen_data(Fld *fld, Nrrd *inrrd, Iter &iter, Iter &end) 
+{
+  void *p = inrrd->data;
+
+  while (iter != end) {
+    Tensor tmp;
+    get_val_and_eigens_and_inc_nrrdptr(tmp, p);
+    fld->set_value(tmp, *iter);
+    ++iter;
+  }
+}
 template <class Fld, class Iter>
 void 
 fill_data(Fld *fld, Nrrd *inrrd, Iter &iter, Iter &end) 
