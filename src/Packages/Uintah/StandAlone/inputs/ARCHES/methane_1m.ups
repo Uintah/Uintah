@@ -113,7 +113,7 @@
 	    <BoundaryConditions>
 	        <ramping_inlet_flowrate>false</ramping_inlet_flowrate>
 		<FlowInlet>
-		    <InletVelocity>0.099</InletVelocity>
+	            <InletVelocity>0.33</InletVelocity>
 		    <MixtureFraction>
 			<Mixfrac>0.0</Mixfrac>
 	            </MixtureFraction>
@@ -127,7 +127,7 @@
 		    </geom_object>
 		</FlowInlet>
 		<FlowInlet>
-	            <InletVelocity>0.33</InletVelocity>
+		    <InletVelocity>0.099</InletVelocity>
 		    <MixtureFraction>
 			<Mixfrac>1.0</Mixfrac>
 	            </MixtureFraction>
