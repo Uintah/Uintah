@@ -91,8 +91,10 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       initializeParticle(patch,obj,matl,*itr,cell_idx,pidx,
 			 cellNAPID);
       
-      if (volumes)
+      if (volumes) {
 	pvolume[pidx] = (*volumes)[i];
+        pmass[pidx] = matl->getInitialDensity()*pvolume[pidx];
+      }
       
       // If the particle is on the surface and if there is
       // a physical BC attached to it then mark with the 
