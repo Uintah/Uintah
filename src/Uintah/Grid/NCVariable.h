@@ -74,50 +74,49 @@ WARNING
 	 IntVector hi = getHighIndex();
 	 switch (face) {
 	 case Region::xplus:
-	   for (int j = low.y(); j<=hi.y(); j++) {
-	     for (int k = low.z(); k<=hi.z(); k++) {
-	       Array3<T>::operator()(hi.x(),j,k) = value;
+	   for (int j = low.y(); j<hi.y(); j++) {
+	     for (int k = low.z(); k<hi.z(); k++) {
+	       Array3<T>::operator()(hi.x()-1,j,k) = value;
 	     }
 	   }
 	   break;
 	 case Region::xminus:
-	   for (int j = low.y(); j<=hi.y(); j++) {
-	     for (int k = low.z(); k<=hi.z(); k++) {
-	       Array3<T>::operator()(low.x(),j,k) = value;
+	   for (int j = low.y(); j<hi.y(); j++) {
+	     for (int k = low.z(); k<hi.z(); k++) {
+	       Array3<T>::operator()(low.x()-1,j,k) = value;
 	     }
 	   }
 	   break;
 	 case Region::yplus:
-	   for (int i = low.x(); i<=hi.x(); i++) {
-	     for (int k = low.z(); k<=hi.z(); k++) {
-	       Array3<T>::operator()(i,hi.y(),k) = value;
+	   for (int i = low.x(); i<hi.x(); i++) {
+	     for (int k = low.z(); k<hi.z(); k++) {
+	       Array3<T>::operator()(i,hi.y()-1,k) = value;
 	     }
 	   }
 	   break;
 	 case Region::yminus:
-	   for (int i = low.x(); i<=hi.x(); i++) {
-	     for (int k = low.z(); k<=hi.z(); k++) {
-	       Array3<T>::operator()(i,low.y(),k) = value;
+	   for (int i = low.x(); i<hi.x(); i++) {
+	     for (int k = low.z(); k<hi.z(); k++) {
+	       Array3<T>::operator()(i,low.y()-1,k) = value;
 	     }
 	   }
 	   break;
 	 case Region::zplus:
-	   for (int i = low.x(); i<=hi.x(); i++) {
-	     for (int j = low.y(); j<=hi.y(); j++) {
-	       Array3<T>::operator()(i,j,hi.z()) = value;
+	   for (int i = low.x(); i<hi.x(); i++) {
+	     for (int j = low.y(); j<hi.y(); j++) {
+	       Array3<T>::operator()(i,j,hi.z()-1) = value;
 	     }
 	   }
 	   break;
 	 case Region::zminus:
-	   for (int i = low.x(); i<=hi.x(); i++) {
-	     for (int j = low.y(); j<=hi.y(); j++) {
-	       Array3<T>::operator()(i,j,low.z()) = value;
+	   for (int i = low.x(); i<hi.x(); i++) {
+	     for (int j = low.y(); j<hi.y(); j++) {
+	       Array3<T>::operator()(i,j,low.z()-1) = value;
 	     }
 	   }
 	   break;
 	 }
-		    
-	 
+
        };
      
      // Use to apply symmetry boundary conditions.  On the
@@ -195,6 +194,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.14  2000/05/10 19:39:48  guilkey
+// Fixed the fillFace function, it was previously reading and writing out
+// of bounds.
+//
 // Revision 1.13  2000/05/09 23:43:07  jas
 // Filled in fillFace.  It is probably slow as mud but hopefully the gist
 // is right.
