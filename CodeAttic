@@ -480,3 +480,152 @@ void ICE::qInfluxFirst(const CCVariable<fflux>& q_out,
     q_in_CF[*iter].d_cflux[BOT_L_FR]= q_out_CF[adjcell].d_cflux[TOP_R_BK];
   }
 }
+
+_____________________________makeTecplotFiles______________________________
+________________________________12_12_01___________________________________
+
+This can be used to generate tecplot file from the UCF code if needed.
+This is actually part of SerialMPM, but ICE could use it too.
+
+void SerialMPM::scheduleMakeTecplotFiles(SchedulerP& sched,
+                                         const PatchSet* patches,
+                                         const MaterialSet* matls)
+{
+  Task* t=scinew Task("SerialMPM::makeTecplotFiles",
+                    this, &SerialMPM::makeTecplotFiles);
+
+  t->requires(Task::NewDW, lb->gStressForSavingLabel,  Ghost::None);
+  t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
+  t->requires(Task::NewDW, lb->pStressLabel,           Ghost::None);
+
+  sched->addTask(t, patches, matls);
+}
+
+void SerialMPM::makeTecplotFiles(const ProcessorGroup*,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* ,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label() );
+
+    static double tec_time   = 0.;
+    static double print_time = 0.;
+    static int filenum       = 0;
+    double print_dt          = 0.01;
+    string fileroot = "partout";
+    string filename;
+    char fnum[5];
+
+    tec_time += delT;
+
+    if(tec_time >= print_time){
+      print_time+=print_dt;
+      sprintf(fnum,"%04d",filenum);
+      filename = fileroot+fnum;
+      ofstream partfile(filename.c_str());
+      filenum++;
+
+      int numMPMMatls=d_sharedState->getNumMPMMatls();
+      int numParticles = 0;
+      for(int m = 0; m < numMPMMatls; m++){
+        MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+        numParticles +=  mpm_matl->countParticles(patch);
+      }
+
+      partfile << "TITLE = \"Time =  " << tec_time <<"\"," << endl;
+      partfile << "VARIABLES = X,Y,Z,VonMises" << endl;
+      partfile << "ZONE T=\"PARTICLES\", I=" << numParticles;
+      partfile <<", F=POINT" << endl;
+
+      for(int m = 0; m < numMPMMatls; m++){
+        MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+        int dwindex = mpm_matl->getDWIndex();
+
+        constParticleVariable<Point> px;
+        constParticleVariable<Matrix3> pstress;
+        double vonm;
+
+        ParticleSubset* pset = old_dw->getParticleSubset(dwindex, patch);
+
+        old_dw->get(px,        lb->pXLabel,      pset);
+        new_dw->get(pstress,   lb->pStressLabel, pset);
+        for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();
+            iter++){
+          particleIndex idx = *iter;
+          double sigx = pstress[idx](1,1);
+          double sigy = pstress[idx](2,2);
+          double sigz = pstress[idx](3,3);
+          double tauxy = pstress[idx](1,2);
+          double tauxz = pstress[idx](1,3);
+          double tauyz = pstress[idx](2,3);
+          vonm = pow(.5*(pow(sigx-sigy,2.0) + pow(sigy-sigz,2.0) +
+                 pow(sigz-sigx,2.0) +
+                    6*(pow(tauxy,2.0)+pow(tauxz,2.0)+pow(tauyz,2.0))),.5);
+
+          partfile << px[idx].x() << " " << px[idx].y() << " "
+                   << px[idx].z() << " " << vonm        << endl;
+        }
+
+      }
+      partfile << "ZONE T=\"GRID\", I=" << 41 <<", J="<< 23 <<" K="<< 2;
+      partfile <<", F=BLOCK" << endl;
+      int m = 1;
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwindex = mpm_matl->getDWIndex();
+      constNCVariable<Matrix3> gsFS;
+      new_dw->get(gsFS, lb->gStressForSavingLabel,
+                        dwindex, patch, Ghost::None, 0);
+      Vector dx = patch->dCell();
+      int cnt = 0;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        partfile << ((double) c.x())*dx.x() << " ";
+        cnt ++;
+        if((cnt % 20) == 0){ partfile << endl;}
+      }
+      partfile << endl;
+      cnt = 0;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        partfile << ((double) c.y())*dx.y() << " ";
+        cnt ++;
+        if((cnt % 20) == 0){ partfile << endl;}
+      }
+      partfile << endl;
+      cnt = 0;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        partfile << ((double) c.z())*dx.z() << " ";
+        cnt ++;
+        if((cnt % 20) == 0){ partfile << endl;}
+      }
+      partfile << endl;
+      cnt = 0;
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        double sigx  = gsFS[c](1,1);
+        double sigy  = gsFS[c](2,2);
+        double sigz  = gsFS[c](3,3);
+        double tauxy = gsFS[c](1,2);
+        double tauxz = gsFS[c](1,3);
+        double tauyz = gsFS[c](2,3);
+        double vonmg;
+        vonmg = pow(.5*(pow(sigx-sigy,2.0) + pow(sigy-sigz,2.0) +
+                pow(sigz-sigx,2.0) +
+                    6*(pow(tauxy,2.0)+pow(tauxz,2.0)+pow(tauyz,2.0))),.5);
+
+        partfile << vonmg << " ";
+        cnt ++;
+        if((cnt % 20) == 0){ partfile << endl;}
+      }
+      partfile << endl;
+    }
+  }
+}
+
+___________________________________________________________________________
