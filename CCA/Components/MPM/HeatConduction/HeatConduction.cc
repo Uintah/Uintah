@@ -24,7 +24,7 @@ HeatConduction::HeatConduction(SimulationStateP& sS,MPMLabel* labels,
   d_flag = flags;
   d_sharedState = sS;
 
-  if(d_flag->d_8or27){
+  if(d_flag->d_8or27==8){
     NGP=1;
     NGN=1;
   } else if(d_flag->d_8or27==27){
