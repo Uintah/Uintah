@@ -194,22 +194,23 @@ void
 
   bool do_execute = false;
   // check the generations to see if we need to re-execute
-  if (dataH != 0 && data_generation_ != dataH->generation) {
-    data_generation_ = dataH->generation;
-    do_execute = true;
-  }
-  if (pointsH != 0 && points_generation_ != pointsH->generation) {
-    points_generation_ = pointsH->generation;
-    do_execute = true;
-  }
-  if (connectH != 0 && connect_generation_ != connectH->generation) {
-    connect_generation_ = connectH->generation;
-    do_execute = true;
-  }
-  if (origfieldH != 0 && origfield_generation_ != origfieldH->generation) {
-    origfield_generation_ = origfieldH->generation;
-    do_execute = true;
-  }
+//   if (dataH != 0 && data_generation_ != dataH->generation) {
+//     data_generation_ = dataH->generation;
+//     do_execute = true;
+//   }
+//   if (pointsH != 0 && points_generation_ != pointsH->generation) {
+//     points_generation_ = pointsH->generation;
+//     do_execute = true;
+//   }
+//   if (connectH != 0 && connect_generation_ != connectH->generation) {
+//     connect_generation_ = connectH->generation;
+//     do_execute = true;
+//   }
+//   if (origfieldH != 0 && origfield_generation_ != origfieldH->generation) {
+//     origfield_generation_ = origfieldH->generation;
+//     do_execute = true;
+//   }
+  do_execute = true;
 
   if (do_execute) {
     last_field_ = create_field_from_nrrds(dataH, pointsH, connectH, origfieldH,
@@ -550,17 +551,35 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	  topology_ = STRUCTURED;
 	  geometry_ = IRREGULAR;
 	  // data 2D -> structquad
-	  mHandle = scinew StructQuadSurfMesh(ni,nj);
-	  idim = ni;
-	  jdim = nj;
+	  //mHandle = scinew StructQuadSurfMesh(ni,nj);
+	  //idim = ni;
+	  //jdim = nj;
+	  if (offset) {
+	    mHandle = scinew StructQuadSurfMesh(data->axis[1].size, data->axis[2].size);
+	    idim = data->axis[1].size;
+	    jdim = data->axis[2].size;
+	  } else {
+	    mHandle = scinew StructQuadSurfMesh(data->axis[0].size, data->axis[1].size);
+	    idim = data->axis[0].size;
+	    jdim = data->axis[1].size;
+	  }
 	} else if (dim == 3) {
 	  topology_ = STRUCTURED;
 	  geometry_ = IRREGULAR;
 	  // data 3D -> structhexvol
-	  mHandle = scinew StructHexVolMesh( ni, nj, nk);
-	  idim = ni;
-	  jdim = nj;
-	  kdim = nk;
+	  if (offset) {
+	    mHandle = scinew StructHexVolMesh(data->axis[1].size, data->axis[2].size,
+					      data->axis[3].size);
+	    idim = data->axis[1].size;
+	    jdim = data->axis[2].size;
+	    kdim = data->axis[3].size;
+	  } else {
+	    mHandle = scinew StructHexVolMesh(data->axis[0].size, data->axis[1].size,
+					      data->axis[2].size);
+	    idim = data->axis[0].size;
+	    jdim = data->axis[1].size;
+	    kdim = data->axis[2].size;
+	  }
 	} else {
 	  error("Incorrect dimensions for Data Nrrd");
 	  return 0;
@@ -726,22 +745,20 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	  } else {
 	    mHandle = scinew StructCurveMesh( points->axis[0].size );
 	  }
+	  idim = ni;      
 	} else if (which == "StructQuad") {
 	  topology_ = STRUCTURED;
 	  geometry_ = IRREGULAR;
-	  if (offset) {
-	    mHandle = scinew StructQuadSurfMesh( points->axis[1].size, points->axis[2].size );
-	  } else {
-	    mHandle = scinew StructQuadSurfMesh( points->axis[0].size, points->axis[1].size );
-	  }
+	  mHandle = scinew StructQuadSurfMesh( ni, nj );
+	  idim = ni;
+	  jdim = nj;
 	} else if (which == "StructHex") {
+	  idim = ni;
+	  jdim = nj;
+	  kdim = nk;
 	  topology_ = STRUCTURED;
 	  geometry_ = IRREGULAR;
-	  if (offset) {
-	    mHandle = scinew StructHexVolMesh( points->axis[1].size, points->axis[2].size, points->axis[3].size );
-	  } else {
-	    mHandle = scinew StructHexVolMesh( points->axis[0].size, points->axis[1].size, points->axis[2].size );
-	  }
+	  mHandle = scinew StructHexVolMesh( ni, nj, nk );
 	} else {
 	  // Try to figure out based on properties
 	  if (pointsH->get_property( "Topology" , property)) {
