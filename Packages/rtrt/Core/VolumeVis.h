@@ -39,7 +39,7 @@ public:
 	    int nx, int ny, int nz,
 	    Point min, Point max, const Array1<Color*> &matls, int nmatls,
 	    const Array1<float> &alphas, int nalphas, double spec_coeff,
-	    double ambient, double diffuse, double specular);
+	    double ambient, double diffuse, double specular, float _t_inc);
   virtual ~VolumeVis();
   virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
