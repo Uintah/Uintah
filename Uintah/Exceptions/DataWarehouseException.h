@@ -40,8 +40,12 @@ class DataWarehouseException : public SCICore::Exceptions::Exception {
     std::string msg;
 public:
     DataWarehouseException(const std::string&);
+    DataWarehouseException(const DataWarehouseException&);
     virtual const char* message() const;
     virtual const char* type() const;
+
+private:
+    DataWarehouseException& operator=(const DataWarehouseException&);
 };
 
 } // end namespace Exception

@@ -9,7 +9,7 @@ SRCDIR   := Uintah/Grid
 
 SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/DataItem.cc \
 	$(SRCDIR)/Grid.cc $(SRCDIR)/Level.cc $(SRCDIR)/ParticleSet.cc \
-	$(SRCDIR)/ParticleSubset.cc $(SRCDIR)/ProblemSpec.cc \
+	$(SRCDIR)/ParticleSubset.cc \
 	$(SRCDIR)/RefCounted.cc $(SRCDIR)/Region.cc $(SRCDIR)/SubRegion.cc \
 	$(SRCDIR)/Task.cc
 
@@ -20,6 +20,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/03/23 20:42:22  sparker
+# Added copy ctor to exception classes (for Linux/g++)
+# Helped clean up move of ProblemSpec from Interface to Grid
+#
 # Revision 1.2  2000/03/20 19:38:35  sparker
 # Added VPATH support
 #

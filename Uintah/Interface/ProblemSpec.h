@@ -7,9 +7,13 @@
 #include <string>
 
 namespace Uintah {
+    namespace Grid {
+	class TypeDescription;
+    }
 namespace Interface {
 
-class TypeDescription;
+using Uintah::Grid::RefCounted;
+using Uintah::Grid::TypeDescription;
 
 // This is the "base" problem spec.  There should be ways of breaking
 // this up
@@ -66,6 +70,10 @@ private:
 
 //
 // $Log$
+// Revision 1.3  2000/03/23 20:42:24  sparker
+// Added copy ctor to exception classes (for Linux/g++)
+// Helped clean up move of ProblemSpec from Interface to Grid
+//
 // Revision 1.2  2000/03/23 20:00:17  jas
 // Changed the include files, namespace, and using statements to reflect the
 // move of ProblemSpec from Grid/ to Interface/.

@@ -9,7 +9,11 @@ class SchedulerException {
     std::string msg;
 public:
     SchedulerException(const std::string&);
+    SchedulerException(const SchedulerException&);
     virtual std::string message() const;
+
+private:
+    SchedulerException& operator=(const SchedulerException&);
 };
 
 #endif

@@ -8,7 +8,7 @@ namespace Uintah {
     }
     namespace Interface {
 	class ProblemSpec;
-	typedef Handle<ProblemSpec> ProblemSpecP;
+	typedef Grid::Handle<ProblemSpec> ProblemSpecP;
     }
 }
 

@@ -3,7 +3,7 @@
 
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Interface/MPMInterface.h>
-#include <Uintah/Grid/ProblemSpecP.h>
+#include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
 
@@ -25,7 +25,7 @@ using Uintah::Interface::SchedulerP;
 using Uintah::Parallel::ProcessorContext;
 using Uintah::Grid::Region;
 using Uintah::Grid::LevelP;
-using Uintah::Grid::ProblemSpecP;
+using Uintah::Interface::ProblemSpecP;
 using Uintah::Grid::GridP;
 
 /**************************************
@@ -130,6 +130,10 @@ private:
 
 //
 // $Log$
+// Revision 1.7  2000/03/23 20:42:16  sparker
+// Added copy ctor to exception classes (for Linux/g++)
+// Helped clean up move of ProblemSpec from Interface to Grid
+//
 // Revision 1.6  2000/03/17 21:01:50  dav
 // namespace mods
 //

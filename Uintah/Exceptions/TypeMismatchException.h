@@ -9,8 +9,12 @@ class TypeMismatchException : public SCICore::Exceptions::Exception {
     std::string msg;
 public:
     TypeMismatchException(const std::string&);
+    TypeMismatchException(const TypeMismatchException&);
     const char* message() const;
     const char* type() const;
+
+private:
+    TypeMismatchException& operator=(const TypeMismatchException&);
 };
 
 #endif

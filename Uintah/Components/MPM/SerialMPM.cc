@@ -12,7 +12,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/ParticleVariable.h>
-#include <Uintah/Grid/ProblemSpec.h>
+#include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/Region.h>
 #include <Uintah/Grid/NodeIterator.h> // Must be included after Region.h
 #include <Uintah/Grid/SoleVariable.h>
@@ -46,7 +46,7 @@ using Uintah::Grid::ParticleSubset;
 using Uintah::Grid::ParticleVariable;
 using Uintah::Grid::Task;
 using Uintah::Grid::SoleVariable;
-using Uintah::Grid::ProblemSpec;
+using Uintah::Interface::ProblemSpec;
 using Uintah::Grid::Region;
 using Uintah::Grid::NodeIterator;
 using Uintah::Grid::NCVariable;
@@ -640,6 +640,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.11  2000/03/23 20:42:16  sparker
+// Added copy ctor to exception classes (for Linux/g++)
+// Helped clean up move of ProblemSpec from Interface to Grid
+//
 // Revision 1.10  2000/03/21 02:13:56  dav
 // commented out bad portions of code so I could check in a version that compiles
 //

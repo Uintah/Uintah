@@ -45,7 +45,7 @@ Version   Programmer         Date       Description
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/ProblemSpec.h>
+#include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/Region.h>
 #include <Uintah/Grid/SoleVariable.h>
 #include <SCICore/Geometry/Vector.h>
