@@ -90,9 +90,7 @@ public:
       ///////////////////////////////////////////////////////////////////////
       // Schedule Solve of linearized pressure equation
       void solve(const LevelP& level,
-		 SchedulerP& sched,
-		 DataWarehouseP& old_dw,
-		 DataWarehouseP& new_dw,
+		 SchedulerP& ,
 		 double time, double delta_t);
    
       ///////////////////////////////////////////////////////////////////////
@@ -100,8 +98,8 @@ public:
       void sched_buildLinearMatrix(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls, double delta_t);
  
-      void sched_pressureLinearSolve(SchedulerP&, const PatchSet* patches,
-				     const MaterialSet* matls);
+      void sched_pressureLinearSolve(const LevelP& level,
+				     SchedulerP& sched);
 
 protected:
 
@@ -118,25 +116,29 @@ private:
       //    [in] 
       //        add documentation here
       void buildLinearMatrix(const ProcessorGroup* pc,
-			     const Patch* patch,
-			     DataWarehouseP& new_dw,
-			     DataWarehouseP& matrix_dw,
+			     const PatchSubset* patches,
+			     const MaterialSubset* matls,
+			     DataWarehouse* new_dw,
+			     DataWarehouse* matrix_dw,
 			     double delta_t);
       void buildLinearMatrixPress(const ProcessorGroup* pc,
-			     const Patch* patch,
-			     DataWarehouseP& new_dw,
-			     DataWarehouseP& matrix_dw,
-			     double delta_t);
+				  const PatchSubset* patches,
+				  const MaterialSubset* matls,
+				  DataWarehouse* new_dw,
+				  DataWarehouse* matrix_dw,
+				  double delta_t);
 
       void pressureLinearSolve_all(const ProcessorGroup* pc,
-				   const Patch* patch,
-				   DataWarehouseP& new_dw,
-				   DataWarehouseP& matrix_dw,
+				   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+				   DataWarehouse* new_dw,
+				   DataWarehouse* matrix_dw,
 				   LevelP level, SchedulerP sched);
       void pressureLinearSolve(const ProcessorGroup* pc,
 			       const Patch* patch,
-			       DataWarehouseP& new_dw,
-			       DataWarehouseP& matrix_dw,
+			       const int matlIndex,
+			       DataWarehouse* new_dw,
+			       DataWarehouse* matrix_dw,
 			       ArchesVariables& pressureVars);
       
       ///////////////////////////////////////////////////////////////////////

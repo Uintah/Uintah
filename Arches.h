@@ -95,8 +95,8 @@ public:
 	 
       ///////////////////////////////////////////////////////////////////////
       // Schedule parameter initialization
-      virtual void sched_paramInit(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls);
+      virtual void sched_paramInit(const LevelP& level,
+				   SchedulerP&);
       
       ///////////////////////////////////////////////////////////////////////
       // Schedule Compute if Stable time step
@@ -144,9 +144,16 @@ private:
       ////////////////////////////////////////////////////////////////////////
       // Arches assignment constructor
       void paramInit(const ProcessorGroup*,
-		     const Patch* patch,
-		     DataWarehouseP& old_dw,
-		     DataWarehouseP& );
+		     const PatchSubset* patches,
+		     const MaterialSubset*,
+		     DataWarehouse* ,
+		     DataWarehouse* new_dw );
+
+      void computeStableTimeStep(const ProcessorGroup* ,
+				 const PatchSubset* patches,
+				 const MaterialSubset* matls,
+				 DataWarehouse* ,
+				 DataWarehouse* new_dw);
 
 private:
 
@@ -163,7 +170,7 @@ private:
       BoundaryCondition* d_boundaryCondition;
       SimulationStateP d_sharedState;
       // Variable labels that are used by the simulation controller
-      const ArchesLabel* d_lab;
+      ArchesLabel* d_lab;
       // for multimaterial
       const MPMArchesLabel* d_MAlab;
 #ifdef multimaterialform

@@ -4,6 +4,10 @@
 #define Uintah_Components_Arches_ArchesLabel_h
 
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
+
 
 /**************************************
 CLASS
@@ -38,7 +42,13 @@ namespace Uintah {
 
       ArchesLabel();
       ~ArchesLabel();
-
+      inline void setSharedState(SimulationStateP& sharedState) {
+	d_sharedState = sharedState;
+      }
+     
+      SimulationStateP d_sharedState;
+      // material subset for stencils
+      MaterialSubset* d_stencilMatl;
       // Cell Information
       // for old_dw, perpatch var
       const VarLabel* d_cellInfoLabel;

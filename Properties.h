@@ -105,16 +105,18 @@ private:
       ///////////////////////////////////////////////////////////////////////
       // Carry out actual computation of properties
       void computeProps(const ProcessorGroup*,
-			const Patch* patch,
-			DataWarehouseP& old_dw,
-			DataWarehouseP& new_dw);
+			const PatchSubset* patches,
+			const MaterialSubset* matls,
+			DataWarehouse* old_dw,
+			DataWarehouse* new_dw);
 
       ///////////////////////////////////////////////////////////////////////
       // Carry out actual recomputation of properties
       void reComputeProps(const ProcessorGroup*,
-			const Patch* patch,
-			DataWarehouseP& old_dw,
-			DataWarehouseP& new_dw);
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw);
 
       // GROUP: Constructors Not Instantiated:
       ///////////////////////////////////////////////////////////////////////

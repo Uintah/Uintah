@@ -79,10 +79,9 @@ public:
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
       // Schedule Solve of the linearized momentum equation. 
-      void solve(const LevelP& level,
-		 SchedulerP& sched,
-		 DataWarehouseP& old_dw,
-		 DataWarehouseP& new_dw, 
+      void solve(SchedulerP& sched,
+		 const PatchSet* patches,
+		 const MaterialSet* matls,
 		 double time, double delta_t, int index);
    
       ///////////////////////////////////////////////////////////////////////
@@ -108,15 +107,17 @@ private:
       ///////////////////////////////////////////////////////////////////////
       // Actually build the linearized momentum matrix
       void buildLinearMatrix(const ProcessorGroup* pc,
-			     const Patch* patch,
-			     DataWarehouseP& old_dw,
-			     DataWarehouseP& new_dw,
+			     const PatchSubset* patches,
+			     const MaterialSubset* /*matls*/,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw,
 			     double delta_t, int index);
    
       void velocityLinearSolve(const ProcessorGroup* pc,
-			       const Patch* patch,
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw,
+			       const PatchSubset* patches,
+			       const MaterialSubset* /*matls*/,
+			       DataWarehouse* old_dw,
+			       DataWarehouse* new_dw,
 			       double delta_t, int index);
 
 private:
