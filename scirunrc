@@ -1,6 +1,9 @@
 #
 # Sample .scirunrc file.
 #
+# This file comes from the SCIRun src tree:
+#   ./SCIRun/src/scirunrc
+#
 # All variables in this file have been commented out or set
 # to their default values.  The first portion of this file
 # includes a list of environment variables that can be either
