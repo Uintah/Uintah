@@ -414,6 +414,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->gNumNearParticlesLabel);
   t->computes(lb->TotalMassLabel);
+  t->computes(lb->TotalVolumeDeformedLabel);
   
   sched->addTask(t, patches, matls);
 }
@@ -1530,6 +1531,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
   for(int iface=0;iface<6;iface++) {
       bndyForce[iface]  = Vector(0.);
   }
+  double partvoldef = 0.;
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1636,6 +1638,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         stressmass  = pstress[idx]*pmass[idx];
         //stresspress = pstress[idx] + Id*p_pressure[idx];
         stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
+        partvoldef += pvol[idx];
 
         for (int k = 0; k < n8or27; k++){
           if(patch->containsNode(ni[k])){
@@ -1697,6 +1700,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       gstressglobal[c] /= gmassglobal[c];
     }
   }
+  new_dw->put(sum_vartype(partvoldef), lb->TotalVolumeDeformedLabel);
+   
   
   // be careful only to put the fields that we have built
   // that way if the user asks to output a field that has not been built
