@@ -993,7 +993,7 @@ OpenGL::redraw_frame()
   }
 
   viewer_->geomlock_.readUnlock();
-
+  view_window_->gui_total_frames_.set(view_window_->gui_total_frames_.get()+1);
   // Look for errors
   CHECK_OPENGL_ERROR("OpenGL::redraw after drawing objects: ")
 
