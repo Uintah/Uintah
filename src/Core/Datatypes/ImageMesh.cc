@@ -57,10 +57,10 @@ ImageMesh::ImageMesh(unsigned x, unsigned y,
 BBox
 ImageMesh::get_bounding_box() const
 {
-  Point p0(0.0, 0.0, 0.0);
-  Point p1(nx_, 0.0, 0.0);
-  Point p2(nx_, ny_, 0.0);
-  Point p3(0.0, ny_, 0.0);
+  Point p0(0.0,   0.0,   0.0);
+  Point p1(nx_-1, 0.0,   0.0);
+  Point p2(nx_-1, ny_-1, 0.0);
+  Point p3(0.0,   ny_-1, 0.0);
   
   BBox result;
   result.extend(transform_.project(p0));
@@ -130,6 +130,9 @@ ImageMesh::locate(Face::index_type &face, const Point &p)
 {
   const Point r = transform_.unproject(p);
 
+  // Rounds down, so catches intervals.  Might lose numerical precision on
+  // upper edge (ie nodes on upper edges are not in any cell).
+  // Nodes over 2 billion might suffer roundoff error.
   face.i_ = (unsigned int)r.x();
   face.j_ = (unsigned int)r.y();
 
@@ -147,29 +150,21 @@ ImageMesh::locate(Face::index_type &face, const Point &p)
 bool
 ImageMesh::locate(Node::index_type &node, const Point &p)
 {
-  Node::array_type nodes;     // storage for node_indeces
-  Face::index_type face;
-  double max;
-  int loop;
+  const Point r = transform_.unproject(p);
 
-  // locate the face enclosing the point (including weights)
-  if (!locate(face,p)) return false;
-  weight_array w;
-  calc_weights(this, face, p, w);
+  // Nodes over 2 billion might suffer roundoff error.
+  face.i_ = (unsigned int)(r.x() + 0.5);
+  face.j_ = (unsigned int)(r.y() + 0.5);
 
-  // get the node_indeces in this face
-  get_nodes(nodes,face);
-
-  // find, and return, the "heaviest" node
-  max = w[0];
-  loop=1;
-  while (loop<8) {
-    if (w[loop]>max) {
-      max=w[loop];
-      node=nodes[loop];
-    }
+  if (face.i_ >= nx_ ||
+      face.j_ >= ny_)
+  {
+    return false;
   }
-  return true;
+  else
+  {
+    return true;
+  }
 }
 
 
@@ -183,8 +178,8 @@ ImageMesh::get_weights(const Point &p,
   node0.i_ = (unsigned int)r.x();
   node0.j_ = (unsigned int)r.y();
 
-  if (node0.i_ >= 0 && node0.i_ < (nx_-1) ||
-      node0.j_ >= 0 && node0.j_ < (ny_-1))
+  if (node0.i_ < (nx_-1) ||
+      node0.j_ < (ny_-1))
   {
     const double dx1 = r.x() - node0.i_;
     const double dy1 = r.y() - node0.j_;

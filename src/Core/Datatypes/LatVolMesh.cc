@@ -90,14 +90,14 @@ LatVolMesh::get_random_point(Point &p, const Elem::index_type &ei,
 BBox
 LatVolMesh::get_bounding_box() const
 {
-  Point p0(0.0, 0.0, 0.0);
-  Point p1(nx_, 0.0, 0.0);
-  Point p2(nx_, ny_, 0.0);
-  Point p3(0.0, ny_, 0.0);
-  Point p4(0.0, 0.0, nz_);
-  Point p5(nx_, 0.0, nz_);
-  Point p6(nx_, ny_, nz_);
-  Point p7(0.0, ny_, nz_);
+  Point p0(0.0,   0.0,   0.0);
+  Point p1(nx_-1, 0.0,   0.0);
+  Point p2(nx_-1, ny_-1, 0.0);
+  Point p3(0.0,   ny_-1, 0.0);
+  Point p4(0.0,   0.0,   nz_-1);
+  Point p5(nx_-1, 0.0,   nz_-1);
+  Point p6(nx_-1, ny_-1, nz_-1);
+  Point p7(0.0,   ny_-1, nz_-1);
   
   BBox result;
   result.extend(transform_.project(p0));
@@ -134,6 +134,7 @@ LatVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 }
 
 //! return all cell_indecies that overlap the BBox in arr.
+
 void
 LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox)
 {
@@ -178,6 +179,9 @@ LatVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
   const Point r = transform_.unproject(p);
 
+  // Rounds down, so catches intervals.  Might lose numerical precision on
+  // upper edge (ie nodes on upper edges are not in any cell).
+  // Nodes over 2 billion might suffer roundoff error.
   cell.i_ = (unsigned int)r.x();
   cell.j_ = (unsigned int)r.y();
   cell.k_ = (unsigned int)r.z();
@@ -199,29 +203,23 @@ LatVolMesh::locate(Cell::index_type &cell, const Point &p)
 bool
 LatVolMesh::locate(Node::index_type &node, const Point &p)
 {
-  Node::array_type nodes;     // storage for node_indeces
-  Cell::index_type cell;
-  double max;
-  int loop;
+  const Point r = transform_.unproject(p);
 
-  // locate the cell enclosing the point (including weights)
-  if (!locate(cell,p)) return false;
-  weight_array w;
-  calc_weights(this, cell, p, w);
+  // Nodes over 2 billion might suffer roundoff error.
+  node.i_ = (unsigned int)(r.x() + 0.5);
+  node.j_ = (unsigned int)(r.y() + 0.5);
+  node.k_ = (unsigned int)(r.z() + 0.5);
 
-  // get the node_indeces in this cell
-  get_nodes(nodes,cell);
-
-  // find, and return, the "heaviest" node
-  max = w[0];
-  loop=1;
-  while (loop<8) {
-    if (w[loop]>max) {
-      max=w[loop];
-      node=nodes[loop];
-    }
+  if (node.i_ >= nx_ ||
+      node.j_ >= ny_ ||
+      node.k_ >= nz_)
+  {
+    return false;
   }
-  return true;
+  else
+  {
+    return true;
+  }
 }
 
 

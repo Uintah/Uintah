@@ -46,7 +46,7 @@ ScanlineMesh::ScanlineMesh(unsigned int length,
 			   const Point &min, const Point &max)
   : offset_(0), length_(length)
 {
-  transform_.pre_scale(Vector(1.0 / (length_-1.0), 1.0, 1.0));
+  transform_.pre_scale(Vector(1.0 / (length_ - 1.0), 1.0, 1.0));
   transform_.pre_scale(max - min);
   transform_.pre_translate(Vector(min));
   transform_.compute_imat();
@@ -57,7 +57,7 @@ BBox
 ScanlineMesh::get_bounding_box() const
 {
   Point p0(0.0, 0.0, 0.0);
-  Point p1(length_, 0.0, 0.0);
+  Point p1(length_ - 1, 0.0, 0.0);
   
   BBox result;
   result.extend(transform_.project(p0));
@@ -126,29 +126,17 @@ ScanlineMesh::locate(Edge::index_type &elem, const Point &p)
 bool
 ScanlineMesh::locate(Node::index_type &node, const Point &p)
 {
-  Node::array_type nodes;     // storage for node_indeces
-  Cell::index_type cell;
-  double max;
-  int loop;
+  const Point r = transform_.unproject(p);
+  elem = (unsigned int)(r.x() + 0.5);
 
-  // locate the cell enclosing the point (including weights)
-  if (!locate(cell,p)) return false;
-  weight_array w;
-  calc_weights(this, cell, p, w);
-
-  // get the node_indeces in this cell
-  get_nodes(nodes,cell);
-
-  // find, and return, the "heaviest" node
-  max = w[0];
-  loop=1;
-  while (loop<8) {
-    if (w[loop]>max) {
-      max=w[loop];
-      node=nodes[loop];
-    }
+  if (elem >= length_)
+  {
+    return false;
   }
-  return true;
+  else
+  {
+    return true;
+  }
 }
 
 
