@@ -128,7 +128,7 @@ namespace SCIRun {
             if (errno == EINTR) continue;
             if (errno == EAGAIN) continue;
 			
-            std::cerr << "SystemCall: Detected an error during select" << std::endl;
+			// std::cerr << "SystemCall: Detected an error during select" << std::endl;
 			
             syscall_->signal_exit();
             syscall_->signal_eof();
@@ -357,9 +357,8 @@ namespace SCIRun {
     // If no command is specified throw an error
     if(command == "") throw SystemCallError("No command to execute",0,SCE_NOCMD);
 
-    // Store the instuctions in the object
-    if (!(systemcallmanager_.get_rep()))  throw SystemCallError("The systemcallmanager has not been forked",0,SCE_NOSYSMANAGER);
-
+	// Store the instuctions in the object
+	if (!(systemcallmanager_))  throw SystemCallError("The systemcallmanager has not been forked",0,SCE_NOSYSMANAGER);
     unlock();
 
     Thread				*thread = 0;
@@ -403,416 +402,418 @@ namespace SCIRun {
 	
   }
 
-  void SystemCall::wait_eof()
-  {
-    dolock();
-    if (iseof_)
-      {
-        unlock();
-        return;
-      }
-    eof_.wait(lock);
-    isrunning_ = false;
-    unlock();
-    return;
-  }
+void SystemCall::wait_eof()
+{
+	dolock();
+	if (iseof_)
+	{
+		unlock();
+		return;
+	}
+	eof_.wait(lock);
+	isrunning_ = false;
+	unlock();
+	return;
+}
 
-  void SystemCall::signal_eof()
-  {
-    dolock();
-    iseof_ = true;
-    eof_.conditionBroadcast();
-    unlock();
-  }
+void SystemCall::signal_eof()
+{
+	dolock();
+	iseof_ = true;
+	eof_.conditionBroadcast();
+	unlock();
+}
 
-  void SystemCall::signal_exit()
-  {
-    dolock();
-    isexit_ = true;
-    std::list<SystemCallHandlerHandle>::iterator it = exithandler_.begin();
-    for (; it != exithandler_.end(); it++)  { (*it)->end(); (*it)->end_ = true; }
-    exit_.conditionBroadcast();
-    unlock();
-  }
-
-
-  void SystemCall::wait()
-  {
-    dolock();
-    if (isexit_)
-      {
-        unlock();
-        return;
-      }
-    exit_.wait(lock);
-    isrunning_ = false;
-    unlock();
-    return;
-  }
+void SystemCall::signal_exit()
+{
+	dolock();
+	isexit_ = true;
+	std::list<SystemCallHandlerHandle>::iterator it = exithandler_.begin();
+	for (; it != exithandler_.end(); it++)  { (*it)->end(); (*it)->end_ = true; }
+	exit_.conditionBroadcast();
+	unlock();
+}
 
 
-  void SystemCall::kill(int secs)
-  {
-    dolock();
-    if (processid_) 
-      {
-        if (isrunning_) systemcallmanager_->kill(processid_,secs);
-      }
-    isrunning_ = false;				// set state to not running
-    unlock();
-  }
+void SystemCall::wait()
+{
+	dolock();
+	if (isexit_)
+	{
+		unlock();
+		return;
+	}
+	exit_.wait(lock);
+	isrunning_ = false;
+	unlock();
+	return;
+}
 
 
-  bool SystemCall::signal_stdout_eof()
-  {
-    dolock();
-    stdout_eof_ = true;
+void SystemCall::kill(int secs)
+{
+	dolock();
+	if (processid_) 
+    {
+             if (isrunning_) systemcallmanager_->kill(processid_,secs);
+    }
+	isrunning_ = false;				// set state to not running
+	unlock();
+}
+
+
+bool SystemCall::signal_stdout_eof()
+{
+	dolock();
+	stdout_eof_ = true;
 	
-    // signal the handlers that we read the end of file
-    std::list<SystemCallHandlerHandle>::iterator it = stdouthandler_.begin();
-    for (; it != stdouthandler_.end(); it++)  { (*it)->end(); (*it)->end_ = true; }
+	// signal the handlers that we read the end of file
+	std::list<SystemCallHandlerHandle>::iterator it = stdouthandler_.begin();
+	for (; it != stdouthandler_.end(); it++)  { (*it)->end(); (*it)->end_ = true; }
 	
-    bool retval = stderr_eof_;
-    unlock();
-    return(retval);		
-  }
+	bool retval = stderr_eof_;
+	unlock();
+	return(retval);		
+}
 
-  bool SystemCall::signal_stderr_eof()
-  {
-    dolock();
-    stderr_eof_ = true;
+bool SystemCall::signal_stderr_eof()
+{
+	dolock();
+	stderr_eof_ = true;
 
-    // signal the handlers that we read the end of file
-    std::list<SystemCallHandlerHandle>::iterator it = stderrhandler_.begin();
-    for (; it != stderrhandler_.end(); it++) { (*it)->end(); (*it)->end_ = true; }
+	// signal the handlers that we read the end of file
+	std::list<SystemCallHandlerHandle>::iterator it = stderrhandler_.begin();
+	for (; it != stderrhandler_.end(); it++) { (*it)->end(); (*it)->end_ = true; }
 	
-    bool retval = stdout_eof_;
-    unlock();
-    return(retval);
-  }
+	bool retval = stdout_eof_;
+	unlock();
+	return(retval);
+}
 
-  void SystemCall::put_stdin(std::list<std::string> &vec, bool raw)
-  {
-    dolock();
+void SystemCall::put_stdin(std::list<std::string> &vec, bool raw)
+{
+	dolock();
+    
+	if (!isrunning_) 
+	{ 
+		unlock(); 
+		throw(SystemCallError("No process is running",0,SCE_NOCMD));
+	}
 	
-    if (!isrunning_) 
-      { 
-        unlock(); 
-        throw(SystemCallError("No process is running",0,SCE_NOCMD));
-      }
+	try
+	{
+		std::list<std::string>::iterator p;
+		for (; p!= vec.end(); p++)	
+		{
+			if (raw == false)
+			{
+				if ((*p).size() == 0)
+				{
+					std::string empty = "\n";
+					put_stdin_int(empty);
+				}
+				else
+				{
+					if ((*p)[(*p).size()-1] != '\n') 
+					{
+						std::string newstring = (*p) + std::string("\n");
+						put_stdin_int(newstring);
+					}
+					else
+					{
+						put_stdin_int((*p));
+					}
+				}
+			}
+			else
+			{
+				put_stdin_int((*p));
+			}
+		}
+	}
+	catch(...)
+	{
+		unlock();
+		throw;
+	}
+	unlock();	
+}
+
+
+
+
+void SystemCall::put_stdin(std::vector<std::string> &vec, bool raw)
+{
+	dolock();
 	
-    try
-      {
-        std::list<std::string>::iterator p;
-        for (; p!= vec.end(); p++)	
-          {
-            if (raw == false)
-              {
-                if ((*p).size() == 0)
-                  {
-                    std::string empty = "\n";
-                    put_stdin_int(empty);
-                  }
-                else
-                  {
-                    if ((*p)[(*p).size()-1] != '\n') 
-                      {
-                        std::string newstring = (*p) + std::string("\n");
-                        put_stdin_int(newstring);
-                      }
-                    else
-                      {
-                        put_stdin_int((*p));
-                      }
-                  }
-              }
-            else
-              {
-                put_stdin_int((*p));
-              }
-          }
-      }
-    catch(...)
-      {
-        unlock();
-        throw;
-      }
-    unlock();	
-  }
-
-
-
-
-  void SystemCall::put_stdin(std::vector<std::string> &vec, bool raw)
-  {
-    dolock();
+	if (!isrunning_) 
+	{ 
+		unlock(); 
+		throw(SystemCallError("No process is running",0,SCE_NOCMD)); 
+	}
 	
-    if (!isrunning_) 
-      { 
-        unlock(); 
-        throw(SystemCallError("No process is running",0,SCE_NOCMD)); 
-      }
+	try
+	{
+		for (int p = 0; p < vec.size(); p++)	
+		{
+			if (raw == false)
+			{
+				if (vec[p].size() == 0)
+				{
+					std::string empty = "\n";
+					put_stdin_int(empty);
+				}
+				else
+				{
+					if (vec[p][vec[p].size()-1] != '\n') 
+					{
+						std::string newstring = vec[p] + std::string("\n");
+						put_stdin_int(newstring);
+					}
+					else
+					{
+						put_stdin_int(vec[p]);
+					}
+				}
+			}
+			else
+			{
+				put_stdin_int(vec[p]);
+			}
+		}
+	}
+	catch (...)
+	{
+		unlock();
+		throw;
+	}
+	unlock();	
+}
+
+
+void SystemCall::put_stdin(std::string &str, bool raw)
+{
+	dolock();
+
+	if (!isrunning_) 
+	{ 
+		unlock(); 
+		throw(SystemCallError("No process is running",0,SCE_NOCMD));  
+	}
 	
-    try
-      {
-        for (int p = 0; p < (int)vec.size(); p++)	
-          {
-            if (raw == false)
-              {
-                if (vec[p].size() == 0)
-                  {
-                    std::string empty = "\n";
-                    put_stdin_int(empty);
-                  }
-                else
-                  {
-                    if (vec[p][vec[p].size()-1] != '\n') 
-                      {
-                        std::string newstring = vec[p] + std::string("\n");
-                        put_stdin_int(newstring);
-                      }
-                    else
-                      {
-                        put_stdin_int(vec[p]);
-                      }
-                  }
-              }
-            else
-              {
-                put_stdin_int(vec[p]);
-              }
-          }
-      }
-    catch (...)
-      {
-        unlock();
-        throw;
-      }
-    unlock();	
-  }
+	try
+	{
+		if (raw == false)
+		{
+			if (str.size() == 0)
+			{
+				std::string empty = "\n";
+				put_stdin_int(empty);
+			}
+			else
+			{
+				if (str[str.size()-1] != '\n') 
+				{
+					std::string newstring = str + std::string("\n");
+					put_stdin_int(newstring);
+				}
+				else
+				{
+					put_stdin_int(str);
+				}
+			}
+		}
+		else
+		{
+			put_stdin_int(str);
+		}
+	}
+	catch(...)
+	{
+		unlock();
+		throw;
+	}
+	unlock();	
+}
 
 
-  void SystemCall::put_stdin(std::string &str, bool raw)
-  {
-    dolock();
-
-    if (!isrunning_) 
-      { 
-        unlock(); 
-        throw(SystemCallError("No process is running",0,SCE_NOCMD));  
-      }
+void SystemCall::put_stdin_int(std::string &str)
+{
+	// internal function, locking is done in 
+	// function that calls this function
 	
-    try
-      {
-        if (raw == false)
-          {
-            if (str.size() == 0)
-              {
-                std::string empty = "\n";
-                put_stdin_int(empty);
-              }
-            else
-              {
-                if (str[str.size()-1] != '\n') 
-                  {
-                    std::string newstring = str + std::string("\n");
-                    put_stdin_int(newstring);
-                  }
-                else
-                  {
-                    put_stdin_int(str);
-                  }
-              }
-          }
-        else
-          {
-            put_stdin_int(str);
-          }
-      }
-    catch(...)
-      {
-        unlock();
-        throw;
-      }
-    unlock();	
-  }
-
-
-  void SystemCall::put_stdin_int(std::string &str)
-  {
-    // internal function, locking is done in 
-    // function that calls this function
-	
-    size_t bytestowrite = str.size();
-    size_t byteswritten = 0;
-    long len = 0;
-    while (byteswritten < bytestowrite)
-      {
-        len = ::write(fd_stdin_,&(str[byteswritten]),bytestowrite-byteswritten);
-        if (len < 0)
-          {
-            if (errno == EINTR) continue;		// Function was interupted by a signal
-            if (errno == EAGAIN) continue;		// Kernel wants us to try once more
+    if (systemcallmanager_->exit_ == true) return;
+    
+	size_t bytestowrite = str.size();
+	size_t byteswritten = 0;
+	long len = 0;
+	while (byteswritten < bytestowrite)
+	{
+		len = ::write(fd_stdin_,&(str[byteswritten]),bytestowrite-byteswritten);
+		if (len < 0)
+		{
+			if (errno == EINTR) continue;		// Function was interupted by a signal
+			if (errno == EAGAIN) continue;		// Kernel wants us to try once more
 			
-            // No hope left, so just generate an error
-            throw SystemCallError("Error writing to stdin",errno,SCE_IOERROR);
-          }
-        byteswritten += len;
-      }
-  }
+			// No hope left, so just generate an error
+			// throw SystemCallError("Error writing to stdin",errno,SCE_IOERROR);
+		}
+		byteswritten += len;
+	}
+}
 
 
 
 
-  bool SystemCall::create_logfile(std::string filename)
-  {
-    dolock();
-    try
-      {
-        file_.open(filename.c_str(),std::ios::out);
-        isfile_	= true;
-      }
-    catch (...)
-      {
-        isfile_ = false;
-        unlock();
-        return(false);
-      }
-    unlock();
-    return(true);
-  }
+bool SystemCall::create_logfile(std::string filename)
+{
+	dolock();
+	try
+	{
+		file_.open(filename.c_str(),std::ios::out);
+		isfile_	= true;
+	}
+	catch (...)
+	{
+		isfile_ = false;
+		unlock();
+		return(false);
+	}
+	unlock();
+	return(true);
+}
 
-  bool SystemCall::append_logfile(std::string filename)
-  {
-    dolock();
-    try
-      {
-        file_.open(filename.c_str(),std::ios::app);
-        isfile_	= true;
-      }
-    catch (...)
-      {
-        isfile_ = false;
-        unlock();
-        return(false);
-      }
+bool SystemCall::append_logfile(std::string filename)
+{
+	dolock();
+	try
+	{
+		file_.open(filename.c_str(),std::ios::app);
+		isfile_	= true;
+	}
+	catch (...)
+	{
+		isfile_ = false;
+		unlock();
+		return(false);
+	}
 	
-    unlock();
-    return(true);
-  }
+	unlock();
+	return(true);
+}
 
 
-  void SystemCall::insert_stdout_line(std::string &line)
-  {
-    // Add the line to the file log;
-    dolock();
+void SystemCall::insert_stdout_line(std::string &line)
+{
+	// Add the line to the file log;
+	dolock();
 
-    if (isfile_) file_ << line;
+	if (isfile_) file_ << line;
 	
-    if (stdoutbuffersize_ != 0)
-      {
-        stdoutbuffer_.push_back(line);
-        if ((stdoutbuffersize_ > 0)&&(stdoutbuffersize_ < (int)stdoutbuffer_.size())) stdoutbuffer_.pop_front();
-      }
+	if (stdoutbuffersize_ != 0)
+	{
+		stdoutbuffer_.push_back(line);
+		if ((stdoutbuffersize_ > 0)&&(stdoutbuffersize_ < stdoutbuffer_.size())) stdoutbuffer_.pop_front();
+	}
 	
-    std::list<SystemCallHandlerHandle>::iterator it = stdouthandler_.begin();
-    for (; it != stdouthandler_.end(); it++)
-      {
-        if(!((*it)->execute(line))) break;
-      }
+	std::list<SystemCallHandlerHandle>::iterator it = stdouthandler_.begin();
+	for (; it != stdouthandler_.end(); it++)
+	{
+		if(!((*it)->execute(line))) break;
+	}
 	
-    unlock();
-  }
+	unlock();
+}
 
-  void SystemCall::insert_stderr_line(std::string &line)
-  {
-    dolock();
+void SystemCall::insert_stderr_line(std::string &line)
+{
+	dolock();
 
-    if (stderrbuffersize_ != 0)
-      {
-        stderrbuffer_.push_back(line);
-        if ((stderrbuffersize_ > 0)&&(stderrbuffersize_ < (int)stderrbuffer_.size())) stderrbuffer_.pop_front();
-      }
+	if (stderrbuffersize_ != 0)
+	{
+		stderrbuffer_.push_back(line);
+		if ((stderrbuffersize_ > 0)&&(stderrbuffersize_ < stderrbuffer_.size())) stderrbuffer_.pop_front();
+	}
 
-    if (isfile_) file_ << "STD_ERROR_OUTPUT: " <<line;
+	if (isfile_) file_ << "STD_ERROR_OUTPUT: " <<line;
 	
-    std::list<SystemCallHandlerHandle>::iterator it = stderrhandler_.begin();
-    for (; it != stderrhandler_.end(); it++)
-      {
-        if(!((*it)->execute(line))) break;
-      }
+	std::list<SystemCallHandlerHandle>::iterator it = stderrhandler_.begin();
+	for (; it != stderrhandler_.end(); it++)
+	{
+		if(!((*it)->execute(line))) break;
+	}
 
-    unlock();
-  }
+	unlock();
+}
 
 
-  void SystemCall::add_stdout_handler(SystemCallHandlerHandle handle, bool front)
-  {
-    dolock();
+void SystemCall::add_stdout_handler(SystemCallHandlerHandle handle, bool front)
+{
+	dolock();
 
-    if (front)
-      {
-        stdouthandler_.push_front(handle);
-      }
-    else
-      {
-        stdouthandler_.push_back(handle);
-      }
-    handle->start(stdoutbuffer_);
+	if (front)
+	{
+		stdouthandler_.push_front(handle);
+	}
+	else
+	{
+		stdouthandler_.push_back(handle);
+	}
+	handle->start(stdoutbuffer_);
 	
-    if (isexit_) { handle->end(); handle->end_ = true; }
+	if (isexit_) { handle->end(); handle->end_ = true; }
 
-    unlock();
-  }
+	unlock();
+}
 
-  void SystemCall::rem_stdout_handler(SystemCallHandlerHandle handle)
-  {
-    dolock();
+void SystemCall::rem_stdout_handler(SystemCallHandlerHandle handle)
+{
+	dolock();
     stdouthandler_.remove(handle);
-    unlock();
-  }
+	unlock();
+}
 
-  void SystemCall::add_stderr_handler(SystemCallHandlerHandle handle, bool front)
-  {
-    dolock();
+void SystemCall::add_stderr_handler(SystemCallHandlerHandle handle, bool front)
+{
+	dolock();
 	
-    if (front)
-      {
-        stderrhandler_.push_front(handle);
-      }
-    else
-      {
-        stderrhandler_.push_back(handle);
-      }
-    handle->start(stderrbuffer_);
-    if (isexit_) { handle->end(); handle->end_ = true; }
+	if (front)
+	{
+		stderrhandler_.push_front(handle);
+	}
+	else
+	{
+		stderrhandler_.push_back(handle);
+	}
+	handle->start(stderrbuffer_);
+	if (isexit_) { handle->end(); handle->end_ = true; }
 	
-    unlock();
-  }
+	unlock();
+}
 
-  void SystemCall::rem_stderr_handler(SystemCallHandlerHandle handle)
-  {
-    dolock();
+void SystemCall::rem_stderr_handler(SystemCallHandlerHandle handle)
+{
+	dolock();
     stderrhandler_.remove(handle);
-    unlock();
-  }
+	unlock();
+}
 
-  void SystemCall::add_exit_handler(SystemCallHandlerHandle handle)
-  {
-    dolock();
+void SystemCall::add_exit_handler(SystemCallHandlerHandle handle)
+{
+	dolock();
 	
-    exithandler_.push_back(handle);
-    // for this one we don not call start, it is an exit handler
-    if (isexit_) { handle->end(); handle->end_ = true; }
-    unlock();
-  }
+	exithandler_.push_back(handle);
+	// for this one we don not call start, it is an exit handler
+	if (isexit_) { handle->end(); handle->end_ = true; }
+	unlock();
+}
 
-  void SystemCall::rem_exit_handler(SystemCallHandlerHandle handle)
-  {
-    dolock();
+void SystemCall::rem_exit_handler(SystemCallHandlerHandle handle)
+{
+	dolock();
     exithandler_.remove(handle);
-    unlock();
-  }
+	unlock();
+}
 
 } // namespace
 
