@@ -33,6 +33,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <sci_hash_map.h>
 #include <iostream>
 

@@ -43,6 +43,7 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/BBox.h>
 #include <Core/GuiInterface/GuiVar.h>
 
 
