@@ -19,6 +19,7 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Containers/StaticArray.h>
+#include <float.h>
 
 using namespace Uintah;
 using namespace SCIRun;
