@@ -18,10 +18,12 @@
 //    Date   : Wed Jun  6 15:40:27 2001
 
 
-#ifndef SCI_Containers_StaticObjectArray_h
-#define SCI_Containers_StaticObjectArray_h
+#ifndef Uintah_Core_Math_StaticObjectArray_h
+#define Uintah_Core_Math_StaticObjectArray_h
 
 #include <Core/Util/Assert.h>
+
+using namespace SCIRun;
 
 namespace Uintah {
 

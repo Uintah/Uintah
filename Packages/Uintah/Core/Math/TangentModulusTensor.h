@@ -23,6 +23,9 @@ namespace Uintah {
     {
     public:
 
+      /** Constructor for tensor : Creates a 3x3x3x3 Tensor4D object */
+      TangentModulusTensor();
+
       /** Convert a 6x6 matrix form of the tangent modulus to a 
           3x3x3x3 form */
       TangentModulusTensor(const FastMatrix& C_6x6);
@@ -39,11 +42,8 @@ namespace Uintah {
       /** Convert the 3x3x3x3 tangent modulus to a 6x6 matrix */
       void convertToVoigtForm(FastMatrix& C_6x6);
 
-    private:
-
-      /** Constructor for tensor : Creates a 3x3x3x3 Tensor4D object */
-      TangentModulusTensor();
-
+      /** Convert a 6x6 tangent modulus to a 3x3x3x3 matrix */
+      void convertToTensorForm(const FastMatrix& C_6x6); 
     };
 
 } // namespace Uintah
