@@ -13,6 +13,7 @@ using std::ostream;
 #include <stdlib.h>
 #include <Packages/Uintah/Core/Grid/TypeDescription.h>
 #include <Packages/Uintah/Core/Math/CubeRoot.h>
+#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
@@ -23,6 +24,13 @@ using std::ostream;
 
 using namespace Uintah;
 
+
+const string& 
+Matrix3::get_h_file_path() {
+  static const string path(SCIRun::TypeDescription::cc_to_h(__FILE__));
+  return path;
+}
+
 // Added for compatibility with Core types
 namespace SCIRun {
 
@@ -32,6 +40,15 @@ template<> const string find_type_name(Matrix3*)
 {
   static const string name = "Matrix3";
   return name;
+}
+
+const TypeDescription* get_type_description(Matrix3*)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("Matrix3", Matrix3::get_h_file_path(), "Uintah");
+  }
+  return td;
 }
 
 } // namespace SCIRun
