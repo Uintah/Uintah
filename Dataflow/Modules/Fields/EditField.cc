@@ -527,6 +527,7 @@ EditField::execute()
 
   if (cgeom_.get())
   {
+    ef.detach();
     ef->mesh_detach();
     ef->mesh()->transform(t);
   }
