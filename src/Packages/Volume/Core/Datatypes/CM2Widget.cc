@@ -256,7 +256,7 @@ TriangleCM2Widget::draw()
 
 
 int
-TriangleCM2Widget::pick (int ix, int iy, int sw, int sh)
+TriangleCM2Widget::pick1 (int ix, int iy, int sw, int sh)
 {
   const double x = ix / (double)sw;
   const double y = iy / (double)sh;
@@ -292,9 +292,31 @@ TriangleCM2Widget::pick (int ix, int iy, int sw, int sh)
     last_y_ = top_y_;
     pick_ix_ = ix;
     pick_iy_ = iy;
+    last_width_ = width_;
     return 4;
   }
-  
+
+  return 0;
+}
+
+
+int
+TriangleCM2Widget::pick2 (int ix, int iy, int sw, int sh)
+{
+  const double x = ix / (double)sw;
+  const double y = iy / (double)sh;
+
+  const double x1top = top_x_ + width_ * 0.5;
+  const double x2top = top_x_ - width_ * 0.5;
+  const double x1 = base_ + x1top * (y / top_y_);
+  const double x2 = base_ + x2top * (y / top_y_);
+  if (y < top_y_ && y > bottom_ * top_y_ &&
+      x > Min(x1, x2) && x < Max(x1, x2))
+  {
+    last_x_ = base_;
+    pick_ix_ = ix;
+    return 1;
+  }
   
   return 0;
 }
@@ -308,17 +330,22 @@ TriangleCM2Widget::move (int obj, int ix, int iy, int w, int h)
   
   switch (selected_)
   {
+  case 1:
+    base_ = last_x_ + x - pick_ix_ / (double)w;
+    break;
+
   case 2:
     width_ = (x - top_x_ - base_) * 2.0;
     break;
 
   case 3:
-    bottom_ = y / top_y_;
+    bottom_ = CLAMP(y / top_y_, 0.0, 1.0);
     break;
 
   case 4:
     top_x_ = last_x_ + x - pick_ix_ / (double)w;
     top_y_ = last_y_ + y - pick_iy_ / (double)h;
+    width_ = last_width_;
     break;
   }
 }
@@ -327,7 +354,7 @@ TriangleCM2Widget::move (int obj, int ix, int iy, int w, int h)
 void
 TriangleCM2Widget::release (int obj, int x, int y, int w, int h)
 {
-  move(obj, x, y, w, h);
+  //move(obj, x, y, w, h);
 }
 
 
@@ -522,7 +549,7 @@ RectangleCM2Widget::draw()
 
 
 int
-RectangleCM2Widget::pick (int ix, int iy, int w, int h)
+RectangleCM2Widget::pick1 (int ix, int iy, int w, int h)
 {
   const double x = ix / (double)w;
   const double y = iy / (double)h;
@@ -558,6 +585,16 @@ RectangleCM2Widget::pick (int ix, int iy, int w, int h)
   {
     return 6;
   }
+
+  return 0;
+}
+
+
+int
+RectangleCM2Widget::pick2 (int ix, int iy, int w, int h)
+{
+  const double x = ix / (double)w;
+  const double y = iy / (double)h;
 
   if (x > Min(left_x_, left_x_ + width_) &&
       x < Max(left_x_, left_x_ + width_) &&
@@ -622,7 +659,7 @@ RectangleCM2Widget::move (int obj, int ix, int iy, int w, int h)
 void
 RectangleCM2Widget::release (int obj, int x, int y, int w, int h)
 {
-  move(obj, x, y, w, h);
+  //move(obj, x, y, w, h);
 }
 
 
