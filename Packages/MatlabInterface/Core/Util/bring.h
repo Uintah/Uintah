@@ -22,8 +22,8 @@
 
 extern "C"
 {
-  char *bring(int wordy,int flag,char *hostport,int lbuf,char *buf);
-  void endiswap(int lbuf, char *buf,int num);
+  char *bring(int wordy, int flag, const char *hostport, int lbuf, char *buf);
+  void endiswap(int lbuf, char *buf, int num);
   int  endian(void);
 }
 #endif
