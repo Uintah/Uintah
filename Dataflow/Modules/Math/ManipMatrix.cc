@@ -331,7 +331,7 @@ ManipMatrix::getFunctionFromDL(const string& f)
     if( h == 0 ) 
     {
       cerr << "ManipMatrix::getFunctionFromDL() error:"
-	   << " dlopen failed" << endl;
+	   << "could not open " << dynamicLibrary << endl;
     }
     else
     {
