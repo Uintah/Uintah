@@ -28,6 +28,7 @@
 #include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/Parallelogram.h>
+#include <Packages/rtrt/Core/Cylinder.h>
 
 using namespace rtrt;
 
@@ -43,9 +44,12 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     return 0;
   }
 
-  Point Eye(-5.85, 6.2, 2.0);
-  Point Lookat(-13.5, 13.5, 2.0);
-  Vector Up(0,0,1);
+  Point Eye(-7.59842, 7.38245, 2.6612);
+  Point Lookat(-11.5014, 12.3235, -5.83386);
+  Vector Up(-0.501733, 0.627447, 0.595461);
+//  Point Eye(-5.85, 6.2, 2.0);
+//  Point Lookat(-13.5, 13.5, 2.0);
+//  Vector Up(0,0,1);
   double fov=60;
 
   Camera cam(Eye,Lookat,Up,fov);
@@ -69,6 +73,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group* west_wall=new Group();
   Group* south_wall=new Group();
   Group* east_wall=new Group();
+  Group* table=new Group();
   Group* ceiling_floor=new Group();
   ceiling_floor->add(check_floor);
 
@@ -126,9 +131,67 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   ceiling_floor->add(new Rect(white, Point(-8, 8, 4),
 		       Vector(4, 0, 0), Vector(0, 4, 0)));
 
-  Group *g = new Group();
   west_wall->add(pic1);
   north_wall->add(pic2);
+
+  Material *silver = new MetalMaterial(Color(0.7,0.73,0.8), 12);
+  Material *air_to_glass = new DielectricMaterial(1.5, 0.66, 0.04, 400.0, Color(.87, .80, .93), Color(1,1,1), false);
+  
+  // top of the table is at 32 inches
+  double i2m = 1./36.;             // convert inches to meters
+  Point center(-8, 8, 0);
+
+  // N/S horizontal bar to support glass
+  table->add(new Box(silver, center+Vector(-1,-24,31.85)*i2m, 
+		     center+Vector(1,24,32.15)*i2m));
+  
+  // E/W horizontal bar to support glass
+  table->add(new Box(silver, center+Vector(-24,-1,31.85)*i2m,
+		     center+Vector(24,1,32.15)*i2m));
+		     
+  
+  // connecting circle for glass supports
+  table->add(new Cylinder(silver, center+Vector(0,0,32.15)*i2m, 
+			  center+Vector(0,0,31.85)*i2m, 3*i2m));
+  table->add(new Disc(silver, center+Vector(0,0,32.15)*i2m, 
+			  Vector(0,0,1), 3*i2m));
+  table->add(new Disc(silver, center+Vector(0,0,31.85)*i2m, 
+			  Vector(0,0,-1), 3*i2m));
+
+  // glass
+  table->add(new Cylinder(air_to_glass, center+Vector(0,0,32.151)*i2m,
+			  center+Vector(0,0,32.451)*i2m, 23.75*i2m));
+  table->add(new Disc(air_to_glass, center+Vector(0,0,32.451)*i2m,
+		      Vector(0,0,1), 23.75*i2m));
+  table->add(new Disc(air_to_glass, center+Vector(0,0,32.151)*i2m,
+		      Vector(0,0,-1), 23.75*i2m));
+
+  // rim
+  // TODO: need a hollow cylinder type: matl, top, bottom, inner rad, thickness
+  // table->add(new HollowCylinder(silver, center+Vector(0,0,32.171)*i2m,
+  //				 center+Vector(0,0,31.671)*i2m, 
+  //				 center+Vector(0,0,32.171)*i2m, 
+  //                             32.*i2m, 23.5*i2m, 2*i2m));
+
+  // N leg
+  table->add(new Box(silver, center+Vector(22,-1,0)*i2m, 
+		     center+Vector(24,1,31.672)*i2m));
+  
+  // S leg
+  table->add(new Box(silver, center+Vector(-24,-1,0)*i2m, 
+		     center+Vector(-22,1,31.672)*i2m));
+  
+  // E leg
+  table->add(new Box(silver, center+Vector(-1,22,0)*i2m, 
+		     center+Vector(1,24,31.672)*i2m));
+  
+  // W leg
+  table->add(new Box(silver, center+Vector(-1,-24,0)*i2m, 
+		     center+Vector(1,-22,31.672)*i2m));
+  
+  // TODO: need a way to bevel the corners with a normal map
+
+  Group *g = new Group();
 
 //  g->add(new BV1(north_wall));
 //  g->add(new BV1(west_wall));
@@ -140,6 +203,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   g->add(west_wall);
   g->add(south_wall);
   g->add(east_wall);
+  g->add(table);
   
   Color cdown(0.1, 0.1, 0.7);
   Color cup(0.5, 0.5, 0.0);
