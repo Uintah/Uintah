@@ -29,6 +29,7 @@
 SRCDIR := Packages/Insight/Dataflow/GUI
 
 PATH_TO_SCIRUN := $(shell cd $(SRCTOP) ; pwd)
+PATH_TO_PACKAGE := $(PATH_TO_SCIRUN)/Packages/Insight
 
 CODEGEN := GenerateSCIRunCode
 

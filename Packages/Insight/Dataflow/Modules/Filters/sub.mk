@@ -29,6 +29,7 @@
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 PATH_TO_SCIRUN := $(shell cd $(SRCTOP) ; pwd)
+PATH_TO_PACKAGE := $(PATH_TO_SCIRUN)/Packages/Insight
 
 INCLUDES += $(INSIGHT_INCLUDE)
 
@@ -47,6 +48,9 @@ XMLS :=  \
 	sci_ThresholdSegmentationLevelSetImageFilter.xml \
 	sci_ReflectImageFilter.xml \
 	sci_BinaryThresholdImageFilter.xml \
+	$(SRCDIR)/ImageRegistration.cc\
+#	$(SRCDIR)/FastMarchingImageFilter.cc \
+#	$(SRCDIR)/FastMarchingImageFilterExt.cc \
 #[INSERT NEW CODE FILE HERE]
 
 
