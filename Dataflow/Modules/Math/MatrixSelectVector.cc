@@ -43,6 +43,7 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Thread/Time.h>
 #include <iostream>
 #include <sstream>
 
@@ -438,10 +439,11 @@ MatrixSelectVector::execute()
 	const int delay = delay_.get();
       
 	if( delay > 0) {
-	  const unsigned int secs = delay / 1000;
-	  const unsigned int msecs = delay % 1000;
-	  if (secs)  { sleep(secs); }
-	  if (msecs) { usleep(msecs * 1000); }
+	Time::waitFor(delay/1000.0); // use this for cross platform instead of below
+	  //const unsigned int secs = delay / 1000;
+	  //const unsigned int msecs = delay % 1000;
+	  //if (secs)  { sleep(secs); }
+	  //if (msecs) { usleep(msecs * 1000); }
 	}
     
 	int next = increment(which, lower, upper);    
