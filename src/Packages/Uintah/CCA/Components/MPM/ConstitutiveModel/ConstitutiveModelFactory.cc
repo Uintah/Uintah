@@ -4,6 +4,7 @@
 #include "CompNeoHookPlas.h"
 #include "ViscoScram.h"
 #include "HypoElastic.h"
+#include "MWViscoElastic.h"
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -41,6 +42,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
    
    else if (mat_type ==  "hypo_elastic")
       return(scinew HypoElastic(child,lb));
+   
+   else if (mat_type ==  "mw_visco_elastic")
+      return(scinew MWViscoElastic(child,lb));
    
    else 
       throw ProblemSetupException("Unknown Material Type R ("+mat_type+")");
