@@ -39,6 +39,7 @@ SRCS     += \
 	$(SRCDIR)/ScaleFieldData.cc\
 	$(SRCDIR)/SeedField.cc\
 	$(SRCDIR)/TransformField.cc\
+	$(SRCDIR)/TetVolCellToNode.cc\
 #[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/CastField.cc\
 #	$(SRCDIR)/ChangeCellType.cc\
