@@ -803,11 +803,19 @@ VolVis::redraw_all()
   glPixelZoom(x_pixel_size, y_pixel_size);
   
   if ( iCenter.get() )
+      glRasterPos2i( x_pixel_size + ( 600 - Image.dim2() ) / 2 ,
+		    y_pixel_size * ( ( 600 / 2 + Image.dim1() / 2 + 1 ) ) );
+  else
+    glRasterPos2i( x_pixel_size, y_pixel_size * (Image.dim1()+1) );
+
+#if 0  
+  if ( iCenter.get() )
       glRasterPos2i( x_pixel_size + ( 600 - rasterX ) / 2 ,
 		    y_pixel_size * ( ( 600 / 2 + rasterY / 2 + 1 ) ) );
   else
     glRasterPos2i( x_pixel_size, y_pixel_size * (rasterY+1) );
-
+#endif
+  
   
   Color c(1, 0, 1);
 
@@ -956,19 +964,34 @@ VolVis::execute()
   /* THE MOST AWESOME DEBUGGING TECHNIQUE */
   
   int loop;
-  for ( loop = 0; loop < iRasterX.get(); loop++ )
+//  for ( loop = 0; loop < iRasterX.get(); loop++ )
+  int d1, d2;
+  d1 = Image.dim1() - 1;
+  d2 = Image.dim2();
+  
+  for ( loop = 0; loop < d2; loop++ )
     {
       Image(0, loop).red = 255;
       Image(0, loop).green = 0;
       Image(0, loop).blue = 0;
+      
+      Image(d1, loop).red = 255;
+      Image(d1, loop).green = 0;
+      Image(d1, loop).blue = 0;
     }
   
   int pool;
-  for ( pool = 0; pool < iRasterY.get(); pool++ )
+  d1++; d2--;
+  
+  for ( pool = 0; pool < d1; pool++ )
     {
       Image(pool, 0).red = 0;
       Image(pool, 0).green = 0;
       Image(pool, 0).blue = 255;
+      
+      Image(pool, d2).red = 0;
+      Image(pool, d2).green = 0;
+      Image(pool, d2).blue = 255;
     }
   
   /* END OF THE MOST AWESOME DEBUGGING TECHNIQUE */

@@ -142,21 +142,16 @@ Levoy::CalculateRayIncrements ( View myview,
 			       Vector& rayIncrementU, Vector& rayIncrementV,
 			       const int& rasterX, const int& rasterY )
 {
-
-  double length;
-
-  // assuming that fov represents the entire angle of view
-  // calculate the length of view plane given an angle
-  
-  length = 2 * sin( DtoR( myview.fov() / 2 ) );
-
   myview.get_normalized_viewplane( rayIncrementU, rayIncrementV );
 
-  rayIncrementU = rayIncrementU * length/rasterX;
-  rayIncrementV = rayIncrementV * length/rasterY;
+  double aspect = double(rasterX) / double(rasterY);
+  double fovy=RtoD(2*Atan(aspect*Tan(DtoR(myview.fov()/2.))));
+  
+  double lengthY = 2 * tan( DtoR( fovy / 2 ) );
+
+  rayIncrementV *= lengthY / rasterY;
+  rayIncrementU *= lengthY / rasterY;
 }
-
-
 
 
 
@@ -1218,12 +1213,6 @@ LevoyS::SetUp ( GeometryData * g )
 
   homeRay = g->view->lookat() - eye;
   homeRay.normalize();
-
-  cerr << "NORMALIZED is " << homeRay << endl;
-  homeRay *= cos( DtoR( g->view->fov() / 2 ) );
-
-  cerr << "The home ray is: " << homeRay  <<endl;
-  
 
   // the distance between the 2 clipping planes
   
