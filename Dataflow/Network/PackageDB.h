@@ -91,7 +91,7 @@ namespace SCIRun {
 
       // Doesnt belong here, this is the path to the TCL GUI splash screen
       void		setSplashPath(string p);
-      void		setLoadingApp(bool b);
+      void		setLoadingApp(bool b, string ses = "");
     private:
       LIBRARY_HANDLE	findLib(string);
       bool		findMaker(ModuleInfo* info);
