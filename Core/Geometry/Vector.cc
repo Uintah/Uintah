@@ -74,8 +74,8 @@ Vector::normal() const
 
 ostream& operator<<( ostream& os, const Vector& v )
 {
-   os << v.get_string();
-   return os;
+  os << '[' << v.x() << ' ' << v.y() << ' ' << v.z() << ']';
+  return os;
 }
 
 istream& operator>>( istream& is, Vector& v)
