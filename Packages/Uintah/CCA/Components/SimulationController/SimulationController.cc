@@ -464,15 +464,15 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 		IntVector inEndCell = endcell;
 		if(i==0)
 		  inStartCell+=IntVector(extraCells.x(), 0, 0);
-		else if(i==patches.x()-1)
+		if(i==patches.x()-1)
 		  inEndCell-=IntVector(extraCells.x(), 0, 0);
 		if(j==0)
 		  inStartCell+=IntVector(0, extraCells.y(), 0);
-		else if(j==patches.y()-1)
+		if(j==patches.y()-1)
 		  inEndCell-=IntVector(0, extraCells.y(), 0);
 		if(k==0)
 		  inStartCell+=IntVector(0, 0, extraCells.z());
-		else if(k==patches.z()-1)
+		if(k==patches.z()-1)
 		  inEndCell-=IntVector(0, 0, extraCells.z());
 		level->addPatch(startcell, endcell,
 				inStartCell, inEndCell);
