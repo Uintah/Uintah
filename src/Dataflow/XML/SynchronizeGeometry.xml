@@ -31,13 +31,13 @@
   <io>
     <inputs lastportdynamic="yes">
       <port>
-        <name>InputGeometry</name>
+        <name>Input Geometry</name>
         <datatype>SCIRun::Geometry</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>OutputGeometry</name>
+        <name>Output Geometry</name>
         <datatype>SCIRun::Geometry</datatype>
 	<componentname>Viewer</componentname>
       </port>
