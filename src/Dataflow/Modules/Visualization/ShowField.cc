@@ -47,6 +47,7 @@
 #include <Core/Geom/Switch.h>
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomLine.h>
+#include <Core/Geom/GeomCylinder.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Geom/Pt.h>
 
@@ -107,7 +108,9 @@ class ShowField : public Module
 
   //! holds options for how to visualize nodes.
   GuiString                node_display_type_;
+  GuiString                edge_display_type_;
   GuiDouble                node_scale_;
+  GuiDouble                edge_scale_;
   GuiInt                   showProgress_;
 
   //! Private Methods
@@ -131,7 +134,7 @@ public:
   inline void add_point(const Point &p, GeomPts *g, 
 			MaterialHandle m0);
   inline void add_edge(const Point &p1, const Point &p2, double scale, 
-		       GeomGroup *g, MaterialHandle m0);
+		       GeomGroup *g, MaterialHandle m0, bool cyl = true);
   inline void add_face(const Point &p1, const Point &p2, const Point &p3, 
 		       MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
 		       GeomTriangles *g);
@@ -175,7 +178,9 @@ ShowField::ShowField(const clString& id) :
   def_color_b_("def-color-b", id, this),
   def_mat_handle_(scinew Material(Color(0.5, 0.5, 0.5))),
   node_display_type_("node_display_type", id, this),
-  node_scale_("scale", id, this),
+  edge_display_type_("edge_display_type", id, this),
+  node_scale_("node_scale", id, this),
+  edge_scale_("edge_scale", id, this),
   showProgress_("show_progress", id, this)
  {
   // Create the input ports
@@ -388,7 +393,10 @@ ShowField::render_edges(const Fld *sfld)
 	def_color = true;
 	break;
       }
-      add_edge(p1, p2, 1.0, edges, choose_mat(def_color, val1));
+      bool cyl = false;
+      if (edge_display_type_.get() == "Cylinders") { cyl = true; }
+      add_edge(p1, p2, edge_scale_.get(), edges, 
+	       choose_mat(def_color, val1), cyl);
     }
   }
 }
@@ -478,10 +486,17 @@ ShowField::add_face(const Point &p0, const Point &p1, const Point &p2,
 
 void 
 ShowField::add_edge(const Point &p0, const Point &p1,  
-		    double scale, GeomGroup *g, MaterialHandle mh) {
-  GeomLine *l = new GeomLine(p0, p1);
-  l->setLineWidth(scale);
-  g->add(scinew GeomMaterial(l, mh));
+		    double scale, GeomGroup *g, MaterialHandle mh, 
+		    bool cyl) 
+{
+  if (cyl) {
+    GeomCappedCylinder *c = new GeomCappedCylinder(p0, p1, scale);
+    g->add(scinew GeomMaterial(c, mh));
+  } else {
+    GeomLine *l = new GeomLine(p0, p1);
+    l->setLineWidth(scale);
+    g->add(scinew GeomMaterial(l, mh));
+  }
 }
 
 void 
@@ -528,9 +543,11 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
     return;
   }
 
-  if (args[1] == "scale") {
+  if (args[1] == "node_scale") {
     if (node_display_type_.get() == "Points") { return; }
     nodes_dirty_ = true;
+  } else if (args[1] == "edge_scale") {
+    edges_dirty_ = true;
   } else if (args[1] == "default_color_change") {
     def_color_r_.reset();
     def_color_g_.reset();
@@ -541,6 +558,9 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
     ogeom_->flushViews();
   } else if (args[1] == "node_display_type") {
     nodes_dirty_ = true;
+    want_to_execute();
+  } else if (args[1] == "edge_display_type") {
+    edges_dirty_ = true;
     want_to_execute();
   } else if (args[1] == "toggle_display_nodes"){
     // Toggle the GeomSwitches.
