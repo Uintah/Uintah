@@ -16,16 +16,16 @@ template <class Data>
 class FData3d : public Array3<Data>
 
   typedef Data value_type;
-
+ 
   FData3d():Array3(){}
   virtual ~FData3d(){}
-
+ 
   value_type operator[](typename LatVolMesh::cell_index idx) const
     { return operator(idx.i_,idx.j_,idx.k_); } 
   value_type operator[](typename LatVolMesh::face_index idx) const
-    { return operator(idx,idx,idx); }
+    { return (Data)0; }
   value_type operator[](typename LatVolMesh::edge_index idx) const
-    { return operator(idx,idx,idx); }
+    { return (Data)0; }
   value_type operator[](typename LatVolMesh::node_index idx) const
     { return operator(idx.i_,idx.j_,idx.k_); }
 };
@@ -35,7 +35,7 @@ class LatticeVol: public GenericField< LatVolMesh, FData3d<Data> > {
 
 public:
 
-  LatticeVal() :
+  LatticeVol() :
     GenericField<LatVolMesh, FData3d<Data> >() {};
   LatticeVol(data_location data_at) :
     GenericField<LatVolMesh, FData3d<Data> >(data_at) {};
