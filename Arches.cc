@@ -431,25 +431,22 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 			     int /*step*/, int /*nsteps*/ ) // AMR Parameters
 {
   nofTimeSteps++ ;
-#ifndef ExactMPMArchesInitialize
   if (d_MAlab) {
+#ifndef ExactMPMArchesInitialize
     if (nofTimeSteps < 2) {
       cout << "Calculating at time step = " << nofTimeSteps << endl;
       d_nlSolver->noSolve(level, sched);
-      d_recompile = true;
     }
-    else {
+    else
       d_nlSolver->nonlinearSolve(level, sched);
-      d_recompile = false;
-    }
+#else
+    d_nlSolver->nonlinearSolve(level, sched);
+#endif
   }
   else {
     d_nlSolver->nonlinearSolve(level, sched);
     d_recompile = false;
   }
-#else
-  d_nlSolver->nonlinearSolve(level, sched);
-#endif
 }
 
 // ****************************************************************************
