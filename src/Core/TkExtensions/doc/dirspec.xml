@@ -1,17 +1,34 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE dir SYSTEM "../../../../doc/dirspec.dtd">
-<?xml-stylesheet href="../../../../doc/dirspec.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
- 
-<dir name="Core/TkExtensions">
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
 
-<!-- ************** phase 1 content ************** -->
+<chapter>
+  <title>Custom Tk Widgets for SCIRun</title>
  
-  <fit>
-  <!-- describe how this directory fits into SCIRun - why does it
-       exist, how does SCIRun benefit from it, etc. -->
-    <p>
-      
+  <sect1>
+    <para>
+      This chapter describes extensions made to Tk by SCIRun to
+      provide for custom widgets.
+    </para>
+  </sect1>
+
+  <sect1>
+    <title>Introduction</title>
+
+    <para>
       The main purpose of this directory is provide additional GUI
       component that are needed by SCIRun but are not provided by
       Tk nor are easily implemented (if at all) in native TclTk. 
@@ -19,19 +36,19 @@
       dimension look and feel and moving the cursor to a specified
       window. These extensions are implemented here in C++ and are
       added to the Tk built in commands in the initialization stage.
-    </p>
-  </fit>
- 
-  <use>
-    <why>
-    <!-- Discuss why a developer would need or want to use the
-         functions and/or classes in this directory. -->
-      <p>
+    </para>
+  </sect1>
+  
+  <sect1>
+
+      <para>
 	There are three components to this interface: Initialization,
 	extensions and a hack of the Tk internals. GUI extensions to Tk
 	should be implemented here and added to the Tk built in commands
 	via the initialization in tkAppInit.c
+      </para>
 
+      <para>
 	A special attention should be given to the tclUnixNotify-*.c 
 	files. These files are a hack of a similar file internal to Tk.
 	Their purpose is to enable Tk to work in a multithreaded 
@@ -39,63 +56,29 @@
 	corresponding file in the Tk distribution changes between different
 	versions of Tk we have included a modified version for the two
 	versions of Tk that are supported by SCIRun, namely 8.0.4 and 8.3 .
-      </p>
-    </why>
+      </para>
 
-    <when>
-    <!-- Discuss when or where to use the functions and classes in
-         this directory: From within modules?, when a certain event
-	 occurs? -->
-      <p>
+      <para>
         The code in this directory is meant to be used only via the tcl 
 	commands that it provides. Any tcl code can call these commands
 	to create the GUI they provide.
-      </p>
-    </when>
-  </use>
+      </para>
 
-<!-- ************** phase 2 content ************** -->
-
-  <definition>
-  <!-- Give the definition for a term, or concept, that is embodied
-       by this directory.  Please provide feature length rather than
-       short story definitions. -->
-    <term>
-      tk command
-    </term>
-    <p>
+     <sect2>
+       <title>tk command</title>
+    <para>
       Tk provides a set of builtin GUI commands. One can augment them
       by providing additional functions written in C++ (or C). These 
       additional functions can interface the TCL/TK system via C function
       calls as describe in the TCL/TK documentation.
-    </p>
-  </definition>
+    </para>
+     </sect2>
 
-  <definition>
-  <!-- Give the definition for a term, or concept, that is embodied
-       by this directory.  Please provide feature length rather than
-       short story definitions. -->
-    <term>
-      tkOpenGL
-    </term>
-    <p>
+     <sect2>
+       <title>tkOpenGL</title>
+    <para>
       A Tk window that embodies an OpenGL window.
-    </p>
-  </definition>
-
-  <example>
-  <!-- give an example of how to use the classes and/or functions
-       here.  Again, more is better, however give only exactly 
-       that which is being explained, no superfluous text (i.e.
-       please don't cut and paste from existing code.) -->
-    
-    <p>
-    </p>
-  </example>
-</dir>
-
-<!-- author comments: suggestions for new/better tags for this xml file
-
-
-
--->
+    </para>
+     </sect2>
+  </sect1>
+</chapter>

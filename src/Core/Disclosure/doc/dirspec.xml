@@ -1,7 +1,3 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE dir SYSTEM "../../../../doc/dirspec.dtd">
-<?xml-stylesheet href="../../../../doc/dirspec.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -20,66 +16,83 @@
   University of Utah. All Rights Reserved.
 -->
 
-<dir name="Core/Disclosure">
-  <fit>
-  <!-- describe how this directory fits into SCIRun - why does it 
-       exist, how does SCIRun benefit from it, etc. -->
-    <p>
+<chapter>
+  <title>Deferred Compilation</title>
+
+  <sect1>
+    <para>
+      This chapter introduces the concept of <term>Deferred
+      Compilation</term> within SCIRun.
+    </para>
+  </sect1>
+
+  <sect1>
+    <title>Introduction</title>
+    <para>
+      SCIRun makes extensive use of C++ templates.  Templates are a
+      powerful mechanism that allows writing algorithms or data
+      structures once, while allowing them to be usable with many
+      types of data.  However, in order to use any particular type of
+      data, the templates need to know about them at compile time.
+      Deferred compilation allows templates written in
+      the past to be applied to new data types at run time by
+      dynamically compiling code.
+    </para>
+  </sect1>
+
+  <sect1>
+    <title>Disclosure</title>
+
+    <para>
        The Disclosure directory contains objects that discover information 
        about types, as well as objects that produce previously uncompiled
        types.
-    </p>
+    </para>
 
-    <p>
+    <para>
        This directory also contains the TypeDescription object, as well
        as the DynamicLoader. TypeDescription gives a recursive definition 
        of type at runtime.  One can query a string that indicates the type
        from the this object. It also provides information that can by used 
        by the DynamicLoader to compile types that support TypeDescription.
-    </p>
+    </para>
     
-    <p>
+    <para>
        The DynamicLoader writes a .cc file, compiles it, then loads in the .so
        all at runtime.  The main function is to compile algorithms that are
        templated on various field types in SCIRun. This gives SCIRun a minimal
        set of template instantiation based on how a user happens to use 
        SCIRun, as opposed to the combinatorial explosion of template bloat 
        that is the alternative.
-    </p>
-  </fit>
-  <use>
-    <when>
-    <!-- Discuss when or where to use the functions and classes in
-         this directory: From within modules?, when a certain event
-	 occurs? -->
-      <p>
-        A developer is likely to use this code from within modules that 
-        has a field port. A FieldHandle can be one of *many* types of fields.
-        An algorithm can be templated on the field, and use the DynamicLoader 
-        to manage compilation and loading of the algorithm without the 
-        module code ever needing to know the exact type of the field.
-      </p>
-    </when>
-    <why>
-    <!-- Discuss why a developer would need or want to use the
-         functions and/or classes in this directory. -->
-      <p>
-         The main use of code in this directory is to compile and load 
-         templated algorithms for use in modules.
-      </p>
-    </why>
-  </use>
-  <definition>
-    <term>get_type_description</term>
-    <p>
-       There are many of these functions.  Each is overloaded on the type that
-       the returned TypeDescription supports. There must be one of these if
-       your type is to be supported in dynamic compilation.
-    </p>
-    <p>
-       An example of a simple get_type_description for int.
-    </p>
-    <code>
+    </para>
+  </sect1>
+
+  <sect1>
+    <title>Programming with SCIRun deferred compilation</title>
+    <para>
+      A developer is likely to use this code from within modules that 
+      has a field port. A FieldHandle can be one of *many* types of fields.
+      An algorithm can be templated on the field, and use the DynamicLoader 
+      to manage compilation and loading of the algorithm without the 
+      module code ever needing to know the exact type of the field.
+    </para>
+    <para>
+       The main use of code in this directory is to compile and load 
+       templated algorithms for use in modules.
+    </para>
+
+    <sect2>
+      <title>get_type_description()</title>
+
+      <para>
+        There are many of these functions.  Each is overloaded on the type that
+        the returned TypeDescription supports. There must be one of these if
+        your type is to be supported in dynamic compilation.
+      </para>
+      <para>
+        An example of a simple get_type_description for int.
+      </para>
+      <computeroutput>
        const TypeDescription* get_type_description(int*)
        {
        	 static TypeDescription* td = 0;
@@ -90,11 +103,11 @@
        	 }
        	 return td;
        }
-    </code>
-    <p>
-       An example of a templated get_type_description function.
-    </p>
-    <code>
+      </computeroutput>
+      <para>
+        An example of a templated get_type_description function.
+      </para>
+      <computeroutput>
        template &lt;class T &gt;
        const TypeDescription* get_type_description(vector &lt;T &gt;*)
        {
@@ -109,8 +122,8 @@
          }
          return td;
        }
-    </code>
-    <!-- one of (p code) -->
-  </definition>
-</dir>
+      </computeroutput>
+    </sect2>
+  </sect1>
+</chapter>
 

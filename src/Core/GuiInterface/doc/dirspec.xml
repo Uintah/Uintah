@@ -1,86 +1,84 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE dir SYSTEM "../../../../doc/dirspec.dtd">
-<?xml-stylesheet href="../../../../doc/dirspec.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
- 
-<dir name="Core/GuiInterface">
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
 
-<!-- ************** phase 1 content ************** -->
+<chapter>
+  <title>The SCIRun Interface to Tcl</title>
  
-  <fit>
-  <!-- describe how this directory fits into SCIRun - why does it
-       exist, how does SCIRun benefit from it, etc. -->
-    <p>
+  <sect1>
+    <para>
+      This chapter describes how to easily communicate between the GUI
+      (Tcl/Tk) and the C++ elements of SCIRun modules.
+    </para>
+  </sect1>
+
+  <sect1>
+    <title>Introduction</title>
+
+    <para>
       SCIRun uses TCL/TK as its GUI font end. However, the TCL/TK
       was not designed with a clean interface between TCL code
       and C/C++. The purpose of this directory is to provide an abstraction
       layer between the two and make the task of moving data between the 
       TCL and the C++ portions of SCIRun transparent to the user.
-    </p>
+    </para>
 
-  </fit>
- 
-  <use>
-    <why>
-    <!-- Discuss why a developer would need or want to use the
-         functions and/or classes in this directory. -->
-      <p>
-	Most of the code in this directory is used internally in SCIRun. 
-	The only exception are the GuiVars which can be access from both
-	the tcl and the C++ codes. These variables provide a transparent
-	mechanism in C++ to set or get the tcl variables they represent.
-	Each such tcl variable is associated with a Module and thus contains
-        information about the module tcl id and a pointer to the module. 
-      </p>
-    </why>
+    <para>
+      Most of the code in the Dataflow/GuiInterface directory is used
+      internally in SCIRun.  
+      The only exception are the GuiVars which can be access from both
+      the tcl and the C++ codes. These variables provide a transparent
+      mechanism in C++ to set or get the tcl variables they represent.
+      Each such tcl variable is associated with a Module and thus contains
+      information about the module tcl id and a pointer to the module. 
+    </para>
+  </sect1>
 
-    <when>
-    <!-- Discuss when or where to use the functions and classes in
-         this directory: From within modules?, when a certain event
-	 occurs? -->
-      <p>
-	On the TCL side, the code should access the variables as regular
-	tcl variables. On the C++ side, the code needs to declare these
-	variables inside a Module and access them via the get() and
-	set() functions.  
-      </p>
-    </when>
-  </use>
+  <sect1>
+    <title>Programming with the SCIRun GuiInterface</title>
 
-<!-- ************** phase 2 content ************** -->
+    <para>
+      On the TCL side, the code should access the variables as regular
+      tcl variables. On the C++ side, the code needs to declare these
+      variables inside a Module and access them via the get() and
+      set() functions.  
+    </para>
 
-  <definition>
-  <!-- Give the definition for a term, or concept, that is embodied
-       by this directory.  Please provide feature length rather than
-       short story definitions. -->
-    <term>
-      GUI var
-    </term>
-    <p>
-      A variable that encapsulate the interaction between the C++ code
+    <sect2>
+      <title>GuiVar</title>
+    <para>
+      GuiVars are variables that encapsulate the interaction between
+      the C++ code 
       and the GUI (Graphical User Interface) code. The variable does not
       hold the actual value, rather it holds information which is used
       to access the corresponding variable on the GUI side. From the C++
       side the user may set the variable value via a set() function and
       retrieve the value via a get() function.
-    </p>
+    </para>
 
-    <p>
+    <para>
       There are several specialization of GuiVar for particular variable types
       such as GuiInt, GuiString and GuiPoint.
-    </p>
-  </definition>
+    </para>
 
+    <para>
+      In a tcl code, i.e. in a tcl module:
+    </para>
 
-  <example>
-  <!-- give an example of how to use the classes and/or functions
-       here.  Again, more is better, however give only exactly 
-       that which is being explained, no superfluous text (i.e.
-       please don't cut and paste from existing code.) -->
-    
-    <p>
-      In a tcl code, i.e. in a tcl module
-    <code>
+    <computeroutput>
       itcl_class foo {
          ...
         method set_defaults {} {
@@ -93,9 +91,11 @@
 
          ...
        }
-    </code>
+    </computeroutput>
+     <para>
        In the C++ side, i.e. in a module:
-     <code>
+     </para>
+     <computeroutput>
        class Demo : public Module {
          ...
          GuiInt gui_min, gui_max;         // define GUI variables
@@ -117,13 +117,7 @@
 	  gui_min.set(7);               // set a tcl variable
 	  int i = gui_max.get();        // get a value from the tcl side
        }
-    </code>     
-    </p>
-  </example>
-</dir>
-
-<!-- author comments: suggestions for new/better tags for this xml file
-
-  Hey, I think this file should address known bugs, i.e. have a <bugs> tag.
-
--->
+    </computeroutput>     
+    </sect2>
+  </sect1>
+</chapter>

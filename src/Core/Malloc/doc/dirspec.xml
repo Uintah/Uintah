@@ -1,7 +1,3 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE dir SYSTEM "../../../../doc/dirspec.dtd">
-<?xml-stylesheet href="../../../../doc/dirspec.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -20,18 +16,25 @@
   University of Utah. All Rights Reserved.
 -->
 
-<dir name="Core/Malloc">
+<chapter>
+  <title>SCIRun Memory Management</title>
 
-<!-- ************** phase 1 content ************** -->
+  <sect1>
+    <para>
+      This chapter explains how and why SCIRun manages memory usage.
+    </para>
+  </sect1>
 
-  <fit>
-  <!-- describe how this directory fits into SCIRun - why does it 
-       exist, how does SCIRun benefit from it, etc. -->
-    <p>
-      Core/Malloc implements the SCIRun memory allocation and tracking
-      system.  This system is an abstracted layer built upon the
+  <sect1>
+    <title>Introduction</title>
+
+    <para>
+      The SCIRun memory allocation and tracking system is defined in
+      Core/Malloc.  This system is an abstracted layer built upon the
       normal memory management tools provided in C/C++.  
+    </para>
 
+    <para>
       At one point or another, most programs run into problems with
       dynamically allocated memory such as stray pointers and memory
       leakage.  Because SCIRun is a large and complex collection of
@@ -39,8 +42,10 @@
       user modules (used to extend its base functionality,) it is
       important to be able to track the allocation and usage of
       memory.
+    </para>
 
-      Core/Malloc provides a transparent, non-invasive method of
+    <para>
+      SCIRun provides a transparent, non-invasive method of
       tracking memory usage.  By overloading the basic C memory
       management routines (malloc, free, calloc, realloc, memalign,
       and valloc) as well as the C++ routines (new and delete,) SCIRun
@@ -51,26 +56,20 @@
       amount of memory being used by the entire system.  Core/Malloc
       provides one other important benefit:  Memory allocation can be,
       and often is, faster because of the smarter algorithms it uses.
-    </p>
-  </fit>
+    </para>
+  </sect1>
 
-  <use>
-    <why>
-    <!-- Discuss why a developer would need or want to use the
-         functions and/or classes in this directory. -->
-      <p>
+  <sect1>
+    <title>Programming with SCIRun Memory Management</title>
+   
+      <para>
         For the reasons mentioned above, it is important for
         developers to use the Core/Malloc routines in order for
         themselves or others to localize and fix and memory problems
         encountered when using SCIRun.
-      </p>
-    </why>
+      </para>
 
-    <when>
-    <!-- Discuss when or where to use the functions and classes in
-         this directory: From within modules?, when a certain event
-	 occurs? -->
-      <p>
+      <para>
         Anytime a developer needs to allocate memory, he or she should
         use the Core/Malloc routines, thereby receiving for free, the
         ability to track memory usage.  The important thing to note is
@@ -79,110 +78,104 @@
         normally use "new".  Because "scinew" is a macro, it can be
         easily configured to allow the default "new" to be used when
         desired.
-      </p>
-    </when>
-  </use>
+      </para>
 
-<!-- ************** phase 2 content ************** -->
-
-  <definition>
-  <!-- Give the definition for a term, or concept, that is embodied
-       by this directory.  Please provide feature length rather than
-       short story definitions. -->
-    <term>
-      Environment Variables
-    </term>
-    <p>
+    <sect2>
+      <title>Environment Variables</title>
+    <para>
       The following environment variables can be set in order to help
       monitor and control the allocation of memory.  The environment
       variables are only used if DISABLE_SCI_MALLOC is NOT defined
       during compilation.  If DISABLE_SCI_MALLOC is defined, then
       SCIRun will use the built in new, free, alloc, etc.
-    </p>
-    <p>
+    </para>
+    <para>
       MALLOC_STRICT: Places markers in unused memory and uses them to
       verify memory integrity.  Unless you wish to check memory
       integrity explicitly using the "audit()" function, MALLOC_LAZY
       should NOT be set.
-    </p>
-    <p>
+    </para>
+    <para>
       MALLOC_LAZY: By default, memory is audited for problems on each
       allocation and deallocation.  If MALLOC_LAZY is set, then
       auditing is turned off.  This can speed up code that allocates
       and deallocates memory frequently.
-    </p>
-    <p>
+    </para>
+    <para>
       MALLOC_TRACE [filename]: If MALLOC_TRACE is set, then every
       memory allocation, reallocation, and deallocation will be
       logged.  If "filename" is not provided, this information will be
       printed to "stderr".
-    </p>
-    <p>
+    </para>
+    <para>
       MALLOC_STATS [filename]: If MALLOC_STATS is set, when SCIRun
       exits, it will output a list of statistics regarding memory
       usage during the run.  This includes the number of alloc/free
       calls, the amount of fragmentation, the amount of memory that is
       free and that is in use, etc.  If "filename" is not provided,
       then "stderr" is used.
-    </p>
-  </definition>
-
-  <definition>
-    <term>
-       Overloaded Functions
-    </term>
-    <p>
+    </para>
+  </sect2>
+ 
+  <sect2>
+    <title>Overloaded Functions</title>
+    <para>
       The following memory management functions are overloaded to
       allow Core/Malloc to provide memory management functionality:
-      <pre>
+    </para>
+    
+    <para>
         C Functions:
+    </para>
 
+    <computeroutput>
         void* malloc(size_t size);
 	void free(void* ptr);
 	void* calloc(size_t n, size_t s);
 	void* realloc(void* p, size_t s);
 	void* memalign(size_t alignment, size_t size);
 	void* valloc(size_t size);
-	
-	C++ Functions:
+    </computeroutput>
 
+    <para>
+	C++ Functions:
+    </para>
+
+    <computeroutput>
 	void* operator new(size_t, SCIRun::Allocator*, char*);
 	void* operator new[](size_t, SCIRun::Allocator*, char*);
 	#define scinew new(SCIRun::default_allocator, __FILE__)
-      </pre>
-    </p>
-  </definition>
-
-  <example>
-  <!-- give an example of how to use the classes and/or functions
-       here.  Again, more is better, however give only exactly 
-       that which is being explained, no superfluous text (i.e.
-       please don't cut and paste from existing code.) -->
-    
-    <p>
+    </computeroutput>
+    <para>
       To take advantage of the SCIRun memory management utilities
       provided by Core/Malloc, you should do the following:
+    </para>
 
-      1) Make sure that DISABLE_SCI_MALLOC is not set.      
+    <para>
+    <orderedlist>
+      <listitem><para>Make sure that DISABLE_SCI_MALLOC is not set.</para></listitem>
+      <listitem>
+        <para>
+          Allocate memory using the following syntax (This can 
+          be transparently done by changing every "new" to "scinew"):
+        </para>
 
-      2) Allocate memory using the following syntax (This can 
-      be transparently done by changing every "new" to "scinew"):
-
+       <computeroutput>
       int * int_array = scinew int[ 128 ];
 
       Object * obj = scinew Object();
-
-      3) Delete objects as normal:
-
+       </computeroutput>
+      </listitem>
+      <listitem><para>Delete objects as normal:</para>
+ 
+      <computeroutput>
       delete int_array[];
       delete obj;
-
-    </p>
-  </example>
-</dir>
-
-<!-- author comments: suggestions for new/better tags for this xml file
-
-  Hey, I think this file should address known bugs, i.e. have a <bugs> tag.
-
--->
+      </computeroutput>
+      </listitem>
+      </orderedlist>
+    </para>
+    </sect2>
+  </sect1>
+</chapter>
+   
