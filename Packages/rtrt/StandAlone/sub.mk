@@ -35,6 +35,13 @@ SRCS := $(SRCDIR)/multi_rtrt.cc
 PROGRAM := Packages/rtrt/StandAlone/mrtrt
 include $(SCIRUN_SCRIPTS)/program.mk
 
+# rserver
+SRCS := $(SRCDIR)/rserver.cc
+PROGRAM := Packages/rtrt/StandAlone/rserver
+LIBS := $(GL_LIBS)
+PSELIBS := Packages/rtrt/visinfo
+include $(SCIRUN_SCRIPTS)/program.mk
+
 #nrrd2brick
 SRCS := $(SRCDIR)/nrrd2brick.cc
 LIBS := $(FASTM_LIBRARY) $(TEEM_LIBRARY) $(THREAD_LIBRARY) $(X11_LIBRARY) $(M_LIBRARY)
