@@ -151,7 +151,6 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
   chdir(resultsdir)
 
-  failcode = 0
 
 
   environ['MPI_TYPE_MAX'] = '10000'
@@ -164,9 +163,11 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   print "===================================="
   print ""
 
+  failcode = 0
 
   solotest_found = 0
   for test in TESTS:
+    current_failcode = 0
     if solotest != "" and nameoftest(test) != solotest:
       continue
 
@@ -243,6 +244,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       # Prepare for restart test
       if rc == 2:
           failcode = 1
+          current_failcode=1
       mkdir("restart")
       chdir("restart")
       # call the callback function before running each test
@@ -254,11 +256,13 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
         rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, tests_to_do, "yes", newalgo)
         if rc > 0:
           failcode = 1
+          current_failcode = 1
       chdir("..")
     elif rc == 1: # negative one means skipping -- not a failure
       failcode = 1
+      current_failcode = 1
     # print short message for email if it failed
-    if failcode == 1:
+    if current_failcode == 1:
       system("echo '  -- %s test failed' >> %s/%s-short.log" % (testname,startpath,upper(algo)))
     chdir("..")
   
