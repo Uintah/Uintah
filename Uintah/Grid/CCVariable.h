@@ -306,10 +306,10 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 	    // This could be optimized...
 	    IntVector l(getLowIndex());
 	    IntVector h(getHighIndex());
-	    for(int x=l.x();x<h.x();x++){
+	    for(int z=l.z();z<h.z();z++){
 	       for(int y=l.y();y<h.y();y++){
-		  size_t size = sizeof(T)*(h.z()-l.z());
-		  ssize_t s=write(oc.fd, &(*this)[IntVector(x,y,l.z())], size);
+		  size_t size = sizeof(T)*(h.x()-l.x());
+		  ssize_t s=write(oc.fd, &(*this)[IntVector(l.x(),y,z)], size);
 		  if(size != s)
 		     throw ErrnoException("CCVariable::emit (write call)", errno);
 		  oc.cur+=size;
@@ -329,10 +329,10 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 	    // This could be optimized...
 	    IntVector l(getLowIndex());
 	    IntVector h(getHighIndex());
-	    for(int x=l.x();x<h.x();x++){
+	    for(int z=l.z();z<h.z();z++){
 	       for(int y=l.y();y<h.y();y++){
-		  size_t size = sizeof(T)*(h.z()-l.z());
-		  ssize_t s=::read(oc.fd, &(*this)[IntVector(x,y,l.z())], size);
+		  size_t size = sizeof(T)*(h.x()-l.x());
+		  ssize_t s=::read(oc.fd, &(*this)[IntVector(l.x(),y,z)], size);
 		  if(size != s)
 		     throw ErrnoException("CCVariable::emit (write call)", errno);
 		  oc.cur+=size;
@@ -347,6 +347,9 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
 //
 // $Log$
+// Revision 1.18  2000/06/22 21:56:30  sparker
+// Changed variable read/write to fortran order
+//
 // Revision 1.17  2000/06/15 21:57:16  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data
