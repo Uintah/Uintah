@@ -71,6 +71,7 @@ public:
     ~GeomPick();
     int nprincipal();
     Vector principal(int i);
+    void set_principal(const Vector&, const Vector&, const Vector&);
     void set_highlight(MaterialProp* matl);
     void set_reply(Mailbox<MessageBase*>*);
     void set_cbdata(void*);

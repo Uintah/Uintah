@@ -51,7 +51,7 @@ Field3D::FieldType Field3D::get_type()
 
 Field3D::Field3D()
 : rep(RegularGrid), fieldtype(ScalarField), nx(0), ny(0), nz(0), ntetra(0),
-  ref_cnt(0)
+  ref_cnt(0), order(1)
 {
 }
 
@@ -163,9 +163,12 @@ int Field3D::interpolate(const Point& p, double& value)
 	return 0;
     }
     Vector pn=p-min;
-    double x=pn.x()*nx/diagonal.x();
-    double y=pn.y()*ny/diagonal.y();
-    double z=pn.z()*nz/diagonal.z();
+    double dx=diagonal.x();
+    double dy=diagonal.y();
+    double dz=diagonal.z();
+    double x=pn.x()*nx/dx;
+    double y=pn.y()*ny/dy;
+    double z=pn.z()*nz/dz;
     int ix=(int)x;
     int iy=(int)y;
     int iz=(int)z;
@@ -196,9 +199,12 @@ int Field3D::interpolate(const Point& p, Vector& value)
 	return 0;
     }
     Vector pn=p-min;
-    double x=pn.x()*nx/diagonal.x();
-    double y=pn.y()*ny/diagonal.y();
-    double z=pn.z()*nz/diagonal.z();
+    double dx=diagonal.x();
+    double dy=diagonal.y();
+    double dz=diagonal.z();
+    double x=pn.x()*nx/dx;
+    double y=pn.y()*ny/dy;
+    double z=pn.z()*nz/dz;
     int ix=(int)x;
     int iy=(int)y;
     int iz=(int)z;
@@ -247,9 +253,12 @@ void Field3D::locate(const Point& p, int& ix, int& iy, int& iz)
 	return;
     }
     Vector pn=p-min;
-    double x=pn.x()*nx/diagonal.x();
-    double y=pn.y()*ny/diagonal.y();
-    double z=pn.z()*nz/diagonal.z();
+    double dx=diagonal.x();
+    double dy=diagonal.y();
+    double dz=diagonal.z();
+    double x=pn.x()*nx/dx;
+    double y=pn.y()*ny/dy;
+    double z=pn.z()*nz/dz;
     ix=(int)x;
     iy=(int)y;
     iz=(int)z;
@@ -257,6 +266,50 @@ void Field3D::locate(const Point& p, int& ix, int& iy, int& iz)
 
 Vector Field3D::gradient(const Point& p)
 {
-    NOT_FINISHED("Field3D::gradient");
-    return Vector(0,0,1);
+    if(rep != RegularGrid){
+	NOT_FINISHED("gradient for non-regular grids");
+	return Vector(0,0,0);
+    }
+    Vector pn=p-min;
+    double diagx=diagonal.x();
+    double diagy=diagonal.y();
+    double diagz=diagonal.z();
+    double x=pn.x()*nx/diagx;
+    double y=pn.y()*ny/diagy;
+    double z=pn.z()*nz/diagz;
+    int ix=(int)x;
+    int iy=(int)y;
+    int iz=(int)z;
+    int ix1=ix+1;
+    int iy1=iy+1;
+    int iz1=iz+1;
+    if(ix<0 || ix1>=nx)return Vector(0,0,0);
+    if(iy<0 || iy1>=ny)return Vector(0,0,0);
+    if(iz<0 || iz1>=nz)return Vector(0,0,0);
+    double fx=x-ix;
+    double fy=y-iy;
+    double fz=z-iz;
+    double z00=Interpolate(s_grid(ix, iy, iz), s_grid(ix, iy, iz1), fz);
+    double z01=Interpolate(s_grid(ix, iy1, iz), s_grid(ix, iy1, iz1), fz);
+    double z10=Interpolate(s_grid(ix1, iy, iz), s_grid(ix1, iy, iz1), fz);
+    double z11=Interpolate(s_grid(ix1, iy1, iz), s_grid(ix1, iy1, iz1), fz);
+    double yy0=Interpolate(z00, z01, fy);
+    double yy1=Interpolate(z10, z11, fy);
+    double dx=(yy1-yy0)*(nx-1)/diagonal.x();
+    double x00=Interpolate(s_grid(ix, iy, iz), s_grid(ix1, iy, iz), fx);
+    double x01=Interpolate(s_grid(ix, iy, iz1), s_grid(ix1, iy, iz1), fx);
+    double x10=Interpolate(s_grid(ix, iy1, iz), s_grid(ix1, iy1, iz), fx);
+    double x11=Interpolate(s_grid(ix, iy1, iz1), s_grid(ix1, iy1, iz1), fx);
+    double y0=Interpolate(x00, x10, fy);
+    double y1=Interpolate(x01, x11, fy);
+    double dz=(y1-y0)*(nz-1)/diagonal.z();
+    double z0=Interpolate(x00, x01, fz);
+    double z1=Interpolate(x10, x11, fz);
+    double dy=(z1-z0)*(ny-1)/diagonal.y();
+    return Vector(dx, dy, dz);
+}
+
+double Field3D::longest_dimension()
+{
+    return Max(diagonal.x(), diagonal.y(), diagonal.z());
 }

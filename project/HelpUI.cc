@@ -84,7 +84,7 @@ MosaicTask::~MosaicTask()
 int MosaicTask::body(int)
 {
     mosaic_running=1;
-    int pid=fork();
+    pid_t pid=fork();
     int status;
     switch(pid){
     case -1:

@@ -30,6 +30,19 @@ Vector GeomPick::principal(int i) {
     return directions[i];
 }
 
+void GeomPick::set_principal(const Vector& v1, const Vector& v2,
+			     const Vector& v3)
+{
+    directions.remove_all();
+    directions.grow(6);
+    directions[0]=v1;
+    directions[1]=-v1;
+    directions[2]=v2;
+    directions[3]=-v2;
+    directions[4]=v3;
+    directions[5]=-v3;
+}
+
 GeomObj::GeomObj()
 : matl(0), pick(0)
 {
@@ -65,8 +78,10 @@ ObjGroup::ObjGroup(const ObjGroup& copy)
 : GeomObj(copy), bb(copy.bb)
 {
     objs.grow(copy.objs.size());
-    for(int i=0;i<objs.size();i++)
-	objs[i]=copy.objs[i]->clone();
+    for(int i=0;i<objs.size();i++){
+	GeomObj* cobj=copy.objs[i];
+	objs[i]=cobj->clone();
+    }
 }
 
 ObjGroup::~ObjGroup()
@@ -507,16 +522,10 @@ void GeomCylinder::adjust()
     axis=top-bottom;
     if(axis.length2() < 1.e-6){
 	cerr << "Degenerate cylinder!\n";
+    } else {
+	axis.find_orthogonal(v1, v2);
     }
-    Vector v0(Cross(axis, Vector(1,0,0)));
-    if(v0.length2() == 0){
-	v0=Cross(axis, Vector(0,1,0));
-    }
-    v1=Cross(axis, v0);
-    v1.normalize();
     v1*=rad;
-    v2=Cross(axis, v1);
-    v2.normalize();
     v2*=rad;
 }
 
@@ -659,15 +668,9 @@ void GeomCone::adjust()
     axis=top-bottom;
     if(axis.length2() < 1.e-6){
 	cerr << "Degenerate Cone!\n";
+    } else {
+	axis.find_orthogonal(v1, v2);
     }
-    Vector v0(Cross(axis, Vector(1,0,0)));
-    if(v0.length2() == 0){
-	v0=Cross(axis, Vector(0,1,0));
-    }
-    v1=Cross(axis, v0);
-    v1.normalize();
-    v2=Cross(axis, v1);
-    v2.normalize();
     tilt=(bot_rad-top_rad)/axis.length2();
 }
 
@@ -810,15 +813,9 @@ void GeomDisc::adjust()
 {
     if(normal.length2() < 1.e-6){
 	cerr << "Degenerate normal on Disc!\n";
+    } else {
+	normal.find_orthogonal(v1, v2);
     }
-    Vector v0(Cross(normal, Vector(1,0,0)));
-    if(v0.length2() == 0){
-	v0=Cross(normal, Vector(0,1,0));
-    }
-    v1=Cross(normal, v0);
-    v1.normalize();
-    v2=Cross(normal, v1);
-    v2.normalize();
 }
 
 void GeomDisc::get_bounds(BBox& bb)

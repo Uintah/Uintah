@@ -34,7 +34,7 @@ void PopupMenuC::Create(EncapsulatorC& parent, const StringC& name)
     RowColumnC::Create(*(EncapsulatorC*)0, name);
 }
 
-Widget PopupMenuC::CreateWidget(Widget parent,
+Widget PopupMenuC::CreateWidget(Widget,
 				String name,
 				WidgetClass,
 				ArgList args,

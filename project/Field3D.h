@@ -30,6 +30,7 @@ protected:
     int ref_cnt;
     Mutex lock;
 private:
+    int order;
     Point min;
     Point max;
     Vector diagonal;
@@ -61,6 +62,7 @@ public:
     int interpolate(const Point&, double&);
     void get_minmax(double&, double&);
     Vector gradient(const Point&);
+    double longest_dimension();
 
     // Only for regular grids
     int get_nx();

@@ -13,7 +13,7 @@ OBJS = CallbackCloners.o \
 	Network.o  NetworkEditor.o  Persistent.o  PopupMenu.o  Port.o  \
 	SoundPort.o \
 	UserModule.o  XFont.o  XQColor.o \
-	main.o
+	main.o  tmpl_hack.o
 SRCS = CallbackCloners.cc \
 	Color.cc ColorManager.cc Connection.cc \
 	DBContext.cc Dialbox.cc \
@@ -25,7 +25,7 @@ SRCS = CallbackCloners.cc \
 	Network.cc NetworkEditor.cc Persistent.cc PopupMenu.cc Port.cc \
 	SoundPort.cc \
 	UserModule.cc XFont.cc XQColor.cc \
-	main.cc
+	main.cc tmpl_hack.cc 
 TARGET = project
 
 SCI_LIBS = \

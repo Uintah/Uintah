@@ -84,7 +84,7 @@ MenuC* MenuBarC::AddMenu(char* name)
      return new MenuC(*rc, name, nchild++);
 }
 
-MenuC::MenuC(EncapsulatorC& parent, char* name, int which)
+MenuC::MenuC(EncapsulatorC& parent, char* name, int)
 {
     menu=new PulldownMenuC;
     menu->Create(parent, name);
