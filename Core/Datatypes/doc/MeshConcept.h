@@ -181,10 +181,17 @@ public:
   unsigned get_cells(Cell::array_type &a, Face::index_type i) const;
   //@}
 
-  //! Get the neighbors of a simplex.  Similar to get_edges() with
-  //Node::index_type argument, but returns the "other" edge if it
-  //exists, not all that exist.
-  void get_neighbor(Edge::index_type &, Node::index_type) const;
+
+  //@{
+  //! Get the nieghboring elements of the same simplex type
+  //! Note: Depending on the mesh type, this Can have multiple definitions, 
+  //! so make sure to document exactly what is returned
+  void get_neighbors(Node::array_type &, Node::index_type) const {};
+  void get_neighbors(Edge::array_type &, Edge::index_type) const {};
+  void get_neighbors(Face::array_type &, Face::index_type) const {};
+  void get_neighbors(Cell::array_type &, Cell::index_type) const {};
+  //@}
+
 
   //@{
   //! Get the center point of an element.
@@ -193,6 +200,18 @@ public:
   void get_center(Point &result, Face::index_type idx) const;
   void get_center(Point &result, Cell::index_type idx) const;
   //@}
+
+  //@{
+  //! Get the size of an elemnt (length, area, volume)
+  double get_size(Node::index_type idx) const;
+  double get_size(Edge::index_type idx) const;
+  double get_size(Face::index_type idx) const;
+  double get_size(Cell::index_type idx) const;
+  double get_length(Edge::index_type idx) const { return get_size(idx); };
+  double get_area(Face::index_type idx) const { return get_size(idx); };
+  double get_volume(Cell::index_type idx) const { return get_size(idx); };
+  //@}
+
 
   //@{
   //! Look up the index closest to or containing the given point.
