@@ -420,7 +420,7 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
 {
   FieldIPort *iportField = (FieldIPort *)get_iport("Mesh");
   FieldIPort *iportSource = (FieldIPort *)get_iport("Dipole Sources");
-  FieldIPort *iportInterp = (FieldIPort *)get_iport("Interpolant");
+  MatrixIPort *iportMapping = (MatrixIPort *)get_iport("Mapping");
   MatrixIPort *iportRhs = (MatrixIPort *)get_iport("Input RHS");
 
   MatrixOPort *oportRhs = (MatrixOPort *)get_oport("Output RHS");
@@ -498,67 +498,50 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
   // process mesh
   if (hTetMesh)
   {
-    FieldHandle hInterp;
-    iportInterp->get(hInterp);
+    MatrixHandle hMapping;
+    iportMapping->get(hMapping);
     FieldHandle hSource;
     iportSource->get(hSource);
 	
     unsigned int sourceNode = Max(sourceNodeTCL_.get(), 0);
     unsigned int sinkNode = Max(sinkNodeTCL_.get(), 0);
 	
-    // if we have an Interp field and its type is good, hInterpTetToPC will
-    //  be valid after this block
-    LockingHandle<PointCloudField<vector<pair<TetVolMesh::Node::index_type, double> > > > hInterpTetToPC;
-    if (hInterp.get_rep())
-    {
-      hInterpTetToPC = dynamic_cast<PointCloudField<vector<pair<TetVolMesh::Node::index_type, double> > > *>(hInterp.get_rep());
-      if (!hInterpTetToPC.get_rep())
-      {
-        error("Input interp field wasn't interp'ing PointCloudField from a TetVolMesh::Node.");
-        return;
-      }
-    }
-	
-    // if we have an Interp field and a Source field and all types are good,
+    // if we have an Mapping field and a Source field and all types are good,
     //  hCurField will be valid after this block
-    LockingHandle<PointCloudField<double> > hCurField;
-    if (hInterpTetToPC.get_rep() && hSource.get_rep())
+    PointCloudField<double> *hCurField = 0;
+    if (hMapping.get_rep() && hSource.get_rep())
     {
-      if (hSource->get_type_name(0)=="PointCloudField")
+      hCurField = dynamic_cast<PointCloudField<double>*> (hSource.get_rep());
+      if (!hCurField)
       {
-        if (hSource->get_type_name(1)!="double")
-        {
-          error("Can only use a PointCloudField<double> when using an Interp field and a source field -- this mode is for specifying current densities");
-          return;
-        }
-        hCurField = dynamic_cast<PointCloudField<double>*> (hSource.get_rep());
-        if (hInterpTetToPC->get_typed_mesh().get_rep() !=
-            hCurField->get_typed_mesh().get_rep())
-        {
-          error("Can't have different meshes for the Source and Interp field");
-          return;
-        }
+        error("Can only use a PointCloudField<double> as source when using an Mapping field and a source field -- this mode is for specifying current densities");
+        return;
       }
-      else
+      if (hCurField->data_size() != (unsigned int)hMapping->nrows())
       {
-        error("Can only use a PointCloudField<double> for the current sources");
+        error("Source field and Mapping matrix size mismatch.");
+        return;
+      }
+      if (nsize != hMapping->ncols())
+      {
+        error("Mesh field and Mapping matrix size mismatch.");
         return;
       }
     }
 	
-    // if we have don't have an Interp field, use the source/sink indices
-    //  directly as TetVol nodes
+    // if we have don't have an Mapping matrix, use the source/sink indices
+    // directly as TetVol nodes
 	
-    // if we do have an Interp field, but we don't have a Source field,
-    //  then the source/sink indices refer to the PointCloud, so use the
-    //  InterpField to get their corresponding TetVol node indices
+    // if we do have an Mapping matrix, but we don't have a Source field,
+    // then the source/sink indices refer to the PointCloud, so use the
+    // Mapping matrix to get their corresponding TetVol node indices.
 	
-    // if we have an Interp field AND a Source field, then ignore the
-    //  source/sink indices.  The Source field and the Interp field
-    //  will have the same mesh, where the Interp field speifies the
-    //  TetVol node index for each source, and the Source field gives a
-    //  scalar quantity (current) for each source
-    if (!hInterpTetToPC.get_rep())
+    // if we have an Mapping matrix AND a Source field, then ignore the
+    // source/sink indices.  The Source field and the Mapping matrix
+    // will have the same mesh, where the Mapping matrix specifies the
+    // TetVol node index for each source, and the Source field gives a
+    // scalar quantity (current) for each source.
+    if (!hMapping.get_rep())
     {
       if ((int)sourceNode >= nsize || (int)sinkNode >= nsize)
       {
@@ -571,17 +554,23 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
       return;
     }
 	
-    if (!hCurField.get_rep())
+    if (!hCurField)
     {
-      if (sourceNode < hInterpTetToPC->fdata().size() &&
-          sinkNode < hInterpTetToPC->fdata().size())
+      if (sourceNode < (unsigned int)hMapping->nrows() &&
+          sinkNode < (unsigned int)hMapping->nrows())
       {
-        sourceNode = hInterpTetToPC->fdata()[sourceNode].begin()->first;
-        sinkNode = hInterpTetToPC->fdata()[sinkNode].begin()->first;
+        Array1<int> cc;
+        Array1<double> vv;
+        hMapping->getRowNonzeros(sourceNode, cc, vv);
+        ASSERT(cc.size());
+        sourceNode = cc[0];
+        hMapping->getRowNonzeros(sinkNode, cc, vv);
+        ASSERT(cc.size());
+        sinkNode = cc[0];
       }
       else
       {
-        error("SourceNode or SinkNode was out of interp range.");
+        error("SourceNode or SinkNode was out of mapping range.");
         return;
       }
       (*rhs)[sourceNode] += -1;
@@ -589,60 +578,68 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
       oportRhs->send(MatrixHandle(rhs));
       return;
     }
-	
+
     PointCloudMesh::Node::iterator ii;
     PointCloudMesh::Node::iterator ii_end;
-    hInterpTetToPC->get_typed_mesh()->begin(ii);
-    hInterpTetToPC->get_typed_mesh()->end(ii_end);
+    hCurField->get_typed_mesh()->begin(ii);
+    hCurField->get_typed_mesh()->end(ii_end);
     for (; ii != ii_end; ++ii)
     {
-      vector<pair<TetVolMesh::Node::index_type, double> > vp;
-      hInterpTetToPC->value(vp, *ii);
       double currentDensity;
       hCurField->value(currentDensity, *ii);
-      for (unsigned int vv=0; vv<vp.size(); vv++)
+
+      Array1<int> cc;
+      Array1<double> vv;
+      hMapping->getRowNonzeros((int)(*ii), cc, vv);
+      
+      for (int j=0; j < cc.size(); j++)
       {
-        unsigned int rhsIdx = (unsigned int)(vp[vv].first);
-        double rhsVal = vp[vv].second * currentDensity;
-        (*rhs)[rhsIdx] += rhsVal;
+        (*rhs)[cc[j]] += vv[j] * currentDensity;
       }
     }
+
     oportRhs->send(MatrixHandle(rhs));
   }
   else if (hTriMesh)
   {
-    FieldHandle hInterp;
-    iportInterp->get(hInterp);
+    MatrixHandle hMapping;
+    iportMapping->get(hMapping);
     unsigned int sourceNode = Max(sourceNodeTCL_.get(), 0);
     unsigned int sinkNode = Max(sinkNodeTCL_.get(), 0);
 
-    if (hInterp.get_rep())
+    if (hMapping.get_rep())
     {
-      PointCloudField<vector<pair<TriSurfMesh::Node::index_type, double> > >* interp;
-      interp = dynamic_cast<PointCloudField<vector<pair<TriSurfMesh::Node::index_type, double> > > *>(hInterp.get_rep());
-      if (!interp)
+      if (nsize != hMapping->ncols())
       {
-        error("Input interp field wasn't interp'ing PointCloudField from a TriSurfMesh::Node.");
+        error("Mesh field and Mapping matrix size mismatch.");
         return;
       }
-      else if (sourceNode < interp->fdata().size() &&
-               sinkNode < interp->fdata().size())
+
+      if (sourceNode < (unsigned int)hMapping->nrows() &&
+          sinkNode < (unsigned int)hMapping->nrows())
       {
-        sourceNode = interp->fdata()[sourceNode].begin()->first;
-        sinkNode = interp->fdata()[sinkNode].begin()->first;
+        Array1<int> cc;
+        Array1<double> vv;
+        hMapping->getRowNonzeros(sourceNode, cc, vv);
+        ASSERT(cc.size());
+        sourceNode = cc[0];
+        hMapping->getRowNonzeros(sinkNode, cc, vv);
+        ASSERT(cc.size());
+        sinkNode = cc[0];
       }
       else
       {
-        error("SourceNode or SinkNode was out of interp range.");
+        error("SourceNode or SinkNode was out of mapping range.");
         return;
       }
     }
-    if (sourceNode >= (unsigned int) nsize ||
-        sinkNode >= (unsigned int) nsize)
+
+    if (sourceNode >= (unsigned int)nsize || sinkNode >= (unsigned int)nsize)
     {
       error("SourceNode or SinkNode was out of mesh range.");
       return;
     }
+
     msgStream_ << "sourceNode="<<sourceNode<<" sinkNode="<<sinkNode<<"\n";
     (*rhs)[sourceNode] += -1;
     (*rhs)[sinkNode] += 1;

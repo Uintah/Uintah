@@ -57,14 +57,14 @@ set m6 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 379 90]
 # Create a BioPSE->Forward->ApplyFEMCurrentSource Module
 set m7 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 25 446]
 
-# Create a SCIRun->FieldsData->BuildInterpolant Module
-set m8 [addModuleAtPosition "SCIRun" "FieldsData" "BuildInterpolant" 61 383]
+# Create a SCIRun->FieldsData->BuildMappingMatrix Module
+set m8 [addModuleAtPosition "SCIRun" "FieldsData" "BuildMappingMatrix" 61 383]
 
 # Create a SCIRun->FieldsData->ChangeFieldDataAt Module
 set m9 [addModuleAtPosition "SCIRun" "FieldsData" "ChangeFieldDataAt" 236 280]
 
-# Create a SCIRun->FieldsData->BuildInterpolant Module
-set m10 [addModuleAtPosition "SCIRun" "FieldsData" "BuildInterpolant" 433 385]
+# Create a SCIRun->FieldsData->BuildMappingMatrix Module
+set m10 [addModuleAtPosition "SCIRun" "FieldsData" "BuildMappingMatrix" 433 385]
 
 # Create a BioPSE->Forward->ApplyFEMCurrentSource Module
 set m11 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 397 525]
@@ -99,8 +99,8 @@ set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 606 385]
 # Create a SCIRun->Render->Viewer Module
 set m21 [addModuleAtPosition "SCIRun" "Render" "Viewer" 197 1123]
 
-# Create a SCIRun->FieldsData->ApplyInterpMatrix Module
-set m22 [addModuleAtPosition "SCIRun" "FieldsData" "ApplyInterpMatrix" 9 822]
+# Create a SCIRun->FieldsData->ApplyMappingMatrix Module
+set m22 [addModuleAtPosition "SCIRun" "FieldsData" "ApplyMappingMatrix" 9 822]
 
 # Create a SCIRun->FieldsData->TransformData Module
 set m23 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 43 301]
@@ -197,12 +197,12 @@ setGlobal $m4-sizeFlag {1}
 # Setup GUI for the BioPSE->Forward->ApplyFEMCurrentSource Module
 setGlobal $m7-modeTCL {sources and sinks}
 
-# Setup GUI for the SCIRun->FieldsData->BuildInterpolant Module
+# Setup GUI for the SCIRun->FieldsData->BuildMappingMatrix Module
 setGlobal $m8-exhaustive_search {1}
 
 # Setup GUI for the SCIRun->FieldsData->ChangeFieldDataAt Module
 
-# Setup GUI for the SCIRun->FieldsData->BuildInterpolant Module
+# Setup GUI for the SCIRun->FieldsData->BuildMappingMatrix Module
 setGlobal $m10-interpolation_basis {constant}
 setGlobal $m10-exhaustive_search {1}
 
@@ -356,7 +356,7 @@ setGlobal $m21-ViewWindow_0-clip-normal-y-6 {}
 setGlobal $m21-ViewWindow_0-clip-normal-z-6 {}
 setGlobal $m21-ViewWindow_0-clip-normal-d-6 {}
 
-# Setup GUI for the SCIRun->FieldsData->ApplyInterpMatrix Module
+# Setup GUI for the SCIRun->FieldsData->ApplyMappingMatrix Module
 
 # Setup GUI for the SCIRun->FieldsData->TransformData Module
 setGlobal $m23-function {result = -1.0;
