@@ -22,7 +22,7 @@ bool
 BeckerCheck::checkStability(const Matrix3& stress ,
 			    const Matrix3& ,
 			    const TangentModulusTensor& M,
-			    Vector& direction)
+			    Vector& )
 {
   // Find the magnitudes and directions of the principal stresses
   // If all three principal stresses are equal, numEV = 1,
