@@ -87,8 +87,6 @@ LOS::draw()
     
     loadColorMap( b );
     loadTexture( b );
-//     makeTextureMatrix( b );
-//     enableTexCoords();
     //setAlpha( b );
     enableBlend();
 
@@ -98,14 +96,18 @@ LOS::draw()
       VolShader->create();
     }
     VolShader->bind();
+#else
+    makeTextureMatrix( b );
+    enableTexCoords();
 #endif
     drawPolys( polys );
 #if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
      VolShader->release();
+#else
+     disableTexCoords();
 #endif
 
     disableBlend();
-//     disableTexCoords();
   }
 }
 
