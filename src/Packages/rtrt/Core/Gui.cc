@@ -17,6 +17,7 @@
 #include <Packages/rtrt/Core/DynamicInstance.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/Worker.h>
+#include <Packages/rtrt/Core/PPMImage.h>
 #include <Packages/rtrt/Core/params.h>
 #include <Packages/rtrt/Core/SelectableGroup.h>
 #include <Packages/rtrt/Core/SpinningInstance.h>
@@ -46,6 +47,10 @@ namespace rtrt {
   extern float glyph_threshold;
 }
   
+//oogl
+extern ShadedPrim   * backgroundTexQuad; // from rtrt.cc
+extern BasicTexture * backgroundTex;     // from rtrt.cc
+
 ////////////////////////////////////////////
 
 extern "C" Display *__glutDisplay;
@@ -58,6 +63,12 @@ using namespace SCIRun;
 using namespace std;
 
 static Gui * activeGui;
+
+PPMImage * livingRoomImage = NULL;
+PPMImage * scienceRoomImage = NULL;
+PPMImage * museumRoomImage = NULL;
+PPMImage * underwaterRoomImage = NULL;
+PPMImage * galaxyRoomImage = NULL;
 
 static double    prev_time[3]; // history for quaternions and time
 static HVect     prev_quat[3];
@@ -270,9 +281,11 @@ Gui::handleTriggers()
 	{
 	  if( activeGui->queuedMTT_ ) 
 	    {
+	      cout << "moving in queued trigger: " << 
+		activeGui->queuedMTT_->getName() << "\n";
 	      activeGui->activeMTT_ = activeGui->queuedMTT_;
-	      activeGui->queuedMTT_->activate();
-	      activeGui->queuedMTT_ = next;
+	      activeGui->activeMTT_->activate();
+	      activeGui->queuedMTT_ = NULL;
 	    }
 	  else
 	    {
@@ -292,17 +305,19 @@ Gui::handleTriggers()
     {
       Trigger * trigger = triggers[cnt];
       bool result = trigger->check( activeGui->camera_->eye );
-      if( result == true )
+      if( result == true && trigger != activeGui->activeMTT_ )
 	{
 	  if( activeGui->activeMTT_ )
 	    {
-	      cout << "queuing trigger: " << trigger->getName() << "\n";
+	      cout << "deactivating current trigger: " <<
+		activeGui->activeMTT_->getName() << " to start " <<
+		trigger->getName() << "\n";
 	      activeGui->activeMTT_->deactivate();
 	      activeGui->queuedMTT_ = trigger;
 	    }
 	  else
 	    {
-	      cout << "KICKING OFF TRIGGER: " << trigger->getName() << "\n";
+	      cout << "starting " << trigger->getName() << "\n";
 	      activeGui->activeMTT_ = trigger;
 	      activeGui->activeMTT_->activate();
 	    }
@@ -343,6 +358,52 @@ Gui::handleTriggers()
 	}
     }
 } // end handleTriggers()
+
+void
+Gui::redrawBackgroundCB()
+{
+  if( activeGui->dpy_->fullScreenMode_ ) {
+    if( !activeGui->backgroundImage_ ) return;
+    glutSetWindow( activeGui->glutDisplayWindowId );
+
+    glViewport(0, 0, 1280, 1024);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0, 1280, 0, 1024);
+    glDisable( GL_DEPTH_TEST );
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(0.375, 0.375, 0.0);
+
+    backgroundTex->reset( GL_FLOAT, &((*(activeGui->backgroundImage_))(0,0)) );
+    backgroundTexQuad->draw();
+    glutSwapBuffers();
+    backgroundTexQuad->draw();
+  }
+}
+
+
+void
+Gui::setBackgroundImage( int room )
+{
+  switch( room ) {
+  case 0:
+    backgroundImage_ = scienceRoomImage;
+    break;
+  case 1:
+    backgroundImage_ = livingRoomImage;
+    break;
+  case 2:
+    backgroundImage_ = galaxyRoomImage;
+    break;
+  case 3:
+    backgroundImage_ = underwaterRoomImage;
+    break;
+  default:
+    backgroundImage_ = museumRoomImage;
+    break;
+  }
+}
 
 void
 Gui::idleFunc()
@@ -1112,11 +1173,13 @@ Gui::updateLightPanelCB( int /*id*/ )
 
   if( light->isOn() )
     {
+      activeGui->lightOnOffBtn_->set_name( "Turn Off" );
       activeGui->lightsColorPanel_->enable();
       activeGui->lightsPositionPanel_->enable();
     }
   else
     {
+      activeGui->lightOnOffBtn_->set_name( "Turn On" );
       activeGui->lightsColorPanel_->disable();
       activeGui->lightsPositionPanel_->disable();
     }
@@ -1893,6 +1956,29 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   activeGui->mainWindow->
     add_button_to_panel( button_panel, "Triggers",
 			 OBJECTS_BUTTON_ID, toggleTriggersWindowCB );
+
+
+  ///////////////////////////////////////////////////////////
+
+  if( activeGui->dpy_->fullScreenMode_ )
+    {
+      livingRoomImage = new PPMImage( 
+	"/usr/sci/data/Geometry/interface/backgrounds/bkgrnd_livingroom.ppm",
+	true );
+      scienceRoomImage = new PPMImage( 
+	"/usr/sci/data/Geometry/interface/backgrounds/bkgrnd_science.ppm",
+	true );
+      museumRoomImage = new PPMImage( 
+	"/usr/sci/data/Geometry/interface/backgrounds/bkgrnd_museum.ppm",
+	true );
+      underwaterRoomImage = new PPMImage( 
+	"/usr/sci/data/Geometry/interface/backgrounds/bkgrnd_atlantis.ppm",
+	true );
+      galaxyRoomImage = new PPMImage( 
+	"/usr/sci/data/Geometry/interface/backgrounds/bkgrnd_galaxy.ppm",
+	true );
+      activeGui->backgroundImage_ = scienceRoomImage;
+    }
   printf("done createmenus\n");
 } // end createMenus()
 
@@ -2677,4 +2763,5 @@ Gui::drawrstats(int nworkers, vector<Worker*> & workers,
     column+=dx;
   }
 } // end draw_rstats()
+
 
