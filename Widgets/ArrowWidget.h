@@ -40,6 +40,8 @@ inline void
 ArrowWidget::SetDirect( const Vector& v )
 {
    direction = v.normal();
+
+   execute();
 }
 
 

@@ -20,9 +20,11 @@
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 #include <Geom/Geom.h>
+#include <Geom/Group.h>
 #include <Geom/Material.h>
+#include <Geom/Pick.h>
+#include <Geom/Switch.h>
 
-class GeomGroup;
 class Module;
 
 class BaseWidget {
@@ -30,6 +32,7 @@ public:
    BaseWidget( Module* module,
 	       const Index vars, const Index cons,
 	       const Index geoms, const Index mats,
+	       const Index picks,
 	       const Real widget_scale );
    BaseWidget( const BaseWidget& );
    ~BaseWidget();
@@ -39,7 +42,9 @@ public:
 
    inline void SetEpsilon( const Real Epsilon );
 
-   inline GeomGroup* GetWidget();
+   inline GeomSwitch* GetWidget();
+   inline int GetState();
+   inline void SetState(const int state);
 
    virtual void execute();
    const Point& GetVar( const Index vindex ) const;
@@ -58,16 +63,20 @@ protected:
    Index NumVariables;
    Index NumGeometries;
    Index NumMaterials;
+   Index NumPicks;
 
    Array1<BaseConstraint*> constraints;
    Array1<Variable*> variables;
    Array1<GeomObj*> geometries;
    Array1<MaterialHandle> materials;
+   Array1<GeomPick*> picks;
 
-   GeomGroup* widget;
+   GeomSwitch* widget;
    Real widget_scale;
 
    Module* module;
+
+   void FinishWidget(GeomObj* w);
 };
 
 inline ostream& operator<<( ostream& os, BaseWidget& w );
@@ -95,13 +104,27 @@ BaseWidget::SetEpsilon( const Real Epsilon )
 }
 
 
-inline GeomGroup*
+inline GeomSwitch*
 BaseWidget::GetWidget()
 {
    return widget;
 }
 
 
+inline int
+BaseWidget::GetState()
+{
+   return widget->get_state();
+}
+
+   
+inline void
+BaseWidget::SetState(const int state)
+{
+   widget->set_state(state);
+}
+
+   
 inline ostream&
 operator<<( ostream& os, BaseWidget& w )
 {

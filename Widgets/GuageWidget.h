@@ -17,7 +17,7 @@
 
 #include <Widgets/BaseWidget.h>
 
-enum { GuageW_PointL, GuageW_PointR, GuageW_Slider, GuageW_Dist };
+enum { GuageW_PointL, GuageW_PointR, GuageW_Dist, GuageW_Slider, GuageW_SDist, GuageW_Ratio};
 
 class GuageWidget : public BaseWidget {
 public:
@@ -27,7 +27,25 @@ public:
 
    virtual void execute();
    virtual void geom_moved(int, double, const Vector&, void*);
+
+   inline Real GetRatio() const;
+   inline const Vector& GetAxis() const;
 };
+
+
+inline Real
+GuageWidget::GetRatio() const
+{
+   return (variables[GuageW_Ratio]->Get().x());
+}
+
+
+inline const Vector&
+GuageWidget::GetAxis() const
+{
+   Vector axis(variables[GuageW_PointR]->Get() - variables[GuageW_PointL]->Get());
+   return axis.normal();
+}
 
 
 #endif

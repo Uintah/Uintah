@@ -6,9 +6,9 @@
  *   James Purciful
  *   Department of Computer Science
  *   University of Utah
- *   Aug. 1994
+ *   Jan. 1995
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 1995 SCI Group
  */
 
 
@@ -18,7 +18,7 @@
 #include <Widgets/BaseWidget.h>
 
 enum { FrameW_PointUL, FrameW_PointUR, FrameW_PointDR, FrameW_PointDL,
-       FrameW_Dist, FrameW_Hypo };
+       FrameW_Dist1, FrameW_Dist2, FrameW_Hypo };
 
 class FrameWidget : public BaseWidget {
 public:

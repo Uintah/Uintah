@@ -6,43 +6,57 @@
  *   James Purciful
  *   Department of Computer Science
  *   University of Utah
- *   Aug. 1994
+ *   Jan. 1995
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 1995 SCI Group
  */
 
 
 #include <Widgets/FrameWidget.h>
 #include <Constraints/DistanceConstraint.h>
-#include <Constraints/HypotenousConstraint.h>
+#include <Constraints/PythagorasConstraint.h>
+#include <Constraints/PlaneConstraint.h>
 #include <Geom/Cylinder.h>
-#include <Geom/Group.h>
-#include <Geom/Pick.h>
 #include <Geom/Sphere.h>
 
-const Index NumCons = 7;
-const Index NumVars = 6;
+const Index NumCons = 8;
+const Index NumVars = 7;
 const Index NumGeoms = 8;
 const Index NumMatls = 3;
+const Index NumPcks = 5;
 const Index NumSchemes = 2;
 
-enum { FrameW_ConstULDR, FrameW_ConstURDL, FrameW_ConstHypo,
+enum { FrameW_ConstULDR, FrameW_ConstURDL, FrameW_ConstPyth, FrameW_ConstPlane,
        FrameW_ConstULUR, FrameW_ConstULDL, FrameW_ConstDRUR, FrameW_ConstDRDL };
 enum { FrameW_SphereUL, FrameW_SphereUR, FrameW_SphereDR, FrameW_SphereDL,
        FrameW_CylU, FrameW_CylR, FrameW_CylD, FrameW_CylL };
 enum { FrameW_PointMatl, FrameW_EdgeMatl, FrameW_HighMatl };
+enum { FrameW_PickSphUL, FrameW_PickSphUR, FrameW_PickSphDR, FrameW_PickSphDL, FrameW_PickCyls };
 
 FrameWidget::FrameWidget( Module* module, Real widget_scale )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, widget_scale*0.1)
+: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
 {
+   cerr << "Starting FrameWidget CTOR" << endl;
    Real INIT = 1.0*widget_scale;
    variables[FrameW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
    variables[FrameW_PointUR] = new Variable("PntUR", Scheme2, Point(INIT, 0, 0));
    variables[FrameW_PointDR] = new Variable("PntDR", Scheme1, Point(INIT, INIT, 0));
    variables[FrameW_PointDL] = new Variable("PntDL", Scheme2, Point(0, INIT, 0));
-   variables[FrameW_Dist] = new Variable("DIST", Scheme1, Point(INIT, 0, 0));
+   variables[FrameW_Dist1] = new Variable("DIST1", Scheme1, Point(INIT, 0, 0));
+   variables[FrameW_Dist2] = new Variable("DIST2", Scheme1, Point(INIT, 0, 0));
    variables[FrameW_Hypo] = new Variable("HYPO", Scheme1, Point(sqrt(2*INIT*INIT), 0, 0));
+
+   constraints[FrameW_ConstPlane] = new PlaneConstraint("ConstPlane",
+							NumSchemes,
+							variables[FrameW_PointUL],
+							variables[FrameW_PointUR],
+							variables[FrameW_PointDR],
+							variables[FrameW_PointDL]);
    
+   constraints[FrameW_ConstPlane]->VarChoices(Scheme1, 2, 3, 0, 1);
+   constraints[FrameW_ConstPlane]->VarChoices(Scheme2, 2, 3, 0, 1);
+   constraints[FrameW_ConstPlane]->Priorities(P_Highest, P_Highest,
+					      P_Highest, P_Highest);
    constraints[FrameW_ConstULDR] = new DistanceConstraint("Const13",
 							  NumSchemes,
 							  variables[FrameW_PointUL],
@@ -50,7 +64,7 @@ FrameWidget::FrameWidget( Module* module, Real widget_scale )
 							  variables[FrameW_Hypo]);
    constraints[FrameW_ConstULDR]->VarChoices(Scheme1, 2, 2, 1);
    constraints[FrameW_ConstULDR]->VarChoices(Scheme2, 1, 0, 1);
-   constraints[FrameW_ConstULDR]->Priorities(P_Highest, P_Highest, P_Default);
+   constraints[FrameW_ConstULDR]->Priorities(P_HighMedium, P_HighMedium, P_Default);
    constraints[FrameW_ConstURDL] = new DistanceConstraint("Const24",
 							  NumSchemes,
 							  variables[FrameW_PointUR],
@@ -58,19 +72,20 @@ FrameWidget::FrameWidget( Module* module, Real widget_scale )
 							  variables[FrameW_Hypo]);
    constraints[FrameW_ConstURDL]->VarChoices(Scheme1, 1, 0, 1);
    constraints[FrameW_ConstURDL]->VarChoices(Scheme2, 2, 2, 1);
-   constraints[FrameW_ConstURDL]->Priorities(P_Highest, P_Highest, P_Default);
-   constraints[FrameW_ConstHypo] = new HypotenousConstraint("ConstHypo",
+   constraints[FrameW_ConstURDL]->Priorities(P_HighMedium, P_HighMedium, P_Default);
+   constraints[FrameW_ConstPyth] = new PythagorasConstraint("ConstPyth",
 							    NumSchemes,
-							    variables[FrameW_Dist],
+							    variables[FrameW_Dist1],
+							    variables[FrameW_Dist2],
 							    variables[FrameW_Hypo]);
-   constraints[FrameW_ConstHypo]->VarChoices(Scheme1, 1, 0);
-   constraints[FrameW_ConstHypo]->VarChoices(Scheme2, 1, 0);
-   constraints[FrameW_ConstHypo]->Priorities(P_Default, P_Highest);
+   constraints[FrameW_ConstPyth]->VarChoices(Scheme1, 2, 2, 0);
+   constraints[FrameW_ConstPyth]->VarChoices(Scheme2, 2, 2, 1);
+   constraints[FrameW_ConstPyth]->Priorities(P_Default, P_Default, P_HighMedium);
    constraints[FrameW_ConstULUR] = new DistanceConstraint("Const12",
 							  NumSchemes,
 							  variables[FrameW_PointUL],
 							  variables[FrameW_PointUR],
-							  variables[FrameW_Dist]);
+							  variables[FrameW_Dist1]);
    constraints[FrameW_ConstULUR]->VarChoices(Scheme1, 1, 1, 1);
    constraints[FrameW_ConstULUR]->VarChoices(Scheme2, 0, 0, 0);
    constraints[FrameW_ConstULUR]->Priorities(P_Default, P_Default, P_LowMedium);
@@ -78,7 +93,7 @@ FrameWidget::FrameWidget( Module* module, Real widget_scale )
 							  NumSchemes,
 							  variables[FrameW_PointUL],
 							  variables[FrameW_PointDL],
-							  variables[FrameW_Dist]);
+							  variables[FrameW_Dist2]);
    constraints[FrameW_ConstULDL]->VarChoices(Scheme1, 1, 1, 1);
    constraints[FrameW_ConstULDL]->VarChoices(Scheme2, 0, 0, 0);
    constraints[FrameW_ConstULDL]->Priorities(P_Default, P_Default, P_LowMedium);
@@ -86,7 +101,7 @@ FrameWidget::FrameWidget( Module* module, Real widget_scale )
 							  NumSchemes,
 							  variables[FrameW_PointDR],
 							  variables[FrameW_PointUR],
-							  variables[FrameW_Dist]);
+							  variables[FrameW_Dist2]);
    constraints[FrameW_ConstDRUR]->VarChoices(Scheme1, 1, 1, 1);
    constraints[FrameW_ConstDRUR]->VarChoices(Scheme2, 0, 0, 0);
    constraints[FrameW_ConstDRUR]->Priorities(P_Default, P_Default, P_LowMedium);
@@ -94,42 +109,45 @@ FrameWidget::FrameWidget( Module* module, Real widget_scale )
 							  NumSchemes,
 							  variables[FrameW_PointDR],
 							  variables[FrameW_PointDL],
-							  variables[FrameW_Dist]);
+							  variables[FrameW_Dist1]);
    constraints[FrameW_ConstDRDL]->VarChoices(Scheme1, 1, 1, 1);
    constraints[FrameW_ConstDRDL]->VarChoices(Scheme2, 0, 0, 0);
    constraints[FrameW_ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
    materials[FrameW_PointMatl] = new Material(Color(0,0,0), Color(.54, .60, 1),
-						  Color(.5,.5,.5), 20);
+					      Color(.5,.5,.5), 20);
    materials[FrameW_EdgeMatl] = new Material(Color(0,0,0), Color(.54, .60, .66),
-						 Color(.5,.5,.5), 20);
+					     Color(.5,.5,.5), 20);
    materials[FrameW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
-						 Color(0,0,.6), 20);
+					     Color(0,0,.6), 20);
 
-   Index geom;
-#ifdef BROKEN
-   for (geom = FrameW_SphereUL; geom <= FrameW_SphereDL; geom++) {
+   Index geom, pick;
+   GeomGroup* pts = new GeomGroup;
+   for (geom = FrameW_SphereUL, pick = FrameW_PickSphUL;
+	geom <= FrameW_SphereDL; geom++, pick++) {
       geometries[geom] = new GeomSphere;
-      GeomPick* p=new GeomPick(module);
-      p->set_highlight(materials[FrameW_HighMatl]);
-      p->set_cbdata((void*)geom);
-      geometries[geom]->set_pick(p);
-      geometries[geom]->set_matl(materials[FrameW_PointMatl]);
+      picks[pick] = new GeomPick(geometries[geom], module);
+      picks[pick]->set_highlight(materials[FrameW_HighMatl]);
+      picks[pick]->set_cbdata((void*)pick);
+      pts->add(picks[pick]);
    }
+   GeomMaterial* ptsm = new GeomMaterial(pts, materials[FrameW_PointMatl]);
+   
+   GeomGroup* cyls = new GeomGroup;
    for (geom = FrameW_CylU; geom <= FrameW_CylL; geom++) {
       geometries[geom] = new GeomCylinder;
-      GeomPick* p = new GeomPick(module);
-      p->set_highlight(materials[FrameW_HighMatl]);
-      p->set_cbdata((void*)geom);
-      geometries[geom]->set_pick(p);
-      geometries[geom]->set_matl(materials[FrameW_EdgeMatl]);
+      cyls->add(geometries[geom]);
    }
-#endif
+   picks[FrameW_PickCyls] = new GeomPick(cyls, module);
+   picks[FrameW_PickCyls]->set_highlight(materials[FrameW_HighMatl]);
+   picks[FrameW_PickCyls]->set_cbdata((void*)FrameW_PickCyls);
+   GeomMaterial* cylsm = new GeomMaterial(picks[FrameW_PickCyls], materials[FrameW_EdgeMatl]);
 
-   widget = new GeomGroup;
-   for (geom = 0; geom < NumGeoms; geom++) {
-      widget->add(geometries[geom]);
-   }
+   GeomGroup* w = new GeomGroup;
+   w->add(ptsm);
+   w->add(cylsm);
+
+   FinishWidget(w);
    
    SetEpsilon(widget_scale*1e-4);
    
@@ -139,6 +157,7 @@ FrameWidget::FrameWidget( Module* module, Real widget_scale )
    
    for (vindex=0; vindex<NumVariables; vindex++)
       variables[vindex]->Resolve();
+   cerr << "Done with FrameWidget CTOR" << endl;
 }
 
 
@@ -181,10 +200,8 @@ FrameWidget::execute()
    spvec1.normalize();
    spvec2.normalize();
    Vector v = Cross(spvec1, spvec2);
-   for (Index geom = 0; geom < NumGeoms; geom++) {
-#ifdef BROKEN
-      geometries[geom]->get_pick()->set_principal(spvec1, spvec2, v);
-#endif
+   for (Index geom = 0; geom < NumPcks; geom++) {
+      picks[geom]->set_principal(spvec1, spvec2, v);
    }
 }
 
@@ -195,35 +212,27 @@ FrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
    Vector delt = delta;
    cerr << "Moved called..." << endl;
    switch((int)cbdata){
-   case FrameW_SphereUL:
+   case FrameW_PickSphUL:
       cerr << "  FrameW_SphereUL moved" << endl;
-      delt.z(0.0);
       variables[FrameW_PointUL]->SetDelta(delt);
       break;
-   case FrameW_SphereUR:
+   case FrameW_PickSphUR:
       cerr << "  FrameW_SphereUR moved" << endl;
-      delt.z(0.0);
       variables[FrameW_PointUR]->SetDelta(delt);
       break;
-   case FrameW_SphereDR:
+   case FrameW_PickSphDR:
       cerr << "  FrameW_SphereDR moved" << endl;
-      delt.z(0.0);
       variables[FrameW_PointDR]->SetDelta(delt);
       break;
-   case FrameW_SphereDL:
+   case FrameW_PickSphDL:
       cerr << "  FrameW_SphereDL moved" << endl;
-      delt.z(0.0);
       variables[FrameW_PointDL]->SetDelta(delt);
       break;
-   case FrameW_CylU:
-   case FrameW_CylR:
-   case FrameW_CylD:
-   case FrameW_CylL:
+   case FrameW_PickCyls:
       cerr << "  FrameW_CylU moved" << endl;
       cerr << "  FrameW_CylR moved" << endl;
       cerr << "  FrameW_CylD moved" << endl;
       cerr << "  FrameW_CylL moved" << endl;
-      delt.z(0.0);
       variables[FrameW_PointUL]->MoveDelta(delt);
       variables[FrameW_PointUR]->MoveDelta(delt);
       variables[FrameW_PointDR]->MoveDelta(delt);

@@ -14,11 +14,9 @@
 
 #include <Widgets/CubeWidget.h>
 #include <Constraints/DistanceConstraint.h>
-#include <Constraints/HypotenousConstraint.h>
+#include <Constraints/HypotenuseConstraint.h>
 #include <Constraints/PythagorasConstraint.h>
 #include <Geom/Cylinder.h>
-#include <Geom/Group.h>
-#include <Geom/Pick.h>
 #include <Geom/Sphere.h>
 
 const Index NumCons = 18;
@@ -26,6 +24,7 @@ const Index NumVars = 11;
 const Index NumGeoms = 20;
 const Index NumMatls = 3;
 const Index NumSchemes = 4;
+const Index NumPcks = 9;
 
 enum { CubeW_ConstIULODR, CubeW_ConstOULIDR, CubeW_ConstIDLOUR, CubeW_ConstODLIUR,
        CubeW_ConstHypo, CubeW_ConstDiag,
@@ -38,11 +37,15 @@ enum { CubeW_SphereIUL, CubeW_SphereIUR, CubeW_SphereIDR, CubeW_SphereIDL,
        CubeW_CylMU, CubeW_CylMR, CubeW_CylMD, CubeW_CylML,
        CubeW_CylOU, CubeW_CylOR, CubeW_CylOD, CubeW_CylOL };
 enum { CubeW_PointMatl, CubeW_EdgeMatl, CubeW_HighMatl };
+enum { CubeW_PickSphIUL, CubeW_PickSphIUR, CubeW_PickSphIDR, CubeW_PickSphIDL,
+       CubeW_PickSphOUL, CubeW_PickSphOUR, CubeW_PickSphODR, CubeW_PickSphODL,
+       CubeW_PickCyls };
 
 CubeWidget::CubeWidget( Module* module, double widget_scale )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, widget_scale)
+: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
 {
-   const Real INIT = 100.0;
+   cerr << "Starting CubeWidget CTOR" << endl;
+   Real INIT = 1.0*widget_scale;
    variables[CubeW_PointIUL] = new Variable("PntIUL", Scheme1, Point(0, 0, 0));
    variables[CubeW_PointIUR] = new Variable("PntIUR", Scheme2, Point(INIT, 0, 0));
    variables[CubeW_PointIDR] = new Variable("PntIDR", Scheme1, Point(INIT, INIT, 0));
@@ -97,7 +100,7 @@ CubeWidget::CubeWidget( Module* module, double widget_scale )
    constraints[CubeW_ConstODLIUR]->VarChoices(Scheme3, 1, 0, 1);
    constraints[CubeW_ConstODLIUR]->VarChoices(Scheme4, 2, 2, 1);
    constraints[CubeW_ConstODLIUR]->Priorities(P_Highest, P_Highest, P_Default);
-   constraints[CubeW_ConstHypo] = new HypotenousConstraint("ConstHypo",
+   constraints[CubeW_ConstHypo] = new HypotenuseConstraint("ConstHypo",
 							   NumSchemes,
 							   variables[CubeW_Dist],
 							   variables[CubeW_Hypo]);
@@ -244,30 +247,35 @@ CubeWidget::CubeWidget( Module* module, double widget_scale )
    materials[CubeW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
 						Color(0,0,.6), 20);
 
-   Index geom;
-#ifdef BROKEN
-   for (geom = CubeW_SphereIUL; geom <= CubeW_SphereODL; geom++) {
+   Index geom, pick;
+   GeomGroup* pts = new GeomGroup;
+   for (geom = CubeW_SphereIUL, pick = CubeW_PickSphIUL;
+	geom <= CubeW_SphereODL; geom++, pick++) {
       geometries[geom] = new GeomSphere;
-      GeomPick* p=new GeomPick(module);
-      p->set_highlight(materials[CubeW_HighMatl]);
-      p->set_cbdata((void*)geom);
-      geometries[geom]->set_pick(p);
-      geometries[geom]->set_matl(materials[CubeW_PointMatl]);
+      picks[pick] = new GeomPick(geometries[geom], module);
+      picks[pick]->set_highlight(materials[CubeW_HighMatl]);
+      picks[pick]->set_cbdata((void*)pick);
+      pts->add(picks[pick]);
    }
+   GeomMaterial* ptsm = new GeomMaterial(pts, materials[CubeW_PointMatl]);
+   
+   GeomGroup* cyls = new GeomGroup;
    for (geom = CubeW_CylIU; geom <= CubeW_CylOL; geom++) {
       geometries[geom] = new GeomCylinder;
-      GeomPick* p = new GeomPick(module);
-      p->set_highlight(materials[CubeW_HighMatl]);
-      p->set_cbdata((void*)geom);
-      geometries[geom]->set_pick(p);
-      geometries[geom]->set_matl(materials[CubeW_EdgeMatl]);
+      cyls->add(geometries[geom]);
    }
-#endif
+   picks[CubeW_PickCyls] = new GeomPick(cyls, module);
+   picks[CubeW_PickCyls]->set_highlight(materials[CubeW_HighMatl]);
+   picks[CubeW_PickCyls]->set_cbdata((void*)CubeW_PickCyls);
+   GeomMaterial* cylsm = new GeomMaterial(picks[CubeW_PickCyls], materials[CubeW_EdgeMatl]);
 
-   widget=new GeomGroup;
-   for (geom = 0; geom < NumGeoms; geom++) {
-      widget->add(geometries[geom]);
-   }
+   GeomGroup* w = new GeomGroup;
+   w->add(ptsm);
+   w->add(cylsm);
+
+   FinishWidget(w);
+
+   SetEpsilon(widget_scale*1e-4);
 
    // Init variables.
    for (Index vindex=0; vindex<NumVariables; vindex++)
@@ -275,6 +283,7 @@ CubeWidget::CubeWidget( Module* module, double widget_scale )
    
    for (vindex=0; vindex<NumVariables; vindex++)
       variables[vindex]->Resolve();
+   cerr << "Done with CubeWidget CTOR" << endl;
 }
 
 
@@ -344,10 +353,8 @@ CubeWidget::execute()
    spvec1.normalize();
    spvec2.normalize();
    Vector v = Cross(spvec1, spvec2);
-   for (Index geom = 0; geom < NumGeoms; geom++) {
-#ifdef BROKEN
-      geometries[geom]->get_pick()->set_principal(spvec1, spvec2, v);
-#endif
+   for (Index geom = 0; geom < NumPcks; geom++) {
+      picks[geom]->set_principal(spvec1, spvec2, v);
    }
 }
 
@@ -357,42 +364,31 @@ CubeWidget::geom_moved( int /* axis*/, double /*dist*/, const Vector& delta,
 {
    cerr << "Moved called..." << endl;
    switch((int)cbdata){
-   case CubeW_SphereIUL:
+   case CubeW_PickSphIUL:
       variables[CubeW_PointIUL]->SetDelta(delta);
       break;
-   case CubeW_SphereIUR:
+   case CubeW_PickSphIUR:
       variables[CubeW_PointIUR]->SetDelta(delta);
       break;
-   case CubeW_SphereIDR:
+   case CubeW_PickSphIDR:
       variables[CubeW_PointIDR]->SetDelta(delta);
       break;
-   case CubeW_SphereIDL:
+   case CubeW_PickSphIDL:
       variables[CubeW_PointIDL]->SetDelta(delta);
       break;
-   case CubeW_SphereOUL:
+   case CubeW_PickSphOUL:
       variables[CubeW_PointOUL]->SetDelta(delta);
       break;
-   case CubeW_SphereOUR:
+   case CubeW_PickSphOUR:
       variables[CubeW_PointOUR]->SetDelta(delta);
       break;
-   case CubeW_SphereODR:
+   case CubeW_PickSphODR:
       variables[CubeW_PointODR]->SetDelta(delta);
       break;
-   case CubeW_SphereODL:
+   case CubeW_PickSphODL:
       variables[CubeW_PointODL]->SetDelta(delta);
       break;
-   case CubeW_CylIU:
-   case CubeW_CylIR:
-   case CubeW_CylID:
-   case CubeW_CylIL:
-   case CubeW_CylMU:
-   case CubeW_CylMR:
-   case CubeW_CylMD:
-   case CubeW_CylML:
-   case CubeW_CylOU:
-   case CubeW_CylOR:
-   case CubeW_CylOD:
-   case CubeW_CylOL:
+   case CubeW_PickCyls:
       variables[CubeW_PointIUL]->MoveDelta(delta);
       variables[CubeW_PointIUR]->MoveDelta(delta);
       variables[CubeW_PointIDR]->MoveDelta(delta);
