@@ -1639,8 +1639,6 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 		   DataWarehouseP& new_dw)
 {
 
-#define MAX(x,y) ((x)>(y)?(x):(y))
-
   cout << "Doing actually step6 and 7" << endl;
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
@@ -1648,11 +1646,12 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
   double dT = 0.0001;
   new_dw->put(delt_vartype(dT), lb->delTLabel);
   Vector dx = patch->dCell();
-  double vol = dx.x()*dx.y()*dx.z();
+  double vol = dx.x()*dx.y()*dx.z(),mass;
+  double invvol = 1.0/vol;
 
   CCVariable<double> temp, cv, q_CC, q_advected;
   CCVariable<double> uvel_CC,vvel_CC,wvel_CC, rho_CC,visc_CC;
-  CCVariable<double> xmom_L_ME,ymom_L_ME,zmom_L_ME,int_eng_L_ME;
+  CCVariable<double> xmom_L_ME,ymom_L_ME,zmom_L_ME,int_eng_L_ME,mass_L;
 
   FCVariable<double> uvel_FC, vvel_FC, wvel_FC;
 
@@ -1676,76 +1675,115 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 					       vfindex, patch, Ghost::None, 0);
       new_dw->get(int_eng_L_ME,lb->int_eng_L_ME_CCLabel,
 					       vfindex, patch, Ghost::None, 0);
+      new_dw->get(mass_L,      lb->mass_L_CCLabel,
+					       vfindex, patch, Ghost::None, 0);
 
-      new_dw->allocate(rho_CC, lb->rho_CCLabel,      vfindex,patch);
-      new_dw->allocate(temp,   lb->temp_CCLabel,     vfindex,patch);
-      new_dw->allocate(cv,     lb->cv_CCLabel,       vfindex,patch);
-      new_dw->allocate(uvel_CC,lb->uvel_CCLabel,     vfindex,patch);
-      new_dw->allocate(vvel_CC,lb->vvel_CCLabel,     vfindex,patch);
-      new_dw->allocate(wvel_CC,lb->wvel_CCLabel,     vfindex,patch);
-      new_dw->allocate(visc_CC,lb->viscosity_CCLabel,vfindex,patch);
-      new_dw->allocate(q_CC,   lb->q_CCLabel,        vfindex,patch);
+      new_dw->allocate(rho_CC, lb->rho_CCLabel,        vfindex,patch);
+      new_dw->allocate(temp,   lb->temp_CCLabel,       vfindex,patch);
+      new_dw->allocate(cv,     lb->cv_CCLabel,         vfindex,patch);
+      new_dw->allocate(uvel_CC,lb->uvel_CCLabel,       vfindex,patch);
+      new_dw->allocate(vvel_CC,lb->vvel_CCLabel,       vfindex,patch);
+      new_dw->allocate(wvel_CC,lb->wvel_CCLabel,       vfindex,patch);
+      new_dw->allocate(visc_CC,lb->viscosity_CCLabel,  vfindex,patch);
+      new_dw->allocate(q_CC,   lb->q_CCLabel,          vfindex,patch);
       new_dw->allocate(q_advected, lb->q_advectedLabel,vfindex,patch);
-      new_dw->allocate(IFS,        IFS_CCLabel,      vfindex,patch);
-      new_dw->allocate(OFS,        OFS_CCLabel,      vfindex,patch);
-      new_dw->allocate(IFE,        IFE_CCLabel,      vfindex,patch);
-      new_dw->allocate(OFE,        OFE_CCLabel,      vfindex,patch);
-      new_dw->allocate(q_out,      q_outLabel,       vfindex,patch);
-      new_dw->allocate(q_out_EF,   q_out_EFLabel,    vfindex,patch);
-      new_dw->allocate(q_in,       q_inLabel,        vfindex,patch);
-      new_dw->allocate(q_in_EF,    q_in_EFLabel,     vfindex,patch);
+      new_dw->allocate(IFS,        IFS_CCLabel,        vfindex,patch);
+      new_dw->allocate(OFS,        OFS_CCLabel,        vfindex,patch);
+      new_dw->allocate(IFE,        IFE_CCLabel,        vfindex,patch);
+      new_dw->allocate(OFE,        OFE_CCLabel,        vfindex,patch);
+      new_dw->allocate(q_out,      q_outLabel,         vfindex,patch);
+      new_dw->allocate(q_out_EF,   q_out_EFLabel,      vfindex,patch);
+      new_dw->allocate(q_in,       q_inLabel,          vfindex,patch);
+      new_dw->allocate(q_in_EF,    q_in_EFLabel,       vfindex,patch);
 
+      // Advection preprocessing
       //influx_outflux_volume
-      influxOutfluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,
-						OFS,OFE,IFS,IFE);
+      influxOutfluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,OFS,OFE,IFS,IFE);
 
       // outflowVolCentroid goes here if doing second order
-#if 0
-      outflowVolCentroid(uvel_FC,vvel_FC,wvel_FC,delT,dx,
-			 r_out_x, r_out_y, r_out_z,
-			 r_out_x_CF, r_out_y_CF, r_out_z_CF);
-#endif
+      //outflowVolCentroid(uvel_FC,vvel_FC,wvel_FC,delT,dx,
+      //		 r_out_x, r_out_y, r_out_z,
+      //		 r_out_x_CF, r_out_y_CF, r_out_z_CF);
 
-      advectQFirst(q_CC,patch,OFS,OFE,IFS,IFE,q_out,q_out_EF,q_in,q_in_EF,
-		   q_advected);
+      { // Advection of the mass (density)
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	  q_CC[*iter] = mass_L[*iter] * invvol;
+        }
 
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-	uvel_CC[*iter] = xmom_L_ME[*iter] + q_advected[*iter];
+        advectQFirst(q_CC,patch,OFS,OFE,IFS,IFE,q_out,q_out_EF,q_in,q_in_EF,
+		     q_advected);
+
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	  rho_CC[*iter] = (mass_L[*iter] + q_advected[*iter])*invvol;
+        }
       }
 
+      { // Advection of the x-momentum
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	  q_CC[*iter] = xmom_L_ME[*iter] * invvol;
+        }
 
-/*    Sketch out how the advection is going to go.
+        advectQFirst(q_CC,patch,OFS,OFE,IFS,IFE,q_out,q_out_EF,q_in,q_in_EF,
+		     q_advected);
 
-	advect_and_advance  calls:
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	  mass = rho_CC[*iter] * vol;
+	  uvel_CC[*iter] = (xmom_L_ME[*iter] + q_advected[*iter])/mass;
+        }
+      }
 
-	advectPreprocess(inuvel_FC,invvel_FC,inwvel_FC,
-			 outinflux_vol,outinflux_vol_CF,
-			 outoutflux_vol,outoutflux_vol_CF);
-		advect_preprocess calls:
-			influx_outflux_volume(inuvel_FC,invvel_FC,inwvel_FC,
-			 		      oinflux_vol,oinflux_vol_CF,
-					      ooutflux_vol,ooutflux_vol_CF);
-			outflux_vol_centroid(inuvel_FC,invvel_FC,inwvel_FC,
-					   or_out_x,or_out_y,or_out_z,
-					   or_out_x_CF,or_out_y_CF,or_out_z_CF);
-		advect_q ( X 4) calls:
-			//gradient_limiter(computes grad_limiter = 1 for now)
-			q_out_flux(q_CC, q_outflux, q_outflux_CF);
-				// set q_outflux=q_outflux_CF=q_CC
-			q_in_flux(q_outflux,q_outflux_CF, q_influx, q_influx_CF)
-				// figure out the influxes from the outfluxes
-		then does Q_CC = Q_CC_L + advectedQ_CC
+      { // Advection of the y-momentum
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	  q_CC[*iter] = ymom_L_ME[*iter] * invvol;
+        }
 
+        advectQFirst(q_CC,patch,OFS,OFE,IFS,IFE,q_out,q_out_EF,q_in,q_in_EF,
+		     q_advected);
 
-*/
-      new_dw->put(temp,lb->temp_CCLabel,vfindex,patch);
-      new_dw->put(cv,lb->cv_CCLabel,vfindex,patch);
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	  mass = rho_CC[*iter] * vol;
+	  vvel_CC[*iter] = (ymom_L_ME[*iter] + q_advected[*iter])/mass;
+        }
+      }
+
+      { // Advection of the z-momentum
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	  q_CC[*iter] = zmom_L_ME[*iter] * invvol;
+        }
+
+        advectQFirst(q_CC,patch,OFS,OFE,IFS,IFE,q_out,q_out_EF,q_in,q_in_EF,
+		     q_advected);
+
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	  mass = rho_CC[*iter] * vol;
+	  wvel_CC[*iter] = (zmom_L_ME[*iter] + q_advected[*iter])/mass;
+        }
+      }
+
+      { // Advection of the internal energy
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	  q_CC[*iter] = int_eng_L_ME[*iter] * invvol;
+        }
+
+        advectQFirst(q_CC,patch,OFS,OFE,IFS,IFE,q_out,q_out_EF,q_in,q_in_EF,
+		     q_advected);
+
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	  mass = rho_CC[*iter] * vol;
+	  temp[*iter] = (int_eng_L_ME[*iter] + q_advected[*iter])/
+							(mass*cv[*iter]);
+        }
+      }
+
       new_dw->put(rho_CC,lb->rho_CCLabel,vfindex,patch);
-
       new_dw->put(uvel_CC,lb->uvel_CCLabel,vfindex,patch);
       new_dw->put(vvel_CC,lb->vvel_CCLabel,vfindex,patch);
       new_dw->put(wvel_CC,lb->wvel_CCLabel,vfindex,patch);
+      new_dw->put(temp,lb->temp_CCLabel,vfindex,patch);
+
+      // These are carried forward variables, they don't change
       new_dw->put(visc_CC,lb->viscosity_CCLabel,vfindex,patch);
+      new_dw->put(cv,lb->cv_CCLabel,vfindex,patch);
     }
   }
 }
@@ -1758,6 +1796,8 @@ void ICE::influxOutfluxVolume(const FCVariable<double>& uvel_CC,
 			      CCVariable<fflux>& IFS, CCVariable<eflux>& IFE)
 
 {
+#define MAX(x,y) ((x)>(y)?(x):(y))
+
   Vector dx = patch->dCell();
   double delY_top,delY_bottom,delX_right,delX_left,delZ_front,delZ_back;
   double delX_tmp,delY_tmp,delZ_tmp,totalfluxin;
@@ -2041,6 +2081,9 @@ const TypeDescription* fun_getTypeDescription(ICE::eflux*)
 
 //
 // $Log$
+// Revision 1.47  2000/10/25 21:15:31  guilkey
+// Finished advection
+//
 // Revision 1.46  2000/10/24 23:07:21  guilkey
 // Added code for steps6and7.
 //
