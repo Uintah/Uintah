@@ -458,10 +458,10 @@ SimpleSimulationController::run()
 	  cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
       }
       // Execute the current timestep
-      //scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
-      //scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
-      scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
-      scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
+      scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
+      scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+      //scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
+      //scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
       scheduler->execute(d_myworld);
       if(output)
 	output->executedTimestep();
