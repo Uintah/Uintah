@@ -59,6 +59,15 @@
 	<datatype>SCIRun::Nrrd</datatype>
 	<componentname>Nrrd1</componentname>
       </port>
+      <port>
+	<name>Nrrd2</name>
+	<description>
+	  <p>
+          </p>
+	</description>
+	<datatype>SCIRun::Nrrd</datatype>
+	<componentname>Nrrd2</componentname>
+      </port>
     </inputs>
   </io>
   <gui>

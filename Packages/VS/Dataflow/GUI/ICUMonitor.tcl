@@ -250,6 +250,9 @@ itcl_class VS_Render_ICUMonitor {
 	    label $w.add.f.idxl -text "Data Index:" -relief groove
 	    entry $w.add.f.idx -textvariable $this-idx-$v \
 		-width 8
+	    label $w.add.f.sndl -text "Draw 2nd Trace:" -relief groove
+	    entry $w.add.f.snd -textvariable $this-snd-$v \
+		-width 8
 
 	    frame $w.add.f.col -borderwidth 2
 	    addColorSelection $w.add.f.col "Plot Color" $this-plot_color-$v  \
@@ -259,6 +262,7 @@ itcl_class VS_Render_ICUMonitor {
 		$w.add.f.swl $w.add.f.sw $w.add.f.minrl $w.add.f.minr \
 		$w.add.f.maxrl $w.add.f.maxr $w.add.f.minl $w.add.f.min \
 		$w.add.f.maxl $w.add.f.max $w.add.f.idxl $w.add.f.idx \
+		$w.add.f.sndl $w.add.f.snd \
 		$w.add.f.col -side top -fill x -padx 2 -pady 2
 
 	    pack $w.add.f -side top -fill x -padx 2 -pady 2
