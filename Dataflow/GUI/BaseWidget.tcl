@@ -132,9 +132,7 @@ itcl_class BaseWidget {
 
     method help {} {
 # There's not actually any help extant right now, so make this work some day
-# when there is.  Put it in $DataflowTCL/help maybe?
-#	global DataflowTCL
-#	helpPage $pse_root/help/$name.html
+# when there is.  Put it in help.tcl maybe?
     }
 
     # This is meant to be a virtual link for inherited widget tcls...
