@@ -238,6 +238,21 @@ to_vector(const Vector &in, Vector &out)
 }
 
 template <>
+void
+value_to_string(std::ostringstream &buffer, const unsigned char &value)
+{
+  buffer << (int)value;
+}
+
+template <>
+void
+value_to_string(std::ostringstream &buffer, const char &value)
+{
+  buffer << (int)value;
+}
+
+
+template <>
 bool 
 add_data(const Point &, const Tensor &, GeomArrows *, 
 	 MaterialHandle &, const string &, double, bool, bool)
