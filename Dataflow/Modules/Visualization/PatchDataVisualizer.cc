@@ -267,10 +267,11 @@ void PatchDataVisualizer::execute()
   // now add the geometry
   for (unsigned int i = 0; i < patch_centers.size(); i++) {
     GeomSphere * sphere =scinew GeomSphere((Point)patch_centers[i].loc,
-					   rad,nu,nv,i,
-					   IntVector(patch_centers[i].id,
-						     patch_centers[i].level,
-						     0));
+					   rad,nu,nv);
+    s->setId(i);
+    s->setId(IntVector(patch_centers[i].id,
+		       patch_centers[i].level,
+		       0));
     double normal = (data_max - patch_centers[i].val)/(data_max - data_min);
     if (have_cmap) 
       spheres->add(scinew GeomMaterial(sphere, cmap->lookup(normal)));

@@ -403,8 +403,11 @@ void GridVisualizer::execute()
 	// for each node in the patch that intersects the widget space
 	if(node_on) {
 	  for(NodeIterator iter = patch->getNodeIterator(widget_box); !iter.done(); iter++){
-	    spheres->add(scinew GeomSphere(patch->nodePosition(*iter),
-					   rad,nu,nv,l,*iter));
+	    GeomSphere *s = scinew GeomSphere(patch->nodePosition(*iter),
+					      rad,nu,nv);
+	    s->setId(l);
+	    s->setId(*iter);
+	    spheres->add(s);
 	  }
 	}
 	break;
@@ -421,8 +424,11 @@ void GridVisualizer::execute()
 	// for each node in the patch that intersects the widget space
 	if(node_on) {
 	  for(CellIterator iter = patch->getCellIterator(widget_box); !iter.done(); iter++){
-	    spheres->add(scinew GeomSphere(patch->cellPosition(*iter),
-					   rad,nu,nv,l,*iter));
+	    GeomSphere *s = scinew GeomSphere(patch->cellPosition(*iter),
+					      rad,nu,nv);
+	    s->setId(l);
+	    s->setId(*iter);
+	    spheres->add(s);
 	  }
 	}
 	break;
