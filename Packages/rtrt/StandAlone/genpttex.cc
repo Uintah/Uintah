@@ -165,15 +165,13 @@ Object *make_geometry_fromfile(char *filename, bool timevary)
     data += size/sizeof(float);
   }
 
-  // A fake material list
-  Material *matls[1] = { 0 };
   // Here is our geometry
   cout << "total_num_spheres = "<<total_num_spheres<<endl;
   GridSpheres *gridspheres = new GridSpheres(alldata, 0, 0, total_num_spheres,
-					     numvars-3,
+					     numvars,
 					     gridcellsize, griddepth,
 					     radius*radius_factor,
-					     1, matls, 0);
+					     0, 0, 0);
   // We need a GridSphereDpy as GridSphere needs one to compute intersections
   GridSpheresDpy *griddpy = new GridSpheresDpy(0);
   griddpy->attach(gridspheres);
