@@ -23,7 +23,7 @@
 
 #include <SCICore/Datatypes/SField.h>
 #include <SCICore/Datatypes/GenSField.h>
-#include <SCICore/Datatypes/LatticeGeom.h>
+#include <SCICore/Datatypes/Lattice3Geom.h>
 #include <SCICore/Datatypes/MeshGeom.h>
 #include <SCICore/Datatypes/MeshGeom.h>
 #include <SCICore/Datatypes/FlatAttrib.h>
@@ -222,7 +222,7 @@ GenField::execute()
 
   //if (mgeomtype != 1) { return; }
 
-  LatticeGeom *geom = new LatticeGeom();
+  Lattice3Geom *geom = new Lattice3Geom();
   geom->resize(x, y, z);
 
 #if 1
@@ -259,9 +259,9 @@ GenField::execute()
   dbg << "Attrib in Genfield:\n" << attrib->get_info() << endl;
 #endif
   
-  GenSField<double, LatticeGeom> *osf =
-    new GenSField<double, LatticeGeom>(geom, attrib);
-  osf->set_bbox(Point(0, 0, 0), Point(x-1, y-1, z-1));
+  GenSField<double, Lattice3Geom> *osf =
+    new GenSField<double, Lattice3Geom>(geom, attrib);
+  geom->set_bbox(Point(0, 0, 0), Point(x-1, y-1, z-1));
   SFieldHandle *hndl = new SFieldHandle(osf);
   ofield->send(*hndl);
 }

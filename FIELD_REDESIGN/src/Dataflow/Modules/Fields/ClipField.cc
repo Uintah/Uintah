@@ -1,32 +1,53 @@
 //static char *id="@(#) $Id$";
 
-/*
- *  ClipField.cc:  Unfinished modules
- *
- *  Written by:
- *   David Weinstein
- *   Department of Computer Science
- *   University of Utah
- *   February 1995
- *
- *  Copyright (C) 1994 SCI Group
- */
 
+/**************************************
+CLASS
+   ClipField
+   Takes a field as input and clips the field according to a bounding
+   box provided by the UI.  The new field is sent to the oport.
+
+GENERAL INFORMATION
+   ClipField.cc
+
+   Written by:
+   David Weinstein (& Eric Kuehne)
+   Department of Computer Science
+   University of Utah
+   February 1995 (& July 2000)
+
+   Copyright (C) 2000 SCI Group
+   
+
+KEYWORDS
+   clip, clipping, bounding_box
+
+DESCRIPTION
+   Takes a field as input and creates a new ClipFieldAlgo object based
+   on the type of input field.  The ClipFieldAlgo::clip(field*, bbox)
+   method clips returns a copy of the field clipped to the bbox.  The
+   method handles both unstructured and structured fields, and both
+   flat and indexed attribute types.   
+
+WARNING
+   none
+
+****************************************/
 #include <stdio.h>
 
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
-#include <SCICore/Datatypes/ScalarFieldRGint.h>
-#include <SCICore/Datatypes/ScalarFieldRGchar.h>
+#include "ClipFieldAlgo.h"
+
+#include <SCICore/Datatypes/SField.h>
+#include <SCICore/Datatypes/GenSField.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <PSECore/Datatypes/FieldPort.h>
+#include <PSECore/Datatypes/GeometryPort.h>
 #include <PSECore/Datatypes/SurfacePort.h>
+#include <PSECore/Widgets/ScaledBoxWidget.h>
+#include <SCICore/Thread/CrowdMonitor.h>
 
 namespace PSECommon {
 namespace Modules {
@@ -35,57 +56,114 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
+using namespace SCICore::Thread;
+using namespace PSECore::Widgets;
+using namespace SCICore::Geometry;
 
 class ClipField : public Module {
-    ScalarFieldIPort* ifield;
-    ScalarFieldOPort* ofield;
 public:
-    TCLint x_min;
-    TCLint x_max;
-    TCLint y_min;
-    TCLint y_max;
-    TCLint z_min;
-    TCLint z_max;
-    TCLint sameInput;
-    int first_time;
-    int last_x_min;
-    int last_y_min;
-    int last_z_min;
-    int last_x_max;
-    int last_y_max;
-    int last_z_max;
-    ClipField(const clString& id);
-    virtual ~ClipField();
-    virtual void execute();
-    ScalarFieldHandle fldHandle;
-    ScalarFieldRGBase* osf;
+  // GROUP: Constructors:
+  //////////
+  // Construct ClipField with the id
+  ClipField(const clString& id);
+
+  // GROUP: Destructors:
+  //////////
+  // Destruction!
+  virtual ~ClipField();
+  
+  // GROUP: Execution:
+  //////////
+  // Execute this module
+  virtual void execute();
+private:
+  FieldIPort* ifield;
+  FieldOPort* ofield;
+  GeometryOPort* ogeom;
+  TCLint x_min;
+  TCLint x_max;
+  TCLint y_min;
+  TCLint y_max;
+  TCLint z_min;
+  TCLint z_max;
+  TCLint sameInput;
+  int first_time;
+  int last_x_min;
+  int last_y_min;
+  int last_z_min;
+  int last_x_max;
+  int last_y_max;
+  int last_z_max;
+
+  int widget_id;
+  CrowdMonitor widgetlock;
+  ScaledBoxWidget* boxwidget;
 };
 
 extern "C" Module* make_ClipField(const clString& id) {
   return new ClipField(id);
 }
 
+static clString widget_name("IsoSurface widget");
+
 ClipField::ClipField(const clString& id)
-: Module("ClipField", id, Filter), 
+  : Module("ClipField", id, Filter), 
   x_min("x_min", id, this),y_min("y_min", id, this),z_min("z_min", id, this), 
   x_max("x_max", id, this),y_max("y_max", id, this),z_max("z_max", id, this),
-  sameInput("sameInput", id, this)
+  sameInput("sameInput", id, this), widgetlock("ClipField widget lock")
 {
-    ifield=new ScalarFieldIPort(this, "Geometry", ScalarFieldIPort::Atomic);
+    ifield=new FieldIPort(this, "Field", FieldIPort::Atomic);
     add_iport(ifield);
     // Create the output port
-    ofield=new ScalarFieldOPort(this, "Geometry", ScalarFieldIPort::Atomic);
+    ofield=new FieldOPort(this, "Field", FieldIPort::Atomic);
     add_oport(ofield);
+    ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+    add_oport(ogeom);
     first_time=1;
+    boxwidget = new ScaledBoxWidget(this, &widgetlock, 1.0);
 }
 
 ClipField::~ClipField()
 {
 }
 
+
+
 void ClipField::execute()
 {
-    ScalarFieldHandle ifh;
+  FieldHandle fh;
+  ifield->get(fh);
+
+  widget_id = ogeom->addObj(boxwidget->GetWidget(), widget_name, &widgetlock);
+  boxwidget->Connect(ogeom);
+  
+  // Get Field
+  // Get BBox for clipping region
+  BBox bbox;
+  // Decide if field is structured or unstructured
+  ClipFieldAlgoBase* op = ClipFieldAlgoBase::make(fh.get_rep());
+  Field* newfield = op->clip(fh.get_rep(), bbox);
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+     
+  
+  /*
+
+  ScalarFieldHandle ifh;
     if(!ifield->get(ifh))
 	return;
     ScalarFieldRGBase* isf=ifh->getRGBase();
@@ -112,7 +190,7 @@ void ClipField::execute()
 	first_time=0;
 	if (ifd) {
 	    ScalarFieldRGdouble *of;
-	    fldHandle = of = 0;
+  	    fldHandle = of = 0;
 	    fldHandle = of = new ScalarFieldRGdouble;
 	    of->resize(mxx-mnx+1, mxy-mny+1, mxz-mnz+1);
 	    for (int i=0; i<=mxx-mnx; i++) {
@@ -130,7 +208,7 @@ void ClipField::execute()
 	    fldHandle = of = new ScalarFieldRGfloat;
 	    of->resize(mxx-mnx+1, mxy-mny+1, mxz-mnz+1);
 	    for (int i=0; i<=mxx-mnx; i++) {
-		for (int j=0; j<=mxy-mny; j++) {
+	    for (int j=0; j<=mxy-mny; j++) {
 		    for (int k=0; k<=mxz-mnz; k++) {
 			of->grid(i,j,k)=iff->grid(i+mnx, j+mny, k+mnz);
 		    }
@@ -178,12 +256,16 @@ void ClipField::execute()
     }
     ofield->send(osf);
 }
+    */
 
 } // End namespace Modules
 } // End namespace PSECommon
 
 //
 // $Log$
+// Revision 1.6.2.1  2000/09/11 16:17:48  kuehne
+// updates to field redesign
+//
 // Revision 1.6  2000/03/17 09:26:56  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

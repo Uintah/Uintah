@@ -103,8 +103,8 @@ void Register::execute(){
 	error("You must specify a name for both the attribute and the geometry.");
 	return;
       }
-      sfh->set_geom_name(geom);
-      sfh->set_attrib_name(attrib);
+      sfh->get_geom()->set_name(geom);
+      sfh->get_attrib()->set_name(attrib);
       SField* sfb = sfh->get_base();
       //      if(SField<double>* sfd = dynamic_cast<SField<double>* >(sfb)){
       //	if(Interpolate<double>* inter = dynamic_cast<Interpolate<double>* >(sfd)){
