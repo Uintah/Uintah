@@ -16,8 +16,9 @@ PressureSolver::PressureSolver()
 {
 }
 
-PressureSolver::PressureSolver(TurbulenceModel* turb_model)
-: d_turbModel(turb_model)
+PressureSolver::PressureSolver(TurbulenceModel* turb_model,
+			       BoundaryCondition* bndry_cond)
+: d_turbModel(turb_model), d_boundaryCondition(bndry_cond)
 {
 }
 
@@ -41,7 +42,6 @@ void PressureSolver::problemSetup(const ProblemSpecP& params)
 		       "not supported: " + finite_diff, db);
   // make source and boundary_condition objects
   d_source = Source(d_turbModel);
-  d_boundaryCondition = BoundaryCondition(d_turbModel);
   string linear_sol;
   db->require("linear_solver", linear_sol);
   if (linear_sol == "GaussSiedel")
@@ -87,7 +87,7 @@ void PressureSolver::buildLinearMatrix(const LevelP& level,
 					       old_dw,new_dw);
     d_source->sched_calculateVelocitySource(index, level, sched, 
 					    old_dw, new_dw);
-    d_boundaryCondition->sched_VelocityBC(index, level, sched,
+    d_boundaryCondition->sched_velocityBC(index, level, sched,
 					  old_dw, new_dw);
   }
   d_discretize->sched_calculatePressureCoeff(level, sched,

@@ -70,7 +70,7 @@ class PressureSolver
   //
   // Default constructor.
    PressureSolver();
-   PressureSolver(TurbulenceModel* turb_model);
+   PressureSolver(TurbulenceModel* turb_model, BoundaryCondition* bndry_cond);
 
   // GROUP: Destructors:
   ////////////////////////////////////////////////////////////////////////
@@ -139,6 +139,8 @@ class PressureSolver
 
    // turbulence model
    TurbulenceModel* d_turbModel;
+   // boundary condition
+   BoundaryCondition* d_boundaryCondition;
 
 // GROUP: Data members.
 

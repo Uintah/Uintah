@@ -32,7 +32,23 @@ none
 ****************************************/
 #ifndef included_BoundaryCondition
 #define included_BoundaryCondition
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Grid/Region.h>
+#include <Uintah/Interface/SchedulerP.h>
+#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Parallel/ProcessorContext.h>
 
+#include <SCICore/Containers/Array1.h>
+
+namespace Uintah {
+namespace Components {
+class StencilMatrix;
+ using namespace Uintah::Grid;
+ using namespace Uintah::Interface;
+ using namespace SCICore::Containers;
+ using namespace Uintah::Parallel;
+
+ class TurbulenceModel; 
 
 class BoundaryCondition : 
 {
@@ -51,7 +67,7 @@ public:
  
    BoundaryCondition();
 
-
+   BoundaryCondition(TurbulenceModel* d_turb_model);
   // GROUP: Destructors:
   ////////////////////////////////////////////////////////////////////////
   // Destructor
@@ -61,26 +77,58 @@ public:
    ////////////////////////////////////////////////////////////////////////
    // Set boundary conditions terms. 
    
-   void setPressureBoundaryCondition();
-   void setMomentumBoundaryCondition(int index);
-   void setScalarBoundaryCondition(int index);
-   //uses TurbulenceModel to calculate wall bc's
-   computeWallBC();
+   void sched_velocityBC(const int index,
+			 const LevelP& level,
+			 SchedulerP& sched,
+			 const DataWarehouseP& old_dw,
+			 DataWarehouseP& new_dw);
+   void sched_pressureBC(const LevelP& level,
+			 const Region* region,
+			 const DataWarehouseP& old_dw,
+			 DataWarehouseP& new_dw);
+   void sched_scalarBC(const int index,
+		       const LevelP& level,
+		       SchedulerP& sched,
+		       const DataWarehouseP& old_dw,
+		       DataWarehouseP& new_dw);
    // Set inlet velocity bc's, we need to do it because of staggered grid
-   // need to pass velocity
-   ComputeInletVelocityBC();
+   // 
+   void sched_setInletVelocityBC(const LevelP& level,
+				 SchedulerP& sched,
+				 const DataWarehouseP& old_dw,
+				 DataWarehouseP& new_dw);
    // used for pressure boundary type
-   ComputePressureBC();
-
+   void sched_computePressureBC(const LevelP& level,
+				SchedulerP& sched,
+				const DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw);
+   // assign flat velocity profiles at the inlet
+   void sched_setFlatProfile(const LevelP& level,
+			     SchedulerP& sched,
+			     const DataWarehouseP& old_dw,
+			     DataWarehouseP& new_dw);
  private:
-   Discretization* d_discrete;
-   Source* d_source;
-   // used for calculating wall boundary conditions
+   void velocityBC(const ProcessorContext* pc,
+		   const Region* region,
+		   const DataWarehouseP& old_dw,
+		   DataWarehouseP& new_dw,
+		   const int index);
+   void pressureBC(const ProcessorContext*,
+		   const Region* region,
+		   const DataWarehouseP& old_dw,
+		   DataWarehouseP& new_dw);
+   void scalarBC(const ProcessorContext* pc,
+		 const Region* region,
+		 const DataWarehouseP& old_dw,
+		 DataWarehouseP& new_dw,
+		 const int index);
+ // used for calculating wall boundary conditions
    TurbulenceModel* d_turb_model;
-   //stores the cell type
-   CCVariable<vector>* d_cellType;
+
 
 
 };
+}
+}
 #endif  
   
