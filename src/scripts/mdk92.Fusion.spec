@@ -27,15 +27,15 @@
 #
 
 %define defname SCIRun
-%define defver	1.24
-%define dotver  1
+%define defver	1.25
+%define dotver  0
 %define gccver  3.3.1
 %define plat	mdk9.2
 %define distro  Mandrake 9.2
 %define debug   opt
 %undefine	__check_files
 %define thirdpartydotver 1
-%define thirdpartyversion %{defver}.%{thirdpartydotver}
+%define thirdpartyversion 1.24.%{thirdpartydotver}
 %define hdf5    hdf5-1.6.2
 %define ftgl	ftgl-2.0.9
 
@@ -115,6 +115,8 @@ make install
 cp $RPM_BUILD_DIR/%{hdf5}/COPYING /usr/local/%{hdf5}
 
 cd $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}
+export TEEM_ZLIB=1
+export TEEM_PNG=1
 python $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}/install /usr/local/SCIRun/Thirdparty 32 1
 
 

@@ -27,21 +27,21 @@
 #
 
 %define defname SCIRun
-%define defver	1.24
-%define dotver  1
+%define defver	1.25
+%define dotver  0
 %define gccver  3.3.1
 %define plat	mdk9.2
 %define distro  Mandrake 9.2
 %define debug   opt
 %undefine	__check_files
 %define thirdpartydotver 1
-%define thirdpartyversion %{defver}.%{thirdpartydotver}
+%define thirdpartyversion 1.24.%{thirdpartydotver}
 %define insightver  2.0.0
 
 
 Name:		%{defname}BioPSE
 Version:	%{defver}.%{dotver}
-Serial:		8
+Serial:		9
 Release:	%{plat}
 Summary:	Problem Solving Environment Software
 Copyright:	University of Utah Limited
@@ -122,6 +122,8 @@ make
 make install
 
 cd $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}
+export TEEM_ZLIB=1
+export TEEM_PNG=1
 python $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}/install /usr/local/SCIRun/Thirdparty 32 1
 
 rm -rf /usr/local/SCIRun/bin
