@@ -51,7 +51,7 @@ PSELIBS := Packages/MIT/Core/Datatypes \
         Core/TkExtensions
 LIBS := $(GL_LIBRARY) $(TK_LIBRARY) \
         -L/usr/local/lib \
-	$(LAPACK_LIBRARY)  $(BLAS_LIBRARY) $(FLIBS) -lcvode -lunuran -lm
+	$(LAPACK_LIBRARY)  $(BLAS_LIBRARY) -lcvode -lunuran $(FLIBS) -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
