@@ -1886,3 +1886,34 @@ proc writeNetwork { filename { subnet 0 } } {
     puts $out "\n::netedit scheduleok"    
     close $out
 }
+
+
+# Numerically compares two version strings and returns:
+#  -1 if ver1 < ver2,
+#   0 if ver1 == ver2
+#   1 if ver1 > ver2
+proc compareVersions { ver1 ver2 } {
+    set v1 [split $ver1 .]
+    set v2 [split $ver2 .]
+    set l1 [llength $v1]
+    set l2 [llength $v2]
+    set len [expr ($l1 > $l2) ? $l1 : $l2]
+    for { set i 0 } {$i < $len} {incr i} {
+	set n1 -1
+	set n2 -1
+	if {$i < $l1} {
+	    set n1 [lindex $v1 $i]
+	}
+	if {$i < $l2} {
+	    set n2 [lindex $v2 $i]
+	}
+	if { $n1 < $n2 } {
+	    return -1
+	}
+	if { $n2 < $n1 } {
+	    return 1
+	}
+    }
+    return 0
+}
+    
