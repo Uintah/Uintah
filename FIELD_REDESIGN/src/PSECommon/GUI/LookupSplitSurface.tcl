@@ -12,6 +12,9 @@
  #  Log Information:
  #
  #  $Log$
+ #  Revision 1.1.2.1  2000/10/31 02:19:19  dmw
+ #  Merging PSECommon changes from HEAD to FIELD_REDESIGN branch
+ #
  #  Revision 1.1  2000/10/29 04:34:46  dmw
  #  BuildFEMatrix -- ground an arbitrary node
  #  SolveMatrix -- when preconditioning, be careful with 0's on diagonal
