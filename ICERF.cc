@@ -1142,19 +1142,19 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
     // Sum of thermal expansion
     // alpha is hardwired for ideal gases
     // ignore contributions from mpm_matls
-    for(int m = 0; m < numALLMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
+    for(int mm = 0; mm < numALLMatls; mm++) {
+      Material* matl = d_sharedState->getMaterial( mm );
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
  
-      if_mpm_matl_ignore[m] = 1.0; 
+      if_mpm_matl_ignore[mm] = 1.0; 
       if ( mpm_matl) {       
-        if_mpm_matl_ignore[m] = 0.0; 
+        if_mpm_matl_ignore[mm] = 0.0; 
       } 
       for(CellIterator iter=patch->getExtraCellIterator();
                                                         !iter.done();iter++){
         IntVector c = *iter;
-        double alpha =  if_mpm_matl_ignore[m] * 1.0/Temp_CC[m][c];
-        sum_therm_exp[c] += vol_frac[m][c]*alpha*Tdot[m][c];
+        double alpha =  if_mpm_matl_ignore[mm] * 1.0/Temp_CC[mm][c];
+        sum_therm_exp[c] += vol_frac[mm][c]*alpha*Tdot[mm][c];
       }  
     }
 
@@ -1198,23 +1198,23 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
         double tmp_T = 0.0, tmp_BOT = 0.0;
         double tmp_F = 0.0, tmp_BK  = 0.0;
         //   O H   T H I S   I S   G O I N G   T O   B E   S L O W  
-        for(int m = 0; m < numALLMatls; m++) {
+        for(int mm = 0; mm < numALLMatls; mm++) {
           //  use the upwinded vol_frac
           IntVector upwc;     
-          upwc     = upwindCell_X(c,     uvel_FC[m][right],  1.0);
-          tmp_R   += vol_frac[m][upwc] * uvel_FC[m][right];
-          upwc     = upwindCell_X(c,     uvel_FC[m][left],   0.0);
-          tmp_L   += vol_frac[m][upwc] * uvel_FC[m][left];
+          upwc     = upwindCell_X(c,     uvel_FC[mm][right],  1.0);
+          tmp_R   += vol_frac[mm][upwc] * uvel_FC[mm][right];
+          upwc     = upwindCell_X(c,     uvel_FC[mm][left],   0.0);
+          tmp_L   += vol_frac[mm][upwc] * uvel_FC[mm][left];
           
-          upwc     = upwindCell_Y(c,     vvel_FC[m][top],    1.0);
-          tmp_T   += vol_frac[m][upwc] * vvel_FC[m][top];
-          upwc     = upwindCell_Y(c,     vvel_FC[m][bottom], 0.0);
-          tmp_BOT += vol_frac[m][upwc] * vvel_FC[m][bottom];
+          upwc     = upwindCell_Y(c,     vvel_FC[mm][top],    1.0);
+          tmp_T   += vol_frac[mm][upwc] * vvel_FC[mm][top];
+          upwc     = upwindCell_Y(c,     vvel_FC[mm][bottom], 0.0);
+          tmp_BOT += vol_frac[mm][upwc] * vvel_FC[mm][bottom];
           
-          upwc     = upwindCell_Z(c,     wvel_FC[m][front],  1.0);
-          tmp_F   += vol_frac[m][upwc] * wvel_FC[m][front];
-          upwc     = upwindCell_Z(c,     wvel_FC[m][back],   0.0);
-          tmp_BK  += vol_frac[m][upwc] * wvel_FC[m][back];
+          upwc     = upwindCell_Z(c,     wvel_FC[mm][front],  1.0);
+          tmp_F   += vol_frac[mm][upwc] * wvel_FC[mm][front];
+          upwc     = upwindCell_Z(c,     wvel_FC[mm][back],   0.0);
+          tmp_BK  += vol_frac[mm][upwc] * wvel_FC[mm][back];
         } 
         term1_X = (tmp_R - tmp_L)   * areaX;
         term1_Y = (tmp_T - tmp_BOT) * areaY;
