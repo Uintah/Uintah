@@ -9,6 +9,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/test.tcl \
 	$(SRCDIR)/ScalarFieldAverage.tcl \
 	$(SRCDIR)/SubFieldHistogram.tcl \
+	$(SRCDIR)/FieldExtractor.tcl \
 	$(SRCDIR)/ScalarFieldExtractor.tcl $(SRCDIR)/TimestepSelector.tcl \
 	$(SRCDIR)/VectorFieldExtractor.tcl \
 	$(SRCDIR)/TensorFieldExtractor.tcl \
