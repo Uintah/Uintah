@@ -98,6 +98,7 @@ void usage(const std::string& badarg, const std::string& progname)
     //    cerr << "  -binary (prints out the data in binary)\n";
     cerr << "  -tlow,--timesteplow [int] (only outputs timestep from int) [defaults to 0]\n";
     cerr << "  -thigh,--timestephigh [int] (only outputs timesteps up to int) [defaults to last timestep]\n";
+    cerr << "  -tinc [int] (output every n timesteps) [defaults to 1]\n";
     cerr << "  -tstep,--timestep [int] (only outputs timestep int)\n";
     cerr << "  -mo <operator> type of operator to apply to matricies.\n";
     cerr << "                 Options are none, det, norm, and trace\n";
@@ -536,6 +537,7 @@ int main(int argc, char** argv)
   unsigned long time_step_lower = 0;
   // default to be last timestep, but can be set to 0
   unsigned long time_step_upper = (unsigned long)-1;
+  unsigned long tinc = 1;
 
   string input_uda_name;
   string output_file_name("");
@@ -567,6 +569,8 @@ int main(int argc, char** argv)
     } else if (s == "-tstep" || s == "--timestep") {
       time_step_lower = strtoul(argv[++i],(char**)NULL,10);
       time_step_upper = time_step_lower;
+    } else if (s == "-tinc") {
+      tinc = strtoul(argv[++i],(char**)NULL,10);
     } else if (s == "-i" || s == "--index") {
       int x = atoi(argv[++i]);
       int y = atoi(argv[++i]);
@@ -607,6 +611,17 @@ int main(int argc, char** argv)
   try {
     DataArchive* archive = scinew DataArchive(input_uda_name);
 
+    ////////////////////////////////////////////////////////
+    // Get the times and indices.
+
+    vector<int> index;
+    vector<double> times;
+    
+    // query time info from dataarchive
+    archive->queryTimesteps(index, times);
+    ASSERTEQ(index.size(), times.size());
+    if (!quiet) cout << "There are " << index.size() << " timesteps:\n";
+    
     //////////////////////////////////////////////////////////
     // Get the variables and types
     vector<string> vars;
@@ -626,7 +641,7 @@ int main(int argc, char** argv)
     
     if (!var_found) {
       cerr << "Variable \"" << variable_name << "\" was not found.\n";
-      cerr << "If a variable name was not specified try -var [name].\n";
+      cerr << "If a variable name was not specified try -v [name].\n";
       cerr << "Possible variable names are:\n";
       var_index = 0;
       for (;var_index < vars.size(); var_index++) {
@@ -647,18 +662,7 @@ int main(int argc, char** argv)
     
     if (!quiet) cout << "Extracing data for "<<vars[var_index] << ": " << types[var_index]->getName() <<endl;
 
-    ////////////////////////////////////////////////////////
-    // Get the times and indices.
-
-    vector<int> index;
-    vector<double> times;
-    
-    // query time info from dataarchive
-    archive->queryTimesteps(index, times);
-    ASSERTEQ(index.size(), times.size());
-    if (!quiet) cout << "There are " << index.size() << " timesteps:\n";
-    
-    //------------------------------
+    /////////////////////////////////////////////////////
     // figure out the lower and upper bounds on the timesteps
     if (time_step_lower >= times.size()) {
       cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
@@ -682,7 +686,8 @@ int main(int argc, char** argv)
 
     ////////////////////////////////////////////////////////
     // Loop over each timestep
-    for (unsigned long time = time_step_lower; time <= time_step_upper; time++){
+    for (unsigned long time = time_step_lower; time <= time_step_upper;
+	 time+=tinc){
 
       // Check the level index
       double current_time = times[time];
@@ -700,6 +705,16 @@ int main(int argc, char** argv)
       const Patch* patch = *(level->patchesBegin());
       ConsecutiveRangeSet matls =
 	archive->queryMaterials(variable_name, patch, current_time);
+
+      if (verbose) {
+	// Print out all the material indicies valid for this timestep
+	cout << "Valid materials for "<<variable_name<<" at time["<<time<<"]("<<current_time<<") are \n\t";
+	for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
+	     matlIter != matls.end(); matlIter++) {
+	  cout << *matlIter << ", ";
+	}
+	cout << endl;
+      }
       
       int mat_num;
       if (material == -1) {
