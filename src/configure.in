@@ -34,15 +34,15 @@ done
 ##-- check for user supplied tcl paths --------------------------------------
 
 AC_ARG_WITH(tcl,
-        [  --with-tcl=<path-to-tcl>      <path-to-tcl>/bin/tclsh8.0],
+        [  --with-tcl=<path-to-tcl>      <path-to-tcl>/bin/tclsh8.?],
         [tcl="$withval"],
         [tcl=""])
 AC_ARG_WITH(tk,
-        [  --with-tk=<path-to-tk>        <path-to-tk>/bin/wish8.0],
+        [  --with-tk=<path-to-tk>        <path-to-tk>/bin/wish8.?],
         [tk="$withval"],
         [tk=""])
 AC_ARG_WITH(itcl,
-        [  --with-itcl=<path-to-itcl>    <path-to-itcl>/bin/itkwish3.0],
+        [  --with-itcl=<path-to-itcl>    <path-to-itcl>/bin/itkwish3.?],
         [itcl="$withval"],
         [itcl=""])
 AC_ARG_WITH(blt,
@@ -341,7 +341,7 @@ AC_SUBST(MAKE_PARALLELISM)
 
 ##-- Find TCL ----------------------------------------------------------------
 
-echo -n "Looking for Pre-built TCL 8.0.4... "
+echo -n "Looking for Pre-built TCL 8... "
 
 if test "$tcl" ; then
   unset cfsh
@@ -351,24 +351,24 @@ if test "$tcl" ; then
   fi
 fi
 
-if test -z "$TCL_VERSION" ; then
-unset Wish80
-if Wish80="`type tclsh8.0 | sed 's/^.* //'`" ; then
-  unset cfsh
-  cfsh="`dirname $Wish80`/../lib/tclConfig.sh"
-  if test -f $cfsh ; then
-    . $cfsh
-  fi
-fi
-fi
+#if test -z "$TCL_VERSION" ; then
+#unset Wish80
+#if Wish80="`type tclsh8.0 | sed 's/^.* //'`" ; then
+#  unset cfsh
+#  cfsh="`dirname $Wish80`/../lib/tclConfig.sh"
+#  if test -f $cfsh ; then
+#    . $cfsh
+#  fi
+#fi
+#fi
 
-if test "$TCL_VERSION" = "8.0" -a "$TCL_PATCH_LEVEL" = ".4" ; then
+if test "$TCL_MAJOR_VERSION" = "8" ; then
   # TCL_PREFIX set by tclConfig.sh
   TCL_INCLUDE_DIR="${TCL_PREFIX}/include"
   TCL_LIB_DIR="${TCL_PREFIX}/lib"
   # TCL_LIB_FLAG set by tclConfig.sh, but needs eval'ing for debug flags
   TCL_LIB_FLAG="`eval echo $TCL_LIB_FLAG`"
-
+  TCL_INIT_DIR="${TCL_LIB_DIR}/tcl${TCL_VERSION}"
   echo -L$TCL_LIB_DIR $TCL_LIB_FLAG
 
   if test "$TCL_LD_FLAGS" != "" ; then
@@ -378,22 +378,24 @@ if test "$TCL_VERSION" = "8.0" -a "$TCL_PATCH_LEVEL" = ".4" ; then
   fi
 
 else
-  if test -z "TCL_VERSION" ; then
+  if test -z "TCL_MAJOR_VERSION" ; then
     echo "not found -- must build"
     echo "  Implement me."
   else
-    echo "incorrect tcl version $TCL_VERSION$TCL_PATCH_LEVEL found"
+    echo "incorrect tcl version $TCL_MAJOR_VERSION$TCL_MINOR_VERSION$TCL_PATCH_LEVEL found"
   fi
   exit 1
 fi
 
 AC_SUBST(TCL_INCLUDE_DIR)
+AC_SUBST(TCL_SRC_DIR)
 AC_SUBST(TCL_LIB_DIR)
 AC_SUBST(TCL_LIB_FLAG)
+AC_SUBST(TCL_INIT_DIR)
 
 ##-- Find Tk -----------------------------------------------------------------
 
-echo -n "Looking for Pre-built Tk 8.0.4... "
+echo -n "Looking for Pre-built Tk 8... "
 
 if test "$tk" ; then
   unset cfsh
@@ -410,18 +412,18 @@ elif test "$tcl" ; then
   fi
 fi
 
-if test -z "$TK_VERSION" ; then
-unset Wish80
-if Wish80="`type wish8.0 | sed 's/^.* //'`" ; then
-  unset cfsh
-  cfsh="`dirname $Wish80`/../lib/tkConfig.sh"
-  if test -f $cfsh ; then
-    . $cfsh
-  fi
-fi
-fi
+#if test -z "$TK_VERSION" ; then
+#unset Wish80
+#if Wish80="`type wish8.0 | sed 's/^.* //'`" ; then
+#  unset cfsh
+#  cfsh="`dirname $Wish80`/../lib/tkConfig.sh"
+#  if test -f $cfsh ; then
+#    . $cfsh
+#  fi
+#fi
+#fi
 
-if test "$TK_VERSION" = "8.0" -a "$TK_PATCH_LEVEL" = ".4" ; then
+if test "$TK_MAJOR_VERSION" = "8" ; then
   # TK_PREFIX set by tclConfig.sh
   TK_INCLUDE_DIR="${TK_PREFIX}/include"
   TK_LIB_DIR="${TK_PREFIX}/lib"
@@ -451,56 +453,72 @@ else
 fi
 
 AC_SUBST(TK_INCLUDE_DIR)
+AC_SUBST(TK_SRC_DIR)
 AC_SUBST(TK_LIB_DIR)
 AC_SUBST(TK_LIB_FLAG)
+AC_SUBST(TK_VERSION)
 
 ##-- Find iTcl ---------------------------------------------------------------
 
-echo -n "Looking for Pre-built iTk 3.0... "
+echo -n "Looking for Pre-built iTcl and iTk 3... "
 
 if test "$BUILDING_TK" = "" ; then
 
 if test "$itcl" ; then
   unset cfsh
-  cfsh="$itcl/lib/itkConfig.sh"
+  cfsh="$itcl/lib/itclConfig.sh"
   if test -f $cfsh ; then
     . $cfsh
     ITCL_PREFIX=$itcl
   fi
+  cfsh="$itcl/lib/itkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  fi
 elif test "$tcl" ; then
-  unset cfsh
-  cfsh="$tcl/lib/itkConfig.sh"
+ unset cfsh
+  cfsh="$tcl/lib/itclConfig.sh"
   if test -f $cfsh ; then
     . $cfsh
     ITCL_PREFIX=$tcl
   fi
-fi
-
-if test -z "$ITCL_VERSION" ; then
-  unset Wish80
-  if sh="`type itkwish3.0 | sed 's/^.* //'`" ; then
-    unset cfsh
-    shdir="`dirname $sh`"
-    cfsh="$shdir/../lib/itkConfig.sh"
-    if test -f $cfsh ; then
-      . $cfsh
-    fi
+  cfsh="$tcl/lib/itkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
   fi
 fi
+
+#if test -z "$ITCL_VERSION" ; then
+#  unset Wish80
+#  if sh="`type itkwish3.0 | sed 's/^.* //'`" ; then
+#    unset cfsh
+#    shdir="`dirname $sh`"
+#    cfsh="$shdir/../lib/itkConfig.sh"
+#    if test -f $cfsh ; then
+#      . $cfsh
+#    fi
+#  fi
+#fi
+
 fi # end BUILDING_TK
 
-if test "$ITCL_VERSION" = "3.0" ; then
+if test "$ITCL_MAJOR_VERSION" = "3" ; then
   if test -z "$ITCL_PREFIX" ; then
    ITCL_PREFIX="`cd $shdir/.. ; pwd`"
   fi
   ITCL_INCLUDE_DIR="${ITCL_PREFIX}/include"
+  ITCL_SRC_DIR="`eval echo $ITCL_SRC_DIR`"
+  ITCL_LIB_SPEC="`eval echo $ITCL_LIB_SPEC`"
+  ITK_SRC_DIR="`eval echo $ITK_SRC_DIR`"
+  ITK_LIB_SPEC="`eval echo $ITK_LIB_SPEC`"
   ITCL_LIB_DIR="${ITCL_PREFIX}/lib"
   ITCL_BIN_DIR="${ITCL_PREFIX}/bin"
-  ITCL_LIB_FLAG="-litk3.0 -litcl3.0"
+  ITCLSH="${ITCL_BIN_DIR}/itclsh${ITCL_VERSION}"
+#  ITCL_LIB_FLAG="-litk3.1 -litcl3.1"
   ITCL_WIDGETS="${ITCL_LIB_DIR}/iwidgets/scripts"
-
+  ITCL_INIT_DIR="${ITCL_LIB_DIR}/itcl${TCL_VERSION}"
   #echo -L$ITCL_PREFIX $ITCL_LIB_FLAG
-  echo -L$ITCL_LIB_DIR $ITCL_LIB_FLAG
+  echo ${ITCL_LIB_SPEC}
 else
   if test -z "$ITCL_VERSION" ; then
     echo "not found -- must build"
@@ -511,11 +529,18 @@ else
   exit 1
 fi
 
+  
+AC_SUBST(ITCLSH)
 AC_SUBST(ITCL_INCLUDE_DIR)
-AC_SUBST(ITCL_LIB_DIR)
+#AC_SUBST(ITCL_LIB_DIR)
 AC_SUBST(ITCL_BIN_DIR)
-AC_SUBST(ITCL_LIB_FLAG)
+#AC_SUBST(ITCL_LIB_FLAG)
 AC_SUBST(ITCL_WIDGETS)
+AC_SUBST(ITCL_INIT_DIR)
+AC_SUBST(ITCL_SRC_DIR)
+AC_SUBST(ITK_SRC_DIR)
+AC_SUBST(ITCL_LIB_SPEC)
+AC_SUBST(ITK_LIB_SPEC)
 
 ##-- Find BLT ---------------------------------------------------------------
 echo -n "Looking for Pre-built blt 2.4... "
@@ -554,7 +579,7 @@ AC_SUBST(BLT_LIB_FLAG)
 echo -n "Looking for Pre-built Xerces-c... "
 
 if test "$xerces"; then
-  XML_LIB_DIR=$xerces
+  XML_LIB_DIR=$xerces/lib
 fi
 
 if test -z "$XML_LIB_DIR"; then
@@ -587,9 +612,7 @@ if test -z "$XML_LIB_DIR"; then
     fi
     ;;
   *linux*)
-    if test -e /tmp/opt/xerces-1.1/lib/libxerces-c1_?.so; then
-      XML_LIB_DIR="/tmp/opt/xerces-1.1/lib"
-    elif test -e /usr/lib/libxerces-c1_?.so; then
+    if test -e /usr/lib/libxerces-c1_?.so; then
       XML_LIB_DIR="/usr/lib"
     elif test -e /usr/local/lib/libxerces-c1_?.so; then
       XML_LIB_DIR="/usr/local/lib"
@@ -832,6 +855,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.74  2000/11/12 20:33:57  yarden
+# add support for itcltk-8.3
+#
 # Revision 1.73  2000/11/06 18:50:44  moulding
 # Allow any 1.x version of Xerces (used to only allow 1.1 and 1.2)
 #
