@@ -317,14 +317,14 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
 
   scheduleAddExchangeContributionToFCVel(sched, patches, all_matls);    
 
+  scheduleMassExchange(sched, patches, all_matls);
+
   scheduleComputeDelPressAndUpdatePressCC(sched, patches, press_matl,
                                                           ice_matls_sub,
                                                           all_matls);
 
   scheduleComputePressFC(sched, patches, press_matl,
                                         all_matls);
-
-  scheduleMassExchange(sched, patches, all_matls);
 
   scheduleAccumulateMomentumSourceSinks(sched, patches, press_matl,all_matls);
 
@@ -428,7 +428,24 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
   sched->addTask(task, patches, matls);
 }
 
-
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleMassExchange--
+_____________________________________________________________________*/
+void  ICE::scheduleMassExchange(SchedulerP& sched,
+				const PatchSet* patches,
+				const MaterialSet* matls)
+{
+#ifdef DOING
+  cout << "ICE::scheduleMassExchange" << endl;
+#endif 
+  Task* task = scinew Task("ICE::massExchange",
+			this, &ICE::massExchange);
+  task->requires(Task::NewDW, lb->rho_CCLabel, Ghost::None);
+  task->computes(lb->burnedMass_CCLabel);
+  task->computes(lb->releasedHeat_CCLabel);
+  
+  sched->addTask(task, patches, matls);
+}
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeDelPressAndUpdatePressCC--
 _____________________________________________________________________*/
@@ -456,7 +473,8 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->requires( Task::NewDW, lb->rho_CCLabel,       Ghost::None);
   task->requires( Task::OldDW, lb->vel_CCLabel,       ice_matls, 
                                                       Ghost::None);
-      
+ task->requires(Task::NewDW,lb->burnedMass_CCLabel,   Ghost::None);
+    
   task->computes(lb->press_CCLabel,    press_matl);
   task->computes(lb->delPress_CCLabel, press_matl);
   
@@ -487,24 +505,7 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
 
   sched->addTask(task, patches, matls);
 }
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleMassExchange--
-_____________________________________________________________________*/
-void  ICE::scheduleMassExchange(SchedulerP& sched,
-				const PatchSet* patches,
-				const MaterialSet* matls)
-{
-#ifdef DOING
-  cout << "ICE::scheduleMassExchange" << endl;
-#endif 
-  Task* task = scinew Task("ICE::massExchange",
-			this, &ICE::massExchange);
-  task->requires(Task::NewDW, lb->rho_CCLabel, Ghost::None);
-  task->computes(lb->burnedMass_CCLabel);
-  task->computes(lb->releasedHeat_CCLabel);
-  
-  sched->addTask(task, patches, matls);
-}
+
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleAccumulateMomentumSourceSinks--
 _____________________________________________________________________*/
@@ -1660,26 +1661,28 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     CCVariable<double> pressure;
     CCVariable<double> delPress;
     CCVariable<double> press_CC;
+    CCVariable<double> burnedMass;
+   
     vector<CCVariable<double>   > rho_micro_CC(numMatls);
     vector<CCVariable<double>   > vol_frac(numMatls);
     vector<CCVariable<Vector>   > vel_CC(numMatls);
     vector<CCVariable<double>   > rho_CC(numMatls);
+
     const IntVector gc(1,1,1);
 
     new_dw->get(pressure,       lb->press_equil_CCLabel,0,patch,Ghost::None,0);
-    new_dw->allocate(delPress,  lb->delPress_CCLabel,0, patch);
-    new_dw->allocate(press_CC,  lb->press_CCLabel,   0, patch);
-    new_dw->allocate(q_CC,      lb->q_CCLabel,       0, patch,gc);
-    new_dw->allocate(q_advected,lb->q_advectedLabel, 0, patch);
-    new_dw->allocate(OFS,       OFS_CCLabel,         0, patch,gc);
-    new_dw->allocate(OFE,       OFE_CCLabel,         0, patch,gc);
-    new_dw->allocate(OFC,       OFC_CCLabel,         0, patch,gc);
+    new_dw->allocate(delPress,  lb->delPress_CCLabel,  0, patch);
+    new_dw->allocate(press_CC,  lb->press_CCLabel,     0, patch);
+    new_dw->allocate(q_CC,      lb->q_CCLabel,         0, patch,gc);
+    new_dw->allocate(q_advected,lb->q_advectedLabel,   0, patch);
+    new_dw->allocate(OFS,       OFS_CCLabel,           0, patch,gc);
+    new_dw->allocate(OFE,       OFE_CCLabel,           0, patch,gc);
+    new_dw->allocate(OFC,       OFC_CCLabel,           0, patch,gc);
 
     CCVariable<double> term1, term2, term3;
     new_dw->allocate(term1, lb->term1Label, 0, patch);
     new_dw->allocate(term2, lb->term2Label, 0, patch);
     new_dw->allocate(term3, lb->term3Label, 0, patch);
-
 
     term1.initialize(0.);
     term2.initialize(0.);
@@ -1714,6 +1717,9 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 		  Ghost::None,0);
       new_dw->get(speedSound,     lb->speedSound_CCLabel,indx,patch,
 		  Ghost::None,0);
+      new_dw->get(burnedMass,     lb->burnedMass_CCLabel,indx,patch,
+		  Ghost::None,0);
+
       //__________________________________
       // Advection preprocessing
       // - divide vol_frac_cc/vol
@@ -1741,7 +1747,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         //__________________________________
         //   Contributions from reactions
         //   to be filled in Be very careful with units
-        term1[*iter] = 0.;
+        term1[*iter] += burnedMass[*iter]/(rho_micro_CC[m][*iter] * vol);
 
         //__________________________________
         //   Divergence of velocity * face area
