@@ -7,11 +7,13 @@
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/CubeRoot.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Util/TypeDescription.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
+#include <Core/Thread/Mutex.h> 
 #include <Core/Util/Endian.h>
+
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1209
@@ -27,6 +29,8 @@ using namespace Uintah;
 using std::cout;
 using std::endl;
 using std::ostream;
+
+extern Mutex mpilock;
 
 const string& 
 Matrix3::get_h_file_path() {
@@ -503,9 +507,15 @@ namespace Uintah {
 MPI_Datatype makeMPI_Matrix3()
 {
    ASSERTEQ(sizeof(Matrix3), sizeof(double)*9);
+
+mpilock.lock();
+
    MPI_Datatype mpitype;
    MPI_Type_vector(1, 9, 9, MPI_DOUBLE, &mpitype);
    MPI_Type_commit(&mpitype);
+
+mpilock.unlock();
+
    return mpitype;
 }
 
