@@ -57,6 +57,7 @@ extern DebugStream mixedDebug;
 
 static DebugStream dbg( "OnDemandDataWarehouse", false );
 static DebugStream warn( "OnDemandDataWarehouse_warn", true );
+extern DebugStream mpidbg;
 
 static Mutex ssLock( "send state lock" );
 
@@ -357,10 +358,11 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* ba
 #endif
         ASSERT(batch->messageTag >= 0);
         
-        // dbg << d_myworld->myrank() << " Sending PARTICLE message number " << (PARTICLESET_TAG|batch->messageTag) << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ")\n"; cerrLock.unlock();
+        mpidbg << d_myworld->myrank() << " Sending PARTICLE message " << (PARTICLESET_TAG|batch->messageTag) << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ")\n"; cerrLock.unlock();
 
         MPI_Bsend(&numParticles, 1, MPI_INT, dest,
                   PARTICLESET_TAG|batch->messageTag, d_myworld->getComm());
+        mpidbg << d_myworld->myrank() << " Done Sending PARTICLE message " << (PARTICLESET_TAG|batch->messageTag) << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ")\n"; cerrLock.unlock();
         ssLock.lock();  // Dd: ??       
         ss.add_sendset(sendset, dest, patch, matlIndex, gt, ngc, old_dw->d_generation);
         ssLock.unlock();  // Dd: ??
@@ -492,11 +494,11 @@ OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
         MPI_Status status;
         ASSERT(batch->messageTag >= 0);
 	ASSERTRANGE(from, 0, d_myworld->size());
-        // dbg << d_myworld->myrank() << " Posting PARTICLES receive for message number " << (PARTICLESET_TAG|batch->messageTag) << " from " << from << ", patch " << patch->getID() << ", matl " << matlIndex << ", length=" << 1 << "\n";      
+        mpidbg << d_myworld->myrank() << " Posting PARTICLES receive for message " << (PARTICLESET_TAG|batch->messageTag) << " from " << from << ", patch " << patch->getID() << ", matl " << matlIndex << ", length=" << 1 << "\n";      
         MPI_Recv(&numParticles, 1, MPI_INT, from,
                  PARTICLESET_TAG|batch->messageTag, d_myworld->getComm(),
                  &status);
-        // dbg << d_myworld->myrank() << " recving " << numParticles << "particles\n";
+        mpidbg << d_myworld->myrank() << "   recved " << numParticles << "particles\n";
         
         // sometime we have to force a receive to match a send.
         // in these cases just ignore this new subset
@@ -689,10 +691,11 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
     cerrLock.unlock();
   }
 
-  dbg << d_myworld->myrank() << " allreduce, buf=" << &sendbuf[0] << ", count=" << count << ", datatype=" << datatype << ", op=" << op << '\n';
+  mpidbg << d_myworld->myrank() << " allreduce, name " << label->getName() << " level " << (level?level->getID():-1) << endl;
   int error = MPI_Allreduce(&sendbuf[0], &recvbuf[0], count, datatype, op,
 			    d_myworld->getComm());
 
+  mpidbg << d_myworld->myrank() << " allreduce, name " << label->getName() << " level " << (level?level->getID():-1) << endl;
   if( mixedDebug.active() ) {
     cerrLock.lock(); mixedDebug << "done with MPI_Allreduce\n";
     cerrLock.unlock();
