@@ -107,7 +107,7 @@ MaskedLatticeVol<T>::maker()
 template <class T>
 PersistentTypeID 
 MaskedLatticeVol<T>::type_id(type_name(-1), 
-			 GenericField<LatVolMesh, vector<T> >::type_name(-1),
+			 LatticeVol<T>::type_name(-1),
 			 maker);
 
 
@@ -116,7 +116,7 @@ void
 MaskedLatticeVol<T>::io(Piostream& stream)
 {
   stream.begin_class(type_name(-1).c_str(), MASKED_LATTICE_VOL_VERSION);
-  GenericField<LatVolMesh, FData3d<T> >::io(stream);
+  LatticeVol<T>::io(stream);
   Pio(stream, mask_);
   stream.end_class();
 }

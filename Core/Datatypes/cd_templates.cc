@@ -42,7 +42,9 @@ using namespace SCIRun;
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/MaskedTetVol.h>
 #include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/MaskedLatticeVol.h>
 #include <Core/Datatypes/TriSurf.h>
 #include <Core/Datatypes/ContourField.h>
 #include <Core/Datatypes/PointCloud.h>
@@ -54,6 +56,18 @@ using namespace SCIRun;
 
 template class LockingHandle<ColumnMatrix>;
 template class LockingHandle<Matrix>;
+
+template class MaskedTetVol<Tensor>;
+template class MaskedTetVol<Vector>;
+template class MaskedTetVol<double>;
+template class MaskedTetVol<float>;
+template class MaskedTetVol<int>;
+template class MaskedTetVol<unsigned int>;
+template class MaskedTetVol<short>;
+template class MaskedTetVol<unsigned short>;
+template class MaskedTetVol<char>;
+template class MaskedTetVol<unsigned char>;
+template class MaskedTetVol<bool>;
 
 template class TetVol<Tensor>;
 template class TetVol<Vector>;
@@ -77,6 +91,18 @@ template class GenericField<TetVolMesh, vector<unsigned short> >;
 template class GenericField<TetVolMesh, vector<char> >;
 template class GenericField<TetVolMesh, vector<unsigned char> >;
 template class GenericField<TetVolMesh, vector<bool> >;
+
+template class MaskedLatticeVol<Tensor>;
+template class MaskedLatticeVol<Vector>;
+template class MaskedLatticeVol<double>;
+template class MaskedLatticeVol<float>;
+template class MaskedLatticeVol<int>;
+template class MaskedLatticeVol<unsigned int>;
+template class MaskedLatticeVol<short>;
+template class MaskedLatticeVol<unsigned short>;
+template class MaskedLatticeVol<char>;
+template class MaskedLatticeVol<unsigned char>;
+template class MaskedLatticeVol<bool>;
 
 template class LatticeVol<Tensor>;
 template class LatticeVol<Vector>;
