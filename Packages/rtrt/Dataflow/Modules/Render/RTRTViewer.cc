@@ -149,7 +149,7 @@ void RTRTViewer::start_rtrt() {
   int c1 = 0;
   int ncounters=0;
   bool bench=false;
-  char* shadow_mode=0;
+  ShadowType shadow_mode = No_Shadows;
   bool no_aa=false;
   double bvscale=.3;
   char* criteria1="db, stereo, max rgb, max accumrgb";
@@ -161,7 +161,6 @@ void RTRTViewer::start_rtrt() {
     do_frameless = false;
   else
     do_frameless = true;
-  bool logframes=false;
   bool display_frames=true;
   
   Camera usercamera(Point(1,0,0), Point(0,0,0), Vector(0,0,1), 60);
@@ -220,10 +219,11 @@ void RTRTViewer::start_rtrt() {
   } else if(strcmp(argv[i], "-bench")==0){
     bench=true;
   } else if(strcmp(argv[i], "-no_shadows")==0){
-    shadow_mode="none";
+    shadow_mode=No_Shadows;
   } else if(strcmp(argv[i], "-shadows")==0){
     i++;
-    shadow_mode=argv[i];
+    shadow_mode = (ShadowType)atoi(argv[i]);
+
   } else if(strcmp(argv[i], "-no_aa")==0){
     no_aa=true;
   } else if(strcmp(argv[i], "-bvscale")==0){
@@ -268,8 +268,6 @@ void RTRTViewer::start_rtrt() {
     }
   } else if(strcmp(argv[i],"-jitter")==0) {
     rtrt_engine->do_jitter=1;
-  } else if(strcmp(argv[i], "-logframes") == 0){
-    logframes=true;
   } else if(strcmp(argv[i], "-eye") == 0){
     Point p;
     i++;
@@ -315,11 +313,9 @@ void RTRTViewer::start_rtrt() {
   // set the scenes rtrt_engine pointer
   current_scene->set_rtrt_engine(rtrt_engine);
   
-  if(shadow_mode){
-    if(!current_scene->select_shadow_mode(shadow_mode)){
-      cerr << "Unknown shadow mode: " << shadow_mode << '\n';
-      exit(1);
-    }
+  if(shadow_mode > Uncached_Shadows ){
+    cerr << "Unknown shadow mode: " << shadow_mode << '\n';
+    exit(1);
   }
   current_scene->no_aa = no_aa;
   
@@ -378,8 +374,6 @@ void RTRTViewer::start_rtrt() {
     
     rtrt_engine->Gjitter_valsb[ii] *= 0.25;
   }
-  
-  current_scene->logframes=logframes;
   
   // Start up display thread...
   Dpy* dpy=new Dpy(current_scene, criteria1, criteria2, rtrt_engine->nworkers,
@@ -444,10 +438,10 @@ Scene* RTRTViewer::make_scene_1() {
 
     Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
 
-    Material* matl0=new Phong(Color(0,0,0), Color(.2,.2,.2), Color(.3,.3,.3), 100, .5);
-    Material* matl00=new Phong(Color(0,0,0), Color(.2,.2,.2), Color(.3,.3,.3), 10, 0);
-    Material* matl1=new Checker(new Phong(Color(.05,.05,.05), Color(.2,.2,.5), Color(.1,.1,.1), 0, .1),
-				new Phong(Color(.05,.0,0), Color(.2,.2,.2), Color(.1,.1,.1), 0, .1),
+    Material* matl0=new Phong( Color(.2,.2,.2), Color(.3,.3,.3), 100, .5);
+    Material* matl00=new Phong( Color(.2,.2,.2), Color(.3,.3,.3), 10, 0);
+    Material* matl1=new Checker(new Phong( Color(.2,.2,.5), Color(.1,.1,.1), 0, .1),
+				new Phong( Color(.2,.2,.2), Color(.1,.1,.1), 0, .1),
 				Vector(1,1.1,0), Vector(-1.1,1,0));
     Object* obj1=new Rect(matl1, Point(0,0,0), Vector(20,0,0), Vector(0,20,0));
     
@@ -462,7 +456,7 @@ Scene* RTRTViewer::make_scene_1() {
     Scene* scene=new Scene(group, cam,
 			   bgcolor, Color(0,0,0), bgcolor, groundplane,
 			   ambient_scale);
-    scene->select_shadow_mode("hard");
+    scene->select_shadow_mode( Hard_Shadows );
     return scene;
 }
 
