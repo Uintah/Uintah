@@ -3,6 +3,7 @@ Makefile Makefile.bak
 so_locations
 ContourSetReader.cc
 ContourSetReader.tcl
+GeomReader.tcl
 MeshReader.cc
 MeshReader.tcl
 MultiMeshReader.cc
