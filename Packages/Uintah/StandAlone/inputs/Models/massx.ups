@@ -13,14 +13,15 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            1       </maxTime>
-       <initTime>           0.0         </initTime>
-       <delt_min>           0.0         </delt_min>
+       <maxTime>            1          </maxTime>
+       <initTime>           0.0        </initTime>
+       <delt_min>           0.0        </delt_min>
        <delt_max>           1.e-2      </delt_max>
-       <delt_init>          1.0e-5      </delt_init>
-	<max_delt_increase>0.5</max_delt_increase>	
-	<max_initial_delt>1.e-4</max_initial_delt>
-       <timestep_multiplier>0.8         </timestep_multiplier>
+       <delt_init>          1.0e-5     </delt_init>
+	<max_delt_increase>  0.5        </max_delt_increase>	
+	<max_initial_delt>   1.e-4      </max_initial_delt>
+       <timestep_multiplier>0.8        </timestep_multiplier>
+       <max_iterations>      50         </max_iterations>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -29,8 +30,8 @@
     <Grid>
     <BoundaryConditions>
       <Face side = "x-">
-        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                              <value> 101325.0   </value>
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
         </BCType>
         <BCType id = "all" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -43,8 +44,8 @@
         </BCType>
       </Face>
       <Face side = "x+">
-        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                              <value> 101325.0   </value>
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
         </BCType>
         <BCType id = "all" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -57,8 +58,8 @@
         </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                              <value> 101325.0   </value>
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
         </BCType>
         <BCType id = "all" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -71,8 +72,8 @@
         </BCType>
       </Face>                  
       <Face side = "y+">
-        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                              <value> 101325.0   </value>
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
         </BCType>
         <BCType id = "all" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -85,8 +86,8 @@
         </BCType>
       </Face>
       <Face side = "z-">
-        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                              <value> 101325.0   </value>
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
         </BCType>
         <BCType id = "all" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -99,8 +100,8 @@
         </BCType>
       </Face>                  
       <Face side = "z+">
-        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                              <value> 101325.0   </value>
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
         </BCType>
         <BCType id = "all" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -116,7 +117,7 @@
        <Level>
            <Box label="1">
               <lower>        [0,0,0]      </lower>
-              <upper>        [5,5,5]      </upper>
+              <upper>        [5,5,0.5]      </upper>
               <extraCells>   [1,1,1]      </extraCells>
               <patches>      [1,1,1]      </patches>
            </Box>
@@ -146,22 +147,25 @@
       <save label="rho_CC"/>
       <save label="sp_vol_CC"/>
       <save label="temp_CC"/>
-      <save label= "model_mass_source"/>
-      <save label= "model_momentum_source"/>
-      <save label= "model_energy_source"/>
+      <save label= "modelMass_src"/>
+      <save label= "modelMom_src"/>
+      <save label= "modelEng_src"/>
       <!-- Need by the regression tester -->
    </DataArchiver>
 
    <Debug>
-     <dbg_timeStart>       1.0      </dbg_timeStart>
-     <dbg_timeStop>        0.003   </dbg_timeStop>
-     <dbg_outputInterval>  1e-9    </dbg_outputInterval>
-   <!--
-     <dbg_BeginIndex>      [0,0,0] </dbg_BeginIndex> 
-     <dbg_EndIndex>        [2,2,2] </dbg_EndIndex>   
-     <dbg_SigFigs>         10      </dbg_SigFigs>    
-    -->
+     <dbg_timeStart>       1.0        </dbg_timeStart>
+     <dbg_timeStop>        0.003      </dbg_timeStop>
+     <dbg_outputInterval>  1e-9       </dbg_outputInterval>
+     <dbg_BeginIndex>      [0,0,0]    </dbg_BeginIndex> 
+     <dbg_EndIndex>        [10,10,10] </dbg_EndIndex>
+     <dbg_Matls>           [0,1]      </dbg_Matls>
+     <dbg_SigFigs>         3          </dbg_SigFigs>    
+    
      <debug label = "switchTestConservation"/>
+     <debug label = "switchDebug_explicit_press"/>
+     <debug label = "switchDebugLagrangianValues"/>
+     <debug label = "switchDebugMomentumExchange_CC"/>
 <!--
      <debug label = "switchDebugInitialize"/>
      <debug label = "switchDebug_EQ_RF_press"/>
@@ -215,7 +219,7 @@
                     <max>       [ 6.0, 6.0, 6.0 ]       </max>
                 </box>
               <box label="gpicehole">
-                    <min>       [ 2.0, 2.0, 2.0 ]       </min>
+                    <min>       [ 2.0, 2.0, 0.0 ]       </min>
                     <max>       [ 3.0, 3.0, 3.0 ]       </max>
                 </box>
               </difference>
@@ -236,7 +240,7 @@
            <gamma>                      1.4             </gamma>
            <geom_object>
               <box label="gpicehole">
-                    <min>       [ 2.0, 2.0, 2.0 ]       </min>
+                    <min>       [ 2.0, 2.0, 0.0 ]       </min>
                     <max>       [ 3.0, 3.0, 3.0 ]       </max>
                 </box>
                <res>                [2,2,2]             </res>
@@ -258,9 +262,9 @@
     </MaterialProperties>
     <Models>
       <Model type="Test">
-         <fromMaterial>source</fromMaterial>
-	 <toMaterial>destination</toMaterial>
-	 <rate>100</rate>
+        <fromMaterial> source     </fromMaterial>
+	 <toMaterial>   destination</toMaterial>
+	 <rate>         1000.0      </rate>
       </Model>
     </Models>
             
