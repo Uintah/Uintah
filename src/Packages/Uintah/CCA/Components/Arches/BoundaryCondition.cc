@@ -2097,9 +2097,11 @@ BoundaryCondition::WallBdry::WallBdry(int cellID):
 //****************************************************************************
 BoundaryCondition::WallBdry::~WallBdry()
 {
+#if 0
   for (std::vector<GeometryPiece*>::const_iterator g = d_geomPiece.begin();
        g != d_geomPiece.end(); ++g)
     delete *g;
+#endif
 }
 
 
@@ -2126,9 +2128,11 @@ BoundaryCondition::IntrusionBdry::IntrusionBdry(int cellID):
 //****************************************************************************
 BoundaryCondition::IntrusionBdry::~IntrusionBdry()
 {
+#if 0
   for (std::vector<GeometryPiece*>::const_iterator g = d_geomPiece.begin();
        g != d_geomPiece.end(); ++g)
     delete *g;
+#endif
 }
 
 //****************************************************************************
@@ -2205,9 +2209,11 @@ BoundaryCondition::FlowInlet& BoundaryCondition::FlowInlet::operator=(const Flow
 BoundaryCondition::FlowInlet::~FlowInlet()
 {
   VarLabel::destroy(d_area_label);
+#if 0
   for (std::vector<GeometryPiece*>::const_iterator g = d_geomPiece.begin();
        g != d_geomPiece.end(); ++g)
     delete *g;
+#endif
 }
 
 //****************************************************************************
@@ -2271,9 +2277,11 @@ BoundaryCondition::PressureInlet::PressureInlet(int /*numMix*/, int cellID):
 //****************************************************************************
 BoundaryCondition::PressureInlet::~PressureInlet()
 {
+#if 0
   for (std::vector<GeometryPiece*>::const_iterator g = d_geomPiece.begin();
        g != d_geomPiece.end(); ++g)
     delete *g;
+#endif
 }
 
 //****************************************************************************
@@ -2331,9 +2339,11 @@ BoundaryCondition::FlowOutlet::FlowOutlet(int /*numMix*/, int cellID):
 //****************************************************************************
 BoundaryCondition::FlowOutlet::~FlowOutlet()
 {
+#if 0
   for (std::vector<GeometryPiece*>::const_iterator g = d_geomPiece.begin();
        g != d_geomPiece.end(); ++g)
     delete *g;
+#endif
 }
 //****************************************************************************
 // Problem Setup for BoundaryCondition::FlowOutlet
