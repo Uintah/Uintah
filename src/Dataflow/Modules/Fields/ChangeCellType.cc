@@ -251,55 +251,55 @@ ChangeCellType::set_data(const LatticeVol<Data> &src, TetVol<Data> &dst,
 void 
 ChangeCellType::execute()
 {
-    FieldHandle input_handle;
-    update_state(NeedData);
+  FieldHandle input_handle;
+  update_state(NeedData);
 
-    if (!input_->get(input_handle))
-	return;
-    if (!input_handle.get_rep()) {
-	cerr << "Error: empty scalar field\n";
-	return;
-    }
+  if (!input_->get(input_handle))
+    return;
+  if (!input_handle.get_rep()) {
+    cerr << "Error: empty field" << endl;
+    return;
+  }
     
 
-    string type_string = input_handle->type_name(0);
-    if (type_string == "LatticeVol") {
-      update_state(JustStarted);
+  string type_string = input_handle->type_name(0);
+  if (type_string == "LatticeVol") {
+    update_state(JustStarted);
       
-      // then we have proper input
-      if (input_handle->type_name(1) == "double") {
+    // then we have proper input
+    if (input_handle->type_name(1) == "double") {
 
-	TetVol<double> *tvol = new TetVol<double>();
-	LatticeVol<double> *lvol = 
-	  dynamic_cast<LatticeVol<double>*>(input_handle.get_rep());
-	fill_tet_vol<double>(*lvol, *tvol);
-	output_->send(FieldHandle(tvol));
-      } else if (input_handle->type_name(1) == "float") {
+      TetVol<double> *tvol = new TetVol<double>();
+      LatticeVol<double> *lvol = 
+	dynamic_cast<LatticeVol<double>*>(input_handle.get_rep());
+      fill_tet_vol<double>(*lvol, *tvol);
+      output_->send(FieldHandle(tvol));
+    } else if (input_handle->type_name(1) == "float") {
 
-	TetVol<float> *tvol = new TetVol<float>();
-	LatticeVol<float> *lvol = 
-	  dynamic_cast<LatticeVol<float>*>(input_handle.get_rep());
-	fill_tet_vol<float>(*lvol, *tvol);
-	output_->send(FieldHandle(tvol));
-      } else if (input_handle->type_name(1) == "int") {
+      TetVol<float> *tvol = new TetVol<float>();
+      LatticeVol<float> *lvol = 
+	dynamic_cast<LatticeVol<float>*>(input_handle.get_rep());
+      fill_tet_vol<float>(*lvol, *tvol);
+      output_->send(FieldHandle(tvol));
+    } else if (input_handle->type_name(1) == "int") {
 
-	TetVol<int> *tvol = new TetVol<int>();
-	LatticeVol<int> *lvol = 
-	  dynamic_cast<LatticeVol<int>*>(input_handle.get_rep());
-	fill_tet_vol<int>(*lvol, *tvol);
-	output_->send(FieldHandle(tvol));
-      } else if (input_handle->type_name(1) == "char") {
+      TetVol<int> *tvol = new TetVol<int>();
+      LatticeVol<int> *lvol = 
+	dynamic_cast<LatticeVol<int>*>(input_handle.get_rep());
+      fill_tet_vol<int>(*lvol, *tvol);
+      output_->send(FieldHandle(tvol));
+    } else if (input_handle->type_name(1) == "char") {
 
-	TetVol<char> *tvol = new TetVol<char>();
-	LatticeVol<char> *lvol = 
-	  dynamic_cast<LatticeVol<char>*>(input_handle.get_rep());
-	fill_tet_vol<char>(*lvol, *tvol);
-	output_->send(FieldHandle(tvol));
-      } 
-    } else {
-	cerr << "Error: field must be a LatticeVol\n";
-	return;
-    }
+      TetVol<char> *tvol = new TetVol<char>();
+      LatticeVol<char> *lvol = 
+	dynamic_cast<LatticeVol<char>*>(input_handle.get_rep());
+      fill_tet_vol<char>(*lvol, *tvol);
+      output_->send(FieldHandle(tvol));
+    } 
+  } else {
+    cerr << "Error: field must be a LatticeVol\n";
+    return;
+  }
 }
 
 } // End namespace SCIRun

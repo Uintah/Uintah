@@ -1,5 +1,5 @@
 /*
- *  FieldBoundary.cc:  Unfinished modules
+ *  FieldBoundary.cc:  Build a surface field from a volume field
  *
  *  Written by:
  *   Peter-Pike Sloan and David Weinstein
@@ -11,9 +11,8 @@
  */
 
 #include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/MeshPort.h>
-#include <Dataflow/Ports/SurfacePort.h>
-#include <Core/Datatypes/TriSurface.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/TetVol.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
@@ -21,101 +20,135 @@ using std::cerr;
 
 namespace SCIRun {
 
-
+//! Module to build a surface field from a volume field.
 class FieldBoundary : public Module {
-    MeshIPort* inport;
-    GeometryOPort* outport;
-    SurfaceOPort* osurf;
 public:
-    FieldBoundary(const clString& id);
-    virtual ~FieldBoundary();
-    virtual void execute();
+  FieldBoundary(const clString& id);
+  virtual ~FieldBoundary();
+  virtual void execute();
+
+private:
+  
+  //! Iterates over mesh, and build TriSurf at the boundary
+  template <class Mesh>
+  void                                           // FIX_ME
+  find_boundary(Mesh *mesh, GeomTrianglesP *tris/*, TriSurf *osurf*/);
+
+  //! Input should be a volume field.
+  FieldIPort*              inport_;
+  //! Scene graph output.
+  GeometryOPort*           outport_;
+  //! TriSurf field output.
+  FieldOPort*              osurf_;
 };
 
 extern "C" Module* make_FieldBoundary(const clString& id)
 {
-    return scinew FieldBoundary(id);
+  return scinew FieldBoundary(id);
 }
 
 FieldBoundary::FieldBoundary(const clString& id)
-: Module("FieldBoundary", id, Filter)
+  : Module("FieldBoundary", id, Filter)
 {
-   // Create the input port
-    inport=scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
-    add_iport(inport);
-    outport=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
-    add_oport(outport);
-    osurf=scinew SurfaceOPort(this, "Surface", SurfaceIPort::Atomic);
-    add_oport(osurf);
+  // Create the input port
+  inport_ = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
+  add_iport(inport_);
+  outport_ = scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+  add_oport(outport_);
+  osurf_ = scinew FieldOPort(this, "TriSurf", FieldIPort::Atomic);
+  add_oport(osurf_);
 }
 
 FieldBoundary::~FieldBoundary()
 {
 }
 
-void FieldBoundary::execute()
+
+
+void 
+FieldBoundary::execute()
 {
-    MeshHandle mesh;
-    if (!inport->get(mesh))
-	return;
+  FieldHandle input;
 
+  if (!inport_->get(input)) return;
+  if (!input.get_rep()) {
+    cerr << "Error: empty field" << endl;
+    return;
+  }
+    
+  MeshBaseHandle mesh = input->get_mesh();
+  GeomTrianglesP *tris= scinew GeomTrianglesP;  
+  //FIX_ME TriSurf *ts = new TriSurf();
 
-    // now actualy look at this stuff...
+  // Get exact mesh type, and find boundary for it.
+  string type_string = mesh->type_name(0);
+  if (type_string == "MeshTet") {
+    MeshTet *mesht = dynamic_cast<MeshTet*>(mesh.get_rep());
+    find_boundary<MeshTet>(mesht, tris/*, ts*/); //FIX_ME
+//    } else if (type_string == "MeshRG") {
+//      MeshRG *meshrg = dynamic_cast<MeshRG*>(mesh.get_rep());
+//      find_boundary<MeshRG>(meshrg, tris/*, ts*/); //FIX_ME
+  } else {
+    cerr << "ERROR: Input mesh type not known!!" << endl;
+    return;
+  }
+  
+  outport_->delAll();
+  outport_->addObj(tris,"Boundary Triangles");
+// FIX_ME
+//    FieldHandle ts_handle(ts);
+//    osurf_->send(ts_handle);
+}
 
-    GeomTrianglesP *tris= scinew GeomTrianglesP;
-    mesh->compute_face_neighbors();
+template <class Mesh>
+void                                           // FIX_ME
+find_boundary(Mesh *mesh, GeomTrianglesP *tris/*, TriSurf *osurf*/)
+{
+  
+  // Walk all the cells in the mesh.
+  Mesh::cell_iterator citer = mesh.cell_begin();
+  while (citer != mesh.cell_end()) {
+    Mesh::cell_index ci = *citer;
+    ++citer;
+    // Get all the faces in the cell.
+    Mesh::face_array faces;
+    mesh->get_faces(faces, ci);
+    // Check each face for neighbors
+    Mesh::face_array::iterator fiter = faces.begin();
+    while (fiter != faces.end()) {
+      Mesh::cell_index nci
+      Mesh::face_index fi = *fiter;
+      if (! mesh->get_neighbor_cell(fi, nci)) {
+	// Faces with no neighbors are on the boundary, build a tri.
+	Mesh::node_array nodes;
+	mesh->get_nodes(nodes, fi);
+	// Creating triangles, so fan if more than 3 nodes.
+	Point p1, p2, p3;
+	Mesh::node_array::iterator niter = nodes.begin();
+	mesh->get_point(p1, *niter);
+	++niter;
+	mesh->get_point(p2, *niter);
+	++niter;
+	mesh->get_point(p3, *niter);
+	++niter;
 
-    int facei[8] = {0,1,2,3,0,1,2,3};
-    Array1<int> bdryNodes(mesh->nodesize());
-    bdryNodes.initialize(0);
-
-    int i;
-    for(i=0;i<mesh->elemsize();i++) {
-      Element *teste = mesh->element(i);
-      if (teste) {
-	for(int j=0;j<4;j++) {
-	  if (teste->faces[j] == -1) {
-	      bdryNodes[teste->n[facei[j+1]]] = 1;
-	      bdryNodes[teste->n[facei[j+2]]] = 1;
-	      bdryNodes[teste->n[facei[j+3]]] = 1;
-	      tris->add(mesh->point(teste->n[facei[j+1]]),
-			mesh->point(teste->n[facei[j+2]]),
-			mesh->point(teste->n[facei[j+3]]));
-	  }
+	tris->add(p1, p2, p3);
+	// FIX_ME add to TriSurf
+	//osurf->add_tri(p1,p2,p3);
+	while (niter != nodes.end()) {
+	  p2 = p3;
+	  mesh->get_point(p3, *niter);
+	  ++niter;
+	  
+	  tris->add(p1, p2, p3);
+	  // FIX_ME add to TriSurf
+	  //osurf->add_tri(p1,p2,p3);
 	}
       }
     }
-    TriSurface *ts = new TriSurface;
-    Array1<int> nodeMap(bdryNodes.size());
-    nodeMap.initialize(-1);
-    int count=0;
-    for (i=0; i<mesh->nodesize(); i++) {
-	if (bdryNodes[i]) {
-	    nodeMap[i] = count;
-	    count++;
-	    ts->points_.add(mesh->point(i));
-	}
-    }
-    for (i=0; i<mesh->elemsize(); i++) {
-	Element *teste = mesh->element(i);
-	if (teste) {
-	    for(int j=0;j<4;j++) {
-		if (teste->faces[j] == -1) {
-		    int n1=nodeMap[teste->n[facei[j+1]]];
-		    int n2=nodeMap[teste->n[facei[j+2]]];
-		    int n3=nodeMap[teste->n[facei[j+3]]];
-		    if (n1 == -1 || n2 == -1 || n3 == -1) {
-			cerr << "ERROR in FieldBoundary!\n";
-		    }
-		    ts->faces_.add(TSElement(n1,n2,n3));
-		}
-	    }
-	}
-    }
-    outport->delAll();
-    outport->addObj(tris,"Boundary Triangles");
-    SurfaceHandle tsHandle(ts);
-    osurf->send(tsHandle);
+  }
+  // FIX_ME remove duplicates and build neighbors
+  // osurf->resolve_surf();
 }
 
 } // End namespace SCIRun
