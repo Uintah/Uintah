@@ -39,7 +39,6 @@ public:
   
   //////////
   // Constructors
-  FlatAttrib();
   FlatAttrib(int);
   FlatAttrib(int, int);
   FlatAttrib(int, int, int);
@@ -73,14 +72,7 @@ public:
 
   // TODO: begin, end 
 
-  //////////
-  // Resize the attribute to the specified dimensions
-  virtual void resize(int);
-  virtual void resize(int, int);
-  virtual void resize(int, int, int);
-
   int size() const;
-
 
   virtual string getInfo();
   virtual string getTypeName(int=0);
@@ -107,7 +99,7 @@ protected:
 // PIO support
 template <class T> Persistent*
 FlatAttrib<T>::maker(){
-  return new FlatAttrib<T>();
+  return new FlatAttrib<T>(0);
 }
 
 template <class T>
@@ -144,12 +136,6 @@ FlatAttrib<T>::io(Piostream& stream)
 
 
 template <class T> DebugStream FlatAttrib<T>::dbg("FlatAttrib", true);
-
-template <class T>
-FlatAttrib<T>::FlatAttrib() :
-  DiscreteAttrib<T>()
-{
-}
 
 template <class T>
 FlatAttrib<T>::FlatAttrib(int ix) :
@@ -316,30 +302,6 @@ FlatAttrib<T>::set3(int x, int y, int z, const T &val)
 //     return true;
 //   }
 // }
-
-template <class T> void
-FlatAttrib<T>::resize(int x, int y, int z)
-{
-  DiscreteAttrib<T>::resize(x, y, z);
-  d_data.resize(x*y*z);
-}
-
-
-template <class T> void
-FlatAttrib<T>::resize(int x, int y)
-{
-  DiscreteAttrib<T>::resize(x, y);
-  d_data.resize(x*y);
-}
-
-
-template <class T> void
-FlatAttrib<T>::resize(int x)
-{
-  DiscreteAttrib<T>::resize(x);
-  d_data.resize(x);
-}
-
 
 template <class T> int
 FlatAttrib<T>::size() const

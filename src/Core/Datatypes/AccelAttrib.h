@@ -23,7 +23,6 @@ public:
   
   //////////
   // Constructors
-  AccelAttrib();
   AccelAttrib(int);
   AccelAttrib(int, int);
   AccelAttrib(int, int, int);
@@ -59,12 +58,6 @@ public:
 
   // TODO: begin, end 
 
-  //////////
-  // Resize the attribute to the specified dimensions
-  virtual void resize(int);
-  virtual void resize(int, int);
-  virtual void resize(int, int, int);
-
   virtual string getInfo();  
   virtual string getTypeName(int=0);
   //////////
@@ -86,7 +79,7 @@ protected:
 // PIO support
 template <class T>
 Persistent* AccelAttrib<T>::maker(){
-  return new AccelAttrib<T>();
+  return new AccelAttrib<T>(0);
 }
 
 template <class T> string AccelAttrib<T>::typeName(int n){
@@ -153,13 +146,6 @@ AccelAttrib<T>::create_accel_structure()
 }
 
 
-
-template <class T>
-AccelAttrib<T>::AccelAttrib() :
-  FlatAttrib<T>()
-{
-  create_accel_structure();
-}
 
 template <class T>
 AccelAttrib<T>::AccelAttrib(int x) :
@@ -334,30 +320,6 @@ AccelAttrib<T>::set3(int x, int y, int z, const T &val)
 //     return true;
 //   }
 // }
-
-template <class T> void
-AccelAttrib<T>::resize(int x, int y, int z)
-{
-  FlatAttrib<T>::resize(x, y, z);
-  create_accel_structure();
-}
-
-
-template <class T> void
-AccelAttrib<T>::resize(int x, int y)
-{
-  FlatAttrib<T>::resize(x, y);
-  create_accel_structure();
-}
-
-
-template <class T> void
-AccelAttrib<T>::resize(int x)
-{
-  FlatAttrib<T>::resize(x);
-  create_accel_structure();
-}
-
 
 template <class T> string AccelAttrib<T>::getInfo() {
   ostringstream retval;

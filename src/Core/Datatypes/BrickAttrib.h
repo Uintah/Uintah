@@ -34,7 +34,6 @@ public:
   
   //////////
   // Constructors
-  BrickAttrib();
   BrickAttrib(int);
   BrickAttrib(int, int);
   BrickAttrib(int, int, int);
@@ -69,12 +68,6 @@ public:
   void fset3(int x, int y, int z, const T &val);
 
   // TODO: begin, end 
-
-  //////////
-  // Resize the attribute to the specified dimensions
-  virtual void resize(int);
-  virtual void resize(int, int);
-  virtual void resize(int, int, int);
 
   virtual int iterate(AttribFunctor<T> &func);
 
@@ -117,7 +110,7 @@ protected:
 // PIO support
 template <class T> 
 Persistent* BrickAttrib<T>::maker(){
-  return new BrickAttrib<T>();
+  return new BrickAttrib<T>(0);
 }
 
 template <class T>
@@ -180,33 +173,45 @@ BrickAttrib<T>::update_brick_counts()
 #endif  
 }
 
-
-template <class T>
-BrickAttrib<T>::BrickAttrib() :
-  FlatAttrib<T>()
-{
-  update_brick_counts();
-}
-
 template <class T>
 BrickAttrib<T>::BrickAttrib(int x) :
-  FlatAttrib<T>()
+  FlatAttrib<T>(x)
 {
-  resize(x);
+  update_brick_counts();
+#if BITBOUND
+  d_data.resize(xbrickcount * XBRICKSIZE);
+#else
+  d_data.resize(xbrickcount << XBRICKBITS);
+#endif
 }
 
 template <class T>
 BrickAttrib<T>::BrickAttrib(int x, int y) :
-  FlatAttrib<T>()
+  FlatAttrib<T>(x, y)
 {
-  resize(x, y);
+  update_brick_counts();
+#if BITBOUND
+  d_data.resize(xbrickcount * XBRICKSIZE *
+		ybrickcount * YBRICKSIZE);
+#else
+  d_data.resize((xbrickcount * ybrickcount) <<
+		(XBRICKBITS + YBRICKBITS));
+#endif
 }
 
 template <class T>
 BrickAttrib<T>::BrickAttrib(int x, int y, int z) :
   FlatAttrib<T>(x, y, z)
 {
-  resize(x, y, z);
+  update_brick_counts();
+#if BITBOUND
+  d_data.resize(xbrickcount * XBRICKSIZE *
+		ybrickcount * YBRICKSIZE *
+		zbrickcount * XBRICKSIZE);
+#else
+  d_data.resize((xbrickcount * ybrickcount * zbrickcount) <<
+	      (XBRICKBITS + YBRICKBITS + ZBRICKBITS));
+#endif
 }
 
 template <class T>
@@ -425,49 +430,6 @@ BrickAttrib<T>::set3(int x, int y, int z, const T &val)
 //     return true;
 //   }
 // }
-
-template <class T> void
-BrickAttrib<T>::resize(int x, int y, int z)
-{
-  DiscreteAttrib<T>::resize(x, y, z);
-  update_brick_counts();
-#if BITBOUND
-  d_data.resize(xbrickcount * XBRICKSIZE *
-	      ybrickcount * YBRICKSIZE *
-	      zbrickcount * XBRICKSIZE);
-#else
-  d_data.resize((xbrickcount * ybrickcount * zbrickcount) <<
-	      (XBRICKBITS + YBRICKBITS + ZBRICKBITS));
-#endif
-}
-
-
-template <class T> void
-BrickAttrib<T>::resize(int x, int y)
-{
-  DiscreteAttrib<T>::resize(x, y);
-  update_brick_counts();
-#if BITBOUND
-  d_data.resize(xbrickcount * XBRICKSIZE *
-	      ybrickcount * YBRICKSIZE);
-#else
-  d_data.resize((xbrickcount * ybrickcount) <<
-	      (XBRICKBITS + YBRICKBITS));
-#endif
-}
-
-
-template <class T> void
-BrickAttrib<T>::resize(int x)
-{
-  DiscreteAttrib<T>::resize(x);
-#if BITBOUND
-  d_data.resize(xbrickcount * XBRICKSIZE);
-#else
-  d_data.resize(xbrickcount << XBRICKBITS);
-#endif
-}
-
 
 template <class T> int
 BrickAttrib<T>::size() const

@@ -214,8 +214,7 @@ void BuildFDMatrix::execute()
   if (hNmnBC.get_rep()==0){
     cout << "No Newman cast done" << endl;
     // -- create dummy attribute with no-valid nodes
-    hNmnBC=new NmnBCAttrib();
-    hNmnBC->resize(nx, ny, nz);
+    hNmnBC=new NmnBCAttrib(nx, ny, nz);
     
     // -- invalidate all the nodes in the attribute
     hNmnBC->setValidBit(IntVector(0, 0, 0), IntVector(nx-1, ny-1, nz-1), false);
@@ -234,8 +233,7 @@ void BuildFDMatrix::execute()
 
   if (hDrhBC.get_rep()==0){
     // -- create dummy attribute with no-valid nodes
-    hDrhBC=new DrhBCAttrib();
-    hDrhBC->resize(nx, ny, nz);
+    hDrhBC=new DrhBCAttrib(nx, ny, nz);
     
     // -- invalidate all the nodes in the attribute
     hDrhBC->setValidBit(IntVector(0, 0, 0), IntVector(nx-1, ny-1, nz-1), false);

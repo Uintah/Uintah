@@ -33,7 +33,7 @@ class LatticeGeom : public Geom
 {
 public:
 
-  LatticeGeom();
+  //LatticeGeom();
   LatticeGeom(int x);
   LatticeGeom(int x, int y);
   LatticeGeom(int x, int y, int z);
@@ -42,11 +42,6 @@ public:
   LatticeGeom(int x, int y, int z, const Point &a, const Point &b);
 
   ~LatticeGeom();
-
-
-  virtual void resize(int x);
-  virtual void resize(int x, int y);
-  virtual void resize(int x, int y, int z);
 
   // This transform can be directly manipulated.  updateTransform()
   // must be called after to flush the changes to the scaled transform.
@@ -96,6 +91,10 @@ public:
   virtual string getTypeName(int);
 
 protected:
+
+  virtual void resize(int x);
+  virtual void resize(int x, int y);
+  virtual void resize(int x, int y, int z);
 
   virtual bool computeBoundingBox();
   
