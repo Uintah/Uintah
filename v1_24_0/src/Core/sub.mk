@@ -35,6 +35,7 @@ SRCDIR := Core
 
 SUBDIRS := \
 	$(SRCDIR)/Algorithms \
+	$(SRCDIR)/Bundle \
 	$(SRCDIR)/Containers \
 	$(SRCDIR)/Datatypes \
 	$(SRCDIR)/Exceptions \
