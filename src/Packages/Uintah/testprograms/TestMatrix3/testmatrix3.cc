@@ -270,7 +270,6 @@ bool testEigenValue(const Matrix3& M, double eigen_value, double max_eigen_value
   std::vector<Vector> eigenVectors = M.getEigenVectors(eigen_value, rel_scale);
 
   if (eigenVectors.size() == 0) {
-    cout << "oh shit!\n";
     return false; // should have at least one Vector for an eigen_value
   }
   else if (eigenVectors.size() == 1) {
