@@ -133,6 +133,38 @@ TaskGraph::overlaps(Task::Dependency* comp, Task::Dependency* req) const
   return true;
 }
 
+/* overloaded addRequires used in setupTaskConnections */
+
+inline void addRequires(Task* task, Task::WhichDW dw, const VarLabel* var,
+			const PatchSet* ps, const MaterialSet* ms)
+{  
+  for(int p=0;p<ps->size();p++){
+    const PatchSubset* pss = ps->getSubset(p);
+    for(int m=0;m<ms->size();m++){
+      const MaterialSubset* mss = ms->getSubset(m);
+      task->requires(dw, var, pss, mss, Ghost::None);
+    }
+  }
+}
+
+inline void addRequires(Task* task, Task::WhichDW dw, const VarLabel* var,
+			const PatchSubset* pss, const MaterialSet* ms)
+{  
+  for(int m=0;m<ms->size();m++){
+    const MaterialSubset* mss = ms->getSubset(m);
+    task->requires(dw, var, pss, mss, Ghost::None);
+  }
+}
+ 
+inline void addRequires(Task* task, Task::WhichDW dw, const VarLabel* var,
+			const PatchSet* ps, const MaterialSubset* mss)
+{  
+  for(int p=0;p<ps->size();p++){
+    const PatchSubset* pss = ps->getSubset(p);
+    task->requires(dw, var, pss, mss, Ghost::None);
+  }
+}
+
 // setupTaskConnections also adds Reduction Tasks to the graph...
 void
 TaskGraph::setupTaskConnections()
@@ -158,24 +190,39 @@ TaskGraph::setupTaskConnections()
       } else if(comp->var->typeDescription()->isReductionVariable()){
 	// Look up this variable in the reductionTasks map
 	const VarLabel* var = comp->var;
+	const PatchSet* ps = task->getPatchSet();
+	const MaterialSet* ms = task->getMaterialSet();
+
 	ReductionTasksMap::iterator it=reductionTasks.find(var);
 	if(it == reductionTasks.end()){
 	  // No reduction task yet, create one
 	  Task* newtask = scinew Task(var->getName()+" reduction",
 				      Task::Reduction);
-	  newtask->computes(var);
+	  // compute for all patches but some set of materials
+	  // (maybe global material, but not necessarily)
+	  if (comp->matls != 0)
+	    newtask->computes(var, comp->matls, Task::OutOfDomain);
+	  else {
+	    for(int m=0;m<ms->size();m++)
+	      newtask->computes(var, ms->getSubset(m), Task::OutOfDomain);
+	  }
 	  reductionTasks[var]=newtask;
 	  it = reductionTasks.find(var);
 	}
-	const PatchSet* ps = task->getPatchSet();
-	const MaterialSet* ms = task->getMaterialSet();
-	for(int p=0;p<ps->size();p++){
-	  const PatchSubset* pss = ps->getSubset(p);
-	  for(int m=0;m<ms->size();m++){
-	    const MaterialSubset* mss = ms->getSubset(m);
-	    it->second->requires(comp->dw, var, pss, mss, Ghost::None);
-	  }
+
+	// Make the reduction task require its variable for the appropriate
+	// patch and materials subset(s).
+	if (comp->patches != 0) {
+	  if (comp->matls != 0)
+	    it->second->requires(comp->dw, var, comp->patches, comp->matls,
+				 Ghost::None);
+	  else
+	    addRequires(it->second, comp->dw, var, comp->patches, ms);
 	}
+	else if (comp->matls != 0)
+	  addRequires(it->second, comp->dw, var, ps, comp->matls);
+	else
+	  addRequires(it->second, comp->dw, var, ps, ms);
       }
     }
   }
@@ -656,8 +703,17 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
       default:
 	throw InternalError("Unknown matls_dom type");
       }
-      if(!patches && !matls)
-	ct.remembercomp(task, comp, 0, 0); // Reduction task
+      if(!patches) {
+	// Reduction task
+	if (matls && !matls->empty()) {
+	  ct.remembercomp(task, comp, 0, matls);
+	}
+	else {
+	  ct.remembercomp(task, comp, 0, 0);
+	  if (matls && matls->getReferenceCount() == 0)
+	    delete matls;
+	}
+      }
       else if(!patches->empty() && !matls->empty())
 	ct.remembercomp(task, comp, patches, matls);
       else {
@@ -668,6 +724,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
       }
     }
   }
+  
   // Go through the reqs and find the matching comp
   for(int i=0;i<dt->numTasks();i++){
     DetailedTask* task = dt->getTask(i);
@@ -726,14 +783,21 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	    for(int m=0;m<matls->size();m++){
 	      int matl = matls->get(m);
 	      DetailedTask* creator;
-	      Task::Dependency* comp;
+	      Task::Dependency* comp = 0;
 	      if(req->dw == Task::OldDW){
 		int proc = findVariableLocation(lb, pg, req, neighbor, matl);
 		creator = dt->getOldDWSendTask(proc);
 		comp=0;
 	      } else {
-		if(!ct.findcomp(req, neighbor, matl, creator, comp))
+		if(!ct.findcomp(req, neighbor, matl, creator, comp)) {
 		  throw InternalError("Failed to find comp for dep!");
+		}
+		/*
+		if (comp && comp->var)
+		  cerr << comp->var->getName() << " on matl " << matl << endl;
+		else
+		  cerr << "unknown on matl " << matl << endl;
+		*/
 	      }
 	      IntVector l = Max(neighbor->getNodeLowIndex(), low);
 	      IntVector h = Min(neighbor->getNodeHighIndex(), high);
