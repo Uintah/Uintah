@@ -270,6 +270,8 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
   scheduleCCMomExchange(                          sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   all_matls);
+  d_ice->scheduleComputeLagrangianSpecificVolume( sched, patches, press_matl,
+								  all_matls);
   scheduleInterpolateCCToNC(                      sched, patches, mpm_matls);
   d_mpm->scheduleExMomIntegrated(                 sched, patches, mpm_matls);
   d_mpm->scheduleSetGridBoundaryConditions(       sched, patches, mpm_matls);
@@ -419,17 +421,21 @@ void MPMICE::scheduleCCMomExchange(SchedulerP& sched,
   t->computes(Ilb->mom_L_ME_CCLabel,     ice_matls);
   t->computes(Ilb->int_eng_L_ME_CCLabel, ice_matls);
   t->requires(Task::NewDW, Ilb->mass_L_CCLabel, ice_matls, Ghost::None);
+  t->requires(Task::OldDW, Ilb->temp_CCLabel,   ice_matls, Ghost::None);
 
                                  // M P M
   t->computes(MIlb->dTdt_CCLabel, mpm_matls);
   t->computes(MIlb->dvdt_CCLabel, mpm_matls);
   t->requires(Task::NewDW,  Ilb->rho_CCLabel,   mpm_matls, Ghost::None);
+  t->requires(Task::NewDW,  Ilb->temp_CCLabel,  mpm_matls, Ghost::None);
 
                                 // A L L  M A T L S
   t->requires(Task::NewDW,  Ilb->mom_L_CCLabel,     Ghost::None);
   t->requires(Task::NewDW,  Ilb->int_eng_L_CCLabel, Ghost::None);
   t->requires(Task::NewDW,  Ilb->rho_micro_CCLabel, Ghost::None);
   t->requires(Task::NewDW,  Ilb->vol_frac_CCLabel,  Ghost::None);
+  t->computes(Ilb->Tdot_CCLabel);
+
 
   sched->addTask(t, patches, all_matls);
 }
@@ -462,11 +468,11 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
          with the addition of MPM matls
 _____________________________________________________________________*/
 void MPMICE::scheduleComputeNonEquilibrationPressure(SchedulerP& sched,
-					         const PatchSet* patches,
+					    const PatchSet* patches,
                                             const MaterialSubset* ice_matls,
                                             const MaterialSubset* mpm_matls,
                                             const MaterialSubset* press_matl,
-					         const MaterialSet*    all_matls)
+					    const MaterialSet*    all_matls)
 {
   cout_doing << "MPMICE::scheduleComputeNonEquilibrationPressure" << endl;
 
@@ -490,6 +496,7 @@ void MPMICE::scheduleComputeNonEquilibrationPressure(SchedulerP& sched,
   t->computes(Ilb->rho_CCLabel);
   t->computes(Ilb->matl_press_CCLabel);
   t->computes(Ilb->f_theta_CCLabel);
+
   t->computes(Ilb->press_equil_CCLabel, press_matl);
 
   sched->addTask(t, patches, all_matls);
@@ -795,7 +802,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       new_dw->allocate(cvolume,   MIlb->cVolumeLabel,     matlindex, patch);
       new_dw->allocate(vel_CC,    MIlb->vel_CCLabel,      matlindex, patch);
       new_dw->allocate(Temp_CC,   MIlb->temp_CCLabel,     matlindex, patch);
-  
+      double rho_orig = mpm_matl->getInitialDensity();
       double very_small_mass = d_SMALL_NUM * cell_vol;
       cmass.initialize(very_small_mass);
       cvolume.initialize( very_small_mass/rho_orig);
@@ -1037,6 +1044,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     StaticArray<CCVariable<double> > mass_L_temp(numALLMatls);
     StaticArray<constCCVariable<double> > mass_L(numALLMatls);
     StaticArray<constCCVariable<double> > rho_CC(numALLMatls);
+    StaticArray<constCCVariable<double> > old_temp(numALLMatls);
+    StaticArray<CCVariable<double> > Tdot(numALLMatls);
 
     vector<double> b(numALLMatls);
     vector<double> density(numALLMatls);
@@ -1060,9 +1069,11 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       if(mpm_matl){                   // M P M
         new_dw->allocate(vel_CC[m],  MIlb->velstar_CCLabel,     dwindex, patch);
         new_dw->allocate(Temp_CC[m], MIlb->temp_CC_scratchLabel,dwindex, patch);
-        new_dw->allocate(mass_L_temp[m],  Ilb->mass_L_CCLabel, dwindex, patch);
+        new_dw->allocate(mass_L_temp[m],  Ilb->mass_L_CCLabel,  dwindex, patch);
 
         new_dw->get(rho_CC[m],        Ilb->rho_CCLabel,         dwindex, patch,
+							        Ghost::None, 0);
+        new_dw->get(old_temp[m],      Ilb->temp_CCLabel,        dwindex, patch,
 							        Ghost::None, 0);
         cv[m] = mpm_matl->getSpecificHeat();
       }
@@ -1070,6 +1081,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
         new_dw->allocate(vel_CC[m], Ilb->vel_CCLabel,     dwindex, patch);
         new_dw->allocate(Temp_CC[m],Ilb->temp_CCLabel,    dwindex, patch);
         new_dw->get(mass_L[m],      Ilb->mass_L_CCLabel,  dwindex, patch,
+							  Ghost::None, 0);
+        old_dw->get(old_temp[m],    Ilb->temp_CCLabel,    dwindex, patch,
 							  Ghost::None, 0);
         cv[m] = ice_matl->getSpecificHeat();
       }                             // A L L  M A T L S
@@ -1086,6 +1099,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       new_dw->allocate(dTdt_CC[m], MIlb->dTdt_CCLabel,      dwindex, patch);
       new_dw->allocate(mom_L_ME[m], Ilb->mom_L_ME_CCLabel,  dwindex,patch);
       new_dw->allocate(int_eng_L_ME[m],Ilb->int_eng_L_ME_CCLabel,dwindex,patch);
+      new_dw->allocate(Tdot[m],     Ilb->Tdot_CCLabel,      dwindex,patch);
 
       dvdt_CC[m].initialize(zero);
       dTdt_CC[m].initialize(0.);
@@ -1244,6 +1258,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       for (int m = 0; m < numALLMatls; m++) {
           int_eng_L_ME[m][*iter] = Temp_CC[m][*iter] * cv[m] * mass_L[m][*iter];
           mom_L_ME[m][*iter]     = vel_CC[m][*iter]          * mass_L[m][*iter];
+	  Tdot[m][*iter] = (Temp_CC[m][*iter] - old_temp[m][*iter])/delT;
       }
     }
     //---- P R I N T   D A T A ------ 
@@ -1278,7 +1293,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
        if(mpm_matl){
         new_dw->put(dvdt_CC[m],MIlb->dvdt_CCLabel,dwindex,patch);
         new_dw->put(dTdt_CC[m],MIlb->dTdt_CCLabel,dwindex,patch);
-      }
+       }
+       new_dw->put(Tdot[m],Ilb->Tdot_CCLabel,dwindex, patch);
     }  
   } //patches
 }
@@ -1399,10 +1415,8 @@ void MPMICE::computeNonEquilibrationPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > sp_vol_CC(numALLMatls);
     StaticArray<constCCVariable<double> > mat_vol(numALLMatls);
     StaticArray<constCCVariable<double> > mass_CC(numALLMatls);
-    constCCVariable<double> press;
     CCVariable<double> press_new; 
 
-    old_dw->get(press,         Ilb->press_CCLabel, 0,patch,Ghost::None, 0); 
     new_dw->allocate(press_new,Ilb->press_equil_CCLabel, 0,patch);
     
     for (int m = 0; m < numALLMatls; m++) {
