@@ -1042,7 +1042,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 				       DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw)
 {
-  double    converg_coeff = 10;
+  double    converg_coeff = 60.;
   double    convergence_crit = converg_coeff * DBL_EPSILON;
   double    sum, tmp;
   int numICEMatls = d_sharedState->getNumICEMatls();
