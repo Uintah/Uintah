@@ -2,7 +2,7 @@
 
 SRCDIR := Core/Algorithms
 
-SUBDIRS := $(SRCDIR)/Visualization 
+SUBDIRS := $(SRCDIR)/SurfSimplification
 
 include $(SRCTOP)/scripts/recurse.mk
 
