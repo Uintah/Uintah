@@ -111,9 +111,9 @@ int SoundIPort::is_stereo()
 void SoundIPort::do_read(int fin)
 {
     if(fin)
-	turn_on(Finishing);
+	if (module->show_status) turn_on(Finishing);
     else
-	turn_on();
+	if (module->show_status) turn_on();
     SoundComm* comm;
     comm=mailbox.receive();
     switch(comm->action){
@@ -141,13 +141,13 @@ void SoundIPort::do_read(int fin)
 	break;
     }
     delete comm;
-    turn_off();
+    if (module->show_status) turn_off();
 }
 
 void SoundOPort::finish()
 {
     // Flush the stream and send an end of stream marker...
-    turn_on();
+    if (module->show_status) turn_on();
     if(!in){
 	Connection* connection=connections[0];
 	in=(SoundIPort*)connection->iport;
@@ -165,7 +165,7 @@ void SoundOPort::finish()
     comm->action=SoundComm::EndOfStream;
     in->mailbox.send(comm);
     state=End;
-    turn_off();
+    if (module->show_status) turn_off();
 }
 
 void SoundOPort::set_nsamples(int s)
@@ -191,7 +191,7 @@ void SoundOPort::put_sample(double s)
     ASSERT(state != End);
     if(state == Begin){
 	// Send the Parameters message...
-	turn_on();
+	if (module->show_status) turn_on();
 	SoundComm* comm=scinew SoundComm;
 	comm->action=SoundComm::Parameters;
 	comm->sample_rate=rate;
@@ -205,7 +205,7 @@ void SoundOPort::put_sample(double s)
 	state=Transmitting;
 	sbufsize=(int)(rate/10);
 	ptr=0;
-	turn_off();
+	if (module->show_status) turn_off();
     }
     if(!sbuf){
 	sbuf=scinew double[sbufsize];
@@ -214,7 +214,7 @@ void SoundOPort::put_sample(double s)
     sbuf[ptr++]=s;
     if(ptr >= sbufsize){
 	// Send it away...
-	turn_on();
+	if (module->show_status) turn_on();
 	SoundComm* comm=scinew SoundComm;
 	comm->action=SoundComm::SoundData;
 	comm->sbufsize=sbufsize;
@@ -223,7 +223,7 @@ void SoundOPort::put_sample(double s)
 	in->mailbox.send(comm);
 	sbuf=0;
 	ptr=0;
-	turn_off();
+	if (module->show_status) turn_off();
     }
 }
 
@@ -248,6 +248,9 @@ void SoundOPort::resend(Connection*)
 
 //
 // $Log$
+// Revision 1.7  1999/11/11 19:56:37  dmw
+// added show_status check for GeometryPort and SoundPort
+//
 // Revision 1.6  1999/10/07 02:07:21  sparker
 // use standard iostreams and complex type
 //
