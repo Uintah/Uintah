@@ -364,7 +364,7 @@ handle_abort_signals(int sig, struct sigcontext ctx)
 }
 
 int
-Thread::get_tid()
+Thread::get_thread_id()
 {
     return d_priv->threadid;
 }
@@ -808,6 +808,9 @@ ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.12  1999/10/15 20:56:52  ikits
+// Fixed conflict w/ get_tid in /usr/include/task.h. Replaced by get_thread_id.
+//
 // Revision 1.11  1999/10/13 21:01:38  sparker
 // Fixed timedWait for pthreads
 //
