@@ -20,13 +20,13 @@ using namespace SCIRun;
 
 // creates the background texture
 void
-Volvis2DDpy::createBGText( void ) {
+Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
   int i, j;
   float c;
   // creates volume-data scatter plot
   for( int n = 0; n < volumes.size(); n++ ) {
     // declare/initialize histogram array
-    float hist[textureHeight][textureWidth];
+    float hist[textureHeight*2][textureWidth*2];
     for( int y = 0; y < textureHeight; y++ )
       for( int x = 0; x < textureWidth; x++ )
 	hist[y][x] = 0.0f;
@@ -301,6 +301,11 @@ void
 Volvis2DDpy::init() {
   // clamps ridiculously high gradient magnitudes
   gmax = min( gmax, MAXFLOAT );
+  vmax = min( vmax, MAXFLOAT );
+  selected_vmin = current_vmin = vmin;
+  selected_vmax = current_vmax = vmax;
+  selected_gmin = current_gmin = gmin;
+  selected_gmax = current_gmax = gmax;
   glViewport( 0, 0, 500, 300 );
   pickedIndex = -1;
   x_pixel_width = 1.0;
@@ -311,7 +316,7 @@ Volvis2DDpy::init() {
   glOrtho( 0.0, 500.0, 0.0, 300.0, -1.0, 1.0 );
   glDisable( GL_DEPTH_TEST );
 
-  createBGText();
+  createBGText( vmin, vmax, gmin, gmax );
   glPixelStoref( GL_UNPACK_ALIGNMENT, 1 );
   glGenTextures( 1, &bgTextName );
   glBindTexture( GL_TEXTURE_2D, bgTextName );
@@ -343,12 +348,39 @@ Volvis2DDpy::display() {
   loadCleanTexture();
   drawBackground();
   drawWidgets( GL_RENDER );
-  char text[20];
+  char text[50];
   Color textColor = Color( 1.0, 1.0, 1.0 );
+  if( hist_adjust ) {
+    glColor4f( 0.0f, 0.7f, 0.6f, 0.5f );
+    glBegin( GL_LINE_LOOP );
+    glVertex2f( (selected_vmin-current_vmin)/(current_vmax-current_vmin)*
+		490.0f+5.0f,
+		(selected_gmin-current_gmin)/(current_gmax-current_gmin)*
+		240.0f+55.0f );
+    glVertex2f( (selected_vmin-current_vmin)/(current_vmax-current_vmin)*
+		490.0f+5.0f,
+		(selected_gmax-current_gmin)/(current_gmax-current_gmin)*
+		240.0f+55.0f );
+    glVertex2f( (selected_vmax-current_vmin)/(current_vmax-current_vmin)*
+		490.0f+5.0f,
+		(selected_gmax-current_gmin)/(current_gmax-current_gmin)*
+		240.0f+55.0f );
+    glVertex2f( (selected_vmax-current_vmin)/(current_vmax-current_vmin)*
+		490.0f+5.0f,
+		(selected_gmin-current_gmin)/(current_gmax-current_gmin)*
+		240.0f+55.0f );
+    glEnd();
+    sprintf( text, "selected view: [%.5g,%.5g] x [%.5g,%.5g]", selected_vmin, selected_vmax, 
+	     selected_gmin, selected_gmax );
+    printString( fontbase, 200, 10, text, textColor );
+  }
   sprintf( text, "master alpha = %.3g", master_alpha );
   printString( fontbase, 10, 25, text, textColor );
   sprintf( text, "t_inc = %.6g", t_inc );
   printString( fontbase, 10, 10, text, textColor );
+  sprintf( text, "current hist view: [%.5g,%.5g] x [%.5g,%.5g]", current_vmin, 
+	   current_vmax, current_gmin, current_gmax);
+  printString( fontbase, 185, 25, text, textColor );
   glFlush();
   glXSwapBuffers(dpy, win);
 } // display()
@@ -378,9 +410,11 @@ Volvis2DDpy::adjustRaySize( unsigned long key ) {
   switch( key ) {
   case XK_Page_Up:
     t_inc *= 2;
+    t_inc_diff *= 2;
     break;
   case XK_Page_Down:
     t_inc *= 0.5;
+    t_inc_diff *= 0.5;
     break;
   } // switch()
   redraw = true;
@@ -398,6 +432,33 @@ Volvis2DDpy::key_pressed(unsigned long key) {
   case XK_Escape:
     close_display();
     exit(0);
+    break;
+  case XK_h:
+  case XK_H:
+    hist_adjust = !hist_adjust;
+    redraw = true;
+    break;
+  case XK_c:
+  case XK_C:
+    current_vmin = selected_vmin;
+    current_vmax = selected_vmax;
+    current_gmin = selected_gmin;
+    current_gmax = selected_gmax;
+    text_x_convert = ((float)textureWidth-1.0f)/(current_vmax-current_vmin);
+    text_y_convert = ((float)textureHeight-1.0f)/(current_gmax-current_gmin);
+    createBGText( selected_vmin, selected_vmax, selected_gmin, selected_gmax );
+    redraw = true;
+    break;
+  case XK_r:
+  case XK_R:
+    selected_vmin = current_vmin = vmin;
+    selected_vmax = current_vmax = vmax;
+    selected_gmin = current_gmin = gmin;
+    selected_gmax = current_gmax = gmax;
+    text_x_convert = ((float)textureWidth-1.0f)/(current_vmax-current_vmin);
+    text_y_convert = ((float)textureHeight-1.0f)/(current_gmax-current_gmin);
+    createBGText( vmin, vmax, gmin, gmax );
+    redraw = true;
     break;
   case XK_s:
   case XK_S:
@@ -442,6 +503,36 @@ Volvis2DDpy::key_pressed(unsigned long key) {
 // window.
 void
 Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y) {
+  if( hist_adjust ) {
+//      selected_vmin = (float)x/x_pixel_width-5.0f;
+//      if( selected_vmin < 0.0f )
+//        selected_vmin = 0.0f;
+//      else if( selected_vmin > 490.0f )
+//        selected_vmin = 490.0f;
+//      selected_vmin *= (current_vmax-current_vmin)/490.0f;
+
+//      selected_gmin = (500.0f-(float)y)/y_pixel_width-255.0f;
+//      if( selected_gmin < 0.0f )
+//        selected_gmin = 0.0f;
+//      else if( selected_gmin > 240.0f )
+//        selected_gmin = 240.0f;
+//      selected_gmin *= (current_gmax-current_gmin)/240.0f;
+    float fx = ((float)x/x_pixel_width-5.0f)/490.0f;
+    selected_vmin = fx*(current_vmax-current_vmin)+current_vmin;
+    float fy = ((300.0f-(float)y)/y_pixel_width-55.0f)/240.0f;
+    selected_gmin = fy*(current_gmax-current_gmin)+current_gmin;
+
+    if( selected_vmin < current_vmin )
+      selected_vmin = current_vmin;
+    else if( selected_vmin > current_vmax )
+      selected_vmin = current_vmax;
+    if( selected_gmin < current_gmin )
+      selected_gmin = current_gmin;
+    else if( selected_gmin > current_gmax )
+      selected_gmin = current_gmax;
+
+    return;
+  }
   old_x = x;
   old_y = y;
   switch( button ) {
@@ -486,6 +577,57 @@ Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y) {
 
 void
 Volvis2DDpy::button_released(MouseButton button, const int x, const int y) {
+  if( hist_adjust ) {
+//      float hist_x = (float)x/x_pixel_width-5.0f;
+//      float hist_y = (500.0f-(float)y)/y_pixel_width-255.0f;
+
+//      if( hist_x < 0.0f )
+//        hist_x = 0.0f;
+//      else if( hist_x > 490.0f )
+//        hist_x = 490.0f;
+
+//      if( hist_y < 0.0f )
+//        hist_y = 0.0f;
+//      else if( hist_y > 240.0f )
+//        hist_y = 240.0f;
+
+//      hist_x *= (current_vmax-current_vmin)/490.0f;
+//      hist_y *= (current_gmax-current_gmin)/240.0f;
+
+    float hist_x = ((float)x/x_pixel_width-5.0f)/490.0f;
+    float hist_y = ((300.0f-(float)y)/y_pixel_width-55.0f)/240.0f;
+
+    if( hist_x < 0.0f )
+      hist_x = 0.0f;
+    else if( hist_x > 1.0f )
+      hist_x = 1.0f;
+
+    if( hist_y < 0.0f )
+      hist_y = 0.0f;
+    else if( hist_y > 1.0f )
+      hist_y = 1.0f;
+
+    hist_x = hist_x*(current_vmax-current_vmin)+current_vmin;
+    hist_y = hist_y*(current_gmax-current_gmin)+current_gmin;
+
+    if( hist_x == selected_vmin || hist_y == selected_gmin )
+      return;
+    if( hist_x < selected_vmin ) {
+      selected_vmax = selected_vmin;
+      selected_vmin = hist_x;
+    }
+    else
+      selected_vmax = hist_x;
+    if( hist_y < selected_gmin ) {
+    selected_gmax = selected_gmin;
+    selected_gmin = hist_y;
+    }
+    else
+      selected_gmax = hist_y;
+
+    redraw = true;
+    return;
+  }
   if( pickedIndex >= 0 )
     widgets[pickedIndex]->drawFlag = 0;
   fflush( stdout );
@@ -497,6 +639,18 @@ Volvis2DDpy::button_released(MouseButton button, const int x, const int y) {
 
 void
 Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
+  if( hist_adjust ) {
+//      selected_vmax = (((float)x/x_pixel_width-5.0f)*
+//  		     (current_vmax-current_vmin))/490.0f;
+//      selected_gmax = (((500.0f-(float)y)/y_pixel_width-255.0f)*
+//  		     (current_gmax-current_gmin))/240.0f;
+    float fx = ((float)x/x_pixel_width-5.0f)/490.0f;
+    selected_vmax = fx*(current_vmax-current_vmin)+current_vmin;
+    float fy = ((300.0f-(float)y)/y_pixel_width-55.0f)/240.0f;
+    selected_gmax = fy*(current_gmax-current_gmin)+current_gmin;
+    redraw = true;
+    return;
+  }
   if( button == MouseButton1 ) {
     // if the user has selected a widget by its frame
     if( pickedIndex >= 0 && widgets[pickedIndex]->drawFlag != 6 )
@@ -551,10 +705,13 @@ Volvis2DDpy::attach( VolumeVis2D* volume ) {
 
   // this needs to be done here, because we can't guarantee
   // that setup_vars will get called before VolumeVis starts cranking!
+  t_inc_diff = 1.0f;
   vmin = min(vmin, volume->data_min.v());
   vmax = max(vmax, volume->data_max.v());
   gmin = min(gmin, volume->data_min.g());
   gmax = max(gmax, volume->data_max.g());
+  text_x_convert = ((float)textureWidth-1.0f)/(vmax-vmin);
+  text_y_convert = ((float)textureHeight-1.0f)/(gmax-gmin);
 } // attach()
 
 
@@ -562,17 +719,15 @@ Volvis2DDpy::attach( VolumeVis2D* volume ) {
 // retrieves RGBA values from a voxel
 void
 Volvis2DDpy::lookup( Voxel2D<float> voxel, Color &color, float &alpha ) {
-  if( voxel.v() >= vmin && voxel.v() <= vmax &&
-      voxel.g() >= gmin && voxel.g() <= gmax ) {
-    //      float linear_factor = 1.0f/(vmax-vmin);
-    int x_index = (int)((voxel.v()-vmin)/(vmax-vmin)*(textureWidth-1));
-    //      linear_factor = 1.0f/(gmax-gmin);
-    int y_index = (int)((voxel.g()-gmin)/(gmax-gmin)*(textureHeight-1));
-    if( transTexture1->textArray[y_index][x_index][3] == 0 )
+  if( voxel.g() < current_gmax && voxel.v() < current_vmax &&
+      voxel.g() > current_gmin && voxel.v() > current_vmin ) {
+    int x_index = (int)((voxel.v()-current_vmin)*text_x_convert);
+    int y_index = (int)((voxel.g()-current_gmin)*text_y_convert);
+    if( transTexture1->textArray[y_index][x_index][3] == 0.0f )
       alpha = 0.0f;
     else {
       alpha = 1-powf( 1-transTexture1->textArray[y_index][x_index][3],
-		      t_inc/original_t_inc );
+		      t_inc_diff );
       color = Color( transTexture1->textArray[y_index][x_index][0],
 		     transTexture1->textArray[y_index][x_index][1],
 		     transTexture1->textArray[y_index][x_index][2] );
@@ -637,6 +792,12 @@ Volvis2DDpy::saveUIState( unsigned long key ) {
     perror( "Could not open saved state!\n" );
     exit( 1 );
   } // if()
+
+  // save file header containing histogram information
+  outfile << "HistogramParameters: "
+          << current_vmin << ' ' << current_vmax << ' '
+          << current_gmin << ' ' << current_gmax << "\n\n";
+
   for( int i = 0; i < widgets.size(); i++ ) {
     // if widget is a TriWidget...
     if( widgets[i]->type == 0 ) {
@@ -771,18 +932,32 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
   for( int i = (size-1); i >= 0; i-- )
     widgets.pop_back();
   string token;
+  infile >> token;
+  if( token == "HistogramParameters:" ) {
+    float vmn, vmx, gmn, gmx;
+    infile >> vmn >> vmx >> gmn >> gmx;
+    createBGText( vmn, vmx, gmn, gmx );
+    current_vmin = selected_vmin = vmn;
+    current_vmax = selected_vmax = vmx;
+    current_gmin = selected_gmin = gmn;
+    current_gmax = selected_gmax = gmx;
+    text_x_convert = ((float)textureWidth-1.0f)/(current_vmax-current_vmin);
+    text_y_convert = ((float)textureHeight-1.0f)/(current_gmax-current_gmin);
+  }
   while( !infile.eof() ) {
     infile >> token;
     while( token != "TriWidget" && token != "RectWidget" && !infile.eof() )
       infile >> token;
     // if widget is a TriWidget...
     if( token == "TriWidget" ) {
-      float lV0, lV1, mLV0, mLV1, mRV0, mRV1, uLV0, uLV1, uRV0, uRV1, red,
-	green, blue, alpha, opac_x, opac_y, text_red, text_green, text_blue;
-      int text_x_off, text_y_off, switchFlag;
-      lV0 = lV1 = mLV0 = mLV1 = mRV0 = mRV1 = uLV0 = uLV1 = uRV0 = uRV1 = red = green
-	= blue = alpha = opac_x = opac_y = text_red = text_green = text_blue = 0.0f;
-      text_x_off = text_y_off = switchFlag = 0;
+      float lV0 = 0.0f;       float lV1 = 0.0f;      float mLV0 = 0.0f;
+      float mLV1 = 0.0f;      float mRV0 = 0.0f;     float mRV1 = 0.0f;
+      float uLV0 = 0.0f;      float uLV1 = 0.0f;     float uRV0 = 0.0f;
+      float uRV1 = 0.0f;      float red = 0.0f;      float green = 0.0f;
+      float blue = 0.0f;      float alpha = 0.0f;    float opac_x = 0.0f;
+      float opac_y = 0.0f;    float text_red = 0.0f; float text_green = 0.0f;
+      float text_blue = 0.0f; int text_x_off = 0;    int text_y_off = 0;
+      int switchFlag = 0;
       while( token != "//TriWidget" ) {
 	infile >> token;
 	if( token == "LowerVertex:" ) {
@@ -826,17 +1001,21 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
 	  infile >> token;
 	} // if()
       } // while()
-      widgets.push_back( new TriWidget( lV0, mLV0, mLV1, mRV0, mRV1, uLV0, uLV1, uRV0, uRV1, red, green, blue, alpha, opac_x, opac_y, text_red, text_green, text_blue, text_x_off, text_y_off, switchFlag ) );
+      widgets.push_back( new TriWidget( lV0, mLV0, mLV1, mRV0, mRV1, uLV0,
+					uLV1, uRV0, uRV1, red, green, blue,
+					alpha, opac_x, opac_y, text_red,
+					text_green, text_blue, text_x_off, 
+					text_y_off, switchFlag ) );
     } // if()
     // if widget is a RectWidget...
     else if( token == "RectWidget" ) {
-      int type = -1;
-      float left, top, width, height, red, green, blue, alpha, focus_x,
-	focus_y, opac_x, opac_y, text_red, text_green, text_blue;
-      int text_x_off, text_y_off, switchFlag;
-      left = top = width = height = red = green = blue = alpha = focus_x =
-	focus_y = opac_x = opac_y = text_red = text_green = text_blue = 0.0f;
-      text_x_off = text_y_off = switchFlag = 0;
+      int type = -1;          float left = 0.0f;     float top = 0.0f;
+      float width = 0.0f;     float height = 0.0f;   float red = 0.0f;
+      float green = 0.0f;     float blue = 0.0f;     float alpha = 0.0f;
+      float focus_x = 0.0f;   float focus_y = 0.0f;  float opac_x = 0.0f;
+      float opac_y = 0.0f;    float text_red = 0.0f; float text_green = 0.0f;
+      float text_blue = 0.0f; int text_x_off = 0;    int text_y_off = 0;
+      int switchFlag = 0;
       while( token != "//RectWidget" ) {
 	infile >> token;
 	if( token == "Type:" ) {
@@ -880,10 +1059,11 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
 	  infile >> token;
 	} // if()
       } // else while()
-      widgets.push_back( new RectWidget( type, left, top, width, height, red, green,
-					 blue, alpha, focus_x, focus_y, opac_x, 
-					 opac_y, text_red, text_green, text_blue, 
-					 text_x_off, text_y_off, switchFlag ) );
+      widgets.push_back( new RectWidget( type, left, top, width, height, red,
+					 green, blue, alpha, focus_x, focus_y, 
+					 opac_x, opac_y, text_red, text_green,
+					 text_blue, text_x_off, text_y_off,
+					 switchFlag ) );
     } // else if()
   } // while()
   printf( "Loaded state %d successfully.\n", stateNum );
@@ -893,10 +1073,12 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
 
 
 
-// sets window resolution and initializes textures before any other calls are made
+// sets window res. and initializes textures before any other calls are made
 Volvis2DDpy::Volvis2DDpy( float t_inc ):DpyBase("Volvis2DDpy"),
-					t_inc(t_inc), vmin(MAXFLOAT), vmax(-MAXFLOAT),
-					gmin(MAXFLOAT), gmax(-MAXFLOAT) {
+					t_inc(t_inc), vmin(MAXFLOAT),
+					vmax(-MAXFLOAT), gmin(MAXFLOAT),
+					gmax(-MAXFLOAT) {
+  hist_adjust = false;
   master_alpha = 1.0f;
   m_alpha_adjusting = false;
   m_alpha_slider = new GLBar( 250.0f, 40.0f, 20.0f, 0.0f, 0.7f, 0.8f );
