@@ -61,6 +61,20 @@ static DebugStream amr_doing("AMRMPM", false);
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
 extern Mutex cerrLock;
 
+static int face_index(Patch::FaceType f)
+{
+  switch(f) { 
+  case Patch::xminus: return 0;
+  case Patch::xplus:  return 1;
+  case Patch::yminus: return 2;
+  case Patch::yplus:  return 3;
+  case Patch::zminus: return 4;
+  case Patch::zplus:  return 5;
+  default:
+    return -1; // oops !
+  }
+}
+
 // ----------------------------------------------------------------------
 
 SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
@@ -578,8 +592,9 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
      
     for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
         ftit!=d_bndy_traction_faces.end();ftit++) {
-      int iface = (int)(*ftit); // FIXME: makes some suspect assumptions about enums
-      t->computes(lb->BndyForceLabel[iface]); // node based
+      int iface = face_index(*ftit);
+      t->computes(lb->BndyForceLabel[iface]);       // node based
+      t->computes(lb->BndyContactAreaLabel[iface]); // node based
     }
     
   }
@@ -1528,8 +1543,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 {
   // node based forces
   Vector bndyForce[6];
+  double bndyArea[6];
   for(int iface=0;iface<6;iface++) {
       bndyForce[iface]  = Vector(0.);
+      bndyArea [iface]  = 0.;
   }
   double partvoldef = 0.;
   
@@ -1569,6 +1586,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       constParticleVariable<Vector>  psize;
       constParticleVariable<double>  pErosion;
       NCVariable<Vector>             internalforce;
+      constNCVariable<double>        gvolume;
       NCVariable<Matrix3>            gstress;
       constNCVariable<double>        gmass;
 
@@ -1584,6 +1602,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         old_dw->get(psize, lb->pSizeLabel,                   pset);
       }
       new_dw->get(gmass,   lb->gMassLabel, dwi, patch, Ghost::None, 0);
+      new_dw->get(gvolume, lb->gMassLabel, dwi, patch, Ghost::None, 0);
       new_dw->get(pErosion,lb->pErosionLabel_preReloc,       pset);
 
       new_dw->allocateAndPut(gstress,      lb->gStressForSavingLabel,dwi,patch);
@@ -1661,8 +1680,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       for(list<Patch::FaceType>::const_iterator fit(d_bndy_traction_faces.begin()); 
           fit!=d_bndy_traction_faces.end();fit++) {       
         Patch::FaceType face = *fit;
-        int iface = (int)face; // FIXME: enum -> int
-           
+        int iface = face_index(face);
+        
         // Check if the face is on an external boundary
         if(patch->getBCType(face)==Patch::Neighbor)
            continue;
@@ -1670,18 +1689,21 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         // We are on the boundary, i.e. not on an interior patch
         // boundary, and also on the correct side, 
         // so do the traction accumulation . . .
-
-        const IntVector blocklow  = patch->getInteriorNodeLowIndex();
-        const IntVector blockhigh = patch->getInteriorNodeHighIndex();
+        // loop nodes to find forces
         IntVector projlow, projhigh;
         patch->getFaceNodes(face, 0, projlow, projhigh);
-        // cout << "face " << Patch::getFaceName(face) << ", proj range = " << projlow << "," << projhigh << ", bctype = " << patch->getBCType(face) << endl;
-
+        
         for (int i = projlow.x(); i<projhigh.x(); i++) {
           for (int j = projlow.y(); j<projhigh.y(); j++) {
             for (int k = projlow.z(); k<projhigh.z(); k++) {
-              bndyForce[iface] += internalforce[IntVector(i,j,k)];
-            } 
+              // flip sign so that pushing on boundary gives positive force
+              bndyForce[iface] -= internalforce[IntVector(i,j,k)];
+              
+              double celldepth  = dx[iface/2];
+              // FIXME: use NC_CCweights to get this factor.
+              double nodaldepth = celldepth/2.; // made up factor, since node only sees half the cell !
+              bndyArea [iface] += gvolume[IntVector(i,j,k)]/nodaldepth;
+            }
           }
         }
         
@@ -1708,8 +1730,9 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
   // it will fail early rather than just giving zeros.
   for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
       ftit!=d_bndy_traction_faces.end();ftit++) {
-    int iface = (int)(*ftit); // FIXME: makes some suspect assumptions about enums
+    int iface = face_index(*ftit);
     new_dw->put(sumvec_vartype(bndyForce[iface]),lb->BndyForceLabel[iface]);
+    new_dw->put(sum_vartype(bndyArea [iface]),lb->BndyContactAreaLabel[iface]);
   }
   
 }
