@@ -5,7 +5,7 @@
 // be used for example when a single velocity field is
 // present in the problem, so doing contact wouldn't make
 // sense.
-
+#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/NullContact.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
@@ -20,9 +20,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 using namespace Uintah;
-
-#define FRACTURE
-#undef FRACTURE
 
 NullContact::NullContact(ProblemSpecP& ps, SimulationStateP& d_sS,MPMLabel* Mlb)
 {

@@ -1,3 +1,4 @@
+#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
@@ -25,9 +26,6 @@ using namespace Uintah;
 using std::vector;
 using std::cerr;
 using std::ofstream;
-
-#define FRACTURE
-#undef FRACTURE
 
 ParticleCreator::ParticleCreator(MPMMaterial* matl, 
                                  MPMLabel* lb,

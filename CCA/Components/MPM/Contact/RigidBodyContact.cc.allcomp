@@ -1,5 +1,5 @@
 // RigidBodyContact.cc
-
+#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/RigidBodyContact.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
@@ -25,9 +25,6 @@
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
-
-#define FRACTURE
-#undef FRACTURE
 
 RigidBodyContact::RigidBodyContact(ProblemSpecP& ps, 
 				    SimulationStateP& d_sS, MPMLabel* Mlb)

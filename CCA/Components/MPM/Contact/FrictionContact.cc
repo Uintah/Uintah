@@ -1,4 +1,4 @@
-
+#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/FrictionContact.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Core/Geometry/Vector.h>
@@ -31,9 +31,6 @@ using std::string;
 using namespace std;
 
 #define MAX_BASIS 27
-
-#define FRACTURE
-#undef FRACTURE
 
 FrictionContact::FrictionContact(ProblemSpecP& ps,SimulationStateP& d_sS,
                                  MPMLabel* Mlb,int n8or27)

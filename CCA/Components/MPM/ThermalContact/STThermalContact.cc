@@ -1,3 +1,4 @@
+#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/STThermalContact.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
@@ -10,9 +11,6 @@
 #include <vector>
 
 using namespace Uintah;
-
-#define FRACTURE
-#undef FRACTURE
 
 STThermalContact::STThermalContact(ProblemSpecP&,SimulationStateP& d_sS,
 								 MPMLabel* Mlb)

@@ -1,5 +1,5 @@
-
 #include "HyperElasticPlastic.h"
+#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DamageModelFactory.h>
@@ -28,9 +28,6 @@
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
-
-#define FRACTURE
-#undef FRACTURE
 
 HyperElasticPlastic::HyperElasticPlastic(ProblemSpecP& ps, 
                                          MPMLabel* Mlb, 
