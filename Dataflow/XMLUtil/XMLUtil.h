@@ -17,6 +17,9 @@ namespace SCIRun {
 #include <parsers/DOMParser.hpp>
 #include <dom/DOM_Node.hpp>
 #include <util/XMLUni.hpp>
+#ifdef XERCESDEFS_HPP
+#include <util/XMLUniDefs.hpp>
+#endif
 #ifdef __sgi
 #pragma reset woff 1375
 #endif
