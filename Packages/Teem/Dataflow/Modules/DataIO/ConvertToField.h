@@ -96,7 +96,6 @@ void
 fill_data(Fld *fld, Nrrd *inrrd, Iter &iter, Iter &end) 
 {
   typedef typename Fld::value_type val_t;
-  
   void *p = inrrd->data;
   while (iter != end) {
     val_t tmp;

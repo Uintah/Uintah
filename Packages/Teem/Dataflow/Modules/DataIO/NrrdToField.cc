@@ -65,7 +65,9 @@ NrrdToField::~NrrdToField()
 {
 }
 
-FieldHandle create_scanline_field(NrrdDataHandle &nrd) {
+FieldHandle 
+create_scanline_field(NrrdDataHandle &nrd) 
+{
   Nrrd *n = nrd->nrrd;
   for (int a = 0; a < 2; a++) {
     if (!(AIR_EXISTS(n->axis[a].min) && AIR_EXISTS(n->axis[a].max)))
@@ -80,53 +82,72 @@ FieldHandle create_scanline_field(NrrdDataHandle &nrd) {
   mh->end(end);
   FieldHandle fh;
 
-  switch (n->type) {
-  case nrrdTypeChar :  
-    fh = new ScanlineField<char>(mh, Field::NODE);
-    fill_data((ScanlineField<char>*)fh.get_rep(), n, iter, end);
-  break;
-  case nrrdTypeUChar : 
-    fh = new ScanlineField<unsigned char>(mh, Field::NODE);
-    fill_data((ScanlineField<unsigned char>*)fh.get_rep(), n, iter, end);
+  int mn_idx, mx_idx;
+  nrd->get_tuple_index_info(0, 0, mn_idx, mx_idx);
+  
+  switch (mx_idx) {
+  case 0:
+    switch (n->type) {
+    case nrrdTypeChar :  
+      fh = new ScanlineField<char>(mh, Field::NODE);
+      fill_data((ScanlineField<char>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeUChar : 
+      fh = new ScanlineField<unsigned char>(mh, Field::NODE);
+      fill_data((ScanlineField<unsigned char>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeShort : 
+      fh = new ScanlineField<short>(mh, Field::NODE);
+      fill_data((ScanlineField<short>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeUShort :
+      fh = new ScanlineField<unsigned short>(mh, Field::NODE);
+      fill_data((ScanlineField<unsigned short>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeInt : 
+      fh = new ScanlineField<int>(mh, Field::NODE);
+      fill_data((ScanlineField<int>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeUInt :  
+      fh = new ScanlineField<unsigned int>(mh, Field::NODE);
+      fill_data((ScanlineField<unsigned int>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeLLong : 
+      //fh = new ScanlineField<long long>(mh, Field::NODE);
+      //fill_data((ScanlineField<long long>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeULLong :
+      //fh = new ScanlineField<unsigned long long>(mh, Field::NODE);
+      //fill_data((ScanlineField<unsigned long long>*)fh.get_rep(), n,iter, end);
+      break;
+    case nrrdTypeFloat :
+      fh = new ScanlineField<float>(mh, Field::NODE);
+      fill_data((ScanlineField<float>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeDouble :
+      fh = new ScanlineField<double>(mh, Field::NODE);
+      fill_data((ScanlineField<double>*)fh.get_rep(), n, iter, end);
+      break;
+    }
+  case 2: // Vector
+    fh = new ScanlineField<Vector>(mh, Field::NODE);
+    fill_data((ScanlineField<Vector>*)fh.get_rep(), n, iter, end);
     break;
-  case nrrdTypeShort : 
-    fh = new ScanlineField<short>(mh, Field::NODE);
-    fill_data((ScanlineField<short>*)fh.get_rep(), n, iter, end);
+  case 5: // Tensor
+    fh = new ScanlineField<Tensor>(mh, Field::NODE);
+    fill_data((ScanlineField<Tensor>*)fh.get_rep(), n, iter, end);
     break;
-  case nrrdTypeUShort :
-    fh = new ScanlineField<unsigned short>(mh, Field::NODE);
-    fill_data((ScanlineField<unsigned short>*)fh.get_rep(), n, iter, end);
-    break;
-  case nrrdTypeInt : 
-    fh = new ScanlineField<int>(mh, Field::NODE);
-    fill_data((ScanlineField<int>*)fh.get_rep(), n, iter, end);
-    break;
-  case nrrdTypeUInt :  
-    fh = new ScanlineField<unsigned int>(mh, Field::NODE);
-    fill_data((ScanlineField<unsigned int>*)fh.get_rep(), n, iter, end);
-    break;
-  case nrrdTypeLLong : 
-    //fh = new ScanlineField<long long>(mh, Field::NODE);
-    //fill_data((ScanlineField<long long>*)fh.get_rep(), n, iter, end);
-    break;
-  case nrrdTypeULLong :
-    //fh = new ScanlineField<unsigned long long>(mh, Field::NODE);
-    //fill_data((ScanlineField<unsigned long long>*)fh.get_rep(), n,iter, end);
-    break;
-  case nrrdTypeFloat :
-    fh = new ScanlineField<float>(mh, Field::NODE);
-    fill_data((ScanlineField<float>*)fh.get_rep(), n, iter, end);
-    break;
-  case nrrdTypeDouble :
-    fh = new ScanlineField<double>(mh, Field::NODE);
-    fill_data((ScanlineField<double>*)fh.get_rep(), n, iter, end);
+  default:
+    cerr << "unknown index offset: " << mx_idx << endl;
+    ASSERTFAIL("Unknown data size");
     break;
   }
-
   return fh;
 }
 
-FieldHandle create_image_field(NrrdDataHandle &nrd) {
+FieldHandle 
+create_image_field(NrrdDataHandle &nrd) 
+{
   Nrrd *n = nrd->nrrd;
   for (int a = 0; a < 3; a++) {
     if (!(AIR_EXISTS(n->axis[a].min) && AIR_EXISTS(n->axis[a].max)))
@@ -135,60 +156,79 @@ FieldHandle create_image_field(NrrdDataHandle &nrd) {
   Point min(n->axis[1].min, n->axis[2].min, .0);
   Point max(n->axis[1].max, n->axis[2].max, .0);
   ImageMesh *m = new ImageMesh(n->axis[1].size, n->axis[2].size,
-				     min, max);
+			       min, max);
   ImageMeshHandle mh(m);
   ImageMesh::Node::iterator iter, end;
   mh->begin(iter);
   mh->end(end);
   FieldHandle fh;
-
-  switch (n->type) {
-  case nrrdTypeChar :  
-    fh = new ImageField<char>(mh, Field::NODE);
-    fill_data((ImageField<char>*)fh.get_rep(), n, iter, end);
+  int mn_idx, mx_idx;
+  nrd->get_tuple_index_info(0, 0, mn_idx, mx_idx);
+  
+  switch (mx_idx) {
+  case 0:
+    switch (n->type) {
+    case nrrdTypeChar :  
+      fh = new ImageField<char>(mh, Field::NODE);
+      fill_data((ImageField<char>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeUChar : 
+      fh = new ImageField<unsigned char>(mh, Field::NODE);
+      fill_data((ImageField<unsigned char>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeShort : 
+      fh = new ImageField<short>(mh, Field::NODE);
+      fill_data((ImageField<short>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeUShort :
+      fh = new ImageField<unsigned short>(mh, Field::NODE);
+      fill_data((ImageField<unsigned short>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeInt : 
+      fh = new ImageField<int>(mh, Field::NODE);
+      fill_data((ImageField<int>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeUInt :  
+      fh = new ImageField<unsigned int>(mh, Field::NODE);
+      fill_data((ImageField<unsigned int>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeLLong : 
+      //fh = new ImageField<long long>(mh, Field::NODE);
+      //fill_data((ImageField<long long>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeULLong :
+      //fh = new ImageField<unsigned long long>(mh, Field::NODE);
+      //fill_data((ImageField<unsigned long long>*)fh.get_rep(), n,iter, end);
+      break;
+    case nrrdTypeFloat :
+      fh = new ImageField<float>(mh, Field::NODE);
+      fill_data((ImageField<float>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeDouble :
+      fh = new ImageField<double>(mh, Field::NODE);
+      fill_data((ImageField<double>*)fh.get_rep(), n, iter, end);
+      break;
+    }
     break;
-  case nrrdTypeUChar : 
-    fh = new ImageField<unsigned char>(mh, Field::NODE);
-    fill_data((ImageField<unsigned char>*)fh.get_rep(), n, iter, end);
+  case 2: // Vector
+    fh = new ImageField<Vector>(mh, Field::NODE);
+    fill_data((ImageField<Vector>*)fh.get_rep(), n, iter, end);
     break;
-  case nrrdTypeShort : 
-    fh = new ImageField<short>(mh, Field::NODE);
-    fill_data((ImageField<short>*)fh.get_rep(), n, iter, end);
+  case 5: // Tensor
+    fh = new ImageField<Tensor>(mh, Field::NODE);
+    fill_data((ImageField<Tensor>*)fh.get_rep(), n, iter, end);
     break;
-  case nrrdTypeUShort :
-    fh = new ImageField<unsigned short>(mh, Field::NODE);
-    fill_data((ImageField<unsigned short>*)fh.get_rep(), n, iter, end);
-    break;
-  case nrrdTypeInt : 
-    fh = new ImageField<int>(mh, Field::NODE);
-    fill_data((ImageField<int>*)fh.get_rep(), n, iter, end);
-    break;
-  case nrrdTypeUInt :  
-    fh = new ImageField<unsigned int>(mh, Field::NODE);
-    fill_data((ImageField<unsigned int>*)fh.get_rep(), n, iter, end);
-    break;
-  case nrrdTypeLLong : 
-    //fh = new ImageField<long long>(mh, Field::NODE);
-    //fill_data((ImageField<long long>*)fh.get_rep(), n, iter, end);
-    break;
-  case nrrdTypeULLong :
-    //fh = new ImageField<unsigned long long>(mh, Field::NODE);
-    //fill_data((ImageField<unsigned long long>*)fh.get_rep(), n,iter, end);
-    break;
-  case nrrdTypeFloat :
-    fh = new ImageField<float>(mh, Field::NODE);
-    fill_data((ImageField<float>*)fh.get_rep(), n, iter, end);
-    break;
-  case nrrdTypeDouble :
-    fh = new ImageField<double>(mh, Field::NODE);
-    fill_data((ImageField<double>*)fh.get_rep(), n, iter, end);
+  default:
+    cerr << "unknown index offset: " << mx_idx << endl;
+    ASSERTFAIL("Unknown data size");
     break;
   }
-
   return fh;
 }
 
-FieldHandle create_latvol_field(NrrdDataHandle &nrd) {
+FieldHandle 
+create_latvol_field(NrrdDataHandle &nrd) 
+{
   Nrrd *n = nrd->nrrd;
 
   for (int a = 0; a < 4; a++) {
@@ -204,50 +244,68 @@ FieldHandle create_latvol_field(NrrdDataHandle &nrd) {
   mh->begin(iter);
   mh->end(end);
   FieldHandle fh;
-
-  switch (n->type) {
-  case nrrdTypeChar :  
-    fh = new LatVolField<char>(mh, Field::NODE);
-    fill_data((LatVolField<char>*)fh.get_rep(), n, iter, end);
+  
+  int mn_idx, mx_idx;
+  nrd->get_tuple_index_info(0, 0, mn_idx, mx_idx);
+  
+  switch (mx_idx) {
+  case 0:
+    switch (n->type) {
+    case nrrdTypeChar :  
+      fh = new LatVolField<char>(mh, Field::NODE);
+      fill_data((LatVolField<char>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeUChar : 
+      fh = new LatVolField<unsigned char>(mh, Field::NODE);
+      fill_data((LatVolField<unsigned char>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeShort : 
+      fh = new LatVolField<short>(mh, Field::NODE);
+      fill_data((LatVolField<short>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeUShort :
+      fh = new LatVolField<unsigned short>(mh, Field::NODE);
+      fill_data((LatVolField<unsigned short>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeInt : 
+      fh = new LatVolField<int>(mh, Field::NODE);
+      fill_data((LatVolField<int>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeUInt :  
+      fh = new LatVolField<unsigned int>(mh, Field::NODE);
+      fill_data((LatVolField<unsigned int>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeLLong : 
+      //fh = new LatVolField<long long>(mh, Field::NODE);
+      //fill_data((LatVolField<long long>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeULLong :
+      //fh = new LatVolField<unsigned long long>(mh, Field::NODE);
+      //fill_data((LatVolField<unsigned long long>*)fh.get_rep(), n,iter, end);
+      break;
+    case nrrdTypeFloat :
+      fh = new LatVolField<float>(mh, Field::NODE);
+      fill_data((LatVolField<float>*)fh.get_rep(), n, iter, end);
+      break;
+    case nrrdTypeDouble :
+      fh = new LatVolField<double>(mh, Field::NODE);
+      fill_data((LatVolField<double>*)fh.get_rep(), n, iter, end);
+      break;
+    }
     break;
-  case nrrdTypeUChar : 
-    fh = new LatVolField<unsigned char>(mh, Field::NODE);
-    fill_data((LatVolField<unsigned char>*)fh.get_rep(), n, iter, end);
+  case 2: // Vector
+    fh = new LatVolField<Vector>(mh, Field::NODE);
+    fill_data((LatVolField<Vector>*)fh.get_rep(), n, iter, end);
     break;
-  case nrrdTypeShort : 
-    fh = new LatVolField<short>(mh, Field::NODE);
-    fill_data((LatVolField<short>*)fh.get_rep(), n, iter, end);
+  case 5: // Tensor
+    fh = new LatVolField<Tensor>(mh, Field::NODE);
+    fill_data((LatVolField<Tensor>*)fh.get_rep(), n, iter, end);
     break;
-  case nrrdTypeUShort :
-    fh = new LatVolField<unsigned short>(mh, Field::NODE);
-    fill_data((LatVolField<unsigned short>*)fh.get_rep(), n, iter, end);
-    break;
-  case nrrdTypeInt : 
-    fh = new LatVolField<int>(mh, Field::NODE);
-    fill_data((LatVolField<int>*)fh.get_rep(), n, iter, end);
-    break;
-  case nrrdTypeUInt :  
-    fh = new LatVolField<unsigned int>(mh, Field::NODE);
-    fill_data((LatVolField<unsigned int>*)fh.get_rep(), n, iter, end);
-    break;
-  case nrrdTypeLLong : 
-    //fh = new LatVolField<long long>(mh, Field::NODE);
-    //fill_data((LatVolField<long long>*)fh.get_rep(), n, iter, end);
-    break;
-  case nrrdTypeULLong :
-    //fh = new LatVolField<unsigned long long>(mh, Field::NODE);
-    //fill_data((LatVolField<unsigned long long>*)fh.get_rep(), n,iter, end);
-    break;
-  case nrrdTypeFloat :
-    fh = new LatVolField<float>(mh, Field::NODE);
-    fill_data((LatVolField<float>*)fh.get_rep(), n, iter, end);
-    break;
-  case nrrdTypeDouble :
-    fh = new LatVolField<double>(mh, Field::NODE);
-    fill_data((LatVolField<double>*)fh.get_rep(), n, iter, end);
+  default:
+    cerr << "unknown index offset: " << mx_idx << endl;
+    ASSERTFAIL("Unknown data size");
     break;
   }
-
   return fh;
 }
 
