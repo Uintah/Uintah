@@ -281,9 +281,11 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   d_ice->scheduleComputeFC_vel_Temp(              sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   press_matl,
-                                                                  all_matls);
+                                                                  all_matls,
+                                                                  false);
                                                                
-  d_ice->scheduleAddExchangeContributionToFCVel(  sched, patches, all_matls);
+  d_ice->scheduleAddExchangeContributionToFCVel(  sched, patches, all_matls,
+                                                                  false);
 
   scheduleHEChemistry(                            sched, patches, react_sub,
                                                                   prod_sub,
