@@ -240,7 +240,7 @@ TriSurfMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
   {
     const int a = idx * 3 + i;
     const int b = a - a % 3 + (a+1) % 3;
-    int j = Min(edges_.size()-1, a);
+    int j = edges_.size()-1;
     for (; j >= 0; j--)
     {
       const int c = edges_[j];
@@ -591,33 +591,51 @@ TriSurfMesh::compute_normals()
 }
 
 
+struct edgecompare
+{
+  bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
+  {
+    return a.first == b.first && a.second == b.second;
+  }
+};
+
+
+struct edgehash
+{
+  size_t operator()(const pair<int, int> &a) const
+  {
+    hash<int> hasher;
+    return hasher(hasher(a.first) + a.second);
+  }
+};
+
 void
 TriSurfMesh::compute_edges()
 {
-  unsigned int i;
-  for (i=0; i < faces_.size(); i++)
+  hash_map<pair<int, int>, int, edgehash, edgecompare> edge_map;
+  
+  int i;
+  for (i=faces_.size()-1; i >= 0; i--)
   {
     const int a = i;
     const int b = a - a % 3 + (a+1) % 3;
 
-    bool found = false;
-    int j;
-    for (j=edges_.size()-1; j >= 0; j--)
-    {
-      const int c = edges_[j];
-      const int d = c - c % 3 + (c+1) % 3;
-      if (faces_[a] == faces_[c] && faces_[b] == faces_[d] ||
-	  faces_[a] == faces_[d] && faces_[b] == faces_[c])
-      {
-	found = true;
-	break;
-      }
-    }
-    if (!found)
-    {
-      edges_.push_back(i);
-    }
+    int n0 = faces_[a];
+    int n1 = faces_[b];
+    int tmp;
+    if (n0 > n1) { tmp = n0; n0 = n1; n1 = tmp; }
+
+    pair<int, int> nodes(n0, n1);
+    edge_map[nodes] = i;
   }
+
+  hash_map<pair<int, int>, int, edgehash, edgecompare>::iterator itr;
+
+  for (itr = edge_map.begin(); itr != edge_map.end(); ++itr)
+  {
+    edges_.push_back((*itr).second);
+  }
+
   synchronized_ |= EDGES_E;
 }
 
