@@ -965,6 +965,11 @@ RecursiveMutex::RecursiveMutex(const char* name)
 
 RecursiveMutex::~RecursiveMutex()
 {
+ // RHE 3.0 pthread_mutex_destroy returns EBUSY if you unlock an already
+ // unlocked thread first.  So we force a lock/unlock before
+ // destroying.  Probably better to just remove the unlock altogether
+ // but this breaks the shutdown behavior.
+  pthread_mutex_trylock(&priv_->mutex);
   pthread_mutex_unlock(&priv_->mutex);
   if(pthread_mutex_destroy(&priv_->mutex) != 0)
       throw ThreadError(std::string("pthread_mutex_destroy: ")
