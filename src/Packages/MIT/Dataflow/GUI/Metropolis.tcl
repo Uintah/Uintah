@@ -40,6 +40,7 @@ itcl_class MIT_Bayer_Metropolis {
 	set $this-monitor 50000
 	set $this-thin    10
 	set $this-kappa   0
+	set $this-ready 0
 	set $this-use-cvode 1
     }
 
@@ -70,7 +71,7 @@ itcl_class MIT_Bayer_Metropolis {
 
 	checkbutton $w.f.cvode -text CVODE -variable $this-use-cvode
 
-	button $w.f.exec -text "Execute" -command "$this-c needexecute"
+	button $w.f.exec -text "Execute" -command "$this-c exec"
 
 	iwidgets::Labeledframe $w.f.graph -labeltext "Progress"
 
@@ -79,6 +80,8 @@ itcl_class MIT_Bayer_Metropolis {
 	pack $w.f.graph -expand yes -fill both
 
 	$this-c graph-window [$w.f.graph childsite]
+
+	set $this-ready 1
     }
 
     
