@@ -164,7 +164,7 @@ namespace Uintah {
                                             const MaterialSet*);
                                        
       void scheduleCheckNeedAddMaterial(SchedulerP&, 
-                                        const PatchSet*,
+                                        const LevelP& level,
                                         const MaterialSet*);
 //__________________________________ 
 //  I M P L I C I T   I C E
@@ -349,12 +349,6 @@ namespace Uintah {
 
       
       void computeLagrangianValues(const ProcessorGroup*,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset* matls,
-                                   DataWarehouse*,
-                                   DataWarehouse*);
-      
-      void checkNeedAddMaterial(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse*,
