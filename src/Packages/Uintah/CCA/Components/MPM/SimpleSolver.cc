@@ -201,7 +201,7 @@ void SimpleSolver::finalizeMatrix()
 int SimpleSolver::getSolution(vector<double>& xSimple)
 {
   for (int i = 0; i < (int)d_x.size(); i++)
-    xSimple[i] = d_x[i];
+    xSimple.push_back(d_x[i]);
 
   int begin = 0;
   return begin;
