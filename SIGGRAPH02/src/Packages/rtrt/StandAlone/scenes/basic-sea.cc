@@ -5,6 +5,7 @@
 #include <Packages/rtrt/Core/Tri.h>
 #include <Packages/rtrt/Core/AirBubble.h>
 #include <Packages/rtrt/Core/Grid2.h>
+#include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Box.h>
 #include <Packages/rtrt/Core/Ring.h>
 #include <Packages/rtrt/Core/Grid.h>
@@ -17,6 +18,7 @@
 #include <Packages/rtrt/Core/CrowMarble.h>
 #include <Packages/rtrt/Core/MetalMaterial.h>
 #include <Packages/rtrt/Core/PhongMaterial.h>
+#include <Packages/rtrt/Core/HierarchicalGrid.h>
 #include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/TimeVaryingCheapCaustics.h>
 #include <Packages/rtrt/Core/SeaLambertian.h>
@@ -95,7 +97,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 							        Color(0.5,0.5,0.5), 0.1, .3);// last should be .6
   
   Material* glass_to_air = new DielectricMaterial(1.0, 1.5, 0.04, 400.0, Color(.80, .93 , .87), Color(1,1,1), false);
-  Material* water_to_glass = new DielectricMaterial(1.0, 1.2, 0.04, 400.0, Color(.80, .84 , .93), Color(1,1,1), false);
+  Material* water_to_glass = new DielectricMaterial(1.0, 1.2, 0.004, 400.0, Color(.80, .84 , .93), Color(1,1,1), false);
 
   Material* air_bubble = new DielectricMaterial(1.0, 1.1, 0.004, 400.0, Color(1, 1, 1), Color(1.01,1.01,1.01), false);
 
@@ -293,114 +295,23 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	                       Color(.7, .7, .7), 50, .3); 
   all_tubes->add(new Rect(vid, Point(0, 4, 4), Vector(2, 0, 0), Vector(0, 0, -2)));  
 */  
-  /**********************************************************************/
-  // gazebo ////////////////////////////////////////
-/*  t3.load_identity();
+  
+  t3.load_identity();
   t3.pre_scale(Vector(.0005, .0005, .0005));
   t3.pre_translate(Vector(-3.9, -2.6, -.80));
   if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/gaz.obj",
                    "/usr/sci/data/Geometry/models/read_in_models/gaz.mtl",
                    t3, gazebo))
     exit(-1);
-*/
-  /**********************************************************************/
-  // fishies!!
-
-  //Group *seahorse1 = new Group;
-  Group *shark1 = new Group;
-  Group *tiger = new Group;
- /* 
-  t3.load_identity();
-  t3.pre_scale(Vector(1.2, 1.2, 1.2));
-  t3.pre_translate(Vector(-1, -3, 1.5));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
-                   t3, shark1))
-      exit(-1);
-   Grid* grid = new Grid(shark1, 30); 
-   TimeVaryingInstance* TVI1 = new TimeVaryingInstance(new InstanceWrapperObject(grid));   
-   Grid2* dynamicGrid1 = new Grid2(TVI1, 20);
-   TVI1->set_anim_grid(dynamicGrid1);
-   all_tubes->add(dynamicGrid1);
-*/
   
-  t3.load_identity();
-  t3.pre_scale(Vector(1.2, 1.2, 1.2));
-  t3.pre_translate(Vector(0, -3, 1.5));
-  t3.pre_rotate(M_PI * .1, Vector(0, 0, 1));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish5/fish5.mtl",
-                   t3, shark1))
-      exit(-1);
-/*  
-   Sphere* extend1 = new Sphere(white, Point(-6, -6, 1), .0001);
-   Sphere* extend2 = new Sphere(white, Point(6, 6, 2.5), .0001);
-   
-   Grid* grid = new Grid(shark1, 100); 
-   TimeVaryingInstance* TVI1 = new TimeVaryingInstance(new InstanceWrapperObject(grid));   
-   Group* extend_group = new Group();
-   extend_group->add(TVI1);
-   extend_group->add(extend1);
-   extend_group->add(extend2);
-   Grid2* dynamicGrid1 = new Grid2(extend_group, 20);
-   TVI1->set_anim_grid(dynamicGrid1);
-   all_tubes->add(dynamicGrid1);
-*/    
-   Grid* grid = new Grid(shark1, 30);
-    
-   FishInstance1* TVI1 
-      = new FishInstance1(new InstanceWrapperObject(grid), .25, .25, .3, .5, .05, -3, 0);
-   FishInstance1* TVI2
-      = new FishInstance1(new InstanceWrapperObject(grid), .20, .2, .25, .6, .05, 0, -.5);   
-   FishInstance1* TVI3
-      = new FishInstance1(new InstanceWrapperObject(grid), .25, .28, .275, .7, .05, 1.5, .7);
-   FishInstance1* TVI4
-      = new FishInstance1(new InstanceWrapperObject(grid), .15, .31, .31, .4, .05, 4.5, .2); 
-   FishInstance1* TVI5
-      = new FishInstance1(new InstanceWrapperObject(grid), .2, .26, .325, .8, .05, -8.5, -.25);   
-   FishInstance1* TVI6
-      = new FishInstance1(new InstanceWrapperObject(grid), .35, .38, .3, .65, .05, -6.5, .2);   
-   FishInstance1* TVI7
-      = new FishInstance1(new InstanceWrapperObject(grid), .15, .2, .26, .55, .05, -2, .6);   
-   
-  t3.load_identity();
-  t3.pre_scale(Vector(1.3, 1.3, 1.3));
-  //t3.pre_translate(Vector(2, 7, 1));
-  t3.pre_translate(Vector(0, 3, 1));
-  if (!readObjFile("/usr/sci/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.obj",
-                   "/usr/sci/data/Geometry/models/read_in_models/fish/fish8/SiameseTiger.mtl",
-                   t3, tiger))
-     exit(-1);
-   
-   Grid* grid2 = new Grid(tiger, 30);
-   FishInstance2* TVI8
-      = new FishInstance2(new InstanceWrapperObject(grid2), .35, .25, .3, .4, .05, 5, .28);
-   FishInstance2* TVI9
-      = new FishInstance2(new InstanceWrapperObject(grid2), .25, .2, .35, .6, .05, 0, 0);
-   FishInstance2* TVI10
-      = new FishInstance2(new InstanceWrapperObject(grid2), .3, .15, .25, .5, .05, 3, -.2);
-
-   all_tubes->add(TVI1);
-   all_tubes->add(TVI2);
-   all_tubes->add(TVI3);
-   all_tubes->add(TVI4);
-   all_tubes->add(TVI5);
-   all_tubes->add(TVI6);
-   all_tubes->add(TVI7);
-
-   all_tubes->add(TVI8);
-   all_tubes->add(TVI9);
-   all_tubes->add(TVI10);
- 
+   Object* tempObj = new HierarchicalGrid(gazebo, 8, 8, 8, 10, 10, 4);
+   tempObj->set_name("Gazebo");
+   all_tubes->add(tempObj);
    all_tubes->add(ruins);  
-  
-   Group* col8 = new Group;
-   Group* col9 = new Group;
-   Group* col10 = new Group;
   
   /*********************************************************************/
   // bubbles
-
+/*
   bubbles->add(new AirBubble(air_bubble, Point(-.25, 6.88, 0) , .05  , 10, .5, .8));
   bubbles->add(new AirBubble(air_bubble, Point(.2, 6.8, -1)   , .09, 10, .7, .7));
   bubbles->add(new AirBubble(air_bubble, Point(-.1, 7.12, -2)  , .1  , 11, .75, .7));
@@ -412,7 +323,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   bubbles->add(new AirBubble(air_bubble, Point(-2.1, 6.9, -2)  , .03 , 10, .55, .9));
   bubbles->add(new AirBubble(air_bubble, Point(-4.1, 6.8, -2.5)  , .03 , 10, .55, .9));
   all_tubes->add(bubbles);
-
+*/
    
   /*********************************************************************/
   // ocean floor
@@ -432,18 +343,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(0.1, 0.1, 0.4);
   Scene *scene = new Scene(all_tubes, cam, bgcolor, cdown, cup, groundplane, 0.5);
-  scene->addObjectOfInterest(bubbles, true); 
-  scene->addObjectOfInterest(TVI1, true);
-  scene->addObjectOfInterest(TVI2, true);
-  scene->addObjectOfInterest(TVI3, true);
-  scene->addObjectOfInterest(TVI4, true);
-  scene->addObjectOfInterest(TVI5, true);
-  scene->addObjectOfInterest(TVI6, true);
-  scene->addObjectOfInterest(TVI7, true);
-
-  scene->addObjectOfInterest(TVI8, true);
-  scene->addObjectOfInterest(TVI9, true);
-  scene->addObjectOfInterest(TVI10, true);
+//  scene->addObjectOfInterest(bubbles, true); 
   
   scene->select_shadow_mode( No_Shadows );
   scene->maxdepth = 8;
