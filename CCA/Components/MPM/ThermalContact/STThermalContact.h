@@ -3,7 +3,6 @@
 
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>

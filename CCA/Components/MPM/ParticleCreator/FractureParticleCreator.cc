@@ -1,5 +1,5 @@
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/FractureParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 
 using namespace Uintah;

@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Core/Math/MinMax.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
 #include <Packages/Uintah/Core/Grid/NodeIterator.h> 
@@ -17,8 +18,6 @@
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
-#include <Core/Util/NotFinished.h>
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 

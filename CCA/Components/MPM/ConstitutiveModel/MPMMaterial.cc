@@ -21,7 +21,6 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
@@ -30,7 +29,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/MembraneParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ShellParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/FractureParticleCreator.h>
-#include <Core/Util/NotFinished.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>

@@ -9,16 +9,15 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <math.h>
 
 namespace Uintah {
-using namespace SCIRun;
-
-   class ProcessorGroup;
-   class Patch;
-   class VarLabel;
-   class Task;
+  using namespace SCIRun;
+  class MPMLabel;
+  class ProcessorGroup;
+  class Patch;
+  class Task;
+  class VarLabel;
 
 /**************************************
 

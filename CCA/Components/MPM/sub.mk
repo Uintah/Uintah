@@ -1,9 +1,9 @@
 # Makefile fragment for this subdirectory
 #
 
-SRCDIR	:= Packages/Uintah/CCA/Components/MPM
-SUBDIRS	:= $(SRCDIR)/ConstitutiveModel
-include $(SCIRUN_SCRIPTS)/recurse.mk
+#SRCDIR	:= Packages/Uintah/CCA/Components/MPM
+#SUBDIRS	:= $(SRCDIR)/ConstitutiveModel
+#include $(SCIRUN_SCRIPTS)/recurse.mk
 
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
@@ -15,7 +15,6 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/FractureMPM.cc \
 	$(SRCDIR)/ImpMPM.cc \
 	$(SRCDIR)/ShellMPM.cc \
-	$(SRCDIR)/MPMLabel.cc \
 	$(SRCDIR)/PetscSolver.cc \
 	$(SRCDIR)/SimpleSolver.cc \
 	$(SRCDIR)/MPMBoundCond.cc
@@ -25,26 +24,28 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 #	$(SRCDIR)/Explicit.cc 
 
 SUBDIRS := \
+	$(SRCDIR)/ConstitutiveModel \
 	$(SRCDIR)/Contact \
 	$(SRCDIR)/ThermalContact \
 	$(SRCDIR)/GeometrySpecification \
 	$(SRCDIR)/PhysicalBC \
 	$(SRCDIR)/ParticleCreator \
 	$(SRCDIR)/Crack			
-	
+
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
-	Packages/Uintah/CCA/Components/MPM/ConstitutiveModel \
 	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/Core/Disclosure  \
+	Packages/Uintah/Core/Labels      \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/Core/Math        \
 	Core/Exceptions Core/Thread      \
-	Core/Geometry Core/Util
+	Core/Geometry Core/Util          \
+	Core/Math
 
 
 LIBS := $(XML_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
