@@ -53,6 +53,7 @@ SRCS := \
 	$(SRCDIR)/TendPoint.tcl\
 	$(SRCDIR)/TendSatin.tcl\
 	$(SRCDIR)/TendShrink.tcl\
+	$(SRCDIR)/Unu1op.tcl\
 	$(SRCDIR)/UnuAxdelete.tcl\
 	$(SRCDIR)/UnuAxinfo.tcl\
 	$(SRCDIR)/UnuAxinsert.tcl\

@@ -28,6 +28,7 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Unu
 
 
 SRCS     += \
+	$(SRCDIR)/Unu1op.cc\
 	$(SRCDIR)/UnuAxdelete.cc\
 	$(SRCDIR)/UnuAxinfo.cc\
 	$(SRCDIR)/UnuAxinsert.cc\
