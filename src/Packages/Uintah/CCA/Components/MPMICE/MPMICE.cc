@@ -53,6 +53,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   d_sharedState = sharedState;
   
   d_mpm->setMPMLabel(Mlb);
+  d_mpm->setWithICE();
   d_mpm->problemSetup(prob_spec, grid, d_sharedState);
   
   d_ice->setICELabel(Ilb);
