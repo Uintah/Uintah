@@ -46,7 +46,7 @@ SRCS     += \
 	$(SRCDIR)/SFCXVariable_special.cc \
 	$(SRCDIR)/SFCYVariable_special.cc \
 	$(SRCDIR)/SFCZVariable_special.cc \
-	$(SRCDIR)/cd_templates.cc
+	$(SRCDIR)/ucg_templates.cc
 
 
 
