@@ -1204,7 +1204,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
 		  last_errupdate);
     
   }
-  data.reducer.wait(data.np);
+//  data.reducer.wait(data.np);
 }
 
 void 
