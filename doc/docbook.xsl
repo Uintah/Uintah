@@ -339,6 +339,7 @@
   <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
 
   <p class="head">
+    <xsl:value-of select="$chapnum"/>
     <a>
       <xsl:attribute name="href">
         <xsl:value-of select="concat($source,'?dir=2&amp;cont=',$chapnum)"/>
@@ -363,7 +364,7 @@
   <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
 
   <xsl:if test="$chapnum=$cont">
-    <p class="title"><xsl:value-of select="./title"/></p>
+    <p class="title">Chapter <xsl:value-of select="$chapnum"/>: <xsl:value-of select="./title"/></p>
   </xsl:if>
 
   <xsl:if test="$chapnum=$cont">
@@ -405,7 +406,7 @@
   <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
 
   <p class="phead">
-    <xsl:value-of select="./title" />
+    <xsl:value-of select="$chapnum"/> <xsl:value-of select="./title" />
   </p>
 
   <p class="pfirstpara">
@@ -419,7 +420,7 @@
 
   <hr size="3"/>
 
-  <p class="ptitle"><xsl:value-of select="./title"/></p>
+  <p class="ptitle">Chapter <xsl:value-of select="$chapnum"/>: <xsl:value-of select="./title"/></p>
 
   <xsl:for-each select="./sect1">
     <xsl:variable name="sectnum"><xsl:number/></xsl:variable>
