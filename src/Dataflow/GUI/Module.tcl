@@ -1312,10 +1312,10 @@ proc destroyConnection {connid omodid imodid} {
 
 	
 
-	netedit deleteconnection $connid $omodid 
 	global netedit_canvas netedit_mini_canvas
 	$netedit_canvas delete $connid
 	$netedit_mini_canvas delete $connid
+	netedit deleteconnection $connid $omodid 
 	configureOPorts $omodid
 	configureIPorts $imodid
     }
