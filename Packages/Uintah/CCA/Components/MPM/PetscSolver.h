@@ -1,8 +1,11 @@
 #ifndef MPM_PETSC_SOLVER_H
 #define MPM_PETSC_SOLVER_H
 
+#include <sci_defs/petsc_defs.h>
+
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <set>
 #include <map>
@@ -15,6 +18,7 @@ extern "C" {
 #include "petscsles.h"
 }
 #endif
+
 using std::set;
 using std::map;
 using std::vector;
