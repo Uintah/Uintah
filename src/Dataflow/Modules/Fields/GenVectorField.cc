@@ -148,9 +148,8 @@ void GenVectorField::execute()
   cout << "x: (" << _xmin << "," << _xmax << ")" << endl;
   cout << "y: (" << _ymin << "," << _ymax << ")" << endl;
   cout << "z: (" << _zmin << "," << _zmax << ")" << endl;
-  vfd = scinew VectorFieldRG;
+  vfd = scinew VectorFieldRG(_resx, _resy, _resz);
   handle = vfd;
-  vfd->resize(_resx,_resy,_resz);
   vfd->set_bounds(Point(_xmin, _ymin, _zmin),
     Point(_xmax, _ymax, _zmax));
 

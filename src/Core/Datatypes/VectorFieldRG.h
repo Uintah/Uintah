@@ -30,10 +30,9 @@ public:
     virtual Point get_point(int, int, int);
     virtual void locate(const Point&, int&, int&, int&);
 
-    void resize(int, int, int);
     void set_bounds(const Point&, const Point&);
 
-    VectorFieldRG();
+    VectorFieldRG(int x, int y, int z);
     virtual ~VectorFieldRG();
     virtual VectorField* clone();
 
