@@ -3487,7 +3487,7 @@ echo "configure:3443: checking for `basename $MAKE` version 3.78.1" >&5
     fi
   
 
-for ac_prog in mawk gawk nawk awk
+for ac_prog in gawk mawk nawk awk
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -3794,7 +3794,7 @@ else
 #line 3795 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw ();
 #endif
 #include <stdio.h>
 main()
@@ -32959,8 +32959,8 @@ EOF
 
     if test "$HAVE_LIB_VDT" && test "$HAVE_VDT_H"; then
       DEF_VDT="#define HAVE_VDT 1"
-      VDT_EXTRA_LIB_FLAG="$ESI_LIB_FLAG $ELIXIR_LIB_FLAG $LPK_LIB_FLAG $PIRAT_LIB_FLAG $LOBS3D_LIB_FLAG $LOBS2D_LIB_FLAG $LOBS1D_LIB_FLAG $G3D_LIB_FLAG $CKIT_LIB_FLAG $MESCHACH_LIB_FLAG"
-      VDT_EXTRA_LIB_DIR_FLAG="$ESI_LIB_DIR_FLAG $ELIXIR_LIB_DIR_FLAG $LPK_LIB_DIR_FLAG $PIRAT_LIB_DIR_FLAG $LOBS3D_LIB_DIR_FLAG $LOBS2D_LIB_DIR_FLAG $LOBS1D_LIB_DIR_FLAG $G3D_LIB_DIR_FLAG $CKIT_LIB_DIR_FLAG $MESCHACH_LIB_DIR_FLAG"
+      VDT_EXTRA_LIB_FLAG="$MISC_LIB_FLAG"
+      VDT_EXTRA_LIB_DIR_FLAG="$MISC_LIB_DIR_FLAG"
       break
     fi
   done
