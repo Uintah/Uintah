@@ -882,6 +882,12 @@ proc moduleMenu {x y modid} {
     tk_popup $menu_id $x $y    
 }
 
+set SCIRunSelection {}
+proc selection_handler { args } {
+    global SCIRunSelection
+    return $SCIRunSelection
+}
+
 proc regenModuleMenu { modid menu_id } {
     # Wipe the menu clean...
     set num_entries [$menu_id index end]
@@ -892,8 +898,9 @@ proc regenModuleMenu { modid menu_id } {
 	$menu_id delete 0
     }
 
+    selection handle . "selection_handler"
     global Subnet Disabled CurrentlySelectedModules
-    $menu_id add command -label "$modid" -state disabled
+    $menu_id add command -label "$modid" -command "setGlobal SCIRunSelection $modid; selection own ."
     $menu_id add separator
 
     # 'Execute Menu Option
