@@ -89,6 +89,8 @@ public:
   void unselect_all() { selected_ = 0; }
   
 protected:
+  void selectcolor(int obj);
+
   Color line_color_;
   float line_alpha_;
   Color selected_color_;
@@ -157,8 +159,6 @@ public:
   static void Exit();
   
 protected:
-
-  void selectcolor(int obj);
 
   RectangleType type_;
   float left_x_, left_y_;
@@ -336,19 +336,11 @@ TriangleWidget::draw()
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  if (selected_)
-  {
-    glColor4f(selected_color_.r(), selected_color_.g(),
-	      selected_color_.b(), selected_alpha_);
-  }
-  else
-  {
-    glColor4f(line_color_.r(), line_color_.g(), line_color_.b(), line_alpha_);
-  }
   glEnable(GL_LINE_SMOOTH);
   glLineWidth(thin_line_width_);
   glBegin(GL_LINES);
   {
+    selectcolor(1);
     glVertex2f(base_, 0.0);
     glVertex2f(base_+top_x_-width_/2, top_y_);
     glVertex2f(base_, 0.0);
@@ -356,13 +348,15 @@ TriangleWidget::draw()
   }
   glEnd();
   glLineWidth(thick_line_width_);
-  float b_x = bottom_*top_x_ + base_;
-  float b_y = bottom_*top_y_;
-  float w = bottom_*width_;
+  const float b_x = bottom_*top_x_ + base_;
+  const float b_y = bottom_*top_y_;
+  const float w = bottom_*width_;
   glBegin(GL_LINES);
   {
+    selectcolor(4);
     glVertex2f(base_+top_x_-width_/2, top_y_);
     glVertex2f(base_+top_x_+width_/2, top_y_);
+    selectcolor(1);
     glVertex2f(b_x-w/2, b_y);
     glVertex2f(b_x+w/2, b_y);
   }
@@ -373,7 +367,9 @@ TriangleWidget::draw()
   glPointSize(point_size_);
   glBegin(GL_POINTS);
   {
+    selectcolor(2);
     glVertex2f(base_+top_x_+width_/2, top_y_);
+    selectcolor(3);
     glVertex2f(b_x-w/2, b_y);
   }
   glEnd();
@@ -383,15 +379,53 @@ TriangleWidget::draw()
 
 
 int
-TriangleWidget::pick (int ix, int iy, int w, int h)
+TriangleWidget::pick (int ix, int iy, int sw, int sh)
 {
+  const double x = ix / (double)sw;
+  const double y = iy / (double)sh;
+  const double xeps = point_size_ / sw * 0.5;
+  const double yeps = point_size_ / sh * 0.5;
+
+  const float b_x = bottom_*top_x_ + base_;
+  const float b_y = bottom_*top_y_;
+  const float w = bottom_*width_;
+
+  const double cp1x = base_ + top_x_ + width_/2;
+  const double cp1y = top_y_;
+  if (fabs(x - cp1x) < xeps &&
+      fabs(y - cp1y) < yeps)
+  {
+    return 2;
+  }
+
+  const double cp2x = b_x - w/2;
+  const double cp2y = b_y;
+  if (fabs(x - cp2x) < xeps &&
+      fabs(y - cp2y) < yeps)
+  {
+    return 3;
+  }
+  
   return 0;
 }
 
 
 void
-TriangleWidget::move (int obj, int x, int y, int w, int h)
+TriangleWidget::move (int obj, int ix, int iy, int w, int h)
 {
+  const double x = ix / (double)w;
+  const double y = iy / (double)h;
+  
+  switch (selected_)
+  {
+  case 2:
+    width_ = (x - top_x_ - base_) * 2.0;
+    break;
+
+  case 3:
+    bottom_ = y / top_y_;
+    break;
+  }
 }
 
 
@@ -528,7 +562,7 @@ RectangleWidget::rasterize(Array3<float>& array)
 
 
 void
-RectangleWidget::selectcolor(int obj)
+Widget::selectcolor(int obj)
 {
   if (selected_ == obj)
   {
@@ -818,7 +852,7 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
 void
 EditTransferFunc2::push(int x, int y, int button)
 {
-  cerr << "push: " << x << " " << y << " " << button << endl;
+  //cerr << "push: " << x << " " << y << " " << button << endl;
 
   unsigned int i;
 
@@ -851,7 +885,7 @@ EditTransferFunc2::push(int x, int y, int button)
 void
 EditTransferFunc2::motion(int x, int y)
 {
-  cerr << "motion: " << x << " " << y << endl;
+  //cerr << "motion: " << x << " " << y << endl;
 
   if (pick_widget_ != -1)
   {
@@ -867,7 +901,7 @@ EditTransferFunc2::motion(int x, int y)
 void
 EditTransferFunc2::release(int x, int y, int button)
 {
-  cerr << "release: " << x << " " << y << " " << button << endl;
+  //cerr << "release: " << x << " " << y << " " << button << endl;
 
   button_ = 0;
   if (pick_widget_ != -1)
