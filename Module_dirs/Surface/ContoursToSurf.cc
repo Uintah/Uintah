@@ -11,13 +11,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Surface/ContoursToSurf.h>
 #include <Classlib/Array1.h>
 #include <Classlib/Assert.h>
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/ContourSet.h>
+#include <Datatypes/ContourSetPort.h>
 #include <Datatypes/Surface.h>
+#include <Datatypes/SurfacePort.h>
 #include <Datatypes/TriSurface.h>
 #include <Geometry/Grid.h>
 #include <Math/MiscMath.h>
@@ -25,9 +27,31 @@
 #include <Math/Expon.h>
 
 #include <iostream.h>
-#include <fstream.h>
 
-#define Sqr(x) ((x)*(x))
+class ContoursToSurf : public Module {
+    Array1<ContourSetIPort*> incontours;
+    SurfaceOPort* osurface;
+    BBox bbox;
+    Grid *grid;
+    void break_triangle(int tri_id, int pt_id, const Point& p, TriSurface*);
+    void break_edge(int tri1,int tri2,int e1,int e2,int pt_id,const Point &p,
+		    TriSurface*);
+    void break_edge2(int tri1, int e1, int pt_id,const Point &p, TriSurface*);
+    void lace_contours(const ContourSetHandle& contour, TriSurface* surf);
+    void add_point(const Point& p, TriSurface* surf);
+    double distance(const Point &p, Array1<int> &res, TriSurface*);
+    void contours_to_surf(const Array1<ContourSetHandle> &contours, TriSurface*);
+    Array1<int>* get_cubes_at_distance(int dist, int i, int j, int k, int imax,
+				       int jmax, int kmax);
+public:
+    ContoursToSurf(const clString&);
+    ContoursToSurf(const ContoursToSurf&, int deep);
+    virtual ~ContoursToSurf();
+    virtual Module* clone(int deep);
+    virtual void connection(Module::ConnectionMode, int, int);
+    virtual void execute();
+};
+
 static Module* make_ContoursToSurf(const clString& id)
 {
     return new ContoursToSurf(id);

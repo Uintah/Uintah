@@ -10,16 +10,24 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Mesh/ExtractMeshSF.h>
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/ScalarFieldUG.h>
 #include <Geometry/Point.h>
 
-#include <iostream.h>
-#include <fstream.h>
+class ExtractMeshSF : public Module {
+    ScalarFieldIPort* inport;
+    MeshOPort* outport;
+public:
+    ExtractMeshSF(const clString& id);
+    ExtractMeshSF(const ExtractMeshSF&, int deep);
+    virtual ~ExtractMeshSF();
+    virtual Module* clone(int deep);
+    virtual void execute();
+};
 
 static Module* make_ExtractMeshSF(const clString& id)
 {

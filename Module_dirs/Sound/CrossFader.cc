@@ -11,12 +11,25 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Sound/CrossFader.h>
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
-#include <iostream.h>
+
+class CrossFader : public Module {
+    SoundIPort* isound1;
+    SoundIPort* isound2;
+    double fade;
+    double gain;
+    SoundOPort* osound;
+public:
+    CrossFader(const clString& id);
+    CrossFader(const CrossFader&, int deep);
+    virtual ~CrossFader();
+    virtual Module* clone(int deep);
+    virtual void execute();
+};
 
 static Module* make_CrossFader(const clString& id)
 {

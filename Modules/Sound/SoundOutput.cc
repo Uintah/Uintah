@@ -11,18 +11,26 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Sound/SoundOutput.h>
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
 
-#include <iostream.h>
-#include <fstream.h>
 #include <audio.h>
-#include <stdlib.h>
+#include <iostream.h>
 #include <stdio.h>
 #include <unistd.h>
+
+class SoundOutput : public Module {
+    SoundIPort* isound;
+public:
+    SoundOutput(const clString& id);
+    SoundOutput(const SoundOutput&, int deep);
+    virtual ~SoundOutput();
+    virtual Module* clone(int deep);
+    virtual void execute();
+};
 
 static Module* make_SoundOutput(const clString& id)
 {

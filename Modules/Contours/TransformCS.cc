@@ -10,16 +10,37 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Contours/TransformCS.h>
-
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/ContourSet.h>
+#include <Datatypes/ContourSetPort.h>
 #include <Devices/Dialbox.h>
 #include <Devices/DBContext.h>
 #include <Geometry/Vector.h>
 #include <Math/Expon.h>
 #include <Math/Trig.h>
+
+
+class TransformCS : public Module {
+    ContourSetIPort* icontour;
+    ContourSetOPort* ocontour;
+    DBContext *dbcontext_st;
+    void lace_contours(ContourSetHandle);
+    void transform_cs();
+    void initDB();
+    void DBCallBack(DBContext*, int, double, double, void*);
+    double spacing;
+    ContourSetHandle contours;
+public:
+    TransformCS(const clString&);
+    TransformCS(const TransformCS&, int deep);
+    virtual ~TransformCS();
+    virtual Module* clone(int deep);
+    virtual void execute();
+    virtual void ui_button();
+    int abort_flag;
+};
 
 static Module* make_TransformCS(const clString& id)
 {

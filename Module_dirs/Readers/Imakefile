@@ -14,37 +14,25 @@ SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME), $(OBJS))
 AllTarget($(TCLS))
 
-ContourSetReader.h: Reader.h
-	sed 's/TYPE/ContourSet/g' < Reader.h > ContourSetReader.h
-
-ContourSetReader.cc: Reader.cc ContourSetReader.h
+ContourSetReader.cc: Reader.cc
 	sed 's/TYPE/ContourSet/g' < Reader.cc > ContourSetReader.cc
 
 ContourSetReader.tcl: Reader.tcl
 	sed 's/TYPE/ContourSet/g' < Reader.tcl > ContourSetReader.tcl
 
-ScalarFieldReader.h: Reader.h
-	sed 's/TYPE/ScalarField/g' < Reader.h > ScalarFieldReader.h
-
-ScalarFieldReader.cc: Reader.cc ScalarFieldReader.h
+ScalarFieldReader.cc: Reader.cc
 	sed 's/TYPE/ScalarField/g' < Reader.cc > ScalarFieldReader.cc
 
 ScalarFieldReader.tcl: Reader.tcl
 	sed 's/TYPE/ScalarField/g' < Reader.tcl > ScalarFieldReader.tcl
 
-SurfaceReader.h: Reader.h
-	sed 's/TYPE/Surface/g' < Reader.h > SurfaceReader.h
-
-SurfaceReader.cc: Reader.cc SurfaceReader.h
+SurfaceReader.cc: Reader.cc
 	sed 's/TYPE/Surface/g' < Reader.cc > SurfaceReader.cc
 
 SurfaceReader.tcl: Reader.tcl
 	sed 's/TYPE/Surface/g' < Reader.tcl > SurfaceReader.tcl
 
-VectorFieldReader.h: Reader.h
-	sed 's/TYPE/VectorField/g' < Reader.h > VectorFieldReader.h
-
-VectorFieldReader.cc: Reader.cc VectorFieldReader.h
+VectorFieldReader.cc: Reader.cc
 	sed 's/TYPE/VectorField/g' < Reader.cc > VectorFieldReader.cc
 
 VectorFieldReader.tcl: Reader.tcl

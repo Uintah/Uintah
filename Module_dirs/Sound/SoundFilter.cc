@@ -11,8 +11,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Sound/SoundFilter.h>
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
 #include <Math/Complex.h>
@@ -21,7 +21,19 @@
 #include <Math/MiscMath.h>
 #include <Math/Trig.h>
 #include <iostream.h>
-#include <fstream.h>
+
+class SoundFilter : public Module {
+    SoundIPort* isound;
+    SoundOPort* osound;
+    double lower_cutoff;
+    double upper_cutoff;
+public:
+    SoundFilter(const clString& id);
+    SoundFilter(const SoundFilter&, int deep);
+    virtual ~SoundFilter();
+    virtual Module* clone(int deep);
+    virtual void execute();
+};
 
 static Module* make_SoundFilter(const clString& id)
 {

@@ -11,17 +11,31 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Contours/LaceContours.h>
-
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
+#include <Datatypes/ContourSet.h>
+#include <Datatypes/ContourSetPort.h>
 #include <Datatypes/Surface.h>
+#include <Datatypes/SurfacePort.h>
 #include <Datatypes/TriSurface.h>
 #include <Math/Expon.h>
 #include <Math/MiscMath.h>
 
 #include <iostream.h>
-#include <fstream.h>
+
+class LaceContours : public Module {
+    ContourSetIPort* incontour;
+    SurfaceOPort* osurface;
+
+    void lace_contours(const ContourSetHandle&, TriSurface*);
+public:
+    LaceContours(const clString& id);
+    LaceContours(const LaceContours&, int deep);
+    virtual ~LaceContours();
+    virtual Module* clone(int deep);
+    virtual void execute();
+};
 
 static Module* make_LaceContours(const clString& id)
 {

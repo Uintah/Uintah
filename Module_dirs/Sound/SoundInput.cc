@@ -11,18 +11,29 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Sound/SoundInput.h>
-
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
 
-#include <iostream.h>
-#include <fstream.h>
 #include <audio.h>
-#include <stdlib.h>
+#include <iostream.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+class SoundInput : public Module {
+    SoundOPort* osound;
+    int onoff;
+    double rate;
+public:
+    SoundInput(const clString& id);
+    SoundInput(const SoundInput&, int deep);
+    virtual ~SoundInput();
+    virtual Module* clone(int deep);
+    virtual void execute();
+    virtual int should_execute();
+};
 
 static Module* make_SoundInput(const clString& id)
 {

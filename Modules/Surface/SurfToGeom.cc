@@ -11,8 +11,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Surface/SurfToGeom.h>
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/ScalarFieldPort.h>
@@ -23,8 +23,19 @@
 #include <Geom/Geom.h>
 #include <Geom/Group.h>
 #include <Geom/Tri.h>
-#include <iostream.h>
-#include <fstream.h>
+
+class SurfToGeom : public Module {
+    SurfaceIPort* isurface;
+    GeometryOPort* ogeom;
+
+    void surf_to_geom(const SurfaceHandle&, GeomGroup*);
+public:
+    SurfToGeom(const clString& id);
+    SurfToGeom(const SurfToGeom&, int deep);
+    virtual ~SurfToGeom();
+    virtual Module* clone(int deep);
+    virtual void execute();
+};
 
 static Module* make_SurfToGeom(const clString& id)
 {

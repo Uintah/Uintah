@@ -10,15 +10,20 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/FEM/ApplyBC.h>
-
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
 
-#include <iostream.h>
-#include <fstream.h>
+class ApplyBC : public Module {
+public:
+    ApplyBC(const clString& id);
+    ApplyBC(const ApplyBC&, int deep);
+    virtual ~ApplyBC();
+    virtual Module* clone(int deep);
+    virtual void execute();
+};
 
 static Module* make_ApplyBC(const clString& id)
 {

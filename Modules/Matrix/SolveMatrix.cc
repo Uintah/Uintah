@@ -10,16 +10,21 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Matrix/SolveMatrix.h>
-
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/MatrixPort.h>
 #include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
 
-#include <iostream.h>
-#include <fstream.h>
+class SolveMatrix : public Module {
+public:
+    SolveMatrix(const clString& id);
+    SolveMatrix(const SolveMatrix&, int deep);
+    virtual ~SolveMatrix();
+    virtual Module* clone(int deep);
+    virtual void execute();
+};
 
 static Module* make_SolveMatrix(const clString& id)
 {

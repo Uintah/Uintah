@@ -11,9 +11,24 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Readers/TYPEReader.h>
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
+#include <Datatypes/TYPEPort.h>
+#include <Datatypes/TYPE.h>
+#include <TCL/TCLvar.h>
+
+class TYPEReader : public Module {
+    TYPEOPort* outport;
+    TCLstring filename;
+    TYPEHandle handle;
+public:
+    TYPEReader(const clString& id);
+    TYPEReader(const TYPEReader&, int deep=0);
+    virtual ~TYPEReader();
+    virtual Module* clone(int deep);
+    virtual void execute();
+};
 
 static Module* make_TYPEReader(const clString& id)
 {

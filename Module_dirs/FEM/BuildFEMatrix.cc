@@ -10,17 +10,22 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/FEM/BuildFEMatrix.h>
-
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/MatrixPort.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
 
-#include <iostream.h>
-#include <fstream.h>
+class BuildFEMatrix : public Module {
+public:
+    BuildFEMatrix(const clString& id);
+    BuildFEMatrix(const BuildFEMatrix&, int deep);
+    virtual ~BuildFEMatrix();
+    virtual Module* clone(int deep);
+    virtual void execute();
+};
 
 static Module* make_BuildFEMatrix(const clString& id)
 {

@@ -10,15 +10,21 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Mesh/GenerateMesh.h>
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
 
-#include <iostream.h>
-#include <fstream.h>
+class GenerateMesh : public Module {
+public:
+    GenerateMesh(const clString& id);
+    GenerateMesh(const GenerateMesh&, int deep);
+    virtual ~GenerateMesh();
+    virtual Module* clone(int deep);
+    virtual void execute();
+};
 
 static Module* make_GenerateMesh(const clString& id)
 {

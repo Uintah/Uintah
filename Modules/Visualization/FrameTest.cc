@@ -10,17 +10,37 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Visualization/FrameTest.h>
-
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/GeometryPort.h>
 #include <Geometry/Point.h>
 #include <Geom/Geom.h>
 #include <Geom/Group.h>
+#include <Widgets/FrameWidget.h>
 
 #include <iostream.h>
-#include <fstream.h>
+
+class FrameTest : public Module {
+    GeometryOPort* ogeom;
+    int abort_flag;
+
+private:
+    int init;
+    int widget_id;
+    double widget_scale;
+
+    FrameWidget* widget;
+
+    virtual void geom_moved(int, double, const Vector&, void*);
+public:
+    FrameTest(const clString& id);
+    FrameTest(const FrameTest&, int deep);
+    virtual ~FrameTest();
+    virtual Module* clone(int deep);
+    virtual void execute();
+    virtual void mui_callback(void*, int);
+};
 
 static Module* make_FrameTest(const clString& id)
 {

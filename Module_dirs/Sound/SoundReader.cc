@@ -11,15 +11,25 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Sound/SoundReader.h>
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
 #include <Math/MinMax.h>
 
 #include <iostream.h>
 #include <audiofile.h>
-#include <fstream.h>
+
+class SoundReader : public Module {
+    SoundOPort* osound;
+    clString filename;
+public:
+    SoundReader(const clString& id);
+    SoundReader(const SoundReader&, int deep);
+    virtual ~SoundReader();
+    virtual Module* clone(int deep);
+    virtual void execute();
+};
 
 static Module* make_SoundReader(const clString& id)
 {

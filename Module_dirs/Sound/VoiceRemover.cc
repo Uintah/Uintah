@@ -11,11 +11,21 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Sound/VoiceRemover.h>
 #include <Classlib/NotFinished.h>
+#include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/SoundPort.h>
-#include <iostream.h>
+
+class VoiceRemover : public Module {
+    SoundIPort* isound;
+    SoundOPort* osound;
+public:
+    VoiceRemover(const clString& id);
+    VoiceRemover(const VoiceRemover&, int deep);
+    virtual ~VoiceRemover();
+    virtual Module* clone(int deep);
+    virtual void execute();
+};
 
 static Module* make_VoiceRemover(const clString& id)
 {
