@@ -186,14 +186,15 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
       
 				// Make it..
       data=(*maker)();
-				// Read it in...
-      data->io(*this);
-      
 				// Insert this pointer in the database
       if (!inpointers) {
 	inpointers = scinew MapIntPersistent;
       }
       (*inpointers)[pointer_id] = data;
+
+				// Read it in...
+      data->io(*this);
+      
     } else {
 				// Look it up...
       if (pointer_id==0) {
