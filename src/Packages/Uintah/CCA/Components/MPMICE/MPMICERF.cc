@@ -806,6 +806,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       double very_small_mass = d_SMALL_NUM * cell_vol;
       cmass.initialize(very_small_mass);
       cvolume.initialize( very_small_mass/rho_orig);
+
       vel_CC.initialize(zero); 
 
       new_dw->get(gmass,Mlb->gMassLabel,matlindex, patch,Ghost::AroundCells, 1);
