@@ -34,8 +34,6 @@ POSSIBLE REVISIONS
 ***************************************************************************/
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/ReactionModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/Integrator.h>
 
 #include <vector>
 
@@ -94,18 +92,6 @@ public:
       inline int getNumRxnVars() const{
 	return 0;
       }
-      inline int getTableDimension() const{
-	return 0;
-      }
-      //***warning** compute totalvars from number of species and dependent vars
-      inline int getTotalVars() const {
-	return 0;
-      }
-      inline ReactionModel* getRxnModel() const {
-      }
-      inline Integrator* getIntegrator() const {
-      }
-
 
 
 protected :
@@ -143,9 +129,8 @@ private:
 
 //
 // $Log$
-// Revision 1.3  2001/09/04 23:44:26  rawat
-// Added ReactingScalar transport equation to run ILDM.
-// Also, merged Jennifer's changes to run ILDM in the mixing directory.
+// Revision 1.4  2001/10/11 18:48:58  divyar
+// Made changes to Mixing
 //
 // Revision 1.2  2001/08/25 07:32:45  skumar
 // Incorporated Jennifer's beta-PDF mixing model code with some

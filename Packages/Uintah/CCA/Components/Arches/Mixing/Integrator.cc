@@ -77,13 +77,13 @@ Integrator::integrate(int* tableKeyIndex)
   upLimit = 1.0;
   // this can be moved to problem setup
   epsabs = 0.0;
-  epsrel = 0.005; // relative error
-  //epsrel = 0.0005; // relative error
+  //epsrel = 0.005; // relative error
+  epsrel = 0.0005; // relative error
   npts2 = 3;
   int mixIndex = 0;
   if (!(pdfMixModel->isAdiabatic()))
     ++mixIndex;
-  int rxnIndex = mixIndex + pdfMixModel->getNumMixStatVars()+1;
+  int rxnIndex = mixIndex + pdfMixModel->getNumMixStatVars();
   double fstoic = d_tableInfo->getStoicValue(mixIndex);
   points[0] = fstoic;
   limit = LIMITS;
@@ -91,7 +91,6 @@ Integrator::integrate(int* tableKeyIndex)
   // ***Modify for higher order integration***
   // checking for mixing variance
   int mixVarIndex = mixIndex + pdfMixModel->getNumMixVars();
-  cout<<"mixVarIndex = "<<mixVarIndex<<endl;
   // compute d_meanValues from tableKeyIndex
   convertKeytoMeanValues(tableKeyIndex);
   // d_keyValues is used for Integral function evaluation
@@ -125,11 +124,11 @@ Integrator::integrate(int* tableKeyIndex)
       d_varsHFPi[inc] = d_meanValues[0];
       ++inc;
     }
-  for (int ii = mixIndex; ii < mixIndex+pdfMixModel->getNumMixVars(); ii++)
+  for (int ii = mixIndex; ii < mixIndex+pdfMixModel->getNumMixVars()-1; ii++)
     {
       d_varsHFPi[inc++] = d_meanValues[ii];
     }
-  for (int ii = rxnIndex; ii < rxnIndex+pdfMixModel->getNumRxnVars(); ii++)
+  for (int ii = rxnIndex; ii < rxnIndex+pdfMixModel->getNumRxnVars()-1; ii++)
     {
      d_varsHFPi[inc++] = d_meanValues[ii];  
     }
@@ -141,28 +140,20 @@ Integrator::integrate(int* tableKeyIndex)
   Stream meanSpaceVars = d_rxnModel->computeRxnStateSpace(unreactedStream,d_varsHFPi,
 							  pdfMixModel->isAdiabatic());
   // compute pdf function for given values of mean and variance
-  cout<<"Int::statVar = "<<d_meanValues[mixVarIndex]<<endl;
   d_mixingPDF->computePDFFunction(&d_meanValues[mixIndex], d_meanValues[mixVarIndex]);
-  cout<<"Int::after call to Beta statVar = "<<d_meanValues[mixVarIndex]<<endl;
-  // if lfavre temp = temp/density...replaced logical with lsoot
-  //bool lsoot = d_rxnModel->getSootBool();
-  //vector<double> meanStateSpaceVars = meanSpaceVars.convertStreamToVec(lsoot);
-  vector<double> meanStateSpaceVars = meanSpaceVars.convertStreamToVec();
-  //cout << "returned from StreamToVec" << endl;
+  // if lfavre temp = temp/density
+  vector<double> meanStateSpaceVars = meanSpaceVars.convertStreamToVec(d_lfavre);
   // store integral values in vector and then copy to stream
   vector<double> resultStateSpaceVars(pdfMixModel->getTotalVars());
-  //cout << "totalVars = " << pdfMixModel->getTotalVars() << endl;
   // Assumption:
   // Only integrated over mixing variable; rxn_dim = 0
   // check if gammafnc is valid
   if (d_mixingPDF->validIntegral()) { 
-    //for (d_count = 0; d_count < resultStateSpaceVars.size(); d_count++)
-    for (d_count = 0; d_count < 2; d_count++)
+    for (d_count = 0; d_count < resultStateSpaceVars.size(); d_count++) 
       {
 	// assuming mix_dim == 1
 	// for details see gammafn.C
 	// fnc is a member function
-	//cout<<"Int::begin integration keyValues are = "<<d_keyValues[0]<<" "<<d_keyValues[1]<<endl;
 	dqagpe_(fnc, &lowLimit, &upLimit, &npts2, points, &epsabs, &epsrel,
 		&limit, &result, &abserr, &neval, &ier, alist, blist, rlist,
 		elist, pts, level, ndin, iord, &last);
@@ -193,14 +184,12 @@ Integrator::integrate(int* tableKeyIndex)
     resultStateSpaceVars[d_temperatureIndex] *= resultStateSpaceVars[d_densityIndex];
 #endif
   Stream resultStateVars;
-  //cout << "Int::int soot = " << lsoot << endl;
   resultStateVars.convertVecToStream(resultStateSpaceVars, d_lfavre, 
-               pdfMixModel->getNumMixVars(), pdfMixModel->getNumRxnVars(),
-	       meanSpaceVars.d_lsoot);
+               pdfMixModel->getNumMixVars(), pdfMixModel->getNumRxnVars());
   cout << "Integrator::h = "<<d_meanValues[0]<<endl;
   cout << "Integrator::f = "<<d_meanValues[1]<<endl;
   cout << "Integrator::gf = "<<d_meanValues[2]<<endl;
-  resultStateVars.print(cout);
+  //resultStateVars.print(cout);
   return resultStateVars;
 
 }
@@ -211,39 +200,30 @@ Integrator::computeMeanValues(int* tableKeyIndex)
   // compute d_meanValues from tableKeyIndex; store mean values in 
   // vector d_meanValues
   convertKeytoMeanValues(tableKeyIndex);
-  //cout << "Int::mean::index = " << tableKeyIndex[0] << " " << tableKeyIndex[1] << endl;
-  //cout << "Int::mean::mean = " << d_meanValues[0] << " " << d_meanValues[1] << endl;
   int mixIndex = 0;
   if (!(pdfMixModel->isAdiabatic()))
     ++mixIndex;
-  int rxnIndex = mixIndex + pdfMixModel->getNumMixStatVars() + 1;
+  int rxnIndex = mixIndex + pdfMixModel->getNumMixStatVars();
   vector<double> mixVars(pdfMixModel->getNumMixVars());
   for (int jj = 0; jj < pdfMixModel->getNumMixVars(); jj++)
     mixVars[jj] = d_meanValues[mixIndex+jj];
-  //cout<<"Int::mixVar = "<<mixVars[0]<<endl;
   Stream unreactedStream = pdfMixModel->speciesStateSpace(mixVars);
-  //cerr << "unreacted Stream: " << d_meanValues[0] << std::endl;
   ChemkinInterface* rxnData = d_rxnModel->getChemkinInterface();
-  //unreactedStream.print(cerr, rxnData); 
   // Write independent variables, excluding variance, to separate vector
   // for use by reaction model
-  //*****FIX THIS****I think it is now
   int inc = 0;
   if (!(pdfMixModel->isAdiabatic()))
     {
       d_varsHFPi[inc] = d_meanValues[0];
       ++inc;
-      //cout << "Int::varsHFPi = " << d_varsHFPi[0] << endl;
     }
-  for (int ii = mixIndex; ii < mixIndex+pdfMixModel->getNumMixVars(); ii++)
+  for (int ii = mixIndex; ii < mixIndex+pdfMixModel->getNumMixVars()-1; ii++)
     {
       d_varsHFPi[inc++] = d_meanValues[ii];
-      //cout << "Int::varsHFPi = " << d_varsHFPi[ii] << endl;
     }
-  for (int ii = rxnIndex; ii < rxnIndex+pdfMixModel->getNumRxnVars(); ii++)
+  for (int ii = rxnIndex; ii < rxnIndex+pdfMixModel->getNumRxnVars()-1; ii++)
     {
      d_varsHFPi[inc++] = d_meanValues[ii];
-     //cout << "Int::varsHFPi = " << d_varsHFPi[ii] << endl;
     }
   return d_rxnModel->computeRxnStateSpace(unreactedStream, d_varsHFPi,
 					  pdfMixModel->isAdiabatic());
@@ -252,13 +232,9 @@ Integrator::computeMeanValues(int* tableKeyIndex)
 
 void
 Integrator::convertKeytoMeanValues(int tableKeyIndex[]) {
-  for (int i = 0; i < d_tableDimension; i++)
-    if (tableKeyIndex[i] <= d_tableInfo->getNumDivsBelow(i))
-      d_meanValues[i] = tableKeyIndex[i]*d_tableInfo->getIncrValueBelow(i) + 
-	d_tableInfo->getMinValue(i);
-    else
-      d_meanValues[i] = (tableKeyIndex[i]-d_tableInfo->getNumDivsBelow(i))*	
-	d_tableInfo->getIncrValueAbove(i) + d_tableInfo->getStoicValue(i);
+  for (int i = 0; i < d_tableDimension; i++) 
+    d_meanValues[i] = tableKeyIndex[i]*d_tableInfo->getIncrValue(i) + 
+      d_tableInfo->getMinValue(i);
   return;
 }
 
@@ -269,19 +245,16 @@ fnc(double *x) {
 
 double
 Integrator::fun(double *x) {
-  //cout<<"Int::made it to fun"<<endl;
-  int mixIndex = !(pdfMixModel->isAdiabatic());
-  //cout<<"mixIndex = "<<mixIndex<<endl;
-  d_keyValues[mixIndex] = *x;
-    //cout<<"Int::fun d_keyValues ="<<d_keyValues[0]<<" "<<d_keyValues[1]<<endl;
+    int mixIndex = !(pdfMixModel->isAdiabatic());
+    d_keyValues[mixIndex] = *x;
     d_varsHFPi[mixIndex] = *x;
     vector<double> mixVars(pdfMixModel->getNumMixVars());
     for (int jj = 0; jj < pdfMixModel->getNumMixVars(); jj++) {
-      mixVars[jj] = d_keyValues[mixIndex+jj]; 
-      // Kluge for stanjan as it blows up if mixture fraction too close to 1
+      mixVars[jj] = d_keyValues[mixIndex+jj];
       if (mixVars[jj] > 0.99) 
 	mixVars[jj] = 1.0;
     }
+
     Stream unreactedStream = pdfMixModel->speciesStateSpace(mixVars);
     Stream stateVars = d_rxnModel->computeRxnStateSpace(unreactedStream,
 				d_varsHFPi, pdfMixModel->isAdiabatic());

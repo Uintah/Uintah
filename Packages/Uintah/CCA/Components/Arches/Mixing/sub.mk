@@ -12,7 +12,6 @@ SRCS     += $(SRCDIR)/MixingModel.cc $(SRCDIR)/ColdflowMixingModel.cc  \
 		$(SRCDIR)/BetaPDFShape.cc $(SRCDIR)/KDTree.cc \
 		$(SRCDIR)/ReactionModel.cc \
 		$(SRCDIR)/StanjanEquilibriumReactionModel.cc \
-		$(SRCDIR)/ILDMReactionModel.cc \
 		$(SRCDIR)/Common.cc \
 		$(SRCDIR)/Stream.cc $(SRCDIR)/InletStream.cc \
 		$(SRCDIR)/ChemkinInterface.cc 
