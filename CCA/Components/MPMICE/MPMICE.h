@@ -108,6 +108,11 @@ public:
 					    DataWarehouseP&,
 					    DataWarehouseP&);
 
+  void scheduleInterpolatePressureToParticles(const Patch* patch,
+					      SchedulerP&,
+					      DataWarehouseP&,
+					      DataWarehouseP&);
+
   //////////
   // Insert Documentation Here:
   void interpolateNCToCC_0(const ProcessorGroup*,
@@ -129,6 +134,11 @@ public:
                        const Patch* patch,
                        DataWarehouseP& old_dw,
                        DataWarehouseP& new_dw);
+
+  void interpolatePressureToParticles(const ProcessorGroup*,
+	                              const Patch* patch,
+                                      DataWarehouseP& old_dw,
+                                      DataWarehouseP& new_dw);
 
   enum bctype { NONE=0,
                 FIXED,

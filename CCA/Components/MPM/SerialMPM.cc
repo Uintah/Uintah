@@ -330,6 +330,8 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(const Patch* patch,
    *             using P.NAT_X and some shape function evaluations)
    *   out(G.MASS, G.VELOCITY) */
 
+  cout << "scheduleInterpolateParticlesToGrid" << endl;
+
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("SerialMPM::interpolateParticlesToGrid",
 		    patch, old_dw, new_dw,
@@ -380,6 +382,8 @@ void SerialMPM::scheduleComputeHeatExchange(const Patch* patch,
   *   the temperature differences)
   *   out(G.EXTERNAL_HEAT_RATE) */
 
+  cout << "scheduleComputeHeatExchange" << endl;
+
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("ThermalContact::computeHeatExchange",
 		        patch, old_dw, new_dw,
@@ -399,6 +403,7 @@ void SerialMPM::scheduleExMomInterpolated(const Patch* patch,
 					  DataWarehouseP& old_dw,
 					  DataWarehouseP& new_dw)
 {
+  cout << "scheduleExMomInterpolated" << endl;
   Task* t = scinew Task("Contact::exMomInterpolated",
 		    patch, old_dw, new_dw,
 		    MPMPhysicalModules::contactModel,
@@ -418,6 +423,7 @@ void SerialMPM::scheduleComputeStressTensor(const Patch* patch,
 					    DataWarehouseP& old_dw,
 					    DataWarehouseP& new_dw)
 {
+  cout << "scheduleComputeStressTensor" << endl;
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("SerialMPM::computeStressTensor",
 		    patch, old_dw, new_dw,
@@ -439,6 +445,7 @@ void SerialMPM::scheduleComputeInternalForce(const Patch* patch,
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw)
 {
+  cout << "scheduleComputeInternalForce" << endl;
  /*
   * computeInternalForce
   *   in(P.CONMOD, P.NAT_X, P.VOLUME)
@@ -447,11 +454,13 @@ void SerialMPM::scheduleComputeInternalForce(const Patch* patch,
   *   shape functions)
   * out(G.F_INTERNAL) */
 
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMPMMatls = d_sharedState->getNumMPMMatls();
+  int numALLMatls = d_sharedState->getNumMatls();
+
   Task* t = scinew Task("SerialMPM::computeInternalForce",
 		    patch, old_dw, new_dw,
 		    this, &SerialMPM::computeInternalForce);
-  for(int m = 0; m < numMatls; m++){
+  for(int m = 0; m < numMPMMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     int idx = mpm_matl->getDWIndex();
 	    
@@ -461,6 +470,11 @@ void SerialMPM::scheduleComputeInternalForce(const Patch* patch,
 			 Ghost::AroundNodes, 1);
     t->requires( old_dw, lb->pMassLabel, idx, patch, Ghost::AroundNodes, 1);
     t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
+
+    if(numMPMMatls!=numALLMatls){
+      t->requires(new_dw, lb->pPressureLabel, idx, patch,Ghost::AroundNodes, 1);
+     cout << "matlindex requires = " << idx << endl;
+    }
 
     if(mpm_matl->getFractureModel()) {
        t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
@@ -1316,13 +1330,16 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
   oodx[0] = 1.0/dx.x();
   oodx[1] = 1.0/dx.y();
   oodx[2] = 1.0/dx.z();
+  Matrix3 Id;
+  Id.Identity();
 
-  int numMatls = d_sharedState->getNumMPMMatls();
+  int numMPMMatls = d_sharedState->getNumMPMMatls();
+  int numALLMatls = d_sharedState->getNumMatls();
 
   double integralTraction = 0.;
   double integralArea = 0.;
 
-  for(int m = 0; m < numMatls; m++){
+  for(int m = 0; m < numMPMMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
       // Create arrays for the particle position, volume
@@ -1334,6 +1351,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       NCVariable<Vector>        internalforce;
       NCVariable<Matrix3>       gstress;
       NCVariable<double>        gmass;
+
+      ParticleVariable<double>  p_pressure;;
 
       ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch,
 					       Ghost::AroundNodes, 1,
@@ -1348,7 +1367,18 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       new_dw->allocate(gstress,lb->gStressForSavingLabel, matlindex, patch);
       new_dw->allocate(internalforce, lb->gInternalForceLabel,
 						matlindex, patch);
-  
+
+      if(numMPMMatls==numALLMatls){
+	new_dw->allocate(p_pressure,lb->pPressureLabel, pset);
+	for(ParticleSubset::iterator iter = pset->begin();
+                                     iter != pset->end(); iter++){
+	   p_pressure[*iter]=0.0;
+	}
+      }
+      else {
+        new_dw->get(p_pressure,lb->pPressureLabel, pset);
+      }
+
       internalforce.initialize(Vector(0,0,0));
 
     if(mpm_matl->getFractureModel()) {
@@ -1364,8 +1394,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
          Vector d_S[8];
          double S[8];
 
-//         patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-//         patch->findCellAndWeights(px[idx], ni, S);
          patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
 
          Visibility vis;
@@ -1377,7 +1405,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 	   if(patch->containsNode(ni[k]) && vis.visible(k)){
 	     Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 						d_S[k].z()*oodx[2]);
-	     internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
+	     internalforce[ni[k]] -=
+			(div * (pstress[idx] - Id*p_pressure[idx]) * pvol[idx]);
              gstress[ni[k]] += pstress[idx] * pmass[idx] * S[k];
 	   }
          }
@@ -1394,15 +1423,15 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
          Vector d_S[8];
          double S[8];
 
-//         patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-//         patch->findCellAndWeights(px[idx], ni, S);
          patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
 
          for (int k = 0; k < 8; k++){
 	   if(patch->containsNode(ni[k])){
 	     Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 						d_S[k].z()*oodx[2]);
-	     internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
+  // Todd LOOK HERE
+	     internalforce[ni[k]] -=
+			(div * (pstress[idx] - Id*p_pressure[idx]) * pvol[idx]);
              gstress[ni[k]] += pstress[idx] * pmass[idx] * S[k];
 	   }
          }

@@ -43,6 +43,8 @@ MPMICELabel::MPMICELabel()
 			CCVariable<double>::getTypeDescription());
   mom_source_CCLabel = scinew VarLabel("mom_source_CC",
 			CCVariable<Vector>::getTypeDescription());
+  press_NCLabel      = scinew VarLabel("pressureNC",
+			NCVariable<double>::getTypeDescription());
 
     uvel_FCLabel       =
      scinew VarLabel("uvel_FC",   SFCXVariable<double>::getTypeDescription() );
@@ -74,6 +76,7 @@ MPMICELabel::~MPMICELabel()
   delete rho_micro_CCLabel;
   delete vol_frac_CCLabel;
   delete mom_source_CCLabel;
+  delete press_NCLabel;
 
   delete uvel_FCLabel;
   delete vvel_FCLabel;
