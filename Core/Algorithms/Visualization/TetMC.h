@@ -190,20 +190,20 @@ void TetMC<Field>::extract_n( cell_index_type cell, double v )
   static int num[16] = { 0, 1, 1, 2, 1, 2, 2, 1, 1, 2, 2, 1, 2, 1, 1, 0 };
   static int order[16][4] = {
     {0, 0, 0, 0},   /* none - ignore */
-    {3, 0, 2, 1},   /* 3 */
-    {2, 0, 1, 3},   /* 2 */
-    {2, 0, 1, 3},   /* 2, 3 */
-    {1, 0, 3, 2},   /* 1 */
-    {1, 2, 0, 3},   /* 1, 3 */
-    {1, 0, 3, 2},   /* 1, 2 */
-    {0, 3, 2, 1},   /* 1, 2, 3 */
-    {0, 1, 2, 3},   /* 0 */
+    {3, 2, 0, 1},   /* 3 */
+    {2, 1, 0, 3},   /* 2 */
+    {2, 1, 0, 3},   /* 2, 3 */
+    {1, 3, 0, 2},   /* 1 */
+    {1, 0, 2, 3},   /* 1, 3 */
+    {1, 3, 0, 2},   /* 1, 2 */
+    {0, 2, 3, 1},   /* 1, 2, 3 */
+    {0, 2, 1, 3},   /* 0 */
     {2, 3, 0, 1},   /* 0, 3 - reverse of 1, 2 */
     {3, 0, 2, 1},   /* 0, 2 - reverse of 1, 3 */
-    {1, 3, 0, 2},   /* 0, 2, 3 - reverse of 1 */
+    {1, 0, 3, 2},   /* 0, 2, 3 - reverse of 1 */
     {3, 1, 0, 2},   /* 0, 1 - reverse of 2, 3 */
     {2, 3, 0, 1},   /* 0, 1, 3 - reverse of 2 */
-    {3, 1, 2, 0},   /* 0, 1, 2 - reverse of 3 */
+    {3, 2, 1, 0},   /* 0, 1, 2 - reverse of 3 */
     {0, 0, 0, 0}    /* all - ignore */
   };
     
@@ -213,8 +213,18 @@ void TetMC<Field>::extract_n( cell_index_type cell, double v )
   value_type value[4];
 
   mesh_->get_nodes( node, cell );
-  int code = 0;
+  int i;
+  for (i=0; i<4; i++)
+    mesh_->get_point( p[i], node[i] );
 
+  // fix the node[i] ordering so tet is orientationally consistent
+  if (Dot(Cross(p[0]-p[1],p[0]-p[2]),p[0]-p[3])>0) {
+    typename mesh_type::Node::index_type nd=node[0];
+    node[0]=node[1];
+    node[1]=nd;
+  }
+
+  int code = 0;
   for (int i=0; i<4; i++) {
     mesh_->get_point( p[i], node[i] );
     if (!field_->value( value[i], node[i] )) return;
