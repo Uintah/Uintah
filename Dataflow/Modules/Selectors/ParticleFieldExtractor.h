@@ -97,11 +97,11 @@ private:
   static Mutex module_lock;
 
   GuiString tcl_status;
-
+  GuiInt level_;
   GuiString psVar;
   GuiString pvVar;
   GuiString ptVar;
-
+  
   GuiInt pNMaterials;
 
 

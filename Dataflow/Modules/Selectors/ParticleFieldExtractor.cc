@@ -59,6 +59,7 @@ using std::cerr;
 using std::endl;
 using std::vector;
 using std::string;
+using std::ostringstream;
 
 namespace Uintah {
 
@@ -73,6 +74,7 @@ Mutex ParticleFieldExtractor::module_lock("PFEMutex");
   ParticleFieldExtractor::ParticleFieldExtractor(GuiContext* ctx)
   : Module("ParticleFieldExtractor", ctx, Filter, "Selectors", "Uintah"),
     tcl_status(ctx->subVar("tcl_status")),
+    level_(ctx->subVar("level")),
     psVar(ctx->subVar("psVar")),
     pvVar(ctx->subVar("pvVar")),
     ptVar(ctx->subVar("ptVar")),
@@ -121,7 +123,9 @@ bool ParticleFieldExtractor::setVars(DataArchive& archive)
   vector< int > indices;
   archive.queryTimesteps( indices, times );
   GridP grid = archive.queryGrid(times[0]);
-  LevelP level = grid->getLevel( 0 );
+  int levels = grid->numLevels();
+  int guilevel = level_.get();
+  LevelP level = grid->getLevel( (guilevel == levels ? 0 : guilevel) );
   Patch* r = *(level->patchesBegin());
 
   //string type_list("");
@@ -138,6 +142,9 @@ bool ParticleFieldExtractor::setVars(DataArchive& archive)
   psVar.set("");
   pvVar.set("");
   ptVar.set("");
+
+  ostringstream os;
+  os << levels;
 
   
   // get all of the NC and Particle Variables
@@ -181,13 +188,14 @@ bool ParticleFieldExtractor::setVars(DataArchive& archive)
   
   // get the number of materials for the NC & particle Variables
   num_materials = archive.queryNumMaterials(r, times[0]);
-  cerr << "Number of Materials " << num_materials << endl;
+//   cerr << "Number of Materials " << num_materials << endl;
 
   string visible;
   gui->eval(id + " isVisible", visible);
   if( visible == "1"){
      gui->execute(id + " destroyFrames");
      gui->execute(id + " build");
+     gui->execute(id + " buildLevels "+ os.str());
      gui->execute(id + " buildPMaterials " + to_string(num_materials));
      gui->execute(id + " buildVarList");    
   }
@@ -424,7 +432,10 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 
   
   GridP grid = archive.queryGrid( time );
-  LevelP level = grid->getLevel( 0 );
+  int levels = grid->numLevels();
+  int guilevel = level_.get();
+  LevelP level = grid->getLevel( (guilevel == levels ? 0 : guilevel) );
+
   
   PSet* pset = new PSet();
   pset->SetLevel( level );
