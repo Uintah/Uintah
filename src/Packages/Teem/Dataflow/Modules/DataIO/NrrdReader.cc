@@ -130,7 +130,6 @@ NrrdReader::NrrdReader(SCIRun::GuiContext* ctx) :
   importtypes += "}";
 
   gui_types_.set(importtypes);
-
 }
 
 

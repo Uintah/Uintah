@@ -51,7 +51,7 @@ itcl_class Teem_DataIO_NrrdReader {
     method ui {} {
 	global env
 	global $this-filename
-	
+
 	set w .ui[modname]
 	
 	if {[winfo exists $w]} {
@@ -74,9 +74,9 @@ itcl_class Teem_DataIO_NrrdReader {
 	######################################################
 	
         # Unwrap $this-types into a list.
-        set tmp1 [set $this-types]
-        set tmp2 [eval "set tmp3 $tmp1"]
-	
+	set tmp1 [set $this-types]
+	set tmp2 [eval "set tmp3 $tmp1"]
+
 	makeOpenFilebox \
 	    -parent $w \
 	    -filevar $this-filename \
