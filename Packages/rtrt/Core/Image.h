@@ -8,18 +8,16 @@
 #include <Packages/rtrt/Core/Array1.h>
 
 namespace rtrt {
-class Pixel;
 class Image;
 }
 
 namespace SCIRun {
-void Pio(Piostream&, rtrt::Pixel*&);
 void Pio(Piostream&, rtrt::Image*&);
 }
 
 namespace rtrt {
 
-struct Pixel : public SCIRun::Persistent {
+struct Pixel {
   unsigned char r;
   unsigned char g;
   unsigned char b;
@@ -31,11 +29,6 @@ struct Pixel : public SCIRun::Persistent {
   inline Pixel()
   {
   }
-
-  //! Persistent I/O.
-  static  SCIRun::PersistentTypeID type_id;
-  virtual void io(SCIRun::Piostream &stream);
-  friend void SCIRun::Pio(SCIRun::Piostream&, Pixel*&);
 
   inline void set(const Color& color) {
     float rr=color.r;
