@@ -623,9 +623,10 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
        double term1 = -vol * vol_frac[m][c] * kappa * delP_Dilatate[c];
        double term2 = delT * vol * (vol_frac[m][c] * alpha *  Tdot[m][c] -
                                    f_theta[c] * sum_therm_exp[c]);
-
+                                   
+        // This is actually Vol * sp_vol
        spec_vol_source[c] = term1 + if_mpm_matl_ignore[m] * term2;
-       spec_vol_L[c] = (rho_CC[c]*vol*sp_vol_CC[c]) + spec_vol_source[c]; 
+       spec_vol_L[c] = vol*sp_vol_CC[c] + spec_vol_source[c]/rho_CC[c];
      }
       //---- P R I N T   D A T A ------ 
       if (switchDebugLagrangianSpecificVol ) {
