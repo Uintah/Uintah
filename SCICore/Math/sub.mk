@@ -8,7 +8,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := SCICore/Math
 
 SRCS     += $(SRCDIR)/Mat.c $(SRCDIR)/MusilRNG.cc $(SRCDIR)/TrigTable.cc \
-	$(SRCDIR)/LinAlg.c $(SRCDIR)/fft.c $(SRCDIR)/hf.c $(SRCDIR)/ssmult.c
+	$(SRCDIR)/LinAlg.c $(SRCDIR)/fft.c $(SRCDIR)/hf.c $(SRCDIR)/ssmult.c \
+	$(SRCDIR)/PiecewiseInterp.cc $(SRCDIR)/LinearPWI.cc
 
 PSELIBS := 
 LIBS := -lm
@@ -17,6 +18,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/07/14 23:27:43  samsonov
+# Added interpolation classes source files paths
+#
 # Revision 1.2  2000/03/20 19:37:44  sparker
 # Added VPATH support
 #
