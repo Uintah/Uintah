@@ -16,7 +16,7 @@ void Pio(Piostream&, rtrt::RingSatellite*&);
 
 namespace rtrt {
 
-class RingSatellite : public Ring
+  class RingSatellite : public Ring, public UVMapping
 {
 
  protected:
@@ -28,7 +28,7 @@ class RingSatellite : public Ring
   RingSatellite(const string &name, Material *mat, const Point &center,
                 const Vector &up, double radius, double thickness,
                 Satellite *parent=0) 
-    : Ring(mat, center, up, radius, thickness)
+    : Ring(mat, center, up, radius, thickness), parent_(parent)
   {
     name_ = name;
 
@@ -37,6 +37,8 @@ class RingSatellite : public Ring
   }
   virtual ~RingSatellite() {}
   RingSatellite() : Ring() {} // for Pio.
+
+  virtual void uv(UV& uv, const Point&, const HitInfo& hit);
 
   //! Persistent I/O.
   static  SCIRun::PersistentTypeID type_id;
@@ -59,9 +61,11 @@ class RingSatellite : public Ring
   {
     if (parent_) {
       parent_->compute_bounds(bbox,offset);
-      bbox.extend(parent_->get_center(), radius+offset);
+      bbox.extend(parent_->get_center(), 
+                  parent_->get_orb_radius()+parent_->get_radius()+
+                  radius+thickness+offset);
     } else {
-      bbox.extend(cen, radius+offset);
+      bbox.extend(cen, radius+thickness+offset);
     }
   }
 

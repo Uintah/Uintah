@@ -11,12 +11,23 @@ Persistent* ring_satellite_maker() {
 // initialize the static member type_id
 PersistentTypeID RingSatellite::type_id("RingSatellite", "Material", ring_satellite_maker);
 
-void RingSatellite::animate(double t, bool& changed)
+void RingSatellite::animate(double /*t*/, bool& changed)
 {
   cen = parent_->get_center();
+  d=Dot(this->n, cen);
   changed = true;
 }
   
+void RingSatellite::uv(UV& uv, const Point& hitpos, const HitInfo&)  
+{
+  // radial mapping of a 1D texture
+  double hitdist = (hitpos-cen).length();
+  double edge1 = hitdist-radius;
+  double edge2 = thickness;
+  double u = edge1/edge2;
+  uv.set(u,0);
+}
+
 const int RING_SATELLITE_VERSION = 1;
 
 void 
