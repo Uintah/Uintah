@@ -1096,7 +1096,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 	     computePressEOS(rho_micro[m][*iter],press_eos[m],
 					dp_drho[m],speedSound_new[m][*iter]);
 #endif     
-#if 1         
+#if 0         
     //__________________________________
     //  Hardwire for ideal gas 
           double gamma   = 1.4; 
@@ -1106,6 +1106,21 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 					         cv[m][*iter],Temp[m][*iter]); 
                                                                      
           mpm_matl->getConstitutiveModel()->
+            computePressEOS(rho_micro[m][*iter],gamma,
+                                            cv[m][*iter],Temp[m][*iter],
+                                            press_eos[m],dp_drho[m], dp_de[m]);
+#endif 
+
+#if 1         
+    //__________________________________
+    //  Hardwire for ideal gas 
+          double gamma   = 1.4; 
+          rho_micro[m][*iter] =  
+            mpm_matl->getEOSModel()->computeRhoMicro(
+                                            press_new[*iter],gamma,
+					         cv[m][*iter],Temp[m][*iter]); 
+                                                                     
+          mpm_matl->getEOSModel()->
             computePressEOS(rho_micro[m][*iter],gamma,
                                             cv[m][*iter],Temp[m][*iter],
                                             press_eos[m],dp_drho[m], dp_de[m]);
