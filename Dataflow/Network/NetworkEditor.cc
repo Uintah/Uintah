@@ -315,6 +315,42 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
       net->read_lock();
     } else if (args[1] == "net_read_unlock" && args.count() == 2){
       net->read_unlock();
+    } else if (args[1] == "module_oport_datatypes") {
+      if (args.count() != 5) {
+	args.error("netedit module_oport_datatypes expects a package, category, and module");
+	return;
+      }
+      const ModuleInfo* info = 
+	packageDB->GetModuleInfo(args[4], args[3], args[2]);
+      if (!info) {
+	args.error("netedit module_oports cant find "+args[2]+"->"+
+		   args[3]+"->"+args[4]);
+	return;
+      }
+      string result("");
+      for (std::map<int,OPortInfo*>::iterator op = info->oports->begin(); 
+	   op != info->oports->end(); ++op) {
+	result += (*op).second->datatype + " ";
+      }
+      args.result(result);
+    } else if (args[1] == "module_iport_datatypes") {
+      if (args.count() != 5) {
+	args.error("netedit module_iport_datatypes expects a package, category, and module");
+	return;
+      }
+      const ModuleInfo* info = 
+	packageDB->GetModuleInfo(args[4], args[3], args[2]);
+      if (!info) {
+	args.error("netedit module_oports cant find "+args[2]+"->"+
+		   args[3]+"->"+args[4]);
+	return;
+      }
+      string result("");
+      for (std::map<int,IPortInfo*>::iterator ip = info->iports->begin(); 
+	   ip != info->iports->end(); ++ip) {
+	result += (*ip).second->datatype + " ";
+      }
+      args.result(result);
     } else {
 	args.error("Unknown minor command for netedit");
     }
