@@ -1,4 +1,4 @@
-o/*
+/*
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
@@ -546,7 +546,7 @@ void OpenGL::redraw_frame()
     tkwin=new_tkwin;
     dpy=Tk_Display(tkwin);
     win=Tk_WindowId(tkwin);
-    // Race condition, don't create the context before the window is done.
+    // Race condition,  create context before the window is done.
     while (win==0)
     {
       gui->unlock();
