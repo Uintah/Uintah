@@ -1,19 +1,19 @@
 
 #include <config/sci.cf>
 
-OBJS = ColumnMatrixWriter.o  ContourSetWriter.o   \
+OBJS = ColormapWriter.o  ColumnMatrixWriter.o  ContourSetWriter.o   \
 	MatrixWriter.o  MeshWriter.o   \
-	MultiMeshWriter.o   ScalarFieldWriter.o   SigmaSetWriter.o   \
+	MultiMeshWriter.o   ScalarFieldWriter.o \
 	SurfaceWriter.o   VectorFieldWriter.o \
 	TetraWriter.o
-GENSRCS = ColumnMatrixWriter.cc ContourSetWriter.cc  \
+GENSRCS = ColormapWriter.cc ColumnMatrixWriter.cc ContourSetWriter.cc  \
 	MatrixWriter.cc MeshWriter.cc  \
-	MultiMeshWriter.cc  ScalarFieldWriter.cc  SigmaSetWriter.cc  \
+	MultiMeshWriter.cc  ScalarFieldWriter.cc  \
 	SurfaceWriter.cc  VectorFieldWriter.cc
 SRCS = $(GENSRCS) TetraWriter.cc
-GENTCLS = ColumnMatrixWriter.tcl ContourSetWriter.tcl \
+GENTCLS = ColormapWriter.tcl ColumnMatrixWriter.tcl ContourSetWriter.tcl \
 	MatrixWriter.tcl MeshWriter.tcl \
-	MultiMeshWriter.tcl ScalarFieldWriter.tcl SigmaSetWriter.tcl \
+	MultiMeshWriter.tcl ScalarFieldWriter.tcl \
 	SurfaceWriter.tcl VectorFieldWriter.tcl
 TCLS = $(GENTCLS) TetraWriter.tcl
 
@@ -31,6 +31,12 @@ clean::
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME), $(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
 AllTarget($(GENTCLS))
+
+ColormapWriter.cc: Writer.cc
+	sed 's/TYPE/Colormap/g' < Writer.cc > ColormapWriter.cc
+
+ColormapWriter.tcl: Writer.tcl
+	sed 's/TYPE/Colormap/g' < Writer.tcl > ColormapWriter.tcl
 
 ColumnMatrixWriter.cc: Writer.cc
 	sed 's/TYPE/ColumnMatrix/g' < Writer.cc > ColumnMatrixWriter.cc
@@ -67,12 +73,6 @@ ScalarFieldWriter.cc: Writer.cc
 
 ScalarFieldWriter.tcl: Writer.tcl
 	sed 's/TYPE/ScalarField/g' < Writer.tcl > ScalarFieldWriter.tcl
-
-SigmaSetWriter.cc: Writer.cc
-	sed 's/TYPE/SigmaSet/g' < Writer.cc > SigmaSetWriter.cc
-
-SigmaSetWriter.tcl: Writer.tcl
-	sed 's/TYPE/SigmaSet/g' < Writer.tcl > SigmaSetWriter.tcl
 
 SurfaceWriter.cc: Writer.cc
 	sed 's/TYPE/Surface/g' < Writer.cc > SurfaceWriter.cc
