@@ -38,7 +38,7 @@ itcl_class SCIRun_Fields_ClipField {
 	set $this-autoinvert 0
 	set $this-execmode 0
 	set $this-usefunction 0
-	set $this-clipfunction "\$x == 2"
+	set $this-clipfunction "\$x > 0"
     }
 
     method execrunmode {} {
@@ -58,6 +58,13 @@ itcl_class SCIRun_Fields_ClipField {
     method locationclip {} {
 	set $this-execmode location
 	$this-c needexecute
+    }
+
+    method functioneval {x function} {
+	if {![catch {expr $function} result]} {
+	    return $result
+	}
+	return 0
     }
 
     method ui {} {
