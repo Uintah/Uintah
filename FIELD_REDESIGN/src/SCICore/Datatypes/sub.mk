@@ -42,8 +42,9 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
 	$(SRCDIR)/MeshGeom.cc $(SRCDIR)/PointCloudGeom.cc \
 	$(SRCDIR)/ContourGeom.cc $(SRCDIR)/TetMeshGeom.cc \
 	$(SRCDIR)/SurfaceGeom.cc $(SRCDIR)/TriSurfaceGeom.cc \
-	$(SRCDIR)/Path.cc $(SRCDIR)/CameraView.cc $(SRCDIR)/GenFunction.cc
-
+	$(SRCDIR)/Path.cc $(SRCDIR)/CameraView.cc $(SRCDIR)/GenFunction.cc\
+	$(SRCDIR)/VectorFieldRGCC.cc  \
+	$(SRCDIR)/Path.cc $(SRCDIR)/CameraView.cc $(SRCDIR)/templates.cc
 
 $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 	sed -e 's/RGTYPE/RG/g' -e 's/TYPE/double/g' < $< > $@
@@ -109,6 +110,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.3.2.13  2000/10/26 10:04:22  moulding
+# merge HEAD into FIELD_REDESIGN
+#
 # Revision 1.3.2.12  2000/10/10 23:02:17  michaelc
 # move from {SVT}Field ports to Field ports
 #

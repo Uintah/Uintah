@@ -12,6 +12,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/CCVariable.h>
+#include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Exceptions/InvalidValue.h>
 
 using namespace Uintah::ArchesSpace;
@@ -39,6 +40,7 @@ Properties::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Properties");
   db->require("denUnderrelax", d_denUnderrelax);
+  db->require("ref_point", d_denRef);
 
   // Read the mixing variable streams, total is noofStreams 0 
   d_numMixingVars = 0;
@@ -100,6 +102,7 @@ Properties::sched_computeProps(const LevelP& level,
       for (int ii = 0; ii < d_numMixingVars; ii++) 
 	tsk->requires(old_dw, d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
 			 numGhostCells);
+      tsk->computes(old_dw, d_lab->d_refDensity_label);
       tsk->computes(new_dw, d_lab->d_densityCPLabel, matlIndex, patch);
       sched->addTask(tsk);
     }
@@ -128,6 +131,7 @@ Properties::sched_reComputeProps(const LevelP& level,
       // requires scalars
       tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
+      tsk->computes(new_dw, d_lab->d_refDensity_label);
       tsk->computes(new_dw, d_lab->d_densityCPLabel, matlIndex, patch);
       sched->addTask(tsk);
     }
@@ -153,7 +157,7 @@ Properties::computeProps(const ProcessorGroup*,
   std::vector<CCVariable<double> > scalar(d_numMixingVars);
   old_dw->get(density, d_lab->d_densitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  cerr << "number of mixing vars" << d_numMixingVars << endl;
+  //cerr << "number of mixing vars" << d_numMixingVars << endl;
   for (int ii = 0; ii < d_numMixingVars; ii++)
     old_dw->get(scalar[ii], d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
 		nofGhostCells);
@@ -209,6 +213,15 @@ Properties::computeProps(const ProcessorGroup*,
     }
   }
 #endif
+  if (patch->containsCell(d_denRef)) {
+    double den_ref = density[d_denRef];
+#ifdef ARCHES_DEBUG
+    cerr << "density_ref " << den_ref << endl;
+#endif
+    old_dw->put(sum_vartype(den_ref),d_lab->d_refDensity_label);
+  }
+  else
+    old_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
 
   // Write the computed density to the new data warehouse
   new_dw->put(density,d_lab->d_densityCPLabel, matlIndex, patch);
@@ -281,6 +294,16 @@ Properties::reComputeProps(const ProcessorGroup*,
     }
   }
 #endif
+  if (patch->containsCell(d_denRef)) {
+    double den_ref = density[d_denRef];
+#ifdef ARCHES_PRES_DEBUG
+    cerr << "density_ref " << den_ref << endl;
+#endif
+    new_dw->put(sum_vartype(den_ref),d_lab->d_refDensity_label);
+  }
+  else
+    new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
+
   new_dw->put(density, d_lab->d_densityCPLabel, matlIndex, patch);
 }
 
@@ -303,6 +326,19 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.29.2.1  2000/10/26 10:05:16  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.32  2000/10/12 20:08:33  sparker
+// Made multipatch work for several timesteps
+// Cleaned up print statements
+//
+// Revision 1.31  2000/10/12 00:03:18  rawat
+// running for more than one timestep.
+//
+// Revision 1.30  2000/09/29 20:32:36  rawat
+// added underrelax to pressure solver
+//
 // Revision 1.29  2000/09/20 16:56:16  rawat
 // added some petsc parallel stuff and fixed some bugs
 //

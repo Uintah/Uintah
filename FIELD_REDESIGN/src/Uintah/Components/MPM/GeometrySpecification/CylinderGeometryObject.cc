@@ -65,6 +65,9 @@ Box CylinderGeometryObject::getBoundingBox() const
 }
 
 // $Log$
+// Revision 1.10.4.1  2000/10/26 10:05:47  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.10  2000/04/25 18:43:30  jas
 // Changed variable name of d_num_par_per_cell to d_resolution.
 //

@@ -51,9 +51,9 @@ InPlaneEigenEvaluator::InPlaneEigenEvaluator(const clString& id)
   add_iport(in);
   add_oport(sfout);
 
-  planeEigenValueFuncs[0] = Matrix3::getYZEigenValues;
-  planeEigenValueFuncs[1] = Matrix3::getXZEigenValues;
-  planeEigenValueFuncs[2] = Matrix3::getXYEigenValues;
+  planeEigenValueFuncs[0] = &Matrix3::getYZEigenValues;
+  planeEigenValueFuncs[1] = &Matrix3::getXZEigenValues;
+  planeEigenValueFuncs[2] = &Matrix3::getXYEigenValues;
 }
   
 void InPlaneEigenEvaluator::execute(void) {

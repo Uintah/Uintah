@@ -80,7 +80,7 @@ ParticleFieldExtractor::ParticleFieldExtractor(const clString& id)
     pvVar("pvVar", id, this),
     ptVar("ptVar", id, this),
     pNMaterials("pNMaterials", id, this),
-    archive(0), positionName("")
+    archive(0), positionName(""), particleIDs("")
 { 
   //////////// Initialization code goes here
   // Create Ports
@@ -158,6 +158,11 @@ ParticleFieldExtractor::~ParticleFieldExtractor(){}
        case  TypeDescription::Point:
 	positionName = names[i];
 	break;
+       case TypeDescription::long_type:
+	 if( names[i] == "p.particleID" )
+	   particleIDs = names[i];
+	 else
+	   particleIDs = "";
        default:
 	 cerr<<"Unknown particle type\n";
        }// else { Tensor,Other}
@@ -195,13 +200,38 @@ void ParticleFieldExtractor::callback( int index)
 {
   cerr<< "ParticleFieldExtractor::callback request data for index "<<
     index << ".\n";
-  /*
-  clString idx = to_string(index);
-  TCL::execute( id + " infoFrame " + idx);
-  TCL::execute( id + " infoAdd " + idx + " " + "0" + 
-		" Info for particle " + idx + " in material "
-		+ pName.get() + ".\n");
 
+//   if( this->archive.get_rep() == 0 ) return;
+
+//   DataArchive& archive = *((*(this->archive.get_rep()))());
+//   vector< double > times;
+//   vector< int > indices;
+//   archive.queryTimesteps( indices, times );
+//   double time;
+//   GridP grid = archive.queryGrid( time );
+//   LevelP level = grid->getLevel( 0 );
+
+//   int matl = 0;
+//   double starttime = times[0];
+//   double endtime = times[times.size() -1];
+
+//   vector<double> sparts;
+  
+//   archive.query(sparts, psVar.get()(), 0, index, starttime, endtime);
+
+//   vector<double>::iterator iter = sparts.begin();
+//   for(; iter < sparts.end(); iter++){
+//     cerr<<sparts[*iter]<<" ";
+//   }
+//   cerr<<endl;
+ 
+  
+//   clString idx = to_string(index);
+//   TCL::execute( id + " infoFrame " + idx);
+//   TCL::execute( id + " infoAdd " + idx + " " + "0" + 
+// 		" Info for particle " + idx + " in material "
+// 		+ pName.get() + ".\n");
+  /*
   TCL::execute( id + " infoAdd " + idx + " "
 		+ to_string(tpr->GetNTimesteps())
 		+ " " +  vars[i] + " = " + to_string( scale ));
@@ -304,8 +334,13 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
   GridP grid = archive.queryGrid( time );
   LevelP level = grid->getLevel( 0 );
 
+  PSet* pset = new PSet();
+  pset->SetCallbackClass( this );
+  
+  
    
   ParticleSubset* dest_subset = scinew ParticleSubset();
+  ParticleVariable< long > ids( dest_subset );
   ParticleVariable< Vector > vectors(dest_subset);
   ParticleVariable< Point > positions(dest_subset);
   ParticleVariable< double > scalars(dest_subset);
@@ -314,7 +349,7 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
   bool have_sp = false;
   bool have_vp = false;
   bool have_tp = false;
-  
+  bool have_ids = false;
   // iterate over patches
   for(Level::const_patchIterator r = level->patchesBegin();
       r != level->patchesEnd(); r++ ){
@@ -345,11 +380,18 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
       }
       if(positionName != "")
 	archive.query(pvp, positionName, matl, *r, time);
+
+      if(particleIDs != ""){
+	cerr<<"paricleIDs = "<<particleIDs<<endl;
+	have_ids = true;
+	archive.query(pvi, particleIDs, matl, *r, time);
+      }
       
       ParticleSubset* source_subset = pvs.getParticleSubset();
       particleIndex dest = dest_subset->addParticles(source_subset->numParticles());
       vectors.resync();
       positions.resync();
+      ids.resync();
       scalars.resync();
       tensors.resync();
       for(ParticleSubset::iterator iter = source_subset->begin();
@@ -366,33 +408,42 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 	  tensors[dest]=pvt[*iter];
 	else
 	  tensors[dest]=Matrix3(0.0);
-
+	if(have_ids)
+	  ids[dest] = pvi[*iter];
+	else
+	  ids[dest] = -1;
+	
 	positions[dest]=pvp[*iter];
       }
     }
-  
+    pset->AddParticles( positions, ids, *r);
+    
     if(have_sp) {
       if( sp == 0 ){
 	sp = scinew ScalarParticles();
-	sp->SetCallbackClass( this );
+	sp->Set( PSetHandle(pset) );
       }
-      sp->AddVar( positions, scalars, *r);
+      sp->AddVar( scalars );
     } else 
       sp = 0;
     if(have_vp) {
       if( vp == 0 ){
 	vp = scinew VectorParticles();
-	vp->SetCallbackClass( this );
+	vp->Set( PSetHandle(pset));
       }
-      vp->AddVar( positions, vectors, *r);
+      vp->AddVar( vectors );
     } else 
-      sp = 0;
+      vp = 0;
+
+    if(have_tp){
+      if( tp == 0 ){
+	tp = scinew TensorParticles();
+	tp->Set( PSetHandle(pset) );
+      }
+      tp->AddVar( tensors);
+    } else
+      tp = 0;
   }
-  if(have_tp){
-    tp =  scinew TensorParticles( positions, tensors, this);
-    tp->SetCallbackClass( this );
-  } else
-    tp = 0;
 } 
 
 //--------------------------------------------------------------- 

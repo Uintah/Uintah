@@ -49,8 +49,11 @@ WARNING
 	    double K;
             double Alpha;
 	 };	 
+	 struct StateData {
+            double Alpha;
+	 };	 
       private:
-	 friend const TypeDescription* fun_getTypeDescription(CMData*);
+	 friend const TypeDescription* fun_getTypeDescription(StateData*);
 
 	 CMData d_initialData;
 	 
@@ -109,9 +112,10 @@ WARNING
 
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to);
- 	 const VarLabel* p_cmdata_label;
+
+ 	 const VarLabel* p_statedata_label;
+ 	 const VarLabel* p_statedata_label_preReloc;
          const VarLabel* bElBarLabel;
- 	 const VarLabel* p_cmdata_label_preReloc;
          const VarLabel* bElBarLabel_preReloc;
       };
 
@@ -121,6 +125,19 @@ WARNING
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.17.2.1  2000/10/26 10:05:40  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.19  2000/10/11 01:30:28  guilkey
+// Made CMData no longer a per particle variable for these models.
+// None of them currently have anything worthy of being called StateData,
+// so no such struct was created.
+//
+// Revision 1.18  2000/10/10 00:10:28  guilkey
+// Created a StateData struct, which is used to store those variables
+// which actually need to be stored on a per particle basis.  CMData
+// variable are stored only once now.
+//
 // Revision 1.17  2000/09/12 16:52:10  tan
 // Reorganized crack surface contact force algorithm.
 //

@@ -163,6 +163,9 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.12.2.1  2000/10/26 10:05:33  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.12  2000/10/25 23:12:17  guilkey
 // Fixed step2, reorganized 6and7 just a little bit.
 //

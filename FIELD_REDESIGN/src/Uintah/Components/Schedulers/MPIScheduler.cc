@@ -364,8 +364,10 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 				    req->d_patch, d_myworld,
 				    MPI_ANY_SOURCE,
 				    req->d_serialNumber, &size, &requestid);
-			log.logRecv(req, size);
-			recv_ids.push_back(requestid);	
+			if(size != -1){
+			   log.logRecv(req, size);
+			   recv_ids.push_back(requestid);
+			}
 			dbg << "there are now " << recv_ids.size() << " waiters\n";
 		     }
 		  }
@@ -411,7 +413,9 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	    if(task->getPatch())
 	       dbg << " on patch " << task->getPatch()->getID() << '\n';
 	    double taskstart = Time::currentSeconds();
+	    //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
 	    task->doit(pc);
+	    //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
 	    double sendstart = Time::currentSeconds();
 	    
 
@@ -449,8 +453,10 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 				       dep->d_task->getAssignedResourceIndex(),
 				       dep->d_serialNumber,
 				       &size, &requestid);
-			   log.logSend(dep, size);
-			   send_ids.push_back(requestid);
+			   if(size != -1){
+			      log.logSend(dep, size);
+			      send_ids.push_back(requestid);
+			   }
 			   varsent.insert(ddest);
 			}
 		     }
@@ -496,6 +502,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
    finalizeNodes(me);
    int junk;
    MPI_Buffer_detach(&mpibuffer, &junk);
+   delete[] mpibuffer;
    if(old_mpibuffersize)
       MPI_Buffer_attach(old_mpibuffer, old_mpibuffersize);
 
@@ -644,6 +651,7 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 		     smr->vars.push_back(new_dw->getParticleVariable(reloc_old_labels[m][v], pset));
 		  smr->relocset = scinew ParticleSubset(pset->getParticleSet(),
 						     false, -1, 0);
+		  smr->relocset->addReference();
 	       }
 	       sr[i]->matls[m]->relocset->addParticle(idx);
 	    }
@@ -673,7 +681,7 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 		  ParticleVariableBase* var = mr->vars[v];
 		  ParticleVariableBase* var2 = var->cloneSubset(mr->relocset);
 		  var2->packsizeMPI(&sendsize, pc, 0, numP);
-		  //delete var2;
+		  delete var2;
 		}
 	      } else {
 		int size;
@@ -851,10 +859,14 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 	 delete subsets[i];
    }
    for(int i=0;i<(int)sr.size();i++){
-     for(int m=0;m<reloc_numMatls;m++)
-       if(sr[i]->matls[m])
-	 delete sr[i]->matls[m];
-     delete sr[i];
+      for(int m=0;m<reloc_numMatls;m++){
+	 if(sr[i]->matls[m]){
+	    if(sr[i]->matls[m]->relocset->removeReference())
+	       delete sr[i]->matls[m]->relocset;
+	    delete sr[i]->matls[m];
+	 }
+      }
+      delete sr[i];
    }
    for(int i=0;i<(int)neighbors.size();i++){
       ASSERTEQ(recvsize[i], recvpos[i]);
@@ -881,6 +893,24 @@ MPIScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.25.2.1  2000/10/26 10:05:55  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.30  2000/10/13 21:14:15  sparker
+// Commented out called to malloc audit
+//
+// Revision 1.29  2000/10/10 05:13:31  sparker
+// Repaired (a) memory leak in particle relcation
+//
+// Revision 1.28  2000/10/09 22:43:33  sparker
+// must free mpi buffer
+//
+// Revision 1.27  2000/09/30 05:33:10  sparker
+// Fixed typo
+//
+// Revision 1.26  2000/09/29 21:19:57  sparker
+// Do not log send or wait for the send if size == -1
+//
 // Revision 1.25  2000/09/27 20:49:55  witzel
 // It needed to receive in gatherParticles even for zero byte data.
 //

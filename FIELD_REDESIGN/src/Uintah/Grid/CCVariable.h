@@ -67,6 +67,8 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       // Insert Documentation Here:
       static const TypeDescription* getTypeDescription();
       
+
+      virtual void rewindow(const IntVector& low, const IntVector& high);
       virtual void copyPointer(const CCVariableBase&);
 
       //////////
@@ -294,12 +296,21 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       void CCVariable<T>::allocate(const IntVector& lowIndex,
 				   const IntVector& highIndex)
       {
-	//	 if(getWindow())
-	//	    throw InternalError("Allocating a CCvariable that "
-	//				"is apparently already allocated!");
+	if(getWindow())
+	   throw InternalError("Allocating a CCvariable that "
+			       "is apparently already allocated!");
 	 resize(lowIndex, highIndex);
       }
 
+   template<class T>
+      void CCVariable<T>::rewindow(const IntVector& low,
+				   const IntVector& high) {
+      Array3<T> newdata;
+      newdata.resize(low, high);
+      newdata.copy(*this, low, high);
+      resize(low, high);
+      Array3<T>::operator=(newdata);
+   }
    template<class T>
       void
       CCVariable<T>::copyPatch(CCVariableBase* srcptr,
@@ -381,6 +392,17 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
 //
 // $Log$
+// Revision 1.24.2.1  2000/10/26 10:06:07  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.26  2000/10/12 20:05:37  sparker
+// Removed print statement from FCVariable
+// Added rewindow to SFC{X,Y,Z}Variables
+// Uncommented assertion in CCVariable
+//
+// Revision 1.25  2000/10/11 21:39:59  sparker
+// Added rewindow to CCVariable - just copies the array to a different window
+//
 // Revision 1.24  2000/09/25 20:37:42  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >

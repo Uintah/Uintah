@@ -101,6 +101,9 @@ void CCScalarField<T>::AddVar( const CCVariable<T>& v, const Patch* p)
   nx = high.x() - low.x();
   ny = high.y() - low.y();
   nz = high.z() - low.z();
+
+  //cerr<<"High index = "<<high<<",  low index = "<< low << endl;
+  
 }
 
 template<class T>
@@ -188,27 +191,22 @@ int CCScalarField<T>::interpolate(const Point& p, double& value, double eps,
 {
   using SCICore::Math::Interpolate;
 
-  Uintah::Box b;
   int i;
+
+  IntVector index;
+  index = _level->getCellIndex( p );
   Level::const_patchIterator r;
   for(i = 0, r = _level->patchesBegin();
       r != _level->patchesEnd(); r++, i++){
-    b = (*r)->getBox();
-    if(b.contains(p)){
+    if( (*r)->containsCell( index )){
       break;
     }
   }
 
-  if (i >= _vars.size())
+  if (i >= _vars.size() || r == _level->patchesEnd() )
     return 0;
   
-  IntVector index;
-  if( !(*r)->findCell( p, index))
-    return 0;
-  int ix = index.x();
-  int iy = index.y();
-  int iz = index.z();
-  value = _vars[i][IntVector(ix, iy, iz)];
+  value = _vars[i][index];
   return 1;
 }
 

@@ -116,6 +116,9 @@ void PerfTest::time(struct timeb* t)
 
 //
 // $Log$
+// Revision 1.3.2.2  2000/10/26 10:04:47  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.3.2.1  2000/09/28 03:11:46  mcole
 // merge trunk into FIELD_REDESIGN branch
 //

@@ -137,6 +137,11 @@ private:
 			     DataWarehouseP& new_dw,
 			     DataWarehouseP& matrix_dw,
 			     double delta_t);
+      void buildLinearMatrixPress(const ProcessorGroup* pc,
+			     const Patch* patch,
+			     DataWarehouseP& new_dw,
+			     DataWarehouseP& matrix_dw,
+			     double delta_t);
 
       void pressureLinearSolve_all(const ProcessorGroup* pc,
 				   const Patch* patch,
@@ -146,7 +151,8 @@ private:
       void pressureLinearSolve(const ProcessorGroup* pc,
 			       const Patch* patch,
 			       DataWarehouseP& new_dw,
-			       DataWarehouseP& matrix_dw);
+			       DataWarehouseP& matrix_dw,
+			       ArchesVariables& pressureVars);
       
       ///////////////////////////////////////////////////////////////////////
       //
@@ -162,9 +168,6 @@ private:
 
  private:
 
-      // stores the variables used by different functions
-      ArchesVariables* d_pressureVars;
-      
       // computes coefficients
       Discretization* d_discretize;
       // computes sources
@@ -198,6 +201,16 @@ private:
 
 //
 // $Log$
+// Revision 1.28.2.1  2000/10/26 10:05:15  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.30  2000/10/07 05:38:51  sparker
+// Changed d_pressureVars into a few different local variables so that
+// they will be freed at the end of the task.
+//
+// Revision 1.29  2000/10/04 16:46:24  rawat
+// Parallel solver for pressure is working
+//
 // Revision 1.28  2000/09/20 18:05:34  sparker
 // Adding support for Petsc and per-processor tasks
 //

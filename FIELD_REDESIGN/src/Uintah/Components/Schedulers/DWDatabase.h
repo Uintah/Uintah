@@ -58,6 +58,7 @@ public:
 		const Patch* patch) const;
    void copyAll(const DWDatabase& from, const VarLabel*, const Patch* patch);
    void print(ostream&);
+   void cleanForeign();
 private:
    typedef vector<VarType*> dataDBtype;
 
@@ -97,6 +98,28 @@ DWDatabase<VarType>::~DWDatabase()
    for(nameDBtype::iterator iter = names.begin();
        iter != names.end(); iter++){
       delete iter->second;
+   }
+}
+
+template<class VarType>
+void
+DWDatabase<VarType>::cleanForeign()
+{
+   for(nameDBtype::iterator iter = names.begin();
+       iter != names.end(); iter++){
+      NameRecord* nr = iter->second;
+      for(patchDBtype::iterator iter = nr->patches.begin();
+	  iter != nr->patches.end(); iter++){
+	 PatchRecord* pr = iter->second;
+	 for(dataDBtype::iterator iter = pr->vars.begin();
+	     iter != pr->vars.end(); iter++){
+	    VarType* var = *iter;
+	    if(var && var->isForeign()){
+	       delete var;
+	       *iter=0;
+	    }
+	 }
+      }
    }
 }
 
@@ -209,6 +232,7 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
    }
 
    rr->vars[matlIndex]=var;
+
 }
 
 template<class VarType>
@@ -222,6 +246,7 @@ VarType* DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
 			    "no variable name");
 
    NameRecord* nr = nameiter->second;
+
    patchDBtype::const_iterator patchiter = nr->patches.find(patch);
    if(patchiter == nr->patches.end())
       throw UnknownVariable(label->getName(), patch->getID(),
@@ -299,6 +324,17 @@ void DWDatabase<VarType>::print(std::ostream& out)
 
 //
 // $Log$
+// Revision 1.15.2.1  2000/10/26 10:05:55  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.17  2000/10/13 20:46:39  sparker
+// Clean out foreign variables at finalize time
+//
+// Revision 1.16  2000/09/28 23:16:45  jas
+// Added (int) for anything returning the size of a STL component.  Added
+// <algorithm> and using std::find.  Other minor modifications to get
+// rid of warnings for g++.
+//
 // Revision 1.15  2000/09/27 02:07:18  dav
 // cosmetics and printout fix
 //

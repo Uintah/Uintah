@@ -7,10 +7,8 @@ include $(SRCTOP)/scripts/largeso_prologue.mk
 
 SRCDIR := PSECommon
 
-SUBDIRS := $(SRCDIR)/ThirdParty \
-	$(SRCDIR)/Algorithms \
-	$(SRCDIR)/Modules \
-	$(SRCDIR)/GUI
+SUBDIRS := $(SRCDIR)/ThirdParty $(SRCDIR)/Algorithms $(SRCDIR)/Modules \
+	 $(SRCDIR)/GUI
 
 include $(SRCTOP)/scripts/recurse.mk
 
@@ -22,6 +20,9 @@ include $(SRCTOP)/scripts/largeso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2.2.2  2000/10/26 10:03:12  moulding
+# merge HEAD into FIELD_REDESIGN
+#
 # Revision 1.2.2.1  2000/09/28 03:16:44  mcole
 # merge trunk into FIELD_REDESIGN branch
 #

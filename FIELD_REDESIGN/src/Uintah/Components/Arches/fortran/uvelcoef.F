@@ -11,7 +11,7 @@ c*********************************************************************
 c     &     DU,
      &     domLoV, domHiV, VV,
      &     domLoW, domHiW, WW,
-     &     domLo, domHi, DEN, VIS, 
+     &     domLoeg, domHieg, domLo, domHi, DEN, VIS, 
      &     DELTAT,
      &     CEEU, CWEU, CWWU, CNN, CSN, CSS,
      &     CTT, CBT, CBB, SEWU, SEW, SNS, STB,
@@ -83,9 +83,10 @@ c     &     domLoU(3):domHiU(3))
       integer domLoW(3), domHiW(3)
       double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
      &     domLoW(3):domHiW(3))
+      integer domLoeg(3), domHieg(3)
       integer domLo(3), domHi(3)
-      double precision DEN(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
+      double precision DEN(domLoeg(1):domHieg(1), domLoeg(2):domHieg(2), 
+     &     domLoeg(3):domHieg(3))
       double precision VIS(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
       double precision DELTAT
@@ -270,12 +271,13 @@ C-----------------------------------------------------------------------
                IF (COEFE.LT.0.0 .OR. COEFW.LT.0.0) TEW = 0.0
                IF (COEFN.LT.0.0 .OR. COEFS.LT.0.0) TNS = 0.0
                IF (COEFT.LT.0.0 .OR. COEFB.LT.0.0) TTB = 0.0
-               AEC = -0.5*CE*TEW + MAX(0.0,-CPE)*(1.0-TEW)
-               AWC = 0.5*CW*TEW + MAX(0.0,CPW)*(1.0-TEW)
-               ANC = -0.5*CN*TNS + MAX(0.0,-CPN)*(1.0-TNS)
-               ASC = 0.5*CS*TNS + MAX(0.0,CPS)*(1.0-TNS)
-               ATC = -0.5*CT*TTB + MAX(0.0,-CPT)*(1.0-TTB)
-               ABC = 0.5*CB*TTB + MAX(0.0,CPB)*(1.0-TTB)
+c ** this is a version that uses double precision
+c               AEC = -0.5*CE*TEW + MAX(0.0,-CPE)*(1.0-TEW)
+c               AWC = 0.5*CW*TEW + MAX(0.0,CPW)*(1.0-TEW)
+c               ANC = -0.5*CN*TNS + MAX(0.0,-CPN)*(1.0-TNS)
+c               ASC = 0.5*CS*TNS + MAX(0.0,CPS)*(1.0-TNS)
+c               ATC = -0.5*CT*TTB + MAX(0.0,-CPT)*(1.0-TTB)
+c               ABC = 0.5*CB*TTB + MAX(0.0,CPB)*(1.0-TTB)
 c               DU(I,J,K) = VOL/DXPW(I)
 c              TSUM = TSUM + TEW+TNS+TTB
 C----------------------------------------------------------------------
@@ -302,18 +304,18 @@ c    &                 ATC*U(I,J,K+1)+ABC*U(I,J,K-1)
 c                 AC(I,J,K) = 0.0
 c                 SU(I,J,K) = 0.0
                ELSE IF (L2UP) THEN
-                  AE(I,J,K) = DE*(1.0-MAX(0.0,SIGN(1.0,COEFE)))
-     &                 + MAX(0.0,COEFE) + MAX(0.0,-CE)
-                  AW(I,J,K) = DW*(1.0-MAX(0.0,SIGN(1.0,COEFW)))
-     &                 + MAX(0.0,COEFW) + MAX(0.0,CW)
-                  AN(I,J,K) = DN*(1.0-MAX(0.0,SIGN(1.0,COEFN)))
-     &                 + MAX(0.0,COEFN) + MAX(0.0,-CN)
-                  AS(I,J,K) = DS*(1.0-MAX(0.0,SIGN(1.0,COEFS)))
-     &                 + MAX(0.0,COEFS) + MAX(0.0,CS)
-                  AT(I,J,K) = DT*(1.0-MAX(0.0,SIGN(1.0,COEFT)))
-     &                 + MAX(0.0,COEFT) + MAX(0.0,-CT)
-                  AB(I,J,K) = DB*(1.0-MAX(0.0,SIGN(1.0,COEFB)))
-     &                 + MAX(0.0,COEFB) + MAX(0.0,CB)
+                  AE(I,J,K) = DE*(1.0-dMAX1(0.0D0,dSIGN(1.0D0,COEFE)))
+     &                 + dMAX1(0.0D0,COEFE) + dMAX1(0.0D0,-CE)
+                  AW(I,J,K) = DW*(1.0-dMAX1(0.0D0,dSIGN(1.0D0,COEFW)))
+     &                 + dMAX1(0.0D0,COEFW) + dMAX1(0.0D0,CW)
+                  AN(I,J,K) = DN*(1.0-dMAX1(0.0D0,dSIGN(1.0D0,COEFN)))
+     &                 + dMAX1(0.0D0,COEFN) + dMAX1(0.0D0,-CN)
+                  AS(I,J,K) = DS*(1.0-dMAX1(0.0D0,dSIGN(1.0D0,COEFS)))
+     &                 + dMAX1(0.0D0,COEFS) + dMAX1(0.0D0,CS)
+                  AT(I,J,K) = DT*(1.0-dMAX1(0.0D0,dSIGN(1.0D0,COEFT)))
+     &                 + dMAX1(0.0D0,COEFT) + dMAX1(0.0D0,-CT)
+                  AB(I,J,K) = DB*(1.0-dMAX1(0.0D0,dSIGN(1.0D0,COEFB)))
+     &                 + dMAX1(0.0D0,COEFB) + dMAX1(0.0D0,CB)
 c                 AC(I,J,K) = 0.0
 c                 SU(I,J,K) = 0.0
                ELSE
@@ -336,6 +338,15 @@ c                 SU(I,J,K) = 0.0
 c*********************************************************************
 c
 c $Log$
+c Revision 1.7.2.1  2000/10/26 10:05:26  moulding
+c merge HEAD into FIELD_REDESIGN
+c
+c Revision 1.9  2000/10/08 18:56:41  rawat
+c fixed the solver for multi
+c
+c Revision 1.8  2000/09/28 22:16:47  bigler
+c Changed certain functions to explicity be double precision functions.
+c
 c Revision 1.7  2000/09/26 04:35:34  rawat
 c added some more multi-patch support
 c

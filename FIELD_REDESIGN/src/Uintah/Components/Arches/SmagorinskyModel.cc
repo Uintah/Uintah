@@ -188,14 +188,14 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
   old_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch, Ghost::None,
 	      zeroGhostCells);
 
-  PerPatch<CellInformation*> cellinfop;
+  PerPatch<CellInformationP> cellinfop;
   //if (old_dw->exists(d_cellInfoLabel, patch)) {
-    old_dw->get(cellinfop, d_lab->d_cellInfoLabel, matlIndex, patch);
+  old_dw->get(cellinfop, d_lab->d_cellInfoLabel, matlIndex, patch);
   //} else {
   //  cellinfop.setData(scinew CellInformation(patch));
   //  old_dw->put(cellinfop, d_cellInfoLabel, matlIndex, patch);
   //}
-  CellInformation* cellinfo = cellinfop;
+  CellInformation* cellinfo = cellinfop.get().get_rep();
 
   //  DataWarehouseP top_dw = new_dw->getTop();
   // Get the patch details
@@ -213,6 +213,10 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
   IntVector domHiVis = viscosity.getFortHighIndex();
   IntVector lowIndex = patch->getCellFORTLowIndex();
   IntVector highIndex = patch->getCellFORTHighIndex();
+  IntVector domLo = patch->getGhostCellLowIndex(numGhostCells);
+  // compatible with fortran index
+  IntVector domHi = patch->getGhostCellHighIndex(numGhostCells) - 
+                                              IntVector(1,1,1);
 
     // get physical constants
   double mol_viscos; // molecular viscosity
@@ -228,6 +232,7 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
 		 domLoVis.get_pointer(), domHiVis.get_pointer(), 
 		 lowIndex.get_pointer(), highIndex.get_pointer(), 
 		 viscosity.getPointer(),
+ 		 domLo.get_pointer(), domHi.get_pointer(),
 		 cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
 		 cellinfo->stb.get_objs(), &mol_viscos,
 		 &d_CF, &d_factorMesh, &d_filterl);
@@ -285,7 +290,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	      zeroGhostCells);
 
   // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
+  PerPatch<CellInformationP> cellInfoP;
   old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   //  if (old_dw->exists(d_cellInfoLabel, patch)) 
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
@@ -293,7 +298,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
   //  cellInfoP.setData(scinew CellInformation(patch));
   //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //}
-  CellInformation* cellinfo = cellInfoP;
+  CellInformation* cellinfo = cellInfoP.get().get_rep();
   
   // get physical constants
   double mol_viscos; // molecular viscosity
@@ -312,8 +317,14 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
   IntVector domHiW = wVelocity.getFortHighIndex();
   IntVector idxLoW = patch->getSFCZFORTLowIndex();
   IntVector idxHiW = patch->getSFCZFORTHighIndex();
-  IntVector domLo = density.getFortLowIndex();
-  IntVector domHi = density.getFortHighIndex();
+  IntVector domLo = patch->getGhostCellLowIndex(numGhostCells);
+  // compatible with fortran index
+  IntVector domHi = patch->getGhostCellHighIndex(numGhostCells) - 
+                                              IntVector(1,1,1);
+  IntVector domLoDen = density.getFortLowIndex();
+  IntVector domHiDen = density.getFortHighIndex();
+  IntVector domLoVis = viscosity.getFortLowIndex();
+  IntVector domHiVis = viscosity.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
@@ -323,12 +334,13 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		 vVelocity.getPointer(),
 		 domLoW.get_pointer(), domHiW.get_pointer(), 
 		 wVelocity.getPointer(),
-		 domLo.get_pointer(), domHi.get_pointer(), 
+		 domLoDen.get_pointer(), domHiDen.get_pointer(), 
 		 density.getPointer(),
-		 domLo.get_pointer(), domHi.get_pointer(), 
+		 domLoVis.get_pointer(), domHiVis.get_pointer(),
 		 idxLo.get_pointer(), idxHi.get_pointer(), 
 		 viscosity.getPointer(),
-		 cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+ 		 domLo.get_pointer(), domHi.get_pointer(),
+ 		 cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
 		 cellinfo->stb.get_objs(), &mol_viscos,
 		 &d_CF, &d_factorMesh, &d_filterl);
 
@@ -366,10 +378,10 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 #ifdef ARCHES_PRES_DEBUG
   // Testing if correct values have been put
   cerr << " AFTER COMPUTE TURBULENCE SUBMODEL " << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
     cerr << "Viscosity for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+      for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
 	cerr.width(10);
 	cerr << viscosity[IntVector(ii,jj,kk)] << " " ; 
       }
@@ -424,7 +436,7 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
 	      numGhostCells);
 
   // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
+  PerPatch<CellInformationP> cellInfoP;
   old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   //  if (old_dw->exists(d_cellInfoLabel, patch)) 
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
@@ -650,6 +662,16 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.31.2.1  2000/10/26 10:05:16  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.33  2000/10/14 17:11:05  sparker
+// Changed PerPatch<CellInformation*> to PerPatch<CellInformationP>
+// to get rid of memory leak
+//
+// Revision 1.32  2000/10/12 00:03:18  rawat
+// running for more than one timestep.
+//
 // Revision 1.31  2000/09/25 14:40:20  rawat
 // modified requires for multi-patch
 //

@@ -496,7 +496,6 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 	    throw InternalError("X faces around z faces not implemented");
 	case Ghost::AroundAllFaces: // X faces around all faces
 	    throw InternalError("X faces around all faces not implemented");
-	    break;
 	}
 	break;
     case YFaceBased:
@@ -521,7 +520,6 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 	    throw InternalError("Y faces around z faces not implemented");
 	case Ghost::AroundAllFaces: // Y faces around all faces
 	    throw InternalError("Y faces around all faces not implemented");
-	    break;
 	}
 	break;
     case ZFaceBased:
@@ -546,7 +544,6 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 	    break;
 	case Ghost::AroundAllFaces: // Z faces around all faces
 	    throw InternalError("Z faces around all faces not implemented");
-	    break;
 	}
 	break;
     case AllFaceBased:
@@ -567,11 +564,12 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 	    throw InternalError("All faces around z faces not implemented");
 	case Ghost::AroundAllFaces: // All faces around all faces
 	    throw InternalError("All faces around all faces not implemented");
-	    break;
 	}
 	break;
     }
-    d_level->selectPatches(l, h, neighbors);
+    low=l;
+    high=h;
+    d_level->selectPatches(low, high, neighbors);
 }
 
 void Patch::computeVariableExtents(TypeDescription::Type basis,
@@ -680,6 +678,17 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 
 //
 // $Log$
+// Revision 1.22.2.1  2000/10/26 10:06:08  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.24  2000/10/11 21:39:59  sparker
+// Added rewindow to CCVariable - just copies the array to a different window
+//
+// Revision 1.23  2000/10/11 17:39:38  sparker
+// Added copy with range
+// Fixed bug in Array3Data::copy
+// Fixed compiler warnings
+//
 // Revision 1.22  2000/09/25 20:58:14  sparker
 // Removed a few "if 0" statements.
 //

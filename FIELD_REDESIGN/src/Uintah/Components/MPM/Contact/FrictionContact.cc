@@ -488,11 +488,11 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
   }
 
   //  print out epsilon_max_max
-  static int ts=0;
-  static ofstream tmpout("max_strain.dat");
+  //  static int ts=0;
+  //  static ofstream tmpout("max_strain.dat");
 
-  tmpout << ts << " " << epsilon_max_max << endl;
-  ts++;
+  //  tmpout << ts << " " << epsilon_max_max << endl;
+  //  ts++;
 
   // Store new velocities and accelerations in DataWarehouse
   for(int n = 0; n < NVFs; n++){
@@ -545,6 +545,12 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.32.4.1  2000/10/26 10:05:43  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.33  2000/10/19 22:52:49  bard
+// Commented out the writing of a debugging file which crept in here.
+//
 // Revision 1.32  2000/09/25 20:23:20  sparker
 // Quiet g++ warnings
 //

@@ -417,6 +417,9 @@ void SimpVolVis::widget_moved(int /*last*/)
 
 //
 // $Log$
+// Revision 1.9.2.2  2000/10/26 10:03:47  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.9.2.1  2000/09/28 03:15:32  mcole
 // merge trunk into FIELD_REDESIGN branch
 //

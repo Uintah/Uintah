@@ -8,6 +8,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/Arches/Discretization.h>
 #include <Uintah/Components/Arches/StencilMatrix.h>
 #include <Uintah/Components/Arches/CellInformation.h>
+#include <Uintah/Grid/CellIterator.h>
 #include <Uintah/Grid/Stencil.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Grid/Level.h>
@@ -63,11 +64,14 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   IntVector domHiV = coeff_vars->vVelocity.getFortHighIndex();
   IntVector domLoW = coeff_vars->wVelocity.getFortLowIndex();
   IntVector domHiW = coeff_vars->wVelocity.getFortHighIndex();
-  IntVector domLo = coeff_vars->density.getFortLowIndex();
-  IntVector domHi = coeff_vars->density.getFortHighIndex();
+  IntVector domLo = coeff_vars->viscosity.getFortLowIndex();
+  IntVector domHi = coeff_vars->viscosity.getFortHighIndex();
+  IntVector domLoeg = coeff_vars->density.getFortLowIndex();
+  IntVector domHieg = coeff_vars->density.getFortHighIndex();
   // get domain size without ghost cells
   // using ng for no ghost cell
 
+#ifdef ARCHES_COEF_DEBUG
   cerr << "BEFORE VELCOEF" << endl;
   for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
     cerr << "Density for ii = " << ii << endl;
@@ -81,7 +85,6 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   }
   cerr << "BEFORE VELCOEF" << endl;
 
-#ifdef ARCHES_COEF_DEBUG
   cerr << "BEFORE VELCOEF" << endl;
   for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
     cerr << "Density for ii = " << ii << endl;
@@ -137,7 +140,9 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
     // Get the patch indices
     IntVector idxLoU = patch->getSFCXFORTLowIndex();
     IntVector idxHiU = patch->getSFCXFORTHighIndex();
-
+#ifdef ARCHES_COEF_DEBUG
+    cerr << "idxLou, idxHiU" << idxLoU << " " << idxHiU << endl;
+#endif
     // Calculate the coeffs
     FORT_UVELCOEF(domLoU.get_pointer(), domHiU.get_pointer(),
 		  domLoUng.get_pointer(), domHiUng.get_pointer(),
@@ -161,6 +166,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  coeff_vars->vVelocity.getPointer(),
 		  domLoW.get_pointer(), domHiW.get_pointer(),
 		  coeff_vars->wVelocity.getPointer(),
+		  domLoeg.get_pointer(), domHieg.get_pointer(),
 		  domLo.get_pointer(), domHi.get_pointer(),
 		  coeff_vars->density.getPointer(),
 		  coeff_vars->viscosity.getPointer(),
@@ -362,6 +368,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  coeff_vars->uVelocity.getPointer(),
 		  domLoW.get_pointer(), domHiW.get_pointer(),
 		  coeff_vars->wVelocity.getPointer(),
+		  domLoeg.get_pointer(), domHieg.get_pointer(),
 		  domLo.get_pointer(), domHi.get_pointer(),
 		  coeff_vars->density.getPointer(),
 		  coeff_vars->viscosity.getPointer(),
@@ -563,6 +570,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  coeff_vars->uVelocity.getPointer(),
 		  domLoV.get_pointer(), domHiV.get_pointer(),
 		  coeff_vars->vVelocity.getPointer(),
+		  domLoeg.get_pointer(), domHieg.get_pointer(),
 		  domLo.get_pointer(), domHi.get_pointer(),
 		  coeff_vars->density.getPointer(),
 		  coeff_vars->viscosity.getPointer(),
@@ -977,6 +985,8 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
   // Get the domain size and the patch indices
   IntVector domLo = coeff_vars->density.getFortLowIndex();
   IntVector domHi = coeff_vars->density.getFortHighIndex();
+  IntVector domLong = coeff_vars->scalarNonlinearSrc.getFortLowIndex();
+  IntVector domHing = coeff_vars->scalarNonlinearSrc.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   IntVector domLoU = coeff_vars->uVelocity.getFortLowIndex();
@@ -1046,6 +1056,7 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
 #endif
 
   FORT_SCALARCOEFF(domLo.get_pointer(), domHi.get_pointer(),
+		   domLong.get_pointer(), domHing.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
 		   coeff_vars->density.getPointer(),
 		   coeff_vars->viscosity.getPointer(), 
@@ -1281,6 +1292,12 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 		   coeff_vars->uVelLinearSrc.getPointer());
 
 #ifdef ARCHES_COEF_DEBUG
+    cerr << "After UVELCOEF" << endl;
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr <<"AP"<< *iter << ": " << (coeff_vars->uVelocityCoeff[Arches::AP])[*iter] << "\n" ; 
+    }
     cerr << "AFTER Calculate U Velocity Diagonal :" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "AP - U Vel Coeff for ii = " << ii << endl;
@@ -1518,6 +1535,25 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.45.2.1  2000/10/26 10:05:14  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.50  2000/10/12 20:08:33  sparker
+// Made multipatch work for several timesteps
+// Cleaned up print statements
+//
+// Revision 1.49  2000/10/10 19:30:57  rawat
+// added scalarsolver
+//
+// Revision 1.48  2000/10/08 18:56:35  rawat
+// fixed the solver for multi
+//
+// Revision 1.47  2000/10/05 16:39:46  rawat
+// modified bcs for multi-patch
+//
+// Revision 1.46  2000/10/02 16:40:24  rawat
+// updated cellinformation for multi-patch
+//
 // Revision 1.45  2000/09/26 04:35:28  rawat
 // added some more multi-patch support
 //

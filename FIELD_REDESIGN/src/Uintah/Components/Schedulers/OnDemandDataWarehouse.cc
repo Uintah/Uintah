@@ -82,6 +82,12 @@ bool OnDemandDataWarehouse::isFinalized() const
 
 void OnDemandDataWarehouse::finalize()
 {
+   d_ncDB.cleanForeign();
+   d_ccDB.cleanForeign();
+   d_particleDB.cleanForeign();
+   d_sfcxDB.cleanForeign();
+   d_sfcyDB.cleanForeign();
+   d_sfczDB.cleanForeign();
   d_finalized=true;
 }
 
@@ -173,7 +179,7 @@ OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
       var->getMPIBuffer(buf, count, datatype);
 
       MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
-
+      
 #if 0 //DAV_DEBUG
       cerr << "ISend Particle: buf=" << buf << ", count=" << count 
 	   << ", dest=" << dest << ", tag=" << tag << ", comm=" 
@@ -262,6 +268,7 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(pset);
+	 var->setForeign();
 	 if(pset->numParticles() == 0){
 	    *size=-1;
 	 } else {
@@ -287,6 +294,7 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 NCVariableBase* var = dynamic_cast<NCVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex());
+	 var->setForeign();
 
 	 void* buf;
 	 int count;
@@ -308,6 +316,7 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 CCVariableBase* var = dynamic_cast<CCVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(patch->getCellLowIndex(), patch->getCellHighIndex());
+	 var->setForeign();
 
 	 void* buf;
 	 int count;
@@ -329,6 +338,7 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 SFCXVariableBase* var = dynamic_cast<SFCXVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(patch->getSFCXLowIndex(), patch->getSFCXHighIndex());
+	 var->setForeign();
 
 	 void* buf;
 	 int count;
@@ -350,6 +360,7 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 SFCYVariableBase* var = dynamic_cast<SFCYVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(patch->getSFCYLowIndex(), patch->getSFCYHighIndex());
+	 var->setForeign();
 
 	 void* buf;
 	 int count;
@@ -371,6 +382,7 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 SFCZVariableBase* var = dynamic_cast<SFCZVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(patch->getSFCZLowIndex(), patch->getSFCZHighIndex());
+	 var->setForeign();
 
 	 void* buf;
 	 int count;
@@ -387,7 +399,6 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 cerr << "RECV SGVAR NOTDONE\n";
 	 throw InternalError( "RECV SGVAR NOTDONE" );
       }
-   break;
    default:
       throw InternalError("recvMPI not implemented for "+label->getFullName(matlIndex, patch));
    } // end switch( label->getType() );
@@ -887,7 +898,6 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
 	 // All 6 faces
 	 lowIndex = patch->getGhostCellLowIndex(numGhostCells);
 	 highIndex = patch->getGhostCellHighIndex(numGhostCells);
-	 cerr << "Cells around nodes is probably not functional!\n";
 	 break;
       default:
 	 throw InternalError("Illegal ghost type");
@@ -937,13 +947,23 @@ OnDemandDataWarehouse::put(const CCVariableBase& var, const VarLabel* label,
 {
   d_lock.writeLock();
    ASSERT(!d_finalized);
-
    // Error checking
    if(d_ccDB.exists(label, matlIndex, patch))
       throw InternalError("CC variable already exists: "+label->getName());
 
-   // Put it in the database
-   d_ccDB.put(label, matlIndex, patch, var.clone(), true);
+   IntVector low, high, size;
+   var.getSizes(low, high, size);
+   if(low != patch->getCellLowIndex() || high != patch->getCellHighIndex()){
+#if 0
+      cerr << "Warning, rewindowing array: " << label->getName() << " on patch " << patch->getID() << '\n';
+#endif
+      CCVariableBase* newvar = var.clone();
+      newvar->rewindow(patch->getCellLowIndex(), patch->getCellHighIndex());
+      d_ccDB.put(label, matlIndex, patch, newvar, true);
+   } else {
+      // Put it in the database
+      d_ccDB.put(label, matlIndex, patch, var.clone(), true);
+   }
   d_lock.writeUnlock();
 }
 
@@ -995,7 +1015,7 @@ OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
 	 h=1;
 	 lowIndex = patch->getCellLowIndex()-gc;
 	 highIndex = patch->getCellHighIndex()+gc;
-	 cerr << "Cells around nodes is probably not functional!\n";
+	 cerr << "Faces around nodes is probably not functional!\n";
 	 break;
       case Ghost::AroundCells:
 	 if(numGhostCells == 0)
@@ -1168,8 +1188,20 @@ OnDemandDataWarehouse::put(const SFCXVariableBase& var,
    if(d_sfcxDB.exists(label, matlIndex, patch))
       throw InternalError("SFCX variable already exists: "+label->getName());
 
-   // Put it in the database
-   d_sfcxDB.put(label, matlIndex, patch, var.clone(), true);
+   IntVector low, high, size;
+   var.getSizes(low, high, size);
+   if(low != patch->getSFCXLowIndex() || high != patch->getSFCXHighIndex()) {
+#if 0
+      cerr << "Warning, rewindowing array: " << label->getName() << " on patch " << patch->getID() << '\n';
+#endif
+      SFCXVariableBase* newvar = var.clone();
+      newvar->rewindow(patch->getSFCXLowIndex(), patch->getSFCXHighIndex());
+      d_sfcxDB.put(label, matlIndex, patch, newvar, true);
+   } else {
+
+      // Put it in the database
+      d_sfcxDB.put(label, matlIndex, patch, var.clone(), true);
+   }
   d_lock.writeUnlock();
 }
 
@@ -1275,8 +1307,20 @@ OnDemandDataWarehouse::put(const SFCYVariableBase& var,
    if(d_sfcyDB.exists(label, matlIndex, patch))
       throw InternalError("SFCY variable already exists: "+label->getName());
 
-   // Put it in the database
-   d_sfcyDB.put(label, matlIndex, patch, var.clone(), true);
+   IntVector low, high, size;
+   var.getSizes(low, high, size);
+   if(low != patch->getSFCYLowIndex() || high != patch->getSFCYHighIndex()) {
+#if 0
+      cerr << "Warning, rewindowing array: " << label->getName() << " on patch " << patch->getID() << '\n';
+#endif
+      SFCYVariableBase* newvar = var.clone();
+      newvar->rewindow(patch->getSFCYLowIndex(), patch->getSFCYHighIndex());
+      d_sfcyDB.put(label, matlIndex, patch, newvar, true);
+   } else {
+
+      // Put it in the database
+      d_sfcyDB.put(label, matlIndex, patch, var.clone(), true);
+   }
   d_lock.writeUnlock();
 }
 
@@ -1378,12 +1422,20 @@ OnDemandDataWarehouse::put(const SFCZVariableBase& var,
   d_lock.writeLock();
    ASSERT(!d_finalized);
 
-   // Error checking
-   if(d_sfczDB.exists(label, matlIndex, patch))
-      throw InternalError("SFCZ variable already exists: "+label->getName());
+   IntVector low, high, size;
+   var.getSizes(low, high, size);
+   if(low != patch->getSFCZLowIndex() || high != patch->getSFCZHighIndex()) {
+#if 0
+      cerr << "Warning, rewindowing array: " << label->getName() << " on patch " << patch->getID() << '\n';
+#endif
+      SFCZVariableBase* newvar = var.clone();
+      newvar->rewindow(patch->getSFCZLowIndex(), patch->getSFCZHighIndex());
+      d_sfczDB.put(label, matlIndex, patch, newvar, true);
+   } else {
 
-   // Put it in the database
-   d_sfczDB.put(label, matlIndex, patch, var.clone(), true);
+      // Put it in the database
+      d_sfczDB.put(label, matlIndex, patch, var.clone(), true);
+   }
   d_lock.writeUnlock();
 }
 
@@ -1557,6 +1609,23 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.52.2.1  2000/10/26 10:05:56  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.56  2000/10/13 20:46:40  sparker
+// Clean out foreign variables at finalize time
+//
+// Revision 1.55  2000/10/12 20:10:14  sparker
+// rewindow SFC* variables on put()
+//
+// Revision 1.54  2000/10/11 21:34:45  sparker
+// Workaround for put() bug (if there are ghostcells on the variable
+// put()ed, then put/get/sendMPI will do the wrong thing)  Currently
+// enabled only for CCVariables
+//
+// Revision 1.53  2000/10/10 05:13:31  sparker
+// Repaired (a) memory leak in particle relcation
+//
 // Revision 1.52  2000/09/28 02:15:51  dav
 // updates due to not sending 0 particles
 //

@@ -14,6 +14,7 @@ c*********************************************************************
      &     VISCOS, 
      &     SEW, SNSV, STB,
      &     X, XU, Z, ZW, 
+     $     xminus, xplus, yminus, yplus, zminus, zplus,
      &     ierr)
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
@@ -79,6 +80,7 @@ c*********************************************************************
       
       integer WALL
       integer FFIELD, PBCFLD
+      integer xminus, xplus, yminus, yplus, zminus, zplus
       integer ierr
 
 c*********************************************************************
@@ -102,14 +104,37 @@ c*********************************************************************
       IEND = idxHi(1)
       JEND = idxHi(2)
       KEND = idxHi(3)
-      iBegGhost = ist-1
-      jBegGhost = jst-1
-      kBegGhost = kst-1
-      iEndGhost = iend+1
-      jEndGhost = jend+1
-      kEndGhost = kend+1
-      idxUInlet = idxHiU(1)+1
-      idxWInlet = idxHiW(3)+1
+      if (xminus) then
+         iBegGhost = ist-1
+      else
+         iBegGhost = ist
+      endif
+      if (yminus) then
+         jBegGhost = jst-1
+      else
+         jBegGhost = jst
+      endif
+      if (zminus) then
+         kBegGhost = kst - 1
+      else
+         kBegGhost = kst
+      endif
+      if (xplus) then
+         iEndGhost = iend+1
+      else
+         iEndGhost = iend
+      endif
+      if (yplus) then
+         jEndGhost = jend+1
+      else
+         jEndGhost = jend
+      endif
+      if (zplus) then
+         kEndGhost = kend + 1
+      else
+         kEndGhost = kend
+      endif
+
       
 c------------------------------------------------------------------ 
 c     interior intrusions
@@ -132,152 +157,60 @@ c------------------------------------------------------------------
 c*********************************************************************
 c     Go thru all the cells
 c*********************************************************************
+      if (xminus) then
 C$DIR SCALAR
-      DO 120 K = kBegGhost, kEndGhost
+         DO 120 K = kst, kend
 C$DIR SCALAR
-        DO 110 J = jBegGhost, jEndGhost
+            DO 110 J = jst, jend
 C$DIR SCALAR
-          DO 100 I = iBegGhost, iEndGhost
-            IF (PCELL(I,J,K).EQ.WALL) THEN
-               VV(I,J,K) = 0.0
-C--------------------------------------------------------------------
-C             SOUTH FACE OF INTRUSION\WALL
-C--------------------------------------------------------------------
-               IF (J.NE.jBegGhost) THEN
-                  IF(PCELL(I,J-1,K).EQ.FFIELD) AN(I,J-1,K) = 0.0
-               END IF
-C--------------------------------------------------------------------
-C               NORTH FACE OF INTRUSION\WALL
-C--------------------------------------------------------------------
-               IF (J.NE.jEndGhost) THEN
-                  IF (PCELL(I, J+1, K).NE.WALL) THEN
-                     IF (J.NE.jend) AS(I,J+2,K) = 0.0
-                  end if
-               end if
+               I = ist - 1
+               IF (PCELL(I,J,K).EQ.WALL) THEN
+                  VV(I,J,K) = 0.0
 C--------------------------------------------------------------------
 C             SOUTHEAST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
-               IF (I.NE.iEndGhost.AND.J.NE.jBegGhost) THEN
                   IF (PCELL(I+1,J,K).NE.WALL.AND.
-     &                 PCELL(I+1,J-1,K).NE.WALL) THEN
+     &                 PCELL(I+1,J-1,K).NE.WALL.AND.
+     $                 .NOT.(yminus.and.j.eq.jst))THEN
                      XP = X(I+1) - XU(I+1)
                      TMULT = VISCOS/XP
                      SP(I+1,J,K) =SP(I+1,J,K)-TMULT*SNSV(J)*STB(K)
                      AW(I+1,J,K) = 0.0
                   END IF
-               END IF
-
 C--------------------------------------------------------------------
-C             SOUTHWEST FACE OF INTRUSION\WALL
+C             NORTHEAST FACE OF INTRUSION/WALL
 C--------------------------------------------------------------------
-               IF (I.NE.iBegGhost.AND.J.NE.jBegGhost) THEN
-                  IF (PCELL(I-1,J,K).NE.WALL.AND.
-     &                 PCELL(I-1,J-1,K).NE.WALL) THEN
-                     XP = XU(I) - X(I-1)
-                     TMULT = VISCOS/XP
-                     SP(I-1,J,K) =SP(I-1,J,K)-TMULT*SNSV(J)*STB(K)
-                     AE(I-1,J,K) = 0.0
-                  END IF
-               END IF
+                  IF (J.NE.JEND) THEN
+                     IF (PCELL(I,J+1,K).NE.WALL) THEN
+                        IF (PCELL(I+1,J+1,K).NE.WALL.AND.
+     &                       PCELL(I+1,J,K).NE.WALL) THEN
+                           XP = X(I+1)-XU(I+1)
+                           TMULT = VISCOS/XP
+                           SP(I+1,J+1,K) = SP(I+1,J+1,K)-TMULT*
+     $                          SNSV(J+1)*STB(K)
+                           AW(I+1,J+1,K) = 0.0
+                        END IF
+                     END IF
+                  endif
 C--------------------------------------------------------------------
-C             BOTTOM SOUTH FACE OF INTRUSION\WALL
+C             SOUTHEAST FACE OF INTRUSION/WALL, only if next to south patch
 C--------------------------------------------------------------------
-              IF (K.NE.kBegGhost.AND.J.NE.jBegGhost) THEN
-                 IF (PCELL(I,J-1,K-1).NE.WALL.AND.
-     &                PCELL(I,J,K-1).NE.WALL) THEN
-                    ZP = ZW(K)-Z(K-1)
-                    TMULT = VISCOS/ZP
-               
-                    SP(I,J,K-1) = SP(I,J,K-1)-TMULT*SNSV(J)*SEW(I)
-                    AT(I,J,K-1) = 0.0
-                 END IF 
-              END IF
-C--------------------------------------------------------------------
-C             TOP SOUTH FACE OF INTRUSION\WALL
-C--------------------------------------------------------------------
-              IF (K.NE.kEndGhost.AND.J.NE.jBegGhost) THEN
-                 IF (PCELL(I,J-1,K+1).NE.WALL.AND.
-     &                PCELL(I,J,K+1).NE.WALL) THEN
-                    ZP = Z(K+1)-ZW(K+1)
-                    TMULT = VISCOS/ZP
-c                TAUZX(I,J,K+1) = -TMULT*U(I,J,K+1)
-c                SU(I,J,K+1) = SUL(I,J,K+1)
-                    SP(I,J,K+1) = SP(I,J,K+1)-TMULT*SEW(I)*SNSV(J)
-                    AB(I,J,K+1) = 0.0
-                 END IF
-              END IF
-C--------------------------------------------------------------------
-C             IF CELL NORTH OF INTRUSION IS AN INTRUSION, SKIP
-C             MODIFICATIONS FOR NORTHERN FACES OF FIRST INTRUSION.
-C--------------------------------------------------------------------
-              IF (J.NE.jEndGhost) THEN
-                 IF (PCELL(I,J+1,K).NE.WALL) THEN
-C--------------------------------------------------------------------
-C               NORTHWEST FACE OF INTRUSION\WALL
-C--------------------------------------------------------------------
-                    IF (I.NE.iBegGhost.AND.J.NE.jEndGhost) THEN
-                       IF (PCELL(I-1,J+1,K).NE.WALL.AND.
-     &                      PCELL(I-1,J,K).NE.WALL)  THEN
-                          XP = XU(I)-X(I-1)
-                          TMULT = VISCOS/XP
-c                       TAUYX(I+1,J-1,K) = -TMULT*U(I+1,J-1,K)
-c                       SU(I+1,J-1,K) = SUL(I+1,J-1,K)
-                          SP(I-1,J+1,K) = SP(I-1,J+1,K) - TMULT*
-     &                         SNSV(J+1)*STB(K)
-                          AE(I-1,J+1,K) = 0.0
-                       END IF
-                    END IF
-C--------------------------------------------------------------------
-C               NORTHEAST FACE OF INTRUSION\WALL
-C--------------------------------------------------------------------
-                    IF (I.NE.iEndGhost.AND.J.NE.jEndGhost) THEN
-                       IF (PCELL(I+1,J+1,K).NE.WALL.AND.
-     &                      PCELL(I+1,J,K).NE.WALL) THEN
-                          XP = X(I+1)-XU(I+1)
-                          TMULT = VISCOS/XP
-c                  TAUYX(I+1,J+1,K) = -TMULT*U(I+1,J+1,K)
-c                  SU(I+1,J+1,K) = SUL(I+1,J+1,K)
-                          SP(I+1,J+1,K) = SP(I+1,J+1,K) - TMULT*
-     &                         SNSV(J+1)*STB(K)
-                          AW(I+1,J+1,K) = 0.0
-                       END IF
-                    END IF
-C--------------------------------------------------------------------
-C               BOTTOM NORTH FACE OF INTRUSION\WALL
-C--------------------------------------------------------------------
-                    IF (K.NE.kBegGhost.AND.J.NE.jEndGhost) THEN
-                       IF (PCELL(I,J+1,K-1).NE.WALL.AND.
-     &                      PCELL(I,J,K-1).NE.WALL) THEN
-                          ZP = ZW(K)-Z(K-1)
-                          TMULT = VISCOS/ZP
-c                  TAUZX(I+1,J,K-1) = -TMULT*U(I+1,J,K-1)
-c                  SU(I+1,J,K-1) = SUL(I+1,J,K-1)
-                          SP(I,J+1,K-1) =SP(I,J+1,K-1)-TMULT*
-     &                         SNSV(J+1)*SEW(I)
-                          AT(I,J+1,K-1) = 0.0
-                       END IF
-                    END IF
-C--------------------------------------------------------------------
-C               TOP NORTH FACE OF INTRUSION\WALL
-C--------------------------------------------------------------------
-                    IF (K.NE.kEndGhost.AND.J.NE.jEndGhost) THEN
-                       IF (PCELL(I,J+1,K+1).NE.WALL.AND.
-     &                      PCELL(I,J,K+1).NE.WALL) THEN
-                          ZP = Z(K+1)-ZW(K+1)
-                          TMULT = VISCOS/ZP
-c                  TAUZX(I+1,J,K+1) = -TMULT*U(I+1,J,K+1)
-c                  SU(I+1,J,K+1) = SUL(I+1,J,K+1)
-                          SP(I,J+1,K+1) =SP(I,J+1,K+1)-TMULT*SEW(I)
-     &                         *SNSV(J+1)
-                          AB(I,J+1,K+1) = 0.0
-                       END IF
-                    END IF
-                 END IF
-              END IF
-           END IF
- 100    CONTINUE
- 110  CONTINUE
- 120  CONTINUE
+                  IF ((J.EQ.JST+1).AND.(.NOT.yminus)) THEN
+                     IF (PCELL(I,J-1,K).NE.WALL) THEN
+                        IF (PCELL(I+1,J-1,K).NE.WALL.AND.
+     &                       PCELL(I+1,J,K).NE.WALL) THEN
+                           XP = X(I+1)-XU(I+1)
+                           TMULT = VISCOS/XP
+                           SP(I+1,J-1,K) = SP(I+1,J-1,K)-TMULT*
+     $                          SNSV(J-1)*STB(K)
+                           AW(I+1,J-1,K) = 0.0
+                        END IF
+                     END IF
+                  endif
+               endif
+ 110        CONTINUE
+ 120     CONTINUE
+      endif
 
 C--------------------------------------------------------------------
 C     PRESSURE BOUNDARY CONDITONS
@@ -337,6 +270,21 @@ C--------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.5.2.1  2000/10/26 10:05:22  moulding
+c merge HEAD into FIELD_REDESIGN
+c
+c Revision 1.9  2000/10/09 17:06:30  rawat
+c modified momentum solver for multi-patch
+c
+c Revision 1.8  2000/10/08 18:56:41  rawat
+c fixed the solver for multi
+c
+c Revision 1.7  2000/10/07 23:53:03  rawat
+c modified bc subroutines
+c
+c Revision 1.6  2000/10/06 23:07:53  rawat
+c fixed some more bc routines for mulit-patch
+c
 c Revision 1.5  2000/09/26 04:35:34  rawat
 c added some more multi-patch support
 c
