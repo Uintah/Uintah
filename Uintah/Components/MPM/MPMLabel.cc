@@ -160,6 +160,9 @@ MPMLabel::MPMLabel()
   gTemperatureLabel = new VarLabel("g.temperature",
 			NCVariable<double>::getTypeDescription());
 
+  gTemperatureStarLabel = new VarLabel("g.temperatureStar",
+			NCVariable<double>::getTypeDescription());
+
   gTemperatureRateLabel = new VarLabel("g.temperatureRate",
 			NCVariable<double>::getTypeDescription());
 
@@ -229,6 +232,9 @@ void MPMLabel::registerPermanentParticleState_preReloc(const VarLabel* label)
 }
 
 // $Log$
+// Revision 1.19  2000/07/17 23:41:33  tan
+// Fixed problems in MPM heat conduction.
+//
 // Revision 1.18  2000/07/12 18:45:06  jas
 // Cleaned up the creation of the particle state and moved things into
 // MPMLabel.
