@@ -144,8 +144,9 @@ class ViewImage : public Module
   struct SliceWindow { 
     SliceWindow() { ASSERT(0); };
     SliceWindow(GuiContext *ctx);
-    string		name_;
     void		reset();
+
+    string		name_;
 
     OpenGLViewport *	viewport_;
     NrrdSlices		slices_;
@@ -156,10 +157,6 @@ class ViewImage : public Module
       
     UIdouble		x_;
     UIdouble		y_;
-    UIdouble		z_;
-      
-    UIdouble		scale_;
-    UIdouble		bias_;
 
     UIint		clut_ww_;
     UIint		clut_wl_;
@@ -179,6 +176,8 @@ class ViewImage : public Module
     UIdouble		fusion_;
     
     GLfloat *		rgba_[4];
+    int			colormap_generation_;
+    int			colormap_size_;
 
 
   };
@@ -205,8 +204,6 @@ class ViewImage : public Module
   //  NrrdVolumeSlices	slices_;
 
   ColorMapHandle	colormap_;
-  int			colormap_generation_;
-  int			colormap_size_;
 
   SliceWindow *		current_window_;
 
@@ -288,15 +285,13 @@ ViewImage::NrrdSlice::NrrdSlice(int axis, int slice, NrrdVolume *volume) :
 }
 
 ViewImage::SliceWindow::SliceWindow(GuiContext *ctx) :  
+  name_("INVALID"),
   viewport_(0),
   slices_(),
   axis_(ctx->subVar("axis"), 2),
   zoom_(ctx->subVar("zoom"), 100.0),
   x_(ctx->subVar("posx"),0.0),
   y_(ctx->subVar("posy"),0.0),
-  z_(ctx->subVar("posz"),0.0),
-  scale_(ctx->subVar("scale"), 1.0),
-  bias_(ctx->subVar("bias"),0.0),
   clut_ww_(ctx->subVar("clut_ww")),
   clut_wl_(ctx->subVar("clut_wl")),
   auto_levels_(ctx->subVar("auto_levels"),0),
@@ -309,7 +304,9 @@ ViewImage::SliceWindow::SliceWindow(GuiContext *ctx) :
   mouse_y_(ctx->subVar("mouse_y"),0),
   show_guidelines_(ctx->subVar("show_guidelines"),1),
   mouse_in_window_(false),
-  fusion_(ctx->subVar("fusion"), 1.0)
+  fusion_(ctx->subVar("fusion"), 1.0),
+  colormap_generation_(-1),
+  colormap_size_(32)
 {
   for (int i = 0; i < 3; ++i) {
     //    slice_[i] = ctx->subVar("slice_"+to_string(i),0);
@@ -351,8 +348,6 @@ ViewImage::ViewImage(GuiContext* ctx) :
   volumes_(),
   //  slices_(),
   colormap_(0),
-  colormap_generation_(-1),
-  colormap_size_(32),
   current_window_(0),
   min_(ctx->subVar("min"), -1),
   max_(ctx->subVar("max"), -1),
@@ -367,10 +362,7 @@ ViewImage::SliceWindow::reset() {
 
   x_ = 0.0;
   y_ = 0.0;
-  z_ = 0.0;
 
-  scale_ = 1.0;
-  bias_ = 0.0;
   clut_ww_ = -1;
   clut_wl_ = -1;
   
@@ -462,6 +454,7 @@ ViewImage::redraw_window(SliceWindow &window) {
   //  ASSERT(slices_[window.axis_][window.slice_num_]);
   for (unsigned int s = 0; s < window.slices_.size(); ++s)
     draw_slice(window, *window.slices_[s]);
+
   if (*window.show_guidelines_)
     draw_guidelines(window, cursor_.x(), cursor_.y(), cursor_.z());
   window.viewport_->swap();
@@ -480,33 +473,32 @@ ViewImage::extract_colormap(SliceWindow &window)
   bool recompute = false;
   int ww = window.clut_ww_;
   int wl = window.clut_wl_;
-  if (colormap_->generation != colormap_generation_) recompute = true;
+  if (colormap_->generation != window.colormap_generation_) recompute = true;
   if (ww != *window.clut_ww_) recompute = true;
   if (wl != *window.clut_wl_) recompute = true;
   if (!window.rgba_[0]) recompute = true;
   if (!recompute) return false;
-
-  colormap_generation_ = colormap_->generation;
+  window.colormap_generation_ = colormap_->generation;
   int i, c;
-  colormap_size_ = pow2(colormap_->resolution());
+  window.colormap_size_ = pow2(colormap_->resolution());
   GLint max_size;    
   window.viewport_->make_current();
   glGetIntegerv(GL_MAX_PIXEL_MAP_TABLE, &max_size);
   window.viewport_->release();
   //  if (colormap_size_ > max_size) 
-  colormap_size_ = max_size;
+  window.colormap_size_ = max_size;
   
   const double scale = 
     double(colormap_->resolution()) / window.clut_ww_;
   
   for (i = 0; i < 4; i++) {
     if (window.rgba_[i]) delete [] window.rgba_[i];
-    window.rgba_[i] = scinew GLfloat[colormap_size_];
+    window.rgba_[i] = scinew GLfloat[window.colormap_size_];
   }
 
   const int min = window.clut_wl_ - window.clut_ww_/2;
   
-  for (c = 0; c < colormap_size_; c++) 
+  for (c = 0; c < window.colormap_size_; c++) 
     for (i = 0; i < 4; i++) {
       const int cmap_pos = Round(scale*(c-min));
       if (cmap_pos < 0) 
@@ -518,6 +510,9 @@ ViewImage::extract_colormap(SliceWindow &window)
 	window.rgba_[i][c] =colormap_->get_rgba()[cmap_pos*4+i];
     }
   
+  for (unsigned int s = 0; s < window.slices_.size(); ++s)
+    window.slices_[s]->dirty_ = true;
+
   return true;
 }
 
@@ -741,9 +736,10 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
   GLfloat ones[4] = {1.0, 1.0, 1.0, 1.0};
   glColor4fv(ones);
   GLfloat opacity = slice.opacity_*window.fusion_();
-  if (volumes_.size() == 2 && slice.volume_ == volumes_[1]) 
-    opacity = slice.opacity_*(1.0 - window.fusion_);
-  glColor4f(opacity, opacity, opacity, opacity);
+  if (volumes_.size() == 2 && slice.volume_->nrrd_.get_rep() == volumes_[1]->nrrd_.get_rep()) {
+    opacity = slice.opacity_*(1.0 - window.fusion_); 
+  }
+  glColor4f(1.0, 1.0, 1.0, opacity);//, opacity, opacity, opacity);
   glDisable(GL_CULL_FACE);
   glDisable(GL_LIGHTING);
   glEnable(GL_BLEND);
@@ -751,7 +747,8 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
 
   //  if (slice.invert_)
   //  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glBlendFunc(GL_ONE, GL_ONE);
+  glBlendFunc(GL_ONE, GL_ONE);//GL_SRC_ALPHA, GL_ONE);//GL_DST_ALPHA); //ONE, GL_ONE);
+  glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA); 
   //else 
   //glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
     
@@ -779,15 +776,15 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
 
 	   
   if (!bound) {
-    glPixelTransferf(GL_RED_SCALE, *window.scale_);
-    glPixelTransferf(GL_GREEN_SCALE, *window.scale_);
-    glPixelTransferf(GL_BLUE_SCALE, *window.scale_);
-    glPixelTransferf(GL_ALPHA_SCALE, *window.scale_);
-    glPixelTransferf(GL_RED_BIAS, *window.bias_);
-    glPixelTransferf(GL_GREEN_BIAS, *window.bias_);
-    glPixelTransferf(GL_BLUE_BIAS, *window.bias_);
-    glPixelTransferf(GL_ALPHA_BIAS, *window.bias_);
-    glPixelTransferi(GL_MAP_COLOR, 1);
+    //     glPixelTransferf(GL_RED_SCALE, *window.scale_);
+    //     glPixelTransferf(GL_GREEN_SCALE, *window.scale_);
+    //     glPixelTransferf(GL_BLUE_SCALE, *window.scale_);
+    //     glPixelTransferf(GL_ALPHA_SCALE, *window.scale_);
+    //     glPixelTransferf(GL_RED_BIAS, *window.bias_);
+    //     glPixelTransferf(GL_GREEN_BIAS, *window.bias_);
+    //     glPixelTransferf(GL_BLUE_BIAS, *window.bias_);
+    //     glPixelTransferf(GL_ALPHA_BIAS, *window.bias_);
+
     
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  
 
@@ -796,11 +793,11 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-
-    glPixelMapfv(GL_PIXEL_MAP_I_TO_R, colormap_size_, window.rgba_[0]);
-    glPixelMapfv(GL_PIXEL_MAP_I_TO_G, colormap_size_, window.rgba_[1]);
-    glPixelMapfv(GL_PIXEL_MAP_I_TO_B, colormap_size_, window.rgba_[2]);
-    glPixelMapfv(GL_PIXEL_MAP_I_TO_A, colormap_size_, window.rgba_[3]);
+    glPixelTransferi(GL_MAP_COLOR, 1);
+    glPixelMapfv(GL_PIXEL_MAP_I_TO_R, window.colormap_size_, window.rgba_[0]);
+    glPixelMapfv(GL_PIXEL_MAP_I_TO_G, window.colormap_size_, window.rgba_[1]);
+    glPixelMapfv(GL_PIXEL_MAP_I_TO_B, window.colormap_size_, window.rgba_[2]);
+    glPixelMapfv(GL_PIXEL_MAP_I_TO_A, window.colormap_size_, window.rgba_[3]);
 
     //int shift = log2(colormap_size_) - 8;
     //    glPixelTransferi(GL_INDEX_SHIFT, shift);
@@ -925,8 +922,15 @@ void
 ViewImage::extract_window_slices(SliceWindow &window) {
   unsigned int v, s;
   int a;
-  for (s = 0; s < window.slices_.size(); ++s)
+  gui->lock();
+  for (s = 0; s < window.slices_.size(); ++s) {
+    window.viewport_->make_current();
+    if (glIsTexture(window.slices_[s]->tex_name_))
+      glDeleteTextures(1,&window.slices_[s]->tex_name_);
+    window.viewport_->release();
     delete window.slices_[s];
+  }
+  gui->unlock();
   window.slices_.clear();
 
   for (v = 0; v < volumes_.size(); ++v) {
@@ -1414,16 +1418,16 @@ ViewImage::handle_gui_keypress(GuiArgs &args) {
 	volumes_[v]->flip_z_ = volumes_[v]->flip_z_?1:0;
       redraw_all();
     } else if (args[4] == "a") {
-      window.scale_ /= 1.1;
+      //      window.scale_ /= 1.1;
       redraw_window(window);
     } else if (args[4] == "s") {
-      window.scale_ *= 1.1;
+      //window.scale_ *= 1.1;
       redraw_window(window);
     } else if (args[4] == "q") {
-      window.bias_ += 0.1;
+      //window.bias_ += 0.1;
       redraw_window(window);
     } else if (args[4] == "w") {
-      window.scale_ += 0.1;
+      //window.scale_ += 0.1;
       redraw_window(window);
     } else if (args[4] == "Left") {
       window.x_ -= 1.0;
