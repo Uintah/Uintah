@@ -1459,6 +1459,13 @@ else
    pkg_fusion="no"
 fi
 
+u=`echo $package | sed 's/.*CollabVis.*/CollabVis/'`
+if test "$u" = "CollabVis" ; then
+   pkg_CollabVis="yes"
+else
+   pkg_CollabVis="no"
+fi
+
 u=`echo $package | sed 's/.*Insight.*/Insight/'`
 if test "$u" = "Insight" ; then
    pkg_insight="yes"
@@ -2571,6 +2578,14 @@ SCI_CHECK_HEADERS($LIB_DIR_BLT/../include,blt.h,$INC_TCL_H $INC_TK_H,,not-option
 AC_SUBST(BLT_LIB_FLAG)
 AC_SUBST(BLT_LIB_DIR_FLAG)
 AC_SUBST(INC_BLT_H)
+
+if test "$pkg_CollabVis" = "yes"; then
+    DEF_COLLAB_VIS="#define HAVE_COLLAB_VIS 1"
+    HAVE_COLLAB_VIS="yes"
+fi
+
+AC_SUBST(DEF_COLLAB_VIS)
+AC_SUBST(HAVE_COLLAB_VIS)
 
 if test "$pkg_fusion" = "yes"; then
   SCI_CHECK_LIB($dirs,plplot,main,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
