@@ -26,6 +26,9 @@
  *
  *  Copyright (C) 2001 SCI Group
  *
+ *  Modified:
+ *   Lorena Kreda, Northeastern University, October 2003
+ *
  */
 
 #include <Core/Datatypes/TriSurfMesh.h>
@@ -444,45 +447,34 @@ TriSurfMesh::get_gradient_basis(Face::index_type fi, Vector& g0, Vector& g1,
   Point newp1;
   Point newp2;
   Point newp3;
-  Point tempp1;
-  Point tempp2;
-  Point tempp3;
   newp1 = p1;
   newp2 = p2;
   newp3 = p3;
 
   // 1. Translate so that p1 is at the origin
   trans1.post_translate(Vector(-x1,-y1,-z1));
-  tempp1 = trans1.project(newp1);
-  tempp2 = trans1.project(newp2);
-  tempp3 = trans1.project(newp3);
-  newp1 = tempp1;
-  newp2 = tempp2;
-  newp3 = tempp3;
+  newp1 = trans1.project(newp1);
+  newp2 = trans1.project(newp2);
+  newp3 = trans1.project(newp3);
 
   // 2. Rotate about z axis - this will bring the p1-p2 edge into the xz 
   //    plane and make p2y=0;
   double phi = Atan(newp2.y()/newp2.x());
   rot1.post_rotate(-phi, Vector(0,0,1));
-  tempp2 = rot1.project(newp2);
-  tempp3 = rot1.project(newp3);
-  newp2 = tempp2;
-  newp3 = tempp3;
+  newp2 = rot1.project(newp2);
+  newp3 = rot1.project(newp3);
 
   // 3. Rotate about y-axis so that newp2.z() = 0 and p1-p2 edge is 
   //    coincident with the x-axis
   double theta = Atan(newp2.z()/newp2.x());
   rot2.post_rotate(theta, Vector(0,1,0));
-  tempp2 = rot2.project(newp2);
-  tempp3 = rot2.project(newp3);
-  newp2 = tempp2;
-  newp3 = tempp3;
+  newp2 = rot2.project(newp2);
+  newp3 = rot2.project(newp3);
 
   // 4. Rotate p3 about x axis so that pnew3.z() = 0.
   theta = Atan(newp3.z()/newp3.y());
   rot3.post_rotate(theta, Vector(1,0,0));
-  tempp3 = rot3.project(newp3);
-  newp3 = tempp3;
+  newp3 = rot3.project(newp3);
 
   // All nodes are now in the x-y plane. Compute basis vectors.
 
@@ -517,29 +509,22 @@ TriSurfMesh::get_gradient_basis(Face::index_type fi, Vector& g0, Vector& g1,
   Vector g2prime=Vector(b2*iA2, c2*iA2, 0);
 
   // apply the inverse rotations to the basis vectors
-  Vector g0temp;
-  Vector g1temp;
-  Vector g2temp; 
-  g0temp = rot3.unproject(g0prime);
-  g0 = rot2.unproject(g0temp);
-  g0temp = g0;
-  g0 = rot1.unproject(g0temp);
-  g0temp = g0;
-  g1temp = rot3.unproject(g1prime);
-  g1 = rot2.unproject(g1temp);
-  g1temp = g1;
-  g1 = rot1.unproject(g1temp);
-  g1temp = g1;
-  g2temp = rot3.unproject(g2prime);
-  g2 = rot2.unproject(g2temp);
-  g2temp = g2;
-  g2 = rot1.unproject(g2temp);
-  g2temp = g2;
+  g0 = rot3.unproject(g0prime);
+  g0 = rot2.unproject(g0);
+  g0 = rot1.unproject(g0);
+
+  g1 = rot3.unproject(g1prime);
+  g1 = rot2.unproject(g1);
+  g1 = rot1.unproject(g1);
+  
+  g2 = rot3.unproject(g2prime);
+  g2 = rot2.unproject(g2);
+  g2 = rot1.unproject(g2);
 
   // apply the inverse translation
-  g0 = trans1.unproject(g0temp);
-  g1 = trans1.unproject(g1temp);
-  g2 = trans1.unproject(g2temp);
+  g0 = trans1.unproject(g0);
+  g1 = trans1.unproject(g1);
+  g2 = trans1.unproject(g2);
   
   // return the area of the element
   double area=(1./iA2)/2.0;

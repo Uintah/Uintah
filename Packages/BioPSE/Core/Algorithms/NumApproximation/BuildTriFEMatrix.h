@@ -24,6 +24,9 @@
  *   University of Utah
  *   March 2001   
  *  Copyright (C) 2001 SCI Group
+ *
+ *  Modified (adapted from BuildTetFEMatrix.h):
+ *   Lorena Kreda, Northeastern University, October 2003
  */
 
 //#include <Dataflow/Network/Module.h>

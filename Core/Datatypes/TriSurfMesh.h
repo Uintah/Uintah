@@ -26,6 +26,9 @@
  *
  *  Copyright (C) 2001 SCI Group
  *
+ *  Modified:
+ *   Lorena Kreda, Northeastern University, October 2003
+ *
  */
 
 #ifndef SCI_project_TriSurfMesh_h
