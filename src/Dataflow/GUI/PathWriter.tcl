@@ -57,13 +57,10 @@ itcl_class SCIRun_DataIO_PathWriter {
 	global env
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    set child [lindex [winfo children $w] 0]
-	    # $w withdrawn by $child's procedures
-	    raise $child
-	    return;
+	    return
 	}
 	
-	#toplevel $w
+	toplevel $w -class TkFDialog
 	set initdir ""
 
 	# place to put preferred data directory
@@ -96,10 +93,10 @@ itcl_class SCIRun_DataIO_PathWriter {
 	######################################################
 	
 	makeSaveFilebox \
-		-parent . \
+		-parent $w \
 		-filevar $this-filename \
-		-command "$this-c needexecute; destroy " \
-		-cancel "destroy " \
+		-command "$this-c needexecute; wm withdraw $w " \
+		-cancel "wm withdraw $w " \
 		-title $title \
 		-filetypes $types \
 	        -initialfile $defname \

@@ -20,8 +20,8 @@
 itcl_class SCIRun_Render_Viewer {
     inherit Module
 
-    # List of ViewWindow children of this Viewer
-    protected viewwindow
+    # List of Viewer children of this Viewer
+    protected openViewersList
 
     # Id for the Next ViewWindows to be created.  Incremented for each new Viewindow
     protected nextrid 0
@@ -37,7 +37,7 @@ itcl_class SCIRun_Render_Viewer {
 	    }
 	}
 	    
-	foreach rid $viewwindow {
+	foreach rid $openViewersList {
 	    destroy .ui[$rid modname]
 
 	    $rid delete
@@ -47,7 +47,8 @@ itcl_class SCIRun_Render_Viewer {
     method set_defaults {} {
 	set make_progress_graph 0
 	set make_time 0
-	set viewwindow ""
+	set openViewersList ""
+	puts "openViewersList length: [llength $openViewersList]"
     }
 
     method makeViewWindowID {} {
@@ -61,13 +62,24 @@ itcl_class SCIRun_Render_Viewer {
     }
 
     method ui {{rid -1}} {
-	if {$rid == -1} {
-	    set rid [makeViewWindowID]
-	}
-        
-        ViewWindow $rid -viewer $this 
 
-	lappend viewwindow $rid
+	# If there are no open viewers, then create one
+	if { [llength $openViewersList] == 0 } { 
+
+	    if {$rid == -1} {
+		set rid [makeViewWindowID]
+	    }
+	    
+	    ViewWindow $rid -viewer $this 
+	    lappend openViewersList $rid
+	} else {
+	    # else, raise them all.
+	    for {set window 0} {$window < [llength $openViewersList] } { incr window } {
+		set rid [lindex $openViewersList $window]
+		wm deiconify .ui[$rid modname]
+		raise .ui[$rid modname]
+	    }
+	}
     }
 
     method ui_embedded {{rid -1}} {
@@ -77,7 +89,7 @@ itcl_class SCIRun_Render_Viewer {
         
         set result [EmbeddedViewWindow $rid -viewer $this]
 
-	lappend viewwindow $rid
+	lappend openViewersList $rid
 	return $result
     }
 }
@@ -225,6 +237,9 @@ itcl_class ViewWindow {
 	$viewer-c addviewwindow $this
 	set w .ui[modname]
 	toplevel $w
+
+	wm protocol $w WM_DELETE_WINDOW "wm iconify $w"
+
 	bind $w <Destroy> "$this killWindow %W" 
 	wm title $w "ViewWindow"
 	wm iconname $w "ViewWindow"
@@ -359,14 +374,23 @@ itcl_class ViewWindow {
 
 	frame $bsframe.v1
 	pack $bsframe.v1 -side left
-	button $bsframe.v1.autoview -text "Autoview" -command "$this-c autoview"
+	button $bsframe.v1.autoview -text "Autoview" -command "$this-c autoview" -width 10
 	pack $bsframe.v1.autoview -fill x -pady 2 -padx 2
+
+	TooltipMultiline $bsframe.v1.autoview \
+	    "Instructs the Viewer to move the camera to a position that will allow\n" \
+	    "all geometry to be rendered visibly in the viewing window."
 
 	frame $bsframe.v1.views             
 	pack $bsframe.v1.views -side left -anchor nw -fill x -expand 1
 	
-	menubutton $bsframe.v1.views.def -text "   Views   " -menu $bsframe.v1.views.def.m -relief raised -padx 2 -pady 2
+	menubutton $bsframe.v1.views.def -text "Views..." -menu $bsframe.v1.views.def.m \
+                  -relief raised -padx 2 -pady 2 -width 10
 	
+	TooltipMultiline $bsframe.v1.views.def \
+	    "Allows the user to easily specify that the viewer align the axes\n" \
+	    "such that they are perpendicular and/or horizontal to the viewer."
+
 	menu $bsframe.v1.views.def.m
 	$bsframe.v1.views.def.m add cascade -label "Look down +X Axis" \
 		-menu $bsframe.v1.views.def.m.posx
@@ -444,17 +468,24 @@ itcl_class ViewWindow {
 	$bsframe.v1.views.def.m.negz add radiobutton -label "Up vector -Y" \
 		-variable $this-pos -value z0_y0 -command "$this-c Views"
 
-	frame $bsframe.v2
+	frame $bsframe.v2 -relief groove -borderwidth 2
 	pack $bsframe.v2 -side left -padx 2 -pady 2
 	button $bsframe.v2.sethome -text "Set Home View" -padx 2 \
-		-command "$this-c sethome"
-	pack $bsframe.v2.sethome -fill x -pady 2
-	button $bsframe.v2.gohome -text "Go home" -command "$this-c gohome"
-	pack $bsframe.v2.gohome -fill x -pady 2
+		-command "$this-c sethome" -width 15
+	button $bsframe.v2.gohome -text "Go home" -command "$this-c gohome" -width 15
+	pack $bsframe.v2.sethome $bsframe.v2.gohome -side top -fill x -pady 2 -padx 4
 	
+	Tooltip $bsframe.v2.sethome \
+	    "Tells the Viewer to remember the current camera position."
+	Tooltip $bsframe.v2.gohome \
+	    "Tells the Viewer to recall the last saved camera position."
+
 	button $bsframe.more -text "+" -padx 3 \
 		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*" \
 		-command "$this addMFrame $w"
+
+	Tooltip $bsframe.more "Shows/hides the Viewer's geometry settings panel."
+
 	pack $bsframe.more -pady 2 -padx 2 -anchor se -side right
 
 # AS: initialization of attachment
@@ -628,7 +659,7 @@ itcl_class ViewWindow {
 	
 	frame $m.eframe
 	
-	checkbutton $m.eframe.light -text Lighting -variable $this-global-light \
+	checkbutton $m.eframe.light -text "Lighting" -variable $this-global-light \
 	    -command "$this-c redraw"
 	checkbutton $m.eframe.fog -text Fog -variable $this-global-fog \
 	    -command "$this-c redraw"
@@ -640,6 +671,21 @@ itcl_class ViewWindow {
 	    -command "$this-c redraw"
 	checkbutton $m.eframe.dl -text "Display List" \
 	    -variable $this-global-dl -command "$this-c redraw"
+
+	Tooltip $m.eframe.light "Toggles on/off whether lights effect the rendering."
+	TooltipMultiline $m.eframe.fog \
+	    "Toggles on/off fog.  This will make objects further\n" \
+	    "away from the viewer appear dimmer and make it easier\n" \
+	    "to judge distances."
+	TooltipMultiline $m.eframe.bbox \
+	    "Toggles on/off whether only the bounding box of every piece\n" \
+	    "of geometry is displayed.  Note, individual bounding boxes may\n" \
+	    "be toggled on/off using the 'Options' button in the 'Objects' frame."
+	Tooltip $m.eframe.clip "Toggles on/off whether clipping is enabled."
+	TooltipMultiline $m.eframe.cull \
+	    "Toggles on/off whether polygons that face away from\n" \
+	    "the camera are rendered."
+	Tooltip $m.eframe.dl "Toggles on/off whether GL display lists are used."
 	
 # 	checkbutton $m.eframe.movie -text "Save Movie" -variable $this-global-movie
 # 	frame $m.eframe.mf
@@ -718,6 +764,21 @@ itcl_class ViewWindow {
 		-resolution 0.02 -orient horizontal -label "Fusion Scale:" \
 		-command "$this-c redraw"
 	pack $m.sbase -side top -anchor w
+
+	Tooltip $m.caxes "Toggles on/off the the set of three axes displayed at 0,0,0."
+	TooltipMultiline $m.raxes \
+	    "Toggles on/off the orientation axes displayed in\n" \
+	    "the upper right corner of the viewer window."
+	TooltipMultiline $m.ortho  \
+	    "Toggles on/off the use of an orthographic projection.\n" \
+	    "SCIRun defaults to using the prospective projection."
+	TooltipMultiline $m.stereo \
+	    "Puts SCIRun into stereo rendering mode.  Special hardware may be\n" \
+	    "necessary to use this function."
+	TooltipMultiline $m.sbase \
+	    "Specifies how far the left and right eye images are\n" \
+	    "offset when rendering in stereo mode."
+
 #	checkbutton $m.sr -text "Fixed\nFocal\nDepth" -variable $this-sr -anchor w
 #	pack $m.sr -side top
 	
@@ -990,7 +1051,7 @@ itcl_class ViewWindow {
 	
 	set menun $m.objlist.canvas.frame.menu$objid.menu
 
-	menubutton $m.objlist.canvas.frame.menu$objid -text Options \
+	menubutton $m.objlist.canvas.frame.menu$objid -text "Options..." \
 		-relief raised -menu $menun
 	menu $menun
 	$menun add checkbutton -label Lighting -variable $this-$objid-light \
@@ -1038,7 +1099,7 @@ itcl_class ViewWindow {
 	pack $m.objlist.canvas.frame.obj$objid \
 	    -in $m.objlist.canvas.frame.objt$objid -side left
 	pack $m.objlist.canvas.frame.menu$objid \
-	    -in $m.objlist.canvas.frame.objt$objid -side right
+	    -in $m.objlist.canvas.frame.objt$objid -side right -padx 1 -pady 1
 
 	update idletasks
 	set width [winfo width $m.objlist.canvas.frame]
@@ -1082,7 +1143,7 @@ itcl_class ViewWindow {
 	set w .lineWidth[modname]
 	if {[winfo exists $w]} {
 	    raise $w
-	    return;
+	    return
 	}
 	toplevel $w
 	wm title $w "Line Width"
@@ -1101,7 +1162,7 @@ itcl_class ViewWindow {
 	set w .polygonOffset[modname]
 	if {[winfo exists $w]} {
 	    raise $w
-	    return;
+	    return
 	}
 	toplevel $w
 	wm title $w "Polygon Offset"
@@ -1126,7 +1187,7 @@ itcl_class ViewWindow {
 	set w .psize[modname]
 	if {[winfo exists $w]} {
 	    raise $w
-	    return;
+	    return
 	}
 	toplevel $w
 	wm title $w "Point Size"
@@ -1148,7 +1209,7 @@ itcl_class ViewWindow {
 	set w .clip[modname]
 	if {[winfo exists $w]} {
 	    raise $w
-	    return;
+	    return
 	}
 	toplevel $w
 	wm title $w "Clipping Planes"
@@ -1695,7 +1756,7 @@ itcl_class ViewWindow {
            return
         }
 
-	#toplevel $w
+	toplevel $w
 
 	set initdir ""
 
@@ -1730,10 +1791,10 @@ itcl_class ViewWindow {
 	######################################################
 	
 	makeSaveFilebox \
-		-parent . \
+		-parent $w \
 		-filevar $this-saveFile \
-		-command "$this doSaveImage; destroy " \
-		-cancel "destroy " \
+		-command "$this doSaveImage; wm withdraw $w" \
+		-cancel "wm withdraw $w" \
 		-title $title \
 		-filetypes $types \
 	        -initialfile $defname \
@@ -2300,8 +2361,8 @@ itcl_class EmbeddedViewWindow {
 	makeSaveFilebox \
 		-parent $w \
 		-filevar $this-saveFile \
-		-command "$this doSaveImage; destroy $w" \
-		-cancel "destroy $w" \
+		-command "$this doSaveImage; wm withdraw $w" \
+		-cancel "wm withdraw $w" \
 		-title $title \
 		-filetypes $types \
 	        -initialfile $defname \

@@ -176,7 +176,7 @@ itcl_class SCIRun_Math_MatrixSelectVector {
         pack $w.loc $w.playmode $w.dependence $w.execmode \
 		-padx 5 -pady 5 -fill both -expand yes
 
-	makeSciButtonPanel $w $w $this "true"
+	makeSciButtonPanel $w $w $this "-no_execute"
 	moveToCursor $w
 
 	update
