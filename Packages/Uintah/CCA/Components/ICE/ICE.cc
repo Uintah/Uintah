@@ -127,10 +127,16 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
   d_sharedState = sharedState;
   d_SMALL_NUM   = 1.e-100;
   cerr << "In the preprocessor . . ." << endl;
-  
+  dataArchiver = dynamic_cast<Output*>(getPort("output"));
   // Find the switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
   if (debug_ps) {
+    debug_ps->require("dbg_timeStart",d_dbgStartTime);
+    debug_ps->require("dbg_timeStop",d_dbgStopTime);
+    debug_ps->require("dbg_outputInterval",d_dbgOutputInterval);
+    d_dbgOldTime = 0.0;
+    d_dbgNextDumpTime = 0.0;
+
     for (ProblemSpecP child = debug_ps->findBlock("debug"); child != 0;
 	 child = child->findNextBlock("debug")) {
       map<string,string> debug_attr;
@@ -162,6 +168,9 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
     }
   }
   cerr << "Pulled out the debugging switches from input file" << endl;
+  cerr<< "  debugging starting time "  <<d_dbgStartTime<<endl;
+  cerr<< "  debugging stopping time "  <<d_dbgStopTime<<endl;
+  cerr<< "  debugging output interval "<<d_dbgOutputInterval<<endl;
 
   // Pull out from CFD-ICE section
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
@@ -2922,6 +2931,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       new_dw->put(temp,     lb->temp_CCLabel,          indx,patch);
     }
   }  // patch loop
+   // This belongs at the bottom of the timestep
+  d_dbgNextDumpTime = d_dbgOldTime + d_dbgOutputInterval; 
 }
 
 
