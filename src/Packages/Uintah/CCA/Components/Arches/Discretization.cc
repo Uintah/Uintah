@@ -23,7 +23,6 @@
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Math/Expon.h>
-#endif
 #include <Core/Math/MiscMath.h>
 
 #include <iostream>
