@@ -29,40 +29,47 @@
 #ifndef SCIRun_Framework_TableTennis_h
 #define SCIRun_Framework_TableTennis_h
 
+#include <CCA/Components/TableTennis/TableTennis_sidl.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
-namespace SCIRun {
+//namespace SCIRun {
   
-class myUIPort : public virtual sci::cca::ports::UIPort {
+class myUIPort : public virtual gov::cca::ports::UIPort {
 public:
    virtual ~myUIPort(){}
    virtual int ui();
 };
 
-class myGoPort : public virtual sci::cca::ports::GoPort {
+class myGoPort : public virtual gov::cca::ports::GoPort {
 public:
    virtual ~myGoPort(){}
    virtual int go();
 };
 
+class myTTPort : public virtual PP::PingPong {
+public:
+   virtual ~myTTPort(){}
+   virtual int pingpong(int test);
+};
 
-class TableTennis : public sci::cca::Component{
+class TableTennis : public gov::cca::Component{
                 
   public:
     TableTennis();
     virtual ~TableTennis();
 
-    virtual void setServices(const sci::cca::Services::pointer& svc);
+    virtual void setServices(const gov::cca::Services::pointer& svc);
   private:
 
     TableTennis(const TableTennis&);
     TableTennis& operator=(const TableTennis&);
     myUIPort uiPort;
     myGoPort goPort;
-    sci::cca::Services::pointer services;
+    myTTPort ttPort;
+    gov::cca::Services::pointer services;
   };
-}
+//}
 
 
 
