@@ -171,8 +171,6 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	
 	frame $w.f -relief flat -borderwidth 2
 	pack $w.f -side top -expand yes -fill x 
-	button $w.f.b -text "close" -command "$this close"
-	pack $w.f.b -side left -expand yes -fill y
 	
 	frame $w.f.f1 -relief sunken -height 40  -borderwidth 2 
 	pack $w.f.f1 -side right -padx 2 -pady 2 -expand yes -fill x
@@ -194,7 +192,7 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	pack $w.f3.s -side left -expand yes -fill x
 	
 	frame $w.f2 -relief groove -borderwidth 2
-	pack $w.f2 -side left -padx 2 -pady 2 -expand yes -fill both
+	pack $w.f2 -padx 2 -pady 2 -expand yes -fill both
 	
 	make_labeled_radio $w.f2.types "ColorMaps" $n top \
 	    $this-mapType {
@@ -225,7 +223,7 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	pack $w.f2.f3.label -side top -pady 2
 	scale $w.f2.f3.s -from [set $this-minRes] -to 256 -state normal \
 		-orient horizontal  -variable $this-resolution 
-	pack $w.f2.f3.s -side top -padx 2 -pady 2 -expand yes -fill x
+	pack $w.f2.f3.s -side top -padx 2 -pady 2 -fill x
 	
 	bind $w.f2.f3.s <ButtonRelease> \
 	    "$this setres; $this update; $this-c needexecute"
@@ -240,6 +238,8 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	
 	set cw [winfo width $w.f.f1.canvas]
 
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
    
     method setres {} {
