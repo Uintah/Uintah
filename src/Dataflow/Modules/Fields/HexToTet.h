@@ -16,108 +16,58 @@
 */
 
 /*
- *  HexToTet.cc:  Clip out the portions of a HexVol with specified values
+ *  HexToTet.h:  Convert a Hex field into a Tet field using 1-5 split
  *
  *  Written by:
- *   Michael Callahan
+ *   David Weinstein
  *   University of Utah
- *   May 2002
+ *   December 2002
  *
  *  Copyright (C) 1994, 2001 SCI Group
  */
 
-#include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/HexVolField.h>
+#if !defined(HexToTet_h)
+#define HexToTet_h
+
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/TetVolField.h>
-#include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
+namespace SCIRun {
 
-
-namespace CardioWave {
-
-using namespace SCIRun;
-
-class HexToTet : public Module {
-private:
-  unsigned int last_generation_;
-  FieldHandle tvfieldH;
-
+class HexToTetAlgo : public DynamicAlgoBase
+{
 public:
+  virtual bool execute(FieldHandle src, FieldHandle& dst) = 0;
 
-  //! Constructor/Destructor
-  HexToTet(GuiContext *context);
-  virtual ~HexToTet();
-
-  //! Public methods
-  virtual void execute();
+  //! support the dynamically compiled algorithm concept
+  static CompileInfoHandle get_compile_info(const TypeDescription *data_td);
 };
 
 
-DECLARE_MAKER(HexToTet)
-
-
-HexToTet::HexToTet(GuiContext *context) : 
-  Module("HexToTet", context, Filter, "CreateModel", "CardioWave"),
-  last_generation_(0)
+template <class FSRC>
+class HexToTetAlgoT : public HexToTetAlgo
 {
-}
+public:
+  //! virtual interface. 
+  virtual bool execute(FieldHandle src, FieldHandle& dst);
+};
 
 
-HexToTet::~HexToTet()
+template <class FSRC>
+bool
+HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
 {
-}
+  typedef typename FSRC::mesh_type mesh_type;   // convenience typedefs
+  typedef typename FSRC::value_type value_type; 
 
+  FSRC *hvfield = dynamic_cast<FSRC*>(srcH.get_rep());
 
-
-void
-HexToTet::execute()
-{
-  FieldIPort *ifieldport = (FieldIPort *)get_iport("HexVol");
-  if (!ifieldport) {
-    error("Unable to initialize iport 'HexVol'.");
-    return;
-  }
-  FieldHandle ifieldhandle;
-  if(!(ifieldport->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    error("Can't get field.");
-    return;
-  }
-
-  HexVolField<int> *hvfield =
-    dynamic_cast<HexVolField<int> *>(ifieldhandle.get_rep());
-
-  if (hvfield == 0)
-  {
-    error("'" + ifieldhandle->get_type_description()->get_name() + "'" +
-	  " field type is unsupported.");
-    return;
-  }
-
-  FieldOPort *ofp = (FieldOPort *)get_oport("TetVol");
-  if (!ofp)
-  {
-    error("Unable to initialize " + name + "'s Output port.");
-    return;
-  }
-
-  // Cache generation.
-  if (hvfield->generation == last_generation_)
-  {
-    ofp->send(tvfieldH);
-    return;
-  }
-  last_generation_ = hvfield->generation;
-
-  HexVolMeshHandle hvmesh = hvfield->get_typed_mesh();
+  mesh_type *hvmesh = hvfield->get_typed_mesh().get_rep();
   TetVolMeshHandle tvmesh = scinew TetVolMesh();
 
   // Copy points directly, assuming they will have the same order.
-  HexVolMesh::Node::iterator nbi, nei;
+  mesh_type::Node::iterator nbi, nei;
   hvmesh->begin(nbi); hvmesh->end(nei);
   while (nbi != nei)
   {
@@ -129,16 +79,18 @@ HexToTet::execute()
 
   hvmesh->synchronize(Mesh::NODE_NEIGHBORS_E);
 
-  vector<HexVolMesh::Elem::index_type> elemmap;
+  vector<mesh_type::Elem::index_type> elemmap;
 
-  HexVolMesh::Elem::size_type hesize; hvmesh->size(hesize);
+  mesh_type::Node::size_type hnsize; hvmesh->size(hnsize);
+  mesh_type::Elem::size_type hesize; hvmesh->size(hesize);
+
   vector<bool> visited(hesize, false);
 
-  HexVolMesh::Elem::iterator bi, ei;
+  mesh_type::Elem::iterator bi, ei;
   hvmesh->begin(bi); hvmesh->end(ei);
 
   const unsigned int surfsize = pow(hesize, 2.0 / 3.0);
-  vector<HexVolMesh::Elem::index_type> buffers[2];
+  vector<mesh_type::Elem::index_type> buffers[2];
   buffers[0].reserve(surfsize);
   buffers[1].reserve(surfsize);
   bool flipflop = true;
@@ -158,7 +110,7 @@ HexToTet::execute()
 	  if (visited[(unsigned int)buffers[flipflop][i]]) { continue; }
 	  visited[(unsigned int)buffers[flipflop][i]] = true;
 
-	  HexVolMesh::Node::array_type hvnodes;
+	  mesh_type::Node::array_type hvnodes;
 	  hvmesh->get_nodes(hvnodes, buffers[flipflop][i]);
 
 	  if (flipflop)
@@ -218,7 +170,7 @@ HexToTet::execute()
 
 	  elemmap.push_back(buffers[flipflop][i]);
 
-	  HexVolMesh::Cell::array_type neighbors;
+	  mesh_type::Cell::array_type neighbors;
 	  hvmesh->get_neighbors(neighbors, buffers[flipflop][i]);
 
 	  for (unsigned int i = 0; i < neighbors.size(); i++)
@@ -235,26 +187,39 @@ HexToTet::execute()
     }
     ++bi;
   }
-
-
-  TetVolField<int> *tvfield = scinew TetVolField<int>(tvmesh, Field::CELL);
+  
+  TetVolField<value_type> *tvfield = 
+    scinew TetVolField<value_type>(tvmesh, hvfield->data_at());
   *(PropertyManager *)tvfield = *(PropertyManager *)hvfield;
+  dstH = tvfield;
 
-  int val;
-  for (unsigned int i = 0; i < elemmap.size(); i++)
-  {
-    hvfield->value(val, elemmap[i]);
-    tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+0));
-    tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+1));
-    tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+2));
-    tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+3));
-    tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+4));
+  value_type val;
+
+  if (hvfield->data_at() == Field::NODE) {
+    for (unsigned int i = 0; i < hnsize; i++)
+    {
+      hvfield->value(val, (mesh_type::Node::index_type)(i));
+      tvfield->set_value(val, (TetVolMesh::Node::index_type)(i));
+    }
+  } else if (hvfield->data_at() == Field::CELL) {
+    for (unsigned int i = 0; i < elemmap.size(); i++)
+    {
+      hvfield->value(val, elemmap[i]);
+      tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+0));
+      tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+1));
+      tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+2));
+      tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+3));
+      tvfield->set_value(val, (TetVolMesh::Elem::index_type)(i*5+4));
+    }
+  } else if (hvfield->data_at() == Field::NONE) {
+    // nothing to copy
+  } else {
+    cerr << "Error -- don't know how to handle data_at == "<<hvfield->data_at()<<"\n";
+    dstH=0;
+    return false;
   }
-
-  // Forward the results.
-  tvfieldH = tvfield;
-  ofp->send(tvfieldH);
+  return true;
+}
 }
 
-
-} // End namespace CardioWave
+#endif
