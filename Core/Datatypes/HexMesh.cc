@@ -29,11 +29,16 @@
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MiscMath.h>
-#include <iostream>
+
+#include <SCICore/Persistent/PersistentMap.h>
+//#include <iostream>
+//#include <fstream>
+
 using std::cout;
 using std::endl;
 using std::ostream;
-#include <fstream>
+
+using std::map;
 
 /*******************************************************************************
 ********************************************************************************
@@ -724,7 +729,7 @@ int HexMesh::add_node (int index, double x, double y, double z)
   
   n = new HexNode (index, x, y, z);
   
-  node_set.insert (index, n);
+  node_set[index] = n;
   
   if (index > highest_node_index)
     highest_node_index = index;
@@ -742,15 +747,14 @@ int HexMesh::add_node (int index, double x, double y, double z)
 
 HexNode * HexMesh::find_node (int index)
 {
-  HexNode * found = NULL;
+  MapIntHexNode::iterator found;
 
   // Look up the index.  Return NULL if a node does not exist.  Otherwise,
   //   'found' gets set up -- return it.
   
-  if (node_set.lookup (index, found) == 0)
-    return NULL;
-    
-  return found;
+  found = node_set.find(index);
+  if (found == node_set.end()) return NULL;
+  return (*found).second;
 }
 
 
@@ -790,8 +794,8 @@ int HexMesh::add_face (int index, int e, FourHexNodes & f)
   
   h = new HexFace (index, e, f, this);
   
-  face_set.insert (index, h);
-  neighbor_set.insert (f, h);
+  face_set[index] = h;
+  neighbor_set[f] = h;
   
   return index;
 }
@@ -819,15 +823,15 @@ int HexMesh::add_face (int e, FourHexNodes & f)
 
 HexFace * HexMesh::find_face (int index)
 {
-  HexFace * found = NULL;
+  MapIntHexFace::iterator found;
 
   // Look up the index.  Return NULL if the face does not exist.  Otherwise,
   //   'found' gets set up -- return it.
   
-  if (face_set.lookup (index, found) == 0)
-    return NULL;
+  found = face_set.find(index);
+  if (found == face_set.end()) return NULL;
     
-  return found;
+  return (*found).second;
 }
 
 
@@ -840,15 +844,15 @@ HexFace * HexMesh::find_face (int index)
 
 HexFace * HexMesh::find_face (FourHexNodes & f)
 {
-  HexFace * found = NULL;
+  MapFourHexNodesHexFace::iterator found;
 
   // Look up the index.  Return NULL if the face does not exist.  Otherwise,
   //   'found' gets set up -- return it.
   
-  if (neighbor_set.lookup (f, found) == 0)
-    return NULL;
+  found = neighbor_set.find(f);
+  if (found == neighbor_set.end()) return NULL;
     
-  return found;
+  return (*found).second;
 }
 
 
@@ -883,7 +887,7 @@ int HexMesh::add_element (int index, EightHexNodes & e)
   
   h = new Hexahedron (index, this, e);
   
-  element_set.insert (index, h);
+  element_set[index] = h;
   
   return index;
 }
@@ -898,15 +902,15 @@ int HexMesh::add_element (int index, EightHexNodes & e)
 
 Hexahedron * HexMesh::find_element (int index)
 {
-  Hexahedron * found = NULL;
+  MapIntHexahedron::iterator found;
 
   // Look up the index.  Return NULL if the element does not exist.  Otherwise,
   //   'found' gets set up -- return it.
   
-  if (element_set.lookup (index, found) == 0)
-    return NULL;
+  found = element_set.find(index);
+  if (found == element_set.end()) return NULL;
     
-  return found;
+  return (*found).second;
 }
 
 
@@ -1043,8 +1047,7 @@ void HexMesh::classify ()
   using namespace SCICore::Geometry;
 
   Hexahedron * h;
-  HashTable<int, Hexahedron *> * hxhtp = & element_set;
-  HashTableIter<int, Hexahedron *> hx (hxhtp);
+  MapIntHexahedron::iterator hx;
   
   cout << "Building KD tree.\n";
   
@@ -1057,9 +1060,8 @@ void HexMesh::classify ()
   KD.max.y(0);
   KD.max.z(0);
   
-  for (hx.first (); hx.ok (); ++hx)
-  {
-    h = hx.get_data();
+  for (hx = element_set.begin(); hx != element_set.end(); hx++) {
+    h = (*hx).second;
     KD.min = Min (KD.min, h->min);
     KD.max = Max (KD.max, h->max);
   }
@@ -1067,10 +1069,8 @@ void HexMesh::classify ()
   KD.split = 0;
   KD.low = KD.high = NULL;
   
-  for (hx.first (); hx.ok (); ++hx)
-  {
-    h = hx.get_data();
-    
+  for (hx = element_set.begin(); hx != element_set.end(); hx++) {
+    h = (*hx).second;
     PushDown (&KD, h, 1);    
   }
   
@@ -1287,19 +1287,15 @@ double HexMesh::interpolate (const Point & P, const Array1<Vector> & data,
 void HexMesh::get_bounds (Point& min, Point& max)
 {
   using namespace SCICore::Geometry;
-
-  HashTable<int, HexNode *> * hnhtp = & node_set;
-  HashTableIter<int, HexNode *> hn (hnhtp);
+  MapIntHexNode::iterator hn;
 
   // Loop through the nodes looking for min/max.  Assumes at least one node exists.
+  hn = node_set.begin();
+  min = max = *(*hn).second;
 
-  hn.first ();
-  min = max = *hn.get_data ();
-
-  for (++hn; hn.ok (); ++hn)
-  {
-    min=Min(min, *hn.get_data ());
-    max=Max(max, *hn.get_data ());
+  for (++hn; hn != node_set.end(); ++hn) {
+    min=Min( min, *(*hn).second );
+    max=Max( max, *(*hn).second );
   }
 }    
 
@@ -1313,14 +1309,9 @@ void HexMesh::get_bounds (Point& min, Point& max)
 
 ostream & operator << (ostream & o, HexMesh & m)
 {
-  HashTable<int, HexNode *> * hnhtp = & m.node_set;
-  HashTableIter<int, HexNode *> hn (hnhtp);
-
-  HashTable<int, HexFace *> * hfhtp = & m.face_set;
-  HashTableIter<int, HexFace *> hf (hfhtp);
-
-  HashTable<int, Hexahedron *> * hxhtp = & m.element_set;
-  HashTableIter<int, Hexahedron *> hx (hxhtp);
+  HexMesh::MapIntHexNode::iterator hn;
+  HexMesh::MapIntHexFace::iterator hf;
+  HexMesh::MapIntHexahedron::iterator hx;
 
   // Print a header.
 
@@ -1330,22 +1321,25 @@ ostream & operator << (ostream & o, HexMesh & m)
   
   o << "  Nodes (" << m.node_set.size() << "):" << endl;
   
-  for (hn.first (); hn.ok (); ++hn)
-    o << "  " << * hn.get_data();
+  for (hn = m.node_set.begin(); hn != m.node_set.end(); ++hn) {
+    o << "  " << *((*hn).second);
+  }
     
   // Print the faces.
   
   o << "  Faces (" << m.face_set.size() << "):" << endl;
   
-  for (hf.first (); hf.ok (); ++hf)
-    o << "  " << * hf.get_data();
+  for (hf = m.face_set.begin(); hf != m.face_set.end(); ++hf) {
+    o << "  " << *((*hf).second);
+  }
     
   // Print the volumes.
   
   o << "  Hexahedrons (" << m.element_set.size() << "):" << endl;
   
-  for (hx.first (); hx.ok (); ++hx)
-    o << "  " << * hx.get_data();
+  for (hx = m.element_set.begin(); hx != m.element_set.end(); ++hx) {
+    o << "  " << *((*hx).second);
+  }
     
   // Done dumping the mesh.  
     
@@ -1395,27 +1389,29 @@ void HexMesh::io (Piostream & p)
   }
 }
 
+//----------------------------------------------------------------------
 void HexMesh::finish ()
 {
-  HashTable<int, HexFace *> * hfhtp = & face_set;
-  HashTableIter<int, HexFace *> hf (hfhtp);
-  HashTable<int, Hexahedron *> * hxhtp = & element_set;
-  HashTableIter<int, Hexahedron *> hx (hxhtp);
+  MapIntHexFace::iterator hf;
+  MapIntHexahedron::iterator hx;
   
-    // If we just read the mesh, some additional processing may be required.
+				// If we just read the mesh, some
+				// additional processing may be
+				// required.
   
-      for (hx.first (); hx.ok (); ++hx)
-        hx.get_data()->finish_read (this);
-      for (hf.first (); hf.ok (); ++hf)
-      {
-        hf.get_data()->finish_read (this);
-        neighbor_set.insert ( hf.get_data()->corner_set(), hf.get_data());
-      }
-      
-  if (!classified)    
-    classify ();
+  for (hx = element_set.begin(); hx != element_set.end(); ++hx) {
+    (*hx).second->finish_read(this);
+  }
+  
+  for (hf = face_set.begin(); hf != face_set.end(); ++hf) {
+    (*hf).second->finish_read(this);
+    neighbor_set[(*hf).second->corner_set()] = (*hf).second;
+ }
+  
+  if (!classified) classify();
 }
 
+//----------------------------------------------------------------------
 void HexMesh::get_boundary_lines(Array1<Point>&)
 {
     NOT_FINISHED("HexMesh::get_boundary_lines");
@@ -1564,6 +1560,10 @@ void Pio (Piostream & p, Hexahedron * & h)
 
 //
 // $Log$
+// Revision 1.6  2000/03/11 00:41:29  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.5  1999/10/07 02:07:31  sparker
 // use standard iostreams and complex type
 //

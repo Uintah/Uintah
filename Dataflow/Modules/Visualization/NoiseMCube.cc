@@ -8,6 +8,7 @@
 #include <SCICore/Containers/Array3.h>
 #include <PSECommon/Modules/Visualization/table.h>
 #include <PSECore/Datatypes/SpanTree.h>
+#include <SCICore/Containers/Array3.h>
 
 
 namespace PSECommon {
@@ -392,7 +393,7 @@ mcube( GeomTrianglesP *triangles, double iso, int cell )
     mcube_interp( cell, x, y, z, transformation, iso, 0, 4, p0 );
     mcube_interp( cell, x, y, z, transformation, iso, 0, 2, p1 );
     mcube_interp( cell, x, y, z, transformation, iso, 0, 1, p2 );
-    cerr << p0 << " " << p1 << " " << p2 << "\n";
+    //cerr << p0 << " " << p1 << " " << p2 << "\n";
     triangles->add(  p0, p1, p2 );
     break;
 

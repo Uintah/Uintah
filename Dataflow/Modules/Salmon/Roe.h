@@ -14,7 +14,7 @@
 #define SCI_project_module_Roe_h
 
 #include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/HashTable.h>
+#include <map.h>
 #include <PSECore/Comm/MessageBase.h>
 #include <SCICore/Geom/Color.h>
 #include <SCICore/Geom/TCLGeom.h>
@@ -71,7 +71,6 @@ using SCICore::Geometry::Point;
 using SCICore::Geometry::BBox;
 using SCICore::Geometry::Transform;
 using SCICore::Containers::Array1;
-using SCICore::Containers::HashTable;
 using SCICore::Thread::FutureValue;
 
 using namespace SCICore::TclInterface;
@@ -87,7 +86,7 @@ class BallData;
 class TexStruct1D;
 class TexStruct2D;
 class TexStruct3D;
-class SegBin;       // bins for sorted line segments...
+class SegBin;			// bins for sorted line segments...
 
 struct ObjTag {
     TCLvarint* visible;
@@ -99,188 +98,194 @@ typedef void (Roe::*MouseHandler)(int, int x, int y, int state, int btn, int tim
 typedef void (Renderer::*RoeVisPMF)(Salmon*, Roe*, GeomObj*);
 
 class Roe : public TCL {
-
-// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+  
+  // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
 public:
-    Salmon* manager;
-// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-
+  Salmon* manager;
+  // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+  
+public:
+  typedef map< clString, Renderer*, less<clString> > MapClStringRenderer;
+  typedef map< clString, ObjTag*, less<clString> > MapClStringObjTag;
+  
 protected:
-    friend class Salmon;
-    HashTable<clString, Renderer*> renderers;
+  friend class Salmon;
+  
+  MapClStringRenderer renderers;
+  
+  void do_mouse(MouseHandler, TCLArgs&);
+  
+  BBox bb;
+  
+  int last_x, last_y;
+  double total_x, total_y, total_z;
+  Point rot_point;
+  int rot_point_valid;
+  GeomPick* pick_pick;
+  GeomObj* pick_obj;
+  int pick_n;
 
-    void do_mouse(MouseHandler, TCLArgs&);
+  void update_mode_string(const clString&);
+  void update_mode_string(GeomObj*);
 
-    BBox bb;
+  int maxtag;
 
-    int last_x, last_y;
-    double total_x, total_y, total_z;
-    Point rot_point;
-    int rot_point_valid;
-    GeomPick* pick_pick;
-    GeomObj* pick_obj;
-    int pick_n;
+  // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+  SCIBaWGL* bawgl;
+  int bawgl_error;
+  // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
 
-    void update_mode_string(const clString&);
-    void update_mode_string(GeomObj*);
+  Point orig_eye;
+  Vector frame_up;
+  Vector frame_right;
+  Vector frame_front;
 
-    int maxtag;
+  Point mousep;
+  GeomSphere* mouse_obj;
+  Array1<GeomObj*> roe_objs;
 
-// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
-    SCIBaWGL* bawgl;
-    int bawgl_error;
-// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+  void animate_to_view(const View& v, double time);
+  void redraw();
+  void redraw(double tbeg, double tend, int nframes, double framerate);
 
-    Point orig_eye;
-    Vector frame_up;
-    Vector frame_right;
-    Vector frame_front;
+  Array1< TexStruct1D* >   tmap_1d;
+  Array1< unsigned int >   tmap_tex_objs_1d;
 
-    Point mousep;
-    GeomSphere* mouse_obj;
-    Array1<GeomObj*> roe_objs;
+  Array1< TexStruct2D* >   tmap_2d;
+  Array1< unsigned int >   tmap_tex_objs_2d;
 
-    void animate_to_view(const View& v, double time);
-    void redraw();
-    void redraw(double tbeg, double tend, int nframes, double framerate);
+  Array1< TexStruct3D* >   tmap_3d;
+  Array1< unsigned int >   tmap_tex_objs_3d;  // no more than 1!!!
 
-    Array1< TexStruct1D* >   tmap_1d;
-    Array1< unsigned int >   tmap_tex_objs_1d;
-
-    Array1< TexStruct2D* >   tmap_2d;
-    Array1< unsigned int >   tmap_tex_objs_2d;
-
-    Array1< TexStruct3D* >   tmap_3d;
-    Array1< unsigned int >   tmap_tex_objs_3d;  // no more than 1!!!
-
-    SegBin*                  line_segs;   // for lit streamlines/hedgehogs/etc
-
-    int last_time;
-
+  SegBin*                  line_segs;   // for lit streamlines/hedgehogs/etc
+  
+  int last_time;
+  
 public:
-    int inertia_mode;
-    BallData *ball;  // this is the ball for arc ball stuff
+  int inertia_mode;
+  BallData *ball;		// this is the ball for arc ball stuff
+  
+  double angular_v;		// angular velocity for inertia
+  View rot_view;		// pre-rotation view
+  Transform prev_trans;
+  double eye_dist;
+  double total_scale;
+  int prev_time[3];		// history for quaternions and time
+  HVect prev_quat[3];
+  
+  int doingMovie;
+  int curFrame;
+  clString curName;
+  
+  void LoadTexture1D(TexStruct1D*);
+  void LoadTexture2D(TexStruct2D*);
+  void LoadTexture3D(TexStruct3D*);
+  void LoadColorTable(TexStruct1D*);
 
-    double angular_v; // angular velocity for inertia
-    View rot_view;    // pre-rotation view
-    Transform prev_trans;
-    double eye_dist;
-    double total_scale;
-    int prev_time[3]; // history for quaternions and time
-    HVect prev_quat[3];
-
-    int doingMovie;
-    int curFrame;
-    clString curName;
-
-    void LoadTexture1D(TexStruct1D*);
-    void LoadTexture2D(TexStruct2D*);
-    void LoadTexture3D(TexStruct3D*);
-    void LoadColorTable(TexStruct1D*);
-
-    int tex_disp_list;
+  int tex_disp_list;
 
 
-    Renderer* current_renderer;
-    Renderer* get_renderer(const clString&);
-    clString id;
-    int need_redraw;
+  Renderer* current_renderer;
+  Renderer* get_renderer(const clString&);
+  clString id;
+  int need_redraw;
 
-    SCIBaWGL* get_bawgl(void) { return(bawgl); }
+  SCIBaWGL* get_bawgl(void) { return(bawgl); }
+    
+  Roe(Salmon *s, const clString& id);
+  Roe(const Roe&);
+  ~Roe();
 
-    Roe(Salmon *s, const clString& id);
-    Roe(const Roe&);
-    ~Roe();
+  clString set_id(const clString& new_id);
 
-    clString set_id(const clString& new_id);
+  void itemAdded(GeomSalmonItem*);
+  void itemDeleted(GeomSalmonItem*);
+  void rotate(double angle, Vector v, Point p);
+  void rotate_obj(double angle, const Vector& v, const Point& p);
+  void translate(Vector v);
+  void scale(Vector v, Point p);
+  void addChild(Roe *r);
+  void deleteChild(Roe *r);
+  void SetParent(Roe *r);
+  void SetTop();
+  void redraw_if_needed();
+  void force_redraw();
 
-    void itemAdded(GeomSalmonItem*);
-    void itemDeleted(GeomSalmonItem*);
-    void rotate(double angle, Vector v, Point p);
-    void rotate_obj(double angle, const Vector& v, const Point& p);
-    void translate(Vector v);
-    void scale(Vector v, Point p);
-    void addChild(Roe *r);
-    void deleteChild(Roe *r);
-    void SetParent(Roe *r);
-    void SetTop();
-    void redraw_if_needed();
-    void force_redraw();
+  //>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  void bawgl_pick(int action, GLint iv[3], GLfloat fv[4]);
+  //<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-    //>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    void bawgl_pick(int action, GLint iv[3], GLfloat fv[4]);
-    //<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  void mouse_translate(int, int, int, int, int, int);
+  void mouse_scale(int, int, int, int, int, int);
+  void mouse_rotate(int, int, int, int, int, int);
+  void mouse_pick(int, int, int, int, int, int);
 
-    void mouse_translate(int, int, int, int, int, int);
-    void mouse_scale(int, int, int, int, int, int);
-    void mouse_rotate(int, int, int, int, int, int);
-    void mouse_pick(int, int, int, int, int, int);
+  void tcl_command(TCLArgs&, void*);
+  void get_bounds(BBox&);
 
-    void tcl_command(TCLArgs&, void*);
-    void get_bounds(BBox&);
+  void autoview(const BBox&);
 
-    void autoview(const BBox&);
+				// sets up the state (OGL) for a tool/roe
+  void setState(DrawInfoOpenGL*,clString);
+				// sets up DI for this drawinfo
+  void setDI(DrawInfoOpenGL*,clString);
+				// sets up OGL clipping planes...
+  void setClip(DrawInfoOpenGL*); 
 
-    // sets up the state (OGL) for a tool/roe
-    void setState(DrawInfoOpenGL*,clString);
-    // sets up DI for this drawinfo
-    void setDI(DrawInfoOpenGL*,clString);
-    // sets up OGL clipping planes...
-    void setClip(DrawInfoOpenGL*); 
+				// Which of the objects do we draw?
+  MapClStringObjTag visible;
 
-    // Which of the objects do we draw?
-    HashTable<clString, ObjTag*> visible;
+				// Which of the lights are on?
+  //ha*hTable<clString, int> light_on;
+  //map< clString, int, clString::operator< > light_on;
+    
+				// The Camera
+  TCLView view;
+  View homeview;
 
-    // Which of the lights are on?
-    HashTable<clString, int> light_on;
+				// Background Color
+  TCLColor bgcolor;
 
-    // The Camera
-    TCLView view;
-    View homeview;
+				// Shading parameters, etc.
+  TCLstring shading;
 
-    // Background Color
-    TCLColor bgcolor;
+				// Stereo
+  TCLint do_stereo;
 
-    // Shading parameters, etc.
-    TCLstring shading;
-
-    // Stereo
-    TCLint do_stereo;
-
-// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
-    TCLint do_bawgl;
-// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-
-    TCLint drawimg;
-
-    TCLstring saveprefix;
-
-    // Object processing utility routines
-    void do_for_visible(Renderer*, RoeVisPMF);
-
-    void set_current_time(double time);
-
-    void dump_objects(const clString&, const clString& format);
-
-    void getData(int datamask, FutureValue<GeometryData*>* result);
-    void setView(View view);
+  // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+  TCLint do_bawgl;
+  // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+  
+  TCLint drawimg;
+  
+  TCLstring saveprefix;
+  
+				// Object processing utility routines
+  void do_for_visible(Renderer*, RoeVisPMF);
+  
+  void set_current_time(double time);
+  
+  void dump_objects(const clString&, const clString& format);
+  
+  void getData(int datamask, FutureValue<GeometryData*>* result);
+  void setView(View view);
 };
 
 class RoeMouseMessage : public MessageBase {
 public:
-    clString rid;
-    MouseHandler handler;
-    int action;
-    int x, y;
-    int state;
-    int btn;
-    int time;
-    
-    
-    RoeMouseMessage(const clString& rid, MouseHandler handler,
-		    int action, int x, int y, int state, int btn,
-		    int time);
-    virtual ~RoeMouseMessage();
+  clString rid;
+  MouseHandler handler;
+  int action;
+  int x, y;
+  int state;
+  int btn;
+  int time;
+  
+  
+  RoeMouseMessage(const clString& rid, MouseHandler handler,
+    int action, int x, int y, int state, int btn,
+    int time);
+  virtual ~RoeMouseMessage();
 };
 
 } // End namespace Modules
@@ -288,6 +293,10 @@ public:
 
 //
 // $Log$
+// Revision 1.12  2000/03/11 00:39:52  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.11  1999/12/03 00:28:59  dmw
 // added setView message for Salmon/Roe
 //

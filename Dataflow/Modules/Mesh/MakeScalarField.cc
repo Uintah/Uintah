@@ -13,7 +13,6 @@
 #include <PSECore/Datatypes/ColumnMatrixPort.h>
 #include <PSECore/Datatypes/MeshPort.h>
 #include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Containers/HashTable.h>
 #include <SCICore/Datatypes/ScalarFieldUG.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -83,6 +82,10 @@ void MakeScalarField::execute()
 
 //
 // $Log$
+// Revision 1.2  2000/03/11 00:41:55  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.1  1999/09/05 01:15:27  dmw
 // added all of the old SCIRun mesh modules
 //

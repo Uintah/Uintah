@@ -56,27 +56,27 @@ using SCICore::Math::Abs;
 using SCICore::Geometry::Cross;
 using SCICore::Geometry::Dot;
 using SCICore::Containers::to_string;
-using SCICore::Containers::HashTableIter;
 using SCICore::GeomSpace::BState;
 using SCICore::GeomSpace::GeomScene;
 using SCICore::PersistentSpace::BinaryPiostream;
 using SCICore::PersistentSpace::TextPiostream;
 
 //static DebugSwitch autoview_sw("Roe", "autoview");
+static Roe::MapClStringObjTag::iterator viter;
 
 Roe::Roe(Salmon* s, const clString& id)
-: manager(s),
+  : manager(s),
   view("view", id, this),
   homeview(Point(.55, .5, 0), Point(.0, .0, .0), Vector(0,1,0), 25),
   bgcolor("bgcolor", id, this), shading("shading", id, this),
   do_stereo("do_stereo", id, this), 
-// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+  // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
   do_bawgl("do_bawgl", id, this),
-// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+  // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
   drawimg("drawimg", id, this),
   saveprefix("saveprefix", id, this),
   id(id),doingMovie(0),curFrame(0),curName("/tmp/movie")
-{
+  {
     inertia_mode=0;
     bgcolor.set(Color(0,0,0));
     view.set(homeview);
@@ -86,10 +86,10 @@ Roe::Roe(Salmon* s, const clString& id)
     mouse_obj=0;
     ball = new BallData();
     ball->Init();
-// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+    // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
     bawgl = new SCIBaWGL();
-// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-}
+    // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+  }
 
 clString Roe::set_id(const clString& new_id)
 {
@@ -101,20 +101,23 @@ clString Roe::set_id(const clString& new_id)
 void Roe::itemAdded(GeomSalmonItem* si)
 {
     ObjTag* vis;
-    if(!visible.lookup(si->name, vis)){
-	// Make one...
-	vis=scinew ObjTag;
-	vis->visible=scinew TCLvarint(si->name, id, this);
-	vis->visible->set(1);
-	vis->tagid=maxtag++;
-	visible.insert(si->name, vis);
-	ostringstream str;
-	str << id << " addObject " << vis->tagid << " \"" << si->name << "\"";
-	TCL::execute(str.str().c_str());
+    
+    viter = visible.find(si->name);
+    if(viter==visible.end()){
+      // Make one...
+      vis=scinew ObjTag;
+      vis->visible=scinew TCLvarint(si->name, id, this);
+      vis->visible->set(1);
+      vis->tagid=maxtag++;
+      visible[si->name] = vis;
+      ostringstream str;
+      str << id << " addObject " << vis->tagid << " \"" << si->name << "\"";
+      TCL::execute(str.str().c_str());
     } else {
-	ostringstream str;
-	str << id << " addObject2 " << vis->tagid;
-	TCL::execute(str.str().c_str());
+      vis = (*viter).second;
+      ostringstream str;
+      str << id << " addObject2 " << vis->tagid;
+      TCL::execute(str.str().c_str());
     }
     // invalidate the bounding box
     bb.reset();
@@ -123,17 +126,21 @@ void Roe::itemAdded(GeomSalmonItem* si)
 
 void Roe::itemDeleted(GeomSalmonItem *si)
 {
-    ObjTag* vis;
-    if(!visible.lookup(si->name, vis)){
-	cerr << "Where did that object go???" << endl;
-    } else {
-	ostringstream str;
-	str << id << " removeObject " << vis->tagid;
-	TCL::execute(str.str().c_str());
-    }
-    // invalidate the bounding box
-    bb.reset();
-    need_redraw=1;
+  ObjTag* vis;
+    
+  viter = visible.find(si->name);
+  if (viter == visible.end()) { // if not found
+    cerr << "Where did that object go???" << endl;
+  }
+  else {
+    vis = (*viter).second;
+    ostringstream str;
+    str << id << " removeObject " << vis->tagid;
+    TCL::execute(str.str().c_str());
+  }
+				// invalidate the bounding box
+  bb.reset();
+  need_redraw=1;
 }
 
 // need to fill this in!   
@@ -146,17 +153,17 @@ void Roe::itemCB(CallbackData*, void *gI) {
 
 void Roe::spawnChCB(CallbackData*, void*)
 {
-  double mat[16];
-  glGetDoublev(GL_MODELVIEW_MATRIX, mat);
+    double mat[16];
+    glGetDoublev(GL_MODELVIEW_MATRIX, mat);
 
-  kids.add(scinew Roe(manager, mat, mtnScl));
-  kids[kids.size()-1]->SetParent(this);
-  for (int i=0; i<geomItemA.size(); i++)
-      kids[kids.size()-1]->itemAdded(geomItemA[i]->geom, geomItemA[i]->name);
+    kids.add(scinew Roe(manager, mat, mtnScl));
+    kids[kids.size()-1]->SetParent(this);
+    for (int i=0; i<geomItemA.size(); i++)
+	kids[kids.size()-1]->itemAdded(geomItemA[i]->geom, geomItemA[i]->name);
 
 }
 #endif
-    
+
 Roe::~Roe()
 {
     TCL::delete_command( id+"-c" );
@@ -164,35 +171,41 @@ Roe::~Roe()
 
 void Roe::get_bounds(BBox& bbox)
 {
-    bbox.reset();
-//    HashTableIter<int, PortInfo*> iter(&manager->portHash);
-    HashTableIter<int,GeomObj*> iter = manager->ports.getIter();
-    for (iter.first(); iter.ok(); ++iter) {
-//	HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
-//	HashTableIter<int, SceneItem*> serIter(serHash);
-//	HashTable<int,GeomObj*>* serHash = 
-//	    ((GeomSalmonPort*)iter.get_data())->getHashPtr();
-	HashTableIter<int,GeomObj*> serIter = 
-	    ((GeomSalmonPort*)iter.get_data())->getIter();
-	// items in the scen are all GeomSalmonItem's...
-	for (serIter.first(); serIter.ok(); ++serIter) {
-	    GeomSalmonItem *si=(GeomSalmonItem*)serIter.get_data();
-	    // Look up the name to see if it should be drawn...
-	    ObjTag* vis;
-	    if(visible.lookup(si->name, vis)){
-		if(vis->visible->get()){
-		    if(si->lock)
-			si->lock->readLock();
-		    si->get_bounds(bbox);
-		    if(si->lock)
-			si->lock->readUnlock();
-		}
-	    } else {
-		cerr << "Warning: object " << si->name << " not in visibility database...\n";
-		si->get_bounds(bbox);
-	    }
+  bbox.reset();
+
+  GeomIndexedGroup::IterIntGeomObj iter = manager->ports.getIter();
+    
+  for ( ; iter.first != iter.second; iter.first++) {
+	
+    GeomIndexedGroup::IterIntGeomObj serIter =
+      ((GeomSalmonPort*)((*iter.first).second))->getIter();
+
+				// items in the scen are all
+				// GeomSalmonItem's...
+    for ( ; serIter.first != serIter.second; serIter.first++) {
+      GeomSalmonItem *si=(GeomSalmonItem*)((*serIter.first).second);
+	    
+				// Look up the name to see if it
+				// should be drawn...
+      ObjTag* vis;
+	    
+      viter = visible.find(si->name);
+	    
+      if (viter != visible.end()) { // if found
+	vis = (*viter).second;
+	if (vis->visible->get()) {
+	  if(si->lock) si->lock->readLock();
+	  si->get_bounds(bbox);
+	  if(si->lock) si->lock->readUnlock();
 	}
+      }
+      else {
+	cerr << "Warning: object " << si->name
+	     << " not in visibility database...\n";
+	si->get_bounds(bbox);
+      }
     }
+  }
 }
 
 void Roe::rotate(double /*angle*/, Vector /*v*/, Point /*c*/)
@@ -267,7 +280,6 @@ void Roe::scale(Vector /*v*/, Point /*c*/)
 #endif
     need_redraw=1;
 }
-
 
 void Roe::mouse_translate(int action, int x, int y, int, int, int)
 {
@@ -735,186 +747,199 @@ void Roe::redraw_if_needed()
 
 void Roe::tcl_command(TCLArgs& args, void*)
 {
-    if(args.count() < 2){
-	args.error("Roe needs a minor command");
-	return;
+  if (args.count() < 2) {
+    args.error("Roe needs a minor command");
+    return;
+  }
+  
+  if (args[1] == "dump_roe") {
+    if (args.count() != 3) {
+      args.error("Roe::dump_roe needs an output file name!");
+      return;
     }
-    if(args[1] == "dump_roe"){
-	if(args.count() != 3){
-	    args.error("Roe::dump_roe needs an output file name!");
-	    return;
-	}
-	// We need to dispatch this one to the remote thread
-	// We use an ID string instead of a pointer in case this roe
-	// gets killed by the time the redraw message gets dispatched.
-	manager->mailbox.send(scinew SalmonMessage(MessageTypes::RoeDumpImage, id, args[2]));
-    } else if(args[1] == "startup"){
-	// Fill in the visibility database...
-	//HashTableIter<int, PortInfo*> iter(&manager->portHash);
-	HashTableIter<int,GeomObj*> iter = manager->ports.getIter();
-	for (iter.first(); iter.ok(); ++iter) {
-//	    HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
-//	    HashTableIter<int, SceneItem*> serIter(serHash);
-	    HashTableIter<int,GeomObj*> serIter = 
-		((GeomSalmonPort*)iter.get_data())->getIter();	    
-	    for (serIter.first(); serIter.ok(); ++serIter) {
-		GeomSalmonItem *si=(GeomSalmonItem*)serIter.get_data();
-		itemAdded(si);
-	    }
-	}
-    } else if(args[1] == "setrenderer"){
-	if(args.count() != 6){
-	    args.error("setrenderer needs a renderer name, etc");
-	    return;
-	}
-	Renderer* r=get_renderer(args[2]);
-	if(!r){
-	    args.error("Unknown renderer!");
-	    return;
-	}
-	if(current_renderer)
-	    current_renderer->hide();
-	current_renderer=r;
-	args.result(r->create_window(this, args[3], args[4], args[5]));
-    } else if(args[1] == "redraw"){
-	// We need to dispatch this one to the remote thread
-	// We use an ID string instead of a pointer in case this roe
-	// gets killed by the time the redraw message gets dispatched.
-	if(!manager->mailbox.trySend(scinew SalmonMessage(id)))
-	    cerr << "Redraw event dropped, mailbox full!\n";
-    } else if(args[1] == "destroy"){
-        manager->delete_roe(this);
-    } else if(args[1] == "anim_redraw"){
-	// We need to dispatch this one to the remote thread
-	// We use an ID string instead of a pointer in case this roe
-	// gets killed by the time the redraw message gets dispatched.
-	if(args.count() != 6){
-	    args.error("anim_redraw wants tbeg tend nframes framerate");
-	    return;
-	}
-	double tbeg;
-	if(!args[2].get_double(tbeg)){
-	    args.error("Can't figure out tbeg");
-	    return;
-	} 
-	double tend;
-	if(!args[3].get_double(tend)){
-	    args.error("Can't figure out tend");
-	    return;
-	}
-	int nframes;
-	if(!args[4].get_int(nframes)){
-	    args.error("Can't figure out nframes");
-	    return;
-	}
-	double framerate;
-	if(!args[5].get_double(framerate)){
-	    args.error("Can't figure out framerate");
-	    return;
-	}
-	if(!manager->mailbox.trySend(scinew SalmonMessage(id, tbeg, tend,
-							  nframes, framerate)))
-	    cerr << "Redraw event dropped, mailbox full!\n";
-    } else if(args[1] == "mtranslate"){
-	do_mouse(&Roe::mouse_translate, args);
-    } else if(args[1] == "mrotate"){
-	do_mouse(&Roe::mouse_rotate, args);
-    } else if(args[1] == "mscale"){
-	do_mouse(&Roe::mouse_scale, args);
-    } else if(args[1] == "mpick"){
-	do_mouse(&Roe::mouse_pick, args);
-    } else if(args[1] == "sethome"){
-	homeview=view.get();
-    } else if(args[1] == "gohome"){
-	view.set(homeview);
-	manager->mailbox.send(scinew SalmonMessage(id)); // Redraw
-    } else if(args[1] == "autoview"){
-	BBox bbox;
-	get_bounds(bbox);
-	autoview(bbox);
-    } else if(args[1] == "dolly"){
-	if(args.count() != 3){
-	    args.error("dolly needs an amount");
-	    return;
-	}
-	double amount;
-	if(!args[2].get_double(amount)){
-	    args.error("Can't figure out amount");
-	    return;
-	}
-	View cv(view.get());
-	Vector lookdir(cv.eyep()-cv.lookat());
-	lookdir*=amount;
-	cv.eyep(cv.lookat()+lookdir);
-	animate_to_view(cv, 1.0);
-    } else if(args[1] == "dolly2"){
-	if(args.count() != 3){
-	    args.error("dolly2 needs an amount");
-	    return;
-	}
-	double amount;
-	if(!args[2].get_double(amount)){
-	    args.error("Can't figure out amount");
-	    return;
-	}
-	View cv(view.get());
-	Vector lookdir(cv.eyep()-cv.lookat());
-	amount = amount-1;
-	lookdir*=amount;
-	cv.eyep(cv.eyep()+lookdir);
-	cv.lookat(cv.lookat()+lookdir);
-	animate_to_view(cv, 1.0);
-    } else if(args[1] == "saveobj") {
-	if(args.count() != 4){
-	    args.error("Roe::dump_roe needs an output file name and format!");
-	    return;
-	}
-	// We need to dispatch this one to the remote thread
-	// We use an ID string instead of a pointer in case this roe
-	// gets killed by the time the redraw message gets dispatched.
-	manager->mailbox.send(scinew SalmonMessage(MessageTypes::RoeDumpObjects,
-						   id, args[2], args[3]));
-    } else if(args[1] == "listvisuals"){
-        current_renderer->listvisuals(args);
-    } else if(args[1] == "switchvisual"){
-      if(args.count() != 6){
-	args.error("switchvisual needs a window name, a visual index, a width and a height");
-	return;
+				// We need to dispatch this one to the
+				// remote thread.  We use an ID string
+				// instead of a pointer in case this
+				// roe gets killed by the time the
+				// redraw message gets dispatched.
+    manager->mailbox.send(scinew
+      SalmonMessage(MessageTypes::RoeDumpImage, id, args[2]));
+  }
+  else if (args[1] == "startup") {
+    
+				// Fill in the visibility database...
+    GeomIndexedGroup::IterIntGeomObj iter = manager->ports.getIter();
+    
+    for ( ; iter.first != iter.second; iter.first++) {
+      
+      GeomIndexedGroup::IterIntGeomObj serIter =
+	((GeomSalmonPort*)((*iter.first).second))->getIter();
+      
+      for ( ; serIter.first != serIter.second; serIter.first++) {
+	GeomSalmonItem *si =
+	  (GeomSalmonItem*)((*serIter.first).second);
+	itemAdded(si);
       }
-      int idx;
-      if(!args[3].get_int(idx)){
-	args.error("bad index for switchvisual");
-	return;
-      }
-      int width;
-      if(!args[4].get_int(width)){
-	args.error("Bad width");
-	return;
-      }
-      int height;
-      if(!args[5].get_int(height)){
-	args.error("Bad height");
-	return;
-      }
-      current_renderer->setvisual(args[2], idx, width, height);
-// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
-   } else if(args[1] == "startbawgl") {
-        if( bawgl->start(this, "bench.config")  == 0 )
-	  {
-	    bawgl_error = 0;
-	  }
-	else
-	  {
-	    do_bawgl.set(0);
-	    bawgl_error = 1;
-	    args.error("Bummer!\n Check if the device daemons are alive!");
-	  }
-   } else if(args[1] == "stopbawgl"){
-     if( !bawgl_error ) bawgl->stop();
-// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-    } else {
-      args.error("Unknown minor command '" + args[1] + "' for Roe");
     }
+  }
+  else if (args[1] == "setrenderer") {
+    if (args.count() != 6) {
+      args.error("setrenderer needs a renderer name, etc");
+      return;
+    }
+    Renderer* r=get_renderer(args[2]);
+    if (!r) {
+      args.error("Unknown renderer!");
+      return;
+    }
+    if (current_renderer) current_renderer->hide();
+    current_renderer=r;
+    args.result(r->create_window(this, args[3], args[4], args[5]));
+  } else if (args[1] == "redraw") {
+				// We need to dispatch this one to the
+				// remote thread We use an ID string
+				// instead of a pointer in case this
+				// roe gets killed by the time the
+				// redraw message gets dispatched.
+    if(!manager->mailbox.trySend(scinew SalmonMessage(id)))
+      cerr << "Redraw event dropped, mailbox full!\n";
+  } else if(args[1] == "destroy"){
+    manager->delete_roe(this);
+  } else if(args[1] == "anim_redraw"){
+				// We need to dispatch this one to the
+				// remote thread We use an ID string
+				// instead of a pointer in case this
+				// roe gets killed by the time the
+				// redraw message gets dispatched.
+    if(args.count() != 6){
+      args.error("anim_redraw wants tbeg tend nframes framerate");
+      return;
+    }
+    double tbeg;
+    if(!args[2].get_double(tbeg)){
+      args.error("Can't figure out tbeg");
+      return;
+    } 
+    double tend;
+    if(!args[3].get_double(tend)){
+      args.error("Can't figure out tend");
+      return;
+    }
+    int nframes;
+    if(!args[4].get_int(nframes)){
+      args.error("Can't figure out nframes");
+      return;
+    }
+    double framerate;
+    if(!args[5].get_double(framerate)){
+      args.error("Can't figure out framerate");
+      return;
+    }
+    if(!manager->mailbox.trySend(scinew SalmonMessage(id, tbeg, tend,
+      nframes, framerate)))
+      cerr << "Redraw event dropped, mailbox full!\n";
+  } else if(args[1] == "mtranslate"){
+    do_mouse(&Roe::mouse_translate, args);
+  } else if(args[1] == "mrotate"){
+    do_mouse(&Roe::mouse_rotate, args);
+  } else if(args[1] == "mscale"){
+    do_mouse(&Roe::mouse_scale, args);
+  } else if(args[1] == "mpick"){
+    do_mouse(&Roe::mouse_pick, args);
+  } else if(args[1] == "sethome"){
+    homeview=view.get();
+  } else if(args[1] == "gohome"){
+    view.set(homeview);
+    manager->mailbox.send(scinew SalmonMessage(id)); // Redraw
+  } else if(args[1] == "autoview"){
+    BBox bbox;
+    get_bounds(bbox);
+    autoview(bbox);
+  } else if(args[1] == "dolly"){
+    if(args.count() != 3){
+      args.error("dolly needs an amount");
+      return;
+    }
+    double amount;
+    if(!args[2].get_double(amount)){
+      args.error("Can't figure out amount");
+      return;
+    }
+    View cv(view.get());
+    Vector lookdir(cv.eyep()-cv.lookat());
+    lookdir*=amount;
+    cv.eyep(cv.lookat()+lookdir);
+    animate_to_view(cv, 1.0);
+  } else if(args[1] == "dolly2"){
+    if(args.count() != 3){
+      args.error("dolly2 needs an amount");
+      return;
+    }
+    double amount;
+    if(!args[2].get_double(amount)){
+      args.error("Can't figure out amount");
+      return;
+    }
+    View cv(view.get());
+    Vector lookdir(cv.eyep()-cv.lookat());
+    amount = amount-1;
+    lookdir*=amount;
+    cv.eyep(cv.eyep()+lookdir);
+    cv.lookat(cv.lookat()+lookdir);
+    animate_to_view(cv, 1.0);
+  } else if(args[1] == "saveobj") {
+    if(args.count() != 4){
+      args.error("Roe::dump_roe needs an output file name and format!");
+      return;
+    }
+				// We need to dispatch this one to the
+				// remote thread We use an ID string
+				// instead of a pointer in case this
+				// roe gets killed by the time the
+				// redraw message gets dispatched.
+    manager->mailbox.send(scinew SalmonMessage(MessageTypes::RoeDumpObjects,
+      id, args[2], args[3]));
+  } else if(args[1] == "listvisuals"){
+    current_renderer->listvisuals(args);
+  } else if(args[1] == "switchvisual"){
+    if(args.count() != 6){
+      args.error("switchvisual needs a window name, a visual index, a width and a height");
+      return;
+    }
+    int idx;
+    if(!args[3].get_int(idx)){
+      args.error("bad index for switchvisual");
+      return;
+    }
+    int width;
+    if(!args[4].get_int(width)){
+      args.error("Bad width");
+      return;
+    }
+    int height;
+    if(!args[5].get_int(height)){
+      args.error("Bad height");
+      return;
+    }
+    current_renderer->setvisual(args[2], idx, width, height);
+    // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+  } else if(args[1] == "startbawgl") {
+    if( bawgl->start(this, "bench.config")  == 0 )
+      {
+	bawgl_error = 0;
+      }
+    else
+      {
+	do_bawgl.set(0);
+	bawgl_error = 1;
+	args.error("Bummer!\n Check if the device daemons are alive!");
+      }
+  } else if(args[1] == "stopbawgl"){
+    if( !bawgl_error ) bawgl->stop();
+    // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+  } else {
+    args.error("Unknown minor command '" + args[1] + "' for Roe");
+  }
 }
 
 void Roe::do_mouse(MouseHandler handler, TCLArgs& args)
@@ -1071,14 +1096,21 @@ void Roe::animate_to_view(const View& v, double /*time*/)
 Renderer* Roe::get_renderer(const clString& name)
 {
     // See if we already have one like that...
-    Renderer* r;
-    if(!renderers.lookup(name, r)){
-	// Create it...
-	r=Renderer::create(name);
-	if(r)
-	    renderers.insert(name, r);
+  Renderer* r;
+  MapClStringRenderer::iterator riter;
+
+  riter = renderers.find(name);
+  if (riter == renderers.end()) { // if not found
+    // Create it...
+    r = Renderer::create(name);
+    if (r) {
+      renderers[name] = r;
     }
-    return r;
+  }
+  else {
+    r = (*riter).second;
+  }
+  return r;
 }
 
 void Roe::force_redraw()
@@ -1088,29 +1120,37 @@ void Roe::force_redraw()
 
 void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
 {
-  // Do internal objects first...
+				// Do internal objects first...
   int i;
-  for(i=0;i<roe_objs.size();i++){
+  for (i = 0; i < roe_objs.size(); i++){
     (r->*pmf)(manager, this, roe_objs[i]);
   }
 
   Array1<GeomSalmonItem*> transp_objs; // transparent objects - drawn last
 
-  HashTableIter<int,GeomObj*> iter = manager->ports.getIter();
-  for (iter.first(); iter.ok(); ++iter) {
-    HashTableIter<int,GeomObj*> serIter = 
-      ((GeomSalmonPort*)iter.get_data())->getIter();
+  GeomIndexedGroup::IterIntGeomObj iter = manager->ports.getIter();
+  
+  for ( ; iter.first != iter.second; iter.first++) {
+      
+    GeomIndexedGroup::IterIntGeomObj serIter = 
+      ((GeomSalmonPort*)((*iter.first).second))->getIter();
     
-    for (serIter.first(); serIter.ok(); ++serIter) {
-      GeomSalmonItem *si=(GeomSalmonItem*)serIter.get_data();
+    for ( ; serIter.first != serIter.second; serIter.first++) {
+	    
+      GeomSalmonItem *si =
+	(GeomSalmonItem*)((*serIter.first).second);
+      
       // Look up the name to see if it should be drawn...
       ObjTag* vis;
-      if(visible.lookup(si->name, vis)){
-	if(vis->visible->get()){
+      
+      viter = visible.find(si->name);
+      if (viter != visible.end()) { // if found
+	vis = (*viter).second;
+	if (vis->visible->get()) {
 	  if (strstr(si->name(),"TransParent")) { // delay drawing
 	    transp_objs.add(si);
-	  } else {
-	    
+	  }
+	  else {
 	    if(si->lock)
 	      si->lock->readLock();
 	    (r->*pmf)(manager, this, si);
@@ -1118,7 +1158,8 @@ void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
 	      si->lock->readUnlock();
 	  }
 	}
-      } else {
+      }
+      else {
 	cerr << "Warning: object " << si->name << " not in visibility database...\n";
       }
     }
@@ -1194,6 +1235,10 @@ void Roe::setView(View newView) {
 
 //
 // $Log$
+// Revision 1.13  2000/03/11 00:39:52  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.12  1999/12/03 00:28:59  dmw
 // added setView message for Salmon/Roe
 //

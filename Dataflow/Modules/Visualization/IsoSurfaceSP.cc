@@ -14,7 +14,6 @@
 
 #include <SCICore/Tester/RigorousTest.h>
 #include <SCICore/Containers/BitArray1.h>
-#include <SCICore/Containers/HashTable.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/Queue.h>
 #include <SCICore/Containers/Stack.h>
@@ -668,13 +667,14 @@ void IsoSurfaceMSRG::iso_reg_grid(ScalarFieldRG* field, const Point& p,
     }
     isoval.set(iv);
     cerr << "Isoval = " << iv << "\n";
-    HashTable<int, int> visitedPts;
+    typedef map<int, int, less<int> > MapIntInt;
+    MapIntInt visitedPts;
     Queue<int> surfQ;
     int px, py, pz;
     field->locate(p, px, py, pz);
     int pLoc=(((pz*ny)+py)*nx)+px;
     int dummy;
-    visitedPts.insert(pLoc, 0);
+    visitedPts[pLoc] = 0;
     surfQ.append(pLoc);
     int counter=1;
     GeomID groupid=0;
@@ -701,49 +701,49 @@ void IsoSurfaceMSRG::iso_reg_grid(ScalarFieldRG* field, const Point& p,
 	px=dummy%nx;
 	int nbrs=iso_cube(px, py, pz, iv, group, field, 0, 0);
 	if ((nbrs & 1) && (px!=0)) {
-	    pLoc-=1;
-	    if (!visitedPts.lookup(pLoc, dummy)) {
-		visitedPts.insert(pLoc, 0);
+	    pLoc-=1;	    
+	    if (visitedPts.find(pLoc) == visitedPts.end()) {
+		visitedPts[pLoc] = 0;
 		surfQ.append(pLoc);
 	    }
 	    pLoc+=1;
 	}
 	if ((nbrs & 2) && (px!=nx-2)) {
 	    pLoc+=1;
-	    if (!visitedPts.lookup(pLoc, dummy)) {
-		visitedPts.insert(pLoc, 0);
+	    if (visitedPts.find(pLoc) == visitedPts.end()) {
+		visitedPts[pLoc] = 0;
 		surfQ.append(pLoc);
 	    }
 	    pLoc-=1;
 	}
 	if ((nbrs & 8) && (py!=0)) {
 	    pLoc-=nx;
-	    if (!visitedPts.lookup(pLoc, dummy)) {
-		visitedPts.insert(pLoc, 0);
+	    if (visitedPts.find(pLoc) == visitedPts.end()) {
+		visitedPts[pLoc] = 0;
 		surfQ.append(pLoc);
 	    }
 	    pLoc+=nx;
 	}
 	if ((nbrs & 4) && (py!=ny-2)) {
 	    pLoc+=nx;
-	    if (!visitedPts.lookup(pLoc, dummy)) {
-		visitedPts.insert(pLoc, 0);
+	    if (visitedPts.find(pLoc) == visitedPts.end()) {
+		visitedPts[pLoc] = 0;
 		surfQ.append(pLoc);
 	    }
 	    pLoc-=nx;
 	}
 	if ((nbrs & 16) && (pz!=0)) {
 	    pLoc-=nx*ny;
-	    if (!visitedPts.lookup(pLoc, dummy)) {
-		visitedPts.insert(pLoc, 0);
+	    if (visitedPts.find(pLoc) == visitedPts.end()) {
+		visitedPts[pLoc] = 0;
 		surfQ.append(pLoc);
 	    }
 	    pLoc+=nx*ny;
 	}
 	if ((nbrs & 32) && (pz!=nz-2)) {
 	    pLoc+=nx*ny;
-	    if (!visitedPts.lookup(pLoc, dummy)) {
-		visitedPts.insert(pLoc, 0);
+	    if (visitedPts.find(pLoc) == visitedPts.end()) {
+		visitedPts[pLoc] = 0;
 		surfQ.append(pLoc);
 	    }
 	    pLoc-=nx*ny;
@@ -1703,6 +1703,10 @@ void IsoSurfaceMSRG::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.7  2000/03/11 00:39:56  dahart
+// Replaced all instances of HashTable<class X, class Y> with the
+// Standard Template Library's std::map<class X, class Y, less<class X>>
+//
 // Revision 1.6  1999/10/07 02:07:07  sparker
 // use standard iostreams and complex type
 //
