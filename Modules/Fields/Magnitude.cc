@@ -84,8 +84,8 @@ void Magnitude::parallel(int proc)
   int nx=vfield->nx;
   int ny=vfield->ny;
   int nz=vfield->nz;
-  int sz=proc*nz/np;
-  int ez=(proc+1)*nz/np;
+  int sz=proc*nz/np;		// starting z
+  int ez=(proc+1)*nz/np;	// ending z
   double min=MAXDOUBLE;
   double max=-MAXDOUBLE;
   float* p1=vfield->data+nx*ny*sz;
