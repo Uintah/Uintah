@@ -126,6 +126,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 {
   for(int p=0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
+    Vector dx = patch->dCell();
 
     int pid,patch_size;
     MPI_Comm_rank(mpi_crack_comm, &pid);
@@ -135,6 +136,9 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
     for(int m=0; m<numMPMMatls; m++) {
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
 
+      // Cell mass of the material
+      double d_cell_mass=mpm_matl->getInitialDensity()*dx.x()*dx.y()*dx.z();
+                   
       // Get nodal mass information
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -179,7 +183,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 
               for(int k = 0; k < d_8or27; k++) {
                 double totalMass=gmass[ni[k]]+Gmass[ni[k]];
-                if(totalMass<5*d_SMALL_NUM_MPM) {
+                if(totalMass<1.e-3*d_cell_mass) {
                   inMat[j]=NO;
                   break;
                 }
@@ -222,7 +226,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 
             for(int k = 0; k < d_8or27; k++) {
               double totalMass=gmass[ni[k]]+Gmass[ni[k]];
-              if(totalMass<5*d_SMALL_NUM_MPM) {
+              if(totalMass<1.e-3*d_cell_mass) {
                 cfSegCenterInMat=NO;
                 break;
               }
@@ -264,13 +268,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
             cfSegNodes[m].push_back(nd1);
             cfSegNodes[m].push_back(nd2);
           }
-          //else { // The segment is dead
-          //  if(pid==0) {
-          //    cout << "   ! Crack-front seg " << i << "(" << nd1
-          //         << cx[m][nd1] << "-->" << nd2 << cx[m][nd2]
-          //         << ") of Mat " << m << " is dead." << endl;
-          //  }
-          //}
+
         } // End of loop over crack-front segs
         delete [] copyData;
 
@@ -331,9 +329,9 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
    
       } // End of if(d_doCrackPropagation!="false")
 
-      // Output crack elems, crack points and crack-front nodes
-      // visualization
-      if(doCrackVisualization) {
+      // Save crack elems, crack points and crack-front nodes
+      // for crack geometry visualization
+      if(saveCrackGeometry) {
         int curTimeStep=d_sharedState->getCurrentTopLevelTimeStep();
         if(pid==0) OutputCrackGeometry(m,curTimeStep);
       }
