@@ -284,54 +284,49 @@ Gui::idleFunc()
       activeGui->startSoundThreadBtn_->set_name( "Sounds Started" );
     }
 
-  ////////////////////////////////////////////
-  // OOGL stuff
-  blend->alpha( alpha );
-  alpha += offset;
-  if( alpha > 1 )
-    {
-      alpha = 1.0;
-      offset = -offset;
-    }
-  else if( alpha < 0 )
-    {
-      alpha = 0.0;
-      offset = -offset;
+  if( dpy->fullScreenMode_ ) {
+    ////////////////////////////////////////////
+    // OOGL stuff
+    blend->alpha( alpha );
+    alpha += offset;
+    if( alpha > 1 )
+      {
+	alpha = 1.0;
+	offset = -offset;
+      }
+    else if( alpha < 0 )
+      {
+	alpha = 0.0;
+	offset = -offset;
 
-      static int position = 0;
-      position = (position + 1)%images.size();
-      blendTex->reset( GL_FLOAT, &((*images[position])(0,0)) );
-    }
-  bottomTexQuad->draw();
-  blendTexQuad->draw();
-  ////////////////////////////////////////////
-
+	static int position = 0;
+	position = (position + 1)%images.size();
+	blendTex->reset( GL_FLOAT, &((*images[position])(0,0)) );
+      }
+    bottomTexQuad->draw();
+    blendTexQuad->draw();
+    ////////////////////////////////////////////
+  }
 
   // I know this is a hack... 
   if( dpy->showImage_ ){
 
     glutSetWindow( activeGui->glutDisplayWindowId );
 
-#if 0
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(0, priv->xres, 0, priv->yres);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef(0.375, 0.375, 0.0);
-#endif
-
     // Display textual information on the screen:
     char buf[100];
     sprintf( buf, "%3.1lf fps", activeGui->priv->FrameRate );
 
-    dpy->showImage_->draw( dpy->renderWindowSize_ );
+    dpy->showImage_->draw( dpy->renderWindowSize_, dpy->fullScreenMode_ );
     activeGui->displayText(fontbase, 138, 302, buf, Color(1,1,1));
-    glutSwapBuffers();
-    // Need to draw into other buffer so that as we "continuously"
-    // flip them, it doesn't look bad.
-    dpy->showImage_->draw( dpy->renderWindowSize_ );    
-    activeGui->displayText(fontbase, 138, 302, buf, Color(1,1,1));
+
+    if( dpy->fullScreenMode_ ) {
+      glutSwapBuffers();
+      // Need to draw into other buffer so that as we "continuously"
+      // flip them, it doesn't look bad.
+      dpy->showImage_->draw( dpy->renderWindowSize_, dpy->fullScreenMode_ );
+      activeGui->displayText(fontbase, 138, 302, buf, Color(1,1,1));
+    }
 
     if( activeGui->displayRStats_ )
       {
@@ -357,8 +352,11 @@ Gui::idleFunc()
     if( activeGui->mainWindowVisible ) {
       activeGui->update(); // update the gui each time a frame is finished.
     }
+    if( !dpy->fullScreenMode_ )
+      glutSwapBuffers(); 
   } else {
-    glutSwapBuffers(); 
+    if( dpy->fullScreenMode_ )
+      glutSwapBuffers(); 
   }
 }
 
