@@ -403,8 +403,8 @@ void Transform::invert() {
     for (int i=0; i<4; i++)
 	for (int j=0; j<4; j++) {
 	    tmp=mat[i][j];
-	    mat[i][j]=imat[j][i];
-	    imat[j][i]=tmp;
+	    mat[i][j]=imat[i][j];
+	    imat[i][j]=tmp;
 	}
 }
 
@@ -609,6 +609,9 @@ Transform& Transform::operator=(const Transform& copy)
 
 //
 // $Log$
+// Revision 1.8  2000/08/13 04:44:06  dmw
+// fixed bug in invert()
+//
 // Revision 1.7  2000/08/04 19:09:25  dmw
 // fixed shear
 //
