@@ -32,14 +32,14 @@ LevelMesh::LevelMesh( GridP  g, int level) : grid_(g), level_(level)
   
 }
 
-LevelMesh::LevelIter::LevelIter(const LevelMesh *m, unsigned i,
-			     unsigned j, unsigned k )
-  : LevelIndex(i, j, k), mesh_(m)
+LevelMesh::LevelIndex::LevelIndex( const LevelMesh *m, unsigned i,
+				   unsigned j, unsigned k) :
+  mesh_(m), i_(i), j_(j), k_(k) 
 {
   LevelP l = mesh_->grid_->getLevel( mesh_->level_ );
   patch_ = l->selectPatch( mesh_->idxLow_ + IntVector(i_,j_,k_));
 }
-
+ 
 
 BBox LevelMesh::get_bounding_box() const
 {
@@ -108,9 +108,9 @@ LevelMesh::locate(cell_index &cell, const Point &p) const
 {
   IntVector idx = grid_->getLevel(level_)->getCellIndex( p );
 
-  cell.i_ = (unsigned)idx.x() - idxLow_.x();
-  cell.j_ = (unsigned)idx.y() - idxLow_.y();
-  cell.k_ = (unsigned)idx.z() - idxLow_.z();
+  cell.i_ = (unsigned)idx.x();
+  cell.j_ = (unsigned)idx.y();
+  cell.k_ = (unsigned)idx.z();
 
   return true;
 }
