@@ -71,7 +71,7 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Input Field</name>
+        <name>Input</name>
         <datatype>SCIRun::Field</datatype>
 	<description>
           <p>
@@ -82,7 +82,7 @@
     </inputs>
     <outputs>
       <port>
-        <name>Output Field</name>
+        <name>Output</name>
         <datatype>SCIRun::Field</datatype>
         <description>
           <p>
@@ -91,7 +91,7 @@
         </description>
       </port>
       <port>
-        <name>Interpolant</name>
+        <name>Mapping</name>
         <datatype>SCIRun::Matrix</datatype>
         <description>
           <p>

@@ -28,7 +28,7 @@
 
 
 /*
- *  BuildInterpMatrix.cc:  Build an interpolant field -- a field that says
+ *  BuildMappingMatrix.cc:  Build an interpolant field -- a field that says
  *         how to project the data from one field onto the data of a second
  *         field.
  *
@@ -46,7 +46,7 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Modules/Fields/BuildInterpMatrix.h>
+#include <Dataflow/Modules/Fields/BuildMappingMatrix.h>
 #include <Core/Containers/Handle.h>
 #include <Core/Util/DynamicCompilation.h>
 #include <iostream>
@@ -58,7 +58,7 @@ using std::vector;
 using std::pair;
 
 
-class BuildInterpMatrix : public Module
+class BuildMappingMatrix : public Module
 {
   GuiString  interpolation_basis_;
   GuiInt     map_source_to_single_dest_;
@@ -67,14 +67,14 @@ class BuildInterpMatrix : public Module
   GuiInt     np_;
 
 public:
-  BuildInterpMatrix(GuiContext* ctx);
-  virtual ~BuildInterpMatrix();
+  BuildMappingMatrix(GuiContext* ctx);
+  virtual ~BuildMappingMatrix();
   virtual void execute();
 };
 
-DECLARE_MAKER(BuildInterpMatrix)
-BuildInterpMatrix::BuildInterpMatrix(GuiContext* ctx) : 
-  Module("BuildInterpMatrix", ctx, Filter, "FieldsData", "SCIRun"),
+DECLARE_MAKER(BuildMappingMatrix)
+BuildMappingMatrix::BuildMappingMatrix(GuiContext* ctx) : 
+  Module("BuildMappingMatrix", ctx, Filter, "FieldsData", "SCIRun"),
   interpolation_basis_(ctx->subVar("interpolation_basis")),
   map_source_to_single_dest_(ctx->subVar("map_source_to_single_dest")),
   exhaustive_search_(ctx->subVar("exhaustive_search")),
@@ -83,12 +83,12 @@ BuildInterpMatrix::BuildInterpMatrix(GuiContext* ctx) :
 {
 }
 
-BuildInterpMatrix::~BuildInterpMatrix()
+BuildMappingMatrix::~BuildMappingMatrix()
 {
 }
 
 void
-BuildInterpMatrix::execute()
+BuildMappingMatrix::execute()
 {
   FieldIPort *dst_port = (FieldIPort *)get_iport("Destination");
   FieldHandle fdst_h;
@@ -123,17 +123,17 @@ BuildInterpMatrix::execute()
   }
   
   CompileInfoHandle ci =
-    BuildInterpMatrixAlgo::get_compile_info(fsrc_h->mesh()->get_type_description(),
+    BuildMappingMatrixAlgo::get_compile_info(fsrc_h->mesh()->get_type_description(),
 					    fsrc_h->order_type_description(),
 					    fdst_h->mesh()->get_type_description(),
 					    fdst_h->order_type_description(),
 					    fdst_h->get_type_description());
-  Handle<BuildInterpMatrixAlgo> algo;
+  Handle<BuildMappingMatrixAlgo> algo;
   if (!DynamicCompilation::compile(ci, algo, this)) return;
 
-  MatrixOPort *omp = (MatrixOPort *)get_oport("Interpolant");
+  MatrixOPort *omp = (MatrixOPort *)get_oport("Mapping");
   if(!omp) {
-    error("Unable to initialize oport 'Interpolant'.");
+    error("Unable to initialize oport 'Mapping'.");
     return;
   }
 
@@ -146,7 +146,7 @@ BuildInterpMatrix::execute()
 }
 
 CompileInfoHandle
-BuildInterpMatrixAlgo::get_compile_info(const TypeDescription *msrc,
+BuildMappingMatrixAlgo::get_compile_info(const TypeDescription *msrc,
 					const TypeDescription *lsrc,
 					const TypeDescription *mdst,
 					const TypeDescription *ldst,
@@ -154,8 +154,8 @@ BuildInterpMatrixAlgo::get_compile_info(const TypeDescription *msrc,
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("BuildInterpMatrixAlgoT");
-  static const string base_class_name("BuildInterpMatrixAlgo");
+  static const string template_class_name("BuildMappingMatrixAlgoT");
+  static const string base_class_name("BuildMappingMatrixAlgo");
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +

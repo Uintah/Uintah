@@ -27,12 +27,12 @@
 */
 
 
-//    File   : BuildInterpMatrix.h
+//    File   : BuildMappingMatrix.h
 //    Author : Michael Callahan
 //    Date   : Jan 2005
 
-#if !defined(BuildInterpMatrix_h)
-#define BuildInterpMatrix_h
+#if !defined(BuildMappingMatrix_h)
+#define BuildMappingMatrix_h
 
 #include <Core/Thread/Thread.h>
 #include <Core/Util/TypeDescription.h>
@@ -43,7 +43,7 @@
 
 namespace SCIRun {
 
-class BuildInterpMatrixAlgo : public DynamicAlgoBase
+class BuildMappingMatrixAlgo : public DynamicAlgoBase
 {
 public:
   virtual MatrixHandle execute(MeshHandle src, MeshHandle dst,
@@ -69,7 +69,7 @@ protected:
 
 
 template <class MSRC, class LSRC, class MDST, class LDST>
-class BuildInterpMatrixAlgoT : public BuildInterpMatrixAlgo
+class BuildMappingMatrixAlgoT : public BuildMappingMatrixAlgo
 {
 public:
   //! virtual interface. 
@@ -115,7 +115,7 @@ private:
 // Returns dist * dist, don't bother to do sqrt.
 template <class MSRC, class LSRC, class MDST, class LDST>
 double
-BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, LDST>::find_closest_src_loc(typename LSRC::index_type &index, MSRC *mesh, const Point &p) const
+BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::find_closest_src_loc(typename LSRC::index_type &index, MSRC *mesh, const Point &p) const
 {
   double mindist = DBL_MAX;
 
@@ -141,7 +141,7 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, LDST>::find_closest_src_loc(typename LS
 // Returns dist * dist, don't bother to do sqrt.
 template <class MSRC, class LSRC, class MDST, class LDST>
 double
-BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, LDST>::find_closest_dst_loc(typename LDST::index_type &index, MDST *mesh, const Point &p) const
+BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::find_closest_dst_loc(typename LDST::index_type &index, MDST *mesh, const Point &p) const
 {
   double mindist = DBL_MAX;
   
@@ -166,7 +166,7 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, LDST>::find_closest_dst_loc(typename LD
 
 template <class MSRC, class LSRC, class MDST, class LDST>
 MatrixHandle
-BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, 
+BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, 
 		       LDST>::execute(MeshHandle src_meshH, 
 				      MeshHandle dst_meshH, 
 				      int interp_basis,
@@ -219,7 +219,7 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
   else
   {
     Thread::parallel(this, 
-       &BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute,
+       &BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute,
        np, true, &d);
   }
 
@@ -296,7 +296,7 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST,
 
 template <class MSRC, class LSRC, class MDST, class LDST>
 void
-BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute(int proc,
+BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute(int proc,
 								 BIData *d)
 {
   const int interp_basis = d->interp_basis;
@@ -463,4 +463,4 @@ BuildInterpMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute(int proc,
 
 } // end namespace SCIRun
 
-#endif // BuildInterpMatrix_h
+#endif // BuildMappingMatrix_h

@@ -27,10 +27,10 @@
 #
 
 
-itcl_class SCIRun_FieldsData_BuildInterpMatrix {
+itcl_class SCIRun_FieldsData_DirectMapping {
     inherit Module
     constructor {config} {
-        set name BuildInterpMatrix
+        set name DirectMapping
         set_defaults
     }
 
@@ -66,7 +66,7 @@ itcl_class SCIRun_FieldsData_BuildInterpMatrix {
 	radiobutton $w.basis.cframe.onetoone -text \
 		"Each source projects to just one destination" \
 		-variable $this-map_source_to_single_dest -value 1
-	pack $w.basis.cframe.label -side top -anchor w
+	pack $w.basis.cframe.label -side top -anchor w -padx 4 -pady 4
 	pack $w.basis.cframe.onetomany $w.basis.cframe.onetoone \
 		-side top -anchor w -padx 15
 	radiobutton $w.basis.lin -text "Linear (`weighted')" \
@@ -97,7 +97,7 @@ itcl_class SCIRun_FieldsData_BuildInterpMatrix {
 	
 	pack $w.basis -side top -anchor w
 	pack $w.exhaustive -side top -anchor w -pady 15
-	pack $w.scale -side top -expand 1 -fill x
+	pack $w.scale -side top -expand 1 -fill x -padx 4 -pady 4
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
