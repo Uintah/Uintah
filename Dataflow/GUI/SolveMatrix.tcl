@@ -31,8 +31,8 @@ itcl_class SCIRun_Math_SolveMatrix {
 	global $this-np
 	
         set $this-target_error 1.0
-	set $this-method conjugate_gradient_sci
-        set $this-precond Diag_P
+	set $this-method "Conjugate Gradient & Precond. (SCI)"
+        set $this-precond jacobi
 	set $this-orig_error 0
 	set $this-current_error 0
 	set $this-flops 0
@@ -94,34 +94,79 @@ itcl_class SCIRun_Math_SolveMatrix {
 	
 	pack $w.np.label $w.np.entry -side left -anchor w
 	
-	make_labeled_radio $w.method "Solution Method" "$this switchmethod" \
+	frame $w.m
+	label $w.m.method_label -text "Current Method: " -anchor w \
+                                -width 20
+	label $w.m.method -textvar $this-method -width 40 -anchor w \
+                          -fg darkred
+	frame $w.p
+	label $w.p.precon_label -text "Current Preconditioner: " -anchor w \
+                                -width 20
+        label $w.p.precond -textvar $this-precond -width 40 -anchor w \
+                           -fg darkred
+        pack $w.m $w.p -side top
+        pack $w.m.method_label $w.m.method $w.p.precon_label $w.p.precond \
+             -side left 
+
+	iwidgets::tabnotebook  $w.tabs -raiseselect true -tabpos n\
+                               -width 400 -height 200
+        pack $w.tabs -side top
+	set methods [$w.tabs add -label "Methods"]
+	set precons [$w.tabs add -label "Preconditioners"]
+
+        $w.tabs view 0
+
+        iwidgets::scrolledframe $methods.f -hscrollmode none \
+                                -vscrollmode dynamic
+        iwidgets::scrolledframe $precons.f -hscrollmode none \
+                                -vscrollmode dynamic
+
+        pack $methods.f $precons.f -f both -e y
+
+	set meth [$methods.f childsite]
+	set prec [$precons.f childsite]
+
+
+	make_labeled_radio $meth.f "" "$this switchmethod" \
 		top $this-method\
-		{{"Conjugate Gradient & Precond. (Dataflow)" conjugate_gradient_sci}\
-		{"BiConjugate Gradient & Precond. (Dataflow)" bi_conjugate_gradient_sci}\
-		{"Jacobi & Precond. (Dataflow)" jacoby_sci}}
+		{{"Conjugate Gradient & Precond. (SCI)" "Conjugate Gradient & Precond. (SCI)"}\
+		{"BiConjugate Gradient & Precond. (SCI)" "BiConjugate Gradient & Precond. (SCI)"}\
+		{"Jacoby & Precond. (SCI)" "Jacoby & Precond. (SCI)"}
+	        {"KSPRICHARDSON (PETSc)" "KSPRICHARDSON (PETSc)"}
+		{"KSPCHEBYCHEV (PETSc)" "KSPCHEBYCHEV (PETSc)"}
+		{"KSPCG (PETSc)" "KSPCG (PETSc)"}
+		{"KSPGMRES (PETSc)" "KSPGMRES (PETSc)"}
+		{"KSPTCQMR (PETSc)" "KSPTCQMR (PETSc)"}
+		{"KSPBCGS (PETSc)" "KSPBCGS (PETSc)"}
+		{"KSPCGS (PETSc)" "KSPCGS (PETSc)"}
+		{"KSPTFQMR (PETSc)" "KSPTFQMR (PETSc)"}
+		{"KSPCR (PETSc)" "KSPCR (PETSc)"}
+		{"KSPLSQR (PETSc)" "KSPLSQR (PETSc)"}
+		{"KSPBICG (PETSc)" "KSPBICG (PETSc)"}
+		{"KSPPREONLY (PETSc)" "KSPPREONLY (PETSc)"}}
+
 	
-	        #other solving methods that currently don't work
-	        #{"Conjugate Gradient" conjugate_gradient }\
-		#{"Conjugate Gradient Squared Iteration" conj_grad_squared}\
-		#{"BiConjugate Gradient Iteration" bi_conjugate_gradient}\
-		#{"BiConjugate Gradient Iteration Stabilized" bi_conjugate_gradient_stab}\
-		#{"Quasi Minimal Residual Iteration" quasi_minimal_res}\
-		#{"Generalized Minimum Residual Iteration" gen_min_res_iter}\
-		#{"Richardson Iterations" richardson_iter}\
-	
-	
-	
+	make_labeled_radio $prec.f "" ""\
+                top $this-precond\
+                {{jacobi jacobi}
+		{bjacobi bjacobi}
+                {sor sor}
+		{eisenstat eisenstat}
+		{icc icc}
+		{ilu ilu}
+		{asm asm}
+		{sles sles}
+		{lu lu}
+	        {mg mg}
+	        {spai spai}
+	        {milu milu}
+	        {nn nn}
+		{cholesky cholesky}
+                {ramg ramg}
+		{none none}}
         
-	#make_labeled_radio $w.precond "Preconditioner" ""\
-		#top $this-precond\
-		#{{"DiagPreconditioner" Diag_P}\
-		#{"IC Preconditioner" IC_P}\
-		#{"ILU Preconditioner" ILU_P}}
-	
-	
-	pack $w.method -side top -fill x -pady 2
-	
-	#pack $w.precond -side top -fill x -pady 2
+	pack $meth.f -side top -fill x -pady 2
+	pack $prec.f -side top -fill x -pady 2
 	
 	global $this-target_error
 	expscale $w.target_error -orient horizontal -label "Target error:" \
