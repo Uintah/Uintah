@@ -227,8 +227,11 @@ private:
   void executePhysio();
 
 protected:
-  FieldHandle  geomFilehandle_;
-  FieldHandle injuryfieldHandle_;
+  FieldHandle  selectGeomFilehandle_;
+  FieldHandle  inj0GeomFilehandle_;
+  FieldHandle  inj1GeomFilehandle_;
+  FieldHandle ablateIconFieldHandle_;
+  FieldHandle stunIconFieldHandle_;
   Transform    inputTransform_;
   string    geomFilename_;
   string    activeBoundBoxSrc_;
@@ -719,7 +722,7 @@ HotBox::execute()
     adjacencytable_->readFile((char *)adjacencyDataSrc.c_str());
 
     // modify the color map which corresponds to the adjacency graph
-    execSelColorMap();
+    // execSelColorMap();
   }
   else if(adjacencytable_->getActiveFile() != adjacencyDataSrc)
   { // adjacency data source has changed
@@ -728,7 +731,7 @@ HotBox::execute()
     adjacencytable_->readFile((char *)adjacencyDataSrc.c_str());
 
     // modify the color map which corresponds to the adjacency graph
-    execSelColorMap();
+    // execSelColorMap();
   }
   else
   {
@@ -835,12 +838,40 @@ HotBox::execute()
 
   // send the selected field (surface) downstream
   if (!highlightOutport) {
-    error("Unable to initialize oport.");
+    error("Unable to initialize selection oport.");
     return;
   }
 
-  if(geomFilehandle_.get_rep() != 0)
-    highlightOutport->send(geomFilehandle_);
+  if(selectGeomFilehandle_.get_rep() != 0)
+    highlightOutport->send(selectGeomFilehandle_);
+
+  // get output geometry port -- Injury 0 Highlight
+  SimpleOPort<FieldHandle> *
+  inj0highlightOutport = (SimpleOPort<FieldHandle> *)
+                      getOPort("Injury 0 Highlight");
+
+  // send the injured field (surface) downstream
+  if (!inj0highlightOutport) {
+    error("Unable to initialize injury 0 oport.");
+    return;
+  }
+
+  if(inj0GeomFilehandle_.get_rep() != 0)
+    inj0highlightOutport->send(inj0GeomFilehandle_);
+
+  // get output geometry port -- Injury 1 Highlight
+  SimpleOPort<FieldHandle> *
+  inj1highlightOutport = (SimpleOPort<FieldHandle> *)
+                      getOPort("Injury 1 Highlight");
+
+  // send the injured field (surface) downstream
+  if (!inj1highlightOutport) {
+    error("Unable to initialize injury 1 oport.");
+    return;
+  }
+
+  if(inj1GeomFilehandle_.get_rep() != 0)
+    inj1highlightOutport->send(inj1GeomFilehandle_);
 
   if(injured_tissue_.size() > 0)
   {
@@ -848,17 +879,29 @@ HotBox::execute()
     makeInjGeometry();
   }
 
-  // get output geometry port -- Injury Icon
+  // get output geometry port -- Ablated Injury Icon
   SimpleOPort<FieldHandle> *
-  injuryOutport = (SimpleOPort<FieldHandle> *)
-                      getOPort("Injury Icon");
+  ablateInjuryOutport = (SimpleOPort<FieldHandle> *)
+                      getOPort("Ablated Injury Icon");
 
   // send the injury field (surface) downstream
-  if (!injuryOutport) {
-    error("Unable to initialize oport.");
+  if (!ablateInjuryOutport) {
+    error("Unable to initialize Ablated Injury oport.");
   }
-  else if(injuryfieldHandle_.get_rep() != 0)
-    injuryOutport->send(injuryfieldHandle_);
+  else if(ablateIconFieldHandle_.get_rep() != 0)
+    ablateInjuryOutport->send(ablateIconFieldHandle_);
+
+  // get output geometry port -- Stunned Injury Icon
+  SimpleOPort<FieldHandle> *
+  stunInjuryOutport = (SimpleOPort<FieldHandle> *)
+                      getOPort("Stunned Injury Icon");
+
+  // send the injury field (surface) downstream
+  if (!stunInjuryOutport) {
+    error("Unable to initialize Stunned Injury oport.");
+  }
+  else if(stunIconFieldHandle_.get_rep() != 0)
+    stunInjuryOutport->send(stunIconFieldHandle_);
 
   // send the NrrdData downstream
   NrrdOPort *nrrdOutPort = (NrrdOPort *)get_oport("Physiology Data");
@@ -871,7 +914,7 @@ HotBox::execute()
       nrrdOutPort->send(InputNrrdHandle_);
 
   // send the ColorMap downstream
-  if(inputCMapHandle_.get_rep() ) {
+  if(outputCMapHandle_.get_rep() ) {
     ColorMapOPort *ocolormap_port =
       (ColorMapOPort *) get_oport("Output ColorMap");
 
@@ -880,6 +923,7 @@ HotBox::execute()
     }
     else
     {// Send the data downstream
+      cerr << "Sending colormap" <<endl;
       ocolormap_port->send( inputCMapHandle_ );
     }
   }
@@ -1122,6 +1166,7 @@ HotBox::execSelColorMap()
     error( "No colormap handle or representation" );
     return;
   }
+  // inputCMapHandle_.detach();
   // scale the colormap to the range of field data values
   pair<double,double> minmax;
   ScalarFieldInterfaceHandle sfi = 0;
@@ -1149,7 +1194,7 @@ HotBox::execSelColorMap()
         anatomytable_->get_labelindex((char *)injPtr.anatomyname.c_str());
     // set this entry to RED
     // if(injTissueIndex >= 0)
-    //     rgbt[injTissueIndex] = (float)18.0;
+        // rgbt[injTissueIndex] = (float)18.0;
   }
   // set selection colors
   // set this entry to YELLOW
@@ -1999,7 +2044,7 @@ HotBox::makeInjGeometry()
   {
     cerr << numQuads << " quads ";
     qsf = scinew QuadSurfField<double>(qsm, -1);
-    injuryfieldHandle_ = qsf;
+    ablateIconFieldHandle_ = qsf;
   }
 
   cerr << " done" << endl;
@@ -2083,35 +2128,103 @@ HotBox::executeHighlight()
   const string currentSelection(currentselection_.get());
   char filePrefix[256];
   space_to_underbar(filePrefix, (char *)currentSelection.c_str());
-  string geometryFilename = geometryPath;
-  geometryFilename += "/";
-  geometryFilename += filePrefix;
-  geometryFilename += ".fld";
+  string selectGeomFilename = geometryPath;
+  selectGeomFilename += "/";
+  selectGeomFilename += filePrefix;
+  selectGeomFilename += ".fld";
 
-  cerr << "executeHighlight: " << geometryFilename << endl;
+  cerr << "executeHighlight: selection " << selectGeomFilename << endl;
 
-  if (stat(geometryFilename.c_str(), &buf)) {
-    error("File '" + geometryFilename + "' not found.");
+  if (stat(selectGeomFilename.c_str(), &buf)) {
+    error("File '" + selectGeomFilename + "' not found.");
     return;
   }
 
-  Piostream *stream = auto_istream(geometryFilename);
-  if (!stream)
+  Piostream *selectstream = auto_istream(selectGeomFilename);
+  if (!selectstream)
   {
-    error("Error reading file '" + geometryFilename + "'.");
+    error("Error reading file '" + selectGeomFilename + "'.");
     return;
   }
 
   // Read the file
-  Pio(*stream, geomFilehandle_);
-  if (!geomFilehandle_.get_rep() || stream->error())
+  Pio(*selectstream, selectGeomFilehandle_);
+  if (!selectGeomFilehandle_.get_rep() || selectstream->error())
   {
-    error("Error reading data from file '" + geometryFilename +"'.");
-    delete stream;
+    error("Error reading data from file '" + selectGeomFilename +"'.");
+    delete selectstream;
     return;
   }
-  delete stream;
+  delete selectstream;
 
+  // set injury colors
+  // for the first two elements of the injury list
+  if(injured_tissue_.size() > 0)
+  {
+    VH_injury injPtr = (VH_injury)injured_tissue_[0];
+    space_to_underbar(filePrefix, (char *)injPtr.anatomyname.c_str());
+    string inj0GeomFilename = geometryPath;
+    inj0GeomFilename += "/";
+    inj0GeomFilename += filePrefix;
+    inj0GeomFilename += ".fld";
+
+    cerr << "executeHighlight: injury 0 " << inj0GeomFilename << endl;
+
+    if (stat(inj0GeomFilename.c_str(), &buf)) {
+      error("File '" + inj0GeomFilename + "' not found.");
+      return;
+    }
+
+    Piostream *inj0stream = auto_istream(inj0GeomFilename);
+    if (!inj0stream)
+    {
+      error("Error reading file '" + inj0GeomFilename + "'.");
+      return;
+    }
+
+    // Read the file
+    Pio(*inj0stream, inj0GeomFilehandle_);
+    if (!inj0GeomFilehandle_.get_rep() || inj0stream->error())
+    {
+      error("Error reading data from file '" + inj0GeomFilename +"'.");
+      delete inj0stream;
+      return;
+    }
+    delete inj0stream;
+  } // end if(injured_tissue_.size() > 0)
+  if(injured_tissue_.size() > 1)
+  {
+    VH_injury injPtr = (VH_injury)injured_tissue_[1];
+    space_to_underbar(filePrefix, (char *)injPtr.anatomyname.c_str());
+    string inj1GeomFilename = geometryPath;
+    inj1GeomFilename += "/";
+    inj1GeomFilename += filePrefix;
+    inj1GeomFilename += ".fld";
+
+    cerr << "executeHighlight: injury 1 " << inj1GeomFilename << endl;
+
+    if (stat(inj1GeomFilename.c_str(), &buf)) {
+      error("File '" + inj1GeomFilename + "' not found.");
+      return;
+    }
+
+    Piostream *inj1stream = auto_istream(inj1GeomFilename);
+    if (!inj1stream)
+    {
+      error("Error reading file '" + inj1GeomFilename + "'.");
+      return;
+    }
+
+    // Read the file
+    Pio(*inj1stream, inj1GeomFilehandle_);
+    if (!inj1GeomFilehandle_.get_rep() || inj1stream->error())
+    {
+      error("Error reading data from file '" + inj1GeomFilename +"'.");
+      delete inj1stream;
+      return;
+    }
+    delete inj1stream;
+  } // end if(injured_tissue_.size() > 1)
 } // end executeHighlight()
 
 void
