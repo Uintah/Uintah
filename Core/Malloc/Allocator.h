@@ -81,6 +81,14 @@ void GetBinStats(Allocator*, int binno, size_t& minsize, size_t& maxsize,
 void AuditAllocator(Allocator*);
 void DumpAllocator(Allocator*, const char* filename = "alloc.dump");
 
+  // Functions for locking and unlocking the allocator.  In the
+  // pthreads implementation, these use a recursive lock that will
+  // allow the same thread to lock and unlock the allocator until
+  // UnLockAllocator is called.  In other implentations this just uses
+  // the regular lock and unlock functions.
+  void LockAllocator(Allocator*);
+  void UnLockAllocator(Allocator*);
+  
 } // End namespace SCIRun
 
 
