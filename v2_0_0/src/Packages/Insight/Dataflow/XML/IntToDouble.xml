@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<?xml-stylesheet href="../../../../Dataflow/XML/package-component.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -20,10 +18,14 @@
   University of Utah. All Rights Reserved.
 -->
 
-<component name="Float2DToUChar2D" category="Converters">
+<component name="IntToDouble" category="Converters">
   <overview>
     <authors>
     </authors>
+    <summary>
+    </summary>
+    <description>Casts input pixels to output pixel type. See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on the itk::CastImageFilter.
+    </description>
   </overview>
   <implementation>
   </implementation>

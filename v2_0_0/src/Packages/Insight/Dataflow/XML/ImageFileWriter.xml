@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<?xml-stylesheet href="../../../../Dataflow/XML/package-component.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
+
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -24,6 +23,10 @@
   <overview>
     <authors>
     </authors>
+    <summary>Writes an ITK Image.
+    </summary>
+    <description>This module writes out an ITK Image in either Meta Image format, PNG, or JPG.
+  </description>
   </overview>
   <implementation>
   </implementation>
