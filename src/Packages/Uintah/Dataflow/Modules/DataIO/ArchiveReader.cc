@@ -19,7 +19,7 @@ extern "C" Module* make_ArchiveReader( const string& id ) {
 ArchiveReader::ArchiveReader(const string& id) 
   : Module("ArchiveReader", id, Filter, "DataIO", "Uintah"),
     filebase("filebase", id, this), 
-    tcl_status("tcl_status",id,this) 
+    tcl_status("tcl_status",id,this), archiveH(0)
 { 
   if( filebase.get() != "" )
     need_execute = 1;
@@ -56,10 +56,10 @@ void ArchiveReader::execute()
      }
      aName = filebase.get();
      aName_size = statbuffer.st_size;
+     archiveH = scinew Archive(reader);
    }
 
-   Archive *archive = scinew Archive( reader );
-   out->send( archive );
+   out->send( archiveH );
 
 }
 
