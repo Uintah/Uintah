@@ -167,7 +167,7 @@ set $m7-extract-from-new-field {1}
 set $m7-algorithm {1}
 set $m7-build_trisurf {0}
 set $m7-np {1}
-set $m7-active-isoval-selection-tab {2}
+#set $m7-active-isoval-selection-tab {2}
 set $m7-active_tab {NOISE}
 set $m7-update_type {Auto}
 set $m7-color-r {0.4}
