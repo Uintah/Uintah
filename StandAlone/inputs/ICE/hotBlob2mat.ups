@@ -12,7 +12,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.1         </maxTime>
+       <maxTime>            0.01         </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -112,12 +112,12 @@
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [1,1,1]    </lower>
+              <lower>        [0,0,0]    </lower>
               <upper>        [10,10,10]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
            </Box>
-           <spacing>            [1,1,1]             </spacing>
+           <spacing>            [1.0,1.0,1.0]             </spacing>
        </Level>
     </Grid>
    
@@ -125,26 +125,43 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>hotBlob2mat.ups</filebase>
-      <outputInterval>.00</outputInterval>
+      <filebase>hotBlob2mat.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
       <save label="vel_CC"/>
+      <save label="uvel_FC"/>
+      <save label="vvel_FC"/>
+      <save label="wvel_FC"/>
+      <save label="uvel_FCME"/>
+      <save label="vvel_FCME"/>
+      <save label="wvel_FCME"/>
       <save label="press_CC"/>
       <save label="rho_CC"/>
       <save label="temp_CC"/>
+      <save label="delP_Dilatate"/>
+      <save label="press_CC"/>
+     <!-- needed for regression tester dat comparisons -->       
+      <save label="KineticEnergy"/>
+      <save label="TotalIntEng"/>
+      <checkpoint interval="0.005" cycle="2"/>"     
    </DataArchiver>
    
    <Debug>
     <dbg_timeStart>       0.00   </dbg_timeStart>
     <dbg_timeStop>        0.1    </dbg_timeStop>
-    <dbg_outputInterval>  1e-9   </dbg_outputInterval>   
-    <!--<debug label = "switchDebugInitialize"/>      
-    <debug label = "switchDebug_EQ_RF_press"/>         
+    <dbg_outputInterval>  1e-9   </dbg_outputInterval>
+     <!-- need this one for regression tester dat comparisons -->       
+     <debug label = "switchTestConservation"/>   
+<!--     
+    <debug label = "switchDebug_EQ_RF_press"/>  
+    <debug label = "switchDebug_PressDiffRF"/>       
     <debug label = "switchDebug_vel_FC"/>           
-    <debug label = "switchDebug_explicit_press"/>     
-    <debug label = "switchDebug_PressFC"/>            
-    <debug label = "switchDebugLagrangianValues"/>    
-    <debug label = "switchDebugSource_Sink"/>       
+    <debug label = "switchDebug_PressFC"/>                   
     <debug label = "switchDebug_advance_advect"/>  
+    
+    <debug label = "switchDebugInitialize"/>
+    <debug label = "switchDebug_explicit_press"/>  
+    <debug label = "switchDebugLagrangianValues"/>    
+    <debug label = "switchDebugSource_Sink"/
     -->
     </Debug>
     <!--____________________________________________________________________-->
@@ -154,7 +171,7 @@
          <cfl>0.4</cfl>
        <ICE>
         <max_iteration_equilibration> 100 </max_iteration_equilibration>
-        <advection type = "FirstOrder" />
+        <advection type = "FirstOrderCE" />
         <solution technique = "EqForm" />
       </ICE>        
     </CFD>
