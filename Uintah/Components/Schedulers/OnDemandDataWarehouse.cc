@@ -428,14 +428,88 @@ OnDemandDataWarehouse::allocate(CCVariableBase& var,
       throw InternalError("CC variable already exists: "+label->getName());
 
    // Allocate the variable
-   var.allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex());
+   var.allocate(patch->getCellLowIndex(), patch->getCellHighIndex());
 }
 
 void
-OnDemandDataWarehouse::get(CCVariableBase&, const VarLabel*, int matlIndex,
-			   const Patch*, Ghost::GhostType, int numGhostCells)
+OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
+			   int matlIndex,
+			   const Patch* patch, Ghost::GhostType gtype,
+			   int numGhostCells)
 {
-  throw InternalError( "CC Var get not implemented yet!" );    
+#if 1
+   if(gtype == Ghost::None) {
+      if(numGhostCells != 0)
+	 throw InternalError("Ghost cells specified with task type none!\n");
+#endif
+      if(!d_ccDB.exists(label, matlIndex, patch))
+	 throw UnknownVariable(label->getName());
+      d_ccDB.get(label, matlIndex, patch, var);
+#if 1
+   } else {
+      int l,h;
+      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
+      IntVector lowIndex;
+      IntVector highIndex;
+      switch(gtype){
+      case Ghost::AroundNodes:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundNodes");
+	 // All 27 neighbors
+	 l=-1;
+	 h=1;
+	 lowIndex = patch->getCellLowIndex()-gc;
+	 highIndex = patch->getCellHighIndex()+gc;
+	 cerr << "Cells around nodes is probably not functional!\n";
+	 break;
+      case Ghost::AroundCells:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundCells");
+	 // all 6 faces
+	 l=-1;
+	 h=1;
+	 lowIndex = patch->getCellLowIndex()-gc;
+         highIndex = patch->getCellHighIndex()+gc;
+	 break;
+      default:
+	 throw InternalError("Illegal ghost type");
+      }
+      var.allocate(lowIndex, highIndex);
+      long totalCells=0;
+      // change it to traverse only thru patches with adjoining faces
+      for(int ix=l;ix<=h;ix++){
+	 for(int iy=l;iy<=h;iy++){
+	    for(int iz=l;iz<=h;iz++){
+	       const Patch* neighbor = patch->getNeighbor(IntVector(ix,iy,iz));
+	       if(neighbor){
+		  if(!d_ccDB.exists(label, matlIndex, neighbor))
+		     throw InternalError("Position variable does not exist: "+ 
+					 label->getName());
+		  CCVariableBase* srcvar = 
+		    d_ccDB.get(label, matlIndex, neighbor);
+
+		  using SCICore::Geometry::Max;
+		  using SCICore::Geometry::Min;
+
+		  IntVector low = Max(lowIndex, neighbor->getCellLowIndex());
+		  IntVector high= Min(highIndex, neighbor->getCellHighIndex());
+
+		  if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
+		      || ( high.z() < low.z() ) )
+		     throw InternalError("Patch doesn't overlap?");
+
+		  var.copyPatch(srcvar, low, high);
+		  IntVector dcells = high-low;
+		  totalCells+=dcells.x()*dcells.y()*dcells.z();
+	       }
+	    }
+	 }
+      }
+      IntVector dn = highIndex-lowIndex;
+      long wantcells = dn.x()*dn.y()*dn.z();
+      ASSERTEQ(wantcells, totalCells);
+   }
+#endif
 }
 
 void
@@ -584,6 +658,9 @@ OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* v
 
 //
 // $Log$
+// Revision 1.27  2000/05/31 04:01:46  rawat
+// partially completed CCVariable implementation
+//
 // Revision 1.26  2000/05/30 20:19:23  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

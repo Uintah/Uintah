@@ -3,15 +3,26 @@
 
 #include <Uintah/Grid/Array3.h>
 #include <Uintah/Grid/CCVariableBase.h>
-#include <Uintah/Exceptions/TypeMismatchException.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Uintah/Grid/TypeDescription.h>
+#include <Uintah/Interface/InputContext.h>
+#include <Uintah/Interface/OutputContext.h>
+#include <SCICore/Exceptions/ErrnoException.h>
 #include <SCICore/Exceptions/InternalError.h>
+#include <SCICore/Geometry/Vector.h>
+#include <Uintah/Exceptions/TypeMismatchException.h>
+#include <Uintah/Grid/Patch.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <unistd.h>
+#include <errno.h>
 
 #include <iostream> // TEMPORARY
 
-namespace Uintah {
+using namespace Uintah;
 
+namespace Uintah {
+   using SCICore::Exceptions::ErrnoException;
    using SCICore::Exceptions::InternalError;
+   using SCICore::Geometry::Vector;
 
    class TypeDescription;
 
@@ -72,6 +83,128 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 		      const IntVector& lowIndex,
 		      const IntVector& highIndex);
 
+      CCVariable<T>& operator=(const CCVariable<T>&);
+     
+     // Replace the values on the indicated face with value
+      void fillFace(Patch::FaceType face, const T& value)
+	{ 
+	  IntVector low = getLowIndex();
+	  IntVector hi = getHighIndex();
+	  switch (face) {
+	  case Patch::xplus:
+	    for (int j = low.y(); j<hi.y(); j++) {
+	      for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(hi.x()-1,j,k)] = value;
+	      }
+	    }
+	    break;
+	  case Patch::xminus:
+	    for (int j = low.y(); j<hi.y(); j++) {
+	      for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(low.x(),j,k)] = value;
+	      }
+	    }
+	    break;
+	  case Patch::yplus:
+	    for (int i = low.x(); i<hi.x(); i++) {
+	      for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(i,hi.y()-1,k)] = value;
+	      }
+	    }
+	    break;
+	  case Patch::yminus:
+	    for (int i = low.x(); i<hi.x(); i++) {
+	      for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(i,low.y(),k)] = value;
+	      }
+	    }
+	    break;
+	  case Patch::zplus:
+	    for (int i = low.x(); i<hi.x(); i++) {
+	      for (int j = low.y(); j<hi.y(); j++) {
+		(*this)[IntVector(i,j,hi.z()-1)] = value;
+	      }
+	    }
+	    break;
+	  case Patch::zminus:
+	    for (int i = low.x(); i<hi.x(); i++) {
+	      for (int j = low.y(); j<hi.y(); j++) {
+		(*this)[IntVector(i,j,low.z())] = value;
+	      }
+	    }
+	    break;
+	  }
+
+	};
+     
+      // Use to apply symmetry boundary conditions.  On the
+      // indicated face, replace the component of the vector
+      // normal to the face with 0.0
+      void fillFaceNormal(Patch::FaceType face)
+	{
+	  IntVector low = getLowIndex();
+	  IntVector hi = getHighIndex();
+	  switch (face) {
+	  case Patch::xplus:
+	    for (int j = low.y(); j<hi.y(); j++) {
+	      for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(hi.x()-1,j,k)] =
+		  Vector(0.0,(*this)[IntVector(hi.x()-1,j,k)].y(),
+			 (*this)[IntVector(hi.x()-1,j,k)].z());
+	      }
+	    }
+	    break;
+	  case Patch::xminus:
+	    for (int j = low.y(); j<hi.y(); j++) {
+	      for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(low.x(),j,k)] = 
+		  Vector(0.0,(*this)[IntVector(low.x(),j,k)].y(),
+			 (*this)[IntVector(low.x(),j,k)].z());
+	      }
+	    }
+	    break;
+	  case Patch::yplus:
+	    for (int i = low.x(); i<hi.x(); i++) {
+	      for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(i,hi.y()-1,k)] =
+		  Vector((*this)[IntVector(i,hi.y()-1,k)].x(),0.0,
+			 (*this)[IntVector(i,hi.y()-1,k)].z());
+	      }
+	    }
+	    break;
+	  case Patch::yminus:
+	    for (int i = low.x(); i<hi.x(); i++) {
+	      for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(i,low.y(),k)] =
+		  Vector((*this)[IntVector(i,low.y(),k)].x(),0.0,
+			 (*this)[IntVector(i,low.y(),k)].z());
+	      }
+	    }
+	    break;
+	  case Patch::zplus:
+	    for (int i = low.x(); i<hi.x(); i++) {
+	      for (int j = low.y(); j<hi.y(); j++) {
+		(*this)[IntVector(i,j,hi.z()-1)] =
+		  Vector((*this)[IntVector(i,j,hi.z()-1)].x(),
+			 (*this)[IntVector(i,j,hi.z()-1)].y(),0.0);
+	      }
+	    }
+	    break;
+	  case Patch::zminus:
+	    for (int i = low.x(); i<hi.x(); i++) {
+	      for (int j = low.y(); j<hi.y(); j++) {
+		(*this)[IntVector(i,j,low.z())] =
+		  Vector((*this)[IntVector(i,j,low.z())].x(),
+			 (*this)[IntVector(i,j,low.z())].y(),0.0);
+	      }
+	    }
+	    break;
+	  }
+	};
+     
+      virtual void emit(OutputContext&);
+      virtual void read(InputContext&);
+      static TypeDescription::Register registerMe;
       //////////
       // Insert Documentation Here:
       void initialize(const T& value);
@@ -80,28 +213,29 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       // Insert Documentation Here:
       T& operator[](const IntVector& idx) const;
       
-
-      CCVariable<T>& operator=(const CCVariable<T>&);
    private:
    };
-   
+      template<class T>
+      TypeDescription::Register
+	CCVariable<T>::registerMe(getTypeDescription());
+
    template<class T>
       const TypeDescription*
       CCVariable<T>::getTypeDescription()
       {
 	 // Dd: Whis isn't td a class variable and does it
-	 // need to be deteleted in the destructor?
+	 // need to be deleted in the destructor?
 	std::cerr << "getting type description from CC var\n";
 
 	 // Dd: Copied this from NC Var... don't know if it is 
 	 // correct.
-	 static TypeDescription* td = 0;
-	 if(!td){
-	    td = new TypeDescription(TypeDescription::CCVariable,
-				     "CCVariable",
-				     fun_getTypeDescription((T*)0));
-	 }
-	 return td;
+	static TypeDescription* td;
+	if(!td){
+	  td = scinew TypeDescription(TypeDescription::CCVariable,
+				   "CCVariable",
+				   fun_getTypeDescription((T*)0));
+	}
+	return td;
       }
    
    template<class T>
@@ -115,13 +249,23 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       {
 	 return scinew CCVariable<T>(*this);
       }
-   
+   template<class T>
+     void
+     CCVariable<T>::copyPointer(const CCVariableBase& copy)
+     {
+       const CCVariable<T>* c = dynamic_cast<const CCVariable<T>* >(&copy);
+       if(!c)
+	 throw TypeMismatchException("Type mismatch in CC variable");
+       *this = *c;
+     }
+
+ 
    template<class T>
       CCVariable<T>&
       CCVariable<T>::operator=(const CCVariable<T>& copy)
       {
 	 if(this != &copy){
-	    std::cerr << "CCVariable<T>::operator= not done!\n";
+	    Array3<T>::operator=(copy);
 	 }
 	 return *this;
       }
@@ -129,13 +273,14 @@ class CCVariable : public Array3<T>, public CCVariableBase {
    template<class T>
       CCVariable<T>::CCVariable()
       {
-	 std::cerr << "CCVariable ctor not done!\n";
+	//	 std::cerr << "CCVariable ctor not done!\n";
       }
    
    template<class T>
       CCVariable<T>::CCVariable(const CCVariable<T>& copy)
+      : Array3<T>(copy)
       {
-	 std::cerr << "CCVariable copy ctor not done!\n";
+	//	 std::cerr << "CCVariable copy ctor not done!\n";
       }
    
    template<class T>
@@ -149,22 +294,72 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       }
 
    template<class T>
+      void
+      CCVariable<T>::copyPatch(CCVariableBase* srcptr,
+				const IntVector& lowIndex,
+				const IntVector& highIndex)
+      {
+	 const CCVariable<T>* c = dynamic_cast<const CCVariable<T>* >(srcptr);
+	 if(!c)
+	    throw TypeMismatchException("Type mismatch in CC variable");
+	 const CCVariable<T>& src = *c;
+	 for(int i=lowIndex.x();i<highIndex.x();i++)
+	    for(int j=lowIndex.y();j<highIndex.y();j++)
+	       for(int k=lowIndex.z();k<highIndex.z();k++)
+		  (*this)[IntVector(i, j, k)] = src[IntVector(i,j,k)];
+      }
+   
+   template<class T>
+      void
+      CCVariable<T>::emit(OutputContext& oc)
+      {
+	 const TypeDescription* td = fun_getTypeDescription((T*)0);
+	 if(td->isFlat()){
+	    // This could be optimized...
+	    IntVector l(getLowIndex());
+	    IntVector h(getHighIndex());
+	    for(int x=l.x();x<h.x();x++){
+	       for(int y=l.y();y<h.y();y++){
+		  size_t size = sizeof(T)*(h.z()-l.z());
+		  ssize_t s=write(oc.fd, &(*this)[IntVector(x,y,l.z())], size);
+		  if(size != s)
+		     throw ErrnoException("CCVariable::emit (write call)", errno);
+		  oc.cur+=size;
+	       }
+	    }
+	 } else {
+	    throw InternalError("Cannot yet write non-flat objects!\n");
+	 }
+      }
+
+   template<class T>
+      void
+      CCVariable<T>::read(InputContext& oc)
+      {
+	 const TypeDescription* td = fun_getTypeDescription((T*)0);
+	 if(td->isFlat()){
+	    // This could be optimized...
+	    IntVector l(getLowIndex());
+	    IntVector h(getHighIndex());
+	    for(int x=l.x();x<h.x();x++){
+	       for(int y=l.y();y<h.y();y++){
+		  size_t size = sizeof(T)*(h.z()-l.z());
+		  ssize_t s=::read(oc.fd, &(*this)[IntVector(x,y,l.z())], size);
+		  if(size != s)
+		     throw ErrnoException("CCVariable::emit (write call)", errno);
+		  oc.cur+=size;
+	       }
+	    }
+	 } else {
+	    throw InternalError("Cannot yet write non-flat objects!\n");
+	 }
+      }
+   // why do we need this function
+   template<class T>
       void CCVariable<T>::initialize(const T& value) {
 	 std::cerr << "CCVariable::initialize!\n";
       }
       
-   template<class T>
-      void CCVariable<T>::copyPointer(const CCVariableBase&) {
-	 std::cerr << "CCVariable::copyPointer!\n";
-      }
-   
-   template<class T>
-      void CCVariable<T>::copyPatch(CCVariableBase* src,
-		      const IntVector& lowIndex,
-		      const IntVector& highIndex) {
-	 std::cerr << "CCVariable::copyPatch!\n";
-      }
-
    template<class T>
       T& CCVariable<T>::operator[](const IntVector& idx) const {
 	 std::cerr << "CCVariable::operator[]!\n";
@@ -174,6 +369,9 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
 //
 // $Log$
+// Revision 1.13  2000/05/31 04:01:50  rawat
+// partially completed CCVariable implementation
+//
 // Revision 1.12  2000/05/30 20:19:27  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

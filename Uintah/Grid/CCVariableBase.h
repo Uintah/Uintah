@@ -9,7 +9,7 @@ namespace SCICore {
 }
 
 namespace Uintah {
-
+   class OutputContext;
    class Patch;
    using SCICore::Geometry::IntVector;
 
@@ -58,6 +58,7 @@ WARNING
       virtual void copyPatch(CCVariableBase* src,
 			      const IntVector& lowIndex,
 			      const IntVector& highIndex) = 0;
+      virtual void emit(OutputContext&) = 0;
    protected:
       CCVariableBase(const CCVariableBase&);
       CCVariableBase();
@@ -70,6 +71,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.3  2000/05/31 04:01:51  rawat
+// partially completed CCVariable implementation
+//
 // Revision 1.2  2000/05/30 20:19:28  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
