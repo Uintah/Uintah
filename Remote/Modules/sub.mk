@@ -5,12 +5,20 @@
 
 SRCDIR := Remote/Modules
 
-SUBDIRS := $(SRCDIR)/remoteSalmon
+SUBDIRS := \
+	$(SRCDIR)/remoteSalmon\
+#[INSERT NEW CATEGORY DIR HERE]
 
 include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.2  2000/10/24 05:57:47  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.1  2000/06/06 15:29:25  dahart
 # - Added a new package / directory tree for the remote visualization
 # framework.

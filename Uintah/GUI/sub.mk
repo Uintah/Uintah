@@ -7,7 +7,8 @@ SRCDIR := Uintah/GUI
 
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
-$(SRCDIR)/tclIndex: $(SRCDIR)/ChemVis.tcl $(SRCDIR)/PartToGeom.tcl \
+$(SRCDIR)/tclIndex: \
+	$(SRCDIR)/ChemVis.tcl $(SRCDIR)/PartToGeom.tcl \
 	$(SRCDIR)/ParticleGridVisControl.tcl $(SRCDIR)/ParticleViz.tcl \
 	$(SRCDIR)/RescaleParticleColorMap.tcl \
 	$(SRCDIR)/TecplotFileSelector.tcl $(SRCDIR)/TriangleReader.tcl \
@@ -24,7 +25,8 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/ChemVis.tcl $(SRCDIR)/PartToGeom.tcl \
 	$(SRCDIR)/InPlaneEigenEvaluator.tcl \
 	$(SRCDIR)/ParticleInPlaneEigenEvaluator.tcl \
 	$(SRCDIR)/TensorElementExtractor.tcl \
-	$(SRCDIR)/ParticleTensorElementExtractor.tcl
+	$(SRCDIR)/ParticleTensorElementExtractor.tcl\
+#[INSERT NEW TCL FILE HERE]
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Uintah/GUI
 
 
@@ -32,6 +34,12 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.14  2000/10/24 05:57:54  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.13  2000/10/18 21:10:03  witzel
 # Added ParticleInPlaneEigenEvaluator
 #

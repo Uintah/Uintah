@@ -8,7 +8,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Yarden/Modules/Visualization
 
 SRCS     += \
-	$(SRCDIR)/ViewTensors.cc
+	$(SRCDIR)/ViewTensors.cc\
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Yarden/Datatypes PSECore/Datatypes PSECore/Dataflow \
 	SCICore/Persistent SCICore/Containers SCICore/Util \
@@ -21,6 +22,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/10/24 05:58:03  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.4  2000/10/23 23:41:31  yarden
 # View Tensors
 #

@@ -7,13 +7,21 @@ SRCDIR := Remote/GUI
 
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
-$(SRCDIR)/tclIndex: $(SRCDIR)/remoteSalmon.tcl
+$(SRCDIR)/tclIndex: \
+	$(SRCDIR)/remoteSalmon.tcl\
+#[INSERT NEW TCL FILE HERE]
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Remote/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.3  2000/10/24 05:57:45  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.2  2000/06/06 16:39:10  dahart
 # Fixed a bug
 #

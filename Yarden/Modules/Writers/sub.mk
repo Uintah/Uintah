@@ -19,7 +19,7 @@ SRCDIR   := Yarden/Modules/Writers
 
 SRCS     += \
 	$(SRCDIR)/TensorFieldWriter.cc\
-#[INSERT NEW MODULE HERE]
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Yarden/Datatypes PSECore/Datatypes PSECore/Dataflow \
 	SCICore/Persistent SCICore/Exceptions SCICore/Containers \

@@ -19,7 +19,7 @@ SRCDIR   := Nektar/Modules/Converters
 
 SRCS     += \
 	$(SRCDIR)/ReferenceGeom.cc\
-#[INSERT NEW MODULE HERE]
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes SCICore/Datatypes \
 	SCICore/Persistent SCICore/Exceptions SCICore/Thread \

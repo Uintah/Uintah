@@ -7,19 +7,27 @@ SRCDIR := Kurt/GUI
 
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
-$(SRCDIR)/tclIndex: $(SRCDIR)/VolVis.tcl $(SRCDIR)/PadField.tcl \
+$(SRCDIR)/tclIndex: \
+	$(SRCDIR)/VolVis.tcl $(SRCDIR)/PadField.tcl \
 	$(SRCDIR)/TextureVolVis.tcl $(SRCDIR)/GLTextureBuilder.tcl \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
 	$(SRCDIR)/VisControl.tcl \
 	$(SRCDIR)/RescaleColorMapForParticles.tcl \
 	$(SRCDIR)/ParticleVis.tcl \
-	$(SRCDIR)/AnimatedStreams.tcl 
+	$(SRCDIR)/AnimatedStreams.tcl \
+#[INSERT NEW TCL FILE HERE]
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Kurt/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.11  2000/10/24 05:57:20  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.10  2000/09/17 16:03:16  kuzimmer
 # updated to include GLAnimatedStreams.tcl
 #

@@ -25,8 +25,7 @@ SRCS     += \
 	$(SRCDIR)/MagneticScalarField.cc\
 	$(SRCDIR)/NegateGradient.cc\
 	$(SRCDIR)/SurfToVectGeom.cc\
-#[INSERT NEW MODULE HERE]
-
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := DaveW/Datatypes/General PSECore/Dataflow PSECore/Datatypes \
 	SCICore/Persistent SCICore/Exceptions SCICore/Thread \
@@ -38,6 +37,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/10/24 05:57:15  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.4  2000/06/08 22:46:17  moulding
 # Added a comment note about not messing with the module maker comment lines,
 # and how to edit this file by hand.

@@ -5,12 +5,20 @@
 
 SRCDIR := Kurt/Modules
 
-SUBDIRS := $(SRCDIR)/Vis
+SUBDIRS := \
+	$(SRCDIR)/Vis\
+#[INSERT NEW CATEGORY DIR HERE]
 
 include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.4  2000/10/24 05:57:21  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.3  2000/05/20 02:31:29  kuzimmer
 # Multiple changes for new vis tools
 #

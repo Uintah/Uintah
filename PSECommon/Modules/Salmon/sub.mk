@@ -40,7 +40,7 @@ SRCS     += \
 	$(SRCDIR)/SharedMemory.cc\
 	$(SRCDIR)/glMath.cc\
 	$(SRCDIR)/EditPath.cc\
-#[INSERT NEW MODULE HERE]
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := PSECore/Widgets PSECore/Dataflow PSECore/Datatypes PSECore/Comm \
 	SCICore/Persistent SCICore/Exceptions SCICore/Geometry \
@@ -55,6 +55,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.10  2000/10/24 05:57:37  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.9  2000/09/27 22:49:43  yarden
 # add PSECore/Widgets to PSELIBS
 #
