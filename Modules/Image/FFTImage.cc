@@ -72,3 +72,6 @@ void FFTImage::execute()
     fft2d_float(out->rows[0], out->xres(), 1, &flops, &refs);
     oport->send(out);
 }
+
+
+
