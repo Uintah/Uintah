@@ -2685,7 +2685,8 @@ proc moduleHelp {modid} {
     wm title $w $t
 	
     frame $w.help
-    text $w.help.txt -relief sunken -bd 2 -yscrollcommand "$w.help.sb set"
+    text $w.help.txt -relief sunken -wrap word -bd 2 \
+	-yscrollcommand "$w.help.sb set"
     scrollbar $w.help.sb -relief sunken -command "$w.help.txt yview"
     pack $w.help.txt $w.help.sb -side left -padx 5 -pady 5 -fill y
 
