@@ -1096,7 +1096,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
       Material* matl = d_sharedState->getMaterial(m);
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+     
       int indx= matl->getDWIndex(); 
       new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gac, 1);
       new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gac, 1);
@@ -1139,13 +1140,23 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
         double grav_vel =  Sqrt( dx.x() * fabs(grav.x()) + 
                                  dx.y() * fabs(grav.y()) + 
                                  dx.z() * fabs(grav.z()) ); 
-        
-        double thermalCond = ice_matl->getThermalConductivity();
-        double viscosity   = ice_matl->getViscosity();
-        double dx_length   = dx.length();                              
-        double cv    = ice_matl->getSpecificHeat();
-        double gamma = ice_matl->getGamma();
+                                 
+                                 
+        double thermalCond, cv, gamma;
+        double viscosity = 0.0;
+        if (ice_matl){                         
+          thermalCond = ice_matl->getThermalConductivity();
+          viscosity   = ice_matl->getViscosity();
+          cv          = ice_matl->getSpecificHeat();
+          gamma       = ice_matl->getGamma();
+        }else{
+          thermalCond = mpm_matl->getThermalConductivity();
+          cv          = mpm_matl->getSpecificHeat();
+          gamma       = mpm_matl->getGamma();
+        }
+                                     
         double cp    = cv * gamma;       
+        double dx_length   = dx.length();
         
         delt_CFL = 1000.0; 
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
