@@ -42,49 +42,39 @@ WARNING
     TestModel(const ProcessorGroup* myworld, ProblemSpecP& params);
     virtual ~TestModel();
 
-    //////////
-    // Insert Documentation Here:
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			      ModelSetup* setup);
       
-    //////////
-    // Insert Documentation Here:
     virtual void scheduleInitialize(SchedulerP&,
-				    const LevelP& level,
-				    const ModelInfo*);
+				        const LevelP& level,
+				        const ModelInfo*);
 
-    //////////
-    // Insert Documentation Here:
     virtual void restartInitialize() {}
       
-    //////////
-    // Insert Documentation Here:
     virtual void scheduleComputeStableTimestep(SchedulerP&,
-					       const LevelP& level,
-					       const ModelInfo*);
+					           const LevelP& level,
+					           const ModelInfo*);
       
-    //////////
-    // Insert Documentation Here:
-    virtual void scheduleMassExchange(SchedulerP&,
-				      const LevelP& level,
-				      const ModelInfo*);
-    virtual void scheduleMomentumAndEnergyExchange(SchedulerP&,
-						   const LevelP& level,
-						   const ModelInfo*);
+    virtual void scheduleComputeModelSources(SchedulerP&,
+				                const LevelP& level,
+				                const ModelInfo*);
                                              
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
-                                               const LevelP&,
-                                               const MaterialSet*);
+                                                         const LevelP&,
+                                                         const MaterialSet*);
                                                
     virtual void computeSpecificHeat(CCVariable<double>&,
-                                 const Patch*,
-                                 DataWarehouse*,
-                                 const int);
+                                    const Patch*,
+                                    DataWarehouse*,
+                                    const int);
 
   private:    
-    void massExchange(const ProcessorGroup*, const PatchSubset* patches,
-		      const MaterialSubset* matls, DataWarehouse*, 
-		      DataWarehouse* new_dw, const ModelInfo*);
+    void computeModelSources(const ProcessorGroup*, 
+                             const PatchSubset* patches,
+		               const MaterialSubset* matls, 
+                             DataWarehouse*, 
+		               DataWarehouse* new_dw, 
+                             const ModelInfo*);
 
     TestModel(const TestModel&);
     TestModel& operator=(const TestModel&);

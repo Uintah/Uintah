@@ -57,10 +57,7 @@ WARNING
 					       const LevelP& level,
 					       const ModelInfo*);
       
-    virtual void scheduleMassExchange(SchedulerP&,
-				      const LevelP& level,
-				      const ModelInfo*);
-    virtual void scheduleMomentumAndEnergyExchange(SchedulerP&,
+    virtual void scheduleComputeModelSources(SchedulerP&,
 						   const LevelP& level,
 						   const ModelInfo*);
                                              
@@ -73,9 +70,12 @@ WARNING
                                     DataWarehouse*,
                                     const int);
   private:    
-    void massExchange(const ProcessorGroup*, const PatchSubset* patches,
-		      const MaterialSubset* matls, DataWarehouse*, 
-		      DataWarehouse* new_dw, const ModelInfo*);
+    void computeModelSources(const ProcessorGroup*, 
+                             const PatchSubset* patches,
+		               const MaterialSubset* matls, 
+                             DataWarehouse*, 
+		               DataWarehouse* new_dw, 
+                             const ModelInfo*);
 
     Simple_Burn(const Simple_Burn&);
     Simple_Burn& operator=(const Simple_Burn&);
