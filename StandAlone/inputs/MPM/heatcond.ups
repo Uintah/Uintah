@@ -27,7 +27,6 @@
    </MPM>
 
 
-
     <PhysicalConstants>
 	<gravity>[0,0,0]</gravity>
 	<ideal_gas_constant>1.0</ideal_gas_constant>
@@ -75,8 +74,6 @@
 			<FaceForce face="x+">[1,0,0]</FaceForce>
 		    </BoundaryConditions>
 		    <temperature>573.</temperature>
-                    <thermal_conductivity>237</thermal_conductivity>
-                    <specific_heat>903</specific_heat>
  		</geom_object>
 		<velocity_field>0</velocity_field>
 
@@ -88,7 +85,9 @@
             </contact>
 
             <heat_conduction></heat_conduction>
-	    
+
+            <thermal_contact></thermal_contact>
+            
 	</MPM>
 
     </MaterialProperties>
