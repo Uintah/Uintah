@@ -89,11 +89,11 @@ main(int argc, char **argv) {
     }
   }
 
-  Array1<double> pots(npts);
-  for (ii=0; ii<npts; ii++) {
+  Array1<double> pots;
+  while(potstream) {
     double pot;
     potstream >> pot;
-    pots[ii]=pot;
+    pots.add(pot);
   }
 
   TriSurfMeshHandle tsmH(tsm);
