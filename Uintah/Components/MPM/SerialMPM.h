@@ -207,8 +207,6 @@ protected:
   SimulationStateP d_sharedState;
   MPMLabel* lb;
   bool             d_burns;
-
-  vector<MPMPhysicalBC*> d_physicalBCs;
 };
       
 } // end namespace MPM
@@ -216,6 +214,9 @@ protected:
    
 //
 // $Log$
+// Revision 1.52  2000/09/04 23:37:18  tan
+// Made the code clean for PhysicalBC.
+//
 // Revision 1.51  2000/08/30 00:12:42  guilkey
 // Added some stuff for interpolating particle data to the grid solely
 // for the purpose of saving to an uda.  This doesn't work yet.

@@ -71,9 +71,6 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
 
 SerialMPM::~SerialMPM()
 {
-  for(vector<MPMPhysicalBC*>::iterator bc = d_physicalBCs.begin();
-      bc != d_physicalBCs.end(); ++bc )
-    delete (*bc);
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
@@ -1825,6 +1822,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.122  2000/09/04 23:37:31  tan
+// Made the code clean for PhysicalBC.
+//
 // Revision 1.121  2000/08/30 00:12:42  guilkey
 // Added some stuff for interpolating particle data to the grid solely
 // for the purpose of saving to an uda.  This doesn't work yet.
