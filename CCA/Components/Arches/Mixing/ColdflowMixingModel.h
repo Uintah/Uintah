@@ -99,6 +99,14 @@ public:
       inline int getNumRxnVars() const{
 	return 0;
       }
+
+      inline bool getCOOutput() const{
+	return 0;
+      }
+      inline bool getSulfurChem() const{
+	return 0;
+      }
+
       inline int getTableDimension() const{
 	return 0;
       }
@@ -150,6 +158,9 @@ private:
 
 //
 // $Log$
+// Revision 1.15  2005/03/20 08:17:50  skumar
+// stuff for sulfur chemistry
+//
 // Revision 1.14  2003/08/07 00:48:14  sparker
 // SGI 64 bit warnings rampage
 //

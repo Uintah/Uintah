@@ -236,6 +236,10 @@ private:
       bool d_thermalNOx;
       bool d_flamelet;
       bool d_steadyflamelet;
+
+      bool d_co_output;
+      bool d_sulfur_chem;
+
       bool d_filter_drhodt;
       bool d_first_order_drhodt;
       int d_numMixingVars;

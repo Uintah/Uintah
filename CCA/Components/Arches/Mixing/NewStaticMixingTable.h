@@ -110,6 +110,14 @@ public:
       inline int getNumRxnVars() const{
 	return d_numRxnVars;
       }
+
+      inline bool getCOOutput() const{
+	return d_co_output;
+      }
+      inline bool getSulfurChem() const{
+	return d_sulfur_chem;
+      }
+
       inline int getTableDimension() const{
 	return 0;
       }
@@ -164,6 +172,11 @@ private:
       std::vector <std::vector <double> > table;
       int d_heatlosscount, d_mixfraccount, d_mixvarcount, d_varscount;
       int co2_index, h2o_index;
+
+      int h2s_index, so2_index, so3_index, co_index;
+      bool d_co_output;
+      bool d_sulfur_chem;
+
       std::vector <std::vector<double> > meanMix;
       std::vector<double> heatLoss;
       std::vector<double> variance;
