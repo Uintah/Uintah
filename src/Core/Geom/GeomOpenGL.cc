@@ -39,7 +39,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+
 #include <sci_defs/ogl_defs.h>
+#include <sci_defs/bits_defs.h>
 
 #ifdef _WIN32
 #define WINGDIAPI __declspec(dllimport)
@@ -174,7 +176,7 @@ GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
       }
     }
     di->set_matl(matl);
-#if (_MIPS_SZPTR == 64) || defined(__digital__) || defined(_AIX)
+#ifdef SCI_64BITS
     unsigned long o=(unsigned long)this;
     unsigned int o1=(o>>32)&0xffffffff;
     unsigned int o2=o&0xffffffff;
@@ -194,7 +196,7 @@ int
 GeomObj::post_draw(DrawInfoOpenGL* di)
 {
   if(di->pickmode && di->pickchild){
-#if (_MIPS_SZPTR == 64)
+#ifdef SCI_64BITS
     glPopName();
     glPopName();
 #else
@@ -2900,7 +2902,7 @@ void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
     if(di->pickmode){
 	// cerr <<"found a widget " << (GLuint)this << endl;
 	++di->npicks;
-#if (_MIPS_SZPTR == 64) || defined(__digital__) || defined(_AIX)
+#ifdef SCI_64BITS
 	unsigned long o=(unsigned long)this;
 	unsigned int o1=(o>>32)&0xffffffff;
 	unsigned int o2=o&0xffffffff;
@@ -2921,7 +2923,7 @@ void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 	child_->draw(di, matl, time);
     }
     if(di->pickmode){
-#if (_MIPS_SZPTR == 64)
+#ifdef SCI_64BITS
 	glPopName();
 	glPopName();
 #else
