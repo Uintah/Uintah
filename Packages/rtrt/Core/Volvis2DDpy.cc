@@ -21,10 +21,6 @@ using namespace SCIRun;
  ***************************************/
 #define textureWidth 128
 #define textureHeight 128
-static GLuint bgTextName;
-static GLuint transFuncTextName;
-Texture <GLfloat> *bgTextImage = new Texture<GLfloat>();    // clean background texture
-Texture <GLfloat> *visibleTexture = new Texture<GLfloat>(); // collection of widget textures painted onto background
 /**************************************
  *      END OF GLOBAL VARIABLES       *
  **************************************/
@@ -40,14 +36,10 @@ Volvis2DDpy::createBGText( void )
     for( j = 0; j < textureWidth; j++ )
       {
 	c = (((i&0x20)==0)^((j&0x10)==0));
-	visibleTexture->textArray[i][j][0] =    bgTextImage->textArray[i][j][0] = c;
-	visibleTexture->textArray[i][j][1] =    bgTextImage->textArray[i][j][1] = c;
-	visibleTexture->textArray[i][j][2] =    bgTextImage->textArray[i][j][2] = c;
-	visibleTexture->textArray[i][j][3] = 0; bgTextImage->textArray[i][j][3] = 1;
-	visibleTexture->textArray[i][j][0] = 0.0;
-	visibleTexture->textArray[i][j][1] = 0.0;
-	visibleTexture->textArray[i][j][2] = 0.0;
-	visibleTexture->textArray[i][j][3] = 0.0;
+	transTexture->textArray[i][j][0] =       bgTextImage->textArray[i][j][0] = c;
+	transTexture->textArray[i][j][1] =       bgTextImage->textArray[i][j][1] = c;
+	transTexture->textArray[i][j][2] =       bgTextImage->textArray[i][j][2] = c;
+	transTexture->textArray[i][j][3] = 0.0f; bgTextImage->textArray[i][j][3] = 1.0f;
       } // for()
 } // createBGText()
 
@@ -61,15 +53,10 @@ Volvis2DDpy::loadCleanTexture( void )
   for( int i = 0; i < textureHeight; i++ )
     for( int j = 0; j < textureWidth; j++ )
       {
-// 	visibleTexture->textArray[i][j][0] = bgTextImage->textArray[i][j][0];
-// 	visibleTexture->textArray[i][j][1] = bgTextImage->textArray[i][j][1];
-// 	visibleTexture->textArray[i][j][2] = bgTextImage->textArray[i][j][2];
-// 	visibleTexture->textArray[i][j][3] = bgTextImage->textArray[i][j][3];
-        // make unusued transfer function transparent
-	visibleTexture->textArray[i][j][0] = 0.0;
-	visibleTexture->textArray[i][j][1] = 0.0;
-	visibleTexture->textArray[i][j][2] = 0.0;
-	visibleTexture->textArray[i][j][3] = 0.0;
+	transTexture->textArray[i][j][0] = 0.0;
+	transTexture->textArray[i][j][1] = 0.0;
+	transTexture->textArray[i][j][2] = 0.0;
+	transTexture->textArray[i][j][3] = 0.0;
       } // for()
 } // loadCleanTexture()
 
@@ -96,7 +83,7 @@ Volvis2DDpy::drawBackground( void )
   glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
   glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, GL_BLEND );
   glBindTexture( GL_TEXTURE_2D, transFuncTextName );
-  glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_FLOAT, visibleTexture );
+  glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_FLOAT, transTexture );
   glBegin( GL_QUADS );        // maps the entire background to the entire worldspace
   glTexCoord2f( 0.0, 0.0 );	glVertex2i( 0, 0 );
   glTexCoord2f( 0.0, 1.0 );	glVertex2i( 0, 250 );
@@ -196,11 +183,11 @@ Volvis2DDpy::bindWidgetTextures( void )
 {
   //printf( "In bindWidgetTextures\n" );
   for( int i = 0; i < widgets.size(); i++ )
-    widgets[i]->paintTransFunc( visibleTexture->textArray, textureWidth, textureHeight );
+    widgets[i]->paintTransFunc( transTexture->textArray, textureWidth, textureHeight );
   //  glBindTexture( GL_TEXTURE_2D, transFuncTextName );
   redraw = true;
   //glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, textureWidth, textureHeight, GL_RGBA, GL_FLOAT,
-  //	   visibleTexture->textArray );
+  //	   transTexture->textArray );
 } // bindWidgetTextures()
 
 
@@ -304,7 +291,6 @@ Volvis2DDpy::init()
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
   glOrtho( 0.0, 500.0, 0.0, 250.0, -1.0, 1.0 );
-  //resize( 500, 250 );
   glDisable( GL_DEPTH_TEST );
 
   createBGText();
@@ -326,7 +312,7 @@ Volvis2DDpy::init()
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA,
-		GL_FLOAT, visibleTexture->textArray ); 
+		GL_FLOAT, transTexture->textArray ); 
   glEnd();
 } // init()
 
@@ -407,13 +393,13 @@ Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y)
   old_x = x;
   old_y = y;	
   /*printf( "RGBA = ( %g, %g, %g, %g )\n",
-	  visibleTexture->textArray[(int)((250-y/y_pixel_width)/250.0f*(float)textureHeight)]
+	  transTexture->textArray[(int)((250-y/y_pixel_width)/250.0f*(float)textureHeight)]
 	                           [(int)(x/x_pixel_width/500.0f*(float)textureWidth)][0],
-	  visibleTexture->textArray[(int)((250-y/y_pixel_width)/250.0f*(float)textureHeight)]
+	  transTexture->textArray[(int)((250-y/y_pixel_width)/250.0f*(float)textureHeight)]
                                    [(int)(x/x_pixel_width/500.0f*(float)textureWidth)][1],
-	  visibleTexture->textArray[(int)((250-y/y_pixel_width)/250.0f*(float)textureHeight)]
+	  transTexture->textArray[(int)((250-y/y_pixel_width)/250.0f*(float)textureHeight)]
 	                           [(int)(x/x_pixel_width/500.0f*(float)textureWidth)][2],
-	  visibleTexture->textArray[(int)((250-y/y_pixel_width)/250.0f*(float)textureHeight)]
+	  transTexture->textArray[(int)((250-y/y_pixel_width)/250.0f*(float)textureHeight)]
 	  [(int)(x/x_pixel_width/500.0f*(float)textureWidth)][3] );*/
   switch( button )
     {
@@ -488,21 +474,58 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y)
 					  250.0-y/y_pixel_width, (old_y-y)/y_pixel_width );
       
       for( int i = 0; i < widgets.size(); i++ )  // paint all the widget textures onto the background
-	widgets[i]->paintTransFunc( visibleTexture->textArray, textureWidth, textureHeight );
-      //      glBindTexture( GL_TEXTURE_2D, transFuncTextName );
-      //glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, textureWidth, textureHeight, GL_RGBA, 
-      //		       GL_FLOAT, visibleTexture->textArray );
+	widgets[i]->paintTransFunc( transTexture->textArray, textureWidth, textureHeight );
       
       old_x = x;       // updates old_x
       old_y = y;       // updates old_y
       redraw = true;
     }
 } // button_motion
+
+
+
+// attaches a new volume to this display
+void
+Volvis2DDpy::attach( VolumeVis2D* volume )
+{
+  volumes.push_back(volume);
+
+  // this needs to be done here, because we can't guarantee that setup_vars
+  // will get called before VolumeVis starts cranking!
+  vmin = min(vmin, volume->data_min.v());
+  vmax = max(vmax, volume->data_max.v());
+  gmin = min(gmin, volume->data_min.g());
+  gmax = max(gmax, volume->data_max.g());
+} // attach()
+
+
+
+// retrieves RGBA values from a voxel
+void
+Volvis2DDpy::lookup( Voxel2D<float> voxel, Color &color, float &alpha )
+{
+  if( voxel.v() >= vmin && voxel.v() <= vmax && voxel.g() >= gmin && voxel.g() <= gmax )
+    {
+      float linear_factor = 1.0f/(vmax-vmin);
+      int x_index = (int)((voxel.v()-vmin)*linear_factor*(textureWidth-1));
+      linear_factor = 1.0f/(gmax-gmin);
+      int y_index = (int)((voxel.g()-gmin)*linear_factor*(textureHeight-1));
+      color = Color( transTexture->textArray[y_index][x_index][0], transTexture->textArray[y_index][x_index][1],transTexture->textArray[y_index][x_index][2] );
+      alpha = transTexture->textArray[y_index][x_index][3];
+    }
+  else
+    alpha = 0.0f;
+  return;
+} // lookup()
  
 
- 
-Volvis2DDpy::Volvis2DDpy():DpyBase("Volvis2DDpy")
+
+// sets window resolution before any other calls are made
+Volvis2DDpy::Volvis2DDpy( float t_inc ):DpyBase("Volvis2DDpy"),
+  t_inc(t_inc), vmin(MAXFLOAT), vmax(-MAXFLOAT), gmin(MAXFLOAT), gmax(-MAXFLOAT)
 {
   //printf( "In Volvis2DDpy::Volvis2DDpy:DpyBase\n" );
+  bgTextImage = new Texture<GLfloat>();
+  transTexture = new Texture<GLfloat>();
   set_resolution( 500, 250 );
 } // Volvis2DDpy()
