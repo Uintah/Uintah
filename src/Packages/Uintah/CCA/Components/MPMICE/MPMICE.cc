@@ -14,6 +14,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
 
 #include <Core/Datatypes/DenseMatrix.h>
 
@@ -1021,11 +1022,31 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 #endif
 
 
-  //HARDWIRING FOR NEUMANN TEMPERATURE BCS
+  // Setting dTdt = 0 in the ExtraCells
   for(int m = 0; m < numALLMatls; m++){
     for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-	dTdt_CC[m].fillFace(face,0);
+        vector<BoundCondBase* > bcs;
+        bcs = patch->getBCValues(face);
+
+        if (bcs.size() == 0) continue;
+
+        BoundCondBase* bc_base = 0;
+
+        for (int i = 0; i<(int)bcs.size(); i++ ) {
+          if (bcs[i]->getType() == "Temperature") {
+            bc_base = bcs[i];
+            break;
+          }
+        }
+        if (bc_base == 0)
+          continue;
+        if (bc_base->getType() == "Temperature") {
+          TemperatureBoundCond* bc=dynamic_cast<TemperatureBoundCond*>(bc_base);
+          if (bc->getKind() == "Dirichlet" || bc->getKind() == "Neumann"){
+	    dTdt_CC[m].fillFace(face,0);
+	  }
+        }
     }
   }
 
@@ -1268,9 +1289,10 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       } 
       
       if(mpm_matl){                //  M P M
-#if 0
-	rho_micro[m][*iter] =  mpm_matl->getConstitutiveModel()->
-	  computeRhoMicroCM(press_new[*iter],mpm_matl);
+#if 1
+//	rho_micro[m][*iter] =  mpm_matl->getConstitutiveModel()->
+//	  computeRhoMicroCM(press_new[*iter],mpm_matl);
+	rho_micro[m][*iter] = mass_CC[m][*iter]/mat_vol[m][*iter];
 
 	mpm_matl->getConstitutiveModel()->
 	  computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
@@ -1279,7 +1301,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 	mat_volume[m] = mat_vol[m][*iter];
 
 //    This is the IDEAL GAS stuff
-#if 1
+#if 0
 	double gamma   = mpm_matl->getGamma(); 
 	rho_micro[m][*iter] = mpm_matl->
 	  getConstitutiveModel()->computeRhoMicro(press_new[*iter],gamma,
@@ -1361,13 +1383,13 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        if(mpm_matl){
         //__________________________________
         //  Hardwire for an ideal gas
-#if 0
+#if 1
           mpm_matl->getConstitutiveModel()->
                computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
 								tmp,mpm_matl);
 #endif
 //    This is the IDEAL GAS stuff
-#if 1
+#if 0
           double gamma = mpm_matl->getGamma();
           mpm_matl->getConstitutiveModel()->
             computePressEOS(rho_micro[m][*iter],gamma, cv[m],Temp[m][*iter],
@@ -1407,13 +1429,13 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                              cv[m],Temp[m][*iter]);
        }
        if(mpm_matl){
-#if 0
+#if 1
          rho_micro[m][*iter] =  
            mpm_matl->getConstitutiveModel()->computeRhoMicroCM(press_new[*iter],
 								mpm_matl);
 #endif
 //    This is the IDEAL GAS stuff
-#if 1
+#if 0
          double gamma = mpm_matl->getGamma();
          rho_micro[m][*iter] = 
          mpm_matl->getConstitutiveModel()->computeRhoMicro(press_new[*iter],
@@ -1445,13 +1467,13 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                     (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
        }
        if(mpm_matl){
-#if 0
+#if 1
           mpm_matl->getConstitutiveModel()->
                computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
 								tmp,mpm_matl);
 #endif
 //    This is the IDEAL GAS stuff
-#if 1
+#if 0
          double gamma = mpm_matl->getGamma();
          mpm_matl->getConstitutiveModel()->
              computePressEOS(rho_micro[m][*iter],gamma,
