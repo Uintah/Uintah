@@ -205,11 +205,6 @@ public:
 
    int queryNumMaterials(const Patch* patch, double time);
 
-   // temporary just so I can compile and test with old vis tools
-   int queryNumMaterials(const std::string& name,
-			 const Patch* patch, double time)
-   { return (int)queryMaterials(name, patch, time).size(); }
-  
    void query( Variable& var, const std::string& name,
 	       int matlIndex, const Patch* patch, double tine );
    
@@ -489,6 +484,9 @@ void DataArchive::query(std::vector<T>& values, const std::string& name,
 
 //
 // $Log$
+// Revision 1.17  2001/01/27 01:00:52  witzel
+// Removed temporary queryNumMaterials overload
+//
 // Revision 1.16  2001/01/24 00:00:14  witzel
 // Added a queryMaterials method (to replace queryNumMaterials for the most
 // part), added some methods to some of the "...HashMaps" classes to support
