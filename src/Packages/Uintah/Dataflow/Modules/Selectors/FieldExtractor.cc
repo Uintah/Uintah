@@ -207,9 +207,9 @@ void
 FieldExtractor::execute()
 { 
   tcl_status.set("Calling FieldExtractor!"); 
-  in = (ArchiveIPort *) get_iport("Data Archive");
-  fout = (FieldOPort *) get_oport("Field");
-  
+  ArchiveIPort *in = (ArchiveIPort *) get_iport("Data Archive");
+  FieldOPort *fout = (FieldOPort *) get_oport("Field");
+
   ArchiveHandle handle;
   if(!in->get(handle)){
     warning("VariableExtractor::execute() Didn't get a handle.");

@@ -108,9 +108,6 @@ protected:
 
   const TypeDescription *type;
 
-  ArchiveIPort *in;
-  FieldOPort *fout;
-
 
 }; //class 
 
