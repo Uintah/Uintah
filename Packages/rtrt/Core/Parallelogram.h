@@ -16,6 +16,7 @@ void Pio(Piostream&, rtrt::Parallelogram*&);
 namespace rtrt {
 
 class Parallelogram : public Object, public UVMapping {
+protected:
   Point anchor;
   Vector u,v;
   Vector n;
@@ -42,6 +43,10 @@ public:
   virtual Vector normal(const Point&, const HitInfo& hit);
   virtual void uv(UV& uv, const Point&, const HitInfo& hit);
   virtual void compute_bounds(BBox&, double offset);
+
+  Point  get_anchor() { return anchor; }
+  Vector get_u() { return u; }
+  Vector get_v() { return v; }
 };
 
 } // end namespace rtrt
