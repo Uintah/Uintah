@@ -74,22 +74,18 @@ public:
                               DataWarehouseP& old_dw,
                               DataWarehouseP& new_dw) const;
 
-  double  getThermalConductivity() const;
-  double  getSpecificHeat() const;
-  double  getHeatTransferCoefficient() const;
-
 private:
   SimulationStateP d_sharedState;
-
-  double   d_thermalConductivity;
-  double   d_specificHeat;
-  double   d_heatTransferCoefficient;
 };
       
 } // end namespace MPM
 } // end namespace Uintah
-   
+
 // $Log$
+// Revision 1.5  2000/06/20 05:09:44  tan
+// Currently thermal_conductivity, specific_heat and heat_transfer_coefficient
+// are set in MPM::MPMMaterial class.
+//
 // Revision 1.4  2000/06/20 03:40:51  tan
 // Get thermal_conductivity, specific_heat and heat_transfer_coefficient
 // from ProblemSpecification input requires.
