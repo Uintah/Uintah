@@ -1,385 +1,248 @@
-/*
-  The contents of this file are subject to the University of Utah Public
-  License (the "License"); you may not use this file except in compliance
-  with the License.
-  
-  Software distributed under the License is distributed on an "AS IS"
-  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-  License for the specific language governing rights and limitations under
-  the License.
-  
-  The Original Source Code is SCIRun, released March 12, 2001.
-  
-  The Original Source Code was developed by the University of Utah.
-  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
-  University of Utah. All Rights Reserved.
-*/
+//  
+//  For more information, please see: http://software.sci.utah.edu
+//  
+//  The MIT License
+//  
+//  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+//  University of Utah.
+//  
+//  License for the specific language governing rights and limitations under
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//  
+//  The above copyright notice and this permission notice shall be included
+//  in all copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//  
+//    File   : Brick.cc
+//    Author : Milan Ikits
+//    Date   : Wed Jul 14 16:03:05 2004
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cmath>
+#include <Packages/Volume/Core/Datatypes/Brick.h>
+#include <Packages/Volume/Core/Util/Utils.h>
+
 #include <iostream>
-#include <string>
-#include <vector>
-
 using std::cerr;
 using std::endl;
-using std::string;
-using std::cin;
-using std::vector;
 
-#include <Packages/Volume/Core/Util/Utils.h>
-#include <Packages/Volume/Core/Datatypes/Brick.h>
+using namespace SCIRun;
 
 namespace Volume {
 
+Brick::Brick (int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int oz,
+              int mx, int my, int mz, const BBox& bbox, const BBox& tbox)
+  : nx_(nx), ny_(ny), nz_(nz), nc_(nc), ox_(ox), oy_(oy), oz_(oz),
+    mx_(mx), my_(my), mz_(mz), bbox_(bbox), tbox_(tbox), dirty_(true)
+{
+  for(int c=0; c<nc_; c++) {
+    nb_[c] = nb[c];
+  }
 
-Brick::Brick() :
-  padx_(0), pady_(0), padz_(0), data_(0),
-  quantized_(false), storingAlpha_(false)
-{
-  name_[0] = 0;
-  name_[1] = 0;
-}
-  
-Brick::~Brick()
-{
-  // Note this is the only openGL call in brick,  we may 
-  // want to move it outside...
-  //  if (glIsTexture( texName()))
-  //   glDeleteTextures(1, texNameP());
-}
-
-Brick::Brick( BrickData *bd,
-              int padx, int pady, int padz,
-              const BBox*  bbox, const BBox *tbox) :
-  padx_(padx), pady_(pady), padz_(padz), data_(bd),
-  quantized_(false), storingAlpha_(false)
-{
-  name_[0] = 0;
-  name_[1] = 0;
   /* The cube is numbered in the following way 
      
-  2________6        y
-  /|        |        |  
-  / |       /|        |
-  /  |      / |        |
-  /   0_____/__4        |
+       2________6        y
+      /|        |        |  
+     / |       /|        |
+    /  |      / |        |
+   /   0_____/__4        |
   3---------7   /        |_________ x
   |  /      |  /         /
   | /       | /         /
   |/        |/         /
   1_________5         /
-  z  
+                     z  
   */
-  //   char s[80];
 
-  int nx = bd->nx();
-  int ny = bd->ny();
-  int nz = bd->nz();
-  // These will be used to create the texture Matrix
-  ax_ = ( 1.0/nx == 1.0 ) ? 2.0 : 1.0/nx;
-  ay_ = ( 1.0/ny == 1.0 ) ? 2.0 : 1.0/ny;
-  az_ = ( 1.0/nz == 1.0 ) ? 2.0 : 1.0/nz;
-
-  //   sprintf(s,"ax, ay, az = %f, %f, %f\n", ax_, ay_, az_);
-  //   OutputDebugString(s);
-  
   // set up vertices
-  Point min_(bbox->min());
-  Point max_(bbox->max());
-  corner[0] = min_;
-  corner[1] = Point(min_.x(), min_.y(), max_.z());
-  corner[2] = Point(min_.x(), max_.y(), min_.z());
-  corner[3] = Point(min_.x(), max_.y(), max_.z());
-  corner[4] = Point(max_.x(), min_.y(), min_.z());
-  corner[5] = Point(max_.x(), min_.y(), max_.z());
-  corner[6] = Point(max_.x(), max_.y(), min_.z());
-  corner[7] = max_;
-
-  // set up texture vertices;
+  Point pmin(bbox_.min());
+  Point pmax(bbox_.max());
+  corner_[0] = pmin;
+  corner_[1] = Point(pmin.x(), pmin.y(), pmax.z());
+  corner_[2] = Point(pmin.x(), pmax.y(), pmin.z());
+  corner_[3] = Point(pmin.x(), pmax.y(), pmax.z());
+  corner_[4] = Point(pmax.x(), pmin.y(), pmin.z());
+  corner_[5] = Point(pmax.x(), pmin.y(), pmax.z());
+  corner_[6] = Point(pmax.x(), pmax.y(), pmin.z());
+  corner_[7] = pmax;
+  // set up texture coordinates
   Point texture[8];
-  if( tbox == 0 ){
-    texture[0] = Point(0+0.5*ax_,    0+0.5*ay_,         0+0.5*az_);
-    texture[1] = Point(0+0.5*ax_,    0+0.5*ay_,         1-(0.5+padz_)*az_);
-    texture[2] = Point(0+0.5*ax_,    1-(0.5+pady_)*ay_, 0+0.5*az_);
-    texture[3] = Point(0+0.5*ax_,    1-(0.5+pady_)*ay_, 1-(0.5+padz_)*az_);
-    texture[4] = Point(1-(0.5+padx_)*ax_, 0+0.5*ay_,         0+0.5*az_);
-    texture[5] = Point(1-(0.5+padx_)*ax_, 0+0.5*ay_,    1-(0.5+padz_)*az_);
-    texture[6] = Point(1-(0.5+padx_)*ax_, 1-(0.5+pady_)*ay_, 0+0.5*az_);
-    texture[7] = Point(1-(0.5+padx_)*ax_, 1-(0.5+pady_)*ay_,1-(0.5+padz_)*az_);
-  } else {
-    min_ = tbox->min();
-    max_ = tbox->max();
-    texture[0] = min_;
-    texture[1] = Point(min_.x(), min_.y(), max_.z());
-    texture[2] = Point(min_.x(), max_.y(), min_.z());
-    texture[3] = Point(min_.x(), max_.y(), max_.z());
-    texture[4] = Point(max_.x(), min_.y(), min_.z());
-    texture[5] = Point(max_.x(), min_.y(), max_.z());
-    texture[6] = Point(max_.x(), max_.y(), min_.z());
-    texture[7] = max_;
-  }
-  //   texture[0] = Point(0, 0, 0);
-  //   texture[1] = Point(0, 0, 1 - (padz_)*az_);
-  //   texture[2] = Point(0, 1 - (pady_)*ay_, 0);
-  //   texture[3] = Point(0, 1 - (pady_)*ay_, 1 - (padz_)*az_);
-  //   texture[4] = Point(1 - (padx_)*ax_, 0, 0);
-  //   texture[5] = Point(1 - (padx_)*ax_, 0, 1 - (padz_)*az_);
-  //   texture[6] = Point(1 - (padx_)*ax_, 1 - (pady_)*ay_, 0);
-  //   texture[7] = Point(1 - (padx_)*ax_, 1 - (pady_)*ay_, 1 - (padz_)*az_);
-
-  //   sprintf(s, "texture vertices are %f, %f, %f \n",
-  // 	  texture[0].x(),  texture[0].y(), texture[0].z());
-  //   OutputDebugString(s);
-  //   sprintf(s, "                     %f, %f, %f \n",
-  // 	  texture[1].x(),  texture[1].y(), texture[1].z());
-  //   OutputDebugString(s);
-  //   sprintf(s, "                     %f, %f, %f \n",
-  // 	  texture[2].x(),  texture[2].y(), texture[2].z());
-  //   OutputDebugString(s);
-  //   sprintf(s, "                     %f, %f, %f \n",
-  // 	  texture[3].x(),  texture[3].y(), texture[3].z());
-  //   OutputDebugString(s);
-  //   sprintf(s, "                     %f, %f, %f \n",
-  // 	  texture[4].x(),  texture[4].y(), texture[4].z());
-  //   OutputDebugString(s);
-  //   sprintf(s, "                     %f, %f, %f \n",
-  // 	  texture[5].x(),  texture[5].y(), texture[5].z());
-  //   OutputDebugString(s);
-  //   sprintf(s, "                     %f, %f, %f \n",
-  // 	  texture[6].x(),  texture[6].y(), texture[6].z());
-  //   OutputDebugString(s);
-  //   sprintf(s, "                     %f, %f, %f \n",
-  // 	  texture[7].x(),  texture[7].y(), texture[7].z());
-  //  OutputDebugString(s);
-
+  Point tmin(tbox_.min());
+  Point tmax(tbox_.max());
+  texture[0] = Point(tmin.x(), tmin.y(), tmin.z());
+  texture[1] = Point(tmin.x(), tmin.y(), tmax.z());
+  texture[2] = Point(tmin.x(), tmax.y(), tmin.z());
+  texture[3] = Point(tmin.x(), tmax.y(), tmax.z());
+  texture[4] = Point(tmax.x(), tmin.y(), tmin.z());
+  texture[5] = Point(tmax.x(), tmin.y(), tmax.z());
+  texture[6] = Point(tmax.x(), tmax.y(), tmin.z());
+  texture[7] = Point(tmax.x(), tmax.y(), tmax.z());
   // set up edges
-  edge[0] = Ray(corner[0], corner[2] - corner[0]);
-  edge[1] = Ray(corner[2], corner[6] - corner[2]);
-  edge[2] = Ray(corner[4], corner[6] - corner[4]);
-  edge[3] = Ray(corner[0], corner[4] - corner[0]);
-  edge[4] = Ray(corner[1], corner[3] - corner[1]);
-  edge[5] = Ray(corner[3], corner[7] - corner[3]);
-  edge[6] = Ray(corner[5], corner[7] - corner[5]);
-  edge[7] = Ray(corner[1], corner[5] - corner[1]);
-  edge[8] = Ray(corner[0], corner[1] - corner[0]);
-  edge[9] = Ray(corner[2], corner[3] - corner[2]);
-  edge[10] = Ray(corner[6], corner[7] - corner[6]);
-  edge[11] = Ray(corner[4], corner[5] - corner[4]);
-
+  edge_[0] = Ray(corner_[0], corner_[2] - corner_[0]);
+  edge_[1] = Ray(corner_[2], corner_[6] - corner_[2]);
+  edge_[2] = Ray(corner_[4], corner_[6] - corner_[4]);
+  edge_[3] = Ray(corner_[0], corner_[4] - corner_[0]);
+  edge_[4] = Ray(corner_[1], corner_[3] - corner_[1]);
+  edge_[5] = Ray(corner_[3], corner_[7] - corner_[3]);
+  edge_[6] = Ray(corner_[5], corner_[7] - corner_[5]);
+  edge_[7] = Ray(corner_[1], corner_[5] - corner_[1]);
+  edge_[8] = Ray(corner_[0], corner_[1] - corner_[0]);
+  edge_[9] = Ray(corner_[2], corner_[3] - corner_[2]);
+  edge_[10] = Ray(corner_[6], corner_[7] - corner_[6]);
+  edge_[11] = Ray(corner_[4], corner_[5] - corner_[4]);
   // set up texture coordinate edges
-  texEdge[0] = Ray(texture[0], texture[2] - texture[0]);
-  texEdge[1] = Ray(texture[2], texture[6] - texture[2]);
-  texEdge[2] = Ray(texture[4], texture[6] - texture[4]);
-  texEdge[3] = Ray(texture[0], texture[4] - texture[0]);
-  texEdge[4] = Ray(texture[1], texture[3] - texture[1]);
-  texEdge[5] = Ray(texture[3], texture[7] - texture[3]);
-  texEdge[6] = Ray(texture[5], texture[7] - texture[5]);
-  texEdge[7] = Ray(texture[1], texture[5] - texture[1]);
-  texEdge[8] = Ray(texture[0], texture[1] - texture[0]);
-  texEdge[9] = Ray(texture[2], texture[3] - texture[2]);
-  texEdge[10] = Ray(texture[6], texture[7] - texture[6]);
-  texEdge[11] = Ray(texture[4], texture[5] - texture[4]);
-
-}
- 
-BBox 
-Brick::bbox() const
-{
-  BBox bb;
-  bb.extend( corner[0] );
-  bb.extend( corner[7] );
-  return bb;
+  tex_edge_[0] = Ray(texture[0], texture[2] - texture[0]);
+  tex_edge_[1] = Ray(texture[2], texture[6] - texture[2]);
+  tex_edge_[2] = Ray(texture[4], texture[6] - texture[4]);
+  tex_edge_[3] = Ray(texture[0], texture[4] - texture[0]);
+  tex_edge_[4] = Ray(texture[1], texture[3] - texture[1]);
+  tex_edge_[5] = Ray(texture[3], texture[7] - texture[3]);
+  tex_edge_[6] = Ray(texture[5], texture[7] - texture[5]);
+  tex_edge_[7] = Ray(texture[1], texture[5] - texture[1]);
+  tex_edge_[8] = Ray(texture[0], texture[1] - texture[0]);
+  tex_edge_[9] = Ray(texture[2], texture[3] - texture[2]);
+  tex_edge_[10] = Ray(texture[6], texture[7] - texture[6]);
+  tex_edge_[11] = Ray(texture[4], texture[5] - texture[4]);
 }
 
-void 
-Brick::ComputePoly(Ray r, double t, Polygon*& p) const
-{
-  double t0, t1;
-  //int i,j,k, tIndex = 1;
-  Point p0, p1;
-  Ray edgeList[6];
-  Ray texEdgeList[6];
-  Point intersects[6];
-  Point texcoords[6];
-  Vector view = r.direction();
-  RayStep dts[6];
-  int nIntersects = 0;
-  p0 = r.parameter(t);
-  p1 = r.parameter(t);
-  for( int j = 0; j < 12; j++) {
-    t0 = intersectParam(-view, p0, edge[j] );
-    t1 = intersectParam(-view, p1, edge[j] );
-    if(t0 > 0.0 && t0 < 1.0 ) {
-      intersects[nIntersects] = edge[j].parameter(t0);
-      texcoords[nIntersects] = texEdge[j].parameter(t0);
-      edgeList[nIntersects] = edge[j];
-      texEdgeList[nIntersects] = texEdge[j];
-      dts[nIntersects].base = t0;
-      dts[nIntersects++].step = t1 - t0;
-    }
-  }
-  if(nIntersects > 3) {
-    OrderIntersects( intersects, texcoords,
-		     edgeList, texEdgeList, dts, nIntersects );
-  }
-  
-  p = new Polygon( intersects, texcoords, nIntersects );
+Brick::~Brick()
+{}
 
+// compute polygon of edge plane intersections
+void
+Brick::compute_polygon(const Ray& view, double t,
+                       Array1<float>& vertex, Array1<float>& texcoord,
+                       Array1<int>& size) const
+{
+  compute_polygons(view, t, t, 1.0, vertex, texcoord, size);
 }
 
 void
-Brick::ComputePolys(Ray r, double tmin, double tmax,
-		    double dt, double* ts, vector<Polygon*>& polys ) const
+Brick::compute_polygons(const Ray& view, double dt,
+                        Array1<float>& vertex, Array1<float>& texcoord,
+                        Array1<int>& size) const
 {
-  // For a series of planes defined by r and tmin + n*dt,
-  // compute the polygon that intersects the texture cube.
-  // ts is a list of parameters that correspond the the planes defined
-  // by -r.direction and the corners of the texture cube.
-  // ts are used for optimization.
+  Point corner[8];
+  corner[0] = bbox_.min();
+  corner[1] = Point(bbox_.min().x(), bbox_.min().y(), bbox_.max().z());
+  corner[2] = Point(bbox_.min().x(), bbox_.max().y(), bbox_.min().z());
+  corner[3] = Point(bbox_.min().x(), bbox_.max().y(), bbox_.max().z());
+  corner[4] = Point(bbox_.max().x(), bbox_.min().y(), bbox_.min().z());
+  corner[5] = Point(bbox_.max().x(), bbox_.min().y(), bbox_.max().z());
+  corner[6] = Point(bbox_.max().x(), bbox_.max().y(), bbox_.min().z());
+  corner[7] = bbox_.max();
+  double t[8];
+  for(int i=0; i<8; i++) {
+    t[i] = Dot(corner[i]-view.origin(), view.direction());
+  }
+  Sort(t, 8);
+  double tmin = (floor(t[0]/dt) + 1)*dt;
+  double tmax = floor(t[7]/dt)*dt;
+  compute_polygons(view, tmin, tmax, dt, vertex, texcoord, size);
+}
 
-  double t = tmax; 
-  double t0, t1;
-  //int i,j,k, tIndex = 1;
-  int j, tIndex = 1;
-  Point p0, p1;
+// compute polygon list of edge plane intersections
+void
+Brick::compute_polygons(const Ray& view, double tmin, double tmax, double dt,
+                        Array1<float>& vertex, Array1<float>& texcoord,
+                        Array1<int>& size) const
+{
+  Vector vv[6], tt[6]; // temp storage for vertices and texcoords
+  double t = tmax; // start at tmax
+  int k = 0, degree = 0;
 
-  Ray edgeList[6];
-  Ray texEdgeList[6];
-  Point intersects[6];
-  Point texcoords[6];
-  Vector view = r.direction();
-  bool buildEdgeList = true;
-  RayStep dts[6];
-  int nIntersects = 0;
-
-  // dt is positive, but we compute polys back to front.
-  // use a negative dt
-
-  while( t > ts[7] && t >= tmin ){
-
-    while( t < ts[tIndex] ){
-      buildEdgeList = true;
-      tIndex++;
+  // find up and right vectors
+  Vector vdir = view.direction();
+  Vector up;
+  Vector right;
+  switch(MinIndex(std::abs(vdir.x()),
+                  std::abs(vdir.y()),
+                  std::abs(vdir.z()))) {
+  case 0:
+    up.x(0.0); up.y(-vdir.z()); up.z(vdir.y());
+    break;
+  case 1:
+    up.x(-vdir.z()); up.y(0.0); up.z(vdir.x());
+    break;
+  case 2:
+    up.x(-vdir.z()); up.y(vdir.y()); up.z(0.0);
+    break;
+  }
+  up.normalize();
+  right = Cross(vdir, up);
+  // we compute polys back to front
+  while(t >= tmin) {
+    // find intersections
+    degree = 0;
+    for(int j=0; j<12; j++) {
+      double u;
+      bool isec =
+        edge_[j].planeIntersectParameter(-view.direction(), view.parameter(t), u);
+      if(isec && u >= 0.0 && u <= 1.0) {
+        vv[degree] = (Vector)(edge_[j].parameter(u));
+        tt[degree] = (Vector)(tex_edge_[j].parameter(u));
+        degree++;
+      }
     }
-
-    if(buildEdgeList  || !nIntersects){
-      nIntersects = 0;
-      buildEdgeList = false;
-      p0 = r.parameter(t);
-      p1 = r.parameter(t-dt);
-      for( j = 0; j < 12; j++) {
-	t0 = intersectParam(-view, p0, edge[j] );
-	t1 = intersectParam(-view, p1, edge[j] );
-	if(t0 > 0.0 && t0 < 1.0 ) {
-	  intersects[nIntersects] = edge[j].parameter(t0);
-	  texcoords[nIntersects] = texEdge[j].parameter(t0);
-	  edgeList[nIntersects] = edge[j];
-	  texEdgeList[nIntersects] = texEdge[j];
-	  dts[nIntersects].base = t0;
-	  dts[nIntersects++].step = t1 - t0;
-	}
+    // 
+    if(degree > 3) {
+      // compute centroids
+      Vector vc(0.0, 0.0, 0.0), tc(0.0, 0.0, 0.0);
+      for(int j=0; j<degree; j++) {
+        vc += vv[j]; tc += tt[j];
       }
-      if(nIntersects > 3) {
-	OrderIntersects( intersects, texcoords, edgeList, texEdgeList,
-			 dts, nIntersects );
+      vc /= (double)degree; tc /= (double)degree;
+      // sort vertices
+      int idx[6];
+      double pa[6];
+      for(int i=0; i<degree; i++) {
+        double vx = Dot(vv[i] - vc, right);
+        double vy = Dot(vv[i] - vc, up);
+        // compute pseudo-angle
+        pa[i] = vy / (std::abs(vx) + std::abs(vy));
+        if (vx < 0.0) pa[i] = 2.0 - pa[i];
+        else if (vy < 0.0) pa[i] = 4.0 + pa[i];
+        // init idx
+        idx[i] = i;
       }
-
-    } else {
-      for( j = 0; j < nIntersects; j++ ){
-	dts[j].base += dts[j].step;
-	intersects[j] = edgeList[j].parameter(dts[j].base);
-	texcoords[j] = texEdgeList[j].parameter(dts[j].base);
-	if (dts[j].base < 0.0 ||  dts[j].base > 1.0)
-	  buildEdgeList = true;
+      Sort(pa, idx, degree);
+      // output polygon
+      for(int j=0; j<degree; j++) {
+        vertex.add(vv[idx[j]].x());
+        vertex.add(vv[idx[j]].y());
+        vertex.add(vv[idx[j]].z());
+        texcoord.add(tt[idx[j]].x());
+        texcoord.add(tt[idx[j]].y());
+        texcoord.add(tt[idx[j]].z());
+      }
+    } else if (degree == 3) {
+      // output a single triangle
+      for(int j=0; j<degree; j++) {
+        vertex.add(vv[j].x());
+        vertex.add(vv[j].y());
+        vertex.add(vv[j].z());
+        texcoord.add(tt[j].x());
+        texcoord.add(tt[j].y());
+        texcoord.add(tt[j].z());
       }
     }
-    
-    Polygon *poly = new Polygon( intersects, texcoords, nIntersects );
-    polys.push_back( poly );
+    // else we don't care
+    k += degree;
+    size.add(degree);
+    // decrement ray parameter
     t -= dt;
   }
-
 }
 
-void
-Brick::OrderIntersects(Point *p, Point *t,
-		       Ray *r, Ray *te, RayStep *dt, int n) const
-{ 
-  // We have a series of points, p, that intesect the edges, r, of the 
-  // texture cube.  We know that these points will make a convex hull
-  // so lets sort the points, rays, and raysteps so that when the points
-  // are connected they create and convex polygon.
-  Point sorted[6]; 
-  Point sortedT[6];
-  Ray sortedE[6];
-  Ray sortedTE[6];
-  RayStep sortedDt[6];
-  Vector v0, v1;
-  int nSorted = 3;
-  int i, j, k;
-  double cosTheta, maxCosTheta;
-  int i0=0, i1=0;
-
-  for(i = 0; i < nSorted;  i++){
-    sorted[i] = p[i];
-    sortedT[i] = t[i];
-    sortedE[i] = r[i];
-    sortedTE[i] = te[i];
-    sortedDt[i] = dt[i];
-  }
-
-  for(k = nSorted; k < n; k++){
-    maxCosTheta = 1.0;
-    // find the neighboring points by finding the maximum angle formed
-    //   by the vectors p[k] to any two points. // 
-    for(j = 0; j < nSorted; j++){
-      for(i = j + 1; i < nSorted; i++) {
-        v0 = sorted[j] - p[k];
-        v1 = sorted[i] - p[k];
-        v0.normalize();
-        v1.normalize();
-	cosTheta = Dot( v0, v1 );
-	if( cosTheta < maxCosTheta ){
-	  i0 = j;
-	  i1 = i;
-	  maxCosTheta = cosTheta;
-	}
-      }
-    }
-    // if the neigbors = the 1st and last point, tag new point to the end
-    // of the sorted list. 
-    if( i0 == 0 && i1 == nSorted - 1 ){
-      sorted[nSorted] = p[k];
-      sortedT[nSorted] = t[k];
-      sortedE[nSorted] = r[k];
-      sortedTE[nSorted] = te[k];
-      sortedDt[nSorted] = dt[k];
-      nSorted++;
-    } else { // move everything to the right of i0 and insert p[k] at i1. 
-      for( i = nSorted; i > i0; i-- ){
-        sorted[i] = sorted[i-1];
-        sortedT[i] = sortedT[i-1];
-        sortedE[i] = sortedE[i-1];
-        sortedTE[i] = sortedTE[i-1];
-        sortedDt[i] = sortedDt[i-1];
-      }
-      sorted[i1] = p[k];
-      sortedT[i1] = t[k];
-      sortedE[i1] = r[k];
-      sortedTE[i1] = te[k];
-      sortedDt[i1] = dt[k];
-      nSorted++;
-    }
-  }
-  // put the sorted points back in p
-  for(i = 0; i < n; i++){
-    p[i] = sorted[i];
-    t[i] = sortedT[i];
-    r[i] = sortedE[i];
-    te[i] = sortedTE[i];
-    dt[i] = sortedDt[i];    
-  }
-}
-
-} // End namespace Volume
+} // end namespace Volume

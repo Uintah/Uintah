@@ -31,7 +31,6 @@
 
 #include <Core/Geom/GeomOpenGL.h>
 #include <Packages/Volume/Core/Geom/TextureRenderer.h>
-#include <Packages/Volume/Core/Datatypes/TypedBrickData.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Color.h>
@@ -44,8 +43,9 @@
 
 #include <iostream>
 using std::cerr;
+using std::string;
 
-using Volume::Brick;
+using namespace SCIRun;
 
 namespace Volume {
 
@@ -78,7 +78,8 @@ static const string Cmap2ShaderStringATI =
 "END";
 
 TextureRenderer::TextureRenderer(TextureHandle tex,
-                                 ColorMapHandle cmap1, Colormap2Handle cmap2) :
+                                 ColorMapHandle cmap1, Colormap2Handle cmap2,
+                                 int tex_mem) :
   GeomObj(),
   tex_(tex),
   mutex_("TextureRenderer Mutex"),
@@ -106,7 +107,8 @@ TextureRenderer::TextureRenderer(TextureHandle tex,
   vol_shader_factory_(new VolShaderFactory()),
   blend_buffer_(0),
   blend_num_bits_(8),
-  use_blend_buffer_(true)
+  use_blend_buffer_(true),
+  free_tex_mem_(tex_mem)
 {}
 
 TextureRenderer::TextureRenderer(const TextureRenderer& copy) :
@@ -137,7 +139,8 @@ TextureRenderer::TextureRenderer(const TextureRenderer& copy) :
   vol_shader_factory_(copy.vol_shader_factory_),
   blend_buffer_(copy.blend_buffer_),
   blend_num_bits_(copy.blend_num_bits_),
-  use_blend_buffer_(copy.use_blend_buffer_)
+  use_blend_buffer_(copy.use_blend_buffer_),
+  free_tex_mem_(copy.free_tex_mem_)
 {}
 
 TextureRenderer::~TextureRenderer()
@@ -238,75 +241,44 @@ TextureRenderer::saveobj(std::ostream&, const string&, GeomSave*)
   return false;
 }
 
-void
-TextureRenderer::compute_view(Ray& ray)
+Ray
+TextureRenderer::compute_view()
 {
+  Transform field_trans = tex_->transform();
   double mvmat[16];
-  Transform mat;
-  Vector view;
-  Point viewPt;
-      
-  glGetDoublev( GL_MODELVIEW_MATRIX, mvmat);
-  /* remember that the glmatrix is stored as
-     0  4  8 12
-     1  5  9 13
-     2  6 10 14
-     3  7 11 15 */
-  
-  // transform the view vector opposite the transform that we draw polys with,
-  // so that polys are normal to the view post opengl draw.
-  //  GLTexture3DHandle tex = volren->get_tex3d_handle();
-  //  Transform field_trans = tex->get_field_transform();
-
-  Transform field_trans = tex_->get_field_transform();
-
-  // this is the world space view direction
-  view = Vector(-mvmat[2], -mvmat[6], -mvmat[10]);
-
-  // but this is the view space viewPt
-  viewPt = Point(-mvmat[12], -mvmat[13], -mvmat[14]);
-
-  viewPt = field_trans.unproject( viewPt );
-  view = field_trans.unproject( view );
-
-  /* set the translation to zero */
-  mvmat[12]=mvmat[13] = mvmat[14]=0;
-   
-
-  /* The Transform stores it's matrix as
-     0  1  2  3
-     4  5  6  7
-     8  9 10 11
-     12 13 14 15
-
-     Because of this order, simply setting the tranform with the glmatrix 
-     causes our tranform matrix to be the transpose of the glmatrix
-     ( assuming no scaling ) */
-  mat.set( mvmat );
-    
-  /* Since mat is the transpose, we then multiply the view space viewPt
-     by the mat to get the world or model space viewPt, which we need
-     for calculations */
-  viewPt = mat.project( viewPt );
- 
-  ray =  Ray(viewPt, view);
+  glGetDoublev(GL_MODELVIEW_MATRIX, mvmat);
+  // index space view direction
+  Vector v = field_trans.unproject(Vector(-mvmat[2], -mvmat[6], -mvmat[10]));
+  Transform mv;
+  mv.set_trans(mvmat);
+  Point p = field_trans.unproject(mv.unproject(Point(0.0, 0.0, 0.0)));
+  return Ray(p, v);
 }
 
-
 void
-TextureRenderer::load_brick(Brick& brick)
+TextureRenderer::load_brick(Brick* brick)
 {
-  TypedBrickData<unsigned char> *br =
-    dynamic_cast<TypedBrickData<unsigned char>*>(brick.data());
-  
-  if(br) {
-    if(!brick.texName(0) || (br->nc() > 1 && !brick.texName(1)) || brick.needsReload()) {
-      if(!brick.texName(0)) {
-        glGenTextures(1, brick.texNameP(0));
+  int nc = brick->nc();
+  int idx[2];
+  for(int c=0; c<nc; c++) {
+    int nb = brick->nb(c);
+    int nx = brick->nx();
+    int ny = brick->ny();
+    int nz = brick->nz();
+    idx[c] = -1;
+    for(unsigned int i=0; i<tex_pool_.size() && idx[c]<0; i++) {
+      if(tex_pool_[i].id != 0 && tex_pool_[i].brick == brick
+         && !brick->dirty() && tex_pool_[i].comp == c
+         && nx == tex_pool_[i].nx && ny == tex_pool_[i].ny
+         && nz == tex_pool_[i].nz && nb == tex_pool_[i].nb
+         && glIsTexture(tex_pool_[i].id)) {
+        idx[c] = i;
       }
-      brick.setReload(false);
-      glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_3D, brick.texName(0));
+    }
+    if(idx[c] != -1) {
+      // bind texture object
+      glBindTexture(GL_TEXTURE_3D, tex_pool_[idx[c]].id);
+      // set interpolation method
       if(interp_) {
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -314,63 +286,71 @@ TextureRenderer::load_brick(Brick& brick)
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
       }
+    } else {
+      // find matching texture object
+      for(unsigned int i=0; i<tex_pool_.size() && idx[c]<0; i++) {
+        if(tex_pool_[i].id != 0
+           && nx == tex_pool_[i].nx && ny == tex_pool_[i].ny
+           && nz == tex_pool_[i].nz && nb == tex_pool_[i].nb) {
+          idx[c] = i;
+        }
+      }
+      bool reuse = (idx[c] >= 0);
+      // 
+      if(!reuse) {
+        // if cannot reuse existing object allocate new object
+        int new_size = nx*ny*nz*nb;
+        if(new_size > free_tex_mem_) {
+          // if there's no space, find object to replace
+          int free_idx = -1;
+          int size, size_max = -1;
+          // find smallest available objects to delete
+          // TODO: this is pretty dumb, optimize it later
+          for(unsigned int i=0; i<tex_pool_.size(); i++) {
+            for(int j=0; j<c; j++) {
+              if(idx[j] == (int)i) continue;
+            }
+            size = tex_pool_[i].nx*tex_pool_[i].ny*tex_pool_[i].nz*tex_pool_[i].nb;
+            if(new_size < free_tex_mem_+size && (size_max < 0 || size < size_max)) {
+              free_idx = i;
+              size_max = size;
+            }
+          }
+          // delete found object
+          if(glIsTexture(tex_pool_[free_idx].id))
+            glDeleteTextures(1, &tex_pool_[free_idx].id);
+          tex_pool_[free_idx].id = 0;
+          free_tex_mem_ += size_max;
+        }
+        // find tex table entry to reuse
+        for(unsigned int i=0; i<tex_pool_.size() && idx[c]<0; i++) {
+          if(tex_pool_[i].id == 0)
+            idx[c] = i;
+        }
+        // allocate new object
+        unsigned int tex_id;
+        glGenTextures(1, &tex_id);
+        if(idx[c] < 0) {
+          // create new entry
+          tex_pool_.push_back(TexParam(nx, ny, nz, nb, tex_id));
+          idx[c] = tex_pool_.size()-1;
+        } else {
+          // reuse existing entry
+          tex_pool_[idx[c]].nx = nx; tex_pool_[idx[c]].ny = ny;
+          tex_pool_[idx[c]].nz = nz; tex_pool_[idx[c]].nb = nb;
+          tex_pool_[idx[c]].id = tex_id;
+        }
+        free_tex_mem_ -= new_size;
+      }
+      tex_pool_[idx[c]].brick = brick;
+      tex_pool_[idx[c]].comp = c;
+      // bind texture object
+      glBindTexture(GL_TEXTURE_3D, tex_pool_[idx[c]].id);
+      // set border behavior
       glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-      switch (br->nb(0)) {
-      case 1:
-        glTexImage3D(GL_TEXTURE_3D, 0,
-                     GL_LUMINANCE8,
-                     br->nx(),
-                     br->ny(),
-                     br->nz(),
-                     0,
-                     GL_LUMINANCE, GL_UNSIGNED_BYTE,
-                     br->texture(0));
-        break;
-      case 4:
-        glTexImage3D(GL_TEXTURE_3D, 0,
-                     GL_RGBA8,
-                     br->nx(),
-                     br->ny(),
-                     br->nz(),
-                     0,
-                     GL_RGBA, GL_UNSIGNED_BYTE,
-                     br->texture(0));
-        break;
-      default:
-        break;
-      }
-      if(br->nc() > 1) {
-        if(!brick.texName(1)) {
-          glGenTextures(1, brick.texNameP(1));
-        }
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_3D, brick.texName(1));
-        if(interp_) {
-          glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        } else {
-          glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        }
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTexImage3D(GL_TEXTURE_3D, 0,
-                     GL_LUMINANCE8,
-                     br->nx(),
-                     br->ny(),
-                     br->nz(),
-                     0,
-                     GL_LUMINANCE, GL_UNSIGNED_BYTE,
-                     br->texture(1));
-      }
-    } else {
-      glActiveTexture(GL_TEXTURE0_ARB);
-      glBindTexture(GL_TEXTURE_3D, brick.texName(0));
+      // set interpolation method
       if(interp_) {
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -378,139 +358,72 @@ TextureRenderer::load_brick(Brick& brick)
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
       }
-      if(br->nc() > 1) {
-        glActiveTexture(GL_TEXTURE1_ARB);
-        glBindTexture(GL_TEXTURE_3D, brick.texName(1));
-        if(interp_) {
-          glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        } else {
-          glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        }
-        glActiveTexture(GL_TEXTURE0_ARB);
+      // download texture data
+      unsigned int format = (nb == 1 ? GL_LUMINANCE : GL_RGBA);
+      if(reuse) {
+        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz, format,
+                        brick->tex_type(), brick->tex_data(c));
+      } else {
+        glTexImage3D(GL_TEXTURE_3D, 0, format, nx, ny, nz, 0, format,
+                     brick->tex_type(), brick->tex_data(c));
       }
     }
   }
+  brick->set_dirty(false);
   int errcode = glGetError();
-  if (errcode != GL_NO_ERROR)
-  {
+  if(errcode != GL_NO_ERROR) {
     cerr << "VolumeRenderer::load_texture | "
-         << (char*)gluErrorString(errcode)
-         << "\n";
+         << (char*)gluErrorString(errcode) << "\n";
   }
 }
 
 void
-TextureRenderer::draw_polys(vector<Polygon *> polys, bool z, Pbuffer* buffer)
+TextureRenderer::draw_polygons(Array1<float>& vertex, Array1<float>& texcoord,
+                               Array1<int>& poly, bool normal, bool fog, Pbuffer* buffer)
 {
-  double mvmat[16];
-  TextureHandle tex = tex_;
-  Transform field_trans = tex_->get_field_transform();
-  // set double array transposed.  Our matricies are stored transposed 
-  // from OpenGL matricies.
-  field_trans.get_trans(mvmat);
-  
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glMultMatrixd(mvmat);
-
-  glGetDoublev(GL_MODELVIEW_MATRIX, mvmat);
-
+  di_->polycount += poly.size();
+  float mvmat[16];
+  if(fog) {
+    glGetFloatv(GL_MODELVIEW_MATRIX, mvmat);
+  }
   if(buffer) {
     glActiveTexture(GL_TEXTURE3);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   }
-  
-  Point p0, t0;
-  unsigned int i;
-  unsigned int k;
-  di_->polycount += polys.size();
-  for (i = 0; i < polys.size(); i++) {
+  for(int i=0, k=0; i<poly.size(); i++) {
     if(buffer) {
       buffer->bind(GL_FRONT);
     }
-    switch (polys[i]->size() ) {
-    case 1:
-      t0 = polys[i]->getTexCoord(0);
-      p0 = polys[i]->getVertex(0);
-      glBegin(GL_POINTS);
-      if(z) {
-        double pz = mvmat[2]*p0.x()+mvmat[6]*p0.y()+mvmat[10]*p0.z()+mvmat[14];
-        glMultiTexCoord3f(GL_TEXTURE1, -pz, 0.0, 0.0);
-      }
-      glMultiTexCoord3f(GL_TEXTURE0, t0.x(), t0.y(), t0.z());
-      glVertex3f(p0.x(), p0.y(), p0.z());
-      glEnd();
-      break;
-    case 2:
-      glBegin(GL_LINES);
-      for(k =0; k < (unsigned int)polys[i]->size(); k++)
-      {
-        t0 = polys[i]->getTexCoord(k);
-        p0 = polys[i]->getVertex(k);
-        if(z) {
-          double pz = mvmat[2]*p0.x()+mvmat[6]*p0.y()+mvmat[10]*p0.z()+mvmat[14];
-          glMultiTexCoord3f(GL_TEXTURE1, -pz, 0.0, 0.0);
-        }
-        glMultiTexCoord3f(GL_TEXTURE0, t0.x(), t0.y(), t0.z());
-        glVertex3f(p0.x(), p0.y(), p0.z());
-      }
-      glEnd();
-      break;
-    case 3:
-      {
-        Vector n = Cross(Vector((*(polys[i]))[0] - (*polys[i])[1]),
-                         Vector((*(polys[i]))[0] - (*polys[i])[2]));
+    glBegin(GL_POLYGON);
+    {
+      if(normal) {
+        float* v0 = &vertex[(k+0)*3];
+        float* v1 = &vertex[(k+1)*3];
+        float* v2 = &vertex[(k+2)*3];
+        Vector dv1(v1[0]-v0[0], v1[1]-v0[1], v1[2]-v0[2]);
+        Vector dv2(v2[0]-v0[0], v2[1]-v0[1], v2[2]-v0[2]);
+        Vector n = Cross(dv1, dv2);
         n.normalize();
-        glBegin(GL_TRIANGLES);
         glNormal3f(n.x(), n.y(), n.z());
-        for(k =0; k < (unsigned int)polys[i]->size(); k++)
-        {
-          t0 = polys[i]->getTexCoord(k);
-          p0 = polys[i]->getVertex(k);
-          if(z) {
-            double pz = mvmat[2]*p0.x()+mvmat[6]*p0.y()+mvmat[10]*p0.z()+mvmat[14];
-            glMultiTexCoord3f(GL_TEXTURE1, -pz, 0.0, 0.0);
-          }
-          glMultiTexCoord3f(GL_TEXTURE0, t0.x(), t0.y(), t0.z());
-          glVertex3f(p0.x(), p0.y(), p0.z());
-        }
-	glEnd();
       }
-      break;
-    case 4:
-    case 5:
-    case 6:
-      {
-	int k;
-	glBegin(GL_POLYGON);
-	Vector n = Cross(Vector((*(polys[i]))[0] - (*polys[i])[1]),
-			 Vector((*(polys[i]))[0] - (*polys[i])[2]));
-	n.normalize();
-	glNormal3f(n.x(), n.y(), n.z());
-	for(k =0; k < polys[i]->size(); k++)
-	{
-	  t0 = polys[i]->getTexCoord(k);
-	  p0 = polys[i]->getVertex(k);
-          if(z) {
-            double pz = mvmat[2]*p0.x()+mvmat[6]*p0.y()+mvmat[10]*p0.z()+mvmat[14];
-            glMultiTexCoord3f(GL_TEXTURE1, -pz, 0.0, 0.0);
-          }
-          glMultiTexCoord3f(GL_TEXTURE0, t0.x(), t0.y(), t0.z());
-	  glVertex3f(p0.x(), p0.y(), p0.z());
-	}
-	glEnd();
-	break;
+      for(int j=0; j<poly[i]; j++) {
+        float* t = &texcoord[(k+j)*3];
+        glMultiTexCoord3f(GL_TEXTURE0, t[0], t[1], t[2]);
+        float* v = &vertex[(k+j)*3];
+        if(fog) {
+          float vz = mvmat[2]*v[0] + mvmat[6]*v[1] + mvmat[10]*v[2] + mvmat[14];
+          glMultiTexCoord3f(GL_TEXTURE1, -vz, 0.0, 0.0);
+        }
+        glVertex3f(v[0], v[1], v[2]);
       }
     }
+    glEnd();
     if(buffer) {
       buffer->release(GL_FRONT);
       buffer->swapBuffers();
     }
+    k += poly[i];
   }
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
   if(buffer) {
     glActiveTexture(GL_TEXTURE0);
   }
@@ -724,10 +637,10 @@ TextureRenderer::build_colormap2()
         }
         for(int i=0; i<raster_array_.dim1(); i++) {
           for(int j=0; j<raster_array_.dim2(); j++) {
-            raster_array_(i,j,0) = CLAMP(raster_array_(i,j,0), 0.0f, 1.0f);
-            raster_array_(i,j,1) = CLAMP(raster_array_(i,j,1), 0.0f, 1.0f);
-            raster_array_(i,j,2) = CLAMP(raster_array_(i,j,2), 0.0f, 1.0f);
-            raster_array_(i,j,3) = CLAMP(raster_array_(i,j,3), 0.0f, 1.0f);
+            raster_array_(i,j,0) = Clamp(raster_array_(i,j,0), 0.0f, 1.0f);
+            raster_array_(i,j,1) = Clamp(raster_array_(i,j,1), 0.0f, 1.0f);
+            raster_array_(i,j,2) = Clamp(raster_array_(i,j,2), 0.0f, 1.0f);
+            raster_array_(i,j,3) = Clamp(raster_array_(i,j,3), 0.0f, 1.0f);
           }
         }
       }

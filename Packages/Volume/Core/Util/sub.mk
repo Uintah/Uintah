@@ -5,7 +5,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Volume/Core/Util
 
 SRCS     += \
-	$(SRCDIR)/SliceTable.cc \
 	$(SRCDIR)/Utils.cc \
 	$(SRCDIR)/ShaderProgramARB.cc \
 	$(SRCDIR)/Pbuffer.cc \

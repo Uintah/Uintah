@@ -30,15 +30,17 @@
 //    Date   : Thu Jul  8 00:04:15 2004
 
 #include <string>
+#include <iostream>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Packages/Volume/Core/Geom/VolumeRenderer.h>
 #include <Packages/Volume/Core/Geom/VolShader.h>
 #include <Packages/Volume/Core/Util/ShaderProgramARB.h>
-#include <Packages/Volume/Core/Util/SliceTable.h>
 #include <Packages/Volume/Core/Util/Pbuffer.h>
 #include <Packages/Volume/Core/Datatypes/Brick.h>
 #include <Core/Util/DebugStream.h>
 
+using std::cerr;
+using std::endl;
 using std::string;
 using SCIRun::DrawInfoOpenGL;
 
@@ -47,8 +49,9 @@ namespace Volume {
 static SCIRun::DebugStream dbg("VolumeRenderer", false);
 
 VolumeRenderer::VolumeRenderer(TextureHandle tex,
-                               ColorMapHandle cmap1, Colormap2Handle cmap2):
-  TextureRenderer(tex, cmap1, cmap2),
+                               ColorMapHandle cmap1, Colormap2Handle cmap2,
+                               int tex_mem):
+  TextureRenderer(tex, cmap1, cmap2, tex_mem),
   shading_(false),
   ambient_(0.5),
   diffuse_(0.5),
@@ -126,14 +129,12 @@ VolumeRenderer::set_adaptive(bool b)
 void
 VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 {
-  //AuditAllocator(default_allocator);
   if(!pre_draw(di, mat, shading_)) return;
   mutex_.lock();
   di_ = di;
   if(di->get_drawtype() == DrawInfoOpenGL::WireFrame ) {
     draw_wireframe();
   } else {
-    //AuditAllocator(default_allocator);
     draw();
   }
   di_ = 0;
@@ -143,30 +144,32 @@ VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 VolumeRenderer::draw()
 {
-  Ray viewRay;
-  compute_view(viewRay);
+  tex_->lock_bricks();
+  
+  Ray view_ray = compute_view();
+  vector<Brick*> bricks;
+  tex_->get_sorted_bricks(bricks, view_ray);
+  if(bricks.size() == 0) return;
 
   if(adaptive_ && ((cmap2_.get_rep() && cmap2_->updating()) || di_->mouse_action))
     set_interactive_mode(true);
   else
     set_interactive_mode(false);
-  
-  vector<Brick*> bricks;
-  tex_->get_sorted_bricks(bricks, viewRay);
-  vector<Brick*>::iterator it = bricks.begin();
-  vector<Brick*>::iterator it_end = bricks.end();
-  BBox brickbounds;
-  tex_->get_bounds(brickbounds);
-  Vector data_size(tex_->max()-tex_->min()+Vector(1.0,1.0,1.0));
+
   double rate = imode_ ? irate_ : sampling_rate_;
-  int slices = (int)(data_size.length()*rate);
-  SliceTable st(brickbounds.min(), brickbounds.max(), viewRay, slices);
-  if(bricks.size() == 0) return;
+  Vector diag = tex_->bbox().diagonal();
+  Vector cell_diag(diag.x()/tex_->nx(), diag.y()/tex_->ny(), diag.z()/tex_->nz());
+  double dt = cell_diag.length()/rate;
+  int num_slices = (int)(diag.length()/dt);
+  
+  Array1<float> vertex(0, 100, num_slices*6);
+  Array1<float> texcoord(0, 100, num_slices*6);
+  Array1<int> size(0, 100, num_slices*6);
   
   //--------------------------------------------------------------------------
 
-  int nc = (*bricks.begin())->data()->nc();
-  int nb0 = (*bricks.begin())->data()->nb(0);
+  int nc = bricks[0]->nc();
+  int nb0 = bricks[0]->nb(0);
   bool use_cmap2 = cmap2_.get_rep() && nc == 2;
   bool use_shading = shading_ && nb0 == 4;
   GLboolean use_fog = glIsEnabled(GL_FOG);
@@ -175,15 +178,15 @@ VolumeRenderer::draw()
   glGetLightfv(GL_LIGHT0+light_, GL_POSITION, light_pos);
   GLfloat clear_color[4];
   glGetFloatv(GL_COLOR_CLEAR_VALUE, clear_color);
-  
+  int vp[4];
+  glGetIntegerv(GL_VIEWPORT, vp);
+
   //--------------------------------------------------------------------------
   // set up blending
 
-  int vp[4];
-  glGetIntegerv(GL_VIEWPORT, vp);
   int psize[2];
-  psize[0] = isPowerOf2(vp[2]) ? vp[2] : nextPowerOf2(vp[2]);
-  psize[1] = isPowerOf2(vp[3]) ? vp[3] : nextPowerOf2(vp[3]);
+  psize[0] = NextPowerOf2(vp[2]);
+  psize[1] = NextPowerOf2(vp[3]);
     
   if(blend_num_bits_ != 8) {
     if(!blend_buffer_ || blend_num_bits_ != blend_buffer_->num_color_bits()
@@ -290,14 +293,11 @@ VolumeRenderer::draw()
     // set shader parameters
     Vector l(light_pos[0], light_pos[1], light_pos[2]);
     //cerr << "LIGHTING: " << pos << endl;
-    double m[16], m_tp[16];
+    double m[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, m);
-    for (int ii=0; ii<4; ii++)
-      for (int jj=0; jj<4; jj++)
-        m_tp[ii*4+jj] = m[jj*4+ii];
     Transform mv;
-    mv.set(m_tp);
-    Transform t = tex_->get_field_transform();
+    mv.set_trans(m);
+    Transform t = tex_->transform();
     l = mv.unproject(l);
     l = t.unproject(l);
     shader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
@@ -306,23 +306,28 @@ VolumeRenderer::draw()
   
   //--------------------------------------------------------------------------
   // render bricks
-  vector<Polygon*> polys;
-  vector<Polygon*>::iterator pit;
-  for( ; it != it_end; it++ ) {
-    for(pit = polys.begin(); pit != polys.end(); pit++) delete *pit;
-    polys.clear();
-    Brick& b = *(*it);
-    double ts[8];
-    for(int i=0; i<8; i++)
-      ts[i] = intersectParam(-viewRay.direction(), b[i], viewRay);
-    sortParameters(ts, 8);
-    double tmin, tmax, dt;
-    st.getParameters(b, tmin, tmax, dt);
-    b.ComputePolys(viewRay, tmin, tmax, dt, ts, polys);
+
+  Transform tform = tex_->transform();
+  double mvmat[16];
+  tform.get_trans(mvmat);
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glMultMatrixd(mvmat);
+  
+  for(unsigned int i=0; i<bricks.size(); i++) {
+    dbg << "Loading brick: " << i << endl;
+    Brick* b = bricks[i];
     load_brick(b);
-    draw_polys(polys, use_fog, blend_num_bits_ > 8 ? blend_buffer_ : 0);
+    vertex.resize(0);
+    texcoord.resize(0);
+    size.resize(0);
+    b->compute_polygons(view_ray, dt, vertex, texcoord, size);
+    draw_polygons(vertex, texcoord, size, false, use_fog,
+                  blend_num_bits_ > 8 ? blend_buffer_ : 0);
   }
 
+  glPopMatrix();
+  
   glDepthMask(GL_TRUE);
 
   //--------------------------------------------------------------------------
@@ -397,65 +402,65 @@ VolumeRenderer::draw()
 
     blend_buffer_->set_use_default_shader(false);
   }
-  
-
   // Look for errors
   GLenum errcode;
   if((errcode=glGetError()) != GL_NO_ERROR) {
     cerr << "VolumeRenderer::end | "
          << (char*)gluErrorString(errcode) << "\n";
   }
+  tex_->unlock_bricks();
 }
 
 void
 VolumeRenderer::draw_wireframe()
 {
-  Ray viewRay;
-  compute_view(viewRay);
-  TextureHandle tex = tex_;
-  Transform field_trans = tex_->get_field_transform();
-  // set double array transposed.  Our matricies are stored transposed 
-  // from OpenGL matricies.
+  tex_->lock_bricks();
+  Ray view_ray = compute_view();
+  Transform tform = tex_->transform();
   double mvmat[16];
-  field_trans.get_trans(mvmat);
+  tform.get_trans(mvmat);
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glMultMatrixd(mvmat);
   glEnable(GL_DEPTH_TEST);
   GLboolean lighting = glIsEnabled(GL_LIGHTING);
   glDisable(GL_LIGHTING);
+  glColor4f(0.8, 0.8, 0.8, 1.0);
   vector<Brick*> bricks;
-  tex_->get_sorted_bricks(bricks, viewRay);
-  vector<Brick*>::iterator it = bricks.begin();
-  vector<Brick*>::iterator it_end = bricks.end();
-  for(; it != it_end; ++it) {
-    Brick& brick = *(*it);
-    glColor4f(0.8, 0.8, 0.8, 1.0);
+  tex_->get_sorted_bricks(bricks, view_ray);
+  for(unsigned int i=0; i<bricks.size(); i++) {
+    Brick& brick = *bricks[i];
     glBegin(GL_LINES);
-    for(int i=0; i<4; i++) {
-      glVertex3d(brick[i].x(), brick[i].y(), brick[i].z());
-      glVertex3d(brick[i+4].x(), brick[i+4].y(), brick[i+4].z());
+    {
+      for(int i=0; i<4; i++) {
+        glVertex3d(brick[i].x(), brick[i].y(), brick[i].z());
+        glVertex3d(brick[i+4].x(), brick[i+4].y(), brick[i+4].z());
+      }
     }
     glEnd();
     glBegin(GL_LINE_LOOP);
-    glVertex3d(brick[0].x(), brick[0].y(), brick[0].z());
-    glVertex3d(brick[1].x(), brick[1].y(), brick[1].z());
-    glVertex3d(brick[3].x(), brick[3].y(), brick[3].z());
-    glVertex3d(brick[2].x(), brick[2].y(), brick[2].z());
+    {
+      glVertex3d(brick[0].x(), brick[0].y(), brick[0].z());
+      glVertex3d(brick[1].x(), brick[1].y(), brick[1].z());
+      glVertex3d(brick[3].x(), brick[3].y(), brick[3].z());
+      glVertex3d(brick[2].x(), brick[2].y(), brick[2].z());
+    }
     glEnd();
     glBegin(GL_LINE_LOOP);
-    glVertex3d(brick[4].x(), brick[4].y(), brick[4].z());
-    glVertex3d(brick[5].x(), brick[5].y(), brick[5].z());
-    glVertex3d(brick[7].x(), brick[7].y(), brick[7].z());
-    glVertex3d(brick[6].x(), brick[6].y(), brick[6].z());
+    {
+      glVertex3d(brick[4].x(), brick[4].y(), brick[4].z());
+      glVertex3d(brick[5].x(), brick[5].y(), brick[5].z());
+      glVertex3d(brick[7].x(), brick[7].y(), brick[7].z());
+      glVertex3d(brick[6].x(), brick[6].y(), brick[6].z());
+    }
     glEnd();
   }
   if(lighting) glEnable(GL_LIGHTING);
-  //glDisable(GL_DEPTH_TEST);
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
+  tex_->unlock_bricks();
 }
 
 #endif // SCI_OPENGL
 
-} // End namespace Volume
+} // namespace Volume

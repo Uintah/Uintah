@@ -33,14 +33,9 @@
 #define TextureRenderer_h
 
 #include <Core/Thread/Mutex.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Ray.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Transform.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomObj.h>
 
-#include <Core/Containers/BinaryTree.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Containers/Array3.h>
 
@@ -49,12 +44,20 @@
 #include <Packages/Volume/Core/Datatypes/Colormap2.h>
 #include <Packages/Volume/Core/Datatypes/CM2Widget.h>
 
+#include <Core/Geometry/Polygon.h>
+
 namespace Volume {
 
 using SCIRun::GeomObj;
+using SCIRun::GeomSave;
 using SCIRun::DrawInfoOpenGL;
 using SCIRun::ColorMap;
+using SCIRun::ColorMapHandle;
+using SCIRun::Material;
 using SCIRun::Mutex;
+using SCIRun::Array2;
+using SCIRun::Array3;
+using SCIRun::Polygon;
 
 class Pbuffer;
 class FragmentProgramARB;
@@ -63,7 +66,8 @@ class VolShaderFactory;
 class TextureRenderer : public GeomObj
 {
 public:
-  TextureRenderer(TextureHandle tex, ColorMapHandle cmap1, Colormap2Handle cmap2);
+  TextureRenderer(TextureHandle tex, ColorMapHandle cmap1, Colormap2Handle cmap2,
+                  int tex_mem);
   TextureRenderer(const TextureRenderer&);
   virtual ~TextureRenderer();
 
@@ -87,14 +91,10 @@ public:
 #endif
   
   virtual GeomObj* clone() = 0;
-  virtual void get_bounds(BBox& bb){ tex_->get_bounds( bb ); }
+  virtual void get_bounds(BBox& bb) { tex_->get_bounds(bb); }
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
-
-  //TextureHandle texH() const { return tex_; }
-  //DrawInfoOpenGL* di() const { return di_; }
-  //bool interp() const { return interp_; }
+  virtual bool saveobj(std::ostream&, const std::string& format, GeomSave*);
 
 protected:
   TextureHandle tex_;
@@ -131,10 +131,25 @@ protected:
   Pbuffer* blend_buffer_;
   int blend_num_bits_;
   bool use_blend_buffer_;
+  int free_tex_mem_;
   
-  void compute_view(Ray& ray);
-  void load_brick(Brick& b);
-  void draw_polys(vector<Polygon *> polys, bool z, Pbuffer* buffer);
+  struct TexParam
+  {
+    int nx, ny, nz, nb;
+    uint id;
+    Brick* brick;
+    int comp;
+    TexParam() : nx(0), ny(0), nz(0), nb(0), id(0), brick(0), comp(0) {}
+    TexParam(int x, int y, int z, int b, uint i)
+      : nx(x), ny(y), nz(z), nb(b), id(i), brick(0), comp(0) {}
+  };
+  vector<TexParam> tex_pool_;
+  
+  Ray compute_view();
+  void load_brick(Brick* b);
+  void draw_polygons(Array1<float>& vertex, Array1<float>& texcoord, Array1<int>& poly,
+                     bool normal, bool fog, Pbuffer* buffer);
+
   void build_colormap1();
   void build_colormap2();
   void bind_colormap1();

@@ -6,8 +6,8 @@ SRCDIR := Packages/Volume/Core/Geom
 SRCS   += \
 	$(SRCDIR)/TextureRenderer.cc \
 	$(SRCDIR)/VolumeRenderer.cc \
-	$(SRCDIR)/SliceRenderer.cc \
 	$(SRCDIR)/VolShader.cc \
+#	$(SRCDIR)/SliceRenderer.cc \
 #[INSERT NEW CODE FILE HERE]
 
 
