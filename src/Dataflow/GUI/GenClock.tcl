@@ -294,16 +294,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	
 	pack $w.location -fill x -expand yes -side top
 
-
-# Misc
-	frame $w.misc
-
-        button $w.misc.execute -text "Execute" -command "$this-c needexecute"
-        button $w.misc.close -text Close -command "destroy $w"
-        pack $w.misc.execute $w.misc.close -side left -padx 25 
- 
-	pack $w.misc
-
+	makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
 
@@ -311,12 +302,9 @@ itcl_class SCIRun_Visualization_GenClock {
 	 global $color
 	 set window .ui[modname]
 	 if {[winfo exists $window.color]} {
-	     raise $window.color
-	     wm deiconify $window.color
+	     SciRaise $window.color
 	     return
 	 } else {
-	     toplevel $window.color
-	     wm title $window.color "Color Chooser"
 	     makeColorPicker $window.color $color \
 		     "$this setColor $col $color $colMsg" \
 		     "destroy $window.color"
