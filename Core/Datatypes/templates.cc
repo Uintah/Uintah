@@ -49,6 +49,10 @@ template class GenericField<LatVolMesh, FData3d<Vector> >;
 #include <Core/Datatypes/TriSurfMesh.h>
 template class GenericField<TriSurfMesh, vector<double> >;
 
+#include <Core/Datatypes/PropertyManager.h>
+template class Property<string>;
+template class Property<pair<double,double> >;
+
 #ifdef __sgi
 #pragma reset woff 1468
 #endif

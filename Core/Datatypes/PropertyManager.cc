@@ -17,6 +17,14 @@
 namespace SCIRun {
 
 
+PersistentTypeID 
+PropertyBase::type_id("PropertyBase", "Datatype", maker);
+
+Persistent* PropertyBase::maker()
+{
+  return scinew PropertyBase;
+}
+
 /*
  * Get
  */
@@ -85,6 +93,28 @@ PropertyManager::io(Piostream &stream)
 {
   stream.begin_class("PropertyManager", PROPERTYMANAGER_VERSION);
 
+  Pio( stream, size_ );
+
+  if ( stream.writing() ) {
+    map_type::iterator i = properties_.begin(); 
+    while ( i != properties_.end() ) {
+      string name = i->first;
+      Pio(stream, name);
+      Persistent *p = i->second;
+      stream.io( p, PropertyBase::type_id );
+      //i->second->io( stream );
+      ++i;
+    }
+  }
+  else {
+    string name;
+    Persistent *p = 0;
+    for (int i=0; i<size_; i++ ) {
+      Pio(stream, name );
+      stream.io( p, PropertyBase::type_id );
+      properties_[name] = static_cast<PropertyBase *>(p);
+    }
+  }
   // TODO: implement this.  read/write all properties not marked temporary.
 
   stream.end_class();

@@ -24,6 +24,7 @@ Field::io(Piostream& stream){
   stream.begin_class("Field", FIELD_VERSION);
   data_location &tmp = data_at_;
   Pio(stream, (unsigned int&)tmp);
+  PropertyManager::io(stream);
   stream.end_class();
 }
 
