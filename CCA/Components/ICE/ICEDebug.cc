@@ -9,6 +9,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/Util/DebugStream.h>
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>
@@ -18,6 +19,97 @@ using std::ifstream;
 using std::cerr;
 using namespace SCIRun;
 using namespace Uintah;
+
+//__________________________________
+//  To turn on normal output
+//  setenv SCI_DEBUG "ICE_NORMAL_COUT:+"
+//  ICE_NORMAL_COUT:  dumps out during problemSetup
+static DebugStream cout_norm("ICE_NORMAL_COUT", false);
+/*_______________________________________________________________________
+ Function:  printData_problemSetup-
+_______________________________________________________________________ */
+void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
+{
+
+  //__________________________________
+  // Find the switches
+  ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
+  if (debug_ps) {
+    IntVector orig(0,0,0);
+    debug_ps->getWithDefault("dbg_GnuPlot",       d_dbgGnuPlot, false);
+    debug_ps->getWithDefault("dbg_var1",          d_dbgVar1, 0);   
+    debug_ps->getWithDefault("dbg_var2",          d_dbgVar2, 0);  
+    debug_ps->getWithDefault("dbg_timeStart",     d_dbgStartTime,0);
+    debug_ps->getWithDefault("dbg_timeStop",      d_dbgStopTime, 1);
+    debug_ps->getWithDefault("dbg_outputInterval",d_dbgOutputInterval,0.0);
+    debug_ps->getWithDefault("dbg_BeginIndex",    d_dbgBeginIndx,orig);
+    debug_ps->getWithDefault("dbg_EndIndex",      d_dbgEndIndx,  orig);
+    debug_ps->getWithDefault("dbg_SigFigs",       d_dbgSigFigs, 5 );
+    debug_ps->getWithDefault("dbg_Level",         d_dbgLevel,   0);
+    debug_ps->get("dbg_Matls",                    d_dbgMatls);
+
+    for (ProblemSpecP child = debug_ps->findBlock("debug"); child != 0;
+        child = child->findNextBlock("debug")) {
+      map<string,string> debug_attr;
+      child->getAttributes(debug_attr);
+      if (debug_attr["label"]      == "switchDebugInitialize")
+       switchDebugInitialize            = true;
+      else if (debug_attr["label"] == "switchDebug_EQ_RF_press")
+       switchDebug_EQ_RF_press          = true;
+      else if (debug_attr["label"] == "switchDebug_PressDiffRF")
+       switchDebug_PressDiffRF          = true;
+      else if (debug_attr["label"] == "switchDebug_vel_FC")
+       switchDebug_vel_FC               = true;
+      else if (debug_attr["label"] == "switchDebug_Temp_FC")
+       switchDebug_Temp_FC               = true;
+      else if (debug_attr["label"] == "switchDebug_Exchange_FC")
+       switchDebug_Exchange_FC          = true;
+      else if (debug_attr["label"] == "switchDebug_explicit_press")
+       switchDebug_explicit_press       = true;
+      else if (debug_attr["label"] == "switchDebug_setupMatrix")
+       switchDebug_setupMatrix          = true;
+      else if (debug_attr["label"] == "switchDebug_setupRHS")
+       switchDebug_setupRHS             = true;
+      else if (debug_attr["label"] == "switchDebug_updatePressure")
+       switchDebug_updatePressure       = true;
+      else if (debug_attr["label"] == "switchDebug_computeDelP")
+       switchDebug_computeDelP          = true;
+      else if (debug_attr["label"] == "switchDebug_PressFC")
+       switchDebug_PressFC              = true;
+      else if (debug_attr["label"] == "switchDebugLagrangianValues")
+       switchDebugLagrangianValues      = true;
+      else if (debug_attr["label"] == "switchDebugLagrangianSpecificVol")
+       switchDebugLagrangianSpecificVol = true;
+      else if (debug_attr["label"] == "switchDebugMomentumExchange_CC")
+       switchDebugMomentumExchange_CC   = true;
+      else if (debug_attr["label"] == "switchDebugSource_Sink")
+       switchDebugSource_Sink           = true;
+      else if (debug_attr["label"] == "switchDebug_advance_advect")
+       switchDebug_advance_advect       = true;
+      else if (debug_attr["label"] == "switchTestConservation")
+        switchTestConservation           = true;
+    }
+  }
+ 
+  d_dbgNextDumpTime = d_dbgStartTime;
+  if(d_dbgStartTime == 0){ 
+    d_dbgTime_to_printData = true;
+    d_dbgNextDumpTime = d_dbgOutputInterval;
+  }
+  if(switchDebugInitialize){ 
+    d_dbgTime_to_printData = true;
+  }
+  
+  cout_norm << "Pulled out the debugging switches from input file" << endl;
+  cout_norm<< "  debugging starting time "  <<d_dbgStartTime<<endl;
+  cout_norm<< "  debugging stopping time "  <<d_dbgStopTime<<endl;
+  cout_norm<< "  debugging output interval "<<d_dbgOutputInterval<<endl;
+  cout_norm<< "  debugging variable 1 "     <<d_dbgVar1<<endl;
+  cout_norm<< "  debugging variable 2 "     <<d_dbgVar2<<endl; 
+  for (int i = 0; i<(int) d_dbgMatls.size(); i++) {
+    cout_norm << "  d_dbg_matls = " << d_dbgMatls[i] << endl;
+  }
+}
 
 /*_______________________________________________________________________ 
  Function:  printData--  convience function
@@ -97,23 +189,12 @@ void    ICE::printData_driver( int matl,
   const Level* level = patch->getLevel();
   int levelIndx = level->getIndex();
     
-  d_dbgTime= dataArchiver->getCurrentTime();
-    
   bool onRightLevel = false;
   if(levelIndx == d_dbgLevel || d_dbgLevel == -9) {
     onRightLevel = true;
   }
   
-  if ( onRightLevel     &&
-       dumpThisMatl == true        &&
-       d_dbgTime >= d_dbgStartTime && 
-       d_dbgTime <= d_dbgStopTime  &&
-       d_dbgTime >= d_dbgNextDumpTime) {
-    
-    // only after 0 timestep
-    if (dataArchiver->getCurrentTime() > 0 ){ 
-      d_dbgOldTime = d_dbgTime;      
-    }
+  if ( onRightLevel && dumpThisMatl == true && d_dbgTime_to_printData ) {
     IntVector low, high; 
 
     adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
@@ -201,25 +282,14 @@ void    ICE::printVector(int matl,
     }
   } 
   const Level* level = patch->getLevel();
-  int levelIndx = level->getIndex();
-  d_dbgTime= dataArchiver->getCurrentTime();  
+  int levelIndx = level->getIndex(); 
   
   bool onRightLevel = false;
   if(levelIndx == d_dbgLevel || d_dbgLevel == -9) {
     onRightLevel = true;
   }
   
-  if ( onRightLevel     &&
-       dumpThisMatl == true        &&
-       d_dbgTime >= d_dbgStartTime && 
-       d_dbgTime <= d_dbgStopTime  &&
-       d_dbgTime >= d_dbgNextDumpTime) {
-       
-    // only after 0 timestep
-    if (dataArchiver->getCurrentTime() > 0 ){ 
-      d_dbgOldTime = d_dbgTime;      
-    }
-        
+  if ( onRightLevel && dumpThisMatl == true && d_dbgTime_to_printData) {        
     IntVector low, high; 
 
     adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
@@ -310,23 +380,13 @@ void    ICE::printStencil( int /*matl*/,
 {
   const Level* level = patch->getLevel();
   int levelIndx = level->getIndex();
-  d_dbgTime= dataArchiver->getCurrentTime();
     
   bool onRightLevel = false;
   if(levelIndx == d_dbgLevel || d_dbgLevel == -9) {
     onRightLevel = true;
   }
   
-  if ( onRightLevel     &&
-       d_dbgTime >= d_dbgStartTime && 
-       d_dbgTime <= d_dbgStopTime  &&
-       d_dbgTime >= d_dbgNextDumpTime) {
-
-    // only after 0 timestep
-    if (dataArchiver->getCurrentTime() > 0 ){ 
-      d_dbgOldTime = d_dbgTime;      
-    }     
-
+  if ( onRightLevel && d_dbgTime_to_printData) {
     IntVector low, high; 
     adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
                         low, high); 
