@@ -56,7 +56,7 @@ class SCICORESHARE DenseMatrix : public Matrix {
 public:
   //! Constructors
   DenseMatrix();
-  DenseMatrix(int, int);
+  DenseMatrix(int r, int c);
   DenseMatrix(const DenseMatrix&);
   DenseMatrix(const Transform &t);
 
@@ -71,8 +71,8 @@ public:
   DenseMatrix& operator=(const DenseMatrix&);
   
   //! slow setters/getter for polymorphic operations
-  virtual double& get(int, int) const;
-  virtual void   put(int, int, const double&);
+  virtual double& get(int r, int c) const;
+  virtual void   put(int r, int c, const double &val);
   
   virtual DenseMatrix* transpose();
   
