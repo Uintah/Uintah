@@ -117,9 +117,9 @@ void DumpAllocator(Allocator*, const char* filename = "alloc.dump");
 #ifdef _WIN32
 #define scinew new
 #else
-void* operator new(size_t, SCIRun::Allocator*, char*);
-void* operator new[](size_t, SCIRun::Allocator*, char*);
-#define scinew new(SCIRun::default_allocator, __FILE__)
+void* operator new(size_t, SCIRun::Allocator*, char*, int);
+void* operator new[](size_t, SCIRun::Allocator*, char*, int);
+#define scinew new(SCIRun::default_allocator, __FILE__, __LINE__)
 #endif
 
 

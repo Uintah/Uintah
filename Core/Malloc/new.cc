@@ -59,14 +59,14 @@ extern "C" {
     {
 	if(!default_allocator)
 	    MakeDefaultAllocator();
-	return default_allocator->alloc(size, "unknown - operator new");
+	return default_allocator->alloc(size, "unknown - operator new", 0);
     }
 
     void* __nwa__GUi(size_t size)
     {
 	if(!default_allocator)
 	    MakeDefaultAllocator();
-	return default_allocator->alloc(size, "unknown - operator new");
+	return default_allocator->alloc(size, "unknown - operator new", 0);
     }
 }
 #endif
@@ -103,28 +103,28 @@ void* operator new(size_t size) throw(std::bad_alloc)
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
-    return default_allocator->alloc(size, default_new_tag);
+    return default_allocator->alloc(size, default_new_tag, 0);
 }
 
 void* operator new[](size_t size) throw(std::bad_alloc)
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
-    return default_allocator->alloc(size, default_new_array_tag);
+    return default_allocator->alloc(size, default_new_array_tag, 0);
 }
 
 void* operator new(size_t size, const std::nothrow_t&) throw()
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
-    return default_allocator->alloc(size, "unknown - nothrow operator new");
+    return default_allocator->alloc(size, "unknown - nothrow operator new", 0);
 }
 
 void* operator new[](size_t size, const std::nothrow_t&) throw()
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
-    return default_allocator->alloc(size, "unknown - nothrow operator new[]");
+    return default_allocator->alloc(size, "unknown - nothrow operator new[]", 0);
 }
 
 void operator delete(void* ptr) throw()
@@ -141,33 +141,33 @@ void operator delete[](void* ptr) throw()
     default_allocator->free(ptr);
 }
 
-void* operator new(size_t size, Allocator* a, char* tag)
+void* operator new(size_t size, Allocator* a, char* tag, int linenum)
 {
     if(!a){
 	if(!default_allocator)
 	    MakeDefaultAllocator();
 	a=default_allocator;
     }
-    return a->alloc(size, tag);
+    return a->alloc(size, tag, linenum);
 }
 
-void* operator new[](size_t size, Allocator* a, char* tag)
+void* operator new[](size_t size, Allocator* a, char* tag, int linenum)
 {
     if(!a){
 	if(!default_allocator)
 	    MakeDefaultAllocator();
 	a=default_allocator;
     }
-    return a->alloc(size, tag);
+    return a->alloc(size, tag, linenum);
 }
 #else
 
-void* operator new(size_t size, Allocator*, char*)
+void* operator new(size_t size, Allocator*, char*, unsigned int)
 {
     return new char[size];
 }
 
-void* operator new[](size_t size, Allocator*, char*)
+void* operator new[](size_t size, Allocator*, char*, unsigned int)
 {
     return new char[size];
 }
