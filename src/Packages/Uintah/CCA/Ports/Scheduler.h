@@ -91,8 +91,16 @@ WARNING
 					    const vector<vector<const VarLabel*> >& labels,
 					    const VarLabel* new_posLabel,
 					    const vector<vector<const VarLabel*> >& new_labels,
+					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls) = 0;
 
+
+    // Get the expected extents that may be needed for a particular variable
+    // on a particular patch (which should include expected ghost cells.
+    virtual void
+    getExpectedExtents(const VarLabel* label, const Patch* patch,
+		       IntVector& lowIndex, IntVector& highIndex) const = 0;
+    
     // Makes and returns a map that maps strings to VarLabels of
     // that name and a list of material indices for which that
     // variable is valid (at least according to d_allcomps).
