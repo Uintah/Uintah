@@ -1,2 +1,4 @@
 Makefile Makefile.bak
+*?Reader.h
+*?Reader.cc
 .~*
