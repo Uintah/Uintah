@@ -218,7 +218,7 @@ void PartToGeom::execute()
   // default colormap--nobody has scaled it.
   if( !cmap->IsScaled()) {
     int i;
-    for( i = 0; i < scalars.size(); i++ ) {
+    for( i = 0; i < (int)scalars.size(); i++ ) {
       max = ( scalars[i] > max ) ? scalars[i] : max;
       min = ( scalars[i] < min ) ? scalars[i] : min;
     }
@@ -236,7 +236,7 @@ void PartToGeom::execute()
     int nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
     GeomGroup *obj = scinew GeomGroup;
     int count = 0;
-    for (int i=0; i<pos.size();i++) {
+    for (int i=0; i<(int)pos.size();i++) {
       count++;
       if (count == show_nth.get() ){ 
 	GeomSphere *sp = scinew GeomSphere(pos[i].asPoint(),radius.get(),
@@ -244,7 +244,7 @@ void PartToGeom::execute()
       // Default ColorMap ie. unscaled n autoscale values.
       //      if( cmap->isScaled() ) {
 	
-//  	int index = cmap->rcolors.size() * ( (scalars[i] - min) /
+//  	int index = cmap->(int)rcolors.size() * ( (scalars[i] - min) /
 // 					     (max - min + 1) ) ;
 // 	obj->add( scinew GeomMaterial(sp,scinew Material( Color(1,1,1),
 // 							  cmap->rcolors[index],
@@ -263,7 +263,7 @@ void PartToGeom::execute()
 					  drawcylinders.get(),
 					  shaft_rad.get());
       //hard coded for now.
-      for (int j = 0; j < pos.size(); j++){
+      for (int j = 0; j < (int)pos.size(); j++){
 	if(vectors[j].length2() * length_scale.get() > 1e-3 )
 	  arrows->add( pos[j].asPoint(), vectors[j]*length_scale.get(),
 		       outcolor, outcolor, outcolor);
@@ -279,7 +279,7 @@ void PartToGeom::execute()
     GeomPts *pts = scinew GeomPts(pos.size());
     pts->pickable = 1;
     int count = 0;
-    for(int i=0;i<pos.size();i++) {
+    for(int i=0;i<(int)pos.size();i++) {
       count++;
       if (count == show_nth.get() ){ 
 	pts->add(pos[i].asPoint(), (cmap->lookup(scalars[i]))->diffuse);
@@ -296,7 +296,7 @@ void PartToGeom::execute()
 					  drawcylinders.get(),
 					  shaft_rad.get());
       //hard coded for now.
-      for (int j = 0; j < pos.size(); j++){
+      for (int j = 0; j < (int)pos.size(); j++){
 	if(vectors[j].length2() * length_scale.get() > 1e-3 )
 	  arrows->add( pos[j].asPoint(), vectors[j]*length_scale.get(),
 		       outcolor, outcolor, outcolor);
@@ -343,6 +343,9 @@ extern "C" Module* make_PartToGeom( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.15  2000/12/05 16:03:37  jas
+// Remove g++ warnings.
+//
 // Revision 1.14  2000/08/11 16:11:10  bigler
 // Replace int index parameter in geom_pick function with GeomObj*.
 // Changed function to acces index from GeomObj*.

@@ -113,7 +113,7 @@ void ParticleGridVisControl::tcl_command( TCLArgs& args, void* userdata)
 	Array1<clString> varnames;
 	mat->getScalarNames( varnames );
 	result = varnames[0];
-	for( i = 1; i < varnames.size(); i++) {
+	for( i = 1; i < (int)varnames.size(); i++) {
 	  result += clString( " " + varnames[i]);
 	}
 	args.result( result );
@@ -135,7 +135,7 @@ void ParticleGridVisControl::tcl_command( TCLArgs& args, void* userdata)
 	Array1<clString> varnames;
 	mat->getVectorNames( varnames );
 	result = varnames[0];
-	for( i = 1; i < varnames.size(); i++) {
+	for( i = 1; i < (int)varnames.size(); i++) {
 	  result += clString( " " + varnames[i]);
 	}
 	args.result( result );
@@ -298,7 +298,7 @@ void ParticleGridVisControl::checkVars(ParticleGridReaderHandle reader)
       setVars(tpr);
       return;
     } else {
-      for( i = 0; i < str1.size(); i++)
+      for( i = 0; i < (int)str1.size(); i++)
 	{
 	  if( str1[i] != str2[i] ) {
 	    setVars(tpr);
@@ -313,7 +313,7 @@ void ParticleGridVisControl::checkVars(ParticleGridReaderHandle reader)
       setVars(tpr);
       return;
     } else {
-      for( i = 0; i < str1.size(); i++)
+      for( i = 0; i < (int)str1.size(); i++)
 	{
 	  if( str1[i] != str2[i] ) {
 	    setVars(tpr);
@@ -344,7 +344,7 @@ void ParticleGridVisControl::callback( int index)
   
     ps->list_scalars( vars );
     int timestep= 0;
-    for(i = 0; i < vars.size(); i++){
+    for(i = 0; i < (int)vars.size(); i++){
       int sid = ps->find_scalar( vars[i] );
       double scale = ps->getScalar(timestep, sid, index);
       TCL::execute( id + " infoAdd " + idx + " "
@@ -354,7 +354,7 @@ void ParticleGridVisControl::callback( int index)
 
     vars.remove_all();
     ps->list_vectors( vars );
-    for(i = 0; i < vars.size(); i++) {
+    for(i = 0; i < (int)vars.size(); i++) {
       int vid = ps->find_vector( vars[i] );
       Vector v = ps->getVector(timestep, vid, index);
       TCL::execute( id + " infoAdd " + idx + " " + "0" + " " +
@@ -379,7 +379,7 @@ void ParticleGridVisControl::graph(clString idx, clString var)
       tpr->GetParticleData(atoi(idx()), varId, pMaterial.get(), false, values);
     
       Array1<double> vs;
-      for(i = 0; i < values.size(); i++)
+      for(i = 0; i < (int)values.size(); i++)
 	vs.add( values[i] );
     
       ostringstream ostr;
