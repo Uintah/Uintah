@@ -67,7 +67,7 @@ void PCAGridSpheres::shade(Color& result, const Ray& ray,
   // get the number of the sphere which was intersected you need to
   // divide by the number of data items.
   int cell=*(int*)hit.scratchpad;
-  int sphere_index = cell/ndata;
+  int sphere_index = cell / ndata;
 
   // Get the texture index
   int tex_index;
@@ -76,7 +76,7 @@ void PCAGridSpheres::shade(Color& result, const Ray& ray,
   else
     tex_index = sphere_index;
 
-  if (tex_index==-1) {
+  if (tex_index < 0) {
     // Solid black texture
     result=Color(0, 0, 0);
   } else if (tex_index >= nvecs) {
@@ -110,14 +110,17 @@ void PCAGridSpheres::shade(Color& result, const Ray& ray,
     v=0;
 
   float luminance = interp_luminance(u, v, tex_index);
-  Color surface;
   if (cmap && dpy->shade_method == 1) {
-    surface = surface_color(hit);
+    result = surface_color(hit) * luminance;
+  } else if (dpy->shade_method == 2) {
+    result = color * luminance;
+  } else if (dpy->shade_method == 3) {
+    lambertianshade(result, color, Color(luminance, luminance, luminance), ray, hit, depth, cx);
   } else {
-    surface = color;
+    lambertianshade(result, surface_color(hit),
+                    Color(luminance, luminance, luminance),
+                    ray, hit, depth, cx);
   }
-
-  result = surface * luminance;
 }
 
 // Given the pixel and texture index compute the pixel's luminance
