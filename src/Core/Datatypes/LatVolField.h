@@ -115,7 +115,6 @@ FData3d<Data>::get_type_name(int n) const
 
 
 
-
 template <class Data>
 class LatVolField : public GenericField< LatVolMesh, FData3d<Data> >
 {
@@ -130,11 +129,13 @@ public:
   virtual VectorFieldInterface* query_vector_interface() const;
   virtual TensorFieldInterface* query_tensor_interface() const;
 
-  static const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const;
+  //! Persistent IO
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
-  virtual const TypeDescription* get_type_description() const;
+
+  static const string type_name(int n = -1);
+  virtual const string get_type_name(int n = -1) const { return type_name(n); }
+  virtual const TypeDescription* get_type_description(int n = -1) const;
 
   // LatVolField Specific methods.
   bool get_gradient(Vector &, const Point &);
@@ -237,33 +238,51 @@ LatVolField<T>::query_tensor_interface() const
 
 template <class Data>
 const string
-LatVolField<Data>::get_type_name(int n) const
+LatVolField<Data>::type_name(int n)
 {
-  return type_name(n);
-}
+  ASSERT((n >= -1) && n <= 1);
+  if (n == -1)
+  {
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    return name;
 
-template <class T>
-const TypeDescription* 
-get_type_description(LatVolField<T>*)
+  }
+  else if (n == 0)
+  {
+    return "LatVolField";
+  }
+  else
+  {
+    return find_type_name((Data *)0);
+  }
+} 
+
+template <class T> 
+const TypeDescription*
+LatVolField<T>::get_type_description(int n) const
 {
-  static TypeDescription* td = 0;
-  static string name("LatVolField");
+  ASSERT((n >= -1) && n <= 1);
+
+  TypeDescription* td = 0;
+  static string name( type_name(0) );
   static string namesp("SCIRun");
   static string path(__FILE__);
+
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
-    (*subs)[0] = sub;
-    td = scinew TypeDescription(name, subs, path, namesp);
+    if (n == -1) {
+      const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+      TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+      (*subs)[0] = sub;
+      td = scinew TypeDescription(name, subs, path, namesp);
+    }
+    else if(n == 0) {
+      td = scinew TypeDescription(name, 0, path, namesp);
+    }
+    else {
+      td = (TypeDescription *) SCIRun::get_type_description((T*)0);
+    }
   }
   return td;
-}
-
-template <class T>
-const TypeDescription* 
-LatVolField<T>::get_type_description() const 
-{
-  return SCIRun::get_type_description((LatVolField<T>*)0);
 }
 
 #define LAT_VOL_FIELD_VERSION 3
@@ -299,30 +318,6 @@ LatVolField<Data>::io(Piostream &stream)
 	  fdata()(i,j,k)=temp(k,j,i);
   }
 }
-
-
-template <class Data>
-const string
-LatVolField<Data>::type_name(int n)
-{
-  ASSERT((n >= -1) && n <= 1);
-  if (n == -1)
-  {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
-    return name;
-
-  }
-  else if (n == 0)
-  {
-    return "LatVolField";
-  }
-  else
-  {
-    return find_type_name((Data *)0);
-  }
-} 
-
-
 
 
 //! compute the gradient g, at point p

@@ -51,7 +51,7 @@ public:
   //! Required virtual functions
   virtual MeshHandle mesh() const = 0;
   virtual void mesh_detach() = 0;
-  virtual const TypeDescription* get_type_description() const = 0; 
+  virtual const TypeDescription* get_type_description(int n = -1) const = 0; 
   
 
   //! Required interfaces
@@ -60,8 +60,9 @@ public:
   virtual TensorFieldInterface* query_tensor_interface() const;
 
   //! Persistent I/O.
-  virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
+  virtual void io(Piostream &stream);
+
   //! All instantiable classes need to define this.
   virtual const string get_type_name(int n = -1) const = 0;
   virtual bool is_scalar() const = 0;

@@ -99,7 +99,7 @@ public:
   static  PersistentTypeID type_id;
   static  const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const;
-  virtual const TypeDescription* get_type_description() const;
+  virtual const TypeDescription* get_type_description(int n = -1) const;
 
   // -- mutability --
   virtual void freeze();
@@ -113,6 +113,7 @@ private:
   //! Data container.
   fdata_type                   fdata_;
 }; 
+
 
 template <class Mesh, class FData>
 void
@@ -184,32 +185,6 @@ GenericField<Mesh, FData>::maker()
 template <class Mesh, class FData>
 PersistentTypeID 
 GenericField<Mesh, FData>::type_id(type_name(-1), "Field", maker);
-
-
-template <class Mesh, class FData>
-const string GenericField<Mesh, FData>::type_name(int n)
-{
-  ASSERT((n >= -1) && n <= 2);
-  if (n == -1)
-  {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNM
-      + type_name(2) + FTNE;
-    return name;
-  }
-  else if (n == 0)
-  {
-    static const string nm("GenericField");
-    return nm;
-  }
-  else if (n == 1)
-  {
-    return find_type_name((Mesh *)0);
-  }
-  else
-  {
-    return find_type_name((FData *)0);
-  }
-}
 
 
 template <class Mesh, class FData>
@@ -398,20 +373,43 @@ GenericField<Mesh, FData>::get_typed_mesh() const
 }
 
 template <class Mesh, class FData>
+const string GenericField<Mesh, FData>::type_name(int n)
+{
+  ASSERT((n >= -1) && n <= 2);
+  if (n == -1)
+  {
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNM
+      + type_name(2) + FTNE;
+    return name;
+  }
+  else if (n == 0)
+  {
+    static const string nm("GenericField");
+    return nm;
+  }
+  else if (n == 1)
+  {
+    return find_type_name((Mesh *)0);
+  }
+  else
+  {
+    return find_type_name((FData *)0);
+  }
+}
+
+template <class Mesh, class FData>
 const string
 GenericField<Mesh, FData>::get_type_name(int n) const
 {
   return type_name(n);
 }
 
-
 template <class Mesh, class FData>
 const TypeDescription *
-GenericField<Mesh, FData>::get_type_description() const
+GenericField<Mesh, FData>::get_type_description(int n) const
 {
-  ASSERTFAIL("TD MUST BE AT LEAF LEVEL OF INHERITENCE"); 
+  ASSERTFAIL("TD MUST BE AT LEAF LEVEL OF INHERITENCE");
 }
-
 
 template <class Mesh, class FData>
 const TypeDescription *
