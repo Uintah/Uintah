@@ -19,7 +19,6 @@ PSELIBS := \
 	Core/Exceptions  \
 	Core/Geom        \
 	Core/Geometry    \
-	Core/GLVolumeRenderer \
 	Core/Persistent  \
 	Core/Datatypes   \
 	Core/Containers  \
