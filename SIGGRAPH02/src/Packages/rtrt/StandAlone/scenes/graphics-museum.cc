@@ -1589,7 +1589,7 @@ void build_history_hall (Group* main_group, Group* no_shadow_group,
 				(copter_max.z()+copter_min.z())/2.)); // center copter over 0
   copterT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
   copterT.pre_rotate(5*M_PI_4,Vector(0,0,1));  // orient heli
-  double copter_scale = .4*2./(sqrt(copter_diag.x()*copter_diag.x()+copter_diag.z()*copter_diag.z()));
+  double copter_scale = .4*2.*0.9/(sqrt(copter_diag.x()*copter_diag.x()+copter_diag.z()*copter_diag.z()));
   copterT.pre_scale(Vector(copter_scale,
 			  copter_scale,
 			  copter_scale));
@@ -1697,17 +1697,17 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
 		    Vector(0.,0.,0.001000));
 //    davidT.pre_translate (Vector(-13.256088,-20.334214,5.427));
   davidT.pre_translate (Vector(-13.256088,-20.334214,5.127));
-  davidT.print();
+  //  davidT.print();
   read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_1mm.ply",davidg,&davidT);
 #else
   GridTris* davidg = new GridTris(david_white, cells, depth,
                                   "/usr/sci/data/Geometry/Stanford_Sculptures/david_2mm-grid"); 
   Transform davidT (Point(0,0,0),
 		    Vector(0.001000,0.,0.),
-		    Vector(0.,0.001,0.001000),
+		    Vector(0.,0.,0.001000),
 		    Vector(0.,-0.001000,0.));
   davidT.pre_translate (Vector(-14.079300,-33.336876,3.586000));
-  davidT.print();
+  //  davidT.print();
   read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_2mm.ply",davidg,&davidT);  
 #endif
 
@@ -1736,8 +1736,8 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
   davidT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
   davidT.pre_scale(Vector(.001,.001,.001)); // make units meters
   davidT.pre_translate(dav_ped_top.asVector());
-  printf ("\n\n*********************************\n\n");
-  davidT.print();
+  //  printf ("\n\n*********************************\n\n");
+  //  davidT.print();
   
   davidg->transform(davidT);
 
@@ -2122,13 +2122,13 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   int dragon_depth=1;
 #endif
 
-  printf ("\n\n*********************************\n\n");
+  //  printf ("\n\n*********************************\n\n");
   Transform dragonT (Point(0,0,0),
 		     Vector(0.,-3.375918,0.),
 		     Vector(0.,0.,3.375918),
 		     Vector(-3.375918,0.,0.));
   dragonT.pre_translate (Vector(-13.015208,-14.020845,0.821603));
-  dragonT.print();
+  //  dragonT.print();
 
   Color dragon_green(.15,.7,.15);
   Material* shiny_green = new Phong(dragon_green,
@@ -2283,13 +2283,13 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   int buddha_cells=5;
   int buddha_depth=2;
 
-  printf ("\n\n*********************************\n\n");
+  //  printf ("\n\n*********************************\n\n");
   Transform buddhaT (Point(0,0,0),
 		     Vector(0.,6.518254,0.),
 		     Vector(0.,0.,6.518254),
 		     Vector(6.518254,0.,0.));
   buddhaT.pre_translate (Vector(-17.956413,-12.964477,-0.024539));
-  buddhaT.print();
+  //  buddhaT.print();
 
   // read in the buddha geometry
   Color buddha_diff(113./255.,  53./255.,  17./255.);
@@ -2405,13 +2405,13 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   int venus_cells=5;
   int venus_depth=2;
 
-  printf ("\n\n*********************************\n\n");
+  //  printf ("\n\n*********************************\n\n");
   Transform venusT (Point(0,0,0),
 		    Vector(5.537701,0.,0.),
 		    Vector(0.,0.,5.537701),
 		    Vector(0.,-5.537701,0.));
   venusT.pre_translate (Vector(-17.990726,-6.970150,0.335281));
-  venusT.print();
+  //  venusT.print();
 
   Material* flat_white = new LambertianMaterial(Color(.8,.8,.8));
   GridTris* venusg = new GridTris(flat_white,venus_cells,venus_depth,
@@ -2555,7 +2555,8 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
 			  sign_ratio,scene);
 
 #ifdef INSERT_SPIRAL
-  Material* silver = new MetalMaterial(Color(0.7,0.73,0.8));
+  //  Material* silver = new MetalMaterial(Color(0.7,0.73,0.8));
+  Material* silver = new LambertianMaterial(Color(0.2,0.2,0.8));
   l1 = new Light(npr_ped_top+Vector(1,-1,3),Color(1.,1.,1.),0,0.7);
   l2 = new Light(npr_ped_top+Vector(-1,-1,3),Color(1.,1.,1.),0,0.7);
   l1->name_ = "NPR 1";
@@ -2582,7 +2583,7 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
 
   partT.pre_translate(-Vector((part_max.x()+part_min.x())/2.,part_min.y(),(part_max.z()+part_min.z())/2.)); // center part over 0
   partT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
-  double part_scale = .25*2./(sqrt(part_diag.x()*part_diag.x()+part_diag.z()*part_diag.z()));
+  double part_scale = .25/(sqrt(part_diag.x()*part_diag.x()+part_diag.z()*part_diag.z()));
   partT.pre_scale(Vector(part_scale,
 			 part_scale,
 			 part_scale));
