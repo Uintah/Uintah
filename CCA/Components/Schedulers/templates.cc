@@ -3,7 +3,7 @@
 #include <set>
 #include <map>
 
-#include <sci_config.h> // For MPIPP_H on SGI
+#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <mpi.h>
 
 #include <Packages/Uintah/Core/Grid/ParticleVariableBase.h>
