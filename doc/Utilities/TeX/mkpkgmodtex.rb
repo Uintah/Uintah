@@ -18,7 +18,7 @@
 #
 # Read list of tex files on stdin, sort them using file basename only, and then
 # write sorted list to stdout enclosing each filename in a tex \input
-# statement.  This tool is used by doc/User/Guide/Makefile to generate a
+# statement.  This tool is used by doc/Developer/Modules/Makefile to generate a
 # sorted list of module description tex files generated from xml and hand
 # crafted tex module description files.
 #
