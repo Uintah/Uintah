@@ -662,12 +662,12 @@ void Module::tcl_command(GuiArgs& args, void*)
     return;
   }
   if(args[1] == "emit_vars") {
-    if (args.count() != 4)
+    if (args.count() != 5)
       args.error(args[0]+" "+args[1]+" needs a filename and variable name");
     else { 
       ofstream out;
       out.open(args[2].c_str(), ofstream::out | ofstream::app);
-      emit_vars(out, args[3]);
+      emit_vars(out, args[3], args[4]);
       out.close();
     }
   } else if(args[1] == "oportcolor") {
@@ -863,9 +863,11 @@ int Module::numIPorts()
   return iports.size();
 }
 
-void Module::emit_vars(std::ostream& out, const std::string& prefix)
+void Module::emit_vars(std::ostream& out,
+		       const std::string& midx,
+		       const std::string& prefix)
 {
-  ctx->emit(out, prefix);
+  ctx->emit(out, midx, prefix);
 }
 
 

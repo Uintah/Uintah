@@ -806,15 +806,16 @@ void Viewer::flushPort(int portid)
 
 
 //----------------------------------------------------------------------
-void Viewer::emit_vars(ostream& out, const string& midx)
+void Viewer::emit_vars(ostream& out, const string& midx, const string &prefix)
 {
   ctx->emit(out, midx);
   string viewwindowstr;
   for(unsigned int i=0;i<view_window_.size();i++)
   {
-    viewwindowstr=midx+string("-ViewWindow_")+to_string(i);
-    out << midx << " ui\n";
-    view_window_[i]->emit_vars(out, viewwindowstr);
+    out << prefix << midx << " ui\n";
+    view_window_[i]->emit_vars(out,
+			       midx+string("-ViewWindow_")+to_string(i),
+			       prefix);
   }
 }
 

@@ -214,7 +214,9 @@ string GuiContext::format_varname()
   return name.substr(end_of_modulename+1);
 }
 
-void GuiContext::emit(std::ostream& out, const string& prefix)
+void GuiContext::emit(std::ostream& out,
+		      const string& midx,
+		      const string& prefix)
 {
   if(save){
     string result;
@@ -251,7 +253,7 @@ void GuiContext::emit(std::ostream& out, const string& prefix)
 	}
       }
 
-      out << prefix << "-" << format_varname() << " \""
+      out << prefix << "setGlobal " << midx << "-" << format_varname() << " \""
 	  << result << "\"" << std::endl;
     }
     else
@@ -259,14 +261,14 @@ void GuiContext::emit(std::ostream& out, const string& prefix)
       string isDefault;
       gui->eval("isaDefaultValue {"+name+"}",isDefault);
       if (isDefault == "0") {
-	out << prefix << "-" << format_varname() << " {"
+	out << prefix << "setGlobal " << midx << "-" << format_varname() << " {"
 	    << result << "}" << std::endl;
       }
     }
   }
   for(vector<GuiContext*>::iterator iter = children.begin();
       iter != children.end(); ++iter)
-    (*iter)->emit(out, prefix);
+    (*iter)->emit(out, midx, prefix);
 }
 
 void GuiContext::reset()
