@@ -302,7 +302,7 @@ SSIDL::array1<std::string> BuilderService::getBridgablePortList(
   for(PortInstanceIterator* iter = comp2->getPorts(); !iter->done();
       iter->next()){
     PortInstance* pr2 = iter->get();
-    if(autobr.canBridge(pr1,pr2))
+    if((pr1->getModel() != pr2->getModel())&&(autobr.canBridge(pr1,pr2)))
       availablePorts.push_back(pr2->getUniqueName());
   }
 
