@@ -69,7 +69,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([SCIRun],[1.22],[scirun-users@sci.utah.edu])
+AC_INIT([SCIRun],[1.24],[scirun-users@sci.utah.edu])
 
 ##  require autoconf version 2.59 
 ##  type "autoconf --version" to find out what version you have.
@@ -104,6 +104,15 @@ AC_COPYRIGHT(
 ##  DEALINGS IN THE SOFTWARE.
 ##
 )
+
+##
+## Any error/warning/note/remark messages that need to be turned off
+## globally should be appended to this variable.  This should only be
+## done if the message is pervasive and has been determined to be
+## benign.  WOFF_NUMBERS should be a 'space' delimited list of numbers.
+## Eg: '123 124 155'
+##
+WOFF_NUMBERS=
 
 ## Clean up files that could be left around if configure was 
 ## interrupted (by control-c, ^c) because I do not know how to add
@@ -635,9 +644,18 @@ if test "$pkg_Ptolemy" = "yes"; then
   SCI_SET_PACKAGE_CHECKS(Ptolemy, $host)
 fi
 
+# Make sure the Package directories exist.
+#   Do an 'ls' of all files in the Packages directory and then grep for the
+#   package in this list.  (We used to just do a "test -d $package", but on
+#   a case-insensitive Mac file system, this fails.)
+
+packages_list=`ls $path_to_src/Packages`
 for i in $package; do
-   # Make sure the Package directories exist.
-   if test ! -d "$path_to_src/Packages/$i"; then
+   found_package=`echo $packages_list | grep $i`
+   if test -z "$found_package"; then
+      if test "$i" = "TEEM"; then
+         AC_MSG_WARN(Try using 'Teem' instead of 'TEEM')
+      fi
       AC_MSG_ERROR(Package '$i' does not exist (in $path_to_src/Packages/)!)
    fi
 done
@@ -646,13 +664,6 @@ if test "$sci_required_unipetsc" = "yes"; then
    sci_required_blas=yes
    sci_required_lapack=yes
 fi
-
-# Set the subdir name in the bin tree for matlab engine.
-if test "$pkg_MatlabInterface" = "yes"; then
-  MATLAB_ENG=matlab
-fi
-
-AC_SUBST(MATLAB_ENG)
 
 # Set the collaborative vars.
 if test "$pkg_CollabVis" = "yes"; then
@@ -700,6 +711,7 @@ case $host in
     SCI_CHECK_OS_VERSION(6.5,,
       configure: error: wrong Irix version. exiting.;exit)
     NUM_CPUS="`TERM=dumb top -n 1 | fgrep CPUs | cut -d' ' -f1`"    
+    WOFF_NUMBERS="$WOFF_NUMBERS 3625 3649"
     ;;
   *linux*)
     SCI_CHECK_OS_VERSION(2.2.17,,
@@ -1427,7 +1439,7 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.22
+  sci_tp_version=1.24
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
 
@@ -3116,12 +3128,18 @@ if test "$sci_required_insight" = "yes"; then
     insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | sed 's/
 //'`"
     INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
-    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -litkjpeg -lITKDICOMParser -litkzlib"
+    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -lITKDICOMParser -litkzlib"
 
     INSIGHT_VERSION_MINOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MINOR' | sed 's/SET(ITK_VERSION_MINOR \"//' | sed 's/\")//' | sed 's/
 //'`"
-    if test "$INSIGHT_VERSION_MINOR" = "6"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff"
+    if test "$INSIGHT_VERSION_MINOR" = "9" || test "$INSIGHT_VERSION_MINOR" = "10"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
+    fi
+    if test "$INSIGHT_VERSION_MINOR" = "8" || test "$INSIGHT_VERSION_MINOR" = "6"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg"
+    fi
+    if test "$INSIGHT_VERSION_MINOR" = "4"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg"
     fi
 
     if ! test "$HAVE_PNG" = "yes"; then
@@ -3581,10 +3599,8 @@ if test -e $freetype_bin/freetype-config; then
     AC_MSG_RESULT(Using $freetype_bin/freetype-config to set freetype variables.)
 
     includes=`$freetype_bin/freetype-config --cflags`
-    FREETYPE_LIB_FLAG=`$freetype_bin/freetype-config --libs`
-
     SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
-                 $_sci_inc,$FREETYPE_LIB_FLAG,$_sci_lib,$includes,,$_sci_optional)
+                 $_sci_inc,freetype,$_sci_lib,$includes,,$_sci_optional)
 
     INC_FREETYPE_H="$INC_FREETYPE_H $includes"
 
@@ -3592,7 +3608,7 @@ if test -e $freetype_bin/freetype-config; then
 fi
 
 if test "$found_freetype_config" = "no"; then
-   AC_MSG_RESULT(no.)
+   AC_MSG_RESULT(No 'freetype-config' file found in $freetype_bin.  Skipping Freetype check.)
    if test "$_sci_optional" != "optional"; then
      echo
      AC_MSG_WARN(Cannot find a freetype-config file to get freetype variables.)
@@ -3621,11 +3637,11 @@ if test "$with_ftgl" = "yes"; then
   _sci_optional=required
 elif test "$with_ftgl"; then
   _sci_lib="$with_ftgl/lib"
-  _sci_inc="$with_ftgl/include/FTGL"
+  _sci_inc="$with_ftgl/include"
   _sci_optional=specific
 fi
 
-SCI_TRY_LINK(FTGL,ftgl library,FTGLTextureFont.h,$_sci_inc,ftgl,$_sci_lib,$INC_FREETYPE_H $FREETYPE_LIB_DIR_FLAG $FREETYPE_LIB_FLAG,,$_sci_optional)
+SCI_TRY_LINK(FTGL,ftgl library,FTGL/FTGLTextureFont.h,$_sci_inc,ftgl,$_sci_lib,$INC_FREETYPE_H $FREETYPE_LIB_DIR_FLAG $FREETYPE_LIB_FLAG,,$_sci_optional)
 
 if test "$HAVE_FTGL" = "yes"; then
   DEF_FTGL="#define HAVE_FTGL 1"
@@ -4300,6 +4316,20 @@ AC_SUBST(BUILD_SCIRUN2)
 ##  ---------------------------------------------------------------------
 ##  --------------------  generate output files  ------------------------
 ##  ---------------------------------------------------------------------
+
+if test -n "$WOFF_NUMBERS"; then
+  for num in $WOFF_NUMBERS; do
+    if test -z "$WOFF_COMMA_LIST"; then
+       WOFF_COMMA_LIST="$num"
+    else
+       WOFF_COMMA_LIST="$WOFF_COMMA_LIST,$num"
+    fi
+    WOFF_STRING="$WOFF_STRING -Wl,-woff -Wl,$num"
+  done
+  WOFF_STRING="-woff $WOFF_COMMA_LIST $WOFF_STRING"
+fi
+AC_SUBST(WOFF_STRING)
+
 SCI_ARG_VAR(CXXFLAGS,C++ compiler flags)
 
 scirun_obj_dir=`pwd`;
