@@ -113,7 +113,7 @@ static int nidle;
 static Thread_private* active[MAXTHREADS];
 static int nactive;
 static usema_t* schedlock;
-static usptr_t* arena;
+  static usptr_t* arena;
 static atomic_reservoir_t reservoir;
 static bool use_fetchop=true;
 
@@ -1163,6 +1163,9 @@ struct ConditionVariable_private {
 ConditionVariable::ConditionVariable(const char* name)
   : name_(name)
 {
+  if(!Thread::initialized){
+    Thread::initialize();
+  }
   priv_=new ConditionVariable_private();
   priv_->num_waiters=0;
   priv_->pollsema=false;
