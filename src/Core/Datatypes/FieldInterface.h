@@ -307,7 +307,7 @@ SFInterface<F>::find_closest(double &minout, const Point &p) const
       {
 	Point c;
 	mesh->get_center(c, *bi);
-	const double dist = (p - c).length();
+	const double dist = (p - c).length2();
 	if (dist < mindist)
 	{
 	  mindist = dist;
@@ -330,7 +330,7 @@ SFInterface<F>::find_closest(double &minout, const Point &p) const
       {
 	Point c;
 	mesh->get_center(c, *bi);
-	const double dist = (p - c).length();
+	const double dist = (p - c).length2();
 	if (dist < mindist)
 	{
 	  mindist = dist;
@@ -353,7 +353,7 @@ SFInterface<F>::find_closest(double &minout, const Point &p) const
       {
 	Point c;
 	mesh->get_center(c, *bi);
-	const double dist = (p - c).length();
+	const double dist = (p - c).length2();
 	if (dist < mindist)
 	{
 	  mindist = dist;
@@ -376,7 +376,7 @@ SFInterface<F>::find_closest(double &minout, const Point &p) const
       {
 	Point c;
 	mesh->get_center(c, *bi);
-	const double dist = (p - c).length();
+	const double dist = (p - c).length2();
 	if (dist < mindist)
 	{
 	  mindist = dist;
@@ -683,7 +683,7 @@ VFInterface<F>::find_closest(Vector &minout, const Point &p) const
       {
 	Point c;
 	mesh->get_center(c, *bi);
-	const double dist = (p - c).length();
+	const double dist = (p - c).length2();
 	if (dist < mindist)
 	{
 	  mindist = dist;
@@ -704,7 +704,7 @@ VFInterface<F>::find_closest(Vector &minout, const Point &p) const
       {
 	Point c;
 	mesh->get_center(c, *bi);
-	const double dist = (p - c).length();
+	const double dist = (p - c).length2();
 	if (dist < mindist)
 	{
 	  mindist = dist;
@@ -725,7 +725,7 @@ VFInterface<F>::find_closest(Vector &minout, const Point &p) const
       {
 	Point c;
 	mesh->get_center(c, *bi);
-	const double dist = (p - c).length();
+	const double dist = (p - c).length2();
 	if (dist < mindist)
 	{
 	  mindist = dist;
@@ -746,7 +746,7 @@ VFInterface<F>::find_closest(Vector &minout, const Point &p) const
       {
 	Point c;
 	mesh->get_center(c, *bi);
-	const double dist = (p - c).length();
+	const double dist = (p - c).length2();
 	if (dist < mindist)
 	{
 	  mindist = dist;
@@ -939,7 +939,7 @@ TFInterface<F>::find_closest(Tensor &minout, const Point &p) const
       {
 	Point c;
 	mesh->get_center(c, *bi);
-	const double dist = (p - c).length();
+	const double dist = (p - c).length2();
 	if (dist < mindist)
 	{
 	  mindist = dist;
@@ -960,7 +960,7 @@ TFInterface<F>::find_closest(Tensor &minout, const Point &p) const
       {
 	Point c;
 	mesh->get_center(c, *bi);
-	const double dist = (p - c).length();
+	const double dist = (p - c).length2();
 	if (dist < mindist)
 	{
 	  mindist = dist;
@@ -981,7 +981,7 @@ TFInterface<F>::find_closest(Tensor &minout, const Point &p) const
       {
 	Point c;
 	mesh->get_center(c, *bi);
-	const double dist = (p - c).length();
+	const double dist = (p - c).length2();
 	if (dist < mindist)
 	{
 	  mindist = dist;
@@ -1002,7 +1002,7 @@ TFInterface<F>::find_closest(Tensor &minout, const Point &p) const
       {
 	Point c;
 	mesh->get_center(c, *bi);
-	const double dist = (p - c).length();
+	const double dist = (p - c).length2();
 	if (dist < mindist)
 	{
 	  mindist = dist;
