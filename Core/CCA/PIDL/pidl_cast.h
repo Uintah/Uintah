@@ -81,7 +81,7 @@ pidl_cast(const F& ptr)
       throw SCIRun::InternalError("TypeInfo::pidl_cast returned wrong object!");
 #ifdef HAVE_MPI
     if(!(SCIRun::PIDL::sampleProxy)) {
-      SCIRun::PIDL::optr = T(p);
+      SCIRun::PIDL::optr = ((SCIRun::Object::pointer*) new T(p));
       SCIRun::PIDL::sampleProxy = true;
     } 
 #endif
