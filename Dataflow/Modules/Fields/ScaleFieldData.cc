@@ -37,7 +37,6 @@
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <iostream>
-using std::cerr;
 #include <stdio.h>
 
 namespace SCIRun {
@@ -95,7 +94,7 @@ ScaleFieldData::execute()
   if (data_name == "Vector" && geom_name == "PointCloud") {
     PointCloud<Vector> *pc = dynamic_cast<PointCloud<Vector> *>(ifieldhandle.get_rep());
     if (rows != pc->fdata().size()) {
-      cerr << "Error -- different size data vectors.\n";
+      error("Error -- different size data vectors.\n");
       return;
     }
     PointCloud<Vector> *pcs = pc->clone();
@@ -106,7 +105,8 @@ ScaleFieldData::execute()
     FieldHandle ofieldhandle(pcs);
     ofield_port->send(ofieldhandle);
   } else {
-    cerr << "ScaleFieldData -- sorry, I only know how to scale vectors.\n";
+    error("ScaleFieldData -- sorry, I only know how to scale vectors.\n");
+    return;
   }
 }
 

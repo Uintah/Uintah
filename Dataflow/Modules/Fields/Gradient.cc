@@ -37,8 +37,6 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 
-using std::cerr;
-
 namespace SCIRun {
 
 class Gradient : public Module

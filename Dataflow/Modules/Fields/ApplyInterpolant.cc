@@ -45,7 +45,6 @@
 
 namespace SCIRun {
 
-using std::cerr;
 using std::vector;
 using std::pair;
 

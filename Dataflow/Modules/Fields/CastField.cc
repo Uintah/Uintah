@@ -45,7 +45,6 @@
 #include <stdio.h>
 #include <math.h>
 #include <iostream>
-using std::cerr;
 
 namespace SCIRun {
 
@@ -91,7 +90,7 @@ void CastField::execute() {
 	return;
     isf=ifh->getRGBase();
     if(!isf){
-	cerr<<"CastField can't deal with unstructured grids!";
+        error("CastField can't deal with unstructured grids!\n");
 	return;
     }
     checkInterface();

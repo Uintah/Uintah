@@ -43,7 +43,6 @@
 
 #include <iostream>
 
-using std::cerr;
 using std::set;
 
 namespace SCIRun {
@@ -263,7 +262,7 @@ SeedField::execute_rake()
   
   Vector dir(max-min);
   int num_seeds = (int)(rake_.GetRatio()*15);
-  cerr << "num_seeds = " << num_seeds << endl;
+  std::cerr << "num_seeds = " << num_seeds << endl;
   dir*=1./(num_seeds-1);
 
   PointCloudMesh* mesh = scinew PointCloudMesh;
