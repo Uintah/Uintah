@@ -31,7 +31,6 @@
     
 <book>
   <title>SCIRun Installation Guide</title>
-  <subtitle>UNIX version - Updated November 14, 2001</subtitle> 
 
   <bookinfo>
     <title>InstallationGuide.xml</title>
@@ -53,13 +52,6 @@
       <holder>SCI Institute, University of Utah</holder>
     </copyright>
   </bookinfo>
-
-  <preface>
-    <para>
-      The <citetitle>Technical Guide</citetitle> contains three
-      parts: Installation, Development, and Reference.
-    </para>
-  </preface>
 
   <part>
     <title>SCIRun Installation</title>
