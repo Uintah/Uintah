@@ -1147,14 +1147,12 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 	if (patch->getBCType(face) == Patch::None) {
 	  int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl);
 	  for (int child = 0; child < numChildren; child++) {
-	    vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
+	    vector<IntVector> bound,inter,nbound;
 	    vector<IntVector>::const_iterator boundary;
 	    vel_bcs = patch->getArrayBCValues(face,matl,"Velocity",bound,
-					      inter,sfx,sfy,sfz,nbound,
-					      child);
+					      inter,nbound,child);
 	    sym_bcs  = patch->getArrayBCValues(face,matl,"Symmetric",bound,
-					       inter,sfx,sfy,sfz,nbound,
-					       child);
+					       inter,nbound, child);
 	    if (vel_bcs != 0) {
 	      const VelocityBoundCond* bc =
 		dynamic_cast<const VelocityBoundCond*>(vel_bcs);
