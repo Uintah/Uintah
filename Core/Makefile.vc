@@ -65,7 +65,7 @@ OBJS = Containers\Sort.odll Containers\String.odll Containers\PQueue.odll\
 	   TkExtensions\tkRange.odll TkExtensions\tkCursor.odll\
 	   TkExtensions\tkUnixRange.odll\
 	   Util\Debug.odll Util\Timer.odll Util\soloader.odll\
-	   share\SCICoreDLLEntry.odll
+	   share\DllEntry.odll
 
 CF   = -DBUILD_SCICORE
 LF   = 
