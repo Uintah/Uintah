@@ -39,12 +39,11 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
-					    const TypeDescription *lsrc,
 					    int svt_flag);
 };
 
 
-template <class Fld, class Loc>
+template <class Fld>
 class ManageFieldDataAlgoFieldScalar : public ManageFieldDataAlgoField
 {
 public:
@@ -52,23 +51,21 @@ public:
   virtual MatrixHandle execute(FieldHandle src);
 };
 
-template <class Fld, class Loc>
+template <class Fld>
 MatrixHandle
-ManageFieldDataAlgoFieldScalar<Fld, Loc>::execute(FieldHandle ifield_h)
+ManageFieldDataAlgoFieldScalar<Fld>::execute(FieldHandle ifield_h)
 {
   Fld *ifield = dynamic_cast<Fld *>(ifield_h.get_rep());
-  typename Fld::mesh_handle_type mesh = ifield->get_typed_mesh();
-//  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
-  
-  typename Loc::size_type ssize;  mesh->size(ssize);
-  ColumnMatrix *omatrix = scinew ColumnMatrix(ssize);
+
+  ColumnMatrix *omatrix = scinew ColumnMatrix(ifield->fdata().size());
   int index = 0;
-  typename Loc::iterator iter; mesh->begin(iter);
-  typename Loc::iterator eiter; mesh->end(eiter);
+  typename Fld::fdata_type::iterator iter, eiter;
+  iter = ifield->fdata().begin();
+  eiter = ifield->fdata().end();
 
   while (iter != eiter)
   {
-    typename Fld::value_type val = ifield->value(*iter);
+    typename Fld::value_type val = *iter;
     omatrix->put(index++, (double)val);
     ++iter;
   }
@@ -79,7 +76,7 @@ ManageFieldDataAlgoFieldScalar<Fld, Loc>::execute(FieldHandle ifield_h)
 }
 
 
-template <class Fld, class Loc>
+template <class Fld>
 class ManageFieldDataAlgoFieldVector : public ManageFieldDataAlgoField
 {
 public:
@@ -87,24 +84,24 @@ public:
   virtual MatrixHandle execute(FieldHandle src);
 };
 
-template <class Fld, class Loc>
+template <class Fld>
 MatrixHandle
-ManageFieldDataAlgoFieldVector<Fld, Loc>::execute(FieldHandle ifield_h)
+ManageFieldDataAlgoFieldVector<Fld>::execute(FieldHandle ifield_h)
 {
   Fld *ifield = dynamic_cast<Fld *>(ifield_h.get_rep());
-  typename Fld::mesh_handle_type mesh = ifield->get_typed_mesh();
-//  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
-  typename Loc::size_type ssize;  mesh->size(ssize);
-  DenseMatrix *omatrix =  scinew DenseMatrix(ssize, 3);
+
+  DenseMatrix *omatrix = scinew DenseMatrix(ifield->fdata().size(), 3);
   int index = 0;
-  typename Loc::iterator iter; mesh->begin(iter);
-  typename Loc::iterator eiter; mesh->end(eiter);
+  typename Fld::fdata_type::iterator iter, eiter;
+  iter = ifield->fdata().begin();
+  eiter = ifield->fdata().end();
+
   while (iter != eiter)
   {
-    typename Fld::value_type val = ifield->value(*iter);
-    (*omatrix)[index][0]=val.x();
-    (*omatrix)[index][1]=val.y();
-    (*omatrix)[index][2]=val.z();
+    const typename Fld::value_type &val = *iter;
+    omatrix->put(index, 0, val.x());
+    omatrix->put(index, 1, val.y());
+    omatrix->put(index, 2, val.z());
     index++;
     ++iter;
   }
@@ -116,7 +113,7 @@ ManageFieldDataAlgoFieldVector<Fld, Loc>::execute(FieldHandle ifield_h)
 
 
 
-template <class Fld, class Loc>
+template <class Fld>
 class ManageFieldDataAlgoFieldTensor : public ManageFieldDataAlgoField
 {
 public:
@@ -124,31 +121,30 @@ public:
   virtual MatrixHandle execute(FieldHandle src);
 };
 
-template <class Fld, class Loc>
+template <class Fld>
 MatrixHandle
-ManageFieldDataAlgoFieldTensor<Fld, Loc>::execute(FieldHandle ifield_h)
+ManageFieldDataAlgoFieldTensor<Fld>::execute(FieldHandle ifield_h)
 {
   Fld *ifield = dynamic_cast<Fld *>(ifield_h.get_rep());
-  typename Fld::mesh_handle_type mesh = ifield->get_typed_mesh();
-  typename Loc::size_type ssize;  mesh->size(ssize);
-  DenseMatrix *omatrix = scinew DenseMatrix(ssize, 9);
+
+  DenseMatrix *omatrix = scinew DenseMatrix(ifield->fdata().size(), 9);
   int index = 0;
-  typename Loc::iterator iter; mesh->begin(iter);
-  typename Loc::iterator eiter; mesh->end(eiter);
+  typename Fld::fdata_type::iterator iter, eiter;
+  iter = ifield->fdata().begin();
+  eiter = ifield->fdata().end();
+
   while (iter != eiter)
   {
-    typename Fld::value_type val = ifield->value(*iter);
-    (*omatrix)[index][0]=val.mat_[0][0];
-    (*omatrix)[index][1]=val.mat_[0][1];
-    (*omatrix)[index][2]=val.mat_[0][2];
-
-    (*omatrix)[index][3]=val.mat_[1][0];
-    (*omatrix)[index][4]=val.mat_[1][1];
-    (*omatrix)[index][5]=val.mat_[1][2];
-
-    (*omatrix)[index][6]=val.mat_[2][0];
-    (*omatrix)[index][7]=val.mat_[2][1];
-    (*omatrix)[index][8]=val.mat_[2][2];
+    const typename Fld::value_type &val = *iter;
+    omatrix->put(index, 0, val.mat_[0][0]);
+    omatrix->put(index, 1, val.mat_[0][1]);
+    omatrix->put(index, 2, val.mat_[0][2]);
+    omatrix->put(index, 3, val.mat_[1][0]);
+    omatrix->put(index, 4, val.mat_[1][1]);
+    omatrix->put(index, 5, val.mat_[1][2]);
+    omatrix->put(index, 6, val.mat_[2][0]);
+    omatrix->put(index, 7, val.mat_[2][1]);
+    omatrix->put(index, 8, val.mat_[2][2]);
     index++;
     ++iter;
   }
