@@ -154,7 +154,7 @@ SCIRUN_TMP_DIR = /tmp
 # SCI_DBXCOMMAND = "dbx"
 
 
-### SCI_EXCEPTION_MODE = <ask, ???, ???, ???>
+### SCI_EXCEPTIONMODE = <ask, throw, dbx, cvd, abort>
 # Default action to take if scirun crashes
 # SCI_EXCEPTIONMODE = ask
 
