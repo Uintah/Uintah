@@ -173,7 +173,8 @@ public:
   SolveMatrix(GuiContext* ctx);
   virtual ~SolveMatrix();
   virtual void execute();
-  
+  void tcl_command( GuiArgs&, void * );
+
   GuiDouble target_error;
   GuiDouble flops;
   GuiDouble floprate;
@@ -188,7 +189,6 @@ public:
   GuiInt use_previous_soln;
   GuiInt emit_partial;
   GuiInt emit_iter;
-  GuiInt petsc_installed;
   bool ep;
   int epcount;
   GuiString status;
@@ -214,20 +214,34 @@ SolveMatrix::SolveMatrix(GuiContext* ctx)
     use_previous_soln(ctx->subVar("use_previous_soln")),
     emit_partial(ctx->subVar("emit_partial")),
     emit_iter(ctx->subVar("emit_iter")),
-    petsc_installed(ctx->subVar("petsc_installed")),
     status(ctx->subVar("status")),
     tcl_np(ctx->subVar("np"))
 {
-#ifdef UNI_PETSCe
-  petsc_installed.set(1);
-#else
-  petsc_installed.set(0);
-#endif
 }
 
 SolveMatrix::~SolveMatrix()
 {
 }
+
+
+void 
+SolveMatrix::tcl_command(GuiArgs& args, void*userdata) 
+{
+  if (args[1] == "petscenabled") 
+  {
+#ifdef UNI_PETSC
+    args.result("1");
+#else
+    args.result("0");
+#endif
+  } 
+  else 
+  {
+    Module::tcl_command(args, userdata);
+  }
+}
+
+
 
 void SolveMatrix::execute()
 {
@@ -435,7 +449,20 @@ void SolveMatrix::petsc_solve(const char* prec, const char* meth,
     MatSetType(A,MATSEQDENSE);
     for (i=0;i<rows;++i) {
       for (j=0;j<cols;++j) { 
-	MatSetValue(A,i,j,(*matrix)[i][j],INSERT_VALUES);
+	// MH - MatSetValue appears to be a macro which has badness in
+	// it. 
+	//MatSetValue(A,i,j,(*matrix)[i][j],INSERT_VALUES);
+	
+	int _ierr,_row = i,_col = j; 
+	PetscScalar _va = (*matrix)[i][j]; 
+	_ierr = MatSetValues(A,1,&_row,1,&_col,&_va,INSERT_VALUES);
+	
+	if (_ierr) {
+	  //  return PetscError(438,"unknownfunction",
+	  //                    "../src/Dataflow/Modules/Math/SolveMatrix.cc",
+	  //                    "unknowndirectory/",_ierr,0," ");
+	  cerr << "An error occured assigning the value to the PETSc matrix...\n";
+	}
       }
     }
     MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
