@@ -5,6 +5,8 @@ SRCDIR   := Packages/Uintah/CCA/Components/ICE/Advection
 SRCS     += $(SRCDIR)/Advector.cc \
  	$(SRCDIR)/FirstOrderAdvector.cc \
  	$(SRCDIR)/FirstOrderCEAdvector.cc \
+	$(SRCDIR)/SecondOrderAdvector.cc \
+ 	$(SRCDIR)/SecondOrderCEAdvector.cc \
 	$(SRCDIR)/AdvectionFactory.cc
 
 PSELIBS := \
