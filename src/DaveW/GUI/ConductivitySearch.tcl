@@ -45,11 +45,12 @@ itcl_class DaveW_ISL_ConductivitySearch {
 	global $this-pinzeroTCL
 	checkbutton $w.ref.pinzero -text "Pin A Reference Node" -variable $this-pinzeroTCL
 	global $this-refnodeTCL
-	make_entry $w.ref.refnode "Reference node:" $this-refnodeTCL {}
+	make_entry $w.ref.refnode "Reference node:" $this-refnodeTCL "$this-c needexecute"
 	pack $w.ref.pinzero $w.ref.refnode -side top -fill x -expand 1
 	frame $w.seed
 	global $this-seedTCL
-	make_entry $w.seed.seed "Random number seed:" $this-seedTCL {}
+	make_entry $w.seed.seed "Random number seed:" $this-seedTCL "$this-c needexecute"
+	pack $w.seed.seed -side top -fill x -expand 1
 	pack $w.g $w.ref $w.seed -side top -fill x -expand 1
     }
 }
