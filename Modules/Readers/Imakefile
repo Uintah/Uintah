@@ -1,14 +1,19 @@
 
 #include <config/sci.cf>
 
-OBJS = ContourSetReader.o  ScalarFieldReader.o  SurfaceReader.o \
-	VectorFieldReader.o
-SRCS = ContourSetReader.cc ScalarFieldReader.cc SurfaceReader.cc \
-	VectorFieldReader.cc
-TCLS = ContourSetReader.tcl ScalarFieldReader.tcl SurfaceReader.tcl \
-	VectorFieldReader.tcl
+OBJS = ContourSetReader.o   MeshReader.o   ScalarFieldReader.o   \
+	SurfaceReader.o   VectorFieldReader.o
+SRCS = ContourSetReader.cc  MeshReader.cc  ScalarFieldReader.cc  \
+	SurfaceReader.cc  VectorFieldReader.cc
+TCLS = ContourSetReader.tcl MeshReader.tcl ScalarFieldReader.tcl \
+	SurfaceReader.tcl VectorFieldReader.tcl
 
 LIBNAME = Readers
+
+depend:: $(SRCS)
+
+clean::
+	$(RM) $(SRCS)
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME), $(OBJS))
@@ -19,6 +24,12 @@ ContourSetReader.cc: Reader.cc
 
 ContourSetReader.tcl: Reader.tcl
 	sed 's/TYPE/ContourSet/g' < Reader.tcl > ContourSetReader.tcl
+
+MeshReader.cc: Reader.cc
+	sed 's/TYPE/Mesh/g' < Reader.cc > MeshReader.cc
+
+MeshReader.tcl: Reader.tcl
+	sed 's/TYPE/Mesh/g' < Reader.tcl > MeshReader.tcl
 
 ScalarFieldReader.cc: Reader.cc
 	sed 's/TYPE/ScalarField/g' < Reader.cc > ScalarFieldReader.cc
