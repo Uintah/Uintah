@@ -93,6 +93,8 @@ private:
   vector<typename OFIELD::mesh_type::Node::index_type> nodes_;
 
   GeomLines *lines_;
+
+  double isoval_;
 };
 
 // The goal dump all all of the unshared edges into a new field.
@@ -108,14 +110,19 @@ SilhouettesAlgoT<IFIELD, OFIELD, OMESH >::execute(FieldHandle& field_h,
   typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
 
   // Create the output mesh.
-  if( build_field ) {
-    omesh_ = scinew OMESH();
-    nodes_.clear();
-    values_.clear();
-  }
+  nodes_.clear();
+  values_.clear();
 
+  if( build_field )
+    omesh_ = scinew OMESH();
+  else
+    omesh_ = 0;
+
+  // Create the output geometry.
   if( build_geom )
     lines_ = scinew GeomLines;
+  else
+    lines_ = 0;
 
   // Iterators and arrays.
   typename IFIELD::mesh_type::Face::iterator in, end;
@@ -153,23 +160,26 @@ SilhouettesAlgoT<IFIELD, OFIELD, OMESH >::execute(FieldHandle& field_h,
 
 	if( build_field ) {
 	  // Add the points to the new mesh.
-	  typename OFIELD::mesh_type::Node::index_type n0 = omesh->add_node(p0);
-	  typename OFIELD::mesh_type::Node::index_type n1 = omesh->add_node(p1);
+	  typename OFIELD::mesh_type::Node::index_type n0 = omesh_->add_node(p0);
+	  typename OFIELD::mesh_type::Node::index_type n1 = omesh_->add_node(p1);
 
 	  // Add the edge to the new mesh.
-	  omesh->add_edge( n0, n1 );
+	  omesh_->add_edge( n0, n1 );
 
 	  // Save the nodes for each value for the field.
-	  nodes.push_back( n0 );
-	  nodes.push_back( n1 );
+	  nodes_.push_back( n0 );
+	  nodes_.push_back( n1 );
 
 	  // Save the values for the field.
-	  values.push_back( ifield->value( nodeArray[0] ) );
-	  values.push_back( ifield->value( nodeArray[1] ) );
+	  values_.push_back( ifield->value( nodeArray[0] ) );
+	  values_.push_back( ifield->value( nodeArray[1] ) );
 	}
 
-	if( build_geom )
+	// Build the edges for the geometry.
+	if( build_geom ) {
+	  isoval_ = ifield->value( nodeArray[0] );
 	  lines_->add( p0, p1 );
+	}
       }
     }
 
@@ -182,10 +192,14 @@ FieldHandle
 SilhouettesAlgoT<IFIELD, OFIELD, OMESH >::get_field() {
 
   // Create the field after the mesh so that the data is allocated properly.
+  // Uncomment for 1.24
   OFIELD *ofield = scinew OFIELD(omesh_, 1);
 
+  // Uncomment for 1.22
+  //OFIELD *ofield = scinew OFIELD(omesh_, Field::NODE);
+
   // Stuff all of the values into the field.
-  for( unsigned int i; i< values_.size(); i++ )
+  for( unsigned int i; i<values_.size(); i++ )
     ofield->set_value( values_[i], nodes_[i] );
 
   ofield->freeze();
@@ -197,8 +211,9 @@ template< class IFIELD, class OFIELD, class OMESH >
 GeomHandle
 SilhouettesAlgoT<IFIELD, OFIELD, OMESH >::get_geom( double &isoval ) {
 
-  isoval = values[0];
-  return lines_;
+  isoval = isoval_;
+
+  return GeomHandle( lines_ );
 }
 
 

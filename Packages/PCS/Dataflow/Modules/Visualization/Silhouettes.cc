@@ -56,7 +56,6 @@ protected:
   int auto_exec_;
 
   FieldHandle fHandle_;
-  GeomHandle  gHandle_;
   int geomID_;
   double isoval_;
 
@@ -82,10 +81,10 @@ Silhouettes::Silhouettes(GuiContext* ctx)
     build_field_(0),
     build_geom_(0),
     auto_exec_(0),
-    fGeneration_(-1),
     fHandle_(0),
-    gHandle_(0),
     geomID_(0),
+    fGeneration_(-1),
+    cmGeneration_(-1),
     error_( false )
 {
 }
@@ -113,26 +112,27 @@ void
 Silhouettes::execute(){
   update_state(NeedData);
  
-  FieldIPort* ifp = (FieldIPort *)get_iport("Input Field");
+  bool update = false;
+
+
+  FieldIPort* ifield_port = (FieldIPort *)get_iport("Input Field");
 
   FieldHandle fHandle;
 
-  if (!ifp) {
+  if (!ifield_port) {
     error( "Unable to initialize iport 'Input Field'.");
     return;
   }
 
-  if (!(ifp->get(fHandle_) && fHandle_.get_rep())) {
+  if (!(ifield_port->get(fHandle) && fHandle.get_rep())) {
     error( "No handle or representation in input field." );
     return;
   }
 
-  if (!fHandle_->query_scalar_interface(this).get_rep() ) {
+  if (!fHandle->query_scalar_interface(this).get_rep() ) {
     error( "This module only works on fields of scalar data.");
     return;
   }
-
-  bool update = false;
 
   // Check to see if the input field has changed.
   if( fGeneration_ != fHandle->generation ) {
@@ -166,25 +166,24 @@ Silhouettes::execute(){
     }
   }
   
-  // Get a handle to the output field port.
-  FieldOPort* ofield_port = (FieldOPort *) get_oport("Silhouettes");
-  
-  if (!ofield_port) {
-    error("Unable to initialize oport 'Silhouettes'.");
+  // Get a handle to the output geometry port.
+  GeometryOPort* ogeom_port = (GeometryOPort *) get_oport("Silouette Geom");
+  if (!ogeom_port) {
+    error( "Unable to initialize oport 'Silhouette Geom'.");
     return;
   }
 
-  // Output geometry.
-  GeometryOPort *ogeom_port = (GeometryOPort *)get_oport("Geometry");
-  if (!ogeom_port) {
-    error("Unable to initialize oport 'Geometry'.");
+  if( ogeom_port->getNViewers() == 0 ) {
+    error("Geometery port is not attached to a viewer.");
     return;
   }
-  
-  GeometryOPort* oview_port = (GeometryOPort *)get_oport("View");
-  if (!oview_port) {
-    error( "Unable to initialize oport 'View'.");
-    return;
+
+  // Get the current view.
+  GeometryData *geometry = ogeom_port->getData( 0, 0, GEOM_VIEW );
+
+  if( geometry == 0 ) {
+    error("Geometery port must be attached to the viewer.");
+    return;    
   }
 
   /*
@@ -204,6 +203,7 @@ Silhouettes::execute(){
   // If no data or a change recalcute.
   if( (build_field  && !fHandle_.get_rep()) ||
       (build_geom   && !geomID_ == -1     ) ||
+      view_ != *(geometry->view) ||
       update ||
       error_ ) {
 
@@ -235,60 +235,63 @@ Silhouettes::execute(){
 
     while( gui_autoexec_.get() ) {
 
-      // Reset incase the user quits.
+      // Reset incase the user quits after this iteration.
       gui_autoexec_.reset();
 
       // Get the next view.
-      GeometryData *geometry = oview_port->getData( 0, 0, GEOM_VIEW );      
+      geometry = ogeom_port->getData( 0, 0, GEOM_VIEW );
 
-      if( view_ != *(geometry->view)) {
+      if( geometry == 0 ) {
+	error("View port is no longer attached to the viewer.");
+	return;    
+      }
+
+      if(  view_ != *(geometry->view)) {
 	cerr << "+";
 
 	view_ = *(geometry->view);
 
-//	algo->execute(fHandle, view_, build_field_, build_geom_ );
+	if( build_field || build_geom )
+	  algo->execute(fHandle, view_, build_field_, build_geom_ );
 
 	if( build_field )
 	  fHandle_ = algo->get_field();
 
-	if( build_geom )
-	  gHandle_ = algo->get_geom( isoval_ );
-	
 	cerr << "-";
 
-	// Stop showing the previous geometry.
-	if ( geomID_ ) {
-	  ogeom_port->delObj( geomID_ );
-	  geomID_ = 0;
-	  geomflush = true;
-	}
-
-	if (build_geom && gHandle_.get_rep()) {
-	  GeomGroup *geom = scinew GeomGroup;;
-
-	  MaterialHandle matl;
-      
-	  if (have_ColorMap)
-	    matl= cmHandle->lookup(isoval_);
-	  else
-	    matl = scinew Material(Color(gui_color_r_.get(),
-					 gui_color_g_.get(),
-					 gui_color_b_.get()));
-      
-	  geom->add(scinew GeomMaterial( gHandle_, matl ));
-
-	  if (!geom->size())
-	    delete geom;
-	  else {
-	    string fldname;
-	    if (fHandle->get_property("name",fldname))
-	      geomID_ = ogeom_port->addObj( geom, fldname );
-	    else 
-	      geomID_ = ogeom_port->addObj( geom, string("Silhouettes") );
-	
+	if( build_geom ) {
+	  // Stop showing the previous geometry.
+	  if ( geomID_ ) {
+	    ogeom_port->delObj( geomID_ );
+	    geomID_ = 0;
 	    geomflush = true;
 	  }
-      
+
+	  GeomHandle gHandle = algo->get_geom( isoval_ );
+	
+	  if (gHandle.get_rep()) {
+	    GeomGroup *geom = scinew GeomGroup;
+
+	    MaterialHandle matl;
+	      
+	    if (have_ColorMap)
+	      matl = cmHandle->lookup(isoval_);
+	    else
+	      matl = scinew Material(Color(gui_color_r_.get(),
+					   gui_color_g_.get(),
+					   gui_color_b_.get()));
+	      
+	    geom->add(scinew GeomMaterial( gHandle, matl ));
+
+	    string fldname;
+	    if (fHandle->get_property("name", fldname) && fldname.length() )
+	      geomID_ = ogeom_port->addObj( geom, fldname );
+	    else
+	      geomID_ = ogeom_port->addObj( geom, string("Silhouettes") );
+
+	    geomflush = true;
+	  }
+	  
 	  if (geomflush) {
 	    ogeom_port->flushViews();
 	    geomflush = false;
@@ -306,10 +309,11 @@ Silhouettes::execute(){
 
   // Get a handle to the output field port.
   if ( build_field && fHandle_.get_rep() ) {
-    FieldOPort* ofield_port = (FieldOPort *) get_oport("Silhouettes");
-
+    // Get a handle to the output field port.
+    FieldOPort* ofield_port = (FieldOPort *) get_oport("Silhouette Field");
+  
     if (!ofield_port) {
-      error("Unable to initialize oport 'Silhouettes'.");
+      error("Unable to initialize oport 'Silhouette Field'.");
       return;
     }
 
