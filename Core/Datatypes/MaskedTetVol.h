@@ -183,14 +183,14 @@ template <class T>
 const TypeDescription* 
 get_type_description(MaskedTetVol<T>*)
 {
-  static TypeDescription* td = 0;
-  if(!td){
+  static TypeDescription* mtv_td = 0;
+  if(!mtv_td){
     const TypeDescription *sub = SCIRun::get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew TypeDescription("MaskedTetVol", subs, __FILE__, "SCIRun");
+    mtv_td = scinew TypeDescription("MaskedTetVol", subs, __FILE__, "SCIRun");
   }
-  return td;
+  return mtv_td;
 }
 
 template <class T>

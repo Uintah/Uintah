@@ -214,17 +214,17 @@ template <class T>
 const TypeDescription* 
 get_type_description(TetVol<T>*)
 {
-  static TypeDescription* td = 0;
+  static TypeDescription* tv_td = 0;
   static string name("TetVol");
   static string namesp("SCIRun");
   static string path(__FILE__);
-  if(!td){
+  if(!tv_td){
     const TypeDescription *sub = SCIRun::get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew TypeDescription(name, subs, path, namesp);
+    tv_td = scinew TypeDescription(name, subs, path, namesp);
   }
-  return td;
+  return tv_td;
 }
 
 template <class T>
