@@ -3,10 +3,10 @@
 
 #define TRY_NEW_WAY
 
-//#define DEBUGGING
-//#define PERFORMANCE_TESTING
+#define SUPERBOX_DEBUGGING
+#define SUPERBOX_PERFORMANCE_TESTING
 
-#ifdef PERFORMANCE_TESTING
+#ifdef SUPERBOX_PERFORMANCE_TESTING
 int biggerBoxCount;
 int minBiggerBoxCount;
 #endif
@@ -630,11 +630,11 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
 		       Value currentlyKnownOptimalValue /*= 0*/,
 		       int depth /*= 0*/)
 {
-#ifdef DEBUGGING
+#ifdef SUPERBOX_DEBUGGING
   Value storeMaxPossibleValue = maxPossibleValue;
   depth++;
   set<SuperBox*, ValueCompare> storeActiveBoxes = activeBoxes;
-  BoxHashMap::iterator iter = boxMap.begin();
+  typename BoxHashMap::iterator iter = boxMap.begin();
   int numAvailable = 0;
   for ( ; iter != boxMap.end(); iter++) {
     if ((*iter).second->isAvailable())
@@ -673,7 +673,7 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
     if (maxPossibleValue <= currentlyKnownOptimalValue
 	&& currentlyKnownOptimalValue > 0 /* make sure there is some other
 					     solution in the works */) {
-#ifdef DEBUGGING
+#ifdef SUPERBOX_DEBUGGING
       cerr << depth << "\tPruned\n";
 #endif
        
@@ -686,7 +686,7 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
     // pick the highest valued SuperBox
     pick = *activeBoxes.begin();
 
-#ifdef DEBUGGING
+#ifdef SUPERBOX_DEBUGGING
     cerr << depth << "\tPick: " << *pick << endl;
 #endif
     
@@ -696,7 +696,7 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
 	   (compositePick == 0 ||
 	    compositePick->getActiveConflicts().size() == 0));
 
-#ifdef DEBUGGING
+#ifdef SUPERBOX_DEBUGGING
   ASSERT(storeMaxPossibleValue >= maxPossibleValue);
 #endif    
   
@@ -705,8 +705,8 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
 				  preValue + pick->getValue(),
 				  maxPossibleValue, currentlyKnownOptimalValue,
 				  depth);
-  result->addSuperBox(pick);
   if (result != 0) {
+    result->addSuperBox(pick);
     if (preValue + result->getValue() > currentlyKnownOptimalValue)
       currentlyKnownOptimalValue = preValue + result->getValue();
   }
@@ -716,7 +716,7 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
   // The only reason not to go with the pick is if it conflicts with
   // something that works out better.  So try those.  
   if (compositePick != 0 && compositePick->getActiveConflicts().size() > 0) {
-#ifdef DEBUGGING
+#ifdef SUPERBOX_DEBUGGING
     cerr << depth << "\tWithout: " << *pick << endl;
 #endif
     compositePick->inactivate(rangeQuerier, boxMap, activeBoxes,
@@ -730,13 +730,13 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
 	 conflictIter != compositePick->getActiveConflicts().end();
 	 conflictIter++) {
       CompositeBox* conflict = *conflictIter;
-#ifdef DEBUGGING
+#ifdef SUPERBOX_DEBUGGING
       cerr << depth << "\tConflict Pick: " << *conflict << endl;
 #endif
       
       // Try each conflict as an alternate possibility to the pick
       takePick(conflict, rangeQuerier, boxMap, activeBoxes, maxPossibleValue);
-#ifdef DEBUGGING
+#ifdef SUPERBOX_DEBUGGING
       ASSERT(storeMaxPossibleValue >= maxPossibleValue);
 #endif    
       
@@ -745,7 +745,8 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
 			       preValue + conflict->getValue(),
 			       maxPossibleValue, currentlyKnownOptimalValue,
 			       depth);
-      otherPossibility->addSuperBox(conflict);
+      if (otherPossibility != 0)
+	otherPossibility->addSuperBox(conflict);
       if (otherPossibility != 0 &&
 	  (result == 0 || otherPossibility->getValue() > result->getValue())) {
 	delete result;
@@ -771,7 +772,7 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
   undoPicks(keepers, activeBoxes, maxPossibleValue);
   result->addSuperBoxes(keepers.begin(), keepers.end());
 
-#ifdef DEBUGGING
+#ifdef SUPERBOX_DEBUGGING
   ASSERT(storeMaxPossibleValue == maxPossibleValue);
   ASSERT(storeActiveBoxes == activeBoxes);
 #endif
@@ -787,6 +788,10 @@ findNearOptimalSuperBoxSet(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
 			   set<SuperBox*, ValueCompare>& activeBoxes,
 			   Value maxPossibleValue)
 {
+#ifdef SUPERBOX_DEBUGGING
+  Value storeMaxPossibleValue = maxPossibleValue;
+#endif
+  
   if (activeBoxes.size() == 0)
     return scinew SuperBoxSet();
   
@@ -801,7 +806,7 @@ findNearOptimalSuperBoxSet(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
     takePick(pick, rangeQuerier, boxMap, activeBoxes, maxPossibleValue);
   } while (activeBoxes.size() > 0);
 
-#ifdef DEBUGGING
+#ifdef SUPERBOX_DEBUGGING
   ASSERT(storeMaxPossibleValue >= maxPossibleValue);
 #endif    
 
@@ -1100,7 +1105,7 @@ buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
 				vector<SuperBox*>& maximalSuperBoxes,
 				const Region* withinRegion /* = 0 */)
 {
-#ifdef PERFORMANCE_TESTING
+#ifdef SUPERBOX_PERFORMANCE_TESTING
   minBiggerBoxCount++;
 #endif
   
@@ -1132,7 +1137,7 @@ buildActivatedMaximalSuperBoxes(BasicBoxPIterator begin,
   set<CompositeBox*, LexCompare> allExploredBoxes;
   for (BasicBoxPIterator iter = begin; iter != end; iter++) {
     if ((*iter)->isAvailable()) {
-#ifdef PERFORMANCE_TESTING
+#ifdef SUPERBOX_PERFORMANCE_TESTING
       minBiggerBoxCount++;
 #endif
       (*iter)->buildActivatedMaximalSuperBoxes(rangeQuerier, boxMap,
@@ -1159,7 +1164,7 @@ buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
 				const Region* withinRegion /* = 0 */)
 {
   typedef typename RangeQuerier::ResultContainer RangeContainer;
-#ifdef PERFORMANCE_TESTING
+#ifdef SUPERBOX_PERFORMANCE_TESTING
   biggerBoxCount++;
 #endif
 
@@ -1269,7 +1274,7 @@ buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
 
     maximalSuperBoxes.push_back(this);
     makeActive();
-#ifdef DEBUGGING
+#ifdef SUPERBOX_DEBUGGING
     cerr << "Active SuperBox: " << *this << endl;
 #endif
   }
@@ -1368,7 +1373,7 @@ inactivateConflicts(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
   set<CompositeBox*>::iterator iter;
   for (iter = activeConflicts_.begin(); iter != activeConflicts_.end();
        iter++) {
-#ifdef DEBUGGING
+#ifdef SUPERBOX_DEBUGGING
     cerr << "\tConflict: " << **iter << endl;
 #endif
     (*iter)->inactivate(rangeQuerier, boxMap,
@@ -1442,11 +1447,11 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
 					    basicBoxes.end(), rangeQuerier,
 					    boxMap, maximalSuperBoxes);
 
-#ifdef DEBUGGING
+#ifdef SUPERBOX_DEBUGGING
   cerr << "Maximal SuperBoxes:\n";
-  for (b_iter = maximalSuperBoxes.begin(); b_iter != maximalSuperBoxes.end();
-       b_iter++) {
-    cerr << "\t" << **b_iter << endl;
+  for (sb_iter = maximalSuperBoxes.begin(); sb_iter != maximalSuperBoxes.end();
+       sb_iter++) {
+    cerr << "\t" << **sb_iter << endl;
   }
 #endif
 
