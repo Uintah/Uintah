@@ -216,3 +216,18 @@ TCLInterface::set(const std::string& name, const std::string& value)
 	     ccast_unsafe(value), TCL_GLOBAL_ONLY);
   TCLTask::unlock();
 }
+
+
+
+bool
+TCLInterface::complete_command(const string &command)
+{
+  const int len = command.length()+1;
+  char *src = scinew char[len];
+  strcpy (src, command.c_str());
+  TCLTask::lock();
+  Tcl_Parse parse;
+  const int ret_val = Tcl_ParseCommand(0, src, len, 1, &parse);
+  TCLTask::unlock();
+  return (ret_val == TCL_OK);
+}
