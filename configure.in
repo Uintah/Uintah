@@ -159,7 +159,7 @@ case $host in
   *-linux-gnu)
      AC_PROG_CC
      AC_PROG_CXX
-     AC_PROG_F77
+#     AC_PROG_F77
      CFLAGS="-Wall ${CFLAGS}"
      TEMPLATE_TAG=
      TEMPLATE_BOX="<>"
@@ -603,6 +603,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.59  2000/06/12 20:23:31  sparker
+# Commented out f77 config on linux - for now
+#
 # Revision 1.58  2000/06/12 18:39:00  sparker
 # Added F77 configuration
 #
