@@ -10,33 +10,35 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Datatypes/ScalarFieldRGint.h>
-#include <Datatypes/ScalarFieldRGshort.h>
-#include <Datatypes/ScalarFieldRGfloat.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Malloc/Allocator.h>
-#include <Multitask/Task.h>
-#include <Multitask/ITC.h>
-#include <TclInterface/TCLvar.h>
-#include <TclInterface/TCLTask.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Datatypes/ScalarFieldRGint.h>
+#include <SCICore/Datatypes/ScalarFieldRGshort.h>
+#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include <Geom/GeomOpenGL.h>
+#include <SCICore/Geom/GeomOpenGL.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
 
 #include <tcl.h>
 #include <tk.h>
+
+using namespace SCICore::Thread;
 
 // tcl interpreter corresponding to this module
 
@@ -90,9 +92,7 @@ class Gauss : public Module {
   
 public: 
   Gauss(const clString& id);
-  Gauss(const Gauss&, int deep);
   virtual ~Gauss();
-  virtual Module* clone(int deep);
   virtual void execute();
 
   void do_parallel(int proc);
@@ -112,12 +112,10 @@ public:
 
 };
 
-extern "C" {
   Module* make_Gauss(const clString& id)
     {
       return scinew Gauss(id);
     }
-}
 
 //static clString module_name("Gauss");
 //static clString widget_name("Gauss Widget");
@@ -148,21 +146,8 @@ Gauss::Gauss(const clString& id)
   
 }
 
-Gauss::Gauss(const Gauss& copy, int deep)
-: Module(copy, deep),
-  sigma("sigma", id, this),  size("size", id, this),
-  hardware("hardware", id, this)
-{
-  NOT_FINISHED("Gauss::Gauss");
-}
-
 Gauss::~Gauss()
 {
-}
-
-Module* Gauss::clone(int deep)
-{
-  return scinew Gauss(*this, deep);
 }
 
 void Gauss::do_parallel(int proc)
@@ -186,14 +171,6 @@ void Gauss::do_parallel(int proc)
 			      gauss[8]*ingrid->grid(x+1,y+1,0)); 
       }
 }
-
-static void do_parallel_stuff(void* obj,int proc)
-{
-  Gauss* img = (Gauss*) obj;
-
-  img->do_parallel(proc);
-}
-
 
 void Gauss::execute()
 {
@@ -326,8 +303,9 @@ void Gauss::execute()
     glXMakeCurrent(dpy,None,NULL);
     TCLTask::unlock();
   } else {
-    np = Task::nprocessors();
-    Task::multiprocess(np, do_parallel_stuff, this);
+    np = Thread::numProcessors();
+    Thread::parallel(Parallel<Gauss>(this, &Gauss::do_parallel),
+		     np, true);
   }
   
   // Send out
@@ -469,7 +447,8 @@ int Gauss::makeCurrent(void)
     int pattr[3]={GLX_PRESERVED_CONTENTS_SGIX,True,None};
     clString myname(clString(".ui")+id);
 
-    tkwin = Tk_NameToWindow(the_interp, myname(),Tk_MainWindow(the_interp));
+    tkwin = Tk_NameToWindow(the_interp, const_cast<char*>(myname()),
+			    Tk_MainWindow(the_interp));
 
     winX = Tk_Width(tkwin);
     winY = Tk_Height(tkwin);
@@ -514,6 +493,9 @@ int Gauss::makeCurrent(void)
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:32  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:55  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

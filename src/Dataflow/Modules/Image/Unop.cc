@@ -8,23 +8,26 @@
  *    November 1997
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Datatypes/ColorMapPort.h>
-#include <Geom/GeomGrid.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
-#include <Multitask/Task.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 #include <math.h>
+
+using namespace SCICore::Thread;
 
 namespace SCIRun {
 namespace Modules {
@@ -33,7 +36,6 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 
 using namespace SCICore::TclInterface;
-using namespace SCICore::Multitask;
 using namespace SCICore::Math;
 
 class Unop : public Module {
@@ -54,9 +56,7 @@ class Unop : public Module {
   
 public:
   Unop(const clString& id);
-  Unop(const Unop&, int deep);
   virtual ~Unop();
-  virtual Module* clone(int deep);
   virtual void execute();
   
   void tcl_command( TCLArgs&, void *);
@@ -64,11 +64,9 @@ public:
   void do_op(int proc);
 };
 
-extern "C" {
 Module* make_Unop(const clString& id)
 {
    return scinew Unop(id);
-}
 }
 
 //static clString module_name("Unop");
@@ -90,19 +88,8 @@ Unop::Unop(const clString& id)
     mode=0;
 }
 
-Unop::Unop(const Unop& copy, int deep)
-: Module(copy, deep),  funcname("funcname",id,this)
-{
-   NOT_FINISHED("Unop::Unop");
-}
-
 Unop::~Unop()
 {
-}
-
-Module* Unop::clone(int deep)
-{
-   return scinew Unop(*this, deep);
 }
 
 void Unop::do_op(int proc)    // Do the operations in paralell
@@ -154,13 +141,6 @@ void Unop::do_op(int proc)    // Do the operations in paralell
     }
 }
 
-static void start_op(void* obj,int proc)
-{
-  Unop* img = (Unop*) obj;
-
-  img->do_op(proc);
-}
-
 void Unop::execute()
 {
     // get the scalar field...if you can
@@ -178,7 +158,7 @@ void Unop::execute()
 
     newgrid=new ScalarFieldRG;
     
-    np = Task::nprocessors();
+    np = Thread::numProcessors();
 
     
     clString ft(funcname.get());
@@ -214,7 +194,8 @@ void Unop::execute()
     
     if ((mode==4) && (rg->grid.dim3()!=3))
       cerr << "Can't convert non-RGB Image to grayscale.\n"; else
-	Task::multiprocess(np, start_op, this);
+	  Thread::parallel(Parallel<Unop>(this, &Unop::do_op),
+			   np, true);
 
     if (mode==8) {
       int nz=0;
@@ -236,6 +217,9 @@ void Unop::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:36  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:59  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

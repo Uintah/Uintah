@@ -12,13 +12,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Datatypes/Image/ImagePort.h>
-#include <Geom/GeomGrid.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <SCIRun/Datatypes/Image/ImagePort.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 namespace SCIRun {
 namespace Modules {
@@ -40,20 +40,16 @@ public:
     TCLdouble heightscale;
     TCLint downsample;
     ImageToGeom(const clString& id);
-    ImageToGeom(const ImageToGeom& copy, int deep);
     virtual ~ImageToGeom();
-    virtual Module* clone(int deep);
     virtual void execute();
 
     int oldid;
 };
 
-extern "C" {
   Module* make_ImageToGeom(const clString& id)
     {
       return scinew ImageToGeom(id);
     }
-}
 
 ImageToGeom::ImageToGeom(const clString& id)
 : Module("ImageToGeom", id, Filter), format("format", id, this),
@@ -68,20 +64,8 @@ ImageToGeom::ImageToGeom(const clString& id)
     have_scale=0;
 }
 
-ImageToGeom::ImageToGeom(const ImageToGeom& copy, int deep)
-: Module(copy, deep), format("format", id, this),
-  heightscale("heightscale", id, this), downsample("downsample", id, this)
-{
-    NOT_FINISHED("ImageToGeom::ImageToGeom");
-}
-
 ImageToGeom::~ImageToGeom()
 {
-}
-
-Module* ImageToGeom::clone(int deep)
-{
-    return scinew ImageToGeom(*this, deep);
 }
 
 void ImageToGeom::execute()
@@ -135,6 +119,9 @@ void ImageToGeom::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:33  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:57  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

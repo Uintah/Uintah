@@ -8,14 +8,14 @@
  *    July 1997
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarField.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLTask.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarField.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,17 +43,13 @@ class TiffReader : public Module {
   
 public:
     TiffReader(const clString& id);
-    TiffReader(const TiffReader&, int deep=0);
     virtual ~TiffReader();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
-extern "C" {
 Module* make_TiffReader(const clString& id)
 {
     return scinew TiffReader(id);
-}
 }
 
 TiffReader::TiffReader(const clString& id)
@@ -64,19 +60,8 @@ TiffReader::TiffReader(const clString& id)
     add_oport(outport);
 }
 
-TiffReader::TiffReader(const TiffReader& copy, int deep)
-: Module(copy, deep), filename("filename", id, this)
-{
-    NOT_FINISHED("TiffReader::TiffReader");
-}
-
 TiffReader::~TiffReader()
 {
-}
-
-Module* TiffReader::clone(int deep)
-{
-    return scinew TiffReader(*this, deep);
 }
 
 void TiffReader::execute()
@@ -160,6 +145,9 @@ void TiffReader::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:35  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:59  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

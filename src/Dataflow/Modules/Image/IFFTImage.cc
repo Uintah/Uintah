@@ -12,11 +12,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/Image/ImagePort.h>
-#include <Malloc/Allocator.h>
-#include <Math/fft.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCIRun/Datatypes/Image/ImagePort.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/fft.h>
 
 namespace SCIRun {
 namespace Modules {
@@ -31,18 +31,14 @@ class IFFTImage : public Module {
     ImageOPort* oport;
 public:
     IFFTImage(const clString& id);
-    IFFTImage(const IFFTImage&, int deep);
     virtual ~IFFTImage();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
-extern "C" {
   Module* make_IFFTImage(const clString& id)
     {
       return scinew IFFTImage(id);
     }
-}
 
 IFFTImage::IFFTImage(const clString& id)
 : Module("IFFTImage", id, Filter)
@@ -54,19 +50,8 @@ IFFTImage::IFFTImage(const clString& id)
     add_oport(oport);
 }
 
-IFFTImage::IFFTImage(const IFFTImage& copy, int deep)
-: Module(copy, deep)
-{
-    NOT_FINISHED("IFFTImage::IFFTImage");
-}
-
 IFFTImage::~IFFTImage()
 {
-}
-
-Module* IFFTImage::clone(int deep)
-{
-    return scinew IFFTImage(*this, deep);
 }
 
 void IFFTImage::execute()
@@ -96,6 +81,9 @@ void IFFTImage::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:32  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:56  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
