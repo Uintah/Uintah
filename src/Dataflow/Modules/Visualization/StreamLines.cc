@@ -83,6 +83,7 @@ private:
   FieldHandle                   vfhandle_;
   FieldHandle                   sfhandle_;
   FieldHandle                   ohandle_;
+  VectorFieldInterface          *vfinterface_;
 
   Field                         *vf_;  // vector field
   Field                         *sf_;  // seed point field
@@ -96,9 +97,10 @@ private:
 
   //! interpolate using the generic linear interpolator
   bool interpolate(const Point &p, Vector &v) {
-    bool b = false; // interp_->interpolate(p,v); // FIXME:
-    if (b)
+    bool b = vfinterface_->interpolate(v,p);
+    if ((b) && v.length2() > 0) {
       v.normalize(); // try not to skip cells - needs help from stepsize
+    }
     return b;
   }
 
@@ -122,17 +124,17 @@ extern "C" PSECORESHARE Module* make_StreamLines(const string& id) {
   return scinew StreamLines(id);
 }
 
-StreamLines::StreamLines(const string& id)
-  : Module("StreamLines", id, Source, "Visualization", "SCIRun"),
-    stepsize_("stepsize",id,this),tolerance_("tolerance",id,this),
-    maxsteps_("maxsteps",id,this)
-
+StreamLines::StreamLines(const string& id) : 
+  Module("StreamLines", id, Source, "Visualization", "SCIRun"),
+  vfinterface_(0),
+  vf_(0),
+  sf_(0),
+  cf_(0),
+  cmesh_(0),
+  stepsize_("stepsize",id,this),
+  tolerance_("tolerance",id,this),
+  maxsteps_("maxsteps",id,this)  
 {
-  vf_ = 0;
-  sf_ = 0;
-  cf_ = 0;
-
-  cmesh_ = 0;
 }
 
 StreamLines::~StreamLines()
@@ -342,8 +344,12 @@ void StreamLines::execute()
     return;
 
   // the vector field input is required
-  if (!vfport_->get(vfhandle_) || !(vf_ = vfhandle_.get_rep()))
+  if (!vfport_->get(vfhandle_) || !(vf_ = vfhandle_.get_rep())) {
     return;
+  } else {
+    vfinterface_ = vf_->query_vector_interface();
+    ASSERT(vfinterface_);
+  }
 
   // the seed field input is required
   if (!sfport_->get(sfhandle_) || !(sf_ = sfhandle_.get_rep()))
