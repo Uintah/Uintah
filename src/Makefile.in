@@ -30,6 +30,9 @@ OBJTOP  := .
 OBJTOP_ABS    := $(shell cd $(OBJTOP) ; pwd)
 SRCTOP_ABS    := $(shell cd $(SRCTOP) ; pwd)
 SCIRUN_SCRIPTS = $(SRCTOP_ABS)/scripts
+
+OS_NAME = $(shell uname)
+
 include configVars.mk
 
 # Rules for autoconf
