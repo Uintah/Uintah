@@ -75,7 +75,7 @@ public:
   void collapse_points();
 
   // TODO: remove this crap from GenField
-  void interp(Attrib *, const Point &, double &) {}
+  //void interp(Attrib *, const Point &, double &) {}
 
 protected:
   bool computeBoundingBox();

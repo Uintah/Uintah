@@ -7,6 +7,8 @@
 //  Copyright (C) 2000 SCI Institute
 
 #include <Core/Datatypes/SurfaceGeom.h>
+#include <sstream>
+
 
 namespace SCIRun {
 
@@ -45,7 +47,7 @@ SurfaceGeom::SurfaceGeom()
 string
 SurfaceGeom::getInfo()
 {
-  ostringstream retval;
+  std::ostringstream retval;
   retval << "name = " << name_ << endl;
   return retval.str();
 }

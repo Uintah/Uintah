@@ -17,9 +17,9 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Datatypes/Geom.h>
-#include <Core/Datatypes/Attrib.h>
-#include <Core/Containers/Array1.h>
-#include <Core/Datatypes/AttribManager.h>
+//#include <Core/Datatypes/Attrib.h>
+//#include <Core/Containers/Array1.h>
+//#include <Core/Datatypes/AttribManager.h>
 
 #include <functional>
 #include <iostream>
@@ -27,7 +27,7 @@
 #include <string>
 #include <map>
 
-namespace SCIRun{
+namespace SCIRun {
 
 using std::vector;
 using std::string;
@@ -36,7 +36,7 @@ using std::map;
 class Field;
 typedef LockingHandle<Field>      FieldHandle;
 
-class SCICORESHARE Field: public AttribManager {
+class SCICORESHARE Field: public Datatype {
 
 public:
 
@@ -58,13 +58,13 @@ public:
 
   //////////
   // Returns handle to the geometry
-  virtual const GeomHandle getGeom() const;
+  //virtual const GeomHandle getGeom() const;
 
   //////////
   // Adds geometry to the field
   // Returns false if the geometry was not registred
   // TODO: checking needed if the geometry is in correspondence with the field
-  bool setGeometry(GeomHandle);
+  //bool setGeometry(GeomHandle);
   
   //////////
   // Test to see if this field includes (is derived from)
@@ -86,7 +86,7 @@ public:
   }
 
 protected:
-  GeomHandle      geomHandle_;
+  //GeomHandle      geomHandle_;
 };
 
 template <class T> T* Field::query_interface(T *)

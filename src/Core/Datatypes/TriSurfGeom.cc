@@ -7,6 +7,8 @@
 //  Copyright (C) 2000 SCI Institute
 
 #include <Core/Datatypes/TriSurfGeom.h>
+#include <sstream>
+
 
 namespace SCIRun {
 
@@ -63,7 +65,7 @@ TriSurfGeom::computeBoundingBox()
  string
 TriSurfGeom::getInfo()
 {
-  ostringstream retval;
+  std::ostringstream retval;
 
   retval << 
     "Type = " << "TriSurfGeom" << endl <<

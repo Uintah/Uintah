@@ -8,6 +8,7 @@
 
 #include <Core/Datatypes/ContourGeom.h>
 #include <Core/Persistent/PersistentSTL.h>
+#include <sstream>
 
 namespace SCIRun {
 
@@ -57,7 +58,7 @@ ContourGeom::~ContourGeom()
 string
 ContourGeom::getInfo()
 {
-  ostringstream retval;
+  std::ostringstream retval;
   retval << "name = " << name_ << endl;
   return retval.str();
 }

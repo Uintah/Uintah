@@ -8,6 +8,8 @@
 
 #include <Core/Datatypes/PointCloudGeom.h>
 #include <Core/Persistent/PersistentSTL.h>
+#include <sstream>
+
 
 namespace SCIRun {
 
@@ -58,7 +60,7 @@ PointCloudGeom::~PointCloudGeom()
 string
 PointCloudGeom::getInfo()
 {
-  ostringstream retval;
+  std::ostringstream retval;
   retval << "name = " << name_ << endl;
   return retval.str();
 }

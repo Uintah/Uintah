@@ -13,7 +13,6 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Datatypes/StructuredGeom.h>
-#include <Core/Datatypes/DiscreteAttrib.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Geometry/Transform.h>
@@ -71,8 +70,8 @@ public:
 
 
   // TODO: This needs to be tested.
-  template <class T>
-  void interp(DiscreteAttrib<T> *att, const Point &p, T &out);
+  //template <class T>
+  //void interp(DiscreteAttrib<T> *att, const Point &p, T &out);
 
   template <class T, class A>
   void finterp(A *att, const Point &p, T &out);
@@ -192,7 +191,7 @@ LatticeGeom::clampk(int z)
 #endif
 
 
-
+#if 0
 template <class T>
 void
 LatticeGeom::interp(DiscreteAttrib<T> *att, const Point &p, T &out)
@@ -337,7 +336,7 @@ LatticeGeom::finterp(A *att, const Point &p, T &out)
   Convert(out, a);
 #endif
 }  
-
+#endif
   
 } // End namespace SCIRun
 

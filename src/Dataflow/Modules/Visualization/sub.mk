@@ -18,13 +18,11 @@ SRCS     += \
 	$(SRCDIR)/Hedgehog.cc\
 	$(SRCDIR)/HedgehogLitLines.cc\
 	$(SRCDIR)/ImageViewer.cc\
-	$(SRCDIR)/IsoSurface.cc\
 	$(SRCDIR)/IsoSurfaceDW.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
 	$(SRCDIR)/ScalarFieldProbe.cc\
 	$(SRCDIR)/ShowColorMap.cc\
 	$(SRCDIR)/ShowDipoles.cc\
-	$(SRCDIR)/ShowField.cc\
 	$(SRCDIR)/ShowFieldSlice.cc\
 	$(SRCDIR)/ShowHist.cc\
 	$(SRCDIR)/ShowImage.cc\
