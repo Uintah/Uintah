@@ -32,6 +32,9 @@ using namespace Uintah;
 using namespace SCIRun;
 using std::vector;
 
+#define FRACTURE
+#undef FRACTURE
+
 SingleVelContact::SingleVelContact(ProblemSpecP& ps, 
 				    SimulationStateP& d_sS, MPMLabel* Mlb)
 {
@@ -117,14 +120,13 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
      int dwi = matls->get(m);
      new_dw->get(gmass[m],lb->gMassLabel, dwi, patch, Ghost::None, 0);
      new_dw->getModifiable(gvelocity_star[m],lb->gVelocityStarLabel, dwi,patch);
-     new_dw->getModifiable(gacceleration[m],lb->gAccelerationLabel, dwi,patch);
-#ifndef FRACTURE
-     new_dw->allocateAndPut(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
+     new_dw->getModifiable(gacceleration[m], lb->gAccelerationLabel, dwi,patch);
+#ifdef FRACTURE
+     new_dw->getModifiable(frictionWork[m], lb->frictionalWorkLabel, dwi,patch);
 #else
-     new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
-#endif
-
+     new_dw->allocateAndPut(frictionWork[m], lb->frictionalWorkLabel,dwi,patch);
      frictionWork[m].initialize(0.);
+#endif
     }
 
     delt_vartype delT;
@@ -171,9 +173,9 @@ void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
 
   t->modifies(             lb->gVelocityStarLabel, mss);
   t->modifies(             lb->gAccelerationLabel, mss);
-#ifndef FRACTURE
+#ifdef FRACTURE
+  t->modifies(             lb->frictionalWorkLabel,mss);
+#else    
   t->computes(             lb->frictionalWorkLabel);
-#else
-  t->modifies(             lb->frictionalWorkLabel,mss); 
 #endif
 }

@@ -10,6 +10,9 @@
 
 using namespace Uintah;
 
+#define FRACTURE
+#undef FRACTURE
+
 NullThermalContact::NullThermalContact(ProblemSpecP&,SimulationStateP& d_sS,
 								MPMLabel* Mlb)
 {
@@ -43,15 +46,12 @@ void NullThermalContact::computeHeatExchange(const ProcessorGroup*,
 
       thermalContactHeatExchangeRate.initialize(0);
 #ifdef FRACTURE
-      // for Fracture (additional field)-------------------------------
       NCVariable<double> GthermalContactHeatExchangeRate;
       new_dw->allocateAndPut(GthermalContactHeatExchangeRate,
 			     lb->GThermalContactHeatExchangeRateLabel, 
 			     dwindex, patch);
       GthermalContactHeatExchangeRate.initialize(0);
-      // --------------------------------------------------------------
 #endif
-
     }
   }
 }
@@ -68,6 +68,6 @@ void NullThermalContact::addComputesAndRequires(Task* t,
 {
   t->computes(lb->gThermalContactHeatExchangeRateLabel);
 #ifdef FRACTURE
-  t->computes(lb->GThermalContactHeatExchangeRateLabel); //for Fracture
+  t->computes(lb->GThermalContactHeatExchangeRateLabel); 
 #endif
 }

@@ -11,7 +11,7 @@ SRCS     += \
 	$(SRCDIR)/CompNeoHookImplicit.cc 	\
 	$(SRCDIR)/CompNeoHookPlas.cc          	\
 	$(SRCDIR)/ViscoScram.cc               	\
-	$(SRCDIR)/ViscoScramForBinder.cc               	\
+	$(SRCDIR)/ViscoScramForBinder.cc      	\
 	$(SRCDIR)/HypoElastic.cc              	\
 	$(SRCDIR)/MWViscoElastic.cc           	\
 	$(SRCDIR)/IdealGasMP.cc               	\

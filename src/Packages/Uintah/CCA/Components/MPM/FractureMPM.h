@@ -58,7 +58,7 @@ public:
   Contact*         contactModel;
   ThermalContact*  thermalContactModel;
   Crack*           crackMethod;           // for Fracture
-
+	 
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
@@ -107,8 +107,7 @@ public:
 
   enum IntegratorType {
     Explicit,
-    Implicit,
-    Fracture
+    Implicit
   };
 
 private:
@@ -136,6 +135,15 @@ private:
                                   ParticleSubset* pset,
                                   DataWarehouse* new_dw,
                                   double val);
+
+  //////////
+  // Initialize particle data with a default values in the
+  // new datawarehouse
+  void setParticleDefault(ParticleVariable<double>& pvar,
+                          const VarLabel* label,
+                          ParticleSubset* pset,
+                          DataWarehouse* new_dw,
+                          double val);
 
   void scheduleInitializePressureBCs(const LevelP& level,
 				     SchedulerP&);
@@ -325,20 +333,20 @@ private:
   void scheduleCalculateDampingRate(SchedulerP&, const PatchSet*,
 				    const MaterialSet*);
 
-  // for Farcture ---------------------------------------------- 
+  // for Farcture ----------------------------------------------
   void scheduleParticleVelocityField(SchedulerP& sched,
-		                     const PatchSet* patches,
-		                     const MaterialSet* matls);
-  void scheduleCrackAdjustInterpolated(SchedulerP& sched,     
-		                     const PatchSet* patches,
-				     const MaterialSet* matls);
-  void scheduleCrackAdjustIntegrated(SchedulerP& sched,       
-		                     const PatchSet* patches,
-	                             const MaterialSet* matls);
-  void scheduleMoveCrack(SchedulerP& sched,                 
-                	       	     const PatchSet* patches,
-			             const MaterialSet* matls);
-  // ---------------------------------------------------------- 
+                                     const PatchSet* patches,
+                                     const MaterialSet* matls);
+  void scheduleCrackAdjustInterpolated(SchedulerP& sched,
+                                     const PatchSet* patches,
+                                     const MaterialSet* matls);
+  void scheduleCrackAdjustIntegrated(SchedulerP& sched,
+                                     const PatchSet* patches,
+                                     const MaterialSet* matls);
+  void scheduleMoveCrack(SchedulerP& sched,
+                                     const PatchSet* patches,
+                                     const MaterialSet* matls);
+  // ----------------------------------------------------------
 
   FractureMPM(const FractureMPM&);
   FractureMPM& operator=(const FractureMPM&);

@@ -30,6 +30,9 @@ using namespace std;
 
 #define MAX_BASIS 27
 
+#define FRACTURE
+#undef FRACTURE
+
 FrictionContact::FrictionContact(ProblemSpecP& ps,SimulationStateP& d_sS,
                                  MPMLabel* Mlb,int n8or27)
 {
@@ -97,17 +100,15 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       new_dw->get(gvolume[m],         lb->gVolumeLabel,dwi, patch, gnone, 0);
       new_dw->get(numnearparticles[m],lb->gNumNearParticlesLabel, 
                                                        dwi, patch, gnone, 0);
-      new_dw->getModifiable(gvelocity[m],    lb->gVelocityLabel,     dwi,patch);
-      new_dw->allocateAndPut(gsurfnorm[m],   lb->gSurfNormLabel,     dwi,patch);
-#ifndef FRACTURE
-      new_dw->allocateAndPut(frictionWork[m],lb->frictionalWorkLabel,dwi,
-			     patch);
-#else
+      new_dw->getModifiable(gvelocity[m],  lb->gVelocityLabel,  dwi, patch);
+      new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel,  dwi, patch);
+#ifdef FRACTURE
       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
-#endif
-
-      gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
+#else      
+      new_dw->allocateAndPut(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
       frictionWork[m].initialize(0.);
+#endif      
+      gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
 
       IntVector low(patch->getInteriorNodeLowIndex());
       IntVector high(patch->getInteriorNodeHighIndex());
@@ -346,12 +347,12 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                   Dv=-gsurfnorm[n][c]*normalDeltaVel;
 		  
 		  // Calculate work done by frictional force
-#ifndef FRACTURE
-		  frictionWork[n][c] = 0.;
-#else
+#ifdef FRACTURE
 		  frictionWork[n][c] += 0.;
+#else				    
+		  frictionWork[n][c] = 0.;
 #endif
-                }
+		}
 
                 // General algorithm, including frictional slip.  The
 		// contact velocity change and frictional work are both
@@ -375,17 +376,17 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                   // conventional definition.  However, here it is calculated
                   // as positive (Work=-force*distance).
 		  if(compare(frictionCoefficient,d_mu)){
-#ifndef FRACTURE
+#ifdef FRACTURE
+		    frictionWork[n][c] += gmass[n][c]*frictionCoefficient
+			                  * (normalDeltaVel*normalDeltaVel) *
+			         (tangentDeltaVelocity/fabs(normalDeltaVel)-
+			  	         	      frictionCoefficient);
+#else		    
 		    frictionWork[n][c] = gmass[n][c]*frictionCoefficient
-		      * (normalDeltaVel*normalDeltaVel) *
-		      (tangentDeltaVelocity/fabs(normalDeltaVel)-
-		       frictionCoefficient);
-#else
-		    frictionWork[n][c] += gmass[n][c]*frictionCoefficient 
-		      * (normalDeltaVel*normalDeltaVel) *
-		      (tangentDeltaVelocity/fabs(normalDeltaVel)-
-		       frictionCoefficient);
-#endif
+					  * (normalDeltaVel*normalDeltaVel) *
+		                 (tangentDeltaVelocity/fabs(normalDeltaVel)-
+		  		                      frictionCoefficient);
+#endif		    
 		  }
 	        }
 
@@ -402,10 +403,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 		  double ff=Min(epsilon_max,.5)/epsilon_max;
 		  Dv=Dv*ff;
 	        }
-#ifndef FRACTURE
 		Dv=scale_factor*Dv;
-#else
-#endif
 	        gvelocity[n][c]+=Dv;
             }  // if traction
 	  }    // if !compare && !compare
@@ -586,10 +584,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 	        double ff=Min(epsilon_max,.5)/epsilon_max;
 	        Dv=Dv*ff;
 	      }
-#ifndef FRACTURE
 	      Dv=scale_factor*Dv;
-#else
-#endif
 	      gvelocity_star[n][c]+=Dv;
 	      Dv=Dv/delT;
 	      gacceleration[n][c]+=Dv;
@@ -640,10 +635,10 @@ void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
   t->computes(lb->gNormTractionLabel);
   t->computes(lb->gSurfNormLabel);
   t->computes(lb->gStressLabel);
-#ifndef FRACTURE
-  t->computes(lb->frictionalWorkLabel);
-#else
+#ifdef FRACTURE
   t->modifies(lb->frictionalWorkLabel, mss);
+#else    
+  t->computes(lb->frictionalWorkLabel);
 #endif
   t->modifies(lb->gVelocityLabel, mss);
 }

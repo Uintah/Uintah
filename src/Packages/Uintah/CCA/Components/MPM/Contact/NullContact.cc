@@ -21,6 +21,9 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 using namespace Uintah;
 
+#define FRACTURE
+#undef FRACTURE
+
 NullContact::NullContact(ProblemSpecP& ps, SimulationStateP& d_sS,MPMLabel* Mlb)
 {
   // Constructor
@@ -74,12 +77,12 @@ void NullContact::exMomIntegrated(const ProcessorGroup*,
 
       new_dw->getModifiable(gv_star, lb->gVelocityStarLabel,        dwi, patch);
       new_dw->getModifiable(gacc,    lb->gAccelerationLabel,        dwi, patch);
-#ifndef FRACTURE
-      new_dw->allocateAndPut(frictionalWork,lb->frictionalWorkLabel,dwi,patch);
-#else
-      new_dw->getModifiable(frictionalWork,lb->frictionalWorkLabel,dwi,patch);
-#endif
+#ifdef FRACTURE
+      new_dw->getModifiable(frictionalWork,lb->frictionalWorkLabel, dwi, patch);
+#else	    
+      new_dw->allocateAndPut(frictionalWork,lb->frictionalWorkLabel,dwi, patch);
       frictionalWork.initialize(0.);
+#endif      
     }
   }
 }
@@ -99,10 +102,9 @@ void NullContact::addComputesAndRequiresIntegrated( Task* t,
   const MaterialSubset* mss = ms->getUnion();
   t->modifies(lb->gVelocityStarLabel, mss);
   t->modifies(lb->gAccelerationLabel, mss);
-#ifndef FRACTURE
+#ifdef FRACTURE
+  t->modifies(lb->frictionalWorkLabel, mss);
+#else    
   t->computes(lb->frictionalWorkLabel);
-#else
-  t->modifies(lb->frictionalWorkLabel, mss); 
 #endif
-
 }
