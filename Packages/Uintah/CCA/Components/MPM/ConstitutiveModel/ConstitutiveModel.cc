@@ -325,21 +325,13 @@ ConstitutiveModel::ConvertJToK(const MPMMaterial*,
   SIF=Vector(-9999.,-9999.,-9999.);
 }
 
-// Determine crack-propagating direction (for FRACTURE)
-double
-ConstitutiveModel::GetPropagationDirection(const double& ,
-                                           const double& )
-{
-  double PI=3.141592654;
-  return PI;
-}
-
-// Detect if crack propagtes (for FRACTURE)
+// Detect if crack propagtes and the propagation direction (for FRACTURE)
 short
-ConstitutiveModel::CrackSegmentPropagates(const double& , 
-		        const double& , const double& )
+ConstitutiveModel::CrackPropagates(const double& Vc, const double& KI, 
+		                   const double& KII, double& theta)
 {
   enum {NO=0, YES};
+  theta=0.0;
   return NO;
 }
 

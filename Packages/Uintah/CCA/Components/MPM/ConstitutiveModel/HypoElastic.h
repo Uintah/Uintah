@@ -24,15 +24,17 @@ namespace Uintah {
   class HypoElastic : public ConstitutiveModel {
   private:
     // Create datatype for storing model parameters
+    // Crack propagation criterion
+    string crackPropagationCriterion;
+    double CrackPropagationAngleFromStrainEnergyDensityCriterion(const double&,
+		    const double&, const double&); 
   public:
     struct CMData {
       double G;
       double K;
-//#ifdef FRACTURE       
       // Fracture toughness at various velocities
       // in the format Vector(Vc,KIc,KIIc)
       vector<Vector> Kc; 
-//#endif       
     };
 
   private:
@@ -126,14 +128,11 @@ namespace Uintah {
     // Convert J-integral into stress intensity factors
     // for hypoelastic materials (for FRACTURE) 
     virtual void ConvertJToK(const MPMMaterial* matl, const Vector& J,
-                             const double& C,const Vector& V,
-                             Vector& SIF);
-    // Determine crack propagation direction (for FRACTURE)
-    virtual double GetPropagationDirection(const double& KI, const double& KII);
+                             const double& C, const Vector& V,Vector& SIF);
 
-    // Detect if crack propagates (for FRACTURE)
-    virtual short CrackSegmentPropagates(const double& Vc, 
-		                         const double& KI, const double& KII);
+    // Detect if crack propagates and the propagation direction (for FRACTURE) 
+    virtual short CrackPropagates(const double& Vc, const double& KI,
+		                  const double& KII, double& theta);
   };
 
 } // End namespace Uintah
