@@ -27,14 +27,16 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-IdealGasMP::IdealGasMP(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
+IdealGasMP::IdealGasMP(ProblemSpecP& ps,  MPMLabel* Mlb, 
+                                          MPMFlags* Mflag)
 {
   lb = Mlb;
+  flag = Mflag;
 
   ps->require("gamma", d_initialData.gamma);
   ps->require("specific_heat",d_initialData.cv);
 
-  d_8or27 = n8or27;
+  d_8or27 = flag->d_8or27;
   if(d_8or27==8){
     NGN=1;
   } else if(d_8or27==27){
@@ -46,6 +48,7 @@ IdealGasMP::IdealGasMP(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
 IdealGasMP::IdealGasMP(const IdealGasMP* cm)
 {
   lb = cm->lb;
+  flag = cm->flag;
   d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
 

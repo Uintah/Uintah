@@ -38,7 +38,7 @@ namespace Uintah {
 
   public:
     // constructors
-    Membrane(ProblemSpecP& ps,  MPMLabel* lb, int n8or27);
+    Membrane(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
     Membrane(const Membrane* cm);
        
     // destructor

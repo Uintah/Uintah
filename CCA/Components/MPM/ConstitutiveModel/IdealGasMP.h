@@ -39,7 +39,7 @@ namespace Uintah {
 
   public:
     // constructors
-    IdealGasMP(ProblemSpecP& ps,  MPMLabel* lb, int n8or27);
+    IdealGasMP(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
     IdealGasMP(const IdealGasMP* cm);
        
     // destructor

@@ -27,9 +27,11 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-MWViscoElastic::MWViscoElastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
+MWViscoElastic::MWViscoElastic(ProblemSpecP& ps, MPMLabel* Mlb, 
+                                                 MPMFlags* Mflag)
 {
   lb = Mlb;
+  flag = Mflag;
   
   ps->require("e_shear_modulus",d_initialData.E_Shear);
   ps->require("e_bulk_modulus",d_initialData.E_Bulk);
@@ -38,7 +40,7 @@ MWViscoElastic::MWViscoElastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
   ps->require("ve_volumetric_viscosity",d_initialData.V_Viscosity);
   ps->require("ve_deviatoric_viscosity",d_initialData.D_Viscosity);
   
-  d_8or27 = n8or27;
+  d_8or27 = flag->d_8or27;
   if(d_8or27==8){
     NGN=1;
   } else if(d_8or27==27){
@@ -49,6 +51,7 @@ MWViscoElastic::MWViscoElastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 MWViscoElastic::MWViscoElastic(const MWViscoElastic* cm)
 {
   lb = cm->lb;
+  flag = cm->flag;
   d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
   

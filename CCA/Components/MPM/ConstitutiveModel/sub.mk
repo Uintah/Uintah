@@ -22,30 +22,11 @@ SRCS     += \
 	$(SRCDIR)/Membrane.cc 			\
 	$(SRCDIR)/ShellMaterial.cc 			\
 	$(SRCDIR)/HypoElasticPlastic.cc \
-	$(SRCDIR)/DamageModel.cc \
-	$(SRCDIR)/DamageModelFactory.cc \
-	$(SRCDIR)/JohnsonCookDamage.cc \
-	$(SRCDIR)/HancockMacKenzieDamage.cc \
-	$(SRCDIR)/MPMEquationOfState.cc \
-	$(SRCDIR)/MPMEquationOfStateFactory.cc \
-	$(SRCDIR)/DefaultHypoElasticEOS.cc \
-	$(SRCDIR)/MieGruneisenEOS.cc \
-	$(SRCDIR)/PlasticityModel.cc \
-	$(SRCDIR)/PlasticityModelFactory.cc \
-	$(SRCDIR)/IsoHardeningPlastic.cc \
-	$(SRCDIR)/JohnsonCookPlastic.cc \
-	$(SRCDIR)/MTSPlastic.cc \
-	$(SRCDIR)/SCGPlastic.cc \
-	$(SRCDIR)/YieldCondition.cc \
-	$(SRCDIR)/YieldConditionFactory.cc \
-	$(SRCDIR)/GursonYield.cc \
-	$(SRCDIR)/VonMisesYield.cc \
-	$(SRCDIR)/StabilityCheck.cc \
-	$(SRCDIR)/StabilityCheckFactory.cc \
-	$(SRCDIR)/BeckerCheck.cc \
-	$(SRCDIR)/DruckerCheck.cc \
-	$(SRCDIR)/DruckerBeckerCheck.cc \
-	$(SRCDIR)/PlasticityState.cc 
+	$(SRCDIR)/ElasticPlastic.cc 
+
+SUBDIRS := $(SRCDIR)/PlasticityModels
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Disclosure \

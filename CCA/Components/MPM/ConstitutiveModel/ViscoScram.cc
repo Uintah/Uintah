@@ -28,9 +28,11 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
+ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb, 
+                                         MPMFlags* Mflag)
 {
   lb = Mlb;
+  flag = Mflag;
   d_useModifiedEOS = false;
   ps->require("PR",d_initialData.PR);
   ps->require("CrackParameterA",d_initialData.CrackParameterA);
@@ -63,7 +65,7 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
                             ParticleVariable<double>::getTypeDescription() );
   pRandLabel_preReloc        = VarLabel::create( "p.rand+",
                             ParticleVariable<double>::getTypeDescription() );
-  d_8or27 = n8or27;
+  d_8or27 = flag->d_8or27;
   if(d_8or27==8){
     NGN=1;
   } else if(d_8or27==27){
@@ -74,6 +76,7 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 ViscoScram::ViscoScram(const ViscoScram* cm)
 {
   lb = cm->lb;
+  flag = cm->flag;
   d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
 

@@ -45,7 +45,7 @@ namespace Uintah {
 
   public:
     // constructors
-    MWViscoElastic(ProblemSpecP& ps, MPMLabel* lb, int n8or27);
+    MWViscoElastic(ProblemSpecP& ps, MPMLabel* lb, MPMFlags* flag);
     MWViscoElastic(const MWViscoElastic* cm);
        
     // destructor

@@ -30,13 +30,15 @@ using namespace SCIRun;
 // Material Constants are C1, C2 and PR (poisson's ratio).  
 // The shear modulus = 2(C1 + C2).
 
-CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
+CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps, MPMLabel* Mlb, 
+                                                     MPMFlags* Mflag)
 {
   lb = Mlb;
+  flag = Mflag;
+  d_8or27 = flag->d_8or27;
   ps->require("he_constant_1",d_initialData.C1);
   ps->require("he_constant_2",d_initialData.C2);
   ps->require("he_PR",d_initialData.PR);
-  d_8or27 = n8or27;
   if(d_8or27==8){
     NGN=1;
   } else if(d_8or27==27){
@@ -47,6 +49,7 @@ CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 CompMooneyRivlin::CompMooneyRivlin(const CompMooneyRivlin* cm)
 {
   lb = cm->lb;
+  flag = cm->flag;
   d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
 
