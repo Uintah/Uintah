@@ -19,9 +19,9 @@ ImageMaterial::ImageMaterial(int, const string &texfile,
 			     ImageMaterial::Mode umode,
 			     ImageMaterial::Mode vmode, double Kd,
 			     const Color& specular, double specpow,
-			     double refl, bool flipped=false)
-    : umode(umode), vmode(vmode), Kd(Kd), specular(specular),
-      specpow(specpow), refl(refl),  transp(0), valid_(false)
+			     double refl, bool /*flipped = false*/) :
+  umode(umode), vmode(vmode), Kd(Kd), specular(specular),
+  specpow(specpow), refl(refl),  transp(0), valid_(false)
 {
     read_hdr_image(texfile);
     outcolor=Color(0,0,0);
@@ -30,9 +30,9 @@ ImageMaterial::ImageMaterial(int, const string &texfile,
 ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 			     ImageMaterial::Mode vmode, double Kd,
 			     const Color& specular, double specpow,
-			     double refl, bool flipped=false)
-    : umode(umode), vmode(vmode), Kd(Kd), specular(specular),
-      specpow(specpow), refl(refl),  transp(0), valid_(false)
+			     double refl, bool flipped/*=false*/) :
+  umode(umode), vmode(vmode), Kd(Kd), specular(specular),
+  specpow(specpow), refl(refl),  transp(0), valid_(false)
 {
   PPMImage ppm(texfile);
   if (ppm.valid())  {
@@ -46,9 +46,10 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 			     ImageMaterial::Mode vmode, double Kd,
 			     const Color& specular, double specpow,
-			     double refl,  double transp, bool flipped=false)
-    : umode(umode), vmode(vmode), Kd(Kd), specular(specular),
-      specpow(specpow), refl(refl),  transp(transp), valid_(false)
+			     double refl,  double transp, 
+			     bool flipped/*=false*/) :
+  umode(umode), vmode(vmode), Kd(Kd), specular(specular),
+  specpow(specpow), refl(refl),  transp(transp), valid_(false)
 {
   PPMImage ppm(texfile);
   if (ppm.valid()) {
