@@ -74,7 +74,7 @@ void AllocatorResetDefaultTagNew()
   default_new_array_tag = "Unknown - operator new[]";
 }
 
-const char* AllocatorSetDefaultTag(char* tag)
+const char* AllocatorSetDefaultTag(const char* tag)
 {
   AllocatorSetDefaultTagMalloc(tag);
   return AllocatorSetDefaultTagNew(tag);
