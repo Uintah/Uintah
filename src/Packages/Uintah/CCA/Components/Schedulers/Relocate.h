@@ -24,7 +24,7 @@ CLASS
 
 GENERAL INFORMATION
 
-   MPIScheduler.h
+   Relocate.h
 
    Steven G. Parker
    Department of Computer Science
@@ -62,7 +62,7 @@ WARNING
 					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls);
 
-    const MaterialSet* getMaterialSet() { return reloc_matls;}
+    const MaterialSet* getMaterialSet() const { return reloc_matls;}
 
   protected:
     virtual void relocateParticles(const ProcessorGroup*,
