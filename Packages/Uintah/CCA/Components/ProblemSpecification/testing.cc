@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include <xercesc/util/PlatformUtils.hpp>
-#include <xercesc/parsers/DOMParser.hpp>
+#include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/dom/DOMNode.hpp>
 #include <xercesc/dom/DOMNamedNodeMap.hpp>
 #include "DOMTreeErrorReporter.hpp"
@@ -37,31 +37,31 @@ int main(int argc, char *argv[]){
 
   string xmlFile = argv[1];
 
-  DOMParser parser;
+  XercesDOMParser* parser = new XercesDOMParser;
 
-  parser.parse(xmlFile.c_str());
+  parser->parse(xmlFile.c_str());
 
-  DOMDocument doc = parser.getDocument();
+  DOMDocument* doc = parser->getDocument();
  
-  DOMNodeList node_list = doc.getElementsByTagName("Uintah_specification");
+  DOMNodeList* node_list = doc->getElementsByTagName("Uintah_specification");
 
   int nlist = node_list.getLength();
   cout << "Number of items in list " << nlist << endl;
-  cout << "Name = " << node_list.item(0).getNodeName() << endl;
+  cout << "Name = " << node_list->item(0)->getNodeName() << endl;
   
   // Process all of the nodes in the document
 
   for (int i = 0; i < nlist; i++) {
-    DOMNode n_child = node_list.item(i);
-    cout << "First node in tree: " << n_child.getNodeName() << endl;
-    cout << "Type " << n_child.getNodeType() << endl;
-    cout << "Contents " << n_child.getNodeValue() << endl;
+    DOMNode* n_child = node_list->item(i);
+    cout << "First node in tree: " << n_child->getNodeName() << endl;
+    cout << "Type " << n_child->getNodeType() << endl;
+    cout << "Contents " << n_child->getNodeValue() << endl;
    
-    for (DOMNode sibling = n_child.getFirstChild(); sibling != 0;
-	 sibling = sibling.getNextSibling()) {
-      cout << "Sibling node in tree: " << sibling.getNodeName() << endl;
-      cout << "Type " << sibling.getNodeType() << endl;
-      cout << "Contents " << sibling.getNodeValue() << endl;
+    for (DOMNode* sibling = n_child->getFirstChild(); sibling != 0;
+	 sibling = sibling->getNextSibling()) {
+      cout << "Sibling node in tree: " << sibling->getNodeName() << endl;
+      cout << "Type " << sibling->getNodeType() << endl;
+      cout << "Contents " << sibling->getNodeValue() << endl;
     }
    
   }
@@ -72,9 +72,9 @@ int main(int argc, char *argv[]){
   //  title and return its contents.
   
  
-  DOMNodeList top_node_list = doc.getElementsByTagName("Time");
+  DOMNodeList* top_node_list = doc->getElementsByTagName("Time");
   cout << "Processing doc nodes" << endl;
-  DOMNode tmp = doc.cloneNode(true);
+  DOMNode* tmp = doc->cloneNode(true);
   string search("initTime");
   DOMString dsearch(search.c_str());
   processNode(tmp,dsearch);
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]){
   // Check if tmp is Null
 
   if (tmp != 0) {
-    cout << "tmp node name is " << tmp.getNodeName() << endl;
+    cout << "tmp node name is " << tmp->getNodeName() << endl;
   }
 
   

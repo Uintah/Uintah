@@ -296,9 +296,10 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    if (d_writeMeta) {
       string inputname = d_dir.getName()+"/input.xml";
       ofstream out(inputname.c_str());
-      out << params->getNode()->getOwnerDocument() << endl;
-      createIndexXML(d_dir);
       
+      out << params->getNode()->getOwnerDocument() << endl; 
+      createIndexXML(d_dir);
+   
       if (d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0) {
 	 d_checkpointsDir = d_dir.createSubdir("checkpoints");
 	 createIndexXML(d_checkpointsDir);
@@ -577,13 +578,10 @@ void DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
 
 void DataArchiver::createIndexXML(Dir& dir)
 {
-   DOMImplementation* impl = DOMImplementationRegistry::getDOMImplementation(XMLString::transcode("LS"));
-    
+   DOMImplementation* impl = DOMImplementationRegistry::getDOMImplementation(XMLString::transcode("Core"));
    DOMDocument* doc = impl->createDocument(0, XMLString::transcode("Uintah_DataArchive"),0);
    DOMElement* rootElem = doc->getDocumentElement();
-
    appendElement(rootElem, doc->createTextNode(XMLString::transcode("numberOfProcessors")), d_myworld->size());
-
    DOMElement* metaElem = doc->createElement(XMLString::transcode("Meta"));
    rootElem->appendChild(metaElem);
    appendElement(metaElem, doc->createTextNode(XMLString::transcode("username")), 
@@ -595,10 +593,10 @@ void DataArchiver::createIndexXML(Dir& dir)
 		 endianness().c_str() );
    appendElement(metaElem, doc->createTextNode(XMLString::transcode("nBits")),
 		 (int)sizeof(unsigned long) * 8 );
-   
    string iname = dir.getName()+"/index.xml";
    ofstream out(iname.c_str());
    out << doc << endl;
+   doc->release();
 }
 
 void DataArchiver::finalizeTimestep(double time, double delt,
@@ -968,18 +966,18 @@ DataArchiver::scheduleOutputTimestep(Dir& baseDir,
 DOMDocument* DataArchiver::loadDocument(string xmlName)
 {
    // Instantiate the DOM parser.
-   XercesDOMParser parser;
-   parser.setDoValidation(false);
+   XercesDOMParser* parser = new XercesDOMParser;
+   parser->setDoValidation(false);
    
    SimpleErrorHandler handler;
-   parser.setErrorHandler(&handler);
+   parser->setErrorHandler(&handler);
 
-   parser.parse(xmlName.c_str());
+   parser->parse(xmlName.c_str());
    
    if(handler.foundError)
      throw InternalError("Error reading file: " + xmlName);
    
-   return parser.getDocument();
+   return parser->getDocument();
 }
 
 const string
@@ -1159,22 +1157,22 @@ void DataArchiver::output(const ProcessorGroup*,
   ifstream test(xmlFilename.c_str());
   if(test){
     // Instantiate the DOM parser.
-    XercesDOMParser parser;
-    parser.setDoValidation(false);
+    XercesDOMParser* parser = new XercesDOMParser;
+    parser->setDoValidation(false);
     
     SimpleErrorHandler handler;
-    parser.setErrorHandler(&handler);
+    parser->setErrorHandler(&handler);
     
     // Parse the input file
     // No exceptions just yet, need to add
     
-    parser.parse(xmlFilename.c_str());
+    parser->parse(xmlFilename.c_str());
     
     if(handler.foundError)
       throw InternalError("Error reading file: "+xmlFilename);
     
     // Add the parser contents to the ProblemSpecP d_doc
-    doc = parser.getDocument();
+    doc = parser->getDocument();
   } else {
     DOMImplementation* impl = DOMImplementationRegistry::getDOMImplementation(XMLString::transcode("LS"));;
     

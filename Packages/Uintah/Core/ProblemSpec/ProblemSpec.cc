@@ -29,18 +29,21 @@ using namespace SCIRun;
 using namespace std;
 
 ProblemSpec::ProblemSpec(const DOMNode* node, bool doWrite)
-  : d_node(node->cloneNode(true)), d_write(doWrite)
-  // call cloneNode instead of scinew DOMNode
+  // : d_node(const_cast<DOMNode*>(node)), d_write(doWrite)
+  // pass node and not node->cloneNode instead of d_node(scinew DOMNode(node))
 {
+  d_node = const_cast<DOMNode*>(node);
+  d_write = doWrite;
 }
 ProblemSpec::~ProblemSpec()
 {
-  delete d_node;
+  // the problem spec doesn't allocate any new memory.
+  //delete d_node;
 }
 
 ProblemSpecP ProblemSpec::findBlock() const
 {
-  ProblemSpecP prob_spec = scinew ProblemSpec(d_node, d_write);
+  //ProblemSpecP prob_spec = scinew ProblemSpec(d_node, d_write);
 
   const DOMNode* child = d_node->getFirstChild();
   if (child != 0) {
@@ -57,13 +60,13 @@ ProblemSpecP ProblemSpec::findBlock() const
 
 ProblemSpecP ProblemSpec::findBlock(const std::string& name) const 
 {
-   const DOMNode* found_node = findNode(name,d_node);
+  const DOMNode* found_node = findNode(name,d_node);
 
   if (found_node == NULL) {
     return 0;
   }
   else {
-     return scinew ProblemSpec(found_node, d_write);
+    return scinew ProblemSpec(found_node, d_write);
   }
 }
 

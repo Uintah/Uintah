@@ -80,10 +80,10 @@ GV_TaskGraph::inflate(string xmlDir)
 
   GV_TaskGraph* pGraph = scinew GV_TaskGraph();
   
-  XercesDOMParser parser;
-  parser.setDoValidation(false);
+  XercesDOMParser* parser = new XercesDOMParser;
+  parser->setDoValidation(false);
   SimpleErrorHandler handler;
-  parser.setErrorHandler(&handler);
+  parser->setErrorHandler(&handler);
 
   int process = 0;
   string xmlFileName;
@@ -97,15 +97,15 @@ GV_TaskGraph::inflate(string xmlDir)
       break;
     fclose(tstFile);
 
-    parser.parse(xmlFileName.c_str());
+    parser->parse(xmlFileName.c_str());
     if (handler.foundError) {
       cerr << "Error parsing taskgraph file " << xmlFileName << endl;
       return 0;
     }
  
-    docs.push_back(parser.getDocument());
+    docs.push_back(parser->getDocument());
 
-    pGraph->readNodes(parser.getDocument());
+    pGraph->readNodes(parser->getDocument());
     process++;
   } while (process < 100000 /* it will most likely always break out of loop
 			       -- but just so it won't ever be caught in an
