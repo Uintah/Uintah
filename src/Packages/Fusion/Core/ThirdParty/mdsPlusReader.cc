@@ -68,8 +68,10 @@ int MDSPlusReader::connect( std::string server )
     }
   } else {
 
+#ifdef HAVE_MDSPLUS
     /* Connect to MDSplus */
     retVal = MDS_Connect((char*)server.c_str());
+#endif
 
     if( retVal == 0 ) {
       server_ = server_;
@@ -98,9 +100,11 @@ int MDSPlusReader::open( std::string tree, int shot )
       retVal = -2;
     }
   } else {
+
+#ifdef HAVE_MDSPLUS
     /* Open tree */
     retVal = MDS_Open((char*)tree.c_str(), shot);
-
+#endif
     if( retVal == 0 ) {
       tree_ = tree;
       shot_ = shot;
@@ -126,9 +130,10 @@ void MDSPlusReader::disconnect()
 
   if( connects_ && --connects_ == 0 ) {
 
+#ifdef HAVE_MDSPLUS
     /* Disconnect to MDSplus */
     MDS_Disconnect();
-
+#endif
     server_ = "";
   }
 
@@ -137,6 +142,7 @@ void MDSPlusReader::disconnect()
 
 /*  Query the rank of the node - as in the number of dimensions. */
 int MDSPlusReader::rank( const std::string signal ) {
+#ifdef HAVE_MDSPLUS
 
   mdsPlusLock_.lock();
 
@@ -145,6 +151,9 @@ int MDSPlusReader::rank( const std::string signal ) {
   mdsPlusLock_.unlock();
 
   return rank;
+#else
+  return 0;
+#endif
 }
 
 /*  Query the size of the node  - as in the number of elements. */
@@ -152,16 +161,21 @@ int MDSPlusReader::size( const std::string signal ) {
 
   mdsPlusLock_.lock();
 
+#ifdef HAVE_MDSPLUS
   int size = get_size( signal.c_str() );
 
   mdsPlusLock_.unlock();
 
   return size;
+#else
+  return 0;
+#endif
 }
 
 /*  Query the server for the cylindrical or cartesian components of the grid. */
 double* MDSPlusReader::grid( const std::string axis, int *dims )
 {
+#ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
 
   double* data = get_grid( axis.c_str(), dims );
@@ -169,11 +183,15 @@ double* MDSPlusReader::grid( const std::string axis, int *dims )
   mdsPlusLock_.unlock();
 
   return data;
+#else
+  return NULL;
+#endif
 }
 
 /*  Query the server for the slice nids for the shot. */
 int MDSPlusReader::slice_ids( int **nids ) 
 {
+#ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
 
   int nSlices = get_slice_ids( nids );
@@ -181,11 +199,15 @@ int MDSPlusReader::slice_ids( int **nids )
   mdsPlusLock_.unlock();
 
   return nSlices;
+#else
+  return 0;
+#endif
 }
 
 /*  Query the server for the slice name. */
 std::string MDSPlusReader::slice_name( const int *nids, int slice )
 {
+#ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
 
   std::string name( get_slice_name(nids, slice) );
@@ -193,11 +215,15 @@ std::string MDSPlusReader::slice_name( const int *nids, int slice )
   mdsPlusLock_.unlock();
 
   return name;
+#else
+  return "";
+#endif
 }
 
 /*  Query the server for the slice time. */
 double MDSPlusReader::slice_time( const std::string name )
 {
+#ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
 
   double time = get_slice_time( name.c_str() );
@@ -205,6 +231,9 @@ double MDSPlusReader::slice_time( const std::string name )
   mdsPlusLock_.unlock();
 
   return time;
+#else
+  return 0;
+#endif
 }
 
 
@@ -214,13 +243,16 @@ double *MDSPlusReader::slice_data( const std::string name,
 				   const std::string node,
 				   int *dims )
 {
+#ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
 
   double* data =
     get_slice_data( name.c_str(), space.c_str(), node.c_str(), dims );
-
   mdsPlusLock_.unlock();
 
   return data;
+#else
+  return NULL;
+#endif
 }
 }
