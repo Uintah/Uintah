@@ -20,6 +20,7 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/ChemVis.tcl $(SRCDIR)/PartToGeom.tcl \
 	$(SRCDIR)/RescaleColorMapForParticles.tcl $(SRCDIR)/ParticleVis.tcl \
 	$(SRCDIR)/NodeHedgehog.tcl $(SRCDIR)/ArchiveReader.tcl \
 	$(SRCDIR)/GridVisualizer.tcl $(SRCDIR)/EigenEvaluator.tcl \
+	$(SRCDIR)/ParticleEigenEvaluator.tcl \
 	$(SRCDIR)/InPlaneEigenEvaluator.tcl \
 	$(SRCDIR)/TensorElementExtractor.tcl
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Uintah/GUI
@@ -29,6 +30,9 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.11  2000/10/17 22:49:35  witzel
+# Added ParticleEigenEvaluator.tcl
+#
 # Revision 1.10  2000/09/20 23:44:50  witzel
 # Added TensorElementExtractor.tcl
 #
