@@ -19,7 +19,6 @@ DataWarehouse::DataWarehouse(const ProcessorGroup* myworld,
 
 DataWarehouse::~DataWarehouse()
 {
-  cerr << "DataWarehouse being deleted\n";
 }
 
 DataWarehouseP
@@ -33,6 +32,9 @@ DataWarehouse::getTop() const{
 
 //
 // $Log$
+// Revision 1.11  2000/08/23 22:54:01  dav
+// removed debug print statement
+//
 // Revision 1.10  2000/08/23 22:51:34  dav
 // Made d_generation a const
 //
