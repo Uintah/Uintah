@@ -453,9 +453,10 @@ float Galpha=1.0; // doh!  global variable...  probably should be moved...
 static Stealth stealth;
 
 static bool follow_path = false;
+static bool be_quiet = false;
 
 void
-Dpy::handle_keypress( unsigned long key )
+Dpy::handle_keypress( XEvent & e )
 {
   static double FPS = 15;
 
@@ -473,7 +474,12 @@ Dpy::handle_keypress( unsigned long key )
 
   Camera *& camera         = priv->camera;
 
-  printf("key is %x\n", key );
+  unsigned long key = XKeycodeToKeysym(priv->dpy, e.xkey.keycode, 0);
+
+  XKeyEvent & xke = (XKeyEvent&)e;
+  bool        shift_down = xke.state & ShiftMask;
+
+  cout << "shift_down: " << shift_down << "\n";
 
   switch( key ){
 
@@ -491,7 +497,7 @@ Dpy::handle_keypress( unsigned long key )
     cout << "pitchdown\n";
     stealth.pitchDown();
     break;
-  case XK_KP_Begin:
+  case XK_KP_Down:
     cout << "pitchup\n";
     stealth.pitchUp();
     break;
@@ -528,8 +534,12 @@ Dpy::handle_keypress( unsigned long key )
 
   case XK_Escape:
   case XK_q:
-    scene->rtrt_engine->exit_clean(1);
-    //	Thread::exitAll(1);
+    if( shift_down ) {
+      be_quiet = !be_quiet;
+    } else {
+      scene->rtrt_engine->exit_clean(1);
+      // Thread::exitAll(1);
+    }
     break;
   case XK_2:
     stereo=true;
@@ -539,6 +549,14 @@ Dpy::handle_keypress( unsigned long key )
     break;
   case XK_x:
     follow_path = !follow_path;
+
+    // If starting to follow the path, stop all movement, and then
+    // accelerate once.  This will start us moving.
+    if( follow_path ) {
+      stealth.stopAllMovement();
+      stealth.accelerate();
+    }
+
     break;
   case XK_a:
     animate=!animate;
@@ -668,6 +686,18 @@ Dpy::handle_keypress( unsigned long key )
   case XK_Right:
     left-=4;
     break;
+  case XK_slash: // Save a checkpoint frame.
+    stealth.clearPath();
+    break;
+  case XK_quoteright: // Save a checkpoint frame.
+    stealth.loadPath( "stealth_path" );
+    break;
+  case XK_comma: // Save a checkpoint frame.
+    stealth.savePath( "temp" );
+    break;
+  case XK_period: // Save a checkpoint frame.
+    stealth.addToPath( camera->get_eye(), camera->get_lookat() );
+    break;
   }
 } // end handle_keypress();
 
@@ -760,7 +790,7 @@ void Dpy::get_input()
       priv->exposed=true;
       break;
     case KeyPress:
-      handle_keypress( XKeycodeToKeysym(priv->dpy, e.xkey.keycode, 0) );
+      handle_keypress( e );
       break;
     case ButtonPress:
       handle_mouse_press( e );
@@ -1283,7 +1313,7 @@ void Dpy::run()
       double dt=tnow-last_frame;
       double framerate=1./dt;
 #if 1
-      if(framerate<4){
+      if( framerate<4 && !be_quiet ){
 	cerr << "dt=" << dt << '\n';
       }
 #endif
@@ -1566,7 +1596,7 @@ void Dpy::run()
       //st->add(tnow, Color(1,0,0));
       double dt=tnow-last_frame;
       double framerate=1./dt;
-      if(framerate<4){
+      if( framerate<4 && !be_quiet ){
 	cerr << "dt=" << dt << '\n';
       }
       last_frame=tnow;
