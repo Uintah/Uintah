@@ -44,6 +44,10 @@ namespace Uintah {
              const Patch* p, const int mat_id);
 
 /*`==========TESTING==========*/
+bool are_We_Using_LODI_BC(const Patch* patch,
+                          vector<bool>& which_face_LODI,
+                          const int mat_id);
+
 void setBCPress_LODI(CCVariable<double>& press_CC,
                      StaticArray<CCVariable<double> >& sp_vol_CC,
                      StaticArray<constCCVariable<double> >& Temp_CC,
@@ -91,10 +95,12 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
               const int mat_id);
 
 void computeNu(CCVariable<Vector>& nu, 
+               const vector<bool>& is_LODI_face,
                const CCVariable<double>& p, 
                const Patch* patch);  
               
 void computeDi(StaticArray<CCVariable<Vector> >& d,
+               const vector<bool>& is_LODI_face,
                constCCVariable<double>& rho_old,  
                const CCVariable<double>& press_tmp, 
                constCCVariable<Vector>& vel_old, 
