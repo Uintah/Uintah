@@ -174,143 +174,144 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP&,
 
 audit();
 /*__________________________________
-*   Plotting variables
-*___________________________________*/
-    putenv("PGPLOT_I_AM_HERE=0");              
-                                        /* tell the plotting routine that  */
-                                        /* you're at the top of main        */
+ *   Plotting variables
+ *___________________________________*/
+ putenv("PGPLOT_I_AM_HERE=0");              
+ /* tell the plotting routine that  */
+ /* you're at the top of main        */
+ 
+ putenv("PGPLOT_PLOTTING_ON_OFF=1");
+ putenv("PGPLOT_OPEN_NEW_WINDOWS=1"); 
+ 
+ /*__________________________________
+  * Now make sure that the face centered
+  * values know about each other.
+  * for example 
+  * [i][j][k][RIGHT][m] = [i-1][j][k][LEFT][m]
+  *___________________________________*/  
+ 
+ audit();
+ equate_ptr_addresses_adjacent_cell_faces(              
+					  x_FC, y_FC,z_FC,
+					  uvel_FC,vvel_FC, wvel_FC,
+					  press_FC,
+					  tau_X_FC, tau_Y_FC, tau_Z_FC,
+					  nMaterials);   
+ audit();
+ /*______________________________________________________________________
+  *
+  *                       PROBLEM INITIALIZATION SECTION
+  *   Initializing routines                                                  
+  *   First read the problem input then test the inputs.                     
+  * -----------------------------------------------------------------------  */
+ 
+ 
+ 
+ int printSwitch = 1;
+ t = 0.0;
+ m = 1;
+ fileNum = 1;
 
-    putenv("PGPLOT_PLOTTING_ON_OFF=1");
-    putenv("PGPLOT_OPEN_NEW_WINDOWS=1"); 
-
-/*__________________________________
-* Now make sure that the face centered
-* values know about each other.
-* for example 
-* [i][j][k][RIGHT][m] = [i-1][j][k][LEFT][m]
-*___________________________________*/  
-
-audit();
-    equate_ptr_addresses_adjacent_cell_faces(              
-                        x_FC,           y_FC,           z_FC,
-                        uvel_FC,        vvel_FC,        wvel_FC,
-                        press_FC,
-                        tau_X_FC,       tau_Y_FC,       tau_Z_FC,
-                        nMaterials);   
-audit();
-/*______________________________________________________________________
-*
-*                       PROBLEM INITIALIZATION SECTION
-*   Initializing routines                                                  
-*   First read the problem input then test the inputs.                     
-* -----------------------------------------------------------------------  */
-
-
-
-     int printSwitch = 1;
-    t = 0.0;
-    m = 1;
-    fileNum = 1;
-                                     
-       readInputFile(   &xLoLimit,      &yLoLimit,      &zLoLimit,     
-                        &xHiLimit,      &yHiLimit,      &zHiLimit,
-                        &delX,          &delY,          &delZ,
-                        uvel_CC,        vvel_CC,        wvel_CC, 
-                        Temp_CC,        press_CC,       rho_CC,
-                        scalar1_CC,     scalar2_CC,     scalar3_CC,
-                        viscosity_CC,   thermalCond_CC, cv_CC,
-                        R,              gamma,
-                        &t_final,       t_output_vars,  delt_limits,
-                        output_file_basename,           output_file_desc,       
-                        grav,           speedSound,
-                        BC_inputs,      BC_Values,      &CFL,
-                        &nMaterials);      
+ readInputFile( &xLoLimit, &yLoLimit, &zLoLimit,     
+		&xHiLimit,      &yHiLimit,      &zHiLimit,
+		&delX,          &delY,          &delZ,
+		uvel_CC,        vvel_CC,        wvel_CC, 
+		Temp_CC,        press_CC,       rho_CC,
+		scalar1_CC,     scalar2_CC,     scalar3_CC,
+		viscosity_CC,   thermalCond_CC, cv_CC,
+		R,              gamma,
+		&t_final,       t_output_vars,  delt_limits,
+		output_file_basename,           output_file_desc,       
+		grav,           speedSound,
+		BC_inputs,      BC_Values,      &CFL,
+		&nMaterials);      
     
-    testInputFile(      xLoLimit,       yLoLimit,       zLoLimit,
-                        xHiLimit,       yHiLimit,       zHiLimit,
-                        delX,           delY,           delZ,
-                        Temp_CC,        press_CC,       rho_CC,
-                        viscosity_CC,   thermalCond_CC, cv_CC,
-                        speedSound,      
-                        t_final,        t_output_vars,  delt_limits,
-                        BC_inputs,      printSwitch,    CFL,
-                        nMaterials); 
-                   
-    definition_of_different_physical_boundary_conditions(              
-                        BC_inputs,      BC_types,       BC_float_or_fixed,
-                        BC_Values,      nMaterials  );  
+ testInputFile(xLoLimit,       yLoLimit,       zLoLimit,
+	       xHiLimit,       yHiLimit,       zHiLimit,
+	       delX,           delY,           delZ,
+	       Temp_CC,        press_CC,       rho_CC,
+	       viscosity_CC,   thermalCond_CC, cv_CC,
+	       speedSound,      
+	       t_final,        t_output_vars,  delt_limits,
+	       BC_inputs,      printSwitch,    CFL,
+	       nMaterials); 
+ 
+ definition_of_different_physical_boundary_conditions(              
+						      BC_inputs, BC_types, 
+						      BC_float_or_fixed,
+						      BC_Values, nMaterials);  
                         
-/*__________________________________
-* Now make sure that the face centered
-* values know about each other.
-* for example 
-* [i][j][k][RIGHT][m] = [i-1][j][k][LEFT][m]
-*___________________________________*/  
+ /*__________________________________
+  * Now make sure that the face centered
+  * values know about each other.
+  * for example 
+  * [i][j][k][RIGHT][m] = [i-1][j][k][LEFT][m]
+  *___________________________________*/  
+ 
+ equate_ptr_addresses_adjacent_cell_faces(              
+					  x_FC, y_FC, z_FC,
+					  uvel_FC, vvel_FC, wvel_FC,
+					  press_FC,
+					  tau_X_FC,tau_Y_FC,tau_Z_FC,
+					  nMaterials);   
 
-    equate_ptr_addresses_adjacent_cell_faces(              
-                        x_FC,           y_FC,           z_FC,
-                        uvel_FC,        vvel_FC,        wvel_FC,
-                        press_FC,
-                        tau_X_FC,       tau_Y_FC,       tau_Z_FC,
-                        nMaterials);   
-
-    /*__________________________________
-    * Generate a grid
-    *___________________________________*/ 
-    generateGrid(       xLoLimit,       yLoLimit,       zLoLimit,
-                        xHiLimit,       yHiLimit,       zHiLimit,
-                        delX,           delY,           delZ,
-                        x_CC,           y_CC,           z_CC,   Vol_CC,  
-                        x_FC,           y_FC,           z_FC );
-    /*__________________________________
-    *   zero the face-centered arrays
-    *___________________________________*/
-    zero_arrays_6d(
-                        xLoLimit,       yLoLimit,       zLoLimit,             
-                        xHiLimit,       yHiLimit,       zHiLimit,
-                        1,              N_CELL_FACES,
-                        1,              nMaterials,     
-                        7,             
-                        uvel_FC,        vvel_FC,        wvel_FC,
-                        press_FC,
-                        tau_X_FC,       tau_Y_FC,       tau_Z_FC);                         
-    stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
+ /*__________________________________
+  * Generate a grid
+  *___________________________________*/ 
+ generateGrid(xLoLimit,       yLoLimit,       zLoLimit,
+	      xHiLimit,       yHiLimit,       zHiLimit,
+	      delX,           delY,           delZ,
+	      x_CC,           y_CC,           z_CC,   Vol_CC,  
+	      x_FC,           y_FC,           z_FC );
+ /*__________________________________
+  *   zero the face-centered arrays
+  *___________________________________*/
+ zero_arrays_6d(
+		xLoLimit,       yLoLimit,       zLoLimit,             
+		xHiLimit,       yHiLimit,       zHiLimit,
+		1,              N_CELL_FACES,
+		1,              nMaterials,     
+		7,             
+		uvel_FC,        vvel_FC,        wvel_FC,
+		press_FC,
+		tau_X_FC,       tau_Y_FC,       tau_Z_FC);                         
+ stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
                             
-   
-    /*__________________________________
-    *   overide the initial conditions
-    *___________________________________*/
-    #if switchOveride_Initial_Conditions                               
-      #include "ice_sm/Header_files/overide_initial_conds.i"
-    #endif 
-    
-    /*__________________________________
-    *  If desired plot the inputs
-    *___________________________________*/
-    #if switchDebug_main_input
-        #define switchInclude_main_1 1
-        #include "debugcode.i"
-        #undef switchInclude_main_1
-    #endif 
-        
-    /*__________________________________
-    *   For the first time through
-    *   set some variables
-    *___________________________________*/
-    delt    = delt_limits[3];              
-    t       = delt;
-    fprintf(stderr,"\nInitial time %f, timestep is %f\n",t,delt);
-    
-   
-                               
+ 
+ /*__________________________________
+  *   overide the initial conditions
+  *___________________________________*/
+#if switchOveride_Initial_Conditions                               
+#include "ice_sm/Header_files/overide_initial_conds.i"
+#endif 
+ 
+ /*__________________________________
+  *  If desired plot the inputs
+  *___________________________________*/
+#if switchDebug_main_input
+#define switchInclude_main_1 1
+#include "debugcode.i"
+#undef switchInclude_main_1
+#endif 
+ 
+ /*__________________________________
+  *   For the first time through
+  *   set some variables
+  *___________________________________*/
+ delt    = delt_limits[3];              
+ t       = delt;
+ fprintf(stderr,"\nInitial time %f, timestep is %f\n",t,delt);
+ 
+ 
+ 
 #if 0
-    CCVariable<Vector> vel_CC;
-    ds.put("vel_CC", vel_CCLabel,0,patch);
-
+ CCVariable<Vector> vel_CC;
+ ds.put("vel_CC", vel_CCLabel,0,patch);
+ 
 #else
-    cerr << "put vel_CC not done\n";
+ cerr << "put vel_CC not done\n";
 #endif
-
+ 
 }
 
 void ICE::scheduleInitialize(const LevelP& level,
@@ -349,30 +350,47 @@ void ICE::actuallyInitialize(const ProcessorContext*,
 			     DataWarehouseP& new_dw)
 {
   cerr <<"Doing actuallyInitialize . . ." << endl;
-  CCVariable<Vector> vel_CC;
-  CCVariable<double> press,rho,temp,cv;
-  FCVariable<Vector> vel_FC,tau;
-  FCVariable<double> press_FC;
+  CCVariable<Vector> vel_cc;
+  CCVariable<double> press_cc,rho_cc,temp_cc,cv_cc;
+  FCVariable<Vector> vel_fc,tau_fc;
+  FCVariable<double> press_fc;
   
-  new_dw->allocate(vel_CC,vel_CCLabel,0,patch);
-  new_dw->put(vel_CC,vel_CCLabel,0,patch);
+  new_dw->allocate(vel_cc,vel_CCLabel,0,patch);
+  convertNR_4dToUCF(patch,vel_cc,uvel_CC,vvel_CC,wvel_CC,xLoLimit,
+		    xHiLimit,yLoLimit,yHiLimit,zLoLimit,zHiLimit,
+		    nMaterials);
+  new_dw->put(vel_cc,vel_CCLabel,0,patch);
 
-  new_dw->allocate(press,press_CCLabel,0,patch);
-  new_dw->put(press,press_CCLabel,0,patch);
+  new_dw->allocate(press_cc,press_CCLabel,0,patch);
+  convertNR_4dToUCF(patch,press_cc,press_CC,xLoLimit,
+		    xHiLimit,yLoLimit,yHiLimit,zLoLimit,zHiLimit,
+		    nMaterials);
+  new_dw->put(press_cc,press_CCLabel,0,patch);
 
-  new_dw->allocate(rho,rho_CCLabel,0,patch);
-  new_dw->put(rho,rho_CCLabel,0,patch);
-  new_dw->allocate(temp,temp_CCLabel,0,patch);
-  new_dw->put(temp,temp_CCLabel,0,patch);
-  new_dw->allocate(cv,cv_CCLabel,0,patch);
-  new_dw->put(cv,cv_CCLabel,0,patch);
+  new_dw->allocate(rho_cc,rho_CCLabel,0,patch);
+  convertNR_4dToUCF(patch,rho_cc,rho_CC,xLoLimit,
+		    xHiLimit,yLoLimit,yHiLimit,zLoLimit,zHiLimit,
+		    nMaterials);
+  new_dw->put(rho_cc,rho_CCLabel,0,patch);
 
-  new_dw->allocate(vel_FC,vel_FCLabel,0,patch);
-  new_dw->put(vel_FC,vel_FCLabel,0,patch);
-  new_dw->allocate(press_FC,press_FCLabel,0,patch);
-  new_dw->put(press_FC,press_FCLabel,0,patch);
-  new_dw->allocate(tau,tau_FCLabel,0,patch);
-  new_dw->put(tau,tau_FCLabel,0,patch);
+  new_dw->allocate(temp_cc,temp_CCLabel,0,patch);
+  convertNR_4dToUCF(patch,temp_cc,Temp_CC,xLoLimit,
+		    xHiLimit,yLoLimit,yHiLimit,zLoLimit,zHiLimit,
+		    nMaterials);
+  new_dw->put(temp_cc,temp_CCLabel,0,patch);
+
+  new_dw->allocate(cv_cc,cv_CCLabel,0,patch);
+  convertNR_4dToUCF(patch,cv_cc,cv_CC,xLoLimit,
+		    xHiLimit,yLoLimit,yHiLimit,zLoLimit,zHiLimit,
+		    nMaterials);
+  new_dw->put(cv_cc,cv_CCLabel,0,patch);
+
+  new_dw->allocate(vel_fc,vel_FCLabel,0,patch);
+  new_dw->put(vel_fc,vel_FCLabel,0,patch);
+  new_dw->allocate(press_fc,press_FCLabel,0,patch);
+  new_dw->put(press_fc,press_FCLabel,0,patch);
+  new_dw->allocate(tau_fc,tau_FCLabel,0,patch);
+  new_dw->put(tau_fc,tau_FCLabel,0,patch);
 
 
 }
@@ -397,7 +415,6 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
     }
 
 }
-
 void ICE::actuallyComputeStableTimestep(const ProcessorContext*,
 					const Patch* patch,
 					DataWarehouseP& fromDW,
@@ -406,9 +423,16 @@ void ICE::actuallyComputeStableTimestep(const ProcessorContext*,
   cerr << "Doing actuallyComputeStableTimestep . . ." << endl;
 
   
-  CCVariable<Vector> vel_CC;
-  toDW->get(vel_CC, vel_CCLabel,0, patch,Ghost::None,0);
+  CCVariable<Vector> vel_cc;
+  toDW->get(vel_cc, vel_CCLabel,0, patch,Ghost::None,0);
+
+#if 0
+  for (CellIterator iter = patch->getCellIterator(patch->getBox());
+       !iter.done(); iter++) {
+    cerr << "vel_cc = " << vel_cc[*iter] << endl;
+  }
   
+
   for (int i = xLoLimit; i <= xHiLimit; i++) {
     for (int j = yLoLimit; j <= yHiLimit; j++) {
       for (int k = zLoLimit; k <= zHiLimit; k++) {
@@ -421,10 +445,10 @@ void ICE::actuallyComputeStableTimestep(const ProcessorContext*,
       }
     }
   }
-  
+#endif
   // Convert the data
   
-  convertUCFToNR_4d(patch,vel_CC,uvel_CC,vvel_CC,wvel_CC,xLoLimit,xHiLimit,
+  convertUCFToNR_4d(patch,vel_cc,uvel_CC,vvel_CC,wvel_CC,xLoLimit,xHiLimit,
 		    yLoLimit,yHiLimit,zLoLimit,zHiLimit,nMaterials);
   
   /*__________________________________
@@ -519,8 +543,8 @@ void ICE::scheduleTimeAdvance(double /*t*/,
 	Task* t = scinew Task("ICE::step1", patch, old_dw, new_dw,
 			      this, &ICE::actuallyStep1);
 	t->requires(old_dw, vel_CCLabel, 0,patch, Ghost::None);
-	t->requires(old_dw, press_CCLabel, 0,patch, Ghost::None);
-	t->requires(old_dw, rho_CCLabel, 0,patch, Ghost::None);
+	//	t->requires(old_dw, press_CCLabel, 0,patch, Ghost::None);
+	//t->requires(old_dw, rho_CCLabel, 0,patch, Ghost::None);
 	t->requires(old_dw, temp_CCLabel, 0,patch, Ghost::None);
 	t->requires(old_dw, cv_CCLabel, 0,patch, Ghost::None);
 
@@ -623,6 +647,8 @@ void ICE::scheduleTimeAdvance(double /*t*/,
 	t->requires(old_dw, vel_CCLabel, 0,patch, Ghost::None);
 //  	t->requires(old_dw, "params", ProblemSpec::getTypeDescription());
   	t->computes(new_dw, vel_CCLabel,0,patch);
+	t->computes(new_dw, temp_CCLabel,0,patch);
+	t->computes(new_dw, cv_CCLabel,0,patch);
 	t->usesMPI(false);
 	t->usesThreads(false);
 	//t->whatis the cost model?();
@@ -642,37 +668,37 @@ void ICE::actuallyStep0(const ProcessorContext*,
 {
 
   cerr << "Actually doing step 0" << endl;
-
+  
   /*__________________________________
-*   Plotting variables
-*___________________________________*/
+   *   Plotting variables
+   *___________________________________*/
 #if (switchDebug_main == 1|| switchDebug_main == 2 || switchDebug_main_input == 1)
-    #include "plot_declare_vars.h"   
+#include "plot_declare_vars.h"   
 #endif
-    stat = putenv("PGPLOT_DIR=/usr/people/jas/PSE/src/Uintah/Components/ICE/ice_sm/Libraries");
-    stat = putenv("PGPLOT_I_AM_HERE=0");              
-                                        /* tell the plotting routine that  */
-                                        /* you're at the top of main       */      
-
-    stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
-    stat = putenv("PGPLOT_OPEN_NEW_WINDOWS=1");  
-
-
-    /*__________________________________
-    * update the physical boundary conditions
-    * and initialize some arrays
-    *___________________________________*/                        
-    update_CC_FC_physical_boundary_conditions( 
-                        xLoLimit,       yLoLimit,       zLoLimit,             
-                        xHiLimit,       yHiLimit,       zHiLimit,             
-                        delX,           delY,           delZ,
-                        BC_types,       BC_float_or_fixed,
-                        BC_Values, 
-                        nMaterials,     3,                 
-                        uvel_CC,        UVEL,           uvel_FC,
-                        vvel_CC,        VVEL,           vvel_FC,
-                        wvel_CC,        WVEL,           wvel_FC);
-                        
+  stat = putenv("PGPLOT_DIR=/usr/people/jas/PSE/src/Uintah/Components/ICE/ice_sm/Libraries");
+  stat = putenv("PGPLOT_I_AM_HERE=0");              
+  /* tell the plotting routine that  */
+  /* you're at the top of main       */      
+  
+  stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
+  stat = putenv("PGPLOT_OPEN_NEW_WINDOWS=1");  
+  
+  
+  /*__________________________________
+   * update the physical boundary conditions
+   * and initialize some arrays
+   *___________________________________*/                        
+  update_CC_FC_physical_boundary_conditions( 
+					    xLoLimit, yLoLimit, zLoLimit,      
+					    xHiLimit,yHiLimit, zHiLimit,
+					    delX,delY, delZ,
+					    BC_types, BC_float_or_fixed,
+					    BC_Values, 
+					    nMaterials, 3,                 
+					    uvel_CC, UVEL, uvel_FC,
+					    vvel_CC, VVEL, vvel_FC,
+					    wvel_CC, WVEL, wvel_FC);
+  
     update_CC_physical_boundary_conditions( 
                         xLoLimit,       yLoLimit,       zLoLimit,             
                         xHiLimit,       yHiLimit,       zHiLimit,             
@@ -712,31 +738,57 @@ void ICE::actuallyStep1(const ProcessorContext*,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw)
 {
+  
+  /*__________________________________
+   *   S  T  E  P     1 
+   *  Use the equation of state to get
+   *  P at the cell center
+   *___________________________________*/
+  // Inputs = 
+  // Outputs = 
 
-  CCVariable<double> pressure;
-  CCVariable<double> rho;
-  CCVariable<double> temp;
-  CCVariable<double> cv;
-     /*__________________________________
-     *   S  T  E  P     1 
-     *  Use the equation of state to get
-     *  P at the cell center
-     *___________________________________*/
-    #if switch_step1_OnOff
+  CCVariable<double> press_cc;
+  CCVariable<double> rho_cc;
+  CCVariable<double> temp_cc;
+  CCVariable<double> cv_cc;
+
+  old_dw->get(press_cc,press_CCLabel, 0, patch, Ghost::None, 0);
+  old_dw->get(rho_cc,rho_CCLabel, 0, patch, Ghost::None, 0);
+  old_dw->get(temp_cc,temp_CCLabel, 0, patch, Ghost::None, 0);
+  old_dw->get(cv_cc,cv_CCLabel, 0, patch, Ghost::None, 0);
+#if 0
+  convertUCFToNR_4d(patch,press_cc,press_CC,xLoLimit,xHiLimit,
+		    yLoLimit,yHiLimit,zLoLimit,zHiLimit,nMaterials);
+
+  convertUCFToNR_4d(patch,rho_cc,rho_CC,xLoLimit,xHiLimit,
+		    yLoLimit,yHiLimit,zLoLimit,zHiLimit,nMaterials);
+
+  convertUCFToNR_4d(patch,temp_cc,Temp_CC,xLoLimit,xHiLimit,
+		    yLoLimit,yHiLimit,zLoLimit,zHiLimit,nMaterials);
+
+  convertUCFToNR_4d(patch,cv_cc,cv_CC,xLoLimit,xHiLimit,
+		    yLoLimit,yHiLimit,zLoLimit,zHiLimit,nMaterials);
+#endif
+
+
+#if switch_step1_OnOff
   cerr << "Actually doing step 1" << endl;
-        equation_of_state(
-                        xLoLimit,       yLoLimit,       zLoLimit,
-                        xHiLimit,       yHiLimit,       zHiLimit,
-                        R,
-                        press_CC,       rho_CC,         Temp_CC,
-                        cv_CC,          nMaterials   );
-                        
-        speed_of_sound(
-                        xLoLimit,       yLoLimit,       zLoLimit,       
-                        xHiLimit,       yHiLimit,       zHiLimit,       
-                        gamma,          R,              Temp_CC,     
-                        speedSound,     nMaterials   );
-    #endif
+  equation_of_state(
+		    xLoLimit,       yLoLimit,       zLoLimit,
+		    xHiLimit,       yHiLimit,       zHiLimit,
+		    R,
+		    press_CC,       rho_CC,         Temp_CC,
+		    cv_CC,          nMaterials   );
+  
+  speed_of_sound(
+		 xLoLimit,       yLoLimit,       zLoLimit,       
+		 xHiLimit,       yHiLimit,       zHiLimit,       
+		 gamma,          R,              Temp_CC,     
+		 speedSound,     nMaterials   );
+#endif
+  
+  // convert NR stuff back to ucf and store in data warehouse
+
 }
 
 void ICE::actuallyStep2(const ProcessorContext*,
@@ -745,13 +797,13 @@ void ICE::actuallyStep2(const ProcessorContext*,
 			DataWarehouseP& new_dw)
 {
 
-  CCVariable<Vector> velocity;
-  old_dw->get(velocity, vel_CCLabel, 0, patch, Ghost::None,0);
+  CCVariable<Vector> vel_cc;
+  old_dw->get(vel_cc, vel_CCLabel, 0, patch, Ghost::None,0);
   // Convert from UCF to NR
-
-  convertUCFToNR_4d(patch,velocity,uvel_CC,vvel_CC,wvel_CC,xLoLimit,xHiLimit,
-		    yLoLimit,yHiLimit,zLoLimit,zHiLimit,nMaterials);
-
+#if 0
+  convertUCFToNR_4d(patch,vel_cc,uvel_CC,vvel_CC,wvel_CC,xLoLimit,
+		    xHiLimit,yLoLimit,yHiLimit,zLoLimit,zHiLimit,nMaterials);
+#endif
     
   cerr << "Actually doing step 2" << endl;
     /*__________________________________
@@ -766,51 +818,59 @@ void ICE::actuallyStep2(const ProcessorContext*,
     *   face-center.  Advection operator needs
     *   uvel_FC and so does the pressure solver
     *___________________________________*/ 
-        stat = putenv("PGPLOT_PLOTTING_ON_OFF=1"); 
-        compute_face_centered_velocities( 
-                        xLoLimit,       yLoLimit,       zLoLimit,
-                        xHiLimit,       yHiLimit,       zHiLimit,
-                        delX,           delY,           delZ,
-                        delt,           
-                        BC_types,       BC_float_or_fixed,
-                        BC_Values,
-                        rho_CC,         grav,           press_CC,
-                        uvel_CC,        vvel_CC,        wvel_CC,
-                        uvel_FC,        vvel_FC,        wvel_FC,
-                        nMaterials ); 
-                        
-                        
-        divergence_of_face_centered_velocity(  
-                        xLoLimit,       yLoLimit,       zLoLimit,
-                        xHiLimit,       yHiLimit,       zHiLimit,
-                        delX,           delY,           delZ,
-                        uvel_FC,        vvel_FC,        wvel_FC,
-                        div_velFC_CC,   nMaterials); 
-        stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
+
+  // Inputs = 
+  // Outputs = 
 
 
-    #if switch_step2_OnOff                        
+  stat = putenv("PGPLOT_PLOTTING_ON_OFF=1"); 
+
+  compute_face_centered_velocities( 
+				   xLoLimit, yLoLimit, zLoLimit,
+				   xHiLimit, yHiLimit, zHiLimit,
+				   delX,delY, delZ,
+				   delt,     
+				   BC_types, BC_float_or_fixed,
+				   BC_Values,
+				   rho_CC, grav, press_CC,
+				   uvel_CC, vvel_CC, wvel_CC,
+				   uvel_FC, vvel_FC, wvel_FC,
+				   nMaterials ); 
   
-    explicit_delPress
-             (  
-                        xLoLimit,       yLoLimit,       zLoLimit,
-                        xHiLimit,       yHiLimit,       zHiLimit,
-                        delX,           delY,           delZ,
-                        div_velFC_CC,
-                        delPress_CC,    press_CC,
-                        rho_CC,         delt,           speedSound,
-                        nMaterials );
-                
-    update_CC_physical_boundary_conditions( 
-                        xLoLimit,       yLoLimit,       zLoLimit,             
-                        xHiLimit,       yHiLimit,       zHiLimit,             
-                        delX,           delY,           delZ,
-                        BC_types,       BC_float_or_fixed,
-                        BC_Values, 
-                        nMaterials,     1,                 
-                        delPress_CC,    DELPRESS);
-                                            
-    #endif     
+  
+  divergence_of_face_centered_velocity(  
+				       xLoLimit,yLoLimit,zLoLimit,
+				       xHiLimit,yHiLimit, zHiLimit,
+				       delX,delY, delZ,
+				       uvel_FC, vvel_FC,wvel_FC,
+				       div_velFC_CC,nMaterials); 
+
+  stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
+
+
+#if switch_step2_OnOff                        
+  
+  explicit_delPress(  
+		    xLoLimit,       yLoLimit,       zLoLimit,
+		    xHiLimit,       yHiLimit,       zHiLimit,
+		    delX,           delY,           delZ,
+		    div_velFC_CC,
+		    delPress_CC,    press_CC,
+		    rho_CC,         delt,           speedSound,
+		    nMaterials );
+  
+  update_CC_physical_boundary_conditions( 
+					 xLoLimit,yLoLimit,zLoLimit,
+					 xHiLimit,yHiLimit, zHiLimit,
+					 delX, delY,delZ,
+					 BC_types,BC_float_or_fixed,
+					 BC_Values, nMaterials, 1,           
+					 delPress_CC,    DELPRESS);
+  
+#endif     
+  // Convert back to ucf format and store in data warehouse
+
+
 }
 
 void ICE::actuallyStep3(const ProcessorContext*,
@@ -1016,36 +1076,36 @@ void ICE::actuallyTimeStep(const ProcessorContext*,
   double delt = this->cheat_delt;
 
 #if 1
-/*__________________________________
-*   Plotting variables
-*___________________________________*/
+  /*__________________________________
+   *   Plotting variables
+   *___________________________________*/
 #if (switchDebug_main == 1|| switchDebug_main == 2 || switchDebug_main_input == 1)
-    #include "plot_declare_vars.h"   
+#include "plot_declare_vars.h"   
 #endif
-    stat = putenv("PGPLOT_DIR=/usr/people/jas/PSE/src/Uintah/Components/ICE/ice_sm/Libraries");
-    stat = putenv("PGPLOT_I_AM_HERE=0");              
-                                        /* tell the plotting routine that  */
-                                        /* you're at the top of main       */      
-
-    stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
-    stat = putenv("PGPLOT_OPEN_NEW_WINDOWS=1");  
+  stat = putenv("PGPLOT_DIR=/usr/people/jas/PSE/src/Uintah/Components/ICE/ice_sm/Libraries");
+  stat = putenv("PGPLOT_I_AM_HERE=0");              
+  /* tell the plotting routine that  */
+  /* you're at the top of main       */      
+  
+  stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
+  stat = putenv("PGPLOT_OPEN_NEW_WINDOWS=1");  
 #endif
-
-/*______________________________________________________________________
-*   M  A  I  N     A  D  V  A  N  C  E     L  O  O  P 
-*_______________________________________________________________________*/                      
-    cerr << "Beginning of while loop " << endl;
-    cerr << "t = " << t << " t_final = " << endl;
-    //    while( t <= t_final)
-    {
-         should_I_write_output = Is_it_time_to_write_output( t, t_output_vars  );
-        /* fprintf(stderr, "should _ I write_output %i\n",should_I_write_output); */
-
+  
+  /*______________________________________________________________________
+   *   M  A  I  N     A  D  V  A  N  C  E     L  O  O  P 
+   *_______________________________________________________________________*/                      
+  cerr << "Beginning of while loop " << endl;
+  cerr << "t = " << t << " t_final = " << endl;
+  //    while( t <= t_final)
+  {
+    should_I_write_output = Is_it_time_to_write_output( t, t_output_vars  );
+    /* fprintf(stderr, "should _ I write_output %i\n",should_I_write_output); */
+    
 #if 0
     /*__________________________________
-    * update the physical boundary conditions
-    * and initialize some arrays
-    *___________________________________*/                        
+     * update the physical boundary conditions
+     * and initialize some arrays
+     *___________________________________*/                        
     update_CC_FC_physical_boundary_conditions( 
                         xLoLimit,       yLoLimit,       zLoLimit,             
                         xHiLimit,       yHiLimit,       zHiLimit,             
@@ -1076,9 +1136,9 @@ void ICE::actuallyTimeStep(const ProcessorContext*,
 
 
     /*__________________________________
-    *   Find the new time step based on the
-    *   Courant condition
-    *___________________________________*/        
+     *   Find the new time step based on the
+     *   Courant condition
+     *___________________________________*/        
     find_delta_time_based_on_CC_vel(
                         xLoLimit,        yLoLimit,      zLoLimit,
                         xHiLimit,        yHiLimit,      zHiLimit,
@@ -1089,42 +1149,42 @@ void ICE::actuallyTimeStep(const ProcessorContext*,
 #endif
 
 #if 0
-     /*__________________________________
+    /*__________________________________
      *   S  T  E  P     1 
      *  Use the equation of state to get
      *  P at the cell center
      *___________________________________*/
-    #if switch_step1_OnOff
-        equation_of_state(
-                        xLoLimit,       yLoLimit,       zLoLimit,
-                        xHiLimit,       yHiLimit,       zHiLimit,
-                        R,
-                        press_CC,       rho_CC,         Temp_CC,
-                        cv_CC,          nMaterials   );
-                        
-        speed_of_sound(
-                        xLoLimit,       yLoLimit,       zLoLimit,       
-                        xHiLimit,       yHiLimit,       zHiLimit,       
-                        gamma,          R,              Temp_CC,     
-                        speedSound,     nMaterials   );
-    #endif
+#if switch_step1_OnOff
+    equation_of_state(
+		      xLoLimit,       yLoLimit,       zLoLimit,
+		      xHiLimit,       yHiLimit,       zHiLimit,
+		      R,
+		      press_CC,       rho_CC,         Temp_CC,
+		      cv_CC,          nMaterials   );
+    
+    speed_of_sound(
+		   xLoLimit,       yLoLimit,       zLoLimit,       
+		   xHiLimit,       yHiLimit,       zHiLimit,       
+		   gamma,          R,              Temp_CC,     
+		   speedSound,     nMaterials   );
+#endif
 #endif
 
 #if 0
     /*__________________________________
-    *    S  T  E  P     2 
-    *   Use Euler's equation thingy to solve
-    *   for the n+1 Lagrangian press (CC)
-    *   and the n+1 face centered fluxing
-    *   velocity
-    *___________________________________*/ 
-     /*__________________________________
-    *   Take (*)vel_CC and interpolate it to the 
-    *   face-center.  Advection operator needs
-    *   uvel_FC and so does the pressure solver
-    *___________________________________*/ 
-        stat = putenv("PGPLOT_PLOTTING_ON_OFF=1"); 
-        compute_face_centered_velocities( 
+     *    S  T  E  P     2 
+     *   Use Euler's equation thingy to solve
+     *   for the n+1 Lagrangian press (CC)
+     *   and the n+1 face centered fluxing
+     *   velocity
+     *___________________________________*/ 
+    /*__________________________________
+     *   Take (*)vel_CC and interpolate it to the 
+     *   face-center.  Advection operator needs
+     *   uvel_FC and so does the pressure solver
+     *___________________________________*/ 
+    stat = putenv("PGPLOT_PLOTTING_ON_OFF=1"); 
+    compute_face_centered_velocities( 
                         xLoLimit,       yLoLimit,       zLoLimit,
                         xHiLimit,       yHiLimit,       zHiLimit,
                         delX,           delY,           delZ,
@@ -1137,26 +1197,26 @@ void ICE::actuallyTimeStep(const ProcessorContext*,
                         nMaterials ); 
                         
                         
-        divergence_of_face_centered_velocity(  
+    divergence_of_face_centered_velocity(  
                         xLoLimit,       yLoLimit,       zLoLimit,
                         xHiLimit,       yHiLimit,       zHiLimit,
                         delX,           delY,           delZ,
                         uvel_FC,        vvel_FC,        wvel_FC,
                         div_velFC_CC,   nMaterials); 
-        stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
+    stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
 
 
-    #if switch_step2_OnOff                        
-  
+#if switch_step2_OnOff                        
+    
     explicit_delPress
-             (  
-                        xLoLimit,       yLoLimit,       zLoLimit,
-                        xHiLimit,       yHiLimit,       zHiLimit,
-                        delX,           delY,           delZ,
-                        div_velFC_CC,
-                        delPress_CC,    press_CC,
-                        rho_CC,         delt,           speedSound,
-                        nMaterials );
+      (  
+       xLoLimit,       yLoLimit,       zLoLimit,
+       xHiLimit,       yHiLimit,       zHiLimit,
+       delX,           delY,           delZ,
+       div_velFC_CC,
+       delPress_CC,    press_CC,
+       rho_CC,         delt,           speedSound,
+       nMaterials );
                 
     update_CC_physical_boundary_conditions( 
                         xLoLimit,       yLoLimit,       zLoLimit,             
@@ -1167,7 +1227,7 @@ void ICE::actuallyTimeStep(const ProcessorContext*,
                         nMaterials,     1,                 
                         delPress_CC,    DELPRESS);
                                             
-    #endif     
+#endif     
    
 #endif
 
@@ -1352,63 +1412,81 @@ void ICE::actuallyTimeStep(const ProcessorContext*,
     } 
     #endif 
     /*__________________________________
-    *  P  L  O  T  T  I  N  G     S  E  C  T  I  O  N 
-    *___________________________________*/
-    #if switchDebug_main
-    if ( should_I_write_output == YES)
-    {
-         #define switchInclude_main 1
-         #include "debugcode.i"
-         #undef switchInclude_main 
-    }
-    #endif
-         /*__________________________________
-         *  Clean up the plotting windows 
-         *___________________________________*/
-         putenv("PGPLOT_I_AM_HERE=1");              
-                                         /* tell the plotting routine that   */
-                                         /* you're at the bottom of main     */
-         putenv("PGPLOT_OPEN_NEW_WINDOWS=1"); 
-         
-         
+     *  P  L  O  T  T  I  N  G     S  E  C  T  I  O  N 
+     *___________________________________*/
+#if switchDebug_main
+    if ( should_I_write_output == NO)
+      {
+#define switchInclude_main 1
+#include "debugcode.i"
+#undef switchInclude_main 
+      }
+#endif
     /*__________________________________
-    *    A  D  V  A  N  C  E     I  N     T  I  M  E 
-    *___________________________________*/
-           
-        t = t + delt;
-        fprintf(stderr,"\nTime is %f, timestep is %f\n",t,delt);
-	std::cerr << "Time is " << t << " timestep is " << delt << std::endl;
- 
-    }
+     *  Clean up the plotting windows 
+     *___________________________________*/
+    putenv("PGPLOT_I_AM_HERE=1");              
+    /* tell the plotting routine that   */
+    /* you're at the bottom of main     */
+    putenv("PGPLOT_OPEN_NEW_WINDOWS=1"); 
+    
+    
+    /*__________________________________
+     *    A  D  V  A  N  C  E     I  N     T  I  M  E 
+     *___________________________________*/
+    
+    t = t + delt;
+    fprintf(stderr,"\nTime is %f, timestep is %f\n",t,delt);
+    std::cerr << "Time is " << t << " timestep is " << delt << std::endl;
+    
+  }
 
   
-     // Added by Steve for sanity checking
-     double sumRho=0;
-     double sumEng=0;
-     int m=1;
-     for ( int i = xLoLimit; i <= xHiLimit; i++){
-	 for ( int j = yLoLimit; j <= yHiLimit; j++){
-	     for ( int k = zLoLimit; k <= zHiLimit; k++){ 
-		 sumRho += rho_CC[i][j][k][m];
-		 sumEng += int_eng_CC[i][j][k][m];
-	     }
-	 }
-     }
-     cerr << "sum rho=" << sumRho << '\n';
-     cerr << "sum eng=" << sumEng << '\n';
-     cerr << "ii=" << int_eng_CC[5][5][1][1] << '\n';
-    #endif
+  // Added by Steve for sanity checking
+  double sumRho=0;
+  double sumEng=0;
+  int m=1;
+  for ( int i = xLoLimit; i <= xHiLimit; i++){
+    for ( int j = yLoLimit; j <= yHiLimit; j++){
+      for ( int k = zLoLimit; k <= zHiLimit; k++){ 
+	cerr << "rho["<<i<<"]["<<j<<"]["<<k<<"] = " << rho_CC[i][j][k][m] << endl;
+	sumRho += rho_CC[i][j][k][m];
+	sumEng += int_eng_CC[i][j][k][m];
+      }
+    }
+  }
+  cerr << "sum rho=" << sumRho << '\n';
+  cerr << "sum eng=" << sumEng << '\n';
+  cerr << "ii=" << int_eng_CC[5][5][1][1] << '\n';
+#endif
+  
+  // Allocate and store the new vel_CC stuff
+  
+  CCVariable<Vector> new_vel_cc;
+  new_dw->allocate(new_vel_cc,vel_CCLabel,0,patch);
+  
+  
+  convertNR_4dToUCF(patch,new_vel_cc,uvel_CC,vvel_CC,wvel_CC,xLoLimit,
+		    xHiLimit,yLoLimit,yHiLimit,zLoLimit,zHiLimit,
+		    nMaterials);
+  new_dw->put(new_vel_cc,vel_CCLabel,0,patch);     
+  CCVariable<double> new_temp_cc;
+  new_dw->allocate(new_temp_cc,temp_CCLabel,0,patch);
+  
+  
+  convertNR_4dToUCF(patch,new_temp_cc,Temp_CC,xLoLimit,
+		    xHiLimit,yLoLimit,yHiLimit,zLoLimit,zHiLimit,
+		    nMaterials);
+  new_dw->put(new_temp_cc,temp_CCLabel,0,patch);     
+  CCVariable<double> new_cv_cc;
+  new_dw->allocate(new_cv_cc,cv_CCLabel,0,patch);
+  
+  
+  convertNR_4dToUCF(patch,new_cv_cc,cv_CC,xLoLimit,
+		    xHiLimit,yLoLimit,yHiLimit,zLoLimit,zHiLimit,
+		    nMaterials);
+  new_dw->put(new_cv_cc,cv_CCLabel,0,patch);     
 
-     // Allocate and store the new vel_CC stuff
-
-     CCVariable<Vector> new_vel_CC;
-     new_dw->allocate(new_vel_CC,vel_CCLabel,0,patch);
-
-
-     convertNR_4dToUCF(patch,new_vel_CC,uvel_CC,vvel_CC,wvel_CC,xLoLimit,
-		       xHiLimit,yLoLimit,yHiLimit,zLoLimit,zHiLimit,
-		       nMaterials);
-     new_dw->put(new_vel_CC,vel_CCLabel,0,patch);     
 }
 
 void ICE::convertNR_4dToUCF(const Patch* patch,CCVariable<Vector>& vel_ucf, 
@@ -1425,11 +1503,14 @@ void ICE::convertNR_4dToUCF(const Patch* patch,CCVariable<Vector>& vel_ucf,
 {
 
   
-  for (CellIterator iter = patch->getCellIterator(patch->getBox()); !iter.done(); iter++) {
+  for (CellIterator iter = patch->getCellIterator(patch->getBox()); 
+       !iter.done(); iter++) {
+    // Do something
   }
 
   CellIterator iter = patch->getCellIterator(patch->getBox());
-  cerr << "CC iterator begin = " << iter.begin() << " end = " << iter.end() << endl;
+  cerr << "CC iterator begin = " << iter.begin() << " end = " << iter.end() 
+       << endl;
   
   cerr << "CC variables limits " << vel_ucf.getLowIndex() << " " 
        << vel_ucf.getHighIndex() << endl;
