@@ -51,7 +51,10 @@ public:
   // if "max_iterations" is not specified in the .ups file, then
   // num_time_steps == MAXINT.
   int    num_time_steps; 
-      
+
+  // Clamp the length of the timestep to the next
+  // output or checkpoint if it will go over
+  bool timestep_clamping;
 private:
   SimulationTime(const SimulationTime&);
   SimulationTime& operator=(const SimulationTime&);

@@ -35,6 +35,10 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
   num_time_steps = MAXINT;
   time_ps->get( "max_iterations", num_time_steps );
 
+  if (!time_ps->get("clamp_timesteps_to_output", timestep_clamping))
+    timestep_clamping = false;
+  
+
   if( num_time_steps < 1 )
     {
       cerr << "Negative number of time steps is not allowed.\n";
