@@ -50,7 +50,6 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
 {
 
-
    pDeformationMeasureLabel = new VarLabel("p.deformationMeasure",
 			    ParticleVariable<Matrix3>::getTypeDescription());
 
@@ -72,7 +71,13 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
    pXLabel = new VarLabel( "p.x", ParticleVariable<Point>::getTypeDescription(),
 			     VarLabel::PositionVariable);
 
-   //H.Tan:
+   pTemperatureLabel = new VarLabel( "p.temperature",
+                           ParticleVariable<double>::getTypeDescription() );
+
+   pTemperatureGradientLabel = new VarLabel( "p.temperatureGradient",
+			     ParticleVariable<Vector>::getTypeDescription() );
+
+   //tan:
    //  pSurfaceNormalLabel is used to define the surface normal of a boundary particle.
    //  For the interior particle, the p.surfaceNormal vector is set to (0,0,0)
    //  in this way we can distinguish boundary particles to interior particles
@@ -121,6 +126,9 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
    deltLabel = 
      new VarLabel( "delt", delt_vartype::getTypeDescription() );
 
+   //tan:
+   //temporary set to false, underconstruction.
+   d_heatConductionInvolved = false;
 }
 
 SerialMPM::~SerialMPM()
@@ -244,10 +252,19 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			Ghost::AroundNodes, 1 );
 	    t->requires(old_dw, pXLabel, idx, region,
 			Ghost::AroundNodes, 1 );
+			
+	    if(d_heatConductionInvolved) {
+              t->requires(old_dw, pTemperatureGradientLabel, idx, region,
+			Ghost::AroundNodes, 1 );
+	    }
 
 	    t->computes(new_dw, gMassLabel, idx, region );
 	    t->computes(new_dw, gVelocityLabel, idx, region );
 	    t->computes(new_dw, gExternalForceLabel, idx, region );
+
+	    if(d_heatConductionInvolved) {
+              t->computes(new_dw, gTemperatureLabel, idx, region );
+	    }
 	 }
 		     
 	 sched->addTask(t);
@@ -1152,6 +1169,10 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.62  2000/05/25 22:06:34  tan
+// A boolean variable d_heatConductionInvolved is set to true when
+// heat conduction considered in the simulation.
+//
 // Revision 1.61  2000/05/23 02:25:45  tan
 // Put all velocity-field independent variables on material
 // index of 0.
