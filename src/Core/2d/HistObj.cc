@@ -50,13 +50,13 @@ PersistentTypeID HistObj::type_id("HistObj", "DrawObj", make_HistObj);
 
 
 HistObj::HistObj( const string &name="")
-  :Polyline(name), bins_(256)
+  :Polyline(name), bins_(128)
 {
 }
 
 
 HistObj::HistObj( const Array1<double> &data, const string &name )
-  : Polyline(name), ref_(data), bins_(256)
+  : Polyline(name), ref_(data), bins_(128)
 {
   set_data( data );
 }
@@ -100,7 +100,10 @@ HistObj::compute()
     if ( pos == bins_ ) pos--;
     data_[pos]++;
   }
-  
+
+  for (int i=0; i<data_.size(); i++)
+    data_[i] /= ref_.size();
+
   compute_minmax();
 }
   
@@ -110,10 +113,8 @@ HistObj::at( double v )
 {
   double val;
 
-  if ( v < 0 ) 
-    val = data_[0];
-  else if ( v >= data_.size()-1 ) 
-    val = data_[data_.size()-1];
+  if ( v < 0  || v >= data_.size()-1 ) 
+    val = 0;
   else {
     val  = data_[int(v)];
   }
