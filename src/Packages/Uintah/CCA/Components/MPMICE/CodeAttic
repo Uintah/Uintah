@@ -182,3 +182,130 @@ ______________________________________________________________________
     }
 
 #endif
+
+void MPMICE::HEChemistry(const ProcessorGroup*,
+
+                             const PatchSubset* patches,
+                             const MaterialSubset* ,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw)
+
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    cout_doing << "Doing HEChemistry on patch "<< patch->getID()
+               <<"\t\t\t\t MPMICE" << endl;
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label());
+    int numALLMatls=d_sharedState->getNumMatls();
+    StaticArray<CCVariable<double> > burnedMass(numALLMatls);
+    StaticArray<CCVariable<double> > createdVol(numALLMatls);
+    StaticArray<CCVariable<double> > int_eng_react(numALLMatls); 
+    StaticArray<CCVariable<Vector> > mom_comb(numALLMatls);
+    
+    constCCVariable<double> gasPressure,gasTemperature,gasVolumeFraction;
+    
+    CCVariable<double> sumBurnedMass, sumCreatedVol,sumReleasedHeat;
+    CCVariable<double> onSurface, surfaceTemp;
+    CCVariable<Vector> sumMom_comb;
+    
+    constCCVariable<Vector> vel_CC;
+    constCCVariable<double> solidTemperature,solidMass;
+
+    Vector dx = patch->dCell();
+    double cell_vol = dx.x()*dx.y()*dx.z();
+    int prod_indx = -1;
+    Ghost::GhostType  gn  = Ghost::None;    
+    for(int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      int indx = matl->getDWIndex();
+      //__________________________________
+      //  if no reaction 
+      //  burnedMass, createdVol, int_eng_comb
+      //  must still be allocated and initialized = 0,
+      //  other tasks depend on them.
+      new_dw->allocateAndPut(burnedMass[m],    MIlb->burnedMassCCLabel,  
+                                                                indx,patch);
+      new_dw->allocateAndPut(createdVol[m],    Ilb->created_vol_CCLabel, 
+                                                                indx,patch);
+      new_dw->allocateAndPut(int_eng_react[m], Ilb->int_eng_comb_CCLabel,
+                                                                indx,patch);
+      new_dw->allocateAndPut(mom_comb[m],      Ilb->mom_comb_CCLabel,    
+                                                                indx,patch);
+            
+      burnedMass[m].initialize(0.0);
+      createdVol[m].initialize(0.0);
+      int_eng_react[m].initialize(0.0); 
+      mom_comb[m].initialize(0.0);
+
+      //__________________________________
+      // Product Data, should be only
+      // 1 product matl
+      if (ice_matl && (ice_matl->getRxProduct() == Material::product)){
+        prod_indx = ice_matl->getDWIndex();
+        new_dw->get(gasPressure,      Ilb->press_equil_CCLabel,0,  patch,gn,0);
+        old_dw->get(gasTemperature,   Ilb->temp_CCLabel,prod_indx, patch,gn,0);
+        new_dw->get(gasVolumeFraction,Ilb->vol_frac_CCLabel,
+                                                        prod_indx,patch,gn,0);
+
+        new_dw->allocateAndPut(sumBurnedMass, MIlb->burnedMassCCLabel,  
+                                                               prod_indx,patch);
+        new_dw->allocateAndPut(sumCreatedVol,  Ilb->created_vol_CCLabel,
+                                                               prod_indx,patch);
+        new_dw->allocateAndPut(sumReleasedHeat,Ilb->int_eng_comb_CCLabel,
+                                                               prod_indx,patch);
+        new_dw->allocateAndPut(sumMom_comb,    Ilb->mom_comb_CCLabel,    
+                                                               prod_indx,patch);
+
+//        new_dw->allocateAndPut(onSurface,     MIlb->onSurfaceLabel,   0, patch);
+//        new_dw->allocateAndPut(surfaceTemp,   MIlb->surfaceTempLabel, 0, patch);
+//        onSurface.initialize(0.0);
+        sumMom_comb.initialize(0.0);
+//        surfaceTemp.initialize(0.0);
+        sumBurnedMass.initialize(0.0); 
+        sumCreatedVol.initialize(0.0);
+        sumReleasedHeat.initialize(0.0);
+      }
+    }
+
+   static int tstep = 0;
+   tstep++;
+   if(d_ice->d_massExchange && tstep <= 1500)  {
+    for(int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl); 
+
+
+      if(ice_matl && (ice_matl->getRxProduct() == Material::product))  {
+        for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+          IntVector c = *iter;
+
+	     double mass_source=0.;
+             if(gasVolumeFraction[c]>.99){
+                mass_source = gasVolumeFraction[c]*11.79*cell_vol;
+             }
+             mom_comb[m][c]      =  Vector(0.,0.,0);
+             sumBurnedMass[c]   += mass_source;
+             sumReleasedHeat[c] += mass_source*716.*gasTemperature[c];
+             sumCreatedVol[c]    = 0.0;
+             sumMom_comb[c]     += -mom_comb[m][c];
+        }  // cell iterator  
+      }  // if(ice_matl == product)
+    }  // numALLMatls loop
+   }  // if d_massExchange
+
+    //__________________________________
+    //  set symetric BC
+    for(int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      setBC(burnedMass[m], "set_if_sym_BC",patch, d_sharedState, indx);
+      if (ice_matl && (ice_matl->getRxProduct() == Material::product)) {
+        setBC(sumBurnedMass, "set_if_sym_BC",patch, d_sharedState, indx);
+      }
+    }
+  }  // patches
+}
