@@ -26,13 +26,13 @@ PressureSolver::~PressureSolver()
 {
 }
 
-void PressureSolver::problemSetup(const ProblemSpecP& params)
+void PressureSolver::problemSetup(const ProblemSpecP& params,
+				  DataWarehouseP& dw)
 {
   ProblemSpecP db = params->findBlock("Pressure Solver");
-  db->require("ipref", d_ipref);
-  db->require("jpref", d_jpref);
-  db->require("kpref", d_kpref);
-  db->require("underrelax", d_underrelax);
+  Array3Index pressRef;
+  db->require("pressureReference", pressRef);
+  dw->put(pressRef, "pressureReference");
   string finite_diff;
   db->require("finite_difference", finite_diff);
   if (finite_diff == "Secondorder") 
@@ -49,7 +49,7 @@ void PressureSolver::problemSetup(const ProblemSpecP& params)
   else 
     throw InvalidValue("linear solver option"
 		       " not supported" + linear_sol, db);
-  d_linearSolver->problemSetup(db);
+  d_linearSolver->problemSetup(db, dw);
 }
 
 void PressureSolver::solve(const LevelP& level,

@@ -24,7 +24,7 @@ Arches::~Arches()
 }
 
 void Arches::problemSetup(const ProblemSpecP& params, GridP&,
-			  DataWarehouseP&)
+			  DataWarehouseP& dw)
 {
   ProblemSpecP db = params->findBlock("Arches");
 
@@ -37,7 +37,7 @@ void Arches::problemSetup(const ProblemSpecP& params, GridP&,
   else
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver, db);
 
-  d_nlSolver->problemSetup(db);
+  d_nlSolver->problemSetup(db, dw);
 }
 
 void Arches::computeStableTimestep(const LevelP& level,
@@ -66,6 +66,9 @@ void Arches::timeStep(double time, double dt,
 
 //
 // $Log$
+// Revision 1.9  2000/03/29 21:18:16  rawat
+// modified boundaryconidtion.cc for inlet bcs
+//
 // Revision 1.8  2000/03/23 20:05:13  jas
 // Changed the location of ProblemSpec from Grid to Interface in the include
 // file path.

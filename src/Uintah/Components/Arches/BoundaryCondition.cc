@@ -29,6 +29,41 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model)
 BoundaryCondition::~BoundaryCondition()
 {
 }
+
+void BoundaryCondition::problemSetup(const ProblemSpecP& params,
+				     DataWarehouseP& dw)
+{
+  ProblemSpecP db = params->findBlock("Boundary Conditions");
+  int numFlowInlets;
+  db->require("NumFlowInlets", numFlowInlets);
+  dw->put(numFlowInlets, "NumFlowInlets");
+  int numMixingScalars;
+  // set number of scalars in properties based on
+  // num of streams read
+  dw->get(numMixingScalars, "NumMixingScalars");
+  for (int i = 0; i < numFlowInlets; i++) {
+    FlowInlet* flow_inlet = new FlowInlet(numMixingScalars);
+    // put flow_inlet to the database, use celltype info to
+    // differentiate different inlets
+    flow_inlet->problemSetup(db, dw);
+  }
+  bool pressureBC;
+  // set the boolean in the section where cell type info is read
+  dw->get(pressureBC, "bool_pressureBC");
+  if (pressureBC) {
+    PressureInlet* press_inlet = new PressureInlet(numMixingScalars);
+    press_inlet->problemSetup(db, dw);
+  }
+  bool outletBC;
+  dw->get(outletBC, "bool_outletBC");
+  if (outletBC) {
+    FlowOutlet* flow_outlet = new FlowOutlet(numMixingScalars);
+    flow_outlet->problemSetup(db, dw);
+  }
+  
+}
+
+    
 // assigns flat velocity profiles for primary and secondary inlets
 // Also sets flat profiles for density
 void BoundaryCondition::sched_setFlatProfile(const LevelP& level,
@@ -36,21 +71,156 @@ void BoundaryCondition::sched_setFlatProfile(const LevelP& level,
 					     const DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw)
 {
- 
-} 
+  for(Level::const_regionIterator iter=level->regionsBegin();
+      iter != level->regionsEnd(); iter++){
+    const Region* region=*iter;
+    {
+      Task* tsk = new Task("BoundaryCondition::setProfile",
+			   region, old_dw, new_dw, this,
+			   BoundaryCondition::setFlatProfile);
+      tsk->requires(old_dw, "velocity", region, 1,
+		    FCVariable<Vector>::getTypeDescription());
+      tsk->requires(old_dw, "density", region, 1,
+		    CCVariable<double>::getTypeDescription());
+      tsk->computes(old_dw, "velocity", region, 1,
+		    FCVariable<Vector>::getTypeDescription());
+      tsk->computes(old_dw, "density", region, 1,
+		    CCVariable<double>::getTypeDescription());
+      sched->addTask(tsk);
+    }
+  }
+}
+
+
+void BoundaryCondition::setFlatProfile(const ProcessorContext* pc,
+				       const Region* region,
+				       const DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw) 
+{
+  FCVariable<Vector> velocity;
+  old_dw->get(velocity, "velocity", region, 1);
+  CCVariable<double> density;
+  old_dw->get(density, "density", region, 1);
+  Array3Index lowIndex = region->getLowIndex();
+  Array3Index highIndex = region->getHighIndex();
+  // stores cell type info for the region with the ghost cell type
+  CCVariable<int> cellType;
+  top_dw->get(cellType, "CellType", region, 1);
+  int num_flow_inlets;
+  old_dw->get(num_flow_inlets, "NumFlowInlets");
+  for (int indx = 0; indx < num_flow_inlets; indx++) {
+    FlowInlet* flowinletp;
+    // return properties of indx inlet
+    old_dw->get(flowinletp, "FlowInlet", indx);
+    FORT_PROFV(velocity, density, lowIndex, highIndex, cellType,
+	       flowinletp->flowrate, flowinletp->area,
+	       flowinletp->density, flowinletp->inletType);
+    old_dw->put(velocity, "velocity", region, 1);
+    old_dw->put(density, "density", region, 1);
+  }
+}
+
+
 
 void BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
 						 SchedulerP& sched,
 						 const DataWarehouseP& old_dw,
 						 DataWarehouseP& new_dw)
 {
+  for(Level::const_regionIterator iter=level->regionsBegin();
+      iter != level->regionsEnd(); iter++){
+    const Region* region=*iter;
+    {
+      Task* tsk = new Task("BoundaryCondition::setProfile",
+			   region, old_dw, new_dw, this,
+			   BoundaryCondition::setInletVelocityBC);
+      tsk->requires(old_dw, "velocity", region, 1,
+		    FCVariable<Vector>::getTypeDescription());
+      tsk->computes(new_dw, "velocity", region, 1,
+		    FCVariable<Vector>::getTypeDescription());
+      sched->addTask(tsk);
+    }
+  }
+}
+
+
+void BoundaryCondition::setInletVelocityBC(const ProcessorContext* pc,
+					   const Region* region,
+					   const DataWarehouseP& old_dw,
+					   DataWarehouseP& new_dw) 
+{
+  FCVariable<Vector> velocity;
+  old_dw->get(velocity, "velocity", region, 1);
+  Array3Index lowIndex = region->getLowIndex();
+  Array3Index highIndex = region->getHighIndex();
+  // stores cell type info for the region with the ghost cell type
+  CCVariable<int> cellType;
+  top_dw->get(cellType, "CellType", region, 1);
+  int num_flow_inlets;
+  old_dw->get(num_flow_inlets, "NumFlowInlets");
+  for (int indx = 0; indx < num_flow_inlets; indx++) {
+    FlowInlet* flowinletp;
+    // return properties of indx inlet
+    old_dw->get(flowinletp, "FlowInlet", indx);
+    // assign flowType the value that corresponds to flow
+    CellTypeInfo flowType = FLOW;
+    FORT_INLBCS(velocity, density, lowIndex, highIndex, cellType,
+		flowinletp->flowrate, flowinletp->area,
+		flowinletp->density, flowinletp->inletType,
+		flowType);
+    new_dw->put(velocity, "velocity", region, 1);
+    new_dw->put(density, "density", region, 1);
+  }
+}
+
  
-} 
+
 void BoundaryCondition::sched_computePressureBC(const LevelP& level,
 						SchedulerP& sched,
 						const DataWarehouseP& old_dw,
 						DataWarehouseP& new_dw)
 {
+  for(Level::const_regionIterator iter=level->regionsBegin();
+      iter != level->regionsEnd(); iter++){
+    const Region* region=*iter;
+    {
+      Task* tsk = new Task("BoundaryCondition::setProfile",
+			   region, old_dw, new_dw, this,
+			   BoundaryCondition::calculatePressBC);
+      tsk->requires(old_dw, "pressure", region, 1,
+		    CCVariable<double>::getTypeDescription());
+      tsk->requires(old_dw, "velocity", region, 1,
+		    FCVariable<Vector>::getTypeDescription());
+      tsk->requires(old_dw, "density", region, 1,
+		    CCVariable<double>::getTypeDescription());
+      tsk->computes(new_dw, "velocity", region, 1,
+		    FCVariable<Vector>::getTypeDescription());
+      sched->addTask(tsk);
+    }
+  }
+}
+
+
+void BoundaryCondition::calculatePressBC(const ProcessorContext* pc,
+					 const Region* region,
+					 const DataWarehouseP& old_dw,
+					 DataWarehouseP& new_dw) 
+{
+  FCVariable<Vector> velocity;
+  old_dw->get(velocity, "velocity", region, 1);
+  CCVariable<double> pressure;
+  old_dw->get(pressure, "pressure", region, 1);
+  Array3Index lowIndex = region->getLowIndex();
+  Array3Index highIndex = region->getHighIndex();
+  // stores cell type info for the region with the ghost cell type
+  CCVariable<int> cellType;
+  top_dw->get(cellType, "CellType", region, 1);
+  PressureInlet* pressinletp;
+  old_dw->get(pressinletp, "PressureInlet");
+  FORT_CALPBC(velocity, pressure, density, lowIndex, highIndex, cellType,
+	      pressinletp->refPressure, pressinletp->area,
+	      pressinletp->density, pressinletp->inletType);
+  new_dw->put(velocity, "velocity", region, 1);
  
 } 
 // sets velocity bc
