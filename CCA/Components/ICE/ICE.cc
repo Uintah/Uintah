@@ -4512,7 +4512,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
             for(CellIterator iter = patch->getExtraCellIterator(); 
                                       !iter.done(); iter++) {
               IntVector c = *iter;                            
-              q_L_CC[c] * = mass_L[c];
+              q_L_CC[c] *= mass_L[c];
             }
 
             // now advect
