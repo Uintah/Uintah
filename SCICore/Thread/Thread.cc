@@ -32,7 +32,7 @@
 #include <libexc.h>
 #endif
 
-#define THREAD_DEFAULT_STACKSIZE 64*1024*2
+#define THREAD_DEFAULT_STACKSIZE 64*1024*20
 
 using SCICore::Thread::ParallelBase;
 using SCICore::Thread::Runnable;
@@ -334,6 +334,9 @@ Thread::getStateString(ThreadState state)
 
 //
 // $Log$
+// Revision 1.18  2000/06/09 20:30:36  yarden
+// increse THREAD_DEFAULT_STACKSIZE
+//
 // Revision 1.17  2000/06/05 21:13:32  bigler
 // Changed default stack size from 64k to 128k due to tcl issues
 //
