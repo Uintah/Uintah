@@ -69,6 +69,7 @@ component_node* CreateComponentNode(int type)
     n->implementation->cfiles = new map<int,char*>;
     n->implementation->ffiles = new map<int,char*>;
     n->io = new io_node;
+    n->io->lastportdynamic = 1;
     n->io->infiles = new map<int,file_node*>;
     n->io->outfiles = new map<int,file_node*>;
     n->io->indevices = new map<int,device_node*>;
@@ -520,6 +521,21 @@ void ProcessIoNode(const DOM_Node& d, io_node* n)
        child=child.getNextSibling()) {
     DOMString childname = child.getNodeName();
     if (childname.equals("inputs")){
+      if (n->lastportdynamic) {
+	DOM_Node attr = child.getAttributes().getNamedItem("lastportdynamic");
+	if (attr!=0) {
+	  DOMString attrstr = attr.getNodeValue();
+	  cout << "lastportdyn = " << attrstr.transcode() << endl;
+	  if (attrstr.equals("yes") ||
+	      attrstr.equals("y") ||
+	      attrstr.equals("YES") ||
+	      attrstr.equals("Y"))
+	    n->lastportdynamic = 1;
+	  else
+	    n->lastportdynamic = 0;
+	} else
+	  n->lastportdynamic = 0;
+      }
       for (DOM_Node inchild = child.getFirstChild();
 	   inchild!=0;
 	   inchild=inchild.getNextSibling()) {
@@ -860,7 +876,11 @@ void WriteIoNodeToStream(io_node* n, std::ofstream& o)
   o << "  <io>" << endl;
 
   if (n->infiles || n->inports || n->indevices) {
-    o << "    <inputs>" << endl;
+    o << "    <inputs lastportdynamic=\"";
+    if (n->lastportdynamic)
+      o << "yes\">" << endl;
+    else
+      o << "no\">" << endl;
 
     if (n->infiles)
       for (i2=n->infiles->begin();
