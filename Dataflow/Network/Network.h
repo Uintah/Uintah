@@ -93,7 +93,7 @@ public:
   Connection* connection(int);
   string connect(Module*, int, Module*, int);
   int disconnect(const string&);
-    
+  void disable_connection(const string& connId);
   Module* add_module(const string& packageName,
 		     const string& categoryName,
 		     const string& moduleName);
@@ -103,6 +103,7 @@ public:
 		      const string& moduleName);
   void add_instantiated_module(Module* mod);
   int delete_module(const string& name);
+
 
   Module* get_module_by_id(const string& id);
 
