@@ -75,7 +75,7 @@
     <p>The third port is the Data port.  For the case of Regular data,
     this should be the only port connected. If it contains vector or
     tensor data values, they should be in the first axis and it's kind
-    should be set accordingly.  This can be done with the UnuAxinfo
+    should be set accordingly.  This can be done with the <modref package="Teem" name="UnuAxinfo"/>
     module.</p>
     <p>The last port is the an optional Field input.  If this is
     connected, the module will attempt to use the Mesh from this Field
