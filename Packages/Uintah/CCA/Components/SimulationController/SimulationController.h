@@ -10,9 +10,7 @@
 
 namespace Uintah {
 
-class CFDInterface;
-class MPMInterface;
-class MPMCFDInterface;
+class SimulationInterface;
   class Output;
 
 /**************************************
@@ -57,21 +55,8 @@ class MPMCFDInterface;
       static char* start_addr;
    private:
       void problemSetup(const ProblemSpecP&, GridP&);
-      void scheduleInitialize(LevelP&, SchedulerP&,
-			      CFDInterface*,
-			      MPMInterface*,
-			      MPMCFDInterface*);
-      void scheduleComputeStableTimestep(LevelP&, SchedulerP&,
-					 CFDInterface*,
-					 MPMInterface*,
-					 MPMCFDInterface*);
-      void scheduleTimeAdvance(LevelP&, SchedulerP&,
-			       CFDInterface*, MPMInterface*,
-			       MPMCFDInterface*);
-
-     bool need_recompile(double t, double delt, const LevelP& level,
-			 CFDInterface* cfd, MPMInterface* mpm,
-			 MPMCFDInterface* mpmcfd,  Output* output);
+      bool need_recompile(double t, double delt, const LevelP& level,
+			  SimulationInterface* cfd, Output* output);
       SimulationController(const SimulationController&);
       SimulationController& operator=(const SimulationController&);
 

@@ -3,7 +3,7 @@
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/MPMInterface.h>
+#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
@@ -49,7 +49,7 @@ WARNING
   
 ****************************************/
 
-class SerialMPM : public UintahParallelComponent, public MPMInterface {
+class SerialMPM : public UintahParallelComponent, public SimulationInterface {
 public:
   SerialMPM(const ProcessorGroup* myworld);
   virtual ~SerialMPM();
