@@ -19,7 +19,7 @@
 
 catch {rename ShowLeads ""}
 
-itcl_class BioPSE_LeadField_ShowLeads {
+itcl_class BioPSE_Visualization_ShowLeads {
     inherit Module
     constructor {config} {
 	set name ShowLeads
