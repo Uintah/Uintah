@@ -38,36 +38,45 @@ namespace SCIRun {
 
 class GaugeWidget : public BaseWidget {
 public:
-   GaugeWidget( Module* module, CrowdMonitor* lock, double widget_scale );
-   GaugeWidget( const GaugeWidget& );
-   virtual ~GaugeWidget();
+  GaugeWidget( Module* module, CrowdMonitor* lock, double widget_scale,
+	       bool is_slideable = false);
+  GaugeWidget( const GaugeWidget& );
+  virtual ~GaugeWidget();
 
-   virtual void redraw();
-   virtual void geom_moved(GeomPick*, int, double, const Vector&, int,
-			   const BState&, const Vector &pick_offset);
+  virtual void redraw();
+  virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
+  virtual void geom_moved(GeomPick*, int, double, const Vector&, int,
+			  const BState&, const Vector &pick_offset);
 
-   virtual void MoveDelta( const Vector& delta );
-   virtual Point ReferencePoint() const;
+  virtual void MoveDelta( const Vector& delta );
+  virtual Point ReferencePoint() const;
 
-   void SetRatio( const double ratio );
-   double GetRatio() const;
+  void SetRatio( const double ratio );
+  double GetRatio() const;
 
-   void SetEndpoints( const Point& end1, const Point& end2 );
-   void GetEndpoints( Point& end1, Point& end2 ) const;
+  void SetEndpoints( const Point& end1, const Point& end2 );
+  void GetEndpoints( Point& end1, Point& end2 ) const;
 
-   const Vector& GetAxis();
+  const Vector& GetAxis();
 
-   // Variable indexs
-   enum { PointLVar, PointRVar, DistVar, SDistVar, RatioVar};
+  // Variable indexs
+  enum { PointLVar, PointRVar, DistVar, SDistVar, RatioVar};
 
-   // Material indexs
-   enum { PointMatl, ShaftMatl, ResizeMatl, SliderMatl };
+  // Material indexs
+  enum { PointMatl, ShaftMatl, ResizeMatl, SliderMatl };
 
 protected:
-   virtual string GetMaterialName( const Index mindex ) const;   
+  virtual string GetMaterialName( const Index mindex ) const;   
    
 private:
-   Vector oldaxis;
+  Vector oldaxis;
+  bool is_slideable_;
+
+  Point pick_pointlvar_;
+  Point pick_pointrvar_;
+  double pick_distvar_;
+  double pick_sdistvar_;
+  double pick_ratiovar_;
 };
 
 

@@ -729,7 +729,7 @@ void Bundles::execute()
 	fdiag=(fmax-fmin);
 	fctr=fmin+fdiag*.33;
 	double fscale=fdiag.length();
-	gw=scinew GaugeWidget(this, &widget_lock, fscale/1000.);
+	gw=scinew GaugeWidget(this, &widget_lock, fscale/1000.0, true);
 	bundleradx.set(fscale/1000.);
 	reset_vars();
 	Vector dir(1,0,0);

@@ -44,10 +44,9 @@ namespace SCIRun {
 const Index NumCons = 2;
 const Index NumVars = 5;
 const Index NumGeoms = 6;
-const Index NumPcks = 6;
+const Index NumPicks = 6;
 const Index NumMatls = 4;
-const Index NumMdes = 2;
-const Index NumSwtchs = 2;
+const Index NumSwitches = 4;
 const Index NumSchemes = 3;
 
 enum { ConstDist, ConstRatio };
@@ -62,9 +61,12 @@ enum { PickSphL, PickSphR, PickCyl, PickSlider, PickResizeL, PickResizeR };
  * Much of the work is accomplished in the BaseWidget constructor which
  *      includes some consistency checking to ensure full initialization.
  */
-GaugeWidget::GaugeWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-  : BaseWidget(module, lock, "GaugeWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
-    oldaxis(1, 0, 0)
+GaugeWidget::GaugeWidget( Module* module, CrowdMonitor* lock,
+			  double widget_scale, bool is_slideable ) :
+  BaseWidget(module, lock, "GaugeWidget", NumVars, NumCons, NumGeoms,
+	     NumPicks, NumMatls, 0, NumSwitches, widget_scale),
+  oldaxis(1, 0, 0),
+  is_slideable_(is_slideable)
 {
   double INIT = 10.0*widget_scale;
   // Scheme3 is for resizing.
@@ -93,12 +95,16 @@ GaugeWidget::GaugeWidget( Module* module, CrowdMonitor* lock, double widget_scal
   constraints[ConstRatio]->VarChoices(Scheme3, 0, 0, 0);
   constraints[ConstRatio]->Priorities(P_Highest, P_Highest, P_Highest);
 
+  // Shaft geometry.
   geometries[GeomShaft] = scinew GeomCappedCylinder;
-  picks[PickCyl] = scinew GeomPick(geometries[GeomShaft], module, this, PickCyl);
+  picks[PickCyl] =
+    scinew GeomPick(geometries[GeomShaft], module, this, PickCyl);
   picks[PickCyl]->set_highlight(DefaultHighlightMaterial);
-  materials[ShaftMatl] = scinew GeomMaterial(picks[PickCyl], DefaultEdgeMaterial);
+  materials[ShaftMatl] = scinew GeomMaterial(picks[PickCyl],
+					     DefaultEdgeMaterial);
   CreateModeSwitch(0, materials[ShaftMatl]);
 
+  // Rotate ball geometry.
   GeomGroup* sphs = scinew GeomGroup;
   geometries[GeomPointL] = scinew GeomSphere;
   picks[PickSphL] = scinew GeomPick(geometries[GeomPointL],
@@ -111,7 +117,9 @@ GaugeWidget::GaugeWidget( Module* module, CrowdMonitor* lock, double widget_scal
   picks[PickSphR]->set_highlight(DefaultHighlightMaterial);
   sphs->add(picks[PickSphR]);
   materials[PointMatl] = scinew GeomMaterial(sphs, DefaultPointMaterial);
-   
+  CreateModeSwitch(1, materials[PointMatl]);
+
+  // Resize geometry
   GeomGroup* resizes = scinew GeomGroup;
   geometries[GeomResizeL] = scinew GeomCappedCylinder;
   picks[PickResizeL] = scinew GeomPick(geometries[GeomResizeL],
@@ -124,20 +132,40 @@ GaugeWidget::GaugeWidget( Module* module, CrowdMonitor* lock, double widget_scal
   picks[PickResizeR]->set_highlight(DefaultHighlightMaterial);
   resizes->add(picks[PickResizeR]);
   materials[ResizeMatl] = scinew GeomMaterial(resizes, DefaultResizeMaterial);
-   
+  CreateModeSwitch(2, materials[ResizeMatl]);
+
+  // Slider geometry.
   geometries[GeomSlider] = scinew GeomCappedCylinder;
   picks[PickSlider] = scinew GeomPick(geometries[GeomSlider],
 				      module, this, PickSlider);
   picks[PickSlider]->set_highlight(DefaultHighlightMaterial);
-  materials[SliderMatl] = scinew GeomMaterial(picks[PickSlider], DefaultSliderMaterial);
-  GeomGroup* w = scinew GeomGroup;
-  w->add(materials[PointMatl]);
-  w->add(materials[ResizeMatl]);
-  w->add(materials[SliderMatl]);
-  CreateModeSwitch(1, w);
+  materials[SliderMatl] = scinew GeomMaterial(picks[PickSlider],
+					      DefaultSliderMaterial);
+  CreateModeSwitch(3, materials[SliderMatl]);
 
-  SetMode(Mode0, Switch0|Switch1);
-  SetMode(Mode1, Switch0);
+  // Switch0 are the bars
+  // Switch1 are the rotation points
+  // Switch2 are the resize cylinders
+  // Switch3 are the sliders
+  if (is_slideable_)
+  {
+    SetNumModes(7);
+    SetMode(Mode0, Switch0|Switch1|Switch2|Switch3);
+    SetMode(Mode1, Switch0|Switch1|Switch2);
+    SetMode(Mode2, Switch0|Switch3);
+    SetMode(Mode3, Switch0);
+    SetMode(Mode4, Switch0|Switch1|Switch3);
+    SetMode(Mode5, Switch0|Switch2|Switch3);
+    SetMode(Mode6, Switch0|Switch2);
+  }
+  else
+  {
+    SetNumModes(4);
+    SetMode(Mode0, Switch0|Switch1|Switch2);
+    SetMode(Mode1, Switch0);
+    SetMode(Mode2, Switch0|Switch1);
+    SetMode(Mode3, Switch0|Switch2);
+  }
 
   FinishWidget();
 }
@@ -169,28 +197,39 @@ GaugeWidget::redraw()
   Point L(variables[PointLVar]->point()), R(variables[PointRVar]->point()),
     S(L+GetAxis()*variables[SDistVar]->real());
 
+  // Draw the cylinder
   if (mode_switches[0]->get_state())
   {
     ((GeomCappedCylinder*)geometries[GeomShaft])->
       move(L, R, 0.5*widget_scale_);
   }
 
+  // Draw the balls
   if (mode_switches[1]->get_state())
   {
     ((GeomSphere*)geometries[GeomPointL])->move(L, widget_scale_);
     ((GeomSphere*)geometries[GeomPointR])->move(R, widget_scale_);
-    ((GeomCappedCylinder*)geometries[GeomResizeL])->move(L, L - (GetAxis() * 1.5 * widget_scale_),
-							 0.5*widget_scale_);
-    ((GeomCappedCylinder*)geometries[GeomResizeR])->move(R, R + (GetAxis() * 1.5 * widget_scale_),
-							 0.5*widget_scale_);
-    ((GeomCappedCylinder*)geometries[GeomSlider])->move(S - (GetAxis() * 0.3 * widget_scale_),
-							S + (GetAxis() * 0.3 * widget_scale_),
-							1.1*widget_scale_);
+  }
+
+  if (mode_switches[2]->get_state())
+  {
+    ((GeomCappedCylinder*)geometries[GeomResizeL])->
+      move(L, L - (GetAxis() * 1.5 * widget_scale_), 0.5*widget_scale_);
+    ((GeomCappedCylinder*)geometries[GeomResizeR])->
+      move(R, R + (GetAxis() * 1.5 * widget_scale_), 0.5*widget_scale_);
+  }
+
+  if (mode_switches[3]->get_state())
+  {
+    ((GeomCappedCylinder*)geometries[GeomSlider])
+      ->move(S - (GetAxis() * 0.3 * widget_scale_),
+	     S + (GetAxis() * 0.3 * widget_scale_),
+	     1.1*widget_scale_);
   }
    
   Vector v(GetAxis()), v1, v2;
   v.find_orthogonal(v1,v2);
-  for (Index geom = 0; geom < NumPcks; geom++)
+  for (Index geom = 0; geom < NumPicks; geom++)
   {
     if ((geom == PickSlider) || (geom == PickResizeL) || (geom == PickResizeR))
     {
@@ -202,6 +241,20 @@ GaugeWidget::redraw()
     }
   }
 }
+
+
+
+void
+GaugeWidget::geom_pick(GeomPick *p, ViewWindow *vw, int data, const BState &bs)
+{
+  BaseWidget::geom_pick(p, vw, data, bs);
+  pick_pointlvar_ = variables[PointLVar]->point();
+  pick_pointrvar_ = variables[PointRVar]->point();
+  pick_distvar_ = variables[DistVar]->real();
+  pick_sdistvar_ = variables[SDistVar]->real();
+  pick_ratiovar_ = variables[RatioVar]->real();
+}
+
 
 
 /***************************************************************************
@@ -220,29 +273,50 @@ GaugeWidget::redraw()
 void
 GaugeWidget::geom_moved( GeomPick*, int axis, double dist,
 			 const Vector& delta, int pick, const BState&,
-			 const Vector &pick_offset)
+			 const Vector &offset)
 {
   ((DistanceConstraint*)constraints[ConstDist])->SetDefault(GetAxis());
 
   switch(pick)
   {
   case PickSphL:
-    variables[PointLVar]->SetDelta(delta);
+    variables[PointLVar]->Move(pick_pointlvar_);
+    variables[PointRVar]->Move(pick_pointrvar_);
+    variables[DistVar]->Move(pick_distvar_);
+    variables[SDistVar]->Move(pick_sdistvar_);
+    variables[RatioVar]->Move(pick_ratiovar_);
+    variables[PointLVar]->SetDelta(offset);
     break;
 
   case PickSphR:
-    variables[PointRVar]->SetDelta(delta);
+    variables[PointLVar]->Move(pick_pointlvar_);
+    variables[PointRVar]->Move(pick_pointrvar_);
+    variables[DistVar]->Move(pick_distvar_);
+    variables[SDistVar]->Move(pick_sdistvar_);
+    variables[RatioVar]->Move(pick_ratiovar_);
+    variables[PointRVar]->SetDelta(offset);
     break;
 
   case PickResizeL:
-    variables[PointLVar]->SetDelta(delta, Scheme3);
+    variables[PointLVar]->Move(pick_pointlvar_);
+    variables[PointRVar]->Move(pick_pointrvar_);
+    variables[DistVar]->Move(pick_distvar_);
+    variables[SDistVar]->Move(pick_sdistvar_);
+    variables[RatioVar]->Move(pick_ratiovar_);
+    variables[PointLVar]->SetDelta(offset, Scheme3);
     break;
 
   case PickResizeR:
-    variables[PointRVar]->SetDelta(delta, Scheme3);
+    variables[PointLVar]->Move(pick_pointlvar_);
+    variables[PointRVar]->Move(pick_pointrvar_);
+    variables[DistVar]->Move(pick_distvar_);
+    variables[SDistVar]->Move(pick_sdistvar_);
+    variables[RatioVar]->Move(pick_ratiovar_);
+    variables[PointRVar]->SetDelta(offset, Scheme3);
     break;
 
   case PickSlider:
+    if (is_slideable_)
     {
       if (axis==1) { dist*=-1.0; }
       double sdist(variables[SDistVar]->real()+dist);
@@ -256,7 +330,12 @@ GaugeWidget::geom_moved( GeomPick*, int axis, double dist,
     break;
 
   case PickCyl:
-    MoveDelta(delta);
+    variables[PointLVar]->Move(pick_pointlvar_);
+    variables[PointRVar]->Move(pick_pointrvar_);
+    variables[DistVar]->Move(pick_distvar_);
+    variables[SDistVar]->Move(pick_sdistvar_);
+    variables[RatioVar]->Move(pick_ratiovar_);
+    MoveDelta(offset);
     break;
   }
   execute(0);
