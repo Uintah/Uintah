@@ -111,6 +111,8 @@ public:
 
       virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
 					       const MaterialSet* matls) = 0;
+      virtual void sched_computeScalarDissipation(SchedulerP&, const PatchSet* patches,
+						  const MaterialSet* matls) = 0;
       // GROUP: Action Computations :
       ///////////////////////////////////////////////////////////////////////
       // Interface for Calculate the wall velocity boundary conditions

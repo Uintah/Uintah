@@ -96,6 +96,8 @@ public:
       //        data User data needed for solve 
       virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
 					       const MaterialSet* matls);
+      virtual void sched_computeScalarDissipation(SchedulerP&, const PatchSet* patches,
+						  const MaterialSet* matls);
       // GROUP: Access Methods :
       ///////////////////////////////////////////////////////////////////////
       // Get the molecular viscosity
@@ -180,16 +182,23 @@ private:
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw);
+      void computeScalarDissipation(const ProcessorGroup*,
+				    const PatchSubset* patches,
+				    const MaterialSubset* matls,
+				    DataWarehouse* old_dw,
+				    DataWarehouse* new_dw);
 
-
-private:
-
-      // const VarLabel* variables 
-
+ protected:
       double d_CF; //model constant
       double d_factorMesh; // lengthscale = fac_mesh*meshsize
       double d_filterl; // prescribed filter length scale
       double d_CFVar; // model constant for mixture fraction variance
+      double d_turbPrNo; // turbulent prandtl number
+
+ private:
+
+      // const VarLabel* variables 
+
 }; // End class SmagorinkyModel
 } // End namespace Uintah
   

@@ -226,6 +226,11 @@ ArchesLabel::ArchesLabel()
 
   d_scalarVarSPLabel = VarLabel::create("scalarVarSP", 
 				       CCVariable<double>::getTypeDescription() );
+  d_scalarDissINLabel = VarLabel::create("scalarDissIN", 
+				       CCVariable<double>::getTypeDescription() );
+
+  d_scalarDissSPLabel = VarLabel::create("scalarDissSP", 
+				       CCVariable<double>::getTypeDescription() );
   // Scalar Coef
   d_scalCoefSBLMLabel = VarLabel::create("scalCoefSBLM",
 				   CCVariable<double>::getTypeDescription() );
@@ -940,6 +945,8 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_scalarCPBCLabel);
   VarLabel::destroy(d_scalarVarINLabel);
   VarLabel::destroy(d_scalarVarSPLabel);
+  VarLabel::destroy(d_scalarDissINLabel);
+  VarLabel::destroy(d_scalarDissSPLabel);
   VarLabel::destroy(d_scalCoefSBLMLabel);
   VarLabel::destroy(d_scalConvCoefSBLMLabel);
   VarLabel::destroy(d_scalLinSrcSBLMLabel);
