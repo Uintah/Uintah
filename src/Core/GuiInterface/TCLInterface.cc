@@ -142,12 +142,17 @@ GuiContext* TCLInterface::createContext(const string& name)
 
 void TCLInterface::postMessage(const string& errmsg, bool err)
 {
-  string tag;
-  if(err)
-    tag += " errtag";
-  execute(string(".top.errorFrame.text insert end \"")+
-	       errmsg+"\\n\""+tag);
-  execute(".top.errorFrame.text see end");
+  // "Status" could also be "warning", but this function only takes a
+  // bool.  In the future, perhas we should update the functions that
+  // call postMessage to be more expressive.
+  // displayErrorWarningOrInfo() is a function in NetworkEditor.tcl.
+
+  string status = "info";
+  if( err ) status = "error";
+
+  string command = "displayErrorWarningOrInfo \"" + errmsg + "\" " + status;
+
+  execute( command );
 }
 
 bool TCLInterface::get(const std::string& name, std::string& value)
