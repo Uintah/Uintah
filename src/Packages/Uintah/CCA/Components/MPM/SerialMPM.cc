@@ -86,17 +86,16 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
     }
 
    string integrator_type;
-   if (!mpm_soln_ps->get("time_integrator",integrator_type))
-     d_integrator = Explicit;
-   else {
+   if (mpm_soln_ps) {
+	mpm_soln_ps->get("time_integrator",integrator_type);
      if (integrator_type == "implicit")
        d_integrator = Implicit;
      else
        if (integrator_type == "explicit")
 	 d_integrator = Explicit;
-   }
-   cout << "integrator type = " << integrator_type << " " << d_integrator << endl;
-    
+   } else
+     d_integrator = Explicit;
+   
    MPMPhysicalBCFactory::create(prob_spec);
 
    contactModel = ContactFactory::create(prob_spec,sharedState, lb, d_8or27);
