@@ -22,13 +22,52 @@
 namespace Component {
     namespace PIDL {
 	class TypeInfo;
+/**************************************
+ 
+CLASS
+   ServerContext
+   
+KEYWORDS
+   PIDL, Server
+   
+DESCRIPTION
+   One of these objects is associated with each server object.  It provides
+   the state necessary for the PIDL internals, including the endpoint
+   associated with this object, a pointer to type information, the objects
+   id from the object wharehouse, a pointer to the base object class
+   (Object_interface), and to the most-derived type (a void*).  Endpoints
+   are created lazily from the Object_interface class.
+****************************************/
 	struct ServerContext {
+	    //////////
+	    // A pointer to the type information.
 	    const TypeInfo* d_typeinfo;
+
+	    //////////
+	    // The endpoint associated with this object.
 	    globus_nexus_endpoint_t d_endpoint;
+
+	    //////////
+	    // The ID of this object from the object wharehouse.  This
+	    // id is unique within this process.
 	    int d_objid;
+
+	    //////////
+	    // A pointer to the object base class.
 	    Object_interface* d_objptr;
+
+	    //////////
+	    // A pointer to the most derived type.  This is used only by
+	    // sidl generated code.
 	    void* d_ptr;
+
+	    //////////
+	    // A flag, true if the endpoint has been created for this
+	    // object.
 	    bool d_endpoint_active;
+
+	    //////////
+	    // Create the endpoint for this object.
 	    void activateEndpoint();
 	};
     }
@@ -38,6 +77,9 @@ namespace Component {
 
 //
 // $Log$
+// Revision 1.4  1999/09/24 20:03:37  sparker
+// Added cocoon documentation
+//
 // Revision 1.3  1999/09/24 06:26:26  sparker
 // Further implementation of new Component model and IDL parser, including:
 //  - fixed bugs in multiple inheritance
