@@ -31,9 +31,10 @@ SRCS     += \
 	$(SRCDIR)/RWS.cc \
 	$(SRCDIR)/MacroSubstitute.cc \
         $(SRCDIR)/Signals.cc \
+        $(SRCDIR)/XMLParser.cc \
 
 PSELIBS := Core/Containers Core/Exceptions Core/Thread
-LIBS := $(DL_LIBRARY) $(THREAD_LIBS)
+LIBS := $(XML_LIBRARY) $$(DL_LIBRARY) $(THREAD_LIBS)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
