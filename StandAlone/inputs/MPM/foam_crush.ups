@@ -29,6 +29,7 @@
 	<save label = "p.x"/>
 	<save label = "p.mass"/>
         <save label = "p.stress"/>
+        <save label = "p.particleID"/>
 	<save label = "g.mass" material = "1"/>
 	<save label = "g.stressFS" material = "1"/>
 	<checkpoint cycle = "2" timestepInterval = "40"/>
