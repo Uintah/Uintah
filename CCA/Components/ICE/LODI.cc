@@ -137,144 +137,195 @@ void lodi_getVars_pressBC( const Patch* patch,
     lodi_vars->cv[m]      = cv[m];
   }
 }
+
+/*__________________________________________________________________
+ Function~ Sutherland_Vector_Components-
+ Purpose:  Returns an IntVector filled with the vector components 
+           from Sutherland and Kennedy's table 4 and 5
+____________________________________________________________________*/
+inline IntVector Sutherland_Vector_Components(const Patch::FaceType face) 
+{
+  IntVector dir(0,0,0);
+  if (face == Patch::xminus || face == Patch::xplus ) {
+    dir = IntVector(0,1,2);
+  }
+  if (face == Patch::yminus || face == Patch::yplus ) {
+    dir = IntVector(1,0,2);
+  }
+  if (face == Patch::zminus || face == Patch::zplus ) {
+    dir = IntVector(2,0,1);
+  }
+  return dir;
+}
+
+/*__________________________________________________________________
+ Function~ characteristic_source_terms-
+____________________________________________________________________*/
+inline void characteristic_source_terms(const IntVector dir,
+                                        const Vector grav,
+                                        const double rho_CC,
+                                        const double speedSound,
+                                        vector<double>& s)
+{
+  Vector s_mom = grav;
+  double s_press = 0.0;
+  //__________________________________
+  //  compute sources, Appendix:Table 4
+  // x_dir:  dir = (0,1,2) 
+  // y_dir:  dir = (1,0,2)  
+  // z_dir:  dir = (2,0,1)
+  s[1] = 0.5 * (s_press - rho_CC * speedSound * s_mom[dir[0]] );
+  s[2] = -s_press/(speedSound * speedSound);
+  s[3] = s_mom[dir[1]];
+  s[4] = s_mom[dir[2]];
+  s[5] = 0.5 * (s_press + rho_CC * speedSound * s_mom[dir[0]] );
+}
+
 /*__________________________________________________________________
  Function~ Di-- do the actual work of computing di
+ Reference:  "Improved Boundary conditions for viscous, reacting compressible
+              flows", James C. Sutherland, Chistopher A. Kenndey
+              Journal of Computational Physics, 191, 2003, pp. 502-524
 ____________________________________________________________________*/
 inline void Di(StaticArray<CCVariable<Vector> >& d,
-               const int dir,
+               const IntVector dir,
                const IntVector& c,
                const Patch::FaceType face,
                const Vector domainLength,
                const Lodi_user_inputs* user_inputs,
                const double maxMach,
+               const vector<double>& s,
                const double press,
                const double speedSound,
                const double rho,
-               const double normalVel,
+               const Vector vel_CC,
                const double drho_dx,
                const double dp_dx,
                const Vector dVel_dx)
-{
-  IntVector dd;  // directions debugging 
-
+{ 
   //__________________________________
   // compute Li terms
-  //  see table 7 of Sutherland and Kennedy 
-  double L3 = -9e1000, L4 = -9e1000;
+  //  see table 5 of Sutherland and Kennedy 
+  // x_dir:  dir = (0,1,2) 
+  // y_dir:  dir = (1,0,2)  
+  // z_dir:  dir = (2,0,1)
+  
+  int n_dir = dir[0];
+  double normalVel = vel_CC[n_dir];
+  double Mach = fabs(vel_CC.length()/speedSound);
+  
   double speedSoundsqr = speedSound * speedSound;
   
-  double A = rho * speedSound * dVel_dx[dir];
-  double L1 = (normalVel - speedSound) * (dp_dx - A);
-  double L2 = normalVel * (speedSoundsqr * drho_dx - dp_dx);
-  double L5 = (normalVel + speedSound) * (dp_dx + A);
-  
-  if (dir == 0) {   // X-normal direction
-    L3 = normalVel * dVel_dx[1];  // u dv/dx
-    L4 = normalVel * dVel_dx[2];  // u dw/dx
-    dd=IntVector(0,1,2);
-  }
-  if (dir == 1) {   // Y-normal direction
-    L3 = normalVel * dVel_dx[0];   // v du/dy
-    L4 = normalVel * dVel_dx[2];   // v dw/dy
-    dd=IntVector(1,0,2);
-  }
-  if (dir == 2) {   // Z-normal direction
-    L3 = normalVel * dVel_dx[0];   // w du/dz
-    L4 = normalVel * dVel_dx[1];   // w dv/dz
-    dd=IntVector(2,0,1);
-  }
+  double A = rho * speedSound * dVel_dx[n_dir];
+  double L1 = 0.5 * (normalVel - speedSound) * (dp_dx - A);
+  double L2 = normalVel * (drho_dx - dp_dx/speedSoundsqr);
+  double L3 = normalVel * dVel_dx[dir[1]];  // u dv/dx
+  double L4 = normalVel * dVel_dx[dir[2]];  // u dw/dx
+  double L5 = 0.5 * (normalVel + speedSound) * (dp_dx + A);
    
   //__________________________________
   //  user_inputs
   double p_infinity = user_inputs->press_infinity;
   double sigma      = user_inputs->sigma;
-  double sp         = 0;
+  
+  //____________________________________________________________
+  //  Modify the Li terms based on whether or not the normal
+  //  component of the velocity if flowing out of the domain.
+  //  Equation 8 & 9 of Sutherland
+  double K =  sigma * speedSound *(1.0 - maxMach*maxMach);
   
   //__________________________________
-  //  Modify the Li terms
-  //  equation 8 & 9 of Sutherland
-  double K =  sigma * (1.0 - maxMach*maxMach)/domainLength[dir];
-  
-  if (face == Patch::xminus ||     // LEFT  BOTTOM  BACK FACES
-      face == Patch::yminus ||
-      face == Patch::zminus) {
-    if(normalVel < 0 ){   // flowing out of the domain
-      L5 = K * speedSound * (press - p_infinity) + 0.5 * sp;
-    }
-    if(normalVel >=0) {   // flowing into the domain
-      L1 = L1;            // unchanged
-      L2 = -sp/speedSoundsqr;
-      L3 = 0.0;
-      L4 = 0.0;
-      L5 = 0.5 * sp;
-    }
+  //right or left boundary
+  // inflow or outflow
+  double rightFace =1;
+  double leftFace = 0;
+  if (face == Patch::xminus || face == Patch::yminus || face == Patch::zminus){
+    leftFace  = 1;
+    rightFace = 0;
   }
   
-  if (face == Patch::xplus ||     //  RIGHT  TOP  FRONT FACES
-      face == Patch::yplus ||
-      face == Patch::zplus) {
-    double K = 0.0;
-    if(normalVel > 0 ){   // flowing out of the domain
-      L1 = K * speedSound * (press - p_infinity) + 0.5 * sp;
-    }
-    if(normalVel <=0) {   // flowing into the domain
-      L1 = 0.5 * sp;
-      L2 = -sp/speedSoundsqr;
-      L3 = 0.0;
-      L4 = 0.0;
-      L5 = L5;            //unchanged
-    }
-  }  
+  string flowDir = "outFlow";
+  if (leftFace && normalVel >= 0 || rightFace && normalVel <= 0){
+    flowDir = "inFlow";
+  }
   
   //__________________________________
-  //  compute Di terms based on the 
-  // modified Ls
-  d[1][c][dir] = (L2 + 0.5 * (L1 + L5))/speedSoundsqr;
-  d[2][c][dir] = 0.5 * (L5 + L1);
+  //Subsonic non-reflective inflow
+  if (flowDir == "inFlow" && Mach < 1.0){
+    L1 = leftFace * L1 + rightFace * s[1];
+    L2 = s[2];
+    L3 = s[3];
+    L4 = s[4];
+    L5 = rightFace * L5 + leftFace * s[5]; 
+  }
+  //__________________________________
+  // Subsonic non-reflective outflow
+  if (flowDir == "outFlow" && Mach < 1.0){
+    L1 = rightFace *(0.5 * K * (press - p_infinity)/domainLength[n_dir] + s[1])
+       + leftFace  * L1;
+       
+    L5 = leftFace  *(0.5 * K * (press - p_infinity)/domainLength[n_dir] + s[5])
+       + rightFace * L5;
+  }
+  
+  //__________________________________
+  //Supersonic non-reflective inflow
+  // see Thompson II pg 453
+  if (flowDir == "inFlow" && Mach > 1.0){
+    L1 = s[1];
+    L2 = s[2];
+    L3 = s[3];
+    L4 = s[4];
+    L5 = s[5]; 
+  }
+  //__________________________________
+  // Supersonic non-reflective outflow
+  //if (flowDir == "outFlow" && Mach > 1.0){
+  //}   do nothing see Thompson II pg 453
+  
+  //__________________________________
+  //  compute Di terms in the normal direction based on the 
+  // modified Ls  See Sutherland Table 7
+  d[1][c][n_dir] = L2 + (L1 + L5)/speedSoundsqr;
+  d[2][c][n_dir] = (L5 + L1);
  
-  if (dir == 0) {   // X-normal direction
-    d[3][c][dir] = 0.5 * (L5 - L1)/(rho * speedSound);
-    d[4][c][dir] = L3;
-    d[5][c][dir] = L4;
-    dd=IntVector(0,1,2);
+  if (n_dir == 0) {   // X-normal nection
+    d[3][c][n_dir] = (L5 - L1)/(rho * speedSound);
+    d[4][c][n_dir] = L3;
+    d[5][c][n_dir] = L4;
   }
-  if (dir == 1) {   // Y-normal direction
-    d[3][c][dir] = L3;
-    d[4][c][dir] = 0.5 * (L5 - L1)/(rho * speedSound);
-    d[5][c][dir] = L4;
-    dd=IntVector(1,0,2);
+  if (n_dir == 1) {   // Y-normal nection
+    d[3][c][n_dir] = L3;
+    d[4][c][n_dir] = (L5 - L1)/(rho * speedSound);
+    d[5][c][n_dir] = L4;
   }
-  if (dir == 2) {   // Z-normal direction
-    d[3][c][dir] = L3;
-    d[4][c][dir] = L4;
-    d[5][c][dir] = 0.5 * (L5 - L1)/(rho * speedSound);
-    dd=IntVector(2,0,1);
+  if (n_dir == 2) {   // Z-normal nection
+    d[3][c][n_dir] = L3;
+    d[4][c][n_dir] = L4;
+    d[5][c][n_dir] = (L5 - L1)/(rho * speedSound);
   }
   
 #if 0
    //__________________________________
    //  debugging
-   // hardCode the cells you want to intergate;
-
    vector<IntVector> dbgCells;
-   dbgCells.push_back(IntVector(50,-1,2));
-   dbgCells.push_back(IntVector(50,0,2));        
-   dbgCells.push_back(IntVector(50,-1,-1));        
-   dbgCells.push_back(IntVector(50,-1,5)); 
+   dbgCells.push_back(IntVector(40,50,0));
+   dbgCells.push_back(IntVector(50,40,0));
      
    for (int i = 0; i<(int) dbgCells.size(); i++) {
      if (c == dbgCells[i]) {
-    
-       cout << c << " dd[0] " << dd[0] << " dd[1] " << dd[1] << " dd[2] " << dd[2]<< endl;
-       cout << " normalVel " << normalVel << " drho_dx " 
-            << drho_dx << " dp_dx " << dp_dx << endl;
-       cout << " dvel_dx " << dVel_dx<< endl;
-       cout << " A:  \t" << "rho * C * du"<<dd[0]<<"/dx"<<dd[0]<<endl;
-       cout << " L1: \t" << L1 << " (u"<< dd[0] <<" - c^2)*(dp/dx"<<dd[0]<< " - A)"<<endl;
-       cout << " L2: \t" << L2 << "  u"<< dd[0] <<"*(c^2*drho/dx"<<dd[0]<< " - dp/dx"<<dd[0]<<")"<<endl;
-       cout << " L3: \t" << L3 << "  u"<< dd[0] <<"*du"<<dd[1]<<"/dx"<<dd[0]<<endl;
-       cout << " L4: \t" << L4 << "  u"<< dd[0] <<"*du"<<dd[2]<<"/dx"<<dd[0]<<endl;
-       cout << " L5: \t" << L5 << " (u"<< dd[0] <<" + c^2)*(dp/dx"<<dd[0]<< " + A)"<<endl;
+      cout << "//__________________________________ DI 2" << endl;
+       cout << c << " dir " << dir<< " flowDir " << flowDir << " Mach " << Mach 
+            << " rightFace " << rightFace << " leftFace " << leftFace << endl;
+       cout << " normalVel " << normalVel << " drho_dx " << drho_dx 
+            << " dp_dx " << dp_dx << " dvel_dx " << dVel_dx << endl;
+            
+       cout << " A:  \t" << A  << " rho * C * du"<<n_dir<<"/dx"<< n_dir <<endl;
+       cout << " L1: \t" << L1 << " (u"<< n_dir <<" - c^2)*(dp/dx"<<n_dir<< " - A)"<<endl;
+       cout << " L2: \t" << L2 << "  u"<< n_dir <<"*(c^2*drho/dx"<<n_dir<< " - dp/dx"<<n_dir<<")"<<endl;
+       cout << " L3: \t" << L3 << "  u"<< n_dir <<"*du"<<dir[1]<<"/dx"<<n_dir<<endl;
+       cout << " L4: \t" << L4 << "  u"<< n_dir <<"*du"<<dir[2]<<"/dx"<<n_dir<<endl;
+       cout << " L5: \t" << L5 << " (u"<< n_dir <<" + c^2)*(dp/dx"<<n_dir<< " + A)"<<endl;
        for (int i = 1; i<= 5; i++ ) {
          cout << " d[" << i << "]:\t"<< d[i][c]<< endl;
        }
@@ -284,7 +335,6 @@ inline void Di(StaticArray<CCVariable<Vector> >& d,
    }  // dbgCells loop
  #endif
 } 
-
 
 /*__________________________________________________________________
  Function~ computeDi--
@@ -300,29 +350,16 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
                SimulationStateP& sharedState,
                const Lodi_user_inputs* user_inputs)                              
 {
-  cout_doing << "LODI computeLODIFirstOrder "<< endl;
+  cout_doing << "LODI computeDi "<< endl;
   Vector dx = patch->dCell();
-  vector<IntVector> R_Offset(6);
-  R_Offset[Patch::xminus] = IntVector(1,0,0);  // right cell offset
-  R_Offset[Patch::xplus]  = IntVector(0,0,0);
-  R_Offset[Patch::yminus] = IntVector(0,1,0);
-  R_Offset[Patch::yplus]  = IntVector(0,0,0);
-  R_Offset[Patch::zminus] = IntVector(0,0,1);
-  R_Offset[Patch::zplus]  = IntVector(0,0,0);
-
-  vector<IntVector> L_Offset(6);
-  L_Offset[Patch::xminus] = IntVector(0, 0, 0);   // left cell offset
-  L_Offset[Patch::xplus]  = IntVector(-1,0, 0);
-  L_Offset[Patch::yminus] = IntVector(0, 0, 0);
-  L_Offset[Patch::yplus]  = IntVector(0,-1, 0);
-  L_Offset[Patch::zminus] = IntVector(0, 0, 0);
-  L_Offset[Patch::zplus]  = IntVector(0, 0, -1);
   
   // Characteristic Length of the overall domain
   Vector domainLength;
   const Level* level = patch->getLevel();
   GridP grid = level->getGrid();
   grid->getLength(domainLength, "minusExtraCells");
+  
+  Vector grav = sharedState->getGravity();
 
   for (int i = 1; i<= 5; i++ ) {           // don't initialize inside main loop
     d[i].initialize(Vector(0.0,0.0,0.0));  // you'll overwrite previously compute di
@@ -344,6 +381,17 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
     int P_dir = axes[0]; // find the principal dir
     double delta = dx[P_dir];
     
+    IntVector R_offset(0,0,0);
+    IntVector L_offset(0,0,0);     //  find the one sided derivative offsets
+
+    if (face == Patch::xminus || face == Patch::yminus || face == Patch::zminus){
+      R_offset[P_dir] += 1; 
+    }
+    if (face == Patch::xplus || face == Patch::yplus || face == Patch::zplus){
+      L_offset[P_dir] -= 1;
+    }
+    
+    IntVector dir = Sutherland_Vector_Components(face);
 /*`==========TESTING==========*/
     // find max Mach Number
     double maxMach = 0.0;
@@ -353,23 +401,26 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
       maxMach = Max(maxMach, fabs(vel[c][P_dir]/speedSound[c]));
     } 
 /*===========TESTING==========`*/
-
     for(CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells"); 
         !iter.done();iter++) {
       IntVector c = *iter;
-      IntVector r = c + R_Offset[face];
-      IntVector l = c + L_Offset[face];
+      IntVector r = c + R_offset;
+      IntVector l = c + L_offset;
 
       double drho_dx = (rho[r]   - rho[l])/delta; 
       double dp_dx   = (press[r] - press[l])/delta;
       Vector dVel_dx = (vel[r]   - vel[l])/delta;
 
-      Di(d, P_dir, c, face, domainLength, user_inputs, maxMach, press[c],
-         speedSound[c], rho[c], vel[c][P_dir], drho_dx, dp_dx, dVel_dx); 
+      vector<double> s(6);
+      characteristic_source_terms(dir, grav, rho[c], speedSound[c], s);
+      
+      Di(d, dir, c, face, domainLength, user_inputs, maxMach, s, press[c],
+         speedSound[c], rho[c], vel[c], drho_dx, dp_dx, dVel_dx); 
 
     }  // faceCelliterator 
   }  // loop over faces
 }// end of function
+
 
 /*__________________________________________________________________
  Function~ computeNu--                    L   O   D   I
@@ -435,7 +486,7 @@ void computeNu(CCVariable<Vector>& nu,
         IntVector faceDir = patch->faceDirection(face0);
         IntVector axes = patch->faceAxes(face0);
         int Edir1 = axes[0];
-        int Edir2 = otherDirection(P_dir, Edir1);
+        int Edir2 = remainingVectorComponent(P_dir, Edir1);
         
         //-----------  THIS IS GROSS-------
         // Find an edge iterator that 
@@ -668,10 +719,10 @@ void getBoundaryEdges(const Patch* patch,
 }
 
 /*_________________________________________________________________
- Function~ otherDirection--
+ Function~ remainingVectorComponent--
  Purpose~  returns the remaining vector component.
 ___________________________________________________________________*/  
-int otherDirection(int dir1, int dir2)
+int remainingVectorComponent(int dir1, int dir2)
 { 
   int dir3 = -9;
   if ((dir1 == 0 && dir2 == 1) || (dir1 == 1 && dir2 == 0) ){  // x, y
@@ -766,7 +817,7 @@ void FaceDensity_LODI(const Patch* patch,
            
     IntVector axes = patch->faceAxes(face0);
     int Edir1 = axes[0];
-    int Edir2 = otherDirection(P_dir, Edir1);
+    int Edir2 = remainingVectorComponent(P_dir, Edir1);
   
     CellIterator iterLimits =  
                 patch->getEdgeCellIterator(face, face0, "minusCornerCells");
@@ -821,12 +872,12 @@ void FaceVel_LODI(const Patch* patch,
 // hardCode the cells you want to intergate;
 vector<IntVector> dbgCells;
 #if 0
-  dbgCells.push_back(IntVector(-1,-1,2));
-  dbgCells.push_back(IntVector(0,-1,2));      
-  dbgCells.push_back(IntVector(1,-1,2));        
-  dbgCells.push_back(IntVector(2,-1,2));
-  dbgCells.push_back(IntVector(3,-1,2));
+  dbgCells.push_back(IntVector(36,50,0));
+  dbgCells.push_back(IntVector(50,23,0));
+ // dbgCells.push_back(IntVector(49,50,0));      
+ // dbgCells.push_back(IntVector(50,49,0));
 #endif
+double time = sharedState->getElapsedTime();
 /*===========TESTING==========`*/
      
   // shortcuts       
@@ -924,7 +975,7 @@ vector<IntVector> dbgCells;
         cout << " rho_old[c] * vel_old[c] " << momOld << endl;
         cout << " convect1                " << convect1 << endl;
         cout << " convect2                " << convect2 << endl;
-        cout << " BN_convect              " << BN_convect<< " term1 " << term1 << " term2 " << term2 <<endl;
+        cout << " BN_convect              " << BN_convect <<endl;
         cout << " pressGradient           " << pressGradient << endl;
         cout << " rho_old * gravity       " << rho_old[c] * gravity << endl;
         cout << " vel                     " << vel_CC[c] << "\n"<<endl;
@@ -953,7 +1004,7 @@ vector<IntVector> dbgCells;
            
     IntVector axes = patch->faceAxes(face0);
     int Edir1 = axes[0];
-    int Edir2 = otherDirection(P_dir, Edir1);
+    int Edir2 = remainingVectorComponent(P_dir, Edir1);
      
     CellIterator iterLimits =  
                 patch->getEdgeCellIterator(face, face0, "minusCornerCells");
@@ -990,41 +1041,35 @@ vector<IntVector> dbgCells;
       //__________________________________
       // Equation 9.9 - 9.10
       Vector mom; // momentum
-      Vector term1, term2;
-      Vector weight(1,1,1);
-      weight[Edir1] = 0.0;  // so you don't double count di values
       
-      term1.x(vel_old[c].x() * (d[1][c][P_dir] + weight.x() * d[1][c][Edir1]) );
-      term1.y(vel_old[c].y() * (d[1][c][P_dir] + weight.y() * d[1][c][Edir1]) );
-      term1.z(vel_old[c].z() * (d[1][c][P_dir] + weight.z() * d[1][c][Edir1]) );   
-      
-      term2.x( (d[3][c][P_dir] + weight.x() * d[3][c][Edir1]) );        
-      term2.y( (d[4][c][P_dir] + weight.y() * d[4][c][Edir1]) );       
-      term2.z( (d[5][c][P_dir] + weight.z() * d[5][c][Edir1]) );
-      term2 *= rho_old[c];
+      Vector BN_convect;    // boundary normal convection
+      BN_convect.x( vel_old[c].x() * (d[1][c][P_dir] + d[1][c][Edir1])
+                  + rho_old[c]     * (d[3][c][P_dir] + d[3][c][Edir1]) );
+                  
+      BN_convect.y( vel_old[c].y() * (d[1][c][P_dir] + d[1][c][Edir1])
+                  + rho_old[c]     * (d[4][c][P_dir] + d[4][c][Edir1]) );
+                  
+      BN_convect.z( vel_old[c].z() * (d[1][c][P_dir] + d[1][c][Edir1])
+                  + rho_old[c]     * (d[5][c][P_dir] + d[5][c][Edir1]) );
       
       mom  = rho_old[c] * vel_old[c]                                
-           - delT * ( term1 +  term2 + convect1 + pressGradient )  
+           - delT * ( BN_convect + convect1 + pressGradient )  
            + delT *rho_old[c] * gravity;                     
               
       vel_CC[c] = mom/rho_new[c];
 
-#if 0      
+#if 0
       //__________________________________
       //  debugging
       for (int i = 0; i<(int) dbgCells.size(); i++) {
-        if (c == dbgCells[i]) {
+        if (c == dbgCells[i] && time > 0.008) {
           cout.setf(ios::scientific,ios::floatfield);
           cout.precision(10);
-          int Pd = P_dir;
-          int E1 = Edir1;
-          int E2 = Edir2;
 
           cout << " -------------------------- E D G E " << endl;
-          cout << c <<" P_dir " << Pd << " Edir1 " << Edir1 << " Edir2 " << Edir2 << endl;
+          cout << c <<" P_dir " << P_dir << " Edir1 " << Edir1 << " Edir2 " << Edir2 << endl;
           cout << " rho_old[c] * vel_old[c] " << rho_old[c] * vel_old[c] << endl;
-          cout << " term1                   " << term1 << endl;
-          cout << " term2                   " << term2 << endl;
+          cout << " BN_convect              " << BN_convect << endl;
           cout << " convect1                " << convect1 << endl;
           cout << " pressGradient           " << pressGradient << endl;
           cout << " rho_old gravity         " << rho_old[c] * gravity << endl;
@@ -1066,9 +1111,9 @@ vector<IntVector> dbgCells;
       //  debugging
 #if 0
       for (int i = 0; i<(int) dbgCells.size(); i++) {
-        if (c == dbgCells[i]) {
+        if (c == dbgCells[i] && time > 0.001) {
          cout << "-------------------------- C O R N E R " << c << endl;
-         cout << " rho_old[c] * vel_old[c] " << rho_old[c] * vel_old[c] << << endl;
+         cout << " rho_old[c] * vel_old[c] " << rho_old[c] * vel_old[c] << endl;
          cout << " term1 = " << term1 << endl;
          cout << " term2 = " << term2 << endl;
          cout << " d1 " << d[1][c] << endl; 
@@ -1077,8 +1122,8 @@ vector<IntVector> dbgCells;
          cout << " d5 " << d[5][c] << endl; 
          cout << " mom/delT " <<  mom/delT<< endl;
          cout << " vel_CC[c] " << vel_CC[c] <<" \n\n"<< endl;
-        }
-      }
+       }
+    }
 #endif 
     
   }
@@ -1194,7 +1239,7 @@ void FaceTemp_LODI(const Patch* patch,
            
     IntVector axes = patch->faceAxes(face0);
     int Edir1 = axes[0];
-    int Edir2 = otherDirection(P_dir, Edir1);
+    int Edir2 = remainingVectorComponent(P_dir, Edir1);
      
     CellIterator iterLimits =  
                 patch->getEdgeCellIterator(face, face0, "minusCornerCells");
