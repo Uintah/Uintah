@@ -425,10 +425,6 @@ Grid* HierarchicalRegridder::CreateGrid(Grid* oldGrid, const ProblemSpecP& ups)
     }
 
     LevelP newLevel = newGrid->addLevel(anchor, spacing);
-
-    // in the level code, the refinement ratio is the relation
-    // between it and the coarser level.
-    newLevel->setRefinementRatio(d_cellRefinementRatio[levelIdx]);
     newLevel->setExtraCells(extraCells);
 
     rdbg << "HierarchicalRegridder::regrid(): Setting extra cells to be: " << extraCells << endl;
@@ -678,9 +674,6 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups)
 
     LevelP newLevel = newGrid->addLevel(anchor, spacing);
 
-    // in the level code, the refinement ratio is the relation
-    // between it and the coarser level.
-    newLevel->setRefinementRatio(d_cellRefinementRatio[levelIdx]);
     newLevel->setExtraCells(extraCells);
 
     rdbg << "HierarchicalRegridder::regrid(): Setting extra cells to be: " << extraCells << endl;
