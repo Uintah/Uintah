@@ -253,6 +253,7 @@ public:
 	       const Point &p6, const Point &p7);
   Elem::index_type add_elem(Node::array_type a);
   virtual bool is_editable() const { return true; }
+  virtual int dimensionality() const { return 3; }
 
   Node::index_type add_point(const Point &p);
 

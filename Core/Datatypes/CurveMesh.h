@@ -192,6 +192,7 @@ public:
     }
 
   virtual bool is_editable() const { return true; }
+  virtual int dimensionality() const { return 1; }
     
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
