@@ -43,5 +43,3 @@ TriSurface* Surface::getTriSurface()
     else
 	return 0;
 }
-
-    
