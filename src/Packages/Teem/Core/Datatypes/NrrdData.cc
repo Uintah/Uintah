@@ -62,7 +62,7 @@ void NrrdData::io(Piostream& stream) {
   FILE *f;
   if (stream.reading()) {
     Pio(stream, fname);
-    if (!(f = fopen(fname(), "rt"))) {
+    if (!(f = fopen(fname.c_str(), "rt"))) {
       cerr << "Error opening file "<<fname<<"\n";
       return;
     }
@@ -78,12 +78,10 @@ void NrrdData::io(Piostream& stream) {
     fname="";
   } else { // writing
     if (fname == "") {   // if fname wasn't set up stream, just append .nrrd
-      if (stream.file_name()) {
-	fname = stream.file_name() + clString(".nrrd");
-      }
+      fname = stream.file_name + string(".nrrd");
     }
     Pio(stream, fname);
-    if (!(f = fopen(fname(), "wt"))) {
+    if (!(f = fopen(fname.c_str(), "wt"))) {
       cerr << "Error opening file "<<fname<<"\n";
       return;
     }

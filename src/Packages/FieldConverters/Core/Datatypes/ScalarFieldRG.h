@@ -78,22 +78,14 @@ private:
 
 
 template <> ScalarFieldRGT<double>::ScalarFieldRGT(int x, int y, int z);
-template <> ScalarFieldRGT<float>::ScalarFieldRGT(int x, int y, int z);
 template <> ScalarFieldRGT<int>::ScalarFieldRGT(int x, int y, int z);
 template <> ScalarFieldRGT<short>::ScalarFieldRGT(int x, int y, int z);
-template <> ScalarFieldRGT<unsigned short>::ScalarFieldRGT(int x, int y, int z);
 template <> ScalarFieldRGT<char>::ScalarFieldRGT(int x, int y, int z);
-template <> ScalarFieldRGT<unsigned char>::ScalarFieldRGT(int x, int y, int z);
-
 
 template <> PersistentTypeID ScalarFieldRGT<double>::type_id;
-template <> PersistentTypeID ScalarFieldRGT<float>::type_id;
 template <> PersistentTypeID ScalarFieldRGT<int>::type_id;
 template <> PersistentTypeID ScalarFieldRGT<short>::type_id;
-template <> PersistentTypeID ScalarFieldRGT<unsigned short>::type_id;
 template <> PersistentTypeID ScalarFieldRGT<char>::type_id;
-template <> PersistentTypeID ScalarFieldRGT<unsigned char>::type_id;
-
 
 
 template <class T>
@@ -164,11 +156,12 @@ void ScalarFieldRGT<T>::io(Piostream& stream)
 
     if ( separate_raw == 1) {
       SCIRun::Pio(stream,raw_filename);
-      clString filename;
-      if ( raw_filename(0) == '/' )
+      string filename;
+      if ( raw_filename[0] == '/' )
 	filename = raw_filename;
       else
-	filename = pathname( stream.file_name ) + "/" + raw_filename;
+	filename = pathname(clString(stream.file_name.c_str()))() + 
+	  string("/") + raw_filename;
       std::cerr << "reading... rawfile=" << filename <<std::endl;
       SCIRun::Pio(stream, grid, filename);
     }
@@ -176,17 +169,17 @@ void ScalarFieldRGT<T>::io(Piostream& stream)
       SCIRun::Pio(stream,grid);
   }
   else { // writing
-    clString filename = raw_filename;
+    string filename = raw_filename;
     int split = separate_raw ;
     if ( split == 1) {
       std::cerr << "SF: split \n";
       if ( filename == "" ) {
-	if ( stream.file_name() ) { 
-	  char *tmp=strdup(stream.file_name());
+	if ( stream.file_name.c_str()) { 
+	  char *tmp=strdup(stream.file_name.c_str());
 	  char *dot = strrchr( tmp, '.' );
 	  if (!dot ) dot = strrchr( tmp, 0);
             
-	  filename = stream.file_name.substr(0,dot-tmp)+clString(".raw");
+	  filename = stream.file_name.substr(0,dot-tmp)+string(".raw");
 	  delete tmp;
 	}
 	else 

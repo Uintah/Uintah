@@ -48,7 +48,7 @@ public:
   //////////
   // 
   Nrrd *nrrd;
-  clString fname;
+  string fname;
 
   NrrdData();
   NrrdData(const NrrdData&);
