@@ -7,7 +7,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Components/MPMICE
 
-SRCS     += $(SRCDIR)/MPMICE.cc
+SRCS     += $(SRCDIR)/MPMICE.cc $(SRCDIR)/MPMICELabel.cc
 
 PSELIBS := Uintah/Interface Uintah/Grid Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Thread \

@@ -9,13 +9,16 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
+
 #include <Uintah/Components/MPM/Contact/Contact.h>
-#include <SCICore/Geometry/Vector.h>
 #include <Uintah/Components/MPM/MPMLabel.h>
 #include <Uintah/Components/MPM/SerialMPM.h>
+#include <Uintah/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <Uintah/Components/ICE/ICE.h>
 #include <Uintah/Components/ICE/ICELabel.h>
-#include <Uintah/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
+#include <Uintah/Components/MPMICE/MPMICELabel.h>
+
+#include <SCICore/Geometry/Vector.h>
 
 using SCICore::Geometry::Vector;
 using namespace Uintah::MPM;
@@ -79,6 +82,11 @@ public:
 				   const LevelP& level, SchedulerP&,
 				   DataWarehouseP&, DataWarehouseP&);
 
+  void scheduleInterpolateNCToCC(const Patch* patch,
+                                 SchedulerP&,
+                                 DataWarehouseP&,
+                                 DataWarehouseP&);
+
   //////////
   // Insert Documentation Here:
   void interpolateNCToCC(const ProcessorGroup*,
@@ -99,6 +107,7 @@ protected:
   SimulationStateP d_sharedState;
   MPMLabel* Mlb;
   ICELabel* Ilb;
+  MPMICELabel* MIlb;
   bool             d_burns;
   double           d_nextOutputTime;
   double           d_outputInterval;
