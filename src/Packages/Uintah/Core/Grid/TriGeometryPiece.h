@@ -1,7 +1,14 @@
 #ifndef __TRI_GEOMETRY_OBJECT_H__
 #define __TRI_GEOMETRY_OBJECT_H__
 
-#include "GeometryPiece.h"
+#include <Packages/Uintah/Core/Grid/GeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Plane.h>
+#include <vector>
+
+using std::vector;
 
 namespace Uintah {
 
@@ -64,7 +71,15 @@ WARNING
 	 virtual Box getBoundingBox() const;
 	 
       private:
+	 void readPoints(const string& file);
+	 void readTri(const string& file);
+	 void makePlanes();
+	 bool insideTriangle(const Point& p, int i) const;
 	 
+	 Box d_box;
+	 vector<Point> d_points;
+	 vector<IntVector> d_tri;
+	 vector<Plane> d_planes;
 	 
       };
 } // End namespace Uintah
