@@ -129,26 +129,37 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    d_checkpointWalltimeInterval = 0;
    d_checkpointCycle = 2; /* 2 is the smallest number that is safe
 			     (always keeping an older copy for backup) */
+                          
+   string attrib_1= "", attrib_2= "", attrib_3= "";
+   string attrib_4= "", attrib_5= "";
    ProblemSpecP checkpoint = p->findBlock("checkpoint");
    if (checkpoint != 0) {
       attributes.clear();
       checkpoint->getAttributes(attributes);
-      string attrib = attributes["interval"];
-      if (attrib != "")
-	d_checkpointInterval = atof(attrib.c_str());
-      attrib = attributes["timestepInterval"];
-      if (attrib != "")
-	d_checkpointTimestepInterval = atoi(attrib.c_str());
-      attrib = attributes["walltimeStart"];
-      if (attrib != "")
-	d_checkpointWalltimeStart = atoi(attrib.c_str());
-      attrib = attributes["walltimeInterval"];
-      if (attrib != "")
-	d_checkpointWalltimeInterval = atoi(attrib.c_str());
-      attrib = attributes["cycle"];
-      if (attrib != "")
-	d_checkpointCycle = atoi(attrib.c_str());
+      
+      attrib_1 = attributes["interval"];
+      if (attrib_1 != "")
+	d_checkpointInterval = atof(attrib_1.c_str());
+      
+      attrib_2 = attributes["timestepInterval"];
+      if (attrib_2 != "")
+	d_checkpointTimestepInterval = atoi(attrib_2.c_str());
+      
+      attrib_3 = attributes["walltimeStart"];
+      if (attrib_3 != "")
+	d_checkpointWalltimeStart = atoi(attrib_3.c_str());
+      
+      attrib_4 = attributes["walltimeInterval"];
+      if (attrib_4 != "")
+	d_checkpointWalltimeInterval = atoi(attrib_4.c_str());
+       
+      attrib_5 = attributes["cycle"];
+      if (attrib_5 != "")
+	d_checkpointCycle = atoi(attrib_5.c_str());
    }
+   // must specify something
+   if ( attrib_1 == "" && attrib_2 == "" && attrib_3 == "")
+     throw ProblemSetupException("ERROR: \n In checkpointing: must specify either interval, timestepInterval or walltimeStart");
 
    // can't use both checkpointInterval and checkpointTimestepInterval
    if (d_checkpointInterval != 0.0 && d_checkpointTimestepInterval != 0)
