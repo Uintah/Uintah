@@ -65,6 +65,7 @@ void Roe::RoeInit(Salmon* s) {
     evl->lock();
     doneInit=0;
     manager=s;
+    drawinfo=new DrawInfo;
     firstGen=False;
     dialog=new DialogShellC;
     dialog->SetAllowShellResize(true);
@@ -314,8 +315,6 @@ void Roe::initCB(CallbackData*, void*) {
     glEnable(GL_LIGHT0);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_DEPTH_TEST);
-    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-    glEnable(GL_COLOR_MATERIAL);
     evl->unlock();
     doneInit=1;
 }
@@ -376,8 +375,10 @@ void Roe::redrawAll()
 		GeomObj *geom=serIter.get_data();
 		for (int i=0; i<geomItemA.size(); i++)
 		    if (geomItemA[i]->geom == geom)
-			if (geomItemA[i]->vis)
-			    geom->draw();
+			if (geomItemA[i]->vis){
+			    manager->default_matl->set(drawinfo);
+			    geom->draw(drawinfo);
+			}
 	    }	
 	}
 	GLwDrawingAreaSwapBuffers(*graphics);
@@ -477,6 +478,9 @@ Roe::~Roe()
     delete spawnInd;
     delete form;
     delete gr_frame;
+
+    delete drawinfo;
+
     for (int i=0; i<geomItemA.size(); i++)
 	delete geomItemA[i];
     geomItemA.remove_all();

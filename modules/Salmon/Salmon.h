@@ -24,11 +24,12 @@ class DialogShellC;
 class DrawingAreaC;
 class FormC;
 class FrameC;
+class GeomObj;
 class GeometryIPort;
 class GLwMDrawC;
-class XQColor;
+class MaterialProp;
 class Roe;
-class GeomObj;
+class XQColor;
 
 class Salmon : public Module {
     Array1<GeometryIPort*> iports;
@@ -56,6 +57,7 @@ class Salmon : public Module {
     //gotta store the geometry!
     HashTable<int, HashTable<int, GeomObj*>*> portHash;
 
+    MaterialProp* default_matl;
 public:
     friend class Roe;
     Salmon();

@@ -50,10 +50,15 @@ Salmon::Salmon()
     iports.add(new GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
     add_iport(iports[0]);
 
+    default_matl=new MaterialProp(Color(.1,.1,.1),
+				  Color(.6,0,0),
+				  Color(.7,.7,.7),
+				  10);
 }
 
 Salmon::~Salmon()
 {
+    delete default_matl;
 }
 
 Module* Salmon::clone(int deep)

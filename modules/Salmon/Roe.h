@@ -17,6 +17,7 @@
 #include <GL/glx.h>
 class CallbackData;
 class DialogShellC;
+class DrawInfo;
 class DrawingAreaC;
 class FormC;
 class FrameC;
@@ -115,6 +116,8 @@ class Roe {
     int haveInheritMat;
     double inheritMat[16];
     Array1<GeomItem *> geomItemA;
+
+    DrawInfo* drawinfo;
 public:
     Roe(Salmon *s);
     Roe(Salmon *s, double *m);
