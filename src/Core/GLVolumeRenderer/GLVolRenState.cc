@@ -159,7 +159,8 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
       t0 = polys[i]->getTexCoord(0);
       p0 = polys[i]->getVertex(0);
       glBegin(GL_POINTS);
-      glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
+//       glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
+      glTexCoord3f(t0.x(), t0.y(), t0.z());
       glVertex3f(p0.x(), p0.y(), p0.z());
       glEnd();
       break;
@@ -169,7 +170,8 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
       {
         t0 = polys[i]->getTexCoord(k);
         p0 = polys[i]->getVertex(k);
-        glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
+//         glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
+        glTexCoord3f(t0.x(), t0.y(), t0.z());
         glVertex3f(p0.x(), p0.y(), p0.z());
       }
       glEnd();
@@ -185,7 +187,8 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
         {
           t0 = polys[i]->getTexCoord(k);
           p0 = polys[i]->getVertex(k);
-          glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
+//           glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
+          glTexCoord3f(t0.x(), t0.y(), t0.z());
           glVertex3f(p0.x(), p0.y(), p0.z());
         }
 	glEnd();
@@ -205,7 +208,8 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
 	{
 	  t0 = polys[i]->getTexCoord(k);
 	  p0 = polys[i]->getVertex(k);
-	  glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
+// 	  glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
+	  glTexCoord3f(t0.x(), t0.y(), t0.z());
 	  glVertex3f(p0.x(), p0.y(), p0.z());
 	  //            sprintf(s, "3D texture coordinates are ( %f, %f, %f, )\n", t0.x(), t0.y(), t0.z() );
 	  // 	cerr<<s;
