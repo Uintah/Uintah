@@ -175,6 +175,7 @@ public:
   }
   friend inline Vector operator*(const Vector&, const IntVector&);
   friend inline Vector operator*(const IntVector&, const Vector&);
+  friend inline IntVector Abs(const IntVector& v);
 private:
   int value_[3];
 };
@@ -196,9 +197,9 @@ inline IntVector Max(const IntVector& a, const IntVector& b) {
 }
 inline IntVector Abs(const IntVector& v)
 {
-    int x=v.x()<0?-v.x():v.x();
-    int y=v.y()<0?-v.y():v.y();
-    int z=v.z()<0?-v.z():v.z();
+    int x=v.value_[0]<0?-v.value_[0]:v.value_[0];
+    int y=v.value_[1]<0?-v.value_[1]:v.value_[1];
+    int z=v.value_[2]<0?-v.value_[2]:v.value_[2];
     return IntVector(x,y,z);
 }
 
