@@ -2,6 +2,7 @@
 #define UINTAH_HOMEBREW_SHELLMPM_H
 
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 
 namespace Uintah {
 
@@ -65,13 +66,31 @@ protected:
 
   ///////////////////////////////////////////////////////////////////////////
   //
-  // Initializate Shell Variables
+  // Setup problem -- material parameters specific to shell
   //
-  void initializeShellVariables(const ProcessorGroup*,
-				const PatchSubset* patches,
-				const MaterialSubset* matls,
-				DataWarehouse*,
-				DataWarehouse* new_dw);
+  virtual void materialProblemSetup(const ProblemSpecP& prob_spec, 
+				    SimulationStateP& sharedState,
+				    MPMLabel* lb, int n8or27,
+				    string integrator, bool haveLoadCurve,
+				    bool doErosion);
+	 
+  ///////////////////////////////////////////////////////////////////////////
+  //
+  // Actually initialize
+  //
+  virtual void actuallyInitialize(const ProcessorGroup* pg,
+				  const PatchSubset* patches,
+				  const MaterialSubset* matls,
+				  DataWarehouse* old_dw,
+				  DataWarehouse* new_dw);
+
+  ///////////////////////////////////////////////////////////////////////////
+  //
+  // Initialize shell related variables for non shell materials
+  //
+  void initializeShellVariables(const Patch* patch,
+			        const MPMMaterial* matl,
+			        DataWarehouse* new_dw);
 
   ///////////////////////////////////////////////////////////////////////////
   //
@@ -174,7 +193,7 @@ protected:
   //
   // Schedule interpolation from grid to particles and update
   //
-  void scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
+  virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 					       const PatchSet* patches,
 					       const MaterialSet* matls);
 

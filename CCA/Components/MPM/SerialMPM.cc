@@ -90,75 +90,84 @@ SerialMPM::~SerialMPM()
   MPMPhysicalBCFactory::clean();
 }
 
-void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
+void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 			     SimulationStateP& sharedState)
 {
-   d_sharedState = sharedState;
+  d_sharedState = sharedState;
 
-   ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
+  ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
 
-   if(mpm_soln_ps) {
-     mpm_soln_ps->get("nodes8or27", d_8or27);
-     mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
-     mpm_soln_ps->get("maximum_particle_velocity",d_max_vel);
-     mpm_soln_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
-     mpm_soln_ps->get("artificial_viscosity",     d_artificial_viscosity);
-     mpm_soln_ps->get("accumulate_strain_energy", d_accStrainEnergy);
-     mpm_soln_ps->get("use_load_curves", d_useLoadCurves);
-     ProblemSpecP erosion_ps = mpm_soln_ps->findBlock("erosion");
-     if (erosion_ps) {
-       if (erosion_ps->getAttribute("algorithm", d_erosionAlgorithm)) {
-          if (d_erosionAlgorithm == "none") d_doErosion = false;
-          else d_doErosion = true;
-       }
-     }
-   }
+  if(mpm_soln_ps) {
+    mpm_soln_ps->get("nodes8or27", d_8or27);
+    mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
+    mpm_soln_ps->get("maximum_particle_velocity",d_max_vel);
+    mpm_soln_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
+    mpm_soln_ps->get("artificial_viscosity",     d_artificial_viscosity);
+    mpm_soln_ps->get("accumulate_strain_energy", d_accStrainEnergy);
+    mpm_soln_ps->get("use_load_curves", d_useLoadCurves);
+    ProblemSpecP erosion_ps = mpm_soln_ps->findBlock("erosion");
+    if (erosion_ps) {
+      if (erosion_ps->getAttribute("algorithm", d_erosionAlgorithm)) {
+	if (d_erosionAlgorithm == "none") d_doErosion = false;
+	else d_doErosion = true;
+      }
+    }
+  }
 
-   if(d_8or27==8){
-     NGP=1;
-     NGN=1;
-   } else if(d_8or27==MAX_BASIS){
-     NGP=2;
-     NGN=2;
-   }
+  if(d_8or27==8){
+    NGP=1;
+    NGN=1;
+  } else if(d_8or27==MAX_BASIS){
+    NGP=2;
+    NGN=2;
+  }
 
   //__________________________________
   // Grab time_integrator, default is explicit
-   string integrator_type = "explicit";
-   d_integrator = Explicit;
-   if (mpm_soln_ps ) {
-     mpm_soln_ps->get("time_integrator",integrator_type);
-     if (integrator_type == "implicit"){
-       d_integrator = Implicit;
-     }
-     if (integrator_type == "explicit") {
-       d_integrator = Explicit;
-     }
-   }
+  string integrator_type = "explicit";
+  d_integrator = Explicit;
+  if (mpm_soln_ps ) {
+    mpm_soln_ps->get("time_integrator",integrator_type);
+    if (integrator_type == "implicit"){
+      d_integrator = Implicit;
+    }
+    if (integrator_type == "explicit") {
+      d_integrator = Explicit;
+    }
+  }
    
-   MPMPhysicalBCFactory::create(prob_spec);
+  MPMPhysicalBCFactory::create(prob_spec);
 
-   contactModel = ContactFactory::create(prob_spec,sharedState, lb, d_8or27);
-   thermalContactModel =
-		 ThermalContactFactory::create(prob_spec, sharedState, lb);
+  contactModel = ContactFactory::create(prob_spec,sharedState, lb, d_8or27);
+  thermalContactModel =
+    ThermalContactFactory::create(prob_spec, sharedState, lb);
 
-   ProblemSpecP p = prob_spec->findBlock("DataArchiver");
-   if(!p->get("outputInterval", d_outputInterval))
-      d_outputInterval = 1.0;
+  ProblemSpecP p = prob_spec->findBlock("DataArchiver");
+  if(!p->get("outputInterval", d_outputInterval))
+    d_outputInterval = 1.0;
 
-   //Search for the MaterialProperties block and then get the MPM section
+  materialProblemSetup(prob_spec, sharedState, lb, d_8or27, integrator_type,
+                       d_useLoadCurves, d_doErosion);
+}
 
-   ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");
-
-   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
-
-   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
+void 
+SerialMPM::materialProblemSetup(const ProblemSpecP& prob_spec, 
+			        SimulationStateP& sharedState,
+                                MPMLabel* lb, int n8or27,
+			        string integrator, bool haveLoadCurve,
+			        bool doErosion)
+{
+  cerr << "Using SerialMPM material problem setup" << endl;
+  //Search for the MaterialProperties block and then get the MPM section
+  ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");
+  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
+  for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
-     MPMMaterial *mat = scinew MPMMaterial(ps, lb, d_8or27,integrator_type,
-                                           d_useLoadCurves, d_doErosion);
-     //register as an MPM material
-     sharedState->registerMPMMaterial(mat);
-   }
+    MPMMaterial *mat = scinew MPMMaterial(ps, lb, d_8or27, integrator,
+					  d_useLoadCurves, d_doErosion);
+    //register as an MPM material
+    sharedState->registerMPMMaterial(mat);
+  }
 }
 
 void SerialMPM::scheduleInitialize(const LevelP& level,
@@ -223,10 +232,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
-  t = scinew Task("MPM::printParticleCount",
-		  this, &SerialMPM::printParticleCount);
-  t->requires(Task::NewDW, lb->partCountLabel);
-  sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+  schedulePrintParticleCount(level, sched);
 
   // The task will have a reference to zeroth_matl
   if (zeroth_matl->removeReference())
@@ -236,6 +242,15 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     // Schedule the initialization of pressure BCs per particle
     scheduleInitializePressureBCs(level, sched);
   }
+}
+
+void SerialMPM::schedulePrintParticleCount(const LevelP& level, 
+                                           SchedulerP& sched)
+{
+  Task* t = scinew Task("MPM::printParticleCount",
+		        this, &SerialMPM::printParticleCount);
+  t->requires(Task::NewDW, lb->partCountLabel);
+  sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 }
 
 void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
@@ -2387,6 +2402,34 @@ SerialMPM::setParticleDefault(ParticleVariable<double>& pvar,
 			      ParticleSubset* pset,
 			      DataWarehouse* new_dw,
                               double val)
+{
+  new_dw->allocateAndPut(pvar, label, pset);
+  ParticleSubset::iterator iter = pset->begin();
+  for (; iter != pset->end(); iter++) {
+    pvar[*iter] = val;
+  }
+}
+
+void 
+SerialMPM::setParticleDefault(ParticleVariable<Vector>& pvar,
+			      const VarLabel* label, 
+			      ParticleSubset* pset,
+			      DataWarehouse* new_dw,
+                              const Vector& val)
+{
+  new_dw->allocateAndPut(pvar, label, pset);
+  ParticleSubset::iterator iter = pset->begin();
+  for (; iter != pset->end(); iter++) {
+    pvar[*iter] = val;
+  }
+}
+
+void 
+SerialMPM::setParticleDefault(ParticleVariable<Matrix3>& pvar,
+			      const VarLabel* label, 
+			      ParticleSubset* pset,
+			      DataWarehouse* new_dw,
+                              const Matrix3& val)
 {
   new_dw->allocateAndPut(pvar, label, pset);
   ParticleSubset::iterator iter = pset->begin();
