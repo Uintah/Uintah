@@ -75,8 +75,10 @@ RescaleColorMap::execute()
   if( isFixed.get() ){
     cmap->Scale(min.get(), max.get());
     port_range_type range = get_iports("Field");
-    if (range.first == range.second)
+    if (range.first == range.second) {
+      omap->send(cmap);
       return;
+    }
     port_map_type::iterator pi = range.first;
     while (pi != range.second)
     {
@@ -93,12 +95,15 @@ RescaleColorMap::execute()
       }
       ++pi;
     }
+    omap->send(cmap);
   } else {
     port_range_type range = get_iports("Field");
     if (range.first == range.second)
       return;
     port_map_type::iterator pi = range.first;
     double minv, maxv;
+    minv=maxv=0; // initialize them to the compiler will stop warning us about
+                 // possibly using unitialized variables
     int have_some=0;
     while (pi != range.second)
     {
