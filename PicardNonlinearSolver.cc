@@ -872,7 +872,23 @@ int PicardNonlinearSolver::noSolve(const LevelP& level,
   d_props->sched_computeDrhodt(sched, patches, matls,
 				 nosolve_timelabels);
 
+  d_boundaryCondition->sched_setInletFlowRates(sched, patches, matls);
+
   sched_dummySolve(sched, patches, matls);
+
+  // Schedule an interpolation of the face centered velocity data 
+  // to a cell centered vector for used by the viz tools
+
+  sched_interpolateFromFCToCC(sched, patches, matls, nosolve_timelabels);
+  
+  // check if filter is defined...
+#ifdef PetscFilter
+  if (d_turbModel->getFilter()) {
+    // if the matrix is not initialized
+    if (!d_turbModel->getFilter()->isInitialized()) 
+      d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
+  }
+#endif
 
   d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
 					   nosolve_timelabels);
@@ -880,11 +896,6 @@ int PicardNonlinearSolver::noSolve(const LevelP& level,
   d_pressSolver->sched_addHydrostaticTermtoPressure(sched, patches, matls,
 						    nosolve_timelabels);
  
-  // Schedule an interpolation of the face centered velocity data 
-  // to a cell centered vector for used by the viz tools
-
-  sched_interpolateFromFCToCC(sched, patches, matls, nosolve_timelabels);
-  
   // print information at probes provided in input file
 
   if (d_probe_data)
