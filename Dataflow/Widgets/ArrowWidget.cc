@@ -19,8 +19,10 @@
 #include <SCICore/Geom/GeomSphere.h>
 #include <SCICore/Geom/GeomGroup.h>
 #include <SCICore/Geom/GeomPick.h>
+#include <SCICore/Geom/GeomCylinder.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <PSECore/Dataflow/Module.h>
+#include <PSECore/Constraints/DistanceConstraint.h>
 
 namespace PSECore {
 namespace Widgets {
@@ -30,20 +32,22 @@ using SCICore::GeomSpace::GeomSphere;
 using SCICore::GeomSpace::GeomCylinder;
 using SCICore::GeomSpace::GeomCone;
 using SCICore::GeomSpace::GeomCappedCone;
+using SCICore::GeomSpace::GeomCappedCylinder;
 
 using namespace PSECore::Constraints;
 
-const Index NumCons = 0;
-const Index NumVars = 1;
-const Index NumGeoms = 3;
-const Index NumPcks = 3;
-const Index NumMatls = 3;
-const Index NumMdes = 2;
-const Index NumSwtchs = 3;
-// const Index NumSchemes = 1;
+const Index NumCons = 1;
+const Index NumVars = 3;
+const Index NumGeoms = 4;
+const Index NumPcks = 4;
+const Index NumMatls = 4;
+const Index NumMdes = 3;
+const Index NumSwtchs = 4;
+const Index NumSchemes = 2;
 
-enum { GeomPoint, GeomShaft, GeomHead };
-enum { PointP, ShaftP, HeadP };
+enum { GeomPoint, GeomShaft, GeomHead, GeomResize };
+enum { PointP, ShaftP, HeadP, ResizeP };
+enum { ConstDist };
 
 /***************************************************************************
  * The constructor initializes the widget's constraints, variables,
@@ -53,30 +57,53 @@ enum { PointP, ShaftP, HeadP };
  * Much of the work is accomplished in the BaseWidget constructor which
  *      includes some consistency checking to ensure full initialization.
  */
+
 ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scale )
 : BaseWidget(module, lock, "ArrowWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
-  direction(0, 0, 1)
+  direction(1, 0, 0)
 {
+   Real INIT = 3*widget_scale;
    variables[PointVar] = scinew PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
-
+   variables[HeadVar]  = scinew PointVariable("Head", solve, Scheme1, Point(INIT, 0, 0));
+   variables[DistVar]  = scinew RealVariable("Dist", solve,  Scheme1, INIT);
+   
+   constraints[ConstDist]=scinew DistanceConstraint("ConstDist",
+   						    NumSchemes,
+						    variables[PointVar],
+						    variables[HeadVar],
+						    variables[DistVar]);
+   constraints[ConstDist]->VarChoices(Scheme1, 0, 1, 0);
+   constraints[ConstDist]->VarChoices(Scheme2, 2, 2, 2);
+   constraints[ConstDist]->Priorities(P_Lowest, P_Lowest, P_Highest);
+   
+						    
    geometries[GeomPoint] = scinew GeomSphere;
    picks[PointP] = scinew GeomPick(geometries[GeomPoint], module, this, PointP);
    picks[PointP]->set_highlight(DefaultHighlightMaterial);
    materials[PointMatl] = scinew GeomMaterial(picks[PointP], DefaultPointMaterial);
    CreateModeSwitch(0, materials[PointMatl]);
+
    geometries[GeomShaft] = scinew GeomCylinder;
    picks[ShaftP] = scinew GeomPick(geometries[GeomShaft], module, this, ShaftP);
    picks[ShaftP]->set_highlight(DefaultHighlightMaterial);
    materials[ShaftMatl] = scinew GeomMaterial(picks[ShaftP], DefaultEdgeMaterial);
    CreateModeSwitch(1, materials[ShaftMatl]);
+
    geometries[GeomHead] = scinew GeomCappedCone;
    picks[HeadP] = scinew GeomPick(geometries[GeomHead], module, this, HeadP);
    picks[HeadP]->set_highlight(DefaultHighlightMaterial);
    materials[HeadMatl] = scinew GeomMaterial(picks[HeadP], DefaultEdgeMaterial);
    CreateModeSwitch(2, materials[HeadMatl]);
 
+   geometries[GeomResize] = scinew GeomCappedCylinder;
+   picks[ResizeP] = scinew GeomPick(geometries[GeomResize], module, this, ResizeP);
+   picks[ResizeP]->set_highlight(DefaultHighlightMaterial);
+   materials[ResizeMatl] = scinew GeomMaterial(picks[ResizeP], DefaultResizeMaterial);
+   CreateModeSwitch(3, materials[ResizeMatl]);
+   
    SetMode(Mode0, Switch0|Switch1|Switch2);
-   SetMode(Mode1, Switch0);
+   SetMode(Mode1, Switch0|Switch1|Switch2|Switch3);
+   SetMode(Mode2, Switch0);
    FinishWidget();
 }
 
@@ -104,33 +131,34 @@ ArrowWidget::~ArrowWidget()
 void
 ArrowWidget::redraw()
 {
+   Point P(variables[PointVar]->point()), H(variables[HeadVar]->point());
+   
    if (mode_switches[0]->get_state()) {
-      Point center(variables[PointVar]->point());
-      Vector direct(direction*widget_scale);
-      ((GeomSphere*)geometries[GeomPoint])->move(center, widget_scale);
+      Vector direct(GetDirection()*widget_scale);
+      ((GeomSphere*)geometries[GeomPoint])->move(P, widget_scale);
 
       if (direct.length2() > 1.e-6) {
-	 ((GeomCylinder*)geometries[GeomShaft])->move(center,
-						      center + direct * 3.0,
-						      0.5*widget_scale);
-	 ((GeomCappedCone*)geometries[GeomHead])->move(center + direct * 3.0,
-						       center + direct * 5.0,
-						       widget_scale,
-						       0);
+	 ((GeomCylinder*)geometries[GeomShaft])->move(P, H, 0.5*widget_scale);
+	 ((GeomCappedCone*)geometries[GeomHead])->move(H, H +direct * 2.0, widget_scale, 0);
       }
    }
-
+   
    if (mode_switches[1]->get_state()) {
-       Point center(variables[PointVar]->point());
-       ((GeomSphere*)geometries[GeomPoint])->move(center, widget_scale);
+      Vector direct(GetDirection()*widget_scale);
+      ((GeomCappedCylinder*)geometries[GeomResize])->move(H+direct*1.0,  H + direct * 1.5, widget_scale);
    }
 
-   Vector v1, v2;
-   if(direction.length2() > 1.e-6){
-       direction.find_orthogonal(v1, v2);
-       for (Index geom = 0; geom < NumPcks; geom++) {
-	   picks[geom]->set_principal(direction, v1, v2);
-       }
+   if (mode_switches[2]->get_state()) {
+       ((GeomSphere*)geometries[GeomPoint])->move(P, widget_scale);
+   }
+
+   Vector v(GetDirection()), v1, v2;
+   v.find_orthogonal(v1,v2);
+   for (Index geom = 0; geom < NumPcks; geom++) {
+     if (geom==ResizeP)
+       picks[geom]->set_principal(v);
+     else
+       picks[geom]->set_principal(v, v1, v2);
    }
 }
 
@@ -151,11 +179,18 @@ ArrowWidget::redraw()
 void
 ArrowWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
 			 const Vector& delta, int pick, const BState& )
-{
+{   
+    ((DistanceConstraint*)constraints[ConstDist])->SetDefault(direction);
     switch(pick){
-    case PointP: 
-    case ShaftP: 
     case HeadP:
+      variables[HeadVar]->SetDelta(delta, Scheme1);
+      break;
+    case ResizeP:
+      variables[HeadVar]->SetDelta(delta, Scheme2);
+      break;
+
+    case PointP: 
+    case ShaftP:
 	MoveDelta(delta);
 	break;
     }
@@ -173,6 +208,7 @@ void
 ArrowWidget::MoveDelta( const Vector& delta )
 {
    variables[PointVar]->MoveDelta(delta);
+   variables[HeadVar]->MoveDelta(delta);
 
    execute(1);
 }
@@ -193,8 +229,8 @@ ArrowWidget::ReferencePoint() const
 void
 ArrowWidget::SetPosition( const Point& p )
 {
+   variables[HeadVar]->MoveDelta(p-(variables[PointVar]->point()));
    variables[PointVar]->Move(p);
-
    execute(0);
 }
 
@@ -214,11 +250,15 @@ ArrowWidget::SetDirection( const Vector& v )
    execute(0);
 }
 
-
+// by AS: updates if nessesary direction and returns it
 const Vector&
-ArrowWidget::GetDirection() const
-{
-   return direction;
+ArrowWidget::GetDirection()
+{ 
+   Vector dir(variables[HeadVar]->point() - variables[PointVar]->point());
+   if (dir.length2() <= 1e-6)
+      return direction;
+   else 
+      return (direction = dir.normal());
 }
 
 
@@ -282,6 +322,9 @@ ArrowWidget::widget_tcl( TCLArgs& args )
 
 //
 // $Log$
+// Revision 1.4  2000/06/22 22:51:34  samsonov
+// Added resizing mode and rotation in respect to base point. Translational behavior is changed.
+//
 // Revision 1.3  1999/09/02 04:44:58  dmw
 // added a mode
 //
@@ -296,3 +339,11 @@ ArrowWidget::widget_tcl( TCLArgs& args )
 // Import sources
 //
 //
+
+
+
+
+
+
+
+
