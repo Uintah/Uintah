@@ -17,6 +17,8 @@
 
 #include <SCICore/share/share.h>
 
+#include <SCICore/Thread/Thread.h>
+
 namespace SCICore {
     namespace Thread {
 	class ThreadGroup;
@@ -77,6 +79,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.10  1999/11/02 06:08:36  moulding
+// Added a #include to help the visual C++ compiler
+//
 // Revision 1.9  1999/09/24 18:55:06  moulding
 // added SCICORESHARE, for win32, to class declarations
 //
