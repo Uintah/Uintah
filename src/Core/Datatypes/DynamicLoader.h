@@ -51,7 +51,8 @@ public:
 //! All algorithms that support the dynamic loading concept must 
 //! inherit from this.
 struct DynamicAlgoBase : public Datatype { // inherit from Datatype to get 
-  virtual ~DynamicAlgoBase() {}            // handle functionality.   
+  virtual ~DynamicAlgoBase() {}            // handle functionality. 
+  virtual void io(Piostream &) {}          // no Pio for algorithms
 };
 
 typedef LockingHandle<DynamicAlgoBase> DynamicAlgoHandle;
@@ -64,7 +65,7 @@ public:
 
   // Compile and load .so for the selected manipulation
   bool compile_and_store(const CompileInfo &info);
-  bool get( const string &, DynamicAlgoHandle);
+  bool get( const string &, DynamicAlgoHandle&);
 
 
 private:
