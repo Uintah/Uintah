@@ -79,6 +79,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/GridSpheres.cc \
 	$(SRCDIR)/GridSpheresDpy.cc \
 	$(SRCDIR)/TextureGridSpheres.cc \
+	$(SRCDIR)/PCAGridSpheres.cc \
 	$(SRCDIR)/Volume.cc \
 	$(SRCDIR)/HitCell.cc \
 	$(SRCDIR)/CubeRoot.cc \
