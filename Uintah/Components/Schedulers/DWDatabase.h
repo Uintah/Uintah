@@ -247,12 +247,12 @@ void DWDatabase<VarType>::copyAll(const DWDatabase& from,
 {
    nameDBtype::const_iterator nameiter = from.names.find(label);
    if(nameiter == from.names.end())
-      throw UnknownVariable(label->getName());
+      return;
 
    NameRecord* nr = nameiter->second;
    patchDBtype::const_iterator patchiter = nr->patches.find(patch);
    if(patchiter == nr->patches.end())
-      throw UnknownVariable(label->getName());
+      return;
 
    PatchRecord* rr = patchiter->second;
 
@@ -266,6 +266,10 @@ void DWDatabase<VarType>::copyAll(const DWDatabase& from,
 
 //
 // $Log$
+// Revision 1.10  2000/05/31 17:55:50  sparker
+// Fixed database so that carryForward won't die when there are no
+// particles.
+//
 // Revision 1.9  2000/05/30 20:19:23  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
