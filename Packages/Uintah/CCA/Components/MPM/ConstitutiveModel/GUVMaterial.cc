@@ -480,10 +480,21 @@ GUVMaterial::computeStressTensor(const PatchSubset* patches,
       debug << "GUVMaterial::compStress:: Particle = " << idx
             << " defGradIncCen = " << defGradIncCen << endl;
 
+      // Calculate the top and bottom Deformation gradient increments
+      double h = pThick[idx];
+      Matrix3 temp = rotGrad*(0.5*h*delT);
+      Matrix3 defGradIncTop = defGradIncCen + temp;
+      Matrix3 defGradIncBot = defGradIncCen - temp;
+
       // Update the deformation gradient tensor to its time n+1 value.
       Matrix3 defGradCen_new = defGradIncCen*pDefGrad[idx];
       debug << "GUVMaterial::compStress:: Particle = " << idx
             << " defGradCen_new = " << defGradCen_new << endl;
+
+      // Assume that difference in deformation gradient is very small
+      // between top and bottom
+      Matrix3 defGradTop = defGradIncTop*pDefGrad[idx];
+      Matrix3 defGradBot = defGradIncBot*pDefGrad[idx];
 
       // Rotate the deformation gradient so that the 33 direction
       // is along the direction of the normal
@@ -495,6 +506,9 @@ GUVMaterial::computeStressTensor(const PatchSubset* patches,
       debug << "GUVMaterial::compStress:: Particle = " << idx
             << " rotated  defGradCen_new = " << defGradCen_new << endl;
       
+      defGradTop = R*defGradTop*R.Transpose();
+      defGradBot = R*defGradBot*R.Transpose();
+
       // Enforce the no normal stress condition (Sig33 = 0)
       // (we call this condition, roughly, plane stress)
       double K, mu;
@@ -511,8 +525,29 @@ GUVMaterial::computeStressTensor(const PatchSubset* patches,
         cerr << "SigCen = " << sigCen << endl;
         exit(1);
       }
+      if (idx == 1) 
+        cout << "GUVMaterial::compStress:: Particle = " << idx
+             << " \n F = " << defGradCen_new << " \n sig = " << sigCen << endl;
       debug << "GUVMaterial::compStress:: Particle = " << idx
             << " sigCen = " << sigCen << endl;
+
+      Matrix3 sigTop(0.0);
+      if (!computePlaneStressAndDefGrad(defGradTop, sigTop, K, mu)) {
+        cerr << "Normal = " << pNormal[idx] << endl;
+        cerr << "R = " << R << endl;
+        cerr << "defGradTop = " << defGradTop << endl;
+        cerr << "SigTop = " << sigTop << endl;
+        exit(1);
+      }
+
+      Matrix3 sigBot(0.0);
+      if (!computePlaneStressAndDefGrad(defGradBot, sigBot, K, mu)) {
+        cerr << "Normal = " << pNormal[idx] << endl;
+        cerr << "R = " << R << endl;
+        cerr << "defGradBot = " << defGradBot << endl;
+        cerr << "SigBot = " << sigBot << endl;
+        exit(1);
+      }
 
       // Rotate back to global co-ordinates
       defGradCen_new = R.Transpose()*defGradCen_new*R;
@@ -520,6 +555,9 @@ GUVMaterial::computeStressTensor(const PatchSubset* patches,
       debug << "GUVMaterial::compStress:: Particle = " << idx
             << " back-rotated defGradCen_new = " << defGradCen_new
             << " sigCen = " << sigCen << endl;
+
+      sigTop = R.Transpose()*sigTop*R;
+      sigBot = R.Transpose()*sigBot*R;
 
       // Update the deformation gradients
       pDefGrad_new[idx] = defGradCen_new;
@@ -547,10 +585,12 @@ GUVMaterial::computeStressTensor(const PatchSubset* patches,
       pStress_new[idx] = sigCen;
 
       // Calculate the average moment over the thickness of the shell
-      pAvMoment[idx] = Zero;
+      Matrix3 nn(pNormal[idx], pNormal[idx]);
+      Matrix3 Is = One - nn;
+      Matrix3 avMoment = (sigTop - sigBot)*(0.5*h);
+      pAvMoment[idx] = (Is*avMoment*Is)*pVolume_new[idx];
 
       // Calculate inertia term
-      double h = pThick[idx];
       pRotMass[idx] = pMass[idx]*h*h/12.0;
       debug << "GUVMaterial::compStress:: Particle = " << idx
             << " pAvMoment = " << pAvMoment[idx]
@@ -559,17 +599,9 @@ GUVMaterial::computeStressTensor(const PatchSubset* patches,
       // Compute the strain energy for all the particles
       Matrix3 be = pDefGrad_new[idx]*pDefGrad_new[idx].Transpose();
       Matrix3 bebar = be/pow(Je, 2.0/3.0);
-      double U = 0, W = 0, c_dil = 0;
-      if (pType[idx] == Lipid) {
-        U = 0.5*K_lipid*(0.5*(Je*Je - 1.0) - log(Je));
-        W = 0.5*mu_lipid*(bebar.Trace() - 3.0);
-        c_dil = sqrt((K_lipid + 4.*mu_lipid/3.)*pVolume_new[idx]/pMass[idx]);
-      } else {
-        U = 0.5*K_cholesterol*(0.5*(Je*Je - 1.0) - log(Je));
-        W = 0.5*mu_cholesterol*(bebar.Trace() - 3.0);
-        c_dil = sqrt((K_cholesterol + 4.*mu_cholesterol/3.)*
-                     pVolume_new[idx]/pMass[idx]);
-      }
+      double U = 0.5*K*(0.5*(Je*Je - 1.0) - log(Je));
+      double W = 0.5*mu*(bebar.Trace() - 3.0);
+      double c_dil = sqrt((K + 4.*mu/3.)*pVolume_new[idx]/pMass[idx]);
 
       double e = (U + W)*pVolume_new[idx]/Je;
       strainEnergy += e;
@@ -761,5 +793,69 @@ GUVMaterial::getCompressibility()
 {
   double bulk = 0.5*(d_cm.Bulk_lipid+d_cm.Bulk_cholesterol);
   return 1.0/bulk;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Calculate the plane stress deformation gradient corresponding
+// to sig33 = 0 (Use an iterative Newton method)
+//
+bool
+GUVMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig, 
+                                            double bulk, double shear)
+{
+  /*
+  double epsilon = 1.e-14;
+  double delta = 1.;
+  double f33, f33p, jv, f33m, jvp, jvm, sig33, sig33p, sig33m;
+
+  // Guess F33
+  f33 =  1./(F(0,0)*F(1,1));
+
+  // Find F33 that enforces plane stress
+  while(fabs(delta) > epsilon){
+    double detF2=(F(0,0)*F(1,1) - F(1,0)*F(0,1));
+    jv = f33*detF2;
+    double FinF = F(0,0)*F(0,0)+F(0,1)*F(0,1)+F(1,0)*F(1,0)+F(1,1)*F(1,1);
+    sig33 = (shear/(3.*pow(jv,2./3.)))*
+            (2.*f33*f33 - FinF) + (.5*bulk)*(jv - 1./jv);
+
+    f33p = 1.01*f33;
+    f33m = 0.99*f33;
+    jvp = f33p*detF2;
+    jvm = f33m*detF2;
+
+    sig33p = (shear/(3.*pow(jvp,2./3.)))*
+                (2.*f33p*f33p - FinF) + (.5*bulk)*(jvp - 1./jvp);
+
+    sig33m = (shear/(3.*pow(jvm,2./3.)))*
+                (2.*f33m*f33m - FinF) + (.5*bulk)*(jvm - 1./jvm);
+
+    delta = -sig33/((sig33p-sig33m)/(f33p-f33m));
+
+    f33 = f33 + delta;
+  }
+
+  // Update F
+  F(0,2) = 0.0; F(2,0) = 0.0; F(1,2) = 0.0; F(2,1) = 0.0;
+  F(2,2) = f33;
+
+  */
+  // Calculate Jacobian
+  double J = F.Determinant();
+  if (!(J > 0.0)) {
+    cerr << "GUVMaterial::** ERROR ** F = " << F << " det F = " << J << endl;
+    return false;
+  }
+
+  // Calcuate Kirchhoff stress
+  Matrix3 I; I.Identity();
+  double Jp = (0.5*bulk)*(J*J - 1.0);
+  Matrix3 b = (F*F.Transpose())*pow(J, -(2.0/3.0));
+  Matrix3 Js = (b - I*(b.Trace()/3.0))*shear;
+  Matrix3 tau = I*Jp + Js;
+
+  sig = tau/J;
+  return true;
 }
 
