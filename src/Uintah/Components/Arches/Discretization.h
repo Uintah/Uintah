@@ -104,20 +104,10 @@ public:
 			  DataWarehouseP& new_dw,
 				const int Index);
     void calculatePressureCoeff(const ProcessorContext*,
-				const LevelP& level,
 				const Region* region,
 				const DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw); 
 
-    void calculateResidual(const ProcessorContext*,
-			   const LevelP& level,
-			   SchedulerP& sched,
-			   const DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw);
-    void calculateOrderMagnitude(const LevelP& level,
-			   SchedulerP& sched,
-			   const DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw);
   // Stencil weights.
    // Array of size NDIM and of depth determined by stencil coefficients
 

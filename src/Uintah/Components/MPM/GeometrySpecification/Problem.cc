@@ -11,8 +11,6 @@ using std::ofstream;
 using std::string;
 using std::vector;
 
-#ifdef WONT_COMPILE_YET
-
 Problem::Problem()
   : NumMaterial(0),
     NumObjects(0),
@@ -28,6 +26,8 @@ Problem::~Problem()
       delete materials[i];
     }
 }
+
+#ifdef WONT_COMPILE_YET
 
 void Problem::preProcessor(string filename)
 {
@@ -289,6 +289,9 @@ void Problem::writeSAMRAIGridFile(string gridname)
 
 
 // $Log$
+// Revision 1.3  2000/03/22 23:41:23  sparker
+// Working towards getting arches to compile/run
+//
 // Revision 1.2  2000/03/20 17:17:15  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //

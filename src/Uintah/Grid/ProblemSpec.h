@@ -51,6 +51,8 @@ public:
     ProblemSpecP findBlock(const std::string& name) const;
 
     void require(const std::string& name, double& value);
+    void require(const std::string& name, int& value);
+    void require(const std::string& name, bool& value);
     void require(const std::string& name, std::string& value);
 
     static const TypeDescription* getTypeDescription();
@@ -64,6 +66,9 @@ private:
 
 //
 // $Log$
+// Revision 1.4  2000/03/22 23:41:27  sparker
+// Working towards getting arches to compile/run
+//
 // Revision 1.3  2000/03/21 18:52:11  sparker
 // Prototyped header file for new problem spec functionality
 //
