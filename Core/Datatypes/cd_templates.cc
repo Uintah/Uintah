@@ -7,7 +7,7 @@
 using namespace Uintah;
 using std::pair;
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1468
 #endif
 
@@ -16,6 +16,6 @@ template class GenericField<LevelMesh, LevelData<SCIRun::Vector> >;
 template class LevelField<Matrix3>;
 template class GenericField<LevelMesh, LevelData<Matrix3> >;
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468
 #endif

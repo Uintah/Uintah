@@ -12,7 +12,7 @@
 namespace SCIRun {
   using namespace Uintah;
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1375
 #endif
   
@@ -22,7 +22,7 @@ namespace SCIRun {
     : public EqualIntervalSequencer<Matrix3>
   { };
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
 #endif
 

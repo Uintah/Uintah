@@ -10,12 +10,12 @@
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/Reductions.h>
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #define IRIX
 #pragma set woff 1375
 #endif
 #include <dom/DOM_Element.hpp>
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
 #endif
 
