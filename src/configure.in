@@ -1901,9 +1901,9 @@ for i in $with_vdt $thirdparty $SCI_LAB_TP_DEFAULT; do
   # Testing the link also need by vdt to link is:
   VDT_LIB_PATH="-L$i/src/vdt/G3D/lib/$ad -L$i/src/vdt/Ckit/lib/$ad -L$i/src/vdt/LOBS/lib/$ad -L$i/src/vdt/PiRaT/lib/$ad -L$i/src/vdt/Meschach/$ad -L$i/src/vdt/lp_solve_2.2/$ad -L$i/src/vdt/Elixir/lib/$ad -L$i/src/vdt/VDT/lib/$ad $X_LIBRARY"
 
-  VDT_NEEDED_LIBRARIES='-lesi -lelixir -llpk -lpirat -llobs3d -llobs2d -llobs1d -lg3d -lckit -lmeschach -lX11 -lXext -lXaw -lXt -lXmu -lm $LEXLIB'
+  VDT_NEEDED_LIBRARIES='-lesi -lelixir -llpk -lpirat -llobs3d -llobs2d -llobs1d -lg3d -lckit -lmeschach -lX11 -lXext -lXaw -lXt -lXmu -lm'
 
-  SCI_CHECK_LIB($i/src/vdt/VDT/lib/$ad,vdt,VDT_triangulate,,continue,$VDT_LIB_PATH $VDT_NEEDED_LIBRARIES)
+  SCI_CHECK_LIB($i/src/vdt/VDT/lib/$ad,vdt,VDT_triangulate,,continue,$VDT_LIB_PATH $VDT_NEEDED_LIBRARIES $LEXLIB)
 
 
   if test "$HAVE_LIBVDT"; then
@@ -1919,7 +1919,7 @@ for i in $with_vdt $thirdparty $SCI_LAB_TP_DEFAULT; do
     LOBS_LIB="$i/src/vdt/LOBS/lib/$ad"
     CKIT_LIB="$i/src/vdt/Ckit/lib/$ad"
     G3D_LIB="$i/src/vdt/G3D/lib/$ad"
-    VDT_LINK="-lvdt $VDT_NEEDED_LIBRARIES"
+    VDT_LINK="-lvdt $VDT_NEEDED_LIBRARIES $LEXLIB"
     break
   fi
 done
