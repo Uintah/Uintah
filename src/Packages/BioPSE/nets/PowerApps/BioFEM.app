@@ -773,8 +773,16 @@ class BioFEMApp {
 	}	
     }
 
- 
-    
+    ##############################
+    ### save_image
+    ##############################
+    # To be filled in by child class. It should save out the
+    # viewer image.
+    method save_image {} {
+	global mods
+	$mods(Viewer)-ViewWindow_0 makeSaveImagePopup
+    }
+
     
     method show_help {} {
 	tk_messageBox -message "Please refer to the online BioFEM Tutorial\nhttp://software.sci.utah.edu/doc/User/BioFEMTutorial" -type ok -icon info -parent .standalone
