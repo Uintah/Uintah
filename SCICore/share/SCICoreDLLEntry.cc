@@ -1,4 +1,4 @@
-// SCICoreDLLEntry.c written by Chris Moulding 7/99
+// SCICoreDLLEntry.cc written by Chris Moulding 7/99
 
 #ifdef _WIN32
 
@@ -24,3 +24,4 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 	return TRUE;
 }
 
+#endif
