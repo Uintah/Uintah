@@ -170,6 +170,17 @@ WARNING
 					 const Vector& psize, 
 					 constNCVariable<Vector>& gVelocity);
 
+         Matrix3 computeVelocityGradient(const Patch* patch,
+                                         const double* oodx, 
+					 const Point& px, 
+					 constNCVariable<Vector>& gVelocity);
+
+         void computeUpdatedVR(const double& delT,
+                               const Matrix3& DD, 
+                               const Matrix3& WW,
+                               Matrix3& VV, 
+                               Matrix3& RR);  
+
 	 Matrix3 computeRateofRotation(const Matrix3& tensorV, 
 				       const Matrix3& tensorD,
 				       const Matrix3& tensorW);
