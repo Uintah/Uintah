@@ -23,7 +23,7 @@ void scalarDiffusionOperator(DataWarehouse* new_dw,
                                   const CCVariable<double>& sp_vol_CC,  
                                   const CCVariable<double>& q_CC,
                                   CCVariable<double>& q_diffusion_src,
-                                  double diff_coeff,
+                                  const CCVariable<double>& diff_coeff,
                                   const double delT)
 {
   SFCXVariable<double> q_X_FC;
@@ -61,7 +61,7 @@ void scalarDiffusionOperator(DataWarehouse* new_dw,
 template <class T> 
   void q_flux_FC(CellIterator iter, 
                          IntVector adj_offset,
-                         const double diff_coeff,
+                         const CCVariable<double>& diff_coeff,
                          const double dx,
                          const CCVariable<double>& rho_CC,      
                          const CCVariable<double>& sp_vol_CC,   
@@ -72,11 +72,14 @@ template <class T>
   //__________________________________
   //  For variable diff_coeff use
   //  diff_coeff_FC = 2 * k[L] * k[R]/ ( k[R] + k[L])
-  double diff_coeff_FC = diff_coeff;
+  
   if(use_vol_frac) {
     for(;!iter.done(); iter++){
       IntVector R = *iter;
       IntVector L = R + adj_offset;
+      
+      double diff_coeff_FC = (2.0 * diff_coeff[L] * diff_coeff[R] )/
+                                   (diff_coeff[L] + diff_coeff[R]);
       double rho_brack = (2.0 * rho_CC[R] * rho_CC[L])/(rho_CC[R] + rho_CC[L]);
       double vol_frac_FC = rho_brack * sp_vol_CC[R];
       q_fluxFC[R] = -vol_frac_FC * diff_coeff_FC* (q_CC[R] - q_CC[L])/dx;
@@ -85,6 +88,10 @@ template <class T>
    for(;!iter.done(); iter++){
       IntVector R = *iter;
       IntVector L = R + adj_offset;
+      
+      double diff_coeff_FC = (2.0 * diff_coeff[L] * diff_coeff[R] )/
+                                   (diff_coeff[L] + diff_coeff[R]);
+                                   
       q_fluxFC[R] = -diff_coeff_FC* (q_CC[R] - q_CC[L])/dx;
     }
 }
@@ -99,7 +106,7 @@ void q_flux_allFaces(DataWarehouse* new_dw,
                           const CCVariable<double>& rho_CC,      
                           const CCVariable<double>& sp_vol_CC,   
                           const CCVariable<double>& q_CC,
-                          double diff_coeff,
+                          const CCVariable<double>& diff_coeff,
                           SFCXVariable<double>& q_X_FC,
                           SFCYVariable<double>& q_Y_FC,
                           SFCZVariable<double>& q_Z_FC)
