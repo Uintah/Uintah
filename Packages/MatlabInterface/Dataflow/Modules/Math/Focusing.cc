@@ -108,7 +108,7 @@ void Focusing::execute()
   inp1=dynamic_cast<DenseMatrix*>(mh1.get_rep()); //upcast
   if(inp1==NULL) 
   {
-    fprintf(stderr,"Focusing needs DenseMatrix as first input\n");
+    //    fprintf(stderr,"Focusing needs DenseMatrix as first input\n");
     return;
   }
   F=(double*)&((*inp1)[0][0]);
@@ -124,7 +124,7 @@ void Focusing::execute()
   inp2=dynamic_cast<ColumnMatrix*>(mh2.get_rep()); //upcast
   if(inp2==NULL) 
   {
-    fprintf(stderr,"Focusing needs ColumnMatrix as second input\n");
+    //fprintf(stderr,"Focusing needs ColumnMatrix as second input\n");
     return;
   }
   d=(double*)&((*inp2)[0]);

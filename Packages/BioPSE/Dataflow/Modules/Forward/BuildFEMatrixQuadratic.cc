@@ -232,8 +232,8 @@ BuildFEMatrixQuadratic::execute()
 void BuildFEMatrixQuadratic::parallel(int proc)
 {
   if (proc==0){
-    qtvm_->compute_edges();
-    qtvm_->compute_nodes();
+    //    qtvm_->compute_edges();
+    //qtvm_->compute_nodes();
   }
 
 

@@ -107,7 +107,11 @@ DipoleMatrixSourceRHSQuadratic::execute()
     
   QuadraticTetVolMeshHandle mesh_handle;
   QuadraticTetVolMeshHandle qtvm_ = qtv->get_typed_mesh();
-  qtvm_->flush_changes();
+  
+  Mesh::synchronized_t sync;
+  sync.set(Mesh::GRID_E);
+  sync.set(Mesh::NODE_NEIGHBORS_E);
+  qtvm_->synchronize(sync);
 
   QuadraticTetVolMesh::Node::size_type nnodes;
   qtvm_->size(nnodes);

@@ -70,7 +70,7 @@ main(int argc, char **argv) {
     npts++;
     tvm->add_point(Point(x,y,z));
   }
-  tvm->compute_nodes();
+  //  tvm->compute_nodes();
 
   int ntets=0;
   while(tetstream) {

@@ -113,7 +113,6 @@ main(int argc, char **argv) {
   }
   cerr << "done adding edges.\n";
 
-  cm->flush_changes();
   CurveField<double> *cfd = scinew CurveField<double>(cm, Field::EDGE);
   FieldHandle cfdH(cfd);
   PointCloudField<Vector> *pcv = scinew PointCloudField<Vector>(pcm, Field::NODE);

@@ -150,7 +150,10 @@ void FloodFillNewValue::execute(){
     mask_vol->set_value(2, loc);
     Q.push_back(loc);
 
-    hvf->get_typed_mesh()->compute_node_neighbors();
+
+    Mesh::synchronized_t sync;
+    sync.set(Mesh::NODE_NEIGHBORS_E);
+    hvf->get_typed_mesh()->synchronize(sync);
     
     // flood fill
     while (!Q.empty()) {

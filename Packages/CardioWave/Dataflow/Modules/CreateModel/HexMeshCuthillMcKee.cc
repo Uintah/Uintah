@@ -151,7 +151,9 @@ HexMeshCuthillMcKee::execute()
   HexVolMesh::Node::iterator nbi, nei;
   hvmesh->begin(nbi); hvmesh->end(nei);
 
-  hvmesh->compute_node_neighbors();
+  Mesh::synchronized_t sync;
+  sync.set(Mesh::NODE_NEIGHBORS_E);
+  hvmesh->synchronize(sync);
 
   int max_half_bw=0;
   int bw;
@@ -284,7 +286,8 @@ HexMeshCuthillMcKee::execute()
     ++nbi;
   }
 
-  bwmesh->compute_node_neighbors();
+  bwmesh->synchronize(sync);
+
 
   int new_max_half_bw=0;
   int new_bw;

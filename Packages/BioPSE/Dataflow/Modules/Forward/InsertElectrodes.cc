@@ -246,7 +246,7 @@ InsertElectrodes::insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet
     }
     ++ci;
   }
-  tet_mesh->recompute_connectivity();
+  //  tet_mesh->recompute_connectivity();
 }
 
 
