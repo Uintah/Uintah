@@ -60,12 +60,15 @@ void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
           cerr<<"lst.size="<<lst.size()<<endl;
           if(lst.size()>0) removeConnection(lst[0]);
         }
+	else if(e->button()==Qt::MidButton){
+	  cerr<<"pos="<<e->pos().x()<<" "<<e->pos().y()<<endl;
+	}
 #ifdef USE_MID_BUTTON
 	else if(e->button()==Qt::MidButton){
                   for(std::vector<Module*>::iterator it=modules.begin(); it!=modules.end(); it++) {
                      if( (QWidget*)(*it)==who ){
                         QPoint localpos=e->pos()-QPoint(childX(who), childY(who));
-                        cerr<<"local point="<<localpos.x()<<" "<<localpos.y()<<endl;
+                        //cerr<<"local point="<<localpos.x()<<" "<<localpos.y()<<endl;
                         if((*it)->clickedPort(localpos, porttype, portname)){
 
 
@@ -90,7 +93,7 @@ void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
 		  for(std::vector<Module*>::iterator it=modules.begin(); it!=modules.end(); it++) {
 		     if( (QWidget*)(*it)==who ){
 			QPoint localpos=e->pos()-QPoint(childX(who), childY(who));
-		        cerr<<"local point="<<localpos.x()<<" "<<localpos.y()<<endl;	
+		        //cerr<<"local point="<<localpos.x()<<" "<<localpos.y()<<endl;	
 			if((*it)->clickedPort(localpos, porttype, portname)){
 
 	
@@ -213,12 +216,30 @@ void NetworkCanvasView::contentsMouseMoveEvent(QMouseEvent* e)
 }
 
 void NetworkCanvasView::addModule(const string& name,
+				  CIA::array1<std::string> & up,
+				  CIA::array1<std::string> &pp ,
 				  const gov::cca::ComponentID::pointer &cid)
 {
-  Module *module=new Module(this,name, services, cid);
+  Module *module=new Module(this,name,up,pp, services, cid);
   addChild(module,20, 20);
+  connect(module, SIGNAL(destroyModule(Module *)), 
+	  this, SLOT(removeModule(Module *)) );
   modules.push_back(module);
   module->show();		
+}
+
+void NetworkCanvasView::removeModule(Module * module)
+{
+  cerr<<"need remove the component instance from framework"<<endl;
+  removeAllConnections(module);
+  for(unsigned int i=0; i<modules.size(); i++){
+    if(modules[i]==module){
+      modules.erase(modules.begin()+i);
+      break;
+    }
+  }
+  module->hide();
+  delete module;
 }
 
 void NetworkCanvasView::addConnection(Module *m1,const std::string &portname1,  Module *m2, const std::string &portname2)
@@ -243,28 +264,47 @@ void NetworkCanvasView::addConnection(Module *m1,const std::string &portname1,  
 
 void NetworkCanvasView::removeConnection(QCanvasItem *c)
 {
-	std::vector<Connection *>::iterator iter=connections.begin();
-	while(iter!=connections.end()){
+	for(std::vector<Connection *>::iterator iter=connections.begin();
+		iter!=connections.end(); iter++){
 	   if((QCanvasItem*) (*iter)==c){
-		connections.erase(iter);
-		//canvas()->removeItem(c);
                 
-		//canvas()->removeChild(c); //
-                cerr<<"connection.size()="<<connections.size()<<endl;
-                cerr<<"all item.size before del="<<canvas()->allItems().size()<<endl;
+		cerr<<"connection.size()="<<connections.size()<<endl;
+		cerr<<"all item.size before del="<<canvas()->allItems().size()<<endl;
 		gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
 		if(bs.isNull()){
 		  cerr << "Fatal Error: Cannot find builder service\n";
 		}
 		bs->disconnect((*iter)->getConnectionID(),0);
 		services->releasePort("cca.BuilderService");
+		connections.erase(iter);
+
 		delete c;
-                cerr<<"all item.size after del="<<canvas()->allItems().size()<<endl;
+                cerr<<"allitem.size after del="<<canvas()->allItems().size()<<endl;
 	        canvas()->update();
-                cerr<<"all item.size after del="<<canvas()->allItems().size()<<endl;
+		break;
 
            }			
 	}
+}
+
+void NetworkCanvasView::removeAllConnections(Module *module)
+{
+  bool needUpdate=false;
+  for(int i=connections.size()-1; i>=0; i--){
+    if( connections[i]->isConnectedTo(module) ){
+      gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+      if(bs.isNull()){
+	cerr << "Fatal Error: Cannot find builder service\n";
+      }
+      bs->disconnect(connections[i]->getConnectionID(),0);
+      services->releasePort("cca.BuilderService");
+      delete connections[i];
+      connections.erase(connections.begin()+i);
+
+      needUpdate=true;
+    }
+  }
+  if(needUpdate) canvas()->update();
 }
 
 void NetworkCanvasView::setServices(const gov::cca::Services::pointer &services)

@@ -40,17 +40,21 @@
 
 class NetworkCanvasView:public QCanvasView
 {
+  Q_OBJECT
 public:
   NetworkCanvasView(QCanvas* canvas, QWidget* parent=0);
   void setServices(const gov::cca::Services::pointer &services);
   virtual ~NetworkCanvasView();
-  void addModule(const std::string& name, const gov::cca::ComponentID::pointer &cid);
+  void addModule(const std::string& name, CIA::array1<std::string> & up, CIA::array1<std::string> &pp, const gov::cca::ComponentID::pointer &cid);
   void addConnection(Module *m1, const std::string & portname1, Module *m2, const std::string & portname2);	
   void removeConnection(QCanvasItem *c);
   void highlightConnection(QCanvasItem *c);
   void showPossibleConnections(Module *m, 
 			       const std::string &protname, Module::PortType);
   void clearPossibleConnections();
+  void removeAllConnections(Module *module);
+public slots:
+  void removeModule(Module *);
 protected:
   void contentsMousePressEvent(QMouseEvent*);
   void contentsMouseMoveEvent(QMouseEvent*);
