@@ -359,7 +359,7 @@ void ParticleFieldExtractor::graph(string idx, string var)
 void ParticleFieldExtractor::execute() 
 { 
   tcl_status.set("Calling ParticleFieldExtractor!"); 
-
+  bool newarchive;
   in = (ArchiveIPort *) get_iport("Data Archive");
   psout = (ScalarParticlesOPort *) get_oport("Scalar Particles");
   pvout = (VectorParticlesOPort *) get_oport("Vector Particles");
@@ -373,7 +373,7 @@ void ParticleFieldExtractor::execute()
 
    if ( handle.get_rep() != archiveH.get_rep() ) {
      // we have a different archive
-
+     
      // empty the cache of stored variables
      material_data_list.clear();
      
@@ -383,8 +383,7 @@ void ParticleFieldExtractor::execute()
        if( visible == "0" ){
 	 gui->execute(id + " buildTopLevel");
        }
-     }
-     
+     }     
      if( !setVars( handle )){
        warning("Cannot read any ParticleVariables, no action.");
        return;
@@ -455,7 +454,8 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
     update_progress(count++/size, my_timer);
     sema->down();
     Thread *thrd =
-      new Thread( scinew PFEThread( this, archive, *patch,  sp, vp, tp, pset,
+      new Thread( scinew PFEThread( this, archive, level,
+			     *patch,  sp, vp, tp, pset,
 			     scalar_type, have_sp, have_vp,
 			     have_tp, have_ids, sema,
 			     &smutex, &vmutex, &tmutex, &imutex, gui),
@@ -614,6 +614,7 @@ void PFEThread::run(){
     if( sp == 0 ){
       sp = scinew ScalarParticles();
       sp->Set( PSetHandle(pset) );
+      sp->Set( level );
     }
     sp->AddVar( scalars );
     smutex->unlock();
@@ -624,6 +625,7 @@ void PFEThread::run(){
     if( vp == 0 ){
       vp = scinew VectorParticles();
       vp->Set( PSetHandle(pset));
+      vp->Set( level );
     }
     vp->AddVar( vectors );
     vmutex->unlock();
@@ -635,6 +637,7 @@ void PFEThread::run(){
     if( tp == 0 ){
       tp = scinew TensorParticles();
       tp->Set( PSetHandle(pset) );
+      tp->Set( level );
     }
     tp->AddVar( tensors);
     tmutex->unlock();

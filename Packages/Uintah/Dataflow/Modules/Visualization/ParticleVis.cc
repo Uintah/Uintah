@@ -55,11 +55,14 @@ ParticleVis::ParticleVis(GuiContext* ctx) :
   isFixed(ctx->subVar("isFixed")),
   current_time(ctx->subVar("current_time")),
   radius(ctx->subVar("radius")), 
+  auto_radius(ctx->subVar("auto_radius")), 
   drawcylinders(ctx->subVar("drawcylinders")),
   length_scale(ctx->subVar("length_scale")),
+  auto_length_scale(ctx->subVar("auto_length_scale")),
   min_crop_length(ctx->subVar("min_crop_length")),
   max_crop_length(ctx->subVar("max_crop_length")),
-  head_length(ctx->subVar("head_length")), width_scale(ctx->subVar("width_scale")),
+  head_length(ctx->subVar("head_length")), 
+  width_scale(ctx->subVar("width_scale")),
   shaft_rad(ctx->subVar("shaft_rad")),
   show_nth(ctx->subVar("show_nth")),
   drawVectors(ctx->subVar("drawVectors")),
@@ -95,7 +98,6 @@ ParticleVis::~ParticleVis()
 
 void ParticleVis::execute()
 {
-
   // Create the input port
   spin0= (ScalarParticlesIPort *) get_iport("Scalar Particles");
   spin1= (ScalarParticlesIPort *) get_iport("Scaling Particles");
@@ -214,6 +216,44 @@ void ParticleVis::execute()
   
   
   bool have_particle = false;
+
+  // Check to see if we are dealing with a new dataset
+  // if so, check the generation number and update the particlesize
+  // based on the cell size of the data.
+  if( auto_radius.get() ){
+    BBox spatial_box;
+    IntVector low, hi, range;
+    part->get_level()->findIndexRange( low, hi );
+    range = hi -low;
+    part->get_level()->getSpatialRange(spatial_box);
+    Vector srange = spatial_box.max() - spatial_box.min();
+    double max_srange = ((srange.x() > srange.y() && srange.x() > srange.z()) ?
+		     srange.x():((srange.y() > srange.z()) ?
+				srange.y(): srange.z()));
+    int max_range = ((range.x() > range.y() && range.x() > range.z()) ?
+		     range.x():((range.y() > range.z()) ?
+				range.y(): range.z()));
+    double cell_size = max_srange/max_range;
+    double part_size = cell_size/4.0;
+    if (part_size > 0)
+      radius.set( cell_size/4.0);
+    
+    if(hasVectors && auto_length_scale.get()) { 
+      // lets mess with the vectors too...
+      double max_length2 = 0;
+      for(; p_it != p_it_end; v_it++, p_it++){
+	ParticleSubset *ps = (*p_it).getParticleSubset();
+	for(ParticleSubset::iterator iter = ps->begin();
+	    iter != ps->end(); iter++){
+	  max_length2 = (( max_length2 > ((*v_it)[*iter]).length2()) ?
+	    max_length2 : ((*v_it)[*iter]).length2());
+	}
+      }
+      length_scale.set( max_srange/((2 * sqrt(max_length2))));
+      p_it = points.begin();
+      v_it = vect->get().begin();
+    }
+  }
   
   for(; p_it != p_it_end; p_it++, s_it++, id_it++){
     ParticleSubset *ps = (*p_it).getParticleSubset();

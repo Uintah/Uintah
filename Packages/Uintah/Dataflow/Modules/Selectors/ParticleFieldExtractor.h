@@ -177,14 +177,16 @@ private:
     {
     public:
       PFEThread( ParticleFieldExtractor *pfe, DataArchive& archive,
-		 Patch *patch, ScalarParticles*& sp, VectorParticles*& vp,
+		 LevelP level, Patch *patch,
+		 ScalarParticles*& sp, VectorParticles*& vp,
 		 TensorParticles*& tp, PSet* pset,
 		 int scalar_type, bool have_sp,
 		 bool have_vp, bool have_tp, bool have_ids,
 		 Semaphore *sema, Mutex *smutex,
 		 Mutex *vmutex, Mutex *tmutex, Mutex *imutex,
 		 GuiInterface* gui):
-	pfe(pfe), archive(archive), patch(patch), sp(sp), vp(vp), tp(tp),
+	pfe(pfe), archive(archive), level(level), patch(patch),
+	sp(sp), vp(vp), tp(tp),
 	pset(pset), scalar_type(scalar_type), have_sp(have_sp),
 	have_vp(have_vp), have_tp(have_tp), have_ids(have_ids), sema(sema),
 	smutex(smutex), vmutex(vmutex), tmutex(tmutex), imutex(imutex),
@@ -194,6 +196,7 @@ private:
     private:
       ParticleFieldExtractor *pfe;
       DataArchive&  archive;
+      LevelP level;
       Patch *patch;
       ScalarParticles*& sp;
       VectorParticles*& vp;
