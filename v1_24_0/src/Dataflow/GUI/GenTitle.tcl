@@ -211,15 +211,15 @@ itcl_class SCIRun_Visualization_GenTitle {
 	
 	pack $location.top_left.button $location.top_left.label -side left
 
-# Location - top right
-	frame $location.top_right
+# Location - top center
+	frame $location.top_center
 
-	radiobutton $location.top_right.button -variable $this-location \
-	    -value "Top Right" -command "$this-c needexecute"
-	label $location.top_right.label -text "Top Right" -width 10 \
+	radiobutton $location.top_center.button -variable $this-location \
+	    -value "Top Center" -command "$this-c needexecute"
+	label $location.top_center.label -text "Top Center" -width 10 \
 	    -anchor w -just left
 	
-	pack $location.top_right.button $location.top_right.label -side left
+	pack $location.top_center.button $location.top_center.label -side left
 
 # Location - bottom left
 	frame $location.bottom_left
@@ -231,19 +231,19 @@ itcl_class SCIRun_Visualization_GenTitle {
 	
 	pack $location.bottom_left.button $location.bottom_left.label -side left
 
-# Location - bottom right
-	frame $location.bottom_right
+# Location - bottom center
+	frame $location.bottom_center
 
-	radiobutton $location.bottom_right.button -variable $this-location \
-	    -value "Bottom Right" -command "$this-c needexecute"
-	label $location.bottom_right.label -text "Bottom Right" -width 13 \
-	    -anchor w -just right
+	radiobutton $location.bottom_center.button -variable $this-location \
+	    -value "Bottom Center" -command "$this-c needexecute"
+	label $location.bottom_center.label -text "Bottom Center" -width 13 \
+	    -anchor w -just center
 	
-	pack $location.bottom_right.button $location.bottom_right.label -side left
+	pack $location.bottom_center.button $location.bottom_center.label -side left
 
 
-	pack $location.top_left $location.top_right \
-	    $location.bottom_left $location.bottom_right -side left
+	pack $location.top_left $location.top_center \
+	    $location.bottom_left $location.bottom_center -side left
 	
 	pack $w.location -fill x -expand yes -side top
 
