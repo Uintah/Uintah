@@ -215,6 +215,7 @@ void Level::finalizeLevel()
 {
   for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++){
     Patch* patch = *iter;
+    cout << "Patch bounding box = " << patch->getBox() << endl;
     // See if there are any neighbors on the 6 faces
     for(Patch::FaceType face = Patch::startFace;
 	face <= Patch::endFace; face=Patch::nextFace(face)){
@@ -282,6 +283,9 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 
 //
 // $Log$
+// Revision 1.25  2000/11/28 03:47:26  jas
+// Added FCVariables for the specific faces X,Y,and Z.
+//
 // Revision 1.24  2000/11/14 03:53:33  jas
 // Implemented getExtraCellIterator.
 //

@@ -269,6 +269,18 @@ Patch::getCellIterator(const Box& b) const
    return CellIterator(low, high);
 }
 CellIterator
+Patch::getExtraCellIterator(const Box& b) const
+{
+   Point l = d_level->positionToIndex(b.lower());
+   Point u = d_level->positionToIndex(b.upper());
+   IntVector low((int)l.x(), (int)l.y(), (int)l.z());
+   IntVector high(RoundUp(u.x()), RoundUp(u.y()), RoundUp(u.z()));
+   low = SCICore::Geometry::Min(low, getCellLowIndex());
+   high = SCICore::Geometry::Max(high, getCellHighIndex());
+   return CellIterator(low, high);
+}
+
+CellIterator
 Patch::getCellIterator() const
 {
   //   return CellIterator(getCellLowIndex(), getCellHighIndex());
@@ -316,18 +328,47 @@ IntVector Patch::getNodeHighIndex() const
    return h;
 }
 
-IntVector Patch::getFaceHighIndex() const
+IntVector Patch::getXFaceHighIndex() const
 {
   IntVector nodes(getNNodes());
   IntVector cells(getCellHighIndex() - getCellLowIndex());
+
+  cout << "Nodes = " << nodes << " Cells = " << cells << endl;
 
   int face_x = nodes.x()*cells.y()*cells.z();
   int face_y = nodes.y()*cells.x()*cells.z();
   int face_z = nodes.z()*cells.x()*cells.y();
 
-  return IntVector(face_x,face_y,face_z);
+  return IntVector(nodes.x(),cells.y(),cells.z());
 }
   
+IntVector Patch::getYFaceHighIndex() const
+{
+  IntVector nodes(getNNodes());
+  IntVector cells(getCellHighIndex() - getCellLowIndex());
+
+  cout << "Nodes = " << nodes << " Cells = " << cells << endl;
+
+  int face_x = nodes.x()*cells.y()*cells.z();
+  int face_y = nodes.y()*cells.x()*cells.z();
+  int face_z = nodes.z()*cells.x()*cells.y();
+
+  return IntVector(nodes.y(),cells.x(),cells.z());
+}
+
+IntVector Patch::getZFaceHighIndex() const
+{
+  IntVector nodes(getNNodes());
+  IntVector cells(getCellHighIndex() - getCellLowIndex());
+
+  cout << "Nodes = " << nodes << " Cells = " << cells << endl;
+
+  int face_x = nodes.x()*cells.y()*cells.z();
+  int face_y = nodes.y()*cells.x()*cells.z();
+  int face_z = nodes.z()*cells.x()*cells.y();
+
+  return IntVector(nodes.z(),cells.x(),cells.y());
+}
 
 IntVector Patch::getSFCXHighIndex() const
 {
@@ -608,10 +649,16 @@ void Patch::computeVariableExtents(TypeDescription::Type basis,
 	translation=CellBased;
 	break;
     case TypeDescription::NCVariable:
-	translation=NodeBased;
+         translation=NodeBased;
+         break;
+    case TypeDescription::XFCVariable:
+         translation=XFaceBased;
+	 break;
+    case TypeDescription::YFCVariable:
+	translation=YFaceBased;
 	break;
-    case TypeDescription::FCVariable:
-	translation=AllFaceBased;
+    case TypeDescription::ZFCVariable:
+	translation=ZFaceBased;
 	break;
     case TypeDescription::SFCXVariable:
 	translation=XFaceBased;
@@ -702,6 +749,9 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 
 //
 // $Log$
+// Revision 1.28  2000/11/28 03:47:26  jas
+// Added FCVariables for the specific faces X,Y,and Z.
+//
 // Revision 1.27  2000/11/21 21:57:27  jas
 // More things to get FCVariables to work.
 //

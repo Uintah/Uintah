@@ -41,7 +41,9 @@ namespace Uintah {
       enum Type {
 	 CCVariable,
 	 NCVariable,
-	 FCVariable,
+	 XFCVariable,
+	 YFCVariable,
+	 ZFCVariable,
 	 SFCXVariable,
 	 SFCYVariable,
 	 SFCZVariable,
@@ -111,6 +113,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.10  2000/11/28 03:47:26  jas
+// Added FCVariables for the specific faces X,Y,and Z.
+//
 // Revision 1.9  2000/09/25 20:37:43  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >

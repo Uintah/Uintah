@@ -128,6 +128,7 @@ WARNING
      CellIterator getExtraCellIterator() const;
      
      CellIterator getCellIterator(const Box& b) const;
+     CellIterator getExtraCellIterator(const Box& b) const;
      
      //////////
      // Insert Documentation Here:
@@ -162,11 +163,19 @@ WARNING
        return d_highIndex;
      }
 
-     IntVector getFaceLowIndex() const {
+     IntVector getXFaceLowIndex() const {
+       return d_lowIndex;
+     }
+     IntVector getYFaceLowIndex() const {
+       return d_lowIndex;
+     }
+     IntVector getZFaceLowIndex() const {
        return d_lowIndex;
      }
 
-     IntVector getFaceHighIndex() const;
+     IntVector getXFaceHighIndex() const;
+     IntVector getYFaceHighIndex() const;
+     IntVector getZFaceHighIndex() const;
      // required for fortran interface
      IntVector getSFCXFORTLowIndex() const;
      IntVector getSFCXFORTHighIndex() const;
@@ -196,7 +205,8 @@ WARNING
      }
      
      inline IntVector getNFaces() const {
-       return getFaceHighIndex()-getFaceLowIndex();
+       // not correct
+       return getXFaceHighIndex()-getXFaceLowIndex();
      }
      
      inline IntVector getNNodes() const {
@@ -314,6 +324,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.23  2000/11/28 03:47:26  jas
+// Added FCVariables for the specific faces X,Y,and Z.
+//
 // Revision 1.22  2000/11/21 21:57:27  jas
 // More things to get FCVariables to work.
 //

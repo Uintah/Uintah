@@ -12,7 +12,8 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/SFCXVariableBase.cc $(SRCDIR)/SFCYVariableBase.cc \
 	$(SRCDIR)/SFCZVariableBase.cc \
 	$(SRCDIR)/FaceIterator.cc \
-	$(SRCDIR)/Grid.cc $(SRCDIR)/FCVariableBase.cc \
+	$(SRCDIR)/Grid.cc $(SRCDIR)/XFCVariableBase.cc \
+	$(SRCDIR)/YFCVariableBase.cc $(SRCDIR)/ZFCVariableBase.cc \
 	$(SRCDIR)/Level.cc $(SRCDIR)/Material.cc \
 	$(SRCDIR)/NCVariableBase.cc $(SRCDIR)/ParticleSet.cc \
 	$(SRCDIR)/ParticleSubset.cc $(SRCDIR)/ParticleVariableBase.cc \
@@ -51,6 +52,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.27  2000/11/28 03:47:26  jas
+# Added FCVariables for the specific faces X,Y,and Z.
+#
 # Revision 1.26  2000/11/02 21:25:55  jas
 # Rearranged the boundary conditions so there is consistency between ICE
 # and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
