@@ -421,6 +421,9 @@ main(int argc, char *argv[], char **environment) {
     (new Thread(socket_runner, "TCL Socket"))->detach();
   }
 
+  // Determine if SCIRun is in regression testing mode
+  const bool doing_regressions = sci_getenv_p("SCI_REGRESSION_TESTING");
+
   // Create initial network
   packageDB = new PackageDB(gui);
   Network* net=new Network();
@@ -434,7 +437,7 @@ main(int argc, char *argv[], char **environment) {
     const char *rcversion = sci_getenv("SCIRUN_RCFILE_VERSION");
     const string ver =string(SCIRUN_VERSION)+"."+string(SCIRUN_RCFILE_SUBVERSION);
     // If the .scirunrc is an old version
-    if (!rcversion || string(rcversion) != ver)
+    if (!doing_regressions && (!rcversion || string(rcversion) != ver))
       // Ask them if they want to copy over a new one
       if (gui->eval("promptUserToCopySCIRunrc") == "1")
 	show_license_and_copy_scirunrc(gui);
@@ -493,9 +496,6 @@ main(int argc, char *argv[], char **environment) {
   // Activate "File" menu sub-menus once packages are all loaded.
   gui->eval("activate_file_submenus");
   
-  // Determine if SCIRun is in regression testing mode
-  const bool doing_regressions = sci_getenv_p("SCI_REGRESSION_TESTING");
-
   // Test for shaders.
   SCIRun::ShaderProgramARB::init_shaders_supported();
 
