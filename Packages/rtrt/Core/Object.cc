@@ -32,7 +32,7 @@ void Object::collect_prims(Array1<Object*>& prims)
     prims.add(this);
 }
 
-void Object::preprocess(double, int&, int& scratchsize)
+void Object::preprocess(double, int&, int& /*scratchsize*/)
 {
   //  scratchsize=Max(scratchsize, matl->get_scratchsize());
 }

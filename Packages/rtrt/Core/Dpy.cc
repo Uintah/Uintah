@@ -26,8 +26,10 @@
 // c      display (c)amera position
 // f      decrease framerate
 // F      increase framerate (was 'g' key.)
+// g      toggle gravity on/off
 // h      toggle ambient_hack
 // j      toggle on/off jitter sampling
+// J      toggle on/off AUTO jitter (jitters if not moving)
 // m      scale eyesep to 1.1
 // n      scale eyesep to 0.9
 // o      cycle through materials
@@ -62,6 +64,7 @@
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/Thread/Barrier.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
@@ -72,17 +75,19 @@
 #include <Packages/rtrt/Core/CycleMaterial.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Stealth.h>
+#include <Packages/rtrt/Core/PerProcessorContext.h>
 #include <Packages/rtrt/Core/Image.h>
-#include <Core/Geometry/Transform.h>
+
 #include <Packages/rtrt/Core/Ball.h>
 #include <Packages/rtrt/Core/BallMath.h>
-#include <Packages/rtrt/visinfo/visinfo.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/MiscMath.h>
 #include <Packages/rtrt/Core/MusilRNG.h>
 #include <Packages/rtrt/Core/Scene.h>
+
+#include <Packages/rtrt/visinfo/visinfo.h>
 
 #include <iostream>
 
@@ -129,7 +134,8 @@ static bool follow_path = false;
 
 // Do or do not output certain types of information to the tty.
 static bool be_quiet = false;
-
+static bool mouse_down = false;
+static bool do_auto_jitter = false;
 
 inline double RtoD(double rad) {
   return rad*180/M_PI;
@@ -203,12 +209,15 @@ namespace rtrt {
 
 Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
 	 int nworkers, bool bench, int ncounters, int c0, int c1,
-	 float, float, bool display_frames, int frameless)
+	 float, float, bool display_frames, 
+	 int pp_size, int scratchsize, int frameless)
   : scene(scene), criteria1(criteria1), criteria2(criteria2),
     nworkers(nworkers), bench(bench), ncounters(ncounters),
     c0(c0), c1(c1), frameless(frameless),synch_frameless(0),
     display_frames(display_frames)
 {
+  ppc = new PerProcessorContext( pp_size, scratchsize );
+
   //  barrier=new Barrier("Frame end", nworkers+1);
   barrier=new Barrier("Frame end");
   workers=new Worker*[nworkers];
@@ -218,10 +227,14 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
 
   // Get the size of the area of interest and use it to initialize 
   // the stealth.  This will effect how fast the stealth moves.
-  BBox bb;
-  scene->get_object()->compute_bounds( bb, 1e-3 );
-//  stealth = new Stealth( bb.diagonal().length() );
-  stealth = new Stealth( 2 );
+  //
+  //     haven't quite figured a good heuristic out for this yet...
+  //     hard coding for stadium.
+  //BBox bb;
+  //scene->get_object()->compute_bounds( bb, 1e-3 );
+  double scale   = 2.0;
+  double gravity = 10.0;
+  stealth = new Stealth( scale, gravity );
 
 }
 
@@ -664,7 +677,8 @@ Dpy::handle_keypress( XEvent & e )
     }
     break;
   case XK_g:
-    cout << "Use 'F' for increase framerate.  'g' is deprecated\n";
+    cout << "Toggling Gravity.  If you want to increase framerate, use 'F'\n";
+    stealth->toggleGravity();
     break;
 
   case XK_o:
@@ -675,7 +689,13 @@ Dpy::handle_keypress( XEvent & e )
     break;
 
   case XK_j: // turning on/off jittered sampling...
-    scene->rtrt_engine->do_jitter=1-scene->rtrt_engine->do_jitter;
+    if( shift_down ){
+      do_auto_jitter = !do_auto_jitter;
+      if( !do_auto_jitter )
+	scene->rtrt_engine->do_jitter = false;
+    } else {
+      scene->rtrt_engine->do_jitter = !(scene->rtrt_engine->do_jitter);
+    }
     break;
 
     // below is for blending "pixels" in
@@ -880,9 +900,13 @@ void Dpy::get_input()
       handle_keypress( e );
       break;
     case ButtonPress:
+
+      mouse_down = true;
+
       handle_mouse_press( e );
       break;
     case MotionNotify:
+
       switch(e.xmotion.state&(Button1Mask|Button2Mask|Button3Mask)){
       case Button1Mask:
 	{
@@ -974,6 +998,8 @@ void Dpy::get_input()
       }
       break;
     case ButtonRelease:
+      mouse_down = false;
+
       switch(e.xbutton.button){
       case Button1:
 	// Nothing...
@@ -1378,6 +1404,17 @@ void Dpy::run()
 	}
       }
       drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(), Color(0,1,0));
+
+      // Automatically turns jitter on if not moving.
+      if( do_auto_jitter ) {
+	// If we are not moving via stealth or mouse, then turn on jitter!
+	if( !stealth->moving() && !mouse_down) {
+	  scene->rtrt_engine->do_jitter = true;
+	} else {
+	  scene->rtrt_engine->do_jitter = false;
+	}
+      }
+
       // sync all the workers.  scene->get_image(rendering_scene) should now
       // be completed
       barrier->wait(nworkers+1);
@@ -1549,10 +1586,11 @@ void Dpy::run()
 
       if (display_frames) {
 	get_input(); // this does all of the x stuff...
-	if( !follow_path )
-	  priv->camera->updatePosition( *stealth );
-	else
+	if( !follow_path ) {
+	  priv->camera->updatePosition( *stealth, scene, ppc );
+	} else {
 	  priv->camera->followPath( *stealth );
+	}
 
       }
 

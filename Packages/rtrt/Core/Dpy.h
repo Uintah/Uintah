@@ -17,6 +17,7 @@ using SCIRun::Runnable;
 //class Barrier;
 class Scene;
 class Stats;
+class PerProcessorContext;
 class Worker;
 //class Mutex;
 class Counters;
@@ -27,18 +28,20 @@ extern Mutex xlock;
 struct Dpy_private;
 
 class Dpy : public Runnable {
-  Scene* scene;
-  char* criteria1;
-  char* criteria2;
-  Barrier* barrier;
-  int nworkers;
-  bool bench;
-  Worker** workers;
-  Stats* drawstats[2];
-  Counters* counters;
-  int ncounters;
-  int c0, c1;
-  
+  Scene    * scene;
+  char     * criteria1;
+  char     * criteria2;
+  Barrier  * barrier;
+  int        nworkers;
+  bool       bench;
+  Worker  ** workers;
+  Stats    * drawstats[2];
+  Counters * counters;
+  int        ncounters;
+  int        c0, c1;
+
+  PerProcessorContext* ppc;
+
   Dpy_private* priv; // allows cleaner integration of frameless stuff
   
   float xScale,yScale; // for using pixelzoom 
@@ -58,7 +61,8 @@ class Dpy : public Runnable {
 public:
   Dpy(Scene* scene, char* criteria1, char* criteria2,
       int nworkers, bool bench, int ncounters, int c0, int c1,
-      float xScale,float yScale, bool display_frames, int frameless=0);
+      float xScale,float yScale, bool display_frames, 
+      int pp_size, int scratchsize, int frameless=0);
   virtual ~Dpy();
   virtual void run();
   Barrier* get_barrier();
