@@ -194,7 +194,7 @@
   <figure id="GUI1">
   <img>../Modules/DataIO/doc/MatlabFieldsReaderGUI.jpg</img>
   <caption>MatlabFieldsReader GUI showing the selection of the "geometry.mat" file</caption>
-  </figureM>
+  </figure>
 
   <figure id="GUI2">
   <img>../Modules/DataIO/doc/MatlabMatricesReaderGUI.jpg</img>
