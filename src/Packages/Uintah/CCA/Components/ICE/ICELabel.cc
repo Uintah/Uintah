@@ -35,6 +35,8 @@ ICELabel::ICELabel()
     VarLabel::create("rho_micro_CC", CCVariable<double>::getTypeDescription());
   sp_vol_CCLabel =
     VarLabel::create("sp_vol_CC",    CCVariable<double>::getTypeDescription());
+  DLabel =
+    VarLabel::create("D",            CCVariable<double>::getTypeDescription());
 
   mass_CCLabel =
     VarLabel::create("mass_CC",      CCVariable<double>::getTypeDescription());
@@ -175,6 +177,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(cv_CCLabel);
     VarLabel::destroy(rho_micro_CCLabel);
     VarLabel::destroy(sp_vol_CCLabel);
+    VarLabel::destroy(DLabel);
     VarLabel::destroy(mass_CCLabel);
     VarLabel::destroy(burnedMass_CCLabel);
     VarLabel::destroy(int_eng_comb_CCLabel);
