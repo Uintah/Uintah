@@ -19,6 +19,15 @@ set SCALEY [expr $mainCanvasHeight/$miniCanvasHeight]
 set mouseX 0
 set mouseY 0
 
+global maincanvas
+set maincanvas ".bot.neteditFrame.canvas"
+global minicanvs
+set minicanvas ".top.globalViewFrame.canvas"
+
+global loading
+set loading 0
+
+
 proc resource {} {
 }
 
@@ -51,17 +60,6 @@ proc makeNetworkEditor {} {
 	    -command "netedit quit"
 
 
-    menubutton .main_menu.edit -text "Edit" -underline 0 \
-	    -menu .main_menu.edit.menu
-    menu .main_menu.edit.menu -tearoff false
-    .main_menu.edit.menu add command -label "Select All" -underline 0 \
-	    -command "SelectAll"
-    .main_menu.edit.menu add command -label "Clear Canvas" -underline 0 \
-	    -command "ClearCanvas"
-    
-
-
-
     menubutton .main_menu.stats -text "Statistics" -underline 0 \
 	-menu .main_menu.stats.menu
     menu .main_menu.stats.menu
@@ -83,7 +81,6 @@ proc makeNetworkEditor {} {
 #         .main_menu.modules     \
 #         .main_menu.appModules     -side left
     pack .main_menu.file -side left
-    pack .main_menu.edit -side left
     pack .main_menu.help        \
          .main_menu.stats          -side right
 
@@ -438,12 +435,16 @@ proc addModuleAtMouse { package category module } {
 
 proc addModuleAtPosition {package category module xpos ypos} {
     global mainCanvasWidth mainCanvasHeight
+    global loading
+
     set mainCanvasWidth 4500
     set mainCanvasHeight 4500
-        set xpos [expr $xpos+int([expr (([lindex [.bot.neteditFrame.canvas xview] 0]*$mainCanvasWidth))])]
     
-    set ypos [expr $ypos+int([expr (([lindex [.bot.neteditFrame.canvas yview] 0]*$mainCanvasHeight))])]
-
+    # create the modules at their relative positions only when not loading from a script.
+    
+	set xpos [expr $xpos+int([expr (([lindex [.bot.neteditFrame.canvas xview] 0]*$mainCanvasWidth))])]
+	set ypos [expr $ypos+int([expr (([lindex [.bot.neteditFrame.canvas yview] 0]*$mainCanvasHeight))])]
+    
     set modid [netedit addmodule "$package" "$category" "$module"]
     # Create the itcl object
     set className [removeSpaces "${package}_${category}_${module}"]
@@ -463,6 +464,11 @@ proc addModuleAtPosition {package category module xpos ypos} {
 proc addConnection {omodid owhich imodid iwhich} {
     set connid [netedit addconnection $omodid $owhich $imodid $iwhich]
     set portcolor [lindex [lindex [$omodid-c oportinfo] $owhich] 0]
+    
+    global connection_list
+    set connection_list "$connection_list {$omodid $owhich $imodid $iwhich\
+	    $portcolor}"
+    
     buildConnection $connid $portcolor $omodid $owhich $imodid $iwhich
     configureOPorts $omodid
     configureIPorts $imodid
@@ -496,6 +502,7 @@ proc popupSaveMenu {} {
 			       -filetypes $types ]
 
     if { $netedit_savefile != "" } {
+	saveMacroModules
 	netedit savenetwork  $netedit_savefile
     }
 }
@@ -808,9 +815,24 @@ proc createAlias {fromPackage fromCategory fromModule toPackage toCategory toMod
 }
 
 proc loadfile {netedit_loadfile} {
+    global loading
+    set loading 0
+    set group_info [sourcefile $netedit_loadfile]
+    set loading 1
+
+    if { ! [string match $group_info ""] } {
+	[loadMacroModules $group_info]
+    }
+}
+
+proc sourcefile {netedit_loadfile} {
+    # set loading to 1
+    global loading
+    set loading 1
+
     # Check to see of the file exists; exit if it doesn't
     if { ! [file exists $netedit_loadfile] } {
-	puts "loadfile: no such file"
+	puts "$netedit_loadfile: no such file"
 	return
     }
     
@@ -828,6 +850,9 @@ proc loadfile {netedit_loadfile} {
 
     # read in the first line of the file
     set curr_line [gets $fchannel]
+    
+    set group_info ""
+    
     while { ! [eof $fchannel] } {
 	# Stage 1: Source basic variables
 	if { $stage == 1 } {
@@ -922,10 +947,18 @@ proc loadfile {netedit_loadfile} {
 		
 		set command "set ::$m"
 		append command "$pram $value"
-
+		
 		# Execute the "real" command
-		puts "command: $command"
 		eval $command
+		
+		if { [string match "*-group*" $command] } {
+		    global $m-group
+		    set grp [lindex [set $m-group] 0]
+		    if { ! [string match $grp ""] } {
+			set group_info "$group_info {$m $grp}"
+		    }
+		}
+
 
 	    } elseif { [string match $curr_line ""] } {
 		# do nothing
@@ -952,10 +985,86 @@ proc loadfile {netedit_loadfile} {
     # close the file
     close $fchannel
 
+
+    # set loading back to 0
+    set loading 0
+
+    return $group_info
 }
 
+proc loadMacroModules {group_info} {
+    # Generate group lists
+    set mmlist ""
+    foreach ginf $group_info {
+	set num [lindex $ginf 1]
+	set mod [lindex $ginf 0]
+	if { [string match "*group$num*" $mmlist] } {
+	    set group$num "[set group$num] $mod"
+	} else {
+	    set group$num $mod
+	    set mmlist "$mmlist group$num"
+	}
+    }
 
 
+    if { ! [string match $mmlist ""] } {
+	# move the modules into their correct positions
+	global maincanvas
+	global minicanvas
+
+	set mainCanvasWidth 4500
+	set mainCanvasHeight 4500
+
+	
+	foreach l $mmlist {
+	    foreach mod [set $l] {
+		global $mod-lastpos
+		set lastpos [set $mod-lastpos]
+		
+		set lastx [lindex $lastpos 0]
+		set lasty [lindex $lastpos 1]
+
+		
+		set movx [$mod get_x]
+		set movy [$mod get_y]
+		
+		
+
+		set mx [expr -$movx+$lastx]
+		set my [expr -$movy+$lasty]
+		
+		$maincanvas move $mod $mx $my
+		
+
+		# account for any scrolling...
+		
+		set xv [lindex [$maincanvas xview] 0]
+		set yv [lindex [$maincanvas yview] 0]
+
+		set xs [expr $xv*$mainCanvasWidth]
+		set ys [expr $yv*$mainCanvasWidth]
+
+		$maincanvas move $mod $xs $ys
+		
+
+		
+		
+
+	    }
+	}
+	
+
+	foreach l $mmlist {
+	    global CurrentlySelectedModules
+	    set temp $CurrentlySelectedModules
+	    set CurrentlySelectedModules "[set $l]"
+	    set curr_mod [lindex $CurrentlySelectedModules 0]
+	    set macro [makeMacroModule $maincanvas $minicanvas $curr_mod]
+	    rebuildMModuleConnections $macro
+	    set CurrentlySelectedModules $temp
+	}
+    }   
+}
 
 
 
