@@ -32,7 +32,4 @@ itcl_class RingWidget {
 	BaseWidget::constructor
 	set name RingWidget
     }
-
-    method scale_changed {newscale} }
-    }
 }
