@@ -45,7 +45,6 @@ DifferenceBCData& DifferenceBCData::operator=(const DifferenceBCData& rhs)
   sfcx=rhs.sfcx;
   sfcy=rhs.sfcy;
   sfcz=rhs.sfcz;
-
  
   return *this;
 }
@@ -128,23 +127,3 @@ bool DifferenceBCData::inside(const Point &p) const
   return (left->inside(p) && !right->inside(p));
 }
 
-#if 0
-Box DifferenceBCData::getBoundingBox() const
-{
-
-  Point lo,hi;
-
-  // Initialize the lo and hi points to the first element
-
-  lo = child[0]->getBoundingBox().lower();
-  hi = child[0]->getBoundingBox().upper();
-
-  for (int i = 0; i < (int)child.size(); i++) {
-    Box box = child[i]->getBoundingBox();
-    lo = Min(lo,box.lower());
-    hi = Max(hi,box.upper());
-  }
-
-  return Box(lo,hi);
-}
-#endif

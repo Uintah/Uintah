@@ -326,10 +326,11 @@ WARNING
      const BoundCondBase* getBCValues(int mat_id,string type,
 				      FaceType face) const;
 
-     BCDataArray getBCDataArray(Patch::FaceType face) const;
+     BCDataArray* getBCDataArray(Patch::FaceType face) const;
 
      const BoundCondBase* getArrayBCValues(FaceType face,int mat_id,
-					   string type,vector<IntVector>& b,
+					   string type,
+					   vector<IntVector>& b,
 					   vector<IntVector>& i,
 					   vector<IntVector>& sfx,
 					   vector<IntVector>& sfy,
