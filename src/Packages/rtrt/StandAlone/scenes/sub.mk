@@ -3,6 +3,7 @@
 SRCDIR := Packages/rtrt/StandAlone/scenes
 
 SCENES := $(SRCDIR)/0.mo \
+	$(SRCDIR)/obj_reader.mo \
 	$(SRCDIR)/gl.mo \
 	$(SRCDIR)/simple.mo \
 	$(SRCDIR)/simple_spheres.mo \
