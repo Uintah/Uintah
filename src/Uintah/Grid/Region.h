@@ -15,6 +15,7 @@
 #include <stdio.h>
 
 using std::string;
+using namespace Uintah;
 
 namespace Uintah {
     
@@ -26,6 +27,7 @@ namespace Uintah {
    class NodeSubIterator;
    class NodeIterator;
    class CellIterator;
+
    
 /**************************************
       
@@ -58,7 +60,23 @@ WARNING
     
    class Region {
    public:
-      
+
+     enum BCType {
+       None,
+       Fixed,
+       Symmetry,
+       Neighbor
+     };
+     
+     enum FaceType {
+       xplus,
+       xminus,
+       yplus,
+       yminus,
+       zplus,
+       zminus
+     };
+
       //////////
       // Insert Documentation Here:
       Vector dCell() const {
@@ -116,7 +134,7 @@ WARNING
       
       void performConsistencyCheck() const;
 
-      int getBCType(int face) const;
+      BCType getBCType(FaceType face) const;
       
       //////////
       // Insert Documentation Here:
@@ -208,6 +226,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Region* r);
 
 //
 // $Log$
+// Revision 1.18  2000/05/09 03:24:40  jas
+// Added some enums for grid boundary conditions.
+//
 // Revision 1.17  2000/05/07 06:02:12  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

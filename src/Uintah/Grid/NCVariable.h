@@ -6,6 +6,10 @@
 #include <Uintah/Grid/TypeDescription.h>
 #include <SCICore/Exceptions/InternalError.h>
 #include <SCICore/Geometry/Vector.h>
+#include <Uintah/Exceptions/TypeMismatchException.h>
+#include <Uintah/Grid/Region.h>
+
+using namespace Uintah;
 
 namespace Uintah {
    using SCICore::Exceptions::InternalError;
@@ -42,34 +46,35 @@ WARNING
 
    template<class T> class NCVariable : public Array3<T>, public NCVariableBase{
    public:
-      NCVariable();
-      NCVariable(const NCVariable<T>&);
-      virtual ~NCVariable();
-      
-      //////////
-      // Insert Documentation Here:
-      static const TypeDescription* getTypeDescription();
-      
-      virtual void copyPointer(const NCVariableBase&);
-      
-      //////////
-      // Insert Documentation Here:
-      virtual NCVariable<T>* clone() const;
-
-      //////////
-      // Insert Documentation Here:
-      virtual void allocate(const Region*);
-      
-      NCVariable<T>& operator=(const NCVariable<T>&);
-
-      // Replace the values on the indicated face with value
-      void fillFace(int face, Vector value);
-
-      // Use to apply symmetry boundary conditions.  On the
-      // indicated face, replace the component of the vector
-      // normal to the face with 0.0
-      void fillFaceNormal(int face);
-      
+     
+     NCVariable();
+     NCVariable(const NCVariable<T>&);
+     virtual ~NCVariable();
+     
+     //////////
+     // Insert Documentation Here:
+     static const TypeDescription* getTypeDescription();
+     
+     virtual void copyPointer(const NCVariableBase&);
+     
+     //////////
+     // Insert Documentation Here:
+     virtual NCVariable<T>* clone() const;
+     
+     //////////
+     // Insert Documentation Here:
+     virtual void allocate(const Region*);
+     
+     NCVariable<T>& operator=(const NCVariable<T>&);
+     
+     // Replace the values on the indicated face with value
+     void fillFace(Region::FaceType face, Vector value) {};
+     
+     // Use to apply symmetry boundary conditions.  On the
+     // indicated face, replace the component of the vector
+     // normal to the face with 0.0
+     void fillFaceNormal(Region::FaceType) {};
+     
    private:
    };
    
@@ -140,6 +145,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.12  2000/05/09 03:24:39  jas
+// Added some enums for grid boundary conditions.
+//
 // Revision 1.11  2000/05/07 06:02:12  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler
