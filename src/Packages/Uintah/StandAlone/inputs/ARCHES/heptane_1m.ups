@@ -1,22 +1,26 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE Uintah_specification SYSTEM "input.dtd">
+
 <!-- @version: -->
+
+
 <Uintah_specification>
 
    <Meta>
-	<title>Arches Helium Plume Multi Patch Run</title>
+	<title>Arches Heptane Run with Radiation</title>
    </Meta>
 
    <Time>
-	<maxTime>20.0</maxTime>
+	<maxTime>10.0</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
-	<delt_max>0.01</delt_max>
-	<timestep_multiplier>0.35</timestep_multiplier>
+	<delt_max>0.005</delt_max>
+	<timestep_multiplier>0.4</timestep_multiplier>
    </Time>
 
    <DataArchiver>
-        <filebase>sandia_helium.uda</filebase>
-	<outputInterval>0.1</outputInterval>
+        <filebase>heptane_1m.uda</filebase>
+	<outputInterval>0.01</outputInterval>
 	<save label = "uvwout"/>
 	<save label = "totalflowIN"/>
 	<save label = "totalflowOUT"/>
@@ -31,11 +35,19 @@
 	<save label = "scalarSP"/>
 	<save label = "densityCP"/>
 	<save label = "viscosityCTS"/>
-	<save label = "velocityDivergence"/>
-	<save label = "continuityResidual"/>
+	<save label = "tempIN"/>
+        <save label = "co2IN"/>
+        <save label = "enthalpySP"/>
+        <save label = "sootFVIN"/>
+        <save label = "radiationSRCIN"/>
+        <save label = "velocityDivergence"/>
+        <save label = "continuityResidual"/>
         <save label = "filterdrhodt"/>
 	<save label = "cellType"/>
-	<checkpoint cycle = "2" interval = "0.1"/>
+	<save label = "radiationFluxWIN"/>
+	<save label = "radiationFluxNIN"/>
+        <save label = "abskgIN"/>
+	<checkpoint cycle = "2" interval = "0.01"/>
         <outputDoubleAsFloat/>
         <compression>gzip</compression>
    </DataArchiver>
@@ -51,9 +63,9 @@
 	    <Box label = "1">
 	        <lower>[0,0,0]</lower>
 	        <upper>[3,3,3]</upper>
-	        <resolution>[100,100,100]</resolution>
+	        <resolution>[81,81,81]</resolution>
                 <extraCells>[1,1,1]</extraCells>
-		<patches>[3,4,4]</patches>
+		<patches>[3,2,2]</patches>
 	    </Box>
 	</Level>
     </Grid>
@@ -67,8 +79,8 @@
 	    <variable_dt>true</variable_dt>
    	    <nonlinear_solver>explicit</nonlinear_solver>
     	    <turbulence_model>compdynamicprocedure</turbulence_model>
-            <reacting_flow>false</reacting_flow>
-            <solve_enthalpy>false</solve_enthalpy>	
+            <reacting_flow>true</reacting_flow>
+            <solve_enthalpy>true</solve_enthalpy>	
 	    <solve_reactingscalar>false</solve_reactingscalar>
 	    <Turbulence>
 		<cf>0.17</cf>
@@ -82,56 +94,28 @@
             </ScaleSimilarity>
 
 	    <Properties>
-		<denUnderrelax>1.0</denUnderrelax>
+		<denUnderrelax>1.00</denUnderrelax>
 		<first_order_drhodt>true</first_order_drhodt>
 	        <ref_point>[-1,-1,-1]</ref_point>
-	        <radiation>false</radiation>
-	        <mixing_model>coldFlowMixingModel</mixing_model>
-	        <ColdflowMixingModel>
-		  <adiabatic>true</adiabatic>
+	        <radiation>true</radiation>
+	        <filter_drhodt>true</filter_drhodt>
+	        <opl>3.0</opl>
+	        <empirical_soot>true</empirical_soot>
+	        <mixing_model>StaticMixingTable</mixing_model>
+	        <StaticMixingTable>
+                  <adiabatic>false</adiabatic>
                   <mixstatvars>0</mixstatvars>
                   <rxnvars>0</rxnvars>
-                  <PDFShape>Beta</PDFShape>
-		  <reaction_model>EquilibriumReactionModel</reaction_model>
-		  <Stream>
-		    <density>0.133</density>
-		    <temperature>298</temperature>
-		    <enthalpyLoss>0</enthalpyLoss>
-                    <pressure>1.01325e+05</pressure>
-		  </Stream>
-		  <Stream>
-		    <density>1.184344</density>
-		    <temperature>298</temperature>
-		    <enthalpyLoss>0</enthalpyLoss>
-		  </Stream>
-		  <MixRxnTableInfo>
-                    <Enthalpy>
-                       <MaxValue>1.0</MaxValue>
-                       <MinValue>-1.0</MinValue>
-                       <MidValue>0.0</MidValue>
-     		       <NumDivsBelow>10</NumDivsBelow>
-     		       <NumDivsAbove>10</NumDivsAbove>
-                    </Enthalpy>
-                    <MixtureFraction>
-                       <MaxValue>1.0</MaxValue>
-                       <MinValue>0.0</MinValue>
-                       <MidValue>0.1</MidValue>
-     		       <NumDivsBelow>20</NumDivsBelow>
-     		       <NumDivsAbove>20</NumDivsAbove>
-                     </MixtureFraction>
-                  </MixRxnTableInfo>
-                  <TableType>dynamic</TableType>
-                  <TableStorage>2DVector</TableStorage>
-		  <Integrator>
-		     <favre>false</favre>
-                  </Integrator>
-                </ColdflowMixingModel>
+                  <inputfile>hept.rxn</inputfile>
+                  <h_fuel>-1869683.0</h_fuel>
+                  <h_air>-125.3610</h_air>
+                </StaticMixingTable>
 	    </Properties>
 
 	    <BoundaryConditions>
 	        <ramping_inlet_flowrate>false</ramping_inlet_flowrate>
 		<FlowInlet>
-		    <Flow_rate>0.03666</Flow_rate>
+		    <Flow_rate>0.03044</Flow_rate>
 		    <MixtureFraction>
 			<Mixfrac>1.0</Mixfrac>
 	            </MixtureFraction>
@@ -141,7 +125,7 @@
 		      <cylinder label = "inlet">
 			<bottom>[-5,1.5,1.5]</bottom>
 			<top>[0,1.5,1.5]</top>
-			<radius> .5 </radius>
+			<radius> 0.5 </radius>
 		      </cylinder>
 		    </geom_object>
 		</FlowInlet>
@@ -204,7 +188,12 @@
 
 	    <ExplicitSolver>
 		<timeIntegratorType>RK2SSP</timeIntegratorType>	
+		<max_iter>0</max_iter>	
+		<res_tol>2.0</res_tol>
 		<probe_data>false</probe_data>
+      	        <ProbePoints>
+	           <probe_point>[60,60,60]</probe_point>
+		</ProbePoints>
 	        <cal_pressure>true</cal_pressure>
 		<PressureSolver>
 		    <ref_point>[3,3,3]</ref_point>
@@ -227,7 +216,7 @@
 		    <LinearSolver>
 			<max_iter>8</max_iter>
 			<res_tol>0.0003</res_tol>
-			<underrelax>1.0</underrelax>
+			<underrelax>1.00</underrelax>
 		    </LinearSolver>
 		</MomentumSolver>
 
@@ -238,18 +227,25 @@
 		    <LinearSolver>
 			<max_iter>6</max_iter>
 			<res_tol>0.0003</res_tol>
-			<underrelax>1.0</underrelax>
+			<underrelax>1.00</underrelax>
 		    </LinearSolver>
 		</MixtureFractionSolver>
-		<cal_enthalpy>false</cal_enthalpy>
+		<cal_enthalpy>true</cal_enthalpy>
 		<EnthalpySolver>
-                    <radiation>false</radiation>
+                    <radiation>true</radiation>
+                    <discrete_ordinates>true</discrete_ordinates>
+                    <radiationCalcFreq>5</radiationCalcFreq>
+                    <radCalcForAllRKSteps>false</radCalcForAllRKSteps>
+                    <DORadiationModel>
+	                <opl>3.0</opl>
+                        <ordinates>4</ordinates>
+                    </DORadiationModel>
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>linegs</linear_solver>
 		    <LinearSolver>
 			<max_iter>6</max_iter>
 			<res_tol>0.0003</res_tol>
-			<underrelax>1.0</underrelax>
+			<underrelax>1.00</underrelax>
 		    </LinearSolver>
 		</EnthalpySolver>
 	    </ExplicitSolver>
