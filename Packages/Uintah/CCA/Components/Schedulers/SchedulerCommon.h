@@ -86,7 +86,7 @@ WARNING
     virtual VarLabelMaterialMap* makeVarLabelMaterialMap();
   protected:
     void makeTaskGraphDoc(const DetailedTasks* dt,
-			  bool emit_edges = true);
+			  int rank = 0);
     void emitNode(const DetailedTask* dt, double start, double duration);
     void finalizeNodes(int process=0);
     void scrub(const DetailedTask* dt);

@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
@@ -123,6 +124,8 @@ namespace Uintah {
     // Called after doit finishes.
     void done();
 
+    string getName() const;
+    
     const Task* getTask() const {
       return task;
     }
@@ -149,6 +152,8 @@ namespace Uintah {
       return scrublist;
     }
 
+    void emitEdges(DOM_Element edgesElement);
+
     bool addRequires(DependencyBatch*);
     void addComputes(DependencyBatch*);
     void addScrub(const VarLabel* var, Task::WhichDW dw);
@@ -167,6 +172,9 @@ namespace Uintah {
     map<DependencyBatch*, DependencyBatch*> reqs;
     DependencyBatch* comp_head;
     DetailedTasks* taskGroup;
+
+    mutable string name_; /* doesn't get set until getName() is called
+			     the first time. */
 
     // Called when prerequisite tasks (dependencies) call done.
     void dependencySatisfied(InternalDependency* dep);
@@ -225,6 +233,8 @@ namespace Uintah {
     DetailedTask* localTask(int idx) {
       return localtasks[idx];
     }
+
+    void emitEdges(DOM_Element edgesElement, int rank);
 
     DetailedTask* getNextInternalReadyTask();
     
