@@ -27,10 +27,10 @@ Camera::Camera()
 
 Camera::Camera(const Point& eye, const Point& lookat,
 	       const Vector& up, double fov)
-  : eye(eye), lookat(lookat), up(up), fov(fov), eyesep(1)
+  : eye(eye), lookat(lookat), up(up), fov(fov), eyesep(1), 
+  verticalFov_(fov), windowAspectRatio_(1.0)
 
 {
-  verticalFov_ = fov;
   setup();
 }
 
@@ -149,9 +149,18 @@ Point Camera::get_lookat() const
     return lookat;
 }
 
-void Camera::set_fov(double f)
+void
+Camera::setWindowAspectRatio( double ratio )
+{
+  windowAspectRatio_ = ratio;
+  verticalFov_ = fov * ratio;
+}
+
+void
+Camera::set_fov(double f)
 {
     fov=f;
+    verticalFov_ = fov * windowAspectRatio_;
 }
 
 double Camera::get_eyesep() const
@@ -165,13 +174,13 @@ double Camera::get_fov() const
 }
 
 void Camera::getParams(Point& origin, Vector& direction,
-		       Vector& up, Vector& side, double& vfov)
+		       Vector& up, Vector& side, double& theFov)
 {
     origin=eye;
     direction=this->direction;
     up=u;
     side=v;
-    vfov=fov;
+    theFov=fov;
 }
 
 void
