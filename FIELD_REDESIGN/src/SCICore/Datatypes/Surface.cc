@@ -35,7 +35,7 @@ Surface::~Surface()
 }
 
 Surface::Surface(const Surface& copy)
-: monitor("Surface crowd monitor"), closed(copy.closed), rep(copy.rep), name(copy.name), grid(0)
+  : monitor("Surface crowd monitor"), closed(copy.closed), rep(copy.rep), name(copy.name), grid(0), pntHash(0)
 {
 //    NOT_FINISHED("Surface::Surface");
 }
@@ -112,6 +112,12 @@ void Surface::set_bc(const clString& bc_expr)
 
 //
 // $Log$
+// Revision 1.5.2.1  2000/10/31 02:36:24  dmw
+// Merging SCICore changes in HEAD into FIELD_REDESIGN branch
+//
+// Revision 1.6  2000/10/29 04:46:17  dmw
+// changed private/public status, added a flag for whether datavalues were associate with elements or nodes
+//
 // Revision 1.5  1999/09/05 05:32:28  dmw
 // updated and added Modules from old tree to new
 //

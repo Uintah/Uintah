@@ -52,6 +52,7 @@ public:
     SymSparseRowMatrix(const SymSparseRowMatrix&);
     SymSparseRowMatrix& operator=(const SymSparseRowMatrix&);
     virtual double& get(int, int);
+    int getIdx(int, int);
     virtual void put(int, int, const double&);
     virtual int nrows() const;
     virtual int ncols() const;
@@ -80,8 +81,11 @@ public:
 
 //
 // $Log$
-// Revision 1.3.2.2  2000/10/26 17:30:47  moulding
-// merge HEAD into FIELD_REDESIGN
+// Revision 1.3.2.3  2000/10/31 02:36:25  dmw
+// Merging SCICore changes in HEAD into FIELD_REDESIGN branch
+//
+// Revision 1.5  2000/10/29 04:46:18  dmw
+// changed private/public status, added a flag for whether datavalues were associate with elements or nodes
 //
 // Revision 1.4  2000/07/12 15:45:10  dmw
 // Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort

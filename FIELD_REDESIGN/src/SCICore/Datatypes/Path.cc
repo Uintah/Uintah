@@ -611,8 +611,8 @@ bool Path::get_nextPP(View& v, int& curr_view, double& curr_speed, double& curr_
 
 //
 // $Log$
-// Revision 1.3.2.3  2000/10/26 17:30:46  moulding
-// merge HEAD into FIELD_REDESIGN
+// Revision 1.3.2.4  2000/10/31 02:36:23  dmw
+// Merging SCICore changes in HEAD into FIELD_REDESIGN branch
 //
 // Revision 1.8  2000/10/11 00:39:28  dmw
 // Alexei's changes
