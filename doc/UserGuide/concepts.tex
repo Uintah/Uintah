@@ -4,6 +4,9 @@
 %
 % Last update: Tue Mar  6 11:06:01 2001 by Rob MacLeod
 %    - created
+% Last update: Wed Mar 14 21:43:52 2001 by Rob MacLeod
+%    - finished version 1.0 
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%  Figures used in this file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %begin{latexonly}
@@ -16,11 +19,13 @@
   {../figures/biopse-modmap.gif}}
 \end{htmlonly}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Concept}
+\section{Concepts}
 \label{sec:concepts} 
+\index{concepts}
 
 Read this section to learn about the design philosphy and goals of
-integrated problem solving environments generally and how \PSE{} embodies
+integrated problem solving environments \index{problem solving environment}
+generally and how \PSE{} embodies
 some of these ideas.  
 
 \subsection{Traditional problem solving methods}
@@ -37,8 +42,8 @@ the surfaces\cite{CRJ:Sch93b}.  Another application like Matlab compute a
 finite element simulation of the electric current distribution from the
 defibrillation electrodes through the thoracic volume\cite{RSM:And93}.
 Another approach might be to write a Fortran program using a public domain
-numerical library such as LAPACK\@.  To see the output would require a
-scientific visualization package (such as those described
+numerical library such as LAPACK\@ \index{LAPACK}.  To see the output would
+require a scientific visualization package (such as those described
 in\cite{RSM:All91}).  Between each of these steps, it would be necessary to
 save the output of one program in a format that the next in the sequence
 could read---this might necessitate separate file format conversion
@@ -86,14 +91,14 @@ steering}
 The goal of integrated problem solving environments---and specifically of
 \SR{} and \PSE{}---is to incorporate and integrate all the steps described
 in the previous example as components in a single, unified, extensible
-problem solving environment (PSE).  The functionality that will result includes
-the ability to manage each step in a sequential computing process, and to
-create batch processes that execute repeated simulations.  However, the
-functionality that sets \SR{} and \PSE{} apart from most integrated
-software environments is the ability to intervene and control execution
-anywhere in the chain at any time during its execution.  This ability to
-control a computer program during execution is termed \emph{computational
-steering.}  
+problem solving environment (PSE)\index{PSE}.  The functionality that will
+result includes the ability to manage each step in a sequential computing
+process, and to create batch processes that execute repeated simulations.
+However, the functionality that sets \SR{} and \PSE{} apart from most
+integrated software environments is the ability to intervene and control
+execution anywhere in the chain at any time during its execution.  This
+ability to control a computer program during execution is termed
+\emph{computational steering.}
 
 To provide a non-technical analogy, adding computational steering to a
 software environment is similar to adding the ability to occasionally
@@ -132,7 +137,8 @@ there are a number of examples of such systems (besides \SR{}) described in
 the literature.  Burnett\cite{MM:Bur94}, and Vetter and
 Schwan\cite{MM:Vet96} give overviews of existing computational steering
 system.  Several notable examples include CUMULVS\cite{MM:Gei96,MM:Koh97},
-Progress\cite{MM:Vet95}, and  Magellan\cite{MM:Vet97a}.
+\index{CUMULVS} Progress\cite{MM:Vet95}, \index{Progress} and
+Magellan\cite{MM:Vet97a} \index{Magellan}.
 
 
 
@@ -159,7 +165,7 @@ environment.
 
 
 \subsection{\SR{} modules and networks}
-\index{sec:con-modules} 
+\label{sec:con-modules} 
 
 
 \begin{figure}[htb]
@@ -167,26 +173,26 @@ environment.
   \end{makeimage}
   \basicmodule
 %  \centerline{\epsfig{file=figures/biopse-modmap.eps,width=6in}}
-  \caption{\label{fig:module} Example of a \SR{} module}
+  \caption{\label{fig:conc-module} Example of a \SR{} module}
 \end{figure}
 
-The functional unit of a dataflow environment is the {\em\/module}.
-Figure~\ref{fig:module} contains a generic \SR{} module, with a User
-Interface (UI) button for graphically accessing the module's parameters,
-and input and output ports for receiving and sending data,
-respectively.  On the right is a simple example of a dataflow network.
-Data passes through the output port of the top module, through the
-data pipe, and into the input port of the bottom module.  The User
+The functional unit of a dataflow environment is the {\em\/module}
+\index{module} .  Figure~\ref{fig:conc-module} contains a generic \SR{}
+module, with a User Interface (UI) button for graphically accessing the
+module's parameters, and input and output ports for receiving and sending
+data, respectively.  On the right is a simple example of a dataflow
+network.  Data passes through the output port of the top module, through
+the data pipe, and into the input port of the bottom module.  The User
 Interface enables the selection of a desired isochrone surface.
 
-Modules may contain other elements, but they will all have
-at least one input or one output port.  Examples of a module with only an
-output port would be file readers.  The \htmladdnormallink{Renderer}{??link
-to render manual section} module contains only input ports because it
-receives information and the output is a visualization.  For a more
-detailed description of modules and how to control them, see
-Section~\ref{??}.  The important part at this stage is to appreciate the
-concept of a module and the dataflow that links one module to another.
+Modules may contain other elements, but they will all have at least one
+input or one output port.  Examples of a module with only an output port
+would be file readers.  The \htmladdnormallink{\emph{Viewer}}{viewer.html}
+module contains only input ports because it receives information and the
+output is a visualization.  For a more detailed description of modules and
+how to control them, see Section~\ref{sec:workwithnets}.  The most
+important goal at this stage is to appreciate the concept of a module and
+the dataflow that links one module to another.
 
 A network diagram \index{network!diagram} describes the way data flows
 through \SR{} and is the main means of user interaction with the overall
@@ -195,7 +201,7 @@ the program; without a network, \SR{} and \PSE{} are just a set of tools
 sitting in a chest.  By joining the modules into a network, the tools
 become a functioning program that does whatever the network tells it to.
 Once again, the important thing to appreciate is what the network is
-conceptually; for the details, see Section~\ref{??}.
+conceptually; for the details, see Section~\ref{sec:workwithnets}.
 
 
 \subsection{Links to third party software}
@@ -207,19 +213,19 @@ the need for some third party software libraries that are required for
 basic functionality.  This type of third party software is largely
 invisible to the user of \SR{} or \PSE{}, at least until something
 breaks\ldots{} Perhaps the most evident is the
-\htmladdnormallink{TCL/Tk}{http://www.tcltk.com/} library, which \SR{}
-uses to create the network editor and the icons for the modules and data
-pipes.  In fact, \SR{} is actually a large TCL script that calls a lot of
-specialized C++ code to do all the hard work.
+\htmladdnormallink{TCL/Tk}{http://www.tcltk.com/} \index{Tcl/Tk} library,
+which \SR{} uses to create the network editor and the icons for the modules
+and data pipes.  In fact, \SR{} is actually a large TCL script that calls a
+lot of specialized C++ code to do all the hard work.
 
 
 Far more interesting is the interaction between programs you may have that
-are written in FORTRAN or
+are written in FORTRAN \index{FORTRAN} or
 \htmladdnormallink{Matlab}{http://www.mathworks.com/products/matlab/} and
 \SR{}.  One of the goals of the \PSE{} project was to develop support for
 such external code, including FORTRAN, C, Matlab, and IDL\@.  This first
 version of \PSE{} has support for Matlab and one example of wrapping
-existing FORTRAN code into a \SR{} module.
+existing FORTRAN code into a \SR{} module. \index{Matlab}
 
 %?? I need some detail here on how to work with Matlab in SR\@.
 
@@ -228,17 +234,17 @@ existing FORTRAN code into a \SR{} module.
 \subsection{Extensibility}
 \label{sec:con-extend} 
 
-\SR{} is an extensible problem solving environment.  This is true in the
-sense that no one by the user really limits the different ways of
-connecting modules and creating new applications.  Ii is also more
-generally true in that \SR{} is designed to have users who can program
-create their own new modules.  To support creating new modules, we have
-developed the \emph{Module maker} application, described in
-Section~\ref{sec:modulemaker??} 
+\SR{} is an extensible \index{extensible} problem solving environment.
+This is true in the sense that no one by the user really limits the
+different ways of connecting modules and creating new applications.  Ii is
+also more generally true in that \SR{} is designed to have users who can
+program create their own new modules.  To support creating new modules, we
+have developed the \emph{Module maker} application, described in The
+\htmladdnormallink{Module maker manual}{http://modulemaker}.
 
 With the release of \SR{}, we anticipate that users all over the world will
 create new modules and we will encourage them to contribute modules to a
-repository on the \PSE{} web site
+repository on the \PSE{} web site \index{\PSE{}!web site}
 (\htmladdnormallink{www.sci.utah.edu/ncrr/software/biopse.html}
 {http://www.sci.utah.edu/ncrr/software/biopse.html}.  We will review
 submissions to this collection of modules and adopt and then test generally
@@ -250,6 +256,7 @@ intellectual investment in legacy code.
 
 \subsection{Detachable interface}
 \label{sec:con-detach} 
+\index{detachable interface}
 
 A strategy seen in a few PSEs currently under development and an integral
 part of \SR{} is the idea of a detachable interface.  Rather than having a
@@ -263,14 +270,15 @@ come from a remote computer via a network, or from another user on the same
 computer.  An additional strength of this approach is that the re-attached
 interface may not be an interactive widget at all, but a set of commands
 executed from a script.  This permits complete remote control of the
-application and thus is a flexible blend of interactive and almost unlimited
-batch control.  CUMULVS is one example of such a system and uses its
-detachable interface to allow collaboration between scientists working
-remotely, with viewing systems that can attach or detach from the running
-simulation.
+application and thus is a flexible blend of interactive and almost
+unlimited batch control.  CUMULVS \index{CUMULVS} is one example of such a
+system and uses its detachable interface to allow collaboration between
+scientists working remotely, with viewing systems that can attach or detach
+from the running simulation.
 
 %?? Here I need to know how much detachable interface stuff we will have in
 %   the release.
 
-
+The first release of \SR{} will not include any of the detachable interface
+support but we plan to add this within six months of the first release.
 
