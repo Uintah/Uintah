@@ -8,8 +8,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Uintah/Components/MPM
 
 SRCS     += $(SRCDIR)/SerialMPM.cc \
-	$(SRCDIR)/BoundCond.cc $(SRCDIR)/MPMLabel.cc \
-	$(SRCDIR)/DavMPM.cc
+	$(SRCDIR)/BoundCond.cc $(SRCDIR)/MPMLabel.cc
 
 SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
 	$(SRCDIR)/Fracture \
@@ -26,6 +25,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.10  2000/05/30 17:55:19  dav
+# commited the previous one with a test file.  now it is removed
+#
 # Revision 1.9  2000/05/30 17:07:56  dav
 # I think I added the xerces flag
 #
