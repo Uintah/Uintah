@@ -43,8 +43,10 @@ WARNING
      virtual Vector getValue() const;
      
    private:
+#if 0
       VelocityBoundCond(const VelocityBoundCond&);
       VelocityBoundCond& operator=(const VelocityBoundCond&);
+#endif
       
       Vector d_vel;
      

@@ -12,12 +12,12 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <cstdlib>
 
 using namespace std;
 using namespace Uintah;
 
-void BoundCondFactory::create(const ProblemSpecP& ps,
-				   std::vector<BoundCondBase*>& objs)
+void BoundCondFactory::create(const ProblemSpecP& ps,BCData& objs)
 
 {
    for(ProblemSpecP child = ps->findBlock("BCType"); child != 0;
@@ -25,27 +25,46 @@ void BoundCondFactory::create(const ProblemSpecP& ps,
      
      map<string,string> bc_attr;
      child->getAttributes(bc_attr);
+     int mat_id;
+     if (bc_attr["id"] != "all")
+       mat_id = atoi(bc_attr["id"].c_str());
+     else
+       mat_id = 0;
      
-     if (bc_attr["var"] == "None")
-       objs.push_back(new NoneBoundCond(child));
+     if (bc_attr["var"] == "None") {
+       BoundCondBase* bc = new NoneBoundCond(child);
+       objs.setBCValues(mat_id,bc);
+     }
      
-     else if (bc_attr["label"] == "Symmetric")
-       objs.push_back(new SymmetryBoundCond(child));
+     else if (bc_attr["label"] == "Symmetric") {
+       BoundCondBase* bc = new SymmetryBoundCond(child);
+       objs.setBCValues(mat_id,bc);
+     }
      
-     else if (bc_attr["var"] ==  "Neighbor")
-       objs.push_back(new NeighBoundCond(child));
+     else if (bc_attr["var"] ==  "Neighbor") {
+       BoundCondBase* bc = new NeighBoundCond(child);
+       objs.setBCValues(mat_id,bc);
+     }
      
-     else if (bc_attr["label"] == "Velocity")
-       objs.push_back(new VelocityBoundCond(child,bc_attr["var"]));
+     else if (bc_attr["label"] == "Velocity") {
+       BoundCondBase* bc = new VelocityBoundCond(child,bc_attr["var"]);
+       objs.setBCValues(mat_id,bc);
+     }
      
-     else if (bc_attr["label"] == "Temperature") 
-       objs.push_back(new TemperatureBoundCond(child,bc_attr["var"]));
+     else if (bc_attr["label"] == "Temperature") {
+       BoundCondBase* bc = new TemperatureBoundCond(child,bc_attr["var"]);
+       objs.setBCValues(mat_id,bc);
+     }
      
-     else if (bc_attr["label"] == "Pressure")
-       objs.push_back(new PressureBoundCond(child,bc_attr["var"]));
+     else if (bc_attr["label"] == "Pressure") {
+       BoundCondBase* bc = new PressureBoundCond(child,bc_attr["var"]);
+       objs.setBCValues(mat_id,bc);
+     }
      
-     else if (bc_attr["label"] == "Density")
-       objs.push_back(new DensityBoundCond(child,bc_attr["var"]));
+     else if (bc_attr["label"] == "Density") {
+       BoundCondBase* bc = new DensityBoundCond(child,bc_attr["var"]);
+       objs.setBCValues(mat_id,bc);
+     }
 
      else {
        cerr << "Unknown Boundary Condition Type " << "(" << bc_attr["var"] 

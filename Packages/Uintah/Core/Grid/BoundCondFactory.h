@@ -3,7 +3,7 @@
 
 // add #include for each ConstitutiveModel here
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/BoundCondBase.h>
+#include <Packages/Uintah/Core/Grid/BoundCondData.h>
 
 #include <vector>
 
@@ -13,8 +13,7 @@ class BoundCondFactory
 {
 public:
   // this function has a switch for all known BC_types
-  static void create(const ProblemSpecP& ps,
-		     std::vector<BoundCondBase*>& bcs);
+  static void create(const ProblemSpecP& ps,BCData& bcs);
 };
 
 } // End namespace Uintah

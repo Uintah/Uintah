@@ -41,8 +41,10 @@ WARNING
       virtual ~SymmetryBoundCond() {};
          
    private:
+#if 0
       SymmetryBoundCond(const SymmetryBoundCond&);
       SymmetryBoundCond& operator=(const SymmetryBoundCond&);
+#endif
       
      
    };

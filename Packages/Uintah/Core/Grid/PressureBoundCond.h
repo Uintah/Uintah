@@ -44,8 +44,10 @@ WARNING
      virtual double  getValue() const;
      
    private:
+#if 0
      PressureBoundCond(const PressureBoundCond&);
      PressureBoundCond& operator=(const PressureBoundCond&);
+#endif
      
      double  d_press;
      
