@@ -113,8 +113,21 @@ proc balloon_aux {w x y msg} {
     pack [label $t.l -text $msg -justify left -relief groove -bd 1 -bg white] -fill both
 #    set x [expr [winfo rootx $w]+6+[winfo width $w]/2]
 #    set y [expr [winfo rooty $w]+6+[winfo height $w]/2]
-    set x [expr $x+6]
-    set y [expr $y+6]
+    set padding 12
+    set x [expr $x+$padding]
+    set y [expr $y+$padding]
+
+# let's move the tool tip to the left if it is going
+# to be cutoff on the right of the screen
+
+    set cutoff_right [expr [expr $x+[winfo reqwidth $t.l]]-[winfo screenwidth .]]
+    if {$cutoff_right > 0} {set x [expr $x-$cutoff_right-$padding]}
+
+# let's put the tooltip above the cursor if it is going
+# to be cutoff on the bottom of the screen
+
+    set cutoff_bottom [expr [expr $y+[winfo reqheight $t.l]]-[winfo screenheight .]]
+    if {$cutoff_bottom > 0} {set y [expr $y-[winfo reqheight $t.l]-(2*$padding)]}
 
     wm geometry $t +$x\+$y
     bind $t <Enter> {after cancel {catch {destroy .balloon_help}}}
