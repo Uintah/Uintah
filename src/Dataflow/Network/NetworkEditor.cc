@@ -117,17 +117,14 @@ void NetworkEditor::save_network(const string& filename,
 {
     ofstream out(filename.c_str());
 
-    if(!out)
-      return;
-    out << "# SCI Network 1.20\n";
+    if(!out) return;
+    out << "# SCI Network 1.22\n";
     if (getenv("SCI_INSERT_NET_COPYRIGHT")) { emit_tclstyle_copyright(out); }
     out << "\n";
-    out << "::netedit dontschedule\n\n";
     net->read_lock();
 
     // Added by Mohamed Dekhil for saving extra information
     gui->lock();
-
     string myvalue;
     if (!gui->get("userName", myvalue)){
       out << "global userName\nset userName \"" << myvalue << "\"\n" ;
@@ -146,39 +143,14 @@ void NetworkEditor::save_network(const string& filename,
       out << "\n" ;
     }
     gui->unlock();
-   
-
     out.close();
     net->read_unlock();
-    gui->execute("writeSubnetModulesAndConnections {"+filename+"} "+subnet_num);
+
+    gui->execute("writeSubnets {"+filename+"}");
+
     net->read_lock();
     out.open(filename.c_str(), ofstream::out | ofstream::app);
-
-    int i;
-    // Emit variables...
-    string midx;
-    for(i=0;i<net->nmodules();i++){
-        Module* module=net->module(i);
-	gui->eval("modVarName {"+filename+"} "+module->id, midx);
-	if (midx.size()) {
-	  module->emit_vars(out, midx);
-	}
-    }
-
-    for(i=0;i<net->nmodules();i++){
-        Module* module=net->module(i);
-	gui->eval("modVarName {"+filename+"} "+module->id, midx);
-	if (midx.size()) {
-	  string result;
-	  gui->eval("windowIsMapped .ui" + module->id, result);
-	  int res;
-	  if(string_to_int(result, res) && (res == 1)) {
-	    out << midx << " initialize_ui\n";
-	  }
-	}
-    }
-    out << "\n";
-    out << "::netedit scheduleok\n";
+    out << "\n::netedit scheduleok\n";
     net->read_unlock();
 }
 
@@ -271,43 +243,6 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    return;
 	}
 	net->unblock_connection(args[2]);
-    } else if(args[1] == "getconnected"){
-	if(args.count() < 3){
-	    args.error("netedit getconnected needs a module name");
-	    return;
-	}
-	Module* mod=net->get_module_by_id(args[2]);
-	if(!mod){
-	    args.error("netedit getconnected can't find output module");
-	    return;
-	}
-	vector<string> res;
-	int i;
-	for(i=0;i<mod->numIPorts();i++){
-	    Port* p=mod->getIPort(i);
-	    for(int c=0;c<p->nconnections();c++){
-		Connection* conn=p->connection(c);
-		vector<string> cinfo(4);
-		cinfo[0]=conn->oport->get_module()->id;
-		cinfo[1]=to_string(conn->oport->get_which_port());
-		cinfo[2]=conn->iport->get_module()->id;
-		cinfo[3]=to_string(conn->iport->get_which_port());
-		res.push_back(args.make_list(cinfo));
-	    }
-	}
-	for(i=0;i<mod->numOPorts();i++){
-	    Port* p=mod->getOPort(i);
-	    for(int c=0;c<p->nconnections();c++){
-		Connection* conn=p->connection(c);
-		vector<string> cinfo(4);
-		cinfo[0]=conn->oport->get_module()->id;
-		cinfo[1]=to_string(conn->oport->get_which_port());
-		cinfo[2]=conn->iport->get_module()->id;
-		cinfo[3]=to_string(conn->iport->get_which_port());
-		res.push_back(args.make_list(cinfo));
-	    }
-	}
-	args.result(args.make_list(res));
     } else if(args[1] == "packageNames") {
       args.result(args.make_list(packageDB->packageNames()));
     } else if(args[1] == "categoryNames") {
