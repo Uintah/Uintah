@@ -978,21 +978,6 @@ TetVolMesh::locate(Face::index_type &face, const Point &p)
 bool
 TetVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
-#if 1
-  Cell::iterator bi, ei;
-  begin(bi);
-  end(ei);
-  while (bi != ei)
-  {
-    if (inside4_p(*bi * 4, p))
-    {
-      cell = *bi;
-      return true;
-    }
-    ++bi;
-  }
-  return false;
-#else
   if (grid_.get_rep() == 0)
   {
     compute_grid();
@@ -1012,7 +997,6 @@ TetVolMesh::locate(Cell::index_type &cell, const Point &p)
     ++iter;
   }
   return false;
-#endif
 }
 
 
@@ -1096,8 +1080,8 @@ TetVolMesh::compute_grid()
   Cell::size_type csize;  size(csize);
   const int s = ((int)ceil(pow((double)csize , one_third))) / 2 + 2;
   const Vector cell_epsilon = bb.diagonal() * (0.01 / s);
-  bb.extend(bb.min() - cell_epsilon);
-  bb.extend(bb.max() + cell_epsilon);
+  bb.extend(bb.min() - cell_epsilon*2);
+  bb.extend(bb.max() + cell_epsilon*2);
 
   LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
   grid_ = scinew LatVolField<vector<Cell::index_type> >(mesh, Field::CELL);
