@@ -60,6 +60,7 @@ public:
     int interpolate(const Point&, Vector&);
     int interpolate(const Point&, double&);
     void get_minmax(double&, double&);
+    Vector gradient(const Point&);
 
     // Only for regular grids
     int get_nx();

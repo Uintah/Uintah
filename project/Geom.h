@@ -152,6 +152,7 @@ class GeomCylinder : public GeomObj {
 public:
     Point bottom;
     Point top;
+    Vector axis;
     double rad;
     int nu;
     int nv;
@@ -170,6 +171,7 @@ class GeomCone : public GeomObj {
 public:
     Point bottom;
     Point top;
+    Vector axis;
     double bot_rad;
     double top_rad;
     int nu;

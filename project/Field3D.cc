@@ -254,3 +254,9 @@ void Field3D::locate(const Point& p, int& ix, int& iy, int& iz)
     iy=(int)y;
     iz=(int)z;
 }
+
+Vector Field3D::gradient(const Point& p)
+{
+    NOT_FINISHED("Field3D::gradient");
+    return Vector(0,0,1);
+}

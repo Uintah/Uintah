@@ -17,6 +17,7 @@
 #include <GL/glu.h>
 #include <Math/Trig.h>
 #include <Math/TrigTable.h>
+#include <NotFinished.h>
 #include <iostream.h>
 #include <Geometry/BBox.h>
 
@@ -34,6 +35,16 @@ GeomObj::~GeomObj()
 {
     if(matl)
 	delete matl;
+}
+
+void GeomObj::set_pick(GeomPick* _pick)
+{
+    pick=_pick;
+}
+
+void GeomObj::set_matl(MaterialProp* _matl)
+{
+    matl=_matl;
 }
 
 ObjGroup::ObjGroup()
@@ -58,9 +69,6 @@ ObjGroup::~ObjGroup()
 void ObjGroup::add(GeomObj* obj)
 {
     objs.add(obj);
-    BBox obj_bb(obj->bbox());
-    if(obj_bb.valid())
-	bb.extend(obj_bb);
 }
 
 int ObjGroup::size()
@@ -83,21 +91,23 @@ GeomObj* ObjGroup::clone()
     return new ObjGroup(*this);
 }
 
-BBox ObjGroup::bbox()
+void ObjGroup::get_bounds(BBox& in_bb)
 {
-    return bb;
+    if(!bb.valid()){
+	for(int i=0;i<objs.size();i++)
+	    objs[i]->get_bounds(bb);
+    }
+    if(bb.valid())
+	bb.extend(in_bb);
 }
 
 Triangle::Triangle(const Point& p1, const Point& p2, const Point& p3)
 : p1(p1), p2(p2), p3(p3), n(Cross(p3-p1, p2-p1))
 {
-    bb.extend(p1);
-    bb.extend(p2);
-    bb.extend(p3);
 }
 
 Triangle::Triangle(const Triangle &copy)
-: bb(copy.bb), p1(copy.p1), p2(copy.p2), p3(copy.p3), n(copy.n)
+: p1(copy.p1), p2(copy.p2), p3(copy.p3), n(copy.n)
 {
 }
 
@@ -143,21 +153,20 @@ GeomObj* Triangle::clone()
     return new Triangle(*this);
 }
 
-BBox Triangle::bbox() {
-    return bb;
+void Triangle::get_bounds(BBox& bb)
+{
+    bb.extend(p1);
+    bb.extend(p2);
+    bb.extend(p3);
 }
 
 Tetra::Tetra(const Point& p1, const Point& p2, const Point& p3, const Point& p4)
 : p1(p1), p2(p2), p3(p3), p4(p4)
 {
-    bb.extend(p1);
-    bb.extend(p2);
-    bb.extend(p3);
-    bb.extend(p4);
 }
 
 Tetra::Tetra(const Tetra& copy)
-: bb(copy.bb), p1(copy.p1), p2(copy.p2), p3(copy.p3), p4(copy.p4)
+: p1(copy.p1), p2(copy.p2), p3(copy.p3), p4(copy.p4)
 {
 }
 
@@ -188,18 +197,21 @@ GeomObj* Tetra::clone()
     return new Tetra(*this);
 }
 
-BBox Tetra::bbox() {
-    return bb;
+void Tetra::get_bounds(BBox& bb)
+{
+    bb.extend(p1);
+    bb.extend(p2);
+    bb.extend(p3);
+    bb.extend(p4);
 }
 
 GeomSphere::GeomSphere(const Point& cen, double rad, int nu, int nv)
 : cen(cen), rad(rad), nu(nu), nv(nv)
 {
-    bb.extend(cen, rad);
 }
 
 GeomSphere::GeomSphere(const GeomSphere& copy)
-: bb(copy.bb), cen(copy.cen), rad(copy.rad), nu(copy.nu), nv(copy.nv)
+: cen(copy.cen), rad(copy.rad), nu(copy.nu), nv(copy.nv)
 {
 }
 
@@ -222,7 +234,7 @@ void GeomSphere::draw(DrawInfo* di)
     case DrawInfo::WireFrame:
 	for(i=0;i<nu-1;i++){
 	    glBegin(GL_LINE_STRIP);
-		double x0=u.sin(i);
+	    double x0=u.sin(i);
 	    double y0=u.cos(i);
 	    for(int j=0;j<nv;j++){
 		double r0=v.sin(j);
@@ -318,18 +330,18 @@ GeomObj* GeomSphere::clone()
     return new GeomSphere(*this);
 }
 
-BBox GeomSphere::bbox() {
-    return bb;
+void GeomSphere::get_bounds(BBox& bb)
+{
+    bb.extend(cen, rad);
 }
 
 GeomPt::GeomPt(const Point& p)
 : p1(p)
 {
-    bb.extend(p);
 }
 
 GeomPt::GeomPt(const GeomPt& copy)
-: bb(copy.bb), p1(copy.p1)
+: p1(copy.p1)
 {
 }
 
@@ -352,8 +364,9 @@ GeomObj* GeomPt::clone()
     return new GeomPt(*this);
 }
 
-BBox GeomPt::bbox() {
-    return bb;
+void GeomPt::get_bounds(BBox& bb)
+{
+    bb.extend(p1);
 }
 
 MaterialProp::MaterialProp(const Color& ambient, const Color& diffuse,
@@ -407,4 +420,256 @@ void DrawInfo::pop_matl()
     if(stack.size()>0){
 	stack.top()->set(this);
     }
+}
+
+GeomPick::GeomPick(const Vector& v1)
+: directions(2)
+{
+    directions[0]=v1;
+    directions[1]=-v1;
+}
+
+GeomPick::~GeomPick()
+{
+}
+
+void GeomPick::set_highlight(MaterialProp* matl)
+{
+    hightlight=matl;
+}
+
+GeomCylinder::GeomCylinder(const Point& bottom, const Point& top,
+			   double rad, int nu, int nv)
+: bottom(bottom), top(top), rad(rad), nu(nu), nv(nv), axis(top-bottom)
+{
+    if(axis.length2() < 1.e-6){
+	cerr << "Degenerate cylinder!\n";
+    }
+    Vector v0(Cross(axis, Vector(1,0,0)));
+    if(v0.length2() == 0){
+	v0=Cross(axis, Vector(0,1,0));
+    }
+    v1=Cross(axis, v0);
+    v1.normalize();
+    v1*=rad;
+    v2=Cross(axis, v1);
+    v2.normalize();
+    v2*=rad;
+}
+
+GeomCylinder::GeomCylinder(const GeomCylinder& copy)
+: bottom(copy.bottom), top(copy.top), rad(copy.rad), nu(copy.nu),
+  nv(copy.nv), axis(copy.axis), v1(copy.v1), v2(copy.v2)
+{
+}
+
+GeomCylinder::~GeomCylinder()
+{
+}
+
+GeomObj* GeomCylinder::clone()
+{
+    return new GeomCylinder(*this);
+}
+
+void GeomCylinder::get_bounds(BBox& bb)
+{
+    NOT_FINISHED("GeomCylinder::get_bounds");
+    bb.extend(bottom);
+    bb.extend(top);
+}
+
+void GeomCylinder::draw(DrawInfo* di)
+{
+    if(matl)
+	di->push_matl(matl);
+    SinCosTable u(nu, 0, 2.*Pi);
+    int i,j;
+    di->polycount+=nu*nv;
+    switch(di->drawtype){
+    case DrawInfo::WireFrame:
+	for(i=0;i<=nv;i++){
+	    double z=double(i)/double(nv);
+	    Vector up(axis*z);
+	    Point bot_up(bottom+up);
+	    glBegin(GL_LINE_LOOP);
+	    for(int j=0;j<nu-1;j++){
+		double d1=u.sin(j);
+		double d2=u.cos(j);
+		Point p(bot_up+v1*d1+v2*d2);
+		glVertex3d(p.x(), p.y(), p.z());
+	    }
+	    glEnd();
+	}
+	glBegin(GL_LINES);
+	for(j=0;j<nu-1;j++){
+	    double d1=u.sin(j);
+	    double d2=u.cos(j);
+	    Point p1(bottom+v1*d1+v2*d2);
+	    Point p2(p1+axis);
+	    glVertex3d(p1.x(), p1.y(), p1.z());
+	    glVertex3d(p2.x(), p2.y(), p2.z());
+	}
+	glEnd();
+	break;
+    case DrawInfo::Gouraud:
+    case DrawInfo::Phong:
+    case DrawInfo::Flat:
+	NOT_FINISHED("GeomCylinder::Draw");
+	break;
+    }
+    if(matl)
+	di->pop_matl();
+}
+
+GeomCone::GeomCone(const Point& bottom, const Point& top,
+		   double bot_rad, double top_rad, int nu, int nv)
+: bottom(bottom), top(top), bot_rad(bot_rad),
+  top_rad(top_rad), nu(nu), nv(nv), axis(top-bottom)
+{
+    if(axis.length2() < 1.e-6){
+	cerr << "Degenerate Cone!\n";
+    } else {
+	axis.normalize();
+    }
+    Vector v0(Cross(axis, Vector(1,0,0)));
+    if(v0.length2() == 0){
+	v0=Cross(axis, Vector(0,1,0));
+    }
+    v1=Cross(axis, v0);
+    v1.normalize();
+    v2=Cross(axis, v1);
+    v2.normalize();
+}
+
+GeomCone::GeomCone(const GeomCone& copy)
+: bottom(copy.bottom), top(copy.top), top_rad(copy.top_rad),
+  bot_rad(copy.bot_rad), nu(copy.nu), nv(copy.nv),
+  v1(copy.v1), v2(copy.v2), axis(copy.axis)
+{
+}
+
+GeomCone::~GeomCone()
+{
+}
+
+GeomObj* GeomCone::clone()
+{
+    return new GeomCone(*this);
+}
+
+void GeomCone::get_bounds(BBox& bb)
+{
+    NOT_FINISHED("GeomCone::get_bounds");
+    bb.extend(bottom);
+    bb.extend(top);
+}
+
+void GeomCone::draw(DrawInfo* di)
+{
+    if(matl)
+	di->push_matl(matl);
+    switch(di->drawtype){
+    case DrawInfo::WireFrame:
+    case DrawInfo::Gouraud:
+    case DrawInfo::Phong:
+    case DrawInfo::Flat:
+	NOT_FINISHED("GeomCone::draw");
+	break;
+    }
+    if(matl)
+	di->push_matl(matl);
+}
+
+GeomDisc::GeomDisc(const Point& cen, const Vector& normal,
+		   double rad, int nu, int nv)
+: cen(cen), normal(normal), rad(rad), nu(nu), nv(nv)
+{
+    if(normal.length2() < 1.e-6){
+	cerr << "Degenerate normal on Disc!\n";
+    }
+    Vector v0(Cross(normal, Vector(1,0,0)));
+    if(v0.length2() == 0){
+	v0=Cross(normal, Vector(0,1,0));
+    }
+    v1=Cross(normal, v0);
+    v1.normalize();
+    v2=Cross(normal, v1);
+    v2.normalize();
+}
+
+GeomDisc::GeomDisc(const GeomDisc& copy)
+: cen(copy.cen), normal(copy.normal), rad(copy.rad), nu(copy.nu),
+  nv(copy.nv), v1(copy.v1), v2(copy.v2)
+{
+}
+
+GeomDisc::~GeomDisc()
+{
+}
+
+GeomObj* GeomDisc::clone()
+{
+    return new GeomDisc(*this);
+}
+
+void GeomDisc::get_bounds(BBox& bb)
+{
+    NOT_FINISHED("GeomDisc::get_bounds");
+    bb.extend(cen);
+}
+
+void GeomDisc::draw(DrawInfo* di)
+{
+    if(matl)
+	di->push_matl(matl);
+    SinCosTable u(nu, 0, 2.*Pi);
+    int i,j;
+    di->polycount+=nu*nv;
+    switch(di->drawtype){
+    case DrawInfo::WireFrame:
+	for(i=1;i<nv+1;i++){
+	    glBegin(GL_LINE_LOOP);
+	    double r=rad*double(i)/double(nv);
+	    for(int j=0;j<nu-1;j++){
+		double d1=u.sin(j);
+		double d2=u.cos(j);
+		Point p(cen+v1*(d1*r)+v2*(d2*r));
+		glVertex3d(p.x(), p.y(), p.z());
+	    }
+	    glEnd();
+	}
+	glBegin(GL_LINES);
+	for(j=0;j<nu-1;j++){
+	    double d1=u.sin(j);
+	    double d2=u.cos(j);
+	    Point p(cen+v1*(d1*rad)+v2*(d2*rad));
+	    glVertex3d(cen.x(), cen.y(), cen.z());
+	    glVertex3d(p.x(), p.y(), p.z());
+	}
+	glEnd();
+	break;
+    case DrawInfo::Gouraud:
+    case DrawInfo::Phong:
+	glNormal3d(normal.x(), normal.y(), normal.z());
+	// Trickle through...
+    case DrawInfo::Flat:
+	for(i=0;i<nv;i++){
+	    glBegin(GL_TRIANGLE_STRIP);
+	    double r1=double(i)/double(nv);
+	    double r2=double(i+1)/double(nv);
+	    for(int j=0;j<nu;j++){
+		double d1=u.sin(j);
+		double d2=u.cos(j);
+		Point p1(cen+v1*(d1*r1)+v2*(d2*r1));
+		Point p2(cen+v1*(d1*r2)+v2*(d2*r2));
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		glVertex3d(p2.x(), p2.y(), p2.z());
+	    }
+	    glEnd();
+	}
+	break;
+    }
+    if(matl)
+	di->pop_matl();
 }
