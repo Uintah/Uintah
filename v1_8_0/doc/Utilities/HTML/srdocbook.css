@@ -119,12 +119,8 @@ background: #CCCCCC;
 }
 
 /* General definitions for tables */ 
-/* background: white; */
 table 
-{
-border-width: 2;
-border-color: black;
-}
+{}
 
 /* Table headers */ 
 th 
