@@ -209,6 +209,8 @@ if (!oldStyleAdvect.active()){
   //__________________________________
   //  Read in probe locations for the scalar field
   ProblemSpecP probe_ps = child->findBlock("probePoints");
+  d_usingProbePts = false;
+  
   if (probe_ps) {
     probe_ps->require("probeSamplingFreq", d_probeFreq);
      
@@ -476,7 +478,7 @@ void TableTest::scheduleComputeModelSources(SchedulerP& sched,
 //______________________________________________________________________
 void TableTest::computeModelSources(const ProcessorGroup*, 
                                     const PatchSubset* patches,
-                                    const MaterialSubset* matls,
+                                    const MaterialSubset* /*matls*/,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw,
                                     const ModelInfo* mi)
