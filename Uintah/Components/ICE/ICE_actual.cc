@@ -103,7 +103,7 @@ ICE::ICE()
 /*__________________________________
 *   Plotting variables
 *___________________________________*/
-    stat = putenv("PGPLOT_DIR=/usr/people/harman/Csafe/PSE/src/Uintah/Components/ICE/ice_sm/Libraries");
+    stat = putenv("PGPLOT_DIR=" PGPLOT_DIR);
     stat = putenv("PGPLOT_I_AM_HERE=0");              
     stat = putenv("PGPLOT_PLOTTING_ON_OFF=1");
     stat = putenv("PGPLOT_OPEN_NEW_WINDOWS=1");  
