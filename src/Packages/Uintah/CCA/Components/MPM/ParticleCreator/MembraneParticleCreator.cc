@@ -77,6 +77,7 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
       for(int idx=0;idx<(start+numP);idx++){
 	pvelocity[start+idx]=(*obj)->getInitialVelocity();
 	ptemperature[start+idx]=(*obj)->getInitialTemperature();
+       psp_vol[start+idx]=1.0/matl->getInitialDensity();
 	pmass[start+idx]=matl->getInitialDensity() * pvolume[start+idx];
 	// Determine if particle is on the surface
 	pexternalforce[start+idx]=Vector(0,0,0); // for now
@@ -117,7 +118,7 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
 		pvolume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
 		pvelocity[start+count]=(*obj)->getInitialVelocity();
 		ptemperature[start+count]=(*obj)->getInitialTemperature();
-
+              psp_vol[start+count]     =1.0/matl->getInitialDensity();
                 // Calculate particle mass
                 double partMass = matl->getInitialDensity()*pvolume[start+count];
 	        pmass[start+count] = partMass;
