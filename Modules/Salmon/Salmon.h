@@ -49,7 +49,6 @@ class Salmon : public Module {
     int busy_bit;
     Array1<Roe*> topRoe;
     virtual void do_execute();
-    virtual int should_execute();
 
     int max_portno;
     virtual void connection(Module::ConnectionMode, int, int);

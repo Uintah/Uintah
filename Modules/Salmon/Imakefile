@@ -1,8 +1,6 @@
 
 #include <config/sci.cf>
 
-#ifdef SCI_DIR_Modules_Salmon
-
 #ifdef SCI_OPENGL
 OPENGLOBJS = OpenGL.o
 OPENGLSRCS = OpenGL.cc
@@ -27,17 +25,9 @@ SRCS = Postscript.cc Raytracer.cc Salmon.cc Renderer.cc Roe.cc X11.cc \
 LOCALINCLUDES = $(OPENGLINCS)
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lDevices -lGeom \
-	-lGeometry -lTCL -lClasslib $(OPENGLLIBS)
+	-lGeometry -lTCL -lClasslib -lMultitask $(OPENGLLIBS) -ltk -lC -lc -lm
 
 LIBNAME = Salmon
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
-
-#else
-all:
-depend::
-
-           RM_CMD = $(RM) *.CKP *.ln *.BAK *.bak core errs ,* *~ .emacs_* tags TAGS make.log MakeOut
-
-#endif

@@ -32,7 +32,7 @@ Module* make_Salmon(const clString& id)
 };
 
 Salmon::Salmon(const clString& id)
-: Module("Salmon", id, Sink), max_portno(0)
+: Module("Salmon", id, SalmonSpecial), max_portno(0)
 {
     // Add a headlight
     lighting.lights.add(scinew HeadLight("Headlight", Color(1,1,1)));
@@ -185,24 +185,6 @@ int Salmon::process_event(int block)
     if(msg)
 	delete msg;
     return 1;
-}
-
-int Salmon::should_execute()
-{
-    // See if there is new data upstream...
-    int changed=0;
-    for(int i=0;i<iports.size();i++){
-	IPort* port=iports[i];
-	for(int c=0;c<port->nconnections();c++){
-	    Module* mod=port->connection(c)->iport->get_module();
-	    if(mod->sched_state == SchedNewData){
-		sched_state=SchedNewData;
-		changed=1;
-		break;
-	    }
-	}
-    }
-    return changed;
 }
 
 void Salmon::initPort(Mailbox<GeomReply>* reply)
