@@ -29,9 +29,9 @@
 #    Author : Darby Van Uitert
 #    Date   : April 2004
 
-catch {rename Teem_Unu_UnuAxdelete ""}
+catch {rename Teem_UnuAtoM_UnuAxdelete ""}
 
-itcl_class Teem_Unu_UnuAxdelete {
+itcl_class Teem_UnuAtoM_UnuAxdelete {
     inherit Module
     constructor {config} {
         set name UnuAxdelete

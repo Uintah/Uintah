@@ -69,7 +69,7 @@ private:
 
 DECLARE_MAKER(UnuRmap)
 UnuRmap::UnuRmap(GuiContext* ctx)
-  : Module("UnuRmap", ctx, Source, "Unu", "Teem"),
+  : Module("UnuRmap", ctx, Source, "UnuNtoZ", "Teem"),
     inrrd_(0), idmap_(0), onrrd_(0),
     rescale_(ctx->subVar("rescale")),
     min_(ctx->subVar("min")),

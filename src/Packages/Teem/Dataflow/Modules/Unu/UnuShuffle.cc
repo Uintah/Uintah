@@ -67,7 +67,7 @@ private:
 
 DECLARE_MAKER(UnuShuffle)
 UnuShuffle::UnuShuffle(GuiContext* ctx)
-  : Module("UnuShuffle", ctx, Source, "Unu", "Teem"),
+  : Module("UnuShuffle", ctx, Source, "UnuNtoZ", "Teem"),
     inrrd_(0), onrrd_(0), ordering_(ctx->subVar("ordering")),
     axis_(ctx->subVar("axis")), inverse_(ctx->subVar("inverse"))
 {

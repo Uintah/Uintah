@@ -76,7 +76,7 @@ using namespace SCITeem;
 DECLARE_MAKER(UnuCrop)
 
 UnuCrop::UnuCrop(SCIRun::GuiContext *ctx) : 
-  Module("UnuCrop", ctx, Filter, "Unu", "Teem"), 
+  Module("UnuCrop", ctx, Filter, "UnuAtoM", "Teem"), 
   num_axes_(ctx->subVar("num-axes")),
   last_generation_(-1), 
   last_nrrdH_(0)

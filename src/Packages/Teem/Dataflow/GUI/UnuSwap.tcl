@@ -29,7 +29,7 @@
 #    Author : Darby Van Uitert
 #    Date   : April 2004
 
-itcl_class Teem_Unu_UnuSwap {
+itcl_class Teem_UnuNtoZ_UnuSwap {
     inherit Module
     constructor {config} {
         set name UnuSwap

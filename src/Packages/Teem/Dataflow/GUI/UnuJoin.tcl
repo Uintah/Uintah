@@ -29,7 +29,7 @@
 #    Author : Martin Cole
 #    Date   : Thu Jan 16 09:44:07 2003
 
-itcl_class Teem_Unu_UnuJoin {
+itcl_class Teem_UnuAtoM_UnuJoin {
     inherit Module
     constructor {config} {
         set name UnuJoin

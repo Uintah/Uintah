@@ -69,7 +69,7 @@ private:
 
 DECLARE_MAKER(UnuLut)
 UnuLut::UnuLut(GuiContext* ctx)
-  : Module("UnuLut", ctx, Source, "Unu", "Teem"),
+  : Module("UnuLut", ctx, Source, "UnuAtoM", "Teem"),
     inrrd_(0), ilut_(0), onrrd_(0),
     rescale_(ctx->subVar("rescale")),
     min_(ctx->subVar("min")),

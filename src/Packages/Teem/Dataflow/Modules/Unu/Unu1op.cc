@@ -58,7 +58,7 @@ private:
 DECLARE_MAKER(Unu1op)
 
 Unu1op::Unu1op(SCIRun::GuiContext *ctx) : 
-  Module("Unu1op", ctx, Filter, "Unu", "Teem"), 
+  Module("Unu1op", ctx, Filter, "UnuAtoM", "Teem"), 
   operator_(ctx->subVar("operator"))
 {
 }

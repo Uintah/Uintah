@@ -69,7 +69,7 @@ private:
 
 DECLARE_MAKER(UnuSplice)
 UnuSplice::UnuSplice(GuiContext* ctx)
-  : Module("UnuSplice", ctx, Source, "Unu", "Teem"),
+  : Module("UnuSplice", ctx, Source, "UnuNtoZ", "Teem"),
     inrrd_(0), islice_(0), onrrd_(0),
     axis_(ctx->subVar("axis")),
     position_(ctx->subVar("position"))

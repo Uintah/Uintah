@@ -37,9 +37,9 @@
  #  Copyright (C) 2000 SCI Group
  ##
 
-catch {rename Teem_Unu_UnuQuantize ""}
+catch {rename Teem_UnuNtoZ_UnuQuantize ""}
 
-itcl_class Teem_Unu_UnuQuantize {
+itcl_class Teem_UnuNtoZ_UnuQuantize {
     inherit Module
     constructor {config} {
         set name UnuQuantize

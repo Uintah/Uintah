@@ -29,7 +29,7 @@
 #    Author : Darby Van Uitert
 #    Date   : April 2004
 
-itcl_class Teem_Unu_UnuInset {
+itcl_class Teem_UnuAtoM_UnuInset {
     inherit Module
     constructor {config} {
         set name UnuInset

@@ -29,9 +29,9 @@
 #    Author : Martin Cole
 #    Date   : Mon Sep  8 09:46:23 2003
 
-catch {rename Teem_Unu_Unu1op ""}
+catch {rename Teem_UnuAtoM_Unu1op ""}
 
-itcl_class Teem_Unu_Unu1op {
+itcl_class Teem_UnuAtoM_Unu1op {
     inherit Module
     constructor {config} {
         set name Unu1op

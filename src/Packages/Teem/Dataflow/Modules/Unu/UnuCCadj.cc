@@ -66,7 +66,7 @@ private:
 
 DECLARE_MAKER(UnuCCadj)
 UnuCCadj::UnuCCadj(GuiContext* ctx)
-  : Module("UnuCCadj", ctx, Source, "Unu", "Teem"),
+  : Module("UnuCCadj", ctx, Source, "UnuAtoM", "Teem"),
     inrrd_(0), onrrd_(0),
     connectivity_(ctx->subVar("connectivity"))
 {

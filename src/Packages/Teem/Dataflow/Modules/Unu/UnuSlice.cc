@@ -61,7 +61,7 @@ private:
 DECLARE_MAKER(UnuSlice)
 
 UnuSlice::UnuSlice(SCIRun::GuiContext *ctx) : 
-  Module("UnuSlice", ctx, Filter, "Unu", "Teem"), 
+  Module("UnuSlice", ctx, Filter, "UnuNtoZ", "Teem"), 
   axis_(ctx->subVar("axis")),
   position_(ctx->subVar("position"))
 {

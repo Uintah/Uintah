@@ -58,7 +58,7 @@ private:
 DECLARE_MAKER(UnuHeq)
 
 UnuHeq::UnuHeq(SCIRun::GuiContext *ctx) : 
-  Module("UnuHeq", ctx, Filter, "Unu", "Teem"),
+  Module("UnuHeq", ctx, Filter, "UnuAtoM", "Teem"),
   bins_(ctx->subVar("bins")),
   sbins_(ctx->subVar("sbins")),
   amount_(ctx->subVar("amount"))

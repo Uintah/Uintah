@@ -70,7 +70,7 @@ private:
 
 DECLARE_MAKER(UnuImap)
 UnuImap::UnuImap(GuiContext* ctx)
-  : Module("UnuImap", ctx, Source, "Unu", "Teem"),
+  : Module("UnuImap", ctx, Source, "UnuAtoM", "Teem"),
     inrrd_(0), idmap_(0), onrrd_(0),
     length_(ctx->subVar("length")),
     rescale_(ctx->subVar("rescale")),

@@ -73,7 +73,7 @@ using namespace SCITeem;
 DECLARE_MAKER(UnuQuantize)
 
 UnuQuantize::UnuQuantize(GuiContext *ctx)
-  : Module("UnuQuantize", ctx, Filter, "Unu", "Teem"),
+  : Module("UnuQuantize", ctx, Filter, "UnuNtoZ", "Teem"),
     minf_(ctx->subVar("minf")),
     maxf_(ctx->subVar("maxf")),
     nbits_(ctx->subVar("nbits")), last_minf_(0),
