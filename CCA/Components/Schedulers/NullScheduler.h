@@ -1,9 +1,7 @@
 #ifndef UINTAH_HOMEBREW_NullSCHEDULER_H
 #define UINTAH_HOMEBREW_NullSCHEDULER_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/TaskProduct.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
@@ -13,7 +11,8 @@ using std::vector;
 
 namespace Uintah {
 
-class Task;
+  class Task;
+  class OnDemandDataWarehouse;
 
 /**************************************
 
@@ -44,58 +43,31 @@ WARNING
   
 ****************************************/
 
-   class NullScheduler : public UintahParallelComponent, public Scheduler {
+   class NullScheduler : public SchedulerCommon {
    public:
       NullScheduler(const ProcessorGroup* myworld, Output* oport);
       virtual ~NullScheduler();
       
       //////////
       // Insert Documentation Here:
-      virtual void initialize();
+     virtual void execute( const ProcessorGroup * pc );
       
       //////////
       // Insert Documentation Here:
-      virtual void execute( const ProcessorGroup * pc,
-			          DataWarehouseP   & old_dwp,
-			          DataWarehouseP   & dwp );
-      
-      //////////
-      // Insert Documentation Here:
-      virtual void addTask(Task* t);
-      
-      //////////
-      // Insert Documentation Here:
-      virtual DataWarehouseP createDataWarehouse(DataWarehouseP& parent_dw);
-      
+      virtual void advanceDataWarehouse(const GridP&);
+
       //////////
       // Insert Documentation Here:
       virtual void scheduleParticleRelocation(const LevelP& level,
-					      DataWarehouseP& old_dw,
-					      DataWarehouseP& new_dw,
 					      const VarLabel* old_posLabel,
 					      const vector<vector<const VarLabel*> >& old_labels,
 					      const VarLabel* new_posLabel,
 					      const vector<vector<const VarLabel*> >& new_labels,
-					      int numMatls);
+					      const MaterialSet* matls);
 
-       virtual LoadBalancer* getLoadBalancer();
-       virtual void releaseLoadBalancer();
-       
-      // Makes and returns a map that maps strings to VarLabels of
-      // that name and a list of material indices for which that
-      // variable is valid (according to d_allcomps in graph).
-      virtual VarLabelMaterialMap* makeVarLabelMaterialMap()
-      { return graph.makeVarLabelMaterialMap(); }
-
-      virtual const vector<const Task::Dependency*>& getInitialRequires()
-      { return graph.getInitialRequires(); }
    private:
       NullScheduler(const NullScheduler&);
       NullScheduler& operator=(const NullScheduler&);
-
-      TaskGraph graph;
-      // id of datawarehouse
-      int d_generation;
 
       const VarLabel* delt;
       bool firstTime;

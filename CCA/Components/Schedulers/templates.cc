@@ -28,10 +28,10 @@ template class vector<Task::Dependency*>;
 template class vector<const Task::Dependency*>;
 template class vector<Task *>;
 //template class set<VarDestType>;  // Not in .h file
-template class vector<DependData>;
-template class map< MPI_Request, DependData >;
-template class map< DependData, vector<Task *>, DependData >;
-template class map< TaskData, vector<DependData>, TaskData >;
+//template class vector<DependData>;
+//template class map< MPI_Request, DependData >;
+//template class map< DependData, vector<Task *>, DependData >;
+//template class map< TaskData, vector<DependData>, TaskData >;
 template class vector<MPI_Request>;
 template class vector<const VarLabel*>;
 template class vector<vector<const VarLabel*> >;

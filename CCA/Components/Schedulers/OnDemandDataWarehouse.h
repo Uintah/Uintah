@@ -17,12 +17,13 @@ namespace Uintah {
 
 using namespace std;
 using namespace SCIRun;
-
-class DataItem;
-class TypeDescription;
-class Patch;
-class ProcessorGroup;
-class SendState;
+  class BufferInfo;
+  class DependencyBatch;
+  class DetailedDep;
+  class TypeDescription;
+  class Patch;
+  class ProcessorGroup;
+  class SendState;
 
 /**************************************
 
@@ -56,11 +57,9 @@ class SendState;
 class OnDemandDataWarehouse : public DataWarehouse {
 public:
    OnDemandDataWarehouse( const ProcessorGroup* myworld, int generation,
-			  DataWarehouseP& parent);
+			  const GridP& grid);
    virtual ~OnDemandDataWarehouse();
    
-   virtual void setGrid(const GridP&);
-
    virtual bool exists(const VarLabel*, int matIndex, const Patch*) const;
 
    // Generic put, passing Variable as a pointer rather than by reference
@@ -86,6 +85,8 @@ public:
    // Particle Variables
    virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
 						int matlIndex, const Patch*);
+  virtual void saveParticleSubset(int matlIndex, const Patch*,
+				  ParticleSubset*);
    virtual bool haveParticleSubset(int matlIndex, const Patch*);
    virtual ParticleSubset* getParticleSubset(int matlIndex,
 					     const Patch*);
@@ -158,20 +159,14 @@ public:
    virtual void print(ostream& intout, const VarLabel* label,
 		      int matlIndex = -1) const;
 
-   void sendParticleSubset(SendState& ss,
-			   ParticleSubset* pset, const VarLabel* pos_var,
-			   const Task::Dependency* dep, const Patch* toPatch,
-			   const ProcessorGroup* world, int* size);
-   void sendMPI(SendState& ss, const VarLabel* label, int matlIndex,
-		const Patch* patch, const ProcessorGroup* world,
-		const Task::Dependency*, int dest,
-		int tag, int* size, MPI_Request* requestid);
-   void recvMPI(SendState& ss, DataWarehouseP& old_dw, 
-		const VarLabel* label, int matlIndex,
-		const Patch* patch, const ProcessorGroup* world,
-		const Task::Dependency*, int src,
-		int tag, int* size, MPI_Request* requestid);
-   void reduceMPI(const VarLabel* label, int matlIndex,
+   void sendMPI(SendState& ss, DependencyBatch* batch,
+		const ProcessorGroup* world, const VarLabel* pos_var,
+		BufferInfo& buffer, OnDemandDataWarehouse* old_dw,
+		const DetailedDep* dep);
+   void recvMPI(BufferInfo& buffer, DependencyBatch* batch,
+		const ProcessorGroup* world, OnDemandDataWarehouse* old_dw,
+		const DetailedDep* dep);
+   void reduceMPI(const VarLabel* label, const MaterialSubset* matls,
 		  const ProcessorGroup* world);
 private:
 

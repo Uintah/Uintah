@@ -1,5 +1,5 @@
-#ifndef UINTAH_HOMEBREW_SinglePROCESSORSCHEDULER_H
-#define UINTAH_HOMEBREW_SinglePROCESSORSCHEDULER_H
+#ifndef UINTAH_HOMEBREW_SimpleSCHEDULER_H
+#define UINTAH_HOMEBREW_SimpleSCHEDULER_H
 
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
@@ -17,13 +17,13 @@ namespace Uintah {
 /**************************************
 
 CLASS
-   SingleProcessorScheduler
+   SimpleScheduler
    
    Short description...
 
 GENERAL INFORMATION
 
-   SingleProcessorScheduler.h
+   SimpleScheduler.h
 
    Steven G. Parker
    Department of Computer Science
@@ -43,13 +43,14 @@ WARNING
   
 ****************************************/
 
-   class SingleProcessorScheduler : public SchedulerCommon {
+   class SimpleScheduler : public SchedulerCommon {
    public:
-      SingleProcessorScheduler(const ProcessorGroup* myworld, Output* oport);
-      virtual ~SingleProcessorScheduler();
+      SimpleScheduler(const ProcessorGroup* myworld, Output* oport);
+      virtual ~SimpleScheduler();
       
       //////////
       // Insert Documentation Here:
+     virtual void compile( const ProcessorGroup * pc );
      virtual void execute( const ProcessorGroup * pc );
       
       //////////
@@ -68,19 +69,16 @@ WARNING
       vector<vector<const VarLabel*> > reloc_new_labels;
       const MaterialSet* reloc_matls;
 
-      void scatterParticles(const ProcessorGroup*,
-			    const PatchSubset* patch,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
-      void gatherParticles(const ProcessorGroup*,
-			   const PatchSubset* patch,
-			   const MaterialSubset* matls,
-			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw);
+      void relocateParticles(const ProcessorGroup*,
+			     const PatchSubset* patch,
+			     const MaterialSubset* matls,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw);
       const VarLabel* scatterGatherVariable;
-      SingleProcessorScheduler(const SingleProcessorScheduler&);
-      SingleProcessorScheduler& operator=(const SingleProcessorScheduler&);
+      SimpleScheduler(const SimpleScheduler&);
+      SimpleScheduler& operator=(const SimpleScheduler&);
+
+     vector<Task*> tasks;
    };
 
 } // End namespace Uintah
