@@ -102,32 +102,8 @@ void TextureVolVis::widget_moved(int)
 }
 
 
-void TextureVolVis::SwapXZ( /*FieldHandle sfh*/ )
-{
-#if 0
-  FieldRGuchar *ifu, *ofu;
-  ifu = sfh->getRGBase()->getRGUchar();
-  int nx=ifu->nx;
-  int ny=ifu->ny;
-  int nz=ifu->nz;
-  Point min;
-  Point max;
-  sfh->get_bounds(min, max);
-
-  ofu = scinew FieldRGuchar(nz, ny, nx);
-  ofu->set_bounds(min, max);
-  for (int i=0, ii=0; i<nx; i++, ii++)
-    for (int j=0, jj=0; j<ny; j++, jj++)
-      for (int k=0, kk=0; k<nz; k++, kk++)
-	ofu->grid(k,j,i)=ifu->grid(ii,jj,kk);
-
-  sfh = FieldHandle( ofu );
-#endif
-}
-  
 void TextureVolVis::execute(void)
 {
-#if 0
   if (!intexture->get(tex)) {
     return;
   }
@@ -212,7 +188,6 @@ void TextureVolVis::execute(void)
   //AuditAllocator(default_allocator);
   ogeom->flushViews();				  
   //AuditAllocator(default_allocator);
-#endif
 }
 
 } // End namespace SCIRun
