@@ -257,7 +257,6 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       chdir("..")
     elif rc == 1: # negative one means skipping -- not a failure
       failcode = 1
-    # print short message for email if it failed
     chdir("..")
   
   chdir("..")
@@ -266,8 +265,10 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   system("chmod -R g+rwX %s" % resultsdir)
 
   # if results saved on the web server, copy back to build root
+  # also copy back short messages
   if outputpath != startpath:
     system("cp -r %s %s/" % (resultsdir, startpath))
+    system("cp -rf *short* %s/" % startpath)
     # remove xml and data files so they don't pile up after they're copied
     system("find %s -name '*.uda*' | xargs rm -rf " % resultsdir)
   if solotest != "" and solotest_found == 0:
