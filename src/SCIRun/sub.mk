@@ -31,9 +31,13 @@ SRCS     += \
 	$(SRCDIR)/PortInstance.cc \
 	$(SRCDIR)/PortInstanceIterator.cc\
 	$(SRCDIR)/CCACommunicator.cc \
-	$(SRCDIR)/SCIRunLoader.cc \
 	$(SRCDIR)/resourceReference.cc \
 	$(SRCDIR)/TypeMap.cc
+
+ifneq ($(HAVE_MPI),)
+SRCS += $(SRCS) $(SRCDIR)/SCIRunLoader.cc
+endif
+
 
 SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal
 ifeq ($(HAVE_BABEL),yes)
@@ -55,7 +59,11 @@ PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
 	Core/CCA/Component/Comm
 endif
 
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
+LIBS := $(XML_LIBRARY)
+ifneq ($(HAVE_MPI),)
+ LIBS := $(LIBS) $(MPI_LIBRARY)
+endif
+
 ifeq ($(HAVE_BABEL),yes)
   LIBS := $(LIBS) $(SIDL_LIBRARY)
 endif
