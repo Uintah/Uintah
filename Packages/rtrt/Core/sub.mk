@@ -103,9 +103,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/PlaneDpy.cc \
 	$(SRCDIR)/MIPGroup.cc \
 	$(SRCDIR)/Context.cc  \
-	$(SRCDIR)/UVMapping.cc \
 	$(SRCDIR)/PPMImage.cc \
-	$(SRCDIR)/UVPlane.cc \
 	$(SRCDIR)/ImageMaterial.cc \
 	$(SRCDIR)/TileImageMaterial.cc \
 	$(SRCDIR)/RationalBezier.cc \
@@ -119,6 +117,10 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Cylinder.cc \
 	$(SRCDIR)/UVCylinder.cc \
 	$(SRCDIR)/UVCylinderArc.cc \
+	$(SRCDIR)/UVMapping.cc \
+	$(SRCDIR)/UVPlane.cc \
+	$(SRCDIR)/UVSphere.cc \
+	$(SRCDIR)/UVSphere2.cc \
 	$(SRCDIR)/hilbert.cc \
 	$(SRCDIR)/Wood.cc \
 	$(SRCDIR)/HTVolumeBrick.cc  \
@@ -140,7 +142,6 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/fpcube.c \
 	$(SRCDIR)/templates.cc \
 	$(SRCDIR)/BumpMaterial.cc \
-	$(SRCDIR)/UVSphere.cc \
 	$(SRCDIR)/BumpObject.cc \
 	$(SRCDIR)/NormalMapMaterial.cc \
 	$(SRCDIR)/SelectableGroup.cc \
