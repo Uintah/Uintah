@@ -44,21 +44,27 @@ SCIRexWindow::run()
   render_data_->mutex_->lock(); 
   init();
   render_data_->mutex_->unlock();
-  do{
-
+  for(;;){
     while (XPending(dpy)){ 
       handleEvent();
     } 
-//     render_data_->mutex_->lock();     
-//     cerr<<"check for Exit "<<my_thread_->getThreadName()<<endl;
-//     render_data_->mutex_->unlock();
-    render_data_->barrier_->wait(render_data_->waiters_);
-    if( die_ ){  
-//       render_data_->mutex_->lock(); 
-//       cerr<<"Returning from thread "<<my_thread_->getThreadName()<<endl;
+    for(;;){
+      int i = 0;
+//       render_data_->mutex_->lock();     
+//       cerr<<"check for Exit "<<my_thread_->getThreadName()<<"   "<<i++<<endl;
 //       render_data_->mutex_->unlock();
-      break;
+      render_data_->barrier_->wait(render_data_->waiters_);
+      if( die_ ){  
+// 	render_data_->mutex_->lock(); 
+// 	cerr<<"Returning from thread "<<my_thread_->getThreadName()<<endl;
+// 	render_data_->mutex_->unlock();
+	unmap();
+	return;
+      } else if( !render_data_->waiters_changed_ ){
+	break;
+      }
     }
+
 //     render_data_->mutex_->lock(); 
 //     cerr<<"update info for "<<my_thread_->getThreadName()<<endl;
 //     render_data_->mutex_->unlock();
@@ -83,10 +89,7 @@ SCIRexWindow::run()
 //     cerr<<"wait on Display "<<my_thread_->getThreadName()<<endl;
 //     render_data_->mutex_->unlock();
     render_data_->barrier_->wait( render_data_->waiters_);
-  }while(true);
-  
-  unmap();
-  
+  }
 }
 
 

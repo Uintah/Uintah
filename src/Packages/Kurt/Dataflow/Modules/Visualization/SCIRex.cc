@@ -96,6 +96,7 @@ void SCIRex::execute(void)
   static double old_max = 1;
   static bool old_fixed = false;
   static GeomID geom_id = -1;
+  static int old_compositers = 0;
 //   static int dumpcounter = 0;
 
   infield_ = (FieldIPort *)get_iport("Texture Field");
@@ -139,12 +140,9 @@ void SCIRex::execute(void)
   vector<char*> dpys; // hard code for now
   while(iss >> dpy){
     char *ds = new char[dpy.length()];
-    cerr<<"using display "<<dpy<<endl;
+//     cerr<<"using display "<<dpy<<endl;
     strcpy(ds, dpy.c_str());
     dpys.push_back( ds );
-  }
-  for(int i = 0; i < dpys.size(); i++){
-    cerr<<"1st try displays["<<i<<"] = "<<dpys[i]<<endl;
   }
 
   if( dpys.size() < 2 ) return;
@@ -153,12 +151,10 @@ void SCIRex::execute(void)
 //   dpys.push_back(":0.0");
 //   int ncomp = 3;
   //AuditAllocator(default_allocator);
-  if(geom_id != -1)
-    ogeom_->delObj(geom_id, 0);
+//   if(geom_id != -1)
+//     ogeom_->delObj(geom_id, 0);
   
   if( !volren_ ){
-    //    delete volren_;
-
     cerr<<"min = "<<min_.get()<<" max = "<<max_.get()<<endl;
     volren_ =
       scinew SCIRexRenderer(0x123456, dpys, compositers_.get(), tex_, cmap,
@@ -180,6 +176,7 @@ void SCIRex::execute(void)
       max_.set(old_max);
     }
     old_fixed = ( is_fixed_.get() == 1);
+    old_compositers = compositers_.get();
     ogeom_->delAll();
     geom_id = ogeom_->addObj( volren_, "SCIRex TransParent");
   
@@ -189,6 +186,10 @@ void SCIRex::execute(void)
       volren_->SetVol( tex_ );
       old_tex = tex_;
       needbuild = true;
+    }
+    if( old_compositers != compositers_.get()) {
+      volren_->UpdateCompositers( compositers_.get() );
+      old_compositers = compositers_.get();
     }
     if( max_brick_dim_.get() != old_brick_size ){
       volren_->SetBrickSize(  max_brick_dim_.get() );
@@ -219,7 +220,7 @@ void SCIRex::execute(void)
       max_.set(old_max);
     }
     
-    std::cerr<<"Initialized\n";
+//    std::cerr<<"Initialized\n";
   }
  
   //AuditAllocator(default_allocator);
@@ -250,6 +251,6 @@ void SCIRex::execute(void)
 //   dump_string += num.str();
   //  DumpAllocator(default_allocator, dump_string.c_str() );
 
-
+  gui->execute(id + " disableDpy");
 }
 
