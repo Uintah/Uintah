@@ -47,7 +47,7 @@
 
 namespace SCIRun {
   
-class SCICORESHARE Workspace {
+class Workspace {
 public:
   Workspace( Interface *parent = 0, const string &name="workspace");
   virtual ~Workspace();

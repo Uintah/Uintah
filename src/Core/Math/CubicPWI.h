@@ -46,7 +46,6 @@
 #include <Core/Math/PiecewiseInterp.h>
 
 
-#include <Core/share/share.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -63,7 +62,7 @@ enum EndCondition {natural_ends, clamped_ends, bessel_ends, quadratic_ends};
 using std::cout;
 using std::endl;
 
-template <class T> SCICORESHARE std::ostream& 
+template <class T> std::ostream& 
 operator<<(std::ostream& out, Array1<T> a){
   for (int i=0; i<a.size(); i++){
     std::cout << a[i] << std::endl;
@@ -78,7 +77,7 @@ typedef struct Quat {
   double d;
 } QUAT;
 
-class SCICORESHARE CubicPWI: public PiecewiseInterp<double> {
+class CubicPWI: public PiecewiseInterp<double> {
 public:
   CubicPWI();
   CubicPWI(const Array1<double>&, const Array1<double>&);
@@ -101,7 +100,7 @@ inline bool CubicPWI::get_value(double w, double& res){
     return false;
 }
 
-template <class T> class SCICORESHARE Cubic3DPWI: public PiecewiseInterp<T> {
+template <class T> class Cubic3DPWI: public PiecewiseInterp<T> {
 public:
   Cubic3DPWI() {};
   Cubic3DPWI(const Array1<double>&, const Array1<T>&);
@@ -136,7 +135,7 @@ template <class T> inline bool Cubic3DPWI<T>::get_value(double w, T& res){
 }
 
 
-bool SCICORESHARE set_tangents(const Array1<double>&, const Array1<double>&, 
+bool set_tangents(const Array1<double>&, const Array1<double>&, 
 			       Array1<double>&, EndCondition);
 
 template <class T> bool 

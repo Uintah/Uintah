@@ -49,7 +49,7 @@ namespace SCIRun {
 class SciEvent;
 class Piostream;
 
-class SCICORESHARE EventManager {
+class EventManager {
 private:
   Piostream *log_;
 

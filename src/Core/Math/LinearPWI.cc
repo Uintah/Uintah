@@ -40,7 +40,6 @@
  */
 
 #include <Core/Math/LinearPWI.h>
-#include <Core/share/share.h>
 #include <Core/Containers/Sort.h>
 #include <Core/Containers/Array1.h>
 
