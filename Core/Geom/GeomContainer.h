@@ -46,6 +46,8 @@ public:
     virtual void get_bounds(BBox&);
     virtual void reset_bbox();
 
+    virtual GeomHandle get_child() { return child_; }
+
     // For OpenGL
 #ifdef SCI_OPENGL
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
