@@ -9,6 +9,7 @@
 #include <string.h>
 
 using namespace rtrt;
+using namespace std;
 
 extern "C" 
 Scene* make_scene(int argc, char* argv[], int /*nworkers*/)

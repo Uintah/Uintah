@@ -4,7 +4,7 @@
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/Scene.h>
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 #include <string.h>
 #include <Core/Geometry/Point.h>
@@ -16,6 +16,7 @@
 #define MAXBUFSIZE 256
 
 using namespace rtrt;
+using namespace std;
 
 extern "C"
 Scene* make_scene(int argc, char* argv[])

@@ -7,6 +7,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/gl.mo \
 	$(SRCDIR)/simple.mo \
 	$(SRCDIR)/simple_spheres.mo \
+	$(SRCDIR)/simple_disc.mo \
 	$(SRCDIR)/instance_spheres.mo \
 	$(SRCDIR)/1.mo \
 	$(SRCDIR)/2.mo \
@@ -15,6 +16,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/5.mo \
 	$(SRCDIR)/6.mo \
 	$(SRCDIR)/7.mo \
+	$(SRCDIR)/sr2.mo \
 	$(SRCDIR)/3ds.mo \
 	$(SRCDIR)/3dsm_ase.mo \
 	$(SRCDIR)/bunny.mo \

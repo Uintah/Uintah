@@ -14,6 +14,7 @@
 #include <sys/param.h>
 
 using namespace rtrt;
+using namespace std;
 
 // -scene scenes/multiscene [nscenes] -scene scenes/xxx arg0 ... argn -scene scenes/yyy arg0 ... argm
 

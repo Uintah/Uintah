@@ -75,6 +75,7 @@
 #define CH_KEYFRAME 0xb000
 
 using namespace rtrt;
+using namespace std;
 
 struct Face {
     int v1, v2, v3;

@@ -15,6 +15,7 @@
 #include <Packages/rtrt/Core/MetalMaterial.h>
 
 using namespace rtrt;
+using namespace std;
 
 #define MAXBUFSIZE 256
 
