@@ -20,8 +20,12 @@ class Fracture {
 public:
   enum CellStatus { HAS_ONE_BOUNDARY_SURFACE,
                     HAS_SEVERAL_BOUNDARY_SURFACE,
-                    INTERIOR
+                    INTERIOR_CELL
                   };
+
+  enum ParticleStatus { BOUNDARY_PARTICLE,
+                        INTERIOR_PARTICLE
+                      };
 
   void   materialDefectsInitialize(const Patch* patch,
                                    DataWarehouseP& new_dw);
@@ -69,8 +73,15 @@ private:
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
-  static Fracture::CellStatus  cellStatus(const Vector& cellSurfaceNormal);
-  static void setCellStatus(Fracture::CellStatus status,Vector* cellSurfaceNormal);
+  static Fracture::CellStatus  cellStatus(
+           const Vector& cellSurfaceNormal);
+  static void setCellStatus(Fracture::CellStatus status,
+           Vector* cellSurfaceNormal);
+
+  static Fracture::ParticleStatus  particleStatus(
+           const Vector& particleSurfaceNormal);
+  static void setParticleStatus(Fracture::ParticleStatus status,
+           Vector* particleSurfaceNormal);
 
   double           d_averageMicrocrackLength;
   double           d_materialToughness;
@@ -83,6 +94,10 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.12  2000/06/02 00:12:58  tan
+// Added ParticleStatus to determine if a particle is a BOUNDARY_PARTICLE
+// or a INTERIOR_PARTICLE.
+//
 // Revision 1.11  2000/06/01 23:55:47  tan
 // Added CellStatus to determine if a cell HAS_ONE_BOUNDARY_SURFACE,
 // HAS_SEVERAL_BOUNDARY_SURFACE or is INTERIOR cell.

@@ -29,7 +29,7 @@ cellStatus(const Vector& cellSurfaceNormal)
   if(cellSurfaceNormal.x() > 1000) return HAS_SEVERAL_BOUNDARY_SURFACE;
   else if( fabs(cellSurfaceNormal.x()) +
            fabs(cellSurfaceNormal.y()) +
-           fabs(cellSurfaceNormal.z()) < 0.1 ) return INTERIOR;
+           fabs(cellSurfaceNormal.z()) < 0.1 ) return INTERIOR_CELL;
   else return HAS_ONE_BOUNDARY_SURFACE;
 } 
 
@@ -38,9 +38,26 @@ Fracture::
 setCellStatus(Fracture::CellStatus status,Vector* cellSurfaceNormal)
 {
   if(status == HAS_SEVERAL_BOUNDARY_SURFACE) cellSurfaceNormal->x(1000.1);
-  else if(INTERIOR) (*cellSurfaceNormal) = Vector(0.,0.,0.);
+  else if(status == INTERIOR_CELL) (*cellSurfaceNormal) = Vector(0.,0.,0.);
 }
  
+Fracture::ParticleStatus
+Fracture::
+particleStatus(const Vector& particleSurfaceNormal)
+{
+  if( fabs(particleSurfaceNormal.x()) +
+      fabs(particleSurfaceNormal.y()) +
+      fabs(particleSurfaceNormal.z()) < 0.1 ) return INTERIOR_PARTICLE;
+  else return BOUNDARY_PARTICLE;
+}
+
+void
+Fracture::
+setParticleStatus(Fracture::ParticleStatus status,Vector* particleSurfaceNormal)
+{
+  if(status == INTERIOR_PARTICLE) (*particleSurfaceNormal) = Vector(0.,0.,0.);
+}
+
 void
 Fracture::
 materialDefectsInitialize(const Patch* patch,
@@ -136,10 +153,16 @@ labelCellSurfaceNormal (
 	 IntVector cIdx = patch->findCell(px[pIdx]);
 
 	 Vector cellSurfaceNormal = cSurfaceNormal[cIdx];
-	 if( finsStatus(cellSurfaceNormal) ==  )
+	 if( cellStatus(cellSurfaceNormal) == HAS_SEVERAL_BOUNDARY_SURFACE)
+	   continue;
 	 
 	 Vector particleSurfaceNormal = cSurfaceNormal[pIdx];
-	 Dot(cellSurfaceNormal,particleSurfaceNormal) <
+	 if( Dot(cellSurfaceNormal,particleSurfaceNormal) > 0 ) {
+	   cellSurfaceNormal += particleSurfaceNormal;
+	 }
+	 else {
+    	   setCellStatus(,&cellSurfaceNormal)
+	 }
 	 
           +=
            pSurfaceNormal[idx];
@@ -247,6 +270,10 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.14  2000/06/02 00:13:13  tan
+// Added ParticleStatus to determine if a particle is a BOUNDARY_PARTICLE
+// or a INTERIOR_PARTICLE.
+//
 // Revision 1.13  2000/06/01 23:56:00  tan
 // Added CellStatus to determine if a cell HAS_ONE_BOUNDARY_SURFACE,
 // HAS_SEVERAL_BOUNDARY_SURFACE or is INTERIOR cell.
