@@ -81,6 +81,11 @@ extern "C" {
 			  const char *space,
 			  const char *node,
 			  int **dims );
+
+  unsigned int get_names( const char *signal, char **names,
+			  char recurse, char absolute, char type );
+  unsigned int get_nids ( const char *signal,  int **nids  );
+
 #endif  // HAVE_MDSPLUS
 
 #ifdef __cplusplus

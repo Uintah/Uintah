@@ -180,11 +180,11 @@ int MDSPlusReader::type( const std::string signal )
 
   MDS_SetSocket( socket_ );
 
-  int rank = get_type( signal.c_str() );
+  int type = get_type( signal.c_str() );
 
   mdsPlusLock_.unlock();
 
-  return rank;
+  return type;
 #else
   return 0;
 #endif
@@ -199,11 +199,11 @@ int MDSPlusReader::dims( const std::string signal, int** dims )
 
   MDS_SetSocket( socket_ );
 
-  int rank = get_dims( signal.c_str(), dims );
+  int ndims = get_dims( signal.c_str(), dims );
 
   mdsPlusLock_.unlock();
 
-  return rank;
+  return ndims;
 #else
   return 0;
 #endif
@@ -292,18 +292,18 @@ int MDSPlusReader::slice_ids( int **nids )
 }
 
 // Simple slice name interface that insures thread safe calls and the correct socket.
-std::string MDSPlusReader::slice_name( const int nid )
+std::string MDSPlusReader::name( const int nid )
 {
 #ifdef HAVE_MDSPLUS
   mdsPlusLock_.lock();
 
   MDS_SetSocket( socket_ );
 
-  std::string name( get_name(nid) );
+  std::string namestr( get_name(nid) );
 
   mdsPlusLock_.unlock();
 
-  return name;
+  return namestr;
 #else
   return "";
 #endif
@@ -348,4 +348,62 @@ double *MDSPlusReader::slice_data( const std::string name,
   return NULL;
 #endif
 }
+
+// Simple interface that insures thread safe calls and the correct socket.
+unsigned int
+MDSPlusReader::names( const std::string signal,
+		      std::vector<std::string> &signals,
+		      bool recurse, bool absolute, bool type )
+{
+#ifdef HAVE_MDSPLUS
+  mdsPlusLock_.lock();
+
+  MDS_SetSocket( socket_ );
+
+  char *names = NULL;
+
+  unsigned int nnames =
+    get_names(signal.c_str(), &names, recurse, absolute, type);
+
+  signals.resize(nnames);
+
+  unsigned int m = 0;
+
+  for( unsigned int n=0; n<nnames; n++ ) {
+
+    std::string name( &(names[m]) );
+
+    signals[n] = name;
+
+    m += name.length() + 1;
+  }
+
+  if( names )
+    free( names );
+
+  mdsPlusLock_.unlock();
+
+  return nnames;
+#else
+  return 0;
+#endif
+}
+
+unsigned int 
+MDSPlusReader::nids( const std::string signal, int **nids ){
+#ifdef HAVE_MDSPLUS
+  mdsPlusLock_.lock();
+
+  MDS_SetSocket( socket_ );
+
+  unsigned int nnids = get_nids( signal.c_str(), nids );
+
+  mdsPlusLock_.unlock();
+
+  return nnids;
+#else
+  return NULL;
+#endif
+}
+
 }

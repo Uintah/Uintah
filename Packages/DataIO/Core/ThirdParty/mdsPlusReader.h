@@ -28,7 +28,7 @@
 
 
 /*
- *  MDSPlusReader.cc:
+ *  MDSPlusReader.h:
  *
  *  Written by:
  *   Allen Sanderson
@@ -48,10 +48,14 @@
   multiple servers and, or trees.
 */
 
+#ifndef MDSPLUS_READER
+#define MDSPLUS_READER
+
 #include <Core/Thread/Mutex.h>
 
 #include <string>
 #include <vector>
+#include <iostream>
 
 #define DTYPE_UCHAR   2
 #define DTYPE_USHORT  3
@@ -96,7 +100,7 @@ public:
 
   double *grid( const std::string axis, int **dims  );
   int slice_ids( int **nids );
-  std::string slice_name( const int nid );
+  std::string name( const int nid );
   double slice_time( const std::string name );
 
   double *slice_data( const std::string name,
@@ -104,9 +108,15 @@ public:
 		      const std::string node,
 		      int **dims );
 
+  unsigned int names( const std::string signal, std::vector<std::string> &nameList,
+		      bool recurse, bool absolute, bool type );
+  unsigned int nids( const std::string signal, int **nids  );
+
 protected:
   int socket_;
 
   static Mutex mdsPlusLock_;
 };
 }
+
+#endif  // MDSPLUS_READER
