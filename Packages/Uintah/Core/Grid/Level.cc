@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/BoundCondReader.h>
 #include <Packages/Uintah/Core/Grid/BoundCondData.h>
 
@@ -543,9 +544,10 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 {
   ProblemSpecP bc_ps = grid_ps->findBlock("BoundaryConditions");
   if (bc_ps == 0)
-    return;
+    throw ProblemSetupException("No BoundaryConditions specified");
 
-  BCReader reader;
+
+  BoundCondReader reader;
   reader.read(bc_ps);
 
   for (Patch::FaceType face_side = Patch::startFace; 
@@ -561,7 +563,7 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
       reader.getBC(face_side,bc_data);
       if (bc_type == Patch::None) {
 	patch->setBCValues(face_side,bc_data);
-	patch->setArrayBCValues(face_side,reader.d_BCReaderData[face_side]);
+	patch->setArrayBCValues(face_side,&(reader.d_BCReaderData[face_side]));
       }
     }  // end of patchIterator
   }
