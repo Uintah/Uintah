@@ -32,9 +32,6 @@ using namespace std;
 //  TABLETEST_DBG:       dumps out during problemSetup 
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 static DebugStream cout_dbg("TABLETEST_DBG_COUT", false);
-/*`==========TESTING==========*/
-static DebugStream oldStyleAdvect("oldStyleAdvect",false); 
-/*==========TESTING==========`*/
 //______________________________________________________________________              
 TableTest::TableTest(const ProcessorGroup* myworld, 
                      ProblemSpecP& params)
@@ -79,19 +76,6 @@ TableTest::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
 void TableTest::problemSetup(GridP&, SimulationStateP& in_state,
                         ModelSetup* setup)
 {
-/*`==========TESTING==========*/
-if (!oldStyleAdvect.active()){
-  ostringstream desc;
-  desc<< "\n----------------------------\n"
-      <<" ICE need the following environmental variable \n"
-       << " \t setenv SCI_DEBUG oldStyleAdvect:+ \n"
-       << "for this model to work.  This is gross--Todd"
-       << "\n----------------------------\n";
-  throw ProblemSetupException(desc.str());  
-} 
-/*==========TESTING==========`*/
-
-
   cout_doing << "Doing problemSetup \t\t\t\tTABLETEST" << endl;
   sharedState = in_state;
   d_matl = sharedState->parseAndLookupMaterial(params, "material");
