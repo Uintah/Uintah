@@ -13,7 +13,7 @@
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/ColorMapPort.h>
 #include <PSECore/Datatypes/GeometryPort.h>
-#include <Kurt/DataArchive/VisParticleSetPort.h>
+#include <Kurt/DataType/VisParticleSetPort.h>
 
 namespace PSECommon {
 namespace Kurt {

@@ -13,7 +13,7 @@
 #include "RescaleColorMapForParticles.h"
 #include <SCICore/Datatypes/ColorMap.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <Kurt/DataArchive/VisParticleSet.h>
+#include <Kurt/DataTypes/VisParticleSet.h>
 #include <Uintah/Grid/ParticleSubset.h>
 
 namespace Kurt{
