@@ -31,6 +31,10 @@ _______________________________________________________________________ */
 void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
 {
 
+  // defaults
+  d_dbgStartTime = 9;
+  d_dbgStopTime  = 9;
+  d_dbgOutputInterval = 9;
   //__________________________________
   // Find the switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
@@ -39,13 +43,13 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
     debug_ps->getWithDefault("dbg_GnuPlot",       d_dbgGnuPlot, false);
     debug_ps->getWithDefault("dbg_var1",          d_dbgVar1, 0);   
     debug_ps->getWithDefault("dbg_var2",          d_dbgVar2, 0);  
-    debug_ps->getWithDefault("dbg_timeStart",     d_dbgStartTime,0);
-    debug_ps->getWithDefault("dbg_timeStop",      d_dbgStopTime, 1);
-    debug_ps->getWithDefault("dbg_outputInterval",d_dbgOutputInterval,0.0);
-    debug_ps->getWithDefault("dbg_BeginIndex",    d_dbgBeginIndx,orig);
-    debug_ps->getWithDefault("dbg_EndIndex",      d_dbgEndIndx,  orig);
     debug_ps->getWithDefault("dbg_SigFigs",       d_dbgSigFigs, 5 );
     debug_ps->getWithDefault("dbg_Level",         d_dbgLevel,   0);
+    debug_ps->get("dbg_timeStart",                d_dbgStartTime);
+    debug_ps->get("dbg_timeStop",                 d_dbgStopTime);
+    debug_ps->get("dbg_outputInterval",           d_dbgOutputInterval);
+    debug_ps->get("dbg_BeginIndex",               d_dbgBeginIndx);
+    debug_ps->get("dbg_EndIndex",                 d_dbgEndIndx);
     debug_ps->get("dbg_Matls",                    d_dbgMatls);
 
     for (ProblemSpecP child = debug_ps->findBlock("debug"); child != 0;
@@ -92,20 +96,22 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
   }
  
   d_dbgNextDumpTime = d_dbgStartTime;
-  if(d_dbgStartTime == 0){ 
+  if(fabs(d_dbgStartTime - 0.0) < d_SMALL_NUM){ 
     d_dbgTime_to_printData = true;
-    d_dbgNextDumpTime = d_dbgOutputInterval;
+    d_dbgNextDumpTime = d_dbgStartTime;
   }
   if(switchDebugInitialize){ 
     d_dbgTime_to_printData = true;
   }
   
   cout_norm << "Pulled out the debugging switches from input file" << endl;
-  cout_norm<< "  debugging starting time "  <<d_dbgStartTime<<endl;
-  cout_norm<< "  debugging stopping time "  <<d_dbgStopTime<<endl;
+  cout_norm<< "  debugging starting time   "<<d_dbgStartTime<<endl;
+  cout_norm<< "  debugging stopping time   "<<d_dbgStopTime<<endl;
   cout_norm<< "  debugging output interval "<<d_dbgOutputInterval<<endl;
-  cout_norm<< "  debugging variable 1 "     <<d_dbgVar1<<endl;
-  cout_norm<< "  debugging variable 2 "     <<d_dbgVar2<<endl; 
+  cout_norm<< "  debugging begin index     "<<d_dbgBeginIndx<< endl;
+  cout_norm<< "  debugging End index       "<<d_dbgEndIndx<< endl;
+  cout_norm<< "  debugging variable 1      "<<d_dbgVar1<<endl;
+  cout_norm<< "  debugging variable 2      "<<d_dbgVar2<<endl; 
   for (int i = 0; i<(int) d_dbgMatls.size(); i++) {
     cout_norm << "  d_dbg_matls = " << d_dbgMatls[i] << endl;
   }
