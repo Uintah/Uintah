@@ -1306,6 +1306,12 @@ interface BuilderService  extends gov.cca.Port
    array<gov.cca.Port> 
    listPorts(in string name ) throws gov.cca.CCAException;
 
+ 
+   /* get available ports in c2 that can be connected to port1 of c1*/ 	
+   array<string> getAvailablePortList(in gov.cca.ComponentID c1, in string port1,
+			        	 in gov.cca.ComponentID c2);   	
+
+
    gov.cca.Port getUIPort(in string name ) throws gov.cca.CCAException;	
 }  // end interface BuilderService
 
