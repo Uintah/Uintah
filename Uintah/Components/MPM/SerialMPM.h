@@ -104,11 +104,25 @@ private:
 			   DataWarehouseP& new_dw);
 
   //////////
+  // Check to see if any particles are ready to burn
+  void checkIfIgnited(const ProcessorContext*,
+		      const Patch* patch,
+		      DataWarehouseP& old_dw,
+		      DataWarehouseP& new_dw);
+
+  //////////
+  // Compute the amount of mass of each particle that burns
+  // up in a given timestep
+  void computeMassRate(const ProcessorContext*,
+		       const Patch* patch,
+		       DataWarehouseP& old_dw,
+		       DataWarehouseP& new_dw);
+
+  //////////
   // update the Surface Normal Of Boundary Particles according to their
   // velocity gradient during the deformation
   //
-  void updateSurfaceNormalOfBoundaryParticle(
-					     const ProcessorContext*,
+  void updateSurfaceNormalOfBoundaryParticle(const ProcessorContext*,
 					     const Patch* patch,
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw);
@@ -180,6 +194,9 @@ private:
    
 //
 // $Log$
+// Revision 1.38  2000/06/08 16:56:51  guilkey
+// Added tasks and VarLabels for HE burn model stuff.
+//
 // Revision 1.37  2000/05/31 18:30:10  tan
 // Create linkage to ThermalContact model.
 //

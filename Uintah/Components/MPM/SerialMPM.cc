@@ -3,6 +3,7 @@ static char *id="@(#) $Id$";
 
 #include <Uintah/Components/MPM/SerialMPM.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Uintah/Components/MPM/Burn/HEBurn.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Components/MPM/Contact/ContactFactory.h>
@@ -319,7 +320,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    int idx = matl->getDWIndex();
 	    t->requires( new_dw, lb->pStressLabel, idx, patch,
 			 Ghost::AroundNodes, 1);
-	    t->requires( new_dw, lb->pVolumeLabel, idx, patch,
+	    t->requires( new_dw, lb->pVolumeDeformedLabel, idx, patch,
 			 Ghost::AroundNodes, 1);
 
 	    t->computes( new_dw, lb->gInternalForceLabel, idx, patch );
@@ -348,7 +349,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
 	    t->requires(old_dw, lb->pXLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
-	    t->requires(old_dw, lb->pVolumeLabel, idx, patch,
+	    t->requires(new_dw, lb->pVolumeDeformedLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
 	    t->requires( new_dw, lb->pTemperatureGradientLabel, idx, patch,
 			 Ghost::AroundNodes, 1);
@@ -522,7 +523,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    t->requires(old_dw, d_sharedState->get_delt_label() );
 	    t->computes(new_dw, lb->pVelocityLabel, idx, patch );
 	    t->computes(new_dw, lb->pXLabel, idx, patch );
-	    t->computes(new_dw, lb->pMassLabel, idx, patch);
+//	    t->computes(new_dw, lb->pMassLabel, idx, patch);
 	    t->computes(new_dw, lb->pExternalForceLabel, idx, patch);
 	    t->computes(new_dw, lb->KineticEnergyLabel);
 
@@ -536,6 +537,56 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 }
 
 	 sched->addTask(t);
+      }
+
+      {
+	 /*
+	  * checkIfIgnited
+	  * in(P.TEMPERATURE_RATE)
+	  *	operation(based on the heat flux history, determine if
+	  * 	each of the particles has ignited)
+	  * out(P.IGNITED)
+	  *
+	  */
+	 Task *t = scinew Task("SerialMPM::checkIfIgnited",
+                            patch, old_dw, new_dw,
+                            this, &SerialMPM::checkIfIgnited);
+         for(int m = 0; m < numMatls; m++){
+            Material* matl = d_sharedState->getMaterial(m);
+            MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+            if(mpm_matl){
+               HEBurn* heb = mpm_matl->getBurnModel();
+               heb->addCheckIfComputesAndRequires
+				(t, mpm_matl, patch, old_dw, new_dw);
+            }
+         }
+         sched->addTask(t);
+
+      }
+
+      {
+         /*
+          * computeMassRate
+          * in(P.MASS,P.VOLUME,P.IGNITED)
+          *     operation(based on the heat flux history, determine if
+          *     each of the particles has ignited)
+          * out(P.MASS,P.BURNMODEL,P.TEMPERATURE,SOME_HEAT)
+          *
+          */
+         Task *t = scinew Task("SerialMPM::computeMassRate",
+                            patch, old_dw, new_dw,
+                            this, &SerialMPM::computeMassRate);
+         for(int m = 0; m < numMatls; m++){
+            Material* matl = d_sharedState->getMaterial(m);
+            MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+            if(mpm_matl){
+               HEBurn* heb = mpm_matl->getBurnModel();
+               heb->addMassRateComputesAndRequires
+                                (t, mpm_matl, patch, old_dw, new_dw);
+            }
+         }
+         sched->addTask(t);
+
       }
 
       if(d_fractureModel) {
@@ -615,7 +666,6 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    if(d_fractureModel) {
       new_dw->pleaseSave(lb->pDeformationMeasureLabel, numMatls);
    }
-   new_dw->pleaseSave(lb->pVolumeLabel, numMatls);
    new_dw->pleaseSave(lb->pExternalForceLabel, numMatls);
    new_dw->pleaseSave(lb->gVelocityLabel, numMatls);
    new_dw->pleaseSave(lb->pXLabel, numMatls);
@@ -650,6 +700,8 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
        cout << "NAPID " << NAPID << endl;
 
        mpm_matl->getConstitutiveModel()->initializeCMData(patch,
+						mpm_matl, new_dw);
+       mpm_matl->getBurnModel()->initializeBurnModelData(patch,
 						mpm_matl, new_dw);
        int vfindex = matl->getVFIndex();
 
@@ -819,7 +871,6 @@ void SerialMPM::computeStressTensor(const ProcessorContext*,
 {
    // This needs the datawarehouse to allow indexing by material
    // for both the particle and the grid data.
-
   
    for(int m = 0; m < d_sharedState->getNumMatls(); m++){
       Material* matl = d_sharedState->getMaterial(m);
@@ -827,6 +878,42 @@ void SerialMPM::computeStressTensor(const ProcessorContext*,
       if(mpm_matl){
 	 ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
 	 cm->computeStressTensor(patch, mpm_matl, old_dw, new_dw);
+      }
+   }
+}
+
+void SerialMPM::checkIfIgnited( const ProcessorContext*,
+				const Patch* patch,
+				DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw)
+{
+   // This needs the datawarehouse to allow indexing by material
+   // for both the particle and the grid data.
+  
+   for(int m = 0; m < d_sharedState->getNumMatls(); m++){
+      Material* matl = d_sharedState->getMaterial(m);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      if(mpm_matl){
+	 HEBurn* heb = mpm_matl->getBurnModel();
+	 heb->checkIfIgnited(patch, mpm_matl, old_dw, new_dw);
+      }
+   }
+}
+
+void SerialMPM::computeMassRate(const ProcessorContext*,
+			 	const Patch* patch,
+				DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw)
+{
+   // This needs the datawarehouse to allow indexing by material
+   // for both the particle and the grid data.
+  
+   for(int m = 0; m < d_sharedState->getNumMatls(); m++){
+      Material* matl = d_sharedState->getMaterial(m);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      if(mpm_matl){
+	 HEBurn* heb = mpm_matl->getBurnModel();
+	 heb->computeMassRate(patch, mpm_matl, old_dw, new_dw);
       }
    }
 }
@@ -873,7 +960,7 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
 
       old_dw->get(px,      lb->pXLabel, matlindex, patch,
 		  Ghost::AroundNodes, 1);
-      new_dw->get(pvol,    lb->pVolumeLabel, matlindex, patch,
+      new_dw->get(pvol,    lb->pVolumeDeformedLabel, matlindex, patch,
 		  Ghost::AroundNodes, 1);
       new_dw->get(pstress, lb->pStressLabel, matlindex, patch,
 		  Ghost::AroundNodes, 1);
@@ -946,7 +1033,7 @@ void SerialMPM::computeInternalHeatRate(
 
       old_dw->get(px,      lb->pXLabel, matlindex, patch,
 		  Ghost::AroundNodes, 1);
-      old_dw->get(pvol,    lb->pVolumeLabel, matlindex, patch,
+      old_dw->get(pvol,    lb->pVolumeDeformedLabel, matlindex, patch,
 		  Ghost::AroundNodes, 1);
       old_dw->get(pTemperatureGradient, lb->pTemperatureGradientLabel, matlindex, patch,
 		  Ghost::AroundNodes, 1);
@@ -1112,8 +1199,6 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       NCVariable<Vector>        acceleration;
       NCVariable<Vector>        velocity;
       delt_vartype delT;
-      sum_vartype strainEnergy;
-      new_dw->get(strainEnergy, lb->StrainEnergyLabel);
 
       new_dw->get(acceleration, lb->gAccelerationLabel, vfindex, patch,
 		  Ghost::None, 0);
@@ -1300,7 +1385,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 
       ParticleVariable<Vector> pexternalforce;
 
-      new_dw->put(pmass,          lb->pMassLabel, matlindex, patch);
       old_dw->get(pexternalforce, lb->pExternalForceLabel, matlindex, patch,
 		  Ghost::None, 0);
       new_dw->put(pexternalforce, lb->pExternalForceLabel, matlindex, patch);
@@ -1382,6 +1466,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.81  2000/06/08 16:56:51  guilkey
+// Added tasks and VarLabels for HE burn model stuff.
+//
 // Revision 1.80  2000/06/05 19:48:57  guilkey
 // Added Particle IDs.  Also created NAPID (Next Available Particle ID)
 // on a per patch basis so that any newly created particles will know where
