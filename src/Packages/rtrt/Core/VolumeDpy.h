@@ -2,9 +2,9 @@
 #ifndef VOLUMEDPY_H
 #define VOLUMEDPY_H 1
 
-#include <Core/Thread/Runnable.h>
 #include <X11/Xlib.h>
 #include <Packages/rtrt/Core/Array1.h>
+#include <Packages/rtrt/Core/DpyBase.h>
 
 namespace rtrt {
 
@@ -12,24 +12,33 @@ using SCIRun::Runnable;
 
 class VolumeBase;
 
-class VolumeDpy : public Runnable {
-    Array1<VolumeBase*> vols;
-    int* hist;
-    int histmax;
-    int xres, yres;
-    float datamin, datamax;
-    void compute_hist(unsigned int fid);
-    void draw_hist(unsigned int fid, XFontStruct* font_struct,
-		   bool redraw_hist);
-    void move(int x, int y);
-    float new_isoval;
+class VolumeDpy : public DpyBase {
+  Array1<VolumeBase*> vols;
+  int* hist;
+  int histmax;
+  float datamin, datamax;
+  
+  void compute_hist();
+  void draw_hist(bool redraw_hist);
+
+  virtual void init();
+  
+  // event variable and handlers
+  bool need_hist; // default: true
+  bool redraw_isoval; // default: false
+  virtual void display();
+  virtual void resize(const int width, const int height);
+  virtual void button_released(MouseButton button, const int x, const int y);
+  virtual void button_motion(MouseButton button, const int x, const int y);
+
+  void move_isoval(const int x);
+  float new_isoval;
 public:
-    float isoval;
-    VolumeDpy(float isoval=-123456);
-    void attach(VolumeBase*);
-    virtual ~VolumeDpy();
-    virtual void run();
-    void animate(bool& changed);
+  float isoval;
+  VolumeDpy(float isoval=-123456);
+  void attach(VolumeBase*);
+  virtual ~VolumeDpy();
+  virtual void animate(bool& changed);
 };
 
 } // end namespace rtrt
