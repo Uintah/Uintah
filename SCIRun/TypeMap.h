@@ -52,7 +52,9 @@ namespace SCIRun {
   public:
     typedef std::map<std::string, std::string> StringMap;
     typedef std::map<std::string, int> IntMap;
+    typedef std::map<std::string, long> LongMap;
     typedef std::map<std::string, SSIDL::array1<int> > IntArrayMap;
+    typedef std::map<std::string, SSIDL::array1<long> > LongArrayMap;
     typedef std::map<std::string, SSIDL::array1<std::string> > StringArrayMap;
     
 
@@ -175,7 +177,9 @@ namespace SCIRun {
   private:
     StringMap stringMap;
     IntMap intMap;
+    LongMap longMap;
     IntArrayMap intArrayMap;
+    LongArrayMap longArrayMap;
     StringArrayMap stringArrayMap;
 
 
