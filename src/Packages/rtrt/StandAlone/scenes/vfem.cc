@@ -25,6 +25,8 @@ using namespace rtrt;
 using namespace std;
 using SCIRun::Thread;
 
+typedef HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > > HVolumeShort;
+
 extern "C" 
 Scene* make_scene(int argc, char* argv[], int nworkers)
 {
@@ -134,27 +136,20 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     }
     VolumeDpy* dpy=new VolumeDpy(bone?1224.5:600.5);
     scene->attach_display(dpy);
-    HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj0=
-	new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
-	(matl0, dpy, "vfem/vfem16_0", depth, nworkers);
-    HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj1=
-	new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
-	(matl0, dpy, "vfem/vfem16_1", depth, nworkers);
-    HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj2=
-	new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
-	(matl0, dpy, "vfem/vfem16_2", depth, nworkers);
-    HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj3=
-	new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
-	(matl0, dpy, "vfem/vfem16_3", depth, nworkers);
-    HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj4=
-	new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
-	(matl0, dpy, "vfem/vfem16_4", depth, nworkers);
-    HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj5=
-	new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
-	(matl0, dpy, "vfem/vfem16_5", depth, nworkers);
-    HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj6=
-	new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
-	(matl0, dpy, "vfem/vfem16_6", depth, nworkers);
+    HVolumeShort* obj0=	new HVolumeShort(matl0, dpy, "vfem/vfem16_0",
+                                         depth, nworkers);
+    HVolumeShort* obj1=	new HVolumeShort(matl0, dpy, "vfem/vfem16_1",
+                                         depth, nworkers);
+    HVolumeShort* obj2=	new HVolumeShort(matl0, dpy, "vfem/vfem16_2",
+                                         depth, nworkers);
+    HVolumeShort* obj3=	new HVolumeShort(matl0, dpy, "vfem/vfem16_3",
+                                         depth, nworkers);
+    HVolumeShort* obj4=	new HVolumeShort(matl0, dpy, "vfem/vfem16_4",
+                                         depth, nworkers);
+    HVolumeShort* obj5=	new HVolumeShort(matl0, dpy, "vfem/vfem16_5",
+                                         depth, nworkers);
+    HVolumeShort* obj6=	new HVolumeShort(matl0, dpy, "vfem/vfem16_6",
+                                         depth, nworkers);
     (new Thread(dpy, "Volume GUI thread"))->detach();
 
     Group* group=new Group();
@@ -175,27 +170,13 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	}
 	VolumeDpy* dpy2=new VolumeDpy(1459.5);
 	scene->attach_display(dpy2);
-	HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj00=
-	    new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
-	    (matl1, dpy, obj0);
-	HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj11=
-	    new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
-	    (matl1, dpy, obj1);
-	HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj22=
-	    new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
-	    (matl1, dpy, obj2);
-	HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj33=
-	    new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
-		(matl1, dpy, obj3);
-	HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj44=
-	    new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
-	    (matl1, dpy, obj4);
-	HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj55=
-	    new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
-	    (matl1, dpy, obj5);
-	HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >* obj66=
-	    new HVolume<short, BrickArray3<short>, BrickArray3<VMCell<short> > >
-	    (matl1, dpy, obj6);
+	HVolumeShort* obj00= new HVolumeShort(matl1, dpy, obj0);
+	HVolumeShort* obj11= new HVolumeShort(matl1, dpy, obj1);
+	HVolumeShort* obj22= new HVolumeShort(matl1, dpy, obj2);
+	HVolumeShort* obj33= new HVolumeShort(matl1, dpy, obj3);
+	HVolumeShort* obj44= new HVolumeShort(matl1, dpy, obj4);
+	HVolumeShort* obj55= new HVolumeShort(matl1, dpy, obj5);
+	HVolumeShort* obj66= new HVolumeShort(matl1, dpy, obj6);
 	Group* group2=new Group();
 	group2->add(obj00);
 	group2->add(obj11);
@@ -221,7 +202,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
     scene->set_object(obj);
     scene->addObjectOfInterest(group, true);
-    scene->add_light(new Light(Point(1000,-3000,0), Color(1,1,1), 0));
+    Light* light = new Light(Point(1000,-3000,0), Color(1,1,1), 0);
+    light->name_ = "main";
+    scene->add_light(light);
     scene->select_shadow_mode( No_Shadows );
     return scene;
 }
