@@ -19,6 +19,7 @@
 
 #include <Core/Algorithms/Visualization/MarchingCubes.h>
 #include <Core/Algorithms/Visualization/HexMC.h>
+#include <Core/Algorithms/Visualization/UHexMC.h>
 #include <Core/Algorithms/Visualization/TetMC.h>
 
 namespace SCIRun {
@@ -53,6 +54,9 @@ MarchingCubesAlg::get_compile_info(const TypeDescription *td) {
   } else if (sname.find("TetVol") != string::npos) {
     subname.append("TetMC<" + td->get_name() + "> ");
     subinc.append(TetMCBase::get_h_file_path());
+  } else if (sname.find("HexVol") != string::npos) {
+    subname.append("UHexMC<" + td->get_name() + "> ");
+    subinc.append(UHexMCBase::get_h_file_path());
   } else {
     cerr << "Unsupported Field, needs to be of Lattice or Tet type." << endl;
     subname.append("Cannot compile this unsupported type");
