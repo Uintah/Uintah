@@ -34,22 +34,29 @@ DEALINGS IN THE SOFTWARE.
 
   <section>
     <title>Loading Data</title>
-    <para>Loading a dataset is very easy.  Upon opening BioImage, the
-    first module visible on the left-hand panel is the Load Data
-    window.  To load data, in this case the Tooth CT data, select the
-    Nrrd tab.  This will automatically allow BioImage to properly
-    process the Nrrd datatype.  Please see the BioImage Reference
-    Guide for more instruction on loading other types of data.  After
-    selecting the Nrrd tab, used to load the the Nearly-Raw Raster Data type, press the "Browse" button to open the File
-    Selection Dialog.  Navigate to the proper location and select the
-    "tooth.nhdr" file.  After selecting the proper dataset, press the
-    "Set" button to load the data.  After selecting the dataset,
-    simply press the green "Update" button to complete the process of
-    loading the data into BioImage.  Although the data might be
-    displayed in the view windows, the loading process is not complete
-    until the "Update" button is clicked.</para>
+    <para>Upon opening BioImage, the
+    first module visible in the Processing Pane is the Load Data
+    frame as seen in label 1 of <xref linkend="fig.load"/>.  This 
+    tutorial will load a CT volume of a tooth.  The volume
+    is stored in a format called Nrrd which means Nearly-Raw Raster
+    Data.  To load the volume, select the Nrrd tab.  This will allow 
+    BioImage to properly process the Nrrd format.  Please see 
+    <xref linkend="ch.ref_data"/> for information on loading other 
+    supported formats.  
+    </para>
+    <para>
+      After selecting the Nrrd tab, press the "Browse" button to open the File
+      Selection Dialog.  Navigate to the proper location and select the
+      "tooth.nhdr" file.  After highlighting the proper dataset, press the
+      "Set" button to load the data.  The File Selection Dialog will disapear.
+      Press the green "Update" button located near the bottom of the Processing
+      Pane as show in <xref linkend="fig.load"/> labeled 2, to complete the process of
+      loading the data into BioImage.  Clicking the "Update" button will finalize 
+      and apply the new filter rules.  Only after clicking the Update button will any
+      changes made to the data be applied to the data being visualized.
+    </para>
     <figure id="fig.load">
-      <title>Load Data Pane</title>
+      <title>Loading Data User Interface</title>
       <mediaobject>
 	<textobject>
 	  <phrase>Loading the Tooth dataset.</phrase>
@@ -64,19 +71,42 @@ DEALINGS IN THE SOFTWARE.
     </figure>
 
     <para>After loading the data into BioImage, the 4 view windows
-    will contain visualizations of the data.  <xref linkend="fig.2dview"/> The upper-left window
-    will contain a 3D reconstruction of the data, while the other
+    will contain visualizations of the data as shown in 
+    <xref linkend="fig.viewing-pane"/>. The top window
+    will contain a 3D reconstruction of the data, while the bottom
     three windows will present 3 different, orthogonal, slices of the
-    data.  These three windows can be manipulated by the "Viewing
-    Cube."  The Viewing Cube, located in the Load Data window, <xref linkend="fig.cube"/> allows
-    the user to change the orientation of the slices presented in the
-    3 windows.  The orientation of each view can be changed by
-    altering the abbreviation next to the proper arrow.  By default,
-    the axial, sagittal, and coronal slices are view from the
-    superior, anterior, left views respectively.  To change this,
-    simply select the appropriate arrow, change the value, and then
-    click the cube button in the middle.  This will change all four
-    views in the drawing space.  The valid options are:</para>
+    data.  
+    </para>
+    <figure id="fig.viewing-pane">
+      <title>Viewing Pane After Clicking Update</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>Viewing Pane</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/viewing-pane.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/viewing-pane.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+    
+    <para>
+      The 3 slice windows should show the sagittal, coronal, and axial views
+      and be labeld accordingly. Depending on the order of the axes in the 
+      loaded volume, the data need to be flipped or permuted so that the axis
+      labels are correct.  The Viewing Cube, located in the Load Data window
+      labeled 3 in <xref linkend="fig.load"/> allows
+      the user to change the orientation of the slices presented in the
+      4 windows.  The orientation of each view can be changed by
+      altering the abbreviation next to the proper arrow.  By default,
+      the axial, sagittal, and coronal slices are a view from the
+      superior, anterior, and left views respectively.  To change this,
+      simply select the appropriate arrow entry box, change the value, and then
+      click the cube button in the middle.  This will change all four
+      views in the drawing space.  The valid options are:
+    </para>
     <simplelist type="vert" columns="1">
       <member>S: Superior</member>
       <member>I: Inferior</member>
@@ -85,23 +115,11 @@ DEALINGS IN THE SOFTWARE.
       <member>L: Left</member>
       <member>R: Right</member>
     </simplelist>
-    <figure id="fig.cube">
-      <title>The Viewing Cube</title>
-      <mediaobject>
-	<textobject>
-	  <phrase>The Viewing Cube.</phrase>
-	</textobject>
-	<imageobject>
-	  <imagedata fileref="Figures/viewcube.eps" align="center" format="EPS"/>
-	</imageobject>
-	<imageobject>
-	  <imagedata fileref="Figures/viewcube.jpg" align="center" format="JPG"/>
-	</imageobject>
-      </mediaobject>
-    </figure>
-    <para>To reset the views to the default parameters, simply press
-    the "Reset" button in the lower right corner of the Load Data
-    window.</para>
+    <para>
+      To reset the views to the default parameters, simply press
+      the "Reset" button in the lower right corner of the Load Data
+      window.
+    </para>
   </section><!-- end:Loading Data -->
 
   <section>
@@ -109,31 +127,42 @@ DEALINGS IN THE SOFTWARE.
     <para>BioImage focuses on data display, interaction, and
     manipulation.  This is all possible through the use of Dynamic
     Filters.  The various filters available are located at the top of
-    the left hand pane.  These filters, Resample, Crop, Histogram, and
+    the Processing Pane.  These filters, Resample, Crop, Histogram, and
     CMedian allow finer control over the interaction and manipulation
     of the data displayed in the visualization windows.</para>
 
+    <para>
+      To help manage space in the filter history, minimize the Load Data
+      frame by clicking on the black triangle next to the label 
+      "Data - Unknown". This will hide the specific ui and leave
+      only the label showing.
+    </para>
+
     <para>To add a Resample filter, click the "Resample" button.  A
-    new window will appear immediately above the Load Data window.  
-    <xref linkend="fig.filter"/>
+    new window will appear immediately below the Load Data window as
+    shown in <xref linkend="fig.filter"/>.
     This window allows for resampling in each dimension as well as a
     parameterized method for resampling.  To downsample this data set
     in each dimension, change the "x1" to "x0.5" in each dimension.
-    This will resample the dataset to 1/2 of the samples in each
-    dimension.</para>
+    This indicates to multiply the number of samples by 0.5 which will 
+    resample the dataset to 1/2 of the samples in each dimension.</para>
 
     <para>Click the "Update" button to finalize and apply the Resample
     filter.</para>
 
     <para>To add a cropping filter, click the "Crop" button.  A new
     window will appear immediately below the Resample filter.  Also,
-    notice that a set of boxes appears over the dataset in the display
-    pane.  The extents of the various boxes present a visual
+    notice that a set of boxes appears over the dataset in the 2D
+    Viewers. The extents of the various boxes present a visual
     indication of the area of the dataset that will remain after the
     application of the Cropping filter.  The small yellow circles at
     the corners can be clicked-and-dragged in order to interactively
-    change the size of the cropping filter. Section <xref linkend="chap.filters"/>
-    discusses each filter in more detail and their common uses.</para>
+    change the size of the cropping filter. 
+    </para>
+    <para>
+      Section <xref linkend="chap.filters"/>
+      discusses each filter in more detail and their common uses.
+    </para>
 
     <para>Click the "Update" button to finalize and apply the Crop
     filter to the Resampled dataset.</para>
@@ -152,18 +181,15 @@ DEALINGS IN THE SOFTWARE.
       </mediaobject>
     </figure>
 
-    <para>Notice that each of these filters are applied sequentially
-    from the Load Data window to the last filter in the list.  To
-    remove a filter from the list of filters to apply to the data,
-    simply click on the red 'X' button in the appropriate filter.  
-    This will remove the filter from the pipeline completely. See
-    <xref linkend="sec.dynamic_filters"/> for more information regarding
-    dynamic filters and how to insert and delete them.</para>
-
-    <para>Click the "Update" button to finalize and apply the new
-    filter rules.  Only after clicking the Update button will any
-    changes made to the data be applied to the data being
-    visualized.</para>
+    <para>
+      Notice that each of these filters are applied sequentially
+      from the Load Data window to the last filter in the list.  To
+      remove a filter from the list of filters to apply to the data,
+      simply click on the red 'X' button in the appropriate filter.  
+      This will remove the filter from the pipeline completely. See
+      <xref linkend="sec.dynamic_filters"/> for more information regarding
+      dynamic filters and how to insert and delete them.
+    </para>
   </section><!-- end:Resampling and Cropping -->
 
   <section><title>Visualization</title>
