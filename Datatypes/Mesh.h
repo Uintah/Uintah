@@ -32,10 +32,8 @@ struct Element {
     Mesh* mesh;
     Element(Mesh*, int, int, int, int);
     Element(const Element&, Mesh* mesh);
-#if 0
     void* operator new(size_t);
     void operator delete(void*, size_t);
-#endif
     int face(int);
 
     double volume();
@@ -60,10 +58,8 @@ struct Node {
     NodeType nodetype;
     double value;
     Node(const Node&);
-#if 0
     void* operator new(size_t);
     void operator delete(void*, size_t);
-#endif
 };
 
 void Pio(Piostream&, Node*&);

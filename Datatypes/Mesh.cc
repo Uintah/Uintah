@@ -98,7 +98,6 @@ void Mesh::io(Piostream& stream)
 	for(int i=0;i<elems.size();i++)
 	    elems[i]->mesh=this;
 	compute_neighbors();
-	compute_face_neighbors();
     }
 }
 
@@ -504,7 +503,6 @@ int Mesh::locate(const Point& p, int& ix)
 //    return 0;
 }
 
-#if 0
 void* Element::operator new(size_t)
 {
     return Element_alloc.alloc();
@@ -524,7 +522,6 @@ void Node::operator delete(void* rp, size_t)
 {
     Node_alloc.free(rp);
 }
-#endif
 
 int Element::orient()
 {
