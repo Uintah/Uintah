@@ -30,21 +30,6 @@ void BCGeomBase::setInteriorIterator(vector<IntVector>& i)
   interior = i;
 }
 
-void BCGeomBase::setSFCXIterator(vector<IntVector>& i)
-{
-  sfcx = i;
-}
-
-void BCGeomBase::setSFCYIterator(vector<IntVector>& i)
-{
-  sfcy = i;
-}
-
-void BCGeomBase::setSFCZIterator(vector<IntVector>& i)
-{
-  sfcz = i;
-}
-
 void BCGeomBase::getBoundaryIterator(vector<IntVector>& b) const
 {
   b = boundary;
@@ -58,19 +43,4 @@ void BCGeomBase::getNBoundaryIterator(vector<IntVector>& b) const
 void BCGeomBase::getInteriorIterator(vector<IntVector>& i) const
 {
   i = interior;
-}
-
-void BCGeomBase::getSFCXIterator(vector<IntVector>& i) const
-{
-  i = sfcx;
-}
-
-void BCGeomBase::getSFCYIterator(vector<IntVector>& i) const
-{
-  i = sfcy;
-}
-
-void BCGeomBase::getSFCZIterator(vector<IntVector>& i) const
-{
-  i = sfcz;
 }

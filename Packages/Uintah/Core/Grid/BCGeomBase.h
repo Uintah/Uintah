@@ -53,19 +53,13 @@ WARNING
     void setBoundaryIterator(std::vector<IntVector>& b);
     void setNBoundaryIterator(std::vector<IntVector>& b);
     void setInteriorIterator(std::vector<IntVector>& i);
-    void setSFCXIterator(std::vector<IntVector>& i);
-    void setSFCYIterator(std::vector<IntVector>& i);
-    void setSFCZIterator(std::vector<IntVector>& i);
     void getBoundaryIterator(std::vector<IntVector>& b) const;
     void getNBoundaryIterator(std::vector<IntVector>& b) const;
     void getInteriorIterator(std::vector<IntVector>& i) const;
-    void getSFCXIterator(std::vector<IntVector>& i) const;
-    void getSFCYIterator(std::vector<IntVector>& i) const;
-    void getSFCZIterator(std::vector<IntVector>& i) const;
     virtual bool inside(const Point& p) const = 0;
 
   protected:
-    std::vector<IntVector> boundary,interior,sfcx,sfcy,sfcz,nboundary;
+    std::vector<IntVector> boundary,interior,nboundary;
   };
 
   bool cmp_type(BCGeomBase* p);

@@ -346,9 +346,6 @@ WARNING
 					   string type,
 					   vector<IntVector>& b,
 					   vector<IntVector>& i,
-					   vector<IntVector>& sfx,
-					   vector<IntVector>& sfy,
-					   vector<IntVector>& sfz,
 					   vector<IntVector>& nb,
 					   int child) const;
      
