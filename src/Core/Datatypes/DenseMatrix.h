@@ -67,6 +67,7 @@ public:
 
     void invert();
     void mult(double s);
+    virtual DenseMatrix* clone();
 
     friend SCICORESHARE void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
     friend SCICORESHARE void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
@@ -80,6 +81,9 @@ public:
 
 //
 // $Log$
+// Revision 1.7  2000/12/11 23:08:20  oleg
+// Clone function implemented
+//
 // Revision 1.6  2000/10/18 17:26:14  guilkey
 // Added a version of solve which take a vector<double>.
 //
