@@ -261,6 +261,7 @@ itcl_class Roe {
     }
     method bindEvents {w} {
 	bind $w <Expose> "$this-c redraw"
+	bind $w <Configure> "$this-c redraw"
 	bind $w <ButtonPress-1> "$this-c mtranslate start %x %y"
 	bind $w <Button1-Motion> "$this-c mtranslate move %x %y"
 	bind $w <ButtonRelease-1> "$this-c mtranslate end %x %y"
