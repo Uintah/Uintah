@@ -2471,6 +2471,10 @@ ViewSlices::execute()
       max_value = range->max;      
 
     for (a = 0; a < 3; ++a) {
+      if (nrrdH->nrrd->axis[a].min > nrrdH->nrrd->axis[a].max)
+	SWAP(nrrdH->nrrd->axis[a].min,nrrdH->nrrd->axis[a].max);
+      if (nrrdH->nrrd->axis[a].spacing < 0.0)
+	nrrdH->nrrd->axis[a].spacing *= -1.0;
       const double spacing = nrrdH->nrrd->axis[a].spacing;
       if (airIsNaN(scale_[a]))
 	scale_[a] = (airExists(spacing) ? spacing : 1.0);
