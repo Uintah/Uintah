@@ -11,8 +11,10 @@
 
 #include <sci_hash_map.h>
 
+#ifdef SUPERBOX_DEBUGGING
 #include <iostream>
 #include <sstream>
+#endif
 
 #include <set>
 #include <vector>
