@@ -42,6 +42,8 @@ itcl_class Teem_DataIO_NrrdReader {
 
     method set_defaults {} {
 	global $this-filename
+        global $this-types
+        global $this-filetype
 
 	set $this-filename ""
     }
@@ -68,19 +70,12 @@ itcl_class Teem_DataIO_NrrdReader {
 	# extansion to append if no extension supplied by user
 	set defext ".nrrd"
 	set title "Open nrrd file"
-	
-	# file types to appers in filter box
-	set types {
-            {{Nrrd Files}         {.nhdr .nrrd .nd .vff .pic .pict .vol .v}   }
-	    {{NrrdData File}      {.nd}           }
-	    {{VFF File}           {.vff}          }
-	    {{PICT File}          {.pic .pict}    }
-	    {{geovoxel VOL File}  {.vol}    }
-	    {{Vista File}         {.v}    }
-	    {{All Files}          {.*}            }
-	}
-	
+
 	######################################################
+	
+        # Unwrap $this-types into a list.
+        set tmp1 [set $this-types]
+        set tmp2 [eval "set tmp3 $tmp1"]
 	
 	makeOpenFilebox \
 	    -parent $w \
@@ -89,9 +84,10 @@ itcl_class Teem_DataIO_NrrdReader {
 	    -command "$this-c needexecute; wm withdraw $w" \
 	    -cancel "wm withdraw $w" \
 	    -title $title \
-	    -filetypes $types \
+	    -filetypes $tmp2 \
 	    -initialdir $initdir \
-	    -defaultextension $defext
+	    -defaultextension $defext \
+            -selectedfiletype $this-filetype
 
 	moveToCursor $w
     }
