@@ -224,7 +224,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       print "Remove %s/%s before running this test" % (resultsdir, testname)
       exit(1)
 
-    system("echo '%s/replace_gold_standard %s %s/%s-results %s' > %s/replace_gold_standard" % (helperspath, compare_root, startpath, ALGO, testname, testname))
+    system("echo '%s/replace_gold_standard %s %s/%s-results %s $1' > %s/replace_gold_standard" % (helperspath, compare_root, startpath, ALGO, testname, testname))
     system("chmod gu+rwx %s/replace_gold_standard" % testname)
 
 
