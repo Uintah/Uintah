@@ -479,6 +479,9 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
+// Revision 1.10.2.2  2000/10/26 10:03:57  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.10.2.1  2000/09/28 03:14:57  mcole
 // merge trunk into FIELD_REDESIGN branch
 //

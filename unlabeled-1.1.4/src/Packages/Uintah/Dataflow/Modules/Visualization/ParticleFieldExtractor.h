@@ -99,6 +99,7 @@ private:
 
   
   std::string positionName;
+  std::string particleIDs;
 
   ArchiveHandle archive;
   void setVars(ArchiveHandle ar);

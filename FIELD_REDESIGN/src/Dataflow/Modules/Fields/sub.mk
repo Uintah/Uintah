@@ -25,13 +25,11 @@ SRCS     += \
 	$(SRCDIR)/FieldMedianFilter.cc\
 	$(SRCDIR)/FieldRGAug.cc\
 	$(SRCDIR)/FieldSeed.cc\
-	$(SRCDIR)/GenField.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/GradientMagnitude.cc\
 	$(SRCDIR)/MergeTensor.cc\
 	$(SRCDIR)/OpenGL_Ex.cc\
 	$(SRCDIR)/SFRGfile.cc\
-	$(SRCDIR)/ShowGeometry.cc\
 	$(SRCDIR)/TracePath.cc\
 	$(SRCDIR)/TrainSeg2.cc\
 	$(SRCDIR)/TrainSegment.cc\
@@ -39,7 +37,9 @@ SRCS     += \
 	$(SRCDIR)/ScalarFieldProbe.cc\
 	$(SRCDIR)/GenVectorField.cc\
 	$(SRCDIR)/GenScalarField.cc\
-#[INSERT NEW MODULE HERE]
+#[INSERT NEW CODE FILE HERE]
+
+#       $(SRCDIR)/ClipField.cc\
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
 	SCICore/Persistent SCICore/Exceptions SCICore/Thread \
@@ -52,6 +52,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2.2.5  2000/10/26 10:03:31  moulding
+# merge HEAD into FIELD_REDESIGN
+#
 # Revision 1.2.2.4  2000/09/28 03:16:53  mcole
 # merge trunk into FIELD_REDESIGN branch
 #
@@ -63,6 +66,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 #
 # Revision 1.2.2.1  2000/06/07 17:28:46  kuehne
 # Added GenField module.  Creates a scalar field from a specified equation and bounds.
+#
+# Revision 1.7  2000/10/24 05:57:33  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
 #
 # Revision 1.6  2000/07/23 18:30:11  dahart
 # Initial commit / Modules to generate scalar & vector fields from

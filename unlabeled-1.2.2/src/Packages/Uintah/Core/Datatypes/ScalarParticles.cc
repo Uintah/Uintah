@@ -32,16 +32,14 @@ void ScalarParticles::io(Piostream&)
 }
 
 ScalarParticles::ScalarParticles()
-  : have_bounds(false), have_minmax(false)
+  : have_minmax(false), psetH(0)
 {
 }
 
 ScalarParticles::ScalarParticles(
-		 const vector <ParticleVariable<Point> >& positions,
 		 const vector <ParticleVariable<double> >& scalars,
-		 void* callbackClass):
-  positions(positions), scalars(scalars),  cbClass(callbackClass),
-  have_bounds(false), have_minmax(false)
+		 PSet* pset) :
+  scalars(scalars),  psetH(pset), have_minmax(false)
 {
 }
 
@@ -50,48 +48,12 @@ ScalarParticles::~ScalarParticles()
 {
 }
 
-void ScalarParticles::compute_bounds()
+
+void ScalarParticles:: AddVar( const ParticleVariable<double> parts )
 {
-  if( have_bounds )
-    return;
-
-  Point min(1e30,1e30,1e30), max(-1e30,-1e30,-1e30);
-
-  vector<ParticleVariable<Point> >::iterator it;
-  for( it = positions.begin(); it != positions.end(); it++){
-    
-    ParticleSubset *ps = (*it).getParticleSubset();
-    for(ParticleSubset::iterator iter = ps->begin();
-	iter != ps->end(); iter++){
-      max = SCICore::Geometry::Max((*it)[ *iter ], max);
-      min = SCICore::Geometry::Min((*it)[ *iter ], min);
-    }
-  }
-  if (min == max) {
-    min = Point(0,0,0);
-    max = Point(1,1,1);
-  }
-  have_bounds = true;
-  bmin = min;
-  bmax = max;
-}
-
-void ScalarParticles:: AddVar( const ParticleVariable<Point> locs,
-			       const ParticleVariable<double> parts,
-			       const Patch*)
-{
-  positions.push_back( locs );
   scalars.push_back( parts );
 }
 
-void ScalarParticles::get_bounds(Point& p0, Point& p1)
-{
-  if( !have_bounds)
-    compute_bounds();
-
-  p0 = bmin;
-  p1 = bmax;
-}
 
 void ScalarParticles::compute_minmax()
 {

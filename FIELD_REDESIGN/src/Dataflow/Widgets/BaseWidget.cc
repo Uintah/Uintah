@@ -730,6 +730,9 @@ BaseWidget& BaseWidget::operator=( const BaseWidget& )
 
 //
 // $Log$
+// Revision 1.9.2.2  2000/10/26 10:04:06  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.9.2.1  2000/09/28 03:14:24  mcole
 // merge trunk into FIELD_REDESIGN branch
 //

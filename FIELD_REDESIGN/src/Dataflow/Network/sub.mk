@@ -12,7 +12,8 @@ SRCS     += $(SRCDIR)/Connection.cc $(SRCDIR)/ModuleHelper.cc \
 	$(SRCDIR)/NetworkEditor.cc $(SRCDIR)/PackageDB.cc \
 	$(SRCDIR)/FileUtils.cc $(SRCDIR)/GenFiles.cc\
 	$(SRCDIR)/ComponentNode.cc $(SRCDIR)/SkeletonFiles.cc\
-        $(SRCDIR)/CreatePacCatMod.cc
+        $(SRCDIR)/PackageDBHandler.cc\
+	$(SRCDIR)/StrX.cc
 
 PSELIBS := PSECore/Comm SCICore/Exceptions SCICore/Thread \
 	SCICore/Containers SCICore/TclInterface SCICore/Util \
@@ -23,8 +24,20 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3.2.3  2000/10/26 10:03:59  moulding
+# merge HEAD into FIELD_REDESIGN
+#
 # Revision 1.3.2.2  2000/10/16 23:15:24  moulding
 # more Phase 1 changes to FIELD_REDESIGN branch.
+#
+# Revision 1.7  2000/10/24 05:57:41  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
+# Revision 1.6  2000/10/21 18:35:10  moulding
+# more work for new module maker.
 #
 # Revision 1.5  2000/10/15 04:17:20  moulding
 # Phase 1 for the new module maker: Prepare the repository for the new

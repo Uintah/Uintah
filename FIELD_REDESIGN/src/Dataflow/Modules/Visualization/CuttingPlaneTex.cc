@@ -331,6 +331,9 @@ void CuttingPlaneTex::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.8.2.2  2000/10/26 10:03:46  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.8.2.1  2000/09/28 03:15:32  mcole
 // merge trunk into FIELD_REDESIGN branch
 //
