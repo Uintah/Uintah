@@ -254,6 +254,7 @@ public:
 
 private:
 
+  friend class LevelIter;
   // each LevelMesh needs grid and level index
   GridP grid_; 
   int level_;
