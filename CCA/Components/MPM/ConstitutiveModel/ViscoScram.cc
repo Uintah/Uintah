@@ -676,7 +676,7 @@ void ViscoScram::computePressEOSCM(const double rho_cur,double& pressure,
 //  }
 
   pressure = p_ref + p_g;
-  tmp = (bulk + 4.*G/3.)/rho_cur;  // speed of sound squared
+  tmp = bulk/rho_cur;  // speed of sound squared
 
 #if 0
   cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR ViscoScram" << endl;
