@@ -32,6 +32,7 @@
 #include <Core/CCA/Component/PIDL/MalformedURL.h>
 #include <iostream>
 #include <sstream>
+#include <netdb.h>
 using namespace std;
 using namespace SCIRun;
 
@@ -112,6 +113,14 @@ int URL::getPortNumber() const
 string URL::getSpec() const
 {
     return d_spec;
+}
+
+long URL::getIP(){
+  struct hostent *he;
+  if((he=gethostbyname(d_hostname.c_str())) == NULL){
+    throw MalformedURL(d_hostname, "invalid hostname");
+  }
+  return *((long*)he->h_addr);
 }
 
 URL::URL(const URL& ucopy)

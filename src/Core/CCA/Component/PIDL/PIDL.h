@@ -51,6 +51,8 @@ KEYWORDS
 DESCRIPTION
    A class to encapsulate several static methods for PIDL.
 ****************************************/
+
+  class DataTransmitter;
   class PIDL {
   public:
     //////////
@@ -101,11 +103,9 @@ DESCRIPTION
     // (only in parallel components)
     static IntraComm* getIntraComm();
 
-    //////////
-    // Check if the communication library is nexus
-    static bool isNexus();
+    static DataTransmitter *getDT();
 
-    static int getPID();
+    static bool isNexus();
 
   protected:
   private:
@@ -123,11 +123,12 @@ DESCRIPTION
     // The warehouse singleton object
     static Warehouse* warehouse;
 
+    static DataTransmitter* theDataTransmitter;
+
     //////////
     // Private constructor to prevent creation of a PIDL
     PIDL();
 
-    static int pid;
   };
 } // End namespace SCIRun
 

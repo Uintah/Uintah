@@ -92,6 +92,11 @@ DESCRIPTION
     int registerObject(Object* obj);
 
     //////////
+    // Register obj with the warehouse with the given unique id, 
+    // returning the objects unique identifier.
+    int registerObject(int id, Object* obj);
+
+    //////////
     // Unregister the object associated with the object ID.
     // Returns a pointer to the object.
     Object* unregisterObject(int id);
