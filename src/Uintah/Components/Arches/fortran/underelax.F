@@ -4,7 +4,8 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE underelax(domLo, domHi, idxLo, idxHi,
+      SUBROUTINE underelax(domLo, domHi, domLong, domHing, 
+     $     idxLo, idxHi,
      &     PHI,
      &     AP,SU,
      &     urelax)
@@ -29,14 +30,16 @@ c     Arguments :
 c*********************************************************************
       integer domLo(3)
       integer domHi(3)
+      integer domLong(3)
+      integer domHing(3)
       integer idxLo(3)
       integer idxHi(3)
       double precision PHI(domLo(1):domHi(1), 
      &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision AP(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision SU(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision AP(domLong(1):domHing(1), 
+     &     domLong(2):domHing(2), domLong(3):domHing(3))
+      double precision SU(domLong(1):domHing(1), 
+     &     domLong(2):domHing(2), domLong(3):domHing(3))
       double precision urelax
 
 c*********************************************************************
@@ -64,6 +67,9 @@ C-----------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/09/29 20:32:42  rawat
+c added underrelax to pressure solver
+c
 c Revision 1.1  2000/08/11 21:26:41  rawat
 c added linear solver for pressure eqn
 c

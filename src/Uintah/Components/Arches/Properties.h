@@ -39,6 +39,7 @@ POSSIBLE REVISIONS
 #include <Uintah/Interface/CFDInterface.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/VarLabel.h>
+#include <SCICore/Geometry/IntVector.h>
 
 #include <vector>
 
@@ -161,7 +162,7 @@ private:
 
       int d_numMixingVars;
       double d_denUnderrelax;
-
+      IntVector d_denRef;
       struct Stream {
 	double d_density;
 	double d_temperature;
@@ -182,6 +183,9 @@ private:
 
 //
 // $Log$
+// Revision 1.17  2000/09/29 20:32:36  rawat
+// added underrelax to pressure solver
+//
 // Revision 1.16  2000/08/19 05:53:43  bbanerje
 // Changed code so that output looks more like fortran output.
 //
