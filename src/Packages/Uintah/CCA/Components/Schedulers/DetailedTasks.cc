@@ -20,7 +20,7 @@ extern DebugStream mixedDebug;
 
 static DebugStream dbg("TaskGraph", false);
 
-#define NO_SCRUB -1
+const int NO_SCRUB = -1;
 
 DetailedTasks::DetailedTasks(const ProcessorGroup* pg,
 			     const TaskGraph* taskgraph,
@@ -98,7 +98,7 @@ DetailedTasks::assignMessageTags(int me)
       int to = iter->first.second;
       int num = iter->second;
       dbg << num << " messages from process " << from << " to process " << to
-	  << endl;
+	  << "\n";
     }
   }
 } // end assignMessageTags()
@@ -150,7 +150,7 @@ DetailedTasks::computeLocalTasks(int me)
 	if( mixedDebug.active() ) {
 	  cerrLock.lock();
 	  mixedDebug << "Initially Ready Task: " 
-		     << task->getTask()->getName() << endl;
+		     << task->getTask()->getName() << "\n";
 	  cerrLock.unlock();
 	}
       }
@@ -316,10 +316,21 @@ DetailedTasks::scrubCountDependency(DetailedTask* to,
 				    const Patch *fromPatch,
 				    int matl, Task::WhichDW dw)
 {
+  // Dav's conjectures on how this works:
+  //   This function is called once for each time a dependency is found
+  //   while creating the task graph.  After it has been called X times,
+  //   scrubCountMap_[VAR] == X.  Later, each time a task that uses VAR,
+  //   scrubCountMap_[VAR] is decremented.  When it reaches 0, the VAR
+  //   can be scrubbed as no one will be using it after that.
+  //   
+  // Questions:
+  //   What is "doScrubNew()" used for?
+  //
+
   if (matl < 0) fromPatch = 0;
   if (dw == Task::NewDW) {
     if (doScrubNew()) {
-      unsigned int& scrubCount =
+      int & scrubCount =
 	scrubCountMap_[VarLabelMatlPatch(req->var, matl, fromPatch)];
       if (scrubCount != NO_SCRUB) {
 	scrubCount++;    
@@ -795,10 +806,10 @@ void DependencyBatch::received(const ProcessorGroup * pg)
   if( mixedDebug.active() ) {
     cerrLock.lock();
     mixedDebug << "Received batch message " << messageTag 
-	       << " from task " << *fromTask << endl;
+	       << " from task " << *fromTask << "\n";
     
     for (DetailedDep* dep = head; dep != 0; dep = dep->next)
-      mixedDebug << "\tSatisfying " << *dep << endl;
+      mixedDebug << "\tSatisfying " << *dep << "\n";
     cerrLock.unlock();
   }
 
@@ -912,14 +923,14 @@ string DetailedTask::getName() const
     ConsecutiveRangeSet patchIDs;
     patchIDs.addInOrder(PatchIDIterator(patches->getVector().begin()),
 			PatchIDIterator(patches->getVector().end()));
-    name_ += string("\\nPatches: ") + patchIDs.toString();
+    name_ += string(" (Patches: ") + patchIDs.toString() + ")";
   }
 
   if (matls != 0) {
     ConsecutiveRangeSet matlSet;
     matlSet.addInOrder(matls->getVector().begin(),
 		       matls->getVector().end());
-    name_ += string("\\nMaterials: ") + matlSet.toString();
+    name_ += string(" (Matls: ") + matlSet.toString() + ")";
   }
   
   return name_;
