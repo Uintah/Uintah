@@ -104,6 +104,7 @@ int main(int argc, char** argv)
     bool   do_mpm=false;
     bool   do_arches=false;
     bool   do_ice=false;
+    bool   emit_graphs=false;
     bool   restart=false;
     int    restartTimestep = -1;
     string restartFromDir;
@@ -149,6 +150,8 @@ int main(int argc, char** argv)
 	} else if(s.substr(0,3) == "-p4") {
 	   // mpich - skip the rest
 	   break;
+	} else if (s == "-emit_taskgraphs") {
+	   emit_graphs = true;
 	} else if(s == "-restart") {
 	   restart=true;
 	} else if(s == "-nocopy") {
@@ -264,12 +267,14 @@ int main(int argc, char** argv)
 	      scinew SingleProcessorScheduler(world, output);
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
+	   if (emit_graphs) sched->doEmitTaskGraphDocs();
 	} else if(scheduler == "MPIScheduler"){
 	   MPIScheduler* sched =
 	      scinew MPIScheduler(world, output);
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
-/*
+	   if (emit_graphs) sched->doEmitTaskGraphDocs();
+	/*
 	} else if(scheduler == "MixedScheduler"){
 	   if( numThreads > 0 ){
 	     if( Uintah::Parallel::getMaxThreads() == 1 ){
@@ -286,10 +291,11 @@ int main(int argc, char** argv)
 	      scinew NullScheduler(world, output);
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
+	   if (emit_graphs) sched->doEmitTaskGraphDocs();
 	} else {
 	   quit( "Unknown scheduler: " + scheduler );
 	}
-
+	  
 	/*
 	 * Start the simulation controller
 	 */
