@@ -47,8 +47,8 @@ DEALINGS IN THE SOFTWARE.
     axial, sagittal, and coronal.  The 2D views allow the user to
     quickly investigate a volume slice by slice or via a maximum
     intensity projection. The 2D views provide standard zooming and
-    translation capabilities as well as the ability to change the
-    brightness and contrast (also known as window and level) of the
+    translation capabilities as well as the ability to specify a
+    window and level to be applied to the
     images.
     </para>
 
@@ -149,7 +149,8 @@ cd /usr/local/SCIRun/bin
       separating the panes. 
     </para>
     <para>
-      The Rendering Window pane contains four main windows. The top
+      The Rendering Window pane <xref linkend="fig.viewing-pane"/> 
+      contains four main windows. The top
       window is the 3D viewer window. The bottom viewer windows display 
       2D images of the standard slice planes (in order from left to right)
       of Sagittal, Coronal, and Axial.
