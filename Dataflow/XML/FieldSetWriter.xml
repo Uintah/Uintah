@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/ReferenceGuide/component.dtd">
+
+<component name="FieldSetWriter" category="DataIO">
+  <overview>
+    <authors>
+      <author>Alexei Samsonov</author>
+    </authors>
+    <summary>Saves persistent field objects received from upstream modules</summary>
+    <description>
+      <p>Version Date: December 2000</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
+    </inputs>
+    <outputs>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

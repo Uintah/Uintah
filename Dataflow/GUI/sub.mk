@@ -21,6 +21,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ErrorMetric.tcl \
 	$(SRCDIR)/FieldReader.tcl \
 	$(SRCDIR)/FieldWriter.tcl \
+	$(SRCDIR)/FieldSetReader.tcl \
+	$(SRCDIR)/FieldSetWriter.tcl \
 	$(SRCDIR)/FrameWidget.tcl \
 	$(SRCDIR)/GLTextureBuilder.tcl \
 	$(SRCDIR)/GaugeWidget.tcl \
@@ -41,8 +43,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/PathWidget.tcl \
 	$(SRCDIR)/PathWriter.tcl \
 	$(SRCDIR)/PointWidget.tcl \
-    $(SRCDIR)/PromptedText.tcl \
-    $(SRCDIR)/PromptedEntry.tcl \
+	$(SRCDIR)/PromptedText.tcl \
+	$(SRCDIR)/PromptedEntry.tcl \
 	$(SRCDIR)/RescaleColorMap.tcl \
 	$(SRCDIR)/RingWidget.tcl \
 	$(SRCDIR)/ScaledBoxWidget.tcl \
