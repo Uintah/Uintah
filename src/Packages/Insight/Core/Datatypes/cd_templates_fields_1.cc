@@ -26,6 +26,7 @@ template class ITKFData2d<char>;
 template class ITKFData2d<unsigned int>;
 template class ITKFData2d<unsigned short>;
 template class ITKFData2d<unsigned char>;
+template class ITKFData2d<unsigned long>;
 
 template class GenericField<ImageMesh, ITKFData2d<Tensor> >;
 template class GenericField<ImageMesh, ITKFData2d<Vector> >;
@@ -37,6 +38,7 @@ template class GenericField<ImageMesh, ITKFData2d<char> >;
 template class GenericField<ImageMesh, ITKFData2d<unsigned int> >;
 template class GenericField<ImageMesh, ITKFData2d<unsigned short> >;
 template class GenericField<ImageMesh, ITKFData2d<unsigned char> >;
+template class GenericField<ImageMesh, ITKFData2d<unsigned long> >;
 
 template class ITKImageField<Tensor>;
 template class ITKImageField<Vector>;
@@ -48,6 +50,7 @@ template class ITKImageField<char>;
 template class ITKImageField<unsigned int>;
 template class ITKImageField<unsigned short>;
 template class ITKImageField<unsigned char>;
+template class ITKImageField<unsigned long>;
 
 const TypeDescription* get_type_description(ITKImageField<Tensor> *);
 const TypeDescription* get_type_description(ITKImageField<Vector> *);
@@ -59,6 +62,7 @@ const TypeDescription* get_type_description(ITKImageField<char> *);
 const TypeDescription* get_type_description(ITKImageField<unsigned int> *);
 const TypeDescription* get_type_description(ITKImageField<unsigned short> *);
 const TypeDescription* get_type_description(ITKImageField<unsigned char> *);
+const TypeDescription* get_type_description(ITKImageField<unsigned long> *);
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468
