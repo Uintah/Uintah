@@ -90,6 +90,7 @@ Parallel::initializeManager(int& argc, char**& argv)
    if(::usingMPI){	
 
       int status;
+      const char* oldtag = AllocatorSetDefaultTagMalloc("MPI initialization");
       if((status=MPI_Init(&argc, &argv)) != MPI_SUCCESS)
 	 MpiError("MPI_Init", status);
       worldComm=MPI_COMM_WORLD;
@@ -99,6 +100,7 @@ Parallel::initializeManager(int& argc, char**& argv)
       int worldRank;
       if((status=MPI_Comm_rank(worldComm, &worldRank)) != MPI_SUCCESS)
 	 MpiError("MPI_Comm_rank", status);
+      AllocatorSetDefaultTagMalloc(oldtag);
       rootContext = scinew ProcessorGroup(0, worldComm, true,
 					  worldRank,worldSize);
    } else {
@@ -130,6 +132,10 @@ Parallel::finalizeManager(Circumstances circumstances)
 	 if((status=MPI_Finalize()) != MPI_SUCCESS)
 	    MpiError("MPI_Finalize", status);
       }
+   }
+   if(rootContext){
+     delete rootContext;
+     rootContext=0;
    }
 }
 
