@@ -151,7 +151,8 @@ void ViscoScram::computeStableTimestep(const Patch* patch,
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    new_dw->put(delt_vartype(delT_new), lb->delTAfterConstitutiveModelLabel);
+//    new_dw->put(delt_vartype(delT_new), lb->delTAfterConstitutiveModelLabel);
+    new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
 void ViscoScram::computeStressTensor(const Patch* patch,
@@ -509,7 +510,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+  new_dw->put(delt_vartype(delT_new),lb->delTAfterConstitutiveModelLabel);
   new_dw->put(pstress, lb->pStressAfterStrainRateLabel);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
 
@@ -604,6 +605,9 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.12  2000/10/17 18:03:56  guilkey
+// Swapped delTLabel with delTAfterConstitutiveModel in two places.
+//
 // Revision 1.11  2000/09/28 23:04:00  bard
 // Viscoscram logic complete in theory, except for known omissions marked
 // by FIX.
