@@ -159,7 +159,7 @@ Integrator::integrate(int* tableKeyIndex)
 	// for details see gammafn.C
 	// fnc is a member function
 	//cout<<"Int::begin integration keyValues are = "<<d_keyValues[0]<<" "<<d_keyValues[1]<<endl;
-	dqagpe_(fnc, &lowLimit, &upLimit, &npts2, points, &epsabs, &epsrel,
+	dqagpe(fnc, &lowLimit, &upLimit, &npts2, points, &epsabs, &epsrel,
 		&limit, &result, &abserr, &neval, &ier, alist, blist, rlist,
 		elist, pts, level, ndin, iord, &last);
 	

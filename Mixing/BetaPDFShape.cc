@@ -106,7 +106,7 @@ BetaPDFShape::computeBetaPDFShape(double* meanMixVar,
 	d_coef[i] = meanMixVar[i]*new_factor;
 	//cout << "beta is negative, new beta is calculated" << endl;
       }
-    gammafn[i] = dgammaln_(&d_coef[i]); // gammaln(ai)
+    gammafn[i] = dgammaln(&d_coef[i]); // gammaln(ai)
     //cout << "gammaln(" << i << ") = " << gammafn[i] << endl;
     multGamma += gammafn[i]; // LN(gamma(a1))+LN(gamma(a2))...LN(gamma(a(N-1)))
     sumCoefs += d_coef[i];  // a1+a2+...+a(N-1)
@@ -125,14 +125,14 @@ BetaPDFShape::computeBetaPDFShape(double* meanMixVar,
     }    
 
   //cout << lastMixVars << " Beta(" << d_dimPDF << ") = " << d_coef[d_dimPDF] << endl;
-  gammafn[d_dimPDF] = dgammaln_(&d_coef[d_dimPDF]); // computing gamma(aN)
+  gammafn[d_dimPDF] = dgammaln(&d_coef[d_dimPDF]); // computing gamma(aN)
   //  cout << "gammaln(" << i << ") = " << d_gammafn[i] << endl;
   //  cout << "*******************" << endl;
   multGamma += gammafn[d_dimPDF];    // LN(gamma(a1))+...+LN(gamma(aN))
   //cout << "LN(mult) = " << multGamma << endl;
   sumCoefs += d_coef[d_dimPDF];
   //  cout << "sumCoefs = " << sumCoefs << endl;
-  double gammafnNum = dgammaln_(&sumCoefs);   // LN(gamma(a1+a2+...+aN))
+  double gammafnNum = dgammaln(&sumCoefs);   // LN(gamma(a1+a2+...+aN))
   //cout << "LN(sum) = " << gammafnNum << endl;
   return (gammafnNum-multGamma);   
 } // gamma(a1+a2+...+aN)/(gamma(a1)*...*gamma(aN))
@@ -160,6 +160,9 @@ BetaPDFShape::computeShapeFunction(double *var) {
 
 //
 // $Log$
+// Revision 1.9  2002/06/21 16:29:16  dav
+// xlC AIX fix: removed _ from fortran names.  This probably will break sgi/linux.  However, need to be consistent and do something link #define to add _ as is done in some files.
+//
 // Revision 1.8  2001/11/08 19:13:43  spinti
 // 1. Corrected minor problems in ILDMReactionModel.cc
 // 2. Added tabulation capability to StanjanEquilibriumReactionModel.cc. Now,
