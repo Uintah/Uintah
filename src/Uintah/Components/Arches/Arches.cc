@@ -71,7 +71,7 @@ void Arches::problemInit(const LevelP& level,
     d_boundaryCondition->sched_setProfile(level, sched, dw);
   }
   d_properties->sched_computeProperties(level, sched, dw, dw);
-  d_turbModel->sched_computeTurbViscosity(level, sched, dw, dw);
+  d_turbModel->sched_computeTurbSubmodel(level, sched, dw, dw);
   d_boundaryCondition->sched_pressureBC(level, sched, dw, dw);
 }
 #endif
@@ -101,6 +101,9 @@ void Arches::timeStep(double time, double dt,
 
 //
 // $Log$
+// Revision 1.13  2000/04/10 23:11:23  rawat
+// Added sub-grid scale turbulence models
+//
 // Revision 1.12  2000/04/09 00:53:50  rawat
 // added PhysicalConstants and Properties classes
 //
