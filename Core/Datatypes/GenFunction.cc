@@ -184,13 +184,13 @@ void GenFunction::set_funcs(const FuncPtrV& ff, int dd){
 
 void GenFunction::set_speed(bool is_f){
   if (is_f ^ d_isFast){
-    refresh_fast_eval();
     d_isFast=is_f;
+    refresh_fast_eval();
   }
 }
 
 void GenFunction::refresh_fast_eval(){
-  if (d_isChanged){
+  if (d_isChanged && d_isFast) {
     d_fevals.resize(d_fns.size());
       
     for (int i=0; i<d_resDims; i++){
