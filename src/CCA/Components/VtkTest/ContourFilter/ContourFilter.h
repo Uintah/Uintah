@@ -29,52 +29,39 @@
 #ifndef SCIRun_VTK_Components_ContourFilter_h
 #define SCIRun_VTK_Components_ContourFilter_h
 
-#include <SCIRun/Vtk/Port.h>
+#include <SCIRun/Vtk/InPort.h>
+#include <SCIRun/Vtk/OutPort.h>
 #include <SCIRun/Vtk/Component.h>
 #include <vector>
-
-#define IPort ContourFilter_IPort
-#define OPort ContourFilter_OPort
 
 class vtkContourFilter;
 
 namespace SCIRun {
   namespace vtk{
-  class IPort : public vtk::Port {
-  public:
-    IPort(vtkContourFilter *filter);;
-    virtual ~IPort();
-    bool isInput();
-    std::string getName();
-    bool accept(Port *);
-    void connect(Port* p);
-    vtkContourFilter *filter;
-  };
 
-  class OPort : public vtk::Port {
-  public:
-    OPort(vtkContourFilter *filter);
-    virtual ~OPort();
-    bool isInput();
-    std::string getName();
-    vtkObject* getObj();
-    vtkContourFilter *filter;
-  };
-  
-  class ContourFilter: public vtk::Component{
+    class ContourFilter: public Component, public OutPort, public InPort{
+    public:
+      //constructor
+      ContourFilter();
+      
+      //destructor
+      ~ContourFilter();
+      
+      //InPort interface
+      bool accept(OutPort *port);
+      
+      //InPort interface
+      void connect(OutPort* port);
+      
+    private:
+      vtkContourFilter *filter;
+      
+      ContourFilter(const ContourFilter&);
+      ContourFilter& operator=(const ContourFilter&);
+    };
     
-  public:
-    ContourFilter();
-    virtual ~ContourFilter();
-  private:
-    vtkContourFilter *filter;
-
-    ContourFilter(const ContourFilter&);
-    ContourFilter& operator=(const ContourFilter&);
-  };
-  
-  
-} //namespace vtk
+    
+  } //namespace vtk
 } //namespace SCIRun
 
 
