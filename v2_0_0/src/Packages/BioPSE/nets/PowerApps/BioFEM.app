@@ -304,7 +304,8 @@ class BioFEMApp {
 	# Embed the Viewer
 	set eviewer [$mods(Viewer) ui_embedded]
 	$eviewer setWindow $win.viewer $viewer_width $viewer_height
-	
+	set_dataset 0
+
 	### Menu
 	build_menu $win
 
@@ -361,7 +362,7 @@ class BioFEMApp {
 
     }
 
-    method set_dataset {} {
+    method set_dataset { andexec } {
 	global mods
 	global DATADIR
 	global DATASET
@@ -412,7 +413,7 @@ class BioFEMApp {
 	set $mods(Viewer)-ViewWindow_0-view-up-z ${view-up-z}
 	set $mods(Viewer)-ViewWindow_0-view-fov ${view-fov}
 
-	$this execute_Data
+	if {$andexec} { $this execute_Data }
     }
 
 
@@ -465,11 +466,11 @@ class BioFEMApp {
 	    
 	set dataset [$f.dataset childsite]
 
-	radiobutton $dataset.brain-eg -text "Brain EG" -variable DATASET -value brain-eg -command "$this set_dataset"
-	radiobutton $dataset.cyl3 -text "Cyl3" -variable DATASET -value cyl3 -command "$this set_dataset"
-	radiobutton $dataset.sphere -text "Sphere" -variable DATASET -value sphere -command "$this set_dataset"
-	radiobutton $dataset.utahtorso-lowres -text "Utah Torso Lowres" -variable DATASET -value utahtorso-lowres -command "$this set_dataset"
-	radiobutton $dataset.utahtorso -text "Utah Torso" -variable DATASET -value utahtorso -command "$this set_dataset"
+	radiobutton $dataset.brain-eg -text "Brain EG" -variable DATASET -value brain-eg -command "$this set_dataset 1"
+	radiobutton $dataset.cyl3 -text "Cyl3" -variable DATASET -value cyl3 -command "$this set_dataset 1"
+	radiobutton $dataset.sphere -text "Sphere" -variable DATASET -value sphere -command "$this set_dataset 1"
+	radiobutton $dataset.utahtorso-lowres -text "Utah Torso Lowres" -variable DATASET -value utahtorso-lowres -command "$this set_dataset 1"
+	radiobutton $dataset.utahtorso -text "Utah Torso" -variable DATASET -value utahtorso -command "$this set_dataset 1"
 
 	pack $dataset.brain-eg $dataset.cyl3 $dataset.sphere $dataset.utahtorso-lowres $dataset.utahtorso -anchor w -side top
 
