@@ -178,21 +178,57 @@ DataTransmitter::runSendingThread(){
     sendQ_mutex->unlock();
     //cerr<<"trying to send a message"<<endl;
     DTMessage *msg=send_msgQ.front();
-    SocketMap::iterator iter=sockmap.find(msg->to_addr);
-    int new_fd;
-    if(iter==sockmap.end()){
-      new_fd=socket(AF_INET, SOCK_STREAM, 0);
-      if( new_fd  == -1){
-	throw CommError("socket", errno);
+    /////////////////////////////////
+    // if the msg is to send to the same process
+    // process it right away.
+    
+    if(msg->to_addr==addr){
+      msg->autofree=true;
+      //int id=*((int *)msg->buf);
+      DTPoint *pt=msg->recver;
+      SemaphoreMap::iterator found=semamap.find(pt);
+      //cerr<<"Send & Recv Message:\n";
+      //msg->display();
+      
+      if(found!=semamap.end()){
+	if(pt->service!=NULL){
+	  
+	  pt->service(msg);
+	}
+	else{
+	  recvQ_mutex->lock();
+	  recv_msgQ.push_back(msg);
+	  recvQ_mutex->unlock();
+	  //recvQ_cond->conditionSignal();
+	  found->second->up();
+	}
+	sendQ_mutex->lock();
+	send_msgQ.pop_front();
+	sendQ_mutex->unlock();
       }
-
-
-      static int protocol_id = -1;
+      else{
+	//discard the message
+	cerr<<"warning: message discarded!\n";
+      }
+    }
+    else
+    {
+    
+      SocketMap::iterator iter=sockmap.find(msg->to_addr);
+      int new_fd;
+      if(iter==sockmap.end()){
+	new_fd=socket(AF_INET, SOCK_STREAM, 0);
+	if( new_fd  == -1){
+	  throw CommError("socket", errno);
+	}
+	
+	
+	static int protocol_id = -1;
 #if defined(__sgi)
-      // SGI does not have SOL_TCP defined.  To the best of my knowledge
-      // (ie: reading the man page) this is what you are supposed to do. (Dd)
-      if( protocol_id == -1 )
-	{
+	// SGI does not have SOL_TCP defined.  To the best of my knowledge
+	// (ie: reading the man page) this is what you are supposed to do. (Dd)
+	if( protocol_id == -1 )
+	  {
 	  struct protoent * p = getprotobyname("TCP");
 	  if( p == NULL )
 	    {
@@ -201,40 +237,44 @@ DataTransmitter::runSendingThread(){
 	      return;
 	    }
 	  protocol_id = p->p_proto;
-	}
+	  }
 #else
-      protocol_id = SOL_TCP;
+	protocol_id = SOL_TCP;
 #endif
-      int yes=1;
-      if( setsockopt( new_fd, protocol_id, TCP_NODELAY, &yes, sizeof(int) ) == -1 ) {
-	perror("setsockopt");
+	int yes=1;
+	if( setsockopt( new_fd, protocol_id, TCP_NODELAY, &yes, sizeof(int) ) == -1 ) {
+	  perror("setsockopt");
+	}
+	
+	struct sockaddr_in their_addr; // connector's address information 
+	their_addr.sin_family = AF_INET;                   // host byte order 
+	their_addr.sin_port = htons(msg->to_addr.port);  // short, network byte order 
+	their_addr.sin_addr = *(struct in_addr*)(&(msg->to_addr.ip));
+	memset(&(their_addr.sin_zero), '\0', 8);  // zero the rest of the struct 
+	
+	if(connect(new_fd, (struct sockaddr *)&their_addr,sizeof(struct sockaddr)) == -1) {
+	  perror("connect");
+	  throw CommError("connect", errno);
+	}
+	//immediate register the listening port
+	cerr<<"register port "<<addr.port<<endl;
+	sendall(new_fd, &addr.port, sizeof(short));
+	sockmap_mutex->lock();
+	sockmap[msg->to_addr]=new_fd;
+	sockmap_mutex->unlock();
       }
-
-      struct sockaddr_in their_addr; // connector's address information 
-      their_addr.sin_family = AF_INET;                   // host byte order 
-      their_addr.sin_port = htons(msg->to_addr.port);  // short, network byte order 
-      their_addr.sin_addr = *(struct in_addr*)(&(msg->to_addr.ip));
-      memset(&(their_addr.sin_zero), '\0', 8);  // zero the rest of the struct 
-      
-      if(connect(new_fd, (struct sockaddr *)&their_addr,sizeof(struct sockaddr)) == -1) {
-	perror("connect");
-	throw CommError("connect", errno);
+      else{
+	new_fd=iter->second;
       }
-      //immediate register the listening port
-      sendall(new_fd, &addr.port, sizeof(short));
-      sockmap_mutex->lock();
-      sockmap[msg->to_addr]=new_fd;
-      sockmap_mutex->unlock();
+      sendall(new_fd, msg, sizeof(DTMessage));
+      sendall(new_fd, msg->buf, msg->length);
+      //cerr<<"Send Message:";
+      //msg->display();
+      delete msg;
+      sendQ_mutex->lock();
+      send_msgQ.pop_front();
+      sendQ_mutex->unlock();
     }
-    else{
-      new_fd=iter->second;
-    }
-    sendall(new_fd, msg, sizeof(DTMessage));
-    sendall(new_fd, msg->buf, msg->length);
-    delete msg;
-    sendQ_mutex->lock();
-    send_msgQ.pop_front();
-    sendQ_mutex->unlock();
   }
 }
 
@@ -243,6 +283,11 @@ DataTransmitter::runRecvingThread(){
   fd_set read_fds; // temp file descriptor list for select()
   struct timeval timeout;
   while(!quit){
+    /*cerr<<"Recving Thread is running: sockmap size="<<sockmap.size()<<endl;
+    for(SocketMap::iterator iter=sockmap.begin(); iter!=sockmap.end(); iter++){
+      cerr<<"\t"<<iter->first.ip<<"/"<<iter->first.port<<" uses socket "<<iter->second<<endl;
+      }*/
+
     timeout.tv_sec=0;
     timeout.tv_usec=20000;
     FD_ZERO(&read_fds);
@@ -272,6 +317,9 @@ DataTransmitter::runRecvingThread(){
 	  //int id=*((int *)msg->buf);
 	  DTPoint *pt=msg->recver;
 	  SemaphoreMap::iterator found=semamap.find(pt);
+	  //cerr<<"Recv Message:";
+	  //msg->display();
+
 	  if(found!=semamap.end()){
 	    if(pt->service!=NULL){
 	      pt->service(msg);
@@ -294,6 +342,7 @@ DataTransmitter::runRecvingThread(){
 	}
 	else{
 	  //remote connection is closed, if receive 0 bytes
+	  cerr<<"######: recved 0 bytes!\n";
 	  close(iter->second);
 	  sockmap_mutex->lock();
 	  sockmap.erase(iter);
@@ -346,6 +395,7 @@ DataTransmitter::runRecvingThread(){
       short listPort;
       newAddr.port=ntohs(their_addr.sin_port);
       recvall(new_fd, &(newAddr.port), sizeof(short));
+      cerr<<"Done register port "<<newAddr.port<<endl;
       sockmap_mutex->lock();
       sockmap[newAddr]=new_fd;
       sockmap_mutex->unlock();
