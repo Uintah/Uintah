@@ -363,7 +363,7 @@ LatVolMesh::get_center(Point &result, Edge::index_type idx) const
 
 
 void
-LatVolMesh::get_center(Point &result, Face::index_type idx) const
+LatVolMesh::get_center(Point &/*result*/, Face::index_type /*idx*/) const
 {
 #if 0 // TODO: Fix get_nodes
   Node::array_type nodes;
