@@ -111,7 +111,7 @@ void MPParticleGridReader::GetParticleData(int particleId,
     ostr << path << "/"<< root<< setw(4)<<ii;
     
     MPRead read( ostr.str().c_str() );
-    cerr<< "filename is "<< ostr.str().c_str() << endl;
+    //cerr<< "filename is "<< ostr.str().c_str() << endl;
     double value;
     read.GetParticleVariableValue( particleId, pSetName, varname, value );
     values.add( value );
@@ -130,7 +130,7 @@ void MPParticleGridReader::GetParticleData(int particleId,
 
 ParticleSetHandle MPParticleGridReader::GetParticleSet( clString name )
 {
-    std::cerr<<"Trying to obtain particleset "<<name<<endl;
+  // std::cerr<<"Trying to obtain particleset "<<name<<endl;
   map<clString, ParticleSetHandle, ltstr>::iterator it = psmap.find( name );
   if (it == psmap.end())
     return 0;
@@ -140,7 +140,7 @@ ParticleSetHandle MPParticleGridReader::GetParticleSet( clString name )
 
 VizGridHandle MPParticleGridReader::GetGrid( clString name )
 {
-    std::cerr<< "Trying to obtain grid "<<name<<endl;
+  //std::cerr<< "Trying to obtain grid "<<name<<endl;
   map<clString, VizGridHandle, ltstr>::iterator it = vgmap.find( name );
   if (it == vgmap.end())
     return 0;
@@ -272,6 +272,7 @@ void MPParticleGridReader::readParticles(MPRead& reader)
   for( i = 0; i < nParticles; i++ ){
     reader.GetParticle(p, scalars, vectors);
     ts->vectors[0].add( p.vector() );
+
     for(j = 0; j < scalars.size(); j++ ){
       ts->scalars[j].add( scalars[j] );
     }
@@ -294,6 +295,9 @@ void MPParticleGridReader::readParticles(MPRead& reader)
 
 //
 // $Log$
+// Revision 1.5  2000/01/27 04:48:55  kuzimmer
+// changes necessary to make MaterialParticle files work when there are only Grids or only Particles
+//
 // Revision 1.4  1999/12/28 21:09:08  kuzimmer
 // modified file readers so that we can read multiple files for parallel output
 //
