@@ -239,9 +239,12 @@ SCIRun::parse_scirunrc( const string &rcfile )
 	removeLTWhiteSpace(var_val);
 	char* sub = MacroSubstitute(var_val);
 
-	// Only put the variable into the environment if it is not
-	// already there.
-	if( !SCIRun::sci_getenv( var ) ) {
+
+
+	// Only put the var into the environment if it is not already there.
+	if(!SCIRun::sci_getenv( var ) || 
+	   // Except the .scirunrc version, that should always come from the file
+	   string(var) == string("SCIRUN_RCFILE_VERSION")) {
 	  sci_putenv(var,sub);
 	} 
 
