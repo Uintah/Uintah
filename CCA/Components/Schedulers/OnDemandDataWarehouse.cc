@@ -58,7 +58,7 @@ extern DebugStream mixedDebug;
 static DebugStream dbg( "OnDemandDataWarehouse", false );
 static DebugStream warn( "OnDemandDataWarehouse_warn", true );
 
-Mutex ssLock( "send state lock" );
+static Mutex ssLock( "send state lock" );
 
 #define PARTICLESET_TAG		0x4000
 #define DAV_DEBUG 0
@@ -1229,7 +1229,7 @@ OnDemandDataWarehouse::put(NCVariableBase& var,
                            int matlIndex, const Patch* patch,
                            bool replace /*= false*/)
 {
-  putGridVar<Patch::NodeBased>(*var.clone(), d_ncDB, label, matlIndex, patch,
+  putGridVar<Patch::NodeBased>(*dynamic_cast<NCVariableBase*>(var.clone()), d_ncDB, label, matlIndex, patch,
                                replace);
 }
 
@@ -1495,7 +1495,7 @@ OnDemandDataWarehouse::put(CCVariableBase& var, const VarLabel* label,
                            int matlIndex, const Patch* patch,
                            bool replace /*= false*/)
 {
-  putGridVar<Patch::CellBased>(*var.clone(), d_ccDB, label, matlIndex, patch,
+  putGridVar<Patch::CellBased>(*dynamic_cast<CCVariableBase*>(var.clone()), d_ccDB, label, matlIndex, patch,
                                replace);  
 }
 
@@ -1554,7 +1554,7 @@ OnDemandDataWarehouse::put(SFCXVariableBase& var,
                            int matlIndex, const Patch* patch,
                            bool replace /*= false*/)
 {
-  putGridVar<Patch::XFaceBased>(*var.clone(), d_sfcxDB, label, matlIndex,
+  putGridVar<Patch::XFaceBased>(*dynamic_cast<SFCXVariableBase*>(var.clone()), d_sfcxDB, label, matlIndex,
                                 patch, replace);
 }
 
@@ -1613,7 +1613,7 @@ OnDemandDataWarehouse::put(SFCYVariableBase& var,
                            int matlIndex, const Patch* patch,
                            bool replace /*= false*/)
 {
-  putGridVar<Patch::YFaceBased>(*var.clone(), d_sfcyDB, label, matlIndex,
+  putGridVar<Patch::YFaceBased>(*dynamic_cast<SFCYVariableBase*>(var.clone()), d_sfcyDB, label, matlIndex,
                                 patch, replace);  
 }
 
@@ -1672,7 +1672,7 @@ OnDemandDataWarehouse::put(SFCZVariableBase& var,
                            int matlIndex, const Patch* patch,
                            bool replace /*= false*/)
 {
-  putGridVar<Patch::ZFaceBased>(*var.clone(), d_sfczDB, label, matlIndex,
+  putGridVar<Patch::ZFaceBased>(*dynamic_cast<SFCZVariableBase*>(var.clone()), d_sfczDB, label, matlIndex,
                                 patch, replace);
 }
 
@@ -2024,7 +2024,7 @@ getGridVar(VariableBase& var, DWDatabase& db,
 				    matlIndex, neighbor == patch?
 				    "on patch":"on neighbor"));
         }
-	VariableBase* srcvar = var.cloneType();
+        VariableBase* srcvar = dynamic_cast<VariableBase*>(var.cloneType());
 	db.get(label, matlIndex, neighbor, *srcvar);
 	if(neighbor->isVirtual())
 	  srcvar->offsetGrid(neighbor->getVirtualOffset());
@@ -2125,7 +2125,7 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
       db.put(label, matlIndex, patch, 0, true);
 
       // this is just a tricky way to uninitialize var
-      VariableBase* tmpVar = var.cloneType();
+      VariableBase* tmpVar = dynamic_cast<VariableBase*>(var.cloneType());
       var.copyPointer(*tmpVar);
       delete tmpVar;
     }
@@ -2184,7 +2184,7 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
   Patch::selectType::iterator iter = encompassedPatches.begin();    
   for (; iter != encompassedPatches.end(); ++iter) {
     const Patch* patchGroupMember = *iter;
-    VariableBase* clone = var.clone();
+    VariableBase* clone = dynamic_cast<VariableBase*>(var.clone());
     IntVector groupMemberLowIndex = patchGroupMember->getLowIndex(basis, label->getBoundaryLayer());
     IntVector groupMemberHighIndex = patchGroupMember->getHighIndex(basis, label->getBoundaryLayer());
     IntVector enclosedLowIndex = Max(groupMemberLowIndex, superLowIndex);
@@ -2282,8 +2282,8 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	  if(!fromDW->d_ncDB.exists(var, matl, patch))
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
 				      "in transferFrom"));
-	  NCVariableBase* v = fromDW->d_ncDB.get(var, matl, patch);
-	  d_ncDB.put(var, matl, copyPatch, v->clone(), replace);
+	  NCVariableBase* v = dynamic_cast<NCVariableBase*>(fromDW->d_ncDB.get(var, matl, patch)->clone());
+	  d_ncDB.put(var, matl, copyPatch, v, replace);
 	}
 	break;
       case TypeDescription::CCVariable:
@@ -2291,8 +2291,8 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	  if(!fromDW->d_ccDB.exists(var, matl, patch))
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
 				      "in transferFrom"));
-	  CCVariableBase* v = fromDW->d_ccDB.get(var, matl, patch);
-	  d_ccDB.put(var, matl, copyPatch, v->clone(), replace);
+	  CCVariableBase* v = dynamic_cast<CCVariableBase*>(fromDW->d_ccDB.get(var, matl, patch)->clone());
+	  d_ccDB.put(var, matl, copyPatch, v, replace);
 	}
 	break;
       case TypeDescription::SFCXVariable:
@@ -2302,8 +2302,8 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
 				      "in transferFrom"));
           }
-	  SFCXVariableBase* v = fromDW->d_sfcxDB.get(var, matl, patch);
-	  d_sfcxDB.put(var, matl, copyPatch, v->clone(), replace);
+	  SFCXVariableBase* v = dynamic_cast<SFCXVariableBase*>(fromDW->d_sfcxDB.get(var, matl, patch)->clone());
+	  d_sfcxDB.put(var, matl, copyPatch, v, replace);
 	}
 	break;
       case TypeDescription::SFCYVariable:
@@ -2311,8 +2311,8 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	  if(!fromDW->d_sfcyDB.exists(var, matl, patch))
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
 				      "in transferFrom"));
-	  SFCYVariableBase* v = fromDW->d_sfcyDB.get(var, matl, patch);
-	  d_sfcyDB.put(var, matl, copyPatch, v->clone(), replace);
+	  SFCYVariableBase* v = dynamic_cast<SFCYVariableBase*>(fromDW->d_sfcyDB.get(var, matl, patch)->clone());
+	  d_sfcyDB.put(var, matl, copyPatch, v, replace);
 	}
 	break;
       case TypeDescription::SFCZVariable:
@@ -2320,8 +2320,8 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	  if(!fromDW->d_sfczDB.exists(var, matl, patch))
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
 				      "in transferFrom"));
-	  SFCZVariableBase* v = fromDW->d_sfczDB.get(var, matl, patch);
-	  d_sfczDB.put(var, matl, copyPatch, v->clone(), replace);
+	  SFCZVariableBase* v = dynamic_cast<SFCZVariableBase*>(fromDW->d_sfczDB.get(var, matl, patch)->clone());
+	  d_sfczDB.put(var, matl, copyPatch, v, replace);
 	}
 	break;
       case TypeDescription::ParticleVariable:
@@ -2859,24 +2859,10 @@ namespace Uintah {
   }
 }
 
-// The following is for support of regriding
-void OnDemandDataWarehouse::getVarLabelMatlPatchTriples(
-	vector<VarLabelMatl<Patch> >& vars ) const
-{
-  d_ncDB.getVarLabelMatlTriples(vars);
-  d_ccDB.getVarLabelMatlTriples(vars);
-  d_sfcxDB.getVarLabelMatlTriples(vars);
-  d_sfcyDB.getVarLabelMatlTriples(vars);
-  d_sfczDB.getVarLabelMatlTriples(vars);
-  d_particleDB.getVarLabelMatlTriples(vars);
-  //  d_perpatchDB.getVarLabelMatlPatchTriples(vars);
-}
-
-void OnDemandDataWarehouse::getVarLabelMatlLevelTriples(
-	 vector<VarLabelMatl<Level> >& vars ) const
+void OnDemandDataWarehouse::getVarLabelMatlLevelTriples( vector<VarLabelMatl<Level> >& vars ) const
 {
   d_reductionDB.getVarLabelMatlTriples(vars);
-  d_soleDB.getVarLabelMatlTriples(vars);
+  //  d_soleDB.getVarLabelMatlTriples(vars);
 }
 
 void OnDemandDataWarehouse::print()

@@ -17,6 +17,9 @@
 //    Author : Wayne Witzel
 //    Date   : Fri May 18 14:36:19 2001
 
+#ifndef UINTAH_GHOSTOFFSETVARMAP_H
+#define UINTAH_GHOSTOFFSETVARMAP_H
+
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Variables/VarLabelMatlPatch.h>
@@ -78,3 +81,5 @@ private:
 };
 
 } // End namespace Uintah
+
+#endif
