@@ -111,14 +111,14 @@ template class Property<vector<pair<int,double> > >;
 
 //! Compute the gradient g in cell ci.
 template <>
-Vector PrismVolField<Vector>::cell_gradient(TetVolMesh::Cell::index_type /*ci*/)
+Vector PrismVolField<Vector>::cell_gradient(PrismVolMesh::Cell::index_type /*ci*/)
 {
   ASSERT(type_name(1) != "Vector");  // redundant, useful error message
   return Vector(0, 0, 0);
 }
 
 template <>
-Vector PrismVolField<Tensor>::cell_gradient(TetVolMesh::Cell::index_type /*ci*/)
+Vector PrismVolField<Tensor>::cell_gradient(PrismVolMesh::Cell::index_type /*ci*/)
 {
   ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
   return Vector(0, 0, 0);
@@ -181,20 +181,6 @@ template <> bool LatVolField<Tensor>::get_gradient(Vector &, const Point &/*p*/)
   ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
   return false;
 }
-
-
-template <> bool PrismVolField<Vector>::get_gradient(Vector &, const Point &/*p*/)
-{
-  ASSERT(type_name(1) != "Vector");  // redundant, useful error message
-  return false;
-}
-
-template <> bool PrismVolField<Tensor>::get_gradient(Vector &, const Point &/*p*/)
-{
-  ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
-  return false;
-}
-
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468
