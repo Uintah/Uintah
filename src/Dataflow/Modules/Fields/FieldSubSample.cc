@@ -56,6 +56,8 @@ public:
   virtual void execute();
 
 private:
+  GuiInt power_app_;
+
   GuiInt Wrap_;
   GuiInt Dims_;
 
@@ -111,6 +113,7 @@ DECLARE_MAKER(FieldSubSample)
 
 FieldSubSample::FieldSubSample(GuiContext *context)
   : Module("FieldSubSample", context, Filter, "FieldsCreate", "SCIRun"),
+    power_app_(context->subVar("power_app")),
 
     Wrap_(context->subVar("wrap")),
     Dims_(context->subVar("dims")),
