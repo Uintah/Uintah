@@ -263,6 +263,15 @@ void Tensor::set_eigens(const Vector &e1, const Vector &e2, const Vector &e3) {
   have_eigens_ = 1;
 }
 
+void Tensor::set_outside_eigens(const Vector &e1, const Vector &e2,
+				const Vector &e3,
+				double v1, double v2, double v3)
+{
+  e1_ = e1; e2_ = e2; e3_ = e3;
+  l1_ = v1; l2_ = v2; l3_ = v3;
+  have_eigens_ = 1;
+}
+
 void SCICORESHARE Pio(Piostream& stream, Tensor& t){
   
   stream.begin_cheap_delim();
