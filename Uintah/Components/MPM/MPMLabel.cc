@@ -151,6 +151,9 @@ MPMLabel::MPMLabel()
   gSelfContactLabel = new VarLabel( "g.selfContact",
 			NCVariable<bool>::getTypeDescription() );
   
+  gTemperatureLabel = new VarLabel("g.temperature",
+			NCVariable<double>::getTypeDescription());
+
   gTemperatureRateLabel = new VarLabel("g.temperatureRate",
 			NCVariable<double>::getTypeDescription());
 
@@ -199,6 +202,9 @@ const MPMLabel* MPMLabel::getLabels()
 }
 
 // $Log$
+// Revision 1.12  2000/06/23 20:02:26  tan
+// Create pTemperatureLabel in the MPMLable constructor.
+//
 // Revision 1.11  2000/06/16 23:23:35  guilkey
 // Got rid of pVolumeDeformedLabel_preReloc to fix some confusion
 // the scheduler was having.
