@@ -158,8 +158,8 @@ UnstructureAlgoT<FSRC, FDST>::execute(FieldHandle field_h)
     while (hitr != nodemap.end())
     {
       typename FSRC::value_type val;
-      ifield->value(val, (typename FSRC::mesh_type::Node::index_type)((*hitr).first));
-      ofield->set_value(val, (typename FDST::mesh_type::Node::index_type)((*hitr).second));
+      ifield->value(val, (*hitr).first);
+      ofield->set_value(val, (*hitr).second);
 
       ++hitr;
     }
@@ -172,8 +172,8 @@ UnstructureAlgoT<FSRC, FDST>::execute(FieldHandle field_h)
     while (hitr != elemmap.end())
     {
       typename FSRC::value_type val;
-      ifield->value(val, (typename FSRC::mesh_type::Elem::index_type)((*hitr).first));
-      ofield->set_value(val, (typename FDST::mesh_type::Elem::index_type)((*hitr).second));
+      ifield->value(val, (*hitr).first);
+      ofield->set_value(val, (*hitr).second);
 
       ++hitr;
     }
