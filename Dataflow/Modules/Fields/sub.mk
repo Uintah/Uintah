@@ -36,18 +36,25 @@ SRCS     += \
 	$(SRCDIR)/TrainSegment.cc\
 	$(SRCDIR)/TransformField.cc\
 	$(SRCDIR)/ScalarFieldProbe.cc\
+	$(SRCDIR)/GenVectorField.cc\
+	$(SRCDIR)/GenScalarField.cc\
 #[INSERT NEW MODULE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
 	SCICore/Persistent SCICore/Exceptions SCICore/Thread \
 	SCICore/Containers SCICore/TclInterface SCICore/Geom \
-	SCICore/Datatypes SCICore/Geometry SCICore/TkExtensions
-LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+	SCICore/Datatypes SCICore/Geometry SCICore/TkExtensions \
+	SCICore/Math
+LIBS := $(TK_LIBRARY) $(GL_LIBS) $(FLEX_LIBS) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/07/23 18:30:11  dahart
+# Initial commit / Modules to generate scalar & vector fields from
+# symbolic functions
+#
 # Revision 1.5  2000/06/16 04:17:06  samsonov
 # *** empty log message ***
 #
