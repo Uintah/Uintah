@@ -92,7 +92,7 @@ void MPMICE::scheduleInitialize(const LevelP& level,
 
   Task* task = scinew Task("MPMICE::actuallyInitialize",
 			   this, &MPMICE::actuallyInitialize);
-  sched->addTask(task, level->eachPatch(), d_sharedState->allMPMMaterials());
+  sched->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
 
   cerr << "Doing Initialization \t\t\t MPMICE" <<endl;
   cerr << "--------------------------------\n"<<endl; 
