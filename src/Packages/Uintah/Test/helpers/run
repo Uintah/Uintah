@@ -92,7 +92,7 @@ for test in *; do
 	        rm "${BUILD_DIR}/${test}-${mode}.lock"
 	    fi
 	else
-	    echo "$Failed: {test}-${mode} tests"
+	    echo "Failed: ${test}-${mode} tests"
 	    if [ ! -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
 	        ln -s "$BUILDROOT" "${BUILD_DIR}/${test}-${mode}.lock" > /dev/null 2>&1
 		if [ -f "${BUILDROOT}/${mode}/${test}-short.log" ]; then
