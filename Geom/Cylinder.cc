@@ -68,13 +68,13 @@ void GeomCylinder::adjust()
     Vector z(0,0,1);
     if(Abs(axis.y()) < 1.e-5){
 	// Only in x-z plane...
-	zrotaxis=Vector(0,1,0);
+	zrotaxis=Vector(0,-1,0);
     } else {
 	zrotaxis=Cross(axis, z);
 	zrotaxis.normalize();
     }
     double cangle=Dot(z, axis)/height;
-    zrotangle=Acos(cangle);
+    zrotangle=-Acos(cangle);
 }
 
 GeomObj* GeomCylinder::clone()
@@ -85,8 +85,8 @@ GeomObj* GeomCylinder::clone()
 void GeomCylinder::get_bounds(BBox& bb)
 {
     NOT_FINISHED("GeomCylinder::get_bounds");
-    bb.extend(bottom);
-    bb.extend(top);
+    bb.extend(bottom, rad);
+    bb.extend(top, rad);
 }
 
 void GeomCylinder::make_prims(Array1<GeomObj*>& free,

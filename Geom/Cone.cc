@@ -73,20 +73,20 @@ void GeomCone::adjust()
     Vector z(0,0,1);	
     if(Abs(axis.y()) < 1.e-5){
 	// Only in x-z plane...
-	zrotaxis=Vector(0,1,0);
+	zrotaxis=Vector(0,-1,0);
     } else {
 	zrotaxis=Cross(axis, z);
 	zrotaxis.normalize();
     }
     double cangle=Dot(z, axis)/height;
-    zrotangle=Acos(cangle);
+    zrotangle=-Acos(cangle);
 }
 
 void GeomCone::get_bounds(BBox& bb)
 {
     NOT_FINISHED("GeomCone::get_bounds");
-    bb.extend(bottom);
-    bb.extend(top);
+    bb.extend(bottom, bot_rad);
+    bb.extend(top, top_rad);
 }
 
 void GeomCone::make_prims(Array1<GeomObj*>& free,

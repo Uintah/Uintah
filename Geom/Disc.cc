@@ -68,19 +68,19 @@ void GeomDisc::adjust()
     Vector z(0,0,1);
     if(Abs(normal.y()) < 1.e-5){
 	// Only in x-z plane...
-	zrotaxis=Vector(0,1,0);
+	zrotaxis=Vector(0,-1,0);
     } else {
 	zrotaxis=Cross(normal, z);
 	zrotaxis.normalize();
     }
     double cangle=Dot(z, normal);
-    zrotangle=Acos(cangle);
+    zrotangle=-Acos(cangle);
 }
 
 void GeomDisc::get_bounds(BBox& bb)
 {
     NOT_FINISHED("GeomDisc::get_bounds");
-    bb.extend(cen);
+    bb.extend(cen, rad);
 }
 
 void GeomDisc::make_prims(Array1<GeomObj*>& free,
