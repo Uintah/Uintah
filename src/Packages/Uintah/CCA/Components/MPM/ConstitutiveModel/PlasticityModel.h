@@ -65,6 +65,8 @@ namespace Uintah {
     virtual void updatePlastic(const particleIndex idx, 
                                const double& delGamma) = 0;
 
+    virtual double getUpdatedPlasticStrain(const particleIndex idx) = 0;
+
     //////////
     // Calculate the flow stress
     virtual double computeFlowStress(const Matrix3& rateOfDeformation,

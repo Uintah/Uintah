@@ -40,8 +40,6 @@ HyperElasticPlastic::HyperElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8
   d_useMPMICEModifiedEOS = false;
   ps->get("useModifiedEOS",d_useMPMICEModifiedEOS); 
   d_erosionAlgorithm = "none";
-  d_damageCutOff = 1.0;
-  ps->get("damage_cutoff", d_damageCutOff);
   
   d_plasticity = PlasticityModelFactory::create(ps);
   if(!d_plasticity){
@@ -327,7 +325,7 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Check if the damage is greater than the cut-off value
       // Then reset everything and return
-      if (pDamage[idx] > d_damageCutOff) {
+      if (d_damage->hasFailed(pDamage[idx])) {
          pBbarElastic_new[idx] = one;
          pDeformGrad_new[idx] = one;
          pVolume_new[idx]=pMass[idx]/rho_0;
