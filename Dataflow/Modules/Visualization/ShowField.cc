@@ -84,12 +84,15 @@ class ShowField : public Module
   //! Options for rendering non-scalar data.
   GuiInt                   vectors_on_;
   GuiInt                   normalize_vectors_;
-  GuiInt                   has_vec_data_;
+  GuiInt                   has_vector_data_;
   GuiInt                   bidirectional_;
   GuiInt                   arrow_heads_on_;
   bool                     data_dirty_;
   string                   cur_field_data_type_;
 
+  GuiInt                   tensors_on_;
+  GuiInt                   has_tensor_data_;
+  
   //! Options for rendering text.
   GuiInt                   text_on_;
   GuiInt                   text_use_default_color_;
@@ -123,10 +126,12 @@ class ShowField : public Module
   GuiString                node_display_type_;
   GuiString                edge_display_type_;
   GuiString                data_display_type_;
+  GuiString                tensor_display_type_;
   GuiString                active_tab_; //! for saving nets state
   GuiDouble                node_scale_;
   GuiDouble                edge_scale_;
   GuiDouble                vectors_scale_;
+  GuiDouble                tensors_scale_;
   GuiInt                   showProgress_;
   GuiString                interactive_mode_;
 
@@ -138,7 +143,8 @@ class ShowField : public Module
   int                      edge_resolution_;
   int                      data_resolution_;
   LockingHandle<RenderFieldBase>  renderer_;
-  LockingHandle<RenderFieldDataBase>  data_renderer_;
+  LockingHandle<RenderVectorFieldBase>  data_renderer_;
+  LockingHandle<RenderTensorFieldBase>  data_tensor_renderer_;
 
   enum toggle_type_e {
     NODE = 0,
@@ -186,11 +192,13 @@ ShowField::ShowField(GuiContext* ctx) :
   faces_dirty_(true),
   vectors_on_(ctx->subVar("vectors-on")),
   normalize_vectors_(ctx->subVar("normalize-vectors")),
-  has_vec_data_(ctx->subVar("has_vec_data")),
+  has_vector_data_(ctx->subVar("has_vector_data")),
   bidirectional_(ctx->subVar("bidirectional")),
   arrow_heads_on_(ctx->subVar("arrow-heads-on")),
   data_dirty_(true),
   cur_field_data_type_("none"),
+  tensors_on_(ctx->subVar("tensors-on")),
+  has_tensor_data_(ctx->subVar("has_tensor_data")),
   text_on_(ctx->subVar("text-on")),
   text_use_default_color_(ctx->subVar("text-use-default-color")),
   text_color_r_(ctx->subVar("text-color-r")),
@@ -215,10 +223,12 @@ ShowField::ShowField(GuiContext* ctx) :
   node_display_type_(ctx->subVar("node_display_type")),
   edge_display_type_(ctx->subVar("edge_display_type")),
   data_display_type_(ctx->subVar("data_display_type")),
+  tensor_display_type_(ctx->subVar("tensor_display_type")),
   active_tab_(ctx->subVar("active_tab")),
   node_scale_(ctx->subVar("node_scale")),
   edge_scale_(ctx->subVar("edge_scale")),
   vectors_scale_(ctx->subVar("vectors_scale")),
+  tensors_scale_(ctx->subVar("tensors_scale")),
   showProgress_(ctx->subVar("show_progress")),
   interactive_mode_(ctx->subVar("interactive_mode")),
   gui_node_resolution_(ctx->subVar("node-resolution")),
@@ -240,7 +250,8 @@ ShowField::ShowField(GuiContext* ctx) :
   faces_on_.reset();
   render_state_[FACE] = faces_on_.get();
   vectors_on_.reset();
-  render_state_[DATA] = vectors_on_.get();
+  tensors_on_.reset();
+  render_state_[DATA] = vectors_on_.get() || tensors_on_.get();
   text_on_.reset();
   render_state_[TEXT] = text_on_.get();
 }
@@ -291,17 +302,30 @@ ShowField::check_for_vector_data(FieldHandle fld_handle) {
   // Test for vector data possibility
   if (fld_handle.get_rep() == 0) { return false; }
 
-  has_vec_data_.reset();
+  has_vector_data_.reset();
+  has_tensor_data_.reset();
   nodes_as_disks_.reset();
-  if (fld_handle->query_vector_interface(this) != 0) {
-    if (! has_vec_data_.get()) { 
-      has_vec_data_.set(1); 
+  if (fld_handle->query_vector_interface(this) != 0)
+  {
+    if (! has_vector_data_.get())
+    { 
+      has_vector_data_.set(1); 
     }
-    if (fld_handle->data_at() == Field::NODE && nodes_as_disks_.get() == 0) {
+    if (fld_handle->data_at() == Field::NODE && nodes_as_disks_.get() == 0)
+    {
       nodes_as_disks_.set(1); 
     }
     return true;
-  } else if (nodes_as_disks_.get() == 1) {
+  }
+  else if (fld_handle->query_tensor_interface(this) != 0)
+  {
+    if (! has_tensor_data_.get())
+    {
+      has_tensor_data_.set(1);
+    }
+  }
+  if (nodes_as_disks_.get() == 1)
+  {
     nodes_as_disks_.set(0);
   }
   return false;
@@ -331,11 +355,11 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
     }
   }
 
-  if (vfld_handle.get_rep())
+  if (vfld_handle.get_rep() && vfld_handle->query_vector_interface())
   {
     const TypeDescription *vftd = vfld_handle->get_type_description();
     CompileInfoHandle dci =
-      RenderFieldDataBase::get_compile_info(vftd, ftd, ltd);
+      RenderVectorFieldBase::get_compile_info(vftd, ftd, ltd);
     if (!module_dynamic_compile(dci, data_renderer_))
     {
       field_generation_ = -1;
@@ -345,6 +369,22 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
       return false;
     }
   }
+
+  if (vfld_handle.get_rep() && vfld_handle->query_tensor_interface())
+  {
+    const TypeDescription *vftd = vfld_handle->get_type_description();
+    CompileInfoHandle dci =
+      RenderTensorFieldBase::get_compile_info(vftd, ftd, ltd);
+    if (!module_dynamic_compile(dci, data_tensor_renderer_))
+    {
+      field_generation_ = -1;
+      mesh_generation_ = -1;
+      vector_generation_ = -1;
+      data_tensor_renderer_ = 0;
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -467,7 +507,8 @@ ShowField::execute()
       return;
     }
   }
-  else if (fld_handle->query_vector_interface())
+  else if (fld_handle->query_vector_interface() ||
+	   fld_handle->query_tensor_interface())
   {
     vfld_handle = fld_handle;
   }
@@ -534,19 +575,25 @@ ShowField::execute()
   string edt = edge_display_type_.get();
   edge_scale_.reset();
   double es = edge_scale_.get();
+  data_display_type_.reset();
   string vdt = data_display_type_.get();
+  tensor_display_type_.reset();
+  string tdt = tensor_display_type_.get();
   vectors_scale_.reset();
-  double vs = vectors_scale_.get();
+  double vscale = vectors_scale_.get();
+  tensors_scale_.reset();
+  double tscale = tensors_scale_.get();
 
   nodes_on_.reset();
   edges_on_.reset();
   faces_on_.reset();
   vectors_on_.reset();
+  tensors_on_.reset();
   text_on_.reset();
   bool do_nodes = nodes_on_.get() && nodes_dirty_;
   bool do_edges = edges_on_.get() && edges_dirty_;
   bool do_faces = faces_on_.get() && faces_dirty_;
-  bool do_data  = vectors_on_.get() && data_dirty_;
+  bool do_data  = (vectors_on_.get() || tensors_on_.get()) && data_dirty_;
   bool do_text  = text_on_.get() && text_dirty_;
 
   if (render_state_[NODE] != nodes_on_.get()) {
@@ -564,10 +611,10 @@ ShowField::execute()
     face_id_ = 0;
     render_state_[FACE] = faces_on_.get();
   }
-  if (render_state_[DATA] != vectors_on_.get()) {
+  if (render_state_[DATA] != (vectors_on_.get() || tensors_on_.get())) {
     if (data_id_) ogeom_->delObj(data_id_);
     data_id_ = 0;
-    render_state_[DATA] = vectors_on_.get();
+    render_state_[DATA] = vectors_on_.get() || tensors_on_.get();
   }  
   if (render_state_[TEXT] != text_on_.get()) {
     if (text_id_) ogeom_->delObj(text_id_);
@@ -584,7 +631,7 @@ ShowField::execute()
     renderer_->render(fld_handle, 
 		      do_nodes, do_edges, do_faces, false,
 		      def_mat_handle_, data_at_dirty_, color_handle,
-		      ndt, edt, ns, es, vs, normalize_vectors_.get(),
+		      ndt, edt, ns, es, vscale, normalize_vectors_.get(),
 		      node_resolution_, edge_resolution_,
 		      faces_normals_.get(), faces_transparency_.get(),
 		      bidirectional_.get(), arrow_heads_on_.get());
@@ -626,12 +673,25 @@ ShowField::execute()
 						    fld_handle,
 						    color_handle,
 						    def_mat_handle_,
-						    vdt, vs,
+						    vdt, vscale,
 						    normalize_vectors_.get(),
 						    bidirectional_.get(),
 						    arrow_heads_on_.get(),
 						    data_resolution_);
       data_id_ = ogeom_->addObj(data, "Vectors");
+    }
+    else if (vfld_handle.get_rep() &&
+	     data_tensor_renderer_.get_rep() &&
+	     tensors_on_.get())
+    {
+      if (data_id_) ogeom_->delObj(data_id_);
+      GeomHandle data = data_tensor_renderer_->render_data(vfld_handle,
+							   fld_handle,
+							   color_handle,
+							   def_mat_handle_,
+							   tdt, tscale,
+							   data_resolution_);
+      data_id_ = ogeom_->addObj(data, "Tensors");
     }
   }
   if (do_text) {
@@ -680,7 +740,7 @@ ShowField::maybe_execute(toggle_type_e dis_type)
       do_execute = faces_on_.get();
 	break;
     case DATA :
-      do_execute = vectors_on_.get();
+      do_execute = vectors_on_.get() || tensors_on_.get();
 	break;
     case TEXT :
       do_execute = text_on_.get();
@@ -834,6 +894,20 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
       ogeom_->flushViews();
       data_id_ = 0;
     }
+  } else if (args[1] == "toggle_display_tensors"){
+    // Toggle the GeomSwitch.
+    tensors_on_.reset();
+    if ((tensors_on_.get()) && (data_id_ == 0))
+    {
+      data_dirty_ = true;
+      maybe_execute(DATA);
+    }
+    else if (!tensors_on_.get() && data_id_)
+    {
+      ogeom_->delObj(data_id_);
+      ogeom_->flushViews();
+      data_id_ = 0;
+    }
   } else if (args[1] == "toggle_display_text"){
     // Toggle the GeomSwitch.
     text_on_.reset();
@@ -879,6 +953,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
       node_scale_.set(fact);
       edge_scale_.set(fact * 0.5);
       vectors_scale_.set(fact * 10);
+      tensors_scale_.set(fact * 10);
       nodes_dirty_ = true;
       edges_dirty_ = true;
       data_dirty_ = true;
