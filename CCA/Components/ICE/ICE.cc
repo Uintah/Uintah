@@ -1471,13 +1471,13 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx= ice_matl->getDWIndex();
-      new_dw->allocateAndPut(rho_micro[m],  lb->rho_micro_CCLabel, indx,patch);    
-      new_dw->allocateAndPut(sp_vol_CC[m],  lb->sp_vol_CCLabel,    indx,patch);    
-      new_dw->allocateAndPut(rho_CC[m],     lb->rho_CCLabel,       indx,patch);    
-      new_dw->allocateAndPut(Temp_CC[m],    lb->temp_CCLabel,      indx,patch);    
-      new_dw->allocateAndPut(speedSound[m], lb->speedSound_CCLabel,indx,patch);    
-      new_dw->allocateAndPut(vol_frac_CC[m],lb->vol_frac_CCLabel,  indx,patch);    
-      new_dw->allocateAndPut(vel_CC[m],     lb->vel_CCLabel,       indx,patch);    
+      new_dw->allocateAndPut(rho_micro[m],  lb->rho_micro_CCLabel, indx,patch); 
+      new_dw->allocateAndPut(sp_vol_CC[m],  lb->sp_vol_CCLabel,    indx,patch); 
+      new_dw->allocateAndPut(rho_CC[m],     lb->rho_CCLabel,       indx,patch); 
+      new_dw->allocateAndPut(Temp_CC[m],    lb->temp_CCLabel,      indx,patch); 
+      new_dw->allocateAndPut(speedSound[m], lb->speedSound_CCLabel,indx,patch); 
+      new_dw->allocateAndPut(vol_frac_CC[m],lb->vol_frac_CCLabel,  indx,patch); 
+      new_dw->allocateAndPut(vel_CC[m],     lb->vel_CCLabel,       indx,patch); 
     }
     for (int m = 0; m < numMatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
@@ -1653,8 +1653,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     // Compute rho_micro, speedSound, and volfrac
     for (int m = 0; m < numMatls; m++) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();
-          iter++) {
+      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
 /*`==========TESTING==========*/
 // This might be wrong.  Try 1/sp_vol -- Todd 11/22
@@ -3412,13 +3411,15 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > Tdot(numALLMatls);
     StaticArray<constCCVariable<double> > vol_frac(numALLMatls);
     StaticArray<constCCVariable<double> > Temp_CC(numALLMatls);
+    StaticArray<CCVariable<double> > alpha(numALLMatls);
     constCCVariable<double> rho_CC, f_theta,sp_vol_CC;
-    constCCVariable<double> delP;
+    constCCVariable<double> delP, P;
     CCVariable<double> sum_therm_exp;
     vector<double> if_mpm_matl_ignore(numALLMatls);
 
     new_dw->allocateTemporary(sum_therm_exp,patch);
-    new_dw->get(delP,lb->delP_DilatateLabel, 0, patch,gn, 0);
+    new_dw->get(delP, lb->delP_DilatateLabel, 0, patch,gn, 0);
+    new_dw->get(P,    lb->press_CCLabel,      0, patch,gn, 0);
     sum_therm_exp.initialize(0.);
 
     for(int m = 0; m < numALLMatls; m++) {
@@ -3428,6 +3429,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
       int indx = matl->getDWIndex();
       new_dw->get(Tdot[m],    lb->Tdot_CCLabel,    indx,patch, gn,0);
       new_dw->get(vol_frac[m],lb->vol_frac_CCLabel,indx,patch, gac, 1);
+      new_dw->allocateTemporary(alpha[m],patch);
       if (ice_matl) {
         old_dw->get(Temp_CC[m], lb->temp_CCLabel,  indx,patch, gn,0);
       }
@@ -3438,22 +3440,27 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
 
     //__________________________________
     // Sum of thermal expansion
-    // alpha is hardwired for ideal gases
     // ignore contributions from mpm_matls
-    for(int mm = 0; mm < numALLMatls; mm++) {
-      Material* matl = d_sharedState->getMaterial( mm );
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-
-      if_mpm_matl_ignore[mm] = 1.0;
-      if ( mpm_matl) {
-        if_mpm_matl_ignore[mm] = 0.0;
+    // UNTIL we have temperature dependent EOS's for the solids
+    for(int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      int indx = matl->getDWIndex();
+      if (ice_matl) {
+       if_mpm_matl_ignore[m]=1.0;
+       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn, 0);
+       double cv = ice_matl->getSpecificHeat();
+       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+          IntVector c = *iter;
+          alpha[m][c]=
+             ice_matl->getEOS()->getAlpha(Temp_CC[m][c],sp_vol_CC[c],P[c],cv);
+          sum_therm_exp[c] += vol_frac[m][c]*alpha[m][c]*Tdot[m][c];
+        } 
+      } else {
+        if_mpm_matl_ignore[m]=0.0;
+        alpha[m].initialize(0.0);
       }
-      for(CellIterator iter=patch->getExtraCellIterator();
-                                                        !iter.done();iter++){
-        IntVector c = *iter;
-        double alpha =  if_mpm_matl_ignore[mm] * 1.0/Temp_CC[mm][c];
-        sum_therm_exp[c] += vol_frac[mm][c]*alpha*Tdot[mm][c];
-      } 
+     
     }
 
     //__________________________________ 
@@ -3507,10 +3514,8 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
         //  term1
         double kappa = sp_vol_CC[c]/(speedSound[c]*speedSound[c]);
         double term1 = -vol_frac[m][c] * kappa * vol * delP[c];
-
-        double alpha = 1.0/Temp_CC[m][c];  // HARDWRIED FOR IDEAL GAS
-        double term2 = delT * vol * (vol_frac[m][c] * alpha *  Tdot[m][c] -
-                                   f_theta[c] * sum_therm_exp[c]);
+        double term2 = delT * vol * (vol_frac[m][c] * alpha[m][c] * Tdot[m][c] -
+                                     f_theta[c] * sum_therm_exp[c]);
 
         // This is actually mass * sp_vol
         double src = term1 + if_mpm_matl_ignore[m] * term2;
