@@ -45,11 +45,7 @@
 
 /////////////////////////////////////////////////
 // OOGL stuff
-ShadedPrim   * leftTexQuad;
-ShadedPrim   * rightTexQuad;
-ShadedPrim   * topTexQuad;
-ShadedPrim   * bottomTexQuad;
-ShadedPrim   * midTexQuad;
+ShadedPrim   * backgroundTexQuad;
 
 ShadedPrim   * blendTexQuad;
 
@@ -160,21 +156,9 @@ void doNothingCB()
 {
   cout << "doNothingCB\n";
   if( fullscreen ) {
-    glClear( GL_COLOR_BUFFER_BIT );
-    bottomTexQuad->draw();
-    rightTexQuad->draw();
-    leftTexQuad->draw();
-    topTexQuad->draw();
-    midTexQuad->draw();
-
+    backgroundTexQuad->draw();
     glutSwapBuffers();
-
-    glClear( GL_COLOR_BUFFER_BIT );
-    bottomTexQuad->draw();
-    rightTexQuad->draw();
-    leftTexQuad->draw();
-    topTexQuad->draw();
-    midTexQuad->draw();
+    backgroundTexQuad->draw();
   }
 }
 
@@ -191,7 +175,7 @@ main(int argc, char* argv[])
   int gridcellsize = -1;
   int gridcellsizeL2=4;
   int gridcellsizeL3=4;
-  int minObjs1 = 100;
+  int minObjs1 = 20;
   int minObjs2 = 20;
 
   int c0;
@@ -508,14 +492,13 @@ main(int argc, char* argv[])
 	cerr << "WARNING: Unknown bv method\n";
       }
     }
+  } else {
+    scene->set_object( scene->get_object() );
   }
   
   if( fullscreen ) { // For Demo... and oogl stuff 
     xres = 512; // Start in low res mode.
     yres = 288;
-  } else {
-    xres = 256;
-    yres = 256;
   }
 
   if(!scene->get_image(0)){
@@ -557,11 +540,11 @@ main(int argc, char* argv[])
     rtrt_engine->Gjitter_valsb[ii] *= 0.25;
   }
   
-  if( fullscreen ) {
-    // 0.5625 is the 9 to 5 (ish?) aspect ratio.
-    scene->get_camera(0)->setWindowAspectRatio( 0.5625 );
-    scene->get_camera(1)->setWindowAspectRatio( 0.5625 );
-  }
+  double aspectRatio = (double)yres/(double)xres;
+
+  // 0.5625 is the 9 to 5 (ish?) aspect ratio.
+  scene->get_camera(0)->setWindowAspectRatio( aspectRatio );
+  scene->get_camera(1)->setWindowAspectRatio( aspectRatio );
 
   // Start up display thread...
   Dpy* dpy=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
@@ -582,112 +565,36 @@ main(int argc, char* argv[])
   glutInitWindowPosition( 0, 0 );
 
   if( fullscreen ) {
-    glutFullScreen();
+    //glutFullScreen(); // only if full screen is 1280x1024
+    glutReshapeWindow( 1280, 1024 );
   } else {
-    int mainWindowWidth  = 256;
-    int mainWindowHeight = 256; 
-    glutReshapeWindow( mainWindowWidth, mainWindowHeight );
+    glutReshapeWindow( xres, yres );
   }
 
   //////////////////////////////////////////////////////////////////
   // OOGL stuff
 
   if( fullscreen ) {
-    //// LEFT QUAD STUFF
+    //// BACKGROUND QUAD STUFF
     PPMImage * ppm = 
-      new PPMImage( "/usr/sci/data/Geometry/interface/left.ppm", true );
+      new PPMImage( "/usr/sci/data/Geometry/interface/background.ppm", true );
 
     float z = 0.0;  
     bool  genTexCoords = true;
     Vec2f lowerLeft( 0, 0 );
-    Vec2f upperRight( 255, 1024 );
+    Vec2f upperRight( 2048, 1024 );
 
-    PlanarQuad * leftQuad=
+    PlanarQuad * backgroundQuad=
       new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
-    leftQuad->compile();
+    backgroundQuad->compile();
 
-    Vec2i texDimen(256,1024);
-    BasicTexture * leftTex = 
+    Vec2i texDimen(2048,1024);
+    BasicTexture * backgroundTex = 
       new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_REPLACE,
 			NULL, GL_FLOAT, &((*ppm)(0,0)) );
 
-    Shader * leftTexShader = new Shader( leftTex ); // Turn it into a shader
-    leftTexQuad = new ShadedPrim( leftQuad, leftTexShader );
-
-    //// RIGHT QUAD STUFF
-    ppm = new PPMImage( "/usr/sci/data/Geometry/interface/right.ppm", true );
-
-    lowerLeft.set( 1022, 0 );
-    upperRight.set( 1280, 1024 );
-
-    PlanarQuad * rightQuad=
-      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
-    rightQuad->compile();
-
-    texDimen.set(256,1024);
-    BasicTexture * rightTex = 
-      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_REPLACE,
-			NULL, GL_FLOAT, &((*ppm)(0,0)) );
-
-    Shader * rightTexShader = new Shader( rightTex ); // Turn it into a shader
-    rightTexQuad = new ShadedPrim( rightQuad, rightTexShader );
-
-    //// MID QUAD STUFF
-    // 128,258
-    ppm = new PPMImage( "/usr/sci/data/Geometry/interface/mid.ppm", true );
-
-    lowerLeft.set( 128, 254 );
-    upperRight.set( 1152, 766 );
-
-    PlanarQuad * midQuad=
-      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
-    midQuad->compile();
-
-    texDimen.set(1024,512);
-    BasicTexture * midTex = 
-      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_REPLACE,
-			NULL, GL_FLOAT, &((*ppm)(0,0)) );
-
-    Shader * midTexShader = new Shader( midTex ); // Turn it into a shader
-    midTexQuad = new ShadedPrim( midQuad, midTexShader );
-
-
-    //// TOP QUAD STUFF
-    ppm = new PPMImage( "/usr/sci/data/Geometry/interface/top.ppm", true );
-
-    lowerLeft.set( 255, 768 );
-    upperRight.set( 1280, 1024 );
-
-    PlanarQuad * topQuad=
-      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
-    topQuad->compile();
-
-    texDimen.set(1024,256);
-    BasicTexture * topTex = 
-      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_REPLACE,
-			NULL, GL_FLOAT, &((*ppm)(0,0)) );
-
-    Shader * topTexShader = new Shader( topTex ); // Turn it into a shader
-    topTexQuad = new ShadedPrim( topQuad, topTexShader );
-
-    //// BOTTOM QUAD STUFF
-    ppm = new PPMImage( "/usr/sci/data/Geometry/interface/bottom.ppm", true );
-
-    lowerLeft.set( 255, 0 );
-    upperRight.set( 1280, 256 );
-
-    PlanarQuad * bottomQuad=
-      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
-    bottomQuad->compile();
-
-    texDimen.set(1024,256);
-    BasicTexture * bottomTex = 
-      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_REPLACE,
-			NULL, GL_FLOAT, &((*ppm)(0,0)) );
-
-    Shader * bottomTexShader = new Shader( bottomTex ); // Turn it into a shader
-    bottomTexQuad = new ShadedPrim( bottomQuad, bottomTexShader );
-
+    Shader * backgroundTexShader = new Shader( backgroundTex );
+    backgroundTexQuad = new ShadedPrim( backgroundQuad, backgroundTexShader );
 
     //// BLEND QUAD STUFF
 
@@ -712,10 +619,8 @@ main(int argc, char* argv[])
   
     //// RTRT QUAD STUFF -- NEED 2 QUADS (512 Tall + 64 Tall)
 
-    lowerLeft.set(   126, 296 );
-    upperRight.set( 1149, 830 ); // SHOULD BE: 808, but to fit 600 pixel
-                                 // high frame, going to strech it a little
-                                 // Once frame is right, go back.
+    lowerLeft.set(   128, 328 );
+    upperRight.set( 1152, 840 );
     PlanarQuad * rtrtBotQuad=
       new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
     rtrtBotQuad->compile();
@@ -727,8 +632,8 @@ main(int argc, char* argv[])
     Shader * rtrtBotTexShader = new Shader( rtrtBotTex );
     rtrtBotTexQuad = new ShadedPrim( rtrtBotQuad, rtrtBotTexShader );
 
-    lowerLeft.set( 126, 830 ); //SHOULD BE 808.  See not above about stretching
-    upperRight.set( 1149, 899 ); // 872
+    lowerLeft.set( 128, 840 );
+    upperRight.set( 1152, 904 );
 
     PlanarQuad * rtrtTopQuad=
       new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
@@ -742,8 +647,8 @@ main(int argc, char* argv[])
     rtrtTopTexQuad = new ShadedPrim( rtrtTopQuad, rtrtTopTexShader );
 
     // MEDIUM RESOLUTION RTRT RENDER WINDOW
-    lowerLeft.set( 126, 296 );  // see note above about proper dimensions
-    upperRight.set( 1150, 830 );
+    lowerLeft.set(   128, 328 );
+    upperRight.set( 1152, 840 );
 
     PlanarQuad * rtrtMidBotQuad=
       new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
@@ -756,32 +661,14 @@ main(int argc, char* argv[])
     Shader * rtrtMidBotTexShader = new Shader( rtrtMidBotTex );
     rtrtMidBotTexQuad = new ShadedPrim( rtrtMidBotQuad, rtrtMidBotTexShader );
 
-    lowerLeft.set( 126, 830 );
-    upperRight.set( 1150, 899 );
+    lowerLeft.set(   128, 840 );
+    upperRight.set( 1152, 904 );
 
     PlanarQuad * rtrtMidTopQuad=
       new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
     rtrtMidTopQuad->compile();
 
     texDimen.set(512,32);
-    rtrtMidTopTex = 
-      new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGBA, GL_REPLACE );
-
-    Shader * rtrtMidTopTexShader = new Shader( rtrtMidTopTex );
-    rtrtMidTopTexQuad = new ShadedPrim( rtrtMidTopQuad, rtrtMidTopTexShader );
-  } else {
-    // NOT FULL SCREEN.  CURRENTLY FIXED TO 256x256
-
-    float z = 0.0;  
-    bool  genTexCoords = true;
-    Vec2f lowerLeft( 0, 0 );
-    Vec2f upperRight( 256, 256 );
-    Vec2i texDimen(256,256);
-
-    PlanarQuad * rtrtMidTopQuad=
-      new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
-    rtrtMidTopQuad->compile();
-
     rtrtMidTopTex = 
       new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGBA, GL_REPLACE );
 
