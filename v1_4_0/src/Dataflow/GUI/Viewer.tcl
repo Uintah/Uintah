@@ -120,14 +120,14 @@ itcl_class ViewWindow {
 	global $this-diffuse-scale
 	if {![info exists $this-diffuse-scale]} {set $this-diffuse-scale 1.0}
 	global $this-specular-scale
-	if {![info exists $this-specular-scale]} {set $this-specular-scale 1.0}
+	if {![info exists $this-specular-scale]} {set $this-specular-scale 0.4}
 	global $this-emission-scale
 	if {![info exists $this-emission-scale]} {set $this-emission-scale 1.0}
 	global $this-shininessscale
 	if {![info exists $this-shininess-scale]} {set $this-shininess-scale 1.0}
 
 	global $this-sbase
-	if {![info exists $this-sbase]} {set $this-sbase 1.0}
+	if {![info exists $this-sbase]} {set $this-sbase 0.4}
 	global $this-sr
 	if {![info exists $this-sr]} {set $this-sr 1}
 	global $this-do_stereo
@@ -529,7 +529,7 @@ itcl_class ViewWindow {
 	set "$this-global-movieName" "movie"
 	set "$this-global-movieFrame" 0
 	set "$this-global-resize" 0
-	set "$this-x-resize" 640
+	set "$this-x-resize" 700
 	set "$this-y-resize" 512
 	set $this-do_bawgl 0
 	set $this-tracker_state 0
@@ -624,8 +624,8 @@ itcl_class ViewWindow {
 	pack $m.objlist -side left -padx 2 -pady 2 -fill y
 	label $m.objlist.title -text "Objects:"
 	pack $m.objlist.title -side top
-	canvas $m.objlist.canvas -width 400 -height 100 \
-	        -scrollregion "0 0 400 100" \
+	canvas $m.objlist.canvas -width 370 -height 100 \
+	        -scrollregion "0 0 370 100" \
 		-yscrollcommand "$m.objlist.scroll set" -borderwidth 0 -yscrollincrement 10
 	pack $m.objlist.canvas -side right -padx 2 -pady 2 -fill y
 	
@@ -647,8 +647,8 @@ itcl_class ViewWindow {
 		-command "$this-c redraw"
 	pack $m.stereo -side top
 	
-	scale $m.sbase -variable $this-sbase -length 100 -from 0.1 -to 4 \
-		-resolution 0.05 -orient horizontal -label "Fusion Scale:" \
+	scale $m.sbase -variable $this-sbase -length 100 -from 0.1 -to 2 \
+		-resolution 0.02 -orient horizontal -label "Fusion Scale:" \
 		-command "$this-c redraw"
 	pack $m.sbase -side top
 #	checkbutton $m.sr -text "Fixed\nFocal\nDepth" -variable $this-sr -anchor w
