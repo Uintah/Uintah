@@ -349,6 +349,13 @@ Dpy::run()
       //cerr << "xres = "<<xres<<", yres = "<<yres<<'\n';
       //cerr << "priv->xres = "<<priv->xres<<", priv->yres = "<<priv->yres<<'\n';
 
+      // Exit if you are supposed to.
+      if (nworkers == 0) {
+        cout << "Dpy is closing\n";
+        close_display();
+        return;
+      }
+  
       if(bench){
 	if(frame==bench_warmup){
 	  cerr << "Warmup done, starting bench\n";
@@ -358,25 +365,29 @@ Dpy::run()
 	  cerr << "Benchmark completed in " <<  dt << " seconds ("
 	       << (frame-bench_warmup)/dt << " frames/second)\n";
           if (exit_after_bench)
-            Thread::exitAll(0);
+            numThreadsRequested_ = 0;//Thread::exitAll(0);
           else
             bench = false;
 	}
       }
 
       // dump the frame and quit for now
-      if (frame >= 3) {
+      if (frame == 3) {
 	if (!display_frames) {
 	  scene->get_image(priv->showing_scene)->save_ppm("displayless");
-          Thread::exitAll(0);
+          numThreadsRequested_ = 0;//Thread::exitAll(0);
 	}
       }
 
+#if 0
       // Exit if you are supposed to.
       if (scene->get_rtrt_engine()->stop_execution()) {
 	cout << "Dpy going down\n";
-	Thread::exit();
+        close_display();
+        return;
+        //	Thread::exit();
       }
+#endif
       // Slurp up X events...
       if(!rserver){
 	while (XEventsQueued(dpy, QueuedAfterReading)){
@@ -631,6 +642,12 @@ Dpy::renderFrame() {
 
   barrier->wait(nworkers+1);
 
+  // Exit if you are supposed to.
+  if (nworkers == 0) {
+    cout << "Dpy has no more workers, going away\n";
+    return;
+  }
+  
   drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(),Color(1,0,0));
 
   bool changed = true;
@@ -641,7 +658,8 @@ Dpy::renderFrame() {
 
   changed = checkGuiFlags();
 
-  scene->refill_work(rendering_scene, numThreadsRequested_);
+  //  scene->refill_work(rendering_scene, numThreadsRequested_);
+  scene->refill_work(rendering_scene, nworkers);
 
   if(!changed && !scene->no_aa){
     double x1, x2, w;
@@ -837,10 +855,12 @@ Dpy::renderFrame() {
       guiCam_->followPath( *stealth_ );
     }
     st->add(SCIRun::Time::currentSeconds(), Color(0,1,1));
-
-    rendering_scene=1-rendering_scene;
-    showing_scene=1-showing_scene;
   }
+
+  // These need to change even if we are not displaying frames,
+  // because the workers are changing these.
+  rendering_scene=1-rendering_scene;
+  showing_scene=1-showing_scene;
 } // end renderFrame()
 
 void
