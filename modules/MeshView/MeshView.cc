@@ -16,8 +16,6 @@
 #include <Classlib/HashTable.h>
 #include <MeshView/MeshView.h>
 #include <Geometry/Point.h>
-#include <Field3D.h>
-#include <Field3DPort.h>
 #include <Geom.h>
 #include <GeometryPort.h>
 #include <ModuleList.h>

@@ -16,7 +16,6 @@
 
 #include <UserModule.h>
 #include <Geometry/Point.h>
-#include <Field3D.h>
 #include <MUI.h>
 #include "connect.h"
 
