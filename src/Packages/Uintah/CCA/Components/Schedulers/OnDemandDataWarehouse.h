@@ -211,7 +211,7 @@ private:
   
    // Generic get function used by the get functions for grid-based
    // (node or cell) variables to avoid code duplication.
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1424
 #endif  
    template <Patch::VariableBasis basis, class VariableBase, class DWDatabase>
@@ -223,7 +223,7 @@ private:
    allocateGridVar(VariableBase& var, DWDatabase& db,
 		   const VarLabel* label, int matlIndex, const Patch* patch,
 		   Ghost::GhostType gtype, int numGhostCells);
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1424
 #endif  
 

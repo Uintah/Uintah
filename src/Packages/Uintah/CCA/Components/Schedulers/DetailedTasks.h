@@ -4,7 +4,6 @@
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
