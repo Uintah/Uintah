@@ -65,13 +65,10 @@ interface MeshPort extends sci.cca.Port
 interface PDEMatrixPort extends sci.cca.Port
 {
 	//provides a interface to 
-	Matrix getMatrix();
+	void getMatrix(out DMatrix);
 	array<double> getVector();
+	int getSize();
 }
-
-
-
-
 
 // BEGIN proposed sparker
 // Builder events
