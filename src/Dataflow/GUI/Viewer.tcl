@@ -631,9 +631,18 @@ itcl_class ViewWindow {
 # 		$m.eframe.cull $m.eframe.dl $m.eframe.movie $m.eframe.mf \
 #	         $m.eframe.mn -in $m.eframe -side top -anchor w
 	
+	radiobutton $m.eframe.wire -text Wire -value Wire -variable $this-global-type -command "$this-c redraw"
+	radiobutton $m.eframe.flat -text Flat -value Flat -variable $this-global-type -command "$this-c redraw"
+	radiobutton $m.eframe.gouraud -text Gouraud -value Gouraud -variable $this-global-type -command "$this-c redraw"
+
 	pack $m.eframe -anchor w -padx 2 -side left
 	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip \
-		$m.eframe.cull $m.eframe.dl -in $m.eframe -side top -anchor w
+	    $m.eframe.cull $m.eframe.dl \
+	    $m.eframe.wire $m.eframe.flat $m.eframe.gouraud \
+	    -in $m.eframe -side top -anchor w
+	    
+	    #make_labeled_radio $m.shade "Shading:" $r top $this-global-type {Wire Flat Gouraud}
+	    #pack $m.shade -in $m.eframe -side top -anchor w
 
         frame $m.eframe.f -relief groove -borderwidth 2
         pack $m.eframe.f -side top -anchor w
@@ -674,10 +683,6 @@ itcl_class ViewWindow {
         pack $m.eframe.f.moviebase -side top -anchor w -padx 2 -pady 2
 	pack $m.eframe.f.resize $m.eframe.f.e1 \
 	    $m.eframe.f.x $m.eframe.f.e2 -side left  -anchor w
-
-	make_labeled_radio $m.shade "Shading:" $r top $this-global-type \
-		{Wire Flat Gouraud}
-	pack $m.shade -in $m.eframe -side top -anchor w
 
 	frame $m.objlist -relief groove -borderwidth 2
 	pack $m.objlist -side left -padx 2 -pady 2 -fill y
@@ -1014,10 +1019,15 @@ itcl_class ViewWindow {
 		-command "$this-c redraw"
 	$menun add checkbutton -label "Display List" -variable $this-$objid-dl\
 		-command "$this-c redraw"
+
 	$menun add separator
-	$menun add radiobutton -label Wire -variable $this-$objid-type
-	$menun add radiobutton -label Flat -variable $this-$objid-type
-	$menun add radiobutton -label Gouraud -variable $this-$objid-type
+	$menun add radiobutton -label Wire -variable $this-$objid-type \
+	    -command "$this-c redraw"	    
+	$menun add radiobutton -label Flat -variable $this-$objid-type \
+	    -command "$this-c redraw"
+	$menun add radiobutton -label Gouraud -variable $this-$objid-type \
+	    -command "$this-c redraw"
+
 	global "$this-$objid-light"
 	global "$this-$objid-fog"
 	global "$this-$objid-type"
