@@ -1,0 +1,102 @@
+#ifndef UINTAH_SECOND_ORDER_ADVECTOR_H
+#define UINTAH_SECOND_ORDER_ADVECTOR_H
+
+#include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
+#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Core/Containers/StaticArray.h>
+
+
+
+namespace Uintah {
+
+
+  class SecondOrderAdvector : public Advector {
+
+  public:
+    SecondOrderAdvector();
+    SecondOrderAdvector(DataWarehouse* new_dw, const Patch* patch);
+    virtual ~SecondOrderAdvector();
+
+    virtual SecondOrderAdvector* clone(DataWarehouse* new_dw, 
+                                  const Patch* patch);
+
+
+    virtual void inFluxOutFluxVolume(const SFCXVariable<double>& uvel_CC,
+                                 const SFCYVariable<double>& vvel_CC,
+                                 const SFCZVariable<double>& wvel_CC,
+                                 const double& delT, 
+                                 const Patch* patch,
+				     const int& indx);
+			 
+    virtual void advectQ(const CCVariable<double>& q_CC,
+                      const Patch* patch,
+                      CCVariable<double>& q_advected,
+			 DataWarehouse* new_dw);
+    
+    virtual void advectQ(const CCVariable<Vector>& q_CC,
+                      const Patch* patch,
+                      CCVariable<Vector>& q_advected,
+			 DataWarehouse* new_dw);   
+    
+
+    enum FACE {TOP, BOTTOM, RIGHT, LEFT, FRONT, BACK};
+    struct fflux { double d_fflux[6]; };    // face flux
+  
+  private:
+    CCVariable<fflux> d_OFS, r_out_x, r_out_y, r_out_z;
+    const VarLabel* OFS_CCLabel;
+
+    friend class SecondOrderCEAdvector;
+    friend const TypeDescription* fun_getTypeDescription(fflux*);
+
+  private:
+    
+    template<class T> void gradientLimiter(const CCVariable<T>& q_CC,
+                              const Patch* patch,
+                              CCVariable<T>& grad_lim,
+				  T unit, T SN,
+			         DataWarehouse* new_dw);
+			 
+    template<class T> void qAverageFlux(const CCVariable<T>& q_CC,
+                              const Patch* patch,
+				  CCVariable<T>& grad_lim,
+				  StaticArray<CCVariable<T> >& q_OAFS,
+			         DataWarehouse* new_dw);
+    
+    template<class T> void advect(StaticArray<CCVariable<T> >& q_OAFS,
+                              const Patch* patch,
+                              CCVariable<T>& q_advected);
+	
+    template<class T> void q_CCMaxMin(const CCVariable<T>& q_CC,
+                                  const Patch* patch,
+				      CCVariable<T>& q_CC_max, 
+				      CCVariable<T>& q_CC_min);
+				  			  
+    template<class T> void q_vertexMaxMin(const CCVariable<T>& q_CC,
+                                  const Patch* patch,
+				      CCVariable<T>& q_vrtx_max, 
+				      CCVariable<T>& q_vrtx_min,
+			             DataWarehouse* new_dw);
+				  		  
+    template<class T> void gradQ(const CCVariable<T>& q_CC,
+                                  const Patch* patch,
+				      CCVariable<T>& q_grad_x,
+				      CCVariable<T>& q_grad_y,
+				      CCVariable<T>& q_grad_z);			  			   
+			 
+  };
+
+  
+}
+
+namespace SCIRun {
+void swapbytes( Uintah::SecondOrderAdvector::fflux& );
+} // namespace SCIRun
+#endif
+
+
