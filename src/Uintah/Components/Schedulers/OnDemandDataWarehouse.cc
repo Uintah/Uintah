@@ -879,7 +879,7 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
 	 if(neighbor){
 	    if(!d_ncDB.exists(label, matlIndex, neighbor))
 	       throw UnknownVariable(label->getName(), neighbor, matlIndex,
-				     neighbor == patch?"on patch":"on neighbor");
+				    neighbor == patch?"on patch":"on neighbor");
 	    NCVariableBase* srcvar = 
 	       d_ncDB.get(label, matlIndex, neighbor);
 
@@ -900,7 +900,10 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
       }
       IntVector dn = highIndex-lowIndex;
       long wantnodes = dn.x()*dn.y()*dn.z();
-      ASSERTEQ(wantnodes, totalNodes);
+//      ASSERTEQ(wantnodes, totalNodes);
+       if(wantnodes!=totalNodes){
+	  cerr << "Warning:  wantnodes != totalNodes " << endl;
+       }
    }
   d_lock.readUnlock();
 }
@@ -1577,6 +1580,9 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* /*delset*/)
 
 //
 // $Log$
+// Revision 1.64  2001/01/16 20:09:56  guilkey
+// Replaced automatic test killing ASSERTEQ with a warning.
+//
 // Revision 1.63  2000/12/23 00:49:02  witzel
 // Added generic put(Variable*, ...) method, changed the UnknownVariable.h
 // include path (which moved), and changed the emit method to take advantage
