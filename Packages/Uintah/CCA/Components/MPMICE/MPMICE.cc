@@ -818,7 +818,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   int itworked=-9;
 
   // Convert momenta to velocities.  Slightly different for MPM and ICE.
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     for (int m = 0; m < numALLMatls; m++) {
       mass[m]           = rho_CC[m][*iter] * vol + SMALL_NUM;
       Temp_CC[m][*iter] = int_eng_L[m][*iter]/(mass[m]*cv_CC[m][*iter]);
@@ -832,7 +832,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   Vector total_mom(0.,0.,0.);
   for (int m = 0; m < numALLMatls; m++) {
     Vector matl_mom(0.,0.,0.);
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
 	matl_mom += mom_L[m][*iter];
     }
     cout << "Momentum for material " << m << " = " << matl_mom << endl;
@@ -843,7 +843,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 
 
 
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     //   Form BETA matrix (a), off diagonal terms
     //  The beta and (a) matrix is common to all momentum exchanges
     for(int m = 0; m < numALLMatls; m++)  {
@@ -956,7 +956,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   }
   //__________________________________
   // Convert vars. primitive-> flux 
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     for (int m = 0; m < numALLMatls; m++) {
         mass[m] = rho_CC[m][*iter] * vol + SMALL_NUM;
         int_eng_L_ME[m][*iter] = Temp_CC[m][*iter] * cv_CC[m][*iter] * mass[m];
@@ -985,7 +985,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     Vector matl_mom(0.,0.,0.);
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
 	matl_mom += mom_L_ME[m][*iter];
         if(mpm_matl){
 	   dvdt_CC[m][*iter] = vel_CC[m][*iter]-vel_CC_old[m][*iter];
