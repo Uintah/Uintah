@@ -46,7 +46,8 @@ size_t total_num_spheres = 0;
 Array1<float *> spheredata;
 Array1<char *> deleteme;
 Array1<size_t> spheredatasize;
-size_t last_sphere = 0;
+float* alldata = 0;
+size_t next_sphere = 0;
 #define NUM_DATA 3
 int gridcellsize = 6;
 int griddepth = 2;
@@ -61,7 +62,8 @@ Object *make_geometry( )
     radius = 1;
 
   total_num_spheres = 8;
-  float *data = new float[total_num_spheres*NUM_DATA];
+  alldata = new float[total_num_spheres*NUM_DATA];
+  float *data = alldata;
   spheredata.add(data);
   spheredatasize.add(total_num_spheres);
   for(int z = -1; z <= 1; z+=2)
@@ -137,7 +139,7 @@ Object *make_geometry_fromfile(char *filename)
   // point data.
 
   // Allocate memory
-  float *alldata = new float[total_num_spheres*NUM_DATA];
+  alldata = new float[total_num_spheres*NUM_DATA];
   float *data = alldata;
   for(int i = 0; i < spheredata.size(); i++) {
     size_t size = spheredatasize[i] * sizeof(float) * NUM_DATA;
@@ -168,12 +170,16 @@ Object *make_geometry_fromfile(char *filename)
   return gridspheres;
 }
 
-Group* get_next_sphere_set() {
+Group* get_next_sphere_set(size_t num_spheres) {
   Group *group = new Group();
 
+  // Fix num_spheres to prevent running off the array
+  if (num_spheres + next_sphere > total_num_spheres)
+    num_spheres = total_num_spheres - next_sphere;
+  
   // create spheres
-  float *data = spheredata[0];
-  for (int i=0;i<total_num_spheres;i++) {
+  float *data = alldata + (next_sphere*3);
+  for (int i=0;i<num_spheres;i++) {
     double x = *data; data++;
     double y = *data; data++;
     double z = *data; data++;
@@ -183,6 +189,8 @@ Group* get_next_sphere_set() {
     group->add( new TextureSphere(center, radius, tex_size) );
   }
 
+  next_sphere += num_spheres;
+  
   return group;
 }
 
@@ -321,11 +329,13 @@ int main(int argc, char** argv)
   double lx=-0.25, ly=0.2, lz=-0.1;
   double lr = 0.01;
   double intensity=1000.0;
-  int num_samples=10000;
+  int num_samples=100;
   int depth=3;
   char *filename = 0;
   char *bg="/home/sci/cgribble/research/datasets/mpm/misc/envmap.ppm";
-
+  char *outfile = 0;
+  int nworkers = 1;
+  
   for(int i=1;i<argc;i++) {
     if(strcmp(argv[i], "-light_pos")==0) {
       lx=atof(argv[++i]);
@@ -342,19 +352,26 @@ int main(int argc, char** argv)
     else if(strcmp(argv[i],"-depth")==0) {
       depth=atoi(argv[++i]);
     }
-    else if(strcmp(argv[i],"-tex_size")==0) {
+    else if(strcmp(argv[i],"-tex_size")==0 || strcmp(argv[i],"-tex_res")==0) {
       tex_size=atoi(argv[++i]);
     }
     else if(strcmp(argv[i],"-radius")==0) {
       radius = atof(argv[++i]);
     }
-    else if(strcmp(argv[i],"-file")==0) {
+    else if(strcmp(argv[i],"-file")==0 || strcmp(argv[i],"-i")==0) {
       filename = argv[++i];
       cerr << "Reading from file "<<filename<<endl;
     } else if (strcmp(argv[i],"-bg")==0) {
       bg = argv[++i];
-    }
-    else {
+    } else if (strcmp(argv[i],"-o")==0) {
+      outfile = argv[++i];
+    } else if (strcmp(argv[i],"-np")==0) {
+      nworkers = atoi(argv[++i]);
+    } else if (strcmp(argv[i],"-nsides")==0) {
+      gridcellsize = atoi(argv[++i]);
+    } else if (strcmp(argv[i],"-gdepth")==0) {
+      griddepth = atoi(argv[++i]);
+    } else {
       cerr<<"unrecognized option \""<<argv[i]<<"\""<<endl;
 
       cerr << "valid options are: \n";
@@ -366,6 +383,7 @@ int main(int argc, char** argv)
       cerr << "-tex_size <int>\n";
       cerr << "-file <filename>\n";
       cerr << "-bg <background image>\n";
+      cerr << "-o <outfile name>\n";
       exit(1);
     }
   }
@@ -392,19 +410,44 @@ int main(int argc, char** argv)
   }
 
   // Create the context for rendering
+  Semaphore sema("genpttex::Semaphore", nworkers);
   PathTraceContext ptcontext(Color(0.1,0.7,0.2), ptlight, geometry, emap,
-			     num_samples, depth);
+			     num_samples, depth, &sema);
+  
+  if (outfile == 0) {
+    outfile = "sphere";
+  }
   
   // Partition the spheres out and generate textures
-  Group *texture_spheres;
-  if (filename)
-    texture_spheres = get_next_sphere_set();
-  else
-    texture_spheres = dynamic_cast<Group*>(geometry);
-  
-  PathTraceWorker ptworker(texture_spheres, &ptcontext, "sphere");
-
-  ptworker.run();
+  if (nworkers <= 1) {
+    Group *texture_spheres;
+    if (filename)
+      texture_spheres = get_next_sphere_set(total_num_spheres);
+    else
+      texture_spheres = dynamic_cast<Group*>(geometry);
+    
+    PathTraceWorker ptworker(texture_spheres, &ptcontext, outfile);
+    
+    ptworker.run();
+  } else {
+    // We need to determine how many spheres to do per work unit
+    size_t work_load = (size_t)ceil((double)total_num_spheres/nworkers);
+    // This prevents the work load from getting too large
+    if (work_load > 100)
+      work_load = 100;
+    while (next_sphere < total_num_spheres) {
+      sema.down();
+      // Get the next range of spheres
+      size_t last_work = next_sphere;
+      Group *work_unit = get_next_sphere_set(work_load);
+      // Create a thread
+      PathTraceWorker *ptworker = new PathTraceWorker(work_unit, &ptcontext,
+						      outfile, last_work);
+      Thread *thread = new Thread(ptworker, "PathTraceWorker");
+      thread->detach();
+    }
+    sema.down(nworkers);
+  }
       
   return 0;
 }
