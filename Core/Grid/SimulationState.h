@@ -89,9 +89,16 @@ class VarLabel;
 	 return ice_matls[idx];
       }
 
-
       Vector getGravity() const {
 	return d_gravity;
+      }
+
+      double getElapsedTime() const {
+	return d_elapsed_time;
+      }
+
+      void setElapsedTime(double t) {
+	d_elapsed_time = t;
       }
 
    private:
@@ -106,6 +113,7 @@ class VarLabel;
       std::vector<MPMMaterial*> mpm_matls;
       std::vector<ICEMaterial*> ice_matls;
       Vector d_gravity;
+      double d_elapsed_time;
 
    };
 
