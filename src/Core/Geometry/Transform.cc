@@ -33,6 +33,7 @@
 #include <Core/Geometry/Plane.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/Trig.h>
+#include <Core/Persistent/Pstreams.h>
 #include <iostream>
 using std::cerr;
 using std::endl;

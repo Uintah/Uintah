@@ -30,6 +30,8 @@
 
 #include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Persistent/PersistentSTL.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Transform.h>
 #include <sci_hash_map.h>
 
 namespace SCIRun {

@@ -19,16 +19,17 @@
 #define Geometry_Transform_h 1
 
 #include <Core/share/share.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Persistent/Persistent.h>
+#include <string>
 
 namespace SCIRun {
 
-class Vector;
-class Point;
-class Quaternion;
-class Plane;
+  class Vector;
+  class Point;
+  class Quaternion;
+  class Piostream;
+  class Plane;
+  class Transform;
+  class TypeDescription;
   
 void SCICORESHARE Pio(Piostream&, Transform&);
 
@@ -111,7 +112,7 @@ public:
     }
 
   //! support dynamic compilation
-  static const string& get_h_file_path();
+  static const std::string& get_h_file_path();
 
   friend void SCICORESHARE Pio(Piostream&, Transform&);
 };

@@ -30,6 +30,7 @@
 
 #include <Core/GuiInterface/GuiContext.h>
 #include <Core/GuiInterface/GuiInterface.h>
+#include <iostream>
 #include <sstream>
 #include <iomanip>
 using namespace std;

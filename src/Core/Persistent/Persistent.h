@@ -32,8 +32,6 @@
 #define SCI_project_Persistent_h 1
 
 #include <map>
-#include <iosfwd>
-#include <vector>
 #include <string>
 
 #include <Core/share/share.h>
@@ -42,7 +40,6 @@ namespace SCIRun {
 
 using std::string;
 using std::map;
-using std::vector;
 using std::pair;
 
 class Persistent;

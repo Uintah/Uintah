@@ -35,6 +35,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/share/share.h>
 #include <string>
 #include <iostream>
@@ -94,7 +95,7 @@ public:
   unsigned get_length() const { return length_; }
   //Point get_min() const { return min_; }
   //Point get_max() const { return max_; }
-  Vector diagonal() const { return get_bounding_box().diagonal(); }
+  Vector diagonal() const;
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
 

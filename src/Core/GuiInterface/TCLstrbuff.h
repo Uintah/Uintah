@@ -32,8 +32,8 @@
 
 #include <Core/GuiInterface/GuiVar.h>
 
+#include <iosfwd>
 #include <sstream>
-#include <iostream>
 
 namespace SCIRun {
 

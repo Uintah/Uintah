@@ -1,10 +1,11 @@
+#ifdef __sgi
+
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/ScanlineField.h>
 #include <Core/Datatypes/PointCloudField.h>
-
 
 using namespace SCIRun;
 
@@ -73,3 +74,4 @@ const TypeDescription* get_type_description(PointCloudField<char> *);
 const TypeDescription* get_type_description(PointCloudField<unsigned int> *);
 const TypeDescription* get_type_description(PointCloudField<unsigned short> *);
 const TypeDescription* get_type_description(PointCloudField<unsigned char> *);
+#endif

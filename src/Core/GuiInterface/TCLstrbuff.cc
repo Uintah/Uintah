@@ -29,6 +29,7 @@
 
 #include <Core/GuiInterface/TCLstrbuff.h>
 #include <Core/Containers/StringUtil.h>
+#include <iostream>
 #include <string.h>
 #include <tcl.h>
 

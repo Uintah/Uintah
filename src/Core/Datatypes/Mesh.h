@@ -19,15 +19,14 @@
 #define Datatypes_Mesh_h
 
 #include <Core/Datatypes/PropertyManager.h>
-#include <Core/Geometry/BBox.h>
-#include <Core/Geometry/Transform.h>
-#include <Core/Util/TypeDescription.h>
 #include <Core/Containers/LockingHandle.h>
 
 namespace SCIRun {
-
-class Mesh;
-typedef LockingHandle<Mesh> MeshHandle;
+  class BBox;
+  class Mesh;
+  class Transform;
+  class TypeDescription;
+  typedef LockingHandle<Mesh> MeshHandle;
 
 
 class Mesh : public PropertyManager {

@@ -36,18 +36,18 @@
 #include <string>
 
 namespace SCIRun {
-	class InternalError : public Exception {
-	public:
-	    InternalError(const std::string&);
-	    InternalError(const InternalError&);
-	    virtual ~InternalError();
-	    virtual const char* message() const;
-	    virtual const char* type() const;
-	protected:
-	private:
-	    std::string message_;
-	    InternalError& operator=(const InternalError&);
-	};
+  class InternalError : public Exception {
+  public:
+    InternalError(const std::string&);
+    InternalError(const InternalError&);
+    virtual ~InternalError();
+    virtual const char* message() const;
+    virtual const char* type() const;
+  protected:
+  private:
+    std::string message_;
+    InternalError& operator=(const InternalError&);
+  };
 } // End namespace SCIRun
 
 #endif

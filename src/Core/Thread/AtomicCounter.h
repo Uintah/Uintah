@@ -33,9 +33,6 @@
 
 #include <Core/share/share.h>
 
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Mutex.h>
-
 namespace SCIRun {
 
 class AtomicCounter_private;

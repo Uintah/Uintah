@@ -31,6 +31,8 @@
 #include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Persistent/PersistentSTL.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/Geometry/Vector.h>
 #include <float.h>  // for DBL_MAX
 #include <iostream>

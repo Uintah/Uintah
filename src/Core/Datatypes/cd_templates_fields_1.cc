@@ -1,3 +1,5 @@
+#ifdef __sgi
+
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
@@ -99,3 +101,4 @@ const TypeDescription* get_type_description(QuadSurfField<unsigned char> *);
 #pragma reset woff 1468
 #endif
 
+#endif
