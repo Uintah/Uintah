@@ -28,5 +28,111 @@ DEALINGS IN THE SOFTWARE.
 
 <chapter>
   <title>User Interface</title>
-  <para></para>
+  <section>
+    <title>Processing Pane</title>
+    <para>
+    </para>
+    <section>
+      <title>Dynamic Filters</title>
+      <para>
+	Not every user's pre-processing steps will be the same nor in the same
+	order.  One user may want to crop first then resample while another may
+	prefer to resample first and crop later.  BioImage does not impose an order
+	to the processing steps.  The user can add and delete steps to form the
+	desired pipeline.  This pipeline is represented in the History section
+	of the Processing Pane.
+      </para>
+      <para>
+	The history will always start with a Load Data step and 
+	corresponding user interface.  All subsequent filters will appear under the
+	Load Data UI.  
+      </para>
+      <section>
+	<title>Anatomy of a Filter UI</title>
+	<para>
+	  Each filter UI contains four main components: the visibility icon, label
+	  insert bar, and close button.  In addition to these four things, 
+	  each filter contains a unique interface representing its particular parameters.
+	</para>
+	<para>
+	  The visibility icon is located in the top left of each filter UI.  This icon
+	  controls whether the entire filter UI is displayed and in full view or just 
+	  the label and close button.  By clicking this icon, the user can hide or 
+	  show the filter UI.
+	</para>
+	<para>
+	  To the right of the visibility icon is a label which will remain visible whether
+	  the UI is in full view or hidden.  The label defaults to be the
+	  string &quot;Filter - Unknown&quot;.  By right clicking on the label, the
+	  user can edit the label to be something more meaningful.  This is especially
+	  useful when a pipeline contains many filters.
+	</para>
+	<para>
+	  The insert bar is used for inserting new filters between existing filters
+	  and is discussed more in the Adding and Inserting Filters section.
+	</para>
+	<para>
+	  The red close button will delete the filter from the pipeline.  See
+	  the section Deleting Filters for more information.
+	</para>
+      </section>
+      <section>
+	<title>Adding and Inserting Filters</title>
+	<para>
+	  There are two ways to add a new filter to the pipeline.  The first approach
+	  is to click the button for the corresponding filter.  These buttons are 
+	  located directly above the history section. When clicking one of these
+	  buttons, the filter will always be added to the end of the pipeline.
+	</para>
+	<para>
+	  There is another approach to adding filters to the pipeline which allows
+	  the user to insert a filter between two existing filters.  One of these
+	  filters may also be the Load Data step.  To insert a filter, the user
+	  must click the blue bar which separates the two filters, causing a menu
+	  of available filters to appear.  Selecting one of these filters will 
+	  add the appropriate filter in the specified location into the pipeline.
+	</para>
+      </section>
+      <section>
+	<title>Deleting Filters</title>
+	<para>
+	  The red close button is located in the top right corner. Clicking
+	  this button will delete the filter from the pipeline and remove the UI from
+	  the history.  All settings for that filter will be lost. Since there must
+	  always be data to process, the Load Data UI does not have the close button.
+	</para>
+      </section>
+      <section>
+	<title>Currently Viewed Data - The Eye</title>
+	<para>
+	  The radiobuttons to the left of the filters indicate the currenlty viewed data
+	  or the eye.  For example, if the radiobutton next to a crop filter is 
+	  selected, the cropped image will be shown in the 2D and 3D windows. As filters
+	  are added or inserted, the eye will update to be the set to the output of the
+	  new filter.  It is especially helpful when editing Crop value to have the eye
+	  selected for the Crop filter being edited. Note: If a filter hasn't been 
+	  executed yet, the last generated output will be shown. 
+	</para>
+      </section>
+      <section>
+	<title>Update Button</title>
+	<para>
+	  Anytime a filter parameter has changed, or the eye has been moved, the user
+	  must click the green Update button located towards the bottom of the
+	  Processing Pane to see the results. The Update button is only enabled
+	  when a change has been made which requires re-execution.
+	</para>
+      </section>
+    </section>
+  </section>
+  <section>
+    <title>Rendering Windows</title>
+    <para>
+    </para>
+  </section>
+  <section>
+    <title>Visualization Pane</title>
+    <para>
+    </para>
+  </section>
 </chapter>
