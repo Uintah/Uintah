@@ -63,7 +63,15 @@ itcl_class Uintah_Operators_TensorOperator {
 	pack $w.calc.l $w.calc.elem $w.calc.eigen2D $w.calc.pressure $w.calc.eqivstress -anchor w
 	pack $w.calc -side left -padx 2 -pady 2 -fill y
 
-	select_element_extractor
+	if { [set $this-operation] == 0} {
+	    select_element_extractor
+	} elseif { [set $this-operation] == 1} {
+	    select_eigen2D
+	} elseif { [set $this-operation] == 2} {
+	    select_pressure
+	} elseif { [set $this-operation] == 3} {
+	    select_equivalent_stress
+	}
     }
 
     method select_element_extractor {} {
