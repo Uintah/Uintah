@@ -61,7 +61,7 @@ Isosurface::Isosurface(GuiContext* ctx) :
   gui_iso_value_quantity_(ctx->subVar("isoval-quantity")),
   gui_extract_from_new_field_(ctx->subVar("extract-from-new-field")),
   gui_use_algorithm_(ctx->subVar("algorithm")),
-  gui_build_trisurf_(ctx->subVar("build_trisurf")),
+  gui_build_field_(ctx->subVar("build_trisurf")),
   gui_np_(ctx->subVar("np")),
   gui_active_isoval_selection_tab_(ctx->subVar("active-isoval-selection-tab")),
   gui_active_tab_(ctx->subVar("active_tab")),
@@ -120,15 +120,16 @@ Isosurface::execute()
     new_field( field );
     last_generation_ = field->generation;
     if ( !gui_extract_from_new_field_.get() )
+    {
       return;
-
+    }
     // fall through and extract isosurface from the new field
   }
 
-  isovals_.resize(0);
+  vector<double> isovals;
   if (gui_active_isoval_selection_tab_.get() == "0")
   { // slider
-    isovals_.push_back(gui_iso_value_.get());
+    isovals.push_back(gui_iso_value_.get());
   }
   else if (gui_active_isoval_selection_tab_.get() == "1")
   { // typed
@@ -138,7 +139,7 @@ Isosurface::execute()
       warning("Typed isovalue out of range -- skipping isosurfacing.");
       return;
     }
-    isovals_.push_back(val);
+    isovals.push_back(val);
   }
   else if (gui_active_isoval_selection_tab_.get() == "2")
   { // quantity
@@ -150,7 +151,7 @@ Isosurface::execute()
     }
     double di=(prev_max_ - prev_min_)/(num+1);
     for (int i=0; i<num; i++) 
-      isovals_.push_back((i+1)*di+prev_min_);
+      isovals.push_back((i+1)*di+prev_min_);
   }
   else
   {
@@ -158,9 +159,9 @@ Isosurface::execute()
     return;
   }
 
-  surfaces_.resize(0);
-  trisurf_mesh_ = 0;
-  build_trisurf_ = gui_build_trisurf_.get();
+  bool build_field = gui_build_field_.get();
+  vector<GeomObj *> surface_geometries;
+  FieldHandle surface_fields = 0;
   const TypeDescription *td = field->get_type_description();
   switch (gui_use_algorithm_.get()) {
   case 0:  // Marching Cubes
@@ -175,16 +176,16 @@ Isosurface::execute()
       mc_alg->set_np( gui_np_.get() ); 
       if ( gui_np_.get() > 1 )
       {
-	build_trisurf_ = false;
+	build_field = false;
       }
       mc_alg->set_field( field.get_rep() );
-      for (unsigned int iv=0; iv<isovals_.size(); iv++)
+      for (unsigned int iv=0; iv<isovals.size(); iv++)
       {
-	mc_alg->search( isovals_[iv], build_trisurf_);
-	surfaces_.push_back( mc_alg->get_geom() );
+	mc_alg->search( isovals[iv], build_field);
+	surface_geometries.push_back( mc_alg->get_geom() );
       }
-      // if multiple isosurfaces, just send last one for Field output
-      trisurf_mesh_ = mc_alg->get_field();
+      // If multiple isosurfaces, just send last one for Field output.
+      surface_fields = mc_alg->get_field();
     }
     break;
   case 1:  // Noise
@@ -200,12 +201,13 @@ Isosurface::execute()
 	}
 	noise_alg->set_field(field.get_rep());
       }
-      for (unsigned int iv=0; iv<isovals_.size(); iv++)
+      for (unsigned int iv=0; iv<isovals.size(); iv++)
       {
-	surfaces_.push_back(noise_alg->search(isovals_[iv], build_trisurf_));
+	surface_geometries.push_back(noise_alg->search(isovals[iv],
+						       build_field));
       }
-      // if multiple isosurfaces, just send last one for Field output
-      trisurf_mesh_ = noise_alg->get_field();
+      // If multiple isosurfaces, just send last one for Field output.
+      surface_fields = noise_alg->get_field();
     }
     break;
 
@@ -221,12 +223,12 @@ Isosurface::execute()
 	}
 	sage_alg->set_field(field.get_rep());
       } 
-      for (unsigned int iv=0; iv<isovals_.size(); iv++)
+      for (unsigned int iv=0; iv<isovals.size(); iv++)
       {
 	GeomGroup *group = new GeomGroup;
 	GeomPts *points = new GeomPts(1000);
-	sage_alg->search(isovals_[0], group, points);
-	surfaces_.push_back( group );
+	sage_alg->search(isovals[0], group, points);
+	surface_geometries.push_back( group );
       }
     }
     break;
@@ -234,13 +236,8 @@ Isosurface::execute()
     error("Unknown Algorithm requested.");
     return;
   }
-  send_results();
-}
 
-
-void
-Isosurface::send_results()
-{
+  // Merged send_results.
   GeomGroup *geom = new GeomGroup;;
 
   // Color the surface.
@@ -253,13 +250,13 @@ Isosurface::send_results()
   ColorMapHandle cmap;
   const bool have_ColorMap = inColorMap->get(cmap);
   
-  for (unsigned int iv=0; iv<isovals_.size(); iv++)
+  for (unsigned int iv=0; iv<isovals.size(); iv++)
   {
     MaterialHandle matl;
 
     if (have_ColorMap)
     {
-      matl= cmap->lookup(isovals_[iv]);
+      matl= cmap->lookup(isovals[iv]);
     }
     else
     {
@@ -267,9 +264,9 @@ Isosurface::send_results()
 				   gui_color_g_.get(),
 				   gui_color_b_.get()));
     }
-    if (surfaces_[iv]) 
+    if (surface_geometries[iv]) 
     {
-      geom->add(scinew GeomMaterial( surfaces_[iv] , matl ));
+      geom->add(scinew GeomMaterial( surface_geometries[iv] , matl ));
     }
   }
 
@@ -280,7 +277,7 @@ Isosurface::send_results()
     return;
   }
   
-  // stop showing the prev. surface
+  // Stop showing the previous surface.
   if ( geom_id_ )
   {
     ogeom->delObj( geom_id_ );
@@ -292,11 +289,11 @@ Isosurface::send_results()
     return;
   }
 
-  // send to viewer
+  // Send to viewer.
   geom_id_ = ogeom->addObj( geom, surface_name);
 
-  // output surface
-  if (build_trisurf_ && trisurf_mesh_.get_rep())
+  // Output surface.
+  if (build_field && surface_fields.get_rep())
   {
     FieldOPort *osurf = (FieldOPort *)get_oport("Surface");
     if (!osurf)
@@ -304,13 +301,13 @@ Isosurface::send_results()
       error("Unable to initialize oport 'Surface'.");
       return;
     }
-    osurf->send(trisurf_mesh_);
+    osurf->send(surface_fields);
   }
 }
 
 
 void
-Isosurface::new_field( FieldHandle &field )
+Isosurface::new_field( FieldHandle field )
 {
   const string type = field->get_type_description()->get_name();
 
@@ -325,7 +322,7 @@ Isosurface::new_field( FieldHandle &field )
   if ( !field->get_property("minmax", minmax))
   {
     sfi->compute_min_max(minmax.first, minmax.second);
-    // cache this potentially expensive to compute value.
+    // Cache this potentially expensive to compute value.
     field->set_property("minmax", minmax, true);
   }
   

@@ -51,7 +51,7 @@ class Isosurface : public Module {
   GuiInt     gui_iso_value_quantity_;
   GuiInt     gui_extract_from_new_field_;
   GuiInt     gui_use_algorithm_;
-  GuiInt     gui_build_trisurf_;
+  GuiInt     gui_build_field_;
   GuiInt     gui_np_;          
   GuiString  gui_active_isoval_selection_tab_;
   GuiString  gui_active_tab_; //! for saving nets state
@@ -60,24 +60,19 @@ class Isosurface : public Module {
   GuiDouble  gui_color_g_;
   GuiDouble  gui_color_b_;
 
-  vector<GeomObj *> surfaces_;
-  vector<double>    isovals_;
-  FieldHandle       trisurf_mesh_;
-
   //! status variables
   int        geom_id_;
   double     prev_min_;
   double     prev_max_;
   int        last_generation_;
-  int        build_trisurf_;
+
+  void new_field(FieldHandle field);
+  //void send_results();
 
 public:
   Isosurface(GuiContext* ctx);
   virtual ~Isosurface();
   virtual void execute();
-
-  void new_field( FieldHandle & );
-  void send_results();
 };
 
 } // End namespace SCIRun
