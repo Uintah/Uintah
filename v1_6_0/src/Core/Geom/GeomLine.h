@@ -85,6 +85,32 @@ public:
   virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
+
+class SCICORESHARE GeomCLines : public GeomObj {
+public:
+  double line_width_;
+  vector<Point> points_;
+  vector<Color> colors_;
+
+  GeomCLines();
+  GeomCLines(const GeomCLines&);
+
+  void add(const Point &p0, const Color &c0, const Point &p1, const Color &c1);
+  void setLineWidth(float val) { line_width_ = val; }
+
+  virtual ~GeomCLines();
+  virtual GeomObj* clone();
+  virtual void get_bounds(BBox&);
+
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+  
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
+};
+
 // can generate "lit" streamlines this way
 
 class SCICORESHARE TexGeomLines : public GeomObj {
