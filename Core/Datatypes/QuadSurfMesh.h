@@ -130,7 +130,7 @@ public:
   void get_neighbors(Face::array_type &array, Face::index_type idx) const;
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(Node::index_type idx) const;
+  double get_size(Node::index_type idx) const { return 0; }
   double get_size(Edge::index_type idx) const
   {
     Node::array_type arr;
