@@ -34,6 +34,7 @@
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/ScanlineMesh.h>
 #include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Basis/NoData.h>
 
 using namespace SCIRun;
 
@@ -88,4 +89,4 @@ template class GenericField<PCMesh, FDCuintBasis,   vector<unsigned int> >;
 template class GenericField<PCMesh, FDCushortBasis, vector<unsigned short> >;
 template class GenericField<PCMesh, FDCucharBasis,  vector<unsigned char> >;
 template class GenericField<PCMesh, FDCulongBasis,  vector<unsigned long> >;
-
+template class GenericField<PCMesh, NoDataBasis<double>, vector<double> >; 

@@ -208,7 +208,8 @@ protected:
 
 
 template <class T>
-const TypeDescription* get_type_description(HexTrilinearLgn<T> *)
+const TypeDescription* 
+get_type_description(HexTrilinearLgn<T> *)
 {
   static TypeDescription* td = 0;
   if(!td){
