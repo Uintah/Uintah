@@ -19,6 +19,7 @@
 #define Core_OS_Dir_H
 
 #include <string>
+#include <vector>
 
 namespace SCIRun {
    
@@ -74,6 +75,10 @@ namespace SCIRun {
 
       Dir createSubdir(const std::string& name);
       Dir getSubdir(const std::string& name);
+      bool exists();
+
+     void getFilenamesBySuffix(const std::string& suffix,
+			       std::vector<std::string>& filenames);
 
       std::string getName() const {
 	 return name_;

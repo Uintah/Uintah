@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <iostream>
 #include <unistd.h>
+#include <dirent.h>
 
 using namespace std;
 
@@ -131,3 +132,27 @@ void Dir::move(const std::string& filename, Dir& destDir)
    return;
 }
 
+void Dir::getFilenamesBySuffix(const std::string& suffix,
+			       vector<string>& filenames)
+{
+  DIR* dir = opendir(name_.c_str());
+  if (!dir) 
+    return;
+  const char* ext = suffix.c_str();
+  for(dirent* file = readdir(dir); file != 0; file = readdir(dir)){
+    if ((strlen(file->d_name)>=strlen(ext)) && 
+	(strcmp(file->d_name+strlen(file->d_name)-strlen(ext),ext)==0)) {
+      filenames.push_back(file->d_name);
+    }
+  }
+}
+
+bool Dir::exists()
+{
+  struct stat buf;
+  if(lstat(name_.c_str(),&buf) != 0)
+    return false;
+  if (S_ISDIR(buf.st_mode))
+    return true;
+  return false;
+}
