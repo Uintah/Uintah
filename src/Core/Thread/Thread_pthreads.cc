@@ -582,25 +582,28 @@ namespace SCICore {
 Mutex::Mutex(const char* name)
     : d_name(name)
 {
-
-    if(!initialized)
-				Thread::initialize();
-		
-		if(this == 0){
-				fprintf(stderr, "WARNING: creation of null mutex\n");
-		}
-		
-    d_priv=new Mutex_private;
-    if(pthread_mutex_init(&d_priv->mutex, NULL) != 0)
-				throw ThreadError(std::string("pthread_mutex_init: ")
-													+strerror(errno));		
+  
+  if(!initialized)
+    Thread::initialize();
+  
+  if(this == 0){
+    fprintf(stderr, "WARNING: creation of null mutex\n");
+  }
+  
+  d_priv=new Mutex_private;
+  if(pthread_mutex_init(&d_priv->mutex, NULL) != 0)
+    throw ThreadError(std::string("pthread_mutex_init: ")
+		      +strerror(errno));		
 }
 
 Mutex::~Mutex()
 {
-    if(pthread_mutex_destroy(&d_priv->mutex) != 0)
+  pthread_mutex_unlock(&d_priv->mutex);
+  if(pthread_mutex_destroy(&d_priv->mutex) != 0) {
+    std::cerr << "pthread_mutex_destroy() failed!!" << endl;
 	throw ThreadError(std::string("pthread_mutex_destroy: ")
 			  +strerror(errno));
+  }
     delete d_priv;
 }
 
@@ -849,6 +852,10 @@ ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.17  2000/12/01 06:07:44  moulding
+// added call to pthread_mutex_unlock() before call to pthread_mutex_destroy().
+// This prevents the SIGABRT at system exit on linux.
+//
 // Revision 1.16  2000/09/25 18:04:05  sparker
 // Added partial support for debuggin under linux
 // Added environment variable SCI_DBXCOMMAND
