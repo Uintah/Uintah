@@ -480,6 +480,8 @@ case $1 in
   ;;
   Fusion)
     sci_check_plplot=yes
+  ;;
+  DataIO)
     sci_check_mdsplus=yes
     sci_check_hdf5=yes
   ;;
