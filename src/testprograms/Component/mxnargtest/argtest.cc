@@ -224,9 +224,13 @@ int main(int argc, char* argv[])
           MxNArrayRep* arrr = new MxNArrayRep(2,dr);
 	  serv->setCallerDistribution("D",arrr); 
 
+	  ::std::cerr << "INARR FINISHED\n";
           serv->in_arr(c_arr);
-          serv->out_arr(c_arr);
-          serv->inout_arr(c_arr);
+	  ::std::cerr << "INARR FINISHED -- OUTARR\n";
+	  serv->out_arr(c_arr);
+          ::std::cerr << "INARR FINISHED -- INOUTARR\n";
+	  serv->inout_arr(c_arr);
+          ::std::cerr << "INOUTARR FINISHED\n";
 
 	  double dt=Time::currentSeconds()-stime;
 	  cerr << reps << " reps in " << dt << " seconds\n";
