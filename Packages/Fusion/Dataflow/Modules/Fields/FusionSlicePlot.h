@@ -56,9 +56,9 @@ FusionSlicePlotAlgoT<FIELD>::execute(FieldHandle field_h, double scale)
 {
   FIELD *ifield = (FIELD *) field_h.get_rep();
 
-  ScalarFieldInterface *sfi = ifield->query_scalar_interface();
+  ScalarFieldInterfaceHandle sfi = ifield->query_scalar_interface();
 
-  if( sfi ) {
+  if( sfi.get_rep() ) {
 
     FIELD *ifield = (FIELD *) field_h.get_rep();
     FIELD *ofield = ifield->clone();
