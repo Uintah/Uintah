@@ -49,8 +49,6 @@ ICELabel::ICELabel()
     scinew VarLabel("intE_L_CC",CCVariable<double>::getTypeDescription());
   mass_L_CCLabel = 
     scinew VarLabel("mass_L_CC",CCVariable<double>::getTypeDescription());
-  rho_L_CCLabel = 
-    scinew VarLabel("rho_L_CC",CCVariable<double>::getTypeDescription());
   mom_L_ME_CCLabel = 
     scinew VarLabel("mom_L_ME_CC",CCVariable<Vector>::getTypeDescription());
   int_eng_L_ME_CCLabel = 
@@ -121,7 +119,6 @@ ICELabel::~ICELabel()
     delete mom_L_CCLabel;
     delete int_eng_L_CCLabel;
     delete mass_L_CCLabel;
-    delete rho_L_CCLabel;
     delete mom_L_ME_CCLabel;
     delete int_eng_L_ME_CCLabel;
     delete q_CCLabel;
