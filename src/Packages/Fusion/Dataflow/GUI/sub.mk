@@ -16,6 +16,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/FusionSlicePlot.tcl\
 	$(SRCDIR)/FusionFieldReader.tcl\
 	$(SRCDIR)/FusionFieldSetReader.tcl\
+	$(SRCDIR)/NIMRODNrrdConverter.tcl\
 	$(SRCDIR)/PPPLNrrdConverter.tcl\
 	$(SRCDIR)/MDSPlusFieldReader.tcl\
 	$(SRCDIR)/MDSPlusDataReader.tcl\
