@@ -40,6 +40,8 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Util/NotFinished.h>
 
+#include <Packages/Uintah/CCA/Components/MPM/Fracture/NormalFracture.h>
+
 #include <iostream>
 #include <fstream>
 
@@ -267,7 +269,6 @@ void SerialMPM::scheduleComputeConnectivity(SchedulerP& sched,
   *   related nodes)
   * out(P.VISIBILITY) */
 
-  int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task( "SerialMPM::computeConnectivity",
 			  this,&SerialMPM::computeConnectivity);
 
@@ -872,25 +873,25 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	    if( patch->containsNode(ni[k]) ) {
 	      if( conn[k] == Connectivity::connect || 
 	          conn[k] == Connectivity::contact) {
-	        totalgmass[ni[k]]     += pmass[idx]          * S_connect[k];
-	        gmass[ni[k]]          += pmass[idx]          * S_connect[k];
-	        totalmass += pmass[idx] * S_connect[k];
-	        gmassContact[ni[k]]   += pmass[idx]          * S_contact[k];
-	        gTemperature[ni[k]]   += pTemperature[idx] * 
-	        pmass[idx] * S_contact[k];
-	        gvolume[ni[k]]        += pvolume[idx]        * S_contact[k];
+	        totalgmass[ni[k]]   += pmass[idx]          * S_connect[k];
+	        gmass[ni[k]]        += pmass[idx]          * S_connect[k];
+	        totalmass           += pmass[idx]          * S_connect[k];
+	        gmassContact[ni[k]] += pmass[idx]          * S_contact[k];
+	        gTemperature[ni[k]] += pTemperature[idx]   * 
+	                               pmass[idx]          * S_contact[k];
+	        gvolume[ni[k]]      += pvolume[idx]        * S_contact[k];
 	      }
 
 	      if( conn[k] == Connectivity::connect ) {
-	       gexternalforce[ni[k]] += pexternalforce[idx] * S_contact[k];
-	       gvelocity[ni[k]]      += pvelocity[idx] *pmass[idx]*S_contact[k];
+	        gexternalforce[ni[k]] += pexternalforce[idx] * S_contact[k];
+	        gvelocity[ni[k]]      += pvelocity[idx] *pmass[idx]*S_contact[k];
 	      }
 	      else if( conn[k] == Connectivity::contact ) {
-	       gexternalforce[ni[k]] += pContactNormal[idx] * 
-		 ( Dot(pContactNormal[idx],pexternalforce[idx]) * S_contact[k]);
-	       gvelocity[ni[k]]      += pContactNormal[idx] * 
-                 ( Dot(pContactNormal[idx],pvelocity[idx]) * 
-                 pmass[idx] * S_contact[k] );
+	        gexternalforce[ni[k]] += pContactNormal[idx] * 
+		  ( Dot(pContactNormal[idx],pexternalforce[idx]) * S_contact[k]);
+	        gvelocity[ni[k]]      += pContactNormal[idx] * 
+                  ( Dot(pContactNormal[idx],pvelocity[idx]) * 
+                  pmass[idx] * S_contact[k] );
 	      }
 	    }
 	  }
@@ -932,14 +933,14 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
            gTemperatureNoBC[*iter] = gTemperature[*iter]/gmassContact[*iter];
            gTemperature[*iter] /= gmassContact[*iter];
 	 }
-       }
-       else {  // Do interpolation without fracture
+      }
+      else {  // Do interpolation without fracture
          for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
 	   gvelocity[*iter] /= gmass[*iter];
            gTemperatureNoBC[*iter] = gTemperature[*iter]/gmass[*iter];
            gTemperature[*iter] /= gmass[*iter];
 	 }
-       }
+      }
 
       // Apply grid boundary conditions to the velocity before storing the data
 
@@ -1078,7 +1079,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       NCVariable<Matrix3>       gstress;
       NCVariable<double>        gmass;
 
-      ParticleVariable<double>  p_pressure;;
+      ParticleVariable<double>  p_pressure;
 
       ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch,
 					       Ghost::AroundNodes, 1,
@@ -1772,7 +1773,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           acc = Vector(0.0,0.0,0.0);
 
           tempRate = 0;
-	
+
           // Accumulate the contribution from each surrounding vertex
           for(int k = 0; k < 8; k++) {
 	     if( conn[k] == Connectivity::connect || 
@@ -1795,7 +1796,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 		    S_contact[k] );
 	     }
 	  }
-
+	  
           // Update the particle's position and velocity
           pTemperatureNew[idx] = pTemperature[idx] + tempRate * delT;
           thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
@@ -1805,6 +1806,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             pvelocitynew[idx] = pvelocity[idx] + acc * delT;
           }
 	  else {        
+	    cout<<"isolated particle!"<<endl;
+	    exit(0);
    	    //for isolated particles in fracture
             pxnew[idx]      =  px[idx] + pvelocity[idx] * delT;
             pvelocitynew[idx] = pvelocity[idx] +

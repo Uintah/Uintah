@@ -53,6 +53,9 @@ public:
          NormalFracture(ProblemSpecP& ps);
 	~NormalFracture();
 
+  //for debugging
+  static bool   isDebugParticle(const Point& p);
+
 private:
 };
 

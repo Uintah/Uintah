@@ -182,10 +182,11 @@ void QLAlgorithm(Matrix3& z, Vector& d)
     do {
       for (m=l;m<=n-1;m++) { //Look for a single small subdiagonal element to split the matrix.
         dd=fabs(d[m])+fabs(d[m+1]);
-        if ((double)(fabs(e[m])+dd) == dd) break;
+        if ( fabs(e[m]) < dd*1.e-6) break;
       }
       if (m != l) {
-        assert (iter++ < 30);
+        iter++;
+        assert(iter<30);
 	//cout<<"iter: "<<iter<<endl;
         g=(d[l+1]-d[l])/(2.0*e[l]); //Form shift.
         r=pythag(g,1.0);
