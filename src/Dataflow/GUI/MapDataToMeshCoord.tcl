@@ -56,8 +56,12 @@ itcl_class SCIRun_FieldsGeometry_MapDataToMeshCoord {
 	radiobutton $w.b.x -text "X    " -variable $this-coord -value 0
 	radiobutton $w.b.y -text "Y    " -variable $this-coord -value 1
 	radiobutton $w.b.z -text "Z    " -variable $this-coord -value 2
-	radiobutton $w.b.n -text "Push surface nodes by (normal x data)" -variable $this-coord -value 3
+	radiobutton $w.b.n -text "Push surface nodes by (normal x data)" \
+	    -variable $this-coord -value 3
 	pack $w.b.x $w.b.y $w.b.z $w.b.n -side left -expand 1 -fill x
 	pack $w.l $w.b -side top -fill both -expand 1
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
