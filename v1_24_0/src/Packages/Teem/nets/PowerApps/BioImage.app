@@ -1305,7 +1305,6 @@ class BioImageApp {
             setGlobal $m14-scale_factor {1.0}
             setGlobal $m14-faux {1}
             setGlobal $m14-histo {0.5}
-            setGlobal $m14-filename "/home/darbyb/work/data/SCIRunData/1.22.0//volume/tooth.xff"
             setGlobal $m14-name-0 {Triangle}
             setGlobal $m14-0-color-r {0.12221829371}
             setGlobal $m14-0-color-g {0.773248783139}
