@@ -114,11 +114,9 @@ void
 TclObj::set_window( const string & window, const string& args,  bool exec )
 {
   window_ = window;
-  //cerr << "TclObj args = " << args << endl;
   if ( exec ) {
     ostringstream cmd;
     cmd << id_ << " ui " << window << " " << args;
-    //cerr << "TclObj::set_window  " << cmd.str() << endl;
     TCL::execute( cmd.str().c_str() );
   }
   has_window_ = true;
