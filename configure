@@ -3153,7 +3153,7 @@ echo "configure:3109: checking for $MAKE version 3.78.1" >&5
     fi
   
 
-for ac_prog in mawk gawk nawk awk
+for ac_prog in gawk mawk nawk awk
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -9316,7 +9316,7 @@ EOF
     DEF_PETSC="#define HAVE_PETSC 1"
     PETSC_DIR=$i
     PETSC_EXTRA_LIBS="-lpetsccontrib -lpetscdm -lpetscmat \
-      -lpetscsles -lpetscsnes -lpetscts -lpetscvec $LAPACK_LIBRARY -llapack \
+      -lpetscsles -lpetscsnes -lpetscts -lpetscvec $LAPACK_LIBRARY $LAPACK \
       $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 $MPI_LIBRARY $MPI $FLIBS -lm"
     break
   fi 

@@ -40,6 +40,7 @@ SRCS     += \
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldSet.cc\
+	$(SRCDIR)/Probe.cc\
 	$(SRCDIR)/SamplePlane.cc\
 	$(SRCDIR)/SampleLattice.cc\
 	$(SRCDIR)/ScalarFieldStats.cc\
