@@ -99,17 +99,48 @@ void TimeDataFile::open(std::string filename)
     nrows = 0;
     byteskip = 0;
     lineskip = 0;
+    keyvalue.clear();
+    datafilename = "";
+    content = "";
+    endian = "";
+    type = "";
+    unit = "";
+    dimension = 0;
+    ntype = 0;
+    elemsize = 0;
 
     std::string line;
-     
+    
+    int numlines = 0; 
+       
     while(!file.eof())
     { 
       getline(file,line);
+      numlines++;
+      
+      if ((line.size() == 0)&&(datafilename == ""))
+      {
+        // Apparently this is a combined header data file;
+        // Stop reading header and telll reader how many lines
+        // to skip.
+        lineskip += numlines;
+        datafilename = filename;
+        break;
+      }
+      
       std::string::size_type colon = line.find(":");
       if (colon < (line.size()-1))
       {
         std::string keyword = remspaces(line.substr(0,colon));
         std::string attribute = line.substr(colon+1);
+        
+        if ((attribute.size() > 0)&&(attribute[0] == '='))
+        {
+          // we have a key value pair.
+          std::string value = line.substr(colon+2);
+          keyvalue[keyword] = value;
+          continue;
+        }
         
         if (cmp_nocase(keyword,"encoding") == 0) encoding = remspaces(attribute);
         if (cmp_nocase(keyword,"type") == 0) type = remspaces(attribute);
@@ -172,7 +203,7 @@ void TimeDataFile::open(std::string filename)
       throw TimeDataFileException("Improper NRRD dimensions: number of columns/rows is smaller then one");  
     }
     
-    datafile = fopen(datafilename.c_str(),"r");
+    datafile = fopen(datafilename.c_str(),"rb");
     if (datafile == 0)
     {
         std::string::size_type slash = filename.size();
@@ -182,7 +213,9 @@ void TimeDataFile::open(std::string filename)
         {
           datafilename = filename.substr(0,slash+1) + datafilename;
         }
-        datafile = fopen(datafilename.c_str(),"r");
+        
+      
+        datafile = fopen(datafilename.c_str(),"rb");
         if (datafile == 0)
         {
           throw TimeDataFileException("Could not find/open datafile");    
@@ -219,72 +252,148 @@ void TimeDataFile::getcolmatrix(SCIRun::MatrixHandle& mh,int colstart,int colend
     throw TimeDataFileException("Column start is bigger than column end");
   }
 
-  datafile = fopen(datafilename.c_str(),"rb");
-  if (datafile == 0) 
-  {
-    throw TimeDataFileException("Could not find/open datafile");
-  }
 
-  if (lineskip > 0)
-  {
-     char buffer;
-     int ln = lineskip;
-     while (ln)
-     {
-        if(fread(&buffer,1,1,datafile) != 1)
-        {
-          fclose(datafile);
-          throw TimeDataFileException("Could not read header of datafile"); 
-        }
-        if (buffer == '\n') ln--;
-     }
-  }
-  
-  // Accoring to Gordon's definition
-  if (byteskip >= 0)
-  {
-    if (fseek(datafile,byteskip,SEEK_CUR)!=0)
+  #ifndef HAVE_UNISTD_H
+    datafile = fopen(datafilename.c_str(),"rb");
+    if (datafile == 0) 
+    {
+      throw TimeDataFileException("Could not find/open datafile");
+    }
+
+    if (lineskip > 0)
+    {
+       char buffer;
+       int ln = lineskip;
+       while (ln)
+       {
+          if(fread(&buffer,1,1,datafile) != 1)
+          {
+            fclose(datafile);
+            throw TimeDataFileException("Could not read header of datafile"); 
+          }
+          if (buffer == '\n') ln--;
+       }
+    }
+    
+    // Accoring to Gordon's definition
+    if (byteskip >= 0)
+    {
+      if (fseek(datafile,byteskip,SEEK_CUR)!=0)
+      {
+        fclose(datafile);
+        throw TimeDataFileException("Could not read datafile");
+      }
+    }
+    else
+    {
+      if (fseek(datafile,ncols*nrows*elemsize,SEEK_END)!=0)
+      {
+        fclose(datafile);
+        throw TimeDataFileException("Could not read datafile");
+      }
+    }
+    
+    int numcols = colend-colstart + 1;
+    
+    SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(nrows,numcols);
+    
+    if (mat == 0)
+    {
+        fclose(datafile);
+        throw TimeDataFileException("Could not allocate matrix");
+    }  
+
+    void* buffer = reinterpret_cast<void *>(mat->getData());
+    
+    if (fseek(datafile,elemsize*nrows*colstart,SEEK_CUR)!=0)
     {
       fclose(datafile);
-      throw TimeDataFileException("Could not read datafile");
-    }
-  }
-  else
-  {
-    if (fseek(datafile,ncols*nrows*elemsize,SEEK_END)!=0)
+      delete mat;
+      throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+    }    
+
+
+    if (numcols*nrows != fread(buffer,elemsize,numcols*nrows,datafile))
     {
       fclose(datafile);
-      throw TimeDataFileException("Could not read datafile");
+      delete mat;
     }
-  }
-  
-  int numcols = colend-colstart + 1;
-  
-  SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(nrows,numcols);
-  
-  if (mat == 0)
-  {
-      fclose(datafile);
-      throw TimeDataFileException("Could not allocate matrix");
-  }  
-
-  void* buffer = reinterpret_cast<void *>(mat->getData());
-  
-  if (fseek(datafile,elemsize*nrows*colstart,SEEK_CUR)!=0)
-  {
+   
     fclose(datafile);
-    delete mat;
-    throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
-  }    
+    
+  #else
+      datafile_uni = ::open(datafilename.c_str(),O_RDONLY,0);
+      if (datafile_uni <0) 
+      {
+        throw TimeDataFileException("Could not find/open datafile");
+      }
+
+      if (lineskip > 0)
+      {
+         char buffer;
+         int ln = lineskip;
+         while (ln)
+         {
+            if(::read(datafile_uni,&buffer,1) != 1)
+            {
+              close(datafile_uni);
+              throw TimeDataFileException("Could not read header of datafile"); 
+            }
+            if (buffer == '\n') ln--;
+         }
+      }
+    
+    // Accoring to Gordon's definition
+    if (byteskip >= 0)
+    {
+      if (::lseek(datafile_uni,static_cast<off_t>(byteskip),SEEK_CUR)!=0)
+      {
+        ::close(datafile_uni);
+        throw TimeDataFileException("Could not read datafile");
+      }
+    }
+    else
+    {
+      if (::lseek(datafile_uni,static_cast<off_t>(ncols)*static_cast<off_t>(nrows)*static_cast<off_t>(elemsize),SEEK_END)!=0)
+      {
+        ::close(datafile_uni);
+        throw TimeDataFileException("Could not read datafile");
+      }
+    }
+    
+    int numcols = colend-colstart + 1;
+    
+    SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(nrows,numcols);
+    
+    if (mat == 0)
+    {
+        ::close(datafile_uni);
+        throw TimeDataFileException("Could not allocate matrix");
+    }  
+
+    void* buffer = reinterpret_cast<void *>(mat->getData());
+    
+    if (::lseek(datafile_uni,static_cast<off_t>(elemsize)*static_cast<off_t>(nrows)*static_cast<off_t>(colstart),SEEK_CUR)!=0)
+    {
+      ::close(datafile_uni);
+      delete mat;
+      throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+    }    
 
 
-  if (numcols*nrows != fread(buffer,elemsize,numcols*nrows,datafile))
-  {
-    fclose(datafile);
-    delete mat;
-  }
+    if (elemsize*numcols*nrows != read(datafile_uni,buffer,static_cast<size_t>(elemsize*numcols*nrows)))
+    {
+      ::close(datafile_uni);
+      delete mat;
+    }
+   
+    ::close(datafile_uni);
+  #endif
+  
+  
+  
+  
   if (swapbytes) doswapbytes(buffer,elemsize,numcols*nrows);
-
   if (ntype == nrrdTypeChar) { char *fbuffer = reinterpret_cast<char *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(numcols*nrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
   if (ntype == nrrdTypeUChar) { unsigned char *fbuffer = reinterpret_cast<unsigned char *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(numcols*nrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
   if (ntype == nrrdTypeShort) { short *fbuffer = reinterpret_cast<short *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(numcols*nrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
@@ -295,7 +404,6 @@ void TimeDataFile::getcolmatrix(SCIRun::MatrixHandle& mh,int colstart,int colend
   if (ntype == nrrdTypeLLong) { int64 *fbuffer = reinterpret_cast<int64 *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(numcols*nrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
   if (ntype == nrrdTypeULLong) { uint64 *fbuffer = reinterpret_cast<uint64 *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(numcols*nrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]);}
 
-  fclose(datafile);
   mh = dynamic_cast<Matrix *>(mat->transpose());
   delete mat;
 }
@@ -673,7 +781,16 @@ int TimeDataFile::cmp_nocase(const std::string& s1, const std::string& s2)
 std::string TimeDataFile::remspaces(std::string str)
 {
   std::string newstr;
-  for (std::string::size_type i=0;i<str.size();i++) if ((str[i] != ' ' )&&(str[i] != '\t')) newstr += str[i];
+  bool quote_on =false;
+  
+  for (std::string::size_type i=0;i<str.size();i++) 
+  {
+    if (str[i]=='"')
+    {
+      if (quote_on == false) quote_on = true; else quote_on = false;
+    }
+    if (quote_on) newstr += str[i]; else if ((str[i] != ' ' )&&(str[i] != '\t')&&(str[i] != '\n')&&(str[i] != '\r')) newstr += str[i];
+  }
   return(newstr);
 }
 
