@@ -40,8 +40,7 @@
     <summary>Create an output nrrd that is a subsample of the
 original.</summary>
     <description>
-      <p>Crop preserves dimension.  To get valid values in the gui the
-module must execute.  After first execution, the user interface has
+      <p>Crop preserves dimension.  After first execution, the user interface has
 correct values, and will perform a crop that produces the identical
 nrrd as was input. The min and max pairs per axis in the user
 interface are the sample indecies that you wish to crop.</p>
@@ -54,11 +53,19 @@ interface are the sample indecies that you wish to crop.</p>
         <name>Nrrd</name>
 	<datatype>Teem::Nrrd</datatype>
       </port>
+      <port>
+        <name>Current Index</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
         <name>Nrrd</name>
 	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Selected Index</name>
+	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
   </io>
