@@ -221,7 +221,7 @@ ViewWindow::itemAdded(GeomViewerItem* si)
   const string &name = si->name_;
   map<string,GuiInt*>::iterator gui_iter = visible_.find(name);
   if(gui_iter==visible_.end()){
-    visible_[name] = scinew GuiInt(ctx_->subVar(name));
+    visible_.insert(make_pair(name,scinew GuiInt(ctx_->subVar(name))));
     if (!visible_[name]->valid()) 
       visible_[name]->set(1);
     obj_tag_[name] = maxtag_++;
