@@ -67,18 +67,15 @@ doc.insertDocType("article", entities)
 	</para>
 	<para>
 	  &sr; has been tested on the following Linux distributions:
+          (With past versions we have run on RedHat 7 and 8, and
+           Mandrake 8.  While these systems should still work, all local
+           systems have been updated to Redhat 9 and Mandrake 9.2.)
 	  <itemizedlist>
 	    <listitem>
-	      <simpara>Mandrake 7.2 &amp; 8.0</simpara>
+	      <simpara>Mandrake 9.2</simpara>
 	    </listitem>
 	    <listitem>
-	      <simpara>Redhat 6.2, 7.0 &amp; 7.1</simpara>
-	    </listitem>
-	    <listitem>
-	      <simpara>SuSE 6.4, 7.0 &amp; 7.2</simpara>
-	    </listitem>
-	    <listitem>
-	      <simpara>Debian testing</simpara>
+	      <simpara>Redhat 9.0</simpara>
 	    </listitem>
 	  </itemizedlist> 
 	</para>
