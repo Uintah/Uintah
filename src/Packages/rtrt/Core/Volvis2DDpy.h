@@ -13,16 +13,17 @@
 using std::vector;
 
 namespace rtrt {
-  class Volvis2DDpy : public DpyBase {
+  //  template<class T>
+    class Volvis2DDpy : public DpyBase {
     // creates the background texture
-    virtual void createBGText( float vmin, float vmax, float gmin, float gmax );
+    virtual void createBGText(float vmin, float vmax, float gmin, float gmax);
     // restores visible background texture to the clean original
     virtual void loadCleanTexture();
     // draws the background texture
     virtual void drawBackground();
     // adds a new widget to the end of the vector
     virtual void addWidget( int x, int y );
-    // cycles through widget types: tri->rect(ellipse)->rect(1d)->rect(rainbow)->tri..
+    // cycles through widget types: tri->rect(ell)->rect(1d)->rect(deft)->tri..
     virtual void cycleWidgets( int type );
     // draws all widgets in widgets vector without their textures
     virtual void drawWidgets( GLenum mode );
@@ -59,12 +60,15 @@ namespace rtrt {
   public:
     void adjustMasterAlpha( float dx );
     void lookup( Voxel2D<float> voxel, Color &color, float &alpha );
-    void attach( VolumeVis2D* volume );
+    void attach( VolumeVis2D *volume );
     void loadUIState( unsigned long key );
     void saveUIState( unsigned long key );
     void adjustRaySize( unsigned long key );
+    bool skip_alpha( Voxel2D<float> v1, Voxel2D<float> v2,
+		     Voxel2D<float> v3, Voxel2D<float> v4 );
     virtual void animate(bool &changed);
 
+    unsigned int render_mode;
     float original_t_inc;
     float t_inc;
     float t_inc_diff;
@@ -80,14 +84,15 @@ namespace rtrt {
     int old_y;                         // saved most recent y-coordinate
     float x_pixel_width;               // screenspace-to-worldspace x-dim ratio
     float y_pixel_width;               // screenspace-to-worldspace y-dim ratio
-    float vmin, vmax, gmin, gmax;      // voxel minima/maxima
+    float vmin, vmax;                  // voxel minima/maxima
+    float gmin, gmax;
     bool hist_adjust;
-    float current_vmin, current_vmax, current_gmin, current_gmax;
-    float selected_vmin, selected_vmax, selected_gmin, selected_gmax;
+    float current_vmin, current_vmax, selected_vmin, selected_vmax;
+    float current_gmin, current_gmax, selected_gmin, selected_gmax;
     GLuint bgTextName;
     GLuint transFuncTextName;
     Texture <GLfloat> *bgTextImage;    // clean background texture
-    Texture <GLfloat> *transTexture1;  // collection of visible transfer functions
+    Texture <GLfloat> *transTexture1;  // visible transfer functions
     Texture <GLfloat> *transTexture2;  // swapped to remove rendering "streaks"
     vector<VolumeVis2D*> volumes;
     Volvis2DDpy( float t_inc );
