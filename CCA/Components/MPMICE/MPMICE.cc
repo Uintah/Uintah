@@ -601,7 +601,8 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
    for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
         face=Patch::nextFace(face)){
       int mat_id = 0; 
-      BoundCondBase *sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
+      const BoundCondBase *sym_bcs =
+	patch->getBCValues(mat_id,"Symmetric",face);
       if (sym_bcs != 0) {
         for(CellIterator iter = patch->getFaceCellIterator(face,"NC_vars"); 
                                                   !iter.done(); iter++) {
