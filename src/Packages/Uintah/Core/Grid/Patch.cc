@@ -1526,8 +1526,19 @@ Patch::getEdgeCellIterator(const FaceType& face0,
   
   if(domain == "minusCornerCells"){
     IntVector offset = IntVector(1,1,1) - Abs(dir0) - Abs(dir1);
-    LowPt  +=offset;
-    HighPt -=offset;
+    
+    const vector<IntVector> corner = getCornerCells(face0);
+    vector<IntVector>::const_iterator itr;
+
+    for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
+      IntVector corner = *itr;
+      if (corner == LowPt) {
+        LowPt += offset;
+      }
+      if (corner == (HighPt - IntVector(1,1,1)) ) {
+        HighPt -= offset;
+      }
+    }
   }
   return CellIterator(LowPt, HighPt);
 }
