@@ -313,10 +313,10 @@ void NrrdData::io(Piostream& stream) {
     // the nrrd file name will just append .nrrd
     nrrd_fname_ = stream.file_name + string(".nrrd");
     Pio(stream, nrrd_fname_);
-    NrrdIO *no = 0;
+    NrrdIoState *no = 0;
     TextPiostream *text = dynamic_cast<TextPiostream*>(&stream);
     if (text) {
-      no = nrrdIONew();
+      no = nrrdIoStateNew();
       no->encoding = nrrdEncodingAscii;
     } 
     if (nrrdSave(nrrd_fname_.c_str(), nrrd, no)) {
@@ -326,7 +326,7 @@ void NrrdData::io(Piostream& stream) {
       biffDone(NRRD);
       return;
     }
-    if (text) { nrrdIONix(no); }
+    if (text) { nrrdIoStateNix(no); }
   }
   if (version > 1) {
     Pio(stream, data_owned_);

@@ -117,7 +117,7 @@ NrrdSelectTime::send_selection(NrrdDataHandle nrrd_handle,
     return;
   }
   onrrd_handle = out;
-  onrrd_handle->copy_sci_data(*(nrrd_handle.get_rep()));
+  //onrrd_handle->copy_sci_data(*(nrrd_handle.get_rep()));
 
   // Copy the properties.
   onrrd_handle->copy_properties(nrrd_handle.get_rep());
@@ -207,10 +207,9 @@ NrrdSelectTime::execute()
 
 
   // Must have a time axis.
-  // axis 0 is always tuple axis, so time cannot be axis 0.
   unsigned int time_axis = 0;
 
-  for (unsigned int i = 1; i < (unsigned int)nrrd_handle->nrrd->dim; i++) {
+  for (unsigned int i = 0; i < (unsigned int)nrrd_handle->nrrd->dim; i++) {
     string al(nrrd_handle->nrrd->axis[i].label);
     const string t("Time");
     if (al == t) {

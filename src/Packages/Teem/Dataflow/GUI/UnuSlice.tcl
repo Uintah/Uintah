@@ -38,8 +38,7 @@ itcl_class Teem_Unu_UnuSlice {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -54,6 +53,9 @@ itcl_class Teem_Unu_UnuSlice {
         pack $w.f.options.axis -side top -expand yes -fill x
         iwidgets::entryfield $w.f.options.position -labeltext "position:" -textvariable $this-position
         pack $w.f.options.position -side top -expand yes -fill x
+
+	makeSciButtonPanel $w.f $w $this
+	moveToCursor $w
 
 	pack $w.f -expand 1 -fill x
 

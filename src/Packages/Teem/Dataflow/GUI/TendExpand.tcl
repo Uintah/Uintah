@@ -14,10 +14,8 @@
 #  University of Utah. All Rights Reserved.
 #  
 #    File   : TendExpand.tcl
-#    Author : Martin Cole
-#    Date   : Mon Sep  8 09:46:23 2003
-
-catch {rename Teem_Tend_TendExpand ""}
+#    Author : Darby Van Uitert
+#    Date   : April 2004
 
 itcl_class Teem_Tend_TendExpand {
     inherit Module
@@ -25,23 +23,20 @@ itcl_class Teem_Tend_TendExpand {
         set name TendExpand
         set_defaults
     }
+
     method set_defaults {} {
-        global $this-threshold
-        set $this-threshold 0.0
+	global $this-threshold
+	set $this-threshold 0.5
 
-        global $this-scale
-        set $this-scale 0.0
-
-
+	global $this-scale
+	set $this-scale 1.0
     }
 
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
-
         toplevel $w
 
         frame $w.f
@@ -50,13 +45,20 @@ itcl_class Teem_Tend_TendExpand {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.threshold -labeltext "threshold:" -textvariable $this-threshold
+	iwidgets::entryfield $w.f.options.threshold \
+	    -labeltext "Threshold:" \
+	    -textvariable $this-threshold
         pack $w.f.options.threshold -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.scale -labeltext "scale:" -textvariable $this-scale
+	
+
+        iwidgets::entryfield $w.f.options.scale \
+	    -labeltext "Scale:" \
+	    -textvariable $this-scale
         pack $w.f.options.scale -side top -expand yes -fill x
 
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.b -side top -expand 1 -fill x
+	makeSciButtonPanel $w.f $w $this
+	moveToCursor $w
+
 	pack $w.f -expand 1 -fill x
     }
 }

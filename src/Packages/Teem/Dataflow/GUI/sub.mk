@@ -29,7 +29,6 @@ SRCS := \
 	$(SRCDIR)/axis_info_sel_box.tcl\
 	$(SRCDIR)/ChooseNrrd.tcl\
 	$(SRCDIR)/DicomToNrrd.tcl\
-	$(SRCDIR)/EditTupleAxis.tcl\
 	$(SRCDIR)/FieldToNrrd.tcl\
 	$(SRCDIR)/ImageImporter.tcl\
 	$(SRCDIR)/ImageExporter.tcl\
@@ -55,24 +54,54 @@ SRCS := \
 	$(SRCDIR)/TendNorm.tcl\
 	$(SRCDIR)/TendPoint.tcl\
 	$(SRCDIR)/TendSatin.tcl\
-	$(SRCDIR)/TendShrink.tcl\
+	$(SRCDIR)/Unu1op.tcl\
+	$(SRCDIR)/Unu2op.tcl\
+	$(SRCDIR)/Unu3op.tcl\
+	$(SRCDIR)/UnuAxdelete.tcl\
 	$(SRCDIR)/UnuAxinfo.tcl\
+	$(SRCDIR)/UnuAxinsert.tcl\
 	$(SRCDIR)/UnuAxmerge.tcl\
 	$(SRCDIR)/UnuAxsplit.tcl\
+	$(SRCDIR)/UnuCCadj.tcl\
+	$(SRCDIR)/UnuCCfind.tcl\
+	$(SRCDIR)/UnuCCmerge.tcl\
 	$(SRCDIR)/UnuCmedian.tcl\
 	$(SRCDIR)/UnuConvert.tcl\
 	$(SRCDIR)/UnuCrop.tcl\
 	$(SRCDIR)/UnuDhisto.tcl\
 	$(SRCDIR)/UnuFlip.tcl\
+	$(SRCDIR)/UnuGamma.tcl\
+	$(SRCDIR)/UnuHeq.tcl\
+	$(SRCDIR)/UnuHistax.tcl\
 	$(SRCDIR)/UnuHisto.tcl\
+	$(SRCDIR)/UnuImap.tcl\
+	$(SRCDIR)/UnuInset.tcl\
+	$(SRCDIR)/UnuJhisto.tcl\
 	$(SRCDIR)/UnuJoin.tcl\
+	$(SRCDIR)/UnuLut.tcl\
 	$(SRCDIR)/UnuMake.tcl\
+	$(SRCDIR)/UnuMinmax.tcl\
 	$(SRCDIR)/UnuPad.tcl\
 	$(SRCDIR)/UnuPermute.tcl\
 	$(SRCDIR)/UnuProject.tcl\
 	$(SRCDIR)/UnuQuantize.tcl\
 	$(SRCDIR)/UnuResample.tcl\
+	$(SRCDIR)/UnuReshape.tcl\
+	$(SRCDIR)/UnuRmap.tcl\
+	$(SRCDIR)/UnuSave.tcl\
 	$(SRCDIR)/UnuSlice.tcl\
+	$(SRCDIR)/UnuSplice.tcl\
+	$(SRCDIR)/UnuShuffle.tcl\
+	$(SRCDIR)/UnuSwap.tcl\
+	$(SRCDIR)/NrrdToMatrix.tcl\
+	$(SRCDIR)/UnuUnquantize.tcl\
+	$(SRCDIR)/TendSim.tcl\
+	$(SRCDIR)/TendSten.tcl\
+	$(SRCDIR)/TendAnplot.tcl\
+	$(SRCDIR)/TendAnhist.tcl\
+	$(SRCDIR)/TendSlice.tcl\
+	$(SRCDIR)/TendEvalAdd.tcl\
+	$(SRCDIR)/TendEvq.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

@@ -46,15 +46,12 @@ public:
   virtual void execute();
   virtual void tcl_command(GuiArgs& args, void* userdata);
 private:
-  bool maybe_read_nrrd();
-  void get_nrrd_info(NrrdDataHandle handle);
+  bool read_nrrd();
 
-  GuiString       label_;
-  GuiString       type_;
-  GuiString       axis_;
   GuiString       filename_;
+
   NrrdDataHandle  read_handle_;
-  NrrdDataHandle  send_handle_;
+
   string          old_filename_;
   time_t          old_filemodification_;
   int             cached_label_generation_;
@@ -69,12 +66,8 @@ DECLARE_MAKER(NrrdReader)
 
 NrrdReader::NrrdReader(SCIRun::GuiContext* ctx) : 
   Module("NrrdReader", ctx, Filter, "DataIO", "Teem"),
-  label_(ctx->subVar("label")),
-  type_(ctx->subVar("type")),
-  axis_(ctx->subVar("axis")),
   filename_(ctx->subVar("filename")),
   read_handle_(0),
-  send_handle_(0),
   old_filemodification_(0),
   cached_label_generation_(0),
   cached_label_(0)
@@ -86,64 +79,18 @@ NrrdReader::~NrrdReader()
   if (cached_label_) { delete [] cached_label_; cached_label_ = 0; }
 }
 
-void 
-NrrdReader::get_nrrd_info(NrrdDataHandle handle)
-{
-  // Clear any old info.
-  ostringstream clear; 
-  clear << id.c_str() << " clear_axis_info";
-  gui->execute(clear.str());
-  
-  if (!handle.get_rep()) { return; }
-  // Send the axis info to the gui.
-
-  const string addnew =
-    id + " add_axis_info CreateNewTuple FromBelow Unknown --- --- --- ---";
-  gui->execute(addnew);
-
-  // Call the following tcl method:
-  // add_axis_info {id label center size spacing min max}
-  for (int i = 0; i < handle->nrrd->dim; i++) {
-    ostringstream add; 
-    add << id.c_str() << " add_axis_info ";
-    add << i << " ";
-    if (!handle->nrrd->axis[i].label) {
-      handle->nrrd->axis[i].label = strdup("---");
-    }
-    add << handle->nrrd->axis[i].label << " ";
-    switch (handle->nrrd->axis[i].center) {
-    case nrrdCenterUnknown :
-      add << "Unknown ";
-      break;
-    case nrrdCenterNode :
-      add << "Node ";
-      break;
-    case nrrdCenterCell :
-      add << "Cell ";
-      break;
-    }
-    add << handle->nrrd->axis[i].size << " ";
-    add << handle->nrrd->axis[i].spacing << " ";
-
-    if (!(AIR_EXISTS(handle->nrrd->axis[i].min) && 
-	  AIR_EXISTS(handle->nrrd->axis[i].max)))
-      nrrdAxisMinMaxSet(handle->nrrd, i, nrrdCenterNode);
-    
-    add << handle->nrrd->axis[i].min << " ";
-    add << handle->nrrd->axis[i].max << endl;  
-    gui->execute(add.str());
-  }
-}
-
 
 // Return true if handle_ was changed, otherwise return false.  This
 // return value does not necessarily signal an error!
 bool
-NrrdReader::maybe_read_nrrd() 
+NrrdReader::read_nrrd() 
 {
   filename_.reset();
   string fn(filename_.get());
-  if (fn == "") { return false; }
+  if (fn == "") { 
+    error("Please specify nrrd filename");
+    return false; 
+  }
 
   // Read the status of this file so we can compare modification timestamps.
   struct stat buf;
@@ -159,9 +106,9 @@ NrrdReader::maybe_read_nrrd()
 #else
   time_t new_filemodification = buf.st_mtime;
 #endif
-  if(!read_handle_.get_rep() || 
-     fn != old_filename_ || 
-     new_filemodification != old_filemodification_)
+    if(!read_handle_.get_rep() || 
+  fn != old_filename_ || 
+  new_filemodification != old_filemodification_)
   {
     old_filemodification_ = new_filemodification;
     old_filename_=fn;
@@ -198,10 +145,15 @@ NrrdReader::maybe_read_nrrd()
 	return true;
       }
       read_handle_ = n;
+      for (int i = 0; i < read_handle_->nrrd->dim; i++) {
+	if (!(AIR_EXISTS(read_handle_->nrrd->axis[i].min) && 
+	      AIR_EXISTS(read_handle_->nrrd->axis[i].max)))
+	  nrrdAxisInfoMinMaxSet(read_handle_->nrrd, i, nrrdCenterNode);
+      }
     }
     return true;
-  }
-  return false;
+    }
+     return false;
 }
 
 
@@ -211,130 +163,11 @@ NrrdReader::execute()
 {
   update_state(NeedData);
 
-  if (maybe_read_nrrd())
-  {
-    get_nrrd_info(read_handle_);
-  }
+  read_nrrd();
 
   if (!read_handle_.get_rep()) { 
-    error("Please load and set up the axes for a nrrd.");
+    error("Please load a nrrd.");
     return; 
-  }
-
-  axis_.reset();
-  if (axis_.get() == "") {
-    error("Please select the axis which is tuple from the UI");
-    return;
-  }
-
-  // Compute which axis was picked.
-  string ax(axis_.get());
-  int axis = 0;
-  if (ax.size()) {
-    axis = atoi(ax.substr(4).c_str()); // Trim 'axis' from the string.
-  }
-
-  if (cached_label_generation_ == read_handle_->generation &&
-      (cached_label_ == 0 ||
-       strcmp(read_handle_->nrrd->axis[0].label, cached_label_) != 0))
-  {
-    if (read_handle_->nrrd->axis[0].label)
-    {
-      delete [] read_handle_->nrrd->axis[0].label;
-      read_handle_->nrrd->axis[0].label = 0;
-    }
-    if (cached_label_)
-    {
-      read_handle_->nrrd->axis[0].label = strdup(cached_label_);
-    }
-  }
-  
-  bool added_tuple_axis = false;
-  if (ax == "axisCreateNewTuple" && !added_tuple_axis)
-  {
-    // do add permute work here.
-    Nrrd *pn = nrrdNew();
-    if (nrrdAxesInsert(pn, read_handle_->nrrd, 0))
-    {
-      char *err = biffGetDone(NRRD);
-      error(string("Error adding a tuple axis: ") + err);
-      free(err);
-      return;
-    }
-    NrrdData *newnrrd = new NrrdData();
-    newnrrd->nrrd = pn;
-    newnrrd->copy_sci_data(*read_handle_.get_rep());
-    send_handle_ = newnrrd;
-    added_tuple_axis = true;
-  }
-  else if (axis != 0)
-  {
-    // Permute so that 0 is the tuple axis.
-    const int sz = read_handle_->nrrd->dim;
-    int perm[NRRD_DIM_MAX];
-    Nrrd *pn = nrrdNew();
-    // Init the perm array.
-    for(int i = 0; i < sz; i++)
-    {
-      perm[i] = i;
-    }
-
-    // Swap the selected axis with 0.
-    perm[0] = axis;
-    perm[axis] = 0;
-
-    if (nrrdAxesPermute(pn, read_handle_->nrrd, perm))
-    {
-      char *err = biffGetDone(NRRD);
-      error(string("Error adding a tuple axis: ") + err);
-      free(err);
-      return;
-    }
-    NrrdData *newnrrd = new NrrdData();
-    newnrrd->nrrd = pn;
-    newnrrd->copy_sci_data(*read_handle_.get_rep());
-    send_handle_ = newnrrd;
-  }
-  else
-  {
-    send_handle_ = read_handle_;
-  }
-
-  // If the tuple label is valid use it. If not use the string provided
-  // in the gui.
-  vector<string> elems;
-  if (added_tuple_axis || (! send_handle_->get_tuple_indecies(elems)))
-  {
-    int axis_size = send_handle_->nrrd->axis[0].size;
-
-    // Set tuple axis name.
-    label_.reset();
-    type_.reset();
-    string label(label_.get() + ":" + type_.get());
-
-    string full_label = label;
-    int count;
-    if (type_.get() == "Scalar") count=axis_size-1;
-    else if (type_.get() == "Vector") count=axis_size/3-1;
-    else /* if (type_.get() == "Tensor") */ count=axis_size/7-1;
-    while (count > 0) {
-      full_label += string("," + label);
-      count--;
-    }
-    // Cache off a copy of the prior label in case of axis change
-    // later.
-    if (send_handle_.get_rep() == read_handle_.get_rep())
-    {
-      if (cached_label_) { delete [] cached_label_; cached_label_ = 0; }
-      if (read_handle_->nrrd->axis[0].label)
-      {
-	cached_label_ = strdup(read_handle_->nrrd->axis[0].label);
-      }
-      cached_label_generation_ = read_handle_->generation;
-    }
-
-    // TODO:  This appears to memory leak the existing label string.
-    send_handle_->nrrd->axis[0].label = strdup(full_label.c_str());
   }
 
   // Send the data downstream.
@@ -343,7 +176,8 @@ NrrdReader::execute()
     error("Unable to initialize oport 'Outport Data'.");
     return;
   }
-  outport->send(send_handle_);
+
+  outport->send(read_handle_);
 
   update_state(Completed);
 }
@@ -357,16 +191,5 @@ NrrdReader::tcl_command(GuiArgs& args, void* userdata)
     args.error("NrrdReader needs a minor command");
     return;
   }
-  
-  if (args[1] == "read_nrrd")
-  {
-    if (maybe_read_nrrd())
-    {
-      get_nrrd_info(read_handle_);
-    }
-  }
-  else
-  {
-    Module::tcl_command(args, userdata);
-  }
+  Module::tcl_command(args, userdata);
 }

@@ -40,8 +40,7 @@ itcl_class Teem_Unu_UnuConvert {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -60,8 +59,10 @@ itcl_class Teem_Unu_UnuConvert {
 		{float 9} \
 		{double 10}}
 
-
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
+
+	pack $w.f.t -side top -expand 1 -fill x
+	pack $w.f -expand 1 -fill x
     }
 }

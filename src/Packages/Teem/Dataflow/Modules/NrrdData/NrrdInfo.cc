@@ -59,13 +59,18 @@ NrrdInfo::~NrrdInfo(){
 void
 NrrdInfo::clear_vals() 
 {
+  gui->execute(string("set ") + id + "-type \"---\"");
+  gui->execute(string("set ") + id + "-name \"---\"");
+
   gui->execute(id + " delete_tabs");
+
 #if 0
   gui->execute(string("set ") + id + "-type \"---\"");
   gui->execute(string("set ") + id + "-dimension 0");
   gui->execute(string("set ") + id + "-label0 \"---\"");
+  gui->execute(string("set ") + id + "-kind0 \"---\"");
 
-  for (int i = 1; i < nh->nrrd->dim; i++) {
+  for (int i = 0; i < nh->nrrd->dim; i++) {
     ostringstream str;
     
     str << "set " << id.c_str() << "-size" << i 
@@ -79,6 +84,11 @@ NrrdInfo::clear_vals()
     str.clear();
 
     str << "set " << id.c_str() << "-label" << i 
+	<< " \"---\"";    
+    gui->execute(str.str());
+    str.clear();
+
+    str << "set " << id.c_str() << "-kind" << i 
 	<< " \"---\"";    
     gui->execute(str.str());
     str.clear();
@@ -105,6 +115,13 @@ NrrdInfo::clear_vals()
 void
 NrrdInfo::update_input_attributes(NrrdDataHandle nh) 
 {
+  string name;   ;
+  if (nh->get_property( "Name", name)) { 
+    gui->execute(string("set ") + id + "-name " + name);
+  } else {
+    gui->execute(string("set ") + id + "-name \"Unknown\"");
+  }
+
   switch (nh->nrrd->type) {
   case nrrdTypeChar :  
     gui->execute(string("set ") + id + "-type \"char\"");
@@ -141,16 +158,17 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
   gui->execute(string("set ") + id + "-dimension " + to_string(nh->nrrd->dim));
 
   // Tuple Axis
-  gui->execute(string("set ") + id + "-label0 {" + 
-	       string(nh->nrrd->axis[0].label) + "}");
+//   gui->execute(string("set ") + id + "-label0 {" + 
+// 	       string(nh->nrrd->axis[0].label) + "}");
 
-  gui->execute(string("set ") + id + "-size0 " + 
-	       to_string(nh->nrrd->axis[0].size));
+//   gui->execute(string("set ") + id + "-size0 " + 
+// 	       to_string(nh->nrrd->axis[0].size));
 
-  gui->execute(id + " fill_tuple_tab");
+//   gui->execute(id + " fill_tuple_tab");
 
-  for (int i = 1; i < nh->nrrd->dim; i++) {
-    ostringstream sz, cntr, lab, spac, min, max;
+  //for (int i = 1; i < nh->nrrd->dim; i++) {
+  for (int i = 0; i < nh->nrrd->dim; i++) {
+    ostringstream sz, cntr, lab, kind, spac, min, max;
     
     sz << "set " << id.c_str() << "-size" << i 
 	<< " " << nh->nrrd->axis[i].size;
@@ -173,9 +191,81 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
 
     gui->execute(cntr.str());
 
-    lab << "set " << id.c_str() << "-label" << i 
-	<< " {" << nh->nrrd->axis[i].label << "}";
-    gui->execute(lab.str());
+    if (nh->nrrd->axis[i].label == NULL || string(nh->nrrd->axis[i].label).length() == 0) {
+      lab << "set " << id.c_str() << "-label" << i 
+	  << " {" << "---" << "}";
+      gui->execute(lab.str());
+    } else {
+      lab << "set " << id.c_str() << "-label" << i 
+	  << " {" << nh->nrrd->axis[i].label << "}";
+      gui->execute(lab.str());
+    }
+
+    if (nh->nrrd->axis[i].kind == NULL || nh->nrrd->axis[i].kind == nrrdKindUnknown) {
+      nh->nrrd->axis[i].kind = nrrdKindUnknown;
+      kind << "set " << id.c_str() << "-kind" << i 
+	  << " {" << "nrrdKindUnknown" << "}";
+      gui->execute(kind.str());
+    } else {
+      switch(nh->nrrd->axis[i].kind) {
+      case nrrdKindDomain:
+	kind << "set " << id.c_str() << "-kind" << i 
+	    << " {nrrdKindDomain}";
+	gui->execute(kind.str());
+	break;
+      case nrrdKindScalar:
+	kind << "set " << id.c_str() << "-kind" << i 
+	    << " {nrrdKindScalar}";
+	gui->execute(kind.str());
+	break;
+      case nrrdKind3Color:
+	kind << "set " << id.c_str() << "-kind" << i 
+	    << " {nrrdKind3Color}";
+	gui->execute(kind.str());
+	break;
+      case nrrdKind3Vector:
+	kind << "set " << id.c_str() << "-kind" << i 
+	    << " {nrrdKind3Vector}";
+	gui->execute(kind.str());
+	break;
+      case nrrdKind3Normal:
+	kind << "set " << id.c_str() << "-kind" << i 
+	    << " {nrrdKind3Normal}";
+	gui->execute(kind.str());
+	break;
+      case nrrdKind3DSymTensor:
+	kind << "set " << id.c_str() << "-kind" << i 
+	    << " {nrrdKind3DSymTensor}";
+	gui->execute(kind.str());
+	break;
+      case nrrdKind3DMaskedSymTensor:
+	kind << "set " << id.c_str() << "-kind" << i 
+	    << " {nrrdKind3DMaskedSymTensor}";
+	gui->execute(kind.str());
+	break;
+      case nrrdKind3DTensor:
+	kind << "set " << id.c_str() << "-kind" << i 
+	    << " {nrrdKind3DTensor}";
+	gui->execute(kind.str());
+	break;
+      case nrrdKindList:
+	kind << "set " << id.c_str() << "-kind" << i 
+	    << " {nrrdKindList}";
+	gui->execute(kind.str());
+	break;	
+      case nrrdKindStub:
+	kind << "set " << id.c_str() << "-kind" << i 
+	    << " {nrrdKindStub}";
+	gui->execute(kind.str());
+	break;	
+      default:
+	nh->nrrd->axis[i].kind = nrrdKindUnknown;
+	kind << "set " << id.c_str() << "-kind" << i 
+	    << " {" << "nrrdKindUnknown" << "}";
+	gui->execute(kind.str());
+	break;
+      }
+    }
 
     spac << "set " << id.c_str() << "-spacing" << i 
 	 << " " << nh->nrrd->axis[i].spacing;
@@ -209,6 +299,7 @@ NrrdInfo::execute()
   if (!iport->get(nh) || !nh.get_rep())
   {
     clear_vals();
+    generation_ = -1;
     return;
   }
 
