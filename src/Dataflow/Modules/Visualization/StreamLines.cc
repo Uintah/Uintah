@@ -357,21 +357,19 @@ void StreamLines::execute()
   // the vector field input is required
   if (!vfport_->get(vfhandle_) || !(vf_ = vfhandle_.get_rep())) {
     return;
-  } else {
-    vfinterface_ = vf_->query_vector_interface();
-    ASSERT(vfinterface_);
   }
   
-  // the seed field input is required
-  if (!sfport_->get(sfhandle_) || !(sf_ = sfhandle_.get_rep()))
-    return;
-
-  // we expect that the flow field input is a vector field
-  if (vf_->get_type_name(1) != "Vector") {
+  // Check that the flow field input is a vector field.
+  vfinterface_ = vf_->query_vector_interface();
+  if (!vfinterface_) {
     postMessage("StreamLines: ERROR: FlowField is not a Vector field."
 		"  Exiting.");
     return;
   }
+
+  // the seed field input is required
+  if (!sfport_->get(sfhandle_) || !(sf_ = sfhandle_.get_rep()))
+    return;
 
   // might have to get Field::NODE
   cf_ = scinew ContourField<double>(Field::NODE);
