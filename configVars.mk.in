@@ -400,6 +400,7 @@ endif
 .SUFFIXES: .cc .c .o .s .F .f .cpp
 
 .cc.o: $<
+	-rm -f $@
 ifeq ($(CC_DEPEND_MODE),normal)
 	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 else
@@ -435,6 +436,7 @@ endif
 endif
 
 .cpp.o: $<
+	-rm -f $@
 ifeq ($(CC_DEPEND_MODE),normal)
 	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
 else
@@ -470,6 +472,7 @@ endif
 endif
 
 .F.o: $<
+	-rm -f $@
 ifeq ($(F77_DEPEND_MODE),normal)
 	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
 else
@@ -505,6 +508,7 @@ endif
 endif
 
 .f.o: $<
+	-rm -f $@
 ifeq ($(F77_DEPEND_MODE),normal)
 	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
 else
@@ -540,6 +544,7 @@ endif
 endif
 
 .c.o: $<
+	-rm -f $@
 ifeq ($(CC_DEPEND_MODE),normal)
 	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 else
