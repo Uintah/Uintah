@@ -134,7 +134,7 @@ WARNING
 	 IntVector s = from_highIndex-from_lowIndex;
 	 IntVector s_check = to_highIndex-to_lowIndex;
 	 // Check to make sure that the two window sizes are the same
-	 ASSERTEQ(s, s_check);
+	 ASSERT(s == s_check);
 	 for(int i=0;i<s.z();i++){
 	    T* dd=dst;
 	    T* ss=src;
