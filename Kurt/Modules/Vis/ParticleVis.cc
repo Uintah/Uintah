@@ -244,19 +244,19 @@ void ParticleVis::execute()
 }
 
 
-void ParticleVis::geom_pick(GeomPick* pick, void* userdata, int index)
+void ParticleVis::geom_pick(GeomPick* pick,void* userdata, GeomObj* picked_obj)
 {
   cerr << "Caught stray pick event in ParticleVis!\n";
   cerr << "this = "<< this <<", pick = "<<pick<<endl;
   cerr << "User data = "<<userdata<<endl;
-  cerr << "sphere index = "<<index<<endl<<endl;
+  //  cerr << "sphere index = "<<index<<endl<<endl;
   int id = 0;
-  if ( ((GeomObj *)pick)->getId( id ) )
+  if ( ((GeomObj *)picked_obj)->getId( id ) )
     cerr<<"Id = "<< id <<endl;
   else
     cerr<<"Not getting the correct data\n";
   if( cbClass != 0 )
-    ((VisControl *)cbClass)->callback( index );
+    ((VisControl *)cbClass)->callback( id );
   // Now modify so that points and spheres store index.
 }
   
@@ -270,6 +270,10 @@ extern "C" Module* make_ParticleVis( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.5  2000/08/11 16:11:09  bigler
+// Replace int index parameter in geom_pick function with GeomObj*.
+// Changed function to acces index from GeomObj*.
+//
 // Revision 1.4  2000/05/22 17:20:01  kuzimmer
 // Updating new Viz tools
 //
