@@ -12,29 +12,25 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Packages/Insight/share/share.h>
 
-#include <Insight/Dataflow/Ports/ITKImagePort.h>
-#include "itkCastImageFilter.h"
+#include <Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include "itkImageFileWriter.h"
-#include "itkPNGImageIO.h"
+#include "itkCastImageFilter.h"
+
 
 namespace Insight {
 
 using namespace SCIRun;
 
-  typedef itk::ImageFileWriter<ShortImageType> WriterType;
-  typedef itk::PNGImageIO IOType;
-
 class InsightSHARE ImageFileWriter : public Module {
 public:
 
   //! GUI variables
-  GuiString gui_filename_;
+  GuiString gui_FileName_;
 
-  WriterType::Pointer writer_;
-  IOType::Pointer io_;
+  itk::Object::Pointer writer_;
   
-  ITKImageIPort* inport_;
-  ITKImageHandle inhandle_;
+  ITKDatatypeIPort* inport_;
+  ITKDatatypeHandle inhandle_;
 
   ImageFileWriter(GuiContext*);
 
@@ -49,18 +45,16 @@ public:
 DECLARE_MAKER(ImageFileWriter)
 ImageFileWriter::ImageFileWriter(GuiContext* ctx)
   : Module("ImageFileWriter", ctx, Source, "DataIO", "Insight"),
-    gui_filename_(ctx->subVar("filename"))
+    gui_FileName_(ctx->subVar("FileName"))
 {
-  writer_ = WriterType::New();
-  io_ = IOType::New();
 }
 
 ImageFileWriter::~ImageFileWriter(){
 }
 
-void
- ImageFileWriter::execute(){
-  inport_ = (ITKImageIPort *)get_iport("Image");
+void ImageFileWriter::execute(){
+  // check ports
+  inport_ = (ITKDatatypeIPort *)get_iport("Image");
   if(!inport_) {
     error("Unable to initialize iport 'Image'");
   }
@@ -70,22 +64,83 @@ void
     return;
   }
 
-  string fn = gui_filename_.get();
+  string fn = gui_FileName_.get();
 
-  writer_->SetFileName( fn.c_str() );
-  writer_->SetImageIO( io_ );
-  
-  writer_->SetInput(inhandle_->to_short_->GetOutput());
+  ///////////////////////
+  // <float, 2>
+  ///////////////////////
+  if(dynamic_cast<itk::Image<float,2>* >(inhandle_.get_rep()->data_.GetPointer())) {
+    typedef itk::Image<float, 2> ImageType;
+    typedef itk::Image<unsigned short, 2> ShortImageType;
+    typedef itk::ImageFileWriter<ShortImageType> FileWriterType;
 
-  try
-    {
-      writer_->Write();
+    writer_ = FileWriterType::New();
+
+    itk::CastImageFilter<ImageType, ShortImageType>::Pointer to_char = itk::CastImageFilter<ImageType, ShortImageType>::New();
+    
+    itk::Object *object = inhandle_.get_rep()->data_.GetPointer();
+    ImageType *img = dynamic_cast<ImageType *>(object);
+    
+    if( !img ) {
+      // error
+      return;
     }
-  catch (itk::ExceptionObject &e)
+    to_char->SetInput(img);
+    to_char->Update();
+    
+    dynamic_cast<FileWriterType *>(writer_.GetPointer())->SetFileName( fn.c_str() );
+    dynamic_cast<FileWriterType *>(writer_.GetPointer())->SetInput(to_char->GetOutput());
+    
+    try
+    {
+      dynamic_cast<FileWriterType *>(writer_.GetPointer())->Update();
+    }
+    catch (itk::ExceptionObject &e)
     {
       std::cerr << e << std::endl;
     }
   }
+  ///////////////////////
+  // <float, 3>
+  ///////////////////////
+  else if(dynamic_cast<itk::Image<float,3>* >(inhandle_.get_rep()->data_.GetPointer())) {
+    typedef itk::Image<float, 3> ImageType;
+    typedef itk::Image<unsigned short, 3> ShortImageType;
+    typedef itk::ImageFileWriter<ShortImageType> FileWriterType;
+    
+    writer_ = FileWriterType::New();
+
+    itk::CastImageFilter<ImageType, ShortImageType>::Pointer to_char = itk::CastImageFilter<ImageType, ShortImageType>::New();
+    
+    itk::Object *object = inhandle_.get_rep()->data_.GetPointer();
+    ImageType *img = dynamic_cast<ImageType *>(object);
+    
+    if( !img ) {
+      // error
+      return;
+    }
+    to_char->SetInput(img);
+    to_char->Update();
+    
+    dynamic_cast<FileWriterType *>(writer_.GetPointer())->SetFileName( fn.c_str() );
+    dynamic_cast<FileWriterType *>(writer_.GetPointer())->SetInput(to_char->GetOutput());
+    
+    try
+    {
+      dynamic_cast<FileWriterType *>(writer_.GetPointer())->Update();
+    }
+    catch (itk::ExceptionObject &e)
+    {
+      std::cerr << e << std::endl;
+    }
+  }
+  else 
+  {
+    // unknown type
+    error("Unknown type");
+    return;
+  }
+}
 
 void
  ImageFileWriter::tcl_command(GuiArgs& args, void* userdata)
