@@ -16,16 +16,16 @@ public:
 	None
     };
 protected:
-    bool valid_;
 
+    Mode umode, vmode;
     double Kd;
     Color specular;
     double specpow;
     double refl;
     double transp;
     Array2<Color> image;
-    Mode umode, vmode;
     Color outcolor;
+    bool valid_;
 
     void read_image(const string &texfile);
     void read_hdr_image(const string &texfile);
