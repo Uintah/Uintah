@@ -3,6 +3,9 @@
 
 
 #include <Uintah/Grid/VarLabel.h>
+#include <vector>
+
+using std::vector;
 
 namespace Uintah {
   namespace MPM {
@@ -12,7 +15,9 @@ namespace Uintah {
       MPMLabel();
       ~MPMLabel();
 
-      static const MPMLabel* getLabels();
+      void registerPermanentParticleState(const VarLabel* l);
+
+      //      static const MPMLabel* getLabels();
 
       const VarLabel* delTLabel;
       
@@ -80,13 +85,21 @@ namespace Uintah {
       const VarLabel* CenterOfMassVelocityLabel;
 
       const VarLabel* ppNAPIDLabel;
-      
+
+    private:
+      vector<const VarLabel* > d_particleState;
     };
   } // end namepsace MPM
 } // end namespace Uintah
 
 
 // $Log$
+// Revision 1.15  2000/07/05 23:43:30  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.14  2000/06/28 01:08:56  tan
 // Thermal contact model start to work!
 //

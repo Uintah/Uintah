@@ -292,7 +292,7 @@ void ElasticConstitutiveModel::initializeCMData(const Patch* patch,
 						const MPMMaterial* matl,
 						DataWarehouseP& new_dw)
 {
-   const MPMLabel* lb = MPMLabel::getLabels();
+  //   const MPMLabel* lb = MPMLabel::getLabels();
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
    ParticleVariable<CMData> cmdata;
    new_dw->allocate(cmdata, p_cmdata_label, pset);
@@ -510,6 +510,12 @@ int ElasticConstitutiveModel::getSize() const
 
 
 // $Log$
+// Revision 1.18  2000/07/05 23:43:34  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.17  2000/06/16 05:03:05  sparker
 // Moved timestep multiplier to simulation controller
 // Fixed timestep min/max clamping so that it really works now

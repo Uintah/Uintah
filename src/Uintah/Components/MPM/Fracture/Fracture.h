@@ -8,6 +8,7 @@
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/ParticleVariable.h>
+#include <Uintah/Components/MPM/MPMLabel.h>
 
 #include "Lattice.h"
 #include "Cell.h"
@@ -141,6 +142,7 @@ private:
   double           d_averageMicrocrackLength;
   double           d_toughness;
   SimulationStateP d_sharedState;
+  MPMLabel* lb;
 };
 
 } //namespace MPM
@@ -149,6 +151,12 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.21  2000/07/05 23:43:37  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.20  2000/07/05 21:37:43  tan
 // Filled in the function of updateParticleInformationInContactCells.
 //

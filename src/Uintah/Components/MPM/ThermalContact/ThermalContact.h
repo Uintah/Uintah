@@ -11,7 +11,7 @@
 #include <Uintah/Grid/VarTypes.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Math/MinMax.h>
-
+#include <Uintah/Components/MPM/MPMLabel.h>
 #include <math.h>
 
 namespace Uintah {
@@ -76,12 +76,19 @@ public:
 
 private:
   SimulationStateP d_sharedState;
+  MPMLabel* lb;
 };
       
 } // end namespace MPM
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.6  2000/07/05 23:43:38  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.5  2000/06/20 05:09:44  tan
 // Currently thermal_conductivity, specific_heat and heat_transfer_coefficient
 // are set in MPM::MPMMaterial class.

@@ -76,7 +76,7 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
 
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   // Retrieve necessary data from DataWarehouse
   vector<NCVariable<double> > gmass(NVFs);
@@ -130,7 +130,7 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
 
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   // Retrieve necessary data from DataWarehouse
   vector<NCVariable<double> > gmass(NVFs);
@@ -184,7 +184,7 @@ void SingleVelContact::addComputesAndRequiresInterpolated( Task* t,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const
 {
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
   int idx = matl->getDWIndex();
   t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
   t->requires( new_dw, lb->gVelocityLabel, idx, patch, Ghost::None);
@@ -202,7 +202,7 @@ void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
 {
 
   int idx = matl->getDWIndex();
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
   t->requires(new_dw, lb->gMassLabel, idx, patch, Ghost::None);
   t->requires(new_dw, lb->gVelocityStarLabel, idx, patch, Ghost::None);
   t->requires(new_dw, lb->gAccelerationLabel, idx, patch, Ghost::None);
@@ -214,6 +214,12 @@ void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.23  2000/07/05 23:43:36  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.22  2000/06/17 07:06:38  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

@@ -5,7 +5,7 @@
 #include "ConstitutiveModel.h"	
 #include <math.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
-
+#include <Uintah/Components/MPM/MPMLabel.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 
 namespace Uintah {
@@ -94,6 +94,7 @@ WARNING
 				       std::vector<const VarLabel*>& to);
 	 const VarLabel* p_cmdata_label;
 	 const VarLabel* p_cmdata_label_preReloc;
+
       };
 
    }
@@ -102,6 +103,12 @@ WARNING
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.25  2000/07/05 23:43:33  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.24  2000/06/21 00:35:17  bard
 // Added timestep control.  Changed constitutive constant number (only 3 are
 // independent) and format.

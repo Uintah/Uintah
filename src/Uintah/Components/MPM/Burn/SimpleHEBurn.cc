@@ -47,7 +47,7 @@ void SimpleHEBurn::initializeBurnModelData(const Patch* patch,
                                        const MPMMaterial* matl,
                                        DataWarehouseP& new_dw)
 {
-   const MPMLabel* lb = MPMLabel::getLabels();
+  //   const MPMLabel* lb = MPMLabel::getLabels();
 
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
    ParticleVariable<int> pIsIgnited;
@@ -78,7 +78,7 @@ void SimpleHEBurn::addCheckIfComputesAndRequires(Task* task,
                                                  DataWarehouseP& new_dw) const
 {
 
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   task->requires(old_dw, lb->pIsIgnitedLabel, matl->getDWIndex(),
 				patch, Ghost::None);
@@ -110,7 +110,7 @@ void SimpleHEBurn::addMassRateComputesAndRequires(Task* task,
                                                   DataWarehouseP& old_dw,
                                                   DataWarehouseP& new_dw) const
 {
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),
 				patch, Ghost::None);
@@ -138,7 +138,7 @@ void SimpleHEBurn::checkIfIgnited(const Patch* patch,
 
   int matlindex = matl->getDWIndex();
 
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
   // Create array for the particle's "IsIgnited" flag
   ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<int> pIsIgnited;
@@ -186,7 +186,7 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
 {
 
   int matlindex = matl->getDWIndex();
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<double> pmass;
@@ -237,6 +237,12 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
 }
  
 // $Log$
+// Revision 1.13  2000/07/05 23:43:32  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.12  2000/06/23 18:05:59  guilkey
 // Used a different way of creating the delete_subset for the particles
 // to be removed.
