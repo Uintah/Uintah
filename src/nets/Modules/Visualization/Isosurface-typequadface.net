@@ -73,7 +73,7 @@ set c10 [addConnection $m5 0 $m6 2]
 setGlobal $m0-isoval {0.51831}
 setGlobal $m0-isoval-min {0.24999999999999994}
 setGlobal $m0-isoval-max {0.69875346260387816}
-setGlobal $m0-isoval-list {0.51}
+setGlobal $m0-isoval-list {0.4 0.46 0.51}
 setGlobal $m0-active-isoval-selection-tab {2}
 setGlobal $m0-active_tab {}
 
