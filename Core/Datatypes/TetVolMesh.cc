@@ -504,17 +504,14 @@ TetVolMesh::inside4_p(int i, const Point &p) const
 }
 
 //! given the four scalars (doubles) at the nodes, compute the gradient
-//! over the element containing p
-bool
-TetVolMesh::get_gradient(const Point &p, Vector &g, double s0, double s1,
-			 double s2, double s3)
+//! over the element ci
+Vector
+TetVolMesh::cell_gradient(cell_index ci, double s0, double s1,
+			  double s2, double s3)
 {
   Vector g0, g1, g2, g3;
-  cell_index ci;
-  if (!locate(ci, p)) return false;
   /* double vol = */ get_gradient_basis(ci, g0, g1, g2, g3);
-  g = Vector(g0*s0 + g1*s1 + g2*s2 + g3*s3);
-  return true;
+  return Vector(g0*s0 + g1*s1 + g2*s2 + g3*s3);
 }
 
 //! return the volume of the tet.
