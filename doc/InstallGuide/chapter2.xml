@@ -291,8 +291,8 @@ gmake -j <term>NUM_JOBS</term>
           </para>
 
           <para>
-            Additional options for GNU make can be found 
-            <ulink url="http://www.gnu.org/manual/make/html_mono/make.html#SEC92">here</ulink>
+            Additional options for GNU make can be found on this website
+            <ulink url="http://www.gnu.org/manual/make/html_mono/make.html#SEC92">http://www.gnu.org/manual/make/html_mono/make.html#SEC92</ulink>
           </para>
         </listitem>
       </orderedlist>
