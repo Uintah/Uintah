@@ -531,11 +531,13 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     if (d_MAlab && !initialize) {
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->allocateAndPut(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
       if (d_DORadiationCalc)
 	new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
+
+    if (d_MAlab)
+      new_dw->allocateAndPut(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
 
     IntVector indexLow = patch->getCellLowIndex();
     IntVector indexHigh = patch->getCellHighIndex();
