@@ -27,7 +27,7 @@ namespace DaveW {
 namespace Datatypes {
 
 using SCICore::GeomSpace::CharColor;
-using SCICore::CoreDatatypes::DenseMatrix;
+using SCICore::Datatypes::DenseMatrix;
 
 class Pixel {
 public:
@@ -56,6 +56,9 @@ void Pio( Piostream &, Pixel & );
 
 //
 // $Log$
+// Revision 1.2  1999/08/25 03:35:47  sparker
+// *** empty log message ***
+//
 // Revision 1.1  1999/08/23 02:52:56  dmw
 // Dave's Datatypes
 //
