@@ -152,8 +152,8 @@ void TexCuttingPlanes::execute(void)
 
   if( !volren ){
     volren = new GLVolumeRenderer(0x12345676,
-				  tex.get_rep(),
-				  cmap.get_rep());
+				  tex,
+				  cmap);
 
     ogeom->addObj( volren, "Volume Renderer");
     volren->GLPlanes();

@@ -32,6 +32,7 @@ using namespace SCICore::Geometry;
 class SCICore::GeomSpace::GeomObj;
 
 
+
 class TexCuttingPlanes : public Module {
 
 public:
@@ -64,7 +65,7 @@ private:
   TCLint drawZ;
   TCLint drawView;
 
-  GLVolumeRenderer *volren;
+  GLVolumeRenderer* volren;
   Vector ddv;
 
 };
