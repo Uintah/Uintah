@@ -1063,6 +1063,8 @@ proc loadnet { netedit_loadfile } {
 	set netedit_savefile $netedit_loadfile
     }
 
+    renameSourceCommand
+
     # if we are not loading a powerapp network, show loading progress
     if { !$PowerApp } {
 	showProgress 0 0 1 ;# -maybe- raise the progress meter
@@ -1079,7 +1081,6 @@ proc loadnet { netedit_loadfile } {
 
     # Renames a few procs to increment the progressmeter as we load
     renameNetworkCommands loading_
-    renameSourceCommand
 
     uplevel \#0 source \{$netedit_loadfile\}
     
@@ -1090,7 +1091,6 @@ proc loadnet { netedit_loadfile } {
     if { !$PowerApp } {
 	hideProgress
     }
-    redrawMinicanvas
     set Subnet(Subnet$Subnet(Loading)_Filename) $netedit_loadfile
     if { !$inserting } { setGlobal NetworkChanged 0 }
 }
@@ -1138,17 +1138,21 @@ proc showInvalidDatasetPrompt {} {
 		-button1 "Select Dataset" \
 		-button2 "Ignore Dataset" \
 		-button3 "Exit SCIRun" \
-		-message "The environment variables SCIRUN_DATA and/or SCIRUN_DATASET\nare not set or they are invalid.\n\nChoose 'Select Dataset' to select a valid dataset directory.\neg: /usr/sci/data/SCIRunData/[netedit getenv SCIRUN_VERSION]/sphere\n\nChoose 'Ignore Dataset' to load $filename anyway.  You will\nhave to manually set the reader modules to valid filenames.\n\nIf you set these environment variables before running SCIRun, then\nyou will not receive this dialog when loading $filename.\n\nYou may also permanently set these variables in the ~/.scirunrc file."]
+		-message "This network can work on different datasets, but it\ncannot find files matching the pattern:\n\$(SCIRUN_DATA)/\$(SCIRUN_DATASET)/\$(SCIRUN_DATAFILE)*\n\nWhere:\nSCIRUN_DATA = [netedit getenv SCIRUN_DATA]\nSCIRUN_DATASET = [netedit getenv SCIRUN_DATASET]\nSCIRUN_DATAFILE = [netedit getenv SCIRUN_DATAFILE]\n\nThe environment variables listed are not set or they are invalid.\n\nChoose 'Select Dataset' to select a valid dataset directory.\neg: /usr/sci/data/SCIRunData/[netedit getenv SCIRUN_VERSION]/sphere\n\nChoose 'Ignore Dataset' to load $filename anyway.  You will\nhave to manually set the reader modules to valid filenames.\n\nIf you set these environment variables before running SCIRun, then\nyou will not receive this dialog when loading $filename.\n\nYou may also permanently set these variables in the ~/.scirunrc file."]
 }
 
 
 
 proc showChooseDatasetPrompt { initialdir } {
     if { ![string length $initialdir] } {
-	set initialdir "/usr/sci/data/SCIRunData/[netedit getenv SCIRUN_VERSION]"
+	set version [netedit getenv SCIRUN_VERSION]
+	set initialdir "/usr/sci/data/SCIRunData/${version}"
+	if { ![file exists $initialdir] } {
+	    set initialdir [netedit getenv SCIRUN_OBJDIR]
+	}
     }
-    set value [tk_chooseDirectory -parent . -mustexist 1 \
-		   -initialdir $initialdir]
+    set value [tk_chooseDirectory -mustexist 1 -initialdir $initialdir \
+		  -parent . -title "Select Dataset"]
     return $value
 }
 
@@ -1167,25 +1171,24 @@ proc sourceSettingsFile {} {
     # Attempt to get environment variables:
     set DATADIR [netedit getenv SCIRUN_DATA]
     set DATASET [netedit getenv SCIRUN_DATASET]
+    set DATAFILE [netedit getenv SCIRUN_DATAFILE]
     
-    if { "$DATASET" == "" } {
+    if { ![string length $DATASET] } {
 	# if env var SCIRUN_DATASET not set... default to sphere:
 	set DATASET sphere
     } 
+
     global recentlyCalledSourceSettingsFile
     if { ![info exists recentlyCalledSourceSettingsFile] } {
-    
 	set initialdir ""
-	while {![string length [glob -nocomplain "$DATADIR/$DATASET/$DATASET*"]]} {
+	while {![string length [glob -nocomplain "$DATADIR/$DATASET/$DATAFILE*"]] } {
 	    case [showInvalidDatasetPrompt] {
 		1 "set data [showChooseDatasetPrompt $initialdir]"
 		2 { 
 		    displayErrorWarningOrInfo "*** SCIRUN_DATA not set.  Reader modules will need to be manually set to valid filenames." warning
-		    break
+		    return
 		}
-		3 {
-		    ::netedit quit
-		}
+		3 "netedit quit"
 	    }
 	    if { [string length $data] } {
 		set initialdir $data
@@ -1197,19 +1200,19 @@ proc sourceSettingsFile {} {
 
 	displayErrorWarningOrInfo "*** Using SCIRUN_DATA=$DATADIR" info
 	displayErrorWarningOrInfo "*** Using SCIRUN_DATASET=$DATASET" info
+	displayErrorWarningOrInfo "*** Using SCIRUN_DATAFILE=$DATAFILE" info
 	
 	netedit setenv SCIRUN_DATA "$DATADIR"
 	netedit setenv SCIRUN_DATASET "$DATASET"
+	netedit setenv SCIRUN_DATAFILE "$DATAFILE"
 
 	setGlobal recentlyCalledSourceSettingsFile 1
 	after 10000 uplevel \#0 unset recentlyCalledSourceSettingsFile
-
     }
 
     set settings "$DATADIR/$DATASET/$DATASET.settings"
-    renameSourceCommand
     uplevel 1 source $settings
-    return "$DATADIR $DATASET"
+    return "$DATADIR $DATASET $DATAFILE"
 }
 
 #
@@ -1781,9 +1784,10 @@ proc maybeWriteTCLStyleCopyright { out } {
 
 proc init_DATADIR_and_DATASET {} {
     uplevel 1 sourceSettingsFile
-    upvar 1 DATADIR datadir DATASET dataset
+    upvar 1 DATADIR datadir DATASET dataset DATAFILE datafile
     set datadir [netedit getenv SCIRUN_DATA]
     set dataset [netedit getenv SCIRUN_DATASET]
+    set datafile [netedit getenv SCIRUN_DATAFILE]
     netedit setenv SCIRUN_NET_SUBSTITUTE_DATADIR true
 }
     
