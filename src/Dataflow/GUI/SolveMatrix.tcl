@@ -98,7 +98,7 @@ itcl_class SCIRun_Math_SolveMatrix {
 		top $this-method\
 		{{"Conjugate Gradient & Precond. (Dataflow)" conjugate_gradient_sci}\
 		{"BiConjugate Gradient & Precond. (Dataflow)" bi_conjugate_gradient_sci}\
-		{"Jacoby & Precond. (Dataflow)" jacoby_sci}}
+		{"Jacobi & Precond. (Dataflow)" jacoby_sci}}
 	
 	        #other solving methods that currently don't work
 	        #{"Conjugate Gradient" conjugate_gradient }\
