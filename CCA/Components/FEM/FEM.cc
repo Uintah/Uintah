@@ -29,12 +29,12 @@
 #include <CCA/Components/FEM/FEM.h>
 #include <iostream>
 #include <CCA/Components/Builder/QtUtils.h>
-
+#include <Core/CCA/PIDL/MxNArrayRep.h>
 #include <qapplication.h>
 #include <qpushbutton.h>
 #include <qmessagebox.h>
 #include "stdlib.h"
-#include "Matrix.h"
+//#include "Matrix.h"
 
 
 using namespace std;
@@ -48,11 +48,7 @@ extern "C" sci::cca::Component::pointer make_SCIRun_FEM()
 
 FEM::FEM()
 {
-  uiPort.setParent(this);
-  goPort.setParent(this);
-  matrixPort.setParent(this);
-  Ag=0;
-
+  //uiPort.setParent(this);
 }
 
 FEM::~FEM()
@@ -66,13 +62,19 @@ void FEM::setServices(const sci::cca::Services::pointer& svc)
 
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
   //myUIPort::pointer uip(&uiPort);
-  myGoPort::pointer gop(&goPort);
-  myPDEMatrixPort::pointer matrixp(&matrixPort);
+  goPort=new myGoPort;
+  myGoPort::pointer gop(goPort);
+  goPort->setParent(this);
+
+  matrixPort=new myPDEMatrixPort;
+  myPDEMatrixPort::pointer matrixp(matrixPort);
+  matrixPort->setParent(this);  
   //svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
   svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", props);
   svc->addProvidesPort(matrixp,"matrix","sci.cca.ports.PDEMatrixPort", props);
   svc->registerUsesPort("mesh","sci.cca.ports.MeshPort", props);
   svc->registerUsesPort("pde","sci.cca.ports.PDEDescriptionPort", props);
+
   // Remember that if the PortInfo is created but not used in a call to the svc object
   // then it must be freed.
   // Actually - the ref counting will take care of that automatically - Steve
@@ -134,13 +136,13 @@ void FEM::globalMatrices(const SSIDL::array1<double> &nodes1d,
 {
  int N=nodes1d.size()/2; 
 
- Ag=new Matrix(N,N);
+ Ag.resize(N,N);
  SSIDL::array1<double> fg;
 
  for(int i=0; i<N; i++){
    fg.push_back(0);
    for(int j=0; j<N; j++){
-     Ag->setElement(i,j,0);
+     Ag[i][j]=0;
    }
  }
 
@@ -162,7 +164,7 @@ void FEM::globalMatrices(const SSIDL::array1<double> &nodes1d,
        for(int col=0; col<3; col++){
 	 int gcol=tmesh1d[i*3+col];
 	 if(!isConst(gcol)){
-	   Ag->setElement(grow,gcol,Ag->getElement(grow,gcol)+A[row][col]);
+	   Ag[grow][gcol]+=A[row][col];
 	 }
 	 else{
 	   //u(gcol) is the constant boundary value
@@ -176,10 +178,10 @@ void FEM::globalMatrices(const SSIDL::array1<double> &nodes1d,
  for(int grow=0; grow<N; grow++){
    if(isConst(grow)){
      for(int k=0; k<N; k++){
-       Ag->setElement(grow,k,0);
-       Ag->setElement(k,grow,0);
+       Ag[grow][k]=0;
+       Ag[k][grow]=0;
      }
-     Ag->setElement(grow,grow,1);
+     Ag[grow][grow]=1;
      fg[grow]= boundary(grow); 
    }
  }
@@ -255,14 +257,41 @@ int myGoPort::go()
   }
   else{
     com->globalMatrices(nodes1d,tmesh1d);
+
+
+    int mpi_rank=0; 
+    int mpi_size=1;
+    //cerr<<"#### Ag.sizes="<<com->Ag.size1()<<":"<<com->Ag.size2()<<endl;
+    int size=com->Ag.size1();
+    Index* dr[2];
+    dr[0] = BLOCK(mpi_rank,mpi_size,size);
+    dr[1] = BLOCK(mpi_rank,mpi_size,size);
+    MxNArrayRep* arrr = new MxNArrayRep(2,dr);
+    delete dr[0]; 
+    delete dr[1];
+    com->matrixPort->setCalleeDistribution("DMatrix",arrr); 
+
+    cerr<<"MATRIX Ag \n======================="<<endl;
+    for(int i=0;i<size;i++){
+      for(int j=0;j<size;j++){
+	cerr<<com->Ag[i][j]<<" ";
+      }
+      cerr<<endl;
+    }
+    cerr<<"====================================="<<endl;
     return 0;
   }
 }
  
 
-sci::cca::Matrix::pointer myPDEMatrixPort::getMatrix()
+void myPDEMatrixPort::getMatrix(SSIDL::array2<double> &dmatrix)
 {
-   return sci::cca::Matrix::pointer(com->Ag );
+  dmatrix=com->Ag;
+}
+
+int myPDEMatrixPort::getSize()
+{
+  return com->Ag.size1();
 }
 
 SSIDL::array1<double> myPDEMatrixPort::getVector()
