@@ -18,6 +18,7 @@ SRCS     += \
 	$(SRCDIR)/JohnsonCookPlastic.cc \
 	$(SRCDIR)/MTSPlastic.cc \
 	$(SRCDIR)/SCGPlastic.cc \
+	$(SRCDIR)/PTWPlastic.cc \
 	$(SRCDIR)/YieldCondition.cc \
 	$(SRCDIR)/YieldConditionFactory.cc \
 	$(SRCDIR)/GursonYield.cc \
@@ -26,7 +27,18 @@ SRCS     += \
 	$(SRCDIR)/StabilityCheckFactory.cc \
 	$(SRCDIR)/BeckerCheck.cc \
 	$(SRCDIR)/DruckerCheck.cc \
-	$(SRCDIR)/DruckerBeckerCheck.cc 
+	$(SRCDIR)/DruckerBeckerCheck.cc \
+	$(SRCDIR)/ShearModulusModel.cc \
+	$(SRCDIR)/ShearModulusModelFactory.cc \
+	$(SRCDIR)/ConstantShear.cc \
+	$(SRCDIR)/MTSShear.cc \
+	$(SRCDIR)/NPShear.cc \
+	$(SRCDIR)/PTWShear.cc \
+	$(SRCDIR)/SCGShear.cc \
+	$(SRCDIR)/MeltingTempModel.cc \
+	$(SRCDIR)/MeltingTempModelFactory.cc \
+	$(SRCDIR)/ConstantMeltTemp.cc \
+	$(SRCDIR)/SCGMeltTemp.cc
 
 PSELIBS := Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Disclosure \
