@@ -13,8 +13,8 @@
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
 #include <Datatypes/BasicSurfaces.h>
-#include <Datatypes/Colormap.h>
-#include <Datatypes/ColormapPort.h>
+#include <Datatypes/ColorMap.h>
+#include <Datatypes/ColorMapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/SurfacePort.h>
 #include <Geom/Material.h>
@@ -46,7 +46,7 @@ class GenSurface : public Module {
     TCLstring cyl_boundary_expr;
     TCLstring sph_boundary_expr;
 
-    ColormapIPort* colormapport;
+    ColorMapIPort* ColorMapport;
     SurfaceOPort* outport;
     GeometryOPort* ogeom;
 
@@ -99,8 +99,8 @@ GenSurface::GenSurface(const clString& id)
   sph_boundary_expr("sph_boundary_expr", id, this)
 {
     // Create the input port
-    colormapport=scinew ColormapIPort(this, "Colormap", ColormapIPort::Atomic);
-    add_iport(colormapport);
+    ColorMapport=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
+    add_iport(ColorMapport);
 
     // Create the output port
     outport=scinew SurfaceOPort(this, "Geometry", SurfaceIPort::Atomic);
@@ -144,8 +144,8 @@ Module* GenSurface::clone(int deep)
 
 void GenSurface::execute()
 {
-    ColormapHandle cmap;
-    if(!colormapport->get(cmap))
+    ColorMapHandle cmap;
+    if(!ColorMapport->get(cmap))
 	return;
     Surface* surf=0;
     clString st(surfacetype.get());

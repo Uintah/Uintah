@@ -14,14 +14,15 @@
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
 #include <Datatypes/BasicSurfaces.h>
-#include <Datatypes/Colormap.h>
-#include <Datatypes/ColormapPort.h>
+#include <Datatypes/ColorMap.h>
+#include <Datatypes/ColorMapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/Surface.h>
 #include <Datatypes/SurfacePort.h>
 #include <Datatypes/ScalarField.h>
 #include <Datatypes/TriSurface.h>
+#include <Datatypes/ScalarTriSurface.h>
 #include <Geom/Color.h>
 #include <Geom/Geom.h>
 #include <Geom/Material.h>
@@ -35,11 +36,13 @@
 class SurfToGeom : public Module {
     SurfaceIPort* isurface;
     ScalarFieldIPort* ifield;
-    ColormapIPort* icmap;
+    ColorMapIPort* icmap;
     GeometryOPort* ogeom;
 
     TCLdouble range_min;
     TCLdouble range_max;
+    TCLint best;
+    TCLint invert;
     int have_sf, have_cm;
 
     void surf_to_geom(const SurfaceHandle&, GeomGroup*);
@@ -60,14 +63,15 @@ Module* make_SurfToGeom(const clString& id)
 
 SurfToGeom::SurfToGeom(const clString& id)
 : Module("SurfToGeom", id, Filter), range_min("range_min", id, this),
-  range_max("range_max", id, this)
+  range_max("range_max", id, this), best("best", id, this),
+  invert("invert", id, this)
 {
     // Create the input port
     isurface=scinew SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);
     add_iport(isurface);
     ifield=scinew ScalarFieldIPort(this, "ScalarField", ScalarFieldIPort::Atomic);
     add_iport(ifield);
-    icmap = scinew ColormapIPort(this, "ColorMap", ColormapIPort::Atomic);
+    icmap = scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
     add_iport(icmap);
     ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
@@ -75,7 +79,8 @@ SurfToGeom::SurfToGeom(const clString& id)
 
 SurfToGeom::SurfToGeom(const SurfToGeom&copy, int deep)
 : Module(copy, deep), range_min("range_min", id, this),
-  range_max("range_max", id, this)
+  range_max("range_max", id, this), best("best", id, this),
+  invert("invert", id, this)
 {
     NOT_FINISHED("SurfToGeom::SurfToGeom");
 }
@@ -100,7 +105,7 @@ void SurfToGeom::execute()
 	return;
     }
 
-    ColormapHandle cmap;
+    ColorMapHandle cmap;
     int have_cm=icmap->get(cmap);
     ScalarFieldHandle sfield;
 
@@ -110,9 +115,62 @@ void SurfToGeom::execute()
     GeomTrianglesPC* PCgroup = scinew GeomTrianglesPC;
     GeomTrianglesP* Pgroup = scinew GeomTrianglesP;
 
+    ScalarTriSurface* ss=surf->getScalarTriSurface();
     TriSurface* ts=surf->getTriSurface();
     PointsSurface* ps=surf->getPointsSurface();
-    if(ts){
+    if (ss) {
+	cerr << "Got it!\n";
+//	if (have_cm && cmap->non_diffuse_constant) {
+	if (have_cm) {
+	    cerr << "hiya\n";
+	    MaterialHandle mat1,mat2,mat3;
+	    double min, max;
+	    if (best.get()) {
+		min=max=ss->data[0];
+		for (int i=1; i<ss->data.size(); i++) {
+		    double a=ss->data[i];
+		    if (a<min) min=a;
+		    else if (a>max) max=a;
+		}
+	    } else {
+		min=range_min.get();
+		max=range_max.get();
+	    }
+	    min--;max++;
+	    if (invert.get()) {
+		cmap->min=max;
+		cmap->max=min;
+	    } else {
+		cmap->min=min;
+		cmap->max=max;
+	    }
+	    cerr << "min="<<min<<"  max="<<max<<"\n";
+	    double v1, v2, v3;
+	    for (int i=0; i< ss->elements.size(); i++) {
+		v1=ss->data[ss->elements[i]->i1];
+		v2=ss->data[ss->elements[i]->i2];
+		v3=ss->data[ss->elements[i]->i3];
+		mat1=cmap->lookup(v1);
+		mat2=cmap->lookup(v2);
+		mat3=cmap->lookup(v3);
+		PCgroup->add(ss->points[ss->elements[i]->i1],mat1->diffuse,
+			     ss->points[ss->elements[i]->i2],mat2->diffuse,
+			     ss->points[ss->elements[i]->i3],mat3->diffuse);
+		
+	    }
+	} else {
+	    cerr << "uhoh\n";
+	    for (int i=0; i< ss->elements.size(); i++) {
+		Pgroup->add(ss->points[ss->elements[i]->i1], 
+			    ss->points[ss->elements[i]->i2],
+			    ss->points[ss->elements[i]->i3]);
+		if (PCgroup) {
+		    delete PCgroup;
+		    PCgroup = 0;
+		}
+	    }
+	}
+    } else if (ts) {
 	int ix=0;;
 	for (int i=0; i< ts->elements.size(); i++) {
 	    if (have_cm && have_sf) {
@@ -120,34 +178,40 @@ void SurfToGeom::execute()
 		MaterialHandle mat1,mat2,mat3;
 		int ok=1;
 		if (sfield->interpolate(ts->points[ts->elements[i]->i1], 
-					interp, ix, 1.e-6, 1.e-6)){
+					interp, ix, 1.e-4, 1.e-4)){
 		    mat1=cmap->lookup(interp);
 		} else {
 		    ix=0;
 		    if (sfield->interpolate(ts->points[ts->elements[i]->i1], 
-					    interp, ix, 1.e-6, 30.))
-		    mat1=cmap->lookup(interp);
-		    else mat1=outmatl; //ok=0;
+					    interp, ix, 1.e-4, 30.)) {
+			mat1=cmap->lookup(interp);
+		    } else {
+			mat1=outmatl; //ok=0;
+		    }
 		}
 		if (sfield->interpolate(ts->points[ts->elements[i]->i2], 
-				       interp, ix, 1.e-6, 1.e-6)){
+				       interp, ix, 1.e-4, 1.e-4)){
 		    mat2=cmap->lookup(interp);
 		} else {
 		    ix=0;
 		    if (sfield->interpolate(ts->points[ts->elements[i]->i2], 
-				       interp, ix, 1.e-6, 30.))
-		    mat2=cmap->lookup(interp);
-		    else mat2=outmatl; //ok=0;
+				       interp, ix, 1.e-4, 30.)) {
+			mat2=cmap->lookup(interp);
+		    } else {
+			mat2=outmatl; //ok=0;
+		    }
 		}
 		if (sfield->interpolate(ts->points[ts->elements[i]->i3], 
-				       interp, ix, 1.e-6, 1.e-6)){
+				       interp, ix, 1.e-4, 1.e-4)){
 		    mat3=cmap->lookup(interp);
 		} else {
 		    ix=0;
 	  	    if (sfield->interpolate(ts->points[ts->elements[i]->i3], 
-				       interp, ix, 1.e-6, 30.))
-		    mat3=cmap->lookup(interp);
-		    else mat3=outmatl; //ok=0;
+				       interp, ix, 1.e-4, 30.)) {
+			mat3=cmap->lookup(interp);
+		    } else {
+			mat3=outmatl; //ok=0;
+		    }
 		}
 		if (ok) {
 		  if (cmap->non_diffuse_constant) {
