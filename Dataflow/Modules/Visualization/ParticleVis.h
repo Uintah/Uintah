@@ -26,6 +26,8 @@ class ParticleVis : public Module {
     GuiDouble radius;
     GuiInt drawcylinders;
     GuiDouble length_scale;
+    GuiDouble min_crop_length;
+    GuiDouble max_crop_length;
     GuiDouble head_length;
     GuiDouble width_scale;
     GuiDouble shaft_rad;

@@ -40,6 +40,8 @@ itcl_class Uintah_Visualization_ParticleVis {
 	global $this-isFixed
 	global $this-min_
 	global $this-max_
+	global $this-min_crop_length
+	global $this-max_crop_length
 	set $this-current_time 0
 	set $this-radius 0.01
 	set $this-polygons 32
@@ -54,6 +56,9 @@ itcl_class Uintah_Visualization_ParticleVis {
 	set $this-isFixed 0
 	set $this-min_ 0
 	set $this-max_ 1
+	set $this-min_crop_length 0
+	set $this-max_crop_length 0
+
     }
 
     method ui {} {
@@ -130,10 +135,22 @@ itcl_class Uintah_Visualization_ParticleVis {
 		top $this-drawcylinders { {Lines 0} {Cylinders 1} }
 	pack $w.f2.f.shaft -side left -padx 5 -anchor w
 
-	set l_s [expscale $w.f2.length_scale -label "Length scale:" \
-		     -orient horizontal  -variable $this-length_scale \
-		     -command $n ]
+	expscale $w.f2.length_scale -label "Length scale:" \
+	    -orient horizontal  -variable $this-length_scale \
+	    -command $n 
 	pack $w.f2.length_scale -side top -fill x
+	expscale $w.f2.min_length -orient horizontal \
+		-label "Minimum Length:" \
+		-variable $this-min_crop_length -command $n
+
+	pack $w.f2.min_length -side top -fill x
+
+	expscale $w.f2.max_length -orient horizontal \
+		-label "Maximum Length (not used if equal to 0):" \
+		-variable $this-max_crop_length -command $n
+
+	pack $w.f2.max_length -side top -fill x
+
 
 	scale $w.f2.head_length -orient horizontal -label "Head length:" \
 		-from 0 -to 1 -length 3c \
