@@ -201,14 +201,13 @@ Thread::parallel(const ParallelBase& helper, int nthreads,
 void
 Thread::niceAbort()
 {
+#ifndef _WIN32
     for(;;){
         char action;
         Thread* s=Thread::self();
 	print_threads();
 	fprintf(stderr, "\n");
-#ifndef _WIN32
 	fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
-#endif
 	fprintf(stderr, "Occured for thread:\n \"%s\"", s->d_threadname);
 	fprintf(stderr, "resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)? ");
 	fflush(stderr);
@@ -226,15 +225,11 @@ Thread::niceAbort()
         case 'r': case 'R':
 	    return;
         case 'd': case 'D':
-#ifndef _WIN32
 	    sprintf(command, "winterm -c dbx -p %d &", getpid());
-#endif
 	    system(command);	
 	    break;
         case 'c': case 'C':
-#ifndef _WIN32
 	    sprintf(command, "cvd -pid %d &", getpid());
-#endif
 	    system(command);	
 	    break;
         case 'k': case 'K':
@@ -247,6 +242,7 @@ Thread::niceAbort()
 	    break;
         }
     }
+#endif
 }
 
 int
@@ -313,6 +309,9 @@ Thread::getStateString(ThreadState state)
 
 //
 // $Log$
+// Revision 1.14  1999/11/01 22:20:40  moulding
+// #ifdef out Thread::niceAbort() for win32.
+//
 // Revision 1.13  1999/10/04 16:46:12  moulding
 // #ifdef'd out #include <unistd.h> for win32
 // #ifdef'd out all source lines with getpid() for win32
