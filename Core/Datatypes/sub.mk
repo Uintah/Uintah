@@ -15,13 +15,11 @@ SRCS += $(SRCDIR)/Brick.cc		    \
         $(SRCDIR)/HexMesh.cc		    \
         $(SRCDIR)/Image.cc		    \
         $(SRCDIR)/Matrix.cc		    \
-        $(SRCDIR)/Mesh.cc		    \
         $(SRCDIR)/MeshBase.cc		    \
         $(SRCDIR)/Path.cc		    \
         $(SRCDIR)/PropertyManager.cc	    \
         $(SRCDIR)/ScalarField.cc	    \
         $(SRCDIR)/ScalarFieldHUG.cc	    \
-        $(SRCDIR)/ScalarFieldUG.cc	    \
         $(SRCDIR)/ScalarFieldZone.cc	    \
         $(SRCDIR)/SparseRowMatrix.cc	    \
         $(SRCDIR)/SymSparseRowMatrix.cc	    \
@@ -31,7 +29,6 @@ SRCS += $(SRCDIR)/Brick.cc		    \
 	$(SRCDIR)/TypeName.cc		    \
         $(SRCDIR)/VectorField.cc	    \
         $(SRCDIR)/VectorFieldHUG.cc	    \
-        $(SRCDIR)/VectorFieldUG.cc	    \
         $(SRCDIR)/VectorFieldZone.cc	    \
         $(SRCDIR)/VoidStar.cc		    \
         $(SRCDIR)/templates.cc		    \

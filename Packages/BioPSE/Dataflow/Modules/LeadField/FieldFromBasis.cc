@@ -11,9 +11,10 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/TetVol.h>
 
 #include <iostream>
 using std::cerr;
@@ -25,7 +26,7 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class FieldFromBasis : public Module {    
-    MeshIPort* mesh_iport;
+    FieldIPort* mesh_iport;
     MatrixIPort* basis_iport;
     int matrixGen;
     MatrixIPort* rms_iport;
@@ -47,8 +48,8 @@ extern "C" Module* make_FieldFromBasis(const clString& id) {
 FieldFromBasis::FieldFromBasis(const clString& id)
 : Module("FieldFromBasis", id, Filter)
 {
-    mesh_iport = new MeshIPort(this, "Domain Mesh",
-				MeshIPort::Atomic);
+    mesh_iport = new FieldIPort(this, "Domain Mesh",
+				FieldIPort::Atomic);
     add_iport(mesh_iport);
     basis_iport = new MatrixIPort(this,"Basis Matrix",
 				  MatrixIPort::Atomic);
@@ -68,7 +69,7 @@ FieldFromBasis::FieldFromBasis(const clString& id)
 FieldFromBasis::~FieldFromBasis(){}
 
 void FieldFromBasis::execute() {
-    MeshHandle mesh;
+    FieldHandle mesh;
     if (!mesh_iport->get(mesh)) {
 	cerr << "FieldFromBasis -- couldn't get mesh.  Returning.\n";
 	return;
@@ -79,6 +80,7 @@ void FieldFromBasis::execute() {
 	cerr << "FieldFromBasis -- couldn't get basis matrix.  Returning.\n";
 	return;
     }
+#if 0 //FIX_ME replace this with new field code --> TetVol instead of mesh
     int nelems=mesh->elems.size();
     int nnodes=mesh->nodes.size();
     cerr << "basisH->nrows()="<<basisH->nrows()<<" cols="<<basisH->ncols()<<"\n";
@@ -170,5 +172,16 @@ void FieldFromBasis::execute() {
     vecH=vec;
     vec_oport->send(vecH);
     cerr << "Done with the Module!"<<endl;
+#endif
 } 
 } // End namespace BioPSE
+
+
+
+
+
+
+
+
+
+

@@ -12,7 +12,6 @@ SRCS     += $(SRCDIR)/ColorMapPort.cc             \
             $(SRCDIR)/HexMeshPort.cc              \
 	    $(SRCDIR)/ImagePort.cc		  \
             $(SRCDIR)/MatrixPort.cc               \
-            $(SRCDIR)/MeshPort.cc                 \
             $(SRCDIR)/PathPort.cc                 \
             $(SRCDIR)/ScalarFieldPort.cc          \
             $(SRCDIR)/VectorFieldPort.cc          \

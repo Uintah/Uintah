@@ -22,6 +22,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/GuiInterface/Remote.h>
 #include <iostream>
+#include <unistd.h> // for the call to sleep
 
 using std::cerr;
 using std::endl;

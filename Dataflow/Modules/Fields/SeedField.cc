@@ -11,7 +11,7 @@
  
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MusilRNG.h>
@@ -24,7 +24,7 @@ using std::cerr;
 namespace SCIRun {
 
 class SeedField : public Module {
-  MeshIPort* imesh;
+  FieldIPort* imesh;
   MatrixOPort* omat;  
   GuiString seedRandTCL;
   GuiString numDipolesTCL;
@@ -45,7 +45,7 @@ SeedField::SeedField(const clString& id)
   dipoleMagnitudeTCL("dipoleMagnitudeTCL", id, this)
 {
   // Create the input port
-  imesh = scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
+  imesh = scinew FieldIPort(this, "Mesh", FieldIPort::Atomic);
   add_iport(imesh);
   
   // Create the output ports
@@ -57,9 +57,11 @@ SeedField::~SeedField()
 {
 }
 
+// FIX_ME upgrade to new fields.
 void SeedField::execute()
 {
-  MeshHandle mesh;
+#if 0
+  FieldHandle mesh;
   if (!imesh->get(mesh) || !mesh.get_rep()) return;
   int seedRand, numDipoles;
   double dipoleMagnitude;
@@ -85,5 +87,6 @@ void SeedField::execute()
     (*m)[i][5]=2*(mr()-0.5)*dipoleMagnitude;
   }
   omat->send(MatrixHandle(m));
+#endif 
 }
 } // End namespace SCIRun

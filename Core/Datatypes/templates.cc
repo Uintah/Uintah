@@ -27,13 +27,14 @@ template class LockingHandle<ColumnMatrix>;
 #include <Core/Datatypes/Matrix.h>
 template class LockingHandle<Matrix>;
 
+#include <Core/Datatypes/TetVol.h>
+template class TetVol<double>;
+
 #include <Core/Datatypes/GenericField.h>
-//#include <Core/Datatypes/TetVolMesh.h>
 //#include <Core/Datatypes/Lat3VolMesh.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Persistent/PersistentSTL.h>
 
-//template class GenericField<TetVolMesh, vector<double> >;
 //template class GenericField<Lat3VolMesh, vector<double> >;
 template class GenericField<TriSurfMesh, vector<double> >;
 
