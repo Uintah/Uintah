@@ -25,6 +25,10 @@
         <name>Archive Timestep</name>
         <datatype>Uintah::Archive</datatype>
       </port>
+      <port>
+	<name>Geometry</name>
+	<datatype>SCIRun::Geometry</datatype>
+      </port>
    </outputs>
   </io>
   <testing>
