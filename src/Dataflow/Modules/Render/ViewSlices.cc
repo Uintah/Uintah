@@ -335,8 +335,6 @@ class ViewSlices : public Module
   NrrdIPort *		grad_iport_;
   GeometryOPort *	geom_oport_;
   ColorMap2OPort*	cmap2_oport_;
-  
-
 
   typedef		map<string,TexSquare*> TexSquareMap;
   TexSquareMap		tobjs_;
@@ -419,6 +417,7 @@ class ViewSlices : public Module
 
   void			send_slice_geometry(NrrdSlice &slice);
 
+  void			add_paint_widget();
   void			fill_paint_slices(SliceWindow &window);
   void			fill_all_paint_slices();
   void			rasterize_colormap2();
@@ -1997,8 +1996,6 @@ void
 ViewSlices::draw_slice(SliceWindow &window, NrrdSlice &slice)
 {
   if (slice.axis_ != window.axis_) return;
-  //  if (slice.nrrd_dirty_) 
-    //    cerr << window.name_ << " slice dirty\n";
   if (slice.nrrd_dirty_ && slice.volume_)
     extract_slice(slice, window.axis_(), window.slice_num_());
   
@@ -2381,7 +2378,6 @@ ViewSlices::extract_mip_slices(NrrdVolume *volume)
 {
   if (!volume || !volume->nrrd_.get_rep()) { return; }
   for (int axis = 0; axis < 3; ++axis) {
-    //    cerr << "Extracting MIP " << axis << std::endl;
     if (!mip_slices_[axis])
       mip_slices_[axis] = scinew NrrdSlice(axis, 0, volume);
       
@@ -2449,7 +2445,6 @@ ViewSlices::send_mip_slices(SliceWindow &window)
     if (!mip_slices_[axis]) continue;
     NrrdSlice &slice = *mip_slices_[axis];
     if (!slice.tex_dirty_) continue;
-    //    cerr << "Sending MIP " << axis << std::endl;
 
     slice.do_lock();
     slice.tex_dirty_ = false;
@@ -2600,7 +2595,13 @@ void
 ViewSlices::execute()
 {
   update_state(Module::JustStarted);
-  
+  ASSERTMSG(cmap2_iport_,"Unable to initialize ColorMap2 input port.");
+  ASSERTMSG(n1_cmap_iport_,"Unable to initialize iport ColorMap.");
+  ASSERTMSG(n2_cmap_iport_,"Unable to initialize iport ColorMap.");
+  ASSERTMSG(grad_iport_,"Unable to initialize Gradient input port.");
+  ASSERTMSG(geom_oport_,"Unable to initialize oport Scene Graph.");
+  ASSERTMSG(cmap2_oport_,"Unable to initialize oport ColorMap2");
+
   unsigned int a, n = 1;
   vector<NrrdIPort *> nrrd_iports;
   NrrdIPort *nrrd_iport;
@@ -2613,40 +2614,6 @@ ViewSlices::execute()
   } while (nrrd_iport);
 
 
-  if (!cmap2_iport_)
-  {
-    error("Unable to initialize ColorMap2 input port.");
-    return;
-  }
-
-  if (!n1_cmap_iport_)
-  {
-    error("Unable to initialize iport ColorMap.");
-    return;
-  }
-
-  if (!n2_cmap_iport_)
-  {
-    error("Unable to initialize iport ColorMap.");
-    return;
-  }
-
-  if (!grad_iport_)
-  {
-    error("Unable to initialize Gradient input port.");
-    return;
-  }
-
-  if (!geom_oport_) {
-    error("Unable to initialize oport Scene Graph.");
-    return;
-  }
-
-  if (!cmap2_oport_) {
-    error("Unable to initialize oport ColorMap2");
-    return;
-  }
-
   update_state(Module::NeedData);
 
   vector<NrrdDataHandle> nrrds;
@@ -2657,15 +2624,15 @@ ViewSlices::execute()
   }
 
   if (!nrrds.size()) {
-    error ("Unable to get a nrrd");
+    error ("Unable to get an input nrrd.");
     return;
   }
-
 
   if (painting_() == 2) {
     ASSERT(cm2_.get_rep());
     cm2_=scinew ColorMap2(cm2_->widgets(), false, cm2_->faux());
     cmap2_oport_->send_intermediate(cm2_);
+
     painting_ = 1;
   } else  {
     cmap2_oport_->send_intermediate(cm2_);
@@ -2673,10 +2640,28 @@ ViewSlices::execute()
 
   cmap2_iport_->get(cm2_);
 
+  if (cm2_.get_rep() && 
+      (cm2_->selected() >= 0) && 
+      (cm2_->selected() < int(cm2_->widgets().size()))) {
+    paint_widget_ = 
+      dynamic_cast<SCIRun::PaintCM2Widget*>(cm2_->widgets()[cm2_->selected()].get_rep());
+  } else {
+    paint_widget_ = 0;
+  }
+
+  const bool painting_cache = painting_;
+  if (paint_widget_) {
+    painting_ = 1;
+  } else {
+    painting_ = 0;
+  }
+
   if (painting_ && cm2_.get_rep() && !cm2_->updating() &&
       cm2_generation_ != cm2_->generation)
   {
     fill_all_paint_slices();
+    redraw_all();
+  } else if (painting_cache != painting_) {
     redraw_all();
   }
     
@@ -2758,9 +2743,9 @@ ViewSlices::execute()
   // Temporary space to hold the colormapped texture
   if (temp_tex_data_) delete[] temp_tex_data_;
   const int max_dim = 
-    Max(pow2(max_slice_[0]), pow2(max_slice_[1]), pow2(max_slice_[2]));
+    Max(pow2(max_slice_[0]+1), pow2(max_slice_[1]+1), pow2(max_slice_[2]+1));
   const int mid_dim = 
-    Mid(pow2(max_slice_[0]), pow2(max_slice_[1]), pow2(max_slice_[2]));
+    Mid(pow2(max_slice_[0]+1), pow2(max_slice_[1]+1), pow2(max_slice_[2]+1));
   temp_tex_data_ = scinew float[max_dim*mid_dim*4];
 
   // Mark all windows slices dirty
@@ -2781,8 +2766,10 @@ ViewSlices::execute()
   }
 
   TCLTask::unlock();
+
   cmap2_oport_->send(cm2_);
   cmap2_iport_->get(cm2_);
+
   update_state(Module::Completed);  
 }
 
@@ -3057,6 +3044,7 @@ ViewSlices::handle_gui_button(GuiArgs &args) {
     switch (button) {
     case 1:
       if (painting_) { 
+#if 0
 	if (cm2_->selected() == -1) {
 	  paint_widget_ = 
 	    dynamic_cast<SCIRun::PaintCM2Widget*>(cm2_->widgets().back().get_rep());
@@ -3064,7 +3052,7 @@ ViewSlices::handle_gui_button(GuiArgs &args) {
 	  paint_widget_ = 
 	    dynamic_cast<SCIRun::PaintCM2Widget*>(cm2_->widgets()[cm2_->selected()].get_rep());
 	}
-
+#endif
 	last_cursor_ = cursor_;
 	do_paint(window); 
 	continue;
@@ -3101,6 +3089,28 @@ ViewSlices::handle_gui_button(GuiArgs &args) {
     }
   }
 }
+
+void
+ViewSlices::add_paint_widget() {
+  paint_widget_ = scinew PaintCM2Widget();	
+  vector<CM2WidgetHandle> widgets;
+  widgets.reserve(cm2_->widgets().size()+1);
+  int added = -1;
+  for (unsigned int w = 0; w < cm2_->widgets().size(); ++w) {
+    PaintCM2Widget *paint_layer = 
+      dynamic_cast<PaintCM2Widget*>(cm2_->widgets()[w].get_rep());
+    if (!paint_layer && (added == -1)) {
+      added = w;
+      widgets.push_back(paint_widget_);
+    }
+    widgets.push_back(cm2_->widgets()[w]);
+  }
+  cm2_->widgets() = widgets;
+  cm2_->selected() = added;
+  want_to_execute();
+}
+
+
 
 void
 ViewSlices::handle_gui_keypress(GuiArgs &args) {
@@ -3147,28 +3157,6 @@ ViewSlices::handle_gui_keypress(GuiArgs &args) {
       window.invert_ = window.invert_?0:1;
       redraw_window(window);
     } else if (args[4] == "p") {
-      if (painting_()) {
-	painting_ = 0;
-      } else {
-	painting_ = 1;
-	fill_all_paint_slices();
-	paint_widget_ = scinew PaintCM2Widget();	
-	vector<CM2WidgetHandle> widgets;
-	widgets.reserve(cm2_->widgets().size()+1);
-	int added = -1;
-	for (unsigned int w = 0; w < cm2_->widgets().size(); ++w) {
-	  if (added == -1 && 
-	      (!dynamic_cast<PaintCM2Widget*>(cm2_->widgets()[w].get_rep()))) {
-	    added = w;
-	    widgets.push_back(paint_widget_);
-	  }
-	  widgets.push_back(cm2_->widgets()[w]);
-	}
-	cm2_->widgets() = widgets;
-	cm2_->selected() = added;
-	want_to_execute();
-      }
-      redraw_all();
     } else if (args[4] == "m") {
       window.mode_ = (window.mode_+1)%num_display_modes_e;
       extract_window_slices(window);
@@ -3210,6 +3198,7 @@ ViewSlices::tcl_command(GuiArgs& args, void* userdata) {
   else if (args[1] == "enter")    handle_gui_enter(args);
   else if (args[1] == "leave")    handle_gui_leave(args);
   else if (args[1] == "background_thresh") update_background_threshold();
+  else if(args[1] == "add_paint_widget") add_paint_widget();
   else if(args[1] == "setgl") {
     int visualid = 0;
     if (args.count() == 5 && !string_to_int(args[4], visualid))
@@ -3463,8 +3452,6 @@ ViewSlices::fill_paint_slices(SliceWindow &window) {
     }
   }
 }
-
-
 
 
 void 
