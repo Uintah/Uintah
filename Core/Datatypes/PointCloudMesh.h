@@ -106,12 +106,15 @@ public:
   //! set the mesh statistics
   void resize_nodes(Node::size_type n) { points_.resize(n); }
 
+  //! TODO: This doesnt make sense to me (McKay), can someone explain?
   //! get the child elements of the given index
   // this first one is so get_node(Node::array_type &, Cell::index_type)
   //   will compile.  For PointCloudMesh, Cell==Node.  This is needed
   //   in ClipField, for example.
   void get_nodes(Node::array_type &a, Node::index_type i) const
     { a.resize(1); a[0] = i; }
+
+  //! Get the children elemsnts of the given index
   void get_nodes(Node::array_type &, Edge::index_type) const {}
   void get_nodes(Node::array_type &, Face::index_type) const {}
   void get_nodes(Node::array_type &, Cell::index_type) const {}
@@ -127,16 +130,25 @@ public:
   unsigned get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
   unsigned get_cells(Cell::array_type &, Face::index_type) const { return 0; }
 
-  //! similar to get_edges() with Node::index_type argument, but
-  //  returns the "other" edge if it exists, not all that exist
-  void get_neighbor(Edge::index_type &, Node::index_type) const {}
-
   //! get the center point (in object space) of an element
-  void get_center(Point &result, Node::index_type idx) const
-  { result = points_[idx]; }
+  void get_center(Point &p, Node::index_type i) const { p = points_[i]; }
   void get_center(Point &, Edge::index_type) const {}
   void get_center(Point &, Face::index_type) const {}
   void get_center(Point &, Cell::index_type) const {}
+
+  //! Get the size of an elemnt (length, area, volume)
+  double get_size(Node::index_type idx) const { return 0.0; };
+  double get_size(Edge::index_type idx) const { return 0.0; };
+  double get_size(Face::index_type idx) const { return 0.0; };
+  double get_size(Cell::index_type idx) const { return 0.0; };
+  double get_length(Edge::index_type idx) const { return get_size(idx); };
+  double get_area(Face::index_type idx) const { return get_size(idx); };
+  double get_volume(Cell::index_type idx) const { return get_size(idx); };
+
+  int get_valence(Node::index_type idx) const { return 0; };
+  int get_valence(Edge::index_type idx) const { return 0; };
+  int get_valence(Face::index_type idx) const { return 0; };
+  int get_valence(Cell::index_type idx) const { return 0; };
 
   bool locate(Node::index_type &, const Point &) const;
   bool locate(Edge::index_type &, const Point &) const { return false; }
@@ -144,22 +156,21 @@ public:
   bool locate(Cell::index_type &, const Point &) const { return false; }
 
   void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
-  void get_weights(const Point &, Edge::array_type &, vector<double> &) {ASSERTFAIL("PointCloudField::get_weights for edges isn't supported");}
-  void get_weights(const Point &, Face::array_type &, vector<double> &) {ASSERTFAIL("PointCloudField::get_weights for faces isn't supported");}
-  void get_weights(const Point &, Cell::array_type &, vector<double> &) {ASSERTFAIL("PointCloudField::get_weights for cells isn't supported");}
+  void get_weights(const Point &, Edge::array_type &, vector<double> &)
+    {ASSERTFAIL("PointCloudField::get_weights for edges isn't supported");}
+  void get_weights(const Point &, Face::array_type &, vector<double> &) 
+    {ASSERTFAIL("PointCloudField::get_weights for faces isn't supported");}
+  void get_weights(const Point &, Cell::array_type &, vector<double> &) 
+    {ASSERTFAIL("PointCloudField::get_weights for cells isn't supported");}
 
-  void get_point(Point &result, Node::index_type idx) const
-  { get_center(result,idx); }
-  void get_normal(Vector & /* result */, Node::index_type /* index */) const
-  { ASSERTFAIL("not implemented") }
-  void set_point(const Point &point, Node::index_type index)
-  { points_[index] = point; }
+  void get_point(Point &p, Node::index_type i) const { get_center(p,i); }
+  void set_point(const Point &p, Node::index_type i) { points_[i] = p; }
 
   //! use these to build up a new PointCloudField mesh
   Node::index_type add_node(const Point &p) { return add_point(p); }
   Node::index_type add_point(const Point &p);
-
   Elem::index_type add_elem(Node::array_type a) { return a[0]; }
+
   virtual bool is_editable() const { return true; }
 
   virtual void io(Piostream&);
@@ -168,7 +179,6 @@ public:
   virtual const TypeDescription *get_type_description() const;
 
 private:
-
   //! the nodes
   vector<Point> points_;
 

@@ -270,6 +270,65 @@ public:
   void get_center(Point &result, Face::index_type idx) const;
   void get_center(Point &result, Cell::index_type idx) const;
 
+
+  //! Get the size of an elemnt (length, area, volume)
+  double get_size(Node::index_type idx) const { return 0.0; }
+  double get_size(Edge::index_type idx) const 
+  {
+    Node::array_type arr;
+    get_nodes(arr, idx);
+    Point p0, p1;
+    get_center(p0, arr[0]);
+    get_center(p1, arr[1]);
+    return (p1.asVector() - p0.asVector()).length();
+  }
+  double get_size(Face::index_type idx) const
+  {
+    Node::array_type ra;
+    get_nodes(ra,idx);
+    Point p0,p1,p2;
+    get_point(p0,ra[0]);
+    get_point(p1,ra[1]);
+    get_point(p2,ra[2]);
+    return (Cross(p0-p1,p2-p0)).length()*0.5;
+  }
+  double get_size(Cell::index_type idx) const
+  {
+    Node::array_type ra(4);
+    get_nodes(ra,idx);
+    Point p0,p1,p2,p3;
+    get_point(p0,ra[0]);
+    get_point(p1,ra[1]);
+    get_point(p2,ra[2]);
+    get_point(p3,ra[3]);
+    return (Cross(Cross(p1-p0,p2-p0),p3-p0)).length()*0.1666666666666666;
+  } 
+  double get_length(Edge::index_type idx) const { return get_size(idx); };
+  double get_area(Face::index_type idx) const   { return get_size(idx); };
+  double get_volume(Cell::index_type idx) const { return get_size(idx); };
+
+
+
+  int get_valence(Node::index_type idx) const
+  {
+    Node::array_type arr;
+    get_neighbors(arr, idx);
+    return arr.size();
+  }
+  int get_valence(Edge::index_type idx) const { return 0; }
+  int get_valence(Face::index_type idx) const
+  {
+    Face::index_type tmp;
+    return (get_neighbor(tmp, idx) ? 1 : 0);
+  }
+  int get_valence(Cell::index_type idx) const 
+  {
+    Cell::array_type arr;
+    get_neighbors(arr, idx);
+    return arr.size();
+  }
+
+
   //! return false if point is out of range.
   bool locate(Node::index_type &loc, const Point &p);
   bool locate(Edge::index_type &loc, const Point &p);
@@ -292,17 +351,7 @@ public:
   void set_point(const Point &point, Node::index_type index)
   { points_[index] = point; }
 
-  double get_volume(const Cell::index_type &ci) {
-    Node::array_type ra(4);
-    get_nodes(ra,ci);
-    Point p0,p1,p2,p3;
-    get_point(p0,ra[0]);
-    get_point(p1,ra[1]);
-    get_point(p2,ra[2]);
-    get_point(p3,ra[3]);
-    return (Cross(Cross(p1-p0,p2-p0),p3-p0)).length()*0.1666666666666666;
-  }
-  double get_area(const Face::index_type &) { return 0; }
+
   double get_element_size(const Elem::index_type &ci)
   { return get_volume(ci); }
 

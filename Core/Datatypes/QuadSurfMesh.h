@@ -106,9 +106,38 @@ public:
 
   void get_nodes(Node::array_type &array, Edge::index_type idx) const;
   void get_nodes(Node::array_type &array, Face::index_type idx) const;
+  void get_nodes(Node::array_type &array, Cell::index_type idx) const;
   void get_edges(Edge::array_type &array, Face::index_type idx) const;
+  void get_edges(Edge::array_type &array, Cell::index_type idx) const;
+  void get_faces(Face::array_type &array, Cell::index_type idx) const;
+
+  //! get the parent element(s) of the given index
+  bool get_edges(Edge::array_type &, Node::index_type) const { return 0; }
+  bool get_faces(Face::array_type &, Node::index_type) const { return 0; }
+  bool get_faces(Face::array_type &, Edge::index_type) const { return 0; }
+  bool get_cells(Cell::array_type &, Node::index_type) const { return 0; }
+  bool get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
+  bool get_cells(Cell::array_type &, Face::index_type) const { return 0; }
 
   void get_neighbor(Face::index_type &neighbor, Edge::index_type idx) const;
+
+  //! Get the size of an elemnt (length, area, volume)
+  double get_size(Node::index_type idx) const;
+  double get_size(Edge::index_type idx) const;
+  double get_size(Face::index_type idx) const
+  {
+    Node::array_type ra;
+    get_nodes(ra,idx);
+    Point p0,p1,p2;
+    get_point(p0,ra[0]);
+    get_point(p1,ra[1]);
+    get_point(p2,ra[2]);
+    return (Cross(p0-p1,p2-p0)).length()*0.5;
+  };
+  double get_size(Cell::index_type idx) const;
+  double get_length(Edge::index_type idx) const { return get_size(idx); };
+  double get_area(Face::index_type idx) const { return get_size(idx); };
+  double get_volume(Cell::index_type idx) const { return get_size(idx); };
 
   void get_center(Point &p, Node::index_type i) const { get_point(p, i); }
   void get_center(Point &p, Edge::index_type i) const;
@@ -121,30 +150,15 @@ public:
   bool locate(Cell::index_type &loc, const Point &p) const;
 
   void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
-  void get_weights(const Point &, Edge::array_type &, vector<double> &) {ASSERTFAIL("QuadSurfMesh::get_weights for edges isn't supported");}
+  void get_weights(const Point &, Edge::array_type &, vector<double> &)
+    {ASSERTFAIL("QuadSurfMesh::get_weights for edges isn't supported");}
   void get_weights(const Point &p, Face::array_type &l, vector<double> &w);
-  void get_weights(const Point &, Cell::array_type &, vector<double> &) {ASSERTFAIL("QuadSurfMesh::get_weights for cells isn't supported");}
+  void get_weights(const Point &, Cell::array_type &, vector<double> &) 
+    {ASSERTFAIL("QuadSurfMesh::get_weights for cells isn't supported");}
 
-  void get_point(Point &result, Node::index_type index) const
-  { result = points_[index]; }
-  void get_normal(Vector &result, Node::index_type index) const
-  { result = normals_[index]; }
-  void set_point(const Point &point, Node::index_type index)
-  { points_[index] = point; }
-
-  double get_volume(const Cell::index_type &) { return 0; }
-  double get_area(const Face::index_type &fi) {
-    Node::array_type ra;
-    get_nodes(ra,fi);
-    Point p0,p1,p2;
-    get_point(p0,ra[0]);
-    get_point(p1,ra[1]);
-    get_point(p2,ra[2]);
-    return (Cross(p0-p1,p2-p0)).length()*0.5;
-  }
-
-  //void get_random_point(Point &p, const Face::index_type &ei,
-  //int seed=0) const;
+  void get_point(Point &p, Node::index_type i) const { p = points_[i]; }
+  void get_normal(Vector &n, Node::index_type i) const { n = normals_[i]; }
+  void set_point(const Point &p, Node::index_type i) { points_[i] = p; }
 
   double get_element_size(const Elem::index_type &fi) { return get_area(fi); }
   virtual bool has_normals() const { return true; }
@@ -155,7 +169,6 @@ public:
   virtual const TypeDescription *get_type_description() const;
 
   // Extra functionality needed by this specific geometry.
-
   Node::index_type add_find_point(const Point &p, double err = 1.0e-3);
   void add_quad(Node::index_type a, Node::index_type b,
 		Node::index_type c, Node::index_type d);
@@ -164,13 +177,6 @@ public:
   Elem::index_type add_elem(Node::array_type a);
   virtual bool is_editable() const { return true; }
   Node::index_type add_point(const Point &p);
-
-
-
-
-  //bool intersect(const Point &p, const Vector &dir, double &min, double &max,
-  //		 Face::index_type &face, double &u, double &v);
-
 
   const Point &point(Node::index_type i) { return points_[i]; }
   virtual bool		synchronize(unsigned int);
@@ -182,11 +188,6 @@ private:
 
   int next(int i) { return ((i%4)==3) ? (i-3) : (i+1); }
   int prev(int i) { return ((i%4)==0) ? (i+3) : (i-1); }
-
-
-
-  //bool inside4_p(int, const Point &p);
-
 
   vector<Point>			points_;
   vector<Node::index_type>	faces_;
