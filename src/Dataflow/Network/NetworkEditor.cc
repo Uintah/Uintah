@@ -303,15 +303,6 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
       }
       sci_system(command.c_str());
       return;
-    } else if (args[1] == "getenv" && args.count() == 3){
-      char *result = sci_getenv( args[2] );
-      if (result) {
-	args.result(string(result));
-	// WARNING: PROBABLY NEED TO FREE result HERE.
-      }
-      return;
-    } else if (args[1] == "setenv" && args.count() == 4){
-      sci_putenv(args[2], args[3]);
     } else if (args[1] == "net_read_lock" && args.count() == 2){
       net->read_lock();
     } else if (args[1] == "net_read_unlock" && args.count() == 2){
