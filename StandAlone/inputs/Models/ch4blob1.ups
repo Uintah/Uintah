@@ -252,7 +252,6 @@
     <Models>
        <Model type="AdiabaticTable">
         <table name="adiabatic" type="Arches">
-	   <defaultValue name="heat loss">0.0</defaultValue>
 	   <filename>inputs/Models/ch4.rxn</filename>
 	</table>
         <material>BackgroundGas</material>

@@ -243,12 +243,11 @@
     <Models>
        <Model type="AdiabaticTable">
         <table name="adiabatic" type="Arches">
-	   <defaultValue name="heat loss">0.0</defaultValue>
-	   <filename>inputs/Models/NAE.rxn</filename>
+	   <defaultValue name="Hl">0.0</defaultValue>
+	   <filename>inputs/ARCHES/NewStaticMixingTables/JP8_reaction.tbl</filename>
            <constantValue name="viscosity">0.000020</constantValue>
-           <derivedValue name="heat capacity Cv(j/kg-K)">[heat capacity(kj/kmol-K)]-8314*[mix. mol. wt.]</derivedValue>
-           <derivedValue name="gamma">[heat capacity(kj/kmol-K)]/[heat capacity Cv(j/kg-K)]</derivedValue>
-           <derivedValue name="specific volume(m3/kg)">1./[density (kg/m3)]</derivedValue>
+           <derivedValue name="heat_capacity_Cv">[heat_capac]-8314*[mix_mol_wt]</derivedValue>
+           <derivedValue name="gamma">[heat_capac]/[heat_capacity_Cv]</derivedValue>
 	</table>
         <material>BackgroundGas</material>
         <scalar name="f">
