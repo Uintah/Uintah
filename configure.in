@@ -2857,7 +2857,7 @@ AC_SUBST(DEF_CRYPTO)
 dirs="$with_exc $SCI_LAB_TP_LIBS"
 
 SCI_CHECK_LIB($dirs,exc,main,,,optional)
-SCI_CHECK_HEADERS($LIB_DIR_EXE/../include,libexc.h,,,optional)
+SCI_CHECK_HEADERS($LIB_DIR_EXC/../include,libexc.h,,,optional)
 
 if test "$HAVE_LIB_EXC" && test "$HAVE_LIBEXC_H"; then
   TRACEBACK_LIB=-lexc
@@ -2870,8 +2870,8 @@ if test "$with_exc" && test ! "$DEF_EXC"; then
   echo
 fi
 
-AC_SUBST(EXE_LIB_FLAG)
-AC_SUBST(EXE_LIB_DIR_FLAG)
+AC_SUBST(EXC_LIB_FLAG)
+AC_SUBST(EXC_LIB_DIR_FLAG)
 AC_SUBST(DEF_EXC)
 
 ##  --  globus nexus  ----------------------------------------------------
@@ -3159,11 +3159,13 @@ if test "$HAVE_LIB_F" && test "$HAVE_LIB_BLAS"; then
 
   if test ! "$HAVE_LIB_LAPACK"; then
     SCI_CHECK_LIB($dirs,complib.sgimath,main,,,optional)
-    SCI_CHECK_LIB($dirs,complib.sgimath_mp,main,,,optional)
-    if test "$HAVE_LIB_COMPLIB_SGIMATH_MP"; then
+#    SCI_CHECK_LIB($dirs,complib.sgimath_mp,main,,,optional)
+#    if test "$HAVE_LIB_COMPLIB_SGIMATH_MP"; then
+    if test "$HAVE_LIB_COMPLIB_SGIMATH"; then
        AC_MSG_WARN(Using complib for lapack)
        HAVE_LIB_LAPACK="yes"
-       LAPACK_LIB_FLAG="$COMPLIB_SGIMATH_LIB_FLAG $COMPLIB_SGIMATH_MP_LIB_FLAG"
+#      LAPACK_LIB_FLAG="$COMPLIB_SGIMATH_LIB_FLAG $COMPLIB_SGIMATH_MP_LIB_FLAG"
+       LAPACK_LIB_FLAG="$COMPLIB_SGIMATH_LIB_FLAG"
        LAPACK_LIB_DIR_FLAG="$COMPLIB_SGIMATH_LIB_DIR_FLAG"
     fi
   fi
