@@ -46,22 +46,19 @@
 
 
 #ifndef LOAD_PACKAGE
-#error You must set a LOAD_PACKAGE or life is pretty dull
+#  error You must set a LOAD_PACKAGE or life is pretty dull
 #endif
 
 #ifndef ITCL_WIDGETS
-#error You must set ITCL_WIDGETS to the iwidgets/scripts path
+#  error You must set ITCL_WIDGETS to the iwidgets/scripts path
 #endif
 
-
-namespace SCIRun {
-
+using namespace SCIRun;
 using namespace std;
 
 // This set stores all of the environemnt keys that were set when scirun was
 // started.  Its checked by sci_putenv to ensure we don't overwrite env variables
-map<string,string> scirun_env;
-
+static map<string,string> scirun_env;
 
 // MacroSubstitute takes var_value returns a string with the environment
 // variables expanded out.  Performs one level of substitution
@@ -118,10 +115,29 @@ MacroSubstitute( const char * var_value )
   return retval;
 }
 
+// WARNING: According to other software (specifically: tcl) you should
+// lock before messing with the environment.
+
+// Have to append 'SCIRun::' to these function names so that the
+// compiler believes that they are in the SCIRun namespace (even
+// though they are declared in the SCIRun namespace in the .h file...)
+const char *
+SCIRun::sci_getenv( const string & key )
+{
+  if (scirun_env.find(key) == scirun_env.end()) return 0;
+  return scirun_env[key].c_str();
+}
+
+void
+SCIRun::sci_putenv( const string &key, const string &val )
+{
+  scirun_env[key] = val;
+}  
 
 // get_existing_env() will fill up the SCIRun::existing_env string set
 // with all the currently set environment variable keys, but not their values
-void create_sci_environment(char **environ, char *execname)
+void
+SCIRun::create_sci_environment(char **environ, char *execname)
 {
   if (environ) {
     char **environment = environ;
@@ -165,26 +181,6 @@ void create_sci_environment(char **environ, char *execname)
 
 }
 
-
-
-
-// WARNING: According to other software (tcl) you should lock before
-// messing with the environment.
-
-const char *
-sci_getenv( const string & key )
-{
-  if (scirun_env.find(key) == scirun_env.end()) return 0;
-  return scirun_env[key].c_str();
-}
-
-
-void
-sci_putenv( const string &key, const string &val )
-{
-  scirun_env[key] = val;
-}  
-
 // emptryOrComment returns true if the 'line' passed in is a comment
 // ie: the first non-whitespace character is a '#'
 // or if the entire line is empty or white space.
@@ -208,7 +204,7 @@ emptyOrComment( const char * line )
 // It uses sci_putenv to set variables in the environment. 
 // Returns true if the file was opened and parsed.  False otherwise.
 bool
-parse_scirunrc( const string &rcfile )
+SCIRun::parse_scirunrc( const string &rcfile )
 {
   FILE* filein = fopen(rcfile.c_str(),"r");
   if (!filein) return false;
@@ -245,7 +241,7 @@ parse_scirunrc( const string &rcfile )
 
 	// Only put the variable into the environment if it is not
 	// already there.
-	if( !sci_getenv( var ) ) {
+	if( !SCIRun::sci_getenv( var ) ) {
 	  sci_putenv(var,sub);
 	} 
 
@@ -264,7 +260,7 @@ parse_scirunrc( const string &rcfile )
 // find_and_parse_scirunrc will search for the users .scirunrc file in 
 // default locations and read it into the environemnt if possible.
 bool
-find_and_parse_scirunrc()
+SCIRun::find_and_parse_scirunrc()
 {
   // Tell the user that we are searching for the .scirunrc file...
   std::cout << "Parsing .scirunrc... ";
@@ -308,7 +304,8 @@ find_and_parse_scirunrc()
 // returns false if the variable is equal to 'false', 'no', 'off', or '0'
 // returns true otherwise.  Case insensitive.
 bool
-sci_getenv_p(const string &key) {
+SCIRun::sci_getenv_p(const string &key) 
+{
   const char *value = sci_getenv( key );
 
   // If the environment variable does NOT EXIST OR is EMPTY then return FASE
@@ -319,7 +316,6 @@ sci_getenv_p(const string &key) {
     value++;
   }
 
-
   // Only return false if value is zero (or equivalant)
   if (str == "FALSE" || str == "NO" || str == "OFF" || str == "0")
     return false;
@@ -327,5 +323,3 @@ sci_getenv_p(const string &key) {
   return true;
 }
 
-
-} // namespace SCIRun 
