@@ -1,20 +1,20 @@
 
 #include <config/sci.cf>
 
-OBJS = ColormapWriter.o  ColumnMatrixWriter.o  ContourSetWriter.o   \
+OBJS = ColorMapWriter.o  ColumnMatrixWriter.o  ContourSetWriter.o   \
 	MatrixWriter.o  MeshWriter.o   \
 	MultiMeshWriter.o   ScalarFieldWriter.o \
-	SurfaceWriter.o   VectorFieldWriter.o \
+	SurfaceWriter.o   VectorFieldWriter.o   VoidStarWriter.o \
 	TetraWriter.o
-GENSRCS = ColormapWriter.cc ColumnMatrixWriter.cc ContourSetWriter.cc  \
+GENSRCS = ColorMapWriter.cc ColumnMatrixWriter.cc ContourSetWriter.cc  \
 	MatrixWriter.cc MeshWriter.cc  \
 	MultiMeshWriter.cc  ScalarFieldWriter.cc  \
-	SurfaceWriter.cc  VectorFieldWriter.cc
+	SurfaceWriter.cc  VectorFieldWriter.cc  VoidStarWriter.cc
 SRCS = $(GENSRCS) TetraWriter.cc
-GENTCLS = ColormapWriter.tcl ColumnMatrixWriter.tcl ContourSetWriter.tcl \
+GENTCLS = ColorMapWriter.tcl ColumnMatrixWriter.tcl ContourSetWriter.tcl \
 	MatrixWriter.tcl MeshWriter.tcl \
 	MultiMeshWriter.tcl ScalarFieldWriter.tcl \
-	SurfaceWriter.tcl VectorFieldWriter.tcl
+	SurfaceWriter.tcl VectorFieldWriter.tcl VoidStarWriter.tcl
 TCLS = $(GENTCLS) TetraWriter.tcl
 
 LIBNAME = Writers
@@ -32,11 +32,11 @@ SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME), $(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
 AllTarget($(GENTCLS))
 
-ColormapWriter.cc: Writer.cc
-	sed 's/TYPE/Colormap/g' < Writer.cc > ColormapWriter.cc
+ColorMapWriter.cc: Writer.cc
+	sed 's/TYPE/ColorMap/g' < Writer.cc > ColorMapWriter.cc
 
-ColormapWriter.tcl: Writer.tcl
-	sed 's/TYPE/Colormap/g' < Writer.tcl > ColormapWriter.tcl
+ColorMapWriter.tcl: Writer.tcl
+	sed 's/TYPE/ColorMap/g' < Writer.tcl > ColorMapWriter.tcl
 
 ColumnMatrixWriter.cc: Writer.cc
 	sed 's/TYPE/ColumnMatrix/g' < Writer.cc > ColumnMatrixWriter.cc
@@ -85,3 +85,10 @@ VectorFieldWriter.cc: Writer.cc
 
 VectorFieldWriter.tcl: Writer.tcl
 	sed 's/TYPE/VectorField/g' < Writer.tcl > VectorFieldWriter.tcl
+
+VoidStarWriter.cc: Writer.cc
+	sed 's/TYPE/VoidStar/g' < Writer.cc > VoidStarWriter.cc
+
+VoidStarWriter.tcl: Writer.tcl
+	sed 's/TYPE/VoidStar/g' < Writer.tcl > VoidStarWriter.tcl
+
