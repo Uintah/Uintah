@@ -71,6 +71,17 @@ updateParticleInformationInContactCells (
 
 void
 Fracture::
+updateSurfaceNormalOfBoundaryParticle(
+	   const ProcessorContext*,
+           const Region* region,
+           DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw)
+{
+   // Added empty function - Steve
+}
+  
+void
+Fracture::
 updateNodeInformationInContactCells (
            const ProcessorContext*,
            const Region* region,
@@ -123,6 +134,9 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.7  2000/05/12 18:13:07  sparker
+// Added an empty function for Fracture::updateSurfaceNormalOfBoundaryParticle
+//
 // Revision 1.6  2000/05/12 01:46:07  tan
 // Added initializeFracture linked to SerialMPM's actuallyInitailize.
 //
