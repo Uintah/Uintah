@@ -25,7 +25,7 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
-# Revision 1.2.2.2  2000/10/26 10:02:20  moulding
+# Revision 1.2.2.3  2000/10/26 14:01:51  moulding
 # merge HEAD into FIELD_REDESIGN
 #
 # Revision 1.3  2000/07/19 00:24:52  samsonov

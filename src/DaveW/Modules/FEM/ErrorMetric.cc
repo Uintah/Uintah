@@ -213,8 +213,8 @@ void ErrorMetric::execute()
 
 //
 // $Log$
-// Revision 1.7.2.1  2000/09/28 03:19:25  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.7.2.2  2000/10/26 14:02:07  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.10  2000/08/01 18:03:03  dmw
 // fixed errors
