@@ -3211,6 +3211,7 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
 	       cellinfo->dxpw[colX+1] +
 	       constvars->old_old_density[xplusCell]*constvars->old_old_scalar[xplusCell])/
 	      constvars->density_guess[xplusCell];
+           vars->scalar[xplusCell]= vars->scalar[currCell];
            if (vars->scalar[xplusCell] > 1.0)
                vars->scalar[xplusCell] = 1.0;
            else if (vars->scalar[xplusCell] < 0.0)
@@ -3374,6 +3375,7 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
 	       cellinfo->dxpw[colX+1] +
 	       constvars->old_old_density[xplusCell]*constvars->old_old_enthalpy[xplusCell])/
 	      constvars->density_guess[xplusCell];
+           vars->enthalpy[xplusCell]= vars->enthalpy[currCell];
 	}
       }
     }
