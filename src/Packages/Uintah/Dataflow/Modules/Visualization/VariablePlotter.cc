@@ -107,7 +107,7 @@ bool VariablePlotter::getGrid()
     times.clear();
     archive->queryTimesteps( indices, times );
     gui->execute(id + " set_time " +
-		 VariableCache::vector_to_string(indices).c_str());
+		 VariableCache::vector_to_string(times).c_str());
     // set old_timestep to something that will cause a new grid
     // to be queried.
     old_timestep = -1;
