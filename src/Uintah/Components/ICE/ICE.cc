@@ -195,6 +195,29 @@ void ICE::actuallyStep1(const ProcessorGroup*,
 {
 
   cout << "Doing actually step1" << endl;
+
+  int numMatls = d_sharedState->getNumMatls();
+
+  // Compute the speed of sound
+
+  for (int m = 0; m < numMatls; m++) {
+    Material* matl = d_sharedState->getMaterial(m);
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    if (ice_matl) {
+      int matlindex = matl->getDWIndex();
+      int vfindex = matl->getVFIndex();
+      // Get the required variables for this patch
+      CCVariable<double> press_CC, cv_CC, Temp_CC;
+      CCVariable<double> rho_micro_CC;
+
+      EquationOfState* eos = ice_matl->getEOS();
+     
+    }
+  }
+
+
+
+  
 }
 
 
@@ -257,6 +280,9 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.24  2000/10/05 00:16:33  jas
+// Starting to work on the speed of sound stuff.
+//
 // Revision 1.23  2000/10/04 23:38:21  jas
 // All of the steps are in place with just dummy functions.  delT is
 // hardwired in for the moment so that we can actually do multiple
