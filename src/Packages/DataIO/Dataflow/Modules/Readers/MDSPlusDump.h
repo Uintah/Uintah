@@ -46,7 +46,7 @@ using namespace std;
 
 class MDSPlusDump {
 public:
-  MDSPlusDump( ostream *iostr_ );
+  MDSPlusDump( ostream *iostr );
 
   void tab( );
 
