@@ -93,6 +93,7 @@ void ScalarFieldReader::execute()
 	    return;
 	}
 	delete stream;
+	handle->set_filename( fn );
     }
     outport->send(handle);
 }
@@ -102,6 +103,9 @@ void ScalarFieldReader::execute()
 
 //
 // $Log$
+// Revision 1.7  2000/12/12 20:00:21  yarden
+// fill in the new filename field
+//
 // Revision 1.6  2000/03/17 09:27:13  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
