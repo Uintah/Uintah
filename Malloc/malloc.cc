@@ -1,6 +1,17 @@
 
 #include <Allocator.h>
 #include <AllocPriv.h>
+#include <bstring.h>
+
+extern "C" {
+void* malloc(size_t size);
+void free(void* ptr);
+void* calloc(size_t, size_t);
+void* realloc(void* p, size_t s);
+void* memalign(size_t, size_t);
+void* valloc(size_t);
+};
+
 
 void* malloc(size_t size)
 {
@@ -14,9 +25,12 @@ void free(void* ptr)
     default_allocator->free(ptr);
 }
 
-void calloc(size_t)
+void* calloc(size_t n, size_t s)
 {
-    AllocError("calloc not finished");
+    size_t tsize=n*s;
+    void* p=malloc(tsize);
+    bzero(p, tsize);
+    return p;
 }
 
 void* realloc(void* p, size_t s)
