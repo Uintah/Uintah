@@ -137,7 +137,33 @@ ShaderProgramARB::init_shaders_supported()
 	TkOpenGLContext *context =
 	  new TkOpenGLContext(".testforshadersupport", 0, 0, 0);
 	context->make_current();
+
+        int max_texture_size = 64;
+#if !defined(__sgi)
+        int i;
+        for (i = 128; i < 100000; i++)
+        {
+          glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_RGBA, i, i, i, 0,
+                       GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+          GLint width;
+          glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0,
+                                   GL_TEXTURE_WIDTH, &width);
+          if (width == 0)
+          {
+            i /= 2;
+            break;
+          }
+       }
+        max_texture_size = i;
+#else
+        // hardcoded on sgi
+        max_texture_size = 256;
+#endif
 	
+        std::cout << "MAX_TEXTURE_SIZE = " << max_texture_size << "\n";
+
+
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 	mSupported =
 	  gluCheckExtension((const GLubyte*)"GL_ARB_vertex_program", 
