@@ -396,7 +396,8 @@ private:
       ts++;
     GridP grid = queryGrid( d_tstimes[ts] );
     Patch* patch = NULL;
-    particleIndex idx;
+    // idx needs to be initialized before it is used in findPatchAndIndex.
+    particleIndex idx = 0;
     for ( ; (ts < (int)d_tstimes.size()) && (d_tstimes[ts] <= endTime); ts++) {
       double t = d_tstimes[ts];
       // figure out what patch contains the cell. As far as I can tell,
