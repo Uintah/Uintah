@@ -106,8 +106,9 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
 	}
         break;
     case Clamp:
-	if(u>1)
-	    u=1;
+      // If u == 1, seg fault occurs.
+	if(u>=1)
+	    u=0.99999999;
 	else if(u<0)
 	    u=0;
     };
@@ -126,8 +127,8 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
 	}
         break;
     case Clamp:
-	if(v>1)
-	    v=1;
+	if(v>=1)
+	    v=.9999999;
 	else if(v<0)
 	    v=0;
     };
