@@ -60,7 +60,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-text-show-edges
 	global $this-text-show-faces
 	global $this-text-show-cells
-	set $this-node_display_type Points
+	set $this-node_display_type Spheres
 	set $this-edge_display_type Lines
 	set $this-node_scale 0.03
 	set $this-edge_scale 0.015
