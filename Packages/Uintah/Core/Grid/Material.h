@@ -7,7 +7,6 @@
 
 
 namespace Uintah {
-  class Burn;
 
 /**************************************
 
@@ -44,8 +43,6 @@ WARNING
 
    class Material {
    public:
-     enum RX_Prod {reactant,product,none};
-
      Material(ProblemSpecP& ps);
      Material();
       
@@ -61,11 +58,8 @@ WARNING
       // velocity field
       int getVFIndex() const;
 
-      virtual Burn* getBurnModel();
-
       void setDWIndex(int);
       void setVFIndex(int);
-      RX_Prod getRxProduct();
 
      const MaterialSubset* thisMaterial() const {
        return thismatl;
@@ -79,14 +73,12 @@ WARNING
      }
    protected:
 
-      Burn* d_burn;
       // Index associated with this material's spot in the DW
       int d_dwindex;
       // Index associated with this material's velocity field
       int d_vfindex;
-     MaterialSubset* thismatl;
+      MaterialSubset* thismatl;
 
-     RX_Prod d_rx_prod;
    private:
 
      bool haveName;

@@ -61,14 +61,6 @@ ICELabel::ICELabel()
     VarLabel::create("mom_L_ME_CC",  CCVariable<Vector>::getTypeDescription());
   eng_L_ME_CCLabel = 
    VarLabel::create("eng_L_ME_CC",   CCVariable<double>::getTypeDescription());
-  burnedMass_CCLabel =
-    VarLabel::create("burnedMass",   CCVariable<double>::getTypeDescription());
-  int_eng_comb_CCLabel =
-    VarLabel::create("int_eng_comb", CCVariable<double>::getTypeDescription());
-  mom_comb_CCLabel =
-    VarLabel::create("mom_comb_CC",  CCVariable<Vector>::getTypeDescription());
-  created_vol_CCLabel =
-    VarLabel::create("created_vol",  CCVariable<double>::getTypeDescription());
   term2Label = 
     VarLabel::create("term2",        CCVariable<double>::getTypeDescription());
   term3Label = 
@@ -169,6 +161,7 @@ ICELabel::ICELabel()
   mom_exch_errorLabel = 
     VarLabel::create( "mom_exch_error",
                                       sumvec_vartype::getTypeDescription() );
+
   // Model variables
   modelMass_srcLabel =
     VarLabel::create( "modelMass_src",
@@ -182,7 +175,8 @@ ICELabel::ICELabel()
   modelVol_srcLabel =
     VarLabel::create( "modelVol_src",
 		      CCVariable<double>::getTypeDescription());
-} 
+
+}
 
 ICELabel::~ICELabel()
 {
@@ -199,10 +193,6 @@ ICELabel::~ICELabel()
     VarLabel::destroy(rho_micro_CCLabel);
     VarLabel::destroy(sp_vol_CCLabel);
     VarLabel::destroy(DLabel);
-    VarLabel::destroy(burnedMass_CCLabel);
-    VarLabel::destroy(int_eng_comb_CCLabel);
-    VarLabel::destroy(created_vol_CCLabel);
-    VarLabel::destroy(mom_comb_CCLabel);
     VarLabel::destroy(speedSound_CCLabel);
     VarLabel::destroy(vol_frac_CCLabel);
     VarLabel::destroy(press_force_CCLabel); 

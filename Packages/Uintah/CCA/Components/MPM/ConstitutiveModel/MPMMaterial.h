@@ -28,7 +28,6 @@ using namespace SCIRun;
  class GeometryPiece;
  class ConstitutiveModel;
  class Burn;
- class EquationOfState;
  class ParticleCreator;
       
 /**************************************
@@ -76,9 +75,6 @@ WARNING
    // Return correct burn model pointer for this material
    Burn* getBurnModel();
 
-   // Return correct EOS model pointer for this material
-   EquationOfState* getEOSModel() const;
-	 
    particleIndex countParticles(const Patch* patch);
 
    void createParticles(particleIndex numParticles,
@@ -120,10 +116,6 @@ WARNING
    // Burn model
    Burn* d_burn;
 
-   // EOS model
-   EquationOfState* d_eos;
-
-
    ParticleCreator* d_particle_creator;
 
    double d_density;
@@ -132,8 +124,6 @@ WARNING
    double d_thermalConductivity;
    double d_specificHeat;
          
-   double d_gamma;
-
    // for temperature dependent plasticity models
    double d_troom;
    double d_tmelt;

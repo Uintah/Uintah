@@ -19,16 +19,12 @@
 #include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/HETransformation/BurnFactory.h>
-#include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ImplicitParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/DefaultParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/MembraneParticleCreator.h>
@@ -49,7 +45,7 @@ using namespace SCIRun;
 MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
 			 string integrator, bool haveLoadCurve,
 			 bool doErosion)
-  : Material(ps), lb(lb), d_cm(0), d_burn(0), d_eos(0), d_particle_creator(0)
+  : Material(ps), lb(lb), d_cm(0), d_particle_creator(0)
 {
   // The standard set of initializations needed
   standardInitialization(ps, lb, n8or27, integrator, haveLoadCurve, doErosion);
@@ -103,16 +99,12 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
 	 << " either Jim, John or Todd "<< endl; 
     throw ParameterNotFound(desc.str());
   }
-  d_burn = BurnFactory::create(ps);
-
-  //d_eos = EquationOfStateFactory::create(ps);
 
   // Step 2 -- get the general material properties
 
   ps->require("density",d_density);
   ps->require("thermal_conductivity",d_thermalConductivity);
   ps->require("specific_heat",d_specificHeat);
-  ps->get("gamma",d_gamma);
 
   d_troom = 294.0; d_tmelt = 295.0;
   ps->get("room_temp", d_troom);
@@ -151,8 +143,6 @@ MPMMaterial::~MPMMaterial()
   // Destructor
 
   delete d_cm;
-  delete d_burn;
-  delete d_eos;
   delete d_particle_creator;
 
   for (int i = 0; i<(int)d_geom_objs.size(); i++) {
@@ -166,22 +156,6 @@ ConstitutiveModel * MPMMaterial::getConstitutiveModel() const
   // with this material
 
   return d_cm;
-}
-
-Burn* MPMMaterial::getBurnModel()
-{
-  // Return the pointer to the burn model associated
-  // with this material
-
-  return d_burn;
-}
-
-EquationOfState* MPMMaterial::getEOSModel() const
-{
-  // Return the pointer to the EOS model associated
-  // with this material
-
-  return d_eos;
 }
 
 particleIndex MPMMaterial::countParticles(const Patch* patch)
@@ -216,11 +190,6 @@ double MPMMaterial::getSpecificHeat() const
 double MPMMaterial::getHeatTransferCoefficient() const
 {
   return d_heatTransferCoefficient;
-}
-
-double MPMMaterial::getGamma() const
-{
-  return d_gamma;
 }
 
 double MPMMaterial::getInitialDensity() const

@@ -495,12 +495,6 @@ using namespace SCIRun;
                       const CCVariable<double>& rho_micro_CC, 
                       CCVariable<double>& press_CC);
                       
-      void massExchange(const ProcessorGroup*,
-                        const PatchSubset* patch, 
-                        const MaterialSubset* matls,  
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw);  
-                                                      
       void getExchangeCoefficients( FastMatrix& K,
                                     FastMatrix& H ); 
 
@@ -542,7 +536,6 @@ using namespace SCIRun;
       bool switchTestConservation; 
      
       
-      bool d_massExchange;
       bool d_RateForm;
       bool d_EqForm;
       bool d_impICE;
