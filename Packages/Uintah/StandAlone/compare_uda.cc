@@ -118,6 +118,12 @@ bool compare(long64 a, long64 b, double /* abs_tolerance */,
   return (a == b); // longs should use an exact comparison
 }
 
+bool compare(int a, int b, double /* abs_tolerance */,
+	     double /* rel_tolerance */)
+{
+  return (a == b); // int should use an exact comparison
+}
+
 bool compare(Vector a, Vector b, double abs_tolerance, double rel_tolerance)
 {
   return compare(a.x(), b.x(), abs_tolerance, rel_tolerance) &&
@@ -1141,6 +1147,11 @@ int main(int argc, char** argv)
 		  (da1, da2, var, matls, patch, patch2Map, time, time2,
 		   abs_tolerance, rel_tolerance, patch->getNodeIterator());
 		break;
+	      case Uintah::TypeDescription::int_type:
+		compareFields< NCVariable<int> >
+		  (da1, da2, var, matls, patch, patch2Map, time, time2,
+		   abs_tolerance, rel_tolerance, patch->getNodeIterator());
+		break;		
 	      case Uintah::TypeDescription::Point:
 		compareFields< NCVariable<Point> >
 		  (da1, da2, var, matls, patch, patch2Map, time,time2,
@@ -1165,6 +1176,11 @@ int main(int argc, char** argv)
 	      switch(subtype->getType()){
 	      case Uintah::TypeDescription::double_type:
 		compareFields< CCVariable<double> >
+		  (da1, da2, var, matls, patch, patch2Map, time, time2,
+		   abs_tolerance, rel_tolerance, patch->getCellIterator());
+		break;
+	      case Uintah::TypeDescription::int_type:
+		compareFields< CCVariable<int> >
 		  (da1, da2, var, matls, patch, patch2Map, time, time2,
 		   abs_tolerance, rel_tolerance, patch->getCellIterator());
 		break;
