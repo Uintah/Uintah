@@ -24,6 +24,8 @@
 #include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
@@ -332,25 +334,35 @@ void SimulationController::run()
       // can access it
       sharedState->setElapsedTime(t);
       if(need_recompile(t, delt, level, cfd, mpm, mpmcfd, output) || first){
-	first=false;
 	if(d_myworld->myrank() == 0)
 	  cout << "Compiling taskgraph...";
 	double start = Time::currentSeconds();
-	scheduler->initialize();
+	SchedulerP _sched = scheduler;
+	/*
+	if (!first) {
+	  MPIScheduler* sched = scinew MPIScheduler(d_myworld, output);
+	  UintahParallelPort* bal = scheduler->getLoadBalancer();
+	  sched->attachPort("load balancer", bal);
+	  _sched = sched;
+	}
+	*/
+	_sched->initialize();
 
-	scheduleTimeAdvance(t, delt, level, scheduler,
+	scheduleTimeAdvance(level, _sched,
 			    cfd, mpm, mpmcfd);
 
-	if(output)
-	  output->finalizeTimestep(t, delt, level, scheduler);
+	//if(output)
+	//  output->finalizeTimestep(t, delt, level, _sched);
       
 	// Begin next time step...
-	scheduleComputeStableTimestep(level, scheduler, cfd, mpm, mpmcfd);
+	scheduleComputeStableTimestep(level, _sched, cfd, mpm, mpmcfd);
+	
 	scheduler->compile(d_myworld, false);
 
 	double dt=Time::currentSeconds()-start;
 	if(d_myworld->myrank() == 0)
 	  cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
+	first=false;	
       }
       // Execute the current timestep
       scheduler->execute(d_myworld);
@@ -528,8 +540,7 @@ void SimulationController::scheduleComputeStableTimestep(LevelP& level,
    }
 }
 
-void SimulationController::scheduleTimeAdvance(double t, double delt,
-					       LevelP& level,
+void SimulationController::scheduleTimeAdvance(LevelP& level,
 					       SchedulerP& sched,
 					       CFDInterface* cfd,
 					       MPMInterface* mpm,
@@ -537,13 +548,13 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 {
   // Temporary - when cfd/mpm are coupled this will need help
   if(mpmcfd){
-      mpmcfd->scheduleTimeAdvance(t, delt, level, sched);
+      mpmcfd->scheduleTimeAdvance(level, sched);
   }
   else {
    if(cfd)
-     cfd->scheduleTimeAdvance(t, delt, level, sched);
+     cfd->scheduleTimeAdvance(level, sched);
    if(mpm)
-      mpm->scheduleTimeAdvance(t, delt, level, sched);
+      mpm->scheduleTimeAdvance(level, sched);
   }
       
 }
