@@ -76,6 +76,9 @@ void TensorParticlesOperator::execute(void)
   case 3: // equivalent stress 
     computeScalars(pTP, pSP, EquivalentStressOp());
     break;
+  case 4: // Octahedral shear stress
+    computeScalars(pTP, pSP, OctShearStressOp());
+    break;
   default:
     std::cerr << "TensorFieldOperator::performOperation: "
 	      << "Unexpected Operation Type #: " << guiOperation.get() << "\n";
