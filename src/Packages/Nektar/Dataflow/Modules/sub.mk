@@ -15,8 +15,7 @@
 
 SRCDIR := Nektar/Modules
 
-SUBDIRS := \
-        $(SRCDIR)/Readers\
+SUBDIRS :=  $(SRCDIR)/Readers $(SRCDIR)/Converters\
 #[INSERT NEW SUBDIRS HERE]
 
 include $(SRCTOP)/scripts/recurse.mk
