@@ -3,7 +3,10 @@
 
 #include <GL/gl.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
+#include <sgi_stl_warnings_on.h>
+
 #include <stdio.h>
 
 using namespace rtrt;
@@ -98,17 +101,17 @@ void Image::draw( int window_size, bool fullscreen )
   } else 
 #endif
     {
-    if(stereo){
+    if(!stereo){
+      glDrawBuffer(GL_BACK);
+      glRasterPos2i(0,0);
+      glDrawPixels(xres, yres, GL_RGBA, GL_UNSIGNED_BYTE, &image[0][0]);
+    } else {
       glDrawBuffer(GL_BACK_LEFT);
       glRasterPos2i(0,0);
       glDrawPixels(xres, yres, GL_RGBA, GL_UNSIGNED_BYTE, &image[0][0]);
       glDrawBuffer(GL_BACK_RIGHT);
       glRasterPos2i(0,0);
       glDrawPixels(xres, yres, GL_RGBA, GL_UNSIGNED_BYTE, &image[yres][0]);
-    } else {
-      glDrawBuffer(GL_BACK);
-      glRasterPos2i(0,0);
-      glDrawPixels(xres, yres, GL_RGBA, GL_UNSIGNED_BYTE, &image[0][0]);
     }
   }
 }
