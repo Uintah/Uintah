@@ -2150,9 +2150,9 @@ void ICE::actuallyStep5b(const ProcessorGroup*,const Patch* patch,
   }
   
   for (int m = 0; m < numMatls; m++)  {
-    setBC(xmom_L_ME[m],"Velocity",patch);
-    setBC(ymom_L_ME[m],"Velocity",patch);
-    setBC(zmom_L_ME[m],"Velocity",patch);
+    setBC(xmom_L_ME[m],"Velocity","x",patch);
+    setBC(ymom_L_ME[m],"Velocity","y",patch);
+    setBC(zmom_L_ME[m],"Velocity","z",patch);
   }
   
   for(int m = 0; m < numMatls; m++) {
@@ -2435,6 +2435,52 @@ void ICE::setBC(CCVariable<double>& variable, const string& kind,
   }
 
 }
+
+void ICE::setBC(CCVariable<double>& variable, const  string& kind, 
+		const string& comp, const Patch* patch) 
+{
+  Vector dx = patch->dCell();
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+    vector<BoundCondBase* > bcs;
+    bcs = patch->getBCValues(face);
+    if (bcs.size() == 0) continue;
+    
+    BoundCondBase* bc_base = 0;
+    for (int i = 0; i<(int)bcs.size(); i++ ) {
+      if (bcs[i]->getType() == kind) {
+	bc_base = bcs[i];
+	break;
+      }
+    }
+    
+    if (bc_base == 0)
+      continue;
+
+    if (bc_base->getType() == "Velocity") {
+      VelocityBoundCond* bc = dynamic_cast<VelocityBoundCond*>(bc_base);
+      if (bc->getKind() == "Dirichlet") {
+	if (comp == "x")
+	  variable.fillFace(face,bc->getValue().x());
+	if (comp == "y")
+	  variable.fillFace(face,bc->getValue().y());
+	if (comp == "z")
+	  variable.fillFace(face,bc->getValue().z());
+      }
+      
+      if (bc->getKind() == "Neumann") {
+	if (comp == "x")
+	  variable.fillFaceFlux(face,bc->getValue().x(),dx);
+	if (comp == "y")
+	  variable.fillFaceFlux(face,bc->getValue().y(),dx);
+	if (comp == "z")
+	  variable.fillFaceFlux(face,bc->getValue().z(),dx);
+      }
+    }
+  }
+
+}
+
 
 
 void ICE::setBC(CCVariable<Vector>& variable, const string& kind, 
@@ -3537,6 +3583,11 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.78  2001/01/06 03:50:10  jas
+// Added back in setBC for CCVariables and Velocity boundary conditions that
+// was inadvertently deleted in previous commit.  {x,y,z}mom_L_ME used this
+// function with a "Velocity" field tag and the various "x","y","z" tags.
+//
 // Revision 1.77  2001/01/05 20:01:29  jas
 // Replaced {x,y,z}mom_source with a single mom_source that is a
 // CCVariable<Vector>.  Fixed printData so it can handle CCVariable<Vector>.

@@ -137,6 +137,8 @@ namespace Uintah {
 		 const Patch* p);
       void setBC(CCVariable<Vector>& variable,const std::string& type,
 		 const Patch* p);
+      void setBC(CCVariable<double>& variable,const std::string& type,
+		 const std::string& comp, const Patch* p);
       
       void setBC(SFCXVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
@@ -295,6 +297,11 @@ namespace Uintah {
 #endif
 
 // $Log$
+// Revision 1.50  2001/01/06 03:50:11  jas
+// Added back in setBC for CCVariables and Velocity boundary conditions that
+// was inadvertently deleted in previous commit.  {x,y,z}mom_L_ME used this
+// function with a "Velocity" field tag and the various "x","y","z" tags.
+//
 // Revision 1.49  2001/01/05 20:01:29  jas
 // Replaced {x,y,z}mom_source with a single mom_source that is a
 // CCVariable<Vector>.  Fixed printData so it can handle CCVariable<Vector>.
