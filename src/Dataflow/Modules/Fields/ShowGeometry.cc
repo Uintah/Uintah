@@ -166,18 +166,21 @@ public:
   virtual void execute()
   {
     // Check for generation number. FIX_ME
-
+    cerr << "Starting Execution..." << endl;
     d_dbg << "SHOWGEOMETRY EXECUTING" << endl;
 
     // tell module downstream to delete everything we have sent it before.
     // This is typically salmon, it owns the scene graph memory we create here.
+    
     d_ogeom->delAll(); 
     d_infield->get(d_sfield);
     if(!d_sfield.get_rep()){
       return;
     }
 
-    d_dbg << d_sfield->get_attrib()->getInfo();
+    if (!d_sfield->getAttrib().get_rep())
+      cerr << "NO attribute!!1" << endl;
+    d_dbg << d_sfield->getAttrib()->getInfo();
 
     Gradient *gradient = d_sfield->query_interface((Gradient *)0);
     if(!gradient){
@@ -191,7 +194,7 @@ public:
     }
 
     BBox bbox;
-    d_sfield->get_geom()->getBoundingBox(bbox);
+    d_sfield->getGeom()->getBoundingBox(bbox);
 
     d_dbg << bbox.min().x() << " " << bbox.min().y() << " " 
 	  << bbox.min().z() << " " << bbox.max().x() << " " << bbox.max().y() 
@@ -201,15 +204,16 @@ public:
     d_conSwitch = scinew GeomSwitch(bb);
 
     GeomGroup *verts = scinew GeomGroup;
-    Geom *geom = d_sfield->get_geom();
+    GeomHandle geom = d_sfield->getGeom();
 
     d_dbg << geom->getInfo();
 
-    LatticeGeom* grid = dynamic_cast<LatticeGeom*>(geom);
+    LatticeGeomHandle grid = geom->downcast((LatticeGeom*)0);
     //LatticeGeom *grid = geom->get_latticegeom();
-    TriSurfGeom* tsurf = dynamic_cast<TriSurfGeom*>(geom);
+    TriSurfGeomHandle tsurf = geom->downcast((TriSurfGeom*)0);
 
-    if (grid) {
+    d_dbg << "Cast to Lattice and TriSurf is done \n" << endl;
+    if (grid.get_rep()) {
 
       int nx = grid->getSizeX();
       int ny = grid->getSizeY();
@@ -238,7 +242,7 @@ public:
 	  }
 	}
       }
-    } else if (tsurf) {
+    } else if (tsurf.get_rep()) {
       d_dbg << "Writing out surface" << endl;
       displaySurface(tsurf, verts);
     } else {
@@ -260,7 +264,7 @@ public:
   }
 
 
-  void displaySurface(TriSurfGeom *surf, GeomGroup *g)
+  void displaySurface(TriSurfGeomHandle surf, GeomGroup *g)
   {
     BBox bbox;
     surf->getBoundingBox(bbox);
@@ -297,7 +301,7 @@ public:
   // addConnections
   inline void addConnections(int i, int j, int k, 
 			     bool lastI, bool lastJ, bool lastK,
-			     LatticeGeom *grid, GeomGroup *g) {
+			     LatticeGeomHandle grid, GeomGroup *g) {
     Point p0 = grid->getPoint(i, j, k);
     Point p1;
     if (! lastI) {
@@ -317,7 +321,7 @@ public:
 
   //////////
   // addSphere
-  inline void addSphere(int i, int j, int k, LatticeGeom *grid, 
+  inline void addSphere(int i, int j, int k, LatticeGeomHandle grid, 
 			GeomGroup *g, double size) {
 
     Point p0 = grid->getPoint(i, j, k);
@@ -328,7 +332,7 @@ public:
   // addAxis
   inline void addAxis(int i, int j, int k,
 		      Vector &x, Vector &y, Vector &z, 
-		      LatticeGeom *grid, GeomGroup *g) {
+		      LatticeGeomHandle grid, GeomGroup *g) {
 
     Point p0 = grid->getPoint(i, j, k);
     Point p1 = p0 + x;
@@ -408,7 +412,7 @@ public:
   // setUpDirs
   void setUpDirs(Vector &x, Vector &y, Vector &z, 
 		 double &sx, double &sy,  double &sz, 
-		 LatticeGeom *grid, BBox &bbox) {
+		 LatticeGeomHandle grid, BBox &bbox) {
 
     sx = (bbox.max().x() - bbox.min().x()) * 0.2L;
     sy = (bbox.max().y() - bbox.min().y()) * 0.2L;

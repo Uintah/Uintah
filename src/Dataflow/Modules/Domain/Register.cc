@@ -84,25 +84,18 @@ void Register::execute(){
     dbg << "ifield->get(sfh)" << endl;
     string attrib = tcl_attrib.get()();
     string geom = tcl_geom.get()();
-    if(sfh->status == NEW){
-      dbg << "sfh->status == NEW" << endl;
-      dbg << "attrib.length: " << attrib.length() << " geom.length: " << geom.length() << endl;
-      if((attrib.length() == 0) || (geom.length() == 0)){
+    
+    dbg << "attrib.length: " << attrib.length() << " geom.length: " << geom.length() << endl;
+    if((attrib.length() == 0) || (geom.length() == 0)){
       // TODO: fix this...the error message doesn't appear for some reason
-	error("You must specify a name for both the attribute and the geometry.");
-	return;
-      }
-      sfh->get_geom()->setName(geom);
-      sfh->get_attrib()->setName(attrib);
-      fwh = fw = 0;
-      fwh = fw = new FieldWrapper(sfh, NEW);
-      oport->send(fw);
+      error("You must specify a name for both the attribute and the geometry.");
+      return;
     }
-    else if(sfh->status == OLD){
-    }
-    else if(sfh->status == SHARED){
-      
-    }
+    sfh->getGeom()->setName(geom);
+    sfh->getAttrib()->setName(attrib);
+    fwh = fw = 0;
+    fwh = fw = new FieldWrapper(sfh);
+    oport->send(fw);
   }
   else{ // There was nothing on the in-ports
     return;
