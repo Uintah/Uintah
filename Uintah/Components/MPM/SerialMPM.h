@@ -7,6 +7,7 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
+#include <Uintah/Components/MPM/Contact/Contact.h>
 
 namespace Uintah {
 
@@ -136,17 +137,16 @@ private:
 					const Region* region,
 					const DataWarehouseP&,
 					DataWarehouseP&);
-   
    SerialMPM(const SerialMPM&);
    SerialMPM& operator=(const SerialMPM&);
 
    SimulationStateP d_sharedState;
-   const VarLabel* g_velocity_label;
-   const VarLabel* p_deformationMeasure_label;
-   const VarLabel* p_stress_label;
+   Contact*         d_contactModel;
 
    const VarLabel* deltLabel;
 
+   const VarLabel* pDeformationMeasureLabel;
+   const VarLabel* pStressLabel;
    const VarLabel* pVolumeLabel;
    const VarLabel* pMassLabel;
    const VarLabel* pVelocityLabel;
@@ -167,6 +167,9 @@ private:
 
 //
 // $Log$
+// Revision 1.13  2000/04/20 23:20:26  dav
+// updates
+//
 // Revision 1.12  2000/04/20 22:13:41  dav
 // making SerialMPM compile
 //
