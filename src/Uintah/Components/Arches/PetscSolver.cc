@@ -640,12 +640,6 @@ PetscSolver::pressLinearSolve()
   ierr = VecAssemblyEnd(d_x);CHKERRA(ierr);
   /* debugging - steve */
   double norm;
-  ierr = MatNorm(A,NORM_1,&norm);CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"matrix A norm = %g\n",norm);CHKERRQ(ierr);
-  ierr = VecNorm(d_x,NORM_1,&norm);CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"vector x norm = %g\n",norm);CHKERRQ(ierr);
-  ierr = VecNorm(d_b,NORM_1,&norm);CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"vector b norm = %g\n",norm);CHKERRQ(ierr);
 #ifdef ARCHES_PETSC_DEBUG
   ierr = ViewerSetFormat(VIEWER_STDOUT_WORLD, VIEWER_FORMAT_ASCII_DEFAULT, 0); CHKERRQ(ierr);
   ierr = MatNorm(A,NORM_1,&norm);CHKERRQ(ierr);
@@ -1900,6 +1894,9 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.18  2000/10/12 20:09:10  sparker
+// Don't print out matrix norms
+//
 // Revision 1.17  2000/10/12 20:08:33  sparker
 // Made multipatch work for several timesteps
 // Cleaned up print statements
