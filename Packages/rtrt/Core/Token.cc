@@ -100,7 +100,7 @@ Token::ParseChildren(ifstream &str)
     } 
 #if IGNORE_UNKNOWN_TOKENS
     else {
-#if 0
+#if DEBUG
       cerr << "Token: ignoring unknown token: " << curstring << endl;
       cerr << "\t parent is " << moniker_ << endl;
 #endif
