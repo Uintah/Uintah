@@ -1808,7 +1808,7 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
 	  string has, needs;
 	  has = "task requires";
 	  ostringstream ghost_str;
-	  ghost_str << " for " << dep->numGhostCells << " layer";
+	  ghost_str << " requesting " << dep->numGhostCells << " layer";
 	  if (dep->numGhostCells > 1) ghost_str << "s";
 	  ghost_str << " of ghosts around " <<
 	    Ghost::getGhostTypeName(dep->gtype);
@@ -1818,7 +1818,7 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
 	    needs = "get from the old datawarehouse";
 	  else
 	    needs = "get from the new datawarehouse";
-	  needs += " that includes the requested ghosts.";
+	  needs += " that includes these ghosts";
 	
 	  throw DependencyException(currentTask, label, matl, patch,
 				    has, needs);
