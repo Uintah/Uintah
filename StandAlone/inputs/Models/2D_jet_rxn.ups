@@ -196,7 +196,7 @@
          <material name = "source" >
            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
-           <viscosity>                  0.0             </viscosity>
+           <dynamic_viscosity>          0.0             </dynamic_viscosity>
            <thermal_conductivity>       70              </thermal_conductivity>
            <specific_heat>              1293.908298567086          </specific_heat>
            <speed_of_sound>             376             </speed_of_sound>
