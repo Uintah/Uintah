@@ -198,6 +198,54 @@ MatrixSelectVector::execute()
   
   reset_vars();
 
+#if 1
+  // Specialized matrix multiply, with Weight Vector given as a sparse
+  // matrix.  It's not clear what this has to do with MatrixSelectVector.
+  MatrixIPort *ivec = (MatrixIPort *)get_iport("Weight Vector");
+  if (!ivec) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  MatrixHandle weightsH;
+  if (ivec->get(weightsH) && weightsH.get_rep())
+  {
+    ColumnMatrix *w = dynamic_cast<ColumnMatrix*>(weightsH.get_rep());
+    ColumnMatrix *cm;
+    if (use_row) 
+    {
+      cm = scinew ColumnMatrix(mh->ncols());
+      cm->zero();
+      double *data = cm->get_data();
+      for (int i = 0; i<w->nrows()/2; i++)
+      {
+	const int idx = (int)((*w)[i*2]);
+	double wt = (*w)[i*2+1];
+	for (int j = 0; j<mh->ncols(); j++)
+	{
+	  data[j]+=mh->get(idx, j)*wt;
+	}
+      }
+    }
+    else
+    {
+      cm = scinew ColumnMatrix(mh->nrows());
+      cm->zero();
+      double *data = cm->get_data();
+      for (int i = 0; i<w->nrows()/2; i++)
+      {
+	const int idx = (int)((*w)[i*2]);
+	double wt = (*w)[i*2+1];
+	for (int j = 0; j<mh->nrows(); j++)
+	{
+	  data[j]+=mh->get(j, idx)*wt;
+	}
+      }
+    }
+    ovec->send(MatrixHandle(cm));
+    return;
+  }
+#endif
+
   stop_ = false;
 
   const int start = range_min_.get();
