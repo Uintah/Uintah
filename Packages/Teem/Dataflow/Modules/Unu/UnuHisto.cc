@@ -52,7 +52,9 @@ private:
 
   GuiInt       bins_;
   GuiDouble    min_;
+  GuiInt       useinputmin_;
   GuiDouble    max_;
+  GuiInt       useinputmax_;
   GuiString    type_;
   
   unsigned int get_type(string type);
@@ -64,7 +66,9 @@ UnuHisto::UnuHisto(SCIRun::GuiContext *ctx) :
   Module("UnuHisto", ctx, Filter, "UnuAtoM", "Teem"), 
   bins_(ctx->subVar("bins")),
   min_(ctx->subVar("min")),
+  useinputmin_(ctx->subVar("min")),
   max_(ctx->subVar("max")),
+  useinputmax_(ctx->subVar("max")),
   type_(ctx->subVar("type"))
 {
 }
@@ -114,7 +118,15 @@ UnuHisto::execute()
   }
   Nrrd *nout = nrrdNew();
 
-  NrrdRange *range = nrrdRangeNew(min_.get(), max_.get());
+  NrrdRange *range = NULL;
+
+  double min = AIR_NAN, max = AIR_NAN;
+  if (!useinputmin_.get())
+    min = min_.get();
+  if (!useinputmax_.get())
+    max = max_.get();
+
+  nrrdRangeNew(min, max);
   nrrdRangeSafeSet(range, nin, nrrdBlind8BitRangeState);
 
   unsigned int type = get_type(type_.get());

@@ -43,9 +43,13 @@
     the increment is one bin count per sample, but by giving a 
     nrrd, the value in the nrrd at the corresponding location 
     will be the bin count increment.</p>
-    <p>Bins: Number of bins in histogram.  This should be an integer.</p>
-    <p>Min: Value at low end of histogram.  This value should be a double.</p>
-    <p>Max: Value at high end of histogram.  This value should be a double.</p>
+    <p>Bins: Number of bins in histogram.  This should be an integer. </p>
+    <p>Min: Value at low end of histogram.  This value should be a double.
+    To disregard this value and use the lowest value of the input nrrd, 
+    check Use lowest value of input nrrd as min.</p>
+    <p>Max: Value at high end of histogram.  This value should be a double. To 
+    disregard this value and use the highest value of the input nrrd, check Use
+    highest value of input nrrd as max.</p>
     <p>Type: nrrd type to use in output histogram.  The default is uint.</p>
     </description>
   </overview>

@@ -84,23 +84,29 @@ itcl_class Teem_UnuAtoM_UnuHistax {
 	    -textvariable $this-bins
         pack $w.f.options.bins -side top -expand yes -fill x
 
-        iwidgets::entryfield $w.f.options.min -labeltext "Min:" \
+	frame $w.f.options.min -relief groove -borderwidth 2
+	pack $w.f.options.min -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.min.v -labeltext "Min:" \
 	    -textvariable $this-min
-        pack $w.f.options.min -side top -expand yes -fill x
+        pack $w.f.options.min.v -side top -expand yes -fill x
 
-        checkbutton $w.f.options.useinputmin \
-	    -text "Use lowest value of input nrrd as min:" \
+        checkbutton $w.f.options.min.useinputmin \
+	    -text "Use lowest value of input nrrd as min" \
 	    -variable $this-useinputmin
-        pack $w.f.options.useinputmin -side top -expand yes -fill x
+        pack $w.f.options.min.useinputmin -side top -expand yes -fill x
 
-        iwidgets::entryfield $w.f.options.max -labeltext "Max:" \
+	frame $w.f.options.max -relief groove -borderwidth 2
+	pack $w.f.options.max -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.max.v -labeltext "Max:" \
 	    -textvariable $this-max
-        pack $w.f.options.max -side top -expand yes -fill x
+        pack $w.f.options.max.v -side top -expand yes -fill x
 
-        checkbutton $w.f.options.useinputmax \
-	    -text "Use highest value of input nrrd as max:" \
+        checkbutton $w.f.options.max.useinputmax \
+	    -text "Use highest value of input nrrd as max" \
 	    -variable $this-useinputmax
-        pack $w.f.options.useinputmax -side top -expand yes -fill x
+        pack $w.f.options.max.useinputmax -side top -expand yes -fill x
 
 	iwidgets::optionmenu $w.f.options.type -labeltext "Type:" \
 	    -labelpos w -command "$this update_type $w.f.options.type"

@@ -64,7 +64,13 @@ private:
   GuiInt       length_;
   GuiInt       rescale_;
   GuiDouble    min_;
+  GuiInt       useinputmin_;
   GuiDouble    max_;
+  GuiInt       useinputmax_;
+  GuiString    type_;
+  GuiInt       usetype_;
+
+  unsigned int get_type(string type);
 };
 
 
@@ -75,7 +81,11 @@ UnuImap::UnuImap(GuiContext* ctx)
     length_(ctx->subVar("length")),
     rescale_(ctx->subVar("rescale")),
     min_(ctx->subVar("min")),
-    max_(ctx->subVar("max"))
+    useinputmin_(ctx->subVar("min")),
+    max_(ctx->subVar("max")),
+    useinputmax_(ctx->subVar("max")),
+    type_(ctx->subVar("type")),
+    usetype_(ctx->subVar("usetype"))
 {
 }
 
@@ -141,15 +151,29 @@ void
 
   int rescale = rescale_.get();
   if (rescale) {
-    range = nrrdRangeNew(min_.get(), max_.get());
+    double min = AIR_NAN, max = AIR_NAN;
+    if (!useinputmin_.get())
+      min = min_.get();
+    if (!useinputmax_.get())
+      max = max_.get();
+    range = nrrdRangeNew(min, max);
     nrrdRangeSafeSet(range, nin, nrrdBlind8BitRangeState);
   }
 
-  if (nrrdApply1DIrregMap(nout, nin, range, dmap, nacl, dmap->type, rescale)) {
-    char *err = biffGetDone(NRRD);
-    error(string("Error Mapping Nrrd to Lookup Table: ") + err);
-    free(err);
-    return;
+  if (usetype_.get()) {
+    if (nrrdApply1DIrregMap(nout, nin, range, dmap, nacl, dmap->type, rescale)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error Mapping Nrrd to Lookup Table: ") + err);
+      free(err);
+      return;
+    }
+  } else {
+    if (nrrdApply1DIrregMap(nout, nin, range, dmap, nacl, get_type(type_.get()), rescale)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error Mapping Nrrd to Lookup Table: ") + err);
+      free(err);
+      return;
+    }
   }
 
   NrrdData *nrrd = scinew NrrdData;
@@ -174,6 +198,28 @@ void
  UnuImap::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
+}
+
+unsigned int
+UnuImap::get_type(string type) {
+  if (type == "nrrdTypeChar") 
+    return nrrdTypeChar;
+  else if (type == "nrrdTypeUChar")  
+    return nrrdTypeUChar;
+  else if (type == "nrrdTypeShort")  
+    return nrrdTypeShort;
+  else if (type == "nrrdTypeUShort") 
+    return nrrdTypeUShort;
+  else if (type == "nrrdTypeInt")  
+    return nrrdTypeInt;
+  else if (type == "nrrdTypeUInt")   
+    return nrrdTypeUInt;
+  else if (type == "nrrdTypeFloat") 
+    return nrrdTypeFloat;
+  else if (type == "nrrdTypeDouble")  
+    return nrrdTypeDouble;
+  else    
+    return nrrdTypeUInt;
 }
 
 } // End namespace Teem
