@@ -60,8 +60,20 @@
 #define SCIRUN_OBJDIR "@abs_conftop_dir@"
 #define LOAD_PACKAGE "@LOAD_PACKAGE@"
 
+@MDSPLUS_DEF_FLAG@
+
+
 /* Someday, we should make this a config variable - it might help the
    optimizer, at the cost of more difficult debugging */
 #define USE_SCI_THROW 1
 
 #endif
+
+
+
+
+
+
+
+
+
