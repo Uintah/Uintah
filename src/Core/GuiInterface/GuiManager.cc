@@ -1,3 +1,4 @@
+
 /*
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
@@ -16,182 +17,27 @@
 */
 
 /*
- *  GuiManager.cc: Client side (slave) manager of a pool of remote GUI
- *   connections.
+ *  GuiManager.cc: 
  *
  *  This class keeps a dynamic array of connections for use by TCL variables
  *  needing to get their values from the Master.  These are kept in a pool.
  *
  *  Written by:
- *   Michelle Miller
+ *   Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
- *   May 1998
+ *   Nov 2001
  *
- *  Copyright (C) 1998 SCI Group
+ *  Copyright (C) 2001 SCI Group
  */
 
-#ifndef _WIN32
-
 #include <Core/GuiInterface/GuiManager.h>
-#include <Core/GuiInterface/TCL.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <string.h>
-#include <stdio.h>
-#ifndef _WIN32
-#include <unistd.h>
-#endif
-#include <stdlib.h>	// needed for atoi
-#include <iostream>
 
-#include <tk.h>
-
-using namespace std;
-
-extern "C" Tcl_Interp* the_interp;
 namespace SCIRun {
 
-GuiManager* GuiManager::gm_ = 0;
-Mutex GuiManager::gm_lock_("GuiManager: static instance");
-
-
-GuiManager::GuiManager()
-    : access ("GUI manager access lock")
-{
+GuiManager *gm;
   
-}
-
-GuiManager::~GuiManager()
-{
-}
-
-GuiManager& GuiManager::getGuiManager() {
-  if(gm_ == 0) {
-    gm_lock_.lock();
-    if(gm_ == 0) {
-      gm_ = new GuiManager;
-    }
-    gm_lock_.unlock();
-  }
-  return *gm_;
-  
-}
-
-string GuiManager::get(string& value, string varname, int& is_reset) {
-  if(is_reset) {
-    TCLTask::lock();
-    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname),
-		       TCL_GLOBAL_ONLY);
-    if(!l){
-      l="";
-    }
-    value=string(l);
-    is_reset=0;
-    TCLTask::unlock();
-  }
-    //cerr << "GuiString get: " << varname << " to " << value << endl;
-  return value;
-
-}
-void GuiManager::set(string& value, string varname, int &is_reset) {
-  is_reset=0;
-  TCLTask::lock();
-  Tcl_SetVar(the_interp, ccast_unsafe(varname),
-	     ccast_unsafe(value), TCL_GLOBAL_ONLY);
-  TCLTask::unlock();
-  //cerr << "GuiString set: " << varname << " to " << value << endl;
-}
-
-double GuiManager::get(double& value, string varname, int& is_reset) {
-  if(is_reset) {
-    TCLTask::lock(); 
-    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname),
-		       TCL_GLOBAL_ONLY); 
-    if(l){ 
-      Tcl_GetDouble(the_interp, l, &value);
-      is_reset=0; 
-    } 
-    TCLTask::unlock();
-  }
-  //cerr << "GuiDouble get: " << varname << " to " << value << endl;
-  return value; 
-}
-void GuiManager::set(double& value, string varname, int& is_reset) {
-  is_reset = 0;
-  TCLTask::lock(); 
-  char buf[50]; 
-  sprintf(buf, "%g", value); 
-  
-  Tcl_SetVar(the_interp, ccast_unsafe(varname), 
-	     buf, TCL_GLOBAL_ONLY); 
-  TCLTask::unlock(); 
-  //cerr << "GuiDouble set: " << varname << " to " << value << endl;
-}
-
-int GuiManager::get(int& value, string varname, int &is_reset) {
-  if(is_reset) {
-    TCLTask::lock();
-    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname),
-		       TCL_GLOBAL_ONLY);
-    if(l){
-      Tcl_GetInt(the_interp, l, &value);
-      is_reset=0;
-    }
-    TCLTask::unlock();
-  }
-  //cerr << "GuiInt get: " << varname << " to " << value << endl;
-  return value;
-}
-
-void GuiManager::set(int& value, string varname, int &is_reset) {
-  is_reset=0;
-  TCLTask::lock();
-  char buf[20];
-  sprintf(buf, "%d", value);
-  Tcl_SetVar(the_interp, ccast_unsafe(varname), buf, TCL_GLOBAL_ONLY);
-  TCLTask::unlock();
-  //cerr << "GuiInt set: " << varname << " to " << value << endl;
-}
-
-
-void GuiManager::execute(const string& str)
-{
-  TCLTask::lock();
-  int code = Tcl_Eval(the_interp, ccast_unsafe(str));
-  if(code != TCL_OK)
-    Tk_BackgroundError(the_interp);
-  TCLTask::unlock();
-}
-
-
-int GuiManager::eval(const string& str, string& result)
-{
-    TCLTask::lock();
-    int code = Tcl_Eval(the_interp, ccast_unsafe(str));
-    if(code != TCL_OK){
-	Tk_BackgroundError(the_interp);
-	result="";
-    } else {
-	result=string(the_interp->result);
-    }
-    TCLTask::unlock();
-    return code == TCL_OK;
-}
-
-int GuiManager::do_command(ClientData cd, Tcl_Interp*, int argc, char* argv[])
-{
-    TCLCommandData* td=(TCLCommandData*)cd;
-    TCLArgs args(argc, argv);
-    td->object->tcl_command(args, td->userdata);
-    if(args.have_result_)
-    {
-      Tcl_SetResult(the_interp,
-		    strdup(args.string_.c_str()),
-		    (Tcl_FreeProc*)free);
-    }
-    return args.have_error_?TCL_ERROR:TCL_OK;
-}
-
+ 
 } // End namespace SCIRun
 
-#endif
+

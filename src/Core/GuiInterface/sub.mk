@@ -21,17 +21,13 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/GuiInterface
 
-SRCS     += $(SRCDIR)/GuiManager.cc \
-	$(SRCDIR)/GuiServer.cc $(SRCDIR)/Histogram.cc \
-	$(SRCDIR)/MemStats.cc $(SRCDIR)/Remote.cc $(SRCDIR)/TCL.cc \
-	$(SRCDIR)/TCLInit.cc $(SRCDIR)/TCLTask.cc $(SRCDIR)/GuiVar.cc \
-	$(SRCDIR)/ThreadStats.cc \
-	$(SRCDIR)/TCLstrbuff.cc \
-	$(SRCDIR)/TclObj.cc \
+SRCS += $(SRCDIR)/Remote.cc \
+	$(SRCDIR)/TCLArgs.cc \
+	$(SRCDIR)/GuiManager.cc \
 
 PSELIBS := Core/Exceptions Core/Util Core/Thread \
-		Core/Containers Core/TkExtensions
-LIBS := $(TCL_LIBRARY) $(ITK_LIBRARY) $(X11_LIBS)
+	   Core/Containers
+LIBS := $(X11_LIBS)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
