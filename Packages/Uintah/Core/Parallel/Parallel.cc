@@ -90,23 +90,32 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
       }
    }
 
+#undef MPI_THREAD_SINGLE
+#ifdef MPI_THREAD_SINGLE
    int provided = -1;
    int required = MPI_THREAD_SINGLE;
-
+#endif
    if(::usingMPI){	
 
+#ifdef MPI_THREAD_SINGLE
      if( scheduler == "MixedScheduler" ) {
        required = MPI_THREAD_MULTIPLE;
      }
+#endif
 
      int status;
      const char* oldtag = AllocatorSetDefaultTagMalloc("MPI initialization");
 
+#ifdef MPI_THREAD_SINGLE
      if( ( status = MPI_Init_thread( &argc, &argv, required, &provided ) )
 	                                                     != MPI_SUCCESS) {
+#else
+     if( ( status = MPI_Init( &argc, &argv ) ) != MPI_SUCCESS) {
+#endif
        MpiError("MPI_Init", status);
      }
 
+#ifdef MPI_THREAD_SINGLE
      if( provided < required ){
        char msg[ 128 ];
        sprintf( msg, "Provided MPI parallel support of %d is "
@@ -114,6 +123,7 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 		required );
        throw InternalError( string( msg ) );
      }
+#endif
 
      worldComm=MPI_COMM_WORLD;
      int worldSize;
@@ -137,8 +147,10 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
       if(::usingMPI)
 	 cerr << " (using MPI)";
       cerr << '\n';
+#ifdef MPI_THREAD_SINGLE
       cerr << "Parallel: MPI Level Required: " << required << ", provided: " 
 	   << provided << "\n";
+#endif
    }
 }
 
