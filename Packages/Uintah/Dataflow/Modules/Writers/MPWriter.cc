@@ -240,7 +240,7 @@ void MPWriter::SaveFile( clString fname, int isBin)
       for( i = 0; i < svarnames.size(); i++){
 	ScalarFieldHandle sfh = mat->getScalarField( svarnames[i] );
 	ScalarField *sfp = sfh.get_rep();
-	writer.AddVarToGrid(svarnames[i], sfp);
+	writer.AddSVarToGrid(svarnames[i], sfp);
       }
     }
   
@@ -252,7 +252,7 @@ void MPWriter::SaveFile( clString fname, int isBin)
 	vfh = mat->getVectorField( vvarnames[i] );
 	VectorField *vfp = vfh.get_rep();
 	if(VectorFieldRG *vfrg = dynamic_cast<VectorFieldRG*> (vfp)){
-	  writer.AddVarToGrid(vvarnames[i], vfrg);
+	  writer.AddVecVarToGrid(vvarnames[i], vfrg);
 	} else {
 	  cerr<<"Error: unknown grid type\n";
 	  return;
