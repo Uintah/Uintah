@@ -53,6 +53,7 @@ class ShowField : public Module
   int                      mesh_generation_;
   int                      vector_generation_;
   int                      color_map_generation_;
+  string                   last_field_name_;
 
   //! output port
   GeometryOPort           *ogeom_;  
@@ -570,7 +571,8 @@ ShowField::execute()
 
   bool color_map_changed = false;
   if (((bool)(color_map_.get_rep())) != was_color_map ||
-      color_map_.get_rep() && color_map_->generation != color_map_generation_)
+      color_map_.get_rep() && color_map_->generation != color_map_generation_
+      || last_field_name_ != gui_field_name_.get())
   {
     color_map_changed = true;
     color_map_generation_ = color_map_.get_rep()?color_map_->generation:-1;
@@ -588,6 +590,7 @@ ShowField::execute()
       text_dirty_ = true;
     }
   }
+  last_field_name_ = gui_field_name_.get();
 
   if (gui_node_resolution_.get() != node_resolution_) {
     nodes_dirty_ = true;
@@ -1008,13 +1011,6 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
       face_id_ = 0;
     }
     maybe_execute(FACE);
-  } else if (args[1] == "rerender_all"){
-    nodes_dirty_ = true; 
-    edges_dirty_ = true; 
-    faces_dirty_ = true; 
-    data_dirty_ = true;
-    text_dirty_ = true;
-    want_to_execute();
   } else if (args[1] == "toggle_display_faces"){
     // Toggle the GeomSwitch.
     faces_on_.reset();
