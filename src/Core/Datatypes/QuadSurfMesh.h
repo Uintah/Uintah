@@ -48,7 +48,7 @@ class SCICORESHARE QuadSurfMesh : public Mesh
 {
 public:
 
-  typedef unsigned int                  under_type;
+  typedef int                           under_type;
 
   //! Index and Iterator types required for Mesh Concept.
   struct Node {
@@ -121,7 +121,9 @@ public:
   bool get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
   bool get_cells(Cell::array_type &, Face::index_type) const { return 0; }
 
-  void get_neighbor(Face::index_type &neighbor, Edge::index_type idx) const;
+  bool get_neighbor(Face::index_type &neighbor,
+		    Face::index_type from,
+		    Edge::index_type idx) const;
 
   //! Get the size of an elemnt (length, area, volume)
   double get_size(Node::index_type idx) const;
@@ -195,13 +197,15 @@ public:
 
 private:
 
+  void                  compute_edges();
   void			compute_normals();
-  void			compute_edge_neighbors(double err = 1.0e-8);
+  void			compute_edge_neighbors();
 
   int next(int i) { return ((i%4)==3) ? (i-3) : (i+1); }
   int prev(int i) { return ((i%4)==0) ? (i+3) : (i-1); }
 
   vector<Point>			points_;
+  vector<int>                   edges_;
   vector<Node::index_type>	faces_;
   vector<int>			edge_neighbors_;
   vector<Vector>		normals_; //! normalized per node
