@@ -507,7 +507,7 @@ inline void  SetupBEMatrix::get_cruse_weights(
   Mult(temp1, Fy, loc_radpt_x);
   Mult(temp2, Fx, loc_radpt_y);
   Add(A, 1, temp1, -1, temp2);
-  A.mult(0.5/area);
+  A.scalar_multiply(0.5/area);
 
   DenseMatrix ones(1, 7);
   for (int i=0; i < 7 ; i++) ones[0][i] = 1;
@@ -1059,7 +1059,7 @@ void SetupBEMatrix::concat_cols(DenseMatrixHandle m1H, DenseMatrixHandle m2H, De
   Mult(tmpBH, *hZbh_.get_rep(), *PP[hs*(no_of_fields+1)].get_rep());  // tmpBH <- Gbh*Ghh^-1*Phh   PP[hs*(no_of_fields+1)] = hPhh_
   Add(-1, *(PP[ms*(no_of_fields-1)+1].get_rep()), 1, tmpBH);   // Pbh <- part B (Gbh*Ghh^-1*Phh-Pbh)
   Mult(*(hZbh_.get_rep()), *(PP[ms*(no_of_fields+1)].get_rep()), *(PP[ms*(no_of_fields-1)+1].get_rep()));
-  hZbh_->mult(-1);
+  hZbh_->scalar_multiply(-1.0);
   hZoi_ = hZbh_.get_rep();
 
   } // end else   if (no_of_fields>1)
@@ -1135,7 +1135,7 @@ void SetupBEMatrix::make_auto_G(TriSurfMeshHandle hsurf, DenseMatrixHandle &h_GG
       for (int i=0; i<7; i++)  temp[0][i] = g_coef[0][i]*R_W[0][i];
 
       Mult_X_trans(g_values, cruse_weights, temp);
-      g_values.mult(area);
+      g_values.scalar_multiply(area);
           } // else
 
       for (int i=0; i<3; ++i)
@@ -1208,7 +1208,7 @@ void SetupBEMatrix::make_cross_G(TriSurfMeshHandle hsurf1, TriSurfMeshHandle hsu
       for (int i=0; i<7; i++)  temp[0][i] = g_coef[0][i]*R_W[0][i];
 
       Mult_X_trans(g_values, cruse_weights, temp);
-      g_values.mult(area);
+      g_values.scalar_multiply(area);
 
       for (int i=0; i<3; ++i)
 	cross_G[ppi][nodes[i]]+=g_values[i][0]*mult;
