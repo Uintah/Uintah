@@ -220,6 +220,10 @@ Allocator* MakeAllocator()
 
     OSHunk* alloc_hunk=OSHunk::alloc(size);
     Allocator* a=(Allocator*)alloc_hunk->data;
+    alloc_hunk->spaceleft=0;
+    alloc_hunk->next=0;
+    alloc_hunk->ninuse=1;
+
     a->hunks=alloc_hunk;
     a->small_bins=(AllocBin*)(a+1);
     a->mysize=size;
@@ -272,7 +276,7 @@ Allocator* MakeAllocator()
 
 void* Allocator::alloc(size_t size, char* tag)
 {
-//    fprintf(stderr, "Allocating: %d bytes (%s)\n", size, tag);
+    //fprintf(stderr, "Allocating: %ld bytes (%s)\n", size, tag);
     if(size > MEDIUM_THRESHOLD)
 	return alloc_big(size, tag);
     if(size == 0)
@@ -384,7 +388,7 @@ void* Allocator::alloc_big(size_t size, char* tag)
 	// Make a new one...
 	size_t tsize=sizeof(OSHunk)+OVERHEAD+size;
 	// Round up to nearest page size (assuming 4k pages).
-	int npages=(tsize+4095)/4096;
+	size_t npages=(tsize+4095)/4096;
 	tsize=npages*4096;
 	tsize-=sizeof(OSHunk);
 	OSHunk* hunk=OSHunk::alloc(tsize);
