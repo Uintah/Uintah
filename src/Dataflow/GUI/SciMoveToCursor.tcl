@@ -17,13 +17,18 @@ proc moveToCursor { window } {
   set cursorXLoc [expr [winfo pointerx .]]
   set cursorYLoc [expr [winfo pointery .]]
 
-  # Neither commands "winfo width $window", or "winfo reqwidth
-  # $window" return the windows (soon to be) width.  (Ie: the window
-  # has not yet been "realized", and has a width of '1'.  Therefore I
-  # am just goin to assume GUI window size of 300x300 for now.
-  # This works fairly well for all but really big windows.
-  set guiWidth 300
-  set guiHeight 300
+  # After fixing BioPSEFilebox.tcl, I need to at least thank Samsonov
+  # because his comments did clue me in on how to get the width and
+  # height of a widget.  You have to "withdraw" it first and call
+  # "update idletasks" to make it figure out its geometry ... so now
+  # this will work!
+  if { [winfo ismapped $window] == 0 } {
+      wm withdraw $window
+      ::update idletasks
+  }
+
+  set guiWidth [winfo reqwidth $window]
+  set guiHeight [winfo reqheight $window]
 
   if { $cursorXLoc < 100 } {
       set windowXLoc [expr $cursorXLoc / 2]
@@ -36,7 +41,7 @@ proc moveToCursor { window } {
   if { $cursorYLoc < 100 } {
       set windowYLoc [expr $cursorYLoc / 2]
   } elseif { $cursorYLoc > ($screenHeight - $guiHeight) } {
-      set windowYLoc [expr $screenHeight - $guiHeight - 20]
+      set windowYLoc [expr $screenHeight - $guiHeight - 50]
   } else {
       set windowYLoc [expr $cursorYLoc - 80]
   }
