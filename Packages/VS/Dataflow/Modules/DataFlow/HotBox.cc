@@ -41,8 +41,6 @@
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Dataflow/XMLUtil/StrX.h>
 
-#include <Dataflow/share/share.h>
-
 #include <sys/stat.h>
 #include <string.h>
 #include <sgi_stl_warnings_off.h>
@@ -85,7 +83,7 @@ using namespace SCIRun;
 #define CYLREZ 20
 #define MIN3(x, y, z) MIN(x, MIN(y, z))
 
-class PSECORESHARE HotBox : public Module {
+class HotBox : public Module {
 private:
 
   // values from the Knowledgebase Query -> UI
