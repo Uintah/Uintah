@@ -613,7 +613,7 @@ OpenGL::render_and_save_image(int x, int y,
       gui_->execute("updateRunDateAndTime 0; netedit scheduleall");
     }
   }
-}
+} // end render_and_save_image()
 
 
 void
