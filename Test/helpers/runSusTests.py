@@ -54,12 +54,16 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   # performance tests are run only by passing "performance" as the algo
   #   if algo is "performance", then there can be any algo associated with that
   # determine which tests to do
-  if algo == "performance":
+  if algo == "performance" or algo == "scalability":
     do_restart = 0
     do_dbg = 0
     do_comparisons = 0
     do_memory = 0
-    do_performance = 1
+    if algo != "scalability":
+      # scalability will perform its own tests
+      do_performance = 1
+    else:
+      do_performance = 0
   else:
     do_restart = 1  
     do_dbg = 1
@@ -198,7 +202,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     if ALGO == "Examples":
       newalgo = testname
       NEWALGO = ALGO
-    elif algo == "performance" or algo == "ucf":
+    elif algo == "performance" or algo == "ucf" or algo == "scalability":
       newalgo = get_algo(test)
       NEWALGO = upper(newalgo)
     else:
@@ -285,6 +289,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
   # no tests ran
   if ran_any_tests == 0:
+    print "Didn't run any tests!"
     exit(3)
     
   if failcode == 0:
@@ -297,7 +302,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   else:
     print ""
     print "Some tests failed"
-  exit(failcode)
+  return failcode
 
 
 # parameters are basically strings, except for tests_to_do which is a list of
