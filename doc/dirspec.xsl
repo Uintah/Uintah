@@ -7,11 +7,11 @@
 <html>
 <head>
 	<title>SCIRun/<xsl:value-of select="@name" /></title>
-	<link rel="stylesheet" type="text/css" href="doc_styles.css" />
+	<link rel="stylesheet" type="text/css" href="../../../../doc/doc_styles.css" />
 </head>
 <body>
 <!-- THE SCI LOGO -->
-<center><img src="http://www.sci.utah.edu/research/images/research_header_sm.gif"
+<center><img src="../../../../doc/images/research_header_sm.gif"
 usemap="#head-links" height="46" width="600" border="0" /></center>
 <map name="head-links">
 <area shape="rect" coords="491,15,567,32"
