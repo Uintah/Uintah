@@ -275,15 +275,16 @@ DynamicLoader::compile_so(const string& file, ostream &serr)
   command += " > " + file + "log 2>&1";
 
   serr << "DynamicLoader - Executing: " << command << endl;
-  bool compiled =  sci_system(command.c_str()) == 0; 
-  if(!compiled) {
-    serr << "DynamicLoader::compile_so() Error: "
-	 << "system call failed:" << endl << command << endl;
-  } else {
-    serr << "DynamicLoader - Successfully compiled " << file + "so" << endl;
+
+  const int status = sci_system(command.c_str());
+  if(status != 0) {
+    serr << "DynamicLoader::compile_so() syscal error " << status << ": "
+	 << "command was '" << command << "'\n";
+    return false;
   }
 
-  return compiled;
+  serr << "DynamicLoader - Successfully compiled " << file + "so" << endl;
+  return true;
 }
 
 
