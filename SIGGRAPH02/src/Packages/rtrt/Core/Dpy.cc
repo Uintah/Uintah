@@ -324,10 +324,10 @@ Dpy::checkGuiFlags()
   }
 
   if ( _HOLO_STATE_<1 && !holoToggle_) {
-    _HOLO_STATE_ += .1;
+    _HOLO_STATE_ += .05;
     if (_HOLO_STATE_>1) _HOLO_STATE_=1;
   } else if ( _HOLO_STATE_>0 && holoToggle_ ) {
-    _HOLO_STATE_ -= .1;
+    _HOLO_STATE_ -= .005;
     if (_HOLO_STATE_<0) _HOLO_STATE_=0;
   }
 
