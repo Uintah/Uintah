@@ -44,7 +44,7 @@
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/GeomTri.h>
-#include <Core/Geom/Pt.h>
+#include <Core/Geom/GeomPoint.h>
 #include <Core/Geom/View.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
@@ -71,7 +71,7 @@ public:
 
   virtual void release() = 0;
   virtual void set_field( Field * ) = 0;
-  virtual void search( double, GeomGroup*, GeomPts * ) {}
+  virtual void search( double, GeomGroup*, GeomPoints * ) {}
 
   //! support the dynamically compiled algorithm concept
   static const string& get_h_file_path();
@@ -91,7 +91,7 @@ protected:
   int xres, yres;
 	 
   GeomGroup* group;
-  GeomPts* points;
+  GeomPoints* points;
 
   Point eye;
   Vector U,V,W;
@@ -120,7 +120,7 @@ public:
   void setParameters( int, int, int, int, int);
   void setRegion( bool set ) { region_on = set; }
   void setRegion( double, double, double, double );
-  virtual void search( double, GeomGroup*, GeomPts * ) {}
+  virtual void search( double, GeomGroup*, GeomPoints * ) {}
 };
     
 
@@ -158,7 +158,7 @@ public:
 	
   virtual void release() {}
   virtual void set_field( Field *f ); 
-  virtual void search( double, GeomGroup*, GeomPts *);
+  virtual void search( double, GeomGroup*, GeomPoints *);
 
 private:
   void project( const Point &, Pt &);
@@ -429,7 +429,7 @@ int Sage<Field>::adjust( double left, double right, int &x )
     
 template <class Field>
 void Sage<Field>::search( double iso, 
-			   GeomGroup *group, GeomPts *points )
+			   GeomGroup *group, GeomPoints *points )
 {
   setParameters( 1, 1, 0, 1, 0 );
   this->group = group;
