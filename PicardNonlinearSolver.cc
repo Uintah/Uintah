@@ -391,6 +391,10 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
   GridP grid = level->getGrid();
   const PatchSet* local_patches = level->eachPatch();
   const MaterialSet* local_matls = d_lab->d_sharedState->allArchesMaterials();
+  IntVector periodic_vector = level->getPeriodicBoundaries();
+  d_3d_periodic = (periodic_vector == IntVector(1,1,1));
+  d_turbModel->set3dPeriodic(d_3d_periodic);
+  d_props->set3dPeriodic(d_3d_periodic);
 
   sched_setInitialGuess(subsched, local_patches,
 			local_matls);

@@ -79,6 +79,7 @@ public:
       Filter* getFilter() const{
 	return d_filter;
       }
+      virtual void set3dPeriodic(bool periodic) = 0;
 
       void sched_initFilterMatrix(const LevelP&, 
 			      SchedulerP&, const PatchSet* patches,

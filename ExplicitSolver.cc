@@ -202,6 +202,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+  IntVector periodic_vector = level->getPeriodicBoundaries();
+  d_3d_periodic = (periodic_vector == IntVector(1,1,1));
+  d_turbModel->set3dPeriodic(d_3d_periodic);
+  d_props->set3dPeriodic(d_3d_periodic);
 
   //initializes and allocates vars for new_dw
   // set initial guess
