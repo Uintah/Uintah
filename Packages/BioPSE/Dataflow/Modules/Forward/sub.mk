@@ -47,6 +47,10 @@ SRCS     += $(SRCDIR)/AnisoSphereModel.cc\
 	    $(SRCDIR)/SetupFEMatrix.cc\
 	    $(SRCDIR)/SphereModel.cc\
 	    $(SRCDIR)/TensorsToIndices.cc\
+            $(SRCDIR)/ElectrodeManager.cc\
+            $(SRCDIR)/EITAnalyticSolution.cc\
+            $(SRCDIR)/SetEITGround.cc\
+            $(SRCDIR)/TrigCurrentPattern.cc\
 #[INSERT NEW CODE FILE HERE]	
 
 
