@@ -189,10 +189,6 @@ itcl_class Uintah_Visualization_GridVisualizer {
 		-command "$this-c update_sn"
 	pack $w.grid.select.show_select_n -side top -anchor w -pady 2 -ipadx 3
 
-	button $w.grid.select.update_sn -text "Update Selected Node Position" \
-		-command "$this-c update_sn"
-	pack $w.grid.select.update_sn -pady 2 -side top -ipadx 3 -anchor w
-
 	button $w.grid.select.findxy -text "Find XY" -command "$this-c findxy"
 	pack $w.grid.select.findxy -pady 2 -side top -ipadx 3 -anchor w
 
