@@ -6,7 +6,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Geom/GeomText.h>
-#include <Core/Geom/Sticky.h>
+#include <Core/Geom/GeomSticky.h>
 #include <Core/Geom/Color.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomGroup.h>
