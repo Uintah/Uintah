@@ -294,7 +294,7 @@ public:
   void get_faces(Face::array_type &arr, const BBox &box);
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(const Node::index_type &idx) const { return 0.0; }
+  double get_size(const Node::index_type &/*idx*/) const { return 0.0; }
   double get_size(Edge::index_type idx) const 
   {
     Node::array_type arr;
@@ -314,7 +314,7 @@ public:
     get_point(p2,ra[2]);
     return (Cross(p0-p1,p2-p0)).length()*0.5;
   }
-  double get_size(Cell::index_type idx) const { return 0.0; }
+  double get_size(Cell::index_type /*idx*/) const { return 0.0; }
   double get_length(Edge::index_type idx) const { return get_size(idx); };
   double get_area(Face::index_type idx) const { return get_size(idx); };
   double get_volume(Cell::index_type idx) const { return get_size(idx); };
@@ -325,8 +325,8 @@ public:
 	    (idx.j_ == 0 || idx.j_ == nj_ - 1 ? 1 : 2));
   }   
   int get_valence(Edge::index_type idx) const;
-  int get_valence(const Face::index_type &idx) const { return 0; }
-  int get_valence(Cell::index_type idx) const { return 0; }
+  int get_valence(const Face::index_type &/*idx*/) const { return 0; }
+  int get_valence(Cell::index_type /*idx*/) const { return 0; }
 
 
   bool get_neighbor(Face::index_type &neighbor,
