@@ -21,9 +21,8 @@ GENERAL INFORMATION
 KEYWORDS
     Mixing Table 
 DESCRIPTION
-      Reads the mixing reaction tables created by standalone programs. The current implementation
-      is to read specific tables. Future revisons will focus on making this more generic and
-      different mixing tables will be standarized with an interface. 
+      Reads and interpolates the mixing reaction tables created to standard format specifications 
+      Currently supports non-adiabatic equilibrium tables(3-Dimensions). 
     
 PATTERNS
     None
@@ -32,8 +31,7 @@ WARNINGS
     None
 
 POSSIBLE REVISIONS
-    Making it more generic to accomodate different mixing table formats
- 
+	Read and interpolate 4-D tables e.g., non-adiabatic flamelets/extent of reaction tables 
 ***************************************************************************/
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
