@@ -81,14 +81,16 @@ void ServiceManager::run()
   std::string status = "ServiceManager: servicemanager address: " + address_.geturl();
   log_->putmsg(status);
   log_->putmsg("ServiceManager: listening...");
+
+  if (!(serversocket.listen())) 
+  {
+    log_->putmsg("ServiceManager: socket.listen() failed, shutting down service manager");
+    return;
+  }
   
   for(;;) {
     // LOOP FOREVER...
-    if (!(serversocket.listen())) 
-    {
-      log_->putmsg("ServiceManager: socket.listen() failed, shutting down service manager");
-      return;
-    }
+
     
     
     IComSocket clientsocket;

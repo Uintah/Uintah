@@ -353,23 +353,23 @@ void SimpleService::handle_input()
   bool				done = false;
 
   while(!done)
-    {
+  {
       if(!(recv(packet))) 
-        {
+      {
           std::ostringstream oss;
           oss << "Error receiving message from input queue (errno=" << geterrno() << ")";
           errormsg(oss.str());
           break;
-        }
+      }
 
       if (packet->gettag() == TAG_END_) 
-        { 
+      { 
           done = true; 
           continue;
 		
-        }
+      }
       handle_service(packet);
-    }
+  }
 }
 
 

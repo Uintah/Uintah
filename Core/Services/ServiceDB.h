@@ -101,6 +101,8 @@ class ServiceDB : public ServiceBase {
   // Check whether a service exists
   bool    isservice(const std::string servicename);
   
+  void    printservices();
+  
   // Get all the information that is contained in the services
   // database about a certain service The ServiceManager needs this to
   // launch a specified service
