@@ -2545,7 +2545,7 @@ void ImpMPM::solveForDuCG(const ProcessorGroup*,
 
 }
 
-void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
+void ImpMPM::solveForDuCGPetsc(const ProcessorGroup* pg,
 			       const PatchSubset* patches,
 			       const MaterialSubset* ,
 			       DataWarehouse*,
@@ -2586,6 +2586,8 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
       PetscPrintf(PETSC_COMM_WORLD,"d_x[%d] = %g\n",i,xPetsc[i]);
     }
 #endif
+    VecRestoreArray(d_x,&xPetsc);
+    
 #endif
 #ifdef OLD_SPARSE
   valarray<double> x(0.,num_nodes);
@@ -2621,15 +2623,39 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     l2g.copy(d_petscLocalToGlobal[patch]);
+
+    // Get the petsc vectors
+#ifdef HAVE_PETSC
+    PetscScalar* xPetsc;
+    int nlocal,ierr,begin,end;
+    VecGetLocalSize(d_x,&nlocal);
+    VecGetOwnershipRange(d_x,&begin,&end);
+    cerr << "nlocal = " << nlocal << "range = " << begin << " " << end 
+			 << " for processor " << pg->myrank() << endl;
+    ierr = VecGetArray(d_x,&xPetsc);
+    if (ierr)
+      cerr << "VecGetArray failed" << endl;
+    cerr << "work after VecGetArray" << endl;
+    for (int ii = 0; ii < nlocal; ii++) {
+      // cerr << "Trying to print out the vector . . ." << endl;
+      cerr << pg->myrank() <<" xPetsc[" << ii << "]=" << xPetsc[ii] << endl;
+      // PetscPrintf(PETSC_COMM_WORLD,"d_x[%d] = %g\n",ii,xPetsc[ii]);
+    }
+      
+    cerr << "work after PetscPrintf" << endl;
     
+#endif
+
     for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
       IntVector n = *iter;
       int dof[3];
 #ifdef HAVE_PETSC
-      int l2g_node_num = l2g[n];
+      int l2g_node_num = l2g[n] - begin;
       dof[0] = l2g_node_num;
       dof[1] = l2g_node_num+1;
       dof[2] = l2g_node_num+2;
+      cerr << pg->myrank() << " dof = " << dof[0] << " " << dof[1] << " " 
+	   << dof[2] << endl;
       dispInc[n] = Vector(xPetsc[dof[0]],xPetsc[dof[1]],xPetsc[dof[2]]);
 #else
 #ifdef OLD_SPARSE
@@ -2644,11 +2670,12 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
 #endif
 #endif
     }
-  }
+  
 #ifdef HAVE_PETSC
-  VecRestoreArray(d_x,&xPetsc);
+     VecRestoreArray(d_x,&xPetsc);
 
 #endif
+  }
 
 }
 
