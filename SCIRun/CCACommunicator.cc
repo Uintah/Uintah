@@ -69,7 +69,7 @@ CCACommunicator::CCACommunicator(SCIRunFramework *framework,
 {
   services=svc;
   ccaSiteList.push_back("qwerty.sci.utah.edu");
-  ccaSiteList.push_back("bugs.sci.utah.edu");
+  //ccaSiteList.push_back("bugs.sci.utah.edu");
   ccaSiteList.push_back("rat.sci.utah.edu");  
   this->framework=framework;
 }
