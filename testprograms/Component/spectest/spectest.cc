@@ -17,7 +17,7 @@
 //    Author : Martin Cole
 //    Date   : Tue Aug 21 11:17:14 2001
 
-#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/PIDL.h>
 #include <testprograms/Component/spectest/spectest_sidl.h>
 #include <testprograms/Component/spectest/spectest_impl.h>
 #include <Core/Thread/Time.h>

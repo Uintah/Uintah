@@ -38,8 +38,8 @@
 #include <unistd.h>
 #include <iostream>
 #include <mpi.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
-#include <Core/CCA/Component/PIDL/URL.h>
+#include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/URL.h>
 using namespace PingPong_ns;
 using namespace std;
 using namespace SCIRun;

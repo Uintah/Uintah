@@ -18,11 +18,11 @@
 
 #include "PingPong_manual.h"
 #include <Core/Exceptions/InternalError.h>
-#include <Core/CCA/Component/PIDL/Dispatch.h>
-#include <Core/CCA/Component/PIDL/GlobusError.h>
-#include <Core/CCA/Component/PIDL/ReplyEP.h>
-#include <Core/CCA/Component/PIDL/Startpoint.h>
-#include <Core/CCA/Component/PIDL/TypeInfo.h>
+#include <Core/CCA/PIDL/Dispatch.h>
+#include <Core/CCA/PIDL/GlobusError.h>
+#include <Core/CCA/PIDL/ReplyEP.h>
+#include <Core/CCA/PIDL/Startpoint.h>
+#include <Core/CCA/PIDL/TypeInfo.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Thread/Thread.h>
 #include <iostream>

@@ -31,9 +31,9 @@
 #include <iostream>
 #include <stdlib.h>
 #include <algo.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
-#include <Core/CCA/Component/PIDL/MxNArrayRep.h>
-#include <Core/CCA/Component/PIDL/MalformedURL.h>
+#include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/MxNArrayRep.h>
+#include <Core/CCA/PIDL/MalformedURL.h>
 
 #include <testprograms/Component/Jacobi/Jacobi_impl.h>
 #include <testprograms/Component/Jacobi/Jacobi_sidl.h>

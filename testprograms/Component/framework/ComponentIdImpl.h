@@ -4,8 +4,8 @@
 
 #include <testprograms/Component/framework/cca_sidl.h>
 #include <Core/Thread/Mutex.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
-#include <Core/CCA/Component/PIDL/URL.h>
+#include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/URL.h>
 #include <Core/Exceptions/InternalError.h>
 
 #include <string>

@@ -31,9 +31,9 @@
 #include <iostream>
 #include <sci_config.h> // For MPIPP_H on SGI
 #include <mpi.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
-#include <Core/CCA/Component/PIDL/MxNArrayRep.h>
-#include <Core/CCA/Component/PIDL/MalformedURL.h>
+#include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/MxNArrayRep.h>
+#include <Core/CCA/PIDL/MalformedURL.h>
 #include <testprograms/Component/mxnargtest/argtest_sidl.h>
 #include <Core/Thread/Time.h>
 

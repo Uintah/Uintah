@@ -33,10 +33,10 @@
 #include <string>
 #include <sci_config.h> // For MPIPP_H on SGI
 #include <mpi.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
-#include <Core/CCA/Component/PIDL/MxNArrayRep.h>
+#include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/MxNArrayRep.h>
 
-#include <Core/CCA/Component/PIDL/MalformedURL.h>
+#include <Core/CCA/PIDL/MalformedURL.h>
 
 #include <testprograms/Component/pingpongArr/PingPong_impl.h>
 #include <testprograms/Component/pingpongArr/PingPong_sidl.h>
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     SSIDL::array1<int> arr;
 
     int myrank = 0;
-    int mysize = 0;
+    int mysize = 1;
     int arrsize, sta, fin;
 
     try {
@@ -175,8 +175,8 @@ int main(int argc, char* argv[])
 	  }
 	  double dt=Time::currentSeconds()-stime;
 	  cerr << reps << " reps in " << dt << " seconds\n";
-	  double us=dt/reps*1000*1000;
-	  cerr << us << " us/rep\n";
+	  //double us=dt/reps*1000*1000;
+	  //cerr << us << " us/rep\n";
 	}
     } catch(const MalformedURL& e) {
 	cerr << "pingpong.cc: Caught MalformedURL exception:\n";
