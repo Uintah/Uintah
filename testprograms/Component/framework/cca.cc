@@ -84,7 +84,7 @@ CCA::init( int &argc, char *argv[] )
 
   try {
 
-    PIDL::initialize( argc, argv );
+    PIDL::initialize();
     
     if ( is_server_ ) {
       // start server

@@ -521,7 +521,7 @@ int main(int argc, char* argv[])
     usage(argv[0]);
 
   try {
-    PIDL::initialize(argc,argv);
+    PIDL::initialize();
     sleep( 1 ); // Give threads enough time to come up.
 
     Server::pointer pp;

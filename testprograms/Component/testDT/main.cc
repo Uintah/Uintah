@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
 	usage(argv[0]);
 
 
-      PIDL::initialize(argc, argv);
+      PIDL::initialize();
       if(server) {
 	DTPoint *ep=new DTPoint(PIDL::getDT());
 	ofstream f("pp.url");

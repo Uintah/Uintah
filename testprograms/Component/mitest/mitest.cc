@@ -212,7 +212,7 @@ int main(int argc, char* argv[])
   using std::string;
 
   try {
-    PIDL::initialize(argc,argv);
+    PIDL::initialize();
 
     bool client=false;
     bool server=false;

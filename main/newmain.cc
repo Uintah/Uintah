@@ -94,7 +94,7 @@ main(int argc, char *argv[] )
 
   try {
     // TODO: Move this out of here???
-    PIDL::initialize(argc, argv);
+    PIDL::initialize();
   } catch(const Exception& e) {
     cerr << "Caught exception:\n";
     cerr << e.message() << '\n';

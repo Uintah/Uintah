@@ -2346,7 +2346,6 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
     e.out << leader2 << "if(" << arg << "_vtable_base == -1){\n";
     e.out << leader2 << "  " << arg << "=0;\n";
     e.out << leader2 << "} else {\n";
-
     e.out << leader2 << "  ::SCIRun::ReferenceMgr _refM;\n";
     e.out << leader2 << "  for(int i=0; i<" << arg << "_refno; i++) {\n";
     e.out << leader2 << "    //This may leak SPs\n";
@@ -2356,7 +2355,6 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
     e.out << leader2 << "    _refM.insertReference(_ref);\n";
     e.out << leader2 << "  }\n";
     e.out << leader2 << "  ::SCIRun::Message* spmsg = _refM.getIndependentReference()->chan->getMessage();\n";
-
     e.out << leader2 << "  void* _ptr;\n";
     e.out << leader2 << "  if ((_ptr=spmsg->getLocalObj()) != NULL) {\n";
     e.out << leader2 << "    ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(_ptr);\n";

@@ -76,7 +76,7 @@ int
 PIDL::size(1);
 
 void
-PIDL::initialize(int, char*[])
+PIDL::initialize(int rank,int size)
 {
   //Default for communication purposes 
 #ifdef HAVE_GLOBUS
@@ -97,12 +97,13 @@ PIDL::initialize(int, char*[])
     CommNexus::initialize();
     break;
 #endif
-
   }
-
 #ifdef HAVE_MPI
   setIntraCommunication(INTRA_COMM_MPI);
 #endif
+
+  PIDL::rank = rank;
+  PIDL::size = size;
 
   if(!warehouse){
     warehouse=new Warehouse;

@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
     int arrsize, sta, fin;
 
     try {
-        PIDL::initialize(argc,argv);
+        PIDL::initialize();
         
         MPI_Init(&argc,&argv);
 
