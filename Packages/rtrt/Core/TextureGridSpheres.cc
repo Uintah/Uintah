@@ -1255,6 +1255,24 @@ void TextureGridSphere::get_uv(UV& uv, const Point& hitpos, const Point& cen) {
 Color TextureGridSphere::interp_color(unsigned char *image,
 				      double u, double v)
 {
+#if 1  
+  u *= tex_res;
+  int iu = (int)u;
+  if (iu == tex_res)
+    iu = tex_res - 1;
+  
+  v *= tex_res;
+  int iv = (int)v;
+  if (iv == tex_res)
+    iv = tex_res - 1;
+  
+  unsigned char *pixel=image + 3*(iv * tex_res + iu);
+  Color c(pixel[0], pixel[1], pixel[2]);
+
+  return c*(1.0/255);
+#endif
+  
+#if 0
   // u & v *= dimensions minus the slop(2) and the zero base difference (1)
   // for a total of 3
   u *= tex_res-3;
@@ -1278,7 +1296,7 @@ Color TextureGridSphere::interp_color(unsigned char *image,
     c01*   tu *(1-tv)+
     c10*(1-tu)*   tv +
     c11*   tu *   tv;
-  
-  return c*(1.0/255);
-}
 
+  return c*(1.0/255);
+#endif
+}
