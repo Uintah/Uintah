@@ -81,10 +81,11 @@ FusionSlicePlotAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
     typename FIELD<TYPE>::fdata_type::iterator end = ifield->fdata().end();
     typename FIELD<double>::fdata_type::iterator out = ofield->fdata().begin();
 
-    typename FIELD<TYPE>::mesh_type::Node::index_type node = 0;
-    unsigned int counter = 0;
+    typename FIELD<TYPE>::mesh_type::Node::iterator inodeItr;
 
-    imesh ->synchronize( Mesh::NORMALS_E );
+    omesh->begin( inodeItr );
+
+    imesh->synchronize( Mesh::NORMALS_E );
 
     Point pt;
     Vector vec;
@@ -99,19 +100,19 @@ FusionSlicePlotAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
       *out = *in;  // Copy the data.
 
       // Get the orginal point on the mesh.
-      omesh->get_point(pt, node);
+      imesh->get_point(pt, *inodeItr);
       
       // Get the normal from the orginal surface since it should be planar.
-      imesh->get_normal(vec, node);      
+      imesh->get_normal(vec, *inodeItr);      
 
       // Normalize then scale the offset value before adding to the point.
       pt += ( (*in - minmax.first) * scale ) * vec;
 
-      omesh->set_point(pt, node);
+      omesh->set_point(*inodeItr, pt);
 
       ++in; ++out;
 
-      node = ++counter;
+      ++inodeItr;
     }
 
     return FieldHandle( ofield );
