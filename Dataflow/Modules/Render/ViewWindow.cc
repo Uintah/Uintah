@@ -42,6 +42,7 @@
 #include <Core/TclInterface/TCLvar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/FutureValue.h>
+#include "OpenGL.h"
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -1384,6 +1385,8 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
     if(!manager->mailbox.trySend(scinew ViewerMessage(id)))
       cerr << "Redraw event dropped, mailbox full!\n";
   } else if(args[1] == "destroy"){
+    // we should kill the thread also, but don't
+    inertia_mode=0;
     manager->delete_viewwindow(this);
   } else if(args[1] == "anim_redraw"){
     // We need to dispatch this one to the
