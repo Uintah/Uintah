@@ -57,7 +57,9 @@ public:
     LatIndex() : i_(0), j_(0), k_(0) {}
     LatIndex(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k) {}
 
-    operator unsigned() const { return i_*j_*k_; }
+    // TODO: This is broken!
+    // It should go away and everywhere that uses it fixed.
+    operator unsigned() const { return i_ * (1<<20) + j_*(1<<10) + k_; }
 
     unsigned i_, j_, k_;
   };
@@ -80,6 +82,31 @@ public:
     friend const TypeDescription* get_type_description(NodeIndex *);
     friend const string find_type_name(NodeIndex *);
   };
+
+
+  struct LatSize
+  { 
+  public:
+    LatSize() : i_(0), j_(0), k_(0) {}
+    LatSize(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k) {}
+
+    operator unsigned() const { return i_*j_*k_; }
+
+    unsigned i_, j_, k_;
+  };
+
+  struct CellSize : public LatSize
+  {
+    CellSize() : LatSize() {}
+    CellSize(unsigned i, unsigned j, unsigned k) : LatSize(i,j,k) {}
+  };
+
+  struct NodeSize : public LatSize
+  {
+    NodeSize() : LatSize() {}
+    NodeSize(unsigned i, unsigned j, unsigned k) : LatSize(i,j,k) {}
+  };
+
 
   struct LatIter : public LatIndex
   {
@@ -316,7 +343,7 @@ public:
   struct Node {
     typedef NodeIndex          index_type;
     typedef NodeIter           iterator;
-    typedef NodeIndex          size_type;
+    typedef NodeSize           size_type;
     typedef vector<index_type> array_type;
     typedef RangeNodeIter      range_iter;
   };			
@@ -325,20 +352,20 @@ public:
     typedef EdgeIndex<unsigned int>          index_type;
     typedef EdgeIterator<unsigned int>       iterator;
     typedef EdgeIndex<unsigned int>          size_type;
-    typedef vector<index_type> array_type;
+    typedef vector<index_type>               array_type;
   };			
 			
   struct Face {		
     typedef FaceIndex<unsigned int>          index_type;
     typedef FaceIterator<unsigned int>       iterator;
     typedef FaceIndex<unsigned int>          size_type;
-    typedef vector<index_type> array_type;
+    typedef vector<index_type>               array_type;
   };			
 			
   struct Cell {		
     typedef CellIndex          index_type;
     typedef CellIter           iterator;
-    typedef CellIndex          size_type;
+    typedef CellSize           size_type;
     typedef vector<index_type> array_type;
     typedef RangeCellIter      range_iter;
   };
