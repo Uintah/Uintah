@@ -56,9 +56,7 @@ ___________________________________________________________________*/
 void xFaceDensityLODI(const Patch::FaceType face,
                 CCVariable<double>& rho_CC,
                 StaticArray<CCVariable<Vector> >& d,
-                const CCVariable<double>& nux,
-                const CCVariable<double>& nuy,
-                const CCVariable<double>& nuz,
+                const CCVariable<Vector>& nu,
                 const CCVariable<double>& rho_tmp,
                 const CCVariable<Vector>& vel,
                 const double delT,
@@ -90,13 +88,13 @@ void xFaceDensityLODI(const Patch::FaceType face,
 
       qConFrt  = rho_tmp[t] * vel[t].y();
       qConLast = rho_tmp[b] * vel[b].y();
-      y_conv = computeConvection(nuy[t], nuy[c], nuy[b], 
+      y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(), 
                                  rho_tmp[t], rho_tmp[c], rho_tmp[b], qConFrt, 
                                  qConLast, delT, dx.y());
 
       qConFrt  = rho_tmp[f] * vel[f].z();
       qConLast = rho_tmp[bk] * vel[bk].z();
-      z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+      z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                  rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                                  qConFrt, qConLast, delT, dx.z());
 
@@ -115,7 +113,7 @@ void xFaceDensityLODI(const Patch::FaceType face,
     
     qConFrt  = rho_tmp[f]  * vel[f].z();
     qConLast = rho_tmp[bk] * vel[bk].z();
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                                qConFrt, qConLast, delT, dx.z());
 
@@ -131,7 +129,7 @@ void xFaceDensityLODI(const Patch::FaceType face,
 
     qConFrt  = rho_tmp[f]  * vel[f].z();
     qConLast = rho_tmp[bk] * vel[bk].z();
-    z_conv   = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv   = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                               rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                               qConFrt, qConLast, delT, dx.z());
     rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].y() + z_conv);
@@ -145,7 +143,7 @@ void xFaceDensityLODI(const Patch::FaceType face,
     IntVector b (xFaceCell,   j-1, low.z());  
     qConFrt  = rho_tmp[t] * vel[t].y();
     qConLast = rho_tmp[b] * vel[b].y();
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                            rho_tmp[t], rho_tmp[c], rho_tmp[b], 
                            qConFrt, qConLast, delT, dx.y());
     rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].z() + y_conv);
@@ -160,7 +158,7 @@ void xFaceDensityLODI(const Patch::FaceType face,
 
     qConFrt  = rho_tmp[t] * vel[t].y();
     qConLast = rho_tmp[b] * vel[b].y();
-    y_conv   = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv   = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                               rho_tmp[t], rho_tmp[c], rho_tmp[b], 
                               qConFrt, qConLast, delT, dx.y());
     rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].z() + y_conv);
@@ -186,10 +184,8 @@ void xFaceDensityLODI(const Patch::FaceType face,
 ___________________________________________________________________*/
 void yFaceDensityLODI(const Patch::FaceType face,
                 CCVariable<double>& rho_CC,
-                StaticArray<CCVariable<Vector> >& d, 
-                const CCVariable<double>& nux,
-                const CCVariable<double>& nuy,
-                const CCVariable<double>& nuz,
+                StaticArray<CCVariable<Vector> >& d,
+                const CCVariable<Vector>& nu,
                 const CCVariable<double>& rho_tmp,
                 const CCVariable<Vector>& vel,
                 const double delT,
@@ -223,13 +219,13 @@ void yFaceDensityLODI(const Patch::FaceType face,
 
       qConFrt  = rho_tmp[r] * vel[r].x();
       qConLast = rho_tmp[l] * vel[l].x();
-      x_conv = computeConvection(nux[r], nux[c], nux[l], 
+      x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(), 
                                  rho_tmp[r], rho_tmp[c], rho_tmp[l], qConFrt, 
                                  qConLast, delT, dx.x());
 
       qConFrt  = rho_tmp[f] * vel[f].z();
       qConLast = rho_tmp[bk] * vel[bk].z();
-      z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+      z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                  rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                                  qConFrt, qConLast, delT, dx.z());
 
@@ -246,7 +242,7 @@ void yFaceDensityLODI(const Patch::FaceType face,
     IntVector bk(hi_x,   yFaceCell,   k-1);
     qConFrt  = rho_tmp[f]  * vel[f].z();
     qConLast = rho_tmp[bk] * vel[bk].z();
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                                qConFrt, qConLast, delT, dx.z());
 
@@ -260,7 +256,7 @@ void yFaceDensityLODI(const Patch::FaceType face,
     IntVector c (i,   yFaceCell,  hi_z);
     qConFrt  = rho_tmp[r] * vel[r].x();
     qConLast = rho_tmp[l] * vel[l].x();
-    x_conv   = computeConvection(nux[r], nux[c], nux[l],
+    x_conv   = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                               rho_tmp[r], rho_tmp[c], rho_tmp[l], 
                               qConFrt, qConLast, delT, dx.x());
     rho_CC[c] = rho_tmp[c] - delT * (d[1][c].y() + d[1][c].z() + x_conv);
@@ -274,7 +270,7 @@ void yFaceDensityLODI(const Patch::FaceType face,
      IntVector bk (low.x(),   yFaceCell,   k-1);
      qConFrt  = rho_tmp[f] * vel[f].z();
      qConLast = rho_tmp[bk] * vel[bk].z();
-     z_conv   = computeConvection(nuz[f], nuz[c], nuz[bk],
+     z_conv   = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                                qConFrt, qConLast, delT, dx.z());
      rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].y() + z_conv);
@@ -289,7 +285,7 @@ void yFaceDensityLODI(const Patch::FaceType face,
 
     qConFrt  = rho_tmp[r] * vel[r].x();
     qConLast = rho_tmp[l] * vel[l].x();
-    x_conv   = computeConvection(nux[r], nux[c], nux[l],
+    x_conv   = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                               rho_tmp[r], rho_tmp[c], rho_tmp[l], 
                               qConFrt, qConLast, delT, dx.x());
     rho_CC[c] = rho_tmp[c] - delT * (d[1][c].y() + d[1][c].z() + x_conv);
@@ -313,10 +309,8 @@ void yFaceDensityLODI(const Patch::FaceType face,
 ___________________________________________________________________*/
 void zFaceDensityLODI( const Patch::FaceType face,
                 CCVariable<double>& rho_CC,
-                StaticArray<CCVariable<Vector> >& d, 
-                const CCVariable<double>& nux,
-                const CCVariable<double>& nuy,
-                const CCVariable<double>& nuz,
+                StaticArray<CCVariable<Vector> >& d,
+                const CCVariable<Vector>& nu,
                 const CCVariable<double>& rho_tmp,
                 const CCVariable<Vector>& vel,
                 const double delT,
@@ -351,13 +345,13 @@ void zFaceDensityLODI( const Patch::FaceType face,
 
       qConFrt  = rho_tmp[r] * vel[r].x();
       qConLast = rho_tmp[l] * vel[l].x();
-      x_conv = computeConvection(nux[r], nux[c], nux[l], 
+      x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(), 
                                  rho_tmp[r], rho_tmp[c], rho_tmp[l], qConFrt, 
                                  qConLast, delT, dx.x());
 
       qConFrt  = rho_tmp[t] * vel[t].y();
       qConLast = rho_tmp[b] * vel[b].y();
-      y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+      y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                                  rho_tmp[t], rho_tmp[c], rho_tmp[b], 
                                  qConFrt, qConLast, delT, dx.y());
 
@@ -374,7 +368,7 @@ void zFaceDensityLODI( const Patch::FaceType face,
     IntVector b (hi_x,   j-1, zFaceCell);
     qConFrt  = rho_tmp[t] * vel[t].y();
     qConLast = rho_tmp[b] * vel[b].y();
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                                rho_tmp[t], rho_tmp[c], rho_tmp[b], 
                                qConFrt, qConLast, delT, dx.y());
 
@@ -388,7 +382,7 @@ void zFaceDensityLODI( const Patch::FaceType face,
     IntVector b (low.x(),   j-1, zFaceCell);
     qConFrt  = rho_tmp[t] * vel[t].y();
     qConLast = rho_tmp[b] * vel[b].y();
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                                rho_tmp[t], rho_tmp[c], rho_tmp[b], 
                                qConFrt, qConLast, delT, dx.y());
 
@@ -404,7 +398,7 @@ void zFaceDensityLODI( const Patch::FaceType face,
     IntVector c (i,   hi_y,   zFaceCell);
     qConFrt  = rho_tmp[r] * vel[r].x();
     qConLast = rho_tmp[l] * vel[l].x();
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                            rho_tmp[r], rho_tmp[c], rho_tmp[l], 
                             qConFrt, qConLast, delT, dx.x());
     rho_CC[c] = rho_tmp[c] - delT * (d[1][c].y() + d[1][c].z() + x_conv);
@@ -418,7 +412,7 @@ void zFaceDensityLODI( const Patch::FaceType face,
 
     qConFrt  = rho_tmp[r] * vel[r].x();
     qConLast = rho_tmp[l] * vel[l].x();
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                             rho_tmp[r], rho_tmp[c], rho_tmp[l], 
                             qConFrt, qConLast, delT, dx.x());
      rho_CC[c] = rho_tmp[c] - delT * (d[1][c].y() + d[1][c].z() + x_conv);
@@ -443,9 +437,7 @@ void zFaceDensityLODI( const Patch::FaceType face,
 ___________________________________________________________________*/
 void fillFaceDensityLODI(CCVariable<double>& rho_CC,
                    StaticArray<CCVariable<Vector> >& di,
-                   const CCVariable<double>& nux,
-                   const CCVariable<double>& nuy,
-                   const CCVariable<double>& nuz,
+                   const CCVariable<Vector>& nu,
                    const CCVariable<double>& rho_tmp,
                    const CCVariable<Vector>& vel,
                    const Patch::FaceType face,
@@ -454,15 +446,15 @@ void fillFaceDensityLODI(CCVariable<double>& rho_CC,
 
 {   
   if (face == Patch::xplus || face == Patch::xminus ) {
-    xFaceDensityLODI(face,rho_CC,di,nux,nuy,nuz,rho_tmp,vel,delT,dx);
+    xFaceDensityLODI(face, rho_CC, di, nu, rho_tmp, vel, delT, dx);
   } 
 
   if (face == Patch::yplus || face == Patch::yminus ) {
-    yFaceDensityLODI(face,rho_CC,di,nux,nuy,nuz,rho_tmp,vel,delT,dx);
+    yFaceDensityLODI(face, rho_CC, di, nu, rho_tmp, vel, delT, dx);
   } 
 
   if (face == Patch::zplus || face == Patch::zminus ) { 
-    zFaceDensityLODI(face,rho_CC,di,nux,nuy,nuz,rho_tmp,vel,delT,dx);
+    zFaceDensityLODI(face, rho_CC, di, nu, rho_tmp, vel, delT, dx);
   } 
 }
 
@@ -473,9 +465,7 @@ ___________________________________________________________________*/
 void xFaceVelLODI(Patch::FaceType face,
             CCVariable<Vector>& vel_CC,
             StaticArray<CCVariable<Vector> >& d,
-            const CCVariable<double>& nux,
-            const CCVariable<double>& nuy,
-            const CCVariable<double>& nuz,
+            const CCVariable<Vector>& nu,
             const CCVariable<double>& rho_tmp,
             const CCVariable<double>& p,
             const CCVariable<Vector>& vel,
@@ -516,7 +506,7 @@ void xFaceVelLODI(Patch::FaceType face,
        qFrt     = rho_tmp[t] * vel[t].x();
        qMid     = rho_tmp[c] * vel[c].x();
        qLast    = rho_tmp[b] * vel[b].x();
-       y_conv   = computeConvection(nuy[t], nuy[c], nuy[b], 
+       y_conv   = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(), 
                                   qFrt, qMid, qLast, qConFrt, 
                                   qConLast, delT, dx.y());
 
@@ -525,7 +515,7 @@ void xFaceVelLODI(Patch::FaceType face,
        qFrt     = rho_tmp[f]  * vel[f].x();
        qLast    = rho_tmp[bk] * vel[bk].x();
 
-       z_conv   = computeConvection(nuz[f], nuz[c], nuz[bk],
+       z_conv   = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                     qFrt, qMid, qLast, qConFrt, 
                                     qConLast, delT, dx.z());       
        uVel     = (qMid - delT * (d[1][c].x() * vel[c].x() 
@@ -537,7 +527,7 @@ void xFaceVelLODI(Patch::FaceType face,
       qFrt     = rho_tmp[t] * vel[t].y();
       qMid     = rho_tmp[c] * vel[c].y();
       qLast    = rho_tmp[b] * vel[b].y();
-      y_conv   = computeConvection(nuy[t], nuy[c], nuy[b], 
+      y_conv   = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(), 
                                    qFrt, qMid, qLast, qConFrt, 
                                    qConLast, delT, dx.y());
 
@@ -546,7 +536,7 @@ void xFaceVelLODI(Patch::FaceType face,
       qFrt     = rho_tmp[f]  * vel[f].y();
       qLast    = rho_tmp[bk] * vel[bk].y();
 
-      z_conv   = computeConvection(nuz[f], nuz[c], nuz[bk],
+      z_conv   = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                  qFrt, qMid, qLast, qConFrt, 
                              qConLast, delT, dx.z());        
 
@@ -559,7 +549,7 @@ void xFaceVelLODI(Patch::FaceType face,
       qFrt     = rho_tmp[t] * vel[t].z();
       qMid     = rho_tmp[c] * vel[c].z();
       qLast    = rho_tmp[b] * vel[b].z();
-      y_conv   = computeConvection(nuy[t], nuy[c], nuy[b], 
+      y_conv   = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(), 
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.y());
 
@@ -568,7 +558,7 @@ void xFaceVelLODI(Patch::FaceType face,
       qFrt     = rho_tmp[f]  * vel[f].z();
       qLast    = rho_tmp[bk] * vel[bk].z();
 
-      z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+      z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                  qFrt, qMid, qLast, qConFrt, 
                              qConLast, delT, dx.z());        
 
@@ -596,7 +586,7 @@ void xFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c]  * vel[c].x();
     qLast    = rho_tmp[bk] * vel[bk].x();
 
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                qFrt, qMid, qLast, 
                                qConFrt,qConLast, delT, dx.z());       
 
@@ -611,7 +601,7 @@ void xFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c]  * vel[c].y();
     qLast    = rho_tmp[bk] * vel[bk].y();
 
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                  qFrt, qMid, qLast, qConFrt,qConLast, delT, dx.z()); 
 
     vVel = (qMid - delT * ((d[1][c].x() + d[1][c].y()) * vel[c].y() 
@@ -626,7 +616,7 @@ void xFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c]  * vel[c].z();
     qLast    = rho_tmp[bk] * vel[bk].z();
 
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                     qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z());
 
     wVel = (qMid - delT * ((d[1][c].x() + d[1][c].y()) * vel[c].z() 
@@ -650,7 +640,7 @@ void xFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c]  * vel[c].x();
     qLast    = rho_tmp[bk] * vel[bk].x();
 
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                qFrt, qMid, qLast, 
                            qConFrt, qConLast, delT, dx.z());       
 
@@ -665,7 +655,7 @@ void xFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c]  * vel[c].y();
     qLast    = rho_tmp[bk] * vel[bk].y();
 
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z()); 
 
     vVel = (qMid - delT * ((d[1][c].x() + d[1][c].y()) * vel[c].y() 
@@ -680,7 +670,7 @@ void xFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c]  * vel[c].z();
     qLast    = rho_tmp[bk] * vel[bk].z();
 
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                     qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z());
 
     wVel = (qMid - delT * ((d[1][c].x() + d[1][c].y()) * vel[c].z() 
@@ -704,7 +694,7 @@ void xFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].x();
     qLast    = rho_tmp[b] * vel[b].x();
 
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                                qFrt, qMid, qLast, 
                            qConFrt, qConLast, delT, dx.y());       
 
@@ -719,7 +709,7 @@ void xFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].y();
     qLast    = rho_tmp[b] * vel[b].y();
 
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                  qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y()); 
 
     vVel = (qMid - delT * ((d[1][c].x() + d[1][c].z()) * vel[c].y() 
@@ -733,7 +723,7 @@ void xFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].z();
     qLast    = rho_tmp[b] * vel[b].z();
 
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                     qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y());
 
     wVel = (qMid - delT * ((d[1][c].x() + d[1][c].z()) * vel[c].z() 
@@ -757,7 +747,7 @@ void xFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].x();
     qLast    = rho_tmp[b] * vel[b].x();
 
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.y());       
 
@@ -772,7 +762,7 @@ void xFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].y();
     qLast    = rho_tmp[b] * vel[b].y();
 
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y()); 
 
     vVel = (qMid - delT * ((d[1][c].x() + d[1][c].z()) * vel[c].y() 
@@ -786,7 +776,7 @@ void xFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].z();
     qLast    = rho_tmp[b] * vel[b].z();
 
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                     qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y());
 
     wVel = (qMid - delT * ((d[1][c].x() + d[1][c].z()) * vel[c].z() 
@@ -827,9 +817,7 @@ ___________________________________________________________________*/
 void yFaceVelLODI(Patch::FaceType face,
              CCVariable<Vector>& vel_CC,
              StaticArray<CCVariable<Vector> >& d,
-             const CCVariable<double>& nux,
-             const CCVariable<double>& nuy,
-             const CCVariable<double>& nuz,
+             const CCVariable<Vector>& nu,
              const CCVariable<double>& rho_tmp,
              const CCVariable<double>& p,
              const CCVariable<Vector>& vel,
@@ -871,7 +859,7 @@ void yFaceVelLODI(Patch::FaceType face,
       qMid   = rho_tmp[c] * vel[c].x();
       qLast  = rho_tmp[l] * vel[l].x();
       
-      x_conv = computeConvection(nux[r], nux[c], nux[l], 
+      x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(), 
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.x());
 
@@ -880,7 +868,7 @@ void yFaceVelLODI(Patch::FaceType face,
       qFrt     = rho_tmp[f]  * vel[f].x();
       qLast    = rho_tmp[bk] * vel[bk].x();
 
-      z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+      z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.z());       
       uVel = (qMid - delT * (d[1][c].y() * vel[c].x() 
@@ -892,7 +880,7 @@ void yFaceVelLODI(Patch::FaceType face,
       qFrt   = rho_tmp[r] * vel[r].y();
       qMid   = rho_tmp[c] * vel[c].y();
       qLast  = rho_tmp[l] * vel[l].y();
-      x_conv = computeConvection(nux[r], nux[c], nux[l], 
+      x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(), 
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.x());
 
@@ -901,7 +889,7 @@ void yFaceVelLODI(Patch::FaceType face,
       qFrt     = rho_tmp[f]  * vel[f].y();
       qLast    = rho_tmp[bk] * vel[bk].y();
 
-      z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+      z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.z());        
 
@@ -914,7 +902,7 @@ void yFaceVelLODI(Patch::FaceType face,
       qFrt     = rho_tmp[r] * vel[r].z();
       qMid     = rho_tmp[c] * vel[c].z();
       qLast    = rho_tmp[l] * vel[l].z();
-      x_conv = computeConvection(nux[r], nux[c], nux[l], 
+      x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(), 
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.x());
 
@@ -923,7 +911,7 @@ void yFaceVelLODI(Patch::FaceType face,
       qFrt     = rho_tmp[f]  * vel[f].z();
       qLast    = rho_tmp[bk] * vel[bk].z();
 
-      z_conv  = computeConvection(nuz[f], nuz[c], nuz[bk],
+      z_conv  = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                   qFrt, qMid, qLast, qConFrt, 
                                   qConLast, delT, dx.z());        
 
@@ -949,7 +937,7 @@ void yFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c]  * vel[c].x();
     qLast    = rho_tmp[bk] * vel[bk].x();
 
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                qFrt, qMid, qLast, 
                                qConFrt,qConLast, delT, dx.z());       
 
@@ -965,7 +953,7 @@ void yFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c]  * vel[c].y();
     qLast    = rho_tmp[bk] * vel[bk].y();
 
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                qFrt, qMid, qLast, 
                                qConFrt,qConLast, delT, dx.z()); 
 
@@ -980,7 +968,7 @@ void yFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c]  * vel[c].z();
     qLast    = rho_tmp[bk] * vel[bk].z();
 
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.z());
 
@@ -1006,7 +994,7 @@ void yFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c]  * vel[c].x();
     qLast    = rho_tmp[bk] * vel[bk].x();
 
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.z());       
 
@@ -1021,7 +1009,7 @@ void yFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c]  * vel[c].y();
     qLast    = rho_tmp[bk] * vel[bk].y();
 
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                   qFrt, qMid, qLast, 
                                   qConFrt, qConLast, delT, dx.z()); 
 
@@ -1036,7 +1024,7 @@ void yFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c]  * vel[c].z();
     qLast    = rho_tmp[bk] * vel[bk].z();
 
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.z());
 
@@ -1061,7 +1049,7 @@ void yFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].x();
     qLast    = rho_tmp[l] * vel[l].x();
 
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.x());       
 
@@ -1076,7 +1064,7 @@ void yFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].y();
     qLast    = rho_tmp[l] * vel[l].y();
 
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                               qFrt, qMid, qLast, 
                               qConFrt, qConLast, delT, dx.x()); 
 
@@ -1091,7 +1079,7 @@ void yFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].z();
     qLast    = rho_tmp[l] * vel[l].z();
 
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.x());
 
@@ -1116,7 +1104,7 @@ void yFaceVelLODI(Patch::FaceType face,
     qMid   = rho_tmp[c] * vel[c].x();
     qLast  = rho_tmp[l] * vel[l].x();
 
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.x());       
 
@@ -1132,7 +1120,7 @@ void yFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].y();
     qLast    = rho_tmp[l] * vel[l].y();
 
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                  qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x()); 
 
     vVel = (qMid - delT * ((d[1][c].y() + d[1][c].z()) * vel[c].y() 
@@ -1147,7 +1135,7 @@ void yFaceVelLODI(Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].z();
     qLast    = rho_tmp[l] * vel[l].z();
 
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                     qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x());
 
     wVel = (qMid - delT * ((d[1][c].y() + d[1][c].z()) * vel[c].z() 
@@ -1187,9 +1175,7 @@ ___________________________________________________________________*/
 void zFaceVelLODI(const Patch::FaceType face,
              CCVariable<Vector>& vel_CC,
              StaticArray<CCVariable<Vector> >& d,
-             const CCVariable<double>& nux,
-             const CCVariable<double>& nuy,
-             const CCVariable<double>& nuz,
+             const CCVariable<Vector>& nu,
              const CCVariable<double>& rho_tmp,
              const CCVariable<double>& p,
              const CCVariable<Vector>& vel,
@@ -1232,7 +1218,7 @@ void zFaceVelLODI(const Patch::FaceType face,
       qFrt     = rho_tmp[r] * vel[r].x();
       qMid     = rho_tmp[c] * vel[c].x();
       qLast    = rho_tmp[l] * vel[l].x();
-      x_conv   = computeConvection(nux[r], nux[c], nux[l], 
+      x_conv   = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(), 
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.x());
 
@@ -1241,7 +1227,7 @@ void zFaceVelLODI(const Patch::FaceType face,
       qFrt     = rho_tmp[t] * vel[t].x();
       qLast    = rho_tmp[b] * vel[b].x();
 
-      y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+      y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.y());       
       uVel = (qMid - delT * (d[1][c].z() * vel[c].x() 
@@ -1254,7 +1240,7 @@ void zFaceVelLODI(const Patch::FaceType face,
       qMid     = rho_tmp[c] * vel[c].y();
       qLast    = rho_tmp[l] * vel[l].y();
 
-      x_conv = computeConvection(nux[r], nux[c], nux[l],
+      x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.x()); 
 
@@ -1262,7 +1248,7 @@ void zFaceVelLODI(const Patch::FaceType face,
       qConLast = rho_tmp[b] * vel[b].y() * vel[b].y() + p[b];
       qFrt     = rho_tmp[t] * vel[t].y();
       qLast    = rho_tmp[b] * vel[b].y();
-      y_conv   = computeConvection(nuy[t], nuy[c], nuy[b], 
+      y_conv   = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(), 
                                    qFrt, qMid, qLast, qConFrt, 
                                    qConLast, delT, dx.y());
 
@@ -1276,7 +1262,7 @@ void zFaceVelLODI(const Patch::FaceType face,
       qFrt     = rho_tmp[r] * vel[r].z();
       qMid     = rho_tmp[c] * vel[c].z();
       qLast    = rho_tmp[l] * vel[l].z();
-      x_conv   = computeConvection(nux[r], nux[c], nux[l],
+      x_conv   = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                                    qFrt, qMid, qLast, qConFrt, 
                                    qConLast, delT, dx.x());  
 
@@ -1284,7 +1270,7 @@ void zFaceVelLODI(const Patch::FaceType face,
       qConLast = rho_tmp[b] * vel[b].y() * vel[b].z();
       qFrt     = rho_tmp[t] * vel[t].z();
       qLast    = rho_tmp[b] * vel[b].z();
-      y_conv   = computeConvection(nuy[t], nuy[c], nuy[b], 
+      y_conv   = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(), 
                                    qFrt, qMid, qLast, qConFrt, 
                                    qConLast, delT, dx.y());
 
@@ -1311,7 +1297,7 @@ void zFaceVelLODI(const Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].x();
     qLast    = rho_tmp[b] * vel[b].x();
 
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                                qFrt, qMid, qLast, 
                                qConFrt,qConLast, delT, dx.y());       
 
@@ -1326,7 +1312,7 @@ void zFaceVelLODI(const Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].y();
     qLast    = rho_tmp[b] * vel[b].y();
 
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                                qFrt, qMid, qLast, 
                                qConFrt,qConLast, delT, dx.y()); 
 
@@ -1341,7 +1327,7 @@ void zFaceVelLODI(const Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].z();
     qLast    = rho_tmp[b] * vel[b].z();
 
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.y());
 
@@ -1368,7 +1354,7 @@ void zFaceVelLODI(const Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].x();
     qLast    = rho_tmp[b] * vel[b].x();
 
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                                qFrt, qMid, qLast, 
                                qConFrt,qConLast, delT, dx.y());       
 
@@ -1383,7 +1369,7 @@ void zFaceVelLODI(const Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].y();
     qLast    = rho_tmp[b] * vel[b].y();
 
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                                qFrt, qMid, qLast, 
                                qConFrt,qConLast, delT, dx.y()); 
 
@@ -1398,7 +1384,7 @@ void zFaceVelLODI(const Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].z();
     qLast    = rho_tmp[b] * vel[b].z();
 
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.y());
 
@@ -1423,7 +1409,7 @@ void zFaceVelLODI(const Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].x();
     qLast    = rho_tmp[l] * vel[l].x();
 
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                                  qFrt, qMid, qLast, 
                                  qConFrt, qConLast, delT, dx.x());       
 
@@ -1438,7 +1424,7 @@ void zFaceVelLODI(const Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].y();
     qLast    = rho_tmp[l] * vel[l].y();
 
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.x()); 
 
@@ -1453,7 +1439,7 @@ void zFaceVelLODI(const Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].z();
     qLast    = rho_tmp[l] * vel[l].z();
 
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.x());
 
@@ -1479,7 +1465,7 @@ void zFaceVelLODI(const Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].x();
     qLast    = rho_tmp[l] * vel[l].x();
 
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                                  qFrt, qMid, qLast, 
                                  qConFrt, qConLast, delT, dx.x());       
 
@@ -1495,7 +1481,7 @@ void zFaceVelLODI(const Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].y();
     qLast    = rho_tmp[l] * vel[l].y();
 
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.x()); 
 
@@ -1511,7 +1497,7 @@ void zFaceVelLODI(const Patch::FaceType face,
     qMid     = rho_tmp[c] * vel[c].z();
     qLast    = rho_tmp[l] * vel[l].z();
 
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                                qFrt, qMid, qLast,
                                qConFrt, qConLast, delT, dx.x());
 
@@ -1553,9 +1539,7 @@ ___________________________________________________________________*/
 
 void   fillFaceVelLODI(CCVariable<Vector>& vel_CC,
                  StaticArray<CCVariable<Vector> >& di,
-                 const CCVariable<double>& nux,
-                 const CCVariable<double>& nuy,
-                 const CCVariable<double>& nuz,
+                 const CCVariable<Vector>& nu,
                  const CCVariable<double>& rho_tmp,
                  const CCVariable<double>& p,
                  const CCVariable<Vector>& vel,
@@ -1565,18 +1549,15 @@ void   fillFaceVelLODI(CCVariable<Vector>& vel_CC,
 
 { 
   if(face ==  Patch::xplus || face ==  Patch::xminus) {
-    xFaceVelLODI( face, vel_CC, di, 
-                  nux,nuy,nuz,
+    xFaceVelLODI( face, vel_CC, di, nu,
                   rho_tmp, p, vel, delT, dx);
   }
   if(face ==  Patch::yplus || face ==  Patch::yminus) {
-       yFaceVelLODI(face, vel_CC, di,             
-                    nux,nuy,nuz,                        
+       yFaceVelLODI(face, vel_CC, di, nu,              
                     rho_tmp, p, vel, delT, dx);         
   } 
   if(face ==  Patch::zplus || face ==  Patch::zminus) {  
-    zFaceVelLODI(face, vel_CC, di,
-                 nux,nuy,nuz,
+    zFaceVelLODI(face, vel_CC, di, nu, 
                  rho_tmp, p, vel, delT, dx);
   }
 }
@@ -1590,9 +1571,7 @@ void xFaceTempLODI(const Patch::FaceType face,
              StaticArray<CCVariable<Vector> >& d,
              const CCVariable<double>& e,
              const CCVariable<double>& rho_CC,
-             const CCVariable<double>& nux,
-             const CCVariable<double>& nuy,
-             const CCVariable<double>& nuz,
+             const CCVariable<Vector>& nu,
              const CCVariable<double>& rho_tmp,
              const CCVariable<double>& p,
              const CCVariable<Vector>& vel,
@@ -1638,7 +1617,7 @@ void xFaceTempLODI(const Patch::FaceType face,
       qFrt     = e[t];
       qMid     = e[c];
       qLast    = e[b];
-      y_conv   = computeConvection(nuy[t], nuy[c], nuy[b], 
+      y_conv   = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(), 
                                 qFrt, qMid, qLast, qConFrt, 
                                 qConLast, delT, dx.y());
 
@@ -1647,7 +1626,7 @@ void xFaceTempLODI(const Patch::FaceType face,
       qFrt     = e[f];
       qLast    = e[bk];
 
-      z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+      z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                  qFrt, qMid, qLast, 
                                  qConFrt, qConLast, delT, dx.z()); 
 
@@ -1676,7 +1655,7 @@ void xFaceTempLODI(const Patch::FaceType face,
     qMid     = e[c];
     qLast    = e[bk];
 
-     z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+     z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                       qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z());
 
      double vel_sqr = vel[c].length2();
@@ -1705,7 +1684,7 @@ void xFaceTempLODI(const Patch::FaceType face,
     qMid     = e[c];
     qLast    = e[bk];
 
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                      qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z());
 
     double vel_sqr = vel[c].length2();
@@ -1733,7 +1712,7 @@ void xFaceTempLODI(const Patch::FaceType face,
     qMid     = e[c];
     qLast    = e[b];
 
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                     qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y());
 
     double vel_sqr = vel[c].length2();
@@ -1761,7 +1740,7 @@ void xFaceTempLODI(const Patch::FaceType face,
     qMid     = e[c];
     qLast    = e[b];
 
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                       qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y());
 
     double vel_sqr = vel[c].length2();
@@ -1810,9 +1789,7 @@ void yFaceTempLODI(const Patch::FaceType face,
              StaticArray<CCVariable<Vector> >& d,
              const CCVariable<double>& e,
              const CCVariable<double>& rho_CC,
-             const CCVariable<double>& nux,
-             const CCVariable<double>& nuy,
-             const CCVariable<double>& nuz,
+             const CCVariable<Vector>& nu,
              const CCVariable<double>& rho_tmp,
              const CCVariable<double>& p,
              const CCVariable<Vector>& vel,
@@ -1859,7 +1836,7 @@ void yFaceTempLODI(const Patch::FaceType face,
       qFrt     = e[r];
       qMid     = e[c];
       qLast    = e[l];
-      x_conv = computeConvection(nux[r], nux[c], nux[l], 
+      x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(), 
                                    qFrt, qMid, qLast, qConFrt, 
                                    qConLast, delT, dx.x());
 
@@ -1868,7 +1845,7 @@ void yFaceTempLODI(const Patch::FaceType face,
       qFrt     = e[f];
       qLast    = e[bk];
 
-      z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+      z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                  qFrt, qMid, qLast, 
                                  qConFrt, qConLast, delT, dx.z()); 
 
@@ -1898,7 +1875,7 @@ void yFaceTempLODI(const Patch::FaceType face,
     qMid     = e[c];
     qLast    = e[bk];
 
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.z());
 
@@ -1927,7 +1904,7 @@ void yFaceTempLODI(const Patch::FaceType face,
     qMid     = e[c];
     qLast    = e[bk];
 
-    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+    z_conv = computeConvection(nu[f].z(), nu[c].z(), nu[bk].z(),
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.z());
 
@@ -1957,7 +1934,7 @@ void yFaceTempLODI(const Patch::FaceType face,
     qMid     = e[c];
     qLast    = e[l];
 
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.x());
 
@@ -1986,7 +1963,7 @@ void yFaceTempLODI(const Patch::FaceType face,
     qMid     = e[c];
     qLast    = e[l];
 
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.x());
 
@@ -2036,9 +2013,7 @@ void zFaceTempLODI(const Patch::FaceType face,
              StaticArray<CCVariable<Vector> >& d,
              const CCVariable<double>& e,
              const CCVariable<double>& rho_CC,
-             const CCVariable<double>& nux,
-             const CCVariable<double>& nuy,
-             const CCVariable<double>& nuz,
+             const CCVariable<Vector>& nu,
              const CCVariable<double>& rho_tmp,
              const CCVariable<double>& p,
              const CCVariable<Vector>& vel,
@@ -2085,7 +2060,7 @@ void zFaceTempLODI(const Patch::FaceType face,
       qFrt     = e[r];
       qMid     = e[c];
       qLast    = e[l];
-      x_conv = computeConvection(nux[r], nux[c], nux[l], 
+      x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(), 
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.x());
 
@@ -2094,7 +2069,7 @@ void zFaceTempLODI(const Patch::FaceType face,
       qFrt     = e[t];
       qLast    = e[b];
 
-      y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+      y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                                  qFrt, qMid, qLast, 
                                  qConFrt, qConLast, delT, dx.y()); 
 
@@ -2125,7 +2100,7 @@ void zFaceTempLODI(const Patch::FaceType face,
     qMid     = e[c];
     qLast    = e[b];
 
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                      qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y());
 
     double vel_sqr = vel[c].length2();
@@ -2153,7 +2128,7 @@ void zFaceTempLODI(const Patch::FaceType face,
     qMid     = e[c];
     qLast    = e[b];
 
-    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+    y_conv = computeConvection(nu[t].y(), nu[c].y(), nu[b].y(),
                      qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y());
 
     double vel_sqr = vel[c].length2();
@@ -2181,7 +2156,7 @@ void zFaceTempLODI(const Patch::FaceType face,
     qMid     = e[c];
     qLast    = e[l];
 
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                      qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x());
 
     double vel_sqr = vel[c].length2();
@@ -2209,7 +2184,7 @@ void zFaceTempLODI(const Patch::FaceType face,
     qMid     = e[c];
     qLast    = e[l];
 
-    x_conv = computeConvection(nux[r], nux[c], nux[l],
+    x_conv = computeConvection(nu[r].x(), nu[c].x(), nu[l].x(),
                      qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x());
 
     double vel_sqr = vel[c].length2();
@@ -2256,9 +2231,7 @@ void fillFaceTempLODI(CCVariable<double>& temp_CC,
               StaticArray<CCVariable<Vector> >& di,
               const CCVariable<double>& e,
               const CCVariable<double>& rho_CC,
-              const CCVariable<double>& nux,
-              const CCVariable<double>& nuy,
-              const CCVariable<double>& nuz,
+              const CCVariable<Vector>& nu,
               const CCVariable<double>& rho_tmp,
               const CCVariable<double>& p,
               const CCVariable<Vector>& vel,
@@ -2271,22 +2244,19 @@ void fillFaceTempLODI(CCVariable<double>& temp_CC,
 {
   if (face == Patch::xplus || face == Patch::xminus){
     xFaceTempLODI(face, temp_CC, di,
-                  e, rho_CC,
-                  nux,nuy,nuz,
+                  e, rho_CC,nu,
                   rho_tmp, p, vel, 
                   delT, cv, gamma, dx);
   }
   if (face == Patch::yplus || face == Patch::yminus){
     yFaceTempLODI(face, temp_CC, di,
-                  e, rho_CC,
-                  nux,nuy,nuz,
+                  e, rho_CC, nu, 
                   rho_tmp, p, vel, 
                   delT, cv, gamma, dx);
   }
   if (face == Patch::zplus || face == Patch::zminus){
     zFaceTempLODI(face, temp_CC, di,
-                  e, rho_CC,
-                  nux,nuy,nuz,
+                  e, rho_CC,nu, 
                   rho_tmp, p, vel, 
                   delT, cv, gamma, dx);
   }
