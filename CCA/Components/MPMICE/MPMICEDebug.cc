@@ -42,18 +42,9 @@ void    MPMICE::printData(int matl,
        d_dbgTime >= d_dbgNextDumpTime) {
     d_dbgOldTime = d_dbgTime;        
     IntVector low, high; 
-
-    if (include_EC == 1)  { 
-      low   = patch->getNodeLowIndex();
-      high  = patch->getNodeHighIndex();
-    }
-    if (include_EC == 0) {
-      low   = patch->getInteriorNodeLowIndex();
-      high  = patch->getInteriorNodeHighIndex();
-    }
     
-    d_ice->adjust_dbg_indices( d_ice->d_dbgBeginIndx, d_ice->d_dbgEndIndx, 
-                               low, high);
+    d_ice->adjust_dbg_indices( include_EC, patch, d_ice->d_dbgBeginIndx, 
+                                d_ice->d_dbgEndIndx, low, high);
     cerr << "______________________________________________\n";
     cerr << "$" << message1 << "\n";
     cerr << "$" << message2 << "\n"; 
@@ -111,17 +102,8 @@ void    MPMICE::printNCVector(int matl,
     d_dbgOldTime = d_dbgTime;             
     IntVector low, high; 
     
-    if (include_EC == 1)  { 
-      low   = patch->getNodeLowIndex();
-      high  = patch->getNodeHighIndex();
-    }
-    if (include_EC == 0) {
-      low   = patch->getInteriorNodeLowIndex();
-      high  = patch->getInteriorNodeHighIndex();
-    }
-    
-    d_ice->adjust_dbg_indices( d_ice->d_dbgBeginIndx, d_ice->d_dbgEndIndx, 
-                               low, high); 
+    d_ice->adjust_dbg_indices( include_EC, patch, d_ice->d_dbgBeginIndx, 
+                                d_ice->d_dbgEndIndx, low, high); 
     
     string var_name;
     cerr.setf(ios::scientific,ios::floatfield);
