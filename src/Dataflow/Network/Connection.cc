@@ -63,7 +63,7 @@ Connection::Connection(Module* m1, int p1, Module* m2, int p2,
 Connection::~Connection()
 {
   oport->detach(this);
-  iport->detach(this);
+  iport->detach(this, blocked_);
 }
 
 void Connection::makeID()

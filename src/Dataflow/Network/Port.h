@@ -48,7 +48,7 @@ public:
   int nconnections();
   Connection* connection(int);
   virtual void attach(Connection* conn);
-  virtual void detach(Connection* conn);
+  virtual void detach(Connection* conn, bool blocked=false);
   virtual void reset()=0;
   virtual void finish()=0;
 
