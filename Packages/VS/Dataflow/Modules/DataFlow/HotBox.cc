@@ -120,7 +120,7 @@ private:
   VH_AnatomyBoundingBox *boundBoxList;
   VH_AnatomyBoundingBox *maxSegmentVol;
 
-  // the injured tissue lise
+  // the injured tissue list
   vector <VH_injury> injured_tissue;
 
   // the probe widget
@@ -142,6 +142,7 @@ private:
   // private methods
   void executeProbe();
   void execAdjacency();
+  void execInjuryList();
 
 public:
   HotBox(GuiContext*);
@@ -264,7 +265,6 @@ HotBox::execute()
   const string anatomyDataSrc(anatomydatasource_.get());
   const string adjacencyDataSrc(adjacencydatasource_.get());
   const string boundingBoxDataSrc(boundingboxdatasource_.get());
-  const string injuryListDataSrc(injurylistdatasource_.get());
   const string enableDraw(enableDraw_.get());
 
   // The segmented volume (input field to the Probe)
@@ -361,81 +361,9 @@ HotBox::execute()
   VH_AnatomyBoundingBox *selectBox =
       VH_Anatomy_findBoundingBox( boundBoxList, selectName);
 
-  // Read the Injury List -- Every time the HotBox Evaluates
-  try {
-    XMLPlatformUtils::Initialize();
-  } catch (const XMLException& toCatch) {
-    std::cerr << "Error during initialization! :\n"
-         << StrX(toCatch.getMessage()) << endl;
-    return;
-  }
-
-  // Instantiate a DOM parser for the injury list file.
-  XercesDOMParser injListParser;
-  injListParser.setDoValidation(false);
-
-  try {
-    injListParser.parse(injuryListDataSrc.c_str());
-  }  catch (const XMLException& toCatch) {
-    std::cerr << "Error during parsing: '" <<
-      injuryListDataSrc << "'\nException message is:  " <<
-      xmlto_string(toCatch.getMessage());
-      return;
-  }
-  // we are interested in injured tissues -- look for "region"
-  // <wound entity="..." timestamp="...1">
-  //        <primaryInjury>
-  //            <ablate/stunRegion probability="...">
-  //                <region entity="...tissue name..."/> 
-  //            </ablateRegion>
-  //        </primaryInjury>
-  // </wound>
-
-
-  DOMDocument *injListDoc = injListParser.getDocument();
-  DOMNodeList *
-  injList = injListDoc->getElementsByTagName(to_xml_ch_ptr("region"));
-  unsigned long i, num_struQLret, num_injList = injList->getLength();
-
-  if (num_injList == 0) {
-    cout << "HotBox.cc: no entities in Injury List" << endl;
-  }
-  else
-  {
-    cout << "HotBox.cc: xml file: " << injuryListDataSrc << ": "
-         << num_injList << " wounded region entities" << endl;
-    if(num_injList >= VH_LM_NUM_NAMES)
-           num_injList = VH_LM_NUM_NAMES;
-    for (i = 0;i < num_injList; i++)
-    {
-      if (!(injList->item(i)))
-      {
-        std::cerr << "Error: NULL DOM node" << std::endl;
-        continue;
-      }
-      DOMNode &node = *(injList->item(i));
-      cout << "Node[" << i << "] type: " << node.getNodeType();
-      cout << " name: " << to_char_ptr(node.getNodeName());
-      if(node.hasAttributes())
-      {
-          cout << " " << node.getAttributes()->getLength()
-               << " attributes" << endl;
-          DOMNode *
-          elem = node.getAttributes()->item(0);
-          if(elem == 0)
-              cout << " Cannot get element from node" << endl;
-          else
-          {
-              cout << " value: " << to_char_ptr(elem->getNodeValue()) << endl;
-              injured_tissue.push_back(
-                     VH_injury((char *)to_char_ptr(elem->getNodeValue()))
-                     );
-          }
-      } // end if(node.hasAttributes())
-    } // end for (i = 0;i < num_injList; i++)
-  } // end else (num_injList != 0)
   // we now have the anatomy name corresponding to the label value at the voxel
   char *oqafma_relation[VH_LM_NUM_NAMES];
+  int num_struQLret;
   if(dataSource == VS_DATASOURCE_OQAFMA)
   { // get the ontological hierarchy information
     fprintf(stderr, "dataSource = OQAFMA\n");
@@ -532,7 +460,7 @@ HotBox::execute()
              << " entities in StruQL return" << endl;
         if(num_struQLret >= VH_LM_NUM_NAMES)
            num_struQLret = VH_LM_NUM_NAMES;
-        for (i = 0;i < num_struQLret; i++)
+        for (int i = 0;i < num_struQLret; i++)
         {
           if (!(struQLretList->item(i)))
           {
@@ -602,25 +530,9 @@ HotBox::execute()
   // and populate the adjacency UI
   execAdjacency();
 
-  // clean up
-  if(dataSource == VS_DATASOURCE_OQAFMA)
-  {
-     for (i = 0; i < num_struQLret; i++)
-     {
-       if(oqafma_relation[i] != 0)
-       {
-         free(oqafma_relation[i]);
-         oqafma_relation[i] = 0;
-       }
-     }
-     num_struQLret = 0;
-  } // end if(dataSource == VS_DATASOURCE_OQAFMA)
-
-  injured_tissue.clear();
-  num_injList = 0;
 
   if(enableDraw == "yes")
-  {
+  { // draw HotBox UI in the Viewer
     VS_HotBoxUI->draw(0, 0, 0.005);
   
     HB_geomGroup->add(lines);
@@ -692,6 +604,21 @@ HotBox::execute()
   { // clear selection source
     selectionsource_.set("fromProbe");
   }
+  // clean up
+  if(dataSource == VS_DATASOURCE_OQAFMA)
+  {
+     for (int i = 0; i < num_struQLret; i++)
+     {
+       if(oqafma_relation[i] != 0)
+       {
+         free(oqafma_relation[i]);
+         oqafma_relation[i] = 0;
+       }
+     }
+     num_struQLret = 0;
+  } // end if(dataSource == VS_DATASOURCE_OQAFMA)
+
+  injured_tissue.clear();
 } // end HotBox::execute()
 
 void
@@ -877,6 +804,85 @@ HotBox::execAdjacency()
     VS_HotBoxUI->set_text(7, string(adjacentName, 0, 18));
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 9)
 } // end HotBox::execAdjacency()
+
+void
+HotBox::execInjuryList()
+{
+  // Read the Injury List -- Every time the HotBox Evaluates
+  try {
+    XMLPlatformUtils::Initialize();
+  } catch (const XMLException& toCatch) {
+    std::cerr << "Error during initialization! :\n"
+         << StrX(toCatch.getMessage()) << endl;
+    return;
+  }
+
+  // Instantiate a DOM parser for the injury list file.
+  XercesDOMParser injListParser;
+  injListParser.setDoValidation(false);
+  const string injuryListDataSrc(injurylistdatasource_.get());
+
+  try {
+    injListParser.parse(injuryListDataSrc.c_str());
+  }  catch (const XMLException& toCatch) {
+    std::cerr << "Error during parsing: '" <<
+      injuryListDataSrc << "'\nException message is:  " <<
+      xmlto_string(toCatch.getMessage());
+      return;
+  }
+  // we are interested in injured tissues -- look for "region"
+  // <wound entity="..." timestamp="...1">
+  //        <primaryInjury>
+  //            <ablate/stunRegion probability="...">
+  //                <region entity="...tissue name..."/> 
+  //            </ablateRegion>
+  //        </primaryInjury>
+  // </wound>
+
+
+  DOMDocument *injListDoc = injListParser.getDocument();
+  DOMNodeList *
+  injList = injListDoc->getElementsByTagName(to_xml_ch_ptr("region"));
+  unsigned long i, num_injList = injList->getLength();
+
+  if (num_injList == 0) {
+    cout << "HotBox.cc: no entities in Injury List" << endl;
+  }
+  else
+  {
+    cout << "HotBox.cc: xml file: " << injuryListDataSrc << ": "
+         << num_injList << " wounded region entities" << endl;
+    if(num_injList >= VH_LM_NUM_NAMES)
+           num_injList = VH_LM_NUM_NAMES;
+    for (i = 0;i < num_injList; i++)
+    {
+      if (!(injList->item(i)))
+      {
+        std::cerr << "Error: NULL DOM node" << std::endl;
+        continue;
+      }
+      DOMNode &node = *(injList->item(i));
+      cout << "Node[" << i << "] type: " << node.getNodeType();
+      cout << " name: " << to_char_ptr(node.getNodeName());
+      if(node.hasAttributes())
+      {
+          cout << " " << node.getAttributes()->getLength()
+               << " attributes" << endl;
+          DOMNode *
+          elem = node.getAttributes()->item(0);
+          if(elem == 0)
+              cout << " Cannot get element from node" << endl;
+          else
+          {
+              cout << " value: " << to_char_ptr(elem->getNodeValue()) << endl;
+              injured_tissue.push_back(
+                     VH_injury((char *)to_char_ptr(elem->getNodeValue()))
+                     );
+          }
+      } // end if(node.hasAttributes())
+    } // end for (i = 0;i < num_injList; i++)
+  } // end else (num_injList != 0)
+} // end execInjuryList()
 
 void
 HotBox::widget_moved(bool last, BaseWidget*)
