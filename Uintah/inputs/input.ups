@@ -173,15 +173,13 @@
 		<specific_heat>5</specific_heat>
 		<geom_object>
 		  <union>
-		    <box>
-			<label>gp1</label>
+		    <box label="gp1">
 			<min>[.25,.25,.25]</min>
 			<max>[.75,.75,.75]</max>
 		    </box>
 		    <res>[2,2,2]</res>
 		    
-		    <box>
-			<label>gp2</label>
+		    <box label="gp2">
 			<min>[.75,.75,.75]</min>
 			<max>[1.75,1.75,1.75]</max>
 		    </box>
