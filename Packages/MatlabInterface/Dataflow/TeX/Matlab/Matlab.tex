@@ -28,7 +28,7 @@
 
 % Matlab.tex
 %
-\newcommand{\mlm}{\module{Matlab module}}
+\newcommand{\mlm}{\module{Matlab Module}}
 \newcommand{\m}{\emph{Matlab}}
 
 %%%% Images used in this file
@@ -65,26 +65,25 @@
 \ModuleRefSummary
 
 The \mlm{} is part of the \Package{MatlabInterface} package that enables
-calls from \sr{} to \m{}, either to interactive commands or via \m{}
+calls from \sr{} to \m{}, either using interactive commands or via \m{}
 scripts.  Sockets are the underlying coupling mechanism that connect \sr{}
-and m{} because they run as separate processes.  The \mlm{} facilitates
+and \m{} as they both run in separate processes.  The \mlm{} facilitates
 both simple tasks such as converting files between \sr{} and \m{}, and more
 complex tasks such as creating interactive \sr{} programs that call \m{}
-scripts to perform real-time applications.
+scripts to produce real-time results.
 
 \ModuleRefUse
 
 The following five examples of the \package{MatlabInterface} package
 demonstrate how to work with the \mlm{}.  The first three examples,
 \filename{tst1.net}, \filename{tst2.net}, and \filename{tst3.net}, assume
-that \sr{} and \m{} reside on the same host, while the fourth example
+that \sr{} and \m{} reside on the same host, while the fourth example,
 \filename{tst4.net}, illustrates the case in which \sr{} and \m{} reside on
 different hosts. The fifth example, \filename{tst5.net}, demonstrates how
 to apply the \mlm{} to an example of complex \m{} code: the focusing
 inversion routine.
 
 \ModuleRefSubSection{Example 1: Saving the Matlab matrix in \sr{} format} 
-
 
 To execute the first example, begin from your Unix shell and change to the
 directory that contains the networks and data files:
@@ -93,9 +92,8 @@ directory that contains the networks and data files:
 cd $SCIRun/src/Packages/MatlabInterface/matlab/engine
 \end{verbatim}
 %
-The \variable{SCIRun} identifies the top level directory of your 
-local
-\sr{} source code tree.
+The \variable{\$SCIRun} environment variable identifies the top level
+directory of your local \sr{} source code tree.
 
 Now, launch \sr{} with the name of the first test net as the 
 argument 
