@@ -140,7 +140,12 @@ void Matlab::execute()
 
 void Matlab::tcl_command(TCLArgs& args, void* userdata)
 {
-  Module::tcl_command(args, userdata);
+  if (args[1] == "mat-command") {
+    // args[2] contains the entire string including newlines.
+    cerr << "command is: " << args[2] << endl;
+  } else { 
+    Module::tcl_command(args, userdata);
+  }
 }
 
 // Convert matrix handle to double
