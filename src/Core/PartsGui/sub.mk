@@ -30,7 +30,10 @@ PSELIBS := Core/Exceptions \
 	Core/Thread \
 	Core/Persistent \
 	Core/Parts \
-	Core/GuiInterface
+	Core/GuiInterface \
+	Core/Geom \
+	Core/2d \
+	Core/Containers
 
 LIBS := $(TCL_LIBRARY) $(ITK_LIBRARY) $(X11_LIBS)
 
