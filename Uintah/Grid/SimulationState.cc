@@ -7,9 +7,16 @@
 
 using namespace Uintah;
 
-SimulationState::SimulationState()
+SimulationState::SimulationState(ProblemSpecP &ps)
 {
    delt_label = new VarLabel("delt", ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
+
+  // Get the physical constants that are shared between codes.
+  // For now it is just gravity.
+
+  ProblemSpecP phys_cons_ps = ps->findBlock("PhysicalConstants");
+  phys_cons_ps->require("gravity",d_gravity);
+
 }
 
 void SimulationState::registerMaterial(Material* matl)
@@ -20,6 +27,9 @@ void SimulationState::registerMaterial(Material* matl)
 
 //
 // $Log$
+// Revision 1.7  2000/05/18 18:48:30  jas
+// Added gravity.  It is read in from the input file.
+//
 // Revision 1.6  2000/05/02 06:07:23  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //

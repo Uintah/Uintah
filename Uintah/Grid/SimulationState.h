@@ -6,10 +6,14 @@
 #include <iostream>
 #include <SCICore/Math/MinMax.h>
 #include <Uintah/Grid/Material.h>
+#include <SCICore/Geometry/Vector.h>
+#include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Interface/ProblemSpec.h>
 using std::cerr;
 using std::endl;
 using SCICore::Math::Max;
 using Uintah::Material;
+using SCICore::Geometry::Vector;
 
 namespace Uintah {
 
@@ -46,7 +50,7 @@ namespace Uintah {
     
    class SimulationState : public RefCounted {
    public:
-      SimulationState();
+      SimulationState(ProblemSpecP &ps);
       const VarLabel* get_delt_label() const {
 	 return delt_label;
       }
@@ -65,18 +69,25 @@ namespace Uintah {
       Material* getMaterial(int idx) const {
 	 return matls[idx];
       }
+      Vector getGravity() const {
+	return d_gravity;
+      }
    private:
       SimulationState(const SimulationState&);
       SimulationState& operator=(const SimulationState&);
       
       const VarLabel* delt_label;
       std::vector<Material*> matls;
+      Vector d_gravity;
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.7  2000/05/18 18:48:31  jas
+// Added gravity.  It is read in from the input file.
+//
 // Revision 1.6  2000/05/02 17:54:32  sparker
 // Implemented more of SerialMPM
 //
