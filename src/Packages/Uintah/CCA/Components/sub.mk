@@ -15,7 +15,8 @@ SUBDIRS := \
 	$(SRCDIR)/Arches/fortran \
 	$(SRCDIR)/Arches/Mixing \
 	$(SRCDIR)/ProblemSpecification \
-	$(SRCDIR)/HETransformation
+	$(SRCDIR)/HETransformation \
+	$(SRCDIR)/PatchCombiner
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
