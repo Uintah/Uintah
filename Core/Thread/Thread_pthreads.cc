@@ -524,6 +524,11 @@ Thread::exitAll(int code)
     }
     ::exit(code);
   }
+  else if( !initialized ) {
+    // This case happens if the thread library is not being used.
+    // Just use the normal exit function.
+    ::exit(code);
+  }
 }
 
 /*
