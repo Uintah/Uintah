@@ -60,7 +60,7 @@ public:
 private:
   bool read_nrrd();
 
-  GuiString       filename_;
+  GuiFilename     filename_;
 
   NrrdDataHandle  read_handle_;
 
