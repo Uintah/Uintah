@@ -61,6 +61,19 @@ namespace Uintah {
                                           const double porosity,
                                           Matrix3& derivative) = 0;
 
+    /////////////////////////////////////////////////////////////////////////
+    /*! 
+      \brief Evaluate the derivative of the yield function \f$(\Phi)\f$
+      with respect to \f$s_{ij}\f$.
+
+      This is for the associated flow rule with \f$s_{ij}\f$ being
+      the deviatoric stress.
+    */
+    /////////////////////////////////////////////////////////////////////////
+    virtual void evalDevDerivOfYieldFunction(const Matrix3& stress,
+					     const double flowStress,
+					     const double porosity,
+					     Matrix3& derivative) = 0;
   };
 } // End namespace Uintah
       

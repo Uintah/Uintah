@@ -50,3 +50,20 @@ RousselierYield::evalDerivOfYieldFunction(const Matrix3& sig,
 
   derivative = sigDev*(1.5/sigEqv) + I*(D*f*exp(con)/3.0);
 }
+
+/*! \warning Derivative is taken assuming sig_eq^2 - sig_Y^2 = 0 form.
+             This is needed for the HypoElasticPlastic algorithm.  Needs
+             to be more generalized if possible. */
+void 
+RousselierYield::evalDevDerivOfYieldFunction(const Matrix3& sig,
+					     const double ,
+					     const double ,
+					     Matrix3& derivative)
+{
+  Matrix3 I; I.Identity();
+  double trSig = sig.Trace();
+  Matrix3 sigDev = sig - I*(trSig/3.0);
+  //double sigEqv = sqrt((sigDev.NormSquared())*1.5);
+  //derivative = sigDev*(1.5/sigeqv);
+  derivative = sigDev*3.0;
+}
