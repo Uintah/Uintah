@@ -186,8 +186,10 @@ itcl_class Roe {
 		-command "$this-c redraw"
 	checkbutton $m.eframe.bbox -text BBox -variable $this-global-debug \
 		-command "$this-c redraw"
+	checkbutton $m.eframe.clip -text "Use Clip" -variable $this-global-clip \
+		-command "$this-c redraw"
 	pack $m.eframe -anchor w -padx 2 -side left
-	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox -in $m.eframe \
+	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip -in $m.eframe \
 		-side top -anchor w
 	make_labeled_radio $m.shade "Shading:" $r top $this-global-type \
 		{Wire Flat Gouraud}
@@ -197,11 +199,13 @@ itcl_class Roe {
 	global "$this-global-fog"
 	global "$this-global-type"
 	global "$this-global-debug"
+	global "$this-global-clip"
 
 	set "$this-global-light" 1
 	set "$this-global-fog" 0
 	set "$this-global-type" Gouraud
 	set "$this-global-debug" 0
+	set "$this-global-clip" 1
 
 	frame $m.objlist -relief groove -borderwidth 2
 	pack $m.objlist -side left -padx 2 -pady 2 -fill y
@@ -368,16 +372,21 @@ itcl_class Roe {
 		-command "$this-c redraw"
 	$menun add checkbutton -label Fog -variable $this-$objid-fog \
 		-command "$this-c redraw"
+	$menun add checkbutton -label "Use Clip" -variable $this-$objid-clip \
+		-command "$this-c redraw"
 
 	global "$this-$objid-light"
 	global "$this-$objid-fog"
 	global "$this-$objid-type"
 	global "$this-$objid-debug"
+	global "$this-$objid-clip"
 
 	set "$this-$objid-type" Gouraud
 	set "$this-$objid-light" 1
 	set "$this-$objid-fog" 0
 	set "$this-$objid-debug" 0
+	set "$this-$objid-clip" 1
+
 	set menuvar  $m.objlist.canvas.frame.menu2$objid
 	set menup [tk_optionMenu $menuvar $this-$objid-type Wire Flat Gouraud Default]
 

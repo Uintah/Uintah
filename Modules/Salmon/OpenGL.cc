@@ -329,7 +329,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 	    glFogf(GL_FOG_START,float(znear));
 	    glFogf(GL_FOG_END,float(zfar));
 	    // now make the Roe setup its clipping planes...
-	    roe->setClip();
+	    roe->setClip(drawinfo);
 	    
 	    // Draw it all...
 	    current_time=modeltime;
@@ -635,6 +635,8 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
     clString fog(tclID+"-"+"fog");
     clString debug(tclID+"-"+"debug");
 
+    clString use_clip(tclID+"-"+"clip");
+
     if (!get_tcl_stringvar(id,type,val)) {
 	cerr << "Error illegal name!\n";
 	return;
@@ -672,6 +674,19 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
 	    cerr << "Error, no debug level set!\n";
 	    drawinfo->debug = 0;
 	}
+
+	if (get_tcl_stringvar(id,use_clip,val)) {
+	    if (val == "0")
+		drawinfo->check_clip = 0;
+	    else
+		drawinfo->check_clip = 1;
+	}	
+	else {
+	    cerr << "Error, no clipping info\n";
+	    drawinfo->check_clip = 0;
+	}
+
+	drawinfo->init_clip(); // set clipping 
 
 	if (!get_tcl_stringvar(id,lighting,val))
 	    cerr << "Error, no lighting!\n";
@@ -718,16 +733,20 @@ void Roe::setDI(DrawInfoOpenGL* drawinfo,clString name)
     }
 }
 
-void Roe::setClip(void)
+// set the bits for the clipping planes that are on...
+
+void Roe::setClip(DrawInfoOpenGL* drawinfo)
 {
     clString val;
     int i;
 
+    drawinfo->clip_planes = 0; // set them all of for default
     clString num_clip("clip-num");
 
     if (get_tcl_stringvar(id,"clip-visible",val) && 
 	get_tcl_intvar(id,num_clip,i)) {
 
+	int cur_flag = CLIP_P5;
 	if ( (i>0 && i<7) ) {
 	    while(i--) {
 		
@@ -757,7 +776,13 @@ void Roe::setClip(void)
 			plane[2] /= mag;
 			plane[3] = -plane[3]; // so moves in planes direction...
 			glClipPlane(GL_CLIP_PLANE0+i,plane);
-			glEnable(GL_CLIP_PLANE0+i);
+
+			if (drawinfo->check_clip)
+			    glEnable(GL_CLIP_PLANE0+i);
+			else
+			    glDisable(GL_CLIP_PLANE0+i);
+			    
+			drawinfo->clip_planes |= cur_flag;
 
 			if (!rval ) {
 			    cerr << "Error, variable is hosed!\n";
@@ -768,6 +793,7 @@ void Roe::setClip(void)
 		    }
 
 		}
+		cur_flag >>= 1; // shift the bit we are looking at...
 	    }
 	}
     }

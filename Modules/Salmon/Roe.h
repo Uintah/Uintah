@@ -148,7 +148,7 @@ public:
     // sets up DI for this drawinfo
     void setDI(DrawInfoOpenGL*,clString);
     // sets up OGL clipping planes...
-    void setClip(void); 
+    void setClip(DrawInfoOpenGL*); 
 
     // Which of the objects do we draw?
     HashTable<clString, ObjTag*> visible;
