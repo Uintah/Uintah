@@ -70,7 +70,9 @@ Module::Module(NetworkCanvasView *parent, const string& moduleName,
     CIA::array1<string> ports = builder->getProvidedPortNames(cid);
     for(unsigned int i=0; i < ports.size(); i++){
       if(ports[i]=="ui") hasUIPort=true;
+      else if(ports[i]=="babel.ui") hasUIPort=true;
       else if(ports[i]=="go") hasGoPort=true;
+      else if(ports[i]=="babel.go") hasGoPort=true;
       else this->pp.push_back(ports[i]); 
     }
   }
