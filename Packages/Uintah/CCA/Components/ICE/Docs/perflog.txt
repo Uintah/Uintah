@@ -4,11 +4,25 @@ performanceTest.ups - 1 processor
 2.81833		    -Ofast
 
 
-
-../src/configure '--enable-64bit' '--enable-package=Uintah'
-'--enable-optimize=-Ofast -G0 -OPT:div_split=OFF -OPT:Olimit=0'
-'--disable-sci-malloc' '--enable-assertion-level=0'
-'--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b'
+../src/configure --enable-package=Uintah   '--enable-optimize=-Ofast -G0 -OPT:div_split=OFF -OPT:Olimit=0' --disable-sci-malloc --enable-assertion-level=0 --enable-64bit --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b
 
 performanceTest.ups with SecondOrder instead of SecondOrderCE (muse)
-1.0309		    Initial - Ofast
+1.0309		    Initial - Ofast:Steve
+
+
+1.04718 +- 0.00437761     12/11/03 AverageTime:  Todd 
+1.04527 +- 0.00429063
+1.04616 +- 0.00452359
+1.04581 +- 0.00455898
+1.04605 +- 0.00438844
+1.04814 +- 0.00491556
+1.05112 +- 0.00657578
+1.04707 +- 0.00435573 
+1.04807 +- 0.00425899
+                          12/11/03  Todd
+1.04757 +- 0.00428568      computeEquilibrationPress(): moving speedSound calc out of inner loop
+1.04634 +- 0.00452325      (not committed)
+1.04625 +- 0.00445028
+1.0464 +- 0.0041933
+1.04624 +- 0.00431574
+1.04604 +- 0.00444515
