@@ -61,7 +61,7 @@ class Noise : public NoiseAlg {
   typedef typename field_type::mesh_type::Cell::index_type cell_index_type;
   typedef SpanPoint<value_type, cell_index_type>      span_point;
 private:
-  SpanSpace<value_type,cell_index_type> *space_;
+  SpanSpace<value_type,cell_index_type>::handle_type space_;
   Tesselator *tess_;
   double v;
   
