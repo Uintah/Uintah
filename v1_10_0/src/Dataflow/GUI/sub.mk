@@ -64,6 +64,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/LinAlgUnary.tcl \
 	$(SRCDIR)/MacroModule.tcl \
 	$(SRCDIR)/MapDataToMeshCoord.tcl \
+	$(SRCDIR)/MaskLattice.tcl \
 	$(SRCDIR)/MatrixReader.tcl \
 	$(SRCDIR)/MatrixSelectVector.tcl \
 	$(SRCDIR)/MatrixWriter.tcl \
