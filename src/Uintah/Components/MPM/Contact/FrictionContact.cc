@@ -45,8 +45,8 @@ FrictionContact::FrictionContact(ProblemSpecP& ps,
   gSurfNormLabel = new VarLabel( "g.surfnorm",
                    NCVariable<Vector>::getTypeDescription() );
 
-//  gStressLabel   = new VarLabel( "g.stress",
-//                   NCVariable<Matrix3>::getTypeDescription() );
+  gStressLabel   = new VarLabel( "g.stress",
+                   NCVariable<Matrix3>::getTypeDescription() );
 
   pStressLabel   = new VarLabel( "p.stress",
                    ParticleVariable<Matrix3>::getTypeDescription() );
@@ -142,7 +142,6 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   vector<NCVariable<Vector> > gvelocity_star(NVFs);
   vector<NCVariable<Vector> > gacceleration(NVFs);
 
-#if 0
   // First, calculate the gradient of the mass everywhere
   // normalize it, and stick it in surfNorm
   NCVariable<Vector> gsurfnorm;
@@ -226,7 +225,6 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 
     }
   }
-#endif
 
 
   // FINALLY, we have all the pieces in place, compute the proper
@@ -275,6 +273,9 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.8  2000/05/05 04:09:08  guilkey
+// Uncommented the code which previously wouldn't compile.
+//
 // Revision 1.7  2000/05/05 02:24:35  guilkey
 // Added more stuff to FrictionContact, most of which is currently
 // commented out until a compilation issue is resolved.
