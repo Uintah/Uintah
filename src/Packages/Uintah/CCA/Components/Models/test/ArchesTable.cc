@@ -425,7 +425,7 @@ void ArchesTable::setup()
       Ind* ind = in_inds[i];
       int l=0;
       int h=ind->weights.size()-1;
-      if(value < ind->weights[l] || value > ind->weights[h])        
+      if(value < ind->weights[l] || value > ind->weights[h])
 	throw InternalError("Interpolate outside range of table");
       while(h > l+1){
 	int m = (h+l)/2;
@@ -627,8 +627,16 @@ void ArchesTable::interpolate(int index, CCVariable<double>& result,
           } else {
             int l=0;
             int h=ind->weights.size()-1;
-            if(value < ind->weights[l] || value > ind->weights[h])
-              throw InternalError("Interpolate outside range of table");
+            if(value < ind->weights[l] || value > ind->weights[h]){
+              if(value < ind->weights[l] && value > ind->weights[l]-1.e-10)
+                value = ind->weights[l];
+              else if(value > ind->weights[h] && value < ind->weights[h]+1.e-10)
+                value = ind->weights[h];
+              else {
+                cerr << *iter << ", value=" << value << ", low=" << ind->weights[l] << ", high=" << ind->weights[h] << "\n";
+                throw InternalError("Interpolate outside range of table");
+              }
+            }
             while(h > l+1){
               int m = (h+l)/2;
               if(value < ind->weights[m])

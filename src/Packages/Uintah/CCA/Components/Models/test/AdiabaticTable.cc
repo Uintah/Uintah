@@ -220,7 +220,6 @@ void AdiabaticTable::scheduleInitialize(SchedulerP& sched,
   t->modifies(lb->gammaLabel);
   t->modifies(lb->thermalCondLabel);
   t->modifies(lb->viscosityLabel);
-  t->modifies(lb->press_CCLabel);
   
   t->computes(d_scalar->scalar_CCLabel);
   
@@ -240,7 +239,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     int indx = d_matl->getDWIndex();
     
     CCVariable<double>  f, cv, gamma, thermalCond, viscosity, rho_CC, sp_vol;
-    CCVariable<double> press, rho_micro;
+    CCVariable<double> rho_micro;
     constCCVariable<double> Temp;
     new_dw->allocateAndPut(f, d_scalar->scalar_CCLabel, indx, patch);
     new_dw->getModifiable(rho_CC,      lb->rho_CCLabel,       indx,patch);
@@ -323,7 +322,7 @@ void AdiabaticTable::scheduleModifyThermoTransportProperties(SchedulerP& sched,
   t->modifies(lb->gammaLabel);
   t->modifies(lb->thermalCondLabel);
   t->modifies(lb->viscosityLabel);
-  t->computes(d_scalar->diffusionCoefLabel);
+  //t->computes(d_scalar->diffusionCoefLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 //______________________________________________________________________
@@ -344,8 +343,8 @@ void AdiabaticTable::modifyThermoTransportProperties(const ProcessorGroup*,
     CCVariable<double> diffusionCoeff, gamma, cv, thermalCond, viscosity;
     constCCVariable<double> f_old;
     
-    new_dw->allocateAndPut(diffusionCoeff, 
-                           d_scalar->diffusionCoefLabel,indx, patch);  
+    //new_dw->allocateAndPut(diffusionCoeff, 
+    //d_scalar->diffusionCoefLabel,indx, patch);  
     
     new_dw->getModifiable(gamma,       lb->gammaLabel,        indx,patch);
     new_dw->getModifiable(cv,          lb->specific_heatLabel,indx,patch);
@@ -366,7 +365,7 @@ void AdiabaticTable::modifyThermoTransportProperties(const ProcessorGroup*,
       const IntVector& c = *iter;
       thermalCond[c] = 0;
     }
-    diffusionCoeff.initialize(d_scalar->diff_coeff);
+    //diffusionCoeff.initialize(d_scalar->diff_coeff);
   }
 } 
 
@@ -442,13 +441,15 @@ void AdiabaticTable::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
                      
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
+  //t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
   t->requires(Task::OldDW, mi->density_CCLabel,          gn);
   t->requires(Task::OldDW, mi->temperature_CCLabel,      gn);
+  t->requires(Task::OldDW, lb->press_CCLabel,            gn);
+  //t->requires(Task::NewDW, lb->specific_heatLabel,       gn);
+  //t->requires(Task::NewDW, lb->gammaLabel, gn);
   //t->requires(Task::OldDW, mi->delT_Label); turn off for AMR
   
-  t->modifies(mi->momentum_source_CCLabel);
   t->modifies(mi->energy_source_CCLabel);
   t->modifies(d_scalar->scalar_source_CCLabel);
 
@@ -478,71 +479,117 @@ void AdiabaticTable::momentumAndEnergyExchange(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     cout_doing << "Doing momentumAndEnergyExch... on patch "<<patch->getID()<< "\t\tSIMPLERXN" << endl;
 
-    //Vector dx = patch->dCell();
-    //double volume = dx.x()*dx.y()*dx.z();     
-    constCCVariable<double> rho_CC_old,f_old, diff_coeff;
-    CCVariable<double> eng_src, sp_vol_src, f_src;
-    CCVariable<Vector> mom_src;
-    
-    int indx = d_matl->getDWIndex();
-    old_dw->get(rho_CC_old, mi->density_CCLabel,           indx, patch, gn, 0);
-    old_dw->get(f_old,      d_scalar->scalar_CCLabel,      indx, patch, gac,1);
-    new_dw->get(diff_coeff, d_scalar->diffusionCoefLabel,  indx, patch, gac,1);
-    new_dw->allocateAndPut(f_src, d_scalar->scalar_source_CCLabel,
-                                                           indx, patch);
-                                                      
-    new_dw->getModifiable(mom_src,    mi->momentum_source_CCLabel,indx,patch);
-    new_dw->getModifiable(eng_src,    mi->energy_source_CCLabel,  indx,patch);
+    for(int m=0;m<matls->size();m++){
+      int matl = matls->get(m);
 
+      // Get mixture fraction, and initialize source to zero
+      constCCVariable<double> f_old;
+      old_dw->get(f_old,      d_scalar->scalar_CCLabel,    matl, patch, gn, 0);
+      CCVariable<double> f_src;
+      new_dw->allocateAndPut(f_src, d_scalar->scalar_source_CCLabel,
+                             matl, patch);
+      f_src.initialize(0);
+
+      // Interpolate out gamma, cv, and temperature
+      vector<constCCVariable<double> > ind_vars;
+      ind_vars.push_back(f_old);
+      CCVariable<double> gamma;
+      new_dw->allocateTemporary(gamma, patch);
+      table->interpolate(gamma_index, gamma, patch->getExtraCellIterator(),
+                         ind_vars);
+      CCVariable<double> cv;
+      new_dw->allocateTemporary(cv, patch);
+      table->interpolate(cv_index, cv, patch->getExtraCellIterator(),
+                         ind_vars);
+      CCVariable<double> flameTemp;
+      new_dw->allocateTemporary(flameTemp, patch);
+      table->interpolate(temp_index, flameTemp, patch->getExtraCellIterator(),
+                         ind_vars);
+
+      // Get density, temperature, and energy source
+      constCCVariable<double> rho_CC;
+      old_dw->get(rho_CC, mi->density_CCLabel,          matl, patch, gn, 0);
+      constCCVariable<double> oldTemp;
+      old_dw->get(oldTemp,     mi->temperature_CCLabel, matl, patch, gn, 0);
+      constCCVariable<double> press;
+      old_dw->get(press,     lb->press_CCLabel, matl, patch, gn, 0);
+      CCVariable<double> energySource;
+      new_dw->getModifiable(energySource,   
+                            mi->energy_source_CCLabel,  matl, patch);
+
+      Vector dx = patch->dCell();
+      double volume = dx.x()*dx.y()*dx.z();
+      double maxTemp = 0;
+      double maxIncrease = 0;
+      double maxDecrease = 0;
+      double totalEnergy = 0;
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        double mass = rho_CC[c]*volume;
+        double cp = gamma[c] * cv[c];
+        double newTemp = flameTemp[c]*press[c]/101325;
+        //double newTemp = flameTemp[c];
+        double energyx =( newTemp - oldTemp[c]) * cp * mass;
+        //energySource[c] += energyx;
+        //        cerr << c << ", f=" << f_old[c] << ", flameTemp=" << flameTemp[c] << ", press=" << press[c] << ", newTemp=" << newTemp << ", oldTemp=" << oldTemp[c] << ", dtemp=" << newTemp-oldTemp[c] << '\n';
+        totalEnergy += energyx;
+        if(newTemp > maxTemp)
+          maxTemp = newTemp;
+        double dtemp = newTemp-oldTemp[c];
+        if(dtemp > maxIncrease)
+          maxIncrease = dtemp;
+        if(dtemp < maxDecrease)
+          maxDecrease = dtemp;
+      }
+      cerr << "MaxTemp = " << maxTemp << ", maxIncrease=" << maxIncrease << ", maxDecrease=" << maxDecrease << ", totalEnergy=" << totalEnergy << '\n';
 #if 0
-    //__________________________________
-    //  Tack on diffusion
-    double diff_coeff_test = d_scalar->diff_coeff;
-    if(diff_coeff_test != 0.0){ 
-      
-      bool use_vol_frac = false; // don't include vol_frac in diffusion calc.
-      constCCVariable<double> placeHolder;
-
-      scalarDiffusionOperator(new_dw, patch, use_vol_frac,
-                              placeHolder, placeHolder,  f_old,
-                              f_src, diff_coeff, delT);
-    }
+      //__________________________________
+      //  Tack on diffusion
+      double diff_coeff_test = d_scalar->diff_coeff;
+      if(diff_coeff_test != 0.0){ 
+        
+        bool use_vol_frac = false; // don't include vol_frac in diffusion calc.
+        constCCVariable<double> placeHolder;
+        
+        scalarDiffusionOperator(new_dw, patch, use_vol_frac,
+                                placeHolder, placeHolder,  f_old,
+                                f_src, diff_coeff, delT);
+      }
 #endif
 
-    //__________________________________
-    //  dump out the probe points
-    if (d_usingProbePts ) {
-      double time = d_dataArchiver->getCurrentTime();
-      double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
-      
-      if (time >= nextDumpTime){        // is it time to dump the points
-        FILE *fp;
-        string udaDir = d_dataArchiver->getOutputLocation();
-        IntVector cell_indx;
+      //__________________________________
+      //  dump out the probe points
+      if (d_usingProbePts ) {
+        double time = d_dataArchiver->getCurrentTime();
+        double nextDumpTime = oldProbeDumpTime + 1.0/d_probeFreq;
         
-        // loop through all the points and dump if that patch contains them
-        for (unsigned int i =0 ; i < d_probePts.size(); i++) {
-          if(patch->findCell(Point(d_probePts[i]),cell_indx) ) {
-            string filename=udaDir + "/" + d_probePtsNames[i].c_str() + ".dat";
-            fp = fopen(filename.c_str(), "a");
-            fprintf(fp, "%16.15E  %16.15E\n",time, f_old[cell_indx]);
-            fclose(fp);
+        if (time >= nextDumpTime){        // is it time to dump the points
+          FILE *fp;
+          string udaDir = d_dataArchiver->getOutputLocation();
+          IntVector cell_indx;
+          
+          // loop through all the points and dump if that patch contains them
+          for (unsigned int i =0 ; i < d_probePts.size(); i++) {
+            if(patch->findCell(Point(d_probePts[i]),cell_indx) ) {
+              string filename=udaDir + "/" + d_probePtsNames[i].c_str() + ".dat";
+              fp = fopen(filename.c_str(), "a");
+              fprintf(fp, "%16.15E  %16.15E\n",time, f_old[cell_indx]);
+              fclose(fp);
+            }
           }
-        }
-        oldProbeDumpTime = time;
-      }  // time to dump
-    } // if(probePts)  
-
-    // Compute miscellaneous table quantities
-    vector<constCCVariable<double> > ind_vars;
-    ind_vars.push_back(f_old);
-    for(int i=0;i<(int)tablevalues.size();i++){
-      TableValue* tv = tablevalues[i];
-      cerr << "interpolating " << tv->name << '\n';
-      CCVariable<double> value;
-      new_dw->allocateAndPut(value, tv->label, indx, patch);
-      CellIterator iter = patch->getCellIterator();
-      table->interpolate(tv->index, value, iter, ind_vars);
+          oldProbeDumpTime = time;
+        }  // time to dump
+      } // if(probePts)  
+      
+      // Compute miscellaneous table quantities
+      for(int i=0;i<(int)tablevalues.size();i++){
+        TableValue* tv = tablevalues[i];
+        cerr << "interpolating " << tv->name << '\n';
+        CCVariable<double> value;
+        new_dw->allocateAndPut(value, tv->label, matl, patch);
+        CellIterator iter = patch->getCellIterator();
+        table->interpolate(tv->index, value, iter, ind_vars);
+      }
     }
   }
 }
