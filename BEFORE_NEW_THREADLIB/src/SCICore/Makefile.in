@@ -1,0 +1,24 @@
+SRCTOP  = @top_srcdir@
+SRCDIR  = @srcdir@
+OBJTOP  = ..
+
+TCL_LIB_DIR  = @TCL_LIB_DIR@
+TK_LIB_DIR   = @TK_LIB_DIR@
+ITCL_LIB_DIR = @ITCL_LIB_DIR@
+
+TCL_LIB_FLAG  = @TCL_LIB_FLAG@
+TK_LIB_FLAG   = @TK_LIB_FLAG@
+ITCL_LIB_FLAG = @ITCL_LIB_FLAG@
+
+SUBDIRS = Containers Datatypes Exceptions Geom Geometry Malloc Math \
+          Multitask TclInterface TkExtensions Tester Persistent Util
+SOLIB   = libSCICore.so
+
+SOLIBRARIES = -lGLU -lGL \
+              -L$(ITCL_LIB_DIR) $(ITCL_LIB_FLAG) \
+              -L$(TK_LIB_DIR) $(TK_LIB_FLAG) \
+              -L$(TCL_LIB_DIR) $(TCL_LIB_FLAG) \
+              @X_LIBS@ @X_PRE_LIBS@ -lXext -lX11 @X_EXTRA_LIBS@ \
+	      -ldl -lm -lz @THREAD_LIBS@
+
+include $(SRCTOP)/scripts/solib.mk

@@ -1,0 +1,16 @@
+SRCTOP  = @top_srcdir@
+SRCDIR  = @srcdir@
+OBJTOP  = .
+
+SUBDIRS = SCICore PSECore main PSECommon @PACKAGE_DIRS@
+
+include $(SRCTOP)/scripts/recurse.mk
+
+_cleanHere::
+	rm -f uintah scirun davew
+
+_distcleanHere::
+	rm -f config.h so_locations
+	rm -f scripts/cc scripts/CC
+	rm -f scripts/compile.mk scripts/targets.mk
+	rm -f config.cache config.log config.status

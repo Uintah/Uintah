@@ -1,0 +1,19 @@
+/* This sets motion replenished coding only for all the predicted (and
+interpolated) frames.  Thus the intra-frames contain all of the coded
+DCT data; the other frames are motion compensated from that. */
+open 0
+  rcl PTYPE
+  1 GT 
+  IFG NEXT1:
+  0 sto MTYPE
+  exit
+NEXT1:
+  rcl PTYPE
+  2 GT
+  IFG NEXT2:
+  2 sto MTYPE
+   exit
+NEXT2:
+  4 sto MTYPE
+exit
+close

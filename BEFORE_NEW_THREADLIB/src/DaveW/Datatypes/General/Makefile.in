@@ -1,0 +1,10 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../../..
+
+SRCS	 = ManhattanDist.cc ScalarTriSurface.cc SegFld.cc SegFldPort.cc \
+	   SigmaSet.cc SigmaSetPort.cc
+
+INCLUDES = -I$(OBJTOP) 
+
+include $(SRCTOP)/scripts/objs.mk

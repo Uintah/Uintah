@@ -1,0 +1,8 @@
+config.status
+config.cache
+Makefile
+sci_config.h
+sci_defs.h
+config.log
+uintah
+davew

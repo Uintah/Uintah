@@ -1,0 +1,13 @@
+SRCTOP  = @top_srcdir@
+SRCDIR  = @srcdir@
+OBJTOP  = ../..
+
+SUBDIRS = FEM Fields Iterators Matrix Readers Salmon Surface Visualization \
+          Writers
+
+include $(SRCTOP)/scripts/recurse.mk
+
+SRCS     = index.cc
+INCLUDES = -I$(OBJTOP) 
+
+include $(SRCTOP)/scripts/objs.mk

@@ -1,0 +1,54 @@
+THISDIR = Multitask
+SECTION = SCICore
+
+include $(TOP)/make.defaults
+
+C_DIR = $(TOP)/src/SCICore/$(THISDIR)
+O_DIR = $(ARCHDIR)/$(THISDIR)
+
+# VPATH is used by /usr/local/gnu/bin/make
+VPATH = $(C_DIR)
+
+# .SUFFIXES and .PATH are used by smake
+.SUFFIXES : .cc
+.PATH : $(C_DIR)
+
+INCLUDES = -I$(C_DIR)/..
+
+LIB      = $(ARCHDIR)/lib/lib$(THISDIR).so
+
+SHAREDLIB = $(CC) $(SHAREDFLAGS)
+
+OBJS = Task_irix.o ITC.o Task.o \
+	lock_mips.o
+
+
+LIBS = -L$(ARCHDIR)/lib \
+	-lMalloc
+
+all : $(LIB)
+
+clean :
+	rm -f *.o $(LIB) 
+	rm -fR $(TEMPLATEDIR)
+	rm Makedepend
+
+soclean :
+	rm -f $(LIB)
+
+$(LIB): $(OBJS)
+	$(SHAREDLIB) -o $(LIB) $(OBJS) $(LIBS)
+
+CCM = $(CC) $(UPDATE_FLAGS)
+
+.cc.o:
+	$(CCM) $(CFLAGS) -c $< -o $@ $(INCLUDES)
+
+lock_mips.o : lock_mips.s
+	as -o $@ $< $(ARCHFLAGS)
+
+Makedepend:
+	touch Makedepend
+
+include Makedepend
+

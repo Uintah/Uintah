@@ -1,0 +1,19 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../../..
+
+SRCS     = BldEEGMesh.cc Coregister.cc InvEEGSolve.cc RescaleSegFld.cc \
+	   STreeExtractSurf.cc SegFldOps.cc SegFldToSurfTree.cc \
+	   SelectSurfNodes.cc Taubin.cc Thermal.cc
+
+SPARSELIB = ../../ThirdParty/SparseLib
+
+IML_INCLUDE = $(SPARSELIB)/iml
+MV_INCLUDE = $(SPARSELIB)/mv/include
+SPARSELIB_INCLUDE = $(SPARSELIB)/include
+LEONID_INCLUDE = $(SPARSELIB)/Leonid
+
+INCLUDES = -I$(OBJTOP) -I$(IML_INCLUDE) -I$(MV_INCLUDE) \
+	   -I$(SPARSELIB_INCLUDE) -I$(LEONID_INCLUDE)
+
+include $(SRCTOP)/scripts/objs.mk

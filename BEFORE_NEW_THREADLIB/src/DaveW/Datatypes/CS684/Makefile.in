@@ -1,0 +1,10 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../../..
+
+SRCS     = DRaytracer.cc ImageR.cc Pixel.cc RTPrims.cc RadPrims.cc \
+           Sample2D.cc Scene.cc Spectrum.cc
+
+INCLUDES = -I$(OBJTOP)
+
+include $(SRCTOP)/scripts/objs.mk

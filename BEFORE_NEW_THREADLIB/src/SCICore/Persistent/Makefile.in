@@ -1,0 +1,9 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../..
+
+SRCS     = Persistent.cc Pstreams.cc
+
+INCLUDES = -I$(OBJTOP)
+
+include $(SRCTOP)/scripts/objs.mk

@@ -1,0 +1,9 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../..
+
+SRCS     = BBox.cc Grid.cc Point.cc Transform.cc Plane.cc Vector.cc
+
+INCLUDES = -I$(OBJTOP)
+
+include $(SRCTOP)/scripts/objs.mk

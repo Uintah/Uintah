@@ -1,0 +1,9 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../../..
+
+SRCS     = BuildFDField.cc BuildFDMatrix.cc
+
+INCLUDES = -I$(OBJTOP)
+
+include $(SRCTOP)/scripts/objs.mk
