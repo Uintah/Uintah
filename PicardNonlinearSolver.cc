@@ -118,7 +118,7 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   if (d_enthalpySolve) {
     d_enthalpySolver = scinew EnthalpySolver(d_lab, d_MAlab,
 					     d_turbModel, d_boundaryCondition,
-					     d_physicalConsts);
+					     d_physicalConsts, d_myworld);
     d_enthalpySolver->problemSetup(db);
   }
 }

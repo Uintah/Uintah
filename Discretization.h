@@ -77,7 +77,7 @@ public:
       void calculateVelocityCoeff(const ProcessorGroup*,
 				  const Patch* patch,
 				  double delta_t,
-				  int index,
+				  int index, bool lcentral,
 				  CellInformation* cellinfo,
 				  ArchesVariables* vars);
 

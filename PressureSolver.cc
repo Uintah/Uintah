@@ -10,6 +10,9 @@
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
 #include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
 #include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
+#ifdef HAVE_HYPRE
+#include <Packages/Uintah/CCA/Components/Arches/HypreSolver.h>
+#endif
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Source.h>
@@ -96,6 +99,9 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
   db->require("linear_solver", linear_sol);
   if (linear_sol == "linegs") d_linearSolver = scinew RBGSSolver();
   else if (linear_sol == "petsc") d_linearSolver = scinew PetscSolver(d_myworld);
+#ifdef HAVE_HYPRE
+  else if (linear_sol == "hypre") d_linearSolver = scinew HypreSolver(d_myworld);
+#endif
   else {
     throw InvalidValue("Linear solver option"
 		       " not supported" + linear_sol);
@@ -542,9 +548,9 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
       // Calculate Velocity Coeffs :
       //  inputs : [u,v,w]VelocitySIVBC, densityIN, viscosityIN
       //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM 
-
+      bool lcentral = false;
       d_discretize->calculateVelocityCoeff(pc, patch, 
-					   delta_t, index, 
+					   delta_t, index, lcentral, 
 					   cellinfo, &pressureVars);
 
       // Calculate Velocity source
@@ -1270,8 +1276,10 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
     // Calculate Pressure Coeffs
     //  inputs : densityIN, pressureIN, [u,v,w]VelCoefPBLM[Arches::AP]
     //  outputs: presCoefPBLM[Arches::AE..AB] 
-    for (int ii = 0; ii < nofStencils; ii++)
+    for (int ii = 0; ii < nofStencils; ii++) {
       new_dw->allocateAndPut(pressureVars.pressCoeff[ii], d_lab->d_presCoefPBLMLabel, ii, patch);
+      pressureVars.pressCoeff[ii].initialize(0.0);
+    }
     d_discretize->calculatePressureCoeff(pc, patch, old_dw, new_dw, 
 					 delta_t, cellinfo, &pressureVars);
 
@@ -2333,9 +2341,9 @@ PressureSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
       // Calculate Velocity Coeffs :
       //  inputs : [u,v,w]VelocitySIVBC, densityIN, viscosityIN
       //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM 
-
+      bool lcentral = false;
       d_discretize->calculateVelocityCoeff(pc, patch, 
-					   delta_t, index, 
+					   delta_t, index, lcentral,
 					   cellinfo, &pressureVars);
 
       // Calculate Velocity source

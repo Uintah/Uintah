@@ -1,0 +1,7 @@
+void rdomsrc(IntVector idxlo, IntVector idxhi, int l,
+           OffsetArray1<double> wt,
+           CCVariable<double> abskg,
+	   CCVariable<double> esrcg,
+           CCVariable<double> cenint,
+           CCVariable<double> volq,
+           CCVariable<double> src);

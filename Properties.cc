@@ -7,6 +7,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/PDFMixingModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/FlameletMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MeanMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
@@ -25,6 +26,9 @@
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Math/MinMax.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Core/Thread/Time.h>
+
 #include <iostream>
 using namespace std;
 using namespace Uintah;
@@ -37,6 +41,7 @@ Properties::Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
   d_lab(label), d_MAlab(MAlb), d_reactingFlow(reactingFlow),
   d_enthalpySolve(enthalpySolver)
 {
+  d_flamelet = false;
   d_bc = 0;
   d_mixingModel = 0;
 }
@@ -68,12 +73,21 @@ Properties::problemSetup(const ProblemSpecP& params)
     d_mixingModel = scinew PDFMixingModel();
   else if (mixModel == "meanMixingModel")
     d_mixingModel = scinew MeanMixingModel();
+  else if (mixModel == "flameletModel") {
+    d_mixingModel = scinew FlameletMixingModel();
+    d_flamelet = true;
+  }
   else
     throw InvalidValue("Mixing Model not supported" + mixModel);
   d_mixingModel->problemSetup(db);
   // Read the mixing variable streams, total is noofStreams 0 
   d_numMixingVars = d_mixingModel->getNumMixVars();
   d_numMixStatVars = d_mixingModel->getNumMixStatVars();
+  if (d_flamelet) {
+    d_reactingFlow = false;
+    d_radiationCalc = false;
+  }
+
 }
 
 //****************************************************************************
@@ -86,6 +100,9 @@ Properties::computeInletProperties(const InletStream& inStream,
 {
   if (dynamic_cast<const ColdflowMixingModel*>(d_mixingModel))
     d_mixingModel->computeProps(inStream, outStream);
+  else if (dynamic_cast<const FlameletMixingModel*>(d_mixingModel)) {
+    d_mixingModel->computeProps(inStream, outStream);
+  }
   else {
     vector<double> mixVars = inStream.d_mixVars;
     outStream = d_mixingModel->speciesStateSpace(mixVars);
@@ -144,6 +161,13 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
     if (d_mixingModel->getNumRxnVars())
       tsk->computes(d_lab->d_reactscalarSRCINLabel);
 
+  }
+  if (d_flamelet) {
+    tsk->computes(d_lab->d_tempINLabel);
+    tsk->computes(d_lab->d_sootFVINLabel);
+    tsk->computes(d_lab->d_co2INLabel);
+    tsk->computes(d_lab->d_h2oINLabel);
+    tsk->computes(d_lab->d_fvtfiveINLabel);
   }
   if (d_radiationCalc) {
     tsk->computes(d_lab->d_absorpINLabel);
@@ -274,6 +298,15 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
     if (d_mixingModel->getNumRxnVars())
       tsk->computes(d_lab->d_reactscalarSRCINLabel);
   }
+  if (d_flamelet) {
+    tsk->computes(d_lab->d_tempINLabel);
+    tsk->computes(d_lab->d_sootFVINLabel);
+    tsk->computes(d_lab->d_co2INLabel);
+    tsk->computes(d_lab->d_h2oINLabel);
+    tsk->computes(d_lab->d_fvtfiveINLabel);
+
+  }
+
   if (d_radiationCalc) {
     tsk->computes(d_lab->d_absorpINLabel);
     tsk->computes(d_lab->d_sootFVINLabel);
@@ -384,6 +417,15 @@ Properties::computeProps(const ProcessorGroup*,
     }
     CCVariable<double> absorption;
     CCVariable<double> sootFV;
+    CCVariable<double> fvtfive;
+    if (d_flamelet) {
+      new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(co2, d_lab->d_co2INLabel, matlIndex, patch);
+      new_dw->allocateAndPut(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(fvtfive, d_lab->d_fvtfiveINLabel, matlIndex, patch);
+
+    }
     if (d_radiationCalc) {
       new_dw->allocateAndPut(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
       new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
@@ -465,6 +507,12 @@ Properties::computeProps(const ProcessorGroup*,
 	    for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++ ) 
 	      inStream.d_rxnVars[ii] = (reactScalar[ii])[currCell];
 	  }
+	  if (d_flamelet) {
+	    if (colX >= 0)
+	      inStream.d_axialLoc = colX;
+	    else
+	      inStream.d_axialLoc = 0;
+	  }
 
 	  if (!d_mixingModel->isAdiabatic())
 	    inStream.d_enthalpy = 0.0;
@@ -480,6 +528,14 @@ Properties::computeProps(const ProcessorGroup*,
 	    enthalpyRXN[currCell] = outStream.getEnthalpy();
 	    if (d_mixingModel->getNumRxnVars())
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
+	  }
+	  if (d_flamelet) {
+	    temperature[currCell] = outStream.getTemperature();
+	    sootFV[currCell] = outStream.getSootFV();
+	    co2[currCell] = outStream.getCO2();
+	    h2o[currCell] = outStream.getH2O();
+	    fvtfive[currCell] = outStream.getfvtfive();
+
 	  }
 	  if (d_bc == 0)
 	    throw InvalidValue("BoundaryCondition pointer not assigned");
@@ -718,7 +774,7 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 // Actually recompute the properties here
 //****************************************************************************
 void 
-Properties::reComputeProps(const ProcessorGroup*,
+Properties::reComputeProps(const ProcessorGroup* pc,
 			   const PatchSubset* patches,
 			   const MaterialSubset*,
 			   DataWarehouse*,
@@ -733,7 +789,7 @@ Properties::reComputeProps(const ProcessorGroup*,
 
     // Get the CCVariable (density) from the old datawarehouse
     // just write one function for computing properties
-
+    double start_mixTime = Time::currentSeconds();
     constCCVariable<double> density;
     constCCVariable<double> voidFraction;
     CCVariable<double> temperature;
@@ -756,6 +812,16 @@ Properties::reComputeProps(const ProcessorGroup*,
     }
     CCVariable<double> absorption;
     CCVariable<double> sootFV;
+    CCVariable<double> fvtfive;
+    if (d_flamelet) {
+      new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
+      sootFV.initialize(0.0);
+      new_dw->allocateAndPut(co2, d_lab->d_co2INLabel, matlIndex, patch);
+      new_dw->allocateAndPut(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(fvtfive, d_lab->d_fvtfiveINLabel, matlIndex, patch);
+
+    }
     if (d_radiationCalc) {
       new_dw->allocateAndPut(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
       new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
@@ -864,10 +930,25 @@ Properties::reComputeProps(const ProcessorGroup*,
 
 	  if (!d_mixingModel->isAdiabatic())
 	    inStream.d_enthalpy = enthalpy_comp[currCell];
+	  if (d_flamelet) {
+	    if (colX >= 0)
+	      inStream.d_axialLoc = colX;
+	    else
+	      inStream.d_axialLoc = 0;
+	  }
+
 	  Stream outStream;
 	  d_mixingModel->computeProps(inStream, outStream);
 	  double local_den = outStream.getDensity();
 	  drhodf[currCell] = outStream.getdrhodf();
+	  if (d_flamelet) {
+	    temperature[currCell] = outStream.getTemperature();
+	    sootFV[currCell] = outStream.getSootFV();
+	    co2[currCell] = outStream.getCO2();
+	    h2o[currCell] = outStream.getH2O();
+	    fvtfive[currCell] = outStream.getfvtfive();
+
+	  }
 	  if (d_reactingFlow) {
 	    temperature[currCell] = outStream.getTemperature();
 	    co2[currCell] = outStream.getCO2();
@@ -959,32 +1040,9 @@ Properties::reComputeProps(const ProcessorGroup*,
     }
     else
       new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
-    
-    // allocateAndPut instead:
-    /* new_dw->put(new_density, d_lab->d_densityCPLabel, matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch); */;
-    if (d_reactingFlow) {
-      // allocateAndPut instead:
-      /* new_dw->put(temperature, d_lab->d_tempINLabel, matlIndex, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(enthalpy, d_lab->d_enthalpyRXNLabel, matlIndex, patch); */;
-      if (d_mixingModel->getNumRxnVars())
-	// allocateAndPut instead:
-	/* new_dw->put(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
-		    matlIndex, patch); */;
-    }
-    if (d_radiationCalc) {
-      // allocateAndPut instead:
-      /* new_dw->put(absorption, d_lab->d_absorpINLabel, matlIndex, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch); */;
-    }
-    if (d_MAlab)
-      // allocateAndPut instead:
-      /* new_dw->put(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch); */;
+    if (pc->myrank() == 0)
+      cerr << "Time in the Mixing Model: " << Time::currentSeconds()-start_mixTime << " seconds\n";
+
   }
 }
 

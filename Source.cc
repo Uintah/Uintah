@@ -350,8 +350,8 @@ Source::calculatePressureSourcePred(const ProcessorGroup* pc,
 #endif
 #else
   vars->filterdrhodt.copy(vars->drhodt,
-			  vars->filterdrhodt.getLowIndex(),
-			  vars->filterdrhodt.getHighIndex());
+			  vars->drhodt.getLowIndex(),
+			  vars->drhodt.getHighIndex());
 #endif
 #ifdef divergenceconstraint
   fort_pressrcpred_var(idxLo, idxHi, vars->pressNonlinearSrc, vars->divergence,
