@@ -518,7 +518,7 @@ cvs add <replaceable>filename</replaceable>
 <term> <command>commit</command></term>
 <listitem>
 <para>Incorporate changes from the working directory into the
-   repository. Can be abbreviated as <command>ci</command>.</para>
+   repository. <command>commit</command> is abbreviated as <command>ci</command>.</para>
 
 <tip>
 <para>When checking in files, cvs will prompt for comments using
