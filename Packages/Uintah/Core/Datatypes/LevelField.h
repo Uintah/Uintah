@@ -470,9 +470,9 @@ bool LevelField<Data>::interpolate(Data &g, const Point &p) const {
     //} else {
     //  return false;
     //}
-    nx=mesh->get_nx();
-    ny=mesh->get_ny();
-    nz=mesh->get_nz();
+    nx=mesh->get_nx()-1;
+    ny=mesh->get_ny()-1;
+    nz=mesh->get_nz()-1;
     x=pn.x()*(nx-1)/diagonal.x();
     y=pn.y()*(ny-1)/diagonal.y();
     z=pn.z()*(nz-1)/diagonal.z();
