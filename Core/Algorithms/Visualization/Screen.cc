@@ -23,6 +23,9 @@ namespace SCIRun {
 
     inline
     int min(int a, int b) {return a<b ? a : b ;}
+
+    inline
+    int max(int a, int b) {return a>b ? a : b ;}
     
     int show = 0;
     int gl_show = 0;
