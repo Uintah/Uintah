@@ -47,15 +47,15 @@ LOS::draw()
 
   computeView(viewRay);
   
-  LOSIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
+  LOSIterator it( volren->tex().get_rep(), viewRay,  volren->control_point());
 
   BBox box;
-  volren->tex->get_bounds(box);
+  volren->tex()->get_bounds(box);
   SliceTable st(box.min(),
 		box.max(), 
 		viewRay,
-		volren->slices,
-                volren->tex->depth());
+		volren->slices(),
+                volren->tex()->depth());
   
   vector<Polygon* > polys;
   vector<Polygon* >::iterator pit;
@@ -88,7 +88,7 @@ void
 LOS::setAlpha( const Brick& b )
 {
   double alphaScale = 1.0/pow(2.0, b.level());
-  glColor4f(1,1,1, volren->slice_alpha*alphaScale);
+  glColor4f(1,1,1, volren->slice_alpha() * alphaScale);
 }
 
 void 
@@ -98,7 +98,7 @@ LOS::drawWireFrame()
 
   computeView(viewRay);
   
-  LOSIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
+  LOSIterator it( volren->tex().get_rep(), viewRay,  volren->control_point());
 
   Brick* brick;
   for( brick = it.Start(); !it.isDone(); brick = it.Next()){

@@ -59,15 +59,15 @@ FullRes::draw()
 
   computeView(viewRay);
   
-  FullResIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
+  FullResIterator it( volren->tex().get_rep(), viewRay,  volren->control_point());
 
   BBox box;
-  volren->tex->get_bounds(box);
+  volren->tex()->get_bounds(box);
   SliceTable st(box.min(),
 		box.max(), 
 		viewRay,
-		volren->slices,
-                volren->tex->depth());
+		volren->slices(),
+                volren->tex()->depth());
 
   
   vector<Polygon* > polys;
@@ -104,7 +104,7 @@ void
 FullRes::setAlpha( const Brick& b )
 {
   double alphaScale = 1.0/pow(2.0, b.level());
-  glColor4f(1,1,1, volren->slice_alpha*alphaScale);
+  glColor4f(1,1,1, volren->slice_alpha() * alphaScale);
 }
 
 void 
@@ -113,7 +113,8 @@ FullRes::drawWireFrame()
   Ray viewRay;
   computeView( viewRay );
   
-  FullResIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
+  FullResIterator it(volren->tex().get_rep(), viewRay, 
+		     volren->control_point());
 
   const Brick* brick;
   for( brick = it.Start(); !it.isDone(); brick = it.Next()){

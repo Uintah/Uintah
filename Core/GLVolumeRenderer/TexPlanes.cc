@@ -49,7 +49,7 @@ TexPlanes::draw()
   Brick* brick;
   computeView(viewRay);
   
-  FullResIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
+  FullResIterator it( volren->tex().get_rep(), viewRay,  volren->control_point());
 
   Polygon*  poly;
   BBox box;
@@ -59,15 +59,15 @@ TexPlanes::draw()
     box = b.bbox();
     Point viewPt = viewRay.origin();
     Point mid = b[0] + (b[7] - b[0])*0.5;
-    Point c(volren->controlPoint);
+    Point c(volren->control_point());
 
-    if(volren->drawView){
-      t = intersectParam(-viewRay.direction(), volren->controlPoint, viewRay);
+    if(volren->drawView()){
+      t = intersectParam(-viewRay.direction(), volren->control_point(), viewRay);
       b.ComputePoly(viewRay, t, poly);
       draw(b, poly);
     } else {
 
-      if(volren->drawX){
+      if(volren->drawX()){
 	Point o(b[0].x(), mid.y(), mid.z());
 	Vector v(c.x() - o.x(), 0,0);
 	if(c.x() > b[0].x() && c.x() < b[7].x() ){
@@ -76,12 +76,12 @@ TexPlanes::draw()
 	    v.x(c.x() - o.x());
 	  } 
 	  Ray r(o,v);
-	  t = intersectParam(-r.direction(), volren->controlPoint, r);
+	  t = intersectParam(-r.direction(), volren->control_point(), r);
 	  b.ComputePoly( r, t, poly);
 	  draw( b, poly );
 	}
       }
-      if(volren->drawY){
+      if(volren->drawY()){
 	Point o(mid.x(), b[0].y(), mid.z());
 	Vector v(0, c.y() - o.y(), 0);
 	if(c.y() > b[0].y() && c.y() < b[7].y() ){
@@ -90,12 +90,12 @@ TexPlanes::draw()
 	    v.y(c.y() - o.y());
 	  } 
 	  Ray r(o,v);
-	  t = intersectParam(-r.direction(), volren->controlPoint, r);
+	  t = intersectParam(-r.direction(), volren->control_point(), r);
 	  b.ComputePoly( r, t, poly);
 	  draw( b, poly );
 	}
       }
-      if(volren->drawZ){
+      if(volren->drawZ()){
 	Point o(mid.x(), mid.y(), b[0].z());
 	Vector v(0, 0, c.z() - o.z());
 	if(c.z() > b[0].z() && c.z() < b[7].z() ){
@@ -104,7 +104,7 @@ TexPlanes::draw()
 	    v.z(c.z() - o.z());
 	  } 
 	  Ray r(o,v);
-	  t = intersectParam(-r.direction(), volren->controlPoint, r);
+	  t = intersectParam(-r.direction(), volren->control_point(), r);
 	  b.ComputePoly( r, t, poly);
 	  draw( b, poly );
 	}
@@ -140,7 +140,7 @@ TexPlanes::drawWireFrame()
   Ray viewRay;
   computeView( viewRay );
   
-  FullResIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
+  FullResIterator it( volren->tex().get_rep(), viewRay,  volren->control_point());
 
   const Brick* brick;
   for( brick = it.Start(); !it.isDone(); brick = it.Next()){

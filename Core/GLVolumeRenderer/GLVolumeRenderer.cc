@@ -28,121 +28,121 @@ namespace SCIRun {
 using std::cerr;
 
 
-double GLVolumeRenderer::swapMatrix[16] = { 0,0,1,0,
+double GLVolumeRenderer::swap_matrix_[16] = { 0,0,1,0,
 					    0,1,0,0,
 					    1,0,0,0,
 					    0,0,0,1};
 
-int GLVolumeRenderer::rCount = 0;
+int GLVolumeRenderer::r_count_ = 0;
 
-GLVolumeRenderer::GLVolumeRenderer(int id) 
-  : GeomObj( id ),
-    _state(state(_fr, 0)),
-    _roi(0),
-    _fr(0),
-    _los(0),
-    _tp(0),
-    _gl_state(state(_oo, 0)),
-    _oo(0),
-    _mip(0),
-    _atten(0),
-    _planes(0),
-    slices(0),
-    tex(0),
-    mutex("GLVolumeRenderer Mutex"),
-    cmap(0),
-    controlPoint(Point(0,0,0)),
-    slice_alpha(1.0),
-    cmapHasChanged(true),
-    drawX(false),
-    drawY(false),
-    drawZ(false),
-    drawView(false),
-    _interp(true),
-    _lighting(0)
+GLVolumeRenderer::GLVolumeRenderer(int id) : 
+  GeomObj( id ),
+  slices_(0),
+  tex_(0),
+  state_(state(fr_, 0)),
+  roi_(0),
+  fr_(0),
+  los_(0),
+  tp_(0),
+  tex_ren_state_(state(oo_, 0)),
+  oo_(0),
+  mip_(0),
+  atten_(0),
+  planes_(0),
+  mutex_("GLVolumeRenderer Mutex"),
+  cmap_(0),
+  control_point_(Point(0,0,0)),
+  slice_alpha_(1.0),
+  cmap_has_changed_(true),
+  drawX_(false),
+  drawY_(false),
+  drawZ_(false),
+  drawView_(false),
+  interp_(true),
+  lighting_(0)
 {
-  rCount++;
+  r_count_++;
   NOT_FINISHED("GLVolumeRenderer::GLVolumeRenderer(int id, const Texture3D* tex, ColorMap* cmap)");
 }
 
 
 GLVolumeRenderer::GLVolumeRenderer(int id, 
 				   GLTexture3DHandle tex,
-				   ColorMapHandle map)
-  : GeomObj( id ),
-    _state(state(_fr, 0)),
-    _roi(0),
-    _fr(0),
-    _los(0),
-    _tp(0),
-    _gl_state(state(_oo, 0)),
-    _oo(0),
-    _mip(0),
-    _atten(0),
-    _planes(0),
-    slices(0),
-    tex(tex),
-    mutex("GLVolumeRenderer Mutex"),
-    cmap(map),
-    controlPoint(Point(0,0,0)),
-    slice_alpha(1.0),
-    cmapHasChanged(true),
-    drawX(false),
-    drawY(false),
-    drawZ(false),
-    drawView(false),
-    di_(0),
-    _interp(true),
-    _lighting(0)
+				   ColorMapHandle map) : 
+  GeomObj( id ),
+  slices_(0),
+  tex_(tex),
+  state_(state(fr_, 0)),
+  roi_(0),
+  fr_(0),
+  los_(0),
+  tp_(0),
+  tex_ren_state_(state(oo_, 0)),
+  oo_(0),
+  mip_(0),
+  atten_(0),
+  planes_(0),
+  mutex_("GLVolumeRenderer Mutex"),
+  cmap_(map),
+  control_point_(Point(0,0,0)),
+  slice_alpha_(1.0),
+  cmap_has_changed_(true),
+  drawX_(false),
+  drawY_(false),
+  drawZ_(false),
+  drawView_(false),
+  di_(0),
+  interp_(true),
+  lighting_(0)
 {
-  rCount++;
+  r_count_++;
 }
 
-GLVolumeRenderer::GLVolumeRenderer(const GLVolumeRenderer& copy)
-  : GeomObj( copy.id ),
-    _state(copy._state),
-    _roi(copy._roi),
-    _fr(copy._fr),
-    _los(copy._los),
-    _tp(copy._tp),
-    _gl_state(copy._gl_state),
-    _oo(copy._oo),
-    _mip(copy._mip),
-    _atten(copy._atten),
-    _planes(copy._planes),
-    slices(copy.slices),
-    tex(copy.tex),
-    mutex("GLVolumeRenderer Mutex"),
-    cmap(copy.cmap),
-    controlPoint(copy.controlPoint),
-    slice_alpha(copy.slice_alpha),
-    cmapHasChanged(copy.cmapHasChanged),
-    drawX(copy.drawX),
-    drawY(copy.drawY),
-    drawZ(copy.drawZ),
-    drawView(copy.drawView),
-    di_(copy.di_),
-    _interp(copy._interp),
-    _lighting(copy._lighting)
+GLVolumeRenderer::GLVolumeRenderer(const GLVolumeRenderer& copy) : 
+  GeomObj( copy.id ),
+  slices_(copy.slices_),
+  tex_(copy.tex_),
+  state_(copy.state_),
+  roi_(copy.roi_),
+  fr_(copy.fr_),
+  los_(copy.los_),
+  tp_(copy.tp_),
+  tex_ren_state_(copy.tex_ren_state_),
+  oo_(copy.oo_),
+  mip_(copy.mip_),
+  atten_(copy.atten_),
+  planes_(copy.planes_),
+  mutex_("GLVolumeRenderer Mutex"),
+  cmap_(copy.cmap_),
+  control_point_(copy.control_point_),
+  slice_alpha_(copy.slice_alpha_),
+  cmap_has_changed_(copy.cmap_has_changed_),
+  drawX_(copy.drawX_),
+  drawY_(copy.drawY_),
+  drawZ_(copy.drawZ_),
+  drawView_(copy.drawView_),
+  di_(copy.di_),
+  interp_(copy.interp_),
+  lighting_(copy.lighting_)
 {
-  rCount++;
+  r_count_++;
 } 
 
 GLVolumeRenderer::~GLVolumeRenderer()
 {
 
-  //delete cmap;
-  //delete _state;
-  //delete _gl_state;
-  delete _tp;
-  delete _roi;
-  delete _fr;
-  delete _los;
-  delete _oo;
-  delete _mip;
-  delete _atten;
-  delete _planes;
-  rCount--;
+  //delete cmap_;
+  //delete state_;
+  //delete tex_ren_state_;
+  delete tp_;
+  delete roi_;
+  delete fr_;
+  delete los_;
+  delete oo_;
+  delete mip_;
+  delete atten_;
+  delete planes_;
+  r_count_--;
 }
 
 GeomObj* 
@@ -155,9 +155,9 @@ GLVolumeRenderer::clone()
 void 
 GLVolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 {
-    //AuditAllocator(default_allocator);
-  if( !pre_draw(di, mat, _lighting) ) return;
-  mutex.lock();
+  //AuditAllocator(default_allocator);
+  if( !pre_draw(di, mat, lighting_) ) return;
+  mutex_.lock();
   di_ = di;
   if( di->get_drawtype() == DrawInfoOpenGL::WireFrame ){
     drawWireFrame();
@@ -175,7 +175,7 @@ GLVolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
     //AuditAllocator(default_allocator);
   }
   di_ = 0;
-  mutex.unlock();
+  mutex_.unlock();
 
 }
 #endif
@@ -184,21 +184,19 @@ GLVolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 GLVolumeRenderer::setup()
 {
-
-
   glEnable(GL_TEXTURE_3D_EXT);
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE); 
 
-  if( cmap.get_rep() ) {
+  if( cmap_.get_rep() ) {
 #ifdef GL_TEXTURE_COLOR_TABLE_SGI
     //cerr << "Using Lookup!\n";
     glEnable(GL_TEXTURE_COLOR_TABLE_SGI);
 #elif defined(GL_SHARED_TEXTURE_PALETTE_EXT)
     glEnable(GL_SHARED_TEXTURE_PALETTE_EXT);
 #endif
-    if( cmapHasChanged || rCount != 1) {
+    if( cmap_has_changed_ || r_count_ != 1) {
       BuildTransferFunctions();
-      cmapHasChanged = false;
+      cmap_has_changed_ = false;
     }
   }
   glColor4f(1,1,1,1); // set to all white for modulation
@@ -209,7 +207,7 @@ void
 GLVolumeRenderer::cleanup()
 {
 
-  if( cmap.get_rep() )
+  if( cmap_.get_rep() )
 #ifdef GL_TEXTURE_COLOR_TABLE_SGI
     glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
 #elif defined(GL_SHARED_TEXTURE_PALETTE_EXT)
@@ -224,7 +222,7 @@ GLVolumeRenderer::cleanup()
 
 void GLVolumeRenderer::io(Piostream&)
 {
-    // Nothing for now...
+  // Nothing for now...
   NOT_FINISHED("GLVolumeRenderer::io");
 }
 
@@ -232,8 +230,8 @@ void GLVolumeRenderer::io(Piostream&)
 bool
 GLVolumeRenderer::saveobj(std::ostream&, const string&, GeomSave*)
 {
-   NOT_FINISHED("GLVolumeRenderer::saveobj");
-    return false;
+  NOT_FINISHED("GLVolumeRenderer::saveobj");
+  return false;
 }
 inline Color FindColor(const Array1<Color>& c,const Array1<float>& s,float t)
 {
@@ -281,43 +279,43 @@ GLVolumeRenderer::BuildTransferFunctions( )
 {
   const int tSize = 256;
   int defaultSamples = 512;
-  //  double L = (tex->max() - tex->min()).length();
+  //  double L = (tex_->max() - tex_->min()).length();
   //  double dt = L/defaultSamples;
   float mul = 1.0/(tSize - 1);
-  if( tex->depth() > 8 ) {
+  if( tex_->depth() > 8 ) {
     cerr<<"Error: Texture too deep\n";
     return;
   }
 
-  double bp = tan( 1.570796327*(0.5 - slice_alpha*0.49999));
-  for(int i = 0; i < tex->depth() + 1; i++){
-      double sliceRatio = defaultSamples/(double(slices)/
-					  pow(2.0, tex->depth() - i));
+  double bp = tan( 1.570796327*(0.5 - slice_alpha_*0.49999));
+  for(int i = 0; i < tex_->depth() + 1; i++){
+    double sliceRatio = defaultSamples/(double(slices_)/
+					pow(2.0, tex_->depth() - i));
 
-      double alpha, alpha1, alpha2;
-      for( int j = 0; j < tSize; j++ )
-	{
-	  Color c = FindColor(cmap->rawRampColor,
-				    cmap->rawRampColorT, j*mul);
-	  alpha = FindAlpha(cmap->rawRampAlpha,
-			    cmap->rawRampAlphaT, j*mul);
+    double alpha, alpha1, alpha2;
+    for( int j = 0; j < tSize; j++ )
+    {
+      Color c = FindColor(cmap_->rawRampColor,
+			  cmap_->rawRampColorT, j*mul);
+      alpha = FindAlpha(cmap_->rawRampAlpha,
+			cmap_->rawRampAlphaT, j*mul);
 
 
-	  alpha1 = pow(alpha, bp);
-	  alpha2 = 1.0 - pow((1.0 - alpha1), sliceRatio);
+      alpha1 = pow(alpha, bp);
+      alpha2 = 1.0 - pow((1.0 - alpha1), sliceRatio);
 
-//	  if( j == 128 ) cerr <<" alpha = "<< alpha<<std::endl;
-//	  if( j == 128 ) cerr <<" alpha1 = "<< alpha1<<std::endl;
-//	  if( j == 128 ) cerr <<" c.r() = "<< c.r()<<std::endl;
-//	  if( j == 128 ) cerr <<" c.g() = "<< c.g()<<std::endl;
-//	  if( j == 128 ) cerr <<" c.b() = "<< c.b()<<std::endl;
-//	  if( j == 128 ) cerr <<" alpha2 = "<< alpha2<<std::endl;
+      //	  if( j == 128 ) cerr <<" alpha = "<< alpha<<std::endl;
+      //	  if( j == 128 ) cerr <<" alpha1 = "<< alpha1<<std::endl;
+      //	  if( j == 128 ) cerr <<" c.r() = "<< c.r()<<std::endl;
+      //	  if( j == 128 ) cerr <<" c.g() = "<< c.g()<<std::endl;
+      //	  if( j == 128 ) cerr <<" c.b() = "<< c.b()<<std::endl;
+      //	  if( j == 128 ) cerr <<" alpha2 = "<< alpha2<<std::endl;
 
-	  TransferFunctions[i][4*j + 0] = (unsigned char)(c.r()*255);
-	  TransferFunctions[i][4*j + 1] = (unsigned char)(c.g()*255);
-	  TransferFunctions[i][4*j + 2] = (unsigned char)(c.b()*255);
-	  TransferFunctions[i][4*j + 3] = (unsigned char)(alpha2*255);
-	}
+      transfer_functions_[i][4*j + 0] = (unsigned char)(c.r()*255);
+      transfer_functions_[i][4*j + 1] = (unsigned char)(c.g()*255);
+      transfer_functions_[i][4*j + 2] = (unsigned char)(c.b()*255);
+      transfer_functions_[i][4*j + 3] = (unsigned char)(alpha2*255);
+    }
   }
 }
 } // End namespace SCIRun

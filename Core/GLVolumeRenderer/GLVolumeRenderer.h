@@ -49,33 +49,6 @@ namespace SCIRun {
 
 class GLVolumeRenderer : public GeomObj
 {
-  friend class GLVolRenState;
-  friend class GLTexRenState;
-  friend class GLAttenuate;
-  friend class GLOverOp;
-  friend class GLMIP;
-  friend class GLPlanes;
-  friend class FullRes;
-  friend class ROI;
-  friend class LOS;
-  friend class TexPlanes;
-private:
-  GLVolRenState* _state;
-  // GLVolRenStates in lieu of static variables in the state object
-  // this allows multiple volume renders to work..
-
-  ROI* _roi;
-  FullRes* _fr;
-  LOS* _los; 
-  TexPlanes* _tp;
- 
-  GLTexRenState* _gl_state;
- 
-  // GLTexRenStates done for the same reasons as above.
-  GLOverOp* _oo;
-  GLMIP* _mip;
-  GLAttenuate* _atten;
-  GLPlanes* _planes;
 public:
 
   GLVolumeRenderer(int id);
@@ -83,44 +56,44 @@ public:
   GLVolumeRenderer(int id, GLTexture3DHandle tex,
 		   ColorMapHandle map);
 
-  void SetNSlices(int s) { slices = s;}
-  void SetSliceAlpha( double as){ slice_alpha = as;}
+  void SetNSlices(int s) { slices_ = s;}
+  void SetSliceAlpha( double as){ slice_alpha_ = as;}
   void BuildTransferFunctions();
 
 
   void SetVol( GLTexture3DHandle tex ){ 
-    mutex.lock(); this->tex = tex; _state->NewBricks(); mutex.unlock();}
-  void SetColorMap( ColorMapHandle map){
-    mutex.lock(); this->cmap = map; BuildTransferFunctions();
-    cmapHasChanged = true; mutex.unlock(); }
-  void SetControlPoint( const Point& point){ controlPoint = point; }
+    mutex_.lock(); tex_ = tex; state_->NewBricks(); mutex_.unlock();}
+  void SetColorMap( ColorMapHandle cmap){
+    mutex_.lock(); cmap_ = cmap; BuildTransferFunctions();
+    cmap_has_changed_ = true; mutex_.unlock(); }
+  void SetControlPoint( const Point& point){ control_point_ = point; }
 
-  void Reload() { _state->Reload(); }
+  void Reload() { state_->Reload(); }
 
-/*   void DrawFullRes(){ _state = FullRes::Instance(this);} */
-/*   void DrawLOS(){ _state = LOS::Instance(this);} */
-/*   void DrawROI(){ _state = ROI::Instance(this);} */
-/*   void DrawPlanes(){ _state = TexPlanes::Instance(this); } */
-  void DrawFullRes(){ _state = state(_fr, 0);}
-  void DrawLOS(){ _state = state(_los, 0);}
-  void DrawROI(){ _state = state(_roi, 0);}
-  void DrawPlanes(){ _state = state(_tp, 1);}
+/*   void DrawFullRes(){ state_ = FullRes::Instance(this);} */
+/*   void DrawLOS(){ state_ = LOS::Instance(this);} */
+/*   void DrawROI(){ state_ = ROI::Instance(this);} */
+/*   void DrawPlanes(){ state_ = TexPlanes::Instance(this); } */
+  void DrawFullRes(){ state_ = state(fr_, 0);}
+  void DrawLOS(){ state_ = state(los_, 0);}
+  void DrawROI(){ state_ = state(roi_, 0);}
+  void DrawPlanes(){ state_ = state(tp_, 1);}
 
-  void SetX(bool b){ if(b){drawView = false;} drawX = b; }
-  void SetY(bool b){ if(b){drawView = false;} drawY = b; }
-  void SetZ(bool b){ if(b){drawView = false;} drawZ = b; }
-  void SetView(bool b){ if(b){drawX=false; drawY=false; drawZ=false;}
-                        drawView = b; }
-/*   void GLOverOp(){ _gl_state = GLOverOp::Instance( this ); } */
-/*   void GLMIP(){ _gl_state = GLMIP::Instance( this ); } */
-/*   void GLAttenuate(){ _gl_state = GLAttenuate::Instance( this ); } */
-/*   void GLPlanes(){ _gl_state = GLPlanes::Instance(this);} */
-  void _GLOverOp(){ _gl_state = state(_oo, 0);}
-  void _GLMIP(){ _gl_state = state(_mip, 0); }
-  void _GLAttenuate(){ _gl_state = state(_atten, 0 ); }
-  void _GLPlanes(){ _gl_state = state(_planes, 1);}
+  void SetX(bool b){ if(b){drawView_ = false;} drawX_ = b; }
+  void SetY(bool b){ if(b){drawView_ = false;} drawY_ = b; }
+  void SetZ(bool b){ if(b){drawView_ = false;} drawZ_ = b; }
+  void SetView(bool b){ if(b){drawX_=false; drawY_=false; drawZ_=false;}
+                        drawView_ = b; }
+/*   void GLOverOp(){ tex_ren_state_ = GLOverOp::Instance( this ); } */
+/*   void GLMIP(){ tex_ren_state_ = GLMIP::Instance( this ); } */
+/*   void GLAttenuate(){ tex_ren_state_ = GLAttenuate::Instance( this ); } */
+/*   void GLPlanes(){ tex_ren_state_ = GLPlanes::Instance(this);} */
+  void _GLOverOp(){ tex_ren_state_ = state(oo_, 0);}
+  void _GLMIP(){ tex_ren_state_ = state(mip_, 0); }
+  void _GLAttenuate(){ tex_ren_state_ = state(atten_, 0 ); }
+  void _GLPlanes(){ tex_ren_state_ = state(planes_, 1);}
 
-  void SetInterp( bool i) { _interp = i; }
+  void SetInterp( bool i) { interp_ = i; }
 
   GLVolumeRenderer(const GLVolumeRenderer&);
   ~GLVolumeRenderer();
@@ -131,47 +104,75 @@ public:
 #endif
   
   virtual GeomObj* clone();
-  virtual void get_bounds(BBox& bb){ tex->get_bounds( bb ); }
+  virtual void get_bounds(BBox& bb){ tex_->get_bounds( bb ); }
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 
   void setup();
-  void preDraw(){ _gl_state->preDraw(); }
-  void draw(){ _state->draw(); }
-  void postDraw(){ _gl_state->postDraw(); }
+  void preDraw(){ tex_ren_state_->preDraw(); }
+  void draw(){ state_->draw(); }
+  void postDraw(){ tex_ren_state_->postDraw(); }
   void cleanup();
 
-  void drawWireFrame(){ glColor4f(0.8,0.8,0.8,1.0); _state->drawWireFrame(); }
+  void drawWireFrame(){ glColor4f(0.8,0.8,0.8,1.0); state_->drawWireFrame(); }
 
-  GLTexture3DHandle get_tex3d_handle() const { return tex; }
-protected:
-  int slices;
-  GLTexture3DHandle tex;
-
+  
+  //! accessors.
+  GLTexture3DHandle get_tex3d_handle() const { return tex_; }
+  const Point &control_point() const {return control_point_;}
+  GLTexture3DHandle tex() const { return tex_; }
+  DrawInfoOpenGL* di() const { return di_; }
+  const unsigned char *transfer_functions(int i) const 
+  { return &transfer_functions_[i][0]; } 
+  bool interp() const { return interp_; }
+  int slices() const { return slices_; }
+  double slice_alpha() const { return slice_alpha_; }
+  bool drawX() const { return drawX_; }
+  bool drawY() const { return drawY_; }
+  bool drawZ() const { return drawZ_; }
+  bool drawView() const { return drawView_; }
 private:
+  int                   slices_;
+  GLTexture3DHandle     tex_;
 
-  Mutex mutex;
-  ColorMapHandle cmap;
-  Point controlPoint;
-  
-  double slice_alpha;
+  //! GLVolRenStates in lieu of static variables in the state object
+  //! this allows multiple volume renders to work..
+  GLVolRenState        *state_;
 
-  bool cmapHasChanged;
-  bool drawX, drawY, drawZ, drawView;
-  DrawInfoOpenGL* di_;
+  ROI                  *roi_;
+  FullRes              *fr_;
+  LOS                  *los_; 
+  TexPlanes            *tp_;
  
-
-  // Sets the state function without having to write a bunch of code
-  template <class T> T* state( T* st, int l);
-
-
+  GLTexRenState        *tex_ren_state_;
+ 
+  // GLTexRenStates done for the same reasons as above.
+  GLOverOp             *oo_;
+  GLMIP                *mip_;
+  GLAttenuate          *atten_;
+  GLPlanes             *planes_;
+  Mutex                 mutex_;
+  ColorMapHandle        cmap_;
+  Point                 control_point_;
   
-  bool _interp;
-  int _lighting;
-  static double swapMatrix[16];
-  static int rCount;
-  unsigned char TransferFunctions[8][1024];
+  double                slice_alpha_;
+
+  bool                  cmap_has_changed_;
+  bool                  drawX_;
+  bool                  drawY_;
+  bool                  drawZ_;
+  bool                  drawView_;
+  DrawInfoOpenGL       *di_;
+ 
+  //! Sets the state function without having to write a bunch of code
+  template <class T> T* state( T* st, int l);
+  
+  bool                  interp_;
+  int                   lighting_;
+  static double         swap_matrix_[16];
+  static int            r_count_;
+  unsigned char         transfer_functions_[8][1024];
 };
 
 template <class T> 
@@ -179,7 +180,7 @@ T* GLVolumeRenderer::state( T* st, int l)
 { 
   if(st == 0) 
     st = scinew T(this);
-  _lighting = l;
+  lighting_ = l;
   return st;
 }
  
