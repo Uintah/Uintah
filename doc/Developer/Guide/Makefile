@@ -28,7 +28,7 @@ BOOK = DeveloperGuide.xml
 STYLESHEET =../../Utilities/XML/docbook.xsl
 
 define xmltohtml
-java org.apache.xalan.xslt.Process -IN ${BOOK} -XSL ${STYLESHEET} \
+-java org.apache.xalan.xslt.Process -IN ${BOOK} -XSL ${STYLESHEET} \
 -OUT $@ -PARAM treetop ../../../ -PARAM cont ${patsubst %.html,%,$@} -HTML
 endef
 
