@@ -133,9 +133,9 @@ void VectorFieldOperator::computeScalars(VectorField* vectorField,
     vector<ShareAssignArray3<Vector> > tdata = vectorField->fdata();
     vector<ShareAssignArray3<Vector> >::iterator vit = tdata.begin();
     vector<ShareAssignArray3<Vector> >::iterator vit_end = tdata.end();
-    thread_sema->down();
     IntVector offset( (*vit).getLowIndex() );
     for(;vit != vit_end; ++vit) {
+      thread_sema->down();
       Thread *thrd = 
 	scinew Thread(
 	  scinew OperatorThread< Vector, ScalarField, VectorOp >
