@@ -69,9 +69,6 @@ MatrixReader.cc: Reader.cc
 MatrixReader.tcl: Reader.tcl
 	sed 's/TYPE/Matrix/g' < Reader.tcl > MatrixReader.tcl
 
-MeshReader.cc: Reader.cc
-	sed 's/TYPE/Mesh/g' < Reader.cc > MeshReader.cc
-
 MeshReader.tcl: Reader.tcl
 	sed 's/TYPE/Mesh/g' < Reader.tcl > MeshReader.tcl
 

@@ -62,9 +62,6 @@ MatrixWriter.cc: Writer.cc
 MatrixWriter.tcl: Writer.tcl
 	sed 's/TYPE/Matrix/g' < Writer.tcl > MatrixWriter.tcl
 
-MeshWriter.cc: Writer.cc
-	sed 's/TYPE/Mesh/g' < Writer.cc > MeshWriter.cc
-
 MeshWriter.tcl: Writer.tcl
 	sed 's/TYPE/Mesh/g' < Writer.tcl > MeshWriter.tcl
 
