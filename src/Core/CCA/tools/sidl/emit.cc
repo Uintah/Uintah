@@ -1375,8 +1375,10 @@ void CI::emit_proxy(EmitState& e)
   if(doRedistribution) {
     e.out << "\n// redestribution proxy\n";
     e.out << "void " << fn << "::setCallerDistribution(std::string distname,\n" 
-          << "\t\t\t\tSCIRun::MxNArrayRep* arrrep)\n"; 
+          << "\t\t\t\tSCIRun::MxNArrayRep* in_arrrep)\n"; 
     e.out << "{\n";
+    e.out << "  //copy the MxNArrayRep\n";
+    e.out << "  SCIRun::MxNArrayRep* arrrep = new SCIRun::MxNArrayRep(*in_arrrep);\n"; 
     e.out << "  //First clear this distribution in case it already exists\n";
     e.out << "  d_sched->clear(distname, ::SCIRun::caller);\n";
     e.out << "  d_sched->clear(distname, ::SCIRun::callee);\n";
@@ -2441,7 +2443,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	// *********** OUT arg -- Special Redis ******************************
 	e.out << leader2 << "//Collect redistributions of out arguments:\n";
 	e.out << leader2 << "if (1) { //Hack to prevent variable shadowing of _rl_out and _this_rep\n";
-        e.out << leader2 << "SCIRun::descriptorList _rl_out = d_sched->getRedistributionReps(\"" << distarr->getName() << "\");\n";
+        e.out << leader2 << "SCIRun::descriptorList* _rl_out = d_sched->getRedistributionReps(\"" << distarr->getName() << "\");\n";
 	e.out << leader2 << "SCIRun::MxNArrayRep* _this_rep = d_sched->callerGetCallerRep(\"" << distarr->getName() << "\");\n";
 	e.out << leader2 << "//Resize array \n";
         e.out << leader2 << arg << ".resize(";
@@ -2450,8 +2452,8 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
           if (i != 1) e.out << ", ";
         }
         e.out << ");\n";
-	e.out << leader2 << "for(int i = 0; i < (int)_rl_out.size(); i++) {\n";
-	e.out << leader2 << "  SCIRun::Message* message = _rl_out[i]->getReference()->chan->getMessage();\n";
+	e.out << leader2 << "for(int i = 0; i < (int)_rl_out->size(); i++) {\n";
+	e.out << leader2 << "  SCIRun::Message* message = (*_rl_out)[i]->getReference()->chan->getMessage();\n";
 	//string dimname=arg+"_mdim";
 	e.out << leader2 << "  message->createMessage();\n";
 	e.out << leader2 << "  //Marshal the redistribution call flag\n";
@@ -2473,7 +2475,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  int rank = _rm->getRank();\n";
 	e.out << leader2 << "  message->marshalInt(&rank);\n";
 	e.out << leader2 << "  //Intersect and create distribution representation\n";
-	e.out << leader2 << "  ::SSIDL::array2< int> _meta_arr = _rl_out[i]->getArray();\n";
+	e.out << leader2 << "  ::SSIDL::array2< int> _meta_arr = (*_rl_out)[i]->getArray();\n";
 	e.out << leader2 << "  //Marshal distribution representation array\n";
 	e.out << leader2 << "  int _rep_mdim[2];\n";
 	e.out << leader2 << "  _rep_mdim[0]=_meta_arr.size1();\n";
@@ -2483,7 +2485,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  message->marshalInt(&_rep_mdim[0], 2);\n";
 	e.out << leader2 << "  message->marshalInt(_rep_mptr, _rep_mtotalsize);\n";
 	e.out << leader2 << "  //Send Message \n";
-	e.out << leader2 << "  int _handler=_rl_out[i]->getReference()->getVtableBase()+" << handler << ";\n";
+	e.out << leader2 << "  int _handler=(*_rl_out)[i]->getReference()->getVtableBase()+" << handler << ";\n";
 	e.out << leader2 << "  message->sendMessage(_handler);\n";
 	e.out << leader2 << "  message->waitReply();\n";
 	string templeader = e.out.leader;
@@ -2715,11 +2717,11 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "//Redistribute the array:\n";
 	e.out << leader2 << "if (1) { //Hack to prevent varable shadowing on rl & this_rep\n";
 	string ifone = e.out.push_leader(); 
-	e.out << leader2 << "SCIRun::descriptorList rl = d_sched->getRedistributionReps(\"" << distarr->getName() << "\");\n";
+	e.out << leader2 << "SCIRun::descriptorList* rl = d_sched->getRedistributionReps(\"" << distarr->getName() << "\");\n";
 	e.out << leader2 << "SCIRun::MxNArrayRep* this_rep = d_sched->callerGetCallerRep(\"" 
 	      << distarr->getName() << "\");\n";
-	e.out << leader2 << "for(int i = 0; i < (int)rl.size(); i++) {\n";
-	e.out << leader2 << "  SCIRun::Message* message = rl[i]->getReference()->chan->getMessage();\n";
+	e.out << leader2 << "for(int i = 0; i < (int)rl->size(); i++) {\n";
+	e.out << leader2 << "  SCIRun::Message* message = (*rl)[i]->getReference()->chan->getMessage();\n";
 	//string dimname=arg+"_mdim";
 	e.out << leader2 << "  message->createMessage();\n";
 	e.out << leader2 << "  //Marshal the distribution flag\n";
@@ -2741,7 +2743,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  int rank = _rm->getRank();\n";
 	e.out << leader2 << "  message->marshalInt(&rank);\n";
 	e.out << leader2 << "  //Intersect and create distribution representation\n";
-	e.out << leader2 << "  ::SSIDL::array2< int> _meta_arr = rl[i]->getArray();\n";
+	e.out << leader2 << "  ::SSIDL::array2< int> _meta_arr = (*rl)[i]->getArray();\n";
 	e.out << leader2 << "  //Marshal distribution representation array\n";
 	e.out << leader2 << "  int _rep_mdim[2];\n";
 	e.out << leader2 << "  _rep_mdim[0]=_meta_arr.size1();\n";
@@ -2772,7 +2774,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
         e.out.pop_leader(ttleader);
 	e.out << leader2 << "}\n";
 	e.out.pop_leader(templeader);   
-	e.out << leader2 << "  int _handler=rl[i]->getReference()->getVtableBase()+" << handler << ";\n";
+	e.out << leader2 << "  int _handler=(*rl)[i]->getReference()->getVtableBase()+" << handler << ";\n";
 	e.out << leader2 << "  message->sendMessage(_handler);\n";
 	e.out << leader2 << "  message->destroyMessage();\n";
 	e.out << leader2 << "}\n";

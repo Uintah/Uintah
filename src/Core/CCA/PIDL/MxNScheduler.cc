@@ -198,15 +198,13 @@ MxNArrSynch* MxNScheduler::getArrSynch(::std::string distname, ::std::string uui
   return NULL;
 }
  
-descriptorList MxNScheduler::getRedistributionReps(std::string distname)
+descriptorList* MxNScheduler::getRedistributionReps(std::string distname)
 {
-  descriptorList rl;
-  
   schedList::iterator iter = entries.find(distname);
   if ((iter != entries.end())&&(iter->second->isCaller())) 
     return iter->second->makeSchedule();
   else 
-    return rl;
+    return NULL;
 }
 
 void MxNScheduler::clear(std::string distname, sched_t sch)

@@ -116,7 +116,7 @@ namespace SCIRun {
     // Calculate the redistribution schedule given the current array
     // representation this class has (if it had not been calculated
     // before). Returns a the schedule. [CALLER ONLY]
-    descriptorList makeSchedule(); 
+    descriptorList* makeSchedule(); 
     
     //////////
     // Method is called when a remote Array description is recieved.

@@ -182,7 +182,6 @@ namespace SCIRun {
     bool received;
 
   private:
-    MxNArrayRep();
 
     ///////////
     // Array of Index representing first, last and stride for each dimension

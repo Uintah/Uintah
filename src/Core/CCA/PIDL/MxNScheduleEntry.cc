@@ -40,19 +40,21 @@ MxNScheduleEntry::MxNScheduleEntry(std::string n, sched_t st)
 
 MxNScheduleEntry::~MxNScheduleEntry()
 {
+  assert(false);
+  unsigned int i;
   descriptorList::iterator iter;
-  iter = callee_rep.begin();
-  for(;iter != callee_rep.end(); iter++) {
+  for(iter=callee_rep.begin(),i=0; i < callee_rep.size(); i++,iter++) {
     delete (*iter);
   }
-  iter = caller_rep.begin();
-  for(;iter != caller_rep.end(); iter++) {
+  for(iter=caller_rep.begin(),i=0; i < caller_rep.size(); i++,iter++) {
     delete (*iter);
   }
-  iter = sched.begin();
-  for(;iter != sched.end(); iter++) {
+  for(iter=sched.begin(),i=0; i < sched.size(); i++,iter++) {
     delete (*iter);
   }
+  callee_rep.clear();
+  caller_rep.clear();
+  sched.clear();
 }
 
 void MxNScheduleEntry::addCallerRep(MxNArrayRep* arr_rep)
@@ -62,7 +64,10 @@ void MxNScheduleEntry::addCallerRep(MxNArrayRep* arr_rep)
     int myrank = arr_rep->getRank();
     descriptorList::iterator iter = caller_rep.begin();
     for(unsigned int i=0; i < caller_rep.size(); i++, iter++) 
-    if(myrank == (*iter)->getRank()) delete (*iter);
+    if(myrank == (*iter)->getRank()) { 
+      delete (*iter); 
+      caller_rep.erase(iter); 
+    }
   }
   caller_rep.push_back(arr_rep);
 }
@@ -99,11 +104,11 @@ MxNArrayRep* MxNScheduleEntry::getCalleeRep(unsigned int index)
     return NULL;
 }
 
-descriptorList MxNScheduleEntry::makeSchedule()
+descriptorList* MxNScheduleEntry::makeSchedule()
 {
   assert(scht == caller);
 
-  if(madeSched) return sched;
+  if(madeSched) return (&sched);
 
   //Create the schedule 
   MxNArrayRep* i_rep;
@@ -117,7 +122,7 @@ descriptorList MxNScheduleEntry::makeSchedule()
     //Set flag to indicate that schedule is now created
     madeSched = true;
   }
-  return sched;
+  return (&sched);
 }	
 
 void MxNScheduleEntry::reportMetaRecvDone(int size)
@@ -134,23 +139,26 @@ void MxNScheduleEntry::reportMetaRecvDone(int size)
 
 void MxNScheduleEntry::clear(sched_t sch)
 {
+  unsigned int i;
   descriptorList::iterator iter;
   if(sch == callee) {
-    iter = callee_rep.begin();
-    for(;iter != callee_rep.end(); iter++) {
+::std::cerr << "FORE calleerepsize=" << callee_rep.size() << "\n"; 
+    for(i=0, iter=callee_rep.begin(); i < callee_rep.size(); i++,iter++) {
       delete (*iter);
     }
+    callee_rep.clear();
+::std::cerr << "AFT calleerepsize=" << callee_rep.size() << "\n";
   } else {
-    iter = caller_rep.begin();
-    for(;iter != caller_rep.end(); iter++) {
+    for(i=0, iter=caller_rep.begin(); i < caller_rep.size(); i++,iter++) {
       delete (*iter);
     }
+    caller_rep.clear();
   }
   //Delete and reset schedule
-  iter = sched.begin();
-  for(;iter != sched.end(); iter++) {
+  for(i=0, iter=sched.begin(); i < sched.size(); i++,iter++) {
     delete (*iter);
   }
+  sched.clear();
   madeSched = false;	
 }
 
