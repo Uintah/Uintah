@@ -1226,6 +1226,11 @@ private:
 
 SolverParameters* CGSolver::readParameters(ProblemSpecP& params, const string& varname)
 {
+
+/*`==========TESTING==========*/
+throw InternalError("CGSolver: There's a bug in this solver when running with OPT = 1 "
+                     "Until it's fixed use hypre."); 
+/*===========TESTING==========`*/
   CGSolverParams* p = new CGSolverParams();
   if(params){
     for(ProblemSpecP param = params->findBlock("Parameters"); param != 0;
