@@ -23,6 +23,8 @@
 #include <map>
 #include <math.h>
 
+#define SELECT_RANGETREE
+
 #ifdef SELECT_RANGETREE
 #include <Packages/Uintah/Core/Grid/PatchRangeTree.h>
 #endif
@@ -37,8 +39,8 @@ static Mutex ids_init("ID init");
 Level::Level(Grid* grid, const Point& anchor, const Vector& dcell, 
              int index, IntVector refinementRatio, int id /*=-1*/)
    : grid(grid), d_anchor(anchor), d_dcell(dcell), d_index(index),
-     d_refinementRatio(refinementRatio), d_patchDistribution(-1,-1,-1),
-     d_periodicBoundaries(0, 0, 0), d_id(id)
+     d_patchDistribution(-1,-1,-1), d_periodicBoundaries(0, 0, 0), d_id(id),
+     d_refinementRatio(refinementRatio)
 {
   each_patch=0;
   all_patches=0;
