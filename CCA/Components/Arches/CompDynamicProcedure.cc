@@ -668,10 +668,12 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		                      (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
 		// on the boundary
 		if (cellType[filterCell+shift] != flowID) {
-	          // this should not happen
+	          // intrusion
 		  if (filterCell+shift == currCell+shift) {
-		    cout << "wrong boundary hit" << endl;
-		    exit(1);
+		    filterRhoU[currCell] = vol*uVel[filterCell]*
+			   0.5*(density[filterCell]+
+			        density[filterCell-IntVector(1,0,0)]);
+		    totalVol = vol;
 		  }
 		}
 		// inside the domain
@@ -722,10 +724,12 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		                      (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
 		// on the boundary
 		if (cellType[filterCell+shift] != flowID) {
-	          // this should not happen
+	          // intrusion
 		  if (filterCell+shift == currCell+shift) {
-		    cout << "wrong boundary hit" << endl;
-		    exit(1);
+		    filterRhoV[currCell] = vol*vVel[filterCell]*
+			   0.5*(density[filterCell]+
+			        density[filterCell-IntVector(0,1,0)]);
+		    totalVol = vol;
 		  }
 		}
 		// inside the domain
@@ -776,10 +780,12 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		                      (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
 		// on the boundary
 		if (cellType[filterCell+shift] != flowID) {
-	          // this should not happen
+	          // intrusion
 		  if (filterCell+shift == currCell+shift) {
-		    cout << "wrong boundary hit" << endl;
-		    exit(1);
+		    filterRhoW[currCell] = vol*wVel[filterCell]*
+			   0.5*(density[filterCell]+
+			        density[filterCell-IntVector(0,0,1)]);
+		    totalVol = vol;
 		  }
 		}
 		// inside the domain
