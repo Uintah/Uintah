@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/Exceptions/InvalidGrid.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
 
 using namespace Uintah;
 
@@ -24,5 +24,5 @@ const char* InvalidGrid::message() const
 
 const char* InvalidGrid::type() const
 {
-    return "Packages/Uintah::Exceptions::InvalidGrid";
+    return "Uintah::Exceptions::InvalidGrid";
 }

@@ -13,13 +13,20 @@ SRCS     += $(SRCDIR)/Archive.cc  $(SRCDIR)/ArchivePort.cc \
 	$(SRCDIR)/TensorParticles.cc $(SRCDIR)/TensorParticlesPort.cc \
 	$(SRCDIR)/PSet.cc
 
-
-
-PSELIBS := Core/Exceptions Core/Geometry \
-	Core/Persistent Core/Datatypes \
-	Core/Containers Core/Thread Uintah/Grid Uintah/Interface \
+PSELIBS := \
 	Dataflow/Network \
-        Uintah/Exceptions Dataflow/XMLUtil Uintah/Components/MPM
+	Dataflow/XMLUtil \
+	Core/Exceptions  \
+	Core/Geometry    \
+	Core/Persistent  \
+	Core/Datatypes   \
+	Core/Containers  \
+	Core/Thread      \
+	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/CCA/Ports       \
+        Packages/Uintah/Core/Exceptions  \
+	Packages/Uintah/CCA/Components/MPM
 
 LIBS := $(XML_LIBRARY)
 

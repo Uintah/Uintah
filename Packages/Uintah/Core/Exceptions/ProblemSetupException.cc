@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
 using namespace Uintah;
 
@@ -24,5 +24,5 @@ const char* ProblemSetupException::message() const
 
 const char* ProblemSetupException::type() const
 {
-    return "Packages/Uintah::Exceptions::ProblemSetupException";
+    return "Uintah::Exceptions::ProblemSetupException";
 }

@@ -2,12 +2,12 @@
 #define SCALARPARTICLES_H
 
 #include <Packages/Uintah/Core/Datatypes/PSet.h>
-#include <Packages/Uintah/Interface/DataArchive.h>
-//#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
-#include <Packages/Uintah/Grid/ParticleVariable.h>
-#include <Packages/Uintah/Grid/Grid.h>
-#include <Packages/Uintah/Grid/LevelP.h>
-#include <Packages/Uintah/Grid/Patch.h>
+#include <Packages/Uintah/CCA/Ports/DataArchive.h>
+//#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>

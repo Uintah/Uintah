@@ -1,6 +1,6 @@
-#include <Packages/Uintah/Grid/Level.h>
-#include <Packages/Uintah/Grid/LevelP.h>
-#include <Packages/Uintah/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Datatypes/CCTensorField.h>
 
 #include <Core/Geometry/Vector.h>
@@ -22,7 +22,7 @@ CCTensorField::CCTensorField()
 
 
 CCTensorField::CCTensorField(const CCTensorField& copy)
-  //  : Packages/UintahScalarField( copy )
+  //  : UintahScalarField( copy )
   :TensorField( copy ), _grid(copy._grid), _level(copy._level),
     _varname(copy._varname), _matIndex(copy._matIndex),
    high(copy.high), low(copy.low), nx(copy.nx),
@@ -37,7 +37,7 @@ CCTensorField::CCTensorField(const CCTensorField& copy)
 CCTensorField::CCTensorField(GridP grid, LevelP level,
 				string var, int mat,
 				const vector< CCVariable<Matrix3> >& vars)
-  //  : Packages/UintahScalarField( grid, level, var, mat )
+  //  : UintahScalarField( grid, level, var, mat )
   : TensorField(), _grid(grid), _level(level),
     _varname(var), _matIndex(mat),
    high(-MAXINT,-MAXINT,-MAXINT),

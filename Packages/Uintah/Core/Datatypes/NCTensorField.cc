@@ -1,7 +1,7 @@
 #include <Packages/Uintah/Core/Datatypes/NCTensorField.h>
-#include <Packages/Uintah/Grid/Level.h>
-#include <Packages/Uintah/Grid/LevelP.h>
-#include <Packages/Uintah/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
@@ -21,7 +21,7 @@ NCTensorField::NCTensorField()
 }
 
 NCTensorField::NCTensorField(const NCTensorField& copy)
-  //  : Packages/UintahScalarField( copy )
+  //  : UintahScalarField( copy )
   :TensorField( copy ), _grid(copy._grid), _level(copy._level),
     _varname(copy._varname), _matIndex(copy._matIndex),
    high(copy.high), low(copy.low), nx(copy.nx),
@@ -37,7 +37,7 @@ NCTensorField::NCTensorField(const NCTensorField& copy)
 NCTensorField::NCTensorField(GridP grid, LevelP level,
 				string var, int mat,
 				const vector< NCVariable<Matrix3> >& vars)
-  //  : Packages/UintahScalarField( grid, level, var, mat )
+  //  : UintahScalarField( grid, level, var, mat )
   : TensorField(), _grid(grid), _level(level),
     _varname(var), _matIndex(mat),
    high(-MAXINT,-MAXINT,-MAXINT),

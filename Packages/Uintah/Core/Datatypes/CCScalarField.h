@@ -2,10 +2,10 @@
 #define SCI_project_CCScalarField_h 1
 
 //#include "Packages/UintahScalarField.h"
-#include <Packages/Uintah/Grid/CCVariable.h>
-#include <Packages/Uintah/Grid/GridP.h>
-#include <Packages/Uintah/Grid/LevelP.h>
-#include <Packages/Uintah/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/CellIterator.h>
 
 #include <Core/Datatypes/ScalarFieldRGBase.h>
 #include <Core/Geometry/IntVector.h>
@@ -44,7 +44,7 @@ public:
   T grid(int i, int j, int k);
   virtual double get_value( int i, int j, int k);
   void computeHighLowIndices();
-//   virtual Packages/UintahScalarField::Rep getType(){ return Packages/UintahScalarField::CC;}
+//   virtual ScalarField::Rep getType(){ return Packages/UintahScalarField::CC;}
 
   void SetGrid( GridP g ){ _grid = g; }
   void SetLevel( LevelP l){ _level = l; }
@@ -75,7 +75,7 @@ CCScalarField<T>::CCScalarField()
 
 template <class T>
 CCScalarField<T>::CCScalarField(const CCScalarField<T>& copy)
-//   : Packages/UintahScalarField( copy )
+//   : ScalarField( copy )
   :ScalarFieldRGBase( copy ), _grid(copy._grid), _level(copy._level),
     _varname(copy._varname), _matIndex(copy._matIndex), 
    high(-MAXINT,-MAXINT,-MAXINT),
@@ -94,7 +94,7 @@ template <class T>
 CCScalarField<T>::CCScalarField(GridP grid, LevelP level,
 				string var, int mat,
 				const vector< CCVariable<T> >& vars)
-//   : Packages/UintahScalarField( grid, level, var, mat )
+//   : ScalarField( grid, level, var, mat )
   : ScalarFieldRGBase(), _grid(grid), _level(level),
     _varname(var), _matIndex(mat),
    high(-MAXINT,-MAXINT,-MAXINT),
@@ -270,7 +270,7 @@ int CCScalarField<T>::interpolate(const Point& p, double& value, double,
 template <class T>
 Vector CCScalarField<T>::gradient(const Point& p)
 {
-  Packages/Uintah::Box b;
+  Box b;
   int i;
   Level::const_patchIterator r;
   for(i = 0, r = _level->patchesBegin();

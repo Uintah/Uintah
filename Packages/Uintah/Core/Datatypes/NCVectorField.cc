@@ -1,8 +1,8 @@
 #include <Packages/Uintah/Core/Datatypes/NCVectorField.h>
-#include <Packages/Uintah/Grid/Level.h>
-#include <Packages/Uintah/Grid/LevelP.h>
-#include <Packages/Uintah/Grid/Handle.h>
-#include <Packages/Uintah/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/ProblemSpec/Handle.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
@@ -18,7 +18,7 @@ NCVectorField::NCVectorField()
 
 
 NCVectorField::NCVectorField(const NCVectorField& copy)
-  //  : Packages/UintahScalarField( copy )
+  //  : UintahScalarField( copy )
   :VectorFieldRG( copy ), grid(copy.grid), _level(copy._level),
     _varname(copy._varname), _matIndex(copy._matIndex)
 {
@@ -31,7 +31,7 @@ NCVectorField::NCVectorField(const NCVectorField& copy)
 NCVectorField::NCVectorField(GridP grid, LevelP level,
 				string var, int mat,
 				const vector< NCVariable<Vector> >& vars)
-  //  : Packages/UintahScalarField( grid, level, var, mat )
+  //  : UintahScalarField( grid, level, var, mat )
   : VectorFieldRG( ), grid(grid), _level(level),
     _varname(var), _matIndex(mat)
 {
