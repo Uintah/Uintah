@@ -44,7 +44,7 @@ BBox::BBox()
 }
 
 BBox::BBox(const Point& min, const Point& max):
-  have_some(0), cmin(min), cmax(max)
+  have_some(1), cmin(min), cmax(max)
 {
 }
 
