@@ -28,11 +28,16 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/CardioWave/Core/Datatypes
 
-SRCS     += \
+SRCS     += $(SRCDIR)/TimeDataFile.cc\
+            $(SRCDIR)/CardioWaveConverter.cc\
+            $(SRCDIR)/Startup.cc\
+            $(SRCDIR)/cardiowaveIEplugin.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS :=
-LIBS :=
+PSELIBS := Core/Datatypes Core/Persistent Core/Exceptions Core/Containers \
+	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
+	Core/Math Core/Util Core/Thread Core/ImportExport
 
+LIBS :=	$(TEEM_LIBRARY)
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
