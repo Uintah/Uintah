@@ -17,7 +17,6 @@ SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection
 include $(SCIRUN_SCRIPTS)/recurse.mk          
 
 PSELIBS := \
-	Packages/Uintah/CCA/Components/HETransformation \
 	Packages/Uintah/CCA/Ports                       \
 	Packages/Uintah/Core/Grid                       \
 	Packages/Uintah/Core/Math                       \
