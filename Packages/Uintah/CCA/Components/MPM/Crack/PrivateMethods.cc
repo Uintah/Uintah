@@ -660,13 +660,14 @@ short Crack::PointInTriangle(const Point& p,const Point& pt1,
 // Detect if doing fracture analysis at this time step
 void Crack::DetectIfDoingFractureAnalysisAtThisTimeStep(double time)
 {
-  static double timeforcalculateJK=0.0;
-  static double timeforpropagation=0.0;
+  static double timeforcalculateJK=-1.e-200;
+  static double timeforpropagation=-1.e-200;
 
+  // For fracture parameters calculation
   if(d_calFractParameters=="true") {
     if(time>=timeforcalculateJK) {
       calFractParameters=YES;
-      timeforcalculateJK+=calFractParasInterval;
+      timeforcalculateJK=time+calFractParasInterval;
     }
     else {
      calFractParameters=NO;
@@ -679,10 +680,11 @@ void Crack::DetectIfDoingFractureAnalysisAtThisTimeStep(double time)
     calFractParameters=YES;
   }
 
+  // For crack propagation
   if(d_doCrackPropagation=="true") {
     if(time>=timeforpropagation){
-      doCrackPropagation=YES;
-      timeforpropagation+=crackPropInterval;
+      doCrackPropagation=YES;      
+      timeforpropagation=time+crackPropInterval;
     }
     else {
       doCrackPropagation=NO;
