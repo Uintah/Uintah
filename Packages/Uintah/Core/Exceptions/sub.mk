@@ -13,7 +13,8 @@ SRCS     += \
 	$(SRCDIR)/ProblemSetupException.cc  \
 	$(SRCDIR)/TypeMismatchException.cc  \
 	$(SRCDIR)/VariableNotFoundInGrid.cc \
-	$(SRCDIR)/OutFluxVolume.cc
+	$(SRCDIR)/OutFluxVolume.cc	    \
+	$(SRCDIR)/MaxIteration.cc	    
 
 PSELIBS := \
 	Core/Exceptions \
