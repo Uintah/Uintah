@@ -1,18 +1,12 @@
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-
 #include <Dataflow/XMLUtil/XMLUtil.h>
-
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
-
-//#include <cstdlib>
-
 #include <iostream>
-#include <sstream>
 #include <map>
 #include <sstream>
 

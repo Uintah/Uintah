@@ -219,11 +219,13 @@
                <density> 1.1792946927374306000e+00 </density>
 	    </geom_object>
 	  </material>
+	</ICE>	
+	<exchange_properties>
 	  <exchange_coefficients>
 	     <momentum>	[ 1e10 , 10000000000] </momentum>
 	     <heat>     [10000000000.  , 10000000000]  </heat>
 	 </exchange_coefficients>
-	</ICE>	
+	</exchange_properties>
     </MaterialProperties>               
 	
 </Uintah_specification>
