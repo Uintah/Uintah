@@ -53,8 +53,8 @@
       </p>
       <p>
         The output field will contain the new mesh and no data.  It is
-        recommended that the ManageFieldData module be used to attach
-        data to the new field.  See also ManageFieldMesh, which can be
+        recommended that the <modref package="SCIRun" name="ManageFieldData"/> module be used to attach
+        data to the new field.  See also <modref package="SCIRun" name="ManageFieldMesh"/>, which can be
         used to attach new positional data to existing meshes but
         cannot construct a new mesh nor change it's connectivity
         information.

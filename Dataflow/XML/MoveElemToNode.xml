@@ -49,7 +49,7 @@
       that the data remains at the same positions in space but occupy
       the nodes of the new mesh rather than being located at the
       cell/face locations.  This is the opposite of
-      MoveNodeToElem.</p>
+      <modref package="SCIRun" name="MoveNodeToElem"/>.</p>
 
     </description>
   </overview>

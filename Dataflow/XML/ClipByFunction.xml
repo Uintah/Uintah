@@ -48,7 +48,7 @@
         The type of the field is preserved in the clip, as well as the
         data values if possible.  Some field types are structured and
         thus not clippable.  This includes the LatVolField, ImageField,
-        and Scanline field types.  There is an Unstructure module that
+        and Scanline field types.  There is an <modref package="SCIRun" name="Unstructure"/> module that
         can be used to convert these fields to appropriately
         unstructured versions before clipping.
       </p>

@@ -38,7 +38,7 @@
     <authors>
       <author>Alexei Samsonov</author>
     </authors>
-    <summary>Interactive tool  to edit and playback camera path in Viewer.</summary>
+    <summary>Interactive tool  to edit and playback camera path in <modref package="SCIRun" name="Viewer"/>.</summary>
     <description>
       <p>EditPath module provides a set of interactive tools for creation and manipulation of
    camera path in Viewer. The basic features of the modules are as follows:</p>

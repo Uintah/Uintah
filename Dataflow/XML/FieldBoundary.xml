@@ -56,7 +56,7 @@
         no data interpolated onto it.  If the data from the input
         field is desired on the output field, we recommended that
         using the Interpolant output, running the results
-        through ApplyInterpolant in order to draw values from the input
+        through <modref package="SCIRun" name="ApplyInterMatrix"/> in order to draw values from the input
         field.
        </p>
 

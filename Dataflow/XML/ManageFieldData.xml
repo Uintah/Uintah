@@ -76,7 +76,7 @@
         a row matrix, it will return a TetVolField of integers.  If the types
         are not convertible then you will still get a default
         Vector,Tensor, or double field as appropriate.  If you need
-        the old behavior use ChangeFieldDataType to convert the
+        the old behavior use <modref package="SCIRun" name="ChangeFieldDataType"/> to convert the
 	input field to double type before passing it in.
       </p>
     </description>

@@ -54,8 +54,8 @@
       The fixed scale option allows the user to enter the minimum and
       maximum values for the linear mapping.  
       </p>
-      <p> Currently, only the TextureVolVis and the TexCuttingPlanes
-      modules use the texture produced by this module
+      <p> Currently, only the <modref package="SCIRun" name="TextureVolVis"/> and the <modref package="SCIRun" name="TexCuttingPlanes"/>
+      modules use the texture produced by this module.
       </p>
         
     </description>

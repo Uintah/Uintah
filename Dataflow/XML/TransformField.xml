@@ -46,8 +46,8 @@
       "Transform Matrix" port as a 4x4 matrix.  There is no GUI for
       this module.  The transform is
       generally computed by a different module, such as
-      BuildTransform.  For interactive geometry transforms use the
-      ChangeFieldBounds module.</p>
+      <modref package="SCIRun" name="BuildTransform"/>.  For interactive geometry transforms use the
+      <modref package="SCIRun" name="ChangeFieldBounds"/> module.</p>
 
     </description>
   </overview>

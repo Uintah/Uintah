@@ -81,7 +81,7 @@ output port.</p>
         Send Amount entry to send more than one row/column at a time.
         For instance, if both entries are set to three, the module
         will send three rows/columns at a time, which can then be
-        mapped onto a vector field by the ManageFieldData module. </p>
+        mapped onto a vector field by the <modref package="SCIRun" name="ManageFieldData"/> module.</p>
 
 	<p>The second input port of the MatrixSelectVector module, Weight
 Vector, allows the user to to select mutliple columns of a matrix and add

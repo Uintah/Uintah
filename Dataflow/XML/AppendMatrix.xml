@@ -43,7 +43,7 @@
       <p>This module builds up a composited matrix from an optional
       base matrix and submatrices that get appended to the end (or
       prepended to the beginning).  Using this module, in conjunction
-      with an upstream MatrixSelectVector module, users can build up
+      with an upstream <modref package="SCIRun" name="MatrixSelectVector"/> module, users can build up
       time-dependent solution matrices.</p>
       <p>The UI has options to allow the user to select:</p>
       <p>- whether the matrices are concatenated (or replaced);</p>

@@ -45,7 +45,7 @@
     <description>
       <p>
         ChangeFieldBounds can trasform the field geometry via the UI or 
-	a widget attached to a Viewer window.
+	a widget attached to a <modref package="SCIRun" name="Viewer"/> window.
       </p>
       <p>
 	The output field is the transformed input field.

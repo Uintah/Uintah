@@ -57,7 +57,7 @@
       expected to be Nx3, where N is the number of nodes in the field
       and the three columns represent xyz positions.  This operation
       requires the "Input Field" to be an editable mesh type.  The
-      Unstructure module can be used to make uneditable meshes
+      <modref package="SCIRun" name="Unstructure"/> module can be used to make uneditable meshes
       editable.
       </p>
     </description>
