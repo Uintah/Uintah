@@ -38,6 +38,7 @@ set Color(SubnetEditor) purple4 ;#$Color(NetworkEditor)
 #set Color(NetworkEditor) "black"
 set Color(ErrorFrameBG) $Color(NetworkEditor)
 set Color(ErrorFrameFG) white
+set Color(IconFadeStart) $Color(NetworkEditor)
 set Color(Basecolor) gray
 #set Color(Basecolor) darkred
 
