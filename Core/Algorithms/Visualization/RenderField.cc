@@ -75,10 +75,18 @@ to_double(const unsigned char&in, double &out)
 }
 
 template <>
+bool
+to_double(const Vector &in, double &out)
+{
+  out = in.length();
+  return true;
+}
+
+template <>
 bool 
 add_data(const Point &p, const Tensor &d, GeomArrows *arrows, 
 	 GeomSwitch *dat_sw,
-	 MaterialHandle &mat, const string &s, double sf)
+	 MaterialHandle &mat, const string &s, double sf, bool normalize)
 {
   return false;
 }
@@ -87,10 +95,11 @@ template <>
 bool 
 add_data(const Point &p, const Vector &d, GeomArrows *arrows, 
 	 GeomSwitch *dat_sw,
-	 MaterialHandle &mat, const string &s, double sf)
+	 MaterialHandle &mat, const string &s, double sf, bool normalize)
 {
-  //  cerr << "sf is :" << sf << endl;
-  arrows->add(p, d*sf, mat, mat, mat);
+  Vector v(d);
+  if (normalize) { v.normalize(); }
+  arrows->add(p, v*sf, mat, mat, mat);
   return true;
 }
 } // end namespace SCIRun

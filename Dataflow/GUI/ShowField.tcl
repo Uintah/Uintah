@@ -29,6 +29,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-edges-on
 	global $this-faces-on
 	global $this-vectors-on
+	global $this-normalize_vectors
 	global $this-node_display_type
 	global $this-def-color-r
 	global $this-def-color-g
@@ -51,6 +52,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-edges-on 1
 	set $this-faces-on 1
 	set $this-vectors-on 0
+	set $this-normalize_vectors 0
 	set $this-resolution 4
 	set $this-has_vec_data 0
 	set $this-active_tab "Nodes"
@@ -201,12 +203,18 @@ itcl_class SCIRun_Visualization_ShowField {
 		-command "$this-c toggle_display_vectors" \
 		-variable $this-vectors-on
 
+	checkbutton $vector.normalize_vectors \
+		-text "Normalize Vectors before scaling" \
+		-command "$this-c toggle_normalize" \
+		-variable $this-normalize-vectors
+
 #	 global $this-vector_display_type
 #	 make_labeled_radio $vector.radio \
 #		 "Vector Display Type" "$this-c vector_display_type" top \
 #		 $this-vector_display_type {{Cylinders Cylinders} {Lines Lines}}
 #
-	pack $vector.show_vectors -side top -fill y -anchor w
+	pack $vector.show_vectors $vector.normalize_vectors \
+		-side top -fill y -anchor w
 
 	expscale $vector.slide -label CylinderScale \
 		-orient horizontal \
