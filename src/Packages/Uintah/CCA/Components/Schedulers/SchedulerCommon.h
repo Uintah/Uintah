@@ -86,6 +86,7 @@ WARNING
     virtual void advanceDataWarehouse(const GridP& grid);
     virtual void fillDataWarehouses(const GridP& grid);
     virtual void replaceDataWarehouse(int index, const GridP& grid);
+    virtual void setRestartable(bool restartable);
 
     // Get the expected extents that may be needed for a particular variable
     // on a particular patch (which should include expected ghost cells.
@@ -153,6 +154,7 @@ WARNING
     DetailedTasks         * dts_;
 
     Output* m_outPort;
+    bool restartable;
   private:
 
     SchedulerCommon(const SchedulerCommon&);
