@@ -296,6 +296,7 @@ TriSurfMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
       }
     }
   }
+  ASSERT(array.size() == 3);
 }
 
 
@@ -308,7 +309,7 @@ TriSurfMesh::get_neighbor(Face::index_type &neighbor,
   ASSERTMSG(synchronized_ & EDGE_NEIGHBORS_E,
 	    "Must call synchronize EDGE_NEIGHBORS_E on TriSurfMesh first");
   unsigned int n = edge_neighbors_[edges_[edge]];
-  if (n != MESH_NO_NEIGHBOR && (n % 3) == face)
+  if (n != MESH_NO_NEIGHBOR && (n / 3) == face)
   {
     n = edge_neighbors_[n];
   }
@@ -1069,6 +1070,7 @@ typedef map<pair<int, int>, int, edgecompare> EdgeMapType;
 
 #endif
 
+
 void
 TriSurfMesh::compute_edges()
 {
@@ -1226,30 +1228,111 @@ TriSurfMesh::add_elem(Node::array_type a)
   return static_cast<Elem::index_type>((faces_.size() - 1) / 3);
 }
 
+
 void
-TriSurfMesh::orient(Face::index_type fi) 
+TriSurfMesh::flip_faces() 
 {
   face_lock_.lock();
-  Node::array_type ra;
-  get_nodes(ra,fi);
-  const Point &p0 = point(ra[0]);
-  const Point &p1 = point(ra[1]);
-  const Point &p2 = point(ra[2]);
-  const Point p3(0,0,0);
-
-  double sgn = Dot(Cross(p1-p0,p2-p0),p3-p0);
-
-  if(sgn < 0.0) {
-    unsigned int base = fi * 3;
-    int tmp = faces_[base + 1];
-    faces_[base + 1] = faces_[base + 2];  
-    faces_[base + 2] = tmp;
-    sgn=-sgn;
-    cout << "swapping nodes in tri." << endl;
+  Face::iterator fiter, fend;
+  begin(fiter);
+  end(fend);
+  while (fiter != fend) {
+    flip_face(*fiter);
+    ++fiter;
   }
+  synchronized_ &= ~EDGES_E;
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NORMALS_E;
+  face_lock_.unlock();
+}
 
-  if(sgn < 1.e-9){ // return 0; // Degenerate...
-    cerr << "Warning - small element, volume=" << sgn << endl;
+
+void 
+TriSurfMesh::flip_face(Face::index_type face)
+{
+  unsigned int base = face * 3;
+  int tmp = faces_[base + 1];
+  faces_[base + 1] = faces_[base + 2];  
+  faces_[base + 2] = tmp;
+
+  synchronized_ &= ~EDGES_E;
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NORMALS_E;
+}
+
+void 
+TriSurfMesh::walk_face_orient(Face::index_type face, vector<bool> &tested)
+{
+  Face::index_type nbor;
+  Edge::array_type edges(3);
+  get_edges(edges, face);
+
+  Node::array_type nodes;
+  get_nodes(nodes, face);
+
+
+  Edge::array_type::iterator iter = edges.begin();
+  while(iter != edges.end()) {
+
+    unsigned a = edges_[*iter];
+    unsigned b = faces_[a - a % 3 + (a+1) % 3];
+    a = faces_[a];
+    //set order according to orientation in face
+    if (((nodes[0] == b) && (nodes[1] == a)) || 
+	((nodes[1] == b) && (nodes[2] == a)) ||
+	((nodes[0] == a) && (nodes[2] == b)))
+    {
+      //swap 
+      unsigned tmp = b;
+      b = a;
+      a = tmp;
+    } 
+
+    if (get_neighbor(nbor, face, *iter) && !tested[nbor]) {
+      tested[nbor] = true;
+
+      Node::array_type nbor_nodes;
+      get_nodes(nbor_nodes, nbor);
+
+      //order should be opposite of a,b
+      if (((nbor_nodes[0] == a) && (nbor_nodes[1] == b)) || 
+	  ((nbor_nodes[1] == a) && (nbor_nodes[2] == b)) ||
+	  ((nbor_nodes[0] == b) && (nbor_nodes[2] == a)))
+      {
+	flip_face(nbor);
+	synchronized_ &= ~EDGES_E;
+	synchronized_ &= ~EDGE_NEIGHBORS_E;
+	edges_.clear();
+	compute_edges();
+	compute_edge_neighbors(0.0);
+      } 
+
+      // recurse...
+      walk_face_orient(nbor, tested);
+    }
+    ++iter;
+  }
+}
+
+void
+TriSurfMesh::orient_faces() 
+{
+  face_lock_.lock();
+  synchronize(EDGES_E | EDGE_NEIGHBORS_E);
+  int nfaces = (int)faces_.size() / 3;
+  vector<bool> tested(nfaces, false);
+
+  Face::iterator fiter, fend;
+  begin(fiter);
+  end(fend);
+  while (fiter != fend) {
+    if (! tested[*fiter]) {
+      tested[*fiter] = true;
+      walk_face_orient(*fiter, tested);
+    }
+    ++fiter;
   }
 
   synchronized_ &= ~EDGE_NEIGHBORS_E;
