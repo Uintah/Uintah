@@ -200,6 +200,10 @@ private:
 
   int objid;
   static int objcnt;
+
+
+  //FOR TEST ONLY, will remove later
+  bool firstTime;
 };
 
 } // End namespace SCIRun

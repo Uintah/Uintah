@@ -39,7 +39,7 @@
 #include <Core/CCA/PIDL/URL.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/Comm/SocketMessage.h>
-
+#include <unistd.h>
 #include <iostream>
 #include <string>
 
@@ -63,6 +63,8 @@ Object_proxy::Object_proxy(const URL& url)
   rm.localSize = 1;
   rm.localRank = 0;
   rm.intracomm = NULL;
+  //TODO: need verify this statement
+  rm.s_lSize = 1;
 }
 
 Object_proxy::Object_proxy(const int urlc, const URL urlv[], int mysize, int myrank)
@@ -109,14 +111,11 @@ Object_proxy::Object_proxy(const std::vector<Object::pointer>& pxy, int mysize, 
     ProxyBase* pbase = dynamic_cast<ProxyBase* >((*iter).getPointer());
     if(!pbase) continue;
     refList* refL = pbase->_proxyGetReferenceMgr()->getAllReferences();
-    refList::const_iterator riter = refL->begin();
-    for(unsigned int i=0; i < refL->size(); i++, riter++) {
+    for(refList::const_iterator riter = refL->begin(); riter!=refL->end(); riter++){
       Reference *ref = (*riter)->clone();
-
       Message *message=ref->chan->getMessage();
       message->createMessage();
-      message->sendMessage(-101); //addReference;
-
+      message->sendMessage(SocketEpChannel::ADD_REFERENCE);
       rm.insertReference(ref);
     }
   }

@@ -103,6 +103,7 @@ Object* TypeInfo::pidl_cast(Object* obj) const
   // Send the message
   int handler=vtable_isa_handler;
   message->sendMessage(handler);
+
   // Wait for the reply
   message->waitReply();
 
@@ -119,6 +120,7 @@ Object* TypeInfo::pidl_cast(Object* obj) const
   } else {
     // isa succeeded 
     // addReference to the other processes in case it is a parallel component
+    ::std::vector < ::SCIRun::Message*> save_callnoret_msg;
     for(unsigned int i=1; i < _rm->d_ref.size(); i++) {
       /*CALLNORET*/
       message = _rm->d_ref[i]->chan->getMessage();
@@ -137,7 +139,17 @@ Object* TypeInfo::pidl_cast(Object* obj) const
       // Send the message
       int _handler= _rm->d_ref[i]->getVtableBase()+0;
       message->sendMessage(_handler);
-      message->destroyMessage();
+      save_callnoret_msg.push_back(message);
+    }
+
+    for(int i=0; i<save_callnoret_msg.size(); i++){
+      int _x_flag;
+      save_callnoret_msg[i]->waitReply();
+      save_callnoret_msg[i]->unmarshalInt(&_x_flag);
+      save_callnoret_msg[i]->destroyMessage();
+      if(_x_flag != 0) {
+	throw ::SCIRun::InternalError("Unexpected user exception");
+      }
     }
 
     // return the correct proxy
@@ -145,12 +157,6 @@ Object* TypeInfo::pidl_cast(Object* obj) const
     for(unsigned int i=0; i < new_rm.d_ref.size(); i++)
       new_rm.d_ref[i]->d_vtable_base=vtbase;
     return (*d_priv->create_proxy)(new_rm);
-
-/*
-    for(unsigned int i=0; i < _rm->d_ref.size(); i++)
-      _rm->d_ref[i]->d_vtable_base=vtbase;
-    return (*d_priv->create_proxy)(*_rm);
-*/
   }
 }
 

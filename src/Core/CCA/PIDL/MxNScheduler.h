@@ -135,8 +135,15 @@ namespace SCIRun {
     // Waits to recieve all distributions necessary
     // before it returns the array. The notification that
     // a distribution has been received comes through the
-    // reportRedisDone() method.
-    void* waitCompleteArray(std::string distname, ProxyID uuid, int callid);
+    // doReceive() method.
+    void* waitCompleteInArray(std::string distname, ProxyID uuid, int callid);
+
+     
+    ////////////
+    // (Callee Method)
+    // Waits to send all distributions necessary. The notification that
+    // a distribution has been sent comes through the doSend() method.
+    void waitCompleteOutArray(std::string distname, ProxyID uuid, int callid);
  
      ///////////
     // (Caller Method) 

@@ -106,7 +106,12 @@ namespace SCIRun {
     // Blocks until data redistribution is complete and placed
     // within the array. After that is complete we return the
     // pointer to the array. [CALLEE ONLY]
-    void* waitCompleteArray(MxNArrayRep *myrep);
+    void* waitCompleteInArray(MxNArrayRep *myrep);
+
+    /////////
+    // Blocks until data redistribution are sent to the callers
+    // [CALLEE ONLY]
+    void waitCompleteOutArray(MxNArrayRep *myrep);
 
     /////////
     // This method is called when we have recieved the distribution

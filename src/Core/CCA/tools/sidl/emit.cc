@@ -800,14 +800,12 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   emit_comment(e, "", true);
   e.out << "static void _handler" << e.handlerNum << "(::SCIRun::Message* message)\n";
   e.out << "{\n";
-
   string oldleader=e.out.push_leader();
   e.out << leader2 << "void* _v=message->getLocalObj();\n";
   string myclass = emit_class->cppfullname(0);
   e.out << leader2 << "::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(_v);\n";
   e.out << leader2 << myclass << "* _obj=static_cast< " << myclass << "*>(_sc->d_ptr);\n";
   e.out << "\n";
-  
 
   if(return_type){
     if(!return_type->isvoid()){
@@ -963,10 +961,14 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
       e.out << leader2 << "if (_flag == ::SCIRun::CALLNORET) {\n";
       if(throws_clause) {
 	int reply_handler_id=0; // Always 0
+	//TODO: it seems that the corresponding proxy does not handle the throws_clause, K.Z.
 	e.out << leader2 << "  message->sendMessage(" << reply_handler_id << ");\n";
 	e.out << leader2 << "  message->destroyMessage();\n";
 	e.out << leader2 << "  return;\n";	
       } else { 
+	//Even CALLNORET replies in order to maintain the PRMI's integrity
+	int reply_handler_id=0; // Always 0
+	e.out << leader2 << "  message->sendMessage(" << reply_handler_id << ");\n";
 	e.out << leader2 << "  message->destroyMessage();\n";
 	e.out << leader2 << "  return;\n";
       }
@@ -1626,7 +1628,9 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     //    e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
     e.out << leader2 << "message->marshalInt(&_sessionID.iid);\n";
     e.out << leader2 << "message->marshalInt(&_sessionID.pid);\n";
-
+    e.out << leader2 << "SCIRun::ProxyID _nextID=SCIRun::PRMI::peekProxyID();\n";
+    e.out << leader2 << "message->marshalInt(&_nextID.iid);\n";
+    e.out << leader2 << "message->marshalInt(&_nextID.pid);\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
 #endif
     e.out << leader2 << "//Marshal callID\n";
@@ -1702,7 +1706,9 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     //    e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
     e.out << leader2 << "message->marshalInt(&_sessionID.iid);\n";
     e.out << leader2 << "message->marshalInt(&_sessionID.pid);\n";
-
+    e.out << leader2 << "SCIRun::ProxyID _nextID=SCIRun::PRMI::peekProxyID();\n";
+    e.out << leader2 << "message->marshalInt(&_nextID.iid);\n";
+    e.out << leader2 << "message->marshalInt(&_nextID.pid);\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
 #endif
     e.out << leader2 << "//Marshal callID\n";
@@ -1730,7 +1736,8 @@ void Method::emit_proxy(EmitState& e, const string& fn,
       e.out << leader2 << "//Later check if an exception was thrown\n";
     }
     else {
-      e.out << leader2 << "message->destroyMessage();\n";
+      e.out << leader2 << "save_callnoret_msg.push_back(message);\n";
+      //e.out << leader2 << "message->destroyMessage();\n";
     }
 
     e.out.pop_leader(loop_leader1);
@@ -1765,7 +1772,9 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     //    e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
     e.out << leader2 << "message->marshalInt(&_sessionID.iid);\n";
     e.out << leader2 << "message->marshalInt(&_sessionID.pid);\n";
-
+    e.out << leader2 << "SCIRun::ProxyID _nextID=SCIRun::PRMI::peekProxyID();\n";
+    e.out << leader2 << "message->marshalInt(&_nextID.iid);\n";
+    e.out << leader2 << "message->marshalInt(&_nextID.pid);\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
 #endif
     e.out << leader2 << "//Marshal callID\n";
@@ -1877,6 +1886,18 @@ void Method::emit_proxy(EmitState& e, const string& fn,
       e.out << leader2 << "SCIRun::PRMI::setProxyID(nextProxyID);\n\n";
     }
     e.out << leader2 << "message->destroyMessage();\n";
+
+    if (isCollective && !(throws_clause)){
+      e.out << leader2 << "/*CALLNORET reply*/\n";
+      e.out << "for(int i=0; i<save_callnoret_msg.size(); i++){\n";
+      e.out << "  save_callnoret_msg[i]->waitReply();\n";
+      e.out << "  save_callnoret_msg[i]->unmarshalInt(&_x_flag);\n";
+      e.out << "  save_callnoret_msg[i]->destroyMessage();\n";
+      e.out << "  if(_x_flag != 0) {\n";
+      e.out << "    throw ::SCIRun::InternalError(\"Unexpected user exception\");\n";
+      e.out << "  }\n";
+      e.out << "}\n";
+    }
 
     if (isCollective) {
       e.out.pop_leader(call_ldr);
@@ -2570,7 +2591,9 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	//	e.out << leader2 << "  message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
 	e.out << leader2 << "message->marshalInt(&_sessionID.iid);\n";
 	e.out << leader2 << "message->marshalInt(&_sessionID.pid);\n";
-
+	e.out << leader2 << "SCIRun::ProxyID _nextID=SCIRun::PRMI::peekProxyID();\n";
+	e.out << leader2 << "message->marshalInt(&_nextID.iid);\n";
+	e.out << leader2 << "message->marshalInt(&_nextID.pid);\n";
 	e.out << leader2 << "  message->marshalInt(&_numCalls);\n";
 #endif
 	e.out << leader2 << "  //Marshal callID\n";
@@ -2658,7 +2681,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
         string arr_ptr_name = arg + "_ptr";
 	e.out << leader2 << arr_t->cppfullname(0) << "* " << arr_ptr_name << ";\n";
 	e.out << leader2 << arr_ptr_name << " = static_cast< " << arr_t->cppfullname(0) 
-	      << "*>(_sc->d_sched->waitCompleteArray(\"" << Dname << "\",_sessionID,_callID));\n";
+	      << "*>(_sc->d_sched->waitCompleteInArray(\"" << Dname << "\",_sessionID,_callID));\n";
 	e.out << leader2 << "#define " << arg << " (* " << arr_ptr_name << ")\n";
 
 #ifdef MxNDEBUG	
@@ -2844,7 +2867,9 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	//	e.out << leader2 << "  message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
 	e.out << leader2 << "message->marshalInt(&_sessionID.iid);\n";
 	e.out << leader2 << "message->marshalInt(&_sessionID.pid);\n";
-
+	e.out << leader2 << "SCIRun::ProxyID _nextID=SCIRun::PRMI::peekProxyID();\n";
+	e.out << leader2 << "message->marshalInt(&_nextID.iid);\n";
+	e.out << leader2 << "message->marshalInt(&_nextID.pid);\n";
 	e.out << leader2 << "  message->marshalInt(&_numCalls);\n";
 #endif
 	e.out << leader2 << "  //Marshal callID\n";
@@ -2952,7 +2977,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
       if ((ctx == ArgOut)&&(bufferStore != doRetreive)) {
       // *********** OUT arg -- No Special Redis ******************************
 	e.out << leader2 << "_sc->d_sched->setArray(\"" <<  distarr->getName() << "\",_sessionID, _callID, (void**)(&" << arg << "_ptr));\n";
-	e.out << leader2 << "_sc->d_sched->waitCompleteArray(\"" << distarr->getName() << "\",_sessionID, _callID);\n";	
+	e.out << leader2 << "_sc->d_sched->waitCompleteOutArray(\"" << distarr->getName() << "\",_sessionID, _callID);\n";	
       // *********** OUT arg -- No Special Redis ******************************
       }
     }
