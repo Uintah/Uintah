@@ -39,6 +39,7 @@ GeometryOPort::GeometryOPort(Module* module, const clString& portname, int proto
 : OPort(module, Geometry_type, portname, Geometry_color, protocol),
   save_msgs(0), outbox(0)
 {
+    serial=1;
 }
 
 GeometryOPort::~GeometryOPort()
@@ -68,7 +69,6 @@ void GeometryOPort::reset()
 	GeomReply reply=tmp.receive();
 	portid=reply.portid;
 	busy_bit=reply.busy_bit;
-	serial=1;
 	turn_off();
     }
     dirty=0;
@@ -152,7 +152,6 @@ void GeometryOPort::save_msg(GeometryComm* msg)
     } else {
 	save_msgs=save_msgs_tail=msg;
     }
-    cerr << "saving message: " << msg << endl;
     msg->next=0;
 }
 
@@ -164,7 +163,7 @@ void GeometryOPort::attach(Connection* c)
     GeometryComm* p=save_msgs;
     while(p){
 	GeometryComm* next=p->next;
-	cerr << "sending message: " << p << endl;
+	p->portno=portid;
 	outbox->send(p);
 	p=next;
     }
