@@ -253,8 +253,12 @@ void OpenGL::redraw_loop()
 	    Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
 	    
 	    tmpview.up(y_a.vector());
-	    tmpview.eyep((z_a*(roe->eye_dist)) + tmpview.lookat().vector());
-	    
+
+	    if (roe->inertia_mode==1)
+	      tmpview.eyep((z_a*(roe->eye_dist)) + tmpview.lookat().vector());
+	    else if (roe->inertia_mode==2)
+	      tmpview.lookat(tmpview.eyep()-(z_a*(roe->eye_dist)).vector());
+
 	    roe->view.set(tmpview);	    
 	} else {
 	    for (;;) {
@@ -1803,6 +1807,9 @@ ImgReq::ImgReq(const clString& n, const clString& t)
 
 //
 // $Log$
+// Revision 1.30  2000/10/08 05:42:38  samsonov
+// Added rotation around eye point and corresponding inertia mode; to use the mode , use ALT key and middle mouse button
+//
 // Revision 1.29  2000/09/29 08:06:59  samsonov
 // Changes in stereo implementation
 //
