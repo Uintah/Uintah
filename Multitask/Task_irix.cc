@@ -30,7 +30,7 @@
 #include <string.h>
 #include <ucontext.h>
 
-#define DEFAULT_STACK_LENGTH 96*1024
+#define DEFAULT_STACK_LENGTH 256*1024
 #define INITIAL_STACK_LENGTH 32*1024
 #define DEFAULT_SIGNAL_STACK_LENGTH 16*1024
 
