@@ -2143,7 +2143,7 @@ if test "$sci_check_ftgl" = "yes"; then
 ],$_sci_inc,freetype ftgl,$_sci_lib,,,not-optional)
 
   if test "$HAVE_FTGL" = "yes"; then
-    DEF_BLAS="#define HAVE_FTGL 1"
+    DEF_FTGL="#define HAVE_FTGL 1"
   fi
 
   if test "$with_ftgl" && test ! "$DEF_FTGL"; then
