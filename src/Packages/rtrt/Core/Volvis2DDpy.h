@@ -20,6 +20,7 @@ namespace rtrt {
   class Volvis2DDpy : public DpyBase {
     // creates the background texture
     void createBGText(float vmin, float vmax, float gmin, float gmax);
+    void clearBGText();
     // restores visible background texture to the clean original
     void loadCleanTexture();
     // draws the background texture
