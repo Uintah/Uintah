@@ -1,6 +1,7 @@
 #include <Packages/Uintah/Core/Grid/BoxGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
 #include <Core/Geometry/Point.h>
 
@@ -13,7 +14,19 @@ BoxGeometryPiece::BoxGeometryPiece(ProblemSpecP& ps)
 {
   Point min, max;
   ps->require("min",min);
-  ps->require("max",max);  
+  ps->require("max",max); 
+  
+  double near_zero = 1e-100;
+  double xdiff =  max.x() - min.x();
+  double ydiff =  max.y() - min.y();
+  double zdiff =  max.z() - min.z();
+  
+  if ( xdiff < near_zero   ||
+       ydiff < near_zero   ||
+       zdiff < near_zero ) {
+    throw ProblemSetupException("Input File Error: box max <= min coordinates");
+  }
+
   d_box=Box(min,max);
 }
 
