@@ -29,7 +29,7 @@
 src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height="66" width="150"></a>
 
 <p class="title">Installation and Build Instructions for the SCIRun PSE</p>
-<p class="subtitle">(Unix version - Updated February 17, 2001)</p>
+<p class="subtitle">(Unix version - Updated March 21, 2001)</p>
 
 <p class="head">Table of contents</p>
 <ol class="toc">
@@ -88,6 +88,9 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
 	<TH>Software</TH>
 	<TH>Version</TH>
       </TR>
+      <TR>
+	<TH colspan=3>Required OS and build tools</TH>
+      </TR>
 
       <TR>
         <TD rowspan=2>SGI</TD>
@@ -136,7 +139,7 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
       </TR>
 
       <TR>
-        <TD rowspan=7> SGI<br><br>and<br><br>Linux </TD>
+        <TD> SGI and Linux </TD>
         <TD>
           <A HREF="http://www.gnu.org/software/make/make.html">
             GNU make
@@ -150,6 +153,11 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
       </TR>
 
       <TR>
+	<TH colspan=3>Required software</TH>
+      </TR>
+
+      <TR>
+        <TD rowspan=5> SGI and Linux </TD>
         <TD>
           <A HREF=http://dev.scriptics.com/software/tcltk/8.3.html>
             Tcl
@@ -213,7 +221,59 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
           </A>
         </TD>
       </TR>
-    </TABLE>
+      <TR>
+	<TH colspan=3>Optional software</TH>
+      </TR>
+      <TR>
+        <TD rowspan=5> SGI and Linux </TD>
+        <TD>
+          <A HREF="http://bloodyeck.com/mpegelib/">
+            MPEGe Lib
+          </A>
+        </TD>
+        <TD>
+          <A HREF="mailto:alex@ed.ac.uk?Subject=Please Send me MPEGelib">
+            0.3
+          </A>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <A HREF="http://bmrc.berkeley.edu/frame/research/mpeg/mpeg_encode.html">
+            Berkeley MPEG Encoder
+          </A>
+        </TD>
+        <TD>
+          <A HREF="ftp://mm-ftp.cs.berkeley.edu/pub/multimedia/mpeg/encode/mpeg_encode-1.5b-src.tar.gz">
+            1.5b
+          </A>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <A HREF="http://www.cs.utah.edu/~gk">
+            Teem
+          </A>
+        </TD>
+        <TD>
+          <A HREF="http://www.cs.utah.edu/~gk">
+            1.0
+          </A>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <A HREF="http://oss.sgi.com/cgi-bin/cvsweb.cgi/inventor/libimage/">
+            libimage
+          </A>
+        </TD>
+        <TD>
+          <A HREF="http://oss.sgi.com/cgi-bin/cvsweb.cgi/inventor/libimage/">
+            1.0
+          </A>
+        </TD>
+      </TR>
+     </TABLE>
     </center>
     </p>
     
@@ -352,6 +412,17 @@ http://www.cs.utah.edu/scirun_docs/doc</A>
     It also includes solutions when available. 
   </p>
 
+<p class="subhead">Building on Red Hat linux doesn't work</p>
+    <p class="firstpara">
+      Red Hat linux (version 7.0) is shipped with a version of the GNU 
+      Compiler Collection (GCC) that does not work for building SCIRun.  Please
+      see <a href=http://www.gnu.org/software/gcc/gcc-2.96.html>
+      http://www.gnu.org/software/gcc/gcc-2.96.html</a> for details.
+      If you are using Red Hat, you should install GCC version 2.95.2 or
+      2.95.3.  Red Hat 7.0 also ships with other required software (e.g. Tcl
+      distributions) that will need to be upgraded.
+    </p>
+
 <p class="subhead">Path Specifications</p>
     <p class="firstpara">
      If any of the software, SCIRun or thirdparty, is installed into a user's
@@ -417,7 +488,7 @@ tree</a></p>
     </p>
 
     <p class="firstpara">
-      Otherwise, go to the SCIRun <a href="download">download page</a>. 
+      Otherwise, go to the SCIRun <a href="http://ampano.cs.utah.edu/research/software/scirun_down.html">download page</a>. 
     </p>
 
 <br><br><br><p class="subhead"><a name="Installdir">Installing SCIRun into a directory of
