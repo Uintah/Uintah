@@ -24,8 +24,6 @@ itcl_class Ted {
 	if {[winfo exists $w]} {
 	    raise $w
 	    doGL
-	    jrefresh
-	    resetc
 	    return;
 	}
 	toplevel $w
@@ -33,8 +31,9 @@ itcl_class Ted {
 	pack $w.f -padx 2 -pady 2
 	
 	set n "$this-c needexecute "
+	set n2 "$this-c justrefresh "
 
-	expscale $w.zoom -orient horizontal -label "zoom:" -variable $this-zoom -command "$this jrefresh"
+	expscale $w.zoom -orient horizontal -label "zoom:" -variable $this-zoom -command "$this-c justrefresh "
 	$w.zoom-win- configure
 	pack $w.zoom -fill x -pady 2
 
@@ -45,10 +44,12 @@ itcl_class Ted {
 
         button $w.f.reset -text " Reset RasterPos " -command "$this-c resetraster"
         button $w.f.refresh -text " Refresh " -command "$this jrefresh2"
+	button $w.f.res -text " Reset Points " -command "$this resetp"
+	button $w.f.send -text " Send Points " -command "$this sendp"
 
 	doGL
 
-	pack $w.f.v1 $w.f.v2 $w.f.reset $w.f.refresh -side left
+	pack $w.f.v1 $w.f.v2 $w.f.reset $w.f.refresh $w.f.res $w.f.send -side left
 
 	frame $w.f.r4
 	pack $w.f.r4
@@ -59,6 +60,7 @@ itcl_class Ted {
 	entry $w.f.r4.n2 -relief sunken -width 7 -textvariable $this-y
 
 	button $w.f.r4.doit -text " View Grid Coord " -command "$this viewg"
+	
 
 	pack $w.f.r4.lab $w.f.r4.n1 $w.f.r4.lab2 $w.f.r4.n2 $w.f.r4.doit -side left
 
@@ -73,14 +75,17 @@ itcl_class Ted {
 	$this-c resetraster 0
 #	$this-c needexecute
     }
-    method jrefresh {zval} {
-	global $this-zoom
-
-	$this-c justrefresh [set $this-zoom]
+    method sendp {} {
+	$this-c needexecute
+    }
+    method resetp {} {
+	$this-c resetpoints
+	$this-c needexecute
     }
     method jrefresh2 {} {
 	global $this-zoom
-
+	        
+	$this-c ovrrefresh
 	$this-c needexecute
     }
     method doGL {} {
