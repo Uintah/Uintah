@@ -58,8 +58,8 @@ string replaceChar(string s, char old, char newch) {
 // use this function to open a pair of files for outputing
 // data to the reat-time raytracer.
 //
-// in: pointers to the pointer to the file
-//     the file name
+// in: pointers to the pointer to the files data and header
+//     the file names
 // out: inialized files for writing
 //      boolean reporting the success of the file creation
 bool setupOutFiles(FILE** data, FILE** header, string name, string head) {
@@ -1337,25 +1337,25 @@ int main(int argc, char** argv)
 		cerr << "---Writing header file\n";
 	      if (data_found) {
 		fprintf(headerfile,"%d\n",total_particles);
-		fprintf(headerfile,"%g\n",(max.x()-min.x())/total_particles);
-		fprintf(headerfile,"%g %g\n",min.x(),max.x());
-		fprintf(headerfile,"%g %g\n",min.y(),max.y());
-		fprintf(headerfile,"%g %g\n",min.z(),max.z());
+		fprintf(headerfile,"%.17g\n",(max.x()-min.x())/total_particles);
+		fprintf(headerfile,"%.17g %.17g\n",min.x(),max.x());
+		fprintf(headerfile,"%.17g %.17g\n",min.y(),max.y());
+		fprintf(headerfile,"%.17g %.17g\n",min.z(),max.z());
 		if (do_PTvar_all) {
 		  for(int i = 0; i < d_min.size(); i++) {
-		    fprintf(headerfile,"%g %g\n",d_min[i],d_max[i]);
+		    fprintf(headerfile,"%.17g %.17g\n",d_min[i],d_max[i]);
 		  }
 		  for(int i = 0; i < v_min.size(); i++) {
-		    fprintf(headerfile,"%g %g\n",v_min[i],v_max[i]);
+		    fprintf(headerfile,"%.17g %.17g\n",v_min[i],v_max[i]);
 		  }
 		  for(int i = 0; i < m_min.size(); i++) {
-		    fprintf(headerfile,"%g %g\n",m_min[i],m_max[i]);
+		    fprintf(headerfile,"%.17g %.17g\n",m_min[i],m_max[i]);
 		  }
 		  if (do_patch) {
-		    fprintf(headerfile,"%g %g\n",(float)patch->getID(),(float)patch->getID());
+		    fprintf(headerfile,"%.17g %.17g\n",(float)patch->getID(),(float)patch->getID());
 		  }
 		  if (do_material) {
-		    fprintf(headerfile,"%g %g\n",0.0,(float)material_data_list.size());
+		    fprintf(headerfile,"%.17g %.17g\n",0.0,(float)material_data_list.size());
 		  }
 		}
 	      }
@@ -1380,6 +1380,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.14  2000/09/26 18:44:27  bigler
+// Increased the pricision to 17 digits of data writen to the rtdata headerfiles.
+//
 // Revision 1.13  2000/08/16 15:49:54  bigler
 // Changed timesteplow/timestephigh variables to be of type unsigned long.
 // Did this for compatability issues with the data archive.
