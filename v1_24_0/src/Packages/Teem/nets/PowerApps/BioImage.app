@@ -452,6 +452,7 @@ class BioImageApp {
 		}
 		incr axis_num
 	    }
+	    $mods(ViewSlices)-c redrawall
 	} elseif {[string first "Teem_NrrdData_NrrdInfo_0" $which] != -1 && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Loading Volume..."
