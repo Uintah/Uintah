@@ -15,7 +15,7 @@ namespace rtrt {
   class ColorPos {
   public:
     ColorPos() {}
-    ColorPos(float x, float val, Color &c): x(x), val(val), c(c) {}
+    ColorPos(float x, float val, const Color &c): x(x), val(val), c(c) {}
     
     float x; // between 0 and 1
     float val; // between 0 and 1
@@ -43,16 +43,15 @@ class ColorMapDpy : public DpyBase {
   void write_data_file(char *out_file=0);
 
   // Display variables
-  int select_point;
+  int selected_point;
 public:
   ColorMapDpy(Array1<ColorPos> &matls, int num_bins=256);
   ColorMapDpy(char *filebase, int num_bins=256);
   virtual ~ColorMapDpy();
 
-  virtual void run();
   void attach(float min, float max);
-  void get_transfer_pointers(ScalarTransform1D<float,float> *& color_trans_out,
-			     ScalarTransform1D<float,Color> *& alpha_trans_out)
+  void get_transfer_pointers(ScalarTransform1D<float,Color> *& color_trans_out,
+			     ScalarTransform1D<float,float> *& alpha_trans_out)
   {
     color_trans_out = &color_transform;
     alpha_trans_out = &alpha_transform;
