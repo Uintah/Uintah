@@ -38,6 +38,10 @@ This exercises the frictional contact algorithm.  X-position in
 CenterOfMassPosition.dat should compare well with the function
 17408.*(2.+2.525*t**2), where t is time.
 
+rigidbillet.ups  The compression of an elastic cylinder by a
+rigid piston.  Tests the rigid body contact algorithm.  Material
+0 is always the rigid one.
+
 twomatburn.ups  Two adjacent materials, one burnable, the other inert.
 The first starts at 0 degrees, the latter at 100.  The second material
 is next to a 300 degree wall, as heat conducts through it, and into
