@@ -109,8 +109,7 @@
     <save label = "p.damage"/>
     <save label = "p.porosity"/>
     <save label = "p.localized"/>
-    <save label = "p.plasticTemp"/>
-    <save label = "p.plasticTempInc"/>
+    <save label = "p.temperature"/>
 <!--
     <save label = "g.acceleration"/>
     <save label = "g.velocity_star"/>
