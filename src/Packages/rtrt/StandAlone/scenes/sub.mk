@@ -44,7 +44,8 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/hologram-room.mo \
 	$(SRCDIR)/sphere-room.mo \
 	$(SRCDIR)/seaworld-tubes.mo \
-	$(SRCDIR)/multi-scene.mo
+	$(SRCDIR)/multi-scene.mo 
+
 
 
 ifeq ($(findstring Uintah, $(LOAD_PACKAGE)),Uintah)
