@@ -66,7 +66,7 @@ to_string(double val)
 string
 basename(const string &path)
 {
-  return path.substr(path.rfind('/')+1, path.size());
+  return path.substr(path.rfind('/')+1);
 }
 
 string

@@ -105,7 +105,7 @@ LIBRARY_HANDLE PackageDB::findLibInPath(string lib, string path)
     const unsigned int firstColon = tempPaths.find(':');
     if(firstColon < tempPaths.size()) {
       dir=tempPaths.substr(0,firstColon);
-      tempPaths=tempPaths.substr(firstColon+1,-1);
+      tempPaths=tempPaths.substr(firstColon+1);
     } else {
       dir=tempPaths;
       tempPaths="";
@@ -165,7 +165,7 @@ void PackageDB::loadPackage()
     const unsigned int firstComma = loadPackage.find(',');
     if(firstComma < loadPackage.size()) {
       packageElt=loadPackage.substr(0,firstComma);
-      loadPackage=loadPackage.substr(firstComma+1,-1);
+      loadPackage=loadPackage.substr(firstComma+1);
     } else {
       packageElt=loadPackage;
       loadPackage="";
@@ -182,7 +182,7 @@ void PackageDB::loadPackage()
       const unsigned int firstColon = tmpPath.find(':');
       if(firstColon < tmpPath.size()) {
 	pathElt=tmpPath.substr(0,firstColon);
-	tmpPath=tmpPath.substr(firstColon+1,-1);
+	tmpPath=tmpPath.substr(firstColon+1);
       } else {
 	pathElt=tmpPath;
 	tmpPath="";
