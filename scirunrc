@@ -90,7 +90,7 @@
 
 ### SCIRUN_DATA = [path]
 #   Directory location that 'Reader' modules will default to.
-# SCIRUN_DATA    = /usr/sci/data/SCIRunData/1.20.1
+# SCIRUN_DATA = /usr/sci/data/SCIRunData/1.20.1
 
 
 ### SCIRUN_DATASET = [name]
@@ -101,6 +101,11 @@
 ### SCIRUN_ON_THE_FLY_LIBS_DIR = [path]
 #   User writable directory to build 'on-the-fly' .h, .cc, .o and .so files.
 # SCIRUN_ON_THE_FLY_LIBS_DIR = $HOME/SCIRun/on-the-fly-libs
+
+
+### SCIRUN_TMP_DIR = [path]
+#   Directory for writting temporary files - must be world read/writeable
+SCIRUN_TMP_DIR = /tmp
 
 
 ### SCI_DBXCOMMAND = [command]
