@@ -117,8 +117,13 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
      int dwi = matls->get(m);
      new_dw->get(gmass[m],lb->gMassLabel, dwi, patch, Ghost::None, 0);
      new_dw->getModifiable(gvelocity_star[m],lb->gVelocityStarLabel, dwi,patch);
-     new_dw->getModifiable(gacceleration[m], lb->gAccelerationLabel, dwi,patch);
-     new_dw->allocateAndPut(frictionWork[m], lb->frictionalWorkLabel,dwi,patch);
+     new_dw->getModifiable(gacceleration[m],lb->gAccelerationLabel, dwi,patch);
+#ifndef FRACTURE
+     new_dw->allocateAndPut(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
+#else
+     new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,patch);
+#endif
+
      frictionWork[m].initialize(0.);
     }
 
@@ -166,5 +171,9 @@ void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
 
   t->modifies(             lb->gVelocityStarLabel, mss);
   t->modifies(             lb->gAccelerationLabel, mss);
+#ifndef FRACTURE
   t->computes(             lb->frictionalWorkLabel);
+#else
+  t->modifies(             lb->frictionalWorkLabel,mss); 
+#endif
 }

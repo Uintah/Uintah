@@ -74,8 +74,11 @@ void NullContact::exMomIntegrated(const ProcessorGroup*,
 
       new_dw->getModifiable(gv_star, lb->gVelocityStarLabel,        dwi, patch);
       new_dw->getModifiable(gacc,    lb->gAccelerationLabel,        dwi, patch);
-
-      new_dw->allocateAndPut(frictionalWork,lb->frictionalWorkLabel,dwi, patch);
+#ifndef FRACTURE
+      new_dw->allocateAndPut(frictionalWork,lb->frictionalWorkLabel,dwi,patch);
+#else
+      new_dw->getModifiable(frictionalWork,lb->frictionalWorkLabel,dwi,patch);
+#endif
       frictionalWork.initialize(0.);
     }
   }
@@ -96,6 +99,10 @@ void NullContact::addComputesAndRequiresIntegrated( Task* t,
   const MaterialSubset* mss = ms->getUnion();
   t->modifies(lb->gVelocityStarLabel, mss);
   t->modifies(lb->gAccelerationLabel, mss);
+#ifndef FRACTURE
   t->computes(lb->frictionalWorkLabel);
+#else
+  t->modifies(lb->frictionalWorkLabel, mss); 
+#endif
 
 }
