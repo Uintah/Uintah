@@ -42,7 +42,6 @@
 #include <Core/Thread/Mutex.h>
 #include <BioPSE/Core/Algorithms/NumApproximation/BuildFEMatrix.h>
 #include <iostream>
-using std::cerr;
 using std::endl;
 #include <stdio.h>
 #include <math.h>
@@ -143,8 +142,9 @@ void ConductivitySearch::build_basis_matrices() {
     else if (units == "cm") unitsScale = 1./100;
     else if (units == "dm") unitsScale = 1./10;
     else if (units == "m") unitsScale = 1./1;
-    else {
-      cerr << "ConductivitySearch -- didn't recognize units of mesh: " << units << "\n";
+    else
+    {
+      warning("Didn't recognize units of mesh: " + units + ".");
     }
   }
 
@@ -405,26 +405,26 @@ void ConductivitySearch::simplex_search() {
       }
     }
     if ((num_evals % 10) == 0) {
-      cerr << "ConductivitySearch -- Iter "<<num_evals<<":\n";
+      msgStream_ << "ConductivitySearch -- Iter "<<num_evals<<":\n";
       for (i=0; i<NSEEDS_; i++) {
-	cerr << "\t";
+	msgStream_ << "\t";
 	for (j=0; j<NDIM_; j++) {
-	  cerr << conductivities_(i,j) << " ";
+	  msgStream_ << conductivities_(i,j) << " ";
 	}
-	cerr << "\n";
+	msgStream_ << "\n";
       }
     }
   }
   ColumnMatrix *cm = dynamic_cast<ColumnMatrix*>(cond_vector_.get_rep());
-  cerr << "ConductivitySearch -- Original conductivities: \n\t";
-  for (i=NDIM_; i<NDIM_*2; i++) cerr << (*cm)[i] << " ";
-  cerr << "\nConductivitiySearch -- Final conductivities: \n";
+  msgStream_ << "ConductivitySearch -- Original conductivities: \n\t";
+  for (i=NDIM_; i<NDIM_*2; i++) msgStream_ << (*cm)[i] << " ";
+  msgStream_ << "\nConductivitiySearch -- Final conductivities: \n";
   for (i=0; i<NSEEDS_; i++) {
-    cerr << "\t";
+    msgStream_ << "\t";
     for (j=0; j<NDIM_; j++) {
-      cerr << conductivities_(i,j) << " ";
+      msgStream_ << conductivities_(i,j) << " ";
     }
-    cerr << "(error="<<misfit_[i]<<")\n";
+    msgStream_ << "(error="<<misfit_[i]<<")\n";
   }
 }
 
@@ -444,11 +444,11 @@ void ConductivitySearch::read_mesh_and_cond_param_ports(int &valid_data,
       new_data=1;
       mesh_in_=mesh;
     } else {
-      cerr << "ConductivitySearch -- same VolumeMesh as before."<<endl;
+      remark("Same VolumeMesh as previous run.");
     }
   } else {
     valid_data=0;
-    cerr << "ConductivitySearch -- didn't get a valid VolumeMesh."<<endl;
+    warning("Didn't get a valid VolumeMesh.");
   }
 
   TetVolField<int> *meshTV = dynamic_cast<TetVolField<int> *>(mesh.get_rep());
@@ -468,11 +468,11 @@ void ConductivitySearch::read_mesh_and_cond_param_ports(int &valid_data,
       new_data = 1;
       cond_params_=cond_params;
     } else {
-      cerr << "ConductivitySearch -- same ConductivityParams as before."<<endl;
+      remark("Same ConductivityParams as before.");
     }
   } else {
     valid_data=0;
-    cerr << "ConductivitySearch -- didn't get valid ConductivityParams."<<endl;
+    warning("Didn't get valid ConductivityParams.");
   }
 }
 
@@ -521,13 +521,12 @@ void ConductivitySearch::execute() {
   if (!new_data) {
     if (mesh_out_.get_rep()) { // if we have valid old data
       // send old data and clear ports
-      cerr << "Sending old data...\n";
+      remark("Sending old data.");
       mesh_oport_->send(mesh_out_);
       cond_vector_oport_->send(cond_vector_);
       fem_mat_oport_->send(fem_mat_);
       MatrixHandle dummy_mat;
       misfit_iport_->get(dummy_mat);
-      cerr << "Done!\n";
       return;
     } else {
       return;
@@ -567,14 +566,14 @@ ConductivitySearch::tcl_command(GuiArgs& args, void* userdata)
 {
   if (args[1] == "pause") {
     if (mylock_.tryLock())
-      cerr << "ConductivitySearch pausing..."<<endl;
+      msgStream_ << "Pausing..."<<endl;
     else 
-      cerr << "ConductivitySearch: can't lock -- already locked"<<endl;
+      msgStream_ << "Can't lock -- already locked"<<endl;
   } else if (args[1] == "unpause") {
     if (mylock_.tryLock())
-      cerr << "ConductivitySearch: can't unlock -- already unlocked"<<endl;
+      msgStream_ << "Can't unlock -- already unlocked"<<endl;
     else
-      cerr << "ConductivitySearch: unpausing"<<endl;
+      msgStream_ << "Unpausing"<<endl;
     mylock_.unlock();
   } else if (args[1] == "stop") {
     stop_search_=1;

@@ -99,12 +99,12 @@ void LinAlgBinary::execute() {
       omat_->send(MatrixHandle(cm));
       return;
     } else {
-      error("LinAlgBinary: Mult has only been implemented for 4x4 matrices.");
+      error("Mult has only been implemented for 4x4 matrices.");
       return;
     }
   } else if (op == "Function") {
     if (aH->nrows()*aH->ncols() != bH->nrows()*bH->ncols()) {
-      cerr << "LinAlgBinary: Error - function only works if input matrices have the same number of elements.\n";
+      error("Function only works if input matrices have the same number of elements.");
       return;
     }
     Function *f = new Function(1);

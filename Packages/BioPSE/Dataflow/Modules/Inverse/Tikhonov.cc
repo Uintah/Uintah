@@ -141,7 +141,7 @@ namespace BioPSE
     	ColumnMatrix *Acol = dynamic_cast<ColumnMatrix *>(A.get_rep());
     	if (!Acol) 
 	  {
-	    cerr << "Bad input.\n";
+	    warning("Bad input types.");
 	    return Adense;
 	  }
 	return Acol->dense();
@@ -164,7 +164,7 @@ namespace BioPSE
     	DenseMatrix *Adense = dynamic_cast<DenseMatrix *>(A.get_rep());
 	if (!Adense) 
 	  {
-	    cerr << "Bad input.\n";
+	    warning("Bad input types.");
 	    return Acol;
 	  }
     	return Adense->column();
@@ -295,7 +295,7 @@ namespace BioPSE
     int N = matrixForMatD->ncols();
     if (M!=matrixMeasDatD->nrows()) 
       {
-    	cerr << "Matrix dimensions must agree.  " << M << " " << matrixMeasDatD->nrows() << "\n";
+    	error("Input matrix dimensions must agree.");
 	return;
       }
     
@@ -344,19 +344,19 @@ namespace BioPSE
 	  {
 	    // Use single fixed lambda value, entered in UI
 	    lambda = lambda_fix_.get();
-	    cerr << "  method = " << reg_method_.get() << "\n";//DISCARD
+	    msgStream_ << "  method = " << reg_method_.get() << "\n";//DISCARD
 	  }
 	else if (reg_method_.get() == "slider")
 	  {
 	    // Use single fixed lambda value, select via slider
 	    lambda = lambda_sld_.get();
-	    cerr << "  method = " << reg_method_.get() << "\n";//DISCARD
+	    msgStream_ << "  method = " << reg_method_.get() << "\n";//DISCARD
 	  }
       }
     else if (reg_method_.get() == "lcurve")
       {
 	// Use L-curve, lambda from corner of the L-curve
-	cerr << "method = " << reg_method_.get() << "\n";//DISCARD
+	msgStream_ << "method = " << reg_method_.get() << "\n";//DISCARD
 
 	int i, j, k, l;
 	Array1<double> lambdaArray, rho, eta;

@@ -131,12 +131,12 @@ FieldMeasures::measure_trisurf()
   int z = zFlag_.get();
   int valence = valenceFlag_.get();
   if (valence) {
-    cerr << "FieldMeasures: Error - TriSurfMesh node valence not yet implemented.\n";
+    warning("TriSurfMesh node valence not yet implemented.");
     valence=0;
   }
   int aspectRatio = aspectRatioFlag_.get();
   if (aspectRatio) {
-    cerr << "FieldMeasures: Error - TriSurfMesh element aspect ratio not yet implemented.\n";
+    warning("TriSurfMesh element aspect ratio not yet implemented.");
     aspectRatio=0;
   }
   int elemSize = elemSizeFlag_.get();
@@ -203,7 +203,7 @@ FieldMeasures::measure_tetvol()
   int valence = valenceFlag_.get();
   int aspectRatio = aspectRatioFlag_.get();
   if (aspectRatio) {
-    cerr << "FieldMeasures: Error - TetVolMesh element aspect ratio not yet implemented.\n";
+    warning("TetVolMesh element aspect ratio not yet implemented.");
     aspectRatio=0;
   }
   int elemSize = elemSizeFlag_.get();
@@ -274,17 +274,17 @@ FieldMeasures::measure_latvol()
   int z = zFlag_.get();
   int valence = valenceFlag_.get();
   if (valence) {
-    cerr << "FieldMeasures: Error - TriSurfMesh node valence not yet implemented.\n";
+    warning("TriSurfMesh node valence not yet implemented.");
     valence=0;
   }
   int aspectRatio = aspectRatioFlag_.get();
   if (aspectRatio) {
-    cerr << "FieldMeasures: Error - LatVolMesh element aspect ratio not yet implemented.\n";
+    warning("LatVolMesh element aspect ratio not yet implemented.");
     aspectRatio=0;
   }
   int elemSize = elemSizeFlag_.get();
   if (elemSize) {
-    cerr << "FieldMeasures: Error - LatVolMesh element size not yet implemented.\n";
+    warning("LatVolMesh element size not yet implemented.");
     elemSize=0;
   }
   int ncols = 0;

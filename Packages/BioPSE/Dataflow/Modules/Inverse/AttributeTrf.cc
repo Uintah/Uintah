@@ -262,7 +262,7 @@ void AttributeTrf::execute(){
   TriSurfMesh::Node::size_type nsize; 
   tsm->size(nsize);
 
-  cerr << "Reading "<< ((unsigned int)nsize) << " points "<< "\n";
+  //cerr << "Reading "<< ((unsigned int)nsize) << " points "<< "\n";
 
   Array1<Point> pts;
   while(niter != niter_end) {
@@ -274,7 +274,7 @@ void AttributeTrf::execute(){
 
   TriSurfMesh::Face::size_type nfaces;
   tsm->size(nfaces);
-  cerr << "Reading "<< ((unsigned int)nfaces)<<" faces "<< "\n";
+  //  cerr << "Reading "<< ((unsigned int)nfaces)<<" faces "<< "\n";
   Array2<int> tris(nfaces, 3);
   TriSurfMesh::Face::iterator fiter;
   tsm->begin(fiter);

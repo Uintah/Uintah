@@ -32,6 +32,7 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Array2.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/TetVolField.h>
@@ -39,7 +40,6 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>
 #include <iostream>
-using std::cerr;
 using std::endl;
 #include <stdio.h>
 #include <math.h>
@@ -240,13 +240,11 @@ int DipoleSearch::pre_search() {
   if (!vol_mesh_->locate(ci, Point(dipoles_(seed_counter_,0), 
 				   dipoles_(seed_counter_,1), 
 				   dipoles_(seed_counter_,2)))) {
-    cerr << "Error: seedpoint " <<seed_counter_<<" is outside of mesh!" << endl;
+    warning("Seedpoint " + to_string(seed_counter_) + " is outside of mesh.");
     return 0;
   } 
-//  else 
-//    cerr << "Seed " << seed_counter_ << " was found in cell " << ci <<"\n";
   if (cell_visited_[ci]) {
-    cerr << "Warning: redundant seedpoints.\n";
+    warning("Redundant seedpoints found.");
     misfit_[seed_counter_]=cell_err_[ci];
   } else {
     cell_visited_[ci]=1;
@@ -300,7 +298,6 @@ int DipoleSearch::find_better_neighbor(int best, Array1<double>& sum) {
     dipoles_(NSEEDS_,2)=p1.z();
     eval_test_dipole();
     if (misfit_[NSEEDS_] < misfit_[best]) {
-//      cerr << "  test misfit="<<misfit_[NSEEDS_]<<"\n";
       misfit_[best] = misfit_[NSEEDS_];
       int i;
       for (i=0; i<NDIM_; i++) {
@@ -382,7 +379,6 @@ void DipoleSearch::simplex_search() {
 
     if (num_evals > MAX_EVALS_ || stop_search_) break;
 
-//    cerr << "misfit_["<<best<<"]="<<misfit_[best]<<"\n";
     // make sure all of our neighbors are worse than us...
     if (relative_tolerance < CONVERGENCE_) {
       if (misfit_[best]>1.e-12 && find_better_neighbor(best, sum)) {
@@ -424,7 +420,7 @@ void DipoleSearch::simplex_search() {
       }
     }
   }
-  cerr << "DipoleSearch -- num_evals = "<<num_evals << "\n";
+  msgStream_ << "DipoleSearch -- num_evals = "<<num_evals << "\n";
 }
 
 
@@ -444,35 +440,35 @@ void DipoleSearch::read_field_ports(int &valid_data, int &new_data) {
       vol_mesh_=
 	(TetVolMesh*)dynamic_cast<TetVolMesh*>(mesh->mesh().get_rep());
     } else {
-      cerr << "DipoleSearch -- same VolumeMesh as before."<<endl;
+      remark("Same VolumeMesh as previous run.");
     }
   } else {
     valid_data=0;
-    cerr << "DipoleSearch -- didn't get a valid VolumeMesh."<<endl;
+    remark("Didn't get a valid VolumeMesh.");
   }
   
   FieldHandle seeds;    
   if (!seeds_iport_->get(seeds)) {
-    cerr << "No input seeds.\n";
+    warning("No input seeds.");
     valid_data=0;
   } else if (!seeds.get_rep()) {
-    cerr << "Empty seeds handle.\n";
+    warning("Empty seeds handle.");
     valid_data=0;
   } else if (seeds->get_type_name(-1) != "PointCloudField<double>") {
-    cerr << "Seeds typename should have been PointCloudField<double>, not "<<seeds->get_type_name(-1) <<"\n";
+    warning("Seeds typename should have been PointCloudField<double>.");
     valid_data=0;
   } else {
     PointCloudField<double> *d=dynamic_cast<PointCloudField<double> *>(seeds.get_rep());
     PointCloudMesh::Node::size_type nsize; d->get_typed_mesh()->size(nsize);
     if (nsize != (unsigned int)NSEEDS_){
-      cerr << "Got "<< nsize <<" seeds, instead of "<<NSEEDS_<<"\n";
+      msgStream_ << "Got "<< nsize <<" seeds, instead of "<<NSEEDS_<<"\n";
       valid_data=0;
     } else if (!seedsH_.get_rep() || 
 	       (seedsH_->generation != seeds->generation)) {
       new_data = 1;
       seedsH_=seeds;
     } else {
-      cerr << "Using same seeds as before.\n";
+      remark("Using same seeds as before.");
     }
   }
 }
@@ -491,7 +487,7 @@ void DipoleSearch::organize_last_send() {
   TetVolMesh::Cell::index_type best_cell_idx;
   vol_mesh_->locate(best_cell_idx, best_pt);
 
-  cerr << "DipoleSearch -- the dipole was found in cell " << best_cell_idx << "\n    at position " << best_pt << " with a misfit of " << bestMisfit << "\n";
+  msgStream_ << "DipoleSearch -- the dipole was found in cell " << best_cell_idx << "\n    at position " << best_pt << " with a misfit of " << bestMisfit << "\n";
 
   DenseMatrix *leadfield_select_out = scinew DenseMatrix(2, 3);
   for (i=0; i<3; i++) {
@@ -610,14 +606,14 @@ void DipoleSearch::tcl_command(GuiArgs& args, void* userdata)
 {
   if (args[1] == "pause") {
     if (mylock_.tryLock())
-      cerr << "DipoleSearch pausing..."<<endl;
+      msgStream_ << "Pausing..."<<endl;
     else 
-      cerr << "DipoleSearch: can't lock -- already locked"<<endl;
+      msgStream_ << "Can't lock -- already locked"<<endl;
   } else if (args[1] == "unpause") {
     if (mylock_.tryLock())
-      cerr << "DipoleSearch: can't unlock -- already unlocked"<<endl;
+      msgStream_ << "Ccan't unlock -- already unlocked"<<endl;
     else
-      cerr << "DipoleSearch: unpausing"<<endl;
+      msgStream_ << "Unpausing"<<endl;
     mylock_.unlock();
   } else if (args[1] == "stop") {
     stop_search_=1;

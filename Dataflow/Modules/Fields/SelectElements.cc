@@ -89,17 +89,17 @@ void SelectElements::execute()
   int ii;
   for (ii=0; ii<values.size(); ii++) {
     if (values[ii] < min) {
-      cerr << "Error - min="<<min<<" value="<<values[ii]<<"\n";
+      msgStream_ << "Error - min="<<min<<" value="<<values[ii]<<"\n";
       values[ii]=(int)min;
     } else if (values[ii] > max) {
-      cerr << "Error - max="<<max<<" value="<<values[ii]<<"\n";
+      msgStream_ << "Error - max="<<max<<" value="<<values[ii]<<"\n";
       values[ii]=(int)max;
     }
   }
 
   TetVolField<int> *tvI = dynamic_cast<TetVolField<int> *>(field.get_rep());
   if (!tvI) {
-    cerr << "Error -- input field wasn't a TetVolField<int>\n";
+    error("Input field wasn't a TetVolField<int>.");
     return;
   }
 
@@ -145,7 +145,7 @@ void SelectElements::execute()
     }
     count++;
   }
-  cerr << "Found "<<fdata.size()<<" elements (out of "<<count<<") with specified conductivity indices.\n";
+  msgStream_ << "Found "<<fdata.size()<<" elements (out of "<<count<<") with specified conductivity indices.\n";
 
   ColumnMatrix *cm = scinew ColumnMatrix(indices.size()*3);
   for (ii=0; ii<indices.size(); ii++) {
@@ -232,9 +232,10 @@ void SelectElements::execute()
     if (arr[0] == -1 ||
 	arr[1] == -1 ||
 	arr[2] == -1 ||
-	arr[3] == -1) {
-      cerr << "ERROR - TET CONTAINS UNMAPPED NODE!\n";
-      exit(0);
+	arr[3] == -1)
+    {
+      error("Tet contains unmapped node.");
+      return;
     }
     arr[0] = node_map[(int)arr[0]];
     arr[1] = node_map[(int)arr[1]];
