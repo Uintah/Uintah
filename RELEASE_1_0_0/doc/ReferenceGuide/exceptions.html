@@ -22,8 +22,25 @@
 <head>
 
         <title>SCIRun Exceptions</title>
+	 <link rel=stylesheet type="text/css" href="../doc_styles.css">
 </head>
 <body>
+<!-- *************************************************************** -->
+<!-- *************** STANDARD SCI RESEARCH HEADER ****************** -->
+<!-- *************************************************************** -->
+<center><img SRC="../images/research_menuheader.gif" usemap="#head-links" height="71" width="600" border="0"></center>
+<map name="head-links">
+	<area shape="rect" coords="491,15,567,32" href="http://www.sci.utah.edu/research/research.html">
+	<area shape="rect" coords="31,9,95,36" href="http://www.sci.utah.edu">
+	<area href="../InstallGuide/pseInstall.html" coords="0,45,150,70">
+	<area href="../UserGuide/userguide.html" coords="150,45,300,70">
+	<area href="../DeveloperGuide/devguide.html" coords="300,45,450,70">
+	<area href="../ReferenceGuide/refguide.html" coords="450,45,600,70">
+</map>
+<!-- *************************************************************** -->
+<!-- *************************************************************** -->
+
+<p class="title">SCIRun Exceptions</p>
 
 <h1>Introduction</h1>
 
@@ -201,12 +218,26 @@ SCICore/Util/Assert.h, except for <b>ASSERTEQ</b>, <b>ASSERTNE</b>,
 include file pollution, please do *not* include FancyAssert.h in any
 .h file.</p>
 
-<p>Here are several typical ASSERT statements:
+<p>Here are several typical ASSERT statements:</p>
 <pre>
- ASSERT(d_refCount >= 0);
+ ASSERT(d_refCount &gt;= 0);
  ASSERTEQ(d_refCount, 0);
- ASSERT(mindex<NumMaterials);
+ ASSERT(mindex&lt;NumMaterials);
+</pre>
+<p>Look around the source tree for other examples.</p>
+
+<!-- ******************************************************************* -->
+<!-- *********************** STANDARD SCI FOOTER *********************** -->
+<!-- ******************************************************************* -->
+<center>
+<hr size="1" width="600">
+<font size="-1"><a href="http://www.sci.utah.edu">Scientific Computing and Imaging Institute</a> &#149; <a href="http://www.utah.edu">University of Utah</a> &#149; 
+(801) 585-1867</font>
+</center>
+<!-- ********************* END STANDARD SCI FOOTER ********************* -->
+<!-- ******************************************************************* -->
+
 </body>
 
-Look around the source tree for other examples.</p>
+
 </html>
