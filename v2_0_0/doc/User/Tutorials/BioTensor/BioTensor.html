@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
-<!-- Note: This is supposed to be a valid xhtml file! -->
+<!-- 
+  This is supposed to be a valid xhtml file!
+  Please visit http://validator.w3.org after editing this file.
+-->
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 "DTD/xhtml1-transitional.dtd">
@@ -306,14 +309,14 @@ shown in <a href="#figure_1">Figure 1</a>.
 
 <a name="figure_1" id="figure_1"></a>
 <center>
-<a href="figures/biotensor-load.gif">
+<a href="figures/biotensor-load2.gif">
 <img border="1"
-src="figures/biotensor-load-small.gif" alt="Figure 1: BioTensor
+src="figures/biotensor-load2-small.gif" width="600" height="362"alt="Figure 1: BioTensor
 Interface Window (Initial State)."/> 
 </a>
 <br/>
 <b>Figure 1: BioTensor Interface Window initial
-state.  <br />Click on image for a larger view.</b>
+state  <br />Click on image for a larger view</b>
 </center>
 <br />
 <br />
@@ -342,8 +345,8 @@ clicking on the pane detachment/attachment controls.
 </p>
 
 <center>
-<a href="figures/biotensor-panes.gif"><img border="1"
-src="figures/biotensor-panes-small.gif" alt="Figure 2: BioTensor
+<a href="figures/biotensor-panes2.gif"><img border="1"
+src="figures/biotensor-panes2-small.gif" width="623" height="381" alt="Figure 2: BioTensor
 Interface Window (Panels Detached From View Window)."/> 
 </a>
 <br/>
@@ -431,18 +434,24 @@ Notes:
 </p>
 <ul>
 <li>
+<p>
 Pre-computed diffusion tensor data are loaded by clicking the radio
 button labeled: Load Tensor Volumes.  If this is done then processing
 steps are skipped and tensor volume data may be visualized directly
 (as described in <a href="#section_6">Section 6</a>)
+</p>
 </li>
 <li>
+<p>
 DICOM or Analyze format data can be loaded using the Dicom and Analyze
-panels respectively.  </li>
+panels respectively.</p>
+</li>
 <li>
+<p>
 <em>The 1.20.0 version of BioTensor does <b>not</b> have support for
 loading diffusion weighted data without also specifying a B0 reference
 dataset. This will be fixed in version 1.20.1.</em>
+</p>
 </li>
 </ul>
 <br/>
@@ -586,13 +595,13 @@ quality (and decreasing speed), the choices are:
 </p>
 <ul>
 <li>
-Tent (linear interpolation)
+<p>Tent (linear interpolation)</p>
 </li>
 <li>
-Catmull-Rom (cubic interpolation)
+<p>Catmull-Rom (cubic interpolation)</p>
 </li>
 <li>
-Windowed Sinc (Hann window with 8-sample radius)
+<p>Windowed Sinc (Hann window with 8-sample radius)</p>
 </li>
 </ul>
 <p>
@@ -810,25 +819,25 @@ isosurface from the DT volume. As shown in <a href="#figure_10">Figure
 </p>
 <ul>
 <li>
-Choose whether or not to show the isosurface.
+<p>Choose whether or not to show the isosurface.</p>
 </li>
 <li>
-Select which derived metric the isosurface is computing
-(e.g. Fractional Anisotropy).
+<p>Select which derived metric the isosurface is computing
+(e.g. Fractional Anisotropy).</p>
 </li>
 <li>
-Select an isovalue.
+<p>Select an isovalue.</p>
 </li>
 <li>
-Color the isosurface based on: the principle eigenvector direction
+<p>Color the isosurface based on: the principle eigenvector direction
 (and desaturated or colored black as described for the planes, above),
 another scalar metric (in which case the radio buttons for the
 color-map swatches are activated), or a constant color (chosen using
-the "Color" button).
+the "Color" button).</p>
 </li>
 <li>
-Use the planes as clipping planes to clip the isosurface. Orientation
-of each clipping plane can be toggled using the Flip buttons.
+<p>Use the planes as clipping planes to clip the isosurface. Orientation
+of each clipping plane can be toggled using the Flip buttons.</p>
 </li>
 </ul>
 
@@ -924,23 +933,24 @@ the fiber tracing algorithm. These parameters include:
 </p>
 <ul>
 <li>
-Algorithm: trace along the major eigenvector or using the tensor-lines
+<p>Algorithm: trace along the major eigenvector or using the tensor-lines
 algorithm; choose a step size, and whether to use Euler or RK4
 (fourth-order Runge-Kutta) integration.
+</p>
 </li>
 <li>
-Sampling Kernel: choose the interpolation kernel to be used when
+<p>Sampling Kernel: choose the interpolation kernel to be used when
 querying tensor values between discrete sample locations (Tent,
-Catmull-Rom, or B-Spline).
+Catmull-Rom, or B-Spline).</p>
 </li>
 <li>
-Stopping Criteria: choose a set of criteria that can be evaluated to
+<p>Stopping Criteria: choose a set of criteria that can be evaluated to
 determine whether to terminate a fiber. If any of the criteria are
 true, the fiber will terminate. These criteria include: exceeding a
 specified maximum fiber length, exceeding a maximum number of steps,
 and entering a region of the volume that falls below a specified
 anisotropy threshold (either Linear Anisotropy or Fractional
-Anisotropy).
+Anisotropy).</p>
 </li>
 </ul>
 
@@ -1002,9 +1012,8 @@ volume would have dimensions 90x128x256.
 </p>
 
 <p>
-For DICOM data, a
-collection of sequences (directories) that make up the DWI and
-reference volumes must be identified.
+For DICOM data, a collection of sequences (directories) that make up
+the DWI and reference volumes must be identified.
 </p>
 
 <center>
