@@ -642,7 +642,7 @@ namespace Uintah {
       bool d_EqForm;
       bool d_impICE;
       bool d_recompile;
-      bool d_canAddMaterial;
+      bool d_canAddICEMaterial;
       
       int d_max_iter_equilibration;
       int d_max_iter_implicit;
