@@ -51,6 +51,7 @@ public:
 	MUIDispatch,
 
 	GeometryInit,
+	GeometryDetach,
 	GeometryAddObj,
 	GeometryDelObj,
 	GeometryDelAll,

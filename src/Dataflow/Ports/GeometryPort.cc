@@ -406,25 +406,10 @@ GeometryOPort::detach(Connection* c)
   
   if (i < connections.size())
   {
-    // Delete all live objects and flush.
-    bool sent = false;
-    list<GeometryComm *>::iterator itr = saved_msgs_.begin();
-    while (itr != saved_msgs_.end())
-    {
-      if ((*itr)->type == MessageTypes::GeometryAddObj)
-      {
-	GeometryComm *msg = scinew GeometryComm(portid_[i], (*itr)->serial);
-	outbox_[i]->send(msg);
-	sent = true;
-      }
-      ++itr;
-    }
-    if (sent)
-    {
-      GeometryComm *msg = scinew GeometryComm(MessageTypes::GeometryFlushViews,
-					      portid_[i], (Semaphore*)0);
-      outbox_[i]->send(msg);
-    }
+    // Let the Viewer know that the port is shutting down.
+    GeometryComm *msg =
+      scinew GeometryComm(MessageTypes::GeometryDetach, portid_[i]);
+    outbox_[i]->send(msg);
 
     // Clean up the outbox_ and portid_ vectors.
     outbox_.erase(outbox_.begin() + i);
@@ -438,7 +423,7 @@ GeometryOPort::detach(Connection* c)
 bool
 GeometryOPort::have_data()
 {
-  return false;
+  return saved_msgs_.size();
 }
 
 
@@ -447,7 +432,6 @@ GeometryOPort::resend(Connection*)
 {
   cerr << "GeometryOPort can't resend and shouldn't need to!\n";
 }
-
 
 int
 GeometryOPort::getNViewers()
