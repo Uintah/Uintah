@@ -12,7 +12,7 @@
 src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height="66" width="150"></a>
 
 <p class="title">Installation and Build Instructions for the SCIRun PSE</p>
-<p class="subtitle">(Unix version - Updated January 11, 2001)</p>
+<p class="subtitle">(Unix version - Updated February 13, 2001)</p>
 
 <p class="head">Table of contents</p>
 <ol class="toc">
@@ -25,6 +25,7 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
       <LI><A HREF="#AdditionalDocs">Additional Documentation</A></LI>
       <LI><A HREF="#GettingHelp">Getting Help</A></LI>
       <LI><A HREF="#ThirdParty">Third Party Software Information</A></LI>
+	  <LI><A HREF="#Gotchas">Known Issues</A></LI>
 </ol>
 
 <p class="head"><a name="Prerequisites">Prerequisites</a></p>
@@ -48,16 +49,14 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
     <p class="firstpara">
       The following table describes the system software
       requirements for SCIRun.  The version numbers listed
-      in the table are minimums; newer versions may also work but are
-      not officially supported.
+      in the table are minimums; newer and/or older versions may
+	  also work, but are not officially supported.
     </p>
 
     <p class="firstpara">
       Click on the links in the
       table to get information about (software column) or to download
-      (version column) the software.  Click on the link in the
-      archived sources column to download all the freely available sources
-      with one click.
+      (version column) the software.
     </p>
 
     <p class="firstpara">
@@ -66,7 +65,8 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
       required software.
     </p>
 
-    <TABLE border=1><center>
+    <p><center>
+    <TABLE border=1>
       <TR>
         <TH>Platform</TH>
 	<TH>Software</TH>
@@ -198,19 +198,22 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
         </TD>
       </TR>
     </TABLE>
+    </center>
+    </p>
 
 <p class="head"><a name="Recommend">System Recommendations</a></p>
     <p class="firstpara">
       <b>For SGI machines:</b>
       R10K 250MHz processor(s),
-      Texture mapping hardware
+      Texture mapping hardware.
     </p>
 
 
     <p class="firstpara">
       <b>For Linux machines:</b>
         PIII 500MHz processor(s),
-	NVidia Geforce accelerated graphics card
+	NVIDIA Geforce or Quadro series accelerated graphics card with 0-9.6 drivers,
+	Mandrake 7.2 and XFree86 4.0.2.
     </p>
 
 <p class="head"><a name="Installing">Installing SCIRun</a></p>
@@ -220,8 +223,8 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
 
     <p class="firstpara">
       If you have access to the SCIRun CVS repository (i.e. you are
-      a student or staff member of the SCI Institute), then click <a
-      href="http://www.sci.utah.edu/scirun_docs/doc/ReferenceGuide/cvs_info.html">here</a>.
+      a student or staff member of the SCI Institute), then contact a
+	  member of the senior staff for information regarding CVS access.
     </p>
 
     <p class="firstpara">
@@ -261,27 +264,29 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
     </p>
 
     <p class="firstpara">
-      <b>For tarball:</b>
+      For tarball:
     </p>
 
-    <pre class="example">cd /usr/local/contrib
+    <pre class="example"><font color=blue>cd /home/bob
 gunzip SCIRun.tar.gz
 tar xvf SCIRun.tar
+		</font>
     </pre>
 
     <p class="firstpara">
-      <b>For CVS:</b>
+      For CVS:
     </p>
     
-    <pre class="example">cd /usr/local/contrib
+    <pre class="example"><font color=blue>cd /home/bob
 cvs checkout SCIRun
+		</font>
     </pre>
 
     <p class="firstpara"> 
       The root of the resulting SCIRun source tree will be referred to 
       as <i><b><font color=green>SCIRUN_TOP</font></b></i> from now on.
       The <i><b><font color=green>SCIRUN_TOP</font></b></i> for the above
-      examples would be "/usr/local/contrib/SCIRun" .
+      examples would be "/home/bob/SCIRun" .
     </p>
 
     <p class="firstpara">
@@ -304,27 +309,29 @@ cvs checkout SCIRun
   <p class="firstpara">
     <b>2) Run configure.</b>
   </p>
-  <p>
+
+  <p class="firstpara">
     From the <i><b><font color=green>SCIRUN_TOP</font></b></i>/src
     directory type:
   </p>
 
-  <pre class="example">configure CONFIGURE_OPTIONS</pre>
+  <pre class="example"><font color=blue>configure</font> <i><b><font color=green>CONFIGURE_OPTIONS</font></b></i></pre>
 
   <p class="firstpara">
-    Where CONFIGURE_OPTIONS are one or more of 
+    Where <i><b><font color=green>CONFIGURE_OPTIONS</font></b></i> are one or more of 
     <a href="makefiles.html#configure">these</a>.<br><br>
     An example of a typical configure command:
   </p>
 
-  <pre class="example">configure --enable-package="Uintah BioPSE" \
-	  --with-tcl=/usr/local/scirun_thirdparty \
-	  --with-xerces=/usr/local/scirun_thirdparty/lib 
+  <pre class="example"><font color=blue>configure --enable-package="Uintah BioPSE" \
+	  --with-tcl=/usr/local/scirun_stuff \
+	  --with-xerces=/usr/local/scirun_stuff
+	</font>
   </pre>
 
   <p class="firstpara">	
     The example assumes that the indicated third party software 
-    was installed in /usr/local/scirun_thirdparty.
+    was installed in /usr/local/scirun_stuff.
   </p>
 
   <p class="firstpara">   
@@ -336,7 +343,7 @@ cvs checkout SCIRun
     directory type:
   </p>
 
-  <pre class="example">make</pre>
+  <pre class="example"><font color=blue>make</font></pre>
 
 <p class="head"><a name="RunningSCIRun">Running SCIRun</a></p>
     <P class="firstpara">
@@ -344,7 +351,7 @@ cvs checkout SCIRun
       the <i><b><font color=green>SCIRUN_TOP</font></b></i>/src directory named:
     </P>
 
-    <pre class="example">scirun
+    <pre class="example"><font color=blue>scirun</font>
     </pre>
 
     <p class="firstpara">
@@ -367,11 +374,9 @@ cvs checkout SCIRun
       the web at:
     </p>
 
-    <p class="firstpara">
-      <A HREF="http://www.sci.utah.edu/scirun_docs/doc">
-        <TT>http://www.cs.utah.edu/scirun_docs/doc</TT>
-      </A>
-    </p>
+    <pre class="example"><A HREF="http://www.sci.utah.edu/scirun_docs/doc">
+http://www.cs.utah.edu/scirun_docs/doc</A>
+    </pre>
 
 
 <p class="head"><a name="GettingHelp">Getting Help</a></p>
@@ -382,14 +387,14 @@ cvs checkout SCIRun
     </p>
 
     <p class="firstpara">
-      <TT><A HREF="mailto:majordomo@cs.utah.edu">majordomo@cs.utah.edu</A></TT>
+      <A HREF="mailto:majordomo@cs.utah.edu"><pre class="example">majordomo@cs.utah.edu</pre></A>
     </p>
 
     <p class="firstpara">
       with the following in the body of the message:
     </p>
 
-    <pre class="example">subscribe scirun-develop
+    <pre class="example"><font color=blue>subscribe scirun-users</font>
     </pre>
 
     <p class="firstpara">
@@ -397,15 +402,15 @@ cvs checkout SCIRun
       as an email to the list:
     </p>
 
-    <P>
-      <A HREF="mailto:scirun-develop@cs.utah.edu"><TT>scirun-develop@cs.utah.edu</TT></A>
+    <P class="firstpara">
+      <A HREF="mailto:scirun-users@cs.utah.edu"><pre class="example">scirun-users@cs.utah.edu</pre></A>
     </P>
 
-    <P>
+    <P class="firstpara">
       To aid in problem resolution, include a verbatim copy of the error(s) 
       displayed (if any).  Also include a short description of what you
       we're doing (running a network, building the tree, etc.) and which
-      version of the SCIRun you have (SCIRun 1.0 beta).
+      version of SCIRun you have (SCIRun 1.0.0 alpha).
     </P>
 
 <p class="head"><a name="ThirdParty">Third Party Software Information</a></p>
@@ -428,28 +433,28 @@ cvs checkout SCIRun
       SCIRun can easily be used with existing instances of the
       required third party software, regardless of where it is
       installed.  However, it is recommended that all the
-      required third party software be installed into a centralized
-      location, to prevent conflicts with other software, if it is not yet
-      already installed.
+      required third party software be installed into a centralized and
+	  out of the way location, to prevent conflicts with other software,
+	  if it is not yet already installed.
     </p>
     
     <p class="firstpara">
       For example, install all the third party software into the
-      directory called "/usr/local/contrib/scirun_stuff" such that
-      after installing all the distributions, the directories have the
-      following structure:
+      directory called "/usr/local/scirun_stuff" such that
+      after installing all the distributions, the /usr/local/scirun_stuff has the
+      following contents:
     </p>
 
-    <pre class="example">/usr/local/contrib/scirun_stuff/tcl8.3.2
-/usr/local/contrib/scirun_stuff/tk8.3.2
-/usr/local/contrib/scirun_stuff/itcl3.1.0
-/usr/local/contrib/scirun_stuff/blt2.4u
-/usr/local/contrib/scirun_stuff/xerces-c-src1_3_0
-/usr/local/contrib/scirun_stuff/make-3.79.1
-/usr/local/contrib/scirun_stuff/man
-/usr/local/contrib/scirun_stuff/lib
-/usr/local/contrib/scirun_stuff/bin
-/usr/local/contrib/scirun_stuff/include
+    <pre class="example">/usr/local/scirun_stuff/tcl8.3.2
+/usr/local/scirun_stuff/tk8.3.2
+/usr/local/scirun_stuff/itcl3.1.0
+/usr/local/scirun_stuff/blt2.4u
+/usr/local/scirun_stuff/xerces-c-src1_3_0
+/usr/local/scirun_stuff/make-3.79.1
+/usr/local/scirun_stuff/man
+/usr/local/scirun_stuff/lib
+/usr/local/scirun_stuff/bin
+/usr/local/scirun_stuff/include
     </pre>
 
     <p class="firstpara">
@@ -469,7 +474,7 @@ cvs checkout SCIRun
       NOTE: <i><b><font color=green>INST_DIR</font></b></i> represents
       the chosen installation directory for the indicated software
       distribution.  <i><b><font color=green>INST_DIR</font></b></i>
-      would be "/usr/local/contrib/scirun_stuff" for the example given
+      would be "/usr/local/scirun_stuff" for the example given
       above. 
     </p>
 
@@ -477,7 +482,7 @@ cvs checkout SCIRun
       <b>For Tcl, Tk, [incr Tcl/Tk], BLT and GNU make</b>
     </p>
 
-    <pre class="example">configure --prefix=<i><b><font
+    <pre class="example"><font color=blue>configure --prefix=</font><i><b><font
 	  color=green>INST_DIR</font></b></i>
     </pre>
 
@@ -488,16 +493,16 @@ cvs checkout SCIRun
     <p class="firstpara">
       On SGI machines:
     <p>
-    <pre class="example">runConfigure -nfileonly -tnative -minmem \
-             -pirix -ccc -xCC -z-DAPP_NO_THREADS -P<i><b><font
+    <pre class="example"><font color=blue>runConfigure -nfileonly -tnative -minmem \
+             -pirix -ccc -xCC -z-DAPP_NO_THREADS -P</font><i><b><font
 		 color=green>INST_DIR</font></b></i>
     </pre>
 
     <p class="firstpara">
       On Linux machines:
     </p>
-    <pre class="example">runConfigure -nfileonly -tnative -minmem \
-             -plinux -cgcc -xg++ -P<i><b><font
+    <pre class="example"><font color=blue>runConfigure -nfileonly -tnative -minmem \
+             -plinux -cgcc -xg++ -rpthreads -P</font><i><b><font
 		 color=green>INST_DIR</font></b></i>
     </pre>
 
@@ -549,8 +554,103 @@ cvs checkout SCIRun
       default ABI (Application Binary Interface).
     </p>
 
+<p class="head"><a name="Gotchas">Known Issues</a></p>
+    <p class="firstpara">
+	  This section describes known issues with installing and building SCIRun and 
+	  it's required third party software.  It also includes solutions when available. 
+    </p>
 
+<p class="subhead">Path Specifications</p>
+    <p class="firstpara">
+	  If any of the software, SCIRun or thirdparty, is installed into a user's home
+	  directory, <i><b>do not</b></i> use abbreviations such as tilde expansion
+	  when specifying paths.  Instead, use full absolute paths.  For example, use
+	  /home/bob/SCIRun instead of ~bob/SCIRun for the --prefix arguments when configuring.
+	  Most abbreviation techniques will not get expanded by the build scripts for any of
+	  the software.
+    </p>
 
+<p class="subhead">Building [incr Tcl/Tk]</p>
+	<p class="firstpara">
+	  The [incr Tcl/Tk] distribution listed in the system requirements has a bug in it:
+	  The installation scripts are bundled without execute permissions.  Before attempting
+	  to configure or make [incr Tcl/Tk], type the following commands:
+	</p>
+
+	<pre class="example"><font color=blue>cd itcl3.1.0/config
+chmod a+x install-sh mkinstalldirs</font></pre>
+
+	<p class="firstpara">
+	  Then, proceed normally with the configure and make.
+	</p>
+
+<p class="subhead">Building BLT</p>
+	<p class="firstpara">
+	  The BLT make files have bugs in them that prevent building the necessary shared object
+	  libraries.  To build the necessary files type the following, after configuring:
+	</p>
+
+	<pre class="example"><font color=blue>cd blt2.4u
+make -k install
+cd src/shared
+make -k install</font>
+	</pre>
+
+<p class="subhead">Building Xerces-c</p>
+	<p class="firstpara">
+	  The make system for Xerces-c is not standard and has many bugs.  The following all apply
+	  after configuring xerces.
+	</p>
+
+	<p class="firstpara">
+	  After typing "make", but before compilation begins, the make system copies certain files around.
+	  This copying is not specified in any dependancy tree, so using a -j flag (use multiple threads)
+	  as a make argument will cause the build to fail.
+	</p>
+
+	<p class="firstpara">
+	  There is no dependancy tree for the "install" target within the make files, so passing
+	  install as an argument to the first time "make" is typed will cause the build to fail.
+	  Instead type "make" first, then "make install".
+	</p>
+
+	<p class="firstpara">
+	  The make system ignores errors in compilation and forces a link.  Verify that the build
+	  was actually successful by checking the size of libxerces-c1_3.so.  The sizes should be:
+	  ~2.1MB for SGI 32 bit, ~2.4MB for SGI 64 bit, and ~1.4MB for linux.
+	</p>
+
+	<p class="firstpara">
+	  The install script the make system uses to install xerces has a bug: it copies it's
+	  header files into the parent of /include rather than into /include itself.  After 
+	  typing "make install", move the copied files from the parent into /include by hand.
+	</p>
+
+<p class="subhead">Building SCIRun</p>
+	<p class="firstpara">
+	  The configure script expects the OpenGL headers to live in /usr/include/GL or /usr/X11R6/include/GL.
+	  Some linux distributions have the OpenGL headers installed in /usr/local/include/GL.  This is 
+	  non-standard and should be corrected, as this may cause version conflicts with other pieces of 
+	  software located in /usr/local.
+	</p>
+
+	<p class="firstpara">
+	  SCIRun requires the full source of Tcl and Tk to be installed.  This is required because SCIRun
+	  defines a few Tk widgets of it's own, and needs some headers from the source that aren't
+	  included with typical installations.  If your system already has the correct Tcl and Tk versions
+	  installed, you will have to re-install (see above) in order to have the sources included.
+	</p>
+
+	<p class="firstpara">
+	  SCIRun has been successfully built on several versions of linux including Mandrake 7.2, SuSE 7.0,
+	  and Debian 2.2.x (stable and unstable).  It has also been successfully installed (after much coaxing)
+	  on Redhat systems.  In addition, it has been successfully installed on single and dual processor Intel
+	  machines, and on single processor AMD machines.
+	</p>
+
+	<p class="firstpara">
+	  <br><br><hr>
+	</p>
 
 
 
