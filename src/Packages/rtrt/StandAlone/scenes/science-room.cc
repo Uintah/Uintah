@@ -251,6 +251,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     if (!readObjFile(objname, mtlname, room_trans, g))
       exit(0);
   }
+  /*
   for (i=0; i<wines.size(); i++) {
     cerr << "Reading: "<<wines[i]<<"\n";
     string objname(pathname+wines[i]+string(".obj"));
@@ -258,7 +259,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     if (!readObjFile(objname, mtlname, wine_trans, g))
       exit(0);
   }
-
+  */
 
 
 
@@ -403,7 +404,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   CutVolumeDpy* gcvdpy = new CutVolumeDpy(16137.7, gcmap);
 
   HVolumeBrick16* geology=new HVolumeBrick16(gcutmat, gcvdpy,
-					      "/usr/sci/data/Geometry/volumes/Seismic/stack-16high.raw",
+					      "/usr/sci/data/Geometry/volumes/Seismic/stack-16full.raw",
 					      3, nworkers);
   InstanceWrapperObject *giw = new InstanceWrapperObject(geology);
 
@@ -469,10 +470,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->attach_auxiliary_display(gcvdpy);
   scene->attach_auxiliary_display(cpdpy);
 
+  /*
   vcvdpy->setName("Visible Female Volume");
   hcvdpy->setName("Brain Volume");
   gcvdpy->setName("Geological Volume");
   cpdpy->setName("Cutting Plane");
+  */
 
   scene->attach_display(vcvdpy);
   (new Thread(vcvdpy, "VFEM Volume Dpy"))->detach();
