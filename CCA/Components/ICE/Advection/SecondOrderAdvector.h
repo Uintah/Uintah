@@ -87,6 +87,21 @@ namespace Uintah {
                        SFCYVariable<double>& q_YFC,
                        SFCZVariable<double>& q_ZFC,
                        F save_q_FC);  // passed in function
+                       
+    template<class T>
+      void compute_q_FC(CellIterator iter, 
+                	   IntVector adj_offset,
+                	   const int face,
+                	   const CCVariable<facedata<double> >& q_OAFS,
+                        const CCVariable<double>& q_CC,
+                	   T& q_FC);
+			
+      void compute_q_FC_PlusFaces(const CCVariable<facedata<double> >& q_OAFS,
+                                  const CCVariable<double>& q_CC,
+                        	      const Patch* patch,
+                        	      SFCXVariable<double>& q_XFC,
+                        	      SFCYVariable<double>& q_YFC,
+                        	      SFCZVariable<double>& q_ZFC);
 	 
   };  
 } // end namespace Uintah
