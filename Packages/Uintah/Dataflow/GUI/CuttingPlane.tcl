@@ -27,12 +27,12 @@ itcl_class Uintah_Visualization_CuttingPlane {
 	set $this-num_contours 20
 	global $this-where
 	set $this-where 0.5
-	global $this-localMinMaxTCL
-	set $this-localMinMaxTCL 0
-	global $this-fullRezTCL
-	set $this-fullRezTCL 0
-	global $this-exhaustiveTCL
-	set $this-exhaustiveTCL 0
+	global $this-localMinMaxGUI
+	set $this-localMinMaxGUI 0
+	global $this-fullRezGUI
+	set $this-fullRezGUI 0
+	global $this-exhaustiveGUI
+	set $this-exhaustiveGUI 0
 #	$this-c needexecute
     }
     method ui {} {
@@ -106,11 +106,11 @@ itcl_class Uintah_Visualization_CuttingPlane {
 
 	pack $w.where -fill x -pady 2
 	checkbutton $w.local -text "Local Relative Values" -variable \
-		$this-localMinMaxTCL
+		$this-localMinMaxGUI -command $n
 	checkbutton $w.full -text "Full Resolution" -variable \
-		$this-fullRezTCL
+		$this-fullRezGUI -command $n
 	checkbutton $w.exh -text "Exhaustive Search" -variable \
-		$this-exhaustiveTCL
+		$this-exhaustiveGUI -command $n
 	pack $w.local $w.full $w.exh -fill x -pady 2 -side top
     }
 }

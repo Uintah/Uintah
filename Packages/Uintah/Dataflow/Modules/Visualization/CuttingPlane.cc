@@ -359,13 +359,12 @@ void CuttingPlane::execute()
       if(field->get_type_name(0) != "LevelField" &&
 	 field->get_type_name(0) != "LatticeVol"){
 	cerr << "Error - not a regular grid... can't use Full Resolution!\n";
-      } else {
-	int nx, ny, nz;
-	get_dimensions(field, nx,ny,nz);
-	if(field->data_at() == Field::CELL){ nx--; ny--; nz--; }
-	int most=Max(Max(nx, ny), nz);
-	u_num=v_num=most;
       }
+      int nx, ny, nz;
+      get_dimensions(field, nx,ny,nz);
+      if(field->data_at() == Field::CELL){ nx--; ny--; nz--; }
+      int most=Max(Max(nx, ny), nz);
+      u_num=v_num=most;
     }
     //    cout << "u fac = " << u_fac << "\nv fac = " << v_fac << endl;
     
