@@ -38,7 +38,7 @@ namespace SCIRun {
 
 PersistentTypeID Matrix::type_id("Matrix", "Datatype", 0);
 
-#define MATRIX_VERSION 2
+#define MATRIX_VERSION 3
 
 void
 Matrix::io(Piostream& stream)
@@ -47,6 +47,9 @@ Matrix::io(Piostream& stream)
   if (version < 2) {
     int tmpsym;
     stream.io(tmpsym);
+  }
+  if (version > 2) {
+    PropertyManager::io(stream);
   }
   stream.end_class();
 }

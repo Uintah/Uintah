@@ -31,7 +31,7 @@
 #ifndef SCI_project_Matrix_h
 #define SCI_project_Matrix_h 1
 
-#include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/PropertyManager.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Containers/LockingHandle.h>
@@ -48,7 +48,7 @@ class Matrix;
 class MatrixRow;
 typedef LockingHandle<Matrix> MatrixHandle;
 
-class SCICORESHARE Matrix : public Datatype
+class SCICORESHARE Matrix : public PropertyManager
 {
 public:
   //! make a duplicate, needed to support detach from LockingHandle
