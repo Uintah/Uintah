@@ -2089,6 +2089,8 @@ void ICE::computeTempFC(const ProcessorGroup*,
                         DataWarehouse* old_dw,                          
                         DataWarehouse* new_dw)                          
 {
+  const Level* level = getLevel(patches);
+  
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
     
@@ -2141,18 +2143,31 @@ void ICE::computeTempFC(const ProcessorGroup*,
       int offset=0;    // 0=Compute all faces in computational domain
                        // 1=Skip the faces at the border between interior and gc
 
+      CellIterator XFC_iterator = patch->getSFCXIterator(offset);
+      CellIterator YFC_iterator = patch->getSFCYIterator(offset);
+      CellIterator ZFC_iterator = patch->getSFCZIterator(offset);
+      
+      if (level->getIndex() > 0) {  // Finer levels need to hit the ghost cells
+        IntVector l, h;
+        l = patch->getExtraCellIterator().begin();
+        h = patch->getExtraCellIterator().end();
+        XFC_iterator = CellIterator(l + IntVector(1,0,0),h);
+        YFC_iterator = CellIterator(l + IntVector(0,1,0),h);
+        ZFC_iterator = CellIterator(l + IntVector(0,0,1),h);
+      }
+      
       //__________________________________
       //  Compute the temperature on each face     
       //  Currently on used by HEChemistry 
       if (d_models.size() > 0) {        
-        computeTempFace<SFCXVariable<double> >(patch->getSFCXIterator(offset),
-                                     adj_offset[0], rho_CC,Temp_CC, TempX_FC);
+        computeTempFace<SFCXVariable<double> >(XFC_iterator, adj_offset[0], 
+                                               rho_CC,Temp_CC, TempX_FC);
 
-        computeTempFace<SFCYVariable<double> >(patch->getSFCYIterator(offset),
-                                     adj_offset[1], rho_CC,Temp_CC, TempY_FC);
+        computeTempFace<SFCYVariable<double> >(YFC_iterator, adj_offset[1], 
+                                               rho_CC,Temp_CC, TempY_FC);
 
-        computeTempFace<SFCZVariable<double> >(patch->getSFCZIterator(offset),
-                                     adj_offset[2], rho_CC,Temp_CC, TempZ_FC);
+        computeTempFace<SFCZVariable<double> >(ZFC_iterator,adj_offset[2],
+                                               rho_CC,Temp_CC, TempZ_FC);
       }
 
       //---- P R I N T   D A T A ------ 
@@ -2255,20 +2270,34 @@ void ICE::computeVel_FC(const ProcessorGroup*,
 
       int offset=0;    // 0=Compute all faces in computational domain
                        // 1=Skip the faces at the border between interior and gc
+
+      CellIterator XFC_iterator = patch->getSFCXIterator(offset);
+      CellIterator YFC_iterator = patch->getSFCYIterator(offset);
+      CellIterator ZFC_iterator = patch->getSFCZIterator(offset);
+      
+      if (level->getIndex() > 0) {  // Finer levels need to hit the ghost cells
+        IntVector l, h;
+        l = patch->getExtraCellIterator().begin();
+        h = patch->getExtraCellIterator().end();
+        XFC_iterator = CellIterator(l + IntVector(1,0,0),h);
+        YFC_iterator = CellIterator(l + IntVector(0,1,0),h);
+        ZFC_iterator = CellIterator(l + IntVector(0,0,1),h);
+      }
+
       //__________________________________
       //  Compute vel_FC for each face
-      computeVelFace<SFCXVariable<double> >(0,patch->getSFCXIterator(offset),
-                                      adj_offset[0],dx[0],delT,gravity[0],
+      computeVelFace<SFCXVariable<double> >(0, XFC_iterator,
+                                       adj_offset[0],dx[0],delT,gravity[0],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
                                        uvel_FC);
 
-      computeVelFace<SFCYVariable<double> >(1,patch->getSFCYIterator(offset),
-                                      adj_offset[1],dx[1],delT,gravity[1],
+      computeVelFace<SFCYVariable<double> >(1, YFC_iterator,
+                                       adj_offset[1],dx[1],delT,gravity[1],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
                                        vvel_FC);
 
-      computeVelFace<SFCZVariable<double> >(2,patch->getSFCZIterator(offset),
-                                      adj_offset[2],dx[2],delT,gravity[2],
+      computeVelFace<SFCZVariable<double> >(2, ZFC_iterator,
+                                       adj_offset[2],dx[2],delT,gravity[2],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
                                        wvel_FC);
 
@@ -2473,26 +2502,39 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     adj_offset[2] = IntVector(0,  0, -1);   // Z faces
     int offset=0;   // 0=Compute all faces in computational domain
                     // 1=Skip the faces at the border between interior and gc
-                                   
+
+    CellIterator XFC_iterator = patch->getSFCXIterator(offset);
+    CellIterator YFC_iterator = patch->getSFCYIterator(offset);
+    CellIterator ZFC_iterator = patch->getSFCZIterator(offset);
+
+    if (level->getIndex() > 0) {  // Finer levels need to hit the ghost cells
+      IntVector l, h;
+      l = patch->getExtraCellIterator().begin();
+      h = patch->getExtraCellIterator().end();
+      XFC_iterator = CellIterator(l + IntVector(1,0,0),h);
+      YFC_iterator = CellIterator(l + IntVector(0,1,0),h);
+      ZFC_iterator = CellIterator(l + IntVector(0,0,1),h);
+    }
+                                
     //__________________________________
     //  tack on exchange contribution
     add_vel_FC_exchange<StaticArray<constSFCXVariable<double> >,
                         StaticArray<     SFCXVariable<double> > >
-                        (patch->getSFCXIterator(offset), 
+                        (XFC_iterator, 
                         adj_offset[0],  numMatls,    K, 
                         delT,           vol_frac_CC, sp_vol_CC,
                         uvel_FC,        sp_vol_XFC,  uvel_FCME);
                         
     add_vel_FC_exchange<StaticArray<constSFCYVariable<double> >,
                         StaticArray<     SFCYVariable<double> > >
-                        (patch->getSFCYIterator(offset), 
+                        (YFC_iterator, 
                         adj_offset[1],  numMatls,    K, 
                         delT,           vol_frac_CC, sp_vol_CC,
                         vvel_FC,        sp_vol_YFC,  vvel_FCME);
                         
     add_vel_FC_exchange<StaticArray<constSFCZVariable<double> >,
                         StaticArray<     SFCZVariable<double> > >
-                        (patch->getSFCZIterator(offset), 
+                        (ZFC_iterator, 
                         adj_offset[2],  numMatls,    K, 
                         delT,           vol_frac_CC, sp_vol_CC,
                         wvel_FC,        sp_vol_ZFC,  wvel_FCME);
