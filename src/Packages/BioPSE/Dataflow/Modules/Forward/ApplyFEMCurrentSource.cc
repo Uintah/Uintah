@@ -720,9 +720,6 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
   double electrodeLen         = (*electrodeParams)[2];
   int startNodeIndex          = (int) ( (*electrodeParams)[3]);
 
-  cout << "electrode model = " << electrodeModel << "  length= " << electrodeLen << endl;
-
-
   // Get the current pattern input
   // -----------------------------
   // These are the input currents at each electrode - later we will
@@ -778,12 +775,6 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
         remark("Field boundary input is a CurveField<double>");
         hCurveBoundary = dynamic_cast<CurveField<double>*> ( hFieldBoundary.get_rep() );
         hBoundaryMesh = hCurveBoundary->get_typed_mesh();
-
-        CurveMesh::Node::size_type nsize;
-        hBoundaryMesh->size(nsize);
-        int numCurveNodes = (int) nsize;
-        cout << "There are " << numCurveNodes << " nodes in the boundary field." << endl;
-
         boundary = true;
       }
       else
@@ -890,16 +881,9 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
         Point p;
         hBoundaryMesh->get_point(p, *nodeItr);
 
-        cout << "Cont------------ *nodeItr  = " << *nodeItr <<
-          " -----------------------------" << endl;
-        cout << " p=" << p << endl;
-
         // Find the corresponding node index in the body (TriSurf) mesh.
         hBoundaryToMesh->getRowNonzeros(*nodeItr, meshNodeIndex, weight);
 		
-        cout << "Boundary node " << (int) (*nodeItr) <<
-          " maps to mesh node " << meshNodeIndex[0] << endl;
-
         int rhsIndex = meshNodeIndex[0];
 
         // Get the value for the current at this node and store this
@@ -915,17 +899,6 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
   // -------------------------------
   else if (electrodeModel == GAP_MODEL )
   {
-    // print out the current pattern
-    // -----------------------------
-    for (int i = 0; i < numElectrodes; i++)
-    {
-      cout << i << "  " << (*currentPattern)[i] << endl;
-    }
-
-    // print out number of electrodes according to electrode manager
-    cout << "Creating " << numElectrodes << " electrodes of length " << electrodeLen << endl;
-
-    // Note:
     // Originally, we didn't execute if an electrode interp field was
     // not supplied because this is the only way we know where the
     // electrodes are on the input mesh.  Supplying a point cloud
@@ -987,11 +960,7 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
 
     }
 
-    cout << "Boundary length: " << boundaryLength << endl;
-
     double electrodeSeparation = boundaryLength / numElectrodes;
-
-    cout << "Electrode separation = " << electrodeSeparation << endl;
 
     // Using the map we just created (neighborNodes), traverse the
     // boundary and assign electrode nodes Create an array that maps
@@ -1056,8 +1025,6 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
 
     for (int i = 0; i < numElectrodes; i++)
     {
-      cout << "Gap=================== i = " << i <<
-        " =============================" << endl;
       while (!done)
       {
         // Label the current node with the current electrode ID
@@ -1068,7 +1035,6 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
 
         if (firstNode)
         {
-          cout << "First node is: " << currNode << endl;
           nodeFlags[currNode][0] = true;
           firstNode = false;
         }
@@ -1083,7 +1049,6 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
           nodeFlags[currNode][1] = true;  // the current node is the last node
           done = true;
           cumulativeElectrodeLength = 0.0;
-          cout << "done with this electrode (aa) " << currNode << " is last node in this electrode" << endl;
         }
 
         // Find the index of the edge between currNode and nextNode
@@ -1179,7 +1144,6 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
             adjacentEdgeLengths[nextNode][0] = edgeLength[currEdgeIndex];
 
             done = true;
-            cout << "Last node is: " << nextNode << endl;
           }
           else
           {
@@ -1192,18 +1156,13 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
             // and forward adjacent edge lengths for nextNode.
             adjacentEdgeLengths[nextNode][0] = edgeLength[currEdgeIndex];
             adjacentEdgeLengths[nextNode][1] = edgeLength[tempEdgeIndex];
-
-            cout << "Node " << nextNode << " is a middle node" << endl;
-
           }
 
           // Advance node pointers whether the electrode stops or continues.
           prevNode = tempPrevNode;
           currNode = tempCurrNode;
           nextNode = tempNextNode;
-
         } // end if (!done)
-
       }  // end while (!done)
 
       // At this point, we've finished with the current electrode.
@@ -1212,7 +1171,6 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
       // cumulativeElectrodeSeparation which we can initialize here to
       // the value of cumulativeElectrodeLength.
       cumulativeElectrodeSeparation = cumulativeElectrodeLength;
-      cout << "cumulativeElectrodeSeparation = " << cumulativeElectrodeSeparation << endl;
 
       bool startNewElectrode = false;
 
@@ -1240,9 +1198,6 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
           }
 
           startNewElectrode = true;
-
-
-          cout << "First node in next electrode : " << currNode << endl;
         }
         else if (cumulativeElectrodeSeparation > electrodeSeparation)
         {
@@ -1271,9 +1226,7 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
           {
             nextNode = neighborNodes[currNode][0];
           }
-          cout << "prev: " << prevNode << " curr: " << currNode << " next: " << nextNode << endl;
         }
-
       }  // end while (!startNewElectrode)
 
       done = false;
@@ -1327,11 +1280,8 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
 
         (*rhs)[rhsIndex] = current;
 
-        cout << "Bound. Idx: " << i << " Mesh Idx: " << rhsIndex << " current: " << current << endl;
-
         // Tag this node as an "electrode" node using the electrode index
         (*meshToElectrodeMap)[rhsIndex] = nodeElectrodeMap[i];
-
       }
     }
   } // end if GAP model
@@ -1359,23 +1309,16 @@ ApplyFEMCurrentSource::CalcContinuumTrigCurrent(Point p, int k,
 {
   double current;
 
-  double theta = ComputeTheta(p);
-
-  cout << "p = " << p.x() << "," << p.y() << "  theta = " << theta*180/PI << " k = " << k ;
-  cout << " numBoundaryNodes = " << numBoundaryNodes << endl;
+  const double theta = ComputeTheta(p);
 
   if ( k < (numBoundaryNodes/2) + 1 )
   {
-    cout << "using cos" << endl;
     current = cos(k*theta);
   }
   else
   {
-    cout << "using sin" << endl;
     current = sin((k-numBoundaryNodes/2)*theta);
   }
-
-  cout << "current = " << current << endl;
 
   return current;
 }
