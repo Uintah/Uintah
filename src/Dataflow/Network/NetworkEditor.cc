@@ -63,24 +63,18 @@ namespace SCIRun {
 // This function was added by Mohamed Dekhil for CSAFE
 void NetworkEditor::init_notes ()
 {
-    // uid_t userID ;
     char d[40] ;
     char t[20] ;
     char n[80] ;
     time_t t1 ;
     struct tm *t2 ;
-    // char *myvalue ;
     char *days[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", 
 			"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
     
     
     // Construct date, time and user name strings here and pass then to TCL.
-
-    //userID = getuid () ;
-    //strcpy (n, getlogin()) ;
 #ifndef _WIN32
-    //strcpy (n, cuserid(NULL)) ;
     char *name = getenv("LOGNAME");
     if ( !name ) name = getenv("USER");
     if ( !name ) name = "unknown";
@@ -115,16 +109,6 @@ NetworkEditor::~NetworkEditor()
 {
 }
 
-#if 0
-void NetworkEditor::add_text(const string &str)
-{
-  gui->execute("global netedit_errortext");
-  gui->execute("$netedit_errortext configure -state normal");
-  gui->execute("$netedit_errortext insert end \"" + str + "\n\"");
-  gui->execute("$netedit_errortext configure -state disabled");
-}
-#endif
-
 void NetworkEditor::save_network(const string& filename)
 {
     ofstream out(filename.c_str());
@@ -132,16 +116,10 @@ void NetworkEditor::save_network(const string& filename)
       return;
     out << "# SCI Network 1.0\n";
     out << "\n";
-//    out << "######################\n";
-//    out << "# These commands generated automatically, DO NOT REMOVE!\n";
-//    out << "loadfile "<<filename<<"\n";
-//    out << "return\n";
-//    out << "######################\n";
     out << "::netedit dontschedule\n\n";
     net->read_lock();
 
     // Added by Mohamed Dekhil for saving extra information
-
     gui->lock();
 
     string myvalue;
@@ -222,12 +200,8 @@ void NetworkEditor::save_network(const string& filename)
 	    out << "$m" << i << " initialize_ui\n";
 	}
     }
-    // Let it rip...
     out << "\n";
-//    out << "proc ok {} {\n";
     out << "::netedit scheduleok\n";
-//    out << "}\n";
-//    out << "\n";
     net->read_unlock();
 }
 
@@ -316,6 +290,7 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    args.error("netedit getconnections needs a module name");
 	    return;
 	}
+	std::cerr << "Finding module: " << args[2] << std::endl;
 	Module* mod=net->get_module_by_id(args[2]);
 	if(!mod){
 	    args.error("netedit addconnection can't find output module");
@@ -432,9 +407,7 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	}
 	args.result(args.make_list(oports));
     } else if(args[1] == "dontschedule"){
-	schedule=0;
     } else if(args[1] == "scheduleok"){
-	schedule=1;
 	net->schedule();
     } else if(args[1] == "scheduleall"){
         for(int i=0;i<net->nmodules();i++){
@@ -528,16 +501,6 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 		     "  Check your paths and names and try again.");
 	return;
       }
-    } else if (args[1] == "set_group") {
-	if (args.count()!=3) {
-	    args.error("create_mod needs 1 argument");	
-	    return;
-	}
-	
-	cerr << "group name: args[2]";
-	// group=args[2];
-	    
-
     } else {
 	args.error("Unknown minor command for netedit");
     }
