@@ -195,6 +195,141 @@ ChangeFieldDataAtAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
       delete rr;
     }
   }
+  else if (at == Field::NODE && fsrc->data_at() == Field::CELL)
+  {
+    typename FSRC::mesh_type::Cell::size_type nsize;
+    mesh->size(nsize);
+    const int ncols = nsize;
+
+    typename FSRC::mesh_type::Node::size_type osize;
+    mesh->size(osize);
+    const int nrows = osize;
+
+    int *rr = scinew int[nrows + 1];
+    vector<int> cctmp;
+    vector<double> dtmp;
+
+    typename FSRC::mesh_type::Cell::array_type tmparray;
+    typename FSRC::mesh_type::Node::iterator itr, eitr;
+    mesh->begin(itr);
+    mesh->end(eitr);
+    rr[0] = 0;
+    int counter = 0;
+    while (itr != eitr)
+    {
+      mesh->get_cells(tmparray, *itr);
+      for (unsigned int i = 0; i < tmparray.size(); i++)
+      {
+	cctmp.push_back(tmparray[i]);
+	dtmp.push_back(1.0 / tmparray.size()); // Weight by distance?
+      }
+
+      ++itr;
+      ++counter;
+      rr[counter] = rr[counter-1] + tmparray.size();
+    }
+
+    const int nnz = cctmp.size();
+    int *cc = scinew int[nnz];
+    double *d = scinew double[nnz];
+    for (int i = 0; i < nnz; i++)
+    {
+      cc[i] = cctmp[i];
+      d[i] = dtmp[i];
+    }
+    
+    interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, d);
+  }
+  else if (at == Field::NODE && fsrc->data_at() == Field::FACE)
+  {
+    typename FSRC::mesh_type::Face::size_type nsize;
+    mesh->size(nsize);
+    const int ncols = nsize;
+
+    typename FSRC::mesh_type::Node::size_type osize;
+    mesh->size(osize);
+    const int nrows = osize;
+
+    int *rr = scinew int[nrows + 1];
+    vector<int> cctmp;
+    vector<double> dtmp;
+
+    typename FSRC::mesh_type::Face::array_type tmparray;
+    typename FSRC::mesh_type::Node::iterator itr, eitr;
+    mesh->begin(itr);
+    mesh->end(eitr);
+    rr[0] = 0;
+    int counter = 0;
+    while (itr != eitr)
+    {
+      mesh->get_faces(tmparray, *itr);
+      for (unsigned int i = 0; i < tmparray.size(); i++)
+      {
+	cctmp.push_back(tmparray[i]);
+	dtmp.push_back(1.0 / tmparray.size()); // Weight by distance?
+      }
+
+      ++itr;
+      ++counter;
+      rr[counter] = rr[counter-1] + tmparray.size();
+    }
+
+    const int nnz = cctmp.size();
+    int *cc = scinew int[nnz];
+    double *d = scinew double[nnz];
+    for (int i = 0; i < nnz; i++)
+    {
+      cc[i] = cctmp[i];
+      d[i] = dtmp[i];
+    }
+    
+    interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, d);
+  }
+  else if (at == Field::NODE && fsrc->data_at() == Field::EDGE)
+  {
+    typename FSRC::mesh_type::Edge::size_type nsize;
+    mesh->size(nsize);
+    const int ncols = nsize;
+
+    typename FSRC::mesh_type::Node::size_type osize;
+    mesh->size(osize);
+    const int nrows = osize;
+
+    int *rr = scinew int[nrows + 1];
+    vector<int> cctmp;
+    vector<double> dtmp;
+
+    typename FSRC::mesh_type::Edge::array_type tmparray;
+    typename FSRC::mesh_type::Node::iterator itr, eitr;
+    mesh->begin(itr);
+    mesh->end(eitr);
+    rr[0] = 0;
+    int counter = 0;
+    while (itr != eitr)
+    {
+      mesh->get_edges(tmparray, *itr);
+      for (unsigned int i = 0; i < tmparray.size(); i++)
+      {
+	cctmp.push_back(tmparray[i]);
+	dtmp.push_back(1.0 / tmparray.size()); // Weight by distance?
+      }
+
+      ++itr;
+      ++counter;
+      rr[counter] = rr[counter-1] + tmparray.size();
+    }
+
+    const int nnz = cctmp.size();
+    int *cc = scinew int[nnz];
+    double *d = scinew double[nnz];
+    for (int i = 0; i < nnz; i++)
+    {
+      cc[i] = cctmp[i];
+      d[i] = dtmp[i];
+    }
+    
+    interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, d);
+  }
 
   fout->copy_properties(fsrc);
 
