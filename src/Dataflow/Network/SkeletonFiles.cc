@@ -238,7 +238,7 @@ char category_submk_skeleton[] = \
 "        Core/Persistent Core/Containers Core/Util \\\n"
 "        Core/Exceptions Core/Thread Core/GuiInterface \\\n"
 "        Core/Geom Core/Datatypes Core/Geometry \\\n"
-"        Core/TkExtensions\n"
+"        Core/GeomInterface Core/TkExtensions\n"
 "LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)\n"
 "\n"
 "include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk\n"
