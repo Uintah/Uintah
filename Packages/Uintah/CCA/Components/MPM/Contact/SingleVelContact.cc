@@ -37,10 +37,6 @@ SingleVelContact::SingleVelContact(ProblemSpecP& ps, SimulationStateP& d_sS,
 				   MPMLabel* Mlb,MPMFlags* MFlag)
 {
   // Constructor
-
-  IntVector v_f;
-  ps->require("vel_fields",v_f);
-  
   d_sharedState = d_sS;
   lb = Mlb;
   flag = MFlag;
