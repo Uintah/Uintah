@@ -31,7 +31,7 @@ VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
 					       const std::string& extramsg)
 {
   ostringstream s;
-  s << "Particle Variable not found: " << varname;
+  s << "Grid Variable not found: " << varname;
   
   flush(cerr);
   s << " with location [" << loc.x() << ", " << loc.y() << ", " << loc.z() << "]";
@@ -47,7 +47,7 @@ VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
 					       const std::string& extramsg)
 {
   ostringstream s;
-  s << "Particle Variable not found: " << varname;
+  s << "Variable not found: " << varname;
   if(extramsg != "")
     s << " (" << extramsg << ")";
   d_msg = s.str();
