@@ -57,9 +57,6 @@ set probe_lock 1
 set probe_scalar 1
 set probe_vector 1
 
-global show_scalarslice
-set show_scalarslice 0
-
 global slice_direction
 set slice_direction 0
 
@@ -182,10 +179,10 @@ set m35 [addModuleAtPosition "SCIRun" "FieldsCreate" "ClipByFunction" 450 800]
 set m36 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 350 1000]
 
 # Create a SCIRun->FieldsOther->ChooseField Module
-set m37 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 300 1100]
+set m37 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 300 1100]
 
 # Create a SCIRun->Visualization->ShowField Module
-set m38 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 300 1200]
+set m38 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 350 1200]
 
 
 
@@ -285,11 +282,12 @@ set c31 [addConnection $m33 0 $m34 0]
 set c32 [addConnection $m34 0 $m37 0]
 set c33 [addConnection $m35 0 $m34 1]
 set c34 [addConnection $m35 1 $m34 2]
-set c35 [addConnection $m46 0 $m38 1]
+set c35 [addConnection $m46 0 $m37 1]
+set c35a [addConnection $m46 0 $m38 1]
 set c36 [addConnection $m34 0 $m36 0]
-set c37 [addConnection $m36 0 $m37 1]
-set c38 [addConnection $m37 0 $m38 0]
-set c39 [addConnection $m38 0 $m100 0]
+set c37 [addConnection $m36 0 $m38 0]
+set c38 [addConnection $m37 0 $m100 0]
+set c39 [addConnection $m38 0 $m100 1]
 
 
 set c40 [addConnection $m20 0 $m21 0]
@@ -302,8 +300,8 @@ set c46 [addConnection $m23 0 $m27 0]
 set c47 [addConnection $m24 0 $m26 0]
 set c48 [addConnection $m25 0 $m26 1]
 set c49 [addConnection $m26 0 $m28 0]
-set c50 [addConnection $m27 0 $m100 1]
-set c51 [addConnection $m28 0 $m100 2]
+set c50 [addConnection $m27 0 $m100 2]
+set c51 [addConnection $m28 0 $m100 3]
 set c52 [addConnection $m45 0 $m46 0]
 set c53 [addConnection $m46 0 $m27 1]
 set c54 [addConnection $m46 0 $m28 1]
@@ -313,8 +311,8 @@ set c62 [addConnection $m61 0 $m62 1]
 set c63 [addConnection $m61 0 $m68 1]
 set c64 [addConnection $m61 0 $m64 0]
 set c65 [addConnection $m62 0 $m63 0]
-set c66 [addConnection $m63 0 $m100 3]
-set c67 [addConnection $m64 0 $m100 4]
+set c66 [addConnection $m63 0 $m100 4]
+set c67 [addConnection $m64 0 $m100 5]
 set c68 [addConnection $m65 0 $m67 0]
 set c69 [addConnection $m66 0 $m68 0]
 set c70 [addConnection $m67 0 $m63 1]
@@ -589,16 +587,27 @@ set $m36-build_geom {0}
 set $m36-active-isoval-selection-tab {2}
 set $m36-active_tab {}
 
-# Set GUI variables for the SCIRun->FieldsOther->ChooseField Module
-set $m37-port-index {0}
-set $m37-usefirstvalid {0}
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m37-nodes-on {0}
+set $m37-edges-on {0}
+set $m37-faces-on {1}
+set $m37-use-normals {1}
+set $m37-normalize-vectors {}
+set $m37-has_scalar_data {1}
+set $m37-active_tab {Faces}
+set $m37-scalars_scale {0.3}
+set $m37-show_progress {}
+set $m37-field-name {Slice}
 
 # Set GUI variables for the SCIRun->Visualization->ShowField Module
 set $m38-nodes-on {0}
-set $m38-edgess-on {0}
+set $m38-edges-on {1}
+set $m38-faces-on {0}
 set $m38-use-normals {1}
 set $m38-normalize-vectors {}
 set $m38-has_scalar_data {1}
+set $m38-edge_scale 0.15
+set $m38-edge_display_type {Lines}
 set $m38-active_tab {Faces}
 set $m38-scalars_scale {0.3}
 set $m38-show_progress {}
@@ -830,10 +839,9 @@ set connections(matrix_to_choose)          $c32
 set connections(clipfuction_fld_to_matrix) $c33
 set connections(clipfuction_mtx_to_matrix) $c34
 
-set connections(matrix_to_choose)          $c32
+set connections(matrix_to_showfield)       $c32
 set connections(matrix_to_isosurface)      $c36
-set connections(isosurface_to_choose)      $c37
-set connections(choose_to_showfield)       $c38
+set connections(isosurface_to_showfield)   $c37
 
 set connections(choose_to_iso)       $c42
 set connections(iso_to_showfield)    $c46
@@ -922,8 +930,8 @@ set mods(ApplyInterpMatrix-Scalar-Slice-Iso)  $m33
 set mods(ApplyInterpMatrix-Scalar-Slice-Clip) $m34
 set mods(ClipField-Scalar-Slice)              $m35
 set mods(Isosurface-Slice-Contours)           $m36
-set mods(ChooseField-Scalar-Slice)            $m37
-set mods(ShowField-Scalar-Slice)              $m38
+set mods(ShowField-Scalar-Slice-Face)         $m37
+set mods(ShowField-Scalar-Slice-Edge)         $m38
 
 set mods(StreamLines-rake) $m60
 set mods(StreamLines) $m61
@@ -1204,7 +1212,7 @@ class FusionViewerApp {
 	$color_tab0 select "Isosurfaces"
 	$color_tab1 select "Isosurfaces"
 
-	set show_contours 0
+	set show_faces 1
 	set show_isocontours 1
 	set show_integration 1
 
@@ -1736,13 +1744,11 @@ class FusionViewerApp {
 
     method build_scalarslice_frame { f case } {
 	global mods
-	global $mods(ShowField-Scalar-Slice)-faces-on
-	global $mods(ShowField-Scalar-Slice)-edges-on
+	global $mods(ShowField-Scalar-Slice-Edge)-edges-on
+	global $mods(ShowField-Scalar-Slice-Face)-faces-on
 
-	global show_scalarslice
-
-	checkbutton $f.show -text "Show Scalar Slice" \
-	    -variable show_scalarslice \
+	checkbutton $f.show -text "Show Scalar Slice Contours" \
+	    -variable $mods(ShowField-Scalar-Slice-Edge)-edges-on \
 	    -command "$this toggle_scalarslice"
 	pack $f.show -side top -anchor nw -padx 3 -pady 3
 
@@ -1770,17 +1776,24 @@ class FusionViewerApp {
 
 	frame $f.contours
 
-	checkbutton $f.contours.show -text "Show as Contours" \
-	    -variable $mods(ShowField-Scalar-Slice)-edges-on \
-	    -command "$this toggle_contours 0"
-
-	pack $f.contours.show -side top -anchor nw -padx 3 -pady 3
+	label $f.contours.l -text "Contours:"
+	pack $f.contours.l -side top -anchor w -padx 5
 
 	build_isosurface_tabs \
 	    $f.contours $case $mods(Isosurface-Slice-Contours) \
 	    "contour" update_contourvals
 
 	pack $f.contours -side top -anchor nw -pady 3
+
+	frame $f.faces
+
+	checkbutton $f.faces.show -text "Show Scalar Slices as Faces" \
+	    -variable $mods(ShowField-Scalar-Slice-Face)-faces-on \
+	    -command "$this toggle_faces 0"
+
+	pack $f.faces.show -side top -anchor nw -padx 3 -pady 3
+
+	pack $f.faces -side top -anchor nw -pady 3
     }
 
 
@@ -2248,18 +2261,18 @@ class FusionViewerApp {
     }
 
     method toggle_scalarslice {} {
+	toggle_faces 1
 
-	global show_scalarslice
 	global mods connections
-	global $mods(ShowField-Scalar-Slice)-faces-on
-	global $mods(ShowField-Scalar-Slice)-edges-on
-	global $mods(ChooseField-Scalar-Slice)-port-index
+	global $mods(ShowField-Scalar-Slice-Face)-faces-on
+	global $mods(ShowField-Scalar-Slice-Edge)-edges-on
+	global $mods(ShowField-Scalar-Slice-Face)-port-index
 
 	if { $DEBUG == 1 } {
-	    puts stderr "toggle_scalarslice $show_scalarslice $have_scalarslice [set $mods(ShowField-Scalar-Slice)-faces-on] [set $mods(ShowField-Scalar-Slice)-edges-on]"
+	    puts stderr "toggle_scalarslice $have_scalarslice [set $mods(ShowField-Scalar-Slice-Face)-faces-on] [set $mods(ShowField-Scalar-Slice-Edge)-edges-on]"
 	}
 
-	if { $show_scalarslice == 1 } {
+	if { [set $mods(ShowField-Scalar-Slice-Edge)-edges-on] == 1 } {
 	    set on 1
 	    set disable 0
 
@@ -2288,8 +2301,9 @@ class FusionViewerApp {
 	disableConnectionID $connections(isosurface_mtx_to_matrix)  $disable
 	disableConnectionID $connections(isosurface_to_clipfuction) $disable
 	disableConnectionID $connections(matrix_to_matrix)          $disable
-	disableConnectionID $connections(matrix_to_choose)          $disable
-	disableConnectionID $connections(choose_to_showfield)       $disable
+	disableConnectionID $connections(matrix_to_showfield)       $disable
+	disableConnectionID $connections(matrix_to_isosurface)      $disable
+	disableConnectionID $connections(isosurface_to_showfield)   $disable
 	disableConnectionID $connections(clipfuction_fld_to_matrix) $disable
 	disableConnectionID $connections(clipfuction_mtx_to_matrix) $disable
 #       Disconnecting a dynamic port causes a hang
@@ -2298,97 +2312,57 @@ class FusionViewerApp {
 	enable_widget $scalarslice_frame0.show
 	enable_widget $scalarslice_frame1.show
 
-	toggle_contours 1
+	if { $have_scalarslice == 1 } {
+	    $mods(ShowField-Scalar-Slice-Edge)-c toggle_display_edges
+	}
     }
 
 
-    method toggle_contours { update } {
-	global show_scalarslice
+    method toggle_faces { update } {
 	global mods connections
-	global $mods(ShowField-Scalar-Slice)-faces-on
-	global $mods(ShowField-Scalar-Slice)-edges-on
-	global $mods(ChooseField-Scalar-Slice)-port-index
+	global $mods(ShowField-Scalar-Slice-Face)-faces-on
+	global $mods(ShowField-Scalar-Slice-Edge)-edges-on
 
 	if { $DEBUG == 1 } {
-	    puts stderr "in  toggle_contours $show_scalarslice $have_scalarslice $show_contours [set $mods(ShowField-Scalar-Slice)-faces-on] [set $mods(ShowField-Scalar-Slice)-edges-on]"
+	    puts stderr "in  toggle_faces [set $mods(ShowField-Scalar-Slice-Edge)-edges-on] [set $mods(ShowField-Scalar-Slice-Face)-faces-on] $have_scalarslice $show_faces"
 	}
 
 	if { $update == 1 } {
-	    if { $show_scalarslice == 1 } {
-		if { $show_contours == 1 } {
-		    set $mods(ShowField-Scalar-Slice)-edges-on 1
-		    set $mods(ShowField-Scalar-Slice)-faces-on 0
-		} else {
-		    set $mods(ShowField-Scalar-Slice)-edges-on 0
-		    set $mods(ShowField-Scalar-Slice)-faces-on 1
-		}
+	    if {[set $mods(ShowField-Scalar-Slice-Edge)-edges-on] } {
 
+		set $mods(ShowField-Scalar-Slice-Face)-faces-on \
+		    $show_faces
+
+		enable_widget $scalarslice_frame0.faces.show
+		enable_widget $scalarslice_frame1.faces.show
 	    } else {
-		set show_contours \
-		    [set $mods(ShowField-Scalar-Slice)-edges-on]
-		set $mods(ShowField-Scalar-Slice)-edges-on 0
-		set $mods(ShowField-Scalar-Slice)-faces-on 0
-	    }
+		set show_faces \
+		    [set $mods(ShowField-Scalar-Slice-Face)-faces-on]
+		set $mods(ShowField-Scalar-Slice-Face)-faces-on 0
 
-	} else {
-
-	    if { [set $mods(ShowField-Scalar-Slice)-edges-on] == 1 } {
-		set $mods(ShowField-Scalar-Slice)-faces-on 0
-		set $mods(ChooseField-Scalar-Slice)-port-index 1	    
-	    } else {
-		set $mods(ShowField-Scalar-Slice)-faces-on 1
-		set $mods(ChooseField-Scalar-Slice)-port-index 0
+		disable_widget $scalarslice_frame0.faces.show
+		disable_widget $scalarslice_frame1.faces.show
 	    }
 	}
 
-	if { [set $mods(ShowField-Scalar-Slice)-edges-on] == 0 } {
-	    set disable 1
-
-	    foreach w [winfo children $scalarslice_frame0.contours] {
-		disable_widget $w
-	    }
-	    foreach w [winfo children $scalarslice_frame1.contours] {
-		disable_widget $w
-	    }
-
-	    if { $show_scalarslice == 1 } {
-		enable_widget $scalarslice_frame0.contours.show
-		enable_widget $scalarslice_frame1.contours.show
-	    }
-	} elseif { $show_scalarslice == 1 } {
+	if {[set $mods(ShowField-Scalar-Slice-Face)-faces-on] } {
+#	    set $mods(ShowField-Scalar-Slice-Edge)-edge_display_type Cylinders
+#	    set $mods(ShowField-Scalar-Slice-Edge)-edge_scale 0.00
 	    set disable 0
-
-	    foreach w [winfo children $scalarslice_frame0.contours] {
-		enable_widget $w
-	    }
-	    foreach w [winfo children $scalarslice_frame1.contours] {
-		enable_widget $w
-	    }
 	} else {
-	    set disable 1 
+#	    set $mods(ShowField-Scalar-Slice-Edge)-edge_display_type Lines
+#	    set $mods(ShowField-Scalar-Slice-Edge)-edge_scale 0.01
+	    set disable 1
 	}
-
-	disableConnectionID $connections(matrix_to_isosurface)      $disable
-	disableConnectionID $connections(isosurface_to_choose)      $disable
 
 	if { $have_scalarslice == 1 } {
-	    if { $update == 1 } {
-		if { $show_contours == 1 } {
-		    $mods(ShowField-Scalar-Slice)-c toggle_display_edges
-		} else {
-		    $mods(ShowField-Scalar-Slice)-c toggle_display_faces
-		}
-	    } else {
-		$mods(ChooseField-Scalar-Slice)-c needexecute		
-		$mods(ShowField-Scalar-Slice)-c toggle_display_faces
-		$mods(ShowField-Scalar-Slice)-c toggle_display_edges
-	    }
+#	    $mods(ShowField-Scalar-Slice-Edge)-c edge_display_type
+	    $mods(ShowField-Scalar-Slice-Face)-c toggle_display_faces
 	}
 
 	if { $DEBUG == 1 } {
-	    puts stderr "out toggle_contours $show_scalarslice $have_scalarslice $show_contours [set $mods(ShowField-Scalar-Slice)-faces-on] [set $mods(ShowField-Scalar-Slice)-edges-on]"
+	    puts stderr "out toggle_faces [set $mods(ShowField-Scalar-Slice-Face)-faces-on] [set $mods(ShowField-Scalar-Slice-Edge)-edges-on] $have_scalarslice $show_faces"
 	}
-
     }
 
 
@@ -2475,7 +2449,7 @@ class FusionViewerApp {
 	global $mods(ShowField-Isosurface-Contour)-edges-on
 
 	if { $DEBUG == 1 } {
-	    puts stderr "toggle_isocontours [set $mods(ShowField-Isosurface-Surface)-faces-on] [set $mods(ShowField-Isosurface-Contour)-edges-on] $valid_connections"
+	    puts stderr "in  toggle_isocontours [set $mods(ShowField-Isosurface-Surface)-faces-on] [set $mods(ShowField-Isosurface-Contour)-edges-on] $valid_connections $show_isocontours"
 	}
 
 	if { $update == 1 } {
@@ -2515,6 +2489,10 @@ class FusionViewerApp {
 	
 	if { $have_isosurfaces == 1 } {
 	    $mods(ShowField-Isosurface-Contour)-c toggle_display_edges
+	}
+	
+	if { $DEBUG == 1 } {
+	    puts stderr "out toggle_isocontours [set $mods(ShowField-Isosurface-Surface)-faces-on] [set $mods(ShowField-Isosurface-Contour)-edges-on] $valid_connections $show_isocontours"
 	}
     }
 
@@ -2892,7 +2870,6 @@ class FusionViewerApp {
 	    }
 	}
     }
-    
     
     method update_hdf5_callback {varname varele varop} {
 
@@ -3362,7 +3339,7 @@ class FusionViewerApp {
 		set valid_vector 1
 		set probe_vector 1
 
-		set $mods(ShowField-StreamLines-Vector)-edges-on 1
+#		set $mods(ShowField-StreamLines-Vector)-edges-on 1
 
 		toggle_streamlines
 		toggle_probes $mods(Probe-Vector)
@@ -3419,15 +3396,13 @@ class FusionViewerApp {
 	global $mods(MDSPlus-Scalar)-num-entries
 
 	global probe_scalar
-	global show_scalarslicea
 
 	if { $DEBUG == 1 } {
 	    puts stderr "update_scalar_modules $valid_scalar [set $mods(HDF5-Scalar)-filename] [set $mods(MDSPlus-Scalar)-num-entries]"
 	}
 	
+	global $mods(ShowField-Scalar-Slice-Edge)-edges-on
 	global $mods(ShowField-Isosurface-Surface)-faces-on
-	global $mods(ShowField-Scalar-Slice)-faces-on
-	global $mods(ShowField-Scalar-Slice)-edges-on
 
 	set disable -1
 
@@ -3438,10 +3413,9 @@ class FusionViewerApp {
 		set disable 1
 		set valid_scalar 0
 		set probe_scalar 0
-		set show_scalarslice 0
 		
+		set $mods(ShowField-Scalar-Slice-Edge)-edges-on 0
 		set $mods(ShowField-Isosurface-Surface)-faces-on 0
-
 		
 		toggle_scalarslice
 		toggle_isosurfaces
@@ -3476,9 +3450,9 @@ class FusionViewerApp {
 		set disable 0
 		set valid_scalar 1
 		set probe_scalar 1
-		set show_scalarslice 1
 		
-		set $mods(ShowField-Isosurface-Surface)-faces-on 1
+#		set $mods(ShowField-Scalar-Slice-Edge)-edges-on 1
+#		set $mods(ShowField-Isosurface-Surface)-faces-on 1
 		
 		toggle_scalarslice
 		toggle_isosurfaces
@@ -3511,7 +3485,7 @@ class FusionViewerApp {
 
 
 	if { $disable != -1 } {
-	    disableConnectionID $connections(scalar_to_color) $disable	    	    
+	    disableConnectionID $connections(scalar_to_color) $disable
 	    disableConnectionID $connections(scalar_to_info)  $disable
 	}
 	
@@ -3724,22 +3698,13 @@ class FusionViewerApp {
 
 	set probe_scalar 0
 	set probe_vector 0
-
-	global $mods(ShowField-Scalar-Slice)-edges-on
-	global $mods(ShowField-Isosurface-Contour)-edges-on
-	global $mods(ShowField-StreamLines-Scalar)-nodes-on
-
-	set show_contours    [set $mods(ShowField-Scalar-Slice)-edges-on]
-	set show_isocontours [set $mods(ShowField-Isosurface-Contour)-edges-on]
-	set show_integration [set $mods(ShowField-StreamLines-Scalar)-nodes-on]
-
-	global show_scalarslice
-	if { [set $mods(ShowField-Scalar-Slice)-edges-on] == 1 ||
-	     [set $mods(ShowField-Scalar-Slice)-faces-on] == 1 } {
-	    set show_scalarslice 1
-	} else {
-	    set show_scalarslice 0
-	}
+	
+	set show_faces       \
+	    [set $mods(ShowField-Scalar-Slice-Face)-faces-on]
+	set show_isocontours \
+	    [set $mods(ShowField-Isosurface-Contour)-edges-on]
+	set show_integration \
+	    [set $mods(ShowField-StreamLines-Scalar)-nodes-on]
 
 	global $mods(ChooseNrrd-Points)-usefirstvalid 1
 	global $mods(ChooseNrrd-Connections)-usefirstvalid 1
@@ -3901,10 +3866,15 @@ class FusionViewerApp {
 	} elseif {$which == $mods(ShowField-StreamLines-Vector) && $state == "Completed"} {
 	    change_indicate_val 2
 
-	} elseif {$which == $mods(ShowField-Scalar-Slice) && $state == "JustStarted"} {
+	} elseif {$which == $mods(ShowField-Scalar-Slice-Edge) && $state == "JustStarted"} {
 	    change_indicator_labels "Visualization..."
 	    change_indicate_val 1
-	} elseif {$which == $mods(ShowField-Scalar-Slice) && $state == "Completed"} {
+	} elseif {$which == $mods(ShowField-Scalar-Slice-Edge) && $state == "Completed"} {
+	    change_indicate_val 2
+	} elseif {$which == $mods(ShowField-Scalar-Slice-Face) && $state == "JustStarted"} {
+	    change_indicator_labels "Visualization..."
+	    change_indicate_val 1
+	} elseif {$which == $mods(ShowField-Scalar-Slice-Face) && $state == "Completed"} {
 	    change_indicate_val 2
 	}
     }
@@ -4185,7 +4155,7 @@ class FusionViewerApp {
     variable notebook_width
     variable notebook_height
 
-    variable show_contours
+    variable show_faces
     variable show_isocontours
     variable show_integration
 
