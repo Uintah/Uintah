@@ -255,8 +255,8 @@ Worker::run()
 	cerrLock.unlock();
       }
 #endif
-  
-      task->done();
+
+      task->done(dws_[ Task::OldDW ].get_rep(), dws_[ Task::NewDW ].get_rep());
 
     } catch (Exception& e) {
 

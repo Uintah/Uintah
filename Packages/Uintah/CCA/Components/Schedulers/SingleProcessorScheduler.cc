@@ -48,7 +48,8 @@ SingleProcessorScheduler::verifyChecksum()
 }
 
 void
-SingleProcessorScheduler::actuallyCompile(const ProcessorGroup* pg)
+SingleProcessorScheduler::actuallyCompile(const ProcessorGroup* pg,
+					  bool scrubNew)
 {
   if(dts_)
     delete dts_;
@@ -61,17 +62,17 @@ SingleProcessorScheduler::actuallyCompile(const ProcessorGroup* pg)
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
   if( useInternalDeps() ) {
-    dts_ = graph.createDetailedTasks( pg, lb, true );
+    dts_ = graph.createDetailedTasks( pg, lb, scrubNew, true );
   }
   else {
-    dts_ = graph.createDetailedTasks( pg, lb, false );
+    dts_ = graph.createDetailedTasks( pg, lb, scrubNew, false );
   }
 
   lb->assignResources(*dts_, d_myworld);
 
-  if (useInternalDeps()) {
-    graph.createDetailedDependencies(dts_, lb, pg);
-  }
+  //if (useInternalDeps()) { -- for scrubbing as well
+  graph.createDetailedDependencies(dts_, lb, pg);
+  //}
   
   releasePort("load balancer");
 }
@@ -126,6 +127,7 @@ SingleProcessorScheduler::execute_tasks(const ProcessorGroup * pg, DataWarehouse
     double start = Time::currentSeconds();
     DetailedTask* task = dts_->getTask( i );
     task->doit(pg, oldDW, newDW);
+    task->done(oldDW, newDW);
     double delT = Time::currentSeconds()-start;
     long long flop_count = 0;
 #ifdef USE_PERFEX_COUNTERS
@@ -134,7 +136,7 @@ SingleProcessorScheduler::execute_tasks(const ProcessorGroup * pg, DataWarehouse
 #endif
     dbg << "Completed task: " << task->getTask()->getName()
 	<< " (" << delT << " seconds)\n";
-    scrub(task);
+    //scrub(task);
     emitNode( task, start, delT, delT, flop_count );
   }
 }

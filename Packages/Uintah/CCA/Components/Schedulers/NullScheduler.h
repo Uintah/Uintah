@@ -70,7 +70,7 @@ WARNING
    protected:
      //////////
      // Insert Documentation Here:
-     virtual void actuallyCompile( const ProcessorGroup * pg );
+     virtual void actuallyCompile( const ProcessorGroup * pg, bool scrubNew );
      
    private:
       NullScheduler(const NullScheduler&);
