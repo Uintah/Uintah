@@ -77,6 +77,14 @@ WARNING
       //////////
       // Returns true if this process is using MPI
       static bool usingMPI();
+      
+      //////////
+      // Ignore mpi probe, and force this to use MPI
+      static void forceMPI();
+
+      //////////
+      // Ignore mpi probe, and force this to not use MPI
+      static void forceNoMPI();
 
       //////////
       // Tells Parallel that Threads are not to be used.
