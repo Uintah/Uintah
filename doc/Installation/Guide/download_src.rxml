@@ -138,16 +138,48 @@ gunzip -c BioPSE.PKG.<!--%= doc.version() %-->.tar.gz | (cd SCIRun/src/Packages 
 
     <listitem>
       <para>
-	Unpack the sample datasets:
-	<literallayout class="monospaced">
-gunzip -c SCIRunData.<!--%= doc.version() %-->.tar.gz | tar xf -
-	</literallayout>
-	This creates the directory <filename><!--%= doc.version()
-	%--></filename>.  <filename><!--%= doc.version()
-	%--></filename> should be moved to a location accessible to
-	all SCIRun users, say
-	<filename>/usr/local/SCIRunData</filename>.
-      </para>
+	Unpack the sample dataset tarball(s).  The following instructions
+	install the datasets in directory
+	<filename>SCIRunData</filename> inside of the download
+	directory.
+	<itemizedlist>
+	  <listitem>
+	    <para>
+	      If unpacking
+	      <filename>SCIRunData.1.24.0b_to_1.24.1.tar.gz</filename>,
+	      first rename the existing <filename>SCIRunData/1.20.0b</filename> to
+	      <filename>SCIRunData/1.20.1</filename>:
+	      <literallayout class="monospaced">
+pushd SCIRunData
+mv 1.20.0b 1.20.1
+	      </literallayout>
+	      then:
+	      <literallayout class="monospaced">
+popd
+gunzip -c SCIRunData.1.24.0b_to_1.24.1.tar.gz | tar xf -
+	      </literallayout>
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      If installing <filename>SCIRunData.<!--%= doc.version
+	      %-->.tar.gz</filename> type:
+	      <literallayout class="monospaced">
+gunzip -c SCIRunData.<!--%= doc.version %-->.tar.gz | tar xf -
+	      </literallayout>
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      If installing <filename>FusionData.<!--%= doc.version
+	      %-->.tar.gz</filename> type:
+	      <literallayout class="monospaced">
+gunzip -c FusionData.<!--%= doc.version %-->.tar.gz | tar xf -
+	      </literallayout>
+	    </para>
+	  </listitem>
+	</itemizedlist>
+     </para>
     </listitem>
 
     <listitem>
@@ -170,9 +202,7 @@ gunzip -c SCIRunDocs.<!--%= doc.version() %-->.tar.gz | tar xf -
 	</literallayout>
 	This creates the directory
 	<filename>SCIRunDocs</filename>.<!--%= doc.version()
-	%-->. This directory may be moved to a new location (e.g.:
-	<filename>/usr/local</filename>) accessible to all SCIRun
-	users.  Point a browser at <filename>SCIRunDocs.<!--%=
+	%-->.  Point a browser at <filename>SCIRunDocs.<!--%=
 	doc.version() %-->/doc/index.html</filename> to access
 	SCIRun's online documentation.
       </para>
