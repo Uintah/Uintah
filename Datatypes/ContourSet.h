@@ -29,6 +29,8 @@ typedef LockingHandle<ContourSet> ContourSetHandle;
 class ContourSet : public Datatype {
 public:
     Array1<Array1<Point> > contours;
+    Array1<double> conductivity;
+    int bdry_type;
     Vector basis[3];
     Vector origin;
     BBox bbox;

@@ -120,6 +120,43 @@ void Grid::add_triangle(int id, const Point &p1,
     }
 }
 
+Array1<int>* Grid::get_cubes_at_distance(int dist, int i, int j, int k) {
+    int imax=e->dim1();
+    int jmax=e->dim1();
+    int kmax=e->dim1();
+    Array1<int>* set=new Array1<int>(0,10,12*(2*dist+1)*(2*dist+1));
+    if (dist==0) {
+	set->add(i); set->add(j); set->add(k);
+	return set;
+    }
+    int curri=i-dist, currj, currk;
+    for (curri=i-dist; curri<=i+dist; curri+=2*dist)
+	if (curri>=0 && curri<=imax)
+	    for (currj=j-dist; currj<=j+dist; currj++)
+		if (currj>=0 && currj<=jmax)
+		    for (currk=k-dist; currk<=k+dist; currk++)
+			if (currk>=0 && currk<=kmax) {
+			    set->add(curri); set->add(currj); set->add(currk);
+			}
+    for (currj=j-dist; currj<=j+dist; currj+=2*dist)
+	if (currj>=0 && currj<=jmax)
+	    for (currk=k-dist; currk<=k+dist; currk++)
+		if (currk>=0 && currk<=kmax)
+		    for (curri=i-dist+1; curri<=i+dist-1; curri++)
+			if (curri>=0 && curri<=imax)  {
+			    set->add(curri); set->add(currj); set->add(currk);
+			}
+    for (currk=k-dist; currk<=k+dist; currk+=2*dist)
+	if (currk>=0 && currk<=kmax)
+	    for (curri=i-dist+1; curri<=i+dist-1; curri++)
+		if (curri>=0 && curri<=imax)
+		    for (currj=j-dist+1; currj<=j+dist-1; currj++)
+			if (currj>=0 && currj<=jmax) {
+			    set->add(curri); set->add(currj); set->add(currk);
+			}
+    return set;
+}
+
 void Grid::remove_triangle(int id, const Point &p1,
 			   const Point &p2, const Point &p3) {
     Array1<int> intersect;

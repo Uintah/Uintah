@@ -12,11 +12,12 @@
 
 #include <Datatypes/Surface.h>
 #include <Classlib/NotFinished.h>
+#include <Geometry/Grid.h>
 
 PersistentTypeID Surface::type_id("Surface", "Datatype", 0);
 
 Surface::Surface(Representation rep)
-: rep(rep)
+: rep(rep), grid(0)
 {
 }
 
@@ -28,11 +29,19 @@ Surface::Surface(const Surface& copy)
     NOT_FINISHED("Surface::Surface");
 }
 
-#define SURFACE_VERSION 1
+void Surface::destroy_grid() {
+    if (grid) delete grid;
+}
+
+#define SURFACE_VERSION 2
 
 void Surface::io(Piostream& stream) {
     int version=stream.begin_class("Surface", SURFACE_VERSION);
     Pio(stream, name);
+    if (version >= 2) {
+	Pio(stream, conductivity);
+	Pio(stream, bdry_type);
+    }
     stream.end_class();
 }
 

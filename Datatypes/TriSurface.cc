@@ -14,6 +14,9 @@
 #include <Datatypes/TriSurface.h>
 #include <Classlib/Assert.h>
 #include <Classlib/NotFinished.h>
+#include <Geometry/Grid.h>
+#include <Math/MiscMath.h>
+#include <Geometry/BBox.h>
 
 static Persistent* make_TriSurface()
 {
@@ -23,7 +26,7 @@ static Persistent* make_TriSurface()
 PersistentTypeID TriSurface::type_id("TriSurface", "Surface", make_TriSurface);
 
 TriSurface::TriSurface()
-: Surface(TriSurf), empty_index(-1), ordered_cw(0)
+: Surface(TriSurf), empty_index(-1), directed(0)
 {
 }
 
@@ -42,11 +45,94 @@ int TriSurface::inside(const Point&)
     return 1;
 }
 
+void TriSurface::order_faces() {
+    if (elements.size() == 0) 
+	directed=1;
+    else {
+	ASSERTL1(0 && "Can't order faces yet!");
+    }
+}
+
 void TriSurface::add_point(const Point& p) {
     points.add(p);
 }
 
 int TriSurface::add_triangle(int i1, int i2, int i3) {
+    return(add_triangle(i1, i2, i3, 0));  // can no longer assume ordered cw
+}
+
+int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
+				      const Point &p3) {
+    int i[3], j[3], k[3];
+    int maxi, maxj, maxk, mini, minj, mink;
+    grid->get_element(p1, &(i[0]), &(j[0]), &(k[0]));
+    grid->get_element(p2, &(i[1]), &(j[1]), &(k[1]));
+    grid->get_element(p3, &(i[2]), &(j[2]), &(k[2]));
+
+    maxi=Max(i[0],i[1],i[2]); mini=Min(i[0],i[1],i[2]);
+    maxj=Max(j[0],j[1],j[2]); minj=Min(j[0],j[1],j[2]);
+    maxk=Max(k[0],k[1],k[2]); mink=Min(k[0],k[1],k[2]);
+
+    int rad=Max(maxi-mini,maxj-minj,maxk-mink)/2;
+    int ci=(maxi+mini)/2; int cj=(maxj+minj)/2; int ck=(maxk+mink)/2;
+
+    BBox bb;
+    bb.extend(p1); bb.extend(p2); bb.extend(p3);
+
+    TriSurface* surf=new TriSurface;
+    surf->construct_grid(grid->dim1(), grid->dim2(), grid->dim3(), 
+			 grid->get_min(), grid->get_spacing());
+    surf->add_point(p1);
+    surf->add_point(p2);
+    surf->add_point(p3);
+    surf->add_triangle(0,1,2);
+
+    while (1) {
+	double dist;
+	int vid=-1;
+	Array1<int> *cu=grid->get_cubes_at_distance(rad,ci,cj,ck);
+	for (int i=0; i<cu->size(); i+=3) {
+	    Array1<int> *el=grid->get_members((*cu)[i],(*cu)[i+1],(*cu)[i+2]);
+	    for (int j=0; j<el->size(); el++) {
+		Array1<int> res;
+		double tdist=surf->distance(points[elements[(*el)[j]]->i1],
+					    res);
+		if (vid==-1 || tdist<dist) {
+		    vid=elements[(*el)[j]]->i1;
+		    dist=tdist;
+		}
+	    }
+	}
+	if (vid != -1) return vid;
+	rad++;
+    }
+    return 0;
+}
+
+int TriSurface::find_or_add(const Point &p) {
+    Array1<int> *el=grid->get_members(p);
+    for (int i=0, done=0; i<el->size() && !done; i++) {
+	if ((points[elements[(*el)[i]]->i1]-p).length2() < .000001)
+	    return elements[(*el)[i]]->i1;
+	if ((points[elements[(*el)[i]]->i2]-p).length2() < .000001)
+	    return elements[(*el)[i]]->i2;
+	if ((points[elements[(*el)[i]]->i3]-p).length2() < .000001)
+	    return elements[(*el)[i]]->i3;
+    }
+    points.add(p);
+    return (points.size()-1);
+}
+
+int TriSurface::cautious_add_triangle(const Point &p1, const Point &p2, 
+				       const Point &p3) {
+    int i1=find_or_add(p1);
+    int i2=find_or_add(p2);
+    int i3=find_or_add(p3);
+    return (add_triangle(i1,i2,i3,0));
+}
+
+int TriSurface::add_triangle(int i1, int i2, int i3, int cw) {
+    directed=cw;
     int temp;
     if (empty_index == -1) {
 	elements.add(new TSElement(i1, i2, i3));
@@ -58,16 +144,135 @@ int TriSurface::add_triangle(int i1, int i2, int i3) {
 	temp=empty_index;
 	empty_index=-1;
     }
-    if (temp==22229)
-	temp=22229;
+
+    //if we have a grid add this triangle to it
+    if (grid) grid->add_triangle(temp, points[i1], points[i2], points[i3]);
+
     return temp;
 }
 
-double TriSurface::distance(const Point &p, int el, int *type) {
-    Point a(points[elements[el]->i1]);
-    Point b(points[elements[el]->i2]);
-    Point c(points[elements[el]->i3]);
+void TriSurface::remove_empty_index() {
+    if (empty_index!=-1) {
+	elements.remove(empty_index);
+	empty_index=-1;
+    }
+}
 
+void TriSurface::construct_grid(int xdim, int ydim, int zdim, 
+					const Point &min, double spacing) {
+    remove_empty_index();
+    if (grid) delete grid;
+    grid = new Grid(xdim, ydim, zdim, min, spacing);
+    for (int i=0; i<elements.size(); i++)
+	grid->add_triangle(i, points[elements[i]->i1], points[elements[i]->i2],
+			   points[elements[i]->i3]);
+}
+
+
+// Method to find the distance from a point to the surface.  the algorithm
+// goes like this:
+// find which "cube" of the mesh the point is in; look for nearest neighbors;
+// determine if it's closest to a vertex, edge, or face, and store
+// the type in "type" and the info (i.e. edge #, vertex #, triangle #, etc)
+// in "res" (result); finally, return the distance.
+// the information in res will be stored thus...
+// if the thing we're closest to is a:
+// 	face   -- [0]=triangle index
+//	edge   -- [0]=triangle[1] index
+//	  	  [1]=triangle[1] edge #
+//		  [2]=triangle[2] index
+//		  [3]=triangle[2] edge #
+//	vertex -- [0]=triangle[1] index
+//		  [1]=triangle[1] vertex #
+//		   ...
+
+double TriSurface::distance(const Point &p,Array1<int> &res) {
+    Array1<int>* candid;
+    Array1<int>* elem;
+    Array1<int> tri;
+    int i, j, k, imax, jmax, kmax;
+    
+    double dmin;
+    double sp=grid->get_spacing();
+    grid->get_element(p, &i, &j, &k, &dmin);
+    grid->size(&imax, &jmax, &kmax);
+    imax--; jmax--; kmax--;
+    int dist=0;
+    int done=0;
+    double Dist=1000000;
+    Array1<int> info;
+    int type;
+    while (!done) {
+	while (!tri.size()) {
+	    candid=grid->get_cubes_at_distance(dist, i, j, k);
+	    for(int index=0; index<candid->size(); index+=3) {
+		elem=grid->get_members((*candid)[index], (*candid)[index+1], 
+				       (*candid)[index+2]);
+		if (elem) {
+		    for (int a=0; a<elem->size(); a++) {
+			for (int duplicate=0, b=0; b<tri.size(); b++)
+			    if (tri[b]==(*elem)[a]) duplicate=1;
+			for (b=0; b<info.size(); b+=2)
+			    if (info[b]==(*elem)[a]) duplicate=1;
+			if (!duplicate) tri.add((*elem)[a]);
+		    }
+		}
+	    }
+	    dist++;
+	    delete candid;
+	}
+	// now tri holds the indices of the triangles we're closest to
+
+
+	for (int index=0; index<tri.size(); index++) {
+	    double d=distance(p, tri[index], &type);
+	    if (Abs(d-Dist)<.00001) {
+		if (type==0) {
+		    info.remove_all();
+		    Dist=d;
+		    info.add(tri[index]);
+		} else {
+		    if (res.size() != 1) {
+			info.add(tri[index]);
+			info.add((type-1)%3);
+		    }
+		}
+	    } else if (Abs(d)<Abs(Dist)) {
+		info.remove_all();
+		Dist=d;
+		info.add(tri[index]);
+		if (type>0) info.add((type-1)%3);
+	    }
+	}
+
+	tri.remove_all();
+
+	// if our closest point is INSIDE of the squares we looked at...
+	if (Abs(Dist)<(dmin+(dist-1)*sp)) 
+	    done=1;		// ... we're done
+    }
+	
+    res=info;
+    return Dist;
+}
+
+
+// This is basically the ray/triangle interesect code from the ray-tacing
+// chapter in Graphics Gems I.  Much of the c-code comes from page 735 --
+// thanks to Didier Badouel.  Other parts, and a discussion of the algorithm
+// were presented on pages 390-393.
+
+// We return the signed distance from the point to the triangle "el",  
+// and put the type of intersection (face, edge or vertex) into the
+// variable type.  If we're closest to...
+//	the face, then *type=0
+//	an edge,  then *type=1+vertex# (that we're furthest from)
+//      a vertex, then *type=4+vertex# (that we're closest to)
+
+double TriSurface::distance(const Point &p, int el, int *type) {
+    Point a(points[elements[el]->i1]);	//load the vertices of this element...
+    Point b(points[elements[el]->i2]);  //... into a, b and c
+    Point c(points[elements[el]->i3]);
     double V[3][3];	// our array of vertices
     V[0][0]=a.x(); V[0][1]=a.y(); V[0][2]=a.z();
     V[1][0]=b.x(); V[1][1]=b.y(); V[1][2]=b.z();
@@ -79,6 +284,7 @@ double TriSurface::distance(const Point &p, int el, int *type) {
     N.normalize();
     double d=-(a.x()*N.x()+a.y()*N.y()+a.z()*N.z());
     double t=-(d+Dot(N, Vector(p-Point(0,0,0))));
+    int sign=Sign(t);
     Point Pp(p+N*t);
 
     double P[3]; // our point on the plane
@@ -125,7 +331,7 @@ double TriSurface::distance(const Point &p, int el, int *type) {
         }
     }
     *type = 0;
-    if (inter) return Abs(t);
+    if (inter) return t;
 
     // we know the point is outside of the triangle (i.e. the distance is
     // *not* simply the distance along the normal from the point to the
@@ -138,6 +344,9 @@ double TriSurface::distance(const Point &p, int el, int *type) {
     
     // now form our projected vectors for edges, such that a known inside
     //     point is in fact inside.
+
+    // Note: this could be optimized to take advantage of the surface being
+    //     directed.  Wouldn't need to check signs, etc.
 
     double A[3][3], B[3][3], C[3][3];
     double mid[2];
@@ -184,9 +393,9 @@ double TriSurface::distance(const Point &p, int el, int *type) {
 	for (int j=0; j<3; j++)
 	    out[X][j]=(A[X][j]*P[i[1]]+B[X][j]*P[i[2]]+C[X][j] < 0); 
 
-    if (out[2][0] && out[1][1]) { *type=1; return ((p-a).length()); }
-    if (out[0][0] && out[2][1]) { *type=2; return ((p-b).length()); }
-    if (out[1][0] && out[0][1]) { *type=3; return ((p-c).length()); }
+    if (out[2][0] && out[1][1]) { *type=1; return (sign*(p-a).length()); }
+    if (out[0][0] && out[2][1]) { *type=2; return (sign*(p-b).length()); }
+    if (out[1][0] && out[0][1]) { *type=3; return (sign*(p-c).length()); }
 
     ASSERT(out[0][2] || out[1][2] || out[2][2]);
     double theDist=-100;
@@ -208,18 +417,25 @@ double TriSurface::distance(const Point &p, int el, int *type) {
 		*type=X+4;
 	    }
 	}
-    return theDist;
+    return sign*theDist;
 }
     
 void TriSurface::remove_triangle(int i) {
     // if there hasn't been a triangle added since the last one was deleted
     // then we need to start deleting.  Otherwise, we're probably merging
     // contours, so just setting the empty_index is fine.
+
+    // if we have a grid remove this triangle from it
+    if (grid) 
+	grid->remove_triangle(i,points[elements[i]->i1],
+			      points[elements[i]->i2],points[elements[i]->i3]);
+
+    // if we don't have an empty index lying around...
     if (empty_index != -1) {
-	ASSERT(!"Shouldn't be here either!");
 	elements.remove(i);
 	elements.remove(empty_index);
 	empty_index=-1;
+    // else make this the empty index -- hopefully someone will fill it
     } else {
 	empty_index=i;
     }
@@ -228,6 +444,7 @@ void TriSurface::remove_triangle(int i) {
 #define TRISURFACE_VERSION 1
 
 void TriSurface::io(Piostream& stream) {
+    remove_empty_index();
     int version=stream.begin_class("TriSurface", TRISURFACE_VERSION);
     Surface::io(stream);
     Pio(stream, points);
