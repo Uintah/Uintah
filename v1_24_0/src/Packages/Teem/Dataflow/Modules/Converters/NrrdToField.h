@@ -1626,7 +1626,11 @@ NrrdToFieldTestMesh<Fld>::execute(SCIRun::FieldHandle fld,
       break;
     case 0:
       {
-	if (mesh->dimensionality() == 1) {
+	if (mesh->dimensionality() == 0) {
+	  typename Fld::mesh_type::Node::size_type sz;
+	  mesh->size(sz);
+	  dims.push_back(sz);
+	} else if (mesh->dimensionality() == 1) {
 	  typename Fld::mesh_type::Edge::size_type sz;
 	  mesh->size(sz);
 	  dims.push_back(sz);
