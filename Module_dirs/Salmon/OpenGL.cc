@@ -188,9 +188,9 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 
 		// Look up this object by name and see if it is supposed to be
 		// displayed...
-		TCLvarint* vis;
+		ObjTag* vis;
 		if(roe->visible.lookup(si->name, vis)){
-		    if(vis->get())
+		    if(vis->visible->get())
 			si->obj->draw(&drawinfo);
 		} 
  	    }

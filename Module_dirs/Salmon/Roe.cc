@@ -49,17 +49,7 @@ Roe::Roe(Salmon* s, const clString& id)
     current_renderer=0;
     modebuf=new char[MODEBUFSIZE];
     modecommand=new char[MODEBUFSIZE];
-
-    // Fill in the visibility database...
-    HashTableIter<int,HashTable<int, SceneItem*>*> iter(&manager->portHash);
-    for (iter.first(); iter.ok(); ++iter) {
-	HashTable<int, SceneItem*>* serHash=iter.get_data();
-	HashTableIter<int, SceneItem*> serIter(serHash);
-	for (serIter.first(); serIter.ok(); ++serIter) {
-	    SceneItem *si=serIter.get_data();
-	    itemAdded(si);
-	}
-    }
+    maxtag=0;
 }
 
 #ifdef OLDUI
@@ -100,13 +90,23 @@ void Roe::perspCB(CallbackData*, void*) {
 
 void Roe::itemAdded(SceneItem* si)
 {
-    TCLvarint* vis;
+    ObjTag* vis;
     if(!visible.lookup(si->name, vis)){
 	// Make one...
-	vis=new TCLvarint(si->name, id, this);
-	vis->set(1);
+	vis=new ObjTag;
+	vis->visible=new TCLvarint(si->name, id, this);
+	vis->visible->set(1);
+	vis->tagid=maxtag++;
 	visible.insert(si->name, vis);
-	NOT_FINISHED("Add items to TCL listbox...");
+	char buf[1000];
+	ostrstream str(buf, 1000);
+	str << "addObject " << id << " " << vis->tagid << " \"" << si->name << "\"";
+	TCL::execute(str.str());
+    } else {
+	char buf[1000];
+	ostrstream str(buf, 1000);
+	str << "addObject2 " << id << " " << vis->tagid;
+	TCL::execute(str.str());
     }
     // invalidate the bounding box
     bb.reset();
@@ -115,7 +115,15 @@ void Roe::itemAdded(SceneItem* si)
 
 void Roe::itemDeleted(SceneItem *si)
 {
-    NOT_FINISHED("Roe::itemDeleted");
+    ObjTag* vis;
+    if(!visible.lookup(si->name, vis)){
+	cerr << "Where did that object go???" << endl;
+    } else {
+	char buf[1000];
+	ostrstream str(buf, 1000);
+	str << "removeObject " << id << " " << vis->tagid;
+	TCL::execute(str.str());
+    }
     // invalidate the bounding box
     bb.reset();
     need_redraw=1;
@@ -211,9 +219,9 @@ void Roe::get_bounds(BBox& bbox)
 	for (serIter.first(); serIter.ok(); ++serIter) {
 	    SceneItem *si=serIter.get_data();
 	    // Look up the name to see if it should be drawn...
-	    TCLvarint* vis;
+	    ObjTag* vis;
 	    if(visible.lookup(si->name, vis)){
-		if(vis->get())
+		if(vis->visible->get())
 		    si->obj->get_bounds(bbox);
 	    } else {
 		cerr << "Warning: object " << si->name << " not in visibility database...\n";
@@ -696,7 +704,18 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	args.error("Roe needs a minor command");
 	return;
     }
-    if(args[1] == "setrenderer"){
+    if(args[1] == "startup"){
+	// Fill in the visibility database...
+	HashTableIter<int,HashTable<int, SceneItem*>*> iter(&manager->portHash);
+	for (iter.first(); iter.ok(); ++iter) {
+	    HashTable<int, SceneItem*>* serHash=iter.get_data();
+	    HashTableIter<int, SceneItem*> serIter(serHash);
+	    for (serIter.first(); serIter.ok(); ++serIter) {
+		SceneItem *si=serIter.get_data();
+		itemAdded(si);
+	    }
+	}
+    } else if(args[1] == "setrenderer"){
 	if(args.count() != 6){
 	    args.error("setrenderer needs a renderer name, etc");
 	    return;
@@ -750,14 +769,14 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	Vector lookdir(cv.lookat-cv.eyep);
 	double old_dist=lookdir.length();
 	cerr << "old_dist=" << old_dist << endl;
-	double old_w=2*Tan(cv.fov/2.)*old_dist;
+	double old_w=2*Tan(DtoR(cv.fov/2.))*old_dist;
 	cerr << "old_w=" << old_w << endl;
 	Vector diag(bbox.diagonal());
 	double w=diag.length();
 	cerr << "w=" << w << endl;
 	double dist=old_dist*w/old_w;
 	cerr << "dist=" << dist << endl;
-	cv.eyep=cv.lookat-lookdir*dist;
+	cv.eyep=cv.lookat-lookdir*dist/old_dist;
 	cerr << "cv.eyep=" << cv.eyep << endl;
 	animate_to_view(cv, 2.0);
     } else {

@@ -122,15 +122,22 @@ proc makeRoe {salmon rid} {
     pack $m.shade.phong -fill x -padx 2
     $m.shade.phong select
 
+
     frame $m.objlist -relief groove -borderwidth 2
-    pack $m.objlist -side left -padx 2 -pady 2
+    pack $m.objlist -side left -padx 2 -pady 2 -fill y
     label $m.objlist.title -text "Objects:"
     pack $m.objlist.title -side top
-    listbox $m.objlist.list -geometry 30x5 -yscroll "$m.objlist.scroll set" \
-	    -relief sunken -exportselection false
-    pack $m.objlist.list -side left -padx 2 -pady 2
+    canvas $m.objlist.canvas -width 400 -height 100 \
+	    -yscroll "$m.objlist.scroll set" -borderwidth 0
+    pack $m.objlist.canvas -side left -padx 2 -pady 2 -fill y
+
+    frame $m.objlist.canvas.frame -relief sunken -borderwidth 2
+    pack $m.objlist.canvas.frame
+    $m.objlist.canvas create window 0 0 -window $m.objlist.canvas.frame \
+	    -anchor nw
+
     scrollbar $m.objlist.scroll -relief sunken \
-	    -command "$m.objlist.list yview" \
+	    -command "$m.objlist.canvas yview" \
 	    -foreground plum2 -activeforeground SteelBlue2
     pack $m.objlist.scroll -fill y -side right -padx 2 -pady 2
 
@@ -143,6 +150,8 @@ proc makeRoe {salmon rid} {
     eval $wcommand
     bindEvents $w.wframe.draw $rid
     pack $w.wframe.draw -expand yes -fill both
+
+    $rid startup
 }
 
 proc bindEvents {w rid} {
@@ -214,4 +223,26 @@ proc makeViewPopup {rid} {
 }
 
 proc updateMode {rid msg} {
+}
+
+proc addObject {rid objid name} {
+    puts "rid is $rid"
+    puts "name is $name"
+    set w .$rid
+    set m $w.mframe.f
+    checkbutton $m.objlist.canvas.frame.obj$objid -text $name \
+	    -relief flat -variable "$name,$rid" -command "$rid redraw"
+    pack $m.objlist.canvas.frame.obj$objid -side top -anchor w
+}
+
+proc addObject2 {rid objid} {
+    set w .$rid
+    set m $w.mframe.f
+    pack $m.objlist.canvas.frame.obj$objid -side top -anchor w
+}
+
+proc removeObject {rid objid} {
+    set w .$rid
+    set m $w.mframe.f
+    pack forget $m.objlist.canvas.frame.obj$objid
 }
