@@ -9,6 +9,7 @@
 #include <Packages/rtrt/Core/Rect.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
+#include <Packages/rtrt/Sound/Sound.h>
 
 #include <dlfcn.h>
 #include <math.h>
@@ -68,7 +69,17 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   CellGroup *g = new CellGroup;
 
-  vector<Trigger*> * allTriggers;
+  vector<Trigger*>          * allTriggers;
+  vector<Sound*>            * allSounds;
+  rtrt::Array1<Object*>     * allObsOfInterest;
+  rtrt::Array1<Object*>     * allAnimateObjects;
+  rtrt::Array1<Object*>     * allDynamicBBoxObjects;
+  rtrt::Array1<DpyBase*>    * allDisplays;
+  rtrt::Array1<DpyBase*>    * allAux_displays;
+  rtrt::Array1<Material*>   * allMaterials;
+  vector< string >          * allRouteNames_;
+  vector< string >          * allRoomsForRoutes_;
+  rtrt::Array1<ShadowBase*> * allShadows;
 
   for (s=0; s<nscenes; s++) {
      std::cerr << "\n\n\n\n==========================================================\n"
@@ -99,15 +110,64 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
     if( s == 0 ) 
       {
-	allTriggers = &(scene[s]->getTriggers());
+	allTriggers = &(scene[0]->getTriggers());
+	allSounds = &(scene[0]->getSounds());
+	allObsOfInterest = &(scene[0]->getObjectsOfInterest());
+	allAnimateObjects = &(scene[0]->getAnimateObjects());
+	allDynamicBBoxObjects = &(scene[0]->getDynBBoxObjs());
+	allDisplays = &(scene[0]->getDisplays());
+	allAux_displays = &(scene[0]->getAuxDisplays());
+	allMaterials = &(scene[0]->getMaterials());
+	allRouteNames_ = &(scene[0]->getRouteNames());
+	allRoomsForRoutes_ = &(scene[0]->getRoomsForRoutes());
+	allShadows = &(scene[0]->getShadows());
       }
     else
       {
 	vector<Trigger*> & triggers = scene[s]->getTriggers();
-	for( int cnt = 0; cnt < triggers.size(); cnt++ )
-	  {
-	    allTriggers->push_back( triggers[cnt] );
-	  }
+	for( int cnt = 0; cnt < triggers.size(); cnt++ ) {
+	  allTriggers->push_back( triggers[cnt] );
+	}
+	vector<Sound*> & sounds = scene[s]->getSounds();
+	for( int cnt = 0; cnt < sounds.size(); cnt++ ) {
+	  allSounds->push_back( sounds[cnt] );
+	}
+	rtrt::Array1<Object*> & obsOfInterest=scene[s]->getObjectsOfInterest();
+	for( int cnt = 0; cnt < obsOfInterest.size(); cnt++ ) {
+	  allObsOfInterest->add( obsOfInterest[cnt] );
+	}
+	rtrt::Array1<Object*> & animateObjs=scene[s]->getAnimateObjects();
+	for( int cnt = 0; cnt < animateObjs.size(); cnt++ ) {
+	  allAnimateObjects->add( animateObjs[cnt] );
+	}
+	rtrt::Array1<Object*> & dynBBoxObjs=scene[s]->getDynBBoxObjs();
+	for( int cnt = 0; cnt < dynBBoxObjs.size(); cnt++ ) {
+	  allDynamicBBoxObjects->add( dynBBoxObjs[cnt] );
+	}
+	rtrt::Array1<DpyBase*> & displays=scene[s]->getDisplays();
+	for( int cnt = 0; cnt < displays.size(); cnt++ ) {
+	  allDisplays->add( displays[cnt] );
+	}
+	rtrt::Array1<DpyBase*> & auxDisplays=scene[s]->getAuxDisplays();
+	for( int cnt = 0; cnt < auxDisplays.size(); cnt++ ) {
+	  allAux_displays->add( auxDisplays[cnt] );
+	}
+	rtrt::Array1<Material*> & materials=scene[s]->getMaterials();
+	for( int cnt = 0; cnt < materials.size(); cnt++ ) {
+	  allMaterials->add( materials[cnt] );
+	}
+	vector<string> & routeNames = scene[s]->getRouteNames();
+	for( int cnt = 0; cnt < routeNames.size(); cnt++ ) {
+	  allRouteNames_->push_back( routeNames[cnt] );
+	}
+	vector<string> & routeRoomNames = scene[s]->getRoomsForRoutes();
+	for( int cnt = 0; cnt < routeRoomNames.size(); cnt++ ) {
+	  allRouteNames_->push_back( routeRoomNames[cnt] );
+	}
+	rtrt::Array1<ShadowBase*> & shadows=scene[s]->getShadows();
+	for( int cnt = 0; cnt < shadows.size(); cnt++ ) {
+	  allShadows->add( shadows[cnt] );
+	}
       }
 
     if (strncmp(argv[scene_first_arg[s]], "scenes/sea", strlen("scenes/sea")) == 0) {
@@ -127,9 +187,13 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       g->add_bbox_obj(scene[s]->get_object());
     }
 
-    if (s!=0)
+    if (s!=0) {
       for (int l=0; l<scene[s]->nlights(); l++)
 	scene[0]->add_light(scene[s]->light(l));
+      for (int l=0; l<scene[s]->nPerMatlLights(); l++)
+	scene[0]->add_per_matl_light(scene[s]->per_matl_light(l));
+    }
+
     std::cerr << "==========================================================\n"
               << "Finished creating scene " << argv[scene_first_arg[s]] 
 	      << "\n=========================================================="
