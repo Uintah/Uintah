@@ -1300,42 +1300,29 @@ class BioImageApp {
 	    setGlobal $m13-measure {9}
 
 	    # CHANGE THESE VARS FOR TRANSFER FUNCTION 
-	    setGlobal $m14-faux {1}
-	    setGlobal $m14-histo {0.5}
-	    setGlobal $m14-num-entries {4}
-	    setGlobal $m14-name-0 {Dentin/Pulp}
-	    setGlobal $m14-0-color-r {0.8}
-	    setGlobal $m14-0-color-g {0.17}
-	    setGlobal $m14-0-color-b {0.17}
-	    setGlobal $m14-0-color-a {1.0}
-	    setGlobal $m14-state-0 \
-		{r 0 0.0429688 0.335938 0.367187 0.453125 0.427807}
-	    setGlobal $m14-on-0 {1}
-	    setGlobal $m14-name-1 {Bone/Dentin}
-	    setGlobal $m14-1-color-r {0.82}
-	    setGlobal $m14-1-color-g {0.84}
-	    setGlobal $m14-1-color-b {0.33}
-	    setGlobal $m14-1-color-a {0.600000023842}
-	    setGlobal $m14-state-1 \
-		{t 0.462891 0.0679688 0.554687 0.295832 0.304965}
-	    setGlobal $m14-on-1 {1}
-	    setGlobal $m14-name-2 {Dentin/Enamel}
-	    setGlobal $m14-2-color-r {0.38}
-	    setGlobal $m14-2-color-g {0.4}
-	    setGlobal $m14-2-color-b {1.0}
-	    setGlobal $m14-2-color-a {0.72000002861}
-	    setGlobal $m14-state-2 \
-		{r 0 0.607422 0.222656 0.277344 0.300781 0.465753}
-	    setGlobal $m14-on-2 {1}
-	    setGlobal $m14-name-3 {Air/Enamel}
-	    setGlobal $m14-3-color-r {1.0}
-	    setGlobal $m14-3-color-g {1.0}
-	    setGlobal $m14-3-color-b {1.0}
-	    setGlobal $m14-3-color-a {0.810000002384}
-	    setGlobal $m14-state-3 \
-		{r 0 0.443359 0.722656 0.367188 0.253906 0.515625}
-	    setGlobal $m14-on-3 {1}
-	    setGlobal $m14-marker {end}
+            setGlobal $m14-panx {0.0}
+            setGlobal $m14-pany {0.0}
+            setGlobal $m14-scale_factor {1.0}
+            setGlobal $m14-faux {1}
+            setGlobal $m14-histo {0.5}
+            setGlobal $m14-filename "/home/darbyb/work/data/SCIRunData/1.22.0//volume/tooth.xff"
+            setGlobal $m14-name-0 {Triangle}
+            setGlobal $m14-0-color-r {0.12221829371}
+            setGlobal $m14-0-color-g {0.773248783139}
+            setGlobal $m14-0-color-b {0.741646733309}
+            setGlobal $m14-0-color-a {0.800000011921}
+            setGlobal $m14-state-0 {t 0.670178 0.0621057 0.540499 0.495436 0.464177}
+            setGlobal $m14-shadeType-0 {0}
+            setGlobal $m14-on-0 {1}
+            setGlobal $m14-name-1 {Rectangle}
+            setGlobal $m14-1-color-r {0.0157082642279}
+            setGlobal $m14-1-color-g {0.602349504633}
+            setGlobal $m14-1-color-b {0.310323060825}
+            setGlobal $m14-1-color-a {0.800000011921}
+            setGlobal $m14-state-1 {r 0 0.222522 0.0544884 0.212415 0.318622 0.612325}
+            setGlobal $m14-shadeType-1 {0}
+            setGlobal $m14-on-1 {1}
+            setGlobal $m14-marker {end}
 
 	    setGlobal $m15-alpha_scale {0.0}
 	    setGlobal $m15-shading {1}
@@ -2750,6 +2737,34 @@ class BioImageApp {
 	}
 
 	if {$valid_data == 1} {
+	    # try to load a corresponding xff file into the EditColorMap2 module
+	    # currenlty, we only have nrrd demo data sets so this will only
+	    # work if we are reading in a nrrd and is one of our demo datasets
+	    # (i.e. tooth, CThead, engine)
+	    if {!$loading && $port == 0} {
+                set EditColorMap2 [lindex [lindex $filters(0) $modules] 13]
+                global [set EditColorMap2]-filename
+
+                # Figure out if we are loading a sample dataset
+                set NrrdReader [lindex [lindex $filters(0) $modules] $load_nrrd]
+                global [set NrrdReader]-filename
+                set filename [set [set NrrdReader]-filename]
+
+                if {[string first "$data_dir/volume/tooth.nhdr" $filename] != -1 && 
+		    [file exists "$data_dir/volume/tooth.xff"]} {
+                    set [set EditColorMap2]-filename "$data_dir/volume/tooth.xff"
+                    [set EditColorMap2] swatch_load tooth
+                } elseif {[string first "$data_dir/volume/engine.nhdr" $filename] != -1 && 
+		    [file exists "$data_dir/volume/engine.xff"]} {
+                    set [set EditColorMap2]-filename "$data_dir/volume/engine.xff"
+                    [set EditColorMap2] swatch_load engine
+                } elseif {[string first "$data_dir/volume/CThead.nhdr" $filename] != -1 && 
+		    [file exists "$data_dir/volume/CThead.xff"]} {
+                    set [set EditColorMap2]-filename "$data_dir/volume/CThead.xff"
+                    [set EditColorMap2] swatch_load CThead
+                } 
+            }
+	    
 	    $mod-c needexecute
 	    set has_executed 1
 	} else {
