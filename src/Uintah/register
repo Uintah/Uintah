@@ -71,7 +71,7 @@ if( $ARGV[0] eq "-a" ){
 	else {
 	    
 	    use Net::FTP;
-	    if(( -s $fileNM) < 10000){
+	    if(( -s $fileNM) < 500000000){
 		$ftp = Net::FTP->new("panda.cs.utah.edu")             or die "Can't connect: $@\n";
 		$ftp->login('blazer','blazer2001')       or die "Couldn't login\n";       
 		$dir2 =  "d:\\apusers\\uintah\\tmp";
@@ -178,9 +178,24 @@ if($argu1 ne "-uda"){
     $ftp->cwd($dir2)                  or die "Couldn't change directory\n"; 
     $ftp->type("I");
     $ftp->put($Register);
-    $ftp->put($tar);
     $ftp->put($input);
     $ftp->put($index);
+    if(( -s $tar) < 500000000){
+	$ftp->put($tar);
+    }
+    else{
+	my $url3 = url('http://panda.cs.utah.edu/blazer/getMaxVersion');
+	$url3->query_form(SysName => $dirName);   
+	$version = get($url3);		    
+	$ftp2 = Net::FTP->new("rapture.cs.utah.edu")             or die "Can't connect: $@\n";
+	$ftp2->login('blazer','onfire4u')       or die "Couldn't login\n";       
+	$ftp2->mkdir($dirName)                    or print("");               
+	$ftp2->cwd($dirName)                  or die "Couldn't change directory\n"; 
+	$ftp2->mkdir($version)                  or print("");
+	$ftp2->cwd($version)                  or die "Couldn't change directory\n"; 
+	$ftp2->type("I");	
+	$ftp2->put($tar);
+    }
      
 #$ftp->put($filename);
     $Answer1 = "Y";
@@ -222,7 +237,12 @@ if($argu1 ne "-uda"){
 	    chop($InputName);
 
 	    if( -e $InputName ){
-		$ftp->put($InputName);
+		if(( -s $InputName) < 500000000){
+		    $ftp->put($InputName);
+		}
+		else{
+		    $ftp2->put($InputName);
+		}
 		push(@NewFile, $InputName);
 #push(@NewFile, '|');
 	    } else {
@@ -230,8 +250,9 @@ if($argu1 ne "-uda"){
 	    }
 	}
     }
+    
     $ftp->quit();
-        
+
     # Clean up
     system("rm -f NewFile.tar");
     system("rm -f ". $Register);
