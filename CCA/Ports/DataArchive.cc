@@ -15,11 +15,11 @@
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
 
-#include <sax/SAXException.hpp>
-#include <sax/SAXParseException.hpp>
-#include <sax/ErrorHandler.hpp>
-#include <parsers/XercesDOMParser.hpp>
-#include <util/XMLString.hpp>
+#include <xercesc/sax/SAXException.hpp>
+#include <xercesc/sax/SAXParseException.hpp>
+#include <xercesc/sax/ErrorHandler.hpp>
+#include <xercesc/parsers/XercesDOMParser.hpp>
+#include <xercesc/util/XMLString.hpp>
 
 #include <sys/param.h>
 
