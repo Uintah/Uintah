@@ -1,8 +1,10 @@
 
 #include <config/sci.cf>
 
-OBJS = AugmentSurf.o  ContoursToSurf.o  GenSurface.o  SurfToGeom.o
-SRCS = AugmentSurf.cc ContoursToSurf.cc GenSurface.cc SurfToGeom.cc
+OBJS = AugmentSurf.o  ContoursToSurf.o  GenSurface.o  LabelSurface.o \
+	RescaleSurface.o  SurfToGeom.o 
+SRCS = AugmentSurf.cc ContoursToSurf.cc GenSurface.cc LabelSurface.cc \
+	RescaleSurface.cc SurfToGeom.cc
 
 LIBNAME = Surface
 
