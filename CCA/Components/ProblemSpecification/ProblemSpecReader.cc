@@ -81,9 +81,10 @@ ProblemSpecReader::readInputFile()
     delete [] ch;
     throw ProblemSetupException(ex);
   }
-  string test1 = d_filename.substr(d_filename.length()-3,3);
-  if (test1 == "ups")
-    resolveIncludes(prob_spec);
+
+  //  string test1 = d_filename.substr(d_filename.length()-3,3);
+  //if (test1 == "ups")
+  resolveIncludes(prob_spec);
   return prob_spec;
 }
 
