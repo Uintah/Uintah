@@ -14,13 +14,16 @@ using namespace SCIRun;
 extern SCIRun::Mutex       cerrLock;
 extern SCIRun::DebugStream mixedDebug;
 
-
 void CommRecMPI::add(MPI_Request id, int bytes, 
-		     AfterCommunicationHandler* handler, int groupID) {
+		     AfterCommunicationHandler* handler, 
+                     string var, int message, 
+                     int groupID) {
   ids.push_back(id);
   groupIDs.push_back(groupID);
   handlers.push_back(handler);
   byteCounts.push_back(bytes);
+  vars.push_back(var);
+  messageNums.push_back(message);
   totalBytes_ += bytes;
 
   map<int, int>::iterator countIter = groupWaitCount_.find(groupID);
@@ -39,11 +42,18 @@ bool CommRecMPI::waitsome(const ProcessorGroup * pg,
   indices.resize(ids.size());
  
   int me = pg->myrank();
-  mixedDebug << me << " Calling waitsome with " << ids.size() << " waiters\n";
+  if (mixedDebug.active()) {
+    mixedDebug << me << " Waitsome: " << ids.size() << " waiters:\n";
+    for (int i = 0; i < messageNums.size(); i++) {
+      mixedDebug << me << "  Num: " << messageNums[i] << ", vars: " 
+             << vars[i] << endl;
+    }
+  }
+    
   int donecount;
   MPI_Waitsome((int)ids.size(), &ids[0], &donecount,
 	       &indices[0], &statii[0]);
-  mixedDebug << "after old waitsome\n";
+  mixedDebug << "after waitsome\n";
   return donesome(pg, donecount, finishedGroups);
 }
 
@@ -163,6 +173,8 @@ bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount,
     handlers.clear();
     byteCounts.clear();
     groupIDs.clear();
+    vars.clear();
+    messageNums.clear();
     return false; // no more to test
   }
 
@@ -174,6 +186,8 @@ bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount,
       groupIDs[j] = groupIDs[i];
       handlers[j] = handlers[i];
       byteCounts[j] = byteCounts[i];
+      messageNums[j] = messageNums[i];
+      vars[j] = vars[i];
       ++j;
     }
   }
@@ -182,6 +196,8 @@ bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount,
   ids.resize(j);
   groupIDs.resize(j);
   handlers.resize(j);
+  vars.resize(j);
+  messageNums.resize(j);
   byteCounts.resize(j);
 
   return !anyFinished; // keep waiting until something finished
@@ -205,5 +221,7 @@ void CommRecMPI::waitall(const ProcessorGroup * pg)
   ids.clear();
   handlers.clear();
   byteCounts.clear();
+  messageNums.clear();
+  vars.clear();
   totalBytes_ = 0;
 }

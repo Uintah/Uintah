@@ -33,10 +33,11 @@ public:
 
   void waitall(const ProcessorGroup * pg);
 
-  void add(MPI_Request id, int bytes, AfterCommunicationHandler* handler)
-  { add(id, bytes, handler, groupIDDefault_); }
   void add(MPI_Request id, int bytes, AfterCommunicationHandler* handler,
-	   int groupID);
+           string var, int message)
+  { add(id, bytes, handler, var, message, groupIDDefault_); }
+  void add(MPI_Request id, int bytes, AfterCommunicationHandler* handler,
+	   string var, int message, int groupID);
 
   void setDefaultGroupID(int groupID)
   { groupIDDefault_ = groupID; }
@@ -51,6 +52,8 @@ private:
   vector<int> groupIDs;  
   vector<AfterCommunicationHandler*> handlers; 
   vector<int> byteCounts;
+  vector<string> vars;
+  vector<int> messageNums;
 
   map<int, int> groupWaitCount_; // groupID -> # receives waiting
   int groupIDDefault_;

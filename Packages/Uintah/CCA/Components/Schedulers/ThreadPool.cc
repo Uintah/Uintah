@@ -330,7 +330,7 @@ Receiver::run()
   // post receive for self-mpi-process wake up signal
   MPI_Irecv(0, 0, MPI_INT, pg_->myrank(), d_id, pg_->getComm(),
 	    &wakeUpRequest);
-  recvs_.add(wakeUpRequest, 0, 0, -1);
+  recvs_.add(wakeUpRequest, 0, 0,"",0,-1);
 
   int preBytesLeft = recvs_.getUnfinishedBytes();
 
@@ -383,7 +383,7 @@ Receiver::run()
       // post wake up signal receive again
       MPI_Irecv(0, 0, MPI_INT, pg_->myrank(), d_id, pg_->getComm(),
 		&wakeUpRequest);
-      recvs_.add(wakeUpRequest, 0, 0, -1);	
+      recvs_.add(wakeUpRequest, 0, 0,"",0,-1);	
     }
   
     iter = semiReadyTasks_.begin();
