@@ -172,9 +172,9 @@ void VolumeSlicer::execute()
     return;
   }
   
-  if (!intexture_->get(tex_)) {
-    return;
-  } else if (!tex_.get_rep()) {
+  if (!(intexture_->get(tex_) && tex_.get_rep()))
+  {
+    warning("Required Texture input not found.");
     return;
   }
   
