@@ -155,7 +155,8 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/RingSatellite.cc \
 	$(SRCDIR)/Grid2.cc \
 	$(SRCDIR)/TimeVaryingInstance.cc \
-	$(SRCDIR)/TrisReader.cc 
+	$(SRCDIR)/TrisReader.cc \
+	$(SRCDIR)/Parallelogram2.cc \
 
 #	$(SRCDIR)/LumiDpy.cc \
 #	$(SRCDIR)/LumiCamera.cc \
