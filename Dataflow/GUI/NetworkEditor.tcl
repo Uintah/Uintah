@@ -1500,15 +1500,23 @@ proc listFindAndRemove { name elem } {
 
 
 proc initVar { var save substitute } {
+    set var [string trimleft $var :]
     if { [string first msgStream $var] != -1 } return
-    global ModuleVars 
+    global ModuleVars ModuleSavedVars ModleSubstitutedVars
     set ids [split $var -]
+    if { [llength $ids] < 2 } return
     set module [lindex $ids 0]
     set varname [join [lrange $ids 1 end] -]
-    if { ![string length $varname] || ![string length $module] } return
     
     lappend ModuleVars($module) $varname
-    setVarStates $var $save $substitute
+    if { $save } {
+	lappend ModuleSavedVars($module) $varname
+	uplevel \#0 trace variable \"$var\" w networkHasChanged
+    }
+     
+    if { $substitute } {
+	lappend ModuleSubstitutedVars($module) $varname
+    }
 }
 
 proc setVarStates { var save substitute } {
