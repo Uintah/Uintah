@@ -767,7 +767,6 @@ DataArchive::PatchHashMaps::PatchHashMaps()
 }
 
 DataArchive::PatchHashMaps::~PatchHashMaps() {
-  cout << "Destroying important secret documents!\n";
   int size = docs.size();
   for (int i = 0; i < size; i++) {
     docs[i]->releaseDocument();
