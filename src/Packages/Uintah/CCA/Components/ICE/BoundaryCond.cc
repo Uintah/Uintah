@@ -840,23 +840,27 @@ bool are_We_Using_LODI_BC(const Patch* patch,
 { 
   BC_doing << "are_We_Using_LODI_BC on patch"<<patch->getID()<< endl;
   
+#if 0
   bool usingLODI = false;
-  
+
   vector<string> kind(3);
   kind[0] = "Density";
   kind[1] = "Temperature";
   kind[2] = "Pressure";
+#endif
       
-  is_LODI_face.reserve(6);
+  is_LODI_face.resize(6);
   //__________________________________
   // Iterate over the faces encompassing the domain
   // not the faces between neighboring patches.
+#if 0
   vector<Patch::FaceType>::const_iterator iter;
   for (iter  = patch->getBoundaryFaces()->begin(); 
        iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;  
     
     is_LODI_face[face] = false;
+
     //__________________________________
     // check if temperature, pressure or density
     //  is using LODI
@@ -886,7 +890,26 @@ bool are_We_Using_LODI_BC(const Patch* patch,
     BC_dbg  <<" using LODI on face "<<  is_LODI_face[face]<<endl;
     delete new_bcs;
   }
-  return usingLODI;
+#endif
+  bool using_lodi = false;
+  vector<Patch::FaceType>::const_iterator iter;
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;  
+    
+    is_LODI_face[face] = false;
+    bool lodi_pressure = patch->haveBC(face,mat_id,"LODI","Pressure");
+    bool lodi_density = patch->haveBC(face,mat_id,"LODI","Density");
+    bool lodi_temperature = patch->haveBC(face,mat_id,"LODI","Temperature");
+    bool lodi_velocity = patch->haveBC(face,mat_id,"LODI","Velocity");
+       
+    if (lodi_pressure || lodi_density || lodi_temperature || lodi_velocity) {
+      using_lodi = true;
+      is_LODI_face[face] = true;
+    }
+    BC_dbg << " using LODI on face " << is_LODI_face[face] << endl;
+  }
+  return using_lodi;
 }
 
 
