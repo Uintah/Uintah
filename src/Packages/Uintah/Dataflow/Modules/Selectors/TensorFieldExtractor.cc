@@ -42,6 +42,9 @@ LOG
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Containers/ConsecutiveRangeSet.h> 
+#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 
 #include <iostream> 
 #include <sstream>
@@ -163,6 +166,8 @@ void TensorFieldExtractor::execute()
 		  LatVolField<Matrix3> *tfd =
 	    scinew LatVolField<Matrix3>( mesh_handle_, Field::NODE );
 	  // set the generation and timestep in the field
+	  tfd->set_property( "vartype",
+			     int(TypeDescription::NCVariable),true);
 	  build_field( archive, level, low, var, mat, time, gridVar, tfd );
 	  // send the field out to the port
 	  tfout->send(tfd);
@@ -181,6 +186,8 @@ void TensorFieldExtractor::execute()
 	  LatVolField<Matrix3> *tfd =
 	    scinew LatVolField<Matrix3>( mesh_handle_, Field::CELL );
 	  // set the generation and timestep in the field
+	  tfd->set_property( "vartype",
+			     int(TypeDescription::CCVariable),true);
 	  build_field( archive, level, low, var, mat, time, gridVar, tfd );
 	  // send the field out to the port
 	  tfout->send(tfd);
@@ -191,7 +198,67 @@ void TensorFieldExtractor::execute()
 	cerr<<"CCVariable<?> Unknown vector type\n";
 	return;
       }
-    default:
+     case TypeDescription::SFCXVariable:
+      switch ( subtype->getType() ) {
+      case TypeDescription::Matrix3:
+	{
+	  SFCXVariable<Matrix3> gridVar;
+	  LatVolField<Matrix3> *tfd =
+	    scinew LatVolField<Matrix3>( mesh_handle_, Field::FACE );
+	  // set the generation and timestep in the field
+	  tfd->set_property( "vartype",
+			     int(TypeDescription::SFCXVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, tfd );
+	  // send the field out to the port
+	  tfout->send(tfd);
+	  // 	DumpAllocator(default_allocator, "TensorDump.allocator");
+	  return;
+	}
+      default:
+	cerr<<"SFCXVariable<?> Unknown vector type\n";
+	return;
+      }
+     case TypeDescription::SFCYVariable:
+      switch ( subtype->getType() ) {
+      case TypeDescription::Matrix3:
+	{
+	  SFCYVariable<Matrix3> gridVar;
+	  LatVolField<Matrix3> *tfd =
+	    scinew LatVolField<Matrix3>( mesh_handle_, Field::NODE );
+	  // set the generation and timestep in the field
+	  tfd->set_property( "vartype",
+			     int(TypeDescription::SFCYVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, tfd );
+	  // send the field out to the port
+	  tfout->send(tfd);
+	  // 	DumpAllocator(default_allocator, "TensorDump.allocator");
+	  return;
+	}
+      default:
+	cerr<<"SFCYVariable<?> Unknown vector type\n";
+	return;
+      }
+     case TypeDescription::SFCZVariable:
+      switch ( subtype->getType() ) {
+      case TypeDescription::Matrix3:
+	{
+	  SFCZVariable<Matrix3> gridVar;
+	  LatVolField<Matrix3> *tfd =
+	    scinew LatVolField<Matrix3>( mesh_handle_, Field::NODE );
+	  // set the generation and timestep in the field
+	  tfd->set_property( "vartype",
+			     int(TypeDescription::SFCZVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, tfd );
+	  // send the field out to the port
+	  tfout->send(tfd);
+	  // 	DumpAllocator(default_allocator, "TensorDump.allocator");
+	  return;
+	}
+      default:
+	cerr<<"SFCZVariable<?> Unknown vector type\n";
+	return;
+      }
+   default:
       cerr<<"Not a TensorField\n";
       return;
     }

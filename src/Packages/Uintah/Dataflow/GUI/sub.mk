@@ -21,6 +21,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/PatchVisualizer.tcl\
 	$(SRCDIR)/PatchDataVisualizer.tcl\
 	$(SRCDIR)/CuttingPlane.tcl\
+	$(SRCDIR)/FaceCuttingPlane.tcl\
 	$(SRCDIR)/Hedgehog.tcl\
 	$(SRCDIR)/ScalarOperator.tcl\
 	$(SRCDIR)/ScalarFieldOperator.tcl\
