@@ -147,7 +147,7 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp,
     // If no error detected in equilibrium solution, call eqsol, which
     // returns equilibrium solution in cgs units
     double *xeq = new double[nofSpecies]; // Equilibrium mole fractions
-    vector<double> yeq; // Equilibrium mass fractions
+    vector<double> yeq(nofSpecies); // Equilibrium mass fractions
     double equilVol; // Mixture specific volume; not returned
     double sout; // Mixture entropy; not returned
     double cout_s, cdet_out; // Not returned
