@@ -34,7 +34,7 @@ else
 	Core/Thread
 
 endif
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(GL_LIBS) 
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(GL_LIBS) $(TAU_LIBRARY)
 
 include $(SRCTOP)/scripts/program.mk
 
