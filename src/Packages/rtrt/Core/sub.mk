@@ -88,7 +88,11 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/hilbert.cc \
 	$(SRCDIR)/Wood.cc \
 	$(SRCDIR)/HTVolumeBrick.cc  \
-	$(SRCDIR)/Disc.cc 
+	$(SRCDIR)/Disc.cc \
+	$(SRCDIR)/imageutils.c \
+	$(SRCDIR)/input_ppm.c \
+	$(SRCDIR)/write_ppm.c \
+	$(SRCDIR)/rgbe.c
 
 PSELIBS :=  \
 	Core/Thread Core/Exceptions Core/Geometry Packages/rtrt/visinfo 

@@ -3,6 +3,8 @@
 
 #include <Packages/rtrt/Core/Color.h>
 #include <Core/Geometry/Vector.h>
+#include <Packages/rtrt/Core/Array2.h>
+#include <Packages/rtrt/Core/ppm.h>
 
 namespace rtrt {
 
@@ -53,8 +55,30 @@ public:
 
 };
 
+  class EnvironmentMapBackground : public Background 
+  {
+    
+  public:
+
+    EnvironmentMapBackground( char* filename );
+
+    virtual ~EnvironmentMapBackground( void );
+    
+    virtual Color color_in_direction(const Vector& v) const ;
+
+protected:
+    
+      void read_image( char* filename );
+    
+      texture* _text;
+      int _width, _height;
+      Array2<Color> _image;
+      double _aspectRatio;
+  
+};
 
 
 } // end namespace rtrt
 
 #endif
+
