@@ -27,7 +27,7 @@
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
-
+#include <TauProfilerForSCIRun.h>
 #include <iostream>
 #include <iomanip>
 #include <values.h>
@@ -355,6 +355,7 @@ void SimulationController::run()
       // Execute the current timestep
       scheduler->execute(d_myworld);
       t += delt;
+      TAU_DB_DUMP();
    }
 }
 
