@@ -85,6 +85,7 @@ set show_iso 0
 global iso_mapType
 set iso_mapType 2
 
+
 setProgressText "Loading BioImage Application, Please Wait..."
 
 #######################################################
@@ -115,7 +116,7 @@ class BioImageApp {
 	set process_width 325
 	set process_height $viewer_height
 	
-	set vis_width [expr $notebook_width + 30]
+	set vis_width [expr $notebook_width + 25]
 	set vis_height $viewer_height
 
 	set num_filters 0
@@ -160,6 +161,9 @@ class BioImageApp {
 	set 0_samples 2
 	set 1_samples 2
 	set 2_samples 2
+        set sizex 0
+        set sizey 0
+        set sizez 0
 
         set has_autoviewed 0
         set has_executed 0
@@ -261,20 +265,35 @@ class BioImageApp {
                 # simulate a click in each window and set them to the correct views
 		global mods
 
-                $mods(ViewImage)-c keypress .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.bottomlt 60 period 175035491
-		$mods(ViewImage)-c keypress .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.bottomlt 19 0 175035491
+		# force initial draw in correct modes
 
-
-		$mods(ViewImage)-c keypress .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.darby 60 period 175035491
-		$mods(ViewImage)-c keypress .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.darby 10 1 175035491
-
-
-		$mods(ViewImage)-c keypress .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.toprt 60 period 175035491
-		$mods(ViewImage)-c keypress .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.toprt 11 2 175035491
+		
+                $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial
+                $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal
+                $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal
 
 
                 set 2D_fixed 1
 	    }
+	} elseif {[string first "FieldInfo" $which] != -1 && $state == "Completed"} {
+	    # update slice sliders
+	    global $which-sizex $which-sizey $which-sizez
+	    set sizex [set $which-sizex]
+	    set sizey [set $which-sizey]
+	    set sizez [set $which-sizez]
+
+  	    .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.modes.slice.s configure -from 0 -to $sizez
+  	    .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.modes.slice.s configure -from 0 -to $sizey
+ 	    .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.modes.slice.s configure -from 0 -to $sizex
+
+	    # set slice to be middle slice
+	    global $mods(ViewImage)-axial-viewport0-slice
+	    global $mods(ViewImage)-sagittal-viewport0-slice
+	    global $mods(ViewImage)-coronal-viewport0-slice
+
+	    set $mods(ViewImage)-axial-viewport0-slice [expr $sizez/2]
+	    set $mods(ViewImage)-sagittal-viewport0-slice [expr $sizey/2]
+	    set $mods(ViewImage)-coronal-viewport0-slice [expr $sizex/2]
 	} elseif {[string first "NrrdInfo" $which] != -1 && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Loading Volume..."
@@ -388,10 +407,10 @@ class BioImageApp {
 	$indicatorL2 configure -text $msg
     }
 
-    method keypress {} {
+    method keypress {w} {
 	global mods
       
-	$mods(ViewImage)-c keypress .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.bottomlt 60 period 175035491
+	$mods(ViewImage)-c keypress $w 60 a 175035491
     }
 
 
@@ -544,6 +563,97 @@ class BioImageApp {
 
 	$viewimage control_panel $w.cp
 	$viewimage add_nrrd_tab $w 1
+	
+	# modes for axial
+	frame $topr.modes
+	pack $topr.modes -side bottom -padx 0 -pady 0
+
+	frame $topr.modes.slice
+	pack $topr.modes.slice -side top -pady 0 -anchor nw
+
+	global $mods(ViewImage)-axial-viewport0-mode
+	radiobutton $topr.modes.slice.b -text "Slice Mode" \
+	    -variable  $mods(ViewImage)-axial-viewport0-mode -value 0 \
+	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
+	pack $topr.modes.slice.b -side left -padx 0 -anchor nw
+
+	global $mods(ViewImage)-axial-viewport0-slice
+ 	scale $topr.modes.slice.s \
+ 	    -from 0 -to 20 \
+ 	    -orient horizontal -showvalue false \
+ 	    -length 120 \
+	    -variable $mods(ViewImage)-axial-viewport0-slice
+
+	label $topr.modes.slice.l -textvariable $mods(ViewImage)-axial-viewport0-slice
+ 	pack $topr.modes.slice.s $topr.modes.slice.l -side left -anchor n -padx 0
+
+        bind $topr.modes.slice.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
+
+	radiobutton $topr.modes.mip -text "MIP Mode" \
+	    -variable $mods(ViewImage)-axial-viewport0-mode -value 1 \
+	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial"
+	pack $topr.modes.mip -side top -padx 0 -pady 0 -anchor nw
+
+	# modes for sagittal
+	frame $botl.modes
+	pack $botl.modes -side bottom -padx 0 -pady 0
+
+	frame $botl.modes.slice
+	pack $botl.modes.slice -side top -pady 0 -anchor nw
+
+	global $mods(ViewImage)-sagittal-viewport0-mode
+	radiobutton $botl.modes.slice.b -text "Slice Mode" \
+	    -variable $mods(ViewImage)-sagittal-viewport0-mode -value 0 \
+	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
+	pack $botl.modes.slice.b -side left -padx 0 -anchor nw
+
+
+	global $mods(ViewImage)-sagittal-viewport0-slice
+ 	scale $botl.modes.slice.s \
+ 	    -from 0 -to 254 \
+ 	    -orient horizontal -showvalue false \
+ 	    -length 120 \
+	    -variable $mods(ViewImage)-sagittal-viewport0-slice
+	label $botl.modes.slice.l -textvariable $mods(ViewImage)-sagittal-viewport0-slice
+ 	pack $botl.modes.slice.s $botl.modes.slice.l -side left -anchor n -padx 0
+
+        bind $botl.modes.slice.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
+
+	radiobutton $botl.modes.mip -text "MIP Mode" \
+	    -variable $mods(ViewImage)-sagittal-viewport0-mode -value 1 \
+	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal"
+	pack $botl.modes.mip -side top -padx 0 -pady 0 -anchor nw
+
+	# modes for coronal
+	frame $botr.modes
+	pack $botr.modes -side bottom -padx 0 -pady 0
+
+
+	frame $botr.modes.slice
+	pack $botr.modes.slice -side top -pady 0 -anchor nw
+
+	global $mods(ViewImage)-coronal-viewport0-mode
+	radiobutton $botr.modes.slice.b -text "Slice Mode" \
+	    -variable $mods(ViewImage)-coronal-viewport0-mode -value 0 \
+	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
+	pack $botr.modes.slice.b -side left -padx 0 -anchor nw
+
+	global $mods(ViewImage)-coronal-viewport0-slice
+ 	scale $botr.modes.slice.s \
+ 	    -from 0 -to 254 \
+ 	    -orient horizontal -showvalue false \
+ 	    -length 120 \
+	    -variable $mods(ViewImage)-coronal-viewport0-slice
+	label $botr.modes.slice.l -textvariable $mods(ViewImage)-coronal-viewport0-slice
+ 	pack $botr.modes.slice.s $botr.modes.slice.l -side left -anchor n -padx 0
+
+        bind $botr.modes.slice.s <ButtonRelease> "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
+
+	radiobutton $botr.modes.mip -text "MIP Mode" \
+	    -variable $mods(ViewImage)-coronal-viewport0-mode -value 1 \
+	    -command "$mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal"
+	pack $botr.modes.mip -side top -padx 0 -pady 0 -anchor nw
+
 
 	# embed viewer in top left
 	global mods
@@ -556,9 +666,9 @@ class BioImageApp {
  	    -expand 1 -fill both -padx 0 -pady 0
 
 	# add 3 slice windows
-	pack [$viewimage gl_frame $topr "Top Rt" $w] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
-	pack [$viewimage gl_frame $botl "Bottom Lt" $w] -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
-	pack [$viewimage gl_frame $botr "Darby" $w] -expand 1 -fill both
+	pack [$viewimage gl_frame $topr "Axial" $w] -side top -padx 0 -ipadx 0 -pady 0 -ipady 0
+	pack [$viewimage gl_frame $botl "Sagittal" $w] -side top -padx 0 -ipadx 0 -pady 0 -ipady 0
+	pack [$viewimage gl_frame $botr "Coronal" $w] -side top -padx 0 -pady 0 -ipadx 0 -ipady 0
     }
 
 
@@ -748,6 +858,8 @@ class BioImageApp {
 	    set m27 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 741 1977]
             set m28 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 472 2052]
             set m29 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 490 1973]
+	    set m30 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 369 1889]
+
 	    set mods(EditTransferFunc) $m14
 	    
 	    set c1 [addConnection $m17 0 $m18 0]
@@ -773,6 +885,7 @@ class BioImageApp {
 	    set c26 [addConnection $m16 0 $m28 0]
 	    set c27 [addConnection $m29 0 $m28 1]
 	    set c28 [addConnection $m28 1 $mods(Viewer) 1]
+	    set c29 [addConnection $m16 0 $m30 0]
 
             global Disabled
 	    set Disabled($c28) 0
@@ -789,8 +902,8 @@ class BioImageApp {
 
 	    # set some ui parameters
 	    global $m1-filename
-	    set $m1-filename $data_dir/volume/CThead.nhdr
-	    # set $m1-filename "/home/darbyb/work/data/TR0600-TE020.nhdr"
+	    #set $m1-filename $data_dir/volume/CThead.nhdr
+	    set $m1-filename "/home/darbyb/work/data/TR0600-TE020.nhdr"
 
 	    global $m8-nbits
 	    set $m8-nbits {8}
@@ -898,7 +1011,7 @@ class BioImageApp {
 
 	    # create filter index in the form of the list:
 	    # filter_type modules input output prev_index next_index choose_port which_row visibility 
-	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 $m8 $m9 $m10 $m11 $m12 $m13 $m14 $m15 $m16 $m17 $m18 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28 $m29]
+	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 $m8 $m9 $m10 $m11 $m12 $m13 $m14 $m15 $m16 $m17 $m18 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28 $m29 $m30]
 	    set filters(0) [list load $mod_list [list $m6] [list $m6 0] start end 0 0 1]
 
             $this build_viewers $m25 $m26
@@ -3009,6 +3122,9 @@ puts [set UnuResample]
     variable 0_samples
     variable 1_samples
     variable 2_samples
+    variable sizex
+    variable sizey
+    variable sizez
 
     variable has_autoviewed
     variable has_executed
