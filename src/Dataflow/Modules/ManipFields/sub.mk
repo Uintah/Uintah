@@ -1,8 +1,8 @@
 # Makefile fragment for this subdirectory
 
-SRCDIR := Dataflow/Modules/ManipFields
+include $(SRCTOP)/scripts/smallso_prologue.mk
 
-include $(SRCTOP)/scripts/largeso_epilogue.mk
+SRCDIR := Dataflow/Modules/ManipFields
 
 SRCS := \
 	$(SRCDIR)/Rescale.cc\
@@ -10,9 +10,10 @@ SRCS := \
 
 VOLATILE_LIB := ManipFields
 
-PSELIBS := 
+PSELIBS := Dataflow/Network Core/TclInterface Core/Containers
 
 LIBS 	:= 
 
-include $(SRCTOP)/scripts/volatile_lib.mk
+include $(SRCTOP)/scripts/smallso_epilogue.mk
+
 
