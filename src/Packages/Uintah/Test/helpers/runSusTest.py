@@ -40,9 +40,10 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
 
   if datmode == "dbg":
     if do_restart == "yes":
-      environ['MALLOC_STATS'] = "restart_malloc_stats"
+      malloc_stats_file = "restart_malloc_stats"
     else:
-      environ['MALLOC_STATS'] = "malloc_stats"
+      malloc_stats_file = "malloc_stats"
+    environ['MALLOC_STATS'] = malloc_stats_file
 
   test_root = "%s/%s-%s" % (environ['BUILDROOT'], ALGO, mode)
   compare_root = "%s/%s-%s" % (environ['TEST_DATA'], ALGO, datmode)
@@ -73,7 +74,7 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
         print "\tComparison tests passed."
 
     if mode in ('dbg', 'dbgmpi'):
-	rc = system("mem_leak_check %s %s %s/%s/%s %s %s > mem_leak_check.log" % (testname, environ['MALLOC_STATS'], compare_root, testname, environ['MALLOC_STATS'], ".", errors_to))
+	rc = system("mem_leak_check %s %s %s/%s/%s %s %s > mem_leak_check.log" % (testname, malloc_stats_file, compare_root, testname, malloc_stats_file, ".", errors_to))
         if rc == 0:
 	    print "\tMemory leak tests passed."
 	elif rc == 5 * 256:
