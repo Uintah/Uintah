@@ -1,0 +1,151 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+<meta name="generator" content="Adobe GoLive 4">
+<title>Multi-Vis</title>
+</head>
+
+<body bgcolor="#a9a9a9">
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="306" bgcolor="#cccccc">
+<tr>
+<td><img height="92" width="600" src="images/sub-banner.jpg" border="0"
+    usemap="#sub-banner8662a0c4"><map name="sub-banner8662a0c4"><area
+    coords="581,65,598,84" shape="rect" title nohref><area
+    href="chapter_7.html" coords="557,64,575,83" shape="rect"
+    title="Feedback"><area href="chapter_6.html" coords="532,64,550,82"
+    shape="rect" title="Putting Simulation and Visualization
+    Together"><area href="chapter_5.html" coords="508,64,527,83"
+    shape="rect" title="Bioelectric Field Simulation"><area
+    href="chapter_4.html" coords="483,64,502,83" shape="rect"
+    title="Multi-Vis"><area href="chapter_3.html" coords="460,64,478,83"
+    shape="rect" title="Derived Fields"><area href="chapter_2.html"
+    coords="436,64,454,83" shape="rect" title="Looking at the Data"><area
+    href="chapter_1.html" coords="412,64,430,81" shape="rect"
+    title="Geometry Visualization"><area href="Intro.html"
+    coords="354,64,406,84" shape="rect" title="Introduction"><area
+    href="../../index.html"
+    coords="205,63,343,83" shape="rect" title="Documentation"><area
+    href="http://software.sci.utah.edu/" coords="103,63,195,82"
+    shape="rect" title="Software"><area href="index.html"
+    coords="1,65,92,81" shape="rect" title="Tutorial Home"></map></td> 
+</tr>
+
+<tr>
+<td>
+<center>
+<table border="0" cellpadding="0" cellspacing="5" width="600">
+        <tr>
+	<td>
+	<center>
+	<p><br><p><A name="section-3"></A>
+	<font size="4 face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular"
+	color="maroon">
+	<b>Chapter 4: Multi-Vis</b></font> </p>
+        <p>&nbsp; </p>
+        </center>
+        <div align="left">  
+	<p><b><H4><A href="#section-1">Isosurface</A></H4></b>
+	<p><b><H4><A href="#section-2">Putting the nets together</A></H4></b></p>
+	<p><b>Chapter Overview</b><br>
+        <p>Chapter three demonstrates the construction of three networks to
+	    visualize the utahtorso-lowres-voltage  
+	dataset.  This chapter, demonstrates how to merge the three networks into one
+	    larger network 
+	that performs all visualizations concurrently. For details, see the
+	    <a HREF="../Guide/usersguide/srug4.html#sec:navnetwork">User's
+	    Guide 4.15, 
+	    Navigating a Network</a>.  A fourth visualization
+	    tool will be added--isosurface extraction.</p>
+ 
+	<p> First, add the following to the canvas:</p>
+
+	<p><ul><li>A FieldReader module loading the utahtorso-lowres-voltage.tvd.fld file.</p>
+<p><li>An Isosurface module from the SCIRun/Visualization menu and connect with the FieldReader.</p>
+<p><li>A Viewer module and connect to the Isosurface.</p></ul>
+<p><b><a name="section-1">Isosurface</b></A>
+
+	<p>The Isosurface takes a volume Field as input, and outputs a surface Field or scene graph data (visualized with or without a color map).
+
+        <p><b>Figure 4.1</b> shows the Isosurface module UI.  The
+	Iso Value slider widget determines the surface value for the
+	  incoming volume Field. Upon releasing the slider, the module executes.
+
+
+	</div>
+	<center>
+	<p><img height="598" width="332" src="images/figures/4_3.gif"><br>
+	<b>Figure 4.1, Isosurface UI</b></p>
+	</center>
+	<div align="left">
+	<p><br>
+	
+      
+	<p>If a color map is not connected to the Isosurface input port, the module uses the Default Color. By default, the module extracts a surface using the Marching Cubes
+	algorithm. The user can choose the number of threads (processors) 
+	the algorithm will use, or use the NOISE algorithm.</p>
+
+        <p><b><A name="section-2">Putting the nets together</b></A>
+
+        <p>Now add the visualization techniques from Chapter 3, a procedure that involves sharing the FieldReader and Viewer modules across the 3A, 3B, and 3C networks.  Choose from the following two options for rebuilding the nets saved in Chapter 3.  The first option is to manually reconstruct the nets:
+	<p><ul>
+	<li>Repeat all  steps for creating <b><A href="chapter_3.html#section-1">3A</b></A> in Chapter 3.</p>
+	<p><li>Do the same for <b><A href="chapter_3.html#section-2">3B</b></A> and <b><A href="chapter_3.html#section-3">3C</b></A>, but use the FieldReader and
+	  Viewer from 
+       3A.</ul></p>
+                  
+        <p>Use the complete, color-coded network in <b>Figure 4.2</b> that shows the  
+	previous chapter's networks. Yellow corresponds to 3A, green to 3B,
+	and red to 3C.</p>
+
+<p>The second option is to use the File/Insert command to insert all nets saved in Chapter 3, along with their settings. Destroy all but one Viewer module by right-clicking on the module and selecting the Destroy option.  To destroy a connection between two modules, right-click on the pipe connecting those modules. In addition to the Viewer, these nets share the FieldReader module (in the upper left corner of <b>Figure 4.2</b>), which loads the utahtorso-lowres-voltage.tvd.fld file.</p>
+
+<p>Move module groupings by holding the middle-mouse button and drawing a box that contains the modules to relocate. The selected modules will turn a darker gray.  Then left-click the mouse to move the entire group to a new location in the NetEdit frame. </p>
+<p>Save this net, it will be used in Chapter 6.</p>
+	
+      </div>
+	<center>
+	<p><img height="450" width="549" src="images/figures/4_1.gif"><br>
+	<b>Figure 4.2 showing merged, color-coded net</b></p>
+	</center>
+	<div align="left">
+	<p><br>
+
+      </div>
+	<center>
+	<p><img height="451" width="450" src="images/figures/4_2.gif"><br>
+	<b>Figure 4.3 ViewWindow for completed net</b></p>
+	</center>
+	<div align="left">
+	<p><br>
+	
+        
+	
+	<p><b>Summary</b><br>
+	<p>At this point in the tutorial, the user has learned how to perform concurrent visualizations. 
+	
+	Chapter 5 gives instruction on using modules from the bioelectric problem solving 
+	environment (BioPSE) package.  
+
+	<br>
+	<br><A HREF="#section-3">Return to Top</A>
+        </div>
+	</td>
+	</tr>
+</table>
+</center>
+</td>
+</tr>
+<tr>
+<td><img height="35" width="600" src="images/sub-banner-bottom.jpg"
+    border="0" usemap="#sub-banner-bottom8ac548fb"><map
+    name="sub-banner-bottom8ac548fb"><area href="chapter_5.html"
+    coords="565,1,589,22" shape="rect"><area href="chapter_3.html"
+    coords="532,2,561,22" shape="rect"><area href="http://www.sci.utah.edu"
+    coords="6,7,68,31" shape="rect" title="SCI Institute"></map></td> 
+</tr>
+</table>
+</body>
+</html>
+
+
+
