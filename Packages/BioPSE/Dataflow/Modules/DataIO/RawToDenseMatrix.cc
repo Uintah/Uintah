@@ -41,7 +41,7 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(TCLArgs&, void*);
+  virtual void tcl_command(GuiArgs&, void*);
 
 private:
   GuiString units_;
@@ -156,7 +156,9 @@ void RawToDenseMatrix::execute(){
 
   oport_->send(handle_);
 }
-void RawToDenseMatrix::tcl_command(TCLArgs& args, void* userdata)
+
+void
+RawToDenseMatrix::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2){
     args.error("RawToDenseMatrix needs a minor command");

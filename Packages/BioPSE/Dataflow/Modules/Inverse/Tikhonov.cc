@@ -66,7 +66,6 @@ namespace BioPSE
     ColumnMatrix *make_column(MatrixHandle A);
     double FindCorner(Array1<double>  &rho, Array1<double>  &eta, Array1<double>  &lambdaArray, ColumnMatrix *kapa, int *lambda_index);
 
-    // virtual void tcl_command(TCLArgs&, void*);
   };
 	
   // MODULE MAKER
@@ -452,10 +451,5 @@ namespace BioPSE
     oportRegForMat->send(MatrixHandle(regForMatrix));
     //    oportKAPA->send(MatrixHandle(kapa));
   }
-  
-  // void Tikhonov::tcl_command(TCLArgs& args, void* userdata)
-  // {
-  //   Module::tcl_command(args, userdata);
-  // }
   
 } // End namespace BioPSE

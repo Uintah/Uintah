@@ -10,6 +10,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
+#include <Core/Containers/StringUtil.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Widgets/ArrowWidget.h>

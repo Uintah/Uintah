@@ -29,6 +29,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
+#include <Core/Containers/StringUtil.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Array2.h>
@@ -48,6 +49,7 @@ using std::endl;
 
 
 namespace BioPSE {
+
 using namespace SCIRun;
 
 class ConductivitySearch : public Module {    
@@ -100,7 +102,7 @@ public:
   ConductivitySearch(GuiContext *context);
   virtual ~ConductivitySearch();
   virtual void execute();
-  void tcl_command( TCLArgs&, void * );
+  virtual void tcl_command( GuiArgs&, void * );
 };
 
 
@@ -560,7 +562,9 @@ void ConductivitySearch::execute() {
 
 //! Commands invoked from the Gui.  Pause/unpause/stop the search.
 
-void ConductivitySearch::tcl_command(TCLArgs& args, void* userdata) {
+void
+ConductivitySearch::tcl_command(GuiArgs& args, void* userdata)
+{
   if (args[1] == "pause") {
     if (mylock_.tryLock())
       cerr << "ConductivitySearch pausing..."<<endl;

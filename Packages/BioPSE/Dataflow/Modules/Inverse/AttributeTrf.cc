@@ -56,8 +56,6 @@ public:
   int matrix_union(Array1<int> &mat_init, Array1<int> &mat_res);
   void matrix_sort(Array1<int> &matrix);
   DenseMatrix *calc_laplacian(Array1<Point> &pts, Array2<int> &tris);
-
-  //  virtual void tcl_command(TCLArgs&, void*);
 };
 
 DECLARE_MAKER(AttributeTrf)
@@ -319,12 +317,5 @@ void AttributeTrf::execute(){
 
   oportAttrib->send(MatrixHandle(laplacian));
 }
-
-/*
-void AttributeTrf::tcl_command(TCLArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
-*/
 
 } // End namespace BioPSE
