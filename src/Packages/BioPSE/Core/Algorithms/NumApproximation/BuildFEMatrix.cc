@@ -55,7 +55,7 @@ BuildFEMatrix::BuildFEMatrix(TetVolFieldIntHandle hField,
   TetVolMesh::Node::size_type nsize; hMesh_->size(nsize);
   unsigned int nNodes = nsize;
   rows_ = scinew int[nNodes+1];
-  cerr << "unitsScale_ = "<< unitsScale_ << "\n";
+//  cerr << "unitsScale_ = "<< unitsScale_ << "\n";
 }
 BuildFEMatrix::~BuildFEMatrix(){}
 
