@@ -18,7 +18,7 @@ SRCS += $(SRCDIR)/ParticleDB.cc $(SRCDIR)/ParticleDatabase.cc \
 GENHDRS := Uintah/Datatypes/Particles/Particles_sidl.h
 endif
 
-PSELIBS := Uintah/Datatypes/Particles PSECore/Dataflow PSECore/Datatypes \
+PSELIBS := Uintah/Datatypes PSECore/Dataflow PSECore/Datatypes \
 	SCICore/Thread SCICore/Persistent SCICore/Exceptions \
 	SCICore/TclInterface SCICore/Containers SCICore/Datatypes \
 	SCICore/Geom
@@ -32,6 +32,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/06/20 17:57:17  kuzimmer
+# Moved GridVisualizer to Uintah
+#
 # Revision 1.3  2000/03/23 11:18:16  sparker
 # Makefile tweaks for sidl files
 # Added GENHDRS to program.mk
