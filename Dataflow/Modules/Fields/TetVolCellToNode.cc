@@ -100,8 +100,6 @@ void TetVolCellToNode::execute()
   TetVolMesh *mesh = 
     dynamic_cast<TetVolMesh*>(vf_->get_typed_mesh().get_rep());
 
-  vf_->finish_mesh();
-
   int cells_size = mesh->cells_size();
   int nodes_size = mesh->nodes_size();
 

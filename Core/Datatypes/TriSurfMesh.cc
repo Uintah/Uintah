@@ -442,7 +442,7 @@ TriSurfMesh::inside4_p(int i, const Point &p)
 }
 
 void
-TriSurfMesh::finish_mesh()
+TriSurfMesh::flush_changes()
 {
   compute_normals();
 }
@@ -637,6 +637,11 @@ TriSurfMesh::io(Piostream &stream)
   Pio(stream, neighbors_);
 
   stream.end_class();
+
+  if (stream.reading())
+  {
+    flush_changes();
+  }
 }
 
 

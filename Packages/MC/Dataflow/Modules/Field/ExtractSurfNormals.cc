@@ -86,7 +86,6 @@ void ExtractSurfNormals::execute()
 void 
 ExtractSurfNormals::extract_normals(TriSurfMesh *mesh)
 {
-  mesh->finish_mesh();
   PointCloudMeshHandle pcmesh1 = out1_->get_typed_mesh();
   vector<Vector> &fdata1 = out1_->fdata();
 

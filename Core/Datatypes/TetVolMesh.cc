@@ -273,7 +273,7 @@ TetVolMesh::compute_edges()
 }
 
 void
-TetVolMesh::finish_mesh() {
+TetVolMesh::flush_changes() {
   compute_edges();
   compute_faces();
   compute_node_neighbors();
@@ -1016,8 +1016,9 @@ TetVolMesh::io(Piostream &stream)
 
   stream.end_class();
 
-  if (stream.reading()) {
-    finish_mesh();
+  if (stream.reading())
+  {
+    flush_changes();
   }
 }
 

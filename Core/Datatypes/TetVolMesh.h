@@ -184,7 +184,7 @@ public:
   void fill_data(Iter begin, Iter end, Functor fill_ftor);
 
   //! (re)create the edge and faces data based on cells.
-  virtual void finish_mesh();
+  virtual void flush_changes();
   void compute_edges();
   void compute_faces();
   void compute_node_neighbors();

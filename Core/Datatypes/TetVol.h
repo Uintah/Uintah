@@ -53,10 +53,6 @@ public:
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
 
-  /*! Ask mesh to compute edges and faces. Does nothing if mesh 
-    is already finished. */
-  virtual void finish_mesh();
-
   bool get_gradient(Vector &, Point &);
   Vector cell_gradient(TetVolMesh::Cell::index_type);
 
@@ -131,14 +127,6 @@ VectorFieldInterface*
 TetVol<T>::query_vector_interface() const
 {
   return 0;
-}
-
-
-template <class T>
-void
-TetVol<T>::finish_mesh()
-{
-  get_typed_mesh()->finish_mesh();
 }
 
 

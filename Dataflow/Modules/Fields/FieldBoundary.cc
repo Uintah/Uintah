@@ -104,7 +104,6 @@ FieldBoundary::execute()
   } else if (infield_gen_ != input->generation) {
     infield_gen_ = input->generation;
     MeshHandle mesh = input->mesh();
-    mesh->finish_mesh();
 
     const TypeDescription *mtd = mesh->get_type_description();
     CompileInfo *ci = FieldBoundaryAlgo::get_compile_info(mtd);

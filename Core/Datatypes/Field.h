@@ -57,7 +57,6 @@ public:
   virtual ScalarFieldInterface* query_scalar_interface() const { return 0; }
   virtual VectorFieldInterface* query_vector_interface() const { return 0; }
   virtual TensorFieldInterface* query_tensor_interface() const { return 0; }
-  virtual void finish_mesh() {};
 
   //! Persistent I/O.
   virtual void io(Piostream &stream);
