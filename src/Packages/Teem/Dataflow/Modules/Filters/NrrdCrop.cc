@@ -47,7 +47,6 @@ public:
   virtual ~NrrdCrop();
   virtual void execute();
   void load_gui();
-  virtual void tcl_command(GuiArgs& args, void* userdata);
 private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
@@ -248,18 +247,4 @@ NrrdCrop::execute()
   nrrd->copy_sci_data(*nrrdH.get_rep());
   last_nrrdH_ = nrrd;
   onrrd_->send(last_nrrdH_);
-}
-
-void 
-NrrdCrop::tcl_command(GuiArgs& args, void* userdata) 
-{
-  if(args.count() < 2){
-    args.error("NrrdCrop needs a minor command");
-    return;
-  }
-  if (args[1] == "get_axes") {
-    load_gui();
-  } else {
-    Module::tcl_command(args, userdata);
-  }
 }
