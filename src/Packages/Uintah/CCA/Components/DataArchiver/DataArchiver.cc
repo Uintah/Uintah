@@ -840,7 +840,7 @@ void DataArchiver::outputTimestep(Dir& baseDir,
   const XMLCh* str;
 
   ostringstream tname;
-  tname << "t" << setw(4) << setfill('0') << timestep;
+  tname << "t" << setw(5) << setfill('0') << timestep;
   *pTimestepDir = baseDir.getName() + "/" + tname.str();
 
   // Create the directory for this timestep, if necessary
@@ -976,7 +976,7 @@ void DataArchiver::executedTimestep()
     int timestep = d_currentTimestep;
     
     ostringstream tname;
-    tname << "t" << setw(4) << setfill('0') << timestep;
+    tname << "t" << setw(5) << setfill('0') << timestep;
     
     // Reference this timestep in index.xml
     if(d_writeMeta){
@@ -1210,7 +1210,7 @@ void DataArchiver::output(const ProcessorGroup*,
   dbg << " at time: " << d_currentTimestep << "\n";
   
   ostringstream tname;
-  tname << "t" << setw(4) << setfill('0') << d_currentTimestep;
+  tname << "t" << setw(5) << setfill('0') << d_currentTimestep;
   
   Dir tdir = p_dir->getSubdir(tname.str());
   
