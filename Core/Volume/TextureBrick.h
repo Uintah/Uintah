@@ -25,12 +25,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Brick.h
+//    File   : TextureBrick.h
 //    Author : Milan Ikits
 //    Date   : Wed Jul 14 15:55:55 2004
 
-#ifndef Volume_Brick_h
-#define Volume_Brick_h
+#ifndef Volume_TextureBrick_h
+#define Volume_TextureBrick_h
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
@@ -42,12 +42,12 @@
 
 namespace SCIRun {
 
-class Brick 
+class TextureBrick 
 {
 public:
-  Brick(int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int oz,
+  TextureBrick(int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int oz,
         int mx, int my, int mz, const BBox& bbox, const BBox& tbox);
-  virtual ~Brick();
+  virtual ~TextureBrick();
 
   // access one of the 8 vertices [0,7]
   inline const Point& operator[] (int i) const { return corner_[i]; }
@@ -100,12 +100,12 @@ protected:
 };
 
 template <typename T>
-class BrickT : public Brick
+class TextureBrickT : public TextureBrick
 {
 public:
-  BrickT(int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int oz,
+  TextureBrickT(int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int oz,
          int mx, int my, int mz, const BBox& bbox, const BBox& tbox, bool alloc);
-  ~BrickT();
+  ~TextureBrickT();
   
   GLenum tex_type() { return GLinfo<T>::type; }
   void* tex_data(int c) { return data_[c]; }
@@ -117,9 +117,9 @@ protected:
 };
 
 template <typename T>
-BrickT<T>::BrickT(int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int oz,
+TextureBrickT<T>::TextureBrickT(int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int oz,
                   int mx, int my, int mz, const BBox& bbox, const BBox& tbox, bool alloc)
-  : Brick(nx, ny, nz, nc, nb, ox, oy, oz, mx, my, mz, bbox, tbox)
+  : TextureBrick(nx, ny, nz, nc, nb, ox, oy, oz, mx, my, mz, bbox, tbox)
 {
   data_[0] = 0;
   data_[1] = 0;
@@ -131,7 +131,7 @@ BrickT<T>::BrickT(int nx, int ny, int nz, int nc, int* nb, int ox, int oy, int o
 }
 
 template <typename T>
-BrickT<T>::~BrickT()
+TextureBrickT<T>::~TextureBrickT()
 {
   for(int c=0; c<nc_; c++) {
     delete[] data_[c];
@@ -140,4 +140,4 @@ BrickT<T>::~BrickT()
 
 } // namespace SCIRun
 
-#endif // Volume_Brick_h
+#endif // Volume_TextureBrick_h

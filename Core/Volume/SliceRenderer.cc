@@ -36,7 +36,7 @@
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Volume/SliceRenderer.h>
 #include <Core/Volume/VolShader.h>
-#include <Core/Volume/Brick.h>
+#include <Core/Volume/TextureBrick.h>
 #include <Core/Volume/ShaderProgramARB.h>
 
 #include <iostream>
@@ -115,7 +115,7 @@ SliceRenderer::draw()
   tex_->lock_bricks();
   
   Ray view_ray = compute_view();
-  vector<Brick*> bricks;
+  vector<TextureBrick*> bricks;
   tex_->get_sorted_bricks(bricks, view_ray);
   if(bricks.size() == 0) return;
 
@@ -183,7 +183,7 @@ SliceRenderer::draw()
   
   for(unsigned int i=0; i<bricks.size(); i++) {
     double t;
-    Brick* b = bricks[i];
+    TextureBrick* b = bricks[i];
     load_brick(b);
     vertex.resize(0);
     texcoord.resize(0);

@@ -63,7 +63,7 @@ Texture::~Texture()
 {}
 
 void
-Texture::get_sorted_bricks(vector<Brick*>& bricks, const Ray& view)
+Texture::get_sorted_bricks(vector<TextureBrick*>& bricks, const Ray& view)
 {
   bricks.resize(0);
   vector<double> dist;

@@ -32,14 +32,14 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Volume
 
-SRCS +=	$(SRCDIR)/Brick.cc \
-	$(SRCDIR)/CM2Shader.cc \
+SRCS +=	$(SRCDIR)/CM2Shader.cc \
 	$(SRCDIR)/CM2Widget.cc \
 	$(SRCDIR)/Colormap2.cc \
 	$(SRCDIR)/Pbuffer.cc \
 	$(SRCDIR)/ShaderProgramARB.cc \
 	$(SRCDIR)/SliceRenderer.cc \
 	$(SRCDIR)/Texture.cc \
+	$(SRCDIR)/TextureBrick.cc \
 	$(SRCDIR)/TextureRenderer.cc \
 	$(SRCDIR)/Utils.cc \
 	$(SRCDIR)/VideoCardInfo.c \

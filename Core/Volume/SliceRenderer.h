@@ -42,7 +42,6 @@
 
 #include <Core/Containers/BinaryTree.h>
 
-#include <Core/Volume/Brick.h>
 #include <Core/Volume/Texture.h>
 #include <Core/Volume/TextureRenderer.h>
 
