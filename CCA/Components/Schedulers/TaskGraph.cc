@@ -589,7 +589,7 @@ class CompTable {
     unsigned int string_hash(const char* p) {
       unsigned int sum=0;
       while(*p)
-	sum = sum*7 + (unsigned char)*p;
+	sum = sum*7 + (unsigned char)*p++;
       return sum;
     }
 
