@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
   char *me = argv[0];
   char *err = 0;
   if (argc < 4) {
-    fprintf(stderr, "Usage: %s <inside> <texture> <outfile> [threshold]\n", me);
+    fprintf(stderr, "Usage: %s <inside> <texture> <outfile> [-t threshold] [-s support] [-wa]\n", me);
     return 1;
   }
 
@@ -20,11 +20,30 @@ int main(int argc, char *argv[]) {
   char *texfile = argv[2];
   char *outfile = argv[3];
   float threshold = 0.30;
+  int support = 1;
+  int use_weighted_ave = 0;
 
-  if (argc > 4) {
-    threshold = atof(argv[4]);
+  for(int arg = 4; arg < argc; arg++) {
+    if (strcmp(argv[arg], "-t") == 0) {
+      threshold = atof(argv[++arg]);
+    } else if (strcmp(argv[arg], "-s") == 0) {
+      support = atoi(argv[++arg]);
+    } else if (strcmp(argv[arg], "-wa") == 0) {
+      use_weighted_ave = 1;
+    } else {
+      fprintf(stderr, "unknown arg: %s\n", argv[arg]);
+      return 1;
+    }
   }
 
+
+  printf("Here's what were using:\n");
+  printf("input: %s\n", input);
+  printf("texfile: %s\n", texfile);
+  printf("outfile: %s\n", outfile);
+  printf("threshold: %g\n", threshold);
+  printf("support: %d\n", support);
+  printf("use_weighted_ave: %d\n", use_weighted_ave);
 
   Nrrd* nin = nrrdNew();
   Nrrd* texture = nrrdNew();
@@ -96,26 +115,25 @@ int main(int argc, char *argv[]) {
 	  float ave[3] = {0,0,0};
 	  float contribution_total = 0;
 	  // Loop over each neighbor
-	  for(int j = y-1; j <= y+1; j++)
-	    for(int i = x-1; i <= x+1; i++)
+	  for(int j = y-support; j <= y+support; j++)
+	    for(int i = x-support; i <= x+support; i++)
 	      {
 		// Fix boundary conditions
 		int newi = i;
-		if (newi == width)
-		  newi = 0;
-		else if (newi == -1)
-		  newi = width-1;
+		if (newi >= width)
+		  newi = newi - width;
+		else if (newi < 0)
+		  newi += width;
 
 		int newj = j;
-		if (newj == height)
+		if (newj >= height)
 		  newj = height - 1;
-		else if (newj == -1)
+		else if (newj < 0)
 		  newj = 0;
 
 		float contributer = data[z*width*height + newj*width + newi];
 		if (contributer < threshold) {
-		  // Comment out this line if you want weighted averages
-		  contributer = 0;
+		  contributer *= use_weighted_ave;
 		  float *con = tex + (z*width*height + newj*width + newi)*3;
 		  ave[0] = ave[0] + con[0]*(1-contributer);
 		  ave[1] = ave[1] + con[1]*(1-contributer);
