@@ -2616,12 +2616,12 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
     _SCI_CORRECT_='echo $echo_n "$echo_c"'
     _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
     _SCI_VER_1_="0"
-    _SCI_VER_2_="7.0"
+    _SCI_VER_2_="7.1"
     _CUR_1_=""
     _CUR_2_=""
 
-    echo "$as_me:$LINENO: checking for OS version 7.0" >&5
-echo $ECHO_N "checking for OS version 7.0... $ECHO_C" >&6
+    echo "$as_me:$LINENO: checking for OS version 7.1" >&5
+echo $ECHO_N "checking for OS version 7.1... $ECHO_C" >&6
 
     if test "NEED_OSX_HACK=no"; then
       _SCI_CORRECT_='NEED_OSX_HACK=no'
