@@ -31,11 +31,6 @@ SRCS += $(SRCDIR)/tclUnixNotify-$(TK_VERSION).c
 #	$(SRCDIR)/tkRange.c $(SRCDIR)/tkUnixRange.c \
 
 
-INCLUDES := -I$(TCL_SRC_DIR) -I$(TCL_SRC_DIR)/generic \
-	 -I$(TK_SRC_DIR) -I$(TK_SRC_DIR)/generic -I$(TK_SRC_DIR)/unix \
-	 -I$(ITCL_SRC_DIR) -I$(ITCL_SRC_DIR)/generic \
-	 -I$(ITK_SRC_DIR) -I$(ITK_SRC_DIR)/generic $(INCLUDES)
-
 PSELIBS := 
 LIBS := $(BLT_LIBRARY) \
 	$(ITK_LIBRARY) \
