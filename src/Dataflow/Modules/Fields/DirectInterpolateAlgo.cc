@@ -39,8 +39,8 @@ DirectInterpAlgoBase::~DirectInterpAlgoBase()
 
 
 CompileInfo *
-DirectInterpAlgoBase::get_compile_info(const TypeDescription *td0,
-				       const TypeDescription *td1)
+DirectInterpAlgoBase::get_compile_info(const TypeDescription *field_td,
+				       const TypeDescription *loc_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -49,15 +49,15 @@ DirectInterpAlgoBase::get_compile_info(const TypeDescription *td0,
 
   CompileInfo *rval = 
     scinew CompileInfo(to_filename(template_class_name + "." +
-				   td0->get_name(".", ".") +
-				   td1->get_name(".", ".")) + ".",
+				   field_td->get_name(".", ".") +
+				   loc_td->get_name(".", ".")) + ".",
                        base_class_name, 
                        template_class_name, 
-                       td0->get_name() + ", " + td1->get_name());
+                       field_td->get_name() + ", " + loc_td->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  td0->fill_compile_info(rval);
+  field_td->fill_compile_info(rval);
   return rval;
 }
 

@@ -37,8 +37,8 @@ public:
   virtual ~DirectInterpAlgoBase();
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *td1,
-				       const TypeDescription *td2);
+  static CompileInfo *get_compile_info(const TypeDescription *field,
+				       const TypeDescription *element);
 };
 
 
