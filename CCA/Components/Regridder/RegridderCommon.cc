@@ -9,6 +9,7 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 #include <Core/Util/DebugStream.h>
 #include <iostream>
 #include <sstream>
@@ -64,10 +65,12 @@ bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid, SchedulerP& s
     int allprocs;
     for (Level::const_patchIterator iter=level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       // here we assume that the per-patch has been set
-      PerPatch<int> flaggedPatchCells;
+      PerPatch<PatchFlagP> flaggedPatchCells;
       newDW->get(flaggedPatchCells, d_sharedState->get_refinePatchFlag_label(), 0, *iter);
-      if (flaggedPatchCells)
+      if (flaggedPatchCells.get().get_rep()->flag) {
         thisproc = true;
+        break;
+      }
     }
     MPI_Allreduce(&thisproc, &allprocs, 1, MPI_INT, MPI_MAX, d_myworld->getComm());
     return allprocs;
@@ -76,12 +79,13 @@ bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid, SchedulerP& s
     
     for (Level::const_patchIterator iter=level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       // here we assume that the per-patch has been set
-      PerPatch<int> flaggedPatchCells;
+      PerPatch<PatchFlagP> flaggedPatchCells;
       newDW->get(flaggedPatchCells, d_sharedState->get_refinePatchFlag_label(), 0, *iter);
       cout << "  finest level, patch " << (*iter)->getID() << flaggedPatchCells.get() << endl;
-      if (flaggedPatchCells.get())
+      if (flaggedPatchCells.get().get_rep()->flag)
         return true;
     }
+    cout << " NO FLAGGED PATCHES!\n";
     return false;
   }
   
@@ -169,9 +173,9 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   // get level0 resolution
   IntVector low, high;
   level0->findCellIndexRange(low, high);
-  d_cellNum[0] = high-low;
+  d_cellNum[0] = high-low - level0->getExtraCells()*IntVector(2,2,2);
   const Patch* patch = level0->selectPatchForCellIndex(IntVector(0,0,0));
-  d_patchSize[0] = patch->getHighIndex() - patch->getLowIndex();
+  d_patchSize[0] = patch->getInteriorCellHighIndex() - patch->getInteriorCellLowIndex();
   d_patchNum[0] = calculateNumberOfPatches(d_cellNum[0], d_patchSize[0]);
   d_patchActive[0] = new CCVariable<int>;
   d_patchCreated[0] = new CCVariable<int>;

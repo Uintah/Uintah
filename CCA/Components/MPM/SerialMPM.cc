@@ -32,6 +32,7 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
+#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
@@ -2909,12 +2910,15 @@ void SerialMPM::initialErrorEstimate(const ProcessorGroup*,
     
     cout_doing << "Doing errorEstimate on patch "<< patch->getID()<<" \t\t\t AMRSimpleCFD" << '\n';
     CCVariable<int> refineFlag;
-    PerPatch<int> refinePatchFlag;
+    PerPatch<PatchFlagP> refinePatchFlag;
     new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
                           0, patch);
     new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
                 0, patch);
+
+    PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
     
+
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -2926,7 +2930,7 @@ void SerialMPM::initialErrorEstimate(const ProcessorGroup*,
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         refineFlag[patch->getLevel()->getCellIndex(px[*iter])] = true;
-        refinePatchFlag.setData(true);
+        refinePatch->set();
       }
     }
   }
@@ -2954,12 +2958,14 @@ void SerialMPM::errorEstimate(const ProcessorGroup* group,
       // Find the overlapping regions...
 
       CCVariable<int> refineFlag;
-      PerPatch<int> refinePatchFlag;
+      PerPatch<PatchFlagP> refinePatchFlag;
       
       new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
                             0, coarsePatch);
       new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
                   0, coarsePatch);
+
+      PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
     
       Level::selectType finePatches;
       coarsePatch->getFineLevelPatches(finePatches);
@@ -2986,7 +2992,7 @@ void SerialMPM::errorEstimate(const ProcessorGroup* group,
               !inside.done(); inside++){
             if (fineErrorFlag[fineStart+*inside]) {
               refineFlag[*iter] = 1;
-              refinePatchFlag.setData(1);
+              refinePatch->set();
             }
           }
         }
