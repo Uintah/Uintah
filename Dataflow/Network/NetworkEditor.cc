@@ -117,7 +117,7 @@ void NetworkEditor::save_network(const string& filename)
     if(!out)
       return;
     out << "# SCI Network 1.0\n";
-    //emit_tclstyle_copyright(out);
+    if (getenv("SCI_INSERT_NET_COPYRIGHT")) { emit_tclstyle_copyright(out); }
     out << "\n";
     out << "::netedit dontschedule\n\n";
     net->read_lock();

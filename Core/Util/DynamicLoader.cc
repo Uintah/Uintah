@@ -45,7 +45,6 @@ using namespace std;
   const string ext("so");
 #endif
 
-bool regression_testing_flag = false;
 env_map scirunrc;
 
 DynamicLoader *DynamicLoader::scirun_loader_ = 0;

@@ -52,10 +52,6 @@ using namespace SCIRun;
 typedef std::map<int,IPortInfo*>::iterator iport_iter;
 typedef std::map<int,OPortInfo*>::iterator oport_iter;
 
-namespace SCIRun {
-extern bool regression_testing_flag;
-}
-
 #ifdef __APPLE__
 const string ext = ".dylib";
 #else
@@ -706,7 +702,7 @@ void Module::setPid(int pid)
 // Error conditions
 void Module::error(const string& str)
 {
-  if (regression_testing_flag)
+  if (getenv("SCI_REGRESSION_TESTING"))
   {
     cout << id << ":ERROR: " << str << "\n";
   }
@@ -717,7 +713,7 @@ void Module::error(const string& str)
 
 void Module::warning(const string& str)
 {
-  if (regression_testing_flag)
+  if (getenv("SCI_REGRESSION_TESTING"))
   {
     cout << id << ":WARNING: " << str << "\n";
   }
@@ -728,7 +724,7 @@ void Module::warning(const string& str)
 
 void Module::remark(const string& str)
 {
-  if (regression_testing_flag)
+  if (getenv("SCI_REGRESSION_TESTING"))
   {
     cout << id << ":REMARK: " << str << "\n";
   }
@@ -739,7 +735,7 @@ void Module::remark(const string& str)
 
 void Module::postMessage(const string& str)
 {
-  if (regression_testing_flag)
+  if (getenv("SCI_REGRESSION_TESTING"))
   {
     cout << id << ":postMessage: " << str << "\n";
   }
