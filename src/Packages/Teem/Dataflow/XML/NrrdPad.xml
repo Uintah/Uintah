@@ -23,11 +23,16 @@
   <overview>
     <authors>
       <author>David Weinstein</author>
+      <author>Martin Cole</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Pad the size of a nrrd along its axes.</summary>
     <description>
-      <p>Version Date: January 2000</p><p>Version: 1.0</p>
+      <p>The user interface for NrrdPad varies depending upon the
+dimenion of the input nrrd.  For each axis (except the Tuple Axis),
+the user inputs the amount to prepend and append to the axis.  NrrdPad
+outputs a new NrrdData of the specified size.</p>
     </description>
+    <examplesr>Teem/nets/test/pad.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

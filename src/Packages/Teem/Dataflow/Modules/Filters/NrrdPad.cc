@@ -40,28 +40,24 @@ using std::endl;
 namespace SCITeem {
 
 class NrrdPad : public Module {
-  NrrdIPort* inrrd_;
-  NrrdOPort* onrrd_;
-  GuiString minAxis0_;
-  GuiString maxAxis0_;
-  GuiString minAxis1_;
-  GuiString maxAxis1_;
-  GuiString minAxis2_;
-  GuiString maxAxis2_;
-  string last_minAxis0_;
-  string last_maxAxis0_;
-  string last_minAxis1_;
-  string last_maxAxis1_;
-  string last_minAxis2_;
-  string last_maxAxis2_;
-  int last_generation_;
-  NrrdDataHandle last_nrrdH_;
 public:
   int valid_data(string *minS, string *maxS, int *min, int *max, Nrrd *nrrd);
   int getint(const char *str, int *n);
   NrrdPad(GuiContext *ctx);
   virtual ~NrrdPad();
   virtual void execute();
+private:
+  void load_gui();
+  
+  NrrdIPort          *inrrd_;
+  NrrdOPort          *onrrd_;
+  vector<GuiInt*>     mins_;
+  vector<int>         last_mins_;
+  vector<GuiInt*>     maxs_;
+  vector<int>         last_maxs_;
+  GuiInt              dim_;
+  int                 last_generation_;
+  NrrdDataHandle      last_nrrdH_;
 };
 
 } // End namespace SCITeem
@@ -70,69 +66,36 @@ using namespace SCITeem;
 
 DECLARE_MAKER(NrrdPad)
 
-NrrdPad::NrrdPad(GuiContext *ctx)
-  : Module("NrrdPad", ctx, Filter, "Filters", "Teem"),
-    minAxis0_(ctx->subVar("minAxis0")),
-    maxAxis0_(ctx->subVar("maxAxis0")),
-    minAxis1_(ctx->subVar("minAxis1")),
-    maxAxis1_(ctx->subVar("maxAxis1")),
-    minAxis2_(ctx->subVar("minAxis2")),
-    maxAxis2_(ctx->subVar("maxAxis2")),
-    last_minAxis0_(""), last_maxAxis0_(""),
-    last_minAxis1_(""), last_maxAxis1_(""), last_minAxis2_(""), 
-    last_maxAxis2_(""),
-    last_generation_(-1), last_nrrdH_(0)
+NrrdPad::NrrdPad(GuiContext *ctx) : 
+  Module("NrrdPad", ctx, Filter, "Filters", "Teem"),
+  dim_(ctx->subVar("dim")),
+  last_generation_(-1), 
+  last_nrrdH_(0)
 {
+  // value will be overwritten at gui side initialization.
+  dim_.set(0);
+
+  
 }
 
 NrrdPad::~NrrdPad() {
 }
 
-// edited from the Teem package: src/unrrdu/crop.c
-// we initialize n with the axis size - 1
-int
-NrrdPad::getint(const char *str, int *n) {
-  if (!strlen(str)) return 1;
-  if ('M' == str[0]) {
-    if (1 < strlen(str)) {
-      if (('+' == str[1] || '-' == str[1])) {
-	int offset;
-        if (1 != sscanf(str+1, "%d", &offset)) {
-          return 1;
-        }
-	if (str[1] == '+') *n += offset;
-	else *n -= offset;
-        /* else we succesfully parsed the offset */
-      }
-      else {
-        /* something other than '+' or '-' after 'M' */
-        return 1;
-      }
-    }
-  }
-  else {
-    if (1 != sscanf(str, "%d", n)) {
-      return 1;
-    }
-    /* else we successfully parsed n */
-  }
-  return 0;
-}
+void
+NrrdPad::load_gui() {
+  dim_.reset();
+  if (dim_.get() == 0) { return; }
 
-// look for M[+/-a] strings, as well just numbers
-// set the actual indices in the min/max arrays
-int NrrdPad::valid_data(string *minS, string *maxS, 
-			      int *min, int *max, Nrrd *nrrd) {
-  string errstr("Error in NrrdPad - bad pad range.");
-  for (int a=0; a<3; a++) {
-    const char *mins = minS[a].c_str();
-    const char *maxs = maxS[a].c_str();
-    min[a]=max[a]=nrrd->axis[a].size-1;
-    if (getint(mins, &(min[a]))) { msgStream_ << errstr; return 0; }
-    if (getint(maxs, &(max[a]))) { msgStream_ << errstr; return 0; }
-    if (min[a] >= max[a]) { msgStream_ << errstr; return 0; }
+  last_mins_.resize(dim_.get(), -1);
+  last_maxs_.resize(dim_.get(), -1);  
+  for (int a = 0; a < dim_.get(); a++) {
+    ostringstream str;
+    str << "minAxis" << a;
+    mins_.push_back(new GuiInt(ctx->subVar(str.str())));
+    ostringstream str1;
+    str1 << "maxAxis" << a;
+    maxs_.push_back(new GuiInt(ctx->subVar(str1.str())));
   }
-  return 1;
 }
 
 void 
@@ -157,43 +120,75 @@ NrrdPad::execute()
     error("Empty input Nrrd.");
     return;
   }
+  dim_.reset();
+
+  // test for new input
+  if (last_generation_ != nrrdH->generation) {
+
+    if (last_generation_ != -1) {
+      last_mins_.clear();
+      last_maxs_.clear();
+      vector<GuiInt*>::iterator iter = mins_.begin();
+      while(iter != mins_.end()) {
+	delete *iter;
+	++iter;
+      }
+      mins_.clear();
+      iter = maxs_.begin();
+      while(iter != maxs_.end()) {
+	delete *iter;
+	++iter;
+      }
+      maxs_.clear();
+      gui->execute(id.c_str() + string(" clear_axes"));
+    }
+
+    last_generation_ = nrrdH->generation;
+    dim_.set(nrrdH->nrrd->dim);
+    dim_.reset();
+    load_gui();
+    gui->execute(id.c_str() + string(" init_axes"));
+
+  }
+
+  dim_.reset();
+  if (dim_.get() == 0) { return; }
+
+  for (int a = 0; a < dim_.get(); a++) {
+    mins_[a]->reset();
+    maxs_[a]->reset();
+  }
   
-  string minS[3], maxS[3];
-  minS[0]=minAxis0_.get();
-  maxS[0]=maxAxis0_.get();
-  minS[1]=minAxis1_.get();
-  maxS[1]=maxAxis1_.get();
-  minS[2]=minAxis2_.get();
-  maxS[2]=maxAxis2_.get();
-  if (last_generation_ == nrrdH->generation &&
-      last_minAxis0_ == minS[0] &&
-      last_maxAxis0_ == maxS[0] &&
-      last_minAxis1_ == minS[1] &&
-      last_maxAxis1_ == maxS[1] &&
-      last_minAxis2_ == minS[2] &&
-      last_maxAxis2_ == maxS[2] &&
-      last_nrrdH_.get_rep()) {
+  // See if gui values have changed from last execute,
+  // and set up execution values. 
+  bool changed = false;
+  vector<int> min(dim_.get()), max(dim_.get());
+  for (int a = 0; a < dim_.get(); a++) {
+    if (last_mins_[a] != mins_[a]->get()) {
+      changed = true;
+      last_mins_[a] = mins_[a]->get();
+    }
+    if (last_maxs_[a] != maxs_[a]->get()) {
+      changed = true;
+      last_maxs_[a] = maxs_[a]->get();
+    }
+    min[a] = 0 - mins_[a]->get();
+    max[a] = (nrrdH->nrrd->axis[a].size - 1) + maxs_[a]->get();  
+  }
+
+  if (! changed) { 
+    // send old nrrd
     onrrd_->send(last_nrrdH_);
     return;
   }
 
-  int min[3], max[3];
-  if (!valid_data(minS, maxS, min, max, nrrdH->nrrd)) return;
-
-  last_minAxis0_ = minS[0];
-  last_maxAxis0_ = maxS[0];
-  last_minAxis1_ = minS[1];
-  last_maxAxis1_ = maxS[1];
-  last_minAxis2_ = minS[2];
-  last_maxAxis2_ = maxS[2];
-  last_generation_ = nrrdH->generation;
-
   Nrrd *nin = nrrdH->nrrd;
   Nrrd *nout = nrrdNew();
-  msgStream_ << "Pad: ("<<min[0]<<","<<min[1]<<","<<min[2]<<") -> (";
-  msgStream_ << max[0]<<","<<max[1]<<","<<max[2]<<")"<<endl;
+  int *minp = &(min[0]);
+  int *maxp = &(max[0]);
 
-  if (nrrdPad(nout, nin, min, max, nrrdBoundaryBleed)) {
+  if (nrrdPad(nout, nin, minp, maxp, nrrdBoundaryBleed)) 
+  {
     char *err = biffGetDone(NRRD);
     error(string("Trouble resampling: ") + err);
     msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
@@ -202,7 +197,7 @@ NrrdPad::execute()
 
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
+  nrrd->copy_sci_data(*nrrdH.get_rep());
   last_nrrdH_ = nrrd;
   onrrd_->send(last_nrrdH_);
 }
-
