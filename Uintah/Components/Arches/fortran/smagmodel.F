@@ -4,7 +4,7 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE mixltm(domLoU, domHiU, UU,
+      SUBROUTINE smagmodel(domLoU, domHiU, UU,
      &     domLoV, domHiV, VV,
      &     domLoW, domHiW, WW,
      &     domLoDen, domHiDen, DEN,
@@ -171,6 +171,10 @@ c              END IF
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/06/30 05:12:20  bbanerje
+c Changed reComputeTurbModel to reflect chnages to computeTurbModel.
+c Changed name Subroutine mixltm to Subroutine smagmodel
+c
 c Revision 1.1  2000/06/30 04:19:18  rawat
 c added turbulence model and compute properties
 c
