@@ -47,7 +47,7 @@ itcl_class Insight_DataIO_ImageReaderFloat3D {
 	}
 
 	makeOpenFilebox \
-		-parent $w \
+		-parent . \
 		-filevar $this-filename \
 		-command "$this-c needexecute; destroy " \
 		-cancel "destroy " \

@@ -74,7 +74,7 @@ itcl_class MIT_DataIO_MetropolisReader {
 	######################################################
 	
 	makeOpenFilebox \
-		-parent $w \
+		-parent . \
 		-filevar $this-filename \
 		-command "$this-c needexecute; destroy " \
 		-cancel "destroy " \
