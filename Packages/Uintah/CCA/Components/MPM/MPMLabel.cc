@@ -687,11 +687,3 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gNormalRotMassLabel); 
   VarLabel::destroy(gNormalRotAccLabel); 
 }
-
-void MPMLabel::registerPermanentParticleState(int i,
-					      const VarLabel* label,
-					      const VarLabel* preReloc_label)
-{
-  d_particleState[i].push_back(label);
-  d_particleState_preReloc[i].push_back(preReloc_label);
-}

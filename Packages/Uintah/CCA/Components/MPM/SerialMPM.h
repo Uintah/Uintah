@@ -161,6 +161,9 @@ protected:
 			  DataWarehouse* new_dw,
 			  const Matrix3& val);
 
+  void printParticleLabels(vector<const VarLabel*> label,DataWarehouse* dw,
+			   int dwi, const Patch* patch);
+
   void scheduleInitializePressureBCs(const LevelP& level,
 				     SchedulerP&);
 	 
