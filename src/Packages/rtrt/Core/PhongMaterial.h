@@ -11,8 +11,9 @@ class PhongMaterial : public Material {
     double opacity;  // transparancy = 1 - opacity
     double Rphong;  // phong reflectance
     double phong_exponent;
+    bool reflects;
 public:
-    PhongMaterial(const Color& Rd, double opacity, double Rphong = 0.0, double phong_exponent = 100);
+    PhongMaterial(const Color& Rd, double opacity, double Rphong = 0.0, double phong_exponent = 100, bool refl=false);
     virtual ~PhongMaterial();
     virtual void shade(Color& result, const Ray& ray,
 		       const HitInfo& hit, int depth, 
