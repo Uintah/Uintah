@@ -35,7 +35,6 @@
 #include <Core/Math/Trig.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
-#include <Core/Math/MusilRNG.h>
 #include <Dataflow/Widgets/GaugeWidget.h>
 #include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/TetVol.h>
@@ -45,7 +44,6 @@
 #include <set>
 
 #include <iostream>
-#include <limits.h>
 
 using std::set;
 using std::vector;
@@ -54,8 +52,8 @@ using std::pair;
 namespace SCIRun {
 
 //! magnitudes
-double fdata_mag(double v) { return v; }
-double fdata_mag(Vector v) { return v.length(); }  
+inline double fdata_mag(double v) { return v; }
+inline double fdata_mag(Vector v) { return v.length(); }
 
 template <class Field>
 class DistTable
@@ -81,6 +79,7 @@ public:
   { return table_[idx]; }
 
   double size() { return table_.size(); }
+  void clear() { table_.clear(); }
 
   bool search(table_entry&, double);
 };
@@ -103,6 +102,7 @@ DistTable<Field>::search(table_entry &e, double d)
   }
 
   e = (table_[min].first>d)?table_[min]:table_[max];
+
   return true;
 }
 
@@ -132,6 +132,9 @@ class SeedField : public Module
   void generate_widget_seeds(Field *);
   template <class Field>
   void generate_random_seeds(Field *);
+
+  template <class Data, class Field>
+  bool interp(Data &, Point &, Field *);
 
   template <class M> 
   void dispatch(M *mesh);
@@ -195,40 +198,78 @@ SeedField::widget_moved(int i)
   }
 }
 
+template <class Data, class Field>
+bool
+SeedField::interp(Data &ret, Point &p, Field *field)
+{
+  // this is supposed to just do an interpolate, 
+  // but iterpolate's not ready yet. FIXME
+
+  typedef typename Field::mesh_type::Node::index_type index_type;
+  typedef typename Field::mesh_type::Node::array_type node_array;
+  typedef typename Field::fdata_type                  fdata_type;
+  typedef typename Field::mesh_type                   mesh_type;
+
+  index_type ni;
+  node_array ra;
+  mesh_type *mesh = field->get_typed_mesh().get_rep();
+  mesh->locate(ni,p);
+  fdata_type fdata = field->fdata();
+  ret = fdata_mag(fdata[ni])>1?fdata[ni]*100:fdata[ni];
+  return true;
+}
+
 template <class Field>
 bool 
 SeedField::build_weight_table(Field *field, DistTable<Field> &table)
 {
   typedef typename Field::mesh_type            mesh_type;
   typedef typename Field::fdata_type           fdata_type;
+  typedef typename fdata_type::value_type      value_type;
   typedef typename mesh_type::Elem::iterator   elem_iterator;
   typedef typename mesh_type::Elem::index_type elem_index;
 
   string dist = randDist_.get();
 
   mesh_type* mesh = field->get_typed_mesh().get_rep();
-  fdata_type fdata = field->fdata();
+  //fdata_type &fdata = field->fdata();
 
   elem_iterator ei = mesh->elem_begin();
   if (ei==mesh->elem_end()) // empty mesh
     return false;
 
-  // the tables are to be filled with strictly increasing values.
+  // the tables are to be filled with increasing values.
   // degenerate elements will not be included in the table.
   // mag(data) <=0 means ignore the element (don't include in the table).
   // bin[n] = b[n-1]+newval;bin[0]=newval
 
   if (dist=="importance") { // size of element * data at element
-    table.push_back(mesh->get_element_size(*ei)*fdata_mag(fdata[*ei]),*ei);
+    value_type val;
+    Point p;
+    for(;;) {
+      mesh->get_center(p,*ei);
+      if (!interp(val,p,field)) continue;
+      if ((fdata_mag(val)>0)&&(mesh->get_element_size(*ei)>0)) break;
+      ++ei;
+    }
+    table.push_back(mesh->get_element_size(*ei)*fdata_mag(val),*ei);
     ++ei;
     while (ei != mesh->elem_end()) {
-      if ( mesh->get_element_size(*ei)*fdata_mag(fdata[*ei])>0) {
-	table.push_back(mesh->get_element_size(*ei)*fdata_mag(fdata[*ei])+
+      mesh->get_center(p,*ei);
+      if (!interp(val,p,field)) continue;
+      if ( mesh->get_element_size(*ei)>0 && fdata_mag(val)>0) {
+	table.push_back(mesh->get_element_size(*ei)*fdata_mag(val)+
 			table[table.size()-1].first,*ei);
+	std::cerr << "adding: " << mesh->get_element_size(*ei)*fdata_mag(val)+
+	  table[table.size()-1].first << std::endl;
       }
       ++ei;
     }
   } else if (dist=="uniform") { // size of element only
+    for(;;) {
+      if (mesh->get_element_size(*ei)>0) break;
+      ++ei;
+    }
     table.push_back(mesh->get_element_size(*ei),*ei);
     ++ei;
     while (ei != mesh->elem_end()) {
@@ -269,6 +310,7 @@ SeedField::generate_random_seeds(Field *field)
 
   //std::cerr << "table created" << std::endl;
 
+  table.clear();
   if (!build_weight_table(field,table)) // unknown dist type
     return;
 
