@@ -256,7 +256,7 @@ itcl_class BaseViewWindow {
 
     method bindEvents {w} {
 	bind $w <Expose> "$this-c redraw"
-	bind $w <Configure> "$this-c redraw"
+	bind $w <Configure> "$this-c redraw 1"
 
 	bind $w <ButtonPress-1> "$this-c mtranslate start %x %y"
 	bind $w <Button1-Motion> "$this-c mtranslate move %x %y"
