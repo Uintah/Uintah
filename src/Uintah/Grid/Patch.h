@@ -161,6 +161,12 @@ WARNING
      IntVector getCellHighIndex() const {
        return d_highIndex;
      }
+
+     IntVector getFaceLowIndex() const {
+       return d_lowIndex;
+     }
+
+     IntVector getFaceHighIndex() const;
      // required for fortran interface
      IntVector getSFCXFORTLowIndex() const;
      IntVector getSFCXFORTHighIndex() const;
@@ -190,8 +196,7 @@ WARNING
      }
      
      inline IntVector getNFaces() const {
-       // This is wrong for now
-       return getNodeHighIndex()-getNodeLowIndex();
+       return getFaceHighIndex()-getFaceLowIndex();
      }
      
      inline IntVector getNNodes() const {
@@ -309,6 +314,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.22  2000/11/21 21:57:27  jas
+// More things to get FCVariables to work.
+//
 // Revision 1.21  2000/11/14 03:53:34  jas
 // Implemented getExtraCellIterator.
 //

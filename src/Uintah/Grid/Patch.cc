@@ -316,6 +316,19 @@ IntVector Patch::getNodeHighIndex() const
    return h;
 }
 
+IntVector Patch::getFaceHighIndex() const
+{
+  IntVector nodes(getNNodes());
+  IntVector cells(getCellHighIndex() - getCellLowIndex());
+
+  int face_x = nodes.x()*cells.y()*cells.z();
+  int face_y = nodes.y()*cells.x()*cells.z();
+  int face_z = nodes.z()*cells.x()*cells.y();
+
+  return IntVector(face_x,face_y,face_z);
+}
+  
+
 IntVector Patch::getSFCXHighIndex() const
 {
    IntVector h(d_highIndex+
@@ -689,6 +702,9 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 
 //
 // $Log$
+// Revision 1.27  2000/11/21 21:57:27  jas
+// More things to get FCVariables to work.
+//
 // Revision 1.26  2000/11/14 03:53:33  jas
 // Implemented getExtraCellIterator.
 //

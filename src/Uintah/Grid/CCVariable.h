@@ -140,6 +140,8 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 	      }
 	    }
 	    break;
+	  case Patch::numFaces:
+	    break;
 	  }
 
 	};
@@ -198,6 +200,8 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 		  (*this)[IntVector(i,j,low.z()+1)] -  value * dx.z();
 	      }
 	    }
+	    break;
+	  case Patch::numFaces:
 	    break;
 	  }
 
@@ -265,6 +269,8 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 			 (*this)[IntVector(i,j,low.z())].y(),0.0);
 	      }
 	    }
+	    break;
+	  case Patch::numFaces:
 	    break;
 	  }
 	};
@@ -452,6 +458,9 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
 //
 // $Log$
+// Revision 1.28  2000/11/21 21:57:27  jas
+// More things to get FCVariables to work.
+//
 // Revision 1.27  2000/11/02 21:25:55  jas
 // Rearranged the boundary conditions so there is consistency between ICE
 // and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
