@@ -150,13 +150,13 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
     ostringstream sz, cntr, lab, spac, min, max;
     
     sz << "set " << id.c_str() << "-size" << i 
-	<< " " << nh->nrrd->axis[1].size;
+	<< " " << nh->nrrd->axis[i].size;
     
     gui->execute(sz.str());
 
     cntr << "set " << id.c_str() << "-center" << i << " ";
 
-    switch (nh->nrrd->axis[1].center) {
+    switch (nh->nrrd->axis[i].center) {
     case nrrdCenterUnknown :
       cntr << "Unknown";
       break;
