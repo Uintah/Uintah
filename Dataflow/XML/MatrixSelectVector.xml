@@ -39,7 +39,7 @@
     animation of points on the mesh.</p>  
     </summary>
       <description>
-	<p>MatrixSelectVector runs in one of three different modes: interactive mode uses
+	<p>The MatrixSelectVector module runs in one of three different modes: interactive mode uses
       the "Matrix" input port (first port) only.  The other two ports,
       Weight Vector and Current Index, run the module without having to
       select vectors by hand.</p>
