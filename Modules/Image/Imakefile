@@ -1,13 +1,13 @@
 #include <config/sci.cf>
 
 OBJS = FFTImage.o  IFFTImage.o  PMFilterImage.o WhiteNoiseImage.o \
-	FilterImage.o   ImageTest.o ImageConvolve.o \
-	Threshold.o Edge.o ImageGen.o Ridge.o Gauss.o Subsample.o \
+	FilterImage.o   ImageConvolve.o \
+	Threshold.o Edge.o ImageGen.o Gauss.o Subsample.o \
 	Noise.o Sharpen.o Hist.o ViewHist.o Unop.o Binop.o
 SRCS = FFTImage.cc IFFTImage.cc PMFilterImage.cc WhiteNoiseImage.cc \
-	ImageToGeom.cc FilterImage.cc ImageTest.cc ImageConvolve.cc \
-	Threshold.cc Edge.cc ImageGen.cc Ridge.cc \
-	Gauss.cc Subsample.cc Noise.cc Sharpen.cc Histogram.cc \
+	ImageToGeom.cc FilterImage.cc ImageConvolve.cc \
+	Threshold.cc Edge.cc ImageGen.cc \
+	Gauss.cc Subsample.cc Noise.cc Sharpen.cc \
 	Hist.cc ViewHist.cc Unop.cc Binop.cc
 
 LIBNAME = Image
