@@ -24,9 +24,6 @@
 
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   
-  <xsl:include href="top_banner.xsl"/>
-  <xsl:include href="bottom_banner.xsl"/>
-  
   <xsl:param name="treetop"/>
   <xsl:param name="dev" select="0"/>
   
@@ -516,7 +513,7 @@
       </head>
       <body>
         
-        <xsl:call-template name="top_banner"/>
+        <xsl:call-template name="pre-content"/>
         
         <div class="title"><xsl:value-of select="@name"/></div>
         <div class="subtitle">Category: <xsl:value-of select="@category"/></div>
@@ -578,9 +575,23 @@
           <xsl:apply-templates select="nets"/>
         </xsl:if>
         
-        <xsl:call-template name="bottom_banner"/>
+        <xsl:call-template name="post-content"/>
         
       </body>
     </html>
   </xsl:template>
+
+  <xsl:template name="pre-content">
+    <script type="text/javascript" id="load-tools">
+      <xsl:attribute name="src">
+	<xsl:value-of select="$treetop"/>doc/Utilities/HTML/tools.js<xsl:text/>
+      </xsl:attribute>
+    </script>
+    <script type="text/javascript">preMSContent();</script>
+  </xsl:template>
+
+  <xsl:template name="post-content">
+    <script type="text/javascript">postMSContent();</script>
+  </xsl:template>
+
 </xsl:stylesheet>
