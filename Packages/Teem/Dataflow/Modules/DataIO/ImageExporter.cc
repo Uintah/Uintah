@@ -16,22 +16,20 @@
 */
 
 /*
- *  ImageExporter.cc: Nrrd writer
+ *  ImageExporter.cc: Use ImageMagick to write various image formats.
  *
  *  Written by:
- *   David Weinstein
+ *   Michael Callahan
  *   Department of Computer Science
  *   University of Utah
- *   February 2001
+ *   April 2004
  *
- *  Copyright (C) 2001 SCI Group
+ *  Copyright (C) 2004 SCI Group
  */
 
 #include <Dataflow/Network/Module.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 #include <Core/GuiInterface/GuiVar.h>
-//#include <sstream>
-//#include <fstream>
 
 #ifdef HAVE_MAGICK
 namespace C_Magick {

@@ -17,15 +17,15 @@
 
 
 /*
- *  NrrdReader.cc: Read in a Nrrd
+ *  ImageImporter.cc: Use ImageMagick to import numerous image formats.
  *
  *  Written by:
- *   David Weinstein
+ *   Michael Callahan
  *   School of Computing
  *   University of Utah
- *   February 2001
+ *   April 2004
  *
- *  Copyright (C) 2001 SCI Group
+ *  Copyright (C) 2004 SCI Group
  */
 
 #include <Dataflow/Network/Module.h>
