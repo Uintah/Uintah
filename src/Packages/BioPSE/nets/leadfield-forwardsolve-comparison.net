@@ -133,7 +133,7 @@ set $m10-faces-on 0
 set $m10-node_display_type {Spheres}
 set $m10-edge_display_type {Lines}
 set $m10-edge_scale 1
-set $m10-resolution 4
+set $m10-resolution 10
 $m11 initialize_ui
 set $m11-ViewWindow_0-view-eyep-x ${view-eyep-x}
 set $m11-ViewWindow_0-view-eyep-y ${view-eyep-y}
@@ -145,6 +145,7 @@ set $m11-ViewWindow_0-view-up-x ${view-up-x}
 set $m11-ViewWindow_0-view-up-y ${view-up-y}
 set $m11-ViewWindow_0-view-up-z ${view-up-z}
 set $m11-ViewWindow_0-view-fov ${view-fov}
+set $m11-ViewWindow_0-specular-scale {0.4}
 set $m12-interp_op_gui {}
 set $m13-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
 set $m17-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
