@@ -43,7 +43,7 @@ public:
         // Destructor
   virtual ~RescaleColorMap();
 
-  bool get_minmax(Field*, pair<double,double>& pair);
+  template <class F> void dispatch_minmax(F *f);
 
         // GROUP:  Access functions:
         ///////////////////////////
@@ -56,6 +56,8 @@ private:
   GuiInt isFixed;
   GuiDouble min;
   GuiDouble max;
+  pair<double,double> minmax_;
+  bool success_;
 };
 
 } // End namespace SCIRun

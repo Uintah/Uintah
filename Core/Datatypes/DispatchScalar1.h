@@ -304,6 +304,80 @@
         disp_error = true; disp_msg = "TriSurf<bool>::get_type_name is broken";\
       }\
     }\
+  } else if (disp_name == "PointCloud") {\
+    if (field1->get_type_name(1) == "double") {\
+      PointCloud<double> *f1 = 0;\
+      f1 = dynamic_cast<PointCloud<double>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "PointCloud<double>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "float") {\
+      PointCloud<float> *f1 = 0;\
+      f1 = dynamic_cast<PointCloud<float>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "PointCloud<float>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "int") {\
+      PointCloud<int> *f1 = 0;\
+      f1 = dynamic_cast<PointCloud<int>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "PointCloud<int>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "unsigned int") {\
+      PointCloud<unsigned int> *f1 = 0;\
+      f1 = dynamic_cast<PointCloud<unsigned int>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "PointCloud<unsigned int>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "char") {\
+      PointCloud<char> *f1 = 0;\
+      f1 = dynamic_cast<PointCloud<char>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "PointCloud<char>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "unsigned char") {\
+      PointCloud<unsigned char> *f1 = 0;\
+      f1 = dynamic_cast<PointCloud<unsigned char>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "PointCloud<unsigned char>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "short") {\
+      PointCloud<short> *f1 = 0;\
+      f1 = dynamic_cast<PointCloud<short>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "PointCloud<short>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "unsigned short") {\
+      PointCloud<unsigned short> *f1 = 0;\
+      f1 = dynamic_cast<PointCloud<unsigned short>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "PointCloud<unsigned short>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "bool") {\
+      PointCloud<bool> *f1 = 0;\
+      f1 = dynamic_cast<PointCloud<bool>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "PointCloud<bool>::get_type_name is broken";\
+      }\
+    }\
   } else if (disp_error) {\
     cerr << "Error: " << disp_msg << endl;\
   }\

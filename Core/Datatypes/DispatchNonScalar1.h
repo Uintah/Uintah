@@ -80,6 +80,24 @@
         disp_error = true; disp_msg = "TriSurf<Tensor>::get_type_name is broken";\
       }\
     }\
+  } else if (disp_name == "PointCloud") {\
+    if (field1->get_type_name(1) == "Vector") {\
+      PointCloud<Vector> *f1 = 0;\
+      f1 = dynamic_cast<PointCloud<Vector>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "PointCloud<Vector>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "Tensor") {\
+      PointCloud<Tensor> *f1 = 0;\
+      f1 = dynamic_cast<PointCloud<Tensor>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "PointCloud<Tensor>::get_type_name is broken";\
+      }\
+    }\
   } else if (disp_error) {\
     cerr << "Error: " << disp_msg << endl;\
   }\

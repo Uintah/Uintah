@@ -33,7 +33,7 @@
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/ContourField.h>
-#include <Core/Datatypes/ContourMesh.h>
+#include <Core/Datatypes/PointCloud.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Core/Datatypes/MeshBase.h>
 #include <Core/Datatypes/TetVol.h>
