@@ -268,8 +268,8 @@ VolumeRenderer::BuildTransferFunction( )
   double alpha, alpha1, alpha2;
   for( int j = 0; j < tSize; j++ )
   {
-    Color c = cmap->FindColor(j*mul);
-    alpha = cmap->FindAlpha(j*mul);
+    Color c = cmap->getColor(j*mul);
+    alpha = cmap->getAlpha(j*mul);
     
     alpha1 = pow(alpha, bp);
     alpha2 = 1.0 - pow((1.0 - alpha1), sliceRatio);
