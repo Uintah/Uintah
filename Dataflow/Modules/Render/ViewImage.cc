@@ -823,7 +823,7 @@ ViewImage::draw_position_label(SliceWindow &window)
   BBox label_bbox;
   //  BBox line_bbox;
   font->set_points(15.0);
-  FreeTypeText zoom("Zoom: "+to_string(window.zoom_()), font);
+  FreeTypeText zoom("Zoom: "+to_string(window.zoom_())+string("%"), font);
   zoom.get_bounds(label_bbox);
   Point pos(0, label_bbox.max().y()+2, 0);
   FreeTypeText cursor("X: "+to_string(Ceil(cursor_.x()))+
@@ -917,7 +917,7 @@ ViewImage::draw_anatomical_labels(SliceWindow &window)
   }
   if (sec >= 3) SWAP (ttext, btext);
 
-  font->set_points(35.0);
+  font->set_points(25.0);
   draw_label(window, ltext, 2, window.viewport_->height()/2, 
 	     FreeTypeText::w, font);
   draw_label(window, rtext, window.viewport_->width()-2, 
@@ -1582,16 +1582,25 @@ ViewImage::handle_gui_motion(GuiArgs &args) {
 
 
   if (window_level_) {
-    WindowLayouts::iterator liter = layouts_.begin();
-    while (liter != layouts_.end()) {
-      for (int v = 0; v < (*liter).second->windows_.size(); ++v) {
-	SliceWindow &window = *(*liter).second->windows_[v];
-	window.clut_ww_ = window_level_ww_ + (X - window_level_x_)*2;
-	if (window.clut_ww_ < 1) window.clut_ww_ = 1;
-	window.clut_wl_ = window_level_wl_ + (window_level_y_ - Y)*2;
-	window.clut_dirty_ = true;
+    if (state & SHIFT_E) {
+      SliceWindow &window = *window_level_;
+      window.clut_ww_ = window_level_ww_ + (X - window_level_x_)*2;
+      if (window.clut_ww_ < 1) window.clut_ww_ = 1;
+      window.clut_wl_ = window_level_wl_ + (window_level_y_ - Y)*2;
+      window.clut_dirty_ = true;
+    } else {
+      
+      WindowLayouts::iterator liter = layouts_.begin();
+      while (liter != layouts_.end()) {
+	for (unsigned int v = 0; v < (*liter).second->windows_.size(); ++v) {
+	  SliceWindow &window = *(*liter).second->windows_[v];
+	  window.clut_ww_ = window_level_ww_ + (X - window_level_x_)*2;
+	  if (window.clut_ww_ < 1) window.clut_ww_ = 1;
+	  window.clut_wl_ = window_level_wl_ + (window_level_y_ - Y)*2;
+	  window.clut_dirty_ = true;
+	}
+	++liter;
       }
-      ++liter;
     }
   }
 
