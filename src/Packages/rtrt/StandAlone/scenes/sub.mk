@@ -63,6 +63,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/david_old.mo \
 	$(SRCDIR)/davidhead.mo  \
 	$(SRCDIR)/science-room.mo \
+	$(SRCDIR)/science-room-full.mo \
 	$(SRCDIR)/stadium.mo \
 	$(SRCDIR)/dtiglyph.mo 
 # 	$(SRCDIR)/miptest.mo \
