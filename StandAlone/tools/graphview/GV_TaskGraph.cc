@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <sstream>
 #include <stdio.h>
+#include <assert.h>
 #include <Dataflow/XMLUtil/SimpleErrorHandler.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include "GV_TaskGraph.h"
@@ -33,35 +34,35 @@ Edge* GV_Task::addDependency(GV_Task* task)
 {
   for (list<Edge*>::const_iterator iter = m_dependencyEdges.begin();
        iter != m_dependencyEdges.end(); iter++) {
-    if (task == (*iter)->getTarget())
+    if (task == (*iter)->getSource())
       return 0;
   }
 
-  Edge* newEdge = scinew Edge(this, task);
+  Edge* newEdge = scinew Edge(task, this);
   
   m_dependencyEdges.push_back(newEdge);
   task->m_dependentEdges.push_back(newEdge); 
   return newEdge;
 }
 
-Edge::Edge(GV_Task* dependent, GV_Task* dependency)
-  : m_source(dependent), m_target(dependency)
+Edge::Edge(GV_Task* dependency, GV_Task* dependent)
+  : m_source(dependency), m_target(dependent), m_obsolete(false)
 {}
 
 float Edge::getMaxPathPercent() const
 {
   return safePercent(getMaxInclusivePathCost(),
-		     m_target->m_graph->getCriticalPathCost());
+		     getGraph()->getCriticalPathCost());
 }
 
 void Edge::relaxEdgeUp()
 {
-  m_target->testSetMaxBelowCost(m_source->getMaxInclBelowCost());
+  m_source->testSetMaxBelowCost(m_target->getMaxInclBelowCost());
 }
 
 void Edge::relaxEdgeDown()
 {
-  m_source->testSetMaxAboveCost(m_target->getMaxInclAboveCost());
+  m_target->testSetMaxAboveCost(m_source->getMaxInclAboveCost());
 } 
 
 
@@ -170,11 +171,10 @@ void GV_TaskGraph::readEdges(DOM_Document xmlDoc)
     GV_Task* targetTask = m_taskMap[target];
 
     if (sourceTask != NULL && targetTask != NULL) {
-      if (m_edgeMap.find(source + "->" + target) == m_edgeMap.end()) {
+      if (m_edgeMap.find(source + " -> " + target) == m_edgeMap.end()) {
 	Edge* edge = targetTask->addDependency(sourceTask);
 	if (edge) {
-	  m_edges.push_back(edge);
-	  m_edgeMap[source + "->" + target] = edge;
+	  m_edgeMap[source + " -> " + target] = edge;
 	}
       }
     }
@@ -237,16 +237,16 @@ GV_Task::processTaskForSorting(vector<GV_Task*>& sortedTasks)
   list<Edge*>::iterator edgeIter;
   for (edgeIter = m_dependencyEdges.begin();
        edgeIter != m_dependencyEdges.end(); edgeIter++) {
-    GV_Task* target = (*edgeIter)->getTarget();
-    if(!target->m_sorted){
-      if(target->m_visited){
+    GV_Task* source = (*edgeIter)->getSource();
+    if(!source->m_sorted){
+      if(source->m_visited){
 	cerr << "Cycle detected in task graph: trying to do\n\t"
 	     << getName();
 	cerr << "\nbut already did:\n\t"
-	     << target->getName() << endl;
+	     << source->getName() << endl;
 	exit(1);
       }
-      target->processTaskForSorting(sortedTasks);
+      source->processTaskForSorting(sortedTasks);
     }
   }
 
@@ -258,6 +258,7 @@ GV_Task::processTaskForSorting(vector<GV_Task*>& sortedTasks)
 void GV_TaskGraph::computeMaxPathLengths()
 {
   topologicallySortEdges();
+  markObsoleteEdges();
   
   list<GV_Task*>::iterator task_it;
   list<Edge*>::iterator it;
@@ -280,6 +281,56 @@ void GV_TaskGraph::computeMaxPathLengths()
 
   cout << "Processed " << m_tasks.size() << " nodes and "
        << m_edges.size() << " edges" << endl;  
+}
+
+void GV_TaskGraph::markObsoleteEdges()
+{
+  // Mark all edges that are obsolete.  An obsolete edge is one that
+  // is not the only path from its source to its target.
+  
+  // This map's source tasks to each possible destination with
+  // a count of how many paths there are to each destination.
+  map<GV_Task*, map<GV_Task*, int> > pathCountMap;
+
+  // relies upon the edges being topologically sorted
+  list<Edge*>::reverse_iterator r_it;
+  map<GV_Task*, int>::iterator foundIt;
+  for (r_it = m_edges.rbegin(); r_it != m_edges.rend(); r_it++) {
+    Edge* edge = *r_it;
+    map<GV_Task*, int>& destMap = pathCountMap[edge->getSource()];
+
+    // add direct path to the path count
+    foundIt = destMap.find(edge->getTarget());
+    if (foundIt != destMap.end())
+      (*foundIt).second++;
+    else
+      destMap[edge->getTarget()] = 1;
+
+    // add indirect paths to path counts
+    map<GV_Task*, int>& indirectDestMap = pathCountMap[edge->getTarget()];
+    for (map<GV_Task*, int>::iterator destIter = indirectDestMap.begin();
+	 destIter != indirectDestMap.end(); destIter++) {
+      foundIt = destMap.find((*destIter).first);
+      if (foundIt != destMap.end()) {
+	(*foundIt).second += (*destIter).second;
+      }
+      else {
+	destMap[(*destIter).first] = (*destIter).second;
+      }
+    }
+  }
+
+  for (r_it = m_edges.rbegin(); r_it != m_edges.rend(); r_it++) {
+    Edge* edge = *r_it;
+    int pathCount = pathCountMap[edge->getSource()][edge->getTarget()];
+    assert(pathCount >= 1);
+    if (pathCount > 1) {
+      // There is more than one path from the source to the target, so
+      // the direct path is obsolete when considering worrying about
+      // critical paths.
+      edge->setObsolete();
+    }
+  }
 }
 
 GV_Task*

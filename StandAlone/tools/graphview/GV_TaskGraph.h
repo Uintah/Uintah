@@ -102,9 +102,17 @@ public:
   { return m_source->getGraph(); }
 
   double getMaxInclusivePathCost() const
-  { return m_source->getMaxInclBelowCost() + m_target->getMaxInclAboveCost(); }
+  { return m_source->getMaxInclAboveCost() + m_target->getMaxInclBelowCost(); }
 
   float getMaxPathPercent() const;
+
+  bool isObsolete() const
+  {
+    return m_obsolete;
+  }
+
+  void setObsolete()
+  { m_obsolete = true; }
   
   // Set the maximum below cost of the target to
   // max(target->max_below_cost, source->getMaxInclBelowCost).
@@ -123,6 +131,7 @@ public:
 private:
   GV_Task* m_source; // dependent
   GV_Task* m_target; // dependency
+  bool m_obsolete;
 };
 
 class GV_TaskGraph {
@@ -161,6 +170,8 @@ private:
   void computeMaxPathLengths(); // called when graph is created
 
   void topologicallySortEdges();
+
+  void markObsoleteEdges();
   
   std::list<GV_Task*> m_tasks;
   std::list<Edge*> m_edges;

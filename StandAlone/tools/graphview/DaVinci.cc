@@ -298,7 +298,7 @@ operator<<(ostream& out, const GV_Task* task)
   const list<Edge*> dependency_edges = task->getDependencyEdges();
   for (list<Edge*>::const_iterator dep_edge_iter = dependency_edges.begin();
        dep_edge_iter != dependency_edges.end(); dep_edge_iter++) {
-    if (DaVinci::doExclusion && ((*dep_edge_iter)->getTarget()->getMaxPathPercent() < (*dep_edge_iter)->getGraph()->getThresholdPercent()))
+    if (DaVinci::doExclusion && ((*dep_edge_iter)->getSource()->getMaxPathPercent() < (*dep_edge_iter)->getGraph()->getThresholdPercent() || (*dep_edge_iter)->isObsolete()))
       continue; // JUST TESTING -- NEED TO CHANGE BACK
 
    if (!first_edge)
@@ -306,8 +306,8 @@ operator<<(ostream& out, const GV_Task* task)
     else
       first_edge = false;
 	    
-    GV_Task* dep = (*dep_edge_iter)->getTarget();
-    out << "l(\"" << task->getName() << "->" << dep->getName()
+    GV_Task* dep = (*dep_edge_iter)->getSource();
+    out << "l(\"" << dep->getName() << " -> " << task->getName()
 	<< "\",e(\"\",[a(\"_DIR\",\"inverse\"),";
     displayAttributes(out, (*dep_edge_iter));
     out << "],r(\"" << dep->getName() << "\")))";
@@ -392,7 +392,7 @@ void displayAttributes(ostream& out, const Edge* edge)
   float maxPathPercent = edge->getMaxPathPercent();
   out << "a(\"EDGECOLOR\",\"#" << getColor(maxPathPercent, thresholdPercent)
       << "\"),a(\"EDGEPATTERN\",";
-  if (maxPathPercent < thresholdPercent)
+  if (maxPathPercent < thresholdPercent || edge->isObsolete())
     out << "\"dashed\""; // below threshold
   else if (maxPathPercent == 1)
     out << "\"double\""; // critical path
@@ -422,8 +422,9 @@ const char* getColor(float percent /* max incl path / critical path */,
     int blue = 0;
     sprintf(col_str, "%02x%02x%02x\0", red, green, blue);
   }
-  else
+  else {
     strcpy(col_str, "0000FF"); // blue if out of range
+  }
 
   return col_str;
 }
