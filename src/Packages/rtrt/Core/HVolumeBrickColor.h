@@ -19,7 +19,7 @@ protected:
     Vector datadiag;
     Vector sdiag;
     double dt;
-    int nx,ny,nz;
+    unsigned int nx,ny,nz;
     unsigned char* indata;
     unsigned char* blockdata;
     unsigned long* xidx;
@@ -28,13 +28,15 @@ protected:
     WorkQueue work;
     void brickit(int);
     char* filebase;
-    double Ka, Kd, Ks, specpow, refl;
+    double Ka, Kd, Ks;
+    int specpow;
+    double refl;
     bool grid;
     bool nn;
     friend class HVolumeBrickColorDpy;
 public:
     HVolumeBrickColor(char* filebase, int np, double Ka, double Kd,
-		      double Ks, double specpow, double refl,
+		      double Ks, int specpow, double refl,
 		      double dt=0);
     virtual ~HVolumeBrickColor();
     virtual void shade(Color& result, const Ray& ray,

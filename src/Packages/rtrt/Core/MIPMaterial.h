@@ -29,7 +29,7 @@ public:
     Color ambient;
     double Kd;
     Color specular;
-    double specpow;
+    int specpow;
     double refl;
     string filename_;
     bool valid_;
@@ -40,12 +40,12 @@ public:
     MIPMaterial() : Material() {} // for Pio.
     MIPMaterial(const string& filename,
                 double Kd, const Color specular,
-		double specpow, double refl=0,
+		int specpow, double refl=0,
 		bool flipped=0);
     MIPMaterial(const string& filename, rtrt::ImageMaterial::Mode, 
                 rtrt::ImageMaterial::Mode,
                 double Kd, const Color specular,
-		double specpow, double refl=0,
+		int specpow, double refl=0,
 		bool flipped=0);
 
 /*      static  SCIRun::PersistentTypeID type_id; */

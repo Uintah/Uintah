@@ -33,9 +33,9 @@ private:
   double loopTime;                    // time for one complete video loop
   double framesPerSec;                // variable frame speed
   double curTime;                     // time at last intersect
-  double specPower;                   // area of highlight
-  double refl;                        // 
   Color specular;                     // highlight color
+  int specPower;                      // area of highlight
+  double refl;                        // 
   Array1< Array2 <Color> * > frames;  // array of images to loop
    
 public:   
@@ -47,7 +47,7 @@ public:
   // files must be named in format --
   //      named name0.ppm , name1.ppm , ... ,  name[numFrames-1].ppm
   VideoMap (char* _fileName, int _numFrames, double _framesPerSec,
-	    const Color& _specular, double _specPower, double _refl);
+	    const Color& _specular, int _specPower, double _refl);
   ~VideoMap ();
   /*******************************************************************/
   // looks up diffuse color in current frame,  then calls default 

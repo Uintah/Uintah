@@ -28,15 +28,15 @@ CrowMarble::CrowMarble(double scale,
                const Color&  c2,
                const Color&  c3,
                double R0, 
-               double phong_exponent) : 
+               int phong_exponent) : 
   scale(scale), 
   c1(c1), 
   c2(c2), 
   c3(c3),
   direction(direction), 
   spline(c1,c1,c1,c1,c2,c2,c2,c3,c3,c3), 
-  phong_exponent(phong_exponent),
-  R0(R0) 
+  R0(R0),
+  phong_exponent(phong_exponent)
 {
 }
 
@@ -140,8 +140,8 @@ CrowMarble::io(SCIRun::Piostream &str)
   SCIRun::Pio(str, direction);
   SCIRun::Pio(str, spline);
   SCIRun::Pio(str, turbulence);
-  SCIRun::Pio(str, phong_exponent);
   SCIRun::Pio(str, R0);
+  SCIRun::Pio(str, phong_exponent);
   str.end_class();
 }
 

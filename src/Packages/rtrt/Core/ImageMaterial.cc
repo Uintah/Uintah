@@ -40,7 +40,7 @@ PersistentTypeID ImageMaterial::type_id("ImageMaterial", "Material",
 ImageMaterial::ImageMaterial(int, const string &texfile, 
 			     ImageMaterial::Mode umode,
 			     ImageMaterial::Mode vmode, double Kd,
-			     const Color& specular, double specpow,
+			     const Color& specular, int specpow,
 			     double refl, bool /*flipped*/) :
   umode(umode), vmode(vmode), Kd(Kd), specular(specular),
   specpow(specpow), refl(refl),  transp(0), valid_(false)
@@ -54,7 +54,7 @@ ImageMaterial::ImageMaterial(int, const string &texfile,
 
 ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 			     ImageMaterial::Mode vmode, double Kd,
-			     const Color& specular, double specpow,
+			     const Color& specular, int specpow,
 			     double refl, bool flipped) :
   umode(umode), vmode(vmode), Kd(Kd), specular(specular),
   specpow(specpow), refl(refl),  transp(0), valid_(false)
@@ -109,10 +109,10 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 
 ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 			     ImageMaterial::Mode vmode, 
-			     const Color& specular, double Kd, double specpow,
+			     const Color& specular, double Kd, int specpow,
 			     double refl,  double transp, 
 			     bool flipped) :
-  umode(umode), vmode(vmode), specular(specular), Kd(Kd),
+  umode(umode), vmode(vmode), Kd(Kd), specular(specular),
   specpow(specpow), refl(refl),  transp(transp), valid_(false)
 {
 

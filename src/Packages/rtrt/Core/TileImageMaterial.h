@@ -25,14 +25,14 @@ class TileImageMaterial : public ImageMaterial {
 public:
   TileImageMaterial(int /* oldstyle */, const string &filename, 
 		    double Kd, const Color& specular,
-		    double specpow, double refl=0, bool flipped=0);
+		    int specpow, double refl=0, bool flipped=0);
   TileImageMaterial(const string &filename,
 		    double Kd, const Color& specular,
-		    double specpow, double refl, 
+		    int specpow, double refl, 
 		    double transp=0, bool flipped=false);
   TileImageMaterial(const string &filename,
 		    double Kd, const Color& specular,
-		    double specpow, double refl=0, bool flipped=false);
+		    int specpow, double refl=0, bool flipped=false);
   virtual ~TileImageMaterial() {}
 
   TileImageMaterial() : ImageMaterial() {} // for Pio.

@@ -25,8 +25,8 @@ class CrowMarble : public Material {
   Vector direction;
   CatmullRomSpline<Color> spline;
   FastTurbulence turbulence;
-  double phong_exponent;
   double R0;
+  int phong_exponent;
 public:
   CrowMarble(double scale,
 	     const Vector& direction,
@@ -34,7 +34,7 @@ public:
 	     const Color&  c2,
 	     const Color&  c3,
 	     double R0 = 0.04,
-	     double phong_exponent=100);
+	     int phong_exponent=100);
   virtual ~CrowMarble();
 
   CrowMarble() : Material() {} // for Pio.

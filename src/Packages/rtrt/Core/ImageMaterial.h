@@ -33,7 +33,7 @@ protected:
   Mode umode, vmode;
   double Kd;
   Color specular;
-  double specpow;
+  int specpow;
   double refl;
   double transp;
   Array2<Color> image;
@@ -49,13 +49,13 @@ public:
   ImageMaterial(int /* oldstyle */, const string &filename, 
 		Mode umode, Mode vmode,
 		double Kd, const Color& specular,
-		double specpow, double refl=0, bool flipped=false);
+		int specpow, double refl=0, bool flipped=false);
   ImageMaterial(const string &filename, Mode umode, Mode vmode,
 		double Kd, const Color& specular,
-		double specpow, double refl=0, bool flipped=false);
+		int specpow, double refl=0, bool flipped=false);
   ImageMaterial(const string &filename, Mode umode, Mode vmode,
 		const Color& specular, double Kd,
-		double specpow, double refl, 
+		int specpow, double refl, 
 		double transp=0, bool flipped=false);
   virtual ~ImageMaterial();
     
