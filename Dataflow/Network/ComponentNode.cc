@@ -38,12 +38,14 @@
 #define IRIX
 #pragma set woff 1375
 #endif
-#include <util/PlatformUtils.hpp>
-#include <sax/SAXException.hpp>
-#include <sax/SAXParseException.hpp>
-#include <parsers/DOMParser.hpp>
-#include <dom/DOM_NamedNodeMap.hpp>
-#include <sax/ErrorHandler.hpp>
+#include <xercesc/util/TransService.hpp>
+#include <xercesc/util/PlatformUtils.hpp>
+#include <xercesc/sax/SAXException.hpp>
+#include <xercesc/sax/SAXParseException.hpp>
+#include <xercesc/parsers/XercesDOMParser.hpp>
+#include <xercesc/dom/DOMNamedNodeMap.hpp>
+#include <xercesc/dom/DOMNodeList.hpp>
+#include <xercesc/sax/ErrorHandler.hpp>
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
 #endif
@@ -474,293 +476,310 @@ void PrintComponentNode(component_node* n)
   }
 }
 
-void ProcessFileNode(const DOM_Node& d, file_node* n)
+
+
+void 
+ProcessFileNode(const DOMNode& d, file_node* n)
 {
-  for (DOM_Node child = d.getFirstChild();
-       child!=0;
-       child=child.getNextSibling()) {
-    DOMString childname = child.getNodeName();
-    if (childname.equals("description") && n->description==NOT_SET)
+  for (DOMNode *child = d.getFirstChild(); child != 0; 
+       child = child->getNextSibling()) 
+  {
+    const XMLCh* childname = child->getNodeName();
+    if (string_is(childname, "description") && n->description == NOT_SET) 
+    {
       n->description = rWSgSC(child);
-    else if (childname.equals("datatype") && n->datatype==NOT_SET)
-      n->datatype = rWSgSC(child);
+    } else if (string_is(childname, "datatype") && n->datatype == NOT_SET) 
+    {
+      n->datatype = rWSgSC(child);  
+    }
   }
 }
 
-void ProcessInportNode(const DOM_Node& d, inport_node* n)
+void ProcessInportNode(const DOMNode& d, inport_node* n)
 {
-  for (DOM_Node child = d.getFirstChild();
+  for (DOMNode *child = d.getFirstChild();
        child!=0;
-       child=child.getNextSibling()) {
-    DOMString childname = child.getNodeName();
-    if (childname.equals("description") && n->description==NOT_SET)
+       child=child->getNextSibling()) 
+  {
+    const XMLCh* childname = child->getNodeName();
+    if (string_is(childname, "description") && n->description==NOT_SET)
       n->description = rWSgSC(child);
-    else if (childname.equals("name") && n->name==NOT_SET)
+    else if (string_is(childname, "name") && n->name==NOT_SET)
       n->name = rWSgSC(child);
-    else if (childname.equals("datatype") && n->datatype==NOT_SET)
+    else if (string_is(childname, "datatype") && n->datatype==NOT_SET)
       n->datatype = rWSgSC(child);
-    else if (childname.equals("componentname") && n->upstream)
+    else if (string_is(childname, "componentname") && n->upstream)
       n->upstream->insert(std::pair<int,char*>(n->upstream->size(),
 					       rWSgSC(child)));
   }				       
 }
 
-void ProcessOutportNode(const DOM_Node& d, outport_node* n)
+void ProcessOutportNode(const DOMNode& d, outport_node* n)
 {
-  for (DOM_Node child = d.getFirstChild();
+  for (DOMNode *child = d.getFirstChild();
        child!=0;
-       child=child.getNextSibling()) {
-    DOMString childname = child.getNodeName();
-    if (childname.equals("description") && n->description==NOT_SET)
+       child=child->getNextSibling()) {
+    const XMLCh* childname = child->getNodeName();
+    if (string_is(childname, "description") && n->description==NOT_SET)
       n->description = rWSgSC(child);
-    else if (childname.equals("name") && n->name==NOT_SET)
+    else if (string_is(childname, "name") && n->name==NOT_SET)
       n->name = rWSgSC(child);
-    else if (childname.equals("datatype") && n->datatype==NOT_SET)
+    else if (string_is(childname, "datatype") && n->datatype==NOT_SET)
       n->datatype = rWSgSC(child);
-    else if (childname.equals("componentname") && n->downstream)
+    else if (string_is(childname, "componentname") && n->downstream)
       n->downstream->insert(std::pair<int,char*>(n->downstream->size(),
 					       rWSgSC(child)));
   }
 }
 
-void ProcessDeviceNode(const DOM_Node& d, device_node* n)
+void ProcessDeviceNode(const DOMNode& d, device_node* n)
 {
-  for (DOM_Node child = d.getFirstChild();
+  for (DOMNode *child = d.getFirstChild();
        child!=0;
-       child=child.getNextSibling()) {
-    DOMString childname = child.getNodeName();
-    if (childname.equals("description") && n->description==NOT_SET)
+       child=child->getNextSibling()) {
+    const XMLCh* childname = child->getNodeName();
+    if (string_is(childname, "description") && n->description==NOT_SET)
       n->description = rWSgSC(child);
-    else if (childname.equals("devicename") && n->devicename==NOT_SET)
+    else if (string_is(childname, "devicename") && n->devicename==NOT_SET)
       n->devicename = rWSgSC(child);
   }
 }
 
-void ProcessIoNode(const DOM_Node& d, io_node* n)
+void ProcessIoNode(const DOMNode& d, io_node* n)
 {
-  for (DOM_Node child = d.getFirstChild();
+  for (DOMNode *child = d.getFirstChild();
        child!=0;
-       child=child.getNextSibling()) {
-    DOMString childname = child.getNodeName();
-    if (childname.equals("inputs")){
+       child=child->getNextSibling()) {
+    const XMLCh* childname = child->getNodeName();
+    if (string_is(childname, "inputs")){
       if (n->lastportdynamic) {
-	DOM_Node attr = child.getAttributes().getNamedItem("lastportdynamic");
-	if (attr!=0) {
-	  DOMString attrstr = attr.getNodeValue();
-	  if (attrstr.equals("yes") ||
-	      attrstr.equals("y") ||
-	      attrstr.equals("YES") ||
-	      attrstr.equals("Y"))
+	
+	const DOMNode *attr = 
+	  child->getAttributes()->getNamedItem(
+					   to_xml_ch_ptr("lastportdynamic"));
+	if (attr != 0) {
+	  const XMLCh* attrstr = attr->getNodeValue();
+	  if (string_is(attrstr,"yes") ||
+	      string_is(attrstr, "y") ||
+	      string_is(attrstr, "YES") ||
+	      string_is(attrstr, "Y"))
 	    n->lastportdynamic = 1;
 	  else
 	    n->lastportdynamic = 0;
 	} else
 	  n->lastportdynamic = 0;
       }
-      for (DOM_Node inchild = child.getFirstChild();
+      for (DOMNode *inchild = child->getFirstChild();
 	   inchild!=0;
-	   inchild=inchild.getNextSibling()) {
-	DOMString inchildname = inchild.getNodeName();
-	if (inchildname.equals("file") && n->infiles) { 
+	   inchild=inchild->getNextSibling()) {
+	const XMLCh* inchildname = inchild->getNodeName();
+	if (string_is(inchildname, "file") && n->infiles) { 
 	  file_node* newfile = new file_node;
 	  newfile->description = NOT_SET;
 	  newfile->datatype = NOT_SET;
-	  ProcessFileNode(inchild,newfile);
-	  n->infiles->insert(std::pair<int,file_node*>(n->infiles->size(),
+	  ProcessFileNode(*inchild, newfile);
+	  n->infiles->insert(std::pair<int, file_node*>(n->infiles->size(),
 							newfile));
-	} else if (inchildname.equals("port") && n->inports) {
+	} else if (string_is(inchildname, "port") && n->inports) {
 	  inport_node* newport = new inport_node;
 	  newport->name = NOT_SET;
 	  newport->description = NOT_SET;
 	  newport->datatype = NOT_SET;
-	  newport->upstream = new map<int,char*>;
-	  ProcessInportNode(inchild,newport);
-	  n->inports->insert(std::pair<int,inport_node*>(n->inports->size(),
+	  newport->upstream = new map<int, char*>;
+	  ProcessInportNode(*inchild, newport);
+	  n->inports->insert(std::pair<int, inport_node*>(n->inports->size(),
 							newport));
-	} else if (inchildname.equals("device") && n->indevices) {
+	} else if (string_is(inchildname, "device") && n->indevices) {
 	  device_node* newdevice = new device_node;
 	  newdevice->description = NOT_SET;
 	  newdevice->devicename = NOT_SET;
-	  ProcessDeviceNode(inchild,newdevice);
-	  n->indevices->insert(std::pair<int,device_node*>(n->indevices->size(),newdevice));
+	  ProcessDeviceNode(*inchild, newdevice);
+	  n->indevices->insert(
+		std::pair<int, device_node*>(n->indevices->size(),newdevice));
 	}
       }
-    } else if (childname.equals("outputs")) {
-      for (DOM_Node outchild = child.getFirstChild();
+    } else if (string_is(childname, "outputs")) {
+      for (DOMNode *outchild = child->getFirstChild();
 	   outchild!=0;
-	   outchild=outchild.getNextSibling()) {
-	DOMString outchildname = outchild.getNodeName();
-	if (outchildname.equals("file") && n->outfiles) {
+	   outchild=outchild->getNextSibling()) {
+	const XMLCh* outchildname = outchild->getNodeName();
+	if (string_is(outchildname, "file") && n->outfiles) {
 	  file_node* newfile = new file_node;
 	  newfile->description = NOT_SET;
 	  newfile->datatype = NOT_SET;
-	  ProcessFileNode(outchild,newfile);
-	  n->outfiles->insert(std::pair<int,file_node*>(n->outfiles->size(),
+	  ProcessFileNode(*outchild, newfile);
+	  n->outfiles->insert(std::pair<int, file_node*>(n->outfiles->size(),
 							newfile));
-	} else if (outchildname.equals("port") && n->outports) {
+	} else if (string_is(outchildname, "port") && n->outports) {
 	  outport_node* newport = new outport_node;
 	  newport->name = NOT_SET;
 	  newport->description = NOT_SET;
 	  newport->datatype = NOT_SET;
-	  newport->downstream = new map<int,char*>;
-	  ProcessOutportNode(outchild,newport);
-	  n->outports->insert(std::pair<int,outport_node*>(n->outports->size(),
-							newport));
-	} else if (outchildname.equals("device") && n->outdevices) {
+	  newport->downstream = new map<int, char*>;
+	  ProcessOutportNode(*outchild, newport);
+	  n->outports->insert(
+		std::pair<int,outport_node*>(n->outports->size(), newport));
+	} else if (string_is(outchildname, "device") && n->outdevices) {
 	  device_node* newdevice = new device_node;
 	  newdevice->description = NOT_SET;
 	  newdevice->devicename = NOT_SET;
-	  ProcessDeviceNode(outchild,newdevice);
-	  n->outdevices->insert(std::pair<int,device_node*>(n->outdevices->size(),newdevice));
+	  ProcessDeviceNode(*outchild, newdevice);
+	  n->outdevices->insert(
+	       std::pair<int, device_node*>(n->outdevices->size(), newdevice));
 	}
       }
     }
   }
 }
 
-void ProcessParameterNode(const DOM_Node& d, parameter_node* n)
+void ProcessParameterNode(const DOMNode& d, parameter_node* n)
 {
-  for (DOM_Node child = d.getFirstChild();
+  for (DOMNode *child = d.getFirstChild();
        child!=0;
-       child=child.getNextSibling()) {
-    DOMString childname = child.getNodeName();
-    if (childname.equals("label") && n->label==NOT_SET)
+       child=child->getNextSibling()) {
+    const XMLCh* childname = child->getNodeName();
+    if (string_is(childname, "label") && n->label==NOT_SET)
       n->label = rWSgSC(child);
-    else if (childname.equals("widget") && n->widget==NOT_SET)
+    else if (string_is(childname, "widget") && n->widget==NOT_SET)
       n->widget = rWSgSC(child);
-    else if (childname.equals("datatype") && n->datatype==NOT_SET)
+    else if (string_is(childname, "datatype") && n->datatype==NOT_SET)
       n->datatype = rWSgSC(child);
-    else if (childname.equals("description") && n->description==NOT_SET)
+    else if (string_is(childname, "description") && n->description==NOT_SET)
       n->description = rWSgSC(child);
   }
 }
 
-void ProcessGuiNode(const DOM_Node& d, gui_node* n)
+void ProcessGuiNode(const DOMNode& d, gui_node* n)
 {
-  for (DOM_Node child = d.getFirstChild();
+  for (DOMNode *child = d.getFirstChild();
        child!=0;
-       child=child.getNextSibling()) {
-    DOMString childname = child.getNodeName();
-    if (childname.equals("description") && n->description==NOT_SET)
+       child=child->getNextSibling()) {
+    const XMLCh* childname = child->getNodeName();
+    if (string_is(childname, "description") && n->description==NOT_SET)
       n->description = rWSgSC(child);
-    else if (childname.equals("img") && n->image==NOT_SET)
+    else if (string_is(childname, "img") && n->image==NOT_SET)
       n->image = rWSgSC(child);
-    else if (childname.equals("parameter") && n->parameters) {
+    else if (string_is(childname, "parameter") && n->parameters) {
       parameter_node* newparam = new parameter_node;
       newparam->widget = NOT_SET;
       newparam->datatype = NOT_SET;
       newparam->label = NOT_SET;
       newparam->description = NOT_SET;
-      ProcessParameterNode(child,newparam);
-      n->parameters->insert(std::pair<int,parameter_node*>(n->parameters->size(),newparam));
+      ProcessParameterNode(*child, newparam);
+      n->parameters->insert(
+           std::pair<int, parameter_node*>(n->parameters->size(), newparam));
     }
   }
 }
 
-void ProcessPlanNode(const DOM_Node& d, plan_node* n)
+void ProcessPlanNode(const DOMNode& d, plan_node* n)
 {
-  for (DOM_Node child = d.getFirstChild();
+  for (DOMNode *child = d.getFirstChild();
        child!=0;
-       child = child.getNextSibling()) {
-    DOMString childname = child.getNodeName();
-    if (childname.equals("description") && n->description==NOT_SET)
+       child = child->getNextSibling()) {
+    const XMLCh* childname = child->getNodeName();
+    if (string_is(childname, "description") && n->description==NOT_SET)
       n->description = rWSgSC(child);
-    else if (childname.equals("step") && n->steps) 
+    else if (string_is(childname, "step") && n->steps) 
       n->steps->insert(std::pair<int,char*>(n->steps->size(),
 					    rWSgSC(child)));
   }
 }
 
-void ProcessOverviewNode(const DOM_Node& d, overview_node* n)
+void ProcessOverviewNode(const DOMNode& d, overview_node* n)
 {
-  for (DOM_Node child = d.getFirstChild();
+  for (DOMNode *child = d.getFirstChild();
        child!=0;
-       child = child.getNextSibling()) {
-    DOMString childname = child.getNodeName();
-    if (childname.equals("authors") && n->authors) {
-      for (DOM_Node author = child.getFirstChild();
+       child = child->getNextSibling()) {
+    const XMLCh* childname = child->getNodeName();
+    if (string_is(childname, "authors") && n->authors) {
+      for (DOMNode *author = child->getFirstChild();
            author!=0;
-           author = author.getNextSibling()) {
-        DOMString authorname = author.getNodeName();
-        if (authorname.equals("author"))
-          n->authors->insert(std::pair<int,char*>(n->authors->size(),
-            author.getFirstChild().getNodeValue().transcode()));
+           author = author->getNextSibling()) {
+        const XMLCh* authorname = author->getNodeName();
+        if (string_is(authorname, "author")) {
+	  char* nv = 
+	    strdup(to_char_ptr(author->getFirstChild()->getNodeValue()));
+          n->authors->insert(std::pair<int,char*>(n->authors->size(), nv));
+	}
       }
     }
-    else if (childname.equals("description") && n->description==NOT_SET) {
+    else if (string_is(childname, "description") && n->description==NOT_SET) {
       n->description = rWSgSC(child);
-    } else if (childname.equals("summary") && n->summary==NOT_SET)
+    } else if (string_is(childname, "summary") && n->summary==NOT_SET)
       n->summary = rWSgSC(child);
-    else if (childname.equals("examplesr") && n->examplesr==NOT_SET)
+    else if (string_is(childname, "examplesr") && n->examplesr==NOT_SET)
       n->examplesr = rWSgSC(child);
   }
 }
 
-void ProcessImplementationNode(const DOM_Node& d, implementation_node* n)
+void ProcessImplementationNode(const DOMNode& d, implementation_node* n)
 {
-  for (DOM_Node child = d.getFirstChild();
+  for (DOMNode *child = d.getFirstChild();
        child!=0;
-       child=child.getNextSibling()) {
-    DOMString childname = child.getNodeName();
-    if (childname.equals("ccfile") && n->ccfiles) { 
+       child=child->getNextSibling()) {
+    const XMLCh* childname = child->getNodeName();
+    if (string_is(childname, "ccfile") && n->ccfiles) { 
       n->ccfiles->insert(std::pair<int,char*>(n->ccfiles->size(),rWSgSC(child)));
-    } else if (childname.equals("cfile") && n->cfiles) {
+    } else if (string_is(childname, "cfile") && n->cfiles) {
       n->cfiles->insert(std::pair<int,char*>(n->cfiles->size(),rWSgSC(child)));
-    } else if (childname.equals("ffile") && n->ffiles) {
+    } else if (string_is(childname, "ffile") && n->ffiles) {
       n->ffiles->insert(std::pair<int,char*>(n->ffiles->size(),rWSgSC(child)));
     }
   }
 }
 
-void ProcessComponentNode(const DOM_Node& d, component_node* n)
+void ProcessComponentNode(const DOMNode& d, component_node* n)
 {
   if (n->name==NOT_SET) {
-    DOM_Node name = d.getAttributes().getNamedItem("name");
-    if (name==0) 
+    const XMLCh* xs = to_xml_ch_ptr("name");
+    DOMNode *name = d.getAttributes()->getNamedItem(xs);
+    if (name == 0) 
       cout << "ERROR: Component has no name." << endl;
     else {
-      n->name = name.getNodeValue().transcode();
+      n->name = strdup(to_char_ptr(name->getNodeValue()));
     }
   }
   
   if (n->category==NOT_SET) {
-    DOM_Node name = d.getAttributes().getNamedItem("category");
-    if (name==0)
+    DOMNode *name = d.getAttributes()->getNamedItem(to_xml_ch_ptr("category"));
+    if (name == 0)
       cout << "ERROR: Component has no category." << endl;
     else {
-      n->category = name.getNodeValue().transcode();
+      n->category = strdup(to_char_ptr(name->getNodeValue()));
     }
   }
 
   //cout << "processing " << n->category << "::" << n->name << endl;
   
-  for (DOM_Node child = d.getFirstChild();
+  for (DOMNode *child = d.getFirstChild();
        child!=0;
-       child = child.getNextSibling()) {
-    DOMString childname = child.getNodeName();
-    if (childname.equals("overview") && n->overview)
-      ProcessOverviewNode(child,n->overview);
+       child = child->getNextSibling()) {
+    const XMLCh* childname = child->getNodeName();
+    if (string_is(childname, "overview") && n->overview)
+      ProcessOverviewNode(*child, n->overview);
 
-    if (childname.equals("implementation") && n->implementation)
-      ProcessImplementationNode(child,n->implementation);
+    if (string_is(childname, "implementation") && n->implementation)
+      ProcessImplementationNode(*child, n->implementation);
     
-    if (childname.equals("io") && n->io) 
-      ProcessIoNode(child,n->io);
+    if (string_is(childname, "io") && n->io) 
+      ProcessIoNode(*child, n->io);
     
-    if (childname.equals("gui") && n->gui)
-      ProcessGuiNode(child,n->gui);
+    if (string_is(childname, "gui") && n->gui)
+      ProcessGuiNode(*child, n->gui);
     
-    if (childname.equals("testing") && n->testingplans) {
-      for (DOM_Node planchild = child.getFirstChild();
+    if (string_is(childname, "testing") && n->testingplans) {
+      for (DOMNode *planchild = child->getFirstChild();
 	   planchild!=0;
-	   planchild = planchild.getNextSibling()) {
-	DOMString planchildname = planchild.getNodeName();
-	if (planchildname.equals("plan")) {
+	   planchild = planchild->getNextSibling()) {
+	const XMLCh* planchildname = planchild->getNodeName();
+	if (string_is(planchildname, "plan")) {
 	  plan_node* newplan = new plan_node;
 	  newplan->description = NOT_SET;
-	  newplan->steps = new map<int,char*>;
-	  ProcessPlanNode(planchild,newplan);
-	  n->testingplans->insert(std::pair<int,plan_node*>(n->testingplans->size(),newplan));
+	  newplan->steps = new map<int, char*>;
+	  ProcessPlanNode(*planchild, newplan);
+	  n->testingplans->insert(
+             std::pair<int, plan_node*>(n->testingplans->size(), newplan));
 	}
       }
     }
@@ -1106,7 +1125,7 @@ int ReadComponentNodeFromFile(component_node* n, const char* filename,
   }
 
   // Instantiate the DOM parser.
-  DOMParser parser;
+  XercesDOMParser parser;
   parser.setDoValidation(false);
   
   PackageDBHandler handler(gui);
@@ -1122,12 +1141,18 @@ int ReadComponentNodeFromFile(component_node* n, const char* filename,
     return 0;
   }
   
-  DOM_Document doc = parser.getDocument();
-  DOM_NodeList list = doc.getElementsByTagName("component");
-  int nlist = list.getLength();
-  if (nlist==0) return 0;
-  for (int i=0;i<nlist;i++)
-    ProcessComponentNode(list.item(i),n);
+  DOMDocument *doc = parser.getDocument();
+  DOMNodeList *list = doc->getElementsByTagName(to_xml_ch_ptr("component"));
+  int nlist = list->getLength();
+  if (nlist == 0) return 0;
+  for (int i = 0;i < nlist; i++) {
+    DOMNode* node = list->item(i);
+    if (!node) {
+      std::cerr << "Error: NULL node at top level component" << std::endl;
+      return 0;
+    }
+    ProcessComponentNode(*node, n);
+  }
   return 1;
 }
 

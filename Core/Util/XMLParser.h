@@ -10,10 +10,10 @@
 #pragma set woff 3201
 #endif
 
-#include <util/PlatformUtils.hpp>
-#include <sax/ErrorHandler.hpp>
-#include <sax2/Attributes.hpp>
-#include <sax2/DefaultHandler.hpp>
+#include <xercesc/util/PlatformUtils.hpp>
+#include <xercesc/sax/ErrorHandler.hpp>
+#include <xercesc/sax2/Attributes.hpp>
+#include <xercesc/sax2/DefaultHandler.hpp>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
