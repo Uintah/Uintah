@@ -3155,7 +3155,7 @@ ViewSlices::handle_gui_keypress(GuiArgs &args) {
 
   if (false)
     for (int i = 0; i < args.count(); ++i)
-      cerr << args[i] << (i == args.count()-1)?"\n":" ";
+      cerr << args[i] << ((i == args.count()-1)?"\n":" ");
   
   if (args.count() != 6) {
     args.error(args[0]+" "+args[1]+" expects a win #, keycode, keysym,& time");
