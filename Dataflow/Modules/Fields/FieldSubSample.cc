@@ -259,15 +259,9 @@ void FieldSubSample::execute(){
       jdim_ != jDim_.get() ||
       kdim_ != kDim_.get() )
   {
-    // Dims has callback on it, so it must be set it after i, j, k, and wrap.
-    iDim_.set(idim_);
-    jDim_.set(jdim_);
-    kDim_.set(kdim_);
-    Wrap_.set(wrap);
-    Dims_.set(dims);
-
     ostringstream str;
-    str << id << " set_size 0 0 0";
+    str << id << " set_size ";
+    str << dims << "  " << idim_ << " " << jdim_ << " " << kdim_ << " " << wrap;
     gui->execute(str.str().c_str());
 
     updateAll = true;

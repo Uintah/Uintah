@@ -186,10 +186,13 @@ Isosurface::execute()
     sfi->compute_min_max(minmax.first, minmax.second);
     if (minmax.first  != iso_value_min_ ||
 	minmax.second != iso_value_max_) {
-      gui_iso_value_min_.set(minmax.first);
-      gui_iso_value_max_.set(minmax.second);
+
       iso_value_min_ = minmax.first;
       iso_value_max_ = minmax.second;
+
+      ostringstream str;
+      str << id << " set_min_max " << minmax.first << "  " << minmax.second;
+      gui->execute(str.str().c_str());
     }
 
     if ( !gui_extract_from_new_field_.get() )
@@ -472,7 +475,6 @@ Isosurface::execute()
       return;
     }
 
-
     // Get the output field handle.
     if (build_field && fields.size() && fields[0].get_rep()) {
 
@@ -537,6 +539,14 @@ Isosurface::execute()
       }
     }
   
+
+    // Output geometry.
+    GeometryOPort *ogeom_port = (GeometryOPort *)get_oport("Geometry");
+    if (!ogeom_port) {
+      error("Unable to initialize oport 'Geometry'.");
+      return;
+    }
+
     // Stop showing the previous geometry.
     bool geomflush = false;
 
