@@ -31,28 +31,28 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<component name="MatlabMatricesReader" category="DataIO">
+<component name="MatlabBundlesReader" category="DataIO">
   <overview>
     <authors>
 	<author>Jeroen Stinstra</author>
     </authors>
 	
-	<summary> 
-	The MatlabMatricesReader module reads a matrix from a MATLAB file
+	<summary>  
+	The MatlabBundlesReader module reads a matrix from a MATLAB .mat file and exports it as a bundle 
 	</summary>
-	
-    <description>
-	
+    
+	<description>
 	<section>
-	<title>Module description</title>
-	<p>
-	This module imports matrices from MATLAB .mat files. Currently only files from matlab version 5 and higher are supported by this module.
-	The module reads both dense and sparse matrices of any of the supported data classes in matlab (short, int, double, etc.). 
-	Currently the SCIRun matrix class only supports doubles, hence every matrix
-	is casted into a double matrix. In order to facilitate the selection process the module will list all matrices in the file that
-	are compatible with the SCIRun matrix class and will select the most obvious one as a default. </p>  
+	<title> Module Description </title>
 	
-	<p> Follow the next two steps in order to setup the GUI properly: </p>
+	<p>	This module reads a N-dimensional matrix from MATLAB .mat files and exports this matrix as a Bundle
+	object. Currently only files from matlab version 5 and higher are supported by this module. 
+	The module reads dense matrices of any of the supported data classes in matlab (short, int, double, etc.).
+	Sparse matrices however are not supported by this module. Use the <modref Package="MatlabInterface" Module="MatlabmatricesReader" />
+	module to read sparse matrices. In order to facilitate the selection process the module will list all matrices in the file that
+	are compatible with the SCIRun Bundle class and will select the most obvious one as a default. </p>
+	
+		<p> Follow the next two steps in order to setup the GUI properly: </p>
 	
 	<orderedlist>
 		<listitem>
@@ -68,7 +68,7 @@
 	</orderedlist>
 	</section>
 	
-	<section>
+		<section>
 	<title>See Also </title>
 	<p>
 	<modref package="MatlabInterface" name="Matlab" />,	
@@ -85,7 +85,7 @@
 	</p>
 	</section>
 	
-    </description>   
+	</description>   
   </overview>
   <implementation>
   </implementation>
@@ -97,56 +97,55 @@
         <datatype>SCIRun::Nrrd</datatype>
         <description>filename store as a char array in a nrrd</description>
       </port>
--->            
+-->        
     </inputs>
     <outputs>
       <port>
-        <name>Matrix1</name>
-		<datatype>SCIRun::Matrix</datatype>
+        <name>Bundle1</name>
+		<datatype>SCIRun::Bundle</datatype>
 		<description>
-		<p> Matrix imported from the MATLAB file using port 1. </p>
-		</description>
-      </port>
-	  <port>
-        <name>Matrix2</name>
-		<datatype>SCIRun::Matrix</datatype>
-		<description>
-		<p> Matrix imported from the MATLAB file using port 2. </p>
-		</description>
-      </port>
-	  <port>
-        <name>Matrix3</name>
-		<datatype>SCIRun::Matrix</datatype>
-		<description>
-		<p> Matrix imported from the MATLAB file using port 3. </p>
-		</description>
-      </port>
-	  <port>
-        <name>Matrix4</name>
-		<datatype>SCIRun::Matrix</datatype>
-		<description>
-		<p> Matrix imported from the MATLAB file using port 4. </p>
+		<p> SCIRun Bundle Object imported from the MATLAB file using port 1. </p>
 		</description>		
       </port>
 	  <port>
-        <name>Matrix5</name>
-		<datatype>SCIRun::Matrix</datatype>
+        <name>Bundle2</name>
+		<datatype>SCIRun::Bundle</datatype>
 		<description>
-		<p> Matrix imported from the MATLAB file using port 5. </p>
-		</description>		
+		<p> SCIRun Bundle Object imported from the MATLAB file using port 2. </p>
+		</description>	
       </port>
 	  <port>
-        <name>Matrix6</name>
-		<datatype>SCIRun::Matrix</datatype>
+        <name>Bundle3</name>
+		<datatype>SCIRun::Bundle</datatype>
 		<description>
-		<p> Matrix imported from the MATLAB file using port 6. </p>
-		</description>		
+		<p> SCIRun Bundle Object imported from the MATLAB file using port 3. </p>
+		</description>			
+      </port>
+	  <port>
+        <name>Bundle4</name>
+		<datatype>SCIRun::Bundle</datatype>
+		<description>
+		<p> SCIRun Bundle Object imported from the MATLAB file using port 4. </p>
+		</description>			
+      </port>
+	  <port>
+        <name>Bundle5</name>
+		<datatype>SCIRun::Bundle</datatype>
+		<description>
+		<p> SCIRun Bundle Object imported from the MATLAB file using port 5. </p>
+		</description>			
+      </port>
+	  <port>
+        <name>Bundle6</name>
+		<datatype>SCIRun::Bundle</datatype>
+		<description>
+		<p> SCIRun Bundle Object imported from the MATLAB file using port 6. </p>
+		</description>			
       </port>
     </outputs>
   </io>
- 
-   <gui>
 
+  <gui>
     <parameter>
     <widget> Entry </widget>
 	<label> .mat file </label>
@@ -179,55 +178,8 @@
 	white is currently selected one. Selecting a matrix from the list below will put that matrix
 	on the port whose label is highlighted in white. </description>
 	</parameter>
-	
-	 <parameter>
-    <widget>  Checkbox </widget>
-	<label> Disable Matlab to C++ conversion (data will be transposed) </label>
-	<description> Large dataset are often ordered such that the first dimension is the one that is accessed most. 
-	For example the dimension time is often the last one. Because Matlab and C++ use different ordering, a favorable
-	ordering may get lost by importing a matrix directly. By switching on this option the matrix is transposed, but
-	the ordering in memory stays the same. This often saves a lot of swapping to virtual memory for large datasets.
-	</description>
-	</parameter>
-
   </gui>
- 
- <nets>
-  <net>
-  <title>Loading Cardiac data using the MatlabInterface</title>
-  
-   <p> This network demonstrates how to use the MatlabInterface modules when the data is stored in matlab and
-   how it can be used in SCIRun. This example makes use of two example MATLAB files stored in SCIRunData/Matlab.
-   The first file called "geometry.mat" describes the geometry of the epicardium and contains a structured 
-   matrix with a field called .node containing the position of all the nodes and a field called .face containing
-   the connectivity of the geometry. The data itself is contained in a second MATLAB file called "timeseries.mat"
-   this file contains a plain dense matrix with a timeseries for each node. Each row in this matrix represents a
-   time signal of a different electrode. In figure <xref target="network"/> the basic network is shown for displaying
-   the data on top of the geometry using SCIRun.
-   </p>
-  
-  <figure id="network">
-  <img>../Modules/DataIO/doc/Example_Network.jpg</img>
-  <caption>Network for displaying epicardial potentials</caption>
-  </figure>
-  
-  <p> The settings of both the MATLAB file readers are shown in figures <xref target="GUI1"/> and <xref target="GUI2"/>. 
-  Set the ChangeFieldDataAt to "Nodes" in its GUI and execute the network. By changing the selected column vector
-  in the MatrixSelectVector GUI different time instances of a heatbeat can be depicted in the epicardial surface.</p>
-  
-  <figure id="GUI1">
-  <img>../Modules/DataIO/doc/MatlabFieldsReaderGUI.jpg</img>
-  <caption>MatlabFieldsReader GUI showing the selection of the "geometry.mat" file</caption>
-  </figure>
 
-  <figure id="GUI2">
-  <img>../Modules/DataIO/doc/MatlabMatricesReaderGUI.jpg</img>
-  <caption>MatlabMatricesReader GUI showing the selection of the "timeseries.mat" file</caption>
-  </figure>
-  
-  </net>
-  </nets>
- 
   <testing>
   </testing>
 </component>
