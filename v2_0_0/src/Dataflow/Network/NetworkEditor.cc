@@ -145,10 +145,6 @@ void NetworkEditor::save_network(const string& filename,
       out << "global notes\nset notes \"" << myvalue << "\"\n" ;
       out << "\n" ;
     }
-    if (!gui->get("modulesBbox", myvalue)){
-      out << "set bbox {" << myvalue << "}\n" ;
-      out << "\n" ;
-    }
    
     gui->unlock();
 
