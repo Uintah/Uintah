@@ -178,12 +178,6 @@ private:
   //////////
   // Private assignment operator to make assignment impossible.
   Object& operator=(const Object&);
-
-  /////////
-  // Values for rank and size (parallel objects)
-  int myrank;
-  int mysize;
-
 };
 
 } // End namespace SCIRun
