@@ -267,15 +267,14 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
 				      SchedulerP& sched)
 {
   // primitive variable initialization
-  int zeroGhostCells = 0;
   Task* tsk = scinew Task( "Arches::computeStableTimeStep",
 			   this, &Arches::computeStableTimeStep);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		Ghost::None, zeroGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::None, zeroGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-		Ghost::None, zeroGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->computes(d_sharedState->get_delt_label());
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
@@ -294,7 +293,6 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    int zeroGhostCells = 0;
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
@@ -314,11 +312,11 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::None, zeroGhostCells);
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::None, zeroGhostCells);
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::None, zeroGhostCells);
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     IntVector indexLow = patch->getCellFORTLowIndex();
     IntVector indexHigh = patch->getCellFORTHighIndex() + IntVector(1,1,1);
     //    voidFraction.print(cerr);

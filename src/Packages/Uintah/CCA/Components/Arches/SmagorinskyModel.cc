@@ -86,23 +86,21 @@ SmagorinskyModel::sched_computeTurbSubmodel(SchedulerP& sched, const PatchSet* p
 			  this,
 			  &SmagorinskyModel::computeTurbSubmodel);
 
-  int numGhostCells = 1;
-  int zeroGhostCells = 0;
   
   // Requires
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
-		zeroGhostCells);
+		Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, Ghost::None,
-		zeroGhostCells);
+		Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPLabel, 
 		Ghost::AroundFaces,
-		numGhostCells);
+		Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPLabel,
 		Ghost::AroundFaces,
-		numGhostCells);
+		Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPLabel,
 		Ghost::AroundFaces,
-		numGhostCells);
+		Arches::ONEGHOSTCELL);
 
       // Computes
   tsk->computes(d_lab->d_viscosityCTSLabel);
@@ -123,30 +121,28 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 			  this,
 			  &SmagorinskyModel::reComputeTurbSubmodel);
 
-  int numGhostCells = 1;
-  int zeroGhostCells = 0;
   // Requires
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
-		zeroGhostCells);
+		Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, 
 		Ghost::None,
-		zeroGhostCells);
+		Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::AroundFaces,
-		numGhostCells);
+		Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, 
 		Ghost::AroundFaces,
-		numGhostCells);
+		Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
 		Ghost::AroundFaces,
-		numGhostCells);
+		Arches::ONEGHOSTCELL);
   // for multimaterial
   if (d_MAlab)
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-		  Ghost::None, zeroGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
       // Computes
   tsk->computes(d_lab->d_viscosityCTSLabel);
@@ -177,20 +173,18 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
     CCVariable<double> viscosity;
 
     // Get the velocity, density and viscosity from the old data warehouse
-    int numGhostCells = 1;
-    int zeroGhostCells = 0;
     
     new_dw->allocate(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
     new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
-		    Ghost::None, zeroGhostCells);
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(uVelocity, d_lab->d_uVelocitySPLabel, matlIndex, patch,
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPLabel, matlIndex, patch, 
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(wVelocity,d_lab->d_wVelocitySPLabel, matlIndex, patch, 
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch,
-		Ghost::None, zeroGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
     PerPatch<CellInformationP> cellinfop;
     //if (old_dw->exists(d_cellInfoLabel, patch)) {
@@ -284,28 +278,26 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
-    int numGhostCells = 1;
-    int zeroGhostCells = 0;
 
     new_dw->allocate(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
     new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
-		    Ghost::None, zeroGhostCells);
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
     
     new_dw->get(uVelocity,d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(vVelocity,d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
-		zeroGhostCells);
+		Arches::ZEROGHOSTCELLS);
     
     if (d_MAlab)
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
-		  Ghost::None, zeroGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     // Get the PerPatch CellInformation data
 
@@ -444,30 +436,28 @@ SmagorinskyModel::sched_computeTurbSubmodelPred(SchedulerP& sched,
 			  this,
 			  &SmagorinskyModel::computeTurbSubmodelPred);
 
-  int numGhostCells = 1;
-  int zeroGhostCells = 0;
   // Requires
   tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, Ghost::None,
-		zeroGhostCells);
+		Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, 
 		Ghost::None,
-		zeroGhostCells);
+		Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
 		Ghost::AroundFaces,
-		numGhostCells);
+		Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel, 
 		Ghost::AroundFaces,
-		numGhostCells);
+		Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel, 
 		Ghost::AroundFaces,
-		numGhostCells);
+		Arches::ONEGHOSTCELL);
   // for multimaterial
   if (d_MAlab)
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-		  Ghost::None, zeroGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
       // Computes
   tsk->computes(d_lab->d_viscosityPredLabel);
@@ -499,28 +489,26 @@ SmagorinskyModel::computeTurbSubmodelPred(const ProcessorGroup*,
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
-    int numGhostCells = 1;
-    int zeroGhostCells = 0;
 
     new_dw->allocate(viscosity, d_lab->d_viscosityPredLabel, matlIndex, patch);
     new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
-		    Ghost::None, zeroGhostCells);
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
     
     new_dw->get(uVelocity,d_lab->d_uVelocityPredLabel, matlIndex, patch, 
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(vVelocity,d_lab->d_vVelocityPredLabel, matlIndex, patch,
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(wVelocity, d_lab->d_wVelocityPredLabel, matlIndex, patch, 
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(density, d_lab->d_densityPredLabel, matlIndex, patch, Ghost::None,
-		zeroGhostCells);
+		Arches::ZEROGHOSTCELLS);
     
     if (d_MAlab)
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
-		  Ghost::None, zeroGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     // Get the PerPatch CellInformation data
 
@@ -661,30 +649,28 @@ SmagorinskyModel::sched_computeTurbSubmodelInterm(SchedulerP& sched,
 			  this,
 			  &SmagorinskyModel::computeTurbSubmodelInterm);
 
-  int numGhostCells = 1;
-  int zeroGhostCells = 0;
   // Requires
   tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel, Ghost::None,
-		zeroGhostCells);
+		Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, 
 		Ghost::None,
-		zeroGhostCells);
+		Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
 		Ghost::AroundFaces,
-		numGhostCells);
+		Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityIntermLabel, 
 		Ghost::AroundFaces,
-		numGhostCells);
+		Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_wVelocityIntermLabel, 
 		Ghost::AroundFaces,
-		numGhostCells);
+		Arches::ONEGHOSTCELL);
   // for multimaterial
   if (d_MAlab)
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-		  Ghost::None, zeroGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
       // Computes
   tsk->computes(d_lab->d_viscosityIntermLabel);
@@ -716,28 +702,26 @@ SmagorinskyModel::computeTurbSubmodelInterm(const ProcessorGroup*,
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
-    int numGhostCells = 1;
-    int zeroGhostCells = 0;
 
     new_dw->allocate(viscosity, d_lab->d_viscosityIntermLabel, matlIndex, patch);
     new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
-		    Ghost::None, zeroGhostCells);
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
     
     new_dw->get(uVelocity,d_lab->d_uVelocityIntermLabel, matlIndex, patch, 
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(vVelocity,d_lab->d_vVelocityIntermLabel, matlIndex, patch,
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(wVelocity, d_lab->d_wVelocityIntermLabel, matlIndex, patch, 
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(density, d_lab->d_densityIntermLabel, matlIndex, patch, Ghost::None,
-		zeroGhostCells);
+		Arches::ZEROGHOSTCELLS);
     
     if (d_MAlab)
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
-		  Ghost::None, zeroGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     // Get the PerPatch CellInformation data
 
@@ -878,20 +862,18 @@ SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched,
 			  this,
 			  &SmagorinskyModel::computeScalarVariance);
 
-  int numGhostCells = 1;
-  int zeroGhostCells = 0;
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
 #ifdef correctorstep
   tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #else  
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #endif
   tsk->requires(Task::NewDW, d_lab->d_scalarVarINLabel, 
-		Ghost::None, zeroGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   // Computes
   tsk->computes(d_lab->d_scalarVarSPLabel);
@@ -916,18 +898,16 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
     // Get the velocity, density and viscosity from the old data warehouse
-    int numGhostCells = 1;
-    int zeroGhostCells = 0;
 #ifdef correctorstep
     new_dw->get(scalar, d_lab->d_scalarPredLabel, matlIndex, patch, Ghost::AroundCells,
-		numGhostCells);
+		Arches::ONEGHOSTCELL);
 #else
     new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, Ghost::AroundCells,
-		numGhostCells);
+		Arches::ONEGHOSTCELL);
 #endif
     new_dw->allocate(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
     new_dw->copyOut(scalarVar, d_lab->d_scalarVarINLabel, matlIndex, patch,
-		    Ghost::None, zeroGhostCells);
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -970,26 +950,25 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup*,
 {
 #ifdef WONT_COMPILE_YET
   int matlIndex = 0;
-  int numGhostCells = 0;
   SFCXVariable<double> uVelocity;
   SFCYVariable<double> vVelocity;
   SFCZVariable<double> wVelocity;
   switch(eqnType) {
   case Arches::PRESSURE:
     old_dw->get(uVelocity, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
+		Arches::ZEROGHOSTCELLS);
     old_dw->get(vVelocity, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
+		Arches::ZEROGHOSTCELLS);
     old_dw->get(wVelocity, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
+		Arches::ZEROGHOSTCELLS);
     break;
   case Arches::MOMENTUM:
     old_dw->get(uVelocity, d_lab->d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
+		Arches::ZEROGHOSTCELLS);
     old_dw->get(vVelocity, d_lab->d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
+		Arches::ZEROGHOSTCELLS);
     old_dw->get(wVelocity, d_lab->d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
+		Arches::ZEROGHOSTCELLS);
     break;
   default:
     throw InvalidValue("Equation type can only be pressure or momentum");
@@ -997,7 +976,7 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup*,
 
   CCVariable<double> density;
   old_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
+	      Arches::ZEROGHOSTCELLS);
 
   // Get the PerPatch CellInformation data
   PerPatch<CellInformationP> cellInfoP;
@@ -1014,7 +993,7 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup*,
   // stores cell type info for the patch with the ghost cell type
   CCVariable<int> cellType;
   old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
+	      Arches::ZEROGHOSTCELLS);
 
   //get Molecular Viscosity of the fluid
   double mol_viscos = d_physicalConsts->getMolecularViscosity();
@@ -1023,7 +1002,6 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup*,
   cellFieldType walltype = WALLTYPE;
 
 
-  numGhostCells = 0;
 
   SFCXVariable<double> uVelLinearSrc; //SP term in Arches
   SFCXVariable<double> uVelNonLinearSrc; // SU in Arches
@@ -1037,21 +1015,21 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup*,
     switch(index) {
     case 0:
       new_dw->get(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->get(uVelNonLinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
       break;
     case 1:
       new_dw->get(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->get(vVelNonLinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
       break;
     case 2:
       new_dw->get(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->get(wVelNonLinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
       break;
     default:
       throw InvalidValue("Index can only be 0, 1 or 2");
@@ -1061,21 +1039,21 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup*,
     switch(index) {
     case 0:
       new_dw->get(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->get(uVelNonLinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
       break;
     case 1:
       new_dw->get(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->get(vVelNonLinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
       break;
     case 2:
       new_dw->get(wVelLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->get(wVelNonLinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
       break;
     default:
       throw InvalidValue("Index can only be 0, 1 or 2");

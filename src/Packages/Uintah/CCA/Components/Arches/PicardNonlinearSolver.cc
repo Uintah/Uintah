@@ -267,37 +267,36 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
   //solver to compute new values
   Task* tsk = scinew Task( "Picard::initialGuess",
 			  this, &PicardNonlinearSolver::setInitialGuess);
-  int numGhostCells = 0;
   if (d_MAlab) 
     tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
   else
     tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::OldDW, d_lab->d_pressureSPBCLabel,
-		Ghost::None, numGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,
-		Ghost::None, numGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::None, numGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,
-		Ghost::None, numGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   if (d_MAlab)
     tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
   int nofScalars = d_props->getNumMixVars();
   // warning **only works for one scalar
   for (int ii = 0; ii < nofScalars; ii++) {
     tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
   }
   if (d_enthalpySolve)
     tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel, 
-		  Ghost::None, numGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
-		Ghost::None, numGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,
-		Ghost::None, numGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->computes(d_lab->d_cellTypeLabel);
   tsk->computes(d_lab->d_pressureINLabel);
   tsk->computes(d_lab->d_uVelocityINLabel);
@@ -325,19 +324,19 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
 {
   Task* tsk = scinew Task( "Picard::interpFCToCC",
 			   this, &PicardNonlinearSolver::interpolateFromFCToCC);
-  int numGhostCells = 1;
+
   tsk->requires(Task::NewDW, d_lab->d_uVelocityINLabel,
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityINLabel, 
-                Ghost::AroundFaces, numGhostCells);
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_wVelocityINLabel, 
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-                Ghost::AroundFaces, numGhostCells);
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-                Ghost::AroundFaces, numGhostCells);
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
   tsk->computes(d_lab->d_oldCCVelocityLabel);
   tsk->computes(d_lab->d_newCCVelocityLabel);
@@ -356,25 +355,24 @@ PicardNonlinearSolver::sched_probeData(SchedulerP& sched, const PatchSet* patche
 {
   Task* tsk = scinew Task( "Picard::probeData",
 			  this, &PicardNonlinearSolver::probeData);
-  int numGhostCells = 1;
   
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-		Ghost::AroundFaces, numGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
-		Ghost::AroundCells, numGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_pressurePSLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-		Ghost::AroundCells, numGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-		Ghost::AroundCells, numGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
       
   sched->addTask(tsk, patches, matls);
   
@@ -395,12 +393,11 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    int nofGhostCells = 0;
     constCCVariable<double> denMicro;
     CCVariable<double> denMicro_new;
     if (d_MAlab) {
       old_dw->get(denMicro, d_lab->d_densityMicroLabel, 
-		  matlIndex, patch, Ghost::None, nofGhostCells);
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocate(denMicro_new, d_lab->d_densityMicroINLabel, 
 		       matlIndex, patch);
       denMicro_new.copyData(denMicro);
@@ -408,42 +405,42 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     constCCVariable<int> cellType;
     if (d_MAlab)
       new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch,
-		  Ghost::None, nofGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
     else
       old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::None, nofGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
     constCCVariable<double> pressure;
     old_dw->get(pressure, d_lab->d_pressureSPBCLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
     constSFCXVariable<double> uVelocity;
     old_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
     constSFCYVariable<double> vVelocity;
     old_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
     constSFCZVariable<double> wVelocity;
     old_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
     int nofScalars = d_props->getNumMixVars();
     StaticArray< constCCVariable<double> > scalar(nofScalars);
     for (int ii = 0; ii < nofScalars; ii++) {
       old_dw->get(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch, 
-		  Ghost::None, nofGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
     }
     constCCVariable<double> enthalpy;
     if (d_enthalpySolve)
       old_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, 
-		  Ghost::None, nofGhostCells);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
     constCCVariable<double> density;
     old_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
     constCCVariable<double> viscosity;
     old_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
 
   // Create vars for new_dw ***warning changed new_dw to old_dw...check
@@ -531,29 +528,28 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    int nofGhostCells = 1;
 
     // Get the old velocity
     constSFCXVariable<double> oldUVel;
     constSFCYVariable<double> oldVVel;
     constSFCZVariable<double> oldWVel;
     new_dw->get(oldUVel, d_lab->d_uVelocityINLabel, matlIndex, patch, 
-		Ghost::AroundFaces, nofGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(oldVVel, d_lab->d_vVelocityINLabel, matlIndex, patch, 
-		Ghost::AroundFaces, nofGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(oldWVel, d_lab->d_wVelocityINLabel, matlIndex, patch, 
-		Ghost::AroundFaces, nofGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
     // Get the new velocity
     constSFCXVariable<double> newUVel;
     constSFCYVariable<double> newVVel;
     constSFCZVariable<double> newWVel;
     new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundFaces, nofGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundFaces, nofGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundFaces, nofGhostCells);
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     
     // Get the low and high index for the Cell Centered Variables
     IntVector idxLo = patch->getCellLowIndex();
@@ -633,34 +629,33 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    int nofGhostCells = 0;
 
   // Get the new velocity
     constSFCXVariable<double> newUVel;
     constSFCYVariable<double> newVVel;
     constSFCZVariable<double> newWVel;
     new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
     constCCVariable<double> density;
     constCCVariable<double> viscosity;
     constCCVariable<double> pressure;
     constCCVariable<double> mixtureFraction;
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(pressure, d_lab->d_pressurePSLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(mixtureFraction, d_lab->d_scalarSPLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
     
     constCCVariable<double> gasfraction;
     new_dw->get(gasfraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
     for (vector<IntVector>::const_iterator iter = d_probePoints.begin();
 	 iter != d_probePoints.end(); iter++) {
