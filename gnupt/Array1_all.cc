@@ -10,6 +10,7 @@
 #include <Datatypes/ContourSet.h>
 #include <Datatypes/ContourSetPort.h>
 #include <Datatypes/Mesh.h>
+#include <Datatypes/SurfacePort.h>
 #include <Datatypes/TriSurface.h>
 
 class Connection;
@@ -63,27 +64,29 @@ static void _dummy33_(Piostream& p1, _dummy32_& p2)
 typedef Array1<TSElement*> _dummy34_;
 typedef Array1<GeomObj*> _dummy35_;
 typedef Array1<MaterialHandle> _dummy36_;
+typedef Array1<SurfaceIPort*> _dummy37_;
+typedef Array1<SurfaceHandle> _dummy38_;
 
 static void _fn1_(Piostream& p1, Array1<TSElement*>& p2)
 {
     Pio(p1, p2);
 }
 
-static void _fn1_(Piostream& p1, Array1<Vector>& p2)
+static void _fn2_(Piostream& p1, Array1<Vector>& p2)
 {
     Pio(p1, p2);
 }
-static void _fn1_(Piostream& p1, Array1<Node*>& p2)
-{
-    Pio(p1, p2);
-}
-
-static void _fn2_(Piostream& p1, Array1<Element*>& p2)
+static void _fn3_(Piostream& p1, Array1<Node*>& p2)
 {
     Pio(p1, p2);
 }
 
-static void _fn3_(Piostream& p1, Array1<double>& p2)
+static void _fn4_(Piostream& p1, Array1<Element*>& p2)
+{
+    Pio(p1, p2);
+}
+
+static void _fn5_(Piostream& p1, Array1<double>& p2)
 {
     Pio(p1, p2);
 }

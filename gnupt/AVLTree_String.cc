@@ -8,6 +8,7 @@ class Arg_base;
 class Module;
 class Renderer;
 class GeomObj;
+template<class T> class Array1;
 
 typedef TreeLink<clString, Arg_base*> _dummy1_;
 typedef TreeLink<clString, Module* (*)(const clString&)> _dummy2_;
@@ -15,6 +16,7 @@ typedef TreeLink<clString, void*> _dummy3_;
 typedef TreeLink<clString, int> _dummy4_;
 typedef TreeLink<clString, Renderer* (*)()> _dummy5_;
 typedef TreeLink<double, GeomObj*> _dummy6_;
+typedef TreeLink<clString, Array1<clString>*> _dummy7_;
 
 typedef AVLTreeIter<clString, Arg_base*> _dummy10_;
 typedef AVLTree<clString, Arg_base*> _dummy11_;
@@ -33,6 +35,9 @@ typedef AVLTree<clString, Renderer* (*)()> _dummy51_;
 
 typedef AVLTreeIter<double, GeomObj* > _dummy60_;
 typedef AVLTree<double, GeomObj* > _dummy61_;
+
+typedef AVLTreeIter<clString, Array1<clString>*> _dummy70_;
+typedef AVLTree<clString, Array1<clString>*> _dummy71_;
 
 #if 0
 typedef TreeLink<clString, ModuleSubCategory*> _dummy7_;
