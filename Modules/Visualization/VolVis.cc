@@ -17,6 +17,8 @@
 #include <Datatypes/ColormapPort.h>
 #include <Datatypes/GeometryPort.h>
 
+#include <Geom/Color.h>
+
 
 #include <Geom/View.h>
 #include <Geom/TCLView.h>
@@ -94,10 +96,6 @@ class VolVis : public Module {
 
   int homeSFgeneration;
   
-  // OpenGL window size
-  
-  int ViewPort;
-
   // the size in pixels of output window
   
   double x_pixel_size;
@@ -119,7 +117,9 @@ class VolVis : public Module {
 
   // min and max scalar values
 
-  TCLint minSV, maxSV;
+  TCLdouble minSV, maxSV;
+
+  double min, max;
 
   // a list of {x,y}positions {x=scalar value, y=opacity}
   // associated with the nodes of "Opacity map" widget
@@ -141,10 +141,6 @@ class VolVis : public Module {
 
   TCLint iProc;
   
-  // raster dimensions
-
-  int rasterX, rasterY;
-
   // background color
   
   Color bgColor;
@@ -290,13 +286,13 @@ extern "C" {
 VolVis::VolVis(const clString& id)
 : Module("VolVis", id, Source),
   iView("View", id, this),
-  iRasterX("rasterX", id, this),
-  iRasterY("rasterY", id, this),
   minSV("minSV", id, this),
   maxSV("maxSV", id, this),
   ibgColor("bgColor", id, this),
   projection("project", id, this),
   iCenter("centerit", id, this),
+  iRasterX("rasterX", id, this),
+  iRasterY("rasterY", id, this),
   iProc("processors", id, this),
   intervalCount("intervalCount", id, this),
   Rsv("Rsv", id, this),
@@ -329,15 +325,11 @@ VolVis::VolVis(const clString& id)
 
   // initialize a few variables used by OpenGL
   
-  ViewPort = 600;
-
   x_pixel_size = 1;
   y_pixel_size = 1;
 
   homeSFgeneration = -1;
 
-  rasterX = 100;
-  rasterY = 100;
   bgColor = BLACK;
 
   // initialize this image in order to prevent seg faults
@@ -353,6 +345,9 @@ VolVis::VolVis(const clString& id)
   ibgColor.set(BLACK);
 
   //  intervalCount.set(1);
+
+  max = 110;
+  min = 1;
 }
 
 
@@ -366,10 +361,10 @@ VolVis::VolVis(const clString& id)
 VolVis::VolVis(const VolVis& copy, int deep)
 : Module(copy, deep),
   iView("View", id, this),
-  iRasterX("rasterX", id, this),
-  iRasterY("rasterY", id, this),
   maxSV("maxSV", id, this),
   minSV("minSV", id, this),
+  iRasterX("rasterX", id, this),
+  iRasterY("rasterY", id, this),
   ibgColor("bgColor", id, this),
   projection("project", id, this),
   iCenter("centerit", id, this),
@@ -445,12 +440,67 @@ VolVis::parallel( int proc )
 {
   int i;
 
-  cerr << "Why am i here in parallel? " << proc << endl;
+  int interval = iRasterX.get() / procCount / intervalCount.get();
+
+  cout << "The interval is: " << interval << endl;
+
+  if ( projection.get() )
+    {
+      if ( proc != procCount - 1 )
+	for ( i = 0; i < intervalCount.get(); i++ )
+	  {
+	    calc->PerspectiveTrace( interval * ( proc + procCount * i ),
+				   interval * ( proc + 1 + procCount * i ) );
+	    cout << "between: " << interval * (proc + procCount * i ) << "  "
+	      << interval * (proc + 1 + procCount * i ) << endl;
+	  }
+      
+      else
+	{
+	  for ( i = 0; i < intervalCount.get()-1; i++ )
+	    {
+	    calc->PerspectiveTrace( interval * ( proc + procCount * i ),
+				   interval * ( proc + 1 + procCount * i ) );
+	    cout << "between: " << interval * (proc + procCount * i ) << "  "
+	      << interval * (proc + 1 + procCount * i ) << endl;
+	  }
+	  
+	  calc->PerspectiveTrace(interval * ( proc + procCount *
+					      ( intervalCount.get() - 1 ) ),
+				 iRasterX.get() );
+	    cout << "between: " << interval * (proc + procCount *
+					       (intervalCount.get() - 1))
+	      << "  " << iRasterX.get() << endl;
+	}
+    }
+  else
+    {
+      if ( proc != procCount - 1 )
+	for ( i = 0; i < intervalCount.get(); i++ )
+	  calc->ParallelTrace( interval * ( proc + procCount * i ),
+			      interval * ( proc + 1 + procCount * i ) );
+      else
+	{
+	  for ( i = 0; i < intervalCount.get()-1; i++ )
+	    calc->ParallelTrace( interval * ( proc + procCount * i ),
+				interval * ( proc + 1 + procCount * i ) );
+	  
+	  calc->ParallelTrace( interval * ( proc + procCount *
+					   ( intervalCount.get() - 1 ) ),
+			      iRasterX.get() );
+	}
+    }
+}
+
+
+#if 0
+void
+VolVis::parallel( int proc )
+{
+  int i;
 
   int interval = iRasterX.get() / procCount / intervalCount.get();
 
-  cerr << "count of intervals is " << intervalCount.get() << "  " <<
-    interval << endl;
 
   if ( projection.get() )
     {
@@ -500,7 +550,7 @@ VolVis::parallel( int proc )
 	}
     }
 }
-
+#endif
 
 
 /**************************************************************
@@ -513,14 +563,12 @@ VolVis::parallel( int proc )
 int
 VolVis::Validate ( ScalarFieldRG **homeSFRGrid )
 {
-  double min, max;
+  cerr << "Validate\n";
   
   // get the scalar field handle
   
-  if ( iport->get(homeSFHandle) )
-    cerr << "iport->get the handle returned true\n";
-  else
-    cerr << "iport->get the handle returned FALSE\n";
+  if ( ! iport->get(homeSFHandle) )
+    cerr << "\n\n\n\n\n\n\n\niport->get the handle returned FALSE\n\n\n\n\n\n\n\n\n\n";
 
   // Make sure this is a valid scalar field
 
@@ -535,36 +583,10 @@ VolVis::Validate ( ScalarFieldRG **homeSFRGrid )
   
   if ( ( (*homeSFRGrid) = homeSFHandle->getRG()) == 0)
     {
-      cerr << "it's not an rg grid\n";
-    return 0;
+      cerr << "bailed because it is not a regular grid\n";
+      return 0;
     }
 
-  /*  
-     if ( ( (*homeSFRGrid) = (ScalarField*) homeSFHandle->getUG()) == 0)
-     if ( ( (*homeSFRGrid) = (ScalarField*) homeSFHandle->getRG()) == 0 )
-     {
-     cerr << "bailed on getting the grid\n";
-     return 0;
-     }
-     */
-
-    {
-      // remember the generation
-      
-      homeSFgeneration = homeSFHandle->generation;
-      cerr <<"The SF generation = " << homeSFgeneration << endl;
-
-      // get the min, max values of the new field
-
-      homeSFHandle->get_minmax( min, max );
-
-      // set the tcl/tk min and max scalar values
-
-      minSV.set( int( min ) );
-      maxSV.set( int( max ) );
-    }
-  
-#if 0
   if ( homeSFgeneration != homeSFHandle->generation )
     {
       // remember the generation
@@ -573,14 +595,14 @@ VolVis::Validate ( ScalarFieldRG **homeSFRGrid )
 
       // get the min, max values of the new field
 
-      homeSFHandle->get_minmax( min, max );
+
+      (*homeSFRGrid)->get_minmax( min, max );
 
       // set the tcl/tk min and max scalar values
 
-      minSV.set( int( min ) );
-      maxSV.set( int( max ) );
+      minSV.set( min );
+      maxSV.set( max );
     }
-#endif  
   
   return 1;
 }
@@ -641,7 +663,9 @@ VolVis::UpdateTransferFncArray( clString x, clString y, int index )
 	  suppl[i] = '\0';
 
       ScalarVal[index].add( 1.0 * position / CANVAS_WIDTH *
-			   ( maxSV.get() - minSV.get() ) + minSV.get() );
+			   ( max - min ) + min );
+
+//      cerr << index << " it is: " << 1.0 * position / CANVAS_WIDTH * (max-min) + min << endl;
     }
 
   /* read in the y-position */
@@ -740,15 +764,15 @@ VolVis::makeCurrent()
     cerr << "*glXMakeCurrent failed.\n";
 
   // Clear the screen...
-  glViewport( 0, 0, ViewPort-1, ViewPort-1 );
+  glViewport( 0, 0, VIEW_PORT_SIZE-1, VIEW_PORT_SIZE-1 );
 
   glMatrixMode(GL_PROJECTION);
 
   glLoadIdentity();
 
   // Set up an orthogonal projection to the screen
-  // of size ViewPort
-  glOrtho(0, ViewPort-1, ViewPort-1, 0, -1, 1);
+  // of size VIEW_PORT_SIZE
+  glOrtho(0, VIEW_PORT_SIZE-1, VIEW_PORT_SIZE-1, 0, -1, 1);
   
   glMatrixMode(GL_MODELVIEW);
   
@@ -768,8 +792,9 @@ VolVis::makeCurrent()
 void
 VolVis::redraw_all()
 {
-  if ( ! uiopen.get() ) { cerr << "joy: redraw_all\n"; return;}
-  else { cerr << "PASSED: redraw_all proceeds\n"; }
+
+  if ( ! uiopen.get() )
+    return;
   
   if ( ! makeCurrent() )
       return;
@@ -801,30 +826,27 @@ VolVis::redraw_all()
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   
   glPixelZoom(x_pixel_size, y_pixel_size);
-  
-  if ( iCenter.get() )
-      glRasterPos2i( x_pixel_size + ( 600 - Image.dim2() ) / 2 ,
-		    y_pixel_size * ( ( 600 / 2 + Image.dim1() / 2 + 1 ) ) );
-  else
-    glRasterPos2i( x_pixel_size, y_pixel_size * (Image.dim1()+1) );
 
-#if 0  
+//  cerr << "Displaying an image of dimensions: " << Image.dim1() << " " <<
+//    Image.dim2() << endl;
+  
   if ( iCenter.get() )
-      glRasterPos2i( x_pixel_size + ( 600 - rasterX ) / 2 ,
-		    y_pixel_size * ( ( 600 / 2 + rasterY / 2 + 1 ) ) );
+    {
+      glRasterPos2i( x_pixel_size + ( VIEW_PORT_SIZE - Image.dim2() ) / 2 ,
+		    y_pixel_size * ( ( VIEW_PORT_SIZE / 2 + Image.dim1() / 2 + 1 ) ) );
+    }
   else
-    glRasterPos2i( x_pixel_size, y_pixel_size * (rasterY+1) );
-#endif
+    {
+      glRasterPos2i( x_pixel_size, y_pixel_size * (Image.dim1()+1) );
+    }
   
-  
+
   Color c(1, 0, 1);
 
   char *pixels=(char *) ( &(Image(0,0)) );
 
   // glDrawPixles wants width, then height
   
-//  glDrawPixels( rasterX, rasterY, GL_RGB, GL_UNSIGNED_BYTE, pixels );
-
   glDrawPixels( Image.dim2(), Image.dim1(), GL_RGB, GL_UNSIGNED_BYTE, pixels );
 
   imagelock.unlock();
@@ -859,25 +881,24 @@ VolVis::execute()
   // to execute
 
   if ( ! Validate( &homeSFRGrid ) )
-    { cerr << "invalid grid\n";
     return;
-    }
+
+  // update the values from TCL interface
 
   reset_vars();
+
+  // continue if UI is open
   
-  if ( ! uiopen.get() ) { cerr << "joy: execute\n"; return;}
-  else { cerr << "PASSED: execute proceeds\n"; }
+  if ( ! uiopen.get() )
+    return;
   
+
   ColormapHandle cmap;
   CharColor temp;
 
   WallClockTimer watch;
 
   int ClipFar, ClipNear;
-
-  WallClockTimer justsee;
-
-  justsee.start();
 
   // get data from transfer map
 
@@ -896,28 +917,18 @@ VolVis::execute()
   UpdateTransferFncArray( Gsv.get(), Gop.get(), 2 );
   UpdateTransferFncArray( Bsv.get(), Bop.get(), 3 );
 
-  // instantiate the levoy class
-
-  // if connected to a Salmon module, retrieve Salmon view info
+  // if connected to a Salmon module, retrieve Salmon geometry info
   // and store it in a LevoyS type structure
   // otherwise, use the Levoy structure
 
-  // DAVES  
-  //     if ( Salmon::ShareView( SalmonView, DepthBuffer, ColorBuffer, ClipFar,
-  //  ClipNear ) )
   GeometryData* data=ogeom->getData(0, GEOM_ALLDATA);
 
   if ( data != NULL )
     {
-      at();
       calc = new LevoyS( homeSFRGrid, colormapport,
 			ibgColor.get() * ( 1. / 255 ), ScalarVal, Opacity );
 
-      at();
       calc->SetUp( data );
-      
-//      calc->SetUp( SalmonView, SalmonX, SalmonY,
-//		  &DepthBuffer, &ColorBuffer, ClipFar, ClipNear );
     }
   else
     {
@@ -932,19 +943,37 @@ VolVis::execute()
       calc->SetUp( iView.get(), iRasterX.get(), iRasterY.get() );
     }      
 
-  cerr << "the initial part takes: " << justsee.time() << " time units\n";
-
+#if 0  
   // calculate the new image
+
+  int g, h, k;
+
+  for ( g = 15; g < 17; g++ )
+    {
+      for ( h = 0; h < 63; h++ )
+	{
+	  for ( k = 10; k < 15; k++ )
+	    {
+//	      cerr << g << " " << h << " " << k << ": the val is: " <<
+//		homeSFRGrid->get_value( g, h, k ) << endl;
+	      
+	      cerr << " " << homeSFRGrid->get_value( g, h, k );
+	    }
+	  cerr << endl;
+	}
+      cerr << "\n**************************\n\n";
+    }
+#endif  
 
   watch.start();
 
-  at();
-  
   if ( iProc.get() )
     {
-      cerr << "Parallel processing data\n";
-      
       procCount = Task::nprocessors();
+
+      cerr << "projection is: " << projection.get() << "interval count is: "
+	<< intervalCount.get() <<endl;
+      cerr << "raster size: " << iRasterX.get() << endl;
 
       Task::multiprocess(procCount, do_parallel, this);
     }
@@ -961,11 +990,10 @@ VolVis::execute()
 
   Image = *(calc->Image);
 
-  #if 0
   /* THE MOST AWESOME DEBUGGING TECHNIQUE */
   
   int loop;
-//  for ( loop = 0; loop < iRasterX.get(); loop++ )
+
   int d1, d2;
   d1 = Image.dim1() - 1;
   d2 = Image.dim2();
@@ -996,28 +1024,23 @@ VolVis::execute()
     }
   
   /* END OF THE MOST AWESOME DEBUGGING TECHNIQUE */
-#endif
   
   // also, the bgColor accessed by the redraw_all fnc
   // can now be changed.
 
   bgColor = ibgColor.get() * ( 1. / 255 );
-  rasterX = iRasterX.get();
-  rasterY = iRasterY.get();
 
   // the Image array has been modified, it is now safe to let
   // go of the thread
   
   imagelock.unlock();
 
-//  delete tempImage;
 
-  // execute a tcl command
+  // TEMP: execute a tcl command (what does this do???)
+  
   update_progress(0.5);
 
   TCL::execute(id+" redraw_when_idle");
-
-  justsee.stop();
 
   delete calc;
 }

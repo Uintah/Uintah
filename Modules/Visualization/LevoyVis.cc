@@ -9,9 +9,19 @@
  *   May 1996
  *
  *  Copyright (C) 1996 SCI Group
+ *
+ *
+ * IMPORTANT: if i want the image to allign with the salmon view
+ * if the salmon raster exceeds that of VIEW_PORT_SIZE, i must
+ * change one thing: when i loop through the rays, i must
+ * start at the very corner ray, and go on.  otherwise, the rays
+ * get split evenly. (i'm sure this doesn't make sense to anyone
+ * but me).
+ *
  */
 
 #include "kuswik.h"
+#include <Classlib/Timer.h>
 #include <Modules/Visualization/LevoyVis.h>
 #include <Math/MiscMath.h>
 
@@ -36,7 +46,7 @@ double EpsilonContribution = 0.01;
 Levoy::Levoy ( ScalarFieldRG * grid, ColormapIPort * c,
 	      Color& bg, Array1<double> * Xarr, Array1<double> * Yarr )
 {
-  int i;
+  int i, j;
 
   homeSFRGrid = grid;
 
@@ -49,13 +59,31 @@ Levoy::Levoy ( ScalarFieldRG * grid, ColormapIPort * c,
   box.SetupSides();
 
   // get the colormap, if attached
-  
-  colormapFlag = c->get(cmap);
+
+  if ( c != NULL )
+    colormapFlag = c->get(cmap);
 
   backgroundColor = bg;
 
   ScalarVals     = Xarr;
   AssociatedVals = Yarr;
+
+  // do some processing on the array because AssociateValue
+  // function takes a lot of time
+
+  Slopes = new Array1<double> [4];
+
+  // add a dummy at position 0
+
+  Slopes[0].add( 0. );
+  Slopes[1].add( 0. );
+  Slopes[2].add( 0. );
+  Slopes[3].add( 0. );
+
+  for ( i = 0; i < 4; i++ )
+    for ( j = 1; j < ScalarVals[i].size(); j++ )
+      Slopes[i].add( ( AssociatedVals[i][j] - AssociatedVals[i][j-1] ) /
+		    ( ScalarVals[i][j] - ScalarVals[i][j-1] ) );
 
   // if the rgb are at 1 for every scalar value, set the
   // whiteFlag to be true, otherwise it is false
@@ -77,6 +105,13 @@ Levoy::Levoy ( ScalarFieldRG * grid, ColormapIPort * c,
     }
   
   Image = new Array2<CharColor>;
+
+  // setup the lighting coefficients
+
+  ambient_coeff = 0.3;
+  diffuse_coeff = 0.4;
+  specular_coeff = 0.2;
+  specular_iter = 30;
 }
 
 
@@ -126,8 +161,6 @@ Levoy::DetermineRayStepSize ()
 
   return result;
 }
-
-
 
 
 
@@ -196,7 +229,7 @@ Levoy::DetermineFarthestDistance ( const Point& e )
  **************************************************************************/
 
 void
-Levoy::SetUp ( const View& myview, const int& x, const int& y )
+Levoy::SetUp ( const View& myview, int x, int y )
 {
   // temporary storage for eye position
 
@@ -207,11 +240,6 @@ Levoy::SetUp ( const View& myview, const int& x, const int& y )
   homeRay = myview.lookat() - eye;
   homeRay.normalize();
 
-  cerr << "NORMALIZED is " << homeRay << endl;
-  homeRay *= cos( DtoR( myview.fov() / 2 ) );
-
-  cerr << "The home ray is: " << homeRay  <<endl;
-
   // rayStep represents the length of vector.  in order to
   // traverse the volume, a vector of this length in the direction
   // of the ray is added to the current point in space
@@ -221,6 +249,15 @@ Levoy::SetUp ( const View& myview, const int& x, const int& y )
   // the length of longest possible ray
 
   dmax = DetermineFarthestDistance ( eye );
+
+  // make sure that the raster sizes do not exceed the OpenGL window
+  // size
+
+  if ( x > VIEW_PORT_SIZE )
+    x = VIEW_PORT_SIZE;
+  
+  if ( y > VIEW_PORT_SIZE )
+    y = VIEW_PORT_SIZE;
 
   // create and initialize the array containing the image
 
@@ -241,6 +278,16 @@ Levoy::SetUp ( const View& myview, const int& x, const int& y )
 
   CalculateRayIncrements( myview, rayIncrementU, rayIncrementV, x, y );
 
+  // calculate the vector, L, which points toward the sun ( a point
+  // light source which is very far away
+
+//  Lvector = homeRay + rayIncrementU * 3 + rayIncrementV * 3;
+  Lvector = homeRay;
+  Lvector.normalize();
+  
+  // TEMP!!!!  2 different logic statements, interchanged,
+  // in order to compare speed
+  
   // determine the function to use
 
   if ( colormapFlag )
@@ -249,21 +296,15 @@ Levoy::SetUp ( const View& myview, const int& x, const int& y )
     CastRay = &Levoy::Eight;
   else // user defined SV-color map
     CastRay = &Levoy::Nine;
+  
+  if ( colormapFlag )
+    CastRay = &Levoy::Ten;
+  else if ( whiteFlag )
+    CastRay = &Levoy::Bresenham2;
+  else // user defined SV-color map
+    CastRay = &Levoy::Nine;
 }
 
-
-/**************************************************************************
- *
- *
- *
- **************************************************************************/
-
-void
-Levoy::SetUp ( const View& myview, const int& x, const int& y,
-	       Array2<double>* db, Array2<Color>*  cb, double Cnear,
-	      double Cfar )
-{
-}
 
 
 /**************************************************************************
@@ -276,14 +317,6 @@ void
 Levoy::SetUp ( GeometryData * g )
 {
 }
-
-/**************************************************************************
- *
- * Associates a value for the particular scalar value
- * given an array of scalar values and corresponding opacity/color values.
- *
- **************************************************************************/
-
 
 double
 Levoy::AssociateValue ( double scalarValue,
@@ -325,7 +358,6 @@ Levoy::AssociateValue ( double scalarValue,
   return opacity;
 
 }
-
 
 
 /**************************************************************************
@@ -403,7 +435,8 @@ Levoy::Five ( const Point& eye, Vector& step,
 	  colr = ( cmap->lookup( scalarValue ))->diffuse;
 
 	  opacity = AssociateValue( scalarValue,
-				   ScalarVals[0], AssociatedVals[0] );
+				   ScalarVals[0], AssociatedVals[0],
+				   Slopes[0] );
 
 	  accumulatedColor += colr * ( contribution * opacity );
 	  contribution = contribution * ( 1.0 - opacity );
@@ -497,7 +530,7 @@ Levoy::Six ( const Point& eye, Vector& step,
       if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
 	{
 	  opacity = AssociateValue( scalarValue, ScalarVals[0],
-				   AssociatedVals[0] );
+				   AssociatedVals[0], Slopes[0] );
 
 	  accumulatedColor += colr * ( contribution * opacity );
 	  contribution = contribution * ( 1.0 - opacity );
@@ -589,16 +622,20 @@ Levoy::Seven ( const Point& eye, Vector& step,
 	{
 	  
 	  Color tempcolr( AssociateValue( scalarValue,
-					 ScalarVals[1], AssociatedVals[1] ),
+					 ScalarVals[1], AssociatedVals[1],
+					 Slopes[1] ),
 			 AssociateValue( scalarValue,
-					ScalarVals[2], AssociatedVals[2] ),
+					ScalarVals[2], AssociatedVals[2],
+					Slopes[2] ),
 			 AssociateValue( scalarValue,
-					ScalarVals[3], AssociatedVals[3] ) );
+					ScalarVals[3], AssociatedVals[3],
+					Slopes[3] ),
+			 );
 
 	  colr = tempcolr;
 
 	  opacity = AssociateValue( scalarValue,ScalarVals[0],
-				   AssociatedVals[0] );
+				   AssociatedVals[0], Slopes[0]  );
 	  
 	  accumulatedColor += colr * ( contribution * opacity );
 	  contribution = contribution * ( 1.0 - opacity );
@@ -629,7 +666,7 @@ Levoy::Seven ( const Point& eye, Vector& step,
  * the opacity map is not limited to 5 nodes.
  * opacity varies according with the transfer map specified
  * by the user.  the color associated with any scalar value
- * is fixed to be white.
+ * is fixed to be WHITE.
  *
  **************************************************************************/
 
@@ -706,15 +743,6 @@ Levoy::Eight ( const Point& eye, Vector& step,
 
   traversed = - stepLength;
 
-  // yet another check for whether i calculated the dmax correctly...
-  // actually, i probably didn't calculate it correctly...
-
-  if ( mylength + ( eye - beg ).length() + 1.e-5 > dmax )
-    {
-      cerr << "DMAX not calculated correctly: " << dmax << " vs " << mylength + ( eye - beg ).length() + 1.e-5 << endl;
-      cerr << beg <<"   " << end << endl;
-    }
-
   // begin traversing through the volume at the first point of
   // intersection of the ray with the bbox.  keep going through
   // the volume until the contribution of the voxel color
@@ -730,7 +758,7 @@ Levoy::Eight ( const Point& eye, Vector& step,
       if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
 	{
 	  opacity = AssociateValue( scalarValue, ScalarVals[0],
-				   AssociatedVals[0] );
+				   AssociatedVals[0], Slopes[0] );
 
 	  accumulatedColor += colr * ( contribution * opacity );
 	  contribution = contribution * ( 1.0 - opacity );
@@ -854,16 +882,19 @@ Levoy::Nine ( const Point& eye, Vector& step,
 	{
 	  
 	  Color tempcolr( AssociateValue( scalarValue,
-					 ScalarVals[1], AssociatedVals[1] ),
+					 ScalarVals[1], AssociatedVals[1],
+					 Slopes[1] ),
 			 AssociateValue( scalarValue,
-					ScalarVals[2], AssociatedVals[2] ),
+					ScalarVals[2], AssociatedVals[2],
+					Slopes[2] ),
 			 AssociateValue( scalarValue,
-					ScalarVals[3], AssociatedVals[3] ) );
+					ScalarVals[3], AssociatedVals[3],
+					Slopes[3] ) );
 
 	  colr = tempcolr;
 
 	  opacity = AssociateValue( scalarValue, ScalarVals[0],
-				   AssociatedVals[0] );
+				   AssociatedVals[0], Slopes[0] );
 	  
 	  accumulatedColor += colr * ( contribution * opacity );
 	  contribution = contribution * ( 1.0 - opacity );
@@ -995,7 +1026,8 @@ Levoy::Ten ( const Point& eye, Vector& step,
 	  colr = ( cmap->lookup( scalarValue ))->diffuse;
 
 	  opacity = AssociateValue( scalarValue,
-				   ScalarVals[0], AssociatedVals[0] );
+				   ScalarVals[0], AssociatedVals[0],
+				   Slopes[0] );
 
 	  accumulatedColor += colr * ( contribution * opacity );
 	  contribution = contribution * ( 1.0 - opacity );
@@ -1013,7 +1045,251 @@ Levoy::Ten ( const Point& eye, Vector& step,
   return accumulatedColor;
 }
 
+double
+Levoy::LightingComponent( const Vector& normal )
+{
+  double i = ambient_coeff;
+  i += diffuse_coeff * Dot( Lvector, normal );
 
+  return i;
+}
+
+/**************************************************************************
+ *
+ * calculates the pixel color by casting a ray starting at the first
+ * intersection of the ray with the bbox, and ending at the second
+ * intersection of the ray with the bbox.
+ *
+ * the opacity map is not limited to 5 nodes.
+ * opacity varies according with the transfer map specified
+ * by the user.  the color associated with any scalar value
+ * is fixed to be WHITE.
+ *
+ **************************************************************************/
+
+Color
+Levoy::Bresenham2 ( const Point& eye, Vector& step,
+	     const Point& beg, const Point& end )
+{
+
+  double contribution = 1.0;
+  double scalarValue;
+  double opacity;
+  
+  // the color for rendering
+
+  Color colr = WHITE;
+
+  // since no voxels have been crossed, no color has been
+  // accumulated.
+
+  Color accumulatedColor( BLACK );
+
+  
+  Point voxelB, voxelE;
+
+  // get the voxel indices of beginning and ending points
+  
+  if ( ! homeSFRGrid->get_voxel( beg, voxelB ) )
+    cerr << "1: GET VOXEL RETURNED FALSE!\n";
+      
+  if ( ! homeSFRGrid->get_voxel( end, voxelE ) )
+    cerr << "2: GET VOXEL RETURNED FALSE!\n";
+
+  // perform the initial Bresenham line calculations
+
+  int sdx = voxelE.x() - voxelB.x();
+  int sdy = voxelE.y() - voxelB.y();
+  int sdz = voxelE.z() - voxelB.z();
+  
+  int dx = Abs( sdx );
+  int dy = Abs( sdy );
+  int dz = Abs( sdz );
+
+  int largest = Max( dx, dy, dz );
+
+  int start, stop, decr;
+  Vector Primary(0.,0.,0.), Secondary(0.,0.,0.), Tertiary(0.,0.,0.);
+
+  int dS, dT, NES, NET, ES, ET;
+
+  if ( largest == dx )
+    {
+      start = voxelB.x();
+      stop = voxelE.x();
+      
+      if ( sdx < 0 )
+	Primary.x( -1 );
+      else
+	Primary.x( 1 );
+
+      if ( sdy < 0 )
+	Secondary.y( -1 );
+      else
+	Secondary.y( 1 );
+
+      if ( sdz < 0 )
+	Tertiary.z( -1 );
+      else
+	Tertiary.z( 1 );
+
+      dS = 2 * dy - dx;
+      dT = 2 * dz - dx;
+
+      NES = 2 * ( dy - dx );
+      NET = 2 * ( dz - dx );
+
+      ES = 2 * dy;
+      ET = 2 * dz;
+    }
+  else if ( largest == dy )
+    {
+      start = voxelB.y();
+      stop = voxelE.y();
+      
+      if ( sdy < 0 )
+	Primary.y( -1 );
+      else
+	Primary.y( 1 );
+
+      if ( sdx < 0 )
+	Secondary.x( -1 );
+      else
+	Secondary.x( 1 );
+
+      if ( sdz < 0 )
+	Tertiary.z( -1 );
+      else
+	Tertiary.z( 1 );
+
+      dS = 2 * dx - dy;
+      dT = 2 * dz - dy;
+
+      NES = 2 * ( dx - dy );
+      NET = 2 * ( dz - dy );
+
+      ES = 2 * dx;
+      ET = 2 * dz;
+    }
+  else
+    {
+      start = voxelB.z();
+      stop = voxelE.z();
+      
+      if ( sdz < 0 )
+	Primary.x( -1 );
+      else
+	Primary.x( 1 );
+
+      if ( sdy < 0 )
+	Secondary.y( -1 );
+      else
+	Secondary.y( 1 );
+
+      if ( sdx < 0 )
+	Tertiary.z( -1 );
+      else
+	Tertiary.z( 1 );
+
+      dS = 2 * dy - dz;
+      dT = 2 * dx - dz;
+
+      NES = 2 * ( dy - dz );
+      NET = 2 * ( dx - dz );
+
+      ES = 2 * dy;
+      ET = 2 * dx;
+    }
+    
+      if ( start < stop )
+	decr = 1;
+      else
+	decr = -1;
+      
+  Point imat( voxelB );
+
+#if 0  
+  cerr << "starting the loop ........" << start << "  " << stop << "\n";
+  cerr << "voxel beg: " << voxelB << endl;
+  cerr << "voxel end: " << voxelE << endl;
+  cerr << dx << "  " << dy << "  " << dz << endl;
+  cerr << dS << ": " << ES << ", " << NES << endl;
+  cerr << dT << ": " << ET << ", " << NET << endl;
+#endif  
+  
+  while ( contribution > EpsilonContribution && start != stop )
+    {
+#if 0      
+      // TEMP!!! must be removed soon (after good testing)
+      if ( ! homeSFRGrid->within_grid( imat ) )
+	{
+	  cerr << "imat is outside of range\n";
+	  cerr << imat << endl;
+	  ASSERT( NULL );
+	}
+#endif      
+      
+      scalarValue = homeSFRGrid->get_value( imat );
+
+//      cerr << imat << ": The normal is: " << homeSFRGrid->get_normal( imat ) << endl;
+
+      opacity = AssociateValue( scalarValue, ScalarVals[0],
+			       AssociatedVals[0], Slopes[0] );
+
+//      opacity *= LightingComponent( homeSFRGrid->get_normal( imat ) );
+      
+      accumulatedColor += colr * ( contribution * opacity );
+      contribution = contribution * ( 1.0 - opacity );
+
+      start += decr;
+      
+      if ( dS <= 0 )
+	dS += ES;
+      else
+	{
+	  dS += NES;
+	  imat += Secondary;
+	}
+      
+      if ( dT <= 0 )
+	dT += ET;
+      else
+	{
+	  dT += NET;
+	  imat += Tertiary;
+	}
+      
+      imat += Primary;
+    }
+// cerr << endl;
+
+  if ( start == stop && imat != voxelE )
+      {
+	cerr << "Ending voxel does not correspond to the last voxel\n";
+	cerr << "while tracing the ray\n";
+
+	cerr << "ending voxel: " << voxelE << endl;
+	cerr << "imat is: "      << imat   << endl;
+	
+	ASSERT( imat == voxelE );
+      }
+
+  // begin traversing through the volume at the first point of
+  // intersection of the ray with the bbox.  keep going through
+  // the volume until the contribution of the voxel color
+  // is almost none, or until the second intersection point has
+  // been reached.
+
+  // background color should contribute to the final color of
+  // the pixel.  if contribution is minute, the background
+  // is not visible therefore don't add the background color
+  // to the accumulated one.
+  
+  if ( contribution > EpsilonContribution )
+    accumulatedColor = backgroundColor * contribution + accumulatedColor;
+
+  return accumulatedColor;
+}
 
 
 
@@ -1031,8 +1307,6 @@ Levoy::PerspectiveTrace( int from, int till )
   Color pixelColor;
   Point beg, end;
 
-  cerr <<"CALLED a fnc in LEVOY\n";
-  
   for ( pool = from; pool < till; pool++ )
     {
       for ( loop = 0; loop < y; loop++ )
@@ -1052,10 +1326,8 @@ Levoy::PerspectiveTrace( int from, int till )
 	      if ( ( eye - beg ).length() > ( eye - end ).length() )
 		{
 		  cerr << "swapping!!!!! ...\n";
-		  Point aaa;
-		  aaa = beg;
-		  beg = end;
-		  end = aaa;
+		  cerr << "HELP!!!!\n\n\n\n\n\n\n\n\n\n\n\nHELP!";
+		  ASSERT( ( eye - beg).length() <= ( eye - end ).length() );
 		}
 
 	      if ( beg.InInterval( end, 1.e-5 ) )
@@ -1121,84 +1393,6 @@ LevoyS::~LevoyS()
  **************************************************************************/
 
 void
-LevoyS::SetUp ( const View& myview, const int& x, const int& y,
-	       Array2<double>* db, Array2<Color>*  cb, double Cnear,
-	      double Cfar )
-{
-  // temporary storage for eye position
-
-  eye = myview.eyep();
-
-  // the original ray from the eye point to the lookat point
-
-  homeRay = myview.lookat() - eye;
-  homeRay.normalize();
-
-  cerr << "NORMALIZED is " << homeRay << endl;
-  homeRay *= cos( DtoR( myview.fov() / 2 ) );
-
-  cerr << "The home ray is: " << homeRay  <<endl;
-  
-
-  // the distance between the 2 clipping planes
-  
-  clipConst = ( Cfar - Cnear ) / homeRay.length();
-
-  // the ratio of near clipping plane to homeRaylength
-
-  nearTohome = Cnear / homeRay.length();
-  
-
-  // rayStep represents the length of vector.  in order to
-  // traverse the volume, a vector of this length in the direction
-  // of the ray is added to the current point in space
-
-  rayStep = DetermineRayStepSize ();
-
-  // the length of longest possible ray
-
-  dmax = DetermineFarthestDistance ( eye );
-
-  // create and initialize the array containing the image
-
-  this->x = x;
-  this->y = y;
-  
-  CharColor temp;
-
-  // keep the depth and color buffer information
-
-  this->DepthBuffer = db;
-  this->BackgroundBuffer = cb;
-
-  // deallocate, allocate, and initialize the array
-  
-  Image->newsize( y, x );
-  
-  Image->initialize( temp );
-
-  // calculate the increments to be added in the u,v directions
-
-  CalculateRayIncrements( myview, rayIncrementU, rayIncrementV, x, y );
-
-  // determine the function to use
-
-  if ( colormapFlag )
-    CastRay = &LevoyS::Thirteen;
-  else if ( whiteFlag )
-    CastRay = &LevoyS::Eleven;
-  else // user defined SV-color map
-    CastRay = &LevoyS::Twelve;
-}
-
-
-/**************************************************************************
- *
- *
- *
- **************************************************************************/
-
-void
 LevoyS::SetUp ( GeometryData * g )
 {
   g->Print();
@@ -1218,15 +1412,9 @@ LevoyS::SetUp ( GeometryData * g )
   
   clipConst = ( g->zfar - g->znear ) / homeRay.length();
 
-  cerr << "Far clipping plane is " << g->zfar << endl;
-  cerr << "Near clipping plane is " << g->znear << endl;
-  cerr << "clipConst ended up being: " << clipConst << endl;
-
   // the ratio of near clipping plane to homeRaylength
 
   nearTohome = g->znear / homeRay.length();
-
-  cerr << "near to home constant is " << nearTohome << endl;
 
   // rayStep represents the length of vector.  in order to
   // traverse the volume, a vector of this length in the direction
@@ -1238,6 +1426,22 @@ LevoyS::SetUp ( GeometryData * g )
 
   dmax = DetermineFarthestDistance ( eye );
 
+  // make sure that raster sizes do not exceed the raster size
+  // of the OpenGL window.
+
+  int rx, ry;
+
+  rx = g->xres;
+  ry = g->yres;
+
+  if ( g->xres > VIEW_PORT_SIZE )
+    g->xres = VIEW_PORT_SIZE;
+
+  if ( g->yres > VIEW_PORT_SIZE )
+    g->yres = VIEW_PORT_SIZE;
+
+  cerr << "The new resolutions are: " << g->xres << " " << g->yres << endl;
+
   // create and initialize the array containing the image
 
   this->x = g->xres;
@@ -1245,12 +1449,6 @@ LevoyS::SetUp ( GeometryData * g )
   
   CharColor temp;
 
-  // keep the depth and color buffer information
-
-/*  
-  this->DepthBuffer = db;
-  this->BackgroundBuffer = cb;
-  */
 
   // deallocate, allocate, and initialize the array
   
@@ -1261,9 +1459,22 @@ LevoyS::SetUp ( GeometryData * g )
   // calculate the increments to be added in the u,v directions
 
 //  CalculateRayIncrements( myview, rayIncrementU, rayIncrementV, x, y );
+
   CalculateRayIncrements( *(g->view), rayIncrementU, rayIncrementV,
 			 g->xres, g->yres );
 
+  cerr << "with new res's: " << rayIncrementU << " " << rayIncrementV << endl;
+
+  CalculateRayIncrements( *(g->view), rayIncrementU, rayIncrementV,
+			 rx, ry );
+
+  cerr << "keeping the true res's " << rayIncrementU << " " << rayIncrementV << endl;
+  
+  // calculate the vector, L, which points toward the sun ( a point
+  // light source which is very far away
+
+  Lvector = homeRay + rayIncrementU * 3 + rayIncrementV * 3;
+  
   // determine the function to use
 
   if ( colormapFlag )
@@ -1340,15 +1551,6 @@ LevoyS::Eleven ( const Point& eye, Vector& step,
 
   accumulatedColor = BLACK;
 
-  
-  
-  /* DAVES */
-
-/*   int templength = step.length() * ( clipConst * DepthBuffer(x,y) +
-     nearTohome ); */
-
-  // calculate the length from the eye to the DepthBuffer based point
-  // in space
 
   int templength = step.length() * ( clipConst *
 		   geom->depthbuffer->get_depth(px,py) + nearTohome );
@@ -1358,8 +1560,6 @@ LevoyS::Eleven ( const Point& eye, Vector& step,
   if ( templength < mylength )
       mylength = templength;
     
-  /* END DAVES */
-
 
   // find step vector
 
@@ -1393,8 +1593,11 @@ LevoyS::Eleven ( const Point& eye, Vector& step,
 
   if ( mylength + ( eye - beg ).length() + 1.e-5 > dmax )
     {
+      cerr << "HELP!!!!\n\n\n\n\n\n\n\n\n\n\n\nHELP!";
       cerr << "DMAX not calculated correctly: " << dmax << " vs " << mylength + ( eye - beg ).length() + 1.e-5 << endl;
       cerr << beg <<"   " << end << endl;
+      cerr << "HELP!!!!\n\n\n\n\n\n\n\n\n\n\n\nHELP!";
+      ASSERT( NULL );
     }
 
   // begin traversing through the volume at the first point of
@@ -1412,7 +1615,7 @@ LevoyS::Eleven ( const Point& eye, Vector& step,
       if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
 	{
 	  opacity = AssociateValue( scalarValue, ScalarVals[0],
-				   AssociatedVals[0] );
+				   AssociatedVals[0], Slopes[0] );
 
 	  accumulatedColor += colr * ( contribution * opacity );
 	  contribution = contribution * ( 1.0 - opacity );
@@ -1425,17 +1628,8 @@ LevoyS::Eleven ( const Point& eye, Vector& step,
   // to the accumulated one.
   
   if ( contribution > EpsilonContribution )
-    accumulatedColor = backgroundColor * contribution + accumulatedColor;
-
-    // DAVES
-    //    accumulatedColor = BackgroundBuffer(px,py) * contribution + accumulatedColor;
-
-  /* DAVES */
-
-  accumulatedColor = geom->colorbuffer->get_pixel(px,py) * contribution +
-    accumulatedColor;
-
-  /* END DAVES */
+    accumulatedColor = geom->colorbuffer->get_pixel(px,py) * contribution +
+      accumulatedColor;
 
   return accumulatedColor;
 }
@@ -1512,23 +1706,6 @@ LevoyS::Twelve ( const Point& eye, Vector& step,
 
   accumulatedColor = BLACK;
 
-  /* DAVES
-
-     // calculate the length from the eye to the DepthBuffer based point
-     // in space
-
-     int templength = step.length() * ( clipConst * DepthBuffer(x,y) +
-     nearTohome );
-
-     // compare the 2 lengths, pick the shorter one
-
-  if ( templength < mylength )
-    mylength = templength;
-  else
-    cerr << "T";
-    
-    */
-  
   // calculate the length from the eye to the DepthBuffer based point
   // in space
 
@@ -1580,16 +1757,19 @@ LevoyS::Twelve ( const Point& eye, Vector& step,
 	{
 	  
 	  Color tempcolr( AssociateValue( scalarValue,
-					 ScalarVals[1], AssociatedVals[1] ),
+					 ScalarVals[1], AssociatedVals[1],
+					 Slopes[1] ),
 			 AssociateValue( scalarValue,
-					ScalarVals[2], AssociatedVals[2] ),
+					ScalarVals[2], AssociatedVals[2],
+					Slopes[2] ),
 			 AssociateValue( scalarValue,
-					ScalarVals[3], AssociatedVals[3] ) );
+					ScalarVals[3], AssociatedVals[3],
+					Slopes[3] ) );
 
 	  colr = tempcolr;
 
 	  opacity = AssociateValue( scalarValue, ScalarVals[0],
-				   AssociatedVals[0] );
+				   AssociatedVals[0], Slopes[0] );
 	  
 	  accumulatedColor += colr * ( contribution * opacity );
 	  contribution = contribution * ( 1.0 - opacity );
@@ -1604,14 +1784,6 @@ LevoyS::Twelve ( const Point& eye, Vector& step,
   if ( contribution > EpsilonContribution )
     accumulatedColor = geom->colorbuffer->get_pixel(px,py) * contribution +
       accumulatedColor;
-
-  // DAVES  
-//    accumulatedColor = BackgroundBuffer(px,py) * contribution + accumulatedColor;
-
-  /* DAVES */
-
-
-  /* END DAVES */
 
   return accumulatedColor;
 }
@@ -1690,22 +1862,6 @@ LevoyS::Thirteen ( const Point& eye, Vector& step,
 
   accumulatedColor = BLACK;
 
-  /* DAVES
-
-     // calculate the length from the eye to the DepthBuffer based point
-     // in space
-
-     int templength = step.length() * ( clipConst * DepthBuffer(x,y) +
-     nearTohome );
-
-     // compare the 2 lengths, pick the shorter one
-
-  if ( templength < mylength )
-    mylength = templength;
-  else
-    cerr << "T";
-    
-    */
 
   // calculate the length from the eye to the DepthBuffer based point
   // in space
@@ -1717,6 +1873,7 @@ LevoyS::Thirteen ( const Point& eye, Vector& step,
 
   if ( templength < mylength )
       mylength = templength;
+  
     
   // find step vector
   
@@ -1760,7 +1917,8 @@ LevoyS::Thirteen ( const Point& eye, Vector& step,
 	  colr = ( cmap->lookup( scalarValue ))->diffuse;
 
 	  opacity = AssociateValue( scalarValue,
-				   ScalarVals[0], AssociatedVals[0] );
+				   ScalarVals[0], AssociatedVals[0],
+				   Slopes[0] );
 
 	  accumulatedColor += colr * ( contribution * opacity );
 	  contribution = contribution * ( 1.0 - opacity );
@@ -1772,16 +1930,9 @@ LevoyS::Thirteen ( const Point& eye, Vector& step,
   // if contribution is minute, the background is not visible
   // therefore don't add the background color to the accumulated one.
   
-// DAVES    
-//    accumulatedColor = BackgroundBuffer(px,py) * contribution + accumulatedColor;
-
-  /* DAVES */
-
   if ( contribution > EpsilonContribution )
     accumulatedColor = geom->colorbuffer->get_pixel(px,py) * contribution +
       accumulatedColor;
-
-  /* END DAVES */
 
   return accumulatedColor;
 }
@@ -1873,8 +2024,6 @@ LevoyS::PerspectiveTrace( int from, int till )
   Color pixelColor;
   Point beg, end;
 
-  cerr <<"CALLED a fnc in levoyS\n";
-  
   for ( pool = from; pool < till; pool++ )
     {
       for ( loop = 0; loop < y; loop++ )
@@ -1940,5 +2089,26 @@ Levoy::TraceRays ( int projectionType )
       ParallelTrace( 0, x );
     }
 
+  return Image;
+}
+
+
+
+Array2<CharColor> *
+Levoy::BatchTrace ( int projectionType, int repeat )
+{
+  int loop;
+  WallClockTimer watch;
+
+  watch.start();
+
+  for( loop = 0; loop < repeat; loop++ )
+    TraceRays( projectionType );
+
+  watch.stop();
+
+  cerr << "The watch reports: " << watch.time() << " for " << repeat <<
+    " repetitions\n";
+  
   return Image;
 }

@@ -36,6 +36,9 @@
 #include <iostream.h>
 #include <stdlib.h>
 
+
+#define VIEW_PORT_SIZE 600
+
 #define CANVAS_WIDTH 200
 
 class Levoy;
@@ -68,6 +71,9 @@ protected:
   Array1<double> * AssociatedVals;
   Array1<double> * ScalarVals;
 
+
+  Array1<double> * Slopes;
+
   double rayStep;
   double dmax, dmin;
 
@@ -82,6 +88,14 @@ protected:
   // to the original home ray or the original eye point.
   
   Vector rayIncrementU, rayIncrementV;
+
+  // L vector is the vector pointing toward the sun
+
+  Vector Lvector;
+
+  // lighting coefficients
+
+  double ambient_coeff, diffuse_coeff, specular_coeff, specular_iter;
 
   // original eye position
 
@@ -122,6 +136,11 @@ protected:
   double AssociateValue( double scalarValue,
 			const Array1<double>& SVA, const Array1<double>& OA );
   
+  double AssociateValue( double scalarValue,
+			const Array1<double>& SVA, const Array1<double>& OA,
+			const Array1<double>& Sl );
+  
+  double LightingComponent( const Vector& normal );
 public:
 
   Array2<CharColor> * Image;
@@ -138,15 +157,7 @@ public:
   // no depth buffer or color buffer info; therefore, Salmon view
   // is not applicable
 
-  void SetUp ( const View& myview, const int& x, const int& y );
-
-  // virtual SetUp routine
-
-  virtual
-    void SetUp ( const View& myview, const int& x, const int& y,
-	      Array2<double>* db, Array2<Color>* cb, double Cnear,
-	      double Cfar );
-
+  void SetUp ( const View& myview, int x, int y );
 
   virtual void SetUp ( GeometryData * g );
   
@@ -174,9 +185,21 @@ public:
 	      const Point& beg , const Point& end );
 
 
+  // uses the Bresenham algorithm and no interpolation
+  
+  Color Bresenham1 ( const Point& eye, Vector& step,
+	      const Point& beg , const Point& end );
+
+  Color Bresenham2 ( const Point& eye, Vector& step,
+	      const Point& beg , const Point& end );
+
   // traces all the rays
   
   Array2<CharColor>* TraceRays ( int projectionType );
+
+  // traces rays repeat number of times, and takes the time it took
+  
+  Array2<CharColor>* BatchTrace ( int projectionType, int repeat );
   
 
   // Traces rays starting at x=from until x=till
@@ -184,9 +207,37 @@ public:
   virtual void PerspectiveTrace( int from, int till );
   
   void ParallelTrace( int from, int till );
-  
-
 };
+
+/**************************************************************************
+ *
+ * Associates a value for the particular scalar value
+ * given an array of scalar values and corresponding opacity/color values.
+ *
+ **************************************************************************/
+
+inline
+double
+Levoy::AssociateValue ( double scalarValue,
+		       const Array1<double>& SVA, const Array1<double>& OA,
+		       const Array1<double>& Sl )
+{
+  double opacity = -1;
+  int i;
+  
+  for ( i = 1; i < SVA.size(); i++ )
+    if ( scalarValue <= SVA[i] )
+      {
+	opacity = Sl[i] * ( scalarValue - SVA[i-1] ) + OA[i-1];
+	break;
+      }
+
+  ASSERT ( opacity != -1 );
+
+  return opacity;
+
+}
+
 
 class LevoyS : public Levoy
 {
@@ -222,11 +273,13 @@ public:
 
   // allows the Salmon image and my volvis stuff to be superimposed
 
+#if 0  
   virtual
-    void SetUp ( const View& myview, const int& x, const int& y,
+    void SetUp ( const View& myview, int x, int y,
 	      Array2<double>* db, Array2<Color>* cb, double Cnear,
 	      double Cfar );
-
+#endif
+  
   virtual
     void SetUp ( GeometryData * );
 

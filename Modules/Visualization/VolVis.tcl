@@ -393,6 +393,8 @@ itcl_class VolVis {
     ################################################################
 
     method adjustRasterSize {} {
+
+#	global $this-intervalCount
 	
 	set w .adjustRS$this
 
@@ -423,7 +425,7 @@ itcl_class VolVis {
 
 	    scale $w.f.slice -orient horizontal -variable $this-intervalCount \
 		    -from 1 -to 40 -label "Slices per processor: " \
-		    -showvalue true -tickinterval 5 \
+		    -showvalue true -tickinterval 10 \
 		    -digits 3 -length 5c
 
 	    # place the scales in a window
@@ -872,7 +874,7 @@ itcl_class VolVis {
 	
 	set ypos [expr 1 - [expr [expr $y * 1.0] / [expr $CanvasHeight - 1] ] ]
 
-	puts "X = $xpos, Y = $ypos"
+#	puts "X = $xpos, Y = $ypos"
     }
 
     #
