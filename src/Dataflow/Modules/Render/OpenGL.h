@@ -78,10 +78,6 @@
 
 #ifdef __sgi
 #include <X11/extensions/SGIStereo.h>
-#if (_MIPS_SZPTR == 64)
-//#else
-//#include <dmedia/cl.h>
-#endif
 #endif
 
 namespace SCIRun {
@@ -92,16 +88,18 @@ using std::vector;
 
 
 
+
 class OpenGLHelper;
 int query_OpenGL();
 
-#define DO_REDRAW 0
-#define DO_PICK 1
-#define DO_GETDATA 2
-#define REDRAW_DONE 4
-#define PICK_DONE 5
-#define DO_IMAGE 6
-#define IMAGE_DONE 7
+/* #define DO_REDRAW 0 */
+/* #define DO_PICK 1 */
+/* #define DO_GETDATA 2 */
+/* #define REDRAW_DONE 4 */
+/* #define PICK_DONE 5 */
+/* #define DO_IMAGE 6 */
+/* #define DO_HIRES_IMAGE 7 */
+/* #define IMAGE_DONE 8 */
 
 struct GetReq {
     int datamask;
@@ -115,6 +113,18 @@ struct ImgReq {
   string type;
   ImgReq( const string& n, const string& t);
   ImgReq();
+};
+
+struct Frustum {
+  double n;
+  double f;
+  double l;
+  double r;
+  double b;
+  double t;
+  double tb[4][6];
+  double clr;
+  double cbt;
 };
 
 class OpenGL : public Renderer {
@@ -152,7 +162,7 @@ protected:
   //ofstream os;
 #endif
 #endif
-
+  bool do_hi_res;
   bool encoding_mpeg;
 #ifdef MPEG
   FILE *output;
@@ -175,9 +185,13 @@ public:
     virtual void put_scanline(int y, int width, Color* scanline, int repeat=1);
 
   virtual void saveImage(const string& fname,
-		   const string& type = "raw");
+		   const string& type = "ppm");
   void real_saveImage(const string& fname,
-		      const string& type = "raw");
+		      const string& type = "ppm");
+  virtual void saveHiResImage(const string& fname,
+		      const string& type = "ppm");
+  void cycleFrustum();
+  void deriveFrustum();
 
 // HACK -- support data for get_pixel_depth
 float  pixel_depth_data[1310720];  // assume no screen is > 1280x1024
@@ -197,6 +211,8 @@ GLint    get_depth_view[4];
     Mailbox<int> recv_mb;
     Mailbox<GetReq> get_mb;
     Mailbox<ImgReq> img_mb;
+    
+    Frustum frustum;
 
     Viewer* viewer;
     ViewWindow* viewwindow;

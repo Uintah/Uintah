@@ -1662,8 +1662,18 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
     // instead of a pointer in case this
     // viewwindow gets killed by the time the
     // redraw message gets dispatched.
-    manager->mailbox.send(scinew
-			  ViewerMessage(MessageTypes::ViewWindowDumpImage, id, args[2], args[3]));
+    manager->
+      mailbox.send(scinew  ViewerMessage(MessageTypes::ViewWindowDumpImage,
+					 id, args[2], args[3]));
+  }else if (args[1] == "dump_hires_viewwindow"){
+    if (args.count() != 3){
+     args.error("ViewWindow::dump_hires)viewwindow needs an output file name");
+      return;
+    }
+    manager->
+      mailbox.send(scinew ViewerMessage(MessageTypes::ViewWindowDumpHiResImage,
+					id, args[2]));
+ 
   }else if (args[1] == "startup") {
     // Fill in the visibility database...
     GeomIndexedGroup::IterIntGeomObj iter = manager->ports.getIter();
