@@ -3,6 +3,7 @@
 TEST=$1
 TEST_ROOT=$2
 COMPARE_ROOT=$3
+ERRORS_TO=$4
 
 cd $TEST_ROOT/$TEST
 UDADIR=`ls -d *.uda.000`
@@ -74,7 +75,7 @@ EOF
        fi
        cat $TMPDIR/error_info.msg
 
-       if [ "$errormail" = "yes" -a $retval -gt "0" ]; then
+       if [ "$ERRORS_TO" != "" -a $retval -gt "0" ]; then
          cat > $TMPDIR/error.msg <<EOF
 Correctness test failed for $TEST.
 
