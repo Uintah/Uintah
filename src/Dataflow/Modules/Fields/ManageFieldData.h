@@ -177,11 +177,12 @@ ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(MeshHandle mesh,
 {
   MSRC *imesh = dynamic_cast<MSRC *>(mesh.get_rep());
   const unsigned int rows = matrix->nrows();
+  const unsigned int columns = matrix->ncols();
   FOUT *ofield;
   typename MSRC::Node::size_type nsize;
-  typename MSRC::Node::size_type esize;
-  typename MSRC::Node::size_type fsize;
-  typename MSRC::Node::size_type csize;
+  typename MSRC::Edge::size_type esize;
+  typename MSRC::Face::size_type fsize;
+  typename MSRC::Cell::size_type csize;
   imesh->size(nsize);
   imesh->size(esize);
   imesh->size(fsize);
@@ -234,9 +235,60 @@ ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(MeshHandle mesh,
       ++iter;
     }
   }
+  else if (columns && columns == (unsigned int)nsize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(imesh, Field::NODE);
+    typename MSRC::Node::iterator iter; imesh->begin(iter);
+    typename MSRC::Node::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      ofield->set_value(matrix->get(0, index++), *iter);
+      ++iter;
+    }
+  }
+  else if (columns && columns == (unsigned int)esize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(imesh, Field::EDGE);
+    typename MSRC::Edge::iterator iter; imesh->begin(iter);
+    typename MSRC::Edge::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      ofield->set_value(matrix->get(0, index++), *iter);
+      ++iter;
+    }
+  }
+  else if (columns && columns == (unsigned int)fsize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(imesh, Field::FACE);
+    typename MSRC::Face::iterator iter; imesh->begin(iter);
+    typename MSRC::Face::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      ofield->set_value(matrix->get(0, index++), *iter);
+      ++iter;
+    }
+  }
+  else if (columns && columns == (unsigned int)csize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(imesh, Field::CELL);
+    typename MSRC::Cell::iterator iter; imesh->begin(iter);
+    typename MSRC::Cell::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      ofield->set_value(matrix->get(0, index++), *iter);
+      ++iter;
+    }
+  }
   else
   {
-    cout << "Matrix datasize does not match field geometry.";
+    cout << "Matrix datasize does not match field geometry.\n";
+    cout << "Matrix size : " << rows << " " << columns << '\n';
+    cout << "Field size : " << nsize << " " <<  esize <<
+      " " << fsize << " " << csize << '\n';
     return 0;
   }
 
@@ -260,11 +312,12 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(MeshHandle mesh,
 {
   MSRC *imesh = dynamic_cast<MSRC *>(mesh.get_rep());
   const unsigned int rows = matrix->nrows();
+  const unsigned int columns = matrix->ncols();
   FOUT *ofield;
   typename MSRC::Node::size_type nsize;
-  typename MSRC::Node::size_type esize;
-  typename MSRC::Node::size_type fsize;
-  typename MSRC::Node::size_type csize;
+  typename MSRC::Edge::size_type esize;
+  typename MSRC::Face::size_type fsize;
+  typename MSRC::Cell::size_type csize;
   imesh->size(nsize);
   imesh->size(esize);
   imesh->size(fsize);
@@ -333,9 +386,76 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(MeshHandle mesh,
       ++iter;
     }
   }
+  else if (columns && columns == (unsigned int)nsize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(imesh, Field::NODE);
+    typename MSRC::Node::iterator iter; imesh->begin(iter);
+    typename MSRC::Node::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      Vector v(matrix->get(0, index),
+	       matrix->get(1, index),
+	       matrix->get(2, index));
+      ofield->set_value(v, *iter);
+      index++;
+      ++iter;
+    }
+  }
+  else if (columns && columns == (unsigned int)esize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(imesh, Field::EDGE);
+    typename MSRC::Edge::iterator iter; imesh->begin(iter);
+    typename MSRC::Edge::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      Vector v(matrix->get(0, index),
+	       matrix->get(1, index),
+	       matrix->get(2, index));
+      ofield->set_value(v, *iter);
+      index++;
+      ++iter;
+    }
+  }
+  else if (columns && columns == (unsigned int)fsize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(imesh, Field::FACE);
+    typename MSRC::Face::iterator iter; imesh->begin(iter);
+    typename MSRC::Face::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      Vector v(matrix->get(0, index),
+	       matrix->get(1, index),
+	       matrix->get(2, index));
+      ofield->set_value(v, *iter);
+      index++;
+      ++iter;
+    }
+  }
+  else if (columns && columns == (unsigned int)csize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(imesh, Field::CELL);
+    typename MSRC::Cell::iterator iter; imesh->begin(iter);
+    typename MSRC::Cell::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      Vector v(matrix->get(0, index),
+	       matrix->get(1, index),
+	       matrix->get(2, index));
+      ofield->set_value(v, *iter);
+      index++;
+      ++iter;
+    }
+  }
   else
   {
-    cout << "Matrix datasize does not match field geometry.";
+    cout << "Matrix datasize does not match field geometry.\n";
+    cout << "Matrix size : " << rows << " " << columns << '\n';
+    cout << "Field size : " << nsize << " " <<  esize <<
+      " " << fsize << " " << csize << '\n';
     return 0;
   }
 
@@ -360,11 +480,12 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(MeshHandle mesh,
 {
   MSRC *imesh = dynamic_cast<MSRC *>(mesh.get_rep());
   const unsigned int rows = matrix->nrows();
+  const unsigned int columns = matrix->ncols();
   FOUT *ofield;
   typename MSRC::Node::size_type nsize;
-  typename MSRC::Node::size_type esize;
-  typename MSRC::Node::size_type fsize;
-  typename MSRC::Node::size_type csize;
+  typename MSRC::Edge::size_type esize;
+  typename MSRC::Face::size_type fsize;
+  typename MSRC::Cell::size_type csize;
   imesh->size(nsize);
   imesh->size(esize);
   imesh->size(fsize);
@@ -469,9 +590,112 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(MeshHandle mesh,
       ++iter;
     }
   }
+  else if (columns && columns == (unsigned int)nsize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(imesh, Field::NODE);
+    typename MSRC::Node::iterator iter; imesh->begin(iter);
+    typename MSRC::Node::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      Tensor v;
+      v.mat_[0][0] = matrix->get(0, index);
+      v.mat_[0][1] = matrix->get(1, index);
+      v.mat_[0][2] = matrix->get(2, index);
+
+      v.mat_[1][0] = matrix->get(3, index);
+      v.mat_[1][1] = matrix->get(4, index);
+      v.mat_[1][2] = matrix->get(5, index);
+
+      v.mat_[2][0] = matrix->get(6, index);
+      v.mat_[2][1] = matrix->get(7, index);
+      v.mat_[2][2] = matrix->get(8, index);
+      ofield->set_value(v, *iter);
+      index++;
+      ++iter;
+    }
+  }
+  else if (columns && columns == (unsigned int)esize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(imesh, Field::EDGE);
+    typename MSRC::Edge::iterator iter; imesh->begin(iter);
+    typename MSRC::Edge::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      Tensor v;
+      v.mat_[0][0] = matrix->get(0, index);
+      v.mat_[0][1] = matrix->get(1, index);
+      v.mat_[0][2] = matrix->get(2, index);
+
+      v.mat_[1][0] = matrix->get(3, index);
+      v.mat_[1][1] = matrix->get(4, index);
+      v.mat_[1][2] = matrix->get(5, index);
+
+      v.mat_[2][0] = matrix->get(6, index);
+      v.mat_[2][1] = matrix->get(7, index);
+      v.mat_[2][2] = matrix->get(8, index);
+      ofield->set_value(v, *iter);
+      index++;
+      ++iter;
+    }
+  }
+  else if (columns && columns == (unsigned int)fsize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(imesh, Field::FACE);
+    typename MSRC::Face::iterator iter; imesh->begin(iter);
+    typename MSRC::Face::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      Tensor v;
+      v.mat_[0][0] = matrix->get(0, index);
+      v.mat_[0][1] = matrix->get(1, index);
+      v.mat_[0][2] = matrix->get(2, index);
+
+      v.mat_[1][0] = matrix->get(3, index);
+      v.mat_[1][1] = matrix->get(4, index);
+      v.mat_[1][2] = matrix->get(5, index);
+
+      v.mat_[2][0] = matrix->get(6, index);
+      v.mat_[2][1] = matrix->get(7, index);
+      v.mat_[2][2] = matrix->get(8, index);
+      ofield->set_value(v, *iter);
+      index++;
+      ++iter;
+    }
+  }
+  else if (columns && columns == (unsigned int)csize)
+  {
+    int index = 0;
+    ofield = scinew FOUT(imesh, Field::CELL);
+    typename MSRC::Cell::iterator iter; imesh->begin(iter);
+    typename MSRC::Cell::iterator eiter; imesh->end(eiter);
+    while (iter != eiter)
+    {
+      Tensor v;
+      v.mat_[0][0] = matrix->get(0, index);
+      v.mat_[0][1] = matrix->get(1, index);
+      v.mat_[0][2] = matrix->get(2, index);
+
+      v.mat_[1][0] = matrix->get(3, index);
+      v.mat_[1][1] = matrix->get(4, index);
+      v.mat_[1][2] = matrix->get(5, index);
+
+      v.mat_[2][0] = matrix->get(6, index);
+      v.mat_[2][1] = matrix->get(7, index);
+      v.mat_[2][2] = matrix->get(8, index);
+      ofield->set_value(v, *iter);
+      index++;
+      ++iter;
+    }
+  }
   else
   {
-    cout << "Matrix datasize does not match field geometry.";
+    cout << "Matrix datasize does not match field geometry.\n";
+    cout << "Matrix size : " << rows << " " << columns << '\n';
+    cout << "Field size : " << nsize << " " <<  esize <<
+      " " << fsize << " " << csize << '\n';
     return 0;
   }
 
