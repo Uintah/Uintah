@@ -122,6 +122,12 @@ itcl_class Module {
 	if {[winfo exists .ui[modname]]!= 0} {
 	    set w .ui[modname]
 
+	    if { [winfo ismapped $w] == 1} {
+		raise $w
+	    } else {
+		wm deiconify $w
+	    }
+
 	    # Mac Hac to keep GUI windows from "growing..."  Hopefully
 	    # a TCL fix will come out for this soon and we can remove
 	    # the following line: (after 1 "wm geometry $w {}") Note:
