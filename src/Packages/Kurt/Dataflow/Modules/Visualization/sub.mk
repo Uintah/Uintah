@@ -32,4 +32,8 @@ LIBS := $(XML_LIBRARY)  $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
+ifeq ($(LARGESOS),no)
+KURT_MODULES := $(KURT_MODULES) $(LIBNAME)
+endif
+
 
