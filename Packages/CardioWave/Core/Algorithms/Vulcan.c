@@ -127,7 +127,7 @@ void read_mesh(MESH** mesh){
       } 
       nodenumber++;
     } while (c!=NULL);
-    close(fp);
+    fclose(fp);
 
     if((nodenumber-1)!=(*mesh)->numvtx){
       printf("\n\nLength of coordinate file not equal to Number of Nodes.\n");
@@ -165,7 +165,7 @@ void read_mesh(MESH** mesh){
       } 
       numelem++;
     } while (c!=NULL);
-    close(fp);
+    fclose(fp);
 
     if((numelem-1)!=(*mesh)->numelement){
       printf("\n\nLength of connectivity file not equal to number of elements.\n");
@@ -234,7 +234,7 @@ void read_mesh(MESH** mesh){
       (*mesh)->elements[i].vtx[6]=p[6]-1;
       (*mesh)->elements[i].vtx[7]=p[7]-1;
     }
-    close(fp);
+    fclose(fp);
     break;
   default:
     printf("\n\nError in Entry of Grid Type\n");
@@ -341,7 +341,7 @@ void read_conductivity(MESH* mesh){
 			
       counter++;
     } while (c!=NULL);
-    close(fp);
+    fclose(fp);
 			
     if((counter-1)!=mesh->numvtx){
       printf("\n\nError in number of Conductivity Values\n");			
