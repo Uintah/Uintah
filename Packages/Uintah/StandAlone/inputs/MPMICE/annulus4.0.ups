@@ -175,7 +175,7 @@
      <!--
      <debug label = "switchDebugInitialize"/>
      <debug label = "switchDebugInitialize"/>
-     <debug label = "switchDebug_equilibration_press"/>
+     <debug label = "switchDebug_EQ_RF_press"/>
      <debug label = "switchDebug_vel_FC"/>           
      <debug label = "switchDebug_Exchange_FC"/>           
      <debug label = "switchDebug_explicit_press"/>   
