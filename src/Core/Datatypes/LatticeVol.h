@@ -23,18 +23,18 @@ public:
 
   const value_type &operator[](typename LatVolMesh::cell_index idx) const 
     { return operator()(idx.i_,idx.j_,idx.k_); } 
-  const value_type operator[](typename LatVolMesh::face_index idx) const
+  value_type operator[](typename LatVolMesh::face_index) const
     { return (Data)0; }
-  const value_type operator[](typename LatVolMesh::edge_index idx) const 
+  value_type operator[](typename LatVolMesh::edge_index) const 
     { return (Data)0; }
   const value_type &operator[](typename LatVolMesh::node_index idx) const
     { return operator()(idx.i_,idx.j_,idx.k_); }
 
   value_type &operator[](typename LatVolMesh::cell_index idx)
     { return operator()(idx.i_,idx.j_,idx.k_); } 
-  value_type operator[](typename LatVolMesh::face_index idx)
+  value_type operator[](typename LatVolMesh::face_index)
     { return (Data)0; }
-  value_type operator[](typename LatVolMesh::edge_index idx)
+  value_type operator[](typename LatVolMesh::edge_index)
     { return (Data)0; }
   value_type &operator[](typename LatVolMesh::node_index idx)
     { return operator()(idx.i_,idx.j_,idx.k_); }
@@ -69,10 +69,10 @@ class LatticeVol: public GenericField< LatVolMesh, FData3d<Data> > {
 public:
 
   LatticeVol() :
-    GenericField<LatVolMesh, FData3d<Data> >() {};
+    GenericField<LatVolMesh, FData3d<Data> >() {}
   LatticeVol(Field::data_location data_at) :
-    GenericField<LatVolMesh, FData3d<Data> >(data_at) {};
-  virtual ~LatticeVol(){};
+    GenericField<LatVolMesh, FData3d<Data> >(data_at) {}
+  virtual ~LatticeVol(){}
 
   virtual LatticeVol<Data> *clone() const 
     { return new LatticeVol<Data>(*this); }

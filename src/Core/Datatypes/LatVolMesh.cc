@@ -25,11 +25,6 @@ using namespace std;
 PersistentTypeID LatVolMesh::type_id("LatVolMesh", "MeshBase", maker);
 
 
-LatVolMesh::~LatVolMesh()
-{
-}
-
-
 BBox 
 LatVolMesh::get_bounding_box() const
 {
@@ -37,24 +32,6 @@ LatVolMesh::get_bounding_box() const
   result.extend(min_);
   result.extend(max_);
   return result;
-}
-
-
-inline void
-LatVolMesh::unlocate(Point &result, const Point &p) const
-{
-  result = p;
-}
-
-
-inline void
-LatVolMesh::get_nodes(node_array &, edge_index) const
-{
-}
-
-inline void 
-LatVolMesh::get_nodes(node_array &, face_index) const
-{
 }
 
 inline void 
@@ -68,62 +45,6 @@ LatVolMesh::get_nodes(node_array &array, cell_index idx) const
   array[5].i_ = idx.i_+1; array[5].j_ = idx.j_;   array[5].k_ = idx.k_+1;
   array[6].i_ = idx.i_+1; array[6].j_ = idx.j_+1; array[6].k_ = idx.k_+1;
   array[7].i_ = idx.i_;   array[7].j_ = idx.j_+1; array[7].k_ = idx.k_+1;
-}
-
-inline void 
-LatVolMesh::get_edges(edge_array &, face_index) const
-{
-}
-
-inline void 
-LatVolMesh::get_edges(edge_array &, cell_index) const
-{
-}
-
-inline void 
-LatVolMesh::get_faces(face_array &, cell_index) const
-{
-}
-
-inline unsigned
-LatVolMesh::get_edges(edge_array &, node_index) const
-{
-  return 0;
-}
-
-inline unsigned
-LatVolMesh::get_faces(face_array &, node_index) const
-{
-  return 0;
-}
-
-inline unsigned
-LatVolMesh::get_faces(face_array &, edge_index) const
-{
-  return 0;
-}
-
-inline unsigned
-LatVolMesh::get_cells(cell_array &, node_index) const
-{
-  return 0;
-}
-
-inline unsigned
-LatVolMesh::get_cells(cell_array &, edge_index) const
-{
-  return 0;
-}
-
-inline unsigned
-LatVolMesh::get_cells(cell_array &, face_index) const
-{
-  return 0;
-}
-
-inline void 
-LatVolMesh::get_neighbor(cell_index &, face_index) const
-{
 }
 
 inline void 
@@ -142,14 +63,10 @@ LatVolMesh::get_center(Point &result, node_index idx) const
   result.z(min_.z()+idx.k_*zgap);
 }
 
-inline void 
-LatVolMesh::get_center(Point &, edge_index) const
-{
-}
-
-inline void 
-LatVolMesh::get_center(Point &, face_index) const
-{
+inline void
+LatVolMesh::get_point(Point &result, node_index index) const
+{ 
+  get_center(result,index);
 }
 
 inline void 
@@ -169,6 +86,33 @@ LatVolMesh::get_center(Point &result, cell_index idx) const
   result.x(min.x()+(max.x()-min.x())*.5);
   result.y(min.y()+(max.y()-min.y())*.5);
   result.z(min.z()+(max.z()-min.z())*.5);
+}
+
+inline bool
+LatVolMesh::locate(cell_index &cell, const Point &p) const
+{
+  double xgap,ygap,zgap;
+  Point min,max;
+
+  // compute the distance between slices
+  xgap = (max_.x()-min_.x())/(nx_-1);
+  ygap = (max_.y()-min_.y())/(ny_-1);
+  zgap = (max_.z()-min_.z())/(nz_-1);
+
+  // compute the cell_index (divide and truncate)
+  cell.i_ = (unsigned)(p.x()/xgap);
+  cell.j_ = (unsigned)(p.y()/ygap);
+  cell.k_ = (unsigned)(p.z()/zgap);
+
+  // compute the min and max Points of the cell
+  min.x(cell.i_*xgap);
+  min.y(cell.j_*ygap);
+  min.z(cell.k_*zgap);
+  max.x(min.x()+xgap);
+  max.y(min.y()+ygap);
+  max.z(min.z()+zgap);
+
+  return true;
 }
 
 inline bool
@@ -196,61 +140,6 @@ LatVolMesh::locate(node_index &node, const Point &p) const
       node=nodes[loop];
     }
   }
-  return true;
-}
-
-inline bool 
-LatVolMesh::locate(edge_index &, const Point &) const
-{
-  return false;
-}
-
-inline bool
-LatVolMesh::locate(face_index &, const Point &) const 
-{
-  return false;
-}
-
-inline bool
-LatVolMesh::locate(cell_index &cell, const Point &p) const
-{
-  double xgap,ygap,zgap;
-  Point min,max;
-  double fx,fy,fz;
-
-  // compute the distance between slices
-  xgap = (max_.x()-min_.x())/(nx_-1);
-  ygap = (max_.y()-min_.y())/(ny_-1);
-  zgap = (max_.z()-min_.z())/(nz_-1);
-
-  // compute normalization factors for a milliunit cube 
-  fx = 1000./xgap;
-  fy = 1000./ygap;
-  fz = 1000./zgap;
-
-  // compute the cell_index (divide and truncate)
-  cell.i_ = (unsigned)(p.x()/xgap);
-  cell.j_ = (unsigned)(p.y()/ygap);
-  cell.k_ = (unsigned)(p.z()/zgap);
-
-  // compute the min and max Points of the cell
-  min.x(cell.i_*xgap);
-  min.y(cell.j_*ygap);
-  min.z(cell.k_*zgap);
-  max.x(min.x()+xgap);
-  max.y(min.y()+ygap);
-  max.z(min.z()+zgap);
-#if 0
-  // use opposite corner volumes as weights, renormalized to unit
-  w[0] = (max.x()-p.x())*fx*(max.y()-p.y())*fy*(max.z()-p.z())*fz*.001;
-  w[1] = (p.x()-min.x())*fx*(max.y()-p.y())*fy*(max.z()-p.z())*fz*.001;
-  w[2] = (max.x()-p.x())*fx*(p.y()-min.y())*fy*(max.z()-p.z())*fz*.001; 
-  w[3] = (p.x()-min.x())*fx*(p.y()-min.y())*fy*(max.z()-p.z())*fz*.001;
-  w[4] = (max.x()-p.x())*fx*(max.y()-p.y())*fy*(p.z()-min.z())*fz*.001;
-  w[5] = (p.x()-min.x())*fx*(max.y()-p.y())*fy*(p.z()-min.z())*fz*.001;
-  w[6] = (max.x()-p.x())*fx*(p.y()-min.y())*fy*(p.z()-min.z())*fz*.001;
-  w[7] = (p.x()-min.x())*fx*(p.y()-min.y())*fy*(p.z()-min.z())*fz*.001;
-#endif
   return true;
 }
 
