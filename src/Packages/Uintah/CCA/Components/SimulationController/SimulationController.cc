@@ -138,8 +138,10 @@ void SimulationController::run()
    if(mpm && !mpmcfd)
       mpm->problemSetup(ups, grid, sharedState);
 
-   if(mpmcfd)
+   if(mpmcfd) {
+      sharedState->d_mpm_cfd=true;
       mpmcfd->problemSetup(ups, grid, sharedState);
+  }
 
    // Initialize the MD components --tan
    MDInterface* md = dynamic_cast<MDInterface*>(getPort("md"));
