@@ -174,7 +174,7 @@ public:
   static  const string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
 
-private:
+protected:
 
   //! the min Node::index_type ( incase this is a subLattice )
   unsigned int offset_;

@@ -302,7 +302,7 @@ public:
   static  const string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
 
-private:
+protected:
 
   //! the min_Node::index_type ( incase this is a subLattice )
   unsigned min_x_, min_y_;

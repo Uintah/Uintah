@@ -525,7 +525,7 @@ public:
   Transform &set_transform(const Transform &trans) 
   { transform_ = trans; return transform_; }
 
-private:
+protected:
 
   //! the min_Node::index_type ( incase this is a subLattice )
   unsigned min_x_, min_y_, min_z_;
