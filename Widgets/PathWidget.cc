@@ -349,6 +349,14 @@ PathWidget::MoveDelta( const Vector& delta )
 }
 
 
+Point
+PathWidget::ReferencePoint() const
+{
+    ASSERT(npoints>0);
+    return points[0]->ReferencePoint();
+}
+
+
 Index
 PathWidget::GetNumPoints() const
 {

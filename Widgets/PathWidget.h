@@ -32,6 +32,7 @@ public:
    virtual void geom_moved(int, double, const Vector&, int);
 
    virtual void MoveDelta( const Vector& delta );
+   virtual Point ReferencePoint() const;
 
    Index GetNumPoints() const;
    

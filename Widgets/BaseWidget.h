@@ -46,8 +46,8 @@ public:
 
    GeomSwitch* GetWidget();
 
-   virtual void MoveDelta( const Vector& delta );
-   virtual Point ReferencePoint() const;
+   virtual void MoveDelta( const Vector& delta )=0;
+   virtual Point ReferencePoint() const = 0;
    
    int GetState();
    void SetState( const int state );

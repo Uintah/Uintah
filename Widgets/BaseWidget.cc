@@ -84,20 +84,6 @@ BaseWidget::~BaseWidget()
    }
 }
 
-void
-BaseWidget::MoveDelta( const Vector& )
-{
-    ASSERT(!"BaseWidget can't MoveDelta!");
-}
-
-
-Point
-BaseWidget::ReferencePoint() const
-{
-   ASSERT(!"BaseWidget can't find ReferencPoint!");
-   return Point(0,0,0);
-}
-
 
 void
 BaseWidget::SetScale( const double scale )
