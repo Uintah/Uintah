@@ -40,8 +40,9 @@ PSINSTDIR =
 MAINFILE = ${BN}.tex
 DVIFILE = ${BN}.dvi
 PSFILE = ${BN}.ps
+# ${PSFILE2} is a ps file optimized for use with distiller.
+PSFILE2 = ${BN}2.ps
 GZPSFILE = ${PSFILE}.gz
-PDFFILE = ${BN}.pdf
 GZPDFFILE = ${PDFFILE}.gz
 HTMLDIR = ${BN}
 HTMLFILE = ${HTMLDIR}/${BN}.html
@@ -77,7 +78,7 @@ ${HTMLFILE}: ${DVIFILE}
 ${PSFILE}: ${DVIFILE}
 	dvips -o ${PSFILE} -Pps ${DVIFILE}
 	cat ${PSFILE} | gzip -c > ${GZPSFILE}
-	dvips -o ${PDFFILE} -Ppdf ${DVIFILE}
+	dvips -o ${PSFILE2} -Ppdf ${DVIFILE}
 
 clean:
 	-rm -f ${BN}.aux ${BN}.log ${BN}.toc ${BN}.lot ${BN}.lof
