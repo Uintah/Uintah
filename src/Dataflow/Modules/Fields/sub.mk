@@ -66,6 +66,7 @@ SRCS     += \
 	$(SRCDIR)/FieldMeasures.cc\
 	$(SRCDIR)/FieldSlicer.cc\
 	$(SRCDIR)/FieldSubSample.cc\
+	$(SRCDIR)/GatherFields.cc\
 	$(SRCDIR)/GatherPoints.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/HexToTet.cc\
