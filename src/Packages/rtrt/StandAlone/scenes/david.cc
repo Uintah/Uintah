@@ -27,7 +27,7 @@ Scene* make_scene(int argc, char* argv[])
 //      return 0;
 //    }
 // -eye -1329.7 333.468 -8572.81 -lookat 79.9753 34.1933 -13346.8 -up -0.168284 0.979459 -0.111091 -fov 60
-  char* file = "/usr/sci/data/Geometry/Stanford_Sculptures/david_2mm.ply";
+  char* file = "/usr/sci/data/Geometry/Stanford_Sculptures/david_1mm.ply";
   //char* file = "/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip_res2.ply";
   int cells=5;
   int depth=3;
@@ -81,12 +81,13 @@ Scene* make_scene(int argc, char* argv[])
   Transform davidT;
 
   davidT.pre_translate(-Vector((max.x()+min.x())/2.,min.y(),(max.z()+min.z())/2.)); // center david over 0
-  davidT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
+  davidT.pre_rotate(M_PI,Vector(1,0,0));  // make z up
   davidT.pre_scale(Vector(scale,scale,scale)); // make units meters
   davidT.pre_translate(dav_ped_top.asVector());
 
-  david->transform(davidT);
+  davidT.print();
 
+  david->transform(davidT);
   david_bbox.reset();
   david->compute_bounds(david_bbox,0);
 

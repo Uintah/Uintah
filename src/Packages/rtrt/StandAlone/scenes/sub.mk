@@ -59,11 +59,11 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/spinning_instance_demo.mo \
 	$(SRCDIR)/david.mo \
 	$(SRCDIR)/david_old.mo \
- 	$(SRCDIR)/science-room.mo \
+ 	$(SRCDIR)/davidhead.mo  \
+	$(SRCDIR)/science-room.mo \
 	$(SRCDIR)/dtiglyph.mo 
 # 	$(SRCDIR)/cbox.mo \
 # 	$(SRCDIR)/david.mo \
-# 	$(SRCDIR)/davidhead.mo \
 # 	$(SRCDIR)/buddha.mo \
 # 	$(SRCDIR)/venus.mo \
 # 	$(SRCDIR)/crank.mo 

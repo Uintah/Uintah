@@ -61,14 +61,14 @@ using namespace std;
 using SCIRun::Thread;
 
 #define ADD_BRICKBRACK
-//#define ADD_VIS_FEM
-//#define ADD_HEAD
-//#define ADD_CSAFE_FIRE
-//#define ADD_GEO_DATA
-//#define ADD_SHEEP
-//#define ADD_DTIGLYPH
+#define ADD_VIS_FEM
+#define ADD_HEAD
+#define ADD_CSAFE_FIRE
+#define ADD_GEO_DATA
+#define ADD_SHEEP
+#define ADD_DTIGLYPH
 //#define ADD_BOX
-#define ADD_SPHERE
+//#define ADD_SPHERE
 
 #ifdef ADD_DTIGLYPH
 
@@ -1144,6 +1144,19 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 					  3, nworkers);
 					  
 
+  //5cm floating above pedasta;
+#define HFLT 0.05
+  //allow to scale from pedestal top to 3m up
+#define EXTZ (3-(0.5+HFLT))
+  //max x,y that will rotate within a 1.5rad circle 2*sqrt(1.5^2/2)=2.22
+#define EXTX 2.22
+#define EXTY 2.22
+
+  //now where is center of holospace?
+#define CENX -8
+#define CENY 8
+#define CENZ (EXTZ/2.0 + (0.5+HFLT))
+
   Group *vig = new Group();
   vig->add(slc0);
   vig->add(slc1);
@@ -1156,16 +1169,32 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 
   Transform *vtrans = new Transform();
   vtrans->pre_rotate(3.14/2.0, Vector(0,1,0));
-  vtrans->pre_scale(Vector(1.43,1.43,1.43)); //she's 1.73m tall, scale to fit between 0.51 and 3
-  vtrans->pre_translate(Vector(-8, 8, 1.75)); //place in center of space
-  vtrans->pre_translate(Vector(0,0,-.00305)); //place at 1cm above surface
+  //after rotation...
+#define ORIGEX .48
+#define ORIGEY .48
+#define ORIGEZ 1.7330
+  //choose maximum from model, in this case z
+#define SCALE EXTZ/ORIGEZ
+  vtrans->pre_scale(Vector(SCALE,SCALE,SCALE));
+  vtrans->pre_translate(Vector(CENX, CENY, CENZ));
+  //#define ZMIN CENZ-((ORIGEZ*SCALE)/2.0)
+  //#define LOWERZ 0.5+HFLT - ZMIN
+  //no need, we've scaled in this case to fit z
+#define LOWERZ 0
+  vtrans->pre_translate(Vector(0,0,LOWERZ)); //place at HFLT above surface
+#undef ORIGEX
+#undef ORIGEY
+#undef ORIGEZ
+#undef SCALE
+#undef ZMIN
+#undef LOWERZ
 
   SpinningInstance *vinst = new SpinningInstance(viw, vtrans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
   vinst->set_name("Spinning Visible Woman");
 
   CutGroup *vcut = new CutGroup(vcpdpy, true);
   vcut->add(vinst);
-  vcut->set_name("Visible Femarle Cut Plane");
+  vcut->set_name("Visible Female Cut Plane");
 
   vinst->addCPDpy(vcpdpy);
 #endif
@@ -1183,7 +1212,6 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   for (l=0; l<holo_lights.size(); l++)
     hcutmat->my_lights.add(holo_lights[l]);
 
-  //82.5 for dave
   CutVolumeDpy* hcvdpy = new CutVolumeDpy(11000.0, hcmap);
 
   HVolumeBrick16* head=new HVolumeBrick16(hcutmat, hcvdpy,
@@ -1194,9 +1222,24 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 
   Transform *htrans = new Transform();
   htrans->rotate(Vector(1,0,0), Vector(0,0,-1));
-  htrans->pre_scale(Vector(1.11,1.11,1.11)); //scale to fit max
-  htrans->pre_translate(Vector(-8, 8, 1.75));
-  htrans->pre_translate(Vector(0,0,-0.352)); //place 1cm above table
+  //after rotation...
+#define ORIGEX 1.48
+#define ORIGEY 1.9
+#define ORIGEZ 1.6
+  //max in this case is y
+#define SCALE EXTY/ORIGEY
+  htrans->pre_scale(Vector(SCALE,SCALE,SCALE));
+  htrans->pre_translate(Vector(CENX, CENY, CENZ));
+#define ZMIN CENZ-((ORIGEZ*SCALE)/2.0)
+#define LOWERZ 0.5+HFLT - ZMIN
+  htrans->pre_translate(Vector(0,0,LOWERZ)); //place at HFLT above surface
+#undef ORIGEX
+#undef ORIGEY
+#undef ORIGEZ
+#undef SCALE
+#undef ZMIN
+#undef LOWERZ
+
 
   SpinningInstance *hinst = new SpinningInstance(hiw, htrans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
   
@@ -1255,11 +1298,31 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   InstanceWrapperObject *temp_iw = new InstanceWrapperObject(temp_field, f_bb);
   InstanceWrapperObject *fire_iw = new InstanceWrapperObject(fire_geom, f_bb);
   Transform *fire_trans = new Transform();
+  //after rotation...
+  fire_trans->rotate(Vector(1,0,0), Vector(0,0,1));
+#define ORIGEX 2
+#define ORIGEY 2
+#define ORIGEZ 2
+  //max in this case is y
+#define SCALE EXTY/ORIGEY
+  htrans->pre_scale(Vector(SCALE,SCALE,SCALE));
+  htrans->pre_translate(Vector(CENX, CENY, CENZ));
+#define ZMIN CENZ-((ORIGEZ*SCALE)/2.0)
+#define LOWERZ 0.5+HFLT - ZMIN
+  htrans->pre_translate(Vector(0,0,LOWERZ)); //place at HFLT above surface
+#undef ORIGEX
+#undef ORIGEY
+#undef ORIGEZ
+#undef SCALE
+#undef ZMIN
+#undef LOWERZ
+  /*
   fire_trans->pre_scale(Vector(1.245,1.245,1.245));
   fire_trans->rotate(Vector(1,0,0), Vector(0,0,1));
   fire_trans->pre_translate(Vector(-8, 8, 1.75));
   fire_trans->pre_translate(Vector(0,0,-.00305));
-  
+  */
+
   SpinningInstance *fire_inst = new SpinningInstance(fire_iw, fire_trans, Point(-8,8,1.75), Vector(0,0,1), 0.1);
   fire_inst->set_name("Spinning CSAFE Velocity Magnitude Field");
   SpinningInstance *temp_inst = new SpinningInstance(temp_iw, fire_trans, Point(-8,8,1.75), Vector(0,0,1), 0.1);
@@ -1341,11 +1404,33 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 
   Transform *gtrans = new Transform();
   gtrans->rotate(Vector(1,0,0), Vector(0,0,-1));
+  //after rotation...
+#define ORIGEX .46
+#define ORIGEY .4
+#define ORIGEZ 2
+  //choose maximum from model, in this case z
+#define SCALE EXTZ/ORIGEZ
+  gtrans->pre_scale(Vector(SCALE,SCALE,SCALE));
+  gtrans->pre_translate(Vector(CENX, CENY, CENZ));
+  //#define ZMIN CENZ-((ORIGEZ*SCALE)/2.0)
+  //#define LOWERZ 0.5+HFLT - ZMIN
+  //no need, we've scaled in this case to fit z
+#define LOWERZ 0
+  gtrans->pre_translate(Vector(0,0,LOWERZ)); //place at HFLT above surface
+#undef ORIGEX
+#undef ORIGEY
+#undef ORIGEZ
+#undef SCALE
+#undef ZMIN
+#undef LOWERZ
+
+  /*
 //  gtrans->pre_scale(Vector(1.245,1.245,1.245)); //fit between z=0.51 and 3
   gtrans->pre_scale(Vector(3.735,3.735,0.6225)); //fit between z=0.51 and 1.75
   gtrans->pre_translate(Vector(-8, 8, 1.25));
 //  gtrans->pre_translate(Vector(-8, 8, 1.75));
   gtrans->pre_translate(Vector(0,0,0.1)); //place 4 cm above table
+  */
 
   SpinningInstance *ginst = new SpinningInstance(giw, gtrans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
   ginst->set_name("Spinning Geology");
@@ -1379,9 +1464,28 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 
   Transform *strans = new Transform();
   strans->rotate(Vector(0,0,1), Vector(0,0,-1));
+  //after rotation...
+#define ORIGEX .256
+#define ORIGEY .352
+#define ORIGEZ .352
+  //choose maximum from model, in this case y
+#define SCALE EXTY/ORIGEY
+  strans->pre_scale(Vector(SCALE,SCALE,SCALE));
+  strans->pre_translate(Vector(CENX, CENY, CENZ));
+#define ZMIN CENZ-((ORIGEZ*SCALE)/2.0)
+#define LOWERZ 0.5+HFLT - ZMIN
+  strans->pre_translate(Vector(0,0,LOWERZ)); //place at HFLT above surface
+#undef ORIGEX
+#undef ORIGEY
+#undef ORIGEZ
+#undef SCALE
+#undef ZMIN
+#undef LOWERZ
+  /*
   strans->pre_scale(Vector(6.02,6.02,6.02)); //scale to fit max
   strans->pre_translate(Vector(-8, 8, 1.75));
   strans->pre_translate(Vector(0,0,0.30112)); //place 1cm above table
+  */
 
   SpinningInstance *sinst = new SpinningInstance(siw, strans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
   
@@ -1392,6 +1496,14 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   scut->set_name("Sheep Heart Cutting Plane");
   sinst->addCPDpy(scpdpy);
 #endif
+
+#undef HFLT
+#undef EXTZ
+#undef EXTX
+#undef EXTY
+#undef CENX
+#undef CENY
+#undef CENZ
 
   //PUT THE VOLUMES INTO A SWITCHING GROUP  
   SelectableGroup *sg = new SelectableGroup(10);
