@@ -1117,14 +1117,14 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 		    have_one=1;
 		    idx++; // Skip Max Z
 #if (_MIPS_SZPTR == 64)
+		    idx+=nnames-5; // Skip to the last one...
 		    unsigned int ho1=pick_buffer[idx++];
 		    unsigned int ho2=pick_buffer[idx++];
-		    hit_obj=((long)ho1<<32)|ho2;
-		    hit_obj_index = pick_buffer[idx++];
-		    idx+=nnames-6; // Skip to the last one...
+		    hit_pick=((long)ho1<<32)|ho2;
+		    //hit_obj_index = pick_buffer[idx++];
 		    unsigned int hp1=pick_buffer[idx++];
 		    unsigned int hp2=pick_buffer[idx++];
-		    hit_pick=((long)hp1<<32)|hp2;
+		    hit_obj=((long)hp1<<32)|hp2;
 		    hit_pick_index = pick_buffer[idx++];
 #else
 		    // hit_obj=pick_buffer[idx++];
@@ -1741,6 +1741,9 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.18  2000/02/04 00:42:23  dmw
+// corrected order when reading 64-bit pick and obj from pick buffer
+//
 // Revision 1.17  1999/12/28 20:58:04  kuzimmer
 // modified the pick_index to return the proper value
 //
