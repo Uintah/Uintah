@@ -75,6 +75,7 @@ static void service(DTMessage *dtmsg){
 	sc->d_objptr->deleteReference();
 	break;
       }
+      delete dtmsg;
     }
     else{
       if (id >= chan->getTableSize())
