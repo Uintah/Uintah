@@ -75,7 +75,7 @@ itcl_class Teem_DataIO_ImageExporter {
 	makeSaveFilebox \
 		-parent $w \
 		-filevar $this-filename \
-	        -setcomd "wm withdraw $w" \
+	        -setcmd "wm withdraw $w" \
 		-command "$this-c needexecute; wm withdraw $w" \
 		-cancel "wm withdraw $w" \
 		-title $title \
