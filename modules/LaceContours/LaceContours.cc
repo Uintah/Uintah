@@ -72,10 +72,13 @@ void LaceContours::lace_contours(const ContourSetHandle& contour,
 				 TriSurface* surf) {
     Array1<int> row;
     for (int i=0, curr=0; i<contour->contours.size(); i++) {
-	row[i]=curr;
+	row.add(curr);
 	curr+=contour->contours[i].size();
 	for (int j=0; j<contour->contours[i].size(); j++) {
-	    surf->add_point(contour->contours[i][j]);
+	    Point p(contour->contours[i][j]);
+	    p=Point(0,0,0)+contour->origin+contour->basis[0]*p.x()+contour->basis[1]*p.y()+
+		contour->basis[2]*(p.z()*contour->space);
+	    surf->add_point(p);
 	}
     }
    // i will be the index of the top contour being laced, i-1 being the other
@@ -106,8 +109,9 @@ void LaceContours::lace_contours(const ContourSetHandle& contour,
        int bot=0;
        // lets start lacing...  top and bottom will always store the indices
        // of the first matched points so we know when to stop
-       for (int j=top,k=bot,first=1; j!=top || k!=bot || !first;) {
-	   first=0;
+       int jdone=(sz_top==1); // does this val have to change for us to
+       int kdone=(sz_bot==1); // be done lacing
+       for (int j=top,k=bot; !jdone || !kdone;) {
 	   double d1=Sqr(contour->contours[i][j].x()-
 			 contour->contours[i-1][(k+1)%sz_bot].x())+
 	       Sqr(contour->contours[i][j].y()-
@@ -116,12 +120,14 @@ void LaceContours::lace_contours(const ContourSetHandle& contour,
 			 contour->contours[i-1][k].x())+
 	             Sqr(contour->contours[i][(j+1)%sz_top].y()-
 			 contour->contours[i-1][k].y());
-	   if (d1<d2) { // bottom moves
+	   if (d1<d2 || jdone) { // bottom moves
 	       surf->add_triangle(row[i]+j,row[i-1]+k,row[i-1]+((k+1)%sz_bot));
 	       k=(k+1)%sz_bot;
+	       if (k==bot) kdone=1;
 	   } else {     // top moves
 	       surf->add_triangle(row[i]+j,row[i-1]+k,row[i]+((j+1)%sz_top));
 	       j=(j+1)%sz_top;
+	       if (j==top) jdone=1;
 	   }
        }
    }
