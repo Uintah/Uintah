@@ -1,33 +1,3 @@
-
-Each module has a single "window" for consistency.  This window may
-contain the following widgets:
-
-Menu - on the menu bar
-IntegerSlider
-IntegerDial
-IntegerGuage
-RealSlider
-RealDial
-RealGuage
-RealThumbwheel
-OnOffSwitch
-TextInput
-FileSelection
-RadioBox
-MenuSelector
-CheckBox
-Button
-HelpItem
-ColorChooser
-ColormapChooser
-LineGraph
-BarGraph
-Meter
-LEDStack
-LCDDisplay
-Message
-
-
 Parameters:
 All:
 	title - string
@@ -43,17 +13,25 @@ IntegerSlider:
 	value - int
 	tickmarks - int
 	orientation - enum
-	style - enum {Slider, Dial, Guage};
-RealSlider: ***
-	min - real ***
-	max - real ***
-	value - real ***
+	style - enum {Slider, Dial};
+RealSlider:
+	min - real
+	max - real
+	value - real
 	tickmarks - int
-	orientation - enum ***
-	style - enum {Slider ***, Dial, Guage, ThumbWheel};
-OnOffSwitch: ***
-	value - bool ***
-	style - enum {Checkbox, Switch***}
+	orientation - enum
+	style - enum {Slider, Dial, ThumbWheel};
+RealRangeSlider:
+	min - real
+	max - real
+	value1 - real
+	value2 - real
+	tickmarks - int
+	orientation - enum
+	style - enum {Slider};
+OnOffSwitch:
+	value - bool
+	style - enum {Checkbox, Switch}
 TextInput:
 	value - string
 FileSelection:
@@ -82,7 +60,7 @@ Meter:  Go into RealSlider???
 	autorange - bool
 	show_value - bool
 	orientation - enum
-	enum Style {NeedleMeter, LEDStack };
+	enum Style {NeedleMeter, LEDStack, Guage };
 LCDDisplay:
 	text - string
 Message:
@@ -95,16 +73,3 @@ BarGraph:
 	ymax - real
 	Each set:
 		style - enum {Line, Bar };
-
-
-Data types:
-	string
-	int
-	real
-	int, string pair
-	enum
-	Set clas
-	color
-	colormap
-	bool
-	Dataset
