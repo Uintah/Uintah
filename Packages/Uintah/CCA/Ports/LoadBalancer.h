@@ -51,6 +51,9 @@ WARNING
     virtual int getPatchwiseProcessorAssignment(const Patch* patch,
 						const ProcessorGroup* resources) = 0;
 
+    virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level,
+						       const ProcessorGroup* resources) = 0;
+
   private:
     LoadBalancer(const LoadBalancer&);
     LoadBalancer& operator=(const LoadBalancer&);
