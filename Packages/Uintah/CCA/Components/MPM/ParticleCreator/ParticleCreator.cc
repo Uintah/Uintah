@@ -247,8 +247,8 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
 }
 
 void ParticleCreator::allocateVariablesAddRequires(Task* task, 
-						   const MPMMaterial* matl,
-						   const PatchSet* patch,
+						   const MPMMaterial* ,
+						   const PatchSet* ,
 						   MPMLabel* lb) const
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
@@ -505,7 +505,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     createPoints(patch,obj);
   }
   
-  return d_object_points[key].size();
+  return (particleIndex) d_object_points[key].size();
 }
 
 vector<const VarLabel* > ParticleCreator::returnParticleState()
