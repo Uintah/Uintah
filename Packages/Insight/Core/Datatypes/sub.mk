@@ -13,7 +13,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 INCLUDES += $(INSIGHT_INCLUDE)
 SRCDIR   := Packages/Insight/Core/Datatypes
 
-SRCS     += $(SRCDIR)/ITKImage.cc \
+SRCS     += $(SRCDIR)/ITKDatatype.cc \
+
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
