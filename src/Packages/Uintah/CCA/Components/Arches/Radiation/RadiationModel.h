@@ -47,7 +47,8 @@ POSSIBLE REVISIONS
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
- class RadLinearSolver;
+
+class RadiationSolver;
 class RadiationModel {
 
 public:
@@ -99,7 +100,7 @@ public:
 					 CellInformation* cellinfo,
 					ArchesVariables* vars,
 					ArchesConstVariables* constvars)  = 0;
-      RadLinearSolver* d_linearSolver;
+  RadiationSolver* d_linearSolver;
  protected:
       void computeOpticalLength();
       double d_opl; // optical length

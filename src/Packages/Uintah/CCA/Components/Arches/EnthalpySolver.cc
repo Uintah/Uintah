@@ -15,6 +15,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/RadiationModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/RadLinearSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/Radiation/RadHypreSolver.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -241,11 +242,11 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
       if (d_DORadiationCalc) {
         tsk->requires(Task::OldDW, d_lab->d_co2INLabel,
-		      Ghost::None, Arches::ZEROGHOSTCELLS);
+		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
         tsk->requires(Task::OldDW, d_lab->d_h2oINLabel,
-		      Ghost::None, Arches::ZEROGHOSTCELLS);
+		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
         tsk->requires(Task::OldDW, d_lab->d_sootFVINLabel,
-		      Ghost::None, Arches::ZEROGHOSTCELLS);
+		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
         tsk->requires(Task::OldDW, d_lab->d_radiationSRCINLabel,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
         tsk->requires(Task::OldDW, d_lab->d_radiationFluxEINLabel,
@@ -275,11 +276,11 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
       if (d_DORadiationCalc) {
         tsk->requires(Task::NewDW, d_lab->d_co2INLabel,
-		      Ghost::None, Arches::ZEROGHOSTCELLS);
+		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
         tsk->requires(Task::NewDW, d_lab->d_h2oINLabel,
-		      Ghost::None, Arches::ZEROGHOSTCELLS);
+		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
         tsk->requires(Task::NewDW, d_lab->d_sootFVINLabel,
-		      Ghost::None, Arches::ZEROGHOSTCELLS);
+		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
       }
     } 
   }
@@ -532,11 +533,11 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 			TimeIntegratorStepNumber::First)
         {
         old_dw->get(constEnthalpyVars.co2, d_lab->d_co2INLabel, 
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
         old_dw->get(constEnthalpyVars.h2o, d_lab->d_h2oINLabel, 
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
         old_dw->get(constEnthalpyVars.sootFV, d_lab->d_sootFVINLabel, 
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 	new_dw->allocateAndPut(enthalpyVars.qfluxe,
 			       d_lab->d_radiationFluxEINLabel,matlIndex, patch);
@@ -575,11 +576,11 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
         }
         else {
         new_dw->get(constEnthalpyVars.co2, d_lab->d_co2INLabel, 
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
         new_dw->get(constEnthalpyVars.h2o, d_lab->d_h2oINLabel, 
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
         new_dw->get(constEnthalpyVars.sootFV, d_lab->d_sootFVINLabel, 
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 	new_dw->getModifiable(enthalpyVars.qfluxe,
 			       d_lab->d_radiationFluxEINLabel,matlIndex, patch);
@@ -672,8 +673,8 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     if (d_radiationCalc) {
       if (d_DORadiationCalc){
-      enthalpyVars.ESRCG.allocate(patch->getCellLowIndex(),
-				  patch->getCellHighIndex());
+      enthalpyVars.ESRCG.allocate(patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL),
+				 patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL));
 	
       enthalpyVars.ESRCG.initialize(0.0);
 
