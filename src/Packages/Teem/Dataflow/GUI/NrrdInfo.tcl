@@ -104,11 +104,15 @@ itcl_class Teem_NrrdData_NrrdInfo {
 
     method fill_tuple_tab {} {
         set w .ui[modname]
+
+	if {![winfo exists $w]} {
+            return
+        }
 	set att [$w.att childsite]
 	# tuple tab is always first
 	set tuple [$att.tabs childsite 0]
 	#parse the label axis string to gather all the info out of it.
-	set l [regexp -inline -all -- {(\w+):(\w+),?} [set $this-label0]]
+	set l [regexp -inline -all -- {([\w-]+):(\w+),?} [set $this-label0]]
 
 	set last [$tuple.listbox index end]
 	$tuple.listbox delete 0 $last
