@@ -407,6 +407,7 @@ void NodeHedgehog::add_arrow(Point &v_origin, Vector &vf_value,
   }
 }
 
+
 void NodeHedgehog::execute()
 {
   if (node_debug) cout << "NodeHedgehog::execute: start\n";
@@ -489,7 +490,12 @@ void NodeHedgehog::execute()
     widget3d->SetRatioR( 1/20.0 );
     widget3d->SetRatioD( 1/20.0 );
     widget3d->SetRatioI( 1/20.0 );
+
+    // set thier mode to resize/translate only
+    widget2d->SetCurrentMode(3);
+    widget3d->SetCurrentMode(6);
   }
+
   int do_3d=1;
   if(type.get() == "2D")
     do_3d=0;
@@ -499,9 +505,8 @@ void NodeHedgehog::execute()
   // turn on/off widgets
   widget2d->SetState(!do_3d);
   widget3d->SetState(do_3d);
-  // set thier mode to resize/translate only
-  widget2d->SetCurrentMode(3);
-  widget3d->SetCurrentMode(6);
+
+
 
   BBox mesh_boundary = vfield->mesh()->get_bounding_box();
   
