@@ -586,7 +586,7 @@ void Roe::bawgl_pick(int action, int iv[3], GLfloat fv[3])
 				       pick_obj, pick_pick, pick_n); 
 	    if (pick_obj){
 		update_mode_string(pick_obj);
-		pick_pick->set_index(pick_n);
+		pick_pick->set_picked_obj(pick_obj);
 		pick_pick->pick(this,bs);
 		total_x=0;
 		total_y=0;
@@ -665,7 +665,7 @@ void Roe::mouse_pick(int action, int x, int y, int state, int btn, int)
 
 	    if (pick_obj){
 		update_mode_string(pick_obj);
-		pick_pick->set_index(pick_n);
+		pick_pick->set_picked_obj(pick_obj);
 		pick_pick->pick(this,bs);
 
 		need_redraw=1;
@@ -1246,6 +1246,10 @@ void Roe::setView(View newView) {
 
 //
 // $Log$
+// Revision 1.17  2000/08/11 15:51:22  bigler
+// Removed set_index(int) calls to GeomPick class and replaced them with
+// set_picked_obj(GeomObj*).
+//
 // Revision 1.16  2000/06/09 17:50:18  kuzimmer
 // Hopefully everything is fixed so that you can use -lifl on SGI's and you can use -lcl on SGI's in32bit mode.
 //
