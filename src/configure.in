@@ -1914,7 +1914,7 @@ dirs="$opengl_lib /usr/lib /usr/X11R6/lib"
 is_linux=`echo $host | sed 's/.*linux.*/linux/'`
 GLU_OTHERS="-lGL"
 if test "$is_linux" = "linux"; then
-  GLU_OTHERS="-lGL -lpthreads"
+  GLU_OTHERS="-lGL -lpthread"
 fi
 
 SCI_CHECK_LIB($dirs,GL, main,    ,,not-optional)
@@ -2228,7 +2228,7 @@ SCI_CHECK_HEADERS($LIBNRRD/../include,nrrd.h,,,optional)
 
 if test "$INCNRRD_H"; then
    LIBTEEM=$LIBNRRD
-   INCTEEM_H=$LIBNRRD/../include
+   INCTEEM_H=-I$LIBNRRD/../include
    HAVE_LIBTEEM=yes
    DEF_TEEM="#define HAVE_TEEM 1"
 fi
@@ -2251,8 +2251,9 @@ else
 fi
 
 AC_SUBST(DEF_MPEG)
-AC_SUBST(HAVE_LIBMPEGE)
 AC_SUBST(LIBMPEGE)
+AC_SUBST(HAVE_LIBMPEGE)
+AC_SUBST(MPEGE_LIBRARY)
 
 ##  --  search for mdsplus  -------------------------------------------------
 
@@ -2602,8 +2603,8 @@ for i in $with_imagemagick $thirdparty $SCI_LAB_TP_DEFAULT; do
       FOUND_ALL_MAGICK=yes
       DEF_MAGICK="#define HAVE_MAGICK 1"
       HAVE_MAGICK="yes"
-      MAGICK_INCLUDE="$i/include"
-      MAGICK_LIB="$i/lib"
+      MAGICK_INCLUDE="-I$i/include"
+      LIBMAGICK="$i/lib"
       #parse out the -L parts and leave only the -l parts
       MAGICK_LINK=`echo $IM_LIBS | sed 's|-L[[A-Za-z0-9/\.\-]]* ||g'`
   fi
@@ -2612,7 +2613,7 @@ done
 AC_SUBST(HAVE_MAGICK)
 AC_SUBST(DEF_MAGICK)
 AC_SUBST(MAGICK_INCLUDE)
-AC_SUBST(MAGICK_LIB)
+AC_SUBST(LIBMAGICK)
 AC_SUBST(MAGICK_LINK)
 
 ##  --  See if we have everything needed for SCIRun2 ----------------------
