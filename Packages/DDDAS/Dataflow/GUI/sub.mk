@@ -12,6 +12,8 @@ SRCDIR := Packages/DDDAS/Dataflow/GUI
 
 SRCS := \
 	$(SRCDIR)/StreamReader.tcl\
+	$(SRCDIR)/Mesh3dReader.tcl\
+	$(SRCDIR)/FEM.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

@@ -7,3 +7,5 @@
 # a script that loads the command.
 
 set auto_index(DDDAS_DataIO_StreamReader) [list source [file join $dir StreamReader.tcl]]
+set auto_index(DDDAS_DataIO_Mesh3dReader) [list source [file join $dir Mesh3dReader.tcl]]
+set auto_index(DDDAS_PDESolver_FEM) [list source [file join $dir FEM.tcl]]
