@@ -478,14 +478,14 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   int nofScalarVars = d_props->getNumMixStatVars();
-  // warning **only works for one scalarVar
+  /*
   if (nofScalarVars > 0) {
     for (int ii = 0; ii < nofScalarVars; ii++) {
       tsk->requires(Task::OldDW, d_lab->d_scalarVarSPLabel, 
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
     }
   }
-
+  */
 
   tsk->computes(d_lab->d_pressurePSLabel);
   tsk->computes(d_lab->d_presNonLinSrcPBLMLabel);
@@ -502,11 +502,13 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_maxAbsV_label);
   tsk->requires(Task::OldDW, d_lab->d_maxAbsW_label);
 
+  /*
   if (nofScalarVars > 0) {
     for (int ii = 0; ii < nofScalarVars; ii++) {
       tsk->computes(d_lab->d_scalarVarSPLabel);
     }
   }
+  */
 
   tsk->computes(d_lab->d_maxAbsU_label);
   tsk->computes(d_lab->d_maxAbsV_label);
@@ -1140,6 +1142,7 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     // gets for old dw variables
 
     int nofScalarVars = d_props->getNumMixStatVars();
+    /*
     StaticArray< constCCVariable<double> > scalarVar (nofScalarVars);
     if (nofScalarVars > 0) {
       for (int ii = 0; ii < nofScalarVars; ii++) {
@@ -1147,6 +1150,7 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
       }
     }
+    */
 
     constCCVariable<double> pressure;
     old_dw->get(pressure, d_lab->d_pressurePSLabel, matlIndex, patch, 
@@ -1165,6 +1169,7 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
 			   matlIndex, patch);
     pressureNLSource.initialize(0.0);
 
+    /*
     StaticArray<CCVariable<double> > scalarVar_new(nofScalarVars);
     if (nofScalarVars > 0) {
       for (int ii = 0; ii < nofScalarVars; ii++) {
@@ -1172,6 +1177,7 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
 	scalarVar_new[ii].copyData(scalarVar[ii]); // copy old into new
       }
     }
+    */
 
 
     cout << "DOING DUMMY SOLVE " << endl;
