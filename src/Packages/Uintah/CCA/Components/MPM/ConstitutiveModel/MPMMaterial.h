@@ -131,7 +131,12 @@ WARNING
 
          // For MPMICE
          double getGamma() const;
-				
+         void initializeCCVariables(CCVariable<double>& rhom,
+                                    CCVariable<double>& rhC,
+                                    CCVariable<double>& temp,   
+                                    CCVariable<Vector>& vCC,
+                                    int numMatls,
+                                    const Patch* patch);
       private:
 
 	 // Specific constitutive model associated with this material
