@@ -179,6 +179,7 @@ void PathTraceWorker::run() {
 	  float result=0;
 	  PathTraceLight* light=&(ptc->light);
 	  for (int depth=0;depth<=ptc->max_depth;depth++) {
+#if 0
 	    // Compute direct illumination (assumes one light source)
             Vector random_dir=light->random_vector(rng(),rng(),rng());
 	    Point random_point = light->point_from_normal(random_dir);
@@ -198,6 +199,11 @@ void PathTraceWorker::run() {
 	      sr_dir = random_point - origin;
 	      light_norm_dot_sr = SCIRun::Dot(random_dir, -sr_dir);
 	    }
+#else
+	    
+	    double light_norm_dot_sr = 1;
+	    Vector sr_dir=light->center-origin;
+#endif
 	    
 	    double distance=sr_dir.normalize();
 	    double normal_dot_sr=SCIRun::Dot(sr_dir, normal);
