@@ -97,6 +97,7 @@ SRCS := \
 	$(SRCDIR)/SamplePlane.tcl \
 	$(SRCDIR)/SampleStructHex.tcl \
 	$(SRCDIR)/ScalarFieldStats.tcl \
+	$(SRCDIR)/SciDialog.tcl \
 	$(SRCDIR)/SelectField.tcl \
 	$(SRCDIR)/SetProperty.tcl \
 	$(SRCDIR)/ShowColorMap.tcl \
