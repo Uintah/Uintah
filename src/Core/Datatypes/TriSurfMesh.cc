@@ -1065,7 +1065,7 @@ TriSurfMesh::io(Piostream &stream)
 
   stream.end_class();
 
-  if (stream.reading())
+  if (stream.reading() && edge_neighbors_.size())
   {
     synchronized_ |= EDGE_NEIGHBORS_E;
   }
