@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/CurveField.h>
 #include <Dataflow/Ports/FieldPort.h>

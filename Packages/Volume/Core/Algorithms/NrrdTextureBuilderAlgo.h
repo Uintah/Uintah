@@ -40,8 +40,6 @@
 #include <Core/Datatypes/NrrdData.h>
 
 using SCIRun::BBox;
-using SCITeem::NrrdData;
-using SCITeem::NrrdDataHandle;
 
 namespace Volume {
 

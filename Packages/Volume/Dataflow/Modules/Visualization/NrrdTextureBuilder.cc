@@ -38,7 +38,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 
-#include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 
 #include <Packages/Volume/Core/Util/Utils.h>
 #include <Packages/Volume/Core/Util/VideoCardInfo.h>

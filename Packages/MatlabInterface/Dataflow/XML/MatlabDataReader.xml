@@ -361,21 +361,21 @@
 
       <port>
         <name>Nrrd1</name>
-		<datatype>Teem::Nrrd</datatype>
+		<datatype>SCIRun::Nrrd</datatype>
 		<description>
 		<p> SCIRun Nrrd imported from the MATLAB file using port 7. </p>
 		</description>
       </port>
 	  <port>
         <name>Nrrd2</name>
-		<datatype>Teem::Nrrd</datatype>
+		<datatype>SCIRun::Nrrd</datatype>
 		<description>
 		<p> SCIRun Nrrd imported from the MATLAB file using port 8. </p>
 		</description>		
       </port>
 	  <port>
         <name>Nrrd3</name>
-		<datatype>Teem::Nrrd</datatype>
+		<datatype>SCIRun::Nrrd</datatype>
 		<description>
 		<p> SCIRun Nrrd imported from the MATLAB file using port 9. </p>
 		</description>		

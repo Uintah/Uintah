@@ -44,9 +44,7 @@
 
 using std::cerr;
 
-namespace SCITeem {
-
-using namespace SCIRun;
+namespace SCIRun {
 
 static Persistent* make_NrrdData() {
   return scinew NrrdData;
@@ -801,4 +799,4 @@ unsigned int get_nrrd_type<float>()
 
 
 
-}  // end namespace SCITeem
+}  // end namespace SCIRun

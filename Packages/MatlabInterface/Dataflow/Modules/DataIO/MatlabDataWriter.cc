@@ -41,7 +41,7 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Network/Module.h>
-#include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>

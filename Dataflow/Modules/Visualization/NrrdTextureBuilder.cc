@@ -38,7 +38,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 
-#include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 
 #include <Core/Volume/Utils.h>
 #include <Core/Volume/VideoCardInfo.h>
@@ -48,8 +48,6 @@
 
 #include <sstream>
 using std::ostringstream;
-
-using namespace SCITeem;
 
 namespace SCIRun {
 

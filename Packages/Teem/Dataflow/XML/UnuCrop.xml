@@ -51,7 +51,7 @@ interface are the sample indecies that you wish to crop.</p>
     <inputs lastportdynamic="no">
       <port>
         <name>Nrrd</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
         <name>Current Index</name>
@@ -61,7 +61,7 @@ interface are the sample indecies that you wish to crop.</p>
     <outputs>
       <port>
         <name>Nrrd</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
         <name>Selected Index</name>

@@ -45,7 +45,7 @@
 #include <Dataflow/share/share.h>
 
 #include <Dataflow/Ports/FieldPort.h>
-#include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 
 #include <Packages/Fusion/Dataflow/Modules/Fields/VULCANConverter.h>
 

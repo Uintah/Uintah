@@ -35,7 +35,7 @@
       </port>
       <port>
 	<name>Histogram</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>

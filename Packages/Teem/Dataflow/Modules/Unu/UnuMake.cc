@@ -42,7 +42,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <sys/stat.h>
 
-#include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 
 /* bad Gordon */
 extern "C" {

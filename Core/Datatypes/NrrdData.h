@@ -45,9 +45,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <teem/nrrd.h>
 
-namespace SCITeem {
-
-using namespace SCIRun;
+namespace SCIRun {
 
 /////////
 // Structure to hold NrrdData
@@ -166,6 +164,6 @@ unsigned int get_nrrd_type() {
   return nrrdTypeDouble;
 }
 
-} // end namespace SCITeem
+} // end namespace SCIRun
 
 #endif // SCI_Teem_NrrdData_h

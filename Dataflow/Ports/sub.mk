@@ -40,6 +40,7 @@ SRCS     += $(SRCDIR)/ColorMapPort.cc             \
 	    $(SRCDIR)/GLTexture3DPort.cc          \
 	    $(SRCDIR)/ImagePort.cc		  \
             $(SRCDIR)/MatrixPort.cc               \
+            $(SRCDIR)/NrrdPort.cc	          \
             $(SRCDIR)/PathPort.cc                 \
             $(SRCDIR)/TexturePort.cc              \
             $(SRCDIR)/templates.cc		  \
@@ -47,7 +48,8 @@ SRCS     += $(SRCDIR)/ColorMapPort.cc             \
 
 PSELIBS := Dataflow/Network Dataflow/Comm Core/Containers \
 	Core/Thread Core/Geom Core/Geometry Core/Exceptions \
-	Core/Persistent Core/Datatypes Core/GLVolumeRenderer
+	Core/Persistent Core/Datatypes Core/GLVolumeRenderer Core/Volume
+
 LIBS := 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -45,7 +45,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 
-#include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 
 #include <Packages/DataIO/share/share.h>
 #include <Packages/DataIO/Core/ThirdParty/mdsPlusReader.h>

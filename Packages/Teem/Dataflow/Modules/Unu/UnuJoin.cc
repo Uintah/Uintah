@@ -35,13 +35,14 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Containers/Array1.h>
-#include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 
 #include <iostream>
 using std::endl;
 #include <stdio.h>
 
 namespace SCITeem {
+using namespace SCIRun;
 
 class UnuJoin : public Module {
 public:

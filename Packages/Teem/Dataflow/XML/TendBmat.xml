@@ -54,13 +54,13 @@ with the off-diagonal elements NOT pre-multiplied by 2.</p>
     <inputs lastportdynamic="no">
       <port>
         <name>nin</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
         <name>nout</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </outputs>
   </io>

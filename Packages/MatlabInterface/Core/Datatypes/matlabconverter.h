@@ -51,8 +51,6 @@
  * 
  */
 
-#define HAVE_TEEM_PACKAGE	1
-
 /* 
  * SCIRun data types have a lot of different classes, hence we need to include
  * a large number of class definitions......
@@ -91,9 +89,7 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 
-#ifdef HAVE_TEEM_PACKAGE
-#include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
-#endif
+#include <Dataflow/Ports/NrrdPort.h>
 
 #ifdef HAVE_BUNDLE
 #include <Packages/CardioWave/Core/Bundle.h>
@@ -198,12 +194,10 @@
    void mlArrayTOsciMatrix(matlabarray &mlmat,SCIRun::MatrixHandle &scimat, SCIRun::Module *module);
    void sciMatrixTOmlArray(SCIRun::MatrixHandle &scimat,matlabarray &mlmat, SCIRun::Module *module);
 
-#ifdef HAVE_TEEM_PACKAGE
    // SCIRun NRRDS
    long sciNrrdDataCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::Module *module);
-   void mlArrayTOsciNrrdData(matlabarray &mlmat,SCITeem::NrrdDataHandle &scinrrd, SCIRun::Module *module);
-   void sciNrrdDataTOmlArray(SCITeem::NrrdDataHandle &scinrrd, matlabarray &mlmat, SCIRun::Module *module);
-#endif
+   void mlArrayTOsciNrrdData(matlabarray &mlmat,SCIRun::NrrdDataHandle &scinrrd, SCIRun::Module *module);
+   void sciNrrdDataTOmlArray(SCIRun::NrrdDataHandle &scinrrd, matlabarray &mlmat, SCIRun::Module *module);
 
 #ifdef HAVE_BUNDLE
    // SCIRun Bundles (Currently contained in the CardioWave Package)
@@ -254,12 +248,10 @@
    void sciPropertyTOmlProperty(SCIRun::PropertyManager *handle,matlabarray &ma);
 
 
-#ifdef HAVE_TEEM_PACKAGE
    // FUNCTIONS FOR TRANSLATING THE CONTENTS OF A NRRD (THE NUMERIC PART OF THE DATA)
-   void sciNrrdDataTOmlMatrix(SCITeem::NrrdDataHandle &scinrrd, matlabarray &mlmat);
+   void sciNrrdDataTOmlMatrix(SCIRun::NrrdDataHandle &scinrrd, matlabarray &mlmat);
    unsigned int convertmitype(matlabarray::mitype type);
    matlabarray::mitype convertnrrdtype(int type);
-#endif
 
    // ALTHOUGH FIELDSTRUCT IS PUBLIC DO NOT USE IT, IT NEEDS TO BE PUBLIC FOR THE DYNAMIC COMPILER
    // FRIENDS STATEMENTS WITH TEMPLATED CLASSES SEEM TO COMPLAIN LOT, HENCE I MADE THEM JUST PUBLIC

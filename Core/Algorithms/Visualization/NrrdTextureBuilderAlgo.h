@@ -39,9 +39,6 @@
 #include <Core/Volume/Brick.h>
 #include <Core/Datatypes/NrrdData.h>
 
-using SCITeem::NrrdData;
-using SCITeem::NrrdDataHandle;
-
 namespace SCIRun {
 
 class NrrdTextureBuilderAlgo

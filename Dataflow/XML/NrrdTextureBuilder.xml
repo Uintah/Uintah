@@ -50,11 +50,11 @@
     <inputs lastportdynamic="no">
       <port>
 	<name>Value / Normal-Value Nrrd</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Gradmag Nrrd</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>

@@ -60,13 +60,13 @@ will be zero in the locations which don't meet the given confidence threshold. <
     <inputs lastportdynamic="no">
       <port>
         <name>nin</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
         <name>nout</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </outputs>
   </io>

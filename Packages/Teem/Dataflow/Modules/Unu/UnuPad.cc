@@ -42,7 +42,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Containers/StringUtil.h>
 
 #include <iostream>
@@ -51,6 +51,7 @@
 using std::endl;
 
 namespace SCITeem {
+using namespace SCIRun;
 
 class UnuPad : public Module {
 public:

@@ -43,7 +43,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
-#include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 #include <sys/stat.h>
 
 #ifdef HAVE_MAGICK
@@ -54,7 +54,6 @@ namespace C_Magick {
 
 
 using namespace SCIRun;
-using namespace SCITeem;
 
 
 class ImageImporter : public Module {

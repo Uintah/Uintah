@@ -50,13 +50,13 @@ path="http://www.cs.utah.edu/~gk/teem/unrrdu/join.html"></slink></p>
     <inputs lastportdynamic="yes">
       <port>
         <name>Nrrds</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
         <name>JoinedNrrd</name>
-	<datatype>Teem::Nrrd</datatype>
+	<datatype>SCIRun::Nrrd</datatype>
       </port>
     </outputs>
   </io>

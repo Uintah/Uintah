@@ -71,7 +71,7 @@ image. The plane on which they are sampled is a surface of constant trace.</p>
     <outputs>
       <port>
         <name>OutputNrrd</name>
-        <datatype>Teem::Nrrd</datatype>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
     </outputs>
   </io>

@@ -41,7 +41,7 @@
 #include <Core/Volume/CM2Widget.h>
 #include <Core/Volume/ShaderProgramARB.h>
 #include <Dataflow/Ports/Colormap2Port.h>
-#include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/NrrdPort.h>
 
 #include <Core/Geom/GeomOpenGL.h>
 #include <tcl.h>
@@ -55,7 +55,6 @@ extern Tcl_Interp* the_interp;
 // the OpenGL context structure
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
-using namespace SCITeem;
 using std::stack;
 
 namespace SCIRun {

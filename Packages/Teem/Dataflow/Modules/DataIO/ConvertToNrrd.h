@@ -45,7 +45,6 @@
 #include <iostream>
 
 namespace SCIRun {
-using namespace SCITeem;
 using namespace std;
 
 //! ConvertToNrrdBase supports the dynamically loadable algorithm concept.
