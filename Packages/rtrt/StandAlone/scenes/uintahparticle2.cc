@@ -51,8 +51,8 @@ using namespace SCIRun;
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Variables/ShareAssignParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
