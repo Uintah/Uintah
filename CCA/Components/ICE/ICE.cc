@@ -49,8 +49,8 @@ using namespace Uintah;
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
-//#define ANNULUSICE
-#undef ANNULUSICE
+#define ANNULUSICE
+//#undef ANNULUSICE
 
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
@@ -2161,7 +2161,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     constSFCXVariable<double> press_diffX_FC;
     constSFCYVariable<double> press_diffY_FC;
     constSFCZVariable<double> press_diffZ_FC;
-
+    Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->get(pressX_FC,lb->pressX_FCLabel, 0, patch,Ghost::AroundCells, 1);
     new_dw->get(pressY_FC,lb->pressY_FCLabel, 0, patch,Ghost::AroundCells, 1);
     new_dw->get(pressZ_FC,lb->pressZ_FCLabel, 0, patch,Ghost::AroundCells, 1);
@@ -2583,7 +2583,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
 
     constCCVariable<double> rho_CC, spec_vol_src, sp_vol;
     //__________________________________
-    //  Note that spec_vol_L[m] = cell_vol * sp_vol[m]
+    //  Note that spec_vol_L[m] = mass[m] * sp_vol[m]
     for(int m = 0; m < numALLMatls; m++) {
      Material* matl = d_sharedState->getMaterial( m );
      int indx = matl->getDWIndex();
@@ -2599,14 +2599,13 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
        IntVector c = *iter;
  /*`==========TESTING==========*/
  // WE MAY WANT TO GET RID OF THE EQ VERSION OF THIS TASK.  
- // YOU CAN'T EVOLVE THE SPEC_VOL AND STILL HAVE THE PRESSURE INCREASE
+ // YOU CAN'T EVOLVE SPEC_VOL AND STILL HAVE THE PRESSURIZATION
  // IN THE ANNULUS PROBLEM
-//        OLD STYLE   when the state space was MASS * spec_Vol
-//      spec_vol_L[c] = (rho_CC[c] * cell_vol * sp_vol[c]) + spec_vol_src[c];
-        spec_vol_L[c] = cell_vol* (sp_vol[c]); 
+ //        OLD STYLE   when the state space was MASS * spec_Vol
+ //     spec_vol_L[c] = (rho_CC[c] * cell_vol * sp_vol[c]) + spec_vol_src[c];
+        spec_vol_L[c] = (rho_CC[c] * cell_vol * sp_vol[c]);      
 /*==========TESTING==========`*/
       }
-
       //  Set Neumann = 0 if symmetric Boundary conditions
       setBC(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx); 
 
@@ -3018,7 +3017,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       }
       
       setBC(temp, "Temperature", patch, d_sharedState, indx);
-      
+     
       //__________________________________
       // Advection of specific volume
       // Note sp_vol_L[m] is actually sp_vol[m] * cell_vol
@@ -3030,15 +3029,13 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       advector->advectQ(q_CC,patch,q_advected);
 
       for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
-       IntVector c = *iter;
-/*`==========TESTING==========*/
-       sp_vol_CC[c] = (q_CC[c]*vol + q_advected[c])/vol;
-/*==========TESTING==========`*/
+        IntVector c = *iter;
+        sp_vol_CC[c] = (spec_vol_L[c] + q_advected[c])/(rho_CC[c] * vol);
       }
 
       //  Set Neumann = 0 if symmetric Boundary conditions
       setBC(sp_vol_CC, "set_if_sym_BC",patch, d_sharedState, indx); 
-
+      
       //---- P R I N T   D A T A ------   
       if (switchDebug_advance_advect ) {
        ostringstream desc;
