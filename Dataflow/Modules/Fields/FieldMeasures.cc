@@ -31,10 +31,12 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/HexVolField.h>
 #include <Core/Datatypes/QuadraticTetVolField.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -58,6 +60,7 @@ private:
   GuiInt aspectRatioFlag_;
   GuiInt elemSizeFlag_;
   MeshHandle m_;
+  void measure_hexvol();
   void measure_tetvol();
   void measure_quadtetvol();
   void measure_pointcloud();
@@ -115,7 +118,13 @@ FieldMeasures::measure_pointcloud()
     omp->send(matH);
     return;
   }
-  DenseMatrix *dm = scinew DenseMatrix(nnodes, ncols);
+
+  Matrix *m;
+  if (ncols==1) {
+    m=scinew ColumnMatrix(nnodes);
+  } else {
+    m=scinew DenseMatrix(nnodes, ncols);
+  }
   
   PointCloudMesh::Node::iterator ni, nie;
   mesh->begin(ni); mesh->end(nie);
@@ -126,15 +135,15 @@ FieldMeasures::measure_pointcloud()
     col=0;
     Point p;
     mesh->get_center(p, *ni);
-    if (x) { (*dm)[row][col]=p.x(); col++; }
-    if (y) { (*dm)[row][col]=p.y(); col++; }
-    if (z) { (*dm)[row][col]=p.z(); col++; }
-    if (idx) { (*dm)[row][col]=row; col++; }
+    if (x) { m->get(row,col)=p.x(); col++; }
+    if (y) { m->get(row,col)=p.y(); col++; }
+    if (z) { m->get(row,col)=p.z(); col++; }
+    if (idx) { m->get(row,col)=row; col++; }
     ++ni;
     row++;
   }
 
-  MatrixHandle matH(dm);
+  MatrixHandle matH(m);
   omp->send(matH);
 }
 
@@ -177,7 +186,12 @@ FieldMeasures::measure_trisurf()
       omp->send(matH);
       return;
     }
-    DenseMatrix *dm = scinew DenseMatrix(nnodes, ncols);
+    Matrix *m;
+    if (ncols==1) {
+      m=scinew ColumnMatrix(nnodes);
+    } else {
+      m=scinew DenseMatrix(nnodes, ncols);
+    }
     TriSurfMesh::Node::iterator ni, nie;
     mesh->begin(ni); mesh->end(nie);
     int row=0;
@@ -187,19 +201,19 @@ FieldMeasures::measure_trisurf()
       col=0;
       Point p;
       mesh->get_center(p, *ni);
-      if (x) { (*dm)[row][col]=p.x(); col++; }
-      if (y) { (*dm)[row][col]=p.y(); col++; }
-      if (z) { (*dm)[row][col]=p.z(); col++; }
-      if (idx) { (*dm)[row][col]=row; col++; }
+      if (x) { m->get(row,col)=p.x(); col++; }
+      if (y) { m->get(row,col)=p.y(); col++; }
+      if (z) { m->get(row,col)=p.z(); col++; }
+      if (idx) { m->get(row,col)=row; col++; }
       if (valence) { 
 	mesh->get_neighbors(nbrs,*ni);
-	(*dm)[row][col]=nbrs.size(); 
+	m->get(row,col)=nbrs.size(); 
 	col++; 
       }
       ++ni;
       row++;
     }
-    MatrixHandle matH(dm);
+    MatrixHandle matH(m);
     omp->send(matH);
   } else if (type == "edge") {
     if (length) ncols++;
@@ -211,7 +225,12 @@ FieldMeasures::measure_trisurf()
       omp->send(matH);
       return;
     }
-    DenseMatrix *dm = scinew DenseMatrix(nedges, ncols);
+    Matrix *m;
+    if (ncols==1) {
+      m=scinew ColumnMatrix(nedges);
+    } else {
+      m=scinew DenseMatrix(nedges, ncols);
+    }
     TriSurfMesh::Edge::iterator ni, nie;
     mesh->begin(ni); mesh->end(nie);
     int row=0;
@@ -224,15 +243,15 @@ FieldMeasures::measure_trisurf()
       mesh->get_nodes(nodes, *ni);
       mesh->get_center(p0,nodes[0]);
       mesh->get_center(p1,nodes[1]);
-      if (x) { (*dm)[row][col]=p.x(); col++; }
-      if (y) { (*dm)[row][col]=p.y(); col++; }
-      if (z) { (*dm)[row][col]=p.z(); col++; }
-      if (idx) { (*dm)[row][col]=row; col++; }
-      if (length) { (*dm)[row][col]=(p1-p0).length(); col++; }
+      if (x) { m->get(row,col)=p.x(); col++; }
+      if (y) { m->get(row,col)=p.y(); col++; }
+      if (z) { m->get(row,col)=p.z(); col++; }
+      if (idx) { m->get(row,col)=row; col++; }
+      if (length) { m->get(row,col)=(p1-p0).length(); col++; }
       ++ni;
       row++;
     }
-    MatrixHandle matH(dm);
+    MatrixHandle matH(m);
     omp->send(matH);
   } else if (type == "element") {
     if (aspectRatio) ncols++;
@@ -245,7 +264,12 @@ FieldMeasures::measure_trisurf()
       omp->send(matH);
       return;
     }
-    DenseMatrix *dm = scinew DenseMatrix(nelems, ncols);
+    Matrix *m;
+    if (ncols==1) {
+      m=scinew ColumnMatrix(nelems);
+    } else {
+      m=scinew DenseMatrix(nelems, ncols);
+    }
     TriSurfMesh::Elem::iterator ei, eie;
     mesh->begin(ei); mesh->end(eie);
     int row=0;
@@ -254,16 +278,16 @@ FieldMeasures::measure_trisurf()
       col=0;
       Point p;
       mesh->get_center(p, *ei);
-      if (x) { (*dm)[row][col]=p.x(); col++; }
-      if (y) { (*dm)[row][col]=p.y(); col++; }
-      if (z) { (*dm)[row][col]=p.z(); col++; }
-      if (idx) { (*dm)[row][col]=row; col++; }
-      if (elemSize) { (*dm)[row][col]=mesh->get_area(*ei); col++; }
-      if (aspectRatio) { (*dm)[row][col]=0; col++; }  // FIXME: should be aspect_ratio
+      if (x) { m->get(row,col)=p.x(); col++; }
+      if (y) { m->get(row,col)=p.y(); col++; }
+      if (z) { m->get(row,col)=p.z(); col++; }
+      if (idx) { m->get(row,col)=row; col++; }
+      if (elemSize) { m->get(row,col)=mesh->get_area(*ei); col++; }
+      if (aspectRatio) { m->get(row,col)=0; col++; }  // FIXME: should be aspect_ratio
       ++ei;
       row++;
     }
-    MatrixHandle matH(dm);
+    MatrixHandle matH(m);
     omp->send(matH);
   } else {
     warning("Unkown element type.");
@@ -306,7 +330,12 @@ FieldMeasures::measure_tetvol()
       omp->send(matH);
       return;
     }
-    DenseMatrix *dm = scinew DenseMatrix(nnodes, ncols);
+    Matrix *m;
+    if (ncols==1) {
+      m=scinew ColumnMatrix(nnodes);
+    } else {
+      m=scinew DenseMatrix(nnodes, ncols);
+    }
     TetVolMesh::Node::iterator ni, nie;
     mesh->begin(ni); mesh->end(nie);
     int row=0;
@@ -316,19 +345,19 @@ FieldMeasures::measure_tetvol()
       col=0;
       Point p;
       mesh->get_center(p, *ni);
-      if (x) { (*dm)[row][col]=p.x(); col++; }
-      if (y) { (*dm)[row][col]=p.y(); col++; }
-      if (z) { (*dm)[row][col]=p.z(); col++; }
-      if (idx) { (*dm)[row][col]=row; col++; }
+      if (x) { m->get(row,col)=p.x(); col++; }
+      if (y) { m->get(row,col)=p.y(); col++; }
+      if (z) { m->get(row,col)=p.z(); col++; }
+      if (idx) { m->get(row,col)=row; col++; }
       if (valence) { 
 	mesh->get_neighbors(nbrs, *ni); 
-	(*dm)[row][col]=nbrs.size(); 
+	m->get(row,col)=nbrs.size(); 
 	col++; 
       }
       ++ni;
       row++;
     }
-    MatrixHandle matH(dm);
+    MatrixHandle matH(m);
     omp->send(matH);
   } else if (type == "edge") {
     if (length) ncols++;
@@ -340,7 +369,12 @@ FieldMeasures::measure_tetvol()
       omp->send(matH);
       return;
     }
-    DenseMatrix *dm = scinew DenseMatrix(nedges, ncols);
+    Matrix *m;
+    if (ncols==1) {
+      m=scinew ColumnMatrix(nedges);
+    } else {
+      m=scinew DenseMatrix(nedges, ncols);
+    }
     TetVolMesh::Edge::iterator ni, nie;
     mesh->begin(ni); mesh->end(nie);
     int row=0;
@@ -353,15 +387,15 @@ FieldMeasures::measure_tetvol()
       mesh->get_nodes(nodes, *ni);
       mesh->get_center(p0,nodes[0]);
       mesh->get_center(p1,nodes[1]);
-      if (x) { (*dm)[row][col]=p.x(); col++; }
-      if (y) { (*dm)[row][col]=p.y(); col++; }
-      if (z) { (*dm)[row][col]=p.z(); col++; }
-      if (idx) { (*dm)[row][col]=row; col++; }
-      if (length) { (*dm)[row][col]=(p1-p0).length(); col++; }
+      if (x) { m->get(row,col)=p.x(); col++; }
+      if (y) { m->get(row,col)=p.y(); col++; }
+      if (z) { m->get(row,col)=p.z(); col++; }
+      if (idx) { m->get(row,col)=row; col++; }
+      if (length) { m->get(row,col)=(p1-p0).length(); col++; }
       ++ni;
       row++;
     }
-    MatrixHandle matH(dm);
+    MatrixHandle matH(m);
     omp->send(matH);
   } else if (type == "element") {
     if (aspectRatio) ncols++;
@@ -374,7 +408,12 @@ FieldMeasures::measure_tetvol()
       omp->send(matH);
       return;
     }
-    DenseMatrix *dm = scinew DenseMatrix(nelems, ncols);
+    Matrix *m;
+    if (ncols==1) {
+      m=scinew ColumnMatrix(nelems);
+    } else {
+      m=scinew DenseMatrix(nelems, ncols);
+    }
     TetVolMesh::Elem::iterator ei, eie;
     mesh->begin(ei); mesh->end(eie);
     int row=0;
@@ -383,16 +422,16 @@ FieldMeasures::measure_tetvol()
       col=0;
       Point p;
       mesh->get_center(p, *ei);
-      if (x) { (*dm)[row][col]=p.x(); col++; }
-      if (y) { (*dm)[row][col]=p.y(); col++; }
-      if (z) { (*dm)[row][col]=p.z(); col++; }
-      if (idx) { (*dm)[row][col]=row; col++; }
-      if (elemSize) { (*dm)[row][col]=mesh->get_volume(*ei); col++; }
-      if (aspectRatio) { (*dm)[row][col]=0; col++; }  // FIXME: should be aspect_ratio
+      if (x) { m->get(row,col)=p.x(); col++; }
+      if (y) { m->get(row,col)=p.y(); col++; }
+      if (z) { m->get(row,col)=p.z(); col++; }
+      if (idx) { m->get(row,col)=row; col++; }
+      if (elemSize) { m->get(row,col)=mesh->get_volume(*ei); col++; }
+      if (aspectRatio) { m->get(row,col)=0; col++; }  // FIXME: should be aspect_ratio
       ++ei;
       row++;
     }
-    MatrixHandle matH(dm);
+    MatrixHandle matH(m);
     omp->send(matH);
   } else {
     warning("Unkown element type.");
@@ -434,7 +473,12 @@ FieldMeasures::measure_quadtetvol()
       omp->send(matH);
       return;
     }
-    DenseMatrix *dm = scinew DenseMatrix(nnodes, ncols);
+    Matrix *m;
+    if (ncols==1) {
+      m=scinew ColumnMatrix(nnodes);
+    } else {
+      m=scinew DenseMatrix(nnodes, ncols);
+    }
     QuadraticTetVolMesh::Node::iterator ni, nie;
     mesh->begin(ni); mesh->end(nie);
     int row=0;
@@ -444,19 +488,19 @@ FieldMeasures::measure_quadtetvol()
       col=0;
       Point p;
       mesh->get_center(p, *ni);
-      if (x) { (*dm)[row][col]=p.x(); col++; }
-      if (y) { (*dm)[row][col]=p.y(); col++; }
-      if (z) { (*dm)[row][col]=p.z(); col++; }
-      if (idx) { (*dm)[row][col]=row; col++; }
+      if (x) { m->get(row,col)=p.x(); col++; }
+      if (y) { m->get(row,col)=p.y(); col++; }
+      if (z) { m->get(row,col)=p.z(); col++; }
+      if (idx) { m->get(row,col)=row; col++; }
       if (valence) { 
 	mesh->get_neighbors(nbrs, *ni); 
-	(*dm)[row][col]=nbrs.size(); 
+	m->get(row,col)=nbrs.size(); 
 	col++; 
       }
       ++ni;
       row++;
     }
-    MatrixHandle matH(dm);
+    MatrixHandle matH(m);
     omp->send(matH);
   } else if (type == "edge") {
     if (length) ncols++;
@@ -468,7 +512,12 @@ FieldMeasures::measure_quadtetvol()
       omp->send(matH);
       return;
     }
-    DenseMatrix *dm = scinew DenseMatrix(nedges, ncols);
+    Matrix *m;
+    if (ncols==1) {
+      m=scinew ColumnMatrix(nedges);
+    } else {
+      m=scinew DenseMatrix(nedges, ncols);
+    }
     QuadraticTetVolMesh::Edge::iterator ni, nie;
     mesh->begin(ni); mesh->end(nie);
     int row=0;
@@ -481,15 +530,15 @@ FieldMeasures::measure_quadtetvol()
       mesh->get_nodes(nodes, *ni);
       mesh->get_center(p0,nodes[0]);
       mesh->get_center(p1,nodes[1]);
-      if (x) { (*dm)[row][col]=p.x(); col++; }
-      if (y) { (*dm)[row][col]=p.y(); col++; }
-      if (z) { (*dm)[row][col]=p.z(); col++; }
-      if (idx) { (*dm)[row][col]=row; col++; }
-      if (length) { (*dm)[row][col]=(p1-p0).length(); col++; }
+      if (x) { m->get(row,col)=p.x(); col++; }
+      if (y) { m->get(row,col)=p.y(); col++; }
+      if (z) { m->get(row,col)=p.z(); col++; }
+      if (idx) { m->get(row,col)=row; col++; }
+      if (length) { m->get(row,col)=(p1-p0).length(); col++; }
       ++ni;
       row++;
     }
-    MatrixHandle matH(dm);
+    MatrixHandle matH(m);
     omp->send(matH);
   } else if (type == "element") {
     if (aspectRatio) ncols++;
@@ -502,7 +551,12 @@ FieldMeasures::measure_quadtetvol()
       omp->send(matH);
       return;
     }
-    DenseMatrix *dm = scinew DenseMatrix(nelems, ncols);
+    Matrix *m;
+    if (ncols==1) {
+      m=scinew ColumnMatrix(nelems);
+    } else {
+      m=scinew DenseMatrix(nelems, ncols);
+    }
     QuadraticTetVolMesh::Elem::iterator ei, eie;
     mesh->begin(ei); mesh->end(eie);
     int row=0;
@@ -511,16 +565,160 @@ FieldMeasures::measure_quadtetvol()
       col=0;
       Point p;
       mesh->get_center(p, *ei);
-      if (x) { (*dm)[row][col]=p.x(); col++; }
-      if (y) { (*dm)[row][col]=p.y(); col++; }
-      if (z) { (*dm)[row][col]=p.z(); col++; }
-      if (idx) { (*dm)[row][col]=row; col++; }
-      if (elemSize) { (*dm)[row][col]=mesh->get_volume(*ei); col++; }
-      if (aspectRatio) { (*dm)[row][col]=0; col++; }  // FIXME: should be aspect_ratio
+      if (x) { m->get(row,col)=p.x(); col++; }
+      if (y) { m->get(row,col)=p.y(); col++; }
+      if (z) { m->get(row,col)=p.z(); col++; }
+      if (idx) { m->get(row,col)=row; col++; }
+      if (elemSize) { m->get(row,col)=mesh->get_volume(*ei); col++; }
+      if (aspectRatio) { m->get(row,col)=0; col++; }  // FIXME: should be aspect_ratio
       ++ei;
       row++;
     }
-    MatrixHandle matH(dm);
+    MatrixHandle matH(m);
+    omp->send(matH);
+  } else {
+    warning("Unkown element type.");
+  }
+
+}
+
+void
+FieldMeasures::measure_hexvol()
+{
+  HexVolMesh *mesh = dynamic_cast<HexVolMesh *>(m_.get_rep());
+
+  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
+
+  int x = xFlag_.get();
+  int y = yFlag_.get();
+  int z = zFlag_.get();
+  int idx = idxFlag_.get();
+  int length = lengthFlag_.get();
+  int valence = valenceFlag_.get();
+  int aspectRatio = aspectRatioFlag_.get();
+  if (aspectRatio) {
+    warning("HexVolMesh element aspect ratio not yet implemented.");
+    aspectRatio=0;
+  }
+  int elemSize = elemSizeFlag_.get();
+  int ncols = 0;
+  if (x) ncols++;
+  if (y) ncols++;
+  if (z) ncols++;
+  if (idx) ncols++;
+  const string &type = nodeBased_.get();
+  if (type == "node") {
+    if (valence) ncols++;
+    HexVolMesh::Node::size_type nnodes;
+    mesh->size(nnodes);
+    if (ncols<=0) {
+      warning("No measures selected.  Sending empty matrix");
+      MatrixHandle matH=0;
+      omp->send(matH);
+      return;
+    }
+    Matrix *m;
+    if (ncols==1) {
+      m=scinew ColumnMatrix(nnodes);
+    } else {
+      m=scinew DenseMatrix(nnodes, ncols);
+    }
+    HexVolMesh::Node::iterator ni, nie;
+    mesh->begin(ni); mesh->end(nie);
+    int row=0;
+    int col=0;
+    HexVolMesh::Node::array_type nbrs;
+    while (ni != nie) {
+      col=0;
+      Point p;
+      mesh->get_center(p, *ni);
+      if (x) { m->get(row,col)=p.x(); col++; }
+      if (y) { m->get(row,col)=p.y(); col++; }
+      if (z) { m->get(row,col)=p.z(); col++; }
+      if (idx) { m->get(row,col)=row; col++; }
+      if (valence) { 
+	mesh->get_neighbors(nbrs, *ni); 
+	m->get(row,col)=nbrs.size(); 
+	col++; 
+      }
+      ++ni;
+      row++;
+    }
+    MatrixHandle matH(m);
+    omp->send(matH);
+  } else if (type == "edge") {
+    if (length) ncols++;
+    HexVolMesh::Edge::size_type nedges;
+    mesh->size(nedges);
+    if (ncols<=0) {
+      warning("No measures selected.  Sending empty matrix");
+      MatrixHandle matH=0;
+      omp->send(matH);
+      return;
+    }
+    Matrix *m;
+    if (ncols==1) {
+      m=scinew ColumnMatrix(nedges);
+    } else {
+      m=scinew DenseMatrix(nedges, ncols);
+    }
+    HexVolMesh::Edge::iterator ni, nie;
+    mesh->begin(ni); mesh->end(nie);
+    int row=0;
+    int col=0;
+    while (ni != nie) {
+      col=0;
+      Point p,p0,p1;
+      mesh->get_center(p, *ni);
+      HexVolMesh::Node::array_type nodes;
+      mesh->get_nodes(nodes, *ni);
+      mesh->get_center(p0,nodes[0]);
+      mesh->get_center(p1,nodes[1]);
+      if (x) { m->get(row,col)=p.x(); col++; }
+      if (y) { m->get(row,col)=p.y(); col++; }
+      if (z) { m->get(row,col)=p.z(); col++; }
+      if (idx) { m->get(row,col)=row; col++; }
+      if (length) { m->get(row,col)=(p1-p0).length(); col++; }
+      ++ni;
+      row++;
+    }
+    MatrixHandle matH(m);
+    omp->send(matH);
+  } else if (type == "element") {
+    if (aspectRatio) ncols++;
+    if (elemSize) ncols++;
+    HexVolMesh::Elem::size_type nelems;
+    mesh->size(nelems);
+    if (ncols<=0) {
+      warning("No measures selected. Sending empty matrix");
+      MatrixHandle matH=0;
+      omp->send(matH);
+      return;
+    }
+    Matrix *m;
+    if (ncols==1) {
+      m=scinew ColumnMatrix(nelems);
+    } else {
+      m=scinew DenseMatrix(nelems, ncols);
+    }
+    HexVolMesh::Elem::iterator ei, eie;
+    mesh->begin(ei); mesh->end(eie);
+    int row=0;
+    int col=0;
+    while (ei != eie) {
+      col=0;
+      Point p;
+      mesh->get_center(p, *ei);
+      if (x) { m->get(row,col)=p.x(); col++; }
+      if (y) { m->get(row,col)=p.y(); col++; }
+      if (z) { m->get(row,col)=p.z(); col++; }
+      if (idx) { m->get(row,col)=row; col++; }
+      if (elemSize) { m->get(row,col)=mesh->get_volume(*ei); col++; }
+      if (aspectRatio) { m->get(row,col)=0; col++; }  // FIXME: should be aspect_ratio
+      ++ei;
+      row++;
+    }
+    MatrixHandle matH(m);
     omp->send(matH);
   } else {
     warning("Unkown element type.");
@@ -568,7 +766,12 @@ FieldMeasures::measure_latvol()
       omp->send(matH);
       return;
     }
-    DenseMatrix *dm = scinew DenseMatrix(nnodes, ncols);
+    Matrix *m;
+    if (ncols==1) {
+      m=scinew ColumnMatrix(nnodes);
+    } else {
+      m=scinew DenseMatrix(nnodes, ncols);
+    }
     LatVolMesh::Node::iterator ni, nie;
     mesh->begin(ni); mesh->end(nie);
     int row=0;
@@ -577,15 +780,15 @@ FieldMeasures::measure_latvol()
       col=0;
       Point p;
       mesh->get_center(p, *ni);
-      if (x) { (*dm)[row][col]=p.x(); col++; }
-      if (y) { (*dm)[row][col]=p.y(); col++; }
-      if (z) { (*dm)[row][col]=p.z(); col++; }
-      if (idx) { (*dm)[row][col]=row; col++; }
-      if (valence) { (*dm)[row][col]=0; col++; }  // FIXME: should be num_nbrs
+      if (x) { m->get(row,col)=p.x(); col++; }
+      if (y) { m->get(row,col)=p.y(); col++; }
+      if (z) { m->get(row,col)=p.z(); col++; }
+      if (idx) { m->get(row,col)=row; col++; }
+      if (valence) { m->get(row,col)=0; col++; }  // FIXME: should be num_nbrs
       ++ni;
       row++;
     }
-    MatrixHandle matH(dm);
+    MatrixHandle matH(m);
     omp->send(matH);
   } else if (type == "edge") {
     if (length) ncols++;
@@ -597,7 +800,12 @@ FieldMeasures::measure_latvol()
       omp->send(matH);
       return;
     }
-    DenseMatrix *dm = scinew DenseMatrix(nedges, ncols);
+    Matrix *m;
+    if (ncols==1) {
+      m=scinew ColumnMatrix(nedges);
+    } else {
+      m=scinew DenseMatrix(nedges, ncols);
+    }
     LatVolMesh::Edge::iterator ni, nie;
     mesh->begin(ni); mesh->end(nie);
     int row=0;
@@ -610,15 +818,15 @@ FieldMeasures::measure_latvol()
       mesh->get_nodes(nodes, *ni);
       mesh->get_center(p0,nodes[0]);
       mesh->get_center(p1,nodes[1]);
-      if (x) { (*dm)[row][col]=p.x(); col++; }
-      if (y) { (*dm)[row][col]=p.y(); col++; }
-      if (z) { (*dm)[row][col]=p.z(); col++; }
-      if (idx) { (*dm)[row][col]=row; col++; }
-      if (length) { (*dm)[row][col]=(p1-p0).length(); col++; }
+      if (x) { m->get(row,col)=p.x(); col++; }
+      if (y) { m->get(row,col)=p.y(); col++; }
+      if (z) { m->get(row,col)=p.z(); col++; }
+      if (idx) { m->get(row,col)=row; col++; }
+      if (length) { m->get(row,col)=(p1-p0).length(); col++; }
       ++ni;
       row++;
     }
-    MatrixHandle matH(dm);
+    MatrixHandle matH(m);
     omp->send(matH);
   } else if (type == "element") {
     if (aspectRatio) ncols++;
@@ -631,7 +839,12 @@ FieldMeasures::measure_latvol()
       omp->send(matH);
       return;
     }
-    DenseMatrix *dm = scinew DenseMatrix(nelems, ncols);
+    Matrix *m;
+    if (ncols==1) {
+      m=scinew ColumnMatrix(nelems);
+    } else {
+      m=scinew DenseMatrix(nelems, ncols);
+    }
     LatVolMesh::Elem::iterator ei, eie;
     mesh->begin(ei); mesh->end(eie);
     int row=0;
@@ -640,16 +853,16 @@ FieldMeasures::measure_latvol()
       col=0;
       Point p;
       mesh->get_center(p, *ei);
-      if (x) { (*dm)[row][col]=p.x(); col++; }
-      if (y) { (*dm)[row][col]=p.y(); col++; }
-      if (z) { (*dm)[row][col]=p.z(); col++; }
-      if (idx) { (*dm)[row][col]=row; col++; }
-      if (elemSize) { (*dm)[row][col]=0; col++; } // FIXME: should be volume
-      if (aspectRatio) { (*dm)[row][col]=0; col++; }  // FIXME: should be aspect_ratio
+      if (x) { m->get(row,col)=p.x(); col++; }
+      if (y) { m->get(row,col)=p.y(); col++; }
+      if (z) { m->get(row,col)=p.z(); col++; }
+      if (idx) { m->get(row,col)=row; col++; }
+      if (elemSize) { m->get(row,col)=0; col++; } // FIXME: should be volume
+      if (aspectRatio) { m->get(row,col)=0; col++; }  // FIXME: should be aspect_ratio
       ++ei;
       row++;
     }
-    MatrixHandle matH(dm);
+    MatrixHandle matH(m);
     omp->send(matH);
   } else {
     warning("Unkown element type.");
@@ -688,6 +901,8 @@ FieldMeasures::execute()
     measure_tetvol();
   else if (mesh_name == "QuadraticTetVolMesh") 
     measure_quadtetvol();
+  else if (mesh_name == "HexVolMesh") 
+    measure_hexvol();
   else if (mesh_name == "LatVolMesh") 
     measure_latvol();
   else 
