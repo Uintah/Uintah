@@ -64,6 +64,8 @@ WARNING
       // Returns the number of threads that a processing element is
       // allowed to use to compute its tasks.  
       static int getMaxThreads();
+
+      static void setMaxThreads( int maxNumThreads );
       
    private:
       Parallel();
@@ -76,6 +78,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.10  2000/09/29 20:43:42  dav
+// Added setMaxThreads()
+//
 // Revision 1.9  2000/09/28 22:21:34  dav
 // Added code that allows the MPIScheduler to run correctly even if
 // PSE_MAX_THREADS is set.  This was messing up the assigning of resources.
