@@ -108,12 +108,13 @@ PBuffer::create(Display* dpy, int screen,
 #endif
       // printf("r = %d, b = %d, g = %d, a = %d, z = %d, ar = %d, ag = %d, ab = %d\n",
       //	     a[0],a[1],a[2],a[3],a[4], a[5], a[6], a[7]);
+
       if((a[0] >= 8) && (a[1] >= 8) &&
 	 (a[2] >= 8) && (a[3] >= 8) && 
 	 (a[4] >= 8) && (a[5] == 0) && (a[6] == 0) && (a[7] == 0) )
       {
 	match = i;
-	//printf("fbConfigList[%d] matches the selected attribList\n", i);
+// 	printf("fbConfigList[%d] matches the selected attribList\n", i);
 	break;
       }
     }
@@ -179,10 +180,11 @@ PBuffer::makeCurrent()
 bool
 PBuffer::is_current()
 {
-#ifndef HAVE_CHROMIUM
+#ifdef HAVE_CHROMIUM
   return false;
-#endif
+#else
   return (cx_ == glXGetCurrentContext());
+#endif
 }
 
 } // end namespace SCIRun
