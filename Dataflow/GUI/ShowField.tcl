@@ -158,8 +158,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	     wm deiconify $window.color
 	     return
 	 } else {
-	     toplevel $window.color
-	     wm title $window.color "Color Chooser"
+	     # makeColorPicker now creates the $window.color toplevel.
 	     makeColorPicker $window.color $color \
 		     "$this setColor $col $color $colMsg" \
 		     "destroy $window.color"
