@@ -47,7 +47,7 @@ class TCL {
     void register_var(TCLvar*);
     void unregister_var(TCLvar*);
 public:
-    void emit_vars(ostream& out);
+    virtual void emit_vars(ostream& out);
     static void initialize();
     static void execute(const clString&);
     static void execute(char*);

@@ -56,6 +56,22 @@ clString TCLvar::str()
     return varname;
 }
 
+clString TCLvar::format_varname()
+{
+  bool fixit=false;
+  for(int i=0;i<varname.len();i++){
+    if(!(varname.is_digit(i) || varname.is_alpha(i) || varname(i)=='_'
+	 || varname(i) == '-')){
+      fixit=true;
+      break;
+    }
+  }
+  if(fixit)
+    return clString("{")+varname+"}";
+  else
+    return varname;
+}
+
 TCLdouble::TCLdouble(const clString& name, const clString& id, TCL* tcl)
 : TCLvar(name, id, tcl)
 {
@@ -125,7 +141,7 @@ void TCLdouble::set(double val)
 
 void TCLdouble::emit(ostream& out)
 {
-    out << "set " << varname() << " " << get() << endl;
+    out << "set " << format_varname() << " " << get() << endl;
 }
 
 TCLint::TCLint(const clString& name, const clString& id, TCL* tcl)
@@ -195,7 +211,7 @@ void TCLint::set(int val)
 
 void TCLint::emit(ostream& out)
 {
-    out << "set " << varname() << " " << get() << endl;
+    out << "set " << format_varname() << " " << get() << endl;
 }
 
 TCLstring::TCLstring(const clString& name, const clString& id, TCL* tcl)
@@ -263,7 +279,7 @@ void TCLstring::set(const clString& val)
 
 void TCLstring::emit(ostream& out)
 {
-    out << "set " << varname() << " {" << get() << "}" << endl;
+    out << "set " << format_varname() << " {" << get() << "}" << endl;
 }
 
 TCLvardouble::TCLvardouble(const clString& name, const clString& id, TCL* tcl)
@@ -303,7 +319,7 @@ double TCLvardouble::get()
 
 void TCLvardouble::emit(ostream& out)
 {
-    out << "set " << varname() << " " << get() << endl;
+    out << "set " << format_varname() << " " << get() << endl;
 }
 
 TCLvarint::TCLvarint(const clString& name, const clString& id, TCL* tcl)
@@ -348,7 +364,7 @@ void TCLvarint::set(int nv)
 
 void TCLvarint::emit(ostream& out)
 {
-    out << "set " << varname() << " " << get() << endl;
+    out << "set " << format_varname() << " " << get() << endl;
 }
 
 TCLvarintp::TCLvarintp(int* value,
@@ -383,7 +399,7 @@ void TCLvarintp::set(int nv)
 
 void TCLvarintp::emit(ostream& out)
 {
-    out << "set " << varname() << " " << get() << endl;
+    out << "set " << format_varname() << " " << get() << endl;
 }
 
 TCLPoint::TCLPoint(const clString& name, const clString& id, TCL* tcl)

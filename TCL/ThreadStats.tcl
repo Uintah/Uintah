@@ -5,17 +5,17 @@ proc showThreadStats {} {
 	toplevel .tsw
 	wm title .tsw "Thread Statistics"
 	wm iconname .tsw "ThreadStats"
-	wm minsize .tsw 100 100
+	wm minsize .tsw 400 100
 	set threadstats_window .tsw
 	canvas .tsw.canvas -yscrollcommand ".tsw.vscroll set" \
 		-scrollregion {0c 0c 8c 50c} \
 		-width 8c -height 8c
 	scrollbar .tsw.vscroll -relief sunken -command ".tsw.canvas yview"
 	pack .tsw.vscroll -side right -fill y -padx 4 -pady 4
-	pack .tsw.canvas -expand yes -fill y -pady 4
+	pack .tsw.canvas -expand yes -fill both -pady 4
 	set lineheight [winfo pixels .tsw.canvas 8p]
 	set tleft [winfo pixels .tsw.canvas 1.2c]
-	set gleft [winfo pixels .tsw.canvas 5.5c]
+	set gleft [winfo pixels .tsw.canvas 7.5c]
 	set gwidth [winfo pixels .tsw.canvas 1.9c]
 	set font -Adobe-courier-bold-r-*-100-75-*
 	set ntasks 0

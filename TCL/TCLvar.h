@@ -27,6 +27,8 @@ public:
     virtual ~TCLvar();
     void reset();
 
+    clString format_varname();
+
     clString str();
     virtual void emit(ostream& out)=0;
 };

@@ -104,8 +104,9 @@ itcl_class expscale {
 	setscales
     }
     destructor {
-	destroy $this.scale
+	destroy $this
     }
+
     method config {config} {
     }
     public label "" 
