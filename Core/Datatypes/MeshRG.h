@@ -28,7 +28,7 @@ class SCICORESHARE MeshRG : public Datatype
 {
 public:
 
-  typedef int index_type;
+  typedef unsigned index_type;
 
   //! Index and Iterator types required for Mesh Concept.
   typedef NodeIndex<index_type>       node_index;
@@ -51,7 +51,7 @@ public:
   typedef face_index[6]   rg_face_array;
   typedef cell_index[8]   rg_cell_array;
 
-  MeshRG(int x, int y, int z);
+  MeshRG(int x, int y, int z, Point &min, Point &max);
   MeshRG(const MeshRG &);
   virtual ~MeshRG();
 
@@ -76,7 +76,7 @@ public:
   void get_edges(rg_edge_array &array, cell_index idx) const;
   void get_faces(rg_face_array &array, cell_index idx) const;
 
-  //! get the parent elements of the given index
+  //! get the parent element(s) of the given index
   int get_edges(rg_edge_array &array, node_index idx) const;
   int get_faces(rg_face_array &array, node_index idx) const;
   int get_faces(rg_face_array &array, edge_index idx) const;
@@ -85,7 +85,7 @@ public:
   int get_cells(rg_cell_array &array, face_index idx) const;
 
   //! similar to get_cells() with face_index argument, but
-  //  returns the "other" cell if it exists, not the one or two.
+  //  returns the "other" cell if it exists, not all that exist
   void get_neighbor(cell_index &neighbor, face_index idx) const;
 
   //! get the center point (in object space) of an element
@@ -94,13 +94,13 @@ public:
   void get_center(Point &result, face_index idx) const;
   void get_center(Point &result, cell_index idx) const;
 
-  void locate_node(node_index &node, const Point &p);
-  //void locate_edge(edge_index &edge, const Point &p);
-  //void locate_face(face_index &face, const Point &p);
-  void locate_cell(cell_index &cell, const Point &p);
+  void locate_node(node_index &node, const Point &p) const;
+  void locate_edge(edge_index &edge, const Point &p, double[2]) const;
+  void locate_face(face_index &face, const Point &p, double[4]) const;
+  void locate_cell(cell_index &cell, const Point &p, double[8]) const;
 
 
-  void unlocate(Point &result, const Point &p);
+  void unlocate(Point &result, const Point &p) const;
 
   void get_point(Point &result, const node_index &index) const;
 
@@ -112,20 +112,16 @@ private:
   //! the object space extents of a MeshRG
   Point min_, max_;
 
-  //! the cell_index extents of a MeshRG (min=0, max=n)
+  //! the node_index extents of a MeshRG (min=0, max=n)
   int nx_, ny_, nz_;
 
-  
-  // what is this?
+  // returns a MeshRG
   static Persistent *maker();
 };
 
 
 
 } // namespace SCIRun
-
-
-
 
 
 
