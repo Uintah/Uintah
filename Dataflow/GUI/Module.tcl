@@ -1543,6 +1543,7 @@ proc moduleHelp { modid } {
 
 
     $w.help.txt insert end [$modid-c help]
+    $w.help.txt configure -state disabled
 }
 
 proc moduleDestroy {modid} {
