@@ -40,6 +40,6 @@ Makefile: $(MATRIX_MANIP_SRC)/Makefile.in $(MANIP_OBJTOP_ABS)/config.status
 %.so : $(MATRIX_MANIP_SRC)/%.cc
 	rm -f $@
 	echo $<
-	$(CXX) $(CFLAGS) $($(patsubst %.cc,%INCLUDES,$<)) $(INCLUDES) $(CC_DEPEND_REGEN) $(SOFLAGS) $< -o $@ $($(patsubst %.cc,%LIBPATH,$<)) $(LIBDIR) $($(patsubst %.cc,%LIBS,$<))
+	$(CXX) $(CFLAGS) $($(patsubst $(MATRIX_MANIP_SRC)/%.cc,%INCLUDES,$<)) $(INCLUDES) $(CC_DEPEND_REGEN) $(SOFLAGS) $< -o $@ $($(patsubst $(MATRIX_MANIP_SRC)/%.cc,%LIBPATH,$<)) $(LIBDIR) $($(patsubst $(MATRIX_MANIP_SRC)/%.cc,%LIBS,$<))
 
 all: $(MANIP_LIBS)

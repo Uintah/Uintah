@@ -24,11 +24,17 @@ namespace SCIRun {
 
 using namespace std;
 
-#ifndef MM_COMP_PATH
-#error main/sub.mk needs to define MM_COMP_PATH
+#ifndef MM_SRC
+#error sub.mk needs to define MM_SRC
 #endif
 
-const char* MATRIX_MANIP_COMPILATION_PATH = MM_COMP_PATH;
+#ifndef MM_OBJ
+#error sub.mk needs to define MM_OBJ
+#endif
+
+const char* MATRIX_MANIP_SRC = MM_SRC;
+const char* MATRIX_MANIP_OBJ = MM_OBJ;
+
 
 typedef void (*MatrixManipFunction)(vector<MatrixHandle>& in, vector<MatrixHandle>& out);
 
@@ -204,7 +210,7 @@ ManipMatrix::tcl_command(TCLArgs& args, void* userdata)
   }  
   else if( args[1] == "launch-editor" )
   {
-    string ecmd = string( args[2]() ) + " " + MATRIX_MANIP_COMPILATION_PATH
+    string ecmd = string( args[2]() ) + " " + MATRIX_MANIP_SRC
       + "/" + name_.get()() + ".cc &";
     
     cout << "Launch Editor: " << ecmd << endl;
@@ -266,12 +272,12 @@ ManipMatrix::change_md_data(StringVector &v, const string& arg)
 
 bool ManipMatrix::save_xml() const
 {
-  ofstream f( ( string(MATRIX_MANIP_COMPILATION_PATH) + "/srcs.xml").c_str() );
+  ofstream f( ( string(MATRIX_MANIP_SRC) + "/srcs.xml").c_str() );
   bool ret = f.is_open();
   
   if( !ret )
   { 
-     cerr << "Could not open: " << MATRIX_MANIP_COMPILATION_PATH << "/srcs.xml"
+     cerr << "Could not open: " << MATRIX_MANIP_SRC << "/srcs.xml"
           << endl;
   }
   else
@@ -324,7 +330,7 @@ ManipMatrix::getFunctionFromDL(const string& f)
   if( compileFile(f) ) 
   {
     // Load the dl.
-    string dynamicLibrary = string( MATRIX_MANIP_COMPILATION_PATH ) + "/" 
+    string dynamicLibrary = string( MATRIX_MANIP_OBJ ) + "/" 
       + f + ".so";
 
     void *h = dlopen( dynamicLibrary.c_str(), RTLD_NOW );
@@ -332,6 +338,8 @@ ManipMatrix::getFunctionFromDL(const string& f)
     {
       cerr << "ManipMatrix::getFunctionFromDL() error:"
 	   << "could not open " << dynamicLibrary << endl;
+
+      cerr << "Reported Error: " << dlerror() << endl;
     }
     else
     {
@@ -357,7 +365,7 @@ ManipMatrix::getFunctionFromDL(const string& f)
 bool 
 ManipMatrix::compileFile(const string& file)
 {
-  string command = string("cd ") + MATRIX_MANIP_COMPILATION_PATH 
+  string command = string("cd ") + MATRIX_MANIP_OBJ 
           + "; gmake " + file + ".so";
 
   cout << "Executing: " << command << endl;
@@ -503,7 +511,7 @@ ManipMatrix::ReadNodeFromFile(const string& filename)
 bool ManipMatrix::create_dummy_cc( const string& filename )
 {
   cout << "Accessing " << filename << endl;
-  ifstream f( ( MATRIX_MANIP_COMPILATION_PATH 
+  ifstream f( ( MATRIX_MANIP_SRC 
           + ( "/" + filename + ".cc" ) ).c_str() );
   bool ret = f.is_open();
 
@@ -516,8 +524,8 @@ bool ManipMatrix::create_dummy_cc( const string& filename )
      cout << "Creating " + filename + ".cc";
      f.close();
      string command = string("cp ") 
-          + MATRIX_MANIP_COMPILATION_PATH + "/template.cc "
-          + MATRIX_MANIP_COMPILATION_PATH + "/" + filename + ".cc"; 
+          + MATRIX_MANIP_SRC + "/template.cc "
+          + MATRIX_MANIP_SRC + "/" + filename + ".cc"; 
      ret = sci_system( command.c_str() );
      if( !ret )
        cerr << "Could not execute: " << command << endl;
@@ -532,7 +540,7 @@ bool ManipMatrix::create_dummy_cc( const string& filename )
 bool
 ManipMatrix::write_sub_mk() const
 {
-  ofstream f( ( string(MATRIX_MANIP_COMPILATION_PATH) + "/sub.mk").c_str() );
+  ofstream f( ( string(MATRIX_MANIP_SRC) + "/sub.mk").c_str() );
 
   bool ret( f.is_open() );
 
@@ -654,7 +662,7 @@ ManipMatrix::getManips()
   {
     beenHere = true;
     string xmlFile
-        = string( MATRIX_MANIP_COMPILATION_PATH ) + "/srcs.xml";
+        = string( MATRIX_MANIP_SRC ) + "/srcs.xml";
     int check = ReadNodeFromFile(xmlFile);
     if( check != 1 ) 
     {
