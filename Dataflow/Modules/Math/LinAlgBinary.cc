@@ -81,7 +81,6 @@ void LinAlgBinary::execute() {
 
   string op = op_.get();
   if (op == "Add") {
-    DenseMatrix *ad, *bd, *cd;
     if (!aH.get_rep()) {
       error("Empty A matrix for Add");
       return;
@@ -90,11 +89,38 @@ void LinAlgBinary::execute() {
       error("Empty B matrix for Add");
       return;
     }
-    ad=aH->dense();
-    bd=bH->dense();
-    cd=scinew DenseMatrix(ad->nrows(), bd->ncols());
-    Add(*cd, *ad, *bd);
-    omat_->send(MatrixHandle(cd));
+    if (aH->ncols() != bH->ncols() || aH->nrows() != bH->nrows())
+    {
+      error("Addition requires A and B must be the same size.");
+      return;
+    }
+    if (aH->ncols() == 1)
+    {
+      ColumnMatrix *ac, *bc, *cc;
+      ac = aH->column();
+      bc = bH->column();
+      cc = scinew ColumnMatrix(ac->nrows());
+      Add(*cc, *ac, *bc);
+      omat_->send(MatrixHandle(cc));
+    }
+    else if (dynamic_cast<SparseRowMatrix *>(aH.get_rep()) ||
+	     dynamic_cast<SparseRowMatrix *>(bH.get_rep()))
+    {
+      SparseRowMatrix *as, *bs, *cs;
+      as = aH->sparse();
+      bs = bH->sparse();
+      cs = AddSparse(*as, *bs);
+      omat_->send(MatrixHandle(cs));
+    }
+    else
+    {
+      DenseMatrix *ad, *bd, *cd;
+      ad=aH->dense();
+      bd=bH->dense();
+      cd=scinew DenseMatrix(ad->nrows(), bd->ncols());
+      Add(*cd, *ad, *bd);
+      omat_->send(MatrixHandle(cd));
+    }
     return;
   } else if (op == "Mult") {
     DenseMatrix *ad, *bd, *cd;
@@ -104,6 +130,11 @@ void LinAlgBinary::execute() {
     }
     if (!bH.get_rep()) {
       error("Empty B matrix for Add");
+      return;
+    }
+    if (aH->ncols() != bH->nrows())
+    {
+      error("Matrix multiply requires the number of columns in A to be the same as the number of rows in B.");
       return;
     }
     ad=aH->dense();
