@@ -48,6 +48,7 @@ static Module* make_Salmon()
 }
 
 static RegisterModule db1("Geometry", "Salmon", make_Salmon);
+static RegisterModule db2("Dave", "Salmon", make_Salmon);
 
 Salmon::Salmon()
 : Module("Salmon", Sink), max_portno(0), need_reconfig(0),

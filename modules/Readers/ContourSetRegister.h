@@ -13,4 +13,5 @@
 
 static RegisterModule db1("Contours", "ContourSetReader", make_ContourSetReader);
 static RegisterModule db2("Readers", "ContourSetReader", make_ContourSetReader);
+static RegisterModule db3("Dave", "ContourSetReader", make_ContourSetReader);
 

@@ -723,15 +723,7 @@ void Roe::printLevel(int level, int&flag) {
 // need to fill this in!   
 void Roe::itemCB(CallbackData*, void *gI) {
     GeomItem *g = (GeomItem *)gI;
-    for (int i=0; i<geomItemA.size(); i++) {
-	if (geomItemA[i]->geom == g->geom) {
-	    if (geomItemA[i]->vis) {
-		geomItemA[i]->vis=0;
-	    } else {
-		geomItemA[i]->vis=1;
-	    }
-	}
-    }
+    g->vis = !g->vis;
     need_redraw=1;
 }
 
