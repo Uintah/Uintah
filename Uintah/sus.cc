@@ -24,7 +24,9 @@
 #include <Uintah/Components/Schedulers/MPIScheduler.h>
 #include <Uintah/Components/Schedulers/SingleProcessorLoadBalancer.h>
 #include <Uintah/Components/Schedulers/RoundRobinLoadBalancer.h>
+#include <Uintah/Components/Schedulers/SimpleLoadBalancer.h>
 #include <Uintah/Components/DataArchiver/DataArchiver.h>
+#include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Parallel/ProcessorGroup.h>
 #include <SCICore/Exceptions/Exception.h>
 #include <ieeefp.h>
@@ -118,6 +120,7 @@ int main(int argc, char** argv)
 	      usage("You must provide a load balancer name for -loadbalancer",
 		    s, argv[0]);
 	   }
+	   loadbalancer = argv[i];
 	} else {
 	    if(filename!="")
 		usage("", s, argv[0]);
@@ -212,6 +215,8 @@ int main(int argc, char** argv)
 	   bal = scinew SingleProcessorLoadBalancer(world);
 	} else if(loadbalancer == "RoundRobinLoadBalancer"){
 	   bal = scinew RoundRobinLoadBalancer(world);
+	} else if(loadbalancer == "SimpleLoadBalancer") {
+	   bal = scinew SimpleLoadBalancer(world);
 	} else {
 	   quit( "Unknown load balancer: " + loadbalancer );
 	}
@@ -270,6 +275,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.21  2000/09/20 16:04:07  sparker
+// Fixed code to set LoadBalancer
+//
 // Revision 1.20  2000/09/12 15:10:34  sparker
 // Catch stray std exceptions
 //
