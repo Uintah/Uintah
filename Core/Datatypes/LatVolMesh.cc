@@ -68,42 +68,26 @@ LatVolMesh::get_nodes(node_array &array, cell_index idx) const
 void 
 LatVolMesh::get_center(Point &result, node_index idx) const
 {
-  double xgap,ygap,zgap;
+  const double sx = (max_.x() - min_.x()) / (nx_ - 1); 
+  const double sy = (max_.y() - min_.y()) / (ny_ - 1); 
+  const double sz = (max_.z() - min_.z()) / (nz_ - 1);
 
-  // compute the distance between slices
-  xgap = (max_.x()-min_.x())/(nx_-1);
-  ygap = (max_.y()-min_.y())/(ny_-1);
-  zgap = (max_.z()-min_.z())/(nz_-1);
-  
-  // return the node_index converted to object space
-  result.x(min_.x()+idx.i_*xgap);
-  result.y(min_.y()+idx.j_*ygap);
-  result.z(min_.z()+idx.k_*zgap);
+  result.x(idx.i_ * sx + min_.x());
+  result.y(idx.j_ * sy + min_.y());
+  result.z(idx.k_ * sz + min_.z());
 }
 
-void
-LatVolMesh::get_point(Point &result, node_index index) const
-{ 
-  get_center(result,index);
-}
 
 void 
 LatVolMesh::get_center(Point &result, cell_index idx) const
 {
-  node_array nodes;
-  Point min,max;
+  const double sx = (max_.x() - min_.x()) / (nx_ - 1); 
+  const double sy = (max_.y() - min_.y()) / (ny_ - 1); 
+  const double sz = (max_.z() - min_.z()) / (nz_ - 1);
 
-  // get the node_indeces inside of this cell
-  get_nodes(nodes,idx);
-
-  // convert the min and max nodes of the cell into object space points
-  get_point(min,nodes[0]); // node 0 = min
-  get_point(max,nodes[6]); // node 6 = max
-
-  // return the point half way between min and max
-  result.x(min.x()+(max.x()-min.x())*.5);
-  result.y(min.y()+(max.y()-min.y())*.5);
-  result.z(min.z()+(max.z()-min.z())*.5);
+  result.x((idx.i_ + 0.5) * sx + min_.x());
+  result.y((idx.j_ + 0.5) * sy + min_.y());
+  result.z((idx.k_ + 0.5) * sz + min_.z());
 }
 
 bool
@@ -159,35 +143,6 @@ LatVolMesh::locate(node_index &node, const Point &p) const
       node=nodes[loop];
     }
   }
-  return true;
-}
-
-
-bool
-LatVolMesh::unlocate(Point &result, node_index idx) const
-{
-  const double sx = (max_.x() - min_.x()) / nx_; 
-  const double sy = (max_.y() - min_.y()) / ny_; 
-  const double sz = (max_.z() - min_.z()) / nz_;
-
-  result.x(idx.i_ * sx + min_.x());
-  result.y(idx.j_ * sy + min_.y());
-  result.z(idx.k_ * sz + min_.z());
-
-  return true;
-}
-
-bool
-LatVolMesh::unlocate(Point &result, cell_index idx) const
-{
-  const double sx = (max_.x() - min_.x()) / nx_; 
-  const double sy = (max_.y() - min_.y()) / ny_; 
-  const double sz = (max_.z() - min_.z()) / nz_;
-
-  result.x((idx.i_ + 0.5) * sx + min_.x());
-  result.y((idx.j_ + 0.5) * sy + min_.y());
-  result.z((idx.k_ + 0.5) * sz + min_.z());
-
   return true;
 }
 

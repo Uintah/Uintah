@@ -238,12 +238,45 @@ TriSurfMesh::locate(cell_index &loc, const Point &) const
 }
 
 
+void
+TriSurfMesh::get_center(Point &p, edge_index i) const
+{
+  node_array nodes;
+  get_nodes(nodes, i);
+  node_array::iterator nai = nodes.begin();
+  const double isize = 1.0 / nodes.size();
+  Vector v(0.0, 0.0, 0.0);
+  while (nai != nodes.end())
+  {
+    Point pp;
+    get_point(pp, *nai);
+    Vector vv(pp);
+    v += vv * isize;
+    ++nai;
+  }
+  p = Point(v);
+}
+
 
 void
-TriSurfMesh::unlocate(Point &result, const Point &p)
+TriSurfMesh::get_center(Point &p, face_index i) const
 {
-  result = p;
+  node_array nodes;
+  get_nodes(nodes, i);
+  node_array::iterator nai = nodes.begin();
+  const double isize = 1.0 / nodes.size();
+  Vector v(0.0, 0.0, 0.0);
+  while (nai != nodes.end())
+  {
+    Point pp;
+    get_point(pp, *nai);
+    Vector vv(pp);
+    v += vv * isize;
+    ++nai;
+  }
+  p = Point(v);
 }
+
 
 
 bool

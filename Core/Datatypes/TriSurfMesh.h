@@ -116,11 +116,13 @@ public:
   bool locate(face_index &loc, const Point &p) const;
   bool locate(cell_index &loc, const Point &p) const;
 
-  void unlocate(Point &result, const Point &p);
+  void get_center(Point &p, node_index i) const { get_point(p, i); }
+  void get_center(Point &p, edge_index i) const;
+  void get_center(Point &p, face_index i) const;
+  void get_center(Point &p, cell_index i) const {}
 
   void get_point(Point &result, node_index index) const
   { result = points_[index]; }
-    
   void set_point(const Point &point, node_index index)
   { points_[index] = point; }
 

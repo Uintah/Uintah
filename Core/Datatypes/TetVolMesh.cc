@@ -447,11 +447,6 @@ TetVolMesh::locate(cell_index &cell, const Point &p) const
   return found_p;
 }
 
-void
-TetVolMesh::unlocate(Point &result, const Point &p)
-{
-  result = p;
-}
 
 bool
 TetVolMesh::inside4_p(int i, const Point &p) const
