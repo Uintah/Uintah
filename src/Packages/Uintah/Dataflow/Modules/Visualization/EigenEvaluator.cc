@@ -107,13 +107,13 @@ void computeGridEigens(TensorField* tensorField,
       for (int z = lowIndex.z(); z < highIndex.z(); z++) {
 	M = tensorField->grid(x, y, z);
 	num_eigen_values = M.getEigenValues(e[0], e[1], e[2]);
-	if (num_eigen_values != 3) {
+	if (num_eigen_values <= chosenEValue) {
 	  eValueField->grid(x, y, z) = 0;
 	  eVectorField->grid(x, y, z) = Vector(0, 0, 0);
 	}
 	else {
 	  eValueField->grid(x, y, z) = e[chosenEValue];
-	  eigenVectors = M.getEigenVectors(e[chosenEValue]);
+	  eigenVectors = M.getEigenVectors(e[chosenEValue], e[0]);
 	  if (eigenVectors.size() != 1) {
 	    eVectorField->grid(x, y, z) = Vector(0, 0, 0);
 	  }
