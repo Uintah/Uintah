@@ -101,16 +101,6 @@ WARNING
 				  DataWarehouseP&);
 
 	 //////////
-	 // update the Surface Normal Of Boundary Particles according to their
-	 // velocity gradient during the deformation
-	 //
-	 void updateSurfaceNormalOfBoundaryParticle(
-	                            const ProcessorContext*,
-				    const Region* region,
-				    const DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw);
-
-	 //////////
 	 // Insert Documentation Here:
 	 void computeInternalForce(const ProcessorContext*,
 				   const Region* region,
@@ -134,15 +124,6 @@ WARNING
 					      const Region* region,
 					      const DataWarehouseP&,
 					      DataWarehouseP&);
-
-	 //////////
-	 // check the stress on each boundary particle to see
-	 // if the microcrack will grow.  If fracture occur,
-	 // more interior particles become boundary particles
-         void crackGrow(const ProcessorContext*,
-                        const Region* region,
-                        const DataWarehouseP& old_dw,
-                        DataWarehouseP& new_dw);
 
 	 SerialMPM(const SerialMPM&);
 	 SerialMPM& operator=(const SerialMPM&);
@@ -172,6 +153,7 @@ WARNING
 	 const VarLabel* gExternalForceLabel;
 	 const VarLabel* gInternalForceLabel;
 	 const VarLabel* cSelfContactLabel; //for fracture, CCVariable
+	 const VarLabel* cSurfaceNormalLabel; //for fracture, CCVariable
 	 
       };
       
@@ -180,6 +162,9 @@ WARNING
    
 //
 // $Log$
+// Revision 1.24  2000/05/10 18:34:00  tan
+// Added computations on self-contact cells for cracked surfaces.
+//
 // Revision 1.23  2000/05/10 05:01:48  tan
 // linked to farcture model.
 //
