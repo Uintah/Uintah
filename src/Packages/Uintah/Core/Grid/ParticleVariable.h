@@ -529,7 +529,7 @@ template<class T>
       RunLengthEncoder<T> rle;
       rle.read(in);
       ParticleSubset::iterator iter = d_pset->begin();
-      RunLengthEncoder<T>::iterator rle_iter = rle.begin();
+      typename RunLengthEncoder<T>::iterator rle_iter = rle.begin();
       for ( ; iter != d_pset->end() && rle_iter != rle.end();
 	    iter++, rle_iter++)
 	(*this)[*iter] = *rle_iter;

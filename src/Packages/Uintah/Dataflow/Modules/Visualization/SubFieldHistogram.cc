@@ -52,12 +52,9 @@
 #endif
 #include <algorithm>
 #include <Core/GLVolumeRenderer/VolumeUtils.h>
-#include <strstream>
 using std::cerr;
 using std::hex;
 using std::dec;
-using std::ostrstream;
-
 
 namespace Uintah {
 

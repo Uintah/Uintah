@@ -42,8 +42,6 @@
 
 namespace SCIRun {
 
-using std::hash_map;
-
 class SCICORESHARE HexVolMesh : public Mesh
 {
 public:

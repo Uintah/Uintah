@@ -32,7 +32,6 @@
 
 #include <iostream>
 #include <fstream>
-#include <strstream>
 #include <stdlib.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -52,8 +51,6 @@
 using std::map;
 using std::cout;
 using std::endl;
-using std::strstream;
-
 
 #define rWSgSC(x) removeLTWhiteSpace(getSerializedChildren(x))
 

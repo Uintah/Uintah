@@ -103,10 +103,10 @@ void MPMArches::scheduleInitialize(const LevelP& level,
 {
   d_mpm->scheduleInitialize(      level, sched);
 
-  const PatchSet* patches = level->eachPatch();
-  const MaterialSet* arches_matls = d_sharedState->allArchesMaterials();
-  const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
-  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  //const PatchSet* patches = level->eachPatch();
+  //const MaterialSet* arches_matls = d_sharedState->allArchesMaterials();
+  //const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
+  //const MaterialSet* all_matls = d_sharedState->allMaterials();
 
   //  scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
   //  scheduleInterpolateNCToCC(sched, patches, mpm_matls);
@@ -629,7 +629,7 @@ void MPMArches::scheduleEnergyExchange(SchedulerP& sched,
 		      this, &MPMArches::doEnergyExchange);
 
   int numGhostCells = 1;
-  int zeroGhostCells = 0;
+  //int zeroGhostCells = 0;
 
   // requires, from mpmarches, solid temperatures at cc, fcx, fcy, and 
   // fcz, solid fraction
@@ -806,7 +806,7 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
 					   DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
+    //const Patch* patch = patches->get(p);
 
     int numMatls = d_sharedState->getNumMPMMatls();
 
@@ -823,7 +823,7 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++){
 
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int matlindex = mpm_matl->getDWIndex();
+      //int matlindex = mpm_matl->getDWIndex();
 
       // Create arrays for the particle data
 
@@ -834,9 +834,9 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
       //      constParticleVariable<double> pTemperature;
       //      constParticleVariable<Vector> pvelocity;
 
-      ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch,
-      						       Ghost::AroundNodes, 1,
-      						       Mlb->pXLabel);
+      //ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch,
+      //						       Ghost::AroundNodes, 1,
+      //						       Mlb->pXLabel);
       //      new_dw->get(px,             Mlb->pXLabel,             pset);
 
       // dbg 1

@@ -30,8 +30,6 @@
 
 namespace SCIRun {
 
-using std::hash_map;
-
 class ClipFieldAlgo : public DynamicAlgoBase
 {
 public:
@@ -111,7 +109,7 @@ ClipFieldAlgoT<FIELD>::execute_cell(FieldHandle fieldh, ClipperHandle clipper)
   if (fieldh->data_at() == Field::NODE)
   {
     FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
-    hash_type::iterator hitr = nodemap.begin();
+    typename hash_type::iterator hitr = nodemap.begin();
 
     while (hitr != nodemap.end())
     {
@@ -222,7 +220,7 @@ ClipFieldAlgoT<FIELD>::execute_node(FieldHandle fieldh, ClipperHandle clipper,
   if (fieldh->data_at() == Field::NODE)
   {
     FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
-    hash_type::iterator hitr = nodemap.begin();
+    typename hash_type::iterator hitr = nodemap.begin();
 
     while (hitr != nodemap.end())
     {

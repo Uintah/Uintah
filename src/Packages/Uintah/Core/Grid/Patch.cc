@@ -1239,7 +1239,7 @@ void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
       lowOffset = g - IntVector(1, 1, 1);
       highOffset = lowOffset + dir; // I think this is the right way
     }
-    else if (basis == gtype) {
+    else if (basis == static_cast<VariableBasis>(gtype)) {
       // nodes around nodes or faces around faces
       lowOffset = highOffset = g * dir; 
     }

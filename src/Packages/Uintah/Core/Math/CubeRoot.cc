@@ -24,7 +24,7 @@
 
 #include    <math.h>
 #include    <stdio.h>
-#include <iostream.h>
+#include <iostream>
 
 /* epsilon surrounding for near zero values */
 

@@ -36,6 +36,13 @@ template <class T>
 class QuadraticTetVolField : public GenericField<QuadraticTetVolMesh, vector<T> >
 {
 public:
+  // Avoids a warning with g++ 3.1
+  // ../src/Core/Datatypes/QuadraticTetVolField.h:95: warning: `typename 
+  // SCIRun::QuadraticTetVolField<T>::mesh_handle_type' is implicitly a typename
+  // ../src/Core/Datatypes/QuadraticTetVolField.h:95: warning: implicit typename is 
+  // deprecated, please see the documentation for details
+  typedef typename GenericField<QuadraticTetVolMesh, vector<T> >::mesh_handle_type mesh_handle_type;
+
   QuadraticTetVolField();
   QuadraticTetVolField(Field::data_location data_at);
   QuadraticTetVolField(QuadraticTetVolMeshHandle mesh, 

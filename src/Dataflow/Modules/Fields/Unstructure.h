@@ -153,7 +153,7 @@ UnstructureAlgoT<FSRC, FDST>::execute(FieldHandle field_h)
 
   if (field_h->data_at() == Field::NODE)
   {
-    node_hash_type::iterator hitr = nodemap.begin();
+    typename node_hash_type::iterator hitr = nodemap.begin();
 
     while (hitr != nodemap.end())
     {
@@ -167,7 +167,7 @@ UnstructureAlgoT<FSRC, FDST>::execute(FieldHandle field_h)
   else if (field_h->data_at_type_description()->get_name() ==
 	   get_type_description((typename FSRC::mesh_type::Elem *)0)->get_name())
   {
-    elem_hash_type::iterator hitr = elemmap.begin();
+    typename elem_hash_type::iterator hitr = elemmap.begin();
 
     while (hitr != elemmap.end())
     {

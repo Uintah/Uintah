@@ -151,8 +151,8 @@ ScalarFieldStatsAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
   
 
   typename FIELD::value_type sigma;
-  vector<typename FIELD::value_type>::iterator vit = values.begin();
-  vector<typename FIELD::value_type>::iterator vit_end = values.end();
+  typename vector<typename FIELD::value_type>::iterator vit = values.begin();
+  typename vector<typename FIELD::value_type>::iterator vit_end = values.end();
   for(; vit != vit_end; ++vit) {
     if( *vit >= sfs->min_.get() && *vit <= sfs->max_.get()){
       double value = (*vit - sfs->min_.get())*frac;

@@ -387,14 +387,14 @@ void AMRSimulationController::subCycle(std::vector<SchedulerP>& schedulers, Grid
 
    // Check if we need a new scheduler for that level
    SchedulerP coarseSched = schedulers[numLevel-1];
-   if(schedulers.size() >= numLevel)
+   if(static_cast<int>(schedulers.size()) >= numLevel)
       schedulers.push_back(coarseSched->createSubScheduler());
 
    SchedulerP fineSched = schedulers[numLevel];
    fineSched->initialize();
 
    // Get the Datawarehouses
-   DataWarehouse* coarseDW = coarseSched->get_new_dw(); 
+   //DataWarehouse* coarseDW = coarseSched->get_new_dw(); 
    DataWarehouse* fineDW = fineSched->get_new_dw(); 
 
    // halve the delta
