@@ -76,8 +76,8 @@ void IdealGas::computeSpeedSound(const Patch* patch,
     double dp_drho = (gamma - 1.0) * cv[*iter] * temp[*iter];
     double dp_de   = (gamma - 1.0) * rho_micro[*iter];
     double press   = (gamma - 1.0) * rho_micro[*iter]*cv[*iter]*temp[*iter];
-    speedSound[*iter] =
-    sqrt(dp_drho + dp_de* (press/(rho_micro[*iter]*rho_micro[*iter])));
+    double denom = rho_micro[*iter]*rho_micro[*iter];
+    speedSound[*iter] =  sqrt(dp_drho + dp_de* (press/(denom*denom)));
   }
 
   new_dw->put(speedSound,lb->speedSound_CCLabel,vfindex,patch);
@@ -94,6 +94,11 @@ void IdealGas::computeEquilibrationPressure(const Patch* patch,
 }
 
 //$Log$
+//Revision 1.3  2000/10/06 03:47:26  jas
+//Added computes for the initialization so that step 1 works.  Added a couple
+//of CC labels for step 1. Can now go thru multiple timesteps doing work
+//only in step 1.
+//
 //Revision 1.2  2000/10/05 04:26:48  guilkey
 //Added code for part of the EOS evaluation.
 //
