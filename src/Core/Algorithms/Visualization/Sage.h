@@ -16,7 +16,7 @@
 #define Sage_h
 
 #include <stdio.h>
-#include <iostream.h>
+#include <iostream>
 
 #include <SCICore/Containers/String.h>
 #include <SCICore/Thread/Time.h>
