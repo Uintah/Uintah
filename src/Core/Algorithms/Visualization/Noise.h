@@ -23,26 +23,16 @@ namespace SCIRun {
   public:
     NoiseAlg() {}
     virtual ~NoiseAlg() {}
-    
+
+    virtual void release() = 0;
     virtual void set_field( Field * ) = 0;
     virtual GeomObj* search( double ) = 0;
   };
 
-  template < class AI >
-  class NoiseBase : public NoiseAlg {
-  protected:
-    AI *ai_;
-  public:
-    NoiseBase() {}
-    NoiseBase( AI *ai) : ai_(ai) {}
-    virtual ~NoiseBase() {}
-    
-  };
-  
   // Noise<T, AI>
   
   template <class AI, class Tesselator>
-  class Noise : public NoiseBase<AI> {
+  class Noise : public NoiseAlg {
     typedef typename Tesselator::field_type       field_type;
     typedef typename field_type::value_type       value_type;
     typedef typename field_type::mesh_type::cell_index cell_index;
@@ -50,13 +40,15 @@ namespace SCIRun {
   private:
     SpanSpace<value_type,cell_index> *space_;
     Tesselator *tess_;
+    AI *ai_;
     double v;
     
   public:
     Noise() {}
-    Noise( AI *ai) : NoiseBase<AI>(ai), space_(0), tess_(0) {}
+    Noise( AI *ai) : space_(0), tess_(0), ai_(ai) {}
     virtual ~Noise() {}
-    
+
+    virtual void release();
     virtual void set_field( Field *);
     GeomObj *search( double );
     
@@ -76,13 +68,15 @@ namespace SCIRun {
     
   };
   
-  /*
-   * NoiseBase class
-   */
-  
   
   // Noise
   
+  template<class AI, class Tesselator>
+  void Noise<AI, Tesselator>::release()
+  {
+    if ( tess_ ) { delete tess_; tess_ = 0; }
+  }
+
   template<class AI, class Tesselator>
   void Noise<AI, Tesselator>::set_field( Field *f )
   {
