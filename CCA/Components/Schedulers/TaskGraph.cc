@@ -571,8 +571,9 @@ TaskGraph::createDetailedTasks( LoadBalancer* lb, bool useInternalDeps )
 	const PatchSubset* pss = ps->getSubset(p);
 	for(int m=0;m<ms->size();m++){
 	  const MaterialSubset* mss = ms->getSubset(m);
-	  if(lb->inNeighborhood(pss, mss)) // can we move this comparison up
-          	                  //(does mss determines neighborhood)? - an
+	  if(lb->inNeighborhood(pss, mss) || 
+             (task->getType() == Task::Output 
+              && d_myworld->myrank() % lb->getNthProc() == 0)) 
 
 	    createDetailedTask(dt, task, pss, mss);
 	}
