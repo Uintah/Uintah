@@ -197,6 +197,19 @@ void SolveMatrix::execute()
   matrixport = (MatrixIPort *)get_iport("Matrix");
   rhsport = (MatrixIPort *)get_iport("RHS");
   solport = (MatrixOPort *)get_oport("Solution");
+
+  if (!matrixport) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!rhsport) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!solport) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
 #ifdef SCI_SPARSELIB
  int flag = 1;
 #endif

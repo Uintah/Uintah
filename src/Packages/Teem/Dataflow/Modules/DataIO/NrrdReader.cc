@@ -69,6 +69,11 @@ void NrrdReader::execute()
 {
   string fn(filename_.get());
   outport_ = (NrrdOPort *)get_oport("Output Data");
+  if (!outport_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+
   
   // Read the status of this file so we can compare modification timestamps
   struct stat buf;

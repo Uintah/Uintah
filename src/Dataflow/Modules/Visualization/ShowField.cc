@@ -175,6 +175,19 @@ ShowField::execute()
   ogeom_ = (GeometryOPort *)get_oport("Scene Graph");
   FieldHandle fld_handle;
 
+  if (!fld_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!color_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!ogeom_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+
   fld_->get(fld_handle);
   if(!fld_handle.get_rep()){
     warning("No Data in port 1 field.");

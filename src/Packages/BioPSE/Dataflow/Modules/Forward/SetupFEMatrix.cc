@@ -113,6 +113,23 @@ void SetupFEMatrix::execute(){
   oportMtrx_ = (MatrixOPort *)get_oport("FEM Matrix");
   oportRhs_ = (MatrixOPort *)get_oport("RHS");
 
+  if (!iportField_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!iportInterp_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!oportMtrx_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if (!oportRhs_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+
   FieldHandle hField;
   if(!iportField_->get(hField)){
     msgStream_ << "Error: Cann't get field" << endl;

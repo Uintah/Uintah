@@ -86,6 +86,20 @@ void ShowDipoles::execute(){
   ifield_ = (FieldIPort *)get_iport("dipoleFld");
   ofield_ = (FieldOPort *)get_oport("dipoleFld");
   ogeom_ = (GeometryOPort *)get_oport("Geometry");
+
+  if (!ifield_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!ofield_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if (!ogeom_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  
   
   FieldHandle fieldH;
   PointCloud<Vector> *field_pcv;

@@ -130,6 +130,23 @@ void SetupBEMatrix::execute(){
   iportSurfOut_ = (FieldIPort *)get_iport("Outer Surface");
   oportMatrix_ = (MatrixOPort *)get_oport("Zbh Matrix");
   oportSurfOut_ = (FieldOPort *)get_oport("Outer Surf with Pots");
+
+  if (!iportSurfInn_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!iportSurfOut_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!oportMatrix_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if (!oportSurfOut_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
    
   //! getting input fields
   FieldHandle hFieldInn;

@@ -119,6 +119,10 @@ GenericReader<HType>::execute()
 
   // Send the data downstream.
   SimpleOPort<HType> *outport = (SimpleOPort<HType> *)get_oport(0);
+  if (!outport) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
   outport->send(handle_);
 }
 

@@ -73,8 +73,21 @@ MatrixReceive::~MatrixReceive(){ }
 void MatrixReceive::execute()
 {
   imat1 = (MatrixIPort *)get_iport("Matrix");
-  omat1 = (MatrixOPort *)get_oport("Matrix");
-  omat2 = (MatrixOPort *)get_oport("Matrix");
+  omat1 = (MatrixOPort *)get_oport("Matrix1");
+  omat2 = (MatrixOPort *)get_oport("Matrix2");
+
+  if (!imat1) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!omat1) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if (!omat2) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
 /* OBTAIN HOST:PORT INFORMATION */
 
  const char *hport=hpTCL.get().c_str();

@@ -66,7 +66,15 @@ RescaleColorMap::execute()
   ColorMapHandle cmap;
   ColorMapIPort *imap = (ColorMapIPort *)get_iport("ColorMap");
   ColorMapOPort *omap = (ColorMapOPort *)get_oport("ColorMap");
-  if(!imap || !imap->get(cmap)) {
+  if (!imap) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!omap) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if(!imap->get(cmap)) {
     return;
   }
   cmap = new ColorMap(*cmap.get_rep());
@@ -80,6 +88,10 @@ RescaleColorMap::execute()
     while (pi != range.second)
     {
       FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);
+      if (!ifield) {
+	postMessage("Unable to initialize "+name+"'s iport\n");
+	return;
+      }
       FieldHandle field;
       if (ifield->get(field)) {
 

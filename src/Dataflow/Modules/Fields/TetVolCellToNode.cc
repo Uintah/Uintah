@@ -64,13 +64,21 @@ void TetVolCellToNode::execute()
   vector<int>    ref_counts;
 
   // must find ports and have valid data on inputs
-  if (!(inport_=(FieldIPort*)get_iport("Cell centered volume")) ||
-      !inport_->get(inhandle_) || 
+  inport_ = (FieldIPort*)get_iport("Cell centered volume");
+
+  if (!inport_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!inport_->get(inhandle_) || 
       !(infield_ = inhandle_.get_rep()))
     return;
 
-  if (!(outport_=(FieldOPort*)get_oport("Node centered volume")))
+  outport_ = (FieldOPort*)get_oport("Node centered volume");
+  if (!outport_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
     return;
+  }
 
   // we expect that the input field is a TetVol<Vector>
   if (infield_->get_type_description()->get_name() !=

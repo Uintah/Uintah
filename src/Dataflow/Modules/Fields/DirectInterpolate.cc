@@ -80,6 +80,10 @@ DirectInterpolate::execute()
 {
   dst_port_ = (FieldIPort *)get_iport("Destination");
   FieldHandle dfieldhandle;
+  if (!dst_port_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
   if (!(dst_port_->get(dfieldhandle) && dfieldhandle.get_rep()))
   {
     return;
@@ -87,6 +91,10 @@ DirectInterpolate::execute()
 
   src_port_ = (FieldIPort *)get_iport("Source");
   FieldHandle sfieldhandle;
+  if (!src_port_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
   if (!(src_port_->get(sfieldhandle) && sfieldhandle.get_rep()))
   {
     return;
@@ -100,6 +108,10 @@ DirectInterpolate::execute()
   }
 
   ofp_ = (FieldOPort *)get_oport("Interpolant");
+  if (!ofp_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
 
   const TypeDescription *td0 = dfieldhandle->get_type_description();
   const TypeDescription *td1 = dfieldhandle->data_at_type_description();

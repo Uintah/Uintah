@@ -37,7 +37,6 @@
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/ModuleHelper.h>
 #include <Dataflow/Network/Network.h>
-#include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Core/Geom/GeomPick.h>
 #include <Core/Geom/GeomObj.h>
@@ -385,11 +384,19 @@ void Module::rename_iport(int, const string&)
 
 IPort *Module::get_iport(const string &name)
 {
+  if (get_iports(name).first==get_iports(name).second) {
+    //postMessage("Unable to initialize "+name+"'s iports\n");
+    return 0;
+  }
   return get_iport(get_iports(name).first->second);
 }
 
 OPort *Module::get_oport(const string &name)
 {
+  if (get_oports(name).first==get_oports(name).second) {
+    //postMessage("Unable to initialize "+name+"'s oports\n");
+    return 0;
+  }
   return get_oport(get_oports(name).first->second);
 }
 

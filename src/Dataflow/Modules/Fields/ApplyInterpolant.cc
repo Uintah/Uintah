@@ -78,6 +78,11 @@ ApplyInterpolant::execute()
 {
   src_port = (FieldIPort *)get_iport("Source");
   FieldHandle fsrc_h;
+
+  if(!src_port) {
+    postMessage("Unable to initialize "+name+"'s iport");
+    return;
+  }
   if (!(src_port->get(fsrc_h) && fsrc_h.get_rep()))
   {
     return;
@@ -85,6 +90,11 @@ ApplyInterpolant::execute()
 
   itp_port = (FieldIPort *)get_iport("Interpolant");
   FieldHandle fitp_h;
+
+  if (!itp_port) {
+    postMessage("Unable to initialize "+name+"'s iport"); 
+    return;
+  }
   if (!(itp_port->get(fitp_h) && fitp_h.get_rep()))
   {
     return;
@@ -109,6 +119,11 @@ ApplyInterpolant::execute()
   }
 
   ofp = (FieldOPort *)get_oport("Output");
+  if (!ofp) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+    
   ofp->send(algo->execute(fsrc_h, fitp_h));
 }
 

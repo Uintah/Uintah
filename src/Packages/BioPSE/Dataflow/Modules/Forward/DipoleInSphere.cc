@@ -100,6 +100,20 @@ void DipoleInSphere::execute() {
   iportDip_ = (FieldIPort *)get_iport("Dipole Sources");
   oportPot_ = (FieldOPort *)get_oport("SphereWithPots");
   FieldHandle field_handle;
+
+  if (!iportGeom_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!iportDip_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!oportPot_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  
   
   if (!iportGeom_->get(field_handle)){
     msgStream_ << "Cann't get mesh data" << endl;

@@ -91,6 +91,20 @@ void TextureVolVis::execute(void)
   intexture = (GLTexture3DIPort *)get_iport("GL Texture");
   incolormap = (ColorMapIPort *)get_iport("Color Map");
   ogeom = (GeometryOPort *)get_oport("Geometry");
+
+  if (!intexture) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!incolormap) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!ogeom) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+
   
   if (!intexture->get(tex)) {
     return;

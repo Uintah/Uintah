@@ -108,6 +108,15 @@ void GLTextureBuilder::execute(void)
   infield_ = (FieldIPort *)get_iport("Field");
   otexture_ = (GLTexture3DOPort *)get_oport("GL Texture");
   FieldHandle sfield;
+
+  if (!infield_) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!otexture_) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  } 
   if (!infield_->get(sfield))
   {
     return;

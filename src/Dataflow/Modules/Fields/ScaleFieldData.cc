@@ -73,7 +73,11 @@ ScaleFieldData::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  Field *ifield; 
+  Field *ifield;
+  if (!ifp) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
   if (!(ifp->get(ifieldhandle) && (ifield = ifieldhandle.get_rep())))
   {
     return;
@@ -81,6 +85,10 @@ ScaleFieldData::execute()
 
   MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Input Matrix");
   MatrixHandle imatrix;
+  if (!imatrix_port) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
   if (!imatrix_port->get(imatrix))
   {
     return;
@@ -105,6 +113,10 @@ ScaleFieldData::execute()
   FieldHandle ofieldhandle(algo->execute(ifieldhandle, imatrix));
 
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
+  if (!ofield_port) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
   ofield_port->send(ofieldhandle);
 }
 
