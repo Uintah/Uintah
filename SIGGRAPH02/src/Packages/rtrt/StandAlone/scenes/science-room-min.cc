@@ -94,9 +94,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   double east_west_wall_length=8;
   double north_south_wall_length=8;
   double wall_height=4;
-  double door_height=2;
-  double door_width=2;
-  double door_inset_distance=1;
+  double door_height=2.3;
+  double door_width=1.7;
+  double door_inset_distance=1.15;
   double wall_thickness=0.2;
   double fc_thickness=0.001;
 
@@ -109,7 +109,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   ImageMaterial *stucco = new ImageMaterial("/usr/sci/data/Geometry/textures/science-room/stucco.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
-		      1, Color(0,0,0), 0);
+		      1, Color(0,0,0), 0, 0, true);
 
   Point north_wall_center(center+east_west_wall_length/2*north+
 			  wall_height/2*up);
@@ -200,17 +200,17 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   TexturedTri *tri;
 
   p1=Point(south_ceiling_west_corner);
-  p1t=Point(0,0,0);
+  p1t=Point(1,1,0);
   p2=Point(south_floor_west_corner);
-  p2t=Point(0,1,0);
+  p2t=Point(1,0,0);
   p3=Point(south_floor_west_corner+door_inset_distance*east);
-  p3t=Point(door_inset_distance/north_south_wall_length,1,0);
+  p3t=Point(1-door_inset_distance/north_south_wall_length,0,0);
   p4=Point(p3+door_width*east);
-  p4t=Point((door_inset_distance+door_width)/north_south_wall_length,1,0);
+  p4t=Point(1-(door_inset_distance+door_width)/north_south_wall_length,0,0);
   p5=Point(south_floor_east_corner);
-  p5t=Point(1,1,0);
+  p5t=Point(0,0,0);
   p6=Point(south_ceiling_east_corner);
-  p6t=Point(1,0,0);
+  p6t=Point(0,1,0);
   p7=Point(p3+door_height*up);
   p7t=Point(p3t.x(),door_height/wall_height,0);
   p8=Point(p4+door_height*up);
@@ -271,17 +271,17 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   south_wall->add(tri);
 
   p1=Point(north_ceiling_east_corner);
-  p1t=Point(0,0,0);
+  p1t=Point(0,1,0);
   p2=Point(north_floor_east_corner);
-  p2t=Point(0,1,0);
+  p2t=Point(0,0,0);
   p3=Point(north_floor_east_corner-door_inset_distance*north);
-  p3t=Point(door_inset_distance/east_west_wall_length,1,0);
+  p3t=Point(door_inset_distance/east_west_wall_length,0,0);
   p4=Point(p3-door_width*north);
-  p4t=Point((door_inset_distance+door_width)/east_west_wall_length,1,0);
+  p4t=Point((door_inset_distance+door_width)/east_west_wall_length,0,0);
   p5=Point(south_floor_east_corner);
-  p5t=Point(1,1,0);
+  p5t=Point(1,0,0);
   p6=Point(south_ceiling_east_corner);
-  p6t=Point(1,0,0);
+  p6t=Point(1,1,0);
   p7=Point(p3+door_height*up);
   p7t=Point(p3t.x(),door_height/wall_height,0);
   p8=Point(p4+door_height*up);
@@ -434,7 +434,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 		      Color(0,0,0), 0);
   table->add(new UVCylinder(cement_pedestal, center,
 			    center+Vector(0,0,0.5), 1.5));
-  Material *silver = new MetalMaterial(Color(0.7,0.73,0.8), 12);
+  Material *silver = new MetalMaterial(Color(0.5,0.5,0.5), 12);
   table->add(new Disc(silver, center+Vector(0,0,0.5),
 		      Vector(0,0,1), 1.5));
 
