@@ -1059,4 +1059,14 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   //  Turn scrubbing back on
   ParentOldDW->setScrubbing(ParentOldDW_scrubmode);
   ParentNewDW->setScrubbing(ParentNewDW_scrubmode);
+  
+  //__________________________________
+  // clean up memory
+  if(press_matlSet->removeReference()){
+    delete press_matlSet;
+  }
+  if(one_matl->removeReference()){
+    delete one_matl;
+  }
+  
 }
