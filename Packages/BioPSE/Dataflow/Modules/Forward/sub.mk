@@ -27,9 +27,10 @@ include $(SRCTOP_ABS)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/Forward
 
 
-SRCS     += $(SRCDIR)/DipoleInSphere.cc\
+SRCS     += $(SRCDIR)/ApplyFEMCurrentSource.cc\
+	    $(SRCDIR)/DipoleInSphere.cc\
 	    $(SRCDIR)/SetupFEMatrix.cc\
-	    $(SRCDIR)/ApplyFEMCurrentSource.cc\
+	    
 #[INSERT NEW CODE FILE HERE]
 
 

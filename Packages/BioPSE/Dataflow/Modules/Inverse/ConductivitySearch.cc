@@ -162,13 +162,8 @@ void ConductivitySearch::build_basis_matrices() {
   tvH = dynamic_cast<TetVol<int> *>(mesh_in_.get_rep());
   vector<pair<int, double> > dirBC;
   dirBC.push_back(pair<int, double>(0, 0.0));
-  Array1<double> z(6);
-  z.initialize(0);
-  Tensor zero(z);
-  Array1<double> id(6);
-  id[0] = id[3] = id[5] = 1;
-  id[1] = id[2] = id[4] = 0;
-  Tensor identity(id);
+  Tensor zero(0);
+  Tensor identity(1);
 
   MatrixHandle aH;
   MatrixHandle bH;
@@ -204,6 +199,14 @@ void ConductivitySearch::initialize_search() {
   // fill in our random conductivities and build our stiffness matrix frame
   misfit_.resize(NCONDUCTIVITIES_);
   conductivities_.newsize(NCONDUCTIVITIES_, NDIM_);
+
+  ColumnMatrix *cm;
+  cond_vector_ = cm = new ColumnMatrix(NDIM_*2);
+  int c;
+  for (int c=0; c<NDIM_*2; c++) (*cm)[c]=0;
+  Array1<Tensor> conds;
+  if (mesh_in_->get("conductivity_table", conds))
+    for (c=NDIM_; c<NDIM_*2; c++) (*cm)[c]=conds[c-NDIM_].mat_[0][0];
 
   int seed = seed_gui_.get();
   seed_gui_.set(seed+1);
@@ -259,22 +262,26 @@ void ConductivitySearch::send_and_get_data(int which_conductivity) {
 
   // build the new conductivity vector, the new mesh (just new tensors), 
   // and the new fem matrix
+  cond_vector_.detach();
+  FieldHandle mesh_out(mesh_in_);
+  mesh_out.detach();
+  Array1<Tensor> conds;
+  ColumnMatrix *cm = dynamic_cast<ColumnMatrix*>(cond_vector_.get_rep());
+  int i;
+  for (i=0; i<NDIM_; i++) {
+    double c=conductivities_(which_conductivity, i);
+    conds.add(Tensor(c));
+    (*cm)[i]=c;
+  }
+  mesh_out->store("data_storage", string("table"));
+  mesh_out->store("name", string("conductivity"));
+  mesh_out->store("conductivity_table", conds);
+
   MatrixHandle fem_mat = build_composite_matrix(which_conductivity);
-
-  // TODO -- build the cond_vector (store/get original conds in class)
-  //   detach the mesh so we can change the conductivity tensor prop
-
-  TetVolMeshHandle tvmH;
-  tvmH = dynamic_cast<TetVol<int>*>(mesh_in_.get_rep())->get_typed_mesh();
-  tvmH.detach();
-  TetVol<int>* mesh_out;
-  mesh_out = new TetVol<int>(tvmH, Field::CELL);
-  ColumnMatrix *cond_vector;
   
   // send out data
   mesh_out_=mesh_out;
   mesh_oport_->send_intermediate(mesh_out_);
-  cond_vector_=cond_vector;
   cond_vector_oport_->send_intermediate(cond_vector_);
   fem_mat_oport_->send(fem_mat);
   last_intermediate_=1;
@@ -316,10 +323,15 @@ int ConductivitySearch::pre_search() {
 //! Evaluate a test conductivity.
 
 void ConductivitySearch::eval_test_conductivity() {
+  
+  int in_range=1;
+  for (int i=0; i<NDIM_; i++)
+    if (conductivities_(NSEEDS_,i)<(*(cond_params_.get_rep()))[i][2]) 
+      in_range=0;
+    else if (conductivities_(NSEEDS_,i)>(*(cond_params_.get_rep()))[i][3])
+      in_range=0;
 
-  // TODO -- if (conductivities_[NSEEDS_][0] is in range)
-
-  if (conductivities_(NSEEDS_,0) > 0) {
+  if (in_range) {
     send_and_get_data(NSEEDS_);
   } else {
     misfit_[NSEEDS_]=OUT_OF_BOUNDS_MISFIT_;
@@ -524,22 +536,22 @@ void ConductivitySearch::execute() {
 //! Commands invoked from the Gui.  Pause/unpause/stop the search.
 
 void ConductivitySearch::tcl_command(TCLArgs& args, void* userdata) {
-    if (args[1] == "pause") {
-        if (mylock_.tryLock())
-	  cerr << "ConductivitySearch pausing..."<<endl;
-        else 
-	  cerr << "ConductivitySearch: can't lock -- already locked"<<endl;
-    } else if (args[1] == "unpause") {
-        if (mylock_.tryLock())
-	  cerr << "ConductivitySearch: can't unlock -- already unlocked"<<endl;
-        else
-	  cerr << "ConductivitySearch: unpausing"<<endl;
-        mylock_.unlock();
-    } else if (args[1] == "stop") {
-        stop_search_=1;
-    } else {
-        Module::tcl_command(args, userdata);
-    }
+  if (args[1] == "pause") {
+    if (mylock_.tryLock())
+      cerr << "ConductivitySearch pausing..."<<endl;
+    else 
+      cerr << "ConductivitySearch: can't lock -- already locked"<<endl;
+  } else if (args[1] == "unpause") {
+    if (mylock_.tryLock())
+      cerr << "ConductivitySearch: can't unlock -- already unlocked"<<endl;
+    else
+      cerr << "ConductivitySearch: unpausing"<<endl;
+    mylock_.unlock();
+  } else if (args[1] == "stop") {
+    stop_search_=1;
+  } else {
+    Module::tcl_command(args, userdata);
+  }
 }
 
 } // End namespace BioPSE
