@@ -1313,7 +1313,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     if (d_boundaryCondition->getOutletBC())
     d_boundaryCondition->velRhoHatOutletBC(pc, patch, cellinfo, delta_t,
 					   &velocityVars, &constVelocityVars,
-					   maxUxplus, maxAbsV, maxAbsW);
+					   avUxplus, maxAbsV, maxAbsW);
     /*
   if (d_pressure_correction) {
   int outlet_celltypeval = d_boundaryCondition->outletCellType();
