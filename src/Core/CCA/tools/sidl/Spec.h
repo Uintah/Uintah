@@ -201,7 +201,7 @@ private:
 class Method {
 public:
   enum Modifier {
-    Abstract, Final, Static, NoModifier, Unknown,
+    Abstract, Final, Static, NoModifier, Unknown
   };
 
   enum Modifier2 {

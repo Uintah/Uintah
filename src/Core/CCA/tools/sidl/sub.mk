@@ -30,7 +30,7 @@ SRCS := $(SRCDIR)/Spec.cc $(SRCDIR)/SymbolTable.cc $(SRCDIR)/emit.cc \
 PROGRAM := $(SRCDIR)/sidl
 SIDL_EXE := $(PROGRAM)
 PSELIBS :=
-LIBS := -luuid
+LIBS := $(UUID_LIB)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
