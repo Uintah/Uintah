@@ -367,7 +367,8 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       f33 =  1./(F(1,1)*F(2,2));
 
       while(fabs(delta) > epsilon){
-        jv = f33*(F(1,1)*F(2,2) - F(2,1)*F(1,2));
+        double detF2=(F(1,1)*F(2,2) - F(2,1)*F(1,2));
+        jv = f33*detF2;
 
         sig33 = (shear/(3.*pow(jv,2./3.)))*
                 (2.*f33*f33 -
@@ -376,8 +377,8 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 
 	f33p = 1.01*f33;
 	f33m = 0.99*f33;
-        jvp = f33p*(F(1,1)*F(2,2) - F(2,1)*F(1,2));
-        jvm = f33m*(F(1,1)*F(2,2) - F(2,1)*F(1,2));
+        jvp = f33p*detF2;
+        jvm = f33m*detF2;
 
         sig33p = (shear/(3.*pow(jvp,2./3.)))*
                 (2.*f33p*f33p -
