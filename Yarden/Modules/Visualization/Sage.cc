@@ -59,6 +59,7 @@
 #include <SCICore/Math/Trig.h>
 
 #include <math.h>
+//using namespace Std;
 #include <iostream.h>
 #include <strstream.h>
 #include <values.h>
@@ -67,6 +68,10 @@
 #include <Yarden/Datatypes/General/Clock.h>
 #include <Yarden/Modules/Visualization/mcube_scan.h>
 #include <Yarden/Modules/Visualization/BonTree.h>
+
+#ifdef __GNUG__
+int trunc(double v ) { return v > 0 ? int(floor(v)) : int(floor(v+1)); }
+#endif
 
 namespace Yarden {
 namespace Modules {
@@ -81,9 +86,9 @@ using namespace SCICore::TclInterface;
 using namespace Yarden::Datatypes;
 
 
-//#define DOUBLE
-  //#define VIS_WOMAN
-#define FLOAT
+#define DOUBLE
+//#define VIS_WOMAN
+  //#define FLOAT
   
 #ifdef VIS_WOMAN
 #define SHORT
@@ -135,8 +140,8 @@ using namespace Yarden::Datatypes;
   
   int stopat = 10000000;
   int trid = 0;
-  Value MIN(Value p, Value q) {return p<q? p : q;}
-  Value MAX(Value p, Value q) {return p>q? p : q;}
+//   Value MIN(Value p, Value q) {return p<q? p : q;}
+//   Value MAX(Value p, Value q) {return p>q? p : q;}
   
 struct Table {
   int value;
@@ -196,7 +201,6 @@ Statistics::print()
       extract, visible, not_visible;
     visible = bbox_visible = bbox_not_visible = reduce =
       extract = visible = not_visible = 0;
-    iotimer_t time = 0;
     
     printf("table size: %d\n", tpos );
     for (int i=0; i<=tpos; i++ ) {
@@ -205,12 +209,12 @@ Statistics::print()
       if ( table[i].visible == 1 ) visible++;
       if ( table[i].visible == -1 ) not_visible++;
 
-      fprintf( file, "%d %2d  %2d %ll %ll\n",
-	       table[i].value,
-	       table[i].bbox_visible,
-	       table[i].visible,
-	       table[i].time>>3,
-	       table[i].cycle>>3);
+//       fprintf( file, "%d %2d  %2d %ll %ll \n",
+// 	       table[i].value,
+// 	       table[i].bbox_visible,
+// 	       table[i].visible,
+// 	       table[i].time>>3,
+// 	       table[i].cycle>>3);
     }
 
     fclose(file);
@@ -338,8 +342,8 @@ class Sage : public Module
   GLubyte *data;
   TCLdouble isoval;
   TCLdouble isoval_min, isoval_max;
-  TCLint tcl_value, tcl_bbox, tcl_visibility;
-  TCLint tcl_scan, tcl_depth, tcl_reduce, tcl_cover, tcl_all;
+  TCLint tcl_bbox, tcl_value,tcl_visibility, tcl_scan;
+  TCLint tcl_depth, tcl_reduce, tcl_cover, tcl_all;
   TCLint tcl_rebuild;
   
   int value, bbox_visibility, visibility, cutoff_depth;
@@ -656,7 +660,6 @@ void Sage::execute()
   
   iso_value = isoval.get();
 
-  iotimer_t start_search = read_time();
   search();
   
   iotimer_t end = read_time();
@@ -684,7 +687,7 @@ void Sage::execute()
 // 	   (make_done - make_err  )*cycleval*1e-9);
 //   }  
 //  printf("Reset Timer: %.1lf\n", (end_reset-start_reset) *cycleval*1e-9 );
-  printf("Exec Timer: %.3lf\n", (end-start) *cycleval*1e-9 );
+  printf("Exec Timer: %.3f\n", (end-start) *cycleval*1e-9 );
 
   statistics.print();
   //stack.print();
@@ -867,8 +870,8 @@ Sage::search()
   printf("Scan: %d cells\n", statistics.extracted );
 //   printf("Scan : %d %d\n", scan_yes, scan_no );	
   
-  printf(" Search Timers: \n\tinit %.3lf  \n"
-	 "\tsearch %.3lf (%.3lf  %.3lf) \n"
+  printf(" Search Timers: \n\tinit %.3f  \n"
+	 "\tsearch %.3f (%.3f  %.3f) \n"
 	 "\tall %.3lf\n ",
    	 (end-start -(end1-start1))*cycleval*1e-9,
    	 (end1-start1)*cycleval*1e-9, 
@@ -885,7 +888,7 @@ int permutation[8][8] = {
   4,6,0,5,7,2,1,3,
   5,7,4,1,3,6,0,2,
   6,7,2,4,5,0,3,1,
-  7,6,3,5,4,1,2,0,
+  7,6,3,5,4,1,2,0
 };
 
 int
@@ -920,7 +923,7 @@ Sage::search( double v )
     int mask;
     BonNode *node;
     //table[tpos].cycle = read_time() - start;
-    iotimer_t end = read_time();
+    //    iotimer_t end = read_time();
     
     //tpos++;
     stack.pop( node, i, j, k, dx, dy, dz, mask);
@@ -1036,6 +1039,7 @@ Sage::search( double v )
      }
      
      int dx1, dy1, dz1;
+     dx1 = dy1 = dz1 = 0;
      if ( mask & dx ) {
        dx1 = dx & ~mask;
        dx  = mask-1;
@@ -1095,7 +1099,7 @@ Sage::search( double v )
     }
   }
   iotimer_t end = read_time();
-  printf("Search time = %.3lf\n", (end - begin)*cycleval*1e-9);
+  printf("Search time = %.3f\n", (end - begin)*cycleval*1e-9);
   //shadow.stat();
 }
 
@@ -1207,7 +1211,7 @@ Sage::extract( double iso, int i, int j, int k, int dx, int dy, int dz )
     double_edges[0] = double_edges[1] = 1;
     
     for (; v2 != -1; v1=v2,v2=vertex[v++]) {
-      int l= (p[v1].x-p[v0].x)*(p[v2].y-p[v0].y) 
+      double l= (p[v1].x-p[v0].x)*(p[v2].y-p[v0].y) 
 	- (p[v1].y-p[v0].y)*(p[v2].x-p[v0].x);
       double_edges[e] = l > 0 ? 1 : -1;
       scan_edges[e] = v2;
@@ -1281,7 +1285,7 @@ Sage::make_current( int xres, int yres) {
   glClear(GL_COLOR_BUFFER_BIT  );
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  int errcode;
+  GLenum errcode;
   while((errcode=glGetError()) != GL_NO_ERROR)
     cerr << "1- GL Err: " << (char*)gluErrorString(errcode)
 	 << endl;
@@ -1292,7 +1296,7 @@ Sage::make_current( int xres, int yres) {
 void
 Sage::redraw( int xres, int yres)
 {
-  int errcode;
+  GLenum errcode;
   rebuild_start = read_time();
   int ok = make_current( xres, yres ) ;
   rebuild_make = read_time();
