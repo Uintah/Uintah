@@ -1,35 +1,91 @@
 
 #include <config/sci.cf>
 
-OBJS = BasicSurfaces.o  Colormap.o  ColormapPort.o  ColumnMatrix.o  \
-	ColumnMatrixPort.o  ContourSet.o  ContourSetPort.o  \
+OBJS = BasicSurfaces.o  Colormap.o  ColormapPort.o  \
+	ColumnMatrix.o  ColumnMatrixPort.o  ContourSet.o  ContourSetPort.o  \
 	Datatype.o  DenseMatrix.o  \
 	GeometryPort.o  \
 	Matrix.o  MatrixPort.o  Mesh.o  MeshPort.o  \
 	MultiMesh.o  MultiMeshPort.o  Octree.o  OctreePort.o  ScalarField.o  \
-	ScalarFieldPort.o  ScalarFieldRG.o  ScalarFieldUG.o  \
+	ScalarFieldPort.o  ScalarFieldRG.o  ScalarFieldRGBase.o  \
+	ScalarFieldRGchar.o  ScalarFieldRGint.o  ScalarFieldRGfloat.o  \
+	ScalarFieldRGdouble.o  ScalarFieldUG.o  SigmaSet.o  SigmaSetPort.o  \
 	SoundPort.o  Surface.o  SurfacePort.o  SymSparseRowMatrix.o \
 	TriSurface.o  \
 	VectorField.o  \
 	VectorFieldPort.o  VectorFieldRG.o  VectorFieldUG.o \
 	ssmult.o
-SRCS = BasicSurfaces.cc Colormap.cc ColormapPort.cc ColumnMatrix.cc \
-	ColumnMatrixPort.cc ContourSet.cc ContourSetPort.cc \
+GENSRCS = ScalarFieldRGchar.cc  ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
+	ScalarFieldRGdouble.cc  ScalarFieldRG.cc
+SRCS = $(GENSRCS) BasicSurfaces.cc Colormap.cc ColormapPort.cc \
+	ColumnMatrix.cc  ColumnMatrixPort.cc ContourSet.cc ContourSetPort.cc \
 	Datatype.cc DenseMatrix.cc \
 	GeometryPort.cc \
 	Matrix.cc MatrixPort.cc Mesh.cc MeshPort.cc \
 	MultiMesh.cc MultiMeshPort.cc Octree.cc OctreePort.cc ScalarField.cc \
-	ScalarFieldPort.cc ScalarFieldRG.cc ScalarFieldUG.cc \
+	ScalarFieldPort.cc ScalarFieldRG.cc ScalarFieldRGBase.cc \
+	ScalarFieldRGchar.cc ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
+	ScalarFieldRGdouble.cc ScalarFieldUG.cc SigmaSet.cc SigmaSetPort.cc \
 	SoundPort.cc Surface.cc SurfacePort.cc SymSparseRowMatrix.cc \
 	TriSurface.cc \
 	VectorField.cc  \
 	VectorFieldPort.cc VectorFieldRG.cc VectorFieldUG.cc \
 	ssmult.c
+GENH = ScalarFieldRGchar.h  ScalarFieldRGint.h  ScalarFieldRGfloat.h \
+	ScalarFieldRGdouble.h ScalarFieldRG.h
 
 LIBNAME = Datatypes
+
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDataflow -lGeom -lGeometry -lComm -lMath \
 	-lTCL -lClasslib -lMultitask -lMalloc -lm
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS), $(SO_LIBS), $(SO_LDFLAGS))
+
+depend:: $(GENH) $(GENSRCS)
+
+clean::
+	$(RM) $(GENSRCS) $(GENH)
+
+ScalarFieldRGchar.o: ScalarFieldRGchar.h
+	
+ScalarFieldRGchar.h: ScalarFieldRGTYPE.h
+	sed 's/TYPE/char/g' < ScalarFieldRGTYPE.h > ScalarFieldRGchar.h
+
+ScalarFieldRGchar.cc: ScalarFieldRGTYPE.cc
+	sed 's/TYPE/char/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGchar.cc
+
+ScalarFieldRGint.o: ScalarFieldRGint.h
+	
+ScalarFieldRGint.h: ScalarFieldRGTYPE.h
+	sed 's/TYPE/int/g' < ScalarFieldRGTYPE.h > ScalarFieldRGint.h
+
+ScalarFieldRGint.cc: ScalarFieldRGBase.cc
+	sed 's/TYPE/int/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGint.cc
+
+ScalarFieldRGfloat.o: ScalarFieldRGfloat.h
+	
+ScalarFieldRGfloat.h: ScalarFieldRGTYPE.h
+	sed 's/TYPE/float/g' < ScalarFieldRGTYPE.h > ScalarFieldRGfloat.h
+
+ScalarFieldRGfloat.cc: ScalarFieldRGBase.cc
+	sed 's/TYPE/float/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGfloat.cc
+
+ScalarFieldRGdouble.o: ScalarFieldRGdouble.h
+	
+ScalarFieldRGdouble.h: ScalarFieldRGTYPE.h
+	sed 's/TYPE/double/g' < ScalarFieldRGTYPE.h > ScalarFieldRGdouble.h
+
+ScalarFieldRGdouble.cc: ScalarFieldRGBase.cc
+	sed 's/TYPE/double/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGdouble.cc
+
+ScalarFieldRG.o: ScalarFieldRG.h
+	
+ScalarFieldRG.h: ScalarFieldRGdouble.h
+	sed 's/ScalarFieldRGdouble/ScalarFieldRG/g' < ScalarFieldRGdouble.h > ScalarFieldRG.h
+
+ScalarFieldRG.cc: ScalarFieldRGdouble.cc
+	sed 's/ScalarFieldRGdouble/ScalarFieldRG/g' < ScalarFieldRGdouble.cc > ScalarFieldRG.cc
+
+Octree.o: ScalarFieldRG.h
