@@ -48,6 +48,7 @@ private:
 
 public:
   TclObj( const string &script);
+  TclObj( const string &script, const string &id);
   virtual ~TclObj();
 
   bool has_window() { return has_window_; }
