@@ -303,6 +303,7 @@ private:
       bool nosolve_timelabels_allocated;
       bool d_pressure_correction;
       const PatchSet* d_perproc_patches;
+      bool d_3d_periodic;
 
 }; // End class PicardNonlinearSolver
 } // End namespace Uintah

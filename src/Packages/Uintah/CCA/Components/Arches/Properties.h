@@ -152,6 +152,9 @@ public:
 	d_filter = filter;
       }
 #endif
+      inline void set3dPeriodic(bool periodic) {
+	d_3d_periodic = periodic;
+      }
 
 protected :
 

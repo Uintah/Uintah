@@ -104,6 +104,9 @@ public:
 	exit(0);
 	return 0;
       }
+      inline void set3dPeriodic(bool periodic) {
+	d_3d_periodic = periodic;
+      }
 
 protected:
       PhysicalConstants* d_physicalConsts;
