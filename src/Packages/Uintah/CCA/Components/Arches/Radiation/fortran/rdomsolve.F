@@ -87,7 +87,7 @@ c  call fixval assume abskg to be one but change it in props calculation
                su(ii,jj,kk) = su(ii,jj,kk) + (abs(omu(l)) * areaew) * 
      &         PI1 * (SIG * abs(fraction(bands))*
 c     Empirical model for emissivity at boundaries
-     &              abskg(ii+1,jj,kk)*
+     &              1.0d0*
      &              tg(ii+1,jj,kk)**4)
             end if
          endif
@@ -101,7 +101,7 @@ c     Empirical model for emissivity at boundaries
      &              (abs(oeta(l))*arean(ii)) *
      &         PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
-     &              abskg(ii,jj-1,kk)*
+     &              1.0d0*
      &              tg(ii,jj-1,kk)**4)
             end if
          else
@@ -113,7 +113,7 @@ c     Empirical model for emissivity at boundaries
      &              (abs(oeta(l))*arean(ii)) *
      &         PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
-     &              abskg(ii,jj+1,kk)*
+     &              1.0d0*
      &              tg(ii,jj+1,kk)**4)
             end if
          endif
@@ -127,7 +127,7 @@ c     Empirical model for emissivity at boundaries
      &              (abs(oxi(l))*areatb(ii)) *
      &         PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
-     &              abskg(ii,jj,kk-1)*
+     &              1.0d0*
      &              tg(ii,jj,kk-1)**4)
             end if
          else
@@ -138,7 +138,7 @@ c     Empirical model for emissivity at boundaries
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oxi(l))*areatb(ii)) * 
 c     Empirical model for emissivity at boundaries
-     &              abskg(ii,jj,kk+1)*
+     &              1.0d0*
      &         PI1 * (SIG * abs(fraction(bands)) *
      &              tg(ii,jj,kk+1)**4)
             end if
