@@ -144,17 +144,17 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	    set e $frame.e-$i
 	    if { ![winfo exists $e] } {
 		frame $e -width 500 -relief sunken -bd 1
-		entry $e.name -textvariable $this-name-$i -width 10 -bd 1
+		entry $e.name -textvariable $this-name-$i -width 14 -bd 1
 		bind $e.name <ButtonPress> "+$this select_widget $i"
-		button $e.color -width 8 \
+		button $e.color -width 4 \
 		    -command "$this select_widget $i; $this raise_color $frame.e-$i.color $this-$i-color color_change-$i"
 
-		checkbutton $e.shade -text "" -padx 20 -justify center \
+		checkbutton $e.shade -text "" -padx 19 -justify center \
 		    -relief flat -variable $this-shadeType-$i \
 		    -onvalue 1 -offvalue 0 -anchor w \
 		    -command "$this-c shadewidget-$i; $this select_widget $i"
 
-		checkbutton $e.on -text "" -padx 20 -justify center \
+		checkbutton $e.on -text "" -padx 19 -justify center \
 		    -relief flat -variable $this-on-$i -onvalue 1 -offvalue 0 \
 		    -anchor w -command "$this-c toggleon-$i"
 		frame $e.fill -width 500
@@ -410,10 +410,10 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 
     method label_widget_columns { frame } {
         frame $frame
-        label $frame.name -text "Name" -width 10 -relief groove
-        label $frame.color -text "Color" -width 8 -relief groove
+        label $frame.name -text "Name" -width 14 -relief groove
+        label $frame.color -text "Color" -width 4 -relief groove
         label $frame.shade -text "Solid" -width 8 -relief groove
-        label $frame.onoff -text "On" -width 8 -relief groove
+        label $frame.onoff -text "On" -width 9 -relief groove
         label $frame.empty -text "" -width 3
         pack $frame.name $frame.color $frame.shade \
 	    $frame.onoff $frame.empty -side left 
