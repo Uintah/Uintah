@@ -301,7 +301,7 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
         term[c] = 0.0;
       }        
      else{   
-       Cs = LM[c] / MM[c];
+       Cs = sqrt(LM[c] / MM[c]);
        if (Cs < 0.0){       
          Cs = 0.0;
          }
