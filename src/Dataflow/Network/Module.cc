@@ -589,14 +589,21 @@ void Module::get_position(int& x, int& y)
 }
 
 
-// Simple and limited parsing for help descriptions.
+// Simple and limited parser for help descriptions.
+// gcc-2.95.3 compiler does not support string push_back, use + instead.
+//
+// states are
+//  0 toplevel
+//  1 parsing tag
+//  2 parsing spaces.
 static string
 parse_description(const string &in)
 {
   std::stack<int> state;
+  string::size_type tagstart;
   string out;
   state.push(0);
-  state.push(2);
+  state.push(2); // start by eating spaces.
   for (unsigned int i=0; i < in.size(); i++)
   {
     char c = in[i];
@@ -608,29 +615,22 @@ parse_description(const string &in)
     {
       if (c == '<')
       {
+	tagstart = i;
 	state.push(1);
       }
       else if (c == ' ')
       {
-	// gcc-2.95.3 compiler does not support push_back
-	//out.push_back(' ');
 	out = out + ' ';
 	state.push(2);
       }
       else if (c == '.' || c == '!' || c == '?')
       {
-	// gcc-2.95.3 compiler does not support push_back
-	//out.push_back(c);
-	//out.push_back(' ');
-	//out.push_back(' ');
 	out = out + c + ' ' + ' ';
 	state.push(2);
       }
       else
       {
-	// gcc-2.95.3 compiler does not support push_back
 	out = out + c;
-	//out.push_back(c);
       }
     }
     else if (state.top() == 1)
@@ -639,16 +639,33 @@ parse_description(const string &in)
       {
 	if (i > 1 && in[i-2] == '/' && in[i-1] == 'p')
 	{
-	  // gcc-2.95.3 compiler does not support push_back
-	  //out.push_back('\n');
-	  //out.push_back('\n');
 	  out = out + '\n' + '\n';
 	  state.pop();
 	  state.push(2);
 	}
 	else
 	{
-	  state.pop();
+	  const string tag = in.substr(tagstart, i-tagstart+1);
+	  if (tag.find("<modref") == 0)
+	  {
+	    const string tmp = tag.substr(tag.find("name=\"") + 6);
+	    const string modname = tmp.substr(0, tmp.find('"'));
+	    cout << "modname = '" << modname << "'\n";
+	    out = out + modname + ' ';
+	    state.pop();
+	    state.push(2);
+	  }
+	  else if (tag.find("<listitem") == 0)
+	  {
+	    out = out + " * ";
+	    state.pop();
+	    state.push(2);
+	  }
+	  else
+	  {
+	    // Just eat this tag.
+	    state.pop();
+	  }
 	}
       }
     }
@@ -656,6 +673,7 @@ parse_description(const string &in)
     {
       if (c == '<')
       {
+	tagstart = i;
 	state.push(1);
       }
       else if (c != ' ')
