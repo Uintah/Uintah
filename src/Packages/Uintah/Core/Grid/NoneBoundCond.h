@@ -37,7 +37,7 @@ WARNING
    class NoneBoundCond : public BoundCondBase  {
    public:
       NoneBoundCond() : BoundCondBase("None") {};
-      NoneBoundCond(ProblemSpecP& ps){};
+      NoneBoundCond(ProblemSpecP&){};
       virtual ~NoneBoundCond() {};
                
    private:
