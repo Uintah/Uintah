@@ -156,7 +156,7 @@ MatrixToNrrd::create_and_send_dense_matrix_nrrd(MatrixHandle matH) {
   nd->nrrd->axis[1].kind = nrrdKindDomain;
 
   double *val = (double*)nd->nrrd->data;
-  double *data = matrix->getData();
+  double *data = matrix->get_data_pointer();
 
   for(int r=0; r<rows; r++) {
     for(int c=0; c<cols; c++) {
