@@ -495,23 +495,33 @@ void Level::setBCTypes()
     for(Patch::FaceType face = Patch::startFace;
 	face <= Patch::endFace; face=Patch::nextFace(face)){
       IntVector l,h;
-      patch->getFace(face, 1, l, h);
+      patch->getFace(face, IntVector(0,0,0), IntVector(1,1,1), l, h);
       Level::selectType neighbors;
       selectPatches(l, h, neighbors);
       if(neighbors.size() == 0){
-	patch->setBCType(face, Patch::None);
-      }
-      else {
+	if(d_index != 0){
+	  // See if there are any patches on the coarse level at that face
+	  IntVector fineLow, fineHigh;
+	  patch->getFace(face, IntVector(0,0,0), refinementRatio,
+			 fineLow, fineHigh);
+	  IntVector coarseLow = mapCellToCoarser(fineLow);
+	  IntVector coarseHigh = mapCellToCoarser(fineHigh);
+	  const LevelP& coarseLevel = getCoarserLevel();
+	  coarseLevel->selectPatches(coarseLow, coarseHigh, neighbors);
+	  if(neighbors.size() == 0){
+	    patch->setBCType(face, Patch::None);
+	  } else {
+	    patch->setBCType(face, Patch::Coarse);
+	  }
+	} else {
+	  patch->setBCType(face, Patch::None);
+	}
+      } else {
 	patch->setBCType(face, Patch::Neighbor);
       }
     }
   }
   
-  // There is a possibility that the extraLow and extraHigh indices
-  // for a patch are incorrectly determined for unequal number of cells
-  // per patch.  This is meant to correct these problems by using the
-  // above info about Patch::Neighbor to determine the extra indices.
-
   d_finalized=true;
 }
 
@@ -647,6 +657,54 @@ const LevelP& Level::getFinerLevel() const
 IntVector Level::mapCellToCoarser(const IntVector& idx) const
 {
   return idx/refinementRatio;
+}
+
+IntVector Level::mapCellToCoarser(const IntVector& idx, Vector& weight) const
+{
+  IntVector i(idx-(refinementRatio-IntVector(1,1,1)));
+  weight=Vector(double(0.5+i.x()%refinementRatio.x())/double(refinementRatio.x()),
+		double(0.5+i.y()%refinementRatio.y())/double(refinementRatio.y()),
+		double(0.5+i.z()%refinementRatio.z())/double(refinementRatio.z()));
+  return i/refinementRatio;
+}
+
+IntVector Level::mapXFaceToCoarser(const IntVector& idx, Vector& weight) const
+{
+  IntVector i(idx-(refinementRatio-IntVector(refinementRatio.x(),1,1)));
+  weight=Vector(double(i.x()%refinementRatio.x())/double(refinementRatio.x()),
+		double(0.5+i.y()%refinementRatio.y())/double(refinementRatio.y()),
+		double(0.5+i.z()%refinementRatio.z())/double(refinementRatio.z()));
+  return i/refinementRatio;
+}
+
+IntVector Level::mapYFaceToCoarser(const IntVector& idx, Vector& weight) const
+{
+  IntVector i(idx-(refinementRatio-IntVector(1,refinementRatio.y(),1)));
+  weight=Vector(double(0.5+i.x()%refinementRatio.x())/double(refinementRatio.x()),
+		double(i.y()%refinementRatio.y())/double(refinementRatio.y()),
+		double(0.5+i.z()%refinementRatio.z())/double(refinementRatio.z()));
+  return i/refinementRatio;
+}
+
+IntVector Level::mapZFaceToCoarser(const IntVector& idx, Vector& weight) const
+{
+  IntVector i(idx-(refinementRatio-IntVector(1,1,refinementRatio.z())));
+  weight=Vector(double(0.5+i.x()%refinementRatio.x())/double(refinementRatio.x()),
+		double(0.5+i.y()%refinementRatio.y())/double(refinementRatio.y()),
+		double(i.z()%refinementRatio.z())/double(refinementRatio.z()));
+  return i/refinementRatio;
+}
+
+IntVector Level::mapToCoarser(const IntVector& idx, const IntVector& dir,
+			      Vector& weight) const
+{
+  IntVector d(IntVector(1,1,1)-dir);
+  IntVector i(idx-(refinementRatio-d-dir*refinementRatio));
+  Vector o(d.asVector()*0.5);
+  weight=Vector(double(o.x()+i.x()%refinementRatio.x())/double(refinementRatio.x()),
+		double(o.y()+i.y()%refinementRatio.y())/double(refinementRatio.y()),
+		double(o.z()+i.z()%refinementRatio.z())/double(refinementRatio.z()));
+  return i/refinementRatio;
 }
 
 IntVector Level::mapCellToFiner(const IntVector& idx) const

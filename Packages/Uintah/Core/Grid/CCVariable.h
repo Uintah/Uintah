@@ -144,20 +144,23 @@ WARNING
     virtual IntVector getHigh()
     { return getHighIndex(); }
 
-    virtual void emitNormal(ostream& out, DOMElement* /*varnode*/)
+    virtual void emitNormal(ostream& out, const IntVector& l, const IntVector& h,
+			    DOM_Element* /*varnode*/)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat())
-	Array3<T>::write(out);
+	Array3<T>::write(out, l, h);
       else
 	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
     }
 
-    virtual bool emitRLE(ostream& out, DOMElement* /*varnode*/)
+    virtual bool emitRLE(ostream& out, const IntVector& l, const IntVector& h,
+			 DOM_Element* /*varnode*/)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat()){
-	RunLengthEncoder<T> rle(Array3<T>::begin(), Array3<T>::end());
+	RunLengthEncoder<T> rle(Array3<T>::iterator(this, l),
+				Array3<T>::iterator(this, h));
 	rle.write(out);
       }
       else
