@@ -218,6 +218,7 @@ endif
 	rm -Rf $(LIBDIR)
 	-rm -f sciTAGS
 	rm -f on-the-fly-libs/*.*
+	rm -f include/sci_defs/*.h
 	rm -f BioTensor BioFEM
 
 distclean:: clean
