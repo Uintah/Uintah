@@ -46,6 +46,8 @@ TurbulenceModel::sched_initFilterMatrix(const LevelP& level,
   Task* tsk = scinew Task("TurbulenceModel::initFilterMatrix",
 			  this,
 			  &TurbulenceModel::initFilterMatrix);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   sched->addTask(tsk, patches, matls);
 
 
@@ -63,6 +65,9 @@ TurbulenceModel::initFilterMatrix(const ProcessorGroup* pg,
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     PerPatch<CellInformationP> cellInfoP;
+    constCCVariable<int> cellType;
+    new_dw->get(cellType, d_lab->d_cellTypeLabel,
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     else {
@@ -70,7 +75,7 @@ TurbulenceModel::initFilterMatrix(const ProcessorGroup* pg,
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    d_filter->setFilterMatrix(pg, patch, cellinfo);
+    d_filter->setFilterMatrix(pg, patch, cellinfo, cellType);
   }
 }
 #endif
