@@ -105,7 +105,8 @@ namespace Uintah {
                    Patch::FaceType face,                 
                    CCVariable<Vector>& vel_CC,           
                    Lodi_vars* lv,
-                   const Vector& dx);
+                   const Vector& dx,
+                   SimulationStateP& sharedState);
                     
   void FaceTemp_LODI(const Patch* patch,
                     const Patch::FaceType face,
