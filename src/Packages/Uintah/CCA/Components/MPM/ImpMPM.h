@@ -359,7 +359,12 @@ private:
   int              d_numIterations;
   bool             d_doGridReset;  // Default is true, standard MPM
   Vector           d_contact_dirs; // For rigid body contact
-  int              d_max_num_iterations;
+  int              d_max_num_iterations;  // restart timestep
+  int              d_num_iters_to_decrease_delT;
+  int              d_num_iters_to_increase_delT;
+  double           d_delT_decrease_factor;
+  double           d_delT_increase_factor;
+
   
   const PatchSet* d_perproc_patches;
 
