@@ -296,6 +296,7 @@
 
 	    <ExplicitSolver>
 
+		<timeIntegratorType>RK2SSP</timeIntegratorType>
 		<max_iter>0</max_iter>	
 		<res_tol>2.0</res_tol>
 
