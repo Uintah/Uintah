@@ -36,11 +36,25 @@ using std::vector;
 #pragma reset woff 1375
 #endif
 
+namespace SCIRun {
+
+typedef struct {
+  clString name;
+  std::map<clString,ModuleInfo*> modules;
+} category;
+  
+typedef struct {
+  clString name;
+  std::map<clString,category*> categories;
+} package;
+
 typedef std::map<int,char*>::iterator char_iter;
 typedef std::map<int,inport_node*>::iterator inport_iter;
 typedef std::map<int,outport_node*>::iterator outport_iter;
-
-namespace SCIRun {
+typedef std::map<clString,int>::iterator string_iter;
+typedef std::map<clString,category*>::iterator category_iter;
+typedef std::map<clString,ModuleInfo*>::iterator module_iter;
+typedef std::map<int,package*>::iterator package_iter;
 
 
 PackageDB packageDB;
@@ -59,23 +73,28 @@ typedef void (*pkgInitter)(const clString& tclPath);
 
 void PackageDB::loadPackage(const clString& packPath)
 {
+  clString packagePath = packPath;
+  clString result;
+  std::map<int,package*> packages;
+  package* new_package = 0;
+  category* new_category = 0;
+  ModuleInfo* new_module = 0;
+  module_iter mi;
+  category_iter ci;
+  package_iter pi;
+  clString packageElt;
+  component_node* node = 0;
+  int mod_count = 0;
+
+  postMessage("Loading packages, please wait...\n", false);
+
+
   // The format of a package path element is either URL,URL,...
   // Where URL is a filename or a url to an XML file that
   // describes the components in the package.
-  clString packagePath = packPath;
-  clString result;
-  char string[100];
-  int index=0;
-
-  bool loading = false;
-
-  postMessage("Loading packages, please wait...\n", false);
-  postMessage(clString("DEBUG: package path is: '")+packagePath, false);
   while(packagePath!="") {
     // Strip off the first element, leave the rest in the path for the next
     // iteration.
-    postMessage(packagePath, false);
-    clString packageElt;
     int firstComma=packagePath.index(',');
     if(firstComma!=-1) {
       packageElt=packagePath.substr(0,firstComma);
@@ -85,94 +104,56 @@ void PackageDB::loadPackage(const clString& packPath)
       packagePath="";
     }
     
-    // Load the package
-    postMessage(clString("Loading package '")+packageElt+"'", false);
-    TCL::eval("update idletasks",result);
+    clString bname = basename(packageElt);
+    clString pname = basename(packageElt);
+    
+    if(bname == "src") {
+      bname = "";
+      pname = "SCIRun";
+    } else {
+      bname = clString("Packages_")+bname+"_";
+    }
 
-    // The GUI path is hard-wired to be "PACKAGENAME/GUI"
-    TCL::execute(clString("lappend auto_path ")+packageElt+"/Dataflow/GUI");
+    new_package = new package;
+    new_package->name=pname;
+    packages.insert(std::pair<int,
+		    package*>(packages.size(),new_package));
 
-    // get *.xml in the PACKAGENAME/XML directory.
     clString xmldir = packageElt+"/Dataflow/XML";
     std::map<int,char*>* files = 
       GetFilenamesEndingWith((char*)xmldir(),".xml");
 
-    // first package
-    if ( !loading ) {
-      TCL::execute(clString("toplevel .loading; "
-			    "wm geometry .loading 250x75+275+200;"));
-      loading = true;
-    }
-    
-    // if the user closed the progress bar, don't open it for future packages
-    TCL::eval("winfo exists .loading", result);
-    if ( result == "1" ) {
-      TCL::execute(clString("iwidgets::feedback .loading.fb -labeltext "
-			    + packageElt +
-			    " -steps " + to_string(int(files->size())) + ";"
-			    "pack .loading.fb; update idletasks"));
-    }
+    mod_count += files->size();
 
-    component_node* node = 0;
     for (char_iter i=files->begin();
 	 i!=files->end();
 	 i++) {
       if (node) DestroyComponentNode(node);
       node = CreateComponentNode(3);
-      ReadComponentNodeFromFile(node,(packageElt+"/Dataflow/XML/"+(*i).second)());
-      
-      // find the .so for this component
-      LIBRARY_HANDLE so;
-      ModuleMaker makeaddr = 0;
-      
-      clString bname = basename(packageElt);
-      clString pname = basename(packageElt);
+      ReadComponentNodeFromFile(node,(xmldir+"/"+(*i).second)());
 
-      if(bname == "src") {
-	bname = "";
-	pname = "SCIRun";
-      } else {
-	bname = clString("Packages_")+bname+clString("_");
-      }
-
-      clString libname(clString("lib")+bname+"Dataflow_Modules_"+
-		       node->category+".so");
-      so = GetLibraryHandle(libname());
-      if (!so) {
-	clString firsterror(SOError());
-	libname = clString("lib")+pname+".so";
-	so = GetLibraryHandle(libname());
-	if (!so) {
-	  postMessage("PackageDB: Couldn't load all of package \\\""+
-		      pname+"\\\"\n  "+
-		      firsterror()+"\n  "+SOError());
-	  TCL::eval("update idletasks",result);
-	}
+      ci = new_package->categories.find(clString(node->category));
+      if (ci==new_package->categories.end()) {
+	new_category = new category;
+	new_category->name = clString(node->category);
+	new_package->categories.insert(std::pair<clString,
+	  category*>(new_category->name,new_category));
+	ci = new_package->categories.find(clString(new_category->name));
       }
       
-      if (so) {
-	clString make(clString("make_")+node->name);
-	makeaddr = (ModuleMaker)GetHandleSymbolAddress(so,make());
-	if (!makeaddr) {
-	  postMessage(clString("PackageDB: Couldn't find component \\\"")+
-		      node->name+"\\\"\n  "+
-		      SOError());
-	  TCL::eval("update idletasks",result);
-	}
-      }
-      
-      if (makeaddr) {
+      mi = (*ci).second->modules.find(clString(node->name));
+      if (mi==(*ci).second->modules.end()) {
 	IPortInfo* ipinfo;
 	OPortInfo* opinfo;
-	ModuleInfo* info = scinew ModuleInfo;
-	info->packageName = pname;
-	info->categoryName = node->category;
-	info->moduleName = node->name;
-	info->maker = (ModuleMaker)makeaddr;
-	info->uiFile = "not currently used";
-	info->iports = scinew std::map<int,IPortInfo*>;
-	info->oports = scinew std::map<int,OPortInfo*>;
-	info->lastportdynamic = node->io->lastportdynamic;
+	new_module = new ModuleInfo;
+	new_module->moduleName = node->name;
+	new_module->categoryName = node->category;
+	new_module->packageName = pname;
+	new_module->maker = 0;
+	new_module->uiFile = "not currently used";
+	new_module->iports = scinew std::map<int,IPortInfo*>;
+	new_module->oports = scinew std::map<int,OPortInfo*>;
+	new_module->lastportdynamic = node->io->lastportdynamic;
 	for (inport_iter i1 = node->io->inports->begin();
 	     i1!=node->io->inports->end();
 	     i1++) {
@@ -180,8 +161,8 @@ void PackageDB::loadPackage(const clString& packPath)
 	  ipinfo->name = clString(((*i1).second)->name);
 	  ipinfo->datatype = clString(((*i1).second)->datatype);
 	  ipinfo->maker = (iport_maker)0;
-	  info->iports->insert(
-	    std::pair<int,IPortInfo*>(info->iports->size(),
+	  new_module->iports->insert(
+	    std::pair<int,IPortInfo*>(new_module->iports->size(),
 					    ipinfo));
 	}
 	for (outport_iter i2 = node->io->outports->begin();
@@ -191,33 +172,115 @@ void PackageDB::loadPackage(const clString& packPath)
 	  opinfo->name = clString(((*i2).second)->name);
 	  opinfo->datatype = clString(((*i2).second)->datatype);
 	  opinfo->maker = (oport_maker)0;
-	  info->oports->insert(
-	    std::pair<int,OPortInfo*>(info->oports->size(),
+	  new_module->oports->insert(
+	    std::pair<int,OPortInfo*>(new_module->oports->size(),
 					    opinfo));
 	}
-	registerModule(info);
-	TCL::eval("winfo exists .loading.fb", result);
-	if (result == "1")
-	  TCL::execute(clString(".loading.fb step"));
-	else
-	  postMessageNoCRLF(".",false);
-	TCL::eval("update idletasks",result);
+	(*ci).second->modules.insert(std::pair<clString,
+	   ModuleInfo*>(clString(new_module->moduleName),new_module));
       }
     }
-    TCL::eval("update idletasks",result);
-    sprintf(string,"createPackageMenu %d",index++);
-    TCL::execute(string);
-    TCL::eval("winfo exists .loading.fb", result);
-    if (result == "1")
-      TCL::execute(clString("destroy .loading.fb"));
   }
+
+  TCL::execute(clString("toplevel .loading; "
+			"wm geometry .loading 250x75+275+200; "
+			"wm title .loading {Loading packages}; "
+			"update idletasks"));
+  TCL::execute(clString("iwidgets::feedback .loading.fb -labeltext "
+			"{Loading package:                 }"
+			" -steps " + to_string(mod_count) + ";"
+			"pack .loading.fb -padx 5 -fill x; update idletasks"));
+
+  LIBRARY_HANDLE package_so;
+  LIBRARY_HANDLE category_so;
+  clString libname;
+  clString bname;
+  clString pname,cname,mname;
+  clString category_error;
+  clString package_error;
+  clString makename;
+  clString command;
+  int index = 0;
   
+  mod_count = 0;
+
+  for (pi = packages.begin();
+       pi!=packages.end();
+       pi++) {
+    
+    pname = (*pi).second->name;
+
+    if(pname == "SCIRun") {
+      bname = "Dataflow_Modules_";
+    } else {
+      bname = clString("Packages_")+pname+"_Dataflow_Modules_";
+    }
+
+    postMessage(clString("Loading package '")+pname+"'", false);
+    TCL::execute(clString("lappend auto_path Packages/")+
+		 pname+"/Dataflow/GUI");
+    TCL::execute(clString(".loading.fb configure "
+			  "-labeltext {Loading package: ") +
+		 pname + " }");
+    TCL::eval("update idletasks",result);
+
+    libname = clString("lib")+pname+".so";
+    package_so = GetLibraryHandle(libname());
+    if (!package_so)
+      package_error = SOError();
+
+    for (ci = (*pi).second->categories.begin();
+	 ci!=(*pi).second->categories.end();
+	 ci++) {
+
+      cname = (*ci).second->name;
+
+      libname = clString("lib")+bname+cname+".so";
+      category_so = GetLibraryHandle(libname());
+      if (!category_so)
+	category_error = SOError();
+
+      if (!category_so && !package_so) {
+	postMessage(clString("Unable to load all of package '")+pname+
+			     "' (category '"+cname+"') :\n - "+
+		    package_error+"\n - "+category_error+"\n");
+	TCL::execute("update idletasks");
+	continue;
+      }
+
+      for (mi = (*ci).second->modules.begin();
+	   mi!=(*ci).second->modules.end();
+	   mi++) {
+	mname = (*mi).second->moduleName;
+	makename = clString("make_"+mname);
+	(*mi).second->maker = 0;
+	if (category_so)
+	  (*mi).second->maker = 
+	    (ModuleMaker)GetHandleSymbolAddress(category_so,makename());
+	if (!(*mi).second->maker && package_so)
+	  (*mi).second->maker = 
+	    (ModuleMaker)GetHandleSymbolAddress(package_so,makename());
+	if (!(*mi).second->maker) {
+	  postMessage(clString("Unable to load module '")+mname+
+		      "' :\n - can't find symbol 'make_"+mname+"'\n");
+	  TCL::execute("update idletasks");
+	  //destroy new_module here
+	  continue;
+	} else
+	  registerModule((*mi).second);
+	TCL::execute(clString("if [winfo exists .loading.fb] "
+			      "{.loading.fb step; update idletasks}"));
+      }
+    }
+    
+    command = clString("createPackageMenu "+to_string(index++));
+    TCL::execute(command());
+    TCL::execute("update idletasks");
+  }
+
   postMessage("\nFinished loading packages.\n",false);
   TCL::execute(clString("destroy .loading"));
   TCL::eval("update idletasks",result);
-  
-  // don't do this.  Instead, create each package menu as it's loaded.
-  //  TCL::execute("createCategoryMenu");
 }
   
 void PackageDB::registerModule(ModuleInfo* info) {
