@@ -67,13 +67,13 @@ int DpyBase::open_display(Window parent, bool needevents) {
   //   ex: "db, max rgb" - double buffered, max color depth for rgb
   //     : "sb, max rgb" - single buffered, max color depth for rgb
   char criteria[50]; // leave space for additional options
-  if (window_mode & BufferModeMask == DoubleBuffered)
-    criteria = strdup("db");
+  if ((window_mode & BufferModeMask) == DoubleBuffered)
+    strcpy(criteria,"db");
   else
-    criteria = strdup("sb");
+    strcpy(criteria,"sb");
     
 #if !defined(__APPLE__)
-  criteria = strcat(criteria, ", max rgba");
+  strcat(criteria, ", max rgba");
 #endif
 
   if(!visPixelFormat(criteria)){
@@ -87,8 +87,6 @@ int DpyBase::open_display(Window parent, bool needevents) {
     cerr << "Error matching OpenGL Visual: " << criteria << '\n';
     return 1;
   }
-  // free criteria
-  if (criteria) free(criteria);
 
   Colormap cmap = XCreateColormap(dpy, RootWindow(dpy, screen),
 				  vi->visual, AllocNone);
@@ -198,7 +196,7 @@ void DpyBase::init() {
 
 void DpyBase::display() {
   glFinish();
-  if (window_mode & BufferModeMask == DoubleBuffered){
+  if ((window_mode & BufferModeMask) == DoubleBuffered){
     glXSwapBuffers(dpy, win);
   }
   XFlush(dpy);
