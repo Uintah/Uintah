@@ -1295,7 +1295,7 @@ for i in $tcl $thirdparty $SCI_LAB_TP_DEFAULT; do
 
   SCI_CHECK_LIB($i/lib,itk,main,,continue,
     -L$LIBITCL -litcl -L$LIBTK -ltk -L$LIBTCL -ltcl)
-  SCI_CHECK_HEADER($ITKLIB/../include,itk.h,,, 
+  SCI_CHECK_HEADER($LIBITK/../include,itk.h,,, 
     -I$INCITCL_H -I$INCTK_H -I$INCTCL_H)
 
   SCI_CHECK_LIB($i/lib,BLT,main,,continue,-L$LIBTK -ltk -L$LIBTCL -ltcl)
