@@ -63,6 +63,7 @@ template<class Key, class Data> class HashTable {
     friend class HashTableIter<Key, Data>;
 public:
     HashTable();
+    HashTable(const HashTable<Key, Data>&);
     ~HashTable();
     // Inserts the key/data pair into the hash table
     void insert(const Key& key, const Data& data);
@@ -119,6 +120,7 @@ template<class Key, class Data> class HashKey {
     HashKey<Key, Data>* next;
     
     HashKey(const Key&, const Data&, HashKey<Key, Data>*);
+    HashKey(const HashKey<Key, Data>&, int deep=0);
 };
 
 #endif

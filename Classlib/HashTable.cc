@@ -226,3 +226,24 @@ Data& HashTableIter<Key, Data>::get_data()
     return current_key->data;
 }
 
+// Copy constructor
+template<class Key, class Data>
+HashTable<Key, Data>::HashTable(const HashTable<Key, Data>& copy)
+: hash_size(copy.hash_size), nelems(copy.nelems)
+{
+    table=new HashKey<Key, Data>*[hash_size];
+    for(int i=0;i<hash_size;i++){
+	if(copy.table[i])
+	    table[i]=new HashKey<Key, Data>(*copy.table[i], 1); // Deep copy
+	else
+	    table[i]=0;
+    }
+}
+
+// Copy CTOR for keys
+template<class Key, class Data>
+HashKey<Key, Data>::HashKey(const HashKey<Key, Data>& copy, int deep)
+: key(copy.key), data(copy.data),
+  next((deep && copy.next)?new HashKey<Key, Data>(*copy.next, 1):0)
+{
+}
