@@ -145,7 +145,7 @@ does not conform to component.dtd.  Validate the xml input first!
         <xsl:text>&#xA;\end{document}&#xA;</xsl:text>
       </xsl:when>
       <xsl:when test="$frag=1">
-        <xsl:text>&#xA;\pagebreak{}&#xA;</xsl:text>
+        <xsl:text>&#xA;&#xA;</xsl:text>
       </xsl:when>
     </xsl:choose>
 
