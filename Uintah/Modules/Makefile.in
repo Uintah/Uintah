@@ -4,7 +4,7 @@ OBJTOP  = ../..
 
 SUBDIRS = MPMViz Readers
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(OBJTOP)/scripts/recurse.mk
 
 SRCS     = index.cc
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)

@@ -5,7 +5,7 @@ OBJTOP  = ../..
 SUBDIRS = FEM Fields Iterators Matrix Readers Salmon Surface Visualization \
           Writers
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(OBJTOP)/scripts/recurse.mk
 
 SRCS     = index.cc
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP) 
