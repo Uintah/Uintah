@@ -45,7 +45,7 @@ C--------------------------------------------------------------------
       double precision cpplus
       double precision cpo
       double precision tcons
-      logical*1 ltest, l2up
+      logical*1 ltest, l2up, filtcend
 
       integer i
       integer j
@@ -54,6 +54,8 @@ C--------------------------------------------------------------------
       tcons = 1.0D0
       ltest = .false.
       l2up = .false.
+c      filtcend = .true.
+      filtcend = .false.
 
 C--------------------------------------------------------------------
       if (.not.ltest) then
@@ -101,6 +103,7 @@ c               cpplus = max(zero,smp)
 c               cpo = - min(zero,smp)*tcons
 c               if (l2up.and..not.ltest) cpo = cpplus*tcons
 c               su(i,j,k) = su(i,j,k) + cpo*phi(i,j,k)
+               if (filtcend.and..not.ltest) smp = zero
                su(i,j,k) = su(i,j,k) - smp*phi(i,j,k)
 c               sp(i,j,k) = sp(i,j,k) - cpplus
 

@@ -431,8 +431,9 @@ ScalarSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) 
-    tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel, d_lab->d_scalarFluxMatl,
-		  Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
+		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 
 #ifdef Scalar_ENO
@@ -569,6 +570,18 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     d_source->calculateScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
 				    &scalarVars );
+#ifdef Scalar_ENO
+    int wallID = d_boundaryCondition->wallCellType();
+#ifdef Scalar_WENO
+    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &scalarVars, wallID);
+#else
+    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &scalarVars, wallID);
+#endif
+#endif
 
     // for scalesimilarity model add scalarflux to the source of scalar eqn.
     if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
@@ -641,17 +654,6 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &scalarVars);
 
-#ifdef Scalar_ENO
-#ifdef Scalar_WENO
-    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &scalarVars);
-#else
-    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &scalarVars);
-#endif
-#endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       // allocateAndPut instead:
       /* new_dw->put(scalarVars.scalarCoeff[ii], 
@@ -924,6 +926,11 @@ ScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   #endif
 
+  if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) 
+    tsk->requires(Task::NewDW, d_lab->d_scalarFluxCompLabel,
+		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
 #ifdef Scalar_ENO
   #ifdef Runge_Kutta_3d
     tsk->requires(Task::NewDW, d_lab->d_maxAbsUInterm_label);
@@ -1086,7 +1093,65 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     d_source->calculateScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
 				    &scalarVars );
+#ifdef Scalar_ENO
+    int wallID = d_boundaryCondition->wallCellType();
+#ifdef Scalar_WENO
+    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &scalarVars, wallID);
+#else
+    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &scalarVars, wallID);
+#endif
+#endif
 
+    // for scalesimilarity model add scalarflux to the source of scalar eqn.
+    if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
+      StencilMatrix<CCVariable<double> > scalarFlux; //3 point stencil
+      for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
+	new_dw->getCopy(scalarFlux[ii], 
+			d_lab->d_scalarFluxCompLabel, ii, patch,
+			Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      }
+      IntVector indexLow = patch->getCellFORTLowIndex();
+      IntVector indexHigh = patch->getCellFORTHighIndex();
+      
+      // set density for the whole domain
+      
+      
+      // Store current cell
+      double sue, suw, sun, sus, sut, sub;
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	  for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	    IntVector currCell(colX, colY, colZ);
+	    IntVector prevXCell(colX-1, colY, colZ);
+	    IntVector prevYCell(colX, colY-1, colZ);
+	    IntVector prevZCell(colX, colY, colZ-1);
+	    IntVector nextXCell(colX+1, colY, colZ);
+	    IntVector nextYCell(colX, colY+1, colZ);
+	    IntVector nextZCell(colX, colY, colZ+1);
+	    
+	    sue = 0.5*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+	      ((scalarFlux[0])[currCell]+(scalarFlux[0])[nextXCell]);
+	    suw = 0.5*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+	      ((scalarFlux[0])[prevXCell]+(scalarFlux[0])[currCell]);
+	    sun = 0.5*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+	      ((scalarFlux[1])[currCell]+ (scalarFlux[1])[nextYCell]);
+	    sus = 0.5*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+	      ((scalarFlux[1])[currCell]+(scalarFlux[1])[prevYCell]);
+	    sut = 0.5*cellinfo->sns[colY]*cellinfo->sew[colX]*
+	      ((scalarFlux[2])[currCell]+ (scalarFlux[2])[nextZCell]);
+	    sub = 0.5*cellinfo->sns[colY]*cellinfo->sew[colX]*
+	      ((scalarFlux[2])[currCell]+ (scalarFlux[2])[prevZCell]);
+#if 1
+	    scalarVars.scalarNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
+#endif
+	  }
+	}
+      }
+    }
     // Calculate the scalar boundary conditions
     // inputs : scalarSP, scalCoefSBLM
     // outputs: scalCoefSBLM
@@ -1107,17 +1172,6 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &scalarVars);
 
-#ifdef Scalar_ENO
-#ifdef Scalar_WENO
-    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &scalarVars);
-#else
-    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &scalarVars);
-#endif
-#endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       // allocateAndPut instead:
       /* new_dw->put(scalarVars.scalarCoeff[ii], 
@@ -1430,6 +1484,11 @@ ScalarSolver::sched_buildLinearMatrixInterm(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
+  if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) 
+    tsk->requires(Task::NewDW, d_lab->d_scalarFluxCompLabel,
+		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
 #ifdef Scalar_ENO
     tsk->requires(Task::NewDW, d_lab->d_maxAbsUPred_label);
     tsk->requires(Task::NewDW, d_lab->d_maxAbsVPred_label);
@@ -1544,7 +1603,65 @@ void ScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     d_source->calculateScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
 				    &scalarVars );
+#ifdef Scalar_ENO
+    int wallID = d_boundaryCondition->wallCellType();
+#ifdef Scalar_WENO
+    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &scalarVars, wallID);
+#else
+    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &scalarVars, wallID);
+#endif
+#endif
 
+    // for scalesimilarity model add scalarflux to the source of scalar eqn.
+    if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
+      StencilMatrix<CCVariable<double> > scalarFlux; //3 point stencil
+      for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
+	new_dw->getCopy(scalarFlux[ii], 
+			d_lab->d_scalarFluxCompLabel, ii, patch,
+			Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      }
+      IntVector indexLow = patch->getCellFORTLowIndex();
+      IntVector indexHigh = patch->getCellFORTHighIndex();
+      
+      // set density for the whole domain
+      
+      
+      // Store current cell
+      double sue, suw, sun, sus, sut, sub;
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	  for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	    IntVector currCell(colX, colY, colZ);
+	    IntVector prevXCell(colX-1, colY, colZ);
+	    IntVector prevYCell(colX, colY-1, colZ);
+	    IntVector prevZCell(colX, colY, colZ-1);
+	    IntVector nextXCell(colX+1, colY, colZ);
+	    IntVector nextYCell(colX, colY+1, colZ);
+	    IntVector nextZCell(colX, colY, colZ+1);
+	    
+	    sue = 0.5*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+	      ((scalarFlux[0])[currCell]+(scalarFlux[0])[nextXCell]);
+	    suw = 0.5*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+	      ((scalarFlux[0])[prevXCell]+(scalarFlux[0])[currCell]);
+	    sun = 0.5*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+	      ((scalarFlux[1])[currCell]+ (scalarFlux[1])[nextYCell]);
+	    sus = 0.5*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+	      ((scalarFlux[1])[currCell]+(scalarFlux[1])[prevYCell]);
+	    sut = 0.5*cellinfo->sns[colY]*cellinfo->sew[colX]*
+	      ((scalarFlux[2])[currCell]+ (scalarFlux[2])[nextZCell]);
+	    sub = 0.5*cellinfo->sns[colY]*cellinfo->sew[colX]*
+	      ((scalarFlux[2])[currCell]+ (scalarFlux[2])[prevZCell]);
+#if 1
+	    scalarVars.scalarNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
+#endif
+	  }
+	}
+      }
+    }
     // Calculate the scalar boundary conditions
     // inputs : scalarSP, scalCoefSBLM
     // outputs: scalCoefSBLM
@@ -1565,17 +1682,6 @@ void ScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &scalarVars);
 
-#ifdef Scalar_ENO
-#ifdef Scalar_WENO
-    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &scalarVars);
-#else
-    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &scalarVars);
-#endif
-#endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       // allocateAndPut instead:
       /* new_dw->put(scalarVars.scalarCoeff[ii], 

@@ -640,6 +640,20 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
       				    &enthalpyVars);
 
     }
+#ifdef Scalar_ENO
+    new_dw->getCopy(enthalpyVars.scalar, d_lab->d_enthalpyOUTBCLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    int wallID = d_boundaryCondition->wallCellType();
+#ifdef Scalar_WENO
+    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &enthalpyVars, wallID);
+#else
+    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &enthalpyVars, wallID);
+#endif
+#endif
 
     // Calculate the enthalpy boundary conditions
     // inputs : enthalpySP, scalCoefSBLM
@@ -684,19 +698,6 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &enthalpyVars);
 
-#ifdef Scalar_ENO
-    new_dw->getCopy(enthalpyVars.scalar, d_lab->d_enthalpyOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-#ifdef Scalar_WENO
-    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &enthalpyVars);
-#else
-    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &enthalpyVars);
-#endif
-#endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       // allocateAndPut instead:
       /* new_dw->put(enthalpyVars.scalarCoeff[ii], 
@@ -1169,6 +1170,25 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     d_source->calculateEnthalpySource(pc, patch,
 				    delta_t, cellinfo, 
 				    &enthalpyVars );
+#ifdef Scalar_ENO
+  #ifdef Runge_Kutta_3d
+    new_dw->getCopy(enthalpyVars.scalar, d_lab->d_enthalpyIntermLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+  #else
+    new_dw->getCopy(enthalpyVars.scalar, d_lab->d_enthalpyPredLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+  #endif
+    int wallID = d_boundaryCondition->wallCellType();
+#ifdef Scalar_WENO
+    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &enthalpyVars, wallID);
+#else
+    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &enthalpyVars, wallID);
+#endif
+#endif
 
     // Calculate the enthalpy boundary conditions
     // inputs : enthalpySP, scalCoefSBLM
@@ -1197,24 +1217,6 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &enthalpyVars);
 
-#ifdef Scalar_ENO
-  #ifdef Runge_Kutta_3d
-    new_dw->getCopy(enthalpyVars.scalar, d_lab->d_enthalpyIntermLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-  #else
-    new_dw->getCopy(enthalpyVars.scalar, d_lab->d_enthalpyPredLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-  #endif
-#ifdef Scalar_WENO
-    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &enthalpyVars);
-#else
-    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &enthalpyVars);
-#endif
-#endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       // allocateAndPut instead:
       /* new_dw->put(enthalpyVars.scalarCoeff[ii], 
@@ -1659,6 +1661,20 @@ void EnthalpySolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     d_source->calculateEnthalpySource(pc, patch,
 				    delta_t, cellinfo, 
 				    &enthalpyVars );
+#ifdef Scalar_ENO
+    new_dw->getCopy(enthalpyVars.scalar, d_lab->d_enthalpyPredLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    int wallID = d_boundaryCondition->wallCellType();
+#ifdef Scalar_WENO
+    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &enthalpyVars, wallID);
+#else
+    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &enthalpyVars, wallID);
+#endif
+#endif
 
     // Calculate the enthalpy boundary conditions
     // inputs : enthalpySP, scalCoefSBLM
@@ -1687,19 +1703,6 @@ void EnthalpySolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &enthalpyVars);
 
-#ifdef Scalar_ENO
-    new_dw->getCopy(enthalpyVars.scalar, d_lab->d_enthalpyPredLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-#ifdef Scalar_WENO
-    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &enthalpyVars);
-#else
-    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &enthalpyVars);
-#endif
-#endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       // allocateAndPut instead:
       /* new_dw->put(enthalpyVars.scalarCoeff[ii], 
