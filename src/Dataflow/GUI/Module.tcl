@@ -1,4 +1,3 @@
-#
 #  The contents of this file are subject to the University of Utah Public
 #  License (the "License"); you may not use this file except in compliance
 #  with the License.
@@ -32,6 +31,9 @@ set unselected_color gray
 
 global CurrentlySelectedModules
 set CurrentlySelectedModules ""
+
+global BlockedModules
+set BlockedModules ""
 
 global sel_module_box
 set sel_module_box ""
@@ -121,7 +123,6 @@ itcl_class Module {
 	update_progress
 	update_time
 	update idletasks
-	#tk_dialog .xx xx xx "" 0 OK
     }
 
     method set_title {name} {
@@ -302,6 +303,7 @@ itcl_class Module {
 	    bindtags $p.inset [linsert [bindtags $p.inset] 1 $modframe]
 	}
 	set made_icon 1
+	update idletasks
     }
     
     method set_moduleConnected { ModuleConnected } {
@@ -347,8 +349,8 @@ itcl_class Module {
 	    bind $port <2> "startIPortConnection [modname] $i %x %y"
 	    bind $port <B2-Motion> "trackIPortConnection [modname] $i %x %y"
 	    bind $port <ButtonRelease-2> "endPortConnection"
-	    bind $port <ButtonPress-1> "IPortTrace [modname] $i $temp"
-	    bind $port <ButtonRelease-1> "IPortReset $temp"
+	    bind $port <ButtonPress-1> "TracePort [modname] 0 $i"
+	    bind $port <ButtonRelease-1> "canvasDelete tempConnection"
 	    incr i
 	} 
 	rebuildConnections [netedit getconnected [modname]] 0
@@ -386,8 +388,8 @@ itcl_class Module {
 	    bind $port <2> "startOPortConnection [modname] $i %x %y"
 	    bind $port <B2-Motion> "trackOPortConnection [modname] $i %x %y"
 	    bind $port <ButtonRelease-2> "endPortConnection"
-	    bind $port <ButtonPress-1> "OPortTrace [modname] $i $temp"
-	    bind $port <ButtonRelease-1> "OPortReset $temp"
+	    bind $port <ButtonPress-1> "TracePort [modname] 1 $i"
+	    bind $port <ButtonRelease-1> "canvasDelete tempConnection"
 	    incr i
 	}
 	rebuildConnections [netedit getconnected [modname]] 0
@@ -766,92 +768,96 @@ proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
     set $connid-block 0
     $maincanvas bind $connid <ButtonRelease-2> "block_pipe $connid $omodid $owhich $imodid $iwhich $portcolor"
     $maincanvas bind $connid <ButtonPress-3> "destroyConnection $connid $omodid $imodid 1"
-    $maincanvas bind $connid <ButtonPress-1> "lightPipe $temp $omodid $owhich $imodid $iwhich"
-    $maincanvas bind $connid <ButtonRelease-1> "resetPipe $temp $omodid $imodid"
-    $maincanvas bind $connid <Control-Button-1> "raisePipe $connid"
-    
-#    global $connid-annotation
-#    set $connid-annotation "$owhich to $iwhich"
-#    eval $maincanvas create text [lindex $path 2] [lindex $path 3] -text "$connid-annotation" -width [expr abs([lindex $path 4] - [lindex $path 2])] -fill \"$portcolor\" -tags $connid-annotation
-#    $maincanvas bind $connid-annotation <ButtonPress-1> "puts \"you clicked on $connid !\""
-    
+    $maincanvas bind $connid <ButtonPress-1> "TracePipe $omodid $owhich $imodid $iwhich"
+# lightPipe $temp $omodid $owhich $imodid $iwhich"
+    $maincanvas bind $connid <ButtonRelease-1> "canvasDelete tempConnection"
+    $maincanvas bind $connid <Control-Button-1> "canvasRaise $connid"
+
     eval $minicanvas create line [scalePath $path] -width 1 -fill \"$portcolor\" -tags $connid
-    
 
     $minicanvas lower $connid
+    
+    return
+    
+    global $connid-annotation modname_font
+    set $connid-annotation "$owhich to $iwhich"
+    set text [set $connid-annotation]
+    set x [expr [lindex $path 0]+[expr ([lindex $path end-1]-[lindex $path 0])/2]]
+    set y [expr [lindex $path 3]-10]
+    eval $maincanvas create text $x $y -text \"$text\" -width [expr abs([lindex $path 4] - [lindex $path 2])] -fill "\"$portcolor\"" -tags $connid-annotation -font $modname_font
+    $maincanvas bind $connid-annotation <ButtonPress-1> "puts \"you clicked on $connid !\""
+    
 }
 
-proc IPortTrace { imodid which temp } {
-    set connInfo [netedit getconnected $imodid] 
-    foreach t $connInfo {
-	set fromName [lindex $t 1]
-	set fromPort [lindex $t 2]
-	set toName [lindex $t 3] 
-	set toPort [lindex $t 4]
-	if { [string match $toName $imodid] && \
-		[string match $which $toPort] } {
-	    # light up the pipe
-	    global maincanvas minicanvas
-	    set path [routeConnection $fromName $fromPort $toName $toPort]
-	    eval $maincanvas create bline $path -width 7 \
-		    -borderwidth 2 -fill red -tags $temp
-	    eval $minicanvas create bline [scalePath $path] -width 1 \
-		    -fill red -tags $temp
+global TracedPorts
+set TracedPorts ""
+
+proc TracePort { modid isa_o_port args } {
+    global TracedPorts
+    set sameportindex 3
+    set otherportindex 1
+    if $isa_o_port {
+	set sameportindex 1
+	set otherportindex 3
+    } 
+    if [llength $args] { set TracedPorts "" }
+    set allConnections [netedit getconnected $modid]     
+    foreach conn $allConnections {
+	set connid [lindex $conn 0]
+	if { [lsearch $TracedPorts $connid] == -1 && \
+	      $modid == [lindex $conn $sameportindex] && \
+	    (![llength $args] || \
+		 [lindex $conn [expr $sameportindex+1]] == [lindex $args 0])} {
+	    lappend TracedPorts $connid
+	    eval lightPipe tempConnection [lrange $conn 1 4]
+	    TracePort [lindex $conn $otherportindex] $isa_o_port
 	}
     }
 }
 
-proc IPortReset { temp } {
-    global netedit_canvas netedit_mini_canvas
-    $netedit_canvas delete $temp
-    $netedit_mini_canvas delete $temp
+
+proc TracePipe { args } {
+    if { [llength $args] != 4 } return
+    eval lightPipe tempConnection $args
+    global TracedPorts
+    set TracedPorts ""
+    TracePort [lindex $args 0] 0
+    TracePort [lindex $args 2] 1
 }
 
-proc OPortTrace { omodid which temp } {
-    set connInfo [netedit getconnected $omodid]
-    set fromName ""
-    set fromPort ""
-    foreach t $connInfo {
-	set fromName [lindex $t 1]
-	set fromPort [lindex $t 2]
-	set toName [lindex $t 3] 
-	set toPort [lindex $t 4]
-	if { [string match $fromName $omodid] && \
-		[string match $which $fromPort] } {
-	    # light up the pipe
-	    global maincanvas minicanvas
-	    set path [routeConnection $fromName $fromPort $toName $toPort]
-	    eval $maincanvas create bline $path -width 7 \
-		    -borderwidth 2 -fill red -tags $temp
-	    eval $minicanvas create bline [scalePath $path] -width 1 \
-		    -fill red -tags $temp
-	}
+
+
+proc canvasDelete { args } {
+    global maincanvas minicanvas
+    eval $maincanvas delete $args
+    eval $minicanvas delete $args
+}
+
+proc canvasRaise { args } {
+    global maincanvas minicanvas
+    foreach arg $args {
+	$maincanvas raise $arg
+	$minicanvas raise $arg
     }
 }
 
-proc OPortReset { temp } {
-    global netedit_canvas netedit_mini_canvas
-    $netedit_canvas delete $temp
-    $netedit_mini_canvas delete $temp
-}
-  
+
 proc block_pipe { connid omodid owhich imodid iwhich pcolor} {
-    global netedit_canvas
-    global netedit_mini_canvas
+    global maincanvas minicanvas
     global $connid-block
 
-    if {[expr [set $connid-block] == 0]} {
-	eval $netedit_canvas itemconfigure $connid -width 3 -fill gray
-	eval $netedit_mini_canvas itemconfigure $connid -fill gray
+    if {![set $connid-block]} {
+	eval $maincanvas itemconfigure $connid -width 3 -fill gray
+	eval $minicanvas itemconfigure $connid -fill gray
 	incr $connid-block
 	netedit blockconnection $connid
     } else {
-	eval $netedit_canvas itemconfigure $connid -width 7 -fill $pcolor
-	eval $netedit_mini_canvas itemconfigure $connid -fill $pcolor
+	eval $maincanvas itemconfigure $connid -width 7 -fill $pcolor
+	eval $minicanvas itemconfigure $connid -fill $pcolor
 	set $connid-block 0
 	netedit unblockconnection $connid
     }
-    $netedit_mini_canvas raise $connid
+    canvasRaise $connid
 }
 
 proc lightPipe { temp omodid owhich imodid iwhich } {
@@ -861,30 +867,10 @@ proc lightPipe { temp omodid owhich imodid iwhich } {
 	-borderwidth 2 -fill red  -tags $temp
     eval $minicanvas create line [scalePath $path] -width 1 \
 	-fill red -tags $temp
-
-    eval $minicanvas itemconfigure $omodid -fill green
-    eval $minicanvas itemconfigure $imodid -fill green
-
-    $minicanvas raise $temp
+    $minicanvas itemconfigure $omodid -fill green
+    $minicanvas itemconfigure $imodid -fill green
+    canvasRaise $temp
 }
-
-proc resetPipe { temp omodid imodid } {
-    global netedit_canvas
-    $netedit_canvas delete $temp
-    global netedit_mini_canvas
-    $netedit_mini_canvas delete $temp
-    global basecolor
-    eval $netedit_mini_canvas itemconfigure $omodid -fill $basecolor
-    eval $netedit_mini_canvas itemconfigure $imodid -fill $basecolor
-    #destroy $netedit_mini_canvas.frame
-}
-
-proc raisePipe { connid } {
-    global netedit_canvas netedit_mini_canvas
-    $netedit_canvas raise $connid
-    $netedit_mini_canvas raise $connid
-}
-
 
 # set the optional args command to anything to record the undo action
 proc addConnection {omodid owhich imodid iwhich args } {
@@ -959,7 +945,7 @@ proc rebuildConnections {list color} {
     global maincanvas
     foreach i $list {
 	set id [lindex $i 0]
-	$maincanvas raise $id	
+	canvasRaise $id	
 	if {$color} {
 	    $minicanvas itemconfigure $id -fill [$maincanvas itemcget $id -fill]
 	}
