@@ -40,8 +40,8 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/TemperatureBoundCond.cc \
 	$(SRCDIR)/PressureBoundCond.cc \
 	$(SRCDIR)/DensityBoundCond.cc \
-	$(SRCDIR)/BoundCondFactory.cc 
-
+	$(SRCDIR)/BoundCondFactory.cc \
+	$(SRCDIR)/UnknownVariable.cc
 
 
 PSELIBS := Uintah/Math Uintah/Exceptions SCICore/Thread SCICore/Exceptions \
@@ -52,6 +52,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.30  2000/12/23 00:40:33  witzel
+# Added UnknownVariable.cc, moved from Uintah/Exceptions
+#
 # Revision 1.29  2000/12/22 00:10:31  jas
 # Got rid of the X,Y,Z FCVariable and friends.
 #
