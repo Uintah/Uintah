@@ -79,7 +79,6 @@ ICELabel::ICELabel()
   Tdot_CCLabel =
     VarLabel::create("Tdot",         CCVariable<double>::getTypeDescription());
  
-/*`==========TESTING==========*/
   // Implicit Labels
   matrixLabel = 
     VarLabel::create("matrix",      CCVariable<Stencil7>::getTypeDescription());      
@@ -91,7 +90,6 @@ ICELabel::ICELabel()
     VarLabel::create("imp_delP",    CCVariable<double>::getTypeDescription());       
   betaLabel = 
     VarLabel::create("beta",        CCVariable<double>::getTypeDescription());
-/*==========TESTING==========`*/ 
   
   // Face centered variables
   uvel_FCLabel       = 
@@ -149,7 +147,9 @@ ICELabel::ICELabel()
   TotalMassLabel = 
     VarLabel::create( "TotalMass",     sum_vartype::getTypeDescription() );  
   TotalIntEngLabel = 
-    VarLabel::create( "TotalIntEng",   sum_vartype::getTypeDescription() ); 
+    VarLabel::create( "TotalIntEng",   sum_vartype::getTypeDescription() );
+  max_RHSLabel = 
+    VarLabel::create( "max_RHS",       max_vartype::getTypeDescription() ); 
 } 
 
 ICELabel::~ICELabel()
@@ -161,9 +161,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(delP_DilatateLabel);
     VarLabel::destroy(delP_MassXLabel);
     VarLabel::destroy(rho_CCLabel);
-/*`==========TESTING==========*/
-    VarLabel::destroy(sum_rho_CCLabel); 
-/*===========TESTING==========`*/
+    VarLabel::destroy(sum_rho_CCLabel);
     VarLabel::destroy(temp_CCLabel);
     VarLabel::destroy(vel_CCLabel);
     VarLabel::destroy(rho_micro_CCLabel);
@@ -189,15 +187,13 @@ ICELabel::~ICELabel()
     VarLabel::destroy(term3Label);
     VarLabel::destroy(f_theta_CCLabel);
     VarLabel::destroy(Tdot_CCLabel);
-    //
-/*`==========TESTING==========*/
+    
     // Implicit Labels
     VarLabel::destroy(matrixLabel);
     VarLabel::destroy(rhsLabel); 
     VarLabel::destroy(initialGuessLabel);
     VarLabel::destroy(betaLabel);
-    VarLabel::destroy(imp_delPLabel);    
-/*==========TESTING==========`*/
+    VarLabel::destroy(imp_delPLabel);  
     
     // Face centered variables
     VarLabel::destroy(uvel_FCLabel);
@@ -228,7 +224,8 @@ ICELabel::~ICELabel()
     VarLabel::destroy(TotalMassLabel);
     VarLabel::destroy(KineticEnergyLabel);
     VarLabel::destroy(CenterOfMassVelocityLabel);
-    VarLabel::destroy(TotalIntEngLabel);    
+    VarLabel::destroy(TotalIntEngLabel); 
+    VarLabel::destroy(max_RHSLabel);   
     VarLabel::destroy(doMechLabel);
 }
 

@@ -47,13 +47,14 @@ namespace Uintah {
     const VarLabel* term3Label;
     const VarLabel* f_theta_CCLabel;
     const VarLabel* Tdot_CCLabel;
-/*`==========TESTING==========*/
+//__________________________________
+//    IMPLICIT      
     const VarLabel* matrixLabel;
     const VarLabel* rhsLabel;
     const VarLabel* initialGuessLabel;
     const VarLabel* betaLabel;
     const VarLabel* imp_delPLabel;
-/*==========TESTING==========`*/    
+    
     // Face centered variables
     const VarLabel* uvel_FCLabel;
     const VarLabel* vvel_FCLabel;
@@ -84,6 +85,7 @@ namespace Uintah {
     const VarLabel*  CenterOfMassVelocityLabel;
     const VarLabel*  KineticEnergyLabel;
     const VarLabel*  TotalIntEngLabel;
+    const VarLabel*  max_RHSLabel;
       
     };
 } // end namespace Uintah
