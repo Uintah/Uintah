@@ -2176,7 +2176,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
      double S[MAX_BASIS];
      Vector d_S[MAX_BASIS];
 
-     double rho_frac_min = 1.;
+     double rho_frac_min = 0.;
      if(mpm_matl->getRxProduct() == Material::reactant){
       combustion_problem=true;
       rho_frac_min = .1;
