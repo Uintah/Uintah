@@ -38,11 +38,11 @@
 TREE_TOP = "../../../"
 
 class Entry
-  attr_reader :base, :file, :orphaned
+  attr_reader :base, :file
   def initialize(file)
     @file = file
     @base = File.basename(file)
-    @orphaned = !File.exists?(@file[0..@file.rindex('.')-1] + ".xml")
+    raise "#{@file} is an orphan" if !File.exists?(@file[0..@file.rindex('.')-1] + ".xml")
   end
   def <=>(e)
     @base <=> e.base
@@ -78,20 +78,31 @@ def main
       # Insert boilerplate at top of file
       index.print <<EndOfString
 <!--
-The contents of this file are subject to the University of Utah Public
-License (the "License"); you may not use this file except in compliance
-with the License.
+For more information, please see: http://software.sci.utah.edu
 
-Software distributed under the License is distributed on an "AS IS"
-basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
 License for the specific language governing rights and limitations under
-the License.
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
 
-The Original Source Code is SCIRun, released March 12, 2001.
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
 
-The Original Source Code was developed by the University of Utah.
-Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
-University of Utah. All Rights Reserved.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
 -->
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
@@ -112,8 +123,11 @@ EndOfString
       # Generate module index.  Alphabetical order in 3 columns.
       entries = []
       Dir["#{xmlDir}/*.html"].each do |f|
-          entry = Entry.new(f)
-          entries << entry if !entry.orphaned()
+	  begin
+	    entries << Entry.new(f)
+	  rescue => oops
+	    $stderr.print("WARNING: ", oops.message, "\n")
+	  end
       end
 		    
 #       Dir["#{texDir}/*/*/*.html"].each do |f|
