@@ -43,7 +43,7 @@
 #include <Core/Math/sci_lapack.h>
 #endif
 
-#if defined(HAVE_BLAS)
+#if defined(HAVE_CBLAS)
 #if defined(__APPLE__) 
 #include <vecLib/cblas.h>
 #else
@@ -725,7 +725,7 @@ void Mult(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)
   ASSERTEQ(m1.ncols(), m2.nrows());
   ASSERTEQ(out.nrows(), m1.nrows());
   ASSERTEQ(out.ncols(), m2.ncols());
-#if defined(HAVE_BLAS)
+#if defined(HAVE_CBLAS)
   double ALPHA = 1.0;
   double BETA = 0.0;
   cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m1.nrows(), 
