@@ -26,8 +26,8 @@
 proc makeColorPicker {w var command cancel} {
     global $var
 
-    global $var-r $var-g $var-b
-    global $w-r $w-g $w-b
+    global $var-r $var-g $var-b $var-a
+    global $w-r $w-g $w-b $w-a
     global $w-rgbhsv
 
     set $w-rgbhsv "rgb"
@@ -35,6 +35,9 @@ proc makeColorPicker {w var command cancel} {
     set $w-r [set $var-r]
     set $w-g [set $var-g]
     set $w-b [set $var-b]
+    if [info exists $var-a] {
+	set $w-a [set $var-a]
+    }
 
     frame $w.c
 
@@ -66,6 +69,15 @@ proc makeColorPicker {w var command cancel} {
     $rgb.s2 set [set $w-g]
     $rgb.s3 set [set $w-b]
 
+    if [info exists $var-a] {
+	scale $rgb.s4 -label Alpha -from 0.0 -to 1.0 -length 6c \
+		-showvalue true -orient horizontal -resolution .01 \
+		-digits 3 -variable $w-a
+	pack $rgb.s4 -in $picks.rgb -side top -padx 2 -pady 2 \
+		-anchor nw -fill y
+	$rgb.s4 set [set $w-a]
+    }
+
     frame $picks.hsv -relief groove -borderwidth 4 
     set hsv $picks.hsv
     scale $hsv.s1 -label Hue -from 0.0 -to 360.0 -length 6c -showvalue true \
@@ -81,6 +93,14 @@ proc makeColorPicker {w var command cancel} {
     pack $hsv.s2 -in $picks.hsv -side top -padx 2 -pady 2 -anchor nw -fill y
     pack $hsv.s3 -in $picks.hsv -side top -padx 2 -pady 2 -anchor nw -fill y
 
+    if [info exists $var-a] {
+	scale $hsv.s4 -label Alpha -from 0.0 -to 1.0 -length 6c \
+		-showvalue true -orient horizontal -resolution .01 \
+		-digits 3 -variable $w-a
+	pack $hsv.s4 -in $picks.hsv -side top -padx 2 -pady 2 -anchor nw \
+		-fill y
+    }
+
     $rgb.s1 configure -command "cpsetrgb $col $rgb.s1 $rgb.s2 $rgb.s3 \
 	    $hsv.s1 $hsv.s2 $hsv.s3 "
     $rgb.s2 configure -command "cpsetrgb $col $rgb.s1 $rgb.s2 $rgb.s3 \
@@ -95,7 +115,7 @@ proc makeColorPicker {w var command cancel} {
 	    $hsv.s1 $hsv.s2 $hsv.s3 "
 
     frame $w.c.opts
-    button $w.c.opts.ok -text OK -command "cpcommitcolor $var $rgb.s1 $rgb.s2 $rgb.s3 \"$command\""
+    button $w.c.opts.ok -text OK -command "cpcommitcolor $var $rgb.s1 $rgb.s2 $rgb.s3 $rgb.s4 \"$command\""
     button $w.c.opts.cancel -text Cancel -command $cancel
     radiobutton $w.c.opts.rgb -text RGB -variable $w-rgbhsv -value rgb \
 	    -command "cptogrgbhsv $w $picks $rgb $hsv"
@@ -231,14 +251,14 @@ proc cpsetcol {col r g b} {
     $col config -background [format #%04x%04x%04x $ir $ig $ib]
 }
 
-proc cpcommitcolor {var rs gs bs command} {
-    set r [$rs get]
-    set g [$gs get]
-    set b [$bs get]
-    global $var-r $var-g $var-b
-    set $var-r $r
-    set $var-g $g
-    set $var-b $b
+proc cpcommitcolor {var rs gs bs as command} {
+    global $var-r $var-g $var-b $var-a
+    set $var-r [$rs get]
+    set $var-g [$gs get]
+    set $var-b [$bs get]
+    if [info exists $var-a] {
+	set $var-a [$as get]
+    }
     eval $command
 }
 
