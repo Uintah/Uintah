@@ -24,6 +24,7 @@ static bool            allowThreads;
 static bool            usingMPI = false;
 static int             maxThreads = 1;
 static MPI_Comm        worldComm = -1;
+static int             worldRank = -1;
 static ProcessorGroup* rootContext = 0;
 
 static
@@ -119,12 +120,13 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 
 #ifdef THREADED_MPI_AVAILABLE
      if( ( status = MPI_Init_thread( &argc, &argv, required, &provided ) )
-	                                                     != MPI_SUCCESS) {
+	                                                     != MPI_SUCCESS)
 #else
-     if( ( status = MPI_Init( &argc, &argv ) ) != MPI_SUCCESS) {
+     if( ( status = MPI_Init( &argc, &argv ) ) != MPI_SUCCESS)
 #endif
-       MpiError("MPI_Init", status);
-     }
+       {
+	 MpiError("MPI_Init", status);
+       }
 
 #ifdef THREADED_MPI_AVAILABLE
      if( provided < required ){
@@ -140,7 +142,7 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
      int worldSize;
      if((status=MPI_Comm_size(worldComm, &worldSize)) != MPI_SUCCESS)
        MpiError("MPI_Comm_size", status);
-     int worldRank;
+
      if((status=MPI_Comm_rank(worldComm, &worldRank)) != MPI_SUCCESS)
        MpiError("MPI_Comm_rank", status);
      AllocatorSetDefaultTagMalloc(oldtag);
@@ -156,29 +158,39 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 #endif
      }
    } else {
+     worldRank = 0;
      rootContext = scinew ProcessorGroup(0,0, false, 0, 1);
    }
+}
+
+int
+Parallel::getMPIRank()
+{
+  return worldRank;
 }
 
 void
 Parallel::finalizeManager(Circumstances circumstances)
 {
-   if(::usingMPI){
-      if(circumstances == Abort){
-	 cerr.flush();
-	 cout.flush();
-	 sleep(1);
-	 MPI_Abort(worldComm, 1);
-      } else {
-	 int status;
-	 if((status=MPI_Finalize()) != MPI_SUCCESS)
-	    MpiError("MPI_Finalize", status);
-      }
-   }
-   if(rootContext){
-     delete rootContext;
-     rootContext=0;
-   }
+  // worldRank is not reset here as even after finalizeManager,
+  // some things need to knoww their rank...
+
+  if(::usingMPI){
+    if(circumstances == Abort){
+      cerr.flush();
+      cout.flush();
+      sleep(1);
+      MPI_Abort(worldComm, 1);
+    } else {
+      int status;
+      if((status=MPI_Finalize()) != MPI_SUCCESS)
+	MpiError("MPI_Finalize", status);
+    }
+  }
+  if(rootContext){
+    delete rootContext;
+    rootContext=0;
+  }
 }
 
 ProcessorGroup*
