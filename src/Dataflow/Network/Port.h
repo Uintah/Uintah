@@ -110,6 +110,6 @@ namespace SCIRun {
 
     virtual void update_light();
   };
-};
+}
 
 #endif
