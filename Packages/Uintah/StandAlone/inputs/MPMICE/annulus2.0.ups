@@ -20,7 +20,7 @@
     <!--   timestep_mulipler= needed by MPM                                 -->
     <!--____________________________________________________________________-->
    <Time>
-	<maxTime>            0.05      </maxTime>
+	<maxTime>            3.0e-5      </maxTime>
 	<initTime>           0.0         </initTime>
 	<delt_min>           1.0e-9      </delt_min>
 	<delt_max>           1.0e-7      </delt_max>
@@ -140,8 +140,8 @@
     <!--   switchDebug      = various debugging output                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-       <filebase>annulus1.0.uda</filebase>
-       <outputInterval>0.0005</outputInterval>
+       <filebase>annulus2.0.uda</filebase>
+       <outputInterval>3.0e-6</outputInterval>
      <!--
        <compression>gzip</compression>
      -->
