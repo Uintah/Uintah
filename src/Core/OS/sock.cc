@@ -29,9 +29,9 @@
 #include <iostream>
 #include <signal.h>
 #include <stdio.h>
-using namespace std;
-#ifdef __aix
-#include <strings.h>
+
+#ifdef _AIX
+#  include <strings.h>  // for bzero
 #endif
 
 #include <Core/OS/sock.h>
@@ -57,6 +57,8 @@ int errno;
 #ifdef _WIN32
 static void prError(int err);
 #endif
+
+using namespace std;
 
 namespace SCIRun {
   
