@@ -19,27 +19,27 @@ originally by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
 </HEAD>
 <BODY >
 <!--Navigation Panel-->
-<A NAME="tex2html120"
+<A NAME="tex2html119"
  HREF="node4.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
-<A NAME="tex2html116"
+<A NAME="tex2html115"
  HREF="usersguide.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
-<A NAME="tex2html110"
+<A NAME="tex2html109"
  HREF="node2.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
-<A NAME="tex2html118"
+<A NAME="tex2html117"
  HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
-<A NAME="tex2html119"
- HREF="node9.html">
+<A NAME="tex2html118"
+ HREF="node8.html">
 <IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
 <BR>
-<B> Next:</B> <A NAME="tex2html121"
+<B> Next:</B> <A NAME="tex2html120"
  HREF="node4.html">3. Starting SCIRun</A>
-<B> Up:</B> <A NAME="tex2html117"
+<B> Up:</B> <A NAME="tex2html116"
  HREF="usersguide.html">No Title</A>
-<B> Previous:</B> <A NAME="tex2html111"
+<B> Previous:</B> <A NAME="tex2html110"
  HREF="node2.html">1. Introduction</A>
 <BR>
 <BR>
@@ -47,18 +47,18 @@ originally by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
 <!--Table of Child-Links-->
 <A NAME="CHILD_LINKS"><strong>Subsections</strong></A>
 <UL>
-<LI><A NAME="tex2html122"
+<LI><A NAME="tex2html121"
  HREF="node3.html#SECTION00031000000000000000">2.1 Traditional problem solving methods</A>
-<LI><A NAME="tex2html123"
+<LI><A NAME="tex2html122"
  HREF="node3.html#SECTION00032000000000000000">2.2 Integrated problem solving and computational
 steering</A>
-<LI><A NAME="tex2html124"
+<LI><A NAME="tex2html123"
  HREF="node3.html#SECTION00033000000000000000">2.3 <EM>SCIRun</EM> modules and networks</A>
-<LI><A NAME="tex2html125"
+<LI><A NAME="tex2html124"
  HREF="node3.html#SECTION00034000000000000000">2.4 Links to third party software</A>
-<LI><A NAME="tex2html126"
+<LI><A NAME="tex2html125"
  HREF="node3.html#SECTION00035000000000000000">2.5 Extensibility</A>
-<LI><A NAME="tex2html127"
+<LI><A NAME="tex2html126"
  HREF="node3.html#SECTION00036000000000000000">2.6 Detachable interface</A>
 </UL>
 <!--End of Table of Child-Links-->
@@ -66,14 +66,14 @@ steering</A>
 
 <H1><A NAME="SECTION00030000000000000000">&#160;</A>
 <A NAME="sec:concepts">&#160;</A> 
-<A NAME="473">&#160;</A>
+<A NAME="524">&#160;</A>
 <BR>
 2. Concepts
 </H1>
 
 <P>
 Read this section to learn about the design philosphy and goals of
-integrated problem solving environments <A NAME="474">&#160;</A>
+integrated problem solving environments <A NAME="525">&#160;</A>
 generally and how <EM>BioPSE</EM> embodies
 some of these ideas.  
 
@@ -89,20 +89,20 @@ multiple, non-integrated computer programs.  For example, a scientist using
 a computer simulation to examine the effect of electrode patch placement on
 transcardiac current density in the design of a cardiac implantable
 defibrillator[<A
- HREF="node8.html#CRJ:Sch95b">1</A>] would require geometric modeling, numerical
+ HREF="node7.html#CRJ:Sch95b">1</A>] would require geometric modeling, numerical
 simulation, and scientific visualization tools to complete the task.  The
 user might need one program to define the thoracic surfaces from medical
 images and another to create a discrete mesh of the volume contained within
 the surfaces[<A
- HREF="node8.html#CRJ:Sch93b">2</A>].  Another application like Matlab compute a
+ HREF="node7.html#CRJ:Sch93b">2</A>].  Another application like Matlab compute a
 finite element simulation of the electric current distribution from the
 defibrillation electrodes through the thoracic volume[<A
- HREF="node8.html#RSM:And93">3</A>].
+ HREF="node7.html#RSM:And93">3</A>].
 Another approach might be to write a Fortran program using a public domain
-numerical library such as LAPACK <A NAME="480">&#160;</A>.  To see the output would
+numerical library such as LAPACK <A NAME="531">&#160;</A>.  To see the output would
 require a scientific visualization package (such as those described
 in[<A
- HREF="node8.html#RSM:All91">4</A>]).  Between each of these steps, it would be necessary to
+ HREF="node7.html#RSM:All91">4</A>]).  Between each of these steps, it would be necessary to
 save the output of one program in a format that the next in the sequence
 could read--this might necessitate separate file format conversion
 utilities.  To find the optimal location, shape, and size parameters for
@@ -157,7 +157,7 @@ steering
 The goal of integrated problem solving environments--and specifically of
 <EM>SCIRun</EM> and <EM>BioPSE</EM>--is to incorporate and integrate all the steps described
 in the previous example as components in a single, unified, extensible
-problem solving environment (PSE)<A NAME="488">&#160;</A>.  The functionality that will
+problem solving environment (PSE)<A NAME="539">&#160;</A>.  The functionality that will
 result includes the ability to manage each step in a sequential computing
 process, and to create batch processes that execute repeated simulations.
 However, the functionality that sets <EM>SCIRun</EM> and <EM>BioPSE</EM> apart from most
@@ -204,16 +204,16 @@ to spontaneously explore a problem.
 While computational steering is still a young field in computer science,
 there are a number of examples of such systems (besides <EM>SCIRun</EM>) described in
 the literature.  Burnett[<A
- HREF="node8.html#MM:Bur94">5</A>], and Vetter and
+ HREF="node7.html#MM:Bur94">5</A>], and Vetter and
 Schwan[<A
- HREF="node8.html#MM:Vet96">6</A>] give overviews of existing computational steering
+ HREF="node7.html#MM:Vet96">6</A>] give overviews of existing computational steering
 system.  Several notable examples include CUMULVS[<A
- HREF="node8.html#MM:Gei96">7</A>,<A
- HREF="node8.html#MM:Koh97">8</A>],
-<A NAME="500">&#160;</A> Progress[<A
- HREF="node8.html#MM:Vet95">9</A>], <A NAME="502">&#160;</A> and
+ HREF="node7.html#MM:Gei96">7</A>,<A
+ HREF="node7.html#MM:Koh97">8</A>],
+<A NAME="551">&#160;</A> Progress[<A
+ HREF="node7.html#MM:Vet95">9</A>], <A NAME="553">&#160;</A> and
 Magellan[<A
- HREF="node8.html#MM:Vet97a">10</A>] <A NAME="504">&#160;</A>.
+ HREF="node7.html#MM:Vet97a">10</A>] <A NAME="555">&#160;</A>.
 
 <P>
 
@@ -226,19 +226,19 @@ It is important to understand the hierarchy of the problem solving software
 included in this package.  From a historical perspective, <EM>SCIRun</EM> was the
 original implementation of the concept of dataflow in a computational
 framework[<A
- HREF="node8.html#CRJ:Joh94c">11</A>,<A
- HREF="node8.html#RSM:Par95">12</A>,<A
- HREF="node8.html#RSM:Par95b">13</A>,<A
- HREF="node8.html#RSM:Par97">14</A>,<A
- HREF="node8.html#RSM:Par97b">15</A>,<A
- HREF="node8.html#CRJ:Parker99b">16</A>].
+ HREF="node7.html#CRJ:Joh94c">11</A>,<A
+ HREF="node7.html#RSM:Par95">12</A>,<A
+ HREF="node7.html#RSM:Par95b">13</A>,<A
+ HREF="node7.html#RSM:Par97">14</A>,<A
+ HREF="node7.html#RSM:Par97b">15</A>,<A
+ HREF="node7.html#CRJ:Parker99b">16</A>].
 We have now generalized and greatly expanded the <EM>SCIRun</EM> software so that
 now, <EM>SCIRun</EM> is the overarching term for any of the integrated problem
 solving applications built on the same foundation.  <EM>BioPSE</EM> is then one of
 these specific  applications, in this case for solving bioelectric field
 problems.  Another example of a <EM>SCIRun</EM> applications package is
 Uintah[<A
- HREF="node8.html#RSM:Dav2000">17</A>], which focuses on the simulation of fire and
+ HREF="node7.html#RSM:Dav2000">17</A>], which focuses on the simulation of fire and
 combustion. 
 
 <P>
@@ -259,12 +259,12 @@ environment.
 
 <P>
 <BR>
-<DIV ALIGN="CENTER"><A NAME="fig:conc-module">&#160;</A><A NAME="599">&#160;</A>
+<DIV ALIGN="CENTER"><A NAME="fig:conc-module">&#160;</A><A NAME="648">&#160;</A>
 <TABLE WIDTH="50%">
 <CAPTION><STRONG>Figure 1:</STRONG>
 Example of a <EM>SCIRun</EM> module</CAPTION>
 <TR><TD><IMG
-  WIDTH="881" ALIGN="TOP"
+  WIDTH="766" ALIGN="TOP"
  SRC="../figures/biopse-modmap.gif"
  ALT="module"></TD></TR>
 </TABLE>
@@ -272,7 +272,7 @@ Example of a <EM>SCIRun</EM> module</CAPTION>
 <BR>
 <P>
 The functional unit of a dataflow environment is the <EM>module</EM>
-<A NAME="527">&#160;</A>.  Figure&nbsp;<A HREF="node3.html#fig:conc-module">1</A> contains a generic <EM>SCIRun</EM>
+<A NAME="578">&#160;</A>.  Figure&nbsp;<A HREF="node3.html#fig:conc-module">1</A> contains a generic <EM>SCIRun</EM>
 module, with a User Interface (UI) button for graphically accessing the
 module's parameters, and input and output ports for receiving and sending
 data, respectively.  On the right is a simple example of a dataflow
@@ -283,7 +283,7 @@ Interface enables the selection of a desired isochrone surface.
 <P>
 Modules may contain other elements, but they will all have at least one
 input or one output port.  Examples of a module with only an output port
-would be file readers.  The <A NAME="tex2html7"
+would be file readers.  The <A NAME="tex2html12"
  HREF="viewer.html"><EM>Viewer</EM></A>
 module contains only input ports because it receives information and the
 output is a visualization.  For a more detailed description of modules and
@@ -292,7 +292,7 @@ The most important goal at this stage is to appreciate the concept of a
 module and the dataflow that links one module to another.
 
 <P>
-A network diagram <A NAME="534">&#160;</A> describes the way data flows
+A network diagram <A NAME="585">&#160;</A> describes the way data flows
 through <EM>SCIRun</EM> and is the main means of user interaction with the overall
 action of the program.  The network essentially defines the basic function of
 the program; without a network, <EM>SCIRun</EM> and <EM>BioPSE</EM> are just a set of tools
@@ -317,23 +317,23 @@ the need for some third party software libraries that are required for
 basic functionality.  This type of third party software is largely
 invisible to the user of <EM>SCIRun</EM> or <EM>BioPSE</EM>, at least until something
 breaks... Perhaps the most evident is the
-<A NAME="tex2html8"
+<A NAME="tex2html13"
  HREF="http://www.tcltk.com/">TCL/Tk</A>
-<A NAME="550">&#160;</A> library,
+<A NAME="601">&#160;</A> library,
 which <EM>SCIRun</EM> uses to create the network editor and the icons for the modules
 and data pipes.  In fact, <EM>SCIRun</EM> is actually a large TCL script that calls a
 lot of specialized C++ code to do all the hard work.
 
 <P>
 Far more interesting is the interaction between programs you may have that
-are written in FORTRAN <A NAME="553">&#160;</A> or
-<A NAME="tex2html9"
+are written in FORTRAN <A NAME="604">&#160;</A> or
+<A NAME="tex2html14"
  HREF="http://www.mathworks.com/products/matlab/">Matlab</A>
 and
 <EM>SCIRun</EM>.  One of the goals of the <EM>BioPSE</EM> project was to develop support for
 such external code, including FORTRAN, C, Matlab, and IDL.  This first
 version of <EM>BioPSE</EM> has support for Matlab and one example of wrapping
-existing FORTRAN code into a <EM>SCIRun</EM> module. <A NAME="560">&#160;</A>
+existing FORTRAN code into a <EM>SCIRun</EM> module. <A NAME="611">&#160;</A>
 
 <P>
 
@@ -369,10 +369,6 @@ where <TT>MatrixReceive</TT> module is listening.  <EM>SCIRun</EM>then carries o
 further calculations and display of the results.
 
 <P>
-For examples of this interface, see <A HREF="#sec:examples-matlab"><EM>Matlab
-Examples</EM></A>.
-
-<P>
 
 <H2><A NAME="SECTION00035000000000000000">&#160;</A>
 <A NAME="sec:con-extend">&#160;</A>
@@ -381,20 +377,20 @@ Examples</EM></A>.
 </H2> 
 
 <P>
-<EM>SCIRun</EM> is an extensible <A NAME="578">&#160;</A> problem solving environment.
+<EM>SCIRun</EM> is an extensible <A NAME="627">&#160;</A> problem solving environment.
 This is true in the sense that no one by the user really limits the
 different ways of connecting modules and creating new applications.  Ii is
 also more generally true in that <EM>SCIRun</EM> is designed to have users who can
 program create their own new modules.  To support creating new modules, we
 have developed the <EM>Module maker</EM> application, described in The
-<A NAME="tex2html10"
+<A NAME="tex2html15"
  HREF="http://modulemaker">Module maker manual</A>.
 
 <P>
 With the release of <EM>SCIRun</EM>, we anticipate that users all over the world will
 create new modules and we will encourage them to contribute modules to a
-repository on the <EM>BioPSE</EM> web site <A NAME="602">&#160;</A>
-(<A NAME="tex2html11"
+repository on the <EM>BioPSE</EM> web site <A NAME="651">&#160;</A>
+(<A NAME="tex2html16"
  HREF="http://www.sci.utah.edu/ncrr/software/biopse.html">www.sci.utah.edu/ncrr/software/biopse.html</A>.  We will review
 submissions to this collection of modules and adopt and then test generally
 useful ones to include in subsequent releases of <EM>BioPSE</EM>.  Future releases
@@ -406,7 +402,7 @@ intellectual investment in legacy code.
 
 <H2><A NAME="SECTION00036000000000000000">&#160;</A>
 <A NAME="sec:con-detach">&#160;</A> 
-<A NAME="592">&#160;</A>
+<A NAME="641">&#160;</A>
 <BR>
 2.6 Detachable interface
 </H2>
@@ -425,7 +421,7 @@ computer.  An additional strength of this approach is that the re-attached
 interface may not be an interactive widget at all, but a set of commands
 executed from a script.  This permits complete remote control of the
 application and thus is a flexible blend of interactive and almost
-unlimited batch control.  CUMULVS <A NAME="594">&#160;</A> is one example of such a
+unlimited batch control.  CUMULVS <A NAME="643">&#160;</A> is one example of such a
 system and uses its detachable interface to allow collaboration between
 scientists working remotely, with viewing systems that can attach or detach
 from the running simulation.
@@ -438,27 +434,27 @@ support but we plan to add this within six months of the first release.
 
 <HR>
 <!--Navigation Panel-->
-<A NAME="tex2html120"
+<A NAME="tex2html119"
  HREF="node4.html">
 <IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
-<A NAME="tex2html116"
+<A NAME="tex2html115"
  HREF="usersguide.html">
 <IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
-<A NAME="tex2html110"
+<A NAME="tex2html109"
  HREF="node2.html">
 <IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
-<A NAME="tex2html118"
+<A NAME="tex2html117"
  HREF="node1.html">
 <IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
-<A NAME="tex2html119"
- HREF="node9.html">
+<A NAME="tex2html118"
+ HREF="node8.html">
 <IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
 <BR>
-<B> Next:</B> <A NAME="tex2html121"
+<B> Next:</B> <A NAME="tex2html120"
  HREF="node4.html">3. Starting SCIRun</A>
-<B> Up:</B> <A NAME="tex2html117"
+<B> Up:</B> <A NAME="tex2html116"
  HREF="usersguide.html">No Title</A>
-<B> Previous:</B> <A NAME="tex2html111"
+<B> Previous:</B> <A NAME="tex2html110"
  HREF="node2.html">1. Introduction</A>
 <!--End of Navigation Panel-->
 <ADDRESS>
