@@ -120,22 +120,30 @@ itcl_class Module {
 	    }
 	}
 	
+	menu $p.menu
+	$p.menu add command -label "Help" -command "moduleHelp $name"
+	$p.menu add command -label "Destroy" -command "moduleDestroy $canvas $this"
+
 	bind $canvas <1> "$canvas raise current"
 	bind $p <1> "moduleStartDrag $canvas $this %X %Y"
 	bind $p <B1-Motion> "moduleDrag $canvas $this %X %Y"
 	bind $p <ButtonRelease-1> "moduleEndDrag $modframe"
+	bind $p <3> "tk_popup $p.menu %X %Y"
 	bind $p.title <1> "moduleStartDrag $canvas $this %X %Y"
 	bind $p.title <B1-Motion> "moduleDrag $canvas $this %X %Y"
 	bind $p.title <ButtonRelease-1> "moduleEndDrag $modframe"
+	bind $p.title <3> "tk_popup $p.menu %X %Y"
 	if {$make_time} {
 	    bind $p.time <1> "moduleStartDrag $canvas $this %X %Y"
 	    bind $p.time <B1-Motion> "moduleDrag $canvas $this %X %Y"
 	    bind $p.time <ButtonRelease-1> "moduleEndDrag $modframe"
+	    bind $p.time <3> "tk_popup $p.menu %X %Y"
 	}
 	if {$make_progress_graph} {
 	    bind $p.inset <1> "moduleStartDrag $canvas $this %X %Y"
 	    bind $p.inset <B1-Motion> "moduleDrag $canvas $this %X %Y"
 	    bind $p.inset <ButtonRelease-1> "moduleEndDrag $modframe"
+	    bind $p.inset <3> "tk_popup $p.menu %X %Y"
 	}
     }
     method configureAllIPorts {} {
@@ -542,3 +550,13 @@ proc configureOPorts {modid} {
 	$modid configureAllOPorts
     }
 }
+
+proc moduleHelp {name} {
+    global sci_root
+    helpPage [glob $sci_root/Modules/*/help/$name.html]
+}
+
+proc moduleDestroy {c modid} {
+    puts "moduleDestroy not implemented."
+}
+
