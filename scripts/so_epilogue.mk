@@ -48,14 +48,15 @@ $(LIBNAME)_LIBS := $(LIBS)
 # lib/libSCICore_Thread.so to -lSCICore_Thread.  This is so that
 # we can use the -l syntax to link, but still express the dependicies.
 #
+ifeq ($(NEED_SONAME),yes)
+SONAMEFLAG = -Wl,-soname,$(notdir $@)
+else
+SONAMEFLAG = 
+endif
 $(LIBNAME): $(OBJS) $(patsubst %,$(LIBDIR)lib%.so,$(PSELIBS))
 	rm -f $@
-ifeq ($(NEED_SONAME),yes)
-	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ -Wl,-soname,$(notdir $@) $(filter %.o,$^) $(patsubst $(LIBDIR)/lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
-else
-	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.o,$^) $(patsubst $(LIBDIR)/lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
-endif
-#	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ -Wl,-soname -Wl,$(notdir $@) $(filter %.o,$^) $(patsubst $(LIBDIR)/lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
+	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(LIBDIR)/lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
+
 #
 #  These will get removed on make clean
 #
@@ -74,6 +75,10 @@ endif
 
 #
 # $Log$
+# Revision 1.6  2000/03/21 04:30:06  sparker
+# Simplified rules for using -soname
+# Added a convenience target for subdirectories: "make here"
+#
 # Revision 1.5  2000/03/20 21:56:22  yarden
 # Linux port: add support for so lib on linux
 #

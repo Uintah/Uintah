@@ -180,11 +180,11 @@ ALLSUBDIRS := .
 include $(SRCTOP)/scripts/recurse.mk
 MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
 MAKEFILEDIRS := $(subst $(SRCTOP),$(OBJTOP_ABS),$(MAKEFILEDIRS))
-MAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
+SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
 
 all:: $(MAKEFILEDIRS)
 
-all:: $(LIBDIR) $(MAKEFILES)
+all:: $(LIBDIR) $(SUBMAKEFILES)
 
 all:: $(ALLGEN) $(ALLTARGETS)
 
@@ -201,9 +201,14 @@ $(ALLOBJS): $(ALLGEN)
 # The sophsticated looking $(...) mess below is just to convert a
 # subdirectory of the form a/b/c into ../../..
 #
-$(MAKEFILES): scripts/Makefile.tmpl
+ifeq ($(LARGESOS),yes)
+  HERE = $(LIBDIR)lib$(firstword $(subst /," ",$(subst $(OBJTOP_ABS)/,,$@))).so
+else
+  HERE = $(LIBDIR)lib$(subst /,_,$(patsubst $(OBJTOP_ABS)/%/,%,$(dir $@))).so
+endif
+$(SUBMAKEFILES): scripts/Makefile.tmpl
 	@echo creating $@
-	@sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(SRCTOP), $< > $@
+	@sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(strip $(SRCTOP)), -e s,@HERE_TARGET@,$(strip $(HERE)), $< > $@
 
 clean::
 	rm -f $(CLEANOBJS)
@@ -231,6 +236,10 @@ endif
 
 #
 # $Log$
+# Revision 1.15  2000/03/21 04:30:04  sparker
+# Simplified rules for using -soname
+# Added a convenience target for subdirectories: "make here"
+#
 # Revision 1.14  2000/03/20 23:14:13  sparker
 # Quieted make output in rules for building subdir Makefiles (added @)
 #
