@@ -2,6 +2,7 @@
 #include <Packages/Uintah/CCA/Components/Examples/ExamplesLabel.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
@@ -22,17 +23,23 @@ ExamplesLabel::ExamplesLabel()
 
   // For SimpleCFD
   bctype = VarLabel::create("bctype",
-			    NCVariable<int>::getTypeDescription());
+			    NCVariable<int>::getTypeDescription(),
+			    IntVector(1,1,1));
   xvelocity = VarLabel::create("xvelocity",
-			       SFCXVariable<double>::getTypeDescription());
+			       SFCXVariable<double>::getTypeDescription(),
+			       IntVector(1,1,1));
   yvelocity = VarLabel::create("yvelocity",
-			       SFCYVariable<double>::getTypeDescription());
+			       SFCYVariable<double>::getTypeDescription(),
+			       IntVector(1,1,1));
   zvelocity = VarLabel::create("zvelocity",
-			       SFCZVariable<double>::getTypeDescription());
+			       SFCZVariable<double>::getTypeDescription(),
+			       IntVector(1,1,1));
   density = VarLabel::create("density",
-			     CCVariable<double>::getTypeDescription());
+			     CCVariable<double>::getTypeDescription(),
+			     IntVector(1,1,1));
   temperature = VarLabel::create("temperature",
-				 CCVariable<double>::getTypeDescription());
+				 CCVariable<double>::getTypeDescription(),
+				 IntVector(1,1,1));
   xvelocity_matrix = VarLabel::create("xvelocity_matrix",
 				      SFCXVariable<Stencil7>::getTypeDescription());
   xvelocity_rhs = VarLabel::create("xvelocity_rhs",
@@ -63,6 +70,29 @@ ExamplesLabel::ExamplesLabel()
 
   ccvelocity = VarLabel::create("ccvelocity",
 				CCVariable<Vector>::getTypeDescription());
+  ccvorticity = VarLabel::create("ccvorticity",
+				 CCVariable<Vector>::getTypeDescription());
+  ccvorticitymag = VarLabel::create("ccvorticitymag",
+				    CCVariable<double>::getTypeDescription());
+  vcforce = VarLabel::create("vcforce",
+			     CCVariable<Vector>::getTypeDescription());
+  NN = VarLabel::create("N",
+			CCVariable<Vector>::getTypeDescription());
+
+  // For AMRSimpleCFD
+  pressure2_matrix = VarLabel::create("pressure2_matrix",
+				      CCVariable<Stencil7>::getTypeDescription());
+  pressure2_rhs = VarLabel::create("pressure2_rhs",
+				  CCVariable<double>::getTypeDescription());
+  pressure2 = VarLabel::create("pressure2",
+			       CCVariable<double>::getTypeDescription());
+
+  density_gradient_mag = VarLabel::create("density_gradient_magnitude",
+					  CCVariable<double>::getTypeDescription());
+  temperature_gradient_mag = VarLabel::create("temperature_gradient_magnitude",
+					      CCVariable<double>::getTypeDescription());
+  pressure_gradient_mag = VarLabel::create("pressure_gradient_magnitude",
+					   CCVariable<double>::getTypeDescription());
 }
 
 ExamplesLabel::~ExamplesLabel()
@@ -90,6 +120,16 @@ ExamplesLabel::~ExamplesLabel()
   VarLabel::destroy(pressure_rhs);
   VarLabel::destroy(pressure);
   VarLabel::destroy(ccvelocity);
+  VarLabel::destroy(ccvorticity);
+  VarLabel::destroy(ccvorticitymag);
+  VarLabel::destroy(vcforce);
+  VarLabel::destroy(NN);
+  VarLabel::destroy(pressure2);
+  VarLabel::destroy(pressure2_matrix);
+  VarLabel::destroy(pressure2_rhs);
+  VarLabel::destroy(pressure_gradient_mag);
+  VarLabel::destroy(temperature_gradient_mag);
+  VarLabel::destroy(density_gradient_mag);
 }
 
 } // end namespace uintah 
