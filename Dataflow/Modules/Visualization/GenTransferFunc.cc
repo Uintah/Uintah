@@ -481,6 +481,8 @@ void GenTransferFunc::tcl_command( GuiArgs& args, void* userdata)
     string_to_int(args[2], whichwin);
     Resize(whichwin); // just sets up OGL stuff...
     DrawGraphs();
+  }else if(args[1] == "closewindow") {
+     ctxs[0] = ctxs[1] = ctxs[2] = 0;
   }else {
     Module::tcl_command(args, userdata);
   }
