@@ -5,6 +5,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/Core/Math
 
 SRCS     += \
+	$(SRCDIR)/FastMatrix.cc \
 	$(SRCDIR)/Primes.cc     \
 	$(SRCDIR)/Matrix3.cc    \
 	$(SRCDIR)/CubeRoot.cc	\
