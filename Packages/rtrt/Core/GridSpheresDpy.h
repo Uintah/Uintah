@@ -23,12 +23,19 @@ class GridSpheresDpy : public Runnable {
   Array1<GridSpheres*> grids;
   std::string *var_names;
   float* scales;
+  float* color_scales;
+  float* original_min;
+  float* original_max;
   float* min;
   float* max;
   float* range_begin;
   float* range_end;
   float* new_range_begin;
   float* new_range_end;
+  float* color_begin;
+  float* color_end;
+  float* new_color_begin;
+  float* new_color_end;
   int ndata;
   int colordata, newcolordata;
   
