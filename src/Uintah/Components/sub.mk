@@ -9,6 +9,7 @@ SRCDIR := Uintah/Components
 SUBDIRS :=  $(SRCDIR)/DataArchiver \
 	$(SRCDIR)/Schedulers $(SRCDIR)/SimulationController \
 	$(SRCDIR)/MPM $(SRCDIR)/ICE \
+	$(SRCDIR)/MPMICE \
 	$(SRCDIR)/Arches $(SRCDIR)/ProblemSpecification
 
 
@@ -16,6 +17,9 @@ include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.10  2000/12/01 23:00:20  guilkey
+# Adding MPMICE to sub.mk.
+#
 # Revision 1.9  2000/06/09 22:46:43  sparker
 # Put ICE back, so that we can get sus to link
 #
