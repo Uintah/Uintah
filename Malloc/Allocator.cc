@@ -308,10 +308,11 @@ void* Allocator::alloc_big(size_t size, char* tag)
     lock();
 
     Tag* obj=big_bin.free;
-    size_t maxsize=size+(size>>4);
+    size_t osize=size+OVERHEAD;
+    size_t maxsize=osize+(size>>4);
     for(;obj!=0;obj=obj->next){
 	// See if this object is within .0625% of the right size...
-	if(obj->hunk->len > size && obj->hunk->len <= maxsize)
+	if(obj->hunk->len > osize && obj->hunk->len <= maxsize)
 	    break;
     }
     if(!obj){
