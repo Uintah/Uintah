@@ -82,6 +82,17 @@ RescaleColorMap::RescaleColorMap(const clString& id)
     min("min", id, this ),
     max("max", id, this)
 {
+    // Create the output port
+  omap=scinew ColorMapOPort(this, "ColorMap", ColorMapIPort::Atomic);
+  add_oport(omap);
+
+    // Create the input ports
+  imap=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
+  add_iport(imap);
+  FieldIPort* ifield=scinew FieldIPort(this, "ScalarField",
+                                                     FieldIPort::Atomic);
+  add_iport(ifield);
+  fieldports.add(ifield);
 }
 
 RescaleColorMap::~RescaleColorMap()
@@ -96,12 +107,6 @@ void RescaleColorMap::get_minmax(FieldHandle field) {
 void
 RescaleColorMap::execute()
 {
-  omap = (ColorMapOPort*)get_oport("Rescaled Colormap");
-
-  imap = (ColorMapIPort*)get_iport("Colormap");
-
-  dynamic_port_range iters = get_iports("Domain");
-
   ColorMapHandle cmap;
   if(!imap->get(cmap)) {
     return;
@@ -110,10 +115,9 @@ RescaleColorMap::execute()
   if( isFixed.get() ){
     cmap->Scale(min.get(), max.get());
   } else {
-    port_iter pi = iters.first;
-    while (pi != iters.second) {
+    for(int i=0;i<fieldports.size()-1;i++){
       FieldHandle field;
-      if (((FieldIPort*)get_iport((*pi).second))->get(field)) {
+      if(fieldports[i]->get(field)){
         string type = field->get_type_name();
         cerr << "field type = " << type << endl;
 	
@@ -130,12 +134,28 @@ RescaleColorMap::execute()
 	}
 	
 	cmap->Scale( minmax_.first, minmax_.second);
-	min.set(     minmax_.first );
+	min.set( minmax_.first );
 	max.set( minmax_.second );
       }
     }
   }
   omap->send(cmap);
+}
+
+void 
+RescaleColorMap::connection(ConnectionMode mode, int which_port, int)
+{
+    if(which_port > 0){
+        if(mode==Disconnected){
+            remove_iport(which_port);
+            fieldports.remove(which_port-1);
+        } else {
+            FieldIPort* p=scinew FieldIPort(this, "Field",
+                                                        FieldIPort::Atomic);
+            fieldports.add(p);
+            add_iport(p);
+        }
+    }
 }
 
 } // End namespace SCIRun

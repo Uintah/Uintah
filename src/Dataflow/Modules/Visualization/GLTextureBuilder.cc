@@ -59,7 +59,8 @@ GLTextureBuilder::GLTextureBuilder(const clString& id)
     max_brick_dim_("max_brick_dim", id, this),
     min_("min", id, this),
     max_("max", id, this),
-    old_brick_size_(0)
+    is_fixed_("is_fixed", id, this),
+    old_brick_size_(0), old_min_(-1), old_max_(-1)
 {
   // Create the input ports
   infield_ = scinew FieldIPort( this, " Field", FieldIPort::Atomic);
@@ -121,6 +122,8 @@ GLTextureBuilder::DestroyContext(Display *dpy, GLXContext& cx)
 */
 void GLTextureBuilder::execute(void)
 {
+  reset_vars();
+
   FieldHandle sfield;
   if (!infield_->get(sfield))
   {
@@ -131,44 +134,77 @@ void GLTextureBuilder::execute(void)
     return;
   }
 
-  cout << "LOCATION 1\n";
+  double minV, maxV;
+  double min = min_.get();
+  double max = max_.get();
+  int is_fixed = is_fixed_.get();
+  cerr << "is_fixed = "<<is_fixed<<"\n";
   if (sfield.get_rep() != sfrg_.get_rep()  && !tex_.get_rep())
   {
-    cout << "LOCATION 5\n";
     sfrg_ = sfield;
-    tex_ = scinew GLTexture3D(sfield);
+    if (is_fixed) {  // if fixed, copy min/max into these locals
+      minV = min;
+      maxV = max;
+    }
+
+    // this constructor will take in a min and max, and if is_fixed is set
+    // it will set the values to that range... otherwise it auto-scales
+    tex_ = scinew GLTexture3D(sfield, minV, maxV, is_fixed);
+
+    if (!is_fixed) { // if not fixed, overwrite min/max values on Gui
+      tex_->getminmax(minV, maxV);
+      min_.set(minV);
+      max_.set(maxV);
+    }
     TCL::execute(id + " SetDims " + to_string( tex_->get_brick_size()));
     max_brick_dim_.set(tex_->get_brick_size());
     old_brick_size_ = tex_->get_brick_size();
-    double minV, maxV;
-    tex_->getminmax(minV, maxV);
-    min_.set(minV);
-    max_.set(maxV);
   }
   else if (sfield.get_rep() != sfrg_.get_rep())
   {
-    cout << "LOCATION 4\n";
     sfrg_ = sfield;
-    tex_ = scinew GLTexture3D(sfield);
+    if (is_fixed) {
+      minV = min;
+      maxV = max;
+    }
+
+    // see note above
+    tex_ = scinew GLTexture3D(sfield, minV, maxV, is_fixed);
+    if (!is_fixed) {
+      tex_->getminmax(minV, maxV);
+      min_.set(minV);
+      max_.set(maxV);
+    }
     tex_->set_brick_size(max_brick_dim_.get());
-    double minV, maxV;
-    tex_->getminmax(minV, maxV);
-    min_.set(minV);
-    max_.set(maxV);
   }
   else if (old_brick_size_ != max_brick_dim_.get())
   {
-    cout << "LOCATION 3\n";
     tex_->set_brick_size(max_brick_dim_.get());
     old_brick_size_ = max_brick_dim_.get();
   }
-  
+  else if ((old_min_ != min) || (old_max_ != max))
+  {
+    if (is_fixed) {
+      minV = min;
+      maxV = max;
+    }
+
+    // see note above
+    tex_ = scinew GLTexture3D(sfield, minV, maxV, is_fixed);
+    if (!is_fixed) {
+      tex_->getminmax(minV, maxV);
+      min_.set(minV);
+      max_.set(maxV);
+    }
+  }    
+
+  old_min_ = minV;
+  old_max_ = maxV;
+
   if (tex_.get_rep())
   {
     otexture_->send(tex_);
   }
-
-  cout << "LOCATION 2\n";
 }
 
 } // End namespace SCIRun

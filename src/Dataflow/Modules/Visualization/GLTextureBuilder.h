@@ -59,9 +59,12 @@ private:
   FieldHandle sfrg_;
   GLTexture3DHandle tex_;
 
+  GuiInt is_fixed_;
   GuiInt max_brick_dim_;
   GuiDouble min_, max_;
   int old_brick_size_;
+  int old_min_;
+  int old_max_;
 };
 
 } // End namespace SCIRun

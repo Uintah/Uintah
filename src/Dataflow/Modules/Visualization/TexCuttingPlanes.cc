@@ -136,7 +136,6 @@ void TexCuttingPlanes::widget_moved(int)
 
 void TexCuttingPlanes::execute(void)
 {
-#if 0
   //AuditAllocator(default_allocator);
   static GLTexture3DHandle oldtex = 0;
   if (!intexture->get(tex)) {
@@ -158,12 +157,13 @@ void TexCuttingPlanes::execute(void)
     Point Smin(tex->min());
     Point Smax(tex->max());
     Vector dv(Smax - Smin);
-
-    ScalarFieldRGBase *sf = tex->getField();
-    ddv.x(dv.x()/(sf->nx - 1));
-    ddv.y(dv.y()/(sf->ny - 1));
-    ddv.z(dv.z()/(sf->nz - 1));
-    ddview = (dv.length()/(std::max(sf->nx, std::max(sf->ny, sf->nz)) -1));
+    LatVolMeshHandle lvmH = tex->get_mesh();
+    ddv.x(dv.x()/(lvmH->get_nx() - 1));
+    ddv.y(dv.y()/(lvmH->get_ny() - 1));
+    ddv.z(dv.z()/(lvmH->get_nz() - 1));
+    ddview = (dv.length()/(std::max(lvmH->get_nx(), 
+				    std::max(lvmH->get_ny(), 
+					     lvmH->get_nz())) -1));
 
     control_widget->SetPosition(Interpolate(Smin,Smax,0.5));
     control_widget->SetScale(dv.length()/80.0);
@@ -190,11 +190,13 @@ void TexCuttingPlanes::execute(void)
       Point Smin(tex->min());
       Point Smax(tex->max());
       Vector dv(Smax - Smin);
-      ScalarFieldRGBase *sf = tex->getField();
-      ddv.x(dv.x()/(sf->nx - 1));
-      ddv.y(dv.y()/(sf->ny - 1));
-      ddv.z(dv.z()/(sf->nz - 1));
-      ddview = (dv.length()/(std::max(sf->nx, std::max(sf->ny, sf->nz)) -1));
+      LatVolMeshHandle lvmH = tex->get_mesh();
+      ddv.x(dv.x()/(lvmH->get_nx() - 1));
+      ddv.y(dv.y()/(lvmH->get_ny() - 1));
+      ddv.z(dv.z()/(lvmH->get_nz() - 1));
+      ddview = (dv.length()/(std::max(lvmH->get_nx(), 
+				      std::max(lvmH->get_ny(), 
+					       lvmH->get_nz())) -1));
       volren->SetVol( tex.get_rep() );
     }
 
@@ -226,7 +228,6 @@ void TexCuttingPlanes::execute(void)
 
   ogeom->flushViews();				  
   //AuditAllocator(default_allocator);
-#endif
 }
 
 } // End namespace SCIRun
