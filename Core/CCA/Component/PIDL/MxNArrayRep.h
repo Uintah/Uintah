@@ -34,6 +34,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <math.h>
 #include <Core/CCA/Component/CIA/array.h>
 #include <Core/CCA/Component/PIDL/Reference.h>
 

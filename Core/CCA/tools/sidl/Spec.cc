@@ -119,6 +119,11 @@ Argument::Mode Argument::getMode() const
   return mode;
 }
 
+Type* Argument::getType() const
+{
+  return type;
+}
+
 ArgumentList::ArgumentList()
 {
 }

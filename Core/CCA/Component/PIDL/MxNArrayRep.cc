@@ -180,7 +180,7 @@ unsigned int MxNArrayRep::getSize(int dimno)
     int fst = mydimarr[dimno-1]->myfirst;
     int lst = mydimarr[dimno-1]->mylast;
     int str = mydimarr[dimno-1]->mystride;
-    return (((lst - fst) / str) + 1);
+    return ( (int) ceil((float)(lst - fst) / (float)str) );
   }
   else
     return 0;
@@ -255,7 +255,15 @@ Index* MxNArrayRep::Intersect(MxNArrayRep* arep, int dimno)
         d_crt = crt(fst,str,myfst,mystr);
       else {
         if ((fst % d_gcd) == (myfst % d_gcd)) {
-          d_crt = fst % d_gcd;
+	  std::cerr << "Intersection exists, but I can't find it\n";
+          //No Intersection
+          intersectionRep->myfirst = 1;
+          intersectionRep->mylast = 0;
+
+          std::cerr << "INTERSECTION: ";
+          intersectionRep->print(std::cerr);
+
+          return intersectionRep;
         } 
 	else {
           //No Intersection
@@ -277,16 +285,12 @@ Index* MxNArrayRep::Intersect(MxNArrayRep* arep, int dimno)
       if ((t1 % lcm_str) == 0)
 	intersectionRep->myfirst = max_fst;
       else {
-	t1 = (max_fst - d_crt);
-	if ((t1 % lcm_str) == 0) 
-	  t1 = t1 / lcm_str;
-	else
-	  t1 = (t1 / lcm_str) + 1;
+	t1 = (t1 / lcm_str) + 1;
 	intersectionRep->myfirst = lcm_str * t1 + d_crt;
       }
       
       //Using the first intersect, find the last
-      int min_lst = std::min(mylst,lst);
+      int min_lst = std::min(mylst,lst) - 1;
       int dif = min_lst - intersectionRep->myfirst;
       if (dif > 0) {
 	if ((dif % lcm_str) == 0)

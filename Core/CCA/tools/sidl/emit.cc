@@ -211,7 +211,8 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   out << "#include <Core/Thread/Thread.h>\n";
   out << "#include <iostream>\n";
   out << "#include <mpi.h> //Debugging purposes\n";
-  out << "\n";
+  out << "using namespace std;\n";
+  out << "\n"; 
   out << e.proxy.str();
   out << e.out.str();
 }
@@ -744,12 +745,27 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   e.out << leader2 << myclass << "* _obj=static_cast< " << myclass << "*>(_sc->d_ptr);\n";
   e.out << "\n";
   
-  string f_leader;
-  if (doRedistribution) {
+
+  if(return_type){
+    if(!return_type->isvoid()){
+      e.out << leader2;
+      return_type->emit_rettype(e, "_ret");
+      e.out << ";\n";
+    }
+  }
+
+  if (isCollective) {
     e.out << leader2 << "//Unmarshal distribution flag\n";
-    e.out << leader2 << "bool _d_flag;\n";
-    e.out << leader2 << "message->unmarshalByte((char*) &_d_flag);\n";
-    e.out << leader2 << "if (!_d_flag) {\n";
+    e.out << leader2 << "int _flag;\n";
+    e.out << leader2 << "message->unmarshalInt(&_flag);\n";
+  }
+
+  /***********************************/
+  /*CALLONLY||CALLNORET              */
+  /***********************************/
+  string f_leader;
+  if (isCollective) {
+    e.out << leader2 << "if ((_flag == 2)||(_flag == 3)) {  /*CALLONLY || CALLNORET*/ \n";
     f_leader=e.out.push_leader();
   }
 
@@ -765,9 +781,6 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     }
   }
 
-  // Unmarshal the reply  
-  e.out << leader2 << "message->unmarshalReply();\n";
-
   // Declare out arguments...
   argNum=0;
   for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
@@ -780,13 +793,15 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     }
   }
 
+  // Unmarshal the reply  
+  e.out << leader2 << "message->unmarshalReply();\n";
+
   e.out << leader2 << "// Call the method\n";
   // Call the method...
   e.out << leader2;
   if(return_type){
     if(!return_type->isvoid()){
-      return_type->emit_rettype(e, "_ret");
-      e.out << " = ";
+      e.out << "_ret =";
     }
   }
   e.out << "_obj->" << name << "(";
@@ -799,33 +814,27 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   }
   e.out << ");\n";
 
-  // Clean up in arguments
   if(reply_required()){
     // Set up startpoints for any objects...
     e.out << leader2 << "// Size the reply...\n";
     e.out << leader2 << "message->createMessage();\n";
     
-    if(return_type){
-      if(!return_type->isvoid()){
-	return_type->emit_marshalsize(e, "_ret", "_rsize", "1");
-      }
+    e.out << leader2 << "int _x_flag=0;\n";
+    e.out << leader2 << "message->marshalInt(&_x_flag);\n";
+
+    if (isCollective) {
+      e.out << leader2 << "// Clear Storage from previous data\n";
+      e.out << leader2 << "if (_flag != 3)\n";
+      e.out << leader2 << "  _sc->storage.clear(" << e.handlerNum << ");\n";
     }
-    argNum=0;
-    for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
-      argNum++;
-      Argument* arg=*iter;
-      if(arg->getMode() != Argument::In) {
-	std::ostringstream argname;
-	argname << "_arg" << argNum;
-	arg->emit_marshalsize(e, argname.str(), "_rsize", "1");
-      }
-    }
-    e.out << leader2 << "int _flag=0;\n";
-    e.out << leader2 << "message->marshalInt(&_flag);\n";
+
     if(return_type){
       if(!return_type->isvoid()){
 	e.out << leader2 << "// Marshal return value\n";
-	return_type->emit_marshal(e, "_ret", "1", 0 , true, ReturnType, false);
+	if (isCollective)
+	  return_type->emit_marshal(e, "_ret", "1", 0 , true, ReturnType, false, doStore);
+	else
+	  return_type->emit_marshal(e, "_ret", "1", 0 , true, ReturnType, false, noneStorage);
       }
     }
     if(list.size() != 0)
@@ -837,9 +846,23 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
       if(arg->getMode() != Argument::In) {
 	std::ostringstream argname;
 	argname << "_arg" << argNum;
-	arg->emit_marshal(e, argname.str(), "1", 0 , true, ArgOut, false);
+	if (isCollective)
+	  arg->emit_marshal(e, argname.str(), "1", 0 , true, ArgOut, false, doStore);
+	else
+	  arg->emit_marshal(e, argname.str(), "1", 0 , true, ArgOut, false, noneStorage);
       }
     }
+
+    /***********************************/
+    /*CALLONLY                         */
+    /***********************************/
+    if (isCollective) {
+      //Do this here because CALLNORET needs data redistribution
+      //calls found in emit_marshal (OUT args)
+      e.out << leader2 << "if (_flag == 3) return;\n";
+      e.out << leader2 << "/*CALLONLY*/ \n";
+    }
+
 
     e.out << leader2 << "// Send the reply...\n";
     int reply_handler_id=0; // Always 0
@@ -847,8 +870,67 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   }
   e.out << leader2 << "message->destroyMessage();\n";  
 
-  if(doRedistribution) {
+  if (isCollective) {
+    e.out.pop_leader(f_leader);
+    e.out << leader2 << "}\n";
+  }
+ 
+  /***********************************/
+  /*NOCALLRET                        */
+  /***********************************/
+  if (isCollective) {
+    e.out << leader2 << "if (_flag == 4) {  /*NOCALLRET*/ \n";
+    f_leader=e.out.push_leader();
+    
+    if(reply_required()){
+      e.out << leader2 << "message->unmarshalReply();\n";
+      e.out << leader2 << "message->createMessage();\n";
 
+      e.out << leader2 << "int _x_flag=0;\n";
+      e.out << leader2 << "message->marshalInt(&_x_flag);\n";
+            
+      if(return_type){
+	if(!return_type->isvoid()){
+	  e.out << leader2 << "// Marshal return value\n";
+	  if (isCollective)
+	    return_type->emit_marshal(e, "_ret", "1", 0 , true, ReturnType, false, doRetreive);
+	  else
+	    return_type->emit_marshal(e, "_ret", "1", 0 , true, ArgOut, false, noneStorage);
+	}
+      }
+      
+      if(list.size() != 0)
+	e.out << leader2 << "// Marshal arguments\n";
+      argNum=0;
+      for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
+	argNum++;
+	Argument* arg=*iter;
+	if(arg->getMode() != Argument::In) {
+	  std::ostringstream argname;
+	  argname << "_arg" << argNum;
+	  if (isCollective)
+	    arg->emit_marshal(e, argname.str(), "1", 0 , true, ArgOut, false, doRetreive);
+	  else
+	    arg->emit_marshal(e, argname.str(), "1", 0 , true, ArgOut, false, noneStorage);
+	}
+      }
+      
+
+      e.out << leader2 << "// Send the reply...\n";
+      int reply_handler_id=0; // Always 0
+      e.out << leader2 << "message->sendMessage(" << reply_handler_id << ");\n";    
+    }
+    
+    e.out << leader2 << "message->destroyMessage();\n"; 
+    
+    e.out.pop_leader(f_leader);
+    e.out << leader2 << "}\n";
+  } /*endif isCollective*/
+
+  /***********************************/
+  /*REDISONLY                        */
+  /***********************************/
+  if(doRedistribution) {
     //undefs for the arg_ptrs we defined so that no copies are made
     argNum=0;
     for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
@@ -856,8 +938,9 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
       e.out << leader2 << "#undef _arg" << argNum << "\n";
     }
 
-    e.out << "  }  /*end if(!_d_flag)*/\n";
-    e.out << "  else {\n";
+    e.out << leader2 << "if (_flag == 1) {  /*REDISONLY*/ \n";
+
+    f_leader=e.out.push_leader();
     e.out << leader2 << "//Unmarshal recieved distribution name\n";
     e.out << leader2 << "int distname_s;\n";
     e.out << leader2 << "message->unmarshalInt(&distname_s, 1);\n";
@@ -885,7 +968,6 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   }
 
   e.out.pop_leader(oldleader);
-
   e.out << "}\n\n";
 }
 
@@ -1182,9 +1264,9 @@ void CI::emit_proxy(EmitState& e)
     e.out << "  for(unsigned int i=0; i < _refL.size(); i++, iter++) {\n";
     e.out << "    ::SCIRun::Message* message = (*iter).chan->getMessage();\n";
     e.out << "    message->waitReply();\n";
-    e.out << "    int _flag;\n";
-    e.out << "    message->unmarshalInt(&_flag);\n";
-    e.out << "    if(_flag != 0)\n";
+    e.out << "    int _x_flag;\n";
+    e.out << "    message->unmarshalInt(&_x_flag);\n";
+    e.out << "    if(_x_flag != 0)\n";
     e.out << "      NOT_FINISHED(\"Exceptions not implemented\");\n";
     e.out << "    //Unmarshal distribution representation array\n";
     e.out << "    int _ret_dim[2];\n";
@@ -1213,8 +1295,14 @@ void Method::emit_proxy(EmitState& e, const string& fn,
   e.out << leader2 << "::SCIRun::refList _refL;\n";
   e.out << leader2 << "::SCIRun::refList::iterator iter;\n";
   e.out << leader2 << "_proxyGetReferenceList(_refL,false);\n";
-  e.out << leader2 << "iter = _refL.begin() + ( _refL[0].par_rank % _refL.size() );\n";
-  e.out << leader2 << "int rate = _refL[0].par_size;\n";
+
+  if(reply_required()){
+    if(return_type) {
+      if(!return_type->isvoid()) {
+	return_type->emit_declaration(e,"_ret");
+      }
+    }
+  }
 
   //emit special redistribution code here for IN args:
   if (doRedistribution) {
@@ -1230,14 +1318,87 @@ void Method::emit_proxy(EmitState& e, const string& fn,
       }
     }
   }
+  //eof special redistribution code for IN args
+
 
   e.out << "\n";
-  e.out << leader2 << "for(unsigned int i=_refL[0].par_rank; i < _refL.size(); i+=rate, iter+=rate) {\n";
-  string loop_leader1=e.out.push_leader();
+
+
+  /***********************************/
+  /*NOCALLRET                        */
+  /***********************************/
+  if (isCollective) {
+    e.out << leader2 << "if(_refL[0].par_rank >= (int)_refL.size()) {\n";
+    e.out << leader2 << "  /*NOCALLRET*/\n";
+    string nocallret_ldr=e.out.push_leader();
+    e.out << leader2 << "iter = _refL.begin() + ( _refL[0].par_rank % _refL.size() );\n";
+    e.out << leader2 << "::SCIRun::Message* message = (*iter).chan->getMessage();\n";
+    e.out << leader2 << "message->createMessage();\n";
+    e.out << leader2 << "//Marshal flag which informs handler that\n";
+    e.out << leader2 << "// this message is NOCALLRET:\n";
+    e.out << leader2 << "int _flag = 4;\n";
+    e.out << leader2 << "message->marshalInt(&_flag);\n";
+    e.out << leader2 << "// Send the message\n";
+    e.out << leader2 << "int _handler=(*iter).getVtableBase()+" << handlerOff << ";\n";
+    e.out << leader2 << "message->sendMessage(_handler);\n";
+
+    if(reply_required()){
+      e.out << leader2 << "message->waitReply();\n";
+      //... emit unmarshal...;
+      e.out << leader2 << "int _x_flag;\n";
+      e.out << leader2 << "message->unmarshalInt(&_x_flag);\n";
+      e.out << leader2 << "if(_x_flag != 0)\n";
+      e.out << leader2 << "  NOT_FINISHED(\"Exceptions not implemented\");\n";
+      
+      
+      if(return_type){
+	if(!return_type->isvoid()){
+	  e.out << leader2 << "// Unmarshal the return value\n";
+	  return_type->emit_unmarshal(e, "_ret", "1", handlerOff, ReturnType, false, false);
+	}
+      }
+      
+      if(list.size() != 0)
+	e.out << leader2 << "// Unmarshal the return arguments\n";
+      int argNum=0;
+      for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
+	argNum++;
+	Argument* arg=*iter;
+	if(arg->getMode() != Argument::In) {
+	  std::ostringstream argname;
+	  argname << "_arg" << argNum;
+	  arg->emit_unmarshal(e, argname.str(), "1", handlerOff, ArgOut, false, false);
+	}
+      }
+      
+      e.out << leader2 << "message->destroyMessage();\n";
+    }
+    
+    e.out.pop_leader(nocallret_ldr);
+    e.out << leader2 << "}\n";
+  } /*endif isCollective*/
+
+
+  /***********************************/
+  /*CALLONLY                         */
+  /***********************************/
+  string callonly_ldr;
+  if (isCollective) {
+    e.out << leader2 << "else {\n";
+    e.out << leader2 << "  /*CALLONLY*/\n";
+    callonly_ldr=e.out.push_leader();
+  }
+
+  if (isCollective) 
+    e.out << leader2 << "iter = _refL.begin() + _refL[0].par_rank;\n";
+  else
+    e.out << leader2 << "iter = _refL.begin() + ( _refL[0].par_rank % _refL.size() );\n";
+    
   e.out << leader2 << "::SCIRun::Message* message = (*iter).chan->getMessage();\n";
   e.out << leader2 << "message->createMessage();\n";
 
   int argNum=0;
+  /*
   for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
     argNum++;
     Argument* arg=*iter;
@@ -1247,12 +1408,15 @@ void Method::emit_proxy(EmitState& e, const string& fn,
       arg->emit_marshalsize(e, argname.str(), "_size", "1");
     }
   }
-  if (doRedistribution) {
+  */
+
+  if (isCollective) {
     e.out << leader2 << "//Marshal flag which informs handler that\n";
-    e.out << leader2 << "// this message is not the redistribution:\n";
-    e.out << leader2 << "bool _d_flag = false;\n";
-    e.out << leader2 << "message->marshalByte((char*) &_d_flag);\n";
+    e.out << leader2 << "// this message is CALLONLY:\n";
+    e.out << leader2 << "int _flag = 2;\n";
+    e.out << leader2 << "message->marshalInt(&_flag);\n";
   }
+
   if(list.size() != 0)
     e.out << leader2 << "// Marshal the arguments\n";
   argNum=0;
@@ -1266,31 +1430,16 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     }
   }
 
-
   e.out << leader2 << "// Send the message\n";
   e.out << leader2 << "int _handler=(*iter).getVtableBase()+" << handlerOff << ";\n";
   e.out << leader2 << "message->sendMessage(_handler);\n";
 
-  e.out.pop_leader(loop_leader1);
-  e.out << leader2 << "}\n";
-
-
   if(reply_required()){
-    if(return_type) {
-      if(!return_type->isvoid()) {
-	return_type->emit_declaration(e,"_ret");
-      }
-    }
-
-    e.out << leader2 << "iter = _refL.begin() + _refL[0].par_rank;\n";
-    e.out << leader2 << "for(unsigned int i=_refL[0].par_rank; i < _refL.size(); i+=rate, iter+=rate) {\n";
-    string loop_leader2=e.out.push_leader();
-    e.out << leader2 << "::SCIRun::Message* message = (*iter).chan->getMessage();\n";
     e.out << leader2 << "message->waitReply();\n";
     //... emit unmarshal...;
-    e.out << leader2 << "int _flag;\n";
-    e.out << leader2 << "message->unmarshalInt(&_flag);\n";
-    e.out << leader2 << "if(_flag != 0)\n";
+    e.out << leader2 << "int _x_flag;\n";
+    e.out << leader2 << "message->unmarshalInt(&_x_flag);\n";
+    e.out << leader2 << "if(_x_flag != 0)\n";
     e.out << leader2 << "  NOT_FINISHED(\"Exceptions not implemented\");\n";
 
     if(return_type){
@@ -1312,8 +1461,73 @@ void Method::emit_proxy(EmitState& e, const string& fn,
       }
     }
     e.out << leader2 << "message->destroyMessage();\n";
-    e.out.pop_leader(loop_leader2);    
+  }
+
+  if (isCollective) {
+    e.out.pop_leader(callonly_ldr);
     e.out << leader2 << "}\n";
+  }
+
+
+
+
+  /***********************************/
+  /*CALLNORET                        */
+  /***********************************/
+  if (isCollective) {
+    e.out << leader2 << "\n";
+    e.out << leader2 << "int rate = _refL[0].par_size;\n";
+    e.out << leader2 << "iter = _refL.begin() + (_refL[0].par_rank + rate);\n";
+
+    e.out << leader2 << "for(unsigned int i=(_refL[0].par_rank + rate); i < _refL.size(); i+=rate, iter+=rate) {\n";
+    e.out << leader2 << "  /*CALLNORET*/\n";
+    string loop_leader1=e.out.push_leader();
+    e.out << leader2 << "::SCIRun::Message* message = (*iter).chan->getMessage();\n";
+    e.out << leader2 << "message->createMessage();\n";
+
+    argNum=0;
+    /*
+    for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
+      argNum++;
+      Argument* arg=*iter;
+      if(arg->getMode() != Argument::Out) {
+	std::ostringstream argname;
+	argname << "_arg" << argNum;
+	arg->emit_marshalsize(e, argname.str(), "_size", "1");
+      }
+    }
+    */
+    if (doRedistribution) {
+      e.out << leader2 << "//Marshal flag which informs handler that\n";
+      e.out << leader2 << "// this message is CALLNORET\n";
+      e.out << leader2 << "int _flag = 3;\n";
+      e.out << leader2 << "message->marshalInt(&_flag);\n";
+    }
+    if(list.size() != 0)
+      e.out << leader2 << "// Marshal the arguments\n";
+    argNum=0;
+    for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
+      argNum++;
+      Argument* arg=*iter;
+      if(arg->getMode() != Argument::Out) {
+	std::ostringstream argname;
+	argname << "_arg" << argNum;
+	arg->emit_marshal(e, argname.str(), "1", handlerOff , true, ArgIn, false);
+      }
+    }
+    
+
+    e.out << leader2 << "// Send the message\n";
+    e.out << leader2 << "int _handler=(*iter).getVtableBase()+" << handlerOff << ";\n";
+    e.out << leader2 << "message->sendMessage(_handler);\n";
+    e.out << leader2 << "message->destroyMessage();\n";
+    
+    e.out.pop_leader(loop_leader1);
+    e.out << leader2 << "}\n";
+  } /*endif isCollective*/
+
+  /**********************************************/
+  if(reply_required()) {  
 
     // OUT args Redistribution code emitted here:
     if (doRedistribution) {
@@ -1329,7 +1543,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
 	}
       }
     }
-
+ 
     if(return_type){
       if(!return_type->isvoid()){
 	e.out << "  return _ret;\n";
@@ -1367,9 +1581,10 @@ void Argument::emit_declaration(EmitState& e, const string& arg) const
 
 void Argument::emit_marshal(EmitState& e, const string& arg,
 			    const string& qty, const int handler, 
-			    bool top, ArgContext ctx, bool specialRedis) const
+			    bool top, ArgContext ctx, bool specialRedis,
+			    storageT bufferStore) const
 {
-  type->emit_marshal(e, arg, qty, handler, top, ctx, specialRedis);
+  type->emit_marshal(e, arg, qty, handler, top, ctx, specialRedis, bufferStore);
 }
 
 void Argument::emit_prototype(SState& out, SymbolTable* localScope) const
@@ -1460,7 +1675,6 @@ void ArrayType::emit_marshalsize(EmitState& e, const string& arg,
 				 const string& /*sizevar*/,
 				 const string& /* qty */) const
 {
-  //  e.out << leader2 << sizevar << " += globus_nexus_sizeof_int(" << dim << "); // array dims\n";
   if(subtype->uniformsize()){
     string sizename=arg+"_mtotalsize";
     if(dim == 1){
@@ -1475,17 +1689,7 @@ void ArrayType::emit_marshalsize(EmitState& e, const string& arg,
 	e.out << "*" << dimname << "[" << i << "]";
       e.out << ";\n";
     }
-    //  subtype->emit_marshalsize(e, "", sizevar, arg+"_mtotalsize");
-  } else {
-    //    string pname=arg+"_iter";
-    //e.out << leader2 << "for(" << cppfullname(0) << "::const_iterator " << pname << "=" << arg << ".begin();";
-    //e.out << pname << " != " << arg << ".end(); " << pname << "++){\n";
-    //string oldleader=e.out.push_leader();
-    //e.out << leader2 << cppfullname(0) << "::const_reference " << arg << "_el = *" << pname << ";\n";
-    //    subtype->emit_marshalsize(e, arg+"_el", sizevar, "1");
-    //e.out.pop_leader(oldleader);
-    //e.out << leader2 << "}\n";
-  }
+  } 
 }
 
 void ArrayType::emit_declaration(EmitState& e, const string& arg) const
@@ -1505,8 +1709,23 @@ bool ArrayType::uniformsize() const
 
 void ArrayType::emit_marshal(EmitState& e, const string& arg,
 			     const string& /*qty*/, const int handler, 
-			     bool top, ArgContext ctx, bool /*specialRedis*/) const
+			     bool top, ArgContext ctx, bool /*specialRedis*/,
+			     storageT bufferStore) const
 {
+
+  if (bufferStore == doRetreive) {
+    if (ctx == ReturnType) {
+      e.out << leader2 << arg << " = *((" << cppfullname(0) << "*)(_sc->storage.get(" << e.handlerNum << ",0"
+	    << ")));\n";
+    }
+    else {
+      e.out << leader2 << cppfullname(0) << " " << arg << " = *((" << cppfullname(0) << "*)(_sc->storage.get(" 
+	    << e.handlerNum << "," << arg[arg.size()-1] << ")));\n";      
+    }
+  }
+
+  this->emit_marshalsize(e, arg, "_rsize", "1");
+
   string pname;
   if(subtype->array_use_pointer()){
     pname=arg+"_mptr";
@@ -1516,7 +1735,8 @@ void ArrayType::emit_marshal(EmitState& e, const string& arg,
   }
   string sizename=arg+"_mtotalsize";
   string dimname=arg+"_mdim";
-  if(!top || !subtype->uniformsize()){
+  
+  if(!subtype->uniformsize()){
     if(dim == 1){
       e.out << leader2 << "int " << sizename << "=" << arg << ".size();\n";
     } else {
@@ -1529,6 +1749,7 @@ void ArrayType::emit_marshal(EmitState& e, const string& arg,
       e.out << ";\n";
     }
   }
+    
   if(dim == 1){
     e.out << leader2 << "message->marshalInt(&" << sizename << ");\n";
   } else {
@@ -1536,15 +1757,26 @@ void ArrayType::emit_marshal(EmitState& e, const string& arg,
   }
 
   if(subtype->array_use_pointer()){
-    subtype->emit_marshal(e, pname, sizename, handler, false, ctx, false);
+    subtype->emit_marshal(e, pname, sizename, handler, false, ctx, false, noneStorage);
   } else {
     e.out << leader2 << "for(" << cppfullname(0) << "::const_iterator " << pname << "=" << arg << ".begin();";
     e.out << pname << " != " << arg << ".end(); " << pname << "++){\n";
     e.out << leader2 << cppfullname(0) << "::const_reference " << arg << "_el = *" << pname << ";\n";
     string oldleader=e.out.push_leader();
-    subtype->emit_marshal(e, arg+"_el", "1", handler, false, ctx, false);
+    subtype->emit_marshal(e, arg+"_el", "1", handler, false, ctx, false, noneStorage);
     e.out.pop_leader(oldleader);
     e.out << leader2 << "}\n";
+  }
+
+  if (bufferStore == doStore) {
+    if (ctx == ReturnType) {
+      e.out << leader2 << "_sc->storage.add(" <<  e.handlerNum  
+	    <<",0, (void*)(new " << cppfullname(0) << "(" << arg << ")));\n";
+    }
+    else {
+      e.out << leader2 << "_sc->storage.add(" <<  e.handlerNum  << "," << arg[arg.size()-1] 
+	    <<", (void*)(new " << cppfullname(0) << "(" << arg << ")));\n";
+    }
   }
 }
 
@@ -1649,25 +1881,6 @@ void BuiltinType::emit_marshalsize(EmitState& /*e*/, const string& /*arg*/,
 				   const string& /*sizevar*/,
 				   const string& /*qty*/) const
 {
-  /*
-  if(cname == "void"){
-    // What?
-    cerr << "Trying to size a void!\n";
-    exit(1);
-  } else if(cname == "string"){
-    if(qty != "1"){
-      cerr << "emit_marshalsize call for string with qty != 1:" << qty << "\n";
-      exit(1);
-    }
-    e.out << leader2 << sizevar << "+=globus_nexus_sizeof_int(1)+globus_nexus_sizeof_char(" << arg << ".length());\n";
-  } else if(cname == "::std::complex<float> "){
-    e.out << leader2 << sizevar << "+=globus_nexus_sizeof_float(2*" << qty << ");\n";
-  } else if(cname == "::std::complex<double> "){
-    e.out << leader2 << sizevar << "+=globus_nexus_sizeof_double(2*" << qty << ");\n";
-  } else {
-    e.out << leader2 << sizevar << "+=globus_nexus_sizeof_" << nexusname << "(" << qty << ");\n";
-  }
-  */
 }
 
 void BuiltinType::emit_declaration(EmitState& e, const string& arg) const
@@ -1688,8 +1901,20 @@ void BuiltinType::emit_declaration(EmitState& e, const string& arg) const
 
 void BuiltinType::emit_marshal(EmitState& e, const string& arg,
 			       const string& qty, const int /*handler*/, bool/* top*/,
-			       ArgContext ctx, bool /*specialRedis*/) const
+			       ArgContext ctx, bool /*specialRedis*/, 
+			       storageT bufferStore) const
 {
+  if (bufferStore == doRetreive) {
+    if (ctx == ReturnType) {
+      e.out << leader2 << arg << " = *((" << cname << "*)(_sc->storage.get(" << e.handlerNum << ",0"
+	    << ")));\n";
+    }
+    else {
+      e.out << leader2 << cname << " " << arg << " = *((" << cname << "*)(_sc->storage.get(" << e.handlerNum 
+	    << "," << arg[arg.size()-1] << ")));\n";      
+    }
+  }
+
   if(cname == "void"){
     // What?
     cerr << "Trying to unmarshal a void!\n";
@@ -1745,6 +1970,17 @@ void BuiltinType::emit_marshal(EmitState& e, const string& arg,
     if(qty == "1")
       e.out << "&";
     e.out << arg << ", " << qty << ");\n";
+  }
+
+  if (bufferStore == doStore) {
+    if (ctx == ReturnType) {
+      e.out << leader2 << "_sc->storage.add(" <<  e.handlerNum  
+	    <<",0, (void*)(new " << cname << "(" << arg << ")));\n";
+    }
+    else {
+      e.out << leader2 << "_sc->storage.add(" <<  e.handlerNum  << "," << arg[arg.size()-1] 
+	    <<", (void*)(new " << cname << "(" << arg << ")));\n";
+    }
   }
 }
 
@@ -1875,9 +2111,10 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  " << arr_t->cppfullname(0) << "* _arr_ptr;\n";
 	e.out << leader2 << "  _arr_ptr = static_cast< " << arr_t->cppfullname(0) << "*>(_sc->d_sched->getArray(\"" << distarr->getName() << "\"));\n";
 	e.out << leader2 << "  if(_arr_ptr == NULL) {\n";
-	e.out << leader2 << "    _arr_ptr = new " << arr_t->cppfullname(0) << "(_this_rep->getSize(1)";
-	for(int i=2; i <= arr_t->dim; i++) {
-	  e.out << ", _this_rep->getSize(" << i << ")"; 
+	e.out << leader2 << "    _arr_ptr = new " << arr_t->cppfullname(0) << "(";
+	for(int i=arr_t->dim; i > 0; i--) {
+	  e.out << "_this_rep->getSize(" << i << ")";
+	  if (i != 1) e.out << ", ";
 	}
 	e.out << ");\n";
 	e.out << leader2 << "    _sc->d_sched->setArray(\"" << distarr->getName() << "\",(void**)(&_arr_ptr));\n";
@@ -1925,8 +2162,8 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	string dimname=arg+"_mdim";
 	e.out << leader2 << "  message->createMessage();\n";
 	e.out << leader2 << "  //Marshal the distribution flag\n";
-	e.out << leader2 << "  bool _d_flag = true;\n";
-	e.out << leader2 << "  message->marshalByte((char*) &_d_flag);\n";
+	e.out << leader2 << "  int _flag = 1;\n";
+	e.out << leader2 << "  message->marshalInt(&_flag);\n";
 	e.out << leader2 << "  //Marshal the distribution name:\n";
 	e.out << leader2 << "  int namesize = " << distarr->getName().size()+4 << ";\n";
 	e.out << leader2 << "  message->marshalInt(&namesize);\n";
@@ -1982,12 +2219,13 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	  e.out << leader2 << "  d_sched->dbg << k << \"arr = \" << " << arg << "[k] << \"\\n\";\n";
 	}
 	else {
-	  e.out << leader2 << "for(unsigned int k = 0; k < " << arg << ".size2(); k++)\n";	
-	  e.out << leader2 << "  for(unsigned int i = 0; i < " << arg << ".size1(); i++)\n";
+	  e.out << leader2 << "for(unsigned int k = 0; k < " << arg << ".size1(); k++)\n";	
+	  e.out << leader2 << "  for(unsigned int i = 0; i < " << arg << ".size2(); i++)\n";
 	  e.out << leader2 << "    d_sched->dbg << k << \",\" << i << \"out_arr = \" << " 
 		<< arg << "[k][i] << \"\\n\";\n";
 	}
-	e.out << leader2 << "d_sched->dbg.close();\n";
+	e.out << leader2 << "if (_sc->d_sched->dbg)\n";
+	e.out << leader2 << "  d_sched->dbg.close();\n";
 	//EOF TEMPORARY TEST
 
 	// *********** END OF OUT arg -- Special Redis ******************************	
@@ -2015,18 +2253,29 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	  e.out << leader2 << "  _sc->d_sched->dbg << k << \"arr = \" << (*" << arr_ptr_name << ")[k] << \"\\n\";\n";
 	}
 	else {
-	  e.out << leader2 << "for(unsigned int k = 0; k < " << arr_ptr_name << "->size2(); k++)\n";	
-	  e.out << leader2 << "  for(unsigned int i = 0; i < " << arr_ptr_name << "->size1(); i++)\n";
+	  e.out << leader2 << "for(unsigned int k = 0; k < " << arr_ptr_name << "->size1(); k++)\n";	
+	  e.out << leader2 << "  for(unsigned int i = 0; i < " << arr_ptr_name << "->size2(); i++)\n";
 	  e.out << leader2 << "    _sc->d_sched->dbg << k << \",\" << i << \"arr = \" << (*" 
 		<< arr_ptr_name << ")[k][i] << \"\\n\";\n";
 	}
-	e.out << leader2 << "_sc->d_sched->dbg.close();\n";
+	e.out << leader2 << "if (_sc->d_sched->dbg)\n";
+	e.out << leader2 << " _sc->d_sched->dbg.close();\n";
 	//EOF TEMPORARY TEST
 	// *********** END OF IN arg -- No Special Redis ******************************
       }
       else if (ctx == ArgOut) {
 	// *********** OUT arg -- No Special Redis ********************************
 	e.out << leader2 << "//OUT redistribution array detected. Get it afterwards\n";
+	e.out << leader2 << "//Resize array \n";
+	e.out << leader2 << "SCIRun::MxNArrayRep* _d_rep = d_sched->callerGetCallerRep(\"" 
+	      << distarr->getName() << "\");\n";
+	e.out << leader2 << arg << ".resize(";
+	for(int i=arr_t->dim; i > 0; i--) {
+	  e.out << "_d_rep->getSize(" << i << ")";
+	  if (i != 1) e.out << ", ";
+	}
+	e.out << ");\n";
+
 	// *********** END OF OUT arg -- No Special Redis ****************************
       }
     }
@@ -2039,33 +2288,6 @@ void NamedType::emit_marshalsize(EmitState& e, const string& arg,
 				 const string& sizevar,
 				 const string& qty) const
 {
-  /*
-  Symbol::Type symtype = name->getSymbol()->getType();
-  if(symtype == Symbol::EnumType){
-    e.out << leader2 << sizevar << "+=globus_nexus_sizeof_int(1);\n";
-  } else if(symtype == Symbol::ClassType || symtype == Symbol::InterfaceType){
-    if(qty != "1"){
-      cerr << "NamedType::emit_marshalsize called with qty != 1: " << qty << '\n';
-      exit(1);
-    }
-    e.out << leader2 << "::SCIRun::Reference " << arg << "_ref;\n";
-    e.out << leader2 << "if(!" << arg << ".isNull()){\n";
-    e.out << leader2 << "  " << arg << "->addReference();\n";
-    e.out << leader2 << "  " << arg << "->_getReference(" << arg << "_ref, true);\n";
-    e.out << leader2 << "}\n";
-    e.out << leader2 << sizevar << "+=globus_nexus_sizeof_int(1)+(";
-    e.out << arg << ".isNull()?0:globus_nexus_sizeof_startpoint(&" << arg << "_ref.d_sp, 1));\n";
-  } else {
-    cerr << "Emit marshalsize shouldn't be called for packages/methods\n";
-    exit(1);
-  } else
-  if(symtype == Symbol::DistArrayType) {
-    Definition* defn = name->getSymbol()->getDefinition();
-    DistributionArray* distarr = dynamic_cast<DistributionArray*>(defn);
-    ArrayType* arr_t = distarr->getArrayType();
-    arr_t->emit_marshalsize(e, arg, sizevar, qty); 
-  }
-  */
 }
 
 void NamedType::emit_declaration(EmitState& e, const string& arg) const
@@ -2085,7 +2307,8 @@ void NamedType::emit_declaration(EmitState& e, const string& arg) const
 
 void NamedType::emit_marshal(EmitState& e, const string& arg,
 			     const string& qty, const int handler, 
-			     bool top, ArgContext ctx, bool specialRedis) const
+			     bool top, ArgContext ctx, bool specialRedis,
+			     storageT bufferStore) const
 {
   Symbol::Type symtype = name->getSymbol()->getType();
   if(symtype == Symbol::EnumType){
@@ -2093,12 +2316,43 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
       cerr << "NamedType::emit_marshal called with qty != 1: " << qty << '\n';
       exit(1);
     }
+    if (bufferStore == doRetreive) {
+      if (ctx == ReturnType) {
+	e.out << leader2 << arg << " = *((" << name->cppfullname(0) << "*)(_sc->storage.get(" 
+	      << e.handlerNum << ",0" << ")));\n";
+      }
+      else {
+	e.out << leader2 << name->cppfullname(0) << " " << arg << " = *((" << name->cppfullname(0) 
+	      << "*)(_sc->storage.get(" << e.handlerNum << "," << arg[arg.size()-1] << ")));\n";      
+      }
+    }
     e.out << leader2 << "int " << arg << "_marshal = (int)" << arg << ";\n";
     e.out << leader2 << "message->marshalInt(&" << arg << "_marshal);\n";
+    if (bufferStore == doStore) {
+      if (ctx == ReturnType) {
+	e.out << leader2 << "_sc->storage.add(" <<  e.handlerNum  << ",0, (void*)(new " 
+	      << name->cppfullname(0) << "(" << arg << ")));\n";
+      }
+      else {      
+	e.out << leader2 << "_sc->storage.add(" <<  e.handlerNum  << "," << arg[arg.size()-1] 
+	      << ", (void*)(new " << name->cppfullname(0) << "(" << arg << ")));\n";
+      }
+    }
+
   } else if(symtype == Symbol::ClassType || symtype == Symbol::InterfaceType){
     if(qty != "1"){
       cerr << "NamedType::emit_marshal called with qty != 1: " << qty << '\n';
       exit(1);
+    }
+    if (bufferStore == doRetreive) {
+      if (ctx == ReturnType) {
+	e.out << leader2 << arg << " = *((" << name->cppfullname(0) << "::pointer*)(_sc->storage.get(" 
+	      << e.handlerNum << ",0" << ")));\n";
+      }
+      else {
+	e.out << leader2 << name->cppfullname(0) << "::pointer " << arg << " = *((" << name->cppfullname(0) 
+	      << "::pointer*)(_sc->storage.get(" << e.handlerNum << "," << arg[arg.size()-1] << ")));\n";      
+      }
     }
     e.out << leader2 << "if(!" << arg << ".isNull()){\n";
     e.out << leader2 << "  " << arg << "->addReference();\n";
@@ -2114,6 +2368,17 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
     e.out << leader2 << "  int _vtable_base=-1; // Null ptr\n";
     e.out << leader2 << "  message->marshalInt(&_vtable_base);\n";
     e.out << leader2 << "}\n";
+    if (bufferStore == doStore) {
+      if (ctx == ReturnType) {
+	e.out << leader2 << "_sc->storage.add(" <<  e.handlerNum  << ",0, (void*)(new " 
+	      << name->cppfullname(0) << "::pointer(" << arg << ")));\n";
+      }
+      else {      
+	e.out << leader2 << "_sc->storage.add(" <<  e.handlerNum  << "," << arg[arg.size()-1] 
+	      << ", (void*)(new " << name->cppfullname(0) << "::pointer(" << arg << ")));\n";
+      }
+    }
+
   } else if(symtype == Symbol::DistArrayType) {
     Definition* defn = name->getSymbol()->getDefinition();
     DistributionArray* distarr = dynamic_cast<DistributionArray*>(defn);
@@ -2131,8 +2396,8 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	string dimname=arg+"_mdim";
 	e.out << leader2 << "  message->createMessage();\n";
 	e.out << leader2 << "  //Marshal the distribution flag\n";
-	e.out << leader2 << "  bool _d_flag = true;\n";
-	e.out << leader2 << "  message->marshalByte((char*) &_d_flag);\n";
+	e.out << leader2 << "  int _flag = 1;\n";
+	e.out << leader2 << "  message->marshalInt(&_flag);\n";
 	e.out << leader2 << "  //Marshal the distribution name:\n";
 	e.out << leader2 << "  int namesize = " << distarr->getName().size()+3 << ";\n";
 	e.out << leader2 << "  message->marshalInt(&namesize);\n";
@@ -2220,7 +2485,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
       }
     }
     else {
-      if (ctx == ArgOut) {
+      if ((ctx == ArgOut)&&(bufferStore != doRetreive)) {
       // *********** OUT arg -- No Special Redis ******************************
 	e.out << leader2 << "_sc->d_sched->setArray(\"" <<  distarr->getName() << "\",(void**)(&" << arg << "_ptr));\n";
       // *********** OUT arg -- No Special Redis ******************************

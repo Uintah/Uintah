@@ -782,6 +782,7 @@ bool Method::detectRedistribution()
 {
   if (args->detectRedistribution()) {
     doRedistribution = true;
+    isCollective = true;
     return true;
   }
   else
@@ -799,7 +800,16 @@ bool MethodList::detectRedistribution()
 
 void CI::detectRedistribution()
 {
-  if (mymethods->detectRedistribution())
+  if (mymethods->detectRedistribution()) 
     doRedistribution = true;
 }
+
+
+
+
+
+
+
+
+
 

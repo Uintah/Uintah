@@ -87,6 +87,7 @@ extern int lineno;
 %token BOOL
 %token CHAR
 %token CLASS
+%token COLLECTIVE
 %token COPY
 %token DCOMPLEX
 %token DISTRIBUTION
@@ -520,6 +521,15 @@ statements_star: /* Empty */
 method: return_type IDENTIFIER arguments method_modifiers2 opt_throws_clause ';'
 	{
 	  $$=new Method(curfile, lineno, $1.copy, $1.type, $2, $3, $4, $5);
+	  $$->isCollective = false;
+
+	}
+        |
+        COLLECTIVE return_type IDENTIFIER arguments method_modifiers2 opt_throws_clause ';'
+	{
+	  $$=new Method(curfile, lineno, $2.copy, $2.type, $3, $4, $5, $6);
+	  $$->isCollective = true;
+		
 	}
 	;
       

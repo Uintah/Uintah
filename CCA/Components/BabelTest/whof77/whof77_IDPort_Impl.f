@@ -3,8 +3,8 @@ C       File:          whof77_IDPort_Impl.f
 C       Symbol:        whof77.IDPort-v1.0
 C       Symbol Type:   class
 C       Babel Version: 0.7.0
-C       SIDL Created:  20020801 15:44:37 MST
-C       Generated:     20020801 15:44:40 MST
+C       SIDL Created:  20020813 11:07:50 CDT
+C       Generated:     20020813 11:07:53 CDT
 C       Description:   Server-side implementation for whof77.IDPort
 C       
 C       WARNING: Automatically generated; only changes within splicers preserved

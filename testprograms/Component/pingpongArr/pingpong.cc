@@ -123,6 +123,7 @@ int main(int argc, char* argv[])
 	  dr[0] = new Index(myrank,99,mysize);
 	  MxNArrayRep* arrr = new MxNArrayRep(1,dr);
 	  pp->setCalleeDistribution("D",arrr);
+          std::cerr << "setCalleeDistribution completed\n";
 
 	  cerr << "Waiting for pingpong connections...\n";
 	  cerr << pp->getURL().getString() << '\n';
@@ -152,6 +153,7 @@ int main(int argc, char* argv[])
           dr[0] = new Index(sta,fin,1);
           MxNArrayRep* arrr = new MxNArrayRep(1,dr);
 	  pp->setCallerDistribution("D",arrr); 
+	  std::cerr << "setCallerDistribution completed\n";
 
 	  for(int i=0;i<reps;i++){
 	    int j=pp->pingpong(arr);

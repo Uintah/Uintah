@@ -37,7 +37,8 @@ SRCS     += \
 	$(SRCDIR)/TypeInfo_internal.cc \
 	$(SRCDIR)/MxNArrayRep.cc \
 	$(SRCDIR)/MxNScheduler.cc \
-	$(SRCDIR)/MxNScheduleEntry.cc
+	$(SRCDIR)/MxNScheduleEntry.cc \
+	$(SRCDIR)/HandlerStorage.cc
 
 PSELIBS := Core/Exceptions Core/Thread Core/globus_threads
 LIBS := $(GLOBUS_LIBS) -lglobus_io

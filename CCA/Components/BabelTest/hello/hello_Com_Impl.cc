@@ -3,8 +3,8 @@
 // Symbol:        hello.Com-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.0
-// SIDL Created:  20020730 13:51:18 MST
-// Generated:     20020730 13:51:21 MST
+// SIDL Created:  20020813 11:08:19 CDT
+// Generated:     20020813 11:08:21 CDT
 // Description:   Server-side implementation for hello.Com
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
