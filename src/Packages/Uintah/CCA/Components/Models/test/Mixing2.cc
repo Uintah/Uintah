@@ -87,13 +87,13 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
   try {
     gas = new IdealGasMix(fname, id);
     int nsp = gas->nSpecies();
-    int nel = gas->nElements();
 #if 0
     cerr << "refPressure=" << gas->refPressure() << '\n';
     gas->setState_TPY(200, 101325, "H2:1");
 #endif
     if(d_myworld->myrank() == 0){
 #if 0
+      int nel = gas->nElements();
       cerr.precision(17);
       cerr << "Using ideal gas " << id << "(from " << fname << ") with " << nel << " elements and " << nsp << " species\n";
       gas->setState_TPY(300., 101325., "CH4:0.1, O2:0.2, N2:0.7");
@@ -371,6 +371,7 @@ void Mixing2::react(const ProcessorGroup*,
       }
 
       Reactor r;
+      double etotal = 0;
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
 	IntVector idx = *iter;
 	double mass = density[idx]*volume;
@@ -412,11 +413,12 @@ void Mixing2::react(const ProcessorGroup*,
 	double dtemp = gas->temperature()-temp;
 	double energyx = dtemp*cv[*iter]*mass;
 	energySource[idx] += energyx;
+	etotal += energyx;
 	gas->getMassFractions(new_mf);
 	for(int i = 0; i< numSpecies; i++)
 	  mfsource[i][*iter] += new_mf[i]-tmp_mf[i];
       }
-      
+      cerr << "Mixing2 total energy: " << etotal << ", release rate=" << etotal/dt << '\n';
 #if 0
       {
 	static ofstream outt("temp.dat");
