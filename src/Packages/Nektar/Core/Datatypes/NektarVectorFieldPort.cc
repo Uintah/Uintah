@@ -1,6 +1,6 @@
 
 /*
- *  NektarVectorField.h: The Vector Field Data type
+ *  NektarVectorField.cc: The Vector Field Data type
  *
  *  Written by:
  *   Yarden Livnat
@@ -11,22 +11,14 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef NektarVectorFieldPort_h
-#define NektarVectorFieldPort_h 
-
-#include <PSECore/Datatypes/SimplePort.h>
-#include <Nektar/Datatypes/NektarVectorField.h>
+#include <Nektar/Datatypes/NektarVectorFieldPort.h>
 
 namespace Nektar {
   namespace Datatypes {
+    
+    template<> clString SimpleIPort<NektarVectorFieldHandle>::port_type("NektarVectorField");
+    template<> clString SimpleIPort<NektarVectorFieldHandle>::port_color("LightBlue");
 
-    using namespace SCICore::Datatypes;
-    using Nektar::Datatypes::NektarVectorFieldHandle;
-
-    typedef SimpleIPort<NektarVectorFieldHandle> NektarVectorFieldIPort;
-    typedef SimpleOPort<NektarVectorFieldHandle> NektarVectorFieldOPort;
-
-} // End namespace Datatypes
+  } // End namespace Datatypes
 } // End namespace Nektar
 
-#endif
