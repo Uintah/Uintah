@@ -177,7 +177,8 @@ void AnimatedStreams::execute(void)
     mutex.unlock();
     return;
   }
-      
+
+  anistreams->IncrementFlow();
     
   ogeom->flushViews();
   
@@ -191,7 +192,11 @@ void AnimatedStreams::tcl_command( TCLArgs& args, void* userdata) {
   }
   if(args[1] == "reset_streams") {
     anistreams->ResetStreams();
-    //want_to_execute();
+    want_to_execute();
+  }
+  else if(args[1] == "update_linewidth") {
+    anistreams->SetLineWidth( linewidth.get());
+    ((GeometryOPort *) get_oport("Geometry"))->flushViews();
   }
   else {
     Module::tcl_command(args, userdata);
@@ -199,5 +204,8 @@ void AnimatedStreams::tcl_command( TCLArgs& args, void* userdata) {
 }
 
 } // End namespace Uintah
+
+
+
 
 
