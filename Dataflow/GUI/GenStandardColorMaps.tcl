@@ -46,6 +46,8 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	global $this-faux
 	global $this-gamma
 	global $this-mapType
+	global $this-mapName
+	global $this-reverse
 	global $this-resolution
 	global $this-realres
 	global $this-minRes
@@ -56,6 +58,8 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
         set $this-faux 0
 	set $this-gamma 0
 	set $this-mapType 3
+	set $this-mapName "Rainbow"
+	set $this-reverse 0
 	set $this-resolution 256
 	set $this-realres 256
 	set $this-minRes 2
@@ -66,30 +70,14 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	set $this-positionList {}
 	set $this-width 1
 	set $this-height 1
+
+	trace variable $this-mapType w "$this lookupOldIndex"
     }   
     
     method buildColorMaps {} {
 	set colorMaps {
 	    { "Gray" { { 0 0 0 } { 255 255 255 } } }
-	    { "Inverse Gray" { { 255 255 255 } { 0 0 0 }}}
 	    { "Rainbow" {
-		{120 15 0} {156 23 0}
-		{182 33 0} {212 45 0}
-		{234 60 0} {247 77 0}
-		{253 96 1} {255 115 2}
-		{255 137 3} {253 158 5}
-		{247 179 8} {236 197 11}
-		{220 214 15} {201 228 21}
-		{179 239 30} {150 248 41}
-		{120 255 55} {91 255 70}
-		{63 246 90} {44 235 110}
-		{30 223 132} {21 207 156}
-		{15 188 182} {11 168 210}
-		{9 146 238} {5 123 247}
-		{3 100 237} {1 80 220}
-		{0 62 200} {0 46 178}
-		{0 33 156} {0 23 130}}}
-	    { "Inverse Rainbow" {
 		{0 23 130} {0 33 156}
 		{0 46 178} {0 62 200}
 		{1 80 220} {3 100 237}
@@ -106,6 +94,13 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 		{247 77 0} {234 60 0}
 		{212 45 0} {182 33 0}
 		{156 23 0} {120 15 0}}}
+	    { "Old Rainbow" {
+		{ 0 0 255}   { 0 102 255}
+		{ 0 204 255}  { 0 255 204}
+		{ 0 255 102}  { 0 255 0}
+		{ 102 255 0}  { 204 255 0}
+		{ 255 234 0}  { 255 204 0}
+		{ 255 102 0}  { 255 0 0}}}
 	    { "Darkhue" {
 		{ 0  0  0 }  { 0 28 39 }
 		{ 0 30 55 }  { 0 15 74 }
@@ -117,17 +112,6 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 		{ 246 72  1 }  { 255 175 36 }
 		{ 255 231 68 }  { 251 255 121 }
 		{ 239 253 174 }}}
-	    { "Inverse Darkhue" {
-		{ 239 253 174 }  { 251 255 121 }
-		{ 255 231 68 }  { 255 175 36 }
-		{ 246 72  1 }  { 229 30  1 }
-		{ 220  10 10 }  { 177  1 39 }
-		{ 158  1 72 }  { 135  0 105 }
-		{ 108  0 114 }  { 57  1 92 }
-		{ 32  0 85 }  { 28  0 84 }
-		{ 1  0 76 }  { 0 15 74 }
-		{ 0 30 55 }  { 0 28 39 }
-		{ 0  0  0 } }}
 	    { "Lighthue" {
 		{ 64  64  64 }  { 64 80 84 }
 		{ 64 79 92 }  { 64 72 111 }
@@ -147,20 +131,13 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 		{255 204 55}   {255 228 80}
 		{255 247 120}   {255 255 180}
 		{255 255 255}}}
-	    { "Inverse Blackbody" {
-		{255 255 255}
-		{255 255 180} {255 247 120}   
-		{255 228 80}  {255 204 55}   
-		{255 163 20}  {255 120 0}   
-		{230 71 0}    {200 41 0}   
-		{153 18 0}    {102 2 0}   
-		{52 0 0}      {0 0 0}}}
 	    { "Don" {
 		{   0  90 255 }    {  51 104 255 }
 		{ 103 117 255 }    { 166 131 245 }
 		{ 181 130 216 }    { 192 129 186 }
 		{ 197 128 172 }    { 230 126  98 }
 		{ 240 126  49 }    { 255 133   0 }}}
+	    { "BP Seismic" { { 0 0 255 } { 255 255 255} { 255 0 0 } } }
 	    { "Dark Gray" {
 		{   0  0  0 }    {  0 0 0 }
 		{ 128 128 128 } { 255 255 255 }}}
@@ -168,9 +145,9 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	    { "Orange Tint" { { 20 10 0 } { 255 245 235 } } }
 	    { "Yellow Tint" { { 20 20 0 } { 255 255 235 } } }
 	    { "Green Tint" { { 0 20 0 } { 235 255 235 } } }
+	    { "Cyan Tint" { { 0 20 20 } { 235 255 255 } } }
 	    { "Blue Tint" { { 0 0 20 } { 235 235 255 } } }
 	    { "Purple Tint" { { 10 0 20 } { 245 235 255 } } }
-	    { "BP Seismic" { { 0 0 255 } { 255 255 255} { 255 0 0 } } }
 	}
     }
     
@@ -179,14 +156,12 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	for {set i 0} { $i < [llength $colorMaps]} {incr i} {
 	    lappend maps [list [lindex [lindex $colorMaps $i] 0] $i]
 	}
-	puts "getMaps = $maps"
 	return [list $maps]
     }
     method ui {} { 
 	global $this-minRes
 	global $this-resolution
 	global $this-realres
-	global $this-mapType
 	
 	set w .ui[modname]
 	
@@ -198,9 +173,6 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	
 	toplevel $w 
 	wm minsize $w 200 50 
-	
-	#set n "$this-c needexecute " 
-	set n "$this change"
 	
 	frame $w.f -relief flat -borderwidth 2
 	pack $w.f -side top -expand yes -fill x 
@@ -240,26 +212,8 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	frame $w.f2 -relief groove -borderwidth 2
 	pack $w.f2 -padx 2 -pady 2 -expand yes -fill both
 	
-	make_labeled_radio $w.f2.types "ColorMaps" $n "split" $this-mapType \
-	    {   { "Gray" 0 } \
-		{ "Inverse Gray" 1 } \
-		{ "Rainbow" 2} \
-		{ "Inverse Rainbow " 3 } \
-		{ "Darkhue" 4} \
-		{ "Inverse Darkhue" 5} \
-		{ "Lighthue" 6} \
-		{ "Blackbody" 7} \
-		{ "Inverse Blackbody" 8} \
-		{ "Don" 9} \
-		{ "Dark Gray" 10} \
-		{ "Red Tint" 11} \
-		{ "Orange Tint" 12} \
-		{ "Yellow Tint" 13} \
-		{ "Green Tint" 14} \
-		{ "Blue Tint" 15} \
-		{ "Purple Tint" 16} \
-		{ "BP Seismic" 17} \
-	    }
+	make_labeled_radio $w.f2.types "ColorMaps" "$this change" \
+	    "split" $this-mapName [getColorMapNames]
 	    
 	pack $w.f2.types -expand yes -fill both
 
@@ -272,12 +226,18 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
         pack $w.f4.faux -side top -fill x -padx 4
 	Tooltip $w.f4.faux "Modulates color components based on the given opacity curve."
 
+	checkbutton $w.f4.reverse -text "Reverse the colormap" -relief flat \
+            -variable $this-reverse -onvalue 1 -offvalue 0 \
+            -anchor w -command "$this change"
+        pack $w.f4.reverse -side top -fill x -padx 4
+	Tooltip $w.f4.reverse "Reverse the colormap (not the alpha)"
+
 	bind $w.f.f1.canvas <Expose> "$this canvasExpose"
 	bind $w.f.f1.canvas <Button-1> "$this selectNode %x %y"
 	bind $w.f.f1.canvas <B1-Motion> "$this moveNode %x %y"
 	bind $w.f.f1.canvas <Button-3> "$this deleteNode %x %y"
 	bind $w.f.f1.canvas <ButtonRelease> "$this update; $this-c needexecute"
-	bind $w.f3.s <ButtonRelease> $n
+	bind $w.f3.s <ButtonRelease> "$this change"
 	$this update
 	
 	set cw [winfo width $w.f.f1.canvas]
@@ -290,17 +250,8 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	global $this-realres
 	set $this-realres [set $this-resolution]
     }
+
     method change {} {
-#	global $this-minRes
-#	global $this-mapType
-
-#	set w .ui[modname]
-
-#	set mtype [set $this-mapType]
-#	set mres [llength [lindex [lindex $colorMaps $mtype] 1]]
-#	set $this-minRes $mres
-#	$w.f3.s2 configure -from $mres
-
 	$this update
 	$this-c needexecute
     }
@@ -424,7 +375,72 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	}
     }
 
+    method lreverse { stuff } {
+	set size [llength $stuff]
+	set result {}
+	for {set i 0}  {$i < $size} {incr i} {
+	    set result [concat [list [lindex $stuff $i]] $result]
+	}
+	return $result
+    }
+
+    method findByName_aux { name } {
+	set size [llength $colorMaps]
+	for {set i 0}  {$i < $size} {incr i} {
+	    set name1 [lindex [lindex $colorMaps $i] 0]
+	    if {$name == $name1} { return $i }
+	}
+	return 0
+    }
+
+    method findByName { name } {
+	set index [findByName_aux $name]
+	set color [lindex [lindex $colorMaps $index] 1]
+	if {[set $this-reverse]} { set color [lreverse $color] }
+	return $color
+    }
+
+    method getColorMapNames {} {
+	set size [llength $colorMaps]
+	set result {}
+	for {set i 0}  {$i < $size} {incr i} {
+	    set name [lindex [lindex $colorMaps $i] 0]
+	    set result [concat $result [list [list $name $name]]]
+	}
+	return $result
+    }
 	
+    method lookupOldIndex {} {
+	global $this-mapType
+	set index [set $this-mapType]
+	# Old name, new name, reverse?  Note that the order these are
+	# listed is important because mapType is an index into this
+	# list.
+	set remap {
+	    { "Gray" "Gray" 0 }
+	    { "Inverse Gray" "Gray" 1 }
+	    { "Rainbow" "Old Rainbow" 1 }
+	    { "Inverse Rainbow " "Old Rainbow" 0 }
+	    { "Darkhue" "Darkhue" 0 }
+	    { "Inverse Darkhue" "Darkhue" 1 }
+	    { "Lighthue" "Lighthue" 0 }
+	    { "Blackbody" "Blackbody" 0 }
+	    { "Inverse Blackbody" "Blackbody" 1 }
+	    { "Don" "Don" 0 }
+	    { "Dark Gray" "Dark Gray" 0 }
+	    { "Red Tint" "Red Tint" 0 }
+	    { "Orange Tint" "Orange Tint" 0 }
+	    { "Yellow Tint" "Yellow Tint" 0 }
+	    { "Green Tint" "Green Tint" 0 }
+	    { "Blue Tint" "Blue Tint" 0 }
+	    { "Purple Tint" "Purple Tint" 0 }
+	    { "BP Seismic" "BP Seismic" 0}
+           }
+	set entry [lindex $remap $index]
+	set $this-mapName [lindex $entry 1]
+	set $this-reverse [lindex $entry 2]
+    }
+
     method deleteNode { x y } {
 	global $this-nodeList
 	global $this-positionList
@@ -446,7 +462,7 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
     }
     
     method getColorMapString { } {
-	set colors [lindex [lindex $colorMaps [set $this-mapType]] 1]
+	set colors [findByName [set $this-mapName]]
 	set csize [llength $colors]
 	set scolors [join $colors]
 
@@ -518,19 +534,16 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 
     method SetColorMap {} {
 	global $this-resolution
-	global $this-mapType
+	global $this-mapName
 	global $this-realres
 	set colorMap {}
-	set map [lindex $colorMaps [set $this-mapType]]
+	set map [findByName [set $this-mapName]]
 	set currentMap {}
-	set currentMap [$this makeNewMap [ lindex $map 1 ]]
+	set currentMap [$this makeNewMap $map]
 	set n [llength $currentMap]
 	if { [set $this-resolution] > [set $this-realres] } {
 	      set $this-resolution [set $this-realres]
 	}
-#	if { [set $this-resolution] < $n } {
-#	    set $this-resolution $n
-#	}
 	set m [set $this-resolution]
 
 	set frac [expr ($n-1)/double($m-1)]
