@@ -124,6 +124,12 @@ UNI_PETSC_INC_DIR := @UNI_PETSC_INC@
 UNI_PETSC_LIB_DIR := @UNI_PETSC_LIB_DIR@
 UNI_PETSC_LIBS    := @UNI_PETSC_LIBS@
 
+BLAS_LIB_DIR      := @BLAS_LIB_DIR@
+BLAS_LIBS         := @BLAS_LIBS@
+
+LAPACK_LIB_DIR    := @LAPACK_LIB_DIR@
+LAPACK_LIBS       := @LAPACK_LIBS@
+
 LDRUN_PREFIX      := @LDRUN_PREFIX@
 
 ifneq ($(UNI_PETSC_LIB_DIR),)
@@ -131,6 +137,20 @@ ifneq ($(UNI_PETSC_LIB_DIR),)
                        $(UNI_PETSC_LIB_DIR) $(UNI_PETSC_LIBS)
 else
   UNI_PETSC_LIBRARY :=
+endif
+
+ifneq ($(BLAS_LIB_DIR),)
+  BLAS_LIBRARY := $(LDRUN_PREFIX)$(BLAS_LIB_DIR) \
+                       -L$(BLAS_LIB_DIR) $(BLAS_LIBS)
+else
+  BLAS_LIBRARY :=
+endif
+
+ifneq ($(LAPACK_LIB_DIR),)
+  LAPACK_LIBRARY := $(LDRUN_PREFIX)$(LAPACK_LIB_DIR) \
+                       -L$(LAPACK_LIB_DIR) $(LAPACK_LIBS)
+else
+  LAPACK_LIBRARY :=
 endif
 
 ifneq ($(TAU_MAKEFILE),)
