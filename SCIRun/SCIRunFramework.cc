@@ -30,6 +30,7 @@
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Dataflow/SCIRunComponentModel.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
+#include <SCIRun/Babel/BabelComponentModel.h>
 #include <SCIRun/ComponentInstance.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
@@ -47,6 +48,7 @@ SCIRunFramework::SCIRunFramework()
   models.push_back(internalServices=new InternalComponentModel(this));
   models.push_back(new SCIRunComponentModel(this));
   models.push_back(cca=new CCAComponentModel(this));
+  models.push_back(babel=new BabelComponentModel(this));
 }
 
 SCIRunFramework::~SCIRunFramework()
@@ -116,7 +118,8 @@ SCIRunFramework::createComponentInstance(const std::string& name,
     cerr<<"Error: failed to create ComponentInstance"<<endl;
     return ComponentID::pointer(0);
     
-  }registerComponent(ci, name);
+  }
+  registerComponent(ci, name);
   return ComponentID::pointer(new ComponentID(this, ci->instanceName));
 }
 

@@ -32,7 +32,7 @@ SRCS     += \
 	$(SRCDIR)/PortInstanceIterator.cc\
 	$(SRCDIR)/CCACommunicator.cc
 
-SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal
+SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal $(SRCDIR)/Babel
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
@@ -40,7 +40,8 @@ PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
 	Dataflow/Network Core/GuiInterface Core/CCA/spec \
 	Core/CCA/Component/PIDL Core/CCA/Component/CIA \
 	Core/Exceptions Core/TkExtensions Core/Thread
-LIBS := $(XML_LIBRARY)
+
+LIBS := $(XML_LIBRARY) -L${BABELDIR}/lib -lsidl
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
