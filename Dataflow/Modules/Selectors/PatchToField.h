@@ -64,12 +64,12 @@ public:
 
 // 	IntVector fi(it.i_, it.j_, it.k_);
 // 	IntVector ai(vit.getIndex());
-	lock_.lock();
+//	lock_.lock();
 	for(;it != it_end; ++it){
 	  fld_->fdata()[*it] = *vit;
 	  ++vit;
 	}
-	lock_.unlock();
+//	lock_.unlock();
       } else {
 
         IntVector lo(min_ - offset_);
