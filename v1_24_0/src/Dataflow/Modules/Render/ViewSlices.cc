@@ -92,15 +92,6 @@ namespace SCIRun {
 
 class RealDrawer;
 
-// SWAP ----------------------------------------------------------------
-template <class T>
-inline void SWAP(T& a, T& b) {
-  T temp;
-  temp = a;
-  a = b;
-  b = temp;
-}
-
 
 class ViewSlices : public Module
 {
@@ -137,7 +128,6 @@ class ViewSlices : public Module
 
   struct NrrdVolume { 
     NrrdVolume		(GuiContext*ctx);
-    void		reset();
     NrrdDataHandle	nrrd_;
     UIdouble		opacity_;
     UIint		invert_;
@@ -149,21 +139,28 @@ class ViewSlices : public Module
     UIint		transpose_xy_;
   };
 
+  struct SliceWindow;
+  struct WindowLayout;
+
   struct NrrdSlice {
-    NrrdSlice(int axis=0, int slice=0, NrrdVolume *volume=0);
-    int			axis_;  // which axis
-    int			slice_num_;   // which slice # along axis
+    NrrdSlice(NrrdVolume *);
+
+    NrrdVolume *	volume_;
+    SliceWindow	*	window_;
+    NrrdDataHandle      nrrd_;
+
+    int			axis_;
+    int			slice_num_;
     int			slab_min_;
     int			slab_max_;
-    NrrdDataHandle      nrrd_;
     
     bool		nrrd_dirty_;
     bool		tex_dirty_;
     bool		geom_dirty_;
+
     unsigned int	mode_;
     unsigned int	tex_wid_;
     unsigned int	tex_hei_;
-
     unsigned int	wid_;
     unsigned int	hei_;
 
@@ -172,29 +169,26 @@ class ViewSlices : public Module
     float		pos_coords_[12]; // x,y,z * 4 corners
     GLuint		tex_name_;
 
-    NrrdVolume *	volume_;
     //    Mutex		lock_;
-    //    Thread *		owner_;
-    //    int			lock_count_;
+    //    Thread *	owner_;
+    //    int		lock_count_;
     void		do_lock();
     void		do_unlock();
   };
   typedef vector<NrrdSlice *>		NrrdSlices;
   typedef vector<NrrdSlices>		NrrdVolumeSlices;
 
-
-
   struct SliceWindow { 
-    SliceWindow() { ASSERT(0); };
     SliceWindow(GuiContext *ctx);
-    void		reset();
 
     string		name_;
-
+    WindowLayout *	layout_;
     OpenGLViewport *	viewport_;
     NrrdSlices		slices_;
 
-    NrrdSlices		paint_slices_;
+    NrrdSlice		paint_under_;
+    NrrdSlice		paint_;
+    NrrdSlice		paint_over_;
 
     UIint		slice_num_;
     UIint		axis_;
@@ -221,7 +215,6 @@ class ViewSlices : public Module
     UIint		mouse_x_;
     UIint		mouse_y_;
     UIint		show_guidelines_;
-    bool		mouse_in_window_;
     bool		cursor_moved_;
     UIdouble		fusion_;
     
@@ -241,9 +234,10 @@ class ViewSlices : public Module
     SliceWindows	windows_;
     string		name_;
   };
+  typedef map<string, WindowLayout *>	WindowLayouts;
 
   typedef vector<NrrdVolume *>		NrrdVolumes;
-  typedef map<string, WindowLayout *>	WindowLayouts;
+
   typedef vector<BBox>			PickBoxes;
 
   WindowLayouts		layouts_;
@@ -251,15 +245,18 @@ class ViewSlices : public Module
   NrrdDataHandle	gradient_;
   ColorMap2Handle	cm2_;
 
+
   vector<int>		nrrd_generations_;
   int			cm2_generation_;
+  Array3<float>		cm2_buffer_under_;
   Array3<float>		cm2_buffer_;
+  Array3<float>		cm2_buffer_over_;
 
 
   ColorMapHandle	colormap_;
   int			colormap_generation_;
 
-  SliceWindow *		current_window_;
+  WindowLayout *	current_layout_;
   SliceWindow *		zooming_;
   SliceWindow *		panning_;
   double		original_zoom_;
@@ -287,6 +284,7 @@ class ViewSlices : public Module
   double		scale_[3];
   double		center_[3];
   UIint			probe_;
+  UIint			show_colormap2_;
   UIint			painting_;
   UIint			crop_;
   
@@ -347,11 +345,21 @@ class ViewSlices : public Module
   RealDrawer *		runner_;
   Thread *		runner_thread_;
 
-  void			redraw_all();
-  void			redraw_window_layout(WindowLayout &);
-  void			redraw_window(SliceWindow &);
-  void			draw_slice(SliceWindow &, NrrdSlice &);
 
+  // Methods for drawing to the GL window
+  void			redraw_all();
+  int			redraw_window(SliceWindow &);
+  void			setup_gl_view(SliceWindow &);
+  int			draw_slice(NrrdSlice &);
+  void			bind_slice(NrrdSlice &,float *tex=0,bool filter=true);
+  void			draw_slice_quad(NrrdSlice &);
+  void			draw_guide_lines(SliceWindow &, float, float, float);
+  void			draw_slice_lines(SliceWindow &);
+  void			draw_slice_arrows(SliceWindow &);
+  void			draw_dark_slice_regions(SliceWindow &);
+
+
+  // Methods to render TrueType text labels
   void			initialize_fonts();
   void			delete_all_fonts();
   void			set_font_sizes(double size);
@@ -361,14 +369,7 @@ class ViewSlices : public Module
   void			draw_position_label(SliceWindow &);
   void			draw_label(SliceWindow &, string, int, int, 
 				   FreeTypeText::anchor_e, 
-				   FreeTypeFace *font = 0);
-
-  
-  float *		apply_colormap(NrrdSlice &, double min, double max, 
-				       float *);
-
-  void			draw_guide_lines(SliceWindow &, float, float, float);
-  void			draw_slice_lines(SliceWindow &);
+				   FreeTypeFace *font = 0); 
 
   // Crop Widget routines
   void			draw_crop_bbox(SliceWindow &, BBox &);
@@ -376,39 +377,42 @@ class ViewSlices : public Module
   int			mouse_in_pick_boxes(SliceWindow &, PickBoxes &);
   void			set_window_cursor(SliceWindow &, int pick);
   pair<Vector, Vector>	get_crop_vectors(SliceWindow &, int pick);
-  BBox			update_crop_bbox(SliceWindow &, int pick, int X, int Y);
+  BBox			update_crop_bbox(SliceWindow &, int pick, int X,int Y);
   void			update_crop_bbox_from_gui();
   void			update_crop_bbox_to_gui();
 
-  int			x_axis(SliceWindow &);
-  int			y_axis(SliceWindow &);
-
-  void			setup_gl_view(SliceWindow &);
-
+  // Slice extraction and colormapping
+  float *		apply_colormap(NrrdSlice &, double, double, float *);
   void			set_slice_coords(NrrdSlice &slice, bool origin=true);
-
-
-  void			extract_window_slices(SliceWindow &);
-  void			extract_slice(NrrdSlice &,int axis, int slice_num);
+  int			extract_window_slices(SliceWindow &);
+  int			extract_slice(NrrdSlice &);
   void			extract_mip_slices(NrrdVolume *);
-  void			send_mip_slices(SliceWindow &);
+
+  // Methods to send geometry to Viewer
+  int			send_mip_textures(SliceWindow &);
+  int			send_slice_textures(NrrdSlice &slice);
   void			send_all_geometry();
 
+  // Misc
+  void			update_background_threshold();
+  double		get_value(Nrrd *, int, int, int);
+
+  // Methods for navigating around the slices
   void			set_axis(SliceWindow &, unsigned int axis);
   void			next_slice(SliceWindow &);
   void			prev_slice(SliceWindow &);
   void			zoom_in(SliceWindow &);
   void			zoom_out(SliceWindow &);
 
+  // Methods for cursor/coordinate projection and its inverse
+  int			x_axis(SliceWindow &);
+  int			y_axis(SliceWindow &);
+  bool			mouse_in_window(SliceWindow &);
+  Point			world_to_screen(SliceWindow &, Point &);
   Point			screen_to_world(SliceWindow &,
 					unsigned int x, unsigned int y);
 
-  Point			world_to_screen(SliceWindow &, Point &);
-
-  unsigned int		pow2(const unsigned int) const;
-  unsigned int		log2(const unsigned int) const;
-  bool			mouse_in_window(SliceWindow &);
-
+  // Methods called by tcl_command
   void			handle_gui_motion(GuiArgs &args);
   void			handle_gui_button(GuiArgs &args);
   void			handle_gui_button_release(GuiArgs &args);
@@ -416,21 +420,32 @@ class ViewSlices : public Module
   void			handle_gui_enter(GuiArgs &args);
   void			handle_gui_leave(GuiArgs &args);
 
-  void			debug_print_state(int state);
-
-  void			send_slice_geometry(NrrdSlice &slice);
-
-  void			add_paint_widget();
+  // Methods for Painting into 2D Transfer Function
   void			undo_paint_stroke();
-  void			fill_paint_slices(SliceWindow &window);
-  void			fill_all_paint_slices();
-  void			rasterize_colormap2();
+  int			extract_window_paint(SliceWindow &window);
+  void			apply_colormap2_to_slice(Array3<float> &, NrrdSlice &);
+  bool			rasterize_colormap2();
+  void			rasterize_widgets_to_cm2(int min, int max, Array3<float> &);
   void			do_paint(SliceWindow &);
   void			line(float *data, int width, 
 			     int x0, int y0, int x1, int y1,
 			     float r, float g, float b, float a);
-  void			update_background_threshold();
-  double		get_value(Nrrd *, int, int, int);
+
+  typedef int (SCIRun::ViewSlices::* SliceWindowFunc)(SliceWindow &);
+  typedef int (SCIRun::ViewSlices::* WindowLayoutFunc)(WindowLayout &);
+  typedef int (SCIRun::ViewSlices::* NrrdSliceFunc)(NrrdSlice &);
+  template <class T> int			for_each(T);
+  int			for_each(SliceWindow &, NrrdSliceFunc);
+  int			for_each(WindowLayout &, NrrdSliceFunc);
+  int			for_each(WindowLayout &, SliceWindowFunc);
+
+  int			render_window(SliceWindow &);
+  int			swap_window(SliceWindow &);
+  int			set_probe(SliceWindow &);
+  int			rebind_slice(NrrdSlice &);
+  int			reset_clut(SliceWindow &);
+  int			set_paint_dirty(SliceWindow &);
+
 public:
   ViewSlices(GuiContext* ctx);
   virtual ~ViewSlices();
@@ -490,37 +505,71 @@ RealDrawer::run()
       frame_count_start = t2;
     }
     
-    while (t <= t2) t += 1.0/120;
+    while (t <= t2) t += 1.0/30.0;
   }
 }
 
 void
 ViewSlices::extract_all_slices() {
   TCLTask::lock();
-  WindowLayouts::iterator liter = layouts_.begin(), lend = layouts_.end();
-  for (; liter != lend; ++liter) {
-    WindowLayout &layout = *(liter->second);
-    SliceWindows::iterator viter = layout.windows_.begin();
-    SliceWindows::iterator vend = layout.windows_.end();
-    for (; viter != vend; ++viter) {
-      SliceWindow &window = **viter;
-      for (unsigned int s = 0; s < window.slices_.size(); ++s) {
-	NrrdSlice &slice = *window.slices_[s];
-	if (slice.axis_ != window.axis_() || !slice.nrrd_dirty_) continue;
-	extract_slice(slice, window.axis_, window.slice_num_());
-      }
-    }
-  }
+  for_each(&ViewSlices::extract_slice);
   TCLTask::unlock();
 }
   
 
-ViewSlices::NrrdSlice::NrrdSlice(int axis, int slice, NrrdVolume *volume) :
-  axis_(axis),
-  slice_num_(slice),
+
+int
+ViewSlices::for_each(SliceWindow &window, NrrdSliceFunc func) {
+  int value = 0;
+  for (unsigned int slice = 0; slice < window.slices_.size(); ++slice) {
+    ASSERT(window.slices_[slice]);
+    value += (this->*func)(*window.slices_[slice]);
+  }
+  return value;
+}
+
+int
+ViewSlices::for_each(WindowLayout &layout, NrrdSliceFunc func) {
+  int value = 0;
+  for (unsigned int window = 0; window < layout.windows_.size(); ++window) {
+    ASSERT(layout.windows_[window]);
+    value += for_each(*layout.windows_[window], func);
+  }
+  return value;
+}
+  
+int
+ViewSlices::for_each(WindowLayout &layout, SliceWindowFunc func)
+{
+  int value = 0;
+  for (unsigned int window = 0; window < layout.windows_.size(); ++window) {
+    ASSERT(layout.windows_[window]);
+    value += (this->*func)(*layout.windows_[window]);
+  }
+  return value;
+}
+
+template <class T>
+int			
+ViewSlices::for_each(T func) {
+  int value = 0;
+  WindowLayouts::iterator liter = layouts_.begin(), lend = layouts_.end();
+  for (; liter != lend; ++liter) {
+    ASSERT(liter->second);
+    value += for_each(*(liter->second), func);
+  }
+  return value;
+}
+
+
+ViewSlices::NrrdSlice::NrrdSlice(NrrdVolume *volume) :
+  volume_(volume),
+  window_(0),
+  nrrd_(0),
+  axis_(0),
+  slice_num_(0),
   slab_min_(0),
   slab_max_(0),
-  nrrd_(0),
   nrrd_dirty_(true),
   tex_dirty_(false),
   geom_dirty_(false),
@@ -530,10 +579,8 @@ ViewSlices::NrrdSlice::NrrdSlice(int axis, int slice, NrrdVolume *volume) :
   wid_(0),
   hei_(0),
   opacity_(1.0),
-  tex_name_(0),
-  volume_(volume)
-  ///,
-  //  lock_("Slice lock")/,
+  tex_name_(0)
+  //lock_("Slice lock"),
   //owner_(0),
   //lock_count_(0)
 {
@@ -574,8 +621,12 @@ ViewSlices::NrrdSlice::do_unlock()
 
 ViewSlices::SliceWindow::SliceWindow(GuiContext *ctx) :  
   name_("INVALID"),
+  layout_(0),
   viewport_(0),
   slices_(),
+  paint_under_(0),
+  paint_(0),
+  paint_over_(0),
   slice_num_(ctx->subVar("slice"), 0),
   axis_(ctx->subVar("axis"), 2),
   zoom_(ctx->subVar("zoom"), 100.0),
@@ -597,7 +648,6 @@ ViewSlices::SliceWindow::SliceWindow(GuiContext *ctx) :
   mouse_x_(ctx->subVar("mouse_x"),0),
   mouse_y_(ctx->subVar("mouse_y"),0),
   show_guidelines_(ctx->subVar("show_guidelines"),1),
-  mouse_in_window_(false),
   cursor_moved_(true),
   fusion_(ctx->subVar("fusion"), 1.0),
   cursor_pixmap_(-1)
@@ -636,10 +686,12 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   volumes_(),
   nrrd_generations_(),
   cm2_generation_(-1),
+  cm2_buffer_under_(256, 256, 4),
   cm2_buffer_(256, 256, 4),
+  cm2_buffer_over_(256, 256, 4),
   colormap_(0),
   colormap_generation_(-1),
-  current_window_(0),
+  current_layout_(0),
   zooming_(0),
   panning_(0),
   cursor_(0.0, 0.0, 0.0),
@@ -654,6 +706,7 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   crop_draw_bbox_(crop_bbox_),
   crop_pick_boxes_(),
   probe_(ctx->subVar("probe"),0),
+  show_colormap2_(ctx->subVar("show_colormap2"),0),
   painting_(ctx->subVar("painting"),0),
   crop_(ctx->subVar("crop"),0),
   crop_min_x_(ctx->subVar("crop_minAxis0"),0),
@@ -705,42 +758,6 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   initialize_fonts();
 }
 
-void
-ViewSlices::SliceWindow::reset() {
-  zoom_ = 0.0;
-
-  x_ = 0.0;
-  y_ = 0.0;
-
-  clut_ww_ = -1;
-  clut_wl_ = -1;
-  
-  auto_levels_ = 0;
-  mode_ = 0;
-  crosshairs_ = 1;
-  snoop_ = 0;
-  invert_ = 0;
-  reverse_ = 0;
-  //  for (unsigned int v=0; v < windows_.size(); ++v)
-  //  windows_[v]->reset();
-
-}
-
-void
-ViewSlices::NrrdVolume::reset() {
-  opacity_ = 0.5;
-  invert_ = 0;
-  flip_x_ = 0;
-  flip_y_ = 0;
-  flip_z_ = 0;
-  transpose_yz_ = 0;
-  transpose_xz_ = 0;
-  transpose_xy_ = 0;
-}
-  
-
-    
-
 ViewSlices::~ViewSlices()
 {
   if (runner_thread_) {
@@ -751,126 +768,73 @@ ViewSlices::~ViewSlices()
 }
 
 
-// TODO: Query opengl max texture size
-unsigned int
-ViewSlices::pow2(const unsigned int dim) const {
-  unsigned int val = 1;
-  while (val < dim) { val = val << 1; };
-  return val;
+int
+ViewSlices::render_window(SliceWindow &window) {
+  if (!window.redraw_) return 0;
+  window.redraw_ = false;
+  
+  window.viewport_->make_current();
+  window.viewport_->clear();
+  setup_gl_view(window);
+  GL_ERROR();
+  
+  if (window.cursor_moved_)
+  {
+    last_cursor_ = cursor_;
+    cursor_ = screen_to_world(window, window.mouse_x_, window.mouse_y_);
+    window.cursor_moved_ = false;
+  }
+  
+  for_each(window, &ViewSlices::draw_slice);
+  //  draw_dark_slice_regions(window);
+  draw_slice_lines(window);
+  //  draw_slice_arrows(window);
+
+  draw_guide_lines(window, cursor_.x(), cursor_.y(), cursor_.z());
+  
+  if (crop_) {
+    draw_crop_bbox(window, crop_draw_bbox_);
+    crop_pick_boxes_ = compute_crop_pick_boxes(window,crop_draw_bbox_);
+    set_window_cursor(window,
+		      mouse_in_pick_boxes(window, crop_pick_boxes_));
+  } else {
+    set_window_cursor(window, 0);
+  }
+  
+  draw_all_labels(window);
+  window.viewport_->release();
+  GL_ERROR();
+  return 1;
 }
 
-unsigned int
-ViewSlices::log2(const unsigned int dim) const {
-  unsigned int log = 0;
-  unsigned int val = 1;
-  while (val < dim) { val = val << 1; log++; };
-  return log;
+int
+ViewSlices::swap_window(SliceWindow &window) {
+  window.viewport_->make_current();
+  window.viewport_->swap();
+  window.viewport_->release();
+  return 1;
 }
-
 
 
 void
 ViewSlices::real_draw_all()
 {
   TCLTask::lock();
-  WindowLayouts::iterator liter = layouts_.begin(), lend = layouts_.end();
-  for (; liter != lend; ++liter) {
-    if (!liter->second) continue;
-    WindowLayout &layout = *(liter->second);
-    SliceWindows::iterator viter = layout.windows_.begin();
-    SliceWindows::iterator vend = layout.windows_.end();
-    for (; viter != vend; ++viter) {
-      if (!*viter) continue;
-      SliceWindow &window = **viter;
-      if (!window.redraw_) continue;
-      window.redraw_ = false;
-
-      window.viewport_->make_current();
-      window.viewport_->clear();
-      setup_gl_view(window);
-      GL_ERROR();
-
-      if (window.cursor_moved_)
-      {
-	last_cursor_ = cursor_;
-	cursor_ = screen_to_world(window, window.mouse_x_, window.mouse_y_);
-	window.cursor_moved_ = false;
-      }
-
-      for (unsigned int s = 0; s < window.slices_.size(); ++s)
-	if (window.slices_[s])
-	  draw_slice(window, *window.slices_[s]);
-
-      draw_slice_lines(window);
-      draw_guide_lines(window, cursor_.x(), cursor_.y(), cursor_.z());
-      
-      if (crop_) {
-	draw_crop_bbox(window, crop_draw_bbox_);
-	crop_pick_boxes_ = compute_crop_pick_boxes(window,crop_draw_bbox_);
-	set_window_cursor(window,
-			  mouse_in_pick_boxes(window, crop_pick_boxes_));
-      } else {
-	set_window_cursor(window, 0);
-      }
-
-      draw_all_labels(window);
-      GL_ERROR();
-      window.viewport_->release();
-    }
-  }
-
-  for (liter = layouts_.begin(); liter != lend; ++liter) {
-    if (!liter->second) continue;
-    WindowLayout &layout = *(liter->second);
-    SliceWindows::iterator viter = layout.windows_.begin();
-    SliceWindows::iterator vend = layout.windows_.end();
-    for (; viter != vend; ++viter) {
-      if (!*viter) continue;
-      SliceWindow &window = **viter;
-      TCLTask::lock();
-      window.viewport_->make_current();
-      window.viewport_->swap();
-      window.viewport_->release();
-      TCLTask::unlock();
-    }
-  }
+  if (for_each(&ViewSlices::render_window)) 
+    for_each(&ViewSlices::swap_window);
   TCLTask::unlock();
   send_all_geometry();
 }
 
+  
 void
 ViewSlices::send_all_geometry()
 {
   if (window_level_) return;
-  bool flush = false;
 
-  // If any of the mips are going to be extracted, we need to flush
-  for (int axis = 0; axis < 3; ++axis)
-    if (mip_slices_[axis] && mip_slices_[axis]->tex_dirty_)
-      flush = true;
-      
-  WindowLayouts::iterator liter = layouts_.begin(), lend = layouts_.end();
-  for (; liter != lend; ++liter) {
-    if (!liter->second) continue;
-    WindowLayout &layout = *(liter->second);
-    SliceWindows::iterator viter = layout.windows_.begin();
-    SliceWindows::iterator vend = layout.windows_.end();
-    for (; viter != vend; ++viter) {
-      if (!*viter) continue;
-      SliceWindow &window = **viter;
-      send_mip_slices(window);
-      for (unsigned int s = 0; s < window.slices_.size(); ++s) {
-	if (!window.slices_[s]) continue;
-	NrrdSlice &slice = *window.slices_[s];
-	if (slice.geom_dirty_) {
-	  send_slice_geometry(slice);
-	  flush = true;
-	}
-      }
-    }
-  }
-
-  if (flush)  {
+  if (for_each(&ViewSlices::send_mip_textures) ||
+      for_each(&ViewSlices::send_slice_textures)) 
+  {
     geom_oport_->flush();
     UIint flushed(ctx->subVar("geom_flushed"));
     if (!flushed()) {
@@ -885,25 +849,13 @@ ViewSlices::send_all_geometry()
 void
 ViewSlices::redraw_all()
 {
-  WindowLayouts::iterator pos = layouts_.begin();
-  while (pos != layouts_.end()) {
-    redraw_window_layout(*(*pos++).second);
-  }
+  for_each(&ViewSlices::redraw_window);
 }
 
-
-void
-ViewSlices::redraw_window_layout(ViewSlices::WindowLayout &layout)
-{
-  SliceWindows::iterator viter, vend = layout.windows_.end();
-  for (viter = layout.windows_.begin(); viter != vend; ++viter) {
-    redraw_window(**viter);
-  }
-}
-
-void
+int
 ViewSlices::redraw_window(SliceWindow &window) {
   window.redraw_ = true;
+  return 1;
 }
 
 // draw_guide_lines
@@ -1016,9 +968,6 @@ ViewSlices::draw_guide_lines(SliceWindow &window, float x, float y, float z) {
 void
 ViewSlices::draw_slice_lines(SliceWindow &window)
 {
-  //  setup_gl_view(window);
-  GL_ERROR();
-
   Vector tmp = screen_to_world(window, 1, 0) - screen_to_world(window, 0, 0);
   tmp[window.axis_] = 0;
   double screen_space_one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
@@ -1032,7 +981,6 @@ ViewSlices::draw_slice_lines(SliceWindow &window)
   const int axis = window.axis_;
   int p = (axis+1)%3;
   int s = (axis+2)%3;
-
 
   double one;
   double xyz[3];
@@ -1065,14 +1013,84 @@ ViewSlices::draw_slice_lines(SliceWindow &window)
     glEnd();
     SWAP(p,s);
   }
+  GL_ERROR();
+}
+
+
+
+
+// renders vertical and horizontal bars that represent
+// selected slices in other dimensions
+void
+ViewSlices::draw_slice_arrows(SliceWindow &window)
+{
+  Vector tmp = screen_to_world(window, 1, 0) - screen_to_world(window, 0, 0);
+  tmp[window.axis_] = 0;
+  double screen_space_one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  GLdouble blue[4] = { 0.1, 0.4, 1.0, 0.8 };
+  GLdouble green[4] = { 0.5, 1.0, 0.1, 0.8 };
+  GLdouble red[4] = { 0.8, 0.2, 0.4, 0.9 };
+
+  const int axis = window.axis_;
+  int p = (axis+1)%3;
+  int s = (axis+2)%3;
+
+  double one;
+  double min, max;
+  double xyz[3];
+  int i;
+
+
+
+  for (int i = 0; i < 3; ++i)
+    xyz[i] = cur_slice_[i]*scale_[i];
+  
+  for (i = 0; i < 2; ++i) {
+    if (!slab_width_[p]) continue;
+    one = Max(screen_space_one, double(scale_[p]*slab_width_[p]));
+    
+    
+    min = double(scale_[p]*window.slab_min_);
+    max = double(scale_[p]*window.slab_max_);
+    
+    if (fabs(max-min) < screen_space_one) {
+      double mid = (min+max)/2.0;
+      min = mid-screen_space_one/2.0;
+      max = mid+screen_space_one/2.0;
+    }
+
+    switch (p) {
+    case 0: glColor4dv(red); break;
+    case 1: glColor4dv(green); break;
+    default:
+    case 2: glColor4dv(blue); break;
+    }
+
+    glBegin(GL_QUADS);    
+
+    glVertex3f(p==0?xyz[0]:0.0, p==1?xyz[1]:0.0, p==2?xyz[2]:0.0);
+    glVertex3f(p==0?xyz[0]+one:0.0, p==1?xyz[1]+one:0.0, p==2?xyz[2]+one:0.0);
+    glVertex3f(p==0?xyz[0]+one:(axis==0?0.0:(max_slice_[s]+1)*scale_[s]),
+	       p==1?xyz[1]+one:(axis==1?0.0:(max_slice_[s]+1)*scale_[s]),
+	       p==2?xyz[2]+one:(axis==2?0.0:(max_slice_[s]+1)*scale_[s]));
+    
+    glVertex3f(p==0?xyz[0]:(axis==0?0.0:(max_slice_[s]+1)*scale_[s]),
+	       p==1?xyz[1]:(axis==1?0.0:(max_slice_[s]+1)*scale_[s]),
+	       p==2?xyz[2]:(axis==2?0.0:(max_slice_[s]+1)*scale_[s]));
+    glEnd();
+    SWAP(p,s);
+  }
+  GL_ERROR();
 }
 
 
 
 void
 ViewSlices::draw_crop_bbox(SliceWindow &window, BBox &bbox) {
-  //  setup_gl_view(window);
-  GL_ERROR();
+  if (!crop_) return;
   float unscaled_one = 1.0;
   Vector tmp = screen_to_world(window, 1, 0) - screen_to_world(window, 0, 0);
   tmp[window.axis_] = 0;
@@ -1317,7 +1335,6 @@ ViewSlices::set_window_cursor(SliceWindow &window, int cursor)
   Tk_Window &tkwin = layouts_[window.name_]->opengl_->tkwin_;
   Tk_DefineCursor(tkwin, Tk_GetCursor(the_interp, tkwin, 
 				      ccast_unsafe(cursor_name)));
-//  gui->eval(window.name_+" configure -cursor "+cursor_name);
 }
 
 
@@ -1466,13 +1483,7 @@ ViewSlices::y_axis(SliceWindow &window)
 void
 ViewSlices::setup_gl_view(SliceWindow &window)
 {
-  // bad hack to resolve infinite loop in screen_to_world
-  static int here = 0;
-  if (here) return;
-  here = 1;
-  GL_ERROR();
   glMatrixMode(GL_MODELVIEW);
-  GL_ERROR();
   glLoadIdentity();
   GL_ERROR();
 
@@ -1484,19 +1495,15 @@ ViewSlices::setup_gl_view(SliceWindow &window)
   } else if (axis == 1) { // screen +X -> +X, screen +Y -> +Z
     glRotated(-90,1.,0.,0.);
   }
-  GL_ERROR();
   
   glTranslated((axis==0)?-double(window.slice_num_)*scale_[0]:0.0,
   	       (axis==1)?-double(window.slice_num_)*scale_[1]:0.0,
   	       (axis==2)?-double(window.slice_num_)*scale_[2]:0.0);
-  GL_ERROR();
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  GL_ERROR();
   glGetDoublev(GL_MODELVIEW_MATRIX, window.gl_modelview_matrix_);
   glGetDoublev(GL_PROJECTION_MATRIX, window.gl_projection_matrix_);
   glGetIntegerv(GL_VIEWPORT, window.gl_viewport_);
-  GL_ERROR();
   
   double hwid = (window.viewport_->width()/(window.zoom_()/100.0))/2.0;
   double hhei = (window.viewport_->height()/(window.zoom_()/100.0))/2.0;
@@ -1511,11 +1518,8 @@ ViewSlices::setup_gl_view(SliceWindow &window)
     maxz = 1.0;
   }
   glOrtho(cx - hwid, cx + hwid, cy - hhei, cy + hhei, minz, maxz);
-  GL_ERROR();
   glGetDoublev(GL_PROJECTION_MATRIX, window.gl_projection_matrix_);
   GL_ERROR();
-  here = 0;
-
 }
 
 
@@ -1551,8 +1555,6 @@ ViewSlices::draw_window_label(SliceWindow &window)
 }
 
 
-
-
 void
 ViewSlices::draw_position_label(SliceWindow &window)
 {
@@ -1571,7 +1573,6 @@ ViewSlices::draw_position_label(SliceWindow &window)
 		     " Z: "+to_string(Ceil(cursor_.z())));
   }
     
-
   FreeTypeText position(position_text, font);
   BBox bbox;
   position.get_bounds(bbox);
@@ -1579,8 +1580,6 @@ ViewSlices::draw_position_label(SliceWindow &window)
   draw_label(window, position_text, 0, 0, FreeTypeText::sw, font);
   draw_label(window, zoom_text, 0, y_pos, FreeTypeText::sw, font);
 }  
-
-
 
 
 // Right	= -X
@@ -1668,8 +1667,8 @@ ViewSlices::draw_label(SliceWindow &window, string text, int x, int y,
     fttext.get_bounds(bbox);
   }
 
-  unsigned int wid = pow2(Round(bbox.max().x()));
-  unsigned int hei = pow2(Round(bbox.max().y()));
+  unsigned int wid = Pow2(Round(bbox.max().x()));
+  unsigned int hei = Pow2(Round(bbox.max().y()));
   GLubyte *buf = scinew GLubyte[wid*hei];
   memset(buf, 0, wid*hei);
   fttext.render(wid, hei, buf);
@@ -1699,9 +1698,12 @@ ViewSlices::draw_label(SliceWindow &window, string text, int x, int y,
   switch (anchor) {
   case FreeTypeText::s:  px -= bbox.max().x()/2.0; break;
   case FreeTypeText::se: px -= bbox.max().x();     break;
-  case FreeTypeText::e:  px -= bbox.max().x();     py -= bbox.max().y()/2.0; break;
-  case FreeTypeText::ne: px -= bbox.max().x();     py -= bbox.max().y();     break;
-  case FreeTypeText::n:  px -= bbox.max().x()/2.0; py -= bbox.max().y();     break;
+  case FreeTypeText::e:  px -= bbox.max().x();     
+                         py -= bbox.max().y()/2.0; break;
+  case FreeTypeText::ne: px -= bbox.max().x();     
+                         py -= bbox.max().y();     break;
+  case FreeTypeText::n:  px -= bbox.max().x()/2.0; 
+                         py -= bbox.max().y();     break;
   case FreeTypeText::nw: py -= bbox.max().y();     break;
   case FreeTypeText::w:  py -= bbox.max().y()/2.0; break;
   default: // lowerleft do noting
@@ -1945,30 +1947,56 @@ ViewSlices::get_value(Nrrd *nrrd, int x, int y, int z) {
   return 0.0;
 }
 
+void
+ViewSlices::bind_slice(NrrdSlice &slice, float *tex, bool filter)
+{
+  const bool bound = glIsTexture(slice.tex_name_);
+  if (!bound) {
+    glGenTextures(1, &slice.tex_name_);
+  }
 
+  glBindTexture(GL_TEXTURE_2D, slice.tex_name_);
+
+  if (!bound || slice.tex_dirty_) {
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    const GLint filter_mode=((filter&&texture_filter_())?GL_LINEAR:GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_mode);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_mode);
+    if (tex)
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, slice.tex_wid_, slice.tex_hei_, 
+		   0, GL_RGBA, GL_FLOAT, tex);
+    else 
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, slice.tex_wid_, slice.tex_hei_, 
+		   0, GL_RGBA, GL_FLOAT, slice.nrrd_->nrrd->data);
+    
+    slice.tex_dirty_ = false;
+    slice.geom_dirty_ = true;
+  }
+}
 
 void
-ViewSlices::draw_slice(SliceWindow &window, NrrdSlice &slice)
+ViewSlices::draw_slice_quad(NrrdSlice &slice) {
+  unsigned int i;
+  glBegin( GL_QUADS );
+  for (i = 0; i < 4; i++) {
+    glTexCoord2fv(&slice.tex_coords_[i*2]);
+    glVertex3fv(&slice.pos_coords_[i*3]);
+  }
+  glEnd();
+}
+  
+
+int
+ViewSlices::draw_slice(NrrdSlice &slice)
 {
-  if (slice.axis_ != window.axis_) return;
-  if (slice.nrrd_dirty_ && slice.volume_)
-    extract_slice(slice, window.axis_(), window.slice_num_());
-  
+  ASSERT(slice.window_);  
+  SliceWindow &window = *slice.window_;
+  ASSERT(slice.axis_ == window.axis_);
+  extract_slice(slice); // Returns immediately if slice is current
   ASSERT(slice.nrrd_.get_rep());
-
   slice.do_lock();
-
-  GL_ERROR();
-  //  setup_gl_view(window);
-
-  glRasterPos2d(0.0, 0.0);
-
-  // set material color to be white
-  GLfloat ones[4] = {1.0, 1.0, 1.0, 1.0};
-  GLfloat zeros[4] = {0.0, 0.0, 0.0, 0.0};
-  GLfloat grey[4] = {0.0, 0.0, 0.0, 0.0};
-  
-  glColor4fv(ones);
 
   // Setup the opacity of the slice to be drawn
   GLfloat opacity = slice.opacity_*window.fusion_();
@@ -1976,7 +2004,6 @@ ViewSlices::draw_slice(SliceWindow &window, NrrdSlice &slice)
       slice.volume_->nrrd_.get_rep() == volumes_[1]->nrrd_.get_rep()) {
     opacity = slice.opacity_*(1.0 - window.fusion_); 
   }
-  glColor4f(1.0, 1.0, 1.0, opacity);//, opacity, opacity, opacity);
   glColor4f(opacity, opacity, opacity, opacity);
 
   glDisable(GL_CULL_FACE);
@@ -1989,90 +2016,33 @@ ViewSlices::draw_slice(SliceWindow &window, NrrdSlice &slice)
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glShadeModel(GL_FLAT);
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, grey);
 
-  const bool bound = glIsTexture(slice.tex_name_);
-  if (!bound) {
-    glGenTextures(1, &slice.tex_name_);
-  }
-
-  glBindTexture(GL_TEXTURE_2D, slice.tex_name_);
-
-  if (!bound || slice.tex_dirty_) {
+  if (slice.tex_dirty_) {
     int min = window.clut_wl_ - window.clut_ww_/2;
     int max = window.clut_wl_ + window.clut_ww_/2;
     apply_colormap(slice, double(min), double(max), temp_tex_data_);
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    const GLint filter_mode = (texture_filter_()?GL_LINEAR:GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_mode);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_mode);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, slice.tex_wid_, slice.tex_hei_, 
-    		 0, GL_RGBA, GL_FLOAT, temp_tex_data_);
-    slice.tex_dirty_ = false;
-    slice.geom_dirty_ = true;
-  }
-
-  unsigned int i;
-  glBegin( GL_QUADS );
-  for (i = 0; i < 4; i++) {
-    glTexCoord2fv(&slice.tex_coords_[i*2]);
-    glVertex3fv(&slice.pos_coords_[i*3]);
-  }
-  glEnd();
-
-  glBindTexture(GL_TEXTURE_2D, 0);
-
-  glColor4fv(zeros);
-  glColor4f(0.5, 0.5, 0.5, 0.5);//opacity, opacity, opacity, opacity);
-    //glColor4fv(ones);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  if (int(painting_) && (window.mode_ == normal_e) &&
-      window.paint_slices_.size() && 
-      window.paint_slices_[window.axis_]) {
-    if (window.paint_slices_[window.axis_]->slice_num_ != window.slice_num_())
-      fill_paint_slices(window);
-    NrrdSlice &paint = *window.paint_slices_[window.axis_];
-
-    const bool bound = glIsTexture(paint.tex_name_);
-    if (!bound) {
-      glGenTextures(1, &paint.tex_name_);
-    }
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    glBindTexture(GL_TEXTURE_2D, paint.tex_name_);
-    
-    if (!bound || paint.tex_dirty_) {
-      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  
-      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, slice.tex_wid_, slice.tex_hei_, 
-		   0, GL_RGBA, GL_FLOAT, paint.nrrd_->nrrd->data);
-    }
-
-    glBegin( GL_QUADS );
-    for (i = 0; i < 4; i++) {
-      glTexCoord2fv(&slice.tex_coords_[i*2]);
-      glVertex3fv(&slice.pos_coords_[i*3]);
-    }
-    glEnd();
-    glBindTexture(GL_TEXTURE_2D, 0);
   }
   
-  glFlush();
-  slice.do_unlock();
-
-  //  glMatrixMode(GL_PROJECTION);
-  //  glLoadIdentity();
-  //  glMatrixMode(GL_MODELVIEW);
-  //  glLoadIdentity();
+  bind_slice(slice, temp_tex_data_);
+  draw_slice_quad(slice);
+  if ((painting_ || show_colormap2_) && (window.mode_ == normal_e))
+  {
+    extract_window_paint(window);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    bind_slice(window.paint_under_, 0, 0);
+    draw_slice_quad(slice);
+    bind_slice(window.paint_, 0, 0);
+    draw_slice_quad(slice);
+    bind_slice(window.paint_over_, 0, 0);
+    draw_slice_quad(slice);
+  }
+  glBindTexture(GL_TEXTURE_2D, 0);
   glDisable(GL_TEXTURE_2D);
   glDisable(GL_BLEND);
-    
-  GL_ERROR();
+  GL_ERROR();  
+  slice.do_unlock();
+
+  return 1;
 }
 
 
@@ -2180,46 +2150,41 @@ ViewSlices::set_slice_coords(NrrdSlice &slice, bool origin) {
 }
 
 
-void
+int
 ViewSlices::extract_window_slices(SliceWindow &window) {
-  unsigned int v, s;
-  int a;
+  unsigned int s;
+  for (s = window.slices_.size(); s < volumes_.size(); ++s)
+    window.slices_.push_back(scinew NrrdSlice(volumes_[s]));
 
-  if (!window.slices_.size()) {
-    for (v = 0; v < volumes_.size(); ++v) {
-      for (a = 0; a < 3; a++)
-	window.slices_.push_back
-	  (scinew NrrdSlice(a, window.slice_num_(), volumes_[v]));
-    }
-  } 
-
-  s = 0;
-  for (v = 0; v < volumes_.size(); ++v) {
-    for (a = 0; a < 3; a++) {
-      NrrdSlice &slice = *window.slices_[s];
-      slice.do_lock();
-      slice.nrrd_dirty_ = true;
-      slice.mode_ = window.mode_();
-      slice.volume_ = volumes_[v];
-      slice.slice_num_ = window.slice_num_();
-      slice.slab_min_ = window.slab_min_();
-      slice.slab_max_ = window.slab_max_();
-      slice.do_unlock();	
-      s++;
-    }
+  for (s = 0; s < window.slices_.size(); ++s)
+  {
+    NrrdSlice &slice = *window.slices_[s];
+    slice.do_lock();
+    slice.window_ = &window;
+    slice.axis_ = window.axis_();
+    slice.slice_num_ = window.slice_num_();
+    slice.slab_min_ = window.slab_min_();
+    slice.slab_max_ = window.slab_max_();
+    slice.nrrd_dirty_ = true;
+    slice.mode_ = window.mode_();
+    slice.do_unlock();	
   }
+
+  window.paint_.nrrd_dirty_ = true;
+
+  return window.slices_.size();
 }
 
 
-
-void
-ViewSlices::extract_slice(NrrdSlice &slice, int axis, int slice_num)
+int
+ViewSlices::extract_slice(NrrdSlice &slice)
 {
-  if (!slice.nrrd_dirty_) return;
+  if (!slice.nrrd_dirty_) return 0;
 
   ASSERT(slice.volume_);
   ASSERT(slice.volume_->nrrd_.get_rep());
-
+  int axis = slice.axis_;
+  int slice_num = slice.slice_num_;
 
   slice.do_lock();
 
@@ -2277,8 +2242,8 @@ ViewSlices::extract_slice(NrrdSlice &slice, int axis, int slice_num)
   slice.geom_dirty_ = false;
   slice.wid_     = temp1->nrrd->axis[0].size;
   slice.hei_     = temp1->nrrd->axis[1].size;
-  slice.tex_wid_ = pow2(slice.wid_);
-  slice.tex_hei_ = pow2(slice.hei_);
+  slice.tex_wid_ = Pow2(slice.wid_);
+  slice.tex_hei_ = Pow2(slice.hei_);
   slice.opacity_ = slice.volume_->opacity_;
 
   int minp[2] = { 0, 0 };
@@ -2294,6 +2259,8 @@ ViewSlices::extract_slice(NrrdSlice &slice, int axis, int slice_num)
   set_slice_coords(slice);
 
   slice.do_unlock();
+
+  return 1;
 }
 
 
@@ -2303,7 +2270,7 @@ ViewSlices::extract_mip_slices(NrrdVolume *volume)
   if (!volume || !volume->nrrd_.get_rep()) { return; }
   for (int axis = 0; axis < 3; ++axis) {
     if (!mip_slices_[axis])
-      mip_slices_[axis] = scinew NrrdSlice(axis, 0, volume);
+      mip_slices_[axis] = scinew NrrdSlice(volume);
       
     NrrdSlice &slice = *mip_slices_[axis];
     slice.do_lock();
@@ -2335,8 +2302,8 @@ ViewSlices::extract_mip_slices(NrrdVolume *volume)
     slice.geom_dirty_ = false;
     slice.wid_     = temp1->nrrd->axis[0].size;
     slice.hei_     = temp1->nrrd->axis[1].size;
-    slice.tex_wid_ = pow2(slice.wid_);
-    slice.tex_hei_ = pow2(slice.hei_);
+    slice.tex_wid_ = Pow2(slice.wid_);
+    slice.tex_hei_ = Pow2(slice.hei_);
     slice.opacity_ = slice.volume_->opacity_;
     
     int minp[2] = { 0, 0 };
@@ -2356,43 +2323,26 @@ ViewSlices::extract_mip_slices(NrrdVolume *volume)
 }
 
 
-void
-ViewSlices::send_mip_slices(SliceWindow &window)
+int
+ViewSlices::send_mip_textures(SliceWindow &window)
 {
-  GeometryOPort *geom = (GeometryOPort *)get_oport("Geometry");
-  if (!geom) {
-    error("Cannot find port Geometry!\n");
-    return;
-  }
+  int value = 0;
   for (int axis = 0; axis < 3; ++axis)
   {
     if (!mip_slices_[axis]) continue;
     NrrdSlice &slice = *mip_slices_[axis];
     if (!slice.tex_dirty_) continue;
-
+    value++;
     slice.do_lock();
-    slice.tex_dirty_ = false;
-    window.viewport_->make_current();
-    bool bound = glIsTexture(slice.tex_name_);
-    if (!bound) {
-      glGenTextures(1, &slice.tex_name_);
-    }
 
-    glBindTexture(GL_TEXTURE_2D, slice.tex_name_);
     int min = window.clut_wl_ - window.clut_ww_/2;
     int max = window.clut_wl_ + window.clut_ww_/2;
     apply_colormap(slice, double(min), double(max), temp_tex_data_);
 
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, slice.tex_wid_, slice.tex_hei_, 
-    		 0, GL_RGBA, GL_FLOAT, temp_tex_data_);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    window.viewport_->make_current();
+    bind_slice(slice, temp_tex_data_);
     window.viewport_->release();
+
     string name = "MIP Slice"+to_string(slice.axis_);
 
     TexSquare *mintex = scinew TexSquare();
@@ -2423,9 +2373,10 @@ ViewSlices::send_mip_slices(SliceWindow &window)
     
     GeomHandle gobj = group;
     slice.do_unlock();
-    if (gobjs_[name]) geom->delObj(gobjs_[name]);
-    gobjs_[name] = geom->addObj(gobj, name);
+    if (gobjs_[name]) geom_oport_->delObj(gobjs_[name]);
+    gobjs_[name] = geom_oport_->addObj(gobj, name);
   }
+  return value;
 }
 
 
@@ -2433,7 +2384,7 @@ void
 ViewSlices::set_axis(SliceWindow &window, unsigned int axis) {
   window.axis_ = axis;
   extract_window_slices(window);
-  redraw_window(window);
+  window.redraw_ = true;
 }
 
 void
@@ -2441,10 +2392,9 @@ ViewSlices::prev_slice(SliceWindow &window)
 {
   if (window.slice_num_() == 0) 
     return;
-  if (window.slice_num_ < 1)
+  window.slice_num_--;
+  if (window.slice_num_ < 0)
     window.slice_num_ = 0;
-  else 
-    window.slice_num_--;
   window.cursor_moved_ = true;
   extract_window_slices(window);
   redraw_all();
@@ -2453,12 +2403,11 @@ ViewSlices::prev_slice(SliceWindow &window)
 void
 ViewSlices::next_slice(SliceWindow &window)
 {
-  if (*window.slice_num_() == max_slice_[window.axis_()]) 
+  if (window.slice_num_() == max_slice_[window.axis_()]) 
     return;
+  window.slice_num_++;
   if (window.slice_num_ > max_slice_[window.axis_])
     window.slice_num_ = max_slice_[window.axis_];
-  else
-    window.slice_num_++;
   window.cursor_moved_ = true;
   extract_window_slices(window);
   redraw_all();
@@ -2470,7 +2419,7 @@ ViewSlices::zoom_in(SliceWindow &window)
   window.zoom_ *= 1.1;
   window.pixel_ratio_ *= 1.1;
   window.cursor_moved_ = true;
-  redraw_window(window);
+  window.redraw_ = true;
 }
 
 void
@@ -2479,9 +2428,8 @@ ViewSlices::zoom_out(SliceWindow &window)
   window.zoom_ /= 1.1;
   window.pixel_ratio_ /= 1.1;
   window.cursor_moved_ = true;
-  redraw_window(window);
+  window.redraw_ = true;
 }
-
   
 Point
 ViewSlices::screen_to_world(SliceWindow &window, 
@@ -2512,6 +2460,7 @@ ViewSlices::world_to_screen(SliceWindow &window, Point &world)
 void
 ViewSlices::execute()
 {
+  //  cerr << "execute\n";
   update_state(Module::JustStarted);
   ASSERTMSG(cmap2_iport_,"Unable to initialize ColorMap2 input port.");
   ASSERTMSG(n1_cmap_iport_,"Unable to initialize iport ColorMap.");
@@ -2549,40 +2498,25 @@ ViewSlices::execute()
   if (painting_() == 2) {
     ASSERT(cm2_.get_rep());
     cm2_=scinew ColorMap2(cm2_->widgets(), false, cm2_->faux());
-    cmap2_oport_->send_intermediate(cm2_);
-
     painting_ = 1;
-  } else  {
-    cmap2_oport_->send_intermediate(cm2_);
-  }
-
+  } 
+  cmap2_oport_->send_intermediate(cm2_);
   cmap2_iport_->get(cm2_);
 
+  paint_widget_ = 0;
   if (cm2_.get_rep() && 
       (cm2_->selected() >= 0) && 
       (cm2_->selected() < int(cm2_->widgets().size()))) {
     paint_widget_ = 
       dynamic_cast<SCIRun::PaintCM2Widget*>(cm2_->widgets()[cm2_->selected()].get_rep());
-  } else {
-    paint_widget_ = 0;
   }
 
-  const bool painting_cache = painting_;
-  if (paint_widget_) {
-    painting_ = 1;
-  } else {
-    painting_ = 0;
-  }
+  painting_ = (paint_widget_?1:0);
 
-  if (painting_ && cm2_.get_rep() && !cm2_->updating() &&
-      cm2_generation_ != cm2_->generation)
-  {
-    fill_all_paint_slices();
-    redraw_all();
-  } else if (painting_cache != painting_) {
-    redraw_all();
-  }
-    
+  if ((show_colormap2_() || painting_) && 
+      cm2_.get_rep() && cm2_generation_ != cm2_->generation)
+    for_each(&ViewSlices::set_paint_dirty);
+  
   grad_iport_->get(gradient_);
   n1_cmap_iport_->get(colormap_);
   bool re_extract = 
@@ -2598,7 +2532,6 @@ ViewSlices::execute()
 
   double min_value = airNaN();
   double max_value = airNaN();
-
 
   for (a = 0; a < 3; a++) {
     max_slice_[a] = -1;
@@ -2661,28 +2594,19 @@ ViewSlices::execute()
   // Temporary space to hold the colormapped texture
   if (temp_tex_data_) delete[] temp_tex_data_;
   const int max_dim = 
-    Max(pow2(max_slice_[0]+1), pow2(max_slice_[1]+1), pow2(max_slice_[2]+1));
+    Max(Pow2(max_slice_[0]+1), Pow2(max_slice_[1]+1), Pow2(max_slice_[2]+1));
   const int mid_dim = 
-    Mid(pow2(max_slice_[0]+1), pow2(max_slice_[1]+1), pow2(max_slice_[2]+1));
+    Mid(Pow2(max_slice_[0]+1), Pow2(max_slice_[1]+1), Pow2(max_slice_[2]+1));
   temp_tex_data_ = scinew float[max_dim*mid_dim*4];
 
   // Mark all windows slices dirty
   if (re_extract) {
-    WindowLayouts::iterator pos = layouts_.begin();
-    while (pos != layouts_.end()) {
-      WindowLayout &layout = *(*pos++).second;
-      SliceWindows::iterator viter, vend = layout.windows_.end();
-      for (viter = layout.windows_.begin(); viter != vend; ++viter) {
-	extract_window_slices(**viter);
-      }
-    }
+    for_each(&ViewSlices::extract_window_slices);
     for (int n = 0; n < 3; ++n)
       if (mip_slices_[n]) 
 	mip_slices_[n]->tex_dirty_ = true;
-
-    redraw_all();
   }
-
+  redraw_all();
   TCLTask::unlock();
 
   cmap2_oport_->send(cm2_);
@@ -2693,16 +2617,46 @@ ViewSlices::execute()
 
 bool
 ViewSlices::mouse_in_window(SliceWindow &window) {
-  return (window.mouse_in_window_ &&
+  
+  return (window.layout_ == current_layout_ &&
 	  window.mouse_x_ >= window.viewport_->x() && 
 	  window.mouse_x_ < window.viewport_->x()+window.viewport_->width() &&
 	  window.mouse_y_ >= window.viewport_->y() &&
 	  window.mouse_y_ < window.viewport_->y()+window.viewport_->height());
 }
 
+
+int
+ViewSlices::set_probe(SliceWindow &window) {
+  const int axis = window.axis_();
+  window.slice_num_ = Floor(cursor_(axis)/scale_[axis]);
+  if (window.slice_num_ < 0) 
+    window.slice_num_ = 0;
+  if (window.slice_num_ > max_slice_[axis]) 
+    window.slice_num_ = max_slice_[axis];  
+  extract_window_slices(window);
+  return 1;
+}
+
+
+int
+ViewSlices::rebind_slice(NrrdSlice &slice) {
+  slice.tex_dirty_ = true;
+  return 1;
+}
+
+int
+ViewSlices::reset_clut(SliceWindow &window) {
+  window.clut_ww_(); // resets gui context
+  window.clut_wl_(); // resets gui context
+  window.clut_dirty_ = true;
+  window.redraw_ = true;
+  for_each(window, &ViewSlices::rebind_slice);
+  return 1;
+}
+
+
   
-
-
 void
 ViewSlices::handle_gui_motion(GuiArgs &args) {
   int state;
@@ -2758,23 +2712,8 @@ ViewSlices::handle_gui_motion(GuiArgs &args) {
       setup_gl_view(*inside_window);
       cursor_ = screen_to_world(*inside_window, x, y);
       inside_window->viewport_->release();
-
-      WindowLayouts::iterator liter = layouts_.begin();
-      while (liter != layouts_.end()) {
-	for (unsigned int v = 0; v < (*liter).second->windows_.size(); ++v) {
-	  SliceWindow &window = *(*liter).second->windows_[v];
-	  const int axis = window.axis_();
-	  window.slice_num_ = Floor(cursor_(axis)/scale_[axis]);
-	  if (window.slice_num_ < 0) 
-	    window.slice_num_ = 0;
-	  if (window.slice_num_ > max_slice_[axis]) 
-	    window.slice_num_ = max_slice_[axis];
-	  
-	  extract_window_slices(window);
-	}
-	++liter;
-      }
-      extract_all_slices();
+      
+      for_each(&ViewSlices::set_probe);
     } else if (window_level_) {
       for (int axis = 0; axis < 3; ++axis)
       {
@@ -2807,63 +2746,20 @@ ViewSlices::handle_gui_motion(GuiArgs &args) {
 
 void
 ViewSlices::handle_gui_enter(GuiArgs &args) {
-  if (layouts_.find(args[2]) == layouts_.end()) {
-    error ("Cannot handle enter on "+args[2]);
-    return;
-  }
-  WindowLayout &layout = *layouts_[args[2]];
-  for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
-    SliceWindow &window = *layout.windows_[w];
-    window.mouse_in_window_ = true;
-    current_window_ = &window;
-  }
+  ASSERTMSG(layouts_.find(args[2]) != layouts_.end(),
+	    ("Cannot handle enter on "+args[2]).c_str());
+  ASSERTMSG(current_layout_ == 0,
+	    "Haven't left window");
+  current_layout_ = layouts_[args[2]];
 }
 
 
 void
 ViewSlices::handle_gui_leave(GuiArgs &args) {
-  if (layouts_.find(args[2]) == layouts_.end()) {
-    error ("Cannot handle enter on "+args[2]);
-    return;
-  }
-  WindowLayout &layout = *layouts_[args[2]];
-  for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
-    SliceWindow &window = *layout.windows_[w];
-    window.mouse_in_window_ = false;
-    current_window_ = 0;
-  }
+  current_layout_ = 0;
 }
 
 
-
-void
-ViewSlices::debug_print_state(int state) {
-  cerr << "State: " << state;
-  vector<string> modstrings;
-  modstrings.push_back("Shift"); // 1
-  modstrings.push_back("Caps Lock"); // 2
-  modstrings.push_back("Control"); // 8
-  modstrings.push_back("Alt"); // 4
-  modstrings.push_back("M1"); // 16
-  modstrings.push_back("M2"); // 32
-  modstrings.push_back("M3"); // 64
-  modstrings.push_back("M4"); // 128
-  modstrings.push_back("Button1"); // 256
-  modstrings.push_back("Button2"); // 512
-  modstrings.push_back("Button3"); // 1024
-  int i = 1;
-  unsigned int power = 0;
-  while (i < state) {
-    if (state & i)
-      if (power < modstrings.size())
-	cerr << modstrings[power] << "-";
-      else
-	cerr << i << "-";  
-    i <<= 1;
-    ++power;
-  }
-  cerr << std::endl;
-}
 
 void
 ViewSlices::handle_gui_button_release(GuiArgs &args) {
@@ -3040,29 +2936,6 @@ ViewSlices::handle_gui_button(GuiArgs &args) {
   }
 }
 
-void
-ViewSlices::add_paint_widget() {
-  paint_widget_ = scinew PaintCM2Widget();	
-  vector<CM2WidgetHandle> widgets;
-  const unsigned int size = cm2_.get_rep() ? cm2_->widgets().size() : 0;
-  widgets.reserve(size+1);
-  int added = -1;
-  for (unsigned int w = 0; w < size; ++w) {
-    PaintCM2Widget *paint_layer = 
-      dynamic_cast<PaintCM2Widget*>(cm2_->widgets()[w].get_rep());
-    if (!paint_layer && (added == -1)) {
-      added = w;
-      widgets.push_back(paint_widget_);
-    }
-    widgets.push_back(cm2_->widgets()[w]);
-  }
-  const bool faux = cm2_.get_rep() ? cm2_->faux() : false;
-  cm2_= scinew ColorMap2(widgets, false, faux);
-  cm2_->selected() = added;
-  want_to_execute();
-}
-
-
 
 void
 ViewSlices::handle_gui_keypress(GuiArgs &args) {
@@ -3135,256 +3008,254 @@ ViewSlices::handle_gui_keypress(GuiArgs &args) {
 
 void
 ViewSlices::tcl_command(GuiArgs& args, void* userdata) {
-  //  cerr << "VS TCL:";
-  //  for (int c = 0; c < args.count(); ++c)
-  //    cerr << " " << args[c];
-  //  cerr << std::endl;
   if(args.count() < 2) {
     args.error("ViewSlices needs a minor command");
     return;
-  } else if (args[1] == "motion") handle_gui_motion(args);
+  }
+
+  if (args[1] == "motion")	  handle_gui_motion(args);
   else if (args[1] == "button")   handle_gui_button(args);
   else if (args[1] == "release")  handle_gui_button_release(args);
   else if (args[1] == "keypress") handle_gui_keypress(args);
   else if (args[1] == "enter")    handle_gui_enter(args);
   else if (args[1] == "leave")    handle_gui_leave(args);
   else if (args[1] == "background_thresh") update_background_threshold();
-  else if (args[1] == "add_paint_widget") add_paint_widget();
   else if (args[1] == "undo") undo_paint_stroke();
   else if (args[1] == "set_font_sizes") set_font_sizes(font_size_());
-   else if(args[1] == "setgl") {
-     int visualid = 0;
-     if (args.count() == 5 && !string_to_int(args[4], visualid))
-       error("setgl bad visual id: "+args[4]);
-
-     TkOpenGLContext *context = scinew TkOpenGLContext(args[2], visualid, 512, 512);
-     XSync(context->display_, 0);
-     ASSERT(layouts_.find(args[2]) == layouts_.end());
-     layouts_[args[2]] = scinew WindowLayout(ctx->subVar(args[3],0));
-     layouts_[args[2]]->opengl_ = context;
-   } else if(args[1] == "destroygl") {
-     WindowLayouts::iterator pos = layouts_.find(args[2]);
-     ASSERT(pos != layouts_.end());
-     delete (pos->second);
-     layouts_.erase(pos);
-   } else if(args[1] == "add_viewport") {
-     ASSERT(layouts_.find(args[2]) != layouts_.end());
-     WindowLayout *layout = layouts_[args[2]];
-     SliceWindow *window = scinew SliceWindow(ctx->subVar(args[3],0));
-     window->name_ = args[2];
-     window->viewport_ = scinew OpenGLViewport(layout->opengl_);
-     window->axis_ = (layouts_.size())%3;
-     layout->windows_.push_back(window);
-   } else if(args[1] == "redraw") {
-     ASSERT(layouts_.find(args[2]) != layouts_.end());
-     redraw_window_layout(*layouts_[args[2]]);
-   } else if(args[1] == "resize") {
-     ASSERT(layouts_.find(args[2]) != layouts_.end());
-     WindowLayout &layout = *layouts_[args[2]];
-     //    for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
-     //SliceWindow &win = *layout.windows_[w];
-     redraw_window_layout(layout);
-
-   } else if(args[1] == "redrawall") {
-     redraw_all();
-   } else if(args[1] == "rebind") {
-     ASSERT(layouts_.find(args[2]) != layouts_.end());
-     WindowLayout &layout = *layouts_[args[2]];
-     for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
-       SliceWindow &window = *layout.windows_[w];
-       extract_window_slices(window);
-     }
-     redraw_window_layout(layout);
-   } else if(args[1] == "texture_rebind") {
-     WindowLayouts::iterator liter = layouts_.begin();
-     WindowLayouts::iterator lend = layouts_.end();
-     while (liter != lend) {
-       if (args.count() == 2 ||
-	   ((args.count() > 2) && liter->first == args[2]))
-       {
-	 WindowLayout &layout = *(liter->second);
-	 for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
-	   SliceWindow &window = *layout.windows_[w];
-	   unsigned int v, s;
-	   int a;      
-	   s = 0;
-	   for (v = 0; v < volumes_.size(); ++v) {
-	     for (a = 0; a < 3; a++) {
-	       window.slices_[s]->do_lock();
-	       window.slices_[s]->tex_dirty_ = true;
-	       window.slices_[s]->do_unlock();	
-	       s++;
-	     }
-	   }
-	 }
-	 redraw_window_layout(layout);
-       }
-       ++liter;
-     }
-
-   } else if(args[1] == "startcrop") {
-     crop_ = 1;
-     if (args.count() == 2) {
-       crop_bbox_ = BBox
-	 (Point(0,0,0), 
-	  Point(max_slice_[0]+1, max_slice_[1]+1, max_slice_[2]+1));
-       crop_draw_bbox_ = crop_bbox_;
-       update_crop_bbox_to_gui();
-     }
-     redraw_all();
-   } else if(args[1] == "stopcrop") {
-     crop_ = 0;
-     redraw_all();
-   } else if(args[1] == "updatecrop") {
-     update_crop_bbox_from_gui();
-     redraw_all();
-   } else if (args[1] == "setclut") {
-     WindowLayouts::iterator liter = layouts_.begin();
-     while (liter != layouts_.end()) {
-       for (unsigned int v = 0; v < (*liter).second->windows_.size(); ++v) {
-	 SliceWindow &window = *(*liter).second->windows_[v];
-	 window.clut_ww_ = window.clut_ww_();
-	 window.clut_wl_ = window.clut_wl_();
-	 window.clut_dirty_ = true;
-	 for (unsigned int s = 0; s < window.slices_.size(); ++s)
-	   window.slices_[s]->tex_dirty_ = true;
-	 window.redraw_ = true;
-       }
-       ++liter;
-     }
-     for (int n = 0; n < 3; ++n)
-       if (mip_slices_[n])
-	 mip_slices_[n]->tex_dirty_ = true;
-
-   } else Module::tcl_command(args, userdata);
+  else if(args[1] == "setgl") {
+    int visualid = 0;
+    if (args.count() == 5 && !string_to_int(args[4], visualid))
+      error("setgl bad visual id: "+args[4]);
+    
+    TkOpenGLContext *context = scinew TkOpenGLContext(args[2], visualid, 512, 512);
+    XSync(context->display_, 0);
+    ASSERT(layouts_.find(args[2]) == layouts_.end());
+    layouts_[args[2]] = scinew WindowLayout(ctx->subVar(args[3],0));
+    layouts_[args[2]]->opengl_ = context;
+  } else if(args[1] == "destroygl") {
+    WindowLayouts::iterator pos = layouts_.find(args[2]);
+    ASSERT(pos != layouts_.end());
+    delete (pos->second);
+    layouts_.erase(pos);
+  } else if(args[1] == "add_viewport") {
+    ASSERT(layouts_.find(args[2]) != layouts_.end());
+    WindowLayout *layout = layouts_[args[2]];
+    SliceWindow *window = scinew SliceWindow(ctx->subVar(args[3],0));
+    window->layout_ = layout;
+    window->name_ = args[2];
+    window->viewport_ = scinew OpenGLViewport(layout->opengl_);
+    window->axis_ = (layouts_.size())%3;
+    layout->windows_.push_back(window);
+  } else if(args[1] == "redraw") {
+    ASSERT(layouts_.find(args[2]) != layouts_.end());
+    for_each(*layouts_[args[2]], &ViewSlices::redraw_window);
+  } else if(args[1] == "resize") {
+    ASSERT(layouts_.find(args[2]) != layouts_.end());
+    for_each(*layouts_[args[2]], &ViewSlices::redraw_window);
+  } else if(args[1] == "redrawall") {
+    redraw_all();
+  } else if(args[1] == "rebind") {
+    ASSERT(layouts_.find(args[2]) != layouts_.end());
+    for_each(*layouts_[args[2]], &ViewSlices::extract_window_slices);
+    for_each(*layouts_[args[2]], &ViewSlices::redraw_window);
+  } else if(args[1] == "texture_rebind") {
+    if (args.count() == 2) { 
+      for_each(&ViewSlices::rebind_slice);
+      for_each(&ViewSlices::redraw_window);
+    } else {
+      for_each(*layouts_[args[2]], &ViewSlices::rebind_slice);
+      for_each(*layouts_[args[2]], &ViewSlices::redraw_window);
+    }
+  } else if(args[1] == "startcrop") {
+    crop_ = 1;
+    if (args.count() == 2) {
+      crop_bbox_ = BBox
+	(Point(0,0,0), 
+	 Point(max_slice_[0]+1, max_slice_[1]+1, max_slice_[2]+1));
+      crop_draw_bbox_ = crop_bbox_;
+      update_crop_bbox_to_gui();
+    }
+    redraw_all();
+  } else if(args[1] == "stopcrop") {
+    crop_ = 0;
+    redraw_all();
+  } else if(args[1] == "updatecrop") {
+    update_crop_bbox_from_gui();
+    redraw_all();
+  } else if (args[1] == "setclut") {
+    for_each(&ViewSlices::reset_clut);
+    for (int n = 0; n < 3; ++n)
+      if (mip_slices_[n])
+	mip_slices_[n]->tex_dirty_ = true;
+  } else Module::tcl_command(args, userdata);
 }
 
 
 
-void
-ViewSlices::send_slice_geometry(NrrdSlice &slice) {
+int
+ViewSlices::send_slice_textures(NrrdSlice &slice) {
+  if (!slice.geom_dirty_) return 0;
   slice.do_lock();
   string name = "Slice"+to_string(slice.axis_);
   if (tobjs_[name] == 0) 
     tobjs_[name] = scinew TexSquare();
+  tobjs_[name]->set_texname(slice.tex_name_);
   set_slice_coords(slice, false);
   tobjs_[name]->set_coords(slice.tex_coords_, slice.pos_coords_);
   set_slice_coords(slice, true);
-  tobjs_[name]->set_texname(slice.tex_name_);
   GeomHandle gobj = tobjs_[name];
   slice.geom_dirty_ = false;
   slice.do_unlock();
   
   if (gobjs_[name]) geom_oport_->delObj(gobjs_[name]);
   gobjs_[name] = geom_oport_->addObj(gobj, name);
-  
+  return 1;
+}
+
+int
+ViewSlices::set_paint_dirty(SliceWindow &window) 
+{
+  window.paint_.nrrd_dirty_ = true;
+  return 1;
 }
 
 void
+ViewSlices::rasterize_widgets_to_cm2(int min, int max, Array3<float> &buffer) 
+{
+  buffer.initialize(0.0);
+  for (int i = min; i <= max; ++i)
+    if (cm2_->widgets()[i]->get_onState() && !cm2_->widgets()[i]->is_empty())
+      cm2_->widgets()[i]->rasterize(buffer, cm2_->faux());
+}
+
+
+bool
 ViewSlices::rasterize_colormap2() {
-  if (!cm2_.get_rep()) return;
-  if (cm2_generation_ == cm2_->generation) return;
+  if (!cm2_.get_rep()) return false;
+  if (cm2_generation_ == cm2_->generation) return false;
+  //  cerr << "Rasterizing cm2: " << cm2_->generation << "\n";
   cm2_generation_ = cm2_->generation;
-  cm2_buffer_.initialize(0.0);
-  for (unsigned int i = 0; i < cm2_->widgets().size(); ++i) {
-    if (!cm2_->widgets()[i]->is_empty()) {
-      cm2_->widgets()[i]->rasterize(cm2_buffer_, cm2_->faux());
-    }
-  }
+
+  const int last_widget = cm2_->widgets().size() - 1;
+  int selected = cm2_->selected();
+  if (selected < 0 || selected > int(cm2_->widgets().size())) 
+    selected = last_widget;
+
+  rasterize_widgets_to_cm2(0, selected-1, cm2_buffer_under_);
+  rasterize_widgets_to_cm2(selected, selected, cm2_buffer_);
+  rasterize_widgets_to_cm2(selected+1, last_widget, cm2_buffer_over_);
+
+  for_each(&ViewSlices::set_paint_dirty);
+
+  return true;
 }
 
-void
-ViewSlices::fill_all_paint_slices() {
-  WindowLayouts::iterator liter = layouts_.begin(), lend = layouts_.end();
-  for (; liter != lend; ++liter) {
-    WindowLayout &layout = *(liter->second);
-    SliceWindows::iterator viter = layout.windows_.begin();
-    SliceWindows::iterator vend = layout.windows_.end();
-    for (; viter != vend; ++viter)
-      fill_paint_slices(**viter);
-  }
-}
 
 void
-ViewSlices::fill_paint_slices(SliceWindow &window) {
-  if (!gradient_.get_rep() || !cm2_.get_rep()) return;
+ViewSlices::apply_colormap2_to_slice(Array3<float> &cm2, NrrdSlice &slice)
+{
+  if (!slice.nrrd_.get_rep()) {
+    slice.nrrd_ = scinew NrrdData;
+    slice.nrrd_->nrrd = nrrdNew();
+    slice.nrrd_->nrrd->data = 0;
+  }
+
+  const int wid = slice.tex_wid_;
+  const int hei = slice.tex_hei_;
+
+  const unsigned int y_ax = y_axis(*slice.window_);
+  const unsigned int x_ax = x_axis(*slice.window_);
+  const unsigned int z = slice.slice_num_;
+
+
+  if (slice.nrrd_->nrrd && 
+      !slice.nrrd_->nrrd->data &&
+      slice.nrrd_->nrrd->dim >= 2 &&
+      (wid != slice.nrrd_->nrrd->axis[0].size ||
+       hei != slice.nrrd_->nrrd->axis[1].size)) {
+    nrrdNuke(slice.nrrd_->nrrd);
+    slice.nrrd_->nrrd->data = 0;
+  }
   
-  rasterize_colormap2();
-  unsigned int a;
-  if (!window.paint_slices_.size()) {
-    for (a = 0; a < 3; ++a) {
-      window.paint_slices_.push_back
-	(scinew NrrdSlice(a, window.slice_num_(), 0));
-      window.paint_slices_.back()->nrrd_ = scinew NrrdData;
-      window.paint_slices_.back()->nrrd_->nrrd = nrrdNew();
-      window.paint_slices_.back()->nrrd_->nrrd->data = 0;
-      window.paint_slices_.back()->tex_wid_ = window.slices_[a]->tex_wid_;
-      window.paint_slices_.back()->tex_hei_ = window.slices_[a]->tex_hei_;
-
-    }
+  slice.tex_dirty_ = true;
+  
+  if (!slice.nrrd_->nrrd->data) {
+    nrrdAlloc(slice.nrrd_->nrrd, nrrdTypeFloat, 3, 4, wid, hei);
   }
 
-  int wid, hei;
-  unsigned int y_ax = y_axis(window);
-  unsigned int x_ax = x_axis(window);
-  unsigned int z = window.slice_num_();
-  for (a = 0; a < 3; ++a) {
-    if (a != (unsigned int)window.axis_) continue;
-    NrrdSlice &slice = *window.paint_slices_[a];
-    NrrdDataHandle &paint = slice.nrrd_;
-    
-    wid = slice.tex_wid_;
-    hei = slice.tex_hei_;
-    if (paint->nrrd && 
-	!paint->nrrd->data &&
-	paint->nrrd->dim >= 2 &&
-	(wid != paint->nrrd->axis[0].size ||
-	 hei != paint->nrrd->axis[1].size)) {
-      nrrdNuke(paint->nrrd);
-      paint->nrrd->data = 0;
-    }
-
-    slice.tex_dirty_ = true;
-    slice.slice_num_ = window.slice_num_;
-
-    if (!paint->nrrd->data) {
-      nrrdAlloc(paint->nrrd, nrrdTypeFloat, 3, 4, wid, hei);
-    }
-
-    float *paintdata =  (float *)slice.nrrd_->nrrd->data;
-    memset(paintdata, sizeof(float)*wid*hei*4, 0);
-    double val, grad;
-    int cval;
-    int pos;
-    const double min = double(window.clut_wl_) - int(window.clut_ww_)/2;
-    double scale = 255.999 / double(window.clut_ww_);
-    for (int y = 0; y <= max_slice_[y_ax]; ++y) {
-      for (int x = 0; x < max_slice_[x_ax]; ++x) {
-	val = get_value(volumes_[0]->nrrd_->nrrd, 
-			(x_ax==0)?x:((y_ax==0)?y:z),
-			(x_ax==1)?x:((y_ax==1)?y:z),
-			(x_ax==2)?x:((y_ax==2)?y:z));
-	grad = get_value(gradient_->nrrd,
-			 (x_ax==0)?x:((y_ax==0)?y:z),
-			 (x_ax==1)?x:((y_ax==1)?y:z),
-			 (x_ax==2)?x:((y_ax==2)?y:z));
-	cval = Floor((val-min)*scale);
-	pos = (y*wid+x)*4;
-	if (cval >= 0 && cval <= 255)
-	  memcpy(paintdata+pos, 
-		 &cm2_buffer_(Round(grad), cval, 0), 
-		 4*sizeof(float));
-#if 0
-	else {
-	  paintdata[pos+0] = 0.0;
-	  paintdata[pos+1] = 0.0;
-	  paintdata[pos+2] = 0.0;
-	  paintdata[pos+3] = 0.0;
-	}
-#endif
+  Nrrd* value_nrrd = volumes_[0]->nrrd_->nrrd;
+  Nrrd* grad_nrrd = gradient_->nrrd;
+  float *paintdata =  (float *)slice.nrrd_->nrrd->data;
+  //  memset(paintdata, sizeof(float)*wid*hei*4, 0);
+  double val, grad;
+  int cval;
+  int pos;
+  const double min = (double(slice.window_->clut_wl_) - 
+		      int(slice.window_->clut_ww_)/2);
+  double scale = 255.999 / double(slice.window_->clut_ww_);
+  for (int y = 0; y <= max_slice_[y_ax]; ++y) {
+    for (int x = 0; x < max_slice_[x_ax]; ++x) {
+      val = get_value(value_nrrd, 
+		      (x_ax==0)?x:((y_ax==0)?y:z),
+		      (x_ax==1)?x:((y_ax==1)?y:z),
+		      (x_ax==2)?x:((y_ax==2)?y:z));
+      grad = get_value(grad_nrrd,
+		       (x_ax==0)?x:((y_ax==0)?y:z),
+		       (x_ax==1)?x:((y_ax==1)?y:z),
+		       (x_ax==2)?x:((y_ax==2)?y:z));
+      cval = Floor((val-min)*scale);
+      pos = (y*wid+x)*4;
+      if (cval >= 0 && cval <= 255)
+	memcpy(paintdata+pos, 
+	       &cm2(Round(grad), cval, 0), 
+	       4*sizeof(float));
+      else {
+	paintdata[pos] = 0.0;
+	paintdata[pos+1] = 0.0;
+	paintdata[pos+2] = 0.0;
+	paintdata[pos+3] = 0.0;
       }
+	
     }
   }
+}
+
+
+int
+ViewSlices::extract_window_paint(SliceWindow &window) {
+  if (!gradient_.get_rep() || !cm2_.get_rep()) return 0;
+  if (window.slices_.empty()) return 0;
+  rasterize_colormap2();
+
+  if (!window.paint_.nrrd_dirty_) return 0;
+
+  window.paint_.nrrd_dirty_ = false;
+
+  window.paint_under_.axis_ = window.axis_();
+  window.paint_under_.slice_num_ = window.slice_num_;
+  window.paint_under_.tex_wid_ = window.slices_[0]->tex_wid_;
+  window.paint_under_.tex_hei_ = window.slices_[0]->tex_hei_;
+  window.paint_under_.window_ = &window;
+
+  window.paint_.axis_ = window.axis_;
+  window.paint_.slice_num_ = window.slice_num_;
+  window.paint_.tex_wid_ = window.slices_[0]->tex_wid_;
+  window.paint_.tex_hei_ = window.slices_[0]->tex_hei_;
+  window.paint_.window_ = &window;
+
+  window.paint_over_.axis_ = window.axis_;
+  window.paint_over_.slice_num_ = window.slice_num_;
+  window.paint_over_.tex_wid_ = window.slices_[0]->tex_wid_;
+  window.paint_over_.tex_hei_ = window.slices_[0]->tex_hei_;
+  window.paint_over_.window_ = &window;
+
+  apply_colormap2_to_slice(cm2_buffer_under_, window.paint_under_);
+  apply_colormap2_to_slice(cm2_buffer_, window.paint_);
+  apply_colormap2_to_slice(cm2_buffer_over_, window.paint_over_);
+  //  cerr << "Extracted paint for window: " 
+  //       << window.name_ 
+  //       << " Slice #" << window.slice_num_ << std::endl;
+  return 2;
 }
 
 
@@ -3472,18 +3343,20 @@ ViewSlices::do_paint(SliceWindow &window) {
     paint_widget_->add_coordinate(make_pair(value, gradient));
   }
 
-  NrrdSlice &ps = *window.paint_slices_[window.axis_];
-  ps.tex_dirty_ = true;
-  line((float *)ps.nrrd_->nrrd->data, ps.tex_wid_, 
+  rasterize_widgets_to_cm2(cm2_->selected(), cm2_->selected(), cm2_buffer_);
+  apply_colormap2_to_slice(cm2_buffer_, window.paint_);
+#if 0
+  window.paint_.tex_dirty_ = true;
+  line((float *)window.paint_.nrrd_->nrrd->data, window.paint_.tex_wid_, 
        xyz[x_axis(window)], xyz[y_axis(window)],
        lxyz[x_axis(window)], lxyz[y_axis(window)],
        paint_r_, paint_g_, paint_b_, paint_a_);
-
+#endif
+  window.redraw_ = true;
   TCLTask::unlock();
 }
 
 
-  
 void
 ViewSlices::update_background_threshold() {
   WindowLayouts::iterator layouts_iter = layouts_.begin();
