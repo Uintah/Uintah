@@ -1,3 +1,4 @@
+#include <sci_defs/malloc_defs.h>
 
 #include <Packages/Uintah/CCA/Components/SimulationController/AMRSimulationController.h>
 #include <Core/Geometry/IntVector.h>

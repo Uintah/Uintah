@@ -1,3 +1,5 @@
+#include <sci_defs/malloc_defs.h>
+
 #include <Packages/Uintah/CCA/Components/SimulationController/SimpleSimulationController.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
