@@ -102,6 +102,7 @@ TendEstim::execute()
       char *err = biffGetDone(NRRD);
       error(string("Error Slicing away bmat tuple axis: ") + err);
       free(err);
+      return;
     }
   } else {
     error("Empty input Bmat Port.");
@@ -121,7 +122,8 @@ TendEstim::execute()
 
  
   Nrrd *nout = nrrdNew();
-  if (tenEstimate4D(nout, NULL, dwi_handle->nrrd, bmat_handle->nrrd, 
+
+  if (tenEstimate4D(nout, NULL, dwi_handle->nrrd, sliced_bmat, 
 		    threshold_.get(), soft_.get(), scale_.get()))
   {
     char *err = biffGetDone(TEN);
@@ -134,7 +136,17 @@ TendEstim::execute()
   NrrdData *output = scinew NrrdData;
   output->nrrd = nout;
   output->copy_sci_data(*dwi_handle.get_rep());
+
   output->nrrd->axis[0].label = strdup(dwi_handle->nrrd->axis[0].label);
+
+
+
+  output->nrrd->axis[1].spacing = dwi_handle->nrrd->axis[1].spacing;
+  output->nrrd->axis[2].spacing = dwi_handle->nrrd->axis[2].spacing;
+  output->nrrd->axis[3].spacing = dwi_handle->nrrd->axis[3].spacing;
+
+
+
   otens_->send(NrrdDataHandle(output));
 }
 
