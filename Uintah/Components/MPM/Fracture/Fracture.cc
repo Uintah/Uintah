@@ -231,9 +231,9 @@ void
 Fracture::
 labelSelfContactNodesAndCells(
            const ProcessorContext*,
-           const Patch* patch,
-           DataWarehouseP& old_dw,
-           DataWarehouseP& new_dw)
+           const Patch* /*patch*/,
+           DataWarehouseP& /*old_dw*/,
+           DataWarehouseP& /*new_dw*/)
 {
 #if 0
   int vfindex = d_sharedState->getMaterial(0)->getVFIndex();
@@ -272,9 +272,9 @@ void
 Fracture::
 updateParticleInformationInContactCells (
            const ProcessorContext*,
-           const Patch* patch,
-           DataWarehouseP& old_dw,
-           DataWarehouseP& new_dw)
+           const Patch* /*patch*/,
+           DataWarehouseP& /*old_dw*/,
+           DataWarehouseP& /*new_dw*/)
 {
 }
 
@@ -282,9 +282,9 @@ void
 Fracture::
 updateSurfaceNormalOfBoundaryParticle(
 	   const ProcessorContext*,
-           const Patch* patch,
-           DataWarehouseP& old_dw,
-           DataWarehouseP& new_dw)
+           const Patch* /*patch*/,
+           DataWarehouseP& /*old_dw*/,
+           DataWarehouseP& /*new_dw*/)
 {
    // Added empty function - Steve
 }
@@ -293,9 +293,9 @@ void
 Fracture::
 updateNodeInformationInContactCells (
            const ProcessorContext*,
-           const Patch* patch,
-           DataWarehouseP& old_dw,
-           DataWarehouseP& new_dw)
+           const Patch* /*patch*/,
+           DataWarehouseP& /*old_dw*/,
+           DataWarehouseP& /*new_dw*/)
 {
 }
 
@@ -304,9 +304,9 @@ void
 Fracture::
 crackGrow(
            const ProcessorContext*,
-           const Patch* patch,
-           DataWarehouseP& old_dw,
-           DataWarehouseP& new_dw)
+           const Patch* /*patch*/,
+           DataWarehouseP& /*old_dw*/,
+           DataWarehouseP& /*new_dw*/)
 {
 }
 
@@ -323,6 +323,12 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.18  2000/06/03 05:25:47  sparker
+// Added a new for pSurfLabel (was uninitialized)
+// Uncommented pleaseSaveIntegrated
+// Minor cleanups of reduction variable use
+// Removed a few warnings
+//
 // Revision 1.17  2000/06/02 21:54:22  tan
 // Finished function labelSelfContactNodes(...) to label the gSalfContact
 // according to the cSurfaceNormal information.

@@ -50,6 +50,9 @@ MPMLabel::MPMLabel()
   //  For the interior particle, the p.surfaceNormal vector is set to (0,0,0)
   //  in this way we can distinguish boundary particles to interior particles
   //
+  pSurfLabel = new VarLabel( "p.surface",
+			ParticleVariable<int>::getTypeDescription() );
+
   pSurfaceNormalLabel = new VarLabel( "p.surfaceNormal",
 			ParticleVariable<Vector>::getTypeDescription() );
 
@@ -130,6 +133,12 @@ const MPMLabel* MPMLabel::getLabels()
 }
 
 // $Log$
+// Revision 1.7  2000/06/03 05:25:43  sparker
+// Added a new for pSurfLabel (was uninitialized)
+// Uncommented pleaseSaveIntegrated
+// Minor cleanups of reduction variable use
+// Removed a few warnings
+//
 // Revision 1.6  2000/06/02 23:16:32  guilkey
 // Added ParticleID labels.
 //
