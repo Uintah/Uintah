@@ -157,6 +157,7 @@ NrrdReader::maybe_read_nrrd()
      fn != old_filename_ || 
      new_filemodification != old_filemodification_)
   {
+    added_tuple_axis_ = false;
     old_filemodification_ = new_filemodification;
     old_filename_=fn;
     handle_ = 0;
