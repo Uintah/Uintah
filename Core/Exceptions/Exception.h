@@ -29,6 +29,7 @@ namespace SCICore {
 	class Exception {
 	public:
 	    Exception();
+	    Exception(const Exception&);
 	    virtual ~Exception();
 	    virtual const char* message() const=0;
 	    virtual const char* type() const=0;
@@ -37,7 +38,6 @@ namespace SCICore {
 	    static bool alwaysFalse();
 	protected:
 	private:
-	    Exception(const Exception&);
 	    Exception& operator=(const Exception&);
 	};
     }

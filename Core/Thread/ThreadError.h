@@ -44,6 +44,10 @@ DESCRIPTION
 	    ThreadError(const std::string& message);
 
 	    //////////
+	    // Copy ctor
+	    ThreadError(const ThreadError&);
+
+	    //////////
 	    // Destructor
 	    virtual ~ThreadError();
 
@@ -58,6 +62,8 @@ DESCRIPTION
 	protected:
 	private:
 	    std::string d_message;
+
+	    ThreadError& operator=(const ThreadError&);
 	};
     }
 }
@@ -66,6 +72,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.9  2000/03/23 20:43:14  sparker
+// Added copy ctor to all exception classes (for Linux/g++)
+//
 // Revision 1.8  2000/03/23 10:21:27  sparker
 // Use libexc to print out stack straces on the SGI
 // Added "name" method to ThreadError to match exception base class

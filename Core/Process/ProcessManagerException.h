@@ -20,6 +20,7 @@ namespace SCICore {
     namespace Process {
 	class ProcessManagerException : public SCICore::Exceptions::Exception {
 	public:
+	    ProcessManagerException(const ProcessManagerException&);
 	protected:
 	private:
 	};
