@@ -54,6 +54,9 @@ namespace SCIRun {
   private:
     World(const World&);
     World& operator=(const World&);
+    void setCommunicator(int comm){
+      //MPI_COMM_COM=MPI_COMM_WORLD; //*(MPI_Comm*)(comm);
+    }    
     sci::cca::Services::pointer services;
   };
   
