@@ -276,6 +276,7 @@ void SimulationController::run()
 		     MPI_SUM, 0, d_myworld->getComm());
 	}
 	avg_memuse /= d_myworld->size(); // only to be used by processor 0
+	avg_highwater /= d_myworld->size();
 	MPI_Reduce(&memuse, &max_memuse, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0,
 		   d_myworld->getComm());
 	if(highwater){
