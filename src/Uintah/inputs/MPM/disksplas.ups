@@ -41,6 +41,9 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
+                <burn>
+                  <type>null</type>
+                </burn>
 		<density>1000.0</density>
                 <comp_neo_hook_plastic>
                     <bulk_modulus>2000.0</bulk_modulus>
