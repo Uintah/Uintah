@@ -113,7 +113,7 @@ ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
   vector<typename FIELD::mesh_type::Elem::index_type> elemmap;
 
   const bool elemdata_valid =
-    field->data_at_type_description()->get_name() ==
+    field->order_type_description()->get_name() ==
     get_type_description((typename FIELD::mesh_type::Elem *)0)->get_name();
 
   typename FIELD::mesh_type::Elem::iterator bi, ei;
@@ -239,7 +239,7 @@ ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
 
     interpolant = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
   }
-  else if (fieldh->data_at_type_description()->get_name() ==
+  else if (fieldh->order_type_description()->get_name() ==
 	   get_type_description((typename FIELD::mesh_type::Elem *)0)->get_name())
   {
     FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());

@@ -189,7 +189,7 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       tvfield->set_value(val, (TriSurfMesh::Node::index_type)(i));
       ++iter; ++i;
     }
-  } else if (qsfield->basis_order() == Field::FACE) {
+  } else if (qsfield->basis_order() == 0) {
     for (unsigned int i = 0; i < elemmap.size(); i++)
     {
       qsfield->value(val, elemmap[i]);
@@ -302,7 +302,7 @@ ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       ++nbi;
     }
   }
-  else if (ifield->basis_order() == Field::FACE)
+  else if (ifield->basis_order() == 0)
   {
     typename FSRC::mesh_type::Cell::iterator cbi, cei;    
     imesh->begin(cbi); imesh->end(cei);
