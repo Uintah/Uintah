@@ -37,8 +37,10 @@ LIBS_FULLNAMES  := $(wildcard $(LIBDIR)/*.$(SO_OR_A_FILE))
 LIBS_NAMES      := $(patsubst %.$(SO_OR_A_FILE),%, $(LIBS_FULLNAMES))
 # replace front section with -l
 LIBS          := $(patsubst $(SCIRUN_OBJTOP)/lib/lib%,-l%, $(LIBS_NAMES))
+# babel libs necessary for bridge compilation
+BABEL_LIBS    := $(filter -lCCA_Components_BabelTest%,$(LIBS))
 
-INCLUDES = -I$(SCIRUN_SRCTOP)/include -I$(SCIRUN_SRCTOP) -I$(SCIRUN_OBJTOP) -I$(SCIRUN_SRCTOP)/Packages @INC_TCL_H@ @INC_TK_H@ @INC_ITCL_H@ @INC_BLT_H@ @INC_GLOBUS_H@ @INC_XERCESC_H@ @INC_PETSC_H@ $(TAU_INCLUDE) $(MPI_INCLUDE) $(GL_INCLUDE) $(INSIGHT_INCLUDE) $(TEEM_INCLUDE)
+INCLUDES = -I$(SCIRUN_SRCTOP)/include -I$(SCIRUN_SRCTOP) -I$(SCIRUN_OBJTOP) -I$(SCIRUN_SRCTOP)/Packages @INC_SCI_THIRDPARTY_H@ @INC_TCL_H@ @INC_TK_H@ @INC_ITCL_H@ @INC_BLT_H@ @INC_GLOBUS_H@ @INC_XERCESC_H@ @INC_PETSC_H@ -I/usr/sci/projects/CCA/frameworks/babel-0.7.4/include $(TAU_INCLUDE) -I$(MPI_INCLUDE) $(GL_INCLUDE) $(INSIGHT_INCLUDE) $(TEEM_INCLUDE)
 
 ifeq ($(SSTREAM_COMPAT),yes)
 INCLUDES := $(INCLUDES) -I$(SCIRUN_SRCTOP)/include/compat
@@ -78,10 +80,10 @@ all: $(OTF_LIBS)
 	$(CXX) -c $(CFLAGS) $(INCLUDES) $< -o $@ 
 
 %.so : %.o 
-	$(CXX) $(CFLAGS) $(INCLUDES) $(SOFLAGS) $< -o $@ 
+	$(CXX) $(CFLAGS) $(INCLUDES) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(BABEL_LIBS) 
 
 %.dylib : %.o 
 	$(CXX) $(CFLAGS) $(INCLUDES) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(LIBS)
 
 clean::
-	@rm -rf *.o *.d *.cc *.dylib *.so *.log *~ ii_files
+	@rm -rf *.o *.d *.cc *.h *.dylib *.so *.log *~ ii_files

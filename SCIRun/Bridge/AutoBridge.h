@@ -29,16 +29,30 @@
 #ifndef SCIRun_Bridge_AutoBridge_h
 #define SCIRun_Bridge_AutoBridge_h
 
+#include <Core/CCA/tools/strauss/strauss.h>
 #include <SCIRun/PortInstance.h>
+#include <set>
 
 namespace SCIRun {
   class AutoBridge {
   public:
-    AutoBridge(/*BuilderService* bsvc*/) {} 
-    virtual ~AutoBridge() {}
-    std::string execute(std::string cFrom, std::string cTo);
+    AutoBridge(); 
+    virtual ~AutoBridge();
+    std::string genBridge(std::string modelFrom, std::string cFrom, std::string modelTo, std::string cTo);
     bool canBridge(PortInstance* pr1, PortInstance* pr2);
   private:
+    ///////
+    //list of bridges that just happened to exist in directory
+    std::set<std::string > oldB;
+
+    //////
+    //runtime cache used to maintain a list of generated bridges 
+    std::set<std::string > runC;
+
+    /////
+    //Compare CRC of existing files found in oldB to the strauss emitted ones
+    //Return true if they match. (Used for caching between different runs)
+    bool isSameFile(std::string name, Strauss* strauss);
   };
 }
 

@@ -32,69 +32,107 @@
 #ifndef strauss_h
 #define strauss_h
 
-#ifdef __sgi
-#define IRIX
-#pragma set woff 1375
-#endif
-#include <xercesc/util/PlatformUtils.hpp>
-#include <xercesc/sax/SAXException.hpp>
-#include <xercesc/sax/SAXParseException.hpp>
-#include <xercesc/parsers/XercesDOMParser.hpp>
-#include <xercesc/dom/DOMNamedNodeMap.hpp>
-#include <xercesc/dom/DOMNodeList.hpp>
-#ifdef __sgi
-#pragma reset woff 1375
-#endif
-
-#include <SCIRun/SCIRunErrorHandler.h>
 #include <fstream>
 #include <vector>
+#include <sstream>
 
 #include <Core/CCA/tools/strauss/c++ruby/rubyeval.h>
 using namespace std;
-class SState;
+
+//CRCState is used a container to emit code into
+//It calculates a crc for all strings written
+struct Leader {
+};
+
+class CRCState : public std::ostringstream {
+ public:
+  CRCState::CRCState() {
+    //Populate the crc table
+    unsigned long poly = 0xEDB88320L;
+    unsigned long entry;
+    int i, j;
+   
+    for(i=0; i<256; i++) {
+      entry = i;
+      for(j=8; j>0; j--) {
+	if(entry & 1)
+	  entry = (entry >> 1) ^ poly;
+	else
+	  entry >>= 1;
+      }
+      crc_table[i] = entry;
+    }
+    //Init crc
+    crc = 0xFFFFFFFF;
+  }
+  CRCState::~CRCState() {}
+
+  std::string push_leader() {
+    string oldleader=leader;
+    leader+="  ";
+    return oldleader;
+  }
+  void pop_leader(const std::string& oldleader) {
+    leader=oldleader;
+  }
+
+  friend std::ostream& operator<<(ostream& out, const Leader&);
+
+  //Calculate CRC of current text
+  //omit specifies a string to skip in calculation 
+  unsigned long calcCRC(std::string& omit)    
+  {
+    string text = this->str();
+    unsigned int oi = text.find(omit);
+    std::cerr << "calcCRC text.size()=" << text.size() << "\n";
+    
+    for(unsigned int i=0;i<text.size();i++) {
+      while((i == oi)&&(oi > 0)) {
+        i += omit.size();
+        oi = text.find(omit,i);
+      } 
+      crc = (((crc)>>8) & 0x00FFFFFF) ^ crc_table[ ((crc)^(int)(text[i])) & 0xFF ];
+    }
+    crc = ((crc)^0xFFFFFFFF);
+    return crc;
+  }
+
+  std::string leader;
+  unsigned long crc_table[256];
+  unsigned long crc;
+};
+
+std::ostream& operator<<(CRCState& out, const Leader&);
+//**** End of CRCState
 
 namespace SCIRun {
   class Strauss {
   public:
-    Strauss(string& plugin, string& portspec, 
-	    string& header, string& impl);
+    Strauss(string plugin, string portspec, 
+	    string header, string implementation);
     ~Strauss();
-    void emitHeader();
-    void emitImpl();
+
+    /////
+    // Emits code into CRCState classes for header and implementation;
+    // Returns nonzero on encountered error
+    int emit();
+
+    /////
+    // If emitted returns a string of the implementation/header
+    unsigned long getImplCRC();
+    unsigned long getHdrCRC();
+
+    /////
+    // Commits emitted data into output files 
+    void commitToFiles();	    
+
   private:
     Strauss();    
-
-    ////////
-    // Various private, read from XML and/or emit methods
-    void emitMethodSignatures(SState& hdr, DOMDocument* doc, string tagname);
-    void emitMethod(SState& out, DOMDocument* doc, string tagname, string objname);
-    void emitPortMethod(SState& out, DOMDocument* doc, string tagname);
-    void emitProvidesPortSpec(SState& hdr, DOMDocument* pSpec);
-    int readXMLAttr(DOMDocument* doc, string tag, string attr);
-    int readXML(DOMDocument* doc, string tag);
-    int readXMLChildNode(DOMDocument* doc, string parent, string child);
-    int rec_readXMLChildNode(DOMNode* cursor, string child);
-
-    ///////
-    // Checks if this is an executable script, if it is it executes the script
-    // and emits its result.
-    void isScriptScratch(std::string line); 
-
-    ///////
-    // Name of bridge component class
-    string bridgeComponent;
-
-    ///////
-    // Xerces XML stuff
-    XercesDOMParser pluginParser;
-    XercesDOMParser portParser;
-    SCIRunErrorHandler handler;
 
     ///////
     // Filenames of output files
     string header;
-    string impl;
+    string implementation;
     string plugin;
     string portSpec;
 
@@ -104,13 +142,21 @@ namespace SCIRun {
     ofstream fImpl;
 
     //////
-    // Scratch pad
-    vector<string> scratch;
- 
-    //////
     // Ruby expression evaluating class   
     RubyEval* ruby; 
 
+    /////
+    // Bridge Component Name (generated here)
+    string bridgeComponent; 
+
+    ////
+    // Output containing classes
+    CRCState hdr;
+    CRCState impl;
+
+    ////
+    // Has the code been generated
+    bool emitted; 
   };
 } //End of SCIRun namespace
 

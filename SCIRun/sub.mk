@@ -50,16 +50,17 @@ PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
 	Dataflow/Network Core/GuiInterface Core/CCA/spec \
 	Core/CCA/PIDL Core/CCA/SSIDL \
 	Core/Exceptions Core/TkExtensions Core/Thread \
-	Core/globus_threads Core/CCA/Comm
+	Core/globus_threads Core/CCA/Comm \
+	Core/CCA/tools/strauss/c++ruby
 else
 PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
 	Dataflow/Network Core/GuiInterface Core/CCA/spec \
 	Core/CCA/PIDL Core/CCA/SSIDL \
 	Core/Exceptions Core/TkExtensions Core/Thread \
-	Core/CCA/Comm
+	Core/CCA/Comm Core/CCA/tools/strauss/c++ruby
 endif
 
-LIBS := $(XML_LIBRARY)
+LIBS := $(XML_LIBRARY) -lruby-static -lcrypt -ldl 
 ifeq ($(HAVE_MPI),yes)
  LIBS := $(LIBS) $(MPI_LIBRARY)
 endif

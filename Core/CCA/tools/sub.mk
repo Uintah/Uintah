@@ -24,6 +24,7 @@ SRCDIR := Core/CCA/tools
 SUBDIRS := \
 	$(SRCDIR)/strauss \
         $(SRCDIR)/sidl \
+	$(SRCDIR)/kwai 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

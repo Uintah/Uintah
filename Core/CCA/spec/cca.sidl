@@ -974,7 +974,10 @@ package cca {
            array<string> getBridgablePortList(in sci.cca.ComponentID c1,
                                        in string port1,
                                        in sci.cca.ComponentID c2);
-           string generateBridge(in string c1, in string c2);
+           string generateBridge(in cca.ComponentID user, 
+				 in string usingPortName, 	
+				 in cca.ComponentID provider, 
+			  	 in string providingPortName);
 
 
 	   int addLoader(in string loaderName, in string login, in string domain, in string path);

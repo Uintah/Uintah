@@ -346,7 +346,7 @@ void NetworkCanvasView::addBridgeConnection(Module *m1,const std::string &portna
   }
 
   //Instantiate bridge component
-  std::string instanceT = bs->generateBridge(m1->cid->getInstanceName(),m2->cid->getInstanceName());
+  std::string instanceT = bs->generateBridge(m1->cid,portname1,m2->cid,portname2);
   if(instanceT==""){
     cerr << "Error: could not properly generate bridge... aborting connection...\n";
     return;
