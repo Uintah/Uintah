@@ -35,9 +35,8 @@ using SCIRun::FieldHandle;
 
 
 
-VolumeRenderer::VolumeRenderer(int id) 
-  : GeomObj( id ),
-    rs_(VolumeRenderer::OVEROP),
+VolumeRenderer::VolumeRenderer() 
+  : rs_(VolumeRenderer::OVEROP),
     slices_(0),
     tex_(0),
     bg_(0),
@@ -53,12 +52,12 @@ VolumeRenderer::VolumeRenderer(int id)
 }
 
 
-VolumeRenderer::VolumeRenderer(int id, GridVolRen* gvr,
+VolumeRenderer::VolumeRenderer(GridVolRen* gvr,
 			       FieldHandle tex,
 			       ColorMapHandle map,
 			       bool fixed,
 			       double min, double max)
-  : GeomObj( id ),
+  :
     rs_(VolumeRenderer::OVEROP),
     slices_(0),
     tex_(tex),
@@ -81,7 +80,7 @@ VolumeRenderer::VolumeRenderer(int id, GridVolRen* gvr,
 }
 
 VolumeRenderer::VolumeRenderer(const VolumeRenderer& copy)
-  : GeomObj( copy.id ),
+  : 
     rs_(copy.rs_),
     slices_(copy.slices_),
     tex_(copy.tex_),

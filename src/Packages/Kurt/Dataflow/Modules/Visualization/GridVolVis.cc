@@ -122,7 +122,7 @@ void GridVolVis::execute(void)
   //AuditAllocator(default_allocator);
   if( !volren ){
     gvr = scinew GridVolRen();
-    volren = scinew VolumeRenderer(0x123456, gvr, tex, cmap,
+    volren = scinew VolumeRenderer( gvr, tex, cmap,
 				(is_fixed_.get() == 1),
 				min_.get(), max_.get());
     if( tex->data_at() == Field::CELL ){

@@ -159,7 +159,7 @@ void SCIRex::execute(void)
   if( !volren_ ){
     cerr<<"min = "<<min_.get()<<" max = "<<max_.get()<<endl;
     volren_ =
-      scinew SCIRexRenderer(0x123456, dpys, compositers_.get(), tex_, cmap,
+      scinew SCIRexRenderer(dpys, compositers_.get(), tex_, cmap,
 			    (is_fixed_.get() == 1),
 			    min_.get(), max_.get());
     //   if( tex_->data_at() == Field::CELL ){

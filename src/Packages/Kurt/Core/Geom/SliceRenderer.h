@@ -37,9 +37,9 @@ class SliceRenderer : public VolumeRenderer
 {
 public:
 
-  SliceRenderer(int id);
+  SliceRenderer();
 
-  SliceRenderer(int id, GridVolRen* gvr, FieldHandle tex,
+  SliceRenderer(GridVolRen* gvr, FieldHandle tex,
 		 ColorMapHandle map, 
 		 bool fixed, double min, double max);
   SliceRenderer(const SliceRenderer&);
