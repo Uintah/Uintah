@@ -1,5 +1,9 @@
 This is the C-SAFE problem solving environment.
 
-Please examine the documentation via ../doc/index.html.  Instructions for
-running "configure" are in ../doc/configure.html if you're anxious to get
-a build going quickly.
+Please examine the documentation via ../doc/index.html.
+
+If you are anxious to build pse and are working on some flavor of unix, the 
+instructions for running "configure" are in ../doc/configure.html.
+
+If you are anxious to build pse and are working on windows NT, the
+instructions for getting started are in ../doc/nt.html
