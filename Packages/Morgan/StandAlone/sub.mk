@@ -2,11 +2,9 @@
 
 include $(SRCTOP_ABS)/scripts/largeso_prologue.mk
 
-SRCDIR := Packages/Morgan
+SRCDIR := Packages/Morgan/StandAlone
 SUBDIRS := \
-	$(SRCDIR)/Core \
-	$(SRCDIR)/Dataflow \
-	$(SRCDIR)/StandAlone \
+	$(SRCDIR)/convert \
 
 include $(SRCTOP_ABS)/scripts/recurse.mk
 
