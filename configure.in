@@ -88,7 +88,6 @@ if test "$davew" = "yes"; then
                 DaveW/Datatypes/Makefile \
                   DaveW/Datatypes/CS684/Makefile \
                   DaveW/Datatypes/General/Makefile \
-                  DaveW/Datatypes/SiRe/Makefile \
 		DaveW/GUI/Makefile \
                 DaveW/Modules/Makefile \
                   DaveW/Modules/CS684/Makefile \
@@ -100,16 +99,12 @@ if test "$davew" = "yes"; then
                   DaveW/Modules/MEG/Makefile \
                   DaveW/Modules/Path/Makefile \
                   DaveW/Modules/Readers/Makefile \
-                  DaveW/Modules/SiRe/Makefile \
                   DaveW/Modules/Tensor/Makefile \
                   DaveW/Modules/Writers/Makefile \
                 DaveW/ThirdParty/Makefile \
                   DaveW/ThirdParty/NumRec/Makefile \
-                  DaveW/ThirdParty/OldLinAlg/Makefile \
-                  DaveW/ThirdParty/Quaternions/Makefile \
-                  DaveW/ThirdParty/RegTools/Makefile \
-                  DaveW/ThirdParty/SparseLib/Makefile \
-                    DaveW/ThirdParty/SparseLib/Leonid/Makefile \
+                  DaveW/ThirdParty/Nrrd/Makefile \
+		  DaveW/ThirdParty/OldLinAlg/Makefile \
                 DaveW/convert/Makefile \
 		"
 fi
