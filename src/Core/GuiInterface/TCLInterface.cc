@@ -133,7 +133,7 @@ void TCLInterface::source_once(const string& filename)
   }
 }
 
-static int do_command(ClientData cd, Tcl_Interp*, int argc, char* argv[])
+static int do_command(ClientData cd, Tcl_Interp*, int argc, TCLCONST char* argv[])
 {
   TCLCommandData* td=(TCLCommandData*)cd;
   GuiArgs args(argc, argv);
@@ -208,7 +208,7 @@ bool
 TCLInterface::get(const std::string& name, std::string& value)
 {
   TCLTask::lock();
-  char* l=Tcl_GetVar(the_interp, ccast_unsafe(name),
+  TCLCONST char* l=Tcl_GetVar(the_interp, ccast_unsafe(name),
 		     TCL_GLOBAL_ONLY);
   if(!l){
     value="";

@@ -43,7 +43,6 @@
 #ifndef SCI_project_GuiVar_h
 #define SCI_project_GuiVar_h 1
 
-#include <Core/share/share.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
@@ -54,7 +53,7 @@
 namespace SCIRun {
   class GuiContext;
 
-  class SCICORESHARE GuiVar {
+  class GuiVar {
   protected:
     GuiContext* ctx;
   public:
@@ -141,7 +140,7 @@ typedef GuiTriple<Vector> GuiVector;
 // SCIRUN_NET_SUBSTITUTE_DATADIR is set it does $SCIRUN_DATA and
 // $SCIRUN_DATASET variable substitution when writing to networks.
 //
-class SCICORESHARE GuiFilename : public GuiString
+class GuiFilename : public GuiString
 {
 public:
   GuiFilename(GuiContext* ctx) : GuiString(ctx)

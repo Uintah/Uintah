@@ -53,7 +53,7 @@ namespace SCIRun {
 
 using namespace std;
 
-class SCICORESHARE SciTCLstrbuff : public GuiVar, public ostringstream{
+class SciTCLstrbuff : public GuiVar, public ostringstream{
   
   // GROUP: private data
   //////////

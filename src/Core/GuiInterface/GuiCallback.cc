@@ -47,7 +47,7 @@
 
 using namespace SCIRun;
 
-GuiArgs::GuiArgs(int argc, char* argv[])
+GuiArgs::GuiArgs(int argc, TCLCONST char* argv[])
 : args_(argc)
 {
     for(int i=0;i<argc;i++)

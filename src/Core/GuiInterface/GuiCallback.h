@@ -43,7 +43,8 @@
 #ifndef SCIRun_Core_GuiInterface_GuiCallback_h
 #define SCIRun_Core_GuiInterface_GuiCallback_h
 
-#include <Core/share/share.h>
+#include <Core/GuiInterface/TCLTask.h> // for TCLCONST
+
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
@@ -56,14 +57,14 @@ namespace SCIRun {
 
   class GuiVar;
 
-  class SCICORESHARE GuiArgs {
+  class GuiArgs {
     vector<string> args_;
   public:
     bool have_error_;
     bool have_result_;
     string string_;
     
-    GuiArgs(int argc, char* argv[]);
+    GuiArgs(int argc, TCLCONST char* argv[]);
     ~GuiArgs();
     int count();
     string operator[](int i);
@@ -78,7 +79,7 @@ namespace SCIRun {
     static string make_list(const vector<string>&);
   };
 
-  class SCICORESHARE GuiCallback {
+  class GuiCallback {
   public:
     GuiCallback();
     virtual ~GuiCallback();
