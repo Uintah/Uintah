@@ -417,13 +417,17 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	  for (int n = 0; n < neighbors.size() 
 		 && neighbors[n]->containsNode(ni[k]); n++) {
 	    const Patch* neighbor = neighbors[n];
-	    l2g_node_num = (d_petscLocalToGlobal)[neighbor][ni[k]];
+	    cout << "John look at line 420 in CompNeoHook.cc -Todd "<<endl;
+	    // I had to comment out the following to get it to compile
+	    //l2g_node_num = (d_petscLocalToGlobal)[neighbor][ni[k]];
 	  } 
 	} else {
-	  l2g_node_num = l2g[ni[k]];
-	  dof.push_back(l2g_node_num);
-	  dof.push_back(l2g_node_num+1);
-	  dof.push_back(l2g_node_num+2);
+	  cout << "John look at line 425 in CompNeoHook.cc -Todd "<<endl;
+	  // I had to comment out the following to get it to compile
+	  //l2g_node_num = l2g[ni[k]];
+	  //dof.push_back(l2g_node_num);
+	  //dof.push_back(l2g_node_num+1);
+	  //dof.push_back(l2g_node_num+2);
 	}  
 
 #ifndef HAVE_PETSC 		
