@@ -99,6 +99,9 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMLabel* lb,
   d_is_rigid=false;
   ps->get("is_rigid", d_is_rigid);
    
+  d_includeFlowWork = true;
+  ps->get("includeFlowWork",d_includeFlowWork);
+
   // Step 3 -- Loop through all of the pieces in this geometry object
   int piece_num = 0;
   for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
