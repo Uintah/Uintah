@@ -59,7 +59,7 @@ public:
   // GROUP: Constructors:
   //////////
   // Constructor
-  Octree(T stored, Octree::nodeType t, const Octree<T> *parent = 0);
+  Octree(T stored, typename Octree::nodeType t, const Octree<T> *parent = 0);
   // GROUP: Destructors
   //////////
   // Destructor
