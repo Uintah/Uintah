@@ -113,20 +113,16 @@ ManageFieldMesh::execute()
     remark("No input matrix connected, sending field as is.");
     result_field = ifieldhandle;
   }
-  else if (!ifieldhandle->mesh()->is_editable())
-  {
-    // Do some checking here for editable meshes.
-    error("Input field is not editable.  Unable to make changes.");
-    return;
-  }
   else
   {
     const TypeDescription *ftd = ifieldhandle->get_type_description();
     CompileInfoHandle ci_insert =
       ManageFieldMeshAlgoInsert::get_compile_info(ftd);
     Handle<ManageFieldMeshAlgoInsert> algo_insert;
-    if (!module_dynamic_compile(ci_insert, algo_insert))
+    if (!DynamicCompilation::compile(ci_insert, algo_insert, false, this))
     {
+      error("Could not compile insertion algorithm.");
+      error("Input field probably not of editable type.");
       return;
     }
 
