@@ -7,7 +7,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Components/Schedulers
 
-SRCS     += $(SRCDIR)/BrainDamagedScheduler.cc \
+SRCS     += $(SRCDIR)/SingleProcessorScheduler.cc \
+	$(SRCDIR)/MPIScheduler.cc \
 	$(SRCDIR)/OnDemandDataWarehouse.cc
 
 PSELIBS := Uintah/Grid Uintah/Interface SCICore/Thread Uintah/Parallel \
@@ -18,6 +19,11 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/06/15 23:14:08  sparker
+# Cleaned up scheduler code
+# Renamed BrainDamagedScheduler to SingleProcessorScheduler
+# Created MPIScheduler to (eventually) do the MPI work
+#
 # Revision 1.6  2000/06/15 21:57:12  sparker
 # Added multi-patch support (bugzilla #107)
 # Changed interface to datawarehouse for particle data

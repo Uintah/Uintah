@@ -54,10 +54,6 @@ WARNING
        
        //////////
        // Insert Documentation Here:
-       virtual void addTarget(const VarLabel*) = 0;
-       
-       //////////
-       // Insert Documentation Here:
        virtual void addTask(Task* t) = 0;
        
        //////////
@@ -73,6 +69,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.10  2000/06/15 23:14:10  sparker
+// Cleaned up scheduler code
+// Renamed BrainDamagedScheduler to SingleProcessorScheduler
+// Created MPIScheduler to (eventually) do the MPI work
+//
 // Revision 1.9  2000/05/11 20:10:23  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //
