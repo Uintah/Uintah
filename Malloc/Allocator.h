@@ -37,6 +37,10 @@ void DumpAllocator(Allocator*);
 
 void* operator new(size_t, Allocator*, char*);
 
+#ifdef __GNUG__
+#define scinew new
+#else
 #define scinew new(default_allocator, __FILE__)
+#endif
 
 #endif

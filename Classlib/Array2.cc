@@ -11,6 +11,7 @@
  */
 
 #include <Classlib/Array2.h>
+#include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Malloc/Allocator.h>
 
@@ -114,3 +115,8 @@ void Pio(Piostream& stream, Array2<T>*& data) {
     Pio(stream, *data);
 }
 
+template<class T>
+Array2<T>& Array2<T>::operator=(const Array2<T>&)
+{
+    NOT_FINISHED("Array2::operator=");
+}

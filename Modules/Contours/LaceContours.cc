@@ -87,7 +87,9 @@ void LaceContours::lace_contours(const ContourSetHandle& contour,
     surf->name=contour->name;
     surf->conductivity=contour->conductivity;
     Array1<int> row;	
-    for (int i=0, curr=0; i<contour->contours.size(); i++) {
+    int i;
+    int curr;
+    for (i=curr=0; i<contour->contours.size(); i++) {
 	row.add(curr);	
 	curr+=contour->contours[i].size();
 	for (int j=0; j<contour->contours[i].size(); j++) {

@@ -20,26 +20,26 @@
 #include <iostream.h>
 #include <strstream.h>
 
-Port::Port(Module* module, const clString& typename,
+Port::Port(Module* module, const clString& type_name,
 	   const clString& portname, const clString& colorname,
 	   int protocols)
-: typename(typename), portname(portname), colorname(colorname),
+: type_name(type_name), portname(portname), colorname(colorname),
   protocols(protocols), u_proto(0), module(module), which_port(-1),
   portstate(Off)
 {
 }
 
-IPort::IPort(Module* module, const clString& typename,
+IPort::IPort(Module* module, const clString& type_name,
 	     const clString& portname, const clString& colorname,
 	     int protocols)
-: Port(module, typename, portname, colorname, protocols)
+: Port(module, type_name, portname, colorname, protocols)
 {
 }
 
-OPort::OPort(Module* module, const clString& typename,
+OPort::OPort(Module* module, const clString& type_name,
 	     const clString& portname, const clString& colorname,
 	     int protocols)
-: Port(module, typename, portname, colorname, protocols)
+: Port(module, type_name, portname, colorname, protocols)
 {
 }
 
@@ -158,7 +158,7 @@ void OPort::turn_off()
 
 clString Port::get_typename()
 {
-    return typename;
+    return type_name;
 }
 
 clString Port::get_portname()

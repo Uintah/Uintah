@@ -113,3 +113,10 @@ void GeomTube::intersect(const Ray&, Material*, Hit&)
 {
     NOT_FINISHED("GeomTube::intersect");
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+template class Array1<double>;
+
+#endif

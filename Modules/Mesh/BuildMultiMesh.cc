@@ -260,6 +260,7 @@ void BuildMultiMesh::partial_execute() {
 	double max=-10000000;
 	double total=0;
 	// compute new node weights
+	int i;
 	for (i=0; i<numNodes; i++) {
 //	    rand_list[i]=.5;
 	    rand_list[i]=rng();
@@ -326,7 +327,9 @@ void BuildMultiMesh::partial_execute() {
 
 	// add nodes to level_sets
 	for (i=0; i<numNodes; i++) {
-	    for (int done=0, lvl=0; !done && lvl<last_levels-1; lvl++) {
+	    int done;
+	    int lvl;
+	    for (done=lvl=0; !done && lvl<last_levels-1; lvl++) {
 		if (rand_list[i] > weightings[i]*recip_avg*cut_offs[lvl]) {
 		    level_sets[lvl].add(i);
 		    done=1;
@@ -396,7 +399,8 @@ void BuildMultiMesh::execute()
 
     BBox bbox;
     int nn=mesh_handle->nodes.size();
-    for(int i=0;i<nn;i++)
+    int i;
+    for(i=0;i<nn;i++)
         bbox.extend(mesh_handle->nodes[i]->p);
 
     double epsilon=1.e-4;

@@ -214,7 +214,8 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    return;
 	}
 	Array1<clString> res;
-	for(int i=0;i<mod->niports();i++){
+	int i;
+	for(i=0;i<mod->niports();i++){
 	    Port* p=mod->iport(i);
 	    for(int c=0;c<p->nconnections();c++){
 		Connection* conn=p->connection(c);

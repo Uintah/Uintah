@@ -104,7 +104,8 @@ int Salmon::process_event(int block)
 	{
 	    SalmonMessage* rmsg=(SalmonMessage*)msg;
 	    Roe* r=0;
-	    for(int i=0;i<roe.size();i++){
+	    int i;
+	    for(i=0;i<roe.size();i++){
 		r=roe[i];
 		if(r->id == rmsg->rid)
 		    break;

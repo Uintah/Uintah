@@ -100,3 +100,11 @@ Vector ScalarFieldUG::gradient(const Point& p)
     mesh->get_grad(e, p, g1, g2, g3, g4);
     return g1*data[e->n[0]]+g2*data[e->n[1]]+g3*data[e->n[2]]+g4*data[e->n[3]];
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+template class Array1<double>;
+template void Pio(Piostream&, Array1<double>&);
+
+#endif

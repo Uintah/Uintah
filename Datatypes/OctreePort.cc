@@ -15,3 +15,15 @@
 
 clString SimpleIPort<OctreeTopHandle>::port_type("Octree");
 clString SimpleIPort<OctreeTopHandle>::port_color("blue");
+
+
+#ifdef __GNUG__
+
+#include <Datatypes/SimplePort.cc>
+#include <Multitask/Mailbox.cc>
+template class SimpleIPort<OctreeTopHandle>;
+template class SimpleOPort<OctreeTopHandle>;
+template class SimplePortComm<OctreeTopHandle>;
+template class Mailbox<SimplePortComm<OctreeTopHandle>*>;
+
+#endif

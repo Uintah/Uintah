@@ -91,6 +91,4 @@ public:
     int nitems() const;
 };
 
-#include <Multitask/Mailbox.cc>
-
 #endif /* SCI_Multitask_ITC_h */

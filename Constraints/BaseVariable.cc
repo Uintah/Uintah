@@ -214,3 +214,11 @@ SchemeString( const Scheme s )
    }
 }
 
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+
+template class Array1<VPriority>;
+template class Array1<BaseConstraint*>;
+
+#endif

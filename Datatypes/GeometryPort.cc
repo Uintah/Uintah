@@ -227,3 +227,10 @@ GeomReply::GeomReply(int portid, int* busy_bit)
 : portid(portid), busy_bit(busy_bit)
 {
 }
+
+#ifdef __GNUG__
+
+#include <Multitask/Mailbox.cc>
+template class Mailbox<GeomReply>;
+
+#endif

@@ -225,7 +225,8 @@ void X11::redraw(Salmon* salmon, Roe* roe)
 	AVLTree<double, GeomObj*> objs;
 	double zmin=1000;
 	double zmax=-1000;
-	for(int i=0;i<free.size();i++){
+	int i;
+	for(i=0;i<free.size();i++){
 	    GeomObj* obj=free[i];
 	    objs.insert(-obj->depth(drawinfo), obj);
 	    zmin=Min(zmin, -obj->depth(drawinfo));

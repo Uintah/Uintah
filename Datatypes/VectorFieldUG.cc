@@ -74,3 +74,11 @@ void VectorFieldUG::io(Piostream& stream)
     Pio(stream, mesh);
     Pio(stream, data);
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+template class Array1<Vector>;
+template void Pio(Piostream&, Array1<Vector>&);
+
+#endif

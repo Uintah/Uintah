@@ -15,6 +15,7 @@
 #include <Classlib/NotFinished.h>
 #include <Geometry/BBox.h>
 #include <Geom/Line.h>
+#include <Malloc/Allocator.h>
 
 GeomPolyline::GeomPolyline()
 {

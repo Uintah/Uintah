@@ -256,7 +256,8 @@ void Transform::perspective(const Point& eyep, const Point& lookat,
 void Transform::invmat(double m[4][4])
 {
     double imat[4][4];
-    for(int i=0;i<4;i++){
+    int i;
+    for(i=0;i<4;i++){
         for(int j=0;j<4;j++){
             imat[i][j]=0.0;
         }
@@ -267,7 +268,8 @@ void Transform::invmat(double m[4][4])
     for(i=0;i<4;i++){
         double max=Abs(m[i][i]);
         int row=i;
-        for(int j=i+i;j<4;j++){
+	int j;
+        for(j=i+i;j<4;j++){
             if(Abs(m[j][i]) > max){
                 max=Abs(m[j][i]);
                 row=j;

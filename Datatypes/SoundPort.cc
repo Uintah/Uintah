@@ -228,3 +228,11 @@ void SoundOPort::put_sample(double sl, double sr)
     put_sample(sl);
     put_sample(sr);
 }
+
+#ifdef __GNUG__
+
+#include <Multitask/Mailbox.cc>
+
+template class Mailbox<SoundComm*>;
+
+#endif

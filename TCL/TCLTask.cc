@@ -12,6 +12,7 @@
  */
 
 #include <Multitask/ITC.h>
+#include <Malloc/Allocator.h>
 #include <TCL/TCLTask.h>
 #include <TCL/TCL.h>
 

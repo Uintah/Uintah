@@ -9,7 +9,8 @@ main()
     for(int i=0;i<500;i++){
 	int n=rand()%1000+1;
 	void* p[1000];
-	for(int j=0;j<n;j++){
+	int j;
+	for(j=0;j<n;j++){
 	    int s=rand()%504;
 	    p[j]=malloc(s);
 	    bytes+=s;

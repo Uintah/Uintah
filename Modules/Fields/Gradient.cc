@@ -77,7 +77,8 @@ void Gradient::execute()
     Mesh* mesh=sfield->mesh.get_rep();
     int nnodes=mesh->nodes.size();
     Array1<Vector>& gradients=vfield->data;
-    for(int i=0;i<nnodes;i++)
+    int i;
+    for(i=0;i<nnodes;i++)
 	gradients[i]=Vector(0,0,0);
     int nelems=mesh->elems.size();
     for(i=0;i<nelems;i++){

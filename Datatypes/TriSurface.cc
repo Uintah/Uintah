@@ -259,7 +259,9 @@ double TriSurface::distance(const Point &p,Array1<int> &res, Point *pp) {
 				       candid[index+2]);
 		if (elem) {
 		    for (int a=0; a<elem->size(); a++) {
-			for (int duplicate=0, b=0; b<tri.size(); b++)
+			int duplicate;
+			int b;
+			for (duplicate=0, b=0; b<tri.size(); b++)
 			    if (tri[b]==(*elem)[a]) duplicate=1;
 			if (!duplicate) tri.add((*elem)[a]);
 		    }
@@ -373,7 +375,7 @@ double TriSurface::distance(const Point &p, int el, int *type, Point *pp) {
         beta=u0/u2;
         if ((beta >= -0.0001) && (beta <= 1.0001)) {
             alpha = (v0-beta*v2)/v1;
-            if (inter=((alpha>=-0.0001) && ((alpha+beta)<=1.0001))) {
+            if ((inter=((alpha>=-0.0001) && ((alpha+beta)<=1.0001)))) {
 		if (pp!=0) {
 		    (*pp)=Pp;
 		}
@@ -383,7 +385,7 @@ double TriSurface::distance(const Point &p, int el, int *type, Point *pp) {
         beta=(v0*u1-u0*v1)/(v2*u1-u2*v1);
         if ((beta >= -0.000001)&&(beta<=1.0001)) {            
             alpha=(u0-beta*u2)/u1;
-            if (inter=((alpha>=-0.0001) && ((alpha+beta)<=1.0001))) {
+            if ((inter=((alpha>=-0.0001) && ((alpha+beta)<=1.0001)))) {
 		if (pp!=0) {
 		    (*pp)=Pp;
 		}
@@ -413,7 +415,8 @@ double TriSurface::distance(const Point &p, int el, int *type, Point *pp) {
     mid[0]=(V[0][i[1]]+V[1][i[1]]+V[2][i[1]])/3;
     mid[1]=(V[0][i[2]]+V[1][i[2]]+V[2][i[2]])/3;
 
-    for (int X=0; X<3; X++) {
+    int X;
+    for (X=0; X<3; X++) {
 	// handle vertical lines
 	if (V[(X+2)%3][i[1]]==V[(X+1)%3][i[1]]) { 		// x=const.
 	    B[X][2]=0;
@@ -570,3 +573,15 @@ void TriSurface::get_surfpoints(Array1<Point>&)
 {
     NOT_FINISHED("TriSurface::get_surfpoints");
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+template class Array1<TSElement*>;
+template void Pio(Piostream&, Array1<TSElement*>&);
+
+#include <Classlib/HashTable.cc>
+template class HashTable<int, int>;
+template class HashKey<int, int>;
+
+#endif

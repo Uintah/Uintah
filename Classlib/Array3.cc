@@ -13,6 +13,7 @@
 #include <Classlib/Array3.h>
 #include <Classlib/String.h>
 #include <Malloc/Allocator.h>
+#include <Classlib/NotFinished.h>
 
 #ifdef __GNUG__
 #pragma interface
@@ -128,3 +129,8 @@ void Pio(Piostream& stream, Array3<T>*& data) {
     Pio(stream, *data);
 }
 
+template<class T>
+Array3<T>& Array3<T>::operator=(const Array3<T>&)
+{
+    NOT_FINISHED("Array2::operator=");
+}

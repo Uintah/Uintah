@@ -124,7 +124,8 @@ Histogram::FillBuckets()
    double range(double(numbuckets-1)/(maxval-minval));
    
    initfreqs();
-   for (int i=0; i<data.size(); i++) {
+   int i;
+   for (i=0; i<data.size(); i++) {
       freqs[int(0.5+(data[i]-minval)*range)]++;
    }
    
@@ -260,5 +261,13 @@ Histogram::SetNumBuckets( const int nb )
    freqs.resize(numbuckets=nb);
    FillBuckets();
 }
-
    
+#ifdef __GNUG__
+// Template instantiations
+#include <Classlib/Array1.cc>
+
+template class Array1<double>;
+template class Array1<int>;
+template class Array1<clString>;
+
+#endif

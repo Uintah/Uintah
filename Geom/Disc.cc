@@ -18,6 +18,7 @@
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
 #include <Geometry/Ray.h>
+#include <Malloc/Allocator.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 

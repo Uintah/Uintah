@@ -129,7 +129,8 @@ void Delaunay::execute()
 	aport=0;
     Array1<int> map(nn);
     MusilRNG rng;
-    for(int node=0;node<nn;node++)
+    int node;
+    for(node=0;node<nn;node++)
 	map[node]=node;
 #if 0
     for(node=0;node<nn;node++){

@@ -79,7 +79,8 @@ void SoundMixer::execute()
     // an error...
     int ni=portinfo.size()-1;
     double rate=portinfo[0]->isound->sample_rate();
-    for(int i=1;i<ni;i++){
+    int i;
+    for(i=1;i<ni;i++){
 	if(portinfo[i]->isound->sample_rate() != rate){
 	    error("All inputs must have the same sampling rate");
 	    return;

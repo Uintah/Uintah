@@ -15,6 +15,8 @@
 #ifndef SCI_Classlib_HashTable_h
 #define SCI_Classlib_HashTable_h 1
 
+#include <Classlib/Assert.h>
+
 #ifdef __GNUG__
 #pragma interface
 #endif
@@ -24,17 +26,13 @@ template<class Key, class Data> class HashTableIter;
 
 // Provide default hash functions for ints, longs and void*'s
 
-// A bunch of nasty hacks to get around bugs in g++ 2.5.7
+template<class Key> inline int Hash(const Key& k, int hash_size)
+{
+    int h=k.hash(hash_size);
+    ASSERTRANGE(h, 0, hash_size);
+    return h;
+}
 
-#if !defined(__GNUG__)
-template<class Key> int Hash(const Key&, int);
-#endif
-
-#if defined(__GNUG__) && defined(HASH_OBJECTS)
-#define Hash(Key, hash_size) Key.hash(hash_size)
-#endif
-
-#if !defined(__GNUG__) || defined(HASH_OTHER)
 inline int Hash(const int& k, int hash_size)
 {
     return (k^(3*hash_size+1))%hash_size;
@@ -51,7 +49,6 @@ inline int Hash(const HashVoid& k, int hash_size)
 {
     return (int)(((long)k^(3*hash_size+1))%hash_size);
 }
-#endif
 
 // The hashtable itself
 template<class Key, class Data> class HashTable {

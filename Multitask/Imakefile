@@ -42,7 +42,7 @@ SRCS = ITC.cc Task.cc TASK_IMPLEMENTATION_CC
 LIBNAME = Multitask
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lMalloc -lC -lc
+SO_LDFLAGS = -L$(TOP)/lib -lMalloc SCI_CCLibs
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

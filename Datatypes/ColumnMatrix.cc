@@ -90,3 +90,10 @@ void ColumnMatrix::io(Piostream&)
     NOT_FINISHED("Matrix::io");
 }
 
+#ifdef __GNUG__
+
+#include <Classlib/LockingHandle.cc>
+
+template class LockingHandle<ColumnMatrix>;
+
+#endif

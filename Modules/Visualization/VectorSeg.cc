@@ -123,7 +123,9 @@ Module* VectorSeg::clone(int deep)
 void VectorSeg::execute()
 {
     Array1<ScalarFieldHandle> fields(ifields.size()-1);
-    for (int flag=0, i=0; i<ifields.size()-1; i++) {
+    int flag;
+    int i;
+    for (flag=0, i=0; i<ifields.size()-1; i++) {
 	if (!ifields[i]->get(fields[i]))
 	    flag=1;
     }
@@ -200,7 +202,8 @@ void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &ifields,
     int fld_changed;
     int min_changed;
     int max_changed;
-    for (int f=0, have_any=0; f<numFields.get(); f++) {
+    int have_any=0;
+    for (int f=0; f<numFields.get(); f++) {
 	int fs=fld_sel[f]->get();
 	fld_changed = (fs!=last_fld_sel[f]);
 	last_fld_sel[f]=fs;
@@ -222,14 +225,14 @@ void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &ifields,
 	ofieldRG->grid.initialize(0);
     } else if (isoChanged) {
 	int first_active_field=1;
-	for (f=0; f<numFields.get(); f++) {
+	for (int f=0; f<numFields.get(); f++) {
 	    if (fld_sel[f]->get()) {
 		ScalarFieldRG* rg_in=ifields[f]->getRG();
 		for (int x=0; x<nx; x++) {
 		    for (int y=0; y<ny; y++) {
 			for (int z=0; z<nz; z++) {
-			    int inVal=rg_in->grid(x,y,z);
-			    int outVal=ofieldRG->grid(x,y,z);
+			    int inVal=(int)rg_in->grid(x,y,z);
+			    int outVal=(int)ofieldRG->grid(x,y,z);
 			    if (first_active_field) {
 				outVal |= isoChanged;
 			    }
@@ -252,3 +255,18 @@ void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &ifields,
     }
     ofieldRG->grid(0,0,0)=isoChanged;
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+template class Array1<ScalarFieldIPort*>;
+template class Array1<ScalarFieldHandle>;
+
+#include <Classlib/Array2.cc>
+template class Array2<int>;
+template class Array2<TCLint*>;
+
+#include <Classlib/Array3.cc>
+template class Array3<double>;
+
+#endif

@@ -161,16 +161,6 @@ HashKey<Key, Data>::HashKey(const Key& k, const Data& d, HashKey<Key, Data>* n)
     
 }
 
-#if !defined(__GNUG__) 
-template<class Key>
-int Hash(const Key& k, int hash_size)
-{
-    int h=k.hash(hash_size);
-    ASSERTRANGE(h, 0, hash_size);
-    return h;
-}
-#endif
-
 template<class Key, class Data>
 HashTableIter<Key, Data>::HashTableIter(HashTable<Key, Data>* hash_table)
 : hash_table(hash_table)
@@ -249,3 +239,4 @@ HashKey<Key, Data>::HashKey(const HashKey<Key, Data>& copy, int deep)
   next((deep && copy.next)?scinew HashKey<Key, Data>(*copy.next, 1):0)
 {
 }
+

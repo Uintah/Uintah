@@ -108,3 +108,11 @@ void GeomArrows::intersect(const Ray&, Material*, Hit&)
 {
     NOT_FINISHED("GeomArrows::intersect");
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+template class Array1<Point>;
+template class Array1<Vector>;
+
+#endif

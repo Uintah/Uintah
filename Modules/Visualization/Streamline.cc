@@ -780,7 +780,8 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
 
 	// Advance the tracers
 	ninside=0;
-	for(int i=0;i<tracers.size();i++)
+	int i;
+	for(i=0;i<tracers.size();i++)
 	    ninside+=tracers[i]->advance(field, stepsize, skip);
 
 	// Draw new points...
@@ -1176,7 +1177,7 @@ void SLSourceInfo::pick_source(const clString& sname,
 	return;
     }
     if(newsource != source){
-	for(i=0;i<sources.size();i++)
+	for(int i=0;i<sources.size();i++)
 	    sources[i]->widget->SetState(sources[i] == newsource);
 	if(source){
 	    Point olds(source->widget->ReferencePoint());
@@ -1207,3 +1208,15 @@ void SLSourceInfo::pick_source(const clString& sname,
 	    sources[i]->find(cen, axis, scale);
     }
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+
+template class Array1<SLSource*>;
+template class Array1<SLTracer*>;
+template class Array1<GeomPolyline*>;
+template class Array1<GeomTube*>;
+template class Array1<GeomTriStrip*>;
+
+#endif

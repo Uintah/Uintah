@@ -14,7 +14,7 @@
 #include <Geom/HeadLight.h>
 #include <Geom/GeomRaytracer.h>
 #include <Geom/View.h>
-#include <Modules/Salmon/Raytracer.h>
+#include <Classlib/NotFinished.h>
 
 HeadLight::HeadLight(const clString& name, const Color& c)
 : Light(name), c(c)
@@ -41,6 +41,8 @@ GeomObj* HeadLight::geom()
 void HeadLight::lintens(const OcclusionData& od, const Point& p,
 			Color& light, Vector& light_dir)
 {
+    NOT_FINISHED("HeadLight::lintens");
+#if 0
     if(od.level == 0){
 	// No need to do intersection test - we won't hit anything.
 	light=c;
@@ -52,4 +54,5 @@ void HeadLight::lintens(const OcclusionData& od, const Point& p,
 	double atten=od.raytracer->light_ray(p, od.view->eyep(), light_dir, light_dist);
 	light=c*atten;
     }
+#endif
 }

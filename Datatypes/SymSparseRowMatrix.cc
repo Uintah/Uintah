@@ -17,7 +17,8 @@ SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
     a=scinew double[nnz];
     columns=scinew int[nnz];
     rows=scinew int[nnz];
-    for(int i=0;i<in_rows.size();i++){
+    int i;
+    for(i=0;i<in_rows.size();i++){
 	rows[i]=in_rows[i];
     }
     for(i=0;i<in_cols.size();i++){

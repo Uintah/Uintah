@@ -6,7 +6,14 @@
 #ifdef SCI_OPENGL
 OPENGLOBJS = OpenGL.o
 OPENGLSRCS = OpenGL.cc
+
+#ifdef SCI_MESA
+OPENGLINCS = -I$(TOP)/Mesa/include
+OPENGLLIBS = -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
+#else
+OPENGLINCS =
 OPENGLLIBS = -lGLU -lGL -lXext -lX11
+#endif
 #else
 OPENGLOBJS =
 OPENGLSRCS = 
@@ -17,6 +24,7 @@ OBJS = Postscript.o  Raytracer.o  Salmon.o  Renderer.o  Roe.o  X11.o  \
 SRCS = Postscript.cc Raytracer.cc Salmon.cc Renderer.cc Roe.cc X11.cc \
 	$(OPENGLSRCS)
 
+LOCALINCLUDES = $(OPENGLINCS)
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lDevices -lGeom \
 	-lGeometry -lTCL -lClasslib $(OPENGLLIBS)

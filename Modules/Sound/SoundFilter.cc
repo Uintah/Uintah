@@ -112,7 +112,8 @@ void SoundFilter::execute()
     Complex* root=new Complex[N];
     double major_axis=0.5*(Pow(alpha, 1./N)-Pow(alpha, -1./N));
     double minor_axis=0.5*(Pow(alpha, 1./N)+Pow(alpha, -1./N));
-    for(int i=0;i<N;i++){
+    int i;
+    for(i=0;i<N;i++){
 	double theta=(i-0.5)*PI/N;
 	root[i]=Complex(minor_axis*Sin(theta), major_axis*Cos(theta));
 	cerr << "root[i]=(" << root[i].re() << "," << root[i].im() << ")" << endl;
@@ -175,7 +176,8 @@ void SoundFilter::execute()
 	Complex E=Exp(Q[i]*T);
 	cerr << "E[" << i << "]=" << E << endl;
 
-	for(int j=fsize-1;j>=1;j--){
+	int j;
+	for(j=fsize-1;j>=1;j--){
 	    top[j]=top[j]-E*top[j-1];
 	}
 	// Add old denominator*Bk to numerator

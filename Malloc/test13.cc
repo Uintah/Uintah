@@ -10,7 +10,8 @@ main()
     for(int i=0;i<50;i++){
 	int n=rand()%10+1;
 	void* p[10];
-	for(int j=0;j<n;j++){
+	int j;
+	for(j=0;j<n;j++){
 	    int s=(rand()|(rand()<<15))%(2*1024*1024);
 	    p[j]=malloc(s);
 	    bytes+=s;

@@ -85,7 +85,8 @@ void TetraWriter::execute()
     ofstream outfile(str2);
 
     outfile << handle -> nodes.size() << endl;
-    for (int i = 0; i < handle -> nodes.size(); i++)
+    int i;
+    for (i = 0; i < handle -> nodes.size(); i++)
     {
 	outfile << handle -> nodes[i] -> p.x() << " " <<
 	           handle -> nodes[i] -> p.y() << " " <<

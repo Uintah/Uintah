@@ -34,7 +34,7 @@ SRCS = VarCore.cc \
 LIBNAME = Constraints
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lGeometry -lClasslib -lMalloc -C -lc -lm
+SO_LDFLAGS = -L$(TOP)/lib -lGeometry -lClasslib -lMalloc SCI_CCLibs -lm
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

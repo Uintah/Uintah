@@ -38,7 +38,7 @@ static clString prefix()
     static clString pf;
     if(!haveit){
 	char* p;
-	if(p=getenv("SCI_WORK")){
+	if((p=getenv("SCI_WORK"))){
 	    pf=clString(p);
 	} else {
 	    cerr << "Error: SCI_WORK variable not set!\n";
@@ -308,3 +308,11 @@ void TCL::set_tclvar(const clString& base, const clString& name,
     Tcl_SetVar(the_interp, n(), value(), TCL_GLOBAL_ONLY);
     TCLTask::unlock();
 }
+
+
+#ifdef __GNUG__
+// Template instantiations
+#include <Classlib/Array1.cc>
+template class Array1<TCLvar*>;
+
+#endif

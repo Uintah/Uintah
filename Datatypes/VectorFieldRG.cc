@@ -135,3 +135,12 @@ VectorField* VectorFieldRG::clone()
 {
     return scinew VectorFieldRG(*this);
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array3.cc>
+
+template class Array3<Vector>;
+template void Pio(Piostream&, Array3<Vector>&);
+
+#endif

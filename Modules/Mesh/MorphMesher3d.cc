@@ -141,7 +141,9 @@ void MorphMesher3d::connection(ConnectionMode mode, int which_port,
 void MorphMesher3d::execute()
 {
     Array1<SurfaceHandle> surfs(isurfaces.size()-1);
-    for (int flag=0, i=0; i<isurfaces.size()-1; i++)
+    int flag;
+    int i;
+    for (flag=i=0; i<isurfaces.size()-1; i++)
 	if (!isurfaces[i]->get(surfs[i]))
 	    flag=1;
     if (flag) return;
@@ -195,7 +197,8 @@ void MorphMesher3d::find_a_crossing(Point *s, TriSurface *outer,
 
 int MorphMesher3d::iso_cube_ext(Point *ov,double* oval,TriSurface*surf){
     int mask=0;
-    for(int idx=1;idx<=8;idx++){
+    int idx;
+    for(idx=1;idx<=8;idx++){
 	if(oval[idx]<0)
 	    mask|=1<<(idx-1);
     }
@@ -434,7 +437,8 @@ void count_grid(const Grid &grid, int tris) {
     int total=0;
     Point min(grid.get_min());
     Array1<int> count(400);
-    for (int i=0; i<400; i++) {
+    int i;
+    for (i=0; i<400; i++) {
 	count[i]=0;
     }
     for (int a=0; a<grid.dim1(); a++) {
@@ -486,7 +490,8 @@ void MorphMesher3d::mesh_mult_surfs(const Array1<SurfaceHandle> &surfs,
 				 (rand()%100)/(-100.)*gr_sp),
 			  gr_sp);
 
-    for (int i=0; i<outer->points.size(); i++) {
+    int i;
+    for (i=0; i<outer->points.size(); i++) {
 	bb.extend(outer->points[i]);
     }
     double radius=(bb.max()-bb.min()).length()/2;
@@ -716,7 +721,8 @@ void MorphMesher3d::mesh_single_surf(const Array1<SurfaceHandle> &surfs,
     TriSurface* ts=surfs[0]->getTriSurface();
     BBox bb;
     Point mid;
-    for (int i=0; i<ts->points.size(); i++) {
+    int i;
+    for (i=0; i<ts->points.size(); i++) {
 	mid=Point(0,0,0)+(ts->points[i]-(-mid));
 	bb.extend(ts->points[i]);
     }
@@ -905,7 +911,8 @@ void MorphMesher3d::lace_surfaces(const SurfaceHandle &outHand, TriSurface* in,
     }
     mesh->cond_tensors.add(*cond);
 
-    for (int i=0; i<out->points.size(); i++)
+    int i;
+    for (i=0; i<out->points.size(); i++)
 	mesh->nodes.add(NodeHandle(new Node(out->points[i])));
 
     for (i=0; i<out->elements.size(); i++) {
@@ -949,7 +956,8 @@ void MorphMesher3d::lace_surfaces(TriSurface *out, TriSurface *in, Mesh* mesh){
     in_elem_base=mesh->elems.size();
 
     // first add all of the new points and triangles from the inner surface
-    for (int i=0; i<in->points.size(); i++)
+    int i;
+    for (i=0; i<in->points.size(); i++)
 	mesh->nodes.add(NodeHandle(new Node(in->points[i])));
     for (i=0; i<in->elements.size(); i++) {
 	mesh->elems.add(new Element(mesh, in->elements[i]->i1+in_node_base,

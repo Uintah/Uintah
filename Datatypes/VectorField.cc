@@ -74,3 +74,10 @@ void VectorField::io(Piostream& stream)
     }
     stream.end_class();
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/LockingHandle.cc>
+template class LockingHandle<VectorField>;
+
+#endif

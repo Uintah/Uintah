@@ -366,7 +366,8 @@ double Octree::set_and_return_max_scalar() {
 	return max_sc;
     } else {
 	double max_value;
-	for (int i=0, have_value=0; i<2; i++) {
+	int have_value=0;
+	for (int i=0; i<2; i++) {
 	    for (int j=0; j<2; j++) {
 		for (int k=0; k<2; k++) {
 		    Octree *kid = child[i][j][k];
@@ -403,7 +404,8 @@ double Octree::set_and_return_min_scalar() {
 	return min_sc;
     } else {
 	double min_value;
-	for (int i=0, have_value=0; i<2; i++) {
+	int have_value=0;
+	for (int i=0; i<2; i++) {
 	    for (int j=0; j<2; j++) {
 		for (int k=0; k<2; k++) {
 		    Octree *kid = child[i][j][k];
@@ -441,7 +443,8 @@ double Octree::set_and_return_avg_scalar() {
 	return avg_sc;
     } else {
 	double avg_value=0;
-	for (int i=0, hits=0; i<2; i++) {
+	int hits=0;
+	for (int i=0; i<2; i++) {
 	    for (int j=0; j<2; j++) {
 		for (int k=0; k<2; k++) {
 		    Octree *kid = child[i][j][k];
@@ -478,7 +481,8 @@ Vector Octree::set_and_return_avg_vector() {
 	return avg_vec;
     } else {
 	Vector avrg(0,0,0);
-	for (int i=0, hits=0; i<2; i++) {
+	int hits=0;
+	for (int i=0; i<2; i++) {
 	    for (int j=0; j<2; j++) {
 		for (int k=0; k<2; k++) {
 		    Octree *kid = child[i][j][k];
@@ -555,7 +559,8 @@ void Octree::print_tree(int level) {
     if (level==0) {
 	cerr <<"Printing Octree...\n\n";
     }
-    for (int i=0; i<level; i++) {
+    int i;
+    for (i=0; i<level; i++) {
 	cerr << "  ";
     }
     cerr << "bits:"<<bits<<"  nx:"<<nx<<"  ny:"<<ny<<"  nz:"<<nz;
@@ -700,7 +705,9 @@ void Octree::push_all_levels() {
 
 void Octree::pop_all_levels() {
     if (leaf || last_leaf) return;
-    for (int parent=0, i=0; i<2; i++) {
+    int parent;
+    int i;
+    for (parent=i=0; i<2; i++) {
 	    for (int j=0; j<2; j++) {
 		for (int k=0; k<2; k++) {
 		    Octree *kid = child[i][j][k];
@@ -1038,3 +1045,9 @@ void Pio(Piostream& stream, Octree*& o)
     }
     stream.end_cheap_delim();
 }
+
+#ifdef __GNUG__
+#include <Classlib/LockingHandle.cc>
+template class LockingHandle<OctreeTop>;
+
+#endif

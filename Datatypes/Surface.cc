@@ -64,3 +64,10 @@ TriSurface* Surface::getTriSurface()
     else
 	return 0;
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/LockingHandle.cc>
+template class LockingHandle<Surface>;
+
+#endif

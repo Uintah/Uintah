@@ -99,6 +99,62 @@ inline void Allocator::unlock()
 }
 
 #endif
+#ifdef __linux
+
+extern inline char tas(char* m)
+{
+    char res;
+
+    __asm__("xchgb %0,%1":"=q" (res),"=m" (*m):"0" (0x1));
+    return res;
+}
+
+void Allocator::initlock()
+{
+    the_lock=0;
+}
+
+
+inline void Allocator::lock()
+{
+    // Simple try first...
+    if(tas((char*)&the_lock) != 0)
+       longlock();
+}
+
+static void (*sleeper)();
+
+void Allocator::longlock()
+{
+    int rt=100000;
+    nlonglocks++;
+    while(rt){
+	// Try the lock...
+	for(int i=0;i<10;i++){
+	    if(tas((char*)&the_lock) == 0)
+		return;
+	}
+	// Sleep...
+	if(sleeper)
+	    (*sleeper)();
+	nnaps++;
+
+	rt--;
+    }
+    AllocError("Possible deadlock after 10000 retries\n");
+}
+
+inline void Allocator::unlock()
+{
+    the_lock=0;
+}
+
+void SetAllocSleeper(void (*s)())
+{
+    sleeper=s;
+}
+
+#endif
 
 inline size_t Allocator::obj_maxsize(Tag* t)
 {
@@ -133,12 +189,12 @@ Allocator* MakeAllocator()
     a->small_bins=(AllocBin*)(a+1);
     a->mysize=size;
     // Fill in the small bin info...
-    for(int i=0;i<NSMALL_BINS;i++){
-	int minsize=i==0?0:SMALL_BINSIZE(i-1)+1;
-	a->init_bin(&a->small_bins[i], SMALL_BINSIZE(i), minsize);
+    for(int j=0;j<NSMALL_BINS;j++){
+	int minsize=j==0?0:SMALL_BINSIZE(j-1)+1;
+	a->init_bin(&a->small_bins[j], SMALL_BINSIZE(j), minsize);
     }
     a->medium_bins=a->small_bins+nsmall;
-    for(i=0;i<NMEDIUM_BINS;i++){
+    for(int i=0;i<NMEDIUM_BINS;i++){
 	int minsize=i==0?SMALL_THRESHOLD+1:MEDIUM_BINSIZE(i-1)+1;
 	a->init_bin(&a->medium_bins[i], MEDIUM_BINSIZE(i), minsize);
     }
@@ -658,7 +714,8 @@ void Allocator::audit(Tag* obj, int what)
 void Allocator::get_hunk(size_t reqsize, OSHunk*& ret_hunk, void*& ret_p)
 {
     // See if we have room in any of the current hunks...
-    for(OSHunk* hunk=hunks; hunk!=0; hunk=hunk->next){
+    OSHunk* hunk;
+    for(hunk=hunks; hunk!=0; hunk=hunk->next){
 	if(hunk->spaceleft >= reqsize)
 	    break;
     }
@@ -714,7 +771,8 @@ static void account_bin(Allocator* a, AllocBin* bin,
 		    size_t& bytes_fragmented,
 		    size_t& bytes_inuse)
 {
-    for(Tag* p=bin->free;p!=0;p=p->next){
+    Tag* p;
+    for(p=bin->free;p!=0;p=p->next){
 	bytes_overhead+=OVERHEAD;
 	bytes_free+=a->obj_maxsize(p);
     }
@@ -756,7 +814,8 @@ void GetGlobalStats(Allocator* a,
     
     // Full accounting - go through each bin...
     bytes_overhead=bytes_free=bytes_fragmented=bytes_inuse=bytes_inhunks=0;
-    for(int i=0;i<NSMALL_BINS;i++)
+    int i;
+    for(i=0;i<NSMALL_BINS;i++)
 	account_bin(a, &a->small_bins[i], bytes_overhead, bytes_free,
 		    bytes_fragmented, bytes_inuse);
     for(i=0;i<NMEDIUM_BINS;i++)
@@ -771,7 +830,8 @@ void GetGlobalStats(Allocator* a,
 	bytes_inhunks+=hunk->spaceleft;
     }
     // And the ones in the bigbin...
-    for(Tag* p=a->big_bin.free;p!=0;p=p->next)
+    Tag* p;
+    for(p=a->big_bin.free;p!=0;p=p->next)
 	bytes_overhead+=sizeof(OSHunk);
     for(p=a->big_bin.inuse;p!=0;p=p->next)
 	bytes_overhead+=sizeof(OSHunk);
@@ -813,7 +873,8 @@ Allocator* DefaultAllocator()
 
 static void audit_bin(Allocator* a, AllocBin* bin)
 {
-    for(Tag* p=bin->free;p!=0;p=p->next){
+    Tag* p;
+    for(p=bin->free;p!=0;p=p->next){
 	if(p->next && p->next->prev != p)
 	    AllocError("Free list confused");
 	a->audit(p, OBJFREE);
@@ -828,7 +889,8 @@ static void audit_bin(Allocator* a, AllocBin* bin)
 void AuditAllocator(Allocator* a)
 {
     a->lock();
-    for(int i=0;i<NSMALL_BINS;i++)
+    int i;
+    for(i=0;i<NSMALL_BINS;i++)
 	audit_bin(a, &a->small_bins[i]);
     for(i=0;i<NMEDIUM_BINS;i++)
 	audit_bin(a, &a->medium_bins[i]);
@@ -849,7 +911,8 @@ void DumpAllocator(Allocator* a)
     FILE* fp=fopen("alloc.dump", "w");
     fprintf(fp, "\n");
     a->lock();
-    for(int i=0;i<NSMALL_BINS;i++)
+    int i;
+    for(i=0;i<NSMALL_BINS;i++)
 	dump_bin(a, &a->small_bins[i], fp);
     for(i=0;i<NMEDIUM_BINS;i++)
 	dump_bin(a, &a->medium_bins[i], fp);

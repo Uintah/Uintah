@@ -104,10 +104,12 @@ void DenseMatrix::solve(ColumnMatrix& sol)
     ASSERT(sol.nrows()==nc);
 
     // Gauss-Jordan with partial pivoting
-    for(int i=0;i<nr;i++){
+    int i;
+    for(i=0;i<nr;i++){
 	double max=Abs(data[i][i]);
 	int row=i;
-	for(int j=i+1;j<nr;j++){
+	int j;
+	for(j=i+1;j<nr;j++){
 	    if(Abs(data[j][i]) > max){
 		max=Abs(data[j][i]);
 		row=j;

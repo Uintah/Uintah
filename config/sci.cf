@@ -19,7 +19,7 @@ DEFINES =
 LOADER = SCI_Linker
 SIZE = SCI_Size
 LDR = ld -r
-LDSHARED = CC -shared -Wl,-no_unresolved
+LDSHARED = SCI_ShLib
 #ifdef SCI_LinkerNeedsCppFlags
 #define ldflags2 SCI_CppFlags $(INCLUDES)
 #else
@@ -129,6 +129,7 @@ Concat(lib,libname.so): objlist othersos                                @@\
 	$(RM) $@                                                        @@\
 	PreLink(objlist)						@@\
 	$(LDSHARED) -o $@ objlist othersos libsos || $(RM) $@
+
 
 #endif
 

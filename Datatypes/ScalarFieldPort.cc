@@ -15,3 +15,15 @@
 
 clString SimpleIPort<ScalarFieldHandle>::port_type("ScalarField");
 clString SimpleIPort<ScalarFieldHandle>::port_color("VioletRed2");
+
+
+#ifdef __GNUG__
+
+#include <Datatypes/SimplePort.cc>
+#include <Multitask/Mailbox.cc>
+template class SimpleIPort<ScalarFieldHandle>;
+template class SimpleOPort<ScalarFieldHandle>;
+template class SimplePortComm<ScalarFieldHandle>;
+template class Mailbox<SimplePortComm<ScalarFieldHandle>*>;
+
+#endif

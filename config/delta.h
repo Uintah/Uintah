@@ -21,6 +21,8 @@
 #define SCI_LinkerFlags SCI_DeltaLinkerFlags
 #define SCI_LinkerLib SCI_DeltaLinkerLib
 #define SCI_PrelinkCommand SCI_DeltaPrelinkCommand
+#define SCI_ShLib CC -shared -Wl,-no_unresolved
+#define SCI_CCLibs -lC -lc
 
 #define CppNeedsIncludes
 #define LinkerNeedsCppFlags

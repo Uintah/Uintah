@@ -118,7 +118,8 @@ void WidgetTest::execute()
    if (init == 1) {
       init = 0;
       GeomGroup* w = scinew GeomGroup;
-      for(int i = 0; i < NumWidgetTypes; i++)
+      int i;
+      for(i = 0; i < NumWidgetTypes; i++)
 	 w->add(widgets[i]->GetWidget());
       widget_id = ogeom->addObj(w, module_name, &widget_lock);
       for(i = 0; i < NumWidgetTypes; i++)

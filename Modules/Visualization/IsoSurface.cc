@@ -370,7 +370,8 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
     ov[7]=field->get_point(i+1, j+1, k+1);
     ov[8]=field->get_point(i, j+1, k+1);
     int mask=0;
-    for(int idx=1;idx<=8;idx++){
+    int idx;
+    for(idx=1;idx<=8;idx++){
 	if(oval[idx]<0)
 	    mask|=1<<(idx-1);
     }

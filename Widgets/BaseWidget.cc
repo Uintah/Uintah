@@ -88,7 +88,8 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
   epsilon(1e-3)
 {
 
-   for (Index i=0; i<NumSwitches; i++)
+   Index i;
+   for (i=0; i<NumSwitches; i++)
       mode_switches[i] = NULL;
    for (i=0; i<NumConstraints; i++)
       constraints[i] = NULL;
@@ -513,7 +514,7 @@ BaseWidget::geom_pick( GeomPick* pick, Roe* roe, int /* cbdata */, const BState&
    } else if (state.btn == 1 && !state.alt && state.control) {
       BBox bbox;
       widget->get_bounds(bbox);
-      roe->autoview(bbox);
+//SGP      roe->autoview(bbox);
       pick->ignore_until_release();
    } else if (state.btn == 2 && !state.alt && !state.control) {
       NextMode();
@@ -552,7 +553,8 @@ BaseWidget::SetMode( const Index mode, const long swtchs )
 void
 BaseWidget::FinishWidget()
 {
-   for (Index i=0; i<NumModes; i++)
+   Index i;
+   for (i=0; i<NumModes; i++)
       if (modes[i] == -1) {
 	 cerr << "BaseWidget Error:  Mode " << i << " is unitialized!" << endl;
 	 exit(-1);
@@ -628,4 +630,20 @@ operator<<( ostream& os, BaseWidget& w )
    return os;
 }
 
+
+BaseWidget& BaseWidget::operator=( const BaseWidget& )
+{
+    NOT_FINISHED("BaseWidget::operator=");
+}
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+template class Array1<long>;
+template class Array1<GeomPick*>;
+template class Array1<GeomSwitch*>;
+template class Array1<GeomMaterial*>;
+template class Array1<GeometryOPort*>;
+
+#endif
 

@@ -20,7 +20,7 @@ class Connection;
 class Module;
 
 class Port {
-    clString typename;
+    clString type_name;
     clString portname;
     clString colorname;
     int protocols;

@@ -20,27 +20,6 @@ static DebugSwitch cs_debug("ConstraintSolver", "Print");
 static DebugSwitch cs2_debug("ConstraintSolver", "Stack");
 
 
-enum RecurseType { UnInit, RecurseInitial, RecurseNormal, RecurseMax };
-
-typedef unsigned char uchar;
-struct StackItem {
-   inline StackItem() : var(NULL), rtype(UnInit), iter(0) {}
-   inline StackItem( BaseVariable* v ) : var(v), rtype(RecurseInitial), iter(0) {}
-   inline StackItem( BaseVariable* v, const uchar rt, const uchar i ) : var(v), rtype(rt), iter(i) {}
-   inline StackItem( const StackItem& i ) : var(i.var), rtype(i.rtype), iter(i.iter) {}
-   inline ~StackItem() {}
-   
-   StackItem& operator=( const StackItem& i ) { var=i.var; rtype=i.rtype; iter=i.iter; return *this; }
-   int operator==( const StackItem& i ) { return (var==i.var)&&(rtype==i.rtype)&&(iter==i.iter); }
-
-   void print( ostream& os=cout ) { os<<"StackItem:  "<<var->GetName()<<","<<rtype<<","<<iter<<endl; }
-   
-   BaseVariable* var;
-   uchar rtype;
-   uchar iter;
-};
-
-
 ostream& operator<<( ostream& os, StackItem& i ) {
    os << i.var->GetName() << ":  ";
    switch (i.rtype) {
@@ -272,3 +251,12 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
 }
 
 
+#ifdef __GNUG__
+
+#include <Classlib/Stack.cc>
+template class Stack<StackItem>;
+
+#include <Classlib/Array1.cc>
+template class Array1<StackItem>;
+
+#endif

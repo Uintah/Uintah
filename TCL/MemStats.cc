@@ -65,7 +65,8 @@ void MemStats::tcl_command(TCLArgs& args, void*)
 	    int old_nnz=nnz;
 	    nnz=0;
 	    int changed=0;
-	    for(int i=0;i<nbins;i++){
+	    int i;
+	    for(i=0;i<nbins;i++){
 		size_t ssize, lsize, n_reqd, n_deld, n_inlist;
 		GetBinStats(a, i, ssize, lsize, n_reqd,
 			    n_deld, n_inlist);

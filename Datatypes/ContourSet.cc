@@ -128,3 +128,15 @@ ContourSet* ContourSet::clone()
 {
     return scinew ContourSet(*this);
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/LockingHandle.cc>
+template class LockingHandle<ContourSet>;
+
+#include <Classlib/Array1.cc>
+template class Array1<Array1<Point> >;
+template void Pio(Piostream&, Array1<Array1<Point> >&);
+template void Pio(Piostream&, Array1<Point>&);
+
+#endif

@@ -166,7 +166,8 @@ clString clString::substr(int start, int length)
     int l=length==-1?len-start:length;
     ASSERTRANGE(start+l, 0, len+1);
     char* tmp=scinew char[l+1];
-    for(int i=0;i<l;i++){
+    int i;
+    for(i=0;i<l;i++){
 	tmp[i]=p->s[i+start];
     }
     tmp[i]='\0';

@@ -132,3 +132,12 @@ void GeomGrid::intersect(const Ray&, Material*, Hit&)
 {
     NOT_FINISHED("GeomGrid::intersect");
 }
+
+#ifdef __GNUG__
+#include <Classlib/Array2.cc>
+
+template class Array2<double>;
+template class Array2<MaterialHandle>;
+template class Array2<Vector>;
+
+#endif

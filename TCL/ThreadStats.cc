@@ -55,7 +55,8 @@ void ThreadStats::tcl_command(TCLArgs& args, void*)
 	Task::debug(info->tinfo[which].taskid);
     } else if(args[1] == "changed"){
 	if(oldinfo){
-	    for(int i=0;i<info->ntasks;i++){
+	    int i;
+	    for(i=0;i<info->ntasks;i++){
 		if(i >= oldinfo->ntasks
 		   || info->tinfo[i].name != oldinfo->tinfo[i].name
 		   || info->tinfo[i].pid != oldinfo->tinfo[i].pid

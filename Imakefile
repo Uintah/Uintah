@@ -1,34 +1,26 @@
 
 #include <config/sci.cf>
 
-#if defined(SCI_COMPILER_GNU) || 1
-TMPL_DIR = gnupt
-TMPL_LIB = gnupt/libgnupt.o
-#else
-TMPL_DIR =
-TMPL_LIB =
+#ifdef SCI_MESA
+#ifdef SCI_MACHINE_LINUX
+all::
+	cd Mesa && make linux-elf
+#endif
 #endif
 
-SUBDIRS = Malloc tcl Multitask Classlib TCL Math Comm Geometry \
+SUBDIRS = Malloc tcl \
+	Multitask Classlib TCL Math Comm Geometry \
 	Devices Constraints Geom Dataflow Datatypes Widgets \
-	Modules $(TMPL_DIR) convert
+	Modules convert
 
 SCISubdirs($(SUBDIRS))
 
-#ifdef SCI_COMPILER_CFRONT
-TMPLHACK_SRCS = tmpl_hack.cc
-TMPLHACK_OBJS = tmpl_hack.o
-#else
-TMPLHACK_SRCS =
-TMPLHACK_OBJS =
-#endif
-
-
 SR_TARGET = sr
-SR_SRCS = scirun.cc $(TMPLHACK_SRCS)
-SR_OBJS = scirun.o  $(TMPLHACK_OBJS)
+SR_SRCS = scirun.cc
+SR_OBJS = scirun.o
 
-SR_LDFLAGS = -L$(TOP)/lib -lDataflow -lDevices -lTCL -lMultitask -lMalloc
+SR_LDFLAGS = -L$(TOP)/lib -lDataflow -lDevices -lComm -lTCL \
+	-lMultitask -lMalloc
 SCIProgramTarget($(SR_TARGET), $(SR_OBJS), $(SR_LIBS), $(SR_LDFLAGS))
 
 sr: lib/libDataflow.so lib/libTCL.so lib/libDevices.so \

@@ -75,7 +75,8 @@ void CylinderSurface::get_surfpoints(Array1<Point>& pts)
 {
     pts.add(p1);
     SinCosTable tab(nv, 0, 2*Pi, radius);
-    for(int i=1;i<ndiscu-1;i++){
+    int i;
+    for(i=1;i<ndiscu-1;i++){
 	double r=double(i)/double(ndiscu-1);
 	for(int j=0;j<nv;j++){
 	    Point p(p1+(u*tab.sin(j)+v*tab.cos(j))*r);
@@ -181,3 +182,9 @@ void PointSurface::construct_grid()
     NOT_FINISHED("PointSurface::construct_grid");
 }
 
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+template class Array1<Point>;
+
+#endif

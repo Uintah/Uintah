@@ -6,7 +6,14 @@
 #ifdef SCI_OPENGL
 OPENGL_OBJS = tkOpenGL.o
 OPENGL_SRCS = tkOpenGL.c
+
+#ifdef SCI_MESA
+OPENGL_INCLUDES = -I$(TOP)/Mesa/include
+OPENGL_LIBS = -L$(TOP)/Mesa/lib -lMesaGL
+#else
+OPENGL_INCLUDES = 
 OPENGL_LIBS = -lGL
+#endif
 #else
 OPENGL_OBJS =
 OPENGL_SRCS =
@@ -16,7 +23,7 @@ OBJS = tk3d2.o  tkAppInit.o  tkBevel.o  tkCanvBLine.o  \
 	tkMain.o  $(OPENGL_OBJS)
 SRCS = tk3d2.c  tkAppInit.c  tkBevel.c  tkCanvBLine.c  \
 	tkMain.c  $(OPENGL_SRCS)
-LOCALINCLUDES = -I../tcl -I../tk -I../itcl/src
+LOCALINCLUDES = -I../tcl -I../tk -I../itcl/src $(OPENGL_INCLUDES)
 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -ltk -litcl -ltcl $(OPENGL_LIBS) -lX11 -lc -lm

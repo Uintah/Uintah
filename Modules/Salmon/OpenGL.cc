@@ -33,7 +33,9 @@
 #include <strstream.h>
 #include <fstream.h>
 
+#ifdef __sgi
 #include <X11/extensions/SGIStereo.h>
+#endif
 
 const int STRINGSIZE=200;
 
@@ -194,7 +196,8 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 	Lighting& l=salmon->lighting;
 	int idx=0;
-	for(int i=0;i<l.lights.size();i++){
+	int i;
+	for(i=0;i<l.lights.size();i++){
 	    Light* light=l.lights[i];
 	    light->opengl_setup(view, drawinfo, idx);
 	}
@@ -245,6 +248,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 	double frametime=framerate==0?0:1./framerate;
 	TimeThrottle throttle;
 	throttle.start();
+#ifdef __sgi
 	int do_stereo=roe->do_stereo.get();
 	if(do_stereo && !old_stereo){
 	    int first_event, first_error;
@@ -278,11 +282,14 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 	    double zmid=(znear+zfar)/2.;
 	    eyesep=u*eye_sep_dist*zmid;
 	}
+#endif /* __sgi */
 	for(int t=0;t<nframes;t++){
+#ifdef __sgi
 	    if(do_stereo){
 		XSGISetStereoBuffer(dpy, win, STEREO_BUFFER_LEFT);
 		glXWaitX();
 	    }
+#endif
 	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	    double modeltime=t*dt+tbeg;
 	    roe->set_current_time(modeltime);
@@ -297,10 +304,12 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 	    glLoadIdentity();
 	    Point eyep(view.eyep());
 	    Point lookat(view.lookat());
+#ifdef __sgi
 	    if(do_stereo){
 		eyep-=eyesep;
 		lookat-=eyesep;
 	    }
+#endif
 	    Vector up(view.up());
 	    gluLookAt(eyep.x(), eyep.y(), eyep.z(),
 		      lookat.x(), lookat.y(), lookat.z(),
@@ -316,6 +325,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 	    }
 #endif
 	    roe->do_for_visible(this, (RoeVisPMF)&OpenGL::redraw_obj);
+#ifdef __sgi
 	    if(do_stereo){
 		glXWaitGL();
 		XSGISetStereoBuffer(dpy, win, STEREO_BUFFER_RIGHT);
@@ -342,6 +352,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 
 		roe->do_for_visible(this, (RoeVisPMF)&OpenGL::redraw_obj);
 	    }
+#endif
 
 	    // Wait for the right time before swapping buffers
 	    TCLTask::unlock();
@@ -520,7 +531,8 @@ void OpenGL::put_scanline(int y, int width, Color* scanline, int repeat)
 {
     float* pixels=scinew float[width*3];
     float* p=pixels;
-    for(int i=0;i<width;i++){
+    int i;
+    for(i=0;i<width;i++){
 	*p++=scanline[i].r();
 	*p++=scanline[i].g();
 	*p++=scanline[i].b();

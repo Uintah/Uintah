@@ -206,7 +206,8 @@ int Grid::element_triangle_intersect(int i, int j, int k, const Point &p1,
     // edge with the cube, storing the new points in next
 
     // first we'll intersect with xmin
-    for (int a=0; a<curr->size()-1; a++) {
+    int a;
+    for (a=0; a<curr->size()-1; a++) {
 	if ((*curr)[a].x() >= xmin) {		// from in...
 	    if ((*curr)[a+1].x() >= xmin) {		// ...to in
 		next->add((*curr)[a+1]);
@@ -344,3 +345,15 @@ int Grid::element_triangle_intersect(int i, int j, int k, const Point &p1,
     }
     return (next->size());
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+template class Array1<int>;
+template class Array1<Point>;
+
+#include <Classlib/Array3.cc>
+template class Array3<Array1<int>*>;
+
+#endif
+

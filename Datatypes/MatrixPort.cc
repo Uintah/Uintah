@@ -15,3 +15,14 @@
 
 clString SimpleIPort<MatrixHandle>::port_type("Matrix");
 clString SimpleIPort<MatrixHandle>::port_color("dodger blue");
+
+#ifdef __GNUG__
+
+#include <Datatypes/SimplePort.cc>
+#include <Multitask/Mailbox.cc>
+template class SimpleIPort<MatrixHandle>;
+template class SimpleOPort<MatrixHandle>;
+template class SimplePortComm<MatrixHandle>;
+template class Mailbox<SimplePortComm<MatrixHandle>*>;
+
+#endif

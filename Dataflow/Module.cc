@@ -265,7 +265,8 @@ void Module::do_execute()
 {
     abort_flag=0;
     // Reset all of the ports...
-    for(int i=0;i<oports.size();i++){
+    int i;
+    for(i=0;i<oports.size();i++){
 	OPort* port=oports[i];
 	port->reset();
     }
@@ -309,3 +310,14 @@ void Module::reconfigure_oports()
     TCL::execute("configureOPorts "+id);
 }
 
+#ifdef __GNUG__
+// Template instantiations
+#include <Classlib/Array1.cc>
+template class Array1<clString>;
+template class Array1<OPort*>;
+template class Array1<IPort*>;
+
+#include <Multitask/Mailbox.cc>
+template class Mailbox<MessageBase*>;
+
+#endif

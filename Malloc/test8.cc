@@ -1,4 +1,6 @@
 
+#ifdef __sgi
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -30,3 +32,16 @@ main()
     wait(&s);
     return 0;
 }
+
+#else
+
+#include <iostream.h>
+
+main()
+{
+    cerr << "This test not available\n";
+    return 0;
+}
+
+#endif
+

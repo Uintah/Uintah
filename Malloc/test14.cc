@@ -31,7 +31,9 @@ main()
     delete[] pp;
     pp=new (default_allocator, "1") X;
     delete pp;
+#ifndef __GNUG__
     pp=new (default_allocator, "2") X[5];
     delete[] pp;
+#endif
     return 0;
 }

@@ -60,3 +60,14 @@ void MultiMesh::io(Piostream& stream)
     Pio(stream, meshes);
     stream.end_class();
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/LockingHandle.cc>
+template class LockingHandle<MultiMesh>;
+
+#include <Classlib/Array1.cc>
+template class Array1<MeshHandle>;
+template void Pio(Piostream&, Array1<MeshHandle>&);
+
+#endif

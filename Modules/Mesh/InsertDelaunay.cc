@@ -90,7 +90,8 @@ void InsertDelaunay::execute()
     // Insert the points...
     int nsurfs=surfs.size();
     Array1<Point> points;
-    for(int isurf=0;isurf<nsurfs;isurf++){
+    int isurf;
+    for(isurf=0;isurf<nsurfs;isurf++){
 	points.remove_all();
 	surfs[isurf]->get_surfpoints(points);
 	int npoints=points.size();
@@ -109,7 +110,7 @@ void InsertDelaunay::execute()
     int ndone=0;
     for(isurf=0;isurf<nsurfs;isurf++){
 	if(surfs[isurf]->closed){
-	    for(i=0;i<nnodes;i++){
+	    for(int i=0;i<nnodes;i++){
 		update_progress(ndone, ntodo);
 		if(mesh->nodes[i].get_rep() && 
 		   surfs[isurf]->inside(mesh->nodes[i]->p)){

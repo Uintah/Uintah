@@ -101,7 +101,9 @@ Module* ContoursToSurf::clone(int deep)
 void ContoursToSurf::execute()
 {
     Array1<ContourSetHandle> contours(incontours.size()-1);
-    for (int flag=0, i=0; i<incontours.size()-1; i++)
+    int flag;
+    int i;
+    for (flag=0, i=0; i<incontours.size()-1; i++)
 	if (!incontours[i]->get(contours[i]))
 	    flag=1;
     if (flag) return;
@@ -122,7 +124,8 @@ void ContoursToSurf::execute()
 void ContoursToSurf::lace_contours(const ContourSetHandle& contour, 
 				   TriSurface* surf) {
     Array1<int> row;	
-    for (int i=0, curr=0; i<contour->contours.size(); i++) {
+    int i, curr;
+    for (i=curr=0; i<contour->contours.size(); i++) {
 	row.add(curr);	
 	curr+=contour->contours[i].size();
 	for (int j=0; j<contour->contours[i].size(); j++) {
@@ -273,7 +276,8 @@ void ContoursToSurf::contours_to_surf(const Array1<ContourSetHandle> &contours,
     surf->name=contours[0]->name;
     surf->bdry_type = (Surface::Boundary_type) contours[0]->bdry_type;
     BBox bb;
-    for (int i=0; i<contours.size(); i++) {
+    int i;
+    for (i=0; i<contours.size(); i++) {
 	contours[i]->build_bbox();
 	BBox bb0(contours[i]->bbox);
 	for (int ti=0; ti<=1; ti++) 

@@ -147,3 +147,11 @@ GeomVertex* GeomMVertex::clone()
 GeomMVertex::~GeomMVertex()
 {
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+
+template class Array1<GeomVertex*>;
+
+#endif

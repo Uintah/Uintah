@@ -145,7 +145,8 @@ void GeomGroup::reset_bbox()
 
 void GeomGroup::preprocess()
 {
-    for(int i=0;i<objs.size();i++){
+    int i;
+    for(i=0;i<objs.size();i++){
 	objs[i]->preprocess();
     }
 
@@ -299,3 +300,12 @@ void ITreeNodeBSphere::intersect(const Ray& ray, Material* matl, Hit& hit)
 ITree::~ITree()
 {
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+
+template class Array1<ITree*>;
+template class Array1<BSphere>;
+
+#endif

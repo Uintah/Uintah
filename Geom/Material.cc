@@ -124,3 +124,13 @@ void GeomMaterial::intersect(const Ray& ray, Material* /* old_matl */,
     child->intersect(ray, matl.get_rep(), hit);
 }
 
+#ifdef __GNUG__
+
+#include <Classlib/LockingHandle.cc>
+
+template class LockingHandle<Material>;
+
+#include <Classlib/Array1.cc>
+template class Array1<MaterialHandle>;
+
+#endif

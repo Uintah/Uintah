@@ -17,6 +17,8 @@
 #include <Geom/Geom.h>
 #include <Geom/Material.h>
 #include <Classlib/Array1.h>
+#include <Geometry/Point.h>
+#include <Geometry/Vector.h>
 
 class GeomArrows : public GeomObj {
     double headwidth;

@@ -223,3 +223,15 @@ Piostream* auto_istream(const clString& filename)
     }
 }
 
+#ifdef __GNUG__
+// Template instantiations
+#include <Classlib/HashTable.cc>
+template class HashTable<clString, PersistentTypeID*>;
+template class HashKey<clString, PersistentTypeID*>;
+template class HashTable<int, Persistent*>;
+template class HashKey<int, Persistent*>;
+template class HashTable<Persistent*, int>;
+template class HashKey<Persistent*, int>;
+template int Hash(const clString& k, int hash_size);
+
+#endif

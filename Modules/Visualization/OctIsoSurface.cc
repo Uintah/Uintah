@@ -246,7 +246,8 @@ int OctIsoSurface::iso_cube(Octree* tree, double isoval, GeomGroup* group) {
     oval[8] = tree->corner_s[1][1][0]-isoval; ov[8] = tree->corner_p[1][1][0];
 
     int mask=0;
-    for(int idx=1;idx<=8;idx++){
+    int idx;
+    for(idx=1;idx<=8;idx++){
 	if(oval[idx]<0)
 	    mask|=1<<(idx-1);
     }

@@ -102,6 +102,7 @@ void BuildFEMatrix::execute()
      Array1<int> rows(ndof+1);
      Array1<int> cols;
      int r=0;
+     int i;
      for(int i=0;i<nnodes;i++){
 	 rows[r++]=cols.size();
 	 if(mesh->nodes[i]->ndof > 0){

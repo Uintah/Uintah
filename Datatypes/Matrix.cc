@@ -77,7 +77,8 @@ int Matrix::isolve(ColumnMatrix& lhs, ColumnMatrix& rhs, double max_error,
 	
 	// Calculate coefficient bk and direction vectors p and pp
 	double bknum=0;
-	for(int i=0;i<size;i++)
+	int i;
+	for(i=0;i<size;i++)
 	    bknum+=Z[i]*R[i];
 	if(niter==1){
 	    P=Z;
@@ -105,3 +106,10 @@ int Matrix::isolve(ColumnMatrix& lhs, ColumnMatrix& rhs, double max_error,
     return niter;
 }
 
+#ifdef __GNUG__
+
+#include <Classlib/LockingHandle.cc>
+
+template class LockingHandle<Matrix>;
+
+#endif

@@ -287,7 +287,8 @@ void Mesh::detach_nodes()
 void Mesh::compute_neighbors()
 {
     // Clear old neighbors...
-    for(int i=0;i<nodes.size();i++)
+    int i;
+    for(i=0;i<nodes.size();i++)
 	if(nodes[i].get_rep())
 	    nodes[i]->elems.remove_all();
     // Compute element info for nodes
@@ -477,7 +478,8 @@ void dump_mesh(Mesh* mesh)
 {
     ofstream out("mesh.dump");
     out << "Nodes:" << endl;
-    for(int i=0;i<mesh->nodes.size();i++){
+    int i;
+    for(i=0;i<mesh->nodes.size();i++){
 	Node* n=mesh->nodes[i].get_rep();
 	if(!n)continue;
 	out << i << ": " << n->p;
@@ -1215,7 +1217,8 @@ void Mesh::pack_elems()
     int nelems=elems.size();
     int idx=0;
     Array1<int> map(nelems);
-    for(int i=0;i<nelems;i++){
+    int i;
+    for(i=0;i<nelems;i++){
 	Element* e=elems[i];
 	if(e){
 	    map[i]=idx;
@@ -1258,7 +1261,8 @@ void Mesh::pack_nodes()
     int nnodes=nodes.size();
     int idx=0;
     Array1<int> map(nnodes);
-    for(int i=0;i<nnodes;i++){
+    int i;
+    for(i=0;i<nnodes;i++){
 	NodeHandle& n=nodes[i];
 	if(n.get_rep()){
 	    map[i]=idx;
@@ -1324,7 +1328,8 @@ void Mesh::add_node_neighbors(int node, Array1<int>& idx)
     Array1<int> neighbor_nodes(4*ne+1);
     int nodesi=0;
     // Gather all of the nodes
-    for(int i=0;i<ne;i++){
+    int i;
+    for(i=0;i<ne;i++){
 	int ei=n->elems[i];
 	Element* e=elems[ei];
 	for(int j=0;j<4;j++){
@@ -1349,3 +1354,29 @@ void Mesh::add_node_neighbors(int node, Array1<int>& idx)
 	    idx.add(neighbor_nodes[i]);
     }
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/LockingHandle.cc>
+template class LockingHandle<Node>;
+template class LockingHandle<Mesh>;
+
+#include <Classlib/Array1.cc>
+template class Array1<NodeVersion1>;
+template class Array1<int>;
+template class Array1<NodeHandle>;
+template class Array1<Element*>;
+template class Array1<Array1<double> >;
+template void Pio(Piostream&, MeshHandle&);
+template void Pio(Piostream&, Array1<Element*>&);
+template void Pio(Piostream&, Array1<NodeVersion1>&);
+template void Pio(Piostream&, Array1<NodeHandle>&);
+template void Pio(Piostream&, NodeHandle&);
+
+#include <Classlib/HashTable.cc>
+template class HashTable<Face, int>;
+template class HashKey<Face, int>;
+template class HashTableIter<Face, int>;
+template int Hash(const Face&, int);
+
+#endif

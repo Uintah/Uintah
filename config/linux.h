@@ -15,7 +15,7 @@
 #define SCI_GNUCppCompiler g++
 #define SCI_GNUCppIncludeLocation /usr/include/g++ -I/usr/lib/gcc-lib/i486-linux/2.6.2/include
 #define SCI_GNUDebugCppFlags -g -O
-#define SCI_GNUOtherCppFlags -m486 -Wall -fexternal-templates
+#define SCI_GNUOtherCppFlags -m486 -Wall -fno-implicit-templates
 #define SCI_GNULinker g++
 #define SCI_GNULinkerFlags
 #define SCI_GNULinkerLib

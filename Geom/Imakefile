@@ -6,7 +6,15 @@
 #ifdef SCI_OPENGL
 OPENGLOBJS = GeomOpenGL.o
 OPENGLSRCS = GeomOpenGL.cc
+
+#ifdef SCI_MESA
+OPENGLINCS = -I$(TOP)/Mesa/include
+OPENGLLIBS = -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lX11
+#else
+OPENGLINCS =
 OPENGLLIBS = -lGLU -lGL -lX11
+#endif
+
 #else
 OPENGLOBJS =
 OPENGLSRCS =
@@ -31,8 +39,10 @@ SRCS = Arrows.cc Color.cc Cone.cc Container.cc Cylinder.cc Disc.cc \
 	Tetra.cc Torus.cc Tri.cc Triangles.cc TriStrip.cc Tube.cc \
 	VertexPrim.cc View.cc \
 	TCLGeom.cc $(OPENGLSRCS) $(X11SRCS)
+LOCALINCLUDES = $(OPENGLINCS)
 SO_LIBS = 
-SO_LDFLAGS = -L$(TOP)/lib -lTCL -lGeometry -lClasslib -lMalloc $(OPENGLLIBS)
+SO_LDFLAGS = -L$(TOP)/lib -lTCL -lGeometry -lClasslib -lMalloc \
+	$(OPENGLLIBS)
 
 LIBNAME = Geom
 

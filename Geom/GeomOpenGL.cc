@@ -642,7 +642,8 @@ void GeomTube::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    {
 		// Draw lines
 		glBegin(GL_LINES);
-		for(int j=0;j<nu;j++){
+		int j;
+		for(j=0;j<nu;j++){
 		    Point pt1(pp1[j]);
 		    glVertex3d(pt1.x(), pt1.y(), pt1.z());
 		    Point pt2(pp2[j]);

@@ -15,3 +15,13 @@
 
 clString SimpleIPort<ContourSetHandle>::port_type("ContourSet");
 clString SimpleIPort<ContourSetHandle>::port_color("#388e8e");
+
+#ifdef __GNUG__
+#include <Datatypes/SimplePort.cc>
+#include <Multitask/Mailbox.cc>
+template class SimpleIPort<ContourSetHandle>;
+template class SimpleOPort<ContourSetHandle>;
+template class SimplePortComm<ContourSetHandle>;
+template class Mailbox<SimplePortComm<ContourSetHandle>*>;
+
+#endif

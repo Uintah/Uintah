@@ -255,7 +255,8 @@ void CuttingPlane::execute()
 	    // get the "contour" number of values from 
 	    // the field, find corresponding colors,	
 	    // and add a Material and it's group to the tree
-	    for (int i = 0; i < contours; i++)
+	    int i;
+	    for (i = 0; i < contours; i++)
 	    {
 		values[i] = ((double)i/(contours - 1)) * (max - min) + min;
 		MaterialHandle matl;
@@ -389,3 +390,12 @@ void CuttingPlane::tcl_command(TCLArgs& args, void* userdata)
 	Module::tcl_command(args, userdata);
     }
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+
+template class Array1<GeomMaterial*>;
+template class Array1<double>;
+
+#endif

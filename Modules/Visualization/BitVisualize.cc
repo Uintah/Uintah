@@ -40,7 +40,7 @@
 
 #define NUM_MATERIALS 5
 
-Point inline mp(const Point &a, const Point &b) { 
+inline Point mp(const Point &a, const Point &b) { 
     return Point((a.x()+b.x())/2, (a.y()+b.y())/2, (a.z()+b.z())/2);
 }
 
@@ -157,9 +157,10 @@ void BitVisualize::execute()
     sp=show_progress.get();
     ScalarFieldRG* regular_grid=field->getRG();
     if(regular_grid){
-	isoChanged=regular_grid->grid(0,0,0);
+	isoChanged=(int)regular_grid->grid(0,0,0);
 	regular_grid->grid(0,0,0)=0;
-	for (int i=0; i<NUM_MATERIALS; i++) {
+	int i;
+	for (i=0; i<NUM_MATERIALS; i++) {
 	    int bit=1<<i;
 	    if (isoChanged & bit) {		    // fld changed...
 		if (isovals[i]->get()) {	    //   want this material...
@@ -277,7 +278,8 @@ void BitVisualize::iso_reg_grid(ScalarFieldRG* field) {
     int pminx=(int)pmin.x();
     int pminy=(int)pmin.y();
     int pminz=(int)pmin.z();
-    for (int i=0; i<NUM_MATERIALS; i++) {
+    int i;
+    for (i=0; i<NUM_MATERIALS; i++) {
 	if (calc_mat[i]) {
 	    surf_hands[i]=surfs[i]=0;
 	    surf_hands[i]=surfs[i]=scinew TriSurface();
@@ -304,8 +306,9 @@ void BitVisualize::iso_reg_grid(ScalarFieldRG* field) {
 		int orall=o1 | o2 | o3 | o4 | o5 | o6 | o7 | o8;
 		int xall=andall ^ orall;
 		int do_mat[NUM_MATERIALS];
-		for (int ii=0, check_box=0; ii<NUM_MATERIALS; ii++) {
-		    if (do_mat[ii]=(calc_mat[ii] && (xall & (1<<ii))))
+		int check_box=0;
+		for (int ii=0; ii<NUM_MATERIALS; ii++) {
+		    if ((do_mat[ii]=(calc_mat[ii] && (xall & (1<<ii)))))
 			check_box=1;
 		}
 		if (check_box) {
@@ -323,7 +326,8 @@ void BitVisualize::iso_reg_grid(ScalarFieldRG* field) {
 			    for (int jj=1; jj<9; jj++)
 				if ((o[jj] & a)!=0) oval[jj]=1;else oval[jj]=0;
 			    int mask=0;
-			    for(int idx=1;idx<=8;idx++){
+			    int idx;
+			    for(idx=1;idx<=8;idx++){
 				if(oval[idx])
 				    mask|=1<<(idx-1);
 			    }
@@ -537,3 +541,18 @@ void BitVisualize::iso_reg_grid(ScalarFieldRG* field) {
 	}
     }
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+template class Array1<SurfaceOPort*>;
+template class Array1<SurfaceHandle>;
+template class Array1<TriSurface*>;
+template class Array1<TCLint*>;
+template class Array1<GeomPts*>;
+template class Array1<int>;
+template class Array1<MaterialHandle>;
+template class Array1<GeomGroup*>;
+
+#endif
+

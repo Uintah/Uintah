@@ -38,7 +38,8 @@ Tracker::Tracker(Mailbox<MessageBase*>* mailbox, void* clientdata)
 : mailbox(mailbox), clientdata(clientdata)
 {
     globlock.lock();
-    clients.add(this);
+    Tracker* t=this;
+    clients.add(t);
     globlock.unlock();
     client_sema.up();
 }
@@ -46,7 +47,8 @@ Tracker::Tracker(Mailbox<MessageBase*>* mailbox, void* clientdata)
 Tracker::~Tracker()
 {
     globlock.unlock();
-    for(int i=0;i<clients.size();i++)
+    int i;
+    for(i=0;i<clients.size();i++)
 	if(clients[i]==this)
 	    break;
     ASSERT(i<clients.size());
@@ -62,3 +64,14 @@ TrackerMessage::TrackerMessage(const TrackerData& data, void* clientdata)
 TrackerMessage::~TrackerMessage()
 {
 }
+
+#ifdef __GNUG__
+// Template instantiations
+#include <Classlib/Array1.cc>
+
+template class Array1<Tracker*>;
+
+#include <Multitask/Mailbox.cc>
+template class Mailbox<MessageBase*>;
+
+#endif
