@@ -142,6 +142,6 @@ field port), we record the single nearest node from the finite element mesh and 
 
 }
 set $m10-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
-$m4 ui
+$m4 initialize_ui
 
 ::netedit scheduleok

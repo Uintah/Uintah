@@ -68,7 +68,7 @@ set $m1-extract-from-new-field 1
 set $m1-algorithm 0
 set $m1-build_trisurf 0
 set $m1-np 1
-$m2 ui
+$m2 initialize_ui
 set $m2-ViewWindow_0-view-eyep-x ${view-eyep-x}
 set $m2-ViewWindow_0-view-eyep-y ${view-eyep-y}
 set $m2-ViewWindow_0-view-eyep-z ${view-eyep-z}
@@ -100,6 +100,6 @@ set $m9-build_trisurf 0
 set $m9-np 1
 set $m9-active_tab {MC}
 set $m9-update_type {on release}
-$m6 ui
+$m6 initialize_ui
 
 ::netedit scheduleok

@@ -155,7 +155,7 @@ set $m1-whichtab {Random}
 set $m2-haveUI 1
 set $m2-methodTCL {CCinv}
 set $m2-pTCL {1}
-$m3 ui
+$m3 initialize_ui
 set $m3-ViewWindow_0-view-eyep-x ${view-eyep-x}
 set $m3-ViewWindow_0-view-eyep-y ${view-eyep-y}
 set $m3-ViewWindow_0-view-eyep-z ${view-eyep-z}
@@ -293,8 +293,8 @@ set $m32-show_status 0
 set $m32-haveUI 1
 set $m32-methodTCL {CCinv}
 set $m32-pTCL {1}
-$m1 ui
-$m2 ui
-$m27 ui
+$m1 initialize_ui
+$m2 initialize_ui
+$m27 initialize_ui
 
 ::netedit scheduleok

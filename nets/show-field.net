@@ -87,7 +87,7 @@ addConnection $m0 0 $m10 0
 addConnection $m0 0 $m11 0
 
 set $m0-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
-$m1 ui
+$m1 initialize_ui
 set $m1-ViewWindow_0-view-eyep-x ${view-eyep-x}
 set $m1-ViewWindow_0-view-eyep-y ${view-eyep-y}
 set $m1-ViewWindow_0-view-eyep-z ${view-eyep-z}
@@ -134,9 +134,9 @@ set $m7-node_scale [expr 0.007 * ${global-scale}]
 set $m7-edge_scale [expr 0.007 * ${global-scale}]
 set $m7-resolution 6
 set $m10-interp_op_gui {}
-$m2 ui
-$m4 ui
-$m5 ui
-$m7 ui
+$m2 initialize_ui
+$m4 initialize_ui
+$m5 initialize_ui
+$m7 initialize_ui
 
 ::netedit scheduleok

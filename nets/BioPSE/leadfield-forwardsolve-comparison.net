@@ -130,7 +130,7 @@ set $m10-node_display_type {Spheres}
 set $m10-edge_display_type {Lines}
 set $m10-edge_scale 1
 set $m10-resolution 4
-$m11 ui
+$m11 initialize_ui
 set $m11-ViewWindow_0-view-eyep-x ${view-eyep-x}
 set $m11-ViewWindow_0-view-eyep-y ${view-eyep-y}
 set $m11-ViewWindow_0-view-eyep-z ${view-eyep-z}
@@ -144,7 +144,7 @@ set $m11-ViewWindow_0-view-fov ${view-fov}
 set $m12-interp_op_gui {}
 set $m13-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
 set $m17-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
-$m5 ui
-$m6 ui
+$m5 initialize_ui
+$m6 initialize_ui
 
 ::netedit scheduleok

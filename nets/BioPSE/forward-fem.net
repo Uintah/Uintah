@@ -150,7 +150,7 @@ set $m12-height 1
 set $m12-mapType 3
 set $m12-minRes 12
 set $m12-resolution 12
-$m13 ui
+$m13 initialize_ui
 set $m13-ViewWindow_0-view-eyep-x ${view-eyep-x}
 set $m13-ViewWindow_0-view-eyep-y ${view-eyep-y}
 set $m13-ViewWindow_0-view-eyep-z ${view-eyep-z}
@@ -176,8 +176,8 @@ set $m17-resolution 10
 set $m18-isFixed 0
 set $m18-min -0.254406
 set $m18-max 1.22203
-$m4 ui
-$m7 ui
+$m4 initialize_ui
+$m7 initialize_ui
 
 
 ::netedit scheduleok

@@ -141,7 +141,7 @@ set $m2-methodTCL {CCinv}
 set $m2-pTCL {1}
 set $m3-notes {}
 set $m3-show_status 1
-$m3 ui
+$m3 initialize_ui
 set $m3-ViewWindow_0-pos {}
 set $m3-ViewWindow_0-caxes 0
 set $m3-ViewWindow_0-iaxes -2147483647
@@ -348,7 +348,7 @@ set $m25-node_scale 0.045
 set $m25-edge_scale 0.03
 set $m25-show_progress -2147483647
 set $m25-resolution 4
-$m1 ui
-$m2 ui
+$m1 initialize_ui
+$m2 initialize_ui
 
 ::netedit scheduleok
