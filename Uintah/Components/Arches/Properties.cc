@@ -25,6 +25,10 @@ Properties::Properties()
 				   CCVariable<double>::getTypeDescription() );
   d_densityCPLabel = scinew VarLabel("densityCP",
 				   CCVariable<double>::getTypeDescription() );
+  d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
+				   CCVariable<double>::getTypeDescription() );
+  d_densityRCPLabel = scinew VarLabel("densityRCP",
+				   CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -226,6 +230,9 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.19  2000/06/21 06:12:12  bbanerje
+// Added missing VarLabel* mallocs .
+//
 // Revision 1.18  2000/06/21 05:43:51  bbanerje
 // nofMixingVars init changed from -1 to 0 to avoid seg violation.
 // Was calling a vector with -1 as index.

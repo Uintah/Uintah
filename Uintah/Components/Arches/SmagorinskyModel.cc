@@ -102,6 +102,18 @@ SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):
 				    CCVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcMBLMLabel = scinew VarLabel("wVelNonLinSrcMBLM",
 				    CCVariable<double>::getTypeDescription() );
+
+  // For the recomputaion of Turbulence SubModel (during solve)
+  d_densityRCPLabel = scinew VarLabel("densityRCP",
+				    CCVariable<double>::getTypeDescription() );
+  d_uVelocityMSLabel = scinew VarLabel("uVelocityMS",
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelocityMSLabel = scinew VarLabel("vVelocityMS",
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelocityMSLabel = scinew VarLabel("wVelocityMS",
+				    CCVariable<double>::getTypeDescription() );
+  d_viscosityRCTSLabel = scinew VarLabel("viscosityRCTS",
+				    CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -576,6 +588,9 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.16  2000/06/21 06:12:12  bbanerje
+// Added missing VarLabel* mallocs .
+//
 // Revision 1.15  2000/06/18 01:20:17  bbanerje
 // Changed names of varlabels in source to reflect the sequence of tasks.
 // Result : Seg Violation in addTask in MomentumSolver

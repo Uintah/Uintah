@@ -114,18 +114,18 @@ ScalarSolver::solve(const LevelP& level,
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
   // pressure solve.
-  //DataWarehouseP matrix_dw = sched->createDataWarehouse(d_generation);
-  //++d_generation;
+  DataWarehouseP matrix_dw = sched->createDataWarehouse(d_generation);
+  ++d_generation;
 
   //computes stencil coefficients and source terms
   // requires : scalarIN, [u,v,w]VelocityMS, densitySIVBC, viscosityCTS
   // computes : scalarCoefSBLM, scalarLinSrcSBLM, scalarNonLinSrcSBLM
-  sched_buildLinearMatrix(level, sched, new_dw, new_dw, delta_t, index);
+  sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t, index);
     
   // Schedule the scalar solve
   // require : scalarIn, scalCoefSBLM, scalNonLinSrcSBLM
   // compute : scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSS
-  d_linearSolver->sched_scalarSolve(level, sched, new_dw, new_dw, index);
+  d_linearSolver->sched_scalarSolve(level, sched, new_dw, matrix_dw, index);
     
 }
 
@@ -225,6 +225,9 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.10  2000/06/21 06:12:12  bbanerje
+// Added missing VarLabel* mallocs .
+//
 // Revision 1.9  2000/06/18 01:20:17  bbanerje
 // Changed names of varlabels in source to reflect the sequence of tasks.
 // Result : Seg Violation in addTask in MomentumSolver
