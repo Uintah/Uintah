@@ -75,6 +75,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   db->require("radiation",d_radiationCalc);
   if (d_radiationCalc) {
     db->getWithDefault("discrete_ordinates",d_DORadiationCalc,true);
+    db->getWithDefault("opl",d_opl,3.0);
   }
   // read type of mixing model
   string mixModel;
@@ -1181,7 +1182,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    // taken from radcoef.f
 	    //	double bc = d_mixingModel->getCarbonAtomNumber(inStream)*local_den;
 	    // optical path length
-	    double opl = 3.0;
 	    if (d_mixingModel->getNumRxnVars()) 
 	      sootFV[currCell] = outStream.getSootFV();
 	    else {
@@ -1200,8 +1200,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	      else 
 		sootFV[currCell] = 0.0;
 	    }
-	    absorption[currCell] = 0.01+ Min(0.5,(4.0/opl)*log(1.0+350.0*
-				   sootFV[currCell]*temperature[currCell]*opl));
+	    absorption[currCell] = 0.01+ Min(0.5,(4.0/d_opl)*log(1.0+350.0*
+				   sootFV[currCell]*temperature[currCell]*d_opl));
 	  }
 	  // check if the density is greater than air...implement a better way
           if (d_DORadiationCalc) {
