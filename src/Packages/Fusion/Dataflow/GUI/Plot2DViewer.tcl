@@ -342,9 +342,9 @@ itcl_class Fusion_Render_Plot2DViewer {
     method add_data { dat idim jdim kdim } {
 	for {set i 0} {$i < [set $this-nPlots]} {incr i} {
 
-	    $this-c add_GUIVar "$this-idim-$dat"
-	    $this-c add_GUIVar "$this-jdim-$dat"
-	    $this-c add_GUIVar "$this-kdim-$dat"
+	    $this-c add_GUIVar "idim-$dat"
+	    $this-c add_GUIVar "jdim-$dat"
+	    $this-c add_GUIVar "kdim-$dat"
 
 	    global $this-idim-$dat
 	    global $this-jdim-$dat
