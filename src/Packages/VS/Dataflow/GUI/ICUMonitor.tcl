@@ -45,6 +45,7 @@ itcl_class VS_Render_ICUMonitor {
 	global  $this-edit
 	global  $this-edit-target
 	global  $this-selected_marker
+	global  $this-dump_frames
 
 	set $this-edit          0
 	set $this-edit-target   0
@@ -57,6 +58,7 @@ itcl_class VS_Render_ICUMonitor {
 	set $this-time_markers_mode  1
 	set $this-plot_count    0
 	set $this-selected_marker -1
+	set $this-dump_frames   0
     }
 
     method bind_events {w} {
@@ -358,11 +360,15 @@ itcl_class VS_Render_ICUMonitor {
 		-justify center -relief flat -variable $this-play_mode \
 		-onvalue 1 -offvalue 0 -anchor n
 	    checkbutton  $w.f.plots.secs -text "Ticks" -padx 6 \
-		-justify center -relief flat -variable $this-time_markers_mode \
+		-justify center -relief flat \
+		-variable $this-time_markers_mode \
 		-onvalue 1 -offvalue 0 -anchor n
+	    checkbutton  $w.f.plots.dump -text "Dump Frames" -padx 6 \
+		-justify center -relief flat -variable $this-dump_frames \
+
 
 	    pack $w.f.plots.add $w.f.plots.edit $w.f.plots.del \
-	    	$w.f.plots.play $w.f.plots.secs \
+	    	$w.f.plots.play $w.f.plots.secs $w.f.plots.dump \
 		-side left -padx 2 -pady 2
 
 	    frame $w.f.settings -relief groove -borderwidth 2
