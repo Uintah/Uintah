@@ -94,14 +94,6 @@ namespace Uintah {
     }
 
     //////////////////////////////////////////////////////////////////////
-    /*! Returns the vector containing the set of particle sizes */
-    //////////////////////////////////////////////////////////////////////
-    inline vector<Vector>* getSize()
-    {
-      return &d_size;
-    }
-
-    //////////////////////////////////////////////////////////////////////
     /*! Returns the vector containing the set of particle types */
     //////////////////////////////////////////////////////////////////////
     inline vector<int>* getType()
@@ -150,7 +142,6 @@ namespace Uintah {
          
     vector<Point> d_pos;
     vector<double> d_vol;
-    vector<Vector> d_size;
     vector<int> d_type;
     vector<double> d_thick;
     vector<Vector> d_norm;

@@ -27,9 +27,9 @@ GUVSphereShellPiece::GUVSphereShellPiece(ProblemSpecP& ps)
     std::string zone_type = child->getNodeName();
     if (zone_type == "zone") {
       double theta, phi, radius;
-      ps->require("zone_center_theta",theta);
-      ps->require("zone_center_phi",phi);
-      ps->require("zone_radius",radius);
+      child->require("zone_center_theta",theta);
+      child->require("zone_center_phi",phi);
+      child->require("zone_radius",radius);
       d_theta_zone.push_back(theta);
       d_phi_zone.push_back(phi);
       d_radius_zone.push_back(radius);
@@ -69,6 +69,9 @@ GUVSphereShellPiece::getBoundingBox() const
 int 
 GUVSphereShellPiece::createPoints()
 {
+  int numPts = d_pos.size();
+  if (numPts > 0) return numPts;
+
   // Compute the number of latitudes
   double numLat = (int) (2.0*M_PI*d_radius/d_dx);
   double dtheta = M_PI/((double) numLat);
@@ -94,6 +97,7 @@ GUVSphereShellPiece::createPoints()
     dphi = (2*M_PI)/numLong;
     double phi   = dphi/2.;
     for(int i_phi=0;i_phi<numLong;i_phi++){
+      ++count;
       x = d_origin.x() + d_radius*sin(theta)*cos(phi);
       y = d_origin.y() + d_radius*sin(theta)*sin(phi);
       z = d_origin.z() + d_radius*cos(theta);
@@ -102,7 +106,6 @@ GUVSphereShellPiece::createPoints()
       // Store the quantities that are the same for both the lipid and
       // the cholesterol
       d_pos.push_back(p);
-      d_size.push_back(Vector(.5,.5,.5));
       d_norm.push_back(Vector(sin(theta)*cos(phi),sin(theta)*sin(phi),
                               cos(theta)));
 
