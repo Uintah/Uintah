@@ -72,6 +72,10 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
   int numMatls = d_sharedState->getNumMPMMatls();
   ASSERTEQ(numMatls, matls->size());
 
+  // Get delT
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel, getLevel(patches));
+
   // Need access to all velocity fields at once
   StaticArray<constNCVariable<double> >  gmass(numMatls);
   StaticArray<constNCVariable<double> >  gvolume(numMatls);
@@ -81,15 +85,15 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
   StaticArray<NCVariable<double> >       frictionWork(numMatls);
   StaticArray<NCVariable<Matrix3> >      gstress(numMatls);
   StaticArray<NCVariable<double> >       gnormtraction(numMatls);
+
+  constNCVariable<double> gm;
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
 
-    delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
-
-    Vector surnor;
+    Vector surnor(0.0,0.0,0.0);
 
     // First, calculate the gradient of the mass everywhere
     // normalize it, and stick it in surfNorm
@@ -103,12 +107,12 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       new_dw->getModifiable(gvelocity[m],  lb->gVelocityLabel,  dwi, patch);
       new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel,  dwi, patch);
       if (flag->d_fracture)
-	new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,
-			      patch);
+        new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,
+                              patch);
       else {
-	new_dw->allocateAndPut(frictionWork[m],lb->frictionalWorkLabel,dwi,
-			       patch);
-	frictionWork[m].initialize(0.);
+        new_dw->allocateAndPut(frictionWork[m],lb->frictionalWorkLabel,dwi,
+                               patch);
+        frictionWork[m].initialize(0.);
       }
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
 
@@ -122,45 +126,45 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
         Patch::BCType bc_type = patch->getBCType(face);
 
         switch(face) {
-         case Patch::xminus:
+        case Patch::xminus:
           if(bc_type == Patch::Neighbor) { ILOW = low.x(); }
           else if(bc_type == Patch::None){ ILOW = low.x()+1; }
           break;
-         case Patch::xplus:
+        case Patch::xplus:
           if(bc_type == Patch::Neighbor) { IHIGH = high.x(); }
           else if(bc_type == Patch::None){ IHIGH = high.x()-1; }
           break;
-         case Patch::yminus:
+        case Patch::yminus:
           if(bc_type == Patch::Neighbor) { JLOW = low.y(); }
           else if(bc_type == Patch::None){ JLOW = low.y()+1; }
           break;
-         case Patch::yplus:
+        case Patch::yplus:
           if(bc_type == Patch::Neighbor) { JHIGH = high.y(); }
           else if(bc_type == Patch::None){ JHIGH = high.y()-1; }
           break;
-         case Patch::zminus:
+        case Patch::zminus:
           if(bc_type == Patch::Neighbor) { KLOW = low.z(); }
           else if(bc_type == Patch::None){ KLOW = low.z()+1; }
           break;
-         case Patch::zplus:
+        case Patch::zplus:
           if(bc_type == Patch::Neighbor) { KHIGH = high.z(); }
           else if(bc_type == Patch::None){ KHIGH = high.z()-1; }
           break;
-         default:
+        default:
           break;
         }
       }
 
       // Compute the normals for all of the interior nodes
+      gm = gmass[m];
       for(int i = ILOW; i < IHIGH; i++){
         int ip = i+1; int im = i-1;
         for(int j = JLOW; j < JHIGH; j++){
           int jp = j+1; int jm = j-1;
           for(int k = KLOW; k < KHIGH; k++){
-            surnor = Vector(
-              -(gmass[m][IV(ip,j,k)] - gmass[m][IV(im,j,k)])/dx.x(),
-              -(gmass[m][IV(i,jp,k)] - gmass[m][IV(i,jm,k)])/dx.y(), 
-              -(gmass[m][IV(i,j,k+1)] - gmass[m][IV(i,j,k-1)])/dx.z()); 
+            surnor.x(-(gm[IV(ip,j,k)] - gm[IV(im,j,k)])/dx.x());
+            surnor.y(-(gm[IV(i,jp,k)] - gm[IV(i,jm,k)])/dx.y()); 
+            surnor.z(-(gm[IV(i,j,k+1)] - gm[IV(i,j,k-1)])/dx.z()); 
             double length = surnor.length();
             if(length>0.0){
               gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
@@ -171,9 +175,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
       // Fix the normals on the surface nodes
       for(Patch::FaceType face = Patch::startFace;
-                  face <= Patch::endFace; face=Patch::nextFace(face)){
+          face <= Patch::endFace; face=Patch::nextFace(face)){
         Patch::BCType bc_type = patch->getBCType(face);
-                                                                                
         if (bc_type == Patch::None) {
           int i=0,j=0,k=0;
           if(face==Patch::xplus || face==Patch::xminus){
@@ -184,12 +187,12 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
             for (j = JLOW; j<JHIGH; j++) {
               int jp = j+1; int jm = j-1;
               for (k = KLOW; k<KHIGH; k++) {
-                surnor = Vector( 0.0,
-                       -(gmass[m][IV(I,jp,k)] - gmass[m][IV(I,jm,k)])/dx.y(),
-                       -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
+                surnor.x(0.0);
+                surnor.y(-(gm[IV(I,jp,k)] - gm[IV(I,jm,k)])/dx.y());
+                surnor.z(-(gm[IV(I,j,k+1)] - gm[IV(I,j,k-1)])/dx.z());
                 double length = surnor.length();
                 if(length>0.0){
-                   gsurfnorm[m][IntVector(I,j,k)] = surnor/length;;
+                  gsurfnorm[m][IntVector(I,j,k)] = surnor/length;;
                 }
               }
             }
@@ -197,8 +200,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
             if(patch->getBCType(Patch::yminus)==Patch::None){
               j=JLOW-1;
               for (k = KLOW; k<KHIGH; k++) {
-                surnor = Vector( 0.0,0.0,
-                     -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
+                surnor.x(0.0);
+                surnor.y(0.0);
+                surnor.z(-(gm[IV(I,j,k+1)] - gm[IV(I,j,k-1)])/dx.z());
                 double length = surnor.length();
                 if(length>0.0){
                   gsurfnorm[m][IntVector(I,j,k)] = surnor/length;;
@@ -208,8 +212,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
             if(patch->getBCType(Patch::yplus)==Patch::None){
               j=JHIGH;
               for (k = KLOW; k<KHIGH; k++) {
-                surnor = Vector( 0.0,0.0,
-                     -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
+                surnor.x(0.0);
+                surnor.y(0.0);
+                surnor.z(-(gm[IV(I,j,k+1)] - gm[IV(I,j,k-1)])/dx.z());
                 double length = surnor.length();
                 if(length>0.0){
                   gsurfnorm[m][IntVector(I,j,k)] = surnor/length;;
@@ -226,10 +231,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
             for (i = ILOW; i<IHIGH; i++) {
               int ip = i+1; int im = i-1;
               for (k = KLOW; k<KHIGH; k++) {
-                surnor = Vector(
-                       -(gmass[m][IV(ip,J,k)] - gmass[m][IV(im,J,k)])/dx.x(),
-                         0.0,
-                       -(gmass[m][IV(i,J,k+1)] - gmass[m][IV(i,J,k-1)])/dx.z());
+                surnor.x(-(gm[IV(ip,J,k)] - gm[IV(im,J,k)])/dx.x());
+                surnor.y(0.0);
+                surnor.z(-(gm[IV(i,J,k+1)] - gm[IV(i,J,k-1)])/dx.z());
                 double length = surnor.length();
                 if(length>0.0){
                   gsurfnorm[m][IntVector(i,J,k)] = surnor/length;;
@@ -240,9 +244,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
             if(patch->getBCType(Patch::zminus)==Patch::None){
               k=KLOW-1;
               for (i = ILOW; i<IHIGH; i++) {
-                surnor = Vector(
-                       -(gmass[m][IV(i+1,J,k)] - gmass[m][IV(i-1,J,k)])/dx.x(),
-                         0.0,0.0);
+                surnor.x(-(gm[IV(i+1,J,k)] - gm[IV(i-1,J,k)])/dx.x());
+                surnor.y(0.0);
+                surnor.z(0.0);
                 double length = surnor.length();
                 if(length>0.0){
                   gsurfnorm[m][IntVector(i,J,k)] = surnor/length;;
@@ -252,9 +256,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
             if(patch->getBCType(Patch::zplus)==Patch::None){
               k=KHIGH;
               for (i = ILOW; i<IHIGH; i++) {
-                surnor = Vector(
-                       -(gmass[m][IV(i+1,J,k)] - gmass[m][IV(i-1,J,k)])/dx.x(),
-                         0.0,0.0);
+                surnor.x(-(gm[IV(i+1,J,k)] - gm[IV(i-1,J,k)])/dx.x());
+                surnor.y(0.0);
+                surnor.z(0.0);
                 double length = surnor.length();
                 if(length>0.0){
                   gsurfnorm[m][IntVector(i,J,k)] = surnor/length;;
@@ -271,10 +275,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
             for (i = ILOW; i<IHIGH; i++) {
               int ip = i+1; int im = i-1;
               for (j = JLOW; j<JHIGH; j++) {
-                surnor = Vector(
-                       -(gmass[m][IV(ip,j,K)] - gmass[m][IV(im,j,K)])/dx.x(),
-                       -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(),
-                       0.0);
+                surnor.x(-(gm[IV(ip,j,K)] - gm[IV(im,j,K)])/dx.x());
+                surnor.y(-(gm[IV(i,j+1,K)] - gm[IV(i,j-1,K)])/dx.y());
+                surnor.z(0.0);
                 double length = surnor.length();
                 if(length>0.0){
                   gsurfnorm[m][IntVector(i,j,K)] = surnor/length;;
@@ -285,9 +288,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
             if(patch->getBCType(Patch::xminus)==Patch::None){
               i=ILOW-1;
               for (j = JLOW; j<JHIGH; j++) {
-                surnor = Vector(0.0,
-                       -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(),
-                       0.0);
+                surnor.x(0.0);
+                surnor.y(-(gm[IV(i,j+1,K)] - gm[IV(i,j-1,K)])/dx.y());
+                surnor.z(0.0);
                 double length = surnor.length();
                 if(length>0.0){
                   gsurfnorm[m][IntVector(i,j,K)] = surnor/length;;
@@ -297,9 +300,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
             if(patch->getBCType(Patch::xplus)==Patch::None){
               i=IHIGH;
               for (j = JLOW; j<JHIGH; j++) {
-                surnor = Vector(0.0,
-                       -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(),
-                       0.0);
+                surnor.x(0.0);
+                surnor.y(-(gm[IV(i,j+1,K)] - gm[IV(i,j-1,K)])/dx.y());
+                surnor.z(0.0);
                 double length = surnor.length();
                 if(length>0.0){
                   gsurfnorm[m][IntVector(i,j,K)] = surnor/length;;
@@ -436,10 +439,10 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                   Dv=-normal_normaldV;
                   
                   // Calculate work done by frictional force
-		  if (flag->d_fracture)
-		    frictionWork[n][c] += 0.;
-		  else
-		    frictionWork[n][c] = 0.;
+                  if (flag->d_fracture)
+                    frictionWork[n][c] += 0.;
+                  else
+                    frictionWork[n][c] = 0.;
                 }
 
                 // General algorithm, including frictional slip.  The
@@ -461,16 +464,16 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                   // conventional definition.  However, here it is calculated
                   // as positive (Work=-force*distance).
                   if(compare(frictionCoefficient,d_mu)){
-		    if (flag->d_fracture)
-		      frictionWork[n][c] += mass*frictionCoefficient
-			* (normalDeltaVel*normalDeltaVel) *
-			(tangentDeltaVelocity/fabs(normalDeltaVel)-
-			 frictionCoefficient);
-		    else
-		      frictionWork[n][c] = mass*frictionCoefficient
-			* (normalDeltaVel*normalDeltaVel) *
-			(tangentDeltaVelocity/fabs(normalDeltaVel)-
-			 frictionCoefficient);
+                    if (flag->d_fracture)
+                      frictionWork[n][c] += mass*frictionCoefficient
+                        * (normalDeltaVel*normalDeltaVel) *
+                        (tangentDeltaVelocity/fabs(normalDeltaVel)-
+                         frictionCoefficient);
+                    else
+                      frictionWork[n][c] = mass*frictionCoefficient
+                        * (normalDeltaVel*normalDeltaVel) *
+                        (tangentDeltaVelocity/fabs(normalDeltaVel)-
+                         frictionCoefficient);
                   }
                 }
 
@@ -654,7 +657,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
                     frictionWork[n][c] += mass*frictionCoefficient
                       * (normalDeltaVel*normalDeltaVel) *
                       (tangentDeltaVelocity/fabs(normalDeltaVel)-
-                        frictionCoefficient);
+                       frictionCoefficient);
                   }
                 }
 
@@ -695,7 +698,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
       double c_v = mpm_matl->getSpecificHeat();
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter;
-        frictionWork[m][c] /= (c_v * gmass[m][c] * delT);
+        frictionWork[m][c] /= (c_v * gmass[m][c]);
         if(frictionWork[m][c]<0.0){
           cout << "dT/dt is negative: " << frictionWork[m][c] << endl;
         }
@@ -708,7 +711,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
                                                           const PatchSet* ,
                                                           const MaterialSet* ms)
-                                                          const
+  const
 {
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW,   lb->delTLabel);
@@ -733,7 +736,7 @@ void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
 void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
                                                         const PatchSet* ,
                                                         const MaterialSet* ms) 
-                                                        const
+  const
 {
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
