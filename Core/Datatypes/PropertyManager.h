@@ -44,6 +44,7 @@ namespace SCIRun {
 class PropertyBase : public Datatype {
 public:
   void *obj_;
+
   virtual ~PropertyBase() {}
   virtual void io(Piostream &) {}
   static  PersistentTypeID type_id;
@@ -55,7 +56,7 @@ template<class T>
 class Property : public T, public PropertyBase {
 public:
   Property() {}   // only Pio should use this constructor
-  Property( T &o) { obj_= &o; } 
+  Property( T &o ) { obj_= &o; } 
   
   static const string type_name( int n = -1 );
   virtual void io(Piostream &stream);
@@ -66,8 +67,11 @@ private:
 
 template<class T>
 class Property<T *> : public Property<T> {
+private:
+  bool tmp;
 public:
-  Property( T *obj ) : Property<T>( *obj ) {};
+  Property( T *obj, bool temp=false ) : Property<T>( *obj ), tmp(temp) {}
+  ~Property() { if (tmp) delete static_cast<T *>(obj_); }
 };
 
 
@@ -135,8 +139,9 @@ public:
   virtual ~PropertyManager();
 
   
-  template<class T> void store( const string &, T &);
   template<class T> void store( const string &, const T &);
+  template<class T> void store( const string &, T &); 
+
   void store( const string &name, const char *s )  { store(name,string(s));}
   void store( const string &name, const char s )   { store(name,Char(s));}
   void store( const string &name, const short s )  { store(name,Short(s));}
@@ -146,6 +151,9 @@ public:
   
   template<class T> bool get( const string &, T &);
   template<class T> bool get( const string &, T *&);
+
+  void remove( const string & );
+  int size() { return size_; }
 
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
@@ -162,73 +170,93 @@ private:
 
 template<class T>
 void 
-PropertyManager::store( const string &name, const T& obj )
+PropertyManager::store( const string &name,  T& obj)
 {
-  T *t = new T(obj);
+  lock.lock();
 
-  store( name, t );
-}
-
-template<class T>
-void 
-PropertyManager::store( const string &name,  T& obj )
-{
   map_type::iterator loc = properties_.find(name);
   if (loc != properties_.end()) 
     delete loc->second;
   else
     size_++;
   properties_[name] = new Property<T>( obj );
-  size_++;
+
+  lock.unlock();
 }
 
+template<class T>
+void 
+PropertyManager::store( const string &name,  const T& obj )
+{
+  lock.lock();
+
+  map_type::iterator loc = properties_.find(name);
+  if (loc != properties_.end()) 
+    delete loc->second;
+  else
+    size_++;
+  properties_[name] = new Property<T*>( scinew T(obj), true );
+
+  lock.unlock();
+
+}
 
 template<class T>
 bool 
 PropertyManager::get_scalar(const string &name, T &ref)
 {
+  lock.lock();
+
+  bool ans = false;
   map_type::iterator loc = properties_.find(name);
   if (loc != properties_.end()) {
     if ( dynamic_cast<Scalar *>( loc->second ) ) {
       ref = T(*static_cast<Scalar *>(loc->second->obj_));
-      return true;
+      ans=true;
     }
   }
   
-  // either property not found, or it can not be cast to T
-  return false;
+  lock.unlock();
+  return ans;
 }
 
 template<class T>
 bool 
 PropertyManager::get(const string &name, T &ref)
 {
+  lock.lock();
+
+  bool ans = false;
   map_type::iterator loc = properties_.find(name);
   if (loc != properties_.end()) {
     if ( dynamic_cast<T *>( loc->second ) ) {
       ref = *static_cast<T *>(loc->second->obj_);
-      return true;
+      ans = true;
     }
   }
   
-  // either property not found, or it can not be cast to T
-  return false;
+  lock.unlock();
+  return ans;
 } 
 
 template<class T>
 bool 
 PropertyManager::get(const string &name, T *&ref)
 {
+  lock.lock();
+
+  bool ans = false;
   map_type::iterator loc = properties_.find(name);
   if (loc != properties_.end()) {
     if ( dynamic_cast<T *>( loc->second ) ) {
       ref = static_cast<T *>(loc->second->obj_);
-      return true;
+      ans=true;
     }
   }
   
-  // either property not found, or it can not be cast to T
-  return false;
+  lock.unlock();
+
+  return ans;
 } 
 
 template<> bool PropertyManager::get(const string &name, char &ref);
