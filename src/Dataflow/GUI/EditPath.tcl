@@ -103,7 +103,8 @@ itcl_class PSECommon_Salmon_EditPath {
 	frame $df.info -relief sunken
 	frame $df.modes
 	frame $df.sw
-	pack  $df.ftest $df.info $df.modes $df.sw -side top -fill both -pady 3 -padx 3
+	frame $df.out
+	pack  $df.ftest $df.info $df.modes $df.out $df.sw -side top -fill both -pady 3 -padx 3
 
 #	button $df.ftest.runviews -text "Test Views" -command "$this-c test_views" -anchor w
 	button $df.ftest.run -text "Run" -command "$this-c test_path" -anchor w
@@ -143,6 +144,11 @@ itcl_class PSECommon_Salmon_EditPath {
 	radiobutton $df.modes.new -text "New Path" -variable $this-tcl_is_new -value 1 -command "$this-c init_new"
 	radiobutton $df.modes.exist -text "Existing Path" -variable $this-tcl_is_new -value 0 -command "$this-c init_exist"
 	pack $df.modes.head $df.modes.new $df.modes.exist -side left -padx 2
+	
+	label $df.out.head -text "Output: "
+	radiobutton $df.out.ogeom -text "Geometry Port" -variable $this-tcl_send_dir -value 0
+	radiobutton $df.out.oview -text "CameraView Port" -variable $this-tcl_send_dir -value 1
+	pack  $df.out.head $df.out.ogeom  $df.out.oview -side left -padx 2
 	
 	checkbutton $df.sw.lp -text "Looped" -variable $this-tcl_is_looped  -anchor w
 	checkbutton $df.sw.bk -text "Reversed" -variable $this-tcl_is_backed  -anchor w
@@ -186,6 +192,8 @@ itcl_class PSECommon_Salmon_EditPath {
 	$ef.sw.int.cub configure -variable $this-tcl_intrp_type
 	$ef.sw.spd.sm configure -variable $this-tcl_acc_mode
 	$ef.sw.spd.no configure -variable $this-tcl_acc_mode
+	$df.out.ogeom configure -variable $this-tcl_send_dir
+	$df.out.oview configure -variable $this-tcl_send_dir
 	update
     }
 }
