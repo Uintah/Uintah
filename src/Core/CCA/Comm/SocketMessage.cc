@@ -225,18 +225,26 @@ void SocketMessage::destroyMessage() {
 
 int SocketMessage::getRecvBufferCopy(void* buf)
 {
+  memcpy(buf, msg, msg_size);
+  return msg_size;
 }
 
 int SocketMessage::getSendBufferCopy(void* buf)
 {
+  memcpy(buf, msg, msg_size);
+  return msg_size;
 }
 
 void SocketMessage::setRecvBuffer(void* buf, int len)
 {
+  msg=buf;
+  msg_size=len;
 }
 
 void SocketMessage::setSendBuffer(void* buf, int len)
 {
+  msg=buf;
+  msg_size=len;
 }
 
 
