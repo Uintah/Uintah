@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <vector>
 #include <Packages/Uintah/Core/Math/Sparse.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Core/Containers/StaticArray.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
 
@@ -14,6 +15,8 @@ extern "C" {
 #endif
 
 #define MAX_BASIS 27
+#define RIGHT_POLAR 0
+#define LEFT_POLAR 1
 
 
 
@@ -133,6 +136,12 @@ WARNING
 				      double& press, double& dp_drho,
 				      double& dp_de);
 
+         void polarDecomposition(const Matrix3& defGrad,
+                                 Matrix3& cauchyGreen,
+                                 Matrix3& stretch,
+                                 Matrix3& rotation,
+                                 double tolerance,
+				 int leftOrRight);
         protected:
 
 	 MPMLabel* lb;
