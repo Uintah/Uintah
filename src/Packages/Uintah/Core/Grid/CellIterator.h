@@ -54,6 +54,17 @@ WARNING
       }
       return old;
     }
+
+    inline CellIterator& operator++() {
+      if(++d_ix >= d_e.x()){
+	d_ix = d_s.x();
+	if(++d_iy >= d_e.y()){
+	  d_iy = d_s.y();
+	  ++d_iz;
+	}
+      }
+      return *this;
+    }
     
     //////////
     // Insert Documentation Here:
