@@ -292,12 +292,10 @@ Gui::handleTriggers()
 		      cout << " priorities: " << nextPriority << ", "
 			   << quedPriority << "\n";
 		      activeGui->activeMTT_ = next;
-		      activeGui->activeMTT_->activate();
 		    }
 		  else
 		    {
 		      activeGui->activeMTT_ = activeGui->queuedMTT_;
-		      activeGui->activeMTT_->activate();
 		      activeGui->queuedMTT_ = NULL;
 		    }
 		}
@@ -306,13 +304,17 @@ Gui::handleTriggers()
 		  cout << "moving in queued trigger: " << 
 		    activeGui->queuedMTT_->getName() << "\n";
 		  activeGui->activeMTT_ = activeGui->queuedMTT_;
-		  activeGui->activeMTT_->activate();
 		  activeGui->queuedMTT_ = NULL;
 		}
 	    }
 	  else
 	    {
 	      activeGui->activeMTT_ = next;
+	    }
+	  if( activeGui->activeMTT_ ) 
+	    {
+	      cout << "using next trigger: " << next->getName() << "\n";
+	      activeGui->activeMTT_->activate();
 	    }
 	}
     }
