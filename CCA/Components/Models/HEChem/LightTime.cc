@@ -144,9 +144,11 @@ void LightTime::scheduleComputeModelSources(SchedulerP& sched,
   //__________________________________
   // Products
   t->requires(Task::NewDW,  Ilb->rho_CCLabel,      prod_matl, gn);
+  t->requires(Task::NewDW,  Ilb->vol_frac_CCLabel, prod_matl, gn);
   
   //__________________________________
   // Reactants
+  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  react_matl, gn);
   t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
   t->requires(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
   t->requires(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
@@ -199,6 +201,7 @@ void LightTime::computeModelSources(const ProcessorGroup*,
     new_dw->getModifiable(energy_src_1,  mi->energy_source_CCLabel,   m1,patch);
     new_dw->getModifiable(sp_vol_src_1,  mi->sp_vol_source_CCLabel,   m1,patch);
 
+    constCCVariable<double> vol_frac_rct, vol_frac_prd;
     constCCVariable<double> cv_reactant,Fr_old;
     constCCVariable<double> rctTemp,rctRho,rctSpvol,prodRho;
     constCCVariable<Vector> rctvel_CC;
@@ -216,6 +219,8 @@ void LightTime::computeModelSources(const ProcessorGroup*,
     old_dw->get(Fr_old,        reactedFractionLabel,   m0,patch,gn, 0);
     new_dw->get(rctRho,        Ilb->rho_CCLabel,       m0,patch,gn, 0);
     new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel,    m0,patch,gn, 0);
+    new_dw->get(vol_frac_rct,  Ilb->vol_frac_CCLabel,  m0,patch,gn, 0);
+    new_dw->get(vol_frac_prd,  Ilb->vol_frac_CCLabel,  m1,patch,gn, 0);
     new_dw->get(cv_reactant,   Ilb->specific_heatLabel,m0,patch,gn, 0);
     new_dw->allocateAndPut(Fr, reactedFractionLabel,   m0,patch);
     new_dw->allocateAndPut(delF, delFLabel,            m0,patch);
@@ -229,6 +234,7 @@ void LightTime::computeModelSources(const ProcessorGroup*,
     const Level* lvl = patch->getLevel();
     double time = d_sharedState->getElapsedTime();
     double delta_L = 1.5*pow(cell_vol,1./3.)/d_D;
+//    double delta_L = 1.5*dx.x()/d_D;
     double A=d_direction.x();
     double B=d_direction.y();
     double C=d_direction.z();
@@ -251,36 +257,38 @@ void LightTime::computeModelSources(const ProcessorGroup*,
       double dist_straight = (pos - d_start_place).length();
       double dist = dist_plane*plane + dist_straight*(1.-plane);
       double t_b = dist/d_D; 
-      if (time >= t_b && rctRho[c] > d_TINY_RHO){
-        Fr[c] = (time - t_b)/delta_L;
-        if(Fr[c] > .96) Fr[c] = 1.0;
-        delF[c] = Fr[c] - Fr_old[c];
+      if(vol_frac_rct[c] + vol_frac_prd[c] > .99){
+        if (time >= t_b && rctRho[c] > d_TINY_RHO){
+          Fr[c] = (time - t_b)/delta_L;
+          if(Fr[c] > .96) Fr[c] = 1.0;
+          delF[c] = Fr[c] - Fr_old[c];
 
-        //__________________________________
-        // Insert Burn Model Here
-        double burnedMass;
-        double rctMass = rctRho[c]*cell_vol;
-        double prdMass = prodRho[c]*cell_vol;
-        burnedMass = min(delF[c]*(prdMass+rctMass), rctMass);
+          //__________________________________
+          // Insert Burn Model Here
+          double burnedMass;
+          double rctMass = rctRho[c]*cell_vol;
+          double prdMass = prodRho[c]*cell_vol;
+          burnedMass = min(delF[c]*(prdMass+rctMass), rctMass);
 
-        //__________________________________
-        // conservation of mass, momentum and energy                           
-        mass_src_0[c] -= burnedMass;
-        mass_src_1[c] += burnedMass;
-           
-        Vector momX        = rctvel_CC[c] * burnedMass;
-        momentum_src_0[c] -= momX;
-        momentum_src_1[c] += momX;
+          //__________________________________
+          // conservation of mass, momentum and energy                           
+          mass_src_0[c] -= burnedMass;
+          mass_src_1[c] += burnedMass;
 
-        double energyX   = cv_reactant[c]*rctTemp[c]*burnedMass; 
-        double releasedHeat = burnedMass * d_E0;
-        energy_src_0[c] -= energyX;
-        energy_src_1[c] += energyX + releasedHeat;
+          Vector momX        = rctvel_CC[c] * burnedMass;
+          momentum_src_0[c] -= momX;
+          momentum_src_1[c] += momX;
 
-        double createdVolx  = burnedMass * rctSpvol[c];
-        sp_vol_src_0[c] -= createdVolx;
-        sp_vol_src_1[c] += createdVolx;
-      }  // if (time to light it)
+          double energyX   = cv_reactant[c]*rctTemp[c]*burnedMass; 
+          double releasedHeat = burnedMass * d_E0;
+          energy_src_0[c] -= energyX;
+          energy_src_1[c] += energyX + releasedHeat;
+
+          double createdVolx  = burnedMass * rctSpvol[c];
+          sp_vol_src_0[c] -= createdVolx;
+          sp_vol_src_1[c] += createdVolx;
+        }  // if (time to light it)
+      }  // if cell only contains rct and prod
       if (rctRho[c] <= d_TINY_RHO){
         Fr[c] = 1.0;
         delF[c] = 0.0;
