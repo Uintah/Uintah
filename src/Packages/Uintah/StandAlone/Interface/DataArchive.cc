@@ -27,8 +27,7 @@ using SCICore::Util::DebugStream;
 DebugStream DataArchive::dbg("DataArchive", false);
 
 DataArchive::DataArchive(const std::string& filebase)
-   : d_filebase(filebase), d_lock("DataArchive lock"),
-     d_varHashMaps(NULL)
+   : d_filebase(filebase), d_varHashMaps(NULL), d_lock("DataArchive lock")
 {
    have_timesteps=false;
    string index(filebase+"/index.xml");
@@ -130,10 +129,10 @@ DOM_Node DataArchive::getTimestep(double searchtime, XMLURL& found_url)
       // Will build d_ts* as a side-effect...
    }
    int i;
-   for(i=0;i<d_tstimes.size();i++)
+   for(i=0;i<(int)d_tstimes.size();i++)
       if(searchtime == d_tstimes[i])
 	 break;
-   if(i == d_tstimes.size())
+   if(i == (int)d_tstimes.size())
       return DOM_Node();
    found_url = d_tsurl[i];
    return d_tstop[i];
@@ -273,7 +272,7 @@ DataArchive::TimeHashMaps::TimeHashMaps(const vector<double>& tsTimes,
    ASSERTL3(tsTimes.size() == tsTopNodes.size());
    ASSERTL3(tsUrls.size() == tsTopNodes.size());
 
-   for (int i = 0; i < tsTimes.size(); i++)
+   for (int i = 0; i < (int)tsTimes.size(); i++)
      d_patchHashMaps[tsTimes[i]].init(tsUrls[i], tsTopNodes[i]);
    
    d_lastFoundIt = d_patchHashMaps.end();
@@ -402,7 +401,7 @@ DOM_Node DataArchive::MaterialHashMaps::findVariable(const string& name,
 						     int matl,
 						     XMLURL& foundUrl)
 {
-  if (matl < d_varHashMaps.size()) {
+  if (matl < (int)d_varHashMaps.size()) {
     VarHashMap& hashMap = d_varHashMaps[matl];
     VarHashMapIterator foundIt = hashMap.find(name.c_str());
     
@@ -419,7 +418,7 @@ void DataArchive::MaterialHashMaps::add(const string& name, int matl,
 {
   d_varNames.push_back(name);
   const char* var_name = d_varNames.back().c_str();
-  if (matl >= d_varHashMaps.size())
+  if (matl >= (int)d_varHashMaps.size())
     d_varHashMaps.resize(matl + 1);
   pair<DOM_Node, XMLURL*> value(varNode, pUrl);
   pair<const char*, pair<DOM_Node, XMLURL*> > valkeypair(var_name, value);
@@ -445,6 +444,9 @@ int DataArchive::queryNumMaterials( const string& name, const Patch* patch, doub
 
 //
 // $Log$
+// Revision 1.11  2000/09/25 20:39:14  sparker
+// Quiet g++ compiler warnings
+//
 // Revision 1.10  2000/09/15 22:08:34  witzel
 // Changed the variable hash map structure so that it only parses data xml
 // files for a timestep after that timestep has be queried (instead of

@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 #include <fstream>
 #include <iostream>
@@ -174,6 +175,9 @@ Scheduler::problemSetup(const ProblemSpecP&)
 
 //
 // $Log$
+// Revision 1.11  2000/09/25 20:39:14  sparker
+// Quiet g++ compiler warnings
+//
 // Revision 1.10  2000/09/20 15:50:30  sparker
 // Added problemSetup interface to scheduler
 // Added ability to get/release the loadBalancer from the scheduler
