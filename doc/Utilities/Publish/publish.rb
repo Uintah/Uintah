@@ -289,6 +289,8 @@ class Docs
     ENV["PATH"] = ENV["PATH"] + ":" + @conf[Configuration::ToolsPath]
     ENV["CLASSPATH"] = @conf[Configuration::ClassPath]
     ENV["STYLESHEET_XSL_HTML"] = @conf[Configuration::Stylesheet_XSL_HTML]
+    # Next one is for compatibility with 1.10.1 and earlier docs.
+    ENV["STYLESHEET_PATH"] = ENV["STYLESHEET_XSL_HTML"]
     ENV["STYLESHEET_DSSSL_PRINT"] = @conf[Configuration::Stylesheet_DSSSL_Print]
     ENV["XML_DCL"] = @conf[Configuration::XML_DCL]
     ENV["CATALOG"] = @conf[Configuration::Catalog]
