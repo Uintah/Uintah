@@ -42,8 +42,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-continuous
 	global $this-extract-from-new-field
 	global $this-algorithm
-	global $this-type
-	global $this-gen
+	global $this-field-type
+	global $this-field-gen
 	global $this-build_trisurf
 	global $this-np
 	global $this-active_tab
@@ -65,8 +65,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-continuous 0
 	set $this-extract-from-new-field 1
 	set $this-algorithm 0
-	set $this-type ""
-	set $this-gen 0
+	set $this-field-type ""
+	set $this-field-gen 0
 	set $this-build_trisurf 0
 	set $this-np 1
 	set $this-active_tab "MC"
@@ -280,16 +280,16 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	#  Info
 	
-	global $this-type
-	global $this-gen
+	global $this-field-type
+	global $this-field-gen
 
 	iwidgets::labeledframe $w.f.info -labelpos nw -labeltext "Info"
 	set info [$w.f.info childsite]
 	
 	label $info.type_label -text "File Type: " 
-	label $info.type -text [set $this-type]
+	label $info.type -textvar $this-field-type
 	label $info.gen_label -text "Generation: "
-	label $info.gen -text [set $this-gen]
+	label $info.gen -textvar $this-field-gen
 
 	pack $info.type_label $info.type $info.gen_label $info.gen -side left
 	pack $w.f.info -side top -fill x -expand 1
@@ -406,22 +406,6 @@ itcl_class SCIRun_Visualization_Isosurface {
 	    set $this-continuous 1
 	} else {
 	    set $this-continuous 0
-	}
-    }
-
-    method set_info { type generation } {
-	global $this-type
-	global $this-gen
-
-	set $this-type $type
-	set $this-gen $generation
-
-	set w .ui[modname]    
-	if [ expr [winfo exists $w] ] {
-	    set info [$w.f.info childsite]
-	    
-	    $info.type configure -text $type 
-	    $info.gen  configure -text $generation
 	}
     }
 
