@@ -42,7 +42,8 @@ class GenSurface : public Module {
     TCLdouble point_rad;
     TCLColor widget_color;
 
-    TCLstring boundary_expr;
+    TCLstring cyl_boundary_expr;
+    TCLstring sph_boundary_expr;
 
     ColormapIPort* colormapport;
     SurfaceOPort* outport;
@@ -90,7 +91,8 @@ GenSurface::GenSurface(const clString& id)
   sph_nu("sph_nu", id, this), sph_nv("sph_nv", id, this),
   point_pos("point_pos", id, this), point_rad("point_rad", id, this),
   widget_color("widget_color", id, this),
-  boundary_expr("boundary_expr", id, this)
+  cyl_boundary_expr("cyl_boundary_expr", id, this),
+  sph_boundary_expr("sph_boundary_expr", id, this)
 {
     // Create the input port
     colormapport=scinew ColormapIPort(this, "Colormap", ColormapIPort::Atomic);
@@ -118,7 +120,8 @@ GenSurface::GenSurface(const GenSurface& copy, int deep)
   sph_nu("sph_nu", id, this), sph_nv("sph_nv", id, this),
   point_pos("point_pos", id, this), point_rad("point_rad", id, this),
   widget_color("widget_color", id, this),
-  boundary_expr("boundary_expr", id, this)
+  cyl_boundary_expr("cyl_boundary_expr", id, this),
+  sph_boundary_expr("sph_boundary_expr", id, this)
 {
     NOT_FINISHED("GenSurface::GenSurface");
 }
@@ -185,6 +188,7 @@ void GenSurface::execute()
     }
 
     // Spit out the surface
+    clString be;
     if(st=="cylinder"){
 	surf=scinew CylinderSurface(cyl_p1.get(), cyl_p2.get(), cyl_rad.get(),
 				    cyl_nu.get(), cyl_nv.get(), cyl_ndiscu.get());
@@ -200,9 +204,10 @@ void GenSurface::execute()
 	last_cyl_nu=cyl_nu.get();
 	last_cyl_nv=cyl_nv.get();
 	last_cyl_ndiscu=cyl_ndiscu.get();
+	be=cyl_boundary_expr.get();
     } else if(st=="sphere"){
 	surf=scinew SphereSurface(sph_cen.get(), sph_rad.get(),
-				    cyl_nu.get(), cyl_nv.get());
+				  sph_nu.get(), sph_nv.get());
 	if(last_generation && sph_cen.get() == last_sph_cen
 	   && Abs(sph_rad.get()-last_sph_rad) < 1.e-8
 	   && sph_nu.get() == last_sph_nu && sph_nv.get() == last_sph_nv ){
@@ -212,15 +217,16 @@ void GenSurface::execute()
 	last_sph_rad=sph_rad.get();
 	last_sph_nu=sph_nu.get();
 	last_sph_nv=sph_nv.get();
+	be=sph_boundary_expr.get();
     } else if(st=="point"){
 	surf=scinew PointSurface(point_pos.get());
+//	be=point_boundary_expr.get();
     } else {
 	error("Unknown surfacetype: "+st);
     }
     if(surf_id)
 	ogeom->delObj(surf_id);
     if(surf){
-	clString be(boundary_expr.get());
 	if(be != ""){
 	    surf->set_bc(be);
 	}

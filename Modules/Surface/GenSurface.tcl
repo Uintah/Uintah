@@ -56,8 +56,12 @@ itcl_class GenSurface {
 	set $this-widget_color-g 0
 	set $this-widget_color-b 0
 
-	global $this-boundary_expr
-	set $this-boundary_expr ""
+	global $this-cyl_boundary_expr
+	set $this-cyl_boundary_expr ""
+	global $this-sph_boundary_expr
+	set $this-sph_boundary_expr ""
+	global $this-point_boundary_expr
+	set $this-point_boundary_expr ""
 	$this-c needexecute
 
 	global $this-oldst
@@ -89,7 +93,8 @@ itcl_class GenSurface {
 	frame $w.cylinder -borderwidth 2 -relief groove
 	label $w.cylinder.cyl -text "Cylinder:"
 	pack $w.cylinder.cyl -side top -pady 5 -anchor w
-	make_entry $w.cylinder.bc "Voltage:" $this-boundary_expr $n
+	make_entry $w.cylinder.bc "Voltage:" \
+		$this-cyl_boundary_expr $n
 	make_entry $w.cylinder.rad "Radius:" $this-cyl_rad $n
 	make_entry $w.cylinder.nu "nu:" $this-cyl_nu $n
 	make_entry $w.cylinder.nv "nv:" $this-cyl_nv $n
@@ -100,10 +105,10 @@ itcl_class GenSurface {
 	frame $w.sphere -borderwidth 2 -relief groove
 	label $w.sphere.lab -text "Sphere:"
 	pack $w.sphere.lab -side top -pady 5 -anchor w
-	make_entry $w.sphere.bc "Voltage:" $this-boundary_expr $n
-	make_entry $w.sphere.rad "Radius:" $this-cyl_rad $n
-	make_entry $w.sphere.nu "nu:" $this-cyl_nu $n
-	make_entry $w.sphere.nv "nv:" $this-cyl_nv $n
+	make_entry $w.sphere.bc "Voltage:" $this-sph_boundary_expr $n
+	make_entry $w.sphere.rad "Radius:" $this-sph_rad $n
+	make_entry $w.sphere.nu "nu:" $this-sph_nu $n
+	make_entry $w.sphere.nv "nv:" $this-sph_nv $n
 	pack $w.sphere.bc $w.sphere.rad $w.sphere.nu $w.sphere.nv -fill x
 
 	frame $w.point
@@ -117,5 +122,6 @@ itcl_class GenSurface {
 	pack $w.[set $this-surfacetype] \
 		-side top -padx 2 -pady 2 -ipadx 2 -ipady 2 -fill x
 	set $this-oldst [set $this-surfacetype]
+	$this-c needexecute
     }
 }
