@@ -53,11 +53,20 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
 
 {
   ProblemSpecP db = params->findBlock("DORadiationModel");
-  db->require("ordinates",d_sn);
-  if (db->findBlock("opl"))
-    db->require("opl",d_xumax);
-  else
-    d_xumax = 30.0;
+  if (db) {
+    if (db->findBlock("ordinates"))
+      db->require("ordinates",d_sn);
+    else
+      d_sn = 2;
+    if (db->findBlock("opl"))
+      db->require("opl",d_xumax);
+    else
+      d_xumax = 3.0;
+  }
+  else {
+    d_sn = 2;
+    d_xumax=3.0;
+  }
   computeOrdinatesOPL();
 
   // ** WARNING ** ffield/Symmetry/sfield/outletfield hardcoded to -1,-3,-4,-5
