@@ -1,82 +1,122 @@
-%%
-%% Title: MatlabInterface documentation
-%%
-%% To compile (and produce a postscript) use "begtex"
-%% script:
-%%          begtex report
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% DRAFT COMMANDS
-% 
-% \documentclass[11pt,draft]{IEEEtran}
-
-% FINAL VERSION DOCUMENT
-% 
-\documentclass[12pt]{IEEEtran}
-% \documentclass[12pt]{article}
-\textwidth 6.0in
-\topmargin 0.4in
-\oddsidemargin 0.3in
-\evensidemargin 0.3in
-\textheight 8.5in
-
-\usepackage{times}              % Postscript fonts.
-\usepackage{epsfig}
-\usepackage{latexsym}
-\usepackage{amsmath}
-%\oddsidemargin 0in
-
-
+% Matlab.tex
 %
-% ONP: THIS IS A FIGURE COMMAND. LABEL IS THE SAME AS FILENAME. USE:
-%          \fgr{psfilename}{3in}{Caption text}
+% Notes:
+%
+% o Rename this file appropriately.
+%
+% o Complete relevant sections below.
+%
+% o Use markup commands defined in scirun-doc.sty.
+%   Avoid presentation markup (e.g. \textbf or \emph).
+%
+% o To make your document web-friendly, use commands from html package. See
+%   latex2html manual or the book "The Latex Web Companion."
+%
+% o Don't add new subsections, but freely subsubsection 
+%   existing subsections.
+%
+% o Add local commands if desired (via \newcommand).  But first check for
+%   equivalent markup in scirun-doc.sty.
+%
+% o Only use packages distributed with Latex2e.
+%
+% o Cite references with the \cite command. Put citations in
+%   a bib file and send along with this file.
+%
+% o Please include at least one image of tk GUI. Provide 
+%   an EPS version and a web friendly version (e.g., jpeg or gif).
+%
+% o Including images:  Create a figure command for each figure using the
+%   template below.  Copy the template (make a copy of the template
+%   for each figure) and uncomment only the first '%' in each line.
+%   Then replace bracketed text with appropriate values.  Here is the
+%   template: 
 
-\newcommand{\sr}{SCIRun}
-
-\newcommand{\fgr}[3] 
-{                    
+\newcommand{\fgr}[3]
+{
 \begin{figure}[htb]
 \centerline{\epsfig{file=../psfigs/#1.ps,width=#2}}
 \caption{\label{fig:#1} #3 }
 \end{figure}
 }
 
+% 
+% {\centerline{\includegraphics{../psfigs/tst1.ps}}}
+%%begin{latexonly}
+%  \newcommand{\<figure command name>}%
+%  {\centerline{\includegraphics[options]{<path to eps file>}}}
+%%end{latexonly}
+%\begin{htmlonly}
+%  \newcommand{\<figure command name (same as above)>}{%
+%  \htmladdimg[options]{<path to jpg file>}}
+%\end{htmlonly}
+%
+%   Where in the ``latexonly'' part, ``options'' is a list of key-value pair
+%   options.  Typically the options specify graphic width, height, and
+%   bounding box.  See ``The Latex Graphics Companion'' for more
+%   information.  Note that we are using ``\includegraphics'' command
+%   from the ``graphicx'' package.
+%
+%   In the ``htmlonly'' part ``options'' is a list options such as ``align'',
+%   ``width'', ``height'', and ``alt''.  See ``The Latex Web Companion'' for
+%   details.
+%   
+%   Now to actually create figures enclose each figure command as follows:
+%
+%\begin{figure}
+%  \begin{makeimage}
+%  \end{makeimage}
+%  \<figurecommand>
+%  \caption{\label{fig:<figure label>} <Caption text>}
+%\end{figure}
+%
+%   and replace bracket text appropriately.
+%   
+
+% Uncomment following 5 commented lines if you want to process this document
+% with Latex. You must also uncomment the last line of the file.
+
+\documentclass[notitlepage,11pt]{article}
+\usepackage{graphicx}
+% \usepackage{html}
+\usepackage{epsfig}
+\usepackage{scirun-doc}
 \begin{document}
-\baselineskip 0.3in
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{centering}
-\section*{SCIRun/Matlab Interface User Documentation}
-\end{centering}
+\ModuleRef{\Module{Matlab}}{\Category{DataIO}}{\Package{MatlabInterface}}
 
-\subsection*{Purpose} \indent
+\subsection{Summary} \indent
 
 The Matlaninterface module
 enables calls to Matlab scripts within the \sr{} environment.
-This is accomplished 
+This is accomplished
 by first establishing an independent Matlab process and second,
 as SCIRun communicates with that process via network sockets.
-
 Possible uses of the MatlabInterface include both simple tasks
 such as converting SCIRun files to Matlab files and vice versa.
 In addition, the module completes more complex tasks such as creating
 interactive \sr{} programs calling to Matlab scripts for real-time applications.
 
-SCIRun communicates with Matlab via network sockets. The communication
-overhead is minimized when both packages reside on the same machine, 
-and may increase (depending on the network speed) if Matlab is 
-runs at the remote host. 
+\subsection{Use}
 
-The choice of a network communication model (as opposed to hard-compiling 
+\subsubsection{Concept} \indent
+
+SCIRun communicates with Matlab via network sockets. The communication
+overhead is minimized when both packages reside on the same machine,
+and may increase (depending on the network speed) if Matlab is
+runs at the remote host.
+
+The choice of a network communication model (as opposed to hard-compiling
 Matlab codes into \sr{}) is due to incompatibilities in Matlab
-libraries, and due to higher flexibility of the communication model. 
-The network communication model allows both remote calls to Matlab 
-scripts, as well as use of Matlab as a scripting engine to process 
-interactive user requests. This model resolves potential licensing 
-conflicts and provides convenience by saving extra installation time 
+libraries, and due to higher flexibility of the communication model.
+The network communication model allows both remote calls to Matlab
+scripts, as well as use of Matlab as a scripting engine to process
+interactive user requests. This model resolves potential licensing
+conflicts and provides convenience by saving extra installation time
 in the situation where SCIRun and Matlab are installed on different hosts.
 
-\subsection*{Location and Installation} \indent
+\subsubsection{Location and Installation} \indent
 
 We assume that the environment variable {\bf \$SCIRun} points to the root
 of the SCIRun source tree, and the package executables are compiled in the
@@ -94,14 +134,19 @@ package under {\bf DataIO}. Matlab engine scripts, as well as test
 example nets (({\bf tst*.net} files) are located in SCIRun source tree: \\
 {\bf \$SCIRun/src/Packages/MatlabInterface/matlab/engine }\\
 
-\subsection*{Examples: SCIRun and Matlab are on the same host} \indent
+\subsubsection{Examples} \indent
 
 Examples are the best way to learn how to work with MatlabInterface.
+There are five examples attached to the package. First three
+examples assume that SCIRun and Matlab reside on the same host.
+Example number four is for situation where SCIRun and Matlab are
+on the different hosts. The point of example 5 is to demonstrate
+application of the MatlabInterface to call focusing inversion routine.
+
 Three example scripts, named {\bf tst1.net, tst2.net and tst3.net}
-are attached to the package.
-These scripts are written for the situation where SCIRun and 
+are written for the situation where SCIRun and 
 Matlab are installed on the same machine. 
-It is also assumed that the user works from under Linux
+It is also assumed that the user works from under  a Linux (or Unix)
 shell and Matlab package is accessable in the path. 
 
 To run examples, change current directory to \\
@@ -109,6 +154,8 @@ To run examples, change current directory to \\
 and execute SCIRun with first test net: \\
 {\bf \$SCIRun/bin/scirun  tst1.net} \\
 The resulting screen appears in Figure \ref{fig:tst1}.
+
+\subsubsection{Example 1: Save Matlab matrix in SCIRun format} \indent
 
 The first test generates a random matrix under Matlab and sends the
 results to \sr{}, where the matrix is saved into a \sr{} file. 
@@ -175,6 +222,8 @@ To check if the example was run properly, open file {\bf rand1.mat }
 with any ascii text editor and and see that it contains random
 $5 \times 5$ matrix in \sr{} format. 
 
+\subsubsection{Example 2: Convert SCIRun file to raw ascii Matlab file} \indent
+
 The second example runs with {\bf tst2.net} file. In the same
 directory \\
 {\bf \$SCIRun/src/Packages/MatlabInterface/matlab/engine } \\
@@ -204,6 +253,8 @@ the \sr{} environment.
 
 To check if the example was run properly, open file {\bf rand2.dat}
 and see if it contains the same random numbers as file {\bf rand1.mat}.
+
+\subsubsection{Example 3: Convert Matlab file to SCIRun file} \indent
 
 The third example is run with {\bf tst3.net} file. In the same
 directory \\
@@ -237,12 +288,13 @@ To check if the example ran properly, open file {\bf rand3.mat}
 and see if it contains the same random numbers as files {\bf rand1.mat}
 and {\bf rand2.dat}.
 
-\subsection*{Examples: SCIRun and Matlab are on different hosts} \indent
+\subsubsection{Example 4: SCIRun and Matlab are on different hosts} \indent
 
 There is no sample script provided for the situation where SCIRun and
 Matlab packages are installed on the different hosts. But the example
 could be easily made out of script {\bf tst1.net}.  In our example
-below we use two hosts, {\bf burn.cs.utah.edu} and {\bf rapture.sci.utah.edu}.
+below we use two hosts, {\bf burn.cs.utah.edu} and
+{\bf rapture.sci.utah.edu}.
 
 Suppose that Matlab is running on host {\bf burn}. The
 content of directory \\
@@ -254,7 +306,7 @@ pointing to {\bf rapture}: \\
 mlabengine(0,'rapture.sci.utah.edu:5515'); \\
 The Matlab side is now ready to accept commands.
 
-Now, suppose that SCIRun is running on a different host 
+Now, suppose that SCIRun is running on a different host \\
 {\bf rapture.sci.utah.edu}. 
 In SCIRun environment, download the script {\bf tst1.net} 
 and edit the host:port
@@ -278,10 +330,92 @@ On {\bf rapture}, quit SCIRun. On {\bf burn}, push {\bf control-C}
 to terminate the {\bf mlabengine.m} script,
 and quit Matlab (doing so will shut down the socket connection).
 
+\subsubsection{Example 5: Focusing inversion} \indent
+
+
+
+The focusing inversion is special solution of inverse problem
+\begin{equation}
+{\bf F} {\bf m} = {\bf d} 
+\end{equation}
+where model ${\bf m}$ is assumed to be of minimum support (sparsest).
+The problem is essentially underdetermined, such that
+matrix ${\bf F}$ is rectangular (more parameters than data).
+
+The algorithm receives matrix ${\bf F}$ and vector ${\bf d}$
+as input, and outputs the solution, vector ${\bf m}$.
+
+Example 5 resides in \\
+{\bf \$SCIRun/src/Packages/MatlabInterface/matlab/fcs } \\
+
+The first part of the example prepares ``fake'' matrix ${\bf F}$ and 
+vector ${\bf d}$, by seeding ${\bf F}$ with random numbers,
+assuming sparse ${\bf m}$ and producing ${\bf d}={\bf F} {\bf m}$.
+
+To do that, 
+
+1) change directory to \\
+{\bf \$SCIRun/src/Packages/MatlabInterface/matlab/fcs } \\
+
+2) change script {\bf scirun.bat} such that the path in
+   it points to location of scirun executable
+   on your machine. Matlab should be in the
+   path (check that by typing "which matlab")
+
+3) execute \sr{} with the command:\\
+   {\bf scirun.bat prepare.net }\\
+   and run the net within the SCIRun.
+   This will produce files {\bf f.mat} and {\bf dd.mat}
+   (sensitivity and data matrices).
+
+4) Destroy Matlab module manually
+   (to shut down the Matlab)
+   and quit SCIRun environment.
+
+Now, we have matrix ${\bf F}$ stored in the file {\bf f.mat}
+and data vector ${\bf d}$ stored in the file {\bf dd.mat}.
+All files are ascii. ${\bf F}$ is 100*900 random
+matrix, ${\bf d}$ is vector (100 points). 
+
+Focusing inversion accepts these data as inputs, calls
+on Matlab script {\bf fcs.m} to produce the solution,
+and saves the solution into file {\bf res.mat}.
+To run focusing:
+
+1) execute SCIRun again, with the command:
+
+   {\bf scirun.bat fcs.net}
+
+   and run the net. This will produce file
+   res.mat (result of focusing inversion)
+
+2) Destroy Matlab module manually
+   (to shut down the matlab)
+   and quit \sr{} environment.
+
+Resulting file {\bf res.mat} 
+is  a vector of 900 points. 
+Open {\bf res.mat}
+and see that it is really a
+sparse solution.
+
+
+\subsection{Detail} \indent
+
+The Matlab graphics does not work under current version of Matlab module.
+If the script contains graphics commands (like ``plot''), the 
+Matlab graphics window does not appear and the error may be produced.
+
+\subsection{Credits} \indent
+
+The Matlab module is written by Oleg Portniaguine. Help
+from Marty Cole, David Weinstein  and Michael Callahan 
+is acknowledged, as well as useful suggestions from Robert 
+MacLeod, Steve Parker and Yesim Serinagaoglu. 
 
 \fgr{tst1}{5.5in}
 {
- Screen capture for the first test example. SCIRun and Matlab reside on
+Screen capture for the first test example. SCIRun and Matlab reside on
 the same machine. The local loopback address {\bf 127.0.0.1} is used
 to signify this fact. Matlab process starts automatically from under SCIRun
 environment, runs the engine and goes into background with engine listening
@@ -294,16 +428,15 @@ of {\bf Matlab} module.
 
 \fgr{tst2}{5.5in}
 {
- Screen capture for the second test example. This test example reads
+Screen capture for the second test example. This test example reads
 file from the disk in SCIRun format and saves it in Matlab format.
 }
 
 \fgr{tst3}{5.5in}
 {
- Screen capture for the third test example. This example reads
+Screen capture for the third test example. This example reads
 Matlab file and saves it in SCIRun format.
 } 
 
 \end{document}
-
 
