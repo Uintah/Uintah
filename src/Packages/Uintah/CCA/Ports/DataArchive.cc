@@ -45,9 +45,8 @@ DataArchive::DataArchive(const std::string& filebase,
 {
   have_timesteps=false;
   string index(filebase+"/index.xml");
-  XMLCh* tmpRel = XMLString::transcode(index.c_str());
+  const XMLCh* tmpRel = to_xml_ch_ptr(index.c_str());
   d_base.setURL(tmpRel);
-  delete[] tmpRel;
   
   if(d_base.isRelative()){
     char path[MAXPATHLEN];
@@ -63,11 +62,11 @@ DataArchive::DataArchive(const std::string& filebase,
   SimpleErrorHandler handler;
   parser->setErrorHandler(&handler);
   
-  cout << "Parsing " << XMLString::transcode(d_base.getURLText()) << endl;
+  cout << "Parsing " << to_char_ptr(d_base.getURLText()) << endl;
   parser->parse(d_base.getURLText());
   
   if(handler.foundError)
-    throw InternalError("Error reading file: "+ string(XMLString::transcode(d_base.getURLText())));
+    throw InternalError("Error reading file: "+ string(to_char_ptr(d_base.getURLText())));
   
   d_indexDoc = dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
 
@@ -112,7 +111,7 @@ string DataArchive::queryEndianness()
   }
   DOMNode* child = endian_node->getFirstChild();
   //DOMString endian = child->getNodeValue();
-  ret = string(XMLString::transcode(child->getNodeValue()));
+  ret = string(to_char_ptr(child->getNodeValue()));
   d_lock.unlock();
   return ret;
 }
@@ -138,7 +137,7 @@ int DataArchive::queryNBits()
   }
   DOMNode* child = nBits_node->getFirstChild();
   //DOMString nBits = child->getNodeValue();
-  ret = atoi(XMLString::transcode(child->getNodeValue()));
+  ret = atoi(to_char_ptr(child->getNodeValue()));
   d_lock.unlock();
   return ret;
 }
@@ -157,19 +156,19 @@ DataArchive::queryTimesteps( std::vector<int>& index,
       for(DOMNode* t = ts->getFirstChild(); t != 0; t = t->getNextSibling()){
 	if(t->getNodeType() == DOMNode::ELEMENT_NODE){
 	  DOMNamedNodeMap* attributes = t->getAttributes();
-	  DOMNode* tsfile = attributes->getNamedItem(XMLString::transcode("href"));
+	  DOMNode* tsfile = attributes->getNamedItem(to_xml_ch_ptr("href"));
 	  if(tsfile == 0)
 	    throw InternalError("timestep href not found");
 	  
 	  //DOMString href_name = tsfile->getNodeValue();
-	  XMLURL url(d_base, XMLString::transcode(tsfile->getNodeValue()));
+	  XMLURL url(d_base, to_char_ptr(tsfile->getNodeValue()));
 	  XercesDOMParser* parser = new XercesDOMParser;
 	  parser->setDoValidation(false);
 	  
 	  SimpleErrorHandler handler;
 	  parser->setErrorHandler(&handler);
 	  
-	  //cerr << "reading: " << XMLString::transcode(url.getURLText()) << '\n';
+	  //cerr << "reading: " << to_char_ptr(url.getURLText()) << '\n';
 	  parser->parse(url.getURLText());
 	  if(handler.foundError)
 	    throw InternalError("Cannot read timestep file");
@@ -243,10 +242,10 @@ DataArchive::queryGrid( double time )
   int numLevels = -1234;
   GridP grid = scinew Grid;
   for(DOMNode* n = gridnode->getFirstChild(); n != 0; n=n->getNextSibling()){
-    if(strcmp(XMLString::transcode(n->getNodeName()), "numLevels") == 0) {
+    if(strcmp(to_char_ptr(n->getNodeName()), "numLevels") == 0) {
       if(!get(n, numLevels))
 	throw InternalError("Error parsing numLevels");
-    } else if(strcmp(XMLString::transcode(n->getNodeName()),"Level") == 0){
+    } else if(strcmp(to_char_ptr(n->getNodeName()),"Level") == 0){
       Point anchor;
       if(!get(n, "anchor", anchor))
 	throw InternalError("Error parsing level anchor point");
@@ -268,15 +267,15 @@ DataArchive::queryGrid( double time )
       long totalCells = 0;
       IntVector periodicBoundaries(0, 0, 0);      
       for(DOMNode* r = n->getFirstChild(); r != 0; r=r->getNextSibling()){
-	if(strcmp(XMLString::transcode(r->getNodeName()),"numPatches") == 0 ||
-	   strcmp(XMLString::transcode(r->getNodeName()),"numRegions") == 0){
+	if(strcmp(to_char_ptr(r->getNodeName()),"numPatches") == 0 ||
+	   strcmp(to_char_ptr(r->getNodeName()),"numRegions") == 0){
 	  if(!get(r, numPatches))
 	    throw InternalError("Error parsing numRegions");
-	} else if(strcmp(XMLString::transcode(r->getNodeName()),"totalCells") == 0){
+	} else if(strcmp(to_char_ptr(r->getNodeName()),"totalCells") == 0){
 	  if(!get(r, totalCells))
 	    throw InternalError("Error parsing totalCells");
-	} else if(strcmp(XMLString::transcode(r->getNodeName()),"Patch") == 0 ||
-		  strcmp(XMLString::transcode(r->getNodeName()),"Region") == 0){
+	} else if(strcmp(to_char_ptr(r->getNodeName()),"Patch") == 0 ||
+		  strcmp(to_char_ptr(r->getNodeName()),"Region") == 0){
 	  int id;
 	  if(!get(r, "id", id))
 	    throw InternalError("Error parsing patch id");
@@ -292,15 +291,15 @@ DataArchive::queryGrid( double time )
 	  Patch* patch = level->addPatch(lowIndex, highIndex,lowIndex,
 				     highIndex,id);
 	  ASSERTEQ(patch->totalCells(), totalCells);
-	} else if(strcmp(XMLString::transcode(r->getNodeName()),"anchor") == 0
-		  || strcmp(XMLString::transcode(r->getNodeName()),"cellspacing") == 0
-		  || strcmp(XMLString::transcode(r->getNodeName()),"id") == 0){
+	} else if(strcmp(to_char_ptr(r->getNodeName()),"anchor") == 0
+		  || strcmp(to_char_ptr(r->getNodeName()),"cellspacing") == 0
+		  || strcmp(to_char_ptr(r->getNodeName()),"id") == 0){
 	  // Nothing - handled above
-	} else if(strcmp(XMLString::transcode(r->getNodeName()),"periodic") == 0) {
+	} else if(strcmp(to_char_ptr(r->getNodeName()),"periodic") == 0) {
 	  if(!get(n, "periodic", periodicBoundaries))
 	    throw InternalError("Error parsing periodoc");
 	} else if(r->getNodeType() != DOMNode::TEXT_NODE){
-	  cerr << "WARNING: Unknown level data: " << ::XMLString::transcode(r->getNodeName()) << '\n';
+	  cerr << "WARNING: Unknown level data: " << ::to_char_ptr(r->getNodeName()) << '\n';
 	}
       }
       ASSERTEQ(level->numPatches(), numPatches);
@@ -315,7 +314,7 @@ DataArchive::queryGrid( double time )
 	level->finalizeLevel();
       }
     } else if(n->getNodeType() != DOMNode::TEXT_NODE){
-      cerr << "WARNING: Unknown grid data: " << XMLString::transcode(n->getNodeName()) << '\n';
+      cerr << "WARNING: Unknown grid data: " << to_char_ptr(n->getNodeName()) << '\n';
     }
   }
   
@@ -376,12 +375,12 @@ DataArchive::queryVariables(const DOMNode* vars, vector<string>& names,
 			    vector<const TypeDescription*>& types)
 {
   for(DOMNode* n = vars->getFirstChild(); n != 0; n = n->getNextSibling()){
-    if(strcmp(XMLString::transcode(n->getNodeName()),"variable") == 0){
+    if(strcmp(to_char_ptr(n->getNodeName()),"variable") == 0){
       DOMNamedNodeMap* attributes = n->getAttributes();
-      DOMNode* type = attributes->getNamedItem(XMLString::transcode("type"));
+      DOMNode* type = attributes->getNamedItem(to_xml_ch_ptr("type"));
       if(type == 0)
 	throw InternalError("Variable type not found");
-      string type_name = XMLString::transcode(type->getNodeValue());
+      string type_name = to_char_ptr(type->getNodeValue());
       const TypeDescription* td = TypeDescription::lookupType(type_name);
       if(!td){
 	static TypeDescription* unknown_type = 0;
@@ -392,12 +391,12 @@ DataArchive::queryVariables(const DOMNode* vars, vector<string>& names,
 	td = unknown_type;
       }
       types.push_back(td);
-      DOMNode* name = attributes->getNamedItem(XMLString::transcode("name"));
+      DOMNode* name = attributes->getNamedItem(to_xml_ch_ptr("name"));
       if(name == 0)
 	throw InternalError("Variable name not found");
-      names.push_back(XMLString::transcode(name->getNodeValue()));
+      names.push_back(to_char_ptr(name->getNodeValue()));
     } else if(n->getNodeType() != DOMNode::TEXT_NODE){
-      cerr << "WARNING: Unknown variable data: " << XMLString::transcode(n->getNodeName()) << '\n';
+      cerr << "WARNING: Unknown variable data: " << to_char_ptr(n->getNodeName()) << '\n';
     }
   }
 }
@@ -426,10 +425,10 @@ DataArchive::query( Variable& var, DOMNode* vnode, XMLURL url,
 {
   d_lock.lock();
   DOMNamedNodeMap* attributes = vnode->getAttributes();
-  DOMNode* typenode = attributes->getNamedItem(XMLString::transcode("type"));
+  DOMNode* typenode = attributes->getNamedItem(to_xml_ch_ptr("type"));
   if(typenode == 0)
     throw InternalError("Variable doesn't have a type");
-  string type = XMLString::transcode(typenode->getNodeValue());
+  string type = to_char_ptr(typenode->getNodeValue());
   const TypeDescription* td = var.virtualGetTypeDescription();
   ASSERT(td->getName() == type);
   
@@ -471,8 +470,8 @@ DataArchive::query( Variable& var, DOMNode* vnode, XMLURL url,
   XMLURL dataurl(url, filename.c_str());
   if(dataurl.getProtocol() != XMLURL::File)
     throw InternalError(string("Cannot read over: ")
-			+XMLString::transcode(dataurl.getPath()));
-  string datafile(XMLString::transcode(dataurl.getPath()));
+			+to_char_ptr(dataurl.getPath()));
+  string datafile(to_char_ptr(dataurl.getPath()));
   
   int fd = open(datafile.c_str(), O_RDONLY);
   if(fd == -1)
@@ -662,12 +661,11 @@ bool DataArchive::queryRestartTimestep(int& timestep)
   }
   
   DOMNamedNodeMap* attributes = restartNode->getAttributes();
-  DOMNode* timestepNode = attributes->getNamedItem(XMLString::transcode("timestep"));
+  DOMNode* timestepNode = attributes->getNamedItem(to_xml_ch_ptr("timestep"));
   if (timestepNode == 0)
     return false;
-  char*s = XMLString::transcode(timestepNode->getNodeValue());
+  const char*s = to_char_ptr(timestepNode->getNodeValue());
   timestep = atoi(s);
-  delete[] s;
   return true;
 }
 
@@ -779,26 +777,25 @@ void DataArchive::PatchHashMaps::init(XMLURL tsUrl, DOMNode* tsTopNode,
   if(datanode == 0)
     throw InternalError("Cannot find Data in timestep");
   for(DOMNode* n = datanode->getFirstChild(); n != 0; n=n->getNextSibling()){
-    if(strcmp(XMLString::transcode(n->getNodeName()),"Datafile") == 0){
+    if(strcmp(to_char_ptr(n->getNodeName()),"Datafile") == 0){
       DOMNamedNodeMap* attributes = n->getAttributes();
-      DOMNode* procNode = attributes->getNamedItem(XMLString::transcode("proc"));
+      DOMNode* procNode = attributes->getNamedItem(to_xml_ch_ptr("proc"));
       if (procNode != NULL) {
-	char* s = XMLString::transcode(procNode->getNodeValue());
+	const char* s = to_char_ptr(procNode->getNodeValue());
 	int proc = atoi(s);
-	delete[] s;
 	if ((proc % numProcessors) != processor)
 	  continue;
       }
 	 
-      DOMNode* datafile = attributes->getNamedItem(XMLString::transcode("href"));
+      DOMNode* datafile = attributes->getNamedItem(to_xml_ch_ptr("href"));
       if(datafile == 0)
 	throw InternalError("timestep href not found");
       //DOMString href_name = datafile.getNodeValue();
-      XMLURL url(tsUrl, XMLString::transcode(datafile->getNodeValue()));
+      XMLURL url(tsUrl, to_char_ptr(datafile->getNodeValue()));
       d_xmlUrls.push_back(url);
     }
     else if(n->getNodeType() != DOMNode::TEXT_NODE){
-      cerr << "WARNING: Unknown element in Data section: " << XMLString::transcode(n->getNodeName()) << '\n';
+      cerr << "WARNING: Unknown element in Data section: " << to_char_ptr(n->getNodeName()) << '\n';
     }
   }
 }
@@ -823,7 +820,7 @@ void DataArchive::PatchHashMaps::parse()
     SimpleErrorHandler handler;
     parser->setErrorHandler(&handler);
     
-    //cerr << "reading: " << XMLString::transcode(urlIt->getURLText()) << '\n';
+    //cerr << "reading: " << to_char_ptr(urlIt->getURLText()) << '\n';
     parser->parse((*urlIt).getURLText());
     if(handler.foundError)
       throw InternalError("Cannot read timestep file");
@@ -835,7 +832,7 @@ void DataArchive::PatchHashMaps::parse()
     
     delete parser;
     for(DOMNode* r = top->getFirstChild(); r != 0; r=r->getNextSibling()){
-      if(strcmp(XMLString::transcode(r->getNodeName()),"Variable") == 0){
+      if(strcmp(to_char_ptr(r->getNodeName()),"Variable") == 0){
 	string varname;
 	if(!get(r, "variable", varname))
 	  throw InternalError("Cannot get variable name");
@@ -850,7 +847,7 @@ void DataArchive::PatchHashMaps::parse()
 	
 	add(varname, patchid, index, r, *urlIt);
       } else if(r->getNodeType() != DOMNode::TEXT_NODE){
-	cerr << "WARNING: Unknown element in Variables section: " << XMLString::transcode(r->getNodeName()) << '\n';
+	cerr << "WARNING: Unknown element in Variables section: " << to_char_ptr(r->getNodeName()) << '\n';
       }
     }
 

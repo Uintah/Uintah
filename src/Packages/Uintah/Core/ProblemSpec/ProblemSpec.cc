@@ -1,4 +1,3 @@
-
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
@@ -95,9 +94,8 @@ ProblemSpecP ProblemSpec::findNextBlock(const std::string& name) const
   const DOMNode* found_node = d_node->getNextSibling();
 
   while(found_node != 0){
-    char *s = XMLString::transcode(found_node->getNodeName());
+    const char *s = to_char_ptr(found_node->getNodeName());
     std::string c_name(s);
-    delete[] s;
 
     if (c_name == name) {
       break;
@@ -121,9 +119,8 @@ std::string ProblemSpec::getNodeName() const
 {
 
   //DOMString node_name = d_node->getNodeName();
-  char *s = XMLString::transcode(d_node->getNodeName());
+  const char *s = to_char_ptr(d_node->getNodeName());
   std::string name(s);
-  delete[] s;
 
   return name;
 }
@@ -143,9 +140,8 @@ ProblemSpecP ProblemSpec::get(const std::string& name, double &value)
 	 child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	//DOMString val = child->getNodeValue();
-	char* s = XMLString::transcode(child->getNodeValue());
+	const char* s = to_char_ptr(child->getNodeValue());
 	value = atof(s);
-	delete[] s;
       }
     }
   }
@@ -166,9 +162,8 @@ ProblemSpecP ProblemSpec::get(const std::string& name, int &value)
 	 child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	//DOMString val = child->getNodeValue();
-	char* s = XMLString::transcode(child->getNodeValue());
+	const char* s = to_char_ptr(child->getNodeValue());
 	value = atoi(s);
-	delete[] s;
       }
     }
   }
@@ -190,9 +185,8 @@ ProblemSpecP ProblemSpec::get(const std::string& name, bool &value)
 	 child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	//DOMString val = child->getNodeValue();
-	char *s = XMLString::transcode(child->getNodeValue());
+	const char *s = to_char_ptr(child->getNodeValue());
 	std::string cmp(s);
-	delete[] s;
 	// Slurp up any spaces that were put in before or after the cmp string.
 	istringstream result_stream(cmp);
         string nospace_cmp;
@@ -227,9 +221,8 @@ ProblemSpecP ProblemSpec::get(const std::string& name, std::string &value)
 	 child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	//DOMString val = child->getNodeValue();
-	char *s = XMLString::transcode(child->getNodeValue());
+	const char *s = to_char_ptr(child->getNodeValue());
 	value = std::string(s);
-	delete[] s;
       }
     }
   }
@@ -263,9 +256,8 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 	 child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	//DOMString val = child->getNodeValue();
-	char *s = XMLString::transcode(child->getNodeValue());
+	const char *s = to_char_ptr(child->getNodeValue());
 	string_value = std::string(s);
-	delete[] s;
 	// Parse out the [num,num,num]
 	// Now pull apart the string_value
 	std::string::size_type i1 = string_value.find("[");
@@ -304,9 +296,8 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 	 child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	//DOMString val = child->getNodeValue();
-	char *s = XMLString::transcode(child->getNodeValue());
+	const char *s = to_char_ptr(child->getNodeValue());
 	string_value = std::string(s);
-	delete[] s;
 
 	istringstream in(string_value);
 	char c,next;
@@ -349,9 +340,8 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 	 child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	//DOMString val = child->getNodeValue();
-	char *s = XMLString::transcode(child->getNodeValue());
+	const char *s = to_char_ptr(child->getNodeValue());
 	string_value = std::string(s);
-	delete[] s;
 
 	istringstream in(string_value);
 	char c,next;
@@ -393,9 +383,8 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 	 child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	//DOMString val = child->getNodeValue();
-	char *s = XMLString::transcode(child->getNodeValue());
+	const char *s = to_char_ptr(child->getNodeValue());
 	string_value = std::string(s);
-	delete[] s;
 	// Parse out the [num,num,num]
 	// Now pull apart the string_value
 	std::string::size_type i1 = string_value.find("[");
@@ -535,9 +524,8 @@ ProblemSpecP ProblemSpec::getOptional(const std::string& name,
 	return ps = 0;
       if (attr_node->getNodeType() == DOMNode::ATTRIBUTE_NODE) {
 	//DOMString val = attr_node->getNodeValue();
-	char *s = XMLString::transcode(attr_node->getNodeValue());
+	const char *s = to_char_ptr(attr_node->getNodeValue());
 	value = std::string(s);
-	delete[] s;
       }
       else {
 	ps = 0;
@@ -565,14 +553,11 @@ void ProblemSpec::getAttributes(map<string,string>& attributes)
   int num_attr = attr->getLength();
 
   for (int i = 0; i<num_attr; i++) {
-    char* attrName = XMLString::transcode(attr->item(i)->getNodeName());
-    char* attrValue = XMLString::transcode(attr->item(i)->getNodeValue());
+    const char* attrName = to_char_ptr(attr->item(i)->getNodeName());
     string name(attrName);
+    const char* attrValue = to_char_ptr(attr->item(i)->getNodeValue());
     string value(attrValue);
 
-    delete [] attrName;
-    delete [] attrValue;
-		
     attributes[name]=value;
   }
 
@@ -584,16 +569,14 @@ bool ProblemSpec::getAttribute(const string& attribute, string& result)
   DOMNamedNodeMap* attr = d_node->getAttributes();
   //DOMString search_name(attribute.c_str());
 
-  XMLCh* attrName = XMLString::transcode(attribute.c_str());
+  const XMLCh* attrName = to_xml_ch_ptr(attribute.c_str());
   const DOMNode* n = attr->getNamedItem(attrName);
-  delete [] attrName;
 
   if(n == 0)
      return false;
   //DOMString val = n.getNodeValue();
-  char* s = XMLString::transcode(n->getNodeValue());
+  const char* s = to_char_ptr(n->getNodeValue());
   result=s;
-  delete[] s;
   return true;
 }
 
