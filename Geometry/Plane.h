@@ -16,9 +16,8 @@
 #include <Geometry/Point.h>
 
 class Plane {
-protected:
-    double a,b,c,d;
 public:
+    double a,b,c,d;
     Plane(const Plane &copy);
     Plane(const Point &p1, const Point &p2, const Point &p3);
     Plane(double a, double b, double c, double d);
