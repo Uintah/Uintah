@@ -5,7 +5,7 @@ from helpers.runSusTests import runSusTests
 
 TESTS = [   ("advect_mpmice", "advect.ups", 1),	\
             ("thermx", "thermx.ups", 1),     \
-            ("massX", "massX.ups", 1)     \
+            ("massX", "massX.ups", 1),     \
     	]
 
 exit(runSusTests(argv, TESTS, "mpmice"))
