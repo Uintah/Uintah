@@ -38,6 +38,8 @@ typedef __sighandler_t SIG_PF;
 #define DEFAULT_STACK_LENGTH 16*1024
 #define DEFAULT_SIGNAL_STACK_LENGTH 16*1024
 
+#define MAXTASKS 100
+
 static int aborting=0;
 static int exit_code;
 static int exiting=0;
@@ -50,10 +52,15 @@ static int skip_csw=0;
 
 extern inline char tas(char* m)
 {
-        char res;
+    char res;
 
-        __asm__("xchgb %0,%1":"=q" (res),"=m" (*m):"0" (0x1));
-        return res;
+    __asm__("xchgb %0,%1":"=q" (res),"=m" (*m):"0" (0x1));
+    return res;
+}
+
+int spin_try_lock(char& lock)
+{
+    return tas(&lock);
 }
 
 void spin_lock_yield(char& lock)
@@ -82,7 +89,7 @@ class TaskQueue {
     int last;
 public:
     int nitems;
-    TaskQueue(int size);
+    TaskQueue(int size=MAXTASKS);
     ~TaskQueue();
 
     void append(Task*);
@@ -139,14 +146,16 @@ Task* TaskQueue::pop_first()
 
 struct TaskPrivate {
     int retval;
+    int block;
     caddr_t sp;
     caddr_t stackbot;
     size_t stacklen;
     size_t redlen;
     jmp_buf context;
+    void (*handle_alrm)(void*);
+    void* alrm_data;
 };
 
-#define MAXTASKS 100
 static int ntasks=0;
 static Task* tasks[MAXTASKS];
 static TaskQueue readyq(MAXTASKS);
@@ -198,6 +207,36 @@ static void unlock_scheduler()
     sched_lock=0;
 }
 
+void block(Task* task)
+{
+    lock_scheduler();
+    task->priv->block++;
+    unlock_scheduler();
+    Task::yield();
+}
+
+void unblock(Task* task)
+{
+    lock_scheduler();
+    if(task->priv->block)
+	task->priv->block--;
+    unlock_scheduler();
+}
+
+int nactive_tasks()
+{
+    int n=1;
+    lock_scheduler();
+    int nitems=readyq.nitems;
+    for(int i=0;i<nitems;i++){
+	Task* task=readyq.pop_first();
+	if(!task->priv->block)n++;
+	readyq.append(task);
+    }
+    unlock_scheduler();
+    return n;
+}
+
 int Task::startup(int task_arg)
 {
     int retval=body(task_arg);
@@ -232,6 +271,7 @@ void Task::activate(int task_arg)
 	    cerr << "Error - startup returned!\n";
 	    exit(-1);
 	}
+	priv->block=0;
 	priv->context->__sp=priv->sp;
 	readyq.append(this);
 	tasks[ntasks++]=this;
@@ -435,6 +475,11 @@ static void unlocker()
     malloc_lock->unlock();
 }
 
+int Task::test_malloc_lock()
+{
+    return skip_csw != 0;
+}
+
 void Task::initialize(char* pn)
 {
     malloc_lock=new LibMutex;
@@ -563,13 +608,22 @@ void Task::yield()
     }
     lock_scheduler();
     if(readyq.nitems == 0){
-	cerr << "yield giving up because readyq is empty\n";
+	//cerr << "yield giving up because readyq is empty\n";
 	unlock_scheduler();
 	return;
     }
     if(setjmp(current_task->priv->context) == 0){
 	readyq.append(current_task);
 	current_task=readyq.pop_first();
+	Task* first_task=current_task;
+	while(current_task->priv->block){
+	    readyq.append(current_task);
+	    current_task=readyq.pop_first();
+	    if(current_task==first_task){
+		cerr << "Deadlock detected!\n";
+		exit(-1);
+	    }
+	}
 	longjmp(current_task->priv->context, 1);
     }
     unlock_scheduler();
@@ -586,6 +640,7 @@ int Task::wait_for_task(Task* task)
 //
 struct Semaphore_private {
     int count;
+    TaskQueue waiters;
     char lock;
 };
 
@@ -617,8 +672,10 @@ void Semaphore::down()
 		spin_unlock(priv->lock);
 		return;
 	    } else {
+		Task* self=Task::self();
+		priv->waiters.append(self);
 		spin_unlock(priv->lock);
-		Task::yield();
+		block(self);
 	    }
 	}
     }
@@ -628,6 +685,10 @@ void Semaphore::up()
 {
     if(!single_threaded.is_set()){
 	spin_lock_yield(priv->lock);
+	if(priv->waiters.nitems){
+	    Task* wake=priv->waiters.pop_first();
+	    unblock(wake);
+	}
 	priv->count++;
 	spin_unlock(priv->lock);
     }
@@ -671,6 +732,14 @@ void Mutex::unlock()
     }
 }
 
+int Mutex::try_lock()
+{
+    if(!single_threaded.is_set()){
+	return spin_try_lock(priv->lock);
+    } else {
+	return 1;
+    }
+}
 
 //
 // Library Mutex implementation
@@ -825,14 +894,22 @@ static void fd_copy(int n, fd_set* to, fd_set* from)
 }
 
 // Interface to select...
-int Task::mtselect(int nfds, fd_set* readfds, fd_set* writefds,
-		   fd_set* exceptfds, struct timeval* timeout)
+int Task::mtselect(int nfds, fd_set* orig_readfds, fd_set* orig_writefds,
+		   fd_set* orig_exceptfds, struct timeval* timeout)
 {
-    if(readyq.nitems == 0 ||
+    if(nactive_tasks() == 1 ||
        (timeout && timeout->tv_sec == 0 && timeout->tv_usec == 0)){
-	int val=select(nfds, readfds, writefds, exceptfds, timeout);
+	int val=select(nfds, orig_readfds, orig_writefds,
+		       orig_exceptfds, timeout);
 	return val;
     } else {
+	fd_set readfds, writefds, exceptfds;
+	if(orig_readfds)
+	    readfds=*orig_readfds;
+	if(orig_writefds)
+	    writefds=*orig_writefds;
+	if(orig_exceptfds)
+	    exceptfds=*orig_exceptfds;
 	struct timeval to;
 	struct timeval done;
 	struct timezone tz;
@@ -846,37 +923,39 @@ int Task::mtselect(int nfds, fd_set* readfds, fd_set* writefds,
 	    done.tv_usec-=1000000;
 	    done.tv_sec++;
 	}
+	int count=0;
 	while(1){
 	    fd_set rfds;
 	    fd_set* prfds=0;
-	    if(readfds){
-		fd_copy(nfds, &rfds, readfds);
+	    if(orig_readfds){
+		fd_copy(nfds, &rfds, &readfds);
 		prfds=&rfds;
 	    }
 	    fd_set wfds;
 	    fd_set* pwfds=0;
-	    if(writefds){
-		fd_copy(nfds, &wfds, writefds);
+	    if(orig_writefds){
+		fd_copy(nfds, &wfds, &writefds);
 		pwfds=&wfds;
 	    }
 	    fd_set efds;
 	    fd_set* pefds=0;
-	    if(exceptfds){
-		fd_copy(nfds, &efds, exceptfds);
+	    if(orig_exceptfds){
+		fd_copy(nfds, &efds, &exceptfds);
 		pefds=&efds;
 	    }
 	    to.tv_sec=0;
 	    to.tv_usec=0;
 	    int val=select(nfds, prfds, pwfds, pefds, &to);
 	    if(val != 0){
-		if(readfds)
-		    fd_copy(nfds, readfds, &rfds);
-		if(writefds)
-		    fd_copy(nfds, writefds, &wfds);
-		if(exceptfds)
-		    fd_copy(nfds, exceptfds, &efds);
+		if(orig_readfds)
+		    fd_copy(nfds, orig_readfds, &rfds);
+		if(orig_writefds)
+		    fd_copy(nfds, orig_writefds, &wfds);
+		if(orig_exceptfds)
+		    fd_copy(nfds, orig_exceptfds, &efds);
 		return val;
 	    }
+	    // See if the timeout is up...
 	    if(timeout){
 		struct timeval now;
 		if(gettimeofday(&now, &tz) != 0){
@@ -885,17 +964,89 @@ int Task::mtselect(int nfds, fd_set* readfds, fd_set* writefds,
 		}
 		if(now.tv_sec > done.tv_sec ||
 		   (now.tv_sec == done.tv_sec && now.tv_usec >= done.tv_usec)){
-		    if(readfds)
-			FD_ZERO(readfds);
-		    if(writefds)
-			FD_ZERO(writefds);
-		    if(exceptfds)
-			FD_ZERO(exceptfds);
+		    if(orig_readfds)
+			FD_ZERO(orig_readfds);
+		    if(orig_writefds)
+			FD_ZERO(orig_writefds);
+		    if(orig_exceptfds)
+			FD_ZERO(orig_exceptfds);
 		    return 0;
 		}
 	    }
-	    // See if the timeout is up...
+	    if(count++>20){
+		errno=EINTR;
+		return -1;
+	    }
 	    Task::yield();
 	}
     }
+}
+
+static void handle_alrm(int, int, sigcontext_t*)
+{
+    Task* task=Task::self();
+    if(task->priv->handle_alrm)
+       (*task->priv->handle_alrm)(task->priv->alrm_data);
+}
+
+int Task::start_itimer(const TaskTime& start, const TaskTime& interval,
+		       void (*handler)(void*), void* cbdata)
+{
+    if(ntimers > 0){
+	NOT_FINISHED("Multiple timers in a single thread");
+	return 0;
+    }
+    ITimer** new_timers=new ITimer*[ntimers+1];
+    if(timers){
+	for(int i=0;i<ntimers;i++){
+	    new_timers[i]=timers[i];
+	}
+	delete[] timers;
+    }
+    timers=new_timers;
+    ITimer* t=new ITimer;
+    timers[ntimers]=t;
+    ntimers++;
+    t->start=start;
+    t->interval=interval;
+    t->handler=handler;
+    t->cbdata=cbdata;
+    t->id=timer_id++;
+    struct itimerval it;
+    it.it_interval.tv_sec=interval.secs;
+    it.it_interval.tv_usec=interval.usecs;
+    it.it_value.tv_sec=start.secs;
+    it.it_value.tv_usec=start.usecs;
+    signal(SIGALRM, (SIG_PF)handle_alrm);
+
+    if(setitimer(ITIMER_REAL, &it, 0) == -1){
+	perror("setitimer");
+	return 0;
+    }
+    priv->handle_alrm=handler;
+    priv->alrm_data=cbdata;
+    return t->id;
+}
+
+void Task::cancel_itimer(int which_timer)
+{
+    priv->handle_alrm=0;
+    for(int idx=0;idx<ntimers;idx++){
+	if(timers[idx]->id == which_timer)
+	    break;
+    }
+    if(idx==ntimers){
+	cerr << "Cancelling bad timer!\n" << endl;
+	return;
+    }
+    struct itimerval it;
+    timerclear(&it.it_interval);
+    timerclear(&it.it_value);
+    if(setitimer(ITIMER_REAL, &it, 0) == -1){
+	perror("setitimer");
+	return;
+    }
+    for(int i=idx;i<ntimers-1;i++)
+	timers[i]=timers[i+1];
+    ntimers--;
 }
