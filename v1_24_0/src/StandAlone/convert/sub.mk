@@ -177,3 +177,14 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PROGRAM := $(SRCDIR)/TetgenToTetVol
 SRCS := $(SRCDIR)/TetgenToTetVol.cc
 include $(SCIRUN_SCRIPTS)/program.mk
+
+####################################
+# added by C.Wolters, Nov.18 2004:
+PROGRAM := $(SRCDIR)/gmvTopts
+SRCS := $(SRCDIR)/gmvTopts.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/geoTopts
+SRCS := $(SRCDIR)/geoTopts.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+####################################
