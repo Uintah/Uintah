@@ -1256,7 +1256,7 @@ itcl_class ViewWindow {
 	global $clip-visible
 	global $clip-selected
 
-	if {![info exists $clip-num]} {
+	if {![info exists $clip-num] || [set $clip-num] == "" } {
 	    set $clip-num 6
 	    
 	    for {set i 1} {$i <= [set $clip-num]} {incr i 1} {
@@ -1273,6 +1273,7 @@ itcl_class ViewWindow {
 		set $clip-normal-z-$mod 0.0
 	    }
 	    set $clip-selected 1
+
 	}
 	set c "$this setClip ; $this-c redraw"
 	set menup [tk_optionMenu $w.which $clip-selected 1 2 3 4 5 6]
