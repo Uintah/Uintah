@@ -1,11 +1,18 @@
 body {background-color:#EEEEEE; text-color:#000000; font-family:"times"; margin-left:2em; margin-right:2em}
 
+a:link {color:#AA0000}
+
+a:visited {color:#660000}
+
+a:hover {color:#660066}
+
+a:active {color:#AA00AA}
+
 p {margin-left:90px; margin-right:80px; font-family:"serif"}
 
 .toc {list-style-type:"upper-roman"; font-family:"serif"; margin-left:60px; margin-right:60px}
 
 .subtoc {list-style-type:disc; font-family:"serif"}
-
 
 .title {font-family: "times"; font-weight:bold; font-size:x-large; color:#660000; margin-bottom:0px; margin-top:0px; text-align:center}
 
@@ -30,3 +37,7 @@ blockquote {margin-left:150px; font-family:times}
 td {font-family:"arial", "helvetica", "sans-serif"}
 
 .small {font-size:small; font-family:"arial", "helvetica", "sans-serif"}
+
+.dropcap {font-family: "times"; font-size:40px; margin:0; color:#660000}
+
+.question {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"; color:#660000}

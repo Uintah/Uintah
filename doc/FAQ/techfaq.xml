@@ -30,9 +30,8 @@
 <faq name="Technical FAQ">
   <description>
     <p>
-      For technical issues with compiling and linking SCIRun and it's
-      required thirdparty software including some runtime issues (some types 
-      of crashes)
+      This FAQ includes questions of a technical nature of interest to people
+installing, maintaining, and developing within SCIRun.
     </p>
   </description>
   <entry>
