@@ -334,12 +334,6 @@ void RigidMPM::scheduleComputeStressTensor(SchedulerP& sched,
   Task* t = scinew Task("MPM::computeStressTensor",
 		    this, &RigidMPM::computeStressTensor);
 
-//  t->requires(Task::OldDW,lb->pDeformationMeasureLabel,  Ghost::None);
-//  t->requires(Task::OldDW,lb->pStressLabel,              Ghost::None);
-//  t->computes(            lb->pDeformationMeasureLabel_preReloc);
-//  t->computes(            lb->pStressLabel_preReloc);
-//  t->computes(d_sharedState->get_delt_label());
-
   int numMatls = d_sharedState->getNumMPMMatls();
   if (d_doErosion) {
     for(int m = 0; m < numMatls; m++){
@@ -918,31 +912,6 @@ void RigidMPM::computeStressTensor(const ProcessorGroup*,
     }
   }
 
-#if 0
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    cout_doing <<"Doing computeStressTensor " <<"\t\t\t\t MPM"<< endl;
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      // Get the arrays of particle values to be changed
-      ParticleVariable<Matrix3> pdefm_new,pstress_new;
-      constParticleVariable<Matrix3> pdefm,pstress;
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-      old_dw->get(pdefm,         lb->pDeformationMeasureLabel,           pset);
-      new_dw->allocateAndPut(pdefm_new,lb->pDeformationMeasureLabel_preReloc,
-                                                                         pset);
-      old_dw->get(pstress,       lb->pStressLabel,                       pset);
-      new_dw->allocateAndPut(pstress_new,lb->pStressLabel_preReloc,      pset);
-      for(ParticleSubset::iterator iter = pset->begin();
-                                   iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        pdefm_new[idx] = pdefm[idx];
-        pstress_new[idx] = pstress[idx];
-      }
-    }
-  }
-#endif
   new_dw->put(delt_vartype(999.0), lb->delTLabel);
 
 }
