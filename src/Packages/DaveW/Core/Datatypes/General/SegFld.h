@@ -46,6 +46,7 @@ public:
 
 class SegFld : public ScalarFieldRGint {
 public:
+    Array1<int> thin;
     Array1<int> comps;
     Array1<Array1<tripleInt> *> compMembers;
 public:
@@ -66,6 +67,7 @@ public:
     ScalarFieldRGchar* getTypeFld();
     ScalarFieldRG* getBitFld();
     void bldFromChar(ScalarFieldRGchar*);
+    void bldFromCharOld(ScalarFieldRGchar*);
 //    void setCompsFromGrid();
 //    void setGridFromComps();
     void annexComponent(int old_comp, int new_comp);
@@ -82,6 +84,9 @@ void Pio( Piostream &, tripleInt & );
 
 //
 // $Log$
+// Revision 1.3  2000/03/04 00:16:32  dmw
+// update some DaveW stuff
+//
 // Revision 1.2  1999/08/25 03:47:34  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
