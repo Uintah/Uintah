@@ -104,7 +104,7 @@ public:
   TextureBrickT(int nx, int ny, int nz, int nc, int* nb,
 		int ox, int oy, int oz,	int mx, int my, int mz,
 		const BBox& bbox, const BBox& tbox, bool alloc);
-  ~TextureBrickT();
+  virtual ~TextureBrickT();
   
   GLenum tex_type() { return GLinfo<T>::type; }
   void* tex_data(int c) { return data_[c]; }
