@@ -193,12 +193,22 @@ optional.
   \envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR} specifies the location of
   dynamically generated code (see \secref{Dynamic
   Compilation}{sec:dyncomp} for details on the meaning and use of
-  this variable).
+  this variable).  Typically, a user should create directory
+  \directory{~/on\_the\_fly}, and then, in his login script or
+  \filename{.scirunrc} file set the value of 
+  \envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR} to \directory{~/on\_the\_fly}.
   
-  \descitem{\envvar{SCIRUN\_DATA} \& \envvar{SCIRUN\_DATASET}}  These
-  two variables specify the complete path to a \sr{} \dfn{data set}. A data set is a collection of \sr{} type data  fields,
-  matrices, \etc{} that are stored in a directory and used in
-  \sr{} networks.
+  \envitem{SCI\_CONFIRM\_OVERWRITE} determines the default behavior of
+  file saving operations.  If set to 1, the user is always
+  asked to confirm a file save if an existing file would be
+  overwritten.  If set to 0 then the user is not asked for
+  confirmation.  If \envvar{SCI\_CONFIRM\_OVERWRITE} is undefined, a
+  value of 1 is assumed.
+  
+  \descitem{\envvar{SCIRUN\_DATA} \& \envvar{SCIRUN\_DATASET}} These
+  two variables specify the complete path to a \sr{} \dfn{data set}. A
+  data set is a collection of \sr{} type data fields, matrices, \etc{}
+  that are stored in a directory and used in \sr{} networks.
 
   \envvar{SCIRUN\_DATA} specifies a directory that contains a
   collection of data set directories.  \envvar{SCIRUN\_DATA} is used in
