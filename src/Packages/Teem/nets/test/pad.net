@@ -40,7 +40,7 @@ set m4 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 31 88]
 addConnection $m0 0 $m1 0
 addConnection $m3 0 $m4 0
 addConnection $m4 0 $m0 0
-addConnection $m4 0 $m2 0
+addConnection $m4 2 $m2 0
 
 set $m0-notes {}
 set $m0-show_status {1}

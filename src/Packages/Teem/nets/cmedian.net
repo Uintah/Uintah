@@ -45,7 +45,7 @@ set m10 [addModuleAtPosition "SCIRun" "Math" "BuildTransform" 381 149]
 set m11 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 140 304]
 
 addConnection $m9 0 $m2 3
-addConnection $m1 0 $m0 0
+addConnection $m1 2 $m0 0
 addConnection $m0 0 $m2 2
 addConnection $m3 0 $m4 0
 addConnection $m4 0 $m5 1

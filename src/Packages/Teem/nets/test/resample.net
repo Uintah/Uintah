@@ -52,8 +52,8 @@ set m3 [addModuleAtPosition "Teem" "Unu" "UnuResample" 10 169]
 set m4 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 10 235]
 
 addConnection $m1 0 $m2 0
-addConnection $m2 0 $m0 0
-addConnection $m2 0 $m3 0
+addConnection $m2 2 $m0 0
+addConnection $m2 2 $m3 0
 addConnection $m3 0 $m4 0
 
 set $m0-notes {}
