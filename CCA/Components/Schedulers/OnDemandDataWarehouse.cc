@@ -262,7 +262,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
       ASSERTRANGE(dest, 0, d_myworld->size());
 
       ssLock.lock();  // Dd: ??
-      ParticleSubset* sendset = ss.find_sendset(patch, matlIndex, dest);
+      ParticleSubset* sendset = ss.find_sendset(dest, patch, matlIndex);
       ssLock.unlock();  // Dd: ??
 
       if(!sendset){
@@ -299,7 +299,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
         MPI_Bsend(&numParticles, 1, MPI_INT, dest,
                   PARTICLESET_TAG|batch->messageTag, d_myworld->getComm());
         ssLock.lock();  // Dd: ??       
-        ss.add_sendset(patch, matlIndex, dest, sendset);
+        ss.add_sendset(sendset, dest, patch, matlIndex);
         ssLock.unlock();  // Dd: ??
       }
         
