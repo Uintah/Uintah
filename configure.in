@@ -354,10 +354,16 @@ if test "$tcl" ; then
   fi
 fi
 
-# if not found try the SCI group default (we're lazy ;)
+# if not found try the SCI group defaults (we're lazy ;)
 if test -z "$TCL_MAJOR_VERSION" ; then
   unset cfsh
-  cfsh="/res/sci/data1/itcltk-8.3.2/lib/tclConfig.sh"
+
+  if test "$is_64bit" = "yes" ; then
+    cfsh="/res/sci/data1/itcltk-8.3.2-64/lib/tclConfig.sh"
+  else
+    cfsh="/res/sci/data1/itcltk-8.3.2/lib/tclConfig.sh"
+  fi
+
   if test -f $cfsh ; then
     . $cfsh
   fi
@@ -440,7 +446,13 @@ fi
 # if not found try the SCI group default (we're lazy ;)
 if test -z "$TK_MAJOR_VERSION" ; then
   unset cfsh
-  cfsh="/res/sci/data1/itcltk-8.3.2/lib/tkConfig.sh"
+
+  if test "$is_64bit" = "yes" ; then
+    cfsh="/res/sci/data1/itcltk-8.3.2-64/lib/tkConfig.sh"
+  else
+    cfsh="/res/sci/data1/itcltk-8.3.2/lib/tkConfig.sh"
+  fi
+
   if test -f $cfsh ; then
     . $cfsh
   fi
@@ -537,18 +549,38 @@ elif test "$tcl" ; then
   fi
 fi
 
-# if not found try the SCI group default (we're lazy ;)
+# if not found try the SCI group defaults (we're lazy ;)
 if test -z "$ITCL_MAJOR_VERSION" ; then
+
   unset cfsh
-  cfsh="/res/sci/data1/itcltk-8.3.2/lib/itclConfig.sh"
-  if test -f $cfsh ; then
-    . $cfsh
+  if test "$is_64bit" = "yes" ; then
+    cfsh="/res/sci/data1/itcltk-8.3.2-64/lib/itclConfig.sh"
+    ITCL_PREFIX="/res/sci/data1/itcltk-8.3.2-64"
+  else
+    cfsh="/res/sci/data1/itcltk-8.3.2/lib/itclConfig.sh"
     ITCL_PREFIX="/res/sci/data1/itcltk-8.3.2"
   fi
-  cfsh="/res/sci/data1/itcltk-8.3.2/lib/itkConfig.sh"
+
   if test -f $cfsh ; then
     . $cfsh
+  else
+    ITCL_PREFIX=""
+  fi  
+
+  unset cfsh
+  if test "$is_64bit" = "yes" ; then
+    cfsh="/res/sci/data1/itcltk-8.3.2-64/lib/itkConfig.sh"
+    ITK_PREFIX="/res/sci/data1/itcltk-8.3.2-64"
+  else
+    cfsh="/res/sci/data1/itcltk-8.3.2/lib/itkConfig.sh"
+    ITK_PREFIX="/res/sci/data1/itcltk-8.3.2"
   fi
+
+  if test -f $cfsh ; then
+    . $cfsh
+  else
+    ITK_PREFIX=""
+  fi  
 fi
 
 # if still not found try some standard locations
@@ -628,19 +660,21 @@ AC_SUBST(ITK_LIB_SPEC)
 ##-- Find BLT ---------------------------------------------------------------
 echo -n "checking for BLT 2.4x... "
 
-if test "$blt" ; then
-  if test -e $blt/lib/libBLT24.so; then
-    BLT_PREFIX=$blt
-  fi
-elif test "$tcl" ; then
-  if test -e $tcl/lib/libBLT24.so; then
-    BLT_PREFIX=$tcl
-  fi
+if test "$blt" &&
+   test -e $blt/lib/libBLT24.so; then
+  BLT_PREFIX=$blt
+elif test "$tcl" &&
+     test -e $tcl/lib/libBLT24.so; then
+  BLT_PREFIX=$tcl
 fi
 
 if test -z "$BLT_PREFIX" ; then
-  if test -e /res/sci/data1/itcltk-8.3.2/lib/libBLT24.so; then
-    BLT_PREFIX=/res/sci/data1/itcltk-8.3.2
+  if test "$is_64bit" = "yes" && 
+     test -e /res/sci/data1/itcltk-8.3.2-64/lib/libBLT24.so; then
+    BLT_PREFIX="/res/sci/data1/itcltk-8.3.2-64"
+  elif test "$is_64bit" != "yes" &&
+       test -e /res/sci/data1/itcltk-8.3.2/lib/libBLT24.so; then
+    BLT_PREFIX="/res/sci/data1/itcltk-8.3.2"  
   elif test -e /usr/lib/libBLT24.so; then
     BLT_PREFIX=/usr
   elif test -e /usr/local/lib/libBLT24.so; then
@@ -694,8 +728,8 @@ if test -z "$XML_LIB_DIR"; then
   case $host in
   *-irix*)
     if test "$is_64bit" = "yes"; then
-      if test -e /res/sci/data6/sparker/xerces-c/lib64/libxerces-c1_?.so; then
-        XML_LIB_DIR="/res/sci/data6/sparker/xerces-c/lib64"
+      if test -e /res/sci/data1/xerces-1.3.0/lib64/libxerces-c1_?.so; then
+        XML_LIB_DIR="/res/sci/data1/xerces-1.3.0/lib64"
       elif test -e /usr/lib64/libxerces-c1_?.so; then
 	XML_LIB_DIR="/usr/lib64"
       elif test -e /usr/local/lib64/libxerces-c1_?.so; then
@@ -706,8 +740,8 @@ if test -z "$XML_LIB_DIR"; then
 	XML_LIB_DIR="/usr/local/lib"
       fi
     else
-      if test -e /res/sci/data6/sparker/xerces-c/lib32/libxerces-c1_?.so; then
-        XML_LIB_DIR="/res/sci/data6/sparker/xerces-c/lib32"
+      if test -e /res/sci/data1/xerces-1.3.0/lib32/libxerces-c1_?.so; then
+        XML_LIB_DIR="/res/sci/data1/xerces-1.3.0/lib32"
       elif test -e /usr/lib32/libxerces-c1_?.so; then
 	XML_LIB_DIR="/usr/lib32"
       elif test -e /usr/local/lib32/libxerces-c1_?.so; then
@@ -740,11 +774,11 @@ if (test $xerces &&
     test -d "$xerces/include/dom" &&
     test -d "$xerces/include/parsers") ; then
   XML_INCLUDE_DIR="$xerces/include"
-elif (test -d "/res/sci/data6/sparker/xerces-c/include/util" &&
-      test -d "/res/sci/data6/sparker/xerces-c/include/sax" &&
-      test -d "/res/sci/data6/sparker/xerces-c/include/dom" &&
-      test -d "/res/sci/data6/sparker/xerces-c/include/parsers") ; then
-  XML_INCLUDE_DIR="/res/sci/data6/sparker/xerces-c/include"
+elif (test -d "/res/sci/data1/xerces-1.3.0/include/util" &&
+      test -d "/res/sci/data1/xerces-1.3.0/include/sax" &&
+      test -d "/res/sci/data1/xerces-1.3.0/include/dom" &&
+      test -d "/res/sci/data1/xerces-1.3.0/include/parsers") ; then
+  XML_INCLUDE_DIR="/res/sci/data1/xerces-1.3.0/include"
 elif (test -d "/usr/include/util" &&
       test -d "/usr/include/sax" &&
       test -d "/usr/include/dom" &&
