@@ -116,7 +116,7 @@ if (!oldStyleAdvect.active()){
   //setup the table
   string tablename = "adiabatic";
   table = TableFactory::readTable(params, tablename);
-  table->addIndependentVariable("mix. frac.");
+  table->addIndependentVariable("F");
   
   for (ProblemSpecP child = params->findBlock("tableValue"); child != 0;
        child = child->findNextBlock("tableValue")) {
@@ -128,15 +128,15 @@ if (!oldStyleAdvect.active()){
     tablevalues.push_back(tv);
   }
   
-  d_temp_index          = table->addDependentVariable("Temp(K)");
-  d_density_index       = table->addDependentVariable("density (kg/m3)");
+  d_temp_index          = table->addDependentVariable("Temp");
+  d_density_index       = table->addDependentVariable("density");
   d_gamma_index         = table->addDependentVariable("gamma");
-  d_cv_index            = table->addDependentVariable("heat capacity Cv(j/kg-K)");
+  d_cv_index            = table->addDependentVariable("heat_capac_Cv");
   d_viscosity_index     = table->addDependentVariable("viscosity");
-  d_thermalcond_index   = table->addDependentVariable("thermal conductivity");
-  d_ref_cv_index    = table->addDependentVariable("reference heat capacity Cv(j/kg-K)");
-  d_ref_gamma_index = table->addDependentVariable("reference gamma");
-  d_ref_temp_index  = table->addDependentVariable("reference Temp(K)");
+  d_thermalcond_index   = table->addDependentVariable("thermal_conductivity");
+  d_ref_cv_index    = table->addDependentVariable("reference_heat_capacity_Cv");
+  d_ref_gamma_index = table->addDependentVariable("reference_gamma");
+  d_ref_temp_index  = table->addDependentVariable("reference_Temp");
   table->setup();
   
   //__________________________________
@@ -322,8 +322,6 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     table->interpolate(d_ref_gamma_index, ref_gamma,iter, ind_vars);
     table->interpolate(d_ref_temp_index,  ref_temp, iter, ind_vars);
     
-    Vector dx = patch->dCell();
-    double volume = dx.x()*dx.y()*dx.z();
     for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
       // Restore the density and specific volume using the same volume

@@ -51,13 +51,20 @@ WARNING
     virtual double interpolate(int index, vector<double>& independents);
   private:
 
-    struct Ind {
-      string name;
+    struct InterpAxis {
+      InterpAxis(int size, int stride);
+      InterpAxis(const InterpAxis* copy, int newStride);
       vector<double> weights;
       vector<long> offset;
-
       bool uniform;
       double dx;
+      int useCount;
+      void finalize();
+      bool sameAs(const InterpAxis* b) const;
+    };
+
+    struct Ind {
+      string name;
     };
     vector<Ind*> inds;
 
@@ -89,6 +96,7 @@ WARNING
 
     struct Dep {
       string name;
+      string units;
       enum Type {
         ConstantValue,
         DerivedValue,
@@ -97,7 +105,11 @@ WARNING
       double constantValue;
       double* data;
       Expr* expression;
+      vector<Ind*> myinds;
+      vector<InterpAxis*> axes;
       Dep(Type type) : type(type) { data = 0; expression = 0; }
+      ~Dep();
+      void addAxis(InterpAxis*);
     };
     vector<Dep*> deps;
 
@@ -105,7 +117,10 @@ WARNING
     Expr* parse_muldiv(string::iterator&  begin, string::iterator& end);
     Expr* parse_sign(string::iterator&  begin, string::iterator& end);
     Expr* parse_idorconstant(string::iterator&  begin, string::iterator& end);
-    void evaluate(Expr* expr, double* data, int size);
+    void evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
+                  double* data, int size);
+    void checkAxes(const vector<InterpAxis*>& a, const vector<InterpAxis*>& b,
+                   vector<InterpAxis*>& out_axes);
 
     string filename;
     bool file_read;
@@ -120,6 +135,7 @@ WARNING
     double getDouble(istream&);
     bool getBool(istream&);
     string getString(istream&);
+    string getLine(istream&);
 
     bool startline;
     void error(istream& in);
