@@ -845,7 +845,10 @@ ViewSlices::send_all_geometry()
       }
     }
   }
-  if (flush) ogeom_->flush();
+  if (flush)  {
+    ogeom_->flush();
+    gui->eval("set "+id+"-geom_flushed 1");
+  }
 }
 
 
@@ -1039,6 +1042,7 @@ ViewSlices::draw_slice_lines(SliceWindow &window)
     xyz[i] = cur_slice_[i]*scale_[i];
   
   for (i = 0; i < 2; ++i) {
+    if (!slab_width_[p]) continue;
     one = Max(screen_space_one, double(scale_[p]*slab_width_[p]));
 
     switch (p) {
@@ -2155,13 +2159,6 @@ ViewSlices::extract_window_slices(SliceWindow &window) {
       slice.slice_num_ = window.slice_num_();
       slice.slab_min_ = window.slab_min_();
       slice.slab_max_ = window.slab_max_();
-      if (slice.mode_ == normal_e) {
-	cur_slice_[window.axis_()] = window.slice_num_();
-	slab_width_[window.axis_()] = 1;
-      } else {
-	cur_slice_[window.axis_()] = slice.slab_min_;
-	slab_width_[window.axis_()] = slice.slab_max_ - slice.slab_min_;
-      }
       slice.do_unlock();	
       s++;
     }
@@ -2196,12 +2193,15 @@ ViewSlices::extract_slice(NrrdSlice &slice, int axis, int slice_num)
       min[i] = 0;
       max[i] = max_slice_[i];
     }
+    slab_width_[axis] = 0;
     if (slice.mode_ == slab_e) {
       min[axis] = Min(max_slice_[axis], Max(0, slice.slab_min_));
       max[axis] = Max(0, Min(slice.slab_max_, max_slice_[axis]));
+      slab_width_[axis] = slice.slab_max_ - slice.slab_min_ + 1;
     }
     if (max[axis] < min[axis]) SWAP(min[axis], max[axis]);
-    
+    cur_slice_[axis] = min[axis];
+
     if (nrrdCrop(temp2->nrrd, slice.volume_->nrrd_->nrrd, min, max)) {
       char *err = biffGetDone(NRRD);
       error(string("Error MIP cropping nrrd: ") + err);
@@ -2214,6 +2214,9 @@ ViewSlices::extract_slice(NrrdSlice &slice, int axis, int slice_num)
       free(err);
     }
   } else {
+    slice_num = Clamp(slice_num, 0, max_slice_[axis]);
+    cur_slice_[axis] = slice_num;
+    slab_width_[axis] = 1;
     if (nrrdSlice(temp1->nrrd, slice.volume_->nrrd_->nrrd, axis, slice_num)) {
       char *err = biffGetDone(NRRD);
       error(string("Error Slicing nrrd: ") + err);
