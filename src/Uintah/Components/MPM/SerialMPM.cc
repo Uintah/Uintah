@@ -59,7 +59,7 @@ SerialMPM::~SerialMPM()
 {
 }
 
-void SerialMPM::problemSetup(const ProblemSpecP&, GridP& grid,
+void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 			     DataWarehouseP& dw)
 {
 
@@ -681,6 +681,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.16  2000/04/14 02:16:33  jas
+// Added variable to the problemSetup declaration.
+//
 // Revision 1.15  2000/04/14 02:13:57  jas
 // problemSetup runs the preProcessor.
 //
