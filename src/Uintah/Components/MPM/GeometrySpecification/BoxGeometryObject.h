@@ -11,14 +11,53 @@ using Uintah::Grid::Box;
 namespace Uintah {
 namespace Components {
 
+/**************************************
+	
+CLASS
+   BoxGeometryObject
+	
+   Short description...
+	
+GENERAL INFORMATION
+	
+   BoxGeometryObject.h
+	
+   John A. Schmidt
+   Department of Mechanical Engineering
+   University of Utah
+	
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+	
+ 
+	
+KEYWORDS
+   BoxGeometryObject
+	
+DESCRIPTION
+   Long description...
+	
+WARNING
+	
+****************************************/
+
+
 class BoxGeometryObject : public GeometryObject {
 
  public:
-
+  //////////
+  // Insert Documentation Here:
   BoxGeometryObject(ProblemSpecP&);
+
+  //////////
+  // Insert Documentation Here:
   virtual ~BoxGeometryObject();
 
+  //////////
+  // Insert Documentation Here:
   virtual bool inside(const Point &p) const;
+
+  //////////
+  // Insert Documentation Here:
   virtual Box getBoundingBox() const;
  private:
   Box d_box;
@@ -31,6 +70,9 @@ class BoxGeometryObject : public GeometryObject {
 #endif // __BOX_GEOMTRY_OBJECT_H__
 
 // $Log$
+// Revision 1.4  2000/04/22 16:55:11  jas
+// Added logging of changes.
+//
 // Revision 1.3  2000/04/20 18:56:20  sparker
 // Updates to MPM
 //
