@@ -243,10 +243,10 @@ itcl_class Module {
 	set modframe $canvas.module[modname]
 	frame $modframe -relief raised -borderwidth 3 
 	
-	#bind $modframe <1> "moduleStartDrag $canvas [modname] %X %Y"
-	#bind $modframe <B1-Motion> "moduleDrag $canvas $minicanvas [modname] %X %Y"
-	#bind $modframe <ButtonRelease-1> "moduleEndDrag $modframe $canvas"
-
+	bind $modframe <1> "moduleStartDrag $canvas [modname] %X %Y"
+	bind $modframe <B1-Motion> "moduleDrag $canvas $minicanvas [modname] %X %Y"
+	bind $modframe <ButtonRelease-1> "moduleEndDrag $modframe $canvas"
+	
 	frame $modframe.ff
 	pack $modframe.ff -side top -expand yes -fill both -padx 5 -pady 6
 	 
@@ -410,26 +410,19 @@ itcl_class Module {
 	bind .bot.neteditFrame.canvas <ButtonRelease-2> "endBox %X %Y $canvas"
 
 	bind $p <1> "$canvas raise $this"
-	bind $p <1> "moduleStartDrag $canvas [modname] %X %Y"
-	bind $p <B1-Motion> "moduleDrag $canvas $minicanvas [modname] %X %Y"
-	bind $p <ButtonRelease-1> "moduleEndDrag $modframe $canvas"
+	bindtags $p $modframe
+	
 	bind $p <3> "popup_menu %X %Y $canvas $minicanvas [modname]"
-	bind $p.title <1> "moduleStartDrag $canvas [modname] %X %Y"
-	bind $p.title <B1-Motion> "moduleDrag $canvas $minicanvas [modname] %X %Y"
-	bind $p.title <ButtonRelease-1> "moduleEndDrag $modframe $canvas"
+	bindtags $p.title $modframe
+		
 	bind $p.title <3> "popup_menu %X %Y $canvas $minicanvas [modname]"
 	
 	if {$make_time} {
-	    bind $p.time <1> "moduleStartDrag $canvas [modname] %X %Y"
-	    bind $p.time <B1-Motion> \
-		    "moduleDrag $canvas $minicanvas [modname] %X %Y"
-	    bind $p.time <ButtonRelease-1> "moduleEndDrag $modframe $canvas"
+	    bindtags $p.time $modframe
 	    bind $p.time <3> "popup_menu %X %Y $canvas $minicanvas [modname]"
 	}
 	if {$make_progress_graph} {
-	    bind $p.inset <1> "moduleStartDrag $canvas [modname] %X %Y"
-	    bind $p.inset <B1-Motion> "moduleDrag $canvas $minicanvas [modname] %X %Y"
-	    bind $p.inset <ButtonRelease-1> "moduleEndDrag $modframe $canvas"
+	    bindtags $p.inset $modframe
 	    bind $p.inset <3> "popup_menu %X %Y $canvas $minicanvas [modname]"
 	}
 	set made_icon 1
