@@ -28,7 +28,10 @@ static DebugStream cout_doing("flameSheet_RXN_DOING_COUT", false);
 //______________________________________________________________________
 //    To Do:
 //      - fix smearing of initial distribution when patch boundary 
-//        intersects the scalar field
+//        intersects the scalar field.  Currently there is no good 
+//        way to do an operation that need a layer of ghost cells during
+//        the initialization task.  Thus we adjust the iterator to 
+//        stay away for the boundaries completely.
 //______________________________________________________________________
 // flame sheet approach for laminar diffusion flames.
 // Reference:  "An Introduction to Combustion Concepts and Applications"
@@ -199,6 +202,7 @@ void flameSheet_rxn::initialize(const ProcessorGroup*,
   cout_doing << "Doing Initialize \t\t\t\tFLAMESHEET" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
       CCVariable<double>  var;
@@ -207,54 +211,70 @@ void flameSheet_rxn::initialize(const ProcessorGroup*,
 	  iter != scalars.end(); iter++){
 	 Scalar* scalar = *iter;
 
-	 new_dw->allocateAndPut(var, scalar->scalar_CCLabel, matl, patch,
-                               Ghost::AroundCells, 1);
+	 new_dw->allocateAndPut(var, scalar->scalar_CCLabel, matl, patch);
 	 var.initialize(0);
 
 	 for(vector<Region*>::iterator iter = scalar->regions.begin();
 	      iter != scalar->regions.end(); iter++){
 	   Region* region = *iter;
-	   Box b1 = region->piece->getBoundingBox();
-	   Box b2 = patch->getBox();
-	   Box b = b1.intersect(b2);
           
 	   for(CellIterator iter = patch->getExtraCellIterator();
 	       !iter.done(); iter++){
-	     Point p = patch->cellPosition(*iter);
+            IntVector c = *iter;
+	     Point p = patch->cellPosition(c);            
 	     if(region->piece->inside(p)) {
-	       var[*iter] = region->initialScalar;
+	       var[c] = region->initialScalar;
             }
 	   } // Over cells
-          
+        } // regions
+           
+        //__________________________________
+        //  Smooth out initial distribution with some diffusion
+        double FakeDiffusivity = 1.0;
+        for( int i =1 ; i < d_smear_initialDistribution_knob; i++ ){
+          Vector dx = patch->dCell();
+          IntVector right, left, top, bottom, front, back;
+          double areaX = dx.y() * dx.z();
+          double areaY = dx.x() * dx.z();
+          double areaZ = dx.x() * dx.y();
+          SFCXVariable<double> f_flux_X_FC;
+          SFCYVariable<double> f_flux_Y_FC;
+          SFCZVariable<double> f_flux_Z_FC;
+
+          computeQ_diffusion_FC( new_dw, patch, var, FakeDiffusivity,
+                                 f_flux_X_FC, f_flux_Y_FC, f_flux_Z_FC);
+/*`==========BUG==========*/
           //__________________________________
-          //  Smooth out initial distribution with some diffusion
-          double FakeDiffusivity = 10.0;
-          for( int i =1 ; i < d_smear_initialDistribution_knob; i++ ){
-            Vector dx = patch->dCell();
-            IntVector right, left, top, bottom, front, back;
-            double areaX = dx.y() * dx.z();
-            double areaY = dx.x() * dx.z();
-            double areaZ = dx.x() * dx.y();
-            SFCXVariable<double> f_flux_X_FC;
-            SFCYVariable<double> f_flux_Y_FC;
-            SFCZVariable<double> f_flux_Z_FC;
+          //  Adjust the iterator to stay away from
+          //  patch boundaries.  See top of file for 
+          //  discussion
+          CellIterator hi_lo = patch->getCellIterator();
+          IntVector low = hi_lo.begin();
+          IntVector hi  = hi_lo.end();
 
-            computeQ_diffusion_FC( new_dw, patch, var, FakeDiffusivity,
-                                   f_flux_X_FC, f_flux_Y_FC, f_flux_Z_FC);
+          hi -=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?1:0,
+                         patch->getBCType(patch->yplus) ==patch->Neighbor?1:0,
+                         patch->getBCType(patch->zplus) ==patch->Neighbor?1:0); 
 
-            for(CellIterator iter = patch->getCellIterator(); !iter.done(); 
-                                                                      iter++){
-              IntVector c = *iter;
-              right  = c + IntVector(1,0,0);    left   = c ;
-              top    = c + IntVector(0,1,0);    bottom = c ;
-              front  = c + IntVector(0,0,1);    back   = c ;
+          low +=IntVector(patch->getBCType(patch->xminus) ==patch->Neighbor?1:0,
+                         patch->getBCType(patch->yminus) ==patch->Neighbor?1:0,
+                         patch->getBCType(patch->zminus) ==patch->Neighbor?1:0); 
 
-              var[c]   +=((f_flux_X_FC[right] - f_flux_X_FC[left]) *areaX + 
-                         (f_flux_Y_FC[top]   - f_flux_Y_FC[bottom])*areaY +
-                         (f_flux_Z_FC[front] - f_flux_Z_FC[back])  *areaZ );
-            } // cells
-          }  // diffusion loop
-        } // Over regions
+          CellIterator iterLimits(low,hi); 
+/*==========BUG==========`*/ 
+          
+          for(CellIterator iter = iterLimits;!iter.done();iter++){ 
+            IntVector c = *iter;
+            right  = c + IntVector(1,0,0);    left   = c ;
+            top    = c + IntVector(0,1,0);    bottom = c ;
+            front  = c + IntVector(0,0,1);    back   = c ;
+
+            double smear=((f_flux_X_FC[right] - f_flux_X_FC[left]) *areaX + 
+                          (f_flux_Y_FC[top]   - f_flux_Y_FC[bottom])*areaY +
+                          (f_flux_Z_FC[front] - f_flux_Z_FC[back])  *areaZ );           
+            var[c]   +=smear;
+          } // cells
+        }  // diffusion loop
       } // over scalars
     } // Over matls
   }  // patches
