@@ -615,16 +615,24 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
 #endif
 
-  new_dw->allocate(velocityVars.old_uVelocity, d_lab->d_old_uVelocityGuess,
-			  matlIndex, patch);
-  new_dw->allocate(velocityVars.old_vVelocity, d_lab->d_old_vVelocityGuess,
-			  matlIndex, patch);
-  new_dw->allocate(velocityVars.old_wVelocity, d_lab->d_old_wVelocityGuess,
-			  matlIndex, patch);
+  switch(index){
+  case Arches::XDIR:
+     velocityVars.old_uVelocity.allocate(velocityVars.uVelocity.getLowIndex(),
+					 velocityVars.uVelocity.getHighIndex());
+     velocityVars.old_uVelocity.copy(velocityVars.uVelocity);
+     break;
+  case Arches::YDIR:
+     velocityVars.old_vVelocity.allocate(velocityVars.vVelocity.getLowIndex(),
+					 velocityVars.vVelocity.getHighIndex());
+     velocityVars.old_vVelocity.copy(velocityVars.vVelocity);
+     break;
+  case Arches::ZDIR:
+     velocityVars.old_wVelocity.allocate(velocityVars.wVelocity.getLowIndex(),
+					 velocityVars.wVelocity.getHighIndex());
+     velocityVars.old_wVelocity.copy(velocityVars.wVelocity);
+     break;
+  }
 
-  velocityVars.old_uVelocity.copy(velocityVars.uVelocity);
-  velocityVars.old_vVelocity.copy(velocityVars.vVelocity);
-  velocityVars.old_wVelocity.copy(velocityVars.wVelocity);
 
   // make it a separate task later
   d_linearSolver->velocityLisolve(pc, patch, old_dw, new_dw, index, delta_t, 
@@ -653,6 +661,9 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   
 //
 // $Log$
+// Revision 1.32  2000/10/09 18:47:17  sparker
+// Fixed variable allocation
+//
 // Revision 1.31  2000/10/09 17:06:24  rawat
 // modified momentum solver for multi-patch
 //
