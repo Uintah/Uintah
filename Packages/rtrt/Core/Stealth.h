@@ -98,17 +98,38 @@ public:
   void pitchUp();
   void pitchDown();
 
+  void updateRotateSensitivity( double scalar );
+  void updateTranslateSensitivity( double scalar );
+
   // Display the Stealth's speeds, etc.
   void print();
 
   // Returns next location in the path and the new view vector.
   void getNextLocation( Point & point, Point & look_at );
 
+  // Moves the stealth to the next Marker in the path, point/lookat
+  // are set to the correct locations.  Index of that pnt is returned.
+  // Returns -1 if no route!
+  int  getNextMarker( Point & point, Point & look_at );
+  int  getPrevMarker( Point & point, Point & look_at );
+  int  goToBeginning( Point & point, Point & look_at );
+  void getRouteStatus( int & pos, int & numPts );
+
   // Clear out path stealth is to follow.
   void clearPath();
+  // Adds point to the end of the route
   void addToPath( const Point & eye, const Point & look_at );
-  void loadPath( const string & filename );
-  void savePath( const string & filename );
+  // Adds point in front of the current marker.
+  void addToMiddleOfPath( const Point & eye, const Point & look_at );
+  void deleteCurrentMarker();
+
+  // Returns the name of the route (for GUI to display)
+  string loadPath( const string & filename );
+  void   newPath(  const string & routeName );
+  void   savePath( const string & filename );
+
+  // Choose the current path to follow.
+  void   selectPath( int index );
 
   // If gravity is on, the stealth/camera will "fall" towards the ground.
   void toggleGravity();
@@ -126,8 +147,14 @@ private:
   void increase_a_speed( double & speed, int & accel_cnt, double scale, double base, double max );
   void decrease_a_speed( double & speed, int & accel_cnt, double scale, double base, double min );
 
+  void displayCurrentRoute();
+
   // Scale is based on the size of the "universe".  It effects how fast
   // the stealth will move.
+
+  double baseTranslateScale_;
+  double baseRotateScale_;
+
   double translate_scale_;
   double rotate_scale_;
 
@@ -150,8 +177,13 @@ private:
 
   // Path information  (rough draft)
 
-  vector<Point> path_;     // Points along the path for the stealth to move.
-  vector<Point> look_ats_; // Look at locations along path.
+  vector< vector<Point> >   paths_;    // Array of routes.
+  vector< vector<Point> >   lookAts_;
+  vector< string >          routeNames_;
+
+  vector<Point>    * currentPath_;
+  vector<Point>    * currentLookAts_;
+  string           * currentRouteName_;
 
   double        segment_percentage_;
 
