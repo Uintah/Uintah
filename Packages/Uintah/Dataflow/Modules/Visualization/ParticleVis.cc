@@ -219,8 +219,14 @@ void ParticleVis::execute()
 	  
 	  if( hasScale ) {
 	    double smin = 0, smax = 0;
-	    scaleSet->get_minmax(smin,smax);
-
+	    if( isFixed.get() == 1 ){
+	      smin = min_.get();
+	      smax = max_.get();
+	      } else {
+		scaleSet->get_minmax(smin,smax);
+		min_.set(smin);
+		max_.set(smax);
+	      }
 	    double scalefactor = 1;   // If smin = smax
                                      // then set scale = 1 -Todd
                                      // This was originally set to 0
@@ -283,7 +289,7 @@ void ParticleVis::execute()
 	  double value = (*s_it)[*iter];
 	  if( sp != 0) {
 	    sp->properties().freeze();
-	    sp->properties().store("id",LongLong((*id_it)[*iter]),true);
+	    sp->properties().set_property("id",LongLong((*id_it)[*iter]),true);
 	    obj->add( scinew GeomMaterial( sp,(cmap->lookup(value).get_rep())));
 	  }
 	  count = 0;
@@ -351,7 +357,7 @@ void ParticleVis::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked_obj)
   cerr << "User data = "<<userdata<<endl;
   //  cerr << "sphere index = "<<index<<endl<<endl;
   LongLong id(-1);
-  if ( picked_obj->properties().get("id",id) ) {
+  if ( picked_obj->properties().get_property("id",id) ) {
     cerr<<"Id = "<< id.val_ <<endl;
   } else {
     cerr<<"Not getting the correct data\n";

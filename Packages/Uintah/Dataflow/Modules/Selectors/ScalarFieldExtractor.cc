@@ -174,8 +174,8 @@ void ScalarFieldExtractor::execute()
 					     box.max());
 	  LatVolField<double> *sfd =
 	    scinew LatVolField<double>( lvm, Field::NODE );
-	  sfd->store( "variable", string(var), true );
-	  sfd->store( "time", double( time ), true);
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
 	  build_field2( archive, level, low, var, mat, time, gridVar,
 			sfd, need_byte_swap);
 	  sfout->send(sfd);
@@ -189,8 +189,8 @@ void ScalarFieldExtractor::execute()
 					     box.max());
 	  LatVolField<int> *sfd =
 	    scinew LatVolField<int>( lvm, Field::NODE );
-	  sfd->store( "variable", string(var), true );
-	  sfd->store( "time", double( time ), true);
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
 	  build_field2( archive, level, low, var, mat, time, gridVar,
 			sfd, need_byte_swap);
 	  sfout->send(sfd);
@@ -205,8 +205,8 @@ void ScalarFieldExtractor::execute()
 					     box.max());
 	  LatVolField<long64> *sfd =
 	    scinew LatVolField<long64>( lvm, Field::NODE );
-	  sfd->store( "variable", string(var), true );
-	  sfd->store( "time", double( time ), true);
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
 	  build_field2( archive, level, low, var, mat, time, gridVar,
 			sfd, need_byte_swap);
 	  sfout->send(sfd);
@@ -229,14 +229,14 @@ void ScalarFieldExtractor::execute()
 	  LatVolField<double> *sfd =
 	    scinew LatVolField<double>( lvm, Field::CELL );
 	  
-	  sfd->store( "variable", string(var), true );
-	  sfd->store( "time", double( time ), true);
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
 	  build_field2( archive, level, low, var, mat, time, gridVar,
 			sfd, need_byte_swap);
 //  	  double min, max;
 //  	  ScalarFieldInterface *sfi = sfd->query_scalar_interface();
 //  	  sfi->compute_min_max(min, max);
-//  	  sfd->store("minmax", pair<double, double>(min, max), true);
+//  	  sfd->set_property("minmax", pair<double, double>(min, max), true);
 	  sfout->send(sfd);
 	  return;
 	}
@@ -248,8 +248,8 @@ void ScalarFieldExtractor::execute()
 					     box.max());
 	  LatVolField<int> *sfd =
 	    scinew LatVolField<int>( lvm, Field::CELL );
-	  sfd->store( "variable", string(var), true );
-	  sfd->store( "time", double( time ), true);
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
 	  build_field2( archive, level, low, var, mat, time, gridVar,
 			sfd, need_byte_swap);
 	  sfout->send(sfd);
@@ -264,8 +264,8 @@ void ScalarFieldExtractor::execute()
 					     box.max());
 	  LatVolField<long64> *sfd =
 	    scinew LatVolField<long64>( lvm, Field::CELL );
-	  sfd->store( "variable", string(var), true );
-	  sfd->store( "time", double( time ), true);
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
 	  build_field2( archive, level, low, var, mat, time, gridVar,
 			sfd, need_byte_swap);
 	  sfout->send(sfd);

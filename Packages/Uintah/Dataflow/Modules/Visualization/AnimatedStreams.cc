@@ -132,9 +132,9 @@ void AnimatedStreams::execute(void)
       int new_generation = -1;
       int new_timestep = -1;
       // check for the properties
-      if (vf->get("varname",new_varname) &&
-	  vf->get("generation",new_generation) &&
-	  vf->get("timestep",new_timestep)) {
+      if (vf->get_property("varname",new_varname) &&
+	  vf->get_property("generation",new_generation) &&
+	  vf->get_property("timestep",new_timestep)) {
 	// check to make sure the variable name and generation are the same
 	if (new_varname == varname && new_generation == generation) {
 	  if (new_timestep != timestep)
@@ -164,7 +164,7 @@ void AnimatedStreams::execute(void)
   }
 
   double dt = -1;
-  if (vf->get("delta_t",dt) && dt > 0) {
+  if (vf->get_property("delta_t",dt) && dt > 0) {
     cerr << "Delta_t = " << dt << "\n";
     anistreams->SetDeltaT(dt);
   } else {
