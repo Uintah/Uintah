@@ -47,8 +47,9 @@ POSSIBLE REVISIONS:
 #include <vector>
 
 namespace Uintah {
-class MixRxnTableInfo;
-
+  class MixRxnTableInfo;
+  class Stream;
+ 
 class VectorTable: public MixRxnTable {
 
  public:
@@ -69,22 +70,25 @@ class VectorTable: public MixRxnTable {
   // GROUP: Manipulate
   //////////////////////////////////////////////////////////////////////
   // Inserts stateSpaceVars vector in table at location based on keyIndex.  
-  virtual bool Insert(int keyIndex[], std::vector<double>& stateSpaceVars); 
+  //virtual bool Insert(int keyIndex[], std::vector<double>& stateSpaceVars); 
+  virtual bool Insert(int keyIndex[], Stream& stateSpaceVars);
 
   // GROUP: Access
   //////////////////////////////////////////////////////////////////////
   // Lookup function looks up state space vector in the table at location 
   // based on keyIndex. If it is found, it stores the state space vars in 
   // stateSpaceVars and returns true, else it just returns false.
-  virtual bool Lookup(int keyIndex[], std::vector<double>& stateSpaceVars);
+  //virtual bool Lookup(int keyIndex[], std::vector<double>& stateSpaceVars);
+  virtual bool Lookup(int keyIndex[], Stream& stateSpaceVars);
 
 
  private:
  
   int d_numIndepVars;
-  std::vector< std::vector <double> > d_tableVec;
+  //std::vector< std::vector <double> > d_tableVec;
   std::vector<double> d_stateSpaceVec;
   MixRxnTableInfo* d_tableInfo;
+  std::vector<Stream> d_tableVec;
     
 }; // End Class VectorTable
 

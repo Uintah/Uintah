@@ -53,11 +53,17 @@ PDFMixingModel::problemSetup(const ProblemSpecP& params)
     cout << "WARNING: Setting numMixStatVars = " << endl;
     d_numMixStatVars = 1;
   }
-  db->require("PDFShape",d_pdfShape);
-  if ((d_pdfShape != "Beta")&&(d_pdfShape != "ClippedGaussian")) {
+  if (db->findBlock("PDFShape")) {
+    db->require("PDFShape",d_pdfShape);
+    if ((d_pdfShape != "Beta")&&(d_pdfShape != "ClippedGaussian")) {
+      cout << "PDFShape is Beta" << endl;
+      d_pdfShape = "Beta";
+      //throw InvalidValue("PDF shape not implemented " + d_pdfShape);
+    }
+  }
+  else {
     cout << "PDFShape is Beta" << endl;
     d_pdfShape = "Beta";
-    //throw InvalidValue("PDF shape not implemented " + d_pdfShape);
   }
   // read and initialize reaction model with chemkin interface
   string rxnModel;
@@ -158,13 +164,13 @@ PDFMixingModel::problemSetup(const ProblemSpecP& params)
     else {
       // Default tableType is dynamic
       d_dynamic = true;
-      cout << "TABLE TYPE is dynamic" << endl;
+      cout << "PDFMixing TABLE TYPE is dynamic" << endl;
     }
   }
   else {
     // Default tableType is dynamic
     d_dynamic = true;
-    cout << "TABLE TYPE is dynamic" << endl;
+    cout << "PDFMixing TABLE TYPE is dynamic" << endl;
   }
   // Call reaction model constructor, get total number of dependent  vars;
   // can't call it sooner because d_numMixingVars  and mixTableType are needed
@@ -179,12 +185,14 @@ PDFMixingModel::problemSetup(const ProblemSpecP& params)
     else if (tableStorage == "2DVector")
       d_mixTable = new VectorTable(d_tableDimension, d_tableInfo);
     else {
-      throw InvalidValue("Table storage not supported" + tableStorage);
+      d_mixTable = new VectorTable(d_tableDimension, d_tableInfo);
+      cout << "PDFMixing TABLE STORAGE is vector table" << endl;
+      //throw InvalidValue("Table storage not supported" + tableStorage);
     }
   }
   else {
     d_mixTable = new VectorTable(d_tableDimension, d_tableInfo);
-    cout << "TABLE STORAGE is vectorTable" << endl;
+    cout << "PDFMixing TABLE STORAGE is vectorTable" << endl;
   }
   // tableSetup is a function in DynamicTable; it allocates memory for 
   // table functions
@@ -371,7 +379,7 @@ PDFMixingModel::computeProps(const InletStream& inStream,
 
 void
 PDFMixingModel::tableLookUp(int* tableKeyIndex, Stream& stateSpaceVars) {
-  vector<double> vec_stateSpaceVars;
+  //vector<double> vec_stateSpaceVars;
   bool lsoot = d_rxnModel->getSootBool();
 #if 0
   cout << "PDF::tableKeyIndex = " << endl;
@@ -384,20 +392,22 @@ PDFMixingModel::tableLookUp(int* tableKeyIndex, Stream& stateSpaceVars) {
 #endif
   if (d_dynamic) 
     {  //Table is dynamic
-      if (!(d_mixTable->Lookup(tableKeyIndex, vec_stateSpaceVars))) 
+      //if (!(d_mixTable->Lookup(tableKeyIndex, vec_stateSpaceVars)))
+      if (!(d_mixTable->Lookup(tableKeyIndex, stateSpaceVars)))
         {
           // Call to integrator
           // Don't need "if (d_numMixStatVars)" because it is set to 1 in 
           // problemSetup
           stateSpaceVars = d_integrator->integrate(tableKeyIndex);
-          vec_stateSpaceVars = stateSpaceVars.convertStreamToVec();
+          //vec_stateSpaceVars = stateSpaceVars.convertStreamToVec();
           // defined in K-D tree or 2D vector implementation
-          d_mixTable->Insert(tableKeyIndex, vec_stateSpaceVars);
+          //d_mixTable->Insert(tableKeyIndex, vec_stateSpaceVars);
+	  d_mixTable->Insert(tableKeyIndex, stateSpaceVars);
           //stateSpaceVars.print(cerr);
         }
       else {
-        stateSpaceVars.convertVecToStream(vec_stateSpaceVars, d_numMixingVars,
-                                          d_numRxnVars, lsoot);
+        //stateSpaceVars.convertVecToStream(vec_stateSpaceVars, d_numMixingVars,
+	//                                       d_numRxnVars, lsoot);
 #if 0
         cout<<"PDF::entry exists"<<endl;
         for (int ii = 0; ii < vec_stateSpaceVars.size(); ii++) {
@@ -406,15 +416,17 @@ PDFMixingModel::tableLookUp(int* tableKeyIndex, Stream& stateSpaceVars) {
           if (!(ii % 10)) cout << endl; 
         }
         cout << endl;
+	stateSpaceVars.print(cerr);
 #endif
       }
     }
   else 
     {  //Table is static
-      if (d_mixTable->Lookup(tableKeyIndex, vec_stateSpaceVars)) 
+      //if (d_mixTable->Lookup(tableKeyIndex, vec_stateSpaceVars)) 
+      if (d_mixTable->Lookup(tableKeyIndex, stateSpaceVars))
         {
-          stateSpaceVars.convertVecToStream(vec_stateSpaceVars, d_numMixingVars, 
-                                            d_numRxnVars, lsoot);
+          //stateSpaceVars.convertVecToStream(vec_stateSpaceVars, d_numMixingVars, 
+	  //                                   d_numRxnVars, lsoot);
           //stateSpaceVars.print(cout);   
         } 
       else
@@ -459,7 +471,13 @@ PDFMixingModel::readStaticTable() {
   int dataCount = 0;
   int numMixDiv, numVarDiv;
   int numSpecies;
-  vector<double> vec_stateSpaceVars(d_depStateSpaceVars, 0.0);
+  //vector<double> vec_stateSpaceVars(d_depStateSpaceVars, 0.0);
+  int nofElements = d_chemInterf->getNumElements();
+  //int nofSpecies = d_chemInterf->getNumSpecies();
+  int nofSpecies = 4; //Only CO2,H2O,O2,CO in output vector
+  bool lsoot = d_rxnModel->getSootBool();
+  Stream stateSpaceVars(nofSpecies,nofElements, d_numMixingVars, d_numRxnVars,
+		     lsoot);
   vector<double> indepVars(d_tableDimension, 0.0);
   double value;
   // Read in header information
@@ -527,12 +545,13 @@ PDFMixingModel::readStaticTable() {
 	    mixfile>>value;
 	    speciesMassFract[jj] = value;
 	  }
-	  int vecCount = 0; 
+	  //int vecCount = 0; 
 	  double temp;
 	  // Ordering in output vector: density, pressure, temp, enthalpy, 
 	  // sensh, cp, molwt, species mass fractions
 	  mixfile>>temp; //Read in temperature in K
 	  mixfile>>value; //Read in density in kg/m^3
+#if 0
 	  vec_stateSpaceVars[vecCount++] = value;
 	  vec_stateSpaceVars[vecCount++] = 1.0; //Pressure in atm
 	  vec_stateSpaceVars[vecCount++] = temp;
@@ -544,16 +563,25 @@ PDFMixingModel::readStaticTable() {
 	  vec_stateSpaceVars[vecCount++] = value;
 	  vec_stateSpaceVars[vecCount++]= 0; //drhodf place holder
 	  vec_stateSpaceVars[vecCount++] = 0; //drhodh place holder
-	  // Assign species mass fractions to vector
-	  for (int jj = 0; jj < numSpecies; jj++) {
-	    vec_stateSpaceVars[vecCount++] = speciesMassFract[jj];
-	    // ***Can I do this in one line???
-	  }
+#endif
+	  stateSpaceVars.d_density = value;
+	  stateSpaceVars.d_pressure = 1.0; //Pressure in atm
+	  stateSpaceVars.d_temperature = temp;
+	  mixfile>>value; //Read in enthalpy in J/kg
+	  stateSpaceVars.d_enthalpy = value;
+	  stateSpaceVars.d_sensibleEnthalpy = 0.0; //Set sensible enthalpy to 0
+	  stateSpaceVars.d_moleWeight = 0.0; //Set molecular weight to 0
+	  mixfile>>value; //Read in mix heat capacity in J/(kg-K)
+	  stateSpaceVars.d_cp = value;
+	  stateSpaceVars.d_drhodf= 0; //drhodf place holder
+	  stateSpaceVars.d_drhodh = 0; //drhodh place holder
+	  stateSpaceVars.d_speciesConcn = speciesMassFract;  // Species mass fractions
+      
 	  mixfile.ignore(50,'\n');    //Move to next line
   
-	  //Convert indepVars to tableKeyIndex, but first check table dimensions in stateTable
-	  //file against dimensions in input file. ***This will only work for one f- I do check
-	  //at end that may be adequate
+	  //Convert indepVars to tableKeyIndex, but first check table dimensions in 
+	  //stateTable file against dimensions in input file. ***This will only work 
+	  //for one f- I do check at end that may be adequate
 	  if ((d_tableInfo->getNumDivsBelow(0)+d_tableInfo->getNumDivsAbove(0)+1) != 
 	      numMixDiv) {
 	    cout << "WARNING: Number of f entries in stateTable does not match table size";
@@ -594,7 +622,8 @@ PDFMixingModel::readStaticTable() {
 		gflag = false;
 	      }		   
 	    }
-	    d_mixTable->Insert(tableIndex, vec_stateSpaceVars);
+	  //d_mixTable->Insert(tableIndex, vec_stateSpaceVars);
+	  d_mixTable->Insert(tableIndex, stateSpaceVars);
 	    delete [] tableIndex;
 	} // for(ii = 0 to numVarDiv)
     } // for(nn = 0 to numMixDiv)
@@ -633,7 +662,13 @@ PDFMixingModel::readBetaTable() {
 
   int dataCount = 0;
   int numHDiv, numMixDiv, numVarDiv, numPiDiv;
-  vector<double> vec_stateSpaceVars(d_depStateSpaceVars, 0.0);
+  //vector<double> vec_stateSpaceVars(d_depStateSpaceVars, 0.0);
+  int nofElements = d_chemInterf->getNumElements();
+  //int nofSpecies = d_chemInterf->getNumSpecies();
+  int nofSpecies = 4; //Only CO2,H2O,O2,CO in output vector
+  bool lsoot = d_rxnModel->getSootBool();
+  Stream stateSpaceVars(nofSpecies,nofElements, d_numMixingVars, d_numRxnVars,
+		     lsoot);
   vector<double> indepVars(d_tableDimension, 0.0);
   double value;
   int mixCount = 0;
@@ -673,9 +708,51 @@ PDFMixingModel::readBetaTable() {
       mixfile.ignore(50,'\n');    //Move to next line
       // Read line containing state space information
       // gf is already normalized.
-      for (int kk = 0; kk < d_depStateSpaceVars; kk++) {
+      //for (int kk = 0; kk < d_depStateSpaceVars; kk++) {
+      //mixfile >> value;
+      //vec_stateSpaceVars[kk] = value;
+      mixfile >> value;
+      stateSpaceVars.d_density = value;
+      mixfile >> value;
+      stateSpaceVars.d_pressure = value;
+      mixfile >> value;
+      stateSpaceVars.d_temperature = value;
+      mixfile >> value;
+      stateSpaceVars.d_enthalpy = value;
+      mixfile >> value;
+      stateSpaceVars.d_sensibleEnthalpy = value;
+      mixfile >> value;
+      stateSpaceVars.d_moleWeight = value;
+      mixfile >> value;
+      stateSpaceVars.d_cp = value;
+      mixfile >> value;
+      stateSpaceVars.d_drhodf = value;
+      mixfile >> value;
+      stateSpaceVars.d_drhodh = value;
+      for (vector<double>::iterator iter = 
+	   stateSpaceVars.d_speciesConcn.begin(); 
+	   iter != stateSpaceVars.d_speciesConcn.end(); ++iter) {
 	mixfile >> value;
-	vec_stateSpaceVars[kk] = value;
+	stateSpaceVars.d_speciesConcn.push_back(value);
+      }
+      if (d_numRxnVars > 0) {
+	for (vector<double>::iterator iter = stateSpaceVars.d_rxnVarRates.begin(); 
+	     iter != stateSpaceVars.d_rxnVarRates.end(); ++iter) {
+	  mixfile >> value;
+	  stateSpaceVars.d_rxnVarRates.push_back(value);
+	}
+	for (vector<double>::iterator iter = stateSpaceVars.d_rxnVarNorm.begin(); 
+	     iter != stateSpaceVars.d_rxnVarNorm.end(); ++iter){
+	  mixfile >> value;
+	  stateSpaceVars.d_rxnVarNorm.push_back(value);
+	}
+      }
+      if (lsoot) {
+	for (vector<double>::iterator iter = stateSpaceVars.d_sootData.begin(); 
+	     iter != stateSpaceVars.d_sootData.end(); ++iter) {
+	  mixfile >> value;
+	  stateSpaceVars.d_sootData.push_back(value);
+	}
       }
       mixfile.ignore(50,'\n');    //Move to next line
       dataCount++; // Counter for number of total entries in data file
@@ -713,7 +790,8 @@ PDFMixingModel::readBetaTable() {
 	  }		   
 	} // for (int ll)
       //cout << "Indeces = " << tableIndex[0] << " " << tableIndex[1] << " " << tableIndex[2]<< endl;
-      d_mixTable->Insert(tableIndex, vec_stateSpaceVars);
+      //d_mixTable->Insert(tableIndex, vec_stateSpaceVars);
+      d_mixTable->Insert(tableIndex, stateSpaceVars); 
       delete [] tableIndex;
     } // for(nn = 0 to totalEntries)
   mixfile.close();
@@ -729,7 +807,7 @@ PDFMixingModel::createBetaTable() {
   // is that only one mixture fraction and one variance are used.
   // The table is written out to the file "betaTable"
 
-  vector<double> vec_stateSpaceVars;
+  //vector<double> vec_stateSpaceVars;
   int *tableIndex = new int[d_tableDimension];
   vector<int> numEntries(d_tableDimension, 0.0);
   Stream stateSpaceVars, prevStateSpaceVars;
@@ -738,7 +816,7 @@ PDFMixingModel::createBetaTable() {
   int count = 0;
 
   ofstream betafile("betaTable");
-  ofstream comparefile("compareTable");
+  //ofstream comparefile("compareTable");
   if (betafile.fail()) {
     cout<<"ERROR in PDFMixingModel"<<endl
 	<<"    Could not open betaTable file."<<endl;
@@ -847,9 +925,10 @@ PDFMixingModel::createBetaTable() {
 		  }
 		  prevStateSpaceVars = stateSpaceVars;
 		  //stateSpaceVars.drhodf = 0.0;
-		  vec_stateSpaceVars = stateSpaceVars.convertStreamToVec();
+		  //vec_stateSpaceVars = stateSpaceVars.convertStreamToVec();
 		  // defined in K-D tree or 2D vector implementation
-		  d_mixTable->Insert(tableIndex, vec_stateSpaceVars);	
+		  //d_mixTable->Insert(tableIndex, vec_stateSpaceVars);	
+		  d_mixTable->Insert(tableIndex, stateSpaceVars);	
 		  ++entryCount;
 
 		  //convertKeyToFloatValues(tableIndex, indepVars);
@@ -857,19 +936,20 @@ PDFMixingModel::createBetaTable() {
 		    betafile << indepVars[nn] << " " ;  
 		  }
 		  betafile << endl;
-		  for (int nn = 0; nn < vec_stateSpaceVars.size(); nn++) {
-		    betafile << vec_stateSpaceVars[nn] << " " ; 
-		  }
+		  //for (int nn = 0; nn < vec_stateSpaceVars.size(); nn++) {
+		  //  betafile << vec_stateSpaceVars[nn] << " " ; 
+		  //}
+		  stateSpaceVars.print_oneline(betafile);
 		  betafile << endl;
-		  if (kk = 0)
-		    comparefile << indepVars[0] << endl;
-		  comparefile << vec_stateSpaceVars[0] << " " <<vec_stateSpaceVars[2] << endl;
+		  //if (kk = 0)
+		  //  comparefile << indepVars[0] << endl;
+		  //comparefile << vec_stateSpaceVars[0] << " " <<vec_stateSpaceVars[2] << endl;
 		} // for ll 
 	    } // for kk
 	} // for jj
     } // for ii
   betafile.close();
-  comparefile.close();
+  //comparefile.close();
       
   //Check to see if number of entries in datafile match the specified size of table 
   //Compute total number of entries that should be in table 

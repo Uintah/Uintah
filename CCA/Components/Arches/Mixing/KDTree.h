@@ -43,6 +43,7 @@ POSSIBLE REVISIONS
 #include <vector>
 
 namespace Uintah {
+  class Stream;
 
   ///////////////////////////////////////////////////////////////////////////
   // structure KD_Node is the basic element of the KD_Tree .
@@ -58,18 +59,21 @@ namespace Uintah {
     int dim;
     int Phi_dim;
     int* keys;
-    std::vector<double> Phi;
+    //    std::vector<double> Phi;
+    Stream Phi;
   
     //Constructor Node transfer the value keyes & Data .
 
     KD_Node(){
         keys = 0;
-        Phi = std::vector<double>();
+        //Phi = std::vector<double>();
+	Phi = Stream();
         left =0;
         right = 0;
     }
 
-    KD_Node(int dim, int Phi_dim, int Key[],std::vector<double> Phi, KD_Node *left=0, 
+    //KD_Node(int dim, int Phi_dim, int Key[],std::vector<double> Phi, KD_Node *left=0,
+    KD_Node(int dim, int Phi_dim, int Key[], Stream Phi, KD_Node *left=0,
             KD_Node *right=0):   
       dim(dim), Phi_dim(Phi_dim),Phi(Phi),left(left),right(right){
         keys = new int[dim];
@@ -108,14 +112,16 @@ class KD_Tree: public MixRxnTable {
   // Store a key and value pair into the KD_Node and inserts in   
   // the Tree.  
 
-  virtual bool Insert(int key[], std::vector<double>& Phi);
+  //virtual bool Insert(int key[], std::vector<double>& Phi);
+  virtual bool Insert(int key[], Stream& Phi);
 
   // GROUP: Access
   //////////////////////////////////////////////////////////////////////
   // Lookup function looks up the tree for key. If its found it stores the
   // statespcae vars in Phi vector and returns true, else it just returns
   // false.
-  virtual bool Lookup(int key[], std::vector<double>& Phi);
+  //virtual bool Lookup(int key[], std::vector<double>& Phi);
+  virtual bool Lookup(int key[], Stream& Phi);
 
   // GROUP: Manipulate
   //////////////////////////////////////////////////////////////////////
@@ -140,7 +146,8 @@ class KD_Tree: public MixRxnTable {
  private:
    //** Insert a new Node z which contain a given key into the Tree.
 
-   KD_Node* TreeInsert(KD_Node*& x, int key[], std::vector<double> phi, int lev);
+  //KD_Node* TreeInsert(KD_Node*& x, int key[], std::vector<double> phi, int lev);
+   KD_Node* TreeInsert(KD_Node*& x, int key[], Stream phi, int lev);
 
   
    //** Given a key to search which contain this key in Tree
@@ -157,7 +164,8 @@ class KD_Tree: public MixRxnTable {
 
    //** Retrieves and deletes the leftmost descendant of a given node.
        
-   void ProcessLeftMost(KD_Node*& x, std::vector<double>& phi);
+   //void ProcessLeftMost(KD_Node*& x, std::vector<double>& phi);
+   void ProcessLeftMost(KD_Node*& x, Stream& phi);
    
    //** Destroy a tree;
    
