@@ -121,6 +121,9 @@ public:
   // Make the array larger by count elements
   void grow(int count, int grow_size=10);
 
+  //////////
+  // set allocated size 
+  void reserve(int n);
 
   //////////
   // Add one element to the array.  equivalent to:
@@ -246,6 +249,23 @@ void Array1<T>::grow(int count, int grow_size)
     nalloc=newalloc;
   }
   _size=newsize;
+}
+
+template<class T>
+void Array1<T>::reserve(int n)
+{
+  if(n>nalloc){
+    // Reallocate...
+    T* newobjs=new T[n];
+    if(objs){
+      for(int i=0;i<_size;i++){
+	newobjs[i]=objs[i];
+      }
+      delete[] objs;
+    }
+    objs=newobjs;
+    nalloc=n;
+  }
 }
 
 template<class T>
