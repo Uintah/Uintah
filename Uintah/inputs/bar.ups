@@ -72,7 +72,7 @@
 	    <Box label="1">
 		<lower>[0,0,0]</lower>
 		<upper>[100,50,50]</upper>
-	        <resolution>[200,100,100]</resolution>
+	        <resolution>[50,25,25]</resolution>
 		<patches>[1,1,1]</patches>
 	    </Box>
 	</Level>

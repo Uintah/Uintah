@@ -221,8 +221,9 @@ void Region::performConsistencyCheck() const
 
 CellIterator Region::getCellIterator(const Box& b) const
 {
-   Vector l = (b.lower() - d_box.lower())/d_res;
-   Vector u = (b.upper() - d_box.lower())/d_res;
+   Vector diag = d_box.upper()-d_box.lower();
+   Vector l = (b.lower() - d_box.lower())*d_res/diag;
+   Vector u = (b.upper() - d_box.lower())*d_res/diag;
    return CellIterator((int)l.x(), (int)l.y(), (int)l.z(),
 		       RoundUp(u.x()), RoundUp(u.y()), RoundUp(u.z()));
 }
@@ -230,6 +231,13 @@ CellIterator Region::getCellIterator(const Box& b) const
 
 //
 // $Log$
+// Revision 1.8  2000/04/28 03:58:20  sparker
+// Fixed countParticles
+// Implemented createParticles, which doesn't quite work yet because the
+//   data warehouse isn't there yet.
+// Reduced the number of particles in the bar problem so that it will run
+//   quickly during development cycles
+//
 // Revision 1.7  2000/04/27 23:18:50  sparker
 // Added problem initialization for MPM
 //
