@@ -61,13 +61,13 @@ using std::map;
 //----------------------------------------------------------------------
 class SCICORESHARE MatrixIEPlugin {
 public:
-  const string pluginname;
+  const string pluginname_;
 
-  const string fileextension;
-  const string filemagic;
+  const string fileExtension_;
+  const string fileMagic_;
 
-  MatrixHandle (*filereader)(ProgressReporter *pr, const char *filename);
-  bool (*filewriter)(ProgressReporter *pr,
+  MatrixHandle (*fileReader_)(ProgressReporter *pr, const char *filename);
+  bool (*fileWriter_)(ProgressReporter *pr,
 		     MatrixHandle f, const char *filename);
 
   MatrixIEPlugin(const string &name,
