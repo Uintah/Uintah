@@ -35,6 +35,10 @@ itcl_class Kurt_Visualization_GridSliceVis {
 	global $this-drawZ
 	global $this-drawView
 	global $this-interp_mode 
+	global $this-point_x
+	global $this-point_y
+	global $this-point_z
+	global $this-point_init
 	set $this-max_brick_dim_ 0
 	set $this-min_ 0
 	set $this-max_ 1
@@ -44,6 +48,10 @@ itcl_class Kurt_Visualization_GridSliceVis {
 	set $this-drawZ 0
 	set $this-drawView 0
 	set $this-interp_mode 1
+	set $this-point_x 0
+	set $this-point_y 0
+	set $this-point_z 0
+	set $this-point_init 0
     }
 
 
