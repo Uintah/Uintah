@@ -60,6 +60,8 @@ proc change_radio_var {root newvar} {
 #
 itcl_class expscale {
 
+    protected decimalplaces
+
     method modname { c } {
 	set n [string range $c [expr [string last "::" $c] + 2] end]
 	return $n
@@ -76,6 +78,8 @@ itcl_class expscale {
 	#puts "name received by expscale = [modname $this]"
 	#puts "dollar this info class = [ $this info class] "
 
+	set decimalplaces 3
+
 	set class [modname [$this info class]]
 	set w [modname $this]
 	frame $w -class $class -borderwidth 2 -relief groove
@@ -90,9 +94,10 @@ itcl_class expscale {
 
 	set w [modname $this]
 
+	set resolution [getResolution ]
 	set built 1
 	scale $w.scale -label $label -orient $orient \
-		-from -1000000 -to 10000000 -resolution 0.000001 \
+		-from -1000000 -to 10000000 -resolution $resolution \
 		-variable $variable -command $command
 	pack $w.scale -fill x -side left -expand yes
 
@@ -136,20 +141,46 @@ itcl_class expscale {
 	    $w.scale config -variable $variable
 	}
     }
+
+    method getResolution {} {
+	if { $decimalplaces == 0 } {
+	    return 1
+	} else {
+	    set val 1
+
+	    for { set i 1} { $i < $decimalplaces } {incr i } {
+		set val "0$val"
+	    }
+	    
+	    return "0.$val"
+	}
+    }
     protected exp 0
     protected sign 1
     public command ""
 
     method upexp {} {
 	incr exp
+	if { $exp > 2 } {
+	    set decimalplaces 0
+	} else {
+	    incr decimalplaces -1
+	}
+	    
 	setscales
     }
 
     method downexp {} {
-	if {$exp < -4} {
+	if {$exp < -5} {
 	    return;
 	}
 	incr exp -1
+	if { $exp > 2 } {
+	    set decimalplaces 0
+	} else {
+	    incr decimalplaces
+	}
+	
 	setscales
     }
 
@@ -181,8 +212,11 @@ itcl_class expscale {
 
 	set to [expr $from+$mag*$sign]
 	set ti [expr $mag/5]
+	
+	set resolution [getResolution ]
 
-	[modname $this].scale configure -from $from -to $to -tickinterval $mag
+	[modname $this].scale configure -from $from -to $to \
+	    -tickinterval $mag -resolution $resolution
 
 	[modname $this].e.exp delete 0 end
 	[modname $this].e.exp insert 0 $exp
