@@ -8,10 +8,6 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Uintah/Modules/Readers
 
 SRCS     += \
-	$(SRCDIR)/MPReader.cc\
-	$(SRCDIR)/MPReaderMultiFile.cc\
-	$(SRCDIR)/TriangleReader.cc\
-	$(SRCDIR)/ParticleSetReader.cc \
 	$(SRCDIR)/ArchiveReader.cc\
 #[INSERT NEW CODE FILE HERE]
 
@@ -25,7 +21,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/12/07 18:44:32  kuzimmer
+# removing more legacy code
+#
 # Revision 1.4  2000/10/24 05:57:57  moulding
+#
+#
 # new module maker Phase 2: new module maker goes online
 #
 # These changes clean out the last remnants of the old module maker and
