@@ -46,12 +46,13 @@ class FieldMeasures : public Module
 private:
   FieldIPort *ifp;
   MatrixOPort *omp;
-  GuiInt nodeBased_;
+  GuiString nodeBased_;
   GuiInt xFlag_;
   GuiInt yFlag_;
   GuiInt zFlag_;
   GuiInt sizeFlag_;
   GuiInt valenceFlag_;
+  GuiInt lengthFlag_;
   GuiInt aspectRatioFlag_;
   GuiInt elemSizeFlag_;
   MeshHandle m_;
@@ -76,6 +77,7 @@ FieldMeasures::FieldMeasures(GuiContext* ctx)
     xFlag_(ctx->subVar("xFlag")), yFlag_(ctx->subVar("yFlag")),
     zFlag_(ctx->subVar("zFlag")), sizeFlag_(ctx->subVar("sizeFlag")),
     valenceFlag_(ctx->subVar("valenceFlag")), 
+    lengthFlag_(ctx->subVar("lengthFlag")), 
     aspectRatioFlag_(ctx->subVar("aspectRatioFlag")),
     elemSizeFlag_(ctx->subVar("elemSizeFlag"))
 {
@@ -129,6 +131,7 @@ FieldMeasures::measure_trisurf()
   int x = xFlag_.get();
   int y = yFlag_.get();
   int z = zFlag_.get();
+  int length = lengthFlag_.get();
   int valence = valenceFlag_.get();
   if (valence) {
     warning("TriSurfMesh node valence not yet implemented.");
@@ -144,7 +147,8 @@ FieldMeasures::measure_trisurf()
   if (x) ncols++;
   if (y) ncols++;
   if (z) ncols++;
-  if (nodeBased_.get()) {
+  const string &type = nodeBased_.get();
+  if (type == "node") {
     if (valence) ncols++;
     TriSurfMesh::Node::size_type nnodes;
     mesh->size(nnodes);
@@ -166,7 +170,33 @@ FieldMeasures::measure_trisurf()
     }
     MatrixHandle matH(dm);
     omp->send(matH);
-  } else {
+  } else if (type == "edge") {
+    if (length) ncols++;
+    TriSurfMesh::Edge::size_type nedges;
+    mesh->size(nedges);
+    DenseMatrix *dm = scinew DenseMatrix(nedges, ncols);
+    TriSurfMesh::Edge::iterator ni, nie;
+    mesh->begin(ni); mesh->end(nie);
+    int row=0;
+    int col=0;
+    while (ni != nie) {
+      col=0;
+      Point p,p0,p1;
+      mesh->get_center(p, *ni);
+      TriSurfMesh::Node::array_type nodes;
+      mesh->get_nodes(nodes, *ni);
+      mesh->get_center(p0,nodes[0]);
+      mesh->get_center(p1,nodes[1]);
+      if (x) { (*dm)[row][col]=p.x(); col++; }
+      if (y) { (*dm)[row][col]=p.y(); col++; }
+      if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (length) { (*dm)[row][col]=(p1-p0).length(); col++; }
+      ++ni;
+      row++;
+    }
+    MatrixHandle matH(dm);
+    omp->send(matH);
+  } else if (type == "element") {
     if (aspectRatio) ncols++;
     if (elemSize) ncols++;
     TriSurfMesh::Elem::size_type nelems;
@@ -190,7 +220,10 @@ FieldMeasures::measure_trisurf()
     }
     MatrixHandle matH(dm);
     omp->send(matH);
-  }    
+  } else {
+    warning("Unkown element type.");
+  }
+
 }
 
 void
@@ -211,7 +244,8 @@ FieldMeasures::measure_tetvol()
   if (x) ncols++;
   if (y) ncols++;
   if (z) ncols++;
-  if (nodeBased_.get()) {
+  const string &type = nodeBased_.get();
+  if (type == "node") {
     if (valence) ncols++;
     TetVolMesh::Node::size_type nnodes;
     mesh->size(nnodes);
@@ -238,7 +272,9 @@ FieldMeasures::measure_tetvol()
     }
     MatrixHandle matH(dm);
     omp->send(matH);
-  } else {
+  } else if (type == "edge") {
+    warning("TetVolMesh edge not yet implemented.");
+  } else if (type == "element") {
     if (aspectRatio) ncols++;
     if (elemSize) ncols++;
     TetVolMesh::Elem::size_type nelems;
@@ -262,7 +298,10 @@ FieldMeasures::measure_tetvol()
     }
     MatrixHandle matH(dm);
     omp->send(matH);
-  }    
+  } else {
+    warning("Unkown element type.");
+  }
+
 }
 
 void
@@ -291,7 +330,8 @@ FieldMeasures::measure_latvol()
   if (x) ncols++;
   if (y) ncols++;
   if (z) ncols++;
-  if (nodeBased_.get()) {
+  const string &type = nodeBased_.get();
+  if (type == "node") {
     if (valence) ncols++;
     LatVolMesh::Node::size_type nnodes;
     mesh->size(nnodes);
@@ -313,7 +353,9 @@ FieldMeasures::measure_latvol()
     }
     MatrixHandle matH(dm);
     omp->send(matH);
-  } else {
+  } else if (type == "edge") {
+    warning("TetVolMesh edge not yet implemented.");
+  } else if (type == "element") {
     if (aspectRatio) ncols++;
     if (elemSize) ncols++;
     LatVolMesh::Elem::size_type nelems;
@@ -337,7 +379,10 @@ FieldMeasures::measure_latvol()
     }
     MatrixHandle matH(dm);
     omp->send(matH);
-  }    
+  } else {
+    warning("Unkown element type.");
+  }
+
 }
 
 
