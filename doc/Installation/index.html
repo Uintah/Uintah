@@ -1,66 +1,123 @@
-<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<!--
+The contents of this file are subject to the University of Utah Public
+License (the "License"); you may not use this file except in compliance
+with the License.
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations under
+the License.
+
+The Original Source Code is SCIRun, released March 12, 2001.
+
+The Original Source Code was developed by the University of Utah.
+Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+University of Utah. All Rights Reserved.
+-->
+
+<!-- 
+Template for SCIRun pages written in html that live in the 'doc' tree.
+Simply add content where noted below.
+
+*Note*: This document is trying to be an XHTML document (but for practical
+reasons is not quite there yet).  Please try to code to the XHTML standard.
+See http://www.w3schools.com/xhtml/xhtml_reference.asp for reference.
+
+If you are editing this file with psgml-mode then be sure to adjust the
+path to the file xhtml1-transitional.ced (it should be relative to the
+location of this document) - See the bottom of this file.
+-->
+
 <html>
 <head>
-<script language="JavaScript">
+<script type="text/javascript">
 var treetop="";
 var path = location.pathname;
 while (path.substr(path.lastIndexOf("/")+1) != "doc") {
 treetop += "../";
 path = path.substr(0, path.lastIndexOf("/"));
 }
-document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'>")
+document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css' \/>")
 </script>
-<title>Installation Guide</title>
-<!-- Changed by: Ted Dustman, 03-Jul-2002 -->
- 
-<link href="../Utilities/HTML/doc_styles.css/doc_styles.css" rel="stylesheet"
-type="text/css">
+<title></title>
 </head>
 <body>
-<!-- ******************** DOCUMENTATION HEADER ********************* -->
-<script language="JavaScript">
-document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
+
+<script type="text/javascript">
+document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
 </script>
-<!-- ****************** END DOCUMENTATION HEADER ******************* -->
 
-<table border="0" align="center" cellpadding="0" cellspacing="0" width="600">
-
+<!-- Content goes here -->
 <p class="title">Installation Documentation</p>
-<hr size="1">
-    <p class="firstpara">
-      The <a href="Guide/index.html"><b><i>Installation
-      Guide</i></b></a> contains
-      instructions and information for installing and building SCIRun,
-      it's packages and the thirdparty libraries that it requires.
-      See the <a href="../FAQBook/faq1.html"><b><i>Installation FAQ
-      </i></b></a> for information on troubleshooting these
-      processes.
-    </p>
-  <hr size="1"><p class="head"><a href="Guide/quickstart.html">Quick Start SCIRun Installation</a></p><p class="firstpara">
-      This chapter is a quick installation checklist.
-    </p><p class="head"><a href="Guide/inst.html">SCIRun Installation and Build Instructions</a></p><p class="firstpara">
-      This chapter provides detailed instructions for installing and
-      building SCIRun and it's packages.
-    </p><p class="head"><a href="Guide/thirdparty.html">Thirdparty Software Installation and Build Information</a></p><p class="firstpara">
-      This chapter may help expedite installation of the
-      required third party software. However, this information is not
-      intended to replace the installation instructions that come with
-      the software, but to supplement them. Please read the install
-      instructions for each software distribution before attempting to
-      use this information. 
-    </p>
+
+<hr size="1" />
+
+<p class="head"><a href="Guide/inst.html">Installation Guide</a></p>
+
+<p class="firstpara">The <a href="Guide/index.html"><b><i>Installation
+Guide</i></b></a> contains
+instructions and information for installing and building SCIRun,
+it's packages and the thirdparty libraries that it requires.
+</p>
+
+<ul>
+<li><a href="Guide/quickstart.html">Quick Start SCIRun Installation</a></li>
+
+<p class="firstpara">
+This chapter is a quick installation checklist.
+</p>
+
+<li><a href="Guide/inst.html">SCIRun Installation and Build Instructions</a>
+</li>
+
+<p class="firstpara">
+This chapter provides detailed instructions for installing and
+building SCIRun and it's packages.
+</p>
+
+
+<li><a href="Guide/thirdparty.html">Thirdparty Software Installation and Build Information</a>
+</li>
+
+<p class="firstpara">This chapter may help expedite installation of
+the required third party software. However, this information is not
+intended to replace the installation instructions that come with the
+software, but to supplement them. Please read the install instructions for
+each software distribution before attempting to use this information.
+</p>
+
+
+<li><a href="Guide/appendix.html">Appendix</a><p class="firstpara">
+The appendix holds tables and details pertinent to building and
+installing SCIRun.
+</p>
+</li>
+</ul>
+
 <p class="head"><a href="../FAQBook/faq1.html">FAQ</a></p>
 
-<p class="head"><a href="Guide/appendix.html">Appendix</a></p><p class="firstpara">
-      The appendix holds tables and details pertinent to building and
-      installing SCIRun.
-    </p>
-</table>
-<!-- ******************** DOCUMENTATION FOOTER ********************* -->
-<script language="JavaScript">
-document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
+<p>See the <a href="../FAQBook/faq1.html"><b><i>Installation FAQ
+</i></b></a> for information on troubleshooting these
+processes.
+</p>
+
+<script type="text/javascript">
+// Include JavaScript code that produces the bottom banner.
+document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
 </script>
-<!-- ****************** END DOCUMENTATION FOOTER ******************* -->
 
 </body>
 </html>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../Utilities/XML/xhtml1-transitional.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

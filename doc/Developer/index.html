@@ -1,51 +1,118 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<!--
+The contents of this file are subject to the University of Utah Public
+License (the "License"); you may not use this file except in compliance
+with the License.
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations under
+the License.
+
+The Original Source Code is SCIRun, released March 12, 2001.
+
+The Original Source Code was developed by the University of Utah.
+Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+University of Utah. All Rights Reserved.
+-->
+
+<!-- 
+Template for SCIRun pages written in html that live in the 'doc' tree.
+Simply add content where noted below.
+
+*Note*: This document is trying to be an XHTML document (but for practical
+reasons is not quite there yet).  Please try to code to the XHTML standard.
+See http://www.w3schools.com/xhtml/xhtml_reference.asp for reference.
+
+If you are editing this file with psgml-mode then be sure to adjust the
+path to the file xhtml1-transitional.ced (it should be relative to the
+location of this document) - See the bottom of this file.
+-->
+
 <html>
 <head>
-<script language="JavaScript">
+<script type="text/javascript">
 var treetop="";
 var path = location.pathname;
 while (path.substr(path.lastIndexOf("/")+1) != "doc") {
 treetop += "../";
 path = path.substr(0, path.lastIndexOf("/"));
-document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'>")
 }
+document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css' \/>")
 </script>
-<title>Developer Documentation</title>
-<!-- Changed by: Ted Dustman, 20-Jun-2002 -->
+<title>Developer Documentation Cover Page</title>
 </head>
 <body>
-<!-- ******************** DOCUMENTATION HEADER ********************* -->
-<script language="JavaScript">
-document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
-</script>
-<!-- ****************** END DOCUMENTATION HEADER ******************* -->
 
+<script type="text/javascript">
+document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
+</script>
+
+<!-- Content goes here -->
 <p class="title">Developer Documentation</p>
-<hr size="1">
+<hr size="1" />
+
+<p class="head"><a href="Guide/index.html">Developer's Guide</a></p>
+
 <p class="firstpara">
-The <a href="Guide/index.html"><b><i>Developer's Guide</i></b></a> contains
-information related to writing
-SCIRun modules, Data Types, and other code.  Topics such as dataflow programming, memory managment, dynamic compilation, thread
-managment, data IO are
-addressed. 
+The <a href="Guide/index.html">Developer's Guide</a> contains
+information related to writing SCIRun modules, Data Types, and other code.
+Topics such as dataflow programming, memory managment, dynamic compilation,
+thread managment, data IO are addressed.
 </p>
 
-<p class="nextpara">
-The <a href="CodeViews/html/index.html"><b><i>Code Views</i></b></a>
+<p class="head"><a href="CodeViews/html/index.html">Code Views</a></p>
+
+<p class="firstpara">
+The <a href="CodeViews/html/index.html">Code Views</a>
 page is a reference to the organization of SCIRun source code and will help
 you navigate the source code.  
 </p>
 
-<p class="nextpara"> Module references can be located from the <a
-href="Modules/index.html"><b><i>Module Reference</i></b></a> page.  The
+<p class="head"><a
+href="Modules/index.html">Module Reference</a></p>
+
+<p class="firstpara"> Module references can be located from the <a
+href="Modules/index.html">Module Reference</a> page.  The
 purpose and use of each module is described by its module reference page.
 </p>
 
-<!-- ******************** DOCUMENTATION FOOTER ********************* -->
-<script language="JavaScript">
-document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
+<ul>
+<li><a href="Modules/SCIRun.html">SCIRun Package</a></li>
+<li><a href="Modules/BioPSE.html">BioPSE Package</a></li>
+<li><a href="Modules/MatlabInterface.html">MatlabInterface Package</a></li>
+<li><a href="Modules/Teem.html">Teem Package</a></li>
+<li><a href="Modules/Fusion.html">Fusion Package</a></li>
+<li><a href="Modules/VDT.html">VDT Package</a></li>
+</ul>
+
+
+<p class="head"><a href="../Documentum/index.html">Documenting SCIRun</a></p>
+
+<p class="firstpara">Information for those who write SCIRun documentation.</p>
+
+<ul>
+<li><a href="../Documentum/documentum.html">Overview of SCIRun Documentation</a></li>
+<li><a href="../Documentum/module-latex/index.html">How to Write Module Descriptions (LaTeX Version)</a></li>
+<li><a href="../Documentum/module-xml/index.html">How to Write Module Descriptions (XML Version)</a></li>
+</ul>
+
+<script type="text/javascript">
+// Include JavaScript code that produces the bottom banner.
+document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
 </script>
-<!-- ****************** END DOCUMENTATION FOOTER ******************* -->
 
 </body>
 </html>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../Utilities/XML/xhtml1-transitional.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->
