@@ -48,14 +48,6 @@ using std::string;
 #     define GL_VERTEX_PROGRAM_ARB 0x8620
 #     define GL_PROGRAM_ERROR_POSITION_ARB 0x864B
 #     define GL_PROGRAM_FORMAT_ASCII_ARB 0x8875
-
-      typedef void (GLAPIENTRY * PFNGLGENPROGRAMSARBPROC) (GLsizei n, GLuint* programs);
-      typedef void (GLAPIENTRY * PFNGLDELETEPROGRAMSARBPROC) (GLsizei n, const GLuint* programs);
-      typedef void (GLAPIENTRY * PFNGLBINDPROGRAMARBPROC) (GLenum target, GLuint program);
-      typedef void (GLAPIENTRY * PFNGLPROGRAMSTRINGARBPROC) (GLenum target, GLenum format, GLsizei len, const void* string);
-      typedef GLboolean (GLAPIENTRY * PFNGLISPROGRAMARBPROC) (GLuint program);
-      typedef void (GLAPIENTRY * PFNGLPROGRAMLOCALPARAMETER4FARBPROC) (GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-
 #  endif /* GL_ARB_vertex_program */
 #  ifndef GL_ARB_fragment_program
 #    define GL_FRAGMENT_PROGRAM_ARB 0x8804
@@ -89,12 +81,20 @@ using std::string;
 #    define getProcAddress(x) ((*glXGetProcAddressARB)((const GLubyte*)x))
 #  endif /* APPLE */
 
-static PFNGLGENPROGRAMSARBPROC glGenProgramsARB_SCI = 0;
-static PFNGLDELETEPROGRAMSARBPROC glDeleteProgramsARB_SCI = 0;
-static PFNGLBINDPROGRAMARBPROC glBindProgramARB_SCI = 0;
-static PFNGLPROGRAMSTRINGARBPROC glProgramStringARB_SCI = 0;
-static PFNGLISPROGRAMARBPROC glIsProgramARB_SCI = 0;
-static PFNGLPROGRAMLOCALPARAMETER4FARBPROC glProgramLocalParameter4fARB_SCI = 0;
+
+typedef void (GLAPIENTRY * SCIPFNGLGENPROGRAMSARBPROC) (GLsizei n, GLuint* programs);
+typedef void (GLAPIENTRY * SCIPFNGLDELETEPROGRAMSARBPROC) (GLsizei n, const GLuint* programs);
+typedef void (GLAPIENTRY * SCIPFNGLBINDPROGRAMARBPROC) (GLenum target, GLuint program);
+typedef void (GLAPIENTRY * SCIPFNGLPROGRAMSTRINGARBPROC) (GLenum target, GLenum format, GLsizei len, const void* string);
+typedef GLboolean (GLAPIENTRY * SCIPFNGLISPROGRAMARBPROC) (GLuint program);
+typedef void (GLAPIENTRY * SCIPFNGLPROGRAMLOCALPARAMETER4FARBPROC) (GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+
+static SCIPFNGLGENPROGRAMSARBPROC glGenProgramsARB_SCI = 0;
+static SCIPFNGLDELETEPROGRAMSARBPROC glDeleteProgramsARB_SCI = 0;
+static SCIPFNGLBINDPROGRAMARBPROC glBindProgramARB_SCI = 0;
+static SCIPFNGLPROGRAMSTRINGARBPROC glProgramStringARB_SCI = 0;
+static SCIPFNGLISPROGRAMARBPROC glIsProgramARB_SCI = 0;
+static SCIPFNGLPROGRAMLOCALPARAMETER4FARBPROC glProgramLocalParameter4fARB_SCI = 0;
 #endif /* GL_ARB_fragment_program */
 
 namespace SCIRun {
@@ -140,17 +140,17 @@ ShaderProgramARB::init_shaders_supported()
                           glGetString(GL_EXTENSIONS)) &&
         gluCheckExtension((const GLubyte*)"GL_ARB_fragment_program", 
                           glGetString(GL_EXTENSIONS)) &&
-        (glGenProgramsARB_SCI = (PFNGLGENPROGRAMSARBPROC)
+        (glGenProgramsARB_SCI = (SCIPFNGLGENPROGRAMSARBPROC)
          getProcAddress("glGenProgramsARB")) &&
-        (glDeleteProgramsARB_SCI = (PFNGLDELETEPROGRAMSARBPROC)
+        (glDeleteProgramsARB_SCI = (SCIPFNGLDELETEPROGRAMSARBPROC)
          getProcAddress("glDeleteProgramsARB")) &&
-        (glBindProgramARB_SCI = (PFNGLBINDPROGRAMARBPROC) 
+        (glBindProgramARB_SCI = (SCIPFNGLBINDPROGRAMARBPROC) 
          getProcAddress("glBindProgramARB")) &&
-        (glProgramStringARB_SCI = (PFNGLPROGRAMSTRINGARBPROC)
+        (glProgramStringARB_SCI = (SCIPFNGLPROGRAMSTRINGARBPROC)
          getProcAddress("glProgramStringARB")) &&
-        (glIsProgramARB_SCI = (PFNGLISPROGRAMARBPROC)
+        (glIsProgramARB_SCI = (SCIPFNGLISPROGRAMARBPROC)
          getProcAddress("glIsProgramARB")) &&
-        (glProgramLocalParameter4fARB_SCI = (PFNGLPROGRAMLOCALPARAMETER4FARBPROC)
+        (glProgramLocalParameter4fARB_SCI = (SCIPFNGLPROGRAMLOCALPARAMETER4FARBPROC)
          getProcAddress("glProgramLocalParameter4fARB"));
 #else
       mSupported = false;
