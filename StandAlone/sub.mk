@@ -21,6 +21,9 @@ ifeq ($(CC),newmpxlc)
         Core/Containers   \
 	Core/Persistent   \
 	Core/OS		  \
+        Packages/Uintah/Core/Variables \
+        Packages/Uintah/Core/BoundaryConditions \
+        Packages/Uintah/Core/GeometryPiece \
         Packages/Uintah/CCA/Components/Arches/Mixing \
         Packages/Uintah/CCA/Components/Arches/fortran \
         Packages/Uintah/CCA/Components/Arches/Radiation \
@@ -104,6 +107,7 @@ else
         Packages/Uintah/Core/Grid          \
         Packages/Uintah/Core/Util          \
         Packages/Uintah/Core/Variables     \
+        Packages/Uintah/Core/BoundaryConditions \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/Parallel      \
         Packages/Uintah/Core/Disclosure    \
@@ -122,7 +126,7 @@ else
         Core/Containers
 endif
 
-LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY)
+LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -140,6 +144,7 @@ else
         Packages/Uintah/Core/Grid          \
         Packages/Uintah/Core/Util          \
         Packages/Uintah/Core/Variables     \
+        Packages/Uintah/Core/BoundaryConditions     \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/Parallel      \
         Packages/Uintah/Core/Disclosure    \
@@ -158,7 +163,7 @@ else
         Core/Containers
 endif
 
-LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY)
+LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -200,6 +205,7 @@ else
         Packages/Uintah/Core/Grid          \
         Packages/Uintah/Core/Util          \
         Packages/Uintah/Core/Variables     \
+        Packages/Uintah/Core/BoundaryConditions     \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/Parallel      \
         Packages/Uintah/Core/Disclosure    \
@@ -218,7 +224,7 @@ else
         Core/Containers
 endif
 
-LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY)
+LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -280,16 +286,21 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
   PSELIBS := \
+        Dataflow/XMLUtil  \
         Packages/Uintah/Core/Exceptions    \
+        Packages/Uintah/Core/BoundaryConditions    \
         Packages/Uintah/Core/Grid          \
         Packages/Uintah/Core/Util          \
+        Packages/Uintah/Core/Parallel \
         Packages/Uintah/Core/Variables     \
         Packages/Uintah/Core/Disclosure    \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/ProblemSpec   \
         Packages/Uintah/Core/DataArchive   \
 	Packages/Uintah/CCA/Ports          \
+        Packages/Uintah/CCA/Components/ProblemSpecification \
         Core/Exceptions  \
+	Core/Persistent   \
         Core/Geometry    \
         Core/Thread      \
         Core/Util        \
@@ -297,7 +308,7 @@ else
         Core/Containers
 endif
 
-LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
