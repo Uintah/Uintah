@@ -11,8 +11,8 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Math/Sparse.h>
-#include <valarray>
 #include <Packages/Uintah/Core/Grid/Array3.h>
+#include <valarray>
 #include <map>
 
 using namespace std;
