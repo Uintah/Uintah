@@ -79,15 +79,16 @@ private:
 			      const Point &p0,
 			      const Point &p1,
 			      const Point &p2) const;
-  void compute_intersections(vector<double> results,
+  void compute_intersections(vector<pair<double, int> > &results,
 			     const TriSurfMeshHandle &mesh,
-			     const Point &p, const Vector &v) const;
+			     const Point &p, const Vector &v,
+			     int marker) const;
 
 
-  int compute_ordering(const TriSurfMeshHandle &a,
-		       const TriSurfMeshHandle &b) const;
+  int compute_parent(const vector<TriSurfMeshHandle> &meshes, int index);
 
-  bool compute_nesting(vector<int> &nesting, vector<TriSurfMeshHandle> meshes);
+  bool compute_nesting(vector<int> &nesting,
+		       const vector<TriSurfMeshHandle> &meshes);
   
 public:
   
@@ -115,22 +116,63 @@ SetupBEMatrix2::~SetupBEMatrix2()
 }
 
 
+// C++ized MollerTrumbore97 Ray Triangle intersection test.
+#define EPSILON 1.0e-6
 bool
 SetupBEMatrix2::ray_triangle_intersect(double &t,
-				       const Point &p,
-				       const Vector &v,
+				       const Point &point,
+				       const Vector &dir,
 				       const Point &p0,
 				       const Point &p1,
 				       const Point &p2) const
 {
-  // do some math
-  return false;
+  // Find vectors for two edges sharing p0.
+  const Vector edge1 = p1 - p0;
+  const Vector edge2 = p2 - p0;
+  
+  // begin calculating determinant - also used to calculate U parameter.
+  const Vector pvec = Cross(dir, edge2);
+
+  // if determinant is near zero, ray lies in plane of triangle.
+  const double det = Dot(edge1, pvec);
+  if (det > -EPSILON && det < EPSILON)
+  {
+    return false;
+  }
+  const double inv_det = 1.0 / det;
+
+  // Calculate distance from vert0 to ray origin.
+  const Vector tvec = point - p0;
+
+  // Calculate U parameter and test bounds.
+  const double u = Dot(tvec, pvec) * inv_det;
+  if (u < 0.0 || u > 1.0)
+  {
+    return false;
+  }
+
+  // Prepare to test V parameter.
+  const Vector qvec = Cross(tvec, edge1);
+
+  // Calculate V parameter and test bounds.
+  const double v = Dot(dir, qvec) * inv_det;
+  if (v < 0.0 || u + v > 1.0)
+  {
+    return false;
+  }
+
+  // Calculate t, ray intersects triangle.
+  t = Dot(edge2, qvec) * inv_det;
+  
+  return true;
 }
 
+
 void
-SetupBEMatrix2::compute_intersections(vector<double> results,
+SetupBEMatrix2::compute_intersections(vector<pair<double, int> > &results,
 				      const TriSurfMeshHandle &mesh,
-				      const Point &p, const Vector &v) const
+				      const Point &p, const Vector &v,
+				      int marker) const
 {
   TriSurfMesh::Face::iterator itr, eitr;
   mesh->begin(itr);
@@ -146,41 +188,74 @@ SetupBEMatrix2::compute_intersections(vector<double> results,
     mesh->get_center(p2, nodes[2]);
     if (ray_triangle_intersect(t, p, v, p0, p1, p2))
     {
-      results.push_back(t);
+      results.push_back(pair<double, int>(t, marker));
     }
     ++itr;
   }
 }
 
+static bool
+pair_less(const pair<double, int> &a,
+	  const pair<double, int> &b)
+{
+  return a.first < b.first;
+}
+
 
 int
-SetupBEMatrix2::compute_ordering(const TriSurfMeshHandle &a,
-				 const TriSurfMeshHandle &b) const
+SetupBEMatrix2::compute_parent(const vector<TriSurfMeshHandle> &meshes,
+			       int index)
 {
-  // No overlap, return 0
-  if (!(a->get_bounding_box().Overlaps(b->get_bounding_box())))
+  Point point;
+  meshes[index]->get_center(point, TriSurfMesh::Node::index_type(0));
+  Vector dir(1.0, 1.0, 1.0);
+  vector<pair<double, int> > intersections;
+
+  unsigned int i;
+  for (i = 0; i < meshes.size(); i++)
   {
-    return 0;
+    compute_intersections(intersections, meshes[i], point, dir, i);
   }
-  else
+
+  std::sort(intersections.begin(), intersections.end(), pair_less);
+
+  vector<int> counts(meshes.size(), 0);
+  for (i = 0; i < intersections.size(); i++)
   {
-    return 0;
+    if (intersections[i].second == index)
+    {
+      // First odd count is parent.
+      for (int j = i-1; j >= 0; j--)
+      {
+	if (counts[intersections[j].second] & 1)
+	{
+	  return intersections[j].second;
+	}
+      }
+      // No odd parent, is outside.
+      return meshes.size();
+    }
+    counts[intersections[i].second]++;
   }
+
+  // Indeterminant, we should intersect with ourselves.
+  return meshes.size();
 }
+
 
 
 bool
 SetupBEMatrix2::compute_nesting(vector<int> &nesting,
-				vector<TriSurfMeshHandle> meshes)
+				const vector<TriSurfMeshHandle> &meshes)
 {
   nesting.resize(meshes.size());
- 
-  // Test code only, compute a concentric nesting.
-  nesting[0] = meshes.size(); // Put outside at END of list.
-  for (int i = 1; i < meshes.size(); i++)
+
+  int i;
+  for (i = 0; i < meshes.size(); i++)
   {
-    nesting[i] = i-1;
+    nesting[i] = compute_parent(meshes, i);
   }
+
   return true;
 }
 
@@ -237,8 +312,12 @@ SetupBEMatrix2::execute()
     error("Unable to compute a valid nesting for this set of surfaces.");
   }
 
-  
-
+  // Debugging code, print out the tree.
+  int i;
+  for (i=0; i < nesting.size(); i++)
+  {
+    cout << "parent of " << i << " is " << nesting[i] << "\n";
+  }
 }
 
 } // end namespace BioPSE
