@@ -47,9 +47,6 @@ set Subnet(Subnet0_minicanvas) $minicanvas
 global inserting
 set inserting 0
 
-global insertPosition
-set insertPosition 0
-
 global netedit_savefile
 set netedit_savefile ""
 
@@ -421,7 +418,7 @@ proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } } {
     }    
 
     networkHasChanged
-    global inserting insertPosition Subnet
+    global inserting Subnet
     set canvas $Subnet(Subnet$Subnet(Loading)_canvas)
     set Subnet($modid) $Subnet(Loading)
     set Subnet(${modid}_connections) ""
@@ -438,15 +435,15 @@ proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } } {
     }
 
     # compute position if we're inserting the net to the right    
-    if { $inserting && !$insertPosition } {
-	global modulesBbox
-	set xpos [expr int([expr $xpos+[lindex $modulesBbox 2]])]
-	set ypos [expr $ypos+[$canvas canvasy 0]]
+    if { $inserting } {
+	global insertOffset
+	set xpos [expr $xpos+[lindex $insertOffset 0]]
+	set ypos [expr $ypos+[lindex $insertOffset 1]]
     } else { ;# create the module relative to current screen position
 	set xpos [expr $xpos+[$canvas canvasx 0]]
 	set ypos [expr $ypos+[$canvas canvasy 0]]
     }
-    $modid make_icon $xpos $ypos
+    $modid make_icon $xpos $ypos $inserting
     update idletasks
     return $modid
 }
@@ -494,8 +491,8 @@ proc popupSaveAsMenu {} {
 }
 
 proc popupInsertMenu { {subnet 0} } {
-    global inserting insertPosition Subnet NetworkChanged
-    set inserting 1
+    global inserting insertOffset Subnet NetworkChanged
+    global mainCanvasWidth mainCanvasHeight
     
     #get the net to be inserted
     set types {
@@ -506,54 +503,95 @@ proc popupInsertMenu { {subnet 0} } {
     } 
     set netedit_loadnet [tk_getOpenFile -filetypes $types ]
     if { $netedit_loadnet == "" || ![file exists $netedit_loadnet]} { 
-	set inserting 0
 	return
     }
     
     set canvas $Subnet(Subnet${subnet}_canvas)    
-    set insertBbox [$canas cget -scrollregion]
-    set bbox $insertBbox
     # get the bbox for the net being inserted by
     # parsing netedit_loadnet for bbox 
-
     set fchannel [open $netedit_loadnet]
     set curr_line ""
     set curr_line [gets $fchannel]
     while { ![eof $fchannel] } {
 	if { [string match "set bbox*" $curr_line] } {
 	    eval $curr_line
-	    set insertBbox $bbox
 	    break
 	}
 	set curr_line [gets $fchannel]
-    }
+	set val [string match "set bbox*" $curr_line]
 
-    set insertPosition 1
-    set modules $Subnet(Subnet${subnet}_Modules)
-    if { [llength $modules] } {
-	set startX [expr [$canvas canvasx 0]+[lindex $insertBbox 0]]
-	set startY [expr [$canvas canvasy 0]+[lindex $insertBbox 1]]
-	set endX   [expr [$canvas canvasx 0]+[lindex $insertBbox 2]]
-	set endY   [expr [$canvas canvasy 0]+[lindex $insertBbox 3]]
-	foreach m $modules {
-	    set curr_coords [$canvas coords $m]
-	    if { [lindex $curr_coords 0] < $endX && \
-		 [lindex $curr_coords 1] > $startX && \
-		 [lindex $curr_coords 1] < $endY && \
-		 [lindex $curr_coords 1] > $startY } {
-		set insertPosition 0
-		break
+    }
+    set viewBox "0 0 [winfo width $canvas] [winfo width $canvas]"
+    if { ![info exists bbox] || [llength $bbox] != 4 } {
+	set bbox $viewBox
+    }
+    set w [expr [lindex $bbox 2] - [lindex $bbox 0]]
+    set h [expr [lindex $bbox 3] - [lindex $bbox 1]]
+    set oldbox $bbox
+    set moveBoxX "[expr $w/2] 0 [expr $w/2] 0"
+    set moveBoxY "0 [expr $h/2] 0 [expr $h/2]"
+    set done 0
+    set bbox [list 0 0 $w $h] ;# start inserting in upper left corner
+    while {!$done} {
+	set done 1
+	set modules [eval $canvas find overlapping $bbox]
+	foreach modid $modules {
+	    if { [lsearch [$canvas gettags $modid] module] != -1 } {
+		set overlap [clipBBoxes [compute_bbox $canvas $modid] $bbox]
+		if ![string equal $overlap "0 0 0 0"] {
+		    set done 0
+		    break
+		}
+	    }
+	}
+	if {!$done} {
+	    # move the insert position left by half a screen
+	    for {set i 0} {$i < 4} {incr i} {
+		set bbox [lreplace $bbox $i $i \
+			      [expr [lindex $moveBoxX $i]+[lindex $bbox $i]]]
+	    }
+	    if {[lindex $bbox 2] > $mainCanvasWidth} {
+		set bbox [lreplace $bbox 2 2 \
+			  [expr [lindex $bbox 2] -[lindex $bbox 0]]]
+		set bbox [lreplace $bbox 0 0 0]
+		for {set i 0} {$i < 4} {incr i} {
+		    set bbox [lreplace $bbox $i $i \
+			       [expr [lindex $moveBoxY $i]+[lindex $bbox $i]]]
+		}
+		if {[lindex $bbox 3] > $mainCanvasHeight} {
+		    set bbox [list 50 50 [expr 50+$w] [expr 50+$h]]
+		    set done 1
+		}
 	    }
 	}
     }
-    global modulesBbox
-    set modulesBbox [compute_bbox $canvas [$canvas find withtag "module"]]
+
+    set insertOffset [list [expr [lindex $bbox 0]-[lindex $oldbox 0]] \
+			  [expr [lindex $bbox 1]-[lindex $oldbox 1]]]
+    $canvas xview moveto [expr [lindex $bbox 0]/$mainCanvasWidth-0.01]
+    $canvas yview moveto [expr [lindex $bbox 1]/$mainCanvasHeight-0.01]
+    set preLoadModules $Subnet(Subnet${subnet}_Modules)
+    set inserting 1
     loadnet $netedit_loadnet
-    set NetworkChanged 1
     set inserting 0
+    unselectAll
+    foreach module $Subnet(Subnet${subnet}_Modules) {
+	if { [lsearch $preLoadModules $module] == -1 } {
+	    $module addSelected
+	}
+    }
+    
+    set NetworkChanged 1
+
 }
 
-proc compute_bbox { canvas { items "" } } {
+proc subnet_bbox { subnet { cheat 1} } {
+    global Subnet
+    return [compute_bbox $Subnet(Subnet${subnet}_canvas) \
+		$Subnet(Subnet${subnet}_Modules) 1]
+}
+
+proc compute_bbox { canvas { items "" } { cheat 0 } } {
     set canvasbounds [$canvas cget -scrollregion]
     set maxx [lindex $canvasbounds 0]
     set maxy [lindex $canvasbounds 1]
@@ -564,6 +602,14 @@ proc compute_bbox { canvas { items "" } } {
     if { ![llength $items] } { return [list 0 0 0 0] }
     foreach item $items {
 	set bbox [$canvas bbox $item]
+	if { $cheat && [lsearch [$canvas gettags $item] module] != -1 } {
+	    if { [expr [lindex $bbox 2] - [lindex $bbox 0] < 10]  } {
+		set bbox [lreplace $bbox 2 2 [expr [lindex $bbox 0]+180]]
+	    }
+	    if { [expr [lindex $bbox 3] - [lindex $bbox 1] < 10]  } {
+		set bbox [lreplace $bbox 3 3 [expr [lindex $bbox 1]+80]]
+	    }
+	}
 	if { [lindex $bbox 0] <= $minx} { set minx [lindex $bbox 0] }
 	if { [lindex $bbox 1] <= $miny} { set miny [lindex $bbox 1] }
 	if { [lindex $bbox 2] >  $maxx} { set maxx [lindex $bbox 2] }
