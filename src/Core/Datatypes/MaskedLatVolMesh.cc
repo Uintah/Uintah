@@ -437,7 +437,7 @@ MaskedLatVolMesh::get_bounding_box() const
 void
 MaskedLatVolMesh::get_center(Point &result, const Node::index_type &idx) const
 {
-  check_valid(idx);
+  ASSERT(check_valid(idx));
   LatVolMesh::get_center
     (result, LatVolMesh::Node::index_type(this,idx.i_,idx.j_,idx.k_));
 }
@@ -447,14 +447,14 @@ MaskedLatVolMesh::get_center(Point &result, const Node::index_type &idx) const
 void
 MaskedLatVolMesh::get_center(Point &result, const Edge::index_type &idx) const
 {
-  check_valid(idx);
+  ASSERT(check_valid(idx));
   LatVolMesh::get_center(result, LatVolMesh::Edge::index_type(unsigned(idx))); 
 }
 
 void
 MaskedLatVolMesh::get_center(Point &result, const Face::index_type &idx) const
 {
-  check_valid(idx);
+  ASSERT(check_valid(idx));
   LatVolMesh::get_center(result, LatVolMesh::Face::index_type(unsigned(idx))); 
 }
 
@@ -462,7 +462,7 @@ MaskedLatVolMesh::get_center(Point &result, const Face::index_type &idx) const
 void
 MaskedLatVolMesh::get_center(Point &result, const Cell::index_type &idx) const
 {
-  check_valid(idx);
+  ASSERT(check_valid(idx));
   LatVolMesh::get_center
     (result,LatVolMesh::Cell::index_type(this,idx.i_,idx.j_,idx.k_));
 }
