@@ -746,7 +746,7 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
 	// but whose format can be anything. The next piece of code
 	// copies and casts the data
 	
-	std::vector<typename MESH::under_type> mldata;
+	std::vector<unsigned int> mldata;
 	mlarray.getnumericarray(mldata);		
 	
 	// check whether it is zero based indexing 
@@ -781,7 +781,7 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
    // but whose format can be anything. The next piece of code
    // copies and casts the data
 	
-   std::vector<typename MESH::under_type> mldata;
+   std::vector<unsigned int> mldata;
    mlarray.getnumericarray(mldata);		
 	
    // check whether it is zero based indexing 
@@ -826,7 +826,7 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
    // but whose format can be anything. The next piece of code
    // copies and casts the data
 	
-   std::vector<typename MESH::under_type> mldata;
+   std::vector<unsigned int> mldata;
    mlarray.getnumericarray(mldata);		
 	
    // check whether it is zero based indexing 
