@@ -45,8 +45,7 @@ window.  \note{Don't start \sr{} in the background, \ie don't type
 The \command{scirun} command is located in \sr{}'s build directory
 (see the
 \htmladdnormallinkfoot{\srig}{\htmlurl{\latexhtml{\scisoftware/doc}{../../..}/Installation/Guide/ch.inst.html}}
-for details).  The person who installed \sr{} can locate this command
-for you.
+for details).  The person who installed \sr{} can locate this command.
 
 
 \begin{figure}[htb]
@@ -63,8 +62,7 @@ extension).  These files hold previously defined \sr{} networks.
 \sr{} will load the specified network.  Network files are discussed in
 a later section.
 
-Typing \keyboard{scirun} with no arguments (argument is the name of a
-\sr{}\dfn{network}\index{network} file) starts up \sr{} with a blank
+Typing \keyboard{scirun} with no arguments starts \sr{} with a blank
 \sr{} window as shown in Figure~\ref{fig:srwindow}
 (Section~\ref{sec:windowanatomy} discusses the main features of this
 window).
@@ -91,7 +89,7 @@ Figure~\ref{fig:srwindow}):
     \menudesc{File} The \menu{File} menu contains the following items:
 
     \begin{description}
-      \menuitemdesc{Save} Saves the network to a file (See \hyperref{this
+      \menuitemdesc{Save} Saves a network to a file (See \hyperref{this
         section}{Section~}{}{sec:savenet}).
 
       \menuitemdesc{Save As...} Saves a network to a new file (See
@@ -140,32 +138,32 @@ Figure~\ref{fig:srwindow}):
 
   \begin{description}
     \menudesc{BioPSE} The \menu{BioPSE} menu is used to create modules
-    (from the \biopse package) for use in the NetEdit frame.  It
+    (from the \biopse  package) for use in the NetEdit frame.  It
     consists of category sub-menus and module menu items 
-    ( \secref{The SCIRun Package}{sec:srpackage} has an overview of the \biopse{}package).
+    (\secref{The SCIRun Package}{sec:srpackage} has an overview of the \biopse{}package).
   \end{description}
 
   \begin{description}
     \descitem{...}  There may be other package menus if other packages
-    have been installed.  They they will also have category sub-menus
+    have been installed.  They also have category sub-menus
     and module menu items.
   \end{description}
   
   \descitem{Global View Frame} The Global View Frame is located in the
   upper left corner of the main window (see
   Figure~\ref{fig:srwindow}). It is used to navigate complex networks
-  ( \secref{Navigating a Network}{sec:navnetwork} describes the use of the Global View Frame).
+  (\secref{Navigating a Network}{sec:navnetwork} describes the use of the Global View Frame).
   
   \descitem{Error Frame} Errors during program startup are displayed
   in the Error Frame.  The Error Frame is located in the upper right corner of the
   main window(see Figure~\ref{fig:srwindow}).  Errors on startup may
   mean that \sr{} has been installed incorrectly or has been installed
-  from a buggy distribution.  Please report these errors (\hyperref{report}{(see
+  from a buggy distribution.  Please report these errors (\hyperref{report}{see
     Section~}{)}{sec:bugs}).
   
   \descitem{NetEdit Frame} The NetEdit Frame occupies the bottom of
   the main window(see Figure~\ref{fig:srwindow}).  It is used to build
-  and execute networks ( \secref{Building Networks}{sec:workwithnets}
+  and execute networks (\secref{Building Networks}{sec:workwithnets}
   discusses the use of this frame).
 
 \end{description}
@@ -173,7 +171,7 @@ Figure~\ref{fig:srwindow}):
 \subsection{The Terminal Window}
 \label{sec:termwinapp}
 
-After starting, \sr{} will run a shell-like application in the
+After starting, \sr{} runs a shell-like application in the
 terminal window called the \dfn{\sr{} shell}.  The \sr{} shell displays the
 prompt \screen{scirun\ra}.  This program is  a modified \dfna{Tool
   Command Language}{TCL} shell program. It is possible to type
@@ -186,9 +184,9 @@ prompt \screen{scirun\ra}.  This program is  a modified \dfna{Tool
 
 \newcommand{\envitem}[1]{\item[\envvar{#1}]\latex{\mbox{}\\}}
 
-The following environment variables either affect \sr{}'s behavior or
+The following environment variables affect \sr{}'s behavior, or
 improve its performance via remote connections.  With the exception of
-\envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR} the use of these variables is
+\envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR}, use of these variables is
 optional.
 
 \begin{description}
@@ -199,8 +197,7 @@ optional.
   this variable).
   
   \descitem{\envvar{SCIRUN\_DATA} \& \envvar{SCIRUN\_DATASET}}  These
-  two variables specify the complete path to a \sr{} \dfn{data set}.
-  A data set is a collection of \sr{} type data  fields,
+  two variables specify the complete path to a \sr{} \dfn{data set}. A data set is a collection of \sr{} type data  fields,
   matricies, \etc{} that are stored in a directory and are used in
   \sr{} networks.
 
@@ -211,14 +208,14 @@ optional.
   directory. 
 
   When working with the sample \sr{} data sets, for example,
-  \envvar{SCIRUN\_DATA} would be set to
+  \envvar{SCIRUN\_DATA} is set to
   \filename{/usr/local/SCIRunData} (assuming this is where \sr{}'s
-  sample data were installed).  \envvar{SCIRUN\_DATASET} could then be
+  sample data were installed).  \envvar{SCIRUN\_DATASET} can then be
   set to \filename{utahtorso} to specify the Utah Torso data set.
   
   \envitem{DISPLAY} If \sr{} is executed remotely, then the value of
   the \envvar{DISPLAY} variable (as set on the remote machine) must be
-  set correctly and the remote machine must be allowed to talk to the
+  set correctly, and the remote machine must be allowed to talk to the
   local X11 server.
   
   For telnet-like (unencrypted) connections to a remote machine,
@@ -255,7 +252,7 @@ for a csh-style shell
 \end{verbatim}
   
   \envitem{LOAD\_PACKAGE} A comma seperated list of package names that
-  \sr{} load.
+  \sr{} loads.
   
 \sr{} loads these packages instead of packages specified at configure time. Each package on the list must have been previously compiled.
   
@@ -264,8 +261,8 @@ for a csh-style shell
   \envitem{PACKAGE\_SRC\_PATH} A colon separated list of paths to
   package source trees.  The path
   \directory{\ptext{build\_dir}/Packages} is implicitly part of this
-  list.  \ptext{build\_dir} is the directory in which the
-  \command{configure} and \command{make} command was run.
+  list.  \ptext{build\_dir} is the directory where
+  \command{configure} and \command{make} command are run.
   
   \sr{} searches this path list to find XML description files and
   user interface code corresponding to packages
@@ -293,10 +290,10 @@ loads the content of the file \filename{.scirunrc}.  \sr{} searches for
 \filename{.scirunrc} in this order:
 
 \begin{enumerate}
-\item The current working directory
-\item The root of \sr's build directory
-\item Your home directory
-\item The root of \sr's source code directory
+\item current working directory
+\item root of \sr's build directory
+\item home directory
+\item  root of \sr's source code directory
 \end{enumerate}
 
 This file may contain assignment of values to variables and variable
@@ -308,7 +305,7 @@ SCIRUN_ON_THE_FLY_LIBS_DIR=$(HOME)/on-the-fly-libs
 \end{verbatim}
 
 The expansion of environment variables is not supported.  Only
-variables declared earlier in the file may be expanded.
+variables declared earlier in the file can be expanded.
 
 The following variables are understood by \sr{} and may be set in
 \filename{.scirunrc}: \envvar{SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR},
@@ -369,7 +366,7 @@ Setting a unique value of SCIRUN\_ON\_THE\_FLY\_LIBS\_DIR for each
 \begin{itemize}
 \item Allows multiple users to run the same instance of \sr{} without the worry of  dynamic compilation conflicts.
   For example, by specifying an \filename{on-the-fly-libs}
-  directory in their home directory, a user can run the same shared
+  directory in their home directory, a user can run 
   \sr{} installed in \directory{/usr/local} that another user
   is already running.
 
