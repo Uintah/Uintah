@@ -10,10 +10,10 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColumnMatrixPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/MeshPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/ColumnMatrix.h>
 
 #include <iostream>
 using std::cerr;
@@ -26,9 +26,9 @@ using namespace SCIRun;
 
 class RecipBasis : public Module {    
     MeshIPort* mesh_iport;
-    ColumnMatrixIPort* idx_iport;
+    MatrixIPort* idx_iport;
     MatrixIPort* sol_iport;
-    ColumnMatrixOPort* rhs_oport;
+    MatrixOPort* rhs_oport;
     MatrixOPort* basis_oport;
     MatrixOPort* basis2_oport;
 public:
@@ -49,14 +49,14 @@ RecipBasis::RecipBasis(const clString& id)
     mesh_iport = new MeshIPort(this, "Domain Mesh",
 				MeshIPort::Atomic);
     add_iport(mesh_iport);
-    idx_iport = new ColumnMatrixIPort(this, "Electrode Indices",
-				       ColumnMatrixIPort::Atomic);
+    idx_iport = new MatrixIPort(this, "Electrode Indices",
+				       MatrixIPort::Atomic);
     add_iport(idx_iport);
     sol_iport = new MatrixIPort(this,"Solution Vectors",
 				      MatrixIPort::Atomic);
     add_iport(sol_iport);
-    rhs_oport = new ColumnMatrixOPort(this,"RHS Vector",
-				       ColumnMatrixIPort::Atomic);
+    rhs_oport = new MatrixOPort(this,"RHS Vector",
+				       MatrixIPort::Atomic);
     add_oport(rhs_oport);
     basis_oport = new MatrixOPort(this, "EBasis (nelems x (nelecs-1)x3)",
 				  MatrixIPort::Atomic);
@@ -74,8 +74,9 @@ void RecipBasis::execute() {
 	cerr << "RecipBasis -- couldn't get mesh.  Returning.\n";
 	return;
     }
-    ColumnMatrixHandle idx_in;
-    if (!idx_iport->get(idx_in)) {
+    MatrixHandle idx_inH;
+    ColumnMatrix *idx_in;
+    if (!idx_iport->get(idx_inH) || !(idx_in = dynamic_cast<ColumnMatrix *>(idx_inH.get_rep()))) {
 	cerr << "RecipBasis -- couldn't get index vector.  Returning.\n";
 	return;
     }
@@ -92,8 +93,8 @@ void RecipBasis::execute() {
 	ColumnMatrix* rhs=new ColumnMatrix(nnodes);
 	int i;
 	for (i=0; i<nnodes; i++) (*rhs)[i]=0;
-	(*rhs)[(*idx_in.get_rep())[0]]=1;
-	(*rhs)[(*idx_in.get_rep())[counter+1]]=-1;
+	(*rhs)[(*idx_in)[0]]=1;
+	(*rhs)[(*idx_in)[counter+1]]=-1;
 	if (counter<(nelecs-2)) rhs_oport->send_intermediate(rhs);
 	else rhs_oport->send(rhs);
 
