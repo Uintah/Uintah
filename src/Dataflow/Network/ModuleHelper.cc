@@ -57,15 +57,15 @@ ModuleHelper::~ModuleHelper()
 
 void ModuleHelper::run()
 {
-  if(module->have_own_dispatch){
+  module->pid_.set(getpid());
+  if(module->have_own_dispatch)
     module->do_execute();
-    module->pid_.set(getpid());
-  } else {
-    module->pid_.set(getpid());
+  else {
     for(;;){
       MessageBase* msg=module->mailbox.receive();
       switch(msg->type){
       case MessageTypes::GoAway:
+	module->helper_done.send(1);
 	return;
       case MessageTypes::ExecuteModule:
 	module->do_execute();
