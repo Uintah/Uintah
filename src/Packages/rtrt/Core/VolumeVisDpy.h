@@ -29,11 +29,13 @@ class VolumeVisDpy : public DpyBase {
   int histmax;
   int* hist_log;
   int histmax_log;
+#if 0
   // For the bounding box changes
   double bbox_min_x, bbox_min_y, bbox_min_z;
   double bbox_max_x, bbox_max_y, bbox_max_z;
   double range_min_x, range_min_y, range_min_z;
   double range_max_x, range_max_y, range_max_z;
+#endif
   
   friend class VolumeVis;
   Array1<VolumeVis*> volumes;
