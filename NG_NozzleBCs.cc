@@ -9,6 +9,7 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Core/Util/DebugStream.h>
 #include <iostream>
+#include <dirent.h>
 static DebugStream cout_doing("NG_DOING_COUT", false);
 static DebugStream cout_dbg("NG_DBG_COUT", false);
 /*______________________________________________________________________
@@ -147,6 +148,33 @@ void computeStagnationProperties(double &stag_press,
 }
 
 /*______________________________________________________________________
+ Function: BC_values_using_IsentropicRelations
+ Compute the static (temperature, density, velocity)  using isentropic
+ relations (gamma = 1.4) and an area ratio = 1.88476 
+______________________________________________________________________*/
+void  BC_values_using_IsentropicRelations(const double stag_press,
+                                          const double stag_rho,
+                                          const double stag_temp,
+                                          double &static_press,
+                                          double &static_temp,
+                                          double &static_rho,
+                                          double &static_vel)
+{
+  //__________________________________
+  //  Isenentrop relations for A/A* = 1.88476
+  double p_p0     = 0.92850;
+  double T_T0     = 0.97902;
+  double rho_rho0 = 0.94839;
+  double Mach     = 0.32725;
+  double R        = 287.0;
+  double gamma    = 1.4;
+  static_temp  = T_T0 * stag_temp;
+  static_rho   = rho_rho0 * stag_rho;
+  static_press = p_p0 * stag_press;
+  static_vel   = Mach * sqrt(gamma * R * static_temp); 
+}
+
+/*______________________________________________________________________
  Function:  p2_p1_ratio--MISC: computes p2/p1           
  This is function is used by the secant method.
 ______________________________________________________________________*/
@@ -232,21 +260,24 @@ ______________________________________________________________________*/
             
     double  p2_p1_guess_old,
             p2_p1_guess_new,
-            p2_p1_guess,
-            
             p2_p1_guess0,
             p2_p1_guess00;
             
     double  delta,                       /* used by the secant method        */
             fudge;        
-
+    static double p2_p1_guess;
 /*__________________________________
 *   Compute some stuff
 *___________________________________*/
     p4_p1           = p4/p1;
-    
-    p2_p1_guess0    = 0.5* p4_p1;
-    p2_p1_guess00   = 0.05* p4_p1;
+    if (p2_p1_guess > 1){
+      p2_p1_guess0    = 0.999* p2_p1_guess;
+      p2_p1_guess00   = 1.0001* p2_p1_guess;
+    }else
+    {
+      p2_p1_guess0    = 0.5 * p4_p1;
+      p2_p1_guess00   = 0.05* p4_p1;
+    }
     iter            = 0;    
     fudge           = 0.99;
 /*______________________________________________________________________
@@ -262,14 +293,14 @@ ______________________________________________________________________*/
     delta               = p2_p1_guess0 - p2_p1_guess00;
     p2_p1_guess         = p2_p1_guess0;
     p2_p1_guess_old     = p2_p1_ratio( gamma,  p4_p1, p2_p1_guess00, a4, a1, u4, u1  );
-    
+
     while (fabs(delta) > CONVERGENCE && iter < MAX_ITER){
       p2_p1_guess_new = p2_p1_ratio( gamma,  p4_p1, p2_p1_guess, a4, a1, u4, u1  );
-      delta           = -p2_p1_guess_new/( (p2_p1_guess_new - p2_p1_guess_old)/delta );
+      delta           = -p2_p1_guess_new/( (p2_p1_guess_new - p2_p1_guess_old)/(delta + 1e-100) );
       p2_p1_guess     = p2_p1_guess + delta;
 
       p2_p1_guess_old = p2_p1_guess_new;
-      /* fprintf(stderr,"p2_p1_guess = %g delta %g \n",p2_p1_guess, delta); */
+     // cout << " p2_p1_guess " << p2_p1_guess << " delta " << delta << endl;
       iter ++;
     }
     p2_p1               = p2_p1_guess;
@@ -309,6 +340,14 @@ ______________________________________________________________________*/
     xcontact            = diaphragm_location + (u3 * time);             
     xexpansion_head     = diaphragm_location + ((u4 - a4)  * time);
     xexpansion_tail     = diaphragm_location + ((u3 - a3)  * time);   
+    
+     //__________________________________
+     //  compute common reused variables
+     double gamma_R     = (gamma * R);
+     double a1_sqr      = a1 * a1;
+     double a2_sqr      = a2 * a2;
+     double a3_sqr      = a3 * a3;
+        
     //__________________________________
     //   Now write all of the data to the arrays
 
@@ -321,7 +360,7 @@ ______________________________________________________________________*/
         a_Rieman[i]     = a1;
         p_Rieman[i]     = p1;
         rho_Rieman[i]   = rho1;
-        T_Rieman[i]     = pow(a1,2.0)/(gamma * R);
+        T_Rieman[i]     = a1_sqr/gamma_R;
       }
       //__________________________________
       //   Region 2
@@ -330,9 +369,8 @@ ______________________________________________________________________*/
         a_Rieman[i]     = a2;
         p_Rieman[i]     = p2;
         rho_Rieman[i]   = rho2;
-        T_Rieman[i]     = pow(a2,2.0)/(gamma * R);
+        T_Rieman[i]     = a2_sqr/gamma_R;
       }
-
       //__________________________________
       //   Region 3
       if ( (xexpansion_tail <= x) && (x <= xcontact) ){
@@ -340,9 +378,8 @@ ______________________________________________________________________*/
         a_Rieman[i]     = a3;
         p_Rieman[i]     = p3;
         rho_Rieman[i]   = rho3;
-        T_Rieman[i]     = pow(a3,2.0)/(gamma * R);
+        T_Rieman[i]     = a3_sqr/gamma_R;
       }
-
       //__________________________________
       //   Expansion fan Between 3 and 4
       if ( (xexpansion_head <= x) && (x < xexpansion_tail) ){
@@ -357,9 +394,8 @@ ______________________________________________________________________*/
         exponent        = (2.0)/( gamma - 1.0 );
         rho_Rieman[i]   =  rho4 * pow( (a_Rieman[i]/a4), exponent);
 
-        T_Rieman[i]     =  pow(a_Rieman[i],2.0)/(gamma * R);
+        T_Rieman[i]     =  a_Rieman[i]*a_Rieman[i]/(gamma * R);
       }
-
       //__________________________________
       //   Region 4
       if (x <xexpansion_head){
@@ -367,11 +403,11 @@ ______________________________________________________________________*/
         a_Rieman[i]     = a4;
         p_Rieman[i]     = p4;
         rho_Rieman[i]   = rho4;
-        T_Rieman[i]     = pow(a4,2.0)/(gamma*R);
+        T_Rieman[i]     = a4*a4/(gamma*R);
       }
     }
 
-#if 0    
+#if 0
     fprintf(stderr,"________________________________________________\n"); 
     fprintf(stderr," p2_p1: %f\n",p2_p1);
     fprintf(stderr," u4: %f,\t  u3: %f,\t  u2: %f,\t  u1: %f\n",u4, u3, u2, u1);
@@ -405,8 +441,8 @@ void solveRiemannProblemInterface( const double t_final,
             R, gamma, delQ;
   //__________________________________
   //Parse arguments                
-  cout_dbg << " p4 " << p4 << " u4 " << u4 << " rho4 " << rho4
-           << " p1 " << p1 << " u1 " << u1 << " rho1 " << rho1 << endl;
+//  cout_dbg << " p4 " << p4 << " u4 " << u4 << " rho4 " << rho4
+//           << " p1 " << p1 << " u1 " << u1 << " rho1 " << rho1 << endl;
 //  cout_dbg << " t_final " << t_final<< " length " << Length << " resolution " << ncells
 //           << " diaphragm loc: " << diaphragm_location << endl;
   //__________________________________
@@ -441,7 +477,7 @@ void solveRiemannProblemInterface( const double t_final,
     rho_Rieman[i]   = 0.0; 
     T_Rieman[i]     = 0.0;          
   }
-
+          
   Solve_Riemann_problem(  qLoLimit,       qHiLimit,       diaphragm_location ,
                           delQ,           t_final,        gamma,
                           p1,             rho1,           u1, a1,
@@ -454,32 +490,37 @@ void solveRiemannProblemInterface( const double t_final,
   press = p_Rieman[probeCell];
   rho   = rho_Rieman[probeCell];
   vel   = u_Rieman[probeCell];
-  Temp  = T_Rieman[probeCell];
-    
+  Temp  = T_Rieman[probeCell];    
   //__________________________________
   // dump to a file when sus dumps and at
-  //  cell index -1, 1, 0             
+  //  cell index -1, 1, 0  
+          
   if(ng->dumpNow){
     if(ng->dataArchiver->wasOutputTimestep() && ng->c == IntVector(-1,1,0)) {
     
       string udaDir    = ng->dataArchiver->getOutputLocation();
-      ostringstream dw;
-      dw << ng->dataArchiver->getCurrentTimestep(); 
-      string filename = udaDir + "/exactSolution_" + dw.str();
       
-      double x = 0;
-      cout << " Dumping file " << filename  << endl;
-       FILE *fp = fopen(filename.c_str(),"w");
-       /*fprintf(fp, "#X p_Rieman u_Rieman rho_Rieman a_Rieman T_Rieman sp_vol_Rieman\n");*/
-       for ( i = qLoLimit; i <= qHiLimit; i++){
-         fprintf(fp, "%6.5E %6.5E %6.5E %6.5E %6.5E %6.5E %6.5E\n", 
-                 x, p_Rieman[i], u_Rieman[i], rho_Rieman[i], 
-                 a_Rieman[i], T_Rieman[i], 1.0/rho_Rieman[i]);
-         x +=delQ;
-       }
-       fclose(fp);
+      DIR *check = opendir(udaDir.c_str());
+      if ( check != NULL){        // only dump if uda directory exists
+      
+        ostringstream dw;
+        dw << ng->dataArchiver->getCurrentTimestep(); 
+        string filename = udaDir + "/exactSolution_" + dw.str();
+
+        double x = 0;
+        cout << " Dumping file " << filename  << endl;
+         FILE *fp = fopen(filename.c_str(),"w");
+         /*fprintf(fp, "#X p_Rieman u_Rieman rho_Rieman a_Rieman T_Rieman sp_vol_Rieman\n");*/
+         for ( i = qLoLimit; i <= qHiLimit; i++){
+           fprintf(fp, "%6.5E %6.5E %6.5E %6.5E %6.5E %6.5E %6.5E\n", 
+                   x, p_Rieman[i], u_Rieman[i], rho_Rieman[i], 
+                   a_Rieman[i], T_Rieman[i], 1.0/rho_Rieman[i]);
+           x +=delQ;
+         }
+         fclose(fp);
+        }
     }
-  }              
+  } 
   //__________________________________
   //   free memory
   //fprintf(stderr,"Now deallocating memory\n"); 
@@ -489,8 +530,6 @@ void solveRiemannProblemInterface( const double t_final,
   free_dvector_nr( rho_Rieman,   0, Q_MAX_LIM); 
   free_dvector_nr( T_Rieman,     0, Q_MAX_LIM); 
 }
-
-
 
 //______________________________________________________________________
 void setNGCVelocity_BC(const Patch* patch,
@@ -580,6 +619,7 @@ void getVars_for_NGNozzle( DataWarehouse* old_dw,
     
     new_dw->allocateTemporary(ng->vel_CC,   patch);    
     ng->vel_CC.copyData(vel);
+    ng->dumpNow = false;
   }
   //__________________________________
   //    FC exchange
@@ -598,6 +638,7 @@ void getVars_for_NGNozzle( DataWarehouse* old_dw,
     ng->rho_CC.copyData(rho);
     ng->press_CC.copyData(press);
     ng->vel_CC.copyData(vel);
+    ng->dumpNow = false;
   }
   //__________________________________
   //    update pressure
@@ -612,6 +653,7 @@ void getVars_for_NGNozzle( DataWarehouse* old_dw,
     
     ng->vel_CC.copyData(vel);
     ng->rho_CC.copyData(rho);
+    ng->dumpNow = false;
   }
   //__________________________________
   //    cc_ Exchange
@@ -625,6 +667,7 @@ void getVars_for_NGNozzle( DataWarehouse* old_dw,
         
     ng->press_CC.copyData(p);
     ng->rho_CC.copyData(rho);
+    ng->dumpNow = false;
   }
   //__________________________________
   //    Advection
@@ -633,6 +676,7 @@ void getVars_for_NGNozzle( DataWarehouse* old_dw,
     new_dw->get(p,        lb->press_CCLabel, 0,   patch,gn,0);
     new_dw->allocateTemporary(ng->press_CC, patch);
     ng->press_CC.copyData(p);
+    ng->dumpNow = true;
   }
 }
 
