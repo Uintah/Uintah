@@ -40,7 +40,7 @@ static Persistent* make_NrrdData() {
   return scinew NrrdData;
 }
 
-PersistentTypeID NrrdData::type_id("NrrdData", "Datatype", make_NrrdData);
+PersistentTypeID NrrdData::type_id("NrrdData", "PropertyManager", make_NrrdData);
 
 vector<string> NrrdData::valid_tup_types_;
 
@@ -283,12 +283,17 @@ NrrdData::get_tuple_index_info(int tmin, int tmax, int &min, int &max) const
   return true;
 }
 
-#define NRRDDATA_VERSION 2
+#define NRRDDATA_VERSION 3
 
 //////////
 // PIO for NrrdData objects
 void NrrdData::io(Piostream& stream) {
   int version =  stream.begin_class("NrrdData", NRRDDATA_VERSION);
+  // Do the base class first...
+  if (version > 2) {
+    PropertyManager::io(stream);
+  }
+
   if (stream.reading()) {
     Pio(stream, nrrd_fname_);
     if (nrrdLoad(nrrd = nrrdNew(), strdup(nrrd_fname_.c_str()))) {
