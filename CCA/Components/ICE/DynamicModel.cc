@@ -3,12 +3,14 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Core/Geometry/IntVector.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 
 using namespace Uintah;
+static DebugStream cout_doing("ICE_DOING_COUT", false);
 
-DynamicModel::DynamicModel(ProblemSpecP& ps)
-   : d_smag() 
+DynamicModel::DynamicModel(ProblemSpecP& ps, SimulationStateP& sharedState)
+  : Turbulence(ps, sharedState), d_smag() 
 { 
   //__________________________________ 
   //Filter_width=grid space(uniform) for implicit filter.
@@ -16,6 +18,8 @@ DynamicModel::DynamicModel(ProblemSpecP& ps)
 
   ps->require("filter_width",d_filter_width);
   ps->require("test_filter_width",d_test_filter_width);
+  ps->require("model_constant", d_model_constant);
+
 //  ps->require("turb_Pr",d_turbPr);
 
 }
@@ -59,7 +63,7 @@ void DynamicModel::computeTurbViscosity(DataWarehouse* new_dw,
   
   for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
     IntVector c = *iter;    
-    turb_viscosity[c] = rho_CC[c] * term[c] * meanSIJ[c];
+    turb_viscosity[c] = d_model_constant * rho_CC[c] * term[c] * meanSIJ[c];
    }
 }
 /* ---------------------------------------------------------------------
@@ -300,17 +304,75 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
      if (MM[c] < 1.0e-20) {
         term[c] = 0.0;
       }        
-     else{   
-       Cs = sqrt(LM[c] / MM[c]);
-       if (Cs < 0.0){       
+     else{
+       if(LM[c] <= 1.e-20){
          Cs = 0.0;
+       } else {
+         Cs = sqrt(LM[c] / MM[c]);
+         if (Cs > 10.0){
+           Cs = 10.0;
          }
-       else if (Cs > 10.0){
-         Cs = 10.0;
-        }
+       }
        term[c] = (Cs * filter_width) * (Cs * filter_width);
      } 
    }//iter
 }
 
+void DynamicModel::scheduleTurbulence1(SchedulerP& sched,
+                                       const PatchSet* patches,
+                                       const MaterialSet* matls)
+{
+  if(filterScalars.size() > 0){
+    for(int i=0;i<static_cast<int>(filterScalars.size());i++){
+      FilterScalar* s = filterScalars[i];
+      Task* task = scinew Task("DynamicModel::computeVariance",
+                               this, &DynamicModel::computeVariance, s);
+      task->requires(Task::OldDW, s->scalar, Ghost::AroundCells, 1);
+      task->computes(s->scalarVariance);
+      sched->addTask(task, patches, s->matl_set);
+    }
+  }
+}
 
+void DynamicModel::computeVariance(const ProcessorGroup*, 
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw,
+                                   FilterScalar* s)
+{
+  cout_doing << "Doing computeVariance "<< "\t\t\t DynamicModel" << endl;
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    for(int m=0;m<matls->size();m++){
+      int matl = matls->get(m);
+      constCCVariable<double> f;
+      old_dw->get(f, s->scalar, matl, patch, Ghost::AroundCells, 1);
+      CCVariable<double> fvar;
+      new_dw->allocateAndPut(fvar, s->scalarVariance, matl, patch);
+
+      CellIterator iter = patch->getCellIterator();
+      CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);  
+    
+      for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {   
+        const IntVector& c = *iter;
+
+        double sum_f = 0;
+        double sum_fsquared = 0;
+        for (int kk = -1; kk <= 1; kk ++) {
+          for (int jj = -1; jj <= 1; jj ++) {
+            for (int ii = -1; ii <= 1; ii ++) {
+              IntVector neighborCell = c+IntVector(ii,jj,kk);
+              double weight = (1.0-0.5*abs(ii))*(1.0-0.5*abs(jj))*(1.0-0.5*abs(kk))/8;
+              double value = f[neighborCell];
+              sum_f += weight*value;
+              sum_fsquared += weight*value*value;
+            }
+          }
+        }
+        fvar[c] = sum_fsquared - sum_f*sum_f;
+      }
+      setBC(fvar,s->scalarVariance->getName(),patch, d_sharedState, matl, new_dw);
+    }
+  }
+}
