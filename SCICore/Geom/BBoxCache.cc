@@ -80,19 +80,19 @@ void GeomBBoxCache::io(Piostream& stream)
 	int bsphere_cached;
 	Pio(stream, bsphere_cached);
     }
-    Pio(stream, bbox);
+    SCICore::Geometry::Pio(stream, bbox);
     if(version < 2){
 	// Old BSphere stuff...
 	stream.begin_cheap_delim();
 	int have_some;
 	Pio(stream, have_some);
 	Point cen;
-	Pio(stream, cen);
+	SCICore::Geometry::Pio(stream, cen);
 	double rad;
 	Pio(stream, rad);
 	stream.end_cheap_delim();
     }
-    Pio(stream, child);
+    SCICore::GeomSpace::Pio(stream, child);
     stream.end_class();
 }
 
@@ -107,6 +107,11 @@ bool GeomBBoxCache::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:53  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/28 17:54:38  sparker
 // Integrated new Thread library
 //

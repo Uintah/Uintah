@@ -44,14 +44,8 @@ Barrier_private::~Barrier_private()
 {
 }
 
-Barrier::Barrier(const char* name, int num_threads)
-    : d_num_threads(num_threads), d_thread_group(0), d_name(name)
-{
-    d_priv=new Barrier_private;
-}
-
-Barrier::Barrier(const char* name, ThreadGroup* thread_group)
- : d_num_threads(0), d_thread_group(thread_group), d_name(name)
+Barrier::Barrier(const char* name)
+    : d_name(name)
 {
     d_priv=new Barrier_private;
 }
@@ -62,9 +56,8 @@ Barrier::~Barrier()
 }
 
 void
-Barrier::wait()
+Barrier::wait(int n)
 {
-    int n=d_thread_group?d_thread_group->numActive(true):d_num_threads;
     int oldstate=Thread::couldBlock(d_name);
     d_priv->mutex.lock();
     ConditionVariable& cond=d_priv->cc?d_priv->cond0:d_priv->cond1;
@@ -83,6 +76,11 @@ Barrier::wait()
 
 //
 // $Log$
+// Revision 1.3  1999/08/29 00:47:00  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.2  1999/08/28 03:46:46  sparker
 // Final updates before integration with PSE
 //

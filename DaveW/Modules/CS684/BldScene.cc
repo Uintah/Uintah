@@ -127,7 +127,7 @@ static clString module_name("BldScene");
 BldScene::BldScene(const clString& id)
 : Module("BldScene", id, Source),
   atten("atten", id, this), material("material", id, this), nb("nb", id, this),
-  tcl_exec(0), widgetMoved(0), matlChanged(0)
+  tcl_exec(0), widgetMoved(0), matlChanged(0), widget_lock("BldScene widget lock")
 {
     // Create the input port
     iRT = scinew VoidStarIPort(this, "DRaytracer", VoidStarIPort::Atomic);
@@ -647,6 +647,11 @@ void BldScene::tcl_command(TCLArgs& args, void* userdata) {
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.3  1999/08/29 00:46:36  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.2  1999/08/25 03:47:36  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

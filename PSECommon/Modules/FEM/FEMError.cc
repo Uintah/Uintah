@@ -18,8 +18,9 @@
 #include <SCICore/Datatypes/ScalarFieldUG.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Multitask/Task.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 #include <values.h>
 
 namespace PSECommon {
@@ -31,7 +32,8 @@ using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Math;
 using namespace SCICore::Geometry;
-using namespace SCICore::Multitask;
+using SCICore::Thread::Parallel;
+using SCICore::Thread::Thread;
 
 class FEMError : public Module {
     ScalarFieldIPort* infield;
@@ -55,12 +57,6 @@ Module* make_FEMError(const clString& id) {
   return new FEMError(id);
 }
 
-static void do_parallel(void* obj, int proc)
-{
-    FEMError* module=(FEMError*)obj;
-    module->parallel(proc);
-}
-    
 FEMError::FEMError(const clString& id)
 : Module("FEMError", id, Filter)
 {
@@ -181,8 +177,9 @@ void FEMError::execute()
     lowf=scinew ScalarFieldUG(ScalarFieldUG::ElementValues);
     lowf->mesh=mesh;
     lowf->data.resize(nelems);
-    np=Task::nprocessors();
-    Task::multiprocess(np, do_parallel, this);
+    np=Thread::numProcessors();
+    Thread::parallel(Parallel<FEMError>(this, &FEMError::parallel),
+		     np, true);
     
     upbound_field->send(upf);
     lowbound_field->send(lowf);
@@ -205,6 +202,11 @@ Vector FEMError::element_gradient(Element* e, ScalarFieldUG* sfield)
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:38  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/25 03:47:45  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

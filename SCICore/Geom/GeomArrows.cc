@@ -108,19 +108,19 @@ GeomObj* GeomArrows::clone()
 
 void GeomArrows::io(Piostream& stream)
 {
-    using SCICore::Containers::Pio;
+    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomArrows", GEOMARROWS_VERSION);
     GeomObj::io(stream);
     Pio(stream, headwidth);
     Pio(stream, headlength);
-    Pio(stream, shaft_matls);
-    Pio(stream, back_matls);
-    Pio(stream, head_matls);
-    Pio(stream, positions);
-    Pio(stream, directions);
-    Pio(stream, v1);
-    Pio(stream, v2);
+    SCICore::Containers::Pio(stream, shaft_matls);
+    SCICore::Containers::Pio(stream, back_matls);
+    SCICore::Containers::Pio(stream, head_matls);
+    SCICore::Containers::Pio(stream, positions);
+    SCICore::Containers::Pio(stream, directions);
+    SCICore::Containers::Pio(stream, v1);
+    SCICore::Containers::Pio(stream, v2);
     stream.end_class();
 }
 

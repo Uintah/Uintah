@@ -55,6 +55,9 @@ extern "C" {
 #include <fetchop.h>
 }
 
+// Somebody #defines get_tid in /usr/include/task.h - how rude
+#undef get_tid
+
 /*
  * The irix implementation uses the default version of ConditionVariable,
  * CrowdMonitor, and RecursiveMutex.  It provides native implementations
@@ -67,7 +70,11 @@ extern "C" {
 #include "CrowdMonitor_default.cc"
 #include "RecursiveMutex_default.cc"
 
+using SCICore::Thread::Barrier;
+using SCICore::Thread::Mutex;
+using SCICore::Thread::Semaphore;
 using SCICore::Thread::Thread;
+using SCICore::Thread::ThreadError;
 using SCICore::Thread::ThreadGroup;
 using SCICore::Thread::Time;
 
@@ -95,7 +102,8 @@ namespace SCICore {
 	};
     }
 }
-using Thread_private;
+
+using SCICore::Thread::Thread_private;
 
 static Thread_private* idle_main;
 static Thread_private* idle[MAXTHREADS];
@@ -105,7 +113,7 @@ static int nactive;
 static bool initialized;
 static usema_t* schedlock;
 static usptr_t* arena;
-static fetchop_reservoir_t reservoir;
+static atomic_reservoir_t reservoir;
 static bool use_fetchop=true;
 
 static usptr_t* main_sema;
@@ -249,7 +257,7 @@ Thread::initialize()
     // 
     int tmpfd=dup(2);
     close(2);
-    reservoir=fetchop_init(USE_DEFAULT_PM, 10);
+    reservoir=atomic_alloc_reservoir(USE_DEFAULT_PM, 100, NULL);
     int newfd=dup(tmpfd);
     if(newfd != 2)
 	throw ThreadError("Wrong FD returned from dup!");
@@ -272,7 +280,7 @@ Thread::initialize()
 
     control_c_sema=usnewsema(arena, 1);
     if(!control_c_sema)
-	throw ThreadError(std::stirng("Error creating semaphore")
+	throw ThreadError(std::string("Error creating semaphore")
 			  +strerror(errno));
 
     main_pid=getpid();
@@ -523,7 +531,7 @@ Thread::print_threads()
     for(int i=0;i<nactive;i++){
 	Thread_private* p=active[i];
 	const char* tname=p->thread?p->thread->getThreadName():"???";
-	fprintf(fp, "%d: %s (", p->pid, tname);
+	fprintf(fp, " %d: %s (", p->pid, tname);
 	if(p->thread){
 	    if(p->thread->isDaemon())
 		fprintf(fp, "daemon, ");
@@ -550,7 +558,7 @@ Thread::print_threads()
  */
 static
 void
-handle_quit(int sig, int code, sigcontext_t*)
+handle_quit(int sig, int /* code */, sigcontext_t*)
 {
     if(exiting){
 	if(getpid() == main_pid){
@@ -582,7 +590,7 @@ handle_quit(int sig, int code, sigcontext_t*)
     const char* tname=self?self->getThreadName():"main?";
 
     // Kill all of the threads...
-    char* signam=SCICore_Thread_signal_name(sig, code, 0);
+    char* signam=SCICore_Thread_signal_name(sig, 0);
     int pid=getpid();
     fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s\n", tname, pid, signam);
     if(sig==SIGINT){
@@ -601,7 +609,7 @@ handle_quit(int sig, int code, sigcontext_t*)
  */
 static
 void
-handle_abort_signals(int sig, int code, sigcontext_t* context)
+handle_abort_signals(int sig, int /* code */, sigcontext_t* context)
 {
     if(aborting)
 	exit(0);
@@ -620,7 +628,7 @@ handle_abort_signals(int sig, int code, sigcontext_t* context)
 #else
     caddr_t addr=(caddr_t)context->sc_badvaddr.lo32;
 #endif
-    char* signam=SCICore_Thread_signal_name(sig, code, addr);
+    char* signam=SCICore_Thread_signal_name(sig, addr);
     fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
     Thread::niceAbort();
 
@@ -706,7 +714,7 @@ Thread::migrate(int proc)
 	    throw ThreadError(std::string("sysmp(MP_RUNANYWHERE_PID) failed")
 			      +strerror(errno));
     } else {
-	if(sysmp(MP_MUSTRUN_PID, proc, d_priv->pid) == -1){
+	if(sysmp(MP_MUSTRUN_PID, proc, d_priv->pid) == -1)
 	    throw ThreadError(std::string("sysmp(_MP_MUSTRUN_PID) failed")
 			      +strerror(errno));
     }
@@ -716,7 +724,6 @@ Thread::migrate(int proc)
 /*
  * Mutex implementation
  */
-
 Mutex::Mutex(const char* name)
     : d_name(name)
 {
@@ -841,13 +848,15 @@ namespace SCICore {
 	    barrier_t* barrier;
 
 	    // Only for fetchop implementation
-	    fetchop_var_t* pvar;
+	    atomic_var_t* pvar;
 	    char pad[128];
 	    int flag;  // We want this on it's own cache line
 	    char pad2[128];
 	};
     }
 }
+
+using SCICore::Thread::Barrier_private;
 
 Barrier_private::Barrier_private()
     : cond0("Barrier condition 0"), cond1("Barrier condition 1"),
@@ -856,7 +865,7 @@ Barrier_private::Barrier_private()
     if(nprocessors > 1){
 	if(use_fetchop){
 	    flag=0;
-	    pvar=fetchop_alloc(reservoir);
+	    pvar=atomic_alloc_variable(reservoir, 0);
 	    fprintf(stderr, "***Alloc: %p\n", pvar);
 	    if(!pvar)
 		throw ThreadError(std::string("fetchop_alloc failed")
@@ -870,17 +879,8 @@ Barrier_private::Barrier_private()
     }
 }   
 
-Barrier::Barrier(const char* name, int nthreads)
-    : d_name(name), d_num_threads(nthreads), d_thread_group(0)
-{
-    if(!initialized){
-	Thread::initialize();
-    }
-    d_priv=new Barrier_private;
-}
-
-Barrier::Barrier(const char* name, ThreadGroup* threadGroup)
-    : d_name(name), d_num_threads(0), d_thread_group(threadGroup)
+Barrier::Barrier(const char* name)
+    : d_name(name)
 {
     if(!initialized){
 	Thread::initialize();
@@ -891,7 +891,7 @@ Barrier::Barrier(const char* name, ThreadGroup* threadGroup)
 Barrier::~Barrier()
 {
     if(use_fetchop){
-	fetchop_free(reservoir, d_priv->pvar);
+	atomic_free_variable(reservoir, d_priv->pvar);
     } else {
 	free_barrier(d_priv->barrier);
     }
@@ -899,15 +899,14 @@ Barrier::~Barrier()
 }
 
 void
-Barrier::wait()
+Barrier::wait(int n)
 {
-    int n=d_thread_group?d_thread_group->numActive(true):d_num_threads;
     Thread_private* p=Thread::self()->d_priv;
     int oldstate=Thread::push_bstack(p, Thread::BLOCK_BARRIER, d_name);
     if(nprocessors > 1){
 	if(use_fetchop){
 	    int gen=d_priv->flag;
-	    fetchop_var_t val=fetchop_increment(d_priv->pvar);
+	    atomic_var_t val=atomic_fetch_and_increment(d_priv->pvar);
 	    if(val == n-1){
 		storeop_store(d_priv->pvar, 0);
 		d_priv->flag++;
@@ -934,8 +933,161 @@ Barrier::wait()
     Thread::pop_bstack(p, oldstate);
 }
 
+namespace SCICore {
+    namespace Thread {
+	struct AtomicCounter_private {
+	    AtomicCounter_private();
+
+	    // These variables used only for non fectchop implementation
+	    Mutex lock;
+	    int value;
+	};
+    }
+}
+
+using SCICore::Thread::AtomicCounter_private;
+using SCICore::Thread::AtomicCounter;
+
+AtomicCounter_private::AtomicCounter_private()
+    : lock("AtomicCounter lock")
+{
+}
+
+AtomicCounter::AtomicCounter(const char* name)
+    : d_name(name)
+{
+    if(!initialized){
+	Thread::initialize();
+    }
+    if(use_fetchop){
+	d_priv=(AtomicCounter_private*)atomic_alloc_variable(reservoir, 0);
+	if(!d_priv)
+	    throw ThreadError(std::string("fetchop_alloc failed")
+					  +strerror(errno));
+    } else {
+	d_priv=new AtomicCounter_private;
+    }
+}
+
+AtomicCounter::AtomicCounter(const char* name, int value)
+    : d_name(name)
+{
+    if(!initialized){
+	Thread::initialize();
+    }
+    if(use_fetchop){
+	d_priv=(AtomicCounter_private*)atomic_alloc_variable(reservoir, 0);
+	if(!d_priv)
+	    throw ThreadError(std::string("fetchop_alloc failed")
+					  +strerror(errno));
+	atomic_store((atomic_var_t*)d_priv, value);
+    } else {
+	d_priv=new AtomicCounter_private;
+	d_priv->value=value;
+    }
+}
+
+AtomicCounter::~AtomicCounter()
+{
+    if(use_fetchop){
+	atomic_free_variable(reservoir, (atomic_var_t*)d_priv);
+    } else {
+	delete d_priv;
+    }
+}
+
+AtomicCounter::operator int() const
+{
+    if(use_fetchop){
+	return (int)atomic_load((atomic_var_t*)d_priv);
+    } else {
+	return d_priv->value;
+    }
+}
+
+int
+AtomicCounter::operator++()
+{
+    if(use_fetchop){
+	// We do not use the couldBlock/couldBlockDone pairs here because
+	// they are so fast (microsecond), and never block...
+	return (int)atomic_fetch_and_increment((atomic_var_t*)d_priv)+1;
+    } else {
+	int oldstate=Thread::couldBlock(d_name);
+	d_priv->lock.lock();
+	int ret=++d_priv->value;
+	d_priv->lock.unlock();
+	Thread::couldBlockDone(oldstate);
+	return ret;
+    }
+}
+
+int
+AtomicCounter::operator++(int)
+{
+    if(use_fetchop){
+	return (int)atomic_fetch_and_increment((atomic_var_t*)d_priv);
+    } else {
+	int oldstate=Thread::couldBlock(d_name);
+	d_priv->lock.lock();
+	int ret=d_priv->value++;
+	d_priv->lock.unlock();
+	Thread::couldBlockDone(oldstate);
+	return ret;
+    }
+}
+
+int
+AtomicCounter::operator--()
+{
+    if(use_fetchop){
+	return (int)atomic_fetch_and_decrement((atomic_var_t*)d_priv)-1;
+    } else {
+	int oldstate=Thread::couldBlock(d_name);
+	d_priv->lock.lock();
+	int ret=--d_priv->value;	
+	d_priv->lock.unlock();
+	Thread::couldBlockDone(oldstate);
+	return ret;
+    }
+}
+
+int
+AtomicCounter::operator--(int)
+{
+    if(use_fetchop){
+	return (int)atomic_fetch_and_increment((atomic_var_t*)d_priv);
+    } else {
+	int oldstate=Thread::couldBlock(d_name);
+	d_priv->lock.lock();
+	int ret=d_priv->value--;
+	d_priv->lock.unlock();
+	Thread::couldBlockDone(oldstate);
+	return ret;
+    }
+}
+
+void
+AtomicCounter::set(int v)
+{
+    if(use_fetchop){
+	atomic_store((atomic_var_t*)d_priv, v);
+    } else {
+	int oldstate=Thread::couldBlock(d_name);
+	d_priv->lock.lock();
+	d_priv->value=v;
+	d_priv->lock.unlock();
+	Thread::couldBlockDone(oldstate);
+    }
+}
+
 //
 // $Log$
+// Revision 1.7  1999/08/29 00:47:02  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.6  1999/08/28 03:46:52  sparker
 // Final updates before integration with PSE
 //

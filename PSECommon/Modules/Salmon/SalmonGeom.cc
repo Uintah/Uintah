@@ -17,6 +17,7 @@
 #include <SCICore/Geom/GeomOpenGL.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Geom/BBoxCache.h>
+#include <SCICore/Thread/CrowdMonitor.h>
 
 #include <PSECommon/Modules/Salmon/SalmonGeom.h>
 #include <PSECommon/Modules/Salmon/Roe.h>
@@ -26,6 +27,7 @@ namespace Modules {
 
 using SCICore::PersistentSpace::Persistent;
 using SCICore::GeomSpace::GeomBBoxCache;
+using SCICore::Thread::CrowdMonitor;
 
 Persistent* make_GeomSalmonItem()
 {
@@ -95,7 +97,7 @@ void GeomSalmonItem::io(Piostream& stream)
     Pio(stream, have_lock);
     if(stream.reading())
 	if(have_lock)
-	    lock=new CrowdMonitor;
+	    lock=new CrowdMonitor("GeomSalmonItem crowd monitor");
 	else
 	    lock=0;
     Pio(stream, name);
@@ -114,6 +116,11 @@ bool GeomSalmonItem::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.4  1999/08/29 00:46:43  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.3  1999/08/17 23:50:16  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

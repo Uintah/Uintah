@@ -103,8 +103,8 @@ void GeomPolylineTC::io(Piostream& stream)
 {
   using SCICore::PersistentSpace::Pio;
 
-  Pio(stream, bbox);
-  Pio(stream, data);
+  SCICore::Geometry::Pio(stream, bbox);
+  SCICore::Containers::Pio(stream, data);
 }
 
 bool GeomPolylineTC::saveobj(ostream&, const clString&, GeomSave*)
@@ -118,6 +118,11 @@ bool GeomPolylineTC::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:55  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/28 17:54:41  sparker
 // Integrated new Thread library
 //

@@ -32,6 +32,7 @@ public:
     int generation;
     Datatype();
     Datatype(const Datatype&);
+    Datatype& operator=(const Datatype&);
     virtual ~Datatype();
 };
 
@@ -40,6 +41,11 @@ public:
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:52  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/28 17:54:36  sparker
 // Integrated new Thread library
 //

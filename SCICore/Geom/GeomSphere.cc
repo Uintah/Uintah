@@ -83,7 +83,7 @@ void GeomSphere::io(Piostream& stream)
 
     stream.begin_class("GeomSphere", GEOMSPHERE_VERSION);
     GeomObj::io(stream);
-    Pio(stream, cen);
+    SCICore::Geometry::Pio(stream, cen);
     Pio(stream, rad);
     Pio(stream, nu);
     Pio(stream, nv);
@@ -121,6 +121,11 @@ bool GeomSphere::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:55  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/28 17:54:42  sparker
 // Integrated new Thread library
 //

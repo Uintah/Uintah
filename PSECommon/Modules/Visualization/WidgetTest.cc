@@ -17,6 +17,7 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/CrowdMonitor.h>
 
 #include <PSECore/Widgets/PointWidget.h>
 #include <PSECore/Widgets/ArrowWidget.h>
@@ -76,7 +77,8 @@ Module* make_WidgetTest(const clString& id) {
 static clString module_name("WidgetTest");
 
 WidgetTest::WidgetTest(const clString& id)
-: Module("WidgetTest", id, Source), widget_scale("widget_scale", id, this),
+: Module("WidgetTest", id, Source), widget_lock("WidgetTest widget lock"),
+    widget_scale("widget_scale", id, this),
   widget_type("widget_type", id, this),
   init(1)
 {
@@ -133,11 +135,11 @@ void WidgetTest::widget_moved(int last)
    if ((widgets[WT_Crit]->ReferencePoint()-Point(0,0,0)).length2() >= 1e-6)
       ((CriticalPointWidget*)widgets[WT_Crit])->SetDirection((Point(0,0,0)-widgets[WT_Crit]->ReferencePoint()).normal());
    
-   widget_lock.read_lock();
+   widget_lock.readLock();
    cout << "Gauge ratio " << ((GaugeWidget*)widgets[WT_Gauge])->GetRatio() << endl;
    cout << "Ring angle " << ((RingWidget*)widgets[WT_Ring])->GetRatio() << endl;
    cout << "FOV " << ((ViewWidget*)widgets[WT_View])->GetFOV() << endl;
-   widget_lock.read_unlock();
+   widget_lock.readUnlock();
 
    // If your module needs to execute when the widget moves, add these lines:
    //if(last && !abort_flag){
@@ -161,11 +163,11 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
    } else if(args[1] == "select"){
        // Select the appropriate widget
        reset_vars();
-       widget_lock.write_lock();
+       widget_lock.writeLock();
        for(int i = 0; i < NumWidgetTypes; i++)
 	   widgets[i]->SetState(0);
        widgets[widget_type.get()]->SetState(1);
-       widget_lock.write_unlock();
+       widget_lock.writeUnlock();
        widgets[widget_type.get()]->SetScale(widget_scale.get());
    } else if(args[1] == "scale"){
       reset_vars();
@@ -182,6 +184,11 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:49  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/25 03:48:12  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

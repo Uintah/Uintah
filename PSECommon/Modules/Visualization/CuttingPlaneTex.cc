@@ -25,9 +25,8 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Multitask/Task.h>
-#include <SCICore/Multitask/ITC.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/CrowdMonitor.h>
 
 #include <PSECore/Widgets/ScaledFrameWidget.h>
 #include <iostream.h>
@@ -85,7 +84,7 @@ Module* make_CuttingPlaneTex(const clString& id) {
 static clString widget_name("CuttingPlaneTex Widget");
 
 CuttingPlaneTex::CuttingPlaneTex(const clString& id)
-: Module("CuttingPlaneTex", id, Filter), 
+: Module("CuttingPlaneTex", id, Filter), widget_lock("CuttingPlaneTex widget lock"),
   cutting_plane_type("cutting_plane_type",id, this),
   scale("scale", id, this), offset("offset", id, this),
   num_contours("num_contours", id, this)
@@ -327,6 +326,11 @@ void CuttingPlaneTex::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:45  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/25 03:48:05  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

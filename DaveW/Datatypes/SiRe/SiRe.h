@@ -14,11 +14,11 @@
 #define SCI_DaveW_Datatypes_SiRe_h 1
 
 #include <SCICore/Datatypes/VoidStar.h>
-#include <SCICore/Multitask/ITC.h>
 #include <DaveW/ThirdParty/SiRe/include/fftw.h>
 #include <DaveW/ThirdParty/SiRe/include/sire_const.h>
 #include <DaveW/ThirdParty/SiRe/include/sire_struct.h>
 #include <DaveW/ThirdParty/SiRe/include/sire_version.h>
+#include <SCICore/Thread/Semaphore.h>
 
 // SiRe class definition
 
@@ -75,7 +75,7 @@ typedef struct _SiReDataS {
 class SiReData : public VoidStar {
 public:
     SiReDataS s;
-    SCICore::Multitask::Semaphore lockstepSem;
+    SCICore::Thread::Semaphore lockstepSem;
 public:
     SiReData();
     SiReData(const SiReData& copy);
@@ -92,6 +92,11 @@ void Pio(Piostream&, SiReDataS&);
 
 //
 // $Log$
+// Revision 1.3  1999/08/29 00:46:35  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.2  1999/08/25 03:47:35  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

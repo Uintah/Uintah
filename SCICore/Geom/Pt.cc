@@ -143,10 +143,10 @@ void GeomPts::io(Piostream& stream)
 
     int version=stream.begin_class("GeomPts", GEOMPTS_VERSION);
     GeomObj::io(stream);
-    Pio(stream, pts);
+    SCICore::Containers::Pio(stream, pts);
     if (version > 1) {
 	Pio(stream, have_normal);
-	Pio(stream, n);
+	SCICore::Geometry::Pio(stream, n);
     }
     stream.end_class();
 }
@@ -339,6 +339,11 @@ void GeomTimedParticles::draw(DrawInfoOpenGL*, Material*, double)
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:57  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/28 17:54:44  sparker
 // Integrated new Thread library
 //

@@ -46,15 +46,10 @@ namespace SCICore {
 	class Barrier {
 	public:
 	    //////////
-	    // Create a barrier which will be used by nthreads threads.
-	    // <tt>name</tt> should be a static string which describes the
-	    // primitive for debugging purposes.
-	    Barrier(const char* name, int numThreads);
-    
-	    //////////
-	    // Create a Barrier to be associated with a particular
-	    // ThreadGroup.
-	    Barrier(const char* name, ThreadGroup* group);
+	    // Create a barrier which will be used by a variable number
+	    // of threads.   <tt>name</tt> should be a static string
+	    // which describes the primitive for debugging purposes.
+	    Barrier(const char* name);
     
 	    //////////
 	    // Destroy the barrier
@@ -65,12 +60,9 @@ namespace SCICore {
 	    // until all numThreads threads have called the method.
 	    // After all threads have arrived, they are all allowed
 	    // to return.
-	    void wait();
+	    void wait(int numThreads);
 
 	protected:
-	    int d_num_threads;
-	    ThreadGroup* d_thread_group;
-
 	private:
 	    Barrier_private* d_priv;
 	    const char* d_name;
@@ -86,6 +78,11 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.7  1999/08/29 00:47:00  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.6  1999/08/28 03:46:46  sparker
 // Final updates before integration with PSE
 //

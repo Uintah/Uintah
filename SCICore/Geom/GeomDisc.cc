@@ -107,8 +107,8 @@ void GeomDisc::io(Piostream& stream)
 
     stream.begin_class("GeomDisc", GEOMDISC_VERSION);
     GeomObj::io(stream);
-    Pio(stream, cen);
-    Pio(stream, n);
+    SCICore::Geometry::Pio(stream, cen);
+    SCICore::Geometry::Pio(stream, n);
     Pio(stream, rad);
     Pio(stream, nu);
     Pio(stream, nv);
@@ -126,6 +126,11 @@ bool GeomDisc::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:54  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/28 17:54:39  sparker
 // Integrated new Thread library
 //

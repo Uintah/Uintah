@@ -17,45 +17,31 @@
 
 using SCICore::Thread::SimpleReducer;
 
-SimpleReducer::SimpleReducer(const char* name, int numThreads)
-    : Barrier(name, numThreads)
+SimpleReducer::SimpleReducer(const char* name)
+    : Barrier(name)
 {
-    d_array_size=numThreads;
-    d_join[0]=new joinArray[numThreads];
-    d_join[1]=new joinArray[numThreads];
-    d_p=new pdata[d_num_threads];
-    for(int i=0;i<d_num_threads;i++)
-        d_p[i].d_buf=0;
-}
-
-SimpleReducer::SimpleReducer(const char* name, ThreadGroup* group)
-    : Barrier(name, group)
-{
-    d_array_size=group->numActive(true);
-    d_join[0]=new joinArray[d_array_size];
-    d_join[1]=new joinArray[d_array_size];
-    d_p=new pdata[d_array_size];
-    for(int i=0;i<d_array_size;i++)
-        d_p[i].d_buf=0;
+    d_array_size=-1;
+    d_p=0;
 }
 
 SimpleReducer::~SimpleReducer()
 {
-    delete[] d_join[0];
-    delete[] d_join[1];
-    delete[] d_p;
+    if(d_p){
+	delete[] d_join[0];
+	delete[] d_join[1];
+	delete[] d_p;
+    }
 }
 
 void
-SimpleReducer::collectiveResize(int proc)
+SimpleReducer::collectiveResize(int proc, int n)
 {
     // Extra barrier here to change the array size...
 
     // We must wait until everybody has seen the array size change,
     // or they will skip down too soon...
-    wait();
+    wait(n);
     if(proc==0){
-        int n=d_thread_group?d_thread_group->numActive(true):d_num_threads;
         delete[] d_join[0];
         delete[] d_join[1];
         d_join[0]=new joinArray[n];
@@ -66,15 +52,14 @@ SimpleReducer::collectiveResize(int proc)
 	    d_p[i].d_buf=0;
         d_array_size=n;
     }
-    wait();
+    wait(n);
 }
 
 double
-SimpleReducer::sum(int proc, double mysum)
+SimpleReducer::sum(int proc, int n, double mysum)
 {
-    int n=d_thread_group?d_thread_group->numActive(true):d_num_threads;
     if(n != d_array_size){
-        collectiveResize(proc);
+        collectiveResize(proc, n);
     }
 
     int buf=d_p[proc].d_buf;
@@ -82,7 +67,7 @@ SimpleReducer::sum(int proc, double mysum)
 
     joinArray* j=d_join[buf];
     j[proc].d_d.d_d=mysum;
-    wait();
+    wait(n);
     double sum=0;
     for(int i=0;i<n;i++)
         sum+=j[i].d_d.d_d;
@@ -90,11 +75,10 @@ SimpleReducer::sum(int proc, double mysum)
 }
 
 double
-SimpleReducer::max(int proc, double mymax)
+SimpleReducer::max(int proc, int n, double mymax)
 {
-    int n=d_thread_group?d_thread_group->numActive(true):d_num_threads;
     if(n != d_array_size){
-        collectiveResize(proc);
+        collectiveResize(proc, n);
     }
 
     int buf=d_p[proc].d_buf;
@@ -102,7 +86,7 @@ SimpleReducer::max(int proc, double mymax)
 
     joinArray* j=d_join[buf];
     j[proc].d_d.d_d=mymax;
-    Barrier::wait();
+    Barrier::wait(n);
     double gmax=j[0].d_d.d_d;
     for(int i=1;i<n;i++)
         if(j[i].d_d.d_d > gmax)
@@ -112,6 +96,11 @@ SimpleReducer::max(int proc, double mymax)
 
 //
 // $Log$
+// Revision 1.2  1999/08/29 00:47:01  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.1  1999/08/28 03:46:50  sparker
 // Final updates before integration with PSE
 //

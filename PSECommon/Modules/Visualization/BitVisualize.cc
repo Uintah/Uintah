@@ -34,8 +34,9 @@
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Geom/GeomTri.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Multitask/Task.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 #include <iostream.h>
 #include <strstream.h>
 
@@ -55,7 +56,7 @@ using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Containers;
-using namespace SCICore::Multitask;
+using namespace SCICore::Thread;
 
 class BitVisualize : public Module {
     ScalarFieldIPort* infield;
@@ -112,7 +113,7 @@ Module* make_BitVisualize(const clString& id) {
 }
 
 BitVisualize::BitVisualize(const clString& id)
-: Module("BitVisualize", id, Filter)
+: Module("BitVisualize", id, Filter), grouplock("BitVisualize grouplock")
 {
     // Create the input ports
     infield=scinew ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);
@@ -213,20 +214,15 @@ void BitVisualize::execute()
     }
 }
 
-static void do_parallel_vol_render1(void* obj, int proc)
-{
-  BitVisualize* module=(BitVisualize*)obj;
-  module->parallel_vol_render1(proc);
-}
-
 void BitVisualize::vol_render1()
 {
-    np=Task::nprocessors();
-    Task::multiprocess(np, do_parallel_vol_render1, this);
+    np=Thread::numProcessors();
+    Thread::parallel(Parallel<BitVisualize>(this, &BitVisualize::parallel_vol_render1),
+		     np, true);
 }
 
-
-void BitVisualize::parallel_vol_render1(int proc) {
+void BitVisualize::parallel_vol_render1(int proc)
+{
     int nx=sfrg->nx;
     int ny=sfrg->ny;
     int nz=sfrg->nz;
@@ -278,6 +274,11 @@ void BitVisualize::vol_render1_grid() {
 
 //
 // $Log$
+// Revision 1.7  1999/08/29 00:46:44  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.6  1999/08/25 03:48:04  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

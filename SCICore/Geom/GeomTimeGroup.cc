@@ -126,8 +126,8 @@ void GeomTimeGroup::io(Piostream& stream)
     // Do the base class first...
     GeomObj::io(stream);
     Pio(stream, del_children);
-    Pio(stream, objs);
-    Pio(stream,start_times);
+    SCICore::Containers::Pio(stream, objs);
+    SCICore::Containers::Pio(stream,start_times);
     stream.end_class();
 }
 
@@ -153,6 +153,11 @@ bool GeomTimeGroup::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:56  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/28 17:54:42  sparker
 // Integrated new Thread library
 //

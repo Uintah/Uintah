@@ -246,7 +246,15 @@ Array3<T>::get_onedim_byte( unsigned char *v )
 template<class T>
 void Pio(Piostream& stream, Containers::Array3<T>& data)
 {
+#ifdef __GNUG__
+    using namespace SCICore::Geometry;
+    using namespace SCICore::PersistentSpace;
+    using namespace SCICore::Containers;
+#else
+    using SCICore::Geometry::Pio;
     using SCICore::PersistentSpace::Pio;
+    using SCICore::Containers::Pio;
+#endif
 
     /*int version=*/stream.begin_class("Array3", ARRAY3_VERSION);
     if(stream.reading()){
@@ -284,6 +292,11 @@ void Pio(Piostream& stream, Containers::Array3<T>*& data) {
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:51  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/28 17:54:34  sparker
 // Integrated new Thread library
 //

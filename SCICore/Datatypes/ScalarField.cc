@@ -67,6 +67,13 @@ cerr << "rep="<<rep<<"\n";
 	return 0;
 }
 
+void ScalarField::set_minmax(double min, double max)
+{
+    have_minmax=1;
+    data_min=min;
+    data_max=max;
+}
+
 void ScalarField::get_minmax(double& min, double& max)
 {
     if(!have_minmax){
@@ -276,6 +283,11 @@ void ScalarField::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.4  1999/08/29 00:46:52  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.3  1999/08/25 03:48:35  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -77,8 +77,8 @@ Module* make_BoxClipSField(const clString& id) {
 static clString module_name("BoxClipSField");
 
 BoxClipSField::BoxClipSField(const clString& id)
-: Module("BoxClipSField", id, Filter), axis("axis", id, this), 
-  interp("interp", id, this)
+: Module("BoxClipSField", id, Filter), widget_lock("BoxClipSField lock"),
+    axis("axis", id, this), interp("interp", id, this)
 {
     ifield=scinew ScalarFieldIPort(this, "SField", ScalarFieldIPort::Atomic);
     add_iport(ifield);
@@ -407,6 +407,11 @@ void BoxClipSField::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:45  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/25 03:48:05  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -50,9 +50,10 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/SimpleReducer.h>
+#include <SCICore/Thread/Thread.h>
 #include <strstream.h>
-
-#include <SCICore/Multitask/Task.h>
 
 namespace PSECommon {
 namespace Modules {
@@ -61,8 +62,10 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
-using namespace SCICore::Multitask;
 using SCICore::Containers::to_string;
+using SCICore::Thread::Parallel;
+using SCICore::Thread::SimpleReducer;
+using SCICore::Thread::Thread;
 
 struct CGData;
 
@@ -91,8 +94,8 @@ class SolveMatrix : public Module {
 		       const Array1<double>& targetlist,
 		       int& last_errupdate);
 public:
-    void parallel_conjugate_gradient(CGData*, int proc);
-    void parallel_bi_conjugate_gradient(CGData*, int proc);
+    void parallel_conjugate_gradient(int proc);
+    void parallel_bi_conjugate_gradient(int proc);
     SolveMatrix(const clString& id);
     virtual ~SolveMatrix();
     virtual void execute();
@@ -113,6 +116,7 @@ public:
     TCLvarint emit_partial;
     TCLstring status;
   TCLint tcl_np;
+    CGData* data;
 };
 
 Module* make_SolveMatrix(const clString& id) {
@@ -121,7 +125,8 @@ Module* make_SolveMatrix(const clString& id) {
 
 
 SolveMatrix::SolveMatrix(const clString& id)
-: Module("SolveMatrix", id, Filter), target_error("target_error", id, this),
+: Module("SolveMatrix", id, Filter),
+    target_error("target_error", id, this),
   flops("flops", id, this), floprate("floprate", id, this),
   memrefs("memrefs", id, this), memrate("memrate", id, this),
   orig_error("orig_error", id, this), current_error("current_error", id, this),
@@ -864,11 +869,6 @@ struct PStats {
     int pad[28];
 };
 
-struct Result {
-    double r;
-    double pad[15];
-};
-
 struct CGData {
   SolveMatrix* module;
   WallClockTimer* timer;
@@ -888,30 +888,18 @@ struct CGData {
   Matrix *trans;
   //
   double max_error;
-  Barrier barrier;
+  SimpleReducer reducer;
   int np;
-  Result* res1;
-  Result* res2;
-  Result* res3;
   PStats* stats;
   double err;
   double bnorm;
+    CGData();
 };
 
-
-void do_parallel_conjugate_gradient(void* d, int processor)
+CGData::CGData()
+    : reducer("SolveMatrix reduction barrier")
 {
-    CGData* data=(CGData*)d;
-    data->module->parallel_conjugate_gradient(data, processor);
 }
-
-void do_parallel_bi_conjugate_gradient(void* d, int processor)
-{
-  CGData* data=(CGData*)d;
-  data->module->parallel_bi_conjugate_gradient(data, processor);
-}
-
-
 
 void SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
 					 ColumnMatrix& lhs, ColumnMatrix& rhs)
@@ -922,7 +910,7 @@ void SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
   int np = tcl_np.get();
   //     int np=Task::nprocessors();
   cerr << "np=" << np << endl;
-  CGData* data=new CGData;
+  data=new CGData;
   data->module=this;
   data->np=np;
   data->rhs=&rhs;
@@ -930,14 +918,16 @@ void SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
   data->mat=matrix;
   data->timer=new WallClockTimer;
   data->stats=new PStats[data->np];
-  Task::multiprocess(data->np, do_parallel_conjugate_gradient, data);
+  Thread::parallel(Parallel<SolveMatrix>(this, &SolveMatrix::parallel_conjugate_gradient),
+		   data->np, true);
   delete data->timer;
   delete data->stats;
+  delete data;
   timer.stop();
   cerr << "cg done: " << timer.time() << " seconds\n";
 }
 
-void SolveMatrix::parallel_conjugate_gradient(CGData* data, int processor)
+void SolveMatrix::parallel_conjugate_gradient(int processor)
 {
   Matrix* matrix=data->mat;
   PStats* stats=&data->stats[processor];
@@ -1009,9 +999,6 @@ void SolveMatrix::parallel_conjugate_gradient(CGData* data, int processor)
     if(data->toomany == 0)
       data->toomany=2*size;
     data->max_error=target_error.get();
-    data->res1=new Result[data->np];
-    data->res2=new Result[data->np];
-    data->res3=new Result[data->np];
     
     stats->gflop+=stats->flop/1000000000;
     stats->flop=stats->flop%1000000000;
@@ -1035,7 +1022,7 @@ void SolveMatrix::parallel_conjugate_gradient(CGData* data, int processor)
   }
   double log_orig=log(data->err);
   double log_targ=log(data->max_error);
-  data->barrier.wait(data->np);
+  data->reducer.wait(data->np);
   double err=data->err;
   double bkden=0;
   while(data->niter < data->toomany){
@@ -1056,7 +1043,7 @@ void SolveMatrix::parallel_conjugate_gradient(CGData* data, int processor)
       targetidx.add(data->niter);
       targetlist.add(data->max_error);
     }
-    data->barrier.wait(data->np);
+    data->reducer.wait(data->np);
     if(err < data->max_error)
       break;
 
@@ -1069,13 +1056,8 @@ void SolveMatrix::parallel_conjugate_gradient(CGData* data, int processor)
     Mult(Z, R, diag, stats->flop, stats->memref, beg, end);
     
     // Calculate coefficient bk and direction vectors p and pp
-    data->res1[processor].r=Dot(Z, R, stats->flop, stats->memref, beg, end);
-    data->barrier.wait(data->np);
-    
-    double  bknum=0;
-    int ii;
-    for(ii=0;ii<data->np;ii++)
-      bknum+=data->res1[ii].r;
+    double my_bknum=Dot(Z, R, stats->flop, stats->memref, beg, end);
+    double bknum=data->reducer.sum(processor, data->np, my_bknum);
     
     if(data->niter==1){
       Copy(P, Z, stats->flop, stats->memref, beg, end);
@@ -1083,27 +1065,21 @@ void SolveMatrix::parallel_conjugate_gradient(CGData* data, int processor)
       double bk=bknum/bkden;
       ScMult_Add(P, bk, P, Z, stats->flop, stats->memref, beg, end);
     }
-    data->barrier.wait(data->np);
+    data->reducer.wait(data->np);
     // Calculate coefficient ak, new iterate x and new residuals r and rr
     matrix->mult(P, Z, stats->flop, stats->memref, beg, end);
     bkden=bknum;
-    data->res2[processor].r=Dot(Z, P, stats->flop, stats->memref, beg, end);
-    data->barrier.wait(data->np);
+    double my_akden=Dot(Z, P, stats->flop, stats->memref, beg, end);
+    double akden=data->reducer.sum(processor, data->np, my_akden);
     
-    double akden=0;
-    for(ii=0;ii<data->np;ii++)
-      akden+=data->res2[ii].r;
     double ak=bknum/akden;
     ColumnMatrix& lhs=*data->lhs;
     ScMult_Add(lhs, ak, P, lhs, stats->flop, stats->memref, beg, end);
 //     ColumnMatrix& rhs=*data->rhs;
     ScMult_Add(R, -ak, Z, R, stats->flop, stats->memref, beg, end);
     
-    data->res3[processor].r=R.vector_norm(stats->flop, stats->memref, beg, end)/data->bnorm;
-    data->barrier.wait(data->np);
-    err=0;
-    for(ii=0;ii<data->np;ii++)
-      err+=data->res3[ii].r;
+    double my_err=R.vector_norm(stats->flop, stats->memref, beg, end)/data->bnorm;
+    err=data->reducer.sum(processor, data->np, my_err);
 
     int ev=(err<1000000);
 //    cerr << "EVALUATING2 "<<ev<<"\n";
@@ -1179,7 +1155,7 @@ SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
   SparseRowMatrix *trans = scinew SparseRowMatrix;
   //  trans->transpose( *matrix->getSparseRow() );
 
-  CGData* data=new CGData;
+  data=new CGData;
   data->module=this;
   data->np=np;
   data->rhs=&rhs;
@@ -1189,16 +1165,18 @@ SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
   data->stats=new PStats[data->np];
   data->trans = trans;
   
-  Task::multiprocess(data->np, do_parallel_bi_conjugate_gradient, data);
 //   int i,p;
+  Thread::parallel(Parallel<SolveMatrix>(this, &SolveMatrix::parallel_bi_conjugate_gradient),
+		   data->np, true);
   delete data->timer;
   delete data->stats;
+  delete data;
   timer.stop();
   cerr << "bi_cg done: " << timer.time() << " seconds\n";
 }
 
 
-void SolveMatrix::parallel_bi_conjugate_gradient(CGData* data, int processor)
+void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 {
 #ifdef PRINT
   //if ( processor == 0)
@@ -1291,9 +1269,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(CGData* data, int processor)
     if(data->toomany == 0)
       data->toomany=2*size;
     data->max_error=target_error.get();
-    data->res1=new Result[data->np];
-    data->res2=new Result[data->np];
-    data->res3=new Result[data->np];
     
     stats->gflop+=stats->flop/1000000000;
     stats->flop=stats->flop%1000000000;
@@ -1317,7 +1292,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(CGData* data, int processor)
   }
   double log_orig=log(data->err);
   double log_targ=log(data->max_error);
-  data->barrier.wait(data->np);
+  data->reducer.wait(data->np);
   double err=data->err;
   double bkden=0;
 
@@ -1341,7 +1316,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(CGData* data, int processor)
       targetidx.add(data->niter);
       targetlist.add(data->max_error);
     }
-    data->barrier.wait(data->np);
+    data->reducer.wait(data->np);
 
     if(err < data->max_error)
       break;
@@ -1359,14 +1334,8 @@ void SolveMatrix::parallel_bi_conjugate_gradient(CGData* data, int processor)
     
     // Calculate coefficient bk and direction vectors p and pp
     // BiCG - change R->R1
-    data->res1[processor].r=Dot(Z, R1, stats->flop, stats->memref, beg, end);
-
-    data->barrier.wait(data->np);
-
-    double  bknum=0;
-    int ii;
-    for(ii=0;ii<data->np;ii++)
-      bknum+=data->res1[ii].r;
+    double my_bknum=Dot(Z, R1, stats->flop, stats->memref, beg, end);
+    double bknum=data->reducer.sum(processor, data->np, my_bknum);
     
     // BiCG
     if ( bknum == 0 ) {
@@ -1391,7 +1360,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(CGData* data, int processor)
       //
     }
 
-    data->barrier.wait(data->np);
+    data->reducer.wait(data->np);
 
     // Calculate coefficient ak, new iterate x and new residuals r and rr
     matrix->mult(P, Z, stats->flop, stats->memref, beg, end);
@@ -1402,14 +1371,10 @@ void SolveMatrix::parallel_bi_conjugate_gradient(CGData* data, int processor)
     data->trans->mult(P1, Z1, stats->flop, stats->memref, beg, end);
 
     // BiCG = change P -> P1
-    data->res2[processor].r=Dot(Z, P1, stats->flop, stats->memref, beg, end);
+    double my_akden=Dot(Z, P1, stats->flop, stats->memref, beg, end);
     //
+    double akden=data->reducer.sum(processor, data->np, my_akden);
 
-    data->barrier.wait(data->np);
-
-    double akden=0;
-    for(ii=0;ii<data->np;ii++)
-      akden+=data->res2[ii].r;
     double ak=bknum/akden;
     ColumnMatrix& lhs=*data->lhs;
     ScMult_Add(lhs, ak, P, lhs, stats->flop, stats->memref, beg, end);
@@ -1419,13 +1384,8 @@ void SolveMatrix::parallel_bi_conjugate_gradient(CGData* data, int processor)
     ScMult_Add(R1, -ak, Z1, R1, stats->flop, stats->memref, beg, end);
     //
     
-    data->res3[processor].r=R.vector_norm(stats->flop, stats->memref, beg, end)/data->bnorm;
-    
-    data->barrier.wait(data->np);
-
-    err=0;
-    for(ii=0;ii<data->np;ii++)
-      err+=data->res3[ii].r;
+    double my_err=R.vector_norm(stats->flop, stats->memref, beg, end)/data->bnorm;
+    err=data->reducer.sum(processor, data->np, my_err);
 
     int ev=(err<1000000);
 //    cerr << "EVALUATING2 "<<ev<<"\n";
@@ -1495,6 +1455,11 @@ void SolveMatrix::parallel_bi_conjugate_gradient(CGData* data, int processor)
 
 //
 // $Log$
+// Revision 1.7  1999/08/29 00:46:40  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.6  1999/08/25 03:47:51  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

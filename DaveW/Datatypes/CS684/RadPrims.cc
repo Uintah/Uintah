@@ -488,7 +488,8 @@ RadMesh::RadMesh(RTObjectHandle& rto, DRaytracer* rt, int dl) : dl(dl) {
     RTTris *rtt=rto->getTris();
     RTRect *rtr=rto->getRect();
     if (rtt) {
-	ts=*(rtt->surf->getTriSurface());
+	//	ts=(*rtt->surf->getTriSurface());
+	ASSERTFAIL("You need to implement operator= for TriSurface and Surface before this will work");
 // HACK -- need to fix this at some points...
 	nrml=Vector(1,0,0);
     } else if (rtr) {
@@ -548,6 +549,11 @@ PersistentTypeID RadMesh::type_id("RadMesh", "Datatype", make_RadMesh);
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.3  1999/08/29 00:46:35  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.2  1999/08/25 03:47:33  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

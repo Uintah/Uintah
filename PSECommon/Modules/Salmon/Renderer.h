@@ -27,9 +27,8 @@ namespace SCICore {
   namespace TclInterface {
     class TCLArgs;
   }
-  namespace Multitask {
-    template<class T> class AsyncReply;
-    class Semaphore;
+  namespace Thread {
+      template<class T> class FutureValue;
   }
 }
 
@@ -51,7 +50,7 @@ using SCICore::GeomSpace::GeomPick;
 using SCICore::GeomSpace::Color;
 using SCICore::GeomSpace::View;
 using SCICore::TclInterface::TCLArgs;
-using SCICore::Multitask::AsyncReply;
+using SCICore::Thread::FutureValue;
 
 class Roe;
 class Salmon;
@@ -84,7 +83,7 @@ public:
     int compute_depth(Roe* roe, const View& view, double& near, double& far);
 
     int xres, yres;
-    virtual void getData(int datamask, AsyncReply<GeometryData*>* result);
+    virtual void getData(int datamask, FutureValue<GeometryData*>* result);
 };
 
 class RegisterRenderer {
@@ -102,6 +101,11 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/29 00:46:42  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.3  1999/08/25 03:47:57  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

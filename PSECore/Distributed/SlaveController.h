@@ -1,4 +1,5 @@
 
+#error WARNING - this ha not been converted to the new thread library
 /*
  *  SlaveController.h: Daemon - Central Slave interface to the Master's
  *   scheduler.
@@ -95,6 +96,11 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/29 00:46:51  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.3  1999/08/27 00:06:47  moulding
 // changed SCICORESHARE to PSECORESHARE
 //

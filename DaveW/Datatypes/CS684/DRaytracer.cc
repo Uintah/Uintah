@@ -16,6 +16,7 @@
 #include <DaveW/Datatypes/CS684/xyz.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MinMax.h>
+#include <SCICore/Thread/Thread.h>
 
 namespace DaveW {
 namespace Datatypes {
@@ -24,7 +25,7 @@ using SCICore::Math::Min;
 using SCICore::Math::Max;
 
 int global_numbounces;
-SCICore::Multitask::Mutex global_bounces_mutex;
+SCICore::Thread::Mutex global_bounces_mutex("global_bounces_mutex");
 
 static Persistent* make_DRaytracer()
 {
@@ -361,6 +362,11 @@ void DRaytracer::io(Piostream& stream) {
 
 //
 // $Log$
+// Revision 1.3  1999/08/29 00:46:34  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.2  1999/08/24 06:22:54  dmw
 // Added in everything for the DaveW branch
 //

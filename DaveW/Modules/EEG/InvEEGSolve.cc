@@ -60,10 +60,11 @@
 #include <SCICore/Datatypes/SparseRowMatrix.h>
 #include <SCICore/Datatypes/SurfTree.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Multitask/ITC.h>
-#include <SCICore/Multitask/Task.h>
 #include <SCICore/Persistent/Pstreams.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Mutex.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 #include <SCICore/Util/NotFinished.h>
 
 #include <iostream.h>
@@ -129,7 +130,7 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 
 using namespace SCICore::TclInterface;
-using namespace SCICore::Multitask;
+using namespace SCICore::Thread;
 
 void linbcg(unsigned long n, double b[], double x[], int itol, double tol,
 	    int itmax, int *iter, double *err, double **a);
@@ -179,12 +180,6 @@ public:
     void jacobi_sci(Matrix*,ColumnMatrix& , ColumnMatrix&);
 };
 
-static void do_parallel(void* obj, int proc)
-{
-    InvEEGSolve* module=(InvEEGSolve*)obj;
-    module->parallel(proc);
-}
-
 Module* make_InvEEGSolve(const clString& id)
 {
     return new InvEEGSolve(id);
@@ -193,7 +188,8 @@ Module* make_InvEEGSolve(const clString& id)
 InvEEGSolve::InvEEGSolve(const clString& id)
 : Module("InvEEGSolve", id, Filter), status("status", id, this),
   maxiter("maxiter", id, this), target_error("target_error", id, this),
-  iteration("iteration", id, this), current_error("current_error", id, this)
+  iteration("iteration", id, this), current_error("current_error", id, this),
+  mutex("InvEEGSolve mutex")
 {
     imatrix=new MatrixIPort(this, "MatrixIn", MatrixIPort::Atomic);
     add_iport(imatrix);
@@ -331,11 +327,12 @@ void InvEEGSolve::buildAc(double **Ac, int ns, int nc,
 
     AvcTmp = makeMatrix(nv, nc);
 
-    np=Task::nprocessors();
+    np=Thread::numProcessors();
     if (np>4) np/=2;	// being nice - just using half the processors. :)
     cerr << "np="<<np<<"\n";
     cerr << "Starting back substitution ("<<nc<<")...("<<timer.time()<<")... ";
-    Task::multiprocess(np, do_parallel, this);
+    Thread::parallel(Parallel<InvEEGSolve>(this, &InvEEGSolve::parallel),
+		     np, true);
     cerr << "Done! (timer="<<timer.time()<<")\n";
 
     free(fwdMap);
@@ -957,6 +954,11 @@ void InvEEGSolve::execute() {
 
 //
 // $Log$
+// Revision 1.3  1999/08/29 00:46:37  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.2  1999/08/25 03:47:38  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

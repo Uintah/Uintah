@@ -57,7 +57,8 @@ hook up user interface buttons
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MinMax.h>
-#include <SCICore/Multitask/Task.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 #include <PSECore/Widgets/GaugeWidget.h>
 #include <PSECore/Widgets/PointWidget.h>
 #include <PSECore/Widgets/RingWidget.h>
@@ -77,9 +78,8 @@ using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Containers;
 using namespace SCICore::Math;
-using namespace SCICore::Multitask;
 using namespace SCICore::Geometry;
-
+using namespace SCICore::Thread;
 
 class Streamline;
 
@@ -324,7 +324,8 @@ static clString widget_name("Streamline Widget");
 static clString module_name("Streamline");
 
 Streamline::Streamline(const clString& id)
-: Module(module_name, id, Filter), first_execute(1),line_batch(0)
+: Module(module_name, id, Filter), first_execute(1),line_batch(0),
+    grouplock("Streamline group lock"), widget_lock("Streamline widget lock")
 {
     // Create the input ports
     infield=scinew VectorFieldIPort(this, "Vector Field",
@@ -773,21 +774,15 @@ void Streamline::parallel_streamline(int proc)
   }
 }
 
-static void do_parallel_streamline(void* obj, int proc)
-{
-  Streamline* module=(Streamline*)obj;
-  module->parallel_streamline(proc);
-}
-
 void Streamline::do_streamline(SLSourceInfo* si)
 {
     tracers.remove_all();
     make_tracers(si->source, tracers, field, alg_enum);
     lines.resize(tracers.size());
-    np=Min(tracers.size(), Task::nprocessors());
-    Task::multiprocess(np, do_parallel_streamline, this);
+    np=Min(tracers.size(), Thread::numProcessors());
+    Thread::parallel(Parallel<Streamline>(this, &Streamline::parallel_streamline),
+		     np, true);
 }
-
 
 void Streamline::parallel_streamlline(int proc)
 {
@@ -910,12 +905,6 @@ void Streamline::parallel_streamlline(int proc)
   }
 }
 
-static void do_parallel_streamlline(void* obj, int proc)
-{
-  Streamline* module=(Streamline*)obj;
-  module->parallel_streamlline(proc);
-}
-
 void Streamline::do_streamlline(SLSourceInfo* si, int doseed)
 {
   tracers.remove_all();
@@ -938,8 +927,9 @@ void Streamline::do_streamlline(SLSourceInfo* si, int doseed)
     llines[i].ts.resize(0);
     llines[i].cs.resize(0); // clear everything out...
   }
-  np=Min(tracers.size(), Task::nprocessors());
-  Task::multiprocess(np, do_parallel_streamlline, this);
+  np=Min(tracers.size(), Thread::numProcessors());
+  Thread::parallel(Parallel<Streamline>(this, &Streamline::parallel_streamlline),
+		   np, true);
 }
 
 void Streamline::parallel_streamtube(int proc)
@@ -994,21 +984,15 @@ void Streamline::parallel_streamtube(int proc)
     }
 }
 
-static void do_parallel_streamtube(void* obj, int proc)
-{
-  Streamline* module=(Streamline*)obj;
-  module->parallel_streamtube(proc);
-}
-
-
 void Streamline::do_streamtube(SLSourceInfo* si)
 {
     SLSource* source=si->source;
     tracers.remove_all();
     make_tracers(source, tracers, field, alg_enum);
     tubes.resize(tracers.size());
-    np=Min(tracers.size(), Task::nprocessors());
-    Task::multiprocess(np, do_parallel_streamtube, this);
+    np=Min(tracers.size(), Thread::numProcessors());
+    Thread::parallel(Parallel<Streamline>(this, &Streamline::parallel_streamtube),
+		     np, true);
 }
 
 void Streamline::do_streamribbon(SLSourceInfo* si,
@@ -2055,6 +2039,11 @@ void SLSourceInfo::pick_source(const clString& sname,
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:48  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/25 03:48:10  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

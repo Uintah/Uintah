@@ -174,8 +174,6 @@ void SimpleOPort<T>::reset()
 template<class T>
 void SimpleOPort<T>::finish()
 {
-    using SCICore::PersistentSpace::Pio;
-
     // get timestamp here to measure communication time, print to screen
     timer1.stop();
 #ifdef DEBUG
@@ -213,7 +211,7 @@ void SimpleOPort<T>::finish()
 template<class T>
 void SimpleOPort<T>::send(const T& data)
 {
-    using SCICore::PersistentSpace::Pio;
+    using SCICore::Containers::Pio;
 
 #ifdef DEBUG
     cerr << "Entering SimpleOPort<T>::send (data)\n";
@@ -284,7 +282,7 @@ void SimpleOPort<T>::send_intermediate(const T& data)
 template<class T>
 int SimpleIPort<T>::get(T& data)
 {
-    using SCICore::PersistentSpace::Pio;
+    using SCICore::Containers::Pio;
 
 #ifdef DEBUG
     cerr << "Entering SimpleIPort<T>::get (data)\n";
@@ -449,6 +447,11 @@ SimplePortComm<T>::SimplePortComm(const T& data)
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:50  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/28 17:54:32  sparker
 // Integrated new Thread library
 //

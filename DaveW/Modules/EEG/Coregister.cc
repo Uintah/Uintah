@@ -148,7 +148,8 @@ Module* make_Coregister(const clString& id)
 static clString module_name("Coregister");
 
 Coregister::Coregister(const clString& id)
-: Module("Coregister", id, Filter), reg_error("reg_error", id, this),
+: Module("Coregister", id, Filter), widget_lock("Coregister widget lock"),
+    reg_error("reg_error", id, this),
   rot_r_x("rot_r_x",id,this),rot_r_y("rot_r_y",id,this),
   rot_r_z("rot_r_z",id,this),rot_d_x("rot_d_x",id,this),
   rot_d_y("rot_d_y",id,this),rot_d_z("rot_d_z",id,this),
@@ -833,12 +834,12 @@ void Coregister::execute()
     }
 
     // our defaults values will just be the old values
-    widget_lock.read_lock();
+    widget_lock.readLock();
     Point p(widget->ReferencePoint());	
     Vector v_r(widget->GetRightAxis());
     Vector v_d(widget->GetDownAxis());
     Vector v_i(widget->GetInAxis());
-    widget_lock.read_unlock();
+    widget_lock.readUnlock();
 
     // if the pts are new, reset widget
     if (iPtsHdl.get_rep() != old_pts.get_rep() || recenter) {
@@ -914,19 +915,15 @@ void Coregister::makeBaseTransSurf(SurfaceHandle s) {
     }
     if (ps) {
 	PointsSurface* nps=new PointsSurface(*ps);
-	*nps=*ps;
 	osh=nps;
     } else if (ts) {
-	TriSurface* nts=new TriSurface;
-	*nts=*ts;
+	TriSurface* nts=new TriSurface(*ts);
 	osh=nts;
     } else if (st) {
-	SurfTree* nst=new SurfTree;
-	*nst=*st;
+	SurfTree* nst=new SurfTree(*st);
 	osh=nst;
     } else if (ss) {
-	ScalarTriSurface* nss=new ScalarTriSurface;
-	*nss=*ss;
+	ScalarTriSurface* nss=new ScalarTriSurface(*ss);
 	osh=nss;
     }
 }
@@ -940,7 +937,7 @@ void Coregister::setTransSurfPts(void) {
 	cerr << "Coregister: unknown surface type.\n";
 	return;
     }
-    osh->monitor.write_lock();
+    osh->monitor.writeLock();
     if (ps) {
 	ps->pos=trans_pts;
     } else if (ts) {
@@ -951,7 +948,7 @@ void Coregister::setTransSurfPts(void) {
     } else if (ss) {
 	ss->points=trans_pts;
     }
-    osh->monitor.write_unlock();
+    osh->monitor.writeUnlock();
 }
 
 double Coregister::computeError(int perc) {
@@ -1010,7 +1007,7 @@ void Coregister::auto_register() {
     int done=0;
     int currIter=1;
     curr_iter.set("1");
-    widget_lock.read_lock();
+    widget_lock.readLock();
     Point p(widget->ReferencePoint());	
     Vector v_r(widget->GetRightAxis());
 //    cerr << "Right axis="<<v_r<<"\n";
@@ -1023,7 +1020,7 @@ void Coregister::auto_register() {
 	v_d=v_d/1;
 	v_i=v_i/1;
     }
-    widget_lock.read_unlock();
+    widget_lock.readUnlock();
 
     transform_pts(w_c, p, v_r, v_d, v_i, perc);
     double currError=computeError(perc);
@@ -1334,6 +1331,11 @@ void Coregister::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.3  1999/08/29 00:46:36  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.2  1999/08/25 03:47:38  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

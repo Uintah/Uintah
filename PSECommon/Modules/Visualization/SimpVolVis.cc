@@ -19,6 +19,7 @@
 
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/CrowdMonitor.h>
 
 #include <PSECommon/Modules/Salmon/Tex.h>
 // #include <PSECore/Modules/Salmon/NormQuant.h>
@@ -83,8 +84,8 @@ static clString module_name("SimpVolVis");
 static clString widget_name("VolVisLocatorWidget");
 
 SimpVolVis::SimpVolVis(const clString& id)
-  : Module("SimpVolVis", id, Filter),rvol(0),
-    mode(1),num_slices(64),triangles(0),
+  : Module("SimpVolVis", id, Filter), widget_lock("SimpVolVis widget lock"),
+    rvol(0), mode(1),num_slices(64),triangles(0),
     avail_tex("avail_tex", id, this)
 {
   // Create the input ports
@@ -411,6 +412,11 @@ void SimpVolVis::widget_moved(int /*last*/)
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:48  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/25 03:48:10  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

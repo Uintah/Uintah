@@ -26,8 +26,9 @@
 #include <SCICore/Datatypes/ScalarFieldUG.h>
 #include <PSECore/Datatypes/ScalarFieldPort.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Multitask/Task.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 #include <stdio.h>
 
 // just so I can see the proccess id...
@@ -45,7 +46,7 @@ using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Containers;
-using namespace SCICore::Multitask;
+using namespace SCICore::Thread;
 
 class VectorSeg : public Module {
     Array1<ScalarFieldIPort*> ifields;
@@ -230,16 +231,11 @@ void VectorSeg::parallel_vec_seg(int proc) {
     }
 }
 
-static void do_parallel_vec_seg(void* obj, int proc)
-{
-  VectorSeg* module=(VectorSeg*)obj;
-  module->parallel_vec_seg(proc);
-}
-
 void VectorSeg::vec_seg()
 {
-    np=Task::nprocessors();
-    Task::multiprocess(np, do_parallel_vec_seg, this);
+    np=Thread::numProcessors();
+    Thread::parallel(Parallel<VectorSeg>(this, &VectorSeg::parallel_vec_seg),
+		     np, true);
 }
 
 void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &, 
@@ -282,6 +278,11 @@ void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &,
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:48  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/25 03:48:11  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

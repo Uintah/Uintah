@@ -374,7 +374,7 @@ Thread::print_threads()
     for(int i=0;i<numActive;i++){
 	Thread_private* p=active[i];
 	const char* tname=p->thread?p->thread->getThreadName():"???";
-	fprintf(fp, "%ld: %s (", p->threadid, tname);
+	fprintf(fp, " %ld: %s (", p->threadid, tname);
 	if(p->thread){
 	    if(p->thread->isDaemon())
 		fprintf(fp, "daemon, ");
@@ -763,6 +763,11 @@ ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:47:02  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/28 03:46:52  sparker
 // Final updates before integration with PSE
 //

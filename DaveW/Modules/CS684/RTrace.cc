@@ -36,11 +36,11 @@
 #include <SCICore/Geom/GeomSphere.h>
 #include <SCICore/Geom/GeomTriangles.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Multitask/ITC.h>
-#include <SCICore/Multitask/Task.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/TclInterface/TCL.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Util/Timer.h>
 #include <PSECore/Widgets/ViewWidget.h>
@@ -65,6 +65,7 @@ using namespace PSECore::Widgets;
 using namespace SCICore::Containers;
 using namespace SCICore::Datatypes;
 using namespace SCICore::TclInterface;
+using namespace SCICore::Thread;
 
 class RTrace : public Module {
     VoidStarIPort *iRT;
@@ -141,14 +142,9 @@ Module* make_RTrace(const clString& id)
 
 static clString module_name("RTrace");
 
-static void do_parallel_raytrace(void* obj, int proc)
-{
-  RTrace* module=(RTrace*)obj;
-  module->parallel_raytrace(proc);
-}
-
 RTrace::RTrace(const clString& id)
-: Module("RTrace", id, Source), nx("nx", id, this), ny("ny", id, this),
+: Module("RTrace", id, Source), widget_lock("RTrace widget lock"),
+  nx("nx", id, this), ny("ny", id, this),
   ns("ns", id, this), abrt("abrt", id, this), app("app", id, this), 
   camera_id(0), tcl_exec(0), widgetMoved(0),
   specMin("specMin", id, this), specMax("specMax", id, this),
@@ -194,7 +190,7 @@ void RTrace::buildCamera() {
 void RTrace::execute()
 {
     if (!init) {
-	np=Task::nprocessors();
+	np=Thread::numProcessors();
 	cerr << "Found "<<np<<" processors...\n";
 	maxProc.set(np);
 	reset_vars();
@@ -265,7 +261,8 @@ void RTrace::execute()
 	
 	np=numProc.get();
 	cerr << "Using "<<np<<" processors...\n";
-	Task::multiprocess(np, do_parallel_raytrace, this);
+	Thread::parallel(Parallel<RTrace>(this, &RTrace::parallel_raytrace),
+			 np, true);
 	pixels=&(rawImage[0]);
 	if (abrt.get())	abrt.set(0);
 //	for (int i=0; i<NX*NY*3; i++) clampedImage[i]=image[i]=rawImage[i]=0;

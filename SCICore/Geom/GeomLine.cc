@@ -77,8 +77,8 @@ void GeomLine::io(Piostream& stream)
 
     stream.begin_class("GeomLine", GEOMLINE_VERSION);
     GeomObj::io(stream);
-    Pio(stream, p1);
-    Pio(stream, p2);
+    SCICore::Geometry::Pio(stream, p1);
+    SCICore::Geometry::Pio(stream, p2);
     stream.end_class();
 }
 
@@ -131,7 +131,7 @@ void GeomLines::io(Piostream& stream)
 
     stream.begin_class("GeomLines", GEOMLINES_VERSION);
     GeomObj::io(stream);
-    Pio(stream, pts);
+    SCICore::Containers::Pio(stream, pts);
     stream.end_class();
 }
 
@@ -192,7 +192,7 @@ void TexGeomLines::io(Piostream& stream)
 
     stream.begin_class("TexGeomLines", TexGeomLines_VERSION);
     GeomObj::io(stream);
-    Pio(stream, pts);
+    SCICore::Containers::Pio(stream, pts);
     stream.end_class();
 }
 
@@ -392,6 +392,11 @@ void TexGeomLines::SortVecs()
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:55  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/28 17:54:40  sparker
 // Integrated new Thread library
 //

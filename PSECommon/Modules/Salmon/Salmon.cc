@@ -23,7 +23,7 @@
 #include <PSECommon/Modules/Salmon/SalmonGeom.h>
 #include <SCICore/Geom/HeadLight.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Multitask/AsyncReply.h>
+#include <SCICore/Thread/FutureValue.h>
 
 #include <iostream.h>
 
@@ -42,13 +42,14 @@ using SCICore::GeomSpace::HeadLight;
 using SCICore::Containers::to_string;
 using SCICore::Containers::HashTableIter;
 using SCICore::Containers::AVLTreeIter;
+using SCICore::Thread::Mailbox;
 
 Module* make_Salmon(const clString& id) {
   return new Salmon(id);
 }
 
 Salmon::Salmon(const clString& id)
-: Module("Salmon", id, SalmonSpecial), max_portno(0)
+: Module("Salmon", id, SalmonSpecial), max_portno(0), geomlock("Salmon geometry lock")
 {
     // Add a headlight
     lighting.lights.add(scinew HeadLight("Headlight", Color(1,1,1)));
@@ -83,7 +84,7 @@ Salmon::~Salmon()
 void Salmon::do_execute()
 {
     for(;;){
-	if(mailbox.nitems() == 0){
+	if(mailbox.numItems() == 0){
 	    // See if anything needs to be redrawn...
 	    int did_some=1;
 	    while(did_some){
@@ -100,7 +101,7 @@ void Salmon::do_execute()
 
 int Salmon::process_event(int block)
 {
-    int ni=mailbox.nitems();
+    int ni=mailbox.numItems();
     if(!block && ni==0)return 0;
     if(!ni)busy_bit=0;
     MessageBase* msg=mailbox.receive();
@@ -146,7 +147,7 @@ int Salmon::process_event(int block)
 	break;
     case MessageTypes::RoeDumpObjects:
 	{
-	    geomlock.read_lock();
+	    geomlock.readLock();
 	    SalmonMessage* rmsg=(SalmonMessage*)msg;
 	    for(int i=0;i<roe.size();i++){
 		Roe* r=roe[i];
@@ -155,7 +156,7 @@ int Salmon::process_event(int block)
 		    break;
 		}
 	    }
-	    geomlock.read_unlock();
+	    geomlock.readUnlock();
 	}
 	break;
     case MessageTypes::RoeMouse:
@@ -171,9 +172,9 @@ int Salmon::process_event(int block)
 	}
 	break;
     case MessageTypes::GeometryInit:
-	geomlock.write_lock();
+	geomlock.writeLock();
 	initPort(gmsg->reply);
-	geomlock.write_unlock();
+	geomlock.writeUnlock();
 	break;	
     case MessageTypes::GeometryAddObj:
     case MessageTypes::GeometryDelObj:
@@ -182,14 +183,14 @@ int Salmon::process_event(int block)
 	msg=0; // Don't delete it yet...
 	break;
     case MessageTypes::GeometryFlush:
-	geomlock.write_lock();
+	geomlock.writeLock();
 	flushPort(gmsg->portno);
-	geomlock.write_unlock();
+	geomlock.writeUnlock();
 	break;
     case MessageTypes::GeometryFlushViews:
-	geomlock.write_lock();
+	geomlock.writeLock();
 	flushPort(gmsg->portno);
-	geomlock.write_unlock();
+	geomlock.writeUnlock();
 	flushViews();
 	if(gmsg->wait){
 	    // Synchronized redraw - do it now and signal them...
@@ -199,11 +200,11 @@ int Salmon::process_event(int block)
 	}
 	break;
     case MessageTypes::GeometryGetNRoe:
-	gmsg->nreply->reply(roe.size());
+	gmsg->nreply->send(roe.size());
 	break;
     case MessageTypes::GeometryGetData:
 	if(gmsg->which_roe >= roe.size()){
-	    gmsg->datareply->reply(0);
+	    gmsg->datareply->send(0);
 	} else {
 	    cerr << "Calling roe->getData\n";
 	    roe[gmsg->which_roe]->getData(gmsg->datamask, gmsg->datareply);
@@ -485,6 +486,11 @@ void Salmon::emit_vars(ostream& out)
 
 //
 // $Log$
+// Revision 1.7  1999/08/29 00:46:43  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.6  1999/08/25 03:47:58  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

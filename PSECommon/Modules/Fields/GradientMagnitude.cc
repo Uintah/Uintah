@@ -23,8 +23,9 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 #include <SCICore/Math/Expon.h>
-#include <SCICore/Multitask/Task.h>
 
 namespace PSECommon {
 namespace Modules {
@@ -33,7 +34,8 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
-using namespace SCICore::Multitask;
+using SCICore::Thread::Parallel;
+using SCICore::Thread::Thread;
 
 class GradientMagnitude : public Module {
     VectorFieldIPort* infield;
@@ -65,12 +67,6 @@ GradientMagnitude::GradientMagnitude(const clString& id)
 
 GradientMagnitude::~GradientMagnitude()
 {
-}
-
-static void do_parallel(void* obj, int proc)
-{
-    GradientMagnitude* module=(GradientMagnitude*)obj;
-    module->parallel(proc);
 }
 
 void GradientMagnitude::parallel(int proc)
@@ -128,8 +124,9 @@ void GradientMagnitude::execute()
 	sfug->data.resize(vfug->data.size());
 	sf=sfug;
     }
-    np=Task::nprocessors();
-    Task::multiprocess(np, do_parallel, this);
+    np=Thread::numProcessors();
+    Thread::parallel(Parallel<GradientMagnitude>(this, &GradientMagnitude::parallel),
+		     np, true);
     outfield->send(sf);
 }
 
@@ -138,6 +135,11 @@ void GradientMagnitude::execute()
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:39  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/25 03:47:47  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

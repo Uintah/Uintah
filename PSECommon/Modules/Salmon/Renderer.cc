@@ -20,8 +20,8 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 #include <values.h>
+#include <SCICore/Thread/FutureValue.h>
 #include <SCICore/Util/NotFinished.h>
-#include <SCICore/Multitask/AsyncReply.h>
 
 namespace PSECommon {
 namespace Modules {
@@ -152,10 +152,10 @@ void Renderer::setvisual(const clString&, int, int, int)
 {
 }
 
-void Renderer::getData(int, AsyncReply<GeometryData*>* result)
+void Renderer::getData(int, FutureValue<GeometryData*>* result)
 {
     cerr << "Warning Renderer::getData called - only implemented for OpenGL\n";
-    result->reply(0);
+    result->send(0);
 }
 
 } // End namespace Modules
@@ -163,6 +163,11 @@ void Renderer::getData(int, AsyncReply<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.4  1999/08/29 00:46:41  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.3  1999/08/23 20:11:49  sparker
 // GenAxes had no UI
 // Removed extraneous print statements

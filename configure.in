@@ -74,7 +74,6 @@ AC_ARG_ENABLE(threads,
 	[threads="$enableval"],
 	[threads=${threads='unknown'}])
 AC_SUBST(LOCK_IMPL)
-AC_SUBST(TASK_IMPL)
 AC_SUBST(THREAD_IMPL)
 AC_SUBST(TIME_IMPL)
 
@@ -166,7 +165,7 @@ fi
 case $threads in
   pthreads*) THREAD_LIBS="-lpthread"
   ;;
-  irix)     THREAD_LIBS=""
+  irix)     THREAD_LIBS="-lfetchop"
   ;;  
   *)
     echo "Unknown thread implementation: $threads"
@@ -174,7 +173,6 @@ case $threads in
   ;;
 esac
 AC_SUBST(THREAD_LIBS)
-TASK_IMPL="Task_"$threads
 THREAD_IMPL="Thread_"$threads
 
 ##-- Find a C Compiler -------------------------------------------------------
@@ -451,7 +449,6 @@ AC_OUTPUT(Makefile \
                 SCICore/Geometry/Makefile \
                 SCICore/Malloc/Makefile \
                 SCICore/Math/Makefile \
-                SCICore/Multitask/Makefile \
                 SCICore/Persistent/Makefile \
                 SCICore/TclInterface/Makefile \
                 SCICore/TkExtensions/Makefile \

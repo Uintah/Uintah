@@ -27,6 +27,7 @@
 #include <SCICore/TclInterface/TCLvar.h>
 #include <PSECore/Widgets/GaugeWidget.h>
 #include <PSECore/Widgets/PointWidget.h>
+#include <SCICore/Thread/CrowdMonitor.h>
 
 namespace PSECommon {
 namespace Modules {
@@ -53,10 +54,10 @@ using SCICore::GeomSpace::GeomSphere;
 using SCICore::GeomSpace::GeomMaterial;
 using SCICore::GeomSpace::Material;
 using SCICore::GeomSpace::Color;
-using SCICore::Multitask::CrowdMonitor;
 using SCICore::Geometry::Interpolate;
 using SCICore::Math::Abs;
 using SCICore::Containers::to_string;
+using SCICore::Thread::CrowdMonitor;
 
 class GenSurface : public Module {
     TCLstring surfacetype;
@@ -124,7 +125,7 @@ GenSurface::GenSurface(const clString& id)
   point_pos("point_pos", id, this), point_rad("point_rad", id, this),
   cyl_boundary_expr("cyl_boundary_expr", id, this),
   sph_boundary_expr("sph_boundary_expr", id, this),
-  point_val("point_val", id, this)
+  point_val("point_val", id, this), widget_lock("GenSurface widget lock")
 {
     // Create the input port
     ColorMapport=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
@@ -334,6 +335,11 @@ void GenSurface::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:44  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/25 03:47:59  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

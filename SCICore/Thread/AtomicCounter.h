@@ -70,7 +70,9 @@ namespace SCICore {
 
 	    //////////
 	    // Increment the counter and return the new value.
-	    AtomicCounter& operator++();
+	    // This does not return AtomicCounter& like a normal ++
+	    // operator would, because it would destroy atomicity
+	    int operator++();
     
 	    //////////
 	    //	Increment the counter and return the old value
@@ -78,7 +80,9 @@ namespace SCICore {
 
 	    //////////
 	    // Decrement the counter and return the new value
-	    AtomicCounter& operator--();
+	    // This does not return AtomicCounter& like a normal --
+	    // operator would, because it would destroy atomicity
+	    int operator--();
     
 	    //////////
 	    // Decrement the counter and return the old value
@@ -103,6 +107,11 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.7  1999/08/29 00:46:59  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.6  1999/08/28 03:46:46  sparker
 // Final updates before integration with PSE
 //

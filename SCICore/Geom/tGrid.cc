@@ -136,9 +136,9 @@ void TexGeomGrid::io(Piostream& stream)
 
     stream.begin_class("TexGeomGrid", TexGeomGrid_VERSION);
     GeomObj::io(stream);
-    Pio(stream, corner);
-    Pio(stream, u);
-    Pio(stream, v);
+    SCICore::Geometry::Pio(stream, corner);
+    SCICore::Geometry::Pio(stream, u);
+    SCICore::Geometry::Pio(stream, v);
     if(stream.reading())
 	adjust();
     stream.end_class();
@@ -154,6 +154,11 @@ bool TexGeomGrid::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:58  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/28 17:54:45  sparker
 // Integrated new Thread library
 //

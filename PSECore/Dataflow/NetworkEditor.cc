@@ -468,7 +468,6 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	return;
     }
     if(args[1] == "quit"){
-	printf("quit received {%s,%d}\n"__FILE__,__LINE__);
 	Thread::exitAll(0);
     } else if(args[1] == "addmodule"){
 	if(args.count() < 5){
@@ -671,6 +670,11 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:50  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/28 17:54:30  sparker
 // Integrated new Thread library
 //
