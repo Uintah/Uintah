@@ -287,6 +287,40 @@ FieldExtractor::execute()
     //       range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
     
     FieldHandle fHandle_;
+#ifdef TEMPLATE_FUN
+    update_mesh_handle( level, hi, range, box, type->getType(), mesh_handle_);
+    QueryInfo qinfo(&archive, generation, grid, level, var, mat, type,
+                    get_all_levels, time, timestep, dt);
+    // get_all_levels, generation, timestep, dt
+    switch( subtype->getType() ) {
+    case TypeDescription::double_type:
+      fHandle_ = getVariable<double>(qinfo, low, mesh_handle_);
+      break;
+    case TypeDescription::float_type:
+      fHandle_ = getVariable<float>(qinfo, low, mesh_handle_);
+      break;
+    case TypeDescription::int_type:
+      fHandle_ = getVariable<int>(qinfo, low, mesh_handle_);
+      break;
+    case TypeDescription::bool_type:
+      fHandle_ = getVariable<unsigned char>(qinfo, low, mesh_handle_);
+      break;
+    case Uintah::TypeDescription::long_type:
+    case Uintah::TypeDescription::long64_type:
+      fHandle_ = getVariable<long64>(qinfo, low, mesh_handle_);
+      break;
+    case TypeDescription::Vector:
+      fHandle_ = getVariable<Vector>(qinfo, low, mesh_handle_);
+      break;
+    case TypeDescription::Matrix3:
+      fHandle_ = getVariable<Matrix3>(qinfo, low, mesh_handle_);
+      break;
+    case Uintah::TypeDescription::short_int_type:
+    default:
+      error("Subtype " + subtype->getName() + " is not implemented\n");
+      return;
+    }
+#else
     switch( type->getType() ) {
       
     case TypeDescription::NCVariable:
@@ -1116,6 +1150,7 @@ FieldExtractor::execute()
       //      AllocatorSetDefaultTag(old_tag1);
       return;
     }
+#endif // ifdef TEMPLATE_FUN
     new2OldPatchMap_.clear();
     fout->send(fHandle_);
   }
@@ -1289,4 +1324,543 @@ void FieldExtractor::update_mesh_handle( LevelP& level,
     error("in update_mesh_handle:: Not a Uintah type.");
   }
 }
+
+template <class T, class Var>
+void
+FieldExtractor::build_multi_level_field( DataArchive& archive, GridP grid,
+                                         string& var, Var& v, int mat,
+                                         int generation,  double time, 
+                                         int timestep, double dt,
+                                         int loc,
+                                         TypeDescription::Type type,
+                                         TypeDescription::Type subtype,
+                                         MRLatVolField<T>*& mrfield)
+
+{
+  vector<MultiResLevel<T>*> levelfields;
+  for(int i = 0; i < grid->numLevels(); i++){
+    LevelP level = grid->getLevel( i );
+    vector<LockingHandle<LatVolField<T> > > patchfields;
+    int count = 0;
+    
+    // At this point we should have a mimimal patch set in our grid
+    // And we want to make a LatVolField for each patch
+    for(Level::const_patchIterator patch_it = level->patchesBegin();
+        patch_it != level->patchesEnd(); ++patch_it){
+      
+      IntVector hi, low, range;
+      low = (*patch_it)->getLowIndex();
+      hi = (*patch_it)->getHighIndex(); 
+
+      // ***** This seems like a hack *****
+      range = hi - low + IntVector(1,1,1); 
+      // **********************************
+
+      BBox pbox;
+      pbox.extend((*patch_it)->getBox().lower());
+      pbox.extend((*patch_it)->getBox().upper());
+      
+      //       cerr<<"before mesh update: range is "<<range.x()<<"x"<<
+      //      range.y()<<"x"<< range.z()<<",  low index is "<<low<<
+      //      "high index is "<<hi<<" , size is  "<<
+      //      pbox.min()<<", "<<pbox.max()<<"\n";
+      
+      LatVolMeshHandle mh = 0;
+      update_mesh_handle(level, hi, range, pbox, type, mh);
+      LatVolField<T> *fd = 
+        scinew LatVolField<T>( mh, loc );
+      if( subtype == TypeDescription::Vector ) {
+        set_vector_properties( fd, var, generation, timestep, low, dt, type);
+      } else if( subtype == TypeDescription::Matrix3 ){
+        set_tensor_properties( fd, low, type);
+      } else {
+        set_scalar_properties( fd, var, time, low, type);
+      }
+      //       cerr<<"Field "<<count<<", level "<<i<<" ";
+      build_patch_field(archive, (*patch_it), low, var, mat, time, v, fd);
+      patchfields.push_back( fd );
+      count++;
+    }
+    //     cerr<<"Added "<<count<<" fields to level "<<i<<"\n";
+    MultiResLevel<T> *mrlevel = 
+      new MultiResLevel<T>( patchfields, i );
+    levelfields.push_back(mrlevel);
+  }
+  //        MRLatVolField<double>* mrfield =
+  mrfield =  scinew MRLatVolField<T>( levelfields );
+}
+  
+template <class T, class Var>
+void
+FieldExtractor::build_patch_field(DataArchive& archive,
+                                  const Patch* patch,
+                                  IntVector& new_low,
+                                  const string& varname,
+                                  int mat,
+                                  double time,
+                                  Var& /*var*/,
+                                  LatVolField<T>*& sfd)
+{
+  // Initialize the data
+  sfd->fdata().initialize(T(0));
+
+  int max_workers = Max(Thread::numProcessors()/2, 2);
+  Semaphore* thread_sema = scinew Semaphore( "extractor semaphore",
+                                             max_workers);
+  int count = 0;
+  map<const Patch*, list<const Patch*> >::iterator oldPatch_it =
+    new2OldPatchMap_.find(patch);
+  if( oldPatch_it != new2OldPatchMap_.end() ){
+    list<const Patch*> oldPatches = (*oldPatch_it).second;
+    for(list<const Patch*>::iterator patch_it = oldPatches.begin();
+        patch_it != oldPatches.end(); ++patch_it){
+      IntVector old_low, old_hi;
+      Var v;
+      int vartype;
+      archive.query( v, varname, mat, *patch_it, time);
+      if( sfd->basis_order() == 0){
+        old_low = (*patch_it)->getCellLowIndex();
+        old_hi = (*patch_it)->getCellHighIndex();
+      } else if(sfd->get_property("vartype", vartype)){
+        old_low = (*patch_it)->getNodeLowIndex();
+        switch (vartype) {
+        case TypeDescription::SFCXVariable:
+          old_hi = (*patch_it)->getSFCXHighIndex();
+          break;
+        case TypeDescription::SFCYVariable:
+          old_hi = (*patch_it)->getSFCYHighIndex();
+          break;
+        case TypeDescription::SFCZVariable:
+          old_hi = (*patch_it)->getSFCZHighIndex();
+          break;
+        default:
+          old_hi = (*patch_it)->getNodeHighIndex();     
+        } 
+      } 
+
+      IntVector range = old_hi - old_low;
+
+      int z_min = old_low.z();
+      int z_max = old_low.z() + old_hi.z() - old_low.z();
+      int z_step, z, N = 0;
+      if ((z_max - z_min) >= max_workers){
+        // in case we have large patches we'll divide up the work 
+        // for each patch, if the patches are small we'll divide the
+        // work up by patch.
+        unsigned long cs = 25000000;  
+        unsigned long S = range.x() * range.y() * range.z() * sizeof(T);
+        N = Min(Max(S/cs, 1), (max_workers-1));
+      }
+      N = Max(N,2);
+      z_step = (z_max - z_min)/(N - 1);
+      for(z = z_min ; z < z_max; z += z_step) {
+      
+        IntVector min_i(old_low.x(), old_low.y(), z);
+        IntVector max_i(old_hi.x(), old_hi.y(), Min(z+z_step, z_max));
+        thread_sema->down();
+        PatchToFieldThread<Var, T>* ptft = 
+          scinew PatchToFieldThread<Var, T>(sfd, v, new_low, min_i, max_i,
+                                            // old_low, old_hi,
+                                            thread_sema);
+#if 1
+        // Non threaded version
+        ptft->run();
+        delete ptft;
+#else
+        // Threaded version
+        Thread *thrd = scinew Thread( ptft, "patch_to_field_worker");
+        thrd->detach();
+#endif
+      }
+      count++;
+    }
+  } else {
+    error("No mapping from old patches to new patches.");
+  }
+  //   cerr<<"used "<<count<<" patches to fill field\n";
+  thread_sema->down(max_workers);
+  if( thread_sema ) delete thread_sema;
+}
+
+template <class T, class Var>
+void FieldExtractor::build_field(DataArchive& archive,
+                                 const LevelP& level,
+                                 IntVector& lo,
+                                 const string& varname,
+                                 int mat,
+                                 double time,
+                                 Var& /*var_in*/,
+                                 LatVolField<T>*& sfd)
+{
+  // Initialize the data
+  sfd->fdata().initialize(T(0));
+
+  int max_workers = Max(Thread::numProcessors()/2, 2);
+  Semaphore* thread_sema = scinew Semaphore( "extractor semaphore",
+                                             max_workers);
+  //  WallClockTimer my_timer;
+  //  my_timer.start();
+  
+  //   double size = level->numPatches();
+  //   int count = 0;
+  
+  for( Level::const_patchIterator patch_it = level->patchesBegin();
+       patch_it != level->patchesEnd(); ++patch_it){
+    IntVector low, hi;
+    Var var;
+    int vartype;
+    const TypeDescription* td = var.virtualGetTypeDescription();
+    cerr << "build_field::varname = "<<varname<<", type = "<<td->getName()<<"\n";
+    archive.query( var, varname, mat, *patch_it, time);
+    if( sfd->basis_order() == 0){
+      low = (*patch_it)->getCellLowIndex();
+      hi = (*patch_it)->getCellHighIndex();
+      //       low = (*patch_it)->getNodeLowIndex();
+      //       hi = (*patch_it)->getNodeHighIndex() - IntVector(1,1,1);
+
+      //       cerr<<"var.getLowIndex() = "<<var.getLowIndex()<<"\n";
+      //       cerr<<"var.getHighIndex() = "<<var.getHighIndex()<<"\n";
+      //       cerr<<"getCellLowIndex() = "<< (*patch_it)->getCellLowIndex()
+      //        <<"\n";
+      //       cerr<<"getCellHighIndex() = "<< (*patch_it)->getCellHighIndex()
+      //        <<"\n";
+      //       cerr<<"getInteriorCellLowIndex() = "<< (*patch_it)->getInteriorCellLowIndex()
+      //        <<"\n";
+      //       cerr<<"getInteriorCellHighIndex() = "<< (*patch_it)->getInteriorCellHighIndex()
+      //        <<"\n";
+      //       cerr<<"getNodeLowIndex() = "<< (*patch_it)->getNodeLowIndex()
+      //        <<"\n";
+      //       cerr<<"getNodeHighIndex() = "<< (*patch_it)->getNodeHighIndex()
+      //        <<"\n";
+      //       cerr<<"getInteriorNodeLowIndex() = "<< (*patch_it)->getInteriorNodeLowIndex()
+      //        <<"\n";
+      //       cerr<<"getInteriorNodeHighIndex() = "<< (*patch_it)->getInteriorNodeHighIndex()
+      //        <<"\n\n";
+    } else if(sfd->get_property("vartype", vartype)){
+      low = (*patch_it)->getNodeLowIndex();
+      switch (vartype) {
+      case TypeDescription::SFCXVariable:
+        hi = (*patch_it)->getSFCXHighIndex();
+        break;
+      case TypeDescription::SFCYVariable:
+        hi = (*patch_it)->getSFCYHighIndex();
+        break;
+      case TypeDescription::SFCZVariable:
+        hi = (*patch_it)->getSFCZHighIndex();
+        break;
+      default:
+        hi = (*patch_it)->getNodeHighIndex();   
+      } 
+    } 
+
+    IntVector range = hi - low;
+
+    int z_min = low.z();
+    int z_max = low.z() + hi.z() - low.z();
+    int z_step, z, N = 0;
+    if ((z_max - z_min) >= max_workers){
+      // in case we have large patches we'll divide up the work 
+      // for each patch, if the patches are small we'll divide the
+      // work up by patch.
+      unsigned long cs = 25000000;  
+      unsigned long S = range.x() * range.y() * range.z() * sizeof(T);
+      N = Min(Max(S/cs, 1), (max_workers-1));
+    }
+    N = Max(N,2);
+    z_step = (z_max - z_min)/(N - 1);
+    for(z = z_min ; z < z_max; z += z_step) {
+      
+      IntVector min_i(low.x(), low.y(), z);
+      IntVector max_i(hi.x(), hi.y(), Min(z+z_step, z_max));
+      //      update_progress((count++/double(N))/size, my_timer);
+      
+      thread_sema->down();
+      PatchToFieldThread<Var, T> *ptft = 
+        scinew PatchToFieldThread<Var, T>(sfd, var, lo, min_i, max_i,
+                                          thread_sema); 
+      //        cerr<<"low = "<<low<<", hi = "<<hi<<", min_i = "<<min_i 
+      //        <<", max_i = "<<max_i<<endl; 
+
+#if 1
+      // Non threaded version
+      ptft->run();
+      delete ptft;
+#else
+      // Threaded version
+      Thread *thrd = scinew Thread( ptft, "patch_to_field_worker");
+      thrd->detach();
+#endif
+    }
+  }
+  thread_sema->down(max_workers);
+  if( thread_sema ) delete thread_sema;
+  //  timer.add( my_timer.time());
+  //  my_timer.stop();
+}
+
+template <class T>
+void 
+FieldExtractor::set_scalar_properties(LatVolField<T>*& sfd,
+                                      string& varname,
+                                      double time, IntVector& low,
+                                      TypeDescription::Type type)
+{  
+  sfd->set_property( "variable", string(varname), true );
+  sfd->set_property( "time",     double( time ), true);
+  sfd->set_property( "offset",   IntVector(low), true);
+  sfd->set_property( "vartype",  int(type),true);
+}
+
+template <class T>
+void
+FieldExtractor::set_vector_properties(LatVolField<T>*& vfd, string& var,
+                                      int generation, int timestep,
+                                      IntVector& low, double dt,
+                                      TypeDescription::Type type)
+{
+  vfd->set_property( "varname",    string(var), true);
+  vfd->set_property( "generation", generation, true);
+  vfd->set_property( "timestep",   timestep, true);
+  vfd->set_property( "offset",     IntVector(low), true);
+  vfd->set_property( "delta_t",    dt, true);
+  vfd->set_property( "vartype",    int(type),true);
+}
+
+template <class T>
+void 
+FieldExtractor::set_tensor_properties(LatVolField<T>*& tfd,  IntVector& low,
+                                      TypeDescription::Type /*type*/)
+{
+  tfd->set_property( "vartype", int(TypeDescription::CCVariable),true);
+  tfd->set_property( "offset",  IntVector(low), true);
+}
+
+#ifdef TEMPLATE_FUN
+
+void
+FieldExtractor::set_field_properties(Field* field, QueryInfo& qinfo,
+                                     IntVector& offset) {
+  field->set_property( "varname",    string(qinfo.varname), true);
+  field->set_property( "generation", qinfo.generation, true);
+  field->set_property( "timestep",   qinfo.timestep, true);
+  field->set_property( "offset",     IntVector(offset), true);
+  field->set_property( "delta_t",    qinfo.dt, true);
+  field->set_property( "vartype",    int(qinfo.type->getType()),true);
+}
+
+template <class Var, class T>
+FieldHandle
+FieldExtractor::build_multi_level_field( QueryInfo& qinfo, int loc)
+{
+  // Build the minimal patch set.  build_minimal_patch_grid should
+  // eventually return the map rather than have it as a member
+  // variable to map with all the other parameters that aren't being
+  // used by the class.
+  GridP grid_minimal = build_minimal_patch_grid( qinfo.grid );
+  
+  vector<MultiResLevel<T>*> levelfields;
+  for(int i = 0; i < grid_minimal->numLevels(); i++){
+    LevelP level = grid_minimal->getLevel( i );
+    vector<LockingHandle<LatVolField<T> > > patchfields;
+    
+    // At this point we should have a mimimal patch set in our
+    // grid_minimal, and we want to make a LatVolField for each patch.
+    for(Level::const_patchIterator patch_it = level->patchesBegin();
+        patch_it != level->patchesEnd(); ++patch_it){
+      
+      IntVector patch_low, patch_high, range;
+      patch_low = (*patch_it)->getLowIndex();
+      patch_high = (*patch_it)->getHighIndex(); 
+
+      // ***** This seems like a hack *****
+      range = patch_high - patch_low + IntVector(1,1,1); 
+      // **********************************
+
+      BBox pbox;
+      pbox.extend((*patch_it)->getBox().lower());
+      pbox.extend((*patch_it)->getBox().upper());
+      
+      //       cerr<<"before mesh update: range is "<<range.x()<<"x"<<
+      //      range.y()<<"x"<< range.z()<<",  low index is "<<low<<
+      //      "high index is "<<hi<<" , size is  "<<
+      //      pbox.min()<<", "<<pbox.max()<<"\n";
+      
+      LatVolMeshHandle mh = 0;
+      update_mesh_handle(qinfo.level, patch_high, range, pbox,
+                         qinfo.type->getType(), mh);
+      LatVolField<T> *field = scinew LatVolField<T>( mh, loc );
+      set_field_properties(field, qinfo, patch_low);
+
+      build_patch_field<Var, T>(qinfo, (*patch_it), patch_low, field);
+      patchfields.push_back( field );
+    }
+    MultiResLevel<T> *mrlevel = scinew MultiResLevel<T>( patchfields, i );
+    levelfields.push_back(mrlevel);
+  }
+  return scinew MRLatVolField<T>( levelfields );
+}
+
+template <class Var, class T>
+void
+FieldExtractor::getPatchData(QueryInfo& qinfo, IntVector& offset,
+                             LatVolField<T>* sfield, const Patch* patch)
+{
+  cerr << "getPatchData:: offset = "<<offset<<", sfield = "<<sfield<<", patch = "<<patch<<"\n";
+  IntVector patch_low, patch_high;
+  Var patch_data;
+  int vartype;
+  //  const TypeDescription* td = var.virtualGetTypeDescription();
+  //    cerr << "build_field::varname = "<<varname<<", type = "<<td->getName()<<"\n";
+  if( sfield->basis_order() == 0) {
+    patch_low = patch->getCellLowIndex();
+    patch_high = patch->getCellHighIndex();
+    //       patch_low = patch->getNodeLowIndex();
+    //       patch_high = patch->getNodeHighIndex() - IntVector(1,1,1);
+    
+    //       cerr<<"patch_data.getLowIndex() = "<<patch_data.getLowIndex()<<"\n";
+    //       cerr<<"patch_data.getHighIndex() = "<<patch_data.getHighIndex()<<"\n";
+    //       cerr<<"getCellLowIndex() = "<< patch->getCellLowIndex()
+    //        <<"\n";
+    //       cerr<<"getCellHighIndex() = "<< patch->getCellHighIndex()
+    //        <<"\n";
+    //       cerr<<"getInteriorCellLowIndex() = "<< patch->getInteriorCellLowIndex()
+    //        <<"\n";
+    //       cerr<<"getInteriorCellHighIndex() = "<< patch->getInteriorCellHighIndex()
+    //        <<"\n";
+    //       cerr<<"getNodeLowIndex() = "<< patch->getNodeLowIndex()
+    //        <<"\n";
+    //       cerr<<"getNodeHighIndex() = "<< patch->getNodeHighIndex()
+    //        <<"\n";
+    //       cerr<<"getInteriorNodeLowIndex() = "<< patch->getInteriorNodeLowIndex()
+    //        <<"\n";
+    //       cerr<<"getInteriorNodeHighIndex() = "<< patch->getInteriorNodeHighIndex()
+    //        <<"\n\n";
+  } else if(sfield->get_property("vartype", vartype)){
+    patch_low = patch->getNodeLowIndex();
+    switch (vartype) {
+    case TypeDescription::SFCXVariable:
+      patch_high = patch->getSFCXHighIndex();
+      break;
+    case TypeDescription::SFCYVariable:
+      patch_high = patch->getSFCYHighIndex();
+      break;
+    case TypeDescription::SFCZVariable:
+      patch_high = patch->getSFCZHighIndex();
+      break;
+    default:
+      patch_high = patch->getNodeHighIndex();   
+    } 
+  } 
+
+  try {
+    qinfo.archive->query(patch_data, qinfo.varname, qinfo.mat, patch,
+                         qinfo.time);
+  } catch (Exception& e) {
+    error("query caused an exception");
+    cerr << "getPatchData::error in query function\n";
+    cerr << e.message()<<"\n";
+    return;
+  }
+  
+  PatchToFieldThread<Var, T> *ptft = 
+    scinew PatchToFieldThread<Var, T>(sfield, patch_data, offset,
+                                      patch_low, patch_high);
+  //        cerr<<"patch_low = "<<patch_low<<", patch_high = "<<patch_high<<", min_i = "<<min_i 
+  //        <<", max_i = "<<max_i<<endl; 
+  
+  ptft->run();
+  delete ptft;
+}
+
+// For help with build_multi_level_field
+template <class Var, class T>
+void
+FieldExtractor::build_patch_field(QueryInfo& qinfo,
+                                  const Patch* patch,
+                                  IntVector& offset,
+                                  LatVolField<T>* field)
+{
+  // Initialize the data
+  field->fdata().initialize(T(0));
+
+  map<const Patch*, list<const Patch*> >::iterator oldPatch_it =
+    new2OldPatchMap_.find(patch);
+  if( oldPatch_it == new2OldPatchMap_.end() ) {
+    error("No mapping from old patches to new patches.");
+    return;
+  }
+    
+  list<const Patch*> oldPatches = (*oldPatch_it).second;
+  for(list<const Patch*>::iterator patch_it = oldPatches.begin();
+      patch_it != oldPatches.end(); ++patch_it){
+    getPatchData<Var, T>(qinfo, offset, field, *patch_it);
+  }
+}
+
+template <class Var, class T>
+void
+FieldExtractor::build_field(QueryInfo& qinfo, IntVector& offset,
+                            LatVolField<T>* field)
+{
+  // Initialize the data
+  field->fdata().initialize(T(0));
+
+  //  WallClockTimer my_timer;
+  //  my_timer.start();
+  
+  for( Level::const_patchIterator patch_it = qinfo.level->patchesBegin();
+       patch_it != qinfo.level->patchesEnd(); ++patch_it){
+  //      update_progress(somepercentage, my_timer);
+    getPatchData<Var, T>(qinfo, offset, field, *patch_it);
+  }
+
+  //  timer.add( my_timer.time());
+  //  my_timer.stop();
+}
+
+template<class Var, class T>
+FieldHandle FieldExtractor::getData(QueryInfo& qinfo, IntVector& offset,
+                                    LatVolMeshHandle mesh_handle,
+                                    int basis_order)
+{
+  if (qinfo.get_all_levels) {
+    return build_multi_level_field<Var, T>(qinfo, basis_order);
+  } else {
+    LatVolField<T>* sf = scinew LatVolField<T>(mesh_handle, basis_order);
+    set_field_properties(sf, qinfo, offset);
+//     int vartype;
+//     if (sf->get_property("vartype", vartype)) {
+//       cerr << "getData::get_property:: vartype =  "<<vartype<<"\n";
+//     } else {
+//       cerr << "getData::get_property:: couldn't get vartype\n";
+//     }
+//     sleep(4);
+    build_field<Var, T>(qinfo, offset, sf);
+    return sf;
+  }
+}
+
+template<class T>
+FieldHandle FieldExtractor::getVariable(QueryInfo& qinfo, IntVector& offset,
+                                        LatVolMeshHandle mesh_handle)
+{
+  switch( qinfo.type->getType() ) {
+  case TypeDescription::CCVariable:
+    return getData<CCVariable<T>, T>(qinfo, offset, mesh_handle, 0);
+  case TypeDescription::NCVariable:
+    return getData<NCVariable<T>, T>(qinfo, offset, mesh_handle, 1);
+  case TypeDescription::SFCXVariable:
+    return getData<SFCXVariable<T>, T>(qinfo, offset, mesh_handle, 1);
+  case TypeDescription::SFCYVariable:
+    return getData<SFCYVariable<T>, T>(qinfo, offset, mesh_handle, 1);
+  case TypeDescription::SFCZVariable:
+    return getData<SFCZVariable<T>, T>(qinfo, offset, mesh_handle, 1);
+  default:
+    cerr << "Type is unknown.\n";
+    return 0;
+  }
+}
+#endif
+
+
 
