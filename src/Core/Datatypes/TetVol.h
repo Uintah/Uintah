@@ -41,21 +41,19 @@
 namespace SCIRun {
 
 template <class T> 
-class TetVol : public GenericField<TetVolMesh, vector<T> > {
+class TetVol : public GenericField<TetVolMesh, vector<T> >
+{
 public:
-  TetVol() : 
-    GenericField<TetVolMesh, vector<T> >() {}
-  TetVol(Field::data_location data_at) : 
-    GenericField<TetVolMesh, vector<T> >(data_at) {}
-  TetVol(TetVolMeshHandle mesh, Field::data_location data_at) : 
-    GenericField<TetVolMesh, vector<T> >(mesh, data_at) {}
-  virtual TetVol<T> *clone() { return new TetVol(*this); }
+  TetVol();
+  TetVol(Field::data_location data_at);
+  TetVol(TetVolMeshHandle mesh, Field::data_location data_at);
+  virtual TetVol<T> *clone() const;
 
-  virtual ~TetVol() {};
+  virtual ~TetVol();
 
   /*! Ask mesh to compute edges and faces. Does nothing if mesh 
     is already finished. */
-  void finish_mesh() { get_typed_mesh()->finish_mesh(); }
+  void finish_mesh();
 
   bool get_gradient(Vector &, Point &);
   Vector cell_gradient(TetVolMesh::cell_index);
@@ -63,17 +61,51 @@ public:
   //! Persistent IO
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
-
-
   static const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const { return type_name(n); }
+  virtual const string get_type_name(int n = -1) const;
 
 private:
   static Persistent *maker();
 };
 
-// Pio defs.
-const int TET_VOL_VERSION = 1;
+
+template <class T>
+TetVol<T>::TetVol()
+  : GenericField<TetVolMesh, vector<T> >()
+{
+}
+
+template <class T>
+TetVol<T>::TetVol(Field::data_location data_at)
+  : GenericField<TetVolMesh, vector<T> >(data_at)
+{
+}
+
+template <class T>
+TetVol<T>::TetVol(TetVolMeshHandle mesh, Field::data_location data_at)
+  : GenericField<TetVolMesh, vector<T> >(mesh, data_at)
+{
+}
+
+template <class T>
+TetVol<T> *
+TetVol<T>::clone() const
+{
+  return new TetVol(*this);
+}
+
+template <class T>
+TetVol<T>::~TetVol()
+{
+}
+
+template <class T>
+void
+TetVol<T>::finish_mesh()
+{
+  get_typed_mesh()->finish_mesh();
+}
+
 
 template <class T>
 Persistent*
@@ -82,12 +114,16 @@ TetVol<T>::maker()
   return scinew TetVol<T>;
 }
 
+
 template <class T>
 PersistentTypeID 
 TetVol<T>::type_id(type_name(), 
 		   GenericField<TetVolMesh, vector<T> >::type_name(),
 		   maker);
 
+
+// Pio defs.
+const int TET_VOL_VERSION = 1;
 
 template <class T>
 void 
@@ -97,6 +133,7 @@ TetVol<T>::io(Piostream& stream)
   GenericField<TetVolMesh, vector<T> >::io(stream);
   stream.end_class();
 }
+
 
 template <class T> 
 const string 
@@ -118,6 +155,15 @@ TetVol<T>::type_name(int n)
     return find_type_name((T *)0);
   }
 }
+
+
+template <class T> 
+const string
+TetVol<T>::get_type_name(int n) const
+{
+  return type_name(n);
+}
+
 
 //! compute the gradient g, at point p
 template <class T>

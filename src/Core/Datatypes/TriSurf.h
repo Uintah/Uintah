@@ -41,22 +41,20 @@
 namespace SCIRun {
 
 template <class T> 
-class TriSurf : public GenericField<TriSurfMesh, vector<T> > {
+class TriSurf : public GenericField<TriSurfMesh, vector<T> >
+{
 public:
-  TriSurf() : 
-    GenericField<TriSurfMesh, vector<T> >() {}
-  TriSurf(Field::data_location data_at) : 
-    GenericField<TriSurfMesh, vector<T> >(data_at) {}
-  TriSurf(TriSurfMeshHandle mesh, Field::data_location data_at) : 
-    GenericField<TriSurfMesh, vector<T> >(mesh, data_at) {} 
-  virtual TriSurf<T> *clone() { return new TriSurf(*this); }
-  virtual ~TriSurf() {};
+  TriSurf();
+  TriSurf(Field::data_location data_at);
+  TriSurf(TriSurfMeshHandle mesh, Field::data_location data_at);
+  virtual TriSurf<T> *clone() const;
+  virtual ~TriSurf();
   
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
 
   static const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const { return type_name(n); }
+  virtual const string get_type_name(int n = -1) const;
 
 private:
   static Persistent *maker();
@@ -110,6 +108,42 @@ TriSurf<T>::type_name(int n)
   }
 }
 
+template <class T>
+TriSurf<T>::TriSurf()
+  : GenericField<TriSurfMesh, vector<T> >()
+{
+}
+
+template <class T>
+TriSurf<T>::TriSurf(Field::data_location data_at) :
+  GenericField<TriSurfMesh, vector<T> >(data_at)
+{
+}
+
+template <class T>
+TriSurf<T>::TriSurf(TriSurfMeshHandle mesh, Field::data_location data_at)
+  : GenericField<TriSurfMesh, vector<T> >(mesh, data_at)
+{
+} 
+
+template <class T>
+TriSurf<T> *
+TriSurf<T>::clone() const
+{
+  return new TriSurf(*this);
+}
+
+template <class T>
+TriSurf<T>::~TriSurf()
+{
+}
+
+template <class T>
+const string 
+TriSurf<T>::get_type_name(int n = -1) const
+{
+  return type_name(n);
+}
 
 } // end namespace SCIRun
 

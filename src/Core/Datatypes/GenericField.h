@@ -55,78 +55,53 @@ public:
   typedef GenericInterpolate<value_type>  interp_type;
 
   // only Pio should use this constructor
-  GenericField() : 
-    Field(),
-    mesh_(mesh_handle_type(new mesh_type()))
-  {}
+  GenericField();
+  GenericField(data_location data_at);
+  GenericField(mesh_handle_type mesh, data_location data_at);
 
-  GenericField(data_location data_at) : 
-    Field(data_at),
-    mesh_(mesh_handle_type(new mesh_type())) 
-  {}
+  virtual ~GenericField();
 
-  GenericField(mesh_handle_type mesh, data_location data_at) : 
-    Field(data_at),
-    mesh_(mesh)
-  { resize_fdata(); }
-
-  virtual ~GenericField() {}
-
-  virtual GenericField<Mesh, FData> *clone()
-  { return new GenericField<Mesh, FData>(*this); }
+  virtual GenericField<Mesh, FData> *clone() const;
 
   //! Required virtual functions from field base.
-  virtual MeshBaseHandle mesh() const
-  { return MeshBaseHandle(mesh_.get_rep()); }
+  virtual MeshBaseHandle mesh() const;
 
   //! Required interfaces from field base.
   virtual interp_type* query_interpolate() const;
 //  virtual InterpolateToScalar* query_interpolate_to_scalar() const;
 
-  virtual bool is_scalar() const { return ::SCIRun::is_scalar<value_type>(); }
+  virtual bool is_scalar() const;
 
   //! Required interface to support Field Concept.
-  bool value(value_type &val, typename mesh_type::node_index i) const
-  { if (data_at() != NODE) return false; val = fdata_[i]; return true; }
-  bool value(value_type &val, typename mesh_type::edge_index i) const
-  { if (data_at() != EDGE) return false; val = fdata_[i]; return true; }
-  bool value(value_type &val, typename mesh_type::face_index i) const
-  { if (data_at() != FACE) return false; val = fdata_[i]; return true; }
-  bool value(value_type &val, typename mesh_type::cell_index i) const
-  { if (data_at() != CELL) return false; val = fdata_[i]; return true; } 
+  bool value(value_type &val, typename mesh_type::node_index i) const;
+  bool value(value_type &val, typename mesh_type::edge_index i) const;
+  bool value(value_type &val, typename mesh_type::face_index i) const;
+  bool value(value_type &val, typename mesh_type::cell_index i) const;
 
   //! Required interface to support Field Concept.
-  void set_value(const value_type &val, typename mesh_type::node_index i)
-  { fdata_[i] = val; }
-  void set_value(const value_type &val, typename mesh_type::edge_index i)
-  { fdata_[i] = val; }
-  void set_value(const value_type &val, typename mesh_type::face_index i)
-  { fdata_[i] = val; }
-  void set_value(const value_type &val, typename mesh_type::cell_index i)
-  { fdata_[i] = val; }
+  void set_value(const value_type &val, typename mesh_type::node_index i);
+  void set_value(const value_type &val, typename mesh_type::edge_index i);
+  void set_value(const value_type &val, typename mesh_type::face_index i);
+  void set_value(const value_type &val, typename mesh_type::cell_index i);
 
   //! No safety check for the following calls, be sure you know where data is.
-  value_type value(typename mesh_type::node_index i) const
-  { return fdata_[i]; }
-  value_type value(typename mesh_type::edge_index i) const
-  { return fdata_[i]; }
-  value_type value(typename mesh_type::face_index i) const 
-  { return fdata_[i]; }
-  value_type value(typename mesh_type::cell_index i) const 
-  { return fdata_[i]; }
+  value_type value(typename mesh_type::node_index i) const;
+  value_type value(typename mesh_type::edge_index i) const;
+  value_type value(typename mesh_type::face_index i) const;
+  value_type value(typename mesh_type::cell_index i) const;
 
   virtual void resize_fdata();
 
-  fdata_type& fdata() { return fdata_; }
-  const fdata_type& fdata() const { return fdata_; }
+  fdata_type& fdata();
+  const fdata_type& fdata() const;
 
-  mesh_handle_type get_typed_mesh() const { return mesh_; };
+  mesh_handle_type get_typed_mesh() const;
 
   //! Persistent I/O.
   virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
   static  const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const { return type_name(n); }
+  virtual const string get_type_name(int n = -1) const;
 
 private:
 
@@ -271,6 +246,164 @@ void GenericField<Mesh, FData>::io(Piostream& stream)
   mesh_->io(stream);
   Pio(stream, fdata_);
   stream.end_class();
+}
+
+
+
+
+template <class Mesh, class FData>
+GenericField<Mesh, FData>::GenericField()
+  : Field(),
+    mesh_(mesh_handle_type(new mesh_type()))
+{
+}
+
+template <class Mesh, class FData>
+GenericField<Mesh, FData>::GenericField(data_location data_at)
+  : Field(data_at),
+    mesh_(mesh_handle_type(new mesh_type())) 
+{
+}
+
+template <class Mesh, class FData>
+GenericField<Mesh, FData>::GenericField(mesh_handle_type mesh, data_location data_at)
+  : Field(data_at),
+    mesh_(mesh)
+{
+  resize_fdata();
+}
+
+template <class Mesh, class FData>
+GenericField<Mesh, FData>::~GenericField()
+{
+}
+
+template <class Mesh, class FData>
+GenericField<Mesh, FData> *
+GenericField<Mesh, FData>::clone() const
+{
+  return new GenericField<Mesh, FData>(*this);
+}
+
+template <class Mesh, class FData>
+MeshBaseHandle
+GenericField<Mesh, FData>::mesh() const
+{
+  return MeshBaseHandle(mesh_.get_rep());
+}
+
+template <class Mesh, class FData>
+bool
+GenericField<Mesh, FData>::is_scalar() const
+{
+  return ::SCIRun::is_scalar<value_type>();
+}
+
+template <class Mesh, class FData>
+bool
+GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::node_index i) const
+{
+  if (data_at() != NODE) return false; val = fdata_[i]; return true;
+}
+
+template <class Mesh, class FData>
+bool
+GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::edge_index i) const
+{
+  if (data_at() != EDGE) return false; val = fdata_[i]; return true;
+}
+
+template <class Mesh, class FData>
+bool
+GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::face_index i) const
+{
+  if (data_at() != FACE) return false; val = fdata_[i]; return true;
+}
+
+template <class Mesh, class FData>
+bool
+GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::cell_index i) const
+{
+  if (data_at() != CELL) return false; val = fdata_[i]; return true;
+} 
+
+//! Required interface to support Field Concept.
+template <class Mesh, class FData>
+void
+GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::node_index i)
+{
+  fdata_[i] = val;
+}
+template <class Mesh, class FData>
+void
+GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::edge_index i)
+{
+  fdata_[i] = val;
+}
+template <class Mesh, class FData>
+void
+GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::face_index i)
+{
+  fdata_[i] = val;
+}
+template <class Mesh, class FData>
+void
+GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::cell_index i)
+{
+  fdata_[i] = val;
+}
+
+template <class Mesh, class FData>
+GenericField<Mesh, FData>::value_type
+GenericField<Mesh, FData>::value(typename mesh_type::node_index i) const
+{
+  return fdata_[i];
+}
+template <class Mesh, class FData>
+GenericField<Mesh, FData>::value_type
+GenericField<Mesh, FData>::value(typename mesh_type::edge_index i) const
+{
+  return fdata_[i];
+}
+template <class Mesh, class FData>
+GenericField<Mesh, FData>::value_type
+GenericField<Mesh, FData>::value(typename mesh_type::face_index i) const 
+{
+  return fdata_[i];
+}
+template <class Mesh, class FData>
+GenericField<Mesh, FData>::value_type
+GenericField<Mesh, FData>::value(typename mesh_type::cell_index i) const 
+{
+  return fdata_[i];
+}
+
+template <class Mesh, class FData>
+GenericField<Mesh, FData>::fdata_type &
+GenericField<Mesh, FData>::fdata()
+{
+  return fdata_;
+}
+
+template <class Mesh, class FData>
+const GenericField<Mesh, FData>::fdata_type&
+GenericField<Mesh, FData>::fdata() const
+{
+  return fdata_;
+}
+
+template <class Mesh, class FData>
+GenericField<Mesh, FData>::mesh_handle_type
+GenericField<Mesh, FData>::get_typed_mesh() const
+{
+  return mesh_;
+}
+
+template <class Mesh, class FData>
+const string
+GenericField<Mesh, FData>::get_type_name(int n) const
+{
+  return type_name(n);
 }
 
 
