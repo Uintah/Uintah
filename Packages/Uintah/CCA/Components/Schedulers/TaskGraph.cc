@@ -628,7 +628,7 @@ TaskGraph::createDetailedTasks( const ProcessorGroup* pg,
   return dt;
 }
 
-#if defined(__GNUG_) || defined(__digital__)
+#if defined(__GNUG__) || defined(__digital__)
 namespace std {
   template<class T> class hash {
   public:
