@@ -17,10 +17,15 @@
 #include <Geometry/Point.h>
 #include <Geom/Geom.h>
 #include <Geom/Group.h>
-#include <Widgets/FrameWidget.h>
 #include <TCL/TCLvar.h>
 
+#include <Widgets/ArrowWidget.h>
+#include <Widgets/FrameWidget.h>
+
 #include <iostream.h>
+
+const Index NumWidgetTypes = 2;
+enum WidgetTypes {Arrow, Frame};
 
 class FrameTest : public Module {
     GeometryOPort* ogeom;
@@ -29,8 +34,9 @@ private:
     int init;
     int widget_id;
     TCLdouble widget_scale;
+    TCLint widget_type;
 
-    FrameWidget* widget;
+    BaseWidget* widgets[NumWidgetTypes];
 
     virtual void geom_moved(int, double, const Vector&, void*);
 public:
@@ -52,26 +58,23 @@ static RegisterModule db2("Visualization", "FrameTest", make_FrameTest);
 static clString widget_name("FrameTest Widget");
 
 FrameTest::FrameTest(const clString& id)
-: Module("FrameTest", id, Source), widget_scale("widget_scale", id, this)
+: Module("FrameTest", id, Source), widget_scale("widget_scale", id, this),
+  widget_type("widget_type", id, this)
 {
     // Create the output port
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 
-    widget=new FrameWidget(this, .1);
+    widgets[Arrow]=new ArrowWidget(this, .1);
+    widgets[Frame]=new FrameWidget(this, .1);
+    widget_scale.set(.1);
     init = 1;
-
-#ifdef OLDUI
-    MUI_slider_real* slider=new MUI_slider_real("Adaption rate", &widget_scale,
-						MUI_widget::Immediate, 0);
-    slider->set_minmax(0, 10);
-    add_ui(slider);
-#endif
 }
 
 FrameTest::FrameTest(const FrameTest& copy, int deep)
 : Module(copy, deep),
-  widget_scale("widget_scale", id, this)
+  widget_scale("widget_scale", id, this),
+  widget_type("widget_type", id, this)
 {
     NOT_FINISHED("FrameTest::FrameTest");
 }
@@ -89,28 +92,24 @@ void FrameTest::execute()
 {
     if (init == 1) {
         init = 0;
-        widget_id=ogeom->addObj(widget->GetWidget(), widget_name);
+        widget_id=ogeom->addObj(widgets[0]->GetWidget(), widget_name);
+        widget_id=ogeom->addObj(widgets[1]->GetWidget(), widget_name+"2");
     }
-    widget->SetScale(widget_scale.get());
-    widget->execute();
-}
-
-#ifdef OLDUI
-void FrameTest::mui_callback(void*, int)
-{
-    if(!abort_flag){
-	abort_flag=1;
-	want_to_execute();
+    for (Index i=0; i<NumWidgetTypes; i++) {
+       widgets[i]->SetScale(widget_scale.get());
+       widgets[i]->execute();
     }
+    ogeom->flushViews();
 }
-#endif
 
 void FrameTest::geom_moved(int axis, double dist, const Vector& delta,
 			   void* cbdata)
 {
     cerr << "Moved called..." << endl;
-    
-    widget->geom_moved(axis, dist, delta, cbdata);
+
+    for (Index i=0; i<NumWidgetTypes; i++) {
+       widgets[i]->geom_moved(axis, dist, delta, cbdata);
+    }
     
     if(!abort_flag){
 	abort_flag=1;
