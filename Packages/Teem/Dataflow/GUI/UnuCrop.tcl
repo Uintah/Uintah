@@ -54,6 +54,7 @@ itcl_class Teem_UnuAtoM_UnuCrop {
 	global $this-absmaxAxis2
 	global $this-absmaxAxis3
 
+
 	set $this-num-axes 0
 	set $this-reset 0
 	set $this-uis 4
@@ -69,6 +70,7 @@ itcl_class Teem_UnuAtoM_UnuCrop {
 	set $this-absmaxAxis1 1023
 	set $this-absmaxAxis2 1023
 	set $this-absmaxAxis3 1023
+
     }
 
     method set_max_vals {} {
@@ -79,6 +81,7 @@ itcl_class Teem_UnuAtoM_UnuCrop {
 
 		set ax $this-absmaxAxis$i
 		set_scale_max_value $w.f.mmf.a$i [set $ax]
+		set $this-maxAxis$i [set $this-absmaxAxis$i]
 		#if {[set $this-maxAxis$i] == 0 || [set $this-reset]} {
 		 #   set $this-maxAxis$i [set $this-absmaxAxis$i]
 		#}
