@@ -42,69 +42,99 @@
 
 #include "MxNScheduler.h"
 #include <Core/CCA/PIDL/MxNArrayRep.h>
+#include <Core/CCA/PIDL/MxNMetaSynch.h>
 #include <iostream>
 #include <sstream>
 using namespace SCIRun;   
 
-MxNScheduler::MxNScheduler()
-  : s_mutex("ArrSynch access mutex")
+MxNScheduler::MxNScheduler(sched_t sch)
+  :s_mutex("ArrSynch access mutex"),sch_type(sch)
 {
 }
 
 MxNScheduler::~MxNScheduler()
 {
-  schedList::iterator iter = entries.begin();
-  for(;iter != entries.end(); iter++) {
+  //clear all remote entries.
+  for(schedList::iterator iter = entries.begin();iter != entries.end(); iter++){
+    delete ((*iter).second);
+  }
+  //clear all local entries.
+  for(arrRepList::iterator iter = myreps.begin();iter != myreps.end(); iter++){
     delete ((*iter).second);
   }
 }
 
-void MxNScheduler::setCalleeRepresentation(std::string distname, 
-						    MxNArrayRep* arrrep)
+void MxNScheduler::setCalleeRepresentation(std::string distname, MxNArrayRep* arrrep)
 {
-  schedList::iterator iter = entries.find(distname);  
-  if (iter == entries.end()) {
-    MxNScheduleEntry* sch_e = new MxNScheduleEntry(distname,callee);
-    sch_e->addCalleeRep(arrrep);
-    entries[distname] = sch_e;
-  }
-  else {
-    ((*iter).second)->addCalleeRep(arrrep);
-  }
-}
+  //TODO: sychronization needed here
 
-void MxNScheduler::setCallerRepresentation(std::string distname, 
-						    MxNArrayRep* arrrep)
-{
-  schedList::iterator iter = entries.find(distname);
-  if (iter == entries.end()) {
-    MxNScheduleEntry* sch_e = new MxNScheduleEntry(distname,caller);
-    sch_e->addCallerRep(arrrep);
-    entries[distname] = sch_e;
-  }
-  else {
-    ((*iter).second)->addCallerRep(arrrep);
-  }
-}
-
-MxNArrayRep* MxNScheduler::callerGetCallerRep(std::string distname)
-{
-  schedList::iterator iter = entries.find(distname);
-  if (iter != entries.end()) {
-    if (((*iter).second)->isCaller()) {
-      return ((*iter).second)->getCallerRep(0);
+  if(sch_type==caller){
+    //this is a client scheduler, so setCalleeRepresentation means
+    //setRemoteRepresentation
+    schedList::iterator iter = entries.find(distname);  
+    if (iter == entries.end()) {
+      MxNScheduleEntry* sch_e = new MxNScheduleEntry();
+      sch_e->addRep(arrrep);
+      entries[distname] = sch_e;
     }
+    else {
+      ((*iter).second)->addRep(arrrep);
+    }
+  }
+  else{
+    arrRepList::iterator iter = myreps.find(distname);  
+    if (iter != myreps.end()) {
+      //clear the old representaion if it exsits.
+      delete iter->second;
+    }
+    myreps[distname] = arrrep;
+  }
+}
+
+void MxNScheduler::setCallerRepresentation(std::string distname, std::string uuid,
+						    MxNArrayRep* arrrep)
+{
+  //TODO: sychronization needed here
+  if(sch_type==callee){
+    //this is a server scheduler, so setCallerRepresentation means
+    //setRemoteRepresentation
+    schedList::iterator iter = entries.find(distname+uuid);
+    if (iter == entries.end()) {
+      MxNScheduleEntry* sch_e = new MxNScheduleEntry();
+      sch_e->addRep(arrrep);
+      entries[distname+uuid] = sch_e;
+    }
+    else {
+      //addRep will clear existed array representation entry.
+      ((*iter).second)->addRep(arrrep);
+    }
+  }
+  else{
+    arrRepList::iterator iter = myreps.find(distname+uuid);  
+    if (iter != myreps.end()) {
+      //clear the old representaion if it exsits.
+      delete iter->second;
+    }
+    myreps[distname+uuid] = arrrep;
+  }
+}
+
+MxNArrayRep* MxNScheduler::callerGetCallerRep(std::string distname, std::string uuid)
+{
+  //return the local representation
+  arrRepList::iterator iter = myreps.find(distname+uuid);
+  if(iter != myreps.end()) {
+    return iter->second;
   }
   return NULL;
 }
 
 MxNArrayRep* MxNScheduler::calleeGetCalleeRep(std::string distname)
 {
-  schedList::iterator iter = entries.find(distname);
-  if (iter != entries.end()) {
-    if (((*iter).second)->isCallee()) {
-      return ((*iter).second)->getCalleeRep(0);
-    }
+  //return the local representation
+  arrRepList::iterator iter = myreps.find(distname);
+  if(iter != myreps.end()) {
+    return iter->second;
   }
   return NULL;
 }
@@ -128,30 +158,36 @@ Index* MxNScheduler::makeCyclic(int rank, int size, int length)
   return (new Index(rank,length,size));  
 }
 
-void MxNScheduler::reportMetaRecvDone(std::string distname, int size)
-{
-  schedList::iterator sch_iter = entries.find(distname);
-  if (sch_iter != entries.end()) {
-    ((*sch_iter).second)->reportMetaRecvDone(size);
-  }
-}
-
 void MxNScheduler::setArray(std::string distname, std::string uuid, int callid, void** arr)
 {
+  //only callee can call this method.
+  assert(sch_type==callee); 
+
+  //first wait for meta data completion. because array synchronization
+  //needs to know which proxy will send data.
+  //size=0 is dummy size. meta synch should already exist.
+  getMetaSynch(distname, uuid, 0)->waitForCompletion();
+
   ::std::cerr << "MxNSched UUID='" << uuid << "' -- '" << callid << "\n";
   ::std::ostringstream index;
-  index << uuid << callid;
-  schedList::iterator sch_iter = entries.find(distname);
+
+  schedList::iterator sch_iter = entries.find(distname+uuid);
   if (sch_iter != entries.end()) {
     s_mutex.lock();
-    synchList::iterator sy_iter = ((*sch_iter).second)->s_list.find(index.str());
+    synchList::iterator sy_iter = ((*sch_iter).second)->s_list.find(callid);
     if (sy_iter != ((*sch_iter).second)->s_list.end()) {
       s_mutex.unlock();
       return ((*sy_iter).second)->setArray(arr);
     }  
     else {
-      MxNArrSynch* mxnasync = new MxNArrSynch((*sch_iter).second);
-      ((*sch_iter).second)->s_list[index.str()] = mxnasync;
+
+      arrRepList::iterator this_iter = myreps.find(distname);
+      //TODO throw exception?
+      assert(this_iter!=myreps.end());
+
+      MxNArrSynch* mxnasync = new MxNArrSynch((*sch_iter).second,this_iter->second);
+
+      ((*sch_iter).second)->s_list[callid] = mxnasync;
       s_mutex.unlock();
       return mxnasync->setArray(arr);
     }
@@ -160,49 +196,49 @@ void MxNScheduler::setArray(std::string distname, std::string uuid, int callid, 
 
 void* MxNScheduler::waitCompleteArray(std::string distname, std::string uuid, int callid)
 {
-  ::std::cerr << "MxNSched UUID='" << uuid << "' -- '" << callid << "\n";
-  ::std::ostringstream index;
-  index << uuid << callid;
-  schedList::iterator sch_iter = entries.find(distname);
-  if (sch_iter != entries.end()) {
-    s_mutex.lock();
-    synchList::iterator sy_iter = ((*sch_iter).second)->s_list.find(index.str());
-    if (sy_iter != ((*sch_iter).second)->s_list.end()) {
-      s_mutex.unlock();
-      return ((*sy_iter).second)->waitCompleteArray();
-      s_mutex.lock();
-      delete ((*sy_iter).second);
-      s_mutex.unlock();
-    }
-    else {
-      MxNArrSynch* mxnasync = new MxNArrSynch((*sch_iter).second);
-      ((*sch_iter).second)->s_list[index.str()] = mxnasync;
-      s_mutex.unlock();
-      return mxnasync->waitCompleteArray();
-      s_mutex.lock();
-      delete mxnasync;
-      s_mutex.unlock();
-    }  
+  //only callee can call this method.
+  assert(sch_type==callee); 
+
+  MxNArrSynch* mxnasync=getArrSynch(distname, uuid, callid);
+  arrRepList::iterator this_iter = myreps.find(distname);
+  if(this_iter==myreps.end()) return NULL;
+
+  //TODO: need remove the array synch entry because it will not be used 
+  if(mxnasync!=NULL){
+    return mxnasync->waitCompleteArray(this_iter->second);
   }
-  return NULL;
+  else{ 
+    return NULL;
+  }
 }
+
 
 MxNArrSynch* MxNScheduler::getArrSynch(::std::string distname, ::std::string uuid, int callid)
 {
-  ::std::cerr << "MxNSched UUID='" << uuid << "' -- '" << callid << "\n";
-  ::std::ostringstream index;
-  index << uuid << callid;
-  schedList::iterator sch_iter = entries.find(distname);
+  //for server scheduler only
+  assert(sch_type==callee); 
+
+  //first wait for meta data completion. because array synchronization
+  //needs to know which proxy will send data.
+  //size=0 is dummy size. meta synch should already exist.
+  getMetaSynch(distname, uuid, 0)->waitForCompletion();
+
+  //  ::std::cerr << "MxNSched UUID='" << uuid << "' -- '" << callid << "\n";
+  schedList::iterator sch_iter = entries.find(distname+uuid);
   if (sch_iter != entries.end()) {
     s_mutex.lock();
-    synchList::iterator sy_iter = ((*sch_iter).second)->s_list.find(index.str());
+    synchList::iterator sy_iter = ((*sch_iter).second)->s_list.find(callid);
     if (sy_iter != ((*sch_iter).second)->s_list.end()) {
       s_mutex.unlock();
       return ((*sy_iter).second);
     }
     else {
-      MxNArrSynch* mxnasync = new MxNArrSynch((*sch_iter).second);
-      ((*sch_iter).second)->s_list[index.str()] = mxnasync;
+      arrRepList::iterator this_iter = myreps.find(distname);
+      //TODO throw exception?
+      assert(this_iter!=myreps.end());
+
+      MxNArrSynch* mxnasync = new MxNArrSynch((*sch_iter).second,this_iter->second);
+      ((*sch_iter).second)->s_list[callid] = mxnasync;
       s_mutex.unlock();
       return mxnasync;
     }  
@@ -210,34 +246,76 @@ MxNArrSynch* MxNScheduler::getArrSynch(::std::string distname, ::std::string uui
   return NULL;
 }
  
-descriptorList* MxNScheduler::getRedistributionReps(std::string distname)
+
+MxNMetaSynch* MxNScheduler::getMetaSynch(::std::string distname, ::std::string uuid, int size)
 {
+  //for server scheduler only
+  assert(sch_type==callee); 
+  schedList::iterator sch_iter = entries.find(distname+uuid);
+  if (sch_iter == entries.end()) {
+    MxNScheduleEntry* sch_e = new MxNScheduleEntry();
+    entries[distname+uuid] = sch_e;
+  }
+  sch_iter = entries.find(distname+uuid);
+  s_mutex.lock();
+  if(sch_iter->second->meta_sync==NULL){
+    sch_iter->second->meta_sync = new MxNMetaSynch(size);
+  }
+  s_mutex.unlock();
+  return sch_iter->second->meta_sync;
+}
+ 
+
+
+descriptorList* MxNScheduler::getRedistributionReps(std::string distname, std::string uuid)
+{
+  //only client can make the schedule
+  assert(sch_type==caller);
+  //entries for caller is callee entry, distname is the key
   schedList::iterator iter = entries.find(distname);
-  if ((iter != entries.end())&&(iter->second->isCaller())) 
-    return iter->second->makeSchedule();
+  arrRepList::iterator this_iter = myreps.find(distname+uuid);
+  if (iter != entries.end() && this_iter!=myreps.end())
+    return iter->second->makeSchedule( this_iter->second );
   else 
     return NULL;
 }
 
-void MxNScheduler::clear(std::string distname, sched_t sch)
+void MxNScheduler::clear(std::string distname, std::string uuid, sched_t sch)
 {
-  schedList::iterator iter = entries.find(distname);
-  if (iter != entries.end()) {
-    ((*iter).second)->clear(sch);
+  if(sch==sch_type){
+    //clear the local representation
+    arrRepList::iterator found;
+    if(sch==caller) found=myreps.find(distname+uuid);
+    else found=myreps.find(distname);
+    if(found!=myreps.end()){
+      delete (found->second);
+      myreps.erase(found);
+    }
+  }else{
+    //clear the remote entry
+    schedList::iterator iter;
+    if(sch==caller) iter=entries.find(distname+uuid);
+    else  iter=entries.find(distname);
+    if (iter != entries.end()) {
+      ((*iter).second)->clear();
+    }
   }
 }
 
 void MxNScheduler::print()
 {
-  schedList::iterator iter = entries.begin();   
   std::cerr << "entries.size = " << entries.size() << "\n";
-  for(unsigned int i=0; i < entries.size(); i++, iter++) {
+  for(schedList::iterator iter = entries.begin(); iter!= entries.end(); iter++) {
     std::cerr << "!!!!! Printing '" << ((*iter).first) << "'";
-    if (((*iter).second)->isCaller())
+    if (sch_type == caller )
       std::cerr << " Caller\n"; 
     else
       std::cerr << " Callee\n"; 
     ((*iter).second)->print(std::cerr);
+  }
+  std::cerr << "myreps.size = " << myreps.size() << "\n";
+  for(arrRepList::iterator iter = myreps.begin(); iter!= myreps.end(); iter++) {
+    iter->second->print(std::cerr);
   }
 }
 

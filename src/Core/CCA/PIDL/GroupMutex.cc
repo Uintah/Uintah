@@ -26,26 +26,63 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-distribution array DMatrix <double,2>;
-distribution array DArray <double,1>;
 
-interface Loader
-{
+/*
+ *  Mutex: Standard locking primitive for groups of threads
+ *
+ *  Written by:
+ *   Author: Keming Zhang
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: March 2004
+ *
+ *  Copyright (C) 1997 SCI Group
+ */
 
-        //returns 0 if successful
-        distribution array dURL <string, 1>;
+//TODO: this class will be go to src/Core/Thread eventually
+#ifndef Core_Thread_Group_Mutex_h
+#define Core_Thread_Group_Mutex_h
 
-        collective 
-	int createPInstance(in string componentName, in string componentType, in TypeMap properties,
-			           out dURL componentURLs);
+#include <Core/share/share.h>
 
-	int createInstance(in string componentName, in string componentType,  in TypeMap properties,
-			           out string componentURL);
+using namespace SCIRun;
 
-        int destroyInstance(in string componentName, in float timeout);
+GroupMutex::GroupMutex(const char* name){
+  name_=name;
+}
 
-	int getAllComponentTypes(out array<string,1> componentTypes);
-
-	int shutdown(in float timeout);
+GroupMutex::~GroupMutex(){
 
 }
+
+void
+GroupMutex::lock(int gid){
+  mutex.lock();
+  if(!locked){
+    this->gid=gid;
+    locked=true;
+  }
+  mutex.unlock();
+  
+  if(gid==this->gid) return;
+  else
+}
+
+void GroupMutex::unlock(){
+
+}
+
+private:
+  Mutex_private* priv_;
+  const char* name_;
+
+  // Cannot copy them
+  Mutex(const Mutex&);
+  Mutex& operator=(const Mutex&);
+};
+
+} // End namespace SCIRun
+
+#endif
+
+

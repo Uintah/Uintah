@@ -32,6 +32,8 @@
 
 #include <Core/CCA/PIDL/URL.h>
 #include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/Comm/DT/DataTransmitter.h>
+#include <Core/CCA/Comm/DT/DTAddress.h>
 #include <Core/CCA/PIDL/Reference.h>
 #include <Core/CCA/PIDL/ServerContext.h>
 #include <Core/CCA/PIDL/TypeInfo.h>
@@ -40,15 +42,31 @@
 #include <Core/Thread/MutexPool.h>
 #include <sstream>
 #include <iostream>
+#include <stdlib.h>
+
+static bool showRef(){
+  return getenv("SHOWREF")!=NULL;
+}
 
 using namespace std;
 using namespace SCIRun;
 
+int Object::objcnt(0);
+Mutex Object::sm("test mutex");
+
 Object::Object()
     : d_serverContext(0)
 {
+  sm.lock();
+  objid=objcnt++;
   ref_cnt=0;
-  mutex_index=getMutexPool()->nextIndex();
+  if(showRef()){
+    ::std::cout << " ===================================\n";
+    PIDL::getDT()->getAddress().display();
+    ::std::cout << "_addReference (id="<<objid<<"): count is now " << ref_cnt << "\n";
+    //mutex_index=getMutexPool()->nextIndex();
+  }
+  sm.unlock();
 }
 
 void
@@ -72,12 +90,20 @@ Object::initializeServer(const TypeInfo* typeinfo, void* ptr, EpChannel* epc)
   d_serverContext->chan->openConnection();
   d_serverContext->d_typeinfo=typeinfo;
   d_serverContext->d_ptr=ptr;
+  //TODO: possible memory leak if this method is called multiple times.
   d_serverContext->storage = new HandlerStorage();
-  d_serverContext->gatekeeper = new HandlerGateKeeper();
+  // gatekeeper is not used anymore.
+  //  d_serverContext->gatekeeper = new HandlerGateKeeper();
 }
 
 Object::~Object()
 {
+  if(showRef()){
+    ::std::cout << " XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n";
+    PIDL::getDT()->getAddress().display();
+    ::std::cout << "Object destroyed (id="<<objid<<"): count is now " << ref_cnt << "\n";
+  }
+
   if(ref_cnt != 0)
     throw InternalError("Object delete while reference count != 0");
   if(d_serverContext){
@@ -105,8 +131,7 @@ URL Object::getURL() const
     o << d_serverContext->chan->getUrl() 
       << d_serverContext->d_objid;
   } else {
-    // TODO - send a message to get the URL
-    o << "getURL() doesn't (yet) work for proxy objects";
+    throw InternalError("Object::getURL called for a non-server object");
   }
   return (o.str());
 }
@@ -140,26 +165,34 @@ Object::deleteReference()
 void
 Object::_addReference()
 {
-  Mutex* m=getMutexPool()->getMutex(mutex_index);
-  m->lock();
+  //Mutex* m=getMutexPool()->getMutex(mutex_index);
+  sm.lock();
   ref_cnt++;
-  //::std::cout << "Reference count is now " << ref_cnt << "\n";
-  m->unlock();
+  if(showRef()){
+    ::std::cout << "+++++++++++++++++++++++++++++++++\n";
+    PIDL::getDT()->getAddress().display();
+    ::std::cout << "_addReference (id="<<objid<<"): count is now " << ref_cnt << "\n";
+  }
+  sm.unlock();
 }
 
 void
 Object::_deleteReference()
 {
-  Mutex* m=getMutexPool()->getMutex(mutex_index);
-  m->lock();
+  //Mutex* m=getMutexPool()->getMutex(mutex_index);
+  sm.lock();
   ref_cnt--;
-  //::std::cout << "Reference count is now " << ref_cnt << "\n";
+  if(showRef()){
+    ::std::cout << "----------------------------------\n";
+    PIDL::getDT()->getAddress().display();
+    ::std::cout << "_deleteReference (id="<<objid<<") count is now " << ref_cnt << "\n";
+  }
   bool del;
   if(ref_cnt == 0)
     del=true;
   else
     del=false;
-  m->unlock();
+  sm.unlock();
   
   // We must delete outside of the lock to prevent deadlock
   // conditions with the mutex pool, but we must check the condition
@@ -199,14 +232,14 @@ Object::getMutexPool()
 
 void Object::createScheduler()
 {
-  d_serverContext->d_sched = new SCIRun::MxNScheduler();
+  d_serverContext->d_sched = new SCIRun::MxNScheduler(callee);
 }
 
 void Object::setCalleeDistribution(std::string distname, 
 				   MxNArrayRep* arrrep) 
 {
   //Clear existing distribution
-  d_serverContext->d_sched->clear(distname, callee);
+  d_serverContext->d_sched->clear(distname, "dummy uuid", callee);
   //Reset distribution
   d_serverContext->d_sched->setCalleeRepresentation(distname,arrrep);
 }

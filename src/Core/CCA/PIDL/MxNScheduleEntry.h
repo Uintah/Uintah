@@ -32,7 +32,7 @@
  *  MxNScheduleEntry.h 
  *
  *  Written by:
- *   Kostadin Damevski 
+ *   Kostadin Damevski & Keming Zhang
  *   Department of Computer Science
  *   University of Utah
  *   May 2002 
@@ -52,6 +52,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/CCA/PIDL/MxNArrayRep.h>
 #include <Core/CCA/PIDL/MxNArrSynch.h>
+#include <Core/CCA/PIDL/MxNMetaSynch.h>
 
 /**************************************
 				       
@@ -61,12 +62,9 @@
   DESCRIPTION
     This class encapsulates information associated
     with a particular array distribution within a
-    given object. The class does differentiate
-    between a caller and callee object. It also 
-    calculates a schedule for the given distribution.
-    The class is mainly used to contain all pertinent 
-    information about the distribution and also to
-    provide some bookkeeping.
+    given object. The class is mainly used to contain 
+    all pertinent information about the distribution 
+    and also to provide some bookkeeping.
     Most of this class' methods are used withing the 
     MxNScheduler and NOT within the sidl code.
 
@@ -75,6 +73,7 @@
 namespace SCIRun {  
 
   class MxNArrSynch;
+  class MxNMetaSynch;
 
   //String comparison function for std::map
   struct ltstr
@@ -91,55 +90,43 @@ namespace SCIRun {
   
   //////////
   // List of array synchs
-  typedef std::map<std::string, MxNArrSynch*, ltstr> synchList;
+  // the key is call ID.
+  typedef std::map<int, MxNArrSynch*> synchList;
 
   class MxNScheduleEntry {
   public:
 
-    //ArrSynch needs access to local data in order to synchronize
+    //ArrSynch and MetaSynch need access to local data in order to synchronize
     friend class MxNArrSynch;
+    friend class MxNMetaSynch;
 
     //////////////
-    // Constructor accepts the name of the distribution
-    // and the purpose of this object in the form caller/callee 
-    MxNScheduleEntry(std::string n, sched_t st);
+    // Default Constructor 
+    MxNScheduleEntry();
 
     /////////////
     // Destructor which takes care of various memory freeing
     virtual ~MxNScheduleEntry();
     
     ////////////
-    // Returns true if this object is associated with a caller/callee
-    bool isCaller();
-    bool isCallee();
-
-    ////////////
     // Adds a caller/callee array description to the list
-    void addCallerRep(MxNArrayRep* arr_rep);
-    void addCalleeRep(MxNArrayRep* arr_rep);
+    void addRep(MxNArrayRep* arr_rep);
     
     ///////////
     // Retrieves an caller/callee array description by a given 
     // index number
-    MxNArrayRep* getCallerRep(unsigned int index);
-    MxNArrayRep* getCalleeRep(unsigned int index);
+    MxNArrayRep* getRep(unsigned int index);
+
 
     /////////
     // Calculate the redistribution schedule given the current array
     // representation this class has (if it had not been calculated
-    // before). Returns a the schedule. [CALLER ONLY]
-    descriptorList* makeSchedule(); 
-    
-    //////////
-    // Method is called when a remote Array description is recieved.
-    // The number of remote objects (size) is passed in to check
-    // whether that many descriptions have already been recieved.
-    // If that is the case, we raise a synchronization semaphore.
-    void reportMetaRecvDone(int size);
+    // before). Returns the schedule.
+    descriptorList* makeSchedule(MxNArrayRep* this_rep); 
 
     //////////
     // Clears existing arrays of MxNArrayReps
-    void clear(sched_t sch); 
+    void clear();
 
     ///////////
     // Prints the contents of this object
@@ -148,22 +135,18 @@ namespace SCIRun {
     //////////
     // List of synchronization object corresponding uniquely to an
     // 'callid' invocation by component with 'uuid'.
+    // used for server scheduler only
     synchList s_list;
 
+    //////////
+    // synchronization object used for meta data
+    // used for server scheduler only
+    MxNMetaSynch* meta_sync;
+
   private:
-    /////////
-    // Name of the distribution this object is associated with
-    std::string name;
-
-    /////////
-    // Role (caller/callee) that this object helps fulfil
-    sched_t scht;
-
-    /////////
-    // List of caller/callee array representations. Used to store
-    // both the local and remote representations
-    descriptorList caller_rep;
-    descriptorList callee_rep;
+    // List of caller/callee array representations. 
+    // Used to store remote representations
+    descriptorList rep;
 
     /////////
     // The computed distribution schedule.
@@ -173,10 +156,6 @@ namespace SCIRun {
     // Used to determine whether or not the schedule has been calculated
     bool madeSched;
 
-    /////////
-    // Semaphore used to separate the metadata (remote array descriptions)
-    // reception stage from the actual redistribution.
-    Semaphore meta_sema;
   };
 } // End namespace SCIRun
 
