@@ -67,7 +67,7 @@
 #include <Core/CCA/Comm/DT/DTThread.h>
 #include <Core/CCA/Comm/DT/DTPoint.h>
 #include <Core/CCA/Comm/DT/DTMessage.h>
-
+#include <deque>
 using namespace SCIRun;
 using namespace std;
 
@@ -646,3 +646,85 @@ DataTransmitter::exit(){
   quit=true;
   sendQ_cond->conditionSignal(); //wake up the sendingThread
 }
+
+Mutex *
+DataTransmitter::iid_mutex=new Mutex("PRMI ID (iid) mutex");
+
+std::map<Thread* ,ProxyID>
+DataTransmitter::iid_map; 
+
+void
+DataTransmitter::addPRMI_ID(ProxyID id){
+  iid_mutex->lock();
+  iid_map[Thread::self()]=id;
+  iid_mutex->unlock();
+}
+
+ProxyID
+DataTransmitter::getPRMI_ID(){
+  ProxyID id;
+  iid_mutex->lock();
+  id=iid_map[Thread::self()];
+  iid_mutex->unlock();
+  return id;
+}
+
+
+void
+DataTransmitter::delPRMI_ID(){
+  iid_mutex->lock();
+  iid_map.erase(Thread::self());
+  iid_mutex->unlock();
+}
+
+
+std::map<Thread*, ProxyID> 
+DataTransmitter::nid_map;
+
+ProxyID
+DataTransmitter::nextProxyID(){
+  Thread* tid=Thread::self();
+  ProxyID id=getPRMI_ID();
+  // do not move getPRMI_ID into locked section in case of deadlock.
+  ProxyID nid;
+  iid_mutex->lock();
+  if(nid_map.find(tid)==nid_map.end()){
+    nid_map[tid]=id.next();
+  }
+  nid=nid_map[tid];
+  nid_map[tid]=nid_map[tid].next();
+  iid_mutex->unlock();
+  return nid;
+}
+
+
+
+void
+DataTransmitter::mpi_lock(){
+  //called by any threads in the same address space. 
+    
+  //obtain the PRMI_ID
+  ProxyID iid=getPRMI_ID();
+  
+  //  PRMI_ID is head of the lock_queue, grant the lock
+  /*if(orderQ.size()>0 && iid= orderQ[0]){
+    return;
+  }
+  else{
+    
+    
+    //wrap a message (MPI_LOCK_REQUEST, PRMI_ID, lockid) and send to order service
+				
+    //create/register a semaphore and wait
+      
+    //wait until mpiunlock() or updatlock() updates the semaphore
+    
+    //now PRMI_ID should be the head of the lock_queue
+    
+    //grant the lock
+  }
+  */
+}
+
+
+

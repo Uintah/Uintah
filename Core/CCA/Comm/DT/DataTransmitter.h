@@ -48,6 +48,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <sstream>
 #include <Core/CCA/Comm/DT/DTAddress.h>
 #include <Core/CCA/Comm/DT/DTMessageTag.h>
 
@@ -58,8 +59,41 @@ namespace SCIRun {
   class ConditionVariable;
   class Semaphore;
   class Mutex;
-
+  class Thread;
   class DTException{
+  };
+
+
+  class ProxyID{
+  public:
+    int iid;  //first level ID
+    int pid;  //second level ID
+    ProxyID(){
+      iid=pid=0;
+    }
+
+    ProxyID(int iid, int pid){
+      this->iid=iid;
+      this->pid=pid;
+    }
+
+    bool isNull(){
+      return iid==0 && pid==0;
+    }
+
+    bool operator=(const ProxyID &o){
+      return iid==o.iid && pid==o.pid;
+    }
+
+    std::string str(){
+      ::std::ostringstream s;
+      s<<'|'<<iid<<'|'<<pid;
+      return s.str();
+    }
+
+    ProxyID next(){
+      return ProxyID(iid, pid+1);
+    }
   };
 
   class DataTransmitter{
@@ -104,6 +138,17 @@ namespace SCIRun {
     //void unregisterPoint(DTPoint *pt);
 
 
+
+    /////////////////////////////////////////////
+    // These method handles the PRMI IDs
+    // They are static methods, so everybody can access
+    // them without an DT object.
+    static void addPRMI_ID(ProxyID);
+    static ProxyID getPRMI_ID();
+    static void delPRMI_ID();
+
+    static ProxyID nextProxyID();
+
     std::string getUrl();
 
     //start the threads of listening, recieving, and sending
@@ -114,6 +159,9 @@ namespace SCIRun {
     DTAddress getAddress();
 
     bool isLocal(DTAddress& addr);
+
+    static void mpi_lock();
+    static void mpi_unlock();
 
     void exit();
   private:
@@ -163,6 +211,11 @@ namespace SCIRun {
     const static int PACKET_SIZE=1024*32;
 
     bool quit;
+    
+    static Mutex *iid_mutex;
+    static std::map<Thread* ,ProxyID> iid_map; //invocation id
+    static std::map<Thread* ,ProxyID> nid_map; //next proxy id
+
   };
 
 }//namespace SCIRun

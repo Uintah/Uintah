@@ -69,6 +69,8 @@
 ****************************************/
 
 namespace SCIRun {  
+  class ProxyID;
+
 
   ////////////////////
   // R = process rank; S = process size; L = array length in this dimension
@@ -102,15 +104,14 @@ namespace SCIRun {
     // Accepts an array representation describing a callee/callee
     // and assigns it to the appropriate ScheduleEntry for that 
     // distribution name + proxy_uuid
-    void setCallerRepresentation(std::string distname, std::string uuid, 
-				 MxNArrayRep* arrrep);
+    void setCallerRepresentation(std::string distname, ProxyID uuid, MxNArrayRep* arrrep);
     
     ////////////
     // Checks wether we are playing a caller/callee method
     // from the perspective of the distribution and 
     // gets the native distribution representation
     MxNArrayRep* calleeGetCalleeRep(std::string distname);
-    MxNArrayRep* callerGetCallerRep(std::string distname, std::string uuid);
+    MxNArrayRep* callerGetCallerRep(std::string distname, ProxyID uuid);
 
     /////////
     // Static methods that retrieve a appropriate Index
@@ -127,7 +128,7 @@ namespace SCIRun {
     // of the separate data receptions in order to eliminate 
     // copying
     // SeeAlso: similar methods in MxNScheduleEntry Class
-    void setArray(std::string distname, std::string uuid, int callid, void** arr);
+    void setArray(std::string distname, ProxyID uuid, int callid, void** arr);
      
     ////////////
     // (Callee Method)
@@ -135,28 +136,28 @@ namespace SCIRun {
     // before it returns the array. The notification that
     // a distribution has been received comes through the
     // reportRedisDone() method.
-    void* waitCompleteArray(std::string distname, std::string uuid, int callid);
+    void* waitCompleteArray(std::string distname, ProxyID uuid, int callid);
  
      ///////////
     // (Caller Method) 
     // It acquires all of the array descriptions that this object
     // needs to send part of its array to
-    descriptorList* getRedistributionReps(std::string distname, std::string uuid);
+    descriptorList* getRedistributionReps(std::string distname, ProxyID uuid);
  
     //////////
     // (Callee Method)
     // Retrieves a pointer to the ArrSynch, which provides access to the recieved
     // array as well as many other "great" synchronization methods
-    MxNArrSynch* getArrSynch(::std::string distname, ::std::string uuid, int callid);
+    MxNArrSynch* getArrSynch(::std::string distname, ProxyID uuid, int callid);
 
      //////////
     // (Callee Method)
     // Retrieves a pointer to the MetaSynch, which provides ynchronization methods
     // for setCallerDistribution and RMIs.
-    MxNMetaSynch* getMetaSynch(::std::string distname, ::std::string uuid, int size);
+    MxNMetaSynch* getMetaSynch(::std::string distname, ProxyID uuid, int size);
    //////////
     // Erases the ScheduleEntry with a particular name
-    void clear(std::string distname, std::string uuid, sched_t sch);
+    void clear(std::string distname, ProxyID uuid, sched_t sch);
 
     //////////
     // Prints this object

@@ -52,7 +52,7 @@
 #include <map>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
-
+#include <Core/CCA/PIDL/ProxyBase.h>
 namespace SCIRun {
 /**************************************
  
@@ -103,11 +103,13 @@ DESCRIPTION
 
     ////////
     // Adds data to the storage queue 
-    void add(int handler_num, int queue_num, void* data, std::string uuid, int callID, int numCalls);
+    //    void add(int handler_num, int queue_num, void* data, std::string uuid, int callID, int numCalls);
+    void add(int handler_num, int queue_num, void* data, ProxyID uuid, int callID, int numCalls);
 
     ///////
     // Retrieves queue element from storage
-    void* get(int handler_num, int queue_num, std::string uuid, int callID);
+    //    void* get(int handler_num, int queue_num, std::string uuid, int callID);
+    void* get(int handler_num, int queue_num, ProxyID uuid, int callID);
 
   private:
 

@@ -47,11 +47,12 @@
 #include <Core/CCA/PIDL/ReferenceMgr.h>
 #include <Core/CCA/PIDL/MxNScheduler.h>
 #include <Core/CCA/PIDL/XceptionRelay.h>
+#include <Core/CCA/Comm/DT/DataTransmitter.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector> 
 #include <string>
 #include <sgi_stl_warnings_on.h>
-
+#include <sstream>
 namespace SCIRun {
 
   class XceptionRelay;
@@ -70,6 +71,7 @@ DESCRIPTION
    component).  This class should not be used outside of PIDL
    or automatically generated sidl code.
 ****************************************/
+
   class ProxyBase {
   public:
     
@@ -128,7 +130,8 @@ DESCRIPTION
     
     //////////
     // Returns the unique identifier of this proxy 
-    ::std::string getProxyUUID(); 
+    //    ::std::string getProxyUUID(); 
+    ProxyID getProxyUUID();
 
     /////////
     // Created a subset of processes on the callee to service
@@ -152,7 +155,8 @@ DESCRIPTION
     // A unique name representing the entire proxy component
     // (Mostly used to represent the same proxy among the proxy's 
     // parallel processes) 
-    ::std::string proxy_uuid; 
+    //::std::string proxy_uuid; 
+    ProxyID proxy_uuid;
   };
 } // End namespace SCIRun
 

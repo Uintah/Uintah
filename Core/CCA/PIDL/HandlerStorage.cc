@@ -64,11 +64,11 @@ void HandlerStorage::clear()
   d_data_mutex.unlock(); 
 }
 
-void HandlerStorage::add(int handler_num, int queue_num, void* data, std::string uuid, int callID, int numCalls)
+void HandlerStorage::add(int handler_num, int queue_num, void* data, ProxyID uuid, int callID, int numCalls)
 {
   ::std::cout<<" ### HandlerStorage::add is called. ###"<<::std::endl;
   ::std::ostringstream index;
-  index << uuid << callID << handler_num;
+  index << uuid.iid <<'|'<<uuid.pid<<'|'<< callID <<'|'<<handler_num;
   /*Move everyone one space forward, to leave spc#0 for numCalls*/
   int qnum = queue_num + 1;
   
@@ -92,11 +92,11 @@ void HandlerStorage::add(int handler_num, int queue_num, void* data, std::string
   threadcount=0;
 }
 
-void* HandlerStorage::get(int handler_num, int queue_num, std::string uuid, int callID)
+void* HandlerStorage::get(int handler_num, int queue_num, ProxyID uuid, int callID)
 {
   void* getData;
   ::std::ostringstream index;
-  index << uuid << callID << handler_num;
+  index << uuid.iid <<'|'<<uuid.pid<<'|'<< callID <<'|'<<handler_num;
   /*Queue is misaligned by 1, see add()*/
   int qnum = queue_num + 1;
 
