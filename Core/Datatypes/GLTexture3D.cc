@@ -189,8 +189,12 @@ void GLTexture3D::set_bounds()
 
 void GLTexture3D::build_texture()
 {
-  max_workers = Max(Thread::numProcessors()/2, 8);
-  Semaphore* thread_sema = scinew Semaphore( "worker count semhpore",
+#ifdef __sgi
+  max_workers = Max(Thread::numProcessors()/2, 2);
+#else
+  max_workers = 1;
+#endif
+  Semaphore* thread_sema = scinew Semaphore( "worker count semaphore",
 					  max_workers);  
 
   string  group_name =  "thread group ";
@@ -479,9 +483,13 @@ GLTexture3D::run_make_low_res_brick_data::run()
 	  if( 2*ii >= xmax_ ) x = 4; else x = 0;
 	  if( 2*ii == xmax_ ) i = 1;
 
-	  brick = (*((*this->parent_)[x+y+z]))();
-	  brickTexture = brick->texture();
-
+	  const Octree<Brick*>* child = (*this->parent_)[x+y+z];
+	  if( child == 0 ){
+	    brick = 0;
+	  } else {
+	    brick = (*child)();
+	    brickTexture = brick->texture();
+	  }
 	  // This code does simple subsampling.  Uncomment the 
 	  // center section to perform averaging.
 	  if( brick == 0 ){
@@ -506,7 +514,9 @@ GLTexture3D::run_make_low_res_brick_data::run()
 	}
       }
     }
+#ifdef __sgi
     thread_sema_->up();
+#endif    
 //  }    
 }
 
