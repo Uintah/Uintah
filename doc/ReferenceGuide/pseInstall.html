@@ -523,3 +523,58 @@ cvs checkout PSE
              -minmem -nfileonly -tnative -rpthread
     </pre>
 
+<p class="subhead">Environment Variables</p>
+    <p class="firstpara">
+      Once the third party software is properly installed, set or edit 
+      environment variables to use those executables and libraries.
+    </p>
+
+    <p class="firstpara">
+      Usually, depending on the startup shell being used, there are two
+      environment variables that may need to be edited: one defining the
+      search path for executables and the other defining the search path
+      for libraries.  Edit (or set) those variables, for the shell being
+      used, to include the third party executables located in the /bin
+      directory(s) and to include the the third party libraries located
+      in the /lib directory(s).
+    </p>
+
+    <p class="firstpara">
+      As before, <i><b><font color=green>INST_DIR</font></b></i> represents
+      the chosen installation directory.
+    </p>
+
+    <p class="firstpara">
+      For csh or tcsh:
+    </p>
+
+    <pre class="example">setenv PATH <i><b><font color=green>INST_DIR</font></b></i>/bin:$PATH</pre>
+    <pre class="example">setenv LD_LIBRARY_PATH <i><b><font color=green>INST_DIR</font></b></i>/lib:$LD_LIBRARY_PATH</pre>
+
+    <p class="firstpara">
+      For bash or ksh:
+    </p>
+
+    <pre class="example">export PATH=<i><b><font color=green>INST_DIR</font></b></i>/bin:$PATH</pre>
+    <pre class="example">export LD_LIBRARY_PATH=<i><b><font color=green>INST_DIR</font></b></i>/lib:$LD_LIBRARY_PATH</pre>
+
+    <p class="firstpara">
+      Note that if the PATH and LD_LIBRARY_PATH variables were not already set,
+      then the trailing :$PATH and/or :$LD_LIBRARY_PATH are not needed and may
+      cause the command to fail.
+    </p>
+
+    <p class="firstpara">
+      Also, for machines using rld (e.g. SGI machines) the environment 
+      variable named above as LD_LIBARY_PATH may need to changed to
+      LD_LIBARARY32_PATH or LD_LIBRARY64_PATH depending upon machine's
+      default ABI (Application Binary Interface).
+    </p>
+
+
+
+
+
+
+
+
