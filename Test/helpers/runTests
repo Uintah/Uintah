@@ -74,10 +74,10 @@ if [ -f "$BUILDROOT"/opt/summary_log ]; then
 fi
 echo "" >> "$BUILDROOT"/log
 
-/bin/chgrp -Rh csafe "$BUILDROOT"
-/bin/chmod -R g+ws "$BUILDROOT"
-/bin/chgrp -Rh csafe "$TEST_DATA"
-/bin/chmod -R g+ws "$TEST_DATA"
+/usr/local/gnu/bin/chgrp -Rh csafe "$BUILDROOT"
+/usr/local/gnu/bin/chmod -R g+ws "$BUILDROOT"
+/usr/local/gnu/bin/chgrp -Rh csafe "$TEST_DATA"
+/usr/local/gnu/bin/chmod -R g+ws "$TEST_DATA"
 
 if [ "$SEND_MAIL_TO" != "" ]; then
     if [ $failed == "0" ]; then
