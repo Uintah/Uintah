@@ -39,6 +39,7 @@ itcl_class SCIRun_Visualization_GenTransferFunc {
 	set $this-rgbhsv 1
 
 	trace variable $this-alphas_pickle w "$this-c unpickle"
+	trace variable $this-rgbhsv w "$this-c toggle-hsv"
     }
     method ui {} {
 	set w .ui[modname]
