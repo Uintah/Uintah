@@ -2,7 +2,7 @@
 #include <config/sci.cf>
 
 SUBDIRS = sci
-TCLSUBDIRS = tcl7.3 tk3.6
+TCLSUBDIRS = tcl tk itcl
 
 SCISubdirs($(SUBDIRS))
 SCISubdirs3($(TCLSUBDIRS))
