@@ -63,6 +63,7 @@ void BoundCondFactory::create(ProblemSpecP& child,
   else if (bc_attr["label"] == "Velocity" && 
 	   (bc_attr["var"]   == "Neumann"  ||
 	    bc_attr["var"]   == "LODI" ||
+	    bc_attr["var"]   == "Custom" ||
 	    bc_attr["var"]   == "Dirichlet") ) {
     bc = scinew VelocityBoundCond(child,bc_attr["var"]);
   }
@@ -70,6 +71,7 @@ void BoundCondFactory::create(ProblemSpecP& child,
   else if (bc_attr["label"] == "Temperature" &&
 	   (bc_attr["var"]   == "Neumann"  ||
 	    bc_attr["var"]   == "LODI" ||
+	    bc_attr["var"]   == "Custom" ||
 	    bc_attr["var"]   == "Dirichlet") ) {
     bc = scinew TemperatureBoundCond(child,bc_attr["var"]);
   }
@@ -77,6 +79,7 @@ void BoundCondFactory::create(ProblemSpecP& child,
   else if (bc_attr["label"] == "Pressure" &&
 	   (bc_attr["var"]   == "Neumann"  ||
 	    bc_attr["var"]   == "LODI" ||
+	    bc_attr["var"]   == "Custom" ||
 	    bc_attr["var"]   == "Dirichlet") ) {
     bc = scinew PressureBoundCond(child,bc_attr["var"]);
   }
@@ -85,6 +88,7 @@ void BoundCondFactory::create(ProblemSpecP& child,
 	   (bc_attr["var"]   == "Neumann"  ||
 	    bc_attr["var"]   == "Dirichlet_perturbed"  ||
 	    bc_attr["var"]   == "LODI" ||
+	    bc_attr["var"]   == "Custom" ||
 	    bc_attr["var"]   == "Dirichlet") ) {
     bc = scinew DensityBoundCond(child,bc_attr["var"]);
   } 
