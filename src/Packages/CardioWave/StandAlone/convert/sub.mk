@@ -33,6 +33,10 @@ PROGRAM := $(SRCDIR)/CardioWaveToDenseMat
 SRCS := $(SRCDIR)/CardioWaveToDenseMat.cc
 include $(SRCTOP)/scripts/program.mk
 
+PROGRAM := $(SRCDIR)/CardioWaveToTwoDenseMats
+SRCS := $(SRCDIR)/CardioWaveToTwoDenseMats.cc
+include $(SRCTOP)/scripts/program.mk
+
 PROGRAM := $(SRCDIR)/CardioWaveToLatVolVectorField
 SRCS := $(SRCDIR)/CardioWaveToLatVolVectorField.cc
 include $(SRCTOP)/scripts/program.mk
@@ -43,4 +47,8 @@ include $(SRCTOP)/scripts/program.mk
 
 PROGRAM := $(SRCDIR)/SubsetPts
 SRCS := $(SRCDIR)/SubsetPts.cc
+include $(SRCTOP)/scripts/program.mk
+
+PROGRAM := $(SRCDIR)/TestFloodFill
+SRCS := $(SRCDIR)/TestFloodFill.cc
 include $(SRCTOP)/scripts/program.mk

@@ -2,9 +2,6 @@
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
 set m0 [addModuleAtPosition "CardioWave" "CreateModel" "VectorFieldsToTensorField" 10 91]
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 10 10]
 set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 160 9]
@@ -22,7 +19,7 @@ set m13 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 349 337]
 set m14 [addModuleAtPosition "CardioWave" "CreateModel" "HexIntMask" 349 276]
 set m15 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 367 571]
 set m16 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 367 631]
-set m17 [addModuleAtPosition "SCIRun" "DataIO" "FieldWriter" 470 235]
+set m17 [addModuleAtPosition "SCIRun" "DataIO" "FieldWriter" 470 475]
 
 addConnection $m1 0 $m0 0
 addConnection $m2 0 $m0 1
@@ -42,19 +39,18 @@ addConnection $m15 0 $m16 0
 addConnection $m16 0 $m12 2
 addConnection $m4 0 $m17 0
 addConnection $m8 0 $m9 0
-addConnection $m0 0 $m6 0
 
 set $m0-notes {}
 set $m0-show_status {1}
 set $m1-notes {}
 set $m1-show_status {1}
-set $m1-filename {/home/sci/dmw/mydata/mouse-tensor-e1.lvv.fld}
+set $m1-filename {/home/sci/dmw/mydata/duke/mouse-heart-64-e1.lvv.fld}
 set $m2-notes {}
 set $m2-show_status {1}
-set $m2-filename {/home/sci/dmw/mydata/mouse-tensor-e2.lvv.fld}
+set $m2-filename {/home/sci/dmw/mydata/duke/mouse-heart-64-e2.lvv.fld}
 set $m3-notes {}
 set $m3-show_status {1}
-set $m3-filename {/home/sci/dmw/mydata/mouse-tensor.lvt.fld}
+set $m3-filename {/home/sci/dmw/mydata/duke/mouse-heart-64.lvt.fld}
 set $m3-filetype {ASCII}
 set $m4-notes {}
 set $m4-show_status {1}
@@ -65,9 +61,9 @@ set $m6-show_status {1}
 set $m6-locx {          10.8128}
 set $m6-locy {          7.44186}
 set $m6-locz {          4.46698}
-set $m6-value {202}
+set $m6-value {0}
 set $m6-node {11541508}
-set $m6-edge {903}
+set $m6-edge {3335}
 set $m6-face {0}
 set $m6-cell {10492932}
 set $m6-moveto {}
@@ -81,6 +77,7 @@ set $m9-notes {}
 set $m9-show_status {1}
 set $m10-notes {}
 set $m10-show_status {1}
+set $m10-exclude {0}
 set $m11-notes {}
 set $m11-show_status {1}
 set $m11-nodes-on {0}
@@ -111,15 +108,15 @@ $m12 ui
 set $m12-ViewWindow_0-pos {}
 set $m12-ViewWindow_0-caxes {0}
 set $m12-ViewWindow_0-iaxes {}
-set $m12-ViewWindow_0-view-eyep-x {          67.4163}
-set $m12-ViewWindow_0-view-eyep-y {          39.9991}
-set $m12-ViewWindow_0-view-eyep-z {         -5.95122}
-set $m12-ViewWindow_0-view-lookat-x {          6.29215}
-set $m12-ViewWindow_0-view-lookat-y {          6.29215}
-set $m12-ViewWindow_0-view-lookat-z {          7.79215}
-set $m12-ViewWindow_0-view-up-x {        -0.173961}
-set $m12-ViewWindow_0-view-up-y {       -0.0845699}
-set $m12-ViewWindow_0-view-up-z {        -0.981114}
+set $m12-ViewWindow_0-view-eyep-x {         -36.1329}
+set $m12-ViewWindow_0-view-eyep-y {          49.0786}
+set $m12-ViewWindow_0-view-eyep-z {          2.39224}
+set $m12-ViewWindow_0-view-lookat-x {                8}
+set $m12-ViewWindow_0-view-lookat-y {                8}
+set $m12-ViewWindow_0-view-lookat-z {                8}
+set $m12-ViewWindow_0-view-up-x {        0.0624805}
+set $m12-ViewWindow_0-view-up-y {       -0.0687961}
+set $m12-ViewWindow_0-view-up-z {        -0.995672}
 set $m12-ViewWindow_0-view-fov {               20}
 set $m12-ViewWindow_0-view-eyep_offset-x {}
 set $m12-ViewWindow_0-view-eyep_offset-y {}
@@ -143,10 +140,12 @@ set $m12-ViewWindow_0-resx {}
 set $m12-ViewWindow_0-resy {}
 set $m12-ViewWindow_0-aspect {}
 set $m12-ViewWindow_0-aspect_ratio {}
+set $m12-ViewWindow_0-unused {1}
 set $m13-notes {}
 set $m13-show_status {1}
 set $m14-notes {}
 set $m14-show_status {1}
+set $m14-exclude {0}
 set $m15-notes {}
 set $m15-show_status {1}
 set $m16-notes {}

@@ -64,19 +64,28 @@ main(int argc, char **argv) {
   cin >> minx >> miny >> minz;
   cout << "Max x y z? ";
   cin >> maxx >> maxy >> maxz;
+  cout << "Data at nodes or cells (n/c)? ";
+  string nodes_or_cells;
+  cin >> nodes_or_cells;
   cout << "ASCII or Binary output (a/b)? ";
   string ascii_or_binary_output;
   cin >> ascii_or_binary_output;
 
   Point min(minx, miny, minz), max(maxx, maxy, maxz);
-  LatVolMeshHandle lvm = new LatVolMesh(ni, nj, nk, min, max);
+  LatVolMeshHandle lvm;
+  if (nodes_or_cells == "n") lvm = new LatVolMesh(ni, nj, nk, min, max);
+  else lvm = new LatVolMesh(ni+1, nj+1, nk+1, min, max);
+
   FieldHandle fH;
 
   FILE *fin = fopen(argv[1], "rt");
 
   if (datatype == "d") {
-    LatVolField<double> *lv = 
-      new LatVolField<double>(lvm, Field::NODE);
+    LatVolField<double> *lv;
+    if (nodes_or_cells == "n") 
+      lv = new LatVolField<double>(lvm, Field::NODE);
+    else 
+      lv = new LatVolField<double>(lvm, Field::CELL);
     fH=lv;
     double *data=&(lv->fdata()(0,0,0));
     if (ascii_or_binary_input == "a") {
@@ -89,8 +98,11 @@ main(int argc, char **argv) {
       fread(data, sizeof(double), ni*nj*nk, fin);
     }
   } else if (datatype == "f") {
-    LatVolField<float> *lv = 
-      new LatVolField<float>(lvm, Field::NODE);
+    LatVolField<float> *lv;
+    if (nodes_or_cells == "n") 
+      lv = new LatVolField<float>(lvm, Field::NODE);
+    else 
+      lv = new LatVolField<float>(lvm, Field::CELL);
     fH=lv;
     float *data=&(lv->fdata()(0,0,0));
     if (ascii_or_binary_input == "a") {
@@ -103,8 +115,11 @@ main(int argc, char **argv) {
       fread(data, sizeof(float), ni*nj*nk, fin);
     }
   } else if (datatype == "ui") {
-    LatVolField<unsigned int> *lv = 
-      new LatVolField<unsigned int>(lvm, Field::NODE);
+    LatVolField<unsigned int> *lv;
+    if (nodes_or_cells == "n") 
+      lv = new LatVolField<unsigned int>(lvm, Field::NODE);
+    else
+      lv = new LatVolField<unsigned int>(lvm, Field::CELL);
     fH=lv;
     unsigned int *data=&(lv->fdata()(0,0,0));
     if (ascii_or_binary_input == "a") {
@@ -117,8 +132,11 @@ main(int argc, char **argv) {
       fread(data, sizeof(unsigned int), ni*nj*nk, fin);
     }
   } else if (datatype == "i") {
-    LatVolField<int> *lv = 
-      new LatVolField<int>(lvm, Field::NODE);
+    LatVolField<int> *lv;
+    if (nodes_or_cells == "n") 
+      lv = new LatVolField<int>(lvm, Field::NODE);
+    else
+      lv = new LatVolField<int>(lvm, Field::CELL);
     fH=lv;
     int *data=&(lv->fdata()(0,0,0));
     if (ascii_or_binary_input == "a") {
@@ -129,10 +147,18 @@ main(int argc, char **argv) {
       }
     } else {
       fread(data, sizeof(int), ni*nj*nk, fin);
+//      char *d = new char[ni*nj*nk];
+//      fread(d, sizeof(char), ni*nj*nk, fin);
+//      for (int i=0; i<ni*nj*nk; i++)
+//	*data++ = (int)d[i];
+//      delete[] d;
     }
   } else if (datatype == "us") {
-    LatVolField<unsigned short> *lv = 
-      new LatVolField<unsigned short>(lvm, Field::NODE);
+    LatVolField<unsigned short> *lv;
+    if (nodes_or_cells == "n") 
+      lv = new LatVolField<unsigned short>(lvm, Field::NODE);
+    else
+      lv = new LatVolField<unsigned short>(lvm, Field::CELL);
     fH=lv;
     unsigned short *data=&(lv->fdata()(0,0,0));
     if (ascii_or_binary_input == "a") {
@@ -145,8 +171,11 @@ main(int argc, char **argv) {
       fread(data, sizeof(unsigned short), ni*nj*nk, fin);
     }
   } else if (datatype == "s") {
-    LatVolField<short> *lv = 
-      new LatVolField<short>(lvm, Field::NODE);
+    LatVolField<short> *lv;
+    if (nodes_or_cells == "n") 
+      lv = new LatVolField<short>(lvm, Field::NODE);
+    else
+      lv = new LatVolField<short>(lvm, Field::CELL);
     fH=lv;
     short *data=&(lv->fdata()(0,0,0));
     if (ascii_or_binary_input == "a") {
@@ -159,8 +188,11 @@ main(int argc, char **argv) {
       fread(data, sizeof(short), ni*nj*nk, fin);
     }
   } else if (datatype == "uc") {
-    LatVolField<unsigned char> *lv = 
-      new LatVolField<unsigned char>(lvm, Field::NODE);
+    LatVolField<unsigned char> *lv;
+    if (nodes_or_cells == "n") 
+      lv = new LatVolField<unsigned char>(lvm, Field::NODE);
+    else
+      lv = new LatVolField<unsigned char>(lvm, Field::CELL);
     fH=lv;
     unsigned char *data=&(lv->fdata()(0,0,0));
     if (ascii_or_binary_input == "a") {
@@ -173,8 +205,11 @@ main(int argc, char **argv) {
       fread(data, sizeof(unsigned char), ni*nj*nk, fin);
     }
   } else if (datatype == "c") {
-    LatVolField<char> *lv = 
-      new LatVolField<char>(lvm, Field::NODE);
+    LatVolField<char> *lv;
+    if (nodes_or_cells == "n") 
+      lv = new LatVolField<char>(lvm, Field::NODE);
+    else
+      lv = new LatVolField<char>(lvm, Field::CELL);
     fH=lv;
     char *data=&(lv->fdata()(0,0,0));
     if (ascii_or_binary_input == "a") {

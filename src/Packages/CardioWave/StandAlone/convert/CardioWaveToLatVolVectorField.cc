@@ -43,7 +43,7 @@ using namespace SCIRun;
 int
 main(int argc, char **argv) {
   if (argc != 7) {
-    cerr << "Usage: "<<argv[0]<<" raw nx ny nz sample LatVolVectorField\n";
+    cerr << "Usage: "<<argv[0]<<" raw nx ny nz samplestride LatVolVectorField\n";
     return 0;
   }
   int ni, nj, nk;
@@ -70,11 +70,12 @@ main(int argc, char **argv) {
 
   Point min(0,0,0);
 
-  Point max(ni/sample, nj/sample, nk/sample);
+  Point max(1,1,1);
+//  Point max(ni/sample, nj/sample, nk/sample);
 
-  LatVolMeshHandle lvm = new LatVolMesh((ni-1)/sample+2, (nj-1)/sample+2, 
-					(nk-1)/sample+2, min, max);
-  LatVolField<Vector> *lvf = new LatVolField<Vector>(lvm, Field::CELL);
+  LatVolMeshHandle lvm = new LatVolMesh((ni-1)/sample+1, (nj-1)/sample+1, 
+					(nk-1)/sample+1, min, max);
+  LatVolField<Vector> *lvf = new LatVolField<Vector>(lvm, Field::NODE);
   Vector *vdata = &(lvf->fdata()(0,0,0));
   
   int idx=0;

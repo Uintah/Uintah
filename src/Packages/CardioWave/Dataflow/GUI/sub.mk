@@ -34,6 +34,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ReclassifyInteriorTets.tcl \
 	$(SRCDIR)/RemoveInteriorTets.tcl \
 	$(SRCDIR)/SetupFVMatrix.tcl \
+	$(SRCDIR)/SetupFVM2.tcl \
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/CardioWave/Dataflow/GUI
 

@@ -33,9 +33,11 @@ SRCS     += \
 	$(SRCDIR)/FloodFillNewValue.cc\
 	$(SRCDIR)/HexIntMask.cc\
 	$(SRCDIR)/HexToTet.cc\
+	$(SRCDIR)/HexMeshCuthillMcKee.cc\
 	$(SRCDIR)/ReclassifyInteriorTets.cc\
 	$(SRCDIR)/RemoveInteriorTets.cc\
 	$(SRCDIR)/SetupFVMatrix.cc\
+	$(SRCDIR)/SetupFVM2.cc\
 	$(SRCDIR)/VectorFieldsToTensorField.cc\
 #[INSERT NEW CODE FILE HERE]
 

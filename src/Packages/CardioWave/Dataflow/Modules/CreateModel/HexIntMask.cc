@@ -154,68 +154,125 @@ HexIntMask::execute()
 
   HexVolMeshHandle hvmesh = hvfield->get_typed_mesh();
   HexVolMeshHandle clipped = scinew HexVolMesh();
-
-#ifdef HAVE_HASH_MAP
-  typedef hash_map<unsigned int,
-    HexVolMesh::Node::index_type,
-    hash<unsigned int>,
-    equal_to<unsigned int> > hash_type;
-#else
-  typedef map<unsigned int,
-    HexVolMesh::Node::index_type,
-    equal_to<unsigned int> > hash_type;
-#endif
-
-  hash_type nodemap;
-
-  vector<HexVolMesh::Elem::index_type> elemmap;
-
-  HexVolMesh::Elem::iterator bi, ei;
-  hvmesh->begin(bi);
-  hvmesh->end(ei);
-  while (bi != ei)
-  {
-    int val;
-    hvfield->value(val, *bi);
-    if (std::find(exclude.begin(), exclude.end(), val) == exclude.end())
-    {
-      HexVolMesh::Node::array_type onodes;
-      hvmesh->get_nodes(onodes, *bi);
-      HexVolMesh::Node::array_type nnodes(onodes.size());
-      
-      for (unsigned int i = 0; i < onodes.size(); i++)
-      {
-	if (nodemap.find((unsigned int)onodes[i]) == nodemap.end())
-	{
-	  Point np;
-	  hvmesh->get_center(np, onodes[i]);
-	  nodemap[(unsigned int)onodes[i]] = clipped->add_point(np);
-	}
-	nnodes[i] = nodemap[(unsigned int)onodes[i]];
-      }
-
-      clipped->add_elem(nnodes);
-      elemmap.push_back(*bi);
-    }
-
-    ++bi;
-  }
-  clipped->flush_changes();
-
   HexVolField<int> *ofield = 0;
-  if (elemmap.size() > 0)
-  {
-    ofield = scinew HexVolField<int>(clipped, Field::CELL);
-    *(PropertyManager *)ofield = *(PropertyManager *)hvfield;
 
-    int val;
-    for (unsigned int i = 0; i < elemmap.size(); i++)
+  if (hvfield->data_at() == Field::CELL) {
+#ifdef HAVE_HASH_MAP
+    typedef hash_map<unsigned int,
+      HexVolMesh::Node::index_type,
+      hash<unsigned int>,
+      equal_to<unsigned int> > hash_type;
+#else
+    typedef map<unsigned int,
+      HexVolMesh::Node::index_type,
+      equal_to<unsigned int> > hash_type;
+#endif
+    
+    hash_type nodemap;
+    
+    vector<HexVolMesh::Elem::index_type> elemmap;
+    
+    HexVolMesh::Elem::iterator bi, ei;
+    hvmesh->begin(bi);
+    hvmesh->end(ei);
+    while (bi != ei)
     {
-      hvfield->value(val, elemmap[i]);
-      ofield->set_value(val, (HexVolMesh::Elem::index_type)i);
+      int val;
+      hvfield->value(val, *bi);
+      if (std::find(exclude.begin(), exclude.end(), val) == exclude.end())
+      {
+	HexVolMesh::Node::array_type onodes;
+	hvmesh->get_nodes(onodes, *bi);
+	HexVolMesh::Node::array_type nnodes(onodes.size());
+	
+	for (unsigned int i = 0; i < onodes.size(); i++)
+	{
+	  if (nodemap.find((unsigned int)onodes[i]) == nodemap.end())
+	  {
+	    Point np;
+	    hvmesh->get_center(np, onodes[i]);
+	    nodemap[(unsigned int)onodes[i]] = clipped->add_point(np);
+	  }
+	  nnodes[i] = nodemap[(unsigned int)onodes[i]];
+	}
+	
+	clipped->add_elem(nnodes);
+	elemmap.push_back(*bi);
+      }
+      ++bi;
+    }
+    clipped->flush_changes();
+    
+    if (elemmap.size() > 0)
+    {
+      ofield = scinew HexVolField<int>(clipped, Field::CELL);
+      *(PropertyManager *)ofield = *(PropertyManager *)hvfield;
+      
+      int val;
+      for (unsigned int i = 0; i < elemmap.size(); i++)
+      {
+	hvfield->value(val, elemmap[i]);
+	ofield->set_value(val, (HexVolMesh::Elem::index_type)i);
+      }
+    }
+  } else {
+    vector<HexVolMesh::Node::index_type> nodemap;
+    HexVolMesh::Node::size_type nnodes;
+    hvmesh->size(nnodes);
+    vector<HexVolMesh::Node::index_type> invnodemap(nnodes);
+    vector<HexVolMesh::Node::index_type> valid(nnodes);
+    
+    HexVolMesh::Node::iterator bi, ei;
+    hvmesh->begin(bi);
+    hvmesh->end(ei);
+    while (bi != ei) {
+      int val;
+      hvfield->value(val, *bi);
+      if (std::find(exclude.begin(), exclude.end(), val) == exclude.end()) {
+	Point np;
+	hvmesh->get_center(np, *bi);
+	clipped->add_point(np);
+	invnodemap[*bi] = nodemap.size();
+	valid[*bi] = 1;
+	nodemap.push_back(*bi);
+      } else {
+	valid[*bi] = 0;
+      }
+      ++bi;
+    }
+      
+    HexVolMesh::Cell::iterator bci, eci;
+    hvmesh->begin(bci);
+    hvmesh->end(eci);
+    while (bci != eci) {
+      HexVolMesh::Node::array_type onodes;
+      hvmesh->get_nodes(onodes, *bci);
+      HexVolMesh::Node::array_type nnodes(onodes.size());
+      int isvalid=1;
+      for (unsigned int i = 0; i < onodes.size() && isvalid; i++) {
+	isvalid &= valid[onodes[i]];
+	if (isvalid) 
+	  nnodes[i] = invnodemap[onodes[i]];
+      }
+      if (isvalid) 
+	clipped->add_elem(nnodes);
+      ++bci;
+    }
+    clipped->flush_changes();
+    
+    if (nodemap.size() > 0)
+    {
+      ofield = scinew HexVolField<int>(clipped, Field::NODE);
+      *(PropertyManager *)ofield = *(PropertyManager *)hvfield;
+      
+      int val;
+      for (unsigned int i = 0; i < nodemap.size(); i++)
+      {
+	hvfield->value(val, nodemap[i]);
+	ofield->set_value(val, (HexVolMesh::Node::index_type)i);
+      }
     }
   }
-
   // Forward the results.
   FieldOPort *ofp = (FieldOPort *)get_oport("Masked HexVol");
   if (!ofp)

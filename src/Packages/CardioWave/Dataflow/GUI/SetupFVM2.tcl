@@ -15,32 +15,26 @@
 #  University of Utah. All Rights Reserved.
 #
 
-catch {rename CardioWave_CreateModel_SetupFVMatrix ""}
+catch {rename CardioWave_CreateModel_SetupFVM2 ""}
 
-itcl_class CardioWave_CreateModel_SetupFVMatrix {
+itcl_class CardioWave_CreateModel_SetupFVM2 {
     inherit Module
 
     constructor {config} {
-	set name SetupFVMatrix
+	set name SetupFVM2
 	set_defaults
     }
 
     method set_defaults {} {	
-        global $this-sigx1
-	global $this-sigy1
-	global $this-sigz1
-        global $this-sigx2
-	global $this-sigy2
-	global $this-sigz2
+        global $this-bathsig
+	global $this-fibersig1
+	global $this-fibersig2
 	global $this-sprfile
 	global $this-volumefile
 	global $this-visfile
-        set $this-sigx1 1
-	set $this-sigy1 1
-	set $this-sigz1 1
-        set $this-sigx2 20
-	set $this-sigy2 20
-	set $this-sigz2 20
+        set $this-bathsig 20
+	set $this-fibersig1 6
+	set $this-fibersig2 1
 	set $this-sprfile "SPR"
 	set $this-volumefile "VOLUME"
 	set $this-visfile "VIS"
@@ -64,33 +58,26 @@ itcl_class CardioWave_CreateModel_SetupFVMatrix {
 	
         toplevel $w
         wm minsize $w 150 20
-        frame $w.f
-        pack $w.f -padx 2 -pady 2 -side top -expand yes
 
-  	frame $w.sigma1
-        global $this-sigx1
-	global $this-sigy1
-	global $this-sigz1
-	make_entry $w.sigma1.x "Cell1-Sigma X (mS/cm):" $this-sigx1 \
+  	frame $w.bathsig
+        global $this-bathsig
+	global $this-fibersig1
+	global $this-fibersig2
+	global $this-sprfile
+	global $this-volumefile
+	global $this-visfile
+	make_entry $w.bathsig.u "Bath Sigma (mS/cm):" $this-bathsig \
 		"$this-c needexecute"
-	make_entry $w.sigma1.y "Cell1-Sigma Y (mS/cm):" $this-sigy1 \
-		"$this-c needexecute"
-	make_entry $w.sigma1.z "Cell1-Sigma Z (mS/cm):" $this-sigz1 \
-		"$this-c needexecute"
-	pack $w.sigma1.x $w.sigma1.y $w.sigma1.z -side left -fill x -expand 1
+	pack $w.bathsig.u -side top -fill x -expand 1
 
-  	frame $w.sigma2
-        global $this-sigx2
-	global $this-sigy2
-	global $this-sigz2
-	make_entry $w.sigma2.x "Cell2-Sigma X (mS/cm):" $this-sigx2 \
-		"$this-c needexecute"
-	make_entry $w.sigma2.y "Cell2-Sigma Y (mS/cm):" $this-sigy2 \
-		"$this-c needexecute"
-	make_entry $w.sigma2.z "Cell2-Sigma Z (mS/cm):" $this-sigz2 \
-		"$this-c needexecute"
-	pack $w.sigma2.x $w.sigma2.y $w.sigma2.z -side left -fill x -expand 1
+  	frame $w.fibersig
+	make_entry $w.fibersig.p "Fiber Primary Sigma (mS/cm):" \
+		$this-fibersig1 "$this-c needexecute"
+	make_entry $w.fibersig.s "Fiber Secondary Sigma (mS/cm):" \
+		$this-fibersig2 "$this-c needexecute"
+	pack $w.fibersig.p $w.fibersig.s -side top -fill x -expand 1
 
+	frame $w.f
 
         global $this-sprfile
 	make_entry $w.f.spr "SPR file: " $this-sprfile \
@@ -104,6 +91,8 @@ itcl_class CardioWave_CreateModel_SetupFVMatrix {
 	make_entry $w.f.vis "Vis file: " $this-visfile \
 		"$this-c needexecute"
 
-	pack $w.f $w.sigma1 $w.sigma2 $w.f.spr $w.f.vol $w.f.vis -side top
+	pack $w.f.spr $w.f.vol $w.f.vol $w.f.vis -side top
+
+	pack $w.bathsig $w.fibersig $w.f -side top
    }
 }
