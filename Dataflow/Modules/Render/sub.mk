@@ -52,7 +52,7 @@ PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Core/GuiInterface Core/TkExtensions Core/Util \
 	Core/TkExtensions Core/Datatypes
 
-CFLAGS += $(MPEG_DEF_FLAG)
+CFLAGS += $(MPEG_DEF_FLAG) $(MAGICK_DEF_FLAG)
 
 INCLUDES += $(MPEG_INCLUDE) $(MAGICK_INCLUDE)
 

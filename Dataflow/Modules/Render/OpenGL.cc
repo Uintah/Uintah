@@ -31,9 +31,11 @@
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/logo.h>
 
+#ifdef MAGICK
 namespace C_Magick {
 #include <magick/magick.h>
 }
+#endif
 
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern Tcl_Interp* the_interp;
@@ -331,8 +333,10 @@ void OpenGL::redraw_loop()
       throttle.start();
     }
 
-    if(do_hi_res)
+    if(do_hi_res) {
       render_and_save_image(resx,resy,fname,ftype);
+      do_hi_res=false;
+    }
 
     redraw_frame();
     for(int i=0;i<nreply;i++)
@@ -346,16 +350,30 @@ void
 OpenGL::render_and_save_image(int x, int y, 
 			      const string& fname, const string &ftype)
 {
-  cerr << "Saving Image: " << fname.c_str() << " with width :" << x 
-       << " and height: " << y <<"...";
+#ifndef MAGICK
+  if (ftype != "ppm" && ftype != "raw") {
+    cerr << "Error - ImageMagick is not enabled, can only save .ppm or .raw files.\n";
+    return;
+  }
+#endif
+
+  cerr << "Saving Image: " << fname.c_str() << " with width=" << x 
+       << " and height=" << y <<"... ";
+
+
+  // FIXME: this next line was apparently meant to raise the Viewer to the 
+  //        top... but it doesn't actually seem to work
+  Tk_RestackWindow(tkwin,Above,NULL);
+
 
   TCLTask::lock();  
-  Tk_RestackWindow(tkwin,Above,NULL);
   // Make sure our GL context is current
   if(current_drawer != this){
     current_drawer=this;
     glXMakeCurrent(dpy, win, cx);
   }
+  deriveFrustum();
+  TCLTask::unlock();  
 
   // Get Viewport dimensions
   GLint vp[4];
@@ -371,13 +389,13 @@ OpenGL::render_and_save_image(int x, int y,
   const int nrows = (int)ceil(hi_res.nrows);
   const int ncols = (int)ceil(hi_res.ncols);
       
-  deriveFrustum();
-
   ofstream *image_file;
+#ifdef MAGICK
   C_Magick::Image *image;
   C_Magick::ImageInfo *image_info;
+#endif
   int channel_bytes, num_channels;
-  bool do_magick = false;
+  bool do_magick;
 
   if (ftype == "ppm" || ftype == "raw")
   {
@@ -392,8 +410,9 @@ OpenGL::render_and_save_image(int x, int y,
       (*image_file) << 255 << endl;
     }
   }
-  else
+  else 
   {
+#ifdef MAGICK
     C_Magick::InitializeMagick(0);
     num_channels = 4;
     channel_bytes = 2;
@@ -405,7 +424,7 @@ OpenGL::render_and_save_image(int x, int y,
     image=C_Magick::AllocateImage(image_info);
     image->columns=hi_res.resx;
     image->rows=hi_res.resy;
-
+#endif
   }
 
   const int pix_size = channel_bytes*num_channels;
@@ -420,7 +439,6 @@ OpenGL::render_and_save_image(int x, int y,
     tmp_row = scinew unsigned char[hi_res.resx*pix_size];
 
 
-  TCLTask::unlock();  
   for (hi_res.row = nrows - 1; hi_res.row >= 0; --hi_res.row)
   {
     int read_height = hi_res.resy - hi_res.row * vp[3];
@@ -428,8 +446,10 @@ OpenGL::render_and_save_image(int x, int y,
     
     if (do_magick)
     {
+#ifdef MAGICK
       pixels = (unsigned char *)C_Magick::SetImagePixels
 	(image,0,vp[3]*(nrows - 1 - hi_res.row),hi_res.resx,read_height);
+#endif
     }
 
     if (!pixels)
@@ -473,9 +493,11 @@ OpenGL::render_and_save_image(int x, int y,
       memcpy(top_row, bot_row, hi_res.resx*pix_size);
       memcpy(bot_row, tmp_row, hi_res.resx*pix_size);
     }
-    if (do_magick)
+    if (do_magick) {
+#ifdef MAGICK
       C_Magick::SyncImagePixels(image);
-    else
+#endif
+    } else
       image_file->write((char *)pixels, hi_res.resx*read_height*pix_size);
   }
   TCLTask::lock();
@@ -486,6 +508,7 @@ OpenGL::render_and_save_image(int x, int y,
 
   if (do_magick)
   {
+#ifdef MAGICK    
     if (!C_Magick::WriteImage(image_info,image))
     {
       cerr << "\nCannont Write " << fname.c_str() << " because: " 
@@ -495,6 +518,7 @@ OpenGL::render_and_save_image(int x, int y,
     C_Magick::DestroyImageInfo(image_info);
     C_Magick::DestroyImage(image);
     C_Magick::DestroyMagick();
+#endif
   }
   else
   {
@@ -502,15 +526,14 @@ OpenGL::render_and_save_image(int x, int y,
     delete[] pixels;
   }
 
+  TCLTask::unlock();
+
   if (tmp_row)
   {
     delete[] tmp_row;
     tmp_row = 0;
   }
-     
-  TCLTask::unlock();
 
-  do_hi_res = false;
   cout << "done." << endl;
 }
 
