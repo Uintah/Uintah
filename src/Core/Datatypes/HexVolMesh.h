@@ -291,6 +291,10 @@ private:
   vector<under_type>   cells_;
   Mutex                cells_lock_;
 
+  //! each 8 indecies make up a Hex
+  vector<under_type>   neighbors_;
+  Mutex                nbors_lock_;
+
   //! Face information.
   struct PFace {
     Node::index_type         nodes_[4];   //! 4 nodes makes a face.
