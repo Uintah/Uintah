@@ -396,147 +396,6 @@ module's pop-up menu.  Enabling one module enables all selected modules.
 
 See also \secref{Disabling/Enabling Connections}{sec:disableconnect}.
 
-\section{Creating a Sub-Network}
-\label{sec:crsubnet}
-\index{sub-network}
-
-%begin{latexonly}
-\newcommand{\subnetgraphicfig}{%
-  \centerline{\includegraphics[bb=0 0 252 144]{Figures/subnetgraphic.eps.gz}}
-}
-%end{latexonly}
-\begin{htmlonly}
-  \newcommand{\subnetgraphicfig}{%
-    \htmladdimg[alt="Graphic of a Sub-network"]{../Figures/subnetgraphic.gif}
-  }
-\end{htmlonly}
-
-
-A sub-network is a group of modules that are treated as a single
-module.  In a network, you may use a sub-network as you would a
-module.
-
-To create a sub-network, select one or more modules, then choose item
-\guimenuitem{Create Sub-Network} from any selected module's pop-up menu.
-Selected modules will be replaced by a sub-network graphic and the
-sub-network editor will activate.  Sub-networks may be created in
-sub-networks.  The next section (\secref{Editing a
-  Sub-Network}{sec:editsubnet}) explains the use of the sub-network
-editor.
-
-A sub-network editor button replaces the CPU time and Progress
-Bar in the sub-network graphic.  See Figure~\ref{fig:subnetgraphic}
-
-\begin{figure}[htb]
-  \centering
-  \begin{makeimage} \end{makeimage}
-  \subnetgraphicfig
-  \caption{\label{fig:subnetgraphic} A Sub-Network in the NetEdit frame}
-\end{figure}
-
-A sub-network's editor is activated by pressing the
-sub-network editor button.
-
-Pressing button \guibutton{UI} activates control dialogs of all
-modules in a sub-network.  Control dialogs can be activated
-individually in the sub-network editor.
-
-In a network, a sub-network behaves as does a module.  A sub-network
-has input and/or output ports (orginating from modules within the
-sub-network) that can be connected to modules outside of the
-sub-network.  Each sub-network has a pop-up menu and a set of editable
-notes (see \secref{Editing and Displaying Module
-  Notes}{sec:modnotes}).  A sub-network does not have a log. Logs of
-individual modules in the sub-network can be viewed in the sub-network
-editor window (see \secref{Viewing a Module's Log}{sec:viewmodslog}).
-
-\section{Expanding a Sub-Network}
-\label{sec:expsubnet}
-
-Expanding a network reverses the action of menu item \guimenuitem{Create
-  Sub-Network}---all modules in a sub-network are returned to the
-network containing the sub-network and the sub-network is destroyed.
-This action cannot be undone.
-
-To expand a sub-network choose menu item \guimenuitem{Expand Sub-Network}
-from the sub-network's pop-up menu.
-
-\section{Editing a Sub-Network}
-\label{sec:editsubnet}
-
-%begin{latexonly}
-\newcommand{\subneteditorfig}{%
-  \centerline{\includegraphics[bb=0 0 304 307]{Figures/subneteditor.eps.gz}}
-}
-%end{latexonly}
-\begin{htmlonly}
-  \newcommand{\subneteditorfig}{%
-    \htmladdimg[alt="Sub-net editor"]{../Figures/subneteditor.gif}
-  }
-\end{htmlonly}
-
-The sub-network editor is activated by pressing a sub-network's editor
-button.  The sub-network editor works similarly to the NetEdit window.
-All network editing features of the NetEdit window are available in
-the sub-network editor---modules can be created, connections can be
-made, \etc{} See Figure~\ref{fig:subneteditor}.
-
-\begin{figure}[htb]
-  \centering
-  \begin{makeimage} \end{makeimage}
-  \subneteditorfig
-  \caption{\label{fig:subneteditor} Sub-network editor.}
-\end{figure}
-
-Sub-networks have input and/or output ports.  These are created in the
-sub-network editor.  Sub-network input ports are created by making a
-connection between the input port of a module (in the sub-network) and
-the top edge of the sub-network editor window.  Sub-network output
-ports are created by making a connection between the output port of a
-module (in the sub-network) and the bottom edge of the sub-network
-editor window.
-
-A sub-network can be renamed by entering its new name into the
-\guilabel{Name} text entry widget.
-
-\section{Saving a Sub-network}
-\label{sec:savesubnet}
-
-Sub-networks can be saved for reuse in networks and sub-networks.
-
-Sub-networks are saved in the \directory{Subnets} directory of \sr{}'s
-\filename{src} directory, if it exists and is writable.  Otherwise,
-sub-networks are saved in the \directory{SCIRun/Subnets} directory of a
-user's home directory.
-
-To save a sub-network, press the sub-network's editor
-button, which activates the sub-network's editor, then press the
-editor's \guibutton{Save} button.
-
-Saved sub-networks are listed as menu items in the \menu{Sub-network}
-package menu (which is available in the NetEdit window's \menu{File}
-menu and popup menu).
-
-\secref{Loading a Sub-Network}{sec:loadsubnet} gives instructions for
-loading sub-networks into networks and sub-networks.
-
-%% Note:  I don't like the terminology used here.  ``creating''
-%% subnetworks and ``loading'' subnetworks ought to be ``making'' or
-%% ``building'' and ``loading'' ought to be ``instantiating'' or
-%% ``creating''.
-\section{Loading a Sub-Network}
-\label{sec:loadsubnet}
-
-Saved sub-networks are loaded into networks and sub-networks by
-selecting their names from the \menu{Sub-network} package menu.
-Package menus are accessed from the main window's menu bar or from the
-NetEdit frame's pop-up menu.  Unlike other package menus, the
-\menu{Sub-network} menu has no category sub-menus.
-
-A sub-network may be loaded one or more times in a network.  Each time
-a sub-network is loaded a new instance of it is created in the
-network.
-
 \section{Editing and Displaying Module Notes}
 \label{sec:modnotes}
 \index{annotation of networks}
@@ -844,6 +703,146 @@ NetEdit frame.  To view other parts of the network, press
 Frame---this moves the tool to the location of the pointer -- then
 drag the tool to the new location.
 
+\section{Creating a Sub-Network}
+\label{sec:crsubnet}
+\index{sub-network}
+
+%begin{latexonly}
+\newcommand{\subnetgraphicfig}{%
+  \centerline{\includegraphics[bb=0 0 252 144]{Figures/subnetgraphic.eps.gz}}
+}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\subnetgraphicfig}{%
+    \htmladdimg[alt="Graphic of a Sub-network"]{../Figures/subnetgraphic.gif}
+  }
+\end{htmlonly}
+
+
+A sub-network is a group of modules that are treated as a single
+module.  In a network, you may use a sub-network as you would a
+module.
+
+To create a sub-network, select one or more modules, then choose item
+\guimenuitem{Create Sub-Network} from any selected module's pop-up menu.
+Selected modules will be replaced by a sub-network graphic and the
+sub-network editor will activate.  Sub-networks may be created in
+sub-networks.  The next section (\secref{Editing a
+  Sub-Network}{sec:editsubnet}) explains the use of the sub-network
+editor.
+
+A sub-network editor button replaces the CPU time and Progress
+Bar in the sub-network graphic.  See Figure~\ref{fig:subnetgraphic}
+
+\begin{figure}[htb]
+  \centering
+  \begin{makeimage} \end{makeimage}
+  \subnetgraphicfig
+  \caption{\label{fig:subnetgraphic} A Sub-Network in the NetEdit frame}
+\end{figure}
+
+A sub-network's editor is activated by pressing the
+sub-network editor button.
+
+Pressing button \guibutton{UI} activates control dialogs of all
+modules in a sub-network.  Control dialogs can be activated
+individually in the sub-network editor.
+
+In a network, a sub-network behaves as does a module.  A sub-network
+has input and/or output ports (orginating from modules within the
+sub-network) that can be connected to modules outside of the
+sub-network.  Each sub-network has a pop-up menu and a set of editable
+notes (see \secref{Editing and Displaying Module
+  Notes}{sec:modnotes}).  A sub-network does not have a log. Logs of
+individual modules in the sub-network can be viewed in the sub-network
+editor window (see \secref{Viewing a Module's Log}{sec:viewmodslog}).
+
+\section{Expanding a Sub-Network}
+\label{sec:expsubnet}
+
+Expanding a network reverses the action of menu item \guimenuitem{Create
+  Sub-Network}---all modules in a sub-network are returned to the
+network containing the sub-network and the sub-network is destroyed.
+This action cannot be undone.
+
+To expand a sub-network choose menu item \guimenuitem{Expand Sub-Network}
+from the sub-network's pop-up menu.
+
+\section{Editing a Sub-Network}
+\label{sec:editsubnet}
+
+%begin{latexonly}
+\newcommand{\subneteditorfig}{%
+  \centerline{\includegraphics[bb=0 0 304 307]{Figures/subneteditor.eps.gz}}
+}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\subneteditorfig}{%
+    \htmladdimg[alt="Sub-net editor"]{../Figures/subneteditor.gif}
+  }
+\end{htmlonly}
+
+The sub-network editor is activated by pressing a sub-network's editor
+button.  The sub-network editor works similarly to the NetEdit window.
+All network editing features of the NetEdit window are available in
+the sub-network editor---modules can be created, connections can be
+made, \etc{} See Figure~\ref{fig:subneteditor}.
+
+\begin{figure}[htb]
+  \centering
+  \begin{makeimage} \end{makeimage}
+  \subneteditorfig
+  \caption{\label{fig:subneteditor} Sub-network editor.}
+\end{figure}
+
+Sub-networks have input and/or output ports.  These are created in the
+sub-network editor.  Sub-network input ports are created by making a
+connection between the input port of a module (in the sub-network) and
+the top edge of the sub-network editor window.  Sub-network output
+ports are created by making a connection between the output port of a
+module (in the sub-network) and the bottom edge of the sub-network
+editor window.
+
+A sub-network can be renamed by entering its new name into the
+\guilabel{Name} text entry widget.
+
+\section{Saving a Sub-network}
+\label{sec:savesubnet}
+
+Sub-networks can be saved for reuse in networks and sub-networks.
+
+Sub-networks are saved in the \directory{Subnets} directory of \sr{}'s
+\filename{src} directory, if it exists and is writable.  Otherwise,
+sub-networks are saved in the \directory{SCIRun/Subnets} directory of a
+user's home directory.
+
+To save a sub-network, press the sub-network's editor
+button, which activates the sub-network's editor, then press the
+editor's \guibutton{Save} button.
+
+Saved sub-networks are listed as menu items in the \menu{Sub-network}
+package menu (which is available in the NetEdit window's \menu{File}
+menu and popup menu).
+
+\secref{Loading a Sub-Network}{sec:loadsubnet} gives instructions for
+loading sub-networks into networks and sub-networks.
+
+%% Note:  I don't like the terminology used here.  ``creating''
+%% subnetworks and ``loading'' subnetworks ought to be ``making'' or
+%% ``building'' and ``loading'' ought to be ``instantiating'' or
+%% ``creating''.
+\section{Loading a Sub-Network}
+\label{sec:loadsubnet}
+
+Saved sub-networks are loaded into networks and sub-networks by
+selecting their names from the \menu{Sub-network} package menu.
+Package menus are accessed from the main window's menu bar or from the
+NetEdit frame's pop-up menu.  Unlike other package menus, the
+\menu{Sub-network} menu has no category sub-menus.
+
+A sub-network may be loaded one or more times in a network.  Each time
+a sub-network is loaded a new instance of it is created in the
+network.
 
 \section{The \sr{} Shell}
 \label{sec:termapp}
