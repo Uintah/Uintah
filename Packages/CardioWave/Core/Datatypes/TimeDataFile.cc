@@ -195,8 +195,8 @@ void TimeDataFile::open(std::string filename)
     swapbytes = false;
     short test = 0x00FF;
     char *testptr = reinterpret_cast<char *>(&test);
-    if ((testptr[0])&&(endian == "little")) swapbytes = true;
-    if ((testptr[1])&&(endian == "big")) swapbytes = true;
+    if ((testptr[1])&&(endian == "little")) swapbytes = true;
+    if ((testptr[0])&&(endian == "big")) swapbytes = true;
 
     if ((nrows < 1)||(ncols < 1))
     {
