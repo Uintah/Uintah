@@ -631,7 +631,7 @@ void AMRSimpleCFD::scheduleErrorEstimate(const LevelP& coarseLevel,
   // Estimate error - this should probably be in it's own schedule,
   // and the simulation controller should not schedule it every time step
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Task* task = scinew Task("errorEstimate", this, &AMRSimpleCFD::errorEstimate);
+  Task* task = scinew Task("errorEstimate", this, &AMRSimpleCFD::errorEstimate, false);
   task->requires(Task::NewDW, lb_->density,     gac, 1);
   task->requires(Task::NewDW, lb_->temperature, gac, 1);
   task->requires(Task::NewDW, lb_->pressure,    gac, 1);
@@ -639,6 +639,27 @@ void AMRSimpleCFD::scheduleErrorEstimate(const LevelP& coarseLevel,
   
   task->modifies(sharedState_->get_refineFlag_label());
   task->computes(lb_->density_gradient_mag);
+  task->computes(lb_->temperature_gradient_mag);
+  task->computes(lb_->pressure_gradient_mag);
+  task->computes(lb_->ccvorticitymag);
+  sched->addTask(task, coarseLevel->eachPatch(), sharedState_->allMaterials());
+}
+//______________________________________________________________________
+//  This is only used to flag indicating which cells need to be refined.
+//  Nothing is done with this.
+void AMRSimpleCFD::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
+                                                SchedulerP& sched)
+{
+  cout_doing << "AMRSimpleCFD::scheduleInitialErrorEstimate on level " << coarseLevel->getIndex() << '\n';
+  // Estimate error - this should probably be in it's own schedule,
+  // and the simulation controller should not schedule it every time step
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Task* task = scinew Task("errorEstimate", this, &AMRSimpleCFD::errorEstimate, true);
+  task->requires(Task::NewDW, lb_->temperature, gac, 1);
+  task->requires(Task::NewDW, lb_->pressure,    gac, 1);
+  task->requires(Task::NewDW, lb_->density,     gac, 1);
+  
+  task->modifies(sharedState_->get_refineFlag_label());
   task->computes(lb_->temperature_gradient_mag);
   task->computes(lb_->pressure_gradient_mag);
   task->computes(lb_->ccvorticitymag);
@@ -1108,7 +1129,8 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
 				 const PatchSubset* patches,
 				 const MaterialSubset* matls,
 				 DataWarehouse*,
-				 DataWarehouse* new_dw)
+				 DataWarehouse* new_dw,
+                                 bool initial)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1127,45 +1149,49 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
       IntVector l(patch->getCellLowIndex());
       IntVector h(patch->getCellHighIndex());
 
-      //__________________________________
-      //     D E N S I T Y   G R A D
-      constCCVariable<double> density;
-      CCVariable<double> density_gradient_mag;
-      new_dw->get(density, lb_->density, matl, patch, Ghost::AroundCells, 1);
-      
-      new_dw->allocateAndPut(density_gradient_mag, lb_->density_gradient_mag,
-			     matl, patch);
-      double err_density_grad_inv = 1./err_density_grad;
-      
-      for(CellIterator iter(l, h); !iter.done(); iter++){
-	IntVector idx(*iter);
-	double gx, gy, gz;
-	if(idx.x() == l.x()){
-	  gx = (density[idx+IntVector(1,0,0)]-density[idx])*inv_dx.x();
-	} else if(idx.x() == h.x()-1){
-	  gx = (density[idx]-density[idx-IntVector(1,0,0)])*inv_dx.x();
-	} else {
-	  gx = (density[idx+IntVector(1,0,0)]-density[idx-IntVector(1,0,0)])*0.5*inv_dx.x();
-	}
-	if(idx.y() == l.y()){
-	  gy = (density[idx+IntVector(0,1,0)]-density[idx])*inv_dx.y();
-	} else if(idx.y() == h.y()-1){
-	  gy = (density[idx]-density[idx-IntVector(0,1,0)])*inv_dx.y();
-	} else {
-	  gy = (density[idx+IntVector(0,1,0)]-density[idx-IntVector(0,1,0)])*0.5*inv_dx.y();
-	}
-	if(idx.z() == l.z()){
-	  gz = (density[idx+IntVector(0,0,1)]-density[idx])*inv_dx.z();
-	} else if(idx.z() == h.z()-1){
-	  gz = (density[idx]-density[idx-IntVector(0,0,1)])*inv_dx.z();
-	} else {
-	  gz = (density[idx+IntVector(0,0,1)]-density[idx-IntVector(0,0,1)])*0.5*inv_dx.z();
-	}
-	Vector grad(gx, gy, gz);
-	density_gradient_mag[idx]=grad.length();
-	if(density_gradient_mag[idx] > err_density_grad)
-	  refineFlag[idx]=true;
-	density_gradient_mag[idx] *= err_density_grad_inv;
+      // don't do density on initialization estimation, we won't know enough
+      // info to calculate density!
+      if (!initial) {
+        //__________________________________
+        //     D E N S I T Y   G R A D
+        constCCVariable<double> density;
+        CCVariable<double> density_gradient_mag;
+        new_dw->get(density, lb_->density, matl, patch, Ghost::AroundCells, 1);
+        
+        new_dw->allocateAndPut(density_gradient_mag, lb_->density_gradient_mag,
+                               matl, patch);
+        double err_density_grad_inv = 1./err_density_grad;
+        
+        for(CellIterator iter(l, h); !iter.done(); iter++){
+          IntVector idx(*iter);
+          double gx, gy, gz;
+          if(idx.x() == l.x()){
+            gx = (density[idx+IntVector(1,0,0)]-density[idx])*inv_dx.x();
+          } else if(idx.x() == h.x()-1){
+            gx = (density[idx]-density[idx-IntVector(1,0,0)])*inv_dx.x();
+          } else {
+            gx = (density[idx+IntVector(1,0,0)]-density[idx-IntVector(1,0,0)])*0.5*inv_dx.x();
+          }
+          if(idx.y() == l.y()){
+            gy = (density[idx+IntVector(0,1,0)]-density[idx])*inv_dx.y();
+          } else if(idx.y() == h.y()-1){
+            gy = (density[idx]-density[idx-IntVector(0,1,0)])*inv_dx.y();
+          } else {
+            gy = (density[idx+IntVector(0,1,0)]-density[idx-IntVector(0,1,0)])*0.5*inv_dx.y();
+          }
+          if(idx.z() == l.z()){
+            gz = (density[idx+IntVector(0,0,1)]-density[idx])*inv_dx.z();
+          } else if(idx.z() == h.z()-1){
+            gz = (density[idx]-density[idx-IntVector(0,0,1)])*inv_dx.z();
+          } else {
+            gz = (density[idx+IntVector(0,0,1)]-density[idx-IntVector(0,0,1)])*0.5*inv_dx.z();
+          }
+          Vector grad(gx, gy, gz);
+          density_gradient_mag[idx]=grad.length();
+          if(density_gradient_mag[idx] > err_density_grad)
+            refineFlag[idx]=true;
+          density_gradient_mag[idx] *= err_density_grad_inv;
+        }
       }
       //__________________________________
       //   T E M P E R A T U R E   G R A D
