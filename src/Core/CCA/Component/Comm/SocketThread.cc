@@ -32,6 +32,7 @@
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
 #include <Core/CCA/Component/Comm/SocketThread.h>
+#include <Core/CCA/Component/Comm/Message.h>
 
 using namespace SCIRun;
 using namespace std;
@@ -55,7 +56,11 @@ SocketThread::run()
 {
   if(isEp){
     if(id==-1) ep->runAccept();
-    else if(id==1) ; // deleteReference();
-
+    else{
+      cerr<<"calling handler #"<<id<<"\n";
+      Message *msg=ep->getMessage();
+      //ep->handler_table[id](msg);
+      delete msg;
+    }
   }
 }

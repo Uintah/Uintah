@@ -143,6 +143,8 @@ SocketEpChannel::runAccept(){
     printf("server: got connection from %s\n",
 	   inet_ntoa(their_addr.sin_addr));
 
+    //should make a thread for each new_fd
+
     int headerSize=sizeof(long)+sizeof(int);
     void *buf=malloc(headerSize);
     int numbytes;
@@ -163,16 +165,16 @@ SocketEpChannel::runAccept(){
     Thread* t = new Thread(new SocketThread(this, id), "SocketHandlerThread", 0, Thread::Activated);
     t->detach();
     
-    if(id==0) break;
-
     cerr<<"server recv: msg_size="<<msg_size;
     cerr<<"server recv: id="<<id;
 
-    //The SocketThread is responsible to free the buf.
-
-    
+    //The SocketThread is responsible to free the buf.   
 
     close(new_fd);  // parent doesn't need this
+
+    if(id==1) break;
+
+
   }  
 }
 
