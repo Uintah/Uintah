@@ -488,6 +488,8 @@ itcl_class SCIRun_Visualization_GenAxes {
     }
 
     method build_options_tab { tabs } {
+	set dir [file join [netedit getenv SCIRUN_SRCDIR] Fonts]
+
 	set options [$tabs add -label "Fonts"]
 	pack $options -side top -expand 1 -fill both
 
@@ -502,7 +504,7 @@ itcl_class SCIRun_Visualization_GenAxes {
 	label $frame2.label -text "Value Font: " -anchor w
 	pack $frame2.label -side left -expand 0 -fill none
 	menubutton $frame2.menu -indicatoron 1 -menu $frame2.menu.m \
-	    -text "No Fonts in SCIRun/src/Fonts"
+	    -text "No Fonts in $dir"
 	pack $frame2.menu -side right -expand 1 -fill x
 	menu $frame2.menu.m -tearoff 0
 	$frame2.menu config -takefocus 1 -highlightthickness 2 \
@@ -524,7 +526,7 @@ itcl_class SCIRun_Visualization_GenAxes {
 	label $frame.label -text "Label Font: " -anchor w
 	pack $frame.label -side left -expand 0 -fill none
 	menubutton $frame.menu -indicatoron 1 -menu $frame.menu.m \
-	    -text "No Fonts in SCIRun/src/Fonts"
+	    -text "No Fonts in $dir"
 	pack $frame.menu -side right -expand 1 -fill x
 	menu $frame.menu.m -tearoff 0
 	$frame.menu config -takefocus 1 -highlightthickness 2 \
@@ -533,7 +535,6 @@ itcl_class SCIRun_Visualization_GenAxes {
 	set rez [labeledSlider $labelframe "Label Resolution:" $this-labelrez 1 500 1 14]
 	bind $rez <Button> "$this-c needexecute"
 
-	set dir [file join [netedit getenv SCIRUN_SRCDIR] Fonts]
 	set files [glob -nocomplain -dir $dir *.ttf]
 	set def 0
 	set i 0
