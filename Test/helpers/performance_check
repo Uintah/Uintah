@@ -22,7 +22,7 @@ error=0
 echo "Performing performance check"
 percent=`performance_percent.pl $TEST_TIMEFILE $COMPARISON_TIMEFILE`
 
-if [ $percent -gt "30" ]; then
+if [ $percent -gt "10" ]; then
     echo "***Performance test failed"
     echo " -- Time increased by %$percent" > performance_shortmessage.txt
     error=2
