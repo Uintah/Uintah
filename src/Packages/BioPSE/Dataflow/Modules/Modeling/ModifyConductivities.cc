@@ -243,8 +243,11 @@ ModifyConductivities::execute()
     return;
   }
   MatrixHandle imatrix;
+  vector<string> tensor_names;
+
   if (imp->get(imatrix) && imatrix.get_rep())
   {
+    imatrix->get_property("tensor-names", tensor_names);
     ScalarFieldInterfaceHandle sfi = field->query_scalar_interface(this);
     double minval, maxval;
     sfi->compute_min_max(minval, maxval);
@@ -264,8 +267,12 @@ ModifyConductivities::execute()
 	t.mat_[2][0] = imatrix->get(i, 6);
 	t.mat_[2][1] = imatrix->get(i, 7);
 	t.mat_[2][2] = imatrix->get(i, 8);
-	const string s = "matrix-row-" + to_string(i+1);
-	field_tensors.push_back(pair<string, Tensor>(s, t));
+	if (i < tensor_names.size()) {
+	  field_tensors.push_back(pair<string, Tensor>(tensor_names[i], t));
+	} else {
+	  const string s = "matrix-row-" + to_string(i+1);
+	  field_tensors.push_back(pair<string, Tensor>(s, t));
+	}
       }
       created_p = true;
     }
@@ -285,8 +292,12 @@ ModifyConductivities::execute()
 	t.mat_[2][0] = imatrix->get(6, i);
 	t.mat_[2][1] = imatrix->get(7, i);
 	t.mat_[2][2] = imatrix->get(8, i);
-	const string s = "matrix-column-" + to_string(i+1);
-	field_tensors.push_back(pair<string, Tensor>(s, t));
+	if (i < tensor_names.size()) {
+	  field_tensors.push_back(pair<string, Tensor>(tensor_names[i], t));
+	} else {
+	  const string s = "matrix-column-" + to_string(i+1);
+	  field_tensors.push_back(pair<string, Tensor>(s, t));
+	}
       }
       created_p = true;
     }
@@ -406,6 +417,7 @@ ModifyConductivities::execute()
   }
 
   DenseMatrix *omatrix = scinew DenseMatrix(gui_tensors.size(), 9);
+  tensor_names.clear();
   for (unsigned int j = 0; j < gui_tensors.size(); j++)
   {
     omatrix->put(j, 0, gui_tensors[j].second.mat_[0][0]);
@@ -419,7 +431,9 @@ ModifyConductivities::execute()
     omatrix->put(j, 6, gui_tensors[j].second.mat_[2][0]);
     omatrix->put(j, 7, gui_tensors[j].second.mat_[2][1]);
     omatrix->put(j, 8, gui_tensors[j].second.mat_[2][2]);
+    tensor_names.push_back(gui_tensors[j].first);
   }
+  omatrix->set_property("tensor-names", tensor_names, false);
 
   // Forward the matrix results.
   MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
