@@ -122,9 +122,9 @@ PathPoint::PathPoint( PathWidget* w, const Index i, const Point& p )
     OrientHeadMatl((GeomObj*)&GeomOrientHead, w->DefaultSpecialMaterial),
     UpShaftMatl((GeomObj*)&GeomUpShaft, w->DefaultSpecialMaterial),
     UpHeadMatl((GeomObj*)&GeomUpHead, w->DefaultSpecialMaterial),
-    tangent(scinew GeomGroup(0)),
-    orient(scinew GeomGroup(0)),
-    up(scinew GeomGroup(0)),
+    tangent(scinew GeomGroup()),
+    orient(scinew GeomGroup()),
+    up(scinew GeomGroup()),
     PickPoint(&PointMatl, w->module_, w, i),
     PickTangent(tangent, w->module_, w, i+10000),
     PickOrient(orient, w->module_, w, i+20000),
@@ -319,13 +319,13 @@ PathWidget::PathWidget( Module* module, CrowdMonitor* lock, double widget_scale,
   GeomPick* sp = scinew GeomPick(splinegroup, module, this, -1);
   sp->set_highlight(DefaultHighlightMaterial);
   CreateModeSwitch(0, sp);
-  pointgroup = scinew GeomGroup(0);
+  pointgroup = scinew GeomGroup();
   CreateModeSwitch(1, pointgroup);
-  tangentgroup = scinew GeomGroup(0);
+  tangentgroup = scinew GeomGroup();
   CreateModeSwitch(2, tangentgroup);
-  orientgroup = scinew GeomGroup(0);
+  orientgroup = scinew GeomGroup();
   CreateModeSwitch(3, orientgroup);
-  upgroup = scinew GeomGroup(0);
+  upgroup = scinew GeomGroup();
   CreateModeSwitch(4, upgroup);
 
   SetMode(Mode0, Switch0|Switch1|Switch2|Switch3|Switch4);

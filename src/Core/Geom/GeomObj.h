@@ -32,7 +32,7 @@
 #define SCI_Geom_GeomObj_h 1
 
 #include <Core/Containers/Array1.h>
-#include <Core/Containers/Handle.h>
+#include <Core/Containers/LockingHandle.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Datatypes/PropertyManager.h>
@@ -53,6 +53,10 @@ class  IntVector;
 
 class SCICORESHARE GeomObj : public Persistent {
 public:
+  int ref_cnt;
+  Mutex lock;
+
+
   GeomObj(int id = 0x1234567);
   GeomObj(IntVector id);
   GeomObj(int id_int, IntVector id);
@@ -88,6 +92,12 @@ protected:
 
 void Pio(Piostream&, GeomObj*&);
 
+typedef LockingHandle<GeomObj> GeomHandle;
+
 } // End namespace SCIRun
 
 #endif // ifndef SCI_Geom_GeomObj_h
+
+
+
+

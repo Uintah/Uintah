@@ -38,22 +38,34 @@ namespace SCIRun {
 
 PersistentTypeID GeomObj::type_id("GeomObj", "Persistent", 0);
 
-GeomObj::GeomObj(int id) : id(id),
+GeomObj::GeomObj(int id) :
+  ref_cnt(0),
+  lock("GeomObj ref_cnt lock"),
+  id(id),
   _id(0x1234567,0x1234567,0x1234567)
 {
 }
 
-GeomObj::GeomObj(IntVector i)
-  :id( 0x1234567 ), _id(i)
+GeomObj::GeomObj(IntVector i) :
+  ref_cnt(0),
+  lock("GeomObj ref_cnt lock"),
+  id( 0x1234567 ),
+  _id(i)
 {
 }
 
-GeomObj::GeomObj(int id_int, IntVector i)
-  :id( id_int ), _id(i)
+GeomObj::GeomObj(int id_int, IntVector i) :
+  ref_cnt(0),
+  lock("GeomObj ref_cnt lock"),
+  id( id_int ),
+  _id(i)
 {
 }
 
-GeomObj::GeomObj(const GeomObj&)
+GeomObj::GeomObj(const GeomObj&) :
+  ref_cnt(0),
+  lock("GeomObj ref_cnt lock")
+  // TODO: id and _id uninitialized.
 {
 }
 
@@ -83,5 +95,6 @@ void Pio( Piostream & stream, GeomObj *& obj )
     if(stream.reading())
 	obj=(GeomObj*)tmp;
 }
+
 
 } // End namespace SCIRun

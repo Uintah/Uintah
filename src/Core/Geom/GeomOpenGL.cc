@@ -62,7 +62,7 @@
 #include <Core/Geom/PointLight.h>
 #include <Core/Geom/GeomPolyline.h>
 #include <Core/Geom/Pt.h>
-#include <Core/Geom/RenderMode.h>
+#include <Core/Geom/GeomRenderMode.h>
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomEllipsoid.h>
 #include <Core/Geom/GeomDL.h>
@@ -777,13 +777,6 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
 }
 
-void GeomBBoxCache::draw(DrawInfoOpenGL* di, Material *m, double time)
-{
-  if ( child )
-    child->draw(di,m,time);
-}
-
-
 GeomDL::~GeomDL()
 {
   if (display_list_)
@@ -806,13 +799,13 @@ void GeomDL::reset_bbox()
 
 void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
 {
-  if ( !child ) return;
+  if ( !child_.get_rep() ) return;
 
   if ( !pre_draw(di, m, 0) ) return;
   
   if ( !di->dl ) 
   {
-    child->draw(di,m,time);  // do not use display list
+    child_->draw(di,m,time);  // do not use display list
   }
   else
   {
@@ -831,7 +824,7 @@ void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
 	display_list_ = glGenLists(1);
 	if ( !display_list_ )
 	{
-	  child->draw(di,m,time);  // do not use display list
+	  child_->draw(di,m,time);  // do not use display list
 	  post_draw(di);
 	  return;
 	}
@@ -840,7 +833,7 @@ void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
       // Fill in the display list.
       // Don't use COMPILE_AND_EXECUTE as it makes a slower dl (NVidia linux).
       glNewList( display_list_,  GL_COMPILE);
-      child->draw(di,m,time);
+      child_->draw(di,m,time);
       glEndList();
       glCallList(display_list_); 
 
@@ -907,7 +900,7 @@ void GeomBillboard::draw(DrawInfoOpenGL* di, Material* m, double time)
 
   //  glTranslated( at.x(), at.y(), at.z() );
   
-  child->draw(di,m,time);
+  child_->draw(di,m,time);
 
 //   x.draw(di,m,time);
 //   y.draw(di,m,time);
@@ -979,9 +972,13 @@ void GeomCappedCone::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
-void GeomContainer::draw(DrawInfoOpenGL* di, Material* matl, double time)
+void
+GeomContainer::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
-    child->draw(di, matl, time);
+  if (child_.get_rep())
+  {
+    child_->draw(di, matl, time);
+  }
 }
 
 void GeomCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
@@ -1918,20 +1915,19 @@ void GeomQMesh::draw(DrawInfoOpenGL* di, Material* matl, double)
 void GeomGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
   if(di->pickmode){
-    for (int i=0; i<objs.size(); i++)
+    for (unsigned int i=0; i<objs.size(); i++)
       {
-	  //glLoadName((GLuint)i);
 	objs[i]->draw(di, matl, time);
       }
   }
   else 
-    for (int i=0; i<objs.size(); i++)
+    for (unsigned int i=0; i<objs.size(); i++)
       objs[i]->draw(di, matl, time);
 }
 
 void GeomTimeGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
-  int i;
+  unsigned int i;
   for (i=0; i<objs.size() && (start_times[i] <= time); i++) 
     ;
   if (i) { // you can go...
@@ -2294,10 +2290,13 @@ void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
   post_draw(di);
 }
 
-void GeomMaterial::draw(DrawInfoOpenGL* di, Material* /* old_matl */, double time)
+
+void
+GeomMaterial::draw(DrawInfoOpenGL* di, Material* /* old_matl */, double time)
 {
-    child->draw(di, matl.get_rep(), time);
+    child_->draw(di, matl.get_rep(), time);
 }
+
 
 void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
@@ -2321,10 +2320,10 @@ void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 	di->set_matl(highlight_.get_rep());
 	int old_ignore=di->ignore_matl;
 	di->ignore_matl=1;
-	child->draw(di, highlight_.get_rep(), time);
+	child_->draw(di, highlight_.get_rep(), time);
 	di->ignore_matl=old_ignore;
     } else {
-	child->draw(di, matl, time);
+	child_->draw(di, matl, time);
     }
     if(di->pickmode){
 #if (_MIPS_SZPTR == 64)
@@ -2756,8 +2755,8 @@ void GeomRenderMode::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
 //    int save_lighting=di->lighting;
     NOT_FINISHED("GeomRenderMode");
-    if(child){
-	child->draw(di, matl, time);
+    if(child_.get_rep()){
+	child_->draw(di, matl, time);
 	// We don't put things back if no children...
 	
     }
@@ -2793,7 +2792,7 @@ void GeomEllipsoid::draw(DrawInfoOpenGL* di, Material* matl, double)
 void GeomSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
    if(state)
-      child->draw(di, matl, time);
+      child_->draw(di, matl, time);
 }
 
 void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
@@ -2925,8 +2924,8 @@ void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void GeomTimeSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
-    if(time >= tbeg && time < tend){
-	child->draw(di, matl, time);
+    if(time >= tbeg && time < tend) {
+	child_->draw(di, matl, time);
     }
 }
 
@@ -3062,7 +3061,7 @@ void GeomTransform::draw(DrawInfoOpenGL* di, Material* matl, double time)
   double mat[16];
   trans.get_trans(mat);
   glMultMatrixd(mat);
-  child->draw(di, matl, time);
+  child_->draw(di, matl, time);
   glPopMatrix();
 }
 
@@ -4733,7 +4732,7 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
   glDisable(GL_DEPTH_TEST);
   glRasterPos2d(0.55, -0.98);
 
-  child->draw(di,matl,t);
+  child_->draw(di,matl,t);
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);

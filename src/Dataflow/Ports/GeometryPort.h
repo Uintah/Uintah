@@ -35,12 +35,13 @@
 #include <Dataflow/Network/Port.h>
 #include <Dataflow/Comm/MessageBase.h>
 #include <Core/Thread/Mailbox.h>
+#include <Core/Geom/GeomObj.h>
 #include <string>
 
 namespace SCIRun {
 
-  using namespace std;
-class GeomObj;
+using namespace std;
+
 class View;
 class CrowdMonitor;
 class Mutex;
@@ -97,7 +98,7 @@ public:
     GeometryOPort(Module*, const string& name);
     virtual ~GeometryOPort();
 
-    GeomID addObj(GeomObj*, const string& name, CrowdMonitor* lock=0);
+    GeomID addObj(GeomHandle, const string& name, CrowdMonitor* lock=0);
     void delObj(GeomID, int del=1);
     void delAll();
     void flush();

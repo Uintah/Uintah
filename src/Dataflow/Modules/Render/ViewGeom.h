@@ -68,30 +68,25 @@ public:
  * a lock and a geomobj (to call)
  */
 
-class GeomViewerItem: public GeomObj {
+class GeomViewerItem: public GeomContainer {
 private:  
-  GeomObj *child_;
   string name_;
   CrowdMonitor *crowd_lock_;
 
+  GeomViewerItem();
+  static Persistent *maker();
+
 public:
   friend class ViewWindow;
-  GeomViewerItem();
-  GeomViewerItem(GeomObj *,const string&, CrowdMonitor* lock);
-  virtual ~GeomViewerItem();
+  GeomViewerItem(GeomHandle,const string&, CrowdMonitor* lock);
 
   virtual GeomObj* clone();
-  virtual void reset_bbox();
-  virtual void get_bounds(BBox&);
 
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
-  virtual void get_triangles( Array1<float> &);
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  bool saveobj(std::ostream& out, const string& format,
-	       GeomSave* saveinfo);
     
   string& getString(void) { return name_;}
 };

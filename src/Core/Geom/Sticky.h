@@ -30,20 +30,18 @@
 #ifndef SCI_STICKY_H
 #define SCI_STICKY_H 1
 
-#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomContainer.h>
 #include <Core/Geometry/Point.h>
 
 namespace SCIRun {
 
-class SCICORESHARE GeomSticky : public GeomObj {
-  GeomObj *child;
-  
-public:
-  GeomSticky( GeomObj *c );
-  GeomSticky(const GeomSticky&);
-  virtual ~GeomSticky();
+class SCICORESHARE GeomSticky : public GeomContainer {
 
+public:
+  GeomSticky( GeomHandle obj);
+  GeomSticky(const GeomSticky&);
   virtual GeomObj* clone();
+
   virtual void get_bounds(BBox&);
 
 #ifdef SCI_OPENGL
@@ -52,7 +50,6 @@ public:
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
 } // End namespace SCIRun

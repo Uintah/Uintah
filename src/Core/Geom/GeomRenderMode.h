@@ -45,10 +45,10 @@ public:
     };
 private:
     DrawType drawtype;
+
 public:
-    GeomRenderMode(DrawType, GeomObj* child);
+    GeomRenderMode(DrawType, GeomHandle child);
     GeomRenderMode(const GeomRenderMode&);
-    virtual ~GeomRenderMode();
 
     virtual GeomObj* clone();
 

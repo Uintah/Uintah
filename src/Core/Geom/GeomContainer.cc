@@ -37,48 +37,68 @@ namespace SCIRun {
 
 PersistentTypeID GeomContainer::type_id("GeomContainer", "GeomObj", 0);
 
-GeomContainer::GeomContainer(GeomObj* child)
-: GeomObj(), child(child)
+GeomContainer::GeomContainer(GeomHandle child) :
+  GeomObj(),
+  child_(child)
 {
 }
 
-GeomContainer::GeomContainer(const GeomContainer& copy)
-: GeomObj(copy), child(copy.child->clone())
+
+GeomContainer::GeomContainer(const GeomContainer& copy) :
+  GeomObj(copy),
+  child_(copy.child_)
 {
 }
+
 
 GeomContainer::~GeomContainer()
 {
-    if(child)
-	delete child;
 }
 
-void GeomContainer::get_triangles( Array1<float> &v)
+
+void
+GeomContainer::get_triangles( Array1<float> &v)
 {
-  if (child)
-    child->get_triangles(v);
+  if (child_.get_rep())
+    child_->get_triangles(v);
 }
 
-void GeomContainer::get_bounds(BBox& bbox)
+
+void
+GeomContainer::get_bounds(BBox& bbox)
 {
-  if (child)
-    child->get_bounds(bbox);
+  if (child_.get_rep())
+    child_->get_bounds(bbox);
 }
 
-void GeomContainer::reset_bbox()
+void
+GeomContainer::reset_bbox()
 {
-  if (child)
-    child->reset_bbox();
+  if (child_.get_rep())
+    child_->reset_bbox();
 }
 
 #define GEOMCONTAINER_VERSION 1
 
-void GeomContainer::io(Piostream& stream)
+void
+GeomContainer::io(Piostream& stream)
 {
     stream.begin_class("GeomContainer", GEOMCONTAINER_VERSION);
     GeomObj::io(stream);
-    Pio(stream, child);
+    Pio(stream, child_);
     stream.end_class();
 }
+
+
+bool
+GeomContainer::saveobj(ostream& out, const string& format,
+		       GeomSave* saveinfo)
+{
+  if ( child_.get_rep() )
+    return child_->saveobj(out, format, saveinfo);
+  else
+    return true;
+}
+
 
 } // End namespace SCIRun

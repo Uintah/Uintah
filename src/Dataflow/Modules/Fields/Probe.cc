@@ -412,6 +412,8 @@ Probe::execute()
   case Field::CELL:
     index = atoi(cellstr.c_str());
     break;
+  case Field::NONE:
+    break;
   }
   MatrixHandle cm = scinew ColumnMatrix(1);
   cm->get(0, 0) = (double)index;

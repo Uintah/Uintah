@@ -44,7 +44,7 @@ PersistentTypeID GeomDL::type_id("GeomDL", "GeomObj",
 				 make_GeomDL);
 
 
-GeomDL::GeomDL(GeomObj* obj)
+GeomDL::GeomDL(GeomHandle obj)
   : GeomContainer(obj), display_list_(0)
 {
 }
@@ -62,21 +62,13 @@ GeomObj* GeomDL::clone()
 
 #define GEOMDL_VERSION 1
 
-void GeomDL::io(Piostream& stream)
+void
+ GeomDL::io(Piostream& stream)
 {
 
   /*int version=*/ stream.begin_class("GeomDL", GEOMDL_VERSION);
-  Pio(stream, child);
+  Pio(stream, child_);
   stream.end_class();
-}
-
-bool GeomDL::saveobj(ostream& out, const string& format,
-		     GeomSave* saveinfo)
-{
-  if ( child )
-    return child->saveobj(out, format, saveinfo);
-  else
-    return true;
 }
 
 } // End namespace SCIRun

@@ -128,7 +128,7 @@ void GeometryOPort::finish()
     }
 }
 
-GeomID GeometryOPort::addObj(GeomObj* obj, const string& name,
+GeomID GeometryOPort::addObj(GeomHandle obj, const string& name,
 			     CrowdMonitor* lock)
 {
     if (module->showStats()) turn_on();
@@ -280,7 +280,7 @@ GeometryComm::GeometryComm(Mailbox<GeomReply>* reply)
 {
 }
 
-GeometryComm::GeometryComm(int portno, GeomID serial, GeomObj* obj,
+GeometryComm::GeometryComm(int portno, GeomID serial, GeomHandle obj,
 			   const string& name, CrowdMonitor* lock)
   : MessageBase(MessageTypes::GeometryAddObj),
     portno(portno),

@@ -50,47 +50,43 @@ static Persistent* make_GeomTimeGroup()
 
 PersistentTypeID GeomTimeGroup::type_id("GeomTimeGroup", "GeomObj", make_GeomTimeGroup);
 
-GeomTimeGroup::GeomTimeGroup(int del_children)
-: GeomObj(), objs(0, 100), start_times(0,100),del_children(del_children)
+GeomTimeGroup::GeomTimeGroup()
+  : GeomObj()
 {
 }
 
 GeomTimeGroup::GeomTimeGroup(const GeomTimeGroup& copy)
-: GeomObj(copy), del_children(copy.del_children)
+  : GeomObj(copy), objs(copy.objs), start_times(copy.start_times)
 {
-    objs.grow(copy.objs.size());
-    start_times.grow(copy.start_times.size());
-    for(int i=0;i<objs.size();i++){
-	GeomObj* cobj=copy.objs[i];
-	objs[i]=cobj->clone();
-	start_times[i] = copy.start_times[i];
+}
+
+void GeomTimeGroup::add(GeomHandle obj,double time)
+{
+    objs.push_back(obj);
+    start_times.push_back(time);
+}
+
+void GeomTimeGroup::remove(GeomHandle obj)
+{
+  vector<GeomHandle>::iterator oitr = objs.begin();
+  vector<double>::iterator titr = start_times.begin();
+  while(oitr != objs.end())
+  {
+    if ((*oitr).get_rep() == obj.get_rep())
+    {
+      objs.erase(oitr);
+      start_times.erase(titr);
+      break;
     }
-}
-
-void GeomTimeGroup::add(GeomObj* obj,double time)
-{
-    objs.add(obj);
-    start_times.add(time);
-}
-
-void GeomTimeGroup::remove(GeomObj* obj)
-{
-   for(int i=0;i<objs.size();i++)
-      if (objs[i] == obj) {
-	 objs.remove(i);
-	 start_times.remove(i);
-	 if(del_children)delete obj;
-	 break;
-      }
+    ++oitr;
+    ++titr;
+  }
 }
 
 void GeomTimeGroup::remove_all()
 {
-   if(del_children)
-      for(int i=0;i<objs.size();i++)
-	 delete objs[i];
-   objs.remove_all();
-   start_times.remove_all();
+    objs.clear();
+    start_times.clear();
 }
 
 int GeomTimeGroup::size()
@@ -106,7 +102,7 @@ GeomObj* GeomTimeGroup::clone()
 void GeomTimeGroup::get_bounds(BBox& in_bb)
 {
 
-    for(int i=0;i<objs.size();i++)
+    for(unsigned int i=0;i<objs.size();i++)
 	objs[i]->get_bounds(in_bb);
 
 #if 0
@@ -114,13 +110,6 @@ void GeomTimeGroup::get_bounds(BBox& in_bb)
 #endif
 }
 
-GeomTimeGroup::~GeomTimeGroup()
-{
-    if(del_children){
-	for(int i=0;i<objs.size();i++)
-	    delete objs[i];
-    }
-}
 
 void GeomTimeGroup::setbbox(BBox& b)
 {
@@ -129,19 +118,23 @@ void GeomTimeGroup::setbbox(BBox& b)
 
 void GeomTimeGroup::reset_bbox()
 {
-    for(int i=0;i<objs.size();i++)
+    for(unsigned int i=0;i<objs.size();i++)
 	objs[i]->reset_bbox();
 }
 
-#define GEOMTimeGroup_VERSION 1
+#define GEOMTimeGroup_VERSION 2
 
 void GeomTimeGroup::io(Piostream& stream)
 {
 
-    stream.begin_class("GeomTimeGroup", GEOMTimeGroup_VERSION);
+    const int ver = stream.begin_class("GeomTimeGroup", GEOMTimeGroup_VERSION);
     // Do the base class first...
     GeomObj::io(stream);
-    Pio(stream, del_children);
+    if (ver == 1 && stream.reading())
+    {
+      int del_children;
+      Pio(stream, del_children);
+    }
     Pio(stream, objs);
     Pio(stream,start_times);
     stream.end_class();
@@ -154,7 +147,7 @@ bool GeomTimeGroup::saveobj(ostream& out, const string& format,
     cnt++;
     cerr << "saveobj TimeGroup " << cnt << "\n";
 
-    for(int i=0;i<objs.size();i++){ cerr << cnt << ">";
+    for(unsigned int i=0;i<objs.size();i++){ cerr << cnt << ">";
 	if(!objs[i]->saveobj(out, format, saveinfo))
 	  { cnt--;
 	    return false;

@@ -62,15 +62,16 @@ private:
   GeomPick(const GeomPick&);
 
 public:
-  GeomPick(GeomObj*, ModulePickable* module);
-  GeomPick(GeomObj*, ModulePickable* module, WidgetPickable*, int widget_data);
-  GeomPick(GeomObj*, ModulePickable* module, const Vector&);
-  GeomPick(GeomObj*, ModulePickable* module, const Vector&, const Vector&);
-  GeomPick(GeomObj*, ModulePickable* module,
+  GeomPick(GeomHandle, ModulePickable* module);
+  GeomPick(GeomHandle, ModulePickable* module,
+	   WidgetPickable*, int widget_data);
+  GeomPick(GeomHandle, ModulePickable* module, const Vector&);
+  GeomPick(GeomHandle, ModulePickable* module, const Vector&, const Vector&);
+  GeomPick(GeomHandle, ModulePickable* module,
 	   const Vector&, const Vector&, const Vector&);
-  GeomPick(GeomObj*, ModulePickable* module, const Array1<Vector>&);
-  virtual ~GeomPick();
+  GeomPick(GeomHandle, ModulePickable* module, const Array1<Vector>&);
   virtual GeomObj* clone();
+
   int nprincipal();
   const Vector &principal(int i);
   void set_principal(const Vector&);
@@ -95,7 +96,6 @@ public:
   
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
   
 } // End namespace SCIRun

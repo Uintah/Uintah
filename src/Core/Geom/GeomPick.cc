@@ -43,7 +43,7 @@ Persistent* make_GeomPick()
 PersistentTypeID GeomPick::type_id("GeomPick", "GeomObj", make_GeomPick);
 
 
-GeomPick::GeomPick(GeomObj* obj, ModulePickable* module)
+GeomPick::GeomPick(GeomHandle obj, ModulePickable* module)
   : GeomContainer(obj),
     module_(module),
     cbdata_(0),
@@ -63,7 +63,7 @@ GeomPick::GeomPick(GeomObj* obj, ModulePickable* module)
 }
 
 
-GeomPick::GeomPick(GeomObj* obj, ModulePickable* module,
+GeomPick::GeomPick(GeomHandle obj, ModulePickable* module,
 		   WidgetPickable* widget, int widget_data)
   : GeomContainer(obj),
     module_(module),
@@ -85,7 +85,7 @@ GeomPick::GeomPick(GeomObj* obj, ModulePickable* module,
 }
 
 
-GeomPick::GeomPick(GeomObj* obj, ModulePickable* module, const Vector& v1)
+GeomPick::GeomPick(GeomHandle obj, ModulePickable* module, const Vector& v1)
   : GeomContainer(obj),
     module_(module),
     cbdata_(0),
@@ -101,7 +101,7 @@ GeomPick::GeomPick(GeomObj* obj, ModulePickable* module, const Vector& v1)
 }
 
 
-GeomPick::GeomPick(GeomObj* obj, ModulePickable* module,
+GeomPick::GeomPick(GeomHandle obj, ModulePickable* module,
 		   const Vector& v1, const Vector& v2)
   : GeomContainer(obj),
     module_(module),
@@ -120,7 +120,7 @@ GeomPick::GeomPick(GeomObj* obj, ModulePickable* module,
 }
 
 
-GeomPick::GeomPick(GeomObj* obj, ModulePickable* module,
+GeomPick::GeomPick(GeomHandle obj, ModulePickable* module,
 		   const Vector& v1, const Vector& v2, const Vector& v3)
   : GeomContainer(obj),
     module_(module),
@@ -159,11 +159,6 @@ GeomPick::GeomPick(const GeomPick& copy)
 GeomObj* GeomPick::clone()
 {
   return scinew GeomPick(*this);
-}
-
-
-GeomPick::~GeomPick()
-{
 }
 
 
@@ -304,13 +299,6 @@ GeomPick::io(Piostream& stream)
   stream.begin_class("GeomPick", GEOMPICK_VERSION);
   GeomContainer::io(stream);
   stream.end_class();
-}
-
-
-bool
-GeomPick::saveobj(ostream& out, const string& format, GeomSave* saveinfo)
-{
-  return child->saveobj(out, format, saveinfo);
 }
 
 } // End namespace SCIRun

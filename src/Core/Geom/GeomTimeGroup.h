@@ -37,19 +37,17 @@
 namespace SCIRun {
 
 class SCICORESHARE GeomTimeGroup : public GeomObj {
-    Array1<GeomObj*> objs;
-    Array1<double>   start_times;
-    int del_children;
+    vector<GeomHandle> objs;
+    vector<double>     start_times;
 
     BBox bbox; // bbox for entire seen - set once!
 public:
-    GeomTimeGroup(int del_children=1);
+    GeomTimeGroup();
     GeomTimeGroup(const GeomTimeGroup&);
-    virtual ~GeomTimeGroup();
     virtual GeomObj* clone();
 
-    void add(GeomObj*,double); // with time...
-    void remove(GeomObj*);
+    void add(GeomHandle,double); // with time...
+    void remove(GeomHandle);
     void remove_all();
     int size();
 
