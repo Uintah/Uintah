@@ -166,16 +166,23 @@ void VectorFieldExtractor::execute()
       case TypeDescription::Vector:
 	{	
 	  NCVariable<Vector> gridVar;
-	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	  LevelField<Vector> *vfd =
-	    scinew LevelField<Vector>( mesh, Field::NODE );
+//  	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
+//  	  LevelField<Vector> *vfd =
+//  	    scinew LevelField<Vector>( mesh, Field::NODE );
+	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
+					     range.z(), box.min(),
+					     box.max());
+	  LatVolField<Vector> *vfd =
+	    scinew LatVolField<Vector>( lvm, Field::NODE );
 	  // set the generation and timestep in the field
 	  vfd->set_property("varname",string(var), true);
 	  vfd->set_property("generation",generation, true);
 	  vfd->set_property("timestep",timestep, true);
 	  vfd->set_property("delta_t",dt, true);
-	  build_field( archive, level, var, mat, time, gridVar, vfd);
-	  // send the field out to the port
+//  	  build_field( archive, level, var, mat, time, gridVar, vfd);
+	  build_field2( archive, level, low, var, mat, time, gridVar,
+			vfd, need_byte_swap);
+  // send the field out to the port
 	  vfout->send(vfd);
 	  return;
 	}
