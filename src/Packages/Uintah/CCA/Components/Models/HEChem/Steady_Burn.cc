@@ -1,8 +1,8 @@
 #include <Packages/Uintah/CCA/Components/Models/HEChem/Steady_Burn.h>
-
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
@@ -18,6 +18,8 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/LinearInterpolator.h>
 
 #include <Core/Util/DebugStream.h>
 
@@ -35,24 +37,32 @@ static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 
 Steady_Burn::Steady_Burn(const ProcessorGroup* myworld, ProblemSpecP& params): ModelInterface(myworld), params(params){
   mymatls = 0;
-  Mlb = scinew MPMLabel();
   Ilb = scinew ICELabel();
   MIlb = scinew MPMICELabel();
   //_________________________________
   //  diagnostic labels
-  onSurfaceLabel = VarLabel::create("Steady_Burn::onSurface", CCVariable<double>::getTypeDescription());                  
-  surfaceTempLabel = VarLabel::create("Steady_Burn::surfaceTemp", CCVariable<double>::getTypeDescription());                
+  onSurfaceLabel = VarLabel::create("Steady_Burn::onSurface", 
+                         CCVariable<double>::getTypeDescription());
+  surfaceTempLabel = VarLabel::create("Steady_Burn::surfaceTemp",
+                         CCVariable<double>::getTypeDescription());
+
+  PartBulkTempLabel = VarLabel::create("p.BulkTemp",
+                         ParticleVariable<double>::getTypeDescription());
+  PartBulkTempLabel_preReloc = VarLabel::create("p.BulkTemp+",
+                         ParticleVariable<double>::getTypeDescription());
 }
 
 
 
 Steady_Burn::~Steady_Burn(){
   delete Ilb;
-  delete Mlb;
+//  delete Mlb;
   delete MIlb;
   
   VarLabel::destroy(surfaceTempLabel);
   VarLabel::destroy(onSurfaceLabel);
+  VarLabel::destroy(PartBulkTempLabel);
+  VarLabel::destroy(PartBulkTempLabel_preReloc);
   
   if(mymatls && mymatls->removeReference())
     delete mymatls;
@@ -78,7 +88,7 @@ void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup
   m_tmp[0] = matl0->getDWIndex();
   m_tmp[1] = matl1->getDWIndex();
   mymatls = new MaterialSet();            
-  
+
   if( m_tmp[0] != 0 && m_tmp[1] != 0){
     vector<int> m(3);
     m[0] = 0;    // needed for the pressure and NC_CCWeight 
@@ -94,20 +104,20 @@ void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup
   mymatls->addReference();
 }
 
-
-
 //______________________________________________________________________
 //     
-void Steady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, const ModelInfo*){
+void Steady_Burn::scheduleInitialize(SchedulerP& sched, 
+                                     const LevelP& level, const ModelInfo*){
   cout_doing << "Steady_Burn::scheduleInitialize" << endl;
   Task* t = scinew Task("Steady_Burn::initialize", this, &Steady_Burn::initialize);                        
   MaterialSubset* one_matl  = scinew MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();                          
-  t->computes(Steady_Burn::surfaceTempLabel, one_matl);
+  const MaterialSubset* react_matl = matl0->thisMaterial();
+  t->computes(Steady_Burn::surfaceTempLabel,  one_matl);
+  t->computes(Steady_Burn::PartBulkTempLabel, react_matl);
   sched->addTask(t, level->eachPatch(), mymatls);
 }
-
 
 
 //______________________________________________________________________
@@ -119,29 +129,45 @@ Steady_Burn::initialize(const ProcessorGroup*,
                         DataWarehouse*, 
                         DataWarehouse* new_dw){
   
+  int m0 = matl0->getDWIndex();
+
+  (Mlb->d_particleState)[m0].push_back(PartBulkTempLabel);
+  (Mlb->d_particleState_preReloc)[m0].push_back(PartBulkTempLabel_preReloc);
+  
   for(int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing Initialize on patch " << patch->getID()<< "\t\t\t STEADY_BURN" << endl;         
+    cout_doing << "Doing Initialize on patch " 
+               << patch->getID()<< "\t\t\t STEADY_BURN" << endl;         
     CCVariable<double> surfaceTemp;
     new_dw->allocateAndPut(surfaceTemp,Steady_Burn::surfaceTempLabel, 0, patch);
     surfaceTemp.initialize(300.0);
+
+    ParticleVariable<double> pBulkTemp;
+    ParticleSubset* pset = new_dw->getParticleSubset(m0, patch);
+    new_dw->allocateAndPut(pBulkTemp,  Steady_Burn::PartBulkTempLabel, pset);
+
+    for(ParticleSubset::iterator iter = pset->begin();
+                                 iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      pBulkTemp[idx]=300.0;
+    }
   }
 }
 
-
-
 //______________________________________________________________________
 //      
-void Steady_Burn::scheduleComputeStableTimestep(SchedulerP&, const LevelP&, const ModelInfo*){
+void Steady_Burn::scheduleComputeStableTimestep(SchedulerP&,
+                                                const LevelP&, const ModelInfo*)
+{
   // None necessary...
 }
 
-
-
 //______________________________________________________________________
 //     
-void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, const LevelP& level, const ModelInfo* mi){
-  Task* t = scinew Task("Steady_Burn::computeModelSources", this, &Steady_Burn::computeModelSources, mi);
+void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
+                       const LevelP& level, const ModelInfo* mi){
+  Task* t = scinew Task("Steady_Burn::computeModelSources",
+                         this, &Steady_Burn::computeModelSources, mi);
   cout_doing << "Steady_Burn::scheduleComputeModelSources" << endl;
   
   t->requires( Task::OldDW, mi->delT_Label);
@@ -153,13 +179,13 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, const LevelP& l
   one_matl->add(0);
   one_matl->addReference();
   MaterialSubset* press_matl   = one_matl;
-  
+
   //__________________________________
   // Products
   t->requires(Task::OldDW,  Ilb->temp_CCLabel,    prod_matl, gn);       
   t->requires(Task::NewDW,  Ilb->vol_frac_CCLabel,prod_matl, gn);       
-  t->requires(Task::NewDW,  Ilb->TempX_FCLabel,   prod_matl, gac,2);    
-  t->requires(Task::NewDW,  Ilb->TempY_FCLabel,   prod_matl, gac,2);    
+  t->requires(Task::NewDW,  Ilb->TempX_FCLabel,   prod_matl, gac,2);
+  t->requires(Task::NewDW,  Ilb->TempY_FCLabel,   prod_matl, gac,2);
   t->requires(Task::NewDW,  Ilb->TempZ_FCLabel,   prod_matl, gac,2);
   
   //__________________________________
@@ -172,15 +198,20 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, const LevelP& l
   t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matl, gn);
   t->requires(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
   t->requires(Task::NewDW, Mlb->gMassLabel,       react_matl, gac,1);
+  t->requires(Task::OldDW, Mlb->pMassLabel,       react_matl, gac,2);
+  t->requires(Task::OldDW, PartBulkTempLabel,     react_matl, gac,2);
+  t->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gn);
+  t->requires(Task::OldDW, Mlb->pSizeLabel,       react_matl, gn);
 
   //__________________________________
   //Misc
-  t->requires(Task::OldDW, surfaceTempLabel,          one_matl, gn);     //new
-  t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, press_matl,gn);
-  t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   one_matl,  gac, 1);    
+  t->requires(Task::OldDW, surfaceTempLabel,         one_matl, gn);     //new
+  t->requires(Task::NewDW, Ilb->press_equil_CCLabel, press_matl,gn);
+  t->requires(Task::OldDW, MIlb->NC_CCweightLabel,   one_matl,  gac, 1);    
 
-  t->computes(Steady_Burn::onSurfaceLabel,     one_matl);
-  t->computes(Steady_Burn::surfaceTempLabel,   one_matl);
+  t->computes(onSurfaceLabel,              one_matl);
+  t->computes(surfaceTempLabel,            one_matl);
+  t->computes(PartBulkTempLabel_preReloc,  react_matl);
 
   t->modifies(mi->mass_source_CCLabel);
   t->modifies(mi->momentum_source_CCLabel);
@@ -195,18 +226,19 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, const LevelP& l
 
 
 
-void Steady_Burn::scheduleModifyThermoTransportProperties(SchedulerP&, const LevelP&, const MaterialSet*){
+void Steady_Burn::scheduleModifyThermoTransportProperties(SchedulerP&,
+                                              const LevelP&, const MaterialSet*)
+{
   // do nothing      
 }
 
 
 
-void Steady_Burn::computeSpecificHeat(CCVariable<double>&, const Patch*, DataWarehouse*, const int){
+void Steady_Burn::computeSpecificHeat(CCVariable<double>&, const Patch*,
+                                      DataWarehouse*, const int)
+{
   //do nothing
 }
-
-
-
 /*
  *
  ***************** Public Member Functions:******************************
@@ -241,18 +273,22 @@ Steady_Burn::computeModelSources(const ProcessorGroup*,
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
     CCVariable<double> onSurface, surfaceTemp;   
  
-    new_dw->getModifiable(mass_src_0,    mi->mass_source_CCLabel,     m0, patch);    
-    new_dw->getModifiable(momentum_src_0,mi->momentum_source_CCLabel, m0, patch); 
-    new_dw->getModifiable(energy_src_0,  mi->energy_source_CCLabel,   m0, patch);   
-    new_dw->getModifiable(sp_vol_src_0,  mi->sp_vol_source_CCLabel,   m0, patch);   
+    new_dw->getModifiable(mass_src_0,    mi->mass_source_CCLabel,     m0,patch);
+    new_dw->getModifiable(momentum_src_0,mi->momentum_source_CCLabel, m0,patch);
+    new_dw->getModifiable(energy_src_0,  mi->energy_source_CCLabel,   m0,patch);
+    new_dw->getModifiable(sp_vol_src_0,  mi->sp_vol_source_CCLabel,   m0,patch);
 
-    new_dw->getModifiable(mass_src_1,    mi->mass_source_CCLabel,    m1,patch);   
-    new_dw->getModifiable(momentum_src_1,mi->momentum_source_CCLabel,m1,patch);   
-    new_dw->getModifiable(energy_src_1,  mi->energy_source_CCLabel,  m1,patch);   
-    new_dw->getModifiable(sp_vol_src_1,  mi->sp_vol_source_CCLabel,  m1,patch);   
+    new_dw->getModifiable(mass_src_1,    mi->mass_source_CCLabel,    m1,patch); 
+    new_dw->getModifiable(momentum_src_1,mi->momentum_source_CCLabel,m1,patch);
+    new_dw->getModifiable(energy_src_1,  mi->energy_source_CCLabel,  m1,patch);
+    new_dw->getModifiable(sp_vol_src_1,  mi->sp_vol_source_CCLabel,  m1,patch);
  
     constCCVariable<double> press_CC,gasTemp,gasVol_frac,gasSp_vol;
     constCCVariable<double> solidTemp,solidMass,solidSp_vol;
+    constParticleVariable<double> pMass,pBulkTemp;
+    ParticleVariable<double> pBulkTempNew;
+    constParticleVariable<Point>  px;
+    constParticleVariable<Vector> psize;
 
     constNCVariable<double> NC_CCweight,NCsolidMass;
     constSFCXVariable<double> gasTempX_FC,solidTempX_FC;
@@ -262,8 +298,13 @@ Steady_Burn::computeModelSources(const ProcessorGroup*,
     
     Vector dx = patch->dCell();
     Ghost::GhostType  gn  = Ghost::None;    
-    Ghost::GhostType  gac = Ghost::AroundCells;   
-   
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gan = Ghost::AroundNodes;
+
+    ParticleSubset* pset = old_dw->getParticleSubset(m0, patch,
+                                                     gan, 1, Mlb->pXLabel);
+    ParticleSubset* pset_put = old_dw->getParticleSubset(m0, patch);
+
     //__________________________________
     // Reactant data
     new_dw->get(solidTemp,       MIlb->temp_CCLabel, m0,patch,gn, 0);
@@ -274,6 +315,20 @@ Steady_Burn::computeModelSources(const ProcessorGroup*,
     new_dw->get(solidTempZ_FC,   Ilb->TempZ_FCLabel, m0,patch,gac,2);
     new_dw->get(vel_CC,          MIlb->vel_CCLabel,  m0,patch,gn, 0);
     new_dw->get(NCsolidMass,     Mlb->gMassLabel,    m0,patch,gac,1);
+    old_dw->get(pMass,           Mlb->pMassLabel,    pset);
+    old_dw->get(pBulkTemp,       PartBulkTempLabel,  pset);
+    old_dw->get(px,              Mlb->pXLabel,       pset);
+    old_dw->get(psize,           Mlb->pSizeLabel,    pset);
+
+
+
+    NCVariable<double> NCBulkTemp;
+    CCVariable<double> CCBulkTemp;
+    new_dw->allocateTemporary(NCBulkTemp, patch, gac, 2);
+    new_dw->allocateTemporary(CCBulkTemp, patch);
+    NCBulkTemp.initialize(0.0);
+    CCBulkTemp.initialize(0.0);
+    new_dw->allocateAndPut(pBulkTempNew,  PartBulkTempLabel_preReloc,pset_put);
 
     //__________________________________
     // Product Data, 
@@ -290,12 +345,9 @@ Steady_Burn::computeModelSources(const ProcessorGroup*,
     //__________________________________
     //   Misc.
     constCCVariable<double> oldSurfaceTemp; 
-   
-    
-    new_dw->get(press_CC,       Ilb->press_equil_CCLabel,      0, patch, gn,  0);
-    old_dw->get(NC_CCweight,    MIlb->NC_CCweightLabel,        0, patch, gac, 1);   
-    old_dw->get(oldSurfaceTemp, Steady_Burn::surfaceTempLabel, 0, patch, gn,  0);
-
+    new_dw->get(press_CC,       Ilb->press_equil_CCLabel,      0, patch, gn, 0);
+    old_dw->get(NC_CCweight,    MIlb->NC_CCweightLabel,        0, patch, gac,1);
+    old_dw->get(oldSurfaceTemp, Steady_Burn::surfaceTempLabel, 0, patch, gn, 0);
     new_dw->allocateAndPut(surfaceTemp,Steady_Burn::surfaceTempLabel, 0, patch);
     new_dw->allocateAndPut(onSurface,  Steady_Burn::onSurfaceLabel,   0, patch);
    
@@ -314,7 +366,62 @@ Steady_Burn::computeModelSources(const ProcessorGroup*,
         Cp = mpm_matl->getSpecificHeat();
       }
     }
-    
+
+    // Interpolate pBulkTemp to NC
+    // NOTE!!!  To save myself the headache of passing in the MPMFlags
+    // for now I've hardwired this to use linear (8 noded, not GIMP)
+    // interpolation.  If you wish to use GIMP, you need to change
+    // the interpolator to be a Node27Interpolator() and change
+    // n8or27 to be 27 instead of it's current value of 8
+    ParticleInterpolator* interpolator;
+    interpolator = scinew LinearInterpolator(patch);
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
+    int n8or27 = 8;
+
+
+    NCBulkTemp.initialize(0.);
+    for (ParticleSubset::iterator iter = pset->begin();
+                                  iter != pset->end(); iter++){
+       particleIndex idx = *iter;
+       interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
+        for(int k = 0; k < n8or27; k++) {
+          NCBulkTemp[ni[k]]     += pMass[idx]*pBulkTemp[idx]      * S[k];
+        }
+    }
+    for (ParticleSubset::iterator iter = pset_put->begin();
+                                  iter != pset_put->end(); iter++){
+       particleIndex idx = *iter;
+       pBulkTempNew[idx]=pBulkTemp[idx];
+    }
+
+
+    for(NodeIterator iter=patch->getNodeIterator(n8or27);!iter.done();iter++){
+        IntVector c = *iter;
+        NCBulkTemp[c]/=NCsolidMass[c];
+    }
+
+    for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      patch->findNodesFromCell(*iter,nodeIdx);
+                                                                              
+      double Blk_Temp_CC = 0.0;
+      double cmass=0.;
+      for (int in=0;in<8;in++){
+        double NC_CCw_mass = NC_CCweight[nodeIdx[in]]*NCsolidMass[nodeIdx[in]];
+        cmass       += NC_CCw_mass;
+        Blk_Temp_CC += NCBulkTemp[nodeIdx[in]] * NC_CCw_mass;
+      }
+      Blk_Temp_CC/=cmass;
+      //__________________________________
+      // set *_CC = to either vel/Temp_CC_ice or vel/Temp_CC_mpm
+      // depending upon if there is cmass.  You need
+      // a well defined vel/temp_CC even if there isn't any mass
+      // If you change this you must also change
+      // MPMICE::computeLagrangianValuesMPM
+    }
 
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
@@ -431,6 +538,7 @@ Steady_Burn::computeModelSources(const ProcessorGroup*,
     //  set symetric BC
     setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
     setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1, new_dw); 
+    delete interpolator;
   }
 }
 
@@ -572,4 +680,9 @@ void Steady_Burn::scheduleTestConservation(SchedulerP&,
                                            const ModelInfo*)                     
 {
   // Not implemented yet
+}
+
+void Steady_Burn::setMPMLabel(MPMLabel* MLB)
+{
+  Mlb = MLB;
 }
