@@ -24,7 +24,13 @@ TensorFieldOperator::TensorFieldOperator(GuiContext* ctx)
     guiColumn(ctx->subVar("column")),
     guiPlaneSelect(ctx->subVar("planeSelect")),
     guiDelta(ctx->subVar("delta")),
-    guiEigen2DCalcType(ctx->subVar("eigen2D-calc-type"))
+    guiEigen2DCalcType(ctx->subVar("eigen2D-calc-type")),
+    guiNx(ctx->subVar("nx")),
+    guiNy(ctx->subVar("ny")),
+    guiNz(ctx->subVar("nz")),
+    guiTx(ctx->subVar("tx")),
+    guiTy(ctx->subVar("ty")),
+    guiTz(ctx->subVar("tz"))
     //    tcl_status(ctx->subVar("tcl_status")),
 {
 }

@@ -69,6 +69,10 @@ private:
   GuiDouble guiDelta;
   GuiInt guiEigen2DCalcType;
     
+  // n . sigma . t operation
+  GuiDouble guiNx, guiNy, guiNz;
+  GuiDouble guiTx, guiTy, guiTz;
+
   FieldIPort *in;
 
   FieldOPort *sfout;
@@ -118,6 +122,14 @@ void TensorFieldOperator::performOperation(TensorField* tensorField,
     break;
   case 4: // Octahedral shear stress
     computeScalars(tensorField, scalarField, OctShearStressOp());
+    break;
+  case 5: // n . sigma. t
+    {
+    double nx = guiNx.get(); double ny = guiNy.get(); double nz = guiNz.get();
+    double tx = guiTx.get(); double ty = guiTy.get(); double tz = guiTz.get();
+    computeScalars(tensorField, scalarField, NDotSigmaDotTOp(nx, ny, nz,
+                                                             tx, ty, tz));
+    }
     break;
   default:
     std::cerr << "TensorFieldOperator::performOperation: "

@@ -8,6 +8,7 @@
  */
 
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <iostream>
 
 /* Functors used by TensorFieldOperator and TensorParticlesOperator */
 
@@ -105,6 +106,32 @@ struct OctShearStressOp
 		 (M(2,2)-M(0,0))*(M(2,2)-M(0,0))+
 		 6*(M(0,1)*M(0,1)+M(1,2)*M(1,2)+M(0,2)*M(0,2))
 		 )/3.0; }
+};
+
+struct NDotSigmaDotTOp
+{
+  NDotSigmaDotTOp(double nx, double ny, double nz, 
+                  double tx, double ty, double tz)
+  { 
+    n = Vector(nx,ny,nz);
+    t = Vector(tx,ty,tz);
+    std::cout << " n = " << n << " t = " << t << std::endl;
+  }
+
+  // This is the function which does the operation you want.
+  inline double operator()(Matrix3 M)
+  { 
+    double nsigmat = 0.0;
+    for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) {
+        nsigmat += n[i]*M(i+1,j+1)*t[j];
+      }
+    }
+    return nsigmat;
+  }
+
+  Vector n;
+  Vector t;
 };
 
 /*

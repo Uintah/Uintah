@@ -20,7 +20,13 @@ TensorParticlesOperator::TensorParticlesOperator(GuiContext* ctx)
     guiColumn(ctx->subVar("column")),
     guiPlaneSelect(ctx->subVar("planeSelect")),
     guiDelta(ctx->subVar("delta")),
-    guiEigen2DCalcType(ctx->subVar("eigen2D-calc-type"))
+    guiEigen2DCalcType(ctx->subVar("eigen2D-calc-type")),
+    guiNx(ctx->subVar("nx")),
+    guiNy(ctx->subVar("ny")),
+    guiNz(ctx->subVar("nz")),
+    guiTx(ctx->subVar("tx")),
+    guiTy(ctx->subVar("ty")),
+    guiTz(ctx->subVar("tz"))
     //    tcl_status(ctx->subVar("tcl_status")),
 {
 }
@@ -78,6 +84,13 @@ void TensorParticlesOperator::execute(void)
     break;
   case 4: // Octahedral shear stress
     computeScalars(pTP, pSP, OctShearStressOp());
+    break;
+  case 5: // n . sigma. t
+    {
+    double nx = guiNx.get(); double ny = guiNy.get(); double nz = guiNz.get();
+    double tx = guiTx.get(); double ty = guiTy.get(); double tz = guiTz.get();
+    computeScalars(pTP, pSP, NDotSigmaDotTOp(nx, ny, nz, tx, ty, tz));
+    }
     break;
   default:
     std::cerr << "TensorFieldOperator::performOperation: "
