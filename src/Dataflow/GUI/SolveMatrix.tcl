@@ -412,6 +412,9 @@ itcl_class SCIRun_Math_SolveMatrix {
 #	puts "finishing graph!"
 	set w .ui[modname]
 #	puts "$w.graph"
+	if {![winfo exists $w]} {
+	    return
+	}
 	$w.graph element configure "Current Error" -color green
     }
 }
