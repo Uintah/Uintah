@@ -155,6 +155,15 @@ proc deleteTraces {} {
     lightPort
 }
 
+proc disableConnectionID { connid state } {
+    global Disabled
+    setIfExists disabled Disabled($connid) 0
+    # disabledTrace is called when Disabled is written to,
+    # it does the actual disabling of the connection in the network
+    if { $disabled != $state } {
+	set Disabled($connid) $state
+    }
+}
 
 proc disableConnection { conn } {
     global Disabled
