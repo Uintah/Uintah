@@ -1755,9 +1755,11 @@ proc drawPort { port { color red } { connected 0 } } {
 proc lightPort { { port "" } { color "black" } } {
     global Subnet LitPorts
 
-    if { ![string length $port] && [info exists LitPorts] } {
-	foreach port [lsort -unique $LitPorts] {
-	    lightPort $port black
+    if ![string length $port] {
+	if [info exists LitPorts] {
+	    foreach port [lsort -unique $LitPorts] {
+		lightPort $port black
+	    }
 	}
 	return
     }
