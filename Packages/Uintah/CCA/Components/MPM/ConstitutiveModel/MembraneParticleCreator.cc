@@ -14,8 +14,11 @@
 
 using namespace Uintah;
 
-MembraneParticleCreator::MembraneParticleCreator()
+MembraneParticleCreator::MembraneParticleCreator(MPMMaterial* matl,
+						 MPMLabel* lb,int n8or27) 
+  :  ParticleCreator(matl,lb,n8or27)
 {
+  registerPermanentParticleState(matl,lb);
 }
 
 MembraneParticleCreator::~MembraneParticleCreator()
@@ -132,6 +135,7 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
     start += count; 
   }
 
+
   ParticleCreator::applyForceBC(start,pexternalforce,pmass,position);
   return subset;
 
@@ -161,3 +165,18 @@ particleIndex MembraneParticleCreator::countParticles(GeometryObject* obj,
 }
 
 
+void 
+MembraneParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
+							MPMLabel* lb)
+
+{
+  particle_state.push_back(lb->pTang1Label);
+  particle_state_preReloc.push_back(lb->pTang1Label_preReloc);
+
+  particle_state.push_back(lb->pTang2Label);
+  particle_state_preReloc.push_back(lb->pTang2Label_preReloc);
+
+  particle_state.push_back(lb->pNormLabel);
+  particle_state_preReloc.push_back(lb->pNormLabel_preReloc);
+
+}

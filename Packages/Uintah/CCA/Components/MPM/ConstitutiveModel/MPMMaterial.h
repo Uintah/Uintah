@@ -81,6 +81,9 @@ WARNING
 			      const Patch*,
 			      DataWarehouse* new_dw);
 
+	 void getParticleState(vector<const VarLabel* >& pstate,
+			       vector<const VarLabel* >& pstate_rel);
+
          //for HeatConductionModel
          double getThermalConductivity() const;
          double getSpecificHeat() const;

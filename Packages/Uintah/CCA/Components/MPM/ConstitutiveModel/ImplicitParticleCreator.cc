@@ -8,25 +8,31 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <algorithm>
 
 using namespace Uintah;
 using std::vector;
+using std::find;
 
-ImplicitParticleCreator::ImplicitParticleCreator()
+ImplicitParticleCreator::ImplicitParticleCreator(MPMMaterial* matl,
+						 MPMLabel* lb,int n8or27) 
+  :  ParticleCreator(matl,lb,n8or27)
 {
+  registerPermanentParticleState(matl,lb);
 }
 
 ImplicitParticleCreator::~ImplicitParticleCreator()
 {
 }
 
-ParticleSubset* ImplicitParticleCreator::createParticles(MPMMaterial* matl, 
-					      particleIndex numParticles,
-					      CCVariable<short int>& cellNAPID,
-					      const Patch* patch,
-					      DataWarehouse* new_dw,
-					      MPMLabel* lb,
-					      vector<GeometryObject*>& d_geom_objs)
+ParticleSubset* 
+ImplicitParticleCreator::createParticles(MPMMaterial* matl, 
+					 particleIndex numParticles,
+					 CCVariable<short int>& cellNAPID,
+					 const Patch* patch,
+					 DataWarehouse* new_dw,
+					 MPMLabel* lb,
+					 vector<GeometryObject*>& d_geom_objs)
 {
 
   ParticleSubset* subset = ParticleCreator::createParticles(matl,numParticles,
@@ -77,20 +83,49 @@ ParticleSubset* ImplicitParticleCreator::createParticles(MPMMaterial* matl,
     start += count;
   }
 
+
   return subset;
 }
 
-particleIndex ImplicitParticleCreator::countParticles(const Patch* patch,
-						      std::vector<GeometryObject*>& d_geom_objs) const
+particleIndex 
+ImplicitParticleCreator::countParticles(const Patch* patch,
+					vector<GeometryObject*>& d_geom_objs) const
 {
 
   return ParticleCreator::countParticles(patch,d_geom_objs);
 }
 
-particleIndex ImplicitParticleCreator::countParticles(GeometryObject* obj,
-						      const Patch* patch) const
+particleIndex 
+ImplicitParticleCreator::countParticles(GeometryObject* obj,
+					const Patch* patch) const
 {
   return ParticleCreator::countParticles(obj,patch);
 }
 
+void
+ImplicitParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
+							MPMLabel* lb)
+{
+  particle_state.push_back(lb->pVolumeOldLabel);
+  particle_state_preReloc.push_back(lb->pVolumeOldLabel_preReloc);
 
+  particle_state.push_back(lb->pAccelerationLabel);
+  particle_state_preReloc.push_back(lb->pAccelerationLabel_preReloc);
+    
+  // This is a hack to remove the pTemperatureLabel from particle_state.
+  // Temperature is initialized in the ParticleCreator class, but for
+  // the implicit algorithm, we don't use it, hence, we can just remove
+  // it from the permanentParticleState, and relocParticles will ignore it.
+  
+  vector<const VarLabel* >::iterator result;
+  
+  result = find(particle_state.begin(), particle_state.end(),
+		lb->pTemperatureLabel);
+  
+  particle_state.erase(result);
+
+  result = find(particle_state_preReloc.begin(),particle_state_preReloc.end(),
+		lb->pTemperatureLabel_preReloc);
+  
+  particle_state_preReloc.erase(result);
+}

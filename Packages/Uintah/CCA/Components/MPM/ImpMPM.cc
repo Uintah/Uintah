@@ -120,7 +120,16 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 
    cerr << "Number of materials: " << d_sharedState->getNumMatls() << "\n";
 
+   lb->d_particleState.resize(d_sharedState->getNumMPMMatls());
+   lb->d_particleState_preReloc.resize(d_sharedState->getNumMPMMatls());
 
+   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+     mpm_matl->getParticleState(lb->d_particleState[m],
+				lb->d_particleState_preReloc[m]);
+   }
+
+#if 0
    // Load up all the VarLabels that will be used in each of the
    // physical models
    lb->d_particleState.resize(d_sharedState->getNumMPMMatls());
@@ -145,6 +154,8 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      mpm_matl->getConstitutiveModel()->addParticleState(lb->d_particleState[m],
 					lb->d_particleState_preReloc[m]);
    }
+#endif
+
 #ifdef HAVE_PETSC
    int argc = 4;
    char** argv;
@@ -361,8 +372,7 @@ void ImpMPM::scheduleComputeStressTensorR(SchedulerP& sched,
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("ImpMPM::computeStressTensorR",
 		    this, &ImpMPM::computeStressTensor,recursion);
-  //t->assumeDataInNewDW();
-  cerr << "ImpMPM::scheduleComputeStressTensorR needs a fix for assumeDataInNewDW\n";
+
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -421,7 +431,7 @@ void ImpMPM::scheduleFormStiffnessMatrixR(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::formStiffnessMatrixR",
 		    this, &ImpMPM::formStiffnessMatrix,recursion);
 #endif
-  cerr << "ImpMPM::scheduleFormStiffnessMatrixR needs a fix for assumeDataInNewDW\n";
+
   t->requires(Task::ParentNewDW,lb->gMassLabel, Ghost::None);
   t->requires(Task::ParentOldDW,d_sharedState->get_delt_label());
 
@@ -469,7 +479,7 @@ void ImpMPM::scheduleComputeInternalForceR(SchedulerP& sched,
 {
   Task* t = scinew Task("ImpMPM::computeInternalForceR",
 			this, &ImpMPM::computeInternalForce,recursion);
-  cerr << "ImpMPM::computeInternalForceR needs a fix for assumeDataInNewDW\n";
+
   if (recursion) {
     t->requires(Task::ParentOldDW,lb->pXLabel,Ghost::AroundNodes,1);
     t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
@@ -494,7 +504,6 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   Task* task = scinew Task("scheduleIterate", this, &ImpMPM::iterate,level,
 			   sched.get_rep());
 
-  cerr << "ImpMPM::scheduleIterate needs a fix for assumeDataInNewDW\n";
   task->hasSubScheduler();
 
   // Required in computeStressTensor
@@ -770,7 +779,7 @@ void ImpMPM::scheduleFormQR(SchedulerP& sched,const PatchSet* patches,
   Task* t = scinew Task("ImpMPM::formQR", this, 
 			&ImpMPM::formQ,recursion);
 #endif
-  cerr << "ImpMPM::scheduleFormQR needs a fix for assumeDataInNewDW\n";
+
   t->requires(Task::ParentOldDW,d_sharedState->get_delt_label());
   t->requires(Task::NewDW,lb->gInternalForceLabel,Ghost::None,0);
   t->requires(Task::OldDW,lb->dispNewLabel,Ghost::None,0);
@@ -848,7 +857,7 @@ void ImpMPM::scheduleRemoveFixedDOFR(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::removeFixedDOFR", this, 
 			&ImpMPM::removeFixedDOF,recursion);
 #endif
-  cerr << "ImpMPM::scheduleRemoveFixedDOFR needs a fix for assumeDataInNewDW\n";
+
   t->requires(Task::ParentNewDW,lb->gMassLabel,Ghost::None,0);
 
   sched->addTask(t, patches, matls);
@@ -923,7 +932,7 @@ void ImpMPM::scheduleUpdateGridKinematicsR(SchedulerP& sched,
 {
   Task* t = scinew Task("ImpMPM::updateGridKinematicsR", this, 
 			&ImpMPM::updateGridKinematics,recursion);
-  cerr << "ImpMPM::scheduleUpdateGridKinematicsR needs a fix for assumeDataInNewDW\n";
+
   t->requires(Task::OldDW,lb->dispNewLabel,Ghost::None,0);
   t->computes(lb->dispNewLabel);
   t->computes(lb->gVelocityLabel);
@@ -972,7 +981,6 @@ void ImpMPM::scheduleCheckConvergenceR(SchedulerP& sched, const LevelP& level,
   Task* t = scinew Task("ImpMPM::checkConvergenceR", this,
 			&ImpMPM::checkConvergence, recursion);
 
-  cerr << "ImpMPM::checkConvergenceR needs a fix for assumeDataInNewDW\n";
   t->requires(Task::NewDW,lb->dispIncLabel,Ghost::None,0);
   t->requires(Task::OldDW,lb->dispIncQNorm0);
   t->requires(Task::OldDW,lb->dispIncNormMax);
