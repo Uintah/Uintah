@@ -33,17 +33,22 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
+#include <Core/Thread/Thread.h>
 #include <Core/Geom/GeomObj.h>
 
 namespace SCIRun {
 
 class MarchingCubesAlg {
+protected:
+  int np_;
 public:
 
-  MarchingCubesAlg() {}
+  MarchingCubesAlg() : np_(1) {}
   virtual ~MarchingCubesAlg() {}
 
+  virtual void set_np( int np ) { np_ = np; }
   virtual void release() = 0;
   virtual void set_field( Field * ) = 0;
   virtual void search( double, bool ) = 0;
@@ -61,20 +66,22 @@ class MarchingCubes : public MarchingCubesAlg
 
 protected:
   AI *ai_;
-  Tesselator *tess_;
+  vector<Tesselator *> tess_;
   mesh_handle_type mesh_;
+  GeomObj *geom_;
 public:
-  MarchingCubes() {}
-  MarchingCubes(AI *ai) : ai_(ai), tess_(0), mesh_(0) {}
+  MarchingCubes() { tess_.resize(np_, 0); }
+  MarchingCubes(AI *ai) : ai_(ai), mesh_(0) { tess_.resize( np_, 0 ); }
   virtual ~MarchingCubes() {}
 
+  virtual void set_np( int );
   virtual void release();
   virtual void set_field( Field * );
   virtual void search( double, bool=false );
-  virtual GeomObj* get_geom() { 
-    if (tess_) return tess_->get_geom(); else return 0; }
-  virtual TriSurfMeshHandle get_trisurf() { 
-    if (tess_) return tess_->get_trisurf(); else return 0; }
+  virtual GeomObj* get_geom() { return geom_; } 
+  virtual TriSurfMeshHandle get_trisurf() { return TriSurfMeshHandle(0); }
+
+  void parallel_search( int, double, bool );
 };
     
 
@@ -85,16 +92,32 @@ template<class AI, class Tesselator>
 void 
 MarchingCubes<AI,Tesselator>::release() 
 {
-  if ( tess_ ) { delete tess_; tess_ = 0; }
+  for (int i=0; i<np_; i++)
+    if ( tess_[i] ) { delete tess_[i]; tess_[i] = 0; }
+  if (geom_) geom_=0;
 }
+
+template<class AI, class Tesselator>
+void 
+MarchingCubes<AI,Tesselator>::set_np( int np )
+{
+  if ( np > np_ ) 
+    tess_.resize( np, 0 );
+  if ( geom_ ) 
+    geom_ = 0;
+
+  np_ = np;
+}  
 
 template<class AI, class Tesselator>
 void 
 MarchingCubes<AI,Tesselator>::set_field( Field *f )
 {
   if ( field_type *field = dynamic_cast<field_type *>(f) ) {
-    if ( tess_ ) delete tess_;
-    tess_ = new Tesselator( field );
+    for (int i=0; i<np_; i++) {
+      if ( tess_[i] ) delete tess_[i];
+      tess_[i] = new Tesselator( field );
+    }
     mesh_ = field->get_typed_mesh();
   }
 }
@@ -103,14 +126,44 @@ template<class AI, class Tesselator>
 void
 MarchingCubes<AI,Tesselator>::search( double iso, bool build_trisurf )
 {
-  ASSERT(tess_ != 0);
+  if ( np_ == 1 ) {
+    tess_[0]->reset(0, build_trisurf);
+    typename mesh_type::cell_iterator cell = mesh_->cell_begin(); 
+    while ( cell != mesh_->cell_end() )
+    {
+      tess_[0]->extract( *cell, iso );
+      ++cell;
+      geom_ = tess_[0]->get_geom();
+    }
+  }
+  else {
+    Thread::parallel( this,  
+		      &MarchingCubes<AI,Tesselator>::parallel_search, 
+		      np_, true, 
+		      iso, 
+		      false ); // for now build_trisurf is off for parallel mc
+    GeomGroup *group = new GeomGroup;
+    for (int i=0; i<np_; i++)
+      group->add( tess_[i]->get_geom() );
+    geom_ = group;
+  }
+}
 
-  tess_->reset(0, build_trisurf);
-  typename mesh_type::cell_iterator cell = mesh_->cell_begin(); 
-  while ( cell != mesh_->cell_end() )
-  {
-    tess_->extract( *cell, iso );
-    ++cell;
+template<class AI,class Tesselator>
+void 
+MarchingCubes<AI,Tesselator>::parallel_search( int proc, 
+					       double iso, bool build_trisurf)
+{
+  tess_[proc]->reset(0, build_trisurf);
+  int n = mesh_->cells_size();
+  
+  typename mesh_type::cell_iterator from = mesh_->cell_begin();
+  int i;
+  for ( i=0; i<(proc*(n/np_)); i++) ++from;
+  
+  for ( int last = (proc < np_-1) ? (proc+1)*(n/np_) : n; i<last; i++) {
+    tess_[proc]->extract( *from, iso );
+    ++from;
   }
 }
 
