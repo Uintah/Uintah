@@ -388,6 +388,8 @@ int PETSc_monitor(KSP,int niter,PetscReal err,void *context)
     solver->iteration.set(niter);
     solver->current_error.set(to_string(err));
     //    double time=timer.time();
+    //    if (time == 0.0)
+    //       time = 0.000001
     //flops.set(gflop*1.e9+flop);
     //floprate.set((gflop*1.e3+flop*1.e-6)/time);
     //memrefs.set(grefs*1.e9+memref);
@@ -627,6 +629,8 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
     double max_error=target_error.get();
 
     double time=timer.time();
+    if (time == 0.0)
+      time = 0.000001;
     flops.set(gflop*1.e9+flop);
     floprate.set((gflop*1.e3+flop*1.e-6)/time);
     memrefs.set(grefs*1.e9+memref);
@@ -691,6 +695,8 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
 	    iteration.set(niter);
 	    current_error.set(to_string(err));
 	    double time=timer.time();
+	    if (time == 0.0)
+	      time = 0.000001;
 	    flops.set(gflop*1.e9+flop);
 	    floprate.set((gflop*1.e3+flop*1.e-6)/time);
 	    memrefs.set(grefs*1.e9+memref);
@@ -708,6 +714,8 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
     current_error.set(to_string(err));
 
     time=timer.time();
+    if (time == 0.0)
+      time = 0.000001;
     flops.set(gflop*1.e9+flop);
     floprate.set((gflop*1.e3+flop*1.e-6)/time);
     memrefs.set(grefs*1.e9+memref);
@@ -836,6 +844,8 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     current_error.set(to_string(data.err));
     
     double time=data.timer->time();
+    if (time == 0.0)
+      time = 0.000001;
     flops.set(stats->gflop*1.e9+stats->flop);
     floprate.set((stats->gflop*1.e3+stats->flop*1.e-6)/time);
     memrefs.set(stats->grefs*1.e9+stats->memref);
@@ -932,6 +942,8 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
 	  iteration.set(data.niter);
 	  current_error.set(to_string(err));
 	  double time=timer.time();
+	  if (time == 0.0)
+	    time = 0.000001;
 	  flops.set(14*stats->gflop*1.e9+stats->flop);
 	  floprate.set(14*(stats->gflop*1.e3+stats->flop*1.e-6)/time);                    memrefs.set(14*stats->grefs*1.e9+stats->memref);
 	  memrate.set(14*(stats->grefs*1.e3+stats->memref*1.e-6)/time);
@@ -957,6 +969,8 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     current_error.set(to_string(err));
     data.timer->stop();
     double time=data.timer->time();
+    if (time == 0.0)
+      time = 0.000001;
     flops.set(14*stats->gflop*1.e9+stats->flop);
     floprate.set(14*(stats->gflop*1.e3+stats->flop*1.e-6)/time);
     memrefs.set(14*stats->grefs*1.e9+stats->memref);
@@ -1099,6 +1113,8 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     current_error.set(to_string(data.err));
     
     double time=data.timer->time();
+    if (time == 0.0)
+      time = 0.000001;
     flops.set(stats->gflop*1.e9+stats->flop);
     floprate.set((stats->gflop*1.e3+stats->flop*1.e-6)/time);
     memrefs.set(stats->grefs*1.e9+stats->memref);
@@ -1222,6 +1238,8 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 	  iteration.set(data.niter);
 	  current_error.set(to_string(err));
 	  double time=timer.time();
+	  if (time == 0.0)
+	    time = 0.000001;
 	  flops.set(14*stats->gflop*1.e9+stats->flop);
 	  floprate.set(14*(stats->gflop*1.e3+stats->flop*1.e-6)/time);                    memrefs.set(14*stats->grefs*1.e9+stats->memref);
 	  memrate.set(14*(stats->grefs*1.e3+stats->memref*1.e-6)/time);
@@ -1249,6 +1267,8 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     current_error.set(to_string(err));
     data.timer->stop();
     double time=data.timer->time();
+    if (time == 0.0)
+      time = 0.000001;
     flops.set(14*stats->gflop*1.e9+stats->flop);
     floprate.set(14*(stats->gflop*1.e3+stats->flop*1.e-6)/time);
     memrefs.set(14*stats->grefs*1.e9+stats->memref);
