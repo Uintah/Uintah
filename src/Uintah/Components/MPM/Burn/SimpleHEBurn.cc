@@ -42,8 +42,22 @@ SimpleHEBurn::~SimpleHEBurn()
   // Destructor
 
 }
-void SimpleHEBurn::checkIfIgnited()
+
+void SimpleHEBurn::addCheckIfComputesAndRequires(Task* task,
+                                                 const MPMMaterial* matl,
+                                                 const Patch* patch,
+                                                 DataWarehouseP& old_dw,
+                                                 DataWarehouseP& new_dw) const
 {
+
+}
+
+void SimpleHEBurn::checkIfIgnited(const Patch* patch,
+				  const MPMMaterial* matl,
+				  DataWarehouseP& old_dw,
+				  DataWarehouseP& new_dw)
+{
+
 }
  
 void SimpleHEBurn::computeMassRate()
@@ -55,6 +69,9 @@ void SimpleHEBurn::updatedParticleMassAndVolume()
 }                                               
 
 // $Log$
+// Revision 1.2  2000/06/06 18:04:02  guilkey
+// Added more stuff for the burn models.  Much to do still.
+//
 // Revision 1.1  2000/06/02 22:48:26  jas
 // Added infrastructure for Burn models.
 //
