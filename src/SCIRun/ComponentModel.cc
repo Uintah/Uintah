@@ -47,8 +47,7 @@ bool ComponentModel::haveComponent(const std::string& type)
 }
 
 ComponentInstance* ComponentModel::createInstance(const std::string& name,
-						  const std::string& type,
-						  const std::string& url)
+						  const std::string& type)
 {
   cerr << "Error: this component model does not implement createInstance\n";
   return 0;

@@ -60,10 +60,8 @@ namespace SCIRun {
     gov::cca::ComponentID::pointer 
       createComponentInstance( const std::string& name, const std::string& type, const std::string& url="");
   
-    //used for remote creation of a CCA component
-    std::string createComponent(const std::string& name, const std::string& type);
     
-    bool destroyComponentInstance(gov::cca::ComponentID::pointer &cid ) ;
+    void destroyComponentInstance(const gov::cca::ComponentID::pointer &cid, float timeout );
 
     gov::cca::Port::pointer getFrameworkService(const std::string& type,
 						const std::string& componentName);
@@ -75,11 +73,17 @@ namespace SCIRun {
     void listAllComponentTypes(std::vector<ComponentDescription*>&,
 			       bool);
     ComponentInstance* lookupComponent(const std::string& name);
-    void share(const gov::cca::Services::pointer &svc);
+    gov::cca::ComponentID::pointer lookupComponentID(const std::string& componentInstanceName);
+    //do not delete the following 2 lines
+    //void share(const gov::cca::Services::pointer &svc);
+    //std::string createComponent(const std::string& name, const std::string& type);
   protected:
     friend class Services;
+    friend class BuilderService;
     // Put these in a private structure to avoid #include bloat?
     std::vector<ComponentModel*> models;
+    std::vector<gov::cca::ConnectionID::pointer> connIDs;
+    std::vector<gov::cca::ComponentID::pointer> compIDs;
     std::map<std::string, ComponentInstance*> activeInstances;
     InternalComponentModel* internalServices;
     CCAComponentModel* cca;
