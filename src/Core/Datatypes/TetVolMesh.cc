@@ -563,46 +563,48 @@ TetVolMesh::delete_cell_node_neighbors(Cell::index_type c)
   node_neighbor_lock_.unlock();      
 }
 
-      
 
 //! Given two nodes (n0, n1), return all edge indexes that
 //! span those two nodes
 bool
-TetVolMesh::is_edge(Node::index_type n0, Node::index_type n1,
-		    Edge::array_type *array)
+TetVolMesh::is_edge(const Node::index_type n0, const Node::index_type n1,
+                    Edge::array_type *array)
 {
   ASSERTMSG(synchronized_ & EDGES_E, "Must call synchronize EDGES_E on TetVolMesh first.");
   edge_lock_.lock();
   cells_lock_.lock();
-
   //! Create a phantom cell with edge 0 being the one we're searching for
-  const int fake_edge = cells_.size() / 4 * 6;
-  vector<under_type>::iterator c0 = cells_.insert(cells_.end(),n0);
-  vector<under_type>::iterator c1 = cells_.insert(cells_.end(),n1);
-
+  const unsigned int fake_edge = cells_.size() / 4 * 6;
+  const unsigned int fake_cell = cells_.size() / 4;
+  cells_.push_back(n0);
+  cells_.push_back(n1);
+  cells_.push_back(n0);
+  cells_.push_back(n1);
+                                                                                  
   //! Search the all_edges_ multiset for edges matching our fake_edge
-  pair<Edge::HalfEdgeSet::iterator, Edge::HalfEdgeSet::iterator> range =
-    all_edges_.equal_range(fake_edge);
+  pair<Edge::HalfEdgeSet::iterator, Edge::HalfEdgeSet::iterator> range =  all_edges_.equal_range(fake_edge);
 
-  if (array)
-  {
-    array->clear();
-    Edge::HalfEdgeSet::iterator iter = range.first;
-    while(iter != range.second) {
-      array->push_back(*iter);
-      ++iter;
+  bool ret_val = false;
+  if(array)  array->clear();
+  Edge::HalfEdgeSet::iterator iter = range.first;    
+  while(iter != range.second) {
+    if ((*iter)/6 != fake_cell) {
+      if (array) {
+        array->push_back(*iter);
+      }
+      ret_val = true;
     }
+    ++iter;
   }
-
-  //! Delete the pahntom cell
-  cells_.erase(c0);
-  cells_.erase(c1);
-
+                                                                                  
+  //! Delete the phantom cell
+  cells_.resize(cells_.size()-4);
+  
   edge_lock_.unlock();
   cells_lock_.unlock();
-
-  return range.first != range.second;
+  return ret_val;
 }
+      
 
 //! Given three nodes (n0, n1, n2), return all facee indexes that
 //! span those three nodes
@@ -706,17 +708,17 @@ TetVolMesh::get_edges(Edge::array_type &/*array*/, Node::index_type /*idx*/) con
 
 
 void
-TetVolMesh::get_edges(Edge::array_type &/*array*/, Face::index_type /*idx*/) const
+TetVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
 {
-  ASSERTFAIL("Not implemented correctly");
-#if 0
+  //  ASSERTFAIL("Not implemented correctly");
+  //#if 0
   array.clear();    
   static int table[4][3] =
   {
-    {3, 4, 5},
-    {1, 2, 5},
-    {0, 2, 4},
-    {0, 1, 3}
+    {4, 3, 5},
+    {1, 2, 4},
+    {0, 2, 5},
+    {1, 0, 3}
   };
 
   const int base = idx / 4 * 6;
@@ -724,7 +726,7 @@ TetVolMesh::get_edges(Edge::array_type &/*array*/, Face::index_type /*idx*/) con
   array.push_back(base + table[off][0]);
   array.push_back(base + table[off][1]);
   array.push_back(base + table[off][2]);
-#endif
+  //#endif
 }
 
 
@@ -1295,9 +1297,9 @@ TetVolMesh::locate(Cell::index_type &cell, const Point &p)
       cell < Cell::index_type(cells_.size()/4) &&
       inside(cell, p))
   {
-    return true;
+      return true;
   }
-
+  
   if (!(synchronized_ & LOCATE_E))
     synchronize(LOCATE_E);
   ASSERT(grid_.get_rep());
@@ -1341,6 +1343,31 @@ static double
 tet_vol6(const Point &p1, const Point &p2, const Point &p3, const Point &p4)
 {
   return fabs( Dot(Cross(p2-p1,p3-p1),p4-p1) );
+}
+
+void TetVolMesh::get_weights(const Point &p, Node::array_type &l,  vector<double> &w)
+{
+  Cell::index_type idx;
+  if (locate(idx, p))
+  {
+    get_nodes(l,idx);
+    const Point &p0 = point(l[0]);
+    const Point &p1 = point(l[1]);
+    const Point &p2 = point(l[2]);
+    const Point &p3 = point(l[3]);
+
+    w.push_back(tet_vol6(p, p1, p2, p3));
+    w.push_back(tet_vol6(p, p0, p2, p3));
+    w.push_back(tet_vol6(p, p1, p0, p3));
+    w.push_back(tet_vol6(p, p1, p2, p0));
+    const double vol_sum_inv = 1.0 / (w[0] + w[1] + w[2] + w[3]);
+    w[0] *= vol_sum_inv;
+    w[1] *= vol_sum_inv;
+    w[2] *= vol_sum_inv;
+    w[3] *= vol_sum_inv;
+    //   return 4;
+  }
+  //  return 0;
 }
 
 int
@@ -1579,6 +1606,68 @@ TetVolMesh::rewind_mesh()
 }
 
 #endif
+
+void TetVolMesh::get_basis(Cell::index_type ci, int gaussPt, double& g0, double& g1,
+			       double& g2, double& g3)
+{
+
+  Point& p1 = points_[cells_[ci * 4]];
+  Point& p2 = points_[cells_[ci * 4+1]];
+  Point& p3 = points_[cells_[ci * 4+2]];
+  Point& p4 = points_[cells_[ci * 4+3]];
+
+ //  double x1=p1.x();
+//   double y1=p1.y();
+//   double z1=p1.z();
+//   double x2=p2.x();
+//   double y2=p2.y();
+//   double z2=p2.z();
+//   double x3=p3.x();
+//   double y3=p3.y();
+//   double z3=p3.z();
+//   double x4=p4.x();
+//   double y4=p4.y();
+//   double z4=p4.z();
+  
+  double xi, nu, gam;
+
+  switch(gaussPt) {
+  case 0: 
+    xi = 0.25;
+    nu = 0.25;
+    gam = 0.25;
+    break;
+  case 1:
+    xi = 0.5;
+    nu = 1.0/6.0;
+    gam = 1.0/6.0;
+    break;
+  case 2:
+    xi = 1.0/6.0;
+    nu = 0.5;
+    gam = 1.0/6.0;
+    break;
+  case 3:
+    xi = 1.0/6.0;
+    nu = 1.0/6.0;
+    gam = 0.5;
+    break;
+  case 4:
+    xi = 1.0/6.0;
+    nu = 1.0/6.0;
+    gam = 1.0/6.0;
+    break;
+  default: 
+    cerr << "Error in get_basis: Incorrect index for gaussPt. "
+	 << "index = " << gaussPt << endl;
+  }
+
+  g0 = 1-xi-nu-gam;
+  g1 = xi;
+  g2 = nu;
+  g3 = gam;
+
+}
 
 //! return the volume of the tet.
 double
@@ -1990,7 +2079,222 @@ TetVolMesh::insert_node_watson(const Point &p, Cell::array_type *new_cells, Cell
   return new_point_index;
 }
 
+void
+TetVolMesh::refine_elements_levels(vector<Cell::index_type> cells, vector<int> refine_level)
+{
+  synchronize(FACE_NEIGHBORS_E | EDGE_NEIGHBORS_E);
+  typedef map<Cell::index_type, set<Cell::index_type> > parent_2_children_t;
+         
+  set <Cell::index_type> todo;
+  map <Cell::index_type, int> level;
 
+  for (int c = 0; c < cells.size(); ++c) {
+    todo.insert(cells[c]);
+    level.insert(make_pair(cells[c],refine_level[c]));
+  }
+  int current_level = 0;
+
+  while(!todo.empty()) {
+    ++current_level;
+    
+    parent_2_children_t cell_p2c;
+    refine_elements(todo,cell_p2c);
+
+    todo.clear();
+
+    parent_2_children_t::iterator iter = cell_p2c.begin();
+    parent_2_children_t::iterator end = cell_p2c.end();
+    while (iter != end) {
+      const Cell::index_type &parent_cell = (*iter).first;
+      map<Cell::index_type,int>::iterator level_iter = level.find(parent_cell);
+      ASSERT(level_iter != level.end());
+      const int &cell_level = (*level_iter).second;
+      
+      if (cell_level > current_level) {
+        const set<Cell::index_type> &children = (*iter).second;
+        set<Cell::index_type>::iterator iter2 = children.begin();
+        set<Cell::index_type>::iterator end2 = children.end();
+        while(iter2 != end2) {
+	  todo.insert(*iter2);
+	  level.insert(make_pair(*iter2, cell_level));
+          ++iter2;
+        }
+      }
+      ++iter;
+    }
+  }
+}
+                                                                               
+void
+TetVolMesh::refine_elements(set<Cell::index_type> cells, map<Cell::index_type,
+set<Cell::index_type> > &cell_parent_2_children)
+{
+                                                                               
+  typedef hash_multimap<Edge::index_type, Node::index_type,
+    Edge::CellEdgeHasher, Edge::eqEdge>  HalfEdgeMap;
+                                                                               
+  HalfEdgeMap inserted_nodes(100, edge_hasher_, edge_eq_);
+                                                                               
+  // iterate over the cells
+  set<Cell::index_type>::iterator iter = cells.begin();
+  set<Cell::index_type>::iterator end = cells.end();
+                                                                               
+  while(iter != end) {
+    Node::array_type nodes;
+    Cell::index_type cell = *iter;
+    iter++;
+    get_nodes(nodes,cell);
+                                                                               
+    // Loop through edges and create new nodes at center
+    for (unsigned int edge = 0; edge < 6; ++edge)
+    {
+      unsigned int edgeNum = cell*6+edge;
+     pair<Edge::HalfEdgeSet::iterator, Edge::HalfEdgeSet::iterator> range =
+        all_edges_.equal_range(edgeNum);
+                                                                               
+      Node::index_type newnode;
+                                                                               
+      pair<HalfEdgeMap::iterator,HalfEdgeMap::iterator> iter =
+        inserted_nodes.equal_range(edgeNum);
+                                                                               
+      if (iter.first == iter.second) {
+        Point p;
+        get_center(p, Edge::index_type(edgeNum));
+        newnode = add_point(p);
+        for (Edge::HalfEdgeSet::iterator e = range.first;
+             e != range.second; ++e)
+        {
+          if(*e != edgeNum) {
+             inserted_nodes.insert(make_pair(*e,newnode));
+          }
+        }
+      } else {
+        for (HalfEdgeMap::iterator e = iter.first; e != iter.second; ++e)
+        {
+          if((*e).first == edgeNum) {
+            newnode = (*e).second;
+            inserted_nodes.erase(e);
+            break;
+          }
+        }
+      }
+      nodes.push_back(newnode);
+                                                                               
+    }
+                                                                               
+    // Perform an 8:1 split on this tet
+    Elem::index_type t1 = mod_tet(cell,nodes[4],nodes[6],nodes[5],nodes[0]);
+    Elem::index_type t2 = add_tet(nodes[4], nodes[7], nodes[9], nodes[1]);
+    Elem::index_type t3 = add_tet(nodes[7], nodes[5], nodes[8], nodes[2]);
+    Elem::index_type t4 = add_tet(nodes[6], nodes[9], nodes[8], nodes[3]);
+                                                                               
+    Point p4,p5,p6,p7,p8,p9;
+    get_point(p4,nodes[4]);
+    get_point(p5,nodes[5]);
+    get_point(p6,nodes[6]);
+    get_point(p7,nodes[7]);
+    get_point(p8,nodes[8]);
+    get_point(p9,nodes[9]);
+                                                                                     
+    double v48, v67, v59;
+    v48 = (p4 - p8).length();
+    v67 = (p6 - p7).length();
+    v59 = (p5 - p9).length();
+                                                                                     
+    Elem::index_type t5,t6,t7,t8;
+                                                                                     
+    if(v48 >= v67 && v48 >= v59) {
+      t5 = add_tet(nodes[4], nodes[9], nodes[8], nodes[6]);
+      t6 = add_tet(nodes[4], nodes[8], nodes[5], nodes[6]);
+      t7 = add_tet(nodes[4], nodes[5], nodes[8], nodes[7]);
+      t8 = add_tet(nodes[4], nodes[8], nodes[9], nodes[7]);
+    } else if(v67 >= v48 && v67 >= v59) {
+      t5 = add_tet(nodes[9], nodes[4], nodes[6], nodes[7]);
+      t6 = add_tet(nodes[8], nodes[6], nodes[5], nodes[7]);
+      t7 = add_tet(nodes[4], nodes[5], nodes[6], nodes[7]);
+      t8 = add_tet(nodes[7], nodes[6], nodes[9], nodes[8]);
+    } else {
+      t5 = add_tet(nodes[9], nodes[5], nodes[6], nodes[8]);
+      t6 = add_tet(nodes[9], nodes[5], nodes[7], nodes[4]);
+      t7 = add_tet(nodes[9], nodes[4], nodes[6], nodes[5]);
+      t8 = add_tet(nodes[9], nodes[7], nodes[5], nodes[8]);
+    }
+                                                                                  
+    cell_parent_2_children[cell].insert(t1);
+    cell_parent_2_children[cell].insert(t2);
+    cell_parent_2_children[cell].insert(t3);
+    cell_parent_2_children[cell].insert(t4);
+    cell_parent_2_children[cell].insert(t5);
+    cell_parent_2_children[cell].insert(t6);
+    cell_parent_2_children[cell].insert(t7);
+    cell_parent_2_children[cell].insert(t8);
+  }
+
+  typedef pair<Node::index_type, Node::index_type> node_pair_t;
+  typedef map<node_pair_t, Node::index_type> edge_centers_t;
+  edge_centers_t edge_centers;
+  set<Cell::index_type> centersplits;
+  HalfEdgeMap::iterator edge_iter = inserted_nodes.begin();
+  while (edge_iter != inserted_nodes.end()) {
+    const Edge::index_type edge = (*edge_iter).first;
+    const Cell::index_type cell = edge/6;
+    node_pair_t enodes = Edge::edgei((*edge_iter).first);
+    enodes = make_pair(Max(cells_[enodes.first],cells_[enodes.second]),
+                       Min(cells_[enodes.first],cells_[enodes.second]));
+    edge_centers.insert(make_pair(enodes,(*edge_iter).second));
+    centersplits.insert(cell);
+    ++edge_iter;
+  }
+                                                                                  
+  set<Cell::index_type>::iterator splitcell = centersplits.begin();
+
+  while (splitcell != centersplits.end()) {
+    const Cell::index_type cell = *splitcell;
+    ++splitcell;
+                                                                                  
+    // Make Center point of cell
+    Point p;
+    get_center(p, cell);
+    Node::index_type center = add_point(p);
+                                                                                  
+    // Get the nodes of the original cell
+    Node::array_type cnodes;
+    get_nodes(cnodes,cell);
+                                                                                  
+    // Modify the first tet to be 1 of 4
+    mod_tet(cell,center, cnodes[1], cnodes[0], cnodes[2]);
+    // Create the last 3 tets
+    add_tet(center, cnodes[2], cnodes[0], cnodes[3]);
+    add_tet(center, cnodes[0], cnodes[1], cnodes[3]);
+    add_tet(center, cnodes[1], cnodes[2], cnodes[3]);
+
+  }
+  edge_centers_t::iterator enodes_iter = edge_centers.begin();
+  while (enodes_iter != edge_centers.end()) {
+    const node_pair_t enodes = (*enodes_iter).first;
+    const Node::index_type center = (*enodes_iter).second;
+    Edge::array_type half_edges;
+    if (is_edge(enodes.first, enodes.second, &half_edges)) {
+      for (unsigned int e = 0; e < half_edges.size(); ++e) {
+        const Edge::index_type edge = half_edges[e];
+        const Cell::index_type cell = edge/6;
+  
+        pair<Node::index_type, Node::index_type> nnodes = Edge::edgei(edge);
+        pair<Node::index_type, Node::index_type> onodes =
+          Edge::edgei(Edge::opposite_edge(edge));
+                                                          
+        // Perform the 2:1 split
+        orient(add_tet(center, cells_[nnodes.first],
+                       cells_[onodes.second], cells_[onodes.first]));
+
+        orient(mod_tet(cell, center, cells_[nnodes.second],
+                       cells_[onodes.second], cells_[onodes.first]));
+
+      }
+    }
+    ++enodes_iter;
+  }
+}
 
 void
 TetVolMesh::bisect_element(const Cell::index_type cell)
