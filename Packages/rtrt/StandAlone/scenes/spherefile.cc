@@ -586,11 +586,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Camera cam(Point(0,0,400), Point(0,0,0),
 	     Vector(0,1,0), 60.0);
   
-  //double bgscale=0.5;
-  //Color groundcolor(0,0,0);
-  //Color averagelight(0,0,0);
-  double ambient_scale=1.0;
-  
   //  Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
   Color bgcolor(0,0,0);
 
@@ -670,11 +665,19 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   }
   all2->add((Object*)alltime2);
 #endif
+  double ambient_scale=0.7;
+  
   Scene* scene=new Scene(all, cam,
 			 bgcolor, cdown, cup, groundplane, 
 			 ambient_scale);
 
-  Light *light=new Light(Point(500,-300,300), Color(.8,.8,.8), 0);
+  // Add all the lights.
+  rtrt::BBox bounds;
+  all->compute_bounds(bounds, 0);
+  // Take the corners and then extend one of them
+  Point light_loc = bounds.max() + (bounds.max()-bounds.min())*0.2;
+
+  Light *light=new Light(light_loc, Color(.8,.8,.8), 0);
   light->name_ = "Main Light";
   scene->add_light(light);
   scene->select_shadow_mode( No_Shadows );
