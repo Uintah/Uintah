@@ -42,27 +42,28 @@ set runDate " Thu  Apr 19 2001"
 global runTime
 set runTime " 22:8:0"
 
-set bbox {4.0 10.0 747 537}
+set bbox {17.0 5.0 581 484}
 
-set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 304 10]
-set m1 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 92 114]
-set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 110 493]
-set m3 [addModuleAtPosition "Teem" "Filters" "NrrdConvert" 4 216]
-set m4 [addModuleAtPosition "Teem" "Filters" "NrrdSubvolume" 152 216]
-set m5 [addModuleAtPosition "Teem" "Filters" "NrrdQuantize" 304 215]
-set m6 [addModuleAtPosition "Teem" "Filters" "NrrdResample" 453 215]
-set m7 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 304 111]
-set m8 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 304 312]
-set m9 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 304 399]
-set m10 [addModuleAtPosition "Teem" "Filters" "NrrdPermute" 603 214]
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 268 5]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 17 84]
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 35 440]
+set m3 [addModuleAtPosition "Teem" "Filters" "NrrdConvert" 101 151]
+set m4 [addModuleAtPosition "Teem" "Filters" "NrrdCrop" 245 217]
+set m5 [addModuleAtPosition "Teem" "Filters" "NrrdQuantize" 72 217]
+set m6 [addModuleAtPosition "Teem" "Filters" "NrrdResample" 268 151]
+set m7 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 268 80]
+set m8 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 268 291]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 268 356]
+set m10 [addModuleAtPosition "Teem" "Filters" "NrrdPermute" 437 151]
+set m11 [addModuleAtPosition "Teem" "Filters" "NrrdPad" 413 217]
 
 addConnection $m1 1 $m2 0
 addConnection $m0 0 $m7 0
 addConnection $m8 0 $m9 0
 addConnection $m9 1 $m2 1
 addConnection $m0 0 $m1 0
-addConnection $m7 0 $m10 0
-addConnection $m10 0 $m8 0
+addConnection $m7 0 $m6 0
+addConnection $m6 0 $m8 0
 
 set $m0-notes {}
 set $m0-show_status {1}
@@ -76,71 +77,38 @@ set $m1-build_trisurf {0}
 set $m1-np {1}
 set $m1-active_tab {MC}
 set $m1-update_type {on release}
+set $m1-color-r {0.4}
+set $m1-color-g {0.2}
+set $m1-color-b {0.9}
 set $m2-notes {}
 set $m2-show_status {1}
 $m2 ui
-set $m2-ViewWindow_0-pos {}
-set $m2-ViewWindow_0-caxes {1}
-set $m2-ViewWindow_0-iaxes {138568604}
-set $m2-ViewWindow_0-view-eyep-x {4.04415}
-set $m2-ViewWindow_0-view-eyep-y {-3.42129}
-set $m2-ViewWindow_0-view-eyep-z {10.8808}
-set $m2-ViewWindow_0-view-lookat-x {0.171612}
-set $m2-ViewWindow_0-view-lookat-y {-0.111365}
-set $m2-ViewWindow_0-view-lookat-z {0.250741}
-set $m2-ViewWindow_0-view-up-x {0.944467}
-set $m2-ViewWindow_0-view-up-y {0.090146}
-set $m2-ViewWindow_0-view-up-z {-0.315999}
-set $m2-ViewWindow_0-view-fov {13.868}
-set $m2-ViewWindow_0-view-eyep-x {4.04415}
-set $m2-ViewWindow_0-view-eyep-y {-3.42129}
-set $m2-ViewWindow_0-view-eyep-z {10.8808}
-set $m2-ViewWindow_0-view-eyep-x {4.04415}
-set $m2-ViewWindow_0-view-eyep-y {-3.42129}
-set $m2-ViewWindow_0-view-eyep-z {10.8808}
-set $m2-ViewWindow_0-view-lookat-x {0.171612}
-set $m2-ViewWindow_0-view-lookat-y {-0.111365}
-set $m2-ViewWindow_0-view-lookat-z {0.250741}
-set $m2-ViewWindow_0-view-lookat-x {0.171612}
-set $m2-ViewWindow_0-view-lookat-y {-0.111365}
-set $m2-ViewWindow_0-view-lookat-z {0.250741}
-set $m2-ViewWindow_0-view-up-x {0.944467}
-set $m2-ViewWindow_0-view-up-y {0.090146}
-set $m2-ViewWindow_0-view-up-z {-0.315999}
-set $m2-ViewWindow_0-view-up-x {0.944467}
-set $m2-ViewWindow_0-view-up-y {0.090146}
-set $m2-ViewWindow_0-view-up-z {-0.315999}
-set $m2-ViewWindow_0-view-fov {13.868}
-set $m2-ViewWindow_0-view-eyep_offset-x {0}
-set $m2-ViewWindow_0-view-eyep_offset-y {0}
-set $m2-ViewWindow_0-view-eyep_offset-z {0}
-set $m2-ViewWindow_0-view-eyep_offset-x {0}
-set $m2-ViewWindow_0-view-eyep_offset-y {0}
-set $m2-ViewWindow_0-view-eyep_offset-z {0}
-set $m2-ViewWindow_0-bgcolor-r {0}
-set $m2-ViewWindow_0-bgcolor-g {0}
-set $m2-ViewWindow_0-bgcolor-b {0}
-set $m2-ViewWindow_0-bgcolor-r {0}
-set $m2-ViewWindow_0-bgcolor-g {0}
-set $m2-ViewWindow_0-bgcolor-b {0}
-set $m2-ViewWindow_0-shading {}
-set $m2-ViewWindow_0-do_stereo {0}
+set $m2-ViewWindow_0-view-eyep-x {3.36342}
+set $m2-ViewWindow_0-view-eyep-y {-4.98077}
+set $m2-ViewWindow_0-view-eyep-z {10.531}
+set $m2-ViewWindow_0-view-lookat-x {0.503947}
+set $m2-ViewWindow_0-view-lookat-y {0.344085}
+set $m2-ViewWindow_0-view-lookat-z {0.41157}
+set $m2-ViewWindow_0-view-up-x {0.970114}
+set $m2-ViewWindow_0-view-up-y {0.108278}
+set $m2-ViewWindow_0-view-up-z {-0.217151}
+set $m2-ViewWindow_0-view-fov {8.6338}
+set $m2-ViewWindow_0-specular-scale {0.4}
+set $m2-ViewWindow_0-emission-scale {1}
+set $m2-ViewWindow_0-shininess-scale {1}
 set $m2-ViewWindow_0-sbase {1}
 set $m2-ViewWindow_0-sr {1}
-set $m2-ViewWindow_0-do_bawgl {0}
-set $m2-ViewWindow_0-drawimg {0}
-set $m2-ViewWindow_0-saveprefix {}
 set $m3-notes {}
 set $m3-show_status {1}
-set $m3-type {10}
+set $m3-type {9}
 set $m4-notes {}
 set $m4-show_status {1}
-set $m4-minAxis0 {0}
-set $m4-maxAxis0 {20}
+set $m4-minAxis0 {2}
+set $m4-maxAxis0 {M-2}
 set $m4-minAxis1 {0}
-set $m4-maxAxis1 {20}
+set $m4-maxAxis1 {M}
 set $m4-minAxis2 {0}
-set $m4-maxAxis2 {20}
+set $m4-maxAxis2 {M}
 set $m5-notes {}
 set $m5-show_status {1}
 set $m5-minf {0}
@@ -148,28 +116,41 @@ set $m5-maxf {255}
 set $m5-nbits {16}
 set $m6-notes {}
 set $m6-show_status {1}
-set $m6-filtertype {tent}
-set $m6-resampAxis0 {20}
-set $m6-resampAxis1 {20}
-set $m6-resampAxis2 {20}
+set $m6-filtertype {gaussian}
+set $m6-resampAxis0 {x1}
+set $m6-resampAxis1 {x1}
+set $m6-resampAxis2 {x1}
+set $m6-sigma {1}
+set $m6-extent {6}
 set $m7-notes {}
 set $m7-show_status {1}
 set $m8-notes {}
 set $m8-show_status {1}
 set $m9-notes {}
 set $m9-show_status {1}
-set $m9-isoval {27.5}
+set $m9-isoval {2}
 set $m9-extract-from-new-field {1}
 set $m9-algorithm {0}
 set $m9-build_trisurf {0}
 set $m9-np {1}
 set $m9-active_tab {MC}
 set $m9-update_type {on release}
+set $m9-color-r {0.7}
+set $m9-color-g {0.3}
+set $m9-color-b {0.3}
 set $m10-notes {}
 set $m10-show_status {1}
 set $m10-axis0 {1}
 set $m10-axis1 {2}
 set $m10-axis2 {0}
-$m10 initialize_ui
+set $m11-notes {}
+set $m11-show_status {1}
+set $m11-minAxis0 {0}
+set $m11-maxAxis0 {127}
+set $m11-minAxis1 {0}
+set $m11-maxAxis1 {127}
+set $m11-minAxis2 {0}
+set $m11-maxAxis2 {127}
+$m6 initialize_ui
 
 ::netedit scheduleok

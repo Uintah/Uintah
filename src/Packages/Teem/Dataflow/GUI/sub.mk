@@ -28,11 +28,12 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/NrrdConvert.tcl\
+	$(SRCDIR)/NrrdCrop.tcl\
+	$(SRCDIR)/NrrdPad.tcl\
 	$(SRCDIR)/NrrdPermute.tcl\
 	$(SRCDIR)/NrrdQuantize.tcl\
 	$(SRCDIR)/NrrdReader.tcl\
 	$(SRCDIR)/NrrdResample.tcl\
-	$(SRCDIR)/NrrdSubvolume.tcl\
 	$(SRCDIR)/NrrdWriter.tcl\
 #[INSERT NEW TCL FILE HERE]
 

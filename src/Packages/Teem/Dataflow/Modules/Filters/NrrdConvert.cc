@@ -106,7 +106,13 @@ NrrdConvert::execute()
   Nrrd *nout = nrrdNew();
   cerr << "New type is "<<type<<endl;
 
-  nrrdConvert(nout, nin, type);
+  if (nrrdConvert(nout, nin, type)) {
+    char *err = biffGetDone(NRRD);
+    fprintf(stderr, "NrrdResample: trouble resampling:\n%s\n", err);
+    cerr << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+    free(err);
+  }
+
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
   last_nrrdH_ = nrrd;
