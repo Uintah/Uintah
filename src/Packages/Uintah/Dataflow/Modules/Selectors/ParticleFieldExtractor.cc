@@ -407,10 +407,10 @@ void ParticleFieldExtractor::execute()
    time = times[idx];
 
    buildData( archive, time, sp, vp, tp );
-//    psout->send( sp );
-//    pvout->send( vp );
-//    ptout->send( tp );	  
-//    tcl_status.set("Done");
+   psout->send( sp );
+   pvout->send( vp );
+   ptout->send( tp );	  
+   tcl_status.set("Done");
 }
 
 
