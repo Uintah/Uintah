@@ -329,6 +329,12 @@
   <xsl:value-of select="./title"/>
 </p>
 
+<p class="subtitle">
+  Version 
+  <xsl:value-of select="concat(' ',' ')"/>
+  <xsl:value-of select="./bookinfo/edition"/>
+</p>
+
 <center>
   <img src="http://www.sci.utah.edu/sci_images/SCI_logo.jpg" vspace="50"/>
 </center>

@@ -3,6 +3,7 @@
 [
 <!ENTITY techfaq SYSTEM "techfaq.xml">
 <!ENTITY userfaq SYSTEM "userfaq.xml">
+<!ENTITY edition SYSTEM "../edition.xml">
 ]>
 
 
@@ -39,6 +40,7 @@
       <holder>SCI Institute, University of Utah</holder>
       <year>2001</year>
     </copyright>
+    &edition;
   </bookinfo>
 
   <description>
