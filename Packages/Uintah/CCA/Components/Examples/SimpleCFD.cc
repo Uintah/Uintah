@@ -1949,13 +1949,16 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 				DataWarehouse* old_dw, DataWarehouse* new_dw,
 				const VarLabel* pressure)
 {
+  //  cerr << "RANDY: SimpleCFD::applyProjection() BGN" << endl;
   //const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing applyProjection patch " << patch->getID()<< "\t\t\t SimpleCFD" << '\n';
+    //cerr << "RANDY: Doing applyProjection on patch " << patch->getID() << endl;
     
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
+      //cerr << "RANDY: Doing applyProjection on material " << matl << " (" << m << " of " << matls->size() << ")" << endl;
 
       constNCVariable<int> bctype;
       old_dw->get(bctype, lb_->bctype, matl, patch, Ghost::AroundNodes, 1);
@@ -1974,14 +1977,19 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
       Condition<double>* zbc = bcs.getCondition<double>("zvelocity", Patch::ZFaceBased);
       Condition<double>* pbc = bcs.getCondition<double>("pressure",  Patch::CellBased);
 
+      //cerr << "RANDY: SimpleCFD::applyProjection() AAA" << endl;
+
       for(CellIterator iter(patch->getSFCXIterator(0)); !iter.done(); iter++){
+	//cerr << "RANDY: SimpleCFD::applyProjection() AAA AAA" << endl;
 	IntVector idx(*iter);
+	//cerr << "RANDY: idx = " << idx << ", byctype[idx] = " << bctype[idx] << endl;
 	BCRegion<double>* bc = xbc->get(bctype[idx]);
 	switch(bc->getType()){
 	case BC::FreeFlow:
 	case BC::FixedRate:
 	case BC::FixedFlux:
 	  {
+	    //cerr << "RANDY: SimpleCFD::applyProjection() AAA BBB" << endl;
 	    BCRegion<double>* bcr = pbc->get(bctype[idx]);
 	    double pr = -98765; // Remove compiler warning and hopefully easier to catch if pr is not set.
 	    switch(bcr->getType()){
@@ -2000,19 +2008,25 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	      throw InternalError("Unknown bc");
               BREAK;
 	    }
+	    //cerr << "RANDY: SimpleCFD::applyProjection() AAA EEE" << endl;
+	    //cerr << "RANDY: bctype[" << idx << "+IntVector(-1,0,0)] = " << bctype[idx+IntVector(-1,0,0)] << endl;
 	    BCRegion<double>* bcl = pbc->get(bctype[idx+IntVector(-1,0,0)]);
 	    double pl = -98765; // Remove compiler warning and hopefully easier to catch if pl is not set.
+	    //cerr << "RANDY: SimpleCFD::applyProjection() AAA FFF" << endl;
 	    switch(bcl->getType()){
 	    case BC::FreeFlow:
 	    case BC::FixedRate:
 	    case BC::FixedValue:
+	      //cerr << "RANDY: Doing broken code = " << hex << idx << dec << endl;
 	      pl = sol[idx+IntVector(-1,0,0)];
 	      break;
 	    case BC::CoarseGrid:
 	      pl = 0;//boundarypressure[idx+IntVector(-1,0,0)];
 	      break;
 	    case BC::Exterior:
+	      //cerr << "RANDY: SimpleCFD::applyProjection() AAA III" << endl;
 	      pl = sol[idx];
+	      //cerr << "RANDY: SimpleCFD::applyProjection() AAA JJJ" << endl;
 	      break;
 	    case BC::FixedFlux:
 	      throw InternalError("Unknown bc");
@@ -2030,6 +2044,9 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	  BREAK;
 	}
       }
+
+      //cerr << "RANDY: SimpleCFD::applyProjection() BBB" << endl;
+
       for(CellIterator iter(patch->getSFCYIterator(0)); !iter.done(); iter++){
 	IntVector idx(*iter);
 	BCRegion<double>* bc = ybc->get(bctype[idx]);
@@ -2086,6 +2103,9 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	  BREAK;
 	}
       }
+
+      //cerr << "RANDY: SimpleCFD::applyProjection() CCC" << endl;
+
       for(CellIterator iter(patch->getSFCZIterator(0)); !iter.done(); iter++){
 	IntVector idx(*iter);
 	BCRegion<double>* bc = zbc->get(bctype[idx]);
@@ -2145,8 +2165,10 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 #if 0
       print(xvel, yvel, zvel, "Corrected velocity");
 #endif
+      //cerr << "RANDY: SimpleCFD::applyProjection() DDD" << endl;
     }
   }
+  //cerr << "RANDY: SimpleCFD::applyProjection() END" << endl;
 }
 //______________________________________________________________________
 //           A D V E C T     S C A L A R S
