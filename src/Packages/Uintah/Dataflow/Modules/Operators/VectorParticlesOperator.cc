@@ -1,10 +1,12 @@
-#include "VectorParticlesOperator.h"
-#include <math.h>
-#include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Dataflow/Modules/Operators/VectorParticlesOperator.h>
 #include <Uintah/Core/Datatypes/VectorParticles.h>
 #include <Uintah/Core/Datatypes/ScalarParticles.h>
 #include <Uintah/Core/Variables/ParticleVariable.h>
 #include <Uintah/Core/Variables/ParticleSubset.h>
+
+#include <Core/Malloc/Allocator.h>
+
+#include <math.h>
 
 //#include <SCICore/Math/Mat.h>
 
@@ -27,34 +29,39 @@ void VectorParticlesOperator::execute(void)
   spout = (ScalarParticlesOPort *)get_oport("Scalar Particles");
 
   VectorParticlesHandle hTF;
+  ScalarParticlesHandle hSP;
   
-  if(!in->get(hTF)){
+  if(!(in->get(hTF) && hTF.get_rep())){
     error("VectorParticlesOperator::execute(void) Didn't get a handle");
     return;
   }
 
   VectorParticles* pTP = hTF.get_rep();
-  ScalarParticles* pSP = scinew ScalarParticles();
+  hSP = scinew ScalarParticles();
+  if (hSP.get_rep() == 0) {
+    error("Error allocating ScalarParticles");
+    return;
+  }
 
   switch(guiOperation.get()) {
   case 0: // extract U
   case 1: // extract V
   case 2: // extract W
-    computeScalars(pTP, pSP,
+    computeScalars(pTP, hSP.get_rep(),
 		   VectorElementExtractionOp(guiOperation.get()));
     break;
   case 3: // extract the length 
-    computeScalars(pTP, pSP, LengthOp());
+    computeScalars(pTP, hSP.get_rep(), LengthOp());
     break;
   case 4: // extract the curvature
-    computeScalars(pTP, pSP, VorticityOp());
+    computeScalars(pTP, hSP.get_rep(), VorticityOp());
     break;
   default:
     std::cerr << "VectorFieldOperator::performOperation: "
 	      << "Unexpected Operation Type #: " << guiOperation.get() << "\n";
   }
 
-  spout->send(pSP);
+  spout->send(hSP);
 }
 
 
