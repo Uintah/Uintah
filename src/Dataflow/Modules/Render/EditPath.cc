@@ -64,7 +64,6 @@ POSSIBLE REVISIONS
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/HashTable.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/TCLTask.h>
 #include <Core/Datatypes/Path.h>
 
 #include <Core/Util/Timer.h>
@@ -124,10 +123,10 @@ namespace SCIRun {
     PathHandle   ext_path_h, new_path_h, curr_path_h;
     
 public:
-    EditPath(const string& id);
+    EditPath(GuiContext* ctx);
     virtual ~EditPath();
     virtual void execute();
-    virtual void tcl_command(TCLArgs&, void*);
+    virtual void tcl_command(GuiArgs&, void*);
     bool init_new_path();
     bool init_exist_path(PathHandle);
     void update_tcl_var();
@@ -136,31 +135,27 @@ public:
     void send_view();
 };
 
-extern "C" Module* make_EditPath(const string& id)
-{
-    return scinew EditPath(id);
-}
-
-EditPath::EditPath(const string& id)
-: Module("EditPath", id, Filter, "Render", "SCIRun"),
-  tcl_num_views("tcl_num_views", id, this),
-  tcl_is_looped("tcl_is_looped", id, this),
-  tcl_is_backed("tcl_is_backed", id, this),
-  tcl_curr_viewwindow("tcl_curr_viewwindow", id, this),
-  tcl_step_size("tcl_step_size", id, this),
-  tcl_acc_val("tcl_acc_val", id, this),
-  tcl_rate("tcl_rate", id, this), 
-  tcl_speed_val("tcl_speed_val", id, this), 
-  UI_Init("UI_Init", id, this),
-  tcl_send_dir("tcl_send_dir", id, this),
-  tcl_msg_box("tcl_msg_box", id, this),
-  tcl_intrp_type("tcl_intrp_type", id, this),   
-  tcl_acc_mode("tcl_acc_mode", id, this),
-  tcl_widg_show("tcl_widg_show", id, this),
-  tcl_curr_view("tcl_curr_view", id, this),
-  tcl_is_new("tcl_is_new", id, this), 
-  tcl_stop("tcl_stop", id, this),
-  tcl_info("tcl_info", id, this),
+DECLARE_MAKER(EditPath)
+EditPath::EditPath(GuiContext* ctx)
+: Module("EditPath", ctx, Filter, "Render", "SCIRun"),
+  tcl_num_views(ctx->subVar("tcl_num_views")),
+  tcl_is_looped(ctx->subVar("tcl_is_looped")),
+  tcl_is_backed(ctx->subVar("tcl_is_backed")),
+  tcl_curr_viewwindow(ctx->subVar("tcl_curr_viewwindow")),
+  tcl_step_size(ctx->subVar("tcl_step_size")),
+  tcl_acc_val(ctx->subVar("tcl_acc_val")),
+  tcl_rate(ctx->subVar("tcl_rate")), 
+  tcl_speed_val(ctx->subVar("tcl_speed_val")), 
+  UI_Init(ctx->subVar("UI_Init")),
+  tcl_send_dir(ctx->subVar("tcl_send_dir")),
+  tcl_msg_box(ctx->subVar("tcl_msg_box")),
+  tcl_intrp_type(ctx->subVar("tcl_intrp_type")),   
+  tcl_acc_mode(ctx->subVar("tcl_acc_mode")),
+  tcl_widg_show(ctx->subVar("tcl_widg_show")),
+  tcl_curr_view(ctx->subVar("tcl_curr_view")),
+  tcl_is_new(ctx->subVar("tcl_is_new")), 
+  tcl_stop(ctx->subVar("tcl_stop")),
+  tcl_info(ctx->subVar("tcl_info")),
   acc_val(0),
   speed_val(0),
   rate(1),
@@ -553,7 +548,7 @@ void EditPath::send_view(){
 }
 
 
-void EditPath::tcl_command(TCLArgs& args, void* userdata)
+void EditPath::tcl_command(GuiArgs& args, void* userdata)
 {   
   if (args[1] == "add_vp"){
     if(sem.tryDown()){
@@ -714,14 +709,14 @@ void EditPath::init_tcl_update(){
   tcl_curr_view.set(curr_view);
   
   if (UI_Init.get()){
-    TCLTask::lock();
-    TCL::execute(id+" refresh ");
-    TCLTask::unlock();
+    gui->lock();
+    gui->execute(id+" refresh ");
+    gui->unlock();
   }
 }
 
 void EditPath::update_tcl_var(){
-  TCL::reset_vars();  
+  reset_vars();
   tcl_is_new.set(is_new);
   tcl_speed_val.set(speed_val);
   tcl_acc_val.set(acc_val);
@@ -731,18 +726,18 @@ void EditPath::update_tcl_var(){
   message="";
   
   if (UI_Init.get()){
-    TCLTask::lock();
-    TCL::execute(id+" refresh ");
-    TCLTask::unlock();
+    gui->lock();
+    gui->execute(id+" refresh ");
+    gui->unlock();
   }
 }
 
 bool EditPath::Msg_Box(const string& title, const string& message){
   tcl_msg_box.set(0);
   if (UI_Init.get()){
-     TCLTask::lock();
-         TCL::execute(id+" EraseWarn "+ "\""+title +"\""+ " " + "\""+message+"\"");
-     TCLTask::unlock();
+     gui->lock();
+         gui->execute(id+" EraseWarn "+ "\""+title +"\""+ " " + "\""+message+"\"");
+     gui->unlock();
   }
 
   if (tcl_msg_box.get()>0){

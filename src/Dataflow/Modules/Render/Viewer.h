@@ -40,7 +40,6 @@
 #include <Core/Geom/Lighting.h>
 #include <Core/Geom/IndexedGroup.h>
 #include <Dataflow/Modules/Render/ViewGeom.h>
-#include <Core/GuiInterface/TCL.h>
 #include <Core/Thread/CrowdMonitor.h>
 
 #include <map>
@@ -50,13 +49,12 @@ namespace SCIRun {
 
 using std::vector;
 
-class Renderer;
 class ViewWindow;
 
 class Viewer : public Module {
 public:
 
-  Viewer(const string& id);
+  Viewer(GuiContext*);
   virtual ~Viewer();
   virtual void do_execute();
   virtual void execute();
@@ -80,10 +78,10 @@ private:
   void addTopViewWindow(ViewWindow *r);
   void delTopViewWindow(ViewWindow *r);
 
-  void tcl_command(TCLArgs&, void*);
+  void tcl_command(GuiArgs&, void*);
 
   virtual void emit_vars(std::ostream& out, 
-			 string& midx); // Override from class TCL
+			 string& midx); // Override from class Module
   int process_event();
 
   vector<ViewWindow*> view_window_;

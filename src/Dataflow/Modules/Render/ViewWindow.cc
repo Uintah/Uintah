@@ -30,7 +30,6 @@
 
 #include <Dataflow/Modules/Render/Viewer.h>
 #include <Dataflow/Modules/Render/ViewWindow.h>
-#include <Dataflow/Modules/Render/Renderer.h>
 #include <Dataflow/Modules/Render/Ball.h>
 #include <Dataflow/Modules/Render/BallMath.h>
 #include <Core/Util/Debug.h>
@@ -38,6 +37,7 @@
 #include <Core/Util/Timer.h>
 #include <Core/Math/Expon.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Transform.h>
@@ -55,7 +55,6 @@
 #include <Core/Geom/Material.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
-#include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/FutureValue.h>
@@ -85,45 +84,45 @@ void add_pt( ViewWindow *viewwindow, Point p, double s=.2 )
   viewwindow->need_redraw = 1;
 }
 
-ViewWindow::ViewWindow(Viewer* s, const string& id)
-  : manager(s),
-    pos("pos", id, this),
-    caxes("caxes", id, this),iaxes("iaxes", id, this), 
+ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
+  : gui(gui), ctx(ctx), manager(s),
+    pos(ctx->subVar("pos")),
+    caxes(ctx->subVar("caxes")),iaxes(ctx->subVar("iaxes")),
     doingMovie(false),
     makeMPEG(false),
     curFrame(0),
     curName("movie"),
     dolly_throttle(0),
-    id(id),
-    view("view", id, this),
+    id(ctx->getfullname()),
+    view(ctx->subVar("view")),
     homeview(Point(2.1, 1.6, 11.5), Point(.0, .0, .0), Vector(0,1,0), 20),
-    bgcolor("bgcolor", id, this), 
-    shading("shading", id, this),
-    do_stereo("do_stereo", id, this), 
-    ambient_scale("ambient-scale", id, this),
-    diffuse_scale("diffuse-scale", id, this),
-    specular_scale("specular-scale", id, this),
-    emission_scale("emission-scale", id, this),
-    shininess_scale("shininess-scale", id, this),
-    sbase("sbase", id, this),
-    sr("sr", id, this),
+    bgcolor(ctx->subVar("bgcolor")), 
+    shading(ctx->subVar("shading")),
+    do_stereo(ctx->subVar("do_stereo")), 
+    ambient_scale(ctx->subVar("ambient-scale")),
+    diffuse_scale(ctx->subVar("diffuse-scale")),
+    specular_scale(ctx->subVar("specular-scale")),
+    emission_scale(ctx->subVar("emission-scale")),
+    shininess_scale(ctx->subVar("shininess-scale")),
+    sbase(ctx->subVar("sbase")),
+    sr(ctx->subVar("sr")),
     // --  BAWGL -- 
-    do_bawgl("do_bawgl", id, this),  
+    do_bawgl(ctx->subVar("do_bawgl")),  
     // --  BAWGL -- 
-    drawimg("drawimg", id, this),
-    saveprefix("saveprefix", id, this),
-    file_resx("resx", id, this),
-    file_resy("resy", id, this),
-    file_aspect("aspect",id,this),
-    file_aspect_ratio("aspect_ratio",id,this)
+    drawimg(ctx->subVar("drawimg")),
+    saveprefix(ctx->subVar("saveprefix")),
+    file_resx(ctx->subVar("resx")),
+    file_resy(ctx->subVar("resy")),
+    file_aspect(ctx->subVar("aspect")),
+    file_aspect_ratio(ctx->subVar("aspect_ratio"))
 {
   inertia_mode=0;
   bgcolor.set(Color(0,0,0));
 
   view.set(homeview);
 
-  TCL::add_command(id+"-c", this, 0);
-  current_renderer=0;
+  gui->add_command(id+"-c", this, 0);
+  current_renderer=new OpenGL(gui);
   maxtag=0;
   mouse_obj=0;
   ball = new BallData();
@@ -171,18 +170,18 @@ void ViewWindow::itemAdded(GeomViewerItem* si)
   if(viter==visible.end()){
     // Make one...
     vis=scinew ObjTag;
-    vis->visible=scinew GuiVarint(si->name, id, this);
+    vis->visible=scinew GuiVarint(ctx->subVar(si->name));
     vis->visible->set(1);
     vis->tagid=maxtag++;
     visible[si->name] = vis;
     ostringstream str;
     str << id << " addObject " << vis->tagid << " \"" << si->name << "\"";
-    TCL::execute(str.str().c_str());
+    gui->execute(str.str().c_str());
   } else {
     vis = (*viter).second;
     ostringstream str;
     str << id << " addObject2 " << vis->tagid;
-    TCL::execute(str.str().c_str());
+    gui->execute(str.str().c_str());
   }
   // invalidate the bounding box
   bb.reset();
@@ -201,7 +200,7 @@ void ViewWindow::itemDeleted(GeomViewerItem *si)
     vis = (*viter).second;
     ostringstream str;
     str << id << " removeObject " << vis->tagid;
-    TCL::execute(str.str().c_str());
+    gui->execute(str.str().c_str());
   }
 				// invalidate the bounding box
   bb.reset();
@@ -231,7 +230,7 @@ void ViewWindow::spawnChCB(CallbackData*, void*)
 
 ViewWindow::~ViewWindow()
 {
-  TCL::delete_command( id+"-c" );
+  gui->delete_command( id+"-c" );
 }
 
 void ViewWindow::get_bounds(BBox& bbox)
@@ -1643,13 +1642,12 @@ void ViewWindow::redraw_if_needed()
   }
 }
 
-void ViewWindow::tcl_command(TCLArgs& args, void*)
+void ViewWindow::tcl_command(GuiArgs& args, void*)
 {
   if (args.count() < 2) {
     args.error("ViewWindow needs a minor command");
     return;
   }
-  
   if (args[1] == "have_mpeg") {
 #ifdef MPEG
     args.result("1");
@@ -1669,7 +1667,7 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
     manager->
       mailbox.send(scinew  ViewerMessage(MessageTypes::ViewWindowDumpImage,
 					 id, args[2], args[3],args[4],args[5]));
-  }else if (args[1] == "startup") {
+  } else if (args[1] == "startup") {
     // Fill in the visibility database...
     GeomIndexedGroup::IterIntGeomObj iter = manager->ports_.getIter();
     
@@ -1684,20 +1682,6 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
 	itemAdded(si);
       }
     }
-  }
-  else if (args[1] == "setrenderer") {
-    if (args.count() != 6) {
-      args.error("setrenderer needs a renderer name, etc");
-      return;
-    }
-    Renderer* r=get_renderer(args[2]);
-    if (!r) {
-      args.error("Unknown renderer!");
-      return;
-    }
-    if (current_renderer) current_renderer->hide();
-    current_renderer=r;
-    args.result(r->create_window(this, args[3], args[4], args[5]));
   } else if (args[1] == "redraw") {
     // We need to dispatch this one to the
     // remote thread We use an ID string
@@ -2038,7 +2022,7 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
 }
 
 
-void ViewWindow::do_mouse(MouseHandler handler, TCLArgs& args)
+void ViewWindow::do_mouse(MouseHandler handler, GuiArgs& args)
 {
   if(args.count() != 5 && args.count() != 7 && args.count() != 8 && args.count() != 6){
     args.error(args[1]+" needs start/move/end and x y");
@@ -2130,10 +2114,10 @@ void ViewWindow::autoview(const BBox& bbox)
 void ViewWindow::redraw()
 {
   need_redraw=0;
-  reset_vars();
+  ctx->reset();
   // Get animation variables
   double ct;
-  if(!get_gui_doublevar(id, "current_time", ct)){
+  if(!ctx->getSub("current_time", ct)){
     manager->error("Error reading current_time");
     return;
   }
@@ -2150,7 +2134,7 @@ void ViewWindow::redraw()
 void ViewWindow::redraw(double tbeg, double tend, int nframes, double framerate)
 {
   need_redraw=0;
-  reset_vars();
+  ctx->reset();
 
   // Get animation variables
   current_renderer->redraw(manager, this, tbeg, tend, nframes, framerate);
@@ -2174,7 +2158,7 @@ void ViewWindow::update_mode_string(const string& msg)
 {
   ostringstream str;
   str << id << " updateMode \"" << msg << "\"";
-  TCL::execute(str.str().c_str());
+  gui->execute(str.str().c_str());
 }
 
 ViewWindowMouseMessage::ViewWindowMouseMessage(const string& rid, MouseHandler handler,
@@ -2196,32 +2180,12 @@ void ViewWindow::animate_to_view(const View& v, double /*time*/)
   manager->mailbox.send(scinew ViewerMessage(id));
 }
 
-Renderer* ViewWindow::get_renderer(const string& name)
-{
-  // See if we already have one like that...
-  Renderer* r;
-  MapStringRenderer::iterator riter;
-
-  riter = renderers.find(name);
-  if (riter == renderers.end()) { // if not found
-    // Create it...
-    r = Renderer::create(name);
-    if (r) {
-      renderers[name] = r;
-    }
-  }
-  else {
-    r = (*riter).second;
-  }
-  return r;
-}
-
 void ViewWindow::force_redraw()
 {
   need_redraw=1;
 }
 
-void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
+void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
 {
 				// Do internal objects first...
   int i;
@@ -2290,7 +2254,7 @@ void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
 
 void ViewWindow::set_current_time(double time)
 {
-  set_guivar(id, "current_time", to_string(time));
+  ctx->setSub("current_time", to_string(time));
 }
 
 void ViewWindow::dump_objects(const string& filename, const string& format)
@@ -2381,6 +2345,11 @@ GeomGroup* ViewWindow::createGenAxes() {
   all->add(scinew GeomMaterial(zn, dk_blue));
   
   return all;
+}
+
+void ViewWindow::emit_vars(std::ostream& out, const std::string& midx)
+{
+  ctx->emit(out, midx);
 }
 
 } // End namespace SCIRun

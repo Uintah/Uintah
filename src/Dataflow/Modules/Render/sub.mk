@@ -36,7 +36,6 @@ SRCS     += \
 	$(SRCDIR)/EditPath.cc\
 	$(SRCDIR)/OpenGL.cc\
 	$(SRCDIR)/Parser.cc\
-	$(SRCDIR)/Renderer.cc\
 	$(SRCDIR)/SCIBaWGL.cc\
 	$(SRCDIR)/SharedMemory.cc\
 	$(SRCDIR)/Tex.cc\

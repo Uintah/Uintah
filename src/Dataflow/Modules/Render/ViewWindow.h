@@ -33,6 +33,7 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Thread/FutureValue.h>
 #include <Dataflow/Comm/MessageBase.h>
+#include <Core/GuiInterface/GuiCallback.h>
 #include <Core/Geom/Color.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GuiGeom.h>
@@ -40,7 +41,6 @@
 #include <Core/Geom/View.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Transform.h>
-#include <Core/GuiInterface/TCL.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Modules/Render/BallAux.h>
 
@@ -74,6 +74,7 @@ c ? a : c) : b ; }
 inline int  Sign (double a)             { return a > 0 ? 1 : a < 0 ? -1 : 0; }
 
 namespace SCIRun {
+  using namespace std;
 class GeomObj;
 class GeomPick;
 class GeomSphere;
@@ -82,15 +83,14 @@ class Light;
 class Vector;
 class Transform;
 struct GeometryData;
-
+  class OpenGL;
 class DBContext;
-class Renderer;
 class Viewer;
 class SCIBaWGL;
 
 class GeomViewerItem;
 class BallData;
-
+  class OpenGL;
 class TexStruct1D;
 class TexStruct2D;
 class TexStruct3D;
@@ -104,17 +104,18 @@ struct ObjTag {
 class ViewWindow;
 typedef void (ViewWindow::*MouseHandler)(int, int x, int y, 
 				  int state, int btn, int time);
-typedef void (Renderer::*ViewWindowVisPMF)(Viewer*, ViewWindow*, GeomObj*);
+typedef void (OpenGL::*ViewWindowVisPMF)(Viewer*, ViewWindow*, GeomObj*);
 
-class ViewWindow : public TCL {
-  
+class ViewWindow : public GuiCallback {
+  GuiInterface* gui;
+  GuiContext* ctx;
+  ViewWindow(const ViewWindow&);
   // --  BAWGL -- 
 public:
   Viewer* manager;
   // --  BAWGL -- 
   
 public:
-  typedef map<string, Renderer*>	MapStringRenderer;
   typedef map<string, ObjTag*>	        MapStringObjTag;
   GuiString pos;  
   GuiInt caxes;
@@ -122,9 +123,7 @@ public:
 protected:
   friend class Viewer;
   
-  MapStringRenderer renderers;
-  
-  void do_mouse(MouseHandler, TCLArgs&);
+  void do_mouse(MouseHandler, GuiArgs&);
   
   BBox bb;
   
@@ -205,15 +204,13 @@ public:
   int tex_disp_list;
 
 
-  Renderer* current_renderer;
-  Renderer* get_renderer(const string&);
+  OpenGL* current_renderer;
   string id;
   int need_redraw;
 
   SCIBaWGL* get_bawgl(void) { return(bawgl); }
     
-  ViewWindow(Viewer *s, const string& id);
-  ViewWindow(const ViewWindow&);
+  ViewWindow(Viewer *s, GuiInterface* gui, GuiContext* ctx);
   ~ViewWindow();
 
   string set_id(const string& new_id);
@@ -290,13 +287,13 @@ public:
   // ---- end UniCam interactor methods & member variables
 #endif
 
-  void tcl_command(TCLArgs&, void*);
+  void tcl_command(GuiArgs&, void*);
   void get_bounds(BBox&);
 
   void autoview(const BBox&);
 
 				// sets up the state (OGL) for a tool/viewwindow
-  void setState(DrawInfoOpenGL*,string);
+  void setState(DrawInfoOpenGL*, const string&);
 				// sets up DI for this drawinfo
   void setDI(DrawInfoOpenGL*,string);
 				// sets up OGL clipping planes...
@@ -344,7 +341,7 @@ public:
   GuiDouble file_aspect_ratio;
   
 				// Object processing utility routines
-  void do_for_visible(Renderer*, ViewWindowVisPMF);
+  void do_for_visible(OpenGL*, ViewWindowVisPMF);
   
   void set_current_time(double time);
   
@@ -353,6 +350,7 @@ public:
   void getData(int datamask, FutureValue<GeometryData*>* result);
   void setView(View view);
   GeomGroup* createGenAxes();   
+  void emit_vars(std::ostream& out, const std::string& midx);
 };
 
 class ViewWindowMouseMessage : public MessageBase {
