@@ -34,7 +34,9 @@
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/ImageField.h>
 #include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/ScanlineField.h>
 #include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/DispatchScalar1.h>
 #include <Core/Malloc/Allocator.h>

@@ -108,6 +108,106 @@
         disp_error = true; disp_msg = "LatticeVol<Tensor>::get_type_name is broken";\
       }\
     }\
+  } else if (disp_name == "TriSurf") {\
+    if (field1->get_type_name(1) == "double") {\
+      TriSurf<double> *f1 = 0;\
+      f1 = dynamic_cast<TriSurf<double>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "TriSurf<double>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "int") {\
+      TriSurf<int> *f1 = 0;\
+      f1 = dynamic_cast<TriSurf<int>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "TriSurf<int>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "short") {\
+      TriSurf<short> *f1 = 0;\
+      f1 = dynamic_cast<TriSurf<short>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "TriSurf<short>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "unsigned char") {\
+      TriSurf<unsigned char> *f1 = 0;\
+      f1 = dynamic_cast<TriSurf<unsigned char>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "TriSurf<unsigned char>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "Vector") {\
+      TriSurf<Vector> *f1 = 0;\
+      f1 = dynamic_cast<TriSurf<Vector>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "TriSurf<Vector>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "Tensor") {\
+      TriSurf<Tensor> *f1 = 0;\
+      f1 = dynamic_cast<TriSurf<Tensor>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "TriSurf<Tensor>::get_type_name is broken";\
+      }\
+    }\
+  } else if (disp_name == "ImageField") {\
+    if (field1->get_type_name(1) == "double") {\
+      ImageField<double> *f1 = 0;\
+      f1 = dynamic_cast<ImageField<double>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "ImageField<double>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "int") {\
+      ImageField<int> *f1 = 0;\
+      f1 = dynamic_cast<ImageField<int>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "ImageField<int>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "short") {\
+      ImageField<short> *f1 = 0;\
+      f1 = dynamic_cast<ImageField<short>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "ImageField<short>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "unsigned char") {\
+      ImageField<unsigned char> *f1 = 0;\
+      f1 = dynamic_cast<ImageField<unsigned char>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "ImageField<unsigned char>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "Vector") {\
+      ImageField<Vector> *f1 = 0;\
+      f1 = dynamic_cast<ImageField<Vector>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "ImageField<Vector>::get_type_name is broken";\
+      }\
+    } else if (field1->get_type_name(1) == "Tensor") {\
+      ImageField<Tensor> *f1 = 0;\
+      f1 = dynamic_cast<ImageField<Tensor>*>(field1.get_rep());\
+      if (f1) {\
+        callback(f1);\
+      } else {\
+        disp_error = true; disp_msg = "ImageField<Tensor>::get_type_name is broken";\
+      }\
+    }\
   } else if (disp_name == "ContourField") {\
     if (field1->get_type_name(1) == "double") {\
       ContourField<double> *f1 = 0;\
@@ -158,54 +258,54 @@
         disp_error = true; disp_msg = "ContourField<Tensor>::get_type_name is broken";\
       }\
     }\
-  } else if (disp_name == "TriSurf") {\
+  } else if (disp_name == "ScanlineField") {\
     if (field1->get_type_name(1) == "double") {\
-      TriSurf<double> *f1 = 0;\
-      f1 = dynamic_cast<TriSurf<double>*>(field1.get_rep());\
+      ScanlineField<double> *f1 = 0;\
+      f1 = dynamic_cast<ScanlineField<double>*>(field1.get_rep());\
       if (f1) {\
         callback(f1);\
       } else {\
-        disp_error = true; disp_msg = "TriSurf<double>::get_type_name is broken";\
+        disp_error = true; disp_msg = "ScanlineField<double>::get_type_name is broken";\
       }\
     } else if (field1->get_type_name(1) == "int") {\
-      TriSurf<int> *f1 = 0;\
-      f1 = dynamic_cast<TriSurf<int>*>(field1.get_rep());\
+      ScanlineField<int> *f1 = 0;\
+      f1 = dynamic_cast<ScanlineField<int>*>(field1.get_rep());\
       if (f1) {\
         callback(f1);\
       } else {\
-        disp_error = true; disp_msg = "TriSurf<int>::get_type_name is broken";\
+        disp_error = true; disp_msg = "ScanlineField<int>::get_type_name is broken";\
       }\
     } else if (field1->get_type_name(1) == "short") {\
-      TriSurf<short> *f1 = 0;\
-      f1 = dynamic_cast<TriSurf<short>*>(field1.get_rep());\
+      ScanlineField<short> *f1 = 0;\
+      f1 = dynamic_cast<ScanlineField<short>*>(field1.get_rep());\
       if (f1) {\
         callback(f1);\
       } else {\
-        disp_error = true; disp_msg = "TriSurf<short>::get_type_name is broken";\
+        disp_error = true; disp_msg = "ScanlineField<short>::get_type_name is broken";\
       }\
     } else if (field1->get_type_name(1) == "unsigned char") {\
-      TriSurf<unsigned char> *f1 = 0;\
-      f1 = dynamic_cast<TriSurf<unsigned char>*>(field1.get_rep());\
+      ScanlineField<unsigned char> *f1 = 0;\
+      f1 = dynamic_cast<ScanlineField<unsigned char>*>(field1.get_rep());\
       if (f1) {\
         callback(f1);\
       } else {\
-        disp_error = true; disp_msg = "TriSurf<unsigned char>::get_type_name is broken";\
+        disp_error = true; disp_msg = "ScanlineField<unsigned char>::get_type_name is broken";\
       }\
     } else if (field1->get_type_name(1) == "Vector") {\
-      TriSurf<Vector> *f1 = 0;\
-      f1 = dynamic_cast<TriSurf<Vector>*>(field1.get_rep());\
+      ScanlineField<Vector> *f1 = 0;\
+      f1 = dynamic_cast<ScanlineField<Vector>*>(field1.get_rep());\
       if (f1) {\
         callback(f1);\
       } else {\
-        disp_error = true; disp_msg = "TriSurf<Vector>::get_type_name is broken";\
+        disp_error = true; disp_msg = "ScanlineField<Vector>::get_type_name is broken";\
       }\
     } else if (field1->get_type_name(1) == "Tensor") {\
-      TriSurf<Tensor> *f1 = 0;\
-      f1 = dynamic_cast<TriSurf<Tensor>*>(field1.get_rep());\
+      ScanlineField<Tensor> *f1 = 0;\
+      f1 = dynamic_cast<ScanlineField<Tensor>*>(field1.get_rep());\
       if (f1) {\
         callback(f1);\
       } else {\
-        disp_error = true; disp_msg = "TriSurf<Tensor>::get_type_name is broken";\
+        disp_error = true; disp_msg = "ScanlineField<Tensor>::get_type_name is broken";\
       }\
     }\
   } else if (disp_name == "PointCloud") {\

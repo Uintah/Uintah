@@ -25,7 +25,7 @@
 import os
 from sys import argv
 
-fields = ("TetVol", "LatticeVol", "ContourField", "TriSurf", "PointCloud")
+fields = ("TetVol", "LatticeVol", "TriSurf", "ImageField", "ContourField", "ScanlineField", "PointCloud")
 nonlattice = ("TetVol", "ContourField", "TriSurf", "PointCloud")
 data_types = ()
 scalar = ("double", "int", "short", "unsigned char")
