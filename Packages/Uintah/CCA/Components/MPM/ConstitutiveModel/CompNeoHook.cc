@@ -344,14 +344,15 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     int num_nodes = (nodes.x())*(nodes.y())*(nodes.z())*3;
     KK.setSize(num_nodes,num_nodes);
 #ifdef HAVE_PETSC
-    MatCreateSeqAIJ(PETSC_COMM_WORLD,num_nodes,num_nodes,PETSC_DEFAULT,
+    MatCreateMPIAIJ(PETSC_COMM_WORLD,num_nodes,num_nodes,PETSC_DETERMINE,
+		    PETSC_DETERMINE,PETSC_DEFAULT,PETSC_NULL,PETSC_DEFAULT,
 		    PETSC_NULL,&A);
 #endif
 
     for(ParticleSubset::iterator iter = pset->begin();
 	iter != pset->end(); iter++){
       particleIndex idx = *iter;
-#if 0
+#if 1
       cout << "Particle " << px[idx] << endl;
 #endif
       velGrad.set(0.0);
@@ -378,12 +379,12 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	    dispGrad(i+1,j+1) += disp[i] * d_S[k][j]* oodx[j];
 	  }
 	}
-#if 0
+#if 1
 	cout << "d_Shape = " << d_S[k] << endl;
 	cout << "oodx = " << oodx[0] << "\t" << oodx[1] << "\t" << oodx[2] <<
 	  endl;
-	cout << "d_S = " << d_S[k](0)*oodx[0] << "\t" << d_S[k](1)*oodx[1]
-	     << "\t" << d_S[k](2)*oodx[2] << endl;
+	cout << "d_S = " << d_S[k][0]*oodx[0] << "\t" << d_S[k][1]*oodx[1]
+	     << "\t" << d_S[k][2]*oodx[2] << endl;
 #endif
 	
 	B(0,3*k) = d_S[k][0]*oodx[0];
@@ -568,7 +569,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       cout << "volnew = " << volnew << " volold = " << volold << endl;
 #endif
       pvolume_deformed[idx] = volnew;
-#if 0
+#if 1
       for (int i = 0; i < 6; i++) {
 	for (int j = 0; j < 6; j++) {
 	  cout << "D[" << i << "][" << j << "]= " << D(i,j) << "\t";
@@ -578,14 +579,14 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       
       for (int i = 0; i < 6; i++) {
 	for (int j = 0; j < 24; j++) {
-	  cout << "B[" << i << "][" << j << "]= " << B[i][j] << "\t";
+	  cout << "B[" << i << "][" << j << "]= " << B(i,j) << "\t";
 	}
 	cout << endl;
       }
       
       for (int i = 0; i < 3; i++) {
 	for (int j = 0; j < 24; j++) {
-	  cout << "Bnl[" << i << "][" << j << "]= " << Bnl[i][j] << "\t";
+	  cout << "Bnl[" << i << "][" << j << "]= " << Bnl(i,j) << "\t";
 	}
 	cout << endl;
       }
@@ -608,11 +609,13 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	int dofi = dof[I];
 	for (int J = 0; J < 24; J++) {
 	  int dofj = dof[J];
+#if 1
 #if 0
-	  //  cout << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
-	  //     << endl;
-	  cout << "kmat[" << I << "][" << J << "]= " << kmat[I][J] << endl;
-	  cout << "kgeo[" << I << "][" << J << "]= " << kgeo[I][J] << endl;
+	  cout << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
+	       << endl;
+#endif
+	  cout << "kmat[" << I << "][" << J << "]= " << kmat(I,J) << endl;
+	  cout << "kgeo[" << I << "][" << J << "]= " << kgeo(I,J) << endl;
 #endif
 	  KK[dofi][dofj] = KK[dofi][dofj] + (kmat(I,J) + kgeo(I,J));
 #ifdef HAVE_PETSC
