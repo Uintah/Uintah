@@ -39,6 +39,7 @@ SRCS     += \
 	$(SRCDIR)/IsoSurfaceDW.cc\
 	$(SRCDIR)/IsoSurfaceMRSG.cc\
 	$(SRCDIR)/IsoSurfaceSP.cc\
+	$(SRCDIR)/IsoSurfaceSAGE.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
 	$(SRCDIR)/SimpVolVis.cc\
 	$(SRCDIR)/Streamline.cc\
@@ -53,7 +54,8 @@ SRCS     += \
 	$(SRCDIR)/NoiseMCube.cc\
 #[INSERT NEW MODULE HERE]
 
-PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
+PSELIBS := PSECommon/Algorithms/Visualization \
+	PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
 	SCICore/Containers SCICore/Exceptions SCICore/Thread \
 	SCICore/TclInterface SCICore/Geom SCICore/Persistent \
 	SCICore/Datatypes SCICore/Geometry SCICore/Util \
@@ -64,6 +66,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/07/22 18:01:39  yarden
+# add IsoSurfaceSAGE
+#
 # Revision 1.5  2000/06/08 22:46:31  moulding
 # Added a comment note about not messing with the module maker comment lines,
 # and how to edit this file by hand.
