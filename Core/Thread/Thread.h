@@ -15,12 +15,11 @@
 #ifndef SCICore_Thread_Thread_h
 #define SCICore_Thread_Thread_h
 
-#include <SCICore/Thread/ParallelBase.h>
-#include <SCICore/Thread/Runnable.h>
-
 namespace SCICore {
     namespace Thread {
 	struct Thread_private;
+	class ParallelBase;
+	class Runnable;
 	class ThreadGroup;
 	
 /**************************************
@@ -220,19 +219,6 @@ DESCRIPTION
 	    int get_tid();
 	    static void print_threads();
 
-	    class ParallelHelper : public Runnable {
-		const ParallelBase* helper;
-		int proc;
-	    public:
-		ParallelHelper(const ParallelBase* helper, int proc)
-		    : helper(helper), proc(proc) {}
-		virtual ~ParallelHelper() {}
-		virtual void run() {
-		    ParallelBase* cheat=(ParallelBase*)helper;
-		    cheat->run(proc);
-		}
-	    };
-
 	    // Cannot copy them
 	    Thread(const Thread&);
 	    Thread& operator=(const Thread&);
@@ -244,6 +230,13 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.11  1999/09/03 19:51:16  sparker
+// Fixed bug where if Thread::parallel was called with block=false, the
+//   helper object could get destroyed before it was used.
+// Removed include of SCICore/Thread/ParallelBase and
+//  SCICore/Thread/Runnable from Thread.h to minimize dependencies
+// Fixed naming of parallel helper threads.
+//
 // Revision 1.10  1999/09/02 16:52:44  sparker
 // Updates to cocoon documentation
 //

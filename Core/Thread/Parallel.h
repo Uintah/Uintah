@@ -16,6 +16,7 @@
 #define SCICore_Thread_Parallel_h
 
 #include <SCICore/Thread/ParallelBase.h>
+#include <SCICore/Thread/Semaphore.h>
 
 namespace SCICore {
     namespace Thread {
@@ -60,13 +61,20 @@ template<class T>
 void
 SCICore::Thread::Parallel<T>::run(int proc)
 {
-    (d_obj->*d_pmf)(proc);
+    T* obj=d_obj;
+    void (T::*pmf)(int) = d_pmf;
+    if(d_wait)
+	d_wait->up();
+    (obj->*pmf)(proc);
+    // Cannot do anything here, since the object may be deleted by the
+    // time we return
 }
 
 template<class T>
 SCICore::Thread::Parallel<T>::Parallel(T* obj, void (T::*pmf)(int))
     : d_obj(obj), d_pmf(pmf)
 {
+    d_wait=0; // This may be set by Thread::parallel
 }
 
 template<class T>
@@ -75,8 +83,16 @@ SCICore::Thread::Parallel<T>::~Parallel()
 }
 
 #endif
+
 //
 // $Log$
+// Revision 1.7  1999/09/03 19:51:15  sparker
+// Fixed bug where if Thread::parallel was called with block=false, the
+//   helper object could get destroyed before it was used.
+// Removed include of SCICore/Thread/ParallelBase and
+//  SCICore/Thread/Runnable from Thread.h to minimize dependencies
+// Fixed naming of parallel helper threads.
+//
 // Revision 1.6  1999/09/02 16:52:43  sparker
 // Updates to cocoon documentation
 //
