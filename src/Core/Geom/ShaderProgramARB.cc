@@ -102,6 +102,8 @@ namespace SCIRun {
 
 bool ShaderProgramARB::mInit = false;
 bool ShaderProgramARB::mSupported = false;
+int ShaderProgramARB::max_texture_size_1_ = 64;
+int ShaderProgramARB::max_texture_size_4_ = 64;
 static Mutex ShaderProgramARB_mInitMutex("ShaderProgramARB Init Lock");  
 
 ShaderProgramARB::ShaderProgramARB(const string& program)
@@ -138,32 +140,12 @@ ShaderProgramARB::init_shaders_supported()
 	  new TkOpenGLContext(".testforshadersupport", 0, 0, 0);
 	context->make_current();
 
-        int max_texture_size = 64;
-#if !defined(__sgi)
-        int i;
-        for (i = 128; i < 130000; i*=2)
-        {
-          glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_RGBA, i, i, i, 0,
-                       GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-          GLint width;
-          glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0,
-                                   GL_TEXTURE_WIDTH, &width);
-          if (width == 0)
-          {
-            i /= 2;
-            break;
-          }
-       }
-        max_texture_size = i;
+#if defined(__sgi)
+        max_texture_size_1_ = 256; // TODO: Just a guess, should verify this.
+        max_texture_size_4_ = 256; // TODO: Just a guess, should verify this.
 #else
-        // hardcoded on sgi
-        max_texture_size = 256;
-#endif
-        std::cout << "MAX_TEXTURE_SIZE RGBA = " << max_texture_size << "\n";
+        int i;
 
-        max_texture_size = 64;
-#if !defined(__sgi)
         for (i = 128; i < 130000; i*=2)
         {
           glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_LUMINANCE, i, i, i, 0,
@@ -177,14 +159,25 @@ ShaderProgramARB::init_shaders_supported()
             i /= 2;
             break;
           }
-       }
-        max_texture_size = i;
-#else
-        // hardcoded on sgi
-        max_texture_size = 256;
-#endif
-        std::cout << "MAX_TEXTURE_SIZE LUMINANCE = " << max_texture_size << "\n";
+        }
+        max_texture_size_1_ = i;
 
+        for (i = 128; i < 130000; i*=2)
+        {
+          glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_RGBA, i, i, i, 0,
+                       GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+          GLint width;
+          glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0,
+                                   GL_TEXTURE_WIDTH, &width);
+          if (width == 0)
+          {
+            i /= 2;
+            break;
+          }
+        }
+        max_texture_size_4_ = i;
+#endif
 
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 	mSupported =
@@ -224,6 +217,18 @@ ShaderProgramARB::shaders_supported()
   return mSupported;
 }
 
+
+int
+ShaderProgramARB::max_texture_size_1()
+{
+  return max_texture_size_1_;
+}
+
+int
+ShaderProgramARB::max_texture_size_4()
+{
+  return max_texture_size_4_;
+}
 
 bool
 ShaderProgramARB::create()
