@@ -29,6 +29,8 @@ using namespace std;
 //#undef EOSCM
 #define IDEAL_GAS
 //#undef IDEAL_GAS
+//#define BURN_DEBUG
+#undef BURN_DEBUG
 
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
@@ -419,6 +421,7 @@ void MPMICE::scheduleComputeMassBurnRate(SchedulerP& sched,
  
   t->requires(Task::NewDW, Ilb->press_CCLabel, press_matl, Ghost::None);
   t->requires(Task::OldDW, Ilb->temp_CCLabel,  ice_matls,  Ghost::None);
+  t->requires(Task::OldDW, Ilb->vol_frac_CCLabel, ice_matls, Ghost::None);
 
   t->requires(Task::NewDW, MIlb->temp_CCLabel,mpm_matls, Ghost::None);
   t->requires(Task::NewDW, MIlb->cMassLabel,  mpm_matls, Ghost::None);
@@ -1320,6 +1323,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       new_dw->allocate(speedSound_new[m],Ilb->speedSound_CCLabel,dwindex,patch);
     }
 
+
     press_new = press;
 
   //---- P R I N T   D A T A ------
@@ -1362,7 +1366,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         Material* matl = d_sharedState->getMaterial( m );
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         if(ice_matl){                // I C E
-          d_ice->setBC(rho_micro[m],   "Density" ,patch);
+          d_ice->setBC(rho_micro[m], "Density", patch);
         }
       }
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
@@ -1374,6 +1378,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         }
       }
     }
+
 #endif
 
     // Compute rho_micro, speedSound, volfrac, rho_CC
@@ -1385,16 +1390,16 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 
         if(ice_matl){                // I C E
-	   rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
-	   double gamma   = ice_matl->getGamma(); 
-	   ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
-					       cv[m],Temp[m][*iter],
-					       press_eos[m],dp_drho[m],dp_de[m]);
+	  rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
+	  double gamma   = ice_matl->getGamma(); 
+	  ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
+					      cv[m],Temp[m][*iter],
+					      press_eos[m],dp_drho[m],dp_de[m]);
+	  
+	  mat_volume[m] = mass_CC[m][*iter] * sp_vol_CC[m][*iter];
 
-	   mat_volume[m] = mass_CC[m][*iter] * sp_vol_CC[m][*iter];
-
-	   tmp = dp_drho[m] + dp_de[m] * 
-	     (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
+	  tmp = dp_drho[m] + dp_de[m] * 
+	    (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
 
           speedSound_new[m][*iter] = sqrt(tmp);
         } 
@@ -1487,6 +1492,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
             ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
                                              cv[m],Temp[m][*iter],
                                              press_eos[m], dp_drho[m],dp_de[m]);
+
+
+
          }
          if(mpm_matl){
           //__________________________________
@@ -1503,6 +1511,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
               computePressEOS(rho_micro[m][*iter],gamma, cv[m],Temp[m][*iter],
 			      press_eos[m], dp_drho[m], dp_de[m]);
   #endif
+
          }
        }
 
@@ -1730,6 +1739,7 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
     vector<CCVariable<double> > releasedHeat(numALLMatls);
     CCVariable<double> gasTemperature;
     CCVariable<double> gasPressure;
+    CCVariable<double> gasVolumeFraction;
     CCVariable<double> sumBurnedMass;
     CCVariable<double> sumReleasedHeat;
 
@@ -1750,6 +1760,9 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
     // Pull out ICE data
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(0);
     int dwindex = ice_matl->getDWIndex();
+
+    old_dw->get(gasVolumeFraction, Ilb->vol_frac_CCLabel, 
+		dwindex,patch,Ghost::None,0);
     old_dw->get(gasTemperature, Ilb->temp_CCLabel, dwindex,patch,Ghost::None,0);
     new_dw->get(gasPressure,    Ilb->press_CCLabel,0,patch,Ghost::None,0);
 
@@ -1790,7 +1803,6 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
         for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
 	  
 	  // Find if the cell contains surface:
-	  bool containsSurf = 0;
 	  
 	  double gradRhoX, gradRhoY, gradRhoZ;
 	  double normalX,  normalY,  normalZ;
@@ -1827,8 +1839,16 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
 				   gradRhoY*gradRhoY +
 				   gradRhoZ*gradRhoZ );
 
-	  if (absGradRho > 0.01)
+	  bool doTheBurn = 1;
+	  
+	    
+	  if (gasVolumeFraction[*iter] < 1.e-10 ||
+	      absGradRho < 1.e-10) doTheBurn = 0;
+	  
+
+	  if (doTheBurn)
 	    {
+
 	      normalX = gradRhoX/absGradRho;
 	      normalY = gradRhoY/absGradRho;
 	      normalZ = gradRhoZ/absGradRho;
@@ -1847,12 +1867,12 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
 	      
 	      sumBurnedMass[*iter]    += burnedMass[m][*iter];
 	      sumReleasedHeat[*iter]  += releasedHeat[m][*iter];
+
 	    }
-	  else
-	    {
-	      burnedMass[m][*iter]=0;
-	      releasedHeat[m][*iter]=0;
-	    }
+	  else {
+	    burnedMass[m][*iter]=0;
+	    releasedHeat[m][*iter]=0;
+	  }
 	}
       }
     }  
@@ -1938,3 +1958,27 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
     }  //ALLmatls  
   }  //patches
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
