@@ -2412,15 +2412,15 @@ if test "$pkg_rtrt" = "yes"; then
     dirs="$dirs $i/OOGL/lib"
   done
 
-  if test "$with_oogl"; then
+  # Only check for OOGL if the user did not say without-oogl.
+  if test "$with_oogl" != "no"; then
     dirs="$with_oogl/lib $dirs"
-  fi
+    SCI_CHECK_LIB($dirs,oogl,main,,,optional)
+    SCI_CHECK_HEADERS($LIB_DIR_OOGL/../include,oogl/basicTexture.h oogl/shadedPrim.h,$INC_GL_GLUT_H $INC_GL_GLUI_H,,optional)
 
-  SCI_CHECK_LIB($dirs,oogl,main,,,optional)
-  SCI_CHECK_HEADERS($LIB_DIR_OOGL/../include,oogl/basicTexture.h oogl/shadedPrim.h,$INC_GL_GLUT_H $INC_GL_GLUI_H,,optional)
-
-  if test "$HAVE_OOGL_BASICTEXTURE_H"; then
-    INC_OOGL_H="$INC_OOGL_BASICTEXTURE_H"
+    if test "$HAVE_OOGL_BASICTEXTURE_H"; then
+      INC_OOGL_H="$INC_OOGL_BASICTEXTURE_H"
+    fi
   fi
 
   dirs="$with_audio"
