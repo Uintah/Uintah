@@ -8601,7 +8601,7 @@ for i in $with_vdt $thirdparty $SCI_LAB_TP_DEFAULT; do
   # Testing the link also need by vdt to link is:
   VDT_LIB_PATH="-L$i/src/vdt/G3D/lib/$ad -L$i/src/vdt/Ckit/lib/$ad -L$i/src/vdt/LOBS/lib/$ad -L$i/src/vdt/PiRaT/lib/$ad -L$i/src/vdt/Meschach/$ad -L$i/src/vdt/lp_solve_2.2/$ad -L$i/src/vdt/Elixir/lib/$ad -L$i/src/vdt/VDT/lib/$ad $X_LIBRARY"
 
-  VDT_NEEDED_LIBRARIES='-lesi -lelixir -llpk -lpirat -llobs3d -llobs2d -llobs1d -lg3d -lckit -lmeschach -lX11 -lXext -lXaw -lXt -lXmu -lm $LEXLIB'
+  VDT_NEEDED_LIBRARIES='-lesi -lelixir -llpk -lpirat -llobs3d -llobs2d -llobs1d -lg3d -lckit -lmeschach -lX11 -lXext -lXaw -lXt -lXmu -lm'
 
   
     ##  SCI_CHECK_LIB
@@ -8653,7 +8653,7 @@ echo "configure:8642: checking for VDT_triangulate in -lvdt" >&5
 EOF
 
     rm -f conftest.out a.out
-    ac_try="$ac_link $LIBRARY -lvdt $VDT_LIB_PATH $VDT_NEEDED_LIBRARIES >/dev/null 2>conftest.out"
+    ac_try="$ac_link $LIBRARY -lvdt $VDT_LIB_PATH $VDT_NEEDED_LIBRARIES $LEXLIB >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
 #   part of this is a hack to prevent the bizarre libg2c "errors"
     ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$" | grep -v "libg2c\.a(open\.o" | grep -v "open\.o(\.text+"`
@@ -8697,7 +8697,7 @@ EOF
     LOBS_LIB="$i/src/vdt/LOBS/lib/$ad"
     CKIT_LIB="$i/src/vdt/Ckit/lib/$ad"
     G3D_LIB="$i/src/vdt/G3D/lib/$ad"
-    VDT_LINK="-lvdt $VDT_NEEDED_LIBRARIES"
+    VDT_LINK="-lvdt $VDT_NEEDED_LIBRARIES $LEXLIB"
     break
   fi
 done
