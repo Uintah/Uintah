@@ -136,27 +136,19 @@ void ApplyFEMCurrentSource::execute()
   }
 
   TetVolMeshHandle hMesh;
-  LockingHandle<TetVolField<int> > hCondField;
   HexVolMeshHandle hHexMesh;
-  LockingHandle<HexVolField<int> > hHexCondField;
 
-  if (hField->get_type_name(0) == "TetVolField" && hField->get_type_name(1) == "int"){
-    remark("Input is a 'TetVolField<int>'");
-	hCondField = dynamic_cast<TetVolField<int>*> (hField.get_rep());
-    hMesh = hCondField->get_typed_mesh();
-	tet = true;
-  }
-  else {
-	if((hField->get_type_name(0) == "HexVolField") && (hField->get_type_name(1) == "int")) {
-	  remark("Input is a 'HexVolField<int>'");
-	  hHexCondField = dynamic_cast<HexVolField<int>*>(hField.get_rep());
-	  hHexMesh = hHexCondField->get_typed_mesh();
-	  tet = false;
-	}
-	else {
-	  error("Supplied field is not 'TetVolField<int>' nor 'HexVolField<int>'");
-	  return;
-	}
+  if (hField->get_type_name(0) == "TetVolField") {
+    remark("Input is a 'TetVolField'");
+    tet = true;
+    hMesh = dynamic_cast<TetVolMesh*>(hField->mesh().get_rep());
+  } else if (hField->get_type_name(0) == "HexVolField") {
+    remark("Input is a 'HexVolField'");
+    tet = false;
+    hHexMesh = dynamic_cast<HexVolMesh*>(hField->mesh().get_rep());
+  } else {
+    error("Supplied field is not 'TetVolField' or 'HexVolField'");
+    return;
   }
   
   MatrixHandle  hRhsIn;

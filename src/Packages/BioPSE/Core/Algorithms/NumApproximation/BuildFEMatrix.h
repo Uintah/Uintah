@@ -44,12 +44,15 @@ using namespace SCIRun;
 
 class BuildFEMatrix;
 typedef LockingHandle<TetVolField<int> >   TetVolFieldIntHandle;
+typedef LockingHandle<TetVolField<Tensor> >   TetVolFieldTensorHandle;
 typedef LockingHandle<BuildFEMatrix>   BuildFEMatrixHandle;
 
 class BuildFEMatrix: public Datatype {
   
   //! Private data members
-  TetVolFieldIntHandle                 hField_;
+  TetVolFieldIntHandle            hFieldInt_;
+  TetVolFieldTensorHandle         hFieldTensor_;
+  bool                            index_based_;
   TetVolMeshHandle                hMesh_;
   MatrixHandle&                   hA_;
   SparseRowMatrix*                pA_;
@@ -72,10 +75,14 @@ class BuildFEMatrix: public Datatype {
 public:
    //! Constructor
   BuildFEMatrix(TetVolFieldIntHandle,
+		TetVolFieldTensorHandle,
+		bool,
 		vector<pair<string, Tensor> >&,
 		MatrixHandle&, 
 		int, double);
   static bool build_FEMatrix(TetVolFieldIntHandle,
+			     TetVolFieldTensorHandle,
+			     bool,
 			     vector<pair<string, Tensor> > &,
 			     MatrixHandle&, double,
 			     int num_procs = -1);
