@@ -2138,7 +2138,9 @@ OpenGL::AddMpegFrame()
 
   if( !MPEGe_image(image, &mpeg_options_) )
   {
-    cerr << "MPEGe_image failure:" << mpeg_options_.error << "\n";
+    ostringstream str;
+    str << "ERROR creating MPEG frame: " << mpeg_options_.error;
+    view_window_->setMessage( str.str() );
   }
 #endif // HAVE_MPEG
 }
@@ -2151,10 +2153,15 @@ OpenGL::EndMpeg()
 #ifdef HAVE_MPEG
   if( !MPEGe_close(&mpeg_options_) )
   {
-    cerr << "Had a bit of difficulty closing the file:" << mpeg_options_.error;
+    ostringstream str;
+    str << "ERROR closing MPEG file: " << mpeg_options_.error;
+    view_window_->setMessage( str.str() );
+  } else {
+    string message = "Ending Mpeg.";
+    view_window_->setMessage( message );
   }
 
-  cerr << "Ending Mpeg\n";
+  view_window_->setMovie( 0 );
 #endif // HAVE_MPEG
 }
 
