@@ -16,6 +16,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/FieldSet.h>
 #include <Dataflow/Ports/FieldSetPort.h>
+#include <Dataflow/Ports/FieldPort.h>
 
 #include <iostream>
 using std::cerr;
@@ -43,7 +44,7 @@ extern "C" Module* make_ManageFieldSet(const clString& id)
 
 
 ManageFieldSet::ManageFieldSet(const clString& id)
-  : Module("ManageFieldSet", id, Filter),
+  : Module("ManageFieldSet", id, Filter, "Field", "SCIRun"),
     op_gui_("op_gui", id, this)
 {
 }
@@ -61,9 +62,32 @@ ManageFieldSet::execute()
 
   clString op_gui = op_gui_.get();
 
-  // FIXME: based on the op_gui variable, do something to a FieldSet
+  dynamic_port_range range = get_iport("Input FieldSets");
+  port_iter pi = range.first;
+  while (pi != range.second)
+  {
+    FieldSetIPort *port = (FieldSetIPort *)get_iport((*pi).second);
 
-  // ...
+    // Do something with port.
+    FieldSetHandle h;
+    port->get(h);
+
+    ++pi;
+  }
+
+  range = get_iport("Input Fields");
+  pi = range.first;
+  while (pi != range.second)
+  {
+    FieldIPort *port = (FieldIPort *)get_iport((*pi).second);
+
+    // Do something with port.
+    FieldHandle h;
+    port->get(h);
+
+    ++pi;
+  }
+
 
 }
 
