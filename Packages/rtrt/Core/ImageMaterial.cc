@@ -14,6 +14,15 @@
 
 using namespace rtrt;
 using namespace std;
+using namespace SCIRun;
+
+Persistent* imageMaterial_maker() {
+  return new ImageMaterial();
+}
+
+// initialize the static member type_id
+PersistentTypeID ImageMaterial::type_id("ImageMaterial", "Material", 
+					imageMaterial_maker);
 
 ImageMaterial::ImageMaterial(int, const string &texfile, 
 			     ImageMaterial::Mode umode,
@@ -183,3 +192,36 @@ ImageMaterial::read_hdr_image(const string &filename)
    }
   valid_ = true;
 }
+
+const int IMAGEMATERIAL_VERSION = 1;
+
+void 
+ImageMaterial::io(SCIRun::Piostream &str)
+{
+  str.begin_class("ImageMaterial", IMAGEMATERIAL_VERSION);
+  Material::io(str);
+  Pio(str, (unsigned int)umode);
+  Pio(str, (unsigned int)vmode);
+  Pio(str, Kd);
+  Pio(str, specular);
+  Pio(str, specpow);
+  Pio(str, refl);
+  Pio(str, transp);
+  Pio(str, image);
+  Pio(str, outcolor);
+  Pio(str, valid_);
+  Pio(str, filename_);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::ImageMaterial*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::ImageMaterial::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::ImageMaterial*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

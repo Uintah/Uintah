@@ -10,6 +10,14 @@
 
 using namespace rtrt;
 
+SCIRun::Persistent* cylinder_maker() {
+  return new Cylinder();
+}
+
+// initialize the static member type_id
+SCIRun::PersistentTypeID Cylinder::type_id("Cylinder", "Object", 
+					   cylinder_maker);
+
 Cylinder::Cylinder(Material* matl, const Point& bottom, const Point& top,
 		   double radius)
     : Object(matl), bottom(bottom), top(top), radius(radius)
@@ -105,5 +113,34 @@ void Cylinder::compute_bounds(BBox& bbox, double offset)
 
 void Cylinder::print(ostream& out)
 {
-    out << "Cylinder: top=" << top << ", bottom=" << bottom << ", radius=" << radius << '\n';
+  out << "Cylinder: top=" << top << ", bottom=" << bottom 
+      << ", radius=" << radius << '\n';
 }
+
+
+const int CYLINDER_VERSION = 1;
+
+void 
+Cylinder::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Cylinder", CYLINDER_VERSION);
+  Object::io(str);
+  Pio(str, top);
+  Pio(str, bottom);
+  Pio(str, radius);
+  Pio(str, xform);
+  Pio(str, ixform);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Cylinder*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Cylinder::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Cylinder*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

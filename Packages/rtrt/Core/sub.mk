@@ -13,6 +13,8 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Dpy.cc \
 	$(SRCDIR)/Scene.cc \
 	$(SRCDIR)/Image.cc \
+	$(SRCDIR)/Instance.cc \
+	$(SRCDIR)/InstanceWrapperObject.cc \
 	$(SRCDIR)/Camera.cc \
 	$(SRCDIR)/Stealth.cc \
 	$(SRCDIR)/Sphere.cc \

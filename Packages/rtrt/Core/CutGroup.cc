@@ -35,6 +35,12 @@ CutGroup::~CutGroup()
 {
 }
 
+void 
+CutGroup::io(SCIRun::Piostream &str)
+{
+  ASSERTFAIL("Pio for CutGroup not implemented");
+}
+
 void CutGroup::softshadow_intersect(Light* light, const Ray& ray, HitInfo& hit,
 				 double dist, Color& atten, DepthStats* st,
 				 PerProcessorContext* ppc)

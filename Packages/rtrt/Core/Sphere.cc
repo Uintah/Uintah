@@ -11,6 +11,14 @@
 using namespace rtrt;
 using namespace SCIRun;
 
+Persistent* sphere_maker() {
+  return new Sphere();
+}
+
+// initialize the static member type_id
+PersistentTypeID Sphere::type_id("Sphere", "Object", sphere_maker);
+
+
 #if 0
 static TrivialAllocator Sphere_alloc(sizeof(Sphere));
 
@@ -191,3 +199,26 @@ Sphere::updatePosition( const Point & pos )
   cen = pos;
 }
 
+const int SPHERE_VERSION = 1;
+
+void 
+Sphere::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Sphere", SPHERE_VERSION);
+  Object::io(str);
+  Pio(str, cen);
+  Pio(str, radius);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Sphere*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Sphere::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Sphere*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

@@ -13,6 +13,14 @@
 #include <Packages/rtrt/Core/InstanceWrapperObject.h>
 
 namespace rtrt {
+class DynamicInstance;
+}
+
+namespace SCIRun {
+void Pio(Piostream&, rtrt::DynamicInstance*&);
+}
+
+namespace rtrt {
 
 class Camera;
 class Stealth;
@@ -20,11 +28,18 @@ class Stealth;
 class DynamicInstance : public Instance
 {
 public:
-
+  
   DynamicInstance( InstanceWrapperObject * obj,
 		   Transform             * trans, 
 		   const Vector          & location );
   ~DynamicInstance();
+  
+  DynamicInstance() : Instance() {} // for Pio.
+  
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, DynamicInstance*&);
 
   // Places the newTransform into the currentTransform.
   // ** should we update the bounding box / verify the transform is good? **

@@ -13,10 +13,20 @@
 #include <math.h>
 
 using namespace rtrt;
+using namespace SCIRun;
 
+Persistent* bumpMaterial_maker() {
+  return new BumpMaterial();
+}
 
+// initialize the static member type_id
+PersistentTypeID BumpMaterial::type_id("BumpMaterial", "Material", 
+				       bumpMaterial_maker);
 
-BumpMaterial::BumpMaterial(Material *m, char *filename, double ntiles, double bump_scale) : ntiles(ntiles), bump_scale(bump_scale)
+BumpMaterial::BumpMaterial(Material *m, char *filename, double ntiles, 
+			   double bump_scale) : 
+  ntiles(ntiles), 
+  bump_scale(bump_scale)
 {
   material = m;
   if(m == NULL)
@@ -250,4 +260,40 @@ double BumpMaterial::fval(double u, double v)
   return fu0 + dv * (fu1-fu0);
 }
 
+const int BUMPMATERIAL_VERSION = 1;
 
+void 
+BumpMaterial::io(SCIRun::Piostream &str)
+{
+  str.begin_class("BumpMaterial", BUMPMATERIAL_VERSION);
+  Material::io(str);
+  Pio(str, material);
+  Pio(str, dimension_x);
+  Pio(str, dimension_y);
+  Pio(str, evaru);
+  Pio(str, evarv);
+  Pio(str, ntiles);
+  Pio(str, bump_scale);
+
+  int size = dimension_x*dimension_y*sizeof(int);
+  if (str.reading()) {
+    // why malloc?
+    bumpimage = (int *)malloc(size);
+  }
+  for (int i = 0; i < size; i++) {
+    Pio(str, bumpimage[i]);    
+  }
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::BumpMaterial*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::BumpMaterial::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::BumpMaterial*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

@@ -11,9 +11,20 @@
 using namespace rtrt;
 using namespace SCIRun;
 
-Parallelogram::Parallelogram(Material* matl, const Point& anchor, const Vector& u,
-	   const Vector& v)
-    : Object(matl, this), anchor(anchor), u(u), v(v)
+SCIRun::Persistent* Parallelogram_maker() {
+  return new Parallelogram;
+}
+
+// initialize the static member type_id
+SCIRun::PersistentTypeID Parallelogram::type_id("Parallelogram", "Object", 
+						Parallelogram_maker);
+
+Parallelogram::Parallelogram(Material* matl, const Point& anchor, 
+			     const Vector& u, const Vector& v) : 
+  Object(matl, this), 
+  anchor(anchor), 
+  u(u), 
+  v(v)
 {
     n=Cross(u, v);
     n.normalize();
@@ -121,3 +132,37 @@ void Parallelogram::uv(UV& uv, const Point& hitpos, const HitInfo&)
 #endif
     uv.set(uu,vv);
 }
+
+const int PARALLELOGRAM_VERSION = 1;
+
+void 
+Parallelogram::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Parallelogram", PARALLELOGRAM_VERSION);
+  Object::io(str);
+  UVMapping::io(str);
+  Pio(str, anchor);
+  Pio(str, u);
+  Pio(str, v);
+  Pio(str, n);
+  Pio(str, d);
+  Pio(str, d1);
+  Pio(str, d2);
+  Pio(str, un);
+  Pio(str, vn);
+  Pio(str, du);
+  Pio(str, dv);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Parallelogram*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Parallelogram::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Parallelogram*>(pobj);
+    ASSERT(obj != 0);
+  }
+}
+} // end namespace SCIRun

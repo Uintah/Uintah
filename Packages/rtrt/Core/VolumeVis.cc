@@ -22,6 +22,13 @@
 using namespace std;
 using namespace rtrt;
 
+// Persistent* vv_maker() {
+//   return new VolumeVis();
+// }
+
+// // initialize the static member type_id
+// PersistentTypeID VolumeVis::type_id("VolumeVis", "Object", vv_maker);
+
 VolumeVis::VolumeVis(BrickArray3<float>& _data, float data_min, float data_max,
 		     int nx, int ny, int nz,
 		     Point min, Point max,
@@ -378,3 +385,22 @@ void VolumeVis::animate(double, bool& changed)
   dpy->animate(changed);
 }
 
+const int VVIS_VERSION = 1;
+
+void 
+VolumeVis::io(SCIRun::Piostream &str)
+{
+  ASSERTFAIL("Pio not implemented for VolumeVis");
+}
+
+// namespace SCIRun {
+// void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::VolumeVis*& obj)
+// {
+//   SCIRun::Persistent* pobj=obj;
+//   stream.io(pobj, rtrt::VolumeVis::type_id);
+//   if(stream.reading()) {
+//     obj=dynamic_cast<rtrt::VolumeVis*>(pobj);
+//     ASSERT(obj != 0)
+//   }
+// }
+// } // end namespace SCIRun

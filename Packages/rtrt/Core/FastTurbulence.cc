@@ -102,3 +102,15 @@ Vector FastTurbulence::dturb(const Point& p, double m, double& n)
     n+=dn*w*scale;
     return dt;
 }
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& str, rtrt::FastTurbulence& obj)
+{
+  str.begin_cheap_delim();
+  Pio(str, obj.noise);
+  Pio(str, obj.noctaves);
+  Pio(str, obj.s);
+  Pio(str, obj.a);
+  str.end_cheap_delim();
+}
+} // end namespace SCIRun

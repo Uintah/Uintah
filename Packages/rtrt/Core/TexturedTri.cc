@@ -19,50 +19,61 @@ using namespace SCIRun;
 using std::cerr;
 using std::vector;
 
+SCIRun::Persistent* maker() {
+  return new TexturedTri();
+}
+
+// initialize the static member type_id
+SCIRun::PersistentTypeID TexturedTri::type_id("TexturedTri", "UVMapping", 
+					      maker);
+namespace rtrt {
 TexturedTri::TexturedTri(Material* matl, const Point& p1, const Point& p2,
-	 const Point& p3)
-    : Object(matl, this), p1(p1), p2(p2), p3(p3)
+			 const Point& p3) : 
+  Object(matl, this), 
+  p1(p1), 
+  p2(p2), 
+  p3(p3)
 {
-    ngu = p2-p1;
-    ngv = p3-p1;
-    ngungv = Cross(ngu,ngv);
-    lngu = ngu.length();
-    lngv = ngv.length();
-    n=ngungv;
+  ngu = p2-p1;
+  ngv = p3-p1;
+  ngungv = Cross(ngu,ngv);
+  lngu = ngu.length();
+  lngv = ngv.length();
+  n=ngungv;
 #if 1
-    double l = n.length2();
-    if (l > 1.e-16) {
-      bad = false;
-      n *= 1/sqrt(l);
-    } else {
-      bad = true;
-      return;
-    }
+  double l = n.length2();
+  if (l > 1.e-16) {
+    bad = false;
+    n *= 1/sqrt(l);
+  } else {
+    bad = true;
+    return;
+  }
 #else
-    double l=n.normalize();
-    if(l<1.e-8){
-	cerr << "Bad normal? " << n << '\n';
-	cerr << "l=" << l << '\n';
-	cerr << "before: " << Cross(v1, v2) << ", after: " << n << '\n';
-	cerr << "p1=" << p1 << ", p2=" << p2 << ", p3=" << p3 << '\n';
-	bad=true;
-    } else {
-	bad=false;
-    }
+  double l=n.normalize();
+  if(l<1.e-8){
+    cerr << "Bad normal? " << n << '\n';
+    cerr << "l=" << l << '\n';
+    cerr << "before: " << Cross(v1, v2) << ", after: " << n << '\n';
+    cerr << "p1=" << p1 << ", p2=" << p2 << ", p3=" << p3 << '\n';
+    bad=true;
+  } else {
+    bad=false;
+  }
 #endif
-    vn1 = n;
-    vn2 = n;
-    vn3 = n;
-    d=Dot(n, p1);
-    e1=p3-p2;
-    e2=p1-p3;
-    e3=p2-p1;
-    e1l=e1.normalize();
-    e2l=e2.normalize();
-    e3l=e3.normalize();
-    e1p=Cross(e1, n);
-    e2p=Cross(e2, n);
-    e3p=Cross(e3, n);
+  vn1 = n;
+  vn2 = n;
+  vn3 = n;
+  d=Dot(n, p1);
+  e1=p3-p2;
+  e2=p1-p3;
+  e3=p2-p1;
+  e1l=e1.normalize();
+  e2l=e2.normalize();
+  e3l=e3.normalize();
+  e1p=Cross(e1, n);
+  e2p=Cross(e2, n);
+  e3p=Cross(e3, n);
 }
 
 TexturedTri::TexturedTri(Material* matl, const Point& p1, const Point& p2,
@@ -491,3 +502,58 @@ void TexturedTri::compute_bounds(BBox& bbox, double /*offset*/)
     bbox.extend(p3);
 #endif
 }
+
+const int TEXTUREDTRI_VERSION = 1;
+
+void 
+TexturedTri::io(SCIRun::Piostream &str)
+{
+  str.begin_class("TexturedTri", TEXTUREDTRI_VERSION);
+  Object::io(str);
+  UVMapping::io(str);
+  Pio(str, ngu);
+  Pio(str, ngv);
+  Pio(str, ngungv);
+  Pio(str, lngu);
+  Pio(str, lngv);
+  Pio(str, ntu);
+  Pio(str, ntu);
+  Pio(str, ntv);
+  Pio(str, lntu);
+  Pio(str, lntv);
+  Pio(str, p1);
+  Pio(str, p2);
+  Pio(str, p3);
+  Pio(str, vn1);
+  Pio(str, vn2);
+  Pio(str, vn3);
+  Pio(str, t1);
+  Pio(str, t2);
+  Pio(str, t3);
+  Pio(str, n);
+  Pio(str, d);
+  Pio(str, e1p);
+  Pio(str, e2p);
+  Pio(str, e3p);
+  Pio(str, e1);
+  Pio(str, e2);
+  Pio(str, e3);
+  Pio(str, e1l);
+  Pio(str, e2l);
+  Pio(str, e3l);
+  Pio(str, bad);
+  str.end_class();
+}
+} // end namespace rtrt
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::TexturedTri*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::TexturedTri::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::TexturedTri*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

@@ -7,19 +7,34 @@
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Sphere.h>
+#include <Core/Persistent/Persistent.h>
+
+namespace rtrt {
+class Light;
+}
+
+namespace SCIRun {
+using SCIRun::Vector;
+using SCIRun::Point;
+void Pio(Piostream&, rtrt::Light*&);
+}
 
 namespace rtrt {
 
-using SCIRun::Vector;
-using SCIRun::Point;
-
-class Light {
+class Light : public SCIRun::Persistent {
 public:
 
   std::string name_;
   double      radius;
 
+  // default constructor for Pio only.
+  Light() {}
   Light(const Point&, const Color&, double radius, double intensity = 1.0 );
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, Light*&);
 
   inline const Point& get_pos() const { return pos; }
   inline const Color& get_color() const { return currentColor_; }
@@ -41,6 +56,8 @@ public:
   Sphere * getSphere() const { return sphere_; }
 
 protected:
+  //! finish construction.
+  void init();
 
   // Parameters for changing light value:
   float intensity_;

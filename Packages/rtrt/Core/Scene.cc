@@ -27,18 +27,32 @@ using namespace rtrt;
 using namespace SCIRun;
 using std::cerr;
 
+// initialize the static member type_id
+PersistentTypeID Scene::type_id("Scene", "Persistent", 0);
+
 Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
 	     const Color& bgcolor,
              const Color& cdown,
              const Color& cup,
 	     const Plane& groundplane, 
 	     double ambientscale,
-	     AmbientType ambient_mode)
-  : obj(ob), mainGroup_(ob),
-    camera0(camera0), image0(image0), image1(image1),
-    groundplane(groundplane), ambient_mode(ambient_mode),
-    cup(cup), cdown(cdown), origCup_(cup), origCDown_(cdown),
-    work("frame tiles"), transmissionMode_(false), soundVolume_(100)
+	     AmbientType ambient_mode) : 
+  work("frame tiles"),
+  ambient_mode(ambient_mode),
+  soundVolume_(100),
+  obj(ob), 
+  mainGroup_(ob), 
+  camera0(camera0), 
+  image0(image0), 
+  image1(image1),
+  origCup_(cup), 
+  origCDown_(cdown),
+  cup(cup), 
+  cdown(cdown), 
+  groundplane(groundplane),
+  transmissionMode_(false),
+  ref_cnt(0),
+  lock("rtrt::Scene lock")
 {
   lightsGroup_ = new Group;
   mainGroupWithLights_ = lightsGroup_;
@@ -106,12 +120,23 @@ Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
              const Color& cup,
 	     const Plane& groundplane,
 	     double ambientscale,
-	     AmbientType ambient_mode)
-  : obj(ob), mainGroup_(ob),
-    camera0(camera0), image0(0), image1(0),
-    groundplane(groundplane), ambient_mode(ambient_mode),
-    cdown(cdown), cup(cup), origCup_(cup), origCDown_(cdown),
-    work("frame tiles"), transmissionMode_(false), soundVolume_(100)
+	     AmbientType ambient_mode) :     
+  work("frame tiles"),
+  ambient_mode(ambient_mode),
+  soundVolume_(100),
+  obj(ob), 
+  mainGroup_(ob ),
+  camera0(camera0), 
+  image0(0), 
+  image1(0),
+  origCup_(cup), 
+  origCDown_(cdown),
+  cup(cup), 
+  cdown(cdown), 
+  groundplane(groundplane), 
+  transmissionMode_(false),
+  ref_cnt(0),
+  lock("rtrt::Scene lock")
 {
   lightsGroup_ = new Group;
   mainGroupWithLights_ = lightsGroup_;
@@ -349,6 +374,62 @@ Scene::renderLights( bool on )
   }
 }
 
+
+const int SCENE_VERSION = 1;
+
+void 
+Scene::io(SCIRun::Piostream &stream) {
+  cerr << "in Scene Pio" << endl;
+  stream.begin_class("Scene", SCENE_VERSION);
+  //Pio(stream, s.work);
+
+  SCIRun::Pio(stream, shadows);
+  SCIRun::Pio(stream, maxdepth);
+  SCIRun::Pio(stream, base_threshold);
+  SCIRun::Pio(stream, full_threshold);
+  SCIRun::Pio(stream, xoffset);
+  SCIRun::Pio(stream, yoffset);
+  SCIRun::Pio(stream, xtilesize);
+  SCIRun::Pio(stream, ytilesize);
+  SCIRun::Pio(stream, no_aa);
+  SCIRun::Pio(stream, shadowobj);
+  SCIRun::Pio(stream, stereo);
+  SCIRun::Pio(stream, animate);
+  SCIRun::Pio(stream, ambient_mode);
+#if 0
+  SCIRun::Pio(stream, frameno);
+  SCIRun::Pio(stream, frametime_fp);
+  SCIRun::Pio(stream, lasttime);
+  SCIRun::Pio(stream, obj);
+  SCIRun::Pio(stream, mainGroup_);
+  SCIRun::Pio(stream, mainGroupWithLights_);
+  SCIRun::Pio(stream, camera0);
+  SCIRun::Pio(stream, camera1);
+  SCIRun::Pio(stream, image0);
+  SCIRun::Pio(stream, image1);
+  SCIRun::Pio(stream, background);
+  SCIRun::Pio(stream, ambient_environment_map);
+  SCIRun::Pio(stream, origCup_);
+  SCIRun::Pio(stream, origCDown_);
+  SCIRun::Pio(stream, cup);
+  SCIRun::Pio(stream, cdown);
+  SCIRun::Pio(stream, groundplane);
+  SCIRun::Pio(stream, shadow_mode);
+  SCIRun::Pio(stream, lightbits);
+  SCIRun::Pio(stream, lights);
+  SCIRun::Pio(stream, per_matl_lights);
+  SCIRun::Pio(stream, nonActiveLights_);
+  SCIRun::Pio(stream, nonActivePerMatlLights_);
+  SCIRun::Pio(stream, rtrt_engine);
+  SCIRun::Pio(stream, displays);
+  SCIRun::Pio(stream, ambientColor_);
+  SCIRun::Pio(stream, origAmbientColor_);
+  SCIRun::Pio(stream, hotspots);
+  SCIRun::Pio(stream, materials);
+#endif
+  stream.end_class();
+}
+
 // Animate will only be called on objects added through this function.
 void
 Scene::addObjectOfInterest( Object * obj, bool animate /* = false */ )
@@ -358,3 +439,4 @@ Scene::addObjectOfInterest( Object * obj, bool animate /* = false */ )
   if( obj->name_ != "" )
     objectsOfInterest_.add( obj );
 }
+

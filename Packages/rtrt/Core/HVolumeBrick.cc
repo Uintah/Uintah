@@ -22,7 +22,7 @@ using namespace std;
 using namespace SCIRun;
 
 namespace rtrt {
-  Mutex io("io lock");
+  Mutex io_lock_("io lock");
   extern Mutex xlock;
 } // end namespace rtrt
 
@@ -1103,9 +1103,9 @@ void HVolumeBrick::brickit(int /*proc*/)
     int sx, ex;
     while(work.nextAssignment(sx, ex)){
 	for(int x=sx;x<ex;x++){
-	    io.lock();
+	    io_lock_.lock();
 	    //cerr << "processor " << proc << ": " << x << " of " << nx-1 << "\n";
-	    io.unlock();
+	    io_lock_.unlock();
 	    for(int y=0;y<ny;y++){
 		int idx=x*nynz+y*nz;
 		for(int z=0;z<nz;z++){

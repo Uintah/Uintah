@@ -5,6 +5,7 @@
 
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/ThreadGroup.h>
+#include <Core/Persistent/Pstreams.h>
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/BV1.h>
 #include <Packages/rtrt/Core/BV2.h>
@@ -40,53 +41,55 @@ using SCIRun::ThreadGroup;
 
 static void usage(char* progname)
 {
-    cerr << "usage: " << progname << " [options] -scene name [scene options]\n";
-    cerr << "Options:\n";
-    cerr << " -np n            - Set the number of worker processes to use.\n";
-    cerr << "                    The actual number of processors used will be\n";
-    cerr << "                    one more than n.\n";
-    cerr << " -nobv            - use no bounding volume acceleration hierarchy\n";
-    cerr << " -bv n            - Use a specific bounding volume hierarchy\n";
-    cerr << "     n=0: None - same as -nobv\n";
-    cerr << "     n=1: Use bounding volume tree, implementation #1. (the\n";
-    cerr << "          default)\n";
-    cerr << "     n=2: Use bounding volume tree, implementation #2.\n";
-    cerr << "          (doesn't work yet)\n";
-    cerr << "     n=3: Use Grid traversal\n";
-    cerr << "     n=4: Use Hierarchical Grid traversal\n";
-    cerr << " -gridcellsize n  - Set the number of gridcells for -bv 3\n";
-    cerr << " -hgridcellsize n n n - Set the number of gridcells at level 1, 2 and 3 -bv 4\n";
-    cerr << " -minobjs n n - Set the number of objects in each grid cell for -bv 4\n";
-    cerr << " -perfex n1 n2    - Collect performance counters n1 and n2 for\n";
-    cerr << "                   each frame.\n";
-    cerr << " -visual criteria - Uses criteria for selecting the OpenGL\n";
-    cerr << "                    visual for the image display.  See\n";
-    cerr << "                    visinfo/findvis.1 for more info.\n";
-    cerr << " -bench           - Disable frame display, and just render the\n";
-    cerr << "                    image 100 times for timing purposes.\n";
-    cerr << " -no_shadows      - Turn off shadows\n";
-    cerr << " -shadows mode    - Select mode for shadows\n";
-    cerr << " -no_aa           - Turn off accumulation buffer anti-aliasing\n";
-    cerr << " -bvscale         - Controls bounding volume scale factor for\n";
-    cerr << "                    the soft shadow method.\n";
-    cerr << " -light           - Specifies the radius of the light source for\n";
-    cerr << "                    soft shadows.\n";
-    cerr << " -res             - Sets the initial resolution of the image, in\n";
-    cerr << "                    the form mxn (i.e. 100x100)\n";
-    cerr << " -frameless       - Hilbert or Scan, hilbert has to be pwr2xpwr2\n";
-    cerr << " -nchnk           - 1<<val is the number of chunks \n";
-    cerr << "                    (for hilbert log2(xres*yres) for 1 pixel bins\n";
-    cerr << " -clstr           - cluster size - what a pixel is for frameless\n";
-    cerr << " -noshuffle       - don't randomize chunks - much uglier\n";
-    cerr << " -udp             - update rate - how often to synchronuze cameras\n";
-    cerr << "                    as a fraction of pixels per/proc\n";
-    cerr << " -sound           - start sound thread\n";
-    cerr << " -jitter          - jittered masks - fixed table for now\n";
-    cerr << " -worker_gltest   - calls run_gl_test from worker threads\n";
-    cerr << " -display_gltest  - calls run_gl_test from display thread\n";
-    cerr << " -displayless     - do not display and write a frame to displayless\n";
+  cerr << "usage: " << progname << " [options] -scene name [scene options]\n";
+  cerr << "Options:\n";
+  cerr << " -serialize       - Write the generated scene to disk using" << endl
+       << "                    object serialization (Pio)" << endl;
+  cerr << " -np n            - Set the number of worker processes to use.\n";
+  cerr << "                    The actual number of processors used will be\n";
+  cerr << "                    one more than n.\n";
+  cerr << " -nobv            - use no bounding volume acceleration hierarchy\n";
+  cerr << " -bv n            - Use a specific bounding volume hierarchy\n";
+  cerr << "     n=0: None - same as -nobv\n";
+  cerr << "     n=1: Use bounding volume tree, implementation #1. (the\n";
+  cerr << "          default)\n";
+  cerr << "     n=2: Use bounding volume tree, implementation #2.\n";
+  cerr << "          (doesn't work yet)\n";
+  cerr << "     n=3: Use Grid traversal\n";
+  cerr << "     n=4: Use Hierarchical Grid traversal\n";
+  cerr << " -gridcellsize n  - Set the number of gridcells for -bv 3\n";
+  cerr << " -hgridcellsize n n n - Set the number of gridcells at level 1, 2 and 3 -bv 4\n";
+  cerr << " -minobjs n n - Set the number of objects in each grid cell for -bv 4\n";
+  cerr << " -perfex n1 n2    - Collect performance counters n1 and n2 for\n";
+  cerr << "                   each frame.\n";
+  cerr << " -visual criteria - Uses criteria for selecting the OpenGL\n";
+  cerr << "                    visual for the image display.  See\n";
+  cerr << "                    visinfo/findvis.1 for more info.\n";
+  cerr << " -bench           - Disable frame display, and just render the\n";
+  cerr << "                    image 100 times for timing purposes.\n";
+  cerr << " -no_shadows      - Turn off shadows\n";
+  cerr << " -shadows mode    - Select mode for shadows\n";
+  cerr << " -no_aa           - Turn off accumulation buffer anti-aliasing\n";
+  cerr << " -bvscale         - Controls bounding volume scale factor for\n";
+  cerr << "                    the soft shadow method.\n";
+  cerr << " -light           - Specifies the radius of the light source for\n";
+  cerr << "                    soft shadows.\n";
+  cerr << " -res             - Sets the initial resolution of the image, in\n";
+  cerr << "                    the form mxn (i.e. 100x100)\n";
+  cerr << " -frameless       - Hilbert or Scan, hilbert has to be pwr2xpwr2\n";
+  cerr << " -nchnk           - 1<<val is the number of chunks \n";
+  cerr << "                    (for hilbert log2(xres*yres) for 1 pixel bins\n";
+  cerr << " -clstr           - cluster size - what a pixel is for frameless\n";
+  cerr << " -noshuffle       - don't randomize chunks - much uglier\n";
+  cerr << " -udp             - update rate - how often to synchronuze cameras\n";
+  cerr << "                    as a fraction of pixels per/proc\n";
+  cerr << " -sound           - start sound thread\n";
+  cerr << " -jitter          - jittered masks - fixed table for now\n";
+  cerr << " -worker_gltest   - calls run_gl_test from worker threads\n";
+  cerr << " -display_gltest  - calls run_gl_test from display thread\n";
+  cerr << " -displayless     - do not display and write a frame to displayless\n";
 
-    exit(1);
+  exit(1);
 }
 
 #if 0
@@ -148,7 +151,7 @@ main(int argc, char* argv[])
   
   bool do_frameless=false;
   bool display_frames=true;
-
+  bool serialize_scene = false;
   bool startSoundThread = false;
 
   bool show_gui = true;
@@ -190,6 +193,8 @@ main(int argc, char* argv[])
       scene_argc=argc-i;
       scene_argv=argv+i;
       break;
+    } else if(strcmp(argv[i], "-serialize")==0){
+      serialize_scene = true;
     } else if(strcmp(argv[i], "-perfex")==0){
       i++;
       ncounters=sscanf(argv[i], "%d,%d", &c0, &c1);
@@ -354,6 +359,18 @@ main(int argc, char* argv[])
     exit(1);
   }
   
+  if (serialize_scene) {
+    // Create a stream to save to.
+    SCIRun::Piostream *str;
+    str = new SCIRun::FastPiostream ("/tmp/test.scn", 
+			    SCIRun::Piostream::Write);
+
+    // Write it out.
+    SCIRun::Pio(*str, *scene);
+    cerr << "Saved scene to " << scenename << ".scn" << endl;
+    exit(0);
+  }
+
   // set the scenes rtrt_engine pointer
   scene->set_rtrt_engine(rtrt_engine);
   
@@ -512,7 +529,7 @@ main(int argc, char* argv[])
   /* Register the idle callback with GLUI, *not* with GLUT */
   GLUI_Master.set_glutIdleFunc( Gui::idleFunc );
 
-  /* <<<< bigler >>>> */
+  /*  bigler */
   (new Thread(dpy, "Display thread"))->detach();
   
   // Start up worker threads...

@@ -308,3 +308,11 @@ Vector FastNoise::dnoise(const Vector& v, double& n)
     return Vector(dx,dy,dz);
 }
 
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& str, rtrt::FastNoise& obj)
+{
+  str.begin_cheap_delim();
+  Pio(str, (Noise&)obj);
+  str.end_cheap_delim();
+}
+} // end namespace SCIRun

@@ -9,6 +9,13 @@ using SCIRun::Thread;
 using SCIRun::Parallel;
 using namespace rtrt;
 
+SCIRun::Persistent* timeObj_maker() {
+  return new TimeObj();
+}
+
+// initialize the static member type_id
+SCIRun::PersistentTypeID TimeObj::type_id("TimeObj", "Object", timeObj_maker);
+
 TimeObj::TimeObj(double rate)
     : Object(0), rate(rate)
 {
@@ -112,3 +119,29 @@ void TimeObj::compute_bounds(BBox& bbox, double offset)
 	objs[i]->compute_bounds(bbox, offset);
     }
 }
+
+const int TIMEOBJ_VERSION = 1;
+
+void 
+TimeObj::io(SCIRun::Piostream &str)
+{
+  str.begin_class("TimeObj", TIMEOBJ_VERSION);
+  Object::io(str);
+  Pio(str, cur);
+  Pio(str, objs);
+  Pio(str, rate);
+  Pio(str, num_processors);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::TimeObj*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::TimeObj::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::TimeObj*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

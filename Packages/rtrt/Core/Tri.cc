@@ -20,6 +20,14 @@ using namespace SCIRun;
 using std::cerr;
 using std::vector;
 
+Persistent* tri_maker() {
+  return new Tri();
+}
+
+// initialize the static member type_id
+PersistentTypeID Tri::type_id("Tri", "Object", tri_maker);
+
+
 Tri::Tri(Material* matl, const Point& p1, const Point& p2,
 	 const Point& p3)
     : Object(matl), p1(p1), p2(p2), p3(p3)
@@ -466,3 +474,43 @@ void Tri::compute_bounds(BBox& bbox, double /*offset*/)
     bbox.extend(p3);
 #endif
 }
+
+const int TRI_VERSION = 1;
+
+void 
+Tri::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Tri", TRI_VERSION);
+  Object::io(str);
+  Pio(str, p1);
+  Pio(str, p2);
+  Pio(str, p3);
+  Pio(str, vn1);
+  Pio(str, vn2);
+  Pio(str, vn3);
+  Pio(str, n);
+  Pio(str, d);
+  Pio(str, e1p);
+  Pio(str, e2p);
+  Pio(str, e3p);
+  Pio(str, e1);
+  Pio(str, e2);
+  Pio(str, e3);
+  Pio(str, e1l);
+  Pio(str, e2l);
+  Pio(str, e3l);
+  Pio(str, bad);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Tri*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Tri::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Tri*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

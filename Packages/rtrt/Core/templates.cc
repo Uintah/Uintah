@@ -1,6 +1,7 @@
 
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Array2.h>
+#include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Heightfield.h>
 #include <Packages/rtrt/Core/BrickArray2.h>
 
@@ -14,9 +15,7 @@ using rtrt::Heightfield;
 using rtrt::HMCell; 
 using rtrt::BrickArray2;
 namespace rtrt {
-  class Light;
   class Object;
-  class BoundedObject;
   class VolumeBase;
   class Volume;
   class Material;
@@ -30,8 +29,6 @@ template class Heightfield<BrickArray2<float>,Array2<HMCell<float > > >;
 template class Array1<Light*>;
 
 template class Array1<Object*>;
-
-template class Array1<BoundedObject*>;
 
 template class Array1<VolumeBase*>;
 
@@ -47,7 +44,12 @@ template class Array1<int>;
 template class Array1<double>;
 
 template class Array1<Material*>;
-
+#include <Packages/rtrt/Core/Shadows/ShadowBase.h>
+template class Array1<ShadowBase*>;
+namespace SCIRun {
+template void Pio<rtrt::ShadowBase *>(Piostream &, 
+				      rtrt::Array1<rtrt::ShadowBase *> &);
+}
 #include <Packages/rtrt/Core/Random.h>
 #include <Packages/rtrt/Core/HashTable.cc>
 #include <Packages/rtrt/Core/HashTableEntry.cc>

@@ -11,6 +11,13 @@
 using namespace rtrt;
 using namespace SCIRun;
 
+Persistent* ring_maker() {
+  return new Ring();
+}
+
+// initialize the static member type_id
+PersistentTypeID Ring::type_id("Ring", "Object", ring_maker);
+
 Ring::Ring(Material* matl, const Point& cen, const Vector& n,
 	   double radius, double thickness)
   : Object(matl), cen(cen), n(n), radius(radius), thickness(thickness)
@@ -69,4 +76,31 @@ void Ring::compute_bounds(BBox& bbox, double offset)
     bbox.extend(cen-Vector(1,1,1)*(offset+radius+thickness));
     bbox.extend(cen+Vector(1,1,1)*(offset+radius+thickness));
 }
+
+const int RING_VERSION = 1;
+
+void 
+Ring::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Ring", RING_VERSION);
+  Object::io(str);
+  Pio(str, cen);
+  Pio(str, n);
+  Pio(str, d);
+  Pio(str, radius);
+  Pio(str, thickness);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Ring*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Ring::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Ring*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun
 

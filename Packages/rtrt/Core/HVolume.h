@@ -96,7 +96,7 @@ public:
   /////////////////////////////////////////////////
   
 
-extern Mutex io;
+extern Mutex io_lock_;
 extern Mutex xlock;
   
 template<class T, class A, class B>
@@ -1121,9 +1121,9 @@ void HVolume<T,A,B>::brickit(int /*proc*/)
   int sx, ex;
   while(work->nextAssignment(sx, ex)){
     for(int x=sx;x<ex;x++){
-      io.lock();
+      io_lock_.lock();
       //      cerr << "processor " << proc << ": " << x << " of " << nx-1 << "\n";
-      io.unlock();
+      io_lock_.unlock();
       for(int y=0;y<ny;y++){
 	for(int z=0;z<nz;z++){
 	  T value=indata(x,y,z);

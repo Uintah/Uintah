@@ -16,6 +16,14 @@
 //  very own .cc file
 
 namespace rtrt {
+class Instance;
+}
+
+namespace SCIRun {
+void Pio(Piostream&, rtrt::Instance*&);
+}
+
+namespace rtrt {
 
 class Instance: public Object, public Material
 {
@@ -49,6 +57,13 @@ public:
     bbox = b.transform(currentTransform);
   }
 
+  Instance() : Object(0), Material() {} // for Pio.
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, Instance*&);
+
   virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext* ppc)
   {
@@ -68,15 +83,16 @@ public:
 	  
     // if the ray hit one of our objects....
     if (thit.was_hit)
-      {
-	min_t = thit.min_t;// / scale;
-	if(hit.hit(this, min_t)){
-	  InstanceHit* i = (InstanceHit*)(hit.scratchpad);
-	  Point p = ray.origin() + min_t*ray.direction();
-	  i->normal = thit.hit_obj->normal(tray.origin()+min_t*tray.direction(),thit);
-	  i->obj = thit.hit_obj;
-	}
-      }	      
+    {
+      min_t = thit.min_t;// / scale;
+      if(hit.hit(this, min_t)){
+	InstanceHit* i = (InstanceHit*)(hit.scratchpad);
+	Point p = ray.origin() + min_t*ray.direction();
+	i->normal = thit.hit_obj->normal(tray.origin()+min_t*tray.direction(),
+					 thit);
+	i->obj = thit.hit_obj;
+      }
+    }	      
   }
     
   virtual Vector normal(const Point&, const HitInfo& hit)

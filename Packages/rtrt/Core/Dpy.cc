@@ -110,7 +110,7 @@ using std::cerr;
 
 Mutex rtrt::xlock("X windows startup lock");
 
-Mutex io("io lock");
+Mutex io_lock_("io lock");
 
 //////////////////////////////////////////////////////////////////
 
@@ -235,9 +235,9 @@ Dpy::run()
     Thread::exitAll(0);    
   }
 
-  io.lock();
+  io_lock_.lock();
   cerr << "display is pid " << getpid() << '\n';
-  io.unlock();
+  io_lock_.unlock();
 
   if(ncounters)
     counters=new Counters(ncounters, c0, c1);

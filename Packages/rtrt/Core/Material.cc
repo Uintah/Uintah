@@ -17,7 +17,14 @@
 
 using namespace rtrt;
 
-Material::Material() : local_ambient_mode(Global_Ambient), uscale(1), vscale(1)
+// initialize the static member type_id
+SCIRun::PersistentTypeID Material::type_id("Material", "Persistent", 0);
+
+
+Material::Material() : 
+    uscale(1), 
+    vscale(1),
+    local_ambient_mode(Global_Ambient)
 {
 }
 
@@ -124,3 +131,26 @@ void Material::phongshade(Color& result,
   }
   result=surfcolor;
 }
+
+const int MATERIAL_VERSION = 1;
+
+void 
+Material::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Material", MATERIAL_VERSION);
+  Pio(str, my_lights);
+  Pio(str, (unsigned int)local_ambient_mode);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Material*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Material::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Material*>(pobj);
+    ASSERT(obj != 0);
+  }
+}
+} // end namespace SCIRun

@@ -17,9 +17,21 @@ the change in mappying to a UVSphere map.
 using namespace rtrt;
 using namespace SCIRun;
 
+Persistent* uvs_maker() {
+  return new UVSphere();
+}
+
+// initialize the static member type_id
+PersistentTypeID UVSphere::type_id("UVSphere", "UVMapping", uvs_maker);
+
+
 UVSphere::UVSphere(Material *matl, Point c, double r, const Vector &up,
-                   const Vector &right) 
-  : Object(matl,this), radius(r), cen(c), up(up), right(right)
+                   const Vector &right) : 
+  Object(matl,this), 
+  cen(c), 
+  up(up), 
+  right(right),
+  radius(r)
 {
 }
 
@@ -108,3 +120,31 @@ void UVSphere::uv(UV& uv, const Point& hitpos, const HitInfo&)
   uv.set( uu,vv);
 }
 
+const int UVSPHERE_VERSION = 1;
+
+void 
+UVSphere::io(SCIRun::Piostream &str)
+{
+  str.begin_class("UVSphere", UVSPHERE_VERSION);
+  Object::io(str);
+  UVMapping::io(str);
+  Pio(str, cen);
+  Pio(str, up);
+  Pio(str, right);
+  Pio(str, radius);
+  Pio(str, xform);
+  Pio(str, ixform);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::UVSphere*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::UVSphere::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::UVSphere*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

@@ -7,6 +7,14 @@
 #include <stdlib.h>
 
 namespace rtrt {
+class Sphere;
+}
+
+namespace SCIRun {
+void Pio(Piostream&, rtrt::Sphere*&);
+}
+
+namespace rtrt {
 
 class Sphere : public Object {
 protected:
@@ -19,6 +27,13 @@ public:
   Sphere(Material* matl, const Point& cen, double radius);
   virtual ~Sphere();
 
+  Sphere() : Object(0) {} // for Pio.
+  
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, Sphere*&);
+  
   virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
   virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,

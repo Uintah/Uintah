@@ -5,14 +5,25 @@
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Persistent/Persistent.h>
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/PerProcessorContext.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/InstanceWrapperObject.h>
 
+namespace rtrt {
+class InstanceWrapperObject ;
+}
+
+namespace SCIRun {
+void Pio(Piostream&, rtrt::InstanceWrapperObject*&);
+}
+
 using namespace rtrt;
 
-class InstanceWrapperObject {
+namespace rtrt {
+
+class InstanceWrapperObject : public SCIRun::Persistent {
   
  public:
 
@@ -27,6 +38,13 @@ class InstanceWrapperObject {
       was_processed = false;
       computed_bbox = false;
     }
+
+  InstanceWrapperObject() {} // for Pio.
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, InstanceWrapperObject*&);
 
   void preprocess(double maxradius, int& pp_offset, int& scratchsize)
     {
@@ -64,5 +82,6 @@ class InstanceWrapperObject {
   }
 
 };
+} // end namespace rtrt
 #endif
 

@@ -28,7 +28,7 @@ using SCIRun::Mutex;
 using SCIRun::Parallel;
 using SCIRun::Thread;
 
-extern Mutex io;
+extern Mutex io_lock_;
 
 template<class A, class B>
 Heightfield<A,B>::Heightfield(Material* matl, char* filebase,
@@ -886,9 +886,9 @@ void Heightfield<A,B>::brickit(int proc)
     int sx, ex;
     while(work->nextAssignment(sx, ex)){
 	for(int x=sx;x<ex;x++){
-	    io.lock();
+	    io_lock_.lock();
 	    cerr << "processor " << proc << ": " << x << " of " << nx-1 << "\n";
-	    io.unlock();
+	    io_lock_.unlock();
 	    for(int y=0;y<ny;y++){
 	       typename A::data_type value=indata(x,y);
 	       blockdata(x,y)=value;
@@ -918,4 +918,8 @@ void Heightfield<A,B>::uv(UV& uv, const Point&p, const HitInfo&)
 
     uv.set(v,u);
 
+}
+template<class A, class B>
+void Heightfield<A,B>::io(SCIRun::Piostream &stream) {
+  ASSERTFAIL("not implemented");
 }

@@ -11,6 +11,13 @@
 using namespace rtrt;
 using namespace SCIRun;
 
+Persistent* disc_maker() {
+  return new Disc();
+}
+
+// initialize the static member type_id
+PersistentTypeID Disc::type_id("Disc", "Object", disc_maker);
+
 Disc::Disc(Material* matl, const Point& cen, const Vector& n,
 	   double radius)
   : Object(matl), cen(cen), n(n), radius(radius), tex_scale(Vector(1,1,1))
@@ -96,6 +103,33 @@ void Disc::compute_bounds(BBox& bbox, double offset)
 
 void Disc::uv(UV &uv, const Point &p, const HitInfo &hit)
 {
-    Point xp = xform.project(p);
-    uv.set(xp.x()/tex_scale.x(),xp.y()/tex_scale.y());
+  Point xp = xform.project(p);
+  uv.set(xp.x()/tex_scale.x(),xp.y()/tex_scale.y());
 }
+
+const int DISC_VERSION = 1;
+
+void 
+Disc::io(SCIRun::Piostream &str)
+{
+  str.begin_class("Disc", DISC_VERSION);
+  Object::io(str);
+  Pio(str, cen);
+  Pio(str, n);
+  Pio(str, d);
+  Pio(str, radius);
+  str.end_class();
+}
+
+namespace SCIRun {
+void SCIRun::Pio(SCIRun::Piostream& stream, rtrt::Disc*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::Disc::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::Disc*>(pobj);
+    ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun
+

@@ -20,6 +20,13 @@ Email:		ramsey@cs.utah.edu
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
+namespace rtrt {
+class UVSphere;
+}
+
+namespace SCIRun {
+void Pio(Piostream&, rtrt::UVSphere*&);
+}
 
 namespace rtrt {
 
@@ -40,7 +47,14 @@ class UVSphere : public Object, public UVMapping {
  public:
   UVSphere(Material *m, Point c, double r, const Vector &up=Vector(0,0,1),
            const Vector &right=Vector(1,0,0));
+  UVSphere() : Object(0), UVMapping() {} // for Pio.
   virtual ~UVSphere();
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, UVSphere*&);
+
   virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
   virtual void uv(UV& uv, const Point&, const HitInfo& hit);
   virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,

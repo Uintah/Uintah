@@ -9,6 +9,7 @@
  *
  *  Copyright (C) 1994 SCI Group
  */
+namespace rtrt {
 
 template<class T>
 Array2<T>::Array2()
@@ -101,3 +102,37 @@ void Array2<T>::share(const Array2<T>& copy)
     (*refcnt)++;
 }
 
+
+#define Array2_VERSION 1
+
+template<class T>
+void Pio(SCIRun::Piostream& stream, Array2<T>& data)
+{
+  stream.begin_class("rtrtArray2", Array2_VERSION);
+  if(stream.reading()){
+    // Allocate the array...
+    int d1, d2;
+    Pio(stream, d1);
+    Pio(stream, d2);
+    data.resize(d1, d2);
+  } else {
+    Pio(stream, data.dm1);
+    Pio(stream, data.dm2);
+  }
+  for(int i=0;i<data.dm1;i++){
+    for(int j=0;j<data.dm2;j++){
+      Pio(stream, data.objs[i][j]);
+    }
+  }
+  stream.end_class();
+}
+
+template<class T>
+void Pio(SCIRun::Piostream& stream, Array2<T>*& data) {
+  if (stream.reading()) {
+    data=new Array2<T>;
+  }
+  Pio(stream, *data);
+}
+
+} // End namespace rtrt

@@ -7,7 +7,6 @@
 namespace rtrt {
 
 struct BV2Tree;
-struct BoundedObject;
 
 class BV2 : public Object {
     Object* obj;
