@@ -69,8 +69,7 @@
 #pragma set woff 1209 
 #endif 
  
-namespace MatlabIO {
-
+using namespace MatlabIO;
 using namespace SCIRun;
 
 class Matlab2;
@@ -258,7 +257,7 @@ class Matlab2 : public Module, public ServiceBase
     std::string     remote_tempdir_;
     
   public:
-    static void cleanup_callback();
+    static void cleanup_callback( void * data );
 };
 
 
@@ -454,7 +453,7 @@ Matlab2::Matlab2(GuiContext *context) :
     matlab2_list_lock.lock();
     matlab2_list.push_front(this);
     matlab2_list_lock.unlock();
-    CleanupManager::add_callback(Matlab2::cleanup_callback);
+    CleanupManager::add_callback(Matlab2::cleanup_callback, NULL);
 
     // end temp solution
 
@@ -463,7 +462,7 @@ Matlab2::Matlab2(GuiContext *context) :
 
 // Function for cleaning up
 // matlab2 modules
-void Matlab2::cleanup_callback()
+void Matlab2::cleanup_callback( void * /*data*/ )
 {
     try
     {
@@ -1406,8 +1405,6 @@ std::string Matlab2::totclstring(std::string &instring)
 	
 	return(newstring);
 }
-
-} // End namespace MatlabInterface
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1424
