@@ -270,11 +270,8 @@ extern "C" Module* make_ParticleVis( const clString& id ) {
 
 //
 // $Log$
-// Revision 1.4.2.2  2000/10/26 10:03:05  moulding
+// Revision 1.4.2.3  2000/10/26 13:24:52  moulding
 // merge HEAD into FIELD_REDESIGN
-//
-// Revision 1.4.2.1  2000/09/28 03:18:06  mcole
-// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.5  2000/08/11 16:11:09  bigler
 // Replace int index parameter in geom_pick function with GeomObj*.
