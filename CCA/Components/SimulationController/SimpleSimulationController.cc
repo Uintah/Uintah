@@ -360,7 +360,7 @@ SimpleSimulationController::run()
        const Level* level = grid->getLevel(i).get_rep();
        if(i != 0)
          delt_fine /= level->timeRefinementRatio();
-       newDW->override(delt_vartype(delt), sharedState->get_delt_label(),
+       newDW->override(delt_vartype(delt_fine), sharedState->get_delt_label(),
                      level);
       }
 
@@ -559,6 +559,15 @@ SimpleSimulationController::run()
 	  delt = new_delt;
 	  scheduler->get_dw(0)->override(delt_vartype(new_delt), 
 					 sharedState->get_delt_label());
+          double delt_fine = delt;
+          for(int i=0;i<grid->numLevels();i++){
+            const Level* level = grid->getLevel(i).get_rep();
+            if(i != 0)
+              delt_fine /= level->timeRefinementRatio();
+            scheduler->get_dw(0)->override(delt_vartype(delt_fine),
+                                           sharedState->get_delt_label(),
+                                           level);
+          }
 	  success = false;
 	  
 	  scheduler->replaceDataWarehouse(1, grid);
