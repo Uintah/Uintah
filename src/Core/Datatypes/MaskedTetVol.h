@@ -58,13 +58,13 @@ public:
   virtual ~MaskedTetVol() {};
 
   bool value(T &val, typename TetVolMesh::node_index i) const
-  { if (!mask_[i]) return false; val = fdata_[i]; return true; }
+  { if (!mask_[i]) return false; val = fdata()[i]; return true; }
   bool value(T &val, typename TetVolMesh::edge_index i) const
-  { if (!mask_[i]) return false; val = fdata_[i]; return true; }
+  { if (!mask_[i]) return false; val = fdata()[i]; return true; }
   bool value(T &val, typename TetVolMesh::face_index i) const
-  { if (!mask_[i]) return false; val = fdata_[i]; return true; }
+  { if (!mask_[i]) return false; val = fdata()[i]; return true; }
   bool value(T &val, typename TetVolMesh::cell_index i) const
-  { if (!mask_[i]) return false; val = fdata_[i]; return true; }
+  { if (!mask_[i]) return false; val = fdata()[i]; return true; }
 
   void    io(Piostream &stream);
 
