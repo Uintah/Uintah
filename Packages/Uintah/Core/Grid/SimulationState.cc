@@ -26,8 +26,13 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   // For now it is just gravity.
 
   ProblemSpecP phys_cons_ps = ps->findBlock("PhysicalConstants");
-  phys_cons_ps->require("gravity",d_gravity);
-  phys_cons_ps->get("reference_pressure",d_ref_press);
+  if(phys_cons_ps){
+    phys_cons_ps->require("gravity",d_gravity);
+    phys_cons_ps->get("reference_pressure",d_ref_press);
+  } else {
+    d_gravity=0;
+    d_ref_press=0;
+  }
 
   all_mpm_matls = 0;
   all_ice_matls = 0;

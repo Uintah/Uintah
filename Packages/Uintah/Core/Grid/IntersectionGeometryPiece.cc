@@ -1,5 +1,6 @@
 #include <Packages/Uintah/Core/Grid/IntersectionGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeometryPieceFactory.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
 
 #include <Core/Geometry/Point.h>
 

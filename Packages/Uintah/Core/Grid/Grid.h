@@ -6,9 +6,13 @@
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 
-#include <Core/Geometry/BBox.h>
-
 #include <vector>
+
+namespace SCIRun {
+  class BBox;
+  class Point;
+  class Vector;
+}
 
 namespace Uintah {
 
@@ -59,7 +63,7 @@ WARNING
     
     //////////
     // Adds a level to the grid.
-    Level* addLevel(const Point& anchor, const Vector& dcell);
+    Level* addLevel(const Point& anchor, const Vector& dcell, int id=-1);
     
     void performConsistencyCheck() const;
     void printStatistics() const;

@@ -2,9 +2,6 @@
 #define __DIFFERENCE_GEOMETRY_OBJECT_H__      
 
 #include <Packages/Uintah/Core/Grid/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-
-#include <Core/Geometry/Point.h>
 
 namespace Uintah {
 
@@ -63,6 +60,10 @@ WARNING
 	 // input specification and builds the union of geometry Pieces.
 	 DifferenceGeometryPiece(ProblemSpecP &);
 	 
+	 //////////
+	 // Construtor that takes two geometry pieces
+	 DifferenceGeometryPiece(GeometryPiece* p1, GeometryPiece* p2);
+
 	 //////////
 	 // Destructor
 	 virtual ~DifferenceGeometryPiece();

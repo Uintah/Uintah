@@ -42,6 +42,8 @@ WARNING
   template<class VariableBase, class Variable, class T, class Index> 
   class constVariable : public constVariableBase<VariableBase> {
   public:
+    typedef T value_type;
+
     constVariable()
       : rep_() {}
 

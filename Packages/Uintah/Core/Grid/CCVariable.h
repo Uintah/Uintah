@@ -150,7 +150,7 @@ WARNING
       if(td->isFlat())
 	Array3<T>::write(out);
       else
-	throw InternalError("Cannot yet write non-flat objects!\n");
+	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
     }
 
     virtual bool emitRLE(ostream& out, DOM_Element /*varnode*/)
@@ -161,7 +161,7 @@ WARNING
 	rle.write(out);
       }
       else
-	throw InternalError("Cannot yet write non-flat objects!\n");
+	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
       return true;
     }
 
@@ -171,7 +171,7 @@ WARNING
       if(td->isFlat())
 	Array3<T>::read(in, swapBytes);
       else
-	throw InternalError("Cannot yet read non-flat objects!\n");
+	SCI_THROW(InternalError("Cannot yet read non-flat objects!\n"));
     }
       
     virtual void readRLE(istream& in, bool swapBytes, int nByteMode)
@@ -182,7 +182,7 @@ WARNING
 	rle.copyOut(Array3<T>::begin(), Array3<T>::end());
       }
       else
-	throw InternalError("Cannot yet write non-flat objects!\n");
+	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
     }
 
     static TypeDescription::Register registerMe;
@@ -259,7 +259,7 @@ template<class T>
   {
     CCVariable<T>* c = dynamic_cast<CCVariable<T>* >(&copy);
     if(!c)
-      throw TypeMismatchException("Type mismatch in CC variable");
+      SCI_THROW(TypeMismatchException("Type mismatch in CC variable"));
     copyPointer(*c);
   }
 
@@ -281,8 +281,8 @@ template<class T>
 			       const IntVector& highIndex)
   {
     if(getWindow())
-      throw InternalError("Allocating a CCvariable that "
-			  "is apparently already allocated!");
+      SCI_THROW(InternalError("Allocating a CCvariable that "
+			  "is apparently already allocated!"));
     resize(lowIndex, highIndex);
   }
 /*
@@ -302,7 +302,7 @@ template<class T>
   {
     const CCVariable<T>* c = dynamic_cast<const CCVariable<T>* >(srcptr);
     if(!c)
-      throw TypeMismatchException("Type mismatch in CC variable");
+      SCI_THROW(TypeMismatchException("Type mismatch in CC variable"));
     return *c;
   }
 

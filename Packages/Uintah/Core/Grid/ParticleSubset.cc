@@ -81,7 +81,7 @@ ParticleSubset::sort(ParticleVariableBase* particleIDs)
   ParticleVariable<long64>* pIDs =
     dynamic_cast<ParticleVariable<long64>*>(particleIDs);
   if (pIDs == 0)
-    throw InternalError("particleID variable must be ParticleVariable<long64>");
+    SCI_THROW(InternalError("particleID variable must be ParticleVariable<long64>"));
   compareIDFunctor comp(pIDs);
   ::sort(d_particles.begin(), d_particles.end(), comp);
 }

@@ -37,25 +37,27 @@ Patch::Patch(const Level* level,
       d_id( id )
 {
   have_layout=false;
-  if(d_id == -1){
+  if(!ids){
+    ids_init.lock();
     if(!ids){
-      ids_init.lock();
-      if(!ids){
-	ids = new AtomicCounter("Patch ID counter", 0);
-      }
-      ids_init.unlock();
-      
+      ids = new AtomicCounter("Patch ID counter", 0);
     }
+    ids_init.unlock();
+    
+  }
+  if(d_id == -1){
     d_id = (*ids)++;
 
     if(patches.find(d_id) != patches.end()){
       cerr << "id=" << d_id << '\n';
-      throw InternalError("duplicate patch!");
+      SCI_THROW(InternalError("duplicate patch!"));
     }
     patches[d_id]=this;
     in_database=true;
-   } else {
-     in_database=false;
+  } else {
+    in_database=false;
+    if(d_id >= *ids)
+      ids->set(d_id+1);
    }
 
    d_bcs.resize(numFaces);
@@ -85,7 +87,7 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
     int index = 1;
     while (patches.find(d_id - index) != patches.end()){
       if (++index >= 27) {
-	throw InternalError("A real patch shouldn't have more than 26 (3*3*3 - 1) virtual patches");
+	SCI_THROW(InternalError("A real patch shouldn't have more than 26 (3*3*3 - 1) virtual patches"));
       }
     }
     d_id -= index;
@@ -789,7 +791,7 @@ void Patch::performConsistencyCheck() const
    if(res.x() < 1 || res.y() < 1 || res.z() < 1) {
       ostringstream msg;
       msg << "Degenerate patch: " << toString() << " (resolution=" << res << ")";
-      throw InvalidGrid( msg.str() );
+      SCI_THROW(InvalidGrid( msg.str() ));
   }
 }
 
@@ -857,7 +859,7 @@ Patch::getFace(FaceType face, int offset, IntVector& l, IntVector& h) const
       h.z(h.z()+offset);
       break;
    default:
-       throw InternalError("Illegal FaceType in Patch::getFace");
+     SCI_THROW(InternalError("Illegal FaceType in Patch::getFace"));
    }
 }
 
@@ -892,7 +894,7 @@ Patch::getFaceNodes(FaceType face, int offset,IntVector& l, IntVector& h) const
       h.z(h.z()+offset);
       break;
    default:
-       throw InternalError("Illegal FaceType in Patch::getFaceNodes");
+     SCI_THROW(InternalError("Illegal FaceType in Patch::getFaceNodes"));
    }
 }
 
@@ -1008,7 +1010,7 @@ Patch::getSFCIterator(const int dir, const int offset) const
   } else if (dir == 2) {
     return getSFCZIterator(offset);
   } else {
-    throw InternalError("Patch::getSFCIterator: dir must be 0, 1, or 2");
+    SCI_THROW(InternalError("Patch::getSFCIterator: dir must be 0, 1, or 2"));
   }
 } 
 
@@ -1234,7 +1236,7 @@ void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
     return;
   }
   else if (gtype == Ghost::None)
-    throw InternalError("ghost cells should not be specified with Ghost::None");
+    SCI_THROW(InternalError("ghost cells should not be specified with Ghost::None"));
 
   if (basis == CellBased) {
     if (gtype == Ghost::AroundCells) {
@@ -1266,7 +1268,7 @@ void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
     else {
       string basisName = Ghost::getGhostTypeName((Ghost::GhostType)basis);
       string ghostTypeName = Ghost::getGhostTypeName(gtype);
-      throw InternalError(basisName + " around " + ghostTypeName + " not supported for ghost offsets");
+      SCI_THROW(InternalError(basisName + " around " + ghostTypeName + " not supported for ghost offsets"));
     }
   }
 
@@ -1360,7 +1362,7 @@ Patch::VariableBasis Patch::translateTypeToBasis(TypeDescription::Type type,
     return CellBased;
   default:
     if (mustExist)
-      throw InternalError("Unknown variable type in Patch::getVariableExtents (from TypeDescription::Type)");
+      SCI_THROW(InternalError("Unknown variable type in Patch::getVariableExtents (from TypeDescription::Type)"));
     else
       return CellBased; // doesn't matter
   }
@@ -1382,3 +1384,44 @@ bool Patch::getLayoutHint(IntVector& pos) const
 Box Patch::getBox() const {
   return d_level->getBox(d_lowIndex, d_highIndex);
 }
+
+IntVector Patch::getLowIndex(VariableBasis basis) const
+{
+  switch (basis) {
+  case CellBased:
+    return getCellLowIndex();
+  case NodeBased:
+    return getNodeLowIndex();
+  case XFaceBased:
+    return getSFCXLowIndex();
+  case YFaceBased:
+    return getSFCYLowIndex();
+  case ZFaceBased:
+    return getSFCZLowIndex();
+  case AllFaceBased:
+    SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getLowIndex(basis)"));
+  default:
+    SCI_THROW(InternalError("Illegal VariableBasis in Patch::getLowIndex(basis)"));
+  }
+}
+
+IntVector Patch::getHighIndex(VariableBasis basis) const
+{
+  switch (basis) {
+  case CellBased:
+    return getCellHighIndex();
+  case NodeBased:
+    return getNodeHighIndex();
+  case XFaceBased:
+    return getSFCXHighIndex();
+  case YFaceBased:
+    return getSFCYHighIndex();
+  case ZFaceBased:
+    return getSFCZHighIndex();
+  case AllFaceBased:
+    SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getLowIndex(basis)"));
+  default:
+    SCI_THROW(InternalError("Illegal VariableBasis in Patch::getLowIndex(basis)"));
+  }
+}
+

@@ -2,9 +2,6 @@
 #define __UNION_GEOMETRY_OBJECT_H__      
 
 #include <Packages/Uintah/Core/Grid/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-
-#include <Core/Geometry/Point.h>
 
 #include <vector>
 

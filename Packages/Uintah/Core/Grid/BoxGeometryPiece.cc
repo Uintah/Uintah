@@ -24,10 +24,17 @@ BoxGeometryPiece::BoxGeometryPiece(ProblemSpecP& ps)
   if ( xdiff < near_zero   ||
        ydiff < near_zero   ||
        zdiff < near_zero ) {
-    throw ProblemSetupException("Input File Error: box max <= min coordinates");
+    SCI_THROW(ProblemSetupException("Input File Error: box max <= min coordinates"));
   }
 
   d_box=Box(min,max);
+}
+
+BoxGeometryPiece::BoxGeometryPiece(const Point& p1, const Point& p2)
+  : d_box(Min(p1, p2), Max(p1, p2))
+{
+  if(d_box.degenerate())
+    SCI_THROW(ProblemSetupException("degenerate box"));
 }
 
 BoxGeometryPiece::~BoxGeometryPiece()

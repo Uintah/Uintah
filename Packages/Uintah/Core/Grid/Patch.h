@@ -8,8 +8,6 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Containers/StaticArray.h>
 #undef None
 
 #include <string>
@@ -444,7 +442,7 @@ WARNING
       return area;
     }
     
-    static int getVolume(IntVector low, IntVector high)
+    static int getVolume(const IntVector& low, const IntVector& high)
     { return (high.x() - low.x()) * (high.y() - low.y()) *
 	(high.z() - low.z()); }    
    protected:
@@ -495,46 +493,6 @@ WARNING
      bool have_layout;
      IntVector layouthint;
    };
-
-inline IntVector Patch::getLowIndex(VariableBasis basis) const
-{
-  switch (basis) {
-  case CellBased:
-    return getCellLowIndex();
-  case NodeBased:
-    return getNodeLowIndex();
-  case XFaceBased:
-    return getSFCXLowIndex();
-  case YFaceBased:
-    return getSFCYLowIndex();
-  case ZFaceBased:
-    return getSFCZLowIndex();
-  case AllFaceBased:
-    throw InternalError("AllFaceBased not implemented in Patch::getLowIndex(basis)");
-  default:
-    throw InternalError("Illegal VariableBasis in Patch::getLowIndex(basis)");
-  }
-}
-
-inline IntVector Patch::getHighIndex(VariableBasis basis) const
-{
-  switch (basis) {
-  case CellBased:
-    return getCellHighIndex();
-  case NodeBased:
-    return getNodeHighIndex();
-  case XFaceBased:
-    return getSFCXHighIndex();
-  case YFaceBased:
-    return getSFCYHighIndex();
-  case ZFaceBased:
-    return getSFCZHighIndex();
-  case AllFaceBased:
-    throw InternalError("AllFaceBased not implemented in Patch::getLowIndex(basis)");
-  default:
-    throw InternalError("Illegal VariableBasis in Patch::getLowIndex(basis)");
-  }
-}
 
 } // End namespace Uintah
 

@@ -17,7 +17,7 @@ PerPatchBase::PerPatchBase()
 RefCounted*
 PerPatchBase::getRefCounted()
 {
-  throw InternalError("getRefCounted not implemented for PerPatch");
+  SCI_THROW(InternalError("getRefCounted not implemented for PerPatch"));
 }
 
 void PerPatchBase::offsetGrid(const IntVector& /*offset*/)

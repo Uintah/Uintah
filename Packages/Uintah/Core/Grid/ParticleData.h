@@ -79,7 +79,7 @@ WARNING
       void ParticleData<T>::add(particleIndex idx, const T& value)
       {
 	 if(idx != data.size())
-	    throw ParticleException("add, not at the end");
+	   SCI_THROW(ParticleException("add, not at the end"));
 	 data.push_back(value);
       }
    

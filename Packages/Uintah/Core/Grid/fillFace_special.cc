@@ -85,7 +85,7 @@ template<> void fillFaceNormal<Vector>(NCVariable<Vector>& var,
     }
     break;
   default:
-    throw InternalError("Illegal FaceType in NCVariable::fillFaceNormal");
+    SCI_THROW(InternalError("Illegal FaceType in NCVariable::fillFaceNormal"));
   }
 }
 

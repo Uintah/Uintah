@@ -101,7 +101,7 @@ WARNING
       {
          const PerPatch<T>* c = dynamic_cast<const PerPatch<T>* >(&copy);
          if(!c)
-            throw TypeMismatchException("Type mismatch in PerPatch variable");
+	   SCI_THROW(TypeMismatchException("Type mismatch in PerPatch variable"));
          *this = *c;
       }
 

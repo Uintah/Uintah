@@ -2,6 +2,7 @@
 #include <Packages/Uintah/Core/Grid/GeometryPieceFactory.h>
 
 #include <Core/Geometry/Point.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
 
 #include <vector>
 #include <iostream>
@@ -21,6 +22,12 @@ DifferenceGeometryPiece::DifferenceGeometryPiece(ProblemSpecP &ps)
   left = objs[0];
   right = objs[1];
 
+}
+
+DifferenceGeometryPiece::DifferenceGeometryPiece(GeometryPiece* p1,
+						 GeometryPiece* p2)
+  : left(p1), right(p2)
+{
 }
 
 DifferenceGeometryPiece::~DifferenceGeometryPiece()
