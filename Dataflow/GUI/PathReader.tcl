@@ -34,7 +34,6 @@ itcl_class SCIRun_DataIO_PathReader {
     }
 
     method ui {} {
-	global env
 	set w .ui[modname]
 
 	if {[winfo exists $w]} {
@@ -47,12 +46,13 @@ itcl_class SCIRun_DataIO_PathReader {
 	# place to put preferred data directory
 	# it's used if $this-filename is empty
 	
-	if {[info exists env(SCIRUN_DATA)]} {
-	    set initdir $env(SCIRUN_DATA)
-	} elseif {[info exists env(SCI_DATA)]} {
-	    set initdir $env(SCI_DATA)
-	} elseif {[info exists env(PSE_DATA)]} {
-	    set initdir $env(PSE_DATA)
+	global SCIRUN_DATA SCI_DATA PSE_DATA
+	if { $SCIRUN_DATA != "" } {
+	    set initdir $SCIRUN_DATA
+	} elseif { $SCI_DATA != "" } {
+	    set initdir $SCI_DATA
+	} elseif { $PSE_DATA != "" } {
+	    set initdir PSE_DATA
 	}
 	
 	#######################################################
@@ -79,5 +79,7 @@ itcl_class SCIRun_DataIO_PathReader {
 		-filetypes $types \
 		-initialdir $initdir \
 		-defaultextension $defext
+
+	moveToCursor $w
     }
 }
