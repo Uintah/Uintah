@@ -28,6 +28,10 @@
     <template>InputImageType</template>
     <defaults>
       <default>itk::Image&lt;float, 2&gt;</default>
+    </defaults>
+    <defaults>
+      <default>itk::Image&lt;float, 3&gt;</default>
+    </defaults>
   </templated>
 
   <inputs>
@@ -38,7 +42,7 @@
   </inputs>
   <outputs>
     <output name="OutputImage">
-      <type>itk::Image<&lt; unsigned long, InputImageType::VImageDimension &gt;</type>
+      <type>itk::Image&lt; unsigned long, InputImageType::VImageDimension &gt;</type>
       <call>GetOutput</call>
     </output>
   </outputs>
@@ -56,7 +60,7 @@
     </param>
   </parameters>
   <includes>
-    <include>itkWatershedImageFilter.h</include>
+    <file>itkWatershedImageFilter.h</file>
   </includes>
 </filter-itk>
 

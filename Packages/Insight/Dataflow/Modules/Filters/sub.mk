@@ -48,6 +48,7 @@ XMLS :=  \
 	sci_ThresholdSegmentationLevelSetImageFilter.xml \
 	sci_ReflectImageFilter.xml \
 	sci_BinaryThresholdImageFilter.xml \
+	sci_WatershedImageFilter.xml \
 #	$(SRCDIR)/ImageRegistration.cc\
 #	$(SRCDIR)/FastMarchingImageFilter.cc \
 #	$(SRCDIR)/FastMarchingImageFilterExt.cc \
