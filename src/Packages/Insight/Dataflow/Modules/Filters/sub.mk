@@ -53,12 +53,13 @@ XMLS :=  \
 SRC_GEN := $(patsubst sci_%.xml, $(SRCDIR)/%.cc, $(XMLS))
 
 CATEGORY := Filters
-CODEGEN := Packages/Insight/Core/CodeGenerator/generate
+CODEGEN := GenerateSCIRunCode 
 
 SRCS += ${SRC_GEN} 
 
 $(SRCDIR)/%.cc : $(SRCDIR)/XML/sci_%.xml
-	java $(CODEGEN) $(PATH_TO_SCIRUN)/Packages/Insight $(CATEGORY) $*
+	java $(CODEGEN) $(PATH_TO_PACKAGE) $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/XML/sci_$*.xml $(PATH_TO_PACKAGE)/Core/CodeGenerator/XSL/SCIRun_generateCC.xsl $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/$*.cc
+	java $(CODEGEN) $(PATH_TO_PACKAGE) $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/XML/sci_$*.xml $(PATH_TO_PACKAGE)/Core/CodeGenerator/XSL/SCIRun_generateXML.xsl $(PATH_TO_PACKAGE)/Dataflow/XML/$*.xml
 	cp ../src/$@ $@
 
 PSELIBS := Packages/Insight/Core/Datatypes \
