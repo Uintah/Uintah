@@ -22,7 +22,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Util
 
 SRCS     += \
-	$(SRCDIR)/Debug.cc \
 	$(SRCDIR)/DebugStream.cc \
 	$(SRCDIR)/DynamicLoader.cc \
 	$(SRCDIR)/DynamicCompilation.cc \
