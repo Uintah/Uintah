@@ -14,9 +14,14 @@
   Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
   University of Utah. All Rights Reserved.
 */
-
+#include <sci_defs.h>
 #include <Core/GLVolumeRenderer/GLOverOp.h>
+#if defined( HAVE_GLEW )
+#include <GL/glew.h>
+#else
 #include <GL/gl.h>
+#endif
+
 
 namespace SCIRun {
 
@@ -28,15 +33,22 @@ GLOverOp::GLOverOp(const GLVolumeRenderer* glvr) :
 
 void GLOverOp::preDraw()
 {
-  glEnable(GL_BLEND);
+  // comment out blending, done in render algorithm
+//   glEnable(GL_BLEND);
+  // This is the default, but just make sure
   glBlendEquation(GL_FUNC_ADD_EXT);
+
+  // Use the following if not premultiplying alpha
 //    glBlendFunc( GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+
+  // since we premultiply alpha we use the following
   glBlendFunc( GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void GLOverOp::postDraw()
 {
-  glDisable(GL_BLEND);
+  // comment out blending, done in render algorithm
+//   glDisable(GL_BLEND);
 }
 
 

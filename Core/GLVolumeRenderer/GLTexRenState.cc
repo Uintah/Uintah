@@ -18,6 +18,8 @@
 #include <Core/GLVolumeRenderer/GLTexRenState.h>
 
 
+
+
 namespace SCIRun {
 
 GLTexRenState::GLTexRenState(const GLVolumeRenderer* glvr)
@@ -25,6 +27,7 @@ GLTexRenState::GLTexRenState(const GLVolumeRenderer* glvr)
 {
   // Base Class, holds pointer to TexureRenderer and common
   // computation.
+
 }
 
 } // End namespace SCIRun

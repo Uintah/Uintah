@@ -16,7 +16,12 @@
 */
 
 #include <Core/GLVolumeRenderer/GLMIP.h>
+#if defined( HAVE_GLEW )
+#include <GL/glew.h>
+#else
 #include <GL/gl.h>
+#endif
+
 
 namespace SCIRun {
 
@@ -29,14 +34,19 @@ GLMIP::GLMIP(const GLVolumeRenderer* glvr) :
 
 void GLMIP::preDraw()
 {
-  glEnable(GL_BLEND);
+  // comment out blending, done in render algorithm
+//   glEnable(GL_BLEND);
   glBlendEquation(GL_MAX_EXT);
   glBlendFunc(GL_ONE, GL_ONE);
 }
 
 void GLMIP::postDraw()
 {
-  glDisable(GL_BLEND);
+  // comment out blending, done in render algorithm
+//   glDisable(GL_BLEND);
+
+  // return to default BlendEquation
+  glBlendEquation(GL_FUNC_ADD_EXT);
 }
 
 

@@ -1,8 +1,15 @@
+#include <sci_defs.h> 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <iostream>
+
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#else
 #include <GL/gl.h>
+#endif
+
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/Stack.h>
 #include <Packages/Yarden/Core/Algorithms/Visualization/Screen.h>

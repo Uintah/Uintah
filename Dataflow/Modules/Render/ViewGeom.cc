@@ -27,6 +27,9 @@
  *  Copyright (C) 199? SCI Group
  */
 
+
+#include <sci_defs.h>
+
 #include <iostream>
 using std::ostream;
 

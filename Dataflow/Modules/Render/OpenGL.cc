@@ -28,6 +28,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+
+#include <sci_defs.h>
+
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/logo.h>
 #include <Core/Containers/StringUtil.h>
@@ -672,6 +675,15 @@ OpenGL::redraw_frame()
     }
     glXMakeCurrent(dpy, win, cx);
     glXWaitX();
+#if defined(HAVE_GLEW)      
+      GLenum err = glewInit();
+      if (GLEW_OK != err )
+      {
+	  /* problem: glewInit failed, something is seriously wrong */
+	fprintf(stderr, "Error: %s\n", glewGetErrorString(err)); 
+      }
+      fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+#endif
     current_drawer=this;
     GLint data[1];
     glGetIntegerv(GL_MAX_LIGHTS, data);

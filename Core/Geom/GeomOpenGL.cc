@@ -27,6 +27,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <sci_defs.h>
+
+
 #ifdef _WIN32
 #define WINGDIAPI __declspec(dllimport)
 #define APIENTRY __stdcall
@@ -35,9 +38,12 @@
 #include <stdlib.h>
 #define GL_INTENSITY_EXT GL_INTENSITY
 #endif
+
+
 #include <Core/Util/NotFinished.h>
 
 #include <Core/Geom/GeomOpenGL.h>
+#include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomArrows.h>
 #include <Core/Geom/BBoxCache.h>
 #include <Core/Geom/DirectionalLight.h>
@@ -79,7 +85,6 @@
 #include <Core/Geom/TexSquare.h>
 #include <Core/Geom/ColorMapTex.h>
 #include <Core/Geom/HistogramTex.h>
-#include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomTorus.h>
 #include <Core/Geom/GeomTransform.h>
 #include <Core/Geom/GeomTri.h>
@@ -101,8 +106,7 @@
 using std::cerr;
 using std::endl;
 
-#include <GL/gl.h>
-#include <sci_glu.h>
+
 #if !defined(__linux) && !defined(_WIN32) && !defined(__digital__) && !defined(_AIX) && !defined(__APPLE__)
 #include <GL/gls.h>
 #endif
@@ -5947,7 +5951,6 @@ void ColorMapTex::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
     
   glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
@@ -5957,14 +5960,13 @@ void ColorMapTex::draw(DrawInfoOpenGL* di, Material* matl, double)
   if (GL_NO_ERROR == glGetError()){
     glEnable(GL_TEXTURE_1D);
     glShadeModel(GL_FLAT);
-
     glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
     glBegin( GL_QUADS );
-      glTexCoord2f(0.0, 0.0); glVertex3f( a_.x(), a_.y(), a_.z() );
-      glTexCoord2f(1.0, 0.0); glVertex3f( b_.x(), b_.y(), b_.z() );
-      glTexCoord2f(1.0, 1.0); glVertex3f( c_.x(), c_.y(), c_.z() );
-      glTexCoord2f(0.0, 1.0); glVertex3f( d_.x(), d_.y(), d_.z() );
+      glTexCoord1f(0.0); glVertex3f( a_.x(), a_.y(), a_.z() );
+      glTexCoord1f(1.0); glVertex3f( b_.x(), b_.y(), b_.z() );
+      glTexCoord1f(1.0); glVertex3f( c_.x(), c_.y(), c_.z() );
+      glTexCoord1f(0.0); glVertex3f( d_.x(), d_.y(), d_.z() );
     glEnd();
     glFlush();
   

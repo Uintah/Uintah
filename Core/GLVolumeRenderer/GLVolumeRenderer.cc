@@ -20,7 +20,12 @@
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Color.h>
+#if defined( HAVE_GLEW )
+#include <GL/glew.h>
+#else
 #include <GL/gl.h>
+#endif
+
 #include <iostream>
 
 namespace SCIRun {
@@ -187,11 +192,18 @@ GLVolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 GLVolumeRenderer::setup()
 {
-  glEnable(GL_TEXTURE_3D_EXT);
+#if defined(GL_ARB_multitexture)
+  glActiveTextureARB(GL_TEXTURE0_ARB);
+#endif
+  glEnable(GL_TEXTURE_3D);
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE); 
 
   if( cmap_.get_rep() ) {
-#ifdef GL_TEXTURE_COLOR_TABLE_SGI
+#if defined(GL_ARB_multitexture)
+    glActiveTextureARB(GL_TEXTURE1_ARB);
+    glEnable(GL_TEXTURE_1D);
+    glActiveTextureARB(GL_TEXTURE0_ARB);
+#elif defined(GL_TEXTURE_COLOR_TABLE_SGI)
     //cerr << "Using Lookup!\n";
     glEnable(GL_TEXTURE_COLOR_TABLE_SGI);
 #elif defined(GL_SHARED_TEXTURE_PALETTE_EXT)
@@ -212,12 +224,16 @@ GLVolumeRenderer::cleanup()
 
   glDepthMask(GL_TRUE);
   if( cmap_.get_rep() )
-#ifdef GL_TEXTURE_COLOR_TABLE_SGI
+#if defined(GL_ARB_multitexture)
+  glActiveTextureARB(GL_TEXTURE1_ARB);
+  glDisable(GL_TEXTURE_1D);
+  glActiveTextureARB(GL_TEXTURE0_ARB);
+#elif defined( GL_TEXTURE_COLOR_TABLE_SGI)
     glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
 #elif defined(GL_SHARED_TEXTURE_PALETTE_EXT)
   glDisable(GL_SHARED_TEXTURE_PALETTE_EXT);
 #endif
-  glDisable(GL_TEXTURE_3D_EXT);
+  glDisable(GL_TEXTURE_3D);
   // glEnable(GL_DEPTH_TEST);  
 }  
 

@@ -30,7 +30,13 @@
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Algorithms/GLVolumeRenderer/GLTexture3DBuilder.h>
 
+#if defined( HAVE_GLEW )
+#include <GL/glew.h>
+#else
 #include <GL/gl.h>
+#include <GL/glu.h>
+#endif
+
 #include <iostream>
 #include <string>
 #include <deque>
@@ -502,40 +508,40 @@ void
 GLTexture3D::replace_texture()
 { replace_texture( &my_reporter_); }
 
-bool
-GLTexture3D::set_max_brick_size(int maxBrick)
-{
-   GLint xtex = 0, ytex = 0, ztex = 0; 
-   int x,y,z;
-   x = y = z = maxBrick;
-   glEnable(GL_TEXTURE_3D);
-   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+// bool
+// GLTexture3D::set_max_brick_size(int maxBrick)
+// {
+//    GLint xtex = 0, ytex = 0, ztex = 0; 
+//    int x,y,z;
+//    x = y = z = maxBrick;
+//    glEnable(GL_TEXTURE_3D);
+//    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
    
 
-   glPrintError("glEnable(GL_TEXTURE_3D)");
-   //glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_INTENSITY8_EXT, x, y, z, 0, 
-   //                   GL_RED, GL_UNSIGNED_BYTE, NULL); 
-   glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_INTENSITY8, x, y, z, 0, 
-                      GL_RED, GL_UNSIGNED_BYTE, NULL); 
-   glPrintError("glTexImage3DEXT");
-   glGetTexLevelParameteriv( GL_PROXY_TEXTURE_3D, 0, 
-                             GL_TEXTURE_WIDTH, &xtex); 
-   glPrintError("glGetTexLevelParameteriv1");
-   glGetTexLevelParameteriv( GL_PROXY_TEXTURE_3D, 0, 
-                             GL_TEXTURE_HEIGHT, &ytex); 
-   glPrintError("glGetTexLevelParameteriv2");
-   glGetTexLevelParameteriv( GL_PROXY_TEXTURE_3D, 0, 
-                             GL_TEXTURE_DEPTH, &ztex); 
-   glPrintError("glGetTexLevelParameteriv3");
-   glDisable(GL_TEXTURE_3D);
-   glPrintError("glDisable(GL_TEXTURE_3D)");   
-   if( xtex && ytex) { // we can accommodate 
-     xmax_ = ymax_ = zmax_ = maxBrick; 
-     return true;
-   } else {
-     return false;
-   }
-}
+//    glPrintError("glEnable(GL_TEXTURE_3D)");
+//    //glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_INTENSITY8_EXT, x, y, z, 0, 
+//    //                   GL_RED, GL_UNSIGNED_BYTE, NULL); 
+//    glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_INTENSITY8, x, y, z, 0, 
+//                       GL_RED, GL_UNSIGNED_BYTE, NULL); 
+//    glPrintError("glTexImage3DEXT");
+//    glGetTexLevelParameteriv( GL_PROXY_TEXTURE_3D, 0, 
+//                              GL_TEXTURE_WIDTH, &xtex); 
+//    glPrintError("glGetTexLevelParameteriv1");
+//    glGetTexLevelParameteriv( GL_PROXY_TEXTURE_3D, 0, 
+//                              GL_TEXTURE_HEIGHT, &ytex); 
+//    glPrintError("glGetTexLevelParameteriv2");
+//    glGetTexLevelParameteriv( GL_PROXY_TEXTURE_3D, 0, 
+//                              GL_TEXTURE_DEPTH, &ztex); 
+//    glPrintError("glGetTexLevelParameteriv3");
+//    glDisable(GL_TEXTURE_3D);
+//    glPrintError("glDisable(GL_TEXTURE_3D)");   
+//    if( xtex && ytex) { // we can accommodate 
+//      xmax_ = ymax_ = zmax_ = maxBrick; 
+//      return true;
+//    } else {
+//      return false;
+//    }
+// }
 
 #ifndef use_alg
 

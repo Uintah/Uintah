@@ -38,7 +38,11 @@
 #include <iostream>
 using std::cerr;
 using std::ostream;
+#if defined( HAVE_GLEW )
+#include <GL/glew.h>
+#else
 #include <GL/gl.h>
+#endif
 
 #define USELUMIALPH 1
 

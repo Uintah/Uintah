@@ -1,11 +1,19 @@
 #ifndef SCIREXWINDOW_H
 #define SCIREXWINDOW_H
 
+#include <sci_defs.h>
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#include <GL/glxew.h>
+#else
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <GL/glx.h>
+#endif
+
 #include <Packages/Kurt/Core/Geom/OGLXWindow.h>
 #include <Core/Thread/Runnable.h>
-#include <GL/gl.h>
-#include <GL/glx.h>
-#include <GL/glu.h>
+
 #include <vector>
 
 using std::vector;

@@ -15,6 +15,15 @@
   University of Utah. All Rights Reserved.
 */
 
+
+#include <sci_defs.h>
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#else
+#include <GL/gl.h>
+#include <sci_glu.h>
+#endif
+
 #include <Core/GLVolumeRenderer/ROI.h>
 #include <Core/Geometry/Ray.h>
 #include <Core/GLVolumeRenderer/ROIIterator.h>
@@ -88,11 +97,21 @@ ROI::draw()
     
     loadColorMap( b );
     loadTexture( b );
-    makeTextureMatrix( b );
-    enableTexCoords();
+//     makeTextureMatrix( b );
+//     enableTexCoords();
     //    setAlpha( b );
+#if defined( GL_ARB_fragment_program)
+    if( !VolShader->created() ){
+      cerr<<"creating Volume Shader\n";
+      VolShader->create();
+    }
+    VolShader->bind();
+#endif
     drawPolys( polys );
-    disableTexCoords();
+#if defined( GL_ARB_fragment_program)
+     VolShader->release();
+#endif
+//     disableTexCoords();
   }
 }
 

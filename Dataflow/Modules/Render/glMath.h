@@ -19,7 +19,11 @@
 #ifndef GLMATH_H_
 #define GLMATH_H_
 
+#if defined( HAVE_GLEW )
+#include <GL/glew.h>
+#else
 #include <GL/gl.h>
+#endif
 #define GLEPSILON 1e-7
 
 void glEye( GLfloat m[16] );
