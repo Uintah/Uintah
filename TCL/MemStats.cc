@@ -19,28 +19,30 @@
 MemStats::MemStats()
 {
     a=DefaultAllocator();
-    nbins=GetNbins(a);
+    if(a){
+	nbins=GetNbins(a);
 
-    GetGlobalStats(a, old_nalloc, old_sizealloc, old_nfree, old_sizefree,
-		   old_nfillbin,
-		   old_nmmap, old_sizemmap, old_nmunmap, old_sizemunmap,
-		   old_highwater_alloc, old_highwater_mmap,
-		   old_nlonglocks, old_nnaps, old_bytes_overhead,
-		   old_bytes_free, old_bytes_fragmented, old_bytes_inuse,
-		   old_bytes_inhunks);
+	GetGlobalStats(a, old_nalloc, old_sizealloc, old_nfree, old_sizefree,
+		       old_nfillbin,
+		       old_nmmap, old_sizemmap, old_nmunmap, old_sizemunmap,
+		       old_highwater_alloc, old_highwater_mmap,
+		       old_nlonglocks, old_nnaps, old_bytes_overhead,
+		       old_bytes_free, old_bytes_fragmented, old_bytes_inuse,
+		       old_bytes_inhunks);
 
-    old_ssize=scinew size_t[nbins];
-    old_lsize=scinew size_t[nbins];
-    old_reqd=scinew size_t[nbins];
-    old_deld=scinew size_t[nbins];
-    old_inlist=scinew size_t[nbins];
-    lines=scinew int[nbins];
-    nnz=0;
-    for(int i=0;i<nbins;i++){
-	GetBinStats(a, i, old_ssize[i], old_lsize[i],
-		    old_reqd[i], old_deld[i], old_inlist[i]);
-	if(old_inlist[i] || old_reqd[i] || old_deld[i]){
-	    lines[i]=nnz++;
+	old_ssize=scinew size_t[nbins];
+	old_lsize=scinew size_t[nbins];
+	old_reqd=scinew size_t[nbins];
+	old_deld=scinew size_t[nbins];
+	old_inlist=scinew size_t[nbins];
+	lines=scinew int[nbins];
+	nnz=0;
+	for(int i=0;i<nbins;i++){
+	    GetBinStats(a, i, old_ssize[i], old_lsize[i],
+			old_reqd[i], old_deld[i], old_inlist[i]);
+	    if(old_inlist[i] || old_reqd[i] || old_deld[i]){
+		lines[i]=nnz++;
+	    }
 	}
     }
 }
