@@ -1185,6 +1185,9 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->computes(lb->term2Label,           press_matl, oims);
   task->computes(lb->term3Label,           press_matl, oims);
   task->computes(lb->sum_rho_CCLabel,      press_matl, oims);
+  task->computes(lb->vol_fracX_FCLabel);
+  task->computes(lb->vol_fracY_FCLabel);
+  task->computes(lb->vol_fracZ_FCLabel);
   
   sched->setRestartable(true);
   sched->addTask(task, patches, matls);
@@ -1221,7 +1224,7 @@ void
 ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
 					   const PatchSet* patches,
 					   const MaterialSubset* press_matl,
-					   const MaterialSubset* ice_matls_sub,
+					   const MaterialSubset* ice_matls,
 					   const MaterialSubset* /*mpm_matls_sub*/,
 					   const MaterialSet* matls)
 {
@@ -1238,11 +1241,15 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW,lb->pressX_FCLabel,   press_matl,    oims, gac, 1);
   t->requires(Task::NewDW,lb->pressY_FCLabel,   press_matl,    oims, gac, 1);
   t->requires(Task::NewDW,lb->pressZ_FCLabel,   press_matl,    oims, gac, 1);
-  t->requires(Task::NewDW,lb->viscosityLabel,   ice_matls_sub, gac, 2);
-  t->requires(Task::OldDW,lb->vel_CCLabel,      ice_matls_sub, gac, 2);
-  t->requires(Task::NewDW,lb->sp_vol_CCLabel,   ice_matls_sub, gac, 2);
-  t->requires(Task::NewDW,lb->rho_CCLabel,                     gac, 2);
-  t->requires(Task::NewDW,lb->vol_frac_CCLabel, Ghost::None);
+  t->requires(Task::NewDW,lb->viscosityLabel,   ice_matls, gac, 2);
+  t->requires(Task::OldDW,lb->vel_CCLabel,      ice_matls, gac, 2);
+  t->requires(Task::NewDW,lb->sp_vol_CCLabel,   ice_matls, gac, 2);
+  t->requires(Task::NewDW,lb->rho_CCLabel,                   gac, 2);
+  t->requires(Task::NewDW, lb->vol_fracX_FCLabel, ice_matls, gac,2);
+  t->requires(Task::NewDW, lb->vol_fracY_FCLabel, ice_matls, gac,2);
+  t->requires(Task::NewDW, lb->vol_fracZ_FCLabel, ice_matls, gac,2);
+  t->requires(Task::NewDW, lb->vol_frac_CCLabel, Ghost::None);
+  
   if (d_RateForm) {   // RATE FORM
     t->requires(Task::NewDW,lb->press_diffX_FCLabel, gac, 1);
     t->requires(Task::NewDW,lb->press_diffY_FCLabel, gac, 1);
@@ -1250,10 +1257,10 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   }
 
   if(d_turbulence){
-    t->requires(Task::NewDW,lb->uvel_FCMELabel,   ice_matls_sub, gac, 3);
-    t->requires(Task::NewDW,lb->vvel_FCMELabel,   ice_matls_sub, gac, 3);
-    t->requires(Task::NewDW,lb->wvel_FCMELabel,   ice_matls_sub, gac, 3);
-    t->computes(lb->turb_viscosity_CCLabel,   ice_matls_sub);
+    t->requires(Task::NewDW,lb->uvel_FCMELabel,   ice_matls, gac, 3);
+    t->requires(Task::NewDW,lb->vvel_FCMELabel,   ice_matls, gac, 3);
+    t->requires(Task::NewDW,lb->wvel_FCMELabel,   ice_matls, gac, 3);
+    t->computes(lb->turb_viscosity_CCLabel,   ice_matls);
   } 
 
   t->computes(lb->mom_source_CCLabel);
@@ -1292,6 +1299,9 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW, lb->thermalCondLabel,  ice_matls, gac,1);
   t->requires(Task::NewDW, lb->rho_CCLabel,                  gac,1);
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,               gac,1);
+  t->requires(Task::NewDW, lb->vol_fracX_FCLabel, ice_matls, gac,2);
+  t->requires(Task::NewDW, lb->vol_fracY_FCLabel, ice_matls, gac,2);
+  t->requires(Task::NewDW, lb->vol_fracZ_FCLabel, ice_matls, gac,2);
 
   if (d_EqForm) {       //EQ FORM
     t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,oims, gn);
@@ -3011,7 +3021,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       constSFCXVariable<double> uvel_FC;
       constSFCYVariable<double> vvel_FC;
       constSFCZVariable<double> wvel_FC;
-
+      
       new_dw->get(uvel_FC,     lb->uvel_FCMELabel,     indx,patch,gac, 2);   
       new_dw->get(vvel_FC,     lb->vvel_FCMELabel,     indx,patch,gac, 2);   
       new_dw->get(wvel_FC,     lb->wvel_FCMELabel,     indx,patch,gac, 2);   
@@ -3019,6 +3029,22 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       new_dw->get(rho_CC,      lb->rho_CCLabel,        indx,patch,gn,0);
       new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel,     indx,patch,gn,0);
       new_dw->get(speedSound,  lb->speedSound_CCLabel, indx,patch,gn,0);
+
+      SFCXVariable<double> vol_fracX_FC;
+      SFCYVariable<double> vol_fracY_FC;
+      SFCZVariable<double> vol_fracZ_FC;      
+
+      new_dw->allocateAndPut(vol_fracX_FC, lb->vol_fracX_FCLabel, indx,patch);
+      new_dw->allocateAndPut(vol_fracY_FC, lb->vol_fracY_FCLabel, indx,patch);
+      new_dw->allocateAndPut(vol_fracZ_FC, lb->vol_fracZ_FCLabel, indx,patch);
+      
+      // lowIndex is the same for all vel_FC
+      IntVector lowIndex(patch->getSFCXLowIndex());
+      double nan= getNan();
+      vol_fracX_FC.initialize(nan, lowIndex,patch->getSFCXHighIndex());
+      vol_fracY_FC.initialize(nan, lowIndex,patch->getSFCYHighIndex());
+      vol_fracZ_FC.initialize(nan, lowIndex,patch->getSFCZHighIndex()); 
+      
           
       //---- P R I N T   D A T A ------  
       if (switchDebug_explicit_press ) {
@@ -3040,11 +3066,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                                     bulletProof_test, new_dw); 
       //__________________________________
       //   advect vol_frac
-      bool useCompatibleFluxes = false;
-      bool is_Q_massSpecific   = false;
-      CCVariable<double> notUsed;
-      advector->advectQ(useCompatibleFluxes, is_Q_massSpecific,
-                        vol_frac, notUsed, patch, q_advected, new_dw);  
+      advector->advectQ(vol_frac, patch, q_advected,  
+                        vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw); 
       
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
@@ -3324,6 +3347,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     double areaX = dx.y() * dx.z();
     double areaY = dx.x() * dx.z();
     double areaZ = dx.x() * dx.y();
+    
     constCCVariable<double>   rho_CC;
     constCCVariable<double>   sp_vol_CC;
     constCCVariable<double>   viscosity_org;
@@ -3371,9 +3395,9 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       tau_Y_FC.allocate(pressY_FC.getLowIndex(), pressY_FC.getHighIndex());
       tau_Z_FC.allocate(pressZ_FC.getLowIndex(), pressZ_FC.getHighIndex());
       
-      tau_X_FC.initialize(Vector(0.,0.,0.));
-      tau_Y_FC.initialize(Vector(0.,0.,0.));
-      tau_Z_FC.initialize(Vector(0.,0.,0.));
+      tau_X_FC.initialize(Vector(0.0));
+      tau_Y_FC.initialize(Vector(0.0));
+      tau_Z_FC.initialize(Vector(0.0));
 
       if(ice_matl){
         new_dw->get(viscosity_org, lb->viscosityLabel, indx,patch,gac,2); 
@@ -3393,10 +3417,17 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
             d_turbulence->callTurb(new_dw,patch,vel_CC,rho_CC,indx,lb,
                                    d_sharedState, viscosity);
           }//turb
+          constSFCXVariable<double> vol_fracX_FC;
+          constSFCYVariable<double> vol_fracY_FC;
+          constSFCZVariable<double> vol_fracZ_FC;
            
-          computeTauX(patch, rho_CC, sp_vol_CC, vel_CC,viscosity,dx, tau_X_FC);
-          computeTauY(patch, rho_CC, sp_vol_CC, vel_CC,viscosity,dx, tau_Y_FC);
-          computeTauZ(patch, rho_CC, sp_vol_CC, vel_CC,viscosity,dx, tau_Z_FC); 
+          new_dw->get(vol_fracX_FC, lb->vol_fracX_FCLabel, indx,patch,gac, 2);         
+          new_dw->get(vol_fracY_FC, lb->vol_fracY_FCLabel, indx,patch,gac, 2);         
+          new_dw->get(vol_fracZ_FC, lb->vol_fracZ_FCLabel, indx,patch,gac, 2); 
+                     
+          computeTauX(patch, vol_fracX_FC, vel_CC,viscosity,dx, tau_X_FC);
+          computeTauY(patch, vol_fracY_FC, vel_CC,viscosity,dx, tau_Y_FC);
+          computeTauZ(patch, vol_fracZ_FC, vel_CC,viscosity,dx, tau_Z_FC);
         }
         if(viscosity_test == 0.0 && d_turbulence){
           string warn="ERROR:\n input :viscosity can't be zero when calculate turbulence";
@@ -3460,7 +3491,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
 
         mom_source[c].z( (-pressure_source * areaZ +
                            viscous_source + 
-                           mass * gravity.z() * include_term) * delT ); 
+                           mass * gravity.z() * include_term) * delT );
       }
       //__________________________________
       //  RATE FORM:   Tack on contribution
@@ -3538,6 +3569,9 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
     constCCVariable<double> rho_CC;
     constCCVariable<double> Temp_CC;
     constCCVariable<double> thermalCond;
+    constSFCXVariable<double> vol_fracX_FC;
+    constSFCYVariable<double> vol_fracY_FC;
+    constSFCZVariable<double> vol_fracZ_FC;
         
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -3551,10 +3585,13 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       int indx    = matl->getDWIndex();   
       CCVariable<double> int_eng_source;
       
-      new_dw->get(sp_vol_CC,   lb->sp_vol_CCLabel,    indx,patch,gac,1);
-      new_dw->get(rho_CC,      lb->rho_CCLabel,       indx,patch,gac,1);
-      new_dw->get(speedSound,  lb->speedSound_CCLabel,indx,patch,gn,0);
-      new_dw->get(vol_frac,    lb->vol_frac_CCLabel,  indx,patch,gn,0);
+      new_dw->get(sp_vol_CC,    lb->sp_vol_CCLabel,     indx,patch,gac,1);
+      new_dw->get(rho_CC,       lb->rho_CCLabel,        indx,patch,gac,1);
+      new_dw->get(speedSound,   lb->speedSound_CCLabel, indx,patch,gn, 0);
+      new_dw->get(vol_frac,     lb->vol_frac_CCLabel,   indx,patch,gn, 0);
+      new_dw->get(vol_fracX_FC, lb->vol_fracX_FCLabel,  indx,patch,gac, 2);        
+      new_dw->get(vol_fracY_FC, lb->vol_fracY_FCLabel,  indx,patch,gac, 2);        
+      new_dw->get(vol_fracZ_FC, lb->vol_fracZ_FCLabel,  indx,patch,gac, 2);
        
       new_dw->allocateAndPut(int_eng_source, 
                                lb->int_eng_source_CCLabel,indx,patch);
@@ -3568,10 +3605,9 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
         old_dw->get(Temp_CC,     lb->temp_CCLabel,     indx,patch,gac,1); 
         
         if(thermalCond_test != 0.0){ 
-          
           bool use_vol_frac = true; // include vol_frac in diffusion calc.
-          scalarDiffusionOperator(new_dw, patch, use_vol_frac,
-                                  rho_CC, sp_vol_CC,  Temp_CC,
+          scalarDiffusionOperator(new_dw, patch, use_vol_frac, Temp_CC,
+                                  vol_fracX_FC, vol_fracY_FC, vol_fracZ_FC,
                                   int_eng_source, thermalCond, delT);
         } 
       }
@@ -3585,7 +3621,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
           IntVector c = *iter;
           A = vol * vol_frac[c] * press_CC[c] * sp_vol_CC[c];
           B = speedSound[c] * speedSound[c];
-          int_eng_source[c] += (A/B) * delP_Dilatate[c];
+          int_eng_source[c] += (A/B) * delP_Dilatate[c]; 
         }
       }
 
