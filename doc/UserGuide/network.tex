@@ -3,13 +3,13 @@
 
 %begin{latexonly}
   \newcommand{\modgraphic}%
-  {\centerline{\epsfig{file=figures/modgraphic-1.eps.gz,width=4in,
+  {\centerline{\epsfig{file=figures/modgraphic.eps.gz,width=4in,
         bbllx=18, bblly=18, bburx=594, bbury=355}}}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\modgraphic}{%
   \htmladdimg[align=top,width="256",alt="SCIRun Module Graphic"]
-  {../figures/modgraphic-1.gif}}
+  {../figures/modgraphic.jpg}}
 \end{htmlonly}
 
 %begin{latexonly}
@@ -38,21 +38,21 @@ connect modules to form a network.
 \label{sec:creatingmodules}
 
 To create a module select its name from one of the package (\eg{} \sr)
-menus' category submenus.  The package menus may be accessed from the main
-window's menu bar and from the network pane's popup menu.
+menus' category sub-menus.  The package menus may be accessed from the main
+window's menu bar and from the network pane's pop-up menu.
 
-You may activate the network pane's popup menu by clicking mouse button 3
+You may activate the network pane's pop-up menu by clicking mouse button 3
 while the mouse pointer is in the network pane (but not over a module or
 connection).  
 
-The popup menu contains a list of category submenus from the \sr\ package
-and other installed packages.  And each category submenu provides
+The pop-up menu contains a list of category sub-menus from the \sr{} package
+and other installed packages.  And each category sub-menu provides
 access to the modules within the category.
 
 After creating a module its graphic ``front end'' will be created and
 placed in the network pane.
 
-\subsubsection{Anatomy of a Module}
+\subsection{Anatomy of a Module}
 \label{sec:modanatomy}
 
 All modules are represented similarly by a graphic within the network pane.
@@ -77,9 +77,9 @@ for all modules and consists of the following components:
 \item[Progress bar] Shows the module's progress.
 \item[Timer] Displays the amount of CPU time the module has consumed.
   Located to the left of the progress bar.
-\item[Popup Menu] Pressing mouse button 3 while the mouse
-  pointer is over a module gives access to the module's popup menu.  The
-  popup menu gives access to the following items:
+\item[Pop-up Menu] Pressing mouse button 3 while the mouse
+  pointer is over a module gives access to the module's pop-up menu.  The
+  pop-up menu gives access to the following items:
   \begin{description}
   \item[::Package\_Category\_Name\_Instance] This item is a label (not a
     selectable item).  It provides the module's name and the category and
@@ -105,7 +105,7 @@ for all modules and consists of the following components:
       \hline
       Field & Yellow \\
       Field Set & Green \\
-      Matricies & Blue \\
+      Matrices & Blue \\
       Geometric Objects & Pink \\
       Color Maps & Purple \\
       Camera Path & Brown \\
@@ -195,27 +195,27 @@ Network execution is mostly transparent.  That is, the events that trigger
 module execution will usually be generated automatically while you work
 (\eg by changing a module's property).  Sometimes though you must manually
 generate a triggering event by choosing the \menuitem{Execute} item from a
-module's popup menu.
+module's pop-up menu.
 
 \subsubsection{Details}
 
 Each module executes in its own thread and blocks (waits) until its upstream
 modules can supply it with data.  After a module completes its computation
 it sends its results to its downstream modules.  This completes a module's
-execution cycle.  Its next chance to recieve data from its input ports
+execution cycle.  Its next chance to receive data from its input ports
 and send data to its output ports won't arise until some event
 causes it to be put on the scheduler's execution list again.  
 
 This behavior prevents modules from computing in an iterative fashion,
 sending intermediate results to their downstream modules.  This is because
-downstream modules can't recieve these results until they are in their
+downstream modules can't receive these results until they are in their
 execution cycle.  They would need to be executed each time the
 upstream module posts an intermediate result.
 
 
 \subsubsection{Intermediate Results}
 
-Some modules are designed to be used in an interative fashion.  They send
+Some modules are designed to be used in an iterative fashion.  They send
 data to their output ports in a special way.  They use a method called
 \icode{send\_intermediate} to send the results of each iteration.  When
 this method is used the scheduler (re)executes downstream modules each time
@@ -267,7 +267,7 @@ Selected modules will be drawn in a slightly darker shade of grey.
 You may mix selection methods -- you may always add modules the group by
 pressing the control key while making selections using the above methods.
 If you don't press the control key then the previous group will be
-forgotton and a new one will be created.
+forgotten and a new one will be created.
 
 \subsection{Moving Module(s)}
 \label{sec:movemod}
@@ -286,11 +286,11 @@ modules in the selected group and then drag the modules to their new location.
 \label{sec:destroymod}
 
 Delete a module by selecting the \menuitem{Destroy} menu item from the
-module's popup menu.
+module's pop-up menu.
 
 Multiple modules may be deleted at one time.  To do this first
 \hyperref{select}{select (see Section~}{)}{sec:selectmods} 1 or more
-modules. Then choose, from the popup menu of any one of the modules in the
+modules. Then choose, from the pop-up menu of any one of the modules in the
 selected group, the \menuitem{Destroy Selected} item.
 
 
@@ -300,7 +300,7 @@ selected group, the \menuitem{Destroy Selected} item.
 It is often useful to document the purpose of a module within a network.
 Each module maintains a note pad for this purpose.  You may edit the
 module's note pad by selecting \menuitem{Notes} item from the module's
-popup menu.  This will display the module's note pad editor.  This simple
+pop-up menu.  This will display the module's note pad editor.  This simple
 editor allows you to write notes or otherwise document the use of the
 module within the context of its network.
 
@@ -309,7 +309,7 @@ module within the context of its network.
 
 Each module supports a message log.  The module may write error messages or
 other types of messages to its log.  To view this log select the
-\menuitem{Show Log} item from the module's popup menu.
+\menuitem{Show Log} item from the module's pop-up menu.
 
 \subsection{Documenting a Network}
 \label{sec:docnetwork}
@@ -333,7 +333,7 @@ To save a network select the \menuitem{Save} item from the main window's
 name (and location) of the network file.
 
 Network files are actually \dfna{Tool Command Language}{TCL} scripts and
-are editable (although this topic is beyond the scope of this guide).
+are edit-able (although this topic is beyond the scope of this guide).
 
 \subsection{Opening a Network}
 \label{sec:opennet}
