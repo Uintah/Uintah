@@ -17,7 +17,7 @@ fi
 failed=0
 dbg_failed=0
 opt_failed=0
-use_html=0
+use_html=1
 do_dbg=1
 
 
@@ -60,8 +60,10 @@ fi
 
 if [ $failed == "0" ]; then
   echo "All tests passed!" >> "$BUILDROOT"/log
+  echo "All tests passed!" >> "$HTMLLOG"
 fi
 
+# make outputs to the file which will be sent in the mail
 echo "" >> "$BUILDROOT"/log
 echo "" >> "$BUILDROOT"/log
     echo "/--------------------------\\" >> "$BUILDROOT"/log
@@ -70,9 +72,11 @@ if [ $dbg_failed != "0" ]; then
 else
     echo "| DEBUG TESTS - passed     |" >> "$BUILDROOT"/log
 fi
-    echo "\\--------------------------/" >> "$BUILDROOT"/log
+echo "\\--------------------------/" >> "$BUILDROOT"/log
 echo "" >> "$BUILDROOT"/log
+
 cat "$BUILDROOT"/dbg/log >> "$BUILDROOT"/log
+
 echo "" >> "$BUILDROOT"/log
 echo "" >> "$BUILDROOT"/log
     echo "/--------------------------\\" >> "$BUILDROOT"/log
@@ -85,38 +89,46 @@ fi
 echo "" >> "$BUILDROOT"/log
 cat "$BUILDROOT"/opt/log >> "$BUILDROOT"/log
 
+
+# make outputs to the webpage referred to by the mail message
+
+echo "" >> "$HTMLLOG"
+echo "/--------------------------\\" >> "$HTMLLOG"
+echo "|    DEBUG TEST SUMMARY    |" >> "$HTMLLOG"
+echo "\\--------------------------/" >> "$HTMLLOG"
+
+if [ $dbg_failed == "0" ]; then
+   echo "Debug tests passed!" >> "$HTMLLOG"
+fi
+if [ -f "$BUILDROOT"/dbg/configure.log.txt ]; then
+    cat "$BUILDROOT"/dbg/configure.log.txt >> "$HTMLLOG"
+fi
+if [ -f "${BUILDROOT}"/dbg/make_results.log ]; then
+    cat "${BUILDROOT}"/dbg/make_results.log >> "$HTMLLOG"
+fi
+
 # build_and_run should write summary_log files
 if [ -f "$BUILDROOT"/dbg/summary_log ]; then
-    use_html=1
-#    echo "" >> "$BUILDROOT"/log
-#    echo "/--------------------------\\" >> "$BUILDROOT"/log
-#    echo "|    DEBUG TEST SUMMARY    |" >> "$BUILDROOT"/log
-#    echo "\\--------------------------/" >> "$BUILDROOT"/log
-#    echo "" >> "$BUILDROOT"/log
-#    cat "$BUILDROOT"/dbg/summary_log >> "$BUILDROOT"/log
-
-    echo "" >> "$HTMLLOG"
-    echo "/--------------------------\\" >> "$HTMLLOG"
-    echo "|    DEBUG TEST SUMMARY    |" >> "$HTMLLOG"
-    echo "\\--------------------------/" >> "$HTMLLOG"
-    echo "" >> "$BUILDROOT"/log
     cat "$BUILDROOT"/dbg/summary_log >> "$HTMLLOG"
 fi
-if [ -f "$BUILDROOT"/opt/summary_log ]; then
-    use_html=1
-#    echo "" >> "$BUILDROOT"/log
-#    echo "/--------------------------\\" >> "$BUILDROOT"/log
-#    echo "|  OPTIMIZED TEST SUMMARY  |" >> "$BUILDROOT"/log
-#    echo "\\--------------------------/" >> "$BUILDROOT"/log
-#    cat "$BUILDROOT"/opt/summary_log >> "$BUILDROOT"/log
 
-    echo "" >> "$HTMLLOG"
-    echo "/--------------------------\\" >> "$HTMLLOG"
-    echo "|  OPTIMIZED TEST SUMMARY  |" >> "$HTMLLOG"
-    echo "\\--------------------------/" >> "$HTMLLOG"
-    echo "" >> "$BUILDROOT"/log
-    cat "$BUILDROOT"/opt/summary_log >> "$HTMLLOG"
+echo "" >> "$HTMLLOG"
+echo "/--------------------------\\" >> "$HTMLLOG"
+echo "|  OPTIMIZED TEST SUMMARY   |" >> "$HTMLLOG"
+echo "\\--------------------------/" >> "$HTMLLOG"
+   
+if [ $opt_failed == "0" ]; then
+   echo "Optimized tests passed!" >> "$HTMLLOG"
+fi
+if [ -f "$BUILDROOT"/opt/configure.log.txt ]; then
+    cat "$BUILDROOT"/opt/configure.log.txt >> "$HTMLLOG"
+fi
+if [ -f "${HTMLLOG}"-opt/make.log.txt ]; then
+    cat "${HTMLLOG}"-opt/make.log.txt >> "$HTMLLOG"
+fi
 
+if [ -f "${BUILDROOT}"/opt/make_results.log ]; then
+    cat "${BUILDROOT}"/opt/make_results.log >> "$HTMLLOG"
 fi
 echo "</pre></body></html>" >> "$HTMLLOG"
 echo "" >> "$BUILDROOT"/log
