@@ -104,13 +104,15 @@ void AMRSimulationController::run()
       throw ProblemSetupException("Input file is not a Uintah specification");
 
    bool log_dw_mem=false;
+#ifndef DISABLE_SCI_MALLOC
    ProblemSpecP debug = ups->findBlock("debug");
    if(debug){
      ProblemSpecP log_mem = debug->findBlock("logmemory");
      if(log_mem)
        log_dw_mem=true;
    }
-   
+#endif
+
    Output* output = dynamic_cast<Output*>(getPort("output"));
    output->problemSetup(ups);
    
@@ -159,6 +161,8 @@ void AMRSimulationController::run()
    // Parse time struct
    SimulationTime timeinfo(ups);
 
+   // Thsi has to change for AMR restarting, to support the readin
+   // of grid hierarchies (and with that a scheduler hierarchie)
    if(d_restarting){
       // create a temporary DataArchive for reading in the checkpoints
       // archive for restarting.
@@ -183,34 +187,27 @@ void AMRSimulationController::run()
       }
    }
    
-   // For AMR, this will need to change
-   //if(grid->numLevels() != 1)
-      //throw ProblemSetupException("AMR problem specified; cannot do it yet");
-   
    // Parse time struct
    /* SimulationTime timeinfo(ups); */
-      
+
    double start_time = Time::currentSeconds();
 
-   for(int i = 0; i < grid->numLevels(); ++i)
-   {
-      LevelP level = grid->getLevel(i);
-      
-      if (!d_restarting){
-	t = timeinfo.initTime;
-	sim->scheduleComputeStableTimestep(level,scheduler);
-      }
-      
-      if(output)
-	 output->finalizeTimestep(t, 0, level, scheduler);
+
+   LevelP level = grid->getLevel(0);
+   if (!d_restarting){
+     t = timeinfo.initTime;
+     sim->scheduleComputeStableTimestep(level,scheduler);
    }
 
-   scheduler->compile(d_myworld, false);
+   if(output)
+      output->finalizeTimestep(t, 0, level, scheduler);
+
+   scheduler->compile(d_myworld, false, false);
    
    double dt=Time::currentSeconds()-start;
    if(d_myworld->myrank() == 0)
      cout << "done taskgraph compile (" << dt << " seconds)\n";
-   scheduler->execute(d_myworld);
+   scheduler->executeTimestep(d_myworld);
 
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
    int n = 0;
@@ -252,6 +249,11 @@ void AMRSimulationController::run()
       }
       scheduler->get_new_dw()->override(delt_vartype(delt),
 					sharedState->get_delt_label());
+
+      // After one step (either timestep or initialization) and correction
+      // the delta we can finally, finalize our old timestep, eg. 
+      // finalize and advance the Datawarehouse
+      scheduler->finalizeTimestep(grid);
 
 #ifndef DISABLE_SCI_MALLOC
       size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
@@ -331,13 +333,13 @@ void AMRSimulationController::run()
 	n++;
 #endif
       }
-      scheduler->advanceDataWarehouse(grid);
+
       // put the current time into the shared state so other components
       // can access it
       sharedState->setElapsedTime(t);
 
 
-      LevelP level = grid->getLevel(0); // dumb hack
+      // LevelP level = grid->getLevel(0); // dumb hack
       if(need_recompile(t, delt, level, sim, output) || first){
 	 first=false;
 	 if(d_myworld->myrank() == 0)
@@ -352,25 +354,25 @@ void AMRSimulationController::run()
        
 	 // Begin next time step...
 	 sim->scheduleComputeStableTimestep(level, scheduler);
-	 scheduler->compile(d_myworld, true);
+	 scheduler->compile(d_myworld, false, false);
 
 	 double dt=Time::currentSeconds()-start;
 	 if(d_myworld->myrank() == 0)
 	   cout << "DONE TASKGRAPH RE-COMPILE FOR LEVEL 0 (" << dt << " seconds)\n";
       }
       // Execute the current timestep
-      scheduler->execute(d_myworld);
-
+      scheduler->executeTimestep(d_myworld);
+      if(output)
+          output->executedTimestep();
       // remesh here!
 
       // subcycles in time on the finer levels
       if(grid->numLevels() > 1)
 	 subCycle(schedulers, grid, sharedState, 1, sim);
 
-      scheduler->finalizeTimestep(grid);
 
       t += delt;
-      //TAU_DB_D UMP();
+      TAU_DB_DUMP();
    }
 }
 
@@ -392,8 +394,8 @@ void AMRSimulationController::subCycle(std::vector<SchedulerP>& schedulers, Grid
    fineSched->initialize();
 
    // Get the Datawarehouses
-   //DataWarehouse* coarseDW = coarseSched->get_new_dw(); 
-   DataWarehouse* fineDW = coarseSched->get_new_dw(); 
+   DataWarehouse* coarseDW = coarseSched->get_new_dw(); 
+   DataWarehouse* fineDW = fineSched->get_new_dw(); 
 
    // halve the delta
    delt_vartype delt_var;
@@ -416,10 +418,9 @@ void AMRSimulationController::subCycle(std::vector<SchedulerP>& schedulers, Grid
    int i;
    for(i = 0; i < 2; ++i)
    {
-      fineSched->execute(d_myworld);
+      fineSched->executeTimestep(d_myworld);
       if(grid->numLevels() > numLevel)
 	 subCycle(schedulers, grid, sharedState, numLevel+1, sim);
-      fineSched->compile(d_myworld, false, false);
       fineSched->finalizeTimestep(grid);
    }
 
