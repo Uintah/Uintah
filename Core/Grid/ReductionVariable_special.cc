@@ -5,7 +5,9 @@
 using namespace Uintah;
 using namespace SCIRun;
 
-#ifdef __sgi
+namespace Uintah { // <- This is necessary for IBM SP AIX xlC Compiler
+
+#if defined(__sgi) || defined(_AIX)
 template<>
 #endif
 void
@@ -19,7 +21,7 @@ ReductionVariable<double, Reductions::Min<double> >
    op = MPI_MIN;
 }
 
-#ifdef __sgi
+#if defined(__sgi) || defined(_AIX)
 template<>
 #endif
 void
@@ -33,7 +35,7 @@ ReductionVariable<double, Reductions::Max<double> >
    op = MPI_MAX;
 }
 
-#ifdef __sgi
+#if defined(__sgi) || defined(_AIX)
 template<>
 #endif
 void
@@ -47,7 +49,7 @@ ReductionVariable<double, Reductions::Sum<double> >
    op = MPI_SUM;
 }
 
-#ifdef __sgi
+#if defined(__sgi) || defined(_AIX)
 template<>
 #endif
 void
@@ -61,7 +63,7 @@ ReductionVariable<bool, Reductions::And<bool> >
    op = MPI_LAND;
 }
 
-#ifdef __sgi
+#if defined(__sgi) || defined(_AIX)
 template<>
 #endif
 void
@@ -75,7 +77,7 @@ ReductionVariable<long64, Reductions::Sum<long64> >
    op = MPI_SUM;
 }
 
-#ifdef __sgi
+#if defined(__sgi) || defined(_AIX)
 template<>
 #endif
 void
@@ -88,4 +90,7 @@ ReductionVariable<Vector, Reductions::Sum<Vector> >
    count = 3;
    op = MPI_SUM;
 }
+
+} // end namespace Uintah
+
 
