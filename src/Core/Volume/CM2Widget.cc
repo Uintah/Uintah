@@ -36,6 +36,7 @@
 #include <Core/Volume/Pbuffer.h>
 #include <Core/Volume/Utils.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
 
 #include <sci_gl.h>
@@ -79,7 +80,11 @@ CM2Widget::CM2Widget()
     alpha_(0.7),
     selected_(0),
     shadeType_(CM2_SHADE_REGULAR),
-    onState_(1)
+    onState_(1),
+    value_min_(0.0),
+    value_scale_(1.0),
+    pan_x_(0.0),
+    pan_y_(000)
 {}
 
 CM2Widget::~CM2Widget()
@@ -97,7 +102,10 @@ CM2Widget::CM2Widget(CM2Widget& copy)
     alpha_(copy.alpha_),
     selected_(copy.selected_),
     shadeType_(copy.shadeType_),
-    onState_(copy.onState_)
+    onState_(copy.onState_),
+    value_min_(copy.value_min_),
+    value_scale_(copy.value_scale_)
+
 {}
 
 void
@@ -131,6 +139,19 @@ CM2Widget::set_onState(int state)
     onState_ = state;
 }
 
+void
+TriangleCM2Widget::set_value_range(double min, double scale)
+{
+  const double offset = min - value_min_;
+  //  const double rescale = scale / value_scale_;
+
+  base_ = (base_ * value_scale_ - offset) / scale;
+  top_x_ = (top_x_ * value_scale_) / scale;
+  width_ = width_ * value_scale_ / scale;
+  value_min_ = min;
+  value_scale_ = scale;
+}
+
 static Persistent* TriangleCM2Widget_maker()
 {
   return scinew TriangleCM2Widget;
@@ -139,12 +160,13 @@ static Persistent* TriangleCM2Widget_maker()
 PersistentTypeID TriangleCM2Widget::type_id("TriangleCM2Widget", "CM2Widget",
 					    TriangleCM2Widget_maker);
 
-#define TRIANGLECM2WIDGET_VERSION 1
+#define TRIANGLECM2WIDGET_VERSION 2
 
 void
 TriangleCM2Widget::io(Piostream &stream)
 {
-  stream.begin_class("TriangleCM2Widget", TRIANGLECM2WIDGET_VERSION);
+  const int version = 
+    stream.begin_class("TriangleCM2Widget", TRIANGLECM2WIDGET_VERSION);
   
   Pio(stream, base_);
   Pio(stream, top_x_);
@@ -155,6 +177,11 @@ TriangleCM2Widget::io(Piostream &stream)
   Pio(stream, onState_);
   Pio(stream, color_);
   Pio(stream, alpha_);
+  if (version == 2) {
+    Pio(stream, value_min_);
+    Pio(stream, value_scale_);
+  }
+    
   stream.end_class();
 }
 
@@ -208,7 +235,7 @@ TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux,
 			     Pbuffer* pbuffer)
 {
   if(!onState_) return;
-
+  
   CM2BlendType blend = CM2_BLEND_RASTER;
   if(pbuffer) {
     if(pbuffer->need_shader())
@@ -224,15 +251,24 @@ TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux,
     if(!shader->valid()) {
       shader->create();
     }
-  
+    
+    GLdouble modelview[16];
+    glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+    double panx = (modelview[12]+1.0)/2.0;
+    double pany = (modelview[13]+1.0)/2.0;
+    double scalex = (modelview[0])/2.0;
+    double scaley = (modelview[5])/2.0;
+
     shader->bind();
     shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
-    shader->setLocalParam(1, base_, base_+top_x_, top_y_, 0.0);
-    shader->setLocalParam(2, width_, bottom_, 0.0, 0.0);
+    shader->setLocalParam(1, base_*scalex+panx, 
+			  scalex*(base_+top_x_)+panx,
+			  top_y_*scaley+pany, pany);
+    shader->setLocalParam(2, width_*scalex, bottom_, pany, 0.0);
 
     GLint vp[4];
     glGetIntegerv(GL_VIEWPORT, vp);
-    shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
+    shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], pany, pany);
     if(pbuffer)
       shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 
 			    0.0, 0.0);
@@ -366,6 +402,16 @@ TriangleCM2Widget::draw()
 {
   if(!onState_) return;
 
+  GLdouble blue[4] = { 0.1, 0.4, 1.0, 0.8 };
+  GLdouble green[4] = { 0.5, 1.0, 0.1, 0.7 };
+  GLdouble lt_green[4] = { 0.5, 1.0, 0.1, 0.4 };
+  GLdouble red[4] = { 0.8, 0.2, 0.4, 0.9 };
+  GLdouble grey[4] = { 0.6, 0.6, 0.6, 0.6 }; 
+  GLdouble white[4] = { 1.0, 1.0, 1.0, 1.0 }; 
+  GLdouble black[4] = { 0.0, 0.0, 0.0, 1.0 }; 
+  GLdouble yellow[4] = { 1.0, 0.76, 0.1, 1.0 };
+
+
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -384,14 +430,37 @@ TriangleCM2Widget::draw()
   const float b_x = bottom_*top_x_ + base_;
   const float b_y = bottom_*top_y_;
   const float w = bottom_*width_;
-  glLineWidth(thick_line_width_);
+  glLineWidth(5.0);
+  glColor4dv(black);
   glBegin(GL_LINES);
   {
-    selectcolor(4);
+    //selectcolor(4);
     glVertex2f(base_+top_x_-width_/2, top_y_);
     glVertex2f(base_+top_x_+width_/2, top_y_);
   }
   glEnd();
+
+  glLineWidth(3.0);
+  glColor4dv(grey);
+  glBegin(GL_LINES);
+  {
+    //selectcolor(4);
+    glVertex2f(base_+top_x_-width_/2, top_y_);
+    glVertex2f(base_+top_x_+width_/2, top_y_);
+  }
+  glEnd();
+
+  glLineWidth(1.0);
+  glColor4dv(white);
+  glBegin(GL_LINES);
+  {
+    //selectcolor(4);
+    glVertex2f(base_+top_x_-width_/2, top_y_);
+    glVertex2f(base_+top_x_+width_/2, top_y_);
+  }
+  glEnd();
+
+
   glLineWidth(thin_line_width_);
   glBegin(GL_LINES);
   {
@@ -403,15 +472,30 @@ TriangleCM2Widget::draw()
   glDisable(GL_LINE_SMOOTH);
 
   glEnable(GL_POINT_SMOOTH);
-  glPointSize(point_size_);
+  glPointSize(8.0);
+  glColor4dv(black);
   glBegin(GL_POINTS);
   {
-    selectcolor(2);
+    //    selectcolor(2);
     glVertex2f(base_+top_x_+width_/2, top_y_);
-    selectcolor(3);
+    //    selectcolor(3);
     glVertex2f(b_x-w/2, b_y);
   }
   glEnd();
+
+
+  glPointSize(6.0);
+  glColor4dv(yellow);
+  glBegin(GL_POINTS);
+  {
+    //    selectcolor(2);
+    glVertex2f(base_+top_x_+width_/2, top_y_);
+    //    selectcolor(3);
+    glVertex2f(b_x-w/2, b_y);
+  }
+  glEnd();
+
+
   glDisable(GL_POINT_SMOOTH);
   glDisable(GL_BLEND);
 }
@@ -673,9 +757,19 @@ RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux,
     if(!shader->valid()) {
       shader->create();
     }
+
+    
+    GLdouble modelview[16];
+    glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+    double panx = (modelview[12]+1.0)/2.0;
+    double pany = (modelview[13]+1.0)/2.0;
+    double scalex = (modelview[0])/2.0;
+    double scaley = (modelview[5])/2.0;
+
+
     shader->bind();
     shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
-    shader->setLocalParam(1, left_x_, left_y_, width_, height_);
+    shader->setLocalParam(1, left_x_*scalex+panx, left_y_*scaley+pany, width_*scalex, height_*scaley);
     if(offset_ < std::numeric_limits<float>::epsilon())
       shader->setLocalParam(2, offset_, 0.0, 1.0, 0.0);
     else if((1.0-offset_) < std::numeric_limits<float>::epsilon())
@@ -761,9 +855,7 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
             array(i,j,3) = Clamp(alpha_, 0.0f, 1.0f);
           }
         }
-      }
-
-      if(faux) {
+      } else if(faux) {
         float da = ra <= rb+1 ? 0.0 : alpha_/(ra-rb-1);
         float dr = ra <= rb+1 ? 0.0 : color_.r()/(ra-rb-1);
         float dg = ra <= rb+1 ? 0.0 : color_.g()/(ra-rb-1);
@@ -1031,6 +1123,17 @@ RectangleCM2Widget::release (int /*obj*/, int /*x*/, int /*y*/,
   // Don't need to do anything here.
 }
 
+void
+RectangleCM2Widget::set_value_range(double min, double scale)
+{
+  const double offset = min - value_min_;
+  left_x_ = (left_x_ * value_scale_ - offset) / scale;
+  width_ = width_ * value_scale_ / scale;
+  value_min_ = min;
+  value_scale_ = scale;
+}
+
+
 
 string
 RectangleCM2Widget::tcl_pickle()
@@ -1256,6 +1359,197 @@ ImageCM2Widget::rasterize(Array3<float>& array, bool /*faux*/)
 
 void
 ImageCM2Widget::draw()
+{
+  // no widget controls to draw.
+}
+
+
+
+
+
+
+
+
+#define PAINTCM2WIDGET_VERSION 1
+
+static Persistent* PaintCM2Widget_maker()
+{
+  return scinew PaintCM2Widget;
+}
+
+PersistentTypeID PaintCM2Widget::type_id("PaintCM2Widget", "CM2Widget",
+					 PaintCM2Widget_maker);
+
+#define PAINTCM2WIDGET_VERSION 1
+
+void
+PaintCM2Widget::io(Piostream &stream)
+{
+  stream.begin_class("PaintCM2Widget", PAINTCM2WIDGET_VERSION);
+  
+  Pio(stream, segments_);
+  Pio(stream, pixels_);
+  dirty_ = true;
+  stream.end_class();
+}
+
+PaintCM2Widget::PaintCM2Widget() : 
+  segments_(0),
+  pixels_(256, 256, 4),
+  dirty_(false)
+{
+  pixels_.initialize(0.0);
+}
+
+PaintCM2Widget::~PaintCM2Widget()
+{}
+
+PaintCM2Widget::PaintCM2Widget(PaintCM2Widget& copy) : 
+  CM2Widget(copy),
+  segments_(copy.segments_),
+  dirty_(copy.dirty_)
+{
+  pixels_.copy(copy.pixels_);
+}
+
+CM2Widget*
+PaintCM2Widget::clone()
+{
+  return new PaintCM2Widget(*this);
+}
+
+
+void
+PaintCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, 
+			  Pbuffer* pbuffer)
+{
+  if(!onState_) return;
+  if (dirty_) {
+    pixels_.initialize(0.0);
+    rasterize(pixels_, faux);
+    dirty_ = false;
+  }
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  glRasterPos2i(0,0);
+
+  GLint vp[4];
+  glGetIntegerv(GL_VIEWPORT, vp);
+  GLfloat xscale = float(vp[2])/float(pixels_.dim1());
+  GLfloat yscale = float(vp[3])/float(pixels_.dim2());
+  //  cerr << "XScale: " << xscale << "   YScale: " << yscale << std::endl;
+  glPixelZoom(xscale-0.001, yscale-0.001); //STUPID OPENGL DOESNT LIKE 2.0, 1.0!
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+
+  glDrawPixels(pixels_.dim1(), pixels_.dim2(), 
+	       GL_RGBA, GL_FLOAT, &pixels_(0,0,0));
+  glPixelZoom(1.0, 1.0);
+  glDisable(GL_BLEND);
+  CHECK_OPENGL_ERROR("paintcm2widget rasterize end")
+}
+
+void
+PaintCM2Widget::draw_point(Array3<float> &data, int x0, int y0) {
+  data(x0, y0, 0) = color_.r();
+  data(x0, y0, 1) = color_.g();
+  data(x0, y0, 2) = color_.b();
+  data(x0, y0, 3) = alpha_;
+}
+
+void
+PaintCM2Widget::splat(Array3<float> &data, int x0, int y0) {
+  for (int y = y0-3; y <= y0+3; ++y)
+    if (y >= 0 && y < data.dim2())
+      for (int x = x0-3; x <= x0+3; ++x)
+	if (x >= 0 && x < data.dim1()) {
+	  data(x, y, 0) = color_.r();
+	  data(x, y, 1) = color_.g();
+	  data(x, y, 2) = color_.b();
+	  data(x, y, 3) = Max(data(x, y, 3),float(alpha_*((3.0-sqrt(double((x-x0)*(x-x0)+(y-y0)*(y-y0))))/3.0)));
+	}
+}
+
+
+
+void 
+PaintCM2Widget::line(Array3<float> &data, int x0, int y0, int x1, int y1)
+{
+  if (x0 < 0 || x0 >= data.dim1() || 
+      x1 < 0 || x1 >= data.dim1() || 
+      y0 < 0 || y0 >= data.dim2() || 
+      y1 < 0 || y1 >= data.dim2()) return;
+  int dy = y1 - y0;
+  int dx = x1 - x0;
+  int stepx, stepy;
+  
+  if (dy < 0) { 
+    dy = -dy;
+    stepy = -1; 
+  } else { 
+    stepy = 1; 
+  }
+  if (dx < 0) { 
+    dx = -dx;  
+    stepx = -1;
+  } else { 
+    stepx = 1;
+  }
+  dy <<= 1;
+  dx <<= 1;
+
+  splat(data, x0, y0);
+
+  if (dx > dy) {
+    int fraction = dy - (dx >> 1);
+    while (x0 != x1) {
+      if (fraction >= 0) {
+	y0 += stepy;
+	fraction -= dx;
+      }
+      x0 += stepx;
+      fraction += dy;
+      splat(data, x0, y0);
+    }
+  } else {
+    int fraction = dx - (dy >> 1);
+    while (y0 != y1) {
+      if (fraction >= 0) {
+	x0 += stepx;
+	fraction -= dy;
+      }
+      y0 += stepy;
+      fraction += dx;
+      splat(data, x0, y0);
+    }
+  }
+}
+
+
+
+void
+PaintCM2Widget::rasterize(Array3<float>& array, bool /*faux*/)
+{
+  if(!onState_) return;
+  Segments::iterator siter = segments_.begin();
+  Segments::iterator send = segments_.end();
+  while (siter != send) {
+    Segment &seg = *siter;
+    ++siter;
+    Coordinate &p1 = seg.first;
+    Coordinate &p2 = seg.second;
+    line(array,
+	 Round(p1.second*array.dim1()), 
+	 Round(p1.first*array.dim2()),
+	 Round(p2.second*array.dim1()),
+	 Round(p2.first*array.dim2()));
+  }
+}
+
+
+void
+PaintCM2Widget::draw()
 {
   // no widget controls to draw.
 }
