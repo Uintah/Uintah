@@ -311,6 +311,8 @@ bool isduplicate(const Function* f1, const Function* f2) {
     return (isduplicate(f1->arg1, f2->arg1) &&
       isduplicate(f1->arg2, f2->arg2));
 
+  case randomfunction:
+    return false;
   }
 
   return false;

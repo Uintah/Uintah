@@ -42,7 +42,7 @@ namespace SCIRun {
 
 class QuadToTri : public Module {
 private:
-  unsigned int last_generation_;
+  int last_generation_;
   FieldHandle ofieldhandle;
 
 public:

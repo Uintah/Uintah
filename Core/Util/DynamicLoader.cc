@@ -505,12 +505,12 @@ DynamicLoader::get_compile_dir()
 bool 
 DynamicLoader::copy_makefile_to(const string &dir)
 {
-  FILE * pipe = 0;
   string command = ("cp -f " + string(SCIRUN_OBJDIR) + 
 		    "/on-the-fly-libs/Makefile " + dir);
 
   bool result = true;
 #ifdef __sgi
+  FILE * pipe = 0;
   pipe = popen(command.c_str(), "r");
   if (pipe == NULL)
   {
