@@ -8,9 +8,11 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <string>
 #include <vector>
+#include <ostream>
 
 using std::vector;
 using std::string;
+using std::ostream;
 
 namespace Uintah {
    class TaskGraph;
@@ -66,7 +68,7 @@ WARNING
          void (T::*pmf)(const ProcessorGroup*,
                         DataWarehouseP&,
                         DataWarehouseP&);
-      public:
+      public: // class NPAction
          NPAction( T* ptr,
                  void (T::*pmf)(const ProcessorGroup*,
                                 DataWarehouseP&,
@@ -82,9 +84,8 @@ WARNING
                            DataWarehouseP& toDW) {
             (ptr->*pmf)(pc, fromDW, toDW);
          }
-      };
+      }; // end class ActionBase
 
-      
       template<class T, class Arg1>
       class NPAction1 : public ActionBase {
 
@@ -94,7 +95,7 @@ WARNING
                         DataWarehouseP&,
                         DataWarehouseP&,
 			Arg1);
-      public:
+      public:  // class NPAction1
          NPAction1( T* ptr,
                  void (T::*pmf)(const ProcessorGroup*,
                                 DataWarehouseP&,
@@ -112,8 +113,7 @@ WARNING
                            DataWarehouseP& toDW) {
             (ptr->*pmf)(pc, fromDW, toDW, arg1);
          }
-      };
-
+      }; // end class NPAction1
       
       template<class T>
       class Action : public ActionBase {
@@ -123,7 +123,7 @@ WARNING
 			const Patch*,
 			DataWarehouseP&,
 			DataWarehouseP&);
-      public:
+      public: // class Action
 	 Action( T* ptr,
 		 void (T::*pmf)(const ProcessorGroup*, 
 				const Patch*, 
@@ -140,7 +140,8 @@ WARNING
 			   DataWarehouseP& toDW) {
 	    (ptr->*pmf)(pc, patch, fromDW, toDW);
 	 }
-      };
+      }; // end class Action
+
       template<class T, class Arg1>
       class Action1 : public ActionBase {
 	 
@@ -151,7 +152,7 @@ WARNING
 			DataWarehouseP&,
 			DataWarehouseP&,
 			Arg1 arg1);
-      public:
+      public: // class Action1
 	 Action1( T* ptr,
 		 void (T::*pmf)(const ProcessorGroup*, 
 				const Patch*, 
@@ -170,7 +171,7 @@ WARNING
 			   DataWarehouseP& toDW) {
 	    (ptr->*pmf)(pc, patch, fromDW, toDW, arg1);
 	 }
-      };
+      }; // end class Action1
       
       template<class T, class Arg1, class Arg2>
       class Action2 : public ActionBase {
@@ -183,7 +184,7 @@ WARNING
 			DataWarehouseP&,
 			DataWarehouseP&,
 			Arg1 arg1, Arg2 arg2);
-      public:
+      public: // class Action2
 	 Action2( T* ptr,
 		 void (T::*pmf)(const ProcessorGroup*, 
 				const Patch*, 
@@ -202,7 +203,7 @@ WARNING
 			   DataWarehouseP& toDW) {
 	    (ptr->*pmf)(pc, patch, fromDW, toDW, arg1, arg2);
 	 }
-      };
+      }; // end class Action2
 
       template<class T, class Arg1, class Arg2, class Arg3>
       class Action3 : public ActionBase {
@@ -216,7 +217,7 @@ WARNING
 			DataWarehouseP&,
 			DataWarehouseP&,
 			Arg1 arg1, Arg2 arg2, Arg3 arg3);
-      public:
+      public: // class Action3
 	 Action3( T* ptr,
 		 void (T::*pmf)(const ProcessorGroup*, 
 				const Patch*, 
@@ -235,9 +236,9 @@ WARNING
 			   DataWarehouseP& toDW) {
 	    (ptr->*pmf)(pc, patch, fromDW, toDW, arg1, arg2, arg3);
 	 }
-      };
+      }; // end Action3
 
-   public:
+   public: // class Task
 
       enum TaskType {
 	 Normal,
@@ -518,16 +519,21 @@ WARNING
       int getAssignedResourceIndex() const {
 	 return resourceIndex;
       }
-   protected:
+
+      //////////
+      // Prints out information about the task...
+      void display( ostream & out ) const;
+
+   protected: // class Task
       friend class TaskGraph;
       bool visited;
       bool sorted;
       int resourceIndex;
-   private:
+   private: // class Task
       //////////
       // Insert Documentation Here:
       string              d_taskName;
-      const Patch*       d_patch;
+      const Patch*        d_patch;
       ActionBase*         d_action;
       DataWarehouseP      d_fromDW;
       DataWarehouseP      d_toDW;
@@ -546,8 +552,14 @@ WARNING
    
 } // end namespace Uintah
 
+ostream & operator << ( ostream & out, const Uintah::Task & task );
+ostream & operator << ( ostream & out, const Uintah::Task::TaskType & tt );
+
 //
 // $Log$
+// Revision 1.20  2000/08/23 22:33:40  dav
+// added an output operator for task
+//
 // Revision 1.19  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support
