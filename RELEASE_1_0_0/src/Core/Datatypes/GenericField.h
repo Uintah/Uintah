@@ -65,6 +65,7 @@ public:
 
   //! Required virtual functions from field base.
   virtual MeshBaseHandle mesh() const;
+  virtual void mesh_detach();
 
   //! Required interfaces from field base.
   virtual interp_type* query_interpolate() const;
@@ -290,6 +291,13 @@ MeshBaseHandle
 GenericField<Mesh, FData>::mesh() const
 {
   return MeshBaseHandle(mesh_.get_rep());
+}
+
+template <class Mesh, class FData>
+void
+GenericField<Mesh, FData>::mesh_detach()
+{
+  mesh_.detach();
 }
 
 template <class Mesh, class FData>
