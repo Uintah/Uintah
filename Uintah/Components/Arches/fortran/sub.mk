@@ -15,7 +15,7 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/wvelsrc.F $(SRCDIR)/arrass.F $(SRCDIR)/mascal.F \
 	$(SRCDIR)/apcal.F $(SRCDIR)/prescoef.F $(SRCDIR)/pressrc.F \
 	$(SRCDIR)/bcuvel.F $(SRCDIR)/bcvvel.F $(SRCDIR)/bcwvel.F  \
-	$(SRCDIR)/bcpress.F $(SRCDIR)/symbcs.F \
+	$(SRCDIR)/bcpress.F $(SRCDIR)/bcscalar.F $(SRCDIR)/symbcs.F \
 	$(SRCDIR)/prdbc1.F $(SRCDIR)/prdbc2.F $(SRCDIR)/wallbc.F \
 	$(SRCDIR)/fixval.F \
 	$(SRCDIR)/scalcoef.F $(SRCDIR)/coeffb.F $(SRCDIR)/rmean.F \
@@ -54,6 +54,10 @@ FFLAGS += -g
 
 #
 # $Log$
+# Revision 1.29  2000/07/30 22:21:26  bbanerje
+# Added bcscalar.F (originally bcf.f in Kumar's code) needs more work
+# in C++ side.
+#
 # Revision 1.28  2000/07/17 22:07:03  rawat
 # modified momentum source
 #

@@ -42,14 +42,7 @@ using namespace Uintah::ArchesSpace;
 using SCICore::Geometry::Vector;
 
 //****************************************************************************
-// Default constructor for BoundaryCondition
-//****************************************************************************
-BoundaryCondition::BoundaryCondition()
-{
-}
-
-//****************************************************************************
-// Actual constructor for BoundaryCondition
+// Constructor for BoundaryCondition
 //****************************************************************************
 BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
 				     TurbulenceModel* turb_model,
@@ -177,17 +170,6 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 		    idxLo.get_pointer(), idxHi.get_pointer(),
 		    cellType.getPointer(), &d_flowfieldCellTypeVal);
 
-  // Testing if correct values have been put
-  cout << " In C++ (BoundaryCondition.cc) after cell type init " << endl;
-  for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
-      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-	cout << "(" << ii << "," << jj << "," << kk << ") : "
-	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
-      }
-    }
-  }
-
   // Find the geometry of the patch
   Box patchBox = patch->getBox();
   cout << "Patch box = " << patchBox << endl;
@@ -215,17 +197,6 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
       }
     }
   }
-  // Testing if correct values have been put
-  cout << " In C++ (BoundaryCondition.cc) after wall geom init " << endl;
-  for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
-      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-	cout << "(" << ii << "," << jj << "," << kk << ") : "
-	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
-      }
-    }
-  }
-
   // initialization for pressure boundary
   {
     if (d_pressBoundary) {
@@ -250,17 +221,6 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
       }
     }
   }
-  // Testing if correct values have been put
-  cout << " In C++ (BoundaryCondition.cc) after press inlet init " << endl;
-  for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
-      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-	cout << "(" << ii << "," << jj << "," << kk << ") : "
-	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
-      }
-    }
-  }
-
   // initialization for outlet boundary
   {
     if (d_outletBoundary) {
@@ -285,18 +245,6 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
       }
     }
   }
-
-  // Testing if correct values have been put
-  cout << " In C++ (BoundaryCondition.cc) after cell type BC init " << endl;
-  for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
-      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-	cout << "(" << ii << "," << jj << "," << kk << ") : "
-	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
-      }
-    }
-  }
-
   // set boundary type for inlet flow field
   for (int ii = 0; ii < d_numInlets; ii++) {
     int nofGeomPieces = d_flowInlets[ii].d_geomPiece.size();
@@ -324,11 +272,13 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
   // Testing if correct values have been put
   cout << " In C++ (BoundaryCondition.cc) after flow inlet init " << endl;
   for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
-      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-	cout << "(" << ii << "," << jj << "," << kk << ") : "
-	     << " CellType = " << cellType[IntVector(ii,jj,kk)] << endl;
+    cout << "Celltypes for kk = " << kk << endl;
+    for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+      for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+	cout.width(2);
+	cout << cellType[IntVector(ii,jj,kk)] << " " ; 
       }
+      cout << endl;
     }
   }
 
@@ -408,104 +358,13 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 		  cellInfo->sns.get_objs(), cellInfo->stb.get_objs(),
 		  &inlet_area, cellType.getPointer(), &cellid);
 
+      cout << "Inlet area = " << inlet_area << endl;
       // Write the inlet area to the old_dw
       old_dw->put(sum_vartype(inlet_area),d_flowInlets[ii].d_area_label);
     }
   }
 }
     
-//****************************************************************************
-// Schedule the calculation of the velocity BCs
-//****************************************************************************
-void 
-BoundaryCondition::sched_velocityBC(const LevelP& level,
-				    SchedulerP& sched,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw,
-				    int index)
-{
-#ifdef WONT_COMPILE_YET
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-      Task* tsk = scinew Task("BoundaryCondition::VelocityBC",
-			      patch, old_dw, new_dw, this,
-			      &BoundaryCondition::velocityBC,
-			      index);
-
-      int numGhostCells = 0;
-      int matlIndex = 0;
-
-      // This task requires old velocity, density and viscosity
-      // for all cases
-      tsk->requires(old_dw, d_uVelocityLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_vVelocityLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_wVelocityLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_densityLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_viscosityLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-
-      // For the three cases u or v or w are required based on index
-      switch(index) {
-      case 1:
-	tsk->requires(old_dw, d_uVelCoefLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-	tsk->requires(old_dw, d_uVelLinSrcLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-	tsk->requires(old_dw, d_uVelNonLinSrcLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
-	break;
-      case 2:
-	tsk->requires(old_dw, d_vVelCoefLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-	tsk->requires(old_dw, d_vVelLinSrcLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-	tsk->requires(old_dw, d_vVelNonLinSrcLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
-	break;
-      case 3:
-	tsk->requires(old_dw, d_wVelCoefLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-	tsk->requires(old_dw, d_wVelLinSrcLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-	tsk->requires(old_dw, d_wVelNonLinSrcLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
-	break;
-      default:
-	throw InvalidValue("Invalid component for velocity" +index);
-      }
-
-      // This task computes new u, v, w coefs, lin & non lin src terms
-      switch(index) {
-      case 1:
-	tsk->computes(new_dw, d_uVelCoefLabel, matlIndex, patch);
-	tsk->computes(new_dw, d_uVelLinSrcLabel, matlIndex, patch);
-	tsk->computes(new_dw, d_uVelNonLinSrcLabel, matlIndex, patch);
-	break;
-      case 2:
-	tsk->computes(new_dw, d_vVelCoefLabel, matlIndex, patch);
-	tsk->computes(new_dw, d_vVelLinSrcLabel, matlIndex, patch);
-	tsk->computes(new_dw, d_vVelNonLinSrcLabel, matlIndex, patch);
-	break;
-      case 3:
-	tsk->computes(new_dw, d_wVelCoefLabel, matlIndex, patch);
-	tsk->computes(new_dw, d_wVelLinSrcLabel, matlIndex, patch);
-	tsk->computes(new_dw, d_wVelNonLinSrcLabel, matlIndex, patch);
-	break;
-      default:
-	throw InvalidValue("Invalid component for velocity" +index);
-      }
-      sched->addTask(tsk);
-    }
-  }
-#endif
-}
-
 //****************************************************************************
 // Schedule the computation of the presures bcs
 //****************************************************************************
@@ -616,56 +475,6 @@ BoundaryCondition::calcPressureBC(const ProcessorGroup* ,
   new_dw->put(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
   new_dw->put(pressure, d_lab->d_pressureSPBCLabel, matlIndex, patch);
 } 
-
-//****************************************************************************
-// Schedule the computation of the presures bcs
-//****************************************************************************
-void 
-BoundaryCondition::sched_pressureBC(const LevelP& level,
-				    SchedulerP& sched,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw)
-{
-#ifdef WONT_COMPILE_YET
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-      //copies old db to new_db and then uses non-linear
-      //solver to compute new values
-      Task* tsk = scinew Task("BoundaryCondition::PressureBC",patch,
-			      old_dw, new_dw, this,
-			      &BoundaryCondition::pressureBC);
-
-      int numGhostCells = 0;
-      int matlIndex = 0;
-
-      // This task requires the pressure and the pressure stencil coeffs
-      tsk->requires(old_dw, d_pressureLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_presCoefLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-
-      // This task computes new uVelocity, vVelocity and wVelocity
-      tsk->computes(new_dw, d_presCoefLabel, matlIndex, patch);
-
-      sched->addTask(tsk);
-    }
-  }
-#endif
-}
-
-//****************************************************************************
-// Schedule the computation of scalar BCS
-//****************************************************************************
-void 
-BoundaryCondition::sched_scalarBC(const LevelP& level,
-				  SchedulerP& sched,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw,
-				  int index)
-{
-}
 
 //****************************************************************************
 // Schedule the setting of inlet velocity BC
@@ -1073,22 +882,49 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
   IntVector domHi = vars->scalar.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector domLoU = vars->uVelocity.getFortLowIndex();
+  IntVector domHiU = vars->uVelocity.getFortHighIndex();
+  IntVector domLoV = vars->vVelocity.getFortLowIndex();
+  IntVector domHiV = vars->vVelocity.getFortHighIndex();
+  IntVector domLoW = vars->wVelocity.getFortLowIndex();
+  IntVector domHiW = vars->wVelocity.getFortHighIndex();
 
-#ifdef WONT_COMPILE_YET
+  // Get the wall boundary and flow field codes
+  int wall_celltypeval = d_wallBdry->d_cellTypeID;
+  int flow_celltypeval = d_flowfieldCellTypeVal;
+  // ** WARNING ** Symmetry/sfield/outletfield/ffield hardcoded to -3,-4,-5, -6
+  //               Fmixin hardcoded to 0
+  int symmetry_celltypeval = -3;
+  int sfield = -4;
+  int outletfield = -5;
+  int ffield = -6;
+  double fmixin = 0.0;
+
   //fortran call
   FORT_SCALARBC(domLo.get_pointer(), domHi.get_pointer(),
 		idxLo.get_pointer(), idxHi.get_pointer(),
-		scalarCoeff[Arches::AP].getPointer(), 
-		scalarCoeff[Arches::AE].getPointer(), 
-		scalarCoeff[Arches::AW].getPointer(), 
-		scalarCoeff[Arches::AN].getPointer(), 
-		scalarCoeff[Arches::AS].getPointer(), 
-		scalarCoeff[Arches::AT].getPointer(), 
-		scalarCoeff[Arches::AB].getPointer(), 
-		scalar.getPointer(), 
-		cellType.getPointer());
-#endif
-
+		vars->scalar.getPointer(), 
+		vars->scalarCoeff[Arches::AE].getPointer(),
+		vars->scalarCoeff[Arches::AW].getPointer(),
+		vars->scalarCoeff[Arches::AN].getPointer(),
+		vars->scalarCoeff[Arches::AS].getPointer(),
+		vars->scalarCoeff[Arches::AT].getPointer(),
+		vars->scalarCoeff[Arches::AB].getPointer(),
+		vars->scalarNonlinearSrc.getPointer(),
+		vars->scalarLinearSrc.getPointer(),
+		vars->density.getPointer(),
+		&fmixin,
+		domLoU.get_pointer(), domHiU.get_pointer(),
+		vars->uVelocity.getPointer(), 
+		domLoV.get_pointer(), domHiV.get_pointer(),
+		vars->vVelocity.getPointer(), 
+		domLoW.get_pointer(), domHiW.get_pointer(),
+		vars->wVelocity.getPointer(), 
+		cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+		cellinfo->stb.get_objs(),
+		vars->cellType.getPointer(),
+		&wall_celltypeval, &symmetry_celltypeval,
+		&flow_celltypeval, &ffield, &sfield, &outletfield);
 }
 
 
@@ -1280,23 +1116,6 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
   IntVector idxLoW = patch->getSFCZFORTLowIndex();
   IntVector idxHiW = patch->getSFCZFORTHighIndex();
 
-  cout << "In set flat profile : " << endl;
-  cout << "DomLo = (" << domLo.x() << "," << domLo.y() << "," << domLo.z() << ")\n";
-  cout << "DomHi = (" << domHi.x() << "," << domHi.y() << "," << domHi.z() << ")\n";
-  cout << "DomLoU = (" << domLoU.x()<<","<<domLoU.y()<< "," << domLoU.z() << ")\n";
-  cout << "DomHiU = (" << domHiU.x()<<","<<domHiU.y()<< "," << domHiU.z() << ")\n";
-  cout << "DomLoV = (" << domLoV.x()<<","<<domLoV.y()<< "," << domLoV.z() << ")\n";
-  cout << "DomHiV = (" << domHiV.x()<<","<<domHiV.y()<< "," << domHiV.z() << ")\n";
-  cout << "DomLoW = (" << domLoW.x()<<","<<domLoW.y()<< "," << domLoW.z() << ")\n";
-  cout << "DomHiW = (" << domHiW.x()<<","<<domHiW.y()<< "," << domHiW.z() << ")\n";
-  cout << "IdxLo = (" << idxLo.x() << "," << idxLo.y() << "," << idxLo.z() << ")\n";
-  cout << "IdxHi = (" << idxHi.x() << "," << idxHi.y() << "," << idxHi.z() << ")\n";
-  cout << "IdxLoU = (" << idxLoU.x()<<","<<idxLoU.y()<< "," << idxLoU.z() << ")\n";
-  cout << "IdxHiU = (" << idxHiU.x()<<","<<idxHiU.y()<< "," << idxHiU.z() << ")\n";
-  cout << "IdxLoV = (" << idxLoV.x()<<","<<idxLoV.y()<< "," << idxLoV.z() << ")\n";
-  cout << "IdxHiV = (" << idxHiV.x()<<","<<idxHiV.y()<< "," << idxHiV.z() << ")\n";
-  cout << "IdxLoW = (" << idxLoW.x()<<","<<idxLoW.y()<< "," << idxLoW.z() << ")\n";
-  cout << "IdxHiW = (" << idxHiW.x()<<","<<idxHiW.y()<< "," << idxHiW.z() << ")\n";
   // loop thru the flow inlets to set all the components of velocity and density
   for (int indx = 0; indx < d_numInlets; indx++) {
     sum_vartype area_var;
@@ -1326,29 +1145,6 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
 		    cellType.getPointer(),
 		    &fi.density, &fi.d_cellTypeID);
   }   
-  // Testing if correct values have been put
-  cout << " After setting flat profile for Flow Inlets (BoundaryCondition)" << endl;
-  for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) 
-    for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) 
-      for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) 
-	cout << "(" << ii << "," << jj << "," << kk << ") : "
-	     << " UU = " << uVelocity[IntVector(ii,jj,kk)] << endl;
-  for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) 
-    for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) 
-      for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) 
-	cout << "(" << ii << "," << jj << "," << kk << ") : "
-	     << " VV = " << vVelocity[IntVector(ii,jj,kk)] << endl;
-  for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) 
-    for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) 
-      for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) 
-	cout << "(" << ii << "," << jj << "," << kk << ") : "
-	     << " WW = " << wVelocity[IntVector(ii,jj,kk)] << endl;
-  for (int kk = domLo.z(); kk <= domHi.z(); kk++) 
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) 
-      for (int ii = domLo.x(); ii <= domHi.x(); ii++) 
-	cout << "(" << ii << "," << jj << "," << kk << ") : "
-	     << " DEN = " << density[IntVector(ii,jj,kk)] << endl;
-
   if (d_pressureBdry) {
     // set density
     FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(), 
@@ -1364,13 +1160,6 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
 		      scalar[indx].getPointer(), cellType.getPointer(),
 		      &scalarValue, &d_pressureBdry->d_cellTypeID);
     }
-  
-    cout << " After setting flat profile for Pressure Bdry" << endl;
-    for (int kk = domLo.z(); kk <= domHi.z(); kk++) 
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) 
-	for (int ii = domLo.x(); ii <= domHi.x(); ii++) 
-	  cout << "(" << ii << "," << jj << "," << kk << ") : "
-	       << " DEN = " << density[IntVector(ii,jj,kk)] << endl;
   }    
   for (int indx = 0; indx < d_nofScalars; indx++) {
     for (int ii = 0; ii < d_numInlets; ii++) {
@@ -1380,12 +1169,6 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
 		      scalar[indx].getPointer(), cellType.getPointer(),
 		      &scalarValue, &d_flowInlets[ii].d_cellTypeID);
     }
-    cout << " After setting flat profile for scalar " << indx << endl;
-    for (int kk = domLo.z(); kk <= domHi.z(); kk++) 
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) 
-	for (int ii = domLo.x(); ii <= domHi.x(); ii++) 
-	  cout << "(" << ii << "," << jj << "," << kk << ") : "
-	       << " SCAL = " << (scalar[indx])[IntVector(ii,jj,kk)] << endl;
     if (d_pressBoundary) {
       double scalarValue = d_pressureBdry->streamMixturefraction[indx];
       cout << "Scalar Value = " << scalarValue << endl;
@@ -1393,12 +1176,6 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
 		      idxLo.get_pointer(), idxHi.get_pointer(),
 		      scalar[indx].getPointer(), cellType.getPointer(),
 		      &scalarValue, &d_pressureBdry->d_cellTypeID);
-      cout << " After setting PressBdry flat profile for scalar " << indx << endl;
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) 
-	for (int jj = domLo.y(); jj <= domHi.y(); jj++) 
-	  for (int ii = domLo.x(); ii <= domHi.x(); ii++) 
-	    cout << "(" << ii << "," << jj << "," << kk << ") : "
-		 << " SCAL = " << (scalar[indx])[IntVector(ii,jj,kk)] << endl;
     }
   }
       
@@ -1409,6 +1186,79 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
   new_dw->put(wVelocity, d_lab->d_wVelocitySPLabel, matlIndex, patch);
   for (int ii =0; ii < d_nofScalars; ii++) {
     new_dw->put(scalar[ii], d_lab->d_scalarSPLabel, ii, patch);
+  }
+
+  // Testing if correct values have been put
+  cout << "In set flat profile : " << endl;
+  cout << "DomLo = (" << domLo.x() << "," << domLo.y() << "," << domLo.z() << ")\n";
+  cout << "DomHi = (" << domHi.x() << "," << domHi.y() << "," << domHi.z() << ")\n";
+  cout << "DomLoU = (" << domLoU.x()<<","<<domLoU.y()<< "," << domLoU.z() << ")\n";
+  cout << "DomHiU = (" << domHiU.x()<<","<<domHiU.y()<< "," << domHiU.z() << ")\n";
+  cout << "DomLoV = (" << domLoV.x()<<","<<domLoV.y()<< "," << domLoV.z() << ")\n";
+  cout << "DomHiV = (" << domHiV.x()<<","<<domHiV.y()<< "," << domHiV.z() << ")\n";
+  cout << "DomLoW = (" << domLoW.x()<<","<<domLoW.y()<< "," << domLoW.z() << ")\n";
+  cout << "DomHiW = (" << domHiW.x()<<","<<domHiW.y()<< "," << domHiW.z() << ")\n";
+  cout << "IdxLo = (" << idxLo.x() << "," << idxLo.y() << "," << idxLo.z() << ")\n";
+  cout << "IdxHi = (" << idxHi.x() << "," << idxHi.y() << "," << idxHi.z() << ")\n";
+  cout << "IdxLoU = (" << idxLoU.x()<<","<<idxLoU.y()<< "," << idxLoU.z() << ")\n";
+  cout << "IdxHiU = (" << idxHiU.x()<<","<<idxHiU.y()<< "," << idxHiU.z() << ")\n";
+  cout << "IdxLoV = (" << idxLoV.x()<<","<<idxLoV.y()<< "," << idxLoV.z() << ")\n";
+  cout << "IdxHiV = (" << idxHiV.x()<<","<<idxHiV.y()<< "," << idxHiV.z() << ")\n";
+  cout << "IdxLoW = (" << idxLoW.x()<<","<<idxLoW.y()<< "," << idxLoW.z() << ")\n";
+  cout << "IdxHiW = (" << idxHiW.x()<<","<<idxHiW.y()<< "," << idxHiW.z() << ")\n";
+
+  cout << " After setting flat profile (BoundaryCondition)" << endl;
+  for (int kk = idxLoU.z(); kk <= idxHiU.z(); kk++) {
+    cout << "U Velocity for kk = " << kk << endl;
+    for (int ii = idxLoU.x(); ii <= idxHiU.x(); ii++) {
+      for (int jj = idxLoU.y(); jj <= idxHiU.y(); jj++) {
+	cout.width(10);
+	cout << uVelocity[IntVector(ii,jj,kk)] << " " ; 
+      }
+      cout << endl;
+    }
+  }
+  for (int kk = idxLoV.z(); kk <= idxHiV.z(); kk++) {
+    cout << "U Velocity for kk = " << kk << endl;
+    for (int ii = idxLoV.x(); ii <= idxHiV.x(); ii++) {
+      for (int jj = idxLoV.y(); jj <= idxHiV.y(); jj++) {
+	cout.width(10);
+	cout << vVelocity[IntVector(ii,jj,kk)] << " " ; 
+      }
+      cout << endl;
+    }
+  }
+  for (int kk = idxLoW.z(); kk <= idxHiW.z(); kk++) {
+    cout << "U Velocity for kk = " << kk << endl;
+    for (int ii = idxLoW.x(); ii <= idxHiW.x(); ii++) {
+      for (int jj = idxLoW.y(); jj <= idxHiW.y(); jj++) {
+	cout.width(10);
+	cout << wVelocity[IntVector(ii,jj,kk)] << " " ; 
+      }
+      cout << endl;
+    }
+  }
+  for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+    cout << "Density for kk = " << kk << endl;
+    for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+      for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+	cout.width(10);
+	cout << density[IntVector(ii,jj,kk)] << " " ; 
+      }
+      cout << endl;
+    }
+  }
+  for (int indx = 0; indx < d_nofScalars; indx++) {
+    for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+      cout << "Scalar " << indx <<" for kk = " << kk << endl;
+      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+	for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+	  cout.width(10);
+	  cout << (scalar[indx])[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cout << endl;
+      }
+    }
   }
 
 }
@@ -1589,6 +1439,10 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.48  2000/07/30 22:21:21  bbanerje
+// Added bcscalar.F (originally bcf.f in Kumar's code) needs more work
+// in C++ side.
+//
 // Revision 1.47  2000/07/28 02:30:59  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients
