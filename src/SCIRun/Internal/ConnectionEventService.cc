@@ -34,7 +34,7 @@
 namespace SCIRun {
 
 ConnectionEventService::ConnectionEventService(SCIRunFramework* framework,
-						const std::string& name)
+                        const std::string& name)
     : InternalComponentInstance(framework, name, "internal:ConnectionEventService")
 {
 }
@@ -45,7 +45,7 @@ ConnectionEventService::~ConnectionEventService()
 }
 
 InternalComponentInstance* ConnectionEventService::create(SCIRunFramework* framework,
-						  const std::string& name)
+                          const std::string& name)
 {
   ConnectionEventService* n = new ConnectionEventService(framework, name);
   n->addReference();
@@ -58,18 +58,44 @@ sci::cca::Port::pointer ConnectionEventService::getService(const std::string&)
 }
 
 void ConnectionEventService::addConnectionEventListener(
-	    sci::cca::ports::EventType et,
-	    const sci::cca::ports::ConnectionEventListener::pointer& cel)
+        sci::cca::ports::EventType et,
+        const sci::cca::ports::ConnectionEventListener::pointer& cel)
 {
     std::cerr << "ConnectionEventService::addConnectionEventListener" << std::endl;
     listeners.push_back(new Listener(et, cel));
 }
 
 void ConnectionEventService::removeConnectionEventListener(
-	    sci::cca::ports::EventType et,
-	    const sci::cca::ports::ConnectionEventListener::pointer& cel)
+        sci::cca::ports::EventType et,
+        const sci::cca::ports::ConnectionEventListener::pointer& cel)
 {
-    std::cerr << "ConnectionEventService::removeConnectionEventListener not done!" << std::endl;
+    for (std::vector<Listener*>::iterator iter = listeners.begin();
+            iter != listeners.end(); iter++) {
+        if ((*iter)->type == et && (*iter)->l == cel) {
+            delete *iter;
+        }
+    }
 }
+
+void
+ConnectionEventService::emitConnectionEvent(const sci::cca::ports::ConnectionEvent::pointer& event)
+{
+    // iterate through listeners and call connectionActivity
+    std::cerr << "ConnectionEventService::emitConnectionEvent" << std::endl;
+
+    // should the event type to be emitted be ALL?
+    if (event->getEventType() == sci::cca::ports::ALL) {
+        return;
+    }
+
+    for (std::vector<Listener*>::iterator iter=listeners.begin();
+            iter != listeners.end(); iter++) {
+        if ((*iter)->type == sci::cca::ports::ALL ||
+                (*iter)->type == event->getEventType()) {
+            (*iter)->l->connectionActivity(event);
+        }
+    }
+}
+
 
 }
