@@ -194,7 +194,7 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
   vel_CC_hat.initialize(Vector(0.0,0.0,0.0));   
  
   d_smag.computeStrainRate(patch, uvel_FC, vvel_FC, wvel_FC, 
-                           indx, d_sharedState, SIJ);
+                           indx, d_sharedState, new_dw, SIJ);
 
   CellIterator iter = patch->getCellIterator();
   CellIterator iterPlusGhost  = patch->addGhostCell_Iter(iter,1);
@@ -214,10 +214,10 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
     }
   }
    
-  setBC(vel_CC_tmp,"Velocity", patch, d_sharedState, indx);
+  setBC(vel_CC_tmp,"Velocity", patch, d_sharedState, indx, new_dw);
 
   for (int comp = 0; comp < 6; comp++ ) {
-    setBC(beta[comp],"zeroNeumann",patch, d_sharedState, indx);
+    setBC(beta[comp],"zeroNeumann",patch, d_sharedState, indx, new_dw);
   } 
 
   applyFilter(patch, vel_CC_tmp, vel_CC_hat); //need vel_CC_tmp for the template function
@@ -248,7 +248,7 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
      vel_prod[c] = vel_CC[c][comp0] * vel_CC[c][comp1];
     }
     
-    setBC(vel_prod,"zeroNeumann",patch, d_sharedState, indx);
+    setBC(vel_prod,"zeroNeumann",patch, d_sharedState, indx, new_dw);
     
     vel_prod_hat.initialize(0.0);
     
