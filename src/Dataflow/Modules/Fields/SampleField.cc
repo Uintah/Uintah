@@ -253,21 +253,21 @@ void
 SampleField::execute_random()
 {
   const TypeDescription *mtd = vfhandle_->mesh()->get_type_description();
-  CompileInfo *ci = SampleFieldAlgo::get_compile_info(mtd);
+  CompileInfo *ci = SampleFieldRandomAlgo::get_compile_info(mtd);
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
   {
     error("Could not compile algorithm.");
     return;
   }
-  SampleFieldAlgo *algo =
-    dynamic_cast<SampleFieldAlgo *>(algo_handle.get_rep());
+  SampleFieldRandomAlgo *algo =
+    dynamic_cast<SampleFieldRandomAlgo *>(algo_handle.get_rep());
   if (algo == 0)
   {
     error("Could not get algorithm.");
     return;
   }
-  FieldHandle seedhandle(algo->execute(vfhandle_, numSeeds_.get(),
+  FieldHandle seedhandle(algo->execute(this, vfhandle_, numSeeds_.get(),
 				       rngSeed_.get(), randDist_.get(), 
 				       clamp_.get()));
   if (rngInc_.get())
@@ -328,12 +328,12 @@ SampleField::execute()
 
 
 CompileInfo *
-SampleFieldAlgo::get_compile_info(const TypeDescription *mesh_td)
+SampleFieldRandomAlgo::get_compile_info(const TypeDescription *mesh_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("SampleFieldAlgoT");
-  static const string base_class_name("SampleFieldAlgo");
+  static const string template_class_name("SampleFieldRandomAlgoT");
+  static const string base_class_name("SampleFieldRandomAlgo");
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
