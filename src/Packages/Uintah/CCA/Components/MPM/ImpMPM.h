@@ -260,6 +260,13 @@ private:
 				       const MaterialSubset* matls,
 				       DataWarehouse* old_dw,
 				       DataWarehouse* new_dw);
+  //////////
+  // Insert Documentation Here:
+  void interpolateStressToGrid(        const ProcessorGroup*,
+				       const PatchSubset* patches,
+				       const MaterialSubset* matls,
+				       DataWarehouse* old_dw,
+				       DataWarehouse* new_dw);
 
   void scheduleComputeStressTensor( SchedulerP&, const PatchSet*,
                                     const MaterialSet*, const bool recursion);
@@ -303,8 +310,8 @@ private:
   void scheduleSolveForDuCG(                   SchedulerP&,const PatchSet*,
                                                const MaterialSet*);
 
-  void scheduleGetDisplacementIncrement(SchedulerP&, const PatchSet*,
-					const MaterialSet*);
+  void scheduleGetDisplacementIncrement(       SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
   void scheduleComputeAcceleration(            SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
@@ -314,9 +321,6 @@ private:
 
   void scheduleInterpolateStressToGrid(        SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
-
-  void scheduleInterpolateParticlesForSaving(  SchedulerP&, const PatchSet*,
-					       const MaterialSet*);
 
   void scheduleIterate(             SchedulerP&, const LevelP&,const PatchSet*, 
                                     const MaterialSet*);
