@@ -56,7 +56,7 @@ Simple_Burn::~Simple_Burn()
 }
 
 void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
-			     ModelSetup&)
+			     ModelSetup*)
 {
   cout << "I'm in problem setup" << endl;
   d_sharedState = sharedState;
@@ -78,8 +78,9 @@ void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
 }
 //______________________________________________________________________
 //     
-void Simple_Burn::scheduleInitialize(const LevelP&,
-				   SchedulerP&)
+void Simple_Burn::scheduleInitialize(SchedulerP&,
+				     const LevelP& level,
+				     const ModelInfo*)
 {
   // None necessary...
 }
