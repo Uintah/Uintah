@@ -1,4 +1,4 @@
-<?xml version="1.0"?><!-- -*- nxml -*- -->
+<?xml version="1.0"?>
 
 <!--% require("../../Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
