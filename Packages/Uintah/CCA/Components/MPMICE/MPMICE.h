@@ -80,12 +80,7 @@ public:
 				   const LevelP& level, SchedulerP&,
 				   DataWarehouseP&, DataWarehouseP&);
 
-  void scheduleFinishMPMICEproblemSetup(const ProblemSpecP& params, 
-                                        GridP& grid, SimulationStateP&);  
                             
-  void scheduleFinishMPMICEinitialize(const LevelP& level, 
-                                      SchedulerP& sched, DataWarehouseP& dw);
-
   void scheduleInterpolateNCToCC_0(const Patch* patch,
                                    SchedulerP&,
                                    DataWarehouseP&,
@@ -130,14 +125,6 @@ public:
 //______________________________________________________________________
 //       A C T U A L   S T E P S : 
                           
-  void finishMPMICEproblemSetup(const ProblemSpecP& params, 
-				GridP& grid,
-				SimulationStateP&);   
-                            
-  void finishMPMICEinitialize(const ProcessorGroup*, 
-                          const Patch* patch,
-			     DataWarehouseP& old_dw, 
-                          DataWarehouseP& new_dw);  
                                                     
   void interpolateNCToCC_0(const ProcessorGroup*,
                            const Patch* patch,

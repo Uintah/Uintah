@@ -43,15 +43,22 @@ MPMICE::~MPMICE()
 void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 			  SimulationStateP& sharedState)
 {
-   d_sharedState = sharedState;
-
-   d_mpm->setMPMLabel(Mlb);
-   d_mpm->problemSetup(prob_spec, grid, d_sharedState);
-
-   d_ice->setICELabel(Ilb);
-   d_ice->problemSetup(prob_spec, grid, d_sharedState);
-   
-   finishMPMICEproblemSetup(prob_spec, grid, d_sharedState);
+  d_sharedState = sharedState;
+  
+  d_mpm->setMPMLabel(Mlb);
+  d_mpm->problemSetup(prob_spec, grid, d_sharedState);
+  
+  d_ice->setICELabel(Ilb);
+  d_ice->problemSetup(prob_spec, grid, d_sharedState);
+  
+  ProblemSpecP mat_ps       =  prob_spec->findBlock("MaterialProperties");
+  ProblemSpecP mpm_ice_ps   =  mat_ps->findBlock("MPMICE");
+  ProblemSpecP exch_ps = mpm_ice_ps->findBlock("exchange_coefficients");
+  exch_ps->require("momentum",d_K_mom);
+  exch_ps->require("heat",d_K_heat);
+  cerr << "Pulled out exchange coefficients of the input file \t\t MPMICE" 
+       << endl;
+  
 
    cerr << "Done with problemSetup \t\t\t MPMICE" <<endl;
    cerr << "--------------------------------\n"<<endl;
@@ -64,25 +71,10 @@ void MPMICE::scheduleInitialize(const LevelP& level,
 {
   d_mpm->scheduleInitialize(      level, sched, dw);
   d_ice->scheduleInitialize(      level, sched, dw);
-//  scheduleFinishMPMICEinitialize( level, sched, dw);
    cerr << "Doing Initialization \t\t\t MPMICE" <<endl;
    cerr << "--------------------------------\n"<<endl; 
 }
-//______________________________________________________________________
-//
-void MPMICE::scheduleFinishMPMICEinitialize(const LevelP& level, 
-                          SchedulerP& sched,
-			     DataWarehouseP& dw)      
-{
-  Level::const_patchIterator iter;
-  for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    Task* t = scinew Task("MPMICE::finishMPMICEinitialize", patch, dw, dw,this,
-			  &MPMICE::finishMPMICEinitialize);
 
-    sched->addTask(t);
-  }
-}
 //______________________________________________________________________
 //
 void MPMICE::scheduleComputeStableTimestep(const LevelP& level,
@@ -418,30 +410,6 @@ void MPMICE::scheduleComputeEquilibrationPressure(const Patch* patch,
 //       A C T U A L   S T E P S :
 //______________________________________________________________________
 //
-/* --------------------------------------------------------------------- 
- Function~  MPMICE::finishMPMICEproblemSetup--
- Purpose~   Grab the exchange coefficients from the uda file  
-_____________________________________________________________________*/ 
-void MPMICE::finishMPMICEproblemSetup(const ProblemSpecP& prob_spec, 
-                            GridP&, SimulationStateP&)    
-{
-  ProblemSpecP mat_ps       =  prob_spec->findBlock("MaterialProperties");
-  ProblemSpecP mpm_ice_ps   =  mat_ps->findBlock("MPMICE");
-  ProblemSpecP exch_ps = mpm_ice_ps->findBlock("exchange_coefficients");
-  exch_ps->require("momentum",d_K_mom);
-  exch_ps->require("heat",d_K_heat);
-  cerr << "Pulled out exchange coefficients of the input file \t\t MPMICE" << endl;
-}
-
-/* --------------------------------------------------------------------- 
- Function~  MPMICE::finishMPMICEinitialize--
- Purpose~   Make necessary adjustments
-_____________________________________________________________________*/ 
-void MPMICE::finishMPMICEinitialize(const ProcessorGroup*, const Patch*,
-			     DataWarehouseP& , DataWarehouseP& )    
-{
-
-}
 
 
 void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
