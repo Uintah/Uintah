@@ -1112,6 +1112,7 @@ class BioImageApp {
 	    iwidgets::scrolledframe $m.p.sf -width [expr $process_width - 20] \
 		-height [expr $process_height - 180] -labeltext "History"
 	    pack $m.p.sf -side top -anchor nw -expand yes -fill both
+
 	    set history [$m.p.sf childsite]
 
 	    Tooltip $history "Shows a history of steps\nin the dynamic pipeline"
@@ -5092,6 +5093,43 @@ class BioImageApp {
 	global $mods(Viewer)-ViewWindow_0-view-fov
         set $mods(Viewer)-ViewWindow_0-view-fov {20.0}
     }
+
+    method scroll_history {p which} {
+	if {[string first "$attachedPFr.f.p.sf.lwchildsite" $p] != -1} {
+            set x [lindex [$attachedPFr.f.p.sf xview] 0]
+            set y [lindex [$attachedPFr.f.p.sf yview] 0]
+            if {$which == "up"} {
+		$attachedPFr.f.p.sf yview moveto [expr $y - 0.05]
+		$detachedPFr.f.p.sf yview moveto [expr $y - 0.05]
+	    } elseif {$which == "down"} {
+		$attachedPFr.f.p.sf yview moveto [expr $y + 0.05]
+		$detachedPFr.f.p.sf yview moveto [expr $y + 0.05]
+	    } elseif {$which == "right"} {
+		$attachedPFr.f.p.sf xview moveto [expr $x + 0.05]
+		$detachedPFr.f.p.sf xview moveto [expr $x + 0.05]
+	    } else {
+		$attachedPFr.f.p.sf xview moveto [expr $x - 0.05]
+		$detachedPFr.f.p.sf xview moveto [expr $x - 0.05]
+	    }
+
+        } elseif {[string first "$detachedPFr.f.p.sf.lwchildsite" $p] != -1} {
+            set x [lindex [$detachedPFr.f.p.sf xview] 0]
+            set y [lindex [$detachedPFr.f.p.sf yview] 0]
+            if {$which ==" up"} {                
+		$attachedPFr.f.p.sf yview moveto [expr $y - 0.0.5]
+		$detachedPFr.f.p.sf yview moveto [expr $y - 0.0.5]
+	    } elseif {$which == "down"} {
+		$attachedPFr.f.p.sf yview moveto [expr $y + 0.0.5]
+		$detachedPFr.f.p.sf yview moveto [expr $y + 0.0.5]
+	    } elseif {$which == "right"} {
+		$attachedPFr.f.p.sf xview moveto [expr $x + 0.05]
+		$detachedPFr.f.p.sf xview moveto [expr $x + 0.05]
+	    } else {
+		$attachedPFr.f.p.sf xview moveto [expr $x - 0.05]
+		$detachedPFr.f.p.sf xview moveto [expr $x - 0.05]
+	    }
+        }
+    }
     
 
     method maybe_autoview { args } {
@@ -5199,3 +5237,11 @@ bind all <Control-v> {
     global mods
     $mods(Viewer)-ViewWindow_0-c autoview
 }
+
+bind all <ButtonPress-5>  "app scroll_history %W down"
+bind all <ButtonPress-4>  "app scroll_history %W up"
+bind all <KeyPress-Down>  "app scroll_history %W down"
+bind all <KeyPress-Up>  "app scroll_history %W up"
+bind all <KeyPress-Right>  "app scroll_history %W right"
+bind all <KeyPress-Left>  "app scroll_history %W left"
+
