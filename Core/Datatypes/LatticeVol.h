@@ -21,6 +21,7 @@
 
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Geometry/Tensor.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Math/MiscMath.h>
@@ -168,7 +169,13 @@ LatticeVol<Data>::type_name(int n)
   }
 } 
 
+
+
+
 //! compute the gradient g, at point p
+template <> bool LatticeVol<Tensor>::get_gradient(Vector &, Point &p);
+template <> bool LatticeVol<Vector>::get_gradient(Vector &, Point &p);
+
 template <class Data>
 bool LatticeVol<Data>::get_gradient(Vector &g, Point &p) {
   // for now we only know how to do this for fields with doubles at the nodes
