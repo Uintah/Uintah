@@ -109,7 +109,7 @@ void OnDemandDataWarehouse::finalize()
    d_finalized=true;
 
 #ifdef WAYNE_DEBUG   
-   cerr << "Total Grid alloc: " << totalGridAlloc << endl;
+   cerr << "Total Grid alloc: " << totalGridAlloc << "\n";
    totalGridAlloc = 0;
 #endif
    
@@ -556,20 +556,19 @@ OnDemandDataWarehouse::put(const ReductionVariableBase& var,
   ASSERT(!d_finalized);
   d_lock.writeLock();
 
-   checkPutAccess(label, matlIndex, 0,
-		  false /* it actually may be replaced, but it doesn't need
-			   to explicitly modify with multiple reduces in the
-			   task graph */);
-
-   // Error checking
-   if (!d_reductionDB.exists(label, matlIndex, NULL))
-      d_reductionDB.put(label, matlIndex, NULL, var.clone(), false);
-   else {
-      // Put it in the database
-      ReductionVariableBase* foundVar
-	= d_reductionDB.get(label, matlIndex, NULL);
-      foundVar->reduce(var);
-   }
+  checkPutAccess(label, matlIndex, 0,
+                 false /* it actually may be replaced, but it doesn't need
+                          to explicitly modify with multiple reduces in the
+                          task graph */);
+  // Error checking
+  if (!d_reductionDB.exists(label, matlIndex, NULL))
+    d_reductionDB.put(label, matlIndex, NULL, var.clone(), false);
+  else {
+    // Put it in the database
+    ReductionVariableBase* foundVar
+      = d_reductionDB.get(label, matlIndex, NULL);
+    foundVar->reduce(var);
+  }
    
   d_lock.writeUnlock();
 }
@@ -580,10 +579,10 @@ OnDemandDataWarehouse::override(const ReductionVariableBase& var,
 {
   d_lock.writeLock();  
 
-   checkPutAccess(label, matlIndex, 0, true);
+  checkPutAccess(label, matlIndex, 0, true);
 
-   // Put it in the database, replace whatever may already be there
-   d_reductionDB.put(label, matlIndex, NULL, var.clone(), true);
+  // Put it in the database, replace whatever may already be there
+  d_reductionDB.put(label, matlIndex, NULL, var.clone(), true);
    
   d_lock.writeUnlock();
 }
@@ -741,11 +740,11 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
 {
   d_lock.readLock();
 
-   checkGetAccess(label, matlIndex, patch);
-   
-   if(!d_particleDB.exists(label, matlIndex, patch))
-     throw UnknownVariable(label->getName(), patch, matlIndex);
-   constVar = *d_particleDB.get(label, matlIndex, patch);
+  checkGetAccess(label, matlIndex, patch);
+
+  if(!d_particleDB.exists(label, matlIndex, patch))
+    throw UnknownVariable(label->getName(), patch, matlIndex);
+  constVar = *d_particleDB.get(label, matlIndex, patch);
    
   d_lock.readUnlock();
 }
@@ -1284,16 +1283,15 @@ void OnDemandDataWarehouse::print(ostream& intout, const VarLabel* label,
 {
   d_lock.readLock();
 
-   try {
-     checkGetAccess(label, matlIndex, 0); 
-     ReductionVariableBase* var = d_reductionDB.get(label, matlIndex, NULL);
-     var->print(intout);
-   }
-   catch (UnknownVariable) {
-     throw UnknownVariable(label->getName(), NULL, matlIndex,
-			    "on emit reduction");
-   }
-
+  try {
+    checkGetAccess(label, matlIndex, 0); 
+    ReductionVariableBase* var = d_reductionDB.get(label, matlIndex, NULL);
+    var->print(intout);
+  }
+  catch (UnknownVariable) {
+    throw UnknownVariable(label->getName(), NULL, matlIndex,
+			  "on emit reduction");
+  }
   d_lock.readUnlock();
 }
 
@@ -1342,6 +1340,19 @@ OnDemandDataWarehouse::addScrubCount(const VarLabel* var, int matlIndex,
     d_perpatchDB.addScrubCount(var, matlIndex, patch, count, addIfZero);
     break;
   case TypeDescription::ReductionVariable:
+    //
+    // The Simulation Controller itself needs delT and so we need to
+    // increment delT by one.  This is hackish as I am not sure if
+    // this is the correct place to do this or not, or how to best
+    // do this at all.
+    //
+    if( var->getName() == "delT" ) {
+      //cout << "addScrubCount for delt: " << count << ", addIfZero: "
+      //   << addIfZero << "\n";
+      addIfZero++;
+    }
+
+
     d_reductionDB.addScrubCount(var, matlIndex, patch, count, addIfZero);
     break;
   default:
@@ -1455,7 +1466,7 @@ getGridVar(VariableBase& var, DWDatabase& db,
     if(wanted!=total){
       // This ASSERT or this warning are invoked even when trying
       // to do pefectly legitimate things.
-      cerr << "Warning:  wanted cells/nodes != total cells/nodes " << endl;
+      cerr << "Warning:  wanted cells/nodes != total cells/nodes " << "\n";
     }
   }
 }
@@ -1479,7 +1490,7 @@ allocateTemporaryGridVar(VariableBase& var,
   IntVector diff = highIndex - lowIndex;
   int allocSize = diff.x() * diff.y() * diff.z();
   totalGridAlloc += allocSize;
-  cerr << "Allocate temporary: " << lowIndex << " - " << highIndex << " = " << allocSize << endl;
+  cerr << "Allocate temporary: " << lowIndex << " - " << highIndex << " = " << allocSize << "\n";
 #endif
   var.allocate(lowIndex, highIndex);
 }
@@ -1498,10 +1509,12 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
   // super patch group.
  d_lock.writeLock();
 
+#if 0
   if (!hasRunningTask()) {
     throw InternalError("OnDemandDataWarehouse::AllocateAndPutGridVar can only be used when the dw has a running task associated with it.");
   }
- 
+#endif
+
   checkPutAccess(label, matlIndex, patch, false);  
   bool exists = db.exists(label, matlIndex, patch);
 
@@ -1561,7 +1574,9 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
   IntVector diff = superHighIndex - superLowIndex;
   int allocSize = diff.x() * diff.y() * diff.z();
   totalGridAlloc += allocSize;
-  cerr << "Allocate " << label->getName() << ", matl " << matlIndex << ": " << superLowIndex << " - " << superHighIndex << " = " << allocSize << endl;  
+  cerr << "Allocate " << label->getName() << ", matl " << matlIndex 
+       << ": " << superLowIndex << " - " << superHighIndex << " = " 
+       << allocSize << "\n";  
 #endif
   
   var.allocate(superLowIndex, superHighIndex);
@@ -1756,20 +1771,25 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
       
       VarAccessMap& runningTaskAccesses = runningTaskInfo.d_accesses;
       
-      // If it was accessed by the current task already, then it should
-      // have get access (i.e. if you put it in, you should be able to get it
-      // right back out).
       map<VarLabelMatlPatch, AccessInfo>::iterator findIter;
       findIter = runningTaskAccesses.find(VarLabelMatlPatch(label, matlIndex,
 							   patch));
+
+      if (!hasGetAccess(runningTask, label, matlIndex, patch, lowOffset,
+			highOffset)) {
+
+      // If it was accessed by the current task already, then it should
+      // have get access (i.e. if you put it in, you should be able to get it
+      // right back out).
       if (findIter != runningTaskAccesses.end() &&
 	  lowOffset == IntVector(0, 0, 0) && highOffset == IntVector(0, 0, 0)){
 	// allow non ghost cell get if any access (get, put, or modify) is allowed
+	cout << "allowing non-ghost cell access\n";
 	return;
       }
       
-      if (!hasGetAccess(runningTask, label, matlIndex, patch, lowOffset,
-			highOffset)) {
+
+
 	if (runningTask == 0 ||
 	    (string(runningTask->getName()) != "Relocate::relocateParticles")){
 	  string has = (isFinalized() ? "old" : "new");
@@ -1794,6 +1814,16 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
 	    runningTaskAccesses[VarLabelMatlPatch(label, matlIndex, patch)];
 	  accessInfo.accessType = GetAccess;
 	  accessInfo.encompassOffsets(lowOffset, highOffset);
+
+	  int ID = 0;
+	  if( patch ) ID = patch->getID();
+	  string varname = "noname";
+	  if( label ) varname = label->getName();
+
+	  cout << "Running Task: " << runningTask->getName() << "\n";
+	  cout << "data " << varname << " on patch " << ID
+	       << " and matl: " << matlIndex << " has been gotten\n";
+
 	}
 	else {
 	  findIter->second.encompassOffsets(lowOffset, highOffset);
@@ -1988,8 +2018,7 @@ OnDemandDataWarehouse::checkAccesses(RunningTaskInfo* currentTaskInfo,
       matls = default_matls.get_rep();
     }
  
-    if (string(currentTask->getName())
-	== "Relocate::relocateParticles") {
+    if( currentTask->getName() == "Relocate::relocateParticles" ){
       continue;
     }
     
@@ -2004,13 +2033,23 @@ OnDemandDataWarehouse::checkAccesses(RunningTaskInfo* currentTaskInfo,
 	find_iter = currentTaskAccesses.find(key);
 	if (find_iter == currentTaskAccesses.end() ||
 	    (*find_iter).second.accessType != accessType) {
-	  if ((*find_iter).second.accessType == ModifyAccess && accessType == GetAccess) {
-	    // If you require with ghost cells and modify, it can get into this situation.
+	  if ((*find_iter).second.accessType == ModifyAccess && 
+	      accessType == GetAccess) { // If you require with ghost cells
+	    continue;                    // and modify, it can get into this
+	  }                              // situation.
+
+#if 1
+// THIS OLD HACK PERHAPS CAN GO AWAY
+	  if( lowOffset == IntVector(0, 0, 0) && 
+	      highOffset == IntVector(0, 0, 0)){
+	    // In checkGetAccess(), this case does not record the fact
+	    // that the var was accessed, so don't throw exception here.
 	    continue;
 	  }
-
+#endif
 	  if( find_iter == currentTaskAccesses.end() ) {
 	    cout << "Error: did not find " << label->getName() << "\n";
+	    cout << "Mtl: " << m << ", Patch: " << *patch << "\n";
 	  } else {
 	    cout << "Error: accessType is not GetAccess for " 
 		 << label->getName() << "\n";
