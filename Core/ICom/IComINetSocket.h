@@ -48,6 +48,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
+#include <sys/signal.h>
 
 
 namespace SCIRun {
