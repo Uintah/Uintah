@@ -38,6 +38,7 @@ public:
     inline double b() const {return _b;}
 
     friend void Pio(Piostream&, Color&);
+    friend class HSVColor;
 };
 
 class HSVColor {
@@ -49,11 +50,18 @@ public:
     HSVColor(double hue, double sat, double val);
     ~HSVColor();
     HSVColor(const HSVColor&);
+    HSVColor(const Color&);
     HSVColor& operator=(const HSVColor&);
 
+    // These only affect hue.
+    HSVColor operator*(double);
+    HSVColor operator+(const HSVColor&);
+   
     inline double hue() const {return _hue;}
     inline double sat() const {return _sat;}
     inline double val() const {return _val;}
+
+    friend class Color;
 };
 
 #endif

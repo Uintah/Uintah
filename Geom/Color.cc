@@ -12,6 +12,7 @@
  */
 
 #include <Geom/Color.h>
+#include <Math/MinMax.h>
 #include <Classlib/Persistent.h>
 
 Color::Color()
@@ -83,34 +84,31 @@ Color& Color::operator+=(const Color& c)
 
 Color::Color(const HSVColor& hsv)
 {
-    double h=hsv.hue();
-    double s=hsv.sat();
-    double v=hsv.val();
-    // Convert to HSV...
-    int hh=(int)(h/360.0);
-    h-=hh*360.0;
-    double h6=h/60.0;
-    int i=(int)h6;
-    double f=h6-i;
-    double p1=v*(1.0-s);
-    double p2=v*(1.0-(s*f));
-    double p3=v*(1.0-(s*(1-f)));
-    switch(i){
-    case 0:
-	_r=v;  _g=p3; _b=p1; break;
-    case 1:
-	_r=p2; _g=v;  _b=p1; break;
-    case 2:
-	_r=p1; _g=v;  _b=p3; break;
-    case 3:
-	_r=p1; _g=p2; _b=v;  break;
-    case 4:
-	_r=p3; _g=p1; _b=v;  break;
-    case 5:
-	_r=v;  _g=p1; _b=p2; break;
-    default:
-	_r=_g=_b=0;
-    }
+   int hh((int)(hsv._hue/360.0));
+   double hue(hsv._hue-hh*360.0);
+   
+   double h6(hue/60.0);
+   int i((int)h6);
+   double f(h6-i);
+   double p1(hsv._val*(1.0-hsv._sat));
+   double p2(hsv._val*(1.0-(hsv._sat*f)));
+   double p3(hsv._val*(1.0-(hsv._sat*(1-f))));
+   switch(i){
+   case 0:
+      _r=hsv._val; _g=p3;       _b=p1;   break;
+   case 1:
+      _r=p2;       _g=hsv._val; _b=p1;   break;
+   case 2:
+      _r=p1;       _g=hsv._val; _b=p3;   break;
+   case 3:
+      _r=p1;       _g=p2;       _b=hsv._val; break;
+   case 4:
+      _r=p3;       _g=p1;       _b=hsv._val; break;
+   case 5:
+      _r=hsv._val; _g=p1;       _b=p2;   break;
+   default:
+      _r=_g=_b=0;
+   }
 }
 
 HSVColor::HSVColor()
@@ -131,8 +129,43 @@ HSVColor::HSVColor(const HSVColor& copy)
 {
 }
 
+HSVColor::HSVColor(const Color& rgb)
+{
+   double max(Max(rgb._r,rgb._g,rgb._b));
+   double min(Min(rgb._r,rgb._g,rgb._b));
+   _sat = ((max == 0.0) ? 0.0 : ((max-min)/max));
+   if (_sat != 0.0) {
+      double rl((max-rgb._r)/(max-min));
+      double gl((max-rgb._g)/(max-min));
+      double bl((max-rgb._b)/(max-min));
+      if (max == rgb._r) {
+	 if (min == rgb._g) _hue = 60.0*(5.0+bl);
+	 else _hue = 60.0*(1.0-gl);
+      } else if (max == rgb._g) {
+	 if (min == rgb._b) _hue = 60.0*(1.0+rl);
+	 else _hue = 60.0*(3.0-bl);
+      } else {
+	 if (min == rgb._r)	_hue = 60.0*(3.0+gl);
+	 else _hue = 60.0*(5.0-rl);
+      }
+   } else {
+      _hue = 0.0;
+   }
+   _val = max;
+}
+
 HSVColor& HSVColor::operator=(const HSVColor& copy)
 {
     _hue=copy._hue; _sat=copy._sat; _val=copy._val;
     return *this;
+}
+
+HSVColor HSVColor::operator*(double w)
+{
+   return HSVColor(_hue*w,_val*w,_sat*w);
+}
+
+HSVColor HSVColor::operator+(const HSVColor& c)
+{
+   return HSVColor(_hue+c._hue, _sat+c._sat, _val+c._val);
 }

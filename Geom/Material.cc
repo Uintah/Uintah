@@ -22,7 +22,9 @@ static Persistent* make_Material()
 PersistentTypeID Material::type_id("Material", "Persistent", make_Material);
 
 Material::Material()
-: ref_cnt(0)
+: ref_cnt(0), ambient(0,0,0), diffuse(0,0,0), specular(0,0,0),
+  shininess(0), emission(0,0,0), reflectivity(0.5),
+  transparency(0), refraction_index(1)
 {
 }
 
@@ -53,6 +55,7 @@ Material& Material::operator=(const Material& copy)
    diffuse=copy.diffuse;
    specular=copy.specular;
    shininess=copy.shininess;
+   emission=copy.emission;
    reflectivity=copy.reflectivity;
    transparency=copy.transparency;
    refraction_index=copy.refraction_index;
