@@ -20,13 +20,17 @@ SRCS     += $(SRCDIR)/Arches.cc $(SRCDIR)/BoundaryCondition.cc \
 #$(SRCDIR)/Discretization.cc 
 #	$(SRCDIR)/PressureSolver.cc
 
-PSELIBS := Uintah/Parallel Uintah/Interface Uintah/Grid Uintah/Exceptions
+PSELIBS := Uintah/Parallel Uintah/Interface Uintah/Grid Uintah/Exceptions \
+	   SCICore/Exceptions
 LIBS := $(XML_LIBRARY) -lftn -lm -lblas
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.11  2000/05/30 19:35:26  dav
+# added SCICore/Exceptions to PSELIBS
+#
 # Revision 1.10  2000/05/18 16:14:39  sparker
 # Commented out fortran compilation until we get the autoconf
 #  part done
