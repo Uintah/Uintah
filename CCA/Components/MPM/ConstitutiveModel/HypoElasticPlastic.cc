@@ -37,7 +37,9 @@ using namespace SCIRun;
 #define FRACTURE
 #undef FRACTURE
 
-HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
+HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, 
+                                       MPMLabel* Mlb, 
+                                       int n8or27)
 {
   lb = Mlb;
 
@@ -271,8 +273,6 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
-  double equivStress = 0.0;
-  double flowStress = 0.0;
   double bulk  = d_initialData.Bulk;
   double shear = d_initialData.Shear;
   double rho_0 = matl->getInitialDensity();
@@ -423,28 +423,30 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       Matrix3 tensorP = one*(tensorSig.Trace()/3.0);
       tensorS = tensorSig - tensorP;
 
-      // Integrate the stress rate equation to get a trial stress and 
-      // calculate the J2 equivalent stress (assuming isotropic yield surface)
+      // Integrate the stress rate equation to get a trial stress
       Matrix3 trialS = tensorS + tensorEta*(2.0*shear*delT);
-      equivStress = (trialS.NormSquared())*1.5;
+      double equivStress = sqrt((trialS.NormSquared())*1.5);
 
-      // Calculate flow stress
+      // Calculate flow stress (strain driven problem)
       double temperature = pTemperature[idx] + pPlasticTemperature[idx];
-      flowStress = d_plasticity->computeFlowStress(tensorEta, tensorS, 
-                                                   temperature,
-						   delT, d_tol, matl, idx);
+      double flowStress = d_plasticity->computeFlowStress(tensorEta, 
+                                                          temperature,
+						          delT, d_tol, 
+                                                          matl, idx);
 
       // Initialize rate of temperature increase
       double Tdot = 0.0;
 
       // Evaluate yield condition
       double porosity = 0.0;
-      double traceOfTrialStress = 
-          tensorSig.Trace() + tensorD.Trace()*(2.0*shear*delT);
-      double Phi = d_yield->evalYieldCondition(sqrt(equivStress), flowStress,
-                                      traceOfTrialStress, porosity);
-      cout << "Equivalent stress = " << sqrt(equivStress) 
-           << " Flow stress = " << sqrt(flowStress) << endl;
+      double traceOfTrialStress = tensorSig.Trace() + 
+                                  tensorD.Trace()*(2.0*shear*delT);
+      double sig = flowStress;
+      double Phi = d_yield->evalYieldCondition(equivStress, flowStress,
+                                               traceOfTrialStress, 
+                                               porosity, sig);
+      //cout << "Equivalent stress = " << equivStress 
+      //     << " Flow stress = " << flowStress << endl;
       if (Phi <= 0.0) {
 
 	// Calculate the deformed volume
@@ -477,20 +479,71 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 	// Basic assumption is that all strain rate is plastic strain rate
 	ASSERT(flowStress != 0);
 
-	Matrix3 Stilde;
-	double delGamma;
+	Matrix3 Stilde(0.0);
+	double delGamma = 0.0;
 	double sqrtSxS = tensorS.Norm(); 
 	if (sqrtSxS == 0 || tensorS.Determinant() == 0.0) { 
 	  // If the material goes plastic in the first step, 
 	  Stilde = trialS;
-	  delGamma = ((sqrt(equivStress)-flowStress)/(2.0*shear))/
+	  delGamma = ((equivStress-flowStress)/(2.0*shear))/
 	    (1.0+bulk/(3.0*shear));
 	} else {
+
+          // Calculate the derivative of the yield function (using the 
+          // previous time step (n) values)
+          Matrix3 q(0.0);
+          d_yield->evalDerivOfYieldFunction(tensorSig, flowStress, porosity, q);
+
 	  // Calculate the tensor u (at start of time interval)
+          double sqrtqs = sqrt(q.Contract(tensorS));
+	  ASSERT(sqrtqs != 0);
+          Matrix3 u = q/sqrtqs;
+
+          // Calculate c and d at the beginning of time step
+          double cplus = u.NormSquared();
+          double dplus = u.Contract(tensorEta);
+         
+          // Calculate gamma_dot at the beginning of the time step
+          ASSERT(cplus != 0);
+          double gammadotplus = dplus/cplus;
+
+          // Set initial theta
+          double theta = 1.0;
+
+          // Calculate u_q and u_eta
+	  Matrix3 u_eta = tensorEta/sqrt(tensorEta.NormSquared());
+	  Matrix3 u_q = q/sqrt(q.NormSquared());
+
+	  // Calculate new dstar
+	  int count = 0;
+	  double dStarOld = 0.0;
+          double dStar = dplus;
+	  do {
+	    dStarOld = dStar;
+
+            // Calculate dStar
+            double dStar = ((1.0-0.5*theta)*u_eta.Contract(tensorEta) + 
+                           0.5*theta*u_q.Contract(tensorEta))*sqrt(cplus);
+
+            // Update theta
+	    theta = (dStar - cplus*gammadotplus)/dStar;
+	    ++count;
+	  } while (fabs(dStar-dStarOld) > d_tol && count < 5);
+
+	  // Calculate delGammaEr
+	  double delGammaEr =  (sqrtTwo*sig - sqrtqs)/(2.0*shear*cplus);
+
+	  // Calculate delGamma
+	  delGamma = dStar/cplus*delT - delGammaEr;
+
+	  // Calculate Stilde
+	  double denom = 1.0 + (3.0*sqrtTwo*shear*delGamma)/sig; 
+	  ASSERT(denom != 0);
+	  Stilde = trialS/denom;
+
+          /* OLD CODE
 	  ASSERT(sqrtSxS != 0);
 	  Matrix3 tensorU = tensorS*(sqrtThree/sqrtSxS);
-
-	  // Calculate cplus and initial values of dstar, gammadot and theta
 	  ASSERT(tensorS.Determinant() != 0.0);
 	  double gammadotplus = tensorEta.Contract(tensorS.Inverse())*sqrtSxS/
                                 sqrtThree;
@@ -498,13 +551,9 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 	  double sqrtcplus = sqrt(cplus);
 	  double dstar = tensorU.Contract(tensorEta); ASSERT(dstar != 0);
 	  double theta = (dstar - cplus*gammadotplus)/dstar;
-
-	  // Calculate u_eta and u_q
 	  double sqrtEtaxEta = tensorEta.Norm();
 	  Matrix3 tensorU_eta = tensorEta/sqrtEtaxEta;
 	  Matrix3 tensorU_q = tensorS/sqrtSxS;
-
-	  // Calculate new dstar
 	  int count = 0;
 	  double dstar_old = 0.0;
 	  do {
@@ -515,22 +564,17 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 	    theta = (dstar - cplus*gammadotplus)/dstar;
 	    ++count;
 	  } while (fabs(dstar-dstar_old) > d_tol && count < 5);
-
-	  // Calculate delGammaEr
 	  double delGammaEr =  (sqrtTwo*flowStress - sqrtThree*sqrtSxS)/
 	    (2.0*shear*cplus);
-
-	  // Calculate delGamma
 	  delGamma = dstar/cplus*delT - delGammaEr;
-
-	  // Calculate Stilde
 	  double denom = 1.0 + (3.0*sqrtTwo*shear*delGamma)/flowStress; 
 	  ASSERT(denom != 0);
 	  Stilde = trialS/denom;
+          */
 	}
         
 	// Do radial return adjustment
-	tensorS = Stilde*(flowStress*sqrtTwo/(sqrtThree*Stilde.Norm()));
+	tensorS = Stilde*(sig*sqrtTwo/(sqrtThree*Stilde.Norm()));
 	equivStress = sqrt((tensorS.NormSquared())*1.5);
 
 	// Calculate the updated scalar damage parameter
@@ -880,7 +924,7 @@ HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
 
 	// To determine if the stress is above or below yield use a 
         // von Mises yield criterion 
-	flowStress = d_plasticity->computeFlowStress(tensorEta, tensorS, 
+	flowStress = d_plasticity->computeFlowStress(tensorEta, 
                                                      temperature,
 						     delT, d_tol, matl, idx);
 
@@ -888,8 +932,9 @@ HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
         double porosity = 0.0;
         double traceOfTrialStress = 
             tensorSig.Trace() + tensorD.Trace()*(2.0*shear*delT);
+        double sig = flowStress;
         double Phi = d_yield->evalYieldCondition(sqrt(equivStress), flowStress,
-                                        traceOfTrialStress, porosity);
+                                        traceOfTrialStress, porosity, sig);
         if (Phi <= 0.0) {
 
 	  // Calculate the deformed volume

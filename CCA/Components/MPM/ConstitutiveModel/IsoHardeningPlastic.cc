@@ -13,9 +13,9 @@ IsoHardeningPlastic::IsoHardeningPlastic(ProblemSpecP& ps)
 
   // Initialize internal variable labels for evolution
   pAlphaLabel = VarLabel::create("p.alpha",
-				 ParticleVariable<double>::getTypeDescription());
+	ParticleVariable<double>::getTypeDescription());
   pAlphaLabel_preReloc = VarLabel::create("p.alpha+",
-					  ParticleVariable<double>::getTypeDescription());
+	ParticleVariable<double>::getTypeDescription());
 }
 	 
 IsoHardeningPlastic::~IsoHardeningPlastic()
@@ -56,9 +56,8 @@ IsoHardeningPlastic::initializeInternalVars(ParticleSubset* pset,
 					    DataWarehouse* new_dw)
 {
   new_dw->allocateAndPut(pAlpha_new, pAlphaLabel, pset);
-  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
-    pAlpha_new[*iter] = 0.0;
-  }
+  ParticleSubset::iterator iter = pset->begin();
+  for(;iter != pset->end(); iter++) pAlpha_new[*iter] = 0.0;
 }
 
 void 
@@ -82,14 +81,14 @@ IsoHardeningPlastic::updateElastic(const particleIndex idx)
 }
 
 void
-IsoHardeningPlastic::updatePlastic(const particleIndex idx, const double& delGamma)
+IsoHardeningPlastic::updatePlastic(const particleIndex idx, 
+                                   const double& delGamma)
 {
   pAlpha_new[idx] = pAlpha[idx] + sqrt(2.0/3.0)*delGamma;
 }
 
 double 
 IsoHardeningPlastic::computeFlowStress(const Matrix3& ,
-				       const Matrix3& ,
 				       const double& ,
 				       const double& ,
 				       const double& ,
