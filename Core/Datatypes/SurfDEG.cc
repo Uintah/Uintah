@@ -1,5 +1,5 @@
 /*
- *  MeshTet.cc: Tetrahedral mesh with new design.
+ *  SurfDEG.cc: Tetrahedral mesh with new design.
  *
  *  Written by:
  *   Michael Callahan
@@ -11,32 +11,32 @@
  *
  */
 
-#include <Core/Datatypes/MeshTet.h>
+#include <Core/Datatypes/SurfDEG.h>
 
 
 namespace SCIRun {
 
-PersistentTypeID MeshTet::type_id("MeshTet", "Datatype", NULL);
+PersistentTypeID SurfDEG::type_id("SurfDEG", "Datatype", NULL);
 
 
-MeshTet::MeshTet()
+SurfDEG::SurfDEG()
 {
 }
 
-MeshTet::MeshTet(const MeshTet &copy)
+SurfDEG::SurfDEG(const SurfDEG &copy)
   : points_(copy.points_),
-    tets_(copy.tets_),
+    tris_(copy.tris_),
     neighbors_(copy.neighbors_)
 {
 }
 
-MeshTet::~MeshTet()
+SurfDEG::~SurfDEG()
 {
 }
 
 
 BBox
-MeshTet::get_bounding_box() const
+SurfDEG::get_bounding_box() const
 {
   BBox result;
 
@@ -49,157 +49,84 @@ MeshTet::get_bounding_box() const
 }
 
 
-MeshTet::node_iterator
-MeshTet::node_begin() const
+SurfDEG::node_iterator
+SurfDEG::node_begin() const
 {
   return 0;
 }
 
-MeshTet::node_iterator
-MeshTet::node_end() const
+SurfDEG::node_iterator
+SurfDEG::node_end() const
 {
   return points_.size();
 }
 
-MeshTet::edge_iterator
-MeshTet::edge_begin() const
+SurfDEG::edge_iterator
+SurfDEG::edge_begin() const
 {
   return 0;
 }
 
-MeshTet::edge_iterator
-MeshTet::edge_end() const
+SurfDEG::edge_iterator
+SurfDEG::edge_end() const
 {
-  return (tets_.size() >> 2) * 6;
+  return tris_.size();
 }
 
-MeshTet::face_iterator
-MeshTet::face_begin() const
+SurfDEG::face_iterator
+SurfDEG::face_begin() const
 {
   return 0;
 }
 
-MeshTet::face_iterator
-MeshTet::face_end() const
+SurfDEG::face_iterator
+SurfDEG::face_end() const
 {
-  return tets_.size();
-}
-
-MeshTet::cell_iterator
-MeshTet::cell_begin() const
-{
-  return 0;
-}
-
-MeshTet::cell_iterator
-MeshTet::cell_end() const
-{
-  return tets_.size() >> 2;
+  return tris_.size() / 3;
 }
 
 
 void
-MeshTet::get_nodes_from_edge(node_array &array, edge_index idx) const
+SurfDEG::get_nodes_from_edge(node_array &array, edge_index idx) const
 {
   static int table[6][2] =
   {
     {0, 1},
-    {0, 2},
-    {0, 3},
     {1, 2},
-    {1, 3},
-    {2, 3}
+    {2, 0},
   };
 
-  const int tet = idx / 6;
-  const int off = idx % 6;
-  const int node = tet * 4;
+  const int off = idx % 3;
+  const int node = idx - off;
 
-  array.push_back(tets_[node + table[off][0]]);
-  array.push_back(tets_[node + table[off][1]]);
+  array.push_back(tris_[node + table[off][0]]);
+  array.push_back(tris_[node + table[off][1]]);
 }
 
 
 void
-MeshTet::get_nodes_from_face(node_array &array, face_index idx) const
+SurfDEG::get_nodes_from_face(node_array &array, face_index idx) const
 {
-  static int table[4][3] =
-  {
-    {1, 2, 3},
-    {3, 2, 0},
-    {0, 1, 3},
-    {2, 1, 0}
-  };
-  
-  int tet = idx & 0xfffffffc;
-  int off = idx & 3;
-  array.push_back(tets_[tet + table[off][0]]);
-  array.push_back(tets_[tet + table[off][1]]);
-  array.push_back(tets_[tet + table[off][2]]);
-  array.push_back(tets_[tet + table[off][3]]);
+  array.push_back(tris_[idx * 3 + 0]);
+  array.push_back(tris_[idx * 3 + 1]);
+  array.push_back(tris_[idx * 3 + 2]);
 }
 
 
 void
-MeshTet::get_nodes_from_cell(node_array &array, cell_index idx) const
+SurfDEG::get_edges_from_face(edge_array &array, face_index idx) const
 {
-  array.push_back(tets_[idx * 4 + 0]);
-  array.push_back(tets_[idx * 4 + 1]);
-  array.push_back(tets_[idx * 4 + 2]);
-  array.push_back(tets_[idx * 4 + 3]);
+  array.push_back(idx * 3 + 0);
+  array.push_back(idx * 3 + 1);
+  array.push_back(idx * 3 + 2);
 }
 
 
 void
-MeshTet::get_edges_from_face(edge_array &array, face_index idx) const
-{
-  static int table[4][3] =
-  {
-    {3, 4, 5},
-    {1, 2, 5},
-    {0, 2, 4},
-    {0, 1, 3}
-  };
-
-  int base = idx / 4 * 6;
-  int off = idx % 4;
-
-  array.push_back(base + table[off][0]);
-  array.push_back(base + table[off][1]);
-  array.push_back(base + table[off][2]);
-  array.push_back(base + table[off][3]);
-}
-
-
-void
-MeshTet::get_edges_from_cell(edge_array &array, cell_index idx) const
-{
-  idx *= 6;
-  array.push_back(idx++);
-  array.push_back(idx++);
-  array.push_back(idx++);
-  array.push_back(idx++);
-  array.push_back(idx++);
-  array.push_back(idx);
-}
-
-
-void
-MeshTet::get_faces_from_cell(face_array &array, cell_index idx) const
-{
-  idx *= 4;
-  array.push_back(idx++);
-  array.push_back(idx++);
-  array.push_back(idx++);
-  array.push_back(idx);
-}
-
-void
-MeshTet::get_neighbor_from_face(cell_index &neighbor, face_index idx) const
+SurfDEG::get_neighbor_from_edge(face_index &neighbor, edge_index idx) const
 {
   neighbor = neighbors_[idx];
 }
-
 
 
 static double
@@ -213,7 +140,7 @@ distance2(const Point &p0, const Point &p1)
 
 
 void
-MeshTet::locate_node(node_index &node, const Point &p)
+SurfDEG::locate_node(node_index &node, const Point &p)
 {
   // TODO: Use search structure instead of exaustive search.
   int min_indx;
@@ -241,25 +168,26 @@ MeshTet::locate_node(node_index &node, const Point &p)
   node = min_indx;
 }
 
+
 #if 0
+
 void
-MeshTet::locate_edge(edge_index &edge, const Point & /* p */)
+SurfDEG::locate_edge(edge_index &edge, const Point & /* p */)
 {
   edge = edge_end();
 }
 
 void
-MeshTet::locate_face(face_index &face, const Point & /* p */)
+SurfDEG::locate_face(face_index &face, const Point & /* p */)
 {
   face = face_end();
 }
-#endif
 
 
 void
-MeshTet::locate_cell(cell_index &cell, const Point &p)
+SurfDEG::locate_cell(cell_index &cell, const Point &p)
 {
-  for (int i=0; i < tets_.size(); i+=4)
+  for (int i=0; i < tris_.size(); i+=4)
   {
     if (inside4_p(i, p))
     {
@@ -269,33 +197,34 @@ MeshTet::locate_cell(cell_index &cell, const Point &p)
   }
   cell = cell_end();
 }
-
+#endif
 
 
 void
-MeshTet::unlocate(Point &result, const Point &p)
+SurfDEG::unlocate(Point &result, const Point &p)
 {
   result = p;
 }
 
 
 void
-MeshTet::get_point(Point &result, node_index index) const
+SurfDEG::get_point(Point &result, node_index index) const
 {
   result = points_[index];
 }
 
 
+#if 0
 bool
-MeshTet::inside4_p(int i, const Point &p)
+SurfDEG::inside4_p(int i, const Point &p)
 {
   // TODO: This has not been tested.
   // TODO: Looks like too much code to check sign of 4 plane/point tests.
 
-  const Point &p0 = points_[tets_[i+0]];
-  const Point &p1 = points_[tets_[i+1]];
-  const Point &p2 = points_[tets_[i+2]];
-  const Point &p3 = points_[tets_[i+3]];
+  const Point &p0 = points_[tris_[i+0]];
+  const Point &p1 = points_[tris_[i+1]];
+  const Point &p2 = points_[tris_[i+2]];
+  const Point &p3 = points_[tris_[i+3]];
   const double x0 = p0.x();
   const double y0 = p0.y();
   const double z0 = p0.z();
@@ -345,17 +274,18 @@ MeshTet::inside4_p(int i, const Point &p)
 
   return true;
 }
+#endif
 
 
-#define MESHTET_VERSION 1
+#define SURFDEG_VERSION 1
 
 void
-MeshTet::io(Piostream &stream)
+SurfDEG::io(Piostream &stream)
 {
-  stream.begin_class(type_id.type.c_str(), MESHTET_VERSION);
+  stream.begin_class(type_id.type.c_str(), SURFDEG_VERSION);
 
   Pio(stream, points_);
-  Pio(stream, tets_);
+  Pio(stream, tris_);
   Pio(stream, neighbors_);
 
   stream.end_class();

@@ -20,6 +20,8 @@ SRCS += $(SRCDIR)/BasicSurfaces.cc	    \
         $(SRCDIR)/Matrix.cc		    \
         $(SRCDIR)/Mesh.cc		    \
         $(SRCDIR)/MeshGeom.cc		    \
+        $(SRCDIR)/MeshRG.cc		    \
+        $(SRCDIR)/MeshTet.cc		    \
         $(SRCDIR)/Path.cc		    \
         $(SRCDIR)/PointCloudGeom.cc	    \
         $(SRCDIR)/PropertyManager.cc	    \
@@ -35,6 +37,7 @@ SRCS += $(SRCDIR)/BasicSurfaces.cc	    \
         $(SRCDIR)/SurfTree.cc		    \
         $(SRCDIR)/Surface.cc		    \
         $(SRCDIR)/SurfaceGeom.cc	    \
+        $(SRCDIR)/SurfDEG.cc     	    \
         $(SRCDIR)/SymSparseRowMatrix.cc	    \
 	$(SRCDIR)/TriSurfGeom.cc	    \
         $(SRCDIR)/TetMeshGeom.cc	    \
