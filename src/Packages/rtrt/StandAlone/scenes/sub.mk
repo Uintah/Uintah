@@ -97,6 +97,7 @@ SCENES += \
 	$(SRCDIR)/VolumeVisRGBAMod.mo \
 	$(SRCDIR)/sketch.mo \
 	$(SRCDIR)/pt_particle.mo \
+	$(SRCDIR)/tstdemo.mo \
 #	$(SRCDIR)/dtiglyph.mo \
 #	$(SRCDIR)/science-room.mo \
 #	$(SRCDIR)/science-room-full.mo \
