@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>
