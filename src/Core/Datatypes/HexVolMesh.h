@@ -187,6 +187,8 @@ public:
   void set_point(const Point &point, Node::index_type index)
     { points_[index] = point; }
 
+  void get_normal(Vector &/*normal*/, Node::index_type /*index*/) const
+  { ASSERTFAIL("not implemented") }
 
   //! TODO: Remove this function?
   double get_element_size(const Elem::index_type &ci) {return get_volume(ci);}
