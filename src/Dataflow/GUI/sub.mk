@@ -89,6 +89,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Submatrix.tcl \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
 	$(SRCDIR)/TextureVolVis.tcl \
+	$(SRCDIR)/TransformScalarData.tcl \
 	$(SRCDIR)/ViewWidget.tcl \
 	$(SRCDIR)/Viewer.tcl \
 	$(SRCDIR)/TclStream.tcl \
