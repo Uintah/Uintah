@@ -380,6 +380,8 @@ public:
   static  const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
+  virtual const TypeDescription *get_type_description() const;
+
 private:
 
   // each LevelMesh needs grid and level index
@@ -399,6 +401,11 @@ private:
 };
 
 
+const TypeDescription* get_type_description(TetVolMesh *);
+const TypeDescription* get_type_description(TetVolMesh::Node *);
+const TypeDescription* get_type_description(TetVolMesh::Edge *);
+const TypeDescription* get_type_description(TetVolMesh::Face *);
+const TypeDescription* get_type_description(TetVolMesh::Cell *);
 
 
 } // namespace SCIRun
