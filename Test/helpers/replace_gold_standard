@@ -26,10 +26,16 @@ if [ $yesno == "y" -o $yesno == "yes" ]; then
     exit 1
   fi
   echo "cp -r --dereference $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/."
+  # if it has a --dereference option, then use it
   cp -r --dereference $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/.
   if [ $? != "0" ]; then
-    echo "failed"
-    exit 1
+    echo "Try without --dereference."
+    echo "cp -r $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/."
+    cp -r $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/.
+    if [ $? != "0" ]; then
+	echo "failed"
+	exit 1
+    fi
   fi
   echo "cp $replacement_dir/$testname/malloc_stats $gold_standard_dir/$testname/."
   cp $replacement_dir/$testname/malloc_stats $gold_standard_dir/$testname/.
