@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
+#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 
 namespace Uintah {
   class AMRICE : public ICE{
@@ -99,7 +100,7 @@ namespace Uintah {
     void set_refineFlags( CCVariable<Vector>& q_CC_grad,
                           double threshold,
                           CCVariable<int>& refineFlag,
-                          PerPatch<int>& refinePatchFlag,
+                          PerPatch<PatchFlagP>& refinePatchFlag,
                           const Patch* patch);                                                  
     AMRICE(const AMRICE&);
     AMRICE& operator=(const AMRICE&);

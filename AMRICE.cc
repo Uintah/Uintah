@@ -10,6 +10,7 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
 
@@ -723,14 +724,15 @@ ______________________________________________________________________*/
 void AMRICE::set_refineFlags( CCVariable<Vector>& q_CC_grad,
                                   double threshold,
                                   CCVariable<int>& refineFlag,
-                                  PerPatch<int>& refinePatchFlag,
+                                  PerPatch<PatchFlagP>& refinePatchFlag,
                                   const Patch* patch) 
 {                  
+  PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
   for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
     IntVector c = *iter;
     if( q_CC_grad[c].length() > threshold){
       refineFlag[c] = true;
-      refinePatchFlag.setData(true);
+      refinePatch->set();
     }
   }
 }
@@ -754,7 +756,7 @@ void AMRICE::errorEstimate(const ProcessorGroup*,
     CCVariable<int> refineFlag;
     new_dw->getModifiable(refineFlag, refineFlagLabel, 0, patch);      
 
-    PerPatch<int> refinePatchFlag;
+    PerPatch<PatchFlagP> refinePatchFlag;
     new_dw->get(refinePatchFlag, refinePatchLabel, 0, patch);
 
 
