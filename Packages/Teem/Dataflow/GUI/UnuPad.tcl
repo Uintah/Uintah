@@ -51,7 +51,6 @@ itcl_class Teem_UnuNtoZ_UnuPad {
 	set $this-dim 0
     }
 
-    # never pad the tuple axis (axis 0) so no interface for axis 0
     method make_min_max {} {
 	set w .ui[modname]
         if {[winfo exists $w]} {
@@ -69,7 +68,6 @@ itcl_class Teem_UnuNtoZ_UnuPad {
 	}
     }
     
-    # never pad the tuple axis (axis 0)
     method init_axes {} {
 	for {set i 0} {$i < [set $this-dim]} {incr i} {
 	    #puts "init_axes----$i"
