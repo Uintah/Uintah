@@ -107,7 +107,6 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/pcube.c \
 	$(SRCDIR)/fpcube.c \
 	$(SRCDIR)/templates.cc \
-	$(SRCDIR)/BrickArray2.cc \
 	$(SRCDIR)/SelectableGroup.cc \
 	$(SRCDIR)/CutGroup.cc \
 	$(SRCDIR)/CutMaterial.cc \

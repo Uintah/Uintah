@@ -175,7 +175,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
     work=new WorkQueue("Bricking");
     work->refill(nx, bnp, 5);
     SCIRun::Parallel<HVolume<T,A,B> > phelper(this, &HVolume<T,A,B>::brickit);
-    Thread::parallel(phelper, bnp, true);
+    SCIRun::Thread::parallel(phelper, bnp, true);
     delete work;
     
     int bout_fd;
@@ -340,7 +340,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
     work=new WorkQueue("Building hierarchy");
     work->refill(totaltop, np, 5);
     SCIRun::Parallel<HVolume<T,A,B> > phelper(this, &HVolume<T,A,B>::parallel_calc_mcell);
-    Thread::parallel(phelper, np, true);
+    SCIRun::Thread::parallel(phelper, np, true);
     delete work;
 #endif
     cerr << "done\n";
@@ -390,7 +390,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
   work=new WorkQueue("Bricking");
   work->refill(nx, bnp, 5);
   SCIRun::Parallel<HVolume<T,A,B> > phelper(this, &HVolume<T,A,B>::brickit);
-  Thread::parallel(phelper, bnp, true);
+  SCIRun::Thread::parallel(phelper, bnp, true);
   delete work;
 
   double dt=SCIRun::Time::currentSeconds()-start;
