@@ -86,7 +86,7 @@ void CCAComponentModel::buildComponentList()
   }
 
   destroyComponentList();
-  string component_path = "/home/sparker/SCIRun/src/CCA/Components/Builder";
+  string component_path = "../src/CCA/Components/Builder";
   while(component_path != ""){
     unsigned int firstColon = component_path.find(':');
     string dir;
@@ -181,7 +181,7 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
     return 0;
   //ComponentDescription* cd = iter->second;
 
-  LIBRARY_HANDLE handle = GetLibraryHandle("/home/sparker/SCIRun/cca/lib/libCCA_Components_Builder.so");
+  LIBRARY_HANDLE handle = GetLibraryHandle("lib/libCCA_Components_Builder.so");
   if(!handle){
     cerr << "Cannot load component " << type << '\n';
     cerr << SOError() << '\n';
