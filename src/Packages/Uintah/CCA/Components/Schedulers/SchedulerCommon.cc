@@ -426,14 +426,12 @@ void
 SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* patches,
 		  const MaterialSubset* matls, DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
-  //cout << "RANDY: SchedulerCommon::copyDataToNewGrid() BGN" << endl;
+  dbg << "SchedulerCommon::copyDataToNewGrid() BGN" << endl;
 
   OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(old_dw);
   OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(new_dw);
 
   // For each patch in the patch subset which contains patches in the new grid
-
-  //cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() BGN" << endl;
 
   for ( int idx = 0; idx < patches->size(); idx++ ) {
     //cerr << "Patches[ " << idx << " ] = " << patches->get(idx)->getID() << endl;
@@ -459,6 +457,12 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
     //    cerr << ") on patch(" << currentVar.patch_->getID() << ") on matl(" << currentVar.matlIndex_ << ")" << endl;
     //cout << "  Label(" << setw(15) << currentVar.label_->getName() << "): Patch(" << currentVar.patch_->getID() << "): Material(" << currentVar.matlIndex_ << ")" << endl; 
     const Level* oldLevel = currentVar.patch_->getLevel();
+
+    // If there is a level that no longer exists, we don't need to copy it
+    if ( oldLevel->getIndex() >= newDataWarehouse->getGrid()->numLevels() ) {
+      continue;
+    }
+
     const Level* newLevel = (newDataWarehouse->getGrid()->getLevel( oldLevel->getIndex() )).get_rep();
     const Patch* oldPatch = currentVar.patch_;
 
@@ -692,5 +696,5 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
 
   // d_lock.writeUnlock(); Do we need this?
 
-  //cout << "RANDY: SchedulerCommon::copyDataToNewGrid() END" << endl;
+  dbg << "SchedulerCommon::copyDataToNewGrid() END" << endl;
 }
