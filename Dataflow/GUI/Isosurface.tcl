@@ -134,6 +134,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	 set window .ui[modname]
 	 $swatch config -background [format #%04x%04x%04x $ir $ig $ib]
+         $this-c needexecute
     }
 
     method addColorSelection {frame color} {
