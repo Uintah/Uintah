@@ -3798,7 +3798,7 @@ class BioTensorApp {
 	    
 	    set data_completed 1
 
-	    if {!$dt_completed} {
+	    if {!$dt_completed && !$loading} {
 		disableModule $mods(ChooseNrrd-DT) 1
 	    }
 
