@@ -1188,8 +1188,29 @@ TriSurfMesh::swap_shared_edge(Face::index_type f1, Face::index_type f2)
   return true;
 }
 
+bool
+TriSurfMesh::remove_face(Face::index_type f)
+{
+  bool rval = true;
+  face_lock_.lock();
+  vector<under_type>::iterator fb = faces_.begin() + f*3;
+  vector<under_type>::iterator fe = fb + 3;
+
+  if (fe <= faces_.end())
+    faces_.erase(fb, fe);
+  else {
+    rval = false;
+  }
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NORMALS_E;
+  face_lock_.unlock();
+  return rval;
+}
+
 void
-TriSurfMesh::add_triangle(Node::index_type a, Node::index_type b, Node::index_type c)
+TriSurfMesh::add_triangle(Node::index_type a, Node::index_type b, 
+			  Node::index_type c)
 {
   face_lock_.lock();
   faces_.push_back(a);
@@ -1216,6 +1237,37 @@ TriSurfMesh::add_elem(Node::array_type a)
   return static_cast<Elem::index_type>((faces_.size() - 1) / 3);
 }
 
+void
+TriSurfMesh::orient(Face::index_type fi) 
+{
+  face_lock_.lock();
+  Node::array_type ra;
+  get_nodes(ra,fi);
+  const Point &p0 = point(ra[0]);
+  const Point &p1 = point(ra[1]);
+  const Point &p2 = point(ra[2]);
+  const Point p3(0,0,0);
+
+  double sgn = Dot(Cross(p1-p0,p2-p0),p3-p0);
+
+  if(sgn < 0.0) {
+    unsigned int base = fi * 3;
+    int tmp = faces_[base + 1];
+    faces_[base + 1] = faces_[base + 2];  
+    faces_[base + 2] = tmp;
+    sgn=-sgn;
+    cout << "swapping nodes in tri." << endl;
+  }
+
+  if(sgn < 1.e-9){ // return 0; // Degenerate...
+    cerr << "Warning - small element, volume=" << sgn << endl;
+  }
+
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NORMALS_E;
+  face_lock_.unlock();
+}
 
 void
 TriSurfMesh::compute_edge_neighbors(double /*err*/)

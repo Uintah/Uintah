@@ -250,6 +250,8 @@ public:
   void add_triangle(Node::index_type, Node::index_type, Node::index_type);
   //! swap the shared edge between 2 faces, if they share an edge.
   bool swap_shared_edge(Face::index_type, Face::index_type);
+  bool remove_face(Face::index_type);
+  void orient(Face::index_type);  
   void add_triangle(const Point &p0, const Point &p1, const Point &p2);
   Elem::index_type add_elem(Node::array_type a);
   void node_reserve(size_t s) { points_.reserve(s); }
