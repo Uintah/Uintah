@@ -143,6 +143,7 @@ SimpleSimulationController::run()
    
    // Initialize the CFD and/or MPM components
    SimulationInterface* sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
+
    if(!sim)
      throw InternalError("No simulation component");
    sim->problemSetup(ups, grid, sharedState);
