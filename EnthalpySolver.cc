@@ -347,6 +347,8 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->modifies(d_lab->d_radiationFluxSINLabel);
       tsk->modifies(d_lab->d_radiationFluxTINLabel);
       tsk->modifies(d_lab->d_radiationFluxBINLabel);
+      if (timelabels->integrator_last_step)
+        tsk->computes(d_lab->d_totalRadSrcLabel);
     }
   }
 
@@ -390,6 +392,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
   }
 
+  double new_total_src = 0.0;
   double maxAbsU = 0.0;
   double maxAbsV = 0.0;
   double maxAbsW = 0.0;
@@ -721,13 +724,15 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 	    IntVector currCell(colX, colY, colZ);
             double vol=cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
 	    enthalpyVars.scalarNonlinearSrc[currCell] += vol*enthalpyVars.src[currCell];
+	    new_total_src += vol*enthalpyVars.src[currCell];
 	  }
 	}
       }
 #if 0
 	d_DORadiation->d_linearSolver->destroyMatrix();
 #endif
-
+      if (timelabels->integrator_last_step)
+	new_dw->put(sum_vartype(new_total_src), d_lab->d_totalRadSrcLabel);
       }
       else
 	d_source->computeEnthalpyRadThinSrc(pc, patch, cellinfo,
