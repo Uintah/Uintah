@@ -194,14 +194,12 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
     tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  if (d_MAlab)
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, Ghost::None,
-    		  Arches::ZEROGHOSTCELLS);
-
   if (d_MAlab && initialize) {
 #ifdef ExactMPMArchesInitialize
     tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel, Ghost::None,
 		  Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, Ghost::None,
+    		  Arches::ZEROGHOSTCELLS);
 #else
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
 		  Arches::ZEROGHOSTCELLS);
@@ -211,9 +209,14 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
 		  Arches::ZEROGHOSTCELLS);
 
-  if (d_MAlab && !initialize && d_DORadiationCalc)
+  if (d_MAlab && !initialize) {
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, Ghost::None,
+    		  Arches::ZEROGHOSTCELLS);
+  if (d_DORadiationCalc)
     tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, Ghost::None,
 		  Arches::ZEROGHOSTCELLS);
+  }
+
 
   tsk->modifies(d_lab->d_densityCPLabel);
 
@@ -360,6 +363,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 #ifdef ExactMPMArchesInitialize
       new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch, 
     		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 #else
       new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -523,11 +528,11 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       sootFV.initialize(0.0);
     }
 
-    if (d_MAlab){
+    if (d_MAlab && !initialize) {
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocateAndPut(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
-      if (!initialize && d_DORadiationCalc)
+      if (d_DORadiationCalc)
 	new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
