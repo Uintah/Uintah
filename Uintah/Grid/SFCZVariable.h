@@ -89,10 +89,12 @@ class SFCZVariable : public Array3<T>, public SFCZVariableBase {
 
 
      // Replace the values on the indicated face with value
-     void fillFace(Patch::FaceType face, const T& value)
+     void fillFace(Patch::FaceType face, const T& value,
+		  IntVector offset = IntVector(0,0,0))
        { 
-	 IntVector low = getLowIndex();
-	 IntVector hi = getHighIndex();
+	 IntVector low,hi;
+	 low = getLowIndex() + offset;
+	 hi = getHighIndex() - offset;
 	 switch (face) {
 	 case Patch::xplus:
 	   for (int j = low.y(); j<hi.y(); j++) {
@@ -143,10 +145,12 @@ class SFCZVariable : public Array3<T>, public SFCZVariableBase {
        };
 
   // Set the Neumann BC condition using a 1st order approximation
-      void fillFaceFlux(Patch::FaceType face, const T& value, const Vector& dx)
+      void fillFaceFlux(Patch::FaceType face, const T& value, const Vector& dx,
+			 IntVector offset = IntVector(0,0,0))
 	{ 
-	  IntVector low = getLowIndex();
-	  IntVector hi = getHighIndex();
+	  IntVector low,hi;
+	  low = getLowIndex() + offset;
+	  hi = getHighIndex() - offset;
 	  switch (face) {
 	  case Patch::xplus:
 	    for (int j = low.y(); j<hi.y(); j++) {
@@ -206,10 +210,12 @@ class SFCZVariable : public Array3<T>, public SFCZVariableBase {
      // Use to apply symmetry boundary conditions.  On the
      // indicated face, replace the component of the vector
      // normal to the face with 0.0
-     void fillFaceNormal(Patch::FaceType face)
+     void fillFaceNormal(Patch::FaceType face,
+			 IntVector offset = IntVector(0,0,0))
        {
-	 IntVector low = getLowIndex();
-	 IntVector hi = getHighIndex();
+	 IntVector low,hi;
+	 low = getLowIndex() + offset;
+	 hi = getHighIndex() - offset;
 	 switch (face) {
 	 case Patch::xplus:
 	   for (int j = low.y(); j<hi.y(); j++) {
@@ -461,6 +467,13 @@ class SFCZVariable : public Array3<T>, public SFCZVariableBase {
 
 //
 // $Log$
+// Revision 1.12  2000/12/20 20:45:13  jas
+// Added methods to retriever the interior cell index and use those for
+// filling in the bcs for either the extraCells layer or the regular
+// domain depending on what the offset is to fillFace and friends.
+// MPM requires bcs to be put on the actual boundaries and ICE requires
+// bcs to be put in the extraCells.
+//
 // Revision 1.11  2000/12/18 23:41:39  jas
 // Fixed application of bcs for fillFluxFace.
 //

@@ -168,6 +168,12 @@ WARNING
      IntVector getCellHighIndex() const {
        return d_highIndex;
      }
+     IntVector getInteriorCellLowIndex() const {
+       return d_inLowIndex;
+     }
+     IntVector getInteriorCellHighIndex() const {
+       return d_inHighIndex;
+     }
 
      IntVector getXFaceLowIndex() const {
        return d_lowIndex;
@@ -339,6 +345,13 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.26  2000/12/20 20:45:12  jas
+// Added methods to retriever the interior cell index and use those for
+// filling in the bcs for either the extraCells layer or the regular
+// domain depending on what the offset is to fillFace and friends.
+// MPM requires bcs to be put on the actual boundaries and ICE requires
+// bcs to be put in the extraCells.
+//
 // Revision 1.25  2000/12/10 09:06:17  sparker
 // Merge from csafe_risky1
 //
