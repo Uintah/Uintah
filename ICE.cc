@@ -2557,11 +2557,9 @@ template<class V, class T>
                              T& vel_FCME)        
                                        
 {
-#define MAX_MATLS 8
   double b[MAX_MATLS], b_sp_vol[MAX_MATLS];
   double vel[MAX_MATLS], tmp[MAX_MATLS];
   FastMatrix a(numMatls, numMatls);
-  FastMatrix a_inverse(numMatls, numMatls);
   
   for(;!iter.done(); iter++){
     IntVector c = *iter;
@@ -2598,8 +2596,6 @@ template<class V, class T>
 
     //__________________________________
     //  - solve and backout velocities
-    //a_inverse.destructiveInvert(a);
-    //a_inverse.multiply(b,X);
     
     a.destructiveSolve(b, b_sp_vol);
     //  For implicit solve we need sp_vol_FC
@@ -3975,9 +3971,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > rho_CC(numALLMatls);
     StaticArray<constCCVariable<double> > old_temp(numALLMatls);
 
-    vector<double> b(numALLMatls);
+    double b[MAX_MATLS];
+    Vector bb[MAX_MATLS];
     vector<double> sp_vol(numALLMatls);
-    vector<double> X(numALLMatls);
 #ifdef OREN_DEBUG
     vector<double> X_LSE(numALLMatls);
     vector<double> Residual(numALLMatls);
@@ -3986,7 +3982,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     double tmp;
     FastMatrix beta(numALLMatls, numALLMatls),acopy(numALLMatls, numALLMatls);
     FastMatrix K(numALLMatls, numALLMatls), H(numALLMatls, numALLMatls);
-    FastMatrix a(numALLMatls, numALLMatls), a_inverse(numALLMatls, numALLMatls);
+    FastMatrix a(numALLMatls, numALLMatls);
     beta.zero();
     acopy.zero();
     K.zero();
@@ -4120,67 +4116,66 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       a_original.copy(a);
       start_t      = Time::currentSeconds();     
 #endif
-      a_inverse.destructiveInvert(a);
 #ifdef OREN_DEBUG
       time_invert += (Time::currentSeconds() - start_t);
       a.copy(a_original);
       //----- END     Oren 28-Jul-2004: added timing of mom/energy exchange solution (old vs. new approach) -----
-#endif      
-      for (int dir = 0; dir <3; dir++) {  //loop over all three directons
-        for(int m = 0; m < numALLMatls; m++) {
-          b[m] = 0.0;
-	  const Vector& vel_m = vel_CC[m][c];
-          for(int n = 0; n < numALLMatls; n++) {
-           b[m] += beta(m,n) *
-             (vel_CC[n][c][dir] - vel_m[dir]);
-          }
-        }
-#ifdef OREN_DEBUG
-	//----- BEGIN   Oren 28-Jul-2004: added timing of mom/energy exchange solution (old vs. new approach) -----
-	//	fprintf(lseOutput,"%3d %3d %3d ",c.x(),c.y(),c.z());
-	//	cout << "a = " << endl;
-	//	a.print(cout);	
-	//	cout << "b = " << endl;
-	//	for(int m = 0; m < numALLMatls; m++) cout << b[m] << " ";
-	//	cout << endl;
-
-	//	double n;
-	double totalMomentum = 0.0;
-	for(int m = 0; m < numALLMatls; m++) totalMomentum += b[m];
-	//	double newTotalMomentum;
-
-	start_t      = Time::currentSeconds();
 #endif
-        a_inverse.multiply(b,X);                 // Old way of solving: A^{-1}*b
-#ifdef OREN_DEBUG
-	time_invert += (Time::currentSeconds() - start_t);
-	a.multiply(X,Residual);
-	n = 0.0;
-	for (int m = 0; m < numALLMatls; m++) {
-	  double temp = b[m] - Residual[m];
-	  n += temp*temp;
-	}
-	newTotalMomentum = 0.0;
-	for(int m = 0; m < numALLMatls; m++) newTotalMomentum += X[m];
-	//	fprintf(lseOutput,"%+le %+le ",sqrt(n),newTotalMomentum - totalMomentum);
-	start_t      = Time::currentSeconds();
-	// In fact note that we can do QR factorization before the loop over dirs and compute X per-b faster.
-	a.lseSolve(b,X_LSE,totalMomentum);           // New way of solving: min||Ax-b|| s.t. total momentum is preserved
-	time_lse    += (Time::currentSeconds() - start_t);
-	a.multiply(X_LSE,Residual);
-	n = 0.0;
-	for (int m = 0; m < numALLMatls; m++) {
-	  double temp = b[m] - Residual[m];
-	  n += temp*temp;
-	}
-	newTotalMomentum = 0.0;
-	for(int m = 0; m < numALLMatls; m++) newTotalMomentum += X_LSE[m];
-	//	fprintf(lseOutput,"%+le %+le\n",sqrt(n),newTotalMomentum - totalMomentum);
-	//----- END     Oren 28-Jul-2004: added timing of mom/energy exchange solution -----
-#endif
-        for(int m = 0; m < numALLMatls; m++) {
-          vel_CC[m][c][dir] += X[m];
+      for(int m = 0; m < numALLMatls; m++) {
+        Vector sum(0,0,0);
+        const Vector& vel_m = vel_CC[m][c];
+        for(int n = 0; n < numALLMatls; n++) {
+          sum += beta(m,n) *
+            (vel_CC[n][c] - vel_m);
         }
+        bb[m] = sum;
+      }
+#ifdef OREN_DEBUG
+      //----- BEGIN   Oren 28-Jul-2004: added timing of mom/energy exchange solution (old vs. new approach) -----
+      //	fprintf(lseOutput,"%3d %3d %3d ",c.x(),c.y(),c.z());
+      //	cout << "a = " << endl;
+      //	a.print(cout);	
+      //	cout << "b = " << endl;
+      //	for(int m = 0; m < numALLMatls; m++) cout << b[m] << " ";
+      //	cout << endl;
+
+      //	double n;
+      double totalMomentum = 0.0;
+      for(int m = 0; m < numALLMatls; m++) totalMomentum += b[m];
+      //	double newTotalMomentum;
+
+      start_t      = Time::currentSeconds();
+#endif
+      a.destructiveSolve(bb);
+#ifdef OREN_DEBUG
+      // This stuff is probably busted now...
+      time_invert += (Time::currentSeconds() - start_t);
+      a.multiply(X,Residual);
+      n = 0.0;
+      for (int m = 0; m < numALLMatls; m++) {
+        double temp = b[m] - Residual[m];
+        n += temp*temp;
+      }
+      newTotalMomentum = 0.0;
+      for(int m = 0; m < numALLMatls; m++) newTotalMomentum += X[m];
+      //	fprintf(lseOutput,"%+le %+le ",sqrt(n),newTotalMomentum - totalMomentum);
+      start_t      = Time::currentSeconds();
+      // In fact note that we can do QR factorization before the loop over dirs and compute X per-b faster.
+      a.lseSolve(b,X_LSE,totalMomentum);           // New way of solving: min||Ax-b|| s.t. total momentum is preserved
+      time_lse    += (Time::currentSeconds() - start_t);
+      a.multiply(X_LSE,Residual);
+      n = 0.0;
+      for (int m = 0; m < numALLMatls; m++) {
+        double temp = b[m] - Residual[m];
+        n += temp*temp;
+      }
+      newTotalMomentum = 0.0;
+      for(int m = 0; m < numALLMatls; m++) newTotalMomentum += X_LSE[m];
+      //	fprintf(lseOutput,"%+le %+le\n",sqrt(n),newTotalMomentum - totalMomentum);
+      //----- END     Oren 28-Jul-2004: added timing of mom/energy exchange solution -----
+#endif
+      for(int m = 0; m < numALLMatls; m++) {
+        vel_CC[m][c] += bb[m];
       }
 
       //---------- E N E R G Y   E X C H A N G E     
@@ -4207,9 +4202,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         }
       }
       //     S O L V E, Add exchange contribution to orig value
-      a.destructiveSolve(b,X);
+      a.destructiveSolve(b);
       for(int m = 0; m < numALLMatls; m++) {
-        Temp_CC[m][c] = Temp_CC[m][c] + X[m];
+        Temp_CC[m][c] = Temp_CC[m][c] + b[m];
       }
     }  //end CellIterator loop
 #ifdef OREN_DEBUG
@@ -4231,7 +4226,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     //  endif (mpm_matl)
     //  endloop over matls
     FastMatrix cet(2,2),ac(2,2);
-    vector<double> RHSc(2),HX(2);
+    double RHSc[2];
     cet.zero();
     int gm=d_conv_fluid_matlindex;  // gas matl from which to get heat
     int sm=d_conv_solid_matlindex;  // solid matl that heat goes to
@@ -4327,9 +4322,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
               
               RHSc[0] = cet(0,1)*(Temp_CC[gm][q] - Temp_CC[sm][c]);
               RHSc[1] = cet(1,0)*(Temp_CC[sm][c] - Temp_CC[gm][q]);
-              ac.destructiveSolve(RHSc,HX);
-              Temp_CC[sm][c] += HX[0];
-              Temp_CC[gm][q] += HX[1];
+              ac.destructiveSolve(RHSc);
+              Temp_CC[sm][c] += RHSc[0];
+              Temp_CC[gm][q] += RHSc[1];
             }
           }  // if a surface cell
         }    // cellIterator
