@@ -85,7 +85,19 @@ Box CylinderGeometryPiece::getBoundingBox() const
 	   d_top.z() + d_radius);
 
   return Box(lo,hi);
-  
+}
 
+//////////
+// Calculate the unit normal vector to axis from point
+Vector 
+CylinderGeometryPiece::radialDirection(const Point& pt) const
+{
+  Vector axis = d_top-d_bottom;  
+  double height = axis.length();
+  Vector pbot = pt-d_bottom;
+  double tt = Dot(axis, pbot)/height;
+  Vector projOnAxis = d_bottom*(1.0-tt) + d_top*tt;;
+  Vector normal = pt.asVector() - projOnAxis;
+  return (normal/normal.length());
 }
 
