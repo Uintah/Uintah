@@ -40,9 +40,10 @@ Color::~Color()
 {
 }
 
-void Color::get_color(float color[3])
+void Color::get_color(float color[4])
 {
     color[0]=_r;
     color[1]=_g;
     color[2]=_b;
+    color[3]=1.0;
 }

@@ -51,16 +51,16 @@ int ObjGroup::size()
     return objs.size();
 }
 
-void ObjGroup::draw()
+void ObjGroup::draw(DrawInfo* di)
 {
     if(matl){
 	for (int i=0; i<objs.size(); i++){
-	    matl->set();
-	    objs[i]->draw();
+	    matl->set(di);
+	    objs[i]->draw(di);
 	}
     } else {
 	for (int i=0; i<objs.size(); i++)
-	    objs[i]->draw();
+	    objs[i]->draw(di);
     }
 }
 
@@ -81,8 +81,8 @@ Triangle::~Triangle()
 {
 }
 
-void Triangle::draw() {
-    if(matl)matl->set();
+void Triangle::draw(DrawInfo* di) {
+    if(matl)matl->set(di);
     glBegin(GL_TRIANGLES);
     Vector e1(p3-p1);
     Vector e2(p2-p1);
@@ -111,8 +111,8 @@ Tetra::~Tetra()
 {
 }
 
-void Tetra::draw() {
-    if(matl)matl->set();
+void Tetra::draw(DrawInfo* di) {
+    if(matl)matl->set(di);
     glBegin(GL_LINE_STRIP);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glVertex3d(p2.x(), p2.y(), p2.z());
@@ -139,9 +139,9 @@ GeomSphere::~GeomSphere()
 {
 }
 
-void GeomSphere::draw()
+void GeomSphere::draw(DrawInfo* di)
 {
-    if(matl)matl->set();
+    if(matl)matl->set(di);
     SinCosTable u(nu, 0, 2.*Pi);
     SinCosTable v(nv, -Pi/2., Pi/2., rad);
     for(int i=0;i<nu-1;i++){
@@ -177,8 +177,8 @@ GeomPt::GeomPt(const Point& p)
 GeomPt::~GeomPt() {
 }
 
-void GeomPt::draw() {
-    if(matl)matl->set();
+void GeomPt::draw(DrawInfo* di) {
+    if(matl)matl->set(di);
     glBegin(GL_POINTS);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glEnd();
@@ -188,9 +188,19 @@ BBox GeomPt::bbox() {
     return bb;
 }
 
-void MaterialProp::set()
+MaterialProp::MaterialProp(const Color& ambient, const Color& diffuse,
+			   const Color& specular, double shininess)
+: ambient(ambient), diffuse(diffuse), specular(specular),
+  shininess(shininess), emission(0,0,0)
 {
-    float color[3];
+}
+
+void MaterialProp::set(DrawInfo* di)
+{
+    if(this==di->current_matl)
+	return;
+    di->current_matl=this;
+    float color[4];
     ambient.get_color(color);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
     diffuse.get_color(color);
@@ -200,4 +210,9 @@ void MaterialProp::set()
     emission.get_color(color);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
+}
+
+DrawInfo::DrawInfo()
+: current_matl(0)
+{
 }

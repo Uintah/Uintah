@@ -23,7 +23,7 @@ public:
     Color& operator=(const Color&);
     ~Color();
 
-    void get_color(float color[3]);
+    void get_color(float color[4]);
 };
 
 #endif

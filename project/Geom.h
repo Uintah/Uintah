@@ -20,6 +20,7 @@
 #include <Color.h>
 
 class BBox;
+class DrawInfo;
 
 class MaterialProp {
 public:
@@ -29,7 +30,12 @@ public:
     double shininess;
     Color emission;
     MaterialProp(const Color&, const Color&, const Color&, double);
-    void set();
+    void set(DrawInfo*);
+};
+
+struct DrawInfo {
+    MaterialProp* current_matl;
+    DrawInfo();
 };
 
 class GeomObj {
@@ -38,7 +44,7 @@ protected:
 public:
     GeomObj();
     virtual ~GeomObj();
-    virtual void draw() = 0;
+    virtual void draw(DrawInfo*) = 0;
     virtual BBox bbox() = 0;
     void set_matl(MaterialProp*);
 };
@@ -57,7 +63,7 @@ public:
 
     void add(GeomObj*);
     int size();
-    virtual void draw();
+    virtual void draw(DrawInfo*);
     BBox bbox();
 };
 
@@ -70,7 +76,7 @@ public:
 
     Triangle(const Point&, const Point&, const Point&);
     virtual ~Triangle();
-    virtual void draw();
+    virtual void draw(DrawInfo*);
     BBox bbox();
 };
 
@@ -84,7 +90,7 @@ public:
 
     Tetra(const Point&, const Point&, const Point&, const Point&);
     virtual ~Tetra();
-    virtual void draw();
+    virtual void draw(DrawInfo*);
     BBox bbox();
 };
 
@@ -98,7 +104,7 @@ public:
 
     GeomSphere(const Point&, double, int nu=20, int nv=10);
     virtual ~GeomSphere();
-    virtual void draw();
+    virtual void draw(DrawInfo*);
     BBox bbox();
 };
 
@@ -109,7 +115,7 @@ public:
 
     GeomPt(const Point&);
     virtual ~GeomPt();
-    virtual void draw();
+    virtual void draw(DrawInfo*);
     BBox bbox();
 };
 
