@@ -23,7 +23,8 @@
  */
 
 #include <Packages/Kurt/Dataflow/Modules/Visualization/GridVolVis.h>
-
+#include <Packages/Kurt/Core/Geom/VolumeRenderer.h>
+#include <Packages/Kurt/Core/Geom/GridVolRen.h>
 #include <Core/Containers/Array1.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColorMap.h>
@@ -31,15 +32,11 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Geom/GeomTriangles.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/TCLInterface.h>
 #include <Core/GuiInterface/GuiContext.h>
-#include <Core/Thread/CrowdMonitor.h>
 
-#include <Dataflow/Widgets/PointWidget.h>
 #include <iostream>
 #ifdef __sgi
 #include <ios>
@@ -51,9 +48,6 @@ using std::hex;
 using std::dec;
 using std::ostrstream;
 
-
-
-using SCIRun::TCLInterface;
 using SCIRun::Field;
 using SCIRun::to_string;
 using SCIRun::Allocator;
@@ -62,9 +56,6 @@ using SCIRun::DumpAllocator;
 using SCIRun::GuiContext;
 
 using SCIRun::default_allocator;
-
-static std::string control_name("Control Widget");
-
 
 using namespace Kurt;
 

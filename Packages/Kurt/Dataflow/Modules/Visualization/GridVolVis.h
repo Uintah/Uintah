@@ -24,8 +24,6 @@
  */
 
 #include <Packages/Kurt/Core/Geom/BrickGrid.h>
-#include <Packages/Kurt/Core/Geom/VolumeRenderer.h>
-#include <Packages/Kurt/Core/Geom/GridVolRen.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -42,6 +40,9 @@ using SCIRun::FieldIPort;
 using SCIRun::GeometryOPort;
 using SCIRun::GuiInt;
 using SCIRun::GuiDouble;
+
+class VolumeRenderer;
+class GridVolRen;
 
 class GridVolVis : public Module {
 
