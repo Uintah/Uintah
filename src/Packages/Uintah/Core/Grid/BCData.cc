@@ -16,9 +16,10 @@ BCData::BCData()
 
 BCData::~BCData()
 {
-  bcDataType::const_iterator itr;
-  for (itr = d_BCData.begin(); itr != d_BCData.end(); itr++)
-    delete itr->second;
+   bcDataType::const_iterator itr;
+  for (itr = d_BCData.begin(); itr != d_BCData.end(); itr++) {
+     delete itr->second;
+  }
   d_BCData.clear();
 }
 
