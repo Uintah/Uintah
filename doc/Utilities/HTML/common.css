@@ -56,3 +56,15 @@ border-style: none}
 div.bottom-banner-margins td {
 border-style: none}
 
+.block-center {
+display: table;
+margin-left: auto;
+margin-right: auto;
+}
+
+table.default {
+margin-left: auto;
+margin-right: auto;
+}
+
+
