@@ -54,14 +54,14 @@ void MWViscoElastic::initializeCMData(const Patch* patch,
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
    ParticleVariable<Matrix3> deformationGradient;
-   new_dw->allocate(deformationGradient, lb->pDeformationMeasureLabel, pset);
+   new_dw->allocateAndPut(deformationGradient, lb->pDeformationMeasureLabel, pset);
    ParticleVariable<Matrix3> pstress_e,pstress_ve_d,pstress_e_d;
    ParticleVariable<double> pstress_ve_v,pstress_e_v;
-   new_dw->allocate(pstress_e, lb->pStress_eLabel, pset);
-   new_dw->allocate(pstress_ve_v, lb->pStress_ve_vLabel, pset);
-   new_dw->allocate(pstress_ve_d, lb->pStress_ve_dLabel, pset);
-   new_dw->allocate(pstress_e_v, lb->pStress_e_vLabel, pset);
-   new_dw->allocate(pstress_e_d, lb->pStress_e_dLabel, pset);
+   new_dw->allocateAndPut(pstress_e, lb->pStress_eLabel, pset);
+   new_dw->allocateAndPut(pstress_ve_v, lb->pStress_ve_vLabel, pset);
+   new_dw->allocateAndPut(pstress_ve_d, lb->pStress_ve_dLabel, pset);
+   new_dw->allocateAndPut(pstress_e_v, lb->pStress_e_vLabel, pset);
+   new_dw->allocateAndPut(pstress_e_d, lb->pStress_e_dLabel, pset);
 
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
@@ -73,12 +73,18 @@ void MWViscoElastic::initializeCMData(const Patch* patch,
       pstress_e_v[*iter] = 0.0;
       pstress_e_d[*iter] = zero;
    }
-   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel);
-   new_dw->put(pstress_e, lb->pStress_eLabel);
-   new_dw->put(pstress_ve_v, lb->pStress_ve_vLabel);
-   new_dw->put(pstress_ve_d, lb->pStress_ve_dLabel);
-   new_dw->put(pstress_e_v, lb->pStress_e_vLabel);
-   new_dw->put(pstress_e_d, lb->pStress_e_dLabel);
+   // allocateAndPut instead:
+   /* new_dw->put(deformationGradient, lb->pDeformationMeasureLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(pstress_e, lb->pStress_eLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(pstress_ve_v, lb->pStress_ve_vLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(pstress_ve_d, lb->pStress_ve_dLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(pstress_e_v, lb->pStress_e_vLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(pstress_e_d, lb->pStress_e_dLabel); */;
 
    computeStableTimestep(patch, matl, new_dw);
 }
@@ -170,15 +176,15 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
       old_dw->get(psize,             lb->pSizeLabel,                  pset);
     }
 
-    new_dw->allocate(pstress_new, lb->pStressLabel_preReloc, pset);
-    new_dw->allocate(pstress_ve_new, lb->pStress_veLabel, pset);
-    new_dw->allocate(pstress_e_new, lb->pStress_eLabel, pset);
-    new_dw->allocate(pstress_ve_v_new, lb->pStress_ve_vLabel, pset);
-    new_dw->allocate(pstress_ve_d_new, lb->pStress_ve_dLabel, pset);
-    new_dw->allocate(pstress_e_v_new, lb->pStress_e_vLabel, pset);
-    new_dw->allocate(pstress_e_d_new, lb->pStress_e_dLabel, pset);
-    new_dw->allocate(deformationGradient_new, lb->pDeformationMeasureLabel_preReloc, pset);
-    new_dw->allocate(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
+    new_dw->allocateAndPut(pstress_new, lb->pStressLabel_preReloc, pset);
+    new_dw->allocateTemporary(pstress_ve_new,  pset);
+    new_dw->allocateAndPut(pstress_e_new, lb->pStress_eLabel, pset);
+    new_dw->allocateAndPut(pstress_ve_v_new, lb->pStress_ve_vLabel, pset);
+    new_dw->allocateAndPut(pstress_ve_d_new, lb->pStress_ve_dLabel, pset);
+    new_dw->allocateAndPut(pstress_e_v_new, lb->pStress_e_vLabel, pset);
+    new_dw->allocateAndPut(pstress_e_d_new, lb->pStress_e_dLabel, pset);
+    new_dw->allocateAndPut(deformationGradient_new, lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
     
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
@@ -300,15 +306,23 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new),lb->delTLabel);
-    new_dw->put(pstress_ve_v_new,             lb->pStress_ve_vLabel);
-    new_dw->put(pstress_ve_d_new,             lb->pStress_ve_dLabel);
-    new_dw->put(pstress_e_v_new,              lb->pStress_e_vLabel);
-    new_dw->put(pstress_e_d_new,              lb->pStress_e_dLabel);
-    new_dw->put(pstress_e_new,                lb->pStress_eLabel);
-    new_dw->put(pstress_new,                   lb->pStressLabel_preReloc);
-    new_dw->put(deformationGradient_new,       lb->pDeformationMeasureLabel_preReloc);
+    // allocateAndPut instead:
+    /* new_dw->put(pstress_ve_v_new,             lb->pStress_ve_vLabel); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pstress_ve_d_new,             lb->pStress_ve_dLabel); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pstress_e_v_new,              lb->pStress_e_vLabel); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pstress_e_d_new,              lb->pStress_e_dLabel); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pstress_e_new,                lb->pStress_eLabel); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pstress_new,                   lb->pStressLabel_preReloc); */;
+    // allocateAndPut instead:
+    /* new_dw->put(deformationGradient_new,       lb->pDeformationMeasureLabel_preReloc); */;
     new_dw->put(sum_vartype(se),               lb->StrainEnergyLabel);
-    new_dw->put(pvolume_deformed,               lb->pVolumeDeformedLabel);
+    // allocateAndPut instead:
+    /* new_dw->put(pvolume_deformed,               lb->pVolumeDeformedLabel); */;
   }
 }
 

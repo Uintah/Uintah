@@ -249,15 +249,11 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
   // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->allocate(scalarVars.scalarCoeff[ii], 
-		       d_lab->d_scalCoefSBLMLabel, ii, patch);
-      new_dw->allocate(scalarVars.scalarConvectCoeff[ii],
-		       d_lab->d_scalConvCoefSBLMLabel, ii, patch);
+      new_dw->allocateAndPut(scalarVars.scalarCoeff[ii], d_lab->d_scalCoefSBLMLabel, ii, patch);
+      new_dw->allocateTemporary(scalarVars.scalarConvectCoeff[ii],  patch);
     }
-    new_dw->allocate(scalarVars.scalarLinearSrc, 
-		     d_lab->d_scalLinSrcSBLMLabel, matlIndex, patch);
-    new_dw->allocate(scalarVars.scalarNonlinearSrc, 
-		     d_lab->d_scalNonLinSrcSBLMLabel, matlIndex, patch);
+    new_dw->allocateTemporary(scalarVars.scalarLinearSrc,  patch);
+    new_dw->allocateAndPut(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcSBLMLabel, matlIndex, patch);
  
   // compute ith component of scalar stencil coefficients
   // inputs : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
@@ -293,11 +289,13 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &scalarVars);
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->put(scalarVars.scalarCoeff[ii], 
-		  d_lab->d_scalCoefSBLMLabel, ii, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(scalarVars.scalarCoeff[ii], 
+		  d_lab->d_scalCoefSBLMLabel, ii, patch); */;
     }
-    new_dw->put(scalarVars.scalarNonlinearSrc, 
-		d_lab->d_scalNonLinSrcSBLMLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(scalarVars.scalarNonlinearSrc, 
+		d_lab->d_scalNonLinSrcSBLMLabel, matlIndex, patch); */;
 
   }
 }
@@ -340,7 +338,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     // for explicit calculation
     {
-    new_dw->allocate(scalarVars.scalar, d_lab->d_scalarSPLabel, 
+    new_dw->allocateAndPut(scalarVars.scalar, d_lab->d_scalarSPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->copyOut(scalarVars.scalar, d_lab->d_scalarOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -354,8 +352,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 		  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcSBLMLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocate(scalarVars.residualScalar, d_lab->d_scalarRes,
-		     matlIndex, patch);
+    new_dw->allocateTemporary(scalarVars.residualScalar,  patch);
 
 #if 0  
   // compute eqn residual
@@ -371,8 +368,9 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     d_linearSolver->scalarLisolve(pc, patch, index, delta_t, 
 				  &scalarVars, cellinfo, d_lab);
   // put back the results
-    new_dw->put(scalarVars.scalar, d_lab->d_scalarSPLabel, 
-		matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(scalarVars.scalar, d_lab->d_scalarSPLabel, 
+		matlIndex, patch); */;
   }
 }
 
@@ -539,17 +537,12 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
   // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->allocate(scalarVars.scalarCoeff[ii], 
-		       d_lab->d_scalCoefPredLabel, ii, patch);
-      new_dw->allocate(scalarVars.scalarConvectCoeff[ii],
-		       d_lab->d_scalConvCoefPredLabel, ii, patch);
-      new_dw->allocate(scalarVars.scalarDiffusionCoeff[ii],
-		       d_lab->d_scalDiffCoefPredLabel, ii, patch);
+      new_dw->allocateAndPut(scalarVars.scalarCoeff[ii], d_lab->d_scalCoefPredLabel, ii, patch);
+      new_dw->allocateTemporary(scalarVars.scalarConvectCoeff[ii],  patch);
+      new_dw->allocateAndPut(scalarVars.scalarDiffusionCoeff[ii], d_lab->d_scalDiffCoefPredLabel, ii, patch);
     }
-    new_dw->allocate(scalarVars.scalarLinearSrc, 
-		     d_lab->d_scalLinSrcPredLabel, matlIndex, patch);
-    new_dw->allocate(scalarVars.scalarNonlinearSrc, 
-		     d_lab->d_scalNonLinSrcPredLabel, matlIndex, patch);
+    new_dw->allocateTemporary(scalarVars.scalarLinearSrc,  patch);
+    new_dw->allocateAndPut(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcPredLabel, matlIndex, patch);
  
   // compute ith component of scalar stencil coefficients
   // inputs : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
@@ -599,13 +592,16 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 #endif
 #endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->put(scalarVars.scalarCoeff[ii], 
-		  d_lab->d_scalCoefPredLabel, ii, patch);
-      new_dw->put(scalarVars.scalarDiffusionCoeff[ii],
-		  d_lab->d_scalDiffCoefPredLabel, ii, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(scalarVars.scalarCoeff[ii], 
+		  d_lab->d_scalCoefPredLabel, ii, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(scalarVars.scalarDiffusionCoeff[ii],
+		  d_lab->d_scalDiffCoefPredLabel, ii, patch); */;
     }
-    new_dw->put(scalarVars.scalarNonlinearSrc, 
-		d_lab->d_scalNonLinSrcPredLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(scalarVars.scalarNonlinearSrc, 
+		d_lab->d_scalNonLinSrcPredLabel, matlIndex, patch); */;
 
   }
 }
@@ -709,10 +705,10 @@ ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
     // for explicit calculation
     {
 #ifdef correctorstep
-    new_dw->allocate(scalarVars.scalar, d_lab->d_scalarPredLabel, 
+    new_dw->allocateAndPut(scalarVars.scalar, d_lab->d_scalarPredLabel, 
                 matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #else
-    new_dw->allocate(scalarVars.scalar, d_lab->d_scalarSPLabel, 
+    new_dw->allocateAndPut(scalarVars.scalar, d_lab->d_scalarSPLabel, 
                 matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #endif
     new_dw->copyOut(scalarVars.scalar, d_lab->d_scalarOUTBCLabel, 
@@ -727,8 +723,7 @@ ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
 		  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcPredLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocate(scalarVars.residualScalar, d_lab->d_scalarRes,
-		     matlIndex, patch);
+    new_dw->allocateTemporary(scalarVars.residualScalar,  patch);
 
   // apply underelax to eqn
     d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
@@ -749,7 +744,7 @@ ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
 
     new_dw->get(old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocate(temp_scalar, d_lab->d_scalarTempLabel, matlIndex, patch);
+    new_dw->allocateAndPut(temp_scalar, d_lab->d_scalarTempLabel, matlIndex, patch);
     temp_scalar.initialize(0.0);
     
     IntVector indexLow = patch->getCellFORTLowIndex();
@@ -767,16 +762,19 @@ ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
         }
       }
     }
-    new_dw->put(temp_scalar, d_lab->d_scalarTempLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(temp_scalar, d_lab->d_scalarTempLabel, matlIndex, patch); */;
 #endif
 #endif
 
 #ifdef correctorstep
-    new_dw->put(scalarVars.scalar, d_lab->d_scalarPredLabel, 
-                matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(scalarVars.scalar, d_lab->d_scalarPredLabel, 
+                matlIndex, patch); */;
 #else
-    new_dw->put(scalarVars.scalar, d_lab->d_scalarSPLabel, 
-                matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(scalarVars.scalar, d_lab->d_scalarSPLabel, 
+                matlIndex, patch); */;
 #endif
 
   }
@@ -1006,18 +1004,13 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 
   // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->allocate(scalarVars.scalarCoeff[ii], 
-		       d_lab->d_scalCoefCorrLabel, ii, patch);
-      new_dw->allocate(scalarVars.scalarConvectCoeff[ii],
-		       d_lab->d_scalConvCoefCorrLabel, ii, patch);
-      new_dw->allocate(scalarVars.scalarDiffusionCoeff[ii],
-		       d_lab->d_scalDiffCoefCorrLabel, ii, patch);
+      new_dw->allocateAndPut(scalarVars.scalarCoeff[ii], d_lab->d_scalCoefCorrLabel, ii, patch);
+      new_dw->allocateTemporary(scalarVars.scalarConvectCoeff[ii],  patch);
+      new_dw->allocateAndPut(scalarVars.scalarDiffusionCoeff[ii], d_lab->d_scalDiffCoefCorrLabel, ii, patch);
 
     }
-    new_dw->allocate(scalarVars.scalarLinearSrc, 
-		     d_lab->d_scalLinSrcCorrLabel, matlIndex, patch);
-    new_dw->allocate(scalarVars.scalarNonlinearSrc, 
-		     d_lab->d_scalNonLinSrcCorrLabel, matlIndex, patch);
+    new_dw->allocateTemporary(scalarVars.scalarLinearSrc,  patch);
+    new_dw->allocateAndPut(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcCorrLabel, matlIndex, patch);
  
   // compute ith component of scalar stencil coefficients
   // inputs : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
@@ -1065,14 +1058,17 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 #endif
 #endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->put(scalarVars.scalarCoeff[ii], 
-		  d_lab->d_scalCoefCorrLabel, ii, patch);
-      new_dw->put(scalarVars.scalarDiffusionCoeff[ii],
-		  d_lab->d_scalDiffCoefCorrLabel, ii, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(scalarVars.scalarCoeff[ii], 
+		  d_lab->d_scalCoefCorrLabel, ii, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(scalarVars.scalarDiffusionCoeff[ii],
+		  d_lab->d_scalDiffCoefCorrLabel, ii, patch); */;
 
     }
-    new_dw->put(scalarVars.scalarNonlinearSrc, 
-		d_lab->d_scalNonLinSrcCorrLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(scalarVars.scalarNonlinearSrc, 
+		d_lab->d_scalNonLinSrcCorrLabel, matlIndex, patch); */;
 
   }
 }
@@ -1185,7 +1181,7 @@ ScalarSolver::scalarLinearSolveCorr(const ProcessorGroup* pc,
   #endif
     // for explicit calculation
     {
-    new_dw->allocate(scalarVars.scalar, d_lab->d_scalarSPLabel, 
+    new_dw->allocateAndPut(scalarVars.scalar, d_lab->d_scalarSPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
   #ifdef Runge_Kutta_3d
     new_dw->copyOut(scalarVars.scalar, d_lab->d_scalarIntermLabel, 
@@ -1204,8 +1200,7 @@ ScalarSolver::scalarLinearSolveCorr(const ProcessorGroup* pc,
 		  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcCorrLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocate(scalarVars.residualScalar, d_lab->d_scalarRes,
-		     matlIndex, patch);
+    new_dw->allocateTemporary(scalarVars.residualScalar,  patch);
   // apply underelax to eqn
     d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
 					    &scalarVars);
@@ -1308,8 +1303,9 @@ ScalarSolver::scalarLinearSolveCorr(const ProcessorGroup* pc,
   #endif
 
   // put back the results
-    new_dw->put(scalarVars.scalar, d_lab->d_scalarSPLabel, 
-		matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(scalarVars.scalar, d_lab->d_scalarSPLabel, 
+		matlIndex, patch); */;
   }
 }
 
@@ -1467,17 +1463,12 @@ void ScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
 
   // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->allocate(scalarVars.scalarCoeff[ii], 
-		       d_lab->d_scalCoefIntermLabel, ii, patch);
-      new_dw->allocate(scalarVars.scalarConvectCoeff[ii],
-		       d_lab->d_scalConvCoefIntermLabel, ii, patch);
-      new_dw->allocate(scalarVars.scalarDiffusionCoeff[ii],
-		       d_lab->d_scalDiffCoefIntermLabel, ii, patch);
+      new_dw->allocateAndPut(scalarVars.scalarCoeff[ii], d_lab->d_scalCoefIntermLabel, ii, patch);
+      new_dw->allocateTemporary(scalarVars.scalarConvectCoeff[ii],  patch);
+      new_dw->allocateAndPut(scalarVars.scalarDiffusionCoeff[ii], d_lab->d_scalDiffCoefIntermLabel, ii, patch);
     }
-    new_dw->allocate(scalarVars.scalarLinearSrc, 
-		     d_lab->d_scalLinSrcIntermLabel, matlIndex, patch);
-    new_dw->allocate(scalarVars.scalarNonlinearSrc, 
-		     d_lab->d_scalNonLinSrcIntermLabel, matlIndex, patch);
+    new_dw->allocateTemporary(scalarVars.scalarLinearSrc,  patch);
+    new_dw->allocateAndPut(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcIntermLabel, matlIndex, patch);
  
   // compute ith component of scalar stencil coefficients
   // inputs : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
@@ -1525,13 +1516,16 @@ void ScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
 #endif
 #endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->put(scalarVars.scalarCoeff[ii], 
-		  d_lab->d_scalCoefIntermLabel, ii, patch);
-      new_dw->put(scalarVars.scalarDiffusionCoeff[ii],
-		  d_lab->d_scalDiffCoefIntermLabel, ii, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(scalarVars.scalarCoeff[ii], 
+		  d_lab->d_scalCoefIntermLabel, ii, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(scalarVars.scalarDiffusionCoeff[ii],
+		  d_lab->d_scalDiffCoefIntermLabel, ii, patch); */;
     }
-    new_dw->put(scalarVars.scalarNonlinearSrc, 
-		d_lab->d_scalNonLinSrcIntermLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(scalarVars.scalarNonlinearSrc, 
+		d_lab->d_scalNonLinSrcIntermLabel, matlIndex, patch); */;
 
   }
 }
@@ -1623,7 +1617,7 @@ ScalarSolver::scalarLinearSolveInterm(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     // for explicit calculation
     {
-    new_dw->allocate(scalarVars.scalar, d_lab->d_scalarIntermLabel, 
+    new_dw->allocateAndPut(scalarVars.scalar, d_lab->d_scalarIntermLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->copyOut(scalarVars.scalar, d_lab->d_scalarPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1637,8 +1631,7 @@ ScalarSolver::scalarLinearSolveInterm(const ProcessorGroup* pc,
 		  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcIntermLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocate(scalarVars.residualScalar, d_lab->d_scalarRes,
-		     matlIndex, patch);
+    new_dw->allocateTemporary(scalarVars.residualScalar,  patch);
 
   // apply underelax to eqn
     d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
@@ -1714,7 +1707,8 @@ ScalarSolver::scalarLinearSolveInterm(const ProcessorGroup* pc,
   #endif
   
     // put back the results
-    new_dw->put(scalarVars.scalar, d_lab->d_scalarIntermLabel, 
-		matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(scalarVars.scalar, d_lab->d_scalarIntermLabel, 
+		matlIndex, patch); */;
   }
 }

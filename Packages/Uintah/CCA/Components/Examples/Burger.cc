@@ -83,7 +83,7 @@ void Burger::initialize(const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
       NCVariable<double> u;
-      new_dw->allocate(u, lb_->u, matl, patch);
+      new_dw->allocateAndPut(u, lb_->u, matl, patch);
       //Initialize according to the function
       // u = sin( pi*x ) + sin( pi*2*y )
       IntVector l = patch->getNodeLowIndex();
@@ -92,7 +92,8 @@ void Burger::initialize(const ProcessorGroup*,
         Point p = patch->nodePosition(*iter);
         u[*iter] = sin( p.x() * 3.14159265358 ) + sin( p.y() * 2*3.14159265358 );
       }
-      new_dw->put(u, lb_->u, matl, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(u, lb_->u, matl, patch); */;
     }
   }
 }
@@ -121,7 +122,7 @@ void Burger::timeAdvance(const ProcessorGroup*,
       old_dw->get(dt, sharedState_->get_delt_label());
 
       NCVariable<double> newu;
-      new_dw->allocate(newu, lb_->u, matl, patch);
+      new_dw->allocateAndPut(newu, lb_->u, matl, patch);
       IntVector l = patch->getNodeLowIndex();
       IntVector h = patch->getNodeHighIndex(); 
 
@@ -183,7 +184,8 @@ void Burger::timeAdvance(const ProcessorGroup*,
       }
 
       // Store all the new values calculated into the new data warehouse
-      new_dw->put(newu, lb_->u, matl, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(newu, lb_->u, matl, patch); */;
     }
   }
 }

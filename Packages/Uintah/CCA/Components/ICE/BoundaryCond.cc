@@ -452,7 +452,7 @@ void setBC(CCVariable<double>& press_CC,
         CCVariable<double> rho_micro_tmp;
         ICELabel* lb;
         lb = scinew ICELabel();
-        new_dw->allocate(rho_micro_tmp, lb->scratchLabel, 0, patch);
+        new_dw->allocateTemporary(rho_micro_tmp,  patch);
         if (which_Var == "sp_vol") {
           for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
             IntVector c = *iter;

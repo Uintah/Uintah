@@ -81,8 +81,8 @@ void NormalFracture::computeBoundaryContact(
     ParticleVariable<Vector> pContactForce_p_new;
     ParticleVariable<int>    pCrackEffective_p_new;
 
-    new_dw->allocate(pContactForce_p_new, lb->pContactForceLabel, pset_p);
-    new_dw->allocate(pCrackEffective_p_new, lb->pCrackEffectiveLabel, pset_p);
+    new_dw->allocateAndPut(pContactForce_p_new, lb->pContactForceLabel, pset_p);
+    new_dw->allocateAndPut(pCrackEffective_p_new, lb->pCrackEffectiveLabel, pset_p);
   
     for(ParticleSubset::iterator iter = pset_p->begin();
       iter != pset_p->end(); iter++)
@@ -158,8 +158,10 @@ void NormalFracture::computeBoundaryContact(
       }
     }
 
-    new_dw->put(pContactForce_p_new, lb->pContactForceLabel);
-    new_dw->put(pCrackEffective_p_new, lb->pCrackEffectiveLabel);
+    // allocateAndPut instead:
+    /* new_dw->put(pContactForce_p_new, lb->pContactForceLabel); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pCrackEffective_p_new, lb->pCrackEffectiveLabel); */;
   }
 }
 
@@ -204,7 +206,7 @@ void NormalFracture::computeConnectivity(
     IndexExchange indexExchange(pset_p,pX_p,pset_pg,pX_pg);
 
     ParticleVariable<int>       pConnectivity_p_new;
-    new_dw->allocate(pConnectivity_p_new, lb->pConnectivityLabel, pset_p);
+    new_dw->allocateAndPut(pConnectivity_p_new, lb->pConnectivityLabel, pset_p);
 
     Lattice lattice(pX_pg);
     ParticlesNeighbor particles;
@@ -255,7 +257,8 @@ void NormalFracture::computeConnectivity(
       pConnectivity_p_new[pIdx_p] = connectivity.flag();
     }
   
-    new_dw->put(pConnectivity_p_new, lb->pConnectivityLabel);
+    // allocateAndPut instead:
+    /* new_dw->put(pConnectivity_p_new, lb->pConnectivityLabel); */;
   }
 }
 
@@ -325,13 +328,12 @@ void NormalFracture::computeFracture(
     ParticleVariable<Vector> pVelocity_p_new;
     ParticleVariable<double> pToughness_p_new;
   
-    new_dw->allocate(pIsBroken_p_new, lb->pIsBrokenLabel, pset_p);
-    new_dw->allocate(pCrackNormal_p_new, lb->pCrackNormalLabel, pset_p);
-    new_dw->allocate(pStress_p_new, lb->pStressLabel, pset_p);
-    new_dw->allocate(pCrackSurfacePressure_p_new,
-      lb->pCrackSurfacePressureLabel, pset_p);
-    new_dw->allocate(pVelocity_p_new, lb->pVelocityLabel, pset_p);
-    new_dw->allocate(pToughness_p_new, lb->pToughnessLabel, pset_p);
+    new_dw->allocateAndPut(pIsBroken_p_new, lb->pIsBrokenLabel, pset_p);
+    new_dw->allocateAndPut(pCrackNormal_p_new, lb->pCrackNormalLabel, pset_p);
+    new_dw->allocateAndPut(pStress_p_new, lb->pStressLabel, pset_p);
+    new_dw->allocateAndPut(pCrackSurfacePressure_p_new, lb->pCrackSurfacePressureLabel, pset_p);
+    new_dw->allocateAndPut(pVelocity_p_new, lb->pVelocityLabel, pset_p);
+    new_dw->allocateAndPut(pToughness_p_new, lb->pToughnessLabel, pset_p);
 
     for(ParticleSubset::iterator iter = pset_p->begin();
           iter != pset_p->end(); iter++)
@@ -489,12 +491,18 @@ void NormalFracture::computeFracture(
       }
     }
     
-    new_dw->put(pToughness_p_new, lb->pToughnessLabel_preReloc);
-    new_dw->put(pIsBroken_p_new, lb->pIsBrokenLabel_preReloc);
-    new_dw->put(pCrackNormal_p_new, lb->pCrackNormalLabel_preReloc);
-    new_dw->put(pStress_p_new, lb->pStressLabel_afterFracture);
-    new_dw->put(pCrackSurfacePressure_p_new, lb->pCrackSurfacePressureLabel_preReloc);
-    new_dw->put(pVelocity_p_new, lb->pVelocityLabel_afterFracture);
+    // allocateAndPut instead:
+    /* new_dw->put(pToughness_p_new, lb->pToughnessLabel_preReloc); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pIsBroken_p_new, lb->pIsBrokenLabel_preReloc); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pCrackNormal_p_new, lb->pCrackNormalLabel_preReloc); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pStress_p_new, lb->pStressLabel_afterFracture); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pCrackSurfacePressure_p_new, lb->pCrackSurfacePressureLabel_preReloc); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pVelocity_p_new, lb->pVelocityLabel_afterFracture); */;
   }
 }
 
@@ -547,9 +555,8 @@ void NormalFracture::computeCrackExtension(
     ParticleVariable<Vector> pTipNormal_p_new;
     ParticleVariable<Vector> pExtensionDirection_p_new;
 
-    new_dw->allocate(pTipNormal_p_new, lb->pTipNormalLabel, pset_p);
-    new_dw->allocate(pExtensionDirection_p_new, 
-      lb->pExtensionDirectionLabel, pset_p);
+    new_dw->allocateAndPut(pTipNormal_p_new, lb->pTipNormalLabel, pset_p);
+    new_dw->allocateAndPut(pExtensionDirection_p_new, lb->pExtensionDirectionLabel, pset_p);
     
     //build newly cracked surface couples
     vector<SurfaceCouple> couples;
@@ -718,8 +725,10 @@ void NormalFracture::computeCrackExtension(
     
     //cout<<"NumExtension "<<NumExtension<<endl;
 
-    new_dw->put(pTipNormal_p_new, lb->pTipNormalLabel_preReloc);
-    new_dw->put(pExtensionDirection_p_new, lb->pExtensionDirectionLabel_preReloc);
+    // allocateAndPut instead:
+    /* new_dw->put(pTipNormal_p_new, lb->pTipNormalLabel_preReloc); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pExtensionDirection_p_new, lb->pExtensionDirectionLabel_preReloc); */;
   }
 }
 

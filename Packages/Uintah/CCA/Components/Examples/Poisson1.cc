@@ -91,7 +91,7 @@ void Poisson1::initialize(const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
       NCVariable<double> phi;
-      new_dw->allocate(phi, lb_->phi, matl, patch);
+      new_dw->allocateAndPut(phi, lb_->phi, matl, patch);
       phi.initialize(0);
       if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
 	IntVector l,h;
@@ -99,7 +99,8 @@ void Poisson1::initialize(const ProcessorGroup*,
 	for(NodeIterator iter(l,h); !iter.done(); iter++)
 	  phi[*iter]=1;
       }
-      new_dw->put(phi, lb_->phi, matl, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(phi, lb_->phi, matl, patch); */;
       new_dw->put(sum_vartype(-1), lb_->residual);
     }
   }
@@ -117,7 +118,7 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
       constNCVariable<double> phi;
       old_dw->get(phi, lb_->phi, matl, patch, Ghost::AroundNodes, 1);
       NCVariable<double> newphi;
-      new_dw->allocate(newphi, lb_->phi, matl, patch);
+      new_dw->allocateAndPut(newphi, lb_->phi, matl, patch);
       newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
       double residual=0;
       IntVector l = patch->getNodeLowIndex();
@@ -151,7 +152,8 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
       ASSERT(numFaceBoundaries == patch->getNumBoundaryFaces());
 #endif
       new_dw->put(sum_vartype(residual), lb_->residual);
-      new_dw->put(newphi, lb_->phi, matl, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(newphi, lb_->phi, matl, patch); */;
     }
   }
 }

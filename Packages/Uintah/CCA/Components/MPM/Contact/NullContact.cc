@@ -75,9 +75,10 @@ void NullContact::exMomIntegrated(const ProcessorGroup*,
       new_dw->getModifiable(gv_star, lb->gVelocityStarLabel, dwi, patch);
       new_dw->getModifiable(gacc,    lb->gAccelerationLabel, dwi, patch);
 
-      new_dw->allocate(frictionalWork, lb->frictionalWorkLabel, dwi, patch);
+      new_dw->allocateAndPut(frictionalWork, lb->frictionalWorkLabel, dwi, patch);
       frictionalWork.initialize(0.);
-      new_dw->put(frictionalWork,    lb->frictionalWorkLabel,dwi,patch);
+      // allocateAndPut instead:
+      /* new_dw->put(frictionalWork,    lb->frictionalWorkLabel,dwi,patch); */;
     }
   }
 }

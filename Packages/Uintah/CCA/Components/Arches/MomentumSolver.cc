@@ -470,22 +470,17 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
       for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
 
-	new_dw->allocate(velocityVars.uVelocityCoeff[ii], 
-			 d_lab->d_uVelCoefMBLMLabel, ii, patch);
-	new_dw->allocate(velocityVars.uVelocityConvectCoeff[ii], 
-			 d_lab->d_uVelConvCoefMBLMLabel, ii, patch);
+	new_dw->allocateAndPut(velocityVars.uVelocityCoeff[ii], d_lab->d_uVelCoefMBLMLabel, ii, patch);
+	new_dw->allocateTemporary(velocityVars.uVelocityConvectCoeff[ii],  patch);
 
       }
 
-      new_dw->allocate(velocityVars.uVelLinearSrc, 
-		       d_lab->d_uVelLinSrcMBLMLabel, matlIndex, patch);
-      new_dw->allocate(velocityVars.uVelNonlinearSrc, 
-		       d_lab->d_uVelNonLinSrcMBLMLabel, matlIndex, patch);
+      new_dw->allocateTemporary(velocityVars.uVelLinearSrc,  patch);
+      new_dw->allocateAndPut(velocityVars.uVelNonlinearSrc, d_lab->d_uVelNonLinSrcMBLMLabel, matlIndex, patch);
 
       // for computing pressure gradient for momentum source
 
-      new_dw->allocate(velocityVars.pressGradUSu, 
-		       d_lab->d_pressGradUSuLabel, matlIndex, patch);
+      new_dw->allocateTemporary(velocityVars.pressGradUSu,  patch);
 
     //cerr << "in moment solve just after allocate" << index << endl;
 
@@ -522,22 +517,17 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
       
       for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
 
-	new_dw->allocate(velocityVars.vVelocityCoeff[ii], 
-			 d_lab->d_vVelCoefMBLMLabel, ii, patch);
-	new_dw->allocate(velocityVars.vVelocityConvectCoeff[ii], 
-			 d_lab->d_vVelConvCoefMBLMLabel, ii, patch);
+	new_dw->allocateAndPut(velocityVars.vVelocityCoeff[ii], d_lab->d_vVelCoefMBLMLabel, ii, patch);
+	new_dw->allocateTemporary(velocityVars.vVelocityConvectCoeff[ii],  patch);
 
       }
 
-      new_dw->allocate(velocityVars.vVelLinearSrc, 
-		       d_lab->d_vVelLinSrcMBLMLabel, matlIndex, patch);
-      new_dw->allocate(velocityVars.vVelNonlinearSrc, 
-		       d_lab->d_vVelNonLinSrcMBLMLabel, matlIndex, patch);
+      new_dw->allocateTemporary(velocityVars.vVelLinearSrc,  patch);
+      new_dw->allocateAndPut(velocityVars.vVelNonlinearSrc, d_lab->d_vVelNonLinSrcMBLMLabel, matlIndex, patch);
 
       // for computing pressure gradient for momentum source
 
-      new_dw->allocate(velocityVars.pressGradVSu, 
-		       d_lab->d_pressGradVSuLabel, matlIndex, patch);
+      new_dw->allocateTemporary(velocityVars.pressGradVSu,  patch);
 
       break;
 
@@ -571,22 +561,17 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
       for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
 
-	new_dw->allocate(velocityVars.wVelocityCoeff[ii], 
-			 d_lab->d_wVelCoefMBLMLabel, ii, patch);
-	new_dw->allocate(velocityVars.wVelocityConvectCoeff[ii], 
-			 d_lab->d_wVelConvCoefMBLMLabel, ii, patch);
+	new_dw->allocateAndPut(velocityVars.wVelocityCoeff[ii], d_lab->d_wVelCoefMBLMLabel, ii, patch);
+	new_dw->allocateTemporary(velocityVars.wVelocityConvectCoeff[ii],  patch);
 
       }
 
-      new_dw->allocate(velocityVars.wVelLinearSrc, 
-		       d_lab->d_wVelLinSrcMBLMLabel, matlIndex, patch);
-      new_dw->allocate(velocityVars.wVelNonlinearSrc, 
-		       d_lab->d_wVelNonLinSrcMBLMLabel, matlIndex, patch);
+      new_dw->allocateTemporary(velocityVars.wVelLinearSrc,  patch);
+      new_dw->allocateAndPut(velocityVars.wVelNonlinearSrc, d_lab->d_wVelNonLinSrcMBLMLabel, matlIndex, patch);
 
       // for computing pressure gradient for momentum source
 
-      new_dw->allocate(velocityVars.pressGradWSu, 
-		       d_lab->d_pressGradWSuLabel, matlIndex, patch);
+      new_dw->allocateTemporary(velocityVars.pressGradWSu,  patch);
  
       break;
 
@@ -732,32 +717,38 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     case Arches::XDIR:
 
       for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-	new_dw->put(velocityVars.uVelocityCoeff[ii], 
-		    d_lab->d_uVelCoefMBLMLabel, ii, patch);
+	// allocateAndPut instead:
+	/* new_dw->put(velocityVars.uVelocityCoeff[ii], 
+		    d_lab->d_uVelCoefMBLMLabel, ii, patch); */;
 	
       }
-      new_dw->put(velocityVars.uVelNonlinearSrc, 
-		  d_lab->d_uVelNonLinSrcMBLMLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.uVelNonlinearSrc, 
+		  d_lab->d_uVelNonLinSrcMBLMLabel, matlIndex, patch); */;
       break;
 
     case Arches::YDIR:
 
       for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-	new_dw->put(velocityVars.vVelocityCoeff[ii], 
-		    d_lab->d_vVelCoefMBLMLabel, ii, patch);
+	// allocateAndPut instead:
+	/* new_dw->put(velocityVars.vVelocityCoeff[ii], 
+		    d_lab->d_vVelCoefMBLMLabel, ii, patch); */;
     }
-      new_dw->put(velocityVars.vVelNonlinearSrc, 
-		  d_lab->d_vVelNonLinSrcMBLMLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.vVelNonlinearSrc, 
+		  d_lab->d_vVelNonLinSrcMBLMLabel, matlIndex, patch); */;
       break;
       
     case Arches::ZDIR:
 
       for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-	new_dw->put(velocityVars.wVelocityCoeff[ii], 
-		     d_lab->d_wVelCoefMBLMLabel, ii, patch);
+	// allocateAndPut instead:
+	/* new_dw->put(velocityVars.wVelocityCoeff[ii], 
+		     d_lab->d_wVelCoefMBLMLabel, ii, patch); */;
       }
-      new_dw->put(velocityVars.wVelNonlinearSrc, 
-		  d_lab->d_wVelNonLinSrcMBLMLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.wVelNonlinearSrc, 
+		  d_lab->d_wVelNonLinSrcMBLMLabel, matlIndex, patch); */;
       break;
 
     default:
@@ -806,7 +797,7 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
     switch (index) {
     case Arches::XDIR:
       {
-      new_dw->allocate(velocityVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
+      new_dw->allocateAndPut(velocityVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
       new_dw->copyOut(velocityVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
@@ -818,13 +809,12 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
       new_dw->getCopy(velocityVars.uVelNonlinearSrc, 
 		  d_lab->d_uVelNonLinSrcMBLMLabel,
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->allocate(velocityVars.residualUVelocity, d_lab->d_uVelocityRes,
-		       matlIndex, patch);
+      new_dw->allocateTemporary(velocityVars.residualUVelocity,  patch);
       
       break;
     case Arches::YDIR:
       {
-      new_dw->allocate(velocityVars.vVelocity, d_lab->d_vVelocitySPBCLabel,
+      new_dw->allocateAndPut(velocityVars.vVelocity, d_lab->d_vVelocitySPBCLabel,
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
       new_dw->copyOut(velocityVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
@@ -837,12 +827,11 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
       new_dw->getCopy(velocityVars.vVelNonlinearSrc, 
 		  d_lab->d_vVelNonLinSrcMBLMLabel,
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->allocate(velocityVars.residualVVelocity, d_lab->d_vVelocityRes,
-		       matlIndex, patch);
+      new_dw->allocateTemporary(velocityVars.residualVVelocity,  patch);
       break; 
     case Arches::ZDIR:
       {
-      new_dw->allocate(velocityVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
+      new_dw->allocateAndPut(velocityVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
       new_dw->copyOut(velocityVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
@@ -855,8 +844,7 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
       new_dw->getCopy(velocityVars.wVelNonlinearSrc, 
 		  d_lab->d_wVelNonLinSrcMBLMLabel,
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->allocate(velocityVars.residualWVelocity, d_lab->d_wVelocityRes,
-		       matlIndex, patch);
+      new_dw->allocateTemporary(velocityVars.residualWVelocity,  patch);
       break;  
     default:
       throw InvalidValue("Invalid index in MomentumSolver");
@@ -924,16 +912,19 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
     // put back the results
     switch (index) {
     case Arches::XDIR:
-      new_dw->put(velocityVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
-		  matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
+		  matlIndex, patch); */;
       break;
     case Arches::YDIR:
-      new_dw->put(velocityVars.vVelocity, d_lab->d_vVelocitySPBCLabel,
-		  matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.vVelocity, d_lab->d_vVelocitySPBCLabel,
+		  matlIndex, patch); */;
       break;
     case Arches::ZDIR:
-      new_dw->put(velocityVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
-		  matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
+		  matlIndex, patch); */;
       break;
     default:
       throw InvalidValue("Invalid index in MomentumSolver");  
@@ -1163,10 +1154,10 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     case Arches::XDIR:
 
 #ifdef correctorstep
-      new_dw->allocate(velocityVars.uVelRhoHat, d_lab->d_uVelocityPredLabel,
+      new_dw->allocateAndPut(velocityVars.uVelRhoHat, d_lab->d_uVelocityPredLabel,
 		       matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 #else
-      new_dw->allocate(velocityVars.uVelRhoHat, d_lab->d_uVelocitySPBCLabel,
+      new_dw->allocateAndPut(velocityVars.uVelRhoHat, d_lab->d_uVelocitySPBCLabel,
 		       matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 #endif
       new_dw->copyOut(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel, 
@@ -1178,10 +1169,10 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
       // getting new value of u velocity
 #ifdef correctorstep
-      new_dw->allocate(velocityVars.vVelRhoHat, d_lab->d_vVelocityPredLabel,
+      new_dw->allocateAndPut(velocityVars.vVelRhoHat, d_lab->d_vVelocityPredLabel,
 		       matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 #else
-      new_dw->allocate(velocityVars.vVelRhoHat, d_lab->d_vVelocitySPBCLabel,
+      new_dw->allocateAndPut(velocityVars.vVelRhoHat, d_lab->d_vVelocitySPBCLabel,
 		       matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 #endif
       new_dw->copyOut(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel, 
@@ -1195,10 +1186,10 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
       // getting new value of u velocity
 #ifdef correctorstep
-      new_dw->allocate(velocityVars.wVelRhoHat, d_lab->d_wVelocityPredLabel,
+      new_dw->allocateAndPut(velocityVars.wVelRhoHat, d_lab->d_wVelocityPredLabel,
 		       matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 #else
-      new_dw->allocate(velocityVars.wVelRhoHat, d_lab->d_wVelocitySPBCLabel,
+      new_dw->allocateAndPut(velocityVars.wVelRhoHat, d_lab->d_wVelocitySPBCLabel,
 		       matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 #endif
       new_dw->copyOut(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel, 
@@ -1329,11 +1320,13 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
       velocityVars.uVelRhoHat.print(cerr);
 #endif
 #ifdef correctorstep
-      new_dw->put(velocityVars.uVelRhoHat, 
-		  d_lab->d_uVelocityPredLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.uVelRhoHat, 
+		  d_lab->d_uVelocityPredLabel, matlIndex, patch); */;
 #else
-      new_dw->put(velocityVars.uVelRhoHat, 
-		  d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.uVelRhoHat, 
+		  d_lab->d_uVelocitySPBCLabel, matlIndex, patch); */;
 #endif
       break;
     case Arches::YDIR:
@@ -1342,11 +1335,13 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
       velocityVars.vVelRhoHat.print(cerr);
 #endif
 #ifdef correctorstep
-      new_dw->put(velocityVars.vVelRhoHat, 
-		  d_lab->d_vVelocityPredLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.vVelRhoHat, 
+		  d_lab->d_vVelocityPredLabel, matlIndex, patch); */;
 #else
-      new_dw->put(velocityVars.vVelRhoHat, 
-		  d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.vVelRhoHat, 
+		  d_lab->d_vVelocitySPBCLabel, matlIndex, patch); */;
 
 #endif
       break;
@@ -1356,11 +1351,13 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
       velocityVars.wVelRhoHat.print(cerr);
 #endif
 #ifdef correctorstep
-      new_dw->put(velocityVars.wVelRhoHat,
-		  d_lab->d_wVelocityPredLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.wVelRhoHat,
+		  d_lab->d_wVelocityPredLabel, matlIndex, patch); */;
 #else
-      new_dw->put(velocityVars.wVelRhoHat,
-		  d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.wVelRhoHat,
+		  d_lab->d_wVelocitySPBCLabel, matlIndex, patch); */;
 #endif
       break;
     default:
@@ -1560,8 +1557,7 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     case Arches::XDIR:
 
       {
-      new_dw->allocate(velocityVars.uVelRhoHat, 
-		  d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+      new_dw->allocateAndPut(velocityVars.uVelRhoHat, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
       new_dw->copyOut(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatCorrLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
       }
@@ -1573,8 +1569,7 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
       // getting new value of u velocity
 
       {
-      new_dw->allocate(velocityVars.vVelRhoHat, 
-		  d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+      new_dw->allocateAndPut(velocityVars.vVelRhoHat, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
       new_dw->copyOut(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatCorrLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
       }
@@ -1586,8 +1581,7 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
       // getting new value of u velocity
 
       {
-      new_dw->allocate(velocityVars.wVelRhoHat,
-		  d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+      new_dw->allocateAndPut(velocityVars.wVelRhoHat, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
       new_dw->copyOut(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatCorrLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
       }
@@ -1880,24 +1874,27 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
       cerr << "Print uvelRhoHat after solve" << endl;
       velocityVars.uVelRhoHat.print(cerr);
 #endif
-      new_dw->put(velocityVars.uVelRhoHat, 
-		  d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.uVelRhoHat, 
+		  d_lab->d_uVelocitySPBCLabel, matlIndex, patch); */;
       break;
     case Arches::YDIR:
 #if 0
       cerr << "Print vvelRhoHat after solve" << endl;
       velocityVars.vVelRhoHat.print(cerr);
 #endif
-      new_dw->put(velocityVars.vVelRhoHat, 
-		  d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.vVelRhoHat, 
+		  d_lab->d_vVelocitySPBCLabel, matlIndex, patch); */;
       break;
     case Arches::ZDIR:
 #if 0
       cerr << "Print wvelRhoHat after solve" << endl;
       velocityVars.wVelRhoHat.print(cerr);
 #endif
-      new_dw->put(velocityVars.wVelRhoHat,
-		  d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.wVelRhoHat,
+		  d_lab->d_wVelocitySPBCLabel, matlIndex, patch); */;
       break;
     default:
       throw InvalidValue("Invalid index in MomentumSolver");
@@ -2077,8 +2074,7 @@ MomentumSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     case Arches::XDIR:
 
       {
-      new_dw->allocate(velocityVars.uVelRhoHat, 
-		  d_lab->d_uVelocityIntermLabel, matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+      new_dw->allocateAndPut(velocityVars.uVelRhoHat, d_lab->d_uVelocityIntermLabel, matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
       new_dw->copyOut(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatIntermLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
       }
@@ -2090,8 +2086,7 @@ MomentumSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
       // getting new value of u velocity
 
       {
-      new_dw->allocate(velocityVars.vVelRhoHat, 
-		  d_lab->d_vVelocityIntermLabel, matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+      new_dw->allocateAndPut(velocityVars.vVelRhoHat, d_lab->d_vVelocityIntermLabel, matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
       new_dw->copyOut(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatIntermLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
       }
@@ -2103,8 +2098,7 @@ MomentumSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
       // getting new value of u velocity
 
       {
-      new_dw->allocate(velocityVars.wVelRhoHat,
-		  d_lab->d_wVelocityIntermLabel, matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+      new_dw->allocateAndPut(velocityVars.wVelRhoHat, d_lab->d_wVelocityIntermLabel, matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
       new_dw->copyOut(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatIntermLabel, 
 		  matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
       }
@@ -2303,24 +2297,27 @@ MomentumSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
       cerr << "Print uvelRhoHat after solve" << endl;
       velocityVars.uVelRhoHat.print(cerr);
 #endif
-      new_dw->put(velocityVars.uVelRhoHat, 
-		  d_lab->d_uVelocityIntermLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.uVelRhoHat, 
+		  d_lab->d_uVelocityIntermLabel, matlIndex, patch); */;
       break;
     case Arches::YDIR:
 #if 0
       cerr << "Print vvelRhoHat after solve" << endl;
       velocityVars.vVelRhoHat.print(cerr);
 #endif
-      new_dw->put(velocityVars.vVelRhoHat, 
-		  d_lab->d_vVelocityIntermLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.vVelRhoHat, 
+		  d_lab->d_vVelocityIntermLabel, matlIndex, patch); */;
       break;
     case Arches::ZDIR:
 #if 0
       cerr << "Print wvelRhoHat after solve" << endl;
       velocityVars.wVelRhoHat.print(cerr);
 #endif
-      new_dw->put(velocityVars.wVelRhoHat,
-		  d_lab->d_wVelocityIntermLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(velocityVars.wVelRhoHat,
+		  d_lab->d_wVelocityIntermLabel, matlIndex, patch); */;
       break;
     default:
       throw InvalidValue("Invalid index in MomentumSolver");

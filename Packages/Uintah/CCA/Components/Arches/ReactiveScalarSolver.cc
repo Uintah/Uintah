@@ -264,17 +264,12 @@ void ReactiveScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
   // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->allocate(reactscalarVars.scalarCoeff[ii], 
-		       d_lab->d_reactscalCoefPredLabel, ii, patch);
-      new_dw->allocate(reactscalarVars.scalarConvectCoeff[ii],
-		       d_lab->d_reactscalConvCoefPredLabel, ii, patch);
-      new_dw->allocate(reactscalarVars.scalarDiffusionCoeff[ii],
-		       d_lab->d_reactscalDiffCoefPredLabel, ii, patch);
+      new_dw->allocateAndPut(reactscalarVars.scalarCoeff[ii], d_lab->d_reactscalCoefPredLabel, ii, patch);
+      new_dw->allocateTemporary(reactscalarVars.scalarConvectCoeff[ii],  patch);
+      new_dw->allocateAndPut(reactscalarVars.scalarDiffusionCoeff[ii], d_lab->d_reactscalDiffCoefPredLabel, ii, patch);
     }
-    new_dw->allocate(reactscalarVars.scalarLinearSrc, 
-		     d_lab->d_reactscalLinSrcPredLabel, matlIndex, patch);
-    new_dw->allocate(reactscalarVars.scalarNonlinearSrc, 
-		     d_lab->d_reactscalNonLinSrcPredLabel, matlIndex, patch);
+    new_dw->allocateTemporary(reactscalarVars.scalarLinearSrc,  patch);
+    new_dw->allocateAndPut(reactscalarVars.scalarNonlinearSrc, d_lab->d_reactscalNonLinSrcPredLabel, matlIndex, patch);
  
   // compute ith component of reactscalar stencil coefficients
   // inputs : reactscalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
@@ -324,13 +319,16 @@ void ReactiveScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 #endif
 #endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->put(reactscalarVars.scalarCoeff[ii], 
-		  d_lab->d_reactscalCoefPredLabel, ii, patch);
-      new_dw->put(reactscalarVars.scalarDiffusionCoeff[ii], 
-		  d_lab->d_reactscalDiffCoefPredLabel, ii, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(reactscalarVars.scalarCoeff[ii], 
+		  d_lab->d_reactscalCoefPredLabel, ii, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(reactscalarVars.scalarDiffusionCoeff[ii], 
+		  d_lab->d_reactscalDiffCoefPredLabel, ii, patch); */;
     }
-    new_dw->put(reactscalarVars.scalarNonlinearSrc, 
-		d_lab->d_reactscalNonLinSrcPredLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(reactscalarVars.scalarNonlinearSrc, 
+		d_lab->d_reactscalNonLinSrcPredLabel, matlIndex, patch); */;
 
   }
 }
@@ -434,10 +432,10 @@ ReactiveScalarSolver::reactscalarLinearSolvePred(const ProcessorGroup* pc,
     // for explicit calculation
     {
 #ifdef correctorstep
-    new_dw->allocate(reactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
+    new_dw->allocateAndPut(reactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
                 matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #else
-    new_dw->allocate(reactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 
+    new_dw->allocateAndPut(reactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 
                 matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #endif
     new_dw->copyOut(reactscalarVars.scalar, d_lab->d_reactscalarOUTBCLabel, 
@@ -452,8 +450,7 @@ ReactiveScalarSolver::reactscalarLinearSolvePred(const ProcessorGroup* pc,
 		  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(reactscalarVars.scalarNonlinearSrc, d_lab->d_reactscalNonLinSrcPredLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocate(reactscalarVars.residualReactivescalar, d_lab->d_reactscalarRes,
-		     matlIndex, patch);
+    new_dw->allocateTemporary(reactscalarVars.residualReactivescalar,  patch);
 
   // apply underelax to eqn
     d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
@@ -474,7 +471,7 @@ ReactiveScalarSolver::reactscalarLinearSolvePred(const ProcessorGroup* pc,
 
     new_dw->get(old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocate(temp_reactscalar, d_lab->d_reactscalarTempLabel, matlIndex, patch);
+    new_dw->allocateAndPut(temp_reactscalar, d_lab->d_reactscalarTempLabel, matlIndex, patch);
     temp_reactscalar.initialize(0.0);
     
     IntVector indexLow = patch->getCellFORTLowIndex();
@@ -492,16 +489,19 @@ ReactiveScalarSolver::reactscalarLinearSolvePred(const ProcessorGroup* pc,
         }
       }
     }
-    new_dw->put(temp_reactscalar, d_lab->d_reactscalarTempLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(temp_reactscalar, d_lab->d_reactscalarTempLabel, matlIndex, patch); */;
 #endif
 #endif
 
 #ifdef correctorstep
-    new_dw->put(reactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
-                matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(reactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
+                matlIndex, patch); */;
 #else
-    new_dw->put(reactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 
-                matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(reactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 
+                matlIndex, patch); */;
 #endif
 
   }
@@ -747,18 +747,13 @@ void ReactiveScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 
   // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->allocate(reactscalarVars.scalarCoeff[ii], 
-		       d_lab->d_reactscalCoefCorrLabel, ii, patch);
-      new_dw->allocate(reactscalarVars.scalarConvectCoeff[ii],
-		       d_lab->d_reactscalConvCoefCorrLabel, ii, patch);
-      new_dw->allocate(reactscalarVars.scalarDiffusionCoeff[ii],
-		       d_lab->d_reactscalDiffCoefCorrLabel, ii, patch);
+      new_dw->allocateAndPut(reactscalarVars.scalarCoeff[ii], d_lab->d_reactscalCoefCorrLabel, ii, patch);
+      new_dw->allocateTemporary(reactscalarVars.scalarConvectCoeff[ii],  patch);
+      new_dw->allocateAndPut(reactscalarVars.scalarDiffusionCoeff[ii], d_lab->d_reactscalDiffCoefCorrLabel, ii, patch);
 
     }
-    new_dw->allocate(reactscalarVars.scalarLinearSrc, 
-		     d_lab->d_reactscalLinSrcCorrLabel, matlIndex, patch);
-    new_dw->allocate(reactscalarVars.scalarNonlinearSrc, 
-		     d_lab->d_reactscalNonLinSrcCorrLabel, matlIndex, patch);
+    new_dw->allocateTemporary(reactscalarVars.scalarLinearSrc,  patch);
+    new_dw->allocateAndPut(reactscalarVars.scalarNonlinearSrc, d_lab->d_reactscalNonLinSrcCorrLabel, matlIndex, patch);
  
   // compute ith component of scalar stencil coefficients
   // inputs : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
@@ -809,14 +804,17 @@ void ReactiveScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 #endif
 #endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->put(reactscalarVars.scalarCoeff[ii], 
-		  d_lab->d_reactscalCoefCorrLabel, ii, patch);
-      new_dw->put(reactscalarVars.scalarDiffusionCoeff[ii],
-		  d_lab->d_reactscalDiffCoefCorrLabel, ii, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(reactscalarVars.scalarCoeff[ii], 
+		  d_lab->d_reactscalCoefCorrLabel, ii, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(reactscalarVars.scalarDiffusionCoeff[ii],
+		  d_lab->d_reactscalDiffCoefCorrLabel, ii, patch); */;
 
     }
-    new_dw->put(reactscalarVars.scalarNonlinearSrc, 
-		d_lab->d_reactscalNonLinSrcCorrLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(reactscalarVars.scalarNonlinearSrc, 
+		d_lab->d_reactscalNonLinSrcCorrLabel, matlIndex, patch); */;
 
   }
 }
@@ -929,7 +927,7 @@ ReactiveScalarSolver::reactscalarLinearSolveCorr(const ProcessorGroup* pc,
   #endif
     // for explicit calculation
     {
-    new_dw->allocate(reactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 
+    new_dw->allocateAndPut(reactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
   #ifdef Runge_Kutta_3d
     new_dw->copyOut(reactscalarVars.scalar, d_lab->d_reactscalarIntermLabel, 
@@ -949,8 +947,7 @@ ReactiveScalarSolver::reactscalarLinearSolveCorr(const ProcessorGroup* pc,
 		  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(reactscalarVars.scalarNonlinearSrc, d_lab->d_reactscalNonLinSrcCorrLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocate(reactscalarVars.residualReactivescalar, d_lab->d_reactscalarRes,
-		     matlIndex, patch);
+    new_dw->allocateTemporary(reactscalarVars.residualReactivescalar,  patch);
   // apply underelax to eqn
     d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
 					    &reactscalarVars);
@@ -1056,8 +1053,9 @@ ReactiveScalarSolver::reactscalarLinearSolveCorr(const ProcessorGroup* pc,
   #endif
 
   // put back the results
-    new_dw->put(reactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 
-		matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(reactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 
+		matlIndex, patch); */;
   }
 }
 
@@ -1223,17 +1221,12 @@ void ReactiveScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
 
   // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->allocate(reactscalarVars.scalarCoeff[ii], 
-		       d_lab->d_reactscalCoefIntermLabel, ii, patch);
-      new_dw->allocate(reactscalarVars.scalarConvectCoeff[ii],
-		       d_lab->d_reactscalConvCoefIntermLabel, ii, patch);
-      new_dw->allocate(reactscalarVars.scalarDiffusionCoeff[ii],
-		       d_lab->d_reactscalDiffCoefIntermLabel, ii, patch);
+      new_dw->allocateAndPut(reactscalarVars.scalarCoeff[ii], d_lab->d_reactscalCoefIntermLabel, ii, patch);
+      new_dw->allocateTemporary(reactscalarVars.scalarConvectCoeff[ii],  patch);
+      new_dw->allocateAndPut(reactscalarVars.scalarDiffusionCoeff[ii], d_lab->d_reactscalDiffCoefIntermLabel, ii, patch);
     }
-    new_dw->allocate(reactscalarVars.scalarLinearSrc, 
-		     d_lab->d_reactscalLinSrcIntermLabel, matlIndex, patch);
-    new_dw->allocate(reactscalarVars.scalarNonlinearSrc, 
-		     d_lab->d_reactscalNonLinSrcIntermLabel, matlIndex, patch);
+    new_dw->allocateTemporary(reactscalarVars.scalarLinearSrc,  patch);
+    new_dw->allocateAndPut(reactscalarVars.scalarNonlinearSrc, d_lab->d_reactscalNonLinSrcIntermLabel, matlIndex, patch);
  
   // compute ith component of scalar stencil coefficients
   // inputs : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
@@ -1284,13 +1277,16 @@ void ReactiveScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
 #endif
 #endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->put(reactscalarVars.scalarCoeff[ii], 
-		  d_lab->d_reactscalCoefIntermLabel, ii, patch);
-      new_dw->put(reactscalarVars.scalarDiffusionCoeff[ii],
-		  d_lab->d_reactscalDiffCoefIntermLabel, ii, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(reactscalarVars.scalarCoeff[ii], 
+		  d_lab->d_reactscalCoefIntermLabel, ii, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(reactscalarVars.scalarDiffusionCoeff[ii],
+		  d_lab->d_reactscalDiffCoefIntermLabel, ii, patch); */;
     }
-    new_dw->put(reactscalarVars.scalarNonlinearSrc, 
-		d_lab->d_reactscalNonLinSrcIntermLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(reactscalarVars.scalarNonlinearSrc, 
+		d_lab->d_reactscalNonLinSrcIntermLabel, matlIndex, patch); */;
 
   }
 }
@@ -1382,7 +1378,7 @@ ReactiveScalarSolver::reactscalarLinearSolveInterm(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     // for explicit calculation
     {
-    new_dw->allocate(reactscalarVars.scalar, d_lab->d_reactscalarIntermLabel, 
+    new_dw->allocateAndPut(reactscalarVars.scalar, d_lab->d_reactscalarIntermLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->copyOut(reactscalarVars.scalar, d_lab->d_reactscalarPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1396,8 +1392,7 @@ ReactiveScalarSolver::reactscalarLinearSolveInterm(const ProcessorGroup* pc,
 		  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(reactscalarVars.scalarNonlinearSrc, d_lab->d_reactscalNonLinSrcIntermLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->allocate(reactscalarVars.residualScalar, d_lab->d_reactscalarRes,
-		     matlIndex, patch);
+    new_dw->allocateTemporary(reactscalarVars.residualScalar,  patch);
 
   // apply underelax to eqn
     d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
@@ -1475,7 +1470,8 @@ ReactiveScalarSolver::reactscalarLinearSolveInterm(const ProcessorGroup* pc,
   #endif
   
     // put back the results
-    new_dw->put(reactscalarVars.scalar, d_lab->d_reactscalarIntermLabel, 
-		matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(reactscalarVars.scalar, d_lab->d_reactscalarIntermLabel, 
+		matlIndex, patch); */;
   }
 }

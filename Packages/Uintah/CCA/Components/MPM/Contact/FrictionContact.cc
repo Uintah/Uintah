@@ -90,8 +90,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                                                   dwi, patch, Ghost::None, 0);
       new_dw->get(numnearparticles[m],lb->gNumNearParticlesLabel, 
                                                   dwi, patch, Ghost::None, 0);
-      new_dw->allocate(gsurfnorm[m],      lb->gSurfNormLabel,      dwi, patch);
-      new_dw->allocate(frictionalWork[m], lb->frictionalWorkLabel, dwi, patch);
+      new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel,      dwi, patch);
+      new_dw->allocateAndPut(frictionalWork[m], lb->frictionalWorkLabel, dwi, patch);
 
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
       frictionalWork[m].initialize(0.);
@@ -222,8 +222,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       constParticleVariable<Point> px;
       old_dw->get(pstress, lb->pStressLabel, pset);
       old_dw->get(px,      lb->pXLabel,      pset);
-      new_dw->allocate(gstress[m],      lb->gStressLabel,      dwi,patch);
-      new_dw->allocate(gnormtraction[m],lb->gNormTractionLabel,dwi,patch);
+      new_dw->allocateAndPut(gstress[m], lb->gStressLabel,      dwi,patch);
+      new_dw->allocateAndPut(gnormtraction[m], lb->gNormTractionLabel,dwi,patch);
       gstress[m].initialize(Matrix3(0.0));
       
       // Next, interpolate the stress to the grid
@@ -258,9 +258,12 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 		Dot(gsurfnorm[m][*iter]*gstress[m][*iter],gsurfnorm[m][*iter]);
       }
 
-      new_dw->put(gsurfnorm[m],    lb->gSurfNormLabel,     dwi, patch);
-      new_dw->put(gstress[m],      lb->gStressLabel,       dwi, patch);
-      new_dw->put(gnormtraction[m],lb->gNormTractionLabel, dwi, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(gsurfnorm[m],    lb->gSurfNormLabel,     dwi, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(gstress[m],      lb->gStressLabel,       dwi, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(gnormtraction[m],lb->gNormTractionLabel, dwi, patch); */;
     }
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
@@ -369,7 +372,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
     for(int m=0;m<matls->size();m++){
       int dwindex = matls->get(m);
-      new_dw->put(frictionalWork[m], lb->frictionalWorkLabel, dwindex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(frictionalWork[m], lb->frictionalWorkLabel, dwindex, patch); */;
     }  // matls
   }  // patches
   

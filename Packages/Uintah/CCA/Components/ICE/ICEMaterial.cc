@@ -160,7 +160,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
                               const Patch* patch,DataWarehouse* new_dw)
 {
   CCVariable<int> IveBeenHere;
-  new_dw->allocate(IveBeenHere,lb->IveBeenHereLabel, 0,patch);
+  new_dw->allocateTemporary(IveBeenHere, patch);
   
   // Zero the arrays so they don't get wacky values
   vel_CC.initialize(Vector(0.,0.,0.));
