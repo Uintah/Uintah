@@ -283,6 +283,7 @@ extern "C"
 		  const double* vVelocity,
 		  const int* domLoW, const int* domHiW,
 		  const double* wVelocity,
+		  const int* domLoeg, const int* domHieg,
 		  const int* domLo, const int* domHi,
 		  const double* density,
 		  const double* viscosity,
@@ -329,6 +330,7 @@ extern "C"
 		  const double* uVelocity,
 		  const int* domLoW, const int* domHiW,
 		  const double* wVelocity,
+		  const int* domLoeg, const int* domHieg,
 		  const int* domLo, const int* domHi,
 		  const double* density,
 		  const double* viscosity,
@@ -375,6 +377,7 @@ extern "C"
 		  const double* uVelocity,
 		  const int* domLoV, const int* domHiV,
 		  const double* vVelocity,
+		  const int* domLoeg, const int* domHieg,
 		  const int* domLo, const int* domHi,
 		  const double* density,
 		  const double* viscosity,
@@ -407,6 +410,7 @@ extern "C"
 		    const double* vVelocity,
 		    const int* domLoW, const int* domHiW,
 		    const double* wVelocity,
+		    const int* domLoeg, const int* domHieg,
 		    const int* domLo, const int* domHi,
 		    const double* density, 
 		    const double* viscosity,
@@ -438,6 +442,7 @@ extern "C"
 		    const double* uVelocity,
 		    const int* domLoW, const int* domHiW,
 		    const double* wVelocity,
+		    const int* domLoeg, const int* domHieg,
 		    const int* domLo, const int* domHi,
 		    const double* density, 
 		    const double* viscosity,
@@ -469,6 +474,7 @@ extern "C"
 		    const double* uVelocity,
 		    const int* domLoV, const int* domHiV,
 		    const double* vVelocity,
+		    const int* domLoeg, const int* domHieg,
 		    const int* domLo, const int* domHi,
 		    const double* density, 
 		    const double* viscosity,
@@ -946,6 +952,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.41  2000/10/08 18:56:35  rawat
+// fixed the solver for multi
+//
 // Revision 1.40  2000/10/06 23:07:47  rawat
 // fixed some more bc routines for mulit-patch
 //

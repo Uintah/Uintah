@@ -55,9 +55,9 @@ C--------------------------------------------------------------------
       integer valid_hi(3)
       
       double precision phi(
-     $     dim_long(1):dim_hing(1),
-     $     dim_long(2):dim_hing(2),
-     $     dim_long(3):dim_hing(3))
+     $     dim_lo(1):dim_hi(1),
+     $     dim_lo(2):dim_hi(2),
+     $     dim_lo(3):dim_hi(3))
 
       double precision ae(
      $     dim_long(1):dim_hing(1),

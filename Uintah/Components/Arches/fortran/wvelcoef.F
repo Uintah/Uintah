@@ -11,7 +11,7 @@ c*********************************************************************
 c     &     DDW,
      &     domLoU, domHiU, UU,
      &     domLoV, domHiV, VV,
-     &     domLo, domHi, DEN, VIS, 
+     &     domLoeg, domHieg, domLo, domHi, DEN, VIS, 
      &     DELTAT,
      &     CEE, CWE, CWW, CNN, CSN, CSS, CTTW, CBTW, CBBW, 
      &     SEW, SNS, STBW, STB,
@@ -83,9 +83,10 @@ c     &     domLoW(3):domHiW(3))
       integer domLoV(3), domHiV(3)
       double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
      &     domLoV(3):domHiV(3))
+      integer domLoeg(3), domHieg(3)
       integer domLo(3), domHi(3)
-      double precision DEN(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
+      double precision DEN(domLoeg(1):domHieg(1), domLoeg(2):domHieg(2), 
+     &     domLoeg(3):domHieg(3))
       double precision VIS(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
       double precision DELTAT
@@ -366,6 +367,9 @@ c                 SU(I,J,K) = 0.0
 c*********************************************************************
 c
 c $Log$
+c Revision 1.8  2000/10/08 18:56:41  rawat
+c fixed the solver for multi
+c
 c Revision 1.7  2000/09/28 22:16:47  bigler
 c Changed certain functions to explicity be double precision functions.
 c

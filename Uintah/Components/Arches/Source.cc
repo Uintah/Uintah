@@ -86,8 +86,10 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   IntVector domHiV = vars->vVelocity.getFortHighIndex();
   IntVector domLoW = vars->wVelocity.getFortLowIndex();
   IntVector domHiW = vars->wVelocity.getFortHighIndex();
-  IntVector domLo = vars->density.getFortLowIndex();
-  IntVector domHi = vars->density.getFortHighIndex();
+  IntVector domLoeg = vars->density.getFortLowIndex();
+  IntVector domHieg = vars->density.getFortHighIndex();
+  IntVector domLo = vars->viscosity.getFortLowIndex();
+  IntVector domHi = vars->viscosity.getFortHighIndex();
   IntVector idxLoU = patch->getSFCXFORTLowIndex();
   IntVector idxHiU = patch->getSFCXFORTHighIndex();
   IntVector idxLoV = patch->getSFCYFORTLowIndex();
@@ -128,6 +130,7 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    vars->vVelocity.getPointer(), 
 		    domLoW.get_pointer(), domHiW.get_pointer(),
 		    vars->wVelocity.getPointer(), 
+		    domLoeg.get_pointer(), domHieg.get_pointer(),
 		    domLo.get_pointer(), domHi.get_pointer(),
 		    vars->density.getPointer(),
 		    vars->viscosity.getPointer(), 
@@ -196,6 +199,7 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    vars->uVelocity.getPointer(), 
 		    domLoW.get_pointer(), domHiW.get_pointer(),
 		    vars->wVelocity.getPointer(), 
+		    domLoeg.get_pointer(), domHieg.get_pointer(),
 		    domLo.get_pointer(), domHi.get_pointer(),
 		    vars->density.getPointer(),
 		    vars->viscosity.getPointer(), 
@@ -260,6 +264,7 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    vars->uVelocity.getPointer(), 
 		    domLoV.get_pointer(), domHiV.get_pointer(),
 		    vars->vVelocity.getPointer(), 
+		    domLoeg.get_pointer(), domHieg.get_pointer(),
 		    domLo.get_pointer(), domHi.get_pointer(),
 		    vars->density.getPointer(),
 		    vars->viscosity.getPointer(), 
@@ -842,6 +847,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.44  2000/10/08 18:56:35  rawat
+//fixed the solver for multi
+//
 //Revision 1.43  2000/10/06 23:07:48  rawat
 //fixed some more bc routines for mulit-patch
 //

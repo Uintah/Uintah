@@ -668,10 +668,11 @@ PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
   int ierr;
   ierr = VecGetArray(d_x, &xvec); CHKERRQ(ierr);
   Array3<int> l2g = d_petscLocalToGlobal[patch];
+  int rowinit = l2g[IntVector(idxLo.x(), idxLo.y(), idxLo.z())]; 
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	int row = l2g[IntVector(colX, colY, colZ)];
+	int row = l2g[IntVector(colX, colY, colZ)]-rowinit;
 	vars->pressure[IntVector(colX, colY, colZ)] = xvec[row];
       }
     }
@@ -1848,6 +1849,9 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.15  2000/10/08 18:56:35  rawat
+// fixed the solver for multi
+//
 // Revision 1.14  2000/10/02 16:40:25  rawat
 // updated cellinformation for multi-patch
 //

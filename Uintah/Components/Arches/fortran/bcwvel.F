@@ -176,25 +176,26 @@ C--------------------------------------------------------------------
                      SP(I+1,J,K) =SP(I+1,J,K)-TMULT*SNS(J)*STBW(K)
                      AW(I+1,J,K) = 0.0
                   END IF
+
+                  IF (K.NE.kend) THEN
+                     IF (PCELL(I,J,K+1).NE.WALL) THEN
 C--------------------------------------------------------------------
-C               TOPEAST FACE OF INTRUSION\WALL
+C               TOP EAST FACE OF INTRUSION/WALL
 C--------------------------------------------------------------------
-                    IF (K.NE.kend) THEN
-                       IF (PCELL(I+1,J,K+1).NE.WALL.AND.
-     &                      PCELL(I+1,J,K).NE.WALL) THEN
-                          XP = X(I+1)-XU(I+1)
-                          TMULT = VISCOS/XP
-c                  TAUYX(I+1,J+1,K) = -TMULT*U(I+1,J+1,K)
-c                  SU(I+1,J+1,K) = SUL(I+1,J+1,K)
-                          SP(I+1,J,K+1) = SP(I+1,J,K+1) - TMULT*
-     &                         SNS(J)*STBW(K+1)
-                          AW(I+1,J,K+1) = 0.0
-                       END IF
-                    END IF
-                 endif
- 110          CONTINUE
- 120       CONTINUE
-        endif
+                        IF (PCELL(I+1,J,K+1).NE.WALL.AND.
+     &                       PCELL(I+1,J,K).NE.WALL) THEN
+                           XP = X(I+1)-XU(I+1)
+                           TMULT = VISCOS/XP
+                        END IF
+                        SP(I+1,J,K+1) = SP(I+1,J,K+1)-TMULT*SNS(J)*
+     &                                  STBW(K+1)
+                        AW(I+1,J,K+1) = 0.0
+                     END IF
+                  END IF
+               endif
+ 110        CONTINUE
+ 120     CONTINUE
+      endif
 
 C--------------------------------------------------------------------
 C     PRESSURE BOUNDARY CONDITOINS 
@@ -250,6 +251,9 @@ C-------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.8  2000/10/08 18:56:41  rawat
+c fixed the solver for multi
+c
 c Revision 1.7  2000/10/07 23:53:03  rawat
 c modified bc subroutines
 c
