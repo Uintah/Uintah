@@ -19,10 +19,38 @@
 
 static Persistent* make_GeomVertex()
 {
-    return new GeomVertex(Point(0,0,0));
+    return scinew GeomVertex(Point(0,0,0));
 }
 
 PersistentTypeID GeomVertex::type_id("GeomVertex", "Persistent", make_GeomVertex);
+
+static Persistent* make_GeomNVertex()
+{
+    return scinew GeomNVertex(Point(0,0,0),Vector(0,0,1));
+}
+
+PersistentTypeID GeomNVertex::type_id("GeomNVertex", "GeomVertex", make_GeomNVertex);
+
+static Persistent* make_GeomNMVertex()
+{
+    return scinew GeomNMVertex(Point(0,0,0), Vector(0,0,1), MaterialHandle(0));
+}
+
+PersistentTypeID GeomNMVertex::type_id("GeomNMVertex", "GeomNVertex", make_GeomNMVertex);
+
+static Persistent* make_GeomMVertex()
+{
+    return scinew GeomMVertex(Point(0,0,0), MaterialHandle(0));
+}
+
+PersistentTypeID GeomMVertex::type_id("GeomMVertex", "GeomVertex", make_GeomMVertex);
+
+static Persistent* make_GeomCVertex()
+{
+    return scinew GeomCVertex(Point(0,0,0), Color(0,0,0));
+}
+
+PersistentTypeID GeomCVertex::type_id("GeomCVertex", "GeomVertex", make_GeomCVertex);
 
 PersistentTypeID GeomVertexPrim::type_id("GeomVertexPrim", "GeomObj", 0);
 
@@ -57,28 +85,28 @@ void GeomVertexPrim::get_bounds(BSphere& bs)
 
 void GeomVertexPrim::add(const Point& p)
 {
-    verts.add(scinew GeomVertex(p));
+    verts.add(new GeomVertex(p));
 }
 
 void GeomVertexPrim::add(const Point& p, const Vector& normal)
 {
-    verts.add(scinew GeomNVertex(p, normal));
+    verts.add(new GeomNVertex(p, normal));
 }
 
 void GeomVertexPrim::add(const Point& p, const MaterialHandle& matl)
 {
-    verts.add(scinew GeomMVertex(p, matl));
+    verts.add(new GeomMVertex(p, matl));
 }
 
 void GeomVertexPrim::add(const Point& p, const Color& clr)
 {
-    verts.add(scinew GeomCVertex(p, clr));
+    verts.add(new GeomCVertex(p, clr));
 }
 
 void GeomVertexPrim::add(const Point& p, const Vector& normal,
 			 const MaterialHandle& matl)
 {
-    verts.add(scinew GeomNMVertex(p, normal, matl));
+    verts.add(new GeomNMVertex(p, normal, matl));
 }
 
 void GeomVertexPrim::add(GeomVertex* vtx)

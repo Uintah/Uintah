@@ -35,6 +35,10 @@ struct GeomVertex : public Persistent {
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+#if 0
+    void* operator new(size_t);
+    void operator delete(void*, size_t);
+#endif
 };
 
 struct GeomNVertex : public GeomVertex {
@@ -50,6 +54,10 @@ struct GeomNVertex : public GeomVertex {
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+#if 0
+    void* operator new(size_t);
+    void operator delete(void*, size_t);
+#endif
 };
 
 struct GeomNMVertex : public GeomNVertex {
@@ -66,6 +74,10 @@ struct GeomNMVertex : public GeomNVertex {
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+#if 0
+    void* operator new(size_t);
+    void operator delete(void*, size_t);
+#endif
 };
 
 struct GeomMVertex : public GeomVertex {
@@ -80,6 +92,10 @@ struct GeomMVertex : public GeomVertex {
 #endif
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+#if 0
+    void* operator new(size_t);
+    void operator delete(void*, size_t);
+#endif
 };
 
 struct GeomCVertex : public GeomVertex {
@@ -94,6 +110,10 @@ struct GeomCVertex : public GeomVertex {
 #endif
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+#if 0
+    void* operator new(size_t);
+    void operator delete(void*, size_t);
+#endif
 };
 
 void Pio(Piostream&, GeomVertex*&);

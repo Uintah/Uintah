@@ -14,6 +14,7 @@
 #include <Geom/Cone.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
+#include <Geom/Save.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
 #include <Math/TrigTable.h>
@@ -22,14 +23,14 @@
 
 Persistent* make_GeomCone()
 {
-    return new GeomCone;
+    return scinew GeomCone;
 }
 
 PersistentTypeID GeomCone::type_id("GeomCone", "GeomObj", make_GeomCone);
 
 Persistent* make_GeomCappedCone()
 {
-    return new GeomCappedCone(0,0);
+    return scinew GeomCappedCone(0,0);
 }
 
 PersistentTypeID GeomCappedCone::type_id("GeomCappedCone", "GeomObj", make_GeomCappedCone);
@@ -178,6 +179,28 @@ void GeomCone::io(Piostream& stream)
     stream.end_class();
 }
 
+bool GeomCone::saveobj(ostream& out, const clString& format,
+		       GeomSave* saveinfo)
+{
+    if(format == "vrml"){
+	saveinfo->start_tsep(out);
+	saveinfo->orient(out, bottom+axis*0.5, axis);
+	saveinfo->start_node(out, "Cone");
+	saveinfo->indent(out);
+	out << "parts SIDES\n";
+	saveinfo->indent(out);
+	out << "bottomRadius " << bot_rad << "\n";
+	saveinfo->indent(out);
+	out << "height " << height << "\n";
+	saveinfo->end_node(out);
+	saveinfo->end_tsep(out);
+	return true;
+    } else {
+	NOT_FINISHED("GeomCone::saveobj");
+	return false;
+    }
+}
+
 // Capped Geometry
 
 GeomCappedCone::GeomCappedCone(int nu, int nv, int nvdisc1, int nvdisc2)
@@ -234,3 +257,10 @@ void GeomCappedCone::io(Piostream& stream)
     Pio(stream, nvdisc2);
     stream.end_class();
 }
+
+bool GeomCappedCone::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomCappedCone::saveobj");
+    return false;
+}
+

@@ -25,7 +25,7 @@ private:
     void make_circle(int which, Array1<Point>& circle,
 		     const SinCosTable& tab); 
 public:
-    GeomTube(int nu=10); 
+    GeomTube(int nu=8); 
     GeomTube(const GeomTube&); 
     virtual ~GeomTube(); 
 
@@ -46,6 +46,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
 #endif /*SCI_Geom_Tube_h */

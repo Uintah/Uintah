@@ -43,6 +43,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
 class GeomTimeSwitch : public GeomContainer {
@@ -61,6 +62,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
 #endif /* SCI_Geom_Switch_h */

@@ -25,14 +25,14 @@
 
 Persistent* make_GeomTorus()
 {
-    return new GeomTorus;
+    return scinew GeomTorus;
 }
 
 PersistentTypeID GeomTorus::type_id("GeomTorus", "GeomObj", make_GeomTorus);
 
 Persistent* make_GeomTorusArc()
 {
-    return new GeomTorusArc;
+    return scinew GeomTorusArc;
 }
 
 PersistentTypeID GeomTorusArc::type_id("GeomTorusArc", "GeomTorus", make_GeomTorusArc);
@@ -206,6 +206,12 @@ void GeomTorus::io(Piostream& stream)
     stream.end_class();
 }
 
+bool GeomTorus::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomTorus::saveobj");
+    return false;
+}
+
 #define GEOMTORUSARC_VERSION 1
 
 void GeomTorusArc::io(Piostream& stream)
@@ -218,3 +224,10 @@ void GeomTorusArc::io(Piostream& stream)
     Pio(stream, yaxis);
     stream.end_class();
 }
+
+bool GeomTorusArc::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomTorusArc::saveobj");
+    return false;
+}
+

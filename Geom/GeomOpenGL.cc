@@ -964,8 +964,9 @@ void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void GeomTimeSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
-    if(time >= tbeg && time < tend)
+    if(time >= tbeg && time < tend){
 	child->draw(di, matl, time);
+    }
 }
 
 // WARNING not fixed for lighting correctly yet!
@@ -1013,7 +1014,7 @@ void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    glEnd();
 	}
 	break;
-    case DrawInfoOpenGL::Flat:
+#if 0
 	for(v=0;v<nv-1;v++){
 	    double z1=tab2.cos(v);
 	    double rr1=tab2.sin(v);
@@ -1035,7 +1036,8 @@ void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    glEnd();
 	}
 	break;
-    case DrawInfoOpenGL::Gouraud:
+#endif
+    case DrawInfoOpenGL::Flat:
 	for(v=0;v<nv-1;v++){
 	    double z1=tab2.cos(v);
 	    double rr1=tab2.sin(v);
@@ -1060,6 +1062,7 @@ void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    glEnd();
 	}
 	break;
+    case DrawInfoOpenGL::Gouraud:
     case DrawInfoOpenGL::Phong:
 	for(v=0;v<nv-1;v++){
 	    double z1=tab2.cos(v);
@@ -1323,7 +1326,11 @@ void GeomTrianglesPC::draw(DrawInfoOpenGL* di, Material* matl, double)
     di->polycount += size();
 
     if (di->currently_lit) {
+#ifdef SCI_NORM_OGL
+	glEnable(GL_NORMALIZE);
+#else
 	glDisable(GL_NORMALIZE);
+#endif
 	switch(di->get_drawtype()){
 	case DrawInfoOpenGL::WireFrame:
 	case DrawInfoOpenGL::Flat:
@@ -1816,5 +1823,4 @@ void GeomIndexedGroup::draw(DrawInfoOpenGL* di, Material* m, double time)
 	GeomObj *obj = iter.get_data();
 	obj->draw(di,m,time);
     }
-    
 }

@@ -22,7 +22,7 @@
 
 Persistent* make_GeomRenderMode()
 {
-    return new GeomRenderMode(GeomRenderMode::WireFrame, 0);
+    return scinew GeomRenderMode(GeomRenderMode::WireFrame, 0);
 }
 
 PersistentTypeID GeomRenderMode::type_id("GeomRenderMode", "GeomObj", make_GeomRenderMode);
@@ -73,3 +73,10 @@ void GeomRenderMode::io(Piostream& stream)
 	drawtype=(DrawType)tmp;
     stream.end_class();
 }
+
+bool GeomRenderMode::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomRenderMode::saveobj");
+    return false;
+}
+

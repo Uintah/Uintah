@@ -12,6 +12,8 @@
  */
 
 #include <Geom/View.h>
+#include <Classlib/Persistent.h>
+#include <Classlib/String.h>
 #include <Math/Trig.h>
 
 View::View()
@@ -185,3 +187,14 @@ void View::up(const Vector& u)
     up_=u;
 }
 
+#define VIEW_VERSION 1
+
+void Pio(Piostream& stream, View& v)
+{
+    stream.begin_class("View", VIEW_VERSION);
+    Pio(stream, v.eyep_);
+    Pio(stream, v.lookat_);
+    Pio(stream, v.up_);
+    Pio(stream, v.fov_);
+    stream.end_class();
+}

@@ -24,7 +24,7 @@
 
 Persistent* make_GeomPts()
 {
-    return new GeomPts(0);
+    return scinew GeomPts(0);
 }
 
 PersistentTypeID GeomPts::type_id("GeomPts", "GeomObj", make_GeomPts);
@@ -90,3 +90,10 @@ void GeomPts::io(Piostream& stream)
     Pio(stream, pts);
     stream.end_class();
 }
+
+bool GeomPts::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomPts::saveobj");
+    return false;
+}
+

@@ -47,6 +47,7 @@ public:
     virtual Vector normal(const Point& p, const Hit&);
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
 #endif /* SCI_Geom_Sphere_h */

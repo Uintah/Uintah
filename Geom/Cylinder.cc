@@ -13,6 +13,7 @@
 
 #include <Geom/Cylinder.h>
 #include <Classlib/NotFinished.h>
+#include <Geom/Save.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
@@ -23,7 +24,7 @@
 
 Persistent* make_GeomCylinder()
 {
-    return new GeomCylinder;
+    return scinew GeomCylinder;
 }
 
 PersistentTypeID GeomCylinder::type_id("GeomCylinder", "GeomObj",
@@ -31,7 +32,7 @@ PersistentTypeID GeomCylinder::type_id("GeomCylinder", "GeomObj",
 
 Persistent* make_GeomCappedCylinder()
 {
-    return new GeomCappedCylinder;
+    return scinew GeomCappedCylinder;
 }
 
 PersistentTypeID GeomCappedCylinder::type_id("GeomCappedCylinder", "GeomObj",
@@ -173,6 +174,29 @@ void GeomCylinder::io(Piostream& stream)
     stream.end_class();
 }
 
+bool GeomCylinder::saveobj(ostream& out, const clString& format,
+			   GeomSave* saveinfo)
+{
+    if(format == "vrml"){
+	saveinfo->start_tsep(out);
+	saveinfo->orient(out, bottom+axis*0.5, axis);
+	saveinfo->start_node(out, "Cylinder");
+	saveinfo->indent(out);
+	out << "parts SIDES\n";
+	saveinfo->indent(out);
+	out << "radius " << rad << "\n";
+	saveinfo->indent(out);
+	out << "height " << height << "\n";
+	saveinfo->end_node(out);
+	saveinfo->end_tsep(out);
+	return true;
+    } else {
+	NOT_FINISHED("GeomCylinder::saveobj");
+	return false;
+    }
+}
+
+
 // Capped Geometry....
 
 GeomCappedCylinder::GeomCappedCylinder(int nu, int nv, int nvdisc)
@@ -225,3 +249,26 @@ void GeomCappedCylinder::io(Piostream& stream)
     GeomCylinder::io(stream);
     Pio(stream, nvdisc);
 }
+
+bool GeomCappedCylinder::saveobj(ostream& out, const clString& format,
+				 GeomSave* saveinfo)
+{
+    if(format == "vrml"){
+	saveinfo->start_tsep(out);
+	saveinfo->orient(out, bottom+axis*0.5, axis);
+	saveinfo->start_node(out, "Cylinder");
+	saveinfo->indent(out);
+	out << "parts ALL\n";
+	saveinfo->indent(out);
+	out << "radius " << rad << "\n";
+	saveinfo->indent(out);
+	out << "height " << height << "\n";
+	saveinfo->end_node(out);
+	saveinfo->end_tsep(out);
+	return true;
+    } else {
+	NOT_FINISHED("GeomCylinder::saveobj");
+	return false;
+    }
+}
+

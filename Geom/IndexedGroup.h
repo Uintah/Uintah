@@ -39,6 +39,7 @@ public:
 
     HashTableIter<int,GeomObj*> getIter(void); // gets an iter
     HashTable<int,GeomObj*>* getHash(void);    // gets the table
+    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
 #endif

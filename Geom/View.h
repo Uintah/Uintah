@@ -48,6 +48,8 @@ public:
     void up(const Vector&);
     double fov() const;	
     void fov(double);
+
+    friend void Pio(Piostream&, View&);
 };
 
 #endif /* SCI_Geom_View_h */

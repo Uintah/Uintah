@@ -25,7 +25,7 @@
 
 Persistent* make_GeomDisc()
 {
-    return new GeomDisc;
+    return scinew GeomDisc;
 }
 
 PersistentTypeID GeomDisc::type_id("GeomDisc", "GeomObj", make_GeomDisc);
@@ -175,3 +175,10 @@ void GeomDisc::io(Piostream& stream)
     Pio(stream, nv);
     stream.end_class();
 }
+
+bool GeomDisc::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomDisc::saveobj");
+    return false;
+}
+

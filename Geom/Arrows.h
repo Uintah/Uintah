@@ -56,6 +56,8 @@ public:
 			   Hit& hit);
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+
+    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
 #endif /* SCI_Geom_Arrows_h */

@@ -55,6 +55,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
 class GeomTorusArc : public GeomTorus {
@@ -85,6 +86,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
 

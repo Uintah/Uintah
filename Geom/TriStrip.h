@@ -36,6 +36,7 @@ public:
     int size(void);
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
 class GeomTriStripList : public GeomObj {
@@ -75,6 +76,7 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
     
+    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
 #endif /* SCI_Geom_TriStrip_h */

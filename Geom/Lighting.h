@@ -24,6 +24,8 @@ struct Lighting {
 
     Lighting();
     ~Lighting();
+
+    friend void Pio(Piostream&, Lighting&);
 };
 
 #endif /* SCI_Geom_Lighting_h */

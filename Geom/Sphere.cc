@@ -12,8 +12,10 @@
  */
 
 #include <Geom/Sphere.h>
+#include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Geom/GeomRaytracer.h>
+#include <Geom/Save.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
@@ -24,7 +26,7 @@
 
 Persistent* make_GeomSphere()
 {
-    return new GeomSphere;
+    return scinew GeomSphere;
 }
 
 PersistentTypeID GeomSphere::type_id("GeomSphere", "GeomObj", make_GeomSphere);
@@ -170,3 +172,21 @@ void GeomSphere::io(Piostream& stream)
     Pio(stream, nv);
     stream.end_class();
 }
+
+bool GeomSphere::saveobj(ostream& out, const clString& format,
+			 GeomSave* saveinfo)
+{
+    if(format == "vrml"){
+	saveinfo->start_tsep(out);
+	saveinfo->start_node(out, "Sphere");
+	saveinfo->indent(out);
+	out << "radius " << rad << "\n";
+	saveinfo->end_node(out);
+	saveinfo->end_tsep(out);
+	return true;
+    } else {
+	NOT_FINISHED("GeomSphere::saveobj");
+	return false;
+    }
+}
+

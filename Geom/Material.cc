@@ -12,7 +12,9 @@
  */
 
 #include <Geom/Material.h>
+#include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
+#include <Geom/Save.h>
 #include <Malloc/Allocator.h>
 
 static Persistent* make_Material()
@@ -139,6 +141,40 @@ void GeomMaterial::io(Piostream& stream)
     GeomContainer::io(stream);
     Pio(stream, matl);
     stream.end_class();
+}
+
+bool GeomMaterial::saveobj(ostream& out, const clString& format,
+			   GeomSave* saveinfo)
+{
+    if(format == "vrml"){
+	saveinfo->start_sep(out);
+	saveinfo->start_node(out, "Material");
+	saveinfo->indent(out);
+	Color& amb(matl->ambient);
+	out << "ambientColor " << amb.r() << " " << amb.g() << " " << amb.b() << "\n";
+
+	saveinfo->indent(out);
+	Color& dif(matl->diffuse);
+	out << "diffuseColor " << dif.r() << " " << dif.g() << " " << dif.b() << "\n";
+	saveinfo->indent(out);
+	Color& spec(matl->specular);
+	out << "specularColor " << spec.r() << " " << spec.g() << " " << spec.b() << "\n";
+	saveinfo->indent(out);
+	Color& em(matl->emission);
+	out << "emissiveColor " << em.r() << " " << em.g() << " " << em.b() << "\n";
+	saveinfo->indent(out);
+	out << "shininess " << matl->shininess << "\n";
+	saveinfo->indent(out);
+	out << "transparency " << matl->transparency << "\n";
+	saveinfo->end_node(out);
+	if(!child->saveobj(out, format, saveinfo))
+	    return false;
+	saveinfo->end_sep(out);
+	return true;
+    } else {
+	NOT_FINISHED("GeomMaterial::saveobj");
+	return false;
+    }
 }
 
 #ifdef __GNUG__

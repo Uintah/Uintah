@@ -21,10 +21,18 @@
 
 Persistent* make_GeomTriStrip()
 {
-    return new GeomTriStrip;
+    return scinew GeomTriStrip;
 }
 
 PersistentTypeID GeomTriStrip::type_id("GeomTriStrip", "GeomObj", make_GeomTriStrip);
+
+Persistent* make_GeomTriStripList()
+{
+    return scinew GeomTriStripList;
+}
+
+PersistentTypeID GeomTriStripList::type_id("GeomTriStripList", "GeomObj",
+					   make_GeomTriStripList);
 
 GeomTriStrip::GeomTriStrip()
 {
@@ -68,6 +76,12 @@ void GeomTriStrip::io(Piostream& stream)
     stream.end_class();
 }
 
+bool GeomTriStrip::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomTriStrip::saveobj");
+    return false;
+}
+
 int GeomTriStrip::size(void)
 {
     return verts.size();
@@ -86,7 +100,7 @@ GeomTriStripList::~GeomTriStripList()
 
 GeomObj* GeomTriStripList::clone()
 {
-    // not implemented...
+    return new GeomTriStripList(*this);
 }
 
 void GeomTriStripList::add(const Point& p)
@@ -140,14 +154,28 @@ int GeomTriStripList::size(void)
     return nrmls.size()/3;
 }
 
-void GeomTriStripList::io(Piostream&)
+#define GEOMTRISTRIPLIST_VERSION 1
+
+void GeomTriStripList::io(Piostream& stream)
 {
-    // not implemented
+    stream.begin_class("GeomTriStripList", GEOMTRISTRIPLIST_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, n_strips);
+    Pio(stream, pts);
+    Pio(stream, nrmls);
+    Pio(stream, strips);
+    stream.end_class();
+}
+
+bool GeomTriStripList::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomTriStripList::saveobj");
+    return false;
 }
 
 void GeomTriStripList::make_prims(Array1<GeomObj*>&,Array1<GeomObj*>&)
 {
-    // not implemented
+    NOT_FINISHED("GeomTriStripList::make_prims");
 }
 
 Point GeomTriStripList::get_pm1(void)

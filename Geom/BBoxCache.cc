@@ -1,5 +1,17 @@
+
 #include <Geom/BBoxCache.h>
+#include <Classlib/NotFinished.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
+
+Persistent* make_GeomBBoxCache()
+{
+    return scinew GeomBBoxCache(0);
+}
+
+PersistentTypeID GeomBBoxCache::type_id("GeomBBoxCache", "GeomObj",
+					make_GeomBBoxCache);
+
 
 GeomBBoxCache::GeomBBoxCache(GeomObj* obj)
 :child(obj),bbox_cached(0),bsphere_cached(0)
@@ -9,7 +21,8 @@ GeomBBoxCache::GeomBBoxCache(GeomObj* obj)
 
 GeomBBoxCache::~GeomBBoxCache()
 {
-    delete child;
+    if(child)
+	delete child;
 }
 
 GeomObj* GeomBBoxCache::clone()
@@ -32,7 +45,6 @@ void GeomBBoxCache::get_bounds(BBox& box)
     }
 
     box.extend( bbox );
-
 }
 
 void GeomBBoxCache::get_bounds(BSphere& sphere)
@@ -65,7 +77,22 @@ void GeomBBoxCache::intersect(const Ray& ray, Material* m,
     child->intersect(ray,m,hit);
 }
 
-void GeomBBoxCache::io(Piostream& pio)
+#define GEOMBBOXCACHE_VERSION 1
+
+void GeomBBoxCache::io(Piostream& stream)
 {
-    cerr << "GeomBBoxCache::io not implemented!\n";
+    stream.begin_class("GeomBBoxCache", GEOMBBOXCACHE_VERSION);
+    Pio(stream, bbox_cached);
+    Pio(stream, bsphere_cached);
+    Pio(stream, bbox);
+    Pio(stream, bsphere);
+    Pio(stream, child);
+    stream.end_class();
 }
+
+bool GeomBBoxCache::saveobj(ostream& out, const clString& format,
+			    GeomSave* saveinfo)
+{
+    return child->saveobj(out, format, saveinfo);
+}
+

@@ -18,7 +18,7 @@
 
 Persistent* make_GeomPick()
 {
-    return new GeomPick(0,0);
+    return scinew GeomPick(0,0);
 }
 
 PersistentTypeID GeomPick::type_id("GeomPick", "GeomObj", make_GeomPick);
@@ -189,5 +189,10 @@ void GeomPick::io(Piostream& stream)
     stream.begin_class("GeomPick", GEOMPICK_VERSION);
     GeomContainer::io(stream);
     stream.end_class();
+}
+
+bool GeomPick::saveobj(ostream& out, const clString& format, GeomSave* saveinfo)
+{
+    return child->saveobj(out, format, saveinfo);
 }
 

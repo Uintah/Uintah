@@ -25,7 +25,7 @@ OBJS = Arrows.o  BBoxCache.o Color.o  Cone.o  Container.o  Cylinder.o  Disc.o  \
 	Geom.o  GeomRaytracer.o  Grid.o  Group.o  \
 	HeadLight.o  IndexedGroup.o Light.o  Lighting.o  Line.o  Material.o  \
 	Pick.o  PointLight.o  Polyline.o  Pt.o \
-	RenderMode.o  Sphere.o Switch.o  \
+	RenderMode.o  Scene.o  Sphere.o Switch.o  \
 	Tetra.o  Torus.o  Tri.o  Triangles.o  TriStrip.o  Tube.o  \
 	VertexPrim.o  View.o\
 	TCLGeom.o  $(OPENGLOBJS) $(X11OBJS)
@@ -33,7 +33,7 @@ SRCS = Arrows.cc BBoxCache.cc Color.cc Cone.cc Container.cc Cylinder.cc Disc.cc 
 	Geom.cc GeomRaytracer.cc Grid.cc Group.cc \
 	HeadLight.cc IndexedGroup.cc Light.cc Lighting.cc Line.cc Material.cc \
 	Pick.cc PointLight.cc Polyline.cc Pt.cc \
-	RenderMode.cc Sphere.cc Switch.cc \
+	RenderMode.cc Scene.cc Sphere.cc Switch.cc \
 	Tetra.cc Torus.cc Tri.cc Triangles.cc TriStrip.cc Tube.cc \
 	VertexPrim.cc View.cc \
 	TCLGeom.cc $(OPENGLSRCS) $(X11SRCS)

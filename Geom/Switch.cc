@@ -11,19 +11,20 @@
  *  Copyright (C) 1995 SCI Group
  */
 #include <Geom/Switch.h>
+#include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Malloc/Allocator.h>
 
 Persistent* make_GeomSwitch()
 {
-    return new GeomSwitch(0,0);
+    return scinew GeomSwitch(0,0);
 }
 
 PersistentTypeID GeomSwitch::type_id("GeomSwitch", "GeomObj", make_GeomSwitch);
 
 Persistent* make_GeomTimeSwitch()
 {
-    return new GeomTimeSwitch(0,0,0);
+    return scinew GeomTimeSwitch(0,0,0);
 }
 
 PersistentTypeID GeomTimeSwitch::type_id("GeomTimeSwitch", "GeomObj", make_GeomTimeSwitch);
@@ -86,6 +87,15 @@ void GeomSwitch::intersect(const Ray& ray, Material* matl, Hit& hit)
    if(state)child->intersect(ray, matl, hit);
 }
 
+bool GeomSwitch::saveobj(ostream& out, const clString& format,
+			 GeomSave* saveinfo)
+{
+    if(state)
+	return child->saveobj(out, format, saveinfo);
+    else
+	return true;
+}
+
 #define GEOMSWITCH_VERSION 1
 
 void GeomSwitch::io(Piostream& stream)
@@ -124,5 +134,11 @@ void GeomTimeSwitch::io(Piostream& stream)
     Pio(stream, tbeg);
     Pio(stream, tend);
     stream.end_class();
+}
+
+bool GeomTimeSwitch::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomTimeSwitch::saveobj");
+    return false;
 }
 

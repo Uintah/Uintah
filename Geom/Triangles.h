@@ -59,6 +59,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
 class GeomTrianglesP: public GeomObj {
@@ -91,6 +92,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
 class GeomTrianglesPC: public GeomTrianglesP {
@@ -109,6 +111,7 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+    virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
 #endif /* SCI_Geom_Triangles_h */

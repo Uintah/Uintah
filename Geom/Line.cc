@@ -97,3 +97,10 @@ void GeomLine::io(Piostream& stream)
     Pio(stream, p2);
     stream.end_class();
 }
+
+bool GeomLine::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomLine::saveobj");
+    return false;
+}
+

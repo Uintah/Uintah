@@ -24,7 +24,7 @@
 
 Persistent* make_GeomTri()
 {
-    return new GeomTri(Point(0,0,0), Point(1,0,0), Point(0,1,0));
+    return scinew GeomTri(Point(0,0,0), Point(1,0,0), Point(0,1,0));
 }
 
 PersistentTypeID GeomTri::type_id("GeomTri", "GeomObj", make_GeomTri);
@@ -229,3 +229,10 @@ void GeomTri::io(Piostream& stream)
     GeomVertexPrim::io(stream);
     stream.end_class();
 }
+
+bool GeomTri::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomTri::saveobj");
+    return false;
+}
+

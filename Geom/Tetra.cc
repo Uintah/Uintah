@@ -20,7 +20,7 @@
 
 Persistent* make_GeomTetra()
 {
-    return new GeomTetra(Point(0,0,0), Point(0,0,1), Point(0,1,0), Point(1,0,0));
+    return scinew GeomTetra(Point(0,0,0), Point(0,0,1), Point(0,1,0), Point(1,0,0));
 }
 
 PersistentTypeID GeomTetra::type_id("GeomTetra", "GeomObj", make_GeomTetra);
@@ -98,3 +98,10 @@ void GeomTetra::io(Piostream& stream)
     Pio(stream, p4);
     stream.end_class();
 }
+
+bool GeomTetra::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomTetra::saveobj");
+    return false;
+}
+

@@ -31,6 +31,8 @@ public:
 #endif
     virtual void lintens(const OcclusionData& od, const Point& hit_position,
 			 Color& light, Vector& light_dir);
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
 
 #endif /* SCI_Geom_HeadLight_h */

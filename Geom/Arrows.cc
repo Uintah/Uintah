@@ -20,7 +20,7 @@
 
 Persistent* make_GeomArrows()
 {
-    return new GeomArrows(0,0);
+    return scinew GeomArrows(0,0);
 }
 
 PersistentTypeID GeomArrows::type_id("GeomArrows", "GeomObj", make_GeomArrows);
@@ -134,6 +134,13 @@ void GeomArrows::io(Piostream& stream)
     Pio(stream, v2);
     stream.end_class();
 }
+
+bool GeomArrows::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomArrows::saveobj");
+    return false;
+}
+
 
 #ifdef __GNUG__
 

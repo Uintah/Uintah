@@ -21,7 +21,7 @@
 
 Persistent* make_GeomTube()
 {
-    return new GeomTube;
+    return scinew GeomTube;
 }
 
 PersistentTypeID GeomTube::type_id("GeomTube", "GeomObj", make_GeomTube);
@@ -132,6 +132,12 @@ void GeomTube::io(Piostream& stream)
     Pio(stream, directions);
     Pio(stream, radii);
     stream.end_class();
+}
+
+bool GeomTube::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomTube::saveobj");
+    return false;
 }
 
 #ifdef __GNUG__

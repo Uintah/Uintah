@@ -20,7 +20,7 @@
 
 Persistent* make_GeomPolyline()
 {
-    return new GeomPolyline;
+    return scinew GeomPolyline;
 }
 
 PersistentTypeID GeomPolyline::type_id("GeomPolyline", "GeomObj", make_GeomPolyline);
@@ -66,3 +66,10 @@ void GeomPolyline::io(Piostream& stream)
     GeomVertexPrim::io(stream);
     stream.end_class();
 }
+
+bool GeomPolyline::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomPolyline::saveobj");
+    return false;
+}
+

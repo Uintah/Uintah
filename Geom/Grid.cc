@@ -20,7 +20,7 @@
 
 Persistent* make_GeomGrid()
 {
-    return new GeomGrid(0,0,Point(0,0,0), Vector(1,0,0), Vector(0,0,1));
+    return scinew GeomGrid(0,0,Point(0,0,0), Vector(1,0,0), Vector(0,0,1));
 }
 
 PersistentTypeID GeomGrid::type_id("GeomGrid", "GeomObj", make_GeomGrid);
@@ -165,6 +165,12 @@ void GeomGrid::io(Piostream& stream)
 	adjust();
     stream.end_class();
 }    
+
+bool GeomGrid::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomGrid::saveobj");
+    return false;
+}
 
 #ifdef __GNUG__
 #include <Classlib/Array2.cc>

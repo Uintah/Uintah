@@ -14,6 +14,7 @@
 #include <Geom/Triangles.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
+#include <Geom/Save.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
@@ -21,10 +22,24 @@
 
 Persistent* make_GeomTriangles()
 {
-    return new GeomTriangles;
+    return scinew GeomTriangles;
 }
 
 PersistentTypeID GeomTriangles::type_id("GeomTriangles", "GeomObj", make_GeomTriangles);
+
+Persistent* make_GeomTrianglesP()
+{
+    return scinew GeomTrianglesP;
+}
+
+PersistentTypeID GeomTrianglesP::type_id("GeomTrianglesP", "GeomObj", make_GeomTrianglesP);
+
+Persistent* make_GeomTrianglesPC()
+{
+    return scinew GeomTrianglesPC;
+}
+
+PersistentTypeID GeomTrianglesPC::type_id("GeomTrianglesPC", "GeomTrianglesP", make_GeomTrianglesPC);
 
 GeomTriangles::GeomTriangles()
 {
@@ -181,6 +196,12 @@ void GeomTriangles::io(Piostream& stream)
     stream.end_class();
 }
 
+bool GeomTriangles::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomTriangles::saveobj");
+    return false;
+}
+
 GeomTrianglesP::GeomTrianglesP()
 {
     // don't really need to do anythin...
@@ -245,8 +266,7 @@ int GeomTrianglesP::add(const Point& p1, const Point& p2, const Point& p3)
 
 GeomObj* GeomTrianglesP::clone()
 {
-    // not implemented....
-    return 0;
+    return new GeomTrianglesP(*this);
 }
 
 void GeomTrianglesP::get_bounds(BBox& box)
@@ -265,12 +285,12 @@ void GeomTrianglesP::get_bounds(BSphere& box)
 void GeomTrianglesP::make_prims(Array1<GeomObj*>& /*free */,
 				Array1<GeomObj*>& /*dontfree*/)
 {
-    // not implemented...
+    NOT_FINISHED("GeomTrianglesP::make_prims");
 }
 
 void GeomTrianglesP::preprocess()
 {
-    // not implemented...
+    NOT_FINISHED("GeomTrianglesP::preprocess");
 }
 
 void GeomTrianglesP::intersect(const Ray&, Material*, Hit&)
@@ -278,12 +298,22 @@ void GeomTrianglesP::intersect(const Ray&, Material*, Hit&)
     NOT_FINISHED("GeomTrianglesP::intersect");
 }
 
-void GeomTrianglesP::io(Piostream&)
+#define GEOMTRIANGLESP_VERSION 1
+
+void GeomTrianglesP::io(Piostream& stream)
 {
-    // not implemented...
+    stream.begin_class("GeomTrianglesP", GEOMTRIANGLESP_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, points);
+    Pio(stream, normals);
+    stream.end_class();
 }
 
-// PersistentTypeID GeomTrianglesP::type_id;
+bool GeomTrianglesP::saveobj(ostream&, const clString& format, GeomSave*)
+{
+    NOT_FINISHED("GeomTrianglesP::saveobj");
+    return false;
+}
 
 GeomTrianglesPC::GeomTrianglesPC()
 {
@@ -317,10 +347,81 @@ int GeomTrianglesPC::add(const Point& p1, const Color& c1,
     return 0;
 }
 
-void GeomTrianglesPC::io(Piostream&)
+#define GEOMTRIANGLESPC_VERSION 1
+
+void GeomTrianglesPC::io(Piostream& stream)
 {
-    // not implemented...
+    stream.begin_class("GeomTrianglesPC", GEOMTRIANGLESPC_VERSION);
+    GeomTrianglesP::io(stream);
+    Pio(stream, colors);
+    stream.end_class();
 }
 
-//PersistentTypeID GeomTrianglesPC::type_id;
+
+bool GeomTrianglesPC::saveobj(ostream& out, const clString& format,
+			      GeomSave* saveinfo)
+{
+    if(format == "vrml"){
+	saveinfo->start_sep(out);
+	saveinfo->start_node(out, "Coordinate3");
+	saveinfo->indent(out);
+	out << "point [";
+	int np=points.size()/3;
+	for(int i=0;i<np;i++){
+	    if(i>0)
+		out << ", ";
+	    int idx=i*3;
+	    out << " " << points[idx] << " " << points[idx+1] << " " << points[idx+2];
+	}
+	out << " ]\n";
+	saveinfo->end_node(out);
+	saveinfo->start_node(out, "NormalBinding");
+	saveinfo->indent(out);
+	out << "value PER_VERTEX\n";
+	saveinfo->end_node(out);
+	saveinfo->start_node(out, "Normal");
+	saveinfo->indent(out);
+	out << "vector [";
+	for(i=0;i<np;i+=3){
+	    if(i>0)
+		out << ", ";
+	    int idx=i;
+	    out << " " << normals[idx] << " " << normals[idx+1] << " " << normals[idx+2];
+	}
+	out << " ]\n";
+	saveinfo->end_node(out);
+	saveinfo->start_node(out, "MaterialBinding");
+	saveinfo->indent(out);
+	out << "value PER_VERTEX\n";
+	saveinfo->end_node(out);
+	saveinfo->start_node(out, "Material");
+	saveinfo->indent(out);
+	out << "diffuseColor [";
+	for(i=0;i<np;i++){
+	    if(i>0)
+		out << ", ";
+	    int idx=i*3;
+	    out << " " << colors[idx] << " " << colors[idx+1] << " " << colors[idx+2];
+	}
+	out << " ]\n";
+	saveinfo->end_node(out);
+	saveinfo->start_node(out, "IndexedFaceSet");
+	saveinfo->indent(out);
+	out << "coordIndex [";
+	for(i=0;i<np;i++){
+	    if(i>0)
+		out << ", ";
+	    out << " " << i;
+	    if(i%3==2)
+		out << ", -1";
+	}
+	out << " ]\n";
+	saveinfo->end_node(out);
+	saveinfo->end_sep(out);
+	return true;
+    } else {
+	NOT_FINISHED("GeomTrianglesPC::saveobj");
+	return false;
+    }
+}
 

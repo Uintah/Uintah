@@ -16,6 +16,13 @@
 #include <Geom/View.h>
 #include <Classlib/NotFinished.h>
 
+Persistent* make_HeadLight()
+{
+    return new HeadLight("", Color(0,0,0));
+}
+
+PersistentTypeID HeadLight::type_id("HeadLight", "Light", make_HeadLight);
+
 HeadLight::HeadLight(const clString& name, const Color& c)
 : Light(name), c(c)
 {
@@ -55,4 +62,15 @@ void HeadLight::lintens(const OcclusionData& od, const Point& p,
 	light=c*atten;
     }
 #endif
+}
+
+#define HEADLIGHT_VERSION 1
+
+void HeadLight::io(Piostream& stream)
+{
+    stream.begin_class("HeadLight", HEADLIGHT_VERSION);
+    // Do the base class first...
+    Light::io(stream);
+    Pio(stream, c);
+    stream.end_class();
 }

@@ -16,6 +16,13 @@
 #include <Geom/Sphere.h>
 #include <Malloc/Allocator.h>
 
+Persistent* make_PointLight()
+{
+    return new PointLight("", Point(0,0,0), Color(0,0,0));
+}
+
+PersistentTypeID PointLight::type_id("PointLight", "Light", make_PointLight);
+
 PointLight::PointLight(const clString& name,
 		       const Point& p, const Color& c)
 : Light(name), p(p), c(c)
@@ -47,3 +54,14 @@ void PointLight::lintens(const OcclusionData&, const Point&,
     light_dir=Vector(0,1,0);
 }
 
+#define POINTLIGHT_VERSION 1
+
+void PointLight::io(Piostream& stream)
+{
+    stream.begin_class("PointLight", POINTLIGHT_VERSION);
+    // Do the base class first...
+    Light::io(stream);
+    Pio(stream, p);
+    Pio(stream, c);
+    stream.end_class();
+}

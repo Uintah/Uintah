@@ -15,6 +15,7 @@
 #define SCI_Geom_Light_h 1
 
 #include <config.h>
+#include <Classlib/Persistent.h>
 #include <Classlib/String.h>
 
 class Color;
@@ -25,7 +26,7 @@ class Point;
 class Vector;
 class View;
 
-class Light {
+class Light : public Persistent {
 protected:
     Light(const clString& name);
 public:
@@ -39,6 +40,9 @@ public:
 #endif
     virtual void lintens(const OcclusionData& od, const Point& hit_position,
 			 Color& light, Vector& light_dir)=0;
+    virtual void io(Piostream&);
+    friend void Pio(Piostream&, Light*&);
+    static PersistentTypeID type_id;
 };
 
 #endif /* SCI_Geom_Light_h */

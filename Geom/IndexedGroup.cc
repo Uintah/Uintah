@@ -1,10 +1,21 @@
+
 #include <Geom/IndexedGroup.h>
+#include <Classlib/NotFinished.h>
+#include <Classlib/String.h>
+#include <Malloc/Allocator.h>
 #include <iostream.h>
 
+static Persistent* make_GeomIndexedGroup()
+{
+    return new GeomIndexedGroup;
+}
+
+PersistentTypeID GeomIndexedGroup::type_id("GeomIndexedGroup", "GeomObj",
+					   make_GeomIndexedGroup);
 
 GeomIndexedGroup::GeomIndexedGroup(const GeomIndexedGroup& /* g */)
 {
-    cerr << "GeomIndexedGroup::GeomIndexedGroup(const GeomIndexedGroup&) not implemented!\n";
+    NOT_FINISHED("GeomIndexedGroup::GeomIndexedGroup");
 }
 
 GeomIndexedGroup::GeomIndexedGroup()
@@ -19,12 +30,12 @@ GeomIndexedGroup::~GeomIndexedGroup()
 
 GeomObj* GeomIndexedGroup::clone()
 {
-    cerr << "GeomObj* GeomIndexedGroup::clone() not implemented!\n";
+    return scinew GeomIndexedGroup(*this);
 }
 
 void GeomIndexedGroup::reset_bbox()
 {
-    cerr << "void GeomIndexedGroup::reset_bbox() not implemented!\n";
+    NOT_FINISHED("GeomIndexedGroup::reset_bbox");
 }
 
 
@@ -75,10 +86,28 @@ void GeomIndexedGroup::intersect(const Ray& ray, Material* m,
     }
 }
 
-void GeomIndexedGroup::io(Piostream&)
+#define GEOMINDEXEDGROUP_VERSION 1
+
+void GeomIndexedGroup::io(Piostream& stream)
 {
-    cerr << "GeomIndexedGroup::io not implemented!\n";
-}	
+    stream.begin_class("GeomIndexedGroup", GEOMINDEXEDGROUP_VERSION);
+    // Do the base class first...
+    GeomObj::io(stream);
+    Pio(stream, objs);
+    stream.end_class();
+}
+
+bool GeomIndexedGroup::saveobj(ostream& out, const clString& format,
+			       GeomSave* saveinfo)
+{
+    HashTableIter<int, GeomObj*> iter(&objs);
+    for(iter.first();iter.ok();++iter) {
+	GeomObj *obj = iter.get_data();
+	if(!obj->saveobj(out, format, saveinfo))
+	    return false;
+    }
+    return true;
+}
 
 void GeomIndexedGroup::addObj(GeomObj* obj, int id)
 {

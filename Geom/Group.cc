@@ -13,13 +13,14 @@
 
 #include <Geom/Group.h>
 #include <Classlib/Array2.h>
+#include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Malloc/Allocator.h>
 #include <values.h>
 
-Persistent* make_GeomGroup()
+static Persistent* make_GeomGroup()
 {
-    return new GeomGroup;
+    return scinew GeomGroup;
 }
 
 PersistentTypeID GeomGroup::type_id("GeomGroup", "GeomObj", make_GeomGroup);
@@ -258,6 +259,16 @@ void GeomGroup::io(Piostream& stream)
     Pio(stream, del_children);
     Pio(stream, objs);
     stream.end_class();
+}
+
+bool GeomGroup::saveobj(ostream& out, const clString& format,
+			GeomSave* saveinfo)
+{
+    for(int i=0;i<objs.size();i++){
+	if(!objs[i]->saveobj(out, format, saveinfo))
+	    return false;
+    }
+    return true;
 }
 
 ITreeLeaf::ITreeLeaf(GeomObj* obj)
