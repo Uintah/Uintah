@@ -11,7 +11,7 @@
    </Meta>
 
    <Time>
-	<maxTime>20.0</maxTime>
+	<maxTime>2.0</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.01</delt_max>

@@ -11,7 +11,7 @@
    </Meta>
 
    <Time>
-	<maxTime>20.0</maxTime>
+	<maxTime>1.0</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.01</delt_max>
@@ -40,7 +40,7 @@
         <save label="absorpIN"/>
         <save label="sootFVIN"/>
 	<save label="cellType"/>
-	<checkpoint interval="0.5" cycle="2"/>
+	<checkpoint interval="0.2" cycle="2"/>
    </DataArchiver>
 
     <PhysicalConstants>
