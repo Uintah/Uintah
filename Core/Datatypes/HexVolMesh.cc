@@ -66,10 +66,10 @@ HexVolMesh::HexVolMesh() :
   neighbors_(0),
   nbors_lock_("HexVolMesh neighbors_ fill lock"),
   faces_(0),
-  face_table_(0),
+  face_table_(),
   face_table_lock_("HexVolMesh faces_ fill lock"),
   edges_(0),
-  edge_table_(0),
+  edge_table_(),
   edge_table_lock_("HexVolMesh edge_ fill lock"),
   node_nbor_lock_("HexVolMesh node_neighbors_ fill lock"),
   grid_(0),
@@ -253,7 +253,7 @@ HexVolMesh::compute_edges()
   edge_ht::iterator ht_iter = edge_table_.begin();
   while (ht_iter != edge_table_.end()) {
     *e_iter = (*ht_iter).first;
-    (*ht_iter).second = e_iter - edges_.begin();
+    (*ht_iter).second = static_cast<Edge::index_type>(e_iter - edges_.begin());
     ++e_iter; ++ht_iter;
   }
   edge_table_lock_.unlock();
@@ -278,13 +278,13 @@ HexVolMesh::begin(HexVolMesh::Node::iterator &itr) const
 void
 HexVolMesh::end(HexVolMesh::Node::iterator &itr) const
 {
-  itr = points_.size();
+  itr = static_cast<Node::iterator>(points_.size());
 }
 
 void
 HexVolMesh::size(HexVolMesh::Node::size_type &s) const
 {
-  s = points_.size();
+  s = static_cast<Node::size_type>(points_.size());
 }
 
 void
@@ -296,13 +296,13 @@ HexVolMesh::begin(HexVolMesh::Edge::iterator &itr) const
 void
 HexVolMesh::end(HexVolMesh::Edge::iterator &itr) const
 {
-  itr = edges_.size();
+  itr = static_cast<Edge::iterator>(edges_.size());
 }
 
 void
 HexVolMesh::size(HexVolMesh::Edge::size_type &s) const
 {
-  s = edges_.size();
+  s = static_cast<Edge::size_type>(edges_.size());
 }
 
 void
@@ -314,13 +314,13 @@ HexVolMesh::begin(HexVolMesh::Face::iterator &itr) const
 void
 HexVolMesh::end(HexVolMesh::Face::iterator &itr) const
 {
-  itr = faces_.size();
+  itr = static_cast<Face::iterator>(faces_.size());
 }
 
 void
 HexVolMesh::size(HexVolMesh::Face::size_type &s) const
 {
-  s = faces_.size();
+  s = static_cast<Face::size_type>(faces_.size());
 }
 
 void
@@ -332,13 +332,13 @@ HexVolMesh::begin(HexVolMesh::Cell::iterator &itr) const
 void
 HexVolMesh::end(HexVolMesh::Cell::iterator &itr) const
 {
-  itr = cells_.size() >> 3;
+  itr = static_cast<Cell::iterator>(cells_.size() >> 3);
 }
 
 void
 HexVolMesh::size(HexVolMesh::Cell::size_type &s) const
 {
-  s = cells_.size() >> 3;
+  s = static_cast<Cell::size_type>(cells_.size() >> 3);
 }
 
 void
@@ -536,7 +536,7 @@ HexVolMesh::get_center(Point &p, Face::index_type idx) const
     v += pp.asVector();
     ++nai;
   }
-  v *= 1.0 / nodes.size();
+  v *= 1.0 / static_cast<double>(nodes.size());
   p = v.asPoint();
 }
 
@@ -554,7 +554,7 @@ HexVolMesh::get_center(Point &p, Cell::index_type idx) const
     v += pp.asVector();
     ++nai;
   }
-  v *= 1.0 / nodes.size();
+  v *= 1.0 / static_cast<double>(nodes.size());
   p = v.asPoint();
 }
 
@@ -926,7 +926,6 @@ HexVolMesh::get_gradient_basis(Cell::index_type /*ci*/,
 			       Vector& /*g6*/, Vector& /*g7*/)
 {
   ASSERTFAIL("get_gradient_basis not implemented for hexes");
-  return 1;
 }
 
 HexVolMesh::Node::index_type
@@ -940,7 +939,7 @@ HexVolMesh::add_find_point(const Point &p, double err)
   else
   {
     points_.push_back(p);
-    return points_.size() - 1;
+    return static_cast<Node::index_type>(points_.size() - 1);
   }
 }
 
@@ -987,7 +986,7 @@ HexVolMesh::connect(double err)
   // TODO: fix forward/backward facing problems.
 
   // TODO: Find neighbors
-  vector<list<int> > edgemap(points_.size());
+  vector<list<unsigned long> > edgemap(points_.size());
   for (i=0; i< cells_.size(); i++)
   {
     edgemap[cells_[i]].push_back(i);
@@ -1045,7 +1044,7 @@ HexVolMesh::Node::index_type
 HexVolMesh::add_point(const Point &p)
 {
   points_.push_back(p);
-  return points_.size() - 1;
+  return static_cast<Node::index_type>(points_.size() - 1);
 }
 
 
@@ -1089,7 +1088,7 @@ HexVolMesh::add_elem(Node::array_type a)
   cells_.push_back(a[5]);
   cells_.push_back(a[6]);
   cells_.push_back(a[7]);
-  return (cells_.size() - 1) >> 3;
+  return static_cast<Elem::index_type>((cells_.size() - 1) >> 3);
 }
 
 

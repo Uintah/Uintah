@@ -60,6 +60,7 @@ using namespace SCIRun;
 
 #if !defined(__sgi)
 // Needed for optimized linux build only
+#if 0
 template void Pio<char, char>(Piostream&, pair<char, char>&);
 template void Pio<int, int>(Piostream&, pair<int, int>&);
 template void Pio<float, float>(Piostream&, pair<float, float>&);
@@ -72,6 +73,7 @@ template void Pio<unsigned int, unsigned int>(Piostream&, pair<unsigned int,
 		  unsigned int>&);
 template void Pio<unsigned short, unsigned short>(Piostream&, pair<unsigned short,
 		  unsigned short>&);
+#endif
 #endif
 
 template class LockingHandle<ColumnMatrix>;

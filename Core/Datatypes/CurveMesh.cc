@@ -224,7 +224,7 @@ CurveMesh::begin(CurveMesh::Node::iterator &itr) const
 void
 CurveMesh::end(CurveMesh::Node::iterator &itr) const
 {
-  itr = nodes_.size();
+  itr = static_cast<Node::iterator>(nodes_.size());
 }
 
 void

@@ -143,7 +143,7 @@ TriSurfMesh::begin(TriSurfMesh::Edge::iterator &itr) const
 void
 TriSurfMesh::end(TriSurfMesh::Edge::iterator &itr) const
 {
-  itr = faces_.size();
+  itr = static_cast<Edge::iterator>(faces_.size());
 }
 
 void
@@ -155,7 +155,7 @@ TriSurfMesh::begin(TriSurfMesh::Face::iterator &itr) const
 void
 TriSurfMesh::end(TriSurfMesh::Face::iterator &itr) const
 {
-  itr = faces_.size() / 3;
+  itr = static_cast<Face::iterator>(faces_.size() / 3);
 }
 
 void
@@ -380,7 +380,7 @@ TriSurfMesh::get_center(Point &p, Edge::index_type i) const
     v += pp.asVector();
     ++nai;
   }
-  v *= 1.0 / nodes.size();
+  v *= 1.0 / static_cast<double>(nodes.size());
   p = v.asPoint();
 }
 
@@ -399,7 +399,7 @@ TriSurfMesh::get_center(Point &p, Face::index_type i) const
     v += pp.asVector();
     ++nai;
   }
-  v *= 1.0 / nodes.size();
+  v *= 1.0 / static_cast<double>(nodes.size());
   p = v.asPoint();
 }
 
@@ -483,7 +483,7 @@ TriSurfMesh::add_find_point(const Point &p, double err)
   else
   {
     points_.push_back(p);
-    return points_.size() - 1;
+    return static_cast<Node::index_type>(points_.size() - 1);
   }
 }
 
@@ -503,7 +503,7 @@ TriSurfMesh::add_elem(Node::array_type a)
   faces_.push_back(a[0]);
   faces_.push_back(a[1]);
   faces_.push_back(a[2]);
-  return (faces_.size() - 1) / 3;
+  return static_cast<Elem::index_type>((faces_.size() - 1) / 3);
 }
 
 
@@ -532,7 +532,7 @@ TriSurfMesh::connect(double err)
   // TODO: fix forward/backward facing problems.
 
   // Find neighbors
-  vector<list<int> > edgemap(points_.size());
+  vector<list<unsigned long> > edgemap(points_.size());
   for (i=0; i< faces_.size(); i++)
   {
     edgemap[faces_[i]].push_back(i);
@@ -540,14 +540,14 @@ TriSurfMesh::connect(double err)
 
   for (i=0; i<edgemap.size(); i++)
   {
-    list<int>::iterator li1 = edgemap[i].begin();
+    list<unsigned long>::iterator li1 = edgemap[i].begin();
 
     while (li1 != edgemap[i].end())
     {
       int e1 = *li1;
       li1++;
 
-      list<int>::iterator li2 = li1;
+      list<unsigned long>::iterator li2 = li1;
       while (li2 != edgemap[i].end())
       {
 	int e2 = *li2;
@@ -589,7 +589,7 @@ TriSurfMesh::Node::index_type
 TriSurfMesh::add_point(const Point &p)
 {
   points_.push_back(p);
-  return points_.size() - 1;
+  return static_cast<Node::index_type>(points_.size() - 1);
 }
 
 
