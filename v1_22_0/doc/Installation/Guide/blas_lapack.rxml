@@ -65,7 +65,7 @@ DEALINGS IN THE SOFTWARE.
     <acronym>ATLAS</acronym> can be installed in place of
     <acronym>BLAS</acronym>.  <acronym>ATLAS</acronym> should be
     installed from its <link linkend="sec.atlas_source">source
-    code</link>.
+    code distribution</link>.
   </para>
 
   <section id="sec.blas_lapack_rpm">
@@ -145,7 +145,49 @@ make
 
   <section id="sec.atlas_source">
     <title id="title.atlas_source"><acronym>ATLAS</acronym></title>
-    <para></para>
+    <para>
+      Follow these steps to install <acronym>ATLAS</acronym>:
+      <orderedlist>
+	<listitem>
+	  <para>
+	    Download the source distribution:
+	    <literallayout class="monospaced">
+<ulink url="https://sourceforge.net/project/showfiles.php?group_id=23725">https://sourceforge.net/project/showfiles.php?group_id=23725</ulink>
+	    </literallayout>
+	    Choose from the list of files a stable
+	    platform-independent distribution,
+	    e.g. <filename>atlas3.6.0.tar.gz</filename>.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Unpack the <acronym>ATLAS</acronym> distribution:
+	    <literallayout class="monospaced">
+gunzip -c atlas<replaceable>x.x.x</replaceable>.tar.gz | tar xvf -
+	    </literallayout>
+	    This creates a directory named <filename>ATLAS</filename>.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Build <acronym>ATLAS</acronym>.  Type:
+	    <literallayout class="monospaced">
+make config CC=<replaceable>path-to-c-compiler</replaceable>	      
+	    </literallayout>
+	    The above command will print an system architecture
+	    string.  Use the architecture string in the following
+	    command:
+	    <literallayout>
+make install arch=<replaceable>arch-string</replaceable>	      
+	    </literallayout>
+	    The above command will build <acronym>ATLAS</acronym>
+	    libraries in directory
+	    <filename>ATLAS/lib/<replaceable>arch-string</replaceable></filename>
+	    directory.
+	  </para>
+	</listitem>
+      </orderedlist>
+    </para>
   </section>
 
 </section>
