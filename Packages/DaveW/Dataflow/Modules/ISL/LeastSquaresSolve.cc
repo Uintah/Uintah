@@ -82,6 +82,6 @@ void LeastSquaresSolve::execute()
 
 //
 // $Log$
-// Revision 1.1  1999/12/09 00:05:26  dmw
-// new modules
+// Revision 1.1  1999/12/09 00:10:04  dmw
+// woops - wrong filename
 //
