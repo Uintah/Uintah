@@ -86,6 +86,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-update_type w "$this update_type_callback"
+	trace variable $this-isoval-max w "$this update_minmax_callback"
 
 	# SAGE vars
 	global $this-visibility $this-value $this-scan
@@ -198,7 +199,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	scaleEntry2 $sel.isoval \
 	    [set $this-isoval-min] [set $this-isoval-max] \
-	     4c $this-isoval $this-isoval2
+	     4c $this-isoval $this-isoval-typed
 
 	pack $sel.isoval  -fill x
 
@@ -207,13 +208,16 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set sel [$isf.tabs add -label "Quantity" \
 		     -command "set $this-active-isoval-selection-tab 1"]
 	
-	iwidgets::spinner $sel.f -labeltext "Number of evenly-spaced isovals: " \
-		-width 5 -fixed 5 \
-		-validate "$this set-quantity %P $this-isoval-quantity]" \
-		-decrement "$this spin-quantity -1 $sel.f $this-isoval-quantity" \
-		-increment "$this spin-quantity  1 $sel.f $this-isoval-quantity" 
-
-	$sel.f insert 1 [set $this-isoval-quantity]
+	# Save the isoval-quantity since the iwidget resets it
+	global $this-isoval-quantity
+	set quantity [set $this-isoval-quantity]
+	iwidgets::spinint $sel.f -labeltext "Number of evenly-spaced isovals: " \
+	    -range {0 100} -step 1 \
+	    -textvariable $this-isoval-quantity \
+	    -width 10 -fixed 10 -justify right
+	
+	$sel.f delete 0 end
+	$sel.f insert 0 $quantity
 
 	frame $sel.m
 	radiobutton $sel.m.c -text "ColorMap MinMax" \
@@ -321,28 +325,6 @@ itcl_class SCIRun_Visualization_Isosurface {
 	moveToCursor $w
     }
 
-    method set-quantity {new quantity} {
-	if {! [regexp "\\A\\d*\\.*\\d+\\Z" $quantity]} {
-	    return 0
-	} elseif {$quantity < 1.0} {
-	    return 0
-	} 
-	set $quantity $new
-	$this-c needexecute
-	return 1
-    }
-
-    method spin-quantity {step spinner quantity} {
-	set newquantity [expr [set $quantity] + $step]
-
-	if {$newquantity < 1.0} {
-	    set newquantity 0
-	}   
-	set $quantity $newquantity
-	$spinner delete 0 end
-	$spinner insert 0 [set $quantity]
-    }
-
     method set-isoval {} {
 	global $this-update
 
@@ -386,6 +368,13 @@ itcl_class SCIRun_Visualization_Isosurface {
 	}
     }
 
+    method update_minmax_callback { name1 name2 op } {
+	global $this-isoval-min
+	global $this-isoval-max
+
+	set_min_max [set $this-isoval-min] [set $this-isoval-max]
+    }
+
     method set_min_max { min max } {
 	set w .ui[modname]
 	global $this-isoval-min
@@ -413,7 +402,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	}
     }
 
-    method scaleEntry2 { win start stop length var1 var2 } {
+    method scaleEntry2 { win start stop length var_slider var_typed } {
 	frame $win 
 
 	frame $win.l
@@ -431,18 +420,19 @@ itcl_class SCIRun_Visualization_Isosurface {
 	scale $win.l.s \
 	    -from $start -to $stop \
 	    -length $length \
-	    -variable $var1 -orient horizontal -showvalue false \
-	    -command "$this updateSliderEntry $var1 $var2" \
+	    -variable $var_slider -orient horizontal -showvalue false \
+	    -command "$this updateSliderEntry $var_slider $var_typed" \
 	    -resolution [expr $range/(1.0e4*$scale)] \
 	    -tickinterval [expr ($stop - $start)]
 
-	entry $win.r.e -width 7 -text $var2
+	entry $win.r.e -width 7 -text $var_typed
 
 	bind $win.l.s <ButtonRelease> "$this set-isoval"
 
-	bind $win.r.e <Return> "$this-c needexecute"
+	bind $win.r.e <Return> "$this manualSliderEntryReturn \
+             $start $stop $var_slider $var_typed"
 	bind $win.r.e <KeyRelease> "$this manualSliderEntry \
-             $start $stop $var1 $var2"
+             $start $stop $var_slider $var_typed"
 
 	pack $win.l.s -side top -expand 1 -fill x -padx 5
 	pack $win.r.e -side top -padx 5 -pady 3
@@ -450,8 +440,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 	pack $win.r -side right -fill y
     }
 
-    method updateSliderEntry {var1 var2 someUknownVar} {
-	set $var2 [set $var1]
+    method updateSliderEntry {var_slider var_typed someUknownVar} {
+	set $var_typed [set $var_slider]
 
 	global $this-continuous
 
@@ -461,26 +451,56 @@ itcl_class SCIRun_Visualization_Isosurface {
 	    set $this-continuous 1
 	}
     }
-    
-    method manualSliderEntry { start stop var1 var2 } {
-	if { ![string is double [set $var2]] } {
-	    set $var2 [set $var1] }
 
-	if { [set $var2] < $start } {
-	    set $var2 $start
-	}
-	if { [set $var2] > $stop } {
-	    set $var2 $stop 
+    method manualSliderEntryReturn { start stop var_slider var_typed } {
+	# Since the user has typed in a value and hit return, we know
+	# they are done and if their value is not valid or within range,
+	# we can change it to be either the old value, or the min or max
+	# depending on what is appropriate.
+  	if { ![string is double [set $var_typed]] } {
+  	    set $var_typed [set $var_slider] 
+  	}
+
+	if {[set $var_typed] < $start} {
+	    set $var_typed $start
+	} elseif {[set $var_typed] > $stop} {
+	    set $var_typed $stop
 	}
 
 	# Force the update to be manual
 	global $this-continuous
 	set continuous [set $this-continuous]
-
+	
 	set $this-continuous 0
 	
-	set $var1 [set $var2]
-
+	set $var_slider [set $var_typed]
+	
 	set $this-continuous $continuous
+    }
+    
+    method manualSliderEntry { start stop var_slider var_typed } {
+	# Evaluate as the user types in an isoval but never change the value
+	# they are typing in because they might not be done. Only update the
+	# actual isoval when user has typed in a double and it is within range.
+	
+ 	set var_new [set $var_slider]
+
+ 	# only update the value if it evaluates to a double 
+	# and is within range
+ 	if {[string is double [set $var_typed]] && 
+ 	    $start <= [set $var_typed] && 
+ 	    [set $var_typed] <= $stop} {
+ 	    set var_new [set $var_typed]
+ 	}
+	
+	# Force the update to be manual
+  	global $this-continuous
+  	set continuous [set $this-continuous]
+	
+  	set $this-continuous 0
+	
+  	set $var_slider $var_new
+	
+  	set $this-continuous $continuous
     }
 }

@@ -136,11 +136,6 @@ TendPoint::execute()
 
   inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'InputNrrd'.");
-    return;
-  }
-
   if (!inrrd_->get(nrrd_handle))
     return;
 

@@ -55,7 +55,7 @@ extern "C" {
 }
 
 template<> string SimpleIPort<NrrdDataHandle>::port_type_("Nrrd");
-template<> string SimpleIPort<NrrdDataHandle>::port_color_("Purple4");
+template<> string SimpleIPort<NrrdDataHandle>::port_color_("cyan2");
 
 } // End namespace SCIRun
 

@@ -79,13 +79,11 @@ ScaleFieldData::~ScaleFieldData()
 void
 ScaleFieldData::execute()
 {
+  warning("This module is deprecated.  Use TransformData instead.");
+
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
     error("Input field is empty.");
@@ -98,10 +96,6 @@ ScaleFieldData::execute()
   }
   MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Input Matrix");
   MatrixHandle imatrix;
-  if (!imatrix_port) {
-    error("Unable to initialize iport 'Input Matrix'.");
-    return;
-  }
   if (!imatrix_port->get(imatrix))
   {
     return;
@@ -116,10 +110,6 @@ ScaleFieldData::execute()
   FieldHandle ofieldhandle(algo->execute(ifieldhandle, imatrix));
 
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-  if (!ofield_port) {
-    error("Unable to initialize oport 'Output Field'.");
-    return;
-  }
   ofield_port->send(ofieldhandle);
 }
 

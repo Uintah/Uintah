@@ -67,6 +67,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/GeomSwitch.cc		                \
 	$(SRCDIR)/GeomTetra.cc		                \
 	$(SRCDIR)/GeomTexSlices.cc	                \
+	$(SRCDIR)/GeomTexRectangle.cc	    		\
 	$(SRCDIR)/GeomText.cc		                \
 	$(SRCDIR)/GeomTimeGroup.cc	                \
 	$(SRCDIR)/GeomTorus.cc		                \
@@ -89,8 +90,10 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/Path.cc		    		\
 	$(SRCDIR)/PointLight.cc		    		\
 	$(SRCDIR)/SpotLight.cc		    		\
+	$(SRCDIR)/ShaderProgramARB.cc                   \
 	$(SRCDIR)/TexSquare.cc		    		\
 	$(SRCDIR)/TimeGrid.cc		    		\
+	$(SRCDIR)/TkOpenGLContext.cc	    		\
 	$(SRCDIR)/View.cc		    		\
 	$(SRCDIR)/tGrid.cc		    		\
 	$(SRCDIR)/templates.cc
@@ -99,7 +102,7 @@ PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
 	Core/Datatypes Core/Math Core/Containers Core/Thread \
 	Core/GuiInterface Core/Util Core/TkExtensions
 
-LIBS := $(FTGL_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TK_LIBRARY) $(FREETYPE_LIBRARY)
+LIBS := $(FTGL_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TK_LIBRARY) $(FREETYPE_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
 
 INCLUDES += $(FTGL_INCLUDE) $(FREETYPE_INCLUDE)
 

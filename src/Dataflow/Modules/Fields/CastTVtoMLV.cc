@@ -37,6 +37,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Datatypes/MaskedLatVolMesh.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/MaskedLatVolField.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -80,17 +81,7 @@ void CastTVtoMLV::execute()
 {
   // must find ports and have valid data on inputs
   FieldIPort *iport_ = (FieldIPort*)get_iport("TetVolFieldMask");
-
-  if (!iport_) {
-    error("Unable to initialize iport 'TetVolFieldMask'.");
-    return;
-  }
-  
   FieldOPort *oport_ = (FieldOPort*)get_oport("LatVolField");
-  if (!oport_) {
-    error("Unable to initialize oport 'LatVolField'.");
-    return;
-  }
 
   FieldHandle ifieldH;
   if (!iport_->get(ifieldH) || 

@@ -41,15 +41,14 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Fields
 
 SRCS     += \
-	$(SRCDIR)/ApplyInterpMatrix.cc\
-	$(SRCDIR)/ApplyInterpolant.cc\
+	$(SRCDIR)/ApplyMappingMatrix.cc\
 	$(SRCDIR)/AttractNormals.cc\
-	$(SRCDIR)/BuildInterpolant.cc\
+	$(SRCDIR)/BuildMappingMatrix.cc\
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\
 	$(SRCDIR)/Centroids.cc\
 	$(SRCDIR)/ChangeCoordinates.cc\
-	$(SRCDIR)/ChangeFieldDataAt.cc\
+	$(SRCDIR)/ChangeFieldBasis.cc\
 	$(SRCDIR)/ChangeFieldDataType.cc\
 	$(SRCDIR)/ChangeFieldBounds.cc\
 	$(SRCDIR)/ChooseField.cc\
@@ -59,7 +58,7 @@ SRCS     += \
 	$(SRCDIR)/ConvertTet.cc\
 	$(SRCDIR)/Coregister.cc\
 	$(SRCDIR)/CreateMesh.cc\
-	$(SRCDIR)/DirectInterpolate.cc\
+	$(SRCDIR)/DirectMapping.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/FieldCage.cc\
 	$(SRCDIR)/FieldInfo.cc\
@@ -69,7 +68,6 @@ SRCS     += \
 	$(SRCDIR)/GatherFields.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/HexToTet.cc\
-	$(SRCDIR)/InterpolantToTransferMatrix.cc\
 	$(SRCDIR)/IsoClip.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldMesh.cc\
@@ -98,6 +96,7 @@ SRCS     += \
 	$(SRCDIR)/TransformData.cc\
 	$(SRCDIR)/TransformData2.cc\
 	$(SRCDIR)/TransformData3.cc\
+	$(SRCDIR)/TransformMesh.cc\
 	$(SRCDIR)/Unstructure.cc\
 	$(SRCDIR)/VectorMagnitude.cc\
 #[INSERT NEW CODE FILE HERE]

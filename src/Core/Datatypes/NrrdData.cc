@@ -57,6 +57,7 @@ PersistentTypeID NrrdData::type_id("NrrdData", "PropertyManager", maker);
 
 NrrdData::NrrdData() : 
   nrrd(nrrdNew()),
+  write_nrrd_(true),
   embed_object_(false),
   data_owner_(0)
 {
@@ -65,6 +66,7 @@ NrrdData::NrrdData() :
 
 NrrdData::NrrdData(LockingHandle<Datatype> data_owner) : 
   nrrd(nrrdNew()),
+  write_nrrd_(true),
   embed_object_(false),
   data_owner_(data_owner)
 {
@@ -121,7 +123,7 @@ NrrdData::in_name_set(const string &s) const
 }
 
 
-#define NRRDDATA_VERSION 5
+#define NRRDDATA_VERSION 6
 
 //////////
 // PIO for NrrdData objects
@@ -166,8 +168,24 @@ void NrrdData::io(Piostream& stream)
       // errors are reported
       // Functions have been added to supply a filename for external
       // nrrds 
-		
+      
+      // saved out filename basically indicates whether it will be
+      // a .nrrd or .nhdr file because we need to attach the path
+      // that was part of the stream filename
       Pio(stream, nrrd_fname_);
+
+      // versions before 6 wrote out a full path so use that
+      // for reading in the nrrd file.  version 6 and after should 
+      // be writing out a relative path so strip off the ./ and 
+      // prepend the path given from the .nd file
+      if (version >= 6) {
+	string path = stream.file_name;
+	string::size_type e = path.find_last_of("/");
+	if (e == string::npos) e = path.find_last_of("\\");
+	if (e != string::npos) path = stream.file_name.substr(0,e+1);
+	nrrd_fname_ = path + nrrd_fname_.substr(2,nrrd_fname_.length());
+      }
+
       if (nrrdLoad(nrrd = nrrdNew(), nrrd_fname_.c_str(), 0)) 
       {
 	// Need to upgade error reporting
@@ -260,7 +278,7 @@ void NrrdData::io(Piostream& stream)
 			
 	// Need error checking here as well
 	nrrd->axis[q].label= airStrdup(label.c_str());
-	nrrd->axis[q].unit= airStrdup(unit.c_str());
+	nrrd->axis[q].units= airStrdup(unit.c_str());
 	stream.end_cheap_delim();
       }
       stream.end_cheap_delim();
@@ -384,9 +402,35 @@ void NrrdData::io(Piostream& stream)
     // the nrrd file name will just append .nrrd
   
     if ((version < 4)||(!embed_object_))
-    {    
-      nrrd_fname_ = stream.file_name + string(".nrrd");
-      Pio(stream, nrrd_fname_);
+    { 
+      string::size_type e = stream.file_name.rfind('.');
+      //remove the .nd 
+      nrrd_fname_ = stream.file_name.substr(0, e);
+
+      // figure out file to save out in .nd file (relative path)
+      string full_filename = stream.file_name;
+      e = full_filename.find_last_of("/");
+      if (e == string::npos) e = full_filename.find_last_of("\\");
+      
+      string filename = full_filename;
+      if (e != string::npos) filename = full_filename.substr(e+1,full_filename.length());
+      
+      e = filename.find(".");
+      string root = string("./") + filename;
+
+      if (e != string::npos) {
+	root = string("./") + filename.substr(0,e);
+      }
+      
+      if (write_nrrd_) {
+	nrrd_fname_ += string(".nrrd");
+	root += string (".nrrd");
+      } else {
+	nrrd_fname_ += string(".nhdr");
+	root += string (".nhdr");
+      }
+      Pio(stream, root);
+
       NrrdIoState *no = 0;
       TextPiostream *text = dynamic_cast<TextPiostream*>(&stream);
       if (text)
@@ -435,7 +479,7 @@ void NrrdData::io(Piostream& stream)
 	stream.io(nrrd->axis[q].kind);
 	std::string label, unit;
 	if ( nrrd->axis[q].label) { label = nrrd->axis[q].label; } else { label = ""; };
-	if ( nrrd->axis[q].unit) { label = nrrd->axis[q].unit; } else { unit = ""; };
+	if ( nrrd->axis[q].units) { label = nrrd->axis[q].units; } else { unit = ""; };
 	stream.io(label);
 	stream.io(unit);
 	stream.end_cheap_delim();

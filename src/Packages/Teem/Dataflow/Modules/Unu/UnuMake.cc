@@ -205,12 +205,12 @@ void UnuMake::read_file_and_create_nrrd() {
       nout_->nrrd->axis[0].kind = nrrdKind3Vector;
     else if (kind == "nrrdKind3Normal")
       nout_->nrrd->axis[0].kind = nrrdKind3Normal;
-    else if (kind == "nrrdKind3DSymTensor")
-      nout_->nrrd->axis[0].kind = nrrdKind3DSymTensor;
-    else if (kind == "nrrdKind3DMaskedSymTensor")
-      nout_->nrrd->axis[0].kind = nrrdKind3DMaskedSymTensor;
-    else if (kind == "nrrdKind3DTensor")
-      nout_->nrrd->axis[0].kind = nrrdKind3DTensor;
+    else if (kind == "nrrdKind3DSymMatrix")
+      nout_->nrrd->axis[0].kind = nrrdKind3DSymMatrix;
+    else if (kind == "nrrdKind3DMaskedSymMatrix")
+      nout_->nrrd->axis[0].kind = nrrdKind3DMaskedSymMatrix;
+    else if (kind == "nrrdKind3DMatrix")
+      nout_->nrrd->axis[0].kind = nrrdKind3DMatrix;
     else if (kind == "nrrdKindList")
       nout_->nrrd->axis[1].kind = nrrdKindList;
     else if (kind == "nrrdKindStub")
@@ -316,22 +316,26 @@ void UnuMake::read_file_and_create_nrrd() {
       
       string encoding = encoding_.get();
       if (encoding == "Raw") {
-	nio_->encoding = nrrdEncodingArray[1];
+	nio_->encoding = nrrdEncodingArray[nrrdEncodingTypeRaw];
       } else if (encoding == "ASCII") {
-	nio_->encoding = nrrdEncodingArray[2];
+	nio_->encoding = nrrdEncodingArray[nrrdEncodingTypeAscii];
       } else if (encoding == "Hex") {
-	nio_->encoding = nrrdEncodingArray[3];
+	nio_->encoding = nrrdEncodingArray[nrrdEncodingTypeHex];
       } else if (encoding == "Gzip") {
-	nio_->encoding = nrrdEncodingArray[4];
+	nio_->encoding = nrrdEncodingArray[nrrdEncodingTypeGzip];
       } else if (encoding == "Bzip2") {
-	nio_->encoding = nrrdEncodingArray[5];
+	nio_->encoding = nrrdEncodingArray[nrrdEncodingTypeBzip2];
       }  else {
-	error("Non-existant encoding type");
+	error("Unknown encoding type");
 	return;
       }
-      
-      nio_->dataFN = airStrdup(fn.c_str());
-      
+
+      /* start new */      
+      nio_->dataFileDim = nout_->nrrd->dim;
+      airArraySetLen(nio_->dataFNArr, 1);
+      nio_->dataFN[0] = airStrdup(fn.c_str());
+      /* end new */
+
       nio_->detachedHeader = AIR_TRUE;
       nio_->skipData = AIR_TRUE;
       
@@ -363,59 +367,67 @@ void UnuMake::read_file_and_create_nrrd() {
       }
     } 
     
-    // All ready written header so reset as if we
+    // Already written header so reset as if we
     // haven't written it out and still need to
     // read the data
+    nrrdIoStateInit(nio_);
     nio_->detachedHeader = AIR_FALSE;
     nio_->skipData = AIR_FALSE;
     
-    nrrdIoStateInit(nio_);
     nio_->lineSkip = line_skip_.get();
     nio_->byteSkip = byte_skip_.get();
     
     string encoding = encoding_.get();
     if (encoding == "Raw") {
-      nio_->encoding = nrrdEncodingArray[1];
+      nio_->encoding = nrrdEncodingArray[nrrdEncodingTypeRaw];
     } else if (encoding == "ASCII") {
-      nio_->encoding = nrrdEncodingArray[2];
+      nio_->encoding = nrrdEncodingArray[nrrdEncodingTypeAscii];
     } else if (encoding == "Hex") {
-      nio_->encoding = nrrdEncodingArray[3];
+      nio_->encoding = nrrdEncodingArray[nrrdEncodingTypeHex];
     } else if (encoding == "Gzip") {
-      nio_->encoding = nrrdEncodingArray[4];
+      nio_->encoding = nrrdEncodingArray[nrrdEncodingTypeGzip];
     } else if (encoding == "Bzip2") {
-      nio_->encoding = nrrdEncodingArray[5];
+      nio_->encoding = nrrdEncodingArray[nrrdEncodingTypeBzip2];
     }  else {
-      error("Non-existant encoding type");
+      error("Unknown encoding type");
       return;
     }
     
-    
+    FILE *dataFile;
     // Assume only reading in a single file
-    if(!(nio_->dataFile = airFopen(fn.c_str(), stdin, "rb") )) {
+    if(!(dataFile = airFopen(fn.c_str(), stdin, "rb") )) {
       error("Couldn't open file " + fn + " for reading.");
       return;
     }
-    if(nrrdLineSkip(nio_)) {
+    if(nrrdLineSkip(dataFile, nio_)) {
       error("Couldn't skip lines.");
-      airFclose(nio_->dataFile);
+      airFclose(dataFile);
       return;
     } 
     if(!nio_->encoding->isCompression) {
-      if(nrrdByteSkip(nout_->nrrd,nio_)) {
+      if(nrrdByteSkip(dataFile, nout_->nrrd, nio_)) {
 	error("Couldn't skip bytes.");
-	airFclose(nio_->dataFile);
+	airFclose(dataFile);
 	return;
       }
     }
-    if (nio_->encoding->read(nout_->nrrd, nio_)) {
+    nout_->nrrd->data = calloc(nrrdElementNumber(nout_->nrrd), 
+			       nrrdElementSize(nout_->nrrd));
+    if (NULL == nout_->nrrd->data) {
+      error("Allocation failure");
+      return;
+    }
+    if (nio_->encoding->read(dataFile, nout_->nrrd->data, 
+			     nrrdElementNumber(nout_->nrrd), 
+			     nout_->nrrd, nio_)) {
       error("Error reading data.");
       string err = biffGetDone(NRRD);
       error(err);
-      airFclose(nio_->dataFile);
+      airFclose(dataFile);
       return;
     } 
     
-    airFclose(nio_->dataFile);
+    airFclose(dataFile);
     
     if(1 < nrrdElementSize(nout_->nrrd)
        && nio_->encoding->endianMatters
@@ -607,10 +619,6 @@ void UnuMake::execute()
 
   // Send the data downstream.
   NrrdOPort *outport = (NrrdOPort *)get_oport("OutputNrrd");
-  if (!outport) {
-    error("Unable to initialize oport 'OutportNrrd'.");
-    return;
-  }
   outport->send(read_handle_);
 
   update_state(Completed);

@@ -139,7 +139,6 @@ MatlabCallHandler::MatlabCallHandler(MatlabCall* handle) :
 bool
 MatlabCallHandler::execute(std::string line)
 {
-
   if (line == "SCIRUN-MATLABINTERFACE-MATLABENGINE-END\n") 
     {
       if (handle_->engine_ptr_)
@@ -214,6 +213,7 @@ MatlabCall::MatlabCall() :
   error_handler_ = scinew  MatlabCallErrorHandler(this);
   add_stdout_handler(dynamic_cast<SystemCallHandler*>(handler_.get_rep()));
   add_stderr_handler(dynamic_cast<SystemCallHandler*>(error_handler_.get_rep()));
+  use_stdout_timeout(true);
 }
 
 MatlabCall::~MatlabCall()
@@ -490,7 +490,7 @@ void MatlabEngine::close_service()
               std::cerr << "Error: " << error.geterror() << std::endl;
             }        
           matlab_processes_lock_.unlock();
-          matlab_handle_ = MatlabCallHandle(0);
+          matlab_handle_ = 0;
         }
     }
   catch (...)
@@ -508,7 +508,28 @@ void MatlabEngine::handle_service(IComPacketHandle &packet)
 {
   switch (packet->gettag())
     {
+    case TAG_INPUT:
+    {
+      if (packet->getelsize() != 1)
+        {
+          packet->settag(TAG_MERROR);
+          packet->setstring("Code needs to be of character size");
+          send_packet(packet);
+          break;
+        }
+      if (packet->getdatasize() == 0)
+        {
+          packet->settag(TAG_MERROR);
+          packet->setstring("No matlab code was send");
+        }
+
+      std::string str = packet->getstring();
+      matlab_handle_->put_stdin(str,true);
+    }                    
+    break;
+
     case TAG_MCODE:
+    {
       if (packet->getelsize() != 1)
         {
           packet->settag(TAG_MERROR);
@@ -534,7 +555,8 @@ void MatlabEngine::handle_service(IComPacketHandle &packet)
       // unlocking of the engine will be done by the stdout/stderr handler
       // as soon as they recognise an end or error message on the output
       // the engine will be unlocked for the next job
-      break;
+    }
+    break;
     }
 }
 
@@ -562,7 +584,7 @@ std::string     MatlabEngine::addcode(std::string &mfile)
     }
 
   std::string newcode;
-  newcode += "fprintf(1,'\\nSCIRUN-MATLABINTERFACE-MATLABENGINE-START\\n');\n";
+  newcode += "\nfprintf(1,'\\nSCIRUN-MATLABINTERFACE-MATLABENGINE-START\\n');\n";
   newcode += "try\n";
   if(path != "") newcode += "addpath('" + path + "')\n";
   newcode += command;
@@ -570,7 +592,7 @@ std::string     MatlabEngine::addcode(std::string &mfile)
   newcode += "fprintf(1,'\\nSCIRUN-MATLABINTERFACE-MATLABENGINE-ERROR\\n');\n";
   newcode += "disp(lasterr)\n";
   newcode += "end\n";
-  newcode += "fprintf(1,'\\nSCIRUN-MATLABINTERFACE-MATLABENGINE-END\\n');\n";
+  newcode += "fprintf(1,'\\n\\nSCIRUN-MATLABINTERFACE-MATLABENGINE-END\\n');\n";
   return(newcode);
 }
 

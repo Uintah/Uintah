@@ -41,13 +41,10 @@
 #ifndef Datatypes_TetVolField_h
 #define Datatypes_TetVolField_h
 
-#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
-#include <Core/Util/Assert.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
@@ -90,9 +87,9 @@ template <class T>
 TetVolField<T>::TetVolField(int order)
   : GenericField<TetVolMesh, vector<T> >(order)
 {
-  ASSERTMSG((! (order == 0 && mesh_->dimensionality() == 1)), 
+  ASSERTMSG((! (order == 0 && this->mesh_->dimensionality() == 1)), 
 	    "TetVolField does NOT currently support data at edges."); 
-  ASSERTMSG((! (order == 0 && mesh_->dimensionality() == 2)), 
+  ASSERTMSG((! (order == 0 && this->mesh_->dimensionality() == 2)), 
 	    "TetVolField does NOT currently support data at faces."); 
 }
 
@@ -100,9 +97,9 @@ template <class T>
 TetVolField<T>::TetVolField(TetVolMeshHandle mesh, int order)
   : GenericField<TetVolMesh, vector<T> >(mesh, order)
 {
-  ASSERTMSG((! (order == 0 && mesh_->dimensionality() == 1)), 
+  ASSERTMSG((! (order == 0 && this->mesh_->dimensionality() == 1)), 
 	    "TetVolField does NOT currently support data at edges."); 
-  ASSERTMSG((! (order == 0 && mesh_->dimensionality() == 2)), 
+  ASSERTMSG((! (order == 0 && this->mesh_->dimensionality() == 2)), 
 	    "TetVolField does NOT currently support data at faces."); 
 }
 
@@ -208,7 +205,7 @@ TetVolField<T>::get_type_description(int n) const
 template <class T>
 bool TetVolField<T>::get_gradient(Vector &g, Point &p) {
   TetVolMesh::Cell::index_type ci;
-  if (mesh_->locate(ci, p)) {
+  if (this->mesh_->locate(ci, p)) {
     g = cell_gradient(ci);
     return true;
   } else {
@@ -227,18 +224,18 @@ template <class T>
 Vector TetVolField<T>::cell_gradient(TetVolMesh::Cell::index_type ci)
 {
   // for now we only know how to do this for field with doubles at the nodes
-  ASSERT(basis_order() == 1);
+  ASSERT(this->basis_order() == 1);
 
   // load up the indices of the nodes for this cell
   TetVolMesh::Node::array_type nodes;
-  mesh_->get_nodes(nodes, ci);
+  this->mesh_->get_nodes(nodes, ci);
   Vector gb0, gb1, gb2, gb3;
-  mesh_->get_gradient_basis(ci, gb0, gb1, gb2, gb3);
+  this->mesh_->get_gradient_basis(ci, gb0, gb1, gb2, gb3);
 
   // we really want this for all scalars... 
   //  but for now, we'll just make doubles work
-  return Vector(gb0 * value(nodes[0]) + gb1 * value(nodes[1]) + 
-		gb2 * value(nodes[2]) + gb3 * value(nodes[3]));
+  return Vector(gb0 * this->value(nodes[0]) + gb1 * this->value(nodes[1]) + 
+		gb2 * this->value(nodes[2]) + gb3 * this->value(nodes[3]));
 }
 
 
@@ -254,41 +251,41 @@ TetVolField<T>::insert_node_watson(Point &p)
 {
   TetVolMesh::Node::index_type ret_val;
 
-  if (basis_order() == 0) {  
+  if (this->basis_order() == 0) {  
     TetVolMesh::Cell::array_type new_cells, mod_cells;
-    ret_val = mesh_->insert_node_watson(p,&new_cells,&mod_cells);
-    resize_fdata();
+    ret_val = this->mesh_->insert_node_watson(p,&new_cells,&mod_cells);
+    this->resize_fdata();
     
-    T tot = value(mod_cells[0]);
+    T tot = this->value(mod_cells[0]);
     const unsigned int num_mod = mod_cells.size();
     for (unsigned int c = 1; c < num_mod; ++c)
-      tot += value(mod_cells[c]);
+      tot += this->value(mod_cells[c]);
     tot /= num_mod;
     for (unsigned int c = 0; c < num_mod; ++c)
       set_value(tot,mod_cells[c]);
     for (unsigned int c = 0; c < new_cells.size(); ++c)
       set_value(tot,new_cells[c]);
 
-  } else if (basis_order() == 1) {
+  } else if (this->basis_order() == 1) {
 
-    ret_val = mesh_->insert_node_watson(p);
-    resize_fdata();
+    ret_val = this->mesh_->insert_node_watson(p);
+    this->resize_fdata();
 
     vector<TetVolMesh::Node::index_type> nodes;
-    mesh_->synchronize(Mesh::NODE_NEIGHBORS_E);
-    mesh_->get_neighbors(nodes, ret_val);
+    this->mesh_->synchronize(Mesh::NODE_NEIGHBORS_E);
+    this->mesh_->get_neighbors(nodes, ret_val);
 
-    T tot = value(nodes[0]);
+    T tot = this->value(nodes[0]);
     const unsigned int num_nodes = nodes.size();
     for (unsigned int n = 1; n < num_nodes; ++n)
-      tot += value(nodes[n]);
+      tot += this->value(nodes[n]);
     tot /= num_nodes;
     set_value(tot, ret_val);
 
   } else {
 
-    ret_val = mesh_->insert_node_watson(p);
-    resize_fdata();    
+    ret_val = this->mesh_->insert_node_watson(p);
+    this->resize_fdata();    
   }
   return ret_val;
 }

@@ -177,11 +177,6 @@ ImageImporter::execute()
 
   // Send the data downstream.
   NrrdOPort *outport = (NrrdOPort *)getOPort(0);
-  if (!outport)
-  {
-    error("Unable to initialize oport.");
-    return;
-  }
   outport->send(handle_);
 #else
   error("ImageMagick not found.  Please verify that you have the application development installation of ImageMagick.");

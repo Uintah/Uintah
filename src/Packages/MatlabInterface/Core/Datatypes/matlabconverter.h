@@ -56,6 +56,8 @@
  * a large number of class definitions......
  */
  
+#define HAVE_BUNDLE 1
+ 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
@@ -91,11 +93,13 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+#include <Core/Util/DynamicCompilation.h>
+#include <Core/Util/ProgressReporter.h>
 
 #include <Dataflow/Ports/NrrdPort.h>
 
 #ifdef HAVE_BUNDLE
-#include <Packages/CardioWave/Core/Bundle.h>
+#include <Core/Bundle/Bundle.h>
 #endif
  
 
@@ -191,41 +195,60 @@
    void setdisabletranspose(bool dt);
    void converttonumericmatrix();
    void converttostructmatrix();
+   
+   // The following options are for controlling the conversion to bundles
+   // In case prefernrrds is set, numerical data is converted into nrrds
+   // only sparse matrices become matrices. If prefermatrices is set, the
+   // behavior is opposite and only ND (N>2) matrices become nrrds.
+   
+   void prefernrrds();
+   void prefermatrices();
+   
+   // Since Bundles can be bundled, a choice needs to be made whether structured
+   // matlab matrices should become bundles or if possible should be converted into
+   // matrices/nrrds or fields. In case prefer bundles is set, a matlab structure will
+   // be decomposed into bundles of sub bundles and of nrrds and matrices. In case
+   // prefersciobjects is set each structure is read and if it can be translated into
+   // a sciobject it will be come a field, nrrd or matrix and only at the last
+   // resort it will be a bundle. Note that the comparison is done to see whether the
+   // required number of fields is there if so other fields are ignored.
+   void preferbundles();
+   void prefersciobjects();
 
    // SCIRun MATRICES
-   long sciMatrixCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::Module *module);
-   void mlArrayTOsciMatrix(matlabarray &mlmat,SCIRun::MatrixHandle &scimat, SCIRun::Module *module);
-   void sciMatrixTOmlArray(SCIRun::MatrixHandle &scimat,matlabarray &mlmat, SCIRun::Module *module);
+   long sciMatrixCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
+   void mlArrayTOsciMatrix(matlabarray &mlmat,SCIRun::MatrixHandle &scimat, SCIRun::ProgressReporter* pr);
+   void sciMatrixTOmlArray(SCIRun::MatrixHandle &scimat,matlabarray &mlmat, SCIRun::ProgressReporter* pr);
 
    // SCIRun NRRDS
-   long sciNrrdDataCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::Module *module);
-   void mlArrayTOsciNrrdData(matlabarray &mlmat,SCIRun::NrrdDataHandle &scinrrd, SCIRun::Module *module);
-   void sciNrrdDataTOmlArray(SCIRun::NrrdDataHandle &scinrrd, matlabarray &mlmat, SCIRun::Module *module);
+   long sciNrrdDataCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
+   void mlArrayTOsciNrrdData(matlabarray &mlmat,SCIRun::NrrdDataHandle &scinrrd, SCIRun::ProgressReporter* pr);
+   void sciNrrdDataTOmlArray(SCIRun::NrrdDataHandle &scinrrd, matlabarray &mlmat, SCIRun::ProgressReporter* pr);
 
 #ifdef HAVE_BUNDLE
    // SCIRun Bundles (Currently contained in the CardioWave Package)
-   long sciBundleCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::Module *module);
-   void mlArrayTOsciBundle(matlabarray &mlmat,CardioWave::BundleHandle &scibundle, SCIRun::Module *module);
-   void sciBundleTOmlArray(CardioWave::BundleHandle &scibundle, matlabarray &mlmat,SCIRun::Module *module);
+   long sciBundleCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
+   void mlArrayTOsciBundle(matlabarray &mlmat, SCIRun::BundleHandle &scibundle, SCIRun::ProgressReporter* pr);
+   void sciBundleTOmlArray(SCIRun::BundleHandle &scibundle, matlabarray &mlmat,SCIRun::ProgressReporter* pr);
 #endif
 
-   // The reference status of the reader/compatible modules has been changed.
+   // The reference status of the reader/compatible prs has been changed.
    // So I can change the contents without affecting the matrices at the input
    // This is a cleaner solution. 
 
    // SCIRun Fields/Meshes
-   long sciFieldCompatible(matlabarray mlarray,std::string &infostring, SCIRun::Module *module);
+   long sciFieldCompatible(matlabarray mlarray,std::string &infostring, SCIRun::ProgressReporter* pr);
 
    // DYNAMICALLY COMPILING CONVERTERS
    // Note: add the pointer from the Module which makes the call, so the user sees
    // the ouput of the dynamic compilation phase, for example
    //   matlabconverter translate;
    //   translate.sciFieldTOmlArray(scifield,mlarray,this);
-   // ALL the dynamic code is in the matlabconverter class it just needs a pointer to the module
+   // ALL the dynamic code is in the matlabconverter class it just needs a pointer to the pr
    // class.
 	
-   void mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle &scifield,SCIRun::Module *module);
-   void sciFieldTOmlArray(SCIRun::FieldHandle &scifield,matlabarray &mlarray,SCIRun::Module *module);
+   void mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle &scifield,SCIRun::ProgressReporter* pr);
+   void sciFieldTOmlArray(SCIRun::FieldHandle &scifield,matlabarray &mlarray,SCIRun::ProgressReporter* pr);
 
 
    // SUPPORT FUNCTIONS
@@ -236,7 +259,7 @@
 
  private:
    // FUNCTIONS FOR COMMUNICATING WITH THE USER
-   void	postmsg(SCIRun::Module *moduleptr, std::string msg);
+   void	postmsg(SCIRun::ProgressReporter* pr, std::string msg);
    bool	postmsg_;
 
    // THE REST OF THE FUNCTIONS ARE PRIVATE
@@ -296,6 +319,9 @@
      // Property matrix to set properties
      matlabarray property;
 		
+     // Interpolation matrices as used in CVRTI
+     matlabarray interp;
+    
      int  basis_order;
    };
 
@@ -314,6 +340,10 @@
    // Disable transposing matrices from Fortran format to C++ format
    bool disable_transpose_;
 	
+   // Options for translation of structures into bundled objects
+   bool prefer_nrrds;
+   bool prefer_bundles;
+     
    // FUNCTIONS FOR CONVERTING FIELDS:
 	
    // analyse a matlab matrix and sort out all the different fieldname
@@ -721,7 +751,7 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
 	// but whose format can be anything. The next piece of code
 	// copies and casts the data
 	
-	std::vector<typename MESH::under_type> mldata;
+	std::vector<unsigned int> mldata;
 	mlarray.getnumericarray(mldata);		
 	
 	// check whether it is zero based indexing 
@@ -756,7 +786,7 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
    // but whose format can be anything. The next piece of code
    // copies and casts the data
 	
-   std::vector<typename MESH::under_type> mldata;
+   std::vector<unsigned int> mldata;
    mlarray.getnumericarray(mldata);		
 	
    // check whether it is zero based indexing 
@@ -801,7 +831,7 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
    // but whose format can be anything. The next piece of code
    // copies and casts the data
 	
-   std::vector<typename MESH::under_type> mldata;
+   std::vector<unsigned int> mldata;
    mlarray.getnumericarray(mldata);		
 	
    // check whether it is zero based indexing 
@@ -997,14 +1027,17 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
    }
 
    // Dynamically do the field contents. Luckily this is better templated and hence a couple
-   // of templated functions do the trick
-   typename FIELD::fdata_type fdata = field->fdata();
-   if (translate.mladdfield(fdata,mlarray) == false)
-   {
-     // Could not translate field but continuing anyway
-     return(false);
-   }
+   // of templated functions do the tricks
 
+   if (field->basis_order() > -1)
+   {
+     typename FIELD::fdata_type fdata = field->fdata();
+     if (translate.mladdfield(fdata,mlarray) == false)
+     {
+       // Could not translate field but continuing anyway
+       return(false);
+     }
+   }
    // everything went ok, so report this to the function doing the actual implementation
    return(true);
  } 

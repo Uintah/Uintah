@@ -41,21 +41,19 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Render
 
 SRCS     += \
-	$(SRCDIR)/BaWGL.cc\
 	$(SRCDIR)/Ball.cc\
 	$(SRCDIR)/BallAux.cc\
 	$(SRCDIR)/BallMath.cc\
 	$(SRCDIR)/Camera.cc\
 	$(SRCDIR)/EditPath.cc\
 	$(SRCDIR)/OpenGL.cc\
-	$(SRCDIR)/Parser.cc\
 	$(SRCDIR)/PBuffer.cc \
 	$(SRCDIR)/SharedMemory.cc\
 	$(SRCDIR)/SynchronizeGeometry.cc\
 	$(SRCDIR)/Tex.cc\
 	$(SRCDIR)/ViewGeom.cc\
 	$(SRCDIR)/ViewWindow.cc\
-	$(SRCDIR)/ViewImage.cc\
+	$(SRCDIR)/ViewSlices.cc\
 	$(SRCDIR)/Viewer.cc\
 	$(SRCDIR)/glMath.cc\
 #[INSERT NEW CODE FILE HERE]
@@ -65,7 +63,7 @@ PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Dataflow/Comm Core/Persistent Core/Exceptions Core/Geometry \
 	Core/Geom Core/Thread Core/Containers \
 	Core/GuiInterface Core/TkExtensions Core/Util \
-	Core/TkExtensions Core/Datatypes Core/GeomInterface
+	Core/TkExtensions Core/Datatypes Core/GeomInterface Core/Volume
 
 INCLUDES += $(MPEG_INCLUDE) $(MAGICK_INCLUDE) $(TEEM_INCLUDE)
 

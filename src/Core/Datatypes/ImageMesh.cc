@@ -62,7 +62,12 @@ ImageMesh::ImageMesh(unsigned i, unsigned j,
   transform_.pre_scale(max - min);
   transform_.pre_translate(Vector(min));
   transform_.compute_imat();
+
+  normal_ = Vector(0.0, 0.0, 0.0);
+  transform_.project_normal(normal_);
+  normal_.safe_normalize();
 }
+
 
 BBox
 ImageMesh::get_bounding_box() const
@@ -90,6 +95,19 @@ ImageMesh::get_canonical_transform(Transform &t)
 {
   t = transform_;
   t.post_scale(Vector(ni_ - 1.0, nj_ - 1.0, 1.0));
+}
+
+bool
+ImageMesh::synchronize(unsigned int flag)
+{
+  if (flag & NORMALS_E)
+  {
+    normal_ = Vector(0.0, 0.0, 0.0);
+    transform_.project_normal(normal_);
+    normal_.safe_normalize();
+    return true;
+  }
+  return false;
 }
 
 void
@@ -362,14 +380,10 @@ ImageMesh::get_weights(const Point &p, Node::array_type &locs, double *w)
   if (ii<0 && ii>(-1.e-10)) ii=0;
   if (jj<0 && jj>(-1.e-10)) jj=0;
 
-  Node::index_type node0, node1, node2, node3;
-  node0.mesh_ = this;
-  node1.mesh_ = this;
-  node2.mesh_ = this;
-  node3.mesh_ = this;
-
+  Node::index_type node0;
   node0.i_ = (unsigned int)floor(ii);
   node0.j_ = (unsigned int)floor(jj);
+  node0.mesh_ = this;
 
   if (node0.i_ < (ni_-1) && node0.i_ >= 0 &&
       node0.j_ < (nj_-1) && node0.j_ >= 0)
@@ -384,12 +398,15 @@ ImageMesh::get_weights(const Point &p, Node::array_type &locs, double *w)
     
     locs[1].i_ = node0.i_ + 1;
     locs[1].j_ = node0.j_ + 0;
-    
+    locs[1].mesh_ = this;
+
     locs[2].i_ = node0.i_ + 1;
     locs[2].j_ = node0.j_ + 1;
+    locs[2].mesh_ = this;
     
     locs[3].i_ = node0.i_ + 0;
     locs[3].j_ = node0.j_ + 1;
+    locs[3].mesh_ = this;
     
     w[0] = dx0 * dy0;
     w[1] = dx1 * dy0;
@@ -451,7 +468,7 @@ void ImageMesh::get_random_point(Point &p, const Face::index_type &ci,
 }
 
 
-const TypeDescription* get_type_description(ImageMesh::INodeIndex *)
+const TypeDescription* get_type_description(ImageMeshINodeIndex *)
 {
   static TypeDescription* td = 0;
   if(!td){
@@ -462,7 +479,7 @@ const TypeDescription* get_type_description(ImageMesh::INodeIndex *)
   return td;
 }
 
-const TypeDescription* get_type_description(ImageMesh::IFaceIndex *)
+const TypeDescription* get_type_description(ImageMeshIFaceIndex *)
 {
   static TypeDescription* td = 0;
   if(!td){
@@ -475,7 +492,7 @@ const TypeDescription* get_type_description(ImageMesh::IFaceIndex *)
 
 
 void
-Pio(Piostream& stream, ImageMesh::INodeIndex& n)
+Pio(Piostream& stream, ImageMeshINodeIndex& n)
 {
     stream.begin_cheap_delim();
     Pio(stream, n.i_);
@@ -484,7 +501,7 @@ Pio(Piostream& stream, ImageMesh::INodeIndex& n)
 }
 
 void
-Pio(Piostream& stream, ImageMesh::IFaceIndex& n)
+Pio(Piostream& stream, ImageMeshIFaceIndex& n)
 {
     stream.begin_cheap_delim();
     Pio(stream, n.i_);
@@ -494,12 +511,12 @@ Pio(Piostream& stream, ImageMesh::IFaceIndex& n)
 
 
 
-const string find_type_name(ImageMesh::INodeIndex *)
+const string find_type_name(ImageMeshINodeIndex *)
 {
   static string name = "ImageMesh::INodeIndex";
   return name;
 }
-const string find_type_name(ImageMesh::IFaceIndex *)
+const string find_type_name(ImageMeshIFaceIndex *)
 {
   static string name = "ImageMesh::IFaceIndex";
   return name;
@@ -627,13 +644,13 @@ ImageMesh::size(ImageMesh::Cell::size_type &s) const
 
 
 std::ostream& 
-operator<<(std::ostream& os, const ImageMesh::ImageIndex& n) {
+operator<<(std::ostream& os, const ImageMeshImageIndex& n) {
   os << "[" << n.i_ << "," << n.j_ << "]";
   return os;
 }
 
 std::ostream& 
-operator<<(std::ostream& os, const ImageMesh::ImageSize& s) {
+operator<<(std::ostream& os, const ImageMeshImageSize& s) {
   os << (int)s << " (" << s.i_ << " x " << s.j_ << ")";
   return os;
 }
@@ -709,5 +726,43 @@ get_type_description(ImageMesh::Cell *)
   }
   return td;
 }
+
+
+ImageMeshImageIndex::operator unsigned() const
+{ 
+  ASSERT(mesh_);
+  return i_ + j_*mesh_->ni_;
+}
+
+ImageMeshIFaceIndex::operator unsigned() const
+{ 
+  ASSERT(mesh_);
+  return i_ + j_ * (mesh_->ni_-1);
+}
+
+
+ImageMeshINodeIter &
+ImageMeshINodeIter::operator++()
+{
+  i_++;
+  if (i_ >= mesh_->min_i_ + mesh_->ni_) {
+    i_ = mesh_->min_i_;
+    j_++;
+  }
+  return *this;
+}
+
+
+ImageMeshIFaceIter &
+ImageMeshIFaceIter::operator++()
+{
+  i_++;
+  if (i_ >= mesh_->min_i_+mesh_->ni_-1) {
+    i_ = mesh_->min_i_;
+    j_++;
+  }
+  return *this;
+}
+
 
 } // namespace SCIRun

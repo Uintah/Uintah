@@ -93,7 +93,7 @@ TransformField::matrix_to_transform(MatrixHandle mH, Transform& t)
   double *p=&(a[0]);
   for (int i=0; i<4; i++)
     for (int j=0; j<4; j++)
-      *p++=(*mH.get_rep())[i][j];
+      *p++= mH->get(i, j);
   t.set(a);
 }
 
@@ -104,10 +104,6 @@ TransformField::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifield;
-  if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
   if (!(ifp->get(ifield) && ifield.get_rep()))
   {
     return;
@@ -115,10 +111,6 @@ TransformField::execute()
 
   MatrixIPort *imp = (MatrixIPort *)get_iport("Transform Matrix");
   MatrixHandle imatrix;
-  if (!imp) {
-    error("Unable to initialize iport 'Transform Matrix'.");
-    return;
-  }
   if (!(imp->get(imatrix) && imatrix.get_rep()))
   {
     return;
@@ -139,10 +131,6 @@ TransformField::execute()
     ofield->mesh()->transform(trans);
     
     FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
-    if (!ofp) {
-      error("Unable to initialize oport 'Transformed Field'.");
-      return;
-    }
     ofp->send(ofield);
   }
 }

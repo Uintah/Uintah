@@ -38,7 +38,7 @@ SRCS     += $(SRCDIR)/ITKDatatypePort.cc \
 
 PSELIBS := Dataflow/Network Dataflow/Comm Core/Containers \
 	Core/Thread Core/Geom Core/Exceptions \
-	Core/Persistent Core/Datatypes 
+	Core/Persistent Core/Datatypes Core/Util
 LIBS := 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

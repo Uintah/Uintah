@@ -111,8 +111,10 @@ Exception::Exception()
 
 Exception::~Exception()
 {
-  if(stacktrace_)
+  if(stacktrace_) {
     free((char*)stacktrace_);
+    stacktrace_ = 0;
+  }
 }
 
 // This is just to fool the compiler so that it will not complain about

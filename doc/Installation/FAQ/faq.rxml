@@ -35,25 +35,83 @@
 <!--% doc.insertDocType("article", {"sr"=>"SCIRun"}) %-->
 
 <article class="faq">
-  <title>Installation FAQ (for &sr; v. <!--%= doc.edition %-->)</title>
+  <title>Installation FAQ (for SCIRun v. <!--%= doc.edition %-->)</title>
 
   <qandaset defaultlabel="number">
+
 
     <qandaentry>
       <revhistory>
 	<revision>
 	  <revnumber>001</revnumber>
-	  <date>03/29/04</date>
+	  <date>03/17/05</date>
 	</revision>
       </revhistory>
       <question>
-	<para>I am installing SCIRun on Mac. Should I follow the same
-	procedure as installing SGI and Linux?
+	<para>
+	  I'm building ITK on Mac OSX and the compilation fails with
+	  errors like the following:
+	  <literallayout class="monospaced">
+ld: Undefined symbols:
+std::basic_ostream&lt;char, std::char_traits&lt;char> >&amp; operator&lt;&lt; 
+&lt;double>(std::basic_ostream&lt;char, std::char_traits&lt;char> >&amp;, 
+vnl_matrix&lt;double> const&amp;)
+	  </literallayout>
+	  I'm using gcc 3.3. What's wrong?
 	</para>
       </question>
       <answer>
-	<para>SCIRun is fully supported on Mac OS X. Refer to the
-	<ulink url="(%= doc.treeUrl(%Q{doc/Installation/Guide/index.html}) %)">Installation Guide</ulink> for instructions.
+	<para>
+	  The initial version of gcc 3.3 distributed with Xcode 1.5 is
+	  buggy. Be sure the command <command>gcc -v</command> yields
+	  build number 1671.  If the build number is 1666 then gcc
+	  must be updated with Apple's
+	  <filename>November2004GCCUpdater</filename> package,
+	  available from <ulink
+	  url="http://developer.apple.com/">Apple's Developer
+	  Connection page</ulink>.
+	</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>01/26/05</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>Is SCIRun compatible with GCC 3.4?</para>
+      </question>
+      <answer>
+	<para>
+	  Yes.  Note, however, that when building ITK, for use with
+	  SCIRun's ITK package, ITK version 1.10 must be used because
+	  earlier versions are not compatible with GCC 3.4.
+	</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>002</revnumber>
+	  <date>01/26/05</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>I am installing SCIRun on Mac OS X.  What special procedures
+	should I follow?
+	</para>
+      </question>
+      <answer>
+	<para>
+	  SCIRun is fully supported on Mac OS X. Refer to SCIRun's
+	  <ulink url="(%=
+	  doc.treeUrl(%Q{doc/Installation/Guide/osx/index.html})
+	  %)">OSX specific installation guide</ulink> for
+	  instructions.
 	</para>
       </answer>
     </qandaentry>
@@ -67,51 +125,52 @@
       </revhistory>
       <question>
 	<para>
-	  How does one install the thirdparty software on an SGI Octane.
-	  When running the install script provided in the tar ball from the SCIRun
-	  website, the following error message appears.  It seems to be trying to copy a
-	  xerces file that does not exist.  
+	  How does one install the thirdparty software on an SGI
+	  Octane.  When running the install script provided in the tar
+	  ball from the SCIRun website, the following error message
+	  appears.  It seems to be trying to copy a xerces file that
+	  does not exist.
 	</para>
 
 	<literallayout class="monospaced">
-	  cc-32bit/src/xerces-c-src1_5_2/src/validators/schema'
-	  gmake[1]: Leaving directory
-	  `/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/
-	  xerces-c-src1_5_2/src/validators'
+cc-32bit/src/xerces-c-src1_5_2/src/validators/schema'
+gmake[1]: Leaving directory
+`/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/
+xerces-c-src1_5_2/src/validators'
 
-	  cd
-	  /u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/
-	  xerces-c-src1_5_2/obj
-	  &amp;&amp; /usr/local/bin/gmake install &amp;&amp; cd ..
-	  gmake[1]: Entering directory
-	  `/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/
-	  xerces-c-src1_5_2/obj'
+cd
+/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/
+xerces-c-src1_5_2/obj
+&amp;&amp; /usr/local/bin/gmake install &amp;&amp; cd ..
+gmake[1]: Entering directory
+`/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/
+xerces-c-src1_5_2/obj'
 
-	  mkdir -p /u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/lib
+mkdir -p /u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/lib
 
-	  cp -fp
-	  /u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/
-	  xerces-c-src1_5_2/lib/libxerces-c1_5_2.so
-	  /u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/lib
-	  /u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/
-	  xerces-c-src1_5_2/lib/libxerces-c1_5_2.so
-	  - No such file or directory
-	  gmake[1]: [install] Error 2 (ignored)
-	  gmake[1]: Leaving directory
-	  `/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/
-	  xerces-c-src1_5_2/obj'
+cp -fp
+/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/
+xerces-c-src1_5_2/lib/libxerces-c1_5_2.so
+/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/lib
+/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/
+xerces-c-src1_5_2/lib/libxerces-c1_5_2.so
+- No such file or directory
+gmake[1]: [install] Error 2 (ignored)
+gmake[1]: Leaving directory
+`/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/
+xerces-c-src1_5_2/obj'
 
-	  -------------------------------------------------------
-	  -- FATAL ERROR :
-	  --
-	  -- The build or installation of the required software:
-	  --
-	  --   Xerces-C++
-	  --
-	  -- failed.  Check the above output
-	  -- for errors and clues as to how to solve the problem.
+-------------------------------------------------------
+-- FATAL ERROR :
+--
+-- The build or installation of the required software:
+--
+--   Xerces-C++
+--
+-- failed.  Check the above output
+-- for errors and clues as to how to solve the problem.
 
-	  -------------------------------------------------------
+-------------------------------------------------------
 	</literallayout>
       </question>
 
@@ -140,37 +199,37 @@
       </revhistory>
       <question> 
 	<para>
-	  SCIRun and its required thirdparty
-	  software is successfully installed (by hand) onto an SGI target install machine, but
-	  SCIRun is runs, it immediately signals an abort (SIGABRT).  
+	  SCIRun and its required thirdparty software is successfully
+	  installed (by hand) onto an SGI target install machine, but
+	  SCIRun is runs, it immediately signals an abort (SIGABRT).
 	</para>
 
 	<para> 
 	  The output of SCIRun after it signals the abort looks like this: 
 	  <literallayout class="monospaced">
-	    Thread "main"(pid 251775) caught signal SIGABRT (Abort)
-	    Backtrace:
-	    0x5ff69224: SCIRun::Thread::niceAbort(void)
-	    0x5ff7106c: handle_abort_signals
-	    0xc37f7c0: sig_fixup_mask
-	    0xfb11100: prctl
-	    0xc37ee00: pthread_kill
-	    0xc37fef8: _SGIPT_libc_raise
-	    0xc378068: ptctl
-	    0xfaf3e20: raise
-	    0xfa668a4: abort
-	    0xae40958: terminate(void)
-	    0xae40788: __call_terminate
-	    0xae42ba8: __throw
-	    0x5ff72ad0: SCIRun::Thread::os_start(bool)
-	    0x5ff68c7c: SCIRun::Thread::Thread(SCIRun::Runnable*,const
-	    char*,SCIRun::ThreadGroup*,SCIRun::Thread::ActiveState)
-	    0x100057c4: main
-	    251775: main (state=running)
-	    
-	    Abort signalled by pid: 251775
-	    Occured for thread:
-	    "main"resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)?
+Thread "main"(pid 251775) caught signal SIGABRT (Abort)
+Backtrace:
+0x5ff69224: SCIRun::Thread::niceAbort(void)
+0x5ff7106c: handle_abort_signals
+0xc37f7c0: sig_fixup_mask
+0xfb11100: prctl
+0xc37ee00: pthread_kill
+0xc37fef8: _SGIPT_libc_raise
+0xc378068: ptctl
+0xfaf3e20: raise
+0xfa668a4: abort
+0xae40958: terminate(void)
+0xae40788: __call_terminate
+0xae42ba8: __throw
+0x5ff72ad0: SCIRun::Thread::os_start(bool)
+0x5ff68c7c: SCIRun::Thread::Thread(SCIRun::Runnable*,const
+char*,SCIRun::ThreadGroup*,SCIRun::Thread::ActiveState)
+0x100057c4: main
+251775: main (state=running)
+
+Abort signalled by pid: 251775
+Occured for thread:
+"main"resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)?
 	  </literallayout>
 	</para>
       </question>
@@ -250,9 +309,7 @@
 	<para>
 	  The error message displayed contains the following warning:
 	  <literallayout class="monospaced">
-	    &vellip;
-	    Warning: Option 'std' not in group 'LANG' (LANG:std)
-	    &vellip;
+Warning: Option 'std' not in group 'LANG' (LANG:std)
 	  </literallayout>
 	</para>
 

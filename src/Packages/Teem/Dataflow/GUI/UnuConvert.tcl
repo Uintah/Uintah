@@ -56,7 +56,7 @@ itcl_class Teem_UnuAtoM_UnuConvert {
         }
 
         toplevel $w
-        wm minsize $w 100 80
+        wm minsize $w 100 230
         frame $w.f
         pack $w.f -padx 2 -pady 2 -side top -expand yes
 	global $this-type

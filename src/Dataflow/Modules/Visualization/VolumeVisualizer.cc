@@ -45,10 +45,10 @@
 #include <Dataflow/Widgets/PointWidget.h>
 
 #include <Core/Volume/VolumeRenderer.h>
-#include <Core/Volume/Texture.h>
 #include <Dataflow/Ports/TexturePort.h>
 #include <Dataflow/Ports/Colormap2Port.h>
 #include <Core/Volume/VideoCardInfo.h>
+#include <Core/Geom/ShaderProgramARB.h>
 
 #include <iostream>
 #include <sstream>
@@ -75,8 +75,9 @@ private:
   ColorMap2IPort* icmap2;
   GeometryOPort* ogeom;
   ColorMapOPort* ocmap;
-  int cmap1_prevgen;
-  int cmap2_prevgen;
+  int cmap1_prevgen_;
+  int cmap2_prevgen_;
+  int tex_prevgen_;
   int card_mem_;
    
   CrowdMonitor control_lock; 
@@ -111,8 +112,9 @@ DECLARE_MAKER(VolumeVisualizer)
 VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
   : Module("VolumeVisualizer", ctx, Source, "Visualization", "SCIRun"),
     tex(0),
-    cmap1_prevgen(0),
-    cmap2_prevgen(0),
+    cmap1_prevgen_(0),
+    cmap2_prevgen_(0),
+    tex_prevgen_(0),
     card_mem_(video_card_memory_size()),
     control_lock("VolumeVisualizer resolution lock"),
     control_widget(0),
@@ -154,45 +156,46 @@ VolumeVisualizer::execute()
   icmap2 = (ColorMap2IPort*)get_iport("ColorMap2");
   ogeom = (GeometryOPort*)get_oport("Geometry");
   ocmap = (ColorMapOPort*)get_oport("ColorMap");
-  if (!intexture) {
-    error("Unable to initialize iport 'GL Texture'.");
-    return;
-  }
-  if (!icmap1 && !icmap2) {
-    error("Unable to initialize iport 'ColorMap' or 'ColorMap2'.");
-    return;
-  }
-  if (!ogeom) {
-    error("Unable to initialize oport 'Geometry'.");
-    return;
-  }
-  
+
   if (!intexture->get(tex)) {
+    warning("No texture, nothing done.");
     return;
   }
   else if (!tex.get_rep()) {
+    warning("No texture, nothing done.");
     return;
   }
+
+  bool shading_state = false;
+  if (ShaderProgramARB::shaders_supported())
+  {
+    shading_state = (tex->nb(0) == 1);
+  }
+
+  gui->execute(id + " change_shading_state " + (shading_state?"0":"1"));
   
   ColorMapHandle cmap1;
   ColorMap2Handle cmap2;
-  bool c1 = icmap1->get(cmap1);
-  bool c2 = icmap2->get(cmap2);
+  bool c1 = (icmap1->get(cmap1) && cmap1.get_rep());
+  bool c2 = (icmap2->get(cmap2) && cmap2.get_rep());
 
   if (c2)
   {
-#ifndef HAVE_AVR_SUPPORT
-    warning("ColorMap2 usage is not supported by this build.");
-    cmap2 = 0;
-    c2 = false;
-#else
-    if (tex->nc() == 1)
+    if (!ShaderProgramARB::shaders_supported())
     {
-      warning("ColorMap2 requires gradient magnitude in the texture.");
+      warning("ColorMap2 usage is not supported by this machine.");
       cmap2 = 0;
       c2 = false;
     }
-#endif
+    else
+    {
+      if (tex->nc() == 1)
+      {
+        warning("ColorMap2 requires gradient magnitude in the texture.");
+        cmap2 = 0;
+        c2 = false;
+      }
+    }
   }
 
   if (!c1 && !c2)
@@ -202,15 +205,34 @@ VolumeVisualizer::execute()
   }
 
   bool cmap1_dirty = false;
-  bool cmap2_dirty = false;
-  if(c1 && (cmap1->generation != cmap1_prevgen)) {
+  if(c1 && (cmap1->generation != cmap1_prevgen_)) {
+    cmap1_prevgen_ = cmap1->generation;
     cmap1_dirty = true;
   }
-  if(c2 && (cmap2->generation != cmap2_prevgen)) {
+
+  bool cmap2_dirty = false;
+  if(c2 && (cmap2->generation != cmap2_prevgen_)) {
+    cmap2_prevgen_ = cmap2->generation;
     cmap2_dirty = true;
-  }    
-  if(c1) cmap1_prevgen = cmap1->generation;
-  if(c2) cmap2_prevgen = cmap2->generation;
+  }
+
+  bool tex_dirty = false;
+  if (tex.get_rep() && tex->generation != tex_prevgen_) {
+    tex_prevgen_ = tex->generation;
+    tex_dirty = true;
+  }
+   
+  if (!cmap1_dirty && !cmap2_dirty && !tex_dirty && 
+      !gui_sampling_rate_hi_.changed() && !gui_sampling_rate_lo_.changed() &&
+      !gui_adaptive_.changed() && !gui_cmap_size_.changed() && 
+      !gui_sw_raster_.changed() && !gui_render_style_.changed() &&
+      !gui_alpha_scale_.changed() && !gui_interp_mode_.changed() &&
+      !gui_shading_.changed() && !gui_ambient_.changed() &&
+      !gui_diffuse_.changed() && !gui_specular_.changed() &&
+      !gui_shine_.changed() && !gui_light_.changed() &&
+      !gui_blend_res_.changed() && !gui_multi_level_.changed() &&
+      !gui_use_stencil_.changed() && !gui_invert_opacity_.changed() &&
+      !gui_num_slices_.changed()) return;
 
   string s;
   gui->eval(id + " hasUI", s);
@@ -323,17 +345,13 @@ VolumeVisualizer::execute()
   
   ogeom->flushViews();				  
 
-  if (!ocmap) {
-    error("Unable to initialize oport 'Color Map'.");
-    return;
-  } else {
-    if(c1) {
-      ColorMapHandle outcmap;
-      outcmap = new ColorMap(*cmap1.get_rep()); 
-      outcmap->Scale(tex->vmin(), tex->vmax());
-      ocmap->send(outcmap);
-    }
-  }    
+  if(c1)
+  {
+    ColorMapHandle outcmap;
+    outcmap = new ColorMap(*cmap1.get_rep()); 
+    outcmap->Scale(tex->vmin(), tex->vmax());
+    ocmap->send(outcmap);
+  }
 }
 
 } // End namespace SCIRun

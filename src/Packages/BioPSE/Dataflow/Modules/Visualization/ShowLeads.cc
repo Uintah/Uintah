@@ -84,10 +84,6 @@ ShowLeads::~ShowLeads(){
 void ShowLeads::execute(){
 
   iport_ = (MatrixIPort *)get_iport("Potentials");
-  if (!iport_) {
-    error("Unable to initialize iport 'Potentials'.");
-    return;
-  }
   MatrixHandle mh;
   if (! iport_->get(mh)) {
     error("Cannot get matrix from input port.");

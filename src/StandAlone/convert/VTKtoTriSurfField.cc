@@ -207,7 +207,7 @@ main(int argc, char **argv) {
     status = 1;
     return 1;
   }
-  ifstream vtk(in, std::ios_base::binary);
+  ifstream vtk(in, ios::binary);
   if (vtk.fail()) {
     cerr << "Error -- Could not open file " << in << "\n";
     return 2;

@@ -1,4 +1,4 @@
-# SCIRun Network v1.23.0
+# SCIRun Network v1.24.0
 
 # The MIT License
 # 
@@ -27,8 +27,8 @@
 
 set name {Main}
 set bbox {34 26 549 526}
-set creationDate {Tue Oct 05 2004}
-set creationTime {15:27:08}
+set creationDate {Thu Jan 27 2005}
+set creationTime {16:40:41}
 set runDate {}
 set runTime {}
 set notes {}
@@ -45,26 +45,21 @@ set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 354 
 # Create a SCIRun->FieldsData->TransformData Module
 set m4 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 34 121]
 
-# Create a SCIRun->FieldsData->NodeGradient Module
-set m5 [addModuleAtPosition "SCIRun" "FieldsData" "NodeGradient" 169 210]
-
 # Create a SCIRun->Visualization->TextureBuilder Module
-set m6 [addModuleAtPosition "SCIRun" "Visualization" "TextureBuilder" 67 307]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "TextureBuilder" 67 307]
 
 # Create a SCIRun->Visualization->VolumeVisualizer Module
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 143 401]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 143 401]
 
 # Create the Connections between Modules
 set c1 [addConnection $m1 0 $m4 0]
 set c2 [addConnection $m4 0 $m5 0]
-set c3 [addConnection $m4 0 $m6 0]
-set c4 [addConnection $m6 0 $m7 0]
-set c5 [addConnection $m7 0 $m2 0]
-set c6 [addConnection $m5 0 $m6 1]
-set c7 [addConnection $m3 0 $m7 1]
+set c3 [addConnection $m5 0 $m6 0]
+set c4 [addConnection $m6 0 $m2 0]
+set c5 [addConnection $m3 0 $m6 1]
 
 $m2 addViewer
-set $m2-ViewWindow_0-geometry 654x645+437+217
+set $m2-ViewWindow_0-geometry 654x644+437+217
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m2-ViewWindow_0-view-eyep-x {-8.64721}
@@ -98,6 +93,13 @@ set $m2-ViewWindow_0-sbase {0.4}
 set $m2-ViewWindow_0-bgcolor-r {                0}
 set $m2-ViewWindow_0-bgcolor-g {                0}
 set $m2-ViewWindow_0-bgcolor-b {                0}
+set $m2-ViewWindow_0-fogusebg {1}
+set $m2-ViewWindow_0-fogcolor-r {0.0}
+set $m2-ViewWindow_0-fogcolor-g {0.0}
+set $m2-ViewWindow_0-fogcolor-b {1.0}
+set $m2-ViewWindow_0-fog-start {0.0}
+set $m2-ViewWindow_0-fog-end {0.714265}
+set $m2-ViewWindow_0-fog-visibleonly {1}
 set $m2-ViewWindow_0-currentvisual {0}
 set $m2-ViewWindow_0-caxes {0}
 set $m2-ViewWindow_0-pos {}
@@ -147,7 +149,7 @@ set $m2-ViewWindow_0-global-clip {0}
 set $m2-ViewWindow_0-global-cull {0}
 set $m2-ViewWindow_0-global-dl {0}
 set $m2-ViewWindow_0-global-type {Gouraud}
-set "$m2-ViewWindow_0-Transparent Edges (1)" {1}
+set "$m2-ViewWindow_0-VolumeRenderer Transparent (1)" {1}
 
 # Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
 set $m3-positionList {{0 0} {115 3} {158 34} {332 34}}
@@ -158,10 +160,23 @@ set $m3-resolution {255}
 set $m3-realres {255}
 
 # Set GUI variables for the SCIRun->FieldsData->TransformData Module
-set $m4-function {result = sqrt(x*x + y*y + z*z);}
+set $m4-function {result = sqrt(x*x + y*y + z*z);
+}
 
 # Open the SCIRun->FieldsData->TransformData UI
 $m4 initialize_ui
+
+# Set GUI variables for the SCIRun->Visualization->TextureBuilder Module
+set $m5-vmin {0.115470053838}
+set $m5-vmax {1.73205080757}
+set $m5-gmin {0.686140661635}
+set $m5-gmax {0.999728688196}
+set $m5-card_mem {256}
+
+# Set GUI variables for the SCIRun->Visualization->VolumeVisualizer Module
+set $m6-ambient {0.5}
+set $m6-diffuse {0.5}
+set $m6-shine {30}
 
 
 ::netedit scheduleok

@@ -31,7 +31,7 @@
  *  SetupBEMatrix.cc: TODO: Describe this module.
  *
  *  Written by:
- *   Saeed Babaei Zadeh - Norteastern University
+ *   Saeed Babaeizadeh - Northeastern University
  *   Michael Callahan - Department of Computer Science - University of Utah
  *   May, 2003
  *
@@ -64,13 +64,7 @@ SetupBEMatrix::~SetupBEMatrix()
 void
 SetupBEMatrix::execute()
 {
-    MatrixOPort* oportMatrix_ = (MatrixOPort *)get_oport("BEM Forward Matrix");
-
-    if (!oportMatrix_) {
-    error("Unable to initialize oport 'BEM Forward Matrix'.");
-    return;
-  }
-
+  MatrixOPort* oportMatrix_ = (MatrixOPort *)get_oport("BEM Forward Matrix");
   port_range_type range = get_iports("Surface");
   if (range.first == range.second)
   {
@@ -90,11 +84,6 @@ SetupBEMatrix::execute()
   {
 
     FieldIPort *fip = (FieldIPort *)get_iport(pi->second);
-    if (!fip)
-    {
-      error("Unable to initialize iport '" + to_string(pi->second) + "'.");
-      return;
-    }
     FieldHandle field;
     if (fip->get(field))
     {

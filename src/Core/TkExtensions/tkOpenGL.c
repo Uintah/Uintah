@@ -677,13 +677,14 @@ OpenGLListVisuals(interp, OpenGLPtr)
      Tcl_Interp *interp;
      OpenGLClientData *OpenGLPtr;	
 {
-  int i;
-  int score=0;
+  int  i;
+  int  score=0;
   char buf[200];
-  int id, level, db, stereo, r,g,b,a, depth, stencil, ar,ag,ab,aa, rt, dt,able;
+  int  id, level, db, stereo, r,g,b,a, depth, stencil, ar, ag, ab, aa;
+  //int able;
   char samples_string[20] = "";
 #ifdef __sgi
-  int samples_sgis;
+  int  samples_sgis;
 #endif
   int nvis;
   XVisualInfo* vinfo=XGetVisualInfo(OpenGLPtr->display, 0, NULL, &nvis);
@@ -713,8 +714,9 @@ OpenGLListVisuals(interp, OpenGLPtr)
     GETCONFIG(GLX_ACCUM_ALPHA_SIZE, aa);
     //    GETCONFIG(GLX_RENDER_TYPE, rt);
     // GETCONFIG(GLX_DRAWABLE_TYPE, dt);
+
     //GETCONFIG(GLX_X_RENDERABLE, able);
-    if (!able) continue;
+    //if (!able) continue;
 
     score = db?200:0;
     score += stereo?1:0;

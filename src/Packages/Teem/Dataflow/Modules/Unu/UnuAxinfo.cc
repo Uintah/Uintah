@@ -89,18 +89,6 @@ void UnuAxinfo::execute()
   
   update_state(NeedData);
   
-  if (!iport) 
-    {
-      error("Unable to initialize iport 'Nrrd'.");
-      return;
-    }
-  
-  if (!oport) 
-    {
-      error("Unable to initialize oport 'Nrrd'.");
-      return;
-    }
-  
   // The input port (with data) is required.
   NrrdDataHandle nh;
   if (!iport->get(nh)) 
@@ -148,12 +136,12 @@ void UnuAxinfo::execute()
       nout->axis[axis].kind = nrrdKind3Vector;
     } else if (kind == "nrrdKind3Normal") {
       nout->axis[axis].kind = nrrdKind3Normal;
-    } else if (kind == "nrrdKind3DSymTensor") {
-      nout->axis[axis].kind = nrrdKind3DSymTensor;
-    } else if (kind == "nrrdKind3DMaskedSymTensor") {
-      nout->axis[axis].kind = nrrdKind3DMaskedSymTensor;
-    } else if (kind == "nrrdKind3DTensor") {
-      nout->axis[axis].kind = nrrdKind3DTensor;
+    } else if (kind == "nrrdKind3DSymMatrix") {
+      nout->axis[axis].kind = nrrdKind3DSymMatrix;
+    } else if (kind == "nrrdKind3DMaskedSymMatrix") {
+      nout->axis[axis].kind = nrrdKind3DMaskedSymMatrix;
+    } else if (kind == "nrrdKind3DMatrix") {
+      nout->axis[axis].kind = nrrdKind3DMatrix;
     } else if (kind == "nrrdKindList") {
       nout->axis[axis].kind = nrrdKindList;
     } else if (kind == "nrrdKindStub") {
@@ -162,13 +150,13 @@ void UnuAxinfo::execute()
       nout->axis[axis].kind = nrrdKindUnknown;
     }
     
-    if (airExists_d(min_.get())) {
+    if (airExists(min_.get())) {
       nout->axis[axis].min = min_.get();
     }
-    if (airExists_d(max_.get())) {
+    if (airExists(max_.get())) {
       nout->axis[axis].max = max_.get();
     }
-    if (airExists_d(spacing_.get())) {
+    if (airExists(spacing_.get())) {
       nout->axis[axis].spacing = spacing_.get();
     }
   }
@@ -179,8 +167,7 @@ void UnuAxinfo::execute()
   NrrdDataHandle out(nrrd);
   
   // Copy the properties.
-  *((PropertyManager *) out.get_rep()) =
-    *((PropertyManager *) nh.get_rep());
+  out->copy_properties(nh.get_rep());
   
   oport->send(out);
 

@@ -195,6 +195,38 @@ inline SCICORESHARE int Tile(int tile, int tf)
 
 SCICORESHARE double MakeReal(double value);
 
+
+template <class T>
+inline void SWAP(T& a, T& b) {
+  T temp;
+  temp = a;
+  a = b;
+  b = temp;
+}
+
+// Returns the next higher number that is a power of 2
+// Used for determining what size of texture to
+// allocate to store an image
+inline unsigned int
+Pow2(const unsigned int dim) {
+  unsigned int val = 1;
+  while (val < dim) { val = val << 1; };
+  return val;
+}
+
+
+// Returns the power of 2 of the next higher number
+// See above function
+inline unsigned int
+Log2(const unsigned int dim) {
+  unsigned int log = 0;
+  unsigned int val = 1;
+  while (val < dim) { val = val << 1; log++; };
+  return log;
+}
+
+
+
 } // End namespace SCIRun
 
 

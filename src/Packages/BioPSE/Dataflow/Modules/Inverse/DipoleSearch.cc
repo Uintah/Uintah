@@ -47,6 +47,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -202,14 +203,14 @@ void DipoleSearch::send_and_get_data(int which_dipole,
   PointCloudMeshHandle pcm = scinew PointCloudMesh;
   for (j=0; j<NSEEDS_; j++)
     pcm->add_point(Point(dipoles_(j,0), dipoles_(j,1), dipoles_(j,2)));
-  PointCloudField<Vector> *pcv = scinew PointCloudField<Vector>(pcm, 1);
+  PointCloudField<Vector> *pcv = scinew PointCloudField<Vector>(pcm, 0);
   for (j=0; j<NSEEDS_; j++)
     pcv->fdata()[j] = Vector(dipoles_(j,3), dipoles_(j,4), dipoles_(j,5));
 
   pcm = scinew PointCloudMesh;
   pcm->add_point(Point(dipoles_(which_dipole, 0), dipoles_(which_dipole, 1),
 		       dipoles_(which_dipole, 2)));
-  PointCloudField<Vector> *pcd = scinew PointCloudField<Vector>(pcm, 1);
+  PointCloudField<Vector> *pcd = scinew PointCloudField<Vector>(pcm, 0);
   
   // send out data
   leadfield_selectH_ = leadfield_select_out;
@@ -222,19 +223,18 @@ void DipoleSearch::send_and_get_data(int which_dipole,
 
   // read back data, and set the caches and search matrix
   MatrixHandle mH;
-  Matrix* m;
-  if (!misfit_iport_->get(mH) || !(m = mH.get_rep())) {
+  if (!misfit_iport_->get(mH) || !(mH.get_rep())) {
     error("DipoleSearch::failed to read back error");
     return;
   }
-  cell_err_[ci]=misfit_[which_dipole]=(*m)[0][0];
-  if (!dir_iport_->get(mH) || !(m=mH.get_rep()) || mH->nrows()<3) {
+  cell_err_[ci] = misfit_[which_dipole] = mH->get(0, 0);
+  if (!dir_iport_->get(mH) || !(mH.get_rep()) || mH->nrows() < 3) {
     error("DipoleSearch::failed to read back orientation");
     return;
   }
-  cell_dir_[ci]=Vector((*m)[0][0], (*m)[1][0], (*m)[2][0]);
+  cell_dir_[ci] = Vector(mH->get(0, 0), mH->get(1, 0), mH->get(2, 0));
   for (j=0; j<3; j++)
-    dipoles_(which_dipole,j+3)=(*m)[j][0];
+    dipoles_(which_dipole,j+3) = mH->get(j, 0);
 }  
 
 
@@ -369,7 +369,7 @@ void DipoleSearch::simplex_search() {
   double relative_tolerance;
   int num_evals = 0;
 
-  while(1) {
+  for( ;; ) {
     int best, worst, next_worst;
     best = 0;
     if (misfit_[0] > misfit_[1]) {
@@ -514,7 +514,7 @@ void DipoleSearch::organize_last_send() {
   leadfield_selectH_ = leadfield_select_out;
   PointCloudMeshHandle pcm = scinew PointCloudMesh;
   pcm->add_point(best_pt);
-  PointCloudField<Vector> *pcd = scinew PointCloudField<Vector>(pcm, 1);
+  PointCloudField<Vector> *pcd = scinew PointCloudField<Vector>(pcm, 0);
   pcd->fdata()[0]=Vector(dipoles_(bestIdx,3), dipoles_(bestIdx,4), dipoles_(bestIdx,5));
   dipoleH_ = pcd;
 }
@@ -543,35 +543,6 @@ void DipoleSearch::execute() {
   // point cloud of one vector, just the test dipole (for vis)
   dipole_oport_ = (FieldOPort *)get_oport("TestDipole");
 
-  if (!seeds_iport_) {
-    error("Unable to initialize iport 'DipoleSeeds'.");
-    return;
-  }
-  if (!mesh_iport_) {
-    error("Unable to initialize iport 'TetMesh'.");
-    return;
-  }
-  if (!misfit_iport_) {
-    error("Unable to initialize iport 'TestMisfit'.");
-    return;
-  }
-  if (!dir_iport_) {
-    error("Unable to initialize iport 'TestDirection'.");
-    return;
-  }
-  if (!leadfield_select_oport_) {
-    error("Unable to initialize oport 'LeadFieldSelectionMatrix'.");
-    return;
-  }
-  if (!simplex_oport_) {
-    error("Unable to initialize oport 'DipoleSimplex'.");
-    return;
-  }
-  if (!dipole_oport_) {
-    error("Unable to initialize oport 'TestDipole'.");
-    return;
-  }
-
   read_field_ports(valid_data, new_data);
   if (!valid_data) return;
   if (!new_data) {
@@ -592,7 +563,7 @@ void DipoleSearch::execute() {
   last_intermediate_=0;
 
   // we have new, valid data -- run the simplex search
-  while (1) {
+  for( ;; ) {
     if (state_ == "SEEDING") {
       if (!pre_search()) break;
     } else if (state_ == "START_SEARCHING") {

@@ -41,11 +41,7 @@
 #ifndef Datatypes_MaskedTriSurfField_h
 #define Datatypes_MaskedTriSurfField_h
 
-#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Persistent/PersistentSTL.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
@@ -73,24 +69,24 @@ public:
 				vector<T> &data) {
     nodes.resize(0);
     data.resize(0);
-    if (basis_order() != 1) return false;
+    if (this->basis_order() != 1) return false;
     TriSurfMesh::Node::iterator ni, nie;
-    mesh_->begin(ni);
-    mesh_->end(nie);
+    this->mesh_->begin(ni);
+    this->mesh_->end(nie);
     for (; ni != nie; ++ni) { 
-      if (mask_[*ni]) { nodes.push_back(*ni); data.push_back(fdata()[*ni]); }
+      if (mask_[*ni]) { nodes.push_back(*ni); data.push_back(this->fdata()[*ni]); }
     }
     return true;
   }
 
   virtual ~MaskedTriSurfField() {};
 
-  bool value(T &val, typename TriSurfMesh::Node::index_type i) const
-  { if (!mask_[i]) return false; val = fdata()[i]; return true; }
-  bool value(T &val, typename TriSurfMesh::Edge::index_type i) const
-  { if (!mask_[i]) return false; val = fdata()[i]; return true; }
-  bool value(T &val, typename TriSurfMesh::Cell::index_type i) const
-  { if (!mask_[i]) return false; val = fdata()[i]; return true; }
+  bool value(T &val, TriSurfMesh::Node::index_type i) const
+  { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
+  bool value(T &val, TriSurfMesh::Edge::index_type i) const
+  { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
+  bool value(T &val, TriSurfMesh::Cell::index_type i) const
+  { if (!mask_[i]) return false; val = this->fdata()[i]; return true; }
 
   void initialize_mask(char masked) {
     for (vector<char>::iterator c = mask_.begin(); c != mask_.end(); ++c) *c=masked;
@@ -102,16 +98,16 @@ public:
 
   void resize_fdata() {
 
-    if (basis_order() == 0)
+    if (this->basis_order() == 0)
     {
       typename GF::mesh_type::Cell::size_type ssize;
-      mesh_->size(ssize);
+      this->mesh_->size(ssize);
       mask_.resize(ssize);
     }
     else
     {
       typename GF::mesh_type::Node::size_type ssize;
-      mesh_->size(ssize);
+      this->mesh_->size(ssize);
       mask_.resize(ssize);
     }
     TriSurfField<T>::resize_fdata();

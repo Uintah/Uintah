@@ -45,6 +45,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <sgi_stl_warnings_on.h>
 
@@ -52,6 +53,7 @@
 #include <stdlib.h>
 #include <sys/select.h>
 
+#include <Core/Thread/Time.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Thread.h>
@@ -214,6 +216,11 @@ class SystemCall : public SystemCallBase {
 	void	dolock();		// This will lock the object
 	void	unlock();
 
+    void    use_stdout_timeout(bool use_timeout);
+    
+    bool    getexitcode(int &exitcode);
+
+
   ///////////////////////
   // The next set of functions is used by the thread to insert
   // data into the SystemCall object.
@@ -236,7 +243,7 @@ class SystemCall : public SystemCallBase {
 	int		get_stderr();
 	int		get_exit();
 
-
+    
   ///////////////////////
   // Public objects needed by the LockingHandle
   // Do not modify these:
@@ -275,7 +282,21 @@ class SystemCall : public SystemCallBase {
 	std::list<std::string> stderrbuffer_;
 	int					stdoutbuffersize_;
 	int					stderrbuffersize_;
+        
+    bool                use_timeout_;
+    
+    protected:
+    int                 exitcode_;
+    bool                hasexitcode_;
+    
 };
+
+// If there is a long inactivity, pending data will be forwarded
+// And line buffering will be overruled
+inline void SystemCall::use_stdout_timeout(bool use_timeout)
+{
+    use_timeout_ = use_timeout;
+}
 
 inline void SystemCall::dolock()
 {
@@ -321,7 +342,11 @@ inline void	SystemCall::set_stderr_buffersize(int size)
 	stderrbuffersize_ = size;
 }
 
-
+inline bool SystemCall::getexitcode(int &exitcode)
+{
+    exitcode = exitcode_;
+    return(hasexitcode_);
+}
 
 } // end namespace
 

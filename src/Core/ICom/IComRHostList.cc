@@ -88,7 +88,7 @@ bool IComRHostPattern::compare(std::string host)
     size_t patloc;
     for (size_t p =0; p < inbetween_.size(); p++)
     {
-        if ( patloc = rem.find(inbetween_[p]) < rem.size())
+        if ( (patloc = rem.find(inbetween_[p])) < rem.size())
         {
             rem = rem.substr(patloc+inbetween_[p].size());
         }
@@ -106,7 +106,7 @@ void IComRHostList::insert(std::string patternlist)
 {
     // analyse comma/space separated list
 
-    size_t numpatterns;
+    //size_t numpatterns;
     
     size_t patternstart = 0;
     size_t patternstop = 0;
@@ -147,7 +147,7 @@ bool IComRHostList::compare(IComAddress &address)
     
     if (!address.isinternal())
     {
-        for (int p=0;p<patterns_.size();p++)
+        for (int p=0; p < (int)patterns_.size(); p++)
         {
             if(patterns_[p].compare(address.getinetname())) return(true);
             if(patterns_[p].compare(address.getipname())) return(true); 

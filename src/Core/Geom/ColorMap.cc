@@ -61,6 +61,11 @@ Persistent* ColorMap::maker()
 PersistentTypeID ColorMap::type_id("ColorMap", "Datatype", maker);
 
 
+GeomColormapInterface::~GeomColormapInterface()
+{
+}
+
+
 ColorMap::ColorMap()
   : rawRampAlpha_(),
     rawRampAlphaT_(),
@@ -207,7 +212,7 @@ ColorMap::getAlpha(double t)
   return colors_[int(t*(colors_.size()-1))]->transparency;
 }
 
-#define COLORMAP_VERSION 5
+#define COLORMAP_VERSION 6
 
 
 void
@@ -215,6 +220,12 @@ ColorMap::io(Piostream& stream)
 {
 
   int version= stream.begin_class("ColorMap", COLORMAP_VERSION);
+
+  if ( version > 5)
+  {
+    PropertyManager::io(stream);
+  }
+
   if ( version > 4)
   {
     Pio(stream, resolution_);

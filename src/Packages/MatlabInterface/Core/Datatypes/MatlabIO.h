@@ -34,6 +34,5 @@
  */
 
 // This will include as well all the other include files
-#include "matlabfile.h"
+#include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
 
-using namespace MatlabIO;

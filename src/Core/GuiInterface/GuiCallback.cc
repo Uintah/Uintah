@@ -42,6 +42,7 @@
 
 #include <Core/GuiInterface/GuiCallback.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Exceptions/GuiException.h>
 #include <Core/Malloc/Allocator.h>
 #include <tcl.h>
 
@@ -65,16 +66,52 @@ int GuiArgs::count()
     return args_.size();
 }
 
-string GuiArgs::operator[](int i)
+string
+GuiArgs::operator[](int i)
 {
-    return args_[i];
+  if (i < 0 || i >= int(args_.size()))
+    SCI_THROW(GuiException("Cannot access GUI Arg #"+to_string(i)));
+
+  return args_[i];
 }
+
+
+string
+GuiArgs::get_string(int i)
+{
+  return operator[](i);
+}
+
+int
+GuiArgs::get_int(int i)
+{
+  int ret_val;
+  if (!string_to_int(operator[](i), ret_val))
+      SCI_THROW(GuiException
+		("Cannot convert GUI Argument #" +to_string(i) +
+		 ", contents = '" + string(args_[i]) + "' to type of int."));
+          
+  return ret_val;
+}
+
+double
+GuiArgs::get_double(int i)
+{
+  double ret_val;
+  if (!string_to_double(operator[](i), ret_val))
+      SCI_THROW(GuiException
+		("Cannot convert GUI Argument #" +to_string(i) +
+		 ", contents = '" + string(args_[i]) + "' to type of int."));
+          
+  return ret_val;
+}
+
 
 void GuiArgs::error(const string& e)
 {
-    string_ = e;
-    have_error_ = true;
-    have_result_ = true;
+  string_ = e;
+  have_error_ = true;
+  have_result_ = true;
 }
 
 void GuiArgs::result(const string& r)

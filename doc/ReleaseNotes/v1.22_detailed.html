@@ -167,7 +167,6 @@ able to create, structured, unstructured, or regular fields.</li>
       <li>Optimizations in BioTensor in order to use less memory.</li>
       <li>Use GuiFilename for filenames instead of GuiString in NrrdReader and
 NrrdWriter.</li>
-</li>
     </ul>
 
     <h2>Insight Modules (Category in parentheses)</h2>
@@ -227,7 +226,7 @@ C++ code.  This was used by the ClipByFunction, LinAlgBinary and LinAlgUnary mod
       <li>Add debugging asserts to set_value and value calls for fields.</li>
       <li>Use unsigned int as under_type for all meshes.</li>
       <li>Add module runtimes to regression output.</li>
-      <li>Use lessthan function for map<> when hash_map not defined.</li>
+      <li>Use lessthan function for map&lt;> when hash_map not defined.</li>
       <li>Use a better string hash function, use X31 hash.</li>
       <li>Lock PropertyManager more agressively, add copy_properties function.</li>
       <li>Fix typo that was causing dynamic compliation directory to always default to
@@ -240,7 +239,7 @@ C++ code.  This was used by the ClipByFunction, LinAlgBinary and LinAlgUnary mod
       <li>Evaluate floating point numbers using TCL's 'expr' command to pare down redundant 0's after decimal place.</li>
       <li>Added TCL function initGlobal that will assign a value to a global variable if and only if that variable does not already exist.</li>
       <li>Add TCLInterface::complete_command that returns true if str is a complete TCL script with matching braces.</li>
-      <li>Added TCL proc envBool to query the boolean status of an environemnt variable.<?li>
+      <li>Added TCL proc envBool to query the boolean status of an environemnt variable.</li>
       <li>Use Core/Util/Enviroment.h to provide universal environment that works on SGIs, Mac G5's, and Linux.</li>
       <li>In TCL, Use [netedit getenv VARNAME], and [netedit setenv VARNAME VALUE] to interface with environment variables.</li>
       <li>Move some code from SCIRun/src/Dataflow/GUI/Module.tcl out into SCIRun/src/Dataflow/GUI/Port.tcl and SCIRun/src/Dataflow/GUI/Connection.tcl.</li>
@@ -249,7 +248,7 @@ C++ code.  This was used by the ClipByFunction, LinAlgBinary and LinAlgUnary mod
       <li>Handle bad values (like inf) better when writing floating point values to networks.</li>
     </ul>
 
-    <h1>Environment Variables</h1
+    <h1>Environment Variables</h1>
     <ul>
       <li>Added environment variable SCIRUN_NET_SUBSTITUTE_DATADIR. If true, .nets will automatically substitute SCIRUN_DATA and SCIRUN_DATASET.</li>
       <li>Added environment variable SCIRUN_FAST_QUIT.  If true, will not ask user to save before exiting scirun.</li>

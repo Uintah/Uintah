@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<section os="osx" id="sec.dmg_inst">
+  <title id="title.dmg_inst">Installation from a Binary Tarball</title>
+
+  <para>Two SCIRun <firstterm>Problem Solving Environment</firstterm>s
+  (<acronym>PSE</acronym>), BioPSE and Fusion, are available via
+  binary tarballs.  Binary tarballs contain SCIRun executables.
+  Customized SCIRun <acronym>PSE</acronym>s can be built from source
+  code; see <xref linkend="sec.source_inst"/> for details.</para>
+
+  <para>The BioPSE binary tarball includes SCIRun packages BioPSE,
+  MatlabInterface, Teem, and Insight.  The BioPSE tarball includes ITK
+  libraries required by the Insight package.  Matlab software must be
+  present to use modules of the MatlabInterface package.</para>
+
+  <para>The Fusion tarball includes SCIRun packages Fusion, DataIO, and
+  Teem.  The Fusion tarball includes the HDF5 libraries.  The
+  SCIRun/Fusion tarball has been built to use MDSplus software but MDSplus
+  software must be installed separately.  See <xref
+  linkend="sec.mdsplus_inst"/> for MDSplus software installation
+  instructions.</para>
+
+  <para>
+    Follow these steps to install SCIRun:
+    <orderedlist>
+      <listitem>
+	<para><link linkend="sec.dmg_download">Download</link> a
+	binary tarball, documentation, and sample data sets.</para>
+      </listitem>
+      <listitem>
+	<para><link linkend="sec.dmg_install">Install</link> SCIRun
+	from a binary tarball.</para>
+      </listitem>
+      <listitem>
+	<para><link linkend="sec.dmg_data">Install</link> SCIRun's
+	sample data sets.</para>
+      </listitem>
+      <listitem>
+	<para><link linkend="sec.dmg_docs">Install</link> SCIRun's
+	documentation.</para>
+      </listitem>
+    </orderedlist>
+  </para>
+
+  <para>Be sure to read <xref linkend="sec.prepare" /> after
+  installing, but before starting, SCIRun.</para>
+
+  <section>
+    <title id="dmg_download">Downloading</title>
+    <para>
+      From <acronym>SCI</acronym>'s <ulink
+      url="http://software.sci.utah.edu/archive_entry.html">software
+      archive</ulink> page download the following files:
+
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    <filename>SCIRunBioPSE-OSX.<!--%= doc.version
+	    %-->.tar.gz</filename> or
+	    <filename>SCIRunFusion-OSX.<!--%= doc.version
+	    %-->.tar.gz</filename>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <filename>SCIRunData.<!--%= doc.version %-->.tar.gz</filename>
+	    (or
+	    <filename>FusionData.<!--%= doc.version %-->.tar.gz</filename>
+	    if also downloading the Fusion specific RPM).
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <filename>SCIRunDocs.<!--%= doc.version %-->.tar.gz</filename>
+	  </para>
+	</listitem>
+      </itemizedlist>
+    </para>
+
+  </section>
+
+  <section id="sec.dmg_install">
+    <title>Installing SCIRun</title>
+    <para>
+      Administrative privileges (must be member of the admin group)
+      are required to install SCIRun.  SCIRun
+      <emphasis>must</emphasis> be installed in
+      <filename>/usr/local</filename>.
+    </para>
+    <para>
+      To install SCIRun, <command>cd</command> to the directory
+      containing the binary tarball and type:
+      <literallayout class="monospaced">
+sudo sh -c 'gunzip -c SCIRunBioPSE-OSX.<!--%= doc.version %-->.tar.gz \
+ | (cd /usr/local &amp;&amp; tar xf -)'
+      </literallayout>
+      or the following if installing SCIRunWithFusion:
+      <literallayout class="monospaced">
+sudo sh -c 'gunzip -c SCIRunFusion-OSX.<!--%= doc.version %-->.tar.gz \
+ | (cd /usr/local &amp;&amp; tar xf -)'
+      </literallayout>
+      SCIRun and it's PowerApps are found in
+      <filename>/usr/local/SCIRun/bin</filename>. Read <xref
+      linkend="sec.prepare"/> before <link
+      linkend="sec.starting">starting</link> SCIRun.
+    </para>
+  </section>
+
+  <section id="sec.dmg_data">
+    <title>SCIRun's Sample Data Sets</title>
+    <para>
+      The following instructions install SCIRun's sample datasets in
+      <filename>/usr/local/SCIRunData/<!--%= doc.version
+      %--></filename> (although they may be installed anywhere).
+      Administrative privilages are required.
+    </para>
+    <para>
+      First, <command>cd</command> to the directory containing the 
+      dataset tarball and:
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    If installing
+	    <filename>SCIRunData.1.24.0b_to_1.24.1.tar.gz</filename>
+	    type:
+	    <literallayout class="monospaced">
+sudo mv /usr/local/SCIRunData/1.24.0b /usr/local/SCIRunData/1.24.1
+sudo sh -c 'gunzip -c SCIRunData.1.24.0b_to_1.24.1.tar.gz \
+ | (cd /usr/local &amp;&amp; tar xf -)'
+	    </literallayout>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    If installing <filename>SCIRunData.<!--%= doc.version
+	    %-->.tar.gz</filename> type:
+	    <literallayout class="monospaced">
+sudo sh -c 'gunzip -c SCIRunData.<!--%= doc.version %-->.tar.gz \
+ | (cd /usr/local &amp;&amp; tar xf -)'
+	    </literallayout>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    If installing <filename>FusionData.<!--%= doc.version
+	    %-->.tar.gz</filename> type:
+	    <literallayout class="monospaced">
+sudo sh -c 'gunzip -c FusionData.<!--%= doc.version %-->.tar.gz \
+ | (cd /usr/local &amp;&amp; tar xf -)'
+	    </literallayout>
+	  </para>
+	</listitem>
+      </itemizedlist>
+    </para>
+  </section>
+
+  <section id="sec.dmg_docs">
+    <title>SCIRun's Documentation</title>
+    <para>
+      The following instructions install SCIRun's documentation in
+      <filename>/usr/local/SCIRunDocs.<!--%= doc.version
+      %--></filename> (although they may be installed anywhere).
+      Administrative privilages are required.  Type:
+      <literallayout class="monospaced">
+sudo sh -c 'gunzip -c SCIRunDocs.<!--%= doc.version %-->.tar.gz \
+ | (cd /usr/local &amp;&amp; tar xf -)'	
+      </literallayout>
+    </para>
+    <para>
+      Open <filename>/usr/local/SCIRunDocs.<!--%= doc.version
+      %-->/doc/index.html</filename> with a web browser to view
+      SCIRun's online documentation.
+    </para>
+  </section>
+
+</section>

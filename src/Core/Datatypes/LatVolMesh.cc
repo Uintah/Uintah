@@ -56,12 +56,12 @@ using namespace std;
 PersistentTypeID LatVolMesh::type_id("LatVolMesh", "Mesh", maker);
 
 
-LatVolMesh::LatVolMesh(unsigned x, unsigned y, unsigned z,
+LatVolMesh::LatVolMesh(unsigned i, unsigned j, unsigned k,
 		       const Point &min, const Point &max)
   : min_i_(0), min_j_(0), min_k_(0),
-    ni_(x), nj_(y), nk_(z)
+    ni_(i), nj_(j), nk_(k)
 {
-  transform_.pre_scale(Vector(1.0 / (x-1.0), 1.0 / (y-1.0), 1.0 / (z-1.0)));
+  transform_.pre_scale(Vector(1.0 / (i-1.0), 1.0 / (j-1.0), 1.0 / (k-1.0)));
   transform_.pre_scale(max - min);
 
   transform_.pre_translate(min.asVector());
@@ -881,7 +881,7 @@ LatVolMesh::get_weights(const Point &p, Node::array_type &locs, double *w)
   return 0;
 }
 
-const TypeDescription* get_type_description(LatVolMesh::NodeIndex *)
+const TypeDescription* get_type_description(LatVolMeshNodeIndex *)
 {
   static TypeDescription* td = 0;
   if(!td){
@@ -892,7 +892,7 @@ const TypeDescription* get_type_description(LatVolMesh::NodeIndex *)
   return td;
 }
 
-const TypeDescription* get_type_description(LatVolMesh::CellIndex *)
+const TypeDescription* get_type_description(LatVolMeshCellIndex *)
 {
   static TypeDescription* td = 0;
   if(!td){
@@ -904,7 +904,7 @@ const TypeDescription* get_type_description(LatVolMesh::CellIndex *)
 }
 
 void
-Pio(Piostream& stream, LatVolMesh::NodeIndex& n)
+Pio(Piostream& stream, LatVolMeshNodeIndex& n)
 {
     stream.begin_cheap_delim();
     Pio(stream, n.i_);
@@ -914,7 +914,7 @@ Pio(Piostream& stream, LatVolMesh::NodeIndex& n)
 }
 
 void
-Pio(Piostream& stream, LatVolMesh::CellIndex& n)
+Pio(Piostream& stream, LatVolMeshCellIndex& n)
 {
     stream.begin_cheap_delim();
     Pio(stream, n.i_);
@@ -923,12 +923,12 @@ Pio(Piostream& stream, LatVolMesh::CellIndex& n)
     stream.end_cheap_delim();
 }
 
-const string find_type_name(LatVolMesh::NodeIndex *)
+const string find_type_name(LatVolMeshNodeIndex *)
 {
   static string name = "LatVolMesh::NodeIndex";
   return name;
 }
-const string find_type_name(LatVolMesh::CellIndex *)
+const string find_type_name(LatVolMeshCellIndex *)
 {
   static string name = "LatVolMesh::CellIndex";
   return name;
@@ -1105,13 +1105,13 @@ LatVolMesh::get_valence(const Cell::index_type &i) const
 }
 
 std::ostream& 
-operator<<(std::ostream& os, const LatVolMesh::LatIndex& n) {
+operator<<(std::ostream& os, const LatVolMeshLatIndex& n) {
   os << "[" << n.i_ << "," << n.j_ << "," << n.k_ << "]";
   return os;
 }
 
 std::ostream& 
-operator<<(std::ostream& os, const LatVolMesh::LatSize& n) {
+operator<<(std::ostream& os, const LatVolMeshLatSize& n) {
   os << (int)n << " (" << n.i_ << " x " << n.j_ << " x " << n.k_ << ")";
   return os;
 }
@@ -1188,6 +1188,129 @@ get_type_description(LatVolMesh::Cell *)
   return td;
 }
 
+
+
+LatVolMeshLatIndex::operator unsigned() const
+{ 
+  ASSERT(mesh_);
+  return i_ + ni()*j_ + ni()*nj()*k_;;
+}
+
+
+unsigned int
+LatVolMeshLatIndex::ni() const
+{
+  ASSERT(mesh_); return mesh_->get_ni();
+}
+
+unsigned int
+LatVolMeshLatIndex::nj() const
+{
+  ASSERT(mesh_); return mesh_->get_nj();
+}
+
+unsigned int
+LatVolMeshLatIndex::nk() const
+{
+  ASSERT(mesh_); return mesh_->get_nk();
+}
+
+LatVolMeshCellIndex::operator unsigned() const
+{ 
+  ASSERT(mesh_);
+  return i_ + (ni()-1)*j_ + (ni()-1)*(nj()-1)*k_;
+}
+
+
+LatVolMeshNodeIter &
+LatVolMeshNodeIter::operator++()
+{
+  {
+    i_++;
+    if (i_ >= mesh_->min_i_+mesh_->get_ni())	{
+      i_ = mesh_->min_i_;
+      j_++;
+      if (j_ >=  mesh_->min_j_+mesh_->get_nj()) {
+        j_ = mesh_->min_j_;
+        k_++;
+      }
+    }
+    return *this;
+  }
+}
+
+
+LatVolMeshCellIter::operator unsigned() const
+{
+  ASSERT(mesh_);
+  return i_ + (ni()-1)*j_ + (ni()-1)*(nj()-1)*k_;;
+}
+
+
+LatVolMeshCellIter &
+LatVolMeshCellIter::operator++()
+{
+  i_++;
+  if (i_ >= mesh_->min_i_+ni()-1) {
+    i_ = mesh_->min_i_;
+    j_++;
+    if (j_ >= mesh_->min_j_+nj()-1) {
+      j_ = mesh_->min_j_;
+      k_++;
+    }
+  }
+  return *this;
+}
+
+
+LatVolMeshRangeNodeIter &
+LatVolMeshRangeNodeIter::operator++()
+{
+  i_++;
+  // Did i_ loop over the line
+  // mesh_->min_x is the starting point of the x range for the mesh
+  // min_i_ is the starting point of the range on x
+  // max_i_ is the ending point of the range on x
+  if (i_ >= mesh_->min_i_ + max_i_) {
+    // set i_ to the beginning of the range
+    i_ = min_i_;
+    j_++;
+    // Did j_ loop over the face
+    // mesh_->min_j_ is the starting point of the y range for the mesh
+    // min_j is the starting point of the range on y
+    // max_j is the ending point of the range on y
+    if (j_ >= mesh_->min_j_ + max_j_) {
+      j_ = min_j_;
+      k_++;
+    }
+  }
+  return *this;
+}
+
+
+LatVolMeshRangeCellIter &
+LatVolMeshRangeCellIter::operator++()
+{
+  i_++;
+  // Did i_ loop over the line
+  // mesh_->min_x is the starting point of the x range for the mesh
+  // min_i_ is the starting point of the range on x
+  // max_i_ is the ending point of the range on x
+  if (i_ >= mesh_->min_i_ + max_i_) {
+    // set i_ to the beginning of the range
+    i_ = min_i_;
+    j_++;
+    // Did j_ loop over the face
+    // mesh_->min_j_ is the starting point of the y range for the mesh
+    // min_j is the starting point of the range on y
+    // max_j is the ending point of the range on y
+    if (j_ >= mesh_->min_j_ + max_j_) {
+      j_ = min_j_;
+      k_++;
+    }
+  }
+  return *this;
+}
 
 
 } // namespace SCIRun

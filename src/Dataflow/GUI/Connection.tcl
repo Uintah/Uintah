@@ -56,10 +56,11 @@ proc regenConnectionMenu { menu_id conn } {
 	$menu_id add cascade -label "Insert Module" -menu $menu_id.insertModule
     }
     set connid [makeConnID $conn]
-    setIfExists disabled Disabled($connid) 0
-    set label [expr $disabled?"Enable":"Disable"]
-    $menu_id add command -command "disableConnection {$conn}" -label $label
-    set subnet $Subnet([lindex $conn 0])
+    if { ![isaSubnet [oMod conn]] && ![isaSubnet [iMod conn]] } {
+	setIfExists disabled Disabled($connid) 0
+	set label [expr $disabled?"Enable":"Disable"]
+	$menu_id add command -command "disableConnection {$conn}" -label $label
+    }
     $menu_id add command -label "Notes" -command "notesWindow $connid"
 }
 

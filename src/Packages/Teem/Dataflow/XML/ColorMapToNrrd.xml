@@ -36,7 +36,7 @@
     <summary>Convert a SCIRun ColorMap to a Nrrd.
     </summary>
     <description>
-      <p>Convert a SCIRun ColorMap to a Nrrd.</p>
+      <p>Convert a SCIRun ColorMap to a Nrrd in the format 4xN.</p>
     </description>
   </overview>
   <implementation>

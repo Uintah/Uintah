@@ -125,19 +125,9 @@ void GenTitle::execute(){
 
   // Get a handle to the output geom port.
   GeometryOPort *ogeom_port = (GeometryOPort *) get_oport("Title");
-  
-  if (!ogeom_port) {
-    error("Unable to initialize oport 'Title'.");
-    return;
-  }
-  
+
   // Get the time via a matrix
   MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Time Matrix");
-  
-  if (!imatrix_port) {
-    error("Unable to initialize iport 'Time Matrix'.");
-    return;
-  }
   
   if (iShowValue_.get() ) {
     MatrixHandle mHandle;
@@ -174,7 +164,7 @@ void GenTitle::execute(){
 
     ogeom_port->delAll();
 
-    ogeom_port->addObj(generate(), string("Clock"));
+    ogeom_port->addObj(generate(), string("Title"));
   }
 
   // Send the data downstream
@@ -193,8 +183,8 @@ GeomHandle GenTitle::generate()
   double border = 0.025;    
   double scale = .00225;
     
-  double dx = nchars * 14.0 * size_/100.0 * scale + 2.0 * border;
-  double dy = 1.0    * 15.0 * size_/100.0 * scale + 2.0 * border;
+  double dx = (nchars * 14.0 * size_/100.0 * scale + 2.0 * border) / 2;
+  double dy =  1.0    * 15.0 * size_/100.0 * scale + 2.0 * border;
 
   if( bbox_ ) {
     GeomGroup *box = scinew GeomGroup();
@@ -217,13 +207,13 @@ GeomHandle GenTitle::generate()
   Vector refVec;
 
   if( location_ == "Top Left" )
-    refVec = Vector(-31.0/32.0, 31.0/32.0, 0 ) - Vector( 0, dy, 0 );
-  else if( location_ == "Top Right" )
-    refVec = Vector( 31.0/32.0, 31.0/32.0, 0 ) - Vector( dx, dy, 0 );
+    refVec = Vector(-31.0/32.0, 31.0/32.0, 0 ) - Vector(  0, dy, 0 );
+  else if( location_ == "Top Center" )
+    refVec = Vector(    0/32.0, 31.0/32.0, 0 ) - Vector( dx, dy, 0 );
   else if( location_ == "Bottom Left" )
     refVec = Vector(-31.0/32.0,-31.0/32.0, 0 );
-  else if( location_ == "Bottom Right" )
-    refVec = Vector( 31.0/32.0,-31.0/32.0, 0 ) - Vector( dx, 0, 0 );
+  else if( location_ == "Bottom Center" )
+    refVec = Vector(    0/32.0,-31.0/32.0, 0 ) - Vector( dx,  0, 0 );
 
   Transform trans;
   trans.pre_translate( refVec );
@@ -287,11 +277,6 @@ GenTitle::tcl_command(GuiArgs& args, void* userdata) {
     /*
     // Get a handle to the output geom port.
     GeometryOPort *ogeom_port = (GeometryOPort *) get_oport("Title");
-    
-    if (!ogeom_port) {
-      error("Unable to initialize oport 'Title'.");
-      return;
-    }
     
     color_r_.reset();
     color_g_.reset();

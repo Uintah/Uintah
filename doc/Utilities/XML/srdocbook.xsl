@@ -28,12 +28,12 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<!-- Override docbook templates.  See srexten.xsl for details.  -->
+<!-- SCIRun customizations.  -->
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 version="1.0">
 
-  <xsl:import href="docbook.xsl"/>
+  <xsl:import href="profile-docbook.xsl"/>
 
   <xsl:include href="srdocbook-common.xsl"/>
 

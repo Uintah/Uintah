@@ -1,4 +1,3 @@
-% -*-latex-*-
 %
 %  For more information, please see: http://software.sci.utah.edu
 % 
@@ -418,21 +417,29 @@ interface.
 The following Power Apps are available:
 
 \begin{description}
-  \descitem{BioTensor} \index{BioTensor} An application for computing and visualizing
-  diffusion tensor data.  See the \htmladdnormallinkfoot{BioTensor
-    tutorial}{\latexhtml{http://software.sci.utah.edu/doc/User/Tutorials/BioTensor/BioTensor.html}{../../Tutorials/BioTensor/BioTensor.html}}
+  \descitem{BioTensor} \index{BioTensor} An application for computing
+  and visualizing diffusion tensor data.  See the
+  \htmladdnormallinkfoot{BioTensor
+  tutorial}{\latexhtml{http://software.sci.utah.edu/doc/User/Tutorials/BioTensor/BioTensor.html}{../../Tutorials/BioTensor/BioTensor.html}}
   for more information.
   
-  \descitem{BioFEM} \index{BioFEM} A finite element simulation application. It is
-  used, for example, to compute electric and potential fields from a
-  discretized volume conductor and a current source.
+  \descitem{BioFEM} \index{BioFEM} A finite element simulation
+  application. It is used, for example, to compute electric and
+  potential fields from a discretized volume conductor and a current
+  source.
+
+  \descitem{BioImage} \index{BioImage} An application for exploring 3D
+  volume data.  See the \htmladdnormallinkfoot{BioImage tutorial}
+  {\latexhtml{http://software.sci.utah.edu/doc/User/Tutorials/BioImage/index.html}{../../Tutorials/BioImage/index.html}}
+  for more information.
+
 \end{description}
 
-Commands \command{BioTensor} and \command{BioFem} invoke these
-applications.  If \sr{} is installed from source code, commands
-\command{BioTensor} and \command{BioFem} are located in \sr{}'s build
-directory (alongside the \command{scirun} command).  If \sr{} is
-installed from RPMs these commands are located in
+Commands \command{BioTensor}, \command{BioFem} and \command{BioImage}
+invoke these applications.  If \sr{} is installed from source code,
+commands \command{BioTensor}, \command{BioFem} and \command{BioImage}
+are located in \sr{}'s build directory (alongside the \command{scirun}
+command).  If \sr{} is installed from RPMs these commands are located in
 \directory{/usr/local/SCIRun/bin}.
 
 \section{\sr{} Objects}
@@ -472,7 +479,7 @@ C++ data types are \datatype{double}, \datatype{float},
 
 \sr{} meshes are classified as \dfn{unstructured}, \dfn{structured},
 or \dfn{regular}.  A mesh consists of nodes and implicit or explicit
-node connectivity data.
+node connectivity information.
 
 Node locations and connectivities for unstructured 
 meshes\index{meshes!unstructured meshes} are specified
@@ -492,7 +499,23 @@ meshes\index{meshes!regular meshes}.  The regular mesh types
 are \datatype{ScanlineMesh},
 \datatype{ImageMesh}, \datatype{LatVolMesh}.
 
-Below are figures of some mesh types:
+A regular mesh is more constrained than structured and unstructured
+meshes.  Likewise, a structured mesh is more constrained that a
+unstructured mesh.  A more constrained mesh can be trivially converted
+to a less constrained mesh by explicitly enumerating implicit
+properties.  For instance, a LatVol mesh is converted to a StructHexVol
+by enumerating a LatVol mesh's node coordinates (connectivities are
+still implied).  Also, a LatVol mesh is converted to a HexVol mesh by
+enumerating a LatVol's node locations and connectivities.  Module
+\module{ToStructured} performs this type of conversion.
+
+It is not meaningful to convert a less constrained mesh to a more
+constrained mesh.  It is possible, however, to sample an unstructured
+field at regular intervals to create a regular field.  For example, a
+HexVolField is interpolated onto a LatVol mesh using modules
+\module{SampleLattice} and \module{DirectInterpolate}.
+
+Below are figures of mesh types:
 
 %begin{latexonly}
 \newcommand{\meshdoc}[4]{%
@@ -517,8 +540,16 @@ Below are figures of some mesh types:
 \meshdoc{60}{ContourField}{Contour Field Mesh}{A Curve mesh \index{meshes!Curve mesh} is a 
   segmented curve.}
 
-\meshdoc{100}{ImageField}{Image Mesh}{An Image mesh \index{meshes!Image mesh} is a regular 2D
-  grid. Note that an Image mesh is not used for image processing.}
+\meshdoc{100}{ImageField}{Image Mesh}{An Image mesh \index{meshes!Image
+  mesh} is a regular 2D grid. Note that an Image mesh is not used for
+  image processing.}
+
+\meshdoc{253}{StructQuadSurf2}{Structured Quad Surface mesh}{Surface made of
+connected quadrilaterals on a structured grid \index{meshes!Structured Quad Surface mesh}}
+
+\meshdoc{253}{StructHexVol2}{Structured Hex Volume mesh}{Subdivision of
+space into structured hexagonal elements\index{meshes!Structured Hex
+Volume mesh}}
 
 \meshdoc{65}{trisurf}{Tri Surface Mesh}{A Tri Surface mesh \index {meshes!Tri Surface mesh} is a
   surface made of connected triangles.}
@@ -536,6 +567,8 @@ Below are figures of some mesh types:
   \index{meshes!Prism Volume mesh} is a subdivision of space into
   prism elements.  Prism elements have five faces, two trangular faces
   connected by three quadrilateral faces.}
+
+
 
 \subsection{Matrices}
 \index{matrices}
@@ -559,7 +592,50 @@ elements.
 
 \sr{} \datatype{ColorMap} type is a mapping of color values to data values.
 
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: "usersguide"
-%%% End: 
+\section{Bioelectric Field Quantities and Units}
+\label{sec:units}
+\index{quantities}\index{units}
+
+The quantities of interest in bioelectric field problems are
+conductivity, potentials, electric field, dipole source, current
+density, and current source density. These quantities and their
+associated units are listed in table \ref{tbl:units}.
+
+\begin{table}[htbp]
+ \begin{center}
+  \begin{tabular}{|l|l|}
+   \hline
+   {\em Quantity}&{\em Unit} \\
+   \hline
+   Conductivity&$amps / volts / meter$  ($siemens / meter$) \\
+   Potential&$volts$ \\
+   Electric Field&$volts / meter$ \\
+   Dipole Source&$amps / meter$ \\
+   Current Density&$amps / meter^2$ \\
+   Current Source Density&$amps / meter^3$ \\
+   \hline
+  \end{tabular}
+  \caption{SCIRun bioelectric field quantities and units}
+  \label{tbl:units}
+ \end{center}
+\end{table}
+
+SCIRun doesn't keep track of unit scale factors (e.g. centi-, milli-,
+etc).  SCIRun assumes a dipole source is in units of $amps / meter$,
+conductivities are in $siemens / meter$, model geometry is in $meters$;
+results are therefore in units of $volts$.  If this isn't true (e.g. you
+know that the model is in $mm$), then you have to carry those scale
+factors through your computation (e.g. know that the results you get out
+are in $kv$).
+
+The rule of thumb is that if we \emph{increase} the conductivity, then
+we \emph{decrease} the potentials by that same scale factor.
+Conversely, if we \emph{increase} the dipole source moment, then we
+\emph{increase} the potentials by that same scale factor.  i.e. $V = I /
+sigma$.  Similarly, if we hold everything else constant, but
+\emph{increase} the size of the domain, then we \emph{decrease} the
+potentials by that same scale factor.
+
+For example, the SCIRun Utah Torso model has a length scale of
+centimeters ($10^{-2} meters$) and conductivity units of $siemens /
+meter$, so our output potentials are in $hectovolts$  ($10^2 volts$).

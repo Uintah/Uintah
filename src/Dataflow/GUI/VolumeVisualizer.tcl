@@ -35,65 +35,30 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	set name VolumeVisualizer
 	set_defaults
     }
-    method set_defaults {} {
-	global $this-use_stencil
-	set $this-use_stencil 0
-	global $this-invert_opacity
-	set $this-invert_opacity 0
-	global $this-multi_level
-	set $this-multi_level 1
-        global $this-blend_res
-        set $this-blend_res 8
-	global $this-sampling_rate_lo
-	set $this-sampling_rate_lo 1.0
-	global $this-sampling_rate_hi
-	set $this-sampling_rate_hi 4.0
-        global $this-adaptive
-        set $this-adaptive 1
-        global $this-cmap_size
-        set $this-cmap_size 7
-        global $this-sw_raster
-        set $this-sw_raster 0
-	global $this-alpha_scale
-	set $this-alpha_scale 0
-	global $this-render_style
-	set $this-render_style 0
-	global $this-interp_mode 
-	set $this-interp_mode 1
-        global $this-shading
-        set $this-shading 0
-        global $this-ambient
-        set $this-ambient 0.5
-        global $this-diffuse
-        set $this-diffuse 0.5
-        global $this-specular
-        set $this-specular 0.0
-        global $this-shine
-        set $this-shine 30.0
-        global $this-light
-        set $this-light 0
-	global $this-shading_tab
-	global $this-sampling_tab
-	global $this-multires_tab
 
-	# For backwards compatability
-	global $this-contrast
-	global $this-contrastfp
-	global $this-draw_mode
-	global $this-num_slices
-	set $this-num_slices -1
+    method set_defaults {} {
+	setGlobal $this-use_stencil 0
+	setGlobal $this-invert_opacity 0
+	setGlobal $this-multi_level 1
+        setGlobal $this-blend_res 8
+	setGlobal $this-sampling_rate_lo 1.0
+	setGlobal $this-sampling_rate_hi 4.0
+        setGlobal $this-adaptive 1
+        setGlobal $this-cmap_size 7
+        setGlobal $this-sw_raster 0
+	setGlobal $this-alpha_scale 0
+	setGlobal $this-render_style 0
+	setGlobal $this-interp_mode 1
+        setGlobal $this-shading 0
+        setGlobal $this-ambient 0.5
+        setGlobal $this-diffuse 0.5
+        setGlobal $this-specular 0.0
+        setGlobal $this-shine 30.0
+        setGlobal $this-light 0
+	setGlobal $this-num_slices -1
+        setGlobal $this-shading-button-state 1
     }
 
-#      method ui {} {
-#  	set w .ui[modname]
-#  	if {[winfo exists $w]} {
-#  	    return
-#  	}
-#  	toplevel $w
-#  	build_ui
-
-#      }
-    
 
     method ui {} { 
         set w .ui[modname] 
@@ -230,8 +195,8 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 # 		-showvalue true -resolution 1 \
 # 		-orient horizontal \
 
-	checkbutton $tab.tf.sw -text "Software Rasterization" -relief flat \
-            -variable $this-sw_raster -onvalue 1 -offvalue 0 \
+	checkbutton $tab.tf.sw -text "Software ColorMap2 Rasterization" \
+            -relief flat -variable $this-sw_raster -onvalue 1 -offvalue 0 \
             -anchor w -command "$n"
 
 	pack $tab.tf.l $tab.tf.stransp $tab.tf.sw \
@@ -256,7 +221,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 
 
 	scale $tab.srate_hi -variable $this-sampling_rate_hi \
-            -from 0.5 -to 10.0 -label "Sampling Rate" \
+            -from 0.5 -to 20.0 -label "Sampling Rate" \
             -showvalue true -resolution 0.1 \
             -orient horizontal \
 
@@ -265,7 +230,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
             -anchor w -command "$s; $n"
 
 	scale $tab.srate_lo -variable $this-sampling_rate_lo \
-            -from 0.1 -to 5.0 -label "Interactive Sampling Rate" \
+            -from 0.1 -to 10.0 -label "Adaptive Sampling Rate" \
             -showvalue true -resolution 0.1 \
             -orient horizontal \
 
@@ -347,6 +312,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
         bind $tab.f1.specular <ButtonRelease> $n
         bind $tab.f1.shine <ButtonRelease> $n
 
+        change_shading_state [set $this-shading-button-state]
     }
 
 
@@ -465,4 +431,22 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	return [set $this-$sval]
     }
 
+    method change_shading_state { val } {
+        set $this-shading-button-state $val
+
+        set w .ui[modname] 
+
+        if {![winfo exists $w]} { 
+            return
+        }
+        
+	set dof [$w.main.options.disp.frame_title childsite]
+        set tab [$dof.tabs childsite "Shading"]
+        
+        if { $val } {
+            $tab.shading configure -fg "black"
+        } else {
+            $tab.shading configure -fg "darkgrey"
+        }
+    }
 }

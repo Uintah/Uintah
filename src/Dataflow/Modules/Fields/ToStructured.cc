@@ -87,10 +87,6 @@ ToStructured::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
     return;
@@ -140,11 +136,6 @@ ToStructured::execute()
   }
 
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-  if (!ofield_port)
-  {
-    error("Unable to initialize " + name + "'s oport.");
-    return;
-  }
   ofield_port->send(ofieldhandle_);
 }
 

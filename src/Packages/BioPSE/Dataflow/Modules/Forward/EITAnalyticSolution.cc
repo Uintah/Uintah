@@ -194,23 +194,6 @@ EITAnalyticSolution::execute(){
 
   oportPotentialVector_ = (MatrixOPort *)get_oport("PotentialVector");
 
-  if (!iportField_) {
-    error("Unable to initialize iport 'Mesh'.");
-    return;
-  }
-  if (!iportCurrentPatternIndex_) {
-    error("Unable to initialize iport 'Current Pattern Index'.");
-    return;
-  }
-  if (!iportElectrodeParams_) {
-    error("Unable to initialize iport 'Electrode Params'.");
-    return;
-  }
-  if (!oportPotentialVector_) {
-    error("Unable to initialize oport 'Potential Vector'.");
-    return;
-  }
-
   //! Obtaining handles to computation objects
   FieldHandle hField;
   
@@ -273,10 +256,10 @@ EITAnalyticSolution::execute(){
   ColumnMatrix* electrodeParams = scinew ColumnMatrix(numParams);
   electrodeParams=dynamic_cast<ColumnMatrix*>(hElectrodeParams.get_rep());
 
-  unsigned int electrodeModel = (unsigned int)((*electrodeParams)[0]);
+  //unsigned int electrodeModel = (unsigned int)((*electrodeParams)[0]);
   int numElectrodes           = (int) ( (*electrodeParams)[1]);
-  double electrodeLen         = (*electrodeParams)[2];
-  int startNodeIndex          = (int) (*electrodeParams)[3];
+  //double electrodeLen         = (*electrodeParams)[2];
+  //int startNodeIndex          = (int) (*electrodeParams)[3];
 
 
   cout << "number of electrodes = " << numElectrodes << endl;

@@ -150,19 +150,6 @@ void BuildMisfitField::execute() {
   MatrixOPort *misfit_oport = 
     (MatrixOPort *)get_oport("Misfit Vector");
 
-  if (!leadfield_iport) {
-    error("Unable to initialize iport 'Leadfield (nelecs x nelemsx3)'.");
-    return;
-  }
-  if (!measurements_iport) {
-    error("Unable to initialize iport 'Measurement Vector'.");
-    return;
-  }
-  if (!misfit_oport) {
-    error("Unable to initialize oport 'Misfit Vector'.");
-    return;
-  }
-
   MatrixHandle leadfield_in;
   if (!leadfield_iport->get(leadfield_in) || !leadfield_in.get_rep()) {
     cerr << "BuildMisfitField -- couldn't get leadfield.  Returning.\n";

@@ -47,10 +47,10 @@ SRCS     += \
 	$(SRCDIR)/CastMatrix.cc\
 	$(SRCDIR)/ChooseMatrix.cc\
 	$(SRCDIR)/ErrorMetric.cc\
-	$(SRCDIR)/FieldToCanonicalTransform.cc\
 	$(SRCDIR)/LinAlgBinary.cc\
 	$(SRCDIR)/LinAlgUnary.cc\
 	$(SRCDIR)/LinearAlgebra.cc\
+        $(SRCDIR)/MatrixInfo.cc\
         $(SRCDIR)/MatrixSelectVector.cc\
         $(SRCDIR)/MinNormLeastSq.cc\
 	$(SRCDIR)/SolveMatrix.cc\

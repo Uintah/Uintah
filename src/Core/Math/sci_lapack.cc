@@ -207,7 +207,10 @@ void lapackeigen(double **H, int n, double *Er, double *Ei, double **Evecs)
   jobvl = 'N'; /* V/N to calculate/not calculate the left eigenvectors
 		  of the matrix H.*/
 
-  jobvr = 'N'; // As above, but for the right eigenvectors.
+  if (Evecs) 
+    jobvr = 'V'; // As above, but for the right eigenvectors.
+  else
+    jobvr = 'N';
 
   lda = n; // The leading dimension of the matrix a.
   a = ctof(H, n, lda); /* Convert the matrix H from double pointer
@@ -218,9 +221,9 @@ void lapackeigen(double **H, int n, double *Er, double *Ei, double **Evecs)
      We also create a vector for work space. */
 
   ldvl = n;
-  vl = new double[1];
   ldvr = n;
-  vr = new double[1];
+  if (Evecs)
+    vr = new double[n*n];
   lwork = 4*n;
 
   work = new double[lwork];
@@ -237,8 +240,7 @@ void lapackeigen(double **H, int n, double *Er, double *Ei, double **Evecs)
   }
 
   delete a;
-  delete vl;
-  delete vr;
+  if (Evecs) delete vr;
   delete work;
 }
 

@@ -91,19 +91,6 @@ Unu2op::execute()
   inrrd2_ = (NrrdIPort *)get_iport("InputNrrd2");
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd1_) {
-    error("Unable to initialize iport 'InputNrrd1'.");
-    return;
-  }
-
-  if (!inrrd2_) {
-    error("Unable to initialize iport 'InputNrrd2'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'OutputNrrd'.");
-    return;
-  }
   if (!inrrd1_->get(nrrd_handle1)) 
     first_nrrd_ = false;
   if (!inrrd2_->get(nrrd_handle2)) 
@@ -194,6 +181,7 @@ Unu2op::execute()
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
 
+  nrrdKeyValueCopy(nout, nin2);
   NrrdDataHandle out(nrrd);
 
   onrrd_->send(out);

@@ -41,10 +41,8 @@
 #ifndef Datatypes_PrismVolField_h
 #define Datatypes_PrismVolField_h
 
-#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/PrismVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Util/Assert.h>
@@ -89,9 +87,9 @@ template <class T>
 PrismVolField<T>::PrismVolField(int order)
   : GenericField<PrismVolMesh, vector<T> >(order)
 {
-  ASSERTMSG((! (order == 0 && mesh_->dimensionality() == 1)), 
+  ASSERTMSG((! (order == 0 && this->mesh_->dimensionality() == 1)), 
 	    "PrismVolField does NOT currently support data at edges."); 
-  ASSERTMSG((! (order == 0 && mesh_->dimensionality() == 2)), 
+  ASSERTMSG((! (order == 0 && this->mesh_->dimensionality() == 2)), 
 	    "PrismVolField does NOT currently support data at faces."); 
 }
 
@@ -99,9 +97,9 @@ template <class T>
 PrismVolField<T>::PrismVolField(PrismVolMeshHandle mesh, int order)
   : GenericField<PrismVolMesh, vector<T> >(mesh, order)
 {
-  ASSERTMSG((! (order == 0 && mesh_->dimensionality() == 1)), 
+  ASSERTMSG((! (order == 0 && this->mesh_->dimensionality() == 1)), 
 	    "PrismVolField does NOT currently support data at edges."); 
-  ASSERTMSG((! (order == 0 && mesh_->dimensionality() == 2)), 
+  ASSERTMSG((! (order == 0 && this->mesh_->dimensionality() == 2)), 
 	    "PrismVolField does NOT currently support data at faces."); 
 }
 
@@ -207,7 +205,7 @@ PrismVolField<T>::get_type_description(int n) const
 template <class T>
 bool PrismVolField<T>::get_gradient(Vector &g, const Point &p) {
   PrismVolMesh::Cell::index_type ci;
-  if (mesh_->locate(ci, p)) {
+  if (this->mesh_->locate(ci, p)) {
     g = cell_gradient(ci);
     return true;
   } else {
@@ -226,19 +224,19 @@ template <class T>
 Vector PrismVolField<T>::cell_gradient(PrismVolMesh::Cell::index_type ci)
 {
   // for now we only know how to do this for field with doubles at the nodes
-  ASSERT(basis_order() == 1);
+  ASSERT(this->basis_order() == 1);
 
   // load up the indices of the nodes for this cell
   PrismVolMesh::Node::array_type nodes;
-  mesh_->get_nodes(nodes, ci);
+  this->mesh_->get_nodes(nodes, ci);
   Vector gb0, gb1, gb2, gb3, gb4, gb5;
-  mesh_->get_gradient_basis(ci, gb0, gb1, gb2, gb3, gb4, gb5);
+  this->mesh_->get_gradient_basis(ci, gb0, gb1, gb2, gb3, gb4, gb5);
 
   // we really want this for all scalars... 
   //  but for now, we'll just make doubles work
-  return Vector(gb0 * value(nodes[0]) + gb1 * value(nodes[1]) + 
-		gb2 * value(nodes[2]) + gb3 * value(nodes[3]) + 
-		gb4 * value(nodes[4]) + gb5 * value(nodes[5]));
+  return Vector(gb0 * this->value(nodes[0]) + gb1 * this->value(nodes[1]) + 
+		gb2 * this->value(nodes[2]) + gb3 * this->value(nodes[3]) + 
+		gb4 * this->value(nodes[4]) + gb5 * this->value(nodes[5]));
 }
 
 

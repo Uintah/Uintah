@@ -125,13 +125,13 @@ FaceCuttingPlane::FaceCuttingPlane(GuiContext* ctx) :
   control_lock_("FaceCuttingPlane lock"),
   control_widget_(0),
   control_id_(-1),
+  drawX_(ctx->subVar("drawX")),
+  drawY_(ctx->subVar("drawY")),
+  drawZ_(ctx->subVar("drawZ")),
   need_find(ctx->subVar("need_find")), 
   where(ctx->subVar("where")),
   face_name(ctx->subVar("face_name")), 
   line_size(ctx->subVar("line_size")),
-  drawX_(ctx->subVar("drawX")),
-  drawY_(ctx->subVar("drawY")),
-  drawZ_(ctx->subVar("drawZ")),
   mesh_(0)
 {
     need_find.set(1);
@@ -392,7 +392,7 @@ FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
 
   double sval;
   MaterialHandle matl;
-  LatVolMesh::NodeIndex node;
+  typename MyField::mesh_type::Node::index_type node;
   int i, j, u_, v_;
   u_ = u_num; v_ = v_num;
 

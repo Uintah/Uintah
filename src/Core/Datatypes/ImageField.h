@@ -31,10 +31,9 @@
 #ifndef Datatypes_ImageField_h
 #define Datatypes_ImageField_h
 
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/Tensor.h>
-#include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
@@ -56,32 +55,32 @@ public:
   typedef Data const * const_iterator;
 
   iterator begin() { return &(*this)(0,0); }
-  iterator end() { return &((*this)(dim1()-1,dim2()-1))+1; }
+  iterator end() { return &((*this)(this->dim1()-1,this->dim2()-1))+1; }
   const_iterator begin() const { return &(*this)(0,0); }
-  const_iterator end() const { return &((*this)(dim1()-1,dim2()-1))+1; }
+  const_iterator end() const { return &((*this)(this->dim1()-1, this->dim2()-1))+1; }
 
   FData2d() : Array2<Data>() {}
   FData2d(int) : Array2<Data>() {} //default var sgi bug workaround.
   FData2d(const FData2d& data) { Array2<Data>::copy(data); }
   virtual ~FData2d();
   
-  const value_type &operator[](typename ImageMesh::Cell::index_type idx) const
-  { return operator()(0, idx); } 
-  const value_type &operator[](typename ImageMesh::Face::index_type idx) const
-  { return operator()(idx.j_, idx.i_); }
-  const value_type &operator[](typename ImageMesh::Edge::index_type idx) const
-  { return operator()(0, idx); }
-  const value_type &operator[](typename ImageMesh::Node::index_type idx) const
-  { return operator()(idx.j_, idx.i_); }
+  const value_type &operator[](const ImageMesh::Cell::index_type &idx) const
+  { return this->operator()(0, idx); } 
+  const value_type &operator[](const ImageMesh::Face::index_type &idx) const
+  { return this->operator()(idx.j_, idx.i_); }
+  const value_type &operator[](const ImageMesh::Edge::index_type &idx) const
+  { return this->operator()(0, idx); }
+  const value_type &operator[](const ImageMesh::Node::index_type &idx) const
+  { return this->operator()(idx.j_, idx.i_); }
 
-  value_type &operator[](typename ImageMesh::Cell::index_type idx)
-  { return operator()(0, idx); } 
-  value_type &operator[](typename ImageMesh::Face::index_type idx)
-  { return operator()(idx.j_, idx.i_); }
-  value_type &operator[](typename ImageMesh::Edge::index_type idx)
-  { return operator()(0, idx); }
-  value_type &operator[](typename ImageMesh::Node::index_type idx)
-  { return operator()(idx.j_, idx.i_); }
+  value_type &operator[](const ImageMesh::Cell::index_type &idx)
+  { return this->operator()(0, idx); } 
+  value_type &operator[](const ImageMesh::Face::index_type &idx)
+  { return this->operator()(idx.j_, idx.i_); }
+  value_type &operator[](const ImageMesh::Edge::index_type &idx)
+  { return this->operator()(0, idx); }
+  value_type &operator[](const ImageMesh::Node::index_type &idx)
+  { return this->operator()(idx.j_, idx.i_); }
 
   void resize(const ImageMesh::Node::size_type &size)
   { Array2<Data>::resize(size.j_, size.i_); }
@@ -92,7 +91,7 @@ public:
   void resize(const ImageMesh::Cell::size_type &size)
   { Array2<Data>::resize(1, size); }
 
-  unsigned int size() const { return dim1() * dim2(); }
+  unsigned int size() const { return this->dim1() * this->dim2(); }
 
   static const string type_name(int n = -1);
 };
@@ -207,12 +206,12 @@ ImageField<Data>::io(Piostream &stream)
   stream.end_class();                                                         
   if (version < 2) {
     FData2d<Data> temp;
-    temp.copy(fdata());
-    resize_fdata();
+    temp.copy(this->fdata());
+    this->resize_fdata();
     int i, j;
-    for (i=0; i<fdata().dim1(); i++)
-      for (j=0; j<fdata().dim2(); j++)
-	fdata()(i,j)=temp(j,i);
+    for (i=0; i<this->fdata().dim1(); i++)
+      for (j=0; j<this->fdata().dim2(); j++)
+	this->fdata()(i,j)=temp(j,i);
   }  
 }
 

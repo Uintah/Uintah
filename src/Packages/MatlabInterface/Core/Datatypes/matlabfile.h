@@ -1,29 +1,29 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 
@@ -64,10 +64,10 @@
 #define JGS_MATLABIO_MATLABFILE_H 1
 
 
-#include "matfilebase.h" 
-#include "matfile.h"
-#include "matfiledata.h"
-#include "matlabarray.h"
+#include <Packages/MatlabInterface/Core/Datatypes/matfilebase.h>
+#include <Packages/MatlabInterface/Core/Datatypes/matfile.h>
+#include <Packages/MatlabInterface/Core/Datatypes/matfiledata.h>
+#include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
 
 #include <sgi_stl_warnings_off.h> 
 #include <vector>
@@ -78,63 +78,62 @@
  
 namespace MatlabIO {
 
-
-class matlabfile : public matfile {
+  class matlabfile : public matfile {
   
   private:
-	// matrixaddress is a vector of offsets
-	// where the different matrices are stored
-	// matrixname is a vector of the same length
-	// storing the name of these matrices
-	
-	// NOTE: These fields are only available for
-	// read access
+    // matrixaddress is a vector of offsets
+    // where the different matrices are stored
+    // matrixname is a vector of the same length
+    // storing the name of these matrices
+        
+    // NOTE: These fields are only available for
+    // read access
     std::vector<long> matrixaddress_;
-	std::vector<std::string> matrixname_;
-	
+    std::vector<std::string> matrixname_;
+        
   private:
     void importmatlabarray(matlabarray& ma,int mode);
     void exportmatlabarray(matlabarray& ma); 
     mitype converttype(mxtype type);
-	mxtype convertclass(mlclass mclass,mitype type);
-	  
+    mxtype convertclass(mlclass mclass,mitype type);
+          
   public:
     // constructors
     matlabfile();
     matlabfile(std::string filename,std::string accessmode);
-	virtual ~matlabfile();
+    virtual ~matlabfile();
   
     // open and close a file (not needed at this point)
-	// access mode is "r" or "w", a combination is not supported yet
+    // access mode is "r" or "w", a combination is not supported yet
     void open(std::string filename,std::string accessmode);
     void close();
 
     // functions for scanning through the contents of a matlab file
-	// getnummatlabarrays() gets the number of arrays stored in the file
-	// and getmatlabarrayinfo() loads the matrix header but not the data
-	// inside, it does read the headers of sub matrices, getmatlabarrayshortinfo()
-	// on the other hand only reads the header of the top level matlabarray
-	// (no submatrices are read)
+    // getnummatlabarrays() gets the number of arrays stored in the file
+    // and getmatlabarrayinfo() loads the matrix header but not the data
+    // inside, it does read the headers of sub matrices, getmatlabarrayshortinfo()
+    // on the other hand only reads the header of the top level matlabarray
+    // (no submatrices are read)
     long getnummatlabarrays();
 
     matlabarray getmatlabarrayshortinfo(long matrixindex);
-	matlabarray getmatlabarrayshortinfo(std::string name);
+    matlabarray getmatlabarrayshortinfo(std::string name);
 
     matlabarray getmatlabarrayinfo(long matrixindex);
-	matlabarray getmatlabarrayinfo(std::string name);
-	
-	// function reading matrices
+    matlabarray getmatlabarrayinfo(std::string name);
+        
+    // function reading matrices
     matlabarray getmatlabarray(long matrixindex);
-	matlabarray getmatlabarray(std::string name);
+    matlabarray getmatlabarray(std::string name);
 
 
     // function writing the matrices
-	// A matrix name needs to be added. This the name of the object
-	// as it appears in matlab
+    // A matrix name needs to be added. This the name of the object
+    // as it appears in matlab
     void putmatlabarray(matlabarray& ma,std::string matrixname);
     
-};
+  };
 
-}
+} // end namespace MatlabIO
 
 #endif

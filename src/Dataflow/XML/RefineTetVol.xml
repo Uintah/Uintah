@@ -50,7 +50,7 @@ Note: simplification is not yet implemented.
       <p>
 The output field is a cell centered refined version of the input
 field. The data indicates the current subdivision level for that tet.
-Use <modref package="SCIRun" name="ChangeFieldDataAt"/> and <modref package="SCIRun" name="DirectInterpolate"/> to get data values for
+Use <modref package="SCIRun" name="ChangeFieldBasis"/> and <modref package="SCIRun" name="DirectMapping"/> to get data values for
 calculation.
       </p>
       <p>

@@ -39,10 +39,9 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 
-#include <Core/Volume/Utils.h>
 #include <Core/Volume/VideoCardInfo.h>
-#include <Core/Volume/Texture.h>
 #include <Dataflow/Ports/TexturePort.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Algorithms/Visualization/TextureBuilderAlgo.h>
 #include <Core/Util/DebugStream.h>
 
@@ -125,12 +124,6 @@ TextureBuilder::execute()
   FieldIPort* igfield = (FieldIPort*)get_iport("Gradient Field");
   TextureOPort* otexture = (TextureOPort *)get_oport("Texture");
 
-  if (!ivfield)
-  {
-    error("Unable to initialize input ports.");
-    return;
-  }
-
   FieldHandle vfield;
   ivfield->get(vfield);
   if (!vfield.get_rep())
@@ -152,29 +145,32 @@ TextureBuilder::execute()
     igfield->get(gfield);
     if (gfield.get_rep())
     {
-#ifndef HAVE_AVR_SUPPORT
-      // TODO: Runtime check, change message to reflect that.
-      warning("This build does not support advanced volume rendering.  The gradient field will be ignored.");
-      gfield = 0;
-#else
-      if (gfield->generation != gfield_last_generation_)
+      if (!ShaderProgramARB::shaders_supported())
       {
-        // new field
-        if (!new_gfield(gfield)) return;
-        gfield_last_generation_ = gfield->generation;
+        // TODO: Runtime check, change message to reflect that.
+        warning("This machine does not support advanced volume rendering.  The gradient field will be ignored.");
+        gfield = 0;
       }
-      // this field must share a mesh and must have the same basis_order.
-      if (vfield->basis_order() != gfield->basis_order())
+      else
       {
-	error("both input fields must have the same basis order.");
-	return;
+        if (gfield->generation != gfield_last_generation_)
+        {
+          // new field
+          if (!new_gfield(gfield)) return;
+          gfield_last_generation_ = gfield->generation;
+        }
+        // this field must share a mesh and must have the same basis_order.
+        if (vfield->basis_order() != gfield->basis_order())
+        {
+          error("both input fields must have the same basis order.");
+          return;
+        }
+        if (vfield->mesh().get_rep() != gfield->mesh().get_rep())
+        {
+          error("both input fields must share a mesh.");
+          return;
+        }
       }
-      if (vfield->mesh().get_rep() != gfield->mesh().get_rep())
-      {
-	error("both input fields must share a mesh.");
-	return;
-      }
-#endif
     }
   }
 
@@ -261,13 +257,18 @@ TextureBuilder::new_gfield(FieldHandle gfield)
   ei = gfld->fdata().end();
   double gminval = std::numeric_limits<double>::max();
   double gmaxval = -gminval;
+  // Moved sqrt out of loop, do after.
   while (bi != ei)
   {
-    Vector v = *bi;
-    double g = v.length();
+    const double g = (*bi).length2();
     if (g < gminval) gminval = g;
     if (g > gmaxval) gmaxval = g;
     ++bi;
+  }
+  if (gmaxval >= 0)
+  {
+    gminval = sqrt(gminval);
+    gmaxval = sqrt(gmaxval);
   }
   if (!gui_fixed_.get())
   {

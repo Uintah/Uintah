@@ -101,7 +101,7 @@ template <class T> Linear3DPWI<T>::Linear3DPWI(const Array1<double>& pts, const 
 
 template <class T> inline bool Linear3DPWI<T>::get_value(double w, T& res){
   int i;
-  if (data_valid && (i=get_interval(w))>=0){
+  if (this->data_valid && (i = this->get_interval(w))>=0){
     res=T(X[i].a+X[i].b*w, Y[i].a+Y[i].b*w, Z[i].a+Z[i].b*w);
     return true;
   }  
@@ -112,17 +112,17 @@ template <class T> inline bool Linear3DPWI<T>::get_value(double w, T& res){
 // takes sorted array of points
 template <class T> bool Linear3DPWI<T>::set_data(const Array1<double>& pts, const Array1<T>& vals){
   int sz=0;
-  reset();
-  if (fill_data(pts) && (sz=points.size())>1){
+  this->reset();
+  if (this->fill_data(pts) && (sz = this->points.size())>1){
     X.resize(sz);
     Y.resize(sz);
     Z.resize(sz);
     
     double lb, rb, delta;
 
-    for (int i=0; i<points.size()-1; i++){
-      lb=points[i];
-      rb=points[i+1];
+    for (int i=0; i<this->points.size()-1; i++){
+      lb=this->points[i];
+      rb=this->points[i+1];
       delta=rb-lb;
       X[i].a=(vals[i].x()*rb-vals[i+1].x()*lb)/delta;
       X[i].b=(vals[i+1].x()-vals[i].x())/delta;
@@ -131,11 +131,11 @@ template <class T> bool Linear3DPWI<T>::set_data(const Array1<double>& pts, cons
       Z[i].a=(vals[i].z()*rb-vals[i+1].z()*lb)/delta;
       Z[i].b=(vals[i+1].z()-vals[i].z())/delta;
     }
-    return data_valid=true;
+    return this->data_valid=true;
   }
   else{
-    reset();
-    return data_valid=false;
+    this->reset();
+    return this->data_valid=false;
   }
 }
 

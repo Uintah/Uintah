@@ -32,7 +32,7 @@
 #ifndef ColorMap2_h
 #define ColorMap2_h
 
-#include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/PropertyManager.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Thread/Mutex.h>
 #include <vector>
@@ -44,26 +44,29 @@ typedef LockingHandle<CM2Widget> CM2WidgetHandle;
 
 using std::vector;
 
-class ColorMap2 : public SCIRun::Datatype
+class ColorMap2 : public PropertyManager
 {
 public:
   ColorMap2();
+  ColorMap2(const ColorMap2 &copy);
   ColorMap2(const vector<CM2WidgetHandle>& widgets,
-	    bool updating, bool faux);
+	    bool updating, 
+	    bool selected,
+	    pair<float,float> value_range );
   virtual ~ColorMap2();
 
-  inline vector<CM2WidgetHandle>& widgets() { return widgets_; }
-  
-  inline bool updating() { return updating_; }
-  inline bool faux() { return faux_; }
-
-  virtual void io(SCIRun::Piostream&);
-  static SCIRun::PersistentTypeID type_id;
+  vector<CM2WidgetHandle> &		widgets() { return widgets_; }
+  bool &				updating() { return updating_; }
+  int &					selected() { return selected_; }
+  pair<float, float> &			value_range() { return value_range_; }
+  virtual void				io(SCIRun::Piostream&);
+  static SCIRun::PersistentTypeID	type_id;
 
 protected:
-  bool updating_;
-  bool faux_;
-  vector<CM2WidgetHandle> widgets_;
+  bool					updating_;
+  vector<CM2WidgetHandle>		widgets_;
+  int					selected_;
+  pair<float, float>			value_range_;
 };
 
 typedef SCIRun::LockingHandle<ColorMap2> ColorMap2Handle;

@@ -55,6 +55,13 @@
 # REMEMBER, if these variables are set in your shell environment, they will
 # override the valuse in this file.
 
+### SCIRUN_RCFILE_VERSION = [string]
+#   The version number of this .scirunrc file.
+#   Used in determining if the users existing.scirunrc 
+#   needs to be updated upon starup of SCIRun.
+SCIRUN_RCFILE_VERSION = 1.24.1.1
+
+
 # The MALLOC_* environment variables can be set in order to help
 # monitor and control the allocation of memory.  The environment
 # variables are ONLY USED if DISABLE_SCI_MALLOC was NOT defined when
@@ -118,7 +125,7 @@
 
 ### SCIRUN_DATA = [path]
 #   Directory location that 'Reader' modules will default to.
-# SCIRUN_DATA = /usr/sci/data/SCIRunData/1.20.1
+# SCIRUN_DATA = /usr/sci/data/SCIRunData/$(SCIRUN_VERISON)
 
 
 ### SCIRUN_DATASET = [name]
@@ -127,8 +134,8 @@
 
 
 ### SCIRUN_NET_SUBSTITUTE_DATADIR = [boolean]
-#   If true, module filename variables will be automatically substitute
-#   SCIRUN_DATADIR and SCIRUN_DATASET in saved .net files.
+#   If true, module filename variables will be automatically substituted for
+#   'SCIRUN_DATADIR' and 'SCIRUN_DATASET' in saved .net files.
 # SCIRUN_NET_SUBSTITUTE_DATADIR = false
 
 
@@ -152,6 +159,12 @@ SCIRUN_FONT_PATH = $(SCIRUN_SRCDIR)/pixmaps
 ### SCIRUN_TMP_DIR = [path]
 #   Directory for writting temporary files - must be world read/writeable
 SCIRUN_TMP_DIR = /tmp
+
+### SCIRUN_SERV_TMP_DIR = [path]
+#   Directory for writting temporary files - must be world read/writeable
+#   This is one is used by the external application interface. Both scirun
+#   and scirunremote use this one to exchange files.
+SCIRUN_SERV_TMP_DIR = /tmp
 
 
 ### SCI_DBXCOMMAND = [command]
@@ -233,13 +246,34 @@ SCIRUN_TMP_DIR = /tmp
 # FLIP_CAM_MANIP = false
 
 
-### SCIRUN_DRAWARRAYS_DISABLE
+### SCIRUN_NO_PORT_CACHING = [boolean]
+#   If true then SCIRun will no longer cache intermediate results in
+#   its ports.  This will break interactive SCIRun usage as the
+#   program will be confused about which modules it needs to reexecute
+#   when a network is changed.  However it can save memory usage for
+#   batch-type operation.  Smarter caching should deprecate this option
+#   in the future.
+# SCIRUN_NO_PORT_CACHING = false
+
+
+### SCIRUN_DRAWARRAYS_DISABLE = [boolean]
 #   Turns off use of glDrawArrays.  This should be set to true if you wish
 #   to avoid drawing artifacts on _ATI_ Radeon cards under Linux or to fix
 #   cross-platform remote display problems.
 # SCIRUN_DRAWARRAYS_DISABLE = false
 
-### SCIRUN_MPEG_LICENSE_ACCEPT
+
+### SCIRUN_DISABLE_PBUFFERS = [boolean]
+#   Turns off the use of pbuffers even if they are supported by the
+#   platform.  pbuffers are used to save images from the viewer and
+#   for some background tasks related to volume rendering.  However on
+#   Linux with ATI they seem to have OpenGL state issues in that
+#   transparency is disabled and volume rendering can lock up the
+#   screen.
+# SCIRUN_DISABLE_PBUFFERS = false
+
+
+### SCIRUN_MPEG_LICENSE_ACCEPT = [boolean]
 #   License information describing the mpeg_encode software can be found
 #   in SCIRun's Thirdparty directory, in the mpeg_encode/README file:
 #   This software is freely distributed.  That means, you may use it
@@ -284,3 +318,4 @@ SCIRUN_GUI_MoveGuiToMouse = on
 # LOGNAME
 # USER
 # SCI_DEBUG
+
