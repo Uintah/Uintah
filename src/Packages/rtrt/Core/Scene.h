@@ -52,9 +52,6 @@ enum AmbientType { Global_Ambient = 0, Constant_Ambient, Arc_Ambient,
 class Scene : public SCIRun::Persistent {
   
 public:
-  Scene(Object*, const Camera&, Image*, Image*, const Color& bgcolor,
-	const Color& cdown, const Color& cup, const Plane& groundplane,
-	double ambientscale, AmbientType ambient_mode=Constant_Ambient);
   Scene(Object*, const Camera&, const Color& bgcolor,
 	const Color& cdown, const Color& cup, const Plane& groundplane,
 	double ambientscale, AmbientType ambient_mode=Constant_Ambient);
@@ -108,9 +105,11 @@ public:
   inline void get_bgcolor( const Vector& v, Color& result ) const {
     background->color_in_direction( v, result );
   }
-  
+
+  // This function is only called to replace the old background that
+  // was created in init.
   inline void set_background_ptr( Background* ptr ) {
-    background = ptr;
+    orig_background = background = ptr;
   }
   
   inline void set_ambient_environment_map ( EnvironmentMapBackground *ptr ) {
@@ -126,6 +125,10 @@ public:
 
   inline void set_bgcolor(const Color& c) {
     background = new ConstantBackground(c);
+  }
+  
+  inline void set_original_bg() {
+    background = orig_background;
   }
   
   inline const Color& get_cdown() const {
@@ -341,6 +344,7 @@ private:
   Camera* camera1;
   Image* image0;
   Image* image1;
+  Background* orig_background;
   Background* background;
   Background* ambient_environment_map;
 

@@ -62,17 +62,16 @@ Scene::Scene() :
   camera1(0),
   image0(0),
   image1(0),
-  background(0),
+  background(0), orig_background(0),
   ambient_environment_map(0)
 { mainGroup_ = new Group(); }
 
-Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
-	     const Color& bgcolor,
+Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
              const Color& cdown,
              const Color& cup,
-	     const Plane& groundplane, 
+	     const Plane& groundplane,
 	     double ambientscale,
-	     AmbientType ambient_mode) : 
+	     AmbientType ambient_mode) :     
   work("frame tiles"),
   maxdepth(0),
   base_threshold(0),
@@ -90,21 +89,34 @@ Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
   ref_cnt(0),
   lock("rtrt::Scene lock"),
   soundVolume_(50),
-  obj(0), 
-  mainGroup_(0), 
+  obj(ob), 
+  mainGroup_(0),
   camera0(camera0), 
-  image0(image0), 
-  image1(image1),
+  image0(0), 
+  image1(0),
   origCup_(cup), 
   origCDown_(cdown),
   cup(cup), 
   cdown(cdown), 
-  groundplane(groundplane),
+  groundplane(groundplane), 
   transmissionMode_(false)
 {
   mainGroup_ = new Group();
   mainGroup_->add( ob );
   init(cam, bgcolor);
+}
+
+Scene::~Scene()
+{
+  cerr << "Scene destroyed!\n";
+  delete lightsGroup_;
+  delete mainGroup_;
+  delete mainGroupWithLights_;
+  delete permanentLightsGroup_;
+  delete camera0;
+  delete camera1;
+  delete image0;
+  delete image1;
 }
 
 void Scene::init(const Camera& cam, const Color& bgcolor)
@@ -124,7 +136,7 @@ void Scene::init(const Camera& cam, const Color& bgcolor)
   xtilesize=32;
   ytilesize=2;
   shadowobj=0;
-  background = new ConstantBackground( bgcolor );
+  orig_background = background = new ConstantBackground( bgcolor );
   animate=true;
   hotSpotMode_ = 0;
   frameno=0;
@@ -173,59 +185,6 @@ void
 Scene::select_shadow_mode( ShadowType st )
 {
   shadow_mode = st;
-}
-
-Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
-             const Color& cdown,
-             const Color& cup,
-	     const Plane& groundplane,
-	     double ambientscale,
-	     AmbientType ambient_mode) :     
-  work("frame tiles"),
-  maxdepth(0),
-  base_threshold(0),
-  full_threshold(0),
-  xoffset(0),
-  yoffset(0),
-  xtilesize(0),
-  ytilesize(0),
-  no_aa(false),
-  shadowobj(0),
-  stereo(0),
-  animate(0),
-  ambient_mode(ambient_mode),
-  ambientScale_(ambientscale),
-  ref_cnt(0),
-  lock("rtrt::Scene lock"),
-  soundVolume_(50),
-  obj(ob), 
-  mainGroup_(0),
-  camera0(camera0), 
-  image0(0), 
-  image1(0),
-  origCup_(cup), 
-  origCDown_(cdown),
-  cup(cup), 
-  cdown(cdown), 
-  groundplane(groundplane), 
-  transmissionMode_(false)
-{
-  mainGroup_ = new Group();
-  mainGroup_->add( ob );
-  init(cam, bgcolor);
-}
-
-Scene::~Scene()
-{
-  cerr << "Scene destroyed!\n";
-    delete lightsGroup_;
-    delete mainGroup_;
-    delete mainGroupWithLights_;
-    delete permanentLightsGroup_;
-    delete camera0;
-    delete camera1;
-    delete image0;
-    delete image1;
 }
 
 void Scene::refill_work(int which, int nworkers)
