@@ -6,7 +6,8 @@ SRCDIR   := Packages/Uintah/CCA/Components/Models
 SRCS	+= \
        $(SRCDIR)/ModelFactory.cc
 
-SUBDIRS := $(SRCDIR)/test
+SUBDIRS := $(SRCDIR)/test \
+           $(SRCDIR)/HEChem
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := 
