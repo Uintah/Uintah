@@ -23,8 +23,8 @@
 #include <GL/glu.h>
 #include <GL/glx.h>
 #include <SCICore/Geom/GeomOpenGL.h>
-#include <../../../dmw/itcltk-8.0.4/include/tcl.h>
-#include <../../../dmw/itcltk-8.0.4/include/tk.h>
+#include <tcl.h>
+#include <tk.h>
 #undef Colormap
 #include <PSECore/Dataflow/Module.h>
 #include <DaveW/Datatypes/CS684/ImageR.h>
