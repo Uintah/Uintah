@@ -88,7 +88,7 @@ void Array2<T>::initialize(const T& t)
 template<class T>
 void Pio(Piostream& stream, Array2<T>& data)
 {
-    int version=stream.begin_class("Array2", Array2_VERSION);
+    stream.begin_class("Array2", Array2_VERSION);
     if(stream.reading()){
 	// Allocate the array...
 	int d1, d2;
@@ -119,4 +119,5 @@ template<class T>
 Array2<T>& Array2<T>::operator=(const Array2<T>&)
 {
     NOT_FINISHED("Array2::operator=");
+    return *this;
 }

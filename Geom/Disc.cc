@@ -13,6 +13,7 @@
 
 #include <Geom/Disc.h>
 #include <Classlib/NotFinished.h>
+#include <Classlib/String.h>
 #include <Geom/GeomRaytracer.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
@@ -21,6 +22,13 @@
 #include <Malloc/Allocator.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
+
+Persistent* make_GeomDisc()
+{
+    return new GeomDisc;
+}
+
+PersistentTypeID GeomDisc::type_id("GeomDisc", "GeomObj", make_GeomDisc);
 
 GeomDisc::GeomDisc(int nu, int nv)
 : GeomObj(), n(0,0,1), rad(1), nu(nu), nv(nv)
@@ -152,4 +160,18 @@ void GeomDisc::intersect(const Ray& ray, Material* matl,
 Vector GeomDisc::normal(const Point&, const Hit&)
 {
     return n;
+}
+
+#define GEOMDISC_VERSION 1
+
+void GeomDisc::io(Piostream& stream)
+{
+    stream.begin_class("GeomDisc", GEOMDISC_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, cen);
+    Pio(stream, n);
+    Pio(stream, rad);
+    Pio(stream, nu);
+    Pio(stream, nv);
+    stream.end_class();
 }

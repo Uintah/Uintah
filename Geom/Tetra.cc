@@ -13,9 +13,17 @@
 
 #include <Geom/Tetra.h>
 #include <Classlib/NotFinished.h>
+#include <Classlib/String.h>
 #include <Geom/Line.h>
 #include <Geometry/BBox.h>
 #include <Malloc/Allocator.h>
+
+Persistent* make_GeomTetra()
+{
+    return new GeomTetra(Point(0,0,0), Point(0,0,1), Point(0,1,0), Point(1,0,0));
+}
+
+PersistentTypeID GeomTetra::type_id("GeomTetra", "GeomObj", make_GeomTetra);
 
 GeomTetra::GeomTetra(const Point& p1, const Point& p2,
 		     const Point& p3, const Point& p4)
@@ -76,4 +84,17 @@ void GeomTetra::intersect(const Ray&, Material*,
 			  Hit&)
 {
     NOT_FINISHED("GeomTetra::intersect");
+}
+
+#define GEOMTETRA_VERSION 1
+
+void GeomTetra::io(Piostream& stream)
+{
+    stream.begin_class("GeomTetra", GEOMTETRA_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, p1);
+    Pio(stream, p2);
+    Pio(stream, p3);
+    Pio(stream, p4);
+    stream.end_class();
 }

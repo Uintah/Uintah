@@ -12,6 +12,7 @@
  */
 
 #include <Geom/Pt.h>
+#include <Classlib/String.h>
 #include <Geom/GeomRaytracer.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
@@ -20,6 +21,13 @@
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 #include <Classlib/NotFinished.h>
+
+Persistent* make_GeomPts()
+{
+    return new GeomPts(0);
+}
+
+PersistentTypeID GeomPts::type_id("GeomPts", "GeomObj", make_GeomPts);
 
 GeomPts::GeomPts(const GeomPts &copy)
 : pts(copy.pts) {
@@ -71,4 +79,14 @@ Vector GeomPts::normal(const Point&, const Hit&)
 {
     NOT_FINISHED("Don't know the normal to a point -- returning (1,0,0)");
     return(Vector(1,0,0));
+}
+
+#define GEOMPTS_VERSION 1
+
+void GeomPts::io(Piostream& stream)
+{
+    stream.begin_class("GeomPts", GEOMPTS_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, pts);
+    stream.end_class();
 }

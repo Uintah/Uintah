@@ -12,17 +12,22 @@
  */
 
 #include <Geom/Container.h>
+#include <Classlib/String.h>
+
+PersistentTypeID GeomContainer::type_id("GeomContainer", "GeomObj", 0);
 
 GeomContainer::GeomContainer(GeomObj* child)
 : GeomObj(), child(child)
 {
-    child->set_parent(this);
+    if(child)
+	child->set_parent(this);
 }
 
 GeomContainer::GeomContainer(const GeomContainer& copy)
 : GeomObj(copy), child(copy.child->clone())
 {
-    child->set_parent(this);
+    if(child)
+	child->set_parent(this);
 }
 
 GeomContainer::~GeomContainer()
@@ -56,4 +61,14 @@ void GeomContainer::intersect(const Ray& ray, Material* matl,
 			      Hit& hit)
 {
     child->intersect(ray, matl, hit);
+}
+
+#define GEOMCONTAINER_VERSION 1
+
+void GeomContainer::io(Piostream& stream)
+{
+    stream.begin_class("GeomContainer", GEOMCONTAINER_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, child);
+    stream.end_class();
 }

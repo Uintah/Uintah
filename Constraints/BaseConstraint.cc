@@ -55,19 +55,25 @@ BaseConstraint::Priorities( const VPriority p1,
    Index p=0;
    
    if (p == varCount) return;
-   vars[p]->RegisterPriority(var_indexs[p++], p1);
+   vars[p]->RegisterPriority(var_indexs[p], p1);
+   p++;
    if (p == varCount) return;
-   vars[p]->RegisterPriority(var_indexs[p++], p2);
+   vars[p]->RegisterPriority(var_indexs[p], p2);
+   p++;
    if (p == varCount) return;
-   vars[p]->RegisterPriority(var_indexs[p++], p3);
+   vars[p]->RegisterPriority(var_indexs[p], p3);
+   p++;
    if (p == varCount) return;
-   vars[p]->RegisterPriority(var_indexs[p++], p4);
+   vars[p]->RegisterPriority(var_indexs[p], p4);
+   p++;
    if (p == varCount) return;
-   vars[p]->RegisterPriority(var_indexs[p++], p5);
+   vars[p]->RegisterPriority(var_indexs[p], p5);
+   p++;
    if (p == varCount) return;
-   vars[p]->RegisterPriority(var_indexs[p++], p6);
+   vars[p]->RegisterPriority(var_indexs[p], p6);
+   p++;
    if (p == varCount) return;
-   vars[p]->RegisterPriority(var_indexs[p++], p7);
+   vars[p]->RegisterPriority(var_indexs[p], p7);
 }
 
 
@@ -121,7 +127,7 @@ BaseConstraint::Satisfy( const Index, const Scheme, const Real, BaseVariable*&, 
 void
 BaseConstraint::print( ostream& os )
 {
-   int i;
+   unsigned int i;
 
    for (Index j=0; j < nschemes; j++) {
       os << name << " (" << SchemeString((Scheme)j) << ") (";
@@ -148,7 +154,7 @@ BaseConstraint::print( ostream& os )
 void
 BaseConstraint::printc( ostream& os, const Scheme scheme )
 {
-   int i;
+   unsigned int i;
 
    os << name << " (" << SchemeString(scheme) << ") (";
    os << "Called by " << callingMethod << ") (" << endl;

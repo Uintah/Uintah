@@ -13,11 +13,26 @@
 
 #include <Geom/Cone.h>
 #include <Classlib/NotFinished.h>
+#include <Classlib/String.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 #include <Malloc/Allocator.h>
+
+Persistent* make_GeomCone()
+{
+    return new GeomCone;
+}
+
+PersistentTypeID GeomCone::type_id("GeomCone", "GeomObj", make_GeomCone);
+
+Persistent* make_GeomCappedCone()
+{
+    return new GeomCappedCone(0,0);
+}
+
+PersistentTypeID GeomCappedCone::type_id("GeomCappedCone", "GeomObj", make_GeomCappedCone);
 
 GeomCone::GeomCone(int nu, int nv)
 : GeomObj(), bottom(0,0,0), top(0,0,1), bot_rad(1), top_rad(0),
@@ -145,6 +160,24 @@ void GeomCone::intersect(const Ray&, Material*,
     NOT_FINISHED("GeomCone::intersect");
 }
 
+#define GEOMCONE_VERSION 1
+
+void GeomCone::io(Piostream& stream)
+{
+    stream.begin_class("GeomCone", GEOMCONE_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, bottom);
+    Pio(stream, top);
+    Pio(stream, axis);
+    Pio(stream, bot_rad);
+    Pio(stream, top_rad);
+    Pio(stream, nu);
+    Pio(stream, nv);
+    if(stream.reading())
+	adjust();
+    stream.end_class();
+}
+
 // Capped Geometry
 
 GeomCappedCone::GeomCappedCone(int nu, int nv, int nvdisc1, int nvdisc2)
@@ -191,3 +224,13 @@ void GeomCappedCone::intersect(const Ray&, Material*,
     NOT_FINISHED("GeomCappedCone::intersect");
 }
 
+#define GEOMCAPPEDCONE_VERSION 1
+
+void GeomCappedCone::io(Piostream& stream)
+{
+    stream.begin_class("GeomCappedCone", GEOMCAPPEDCONE_VERSION);
+    GeomCone::io(stream);
+    Pio(stream, nvdisc1);
+    Pio(stream, nvdisc2);
+    stream.end_class();
+}

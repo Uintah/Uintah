@@ -8,6 +8,7 @@
 
 set auto_index(TYPEReader) "source $dir/Reader.tcl"
 set auto_index(ContourSetReader) "source $dir/ContourSetReader.tcl"
+set auto_index(GeomReader) "source $dir/GeomReader.tcl"
 set auto_index(MeshReader) "source $dir/MeshReader.tcl"
 set auto_index(MultiMeshReader) "source $dir/MultiMeshReader.tcl"
 set auto_index(PointsReader) "source $dir/PointsReader.tcl"

@@ -41,6 +41,9 @@ public:
 			    Array1<GeomObj*>& dontfree);
     virtual void intersect(const Ray& ray, Material*,
 			   Hit& hit);
+
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
 
 #endif /* SCI_Geom_RenderMode_h */

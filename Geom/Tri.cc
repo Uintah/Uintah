@@ -13,6 +13,7 @@
 
 #include <Geom/Tri.h>
 #include <Classlib/NotFinished.h>
+#include <Classlib/String.h>
 #include <Geom/GeomRaytracer.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
@@ -20,6 +21,13 @@
 #include <Malloc/Allocator.h>
 #include <Math/MinMax.h>
 #include <iostream.h>
+
+Persistent* make_GeomTri()
+{
+    return new GeomTri(Point(0,0,0), Point(1,0,0), Point(0,1,0));
+}
+
+PersistentTypeID GeomTri::type_id("GeomTri", "GeomObj", make_GeomTri);
 
 GeomTri::GeomTri(const Point& p1, const Point& p2, const Point& p3)
 : n(Cross(p3-p1, p2-p1))
@@ -211,4 +219,13 @@ int GeomTri::x_cross(double p1[2], double p2[2], double p[2])
 Vector GeomTri::normal(const Point&, const Hit&)
 {
     return n;
+}
+
+#define GEOMTRI_VERSION 1
+
+void GeomTri::io(Piostream& stream)
+{
+    stream.begin_class("GeomTri", GEOMTRI_VERSION);
+    GeomVertexPrim::io(stream);
+    stream.end_class();
 }

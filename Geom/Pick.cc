@@ -16,6 +16,13 @@
 #include <Malloc/Allocator.h>
 #include <Widgets/BaseWidget.h>
 
+Persistent* make_GeomPick()
+{
+    return new GeomPick(0,0);
+}
+
+PersistentTypeID GeomPick::type_id("GeomPick", "GeomObj", make_GeomPick);
+
 GeomPick::GeomPick(GeomObj* obj, Module* module)
 : GeomContainer(obj), module(module), cbdata(0),
   directions(6), widget(0), selected(0), ignore(0)
@@ -75,7 +82,7 @@ GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1, const Vector&
 GeomPick::GeomPick(const GeomPick& copy)
 : GeomContainer(copy), module(copy.module), cbdata(copy.cbdata), 
   directions(copy.directions), widget(copy.widget),
-  selected(copy.selected), highlight(copy.highlight), ignore(copy.ignore)
+  selected(copy.selected),  ignore(copy.ignore), highlight(copy.highlight)
 {
 }
 
@@ -174,3 +181,9 @@ void GeomPick::set_principal(const Vector& v1, const Vector& v2,
     directions[4]=v3;
     directions[5]=-v3;
 }
+
+void GeomPick::io(Piostream&)
+{
+    NOT_FINISHED("GeomPick::io");
+}
+

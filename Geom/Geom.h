@@ -16,6 +16,7 @@
 
 #include <Classlib/Array1.h>
 #include <Classlib/Handle.h>
+#include <Classlib/Persistent.h>
 #include <config.h>
 
 class BBox;
@@ -28,7 +29,7 @@ class Vector;
 class Point;
 class Ray;
 
-class GeomObj {
+class GeomObj : public Persistent {
 protected:
     GeomObj* parent;
 public:
@@ -63,6 +64,11 @@ public:
     virtual void intersect(const Ray& ray, Material* matl,
 			   Hit& hit)=0;
     virtual Vector normal(const Point& p, const Hit&);
+
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
+
+void Pio(Piostream&, GeomObj*&);
 
 #endif

@@ -75,6 +75,9 @@ public:
 #ifdef SCI_OPENGL
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
+
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
 
 #endif /* SCI_Geom_Pick_h */

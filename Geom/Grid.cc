@@ -13,9 +13,17 @@
 
 #include <Geom/Grid.h>
 #include <Classlib/NotFinished.h>
+#include <Classlib/String.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
 #include <Malloc/Allocator.h>
+
+Persistent* make_GeomGrid()
+{
+    return new GeomGrid(0,0,Point(0,0,0), Vector(1,0,0), Vector(0,0,1));
+}
+
+PersistentTypeID GeomGrid::type_id("GeomGrid", "GeomObj", make_GeomGrid);
 
 GeomGrid::GeomGrid(int nu, int nv, const Point& corner,
 		   const Vector& u, const Vector& v)
@@ -23,8 +31,7 @@ GeomGrid::GeomGrid(int nu, int nv, const Point& corner,
 {
     have_matls=0;
     have_normals=0;
-    w=Cross(u, v);
-    w.normalize();
+    adjust();
 }
 
 GeomGrid::GeomGrid(const GeomGrid& copy)
@@ -32,7 +39,14 @@ GeomGrid::GeomGrid(const GeomGrid& copy)
 {
 }
 
-GeomGrid::~GeomGrid() {
+GeomGrid::~GeomGrid()
+{
+}
+
+void GeomGrid::adjust()
+{
+    w=Cross(u, v);
+    w.normalize();
 }
 
 void GeomGrid::set(int i, int j, double v)
@@ -133,11 +147,34 @@ void GeomGrid::intersect(const Ray&, Material*, Hit&)
     NOT_FINISHED("GeomGrid::intersect");
 }
 
+#define GEOMGRID_VERSION 1
+
+void GeomGrid::io(Piostream& stream)
+{
+    stream.begin_class("GeomGrid", GEOMGRID_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, verts);
+    Pio(stream, have_matls);
+    Pio(stream, matls);
+    Pio(stream, have_normals);
+    Pio(stream, normals);
+    Pio(stream, corner);
+    Pio(stream, u);
+    Pio(stream, v);
+    if(stream.reading())
+	adjust();
+    stream.end_class();
+}    
+
 #ifdef __GNUG__
 #include <Classlib/Array2.cc>
 
 template class Array2<double>;
 template class Array2<MaterialHandle>;
 template class Array2<Vector>;
+
+template void Pio(Piostream&, Array2<double>&);
+template void Pio(Piostream&, Array2<MaterialHandle>&);
+template void Pio(Piostream&, Array2<Vector>&);
 
 #endif

@@ -39,6 +39,9 @@ public:
     virtual void preprocess();
     virtual void intersect(const Ray& ray, Material* matl,
 			   Hit& hit);
+
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };    
 
 #endif

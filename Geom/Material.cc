@@ -22,6 +22,13 @@ static Persistent* make_Material()
 
 PersistentTypeID Material::type_id("Material", "Persistent", make_Material);
 
+Persistent* make_GeomMaterial()
+{
+    return new GeomMaterial(0, MaterialHandle(0));
+}
+
+PersistentTypeID GeomMaterial::type_id("GeomMaterial", "GeomObj", make_GeomMaterial);
+
 Material::Material()
 : ref_cnt(0), ambient(0,0,0), diffuse(0,0,0), specular(0,0,0),
   shininess(0), emission(0,0,0), reflectivity(0.5),
@@ -124,6 +131,16 @@ void GeomMaterial::intersect(const Ray& ray, Material* /* old_matl */,
     child->intersect(ray, matl.get_rep(), hit);
 }
 
+#define GEOMMATERIAL_VERSION 1
+
+void GeomMaterial::io(Piostream& stream)
+{
+    stream.begin_class("GeomMaterial", GEOMMATERIAL_VERSION);
+    GeomContainer::io(stream);
+    Pio(stream, matl);
+    stream.end_class();
+}
+
 #ifdef __GNUG__
 
 #include <Classlib/LockingHandle.cc>
@@ -132,5 +149,8 @@ template class LockingHandle<Material>;
 
 #include <Classlib/Array1.cc>
 template class Array1<MaterialHandle>;
+
+template void Pio(Piostream&, Array1<MaterialHandle>&);
+template void Pio(Piostream&, MaterialHandle&);
 
 #endif

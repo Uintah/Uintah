@@ -38,6 +38,13 @@ itcl_class Roe {
 	wm minsize $w 100 100
 	frame $w.menu -relief raised -borderwidth 3
 	pack $w.menu -fill x
+	menubutton $w.menu.file -text "File" -underline 0 \
+		-menu $w.menu.file.menu
+	menu $w.menu.file.menu
+	$w.menu.file.menu add command -label "Load..." -underline 0 \
+		-command "$this makeLoadPopup"
+	$w.menu.file.menu add command -label "Save..." -underline 0 \
+		-command "$this makeSavePopup"
 	menubutton $w.menu.renderer -text "Renderer" -underline 0 \
 		-menu $w.menu.renderer.menu
 	menu $w.menu.renderer.menu
@@ -97,6 +104,7 @@ itcl_class Roe {
 		-command "$w.dialbox connect"
 	$w.menu.dialbox.menu add command -label "Camera..." -underline 0 \
 		-command "$w.dialbox2 connect"
+	pack $w.menu.file -side left
 	pack $w.menu.edit -side left
 	pack $w.menu.renderer -side left
 	pack $w.menu.spawn -side left
@@ -500,6 +508,10 @@ itcl_class Roe {
     }
     method fov {amt} {
 	puts "fov by $amt"
+    }
+
+    method makeSavePopup {} {
+	$this-c saveall "test1.geom"
     }
 }
 

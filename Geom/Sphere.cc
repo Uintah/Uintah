@@ -12,6 +12,7 @@
  */
 
 #include <Geom/Sphere.h>
+#include <Classlib/String.h>
 #include <Geom/GeomRaytracer.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
@@ -20,6 +21,13 @@
 #include <Malloc/Allocator.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
+
+Persistent* make_GeomSphere()
+{
+    return new GeomSphere;
+}
+
+PersistentTypeID GeomSphere::type_id("GeomSphere", "GeomObj", make_GeomSphere);
 
 GeomSphere::GeomSphere(int nu, int nv)
 : GeomObj(), cen(0,0,0), rad(1), nu(nu), nv(nv)
@@ -150,3 +158,15 @@ Vector GeomSphere::normal(const Point& hitp, const Hit&)
     return normal;
 }
 
+#define GEOMSPHERE_VERSION 1
+
+void GeomSphere::io(Piostream& stream)
+{
+    stream.begin_class("GeomSphere", GEOMSPHERE_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, cen);
+    Pio(stream, rad);
+    Pio(stream, nu);
+    Pio(stream, nv);
+    stream.end_class();
+}

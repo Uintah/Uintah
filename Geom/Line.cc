@@ -13,10 +13,18 @@
 
 #include <Geom/Line.h>
 #include <Classlib/NotFinished.h>
+#include <Classlib/String.h>
 #include <Classlib/TrivialAllocator.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
 #include <Malloc/Allocator.h>
+
+Persistent* make_GeomLine()
+{
+    return new GeomLine(Point(0,0,0), Point(1,1,1));
+}
+
+PersistentTypeID GeomLine::type_id("GeomLine", "GeomObj", make_GeomLine);
 
 static TrivialAllocator Line_alloc(sizeof(GeomLine));
 
@@ -77,4 +85,15 @@ void GeomLine::intersect(const Ray&, Material*,
 			 Hit&)
 {
     NOT_FINISHED("GeomLine::intersect");
+}
+
+#define GEOMLINE_VERSION 1
+
+void GeomLine::io(Piostream& stream)
+{
+    stream.begin_class("GeomLine", GEOMLINE_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, p1);
+    Pio(stream, p2);
+    stream.end_class();
 }

@@ -186,9 +186,3 @@ void GeomTri::objdraw(DrawInfoX11* di, Material*)
 		 CoordModeOrigin);
 }
 
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-template class Array1<GeomObj*>;
-
-#endif

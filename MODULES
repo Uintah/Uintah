@@ -33,6 +33,7 @@ SelectMesh
 
 Category: Readers
 ContourSetReader
+GeomReader
 MeshReader
 MultimeshReader
 PointsReader

@@ -19,7 +19,7 @@
 #include <Classlib/Array1.h>
 #include <Geometry/Point.h>
 
-struct GeomVertex {
+struct GeomVertex : public Persistent {
     Point p;
     GeomVertex(const Point& p);
     GeomVertex(const GeomVertex&);
@@ -31,6 +31,9 @@ struct GeomVertex {
     virtual void emit_matl(DrawInfoOpenGL* di);
     virtual void emit_normal(DrawInfoOpenGL* di);
 #endif
+
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
 
 struct GeomNVertex : public GeomVertex {
@@ -43,6 +46,9 @@ struct GeomNVertex : public GeomVertex {
     virtual void emit_all(DrawInfoOpenGL* di);
     virtual void emit_normal(DrawInfoOpenGL* di);
 #endif
+
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
 
 struct GeomNMVertex : public GeomNVertex {
@@ -56,6 +62,9 @@ struct GeomNMVertex : public GeomNVertex {
     virtual void emit_all(DrawInfoOpenGL* di);
     virtual void emit_matl(DrawInfoOpenGL* di);
 #endif
+
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
 
 struct GeomMVertex : public GeomVertex {
@@ -68,7 +77,12 @@ struct GeomMVertex : public GeomVertex {
     virtual void emit_all(DrawInfoOpenGL* di);
     virtual void emit_matl(DrawInfoOpenGL* di);
 #endif
+
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
+
+void Pio(Piostream&, GeomVertex*&);
 
 class GeomVertexPrim : public GeomObj {
 public:
@@ -86,6 +100,9 @@ public:
     void add(const Point&, const MaterialHandle&);
     void add(const Point&, const Vector&, const MaterialHandle&);
     void add(GeomVertex*);
+
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
 
 #endif /* SCI_Geom_VertexPrim_h */

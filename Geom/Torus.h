@@ -52,6 +52,9 @@ public:
     virtual void intersect(const Ray& ray, Material*,
 			   Hit& hit);
     virtual Vector normal(const Point& p, const Hit&);
+
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
 
 class GeomTorusArc : public GeomTorus {
@@ -79,6 +82,9 @@ public:
 #ifdef SCI_OPENGL
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
+
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
 
 

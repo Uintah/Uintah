@@ -20,6 +20,7 @@
 #include <Classlib/Timer.h>
 #include <Math/Expon.h>
 #include <Math/MiscMath.h>
+#include <Classlib/Pstreams.h>
 #include <Geometry/BBox.h>
 #include <Geometry/Transform.h>
 #include <Geometry/Vector.h>
@@ -43,11 +44,12 @@ const int MODEBUFSIZE = 100;
 static DebugSwitch autoview_sw("Roe", "autoview");
 
 Roe::Roe(Salmon* s, const clString& id)
-: manager(s), id(id),
+: manager(s),
   view("view", id, this),
   homeview(Point(.55, .5, 0), Point(.55, .5, .5), Vector(0,1,0), 25),
   bgcolor("bgcolor", id, this), shading("shading", id, this),
-  do_stereo("do_stereo", id, this), tracker_state("tracker_state", id, this)
+  do_stereo("do_stereo", id, this), tracker_state("tracker_state", id, this),
+  id(id)
 {
     bgcolor.set(Color(0,0,0));
     view.set(homeview);
@@ -629,6 +631,8 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	}
     } else if(args[1] == "reset_tracker"){
 	have_trackerdata=0;
+    } else if(args[1] == "saveall") {
+	saveall(args[2], 0);
     } else {
 	args.error("Unknown minor command for Roe");
     }
@@ -902,6 +906,37 @@ void Roe::head_moved(const TrackerPosition& pos)
     tview.up(frame_up);
     view.set(tview);
     need_redraw=1;
+}
+
+void Roe::saveall(const clString& filename, int binary)
+{
+    Piostream* stream;
+    if(binary)
+	stream=new BinaryPiostream(filename, Piostream::Write);
+    else
+	stream=new TextPiostream(filename, Piostream::Write);
+    HashTableIter<int, PortInfo*> iter(&manager->portHash);
+    for (iter.first(); iter.ok(); ++iter) {
+	HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
+	HashTableIter<int, SceneItem*> serIter(serHash);
+	for (serIter.first(); serIter.ok(); ++serIter) {
+	    SceneItem *si=serIter.get_data();
+	    // Look up the name to see if it should be drawn...
+	    ObjTag* vis;
+	    if(visible.lookup(si->name, vis)){
+		if(vis->visible->get()){
+		    if(si->lock)
+			si->lock->read_lock();
+		    Pio(*stream, si->obj);
+		    if(si->lock)
+			si->lock->read_unlock();
+		}
+	    } else {
+		cerr << "Warning: object " << si->name << " not in visibility database...\n";
+	    }
+	}
+    }
+    delete stream;
 }
 
 #ifdef __GNUG__

@@ -13,9 +13,17 @@
 
 #include <Geom/Arrows.h>
 #include <Classlib/NotFinished.h>
+#include <Classlib/String.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
 #include <Malloc/Allocator.h>
+
+Persistent* make_GeomArrows()
+{
+    return new GeomArrows(0,0);
+}
+
+PersistentTypeID GeomArrows::type_id("GeomArrows", "GeomObj", make_GeomArrows);
 
 GeomArrows::GeomArrows(double headwidth, double headlength)
 : headwidth(headwidth), headlength(headlength)
@@ -109,10 +117,31 @@ void GeomArrows::intersect(const Ray&, Material*, Hit&)
     NOT_FINISHED("GeomArrows::intersect");
 }
 
+#define GEOMARROWS_VERSION 1
+
+void GeomArrows::io(Piostream& stream)
+{
+    stream.begin_class("GeomArrows", GEOMARROWS_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, headwidth);
+    Pio(stream, headlength);
+    Pio(stream, shaft_matls);
+    Pio(stream, back_matls);
+    Pio(stream, head_matls);
+    Pio(stream, positions);
+    Pio(stream, directions);
+    Pio(stream, v1);
+    Pio(stream, v2);
+    stream.end_class();
+}
+
 #ifdef __GNUG__
 
 #include <Classlib/Array1.cc>
 template class Array1<Point>;
 template class Array1<Vector>;
+
+template void Pio(Piostream&, Array1<Point>&);
+template void Pio(Piostream&, Array1<Vector>&);
 
 #endif

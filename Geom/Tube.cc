@@ -11,12 +11,20 @@
  */
 
 #include <Geom/Tube.h>
+#include <Classlib/String.h>
 #include <Geometry/BBox.h>
 #include <Geom/Line.h>
 #include <Classlib/NotFinished.h>
 #include <Malloc/Allocator.h>
 #include <Math/Trig.h>
 #include <Math/TrigTable.h>
+
+Persistent* make_GeomTube()
+{
+    return new GeomTube;
+}
+
+PersistentTypeID GeomTube::type_id("GeomTube", "GeomObj", make_GeomTube);
 
 GeomTube::GeomTube(int nu)
 : nu(nu)
@@ -114,9 +122,22 @@ void GeomTube::intersect(const Ray&, Material*, Hit&)
     NOT_FINISHED("GeomTube::intersect");
 }
 
+#define GEOMTUBE_VERSION 1
+
+void GeomTube::io(Piostream& stream)
+{
+    stream.begin_class("GeomTube", GEOMTUBE_VERSION);
+    GeomVertexPrim::io(stream);
+    Pio(stream, nu);
+    Pio(stream, directions);
+    Pio(stream, radii);
+    stream.end_class();
+}
+
 #ifdef __GNUG__
 
 #include <Classlib/Array1.cc>
 template class Array1<double>;
+template void Pio(Piostream&, Array1<double>&);
 
 #endif

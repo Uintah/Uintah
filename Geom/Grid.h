@@ -28,6 +28,7 @@ class GeomGrid : public GeomObj {
     int have_normals;
     Point corner;
     Vector u, v, w;
+    void adjust();
 public:
     GeomGrid(int, int, const Point&, const Vector&, const Vector&);
     GeomGrid(const GeomGrid&);
@@ -50,6 +51,9 @@ public:
     virtual void preprocess();
     virtual void intersect(const Ray& ray, Material*,
 			   Hit& hit);
+
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
 
 #endif /* SCI_Geom_Grid_h */

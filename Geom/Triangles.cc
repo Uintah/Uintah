@@ -13,9 +13,17 @@
 
 #include <Geom/Triangles.h>
 #include <Classlib/NotFinished.h>
+#include <Classlib/String.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
 #include <Malloc/Allocator.h>
+
+Persistent* make_GeomTriangles()
+{
+    return new GeomTriangles;
+}
+
+PersistentTypeID GeomTriangles::type_id("GeomTriangles", "GeomObj", make_GeomTriangles);
 
 GeomTriangles::GeomTriangles()
 {
@@ -126,4 +134,14 @@ void GeomTriangles::preprocess()
 void GeomTriangles::intersect(const Ray&, Material*, Hit&)
 {
     NOT_FINISHED("GeomTriangles::intersect");
+}
+
+#define GEOMTRIANGLES_VERSION 1
+
+void GeomTriangles::io(Piostream& stream)
+{
+    stream.begin_class("GeomTriangles", GEOMTRIANGLES_VERSION);
+    GeomVertexPrim::io(stream);
+    Pio(stream, normals);
+    stream.end_class();
 }

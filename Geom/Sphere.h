@@ -45,6 +45,8 @@ public:
     virtual void intersect(const Ray& ray, Material*,
 			   Hit& hit);
     virtual Vector normal(const Point& p, const Hit&);
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
 
 #endif /* SCI_Geom_Sphere_h */

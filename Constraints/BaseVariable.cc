@@ -154,6 +154,8 @@ BaseVariable::RegisterPriority( const Index index, const VPriority p )
 {
    ASSERT(index < numconstraints);
 
+   cerr << "index=" << index << endl;
+   cerr << "pris.size()=" << constraint_priorities.size() << endl;
    constraint_priorities[index] = p;
 }
 

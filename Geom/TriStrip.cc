@@ -13,9 +13,17 @@
 
 #include <Geom/TriStrip.h>
 #include <Classlib/NotFinished.h>
+#include <Classlib/String.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
 #include <Malloc/Allocator.h>
+
+Persistent* make_GeomTriStrip()
+{
+    return new GeomTriStrip;
+}
+
+PersistentTypeID GeomTriStrip::type_id("GeomTriStrip", "GeomObj", make_GeomTriStrip);
 
 GeomTriStrip::GeomTriStrip()
 {
@@ -48,4 +56,13 @@ void GeomTriStrip::preprocess()
 void GeomTriStrip::intersect(const Ray&, Material*, Hit&)
 {
     NOT_FINISHED("GeomTriStrip::intersect");
+}
+
+#define GEOMTRISTRIP_VERSION 1
+
+void GeomTriStrip::io(Piostream& stream)
+{
+    stream.begin_class("GeomTriStrip", GEOMTRISTRIP_VERSION);
+    GeomVertexPrim::io(stream);
+    stream.end_class();
 }

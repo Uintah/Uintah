@@ -8,10 +8,6 @@ Shared libraries:
 6) Readers broken
 7) Salmon broken
 
-Home:
-1) Slackware/elf
-2) gcc 2.7.0
-
 DONE 1) Fix allocator - use doubly linked list???
 Tag malloc - put in TK/TCL
 DONE Use scinew everywhere...

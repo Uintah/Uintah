@@ -21,6 +21,22 @@
 #include <Math/Trig.h>
 #include <Classlib/String.h>
 
+Persistent* make_GeomCylinder()
+{
+    return new GeomCylinder;
+}
+
+PersistentTypeID GeomCylinder::type_id("GeomCylinder", "GeomObj",
+				       make_GeomCylinder);
+
+Persistent* make_GeomCappedCylinder()
+{
+    return new GeomCappedCylinder;
+}
+
+PersistentTypeID GeomCappedCylinder::type_id("GeomCappedCylinder", "GeomObj",
+					     make_GeomCappedCylinder);
+
 GeomCylinder::GeomCylinder(int nu, int nv)
 : GeomObj(), bottom(0,0,0), top(0,0,1), rad(1), nu(nu), nv(nv)
 {
@@ -140,6 +156,23 @@ void GeomCylinder::intersect(const Ray&, Material*,
     NOT_FINISHED("GeomCylinder::intersect");
 }
 
+#define GEOMCYLINDER_VERSION 1
+
+void GeomCylinder::io(Piostream& stream)
+{
+    stream.begin_class("GeomCylinder", GEOMCYLINDER_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, bottom);
+    Pio(stream, top);
+    Pio(stream, axis);
+    Pio(stream, rad);
+    Pio(stream, nu);
+    Pio(stream, nv);
+    if(stream.reading())
+	adjust();
+    stream.end_class();
+}
+
 // Capped Geometry....
 
 GeomCappedCylinder::GeomCappedCylinder(int nu, int nv, int nvdisc)
@@ -182,4 +215,13 @@ void GeomCappedCylinder::intersect(const Ray&, Material*,
 			     Hit&)
 {
     NOT_FINISHED("GeomCappedCylinder::intersect");
+}
+
+#define GEOMCAPPEDCYLINDER_VERSION 1
+
+void GeomCappedCylinder::io(Piostream& stream)
+{
+    stream.begin_class("GeomCappedCylinder", GEOMCAPPEDCYLINDER_VERSION);
+    GeomCylinder::io(stream);
+    Pio(stream, nvdisc);
 }

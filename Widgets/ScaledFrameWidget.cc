@@ -53,16 +53,19 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock, Real w
   oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0)
 {
    Real INIT = 5.0*widget_scale;
+   cerr << "sf1" << endl;
    variables[CenterVar] = scinew PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
    variables[PointRVar] = scinew PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
    variables[PointDVar] = scinew PointVariable("PntD", solve, Scheme2, Point(0, INIT, 0));
    variables[DistRVar] = scinew RealVariable("RDIST", solve, Scheme3, INIT);
    variables[DistDVar] = scinew RealVariable("DDIST", solve, Scheme4, INIT);
+   cerr << "sf5" << endl;
    variables[HypoVar] = scinew RealVariable("HYPO", solve, Scheme3, sqrt(2*INIT*INIT));
    variables[SDistRVar] = scinew RealVariable("SDistR", solve, Scheme5, INIT/2.0);
    variables[SDistDVar] = scinew RealVariable("SDistD", solve, Scheme5, INIT/2.0);
    variables[RatioRVar] = scinew RealVariable("RatioR", solve, Scheme1, 0.5);
    variables[RatioDVar] = scinew RealVariable("RatioD", solve, Scheme1, 0.5);
+   cerr << "sf10" << endl;
 
    constraints[ConstRatioR] = scinew RatioConstraint("ConstRatioR",
 						  NumSchemes,
@@ -73,8 +76,16 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock, Real w
    constraints[ConstRatioR]->VarChoices(Scheme2, 0, 0, 0);
    constraints[ConstRatioR]->VarChoices(Scheme3, 0, 0, 0);
    constraints[ConstRatioR]->VarChoices(Scheme4, 0, 0, 0);
+   cerr << "sf15" << endl;
    constraints[ConstRatioR]->VarChoices(Scheme5, 2, 2, 2);
+   cerr << "sf16" << endl;
    constraints[ConstRatioR]->Priorities(P_Highest, P_Highest, P_Highest);
+   cerr << "ConstRatioD=" << ConstRatioD << endl;
+   cerr << "constraints.size()=" << constraints.size() << endl;
+   cerr << "SDistDVar=" << SDistDVar << endl;
+   cerr << "DistDVar=" << DistDVar << endl;
+   cerr << "RatioDVar=" << RatioDVar << endl;
+   cerr << "variables.size()=" << variables.size() << endl;
    constraints[ConstRatioD] = scinew RatioConstraint("ConstRatioD",
 						  NumSchemes,
 						  variables[SDistDVar],
@@ -82,6 +93,7 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock, Real w
 						  variables[RatioDVar]);
    constraints[ConstRatioD]->VarChoices(Scheme1, 0, 0, 0);
    constraints[ConstRatioD]->VarChoices(Scheme2, 0, 0, 0);
+   cerr << "sf20" << endl;
    constraints[ConstRatioD]->VarChoices(Scheme3, 0, 0, 0);
    constraints[ConstRatioD]->VarChoices(Scheme4, 0, 0, 0);
    constraints[ConstRatioD]->VarChoices(Scheme5, 2, 2, 2);
@@ -91,11 +103,13 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock, Real w
 						 variables[PointRVar],
 						 variables[PointDVar],
 						 variables[HypoVar]);
+   cerr << "sf25" << endl;
    constraints[ConstRD]->VarChoices(Scheme1, 1, 1, 1);
    constraints[ConstRD]->VarChoices(Scheme2, 0, 0, 0);
    constraints[ConstRD]->VarChoices(Scheme3, 2, 2, 1);
    constraints[ConstRD]->VarChoices(Scheme4, 2, 2, 0);
    constraints[ConstRD]->VarChoices(Scheme5, 1, 0, 1);
+   cerr << "sf30" << endl;
    constraints[ConstRD]->Priorities(P_Default, P_Default, P_Default);
    constraints[ConstPyth] = scinew PythagorasConstraint("ConstPyth",
 						     NumSchemes,
@@ -105,6 +119,7 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock, Real w
    constraints[ConstPyth]->VarChoices(Scheme1, 1, 0, 1);
    constraints[ConstPyth]->VarChoices(Scheme2, 1, 0, 0);
    constraints[ConstPyth]->VarChoices(Scheme3, 2, 2, 1);
+   cerr << "sf35" << endl;
    constraints[ConstPyth]->VarChoices(Scheme4, 2, 2, 0);
    constraints[ConstPyth]->VarChoices(Scheme5, 1, 0, 1);
    constraints[ConstPyth]->Priorities(P_Highest, P_Highest, P_Highest);
@@ -114,11 +129,13 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock, Real w
 						 variables[CenterVar],
 						 variables[DistRVar]);
    constraints[ConstRC]->VarChoices(Scheme1, 0, 0, 0);
+   cerr << "sf40" << endl;
    constraints[ConstRC]->VarChoices(Scheme2, 0, 0, 0);
    constraints[ConstRC]->VarChoices(Scheme3, 2, 2, 2);
    constraints[ConstRC]->VarChoices(Scheme4, 0, 0, 0);
    constraints[ConstRC]->VarChoices(Scheme5, 1, 0, 1);
    constraints[ConstRC]->Priorities(P_Highest, P_Highest, P_Default);
+   cerr << "sf45" << endl;
    constraints[ConstDC] = scinew DistanceConstraint("ConstDC",
 					       NumSchemes,
 					       variables[PointDVar],
@@ -128,6 +145,7 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock, Real w
    constraints[ConstDC]->VarChoices(Scheme2, 0, 0, 0);
    constraints[ConstDC]->VarChoices(Scheme3, 0, 0, 0);
    constraints[ConstDC]->VarChoices(Scheme4, 2, 2, 2);
+   cerr << "sf50" << endl;
    constraints[ConstDC]->VarChoices(Scheme5, 1, 0, 1);
    constraints[ConstDC]->Priorities(P_Highest, P_Highest, P_Default);
 

@@ -81,6 +81,7 @@ Hedgehog::Hedgehog(const clString& id)
   head_length("head_length", id, this),
   type("type", id, this)
 {
+    cerr << 1 << endl;
     // Create the input ports
     // Need a scalar field and a colormap
     invectorfield = scinew VectorFieldIPort( this, "Vector Field",
@@ -93,21 +94,27 @@ Hedgehog::Hedgehog(const clString& id)
 				     ColormapIPort::Atomic);
     add_iport( incolormap);
 					
+    cerr << 5 << endl;
     // Create the output port
     ogeom = scinew GeometryOPort(this, "Geometry", 
 			      GeometryIPort::Atomic);
     add_oport(ogeom);
+    cerr << 6 << endl;
     init = 1;
     float INIT(.1);
 
+    cerr << 7 << endl;
     widget2d = scinew ScaledFrameWidget(this, &widget_lock, INIT);
+    cerr << 8 << endl;
     widget3d = scinew ScaledBoxWidget(this, &widget_lock, INIT);
     grid_id=0;
 
     need_find2d=1;
     need_find3d=1;
     
+    cerr << 9 << endl;
     outcolor=scinew Material(Color(0,0,0), Color(0,0,0), Color(0,0,0), 0);
+    cerr << 10 << endl;
 }
 
 Hedgehog::Hedgehog(const Hedgehog& copy, int deep)

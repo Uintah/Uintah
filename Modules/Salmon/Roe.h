@@ -157,6 +157,8 @@ public:
     void do_for_visible(Renderer*, RoeVisPMF);
 
     void set_current_time(double time);
+
+    void saveall(const clString&, int binary);
 };
 
 class RoeMouseMessage : public MessageBase {

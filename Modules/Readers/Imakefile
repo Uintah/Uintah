@@ -3,15 +3,15 @@
 
 #ifdef SCI_DIR_Modules_Readers
 
-OBJS = ContourSetReader.o   MeshReader.o   \
+OBJS = ContourSetReader.o   GeomReader.o  MeshReader.o   \
 	MultiMeshReader.o   ScalarFieldReader.o   \
 	SurfaceReader.o   VectorFieldReader.o \
-PointsReader.o
+	PointsReader.o
 GENSRCS = ContourSetReader.cc  MeshReader.cc  \
 	MultiMeshReader.cc  ScalarFieldReader.cc  \
 	SurfaceReader.cc  VectorFieldReader.cc
-SRCS = $(GENSRCS) PointsReader.cc
-GENTCLS = ContourSetReader.tcl MeshReader.tcl \
+SRCS = $(GENSRCS) GeomReader.cc PointsReader.cc
+GENTCLS = ContourSetReader.tcl GeomReader.tcl MeshReader.tcl \
 	MultiMeshReader.tcl ScalarFieldReader.tcl \
 	SurfaceReader.tcl VectorFieldReader.tcl
 TCLS = $(GENTCLS) PointsReader.tcl
@@ -36,6 +36,9 @@ ContourSetReader.cc: Reader.cc
 
 ContourSetReader.tcl: Reader.tcl
 	sed 's/TYPE/ContourSet/g' < Reader.tcl > ContourSetReader.tcl
+
+GeomReader.tcl: Reader.tcl
+	sed 's/TYPE/Geom/g' < Reader.tcl > GeomReader.tcl
 
 MeshReader.cc: Reader.cc
 	sed 's/TYPE/Mesh/g' < Reader.cc > MeshReader.cc

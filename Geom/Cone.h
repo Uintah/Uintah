@@ -55,6 +55,8 @@ public:
     virtual void preprocess();
     virtual void intersect(const Ray& ray, Material*,
 			   Hit& hit);
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
 
 class GeomCappedCone : public GeomCone {
@@ -76,6 +78,8 @@ public:
     virtual void preprocess();
     virtual void intersect(const Ray& ray, Material*,
 			   Hit& hit);
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
 
 #endif /* SCI_Geom_Cone_h */

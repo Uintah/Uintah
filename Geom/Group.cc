@@ -13,8 +13,16 @@
 
 #include <Geom/Group.h>
 #include <Classlib/Array2.h>
+#include <Classlib/String.h>
 #include <Malloc/Allocator.h>
 #include <values.h>
+
+Persistent* make_GeomGroup()
+{
+    return new GeomGroup;
+}
+
+PersistentTypeID GeomGroup::type_id("GeomGroup", "GeomObj", make_GeomGroup);
 
 GeomGroup::GeomGroup(int del_children)
 : GeomObj(), objs(0, 100), del_children(del_children), treetop(0)
@@ -245,6 +253,18 @@ void GeomGroup::intersect(const Ray& ray, Material* matl,
 #endif
 }
 
+#define GEOMGROUP_VERSION 1
+
+void GeomGroup::io(Piostream& stream)
+{
+    stream.begin_class("GeomGroup", GEOMGROUP_VERSION);
+    // Do the base class first...
+    GeomObj::io(stream);
+    Pio(stream, del_children);
+    Pio(stream, objs);
+    stream.end_class();
+}
+
 ITreeLeaf::ITreeLeaf(GeomObj* obj)
 : obj(obj)
 {
@@ -307,5 +327,8 @@ ITree::~ITree()
 
 template class Array1<ITree*>;
 template class Array1<BSphere>;
+template class Array1<GeomObj*>;
+
+template void Pio(Piostream&, Array1<GeomObj*>&);
 
 #endif

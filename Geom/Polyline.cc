@@ -13,9 +13,17 @@
 
 #include <Geom/Polyline.h>
 #include <Classlib/NotFinished.h>
+#include <Classlib/String.h>
 #include <Geometry/BBox.h>
 #include <Geom/Line.h>
 #include <Malloc/Allocator.h>
+
+Persistent* make_GeomPolyline()
+{
+    return new GeomPolyline;
+}
+
+PersistentTypeID GeomPolyline::type_id("GeomPolyline", "GeomObj", make_GeomPolyline);
 
 GeomPolyline::GeomPolyline()
 {
@@ -48,4 +56,13 @@ void GeomPolyline::preprocess()
 void GeomPolyline::intersect(const Ray&, Material*, Hit&)
 {
     NOT_FINISHED("GeomPolyline::intersect");
+}
+
+#define GEOMPOLYLINE_VERSION 1
+
+void GeomPolyline::io(Piostream& stream)
+{
+    stream.begin_class("GeomPolyline", GEOMPOLYLINE_VERSION);
+    GeomVertexPrim::io(stream);
+    stream.end_class();
 }

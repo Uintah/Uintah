@@ -12,6 +12,7 @@
  */
 
 #include <Geom/Torus.h>
+#include <Classlib/String.h>
 #include <Geom/GeomRaytracer.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
@@ -21,6 +22,13 @@
 #include <Malloc/Allocator.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
+
+Persistent* make_GeomTorus()
+{
+    return new GeomTorus;
+}
+
+PersistentTypeID GeomTorus::type_id("GeomTorus", "GeomObj", make_GeomTorus);
 
 GeomTorus::GeomTorus(int nu, int nv)
 : GeomObj(), cen(0,0,0), axis(0,0,1), rad1(1), rad2(.1), nu(nu), nv(nv)
@@ -174,3 +182,32 @@ Vector GeomTorus::normal(const Point&, const Hit&)
     return Vector(0,0,1);
 }
 
+#define GEOMTORUS_VERSION 1
+
+void GeomTorus::io(Piostream& stream)
+{
+    stream.begin_class("GeomTorus", GEOMTORUS_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, cen);
+    Pio(stream, axis);
+    Pio(stream, rad1);
+    Pio(stream, rad2);
+    Pio(stream, nu);
+    Pio(stream, nv);
+    if(stream.reading())
+	adjust();
+    stream.end_class();
+}
+
+#define GEOMTORUSARC_VERSION 1
+
+void GeomTorusArc::io(Piostream& stream)
+{
+    stream.begin_class("GeomTorusArc", GEOMTORUSARC_VERSION);
+    GeomTorus::io(stream);
+    Pio(stream, zero);
+    Pio(stream, start_angle);
+    Pio(stream, arc_angle);
+    Pio(stream, yaxis);
+    stream.end_class();
+}

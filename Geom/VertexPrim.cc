@@ -12,9 +12,19 @@
  */
 
 #include <Geom/VertexPrim.h>
+#include <Classlib/String.h>
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
 #include <Malloc/Allocator.h>
+
+static Persistent* make_GeomVertex()
+{
+    return new GeomVertex(Point(0,0,0));
+}
+
+PersistentTypeID GeomVertex::type_id("GeomVertex", "Persistent", make_GeomVertex);
+
+PersistentTypeID GeomVertexPrim::type_id("GeomVertexPrim", "GeomObj", 0);
 
 GeomVertexPrim::GeomVertexPrim()
 {
@@ -71,6 +81,16 @@ void GeomVertexPrim::add(GeomVertex* vtx)
     verts.add(vtx);
 }
 
+#define GEOMVERTEXPRIM_VERSION 1
+
+void GeomVertexPrim::io(Piostream& stream)
+{
+    stream.begin_class("GeomVertexPrim", GEOMVERTEXPRIM_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, verts);
+    stream.end_class();
+}
+
 GeomVertex::GeomVertex(const Point& p)
 : p(p)
 {
@@ -90,6 +110,15 @@ GeomVertex* GeomVertex::clone()
     return scinew GeomVertex(*this);
 }
 
+#define GEOMVERTEX_VERSION 1
+
+void GeomVertex::io(Piostream& stream)
+{
+    stream.begin_class("GeomVertex", GEOMVERTEX_VERSION);
+    Pio(stream, p);
+    stream.end_class();
+}
+
 GeomNVertex::GeomNVertex(const Point& p, const Vector& normal)
 : GeomVertex(p), normal(normal)
 {
@@ -107,6 +136,16 @@ GeomVertex* GeomNVertex::clone()
 
 GeomNVertex::~GeomNVertex()
 {
+}
+
+#define GEOMNVERTEX_VERSION 1
+
+void GeomNVertex::io(Piostream& stream)
+{
+    stream.begin_class("GeomNVertex", GEOMNVERTEX_VERSION);
+    GeomVertex::io(stream);
+    Pio(stream, normal);
+    stream.end_class();
 }
 
 GeomNMVertex::GeomNMVertex(const Point& p, const Vector& normal,
@@ -129,6 +168,16 @@ GeomNMVertex::~GeomNMVertex()
 {
 }
 
+#define GEOMNMVERTEX_VERSION 1
+
+void GeomNMVertex::io(Piostream& stream)
+{
+    stream.begin_class("GeomNMVertex", GEOMNMVERTEX_VERSION);
+    GeomNVertex::io(stream);
+    Pio(stream, matl);
+    stream.end_class();
+}
+
 GeomMVertex::GeomMVertex(const Point& p, const MaterialHandle& matl)
 : GeomVertex(p), matl(matl)
 {
@@ -148,10 +197,29 @@ GeomMVertex::~GeomMVertex()
 {
 }
 
+#define GEOMMVERTEX_VERSION 1
+
+void GeomMVertex::io(Piostream& stream)
+{
+    stream.begin_class("GeomMVertex", GEOMMVERTEX_VERSION);
+    GeomVertex::io(stream);
+    Pio(stream, matl);
+    stream.end_class();
+}
+
+void Pio(Piostream& stream, GeomVertex*& obj)
+{
+    Persistent* tmp=obj;
+    stream.io(tmp, GeomVertex::type_id);
+    if(stream.reading())
+	obj=(GeomVertex*)tmp;
+}
+
 #ifdef __GNUG__
 
 #include <Classlib/Array1.cc>
 
 template class Array1<GeomVertex*>;
+template void Pio(Piostream&, Array1<GeomVertex*>&);
 
 #endif

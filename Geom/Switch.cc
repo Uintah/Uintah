@@ -11,7 +11,22 @@
  *  Copyright (C) 1995 SCI Group
  */
 #include <Geom/Switch.h>
+#include <Classlib/String.h>
 #include <Malloc/Allocator.h>
+
+Persistent* make_GeomSwitch()
+{
+    return new GeomSwitch(0,0);
+}
+
+PersistentTypeID GeomSwitch::type_id("GeomSwitch", "GeomObj", make_GeomSwitch);
+
+Persistent* make_GeomTimeSwitch()
+{
+    return new GeomTimeSwitch(0,0,0);
+}
+
+PersistentTypeID GeomTimeSwitch::type_id("GeomTimeSwitch", "GeomObj", make_GeomTimeSwitch);
 
 GeomSwitch::GeomSwitch(GeomObj* obj, int state)
 : GeomContainer(obj), state(state)
@@ -71,6 +86,16 @@ void GeomSwitch::intersect(const Ray& ray, Material* matl, Hit& hit)
    if(state)child->intersect(ray, matl, hit);
 }
 
+#define GEOMSWITCH_VERSION 1
+
+void GeomSwitch::io(Piostream& stream)
+{
+    stream.begin_class("GeomSwitch", GEOMSWITCH_VERSION);
+    GeomContainer::io(stream);
+    Pio(stream, state);
+    stream.end_class();
+}
+
 GeomTimeSwitch::GeomTimeSwitch(GeomObj* obj, double tbeg, double tend)
 : GeomContainer(obj), tbeg(tbeg), tend(tend)
 {
@@ -89,3 +114,15 @@ GeomObj* GeomTimeSwitch::clone()
 {
     return scinew GeomTimeSwitch(*this);
 }
+
+#define GEOMTIMESWITCH_VERSION 1
+
+void GeomTimeSwitch::io(Piostream& stream)
+{
+    stream.begin_class("GeomSwitch", GEOMTIMESWITCH_VERSION);
+    GeomContainer::io(stream);
+    Pio(stream, tbeg);
+    Pio(stream, tend);
+    stream.end_class();
+}
+
