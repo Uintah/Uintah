@@ -219,6 +219,7 @@ ifeq ($(BUILD_SCIRUN2),yes)
 #    SUBDIRS += Babel
     CCASIDL := Core/Babel/cca.sidl
     BABEL_REPOSITORY:= Core/Babel/repository
+    BABEL_INCLUDE := @INC_SIDL_H@
     BABEL := @BABEL_BIN@
     CCASIDL := Core/Babel/cca.sidl
     SIDL_LIBRARY := @SIDL_LIB_DIR_FLAG@ @SIDL_LIB_FLAG@
