@@ -277,9 +277,6 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
        iter != level->patchesEnd(); iter++)  {
     const Patch* patch=*iter;
     
-    // Step 1a  computeSoundSpeed
-    scheduleStep1a( patch,  sched,  old_dw, new_dw);
-    
     // calculate equlibration pressure rho_micro, speedSound, vol_frac
     scheduleComputeEquilibrationPressure( 
         patch,  sched,  old_dw, new_dw);
@@ -321,26 +318,6 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
         patch,  sched,  old_dw, new_dw);
   }
 }
-
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep1a--
- Purpose~   Compute the speed of sound
-_____________________________________________________________________*/
-void ICE::scheduleStep1a(const Patch* patch, SchedulerP& sched,
-			 DataWarehouseP& old_dw, DataWarehouseP& new_dw)
-{
-  int numMatls = d_sharedState->getNumICEMatls();
-  
-  Task* task = scinew Task("ICE::step1a",patch, old_dw, new_dw,this,
-			&ICE::actuallyStep1a);
-  for (int m = 0; m < numMatls; m++)  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
-    EquationOfState* eos = matl->getEOS();
-    eos->addComputesAndRequiresSS(task,matl,patch,old_dw,new_dw);
-  }
-  sched->addTask(task);
-}
-
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeEquilibrationPressure--
  Purpose~   Compute the equilibration pressure
@@ -361,16 +338,13 @@ void ICE::scheduleComputeEquilibrationPressure(
     int dwindex = matl->getDWIndex();
     EquationOfState* eos = matl->getEOS();
     // Compute the rho micro
-    eos->addComputesAndRequiresRM(task,matl,patch,old_dw,new_dw);
-    task->requires(old_dw,lb->vol_frac_CCLabel,  dwindex,patch,Ghost::None);
+
     task->requires(old_dw,lb->rho_CCLabel,       dwindex,patch,Ghost::None);
-    task->requires(old_dw,lb->rho_micro_CCLabel, dwindex,patch,Ghost::None);
     task->requires(old_dw,lb->temp_CCLabel,      dwindex,patch,Ghost::None);
     task->requires(old_dw,lb->cv_CCLabel,        dwindex,patch,Ghost::None);
-    task->requires(new_dw,lb->speedSound_CCLabel,dwindex,patch,Ghost::None);
-    task->computes(new_dw,lb->vol_frac_CCLabel,          dwindex, patch);
-    task->computes(new_dw,lb->speedSound_equiv_CCLabel,  dwindex, patch);
-    task->computes(new_dw,lb->rho_micro_equil_CCLabel,   dwindex, patch);
+    task->computes(new_dw,lb->speedSound_CCLabel,dwindex, patch);
+    task->computes(new_dw,lb->vol_frac_CCLabel,  dwindex, patch);
+    task->computes(new_dw,lb->rho_micro_CCLabel, dwindex, patch);
   }
 
   task->computes(new_dw,lb->press_equil_CCLabel,0, patch);
@@ -397,9 +371,8 @@ void ICE::scheduleComputeFaceCenteredVelocities(
     int dwindex = matl->getDWIndex();
     task->requires(old_dw,lb->rho_CCLabel,   dwindex,patch,Ghost::None);
     task->requires(old_dw,lb->vel_CCLabel,   dwindex,patch,Ghost::None);
-    task->requires(new_dw,lb->rho_micro_equil_CCLabel,
-		   dwindex,patch,Ghost::None);
-    
+    task->requires(new_dw,lb->rho_micro_CCLabel,
+		                               dwindex,patch,Ghost::None);
     task->computes(new_dw,lb->uvel_FCLabel,  dwindex, patch);
     task->computes(new_dw,lb->vvel_FCLabel,  dwindex, patch);
     task->computes(new_dw,lb->wvel_FCLabel,  dwindex, patch);
@@ -424,8 +397,8 @@ void ICE::scheduleAddExchangeContributionToFCVel(
   for (int m = 0; m < numMatls; m++) {
     ICEMaterial* matl = d_sharedState->getICEMaterial(m);
     int dwindex = matl->getDWIndex();
-    task->requires(new_dw,lb->rho_micro_equil_CCLabel,
-		   dwindex,patch,Ghost::None);
+    task->requires(new_dw,lb->rho_micro_CCLabel,
+		                                  dwindex,patch,Ghost::None);
     task->requires(new_dw,lb->vol_frac_CCLabel, dwindex, patch,Ghost::None);
     task->requires(old_dw,lb->uvel_FCLabel,     dwindex, patch,Ghost::None);
     task->requires(old_dw,lb->vvel_FCLabel,     dwindex, patch,Ghost::None);
@@ -459,13 +432,11 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(
     task->requires( new_dw, lb->uvel_FCMELabel,    dwindex,patch,Ghost::None);
     task->requires( new_dw, lb->vvel_FCMELabel,    dwindex,patch,Ghost::None);
     task->requires( new_dw, lb->wvel_FCMELabel,    dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->speedSound_equiv_CCLabel,
-		    dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->rho_micro_equil_CCLabel,
-		    dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->speedSound_CCLabel,dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->rho_micro_CCLabel, dwindex,patch,Ghost::None);
   }
   task->computes(   new_dw,lb->press_CCLabel,     0,     patch);
-  task->computes(   new_dw,lb->delPress_CCLabel,    0,     patch);
+  task->computes(   new_dw,lb->delPress_CCLabel,  0,     patch);
   
   sched->addTask(task);
 }
@@ -546,16 +517,11 @@ void ICE::scheduleAccumulateEnergySourceSinks(
   
   for (int m = 0; m < numMatls; m++)  {
     ICEMaterial* matl = d_sharedState->getICEMaterial(m);
-    int dwindex = matl->getDWIndex();
-    
-    task->requires( new_dw, lb->rho_micro_equil_CCLabel,    dwindex, patch,
-		    Ghost::None);
-    task->requires( new_dw, lb->speedSound_equiv_CCLabel,   dwindex, patch,
-		    Ghost::None);
-    task->requires( new_dw, lb->vol_frac_CCLabel,           dwindex, patch,
-		    Ghost::None);
-    
-    task->computes (new_dw, lb->int_eng_source_CCLabel,     dwindex, patch);
+    int dwindex = matl->getDWIndex();      
+    task->requires( new_dw, lb->rho_micro_CCLabel, dwindex, patch,Ghost::None);
+    task->requires( new_dw, lb->speedSound_CCLabel,dwindex, patch,Ghost::None);
+    task->requires( new_dw, lb->vol_frac_CCLabel,  dwindex, patch,Ghost::None);
+    task->computes (new_dw, lb->int_eng_source_CCLabel, dwindex, patch);
   }
   sched->addTask(task);
 }
@@ -612,8 +578,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(
     task->requires( new_dw, lb->int_eng_L_CCLabel,  dwindex,patch,Ghost::None);
     task->requires( new_dw, lb->vol_frac_CCLabel,   dwindex,patch,Ghost::None);
     task->requires( old_dw, lb->cv_CCLabel,         dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->rho_micro_equil_CCLabel,
-		    dwindex,patch,Ghost::None);
+    task->requires( new_dw, lb->rho_micro_CCLabel,  dwindex,patch,Ghost::None);
     
     task->computes( new_dw, lb->mom_L_ME_CCLabel,    dwindex,patch);
     task->computes( new_dw, lb->int_eng_L_ME_CCLabel,dwindex,patch);
@@ -645,7 +610,6 @@ void ICE::scheduleAdvectAndAdvanceInTime(
     task->requires(new_dw, lb->mom_L_ME_CCLabel,  dwindex,patch,Ghost::None,0);
     task->requires(new_dw, lb->int_eng_L_ME_CCLabel,dwindex,patch,
 		   Ghost::None,0);    
-    task->requires(new_dw, lb->speedSound_CCLabel,dwindex,patch,Ghost::None);
     task->computes(new_dw, lb->temp_CCLabel,      dwindex,patch);
     task->computes(new_dw, lb->rho_CCLabel,       dwindex,patch);
     task->computes(new_dw, lb->cv_CCLabel,        dwindex,patch);
@@ -686,9 +650,9 @@ void ICE::actuallyComputeStableTimestep(
     for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int dwindex = ice_matl->getDWIndex();
-      
-      new_dw->get(speedSound, lb->speedSound_equiv_CCLabel,
-		  dwindex,patch,Ghost::None, 0);
+     
+      new_dw->get(speedSound, lb->speedSound_CCLabel,
+		                          dwindex,patch,Ghost::None, 0);
       new_dw->get(vel, lb->vel_CCLabel, dwindex,patch,Ghost::None, 0);
       
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){   
@@ -733,8 +697,20 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
   new_dw->allocate(press,lb->press_CCLabel, 0,patch);
   press.initialize(d_pressure);
   setBC(press,"Pressure",patch);
-  new_dw->put(press,    lb->press_CCLabel,  0,patch);
   
+  
+  
+ //__________________________________
+ //Hardwired to get the symetric problem working
+// IntVector hotpoint(4,4,4); big problem
+// IntVector hotpoint(2,2,2);
+// press[hotpoint] =  135266.03956476325000;
+  
+  
+  
+  
+  new_dw->put(press,    lb->press_CCLabel,  0,patch);
+ 
   for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) {
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
     int dwindex = ice_matl->getDWIndex();
@@ -783,62 +759,45 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
   
   
 /*`==========TESTING==========*/ 
-    if (switchDebugInitialize) {
-      cout << " Initial Conditions" << endl;
-      
-      IntVector lowIndex     = patch->getInteriorCellLowIndex();
-      IntVector highIndex    = patch->getInteriorCellHighIndex();
-      cout << "\n\t xLoLimit   = "<<lowIndex.x()<< 
-	"\t yLoLimit   is "<<lowIndex.y()<<
-	"\t zLoLimit   is "<<lowIndex.z()<< endl;
-      cout << "\t xHiLimit   is "<<highIndex.x()<< 
-	"\t yHiLimit   is "<<highIndex.y()<<
-	"\t zHiLimit   is "<<highIndex.z()<< endl;
-      
-      IntVector loIndex   = patch->getCellLowIndex();
-      IntVector hiIndex   = patch->getCellHighIndex();
-      cout << "\n\txLo_GC   is "<<loIndex.x()<< 
-	"\t yLo_GC   is "<<loIndex.y()<<
-	"\t zLo_GC   is "<<loIndex.z()<< endl;
-      cout << "\t xHi_GC   is "<<hiIndex.x()<< 
-	"\t yHi_GC   is "<<hiIndex.y()<<
-	"\t zHi_GC   is "<<hiIndex.z()<< endl;
-      
-      Vector dx = patch->dCell();
-      cout << "\n\tdx     is "<< dx.x() << 
-	"\tdy     is "<< dx.y() << 
-	"\tdz     is"<< dx.z() << endl;
-      
-      char description[50];
-      sprintf(description, "Initialization, Mat. %d ",m);
-      printData(   patch, 1, description, "rho_CC",         rho_CC);
-      printData(   patch, 1, description, "rho_micro_CC",   rho_micro);
-      printData(   patch, 1, description, "Temp_CC",        Temp_CC);
-      printData(   patch, 1, description, "vol_frac_CC",    vol_frac_CC);
-      printVector( patch, 1, description, "uvel_CC", 0,  vel_CC);
-      printVector( patch, 1, description, "vvel_CC", 1,  vel_CC);
-      printVector( patch, 1, description, "wvel_CC", 2,  vel_CC);
-    }
+if (switchDebugInitialize){
+  cout << " Initial Conditions" << endl;
+  
+  IntVector lowIndex     = patch->getInteriorCellLowIndex();
+  IntVector highIndex    = patch->getInteriorCellHighIndex();
+  cout << "\n\t xLoLimit   = "<<lowIndex.x()<< 
+    "\t yLoLimit   is "<<lowIndex.y()<<
+    "\t zLoLimit   is "<<lowIndex.z()<< endl;
+  cout << "\t xHiLimit   is "<<highIndex.x()<< 
+    "\t yHiLimit   is "<<highIndex.y()<<
+    "\t zHiLimit   is "<<highIndex.z()<< endl;
+  
+  IntVector loIndex   = patch->getCellLowIndex();
+  IntVector hiIndex   = patch->getCellHighIndex();
+  cout << "\n\txLo_GC   is "<<loIndex.x()<< 
+    "\t yLo_GC   is "<<loIndex.y()<<
+    "\t zLo_GC   is "<<loIndex.z()<< endl;
+  cout << "\t xHi_GC   is "<<hiIndex.x()<< 
+    "\t yHi_GC   is "<<hiIndex.y()<<
+    "\t zHi_GC   is "<<hiIndex.z()<< endl;
+  
+  Vector dx = patch->dCell();
+  cout << "\n\tdx     is "<< dx.x() << 
+    "\tdy     is "<< dx.y() << 
+    "\tdz     is"<< dx.z() << endl;
+    
+  char description[50];
+  sprintf(description, "Initialization_Mat_%d ",m);
+  printData(   patch, 1, description, "rho_CC",         rho_CC);
+  printData(   patch, 1, description, "rho_micro_CC",   rho_micro);
+  printData(   patch, 1, description, "Temp_CC",        Temp_CC);
+  printData(   patch, 1, description, "vol_frac_CC",    vol_frac_CC);
+  printVector( patch, 1, description, "uvel_CC", 0,  vel_CC);
+  printVector( patch, 1, description, "vvel_CC", 1,  vel_CC);
+  printVector( patch, 1, description, "wvel_CC", 2,  vel_CC);
+} 
  /*==========TESTING==========`*/   
   }
 
-}
-
-/* --------------------------------------------------------------------- 
- Function~  ICE::actuallyStep1a--
- Purpose~   Compute the speed of sound for each materials   
-_____________________________________________________________________*/
-void ICE::actuallyStep1a(const ProcessorGroup*, const Patch* patch,
-			 DataWarehouseP& old_dw, DataWarehouseP& new_dw)
-{
-  cout << "Doing actually step1a -- speed_of_sound_MM" << endl;
-  int numMatls = d_sharedState->getNumICEMatls();
-
-  for (int m = 0; m < numMatls; m++)  {
-    ICEMaterial* ice_matl   = d_sharedState->getICEMaterial(m);
-    EquationOfState* eos    = ice_matl->getEOS();
-    eos->computeSpeedSound( patch,  ice_matl,   old_dw, new_dw);
-  }
 }
 
 /* --------------------------------------------------------------------- 
@@ -849,9 +808,9 @@ void ICE::actuallyStep1a(const ProcessorGroup*, const Patch* patch,
                    
  Steps
  ----------------
-    - Compute rho_micro_CC
-    - Compute volfrac_CC
+    - Compute rho_micro_CC, SpeedSound, vol_frac
 
+    For each cell
     _ WHILE LOOP(convergence, max_iterations)
         - compute the pressure and dp_drho from the EOS of each material.
         - Compute delta Pressure
@@ -859,8 +818,8 @@ void ICE::actuallyStep1a(const ProcessorGroup*, const Patch* patch,
           volume fraction and the celldensity.
         - Test for convergence of delta pressure and delta volume fraction
     - END WHILE LOOP
-    - After the solution has converged then set the real 
-      array values = local temp values
+    - bulletproofing
+    end
  
 Note:  The nomenclature follows the reference.                                 
 _____________________________________________________________________*/
@@ -870,47 +829,23 @@ void ICE::computeEquilibrationPressure(
 {
   double    converg_coeff = 10;              
   double    convergence_crit = converg_coeff * DBL_EPSILON;
-  double    sum;
+  double    sum, tmp;
 
   int numMatls = d_sharedState->getNumICEMatls();
   vector<CCVariable<double> > vol_frac(numMatls);
   char warning[100];
   static int n_passes;                  
   n_passes ++; 
-  cout << "Doing actually step1b snapshot -- calc_equilibration_pressure" << endl;
+  cout << "Doing actually step1b -- calc_equilibration_pressure" << endl;
  
-  for(int m = 0; m < numMatls; m++) {
-    ICEMaterial* ice_matl = d_sharedState->getICEMaterial( m );
-    ice_matl->getEOS()->computeRhoMicro(patch,ice_matl,old_dw,new_dw);   
-  }
-
-  //_________________________________________________________
-  // The volume fraction computed here won't necessarily = 1.0.
-  // In fact it shouldn't except in completely static or 1 mat problems
-  for (int m = 0; m < numMatls; m++) {
-    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-    int dwindex = ice_matl->getDWIndex();
-    CCVariable<double> rho_micro_temp, rho_temp;   
-    
-    new_dw->allocate( vol_frac[m],lb->vol_frac_CCLabel, dwindex, patch);
-    old_dw->get(rho_temp,lb->rho_CCLabel, dwindex, patch, Ghost::None, 0); 
-    new_dw->get(rho_micro_temp,lb->rho_micro_CCLabel,dwindex,patch,
-		Ghost::None, 0);
-    
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
-	iter++)  {
-      vol_frac[m][*iter] = rho_temp[*iter]/rho_micro_temp[*iter];
-    }
-  }
-
   vector<double> delVol_frac(numMatls),press_eos(numMatls);
   vector<double> dp_drho(numMatls),dp_de(numMatls);
   
-  vector<CCVariable<double> > rho_micro(numMatls),rho_micro_equil(numMatls);
-  vector<CCVariable<double> > rho(numMatls);
+  vector<CCVariable<double> > rho_micro(numMatls);
+  vector<CCVariable<double> > rho_CC(numMatls);
   vector<CCVariable<double> > cv(numMatls);
   vector<CCVariable<double> > Temp(numMatls);
-  vector<CCVariable<double> > speedSound(numMatls),speedSound_old(numMatls);
+  vector<CCVariable<double> > speedSound(numMatls),speedSound_new(numMatls);
   CCVariable<double> press,press_new;
   
   old_dw->get(press,         lb->press_CCLabel, 0,patch,Ghost::None, 0); 
@@ -919,34 +854,56 @@ void ICE::computeEquilibrationPressure(
   for (int m = 0; m < numMatls; m++) {
     ICEMaterial* matl = d_sharedState->getICEMaterial(m);
     int dwindex = matl->getDWIndex();
-    old_dw->get(cv[m],  lb->cv_CCLabel,  dwindex, patch, Ghost::None, 0);
-    old_dw->get(rho[m], lb->rho_CCLabel, dwindex, patch, Ghost::None, 0);
-    old_dw->get(Temp[m],lb->temp_CCLabel,dwindex, patch, Ghost::None, 0);        
-    old_dw->get(speedSound_old[m],lb->speedSound_CCLabel,dwindex,patch,
-		Ghost::None, 0); 
-            
-    new_dw->allocate(speedSound[m],lb->speedSound_equiv_CCLabel,dwindex,patch);
-    new_dw->allocate(rho_micro_equil[m],lb->rho_micro_equil_CCLabel,dwindex,
-		     patch);
-    new_dw->get(rho_micro[m],lb->rho_micro_CCLabel,dwindex,patch,Ghost::None,
-		0);
+    old_dw->get(cv[m],        lb->cv_CCLabel,  dwindex, patch, Ghost::None, 0);
+    old_dw->get(rho_CC[m],    lb->rho_CCLabel, dwindex, patch, Ghost::None, 0);
+    old_dw->get(Temp[m],      lb->temp_CCLabel,dwindex, patch, Ghost::None, 0);              
+    new_dw->allocate(speedSound_new[m],lb->speedSound_CCLabel,dwindex, patch);
+    new_dw->allocate(rho_micro[m],     lb->rho_micro_CCLabel, dwindex, patch);
+    new_dw->allocate( vol_frac[m],     lb->vol_frac_CCLabel,  dwindex, patch); 
   }
-  /*`==========DEBUG============*/ 
-  if (switchDebug_equilibration_press) {
+  press_new = press;
 
+
+  //__________________________________
+  // Compute rho_micro, speedSound, and volfrac
+  for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
+       for (int m = 0; m < numMatls; m++) {
+       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+       double gamma = ice_matl->getGamma();
+                     
+        rho_micro[m][*iter] =  ice_matl->getEOS()->computeRhoMicro(
+                                            press_new[*iter],gamma,
+					         cv[m][*iter],Temp[m][*iter]); 
+                                                                     
+        ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
+                                            cv[m][*iter],Temp[m][*iter],
+                                            press_eos[m],dp_drho[m], dp_de[m]);
+                                            
+        tmp = dp_drho[m] + dp_de[m] * 
+                    (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
+        speedSound_new[m][*iter] = sqrt(tmp);
+        
+        vol_frac[m][*iter] = rho_CC[m][*iter]/rho_micro[m][*iter];
+     }
+ }
+
+/*`==========DEBUG============*/ 
+  if (switchDebug_equilibration_press) {
     printData( patch, 1, "TOP_equilibration", "Press_CC_top", press);
-    
-    for (int m = 0; m < numMatls; m++)  {
-      char description[50];
-      sprintf(description, "TOP_equilibration, Mat. %d ",m);
-      printData( patch, 1, description, "rho_CC",          rho[m]);
-      printData( patch, 1, description, "speedSound",      speedSound_old[m]);
-      printData( patch, 1, description, "Temp_CC",         Temp[m]);
+              
+   for (int m = 0; m < numMatls; m++)  {
+     char description[50];
+     sprintf(description, "TOP_equilibration_Mat_%d ",m);
+     printData( patch, 1, description, "rho_CC",          rho_CC[m]);
+     printData( patch, 0, description, "speedSound",      speedSound_new[m]);
+     printData( patch, 1, description, "Temp_CC",         Temp[m]);
     }
   }
-    /*==========DEBUG============`*/
-  press_new = press;
+ /*==========DEBUG============`*/
  
+       press_new = press;
+//______________________________________________________________________
+// Done with preliminary calcs, now loop over every cell
   int count, test_max_iter = 0;
   for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
     
@@ -966,16 +923,16 @@ void ICE::computeEquilibrationPressure(
       double C = 0.;
       
       for (int m = 0; m < numMatls; m++) 
-	delVol_frac[m] = 0.;
+        delVol_frac[m] = 0.;
       //__________________________________
-     // evaluate presss_eos at cell i,j,k
+     // evaluate press_eos at cell i,j,k
      for (int m = 0; m < numMatls; m++)  {
        ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
        double gamma = ice_matl->getGamma();
        
        ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
-					   cv[m][*iter],Temp[m][*iter],
-					   press_eos[m], dp_drho[m], dp_de[m]);
+                                           cv[m][*iter],Temp[m][*iter],
+                                           press_eos[m], dp_drho[m], dp_de[m]);
      }
      //__________________________________
      // - compute delPress
@@ -983,9 +940,8 @@ void ICE::computeEquilibrationPressure(
      vector<double> Q(numMatls),y(numMatls);     
      for (int m = 0; m < numMatls; m++)   {
        Q[m] =  press_new[*iter] - press_eos[m];
-       y[m] =  rho[m][*iter]/
-               ((vol_frac[m][*iter]*vol_frac[m][*iter])* dp_drho[m] +
-               d_SMALL_NUM);
+       y[m] =  dp_drho[m] * ( rho_CC[m][*iter]/
+               (vol_frac[m][*iter] * vol_frac[m][*iter] + d_SMALL_NUM) ); 
        A   +=  vol_frac[m][*iter];
        B   +=  Q[m]/(y[m] + d_SMALL_NUM);
        C   +=  1.0/(y[m]  + d_SMALL_NUM);
@@ -1002,8 +958,8 @@ void ICE::computeEquilibrationPressure(
        double gamma = ice_matl->getGamma();
        
        rho_micro[m][*iter] = 
-	 ice_matl->getEOS()->computeRhoMicro(press_new[*iter],gamma,
-					     cv[m][*iter],Temp[m][*iter]);
+         ice_matl->getEOS()->computeRhoMicro(press_new[*iter],gamma,
+                                             cv[m][*iter],Temp[m][*iter]);
      }
      //__________________________________
      // - compute the updated volume fractions
@@ -1011,7 +967,7 @@ void ICE::computeEquilibrationPressure(
      for (int m = 0; m < numMatls; m++)  {
        delVol_frac[m]       = -(Q[m] + delPress)/( y[m] + d_SMALL_NUM );
      //vol_frac[m][*iter]   += delVol_frac[m];
-       vol_frac[m][*iter]   = rho[m][*iter]/rho_micro[m][*iter];
+       vol_frac[m][*iter]   = rho_CC[m][*iter]/rho_micro[m][*iter];
      }
      //__________________________________
      // Find the speed of sound at ijk
@@ -1021,12 +977,12 @@ void ICE::computeEquilibrationPressure(
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
         double gamma = ice_matl->getGamma();
         ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
-					    cv[m][*iter],Temp[m][*iter],
-					    press_eos[m],dp_drho[m], dp_de[m]);
+                                            cv[m][*iter],Temp[m][*iter],
+                                            press_eos[m],dp_drho[m], dp_de[m]);
          
-        double temp = dp_drho[m] + dp_de[m] * 
+        tmp = dp_drho[m] + dp_de[m] * 
                     (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
-        speedSound[m][*iter] = sqrt(temp);
+        speedSound_new[m][*iter] = sqrt(tmp);
      }
      //__________________________________
      // - Test for convergence 
@@ -1083,11 +1039,7 @@ void ICE::computeEquilibrationPressure(
     }
   }     // end of cell interator
 
-              
     fprintf(stderr, "\n max number of iterations in any cell %i\n",test_max_iter);
-  // Update the boundary conditions for the variables:
-  // Pressure (press_new)
-
   /*__________________________________
    *   THIS NEEDS TO BE FIXED 
    *   WE NEED TO UPDATE BC_VALUES NOT PRESSURE
@@ -1146,17 +1098,15 @@ void ICE::computeEquilibrationPressure(
       }
       press_new[*iter] -= press_hydro;
     }
-  }  
-  
-  
+  }   
 #endif
-
+  
   for (int m = 0; m < numMatls; m++)   {
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
     int dwindex = ice_matl->getDWIndex();
-    new_dw->put( vol_frac[m],  lb->vol_frac_CCLabel,         dwindex,patch);
-    new_dw->put( speedSound[m],lb->speedSound_equiv_CCLabel, dwindex,patch);
-    new_dw->put( rho_micro[m], lb->rho_micro_equil_CCLabel,  dwindex,patch);
+    new_dw->put( vol_frac[m],      lb->vol_frac_CCLabel,   dwindex, patch);
+    new_dw->put( speedSound_new[m],lb->speedSound_CCLabel, dwindex, patch);
+    new_dw->put( rho_micro[m],     lb->rho_micro_CCLabel,  dwindex, patch);
   }
   new_dw->put(press_new,lb->press_equil_CCLabel,0,patch);
   
@@ -1164,13 +1114,13 @@ void ICE::computeEquilibrationPressure(
 /*`==========DEBUG============*/ 
   if (switchDebug_equilibration_press) {
     printData( patch, 1, "BOTTOM", "Press_CC_equil", press_new);
-    
-    for (int m = 0; m < numMatls; m++)  {
-      char description[50];
-      sprintf(description, "BOT_equilibration, Mat. %d ",m);
-      printData( patch, 1, description, "rho_CC",          rho[m]);
-      printData( patch, 1, description, "speedSound",      speedSound_old[m]);
-      printData( patch, 1, description, "Temp_CC",         Temp[m]);
+              
+   for (int m = 0; m < numMatls; m++)  {
+     char description[50];
+     sprintf(description, "BOT_equilibration_Mat_%d ",m);
+     printData( patch, 1, description, "rho_CC",          rho_CC[m]);
+     printData( patch, 1, description, "speedSound",      speedSound_new[m]);
+     printData( patch, 1, description, "Temp_CC",         Temp[m]);
     }
   }
  /*==========DEBUG============`*/
@@ -1205,9 +1155,9 @@ void ICE::computeFaceCenteredVelocities(
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial( m );
     int dwindex = ice_matl->getDWIndex();
     
-    old_dw->get(rho_CC,  lb->rho_CCLabel,   dwindex, patch, Ghost::None, 0);
-    new_dw->get(rho_micro_CC, lb->rho_micro_equil_CCLabel,dwindex,patch,
-		Ghost::None, 0);
+    old_dw->get(rho_CC,  lb->rho_CCLabel, dwindex, patch, Ghost::None, 0);
+    new_dw->get(rho_micro_CC, lb->rho_micro_CCLabel,dwindex,patch,
+		                                            Ghost::None, 0);        
     old_dw->get(vel_CC, lb->vel_CCLabel,  dwindex, patch, Ghost::None, 0);
     
     SFCXVariable<double> uvel_FC;
@@ -1318,7 +1268,7 @@ void ICE::computeFaceCenteredVelocities(
 /*`==========DEBUG============*/ 
     if (switchDebug_vel_FC ) {
      char description[50];
-     sprintf(description, "bottom of vel_FC, Mat. %d ",m);
+     sprintf(description, "bottom_of_vel_FC_Mat_%d ",m);
     printData_FC( patch,1, description, "uvel_FC", uvel_FC);
     printData_FC( patch,1, description, "vvel_FC", vvel_FC);
     printData_FC( patch,1, description, "wvel_FC", wvel_FC);
@@ -1410,10 +1360,10 @@ void ICE::addExchangeContributionToFCVel(
   for(int m = 0; m < numMatls; m++) {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
     int dwindex = matl->getDWIndex();
-    new_dw->get(rho_micro_CC[m], lb->rho_micro_equil_CCLabel, dwindex, patch, 
-		Ghost::None, 0);
+    new_dw->get(rho_micro_CC[m], lb->rho_micro_CCLabel, dwindex, patch, 
+		                                                Ghost::None, 0);         
     new_dw->get(vol_frac_CC[m],  lb->vol_frac_CCLabel,dwindex, patch, 
-		Ghost::None, 0);
+		                                                Ghost::None, 0);
     new_dw->get(uvel_FC[m], lb->uvel_FCLabel, dwindex, patch, Ghost::None, 0);
     new_dw->get(vvel_FC[m], lb->vvel_FCLabel, dwindex, patch, Ghost::None, 0);
     new_dw->get(wvel_FC[m], lb->wvel_FCLabel, dwindex, patch, Ghost::None, 0);
@@ -1575,10 +1525,10 @@ void ICE::addExchangeContributionToFCVel(
   if (switchDebug_Exchange_FC ) {
     for (int m = 0; m < numMatls; m++)  {
       char description[50];
-      sprintf(description, "Exchange FC before BC, Mat. %d ",m);
-      printData_FC( patch,1, description, "uvel_FCME", uvel_FCME[m]);
-      printData_FC( patch,1, description, "vvel_FCME", vvel_FCME[m]);
-      printData_FC( patch,1, description, "wvel_FCME", wvel_FCME[m]);
+    sprintf(description, "Exchange_FC_before_BC_Mat_%d ",m);
+    printData_FC( patch,1, description, "uvel_FCME", uvel_FCME[m]);
+    printData_FC( patch,1, description, "vvel_FCME", vvel_FCME[m]);
+    printData_FC( patch,1, description, "wvel_FCME", wvel_FCME[m]);
     }
   }
   /*==========DEBUG============`*/
@@ -1660,11 +1610,11 @@ void ICE::computeDelPressAndUpdatePressCC(
     new_dw->get(uvel_FC, lb->uvel_FCMELabel, dwindex,  patch,Ghost::None, 0);
     new_dw->get(vvel_FC, lb->vvel_FCMELabel, dwindex,  patch,Ghost::None, 0);
     new_dw->get(wvel_FC, lb->wvel_FCMELabel, dwindex,  patch,Ghost::None, 0);
-    new_dw->get(vol_frac,lb->vol_frac_CCLabel,dwindex, patch,Ghost::None, 0);
-    new_dw->get(rho_micro_CC, lb->rho_micro_equil_CCLabel,dwindex,patch,
-		Ghost::None, 0);
-    new_dw->get(speedSound,lb->speedSound_equiv_CCLabel,dwindex,patch,
-		Ghost::None, 0);
+    new_dw->get(vol_frac,lb->vol_frac_CCLabel,dwindex, patch,Ghost::None, 0);                                                    
+    new_dw->get(rho_micro_CC, lb->rho_micro_CCLabel,dwindex,patch,
+		                                               Ghost::None, 0);
+    new_dw->get(speedSound,lb->speedSound_CCLabel,dwindex,patch,
+		                                               Ghost::None, 0);
     //__________________________________
     // Advection preprocessing
     // - divide vol_frac_cc/vol
@@ -1683,7 +1633,7 @@ void ICE::computeDelPressAndUpdatePressCC(
     if (switchDebug_explicit_press ) {
 #if 1
     char description[50];
-    sprintf(description, "middle of explicit Pressure, Mat. %d ",m);
+    sprintf(description, "middle_of_explicit_Pressure_Mat_%d ",m);
     printData_FC( patch,1, description, "uvel_FC", uvel_FC);
     printData_FC( patch,1, description, "vvel_FC", vvel_FC);
     printData_FC( patch,1, description, "wvel_FC", wvel_FC);
@@ -1725,8 +1675,8 @@ void ICE::computeDelPressAndUpdatePressCC(
   
 /*`==========DEBUG============*/ 
   if (switchDebug_explicit_press) {
-    printData( patch, 1, "Bottom of explicit Pressure ", "delPress_CC",  delPress);
-    printData( patch, 1, " ",                            "Press_CC",     press_CC);
+    printData( patch, 1, "Bottom_of_explicit_Pressure ", "delPress_CC",  delPress);
+    printData( patch, 1, "Bottom_of_explicit_Pressure",  "Press_CC",     press_CC);
   }
  /*==========DEBUG============`*/
 }
@@ -1999,12 +1949,11 @@ void ICE::accumulateEnergySourceSinks(
 
   for(int m = 0; m < numMatls; m++) {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
-    int dwindex       = matl->getDWIndex();
-    
-    new_dw->get(rho_micro_CC,lb->rho_micro_equil_CCLabel,dwindex,patch,
-		Ghost::None, 0);
-    new_dw->get(speedSound,lb->speedSound_equiv_CCLabel,dwindex,patch,
-		Ghost::None, 0);
+    int dwindex       = matl->getDWIndex();                 
+    new_dw->get(rho_micro_CC,lb->rho_micro_CCLabel,dwindex,patch,
+		                                              Ghost::None, 0);                                            
+    new_dw->get(speedSound,lb->speedSound_CCLabel,dwindex,patch,
+		                                              Ghost::None, 0); 
     new_dw->get(vol_frac,lb->vol_frac_CCLabel,dwindex,patch,Ghost::None, 0);
     CCVariable<double> int_eng_source;
     new_dw->allocate(int_eng_source,lb->int_eng_source_CCLabel,dwindex,patch);
@@ -2028,7 +1977,7 @@ void ICE::accumulateEnergySourceSinks(
 /*`==========TESTING==========*/
     if (switchDebugSource_Sink) {
       char description[50];
-      sprintf(description, "sources/sinks, Mat. %d ",m);
+    sprintf(description, "sources/sinks_Mat_%d ",m);
       printData( patch, 1, description,    "int_eng_source",  int_eng_source);
     }
     /*==========TESTING==========`*/
@@ -2097,7 +2046,7 @@ void ICE::computeLagrangianValues(
  /*`==========DEBUG============*/ 
     if (switchDebugLagrangianValues ) {
       char description[50];
-      sprintf(description, "Bot Lagrangian Values, Mat. %d ",m);
+    sprintf(description, "Bot_Lagrangian_Values_Mat_%d ",m);
       printVector( patch,1, description, "xmom_L_CC", 0, mom_L);
       printVector( patch,1, description, "ymom_L_CC", 1, mom_L);
       printVector( patch,1, description, "zmom_L_CC", 2, mom_L);
@@ -2179,14 +2128,13 @@ void ICE::addExchangeToMomentumAndEnergy(
   for(int m = 0; m < numMatls; m++)  {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
     int dwindex = matl->getDWIndex();
-    old_dw->get(rho_CC[m],   lb->rho_CCLabel,  dwindex,patch, Ghost::None, 0);
-    new_dw->get(mom_L[m],    lb->mom_L_CCLabel,dwindex, patch, Ghost::None, 0);
-    new_dw->get(int_eng_L[m],lb->int_eng_L_CCLabel,dwindex,patch,
-		Ghost::None,0);
-    new_dw->get(vol_frac_CC[m],lb->vol_frac_CCLabel,dwindex,patch,Ghost::None,
-		0);
-    new_dw->get(rho_micro_CC[m],lb->rho_micro_equil_CCLabel,dwindex,patch,
-		Ghost::None, 0);
+    old_dw->get(rho_CC[m],   lb->rho_CCLabel,       dwindex,patch, Ghost::None,0);
+    new_dw->get(mom_L[m],    lb->mom_L_CCLabel,     dwindex,patch, Ghost::None,0);
+    new_dw->get(int_eng_L[m],lb->int_eng_L_CCLabel, dwindex,patch,
+		                                                     Ghost::None,0);
+    new_dw->get(vol_frac_CC[m],lb->vol_frac_CCLabel,dwindex,patch, Ghost::None,0);
+    new_dw->get(rho_micro_CC[m],lb->rho_micro_CCLabel,dwindex,patch,
+		                                                     Ghost::None,0);           
     old_dw->get(cv_CC[m],lb->cv_CCLabel,dwindex,patch, Ghost::None, 0);
 
     new_dw->allocate( mom_L_ME[m],   lb->mom_L_ME_CCLabel,     dwindex, patch);
@@ -2197,7 +2145,7 @@ void ICE::addExchangeToMomentumAndEnergy(
       H[numMatls-1-i][i] = d_K_heat[i];
   }
 
-#if 1  
+#if 0  
   for (int i = 0; i < numMatls; i++) {
     for (int j = 0; j < numMatls; j++) {
       cout << "K["<<i<<"]["<<j<<"]="<<K[i][j] << endl;
@@ -2411,8 +2359,6 @@ void ICE::advectAndAdvanceInTime(
     new_dw->get(mass_L,    lb->mass_L_CCLabel,   dwindex,patch,Ghost::None,0);
     new_dw->get(int_eng_L_ME,lb->int_eng_L_ME_CCLabel,dwindex,patch,
 		Ghost::None,0);
-    new_dw->get(speedSound, lb->speedSound_equiv_CCLabel,dwindex,patch,
-		Ghost::None,0);
     CCVariable<double> rho_CC, visc_CC, cv,temp;
     CCVariable<Vector> vel_CC;
     new_dw->allocate(rho_CC, lb->rho_CCLabel,        dwindex,patch);
@@ -2502,16 +2448,16 @@ void ICE::advectAndAdvanceInTime(
     /*`==========DEBUG============*/  
     if (switchDebug_advance_advect ) {
       char description[50];
-      sprintf(description, "AFTER Advection after BC's, Mat. %d ",m);
-      printData( patch,1, description,   "rho_CC",      rho_CC);
-      printData( patch,1, description,   "Temp_CC",temp);
-      printVector( patch,1, description, "uvel_CC", 0, vel_CC);
-      printVector( patch,1, description, "vvel_CC", 1, vel_CC);
-      printVector( patch,1, description, "wvel_CC", 2, vel_CC);
-      printVector( patch,1, description, "xmom_L_CC", 0, mom_L_ME);
-      printVector( patch,1, description, "ymom_L_CC", 1, mom_L_ME);
-      printVector( patch,1, description, "zmom_L_CC", 2, mom_L_ME);
-      printData( patch,1, description,   "int_eng_L_CC",int_eng_L_ME);
+    sprintf(description, "AFTER_Advection_after_BC_Mat_%d ",m);
+    printVector( patch,0, description, "xmom_L_CC", 0, mom_L_ME);
+    printVector( patch,0, description, "ymom_L_CC", 1, mom_L_ME);
+    printVector( patch,0, description, "zmom_L_CC", 2, mom_L_ME);
+    printData( patch,0, description,   "int_eng_L_CC",int_eng_L_ME);
+    printData( patch,1, description,   "rho_CC",      rho_CC);
+    printData( patch,1, description,   "Temp_CC",temp);
+    printVector( patch,1, description, "uvel_CC", 0, vel_CC);
+    printVector( patch,1, description, "vvel_CC", 1, vel_CC);
+    printVector( patch,1, description, "wvel_CC", 2, vel_CC);
     }
     /*==========DEBUG============`*/
     
@@ -3460,8 +3406,8 @@ void    ICE::printData(const Patch* patch, int include_GC,
   IntVector lowIndex, hiIndex; 
   
   fprintf(stderr,"______________________________________________\n");
-  fprintf(stderr,"%s\n",message1);
-  fprintf(stderr,"~%s\n",message2);
+  fprintf(stderr,"$%s\n",message1);
+  fprintf(stderr,"$%s\n",message2);
   
   if (include_GC == 1)  { 
     lowIndex = patch->getCellLowIndex();
@@ -3483,7 +3429,7 @@ void    ICE::printData(const Patch* patch, int include_GC,
     for(j = yLo; j < yHi; j++) {
       for(i = xLo; i < xHi; i++) {
 	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]= %15.14f  ",
+	fprintf(stderr,"[%d,%d,%d]~ %15.14f  ",
 		i,j,k, q_CC[idx]);
 	
 	/*  fprintf(stderr,"\n"); */
@@ -3510,8 +3456,8 @@ void    ICE::printVector(const Patch* patch, int include_GC,
   IntVector lowIndex, hiIndex; 
   
   fprintf(stderr,"______________________________________________\n");
-  fprintf(stderr,"%s\n",message1);
-  fprintf(stderr,"~%s\n",message2);
+  fprintf(stderr,"$%s\n",message1);
+  fprintf(stderr,"$%s\n",message2);
   
   if (include_GC == 1)  { 
     lowIndex = patch->getCellLowIndex();
@@ -3533,7 +3479,7 @@ void    ICE::printVector(const Patch* patch, int include_GC,
     for(j = yLo; j < yHi; j++) {
       for(i = xLo; i < xHi; i++) {
 	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]= %15.14f  ",
+	fprintf(stderr,"[%d,%d,%d]~ %15.14f  ",
 		i,j,k, q_CC[idx](component));
 	
 	/*  fprintf(stderr,"\n"); */
@@ -3560,8 +3506,8 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
   IntVector lowIndex, hiIndex; 
   
   fprintf(stderr,"______________________________________________\n");
-  fprintf(stderr,"%s\n",message1);
-  fprintf(stderr,"~%s\n",message2);
+  fprintf(stderr,"$%s\n",message1);
+  fprintf(stderr,"$%s\n",message2);
   
   if (include_GC == 1)  { 
     lowIndex = patch->getCellLowIndex();
@@ -3583,7 +3529,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     for(j = yLo; j < yHi; j++) {
       for(i = xLo; i < xHi; i++) {
 	IntVector idx(i+1, j, k);
-	fprintf(stderr,"[%d,%d,%d]= %15.14f  ",
+	fprintf(stderr,"[%d,%d,%d]~ %15.14f  ",
 		i,j,k, q_FC[idx]);
 	
 	/*  fprintf(stderr,"\n"); */
@@ -3608,8 +3554,8 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
   IntVector lowIndex, hiIndex; 
   
   fprintf(stderr,"______________________________________________\n");
-  fprintf(stderr,"%s\n",message1);
-  fprintf(stderr,"~%s\n",message2);
+  fprintf(stderr,"$%s\n",message1);
+  fprintf(stderr,"$%s\n",message2);
   
   if (include_GC == 1)  { 
     lowIndex = patch->getCellLowIndex();
@@ -3631,7 +3577,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     for(j = yLo; j < yHi; j++) {
       for(i = xLo; i < xHi; i++) {
 	IntVector idx(i,j+1, k);
-	fprintf(stderr,"[%d,%d,%d]= %15.14f  ",
+	fprintf(stderr,"[%d,%d,%d]~ %15.14f  ",
 		i,j,k, q_FC[idx]);
 	
 	/*  fprintf(stderr,"\n"); */
@@ -3657,8 +3603,8 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
   IntVector lowIndex, hiIndex; 
   
   fprintf(stderr,"______________________________________________\n");
-  fprintf(stderr,"%s\n",message1);
-  fprintf(stderr,"~%s\n",message2);
+  fprintf(stderr,"$%s\n",message1);
+  fprintf(stderr,"$%s\n",message2);
   
   if (include_GC == 1)  { 
     lowIndex = patch->getCellLowIndex();
@@ -3680,7 +3626,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     for(j = yLo; j < yHi; j++) {
       for(i = xLo; i < xHi; i++) {
 	IntVector idx(i,j, k+1);
-	fprintf(stderr,"[%d,%d,%d]= %15.14f  ",
+	fprintf(stderr,"[%d,%d,%d]~ %15.14f  ",
 		i,j,k, q_FC[idx]);
 	
 	/*  fprintf(stderr,"\n"); */
@@ -3885,6 +3831,13 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.91  2001/01/13 01:41:49  harman
+// - changed all speedSound_equiv_CCLabels to speedSound_CCLabel
+// - changed all rho_micro_equil_CCLabels to rho_micro_CCLabel
+// - eliminated step1a
+// - reorganized the preliminary calcs. in equilibrium press.
+// - eliminated speedSound requires from advectAndAdvanceInTime
+//
 // Revision 1.90  2001/01/12 18:54:57  jas
 // Remove the #define debug switches since they are now replaced with input file
 // debug switches.
