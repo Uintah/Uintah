@@ -121,8 +121,7 @@ Qt is necessary if you want to build the graphical user interface to the
 SCIRun2 framework (recommended).
 A free version of Qt for noncommercial use can be downloaded from
 <a href="http://www.trolltech.com">www.trolltech.com</a>.
-Only the distributions "qt-x11-free-3.3.1" and "qt-x11-free-3.3.2" have
-been tested.
+The distributions "qt-x11-free-3.3.x" have been tested.
 <em>Be sure to configure and build Qt with multithreading enabled
 (<b>Qt configure option -thread</b>).</em>
 
