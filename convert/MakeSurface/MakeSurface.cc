@@ -1,14 +1,11 @@
 
-#include <Multitask/Task.h>
 #include <Surface.h>
+#include <Classlib/Pstreams.h>
 #include <iostream.h>
 #include <fstream.h>
 
 int main(int argc, char** argv)
 {
-    // Initialize the multithreader
-    TaskManager::initialize();
-
     if(argc != 4 && argc != 5){
 	cerr << "Usage: " << argv[0] << " infile pointfile trifile [surface name]" << endl;
 	return -1;
