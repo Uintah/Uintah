@@ -713,7 +713,9 @@ extern "C"
 		     const double* efac, const double* wfac,
 		     const double* nfac, const double* sfac,
 		     const double* tfac, const double* bfac,
-		     const double* dxpw, const double* dyps, const double* dzpb);
+		     const double* dxpw, const double* dxep, 
+		     const double* dyps, const double* dynp,
+		     const double* dzpb, const double* dztp);
 
     ////////////////////////////////////////////////////////////////////////
     //
@@ -782,6 +784,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.28  2000/08/09 20:19:25  rawat
+// modified scalcoef.F
+//
 // Revision 1.27  2000/08/01 23:28:43  skumar
 // Added residual calculation procedure and modified templates in linear
 // solver.  Added template for order-of-magnitude term calculation.
