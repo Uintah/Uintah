@@ -21,6 +21,7 @@
 #include <Salmon/Roe.h>
 #include <CallbackCloners.h>
 #include <Connection.h>
+#include <DBContext.h>
 #include <HelpUI.h>
 #include <MessageTypes.h>
 #include <ModuleHelper.h>
@@ -72,6 +73,11 @@ Module* Salmon::clone(int deep)
 void Salmon::do_execute()
 {
     while(1){
+	if(mailbox.nitems() == 0){
+	    // See if anything needs to be redrawn...
+	    for(int i=0;i<topRoe.size();i++)
+		topRoe[i]->redraw_if_needed();
+	}
 	MessageBase* msg=mailbox.receive();
 	GeometryComm* gmsg=(GeometryComm*)msg;
 	switch(msg->type){
@@ -80,6 +86,13 @@ void Salmon::do_execute()
 		Callback_Message* cmsg=(Callback_Message*)msg;
 		cmsg->mcb->perform(cmsg->cbdata);
 		if(cmsg->cbdata)delete cmsg->cbdata;
+	    }
+	    break;
+	case MessageTypes::DoDBCallback:
+	    {
+		DBCallback_Message* cmsg=(DBCallback_Message*)msg;
+		cmsg->mcb->perform(cmsg->context, cmsg->which,
+				   cmsg->value, cmsg->delta, cmsg->cbdata);
 	    }
 	    break;
 	case MessageTypes::GeometryInit:
@@ -427,7 +440,6 @@ void Salmon::spawnIndCB(CallbackData*, void*)
       item=topRoe[0]->geomItemA[i];
       topRoe[topRoe.size()-1]->itemAdded(item->geom, item->name);
   }
-  topRoe[topRoe.size()-1]->redrawAll();
 //  printFamilyTree();
 }
 

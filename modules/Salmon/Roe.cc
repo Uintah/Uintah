@@ -1,3 +1,4 @@
+
 /*
  *  Salmon.cc:  The Geometry Viewer Window
  *
@@ -44,6 +45,7 @@
 #include <Geometry/Vector.h>
 #include <GL/glu.h>
 #include <CallbackCloners.h>
+#include <Math/Expon.h>
 #include <Math/MiscMath.h>
 #include <Geometry/BBox.h>
 #include <stdio.h>
@@ -109,6 +111,8 @@ static MouseHandlerData* mouse_handlers[8][3] = {
     0,			// Alt+Control+Shift, button 3
 };
 
+static total_salmon_count=1;
+
 GeomItem::GeomItem() {
 }
 
@@ -132,31 +136,45 @@ Roe::Roe(Salmon* s) {
 
 void Roe::RoeInit(Salmon* s) {
     // Build the Dialog Box Contexts...
-    dbcontext_st=new DBContext("Salmon");
-    dbcontext_st->set_knob(1, "Scale",
+    need_redraw=0;
+    manager=s;
+    salmon_count=total_salmon_count++;
+    dbcontext_st=new DBContext(clString("Salmon<")+to_string(salmon_count)+">");
+    dbcontext_st->set_knob(0, "Scale",
 			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
 					       &Roe::DBscale, 0));
-    dbcontext_st->set_range(1, -10, 10); 
-    dbcontext_st->set_value(1, 1.0);
-    dbcontext_st->set_knob(5, "Translate X",
+    dbcontext_st->set_range(0, -3, 3); 
+    dbcontext_st->set_value(0, 0.0);
+    dbcontext_st->set_knob(6, "Translate X",
 			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
 					       &Roe::DBtranslate, (void*)0));
-    dbcontext_st->set_range(5, -100, 100);
-    dbcontext_st->set_knob(6, "Translate Y",
+    dbcontext_st->set_scale(6, 100);
+    dbcontext_st->set_knob(4, "Translate Y",
 			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
 					       &Roe::DBtranslate, (void*)1));
-    dbcontext_st->set_range(5, -100, 100);
-    dbcontext_st->set_knob(7, "Translate Z",
+    dbcontext_st->set_scale(4, 100);
+    dbcontext_st->set_knob(2, "Translate Z",
 			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
 					       &Roe::DBtranslate, (void*)2));
-    dbcontext_st->set_range(5, -100, 100);
+    dbcontext_st->set_scale(2, 100);
+    dbcontext_st->set_knob(7, "Rotate X",
+			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
+						     &Roe::DBrotate, (void*)0));
+    dbcontext_st->set_wraprange(7, 0, 360.0);
+    dbcontext_st->set_knob(5, "Rotate Y",
+			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
+						     &Roe::DBrotate, (void*)1));
+    dbcontext_st->set_wraprange(5, 0, 360.0);
+    dbcontext_st->set_knob(3, "Rotate Z",
+			   new DBCallback<Roe>FIXCB2(&manager->mailbox, this,
+						     &Roe::DBrotate, (void*)2));
+    dbcontext_st->set_wraprange(3, 0, 360.0);
     evl->lock();
     modifier_mask=0;
     doneInit=0;
     old_fh=-1;
     modefont=0;
     buttons_exposed=0;
-    manager=s;
     drawinfo=new DrawInfo;
     drawinfo->drawtype=DrawInfo::Gouraud;
 
@@ -413,7 +431,6 @@ void Roe::RoeInit(Salmon* s) {
 				&Salmon::spawnIndCB,
 				0, 0);
     spawnInd->Create(*spawnRC, "Spawn Independent");
-    
     evl->unlock();
 }
 
@@ -444,7 +461,7 @@ void Roe::orthoCB(CallbackData*, void*) {
 	glScaled(scl,scl,scl);
     }
     glMatrixMode(GL_MODELVIEW);
-    redrawAll();
+    need_redraw=1;
 }
 
 void Roe::perspCB(CallbackData*, void*) {
@@ -453,13 +470,13 @@ void Roe::perspCB(CallbackData*, void*) {
     glLoadIdentity();
     gluPerspective(90, 1.33, 1, 100);
     glMatrixMode(GL_MODELVIEW);
-    redrawAll();
+    need_redraw=1;
 }
 
 void Roe::redrawCB(CallbackData*, void*){
     if(!doneInit)
 	initCB(0, 0);
-    redrawAll();
+    need_redraw=1;
 }
 
 void Roe::initCB(CallbackData*, void*) {
@@ -594,9 +611,6 @@ void Roe::redrawAll()
 	}
 	drawinfo->pop_matl();
 	GLwDrawingAreaSwapBuffers(*graphics);
-	for (int i=0; i<kids.size(); i++) {
-	    kids[i]->redrawAll();
-	}
 	evl->unlock();       
     }
 }
@@ -624,7 +638,7 @@ void Roe::itemCB(CallbackData*, void *gI) {
 	    }
 	}
     }
-    redrawAll();
+    need_redraw=1;
 }
 
 void Roe::destroyWidgetCB(CallbackData*, void*)
@@ -645,7 +659,6 @@ void Roe::spawnChCB(CallbackData*, void*)
   kids[kids.size()-1]->SetParent(this);
   for (int i=0; i<geomItemA.size(); i++)
       kids[kids.size()-1]->itemAdded(geomItemA[i]->geom, geomItemA[i]->name);
-  kids[kids.size()-1]->redrawAll();
 //  manager->printFamilyTree();
 
 }
@@ -754,7 +767,7 @@ void Roe::wireCB(CallbackData*, void*)
     drawinfo->current_matl=0;
     make_current();
     glDisable(GL_LIGHTING);
-    redrawAll();
+    need_redraw=1;
 }
 
 void Roe::flatCB(CallbackData*, void*)
@@ -763,7 +776,7 @@ void Roe::flatCB(CallbackData*, void*)
     drawinfo->current_matl=0;
     make_current();
     glDisable(GL_LIGHTING);
-    redrawAll();
+    need_redraw=1;
 }
 
 void Roe::gouraudCB(CallbackData*, void*)
@@ -772,7 +785,7 @@ void Roe::gouraudCB(CallbackData*, void*)
     drawinfo->current_matl=0;
     make_current();
     glEnable(GL_LIGHTING);
-    redrawAll();
+    need_redraw=1;
 }
 
 void Roe::phongCB(CallbackData*, void*)
@@ -781,7 +794,7 @@ void Roe::phongCB(CallbackData*, void*)
     drawinfo->current_matl=0;
     make_current();
     glEnable(GL_LIGHTING);
-    redrawAll();
+    need_redraw=1;
 }
 
 void Roe::ambientCB(CallbackData*, void*)
@@ -796,7 +809,7 @@ void Roe::fogCB(CallbackData*, void*) {
     } else {
 	glDisable(GL_FOG);
     }
-    redrawAll();
+    need_redraw=1;
 }
 
 void Roe::point1CB(CallbackData*, void*)
@@ -807,44 +820,51 @@ void Roe::point1CB(CallbackData*, void*)
     } else {
 	glDisable(GL_LIGHT0);
     }
-    redrawAll();
+    need_redraw=1;
 }
 void Roe::goHomeCB(CallbackData*, void*)
 {
     make_current();
     glLoadMatrixd(inheritMat);
-    redrawAll();
+    need_redraw=1;
 }
+
+void Roe::get_bounds(BBox& bbox)
+{
+    bb.reset();
+    HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
+    for (iter.first(); iter.ok(); ++iter) {
+	HashTable<int, GeomObj*>* serHash=iter.get_data();
+	HashTableIter<int, GeomObj*> serIter(serHash);
+	for (serIter.first(); serIter.ok(); ++serIter) {
+	    GeomObj *geom=serIter.get_data();
+	    for (int i=0; i<geomItemA.size(); i++)
+		if (geomItemA[i]->geom == geom)
+		    if (geomItemA[i]->vis) {
+			bbox.extend(geom->bbox());
+		    }
+	}		
+    }	
+}
+
 void Roe::autoViewCB(CallbackData*, void*)
 {
-    if (!bb.valid()) {
-	HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
-	for (iter.first(); iter.ok(); ++iter) {
-	    HashTable<int, GeomObj*>* serHash=iter.get_data();
-	    HashTableIter<int, GeomObj*> serIter(serHash);
-	    for (serIter.first(); serIter.ok(); ++serIter) {
-		GeomObj *geom=serIter.get_data();
-		for (int i=0; i<geomItemA.size(); i++)
-		    if (geomItemA[i]->geom == geom)
-			if (geomItemA[i]->vis) {
-			    bb.extend(geom->bbox());
-			}
-	    }		
-	}
-    }	
-    // do we have anything to look at?
-    if (!bb.valid()) return;
-    Point lookat(bb.center());
-    lookat.z(bb.max().z());
-    double xwidth=lookat.x()-bb.min().x();
-    double ywidth=lookat.y()-bb.min().y();
+    BBox bbox;
+    get_bounds(bbox);
+    if (!bbox.valid()) return;
+    Point lookat(bbox.center());
+    lookat.z(bbox.max().z());
+    double lx=lookat.x();
+    double xwidth=lx-bbox.min().x();
+    double ly=lookat.y();
+    double ywidth=ly-bbox.min().y();
     double dist=Max(xwidth, ywidth);
     make_current();
     evl->lock();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(lookat.x(), lookat.y(), lookat.z()+dist, lookat.x(), 
-	      lookat.y(), lookat.z(), 0, 1, 0);
+    double lz=lookat.z();
+    gluLookAt(lx, ly, lz+dist, lx, ly, lz, 0, 1, 0);
     mtnScl=1;
     // if we're in orthographics mode, scale appropriately
     char ort;
@@ -858,7 +878,7 @@ void Roe::autoViewCB(CallbackData*, void*)
 	glMatrixMode(GL_MODELVIEW);
     }
     evl->unlock();
-    redrawAll();
+    need_redraw=1;
 }    
 
 void Roe::setHomeCB(CallbackData*, void*)
@@ -867,7 +887,7 @@ void Roe::setHomeCB(CallbackData*, void*)
     glGetDoublev(GL_MODELVIEW_MATRIX, inheritMat);
 }
 
-Roe::Roe(const Roe& copy)
+Roe::Roe(const Roe&)
 {
     NOT_FINISHED("Roe::Roe");
 }
@@ -885,9 +905,10 @@ void Roe::rotate(double angle, Vector v, Point c)
     glMultMatrixd(temp);
     for (int i=0; i<kids.size(); i++)
 	kids[i]->rotate(angle, v, c);
+    need_redraw=1;
 }
 
-void mmult(double *m, double *p1, double *p2) {
+static void mmult(double *m, double *p1, double *p2) {
     for (int i=0; i<4; i++) {
 	p2[i]=0;
 	for (int j=0; j<4; j++) {
@@ -910,6 +931,7 @@ void Roe::translate(Vector v)
     glMultMatrixd(temp);
     for (int i=0; i<kids.size(); i++)
 	kids[i]->translate(v);
+    need_redraw=1;
 }
 
 void Roe::scale(Vector v, Point c)
@@ -921,6 +943,7 @@ void Roe::scale(Vector v, Point c)
     mtnScl*=v.x();
     for (int i=0; i<kids.size(); i++)
 	kids[i]->scale(v, c);
+    need_redraw=1;
 }
 
 void Roe::eventCB(CallbackData* cbdata, void*)
@@ -1117,7 +1140,7 @@ void Roe::mouse_translate(int action, int x, int y, int, int)
 	    glMultMatrixd(temp);
 	    for (int i=0; i<kids.size(); i++)
 		kids[i]->translate(Vector(-xmtn/mtnScl, ymtn/mtnScl, 0));
-	    redrawAll();
+	    need_redraw=1;
 	    update_mode_string(clString("translate: ")+to_string(total_x)
 			       +", "+to_string(total_y));
 	}
@@ -1137,20 +1160,7 @@ void Roe::mouse_scale(int action, int x, int y, int, int)
 	    last_x=x;
 	    last_y=y;
 	    total_x=1;
-	    if (!bb.valid()) {
-		HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
-		for (iter.first(); iter.ok(); ++iter) {
-		    HashTable<int, GeomObj*>* serHash=iter.get_data();
-		    HashTableIter<int, GeomObj*> serIter(serHash);
-		    for (serIter.first(); serIter.ok(); ++serIter) {
-			GeomObj *geom=serIter.get_data();
-			for (int i=0; i<geomItemA.size(); i++)
-			    if (geomItemA[i]->geom == geom)
-				if (geomItemA[i]->vis)
-				    bb.extend(geom->bbox());
-		    }		
-		}
-	    }
+	    get_bounds(bb);
 	}
 	break;
     case BUTTON_MOTION:
@@ -1176,7 +1186,7 @@ void Roe::mouse_scale(int action, int x, int y, int, int)
 	    for (int i=0; i<kids.size(); i++) {
 		kids[i]->scale(Vector(scl, scl, scl), cntr);
 	    }
-	    redrawAll();
+	    need_redraw=1;
 	    update_mode_string(clString("scale: ")+to_string(total_x*100)+"%");
 	}
 	break;
@@ -1194,20 +1204,7 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
 	    update_mode_string("rotate:");
 	    last_x=x;
 	    last_y=y;
-	    if (!bb.valid()) {
-		HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
-		for (iter.first(); iter.ok(); ++iter) {
-		    HashTable<int, GeomObj*>* serHash=iter.get_data();
-		    HashTableIter<int, GeomObj*> serIter(serHash);
-		    for (serIter.first(); serIter.ok(); ++serIter) {
-			GeomObj *geom=serIter.get_data();
-			for (int i=0; i<geomItemA.size(); i++)
-			    if (geomItemA[i]->geom == geom)
-				if (geomItemA[i]->vis)
-				    bb.extend(geom->bbox());
-		    }		
-		}	
-	    }
+	    get_bounds(bb);
 	}
 	break;
     case BUTTON_MOTION:
@@ -1255,7 +1252,7 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
 		kids[i]->rotate(totMtn,Vector(-ymtn,-xmtn,0),
 				Point(0,0,trans[2]));
 	    }
-	    redrawAll();
+	    need_redraw=1;
 	    update_mode_string("rotate:");
 	}
 	break;
@@ -1265,7 +1262,7 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
     }
 }
 
-void Roe::mouse_pick(int action, int x, int y, int, int)
+void Roe::mouse_pick(int, int, int, int, int)
 {
     NOT_FINISHED("mouse_pick");
 }
@@ -1355,12 +1352,70 @@ void Roe::attach_dials(CallbackData*, void* ud)
     }
 }
 
-void Roe::DBscale(DBContext*, int, void*)
+void Roe::DBscale(DBContext*, int, double value, double delta, void*)
 {
-    NOT_FINISHED("Roe::DBSCale");
+    double oldvalue=value-delta;
+    double f=Exp10(value)/Exp10(oldvalue);
+    BBox bb;
+    get_bounds(bb);
+    Point p(0,0,0);
+    if(bb.valid())
+	p=bb.center();
+    scale(Vector(f, f, f), p);
+    need_redraw=1;
 }
 
-void Roe::DBtranslate(DBContext*, int, void*)
+void Roe::DBtranslate(DBContext*, int, double, double delta,
+		      void* cbdata)
 {
-    NOT_FINISHED("Roe::DBtranslate");
+    int which=(int)cbdata;
+    Vector v(0,0,0);
+    switch(which){
+    case 0:
+	v.x(delta);
+	break;
+    case 1:
+	v.y(delta);
+	break;
+    case 2:
+	v.z(delta);
+	break;
+    }
+    translate(v);
+    need_redraw=1;
+}
+
+void Roe::DBrotate(DBContext*, int, double, double delta,
+		      void* cbdata)
+{
+    int which=(int)cbdata;
+    Vector v(0,0,0);
+    switch(which){
+    case 0:
+	v=Vector(1,0,0);
+	break;
+    case 1:
+	v=Vector(0,1,0);
+	break;
+    case 2:
+	v=Vector(0,0,1);
+	break;
+    }
+    BBox bb;
+    get_bounds(bb);
+    Point p(0,0,0);
+    if(bb.valid())
+	p=bb.center();
+    rotate(delta, v, p);
+    need_redraw=1;
+}
+
+void Roe::redraw_if_needed()
+{
+    if(need_redraw){
+	need_redraw=0;
+	redrawAll();
+    }
+    for (int i=0; i<kids.size(); i++)
+	kids[i]->redraw_if_needed();
 }

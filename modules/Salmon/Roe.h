@@ -17,6 +17,7 @@
 #include <GL/glx.h>
 #include <Geometry/BBox.h>
 
+class BBox;
 class CallbackData;
 class DBContext;
 class DialogShellC;
@@ -121,8 +122,9 @@ class Roe {
     void redrawCB(CallbackData*, void*);
     void initCB(CallbackData*, void*);
     void attach_dials(CallbackData*, void*);
-    void DBscale(DBContext*, int, void*);
-    void DBtranslate(DBContext*, int, void*);
+    void DBscale(DBContext*, int, double, double, void*);
+    void DBtranslate(DBContext*, int, double, double, void*);
+    void DBrotate(DBContext*, int, double, double, void*);
     void make_current();
 
     Array1<Roe *> kids;
@@ -152,6 +154,10 @@ class Roe {
     Font modefont;
     clString mode_string;
     void update_mode_string(const clString&);
+
+    int salmon_count;
+    int need_redraw;
+    void get_bounds(BBox&);
 public:
     Array1<GeomItem *> geomItemA;
     DrawInfo* drawinfo;
@@ -170,6 +176,7 @@ public:
     void SetParent(Roe *r);
     void SetTop();
     void redrawAll();
+    void redraw_if_needed();
     void printLevel(int level, int&flag);
 
     void mouse_translate(int, int, int, int, int);
