@@ -13,10 +13,7 @@
 #include <Packages/Uintah/Core/Math/MiscMath.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 
-
-using namespace Uintah;
 namespace Uintah {
-
 
 struct NG_BC_vars{
   CCVariable<double> press_CC;
@@ -34,7 +31,7 @@ void computeStagnationProperties(double &stag_press,
                                  double &time,
                                  SimulationStateP& sharedState);
                               
- void Solve_Riemann_problem(
+void Solve_Riemann_problem(
         int     qLoLimit,               
         int     qHiLimit,    
         double  origin,           
@@ -56,7 +53,7 @@ void computeStagnationProperties(double &stag_press,
         double  *T_Rieman,
         double  R);
                 
-  double p2_p1_ratio(
+double p2_p1_ratio(
           double  gamma,
           double  p4_p1,
           double  p2_p1_guess,
@@ -65,7 +62,7 @@ void computeStagnationProperties(double &stag_press,
           double  u4,
           double  u1  );
 
-  void solveRiemannProblemInterface( 
+void solveRiemannProblemInterface( 
           const double t_final,
           const double Length, int ncells,
           const double u4, const double p4, const double rho4,                                   
@@ -77,41 +74,44 @@ void computeStagnationProperties(double &stag_press,
           double &Temp,
           double &rho,
           double &vel);
-          
-    void setNGCVelocity_BC(const Patch* patch,
+         
+void setNGCVelocity_BC(const Patch* patch,
                        const Patch::FaceType face,
                        CCVariable<Vector>& q_CC,
                        const string& var_desc,
                        const vector<IntVector> bound,
                        const string& bc_kind,
-			  const int mat_id,
-			  const int child,
+                       const int mat_id,
+                       const int child,
                        SimulationStateP& sharedState,
                        NG_BC_vars* CCVars);
 
-    void addRequires_NGNozzle(Task* t, 
-                               const string& where,
-                               ICELabel* lb,
-                               const MaterialSubset* ice_matls);
+void addRequires_NGNozzle(Task* t, 
+                          const string& where,
+                          ICELabel* lb,
+                          const MaterialSubset* ice_matls);
                                
-    void getVars_for_NGNozzle( DataWarehouse* old_dw,
-                               DataWarehouse* new_dw,
-                               ICELabel* lb,
-                               const Patch* patch,
-                               const int indx,
-                               const string& where,
-                               NG_BC_vars* ng);
+void getVars_for_NGNozzle( DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           ICELabel* lb,
+                           const Patch* patch,
+                           const int indx,
+                           const string& where,
+                           NG_BC_vars* ng );
  
- void  BC_values_using_IsentropicRelations(const double stag_press,
-                                          const double stag_rho,
-                                          const double stag_temp,
-                                          double &static_press,
-                                          double &static_temp,
-                                          double &static_rho,
-                                          double &static_vel);
+void BC_values_using_IsentropicRelations(const double stag_press,
+                                         const double stag_rho,
+                                         const double stag_temp,
+                                         double &static_press,
+                                         double &static_temp,
+                                         double &static_rho,
+                                         double &static_vel);
                                
-    bool using_NG_hack(const ProblemSpecP& prob_spec);
+bool using_NG_hack(const ProblemSpecP& prob_spec);
                                                                 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424 // Template parameter not used in declaring arguments.
+#endif                // This turns off SGI compiler warning.
 //______________________________________________________________________
 //   Function~  setNGC_Nozzle_BC
 template<class T,class V >
@@ -122,8 +122,8 @@ void setNGC_Nozzle_BC(const Patch* patch,
                       const string& var_loc,        // variable location FC, CC
                       const vector<IntVector> bound,
                       const string& bc_kind,        //Dirichlet, Neumann, custom
-			 const int mat_id,
-			 const int child,
+                         const int mat_id,
+                         const int child,
                       SimulationStateP& sharedState,
                       NG_BC_vars* ng)
    {
@@ -188,12 +188,12 @@ void setNGC_Nozzle_BC(const Patch* patch,
       double p, Temp, rho, vel;   // probed cell variables
 //      BC_values_using_IsentropicRelations(p4, rho4, T4, p,Temp, rho, vel);
 
-      solveRiemannProblemInterface( t_final,Length,ncells,
-                              u4, p4, rho4,                                   
-                              u1, p1, rho1,
-                              diaphragm_location,
-                              probeCell, ng,
-                              p, Temp, rho, vel);
+      Uintah::solveRiemannProblemInterface( t_final,Length,ncells,
+                                            u4, p4, rho4,                                   
+                                            u1, p1, rho1,
+                                            diaphragm_location,
+                                            probeCell, ng,
+                                            p, Temp, rho, vel);
                           
       if(var_desc == "Pressure"){
         q_CC[c] = V(p);
@@ -213,6 +213,10 @@ void setNGC_Nozzle_BC(const Patch* patch,
     }
   }
 }
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#endif
                                      
-};
+} // end namespace Uintah
+
 #endif
