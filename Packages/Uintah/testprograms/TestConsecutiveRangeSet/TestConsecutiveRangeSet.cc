@@ -244,7 +244,6 @@ void doUnionTests(Suite* suite)
   suite->addTest("nonjoined", testset.unioned(nonjoin) == nonjoined
 		 && nonjoin.unioned(testset) == nonjoined);
   suite->addTest("same singlet", singlet.unioned(singlet) == singlet);
-  cerr <<"TEST" << singlet.unioned(singlet) << endl;
 }
 
 bool equalSets(ConsecutiveRangeSet& set, const int* array, int arraySize,
