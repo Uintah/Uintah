@@ -9,6 +9,7 @@
 #include <vector>
 #include <Packages/rtrt/Core/VolumeVis2D.h>
 
+// used only for rendering hack
 #define CLEAN 0
 #define FAST 1
 
@@ -60,44 +61,103 @@ namespace rtrt {
     
   
   public:
-    void adjustMasterAlpha( float dx );
-    void lookup( Voxel2D<float> voxel, Color &color, float &alpha );
+    // Called whenever the user adjusts the master opacity control
+    void adjustMasterOpacity( float dx );
+    // Called whenever the user adjusts the cutplane opacity
+    void adjustCutplaneOpacity( float dx );
+    // Called whenever the user adjusts the cutplane grayscale
+    void adjustCutplaneGS( float dx );
+    // Assigns a color and opacity corresponding to a given voxel
+    void voxel_lookup( Voxel2D<float> voxel, Color &color, float &opacity );
+    // Attaches a volume to be rendered through this user interface
     void attach( VolumeVis2D *volume );
+    // Loads a previously saved user interface setup
     void loadUIState( unsigned long key );
+    // Saves a user interface setup
     void saveUIState( unsigned long key );
+    // Called whenever the user adjusts the size of the ray increment
     void adjustRaySize( unsigned long key );
-    bool skip_alpha( Voxel2D<float> v1, Voxel2D<float> v2,
-		     Voxel2D<float> v3, Voxel2D<float> v4 );
+    // Used only for a rendering hack
+    bool skip_opacity( Voxel2D<float> v1, Voxel2D<float> v2,
+		       Voxel2D<float> v3, Voxel2D<float> v4 );
+    // Called whenever the user interface is changed
     virtual void animate(bool &changed);
 
+
+
+    // maintains user interface parameters to manage menus/graphs/etc
+    struct windowParams {
+      float height;
+      float width;
+      float menu_height;
+      float border;
+    };
+    windowParams* UIwind;
+
+    // used only for rendering hack
     unsigned int render_mode;
+
+    // keep track of ray size to accurately assign color/opacity values
     float original_t_inc;
     float t_inc;
     float t_inc_diff;
-    bool m_alpha_adjusting;
-    float master_alpha;
-    GLBar* m_alpha_slider;
-    GLBar* m_alpha_bar;
+
+    // whether or not a cutting plane is being used
+    bool cut;
+
+    // whether or not any part(s) of the display textures need to be redrawn
+    unsigned int textureRedraw[2];
+
+    // for adjusting the master opacity control
+    bool m_opacity_adjusting;
+    float master_opacity;
+    GLBar* m_opacity_slider;
+    GLBar* m_opacity_bar;
+
+    // for adjusting the cutplane opacity
+    bool cp_opacity_adjusting;
+    float cp_opacity;
+    GLBar* cp_opacity_slider;
+    GLBar* cp_opacity_bar;
+
+    // for adjusting the cutplane grayscale
+    bool cp_gs_adjusting;
+    float cp_gs;
+    GLBar* cp_gs_slider;
+    GLBar* cp_gs_bar;
+
+    // precomputed values to speed up voxel-to-texture calculation
     float text_x_convert;
     float text_y_convert;
-    vector<Widget*> widgets;           // collection of widgets
+
+    // the collection of widgets that control the transfer function
+    vector<Widget*> widgets;
+
     int pickedIndex;                   // index of currently selected widget
     int old_x;                         // saved most recent x-coordinate
     int old_y;                         // saved most recent y-coordinate
-    float x_pixel_width;               // screenspace-to-worldspace x-dim ratio
-    float y_pixel_width;               // screenspace-to-worldspace y-dim ratio
-    float vmin, vmax;                  // voxel minima/maxima
+    float pixel_width;                 // screenspace-to-worldspace x-dim ratio
+    float pixel_height;                // screenspace-to-worldspace y-dim ratio
+
+    // voxel minimum/maximum values 
+    float vmin, vmax;
     float gmin, gmax;
+
+    // for user-defined histogram parameters
     bool hist_adjust;
     float current_vmin, current_vmax, selected_vmin, selected_vmax;
     float current_gmin, current_gmax, selected_gmin, selected_gmax;
-    GLuint bgTextName;
-    GLuint transFuncTextName;
+
+    GLuint bgTextName;                 // histogram texture
+    GLuint transFuncTextName;          // transfer function texture
     Texture <GLfloat> *bgTextImage;    // clean background texture
     Texture <GLfloat> *transTexture1;  // visible transfer functions
     Texture <GLfloat> *transTexture2;  // swapped to remove rendering "streaks"
+
+    // collection of volumes being rendered
     vector<VolumeVis2D*> volumes;
-    Volvis2DDpy( float t_inc );
+
+    Volvis2DDpy( float t_inc, bool cut );
   };
 
 } // end namespace rtrt
