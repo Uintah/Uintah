@@ -1122,13 +1122,15 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
               // Save the new data
               pStress_new[idx] = tensorSig;
             }
+            pDamage_new[idx] = 0.0;
+            pPorosity_new[idx] = 0.0;
         
             // Update internal variables
             d_plastic->updateElastic(idx);
 
           } else {
 
-            pLocalized_new[idx] = 0;
+            pLocalized_new[idx] = pLocalized[idx];
 
             // Rotate the stress back to the laboratory coordinates
             tensorSig = (tensorR*tensorSig)*(tensorR.Transpose());
