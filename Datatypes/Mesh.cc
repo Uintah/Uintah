@@ -206,13 +206,18 @@ void Pio(Piostream& stream, Element*& data)
     stream.end_cheap_delim();
 }
 
-#define NODE_VERSION 3
+#define NODE_VERSION 4
 
 void Node::io(Piostream& stream)
 {
     int version=stream.begin_class("Node", NODE_VERSION);
     Pio(stream, p);
     if(version >= 3){
+      if (version >= 4) {
+	  Pio(stream, fluxBC);
+      } else {
+	  fluxBC=0;
+      }
       int flag;
       if(!stream.reading()){
 	flag=bc?1:0;
@@ -323,12 +328,13 @@ Element::Element(const Element& copy, Mesh* mesh)
 }
 
 Node::Node(const Point& p)
-: p(p), elems(0, 4), bc(0)
+: p(p), elems(0, 4), bc(0), fluxBC(0)
 {
 }
 
 Node::Node(const Node& copy)
-: p(copy.p), elems(copy.elems), bc(copy.bc?new DirichletBC(*copy.bc):0)
+: p(copy.p), elems(copy.elems), bc(copy.bc?new DirichletBC(*copy.bc):0),
+  fluxBC(0)
 {
 }
 
@@ -676,7 +682,7 @@ void dump_mesh(Mesh* mesh)
     for(i=0;i<mesh->elems.size();i++){
 	Element* e=mesh->elems[i];
 	if(!e)continue;
-	out << i << ": " << e->n[0] << " " << e->n[1] << " " << e->n[2] << e->n[3] << "(" << e->faces[0] << " " << e->faces[1] << " " << e->faces[2] << " " << e->faces[3] << ")" << endl;
+	out << i << ": " << e->n[0] << " " << e->n[1] << " " << e->n[2] << " " << e->n[3] << "(" << e->faces[0] << " " << e->faces[1] << " " << e->faces[2] << " " << e->faces[3] << ")" << endl;
     }
 }
 
@@ -1509,7 +1515,7 @@ static void heapify(int* data, int n, int i)
     }
 }
 
-void Mesh::add_node_neighbors(int node, Array1<int>& idx)
+void Mesh::add_node_neighbors(int node, Array1<int>& idx, int apBC)
 {
     NodeHandle& n=nodes[node];
     int ne=n->elems.size();
@@ -1522,7 +1528,7 @@ void Mesh::add_node_neighbors(int node, Array1<int>& idx)
 	Element* e=elems[ei];
 	for(int j=0;j<4;j++){
 	    int n=e->n[j];
-	    if(!nodes[n]->bc)
+	    if(!nodes[n]->bc || !apBC)
 		neighbor_nodes[nodesi++]=n;
 	}
     }

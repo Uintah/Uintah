@@ -77,6 +77,7 @@ struct Node : public Datatype {
     Array1<int> elems;
 
     DirichletBC* bc;
+    int fluxBC;
 
     Node(const Node&);
     virtual ~Node();
@@ -162,7 +163,7 @@ public:
     void pack_elems();
     void pack_all();
     int face_idx(int, int);
-    void add_node_neighbors(int node, Array1<int>& idx);
+    void add_node_neighbors(int node, Array1<int>& idx, int apBC=1);
     void new_element(Element* ne, HashTable<Face, int> *new_faces);
     void remove_all_elements();
     void get_boundary_lines(Array1<Point>& lines);
