@@ -27,6 +27,7 @@
   \include{../Utilities/TeX/scirun-doc.tex}
 \end{htmlonly}
 \newcommand{\latexenv}[1]{\texttt{#1}}
+\newcommand{\texutils}{../../Utilities/TeX}
 \begin{document}
 
 \begin{htmlonly}
@@ -53,14 +54,14 @@
   the name of the appropriate package.  This directory should be named
   after the module it describes.
 \item Copy the template file,
-  \filename{doc/Documentum/module-desc-template.tex}, to the directory you
-  just created.  Name this file after its parent directory and with an
-  extension of \filename{.tex}.  This file is now your module description
-  document.
+  \htmladdnormallink{\filename{module-desc-template.tex}}{../module-desc-template.tex},
+  to the directory you just created.  Name this file after its parent
+  directory and with an extension of \filename{.tex}.  This file is
+  now your module description document.
 \item Put your document's figures in the directory created above.  Provide
   figures either in JPG or GIF formats.
 \item Look at the file \htmladdnormallink{\filename{scirun-doc.sty}}
-  {file://../Utilities/scirun-doc.sty} and observe the markup
+  {\texutils{}/scirun-doc.sty} and observe the markup
   commands recommended for use in your module description file.
 \item Flesh out your document by following the instructions in your
   module description document (the copy of the template).
@@ -100,14 +101,14 @@ to add sub-sections and sub-sub-sections to the top-level sections of your
 module description document.  
 
 Markup your document using \LaTeX{} commands and commands in the file
-\htmladdnormallink{\filename{scirun-doc.sty}}{../scirun-doc.sty}. 
+\htmladdnormallink{\filename{scirun-doc.sty}}{\texutils{}/scirun-doc.sty}. 
 
 Avoid presentation style markup commands like \latexcommand{bf} (or even
 \latexcommand{emph}).  Most other \LaTeX{} commands are fine.
 
 You may invent your own markup commands as long as they are not
 presentation oriented and do not conflict with commands in
-\htmladdnormallink{\filename{scirun-doc.sty}}{../scirun-doc.sty}.
+\htmladdnormallink{\filename{scirun-doc.sty}}{\texutils{}/scirun-doc.sty}.
 
 \section{Organization}
 
@@ -217,7 +218,8 @@ Me!
 \end{description}
 
 See also the Quick Start instructions above and the notes in
-\\ \filename{doc/Documentum/module-desc-template.tex}.
+\\
+\htmladdnormallink{\filename{module-desc-template.tex}}{../module-desc-template.tex}.
 
 \section{Including Images}
 \label{sec:inclimg}
