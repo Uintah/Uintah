@@ -67,8 +67,19 @@ struct GeometryData {
     View* view;
     int xres, yres;
     double znear, zfar;
-    GeometryData();
+#ifdef HAVE_COLLAB_VIS
+    // CollabVis code begin
+    double modelview[16];
+    double projection[16];
+    int viewport[4];
+  
+    ~GeometryData() {}
+    // CollabVis code end
+#else
     ~GeometryData();
+#endif
+  
+    GeometryData();
     void Print();
 };
 
@@ -77,7 +88,10 @@ struct GeometryData {
 #define GEOM_DEPTHBUFFER	4
 #define GEOM_ALLDATA		(GEOM_VIEW|GEOM_COLORBUFFER|GEOM_DEPTHBUFFER)
 #define GEOM_TRIANGLES		8
-
+// CollabVis code begin
+#define GEOM_MATRICES           16
+// CollabVis code end
+  
 class PSECORESHARE GeometryOPort : public OPort {
 private:
 
@@ -85,6 +99,7 @@ private:
     bool dirty;
 
     GeometryComm* save_msgs;
+
     GeometryComm* save_msgs_tail;
 
     int portid;
