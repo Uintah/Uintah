@@ -9,7 +9,7 @@
 #include <SCICore/Persistent/Persistent.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
-#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Patch.h>
 #include <iostream>
