@@ -8,6 +8,9 @@
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Components/MPM/Contact/Contact.h>
+#include <SCICore/Geometry/Vector.h>
+
+using SCICore::Geometry::Vector;
 
 namespace Uintah {
    class VarLabel;
@@ -46,7 +49,7 @@ WARNING
 
       class SerialMPM : public UintahParallelComponent, public MPMInterface {
       public:
-	 SerialMPM( int MpiRank, int MpiProcesses );
+	 SerialMPM( int MpiRank, int MpiProcesses);
 	 virtual ~SerialMPM();
 	 
 	 //////////
@@ -149,8 +152,9 @@ WARNING
 	 
 	 SimulationStateP d_sharedState;
 	 Contact*         d_contactModel;
+	 Vector		  d_gravity;
 	 Fracture*        d_fractureModel;
-	 
+
 	 const VarLabel* deltLabel;
 	 
 	 const VarLabel* pDeformationMeasureLabel;
@@ -181,6 +185,10 @@ WARNING
    
 //
 // $Log$
+// Revision 1.26  2000/05/16 00:40:52  guilkey
+// Added code to do boundary conditions, print out tecplot files, and a
+// few other things.  Most of this is now commented out.
+//
 // Revision 1.25  2000/05/11 20:10:12  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //
