@@ -52,6 +52,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   all_matls = 0;
   allInOneMatl = 0;
   refine_flag_matls = 0;
+  d_isCopyDataTimestep = 0;
 }
 
 void SimulationState::registerMaterial(Material* matl)
