@@ -442,7 +442,6 @@ void CI::emit(EmitState& e)
 void CI::emit_typeinfo(EmitState& e)
 {
   std::string fn=cppfullname(0);
-  std::string uuid_str = getUUID();
 
   e.out << "const ::SCIRun::TypeInfo* " << fn << "::_static_getTypeInfo()\n";
   e.out << "{\n";
@@ -450,13 +449,11 @@ void CI::emit_typeinfo(EmitState& e)
   e.out << "  if(!ti){\n";
   e.out << "    ::SCIRun::TypeInfo_internal* tii=\n";
  
-
   e.out << "       new ::SCIRun::TypeInfo_internal(\"" 
-	<< cppfullname(0) << "\", \"" << uuid_str << "\",\n";
-
-  e.out << "                                      NULL,\n";
-  e.out << "                                      0,\n";
-  e.out << "                                      &::" << fn << "_proxy::create_proxy);\n\n";
+	<< cppfullname(0) << "\", \n";
+  e.out << "                         NULL,\n";
+  e.out << "                         0,\n";
+  e.out << "                         &::" << fn << "_proxy::create_proxy);\n\n";
   SymbolTable* localScope=symbols->getParent();
   if(parentclass)
     e.out << "    tii->add_parentclass(" << parentclass->cppfullname(localScope) << "::_static_getTypeInfo(), " << parentclass->vtable_base << ");\n";
@@ -487,18 +484,12 @@ void CI::emit_handlers(EmitState& e)
   e.out << "  char* classname=new char[classname_size+1];\n";
   e.out << "  message->unmarshalChar(classname, classname_size);\n";
   e.out << "  classname[classname_size]=0;\n";
-  e.out << "  int uuid_size;\n";
-  e.out << "  message->unmarshalInt(&uuid_size);\n";
-  e.out << "  char* uuid=new char[uuid_size+1];\n";
-  e.out << "  message->unmarshalChar(uuid, uuid_size);\n";
-  e.out << "  uuid[uuid_size]=0;\n";
   e.out << "  int _addRef;\n";
   e.out << "  message->unmarshalInt(&_addRef);\n";
   e.out << "  message->unmarshalReply();\n";
   e.out << "  const ::SCIRun::TypeInfo* ti=" << cppfullname(0) << "::_static_getTypeInfo();\n";
-  e.out << "  int result=ti->isa(classname, uuid);\n";
+  e.out << "  int result=ti->isa(classname);\n";
   e.out << "  delete[] classname;\n";
-  e.out << "  delete[] uuid;\n";
   e.out << "  int flag;\n";
   e.out << "  if(result == ::SCIRun::TypeInfo::vtable_invalid) {\n";
   e.out << "    flag=0;\n";
