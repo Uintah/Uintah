@@ -344,55 +344,57 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
 #else
     switch(action){
     case MouseStart:
- 	update_mode_string("rotate:");
-	last_x=x;
-	last_y=y;
+	{
+	    update_mode_string("rotate:");
+	    last_x=x;
+	    last_y=y;
 
-	// Find the center of rotation...
-	View tmpview(view.get());
-	int xres=current_renderer->xres;
-	int yres=current_renderer->yres;
-	double aspect=double(xres)/double(yres);
-	double znear, zfar;
-	rot_point_valid=0;
-	if(!current_renderer->compute_depth(this, tmpview, znear, zfar))
-	    return; // No objects...
-	double zmid=(znear+zfar)/2.;
+	    // Find the center of rotation...
+	    View tmpview(view.get());
+	    int xres=current_renderer->xres;
+	    int yres=current_renderer->yres;
+	    double aspect=double(xres)/double(yres);
+	    double znear, zfar;
+	    rot_point_valid=0;
+	    if(!current_renderer->compute_depth(this, tmpview, znear, zfar))
+		return; // No objects...
+	    double zmid=(znear+zfar)/2.;
 
-	Point ep(0, 0, zmid);
-	rot_point=tmpview.eyespace_to_objspace(ep, aspect);
+	    Point ep(0, 0, zmid);
+	    rot_point=tmpview.eyespace_to_objspace(ep, aspect);
 
-	rot_point = tmpview.lookat();
-	rot_view=tmpview;
-	rot_point_valid=1;
+	    rot_point = tmpview.lookat();
+	    rot_view=tmpview;
+	    rot_point_valid=1;
 
-	double rad = 0.8;
-	HVect center(0,0,0,1.0);
+	    double rad = 0.8;
+	    HVect center(0,0,0,1.0);
 	
-	// we also want to keep the old transform information
-	// around (so stuff correlates correctly)
-	// OGL uses left handed coordinate system!
+	    // we also want to keep the old transform information
+	    // around (so stuff correlates correctly)
+	    // OGL uses left handed coordinate system!
 	
-	Vector z_axis,y_axis,x_axis;
+	    Vector z_axis,y_axis,x_axis;
 
-	y_axis = tmpview.up();
-	z_axis = tmpview.eyep() - tmpview.lookat();
-	eye_dist = z_axis.normalize();
-	x_axis = Cross(y_axis,z_axis);
-	x_axis.normalize();
-	y_axis = Cross(z_axis,x_axis);
-	y_axis.normalize();
-	tmpview.up(y_axis); // having this correct could fix something?
+	    y_axis = tmpview.up();
+	    z_axis = tmpview.eyep() - tmpview.lookat();
+	    eye_dist = z_axis.normalize();
+	    x_axis = Cross(y_axis,z_axis);
+	    x_axis.normalize();
+	    y_axis = Cross(z_axis,x_axis);
+	    y_axis.normalize();
+	    tmpview.up(y_axis); // having this correct could fix something?
 
-	prev_trans.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
+	    prev_trans.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
 
-	ball->Init();
-	ball->Place(center,rad);
-	HVect mouse((2.0*x)/xres - 1.0,2.0*(yres-y*1.0)/yres - 1.0,0.0,1.0);
-	ball->Mouse(mouse);
-	ball->BeginDrag();
+	    ball->Init();
+	    ball->Place(center,rad);
+	    HVect mouse((2.0*x)/xres - 1.0,2.0*(yres-y*1.0)/yres - 1.0,0.0,1.0);
+	    ball->Mouse(mouse);
+	    ball->BeginDrag();
 
-	ball->Update();
+	    ball->Update();
+	}
 	break;
     case MouseMove:
 	{
@@ -976,6 +978,7 @@ void Roe::head_moved(const TrackerPosition& pos)
 
 void Roe::saveall(const clString& filename, const clString& format)
 {
+#ifdef BROKEN
     Piostream* stream;
     if(format == "binary")
 	stream=new BinaryPiostream(filename, Piostream::Write);
@@ -1006,6 +1009,7 @@ void Roe::saveall(const clString& filename, const clString& format)
 	}
     }
     delete stream;
+#endif
 }
 
 #ifdef __GNUG__

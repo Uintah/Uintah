@@ -68,7 +68,7 @@ void Quat::FromMatrix(HMatrix& mat)
 	    }
 	}
     if (mat[W][W] != 1.0) *this = V3_Scale(*this, 1/sqrt(mat[W][W]));
-    return (qu);
+//    return (qu);
 }
 
 /* Return vector formed from components */
