@@ -31,6 +31,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/CastField.tcl \
 	$(SRCDIR)/CastMatrix.tcl \
 	$(SRCDIR)/ChangeCellType.tcl \
+	$(SRCDIR)/ClippingPlane.tcl \
 	$(SRCDIR)/ColorMapReader.tcl \
 	$(SRCDIR)/ColorMapWriter.tcl \
 	$(SRCDIR)/ComboListbox.tcl \
