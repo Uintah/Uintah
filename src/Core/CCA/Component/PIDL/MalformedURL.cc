@@ -54,6 +54,6 @@ const char* MalformedURL::message() const
 
 const char* MalformedURL::type() const
 {
-    return "SCIRnu::MalformedURL";
+    return "SCIRun::MalformedURL";
 }
 
