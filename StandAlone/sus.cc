@@ -312,7 +312,9 @@ main(int argc, char** argv)
 	// Connect a MPM module if applicable
 	SimulationInterface* sim = 0;
 	if(do_mpm && do_ice){
-	  sim = scinew MPMICE(world);
+	  MPMICE* mpmice = scinew MPMICE(world);
+	  mpmice->attachPort("output", output);
+	  sim = mpmice;
 	} else if(do_mpm && do_arches){
 	  sim = scinew MPMArches(world);
 	} else if(do_mpm){
