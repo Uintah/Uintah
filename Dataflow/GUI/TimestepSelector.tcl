@@ -165,7 +165,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
     method raiseColor {} {
 	 set window .ui[modname]
 	 if {[winfo exists $window.color]} {
-	     raise $window.color
+	     SciRaise $window.color
 	     return
 	 } else {
 	     makeColorPicker $window.color $this-def-color \
