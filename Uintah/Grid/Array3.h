@@ -5,9 +5,6 @@
 #include "Array3Index.h"
 #include <iostream> // TEMPORARY
 
-namespace Uintah {
-namespace Grid {
-
 /**************************************
 
 CLASS
@@ -94,7 +91,7 @@ public:
 	if(d_window && d_window->removeReference())
 	    delete d_window;
 	//std::cerr << "Creating array: " << size1 << "x" << size2 << "x" << size3 << " (size " << sizeof(T) << ")\n";
-	d_window=new Array3D_window<T>(new Array3Data<T>(size1, size2, size3));
+	d_window=new Array3Window<T>(new Array3Data<T>(size1, size2, size3));
 	d_window->addReference();
     }
     T& operator[](const Array3Index& idx) const {
@@ -120,11 +117,11 @@ Array3<T>::~Array3()
     }
 }
 
-} // end namespace Grid
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.3  2000/03/21 02:22:57  dav
+// few more updates to make it compile including moving Array3 stuff out of namespace as I do not know where it should be
+//
 // Revision 1.2  2000/03/16 22:07:57  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

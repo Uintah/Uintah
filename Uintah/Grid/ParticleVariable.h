@@ -113,7 +113,7 @@ ParticleVariable<T>::getTypeDescription()
 
 template<class T>
 ParticleVariable<T>::ParticleVariable()
-    : d_pdata(0), pset(0)
+    : d_pdata(0), d_pset(0)
 {
 }
 
@@ -200,6 +200,9 @@ ParticleVariable<T>::allocate(const Region*)
 
 //
 // $Log$
+// Revision 1.4  2000/03/21 02:22:57  dav
+// few more updates to make it compile including moving Array3 stuff out of namespace as I do not know where it should be
+//
 // Revision 1.3  2000/03/16 22:08:00  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

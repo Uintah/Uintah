@@ -5,7 +5,12 @@
 #include "Array3Data.h"
 
 namespace Uintah {
-namespace Grid {
+  namespace Grid {
+    class RefCounted;
+  }
+}
+
+using Uintah::Grid::RefCounted;
 
 /**************************************
 
@@ -107,11 +112,11 @@ Array3Window<T>::~Array3Window()
 	delete data;
 }
 
-} // end namespace Grid
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.3  2000/03/21 02:22:57  dav
+// few more updates to make it compile including moving Array3 stuff out of namespace as I do not know where it should be
+//
 // Revision 1.2  2000/03/16 22:07:58  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //
