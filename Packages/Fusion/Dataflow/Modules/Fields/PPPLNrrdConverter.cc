@@ -254,6 +254,12 @@ PPPLNrrdConverter::execute(){
 
     nHandle = nHandles[grid_];
 
+    if( nHandle->nrrd->axis[2].size != 3 ) {
+      error( "Grid dataset does not contain 3D points." );
+      error_ = true;
+      return;
+    }
+    
     // Create the mesh.
     if( nHandle->nrrd->dim == 5 ) {
       // 3D StructHexVol
@@ -404,9 +410,9 @@ PPPLNrrdConverter::execute(){
 	  if( dataset[0].find( ":Scalar" ) != std::string::npos )
 	    rank = 1;
 	  else if( dataset[0].find( ":Vector" ) != std::string::npos )
-	    rank = 1;
+	    rank = 3;
 	  else if( dataset[0].find( ":Tensor" ) != std::string::npos )
-	    rank = 1;
+	    rank = 6;
 	  else {
 	    error( "Bad tuple axis - no data type must be scalar, vector, or tensor." );
 	    error( dataset[0] );
@@ -425,6 +431,11 @@ PPPLNrrdConverter::execute(){
 	    return;
 	  }
 	}
+      } else {
+	error( "Can not determined data rank. Too many axii." );
+	error( dataset[0] );
+	error_ = true;
+	return;
       }
     } else {
       nHandle = NULL;
