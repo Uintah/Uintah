@@ -120,8 +120,8 @@ GenDistanceField::extract(LatVolMeshHandle mesh,
 
   TriSurfMeshHandle trisurf = scinew TriSurfMesh();
   map<long int, TriSurfMesh::Node::index_type> vertex_map;
-  const int nx = mesh->get_nx();
-  const int ny = mesh->get_nx();
+  const int nx = mesh->get_ni();
+  const int ny = mesh->get_ni();
 
   LatVolMesh::Node::array_type node(8);
   Point p[8];

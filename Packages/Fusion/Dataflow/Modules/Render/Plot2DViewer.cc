@@ -122,21 +122,21 @@ void Plot2DViewer::execute(){
 	fHandle->get_type_description(0)->get_name() == "StructHexVolField" ) {
       LatVolMesh *lvmInput = (LatVolMesh*) fHandle->mesh().get_rep();
 
-      idim = lvmInput->get_nx();
-      jdim = lvmInput->get_ny();
-      kdim = lvmInput->get_nz();
+      idim = lvmInput->get_ni();
+      jdim = lvmInput->get_nj();
+      kdim = lvmInput->get_nk();
     } else if( fHandle->get_type_description(0)->get_name() == "ImageField" ||
                fHandle->get_type_description(0)->get_name() == "StructQuadSurfField" ) {
       ImageMesh *imInput = (ImageMesh*) fHandle->mesh().get_rep();
 
-      idim = imInput->get_nx();
-      jdim = imInput->get_ny();
+      idim = imInput->get_ni();
+      jdim = imInput->get_nj();
       kdim = 1;
     } else if( fHandle->get_type_description(0)->get_name() == "ScanlineField" ||
                fHandle->get_type_description(0)->get_name() == "StructCurveField" ) {
       ScanlineMesh *slmInput = (ScanlineMesh*) fHandle->mesh().get_rep();
 
-      idim = slmInput->get_nx();
+      idim = slmInput->get_ni();
       jdim = 1;
       kdim = 1;
     } else {
