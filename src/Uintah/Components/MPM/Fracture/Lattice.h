@@ -27,12 +27,21 @@ private:
   const ParticleVariable<Point>& d_pX;
 };
 
+void fit(ParticleSubset* pset_patchOnly,
+	 const ParticleVariable<Point>& pX_patchOnly,
+         ParticleSubset* pset_patchAndGhost,
+	 const ParticleVariable<Point>& pX_patchAndGhost,
+	 std::vector<int>& particleIndexExchange);
+
 } //namespace MPM
 } //namespace Uintah
 
 #endif //__LATTICE_H__
 
 // $Log$
+// Revision 1.8  2000/12/30 05:08:10  tan
+// Fixed a problem concerning patch and ghost in fracture computations.
+//
 // Revision 1.7  2000/09/25 18:09:04  sparker
 // include Cell.h for template instantiation
 //

@@ -327,21 +327,21 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   int matlindex = mpm_matl->getDWIndex();
 
   // Create arrays for the particle data
-  ParticleVariable<Point>  pX;
+  ParticleVariable<Point>  pX_patchAndGhost;
   ParticleVariable<int>    pIsBroken;
   ParticleVariable<Vector> pCrackSurfaceNormal;
   ParticleVariable<double> pVolume;
 
   ParticleSubset* pset_patchAndGhost = old_dw->getParticleSubset(
-     matlindex, patch, Ghost::AroundNodes, 1, lb->pXLabel);
+     matlindex, patch, Ghost::AroundCells, 1, lb->pXLabel);
 
-  old_dw->get(pX, lb->pXLabel, pset_patchAndGhost);
+  old_dw->get(pX_patchAndGhost, lb->pXLabel, pset_patchAndGhost);
   new_dw->get(pIsBroken, lb->pIsBrokenLabel_preReloc, pset_patchAndGhost);
   new_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel_preReloc, 
     pset_patchAndGhost);
   new_dw->get(pVolume, lb->pVolumeLabel_preReloc, pset_patchAndGhost);
 
-  Lattice lattice(pX);
+  Lattice lattice(pX_patchAndGhost);
   ParticlesNeighbor particles;
 
   ParticleSubset* pset_patchOnly = old_dw->getParticleSubset(
@@ -350,6 +350,9 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   ParticleVariable<Vector> pCrackSurfaceContactForce;
   new_dw->allocate(pCrackSurfaceContactForce,
      lb->pCrackSurfaceContactForceLabel, pset_patchOnly);
+
+  ParticleVariable<Point>  pX_patchOnly;
+  old_dw->get(pX_patchOnly, lb->pXLabel, pset_patchOnly);
 
   for(ParticleSubset::iterator iter = pset_patchOnly->begin();
           iter != pset_patchOnly->end(); iter++)
@@ -368,11 +371,13 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
           iter != pset_patchOnly->end(); iter++)
   {
     particleIndex pIdx = *iter;
-    patch->findCell(pX[pIdx],cellIdx);
+
+    const Point& X1 = pX_patchOnly[pIdx];
+
+    patch->findCell(X1,cellIdx);
     particles.clear();
     particles.buildIn(cellIdx,lattice);
 
-    const Point& X1 = pX[pIdx];
     double size1 = pow(pVolume[pIdx],0.3333);
 
     //crack surface contact force
@@ -381,14 +386,14 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
       particleIndex pContact = particles[pNeighbor];
       if(pContact == pIdx) continue;
 
-      if(!particles.visible( pIdx,
-                            pX[pContact],
-		            pX,
+      if(!particles.visible( pContact,
+                            X1,
+		            pX_patchAndGhost,
 		            pIsBroken,
 		            pCrackSurfaceNormal,
 		            pVolume) ) 
       {
-        const Point& X2 = pX[pContact];
+        const Point& X2 = pX_patchAndGhost[pContact];
 
         double size2 = pow(pVolume[pContact],0.3333);
         Vector N = X2-X1;
@@ -446,7 +451,6 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   Vector dx = patch->dCell();
   double dxLength = dx.length() * tolerance;
 
-  /*
   for(ParticleSubset::iterator iter = pset_patchOnly->begin();
           iter != pset_patchOnly->end(); iter++)
   {
@@ -455,7 +459,6 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
       delT_new = Min(delT_new,sqrt(2*dxLength*pMass[*iter]/force));
     }
   }
-  */
 
   new_dw->put(delt_vartype(delT_new), lb->delTAfterCrackSurfaceContactLabel);
 }
@@ -470,13 +473,13 @@ void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
   int idx = matl->getDWIndex();
   
   task->requires(old_dw, lb->pXLabel, idx,  patch,
-			Ghost::AroundNodes, 1 );
+			Ghost::AroundCells, 1 );
   task->requires(new_dw, lb->pVolumeLabel_preReloc, idx, patch,
-			Ghost::AroundNodes, 1 );
+			Ghost::AroundCells, 1 );
   task->requires(new_dw, lb->pIsBrokenLabel_preReloc, idx, patch,
-			Ghost::AroundNodes, 1 );
+			Ghost::AroundCells, 1 );
   task->requires(new_dw, lb->pCrackSurfaceNormalLabel_preReloc, idx, patch,
-			Ghost::AroundNodes, 1 );
+			Ghost::AroundCells, 1 );
   task->requires(new_dw, lb->delTAfterFractureLabel );
   task->requires(new_dw, lb->pMassLabel_preReloc, idx, patch, Ghost::None);
 		  
@@ -513,6 +516,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.76  2000/12/30 05:08:09  tan
+// Fixed a problem concerning patch and ghost in fracture computations.
+//
 // Revision 1.75  2000/12/10 06:42:29  tan
 // Modifications on fracture contact computations.
 //

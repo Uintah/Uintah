@@ -1,6 +1,7 @@
 #include <Uintah/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 
 #include <Uintah/Components/MPM/PhysicalBC/ForceBC.h>
+#include <Uintah/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Uintah/Interface/ProblemSpec.h>
 
 using namespace std;
@@ -17,9 +18,18 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps)
    {
       mpmPhysicalBCs.push_back(new ForceBC(child));
    }
+
+   for(ProblemSpecP child = current_ps->findBlock("crack"); child != 0;
+       child = child->findNextBlock("crack") )
+   {
+      mpmPhysicalBCs.push_back(new CrackBC(child));
+   }
 }
 
 // $Log$
+// Revision 1.3  2000/12/30 05:08:12  tan
+// Fixed a problem concerning patch and ghost in fracture computations.
+//
 // Revision 1.2  2000/08/18 20:30:14  tan
 // Fixed some bugs in SerialMPM, mainly in applyPhysicalBC.
 //
