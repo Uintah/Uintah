@@ -63,7 +63,7 @@ itcl_class SCIRun_DataIO_FieldSetWriter {
 	
 	makeSaveFilebox \
 		-parent $w \
-		-filevar $this-d_filename \
+		-filevar $this-filename \
 		-command "$this-c needexecute" \
 		-cancel "destroy $w" \
 		-title $title \
