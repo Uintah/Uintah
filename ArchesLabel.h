@@ -241,6 +241,7 @@ namespace Uintah {
 
       const VarLabel* d_mmcellTypeLabel;
       const VarLabel* d_mmgasVolFracLabel;
+
       // for reacting flows
       const VarLabel* d_tempINLabel;
       const VarLabel* d_cpINLabel;
