@@ -2763,6 +2763,7 @@ AC_SUBST(TEEM_LIB_FLAG)
 AC_SUBST(TEEM_LIB_DIR_FLAG)
 AC_SUBST(INC_TEEM_H)
 AC_SUBST(DEF_TEEM)
+AC_SUBST(HAVE_TEEM)
 
 ##  --  search for mdsplus  -------------------------------------------------
 
