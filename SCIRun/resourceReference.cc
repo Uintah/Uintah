@@ -26,8 +26,6 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-
 /*
  *  resourceReference.cc 
  *
@@ -42,18 +40,18 @@
 
 #include "resourceReference.h"
 #include <Core/CCA/spec/cca_sidl.h>
-using namespace std;
-using namespace SCIRun;
+
+namespace SCIRun {
 
 resourceReference::resourceReference(const std::string& name,
-				     const ::SSIDL::array1< ::std::string>& URLs)
+                       const ::SSIDL::array1< ::std::string>& URLs)
 {
   this->name = name;
   this->size= URLs.size();
   for(int i=0; i < size ;i++)
-    this->URLs.push_back(URLs[i]); 
-
-
+    {
+    this->URLs.push_back(URLs[i]);
+    }
 }
 
 resourceReference::~resourceReference()
@@ -62,12 +60,12 @@ resourceReference::~resourceReference()
 
 sci::cca::Loader::pointer resourceReference::getPtrToAll()
 {
-  cerr<<"calling resourceReference::getPtrToAll()...";
+  std::cerr<<"calling resourceReference::getPtrToAll()...";
   Object::pointer obj=PIDL::objectFrom(URLs,1,0);
-  cerr<<"Done\n";
-  cerr<<"calling pidl_cast...";
+  std::cerr<<"Done" << std::endl;;
+  std::cerr<<"calling pidl_cast...";
   sci::cca::Loader::pointer sc=pidl_cast<sci::cca::Loader::pointer>(obj);
-  cerr<<"Done\n";
+  std::cerr<<"Done" << std::endl;
   return sc;
 }
 
@@ -85,15 +83,16 @@ void resourceReference::print(std::ostream& dbg)
 {
   dbg << "********" << name << " (np=" << size << ")********\n";
   for(int i=0; i < size ;i++)
-    dbg << URLs[i].getString() << "\n";
+    {
+    dbg << URLs[i].getString() << std::endl;
+    }
   dbg << "*****************************************************************\n";
 }
     
 
-
 void resourceReference::listAllComponentTypes(::SSIDL::array1<std::string> &typeList)
 {
-  cerr<<"calling   node(0)->getAllComponentTypes(typeList)\n";
+  std::cerr<<"calling   node(0)->getAllComponentTypes(typeList)" << std::endl;
   node(0)->getAllComponentTypes(typeList);
 }
 
@@ -101,9 +100,7 @@ sci::cca::Component::pointer resourceReference::createInstance(const std::string
 					      const std::string& type,
 					      std::vector<int> nodes)
 {
-
   //for all nodes
-  
   SSIDL::array1<std::string> comURLs1;
   comURLs1.push_back("                                                                   ");
   comURLs1.push_back("                                                                   ");
@@ -112,33 +109,30 @@ sci::cca::Component::pointer resourceReference::createInstance(const std::string
   //Inform everyone else of my distribution
   //(this is in correspondence with the instantiate() call)
   
-
-
-  if(ploader.isNull()){
+  if(ploader.isNull())
+    {
     Index* dr[1]; 
-    //cerr<<"URLs.size="<< URLs.size() <<endl;
+    //std::cerr<<"URLs.size="<< URLs.size() <<std::endl;
     dr[0] = new Index(0, URLs.size(), 1);  //first, last, stride
     MxNArrayRep* arrr = new MxNArrayRep(1,dr);
-    //cerr<<"ploader->setCallerDistribution...";
+    //std::cerr<<"ploader->setCallerDistribution...";
     ploader=resourceReference::getPtrToAll();
     ploader->setCallerDistribution("dURL",arrr);   //client is caller
     delete dr[0];
-  }
-  cerr<<"Done\n";
-
-
+    }
+  std::cerr<<"Done" << std::endl;
  
-  cerr<<"comURLs1.size before create Instance="<<comURLs1.size()<<endl;
-  cerr<<"ploader->createPInstance(name, type, comURLs1)...";
+  std::cerr<<"comURLs1.size before create Instance="<<comURLs1.size()<<std::endl;
+  std::cerr<<"ploader->createPInstance(name, type, comURLs1)...";
   ploader->createPInstance(name, type, sci::cca::TypeMap::pointer(0), comURLs1);
 
-  cerr<<"Done\n";
-  cerr<<"comURLs1.size="<<comURLs1.size()<<endl;
+  std::cerr << "Done" << std::endl;
+  std::cerr<<"comURLs1.size="<<comURLs1.size()<<std::endl;
 
 
-  vector<URL> comURLs;
+  std::vector<URL> comURLs;
   for(unsigned int i=0; i<comURLs1.size(); i++){
-    cerr<<"comURLs["<<i<<"]="<<comURLs1[i]<<endl;
+    std::cerr<<"comURLs["<<i<<"]="<<comURLs1[i]<<std::endl;
     comURLs.push_back(comURLs1[i]);
   }
 
@@ -160,16 +154,16 @@ int resourceReference::shutdown(float time)
   //f>>s;
   //f.close();
   std::string s=URLs[0].getString();
-  cout<<"calling objectFrom $"<<s<<"$"<<endl;
+  std::cout<<"calling objectFrom $"<<s<<"$"<<std::endl;
   Object::pointer obj=PIDL::objectFrom(s);//.getString());
   if(obj.isNull()){
-    cerr<<"Cannot get loader from url="<<URLs[0].getString()<<endl;
+    std::cerr<<"Cannot get loader from url="<<URLs[0].getString()<<std::endl;
     return 0;
   }
-  cout<<"Loader obj obtained"<<endl;
+  std::cout<<"Loader obj obtained"<<std::endl;
   sci::cca::Loader::pointer node0=pidl_cast<sci::cca::Loader::pointer>(obj);
-  cout<<"Loader obj casted"<<endl;
-  cout<<"Calling node0->listAllComponents"<<endl;
+  std::cout<<"Loader obj casted"<<std::endl;
+  std::cout<<"Calling node0->listAllComponents"<<std::endl;
   node0->shutdown(time);
   return 0;
 }
@@ -180,14 +174,14 @@ resourceReference::node(int i)
   std::string s=URLs[i].getString();
   Object::pointer obj=PIDL::objectFrom(s);
   if(obj.isNull()){
-    cerr<<"Cannot get loader from url="<<URLs[i].getString()<<endl;
+    std::cerr<<"Cannot get loader from url="<<URLs[i].getString()<<std::endl;
     return sci::cca::Loader::pointer(0);
   }
   sci::cca::Loader::pointer nd=pidl_cast<sci::cca::Loader::pointer>(obj);
   return nd;
 }
 
-
+} // end namespace SCIRun
 
 
 
