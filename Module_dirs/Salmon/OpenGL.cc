@@ -83,7 +83,6 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 
     // Get window information
     if(!tkwin){
-	cerr << 1 << endl;
 	TCLTask::lock();
 	tkwin=Tk_NameToWindow(the_interp, myname(), Tk_MainWindow(the_interp));
 	if(!tkwin){
@@ -91,20 +90,15 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	    TCLTask::unlock();
 	    return;
 	}
-	cerr << 1.1 << endl;
 	dpy=Tk_Display(tkwin);
 	win=Tk_WindowId(tkwin);
-	cerr << 1.2 << endl;
 	cx=OpenGLGetContext(the_interp, myname());
-	cerr << 1.3 << endl;
 	glXMakeCurrent(dpy, win, cx);
-	cerr << 1.4 << endl;
 	current_drawer=this;
 	int data[1];
 	glGetIntegerv(GL_MAX_LIGHTS, data);
 	maxlights=data[0];
 	TCLTask::unlock();
-	cerr << 2 << endl;
     }
 
     // Make ourselves current
@@ -291,11 +285,9 @@ void OpenGL::get_pick(Salmon* salmon, Roe* roe, int x, int y,
 	HashTableIter<int, PortInfo*> iter(&salmon->portHash);
 	for (iter.first(); iter.ok(); ++iter) {
 	    HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
-	    cerr << "drawing port " << iter.get_data()->portno;
 	    HashTableIter<int, SceneItem*> serIter(serHash);
 	    for (serIter.first(); serIter.ok(); ++serIter) {
 		SceneItem *si=serIter.get_data();
-		cerr << "Drawing: " << si->name << endl;
 
 		// Look up this object by name and see if it is supposed to be
 		// displayed...
