@@ -174,17 +174,68 @@ dialog for the ????? module.
 \subsection{Executing a Network}
 \label{sec:executenet}
 
-``Network Execution'' means that 1 or more modules need to be executed in a
-coordinated fashion.
+``Network Execution'' means that 1 or more modules must be executed in a
+coordinated fashion. The coordinated execution of modules is managed by
+\sr{}'s \dfn{scheduler}.
 
-Network execution is mostly transparent.  Execution is managed by
-\sr{}'s \dfn{scheduler}.  The scheduler knows when modules need to be
-executed (or reexecuted).  While you work (creating modules, connecting
-modules, and setting module parameters) the scheduler continuously examines
-your network (determines the data dependencies amongst modules) and will
-reexecute modules as needed.  Occasionally, you may need to force execution
-of a module by selecting the \menuitem{Execute} item from a module's popup
-menu.
+\subsubsection{The Basics}
+
+The scheduler is invoked when an event occurs that \dfn{triggers} a
+module's execution.  The scheduler creates a list of all modules that must
+executed in coordination with the triggered module. Modules
+\dfn{upstream} (directly or indirectly) from the triggered module will be
+put on the execution list if they have not previously executed.  And all
+modules \dfn{downstream} from the triggered module will be put on the
+list.  Once the scheduler determines which modules must be executed, it
+executes them.
+
+Network execution is mostly transparent.  That is, the events that trigger
+module execution will usually be generated automatically while you work
+(\eg by changing a module's property).  Sometimes though you must manually
+generate a triggering event by choosing the \menuitem{Execute} item from a
+module's popup menu.
+
+\subsubsection{Details}
+
+Each module executes in its own thread and blocks (waits) until its upstream
+modules can supply it with data.  After a module completes its computation
+it sends its results to its downstream modules.  This completes a module's
+execution cycle.  Its next chance to recieve data from its input ports
+and send data to its output ports won't arise until some event
+causes it to be put on the scheduler's execution list again.  
+
+This behavior prevents modules from computing in an iterative fashion,
+sending intermediate results to their downstream modules.  This is because
+downstream modules can't recieve these results until they are in their
+execution cycle.  They would need to be executed each time the
+upstream module posts an intermediate result.
+
+
+\subsubsection{Intermediate Results}
+
+Some modules are designed to be used in an interative fashion.  They send
+data to their output ports in a special way.  They use a method called
+\icode{send\_intermediate} to send the results of each iteration.  When
+this method is used the scheduler (re)executes downstream modules each time
+the upstream module posts its next result.  Downstream modules are
+therefore able to receive the results of each iteration as soon as the
+upstream module sends them.
+
+Currently module \module{SolveMatrix} (from the \package(\sr) package and
+\category{Math} category) is the only module that computes iteratively
+using the \icode{send\_intermediate} method.
+
+\subsubsection{Feedback Loops}
+
+Some modules that are designed to be used in feedback loops (and if fact,
+they can only be used this way).  Their output ports may be connected
+directly or indirectly to their input ports.  These modules also use the
+\icode{send\_intermediate} method.
+
+The list of feedback modules is \module{DipoleSearch} and
+\module{ConductivitySearch} from the \category{Inverse} category of the
+\package{BioPSE} package and \module{BuildLeadField} from the
+\category{LeadField} category of the \package{BioPSE} package.
 
 \subsection{Deleting a Connection}
 \label{sec:deleteconnections}
