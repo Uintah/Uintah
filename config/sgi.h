@@ -23,10 +23,18 @@
 #define SCI_NativeLinkerLib
 
 #define SCI_DeltaCCompiler cc
-#define SCI_DeltaOptimizeCFlags -O3
+#define SCI_DeltaOptimizeCFlags -O
 #define SCI_DeltaDebugCFlags -g
 #ifdef SCI_IRIX6
+#ifdef SCI_64BIT
 #define SCI_DeltaOtherCFlags -mips4 -fullwarn
+#else
+#ifdef SCI_N32
+#define SCI_DeltaOtherCFlags -n32 -mips4 -fullwarn
+#else
+#define SCI_DeltaOtherCFlags -32 -mips2 -fullwarn
+#endif
+#endif
 #else
 #define SCI_DeltaOtherCFlags -mips2 -fullwarn
 #endif
@@ -35,16 +43,34 @@
 #define SCI_DeltaOptimizeCppFlags SCI_DeltaOptimizeCFlags
 #define SCI_DeltaDebugCppFlags SCI_DeltaDebugCFlags
 #ifdef SCI_IRIX6
+#ifdef SCI_64BIT
 #define SCI_DeltaOtherCppFlags -mips4
+#else
+#ifdef SCI_N32
+#define SCI_DeltaOtherCppFlags -n32 -mips4
+#else
+#define SCI_DeltaOtherCppFlags -32 -mips2
+#endif
+#endif
 #else
 #define SCI_DeltaOtherCppFlags -mips2
 #endif
 #define SCI_DeltaCppIncludeLocation /usr/include/CC
 #define SCI_DeltaLinker time CC
-#define SCI_DeltaLinkerFlags
+#ifdef SCI_64BIT
+#define SCI_DeltaLinkerFlags -64
+#else
+#ifdef SCI_N32
+#define SCI_DeltaLinkerFlags -n32
+#else
+#define SCI_DeltaLinkerFlags -32
+#endif
+#endif
 #define SCI_DeltaLinkerNeedsCppFlags
 #define SCI_DeltaLinkerLib
+#if 0
 #define SCI_DeltaPrelinkCommand /usr/lib/DCC/edg_prelink -v
+#endif
 
 #define SCI_GNUCCompiler gcc
 #define SCI_GNUOptimizeCFlags -O2
