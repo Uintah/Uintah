@@ -97,11 +97,19 @@
 \index{Viewer@\viewer{}}
 
 This section describes the most frequently used \sr{} module,
+<<<<<<< viewer.tex
+the \viewer{}, which displays interactive graphical
+output to the computer screen.  The \viewer{} is used any time the user
+wants to see a geometry or spatial data. The \viewer{} also provides access to
+many simulation parameters and controls, and indirectly initiates new
+iterations of  simulation steps, which is important for computational steering (see \secref{Computational Steering}{sec:con-steering}).
+=======
 the \viewer{}, which displays interactive graphical
 output to the computer screen.  The \viewer{} will be used any time the user
 wants to see a geometry or spatial data. The \viewer{} also provides access to
 many simulation parameters and controls, and indirectly initiates new
 iterations of  simulation steps, which is important for computational steering (see \secref{Computational Steering}{sec:con-steering}).
+>>>>>>> 1.3.2.4
 
 This section begins with an overview of the \viewer{} window and its
 controls, then describes the options and variations.
@@ -144,11 +152,19 @@ configurations as follows:
 %
 \begin{description}
   \buttondesc{Autoview} Restores the display to a default
+<<<<<<< viewer.tex
+  condition. \buttondesc{Autoview} Useful when some combination of settings result in
+=======
   condition. \buttondesc{Autoview} is useful when some combination of settings result in
+>>>>>>> 1.3.2.4
   the objects disappearing from the view window.
   
   \buttondesc{Set Home View} Captures the setting of the
+<<<<<<< viewer.tex
+  current view so the user can return to it later by clicking the ``Go home''
+=======
   current view so the user can return to it later by clicking the Go home''
+>>>>>>> 1.3.2.4
   button.
 
   \buttondesc{Go home} Restores the current home view.
@@ -171,7 +187,7 @@ the \viewer{} window (see \secref{Extended Control Window} {sec:view-control} fo
 \subsubsection{Menus}
 \index{Viewer@\viewer{}!menus}
 
-At the top of the \viewer{} window are three pull-down menus.
+The top of the \viewer{} window has three pull-down menus.
 
 \begin{description}
   \menuitemdesc{File} \menuitem{Save
@@ -184,8 +200,13 @@ At the top of the \viewer{} window are three pull-down menus.
   controls described in \secref{Extended control
     window}{sec:view-control}).
   
+<<<<<<< viewer.tex
+  \menuitemdesc{Visual} Allows the user to select different
+  graphics hardware settings that are available on the workstation.
+=======
   \menuitemdesc{Visual} Allows users to select between different
   graphics hardware settings that are available on the workstation.
+>>>>>>> 1.3.2.4
   The list is ordered heuristically from most to least useful.
 \end{description}
 
@@ -284,9 +305,15 @@ window.
 \subsubsection{Object Selector}
 
 The lower portion of the extended \viewer{} window is divided into three
+<<<<<<< viewer.tex
+columns. The middle column contains a list of all objects in the
+display.  If the list becomes long, use the scroll bar on the left
+side to access other objects.  For each entry in the list there are
+=======
 columns. The middle column contains a list of all objects in the
 display.  If the list becomes long, use the scroll bar on the left
 side to access other objects.  For each entry in the list, we have
+>>>>>>> 1.3.2.4
 the following controls, reading from left to right:
 
 \begin{itemize}
@@ -299,13 +326,19 @@ the following controls, reading from left to right:
   \item Next the \button{Shading} control box determines the
         shading options used for rendering the object.
         Options include: Lighting, BBox, Fog, Use Clip, Back Cull, and
+<<<<<<< viewer.tex
+        Display List  (see
+        \secref{Rendering controls}{sec:view-rendering} for directions).
+  \item Lighting control is found at the right end of each entry, initially
+=======
         Display List (for descriptions, see
         \secref{Rendering controls}{sec:view-rendering}).
   \item Lighting control is found at the right end of each entry, initially
+>>>>>>> 1.3.2.4
         marked \menu{Default}.  In the Default setting, the common
         rendering controls described in \secref{Rendering
         controls}{sec:view-rendering} below apply.  Clicking this box
-        reveals a set of options that will apply only to this object that
+        reveals a set of options that only apply to this object that
         include Wire, Flat and Gouraud.
 \end{itemize}
 
@@ -368,16 +401,27 @@ suited to facial anatomy and distance from the screen.
 \index{movies}
 
 The \viewer{} window in \SR{} has simple controls for capturing sequences
+<<<<<<< viewer.tex
+of images into animations or movies.  Below is a description of how this works.
+=======
 of images into animations or movies.  Here is described how this works.
+>>>>>>> 1.3.2.4
 
 In the left column of the extended \viewer{} window, there are controls for
 selecting movie type and initiating and stopping the acquisition of
 individual frames in the movie.
 
+<<<<<<< viewer.tex
+\SR{} sends a frame to the movie after each ``redraw'' operation ( \ie{}
+each time something moves in the display or visualization parameters
+change).  If the MPEG package is available, then an option will be available for saving the animations as MPEG movies (See the
+\htmladdnormallink{Installation Manual}{\installguideurl} for details).
+=======
 \SR{} sends a frame to the movie after each ``redraw'' operation ( \ie{}
 each time something moves in the display or a visualization parameters
 change).  If the MPEG package is available, then an option will be available for saving the animations as MPEG movies (See the
 \htmladdnormallink{Installation Manual}{\installguideurl} for details).
+>>>>>>> 1.3.2.4
 
 There is also a button that forces the size of the graphical window to be
 352x240 pixels in size, which is a standard format well suited to MPEG.
@@ -385,14 +429,34 @@ There is also a button that forces the size of the graphical window to be
 \subsection{Control Widgets}
 \label{sec:view-widgets} 
 
+<<<<<<< viewer.tex
+\hyperref{Mouse controls}{Mouse controls in
+Section}{}{sec:view-mouse} describes ways to interact with the contents
+of the \viewer{}, \SR{} also supports  powerful display widgets.
+Examples of widget capabilities include managing cutting surfaces colored
+=======
 \hyperref{Mouse controls}{mouse controls in
 Section}{}{sec:view-mouse} describes ways to interact with the contents
 of the \viewer{}, \SR{} also supports  powerful display widgets.
 Examples of widget capabilities include managing cutting surfaces colored
+>>>>>>> 1.3.2.4
 according to the local data values, displaying streamlines in vector
 fields, or selecting sub-volumes within the display area for further
 manipulation. 
  
+<<<<<<< viewer.tex
+\sci{} has made interaction with widgets as consistent as
+possible. For example, controlling parameters is usually done by
+clicking and dragging on a cylindrical ``collar'' or a sphere element
+of the widget. Note that a single widget can have more than one
+purpose depending on the context in which it exists. The Gauge widget,
+for example, selects a clipping or display plane through a
+three-dimensional object and sets the seed points for a streamline
+module.
+
+This section describes the widgets available within \SR{} and \BIOPSE{}.
+ 
+=======
 We has tried to making interaction with widgets as consistent as
 possible. For example, controlling parameters is usually done by
 clicking and dragging on a cylindrical ``collar'' or a sphere element
@@ -404,6 +468,7 @@ module.
 
 This section describes the widgets available within \SR{} and \BIOPSE{}.
  
+>>>>>>> 1.3.2.4
 
 \subsubsection{Gauge Widget}
 \label{sec:view-gaugewidget} 
@@ -426,11 +491,20 @@ cylinders (D) extending from the spheres.
 
 \paragraph{Purpose} The primary use of the Gauge Widget is to set the
 location and density of streamlines emerging from the long cylinder.  It
+<<<<<<< viewer.tex
+can also be used as a more general purpose three-dimensional slider or a
+=======
 may also be used as a more general purpose three-dimensional slider or a
+>>>>>>> 1.3.2.4
 source for a stream surface. 
 
+<<<<<<< viewer.tex
+\paragraph{Controls} Clicking and dragging either sphere changes the widget's orientation.  Dragging either of the resize
+cylinders cases the size of the widget to change, and dragging any point on
+=======
 \paragraph{Controls} Clicking and dragging either sphere changes the widget's orientation.  Dragging either of the resize
 cylinders cases the size of the widget to change and dragging any point on
+>>>>>>> 1.3.2.4
 the main cylinder moves the whole widget without any change in orientation.
 Dragging the slider collar changes the associated value, typically the
 density of seed points for a streamline source.
@@ -451,15 +525,20 @@ density of seed points for a streamline source.
 
 \paragraph{Appearance} The
 Frame Widget(See Figure~\ref{fig:framewidget}) consists of four cylinders connected in a rectangle.  In
-the middle of each of the cylinders there is a sphere (B), from which
+the middle of each cylinder there is a sphere (B), from which
 a resize cylinder extends (C).
 
 \paragraph{Purpose} The Frame Widget is primarily used for image
 plane definition, defining stream volumes, and as a, "tie dye'' similar to
 the Ring Widget described in \secref{Ring Widget}{sec:view-ringwidget}.
 
+<<<<<<< viewer.tex
+\paragraph{Controls} Dragging a sphere rotates the widget about its center. Dragging on a resize cylinder extends or contracts the rectangle.
+Dragging any cylinder drags the entire widget through space.
+=======
 \paragraph{Controls} Dragging a sphere rotates the widget about its center. Dragging on a resize cylinder will extend or contract the rectangle.
 Dragging any cylinder will drag the entire widget through space.
+>>>>>>> 1.3.2.4
 
 
 \subsubsection{Box Widget}
