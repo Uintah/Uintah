@@ -237,6 +237,7 @@ itcl_class BaseViewWindow {
 	setGlobal $this-global-movieName "./movie.%04d"
 	setGlobal $this-global-movieFrame 0
 	setGlobal $this-global-resize 0
+	setGlobal $this-global-message "Waiting ..."
 	setGlobal $this-x-resize 700
 	setGlobal $this-y-resize 512
 	setGlobal $this-do_bawgl 0
@@ -1460,15 +1461,15 @@ itcl_class ViewWindow {
 
 	frame $w.moviebase
 	label $w.moviebase.label -text "Name:" -width 6
-        entry $w.moviebase.entry -relief sunken -width 13 \
+        entry $w.moviebase.entry -relief sunken -width 15 \
 	    -textvariable "$this-global-movieName" 
 
         TooltipMultiWidget "$w.moviebase.label $w.moviebase.entry" \
             "Name of the movie file.  The %%#d specifies number of digits\nto use in the frame number.  Eg: movie.%%04d will\nproduce names such as movie.0001.ppm"
 
 	frame $w.movieframe
-	label $w.movieframe.label -text "Frame:" -width 6
-        entry $w.movieframe.entry -relief sunken -width 13 \
+	label $w.movieframe.label -text "Next Frame No:" -width 15
+        entry $w.movieframe.entry -relief sunken -width 6 \
 	    -textvariable "$this-global-movieFrame" 
 
         TooltipMultiWidget "$w.movieframe.label $w.movieframe.entry" \
@@ -1487,7 +1488,11 @@ itcl_class ViewWindow {
 	bind $w.resize_f.e1 <Return> "$this resize"
 	bind $w.resize_f.e2 <Return> "$this resize"
 
-	button $w.close -text "Close" -command "wm withdraw $w"
+	entry $w.message -textvariable $this-global-message \
+	    -relief flat -width 20 -state disabled
+	frame $w.separator -height 2 -relief sunken -borderwidth 2
+	button $w.close -width 10 -text "Close" \
+	  -command "wm withdraw $w"
 
         pack $w.l -padx 4 -anchor w
         pack $w.none $w.raw $w.mpeg -padx 4 -anchor w
@@ -1502,7 +1507,9 @@ itcl_class ViewWindow {
                -side left -pady 5 -padx 4
         pack $w.resize_f -padx 4 -anchor w
 
-        pack $w.close -padx 4
+	pack $w.message -fill x -padx 4 -pady 5
+	pack $w.separator -fill x -pady 5
+        pack $w.close -padx 4 -anchor e
 
 	if {[set $this-global-resize] == 0} {
 	    set color "#505050"

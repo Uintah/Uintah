@@ -1066,10 +1066,13 @@ OpenGL::redraw_frame()
         //}
 
 	if( fname.find("%") != std::string::npos ) {
-	  cerr << "Remove the C Style format for the frames." << std::endl;
-	  cerr << "The format should be of the form: 'my_movie'" << std::endl;
+	  string message = "Bad Format - Remove the Frame Format.";
+	  view_window_->setMessage( message );
+	  view_window_->setMovie( 0 );
+
 	} else {
-	  cerr << "Dumping mpeg " << fname << std::endl;
+	  string message = "Dumping mpeg " + fname;
+	  view_window_->setMessage( message );
 
 	  StartMpeg( fname );
 
@@ -1079,11 +1082,14 @@ OpenGL::redraw_frame()
       }
 
       if(encoding_mpeg_) {
-	cerr << "Adding Mpeg Frame " << current_movie_frame_++ << "....  ";
+
+	string message = "Adding Mpeg Frame " + to_string( current_movie_frame_ );
+	view_window_->setMessage( message );
+
 	view_window_->setMovieFrame(current_movie_frame_);
 	AddMpegFrame();
-	cerr << " done!\n";
-	
+
+	current_movie_frame_++;
 	view_window_->setMovieFrame(current_movie_frame_);
       }
 
@@ -1098,18 +1104,20 @@ OpenGL::redraw_frame()
       if( pos == std::string::npos ||
 	  movie_name_[pos+2] != 'd' ||
 	  movie_name_.find("%") != movie_name_.find_last_of("%") ) {
-	cerr << "Bad C Style format for the frames." << std::endl;
-	cerr << "The format should be of the form: './my_movie.%04d'";
-	cerr << std::endl;
+	  string message = "Bad Format - Illegal Frame Format.";
+	  view_window_->setMessage( message );
+	  view_window_->setMovie( 0 );
       } else {
 
 	char fname[256];
-	sprintf(fname, movie_name_.c_str(), current_movie_frame_++);
+	sprintf(fname, movie_name_.c_str(), current_movie_frame_);
 	string fullpath = string(fname) + string(".ppm");
-	cerr << "Dumping " << fullpath << "....  ";
-	dump_image(fullpath);
-	cerr << " done!\n";
 	
+	string message = "Dumping " + fullpath;
+	view_window_->setMessage( message );
+	dump_image(fullpath);
+
+	current_movie_frame_++;
 	view_window_->setMovieFrame(current_movie_frame_);
       }
     }
@@ -1547,12 +1555,35 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
 
 
 void
+ViewWindow::setMovie( int state )
+{
+  GuiInt movie(ctx_->subVar(tclID_+"-movie",false));
+  if (movie.valid()) {
+    movie.set( state );
+    movie.reset();
+    renderer_->doing_movie_p_ = state;
+    renderer_->make_MPEG_p_ = state;
+  }
+}
+
+void
 ViewWindow::setMovieFrame( int movieframe )
 {
   GuiInt movieFrame(ctx_->subVar(tclID_+"-movieFrame",false));
   if (movieFrame.valid()) {
     movieFrame.set( movieframe );
     movieFrame.reset();
+  }
+}
+
+
+void
+ViewWindow::setMessage( string message )
+{
+  GuiString movieMessage(ctx_->subVar(tclID_+"-message",false));
+  if (movieMessage.valid()) {
+    movieMessage.set( message );
+    movieMessage.reset();
   }
 }
 
