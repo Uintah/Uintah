@@ -110,6 +110,7 @@ int main(int argc, char** argv)
 	} else if(s == "-ice"){
 	    do_ice=true;
 	} else if(s == "-nthreads"){
+	  cerr << "reading number of threads\n";
 	    if(++i == argc){
 		usage("You must provide a number of threads for -nthreads",
 		      s, argv[0]);
@@ -188,15 +189,15 @@ int main(int argc, char** argv)
 	MPMInterface* mpm = 0;
 	if(do_mpm){
 
-	    if(numThreads == 0){
+//	    if(numThreads == 0){
 		mpm = scinew MPM::SerialMPM(world);
-	    } else {
+//	    } else {
 #ifdef WONT_COMPILE_YET
 		mpm = scinew ThreadedMPM();
 #else
 		mpm = 0;
 #endif
-	    }
+//	    }
 	    sim->attachPort("mpm", mpm);
 	}
 
@@ -244,6 +245,11 @@ int main(int argc, char** argv)
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
 	} else if(scheduler == "MixedScheduler"){
+	   if( numThreads > 0 ){
+	     if( Parallel::getMaxThreads() == 1 ){
+	       Parallel::setMaxThreads( numThreads );
+	     }
+	   }
 	   MixedScheduler* sched =
 	      scinew MixedScheduler(world, output);
 	   sim->attachPort("scheduler", sched);
@@ -297,6 +303,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.28  2000/09/29 20:41:45  dav
+// Added hack to allow -nthreads to be set
+//
 // Revision 1.27  2000/09/29 19:57:51  dav
 // Changed numThreads from bool to int
 //
