@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<?xml-stylesheet href="../../../../Dataflow/XML/package-component.xsl" type="text/xsl"?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/Utilities/XML/package-component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
 <!--
@@ -20,35 +20,37 @@
   University of Utah. All Rights Reserved.
 -->
 
-<component name="Switch" category="DataIO">
+
+<component name="ChooseImage" category="DataIO">
   <overview>
     <authors>
+      <author>Darby Van Uitert</author>
     </authors>
+    <summary>
+      <p>
+        ChooseImage takes in an arbitrary number of input fields, and
+        pass one of them downstream, based on the port index typed in the UI.
+      </p>
+    </summary>
+    <description>
+      <p>
+        ChooseImage takes in an arbitrary number of input fields, and
+        pass one of them downstream, based on the port index typed in the UI.
+      </p>
+    </description>
   </overview>
   <implementation>
   </implementation>
   <io>
-    <inputs lastportdynamic="no">
+    <inputs lastportdynamic="yes">
       <port>
-        <name>Image1</name>
-        <datatype>Insight::ITKDatatype</datatype>
-      </port>
-      <port>
-        <name>Image2</name>
-        <datatype>Insight::ITKDatatype</datatype>
-      </port>
-      <port>
-        <name>Image3</name>
-        <datatype>Insight::ITKDatatype</datatype>
-      </port>
-      <port>
-        <name>Image4</name>
+        <name>InputImage</name>
         <datatype>Insight::ITKDatatype</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>Image1</name>
+        <name>OutputImage</name>
         <datatype>Insight::ITKDatatype</datatype>
       </port>
     </outputs>
