@@ -183,8 +183,15 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
   typename FIELD::mesh_type::Node::iterator inodeItr, jnodeItr, knodeItr;
   typename FIELD::mesh_type::Node::iterator onodeItr;
 
+  
+  typename FIELD::mesh_type::Cell::iterator icellItr, jcellItr, kcellItr;
+  typename FIELD::mesh_type::Cell::iterator ocellItr;
+
   imesh->begin( inodeItr );
   omesh->begin( onodeItr );
+
+  imesh->begin( icellItr );
+  omesh->begin( ocellItr );
 
   // For structured geometery we need to set the correct location.
   if( ifield->get_type_description(0)->get_name() == "LatVolField" ||
@@ -234,6 +241,8 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
     omesh->transform( trans );
   }
 
+  bool last_node;
+
   // Index based on the old mesh so that we are assured of getting the last
   // node even if it forms a "partial" cell.
   for( k=kstart; k<kstop_skip; k+=kskip ) {
@@ -251,9 +260,13 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
     // A hack here so that an iterator can be used.
     // Set this iterator to be at the correct kth index.
     imesh->begin( knodeItr );
+    imesh->begin( kcellItr );
 
     for( ic=0; ic<knode*jdim_in*idim_in; ic++ )
       ++knodeItr;
+
+    for( ic=0; ic<knode*(jdim_in-1)*(idim_in-1); ic++ )
+      ++kcellItr;
 
     for( j=jstart; j<jstop_skip; j+=jskip ) {
 
@@ -270,9 +283,13 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
       // A hack here so that an iterator can be used.
       // Set this iterator to be at the correct jth index.
       jnodeItr = knodeItr;
+      jcellItr = kcellItr;
 
       for( ic=0; ic<jnode*idim_in; ic++ )
 	++jnodeItr;
+
+      for( ic=0; ic<jnode*(idim_in-1); ic++ )
+	++jcellItr;
 
       for( i=istart; i<istop_skip; i+=iskip ) {
 
@@ -289,16 +306,42 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
 	// A hack here so that an iterator can be used.
 	// Set this iterator to be at the correct ith index.
 	inodeItr = jnodeItr;
+	icellItr = jcellItr;
 
 	for( ic=0; ic<inode; ic++ )
 	  ++inodeItr;
+
+	for( ic=0; ic<inode; ic++ )
+	  ++icellItr;
 
 #ifdef SET_POINT_DEFINED
 	imesh->get_center(pt, *inodeItr);
 	omesh->set_point(pt, *onodeItr);
 #endif
-	ifield->value(value, *inodeItr);
-	ofield->set_value(value, *onodeItr);
+
+	switch( ifield->data_at() ) {
+	case Field::NODE:
+	  ifield->value(value, *inodeItr);
+	  ofield->set_value(value, *onodeItr);
+	  break;
+	case Field::CELL:
+
+	  if( i+iskip<istop_skip &&
+	      j+jskip<jstop_skip &&
+	      k+kskip<kstop_skip ) {
+	    ifield->value(value, *icellItr);
+	    ofield->set_value(value, *ocellItr);
+
+	    /*	    
+	    cout << knode << "  " << jnode << "  " << inode << "        ";
+	    cout << (*icellItr).k_ << "  " << (*icellItr).j_ << "  " << (*icellItr).i_ << "        ";
+	    cout << (*ocellItr).k_ << "  " << (*ocellItr).j_ << "  " << (*ocellItr).i_ << endl;
+	    */
+
+	    ++ocellItr;
+	  }
+	  break;
+	}
 
 	++onodeItr;
       }
