@@ -1,4 +1,4 @@
-void momentum_exchange_term_continuous_cc(
+void momentum_exchange_cont_cc(
 	Array3<double> sux_fcy, 
 	Array3<double> spx_fcy, 
 	Array3<double> sux_fcz, 
