@@ -26,6 +26,7 @@ namespace SCIRun {
   class SpChannel;
   class SocketEpChannel : public EpChannel {
     friend class SocketMessage;
+    friend class SocketThread;
   public:
 
     SocketEpChannel();
