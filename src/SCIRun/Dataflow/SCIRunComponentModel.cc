@@ -54,7 +54,6 @@
 #include <SCIRun/Dataflow/SCIRunComponentDescription.h>
 #include <SCIRun/Dataflow/SCIRunComponentInstance.h>
 #include <SCIRun/SCIRunErrorHandler.h>
-#include <sci_defs/environment_defs.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -132,20 +131,7 @@ void SCIRunComponentModel::initGuiInterface() {
   
   // Create user interface link
   gui = new TCLInterface();
-  
-  // Set up the TCL environment to find core components
-  const std::string DataflowTCLpath = SCIRUN_SRCDIR+std::string("/Dataflow/GUI");
-  const std::string CoreTCLpath = SCIRUN_SRCDIR+std::string("/Core/GUI");
-  gui->execute("global CoreTCL SCIRUN_SRCDIR SCIRUN_OBJDIR scirun2");
-  gui->execute("set CoreTCL "+CoreTCLpath);
-  gui->execute("set SCIRUN_SRCDIR "SCIRUN_SRCDIR);
-  gui->execute("set SCIRUN_OBJDIR "SCIRUN_OBJDIR);
-  gui->execute("set scirun2 1");
-  gui->execute("lappend auto_path "+CoreTCLpath);
-  gui->execute("lappend auto_path "+DataflowTCLpath);
-  gui->execute("lappend auto_path "ITCL_WIDGETS);
-  gui->source_once(DataflowTCLpath+std::string("/NetworkEditor.tcl"));
-
+  gui->eval("set scirun2 1");
   
   tcl_task->release_mainloop();
   packageDB->setGui(gui);
