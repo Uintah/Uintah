@@ -181,5 +181,18 @@ bool GeomSphere::saveobj(ostream& out, const string& format,
     }
 }
 
+void GeomSphere::getnunv(int num_polygons, int &nu, int &nv) {
+#define MIN_POLYS 8
+#define MAX_POLYS 400
+#define MIN_NU 4
+#define MAX_NU 20
+#define MIN_NV 2
+#define MAX_NV 20
+  // calculate the spheres nu,nv based on the number of polygons
+  float t = (num_polygons - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
+  nu = int(MIN_NU + t*(MAX_NU - MIN_NU)); 
+  nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
+}
+
 } // End namespace SCIRun
 
