@@ -1204,6 +1204,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
 		  last_errupdate);
     
   }
+  data.reducer.wait(data.np);
 }
 
 void 
@@ -1514,6 +1515,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 		  last_errupdate);
     
   }
+  data.reducer.wait(data.np);
 }
 
 } // End namespace SCIRun
