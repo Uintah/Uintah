@@ -1,3 +1,4 @@
+
 /* REFERENCED */
 static char *id="@(#) $Id$";
 
@@ -469,6 +470,52 @@ void ProblemSpec::require(const std::string& name,
 
 }
 
+
+ProblemSpecP ProblemSpec::getOptional(const std::string& name, 
+				      std::string &value)
+{
+  ProblemSpecP ps = this;
+  DOM_Node attr_node;
+  DOM_Node found_node = findNode(name,this->d_node);
+  if (found_node.isNull()) {
+    ps = 0;
+    return ps;
+  }
+  else {
+    if (found_node.getNodeType() == DOM_Node::ELEMENT_NODE) {
+      // We have an element node and attributes
+      DOM_NamedNodeMap attr = found_node.getAttributes();
+      int num_attr = attr.getLength();
+      if (num_attr >= 1)
+	attr_node = attr.item(0);
+      else 
+	return ps = 0;
+      if (attr_node.getNodeType() == DOM_Node::ATTRIBUTE_NODE) {
+	DOMString val = attr_node.getNodeValue();
+	char *s = val.transcode();
+	value = std::string(s);
+	delete[] s;
+      }
+      else {
+	ps = 0;
+      }
+    }
+  }
+          
+  return ps;
+
+}
+
+void ProblemSpec::requireOptional(const std::string& name, std::string& value)
+{
+ // Check if the prob_spec is NULL
+
+  if (! this->getOptional(name,value))
+      throw ParameterNotFound(name);
+ 
+}
+
+
 const TypeDescription* ProblemSpec::getTypeDescription()
 {
     //cerr << "ProblemSpec::getTypeDescription() not done\n";
@@ -477,6 +524,9 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.16  2000/04/27 00:28:37  jas
+// Can now read the attributes field of a tag.
+//
 // Revision 1.15  2000/04/26 06:49:11  sparker
 // Streamlined namespaces
 //
