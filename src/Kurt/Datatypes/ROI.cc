@@ -38,7 +38,7 @@ ROI::draw()
   computeView(viewRay);
 
   
-  ROIIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
+  ROIIterator it( volren->tex, viewRay,  volren->controlPoint);
 
   SliceTable st(volren->tex->min(),
 		volren->tex->max(), 
@@ -76,7 +76,7 @@ ROI::drawWireFrame()
   Ray viewRay;
   computeView(viewRay);
   
-  ROIIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
+  ROIIterator it( volren->tex, viewRay,  volren->controlPoint);
 
   Brick* brick;
   for( brick = it.Start(); !it.isDone(); brick = it.Next()){
