@@ -56,11 +56,8 @@
         Field, the module produces a triangulated surface Field of
         just the boundary faces as output.
 
-	<p>[To create a FieldBoundary module from
-	SCIRun/Fields/FieldBoundary|<Confusing - This part tells how
-					       to create a net using the
-					       FieldBoundary module not how to
-					       create a FieldBoundary module>]
+	<p>To create a net using the FieldBoundary module (SCIRun/Fields/FieldBoundary):					
+					      
 	<ol>
 	<li value="1.">Attach the output from a FieldReader 
 	(choose the utahtorso-lowres-voltage.tvd.fld file again)
@@ -95,23 +92,20 @@
 	<p>Another useful technique for visualizing data is to interpolate data values
 	 from one Field to another Field. In this section, we will read in two datasets:
 	<ul> 
-	<li>The first contains the utahtorso volume [mesh|data (mesh and
-	  voltage values)] we looked at in Chapter 1.
-	<li>The second contains the electrode[s| positions] [that|] we [looked at|saw] in
-	Chapter 2 [link here to chapter 2, electrodes]. </ul>
+	<li>The first contains the utahtorso volume data (mesh and
+	  voltage values) we looked at in Chapter 1.
+	<li>The second contains the electrode positions that we saw in
+	Chapter 2 [link here to chapter 2, electrodes].</ul>
 	
-	<p>The [|utahtorso] volume Field contains simulated voltage values
-	through the entire volume.  For each [|electrode] position [of the electrodes|],
+	<p>We want to output a new Field containing the positions (as geometry)
+	of the electrodes and corresponding voltage values
+	interpolated from the utahtorso volume.
+
+	<p>The utahtorso volume Field contains simulated voltage values
+	through the entire volume.  For each electrode position of the electrodes,
 	we must look up the corresponding voltage value
 	from the volume field. 
-	
-	[|<Note: The following paragraph should come before the previous paragraph>]
-
-	<p>We [can then|want to] output a new [combined|] Field containing the
-	  [|electrode's] [geometry|positions (as geometry)]
-	[of the electrodes|] and [their|] corresponding [|voltage values]
-	interpolated [voltages|] from the [|utahtorso] volume.
-
+		
 	<p>The module that implements this algorithm is called
 	DirectInterpolate (SCIRun/Fields/DirectInterpolate).
 	<p>To implement the net described above, we will need:
@@ -153,7 +147,7 @@
 
         <p>Streamline advection is the last visualization technique we will explore in this
         Chapter.  The StreamLine module takes in a vector Field and a Field of sample points. The 
-	module then outputs a new Field [that consists|consisting] of a sequence of path-integral curves
+	module then outputs a new Field consisting of a sequence of path-integral curves
         generated from advecting (integrating) the sample positions
         through the (derivative) vector Field.
 
@@ -177,8 +171,7 @@
 	
 	<p>To interactively position the rake of seed points within
 	the volume:
-	<ol><li value="2.">Connect the geometry output port (pink) [from
-	      this|of the SampleField]
+	<ol><li value="2.">Connect the geometry output port (pink) of the SampleField]
 	module to the Viewer module.  
 	<li>Select the "rake" option from the SampleField UI and 
 	set the number of samples to 30.
@@ -188,7 +181,7 @@
 
 	<p>At this point, we have streamlines coming out of the
         StreamLines module, and we would like to render them.  Before
-        we do, we [can|] attach scalar data values to the
+        we do, we attach scalar data values to the
         streamline nodes.  To accomplish this, we use the
         DirectInterpolate module described above.  
 
@@ -259,13 +252,17 @@
 	<br>
 	<p>You can move this widget around to new positions by:
 	<ol>
-	<li value="1.">Press [|(and hold down)] the shift key and click on
+	<li value="1.">Press (and hold down) the shift key and click on
 	the widget with the left mouse button.
 	<LI>Release the mouse button.</OL> 
 	<P>The streamlines will automatically recompute from the new seed positions.
 
 	<b><H4>Summary</b></H4>
-	need content	
+	We have just constructed three nets, each describing a single method of 
+	visualizing the utahtorso-lowres-voltage dataset.	
+
+	<p>In the next chapter, we will merge those nets into a single, larger network 
+	that performs concurrent visualizations.
 
 	<br>
 	<br>
