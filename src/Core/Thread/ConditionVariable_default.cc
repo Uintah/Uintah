@@ -19,7 +19,6 @@ namespace SCICore {
     namespace Thread {
 	struct ConditionVariable_private {
 	    int num_waiters;
-	    Mutex mutex;
 	    Semaphore semaphore;
 	    ConditionVariable_private();
 	    ~ConditionVariable_private();
@@ -28,8 +27,7 @@ namespace SCICore {
 }
 
 SCICore::Thread::ConditionVariable_private::ConditionVariable_private()
-    : num_waiters(0), mutex("Condition variable lock"),
-      semaphore("Condition variable semaphore", 0)
+    : num_waiters(0), semaphore("Condition variable semaphore", 0)
 {
 }
 
@@ -51,43 +49,41 @@ SCICore::Thread::ConditionVariable::~ConditionVariable()
 void
 SCICore::Thread::ConditionVariable::wait(Mutex& m)
 {
-    int oldstate=Thread::couldBlock(d_name);
-    d_priv->mutex.lock();
     d_priv->num_waiters++;
-    d_priv->mutex.unlock();
     m.unlock();
     // Block until woken up by signal or broadcast
     int s=Thread::couldBlock(d_name);
     d_priv->semaphore.down();
     Thread::couldBlockDone(s);
     m.lock();
-    Thread::couldBlockDone(oldstate);
 }
 
 void
 SCICore::Thread::ConditionVariable::conditionSignal()
 {
-    d_priv->mutex.lock();
     if(d_priv->num_waiters > 0){
         d_priv->num_waiters--;
         d_priv->semaphore.up();
     }
-    d_priv->mutex.unlock();
 }
 
 void
 SCICore::Thread::ConditionVariable::conditionBroadcast()
 {
-    d_priv->mutex.lock();
     while(d_priv->num_waiters > 0){
         d_priv->num_waiters--;
         d_priv->semaphore.up();
     }
-    d_priv->mutex.unlock();
 }
 
 //
 // $Log$
+// Revision 1.4  1999/09/22 06:23:37  sparker
+// Mutex in ConditionVariable was not necessary - the caller of
+//    signal() and broadcast() should ensure that the same mutex
+//    passed in with wait() is locked.  This is consistent with
+//    the pthreads implementation.
+//
 // Revision 1.3  1999/08/28 03:46:47  sparker
 // Final updates before integration with PSE
 //
