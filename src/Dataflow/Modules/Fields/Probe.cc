@@ -63,6 +63,11 @@ private:
   GuiString gui_edge_;
   GuiString gui_face_;
   GuiString gui_cell_;
+  GuiInt gui_show_value_;
+  GuiInt gui_show_node_;
+  GuiInt gui_show_edge_;
+  GuiInt gui_show_face_;
+  GuiInt gui_show_cell_;
   GuiString gui_moveto_;
   GuiDouble gui_probe_scale_;
 
@@ -94,7 +99,12 @@ DECLARE_MAKER(Probe)
       gui_edge_(ctx->subVar("edge")),
       gui_face_(ctx->subVar("face")),
       gui_cell_(ctx->subVar("cell")),
-      gui_moveto_(ctx->subVar("moveto")),
+      gui_show_value_(ctx->subVar("show-value")),
+      gui_show_node_(ctx->subVar("show-node")),
+      gui_show_edge_(ctx->subVar("show-edge")),
+      gui_show_face_(ctx->subVar("show-face")),
+      gui_show_cell_(ctx->subVar("show-cell")),
+      gui_moveto_(ctx->subVar("moveto", false)),
       gui_probe_scale_(ctx->subVar("probe_scale")),
       widgetid_(0)
 {
@@ -336,19 +346,24 @@ Probe::execute()
     if (!module_dynamic_compile(ci, algo)) return;
 
     algo->execute(ifieldhandle->mesh(), location,
-		  nodestr, edgestr, facestr, cellstr);
+		  gui_show_node_.get(), nodestr,
+		  gui_show_edge_.get(), edgestr,
+		  gui_show_face_.get(), facestr,
+		  gui_show_cell_.get(), cellstr);
 
-    gui_node_.set(nodestr);
-    gui_edge_.set(edgestr);
-    gui_face_.set(facestr);
-    gui_cell_.set(cellstr);
+    if (gui_show_node_.get()) { gui_node_.set(nodestr); }
+    if (gui_show_edge_.get()) { gui_edge_.set(edgestr); }
+    if (gui_show_face_.get()) { gui_face_.set(facestr); }
+    if (gui_show_cell_.get()) { gui_cell_.set(cellstr); }
   }
 
   std::ostringstream valstr;
   ScalarFieldInterfaceHandle sfi = 0;
   VectorFieldInterfaceHandle vfi = 0;
   TensorFieldInterfaceHandle tfi = 0;
-  if (!input_field_p || ifieldhandle->data_at() == Field::NONE)
+  if (!input_field_p ||
+      ifieldhandle->data_at() == Field::NONE ||
+      !gui_show_value_.get())
   {
     valstr << 0;
     PointCloudField<double> *field =
@@ -398,7 +413,7 @@ Probe::execute()
   gui_locx_.set(location.x());
   gui_locy_.set(location.y());
   gui_locz_.set(location.z());
-  gui_value_.set(valstr.str());
+  if (gui_show_value_.get()) { gui_value_.set(valstr.str()); }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Probe Point");
   if (!ofp) {

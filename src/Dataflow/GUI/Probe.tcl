@@ -24,6 +24,7 @@ itcl_class SCIRun_Fields_Probe {
 
     method set_defaults {} {
 	global $this-value
+	global $this-show-value
 	global $this-locx
 	global $this-locy
 	global $this-locz
@@ -31,11 +32,16 @@ itcl_class SCIRun_Fields_Probe {
 	global $this-edge
 	global $this-face
 	global $this-cell
+	global $this-show-node
+	global $this-show-edge
+	global $this-show-face
+	global $this-show-cell
 	global $this-moveto
 	global $this-probe_scale
 	
 
 	set $this-value ""
+	set $this-show-value 1
 	set $this-locx ""
 	set $this-locy ""
 	set $this-locz ""
@@ -43,6 +49,10 @@ itcl_class SCIRun_Fields_Probe {
 	set $this-edge ""
 	set $this-face ""
 	set $this-cell ""
+	set $this-show-node 1
+	set $this-show-edge 1
+	set $this-show-face 1
+	set $this-show-cell 1
 	set $this-moveto ""
 	set $this-probe_scale 5.0
     }
@@ -77,6 +87,47 @@ itcl_class SCIRun_Fields_Probe {
 	$this-c needexecute
     }
 
+
+    method changevalue {} {
+	if { [set $this-show-value] } {
+	    $this-c needexecute
+	} else {
+	    set $this-value ""
+	}
+    }
+
+    method changenode {} {
+	if { [set $this-show-node] } {
+	    $this-c needexecute
+	} else {
+	    set $this-node ""
+	}
+    }
+
+    method changeedge {} {
+	if { [set $this-show-edge] } {
+	    $this-c needexecute
+	} else {
+	    set $this-edge ""
+	}
+    }
+
+    method changeface {} {
+	if { [set $this-show-face] } {
+	    $this-c needexecute
+	} else {
+	    set $this-face ""
+	}
+    }
+
+    method changecell {} {
+	if { [set $this-show-cell] } {
+	    $this-c needexecute
+	} else {
+	    set $this-cell ""
+	}
+    }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -97,19 +148,24 @@ itcl_class SCIRun_Fields_Probe {
 	entry $w.f.g.entries.loc.locy -width 10 -textvariable $this-locy
 	entry $w.f.g.entries.loc.locz -width 10 -textvariable $this-locz
 
-	label $w.f.g.labels.value -text "Value" -just left
+	checkbutton $w.f.g.labels.value -text "Value" -just left \
+	    -variable $this-show-value -command "$this changevalue"
 	entry $w.f.g.entries.value -width 40 -state disabled -textvariable $this-value
 
-	label $w.f.g.labels.node -text "Node" -just left
+	checkbutton  $w.f.g.labels.node -text "Node" -just left \
+	    -variable $this-show-node -command "$this changenode"
 	entry $w.f.g.entries.node -width 10 -textvariable $this-node
 
-	label $w.f.g.labels.edge -text "Edge" -just left
+	checkbutton $w.f.g.labels.edge -text "Edge" -just left \
+	    -variable $this-show-edge -command "$this changeedge"
 	entry $w.f.g.entries.edge -width 10 -textvariable $this-edge
 
-	label $w.f.g.labels.face -text "Face" -just left
+	checkbutton $w.f.g.labels.face -text "Face" -just left \
+	    -variable $this-show-face -command "$this changeface"
 	entry $w.f.g.entries.face -width 10 -textvariable $this-face
 
-	label $w.f.g.labels.cell -text "Cell" -just left
+	checkbutton $w.f.g.labels.cell -text "Cell" -just left \
+	    -variable $this-show-cell -command "$this changecell"
 	entry $w.f.g.entries.cell -width 10 -textvariable $this-cell
 
      	pack  $w.f.g.labels.location $w.f.g.labels.value \
