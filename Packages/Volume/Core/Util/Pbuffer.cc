@@ -30,13 +30,17 @@
 //    Date   : Sun Jun 27 17:49:45 2004
 
 #include <Packages/Volume/Core/Util/Pbuffer.h>
+#include <Packages/Volume/Core/Util/ShaderProgramARB.h>
 #include <iostream>
+
+#include <string>
 
 #include <sci_glu.h>
 #include <sci_glx.h>
 
 using std::cerr;
 using std::endl;
+using std::string;
 
 #ifndef HAVE_GLEW
 
@@ -147,6 +151,13 @@ static bool mATI_pixel_format_float = false;
 static bool mNV_float_buffer = false;
 static bool mNV_texture_rectangle = false;
 
+const string program =
+"!!ARBfp1.0 \n"
+"TEX result.color, fragment.texcoord[0], texture[0], RECT; \n"
+"END";
+
+static Volume::FragmentProgramARB* mShader = 0;
+
 namespace Volume {
 
 struct PbufferImpl
@@ -170,7 +181,7 @@ Pbuffer::create ()
     // extension check
     mATI_render_texture = GLXEW_ATI_render_texture;
     mATI_pixel_format_float = GLXEW_ATI_pixel_format_float;
-    mNV_float_buffer = GLXEW_NV_float_buffer && GLEW_NV_float_buffer;
+    mNV_float_buffer = GLXEW_NV_float_buffer && GLEW_NV_float_buffer && GLEW_ARB_fragment_program;
     mNV_texture_rectangle = GLEW_NV_texture_rectangle;
     if (!GLXEW_VERSION_1_3
         || (mFormat == GL_FLOAT // float buffer extensions
@@ -188,7 +199,8 @@ Pbuffer::create ()
     mATI_render_texture = gluCheckExtension((GLubyte*)"GLX_ATI_render_texture", (GLubyte*)glXGetClientString(glXGetCurrentDisplay(), GLX_EXTENSIONS));
     mATI_pixel_format_float = gluCheckExtension((GLubyte*)"GLX_ATI_pixel_format_float", (GLubyte*)glXGetClientString(glXGetCurrentDisplay(), GLX_EXTENSIONS));
     mNV_float_buffer = gluCheckExtension((GLubyte*)"GLX_NV_float_buffer", (GLubyte*)glXGetClientString(glXGetCurrentDisplay(), GLX_EXTENSIONS))
-      && gluCheckExtension((GLubyte*)"GL_NV_float_buffer", (GLubyte*)glGetString(GL_EXTENSIONS));
+      && gluCheckExtension((GLubyte*)"GL_NV_float_buffer", (GLubyte*)glGetString(GL_EXTENSIONS))
+      && gluCheckExtension((GLubyte*)"GL_ARB_fragment_program", (GLubyte*)glGetString(GL_EXTENSIONS));
     mNV_texture_rectangle = gluCheckExtension((GLubyte*)"GL_NV_texture_rectangle", (GLubyte*)glGetString(GL_EXTENSIONS));
     
     if(minor < 3
@@ -423,6 +435,10 @@ Pbuffer::create ()
                      GL_RGBA, GL_UNSIGNED_BYTE, data);
         delete [] data;
       }
+      if(!mShader) {
+        mShader = new FragmentProgramARB(program);
+        if(mShader->create()) return true;
+      }
     }
     return false;
   }
@@ -439,6 +455,8 @@ Pbuffer::destroy ()
   }
   if (mImpl->mPbuffer != 0)
     glXDestroyPbuffer(mImpl->mDisplay, mImpl->mPbuffer);
+  if(mShader)
+    mShader->destroy();
 }
 
 void
@@ -482,6 +500,15 @@ Pbuffer::bind (unsigned int buffer)
       glXBindTexImageATI(mImpl->mDisplay, mImpl->mPbuffer, buffer == GL_FRONT ? 
                          GLX_FRONT_LEFT_ATI : GLX_BACK_LEFT_ATI);
     }
+    if(mFormat == GL_FLOAT && mNV_float_buffer) {
+      if(mUseDefaultShader)
+        mShader->bind();
+      glMatrixMode(GL_TEXTURE);
+      glPushMatrix();
+      glLoadIdentity();
+      glScalef(mWidth, mHeight, 1.0);
+      glMatrixMode(GL_MODELVIEW);
+    }
   }
 }
 
@@ -496,11 +523,18 @@ Pbuffer::release (unsigned int buffer)
     }
     glBindTexture(mTexTarget, 0);
     glDisable(mTexTarget);
+    if(mFormat == GL_FLOAT && mNV_float_buffer) {
+      glMatrixMode(GL_TEXTURE);
+      glPopMatrix();
+      glMatrixMode(GL_MODELVIEW);
+      if(mUseDefaultShader)
+        mShader->release();
+    }
   }
 }
 
 void
-Pbuffer::enable ()
+Pbuffer::activate ()
 {
   // save context state
   mImpl->mSaveDisplay = glXGetCurrentDisplay();
@@ -511,9 +545,21 @@ Pbuffer::enable ()
 }
 
 void
-Pbuffer::disable ()
+Pbuffer::deactivate ()
 {
   glXMakeCurrent(mImpl->mSaveDisplay, mImpl->mSaveDrawable, mImpl->mSaveContext);
+}
+
+bool
+Pbuffer::need_shader()
+{
+  return mFormat == GL_FLOAT && mNV_float_buffer;
+}
+
+void
+Pbuffer::set_use_default_shader(bool b)
+{
+  mUseDefaultShader = b;
 }
 
 Pbuffer::Pbuffer (int width, int height, bool isRenderTex)
@@ -530,7 +576,7 @@ Pbuffer::Pbuffer (int width, int height, int format, int numColorBits,
     mDoubleBuffer(isDoubleBuffer), mNumAuxBuffers(numAuxBuffers),
     mNumDepthBits(numDepthBits), mNumStencilBits(numStencilBits),
     mNumAccumBits(numAccumBits), mSeparate(true), mTex(0),
-    mTexTarget(GL_TEXTURE_2D), mImpl(new PbufferImpl)
+    mTexTarget(GL_TEXTURE_2D), mUseDefaultShader(true), mImpl(new PbufferImpl)
 {}
 
 Pbuffer::~Pbuffer ()

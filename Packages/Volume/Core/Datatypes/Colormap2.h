@@ -36,6 +36,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Thread/Mutex.h>
 #include <Packages/Volume/Core/Datatypes/CM2Widget.h>
+#include <Packages/Volume/Core/Util/Pbuffer.h>
 #include <vector>
 
 namespace Volume {
@@ -48,23 +49,29 @@ public:
   Colormap2();
   virtual ~Colormap2();
 
-  SCIRun::Array3<float>& array();
-  vector<CM2Widget *> &widgets() { return widget_; }
-  
-  bool dirty();
-  void set_dirty(bool b);
+  inline SCIRun::Array3<float>& array() { return array_; }
+  inline void lock_array() { array_lock_.lock(); }
+  inline void unlock_array() { array_lock_.unlock(); }
 
-  void lock_array();
-  void unlock_array();
+  inline vector<CM2Widget *> &widgets() { return widget_; }
+  inline void lock_widgets() { widget_lock_.lock(); }
+  inline void unlock_widgets() { widget_lock_.unlock(); }
   
+  inline bool is_dirty() { return dirty_; }
+  inline bool is_updating() { return updating_; }
+  inline void set_dirty(bool b) { dirty_ = b; }
+  inline void set_updating(bool b) { updating_ = b; }
+
   virtual void io(SCIRun::Piostream&);
   static SCIRun::PersistentTypeID type_id;
 
 protected:
-  SCIRun::Array3<float> array_;
   bool dirty_;
-  SCIRun::Mutex lock_;
+  bool updating_;
+  SCIRun::Array3<float> array_;
   vector<CM2Widget *> widget_;
+  SCIRun::Mutex array_lock_;
+  SCIRun::Mutex widget_lock_;
 };
 
 typedef SCIRun::LockingHandle<Colormap2> Colormap2Handle;

@@ -72,6 +72,9 @@ static const string ShaderString4_2 =
 "ATTRIB t = fragment.texcoord[0]; \n"
 "TEX v.w, t, texture[0], 3D; \n"
 "TEX v.x, t, texture[1], 3D; \n"
+"#MUL c.xyz, v.x, 0.1; \n"
+"#MOV c.w, 0.1; \n"
+"#MOV result.color, c; \n"
 "TEX result.color, v.wxyz, texture[2], 2D; \n"
 "END";
 
@@ -259,13 +262,28 @@ static const string FogVertexShaderString =
 "DP4 oPos.w, mvp[3], iPos; \n"
 "END";
 
+static const string TexShaderString =
+"!!ARBfp1.0 \n"
+"TEMP c, z; \n"
+"ATTRIB t = fragment.texcoord[0]; \n"
+"PARAM s = program.local[0]; # {bp, sliceRatio, 0.0, 0.0} \n"
+"TEX c, t, texture[0], RECT; \n"
+"POW z.w, c.w, s.x; # alpha1 = pow(alpha, bp); \n"
+"SUB z.w, 1.0, z.w; # alpha2 = 1.0-pow(1.0-alpha1, sliceRatio); \n"
+"POW c.w, z.w, s.y; \n"
+"SUB c.w, 1.0, c.w; \n"
+"MUL c.xyz, c.xyzz, c.w; # c *= alpha2; \n"
+"MOV result.color, c; \n"
+"END";
+
 using namespace Volume;
 using SCIRun::DrawInfoOpenGL;
 
 VolumeRenderer::VolumeRenderer() :
   slices_(64), slice_alpha_(0.5), mode_(OVEROP),
   shading_(false), ambient_(0.5), diffuse_(0.5), specular_(0.0),
-  shine_(30.0), light_(0)
+  shine_(30.0), light_(0), pbuffer_(0), shader_factory_(0),
+  texbuffer_(0), use_pbuffer_(true)
 {
   VolShader1 = new FragmentProgramARB(ShaderString1);
   VolShader4 = new FragmentProgramARB(ShaderString4);
@@ -280,13 +298,15 @@ VolumeRenderer::VolumeRenderer() :
   LitVolShader_2 = new FragmentProgramARB(LitVolShaderString_2);
   LitFogVolShader_2 = new FragmentProgramARB(LitFogVolShaderString_2);
   FogVertexShader = new VertexProgramARB(FogVertexShaderString);
+  texshader_ = new FragmentProgramARB(TexShaderString);
 }
 
 VolumeRenderer::VolumeRenderer(TextureHandle tex, ColorMapHandle cmap, Colormap2Handle cmap2):
   TextureRenderer(tex, cmap, cmap2),
   slices_(64), slice_alpha_(0.5), mode_(OVEROP),
   shading_(false), ambient_(0.5), diffuse_(0.5), specular_(0.0),
-  shine_(30.0), light_(0)
+  shine_(30.0), light_(0), pbuffer_(0), shader_factory_(0),
+  texbuffer_(0), use_pbuffer_(true)
 {
   VolShader1 = new FragmentProgramARB(ShaderString1);
   VolShader4 = new FragmentProgramARB(ShaderString4);
@@ -301,13 +321,18 @@ VolumeRenderer::VolumeRenderer(TextureHandle tex, ColorMapHandle cmap, Colormap2
   LitVolShader_2 = new FragmentProgramARB(LitVolShaderString_2);
   LitFogVolShader_2 = new FragmentProgramARB(LitFogVolShaderString_2);
   FogVertexShader = new VertexProgramARB(FogVertexShaderString);
+  texshader_ = new FragmentProgramARB(TexShaderString);
 }
 
 VolumeRenderer::VolumeRenderer( const VolumeRenderer& copy):
   TextureRenderer(copy.tex_, copy.cmap_, copy.cmap2_),
   slices_(copy.slices_),
   slice_alpha_(copy.slice_alpha_),
-  mode_(copy.mode_)
+  mode_(copy.mode_),
+  pbuffer_(copy.pbuffer_),
+  shader_factory_(copy.shader_factory_),
+  texbuffer_(copy.texbuffer_),
+  use_pbuffer_(copy.use_pbuffer_)
 {
   VolShader1 = copy.VolShader1;
   VolShader4 = copy.VolShader4;
@@ -322,6 +347,7 @@ VolumeRenderer::VolumeRenderer( const VolumeRenderer& copy):
   LitVolShader_2 = copy.LitVolShader_2;
   LitFogVolShader_2 = copy.LitFogVolShader_2;
   FogVertexShader = copy.FogVertexShader;
+  texshader_ = copy.texshader_;
 }
 
 GeomObj*
@@ -380,32 +406,35 @@ VolumeRenderer::draw()
       BuildTransferFunction2();
       cmap2_dirty_ = false;
     }
+    glActiveTexture(GL_TEXTURE2_ARB);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    if(use_pbuffer_) {
+      texbuffer_->bind(GL_FRONT);
+    } else {
+      glEnable(GL_TEXTURE_2D);
+    }
+    glActiveTexture(GL_TEXTURE1_ARB);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glEnable(GL_TEXTURE_3D);
+    glActiveTexture(GL_TEXTURE0_ARB);
   }
+  
   if(cmap_.get_rep()) {
     if(cmap_has_changed_ || r_count_ != 1) {
       BuildTransferFunction();
       // cmap_has_changed_ = false;
     }
     load_colormap();
+    glActiveTexture(GL_TEXTURE2_ARB);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glEnable(GL_TEXTURE_1D);
+    glActiveTexture(GL_TEXTURE0_ARB);
   }
 
   // First set up the Textures.
   glActiveTexture(GL_TEXTURE0_ARB);
-  glEnable(GL_TEXTURE_3D);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  if(cmap_.get_rep()) {
-    glActiveTexture(GL_TEXTURE2_ARB);
-    glEnable(GL_TEXTURE_1D);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  } else if(cmap2_.get_rep()) {
-    glActiveTexture(GL_TEXTURE1_ARB);
-    glEnable(GL_TEXTURE_3D);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    glActiveTexture(GL_TEXTURE2_ARB);
-    glEnable(GL_TEXTURE_2D);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  }
-  glActiveTexture(GL_TEXTURE0_ARB);
+  glEnable(GL_TEXTURE_3D);
 
   glColor4f(1.0, 1.0, 1.0, 1.0);
   glDepthMask(GL_FALSE);
@@ -456,7 +485,7 @@ VolumeRenderer::draw()
         GLfloat pos[4];
         glGetLightfv(GL_LIGHT0+light_, GL_POSITION, pos);
         Vector l(pos[0], pos[1], pos[2]);
-        dbg << pos << endl;
+        //cerr << "LIGHTING: " << pos << endl;
         double m[16], m_tp[16];
         glGetDoublev(GL_MODELVIEW_MATRIX, m);
         for (int ii=0; ii<4; ii++)
@@ -696,9 +725,17 @@ VolumeRenderer::draw()
 
   glDisable(GL_BLEND);
   glDepthMask(GL_TRUE);
+
   glActiveTexture(GL_TEXTURE2_ARB);
-  glDisable(GL_TEXTURE_2D);
-  glDisable(GL_TEXTURE_1D);
+  if(cmap2_.get_rep()) {
+    if(use_pbuffer_) {
+      texbuffer_->release(GL_FRONT);
+    } else {
+      glDisable(GL_TEXTURE_2D);
+    }
+  } else {
+    glDisable(GL_TEXTURE_1D);
+  }
   glActiveTexture(GL_TEXTURE1_ARB);
   glDisable(GL_TEXTURE_3D);
   glActiveTexture(GL_TEXTURE0_ARB);
@@ -844,6 +881,120 @@ VolumeRenderer::BuildTransferFunction()
 void
 VolumeRenderer::BuildTransferFunction2()
 {
+  if(use_pbuffer_ && !pbuffer_) {
+    pbuffer_ = new Pbuffer(256, 64, GL_FLOAT, 32, true, GL_FALSE);
+    texbuffer_ = new Pbuffer(256, 64, GL_INT, 8, true, GL_FALSE);
+    shader_factory_ = new CM2ShaderFactory();
+    if(pbuffer_->create() || texbuffer_->create() || texshader_->create()
+       || shader_factory_->create()) {
+      pbuffer_->destroy();
+      texbuffer_->destroy();
+      texshader_->destroy();
+      shader_factory_->destroy();
+      delete pbuffer_;
+      delete texbuffer_;
+      delete shader_factory_;
+      pbuffer_ = 0;
+      texbuffer_ = 0;
+      shader_factory_ = 0;
+      use_pbuffer_ = false;
+    } else {
+      pbuffer_->set_use_default_shader(false);
+      texbuffer_->set_use_default_shader(false);
+    }
+  }
+
+  if(use_pbuffer_) {
+
+    pbuffer_->activate();
+
+    glDrawBuffer(GL_FRONT);
+    glViewport(0, 0, pbuffer_->width(), pbuffer_->height());
+
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(-1.0, -1.0, 0.0);
+    glScalef(2.0, 2.0, 2.0);
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_CULL_FACE);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    
+    // rasterize widgets
+    cmap2_->lock_widgets();
+    vector<CM2Widget*> widgets = cmap2_->widgets();
+    for (unsigned int i=0; i<widgets.size(); i++)
+    {
+      widgets[i]->rasterize(*shader_factory_);
+    }
+    cmap2_->unlock_widgets();
+    
+    glDisable(GL_BLEND);
+    
+    pbuffer_->swapBuffers();
+    pbuffer_->deactivate();
+
+    // opacity correction and quantization
+    double bp = 0;
+    if(mode_ != MIP) {
+      bp = tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
+    } else {
+      bp = tan(1.570796327 * 0.5 );
+    }
+    int defaultSamples = 512;
+    double sliceRatio =  defaultSamples/(double(slices_));
+
+    
+    texbuffer_->activate();
+
+    glDrawBuffer(GL_FRONT);
+    glViewport(0, 0, texbuffer_->width(), texbuffer_->height());
+    
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(-1.0, -1.0, 0.0);
+    glScalef(2.0, 2.0, 2.0);
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_CULL_FACE);
+
+    texshader_->bind();
+    texshader_->setLocalParam(0, bp, sliceRatio, 0.0, 0.0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    pbuffer_->bind(GL_FRONT);
+    glBegin(GL_QUADS);
+    {
+      glTexCoord2f( 0.0,  0.0);
+      glVertex2f( 0.0,  0.0);
+      glTexCoord2f( 1.0,  0.0);
+      glVertex2f( 1.0,  0.0);
+      glTexCoord2f( 1.0,  1.0);
+      glVertex2f( 1.0,  1.0);
+      glTexCoord2f( 0.0,  1.0);
+      glVertex2f( 0.0,  1.0);
+    }
+    glEnd();
+    pbuffer_->release(GL_FRONT);
+    texshader_->release();
+    
+    texbuffer_->swapBuffers();
+    texbuffer_->deactivate();
+  }
+  
+#if 0
   bool size_dirty = false;
   cmap2_->lock_array();
   Array3<float>& c = cmap2_->array();
@@ -898,5 +1049,6 @@ VolumeRenderer::BuildTransferFunction2()
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cmap2_array_.dim2(), cmap2_array_.dim1(),
                     GL_RGBA, GL_UNSIGNED_BYTE, &cmap2_array_(0,0,0));
   }
-  cmap2_->unlock_array();
+  cmap2_->lock_array();
+#endif
 }

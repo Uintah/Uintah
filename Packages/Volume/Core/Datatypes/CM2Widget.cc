@@ -47,57 +47,98 @@ CLAMP(double x, double l, double u)
   return x;
 }
 
-FragmentProgramARB* TriangleCM2Widget::shader_ = 0;
-FragmentProgramARB* RectangleCM2Widget::shader_ = 0;
+const string CM2ShaderString[CM2_LAST] =
+  {
+    // CM2_TRIANGLE
+    "!!ARBfp1.0 \n"
+    "PARAM color = program.local[0]; \n"
+    "PARAM geom0 = program.local[1]; # {base, top_x, top_y, 0.0} \n"
+    "PARAM geom1 = program.local[2]; # {width, bottom, 0.0, 0.0} \n"
+    "PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n"
+    "TEMP c, p, t;"
+    "MUL p.xy, fragment.position.xyyy, sz.xyyy; \n"
+    "MUL p.z, geom1.y, geom0.z; \n"
+    "SUB p.z, p.y, p.z; \n"
+    "KIL p.z; \n"
+    "RCP t.z, geom0.z; \n"
+    "MUL t.x, p.y, t.z; \n"
+    "LRP c.x, t.x, geom0.y, geom0.x; \n"
+    "MUL c.y, t.x, geom1.x; \n"
+    "MUL c.y, c.y, 0.5; \n"
+    "RCP c.y, c.y; \n"
+    "SUB c.z, p.x, c.x; \n"
+    "MUL c.z, c.y, c.z; \n"
+    "ABS c.z, c.z; \n"
+    "SUB c.z, 1.0, c.z; \n"
+    "MUL c.w, color.w, c.z; \n"
+    "MOV c.xyz, color.xyzz; \n"
+    "MOV result.color, c; \n"
+    "END",
+    // CM2_RECTANGLE_1D
+    "!!ARBfp1.0 \n"
+    "PARAM color = program.local[0]; \n"
+    "PARAM geom0 = program.local[1]; # {left_x, left_y, width, height} \n"
+    "PARAM geom1 = program.local[2]; # {offset, 1/offset, 1/(1-offset), 0.0} \n"
+    "PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n"
+    "TEMP c, p, t; \n"
+    "MUL p.xy, fragment.position.xyyy, sz.xyyy; \n"
+    "SUB p.xy, p.xyyy, geom0.xyyy; \n"
+    "RCP p.z, geom0.z; \n"
+    "RCP p.w, geom0.w; \n"
+    "MUL p.xy, p.xyyy, p.zwww; \n"
+    "SUB t.x, p.x, geom1.x; \n"
+    "MUL t.y, t.x, geom1.y; \n"
+    "MUL t.z, t.x, geom1.z; \n"
+    "CMP t.w, t.y, t.y, t.z; \n"
+    "ABS t.w, t.w; \n"
+    "SUB t.w, 1.0, t.w; \n"
+    "MUL c.w, color.w, t.w; \n"
+    "MOV c.xyz, color.xyzz; \n"
+    "MOV result.color, c; \n"
+    "END",
+    // CM2_RECTANGLE_ELLIPSOID
+    "!!ARBfp1.0 \n"
+    "END"
+  };
 
-const char* TriangleCM2WidgetShader =
-"!!ARBfp1.0 \n"
-"PARAM color = program.local[0]; \n"
-"PARAM geom0 = program.local[1]; # {base, top_x, top_y, 0.0} \n"
-"PARAM geom1 = program.local[2]; # {width, bottom, 0.0, 0.0} \n"
-"PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n"
-"TEMP c, p, t;"
-"MUL p.xy, fragment.position.xyyy, sz.xyyy; \n"
-"MUL p.z, geom1.y, geom0.z; \n"
-"SUB p.z, p.y, p.z; \n"
-"KIL p.z; \n"
-"RCP t.z, geom0.z; \n"
-"MUL t.x, p.y, t.z; \n"
-"LRP c.x, t.x, geom0.y, geom0.x; \n"
-"MUL c.y, t.x, geom1.x; \n"
-"MUL c.y, c.y, 0.5; \n"
-"RCP c.y, c.y; \n"
-"SUB c.z, p.x, c.x; \n"
-"MUL c.z, c.y, c.z; \n"
-"ABS c.z, c.z; \n"
-"SUB c.z, 1.0, c.z; \n"
-"MUL c.w, color.w, c.z; \n"
-"MOV c.xyz, color.xyzz; \n"
-"MOV result.color, c; \n"
-"END";
+CM2ShaderFactory::CM2ShaderFactory()
+{
+  shader_ = new FragmentProgramARB*[CM2_LAST];
+  for(int i=0; i<CM2_LAST; i++) {
+    shader_[i] = new FragmentProgramARB(CM2ShaderString[i]);
+  }
+}
 
-const char* RectangleCM2WidgetShader1D =
-"!!ARBfp1.0 \n"
-"PARAM color = program.local[0]; \n"
-"PARAM geom0 = program.local[1]; # {left_x, left_y, width, height} \n"
-"PARAM geom1 = program.local[2]; # {offset, 1/offset, 1/(1-offset), 0.0} \n"
-"PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n"
-"TEMP c, p, t; \n"
-"MUL p.xy, fragment.position.xyyy, sz.xyyy; \n"
-"SUB p.xy, p.xyyy, geom0.xyyy; \n"
-"RCP p.z, geom0.z; \n"
-"RCP p.w, geom0.w; \n"
-"MUL p.xy, p.xyyy, p.zwww; \n"
-"SUB t.x, p.x, geom1.x; \n"
-"MUL t.y, t.x, geom1.y; \n"
-"MUL t.z, t.x, geom1.z; \n"
-"CMP t.w, t.y, t.y, t.z; \n"
-"ABS t.w, t.w; \n"
-"SUB t.w, 1.0, t.w; \n"
-"MUL c.w, color.w, t.w; \n"
-"MOV c.xyz, color.xyzz; \n"
-"MOV result.color, c; \n"
-"END";
+CM2ShaderFactory::~CM2ShaderFactory()
+{
+  for(int i=0; i<CM2_LAST; i++) {
+    delete shader_[i];
+  }
+  delete [] shader_;
+}
+
+bool
+CM2ShaderFactory::create()
+{
+  for(int i=0; i<CM2_LAST; i++) {
+    if(shader_[i]->create()) return true;
+  }
+  return false;
+}
+
+void
+CM2ShaderFactory::destroy()
+{
+  for(int i=0; i<CM2_LAST; i++) {
+    shader_[i]->destroy();
+  }
+}
+
+FragmentProgramARB*
+CM2ShaderFactory::shader(int type)
+{
+  return type < CM2_LAST ? shader_[type] : 0;
+}
 
 CM2Widget::CM2Widget()
   : line_color_(0.75, 0.75, 0.75),
@@ -120,42 +161,25 @@ TriangleCM2Widget::TriangleCM2Widget()
 {}
 
 TriangleCM2Widget::TriangleCM2Widget(float base, float top_x, float top_y,
-                               float width, float bottom)
+                                     float width, float bottom)
   : base_(base), top_x_(top_x), top_y_(top_y), width_(width), bottom_(bottom)
 {}
 
 TriangleCM2Widget::~TriangleCM2Widget()
 {}
 
-bool
-TriangleCM2Widget::Init()
-{
-  if (!shader_) {
-    shader_ = new FragmentProgramARB(TriangleCM2WidgetShader);
-    return shader_->create();
-  }
-  return false;
-}
-
 void
-TriangleCM2Widget::Exit()
+TriangleCM2Widget::rasterize(CM2ShaderFactory& factory)
 {
-  shader_->destroy();
-  delete shader_;
-  shader_ = 0;
-}
-
-void
-TriangleCM2Widget::rasterize()
-{
-  shader_->bind();
-  shader_->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
-  shader_->setLocalParam(1, base_, base_+top_x_, top_y_, 0.0);
-  shader_->setLocalParam(2, width_, bottom_, 0.0, 0.0);
+  FragmentProgramARB* shader = factory.shader(CM2_TRIANGLE);
+  shader->bind();
+  shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
+  shader->setLocalParam(1, base_, base_+top_x_, top_y_, 0.0);
+  shader->setLocalParam(2, width_, bottom_, 0.0, 0.0);
 
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT, vp);
-  shader_->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
+  shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
     
   glBegin(GL_TRIANGLES);
   {
@@ -164,7 +188,7 @@ TriangleCM2Widget::rasterize()
     glVertex2f(base_+top_x_-width_/2, top_y_);
   }
   glEnd();
-  shader_->release();
+  shader->release();
 }
 
 void
@@ -365,12 +389,12 @@ TriangleCM2Widget::release (int obj, int x, int y, int w, int h)
 
 
 RectangleCM2Widget::RectangleCM2Widget()
-  : type_(RECTANGLE_1D), left_x_(0.25), left_y_(0.5), width_(0.25), height_(0.25),
+  : type_(CM2_RECTANGLE_1D), left_x_(0.25), left_y_(0.5), width_(0.25), height_(0.25),
     offset_(0.25)
 {}
 
-RectangleCM2Widget::RectangleCM2Widget(RectangleType type, float left_x, float left_y,
-                                 float width, float height, float offset)
+RectangleCM2Widget::RectangleCM2Widget(int type, float left_x, float left_y,
+                                       float width, float height, float offset)
   : type_(type), left_x_(left_x), left_y_(left_y), width_(width), height_(height),
     offset_(offset)
 {}
@@ -378,35 +402,19 @@ RectangleCM2Widget::RectangleCM2Widget(RectangleType type, float left_x, float l
 RectangleCM2Widget::~RectangleCM2Widget()
 {}
 
-bool
-RectangleCM2Widget::Init()
-{
-  if (!shader_) {
-    shader_ = new FragmentProgramARB(RectangleCM2WidgetShader1D);
-    return shader_->create();
-  }
-  return false;
-}
-
 void
-RectangleCM2Widget::Exit()
+RectangleCM2Widget::rasterize(CM2ShaderFactory& factory)
 {
-  shader_->destroy();
-  delete shader_;
-  shader_ = 0;
-}
+  FragmentProgramARB* shader = factory.shader(type_);
 
-void
-RectangleCM2Widget::rasterize()
-{
-  shader_->bind();
-  shader_->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
-  shader_->setLocalParam(1, left_x_, left_y_, width_, height_);
-  shader_->setLocalParam(2, offset_, 1/offset_, 1/(1-offset_), 0.0);
+  shader->bind();
+  shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
+  shader->setLocalParam(1, left_x_, left_y_, width_, height_);
+  shader->setLocalParam(2, offset_, 1/offset_, 1/(1-offset_), 0.0);
 
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT, vp);
-  shader_->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
+  shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
   
   glBegin(GL_QUADS);
   {
@@ -416,7 +424,7 @@ RectangleCM2Widget::rasterize()
     glVertex2f(left_x_, left_y_+height_);
   }
   glEnd();
-  shader_->release();
+  shader->release();
 }
 
 void
@@ -441,7 +449,7 @@ RectangleCM2Widget::rasterize(Array3<float>& array)
   int re = int(right*size_x);
   int ra = int((offset_*width_+left)*size_x);
   switch(type_) {
-    case RECTANGLE_ELLIPSOID: {
+    case CM2_RECTANGLE_ELLIPSOID: {
       for(int i=lb; i<=le; i++) {
         for(int j=rb; j<re; j++) {
           float x = j/(float)size_x;
@@ -460,7 +468,7 @@ RectangleCM2Widget::rasterize(Array3<float>& array)
       }
     } break;
 
-    case RECTANGLE_1D: {
+    case CM2_RECTANGLE_1D: {
       float a = ra <= rb+1 ? alpha_ : 0;
       float da = ra <= rb+1 ? 0.0 : alpha_/(ra-rb-1);
       for(int j=rb; j<ra; j++, a+=da) {
