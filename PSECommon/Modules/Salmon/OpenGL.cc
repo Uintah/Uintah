@@ -10,12 +10,14 @@
  *
  *  Copyright (C) 1994 SCI Group
  */
-//joe was here
+//milan was here
+
 #include <tcl.h>
 #include <tk.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
+#include <GL/glut.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -525,12 +527,19 @@ void OpenGL::redraw_frame()
 
 	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	    glViewport(0, 0, xres, yres);
+
 	    double modeltime=t*dt+tbeg;
 	    roe->set_current_time(modeltime);
 
 	    if( do_bawgl ) // render head tracked stereo
 	      {
-		if( i )
+		GLfloat stylusMatrix[16];
+		int stylus;
+		GLfloat pinchMatrix[16];
+
+		bawgl->setViewPort(0, 0, xres, yres);
+
+		if( i==1 )
 		  {
 		    bawgl->setModelViewMatrix(BAWGL_RIGHT_EYE);
 		    bawgl->setProjectionMatrix(BAWGL_RIGHT_EYE);
@@ -540,9 +549,68 @@ void OpenGL::redraw_frame()
 		    bawgl->setModelViewMatrix(BAWGL_LEFT_EYE);
 		    bawgl->setProjectionMatrix(BAWGL_LEFT_EYE);
 		  }
+
+		bawgl->getControllerMatrix(bawgl->getControllerID(BAWGL_STYLUS),
+					   BAWGL_ONE, stylusMatrix, BAWGL_REAL_SPACE);
 		
+		bawgl->getControllerState(bawgl->getControllerID(BAWGL_STYLUS), &stylus);
+
+		bawgl->getControllerMatrix(bawgl->getControllerID(BAWGL_PINCH),
+					   BAWGL_LEFT, pinchMatrix, BAWGL_REAL_SPACE);
+
+#define A 1.0
+
+		/* Cube vertex array stuff. */
+		GLdouble vertex[] = { -A/2, -A/2, -A/2,
+				      -A/2,  A/2, -A/2,
+				      -A/2,  A/2,  A/2,
+				      -A/2, -A/2,  A/2,
+				      A/2, -A/2, -A/2,
+				      A/2,  A/2, -A/2,
+				      A/2,  A/2,  A/2,
+				      A/2, -A/2,  A/2 };
+
+		GLubyte face[] = { 2, 3, 7, 6,
+				   0, 3, 2, 1,
+				   0, 1, 5, 4,
+				   4, 5, 6, 7,
+				   1, 2, 6, 5,
+				   0, 4, 7, 3 };
+
+		glDisable(GL_LIGHTING);
+		glPolygonMode(GL_FRONT, GL_LINE);
+		glPolygonMode(GL_BACK, GL_LINE);
+
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_DOUBLE, 0, vertex);
+
+		if( stylus == BAWGL_STYLUS_ON )
+		  glColor3f(1.0, 0.0, 0.0);
+		else
+		  glColor3f(1.0, 1.0, 0.0);
+
+		glPushMatrix();
+		  glMultMatrixf(stylusMatrix);
+		  glScalef(1.0, 2.0, 1.0);
+		  glDrawElements(GL_QUADS, 24, GL_UNSIGNED_BYTE, face);
+		glPopMatrix();
+		
+		if( !bawgl->pick )
+		  {
+		    glPushMatrix();
+		      glMultMatrixf(pinchMatrix);
+		      glColor3f(0.0, 1.0, 0.0);
+		      glutWireSphere(0.6, 10, 10);
+		    glPopMatrix();
+		  }
+
+		glEnable(GL_LIGHTING);
+		glPolygonMode(GL_FRONT, GL_FILL);
+		glPolygonMode(GL_BACK, GL_FILL);
+
 		bawgl->setSurfaceView();
-		bawgl->setVirtualView();      
+		bawgl->setVirtualView();
+
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
 	      } else { // render normal
 		glMatrixMode(GL_PROJECTION);
@@ -809,24 +877,32 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 	glPushName(0x12345678); //for the object
 	glPushName(0x12345678); //for the object's face index
 #endif
-
-	glViewport(0, 0, xres, yres);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	GLint viewport[4];
-	glGetIntegerv(GL_VIEWPORT, viewport);
-	gluPickMatrix(x, viewport[3]-y, pick_window, pick_window, viewport);
-	gluPerspective(fovy, aspect, znear, zfar);
+	if(!roe->do_bawgl.get()){ //Regular flavor picking
+	    glViewport(0, 0, xres, yres);
+	    glMatrixMode(GL_PROJECTION);
+	    glLoadIdentity();
+	    GLint viewport[4];
+	    glGetIntegerv(GL_VIEWPORT, viewport);
+	    gluPickMatrix(x, viewport[3]-y, pick_window, pick_window, viewport);
+	    gluPerspective(fovy, aspect, znear, zfar);
 	
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	Point eyep(view.eyep());
-	Point lookat(view.lookat());
-	Vector up(view.up());
-	gluLookAt(eyep.x(), eyep.y(), eyep.z(),
+	    glMatrixMode(GL_MODELVIEW);
+	    glLoadIdentity();
+	    Point eyep(view.eyep());
+	    Point lookat(view.lookat());
+	    Vector up(view.up());
+	    gluLookAt(eyep.x(), eyep.y(), eyep.z(),
 		  lookat.x(), lookat.y(), lookat.z(),
 		  up.x(), up.y(), up.z());
+	}
+	else{ //BAWGL flavored picking setup!!!
+	    SCIBaWGL* bawgl = roe->get_bawgl();
+	    bawgl->setModelViewMatrix(BAWGL_MIDDLE_EYE);
+	    bawgl->setPickProjectionMatrix(BAWGL_MIDDLE_EYE, x, y, pick_window);
 
+	    bawgl->setSurfaceView();
+	    bawgl->setVirtualView();      
+	}
 	drawinfo->lighting=0;
 	drawinfo->set_drawtype(DrawInfoOpenGL::Flat);
 	drawinfo->pickmode=1;
@@ -871,7 +947,7 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 	    for (int h=0; h<hits; h++) {
 		int nnames=pick_buffer[idx++];
 		GLuint z=pick_buffer[idx++];
-		cerr << "h=" << h << ", nnames=" << nnames << ", z=" << z << endl;
+		//cerr << "h=" << h << ", nnames=" << nnames << ", z=" << z << endl;
 		if (nnames > 1 && (!have_one || z < min_z)) {
 		    min_z=z;
 		    have_one=1;
@@ -1501,6 +1577,9 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.12  1999/10/21 22:39:06  ikits
+// Put bench.config into PSE/src (where the executable gets invoked from). Fixed bug in the bawgl code and added preliminary navigation and picking.
+//
 // Revision 1.11  1999/10/16 20:50:59  jmk
 // forgive me if I break something -- this fixes picking and sets up sci
 // bench - go to /home/sci/u2/VR/PSE for the latest sci bench technology

@@ -406,14 +406,45 @@ void BaWGL::frustum( GLfloat m[16], GLfloat r0[3], GLfloat r[3], GLfloat n )
   r[2] = -n;
 }
 
+void BaWGL::scaleEyeOffsets( void )
+{
+  scaledEyeOffset[BAWGL_MIDDLE_EYE][0] = eyeOffset[BAWGL_MIDDLE_EYE][0];
+  scaledEyeOffset[BAWGL_MIDDLE_EYE][1] = eyeOffset[BAWGL_MIDDLE_EYE][1];
+  scaledEyeOffset[BAWGL_MIDDLE_EYE][2] = eyeOffset[BAWGL_MIDDLE_EYE][2];
+  
+  scaledEyeOffset[BAWGL_LEFT_EYE][0] = (eyeOffset[BAWGL_LEFT_EYE][0] - eyeOffset[BAWGL_MIDDLE_EYE][0]) 
+    / virtualViewScale + eyeOffset[BAWGL_MIDDLE_EYE][0];
+  scaledEyeOffset[BAWGL_LEFT_EYE][1] = (eyeOffset[BAWGL_LEFT_EYE][1] - eyeOffset[BAWGL_MIDDLE_EYE][1]) 
+    / virtualViewScale + eyeOffset[BAWGL_MIDDLE_EYE][1];
+  scaledEyeOffset[BAWGL_LEFT_EYE][2] = (eyeOffset[BAWGL_LEFT_EYE][2] - eyeOffset[BAWGL_MIDDLE_EYE][2]) 
+    / virtualViewScale + eyeOffset[BAWGL_MIDDLE_EYE][2];
+
+  scaledEyeOffset[BAWGL_RIGHT_EYE][0] = (eyeOffset[BAWGL_RIGHT_EYE][0] - eyeOffset[BAWGL_MIDDLE_EYE][0]) 
+    / virtualViewScale + eyeOffset[BAWGL_MIDDLE_EYE][0];
+  scaledEyeOffset[BAWGL_RIGHT_EYE][1] = (eyeOffset[BAWGL_RIGHT_EYE][1] - eyeOffset[BAWGL_MIDDLE_EYE][1]) 
+    / virtualViewScale + eyeOffset[BAWGL_MIDDLE_EYE][1];
+  scaledEyeOffset[BAWGL_RIGHT_EYE][2] = (eyeOffset[BAWGL_RIGHT_EYE][2] - eyeOffset[BAWGL_MIDDLE_EYE][2]) 
+    / virtualViewScale + eyeOffset[BAWGL_MIDDLE_EYE][2];
+}
 
 //------------------------------------ PUBLIC ------------------------------------
 
-BaWGL::BaWGL( char* config )
+BaWGL::BaWGL( void )
+{
+}
+
+BaWGL::~BaWGL( void )
+{
+}
+
+/* Initialize shared memory structure based on arena files given. */
+
+int BaWGL::init( char* config )
 {
   if( parse(config) < 0 )
     {
       cerr << "Error: Parsing configuration file " << config << "." << endl;
+      return(-1);
     }
   else
     {
@@ -424,43 +455,32 @@ BaWGL::BaWGL( char* config )
       virtualViewScale = 1.0;
       virtualViewScaleMin = 0.0;
       virtualViewScaleMax = FLT_MAX;
-    }
-}
+      glEye(virtualViewHome);
+      // scaleEyeOffsets();
 
-BaWGL::~BaWGL( void )
-{
-}
+      if( tracker.shmem.attach(tracker.arena, &(tracker.data)) < 0) return(-1);
 
-/* Initialize shared memory structure based on arena files given. */
-
-int BaWGL::init( void )
-{
-  if( tracker.shmem.attach(tracker.arena, &(tracker.data)) < 0) return(-1);
-
-  for( int i=0; i<NUM_CONTROLLERS; i++ )
-    {
-      switch( controller[i].type )
+      for( int i=0; i<NUM_CONTROLLERS; i++ )
 	{
-	case CONTROLLER_PINCH:
-	  if( controller[i].shmem.attach(controller[i].arena, &(controller[i].data)) < 0 )
-	    return(-1);
-	  controller[i].prev = new Pinch;
-	  ((Pinch*)(controller[i].prev))->gesture = PINCH_NONE;
-	  break;
-	case CONTROLLER_STYLUS:
-	  controller[i].prev = new Stylus;
-	  *(Stylus*)(controller[i].prev) = STYLUS_OFF;
-	  break;
-	case CONTROLLER_I3STICK:
-	  break;
-	case CONTROLLER_NONE:
-	  break;
+	  switch( controller[i].type )
+	    {
+	    case CONTROLLER_PINCH:
+	      if( controller[i].shmem.attach(controller[i].arena, &(controller[i].data)) < 0 )
+		return(-1);
+	      break;
+	    case CONTROLLER_STYLUS:
+	      break;
+	    case CONTROLLER_I3STICK:
+	      break;
+	    case CONTROLLER_NONE:
+	      break;
+	    }
 	}
+
+      system(windowInitCmd);
+      
+      return(0);
     }
-
-  system(windowInitCmd);
-
-  return(0);
 }
 
 /* Detach shared memory structure. */
@@ -531,7 +551,7 @@ void BaWGL::getTrackerMatrix( int id, GLfloat m[16], int space )
 }
 
 
-void BaWGL::getControllerState( int id, void* s, void* c )
+void BaWGL::getControllerState( int id, void* s )
 {
   if( tracker.data )
       {
@@ -542,8 +562,6 @@ void BaWGL::getControllerState( int id, void* s, void* c )
 	      {
 	      case TRACKER_FASTRAK:
 		*(Stylus*)s = ((Fastrak*)(tracker.data))->stylus;
-		*(Stylus*)c = *(Stylus*)(controller[id].prev) ^ *(Stylus*)s;
-		*(Stylus*)(controller[id].prev) = *(Stylus*)s;
 		break;
 	      case TRACKER_FOB:
 	      case TRACKER_NONE:
@@ -553,8 +571,6 @@ void BaWGL::getControllerState( int id, void* s, void* c )
 	    break;
 	  case CONTROLLER_PINCH:
 	    *(Gesture*)s = ((Pinch*)(controller[id].data))->gesture;
-	    *(Gesture*)c = ((Pinch*)(controller[id].prev))->gesture ^ *(Gesture*)s;
-	    ((Pinch*)(controller[id].prev))->gesture = *(Gesture*)s;
 	    break;
 	  case CONTROLLER_I3STICK:
 	    break;
@@ -566,7 +582,41 @@ void BaWGL::getControllerState( int id, void* s, void* c )
       }
 }
 
-void BaWGL::getRelTransform( GLfloat m[16], GLfloat mfrom[16], GLfloat mto[16], int spacefrom, int spaceto )
+
+void BaWGL::getControllerStateChange( int id, void* s, void* ps, void* c )
+{
+  if( tracker.data )
+      {
+	switch( controller[id].type )
+	  {
+	  case CONTROLLER_STYLUS:
+	    switch( tracker.type )
+	      {
+	      case TRACKER_FASTRAK:
+		*(Stylus*)c = *(Stylus*)ps ^ *(Stylus*)s;
+		break;
+	      case TRACKER_FOB:
+	      case TRACKER_NONE:
+	      default:
+		break;
+	      }
+	    break;
+	  case CONTROLLER_PINCH:
+	    *(Gesture*)c = *(Gesture*)ps ^ *(Gesture*)s;
+	    break;
+	  case CONTROLLER_I3STICK:
+	    break;
+	  case CONTROLLER_NONE:
+	    break;
+	  default:
+	    break;
+	  }
+      }
+}
+
+
+void BaWGL::getRelTransform( GLfloat m[16], GLfloat mfrom[16], GLfloat mto[16], 
+			     int spacefrom, int spaceto )
 {
   GLfloat R[16], k[3], k0[3], theta, tmp[16];
 
@@ -624,9 +674,10 @@ void BaWGL::getRelTransform( GLfloat m[16], GLfloat mfrom[16], GLfloat mto[16], 
   m[3] = 0.0; m[7] = 0.0; m[11] = 0.0;
 }
 
-void BaWGL::getControllerMatrix( int id, int rid, GLfloat m[16], GLfloat mc[16], int space )
+
+void BaWGL::getControllerMatrix( int id, int rid, GLfloat m[16], int space )
 {
-  GLfloat tmp[16];
+  GLfloat tmp[16], tmp2[16];
 
   if( tracker.data )
       {
@@ -639,17 +690,15 @@ void BaWGL::getControllerMatrix( int id, int rid, GLfloat m[16], GLfloat mc[16],
 		memcpy(tmp, 
 		       ((Fastrak*)(tracker.data))->receiver[controller[id].receiver[0]].m, 
 		       16*sizeof(GLfloat));
-		transformMatrix(tmp, BAWGL_TRACKER_SPACE, m, space);
-		getRelTransform(mc, controller[id].mprev[0], tmp, BAWGL_TRACKER_SPACE, space);
-		memcpy(controller[id].mprev[0], tmp, 16*sizeof(GLfloat));
+		glMatrixMult(tmp2, tmp, controller[id].offset[rid]);
+		transformMatrix(tmp2, BAWGL_TRACKER_SPACE, m, space);
 		break;
 	      case TRACKER_FOB:
 		memcpy(tmp, 
 		       ((FoB*)(tracker.data))->receiver[controller[id].receiver[0]].m, 
 		       16*sizeof(GLfloat));
-		transformMatrix(tmp, BAWGL_TRACKER_SPACE, m, space);
-		getRelTransform(mc, controller[id].mprev[0], tmp, BAWGL_TRACKER_SPACE, space);
-		memcpy(controller[id].mprev[0], tmp, 16*sizeof(GLfloat));
+		glMatrixMult(tmp2, tmp, controller[id].offset[rid]);
+		transformMatrix(tmp2, BAWGL_TRACKER_SPACE, m, space);
 		break;
 	      case TRACKER_NONE:
 	      default:
@@ -663,17 +712,15 @@ void BaWGL::getControllerMatrix( int id, int rid, GLfloat m[16], GLfloat mc[16],
 		memcpy(tmp, 
 		       ((Fastrak*)(tracker.data))->receiver[controller[id].receiver[rid]].m,
 		       16*sizeof(GLfloat));
-		transformMatrix(tmp, BAWGL_TRACKER_SPACE, m, space);
-		getRelTransform(mc, controller[id].mprev[rid], tmp, BAWGL_TRACKER_SPACE, space);
-		memcpy(controller[id].mprev[rid], tmp, 16*sizeof(GLfloat));
+		glMatrixMult(tmp2, tmp, controller[id].offset[rid]);
+		transformMatrix(tmp2, BAWGL_TRACKER_SPACE, m, space);
 		break;
 	      case TRACKER_FOB:
 		memcpy(tmp, 
 		       ((FoB*)(tracker.data))->receiver[controller[id].receiver[rid]].m,
 		       16*sizeof(GLfloat));
-		transformMatrix(tmp, BAWGL_TRACKER_SPACE, m, space);
-		getRelTransform(mc, controller[id].mprev[rid], tmp, BAWGL_TRACKER_SPACE, space);
-		memcpy(controller[id].mprev[rid], tmp, 16*sizeof(GLfloat));
+		glMatrixMult(tmp2, tmp, controller[id].offset[rid]);
+		transformMatrix(tmp2, BAWGL_TRACKER_SPACE, m, space);
 		break;
 	      case TRACKER_NONE:
 	      default:
@@ -687,6 +734,13 @@ void BaWGL::getControllerMatrix( int id, int rid, GLfloat m[16], GLfloat mc[16],
 	    break;
 	  }
       }
+}
+
+
+void BaWGL::getControllerMatrixChange( int id, int rid, GLfloat m[16], GLfloat pm[16], 
+				       GLfloat mc[16], int spacefrom, int spaceto )
+{
+  getRelTransform(mc, pm, m, spacefrom, spaceto);
 }
 
 /* Calculate eye positions from tracker data. */
@@ -752,6 +806,7 @@ void BaWGL::getAllEyePositions( void )
     }
 }
 
+
 /* Set modelview matrix for the specified eye. */
 
 void BaWGL::setModelViewMatrix( int eye )
@@ -781,18 +836,22 @@ void BaWGL::setProjectionMatrix( int eye )
   glMatrixMode(GL_MODELVIEW);
 }
 
+void BaWGL::setViewPort( GLint xl, GLint yl, GLint xr, GLint yr )
+{
+  viewPort[0] = xl;
+  viewPort[1] = yl;
+  viewPort[2] = xr;
+  viewPort[3] = yr;
+}
+
 void BaWGL::setPickProjectionMatrix( int eye, GLint x, GLint y, GLfloat pickwin )
 {
-  GLint viewport[4];
-
   frustum(modelViewMatrix, surfaceBottomLeft, bottomLeft[eye], nearClip[eye]);
   frustum(modelViewMatrix, surfaceTopRight, topRight[eye], nearClip[eye]);
 
-  glGetIntegerv(GL_VIEWPORT, viewport);
- 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPickMatrix(x, y, pickwin, pickwin, viewport);
+  gluPickMatrix(x, y, pickwin, pickwin, viewPort);
   glFrustum(bottomLeft[eye][0], topRight[eye][0],
 	    bottomLeft[eye][1], topRight[eye][1],
 	    nearClip[eye], farClip[eye]);
@@ -824,20 +883,15 @@ void BaWGL::setNearFar( int eye, GLfloat p[3], GLfloat d )
 
 void BaWGL::getScreenCoordinates( GLfloat p[3], int s[3], int space )
 {
-  // assume that the p[3] is in virtual coords
-  
   GLdouble win[3], modelView[16], projection[16];
   GLfloat pi[4], po[4];
-  GLint vp[4];
 
   pi[0] = p[0];
   pi[1] = p[1];
   pi[2] = p[2];
-  pi[4] = 1.0;
+  pi[3] = 1.0;
 
-  transformVector(pi, space, po, BAWGL_SURFACE_SPACE);
-
-  glGetIntegerv(GL_VIEWPORT, vp);
+  transformVector(pi, space, po, BAWGL_SURFACE_SPACE); 
 
   for( int i=0; i<16; i++ )
     {
@@ -846,7 +900,7 @@ void BaWGL::getScreenCoordinates( GLfloat p[3], int s[3], int space )
     }
 
   gluProject((GLdouble)po[0], (GLdouble)po[1], (GLdouble)po[2],
-	     modelView, projection, vp,
+	     modelView, projection, viewPort,
 	     &win[0], &win[1], &win[2]);
 
   s[0] = (int)win[0];
@@ -867,10 +921,33 @@ void BaWGL::setVirtualView()
   glMultMatrixf(virtualViewMatrix);
 }
 
+/* Functions to change the virtualview - inverse virtualview matrices */
+
+void BaWGL::getVirtualViewMatrix( GLfloat m[16] )
+{
+  memcpy(m, virtualViewMatrix, 16*sizeof(GLfloat));
+}
+
+void BaWGL::getInverseVirtualViewMatrix( GLfloat m[16] )
+{
+  memcpy(m, invVirtualViewMatrix, 16*sizeof(GLfloat));
+}
+
 void BaWGL::loadVirtualViewMatrix( GLfloat m[16] )
 {
   memcpy(virtualViewMatrix, m, 16*sizeof(GLfloat));
   glInverse(invVirtualViewMatrix, virtualViewMatrix);
+}
+
+void BaWGL::loadInverseVirtualViewMatrix( GLfloat m[16] )
+{
+  memcpy(invVirtualViewMatrix, m, 16*sizeof(GLfloat));
+  glInverse(virtualViewMatrix, invVirtualViewMatrix);
+}
+
+void BaWGL::loadVirtualViewHome(GLfloat m[16])
+{
+  memcpy(virtualViewHome, m, 16*sizeof(GLfloat));
 }
 
 void BaWGL::multVirtualViewMatrix( GLfloat m[16] )
@@ -882,6 +959,14 @@ void BaWGL::multVirtualViewMatrix( GLfloat m[16] )
   glInverse(invVirtualViewMatrix, virtualViewMatrix);
 }
 
+void BaWGL::multInverseVirtualViewMatrix( GLfloat m[16] )
+{
+  GLfloat tmp[16];
+
+  glMatrixMult(tmp, invVirtualViewMatrix, m);
+  memcpy(invVirtualViewMatrix, tmp, 16*sizeof(GLfloat));
+  glInverse(virtualViewMatrix, invVirtualViewMatrix);
+}
 
 GLfloat BaWGL::getVirtualViewScale( void )
 {
@@ -899,6 +984,8 @@ void BaWGL::loadVirtualViewScale( GLfloat s )
       virtualViewScale = virtualViewScaleMax;
     }
   else virtualViewScale = s;
+
+  // scaleEyeOffsets();
 }
 
 void BaWGL::multVirtualViewScale( GLfloat s )
@@ -913,6 +1000,8 @@ void BaWGL::multVirtualViewScale( GLfloat s )
     {
       virtualViewScale = virtualViewScaleMax;
     }
+
+  // scaleEyeOffsets();
 }
 
 void BaWGL::addVirtualViewScale( GLfloat s )
@@ -927,6 +1016,8 @@ void BaWGL::addVirtualViewScale( GLfloat s )
     {
       virtualViewScale = virtualViewScaleMax;
     }
+
+  // scaleEyeOffsets(); 
 }
 
 void BaWGL::setVirtualViewScaleLimits( GLfloat min, GLfloat max )

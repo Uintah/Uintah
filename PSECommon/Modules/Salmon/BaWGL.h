@@ -32,6 +32,7 @@ using namespace std;
 #define BAWGL_STYLUS CONTROLLER_STYLUS
 #define BAWGL_PINCH CONTROLLER_PINCH
 
+#define BAWGL_ONE CONTROLLER_ONE
 #define BAWGL_LEFT CONTROLLER_LEFT
 #define BAWGL_RIGHT CONTROLLER_RIGHT
 
@@ -42,6 +43,10 @@ using namespace std;
 #define BAWGL_SCREEN_SPACE  4
 #define BAWGL_MODEL_SPACE   5
 #define BAWGL_VIRTUAL_SPACE BAWGL_MODEL_SPACE
+
+#define BAWGL_PICK_START 0
+#define BAWGL_PICK_MOVE 1
+#define BAWGL_PICK_END 2
 
 #define BAWGL_LEFT_EYE 0
 #define BAWGL_MIDDLE_EYE 1
@@ -112,10 +117,13 @@ public:
 
 /* SURFACE_SPACE <-> CAMERA_SPACE */
   GLfloat eyeOffset[3][3]; /* left, middle, right */
-  
+  GLfloat scaledEyeOffset[3][3];
+
   int eyeReceiver;
-  GLfloat eyePosition[3][3]; /* left, middle, right */
+  GLfloat eyePosition[3][3];
   GLfloat upVector[3];
+
+  GLfloat virtualViewHome[16];
 
   GLfloat surfaceWidth, surfaceHeight;
   GLfloat surfaceBottomLeft[3], surfaceTopRight[3];
@@ -127,6 +135,8 @@ public:
 
   GLfloat modelViewMatrix[16], invModelViewMatrix[16];
   GLfloat projectionMatrix[16];
+
+  GLint viewPort[4];
 
 /* REAL_SPACE <-> MODEL_SPACE */
   GLfloat virtualViewMatrix[16];
@@ -155,17 +165,19 @@ public:
 /* Calculate frustum left bottom and top right points on the near clipping plane */
   void frustum( GLfloat m[16], GLfloat r0[3], GLfloat r[3], GLfloat n );
 
+  void scaleEyeOffsets( void );
+
 /* Parse config files */
   int parse( char* fname );
   int parseData( ifstream& f, char* fname, int& l, int t, int cnum = 0, int rnum = 0 );
 
 public:
 
-  BaWGL( char* );
+  BaWGL( void );
   virtual ~BaWGL( void );
 
 /* Initialize shared memory structure based on arena files given */
-  int init( void );
+  int init( char* );
 
 /* Detach shared memory structure */
   void quit( void );
@@ -177,33 +189,50 @@ public:
   void getTrackerMatrix( int id, GLfloat m[16], int space );
 
 /* Return state and whether state change happened for a given controller */
-  void getControllerState( int id, void* s, void* c );
+  void getControllerState( int id, void* s );
+  void getControllerStateChange( int id, void* s, void* ps, void* sc );
 
-/* Return tracker matrix (or matrices) for a given controller */
-  void getControllerMatrix( int id, int rid, GLfloat m[16], GLfloat mc[16], int space );
-  
+/* Return tracker matrix for a given controller */
+  void getControllerMatrix( int id, int rid, GLfloat m[16], int space );
+  void getControllerMatrixChange( int id, int rid, GLfloat m[16], GLfloat pm[16], GLfloat mc[16], int spacefrom, int spaceto );
+
 /* Calculate eye positions from tracker data */
   void getEyePosition( int eye );
   void getAllEyePositions( void );
 
+/* Set viewport */
+  void setViewPort( GLint xl, GLint yl, GLint xr, GLint yr );
+
 /* Set modelview and projection matrices for one eye */
+/* SHOULD BE USED IN THE OPENGL THREAD ONLY!!! */
   void setModelViewMatrix( int eye );
   void setProjectionMatrix( int eye );
   
 /* Functions to support picking */
+/* SHOULD BE USED IN THE OPENGL THREAD ONLY!!! */
   void setPickProjectionMatrix( int eye, GLint x, GLint y, GLfloat pickwin );
   void setNearFar( int eye, GLfloat p[3], GLfloat d );
+
+/* Functions to support picking */
   void getScreenCoordinates( GLfloat p[3], int s[3], int space );
 
 /* Multiply the modelview matrix by the surface matrix */
+/* SHOULD BE USED IN THE OPENGL THREAD ONLY!!! */
   void setSurfaceView( void );
 
 /* Multiply the modelview matrix by virtualview matrix */
+/* SHOULD BE USED IN THE OPENGL THREAD ONLY!!! */
   void setVirtualView( void );
   
 /* Manipulate the virtual view matrix */
+  void getVirtualViewMatrix( GLfloat m[16] );
+  void getInverseVirtualViewMatrix( GLfloat m[16] );
   void loadVirtualViewMatrix( GLfloat m[16] );
+  void loadInverseVirtualViewMatrix( GLfloat m[16] );
   void multVirtualViewMatrix( GLfloat m[16] );
+  void multInverseVirtualViewMatrix( GLfloat m[16] );
+
+  void loadVirtualViewHome(GLfloat m[16]);
 
 /* Manipulate the virtual view scale */  
   GLfloat getVirtualViewScale( void );

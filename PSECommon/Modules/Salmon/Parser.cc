@@ -50,6 +50,7 @@ const int SURFACE_UPVECTOR             = 44;
 const int CONTROLLER_TYPE              = 50;
 const int CONTROLLER_SHARED_ARENA      = 51;
 const int CONTROLLER_RECEIVER          = 52;
+const int CONTROLLER_RECEIVER_OFFSET   = 53;
 
 namespace PSECommon {
 namespace Modules {
@@ -191,6 +192,22 @@ int BaWGL :: parseData( ifstream& f, char* fname, int& l, int t, int cnum, int r
     case CONTROLLER_RECEIVER:
       f >> controller[cnum].receiver[rnum];
       break;
+    case CONTROLLER_RECEIVER_OFFSET:
+      for( i=0; i<4; i++ )
+	{
+	  for( j=0; j<4; j++ )
+	    {
+	      f >> controller[cnum].offset[rnum][i+4*j];
+	      if( f.fail() )
+		{
+		  daterr(fname, l);
+		  return(-1);
+		}
+	    }
+	  l++;
+	}
+      l--;
+      break;
     default:
       break;
     }
@@ -300,8 +317,12 @@ int BaWGL :: parse( char* fname )
 		    { if( parseData(f, fname, l, CONTROLLER_SHARED_ARENA, cnum) < 0 ) return(-1); }
 		  else if( !strcmp(token2, "RECEIVER") )
 		    { if( parseData(f, fname, l, CONTROLLER_RECEIVER, cnum) < 0 ) return(-1); }
+		  else if( !strcmp(token2, "RECEIVER_OFFSET") )
+		    { if( parseData(f, fname, l, CONTROLLER_RECEIVER_OFFSET, cnum) < 0 ) return(-1); }
 		  else if( sscanf(token2, "RECEIVER%d", &rnum) == 1 )
 		    { if( parseData(f, fname, l, CONTROLLER_RECEIVER, cnum, rnum) < 0 ) return(-1); }
+		  else if( sscanf(token2, "RECEIVER_OFFSET%d", &rnum) == 1 )
+		    { if( parseData(f, fname, l, CONTROLLER_RECEIVER_OFFSET, cnum, rnum) < 0 ) return(-1); }
 		  else
 		    {
 		      tokerr(fname, token2, l);

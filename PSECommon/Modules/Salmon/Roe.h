@@ -208,6 +208,10 @@ public:
     void redraw_if_needed();
     void force_redraw();
 
+    //>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    void bawgl_pick(int action, GLint iv[3], GLfloat fv[4]);
+    //<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
     void mouse_translate(int, int, int, int, int, int);
     void mouse_scale(int, int, int, int, int, int);
     void mouse_rotate(int, int, int, int, int, int);
@@ -283,6 +287,9 @@ public:
 
 //
 // $Log$
+// Revision 1.8  1999/10/21 22:39:06  ikits
+// Put bench.config into PSE/src (where the executable gets invoked from). Fixed bug in the bawgl code and added preliminary navigation and picking.
+//
 // Revision 1.7  1999/10/16 20:51:00  jmk
 // forgive me if I break something -- this fixes picking and sets up sci
 // bench - go to /home/sci/u2/VR/PSE for the latest sci bench technology

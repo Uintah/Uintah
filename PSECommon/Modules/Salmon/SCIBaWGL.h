@@ -32,21 +32,30 @@ protected:
   friend class Salmon;
   friend class Roe;
   Roe* roe;
-  BaWGL* bawgl;
+  SCIBaWGL* bawgl;
   int running, exit;
   
   int pinchID, stylusID;
   
-  int pinch, pinchChange;
-  int stylus, stylusChange;
-  GLfloat pinchMatrix[16], pinchChangeMatrix[16];
-  GLfloat stylusMatrix[16], stylusChangeMatrix[16], pos[3];
+  int pinch, pinch0, pinchChange;
+  int stylus, stylus0, stylusChange;
+
+  
+  GLfloat realStylusMatrix[16], realStylus0Matrix[16];
   GLfloat virtualStylusMatrix[16], virtualStylusChangeMatrix[16];
 
+  GLfloat realPinchMatrix[16], realPinch0Matrix[16];
+  GLfloat surfacePinchMatrix[16];
+  GLfloat virtualPinchChangeMatrix[16];
+  
   GLfloat scaleFrom, scaleOriginal;
-  GLfloat velocity, azim, elev, roll, azim0, elev0, fly[16];
+  GLfloat velocity, azim, elev, roll, azim0, elev0, roll0, fly[16];
+
+  GLfloat navSpeed;
 
   void run();
+  void navigate();
+  void pick();
 
 public:
   SCIBaWGLTimer( Roe*, SCIBaWGL* );
@@ -62,13 +71,15 @@ class SCIBaWGL : public BaWGL {
    protected:
      SCIBaWGLTimer* timer;
      Thread* timerthread;
-     bool shutting_down;
-
+     
    public:
-     SCIBaWGL( char* );
+     SCIBaWGL( void );
      ~SCIBaWGL() { }
 
-     int start( Roe* );
+     bool shutting_down, redraw_enable;
+     int pick;
+
+     int start( Roe*, char* );
      void stop( void );
      void shutdown_ok( void );
  };
